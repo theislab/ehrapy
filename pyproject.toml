@@ -24,7 +24,7 @@ python = "^3.6.1"
 click = "^8.0.0"
 rich = "^10.3.0"
 PyYAML = "^5.4.1"
-Jinja2 = "^2.11.3"
+Jinja2 = "^3.0.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.3"
