@@ -1,0 +1,6 @@
+@import "basic.css";
+
+/*Set max width to none so the theme uses all available width*/
+.wy-nav-content {
+    max-width: none;
+}
