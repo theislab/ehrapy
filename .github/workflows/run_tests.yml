@@ -148,8 +148,7 @@ jobs:
                   nox --version
 
             - name: Install Rich
-              run: |
-                  pip install rich
+              run: pip install rich
 
             - name: Download coverage data
               uses: actions/download-artifact@v2.0.9
@@ -157,12 +156,10 @@ jobs:
                   name: coverage-data
 
             - name: Combine coverage data and display human readable report
-              run: |
-                  nox --force-color --session=coverage
+              run: nox --force-color --session=coverage
 
             - name: Create coverage report
-              run: |
-                  nox --force-color --session=coverage -- xml
+              run: nox --force-color --session=coverage -- xml -i
 
             - name: Upload coverage report
               uses: codecov/codecov-action@v1.5.2
