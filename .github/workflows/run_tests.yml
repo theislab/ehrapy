@@ -156,7 +156,7 @@ jobs:
                   name: coverage-data
 
             - name: Combine coverage data and display human readable report
-              run: nox --force-color --session=coverage
+              run: nox --force-color --session=coverage -i
 
             - name: Create coverage report
               run: nox --force-color --session=coverage -- xml -i
