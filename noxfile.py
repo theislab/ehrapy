@@ -132,7 +132,7 @@ def coverage(session: Session) -> None:
     # Do not use session.posargs unless this is the only session.
     nsessions = len(session._runner.manifest)  # type: ignore[attr-defined]
     has_args = session.posargs and nsessions == 1
-    args = session.posargs if has_args else ["report"]
+    args = session.posargs if has_args else ["report", "-i"]
 
     session.install("coverage[toml]")
 
