@@ -52,6 +52,7 @@ Pygments = "^2.8.1"
 types-pkg-resources = "^0.1.2"
 types-requests = "^0.1.9"
 types-attrs = "^19.1.0"
+sphinx-rtd-dark-mode = "^1.2.2"
 
 [tool.poetry.scripts]
 ehrapy = "ehrapy.__main__:main"

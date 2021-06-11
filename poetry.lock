@@ -835,6 +835,17 @@ docutils = "*"
 sphinx = ">=2.0"
 
 [[package]]
+name = "sphinx-rtd-dark-mode"
+version = "1.2.2"
+description = "Dark mode for the Sphinx Read the Docs theme."
+category = "dev"
+optional = false
+python-versions = ">=3.4"
+
+[package.dependencies]
+sphinx-rtd-theme = "*"
+
+[[package]]
 name = "sphinx-rtd-theme"
 version = "0.5.2"
 description = "Read the Docs theme for Sphinx"
@@ -1068,7 +1079,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.1"
-content-hash = "eb114cb59fabc3590b14701a1ec7167043835d7c2736f27befcc0e25977f3784"
+content-hash = "6eeccb2ef7e41826c9d3c75090723bbb707420948fa7f20ce404584fcdba788e"
 
 [metadata.files]
 alabaster = [
@@ -1556,6 +1567,10 @@ sphinx-autobuild = [
 sphinx-click = [
     {file = "sphinx-click-3.0.0.tar.gz", hash = "sha256:5f0d10a992eae1aa869b22720281eb3f2d0d8fa30364e75db31db52539c70f9e"},
     {file = "sphinx_click-3.0.0-py3-none-any.whl", hash = "sha256:5ae8e558ffe3ee976410f2bbd9213d2c1127bd22df1a47099bf179e775f24591"},
+]
+sphinx-rtd-dark-mode = [
+    {file = "sphinx_rtd_dark_mode-1.2.2-py3-none-any.whl", hash = "sha256:82c5075146b144c32c05c6d3e5c609b90f86dd419ee02080eefe1820ce17a422"},
+    {file = "sphinx_rtd_dark_mode-1.2.2.tar.gz", hash = "sha256:6cd34d382218047436947632dba284681fd4e2ed932b49054bcd3b8feb571211"},
 ]
 sphinx-rtd-theme = [
     {file = "sphinx_rtd_theme-0.5.2-py2.py3-none-any.whl", hash = "sha256:4a05bdbe8b1446d77a01e20a23ebc6777c74f43237035e76be89699308987d6f"},

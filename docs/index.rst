@@ -1,3 +1,6 @@
+.. include:: ../README.rst
+   :end-line: 32
+
 Welcome to ehrapy's documentation!
 ===================================
 .. toctree::
