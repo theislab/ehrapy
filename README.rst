@@ -35,7 +35,10 @@ ehrapy
 Features
 --------
 
-* TODO
+* Exploratory analysis of Electronic Health Records
+* Quality control & preprocessing
+* Clustering & trajectory inference
+* Visualization & Exploration
 
 
 Installation
@@ -51,7 +54,11 @@ You can install *ehrapy* via pip_ from PyPI_:
 Usage
 -----
 
-Please see the `Command-line Reference <Usage_>`_ for details.
+Please see the `Usage documentation <Usage_>`_ for details.
+
+.. code:: python
+
+   import ehra.api as eh
 
 
 Credits
