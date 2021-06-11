@@ -1,0 +1,24 @@
+name: cookietemple lint
+
+on: [push]
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v2
+              name: Check out source-code repository
+
+            - name: Setup Python
+              uses: actions/setup-python@v1
+              with:
+                  python-version: 3.9
+
+            - name: Install cookietemple
+              run: |
+                  pip install cookietemple==1.3.7
+
+            - name: Run cookietemple lint
+              run: |
+                  cookietemple lint . --skip-external

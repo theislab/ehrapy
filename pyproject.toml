@@ -1,0 +1,82 @@
+[tool.poetry]
+name = "ehrapy"
+version = "0.1.0"  # <<COOKIETEMPLE_FORCE_BUMP>>
+description = "Electronic Health Record Analysis with Python."
+authors = ["Lukas Heumos <lukas.heumos@posteo.net>"]
+license = "Apache2.0"
+readme = "README.rst"
+homepage = "https://github.com/theislab/ehrapy"
+repository = "https://github.com/theislab/ehrapy"
+documentation = "https://ehrapy.readthedocs.io"
+packages = [
+    { include = "ehrapy" },
+]
+classifiers = [
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+]
+
+
+[tool.poetry.dependencies]
+python = "^3.6.1"
+click = "^8.0.0"
+rich = "^10.3.0"
+PyYAML = "^5.4.1"
+Jinja2 = "^2.11.3"
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.3"
+coverage = {extras = ["toml"], version = "^5.3"}
+safety = "^1.9.0"
+mypy = "^0.901"
+typeguard = "^2.12.0"
+xdoctest = {extras = ["colors"], version = "^0.15.0"}
+sphinx = "^3.3.1"
+sphinx-autobuild = "^2021.3.14"
+pre-commit = "^2.11.1"
+flake8 = "^3.8.4"
+black = "^20.8b1"
+flake8-bandit = "^2.1.2"
+flake8-bugbear = "^21.4.3"
+flake8-docstrings = "^1.5.0"
+flake8-rst-docstrings = "^0.0.14"
+pep8-naming = "^0.11.1"
+darglint = "^1.5.8"
+reorder-python-imports = "^2.5.0"
+pre-commit-hooks = "^3.3.0"
+sphinx-rtd-theme = "^0.5.0"
+sphinx-click = "^3.0.0"
+Pygments = "^2.8.1"
+types-pkg-resources = "^0.1.2"
+types-requests = "^0.1.9"
+types-attrs = "^19.1.0"
+
+[tool.poetry.scripts]
+ehrapy = "ehrapy.__main__:main"
+
+[tool.black]
+line-length = 120
+
+[tool.mypy]
+strict = false
+pretty = true
+show_column_numbers = true
+show_error_codes = true
+show_error_context = true
+ignore_missing_imports = true
+
+[tool.coverage.paths]
+source = ["ehrapy", "*/site-packages"]
+
+[tool.coverage.run]
+branch = true
+source = ["ehrapy"]
+
+[tool.coverage.report]
+show_missing = true
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

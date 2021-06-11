@@ -1,0 +1,34 @@
+name: cookietemple sync
+
+on:
+    schedule:
+        - cron: "0 1 * * *" # 1 am UTC
+    workflow_dispatch:
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Setup Python
+              uses: actions/setup-python@v1
+              with:
+                  python-version: 3.8
+
+            - name: Install cookietemple
+              run: pip install cookietemple
+
+            - uses: actions/checkout@v2
+              with:
+                  fetch-depth: 0
+                  token: "${{ secrets.CT_SYNC_TOKEN }}"
+              name: Check out source-code repository
+
+            - uses: oleksiyrudenko/gha-git-credentials@v2.1
+              with:
+                  name: "zethson"
+                  email: "lukas.heumos@posteo.net"
+                  actor: "zethson"
+                  token: "${{ secrets.CT_SYNC_TOKEN}}"
+
+            - name: Sync project
+              run: cookietemple sync . ${{ secrets.CT_SYNC_TOKEN }} zethson

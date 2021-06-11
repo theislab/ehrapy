@@ -1,0 +1,73 @@
+name: PR to master branch from patch/release branch only
+
+on:
+    pull_request:
+        branches:
+            - master
+            - main
+
+jobs:
+    check_target:
+        runs-on: ubuntu-latest
+        name: Check Target branch
+        steps:
+            # PRs to the repository master branch are only ok if coming from any patch or release branch
+            - name: Check PRs
+              run: |
+                  { [[ $GITHUB_HEAD_REF = *"release"* ]]; } || [[ $GITHUB_HEAD_REF == *"patch"* ]]
+
+            # If the above check failed, post a comment on the PR explaining the failure
+            # NOTE - this may not work if the PR is coming from a fork, due to limitations in GitHub actions secrets
+            - name: Post PR comment
+              if: failure()
+              uses: mshick/add-pr-comment@v1
+              with:
+                  message: |
+                      Hi @${{ github.event.pull_request.user.login }},
+
+                      It looks like this pull-request is has been made against the ${{github.event.pull_request.head.repo.full_name}} `master` or `main` branch.
+                      The `master`/`main` branch should always contain code from the latest release.
+                      Because of this, PRs to `master`/`main` are only allowed if they come from any ${{github.event.pull_request.head.repo.full_name}} `release` or `patch` branch.
+
+                      You do not need to close this PR, you can change the target branch to `development` by clicking the _"Edit"_ button at the top of this page.
+
+                      Thanks again for your contribution!
+                  repo-token: ${{ secrets.GITHUB_TOKEN }}
+                  allow-repeats: false
+
+    check_version:
+        name: No SNAPSHOT version on master branch
+        runs-on: ubuntu-latest
+        steps:
+            - name: Set up Python
+              uses: actions/setup-python@v2
+              with:
+                  python-version: "3.8"
+            # PRs to the repository master branch are only ok if coming from any patch or release branch
+            - name: Install mlf-core
+              run: pip install mlf-core
+
+            - name: Check project version
+              run: |
+                  PROJECTVERSION=$(mlf-core bump-version --project-version . | tail -n1)
+                  echo $PROJECTVERSION;
+                  if [[ $PROJECTVERSION == *"SNAPSHOT"* ]];then
+                      exit -1
+                  else
+                      exit 0
+                  fi
+
+            # If the above check failed, post a comment on the PR explaining the failure
+            # NOTE - this may not work if the PR is coming from a fork, due to limitations in GitHub actions secrets
+            - name: Post PR comment
+              if: failure()
+              uses: mshick/add-pr-comment@v1
+              with:
+                  message: |
+                      Hi @${{ github.event.pull_request.user.login }},
+
+                      It looks like this pull-request is has been made against the ${{github.event.pull_request.head.repo.full_name}} `master`/`main` branch.
+                      A version check determined that you are using a SNAPSHOT version.
+                      The `master`/`main` branch should never have any SNAPSHOT versions, since only fully stable code should be on the `master`/`main` branch.
+                  repo-token: ${{ secrets.GITHUB_TOKEN }}
+                  allow-repeats: false
