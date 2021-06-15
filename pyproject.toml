@@ -12,7 +12,6 @@ packages = [
     { include = "ehrapy" },
 ]
 classifiers = [
-    "Programming Language :: Python :: 3.6",
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
@@ -20,11 +19,12 @@ classifiers = [
 
 
 [tool.poetry.dependencies]
-python = "^3.6.1"
+python = ">=3.7.0,<3.10"
 click = "^8.0.0"
 rich = "^10.3.0"
 PyYAML = "^5.4.1"
 Jinja2 = "^3.0.1"
+questionary = "^1.9.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.3"
@@ -67,6 +67,7 @@ show_column_numbers = true
 show_error_codes = true
 show_error_context = true
 ignore_missing_imports = true
+no_strict_optional = true
 
 [tool.coverage.paths]
 source = ["ehrapy", "*/site-packages"]

@@ -35,9 +35,9 @@ Tools
 Plotting
 ~~~~~~~~
 
-.. automodule:: ehrapy.api.plotting
+.. automodule:: ehrapy.api.plot
    :members:
 
-.. click:: ehrapy.__main__:main
+.. click:: ehrapy.__main__:ehrapy_cli
    :prog: ehrapy
    :nested: full
