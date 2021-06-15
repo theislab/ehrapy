@@ -107,7 +107,7 @@ python-versions = "*"
 name = "certifi"
 version = "2021.5.30"
 description = "Python package for providing Mozilla's CA Bundle."
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
 
@@ -123,7 +123,7 @@ python-versions = ">=3.6.1"
 name = "chardet"
 version = "4.0.0"
 description = "Universal encoding detector for Python 2 and 3"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
@@ -337,7 +337,7 @@ license = ["editdistance-s"]
 name = "idna"
 version = "2.10"
 description = "Internationalized Domain Names in Applications (IDNA)"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
@@ -670,7 +670,7 @@ python-versions = ">=3.6.1"
 name = "requests"
 version = "2.25.1"
 description = "Python HTTP for Humans."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
@@ -1014,7 +1014,7 @@ python-versions = "*"
 name = "urllib3"
 version = "1.26.5"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, <4"
 
@@ -1085,7 +1085,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7.0,<3.10"
-content-hash = "06d7d7ccd762abfe4ea0eb4a0f70c578331a9ba1c48984c2e270702945b3ae01"
+content-hash = "a7a0975a8d4fcf00523b47c769778eae9e1db2fdc68696c4b73bbee2ef7056fb"
 
 [metadata.files]
 alabaster = [
