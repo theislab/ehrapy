@@ -1,7 +1,7 @@
 import glob
 import pathlib
 import tempfile
-from typing import Union, List
+from typing import List, Union
 from zipfile import ZipFile
 
 import pandas as pd
@@ -13,28 +13,28 @@ from rich.progress import Progress
 class Dataloader:
     """Responsible for downloading, extracting and transforming input files into AnnData objects"""
 
-    def __init__(self, output_file_name: str, path: str = None):
-        """
-
-        Args:
-            output_file_name: File name to output the
-            path: Path to save the file to
-            is_zip: Whether the file to download is a zip file and needs unzipping (default: False)
-        """
-        self.output_file_name = output_file_name
-        self.output_path = path or tempfile.gettempdir()
-        self.download_to_path = f"{path}/{output_file_name}"
-
-    def download(self, url: str, block_size: int = 1024, overwrite: bool = False) -> None:
+    def download(
+        self,
+        url: str,
+        output_file_name: str,
+        output_path: str,
+        block_size: int = 1024,
+        overwrite: bool = False,
+        is_zip: bool = False,
+    ) -> None:
         """Downloads a dataset irrespective of the format.
 
         Args:
             url: URL to download
-            block_size: Block size for downloads in bytes
+            output_file_name: Name of the downloaded file
+            output_path: Path to download/extract the files to (default: OS tmpdir)
+            block_size: Block size for downloads in bytes (default: 1024)
             overwrite: Whether to overwrite existing files (default: False)
+            is_zip: Whether the downloaded file needs to be unzipped (default: False)
         """
-        if pathlib.Path(self.download_to_path).exists():
-            print(f"[bold red]File {self.download_to_path} already exists!")
+        download_to_path = f"{output_path}/{output_file_name}"
+        if pathlib.Path(download_to_path).exists():
+            print(f"[bold red]File {download_to_path} already exists!")
             if not overwrite:
                 return
 
@@ -43,17 +43,18 @@ class Dataloader:
 
         with Progress() as progress:
             task = progress.add_task("[red]Downloading...", total=total)
-            with open(self.download_to_path, "wb") as file:
+            with open(download_to_path, "wb") as file:
                 for data in response.iter_content(block_size):
                     file.write(data)
                     progress.update(task, advance=block_size)
 
-    def unzip(self) -> None:
-        """Unzips a zip file and saves it."""
-        with ZipFile(self.download_to_path, "r") as zip_obj:
-            zip_obj.extractall(path=self.output_path)
+        if is_zip:
+            output_path = download_to_path or tempfile.gettempdir()
+            with ZipFile(download_to_path, "r") as zip_obj:
+                zip_obj.extractall(path=output_path)
 
-    def read_csvs(self, csvs: Union[str, List], sep: str = ",") -> pd.DataFrame:
+    @staticmethod
+    def read_csvs(csvs: Union[str, List], sep: str = ",") -> pd.DataFrame:
         """Reads one or several csv files and returns a (merged) Pandas DataFrame
 
         Args:
