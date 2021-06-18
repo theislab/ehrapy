@@ -1,6 +1,7 @@
 import glob
 import pathlib
 import tempfile
+from functools import reduce
 from typing import List, Union
 from zipfile import ZipFile
 
@@ -55,12 +56,13 @@ class Dataloader:
                 zip_obj.extractall(path=output_path)
 
     @staticmethod
-    def read_csvs(csvs: Union[str, List], sep: str = ",") -> pd.DataFrame:
+    def read_csvs(csvs: Union[str, List], sep: str = ",", on: str = "patient_id") -> pd.DataFrame:
         """Reads one or several csv files and returns a (merged) Pandas DataFrame
 
         Args:
             csvs: One or multiple paths to a folder of csv files or csv files directly
-            sep: Separator of the csv file
+            sep: Separator of the csv file (default: ',')
+            on: ID to merge on (default: 'patient_id')
 
         Returns:
             A single Pandas DataFrame of all csv files merged
@@ -68,12 +70,13 @@ class Dataloader:
         if not isinstance(csvs, List):
             # Not a single csv directly, but a folder containing multiple csv files
             if not (csvs.endswith("csv") or csvs.endswith("tsv")):
-                csvs = glob.glob(f'*.{"csv"}') + glob.glob(f'*.{"tsv"}')
+                extension = "tsv" if sep == "\t" else "csv"
+                csvs = glob.glob(f"{csvs}/*.{extension}")
             # path to single csv file directly
             else:
                 csvs = [csvs]
-
-        combined_csvs_df = pd.concat([pd.read_csv(f, sep=sep) for f in csvs])
+        csvs = [pd.read_csv(csv, sep=sep) for csv in csvs]
+        combined_csvs_df = reduce(lambda x, y: pd.merge(x, y, on=on), csvs)
 
         return combined_csvs_df
 
@@ -89,4 +92,6 @@ class Dataloader:
         Returns:
             AnnData object where X contains the raw data
         """
+        # TODO Ensure that the patient ID is already set as index here
+        # Ensure that at this point we already know what is numerical and what is categorical
         pass
