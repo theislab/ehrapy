@@ -76,7 +76,7 @@ class UpgradeCommand:
     @classmethod
     def upgrade_ehrapy(cls) -> None:
         """Calls pip as a subprocess with the --upgrade flag to upgrade ehrapy to the latest version."""
-        log.debug("Attempting to upgrade ehrapy via    pip install --upgrade ehrapy .")
+        log.debug("Attempting to upgrade ehrapy via   pip install --upgrade ehrapy   .")
         if not UpgradeCommand.is_pip_accessible():
             sys.exit(1)
         try:
@@ -96,7 +96,7 @@ class UpgradeCommand:
         pip_installed = Popen(["pip", "--version"], stdout=PIPE, stderr=PIPE, universal_newlines=True)
         (git_installed_stdout, git_installed_stderr) = pip_installed.communicate()
         if pip_installed.returncode != 0:
-            log.debug("Pip was not accessible!")
+            log.debug("Pip was not accessible! Attempted to test via   pip --version   .")
             print("[bold red]Unable to find 'pip' in the PATH. Is it installed?")
             print("[bold red]Run command was [green]'pip --version '")
             return False

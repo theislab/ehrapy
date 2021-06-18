@@ -7,7 +7,7 @@ from rich import print
 from rich.console import Console
 
 import ehrapy
-from ehrapy.util.levenstein_distance import most_similar_command
+from ehrapy.cli.custom_cli.levenstein_distance import most_similar_command
 
 # ehrapy's main commands
 MAIN_COMMANDS = {"read"}

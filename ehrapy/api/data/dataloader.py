@@ -6,15 +6,16 @@ from zipfile import ZipFile
 
 import pandas as pd
 import requests
+from anndata import AnnData
 from rich import print
 from rich.progress import Progress
 
 
 class Dataloader:
-    """Responsible for downloading, extracting and transforming input files into AnnData objects"""
+    """Responsible for downloading and extracting input files"""
 
+    @staticmethod
     def download(
-        self,
         url: str,
         output_file_name: str,
         output_path: str,
@@ -75,3 +76,17 @@ class Dataloader:
         combined_csvs_df = pd.concat([pd.read_csv(f, sep=sep) for f in csvs])
 
         return combined_csvs_df
+
+    @staticmethod
+    def df_to_anndata(dataframe: pd.DataFrame) -> AnnData:
+        """Transforms a single (concatenated) Pandas DataFrame into an AnnData object.
+
+        This transformation does not yet perform any encodings on the AnnData object.
+
+        Args:
+            dataframe:
+
+        Returns:
+            AnnData object where X contains the raw data
+        """
+        pass
