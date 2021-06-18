@@ -7,10 +7,6 @@ _TEST_PATH = "tests/api/data/test_data"
 
 
 class TestDataloader:
-    class TestDownload:
-        def test_download(self):
-            return
-
     @pytest.mark.parametrize(
         "path,sep,on,shape",
         [

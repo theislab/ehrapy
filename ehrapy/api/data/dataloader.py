@@ -16,7 +16,7 @@ class Dataloader:
     """Responsible for downloading and extracting input files"""
 
     @staticmethod
-    def download(
+    def download(  # pragma: no cover
         url: str,
         output_file_name: str,
         output_path: str,

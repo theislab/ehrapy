@@ -84,6 +84,13 @@ source = ["ehrapy", "*/site-packages"]
 [tool.coverage.run]
 branch = true
 source = ["ehrapy"]
+omit = [
+    "ehrapy/__main__.py",  # Just providing the interface for all click functions
+    "ehrapy/cli/custom_cli/questionary.py",  # Just wrapper over questionary - tested in other projects
+    "ehrapy/cli/custom_cli/click.py",  # Really difficult to test - tested in other projects
+    "ehrapy/cli/custom_cli/rich.py",  # Just a Rich console
+    "ehrapy/cli/upgrade.py"  # Difficult to test - tested in other projects
+]
 
 [tool.coverage.report]
 show_missing = true
