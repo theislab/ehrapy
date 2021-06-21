@@ -19,7 +19,7 @@ class Dataloader:
     def download(  # pragma: no cover
         url: str,
         output_file_name: str,
-        output_path: str,
+        output_path: str = None,
         block_size: int = 1024,
         overwrite: bool = False,
         is_zip: bool = False,
@@ -34,6 +34,9 @@ class Dataloader:
             overwrite: Whether to overwrite existing files (default: False)
             is_zip: Whether the downloaded file needs to be unzipped (default: False)
         """
+        if output_path is None:
+            output_path = tempfile.gettempdir()
+
         download_to_path = f"{output_path}/{output_file_name}"
         if pathlib.Path(download_to_path).exists():
             print(f"[bold red]File {download_to_path} already exists!")

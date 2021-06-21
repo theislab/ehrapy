@@ -1,11 +1,11 @@
-# from ehrapy.api.data.dataloader import Dataloader
+from ehrapy.api.data.dataloader import Dataloader
 
-# dl = Dataloader(
-#     url="https://physionet.org/content/mimic2-iaccd/1.0/full_cohort_data.csv",
-#     output_file_name="mimicii-demo.csv",
-#     is_zip=False,
-# )
-# dl.download()
+Dataloader.download(
+    "https://physionet.org/content/mimic2-iaccd/1.0/full_cohort_data.csv",
+    output_file_name="mimicii-demo.csv",
+    is_zip=False,
+)
+
 #
 # dl_2 = Dataloader(
 #     url="https://physionet.org/static/published-projects/mimiciii-demo/mimic-iii-clinical-database-demo-1.4.zip",
