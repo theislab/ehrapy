@@ -1,11 +1,11 @@
-import os
+from pathlib import Path
 
 import pandas as pd
 import pytest
 
 from ehrapy.api.data.dataloader import Dataloader
 
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+CURRENT_DIR = Path(__file__).parent
 _TEST_PATH = f"{CURRENT_DIR}/test_data"
 
 
