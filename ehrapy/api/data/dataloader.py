@@ -39,9 +39,12 @@ class Dataloader:
 
         download_to_path = f"{output_path}/{output_file_name}"
         if pathlib.Path(download_to_path).exists():
-            print(f"[bold red]File {download_to_path} already exists!")
+            warning = f"[bold red]File {download_to_path} already exists!"
             if not overwrite:
+                print(warning)
                 return
+            else:
+                print(f"{warning} Overwriting...")
 
         response = requests.get(url, stream=True)
         total = int(response.headers.get("content-length", 0))
