@@ -1,6 +1,7 @@
+import os
+
 import pandas as pd
 import pytest
-from coverage.annotate import os
 
 from ehrapy.api.data.dataloader import Dataloader
 
