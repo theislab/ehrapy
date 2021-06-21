@@ -1,9 +1,11 @@
 import pandas as pd
 import pytest
+from coverage.annotate import os
 
 from ehrapy.api.data.dataloader import Dataloader
 
-_TEST_PATH = "tests/api/data/test_data"
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+_TEST_PATH = f"{CURRENT_DIR}/test_data"
 
 
 class TestDataloader:
