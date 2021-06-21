@@ -7,9 +7,9 @@ import click
 import rich.logging
 from rich import traceback
 
+from ehrapy import ehrapy_pypi_latest
 from ehrapy.cli.custom_cli.click import CustomHelpSubcommand, HelpErrorHandling, print_ehrapy_version
 from ehrapy.cli.custom_cli.rich import console
-from ehrapy.cli.upgrade import UpgradeCommand
 
 log = logging.getLogger()
 
@@ -90,7 +90,7 @@ def read() -> None:
 @ehrapy_cli.command(short_help="Check for a newer version of ehrapy and upgrade if required.", cls=CustomHelpSubcommand)
 def upgrade() -> None:
     """Checks whether the locally installed version of ehrapy is the latest & upgrades if not."""
-    UpgradeCommand.check_ehrapy_latest()
+    ehrapy_pypi_latest.check_latest()
 
 
 if __name__ == "__main__":
