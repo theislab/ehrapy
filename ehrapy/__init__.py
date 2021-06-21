@@ -5,6 +5,7 @@ __email__ = "lukas.heumos@posteo.net"
 __version__ = "0.1.0"
 
 from pypi_latest import PypiLatest
+
 from ehrapy.api import data, plot, preprocessing, tools
 
 ehrapy_pypi_latest = PypiLatest("ehrapy", __version__)

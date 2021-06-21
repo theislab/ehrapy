@@ -29,7 +29,7 @@ def main() -> None:
     console.print("[bold blue]Run [green]ehrapy --help [blue]for an overview of all commands\n")
 
     # Is the latest ehrapy version installed? Upgrade if not!
-    if not UpgradeCommand.check_ehrapy_latest():
+    if not ehrapy_pypi_latest.check_latest():
         console.print("[bold blue]Run [green]ehrapy upgrade [blue]to get the latest version.")
     ehrapy_cli()
 
