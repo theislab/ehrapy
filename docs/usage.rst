@@ -4,7 +4,7 @@ Usage
 API
 ---
 
-Import the sc-tools API as follows:
+Import the ehrapy API as follows:
 
 .. code:: python
 
@@ -37,6 +37,9 @@ Plotting
 
 .. automodule:: ehrapy.api.plot
    :members:
+
+Command-line interface
+-----------------------
 
 .. click:: ehrapy.__main__:ehrapy_cli
    :prog: ehrapy
