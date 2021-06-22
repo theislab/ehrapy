@@ -4,7 +4,7 @@ ignore = B950,E203,E501,RST201,RST203,RST301,W503
 max-line-length = 120
 max-complexity = 15
 docstring-convention = google
-per-file-ignores = tests/*:S101,
-                   ehrapy/__init__.py:F401,
-                   ehrapy/api/data/datasets:F401
+per-file-ignores = tests/*:S101
+                   ehrapy/__init__.py:F401
+                   ehrapy/api/data/__init__.py:F401
                    ehrapy/api/data/__init__.py:F403
