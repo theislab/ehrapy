@@ -8,7 +8,7 @@ from pathlib import Path
 from sphinx.application import Sphinx
 from sphinx_gallery.gen_gallery import DEFAULT_GALLERY_CONF
 
-from docs.utils import MaybeMiniGallery, _get_thumbnails  # noqa: E402
+from docs.utils import _get_thumbnails, MaybeMiniGallery
 
 HERE = Path(__file__).parent
 sys.path.insert(0, os.path.abspath(".."))
