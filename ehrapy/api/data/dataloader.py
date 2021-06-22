@@ -82,7 +82,7 @@ class Dataloader:
             else:
                 csvs = [csvs]
         csvs = [pd.read_csv(csv, sep=sep) for csv in csvs]
-        combined_csvs_df = reduce(lambda x, y: pd.merge(x, y, on=on), csvs)
+        combined_csvs_df = reduce(lambda ds_1, ds_2: pd.merge(ds_1, ds_2, on=on), csvs)
 
         return combined_csvs_df
 

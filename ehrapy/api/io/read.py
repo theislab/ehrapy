@@ -1,8 +1,13 @@
+import tempfile
 from enum import Enum
 from pathlib import Path
 from typing import Literal, Optional, Union
 
+import pandas as pd
 from anndata import AnnData
+from rich import print
+
+from ehrapy.api.data.dataloader import Dataloader
 
 
 class Empty(Enum):
@@ -18,6 +23,7 @@ def read(
     sheet: Optional[str] = None,
     extension: Optional[str] = None,
     delimiter: Optional[str] = None,
+    patient_id: Optional[str] = None,
     first_column_names: bool = False,
     backup_url: Optional[str] = None,
     cache: bool = False,
@@ -36,6 +42,7 @@ def read(
         extension: Extension that indicates the file type. If ``None``, uses extension of filename.
         delimiter: Delimiter that separates data within text file. If ``None``, will split at arbitrary number of white spaces,
                    which is different from enforcing splitting at any single white space ``' '``.
+        patient_id: Patient id to merge the csv files on (if several) and to use as index
         first_column_names: Assume the first column stores row names. This is only necessary if these are not strings:
                             strings in the first column are automatically assumed to be row names.
         backup_url: Retrieve the file from an URL if not present on disk.
@@ -45,10 +52,20 @@ def read(
     Returns:
         An :class:`~anndata.AnnData` object
     """
-    # 1. Verify whether the file exists
-    # 2. if it does not exist download it using the backup URL
-    # 3. Unzip the file if required
-    # 4. read the data into a Pandas Dataframe
+    output_file_name: str = ""
+    file = Path(filename)
+    if not file.exists():
+        print("[bold yellow]Path or dataset does not yet exist. Attempting to download...")
+        output_file_name = backup_url.split("/")[-1]
+        is_zip: bool = output_file_name.endswith(".zip")
+        Dataloader.download(backup_url, output_file_name=output_file_name, is_zip=is_zip)
+    else:
+        # Depending on the file extension of the input file or primary files inside the directory call the appropriate read function
+
+        merged_df: pd.DataFrame = Dataloader.read_csvs(
+            csvs=f"{tempfile.gettempdir()}/{output_file_name}", on=patient_id
+        )
+        merged_df
     # 5. Get it into an AnnData format
     # 6. Mark
 
