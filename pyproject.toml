@@ -26,7 +26,7 @@ PyYAML = "^5.4.1"
 Jinja2 = "^3.0.1"
 questionary = "^1.9.0"
 requests = "^2.25.1"
-pandas = "^1.2.4"
+pandas = "^1.2.5"
 anndata = "^0.7.6"
 pypi-latest = "^0.1.0"
 
