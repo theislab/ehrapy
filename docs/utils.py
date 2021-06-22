@@ -146,7 +146,7 @@ class ModnameFilter(Filter):
     Ignore module names.
     """
 
-    _pat = re.compile(r"ehrapy\.(im|gr|pl|datasets)\..+")  # TODO
+    _pat = re.compile(r"ehrapy\.(ds|pp|tl|pl)\..+")  # TODO
 
     def _skip(self, word: str) -> bool:
         return self._pat.match(word) is not None
