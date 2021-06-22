@@ -45,6 +45,13 @@ def read(
     Returns:
         An :class:`~anndata.AnnData` object
     """
+    # 1. Verify whether the file exists
+    # 2. if it does not exist download it using the backup URL
+    # 3. Unzip the file if required
+    # 4. read the data into a Pandas Dataframe
+    # 5. Get it into an AnnData format
+    # 6. Mark
+
     # Dataloader.download(
     #     url="https://physionet.org/content/mimic2-iaccd/1.0/full_cohort_data.csv",
     #     output_file_name="mimic_2.csv",

@@ -2,5 +2,11 @@ Sphinx>=4.0.1
 sphinx_rtd_theme>=0.5.2
 sphinx-rtd-dark-mode>=1.2.1
 sphinx-automodapi>=0.13
+sphinx-autodoc-annotation
+sphinx_last_updated_by_git
+sphinxcontrib-spelling
+sphinx-autodoc-typehints>=1.10.3
+sphinx_gallery>=0.8.2
+sphinxcontrib-bibtex>=2.2.0
 sphinx_click>=3.0.0
 click>=8.0.1
