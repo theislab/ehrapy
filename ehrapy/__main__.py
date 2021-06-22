@@ -50,11 +50,6 @@ def ehrapy_cli(ctx, verbose, log_file) -> None:
     """Access the ehrapy api through commands.
 
     Primarily useful for complex pipelines which call ehrapy functions directly from the command line.
-
-    Args:
-        ctx: Click Context
-        verbose: Whether to enable verbose logging
-        log_file: Path to a log file
     """
     # Set the base logger to output DEBUG
     log.setLevel(logging.DEBUG)
