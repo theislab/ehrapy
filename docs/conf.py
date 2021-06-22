@@ -1,14 +1,9 @@
 #!/usr/bin/env python
 # mypy: ignore-errors
 # ehrapy documentation build configuration file
-import sys
-
-from sphinx.application import Sphinx
-from sphinx_gallery.gen_gallery import DEFAULT_GALLERY_CONF
-
-
 import os
 import re
+import sys
 from logging import info, warning
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
@@ -16,8 +11,9 @@ from urllib.parse import urljoin
 
 import requests
 from enchant.tokenize import Filter
+from sphinx.application import Sphinx
 from sphinx_gallery.directives import MiniGallery
-
+from sphinx_gallery.gen_gallery import DEFAULT_GALLERY_CONF
 
 CURRENT = Path(__file__).parent
 ENDPOINT_FMT = "https://api.github.com/repos/{org}/{repo}/contents/docs/source/"
@@ -169,10 +165,6 @@ class SignatureFilter(Filter):
 
     def _skip(self, word: str) -> bool:
         return word == "img[" or word == "adata,"
-
-
-
-
 
 
 sys.path.insert(0, os.path.abspath(".."))
