@@ -85,7 +85,7 @@ def read() -> None:
 @ehrapy_cli.command(short_help="Check for a newer version of ehrapy and upgrade if required.", cls=CustomHelpSubcommand)
 def upgrade() -> None:
     """Checks whether the locally installed version of ehrapy is the latest & upgrades if not."""
-    ehrapy_pypi_latest.check_latest()
+    ehrapy_pypi_latest.check_upgrade()
 
 
 if __name__ == "__main__":
