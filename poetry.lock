@@ -922,7 +922,7 @@ toml = ["toml"]
 
 [[package]]
 name = "pyenchant"
-version = "3.2.0"
+version = "3.2.1"
 description = "Python bindings for the Enchant spellchecking system"
 category = "dev"
 optional = false
@@ -1598,7 +1598,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7.1,<3.10"
-content-hash = "351ccedfae8c0a5a5649f64800f1f469f24c81c7af73ea31f3c9c70715b8c315"
+content-hash = "4602fb8c2c145734ca10cc9d1e3b541f110179d976c25b9b47e9d2d9e83f8f65"
 
 [metadata.files]
 alabaster = [
@@ -2107,10 +2107,10 @@ pydocstyle = [
     {file = "pydocstyle-6.1.1.tar.gz", hash = "sha256:1d41b7c459ba0ee6c345f2eb9ae827cab14a7533a88c5c6f7e94923f72df92dc"},
 ]
 pyenchant = [
-    {file = "pyenchant-3.2.0-py3-none-any.whl", hash = "sha256:5f5fbf99283136ad0e56660343ec4f16713981e340984ce9487de756fce022c6"},
-    {file = "pyenchant-3.2.0-py3-none-win32.whl", hash = "sha256:f649f36fa90cb950d10b1a70bca50be7799ec759aa478353f08dcef579c097ee"},
-    {file = "pyenchant-3.2.0-py3-none-win_amd64.whl", hash = "sha256:f22cc6e342d4e6a027296c59ae8ad4d5b2f281da1ecbe0e839a9e5f5d243b33d"},
-    {file = "pyenchant-3.2.0.tar.gz", hash = "sha256:6b97e9a9f132fa7c9029a6635d821ccad67d4980e68186d02c765b4256b6f152"},
+    {file = "pyenchant-3.2.1-py3-none-any.whl", hash = "sha256:e8546c28b630f6d9f76642166656e337df2a1849cbef2b8ee198e7f64266f4ee"},
+    {file = "pyenchant-3.2.1-py3-none-win32.whl", hash = "sha256:49e0b255bef9356f57eeeee1d983ffa8599c0a46727d55cddbc71ec26226ca80"},
+    {file = "pyenchant-3.2.1-py3-none-win_amd64.whl", hash = "sha256:37c79e1dab492092fe8135222b2ba404c1b79595b459af9edaeddb77a2cb89a5"},
+    {file = "pyenchant-3.2.1.tar.gz", hash = "sha256:5e206a1d6596904a922496f6c9f7d0b964b243905f401f5f2f40ea4d1f74e2cf"},
 ]
 pyflakes = [
     {file = "pyflakes-2.3.1-py2.py3-none-any.whl", hash = "sha256:7893783d01b8a89811dd72d7dfd4d84ff098e5eed95cfa8905b22bbffe52efc3"},
