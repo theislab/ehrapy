@@ -47,3 +47,7 @@ def init_anndata_from_df(path):
     ann_data.uns['label_mapping'] = cleanup_nums
 
     return ann_data
+
+
+def encode_vars(ann_data, one_hot_encode, label_encode = []):
+    pass

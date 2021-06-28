@@ -15,5 +15,3 @@ def view_vars(ann_data):
         branch_num.add(ann_data.raw.var_names[i], style="blue")
 
     print(tree)
-
-

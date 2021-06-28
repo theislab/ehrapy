@@ -1,12 +1,9 @@
 import scanpy as sc
 
 
-def umap(ann_data):
-    sc.pp.neighbors(ann_data)
-    sc.tl.umap(ann_data)
+def plot_umap(ann_data):
     sc.pl.umap(ann_data, color=['Day_ICU_intime', 'age'], use_raw=False)
 
 
-def pca(ann_data):
-    sc.tl.pca(ann_data, svd_solver='arpack')
+def plot_pca(ann_data):
     sc.pl.pca(ann_data, color=['Day_ICU_intime', 'age'], use_raw=False)
