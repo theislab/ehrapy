@@ -6,8 +6,7 @@ __version__ = "0.1.0"
 
 from pypi_latest import PypiLatest
 
-from ehrapy.api import plot, data, io, tools, core
-
+from ehrapy.api import core, data, io, plot, tools
 
 ehrapy_pypi_latest = PypiLatest("ehrapy", __version__)
 ehrapy_pypi_latest.check_latest()

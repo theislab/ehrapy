@@ -15,7 +15,7 @@ except ImportError:
     sys.exit(1)
 
 package = "ehrapy"
-python_versions = ["3.8"]
+python_versions = ["3.9"]
 nox.options.sessions = (
     "pre-commit",
     "safety",
