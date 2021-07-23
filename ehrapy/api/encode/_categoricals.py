@@ -1,12 +1,13 @@
 import sys
 from typing import List, Mapping, Optional, Tuple
 
+import numpy as np
 import pandas as pd
 from pandas.api.types import infer_dtype
 from rich import print
 
 
-def _detect_categorical_columns(df: pd.DataFrame) -> Mapping[str, List[Optional[str]]]:
+def _detect_categorical_columns(arr: np.ndarray, names: List[str]) -> Mapping[str, List[Optional[str]]]:
     """Autodetect all categorical columns in a DataFrame
 
     Args:
@@ -17,15 +18,18 @@ def _detect_categorical_columns(df: pd.DataFrame) -> Mapping[str, List[Optional[
         A dictionary containing all categorical column names with a hint on whether they need to be encoded or not
 
     """
-    categoricals: Mapping[str, List[Optional[str]]] = {"categorical_encode": [], "categorical_no_encode": []}
-    for col_name in df.columns:
-        is_cat, key = _is_categorical_column(df[col_name])
-        if is_cat:
-            categoricals[key].append(col_name)
+    categoricals: Mapping[str, List[Optional[str]]] = {
+        "categorical_encoded": [],
+        "categorical_not_encoded": [],
+        "not_categorical": [],
+    }
+    for i in range(arr.shape[1]):
+        is_cat, key = _is_categorical_column(arr[::, i : i + 1 :].ravel(), names[i])
+        categoricals[key].append(names[i])
     return categoricals
 
 
-def _is_categorical_column(col) -> Tuple[bool, str]:
+def _is_categorical_column(col: np.ndarray, name: str) -> Tuple[bool, str]:
     """Check for a single column, whether it's categorical or not.
 
     For string columns, a column will be counted as categorical, if there are at least two duplicate elements.
@@ -41,7 +45,7 @@ def _is_categorical_column(col) -> Tuple[bool, str]:
     """
     c_dtype = infer_dtype(col)
     if c_dtype == "categorical":
-        return True, "categorical_encode"
+        return True, "categorical_encoded"
     try:
         c = pd.Categorical(col)
         # when we only have unary/binary numerical categories
@@ -49,25 +53,24 @@ def _is_categorical_column(col) -> Tuple[bool, str]:
             (c_dtype == "floating" or c_dtype == "integer") and 1 <= len(c.categories) <= 2
         ):
             if c_dtype != "floating" and c_dtype != "integer":
-                return True, "categorical_encode"
+                return True, "categorical_encoded"
             else:
-                return True, "categorical_no_encode"
+                return True, "categorical_not_encoded"
     # TODO: Which type of exception?
     except Exception:
         print(
-            f"[bold red] Could not cast column {col.name} to Categorical type. Please file an issue"
+            f"[bold red] Could not cast column {name} to Categorical type. Please file an issue"
             f"at https://github.com/ehrapy!"
         )
         sys.exit(1)
     if c_dtype == "string":
         if len(c.categories) >= len(c):
-            return False, ""
-        return True, "categorical_encode"
-    elif c_dtype == "floating" or c_dtype == "integer":
+            return False, "not_categorical"
+        return True, "categorical_encoded"
+    elif c_dtype == "floating" or c_dtype == "integer" or c_dtype == "mixed-integer-float":
         # TODO: Find a good threshold
-        # at max 80% should be exact same values to be counted as categorical
-        if len(c.categories) > len(c) * 0.8:
-            return False, ""
-        return True, "categorical_no_encode"
-    # mixed datatype columns, free text, non categorical numerical columns, datetime
-    return False, ""
+        if len(c.categories) > len(c) * 0.5:
+            return False, "not_categorical"
+        return True, "categorical_not_encoded"
+    # free text, non categorical numerical columns, datetime
+    return False, "not_categorical"
