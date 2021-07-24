@@ -1,1 +1,1 @@
-from .dataloader import Dataloader  # noqa: F401
+from ehrapy.api.data.dataloader import Dataloader  # noqa: F401

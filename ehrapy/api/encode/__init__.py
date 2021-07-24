@@ -1,1 +1,1 @@
-from .encode import Encoder  # noqa: F401
+from ehrapy.api.encode.encode import Encoder  # noqa: F401

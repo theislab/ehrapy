@@ -1,6 +1,6 @@
 from enum import Enum
 from pathlib import Path
-from typing import Generator, Iterable, Iterator, List, Literal, Optional, Union
+from typing import Generator, Iterable, Iterator, List, Optional, Union
 
 import numpy as np
 from anndata import AnnData, read_h5ad
@@ -31,10 +31,7 @@ class Datareader:
         filename: Union[Path, str],
         extension: Optional[str] = None,
         delimiter: Optional[str] = None,
-        patient_id: Optional[str] = None,
         backup_url: Optional[str] = None,
-        cache: bool = False,
-        cache_compression: Union[Literal["gzip", "lzf"], None, Empty] = _empty,
     ) -> AnnData:
         """Read file and return :class:`~pandas.DataFrame` object.
 
@@ -45,10 +42,7 @@ class Datareader:
             extension: Extension that indicates the file type. If ``None``, uses extension of filename.
             delimiter: Delimiter that separates data within text file. If ``None``, will split at arbitrary number of white spaces,
                        which is different from enforcing splitting at any single white space ``' '``.
-            patient_id: Patient id to merge the csv files on (if several) and to use as index
             backup_url: Retrieve the file from an URL if not present on disk.
-            cache: If `False`, read from source, if `True`, read from fast 'h5ad' cache.
-            cache_compression: See the h5py :ref:`dataset_compression`. (Default: `settings.cache_compression`)
 
         Returns:
             An :class:`~anndata.AnnData` object
@@ -171,7 +165,7 @@ class Datareader:
                 if not Datareader.is_float(line_list[-1]):
                     col_names = line_list
                     # TODO: Throw warning exception here that no ID column found? -> We expect it to be the first col!
-                    if "aligne_flg" == col_names[0]:
+                    if "patient_id" == col_names[0].lower():
                         id_column_avail = True
                     # logg.msg("    assuming first line in file stores column names", v=4)
                 else:
@@ -254,6 +248,7 @@ class Datareader:
             obs=dict(obs_names=row_names),
             var=dict(var_names=col_names),
             dtype=dtype,
+            layers={"original": data.copy()},
         )
 
     @staticmethod
