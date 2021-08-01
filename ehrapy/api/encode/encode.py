@@ -41,7 +41,7 @@ class Encoder:
                     ann_data, encoded_x, encoded_var_names, categorical, is_encoded, col_indices
                 )
 
-            # update layer content with the new categorical encoding and the old other values
+            # update layer content with the latest categorical encoding and the old other values
             updated_layer = Encoder.update_layer_after_encode(
                 ann_data.layers["original"], encoded_x, encoded_var_names, ann_data.var_names.to_list(), cat_names
             )
@@ -76,12 +76,20 @@ class Encoder:
                     )
 
             # update original layer content with the new categorical encoding and the old other values
-            # TODO FIX update layer for "again encoding"
-            # updated_layer = Encoder.update_layer_after_encode(ann_data.layers['original'], encoded_x, encoded_var_names, ann_data.var_names.to_list(),
-            # cat_encode_mode_keys)
+            updated_layer = Encoder.update_layer_after_encode(
+                ann_data.layers["original"],
+                encoded_x,
+                encoded_var_names,
+                ann_data.var_names.to_list(),
+                cat_encode_mode_keys,
+            )
 
             encoded_ann_data = AnnData(
-                encoded_x, obs=ann_data.obs.copy(), var=dict(var_names=encoded_var_names), uns=ann_data.uns.copy()
+                encoded_x,
+                obs=ann_data.obs.copy(),
+                var=dict(var_names=encoded_var_names),
+                uns=ann_data.uns.copy(),
+                layers={"original": updated_layer},
             )
         del ann_data.obs
         del ann_data.X
@@ -144,10 +152,7 @@ class Encoder:
         if not is_encoded:
             del var_names[idx]
         else:
-            print(encoded_indices[0])
-            print(encoded_indices[-1])
-            for i in range(encoded_indices[-1] - 1, encoded_indices[0] - 1, -1):
-                del var_names[i]
+            del var_names[encoded_indices[0]: encoded_indices[-1]]
         temp_var_names = cat_prefixes + var_names
 
         return temp_x, temp_var_names
@@ -165,19 +170,23 @@ class Encoder:
                 old_var_names: The previous var names
                 cats: All previous categorical names
         """
-        indices = set()
-        # get the indices for all categoricals in the old original layer
-        for cat in cats:
-            indices.add(old_var_names.index(cat))
-        # get the stop index up to which the (encoded) categoricals are stored
-        stop_index = next(i for i in range(len(new_var_names)) if not new_var_names[i].startswith("ehrapycat"))
-        # create a selector that filters als indices that are not categorical columns in the old original layer
-        selector = [x for x in range(old_layer.shape[1]) if x not in indices]
+        # get the index of the first column of the new encoded X, that does not store an encoded categorical
+        new_cat_stop_index = next(i for i in range(len(new_var_names)) if not new_var_names[i].startswith("ehrapycat"))
+        # get the index of the first column of the old encoded X, that does not store an encoded categorical
+        old_cat_stop_index = next(i for i in range(len(old_var_names)) if not old_var_names[i].startswith("ehrapycat"))
+        # keep track of all indices with original value columns, that are (and were) not encoded
+        idx_list = []
+        for idx, col_name in enumerate(old_var_names[old_cat_stop_index:]):
+            # this case is needed, when there are one or more numerical (but categorical) columns, that was not encoded yet
+            if col_name not in cats:
+                idx_list.append(idx + old_cat_stop_index)
         # slice old original layer using the selector
-        old_layer_view = old_layer[:, selector]
-        # get all encoded categoricals
-        new_encoded_cats = new_x[:, :stop_index]
-        updated_layer = np.hstack((new_encoded_cats, old_layer_view))
+        old_layer_view = old_layer[:, idx_list]
+        # get all encoded categoricals of X
+        encoded_cats = new_x[:, :new_cat_stop_index]
+        # horizontally stack all encoded categoricals and the remaining "old original values"
+        updated_layer = np.hstack((encoded_cats, old_layer_view))
+        del old_layer
         return updated_layer
 
     @staticmethod
