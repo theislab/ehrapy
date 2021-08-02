@@ -1,39 +1,25 @@
-from enum import Enum
 from pathlib import Path
 from typing import Generator, Iterable, Iterator, List, Optional, Union
 
 import numpy as np
-from anndata import AnnData, read_h5ad
+from anndata import AnnData
+from anndata import read as read_h5ad
 from rich import print
 
 from ehrapy.api.data.dataloader import Dataloader
-
-
-class Empty(Enum):
-    token = 0
-
-
-_empty = Empty.token
+from ehrapy.api.io.utility_io import _slugify, avail_exts, is_float, is_int, is_valid_filename
 
 
 class Datareader:
-
-    avail_exts = {"csv", "tsv", "tab", "txt"}
-
-    @staticmethod
-    def homogeneous_type(seq):
-        iseq = iter(seq)
-        first_type = type(next(iseq))
-        return first_type if all((type(x) is first_type) for x in iseq) else False
-
     @staticmethod
     def read(
         filename: Union[Path, str],
         extension: Optional[str] = None,
         delimiter: Optional[str] = None,
+        cache: bool = False,
         backup_url: Optional[str] = None,
     ) -> AnnData:
-        """Read file and return :class:`~pandas.DataFrame` object.
+        """Read file and return :class:`~anndata.AnnData` object.
 
         To speed up reading, consider passing ``cache=True``, which creates an hdf5 cache file.
 
@@ -42,6 +28,7 @@ class Datareader:
             extension: Extension that indicates the file type. If ``None``, uses extension of filename.
             delimiter: Delimiter that separates data within text file. If ``None``, will split at arbitrary number of white spaces,
                        which is different from enforcing splitting at any single white space ``' '``.
+            cache: If `False`, read from source, if `True`, read from fast 'h5ad' cache.
             backup_url: Retrieve the file from an URL if not present on disk.
 
         Returns:
@@ -54,7 +41,7 @@ class Datareader:
             is_zip: bool = output_file_name.endswith(".zip")
             Dataloader.download(backup_url, output_file_name=output_file_name, is_zip=is_zip)
 
-        raw_anndata = Datareader._read(file, ext=extension, delimiter=delimiter)
+        raw_anndata = Datareader._read(file, ext=extension, delimiter=delimiter, cache=cache)
 
         return raw_anndata
 
@@ -63,14 +50,29 @@ class Datareader:
         filename: Path,
         ext=None,
         delimiter=None,
+        cache: bool = False,
+        backup_url: Optional[str] = None,
     ) -> AnnData:
-        if ext is not None and ext not in Datareader.avail_exts:
-            raise ValueError("Please provide one of the available extensions.\n" f"{Datareader.avail_exts}")
+        if ext is not None and ext not in avail_exts:
+            raise ValueError("Please provide one of the available extensions.\n" f"{avail_exts}")
         else:
-            ext = Datareader.is_valid_filename(filename, return_ext=True)
+            ext = is_valid_filename(filename, return_ext=True)
         # read hdf5 files
         if ext in {"h5", "h5ad"}:
             return read_h5ad(filename)
+
+        is_present = Datareader._check_datafile_present_and_download(filename, backup_url=backup_url)
+        if not is_present:
+            print(f"[bold red]... did not find original file {filename}")
+        # TODO REPLACE WITH SETTINGS cachedir
+        path_cache = Path.cwd() / _slugify(filename).replace("." + ext, ".h5ad")  # type: Path
+        if path_cache.suffix in {".gz", ".bz2"}:
+            path_cache = path_cache.with_suffix("")
+        if cache and path_cache.is_file():
+            return read_h5ad(path_cache)
+
+        if not is_present:
+            raise FileNotFoundError(f"Did not find file {filename}.")
 
         # do the actual reading
         if ext == "csv":
@@ -79,6 +81,14 @@ class Datareader:
             raw_anndata = Datareader.read_text(filename, delimiter, dtype="object")
         else:
             raise ValueError(f"Unknown extension {ext}.")
+
+        # TODO: FIX, does not work currently
+        # if cache:
+        #  if not path_cache.parent.is_dir():
+        #     path_cache.parent.mkdir(parents=True)
+        # write for faster reading when calling the next time
+        # raw_anndata.write(path_cache)
+
         return raw_anndata
 
     @staticmethod
@@ -162,14 +172,14 @@ class Datareader:
                     raise ValueError(f"Did not find delimiter {delimiter!r} in first line.")
                 line_list = line.split(delimiter)
                 # the first column might be row names, so check the last
-                if not Datareader.is_float(line_list[-1]):
+                if not is_float(line_list[-1]):
                     col_names = line_list
                     # TODO: Throw warning exception here that no ID column found? -> We expect it to be the first col!
                     if "patient_id" == col_names[0].lower():
                         id_column_avail = True
                     # logg.msg("    assuming first line in file stores column names", v=4)
                 else:
-                    if not Datareader.is_float(line_list[0]):
+                    if not is_float(line_list[0]):
                         row_names.append(line_list[0])
                         Datareader._cast_vals_to_numeric(line_list[1:])
                         data.append(np.array(line_list[1:], dtype=dtype))
@@ -252,60 +262,37 @@ class Datareader:
         )
 
     @staticmethod
+    def _check_datafile_present_and_download(path, backup_url=None):
+        """Check whether the file is present, otherwise download."""
+        path = Path(path)
+        if path.is_file():
+            return True
+        if backup_url is None:
+            return False
+        if not path.parent.is_dir():
+            path.parent.mkdir(parents=True)
+
+        Dataloader.download(backup_url, output_file_name=str(path))
+        return True
+
+    @staticmethod
     def _cast_vals_to_numeric(row: List[Optional[Union[str, int, float]]]) -> List[Optional[Union[str, int, float]]]:
         """Cast values to numerical datatype if possible"""
         for idx, val in enumerate(row):
-            _is_int = Datareader.is_int(val)
+            _is_int = is_int(val)
             if val == "0":
                 row[idx] = 0
             elif val == "":
                 row[idx] = None
             elif _is_int:
                 row[idx] = _is_int
-            elif Datareader.is_float(val):
+            elif is_float(val):
                 row[idx] = float(val)
         return row
 
     @staticmethod
-    def is_valid_filename(filename: Path, return_ext=False):
-        """Check whether the argument is a filename."""
-        ext = filename.suffixes
-
-        if len(ext) > 2:
-            ext = ext[-2:]
-
-        if ext and ext[-1][1:] in Datareader.avail_exts:
-            return ext[-1][1:] if return_ext else True
-        elif not return_ext:
-            return False
-        raise ValueError(
-            f"""\
-    {filename!r} does not end on a valid extension.
-    Please, provide one of the available extensions.
-    {Datareader.avail_exts}
-    """
-        )
-
-    @staticmethod
-    def is_float(string):
-        """\
-        Check whether string is float.
-        See also
-        --------
-        http://stackoverflow.com/questions/736043/checking-if-a-string-can-be-converted-to-float-in-python
-        """
-        try:
-            float(string)
-            return True
-        except ValueError:
-            return False
-
-    @staticmethod
-    def is_int(string):
-        """\
-        Check whether string is int.
-        """
-        try:
-            return int(string)
-        except ValueError:
-            return False
+    def homogeneous_type(seq):
+        """Check, whether all elements in an iterable are of the same type"""
+        iseq = iter(seq)
+        first_type = type(next(iseq))
+        return first_type if all((type(x) is first_type) for x in iseq) else False
