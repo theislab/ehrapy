@@ -7,38 +7,44 @@ from pandas.api.types import infer_dtype
 from rich import print
 
 
-def _detect_categorical_columns(arr: np.ndarray, names: List[str]) -> Mapping[str, List[Optional[str]]]:
+def _detect_categorical_columns(data: np.ndarray, col_names: List[str]) -> Mapping[str, List[Optional[str]]]:
     """Autodetect all categorical columns in a DataFrame
 
+    ehrapy makes educated guesses on which columns of the data might be of categorical type.
+    These need to be encoded into numbers to allow for downstream analysis.
+    For details see: :func:`~ehrapy.api.data._categoricals._is_categorical_column`
+
     Args:
-        df:
-           The original dataframe
+        data: Numpy array of the data to inspect. Usually AnnData's X
+        col_names: The names of the column of the data
 
     Returns:
         A dictionary containing all categorical column names with a hint on whether they need to be encoded or not
-
     """
     categoricals: Mapping[str, List[Optional[str]]] = {
         "categorical_encoded": [],
         "categorical_not_encoded": [],
         "not_categorical": [],
     }
-    for i in range(arr.shape[1]):
-        is_cat, key = _is_categorical_column(arr[::, i : i + 1 :].ravel(), names[i])
-        categoricals[key].append(names[i])
+    for i in range(data.shape[1]):
+        is_cat, key = _is_categorical_column(data[::, i : i + 1 :].ravel(), col_names[i])
+        categoricals[key].append(col_names[i])
     return categoricals
 
 
-def _is_categorical_column(col: np.ndarray, name: str) -> Tuple[bool, str]:
+def _is_categorical_column(
+    col: np.ndarray, col_name: str
+) -> Tuple[bool, str]:  # TODO The return type should maybe be a Dataclass or something
     """Check for a single column, whether it's categorical or not.
 
     For string columns, a column will be counted as categorical, if there are at least two duplicate elements.
     For numerical values, a column will be counted as categorical, if there are at most TODO non-unique elements.
-    Boolean columns or numerical columns with only one or two categories won't be counted as categorical, since they
+    Boolean columns or numerical columns with only one or two categories won't be counted as categorical since they
     won't require any encoding.
 
     Args:
-        col: The column
+        col: The column to inspect
+        col_name: The name of the column to inspect
 
     Returns:
         Whether a column is categorical or not and the appropriate key indicating whether this columns needs encoding or not
@@ -56,10 +62,9 @@ def _is_categorical_column(col: np.ndarray, name: str) -> Tuple[bool, str]:
                 return True, "categorical_encoded"
             else:
                 return True, "categorical_not_encoded"
-    # TODO: Which type of exception?
-    except Exception:
+    except ValueError:
         print(
-            f"[bold red] Could not cast column {name} to Categorical type. Please file an issue"
+            f"[bold red] Could not cast column {col_name} to Categorical type. Please file an issue"
             f"at https://github.com/ehrapy!"
         )
         sys.exit(1)

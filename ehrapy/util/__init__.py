@@ -3,6 +3,7 @@ from rich.text import Text
 from rich.tree import Tree
 
 
+# TODO This should not be in utils!
 def view_vars(ann_data):
     tree = Tree(
         f"[bold red]Variable names for AnnData object with {len(ann_data.raw.var_names)} variables",
