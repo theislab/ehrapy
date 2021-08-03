@@ -29,13 +29,13 @@ def _slugify(path: Union[str, PurePath]) -> str:
     if not isinstance(path, PurePath):
         path = PurePath(path)
     parts = list(path.parts)
-    if parts[0] == '/':
+    if parts[0] == "/":
         parts.pop(0)
-    elif len(parts[0]) == 3 and parts[0][1:] == ':\\':
+    elif len(parts[0]) == 3 and parts[0][1:] == ":\\":
         parts[0] = parts[0][0]  # C:\ → C
-    filename = '-'.join(parts)
-    assert '/' not in filename, filename
-    assert not filename[1:].startswith(':'), filename
+    filename = "-".join(parts)
+    assert "/" not in filename, filename
+    assert not filename[1:].startswith(":"), filename
     return filename
 
 
