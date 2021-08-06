@@ -177,7 +177,7 @@ class Encoder:
         arr = Encoder.init_encoding(ann_data, categories)
 
         label_encoder = LabelEncoder()
-        row_vec = arr.ravel()
+        row_vec = arr.ravel()  # type: ignore
         label_encoder.fit(row_vec)
         category_prefixes = [f"ehrapycat_{category}" for category in categories]
         transformed = label_encoder.transform(row_vec)
@@ -336,7 +336,7 @@ class Encoder:
         var_names: List[str],
         cat_prefixes: List[str],
         categoricals: List[str],
-    ) -> Tuple[np.array, List[str]]:
+    ) -> Tuple[np.ndarray, List[str]]:
         """Update X and var_names after each encoding
         Args:
             X: Current (old) X
@@ -362,7 +362,7 @@ class Encoder:
     def init_encoding(
         ann_data: AnnData,
         cats: List[str],
-    ) -> np.array:
+    ) -> np.ndarray:
         """Get all original values for every categorical, that needs to be encoded (again)
 
         Args:
@@ -404,7 +404,7 @@ class Encoder:
         return idx_list
 
     @staticmethod
-    def add_categories_to_obs(ann_data: AnnData, categories_names: Set[str]) -> None:
+    def add_categories_to_obs(ann_data: AnnData, categories_names: List) -> None:
         """Add the original categorical values to obs.
 
         Args:
@@ -418,7 +418,7 @@ class Encoder:
                 ann_data.obs[var_name] = ann_data.X[::, idx : idx + 1]
 
     @staticmethod
-    def add_categories_to_uns(ann_data: AnnData, cat_names: Set[str]) -> None:
+    def add_categories_to_uns(ann_data: AnnData, cat_names: List) -> None:
         """Add the original categorical values to uns.
 
         Args:

@@ -11,7 +11,7 @@ class Datawriter:
     def write(
         filename: Union[str, Path],
         adata: AnnData,
-        extension: Optional[Literal["h5", "csv", "txt"]] = None,
+        extension: Union[str, bool] = None,
         compression: Optional[Literal["gzip", "lzf"]] = "gzip",
         compression_opts: Optional[int] = None,
     ) -> None:

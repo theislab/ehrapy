@@ -1,5 +1,5 @@
 from pathlib import Path, PurePath
-from typing import Tuple, Union
+from typing import Union
 
 supported_extensions = {"csv", "tsv", "tab", "txt"}
 
@@ -74,7 +74,7 @@ def is_float(string) -> bool:
         return False
 
 
-def is_int(string: str) -> bool:
+def is_int(string: Union[str, float]) -> bool:
     """Checks whether a string can be converted into an integer
 
     Args:

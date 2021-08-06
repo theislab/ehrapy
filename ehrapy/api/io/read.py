@@ -196,12 +196,12 @@ class Datareader:
             # try reading col_names from the last comment line
             if len(comments) > 0:
                 # logg.msg("    assuming last comment line stores variable names", v=4)
-                column_names = np.array(comments[-1].split())
+                column_names_arr = np.array(comments[-1].split())
             # just numbers as col_names
             else:
                 # logg.msg("    did not find column names in file", v=4)
-                column_names = np.arange(len(data[0])).astype(str)
-        column_names = np.array(column_names, dtype=str)
+                column_names_arr = np.arange(len(data[0])).astype(str)
+        column_names_arr = np.array(column_names, dtype=str)
         # read another line to check if first column contains row names or not
         for line in lines:
             line_list = line.split(delimiter)
@@ -220,7 +220,7 @@ class Datareader:
             #     "    assuming first row stores column names and first column row names",
             #     v=4,
             # )
-            column_names = np.array(data[0]).astype(int).astype(str)
+            column_names_arr = np.array(data[0]).astype(int).astype(str)
             row_names.append(data[1][0].astype(int).astype(str))
             data = [data[1][1:]]
         # parse the file
@@ -243,31 +243,31 @@ class Datareader:
             raise ValueError(
                 f"Length of first line ({data[0].size}) is different " f"from length of last line ({data[-1].size})."
             )
-        data = np.array(data, dtype=dtype)
+        data_arr = np.array(data, dtype=dtype)
         # logg.msg("    constructed array from list of list", t=True, v=4)
         # transform row_names
         if not row_names:
-            row_names = np.arange(len(data)).astype(str)
+            row_names_arr = np.arange(len(data_arr)).astype(str)
             # logg.msg("    did not find row names in file", v=4)
         else:
-            row_names = np.array(row_names)
-            for iname, name in enumerate(row_names):
-                row_names[iname] = name.strip('"')
+            row_names_arr = np.array(row_names)
+            for iname, name in enumerate(row_names_arr):
+                row_names_arr[iname] = name.strip('"')
         # adapt col_names if necessary
-        if column_names.size > data.shape[1]:
-            column_names = column_names[1:]
-        for iname, name in enumerate(column_names):
-            column_names[iname] = name.strip('"')
+        if column_names_arr.size > data_arr.shape[1]:
+            column_names_arr = column_names_arr[1:]
+        for iname, name in enumerate(column_names_arr):
+            column_names_arr[iname] = name.strip('"')
         return AnnData(
-            data,
-            obs=dict(obs_names=row_names),
-            var=dict(var_names=column_names),
+            data_arr,
+            obs=dict(obs_names=row_names_arr),
+            var=dict(var_names=column_names_arr),
             dtype=dtype,
-            layers={"original": data.copy()},
+            layers={"original": data_arr.copy()},
         )
 
     @staticmethod
-    def _check_datafile_present_and_download(path: str, backup_url=None) -> bool:
+    def _check_datafile_present_and_download(path: Union[str, Path], backup_url=None) -> bool:
         """Check whether the file is present, otherwise download.
 
         Args:
