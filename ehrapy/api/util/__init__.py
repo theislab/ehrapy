@@ -1,14 +1,20 @@
+from anndata import AnnData
 from rich import print
 from rich.text import Text
 from rich.tree import Tree
 
 
-# TODO This should not be in utils!
-def view_vars(ann_data):
+def vars_tree(ann_data: AnnData) -> None:
+    """Prints a tree of all vars of an AnnData object.
+
+    Args:
+        ann_data: The AnnData object to print the vars from
+    """
     tree = Tree(
-        f"[bold red]Variable names for AnnData object with {len(ann_data.raw.var_names)} variables",
+        f"[bold green]Variable names for AnnData object with {len(ann_data.raw.var_names)} variables",
         guide_style="underline2 bright_blue",
     )
+    # TODO generalize this method
     branch = tree.add(Text("📄 " + "Categoricals"), style="bold green")
     branch.add("Day_ICU_intime with 7 different categories", style="blue")
     branch.add("Service_unit with 3 different categories", style="blue")

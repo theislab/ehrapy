@@ -53,10 +53,10 @@ def _is_categorical_column(
     if c_dtype == "categorical":
         return True, "categorical_encoded"
     try:
-        c = pd.Categorical(col)
+        categorical = pd.Categorical(col)
         # when we only have unary/binary numerical categories
-        if 1 <= len(c.categories) <= 2 or (
-            (c_dtype == "floating" or c_dtype == "integer") and 1 <= len(c.categories) <= 2
+        if 1 <= len(categorical.categories) <= 2 or (
+            (c_dtype == "floating" or c_dtype == "integer") and 1 <= len(categorical.categories) <= 2
         ):
             if c_dtype != "floating" and c_dtype != "integer":
                 return True, "categorical_encoded"
@@ -64,17 +64,17 @@ def _is_categorical_column(
                 return True, "categorical_not_encoded"
     except ValueError:
         print(
-            f"[bold red] Could not cast column {col_name} to Categorical type. Please file an issue"
-            f"at https://github.com/ehrapy!"
+            f"[bold red] Could not cast column {col_name} to Categorical type.\n"
+            f"Please file an issue at https://github.com/ehrapy!"
         )
         sys.exit(1)
     if c_dtype == "string":
-        if len(c.categories) >= len(c):
+        if len(categorical.categories) >= len(categorical):
             return False, "not_categorical"
         return True, "categorical_encoded"
     elif c_dtype == "floating" or c_dtype == "integer" or c_dtype == "mixed-integer-float":
         # TODO: Find a good threshold
-        if len(c.categories) > len(c) * 0.5:
+        if len(categorical.categories) > len(categorical) * 0.5:
             return False, "not_categorical"
         return True, "categorical_not_encoded"
     # free text, non categorical numerical columns, datetime
