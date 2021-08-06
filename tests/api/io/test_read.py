@@ -2,7 +2,7 @@ from pathlib import Path
 
 import numpy as np
 
-from ehrapy.api.io.read import Datareader
+from ehrapy.api.io.read import DataReader
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_PATH = f"{CURRENT_DIR}/test_data_io"
@@ -10,7 +10,7 @@ _TEST_PATH = f"{CURRENT_DIR}/test_data_io"
 
 class TestRead:
     def test_read_csv(self):
-        ann_data = Datareader.read(filename=f"{_TEST_PATH}/dataset1.csv")
+        ann_data = DataReader.read(filename=f"{_TEST_PATH}/dataset1.csv")
         matrix = np.array(
             [[14, 500, "false"], [7, 330, "false"], [10, 800, "true"], [11, 765, "true"], [3, 800, "true"]]
         )
@@ -21,7 +21,7 @@ class TestRead:
         assert id(ann_data.layers["original"]) != id(ann_data.X)
 
     def test_read_tsv(self):
-        ann_data = Datareader.read(filename=f"{_TEST_PATH}/dataset2.tsv")
+        ann_data = DataReader.read(filename=f"{_TEST_PATH}/dataset2.tsv")
         matrix = np.array(
             [
                 [54, 185.34, "FALSE"],

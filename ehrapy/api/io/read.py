@@ -10,7 +10,7 @@ from ehrapy.api.data.dataloader import Dataloader
 from ehrapy.api.io.utility_io import _slugify, is_float, is_int, is_valid_filename, supported_extensions
 
 
-class Datareader:
+class DataReader:
     @staticmethod
     def read(
         filename: Union[Path, str],
@@ -41,7 +41,7 @@ class Datareader:
             is_zip: bool = output_file_name.endswith(".zip")  # TODO can we generalize this to tar files as well?
             Dataloader.download(backup_url, output_file_name=output_file_name, is_zip=is_zip)
 
-        raw_anndata = Datareader._read(file, extension=extension, delimiter=delimiter, cache=cache)
+        raw_anndata = DataReader._read(file, extension=extension, delimiter=delimiter, cache=cache)
 
         return raw_anndata
 
@@ -62,7 +62,7 @@ class Datareader:
         if extension in {"h5", "h5ad"}:
             return read_h5ad(filename)
 
-        is_present = Datareader._check_datafile_present_and_download(filename, backup_url=backup_url)
+        is_present = DataReader._check_datafile_present_and_download(filename, backup_url=backup_url)
         if not is_present:
             print(f"[bold red]Unable to find original file {filename}")
         # TODO REPLACE WITH SETTINGS cachedir
@@ -77,9 +77,9 @@ class Datareader:
 
         # do the actual reading
         if extension == "csv":
-            raw_anndata = Datareader.read_csv(filename, dtype="object")
+            raw_anndata = DataReader.read_csv(filename, dtype="object")
         elif extension in {"txt", "tab", "data", "tsv"}:
-            raw_anndata = Datareader.read_text(filename, delimiter, dtype="object")
+            raw_anndata = DataReader.read_text(filename, delimiter, dtype="object")
         else:
             raise ValueError(f"Unknown extension {extension}.")
 
@@ -115,7 +115,7 @@ class Datareader:
         Returns:
             An empty AnnData object
         """
-        return Datareader.read_text(filename, delimiter, dtype)
+        return DataReader.read_text(filename, delimiter, dtype)
 
     @staticmethod
     def read_text(
@@ -140,11 +140,11 @@ class Datareader:
             An empty AnnData object
         """
         if not isinstance(filename, (Path, str, bytes)):
-            return Datareader._read_text(filename, delimiter, dtype)
+            return DataReader._read_text(filename, delimiter, dtype)
 
         filename = Path(filename)
         with filename.open() as f:
-            return Datareader._read_text(f, delimiter, dtype)
+            return DataReader._read_text(f, delimiter, dtype)
 
     @staticmethod
     def iter_lines(file_like: Iterable[str]) -> Generator[str, None, None]:
@@ -162,7 +162,7 @@ class Datareader:
     ) -> AnnData:
         comments: List = []
         data: List = []
-        lines: Generator = Datareader.iter_lines(f)
+        lines: Generator = DataReader.iter_lines(f)
         column_names: List = []
         row_names: List = []
         id_column_avail: bool = False
@@ -186,10 +186,10 @@ class Datareader:
                 else:
                     if not is_float(line_list[0]):
                         row_names.append(line_list[0])
-                        Datareader._cast_vals_to_numeric(line_list[1:])
+                        DataReader._cast_vals_to_numeric(line_list[1:])
                         data.append(np.array(line_list[1:], dtype=dtype))
                     else:
-                        Datareader._cast_vals_to_numeric(line_list)
+                        DataReader._cast_vals_to_numeric(line_list)
                         data.append(np.array(line_list, dtype=dtype))
                 break
         if not column_names:
@@ -208,10 +208,10 @@ class Datareader:
             if id_column_avail:
                 # logg.msg("    assuming first column in file stores row names", v=4)
                 row_names.append(line_list[0])
-                Datareader._cast_vals_to_numeric(line_list[1:])
+                DataReader._cast_vals_to_numeric(line_list[1:])
                 data.append(np.array(line_list[1:], dtype=dtype))
             else:
-                Datareader._cast_vals_to_numeric(line_list)
+                DataReader._cast_vals_to_numeric(line_list)
                 data.append(np.array(line_list, dtype=dtype))
             break
         # if row names are just integers
@@ -228,10 +228,10 @@ class Datareader:
             line_list = line.split(delimiter)
             if id_column_avail:
                 row_names.append(line_list[0])
-                Datareader._cast_vals_to_numeric(line_list[1:])
+                DataReader._cast_vals_to_numeric(line_list[1:])
                 data.append(np.array(line_list[1:], dtype=dtype))
             else:
-                Datareader._cast_vals_to_numeric(line_list)
+                DataReader._cast_vals_to_numeric(line_list)
                 data.append(np.array(line_list, dtype=dtype))
         # logg.msg("    read data into list of lists", t=True, v=4)
         # transfrom to array, this takes a long time and a lot of memory

@@ -6,7 +6,7 @@ from anndata import AnnData
 from ehrapy.api.io.utility_io import is_valid_filename
 
 
-class Datawriter:
+class DataWriter:
     @staticmethod
     def write(
         filename: Union[str, Path],
@@ -40,7 +40,7 @@ class Datawriter:
             key = filename
             # TODO get default format from settings
             extension = "csv" if extension is None else extension
-            filename = Datawriter._get_filename_from_key(key, extension)
+            filename = DataWriter._get_filename_from_key(key, extension)
         if extension == "csv":
             adata.write_csvs(filename)
         else:
