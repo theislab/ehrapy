@@ -1,5 +1,6 @@
 import sys
-from typing import List, Mapping, Optional, Tuple
+from dataclasses import dataclass
+from typing import List, Mapping, Optional
 
 import numpy as np
 import pandas as pd
@@ -27,14 +28,18 @@ def _detect_categorical_columns(data: np.ndarray, col_names: List[str]) -> Mappi
         "not_categorical": [],
     }
     for i in range(data.shape[1]):
-        is_cat, key = _is_categorical_column(data[::, i : i + 1 :].ravel(), col_names[i])
-        categoricals[key].append(col_names[i])
+        categorical_column = _is_categorical_column(data[::, i : i + 1 :].ravel(), col_names[i])
+        categoricals[categorical_column.categorical_type].append(col_names[i])
     return categoricals
 
 
-def _is_categorical_column(
-    col: np.ndarray, col_name: str
-) -> Tuple[bool, str]:  # TODO The return type should maybe be a Dataclass or something
+@dataclass
+class CategoricalColumnType:
+    is_categorical: bool  # TODO we never use this boolean. Should we get rid of it?
+    categorical_type: str
+
+
+def _is_categorical_column(col: np.ndarray, col_name: str) -> CategoricalColumnType:
     """Check for a single column, whether it's categorical or not.
 
     For string columns, a column will be counted as categorical, if there are at least two duplicate elements.
@@ -51,7 +56,7 @@ def _is_categorical_column(
     """
     c_dtype = infer_dtype(col)
     if c_dtype == "categorical":
-        return True, "categorical_encoded"
+        return CategoricalColumnType(True, "categorical_encoded")
     try:
         categorical = pd.Categorical(col)
         # when we only have unary/binary numerical categories
@@ -59,9 +64,9 @@ def _is_categorical_column(
             (c_dtype == "floating" or c_dtype == "integer") and 1 <= len(categorical.categories) <= 2
         ):
             if c_dtype != "floating" and c_dtype != "integer":
-                return True, "categorical_encoded"
+                return CategoricalColumnType(True, "categorical_encoded")
             else:
-                return True, "categorical_not_encoded"
+                return CategoricalColumnType(True, "categorical_not_encoded")
     except ValueError:
         print(
             f"[bold red] Could not cast column {col_name} to Categorical type.\n"
@@ -70,12 +75,12 @@ def _is_categorical_column(
         sys.exit(1)
     if c_dtype == "string":
         if len(categorical.categories) >= len(categorical):
-            return False, "not_categorical"
-        return True, "categorical_encoded"
+            return CategoricalColumnType(False, "not_categorical")
+        return CategoricalColumnType(True, "categorical_encoded")
     elif c_dtype == "floating" or c_dtype == "integer" or c_dtype == "mixed-integer-float":
         # TODO: Find a good threshold
         if len(categorical.categories) > len(categorical) * 0.5:
-            return False, "not_categorical"
-        return True, "categorical_not_encoded"
+            return CategoricalColumnType(False, "not_categorical")
+        return CategoricalColumnType(True, "categorical_not_encoded")
     # free text, non categorical numerical columns, datetime
-    return False, "not_categorical"
+    return CategoricalColumnType(False, "not_categorical")
