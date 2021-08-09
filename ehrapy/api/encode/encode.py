@@ -59,9 +59,13 @@ class Encoder:
         else:
             ann_data.uns["categoricals_encoded_with_mode"] = categoricals_encode_mode
             categoricals = list(chain(*categoricals_encode_mode.values()))
+            # ensure no categorical column gets encoded twice
+            if len(categoricals) != len(set(categoricals)):
+                raise ValueError("The categorical column names given contain at least one duplicate column. Check the column names "
+                                 "to ensure not encoding a column twice!")
             Encoder.add_cats_to_obs(ann_data, categoricals)
             Encoder.add_cats_to_uns(ann_data, categoricals)
-
+            current_encodings = {"current_encodings": {}} if "current_encodings" not in ann_data.uns.keys() else ann_data.uns["current_encodings"]
             encoded_x = None
             encoded_var_names = ann_data.var_names.to_list()
 
@@ -71,18 +75,24 @@ class Encoder:
                         f"Unknown encoding mode {encoding_mode}. Please provide one of the following encoding modes:\n"
                         f"{Encoder.available_encode_modes}"
                     )
+                # check, whether encoding mode encodes multiple columns together
+                # this will be important, when a column gets encoded again, since all the other encoded columns need to be encoded again as well
+                is_multiple_encoding = Encoder.is_multiple_encode_mode(encoding_mode)
                 encode_mode_switcher = {
                     "one_hot_encoding": Encoder.one_hot_encoding,
                     "label_encoding": Encoder.label_encoding,
                     "count_encoding": Encoder.count_encoding,
                     # TODO: Hash and sum encoding hashes/sum several columns together, to be shape consistent its necessary (if encode again)
                     # TODO: to encode every column previously hashed/summed again if any of them gets anecoded again (throw error if not)
-                    # "hash_encoding": Encoder.hash_encoding,
-                    # "sum_encoding": Encoder.sum_encoding,
+                    "hash_encoding": Encoder.hash_encoding,
+                    "sum_encoding": Encoder.sum_encoding,
                 }
                 encoded_x, encoded_var_names = encode_mode_switcher[encoding_mode](
                     ann_data, encoded_x, encoded_var_names, categoricals_encode_mode[encoding_mode]
                 )
+                # update encoding history in uns
+                for categorical in categoricals_encode_mode[encoding_mode]:
+                    current_encodings["current_encodings"][categorical] = (encoding_mode, [] if not is_multiple_encoding else categoricals_encode_mode[encoding_mode])
 
             # update original layer content with the new categorical encoding and the old other values
             updated_layer = Encoder.update_layer_after_encode(
@@ -100,6 +110,9 @@ class Encoder:
                     uns=ann_data.uns.copy(),
                     layers={"original": updated_layer},
                 )
+                # update current encodings in uns
+                encoded_ann_data.uns['current_encodings'] = current_encodings
+
             # if the user did not pass at least every non numerical column for encoding, a Anndata object cannot be created
             except ValueError:
                 print(
@@ -325,7 +338,6 @@ class Encoder:
             ann_data: The current AnnData object
             cats: All categoricals, that need to be encoded
         """
-        # TODO EFFICIENCY? STH MORE EFFICIENT?
         # create numpy array from all original categorical values, that will be encoded (again)
         arr = np.array(
             [ann_data.uns["original_values_categoricals"][cats[i]].ravel() for i in range(len(cats))]
@@ -350,7 +362,7 @@ class Encoder:
         return idx_list
 
     @staticmethod
-    def add_cats_to_obs(ann_data: AnnData, cat_names: Set[str]) -> None:
+    def add_cats_to_obs(ann_data: AnnData, cat_names: List[str]) -> None:
         """Add the original categorical values to obs.
 
         Args:
@@ -364,7 +376,7 @@ class Encoder:
                 ann_data.obs[var_name] = ann_data.X[::, idx : idx + 1]
 
     @staticmethod
-    def add_cats_to_uns(ann_data: AnnData, cat_names: Set[str]) -> None:
+    def add_cats_to_uns(ann_data: AnnData, cat_names: List[str]) -> None:
         """Add the original categorical values to uns.
 
         Args:
@@ -381,3 +393,12 @@ class Encoder:
                 continue
             elif var_name in cat_names:
                 ann_data.uns["original_values_categoricals"][var_name] = ann_data.X[::, idx : idx + 1]
+
+    @staticmethod
+    def is_multiple_encode_mode(encode_mode: str) -> bool:
+        """
+
+        """
+        if encode_mode in {'sum_encoding', 'hash_encoding'}:
+            return True
+        return False
