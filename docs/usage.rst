@@ -20,17 +20,27 @@ You can then access the respective modules like:
     :local:
     :backlinks: none
 
-Data
-~~~~~
+Reading and writing
+~~~~~~~~~~~~~~~~~~~~
 
-.. module:: ehrapy.api.data
+.. module:: ehrapy.api
 .. currentmodule:: ehrapy
 
 .. autosummary::
-    :toctree: api
+    :toctree: read_write
+
+    io.read
+
+Data
+~~~~~
+
+.. module:: ehrapy.api
+.. currentmodule:: ehrapy
+
+.. autosummary::
+    :toctree: data
 
     data.mimic_2
-    data.mimic_3_demo
 
 Preprocessing
 ~~~~~~~~~~~~~

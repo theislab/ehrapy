@@ -1,0 +1,6 @@
+patient_id,los_days,b12_values,survival,clinic_day
+12,14,500,false,Friday
+13,7,330,false,Saturday
+14,10,800,true,Monday
+15,11,765,true,Sunday
+16,3,800,true,Friday

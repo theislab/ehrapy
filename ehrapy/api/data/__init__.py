@@ -1,1 +1,2 @@
-from ehrapy.api.data.dataloader import Dataloader  # noqa: F401
+from ehrapy.api.data.dataloader import Dataloader
+from ehrapy.api.data.datasets import mimic_2

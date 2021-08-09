@@ -27,6 +27,7 @@ repos:
             language: system
             types: [text]
             stages: [commit, push, manual]
+            exclude: docs/
           - id: flake8
             name: flake8
             entry: flake8
@@ -39,6 +40,7 @@ repos:
             language: system
             types: [text]
             stages: [commit, push, manual]
+            exclude: docs/
     - repo: https://github.com/pre-commit/mirrors-prettier
       rev: v2.3.0
       hooks:

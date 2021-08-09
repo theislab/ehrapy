@@ -1,34 +1,50 @@
 from pathlib import Path, PurePath
 from typing import Union
 
-avail_exts = {"csv", "tsv", "tab", "txt"}
+supported_extensions = {"csv", "tsv", "tab", "txt"}
 
 
-def is_valid_filename(filename: Path, return_ext=False):
-    """Check whether the argument is a filename."""
-    ext = filename.suffixes
+def is_valid_filename(file_path: Path, return_ext=False) -> Union[str, bool]:
+    """Check whether the argument is a filename.
+
+    Args:
+        file_path: Path to the file
+        return_ext: Whether to return the extension of the file
+
+    Returns:
+        True if the file contains a supported extension, False otherwise
+    """
+    ext = file_path.suffixes
 
     if len(ext) > 2:
         ext = ext[-2:]
 
-    if ext and ext[-1][1:] in avail_exts:
+    if ext and ext[-1][1:] in supported_extensions:
         return ext[-1][1:] if return_ext else True
     elif not return_ext:
         return False
     raise ValueError(
         f"""\
-{filename!r} does not end on a valid extension.
+{file_path!r} does not end on a valid extension.
 Please, provide one of the available extensions.
-{avail_exts}
+{supported_extensions}
 """
     )
 
 
-def _slugify(path: Union[str, PurePath]) -> str:
+def _slugify(file_path: Union[str, PurePath]) -> str:
+    """Transforms a Path into a string representation which is machine readable.
+
+    Args:
+        file_path: Path to the file
+
+    Returns:
+        Machine readable path representation as String
+    """
     """Make a path into a filename."""
-    if not isinstance(path, PurePath):
-        path = PurePath(path)
-    parts = list(path.parts)
+    if not isinstance(file_path, PurePath):
+        file_path = PurePath(file_path)
+    parts: list = list(file_path.parts)
     if parts[0] == "/":
         parts.pop(0)
     elif len(parts[0]) == 3 and parts[0][1:] == ":\\":
@@ -36,15 +52,20 @@ def _slugify(path: Union[str, PurePath]) -> str:
     filename = "-".join(parts)
     assert "/" not in filename, filename
     assert not filename[1:].startswith(":"), filename
+
     return filename
 
 
-def is_float(string):
-    """\
-    Check whether string is float.
-    See also
-    --------
+def is_float(string) -> bool:
+    """Checks whether a string can be converted into a float
+
     http://stackoverflow.com/questions/736043/checking-if-a-string-can-be-converted-to-float-in-python
+
+    Args:
+        string: The string to check for
+
+    Returns:
+        True if the string is float convertable, False otherwise
     """
     try:
         float(string)
@@ -53,11 +74,17 @@ def is_float(string):
         return False
 
 
-def is_int(string):
-    """\
-    Check whether string is int.
+def is_int(string: Union[str, float]) -> bool:
+    """Checks whether a string can be converted into an integer
+
+    Args:
+        string: The string to check for
+
+    Returns:
+        True if the string is int convertable, False otherwise
     """
     try:
-        return int(string)
+        int(string)
+        return True
     except ValueError:
         return False
