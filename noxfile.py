@@ -15,7 +15,7 @@ except ImportError:
     sys.exit(1)
 
 package = "ehrapy"
-python_versions = ["3.9"]
+python_versions = ["3.8"]
 nox.options.sessions = (
     "pre-commit",
     "safety",
@@ -120,7 +120,7 @@ def tests(session: Session) -> None:
     session.install(".")
     session.install("coverage[toml]", "pytest", "pygments")
     try:
-        session.run("coverage", "run", "--parallel", "-m", "pytest","-vv", *session.posargs)
+        session.run("coverage", "run", "--parallel", "-m", "pytest", *session.posargs)
     finally:
         if session.interactive:
             session.notify("coverage")

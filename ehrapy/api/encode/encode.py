@@ -4,7 +4,7 @@ from typing import Dict, List, Optional, Set, Tuple
 
 import numpy as np
 from anndata import AnnData
-from category_encoders import CountEncoder, HashingEncoder, SumEncoder
+from category_encoders import CountEncoder
 from rich import print
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
@@ -42,8 +42,10 @@ class Encoder:
             categorical_names = ann_data.uns["categoricals"]["categorical_encoded"]
             # TODO raise custom warning instead and proceed?
             if "current_encodings" in ann_data.uns.keys():
-                print("[bold yellow] The current data has already been encoded. It's not recommended to use autodetect with "
-                      "already encoded data.")
+                print(
+                    "[bold yellow] The current data has already been encoded. It's not recommended to use autodetect with "
+                    "already encoded data."
+                )
                 sys.exit(1)
             Encoder.add_categories_to_obs(ann_data, categorical_names)
             Encoder.add_categories_to_uns(ann_data, categorical_names)
@@ -60,7 +62,11 @@ class Encoder:
 
             # update layer content with the latest categorical encoding and the old other values
             updated_layer = Encoder.update_layer_after_encode(
-                ann_data.layers["original"], encoded_x, encoded_var_names, ann_data.var_names.to_list(), categorical_names
+                ann_data.layers["original"],
+                encoded_x,
+                encoded_var_names,
+                ann_data.var_names.to_list(),
+                categorical_names,
             )
             encoded_ann_data = AnnData(
                 encoded_x,
@@ -69,7 +75,9 @@ class Encoder:
                 uns=ann_data.uns.copy(),
                 layers={"original": updated_layer},
             )
-            encoded_ann_data.uns['current_encodings'] = {categorical: 'one_hot_encoding' for categorical in categorical_names}
+            encoded_ann_data.uns["current_encodings"] = {
+                categorical: "one_hot_encoding" for categorical in categorical_names
+            }
 
         # user passed categorical values with encoding mode for each
         else:
@@ -78,11 +86,15 @@ class Encoder:
 
             # ensure no categorical column gets encoded twice
             if len(categoricals) != len(set(categoricals)):
-                raise ValueError("The categorical column names given contain at least one duplicate column. Check the column names "
-                                 "to ensure not encoding a column twice!")
+                raise ValueError(
+                    "The categorical column names given contain at least one duplicate column. Check the column names "
+                    "to ensure not encoding a column twice!"
+                )
             Encoder.add_categories_to_obs(ann_data, categoricals)
             Encoder.add_categories_to_uns(ann_data, categoricals)
-            current_encodings = {} if "current_encodings" not in ann_data.uns.keys() else ann_data.uns["current_encodings"]
+            current_encodings = (
+                {} if "current_encodings" not in ann_data.uns.keys() else ann_data.uns["current_encodings"]
+            )
             encoded_x = None
             encoded_var_names = ann_data.var_names.to_list()
 
@@ -121,7 +133,7 @@ class Encoder:
                     layers={"original": updated_layer},
                 )
                 # update current encodings in uns
-                encoded_ann_data.uns['current_encodings'] = current_encodings
+                encoded_ann_data.uns["current_encodings"] = current_encodings
 
             # if the user did not pass at least every non numerical column for encoding, a Anndata object cannot be created
             # TODO can this be checked at an earlier time point?

@@ -1,6 +1,6 @@
+import warnings
 from pathlib import Path
 from typing import Generator, Iterable, Iterator, List, Optional, Union
-import warnings
 
 import numpy as np
 import pandas as pd
@@ -266,20 +266,22 @@ class DataReader:
 
     @staticmethod
     def _df_to_anndata(df: pd.DataFrame) -> AnnData:
-        """Create an AnnData object from the initial dataframe
-        """
+        """Create an AnnData object from the initial dataframe"""
         column_names = list(df.columns)
         if "patient_id" == column_names[0]:
             df = df.set_index("patient_id")
         else:
-            warnings.warn('Did not found patient_id column at column 0. Using default, numerical indices instead!', IndexColumnWarning)
+            warnings.warn(
+                "Did not found patient_id column at column 0. Using default, numerical indices instead!",
+                IndexColumnWarning,
+            )
         X = df.to_numpy(copy=True)
 
         return AnnData(
             X,
             obs=pd.DataFrame(index=df.index.map(str)),
             var=pd.DataFrame(index=list(df.columns)),
-            dtype='object',
+            dtype="object",
             layers={"original": X.copy()},
         )
 

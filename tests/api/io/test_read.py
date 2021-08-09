@@ -1,7 +1,7 @@
+import warnings
 from pathlib import Path
 
 import numpy as np
-import warnings
 
 from ehrapy.api.io.read import DataReader, IndexColumnWarning
 
@@ -12,9 +12,7 @@ _TEST_PATH = f"{CURRENT_DIR}/test_data_io"
 class TestRead:
     def test_read_csv(self):
         ann_data = DataReader.read(filename=f"{_TEST_PATH}/dataset1.csv")
-        matrix = np.array(
-            [[14, 500, False], [7, 330, False], [10, 800, True], [11, 765, True], [3, 800, True]]
-        )
+        matrix = np.array([[14, 500, False], [7, 330, False], [10, 800, True], [11, 765, True], [3, 800, True]])
         assert ann_data.X.shape == (5, 3)
         assert (ann_data.X == matrix).all()
         assert ann_data.var_names.to_list() == ["los_days", "b12_values", "survival"]
