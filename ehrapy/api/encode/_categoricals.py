@@ -1,6 +1,6 @@
 import sys
 from dataclasses import dataclass
-from typing import List, Mapping, Optional
+from typing import List, Mapping, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -8,7 +8,9 @@ from pandas.api.types import infer_dtype
 from rich import print
 
 
-def _detect_categorical_columns(data: np.ndarray, col_names: List[str]) -> Mapping[str, List[Optional[str]]]:
+def _detect_categorical_columns(
+    data: np.ndarray, col_names: Union[List[str], pd.Index]
+) -> Mapping[str, List[Optional[str]]]:
     """Autodetect all categorical columns in a DataFrame
 
     ehrapy makes educated guesses on which columns of the data might be of categorical type.
@@ -30,6 +32,7 @@ def _detect_categorical_columns(data: np.ndarray, col_names: List[str]) -> Mappi
     for i in range(data.shape[1]):
         categorical_column = _is_categorical_column(data[::, i : i + 1 :].ravel(), col_names[i])
         categoricals[categorical_column.categorical_type].append(col_names[i])
+
     return categoricals
 
 

@@ -21,7 +21,7 @@ class Encoder:
     def encode(
         ann_data: AnnData, autodetect: bool = False, categoricals_encode_mode: Dict = None
     ) -> AnnData:  # TODO specify Dict types
-        """Encode the inital read AnnData object. Categorical values could be either passed via parameters or autodetected.
+        """Encode the initial read AnnData object. Categorical values could be either passed via parameters or autodetected.
 
         Available encodings are:
 
@@ -43,8 +43,8 @@ class Encoder:
             # TODO raise custom warning instead and proceed?
             if "current_encodings" in ann_data.uns.keys():
                 print(
-                    "[bold yellow] The current data has already been encoded. It's not recommended to use autodetect with "
-                    "already encoded data."
+                    "[bold yellow] The current data has already been encoded."
+                    "It's not recommended to use autodetect with already encoded data."
                 )
                 sys.exit(1)
             Encoder.add_categories_to_obs(ann_data, categorical_names)

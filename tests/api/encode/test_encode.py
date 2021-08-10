@@ -18,17 +18,17 @@ class TestRead:
             )
 
     def test_duplicate_column_encoding(self):
-        ANN_DATA = DataReader.read(filename=f"{_TEST_PATH}/dataset1.csv")
+        adata = DataReader.read(filename=f"{_TEST_PATH}/dataset1.csv")
         with pytest.raises(ValueError):
             encoded_ann_data = Encoder.encode(  # noqa: F841
-                ANN_DATA,
+                adata,
                 autodetect=False,
                 categoricals_encode_mode={"label_encoding": ["survival"], "count_encoding": ["survival"]},
             )
 
     def test_autodetect_encode(self):
-        ANN_DATA = DataReader.read(filename=f"{_TEST_PATH}/dataset1.csv")
-        encoded_ann_data = Encoder.encode(ANN_DATA, autodetect=True)
+        adata = DataReader.read(filename=f"{_TEST_PATH}/dataset1.csv")
+        encoded_ann_data = Encoder.encode(adata, autodetect=True)
         assert list(encoded_ann_data.obs.columns) == ["survival", "clinic_day"]
         assert (
             encoded_ann_data.var_names
@@ -50,15 +50,15 @@ class TestRead:
         assert id(encoded_ann_data.X) != id(encoded_ann_data.layers["original"])
 
     def test_autodetect_encode_again(self):
-        ANN_DATA = DataReader.read(filename=f"{_TEST_PATH}/dataset1.csv")
-        encoded_ann_data = Encoder.encode(ANN_DATA, autodetect=True)
+        adata = DataReader.read(filename=f"{_TEST_PATH}/dataset1.csv")
+        encoded_ann_data = Encoder.encode(adata, autodetect=True)
         with pytest.raises(SystemExit):
             encoded_ann_data_again = Encoder.encode(encoded_ann_data, autodetect=True)  # noqa: F841
 
     def test_custom_encode(self):
-        ANN_DATA = DataReader.read(filename=f"{_TEST_PATH}/dataset1.csv")
+        adata = DataReader.read(filename=f"{_TEST_PATH}/dataset1.csv")
         encoded_ann_data = Encoder.encode(
-            ANN_DATA,
+            adata,
             autodetect=False,
             categoricals_encode_mode={"label_encoding": ["survival"], "one_hot_encoding": ["clinic_day"]},
         )
@@ -81,9 +81,9 @@ class TestRead:
         assert id(encoded_ann_data.X) != id(encoded_ann_data.layers["original"])
 
     def test_custom_encode_again_single_columns_encoding(self):
-        ANN_DATA = DataReader.read(filename=f"{_TEST_PATH}/dataset1.csv")
+        adata = DataReader.read(filename=f"{_TEST_PATH}/dataset1.csv")
         encoded_ann_data = Encoder.encode(
-            ANN_DATA,
+            adata,
             autodetect=False,
             categoricals_encode_mode={"label_encoding": ["survival"], "one_hot_encoding": ["clinic_day"]},
         )
@@ -110,9 +110,9 @@ class TestRead:
         assert id(encoded_ann_data_again.X) != id(encoded_ann_data_again.layers["original"])
 
     def test_custom_encode_again_multiple_columns_encoding(self):
-        ANN_DATA = DataReader.read(filename=f"{_TEST_PATH}/dataset1.csv")
+        adata = DataReader.read(filename=f"{_TEST_PATH}/dataset1.csv")
         encoded_ann_data = Encoder.encode(
-            ANN_DATA, autodetect=False, categoricals_encode_mode={"one_hot_encoding": ["clinic_day", "survival"]}
+            adata, autodetect=False, categoricals_encode_mode={"one_hot_encoding": ["clinic_day", "survival"]}
         )
         encoded_ann_data_again = Encoder.encode(
             encoded_ann_data,
