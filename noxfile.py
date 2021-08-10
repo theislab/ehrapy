@@ -21,6 +21,7 @@ nox.options.sessions = (
     "safety",
     "mypy",
     "tests",
+    "typeguard",
     "xdoctest",
     #   "docs-build",  Testing via CI since we cannot install external Python scripts into the nox environment
 )
