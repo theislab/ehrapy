@@ -85,12 +85,12 @@ class DataReader:
         else:
             raise ValueError(f"Unknown extension {extension}.")
 
-        # TODO: FIX, does not work currently
-        # if cache:
-        #  if not path_cache.parent.is_dir():
-        #     path_cache.parent.mkdir(parents=True)
-        # write for faster reading when calling the next time
-        # raw_anndata.write(path_cache)
+        # Caching WIP; not needed for csv/tsv parsing
+        if cache and extension not in {"csv", "tsv"}:
+            if not path_cache.parent.is_dir():
+                path_cache.parent.mkdir(parents=True)
+            # write for faster reading when calling the next time
+            raw_anndata.write(path_cache)
 
         return raw_anndata
 
@@ -276,7 +276,6 @@ class DataReader:
                 IndexColumnWarning,
             )
         X = df.to_numpy(copy=True)
-
         return AnnData(
             X,
             obs=pd.DataFrame(index=df.index.map(str)),

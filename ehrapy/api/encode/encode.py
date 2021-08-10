@@ -200,18 +200,19 @@ class Encoder:
             Encoded new X and the corresponding new var names
         """
         arr = Encoder.init_encoding(ann_data, categories)
-
-        label_encoder = LabelEncoder()
-        row_vec = arr.ravel()  # type: ignore
-        label_encoder.fit(row_vec)
+        # label encoding expects input array to be 1D, so iterate over all columns and encode them one by one
+        for idx in range(arr.shape[1]):
+            label_encoder = LabelEncoder()
+            row_vec = arr[:, idx : idx + 1].ravel()  # type: ignore
+            label_encoder.fit(row_vec)
+            transformed = label_encoder.transform(row_vec)
+            # need a column vector instead of row vector
+            arr[:, idx : idx + 1] = transformed[..., None]
         category_prefixes = [f"ehrapycat_{category}" for category in categories]
-        transformed = label_encoder.transform(row_vec)
-        # need a column vector instead of row vector
-        transformed = transformed[..., None]
         # X is None, if this is the first encoding "round", so take the "old" X
         if X is None:
             X = ann_data.X
-        temp_x, temp_var_names = Encoder.update_encoded_data(X, transformed, var_names, category_prefixes, categories)
+        temp_x, temp_var_names = Encoder.update_encoded_data(X, arr, var_names, category_prefixes, categories)
 
         return temp_x, temp_var_names
 

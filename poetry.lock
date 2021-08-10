@@ -447,7 +447,7 @@ numpy = [
 
 [[package]]
 name = "identify"
-version = "2.2.12"
+version = "2.2.13"
 description = "File identification library for Python"
 category = "dev"
 optional = false
@@ -846,7 +846,7 @@ python-versions = ">=2.6"
 
 [[package]]
 name = "pep8-naming"
-version = "0.12.0"
+version = "0.12.1"
 description = "Check PEP-8 naming conventions, plugin for flake8"
 category = "dev"
 optional = false
@@ -1616,7 +1616,7 @@ python-versions = "*"
 
 [[package]]
 name = "types-requests"
-version = "2.25.2"
+version = "2.25.6"
 description = "Typing stubs for requests"
 category = "dev"
 optional = false
@@ -1645,7 +1645,7 @@ socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 
 [[package]]
 name = "virtualenv"
-version = "20.7.0"
+version = "20.7.1"
 description = "Virtual Python Environment builder"
 category = "dev"
 optional = false
@@ -1681,7 +1681,7 @@ python-versions = "*"
 
 [[package]]
 name = "xdoctest"
-version = "0.15.5"
+version = "0.15.6"
 description = "A rewrite of the builtin doctest module"
 category = "dev"
 optional = false
@@ -1722,7 +1722,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7.1,<3.10"
-content-hash = "b8fd784eb869954ef437618da0aa8d888393f3db64508bca1d0263bfefd9cc9b"
+content-hash = "adbf10a0a04408fedb211532e994bcb83255fbfa96f3aa43aae00da7ef3801dc"
 
 [metadata.files]
 alabaster = [
@@ -1793,11 +1793,6 @@ cffi = [
     {file = "cffi-1.14.6-cp27-cp27m-win_amd64.whl", hash = "sha256:7bcac9a2b4fdbed2c16fa5681356d7121ecabf041f18d97ed5b8e0dd38a80224"},
     {file = "cffi-1.14.6-cp27-cp27mu-manylinux1_i686.whl", hash = "sha256:ed38b924ce794e505647f7c331b22a693bee1538fdf46b0222c4717b42f744e7"},
     {file = "cffi-1.14.6-cp27-cp27mu-manylinux1_x86_64.whl", hash = "sha256:e22dcb48709fc51a7b58a927391b23ab37eb3737a98ac4338e2448bef8559b33"},
-    {file = "cffi-1.14.6-cp35-cp35m-macosx_10_9_x86_64.whl", hash = "sha256:aedb15f0a5a5949ecb129a82b72b19df97bbbca024081ed2ef88bd5c0a610534"},
-    {file = "cffi-1.14.6-cp35-cp35m-manylinux1_i686.whl", hash = "sha256:48916e459c54c4a70e52745639f1db524542140433599e13911b2f329834276a"},
-    {file = "cffi-1.14.6-cp35-cp35m-manylinux1_x86_64.whl", hash = "sha256:f627688813d0a4140153ff532537fbe4afea5a3dffce1f9deb7f91f848a832b5"},
-    {file = "cffi-1.14.6-cp35-cp35m-win32.whl", hash = "sha256:f0010c6f9d1a4011e429109fda55a225921e3206e7f62a0c22a35344bfd13cca"},
-    {file = "cffi-1.14.6-cp35-cp35m-win_amd64.whl", hash = "sha256:57e555a9feb4a8460415f1aac331a2dc833b1115284f7ded7278b54afc5bd218"},
     {file = "cffi-1.14.6-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:e8c6a99be100371dbb046880e7a282152aa5d6127ae01783e37662ef73850d8f"},
     {file = "cffi-1.14.6-cp36-cp36m-manylinux1_i686.whl", hash = "sha256:19ca0dbdeda3b2615421d54bef8985f72af6e0c47082a8d26122adac81a95872"},
     {file = "cffi-1.14.6-cp36-cp36m-manylinux1_x86_64.whl", hash = "sha256:d950695ae4381ecd856bcaf2b1e866720e4ab9a1498cba61c602e56630ca7195"},
@@ -1978,8 +1973,8 @@ h5py = [
     {file = "h5py-3.3.0.tar.gz", hash = "sha256:e0dac887d779929778b3cfd13309a939359cc9e74756fc09af7c527a82797186"},
 ]
 identify = [
-    {file = "identify-2.2.12-py2.py3-none-any.whl", hash = "sha256:a510cbe155f39665625c8a4c4b4f9360cbce539f51f23f47836ab7dd852db541"},
-    {file = "identify-2.2.12.tar.gz", hash = "sha256:242332b3bdd45a8af1752d5d5a3afb12bee26f8e67c4be06e394f82d05ef1a4d"},
+    {file = "identify-2.2.13-py2.py3-none-any.whl", hash = "sha256:7199679b5be13a6b40e6e19ea473e789b11b4e3b60986499b1f589ffb03c217c"},
+    {file = "identify-2.2.13.tar.gz", hash = "sha256:7bc6e829392bd017236531963d2d937d66fc27cadc643ac0aba2ce9f26157c79"},
 ]
 idna = [
     {file = "idna-3.2-py3-none-any.whl", hash = "sha256:14475042e284991034cb48e06f6851428fb14c4dc953acd9be9a5e95c7b6dd7a"},
@@ -2204,8 +2199,8 @@ pbr = [
     {file = "pbr-5.6.0.tar.gz", hash = "sha256:42df03e7797b796625b1029c0400279c7c34fd7df24a7d7818a1abb5b38710dd"},
 ]
 pep8-naming = [
-    {file = "pep8-naming-0.12.0.tar.gz", hash = "sha256:1f9a3ecb2f3fd83240fd40afdd70acc89695c49c333413e49788f93b61827e12"},
-    {file = "pep8_naming-0.12.0-py2.py3-none-any.whl", hash = "sha256:2321ac2b7bf55383dd19a6a9c8ae2ebf05679699927a3af33e60dd7d337099d3"},
+    {file = "pep8-naming-0.12.1.tar.gz", hash = "sha256:bb2455947757d162aa4cad55dba4ce029005cd1692f2899a21d51d8630ca7841"},
+    {file = "pep8_naming-0.12.1-py2.py3-none-any.whl", hash = "sha256:4a8daeaeb33cfcde779309fc0c9c0a68a3bbe2ad8a8308b763c5068f86eb9f37"},
 ]
 platformdirs = [
     {file = "platformdirs-2.2.0-py3-none-any.whl", hash = "sha256:4666d822218db6a262bdfdc9c39d21f23b4cfdb08af331a81e92751daf6c866c"},
@@ -2729,8 +2724,8 @@ types-pkg-resources = [
     {file = "types_pkg_resources-0.1.3-py2.py3-none-any.whl", hash = "sha256:0cb9972cee992249f93fff1a491bf2dc3ce674e5a1926e27d4f0866f7d9b6d9c"},
 ]
 types-requests = [
-    {file = "types-requests-2.25.2.tar.gz", hash = "sha256:03122b582f5300ec35ac6692f2634207c467e602dc9ba46b5811a9f6ce0b0bc2"},
-    {file = "types_requests-2.25.2-py3-none-any.whl", hash = "sha256:a4c03c654527957a70002079ca48669b53d82eac4811abf140ea93847b65529b"},
+    {file = "types-requests-2.25.6.tar.gz", hash = "sha256:e21541c0f55c066c491a639309159556dd8c5833e49fcde929c4c47bdb0002ee"},
+    {file = "types_requests-2.25.6-py3-none-any.whl", hash = "sha256:a5a305b43ea57bf64d6731f89816946a405b591eff6de28d4c0fd58422cee779"},
 ]
 typing-extensions = [
     {file = "typing_extensions-3.10.0.0-py2-none-any.whl", hash = "sha256:0ac0f89795dd19de6b97debb0c6af1c70987fd80a2d62d1958f7e56fcc31b497"},
@@ -2742,8 +2737,8 @@ urllib3 = [
     {file = "urllib3-1.26.6.tar.gz", hash = "sha256:f57b4c16c62fa2760b7e3d97c35b255512fb6b59a259730f36ba32ce9f8e342f"},
 ]
 virtualenv = [
-    {file = "virtualenv-20.7.0-py2.py3-none-any.whl", hash = "sha256:fdfdaaf0979ac03ae7f76d5224a05b58165f3c804f8aa633f3dd6f22fbd435d5"},
-    {file = "virtualenv-20.7.0.tar.gz", hash = "sha256:97066a978431ec096d163e72771df5357c5c898ffdd587048f45e0aecc228094"},
+    {file = "virtualenv-20.7.1-py2.py3-none-any.whl", hash = "sha256:73863dc3be1efe6ee638e77495c0c195a6384ae7b15c561f3ceb2698ae7267c1"},
+    {file = "virtualenv-20.7.1.tar.gz", hash = "sha256:57bcb59c5898818bd555b1e0cfcf668bd6204bc2b53ad0e70a52413bd790f9e4"},
 ]
 wcwidth = [
     {file = "wcwidth-0.2.5-py2.py3-none-any.whl", hash = "sha256:beb4802a9cebb9144e99086eff703a642a13d6a0052920003a230f3294bbe784"},
@@ -2754,9 +2749,9 @@ webencodings = [
     {file = "webencodings-0.5.1.tar.gz", hash = "sha256:b36a1c245f2d304965eb4e0a82848379241dc04b865afcc4aab16748587e1923"},
 ]
 xdoctest = [
-    {file = "xdoctest-0.15.5-py2.py3-none-any.whl", hash = "sha256:bbf92c11e29ac5acab6d0381e9d4bcfdce7f2ed3b516e38e71a181d3d210d460"},
-    {file = "xdoctest-0.15.5-py3-none-any.whl", hash = "sha256:49e16058d53138f3f20db3935c0e6e111d60a2c8739c017fb45c4486f4f8e8f1"},
-    {file = "xdoctest-0.15.5.tar.gz", hash = "sha256:3d4966651c2eaa3b7c48307e484e6aa0428388d46842c3639d51757f0df56f56"},
+    {file = "xdoctest-0.15.6-py2.py3-none-any.whl", hash = "sha256:4ba30ad2aadd6474388b185ced6d8146490d3720665c6964891c19b4b169b5fc"},
+    {file = "xdoctest-0.15.6-py3-none-any.whl", hash = "sha256:c8ea193a19183f38fb85a0dc1659f1a39b0437ec892d692d44d586ae2780961f"},
+    {file = "xdoctest-0.15.6.tar.gz", hash = "sha256:49ebffcfa49b810d5c02c6bc1ef0487a36a6a27bb46c39a137952fda3f03ae33"},
 ]
 xlrd = [
     {file = "xlrd-1.2.0-py2.py3-none-any.whl", hash = "sha256:e551fb498759fa3a5384a94ccd4c3c02eb7c00ea424426e212ac0c57be9dfbde"},
