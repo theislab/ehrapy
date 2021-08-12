@@ -9,4 +9,4 @@ from pypi_latest import PypiLatest
 ehrapy_pypi_latest = PypiLatest("ehrapy", __version__)
 ehrapy_pypi_latest.check_latest()
 
-from ehrapy.api import data, encode, io, plot, preprocessing, tools  # noqa: E402
+from ehrapy.api import data, encode, io, plot, preprocessing, tools

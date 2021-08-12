@@ -5,6 +5,7 @@ max-line-length = 120
 max-complexity = 15
 docstring-convention = google
 per-file-ignores =
-    ehrapy/__init__.py:F401
+    ehrapy/__init__.py:F401,E402
     ehrapy/api/data/__init__.py:F401
+    ehrapy/api/encode/__init__.py:F401
     ehrapy/api/io/__init__.py:F401
