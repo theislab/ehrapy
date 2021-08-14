@@ -130,9 +130,10 @@ class DataReader:
             delimiter
                 Delimiter that separates data within the file.
             index_column
-                TODO Description
+                Index or name of future index column (obs)
             columns_obs_only
-                TODO DESCRIPTION
+                List of column names, that should be stored in the AnnData object, but instead of being stored in X, they go
+                into obs (useful for free-text like values)
 
         Returns:
             An AnnData object

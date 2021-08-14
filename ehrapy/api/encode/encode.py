@@ -19,15 +19,15 @@ class Encoder:
 
     @staticmethod
     def encode(
-        ann_data: AnnData, autodetect: bool = False, categoricals_encode_mode: Dict = None
-    ) -> AnnData:  # TODO specify Dict types
+        ann_data: AnnData, autodetect: bool = False, categoricals_encode_mode: Dict[str, List[str]] = None
+    ) -> AnnData:
         """Encode the initial read AnnData object. Categorical values could be either passed via parameters or autodetected.
 
         Available encodings are:
 
-        1. one-hot encoding
-        2. label encoding
-        3. count encoding
+        1. one-hot encoding (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.OneHotEncoder.html)
+        2. label encoding (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.LabelEncoder.html)
+        3. count encoding (https://contrib.scikit-learn.org/category_encoders/count.html)
 
         Args:
             ann_data: The inital AnnData object parsed by the :class: DataReader
@@ -35,12 +35,10 @@ class Encoder:
             categoricals_encode_mode: Only needed if autodetect set to False. A dict containing the categorical name
             and the encoding mode for the respective column
         """
-        # TODO Add some links or descriptions to the available encodings in the docstring
         # autodetect categorical values, which could lead to more categoricals
         if autodetect:
             ann_data.uns["categoricals"] = _detect_categorical_columns(ann_data.X, ann_data.var_names)
             categorical_names = ann_data.uns["categoricals"]["categorical_encoded"]
-            # TODO raise custom warning instead and proceed?
             if "current_encodings" in ann_data.uns.keys():
                 print(
                     "[bold yellow]The current data has already been encoded."
@@ -137,14 +135,13 @@ class Encoder:
                 encoded_ann_data.uns["current_encodings"] = current_encodings
 
             # if the user did not pass every non numerical column for encoding, a Anndata object cannot be created
-            # TODO can this be checked at an earlier time point?
             except ValueError:
                 print(
                     "[bold red]Creation of AnnData object failed. "
                     "Ensure that you passed all non numerical, categorical values for encoding!"
                 )
                 sys.exit(1)
-        del ann_data.obs  # TODO does this even make a difference? the scope if this is over anyways
+        del ann_data.obs
         del ann_data.X
 
         return encoded_ann_data
@@ -397,3 +394,7 @@ class Encoder:
                 continue
             elif var_name in categorical_names:
                 ann_data.uns["original_values_categoricals"][var_name] = ann_data.X[::, idx : idx + 1]
+
+
+class AlreadyEncodedWarning(UserWarning):
+    pass

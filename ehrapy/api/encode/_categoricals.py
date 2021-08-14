@@ -38,7 +38,7 @@ def _detect_categorical_columns(
 
 @dataclass
 class CategoricalColumnType:
-    is_categorical: bool  # TODO we never use this boolean. Should we get rid of it?
+    is_categorical: bool
     categorical_type: str
 
 
@@ -46,7 +46,7 @@ def _is_categorical_column(col: np.ndarray, col_name: str) -> CategoricalColumnT
     """Check for a single column, whether it's categorical or not.
 
     For string columns, a column will be counted as categorical, if there are at least two duplicate elements.
-    For numerical values, a column will be counted as categorical, if there are at most TODO non-unique elements.
+    For numerical values, a column will be counted as categorical, if there are at most 50% unique elements.
     Boolean columns or numerical columns with only one or two categories won't be counted as categorical since they
     won't require any encoding.
 
@@ -81,7 +81,7 @@ def _is_categorical_column(col: np.ndarray, col_name: str) -> CategoricalColumnT
             return CategoricalColumnType(False, "not_categorical")
         return CategoricalColumnType(True, "categorical_encoded")
     elif c_dtype == "floating" or c_dtype == "integer" or c_dtype == "mixed-integer-float":
-        # TODO: Find a good threshold
+        # TODO: Find a good threshold (need to apply to real data to find this; can not fix now)
         if len(categorical.categories) > len(categorical) * 0.5:
             return CategoricalColumnType(False, "not_categorical")
         return CategoricalColumnType(True, "categorical_not_encoded")

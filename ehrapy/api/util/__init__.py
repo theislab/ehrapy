@@ -5,23 +5,37 @@ from rich.tree import Tree
 
 
 def vars_tree(ann_data: AnnData) -> None:
-    """Prints a tree of all vars of an AnnData object.
+    """Prints a tree of all variables of an AnnData object.
 
     Args:
-        ann_data: The AnnData object to print the vars from
+        ann_data: The AnnData object to print the variables from
     """
+    encoding_mapper = {"label_encoding": "label", "one_hot_encoding": "one hot", "count_encoding": "count"}
+
     tree = Tree(
-        f"[bold green]Variable names for AnnData object with {len(ann_data.raw.var_names)} variables",
+        f"[bold green]Variable names for AnnData object with {len(ann_data.var_names)} variables",
         guide_style="underline2 bright_blue",
     )
-    # TODO generalize this method
-    branch = tree.add(Text("📄 " + "Categoricals"), style="bold green")
-    branch.add("Day_ICU_intime with 7 different categories", style="blue")
-    branch.add("Service_unit with 3 different categories", style="blue")
+    if list(ann_data.obs.columns):
+        branch = tree.add("Obs", style="bold green")
+        for categorical in list(ann_data.obs.columns):
+            if "current_encodings" in ann_data.uns.keys():
+                if categorical in ann_data.uns["current_encodings"].keys():
+                    branch.add(
+                        Text(
+                            f"{categorical} 🔐; {len(ann_data.obs[categorical].unique())} different categories; currently {encoding_mapper[ann_data.uns['current_encodings'][categorical]]} encoded"
+                        ),
+                        style="blue",
+                    )
+                else:
+                    branch.add(Text(f"{categorical}; moved from X to obs"), style="blue")
+            else:
+                branch.add(Text(f"{categorical}; moved from X to obs"), style="blue")
 
-    branch_num = tree.add(Text("❶ " + "Numericals"), style="bold green")
+    branch_num = tree.add(Text("🔓 Unencoded variables"), style="bold green")
 
-    for i in range(2, len(ann_data.raw.var_names)):
-        branch_num.add(ann_data.raw.var_names[i], style="blue")
+    for other_vars in list(ann_data.var_names.values):
+        if not other_vars.startswith("ehrapycat"):
+            branch_num.add(f"{other_vars}", style="blue")
 
     print(tree)
