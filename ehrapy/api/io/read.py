@@ -1,6 +1,6 @@
 import warnings
 from pathlib import Path
-from typing import Generator, Iterable, Iterator, List, Optional, Union
+from typing import Generator, Iterable, Iterator, List, NamedTuple, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -12,12 +12,19 @@ from ehrapy.api.data.dataloader import Dataloader
 from ehrapy.api.io.utility_io import _slugify, is_float, is_int, is_valid_filename, supported_extensions
 
 
+class BaseDataframes(NamedTuple):
+    obs: pd.DataFrame
+    df: pd.DataFrame
+
+
 class DataReader:
     @staticmethod
     def read(
         filename: Union[Path, str],
         extension: Optional[str] = None,
         delimiter: Optional[str] = None,
+        index_column: Union[str, Optional[int]] = None,
+        columns_obs_only: Optional[List[Union[str]]] = None,
         cache: bool = False,
         backup_url: Optional[str] = None,
     ) -> AnnData:
@@ -30,6 +37,11 @@ class DataReader:
             extension: Extension that indicates the file type. If ``None``, uses extension of filename.
             delimiter: Delimiter that separates data within text file. If ``None``, will split at arbitrary number of white spaces,
                        which is different from enforcing splitting at any single white space ``' '``.
+            index_column: Name or Index of the column that should be set as index (obs_names in later :class:`~anndata.AnnData` object)
+                         If the a string was passed, the so called column is set as index, if it is an integer, the column at that index is set as index.
+                         If None was passed, the column at index 0 will be examined if it is the "patient_id" column. If not, a warning will be raised.
+            columns_obs_only: If passed, this list contains the name of columns that should be excluded from X, but stored in obs. This may be useful for columns
+                              that contain free text information, which may not be useful to perform some algortihms and tools on.
             cache: If `False`, read from source, if `True`, read from fast 'h5ad' cache.
             backup_url: Retrieve the file from an URL if not present on disk.
 
@@ -43,7 +55,14 @@ class DataReader:
             is_zip: bool = output_file_name.endswith(".zip")  # TODO can we generalize this to tar files as well?
             Dataloader.download(backup_url, output_file_name=output_file_name, is_zip=is_zip)
 
-        raw_anndata = DataReader._read(file, extension=extension, delimiter=delimiter, cache=cache)
+        raw_anndata = DataReader._read(
+            file,
+            extension=extension,
+            delimiter=delimiter,
+            index_column=index_column,
+            columns_obs_only=columns_obs_only,
+            cache=cache,
+        )
 
         return raw_anndata
 
@@ -52,6 +71,8 @@ class DataReader:
         filename: Path,
         extension=None,
         delimiter=None,
+        index_column: Union[str, Optional[int]] = None,
+        columns_obs_only: Optional[List[Union[str]]] = None,
         cache: bool = False,
         backup_url: Optional[str] = None,
     ) -> AnnData:
@@ -79,7 +100,7 @@ class DataReader:
 
         # do the actual reading
         if extension in {"csv", "tsv"}:
-            raw_anndata = DataReader.read_csv(filename, delimiter)
+            raw_anndata = DataReader.read_csv(filename, delimiter, index_column, columns_obs_only)
         elif extension in {"txt", "tab", "data"}:
             raw_anndata = DataReader.read_text(filename, delimiter, dtype="object")
         else:
@@ -98,6 +119,8 @@ class DataReader:
     def read_csv(
         filename: Union[Path, Iterator[str]],
         delimiter: Optional[str] = ",",
+        index_column: Union[str, Optional[int]] = None,
+        columns_obs_only: Optional[List[Union[str]]] = None,
     ) -> AnnData:
         """Read `.csv` and `.tsv` file.
 
@@ -106,6 +129,10 @@ class DataReader:
                 Data file.
             delimiter
                 Delimiter that separates data within the file.
+            index_column
+                TODO Description
+            columns_obs_only
+                TODO DESCRIPTION
 
         Returns:
             An AnnData object
@@ -113,7 +140,7 @@ class DataReader:
         # read pandas dataframe
         initial_df = pd.read_csv(filename, delimiter=delimiter)
         # return the raw AnnData object
-        return DataReader._df_to_anndata(initial_df)
+        return DataReader._df_to_anndata(initial_df, index_column, columns_obs_only)
 
     @staticmethod
     def read_text(
@@ -265,21 +292,19 @@ class DataReader:
         )
 
     @staticmethod
-    def _df_to_anndata(df: pd.DataFrame) -> AnnData:
+    def _df_to_anndata(
+        df: pd.DataFrame, index_column: Union[str, Optional[int]], columns_obs_only: Optional[List[Union[str]]]
+    ) -> AnnData:
         """Create an AnnData object from the initial dataframe"""
-        column_names = list(df.columns)
-        if "patient_id" == column_names[0]:
-            df = df.set_index("patient_id")
-        else:
-            warnings.warn(
-                "Did not found patient_id column at column 0. Using default, numerical indices instead!",
-                IndexColumnWarning,
-            )
-        X = df.to_numpy(copy=True)
+        # set index given or default
+        df = DataReader._set_index(df, index_column)
+        # move columns from the input dataframe to later obs
+        dataframes = DataReader.move_columns_to_obs(df, columns_obs_only)
+        X = dataframes.df.to_numpy(copy=True)
         return AnnData(
             X,
-            obs=pd.DataFrame(index=df.index.map(str)),
-            var=pd.DataFrame(index=list(df.columns)),
+            obs=dataframes.obs,
+            var=pd.DataFrame(index=list(dataframes.df.columns)),
             dtype="object",
             layers={"original": X.copy()},
         )
@@ -306,6 +331,46 @@ class DataReader:
         Dataloader.download(backup_url, output_file_name=str(path))
 
         return True
+
+    @staticmethod
+    def _set_index(df: pd.DataFrame, index_column: Union[str, Optional[int]]) -> pd.DataFrame:
+        """Try to set the index, if any given by the index_column parameter."""
+        column_names = list(df.columns)
+        if isinstance(index_column, str):
+            df = df.set_index(index_column)
+        elif isinstance(index_column, int):
+            df = df.set_index(column_names[index_column])
+        else:
+            if "patient_id" == column_names[0]:
+                df = df.set_index("patient_id")
+            else:
+                warnings.warn(
+                    "Did not found patient_id column at column 0 and no index column was passed. Using default, numerical indices instead!",
+                    IndexColumnWarning,
+                )
+        return df
+
+    @staticmethod
+    def move_columns_to_obs(df: pd.DataFrame, columns_obs_only: Optional[List[Union[str]]]) -> BaseDataframes:
+        """
+        Move the given columns from the original dataframe (and therefore X) to obs. By doing so, those values will not get lost
+        and will be stored in obs, but will not appear in X. This may be useful for textual values like free text.
+        """
+        if columns_obs_only:
+            try:
+                obs = df[columns_obs_only].copy()
+                obs = obs.set_index(df.index.map(str))
+                df = df.drop(columns_obs_only, axis=1)
+            # TODO Key error traceback still prints, have no idea why
+            except KeyError:
+                raise ColumnNotFoundError(
+                    "One or more column names passed to column_obs_only were not found in the input data. Make sure you spelled the column names "
+                    "correctly."
+                )
+        else:
+            obs = pd.DataFrame(index=df.index.map(str))
+
+        return BaseDataframes(obs, df)
 
     @staticmethod
     def _cast_vals_to_numeric(row: List[Optional[Union[str, int, float]]]) -> List[Optional[Union[str, int, float]]]:
@@ -347,4 +412,8 @@ class DataReader:
 
 
 class IndexColumnWarning(UserWarning):
+    pass
+
+
+class ColumnNotFoundError(Exception):
     pass
