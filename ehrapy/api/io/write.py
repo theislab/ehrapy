@@ -15,15 +15,6 @@ class DataWriter:
         compression: Optional[Literal["gzip", "lzf"]] = "gzip",
         compression_opts: Optional[int] = None,
     ) -> None:
-        """Write :class:`~anndata.AnnData` objects to file.
-
-        Args:
-            filename: File name to write the file to
-            adata: Annotated data matrix.
-            extension: File extension. One of h5, csv, txt
-            compression: Optional file compression. One of gzip, lzf
-            compression_opts: See http://docs.h5py.org/en/latest/high/dataset.html.
-        """
         filename = Path(filename)  # allow passing strings
         if is_valid_filename(filename):
             filename = filename

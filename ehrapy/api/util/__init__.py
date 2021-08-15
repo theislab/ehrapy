@@ -7,8 +7,9 @@ from rich.tree import Tree
 def ann_data_tree(adata: AnnData) -> None:
     """Prints the current state of an AnnData object in a tree format.
 
-    Args:
-        adata: The AnnData object
+    Parameter:
+        adata
+            The AnnData object
     """
     encoding_mapper = {"label_encoding": "label", "one_hot_encoding": "one hot", "count_encoding": "count"}
 

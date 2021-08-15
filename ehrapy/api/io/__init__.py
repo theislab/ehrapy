@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import List, Literal, Optional, Union
 
 from anndata import AnnData
 
@@ -56,3 +56,31 @@ def read(
     return DataReader.read(
         filename, extension, delimiter, index_column, columns_obs_only, cache, backup_url, suppress_warnings
     )
+
+
+def write(
+    filename: Union[str, Path],
+    adata: AnnData,
+    extension: Union[str, bool] = None,
+    compression: Optional[Literal["gzip", "lzf"]] = "gzip",
+    compression_opts: Optional[int] = None,
+) -> None:
+    """Write :class:`~anndata.AnnData` objects to file.
+
+    Parameters:
+        filename
+            File name to write the file to
+
+        adata
+            Annotated data matrix.
+
+        extension
+            File extension. One of h5, csv, txt
+
+        compression
+            Optional file compression. One of gzip, lzf
+
+        compression_opts
+            See http://docs.h5py.org/en/latest/high/dataset.html.
+    """
+    DataWriter.write(filename, adata, extension, compression, compression_opts)

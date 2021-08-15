@@ -24,18 +24,20 @@ Reading and writing
 ~~~~~~~~~~~~~~~~~~~~
 
 .. module:: ehrapy.api
-.. currentmodule:: ehrapy
+.. currentmodule:: ehrapy.api
 
 .. autosummary::
     :toctree: io
 
     io.read
 
+    io.write
+
 Encoding
 ~~~~~~~~
 
 .. module:: ehrapy.api
-.. currentmodule:: ehrapy
+.. currentmodule:: ehrapy.api
 
 .. autosummary::
     :toctree: encode
@@ -46,7 +48,7 @@ Data
 ~~~~~
 
 .. module:: ehrapy.api
-.. currentmodule:: ehrapy
+.. currentmodule:: ehrapy.api
 
 .. autosummary::
     :toctree: data
@@ -70,6 +72,17 @@ Plotting
 
 .. automodule:: ehrapy.api.plot
    :members:
+
+Util
+~~~~~
+
+.. module:: ehrapy.api
+.. currentmodule:: ehrapy.api
+
+.. autosummary::
+    :toctree: util
+
+    util.ann_data_tree
 
 Command-line interface
 -----------------------
