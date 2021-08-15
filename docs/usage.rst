@@ -27,9 +27,20 @@ Reading and writing
 .. currentmodule:: ehrapy
 
 .. autosummary::
-    :toctree: read_write
+    :toctree: io
 
     io.read
+
+Encoding
+~~~~~~~~
+
+.. module:: ehrapy.api
+.. currentmodule:: ehrapy
+
+.. autosummary::
+    :toctree: encode
+
+    encode.encode
 
 Data
 ~~~~~

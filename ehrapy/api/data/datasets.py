@@ -1,5 +1,7 @@
 from anndata import AnnData
 
+from ehrapy.api.io import DataReader
+
 
 def mimic_2() -> AnnData:
     """Loads the mimic-ii dataset.
@@ -7,10 +9,14 @@ def mimic_2() -> AnnData:
     The dataset is available here: https://physionet.org/content/mimic2-iaccd/1.0/
 
     Returns:
-        An :class:`~anndata.AnnData` object
+        An :class:`~anndata.AnnData` object with no encodings
     """
-    # adata = read(backupurl=https://physionet.org/content/mimic2-iaccd/1.0/full_cohort_data.csv)
-    return None
+    adata = DataReader.read(
+        filename="ehrapy_mimic2.csv",
+        backup_url="https://www.physionet.org/files/mimic2-iaccd/1.0/full_cohort_data.csv?download",
+        suppress_warnings=True,
+    )
+    return adata
 
 
 def mimic_3_demo() -> AnnData:

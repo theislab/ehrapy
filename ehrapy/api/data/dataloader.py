@@ -1,5 +1,5 @@
-import pathlib
 import tempfile
+from pathlib import Path
 from zipfile import ZipFile
 
 import requests
@@ -33,7 +33,7 @@ class Dataloader:
             output_path = tempfile.gettempdir()
 
         download_to_path = f"{output_path}/{output_file_name}"
-        if pathlib.Path(download_to_path).exists():
+        if Path(download_to_path).exists():
             warning = f"[bold red]File {download_to_path} already exists!"
             if not overwrite:
                 print(warning)

@@ -18,6 +18,8 @@ class BaseDataframes(NamedTuple):
 
 
 class DataReader:
+    suppress_warnings = False
+
     @staticmethod
     def read(
         filename: Union[Path, str],
@@ -27,33 +29,15 @@ class DataReader:
         columns_obs_only: Optional[List[Union[str]]] = None,
         cache: bool = False,
         backup_url: Optional[str] = None,
+        suppress_warnings: bool = False,
     ) -> AnnData:
-        """Read file and return :class:`~anndata.AnnData` object.
-
-        To speed up reading, consider passing ``cache=True``, which creates an hdf5 cache file.
-
-        Args:
-            filename: Name of the input file to read
-            extension: Extension that indicates the file type. If ``None``, uses extension of filename.
-            delimiter: Delimiter that separates data within text file. If ``None``, will split at arbitrary number of white spaces,
-                       which is different from enforcing splitting at any single white space ``' '``.
-            index_column: Name or Index of the column that should be set as index (obs_names in later :class:`~anndata.AnnData` object)
-                         If the a string was passed, the so called column is set as index, if it is an integer, the column at that index is set as index.
-                         If None was passed, the column at index 0 will be examined if it is the "patient_id" column. If not, a warning will be raised.
-            columns_obs_only: If passed, this list contains the name of columns that should be excluded from X, but stored in obs. This may be useful for columns
-                              that contain free text information, which may not be useful to perform some algortihms and tools on.
-            cache: If `False`, read from source, if `True`, read from fast 'h5ad' cache.
-            backup_url: Retrieve the file from an URL if not present on disk.
-
-        Returns:
-            An :class:`~anndata.AnnData` object
-        """
+        DataReader.suppress_warnings = suppress_warnings
         file = Path(filename)
         if not file.exists():
             print("[bold yellow]Path or dataset does not yet exist. Attempting to download...")
             output_file_name = backup_url.split("/")[-1]
             is_zip: bool = output_file_name.endswith(".zip")  # TODO can we generalize this to tar files as well?
-            Dataloader.download(backup_url, output_file_name=output_file_name, is_zip=is_zip)
+            Dataloader.download(backup_url, output_file_name=str(filename), output_path=str(Path.cwd()), is_zip=is_zip)
 
         raw_anndata = DataReader._read(
             file,
@@ -87,16 +71,13 @@ class DataReader:
 
         is_present = DataReader._check_datafile_present_and_download(filename, backup_url=backup_url)
         if not is_present:
-            print(f"[bold red]Unable to find original file {filename}")
+            raise FileNotFoundError(f"Did not find file {filename}.")
         # TODO REPLACE WITH SETTINGS cachedir
         path_cache = Path.cwd() / _slugify(filename).replace("." + extension, ".h5ad")  # type: Path
         if path_cache.suffix in {".gz", ".bz2"}:
             path_cache = path_cache.with_suffix("")
         if cache and path_cache.is_file():
             return read_h5ad(path_cache)
-
-        if not is_present:
-            raise FileNotFoundError(f"Did not find file {filename}.")
 
         # do the actual reading
         if extension in {"csv", "tsv"}:
@@ -345,10 +326,11 @@ class DataReader:
             if "patient_id" == column_names[0]:
                 df = df.set_index("patient_id")
             else:
-                warnings.warn(
-                    "Did not found patient_id column at column 0 and no index column was passed. Using default, numerical indices instead!",
-                    IndexColumnWarning,
-                )
+                if not DataReader.suppress_warnings:
+                    warnings.warn(
+                        "Did not found patient_id column at column 0 and no index column was passed. Using default, numerical indices instead!",
+                        IndexColumnWarning,
+                    )
         return df
 
     @staticmethod
