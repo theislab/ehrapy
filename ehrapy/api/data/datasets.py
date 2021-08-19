@@ -2,10 +2,10 @@ from anndata import AnnData
 
 from ehrapy.api.io import DataReader
 
-class Datasets:
 
+class Datasets:
     @staticmethod
-    def mimic_2() -> AnnData:
+    def mimic_2(encode: bool = False) -> AnnData:
         """Loads the mimic-ii dataset.
 
         The dataset is available here: https://physionet.org/content/mimic2-iaccd/1.0/
@@ -18,8 +18,9 @@ class Datasets:
             backup_url="https://www.physionet.org/files/mimic2-iaccd/1.0/full_cohort_data.csv?download",
             suppress_warnings=True,
         )
-        return adata
+        # TODO implement encoding here
 
+        return adata
 
     @staticmethod
     def mimic_3_demo() -> AnnData:
