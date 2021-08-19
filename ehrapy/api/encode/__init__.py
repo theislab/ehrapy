@@ -33,7 +33,7 @@ def encode(
                 import ehrapy.api as ehp
                 adata = ehp.io.read(...)
                 # encode col1 and col2 using label encoding and encode col3 using one hot encoding
-                _ = ehp.encode.encode(adata, False, {'label_encoding': ['col1', 'col2'], 'one_hot_encoding': ['col3']})
+                ehp.encode.encode(adata, autodetect=False, {'label_encoding': ['col1', 'col2'], 'one_hot_encoding': ['col3']})
 
     Returns:
             An :class:`~anndata.AnnData` object with the encoded values in X

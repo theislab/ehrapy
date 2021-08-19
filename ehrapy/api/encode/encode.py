@@ -15,7 +15,7 @@ class Encoder:
     """The main encoder for the initial read AnnData object providing various encoding solutions for
     non numerical or categorical data"""
 
-    available_encode_modes = {"one_hot_encoding", "label_encoding", "count_encoding"}
+    available_encodings = {"one_hot_encoding", "label_encoding", "count_encoding"}
 
     @staticmethod
     def encode(
@@ -45,13 +45,13 @@ class Encoder:
                     "It is not recommended to use autodetect with already encoded data."
                 )
                 sys.exit(1)
-            Encoder.add_categories_to_obs(ann_data, categorical_names)
-            Encoder.add_categories_to_uns(ann_data, categorical_names)
+            Encoder._add_categories_to_obs(ann_data, categorical_names)
+            Encoder._add_categories_to_uns(ann_data, categorical_names)
 
             encoded_x = None
             encoded_var_names = ann_data.var_names.to_list()
 
-            encoded_x, encoded_var_names = Encoder.one_hot_encoding(
+            encoded_x, encoded_var_names = Encoder._one_hot_encoding(
                 ann_data,
                 encoded_x,
                 encoded_var_names,
@@ -59,7 +59,7 @@ class Encoder:
             )
 
             # update layer content with the latest categorical encoding and the old other values
-            updated_layer = Encoder.update_layer_after_encode(
+            updated_layer = Encoder._update_layer_after_encode(
                 ann_data.layers["original"],
                 encoded_x,
                 encoded_var_names,
@@ -88,8 +88,8 @@ class Encoder:
                     "The categorical column names given contain at least one duplicate column. "
                     "Check the column names to ensure that no column is encoded twice!"
                 )
-            Encoder.add_categories_to_obs(ann_data, categoricals)
-            Encoder.add_categories_to_uns(ann_data, categoricals)
+            Encoder._add_categories_to_obs(ann_data, categoricals)
+            Encoder._add_categories_to_uns(ann_data, categoricals)
             current_encodings = (
                 {} if "current_encodings" not in ann_data.uns.keys() else ann_data.uns["current_encodings"]
             )
@@ -97,15 +97,15 @@ class Encoder:
             encoded_var_names = ann_data.var_names.to_list()
 
             for encoding_mode in categoricals_encode_mode.keys():
-                if encoding_mode not in Encoder.available_encode_modes:
+                if encoding_mode not in Encoder.available_encodings:
                     raise ValueError(
                         f"Unknown encoding mode {encoding_mode}. Please provide one of the following encoding modes:\n"
-                        f"{Encoder.available_encode_modes}"
+                        f"{Encoder.available_encodings}"
                     )
                 encode_mode_switcher = {
-                    "one_hot_encoding": Encoder.one_hot_encoding,
-                    "label_encoding": Encoder.label_encoding,
-                    "count_encoding": Encoder.count_encoding,
+                    "one_hot_encoding": Encoder._one_hot_encoding,
+                    "label_encoding": Encoder._label_encoding,
+                    "count_encoding": Encoder._count_encoding,
                 }
                 # perform the actual encoding
                 encoded_x, encoded_var_names = encode_mode_switcher[encoding_mode](
@@ -116,7 +116,7 @@ class Encoder:
                     current_encodings[categorical] = encoding_mode
 
             # update original layer content with the new categorical encoding and the old other values
-            updated_layer = Encoder.update_layer_after_encode(
+            updated_layer = Encoder._update_layer_after_encode(
                 ann_data.layers["original"],
                 encoded_x,
                 encoded_var_names,
@@ -147,7 +147,7 @@ class Encoder:
         return encoded_ann_data
 
     @staticmethod
-    def one_hot_encoding(
+    def _one_hot_encoding(
         adata: AnnData,
         X: Optional[np.ndarray],
         var_names: List[str],
@@ -180,7 +180,7 @@ class Encoder:
         return temp_x, temp_var_names
 
     @staticmethod
-    def label_encoding(
+    def _label_encoding(
         adata: AnnData,
         X: Optional[np.ndarray],
         var_names: List[str],
@@ -217,7 +217,7 @@ class Encoder:
         return temp_x, temp_var_names
 
     @staticmethod
-    def count_encoding(
+    def _count_encoding(
         adata: AnnData,
         X: Optional[np.ndarray],
         var_names: List[str],
@@ -249,7 +249,7 @@ class Encoder:
         return temp_x, temp_var_names
 
     @staticmethod
-    def update_layer_after_encode(
+    def _update_layer_after_encode(
         old_layer: np.ndarray,
         new_x: np.ndarray,
         new_var_names: List[str],
@@ -363,7 +363,7 @@ class Encoder:
         return idx_list
 
     @staticmethod
-    def add_categories_to_obs(ann_data: AnnData, categorical_names: List[str]) -> None:
+    def _add_categories_to_obs(ann_data: AnnData, categorical_names: List[str]) -> None:
         """Add the original categorical values to obs.
 
         Args:
@@ -377,7 +377,7 @@ class Encoder:
                 ann_data.obs[var_name] = ann_data.X[::, idx : idx + 1]
 
     @staticmethod
-    def add_categories_to_uns(ann_data: AnnData, categorical_names: List[str]) -> None:
+    def _add_categories_to_uns(ann_data: AnnData, categorical_names: List[str]) -> None:
         """Add the original categorical values to uns.
 
         Args:

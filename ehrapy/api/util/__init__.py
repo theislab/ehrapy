@@ -3,15 +3,19 @@ from rich import print
 from rich.text import Text
 from rich.tree import Tree
 
+from ehrapy.api.encode.encode import Encoder
 
-def adata_type_overview(adata: AnnData) -> None:
+
+def adata_type_overview(adata: AnnData, sorted: bool = False) -> None:
     """Prints the current state of an AnnData object in a tree format.
 
-    Parameter:
-        adata
-            The AnnData object
+    Args:
+        adata: AnnData object to examine
+        sorted: Whether the tree output should be sorted
     """
-    encoding_mapper = {"label_encoding": "label", "one_hot_encoding": "one hot", "count_encoding": "count"}
+    encoding_mapping = {
+        encoding: encoding.replace("encoding", "").replace("_", " ").strip() for encoding in Encoder.available_encodings
+    }
 
     tree = Tree(
         f"[bold green]Variable names for AnnData object with {len(adata.var_names)} vars",
@@ -24,7 +28,8 @@ def adata_type_overview(adata: AnnData) -> None:
                 if categorical in adata.uns["current_encodings"].keys():
                     branch.add(
                         Text(
-                            f"{categorical} 🔐; {len(adata.obs[categorical].unique())} different categories; currently {encoding_mapper[adata.uns['current_encodings'][categorical]]} encoded"
+                            f"{categorical} 🔐; {len(adata.obs[categorical].unique())} different categories;"
+                            f" currently {encoding_mapping[adata.uns['current_encodings'][categorical]]} encoded"
                         ),
                         style="blue",
                     )
