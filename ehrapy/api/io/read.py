@@ -328,7 +328,7 @@ class DataReader:
             else:
                 if not DataReader.suppress_warnings:
                     warnings.warn(
-                        "Did not found patient_id column at column 0 and no index column was passed. Using default, numerical indices instead!",
+                        "Did not find patient_id column at column 0 and no index column was passed. Using default, numerical indices instead!",
                         IndexColumnWarning,
                     )
         return df
