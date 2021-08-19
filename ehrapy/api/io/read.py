@@ -106,18 +106,13 @@ class DataReader:
         """Read `.csv` and `.tsv` file.
 
         Args:
-            filename
-                Data file.
-            delimiter
-                Delimiter that separates data within the file.
-            index_column
-                Index or name of future index column (obs)
-            columns_obs_only
-                List of column names, that should be stored in the AnnData object, but instead of being stored in X, they go
-                into obs (useful for free-text like values)
+            filename: File path to the csv file.
+            delimiter: Delimiter separating the csv data within the file.
+            index_column: Index or column name of the index column (obs)
+            columns_obs_only: List of columns which only be stored in .obs, but not in X. Useful for free text annotations.
 
         Returns:
-            An AnnData object
+            An :class:`~anndata.AnnData` object
         """
         # read pandas dataframe
         initial_df = pd.read_csv(filename, delimiter=delimiter)
@@ -132,19 +127,14 @@ class DataReader:
     ) -> AnnData:
         """Read `.txt`, `.tab`, `.data` (text) file.
 
-        Same as :func:`~anndata.read_csv` but with default delimiter `None`.
-
         Args:
-            filename
-                Data file, filename or stream.
-            delimiter
-                Delimiter that separates data within text file. If `None`, will split at
-                arbitrary number of white spaces, which is different from enforcing
-                splitting at single white space `' '`.
-            dtype
-                Numpy data type.
+            filename: File name or stream
+            delimiter:  Delimiter that separates data within text file.
+            If `None`, will split at arbitrary number of white spaces, which is different from enforcing splitting at single white space `' '`.
+            dtype: Numpy data type.
+
         Returns:
-            An empty AnnData object
+            An :class:`~anndata.AnnData` object
         """
         if not isinstance(filename, (Path, str, bytes)):
             return DataReader._read_text(filename, delimiter, dtype)
@@ -350,8 +340,8 @@ class DataReader:
             # TODO Key error traceback still prints, have no idea why
             except KeyError:
                 raise ColumnNotFoundError(
-                    "One or more column names passed to column_obs_only were not found in the input data. Make sure you spelled the column names "
-                    "correctly."
+                    "One or more column names passed to column_obs_only were not found in the input data. "
+                    "Make sure you spelled the column names correctly."
                 )
         else:
             obs = pd.DataFrame(index=df.index.map(str))
