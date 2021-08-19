@@ -4,7 +4,7 @@ from rich.text import Text
 from rich.tree import Tree
 
 
-def ann_data_tree(adata: AnnData) -> None:
+def adata_type_overview(adata: AnnData) -> None:
     """Prints the current state of an AnnData object in a tree format.
 
     Parameter:
