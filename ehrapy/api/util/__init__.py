@@ -13,6 +13,7 @@ def adata_type_overview(adata: AnnData, sorted: bool = False) -> None:
         adata: AnnData object to examine
         sorted: Whether the tree output should be sorted
     """
+    # TODO implement sorted!
     encoding_mapping = {
         encoding: encoding.replace("encoding", "").replace("_", " ").strip() for encoding in Encoder.available_encodings
     }

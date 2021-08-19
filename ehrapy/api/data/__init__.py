@@ -1,6 +1,20 @@
 from ehrapy.api.data.dataloader import Dataloader
-from ehrapy.api.data.datasets import mimic_2
+from ehrapy.api.data.datasets import Datasets
 
 
-def read_mimic2():
-    return mimic_2()
+def mimic_2(encode: bool = False):
+    """Downloads and returns a prepared AnnData object of the clinical data from the MIMIC-II database (https://physionet.org/content/mimic2-iaccd/1.0/)
+
+        Args:
+            encode: Whether to return an already encoded AnnData object
+
+        Returns:
+            An :class:`~anndata.AnnData` object with the (optionally encoded) values in X
+
+        Example:
+            .. code-block:: python
+
+                    import ehrapy.api as eh
+                    adata = eh.data.mimic_2(encode=True)
+        """
+    return Datasets.mimic_2()

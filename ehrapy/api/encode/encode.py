@@ -34,6 +34,9 @@ class Encoder:
             autodetect: Autodetection of categorical values (default: False)
             categoricals_encode_mode: Only needed if autodetect set to False. A dict containing the categorical name
             and the encoding mode for the respective column
+
+        Returns:
+            An :class:`~anndata.AnnData` object with the encoded values in X
         """
         # autodetect categorical values, which could lead to more categoricals
         if autodetect:

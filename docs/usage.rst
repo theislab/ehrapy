@@ -82,7 +82,7 @@ Util
 .. autosummary::
     :toctree: util
 
-    util.ann_data_tree
+    util.adata_type_overview
 
 Command-line interface
 -----------------------
