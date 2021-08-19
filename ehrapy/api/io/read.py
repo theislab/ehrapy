@@ -265,6 +265,7 @@ class DataReader:
             column_names_arr = column_names_arr[1:]
         for iname, name in enumerate(column_names_arr):
             column_names_arr[iname] = name.strip('"')
+
         return AnnData(
             data_arr,
             obs=dict(obs_names=row_names_arr),
@@ -283,6 +284,7 @@ class DataReader:
         # move columns from the input dataframe to later obs
         dataframes = DataReader.move_columns_to_obs(df, columns_obs_only)
         X = dataframes.df.to_numpy(copy=True)
+
         return AnnData(
             X,
             obs=dataframes.obs,
@@ -331,6 +333,7 @@ class DataReader:
                         "Did not find patient_id column at column 0 and no index column was passed. Using default, numerical indices instead!",
                         IndexColumnWarning,
                     )
+
         return df
 
     @staticmethod
