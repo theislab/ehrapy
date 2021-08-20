@@ -39,7 +39,8 @@ def read(
 
          columns_obs_only
              If passed, this list contains the name of columns that should be excluded from X, but stored in obs. This may be useful for columns
-             that contain free text information, which may not be useful to perform some algorithms and tools on.
+             that contain free text information, which may not be useful to perform some algorithms and tools on. This is also required if ``cache`` is ``True``
+             since those columns will be kept in obs only, while reading from the cached file.
 
          cache
              If `False`, read from source, if `True`, read from fast 'h5ad' cache.

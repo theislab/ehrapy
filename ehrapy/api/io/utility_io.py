@@ -1,7 +1,7 @@
 from pathlib import Path, PurePath
 from typing import Union
 
-supported_extensions = {"csv", "tsv", "tab", "txt"}
+supported_extensions = {"csv", "tsv", "tab", "txt", "h5ad"}
 
 
 def is_valid_filename(file_path: Path, return_ext=False) -> Union[str, bool]:

@@ -33,12 +33,8 @@ class TestRead:
         assert (
             encoded_ann_data.var_names
             == [
-                "ehrapycat_survival_False",
-                "ehrapycat_survival_True",
-                "ehrapycat_clinic_day_Friday",
-                "ehrapycat_clinic_day_Monday",
-                "ehrapycat_clinic_day_Saturday",
-                "ehrapycat_clinic_day_Sunday",
+                "ehrapycat_survival",
+                "ehrapycat_clinic_day",
                 "los_days",
                 "b12_values",
             ]

@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Literal, Optional, Union
 
+import numpy as np
 from anndata import AnnData
 
 from ehrapy.api.io.utility_io import is_valid_filename
@@ -35,6 +36,11 @@ class DataWriter:
         if extension == "csv":
             adata.write_csvs(filename)
         else:
+            if not np.issubdtype(adata.X.dtype, np.number) and extension == "h5ad":
+                raise ValueError(
+                    "Cannot write AnnData object containing non-numerical values to .h5ad file. Please "
+                    "encode your AnnData object before writing!"
+                )
             adata.write(filename, compression=compression, compression_opts=compression_opts)
 
     @staticmethod

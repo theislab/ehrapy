@@ -9,6 +9,7 @@ from anndata import read as read_h5ad
 from rich import print
 
 from ehrapy.api.data.dataloader import Dataloader
+from ehrapy.api.encode.encode import Encoder
 from ehrapy.api.io.utility_io import _slugify, is_float, is_int, is_valid_filename, supported_extensions
 
 
@@ -47,7 +48,6 @@ class DataReader:
             columns_obs_only=columns_obs_only,
             cache=cache,
         )
-
         return raw_anndata
 
     @staticmethod
@@ -77,7 +77,10 @@ class DataReader:
         if path_cache.suffix in {".gz", ".bz2"}:
             path_cache = path_cache.with_suffix("")
         if cache and path_cache.is_file():
-            return read_h5ad(path_cache)
+            cached_adata = read_h5ad(path_cache)
+            cached_adata.X = cached_adata.X.astype("object")
+            cached_adata = DataReader._decode_cached_adata(cached_adata, columns_obs_only)
+            return cached_adata
 
         # do the actual reading
         if extension in {"csv", "tsv"}:
@@ -87,12 +90,15 @@ class DataReader:
         else:
             raise ValueError(f"Unknown extension {extension}.")
 
-        # Caching WIP; not needed for csv/tsv parsing
-        if cache and extension not in {"csv", "tsv"}:
+        if cache:
             if not path_cache.parent.is_dir():
                 path_cache.parent.mkdir(parents=True)
             # write for faster reading when calling the next time
-            raw_anndata.write(path_cache)
+            cached_adata = Encoder.encode(ann_data=raw_anndata, autodetect=True)
+            cached_adata.write(path_cache)
+            cached_adata.X = cached_adata.X.astype("object")
+            cached_adata = DataReader._decode_cached_adata(cached_adata, columns_obs_only)
+            return cached_adata
 
         return raw_anndata
 
@@ -282,6 +288,43 @@ class DataReader:
             dtype="object",
             layers={"original": X.copy()},
         )
+
+    @staticmethod
+    def _decode_cached_adata(adata: AnnData, column_obs_only: List[str]) -> np.ndarray:
+        """Decode the label encoding of initial AnnData object
+
+        Args:
+            adata: The label encoded AnnData object
+            column_obs_only: The columns, that should be kept in obs
+
+        Returns:
+            The decoded, initial AnnData object
+        """
+        var_names = list(adata.var_names)
+        # for each encoded categorical, replace its encoded values with its original values in X
+        for idx, var_name in enumerate(var_names):
+            if not var_name.startswith("ehrapycat_"):
+                break
+            value_name = var_name[10:]
+            original_values = adata.uns["original_values_categoricals"][value_name]
+            adata.X[:, idx : idx + 1] = original_values
+            # update var name per categorical
+            var_names[idx] = value_name
+        # drop all columns, that are not obs only in obs
+        if column_obs_only:
+            adata.obs = adata.obs[column_obs_only]
+        else:
+            adata.obs = pd.DataFrame(index=adata.obs.index)
+        # set the new var names (unencoded ones)
+        adata.var.index = var_names
+        # update original layer as well
+        adata.layers["original"] = adata.X.copy()
+        # delete everything from uns
+        tmp_uns = adata.uns.copy()
+        for key in tmp_uns.keys():
+            if key != "neighbors":
+                del adata.uns[key]
+        return adata
 
     @staticmethod
     def _check_datafile_present_and_download(path: Union[str, Path], backup_url=None) -> bool:

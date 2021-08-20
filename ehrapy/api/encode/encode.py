@@ -54,7 +54,7 @@ class Encoder:
             encoded_x = None
             encoded_var_names = ann_data.var_names.to_list()
 
-            encoded_x, encoded_var_names = Encoder._one_hot_encoding(
+            encoded_x, encoded_var_names = Encoder._label_encoding(
                 ann_data,
                 encoded_x,
                 encoded_var_names,
@@ -289,7 +289,7 @@ class Encoder:
         updated_layer = np.hstack((encoded_categoricals, old_layer_view))
         del old_layer
 
-        return updated_layer
+        return updated_layer.astype("float32")
 
     @staticmethod
     def _update_encoded_data(
