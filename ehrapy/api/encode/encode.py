@@ -358,11 +358,25 @@ class Encoder:
             cache_file: The filename of the cache file to read from
 
         Returns:
-            A (partially) encoding resetted AnnData object
+            A (partially) encoding reset AnnData object
         """
-        # TODO causes circular dependency import issue
-        # if from_cache_file:
-        #   return DataReader.read(cache_file)
+        if "current_encodings" not in adata.uns.keys():
+            print("[bold yellow]Calling undo_encoding on unencoded AnnData object. Skipping.")
+            sys.exit(0)
+        if from_cache_file:
+            # import here to resolve circular dependency issue on module level
+            from ehrapy.api.io.read import DataReader
+
+            # read from cache file and decode it
+            cached_adata = DataReader.read(cache_file)
+            cached_adata.X = cached_adata.X.astype("object")
+            encoded_categoricals = list(adata.uns["original_values_categoricals"].keys())
+            # get all columns that should be stored in obs only
+            columns_obs_only = [
+                column_name for column_name in list(adata.obs.columns) if column_name not in encoded_categoricals
+            ]
+            cached_adata = DataReader._decode_cached_adata(cached_adata, columns_obs_only)
+            return cached_adata
         # maybe implement a way to only reset encoding for specific columns later
         if columns == "all":
             categoricals = list(adata.uns["original_values_categoricals"].keys())
