@@ -3,6 +3,8 @@ from itertools import chain
 from typing import Dict, List, Optional, Set, Tuple
 
 import numpy as np
+import pandas as pd
+from _collections import OrderedDict
 from anndata import AnnData
 from category_encoders import CountEncoder
 from rich import print
@@ -340,6 +342,46 @@ class Encoder:
         ).transpose()
 
         return array
+
+    @staticmethod
+    def undo_encoding(
+        adata: AnnData, columns: str = "all", from_cache_file: bool = False, cache_file: str = None
+    ) -> AnnData:
+        """
+        Undo the current encodings applied to some or all columns in X. This currently resets the AnnData object to its initial state.
+        Args:
+            adata: The AnnData object
+            columns: The names of the columns to reset encoding for. Defaults to all columns.
+            from_cache_file: Whether to reset all encodings by reading from a cached .h5ad file, if available. This resets the AnnData object to its initial
+            state.
+            TODO replace this once settings.cache_dir is available
+            cache_file: The filename of the cache file to read from
+
+        Returns:
+            A (partially) encoding resetted AnnData object
+        """
+        # TODO causes circular dependency import issue
+        # if from_cache_file:
+        #   return DataReader.read(cache_file)
+        # maybe implement a way to only reset encoding for specific columns later
+        if columns == "all":
+            categoricals = list(adata.uns["original_values_categoricals"].keys())
+        else:
+            print("[bold blue]Currently, one can only reset encodings for all columns!")
+            sys.exit(1)
+        transformed = Encoder._init_encoding(adata, categoricals)
+        new_x, new_var_names = Encoder._update_encoded_data(
+            adata.X, transformed, list(adata.var_names), categoricals, categoricals
+        )
+
+        return AnnData(
+            new_x,
+            obs=adata.obs,
+            var=pd.DataFrame(index=new_var_names),
+            uns=OrderedDict(),
+            dtype="object",
+            layers={"original": new_x.copy()},
+        )
 
     @staticmethod
     def _get_categories_old_indices(old_var_names: List[str], encoded_categories: List[str]) -> Set[int]:

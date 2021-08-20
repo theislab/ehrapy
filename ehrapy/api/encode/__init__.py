@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Union
 
 from anndata import AnnData
 
@@ -37,3 +37,21 @@ def encode(
             ehp.encode.encode(adata, autodetect=False, {'label_encoding': ['col1', 'col2'], 'one_hot_encoding': ['col3']})
     """
     return Encoder.encode(ann_data, autodetect, categoricals_encode_mode)
+
+
+def undo_encoding(
+    adata: AnnData, columns: str = "all", from_cache_file: bool = False, cache_file: str = None
+) -> AnnData:
+    """Undo the current encodings applied to some or all columns in X. This currently resets the AnnData object to its initial state.
+    Args:
+        adata: The AnnData object
+        columns: The names of the columns to reset encoding for. Defaults to all columns.
+        from_cache_file: Whether to reset all encodings by reading from a cached .h5ad file, if available. This resets the AnnData object to its initial
+        state.
+        TODO replace this once settings.cache_dir is available
+        cache_file: The filename of the cache file to read from
+
+    Returns:
+        A (partially) encoding resetted AnnData object
+    """
+    return Encoder.undo_encoding(adata, columns, from_cache_file, cache_file)

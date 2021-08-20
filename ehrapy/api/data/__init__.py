@@ -17,4 +17,4 @@ def mimic_2(encode: bool = False):
                 import ehrapy.api as eh
                 adata = eh.data.mimic_2(encode=True)
     """
-    return Datasets.mimic_2()
+    return Datasets.mimic_2(encode=encode)

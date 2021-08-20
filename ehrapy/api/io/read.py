@@ -4,6 +4,7 @@ from typing import Generator, Iterable, Iterator, List, NamedTuple, Optional, Un
 
 import numpy as np
 import pandas as pd
+from _collections import OrderedDict
 from anndata import AnnData
 from anndata import read as read_h5ad
 from rich import print
@@ -319,11 +320,8 @@ class DataReader:
         adata.var.index = var_names
         # update original layer as well
         adata.layers["original"] = adata.X.copy()
-        # delete everything from uns
-        tmp_uns = adata.uns.copy()
-        for key in tmp_uns.keys():
-            if key != "neighbors":
-                del adata.uns[key]
+        # reset uns
+        adata.uns = OrderedDict()
         return adata
 
     @staticmethod
