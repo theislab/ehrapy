@@ -55,10 +55,13 @@ class TestRead:
             assert issubclass(w[-1].category, IndexColumnWarning)
 
     def test_set_default_index(self):
-        ann_data = DataReader.read(filename=f"{_TEST_PATH}/dataset3.csv")
-        assert ann_data.X.shape == (5, 4)
-        assert not ann_data.obs_names.name
-        assert list(ann_data.obs.index.values) == [f"{i}" for i in range(5)]
+        with warnings.catch_warnings(record=True) as w:
+            ann_data = DataReader.read(filename=f"{_TEST_PATH}/dataset3.csv")
+            assert ann_data.X.shape == (5, 4)
+            assert not ann_data.obs_names.name
+            assert list(ann_data.obs.index.values) == [f"{i}" for i in range(5)]
+            assert len(w) == 1
+            assert issubclass(w[-1].category, IndexColumnWarning)
 
     def test_set_patient_id_index(self):
         ann_data = DataReader.read(filename=f"{_TEST_PATH}/dataset1.csv")

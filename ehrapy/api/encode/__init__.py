@@ -52,6 +52,6 @@ def undo_encoding(
         cache_file: The filename of the cache file to read from
 
     Returns:
-        A (partially) encoding resetted AnnData object
+        A (partially) encoding reset AnnData object
     """
     return Encoder.undo_encoding(adata, columns, from_cache_file, cache_file)

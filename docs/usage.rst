@@ -36,7 +36,6 @@ Reading and writing
 Encoding
 ~~~~~~~~
 
-.. module:: ehrapy.api
 .. currentmodule:: ehrapy.api
 
 .. autosummary::
@@ -47,7 +46,6 @@ Encoding
 Data
 ~~~~~
 
-.. module:: ehrapy.api
 .. currentmodule:: ehrapy.api
 
 .. autosummary::
@@ -76,7 +74,6 @@ Plotting
 Util
 ~~~~~
 
-.. module:: ehrapy.api
 .. currentmodule:: ehrapy.api
 
 .. autosummary::
