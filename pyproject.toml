@@ -31,7 +31,7 @@ anndata = "^0.7.6"
 pypi-latest = "^0.1.0"
 
 [tool.poetry.dev-dependencies]
-pytest = "^6.2.3"
+pytest = "^6.2.5"
 coverage = {extras = ["toml"], version = "^5.3"}
 safety = "^1.9.0"
 mypy = "^0.910"
