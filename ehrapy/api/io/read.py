@@ -1,6 +1,6 @@
 import warnings
 from pathlib import Path
-from typing import Generator, Iterable, Iterator, List, NamedTuple, Optional, Union
+from typing import Generator, Iterable, Iterator, List, NamedTuple, Optional, Union, Sequence
 
 import numpy as np
 import pandas as pd
@@ -102,7 +102,7 @@ class DataReader:
             if not path_cache.parent.is_dir():
                 path_cache.parent.mkdir(parents=True)
             # write for faster reading when calling the next time
-            cached_adata = Encoder.encode(ann_data=raw_anndata, autodetect=True)
+            cached_adata = Encoder.encode(adata=raw_anndata, autodetect=True)
             cached_adata.write(path_cache)
             cached_adata.X = cached_adata.X.astype("object")
             cached_adata = DataReader._decode_cached_adata(cached_adata, columns_obs_only)
@@ -195,10 +195,10 @@ class DataReader:
                 else:
                     if not _is_float_convertable(line_list[0]):
                         row_names.append(line_list[0])
-                        DataReader._cast_vals_to_numeric(line_list[1:])
+                        DataReader._cast_values_to_numeric(line_list[1:])
                         data.append(np.array(line_list[1:], dtype=dtype))
                     else:
-                        DataReader._cast_vals_to_numeric(line_list)
+                        DataReader._cast_values_to_numeric(line_list)
                         data.append(np.array(line_list, dtype=dtype))
                 break
         # TODO Fix the unused variables
@@ -215,10 +215,10 @@ class DataReader:
             line_list = line.split(delimiter)
             if id_column_avail:
                 row_names.append(line_list[0])
-                DataReader._cast_vals_to_numeric(line_list[1:])
+                DataReader._cast_values_to_numeric(line_list[1:])
                 data.append(np.array(line_list[1:], dtype=dtype))
             else:
-                DataReader._cast_vals_to_numeric(line_list)
+                DataReader._cast_values_to_numeric(line_list)
                 data.append(np.array(line_list, dtype=dtype))
             break
         # if row names are just integers
@@ -231,10 +231,10 @@ class DataReader:
             line_list = line.split(delimiter)
             if id_column_avail:
                 row_names.append(line_list[0])
-                DataReader._cast_vals_to_numeric(line_list[1:])
+                DataReader._cast_values_to_numeric(line_list[1:])
                 data.append(np.array(line_list[1:], dtype=dtype))
             else:
-                DataReader._cast_vals_to_numeric(line_list)
+                DataReader._cast_values_to_numeric(line_list)
                 data.append(np.array(line_list, dtype=dtype))
         if data[0].size != data[-1].size:
             raise ValueError(
@@ -341,7 +341,15 @@ class DataReader:
 
     @staticmethod
     def _set_index(df: pd.DataFrame, index_column: Union[str, Optional[int]]) -> pd.DataFrame:
-        """Try to set the index, if any given by the index_column parameter."""
+        """Try to set the index, if any given by the index_column parameter.
+
+        Args:
+            df: Pandas DataFrame to set the index for
+            index_column: The name of the index column
+
+        Returns:
+            An :class:`~pd.DataFrame` object
+        """
         column_names = list(df.columns)
         if isinstance(index_column, str):
             df = df.set_index(index_column)
@@ -361,10 +369,18 @@ class DataReader:
         return df
 
     @staticmethod
-    def move_columns_to_obs(df: pd.DataFrame, columns_obs_only: Optional[List[Union[str]]]) -> BaseDataframes:
-        """
-        Move the given columns from the original dataframe (and therefore X) to obs. By doing so, those values will not get lost
-        and will be stored in obs, but will not appear in X. This may be useful for textual values like free text.
+    def _move_columns_to_obs(df: pd.DataFrame, columns_obs_only: Optional[List[str]]) -> BaseDataframes:
+        """Move the given columns from the original dataframe (and therefore X) to obs.
+
+        By moving these values will not get lost and will be stored in obs, but will not appear in X.
+        This may be useful for textual values like free text.
+
+        Args:
+            df: Pandas Dataframe to move the columns for
+            columns_obs_only: Columns to move to obs only
+
+        Returns:
+            A modified :class:`~pd.DataFrame` object
         """
         if columns_obs_only:
             try:
@@ -382,7 +398,7 @@ class DataReader:
         return BaseDataframes(obs, df)
 
     @staticmethod
-    def _cast_vals_to_numeric(row: List[Optional[Union[str, int, float]]]) -> List[Optional[Union[str, int, float]]]:
+    def _cast_values_to_numeric(row: List[Optional[Union[str, int, float]]]) -> List[Optional[Union[str, int, float]]]:
         """Cast values to numerical datatype if possible.
 
         Args:
@@ -405,7 +421,7 @@ class DataReader:
         return row
 
     @staticmethod
-    def homogeneous_type(sequence):
+    def _is_homogeneous_type(sequence: Sequence):
         """Check, whether all elements in an iterable are of the same type.
 
         Args:
@@ -417,7 +433,7 @@ class DataReader:
         iseq = iter(sequence)
         first_type = type(next(iseq))
 
-        return first_type if all((type(x) is first_type) for x in iseq) else False
+        return first_type if all((type(el) is first_type) for el in iseq) else False
 
 
 class IndexColumnWarning(UserWarning):
