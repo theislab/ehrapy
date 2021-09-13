@@ -40,11 +40,11 @@ repos:
             types: [text]
             stages: [commit, push, manual]
     - repo: https://github.com/pre-commit/mirrors-prettier
-      rev: v2.3.0
+      rev: v2.3.2
       hooks:
           - id: prettier
     - repo: https://github.com/pycqa/isort
-      rev: 5.8.0
+      rev: 5.9.3
       hooks:
           - id: isort
             name: isort (python)
