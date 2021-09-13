@@ -1,6 +1,6 @@
 import warnings
 from pathlib import Path
-from typing import Generator, Iterable, Iterator, List, NamedTuple, Optional, Union, Sequence
+from typing import Generator, Iterable, Iterator, List, NamedTuple, Optional, Sequence, Union
 
 import numpy as np
 import pandas as pd
@@ -270,7 +270,7 @@ class DataReader:
         # set index given or default
         df = DataReader._set_index(df, index_column)
         # move columns from the input dataframe to later obs
-        dataframes = DataReader.move_columns_to_obs(df, columns_obs_only)
+        dataframes = DataReader._move_columns_to_obs(df, columns_obs_only)
         X = dataframes.df.to_numpy(copy=True)
 
         return AnnData(

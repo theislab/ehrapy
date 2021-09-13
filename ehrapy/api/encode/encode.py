@@ -1,6 +1,6 @@
 import sys
 from itertools import chain
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -22,7 +22,7 @@ class Encoder:
     @staticmethod
     def encode(
         adata: AnnData, autodetect: bool = False, categoricals_encode_mode: Dict[str, List[str]] = None
-    ) -> AnnData:
+    ) -> Union[AnnData, None]:
         """Encode the initial read AnnData object. Categorical values could be either passed via parameters or autodetected.
 
         Available encodings are:
@@ -49,7 +49,7 @@ class Encoder:
                     "[bold yellow]The current data has already been encoded."
                     "It is not recommended to use autodetect with already encoded data."
                 )
-                return
+                return None
             Encoder._add_categories_to_obs(adata, categorical_names)
             Encoder._add_categories_to_uns(adata, categorical_names)
 
@@ -95,9 +95,7 @@ class Encoder:
                 )
             Encoder._add_categories_to_obs(adata, categoricals)
             Encoder._add_categories_to_uns(adata, categoricals)
-            current_encodings = (
-                {} if "current_encodings" not in adata.uns.keys() else adata.uns["current_encodings"]
-            )
+            current_encodings = {} if "current_encodings" not in adata.uns.keys() else adata.uns["current_encodings"]
             encoded_x = None
             encoded_var_names = adata.var_names.to_list()
 
