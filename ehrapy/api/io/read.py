@@ -11,7 +11,7 @@ from rich import print
 
 from ehrapy.api.data.dataloader import Dataloader
 from ehrapy.api.encode.encode import Encoder
-from ehrapy.api.io.utility_io import _slugify, is_float, is_int, is_valid_filename, supported_extensions
+from ehrapy.api.io._utility_io import _get_file_extension, _is_float, _is_int, _slugify, supported_extensions
 
 
 class BaseDataframes(NamedTuple):
@@ -42,7 +42,7 @@ class DataReader:
             Dataloader.download(backup_url, output_file_name=str(filename), output_path=str(Path.cwd()), is_zip=is_zip)
 
         raw_anndata = DataReader._read(
-            file,
+            filename=file,
             extension=extension,
             delimiter=delimiter,
             index_column=index_column,
@@ -54,18 +54,18 @@ class DataReader:
     @staticmethod
     def _read(
         filename: Path,
-        extension=None,
-        delimiter=None,
+        extension: Optional[str] = None,
+        delimiter: Optional[str] = None,
         index_column: Union[str, Optional[int]] = None,
         columns_obs_only: Optional[List[Union[str]]] = None,
         cache: bool = False,
         backup_url: Optional[str] = None,
-    ) -> AnnData:
+    ) -> Union[AnnData, np.ndarray]:
         """Internal interface of the read method."""
         if extension is not None and extension not in supported_extensions:
             raise ValueError("Please provide one of the available extensions.\n" f"{supported_extensions}")
         else:
-            extension = is_valid_filename(filename, return_ext=True)
+            extension = _get_file_extension(filename)
         # read hdf5 files
         if extension in {"h5", "h5ad"}:
             return read_h5ad(filename)
@@ -81,6 +81,7 @@ class DataReader:
             cached_adata = read_h5ad(path_cache)
             cached_adata.X = cached_adata.X.astype("object")
             cached_adata = DataReader._decode_cached_adata(cached_adata, columns_obs_only)
+
             return cached_adata
 
         # do the actual reading
@@ -89,7 +90,7 @@ class DataReader:
         elif extension in {"txt", "tab", "data"}:
             raw_anndata = DataReader.read_text(filename, delimiter, dtype="object")
         else:
-            raise ValueError(f"Unknown extension {extension}.")
+            raise ValueError(f"Unknown extension: {extension}.")
 
         if cache:
             if not path_cache.parent.is_dir():
@@ -151,7 +152,7 @@ class DataReader:
             return DataReader._read_text(f, delimiter, dtype)
 
     @staticmethod
-    def iter_lines(file_like: Iterable[str]) -> Generator[str, None, None]:
+    def _iter_lines(file_like: Iterable[str]) -> Generator[str, None, None]:
         """Helper for iterating only nonempty lines without line breaks"""
         for line in file_like:
             line = line.rstrip("\r\n")
@@ -160,19 +161,18 @@ class DataReader:
 
     @staticmethod
     def _read_text(  # noqa:C901
-        f: Iterator[str],
+        file_iterator: Iterator[str],
         delimiter: Optional[str],
         dtype: str,
     ) -> AnnData:
         comments: List = []
         data: List = []
-        lines: Generator = DataReader.iter_lines(f)
+        lines: Generator = DataReader._iter_lines(file_iterator)
         column_names: List = []
         row_names: List = []
         id_column_avail: bool = False
         # read header and column names
         for line in lines:
-
             if line.startswith("#"):
                 comment = line.lstrip("# ")
                 if comment:
@@ -182,13 +182,12 @@ class DataReader:
                     raise ValueError(f"Did not find delimiter {delimiter!r} in first line.")
                 line_list = line.split(delimiter)
                 # the first column might be row names, so check the last
-                if not is_float(line_list[-1]):
+                if not _is_float(line_list[-1]):
                     column_names = line_list
                     if "patient_id" == column_names[0].lower():
                         id_column_avail = True
-                    # logg.msg("    assuming first line in file stores column names", v=4)
                 else:
-                    if not is_float(line_list[0]):
+                    if not _is_float(line_list[0]):
                         row_names.append(line_list[0])
                         DataReader._cast_vals_to_numeric(line_list[1:])
                         data.append(np.array(line_list[1:], dtype=dtype))
@@ -196,21 +195,19 @@ class DataReader:
                         DataReader._cast_vals_to_numeric(line_list)
                         data.append(np.array(line_list, dtype=dtype))
                 break
+        # TODO Fix the unused variables
         if not column_names:
             # try reading col_names from the last comment line
             if len(comments) > 0:
-                # logg.msg("    assuming last comment line stores variable names", v=4)
                 column_names_arr = np.array(comments[-1].split())
             # just numbers as col_names
             else:
-                # logg.msg("    did not find column names in file", v=4)
                 column_names_arr = np.arange(len(data[0])).astype(str)
         column_names_arr = np.array(column_names, dtype=str)
         # read another line to check if first column contains row names or not
         for line in lines:
             line_list = line.split(delimiter)
             if id_column_avail:
-                # logg.msg("    assuming first column in file stores row names", v=4)
                 row_names.append(line_list[0])
                 DataReader._cast_vals_to_numeric(line_list[1:])
                 data.append(np.array(line_list[1:], dtype=dtype))
@@ -220,10 +217,6 @@ class DataReader:
             break
         # if row names are just integers
         if len(data) > 1 and data[0].size != data[1].size:
-            # logg.msg(
-            #     "    assuming first row stores column names and first column row names",
-            #     v=4,
-            # )
             column_names_arr = np.array(data[0]).astype(int).astype(str)
             row_names.append(data[1][0].astype(int).astype(str))
             data = [data[1][1:]]
@@ -237,38 +230,30 @@ class DataReader:
             else:
                 DataReader._cast_vals_to_numeric(line_list)
                 data.append(np.array(line_list, dtype=dtype))
-        # logg.msg("    read data into list of lists", t=True, v=4)
-        # transfrom to array, this takes a long time and a lot of memory
-        # but it’s actually the same thing as np.genfromtxt does
-        # - we don’t use the latter as it would involve another slicing step
-        #   in the end, to separate row_names from float data, slicing takes
-        #   a lot of memory and CPU time
         if data[0].size != data[-1].size:
             raise ValueError(
                 f"Length of first line ({data[0].size}) is different " f"from length of last line ({data[-1].size})."
             )
-        data_arr = np.array(data, dtype=dtype)
-        # logg.msg("    constructed array from list of list", t=True, v=4)
+        data_array = np.array(data, dtype=dtype)
         # transform row_names
         if not row_names:
-            row_names_arr = np.arange(len(data_arr)).astype(str)
-            # logg.msg("    did not find row names in file", v=4)
+            row_names_arr = np.arange(len(data_array)).astype(str)
         else:
             row_names_arr = np.array(row_names)
             for iname, name in enumerate(row_names_arr):
                 row_names_arr[iname] = name.strip('"')
         # adapt col_names if necessary
-        if column_names_arr.size > data_arr.shape[1]:
+        if column_names_arr.size > data_array.shape[1]:
             column_names_arr = column_names_arr[1:]
         for iname, name in enumerate(column_names_arr):
             column_names_arr[iname] = name.strip('"')
 
         return AnnData(
-            data_arr,
+            X=data_array,
             obs=dict(obs_names=row_names_arr),
             var=dict(var_names=column_names_arr),
             dtype=dtype,
-            layers={"original": data_arr.copy()},
+            layers={"original": data_array.copy()},
         )
 
     @staticmethod
@@ -291,7 +276,7 @@ class DataReader:
         )
 
     @staticmethod
-    def _decode_cached_adata(adata: AnnData, column_obs_only: List[str]) -> np.ndarray:
+    def _decode_cached_adata(adata: AnnData, column_obs_only: List[str]) -> AnnData:
         """Decode the label encoding of initial AnnData object
 
         Args:
@@ -322,6 +307,7 @@ class DataReader:
         adata.layers["original"] = adata.X.copy()
         # reset uns
         adata.uns = OrderedDict()
+
         return adata
 
     @staticmethod
@@ -400,14 +386,14 @@ class DataReader:
             A new List of values casted into the appropriate data type
         """
         for idx, val in enumerate(row):
-            _is_int = is_int(val)
+            __is_int: bool = _is_int(val)
             if val == "0":
                 row[idx] = 0
             elif val == "":
                 row[idx] = None
-            elif _is_int:
+            elif __is_int:
                 row[idx] = int(val)
-            elif is_float(val):
+            elif _is_float(val):
                 row[idx] = float(val)
 
         return row
