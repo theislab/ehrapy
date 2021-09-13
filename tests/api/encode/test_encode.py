@@ -48,8 +48,8 @@ class TestRead:
     def test_autodetect_encode_again(self):
         adata = DataReader.read(filename=f"{_TEST_PATH}/dataset1.csv")
         encoded_ann_data = Encoder.encode(adata, autodetect=True)
-        with pytest.raises(SystemExit):
-            encoded_ann_data_again = Encoder.encode(encoded_ann_data, autodetect=True)  # noqa: F841
+        encoded_ann_data_again = Encoder.encode(encoded_ann_data, autodetect=True)  # noqa: F841
+        assert encoded_ann_data_again is None
 
     def test_custom_encode(self):
         adata = DataReader.read(filename=f"{_TEST_PATH}/dataset1.csv")

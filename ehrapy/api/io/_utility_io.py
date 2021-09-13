@@ -4,15 +4,14 @@ from typing import Union
 supported_extensions = {"csv", "tsv", "tab", "txt", "h5ad"}
 
 
-def is_valid_filename(file_path: Path, return_ext=False) -> Union[str, bool]:
+def _get_file_extension(file_path: Path) -> str:
     """Check whether the argument is a filename.
 
     Args:
         file_path: Path to the file
-        return_ext: Whether to return the extension of the file
 
     Returns:
-        True if the file contains a supported extension, False otherwise
+        File extension of the specified file
     """
     ext = file_path.suffixes
 
@@ -20,9 +19,7 @@ def is_valid_filename(file_path: Path, return_ext=False) -> Union[str, bool]:
         ext = ext[-2:]
 
     if ext and ext[-1][1:] in supported_extensions:
-        return ext[-1][1:] if return_ext else True
-    elif not return_ext:
-        return False
+        return ext[-1][1:]
     raise ValueError(
         f"""\
 {file_path!r} does not end on a valid extension.
@@ -56,7 +53,7 @@ def _slugify(file_path: Union[str, PurePath]) -> str:
     return filename
 
 
-def is_float(string) -> bool:
+def _is_float_convertable(string) -> bool:
     """Checks whether a string can be converted into a float
 
     http://stackoverflow.com/questions/736043/checking-if-a-string-can-be-converted-to-float-in-python
@@ -74,7 +71,7 @@ def is_float(string) -> bool:
         return False
 
 
-def is_int(string: Union[str, float]) -> bool:
+def _is_int_convertable(string: Union[str, float]) -> bool:
     """Checks whether a string can be converted into an integer
 
     Args:

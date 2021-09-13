@@ -1,6 +1,6 @@
 import sys
 from itertools import chain
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -21,8 +21,8 @@ class Encoder:
 
     @staticmethod
     def encode(
-        ann_data: AnnData, autodetect: bool = False, categoricals_encode_mode: Dict[str, List[str]] = None
-    ) -> AnnData:
+        adata: AnnData, autodetect: bool = False, categoricals_encode_mode: Dict[str, List[str]] = None
+    ) -> Union[AnnData, None]:
         """Encode the initial read AnnData object. Categorical values could be either passed via parameters or autodetected.
 
         Available encodings are:
@@ -32,7 +32,7 @@ class Encoder:
         3. count encoding (https://contrib.scikit-learn.org/category_encoders/count.html)
 
         Args:
-            ann_data: The inital AnnData object parsed by the :class: DataReader
+            adata: The inital AnnData object parsed by the :class: DataReader
             autodetect: Autodetection of categorical values (default: False)
             categoricals_encode_mode: Only needed if autodetect set to False. A dict containing the categorical name
             and the encoding mode for the respective column
@@ -42,22 +42,22 @@ class Encoder:
         """
         # autodetect categorical values, which could lead to more categoricals
         if autodetect:
-            ann_data.uns["categoricals"] = _detect_categorical_columns(ann_data.X, ann_data.var_names)
-            categorical_names = ann_data.uns["categoricals"]["categorical_encoded"]
-            if "current_encodings" in ann_data.uns.keys():
+            adata.uns["categoricals"] = _detect_categorical_columns(adata.X, adata.var_names)
+            categorical_names = adata.uns["categoricals"]["categorical_encoded"]
+            if "current_encodings" in adata.uns.keys():
                 print(
                     "[bold yellow]The current data has already been encoded."
                     "It is not recommended to use autodetect with already encoded data."
                 )
-                sys.exit(1)
-            Encoder._add_categories_to_obs(ann_data, categorical_names)
-            Encoder._add_categories_to_uns(ann_data, categorical_names)
+                return None
+            Encoder._add_categories_to_obs(adata, categorical_names)
+            Encoder._add_categories_to_uns(adata, categorical_names)
 
             encoded_x = None
-            encoded_var_names = ann_data.var_names.to_list()
+            encoded_var_names = adata.var_names.to_list()
 
             encoded_x, encoded_var_names = Encoder._label_encoding(
-                ann_data,
+                adata,
                 encoded_x,
                 encoded_var_names,
                 categorical_names,
@@ -65,17 +65,17 @@ class Encoder:
 
             # update layer content with the latest categorical encoding and the old other values
             updated_layer = Encoder._update_layer_after_encode(
-                ann_data.layers["original"],
+                adata.layers["original"],
                 encoded_x,
                 encoded_var_names,
-                ann_data.var_names.to_list(),
+                adata.var_names.to_list(),
                 categorical_names,
             )
             encoded_ann_data = AnnData(
                 encoded_x,
-                obs=ann_data.obs.copy(),
+                obs=adata.obs.copy(),
                 var=dict(var_names=encoded_var_names),
-                uns=ann_data.uns.copy(),
+                uns=adata.uns.copy(),
                 layers={"original": updated_layer},
             )
             encoded_ann_data.uns["current_encodings"] = {
@@ -84,7 +84,7 @@ class Encoder:
 
         # user passed categorical values with encoding mode for each of them
         else:
-            ann_data.uns["categoricals_encoded_with_mode"] = categoricals_encode_mode
+            adata.uns["categoricals_encoded_with_mode"] = categoricals_encode_mode
             categoricals = list(chain(*categoricals_encode_mode.values()))
 
             # ensure no categorical column gets encoded twice
@@ -93,13 +93,11 @@ class Encoder:
                     "The categorical column names given contain at least one duplicate column. "
                     "Check the column names to ensure that no column is encoded twice!"
                 )
-            Encoder._add_categories_to_obs(ann_data, categoricals)
-            Encoder._add_categories_to_uns(ann_data, categoricals)
-            current_encodings = (
-                {} if "current_encodings" not in ann_data.uns.keys() else ann_data.uns["current_encodings"]
-            )
+            Encoder._add_categories_to_obs(adata, categoricals)
+            Encoder._add_categories_to_uns(adata, categoricals)
+            current_encodings = {} if "current_encodings" not in adata.uns.keys() else adata.uns["current_encodings"]
             encoded_x = None
-            encoded_var_names = ann_data.var_names.to_list()
+            encoded_var_names = adata.var_names.to_list()
 
             for encoding_mode in categoricals_encode_mode.keys():
                 if encoding_mode not in Encoder.available_encodings:
@@ -114,7 +112,7 @@ class Encoder:
                 }
                 # perform the actual encoding
                 encoded_x, encoded_var_names = encode_mode_switcher[encoding_mode](
-                    ann_data, encoded_x, encoded_var_names, categoricals_encode_mode[encoding_mode]
+                    adata, encoded_x, encoded_var_names, categoricals_encode_mode[encoding_mode]
                 )
                 # update encoding history in uns
                 for categorical in categoricals_encode_mode[encoding_mode]:
@@ -122,18 +120,18 @@ class Encoder:
 
             # update original layer content with the new categorical encoding and the old other values
             updated_layer = Encoder._update_layer_after_encode(
-                ann_data.layers["original"],
+                adata.layers["original"],
                 encoded_x,
                 encoded_var_names,
-                ann_data.var_names.to_list(),
+                adata.var_names.to_list(),
                 categoricals,
             )
             try:
                 encoded_ann_data = AnnData(
                     encoded_x,
-                    obs=ann_data.obs.copy(),
+                    obs=adata.obs.copy(),
                     var=dict(var_names=encoded_var_names),
-                    uns=ann_data.uns.copy(),
+                    uns=adata.uns.copy(),
                     layers={"original": updated_layer},
                 )
                 # update current encodings in uns
@@ -146,8 +144,8 @@ class Encoder:
                     "Ensure that you passed all non numerical, categorical values for encoding!"
                 )
                 sys.exit(1)
-        del ann_data.obs
-        del ann_data.X
+        del adata.obs
+        del adata.X
 
         return encoded_ann_data
 

@@ -4,7 +4,7 @@ from typing import Literal, Optional, Union
 import numpy as np
 from anndata import AnnData
 
-from ehrapy.api.io.utility_io import is_valid_filename
+from ehrapy.api.io._utility_io import _get_file_extension
 
 
 class DataWriter:
@@ -17,12 +17,12 @@ class DataWriter:
         compression_opts: Optional[int] = None,
     ) -> None:
         filename = Path(filename)  # allow passing strings
-        if is_valid_filename(filename):
+        if _get_file_extension(filename):
             filename = filename
-            ext_ = is_valid_filename(filename, return_ext=True)
+            _extension = _get_file_extension(filename)
             if extension is None:
-                extension = ext_
-            elif extension != ext_:
+                extension = _extension
+            elif extension != _extension:
                 raise ValueError(
                     "It suffices to provide the file type by "
                     "providing a proper extension to the filename."
