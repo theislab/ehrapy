@@ -53,7 +53,7 @@ def _slugify(file_path: Union[str, PurePath]) -> str:
     return filename
 
 
-def _is_float(string) -> bool:
+def _is_float_convertable(string) -> bool:
     """Checks whether a string can be converted into a float
 
     http://stackoverflow.com/questions/736043/checking-if-a-string-can-be-converted-to-float-in-python
@@ -71,7 +71,7 @@ def _is_float(string) -> bool:
         return False
 
 
-def _is_int(string: Union[str, float]) -> bool:
+def _is_int_convertable(string: Union[str, float]) -> bool:
     """Checks whether a string can be converted into an integer
 
     Args:

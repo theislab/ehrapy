@@ -11,7 +11,13 @@ from rich import print
 
 from ehrapy.api.data.dataloader import Dataloader
 from ehrapy.api.encode.encode import Encoder
-from ehrapy.api.io._utility_io import _get_file_extension, _is_float, _is_int, _slugify, supported_extensions
+from ehrapy.api.io._utility_io import (
+    _get_file_extension,
+    _is_float_convertable,
+    _is_int_convertable,
+    _slugify,
+    supported_extensions,
+)
 
 
 class BaseDataframes(NamedTuple):
@@ -182,12 +188,12 @@ class DataReader:
                     raise ValueError(f"Did not find delimiter {delimiter!r} in first line.")
                 line_list = line.split(delimiter)
                 # the first column might be row names, so check the last
-                if not _is_float(line_list[-1]):
+                if not _is_float_convertable(line_list[-1]):
                     column_names = line_list
                     if "patient_id" == column_names[0].lower():
                         id_column_avail = True
                 else:
-                    if not _is_float(line_list[0]):
+                    if not _is_float_convertable(line_list[0]):
                         row_names.append(line_list[0])
                         DataReader._cast_vals_to_numeric(line_list[1:])
                         data.append(np.array(line_list[1:], dtype=dtype))
@@ -347,7 +353,8 @@ class DataReader:
             else:
                 if not DataReader.suppress_warnings:
                     warnings.warn(
-                        "Did not find patient_id column at column 0 and no index column was passed. Using default, numerical indices instead!",
+                        "Did not find patient_id column at column 0 and no index column was passed. "
+                        "Using default, numerical indices instead!",
                         IndexColumnWarning,
                     )
 
@@ -364,9 +371,8 @@ class DataReader:
                 obs = df[columns_obs_only].copy()
                 obs = obs.set_index(df.index.map(str))
                 df = df.drop(columns_obs_only, axis=1)
-            # TODO Key error traceback still prints, have no idea why
             except KeyError:
-                raise ColumnNotFoundError(
+                raise ColumnNotFoundError from KeyError(
                     "One or more column names passed to column_obs_only were not found in the input data. "
                     "Make sure you spelled the column names correctly."
                 )
@@ -386,14 +392,14 @@ class DataReader:
             A new List of values casted into the appropriate data type
         """
         for idx, val in enumerate(row):
-            __is_int: bool = _is_int(val)
+            _is_int: bool = _is_int_convertable(val)
             if val == "0":
                 row[idx] = 0
             elif val == "":
                 row[idx] = None
-            elif __is_int:
+            elif _is_int:
                 row[idx] = int(val)
-            elif _is_float(val):
+            elif _is_float_convertable(val):
                 row[idx] = float(val)
 
         return row
