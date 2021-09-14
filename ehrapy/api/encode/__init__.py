@@ -5,9 +5,7 @@ from anndata import AnnData
 from ehrapy.api.encode.encode import Encoder
 
 
-def encode(
-    ann_data: AnnData, autodetect: bool = False, encodings: Dict[str, List[str]] = None
-) -> AnnData:
+def encode(ann_data: AnnData, autodetect: bool = False, encodings: Dict[str, List[str]] = None) -> AnnData:
     """Encode the initial read AnnData object. Categorical values could be either passed via parameters or autodetected.
     The categorical values are also stored in obs and uns (for keeping the original, unencoded values).
     The current encoding modes for each variable are also stored in uns (`current_encodings` key).
