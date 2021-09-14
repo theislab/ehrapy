@@ -31,6 +31,8 @@ class Encoder:
         2. label encoding (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.LabelEncoder.html)
         3. count encoding (https://contrib.scikit-learn.org/category_encoders/count.html)
 
+        Label encodes by default which is used to save initially unencoded AnnData objects.
+
         Args:
             adata: The inital AnnData object parsed by the :class: DataReader
             autodetect: Autodetection of categorical values (default: False)
@@ -43,33 +45,35 @@ class Encoder:
         # autodetect categorical values, which could lead to more categoricals
         if autodetect:
             adata.uns["categoricals"] = _detect_categorical_columns(adata.X, adata.var_names)
-            categorical_names = adata.uns["categoricals"]["categorical_encoded"]
+            categoricals_names = adata.uns["categoricals"]["categorical_encoded"]
             if "current_encodings" in adata.uns.keys():
                 print(
                     "[bold yellow]The current data has already been encoded."
                     "It is not recommended to use autodetect with already encoded data."
+                    "[bold red]Aborting..."
                 )
                 return None
-            Encoder._add_categories_to_obs(adata, categorical_names)
-            Encoder._add_categories_to_uns(adata, categorical_names)
+            Encoder._add_categoricals_to_obs(adata, categoricals_names)
+            Encoder._add_categoricals_to_uns(adata, categoricals_names)
 
             encoded_x = None
             encoded_var_names = adata.var_names.to_list()
 
+            # Label encode by default. The primary usage of this is to save unencoded AnnData objects
             encoded_x, encoded_var_names = Encoder._label_encoding(
                 adata,
                 encoded_x,
                 encoded_var_names,
-                categorical_names,
+                categoricals_names,
             )
 
             # update layer content with the latest categorical encoding and the old other values
-            updated_layer = Encoder._update_layer_after_encode(
+            updated_layer = Encoder._update_layer_after_encoding(
                 adata.layers["original"],
                 encoded_x,
                 encoded_var_names,
                 adata.var_names.to_list(),
-                categorical_names,
+                categoricals_names,
             )
             encoded_ann_data = AnnData(
                 encoded_x,
@@ -79,7 +83,7 @@ class Encoder:
                 layers={"original": updated_layer},
             )
             encoded_ann_data.uns["current_encodings"] = {
-                categorical: "one_hot_encoding" for categorical in categorical_names
+                categorical: "one_hot_encoding" for categorical in categoricals_names
             }
 
         # user passed categorical values with encoding mode for each of them
@@ -93,8 +97,8 @@ class Encoder:
                     "The categorical column names given contain at least one duplicate column. "
                     "Check the column names to ensure that no column is encoded twice!"
                 )
-            Encoder._add_categories_to_obs(adata, categoricals)
-            Encoder._add_categories_to_uns(adata, categoricals)
+            Encoder._add_categoricals_to_obs(adata, categoricals)
+            Encoder._add_categoricals_to_uns(adata, categoricals)
             current_encodings = {} if "current_encodings" not in adata.uns.keys() else adata.uns["current_encodings"]
             encoded_x = None
             encoded_var_names = adata.var_names.to_list()
@@ -119,7 +123,7 @@ class Encoder:
                     current_encodings[categorical] = encoding_mode
 
             # update original layer content with the new categorical encoding and the old other values
-            updated_layer = Encoder._update_layer_after_encode(
+            updated_layer = Encoder._update_layer_after_encoding(
                 adata.layers["original"],
                 encoded_x,
                 encoded_var_names,
@@ -167,18 +171,21 @@ class Encoder:
         Returns:
             Encoded new X and the corresponding new var names
         """
-        original_values = Encoder._init_encoding(adata, categories)
+        original_values = Encoder._initial_encoding(adata, categories)
+
         encoder = OneHotEncoder(handle_unknown="ignore", sparse=False).fit(original_values)
-        cat_prefixes = [
+        categorical_prefixes = [
             f"ehrapycat_{category}_{str(suffix).strip()}"
             for idx, category in enumerate(categories)
             for suffix in encoder.categories_[idx]
         ]
         transformed = encoder.transform(original_values)
-        # X is None, if this is the first encoding "round", so take the "old" X
+        # X is None if this is the first encoding "round" -> take the former X
         if X is None:
             X = adata.X
-        temp_x, temp_var_names = Encoder._update_encoded_data(X, transformed, var_names, cat_prefixes, categories)
+        temp_x, temp_var_names = Encoder._update_encoded_data(
+            X, transformed, var_names, categorical_prefixes, categories
+        )
 
         return temp_x, temp_var_names
 
@@ -187,7 +194,7 @@ class Encoder:
         adata: AnnData,
         X: Optional[np.ndarray],
         var_names: List[str],
-        categories: List[str],
+        categoricals: List[str],
     ) -> Tuple[np.ndarray, List[str]]:
         """Encode categorical columns using label encoding.
 
@@ -195,12 +202,12 @@ class Encoder:
             adata: The current AnnData object
             X: Current (encoded) X
             var_names: Var names of current AnnData object
-            categories: The name of the categorical columns, that need to be encoded
+            categoricals: The name of the categorical columns, that need to be encoded
 
         Returns:
             Encoded new X and the corresponding new var names
         """
-        original_values = Encoder._init_encoding(adata, categories)
+        original_values = Encoder._initial_encoding(adata, categoricals)
         # label encoding expects input array to be 1D, so iterate over all columns and encode them one by one
         for idx in range(original_values.shape[1]):
             label_encoder = LabelEncoder()
@@ -209,12 +216,12 @@ class Encoder:
             transformed = label_encoder.transform(row_vec)
             # need a column vector instead of row vector
             original_values[:, idx : idx + 1] = transformed[..., None]
-        category_prefixes = [f"ehrapycat_{category}" for category in categories]
-        # X is None, if this is the first encoding "round", so take the "old" X
+        category_prefixes = [f"ehrapycat_{categorical}" for categorical in categoricals]
+        # X is None if this is the first encoding "round" -> take the former X
         if X is None:
             X = adata.X
         temp_x, temp_var_names = Encoder._update_encoded_data(
-            X, original_values, var_names, category_prefixes, categories
+            X, original_values, var_names, category_prefixes, categoricals
         )
 
         return temp_x, temp_var_names
@@ -237,14 +244,14 @@ class Encoder:
         Returns:
             Encoded new X and the corresponding new var names
         """
-        original_values = Encoder._init_encoding(adata, categoricals)
+        original_values = Encoder._initial_encoding(adata, categoricals)
 
         # returns a pandas dataframe per default, but numpy array is needed
         count_encoder = CountEncoder(return_df=False)
         count_encoder.fit(original_values)
-        cat_prefix = [f"ehrapycat_{cat}" for cat in categoricals]
+        cat_prefix = [f"ehrapycat_{categorical}" for categorical in categoricals]
         transformed = count_encoder.transform(original_values)
-        # X is None, if this is the first encoding "round", so take the "old" X
+        # X is None if this is the first encoding "round" -> take the former X
         if X is None:
             X = adata.X  # noqa: N806
         temp_x, temp_var_names = Encoder._update_encoded_data(X, transformed, var_names, cat_prefix, categoricals)
@@ -252,7 +259,7 @@ class Encoder:
         return temp_x, temp_var_names
 
     @staticmethod
-    def _update_layer_after_encode(
+    def _update_layer_after_encoding(
         old_layer: np.ndarray,
         new_x: np.ndarray,
         new_var_names: List[str],
@@ -278,7 +285,7 @@ class Encoder:
         # keep track of all indices with original value columns, that are (and were) not encoded
         idx_list = []
         for idx, col_name in enumerate(old_var_names[old_cat_stop_index:]):
-            # this case is needed, when there are one or more numerical (but categorical) columns, that was not encoded yet
+            # this case is needed when there are one or more numerical (but categorical) columns that was not encoded yet
             if col_name not in categories:
                 idx_list.append(idx + old_cat_stop_index)
         # slice old original layer using the selector
@@ -300,16 +307,18 @@ class Encoder:
         categoricals: List[str],
     ) -> Tuple[np.ndarray, List[str]]:
         """Update X and var_names after each encoding
+
         Args:
-            X: Current (old) X
+            X: Current (former) X
             transformed: The encoded (transformed) categorical column
             var_names: Var names of current AnnData object
             categorical_prefixes: The name(s) of the encoded column(s)
             categoricals: The categorical values that were encoded recently
+
         Returns:
             Encoded new X and the corresponding new var names
         """
-        idx = Encoder._get_categories_old_indices(var_names, categoricals)
+        idx = Encoder._get_categoricals_old_indices(var_names, categoricals)
         # delete the original categorical column
         del_cat_column_x = np.delete(X, list(idx), 1)
         # create the new, encoded X
@@ -321,11 +330,11 @@ class Encoder:
         return temp_x, temp_var_names
 
     @staticmethod
-    def _init_encoding(
+    def _initial_encoding(
         adata: AnnData,
         categoricals: List[str],
     ) -> np.ndarray:
-        """Get all original values for every categorical that needs to be encoded (again)
+        """Get all original values for all categoricals that need to be encoded (again)
 
         Args:
             adata: The current AnnData object
@@ -344,9 +353,10 @@ class Encoder:
     @staticmethod
     def undo_encoding(
         adata: AnnData, columns: str = "all", from_cache_file: bool = False, cache_file: str = None
-    ) -> AnnData:
+    ) -> Optional[AnnData]:
         """
         Undo the current encodings applied to some or all columns in X. This currently resets the AnnData object to its initial state.
+
         Args:
             adata: The AnnData object
             columns: The names of the columns to reset encoding for. Defaults to all columns.
@@ -359,8 +369,8 @@ class Encoder:
             A (partially) encoding reset AnnData object
         """
         if "current_encodings" not in adata.uns.keys():
-            print("[bold yellow]Calling undo_encoding on unencoded AnnData object. Skipping.")
-            sys.exit(0)
+            print("[bold yellow]Calling undo_encoding on unencoded AnnData object. [bold red]Aborting...")
+            return None
 
         # get all encoded variables
         encoded_categoricals = list(adata.uns["original_values_categoricals"].keys())
@@ -382,9 +392,9 @@ class Encoder:
         if columns == "all":
             categoricals = list(adata.uns["original_values_categoricals"].keys())
         else:
-            print("[bold blue]Currently, one can only reset encodings for all columns!")
-            sys.exit(1)
-        transformed = Encoder._init_encoding(adata, categoricals)
+            print("[bold yellow]Currently, one can only reset encodings for all columns! [bold red]Aborting...")
+            return None
+        transformed = Encoder._initial_encoding(adata, categoricals)
         new_x, new_var_names = Encoder._update_encoded_data(
             adata.X, transformed, list(adata.var_names), categoricals, categoricals
         )
@@ -401,7 +411,7 @@ class Encoder:
         )
 
     @staticmethod
-    def _get_categories_old_indices(old_var_names: List[str], encoded_categories: List[str]) -> Set[int]:
+    def _get_categoricals_old_indices(old_var_names: List[str], encoded_categories: List[str]) -> Set[int]:
         """Get indices of every (possibly encoded) categorical column belonging to a newly encoded categorical value
 
         Args:
@@ -425,7 +435,7 @@ class Encoder:
         return idx_list
 
     @staticmethod
-    def _add_categories_to_obs(ann_data: AnnData, categorical_names: List[str]) -> None:
+    def _add_categoricals_to_obs(ann_data: AnnData, categorical_names: List[str]) -> None:
         """Add the original categorical values to obs.
 
         Args:
@@ -439,20 +449,20 @@ class Encoder:
                 ann_data.obs[var_name] = ann_data.X[::, idx : idx + 1]
 
     @staticmethod
-    def _add_categories_to_uns(ann_data: AnnData, categorical_names: List[str]) -> None:
+    def _add_categoricals_to_uns(ann_data: AnnData, categorical_names: List[str]) -> None:
         """Add the original categorical values to uns.
 
         Args:
             ann_data: The current AnnData object
             categorical_names: Name of each categorical column
         """
-        is_init = "original_values_categoricals" in ann_data.uns.keys()
+        is_initial = "original_values_categoricals" in ann_data.uns.keys()
         ann_data.uns["original_values_categoricals"] = (
-            {} if not is_init else ann_data.uns["original_values_categoricals"].copy()
+            {} if not is_initial else ann_data.uns["original_values_categoricals"].copy()
         )
 
         for idx, var_name in enumerate(ann_data.var_names):
-            if is_init and var_name in ann_data.uns["original_values_categoricals"]:
+            if is_initial and var_name in ann_data.uns["original_values_categoricals"]:
                 continue
             elif var_name in categorical_names:
                 ann_data.uns["original_values_categoricals"][var_name] = ann_data.X[::, idx : idx + 1]

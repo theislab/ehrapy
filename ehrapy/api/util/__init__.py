@@ -11,9 +11,7 @@ def adata_type_overview(adata: AnnData, sort: bool = False, sort_reversed: bool 
 
     Args:
         adata: AnnData object to examine
-
         sort: Whether the tree output should be sorted
-
         sort_reversed: Whether to sort in reversed order or not
     """
     encoding_mapping = {
@@ -51,7 +49,7 @@ def adata_type_overview(adata: AnnData, sort: bool = False, sort_reversed: bool 
 
     if sort:
         print(
-            "[bold yellow]Displaying AnnData object in sorted mode. Note that this might not be the exact same order of the "
-            "variables in X or var are stored!"
+            "[bold yellow]Displaying AnnData object in sorted mode. "
+            "Note that this might not be the exact same order of the variables in X or var are stored!"
         )
     print(tree)
