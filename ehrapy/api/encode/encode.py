@@ -21,22 +21,22 @@ class Encoder:
 
     @staticmethod
     def encode(
-        adata: AnnData, autodetect: bool = False, categoricals_encode_mode: Dict[str, List[str]] = None
+        adata: AnnData, autodetect: bool = False, encodings: Dict[str, List[str]] = None
     ) -> Union[AnnData, None]:
         """Encode the initial read AnnData object. Categorical values could be either passed via parameters or autodetected.
 
         Available encodings are:
 
-        1. one-hot encoding (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.OneHotEncoder.html)
-        2. label encoding (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.LabelEncoder.html)
-        3. count encoding (https://contrib.scikit-learn.org/category_encoders/count.html)
+        1. one_hot_encoding (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.OneHotEncoder.html)
+        2. label_encoding (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.LabelEncoder.html)
+        3. count_encoding (https://contrib.scikit-learn.org/category_encoders/count.html)
 
         Label encodes by default which is used to save initially unencoded AnnData objects.
 
         Args:
             adata: The inital AnnData object parsed by the :class: DataReader
             autodetect: Autodetection of categorical values (default: False)
-            categoricals_encode_mode: Only needed if autodetect set to False. A dict containing the categorical name
+            encodings: Only needed if autodetect set to False. A dict containing the categorical name
             and the encoding mode for the respective column
 
         Returns:
@@ -88,8 +88,16 @@ class Encoder:
 
         # user passed categorical values with encoding mode for each of them
         else:
-            adata.uns["categoricals_encoded_with_mode"] = categoricals_encode_mode
-            categoricals = list(chain(*categoricals_encode_mode.values()))
+            # are all specified encodings valid?
+            for encoding_mode in encodings.keys():
+                if encoding_mode not in Encoder.available_encodings:
+                    raise ValueError(
+                        f"Unknown encoding mode {encoding_mode}. Please provide one of the following encoding modes:\n"
+                        f"{Encoder.available_encodings}"
+                    )
+
+            adata.uns["categoricals_encoded_with_mode"] = encodings
+            categoricals = list(chain(*encodings.values()))
 
             # ensure no categorical column gets encoded twice
             if len(categoricals) != len(set(categoricals)):
@@ -103,12 +111,7 @@ class Encoder:
             encoded_x = None
             encoded_var_names = adata.var_names.to_list()
 
-            for encoding_mode in categoricals_encode_mode.keys():
-                if encoding_mode not in Encoder.available_encodings:
-                    raise ValueError(
-                        f"Unknown encoding mode {encoding_mode}. Please provide one of the following encoding modes:\n"
-                        f"{Encoder.available_encodings}"
-                    )
+            for encoding_mode in encodings.keys():
                 encode_mode_switcher = {
                     "one_hot_encoding": Encoder._one_hot_encoding,
                     "label_encoding": Encoder._label_encoding,
@@ -116,10 +119,10 @@ class Encoder:
                 }
                 # perform the actual encoding
                 encoded_x, encoded_var_names = encode_mode_switcher[encoding_mode](
-                    adata, encoded_x, encoded_var_names, categoricals_encode_mode[encoding_mode]
+                    adata, encoded_x, encoded_var_names, encodings[encoding_mode]
                 )
                 # update encoding history in uns
-                for categorical in categoricals_encode_mode[encoding_mode]:
+                for categorical in encodings[encoding_mode]:
                     current_encodings[categorical] = encoding_mode
 
             # update original layer content with the new categorical encoding and the old other values
