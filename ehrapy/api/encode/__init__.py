@@ -5,9 +5,7 @@ from anndata import AnnData
 from ehrapy.api.encode.encode import Encoder
 
 
-def encode(
-    ann_data: AnnData, autodetect: bool = False, categoricals_encode_mode: Dict[str, List[str]] = None
-) -> AnnData:
+def encode(ann_data: AnnData, autodetect: bool = False, encodings: Dict[str, List[str]] = None) -> AnnData:
     """Encode the initial read AnnData object. Categorical values could be either passed via parameters or autodetected.
     The categorical values are also stored in obs and uns (for keeping the original, unencoded values).
     The current encoding modes for each variable are also stored in uns (`current_encodings` key).
@@ -22,7 +20,7 @@ def encode(
     Args:
         ann_data: The inital AnnData object
         autodetect: Autodetection of categorical values
-        categoricals_encode_mode: Only needed if autodetect set to False.
+        encodings: Only needed if autodetect set to False.
         A dict containing the categorical name and the encoding mode for the respective column.
 
     Returns:
@@ -31,12 +29,12 @@ def encode(
     Example:
         .. code-block:: python
 
-            import ehrapy.api as eh
-            adata = ehp.io.read(...)
+            import ehrapy.api as ep
+            adata = ep.io.read(...)
             # encode col1 and col2 using label encoding and encode col3 using one hot encoding
-            ehp.encode.encode(adata, autodetect=False, {'label_encoding': ['col1', 'col2'], 'one_hot_encoding': ['col3']})
+            ep.encode.encode(adata, autodetect=False, {'label_encoding': ['col1', 'col2'], 'one_hot_encoding': ['col3']})
     """
-    return Encoder.encode(ann_data, autodetect, categoricals_encode_mode)
+    return Encoder.encode(ann_data, autodetect, encodings)
 
 
 def undo_encoding(

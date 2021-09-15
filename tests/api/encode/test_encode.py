@@ -14,7 +14,7 @@ class TestRead:
         ANN_DATA = DataReader.read(filename=f"{_TEST_PATH}/dataset1.csv")
         with pytest.raises(ValueError):
             encoded_ann_data = Encoder.encode(  # noqa: F841
-                ANN_DATA, autodetect=False, categoricals_encode_mode={"unknown_mode": ["survival"]}
+                ANN_DATA, autodetect=False, encodings={"unknown_mode": ["survival"]}
             )
 
     def test_duplicate_column_encoding(self):
@@ -23,7 +23,7 @@ class TestRead:
             encoded_ann_data = Encoder.encode(  # noqa: F841
                 adata,
                 autodetect=False,
-                categoricals_encode_mode={"label_encoding": ["survival"], "count_encoding": ["survival"]},
+                encodings={"label_encoding": ["survival"], "count_encoding": ["survival"]},
             )
 
     def test_autodetect_encode(self):
@@ -56,7 +56,7 @@ class TestRead:
         encoded_ann_data = Encoder.encode(
             adata,
             autodetect=False,
-            categoricals_encode_mode={"label_encoding": ["survival"], "one_hot_encoding": ["clinic_day"]},
+            encodings={"label_encoding": ["survival"], "one_hot_encoding": ["clinic_day"]},
         )
         assert encoded_ann_data.X.shape == (5, 7)
         assert list(encoded_ann_data.obs.columns) == ["survival", "clinic_day"]
@@ -81,10 +81,10 @@ class TestRead:
         encoded_ann_data = Encoder.encode(
             adata,
             autodetect=False,
-            categoricals_encode_mode={"label_encoding": ["survival"], "one_hot_encoding": ["clinic_day"]},
+            encodings={"label_encoding": ["survival"], "one_hot_encoding": ["clinic_day"]},
         )
         encoded_ann_data_again = Encoder.encode(
-            encoded_ann_data, autodetect=False, categoricals_encode_mode={"label_encoding": ["clinic_day"]}
+            encoded_ann_data, autodetect=False, encodings={"label_encoding": ["clinic_day"]}
         )
         assert encoded_ann_data_again.X.shape == (5, 4)
         assert list(encoded_ann_data_again.obs.columns) == ["survival", "clinic_day"]
@@ -108,12 +108,12 @@ class TestRead:
     def test_custom_encode_again_multiple_columns_encoding(self):
         adata = DataReader.read(filename=f"{_TEST_PATH}/dataset1.csv")
         encoded_ann_data = Encoder.encode(
-            adata, autodetect=False, categoricals_encode_mode={"one_hot_encoding": ["clinic_day", "survival"]}
+            adata, autodetect=False, encodings={"one_hot_encoding": ["clinic_day", "survival"]}
         )
         encoded_ann_data_again = Encoder.encode(
             encoded_ann_data,
             autodetect=False,
-            categoricals_encode_mode={"label_encoding": ["survival"], "count_encoding": ["clinic_day"]},
+            encodings={"label_encoding": ["survival"], "count_encoding": ["clinic_day"]},
         )
         assert encoded_ann_data_again.X.shape == (5, 4)
         assert list(encoded_ann_data_again.obs.columns) == ["survival", "clinic_day"]

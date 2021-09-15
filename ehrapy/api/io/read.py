@@ -274,7 +274,7 @@ class DataReader:
         X = dataframes.df.to_numpy(copy=True)
 
         return AnnData(
-            X,
+            X=X,
             obs=dataframes.obs,
             var=pd.DataFrame(index=list(dataframes.df.columns)),
             dtype="object",
