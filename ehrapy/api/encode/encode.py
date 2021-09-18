@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from _collections import OrderedDict
 from anndata import AnnData
-from category_encoders import CountEncoder
+from category_encoders import CountEncoder, TargetEncoder
 from rich import print
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
@@ -17,7 +17,7 @@ class Encoder:
     """The main encoder for the initial read AnnData object providing various encoding solutions for
     non numerical or categorical data"""
 
-    available_encodings = {"one_hot_encoding", "label_encoding", "count_encoding"}
+    available_encodings = {"one_hot_encoding", "label_encoding", "count_encoding", "target_encoding"}
 
     @staticmethod
     def encode(
@@ -111,6 +111,7 @@ class Encoder:
                     "one_hot_encoding": Encoder._one_hot_encoding,
                     "label_encoding": Encoder._label_encoding,
                     "count_encoding": Encoder._count_encoding,
+                    "target_encoding": Encoder._target_encoding
                 }
                 # perform the actual encoding
                 encoded_x, encoded_var_names = encode_mode_switcher[encoding_mode](
@@ -252,6 +253,41 @@ class Encoder:
         temp_x, temp_var_names = Encoder._update_encoded_data(X, transformed, var_names, cat_prefix, categoricals)
 
         return temp_x, temp_var_names
+
+    @staticmethod
+    def _target_encoding(
+        adata: AnnData,
+        X: Optional[np.ndarray],
+        var_names: List[str],
+        categoricals: List[str],
+    ) -> Tuple[np.ndarray, List[str]]:
+        """Encode categorical column using target encoding.
+
+           Args:
+              adata: The current AnnData object
+              X: Current (encoded) X
+              var_names: Var names of current AnnData object
+              categoricals: The name of the categorical columns, that need to be encoded
+
+           Returns:
+              Encoded new X and the corresponding new var names
+        """
+        original_values = Encoder._init_encoding(adata, categoricals)
+
+        # returns a pandas dataframe per default, but numpy array is needed
+        target_encoder = TargetEncoder(return_df=False)
+        target_encoder.fit(original_values)
+        cat_prefix = [f"ehrapycat_{cat}" for cat in categoricals]
+        transformed = target_encoder.transform(original_values)
+        print(transformed)
+        sys.exit(0)
+        # X is None, if this is the first encoding "round", so take the "old" X
+        if X is None:
+            X = adata.X  # noqa: N806
+        temp_x, temp_var_names = Encoder._update_encoded_data(X, transformed, var_names, cat_prefix, categoricals)
+
+        return temp_x, temp_var_names
+
 
     @staticmethod
     def _update_layer_after_encode(
