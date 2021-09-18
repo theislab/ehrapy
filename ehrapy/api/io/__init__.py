@@ -53,6 +53,14 @@ def read(
 
     Returns:
          An :class:`~anndata.AnnData` object
+
+     Example:
+        .. code-block:: python
+
+            import ehrapy.api as ep
+            adata = eh.data.mimic_2(encode=True)
+            ep.io.write("mimic_2.h5ad", adata)
+            adata_2 = ep.io.read("mimic_2.h5ad")
     """
     return DataReader.read(
         filename, extension, delimiter, index_column, columns_obs_only, cache, backup_url, suppress_warnings
@@ -83,5 +91,12 @@ def write(
 
         compression_opts
             See http://docs.h5py.org/en/latest/high/dataset.html.
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy.api as ep
+            adata = eh.data.mimic_2(encode=True)
+            ep.io.write("mimic_2.h5ad", adata)
     """
     DataWriter.write(filename, adata, extension, compression, compression_opts)

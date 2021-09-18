@@ -30,6 +30,7 @@ def _detect_categorical_columns(
         "not_categorical": [],
     }
     for i in range(data.shape[1]):
+        # call ravel on each categorical column to get a flattened 1D array rather than a 2D array with one column
         categorical_column = _is_categorical_column(data[::, i : i + 1 :].ravel(), col_names[i])
         categoricals[categorical_column.categorical_type].append(col_names[i])
 
