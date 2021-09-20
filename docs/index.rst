@@ -10,7 +10,6 @@ Welcome to ehrapy's documentation!
    readme
    installation
    usage
-   reference
    contributing
    authors
    code_of_conduct

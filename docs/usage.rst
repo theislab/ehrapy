@@ -20,17 +20,38 @@ You can then access the respective modules like:
     :local:
     :backlinks: none
 
+Reading and writing
+~~~~~~~~~~~~~~~~~~~~
+
+.. module:: ehrapy.api
+.. currentmodule:: ehrapy.api
+
+.. autosummary::
+    :toctree: io
+
+    io.read
+
+    io.write
+
+Encoding
+~~~~~~~~
+
+.. currentmodule:: ehrapy.api
+
+.. autosummary::
+    :toctree: encode
+
+    encode.encode
+
 Data
 ~~~~~
 
-.. module:: ehrapy.api.data
-.. currentmodule:: ehrapy
+.. currentmodule:: ehrapy.api
 
 .. autosummary::
-    :toctree: api
+    :toctree: data
 
     data.mimic_2
-    data.mimic_3_demo
 
 Preprocessing
 ~~~~~~~~~~~~~
@@ -49,6 +70,16 @@ Plotting
 
 .. automodule:: ehrapy.api.plot
    :members:
+
+Util
+~~~~~
+
+.. currentmodule:: ehrapy.api
+
+.. autosummary::
+    :toctree: util
+
+    util.adata_type_overview
 
 Command-line interface
 -----------------------

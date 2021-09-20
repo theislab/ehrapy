@@ -1,10 +1,11 @@
 [flake8]
 select = B,B9,C,E,F,N,W
-ignore = B950,E203,E501,RST201,RST203,RST301,W503
+ignore = B950,E203,E501,RST201,RST203,RST301,W503,N803,N806
 max-line-length = 120
 max-complexity = 15
 docstring-convention = google
-per-file-ignores = tests/*:S101
-                   ehrapy/__init__.py:F401
-                   ehrapy/api/data/__init__.py:F401
-                   ehrapy/api/data/__init__.py:F403
+per-file-ignores =
+    ehrapy/__init__.py:F401,E402
+    ehrapy/api/data/__init__.py:F401
+    ehrapy/api/encode/__init__.py:F401
+    ehrapy/api/io/__init__.py:F401
