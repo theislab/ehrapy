@@ -13,5 +13,3 @@ ehrapy_pypi_latest.check_latest()
 traceback.install(width=200, word_wrap=True)
 
 from ehrapy.api import data, encode, io, plot, preprocessing, tools, util
-
-
