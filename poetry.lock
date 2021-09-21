@@ -665,6 +665,23 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "mudata"
+version = "0.1.0"
+description = "Multimodal omics analysis framework"
+category = "main"
+optional = false
+python-versions = ">= 3.6"
+
+[package.dependencies]
+anndata = "*"
+h5py = "*"
+numpy = "*"
+pandas = "*"
+
+[package.extras]
+docs = ["sphinx (>=4.0)", "sphinx-rtd-theme", "readthedocs-sphinx-search", "nbsphinx", "sphinx-automodapi"]
+
+[[package]]
 name = "mypy"
 version = "0.910"
 description = "Optional static typing for Python"
@@ -1936,7 +1953,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7.1,<3.10"
-content-hash = "b93e33fe9198f69c4f68a2c009d58b43a77fa13b4937aa288b5c8412a30b1e10"
+content-hash = "d739f141d3f08cea09a26090ba3a01bb9ddba0164e8037838aa868c11b985cbf"
 
 [metadata.files]
 alabaster = [
@@ -1999,11 +2016,6 @@ cffi = [
     {file = "cffi-1.14.6-cp27-cp27m-win_amd64.whl", hash = "sha256:7bcac9a2b4fdbed2c16fa5681356d7121ecabf041f18d97ed5b8e0dd38a80224"},
     {file = "cffi-1.14.6-cp27-cp27mu-manylinux1_i686.whl", hash = "sha256:ed38b924ce794e505647f7c331b22a693bee1538fdf46b0222c4717b42f744e7"},
     {file = "cffi-1.14.6-cp27-cp27mu-manylinux1_x86_64.whl", hash = "sha256:e22dcb48709fc51a7b58a927391b23ab37eb3737a98ac4338e2448bef8559b33"},
-    {file = "cffi-1.14.6-cp35-cp35m-macosx_10_9_x86_64.whl", hash = "sha256:aedb15f0a5a5949ecb129a82b72b19df97bbbca024081ed2ef88bd5c0a610534"},
-    {file = "cffi-1.14.6-cp35-cp35m-manylinux1_i686.whl", hash = "sha256:48916e459c54c4a70e52745639f1db524542140433599e13911b2f329834276a"},
-    {file = "cffi-1.14.6-cp35-cp35m-manylinux1_x86_64.whl", hash = "sha256:f627688813d0a4140153ff532537fbe4afea5a3dffce1f9deb7f91f848a832b5"},
-    {file = "cffi-1.14.6-cp35-cp35m-win32.whl", hash = "sha256:f0010c6f9d1a4011e429109fda55a225921e3206e7f62a0c22a35344bfd13cca"},
-    {file = "cffi-1.14.6-cp35-cp35m-win_amd64.whl", hash = "sha256:57e555a9feb4a8460415f1aac331a2dc833b1115284f7ded7278b54afc5bd218"},
     {file = "cffi-1.14.6-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:e8c6a99be100371dbb046880e7a282152aa5d6127ae01783e37662ef73850d8f"},
     {file = "cffi-1.14.6-cp36-cp36m-manylinux1_i686.whl", hash = "sha256:19ca0dbdeda3b2615421d54bef8985f72af6e0c47082a8d26122adac81a95872"},
     {file = "cffi-1.14.6-cp36-cp36m-manylinux1_x86_64.whl", hash = "sha256:d950695ae4381ecd856bcaf2b1e866720e4ab9a1498cba61c602e56630ca7195"},
@@ -2375,6 +2387,10 @@ mccabe = [
 mistune = [
     {file = "mistune-0.8.4-py2.py3-none-any.whl", hash = "sha256:88a1051873018da288eee8538d476dffe1262495144b33ecb586c4ab266bb8d4"},
     {file = "mistune-0.8.4.tar.gz", hash = "sha256:59a3429db53c50b5c6bcc8a07f8848cb00d7dc8bdb431a4ab41920d201d4756e"},
+]
+mudata = [
+    {file = "mudata-0.1.0-py3-none-any.whl", hash = "sha256:0709f09f19de1c81359f69b164eda3b7b7ad9fb7cecf97e1e84980a3be355260"},
+    {file = "mudata-0.1.0.tar.gz", hash = "sha256:85d46902e877ddb02b0fe5c70384930ddffa4c07da04371da88d6bb8d58f456c"},
 ]
 mypy = [
     {file = "mypy-0.910-cp35-cp35m-macosx_10_9_x86_64.whl", hash = "sha256:a155d80ea6cee511a3694b108c4494a39f42de11ee4e61e72bc424c490e46457"},
