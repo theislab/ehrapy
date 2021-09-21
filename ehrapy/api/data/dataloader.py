@@ -25,7 +25,7 @@ class Dataloader:
 
         Args:
             url: URL to download
-            output_file_name: Name of the downloaded file 
+            output_file_name: Name of the downloaded file
             output_path: Path to download/extract the files to (default: OS tmpdir)
             block_size: Block size for downloads in bytes (default: 1024)
             overwrite: Whether to overwrite existing files (default: False)
