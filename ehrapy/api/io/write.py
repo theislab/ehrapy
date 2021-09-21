@@ -4,6 +4,7 @@ from typing import Literal, Optional, Union
 import numpy as np
 from anndata import AnnData
 
+from ehrapy.api import settings
 from ehrapy.api.io._utility_io import _get_file_extension
 
 
@@ -30,8 +31,7 @@ class DataWriter:
                 )
         else:
             key = filename
-            # TODO get default format from settings
-            extension = "csv" if extension is None else extension
+            extension = settings.file_format_data if extension is None else extension
             filename = DataWriter._get_filename_from_key(key, extension)
         if extension == "csv":
             adata.write_csvs(filename)
@@ -54,6 +54,6 @@ class DataWriter:
         Returns:
             Path to the full file
         """
-        # TODO replace with settings (default_file_format_data and write_dir)
+        extension = settings.file_format_data if extension is None else extension
         extension = "csv" if extension is None else extension
-        return Path.cwd() / f"{key}.{extension}"
+        return settings.datasetdir / f"{key}.{extension}"
