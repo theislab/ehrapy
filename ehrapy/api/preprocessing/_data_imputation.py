@@ -36,6 +36,7 @@ class Imputation:
 
         # scenario 1: Replace all missing values with the specified value
         adata_to_act_on.X[np.isnan(adata_to_act_on.X)] = replacement
+
         # scenario 2: Replace all missing values in a subset of columns with the specified value
         # TODO
 

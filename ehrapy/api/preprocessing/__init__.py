@@ -28,6 +28,6 @@ def replace_explicit(
 
             import ehrapy.api as ep
             adata = ep.data.mimic_2(encode=True)
-            adata_replaced = ep.pp.replace_explicit(adata_3, replacement=0, copy=True)
+            adata_replaced = ep.pp.replace_explicit(adata, replacement=0, copy=True)
     """
     return Imputation.explicit(adata, replacement, copy)
