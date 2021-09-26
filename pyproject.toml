@@ -33,6 +33,7 @@ scikit-learn = "^1.0"
 category_encoders = "^2.2.2"
 scanpy = "^1.8.1"
 mudata = "^0.1.0"
+leidenalg = "^0.8.7"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"
