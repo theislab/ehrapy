@@ -1,6 +1,7 @@
 from typing import Dict, Optional, Tuple, Union
 
 import numpy as np
+import pandas as pd
 from anndata import AnnData
 
 
@@ -11,6 +12,7 @@ class Imputation:
     def explicit(
         adata: AnnData,
         replacement: Union[Union[str, int], Dict[str, Union[str, int]], Tuple[str, Union[str, int]]] = None,
+        impute_empty_strings: bool = True,
         copy: bool = False,
     ) -> Optional[AnnData]:
         """Replaces all missing values in all or the specified columns with the passed value
@@ -24,6 +26,7 @@ class Imputation:
             adata: :class:`~anndata.AnnData` object containing X to impute values in
             replacement: Value to use as replacement and optionally keys to indicate which columns to replace.
             See scenarios above
+            impute_empty_strings: Whether to also impute empty strings
             copy: Whether to return a copy with the imputed data.
 
         Returns:
@@ -35,7 +38,10 @@ class Imputation:
             adata_to_act_on = adata_copy
 
         # scenario 1: Replace all missing values with the specified value
-        adata_to_act_on.X[np.isnan(adata_to_act_on.X)] = replacement
+        impute_conditions = np.logical_or(pd.isnull(adata_to_act_on.X), adata_to_act_on.X == "")
+        if not impute_empty_strings:
+            impute_conditions = pd.isnull(adata_to_act_on.X)
+        adata_to_act_on.X[impute_conditions] = replacement
 
         # scenario 2: Replace all missing values in a subset of columns with the specified value
         # TODO
