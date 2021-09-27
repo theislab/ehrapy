@@ -11,10 +11,10 @@ _TEST_PATH = f"{CURRENT_DIR}/test_data_encode"
 
 class TestRead:
     def test_unknown_encode_mode(self):
-        ANN_DATA = DataReader.read(filename=f"{_TEST_PATH}/dataset1.csv")
+        adata = DataReader.read(filename=f"{_TEST_PATH}/dataset1.csv")
         with pytest.raises(ValueError):
             encoded_ann_data = Encoder.encode(  # noqa: F841
-                ANN_DATA, autodetect=False, encodings={"unknown_mode": ["survival"]}
+                adata, autodetect=False, encodings={"unknown_mode": ["survival"]}
             )
 
     def test_duplicate_column_encoding(self):

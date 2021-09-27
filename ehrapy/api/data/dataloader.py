@@ -1,5 +1,7 @@
 import tempfile
 from pathlib import Path
+from random import choice
+from string import ascii_lowercase
 from zipfile import ZipFile
 
 import requests
@@ -13,7 +15,7 @@ class Dataloader:
     @staticmethod
     def download(  # pragma: no cover
         url: str,
-        output_file_name: str,
+        output_file_name: str = None,
         output_path: str = None,
         block_size: int = 1024,
         overwrite: bool = False,
@@ -29,6 +31,10 @@ class Dataloader:
             overwrite: Whether to overwrite existing files (default: False)
             is_zip: Whether the downloaded file needs to be unzipped (default: False)
         """
+        if output_file_name is None:
+            letters = ascii_lowercase
+            output_file_name = f"ehrapy_tmp_{''.join(choice(letters) for _ in range(10))}"
+
         if output_path is None:
             output_path = tempfile.gettempdir()
 
@@ -52,6 +58,6 @@ class Dataloader:
                     progress.update(task, advance=block_size)
 
         if is_zip:
-            output_path = download_to_path or tempfile.gettempdir()
+            output_path = output_path or tempfile.gettempdir()
             with ZipFile(download_to_path, "r") as zip_obj:
                 zip_obj.extractall(path=output_path)
