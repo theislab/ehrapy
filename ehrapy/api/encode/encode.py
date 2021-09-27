@@ -389,7 +389,6 @@ class Encoder:
             columns: The names of the columns to reset encoding for. Defaults to all columns.
             from_cache_file: Whether to reset all encodings by reading from a cached .h5ad file, if available.
             This resets the AnnData object to its initial state.
-            TODO replace this once settings.cache_dir is available
             cache_file: The filename of the cache file to read from
 
         Returns:
