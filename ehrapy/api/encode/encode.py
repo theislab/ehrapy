@@ -274,14 +274,14 @@ class Encoder:
         # returns a pandas dataframe per default, but numpy array is needed
         count_encoder = CountEncoder(return_df=False)
         count_encoder.fit(original_values)
-        cat_prefix = [f"ehrapycat_{categorical}" for categorical in categoricals]
+        category_prefix = [f"ehrapycat_{categorical}" for categorical in categoricals]
         transformed = count_encoder.transform(original_values)
         # X is None if this is the first encoding "round" -> take the former X
         if X is None:
             X = adata.X  # noqa: N806
         if progress:
             progress.update(task, description="[blue]Updating count encoded values ...")
-        temp_x, temp_var_names = Encoder._update_encoded_data(X, transformed, var_names, cat_prefix, categoricals)
+        temp_x, temp_var_names = Encoder._update_encoded_data(X, transformed, var_names, category_prefix, categoricals)
 
         return temp_x, temp_var_names
 
