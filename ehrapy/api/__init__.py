@@ -1,3 +1,7 @@
+import scanpy as sc
+
+settings = sc.settings
+
 from ehrapy.api import data as dt
 from ehrapy.api import encode as ec
 from ehrapy.api import plot as pl
