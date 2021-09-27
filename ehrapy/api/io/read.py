@@ -9,6 +9,7 @@ from anndata import AnnData
 from anndata import read as read_h5ad
 from rich import print
 
+from ehrapy.api import settings
 from ehrapy.api.data.dataloader import Dataloader
 from ehrapy.api.encode.encode import Encoder
 from ehrapy.api.io._utility_io import (
@@ -79,8 +80,7 @@ class DataReader:
         is_present = DataReader._check_datafile_present_and_download(filename, backup_url=backup_url)
         if not is_present:
             raise FileNotFoundError(f"Did not find file {filename}.")
-        # TODO REPLACE WITH SETTINGS cachedir
-        path_cache = Path.cwd() / _slugify(filename).replace("." + extension, ".h5ad")  # type: Path
+        path_cache = settings.cachedir / _slugify(filename).replace("." + extension, ".h5ad")  # type: Path
         if path_cache.suffix in {".gz", ".bz2"}:
             path_cache = path_cache.with_suffix("")
         if cache and path_cache.is_file():
