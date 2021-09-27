@@ -455,7 +455,7 @@ class Encoder:
                 idx_list.add(idx)
             # if the old variable was already encoded
             elif old_var_name.startswith("ehrapycat_"):
-                if any(old_var_name[10:].startswith(cat) for cat in category_set):
+                if any(old_var_name[10:].startswith(category) for category in category_set):
                     idx_list.add(idx)
 
         return idx_list
