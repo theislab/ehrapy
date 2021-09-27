@@ -1,12 +1,17 @@
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 
 from anndata import AnnData
+from mudata import MuData
 
 from ehrapy.api.encode.encode import Encoder
 
 
-def encode(ann_data: AnnData, autodetect: bool = False, encodings: Dict[str, List[str]] = None) -> AnnData:
-    """Encode the initial read AnnData object. Categorical values could be either passed via parameters or autodetected.
+def encode(
+    data: Union[AnnData, MuData],
+    autodetect: Union[bool, Dict] = False,
+    encodings: Union[Dict[str, Dict[str, List[str]]], Dict[str, List[str]]] = None,
+) -> Optional[AnnData]:
+    """Encode the initial read AnnData or MuData object. Categorical values could be either passed via parameters or autodetected.
     The categorical values are also stored in obs and uns (for keeping the original, unencoded values).
     The current encoding modes for each variable are also stored in uns (`current_encodings` key).
     Variable names in var are updated according to the encoding modes used.
@@ -18,13 +23,13 @@ def encode(ann_data: AnnData, autodetect: bool = False, encodings: Dict[str, Lis
         3. count encoding (https://contrib.scikit-learn.org/category_encoders/count.html)
 
     Args:
-        ann_data: The inital AnnData object
+        data: The initial AnnData or MuData object
         autodetect: Autodetection of categorical values
-        encodings: Only needed if autodetect set to False.
-        A dict containing the categorical name and the encoding mode for the respective column.
+        encodings: Only needed if autodetect set to False (or False for some columns in case of a MuData object).
+        A dict containing the encoding mode and categorical name for the respective column (for each AnnData object in case of MuData object).
 
     Returns:
-        An :class:`~anndata.AnnData` object with the encoded values in X
+        An :class:`~anndata.AnnData` object with the encoded values in X or None (in case of MuData object)
 
     Example:
         .. code-block:: python
@@ -32,9 +37,9 @@ def encode(ann_data: AnnData, autodetect: bool = False, encodings: Dict[str, Lis
             import ehrapy.api as ep
             adata = ep.io.read(...)
             # encode col1 and col2 using label encoding and encode col3 using one hot encoding
-            ep.encode.encode(adata, autodetect=False, {'label_encoding': ['col1', 'col2'], 'one_hot_encoding': ['col3']})
+            adata_encoded = ep.encode.encode(adata, autodetect=False, {'label_encoding': ['col1', 'col2'], 'one_hot_encoding': ['col3']})
     """
-    return Encoder.encode(ann_data, autodetect, encodings)
+    return Encoder.encode(data, autodetect, encodings)
 
 
 def undo_encoding(

@@ -78,8 +78,9 @@ def _is_categorical_column(col: np.ndarray, col_name: str) -> CategoricalColumnT
         )
         sys.exit(1)
     if c_dtype == "string":
-        if len(categorical.categories) >= len(categorical):
-            return CategoricalColumnType(False, "not_categorical")
+        # TODO Consider this when we are dealing with freetext
+        # if len(categorical.categories) >= len(categorical):
+        # return CategoricalColumnType(False, "not_categorical")
         return CategoricalColumnType(True, "categorical_encoded")
     elif c_dtype == "floating" or c_dtype == "integer" or c_dtype == "mixed-integer-float":
         # TODO: Find a good threshold (need to apply to real data to find this; can not fix now)

@@ -1,15 +1,14 @@
 import warnings
 from pathlib import Path
-from typing import Generator, Iterable, Iterator, List, NamedTuple, Optional, Sequence, Union, Dict
+from typing import Dict, Generator, Iterable, Iterator, List, NamedTuple, Optional, Sequence, Union
 
 import numpy as np
 import pandas as pd
 from _collections import OrderedDict
 from anndata import AnnData
 from anndata import read as read_h5ad
-from rich import print
-
 from mudata import MuData
+from rich import print
 
 from ehrapy.api.data.dataloader import Dataloader
 from ehrapy.api.encode.encode import Encoder
@@ -74,7 +73,7 @@ class DataReader:
         is_present = DataReader._check_datafiles_present_and_download(filename, backup_url=backup_url)
         if not is_present and not filename.is_dir() and not filename.is_file():
             # TODO Message
-            print(f"[bold red]Tried to download missing data file(s), but was not able to do so. Please file an issue!")
+            print("[bold red]Tried to download missing data file(s), but was not able to do so. Please file an issue!")
 
         # If the filename is a directory, assume it is a mimicIII dataset
         if filename.is_dir():
@@ -122,11 +121,12 @@ class DataReader:
         return raw_anndata
 
     @staticmethod
-    def _read_mimicIII(filename: Path,
+    def _read_mimicIII(  # noqa: N802
+        filename: Path,
         delimiter: Optional[str] = None,
         index_column: Union[Union[str, Optional[int]], Dict[str, Union[str, Optional[int]]]] = None,
         columns_obs_only: Union[Optional[List[Union[str]]], Dict[str, Optional[List[Union[str]]]]] = None,
-                       ):
+    ):
         """Read `mimicIII` dataset.
 
         Args:
@@ -138,19 +138,21 @@ class DataReader:
         Returns:
             An :class:`~mudata.MuData` object
         """
-        #adata_dict = {}
+        # adata_dict = {}
         mudata = None
         for file in filename.iterdir():
-            if file.is_file() and file.suffix in ['.csv', '.tsv']:
+            if file.is_file() and file.suffix in [".csv", ".tsv"]:
                 # slice off the file suffix as this is not needed for identifier
                 adata_identifier = file.name[:-4]
                 # TODO: Check whether that identifier name already exists
-                index_col, col_obs_only = DataReader._extract_index_and_columns_obs_only(adata_identifier, index_column, columns_obs_only)
+                index_col, col_obs_only = DataReader._extract_index_and_columns_obs_only(
+                    adata_identifier, index_column, columns_obs_only
+                )
                 adata = DataReader.read_csv(file, delimiter, index_col, col_obs_only)
                 # obs indices have to be unique otherwise updating and working with the MuData object will fail
                 if index_col:
                     adata.obs_names_make_unique()
-                #adata_dict[adata_identifier] = adata
+                # adata_dict[adata_identifier] = adata
                 if not mudata:
                     mudata = MuData({adata_identifier: adata})
                 else:
@@ -158,7 +160,6 @@ class DataReader:
         # create the MuData object with the AnnData objects as modalities
         mudata.update()
         return mudata
-
 
     @staticmethod
     def read_csv(
@@ -185,7 +186,7 @@ class DataReader:
             columns_obs_only = []
         # add datetime columns to obs only
         for column in initial_df.columns:
-            if ("time" in column.lower() or "date" in column.lower()) and initial_df[column].dtype == 'object':
+            if ("time" in column.lower() or "date" in column.lower()) and initial_df[column].dtype == "object":
                 columns_obs_only.append(column)
         # TODO: Find a better way to detect datetime columns
         # mask = initial_df.astype(str).apply(lambda column: column.str.match(r'(\d{2,4}-\d{2}-\d{2,4}){0,1}( ){0,1}(\d{1,2}:\d{2}:\d{2}){0,1}').any())
@@ -496,10 +497,9 @@ class DataReader:
         else:
             if not DataReader.suppress_warnings:
                 warnings.warn(
-                        "No index column was passed. "
-                        "Using default, numerical indices instead!",
-                        IndexColumnWarning,
-                    )
+                    "No index column was passed. " "Using default, numerical indices instead!",
+                    IndexColumnWarning,
+                )
 
         return df
 
