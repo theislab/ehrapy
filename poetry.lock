@@ -268,6 +268,17 @@ optional = false
 python-versions = ">=3.6,<4.0"
 
 [[package]]
+name = "deepl"
+version = "1.1.2"
+description = "Python library for the DeepL API."
+category = "main"
+optional = false
+python-versions = ">=3.6.2,<4"
+
+[package.dependencies]
+requests = ">=2.18,<3.0"
+
+[[package]]
 name = "defusedxml"
 version = "0.7.1"
 description = "XML bomb protection for Python stdlib modules"
@@ -1989,7 +2000,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7.1,<3.10"
-content-hash = "3c05dfa7b26fe849cfd1cefd49a5b93470ff2b6203cb04f41ead1e3df579d0cb"
+content-hash = "992f7f2c4e82274d44ced139806bd37b344c6108bf28eb5d1f7aeffc265af5ed"
 
 [metadata.files]
 alabaster = [
@@ -2172,6 +2183,10 @@ cycler = [
 darglint = [
     {file = "darglint-1.8.0-py3-none-any.whl", hash = "sha256:ac6797bcc918cd8d8f14c168a4a364f54e1aeb4ced59db58e7e4c6dfec2fe15c"},
     {file = "darglint-1.8.0.tar.gz", hash = "sha256:aa605ef47817a6d14797d32b390466edab621768ea4ca5cc0f3c54f6d8dcaec8"},
+]
+deepl = [
+    {file = "deepl-1.1.2-py3-none-any.whl", hash = "sha256:491b5e8941d205fa761bf99c45e3afe4866b7387a1cc6a5973df371096dde439"},
+    {file = "deepl-1.1.2.tar.gz", hash = "sha256:8d969f63f03c95ef35cefb94013c3fef0217f96f6665da60950b197e2b5e0dbc"},
 ]
 defusedxml = [
     {file = "defusedxml-0.7.1-py2.py3-none-any.whl", hash = "sha256:a352e7e428770286cc899e2542b6cdaedb2b4953ff269a210103ec58f6198a61"},
