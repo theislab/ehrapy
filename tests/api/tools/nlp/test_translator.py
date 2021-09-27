@@ -1,9 +1,12 @@
 import os
 from pathlib import Path
 
+import numpy as np
+import pandas as pd
 import pytest
+from anndata import AnnData
 
-from ehrapy.api.tools.nlp._deepl import DeepL
+from ehrapy.api.tools.nlp._translators import DeepL
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_PATH = f"{CURRENT_DIR}/test_nlp"
@@ -17,12 +20,34 @@ if deepl_token is None:
 
 
 class TestDeepL:
+    def setup_method(self):
+        self.translator = DeepL(deepl_token)
+        obs_data = {
+            "Krankheit": ["Krebs", "Tumor"],
+            "Land": ["Deutschland", "Schweiz"],
+            "Geschlecht": ["männlich", "weiblich"],
+        }
+        self.test_adata = AnnData(
+            X=np.array([[1, 2, 3], [4, 5, 6]]),
+            obs=pd.DataFrame(data=obs_data),
+            var=dict(Feat=["measurement 1", "measurement 2", "measurement 3"]),
+        )
+
     def test_authentication(self):
         translator = DeepL(deepl_token)
         assert translator is not None
         translator.authenticate(deepl_token)
 
     def test_text_translation(self):
-        translator = DeepL(deepl_token)
-        result = translator.translate_text("Ich mag Züge.", target_language="EN-US")
+        result = self.translator.translate_text("Ich mag Züge.", target_language="EN-US")
         assert result.text == "I like trains."
+
+    def test_translate_obs_column(self):
+        self.translator.translate_obs_column(
+            self.test_adata, target_language="EN-US", columns="Krankheit", translate_column_name=True, inplace=True
+        )
+        assert "Disease" in self.test_adata.obs.keys()
+        assert "Cancer" in self.test_adata.obs.values
+
+    def test_translate_var_column(self):
+        pass
