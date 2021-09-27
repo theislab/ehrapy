@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from ehrapy.api.tools.nlp import DeepL
+from ehrapy.api.tools.nlp._deepl import DeepL
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_PATH = f"{CURRENT_DIR}/test_nlp"
