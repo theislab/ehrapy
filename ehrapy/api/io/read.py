@@ -1,4 +1,3 @@
-import warnings
 from pathlib import Path
 from typing import Dict, Generator, Iterable, Iterator, List, NamedTuple, Optional, Sequence, Union
 
@@ -72,8 +71,10 @@ class DataReader:
         # check, whether the datafile(s) is/are present or not
         is_present = DataReader._check_datafiles_present_and_download(filename, backup_url=backup_url)
         if not is_present and not filename.is_dir() and not filename.is_file():
-            # TODO Message
-            print("[bold red]Tried to download missing data file(s), but was not able to do so. Please file an issue!")
+            print(
+                "[bold red]Tried to download missing data file(s), but something went wrong. Please file an issue at our repository "
+                "[bold blue]https://github.com/theislab/ehrapy!"
+            )
 
         # If the filename is a directory, assume it is a mimicIII dataset
         if filename.is_dir():
@@ -138,13 +139,11 @@ class DataReader:
         Returns:
             An :class:`~mudata.MuData` object
         """
-        # adata_dict = {}
         mudata = None
         for file in filename.iterdir():
             if file.is_file() and file.suffix in [".csv", ".tsv"]:
                 # slice off the file suffix as this is not needed for identifier
                 adata_identifier = file.name[:-4]
-                # TODO: Check whether that identifier name already exists
                 index_col, col_obs_only = DataReader._extract_index_and_columns_obs_only(
                     adata_identifier, index_column, columns_obs_only
                 )
@@ -152,7 +151,6 @@ class DataReader:
                 # obs indices have to be unique otherwise updating and working with the MuData object will fail
                 if index_col:
                     adata.obs_names_make_unique()
-                # adata_dict[adata_identifier] = adata
                 if not mudata:
                     mudata = MuData({adata_identifier: adata})
                 else:
@@ -180,18 +178,30 @@ class DataReader:
             An :class:`~anndata.AnnData` object
         """
         # read pandas dataframe
-        initial_df = pd.read_csv(filename, delimiter=delimiter)
+        try:
+            initial_df = pd.read_csv(filename, delimiter=delimiter, index_col=index_column)
+        # possible cause: index column is misspelled (or does not exist at all in this file)
+        except ValueError:
+            raise IndexNotFoundError(
+                f"Could not create AnnData object while reading file {filename}. Does index_column named {index_column} "
+                f"exists in {filename}?"
+            ) from None
+
+        # get all object dtype columns
         object_type_columns = [col_name for col_name in initial_df.columns if initial_df[col_name].dtype == "object"]
-        initial_df[object_type_columns] = initial_df[object_type_columns].apply(pd.to_datetime, errors="ignore")
         # if columns_obs_only is None, initialize it as datetime columns need to be included here
         if not columns_obs_only:
             columns_obs_only = []
-        # add datetime columns to obs only
-        for column in initial_df.columns:
-            if initial_df[column].dtype == "datetime64[ns]":
-                columns_obs_only.append(column)
+
+        for col in object_type_columns:
+            try:
+                pd.to_datetime(initial_df[col])
+                columns_obs_only.append(col)
+            except ValueError:
+                pass
+
         # return the initial AnnData object
-        return DataReader._df_to_anndata(initial_df, index_column, columns_obs_only)
+        return DataReader._df_to_anndata(initial_df, columns_obs_only)
 
     @staticmethod
     def read_text(
@@ -261,7 +271,6 @@ class DataReader:
                         DataReader._cast_values_to_numeric(line_list)
                         data.append(np.array(line_list, dtype=dtype))
                 break
-        # TODO Fix the unused variables
         if not column_names:
             # try reading col_names from the last comment line
             if len(comments) > 0:
@@ -323,12 +332,8 @@ class DataReader:
         )
 
     @staticmethod
-    def _df_to_anndata(
-        df: pd.DataFrame, index_column: Union[str, Optional[int]], columns_obs_only: Optional[List[Union[str]]]
-    ) -> AnnData:
+    def _df_to_anndata(df: pd.DataFrame, columns_obs_only: Optional[List[Union[str]]]) -> AnnData:
         """Create an AnnData object from the initial dataframe"""
-        # set index given or default
-        df = DataReader._set_index(df, index_column)
         # move columns from the input dataframe to later obs
         dataframes = DataReader._move_columns_to_obs(df, columns_obs_only)
         X = dataframes.df.to_numpy(copy=True)
@@ -464,8 +469,6 @@ class DataReader:
         elif index_columns and "default" in index_columns.keys():
             _index_column = index_columns["default"]
 
-        # TODO: Ensure index column is not used in columns_obs_only
-
         # get columns obs only (if any)
         if columns_obs_only and identifier in columns_obs_only.keys():
             _columns_obs_only = columns_obs_only[identifier]
@@ -476,32 +479,15 @@ class DataReader:
         if isinstance(_columns_obs_only, str):
             _columns_obs_only = [_columns_obs_only]
 
+        # if index column is also found in column_obs_only, use default indices instead and only move it to obs only, but warn the user
+        if _index_column and _index_column in _columns_obs_only:
+            print(
+                f"[bold yellow]Index column [bold blue]{_index_column} [bold yellow]for file [bold blue]{identifier} [bold yellow]is also used as a column "
+                f"for obs only. Using default indices instead and moving [bold blue]{_index_column} [bold yellow]to column_obs_only."
+            )
+            _index_column = None
+
         return _index_column, _columns_obs_only
-
-    @staticmethod
-    def _set_index(df: pd.DataFrame, index_column: Union[str, Optional[int]]) -> pd.DataFrame:
-        """Try to set the index, if any given by the index_column parameter.
-
-        Args:
-            df: Pandas DataFrame to set the index for
-            index_column: The name of the index column
-
-        Returns:
-            An :class:`~pd.DataFrame` object
-        """
-        column_names = list(df.columns)
-        if isinstance(index_column, str):
-            df = df.set_index(index_column)
-        elif isinstance(index_column, int):
-            df = df.set_index(column_names[index_column])
-        else:
-            if not DataReader.suppress_warnings:
-                warnings.warn(
-                    "No index column was passed. " "Using default, numerical indices instead!",
-                    IndexColumnWarning,
-                )
-
-        return df
 
     @staticmethod
     def _move_columns_to_obs(df: pd.DataFrame, columns_obs_only: Optional[List[str]]) -> BaseDataframes:
@@ -571,7 +557,7 @@ class DataReader:
         return first_type if all((type(el) is first_type) for el in iseq) else False
 
 
-class IndexColumnWarning(UserWarning):
+class IndexNotFoundError(Exception):
     pass
 
 
