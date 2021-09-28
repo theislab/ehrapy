@@ -32,7 +32,7 @@ class TestDeepL:
             X=np.array([["Krebs", "Krebs", "Tumor"], ["Zöliakie", "Allergie", "Allergie"]]),
             obs=pd.DataFrame(data=obs_data),
             var=dict(var_names=["measurement 1", "measurement 2", "measurement 3"], annoA=[1, 2, 3]),
-            dtype=np.dtype(object)
+            dtype=np.dtype(object),
         )
 
     def test_authentication(self):

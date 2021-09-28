@@ -1,5 +1,5 @@
 from string import ascii_letters
-from typing import Tuple
+from typing import Collection, Tuple
 
 import numpy as np
 import pandas as pd
@@ -13,9 +13,9 @@ def gen_adata(
     X_dtype=np.float32,
     # obs_dtypes,
     # var_dtypes,
-    obsm_types: "Collection[Type]" = (sparse.csr_matrix, np.ndarray, pd.DataFrame),
-    varm_types: "Collection[Type]" = (sparse.csr_matrix, np.ndarray, pd.DataFrame),
-    layers_types: "Collection[Type]" = (sparse.csr_matrix, np.ndarray, pd.DataFrame),
+    obsm_types: Collection = (sparse.csr_matrix, np.ndarray, pd.DataFrame),
+    varm_types: Collection = (sparse.csr_matrix, np.ndarray, pd.DataFrame),
+    layers_types: Collection = (sparse.csr_matrix, np.ndarray, pd.DataFrame),
 ) -> AnnData:
     """\
     Helper function to generate a random AnnData for testing purposes.
@@ -63,16 +63,10 @@ def gen_adata(
         df=gen_typed_df(N, var_names),
     )
     varm = {k: v for k, v in varm.items() if type(v) in varm_types}
-    layers = dict(
-        array=np.random.random((M, N)), sparse=sparse.random(M, N, format="csr")
-    )
+    layers = dict(array=np.random.random((M, N)), sparse=sparse.random(M, N, format="csr"))
     layers = {k: v for k, v in layers.items() if type(v) in layers_types}
-    obsp = dict(
-        array=np.random.random((M, M)), sparse=sparse.random(M, M, format="csr")
-    )
-    varp = dict(
-        array=np.random.random((N, N)), sparse=sparse.random(N, N, format="csr")
-    )
+    obsp = dict(array=np.random.random((M, M)), sparse=sparse.random(M, M, format="csr"))
+    varp = dict(array=np.random.random((N, N)), sparse=sparse.random(N, N, format="csr"))
     uns = dict(
         O_recarray=gen_vstr_recarray(N, 5),
         nested=dict(
@@ -114,12 +108,11 @@ def gen_typed_df(n, index=None):
         index=index,
     )
 
+
 def gen_vstr_recarray(m, n, dtype=None):
     size = m * n
     lengths = np.random.randint(3, 5, size)
     letters = np.array(list(ascii_letters))
     gen_word = lambda l: "".join(np.random.choice(letters, l))
-    arr = np.array([gen_word(l) for l in lengths]).reshape(m, n)
-    return pd.DataFrame(arr, columns=[gen_word(5) for i in range(n)]).to_records(
-        index=False, column_dtypes=dtype
-    )
+    arr = np.array([gen_word(length) for length in lengths]).reshape(m, n)
+    return pd.DataFrame(arr, columns=[gen_word(5) for i in range(n)]).to_records(index=False, column_dtypes=dtype)
