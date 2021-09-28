@@ -181,15 +181,15 @@ class DataReader:
         """
         # read pandas dataframe
         initial_df = pd.read_csv(filename, delimiter=delimiter)
+        object_type_columns = [col_name for col_name in initial_df.columns if initial_df[col_name].dtype == "object"]
+        initial_df[object_type_columns] = initial_df[object_type_columns].apply(pd.to_datetime, errors="ignore")
         # if columns_obs_only is None, initialize it as datetime columns need to be included here
         if not columns_obs_only:
             columns_obs_only = []
         # add datetime columns to obs only
         for column in initial_df.columns:
-            if ("time" in column.lower() or "date" in column.lower()) and initial_df[column].dtype == "object":
+            if initial_df[column].dtype == "datetime64[ns]":
                 columns_obs_only.append(column)
-        # TODO: Find a better way to detect datetime columns
-        # mask = initial_df.astype(str).apply(lambda column: column.str.match(r'(\d{2,4}-\d{2}-\d{2,4}){0,1}( ){0,1}(\d{1,2}:\d{2}:\d{2}){0,1}').any())
         # return the initial AnnData object
         return DataReader._df_to_anndata(initial_df, index_column, columns_obs_only)
 
