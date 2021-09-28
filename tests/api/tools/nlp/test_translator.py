@@ -6,7 +6,6 @@ import pandas as pd
 import pytest
 from anndata import AnnData
 
-from ehrapy.api._util import get_column_indices, get_column_values
 from ehrapy.api.tools.nlp._translators import DeepL
 
 CURRENT_DIR = Path(__file__).parent
@@ -52,6 +51,6 @@ class TestDeepL:
         assert "Cancer" in self.test_adata.obs.values
 
     def test_translate_var_column(self):
-        indices = get_column_indices(self.test_adata, ["measurement 1", "measurement 2"])
-        print()
-        print(get_column_values(self.test_adata, indices))
+        self.translator.translate_var_column(
+            self.test_adata, target_language="EN-US", columns="measurement 1", translate_column_name=True, inplace=True
+        )

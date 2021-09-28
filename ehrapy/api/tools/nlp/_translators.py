@@ -5,6 +5,8 @@ from anndata import AnnData
 from deepl import Formality, GlossaryInfo, TextResult
 from rich import print
 
+from ehrapy.api._util import get_column_indices, get_column_values
+
 
 class DeepL:
     """Implementation of the DeepL translator"""
@@ -177,5 +179,42 @@ class DeepL:
                 lambda text: self.translator.translate_text(text, target_lang=target_language).text
             )
 
-    def translate_var_column(self, adata: AnnData, inplace: bool = False):
-        pass
+    def translate_var_column(
+        self,
+        adata: AnnData,
+        target_language: str,
+        columns=Union[str, List],
+        translate_column_name: bool = False,
+        inplace: bool = False,
+    ) -> None:
+        """Translates a var column (column of X) into the target language
+
+        Args:
+            adata: :class:`~anndata.AnnData` object containing the var column to translate
+            target_language: The target language to translate into, e.g. EN-US
+            columns: The columns to translate. Can be either a single column (str) or a list of columns
+            translate_column_name: Whether to translate the column name itself
+            inplace: Whether to replace the obs values or add a new obs column
+        """
+        if isinstance(columns, str):
+            columns = [columns]
+
+        for column in columns:
+            target_column = column
+            if translate_column_name:
+                target_column = self.translator.translate_text(column, target_lang=target_language).text
+            if not inplace:
+                f"{target_column}_{target_language}"
+
+            index = get_column_indices(adata, column)
+            column_values = get_column_values(adata, index)
+
+            if column_values.dtype != str and column_values.dtype != object:
+                print(
+                    f"[bold red]Attempted to translate column {column} which does not contain only strings. Aborting..."
+                )
+                return None
+
+            # TODO Left to do now is to translate the array with e.g. https://numpy.org/doc/stable/reference/generated/numpy.apply_along_axis.html
+            # Then we need to replace the column in X with the column here
+            # Also possibly the var name
