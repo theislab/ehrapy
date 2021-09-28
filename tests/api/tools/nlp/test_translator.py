@@ -6,6 +6,7 @@ import pandas as pd
 import pytest
 from anndata import AnnData
 
+from ehrapy.api._util import get_column_indices, get_column_values
 from ehrapy.api.tools.nlp._translators import DeepL
 
 CURRENT_DIR = Path(__file__).parent
@@ -28,9 +29,10 @@ class TestDeepL:
             "Geschlecht": ["männlich", "weiblich"],
         }
         self.test_adata = AnnData(
-            X=np.array([[1, 2, 3], [4, 5, 6]]),
+            X=np.array([["Krebs", "Krebs", "Tumor"], ["Zöliakie", "Allergie", "Allergie"]]),
             obs=pd.DataFrame(data=obs_data),
-            var=dict(Feat=["measurement 1", "measurement 2", "measurement 3"]),
+            var=dict(var_names=["measurement 1", "measurement 2", "measurement 3"], annoA=[1, 2, 3]),
+            dtype=np.dtype(object)
         )
 
     def test_authentication(self):
@@ -50,4 +52,6 @@ class TestDeepL:
         assert "Cancer" in self.test_adata.obs.values
 
     def test_translate_var_column(self):
-        pass
+        indices = get_column_indices(self.test_adata, ["measurement 1", "measurement 2"])
+        print()
+        print(get_column_values(self.test_adata, indices))
