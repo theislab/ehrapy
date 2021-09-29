@@ -158,10 +158,9 @@ class Encoder:
             with Progress(
                 "[progress.description]{task.description}", BarColumn(), "[progress.percentage]{task.percentage:>3.0f}%"
             ) as progress:
-                task = progress.add_task(
-                    "[red] Setting up encoding ...", total=sum([len(val_list) for val_list in encodings.values()])
-                )
+
                 for encoding_mode in encodings.keys():
+                    task = progress.add_task(f"[red] Setting up {encoding_mode}", total=len(encodings[encoding_mode]))
                     encode_mode_switcher = {
                         "one_hot_encoding": Encoder._one_hot_encoding,
                         "label_encoding": Encoder._label_encoding,
@@ -176,7 +175,7 @@ class Encoder:
                     # update encoding history in uns
                     for categorical in encodings[encoding_mode]:
                         current_encodings[categorical] = encoding_mode
-                    progress.update(task, advance=1)
+                        progress.update(task, advance=1)
 
             # update original layer content with the new categorical encoding and the old other values
             updated_layer = Encoder._update_layer_after_encoding(
