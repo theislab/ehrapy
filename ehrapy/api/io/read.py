@@ -72,7 +72,7 @@ class DataReader:
         is_present = DataReader._check_datafiles_present_and_download(filename, backup_url=backup_url)
         if not is_present and not filename.is_dir() and not filename.is_file():
             print(
-                "[bold red]Tried to download missing data file(s), but something went wrong. Please file an issue at our repository "
+                "[bold red]Attempted download of missing file(s) failed. Please file an issue at our repository "
                 "[bold blue]https://github.com/theislab/ehrapy!"
             )
 
