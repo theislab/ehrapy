@@ -216,7 +216,6 @@ class DeepL:
                 lambda text: self.translator.translate_text(text, target_lang=target_language).text
             )
 
-
     def translate_X_column(
         self,
         adata: AnnData,
