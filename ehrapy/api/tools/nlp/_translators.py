@@ -246,7 +246,7 @@ class DeepL:
             f = lambda x: x + "blub"
             translated_column_values = f(column_values)
 
-            print("test")
+            print(translated_column_values)
 
             # Replace the column in X with the column here
             # Also possibly the var name
