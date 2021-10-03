@@ -27,10 +27,15 @@ class TestDeepL:
             "Land": ["Deutschland", "Schweiz"],
             "Geschlecht": ["männlich", "weiblich"],
         }
+        var_data = {
+            "Krankheit": ["Krebs", "Tumor", "Krebs"],
+            "Land": ["Deutschland", "Schweiz", "Österreich"],
+            "Geschlecht": ["männlich", "weiblich", "männlich"],
+        }
         self.test_adata = AnnData(
             X=np.array([["Krebs", "Krebs", "Tumor"], ["Zöliakie", "Allergie", "Allergie"]]),
             obs=pd.DataFrame(data=obs_data),
-            var=dict(var_names=["measurement 1", "measurement 2", "measurement 3"], annoA=[1, 2, 3]),
+            var=pd.DataFrame(data=var_data),
             dtype=np.dtype(object),
         )
 
@@ -52,5 +57,7 @@ class TestDeepL:
 
     def test_translate_var_column(self):
         self.translator.translate_var_column(
-            self.test_adata, target_language="EN-US", columns="measurement 1", translate_column_name=True, inplace=True
+            self.test_adata, target_language="EN-US", columns="Krankheit", translate_column_name=True, inplace=True
         )
+        assert "Disease" in self.test_adata.var.keys()
+        assert "Cancer" in self.test_adata.var.values

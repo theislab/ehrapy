@@ -187,6 +187,44 @@ class DeepL:
         translate_column_name: bool = False,
         inplace: bool = False,
     ) -> None:
+        """Translates a single obs column and optionally replaces the original values
+
+        Args:
+            adata: :class:`~anndata.AnnData` object containing the obs column to translate
+            target_language: The target language to translate into, e.g. EN-US
+            columns: The columns to translate. Can be either a single column (str) or a list of columns
+            translate_column_name: Whether to translate the column name itself
+            inplace: Whether to replace the obs values or add a new obs column
+        """
+        if isinstance(columns, str):
+            columns = [columns]
+
+        for column in columns:
+            # as of Pandas 1.1.0 the default for new string column is still 'object'
+            if adata.var[column].dtype != str and adata.var[column].dtype != object:
+                print(
+                    f"[bold red]Attempted to translate column {column} which does not contain only strings. Aborting..."
+                )
+                return None
+            target_column = column
+            if translate_column_name:
+                target_column = self.translator.translate_text(column, target_lang=target_language).text
+            if not inplace:
+                f"{target_column}_{target_language}"
+
+            adata.var[target_column] = adata.var[column].apply(
+                lambda text: self.translator.translate_text(text, target_lang=target_language).text
+            )
+
+
+    def translate_X_column(
+        self,
+        adata: AnnData,
+        target_language: str,
+        columns=Union[str, List],
+        translate_column_name: bool = False,
+        inplace: bool = False,
+    ) -> None:
         """Translates a var column (column of X) into the target language
 
         Args:
