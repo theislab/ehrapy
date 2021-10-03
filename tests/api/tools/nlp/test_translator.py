@@ -33,9 +33,9 @@ class TestDeepL:
             "Geschlecht": ["männlich", "weiblich", "männlich"],
         }
         self.test_adata = AnnData(
-            X=np.array([["Krebs", "Krebs", "Tumor"], ["Zöliakie", "Allergie", "Allergie"]]),
+            X=np.array([["Deutschland", "Zöliakie", "Tumor"], ["Frankreich", "Allergie", "Krebs"]], np.dtype(object)),
             obs=pd.DataFrame(data=obs_data),
-            var=pd.DataFrame(data=var_data),
+            var=pd.DataFrame(data=var_data, index=["Land", "Prädisposition", "Krankheit"]),
             dtype=np.dtype(object),
         )
 
@@ -61,3 +61,11 @@ class TestDeepL:
         )
         assert "Disease" in self.test_adata.var.keys()
         assert "Cancer" in self.test_adata.var.values
+
+    # @pytest.mark.skip(reason="Not implemented yet.")
+    def test_translate_X_column(self):
+        self.translator.translate_X_column(
+            self.test_adata, target_language="EN-US", columns="Krankheit", translate_column_name=True, inplace=True
+        )
+        assert "Disease" in self.test_adata.X
+        assert "Cancer" in self.test_adata.X

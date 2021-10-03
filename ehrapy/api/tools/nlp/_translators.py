@@ -165,10 +165,7 @@ class DeepL:
         for column in columns:
             # as of Pandas 1.1.0 the default for new string column is still 'object'
             if adata.obs[column].dtype != str and adata.obs[column].dtype != object:
-                print(
-                    f"[bold red]Attempted to translate column {column} which does not contain only strings. Aborting..."
-                )
-                return None
+                raise ValueError("Attempted to translate column {column} which does not contain only strings.")
             target_column = column
             if translate_column_name:
                 target_column = self.translator.translate_text(column, target_lang=target_language).text
@@ -187,7 +184,7 @@ class DeepL:
         translate_column_name: bool = False,
         inplace: bool = False,
     ) -> None:
-        """Translates a single obs column and optionally replaces the original values
+        """Translates a single var column and optionally replaces the original values
 
         Args:
             adata: :class:`~anndata.AnnData` object containing the obs column to translate
@@ -202,10 +199,7 @@ class DeepL:
         for column in columns:
             # as of Pandas 1.1.0 the default for new string column is still 'object'
             if adata.var[column].dtype != str and adata.var[column].dtype != object:
-                print(
-                    f"[bold red]Attempted to translate column {column} which does not contain only strings. Aborting..."
-                )
-                return None
+                raise ValueError("Attempted to translate column {column} which does not contain only strings.")
             target_column = column
             if translate_column_name:
                 target_column = self.translator.translate_text(column, target_lang=target_language).text
@@ -224,7 +218,7 @@ class DeepL:
         translate_column_name: bool = False,
         inplace: bool = False,
     ) -> None:
-        """Translates a var column (column of X) into the target language
+        """Translates a X column into the target language
 
         Args:
             adata: :class:`~anndata.AnnData` object containing the var column to translate
@@ -247,11 +241,12 @@ class DeepL:
             column_values = get_column_values(adata, index)
 
             if column_values.dtype != str and column_values.dtype != object:
-                print(
-                    f"[bold red]Attempted to translate column {column} which does not contain only strings. Aborting..."
-                )
-                return None
+                raise ValueError("Attempted to translate column {column} which does not contain only strings.")
 
-            # TODO Left to do now is to translate the array with e.g. https://numpy.org/doc/stable/reference/generated/numpy.apply_along_axis.html
-            # Then we need to replace the column in X with the column here
+            f = lambda x: x + "blub"
+            translated_column_values = f(column_values)
+
+            print("test")
+
+            # Replace the column in X with the column here
             # Also possibly the var name
