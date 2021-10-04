@@ -31,7 +31,5 @@ jobs:
             - name: Publish package on PyPI
               uses: pypa/gh-action-pypi-publish@v1.4.2
               with:
-                  # TODO COOKIETEMPLE: Configure your PyPI Token to enable automatic deployment to PyPi on releases
-                  # https://help.github.com/en/actions/configuring-and-managing-workflows/creating-and-storing-encrypted-secrets
                   user: __token__
                   password: ${{ secrets.PYPI_TOKEN }}

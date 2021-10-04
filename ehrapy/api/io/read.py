@@ -9,6 +9,7 @@ from anndata import read as read_h5ad
 from mudata import MuData
 from rich import print
 
+from ehrapy.api import settings
 from ehrapy.api.data.dataloader import Dataloader
 from ehrapy.api.encode.encode import Encoder
 from ehrapy.api.io._utility_io import (
@@ -73,7 +74,7 @@ class DataReader:
         if not is_present and not filename.is_dir() and not filename.is_file():
             print(
                 "[bold red]Attempted download of missing file(s) failed. Please file an issue at our repository "
-                "[bold blue]https://github.com/theislab/ehrapy!"
+                "[blue]https://github.com/theislab/ehrapy!"
             )
 
         # If the filename is a directory, assume it is a mimicIII dataset
@@ -90,8 +91,7 @@ class DataReader:
 
         if not is_present:
             raise FileNotFoundError(f"Did not find file {filename}.")
-        # TODO REPLACE WITH SETTINGS cachedir
-        path_cache = Path.cwd() / _slugify(filename).replace("." + extension, ".h5ad")  # type: Path
+        path_cache = settings.cachedir / _slugify(filename).replace("." + extension, ".h5ad")  # type: Path
         if path_cache.suffix in {".gz", ".bz2"}:
             path_cache = path_cache.with_suffix("")
         if cache and path_cache.is_file():
@@ -113,7 +113,7 @@ class DataReader:
             if not path_cache.parent.is_dir():
                 path_cache.parent.mkdir(parents=True)
             # write for faster reading when calling the next time
-            cached_adata = Encoder.encode(adata=raw_anndata, autodetect=True)
+            cached_adata = Encoder.encode(data=raw_anndata, autodetect=True)
             cached_adata.write(path_cache)
             cached_adata.X = cached_adata.X.astype("object")
             cached_adata = DataReader._decode_cached_adata(cached_adata, columns_obs_only)
@@ -128,7 +128,7 @@ class DataReader:
         index_column: Union[Union[str, Optional[int]], Dict[str, Union[str, Optional[int]]]] = None,
         columns_obs_only: Union[Optional[List[Union[str]]], Dict[str, Optional[List[Union[str]]]]] = None,
     ):
-        """Read `mimicIII` dataset.
+        """Read `MimicIII` dataset.
 
         Args:
             filename: File path to the directory containing mimicIII dataset.

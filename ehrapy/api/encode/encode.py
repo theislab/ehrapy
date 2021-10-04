@@ -1,4 +1,3 @@
-import sys
 from itertools import chain
 from typing import Dict, List, Optional, Set, Tuple, Union
 
@@ -31,14 +30,14 @@ class Encoder:
         if isinstance(data, AnnData):
             # basic type checking for passed parameters when encoding a single AnnData object
             if not Encoder._check_anndata_input_type(autodetect, encodings):
-                sys.exit(1)
+                raise EncodingInputValueError
             return Encoder._encode(adata=data, autodetect=autodetect, encodings=encodings)
         elif isinstance(data, MuData):
             # basic type checking for passed parameters when encoding a MuData object (collection of multiple AnnData objects)
             if not Encoder._check_mudata_input_type(autodetect, encodings):
-                sys.exit(1)
+                raise EncodingInputValueError
             for adata in data.mod.keys():
-                detect, encodings_modes = Encoder._extract_autodetect_and_encoding_modes(adata, autodetect, encodings)
+                detect, encodings_modes = Encoder._extract_autodetect_and_encoding_modes(adata, autodetect, encodings)  # type: ignore
                 # autodetect is set to False, but no encodings were provided; warn and skip this object
                 if not detect and not encodings_modes:
                     print(
@@ -48,6 +47,10 @@ class Encoder:
                     data.mod[adata] = Encoder._encode(data.mod[adata], detect, encodings_modes)
                 data.update()
                 # no need to return since this references the original MuData object
+        else:
+            print(f"[b red]Cannot encode object of type {type(data)}. Can only encode AnnData or MuData objects!")
+            raise ValueError
+        return None
 
     @staticmethod
     def undo_encoding(
@@ -62,10 +65,16 @@ class Encoder:
                 if reset_adata:
                     data.mod[adata] = reset_adata
             data.update()
+        else:
+            print(f"[b red]Cannot decode object of type {type(data)}. Can only dencode AnnData or MuData objects!")
+            raise ValueError
+        return None
 
     @staticmethod
     def _encode(
-        adata: AnnData, autodetect: bool = False, encodings: Dict[str, List[str]] = None
+        adata: AnnData,
+        autodetect: Union[bool, Dict] = False,
+        encodings: Union[Dict[str, Dict[str, List[str]]], Dict[str, List[str]]] = None,
     ) -> Union[AnnData, None]:
         """Encode the initial read AnnData object. Categorical values could be either passed via parameters or autodetected.
 
@@ -169,7 +178,7 @@ class Encoder:
                     progress.update(task, description=f"Running {encoding_mode} ...")
                     # perform the actual encoding
                     encoded_x, encoded_var_names = encode_mode_switcher[encoding_mode](
-                        adata, encoded_x, encoded_var_names, encodings[encoding_mode], progress, task
+                        adata, encoded_x, encoded_var_names, encodings[encoding_mode], progress, task  # type: ignore
                     )
 
                     # update encoding history in uns
@@ -202,7 +211,7 @@ class Encoder:
                     "[bold red]Creation of AnnData object failed. "
                     "Ensure that you passed all non numerical, categorical values for encoding!"
                 )
-                sys.exit(1)
+                raise AnnDataCreationError from None
         del adata.obs
         del adata.X
 
@@ -316,14 +325,14 @@ class Encoder:
         # returns a pandas dataframe per default, but numpy array is needed
         count_encoder = CountEncoder(return_df=False)
         count_encoder.fit(original_values)
-        cat_prefix = [f"ehrapycat_{categorical}" for categorical in categoricals]
+        category_prefix = [f"ehrapycat_{categorical}" for categorical in categoricals]
         transformed = count_encoder.transform(original_values)
         # X is None if this is the first encoding "round" -> take the former X
         if X is None:
             X = adata.X  # noqa: N806
         if progress:
             progress.update(task, description="[blue]Updating count encoded values ...")
-        temp_x, temp_var_names = Encoder._update_encoded_data(X, transformed, var_names, cat_prefix, categoricals)
+        temp_x, temp_var_names = Encoder._update_encoded_data(X, transformed, var_names, category_prefix, categoricals)
 
         return temp_x, temp_var_names
 
@@ -433,9 +442,8 @@ class Encoder:
         Args:
             adata: The AnnData object
             columns: The names of the columns to reset encoding for. Defaults to all columns.
-            from_cache_file: Whether to reset all encodings by reading from a cached .h5ad file, if available. This resets the AnnData object to its initial
-            state.
-            TODO replace this once settings.cache_dir is available
+            from_cache_file: Whether to reset all encodings by reading from a cached .h5ad file, if available.
+            This resets the AnnData object to its initial state.
             cache_file: The filename of the cache file to read from
             suppress_warning: Whether warnings should be suppressed or not (only True if called from a MuData object)
 
@@ -504,7 +512,7 @@ class Encoder:
                 idx_list.add(idx)
             # if the old variable was already encoded
             elif old_var_name.startswith("ehrapycat_"):
-                if any(old_var_name[10:].startswith(cat) for cat in category_set):
+                if any(old_var_name[10:].startswith(category) for category in category_set):
                     idx_list.add(idx)
 
         return idx_list
@@ -545,10 +553,10 @@ class Encoder:
     @staticmethod
     def _extract_autodetect_and_encoding_modes(
         identifier: str, autodetect: Dict, encodings: Dict[str, Dict[str, List[str]]]
-    ) -> (bool, Optional[Dict]):
+    ) -> Tuple[bool, Optional[Dict]]:
         """
         Extract the index column (if any) and the columns, for obs only (if any) from the given user input.
-        This function is only called when dealing with mimicIII datasets; when parsing multiple files.
+        This function is only called when dealing with datasets consisting of multiple files (for example MIMIC-III).
 
         For each file, `index_columns` and `columns_obs_only` can provide three cases:
             1.) The filename (thus the identifier) is not present as a key and no default key is provided or one or both dicts are empty:
@@ -631,7 +639,7 @@ class Encoder:
         """
         if not isinstance(autodetect, bool):
             print(
-                f"[bold red]Tried encoding an AnnData object, but passed parameter for [bold blue]autodetect [bold red]{autodetect} is not a boolean."
+                f"[bold red]Attempted to encode an AnnData object, but passed parameter for [bold blue]autodetect [bold red]{autodetect} is not a boolean."
                 f"Please provide a boolean value for [bold blue]autodetect [bold red]when encoding a single AnnData object!"
             )
             return False
@@ -665,11 +673,19 @@ class Encoder:
         elif encodings and any(isinstance(column, List) for column in encodings.values()):
             print(
                 "[bold red]Encoding a MuData object requires a dictionary passed for every AnnData object, that should be encoded, containing the "
-                "encoding modes and columns, like it is required for a single AnnData object!"
+                "encoding modes and columns, as required for a single AnnData object!"
             )
             return False
         return True
 
 
 class AlreadyEncodedWarning(UserWarning):
+    pass
+
+
+class EncodingInputValueError(ValueError):
+    pass
+
+
+class AnnDataCreationError(ValueError):
     pass
