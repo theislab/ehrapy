@@ -37,7 +37,7 @@ class Encoder:
             if not Encoder._check_mudata_input_type(autodetect, encodings):
                 raise EncodingInputValueError
             for adata in data.mod.keys():
-                detect, encodings_modes = Encoder._extract_autodetect_and_encoding_modes(adata, autodetect, encodings)  # type: ignore
+                detect, encodings_modes = Encoder._get_mudata_autodetect_options_and_encoding_modes(adata, autodetect, encodings)  # type: ignore
                 # autodetect is set to False, but no encodings were provided; warn and skip this object
                 if not detect and not encodings_modes:
                     print(
@@ -551,7 +551,7 @@ class Encoder:
                 ann_data.uns["original_values_categoricals"][var_name] = ann_data.X[::, idx : idx + 1]
 
     @staticmethod
-    def _extract_autodetect_and_encoding_modes(
+    def _get_mudata_autodetect_options_and_encoding_modes(
         identifier: str, autodetect: Dict, encodings: Dict[str, Dict[str, List[str]]]
     ) -> Tuple[bool, Optional[Dict]]:
         """
