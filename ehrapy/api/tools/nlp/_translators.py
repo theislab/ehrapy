@@ -1,7 +1,6 @@
 from typing import Dict, List, Union
 
 import deepl
-import numpy as np
 from anndata import AnnData
 from deepl import Formality, GlossaryInfo, TextResult
 from rich import print
