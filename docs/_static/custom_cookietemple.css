@@ -11,3 +11,7 @@ td:nth-child(1) {
 td:nth-child(2) {
     width: 100%;
 }
+
+span.pre {
+    color:#007dce;
+}
