@@ -1,3 +1,4 @@
+from functools import wraps
 from typing import Dict, List, Union
 
 import deepl
@@ -23,6 +24,7 @@ class DeepL:
             function: The function to actually call
         """
 
+        @wraps(function)  # type: ignore
         def wrapper(self, *args, **kwargs) -> None:
             usage = self.translator.get_usage()
             if usage.any_limit_exceeded:
@@ -235,7 +237,7 @@ class DeepL:
             column_values = get_column_values(adata, index)
 
             if column_values.dtype != str and column_values.dtype != object:
-                raise ValueError("Attempted to translate column {column} which does not contain only strings.")
+                raise ValueError("Attempted to translate column {column} which does not only contain strings.")
 
             if translate_column_name:
                 translated_column_name = self.translator.translate_text(column, target_lang=target_language).text
@@ -245,7 +247,6 @@ class DeepL:
 
             translate = lambda text: self.translator.translate_text(text, target_lang=target_language)
             translated_column_values: List = translate(column_values)
-            # Columns are expected to be of shape -1,1 -> we need lists that look like ["string", "string"]
             translated_column_values = list(map(lambda text_result: text_result.text, translated_column_values))
 
             adata.X[:, index] = translated_column_values
