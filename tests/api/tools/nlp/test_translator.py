@@ -62,10 +62,11 @@ class TestDeepL:
         assert "Disease" in self.test_adata.var.keys()
         assert "Cancer" in self.test_adata.var.values
 
-    @pytest.mark.skip(reason="Not implemented yet.")
     def test_translate_X_column(self):
         self.translator.translate_X_column(
-            self.test_adata, target_language="EN-US", columns="Krankheit", translate_column_name=True, inplace=True
+            self.test_adata, target_language="EN-US", columns="Krankheit", translate_column_name=True
         )
-        assert "Disease" in self.test_adata.X
-        assert "Cancer" in self.test_adata.X
+        assert "Tumor" in self.test_adata.X[0]
+        assert "Cancer" in self.test_adata.X[1]
+
+        assert "Disease" in self.test_adata.var_names

@@ -1,6 +1,7 @@
 from typing import Dict, List, Union
 
 import deepl
+import numpy as np
 from anndata import AnnData
 from deepl import Formality, GlossaryInfo, TextResult
 from rich import print
@@ -216,37 +217,36 @@ class DeepL:
         target_language: str,
         columns=Union[str, List],
         translate_column_name: bool = False,
-        inplace: bool = False,
     ) -> None:
-        """Translates a X column into the target language
+        """Translates a X column into the target language in place.
+
+        Note that the translation of a column in X is **always** in place.
 
         Args:
             adata: :class:`~anndata.AnnData` object containing the var column to translate
             target_language: The target language to translate into, e.g. EN-US
             columns: The columns to translate. Can be either a single column (str) or a list of columns
-            translate_column_name: Whether to translate the column name itself
-            inplace: Whether to replace the obs values or add a new obs column
+            translate_column_name: Whether to translate the column name itself (only translates var_names, not var)
         """
         if isinstance(columns, str):
             columns = [columns]
 
         for column in columns:
-            target_column = column
-            if translate_column_name:
-                target_column = self.translator.translate_text(column, target_lang=target_language).text
-            if not inplace:
-                f"{target_column}_{target_language}"
-
-            index = get_column_indices(adata, column)
+            index: int = get_column_indices(adata, column)[0]
             column_values = get_column_values(adata, index)
 
             if column_values.dtype != str and column_values.dtype != object:
                 raise ValueError("Attempted to translate column {column} which does not contain only strings.")
 
-            f = lambda x: x + "blub"
-            translated_column_values = f(column_values)
+            if translate_column_name:
+                translated_column_name = self.translator.translate_text(column, target_lang=target_language).text
+                index_values = adata.var_names.tolist()
+                index_values[index] = translated_column_name
+                adata.var_names = index_values
 
-            print(translated_column_values)
+            translate = lambda text: self.translator.translate_text(text, target_lang=target_language)
+            translated_column_values: List = translate(column_values)
+            # Columns are expected to be of shape -1,1 -> we need lists that look like ["string", "string"]
+            translated_column_values = list(map(lambda text_result: text_result.text, translated_column_values))
 
-            # Replace the column in X with the column here
-            # Also possibly the var name
+            adata.X[:, index] = translated_column_values
