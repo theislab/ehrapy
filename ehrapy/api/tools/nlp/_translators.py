@@ -15,7 +15,7 @@ class DeepL:
     def __init__(self, authentication_key: str):
         self.translator = deepl.Translator(authentication_key)
 
-    def _check_usage(function) -> ():  # type: ignore # noqa
+    def _check_usage(function) -> ():  # type: ignore # noqa # pragma: no cover
         """Checks the usage limit of the DeepL Account.
 
         Prints a warning if the DeepL usage limit is exceeded.
@@ -56,7 +56,7 @@ class DeepL:
 
         return wrapper
 
-    @_check_usage  # type: ignore
+    @_check_usage  # type: ignore # pragma: no cover
     def authenticate(self, authentication_key: str) -> None:
         """Authenticates the DeepL user
 
@@ -65,7 +65,7 @@ class DeepL:
         """
         self.translator = deepl.Translator(authentication_key)
 
-    def print_source_languages(self) -> None:
+    def print_source_languages(self) -> None:  # pragma: no cover
         """prints all possible source languages to translate from
 
         Example: "DE (German)"
@@ -73,7 +73,7 @@ class DeepL:
         for language in self.translator.get_source_languages():
             print(f"{language.code} ({language.name})")
 
-    def print_target_languages(self) -> None:
+    def print_target_languages(self) -> None:  # pragma: no cover
         """Prints all possible target languages to translate to"""
         for language in self.translator.get_target_languages():
             if language.supports_formality:
@@ -94,7 +94,7 @@ class DeepL:
         """
         return self.translator.translate_text(text, target_lang=target_language)
 
-    @_check_usage  # type: ignore
+    @_check_usage  # type: ignore # pragma: no cover
     def translate_document(
         self, input_file_path: str, output_path: str, target_language: str, formality: str = Formality.DEFAULT
     ) -> None:
@@ -110,7 +110,7 @@ class DeepL:
             input_file_path, output_path, target_lang=target_language, formality=formality
         )
 
-    @_check_usage  # type: ignore
+    @_check_usage  # type: ignore # pragma: no cover
     def create_glossary(
         self, glossary_name: str, source_language: str, target_language: str, entries: Dict[str, str]
     ) -> GlossaryInfo:
@@ -129,7 +129,7 @@ class DeepL:
         """
         return self.translator.create_glossary(glossary_name, source_language, target_language, entries)
 
-    @_check_usage  # type: ignore
+    @_check_usage  # type: ignore # pragma: no cover
     def translate_with_glossary(
         self, text: Union[str, List], glossary: GlossaryInfo
     ) -> Union[TextResult, List[TextResult]]:
