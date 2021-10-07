@@ -18,3 +18,21 @@ def mimic_2(encode: bool = False):
                 adata = eh.data.mimic_2(encode=True)
     """
     return Datasets.mimic_2(encode=encode)
+
+
+def mimic_3(encode: bool = False):
+    """Downloads and returns a prepared MuData object of the clinical data from the MIMIC-III database (https://physionet.org/content/mimic2-iaccd/1.0/)
+
+    Args:
+        encode: Whether to return an already encoded MuData object
+
+    Returns:
+        An :class:`~mudata.MuData` object with the (optionally encoded) values in X
+
+    Example:
+        .. code-block:: python
+
+                import ehrapy.api as ep
+                mudata = eh.data.mimic_3(encode=True)
+    """
+    return Datasets.mimic_3_demo(encode=encode)

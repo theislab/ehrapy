@@ -466,9 +466,10 @@ class Encoder:
             # import here to resolve circular dependency issue on module level
             from ehrapy.api.io.read import DataReader
 
+            # TODO: FIX caching for mudata/multiple datafiles
             # read from cache file and decode it
             cached_adata = DataReader.read(cache_file)
-            cached_adata.X = cached_adata.X.astype("object")
+            cached_adata.X = cached_adata.X.astype("object")  # type: ignore
             cached_adata = DataReader._decode_cached_adata(cached_adata, columns_obs_only)
             return cached_adata
         # maybe implement a way to only reset encoding for specific columns later

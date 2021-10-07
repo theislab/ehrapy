@@ -36,10 +36,11 @@ class DataReader:
         delimiter: Optional[str] = None,
         index_column: Union[str, Optional[int]] = None,
         columns_obs_only: Optional[List[Union[str]]] = None,
+        return_mudata_object: bool = False,
         cache: bool = False,
         backup_url: Optional[str] = None,
         suppress_warnings: bool = False,
-    ) -> AnnData:
+    ) -> Union[AnnData, Dict[str, AnnData], MuData]:
         DataReader.suppress_warnings = suppress_warnings
         file = Path(filename)
         if not file.exists():
@@ -48,15 +49,16 @@ class DataReader:
             is_zip: bool = output_file_name.endswith(".zip")  # TODO can we generalize this to tar files as well?
             Dataloader.download(backup_url, output_file_name=str(filename), output_path=str(Path.cwd()), is_zip=is_zip)
 
-        raw_anndata = DataReader._read(
+        raw_object = DataReader._read(
             filename=file,
             extension=extension,
             delimiter=delimiter,
             index_column=index_column,
             columns_obs_only=columns_obs_only,
+            return_mudata_object=return_mudata_object,
             cache=cache,
         )
-        return raw_anndata
+        return raw_object
 
     @staticmethod
     def _read(
@@ -65,6 +67,7 @@ class DataReader:
         delimiter: Optional[str] = None,
         index_column: Union[str, Optional[int]] = None,
         columns_obs_only: Optional[List[Union[str]]] = None,
+        return_mudata_object: bool = False,
         cache: bool = False,
         backup_url: Optional[str] = None,
     ) -> Union[AnnData, np.ndarray]:
@@ -79,7 +82,9 @@ class DataReader:
 
         # If the filename is a directory, assume it is a mimicIII dataset
         if filename.is_dir():
-            return DataReader._read_mimicIII(filename, delimiter, index_column, columns_obs_only)
+            return DataReader._read_multiple_csv(
+                filename, delimiter, index_column, columns_obs_only, return_mudata_object
+            )
 
         if extension is not None and extension not in supported_extensions:
             raise ValueError("Please provide one of the available extensions.\n" f"{supported_extensions}")
@@ -122,24 +127,29 @@ class DataReader:
         return raw_anndata
 
     @staticmethod
-    def _read_mimicIII(  # noqa: N802
+    def _read_multiple_csv(  # noqa: N802
         filename: Path,
         delimiter: Optional[str] = None,
         index_column: Union[Union[str, Optional[int]], Dict[str, Union[str, Optional[int]]]] = None,
         columns_obs_only: Union[Optional[List[Union[str]]], Dict[str, Optional[List[Union[str]]]]] = None,
-    ):
-        """Read `MimicIII` dataset.
+        return_mudata_object: bool = False,
+    ) -> Union[MuData, Dict[str, AnnData]]:
+        """Read a dataset containing multiple files (in this case .csv or .tsv files).
 
         Args:
             filename: File path to the directory containing mimicIII dataset.
             delimiter: Delimiter separating the data within the file.
             index_column: Indices or column names of the index columns (obs)
             columns_obs_only: List of columns per file (thus AnnData object) which should only be stored in .obs, but not in X. Useful for free text annotations.
+            return_mudata_object: If set to True, return a :class:`~mudata.MuData` object, else a dict of :class:`~anndata.AnnData` objects
 
         Returns:
-            An :class:`~mudata.MuData` object
+            An :class:`~mudata.MuData` object or a dict mapping the filename (object name) to the corresponding :class:`~anndata.AnnData` object.
         """
-        mudata = None
+        if not return_mudata_object:
+            anndata_dict = {}
+        else:
+            mudata = None
         for file in filename.iterdir():
             if file.is_file() and file.suffix in [".csv", ".tsv"]:
                 # slice off the file suffix as this is not needed for identifier
@@ -151,13 +161,20 @@ class DataReader:
                 # obs indices have to be unique otherwise updating and working with the MuData object will fail
                 if index_col:
                     adata.obs_names_make_unique()
-                if not mudata:
-                    mudata = MuData({adata_identifier: adata})
+
+                if return_mudata_object:
+                    if not mudata:
+                        mudata = MuData({adata_identifier: adata})
+                    else:
+                        mudata.mod[adata_identifier] = adata
                 else:
-                    mudata.mod[adata_identifier] = adata
-        # create the MuData object with the AnnData objects as modalities
-        mudata.update()
-        return mudata
+                    anndata_dict[adata_identifier] = adata
+        if return_mudata_object:
+            # create the MuData object with the AnnData objects as modalities
+            mudata.update()
+            return mudata
+        else:
+            return anndata_dict
 
     @staticmethod
     def read_csv(
@@ -179,12 +196,18 @@ class DataReader:
         """
         # read pandas dataframe
         try:
+            if index_column and columns_obs_only and index_column in columns_obs_only:
+                print(
+                    f"[bold yellow]Index column [blue]{index_column} [yellow]is also used as a column "
+                    f"for obs only. Using default indices instead and moving [blue]{index_column} [yellow]to column_obs_only."
+                )
+                index_column = None
             initial_df = pd.read_csv(filename, delimiter=delimiter, index_col=index_column)
         # possible cause: index column is misspelled (or does not exist at all in this file)
         except ValueError:
             raise IndexNotFoundError(
                 f"Could not create AnnData object while reading file {filename}. Does index_column named {index_column} "
-                f"exists in {filename}?"
+                f"exist in {filename}?"
             ) from None
 
         # get all object dtype columns
@@ -482,8 +505,8 @@ class DataReader:
         # if index column is also found in column_obs_only, use default indices instead and only move it to obs only, but warn the user
         if _index_column and _index_column in _columns_obs_only:
             print(
-                f"[bold yellow]Index column [bold blue]{_index_column} [bold yellow]for file [bold blue]{identifier} [bold yellow]is also used as a column "
-                f"for obs only. Using default indices instead and moving [bold blue]{_index_column} [bold yellow]to column_obs_only."
+                f"[bold yellow]Index column [blue]{_index_column} [yellow]for file [blue]{identifier} [yellow]is also used as a column "
+                f"for obs only. Using default indices instead and moving [blue]{_index_column} [yellow]to column_obs_only."
             )
             _index_column = None
 

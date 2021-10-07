@@ -1,7 +1,9 @@
 from pathlib import Path
-from typing import List, Literal, Optional, Union
+from typing import Dict, List, Literal, Optional, Union
 
+import pandas as pd
 from anndata import AnnData
+from mudata import MuData
 
 from ehrapy.api.io.read import DataReader
 from ehrapy.api.io.write import DataWriter
@@ -13,17 +15,18 @@ def read(
     delimiter: Optional[str] = None,
     index_column: Union[str, Optional[int]] = None,
     columns_obs_only: Optional[List[Union[str]]] = None,
+    return_mudata_object: bool = False,
     cache: bool = False,
     backup_url: Optional[str] = None,
     suppress_warnings: bool = False,
-) -> AnnData:
-    """Read file and return :class:`~anndata.AnnData` object.
+) -> Union[AnnData, Dict[str, AnnData], MuData]:
+    """Read file and return either a single :class:`~anndata.AnnData` object, a list of :class:`~anndata.AnnData` objects or a :class:`~mudata.MuData` object.
 
     To speed up reading, consider passing ``cache=True``, which creates an hdf5 cache file.
 
     Parameters:
          filename
-             Name of the input file to read
+             Name of the input file or directory to read
 
          extension
              Extension that indicates the file type. If ``None``, uses extension of filename.
@@ -41,6 +44,10 @@ def read(
              If passed, this list contains the name of columns that should be excluded from X, but stored in obs. This may be useful for columns
              that contain free text information, which may not be useful to perform some algorithms and tools on. This is also required if ``cache`` is ``True``
              since those columns will be kept in obs only, while reading from the cached file.
+
+         return_mudata_object
+              If set to True, the read function will return a :class:`~mudata.MuData` object instead of a list of AnnData objects. Note, that this
+              currently slows down reading speed.
 
          cache
              If `False`, read from source, if `True`, read from fast 'h5ad' cache.
@@ -63,7 +70,15 @@ def read(
             adata_2 = ep.io.read("mimic_2.h5ad")
     """
     return DataReader.read(
-        filename, extension, delimiter, index_column, columns_obs_only, cache, backup_url, suppress_warnings
+        filename,
+        extension,
+        delimiter,
+        index_column,
+        columns_obs_only,
+        return_mudata_object,
+        cache,
+        backup_url,
+        suppress_warnings,
     )
 
 
@@ -100,3 +115,16 @@ def write(
             ep.io.write("mimic_2.h5ad", adata)
     """
     DataWriter.write(filename, adata, extension, compression, compression_opts)
+
+
+def df_to_anndata(df: pd.DataFrame, columns_obs_only: Optional[List[Union[str]]]) -> AnnData:
+    """Create an :class:`~anndata.AnnData` object from a pandas dataframe
+    Args:
+        df: The dataframe to create the :class:`~anndata.AnnData` object from
+        columns_obs_only: List of column names, that should be in obs only
+
+    Returns:
+        A :class:`~anndata.AnnData` object from the dataframe
+
+    """
+    return DataReader._df_to_anndata(df, columns_obs_only)

@@ -36,9 +36,8 @@ class Datasets:
         Returns:
             :class:`~mudata.MuData` object of the MIMIC-III demo Dataset
         """
-        # TODO Fix unzip code from Dataloader
         mudata = DataReader.read(
-            filename="mimipeter",
+            filename="ehrapy_mimicIII",
             backup_url="https://physionet.org/static/published-projects/mimiciii-demo/mimic-iii-clinical-database-demo-1.4.zip",
         )
         return mudata
