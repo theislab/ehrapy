@@ -39,8 +39,8 @@ def gen_adata(
         What kinds of containers should be in `.layers`?
     """
     M, N = shape
-    obs_names = pd.Index(f"cell{i}" for i in range(shape[0]))
-    var_names = pd.Index(f"gene{i}" for i in range(shape[1]))
+    obs_names = pd.Index(f"patient{i}" for i in range(shape[0]))
+    var_names = pd.Index(f"feature{i}" for i in range(shape[1]))
     obs = gen_typed_df(M, obs_names)
     var = gen_typed_df(N, var_names)
     # For #147

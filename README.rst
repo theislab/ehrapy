@@ -58,7 +58,7 @@ Please see the `Usage documentation <Usage_>`_ for details.
 
 .. code:: python
 
-   import ehra.api as eh
+   import ehra.api as ep
 
 
 Credits

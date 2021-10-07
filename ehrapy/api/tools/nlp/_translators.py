@@ -147,7 +147,7 @@ class DeepL:
     def translate_obs_column(
         self,
         adata: AnnData,
-        target_language: str,
+        target_language: str = "EN-US",
         columns=Union[str, List],
         translate_column_name: bool = False,
         inplace: bool = False,
@@ -156,7 +156,7 @@ class DeepL:
 
         Args:
             adata: :class:`~anndata.AnnData` object containing the obs column to translate
-            target_language: The target language to translate into, e.g. EN-US
+            target_language: The target language to translate into (default: EN-US)
             columns: The columns to translate. Can be either a single column (str) or a list of columns
             translate_column_name: Whether to translate the column name itself
             inplace: Whether to replace the obs values or add a new obs column
@@ -172,7 +172,7 @@ class DeepL:
             if translate_column_name:
                 target_column = self.translator.translate_text(column, target_lang=target_language).text
             if not inplace:
-                f"{target_column}_{target_language}"
+                target_column = f"{target_column}_{target_language}"
 
             adata.obs[target_column] = adata.obs[column].apply(
                 lambda text: self.translator.translate_text(text, target_lang=target_language).text
@@ -181,7 +181,7 @@ class DeepL:
     def translate_var_column(
         self,
         adata: AnnData,
-        target_language: str,
+        target_language: str = "EN-US",
         columns=Union[str, List],
         translate_column_name: bool = False,
         inplace: bool = False,
@@ -190,7 +190,7 @@ class DeepL:
 
         Args:
             adata: :class:`~anndata.AnnData` object containing the obs column to translate
-            target_language: The target language to translate into, e.g. EN-US
+            target_language: The target language to translate into (default: EN-US)
             columns: The columns to translate. Can be either a single column (str) or a list of columns
             translate_column_name: Whether to translate the column name itself
             inplace: Whether to replace the obs values or add a new obs column
@@ -206,7 +206,7 @@ class DeepL:
             if translate_column_name:
                 target_column = self.translator.translate_text(column, target_lang=target_language).text
             if not inplace:
-                f"{target_column}_{target_language}"
+                target_column = f"{target_column}_{target_language}"
 
             adata.var[target_column] = adata.var[column].apply(
                 lambda text: self.translator.translate_text(text, target_lang=target_language).text
@@ -215,7 +215,7 @@ class DeepL:
     def translate_X_column(
         self,
         adata: AnnData,
-        target_language: str,
+        target_language: str = "EN-US",
         columns=Union[str, List],
         translate_column_name: bool = False,
     ) -> None:
@@ -225,15 +225,16 @@ class DeepL:
 
         Args:
             adata: :class:`~anndata.AnnData` object containing the var column to translate
-            target_language: The target language to translate into, e.g. EN-US
+            target_language: The target language to translate into (default: EN-US)
             columns: The columns to translate. Can be either a single column (str) or a list of columns
             translate_column_name: Whether to translate the column name itself (only translates var_names, not var)
         """
         if isinstance(columns, str):
             columns = [columns]
 
-        for column in columns:
-            index: int = get_column_indices(adata, column)[0]
+        indices = get_column_indices(adata, columns)
+
+        for column, index in zip(columns, indices):
             column_values = get_column_values(adata, index)
 
             if column_values.dtype != str and column_values.dtype != object:
