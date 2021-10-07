@@ -68,15 +68,18 @@ Preprocessing
 Tools
 ~~~~~
 
-.. automodule:: ehrapy.api.tools
-   :members:
+.. currentmodule:: ehrapy.api
+
+.. autosummary::
+    :toctree: tools
+
+    tools.DeepL
 
 Plotting
 ~~~~~~~~
 
 .. automodule:: ehrapy.api.plot
    :members:
-
 
 Command-line interface
 -----------------------
