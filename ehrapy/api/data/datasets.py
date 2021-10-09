@@ -1,3 +1,5 @@
+from typing import List, Union
+
 from anndata import AnnData
 from mudata import MuData
 
@@ -27,11 +29,12 @@ class Datasets:
         return adata
 
     @staticmethod
-    def mimic_3_demo(encode: bool = False) -> MuData:
+    def mimic_3_demo(encode: bool = False, mudata: bool = False) -> Union[MuData, List[AnnData]]:
         """Loads the MIMIC-III demo dataset
 
         Args:
             encode: Whether to return an already encoded object
+            mudata: Whether to return a MuData object. Returns a List of AnnData if False
 
         Returns:
             :class:`~mudata.MuData` object of the MIMIC-III demo Dataset
@@ -39,5 +42,13 @@ class Datasets:
         mudata = DataReader.read(
             filename="ehrapy_mimicIII",
             backup_url="https://physionet.org/static/published-projects/mimiciii-demo/mimic-iii-clinical-database-demo-1.4.zip",
+            return_mudata_object=mudata,
         )
+        if encode:
+            if not mudata:
+                raise ValueError(
+                    "Currently we only support the encoding of a single AnnData object or a single MuData object."
+                )
+            Encoder.encode(mudata, autodetect=True)
+
         return mudata

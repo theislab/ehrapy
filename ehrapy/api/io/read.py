@@ -55,7 +55,7 @@ class DataReader:
             delimiter=delimiter,
             index_column=index_column,
             columns_obs_only=columns_obs_only,
-            return_mudata_object=return_mudata_object,
+            return_mudata=return_mudata_object,
             cache=cache,
         )
         return raw_object
@@ -67,7 +67,7 @@ class DataReader:
         delimiter: Optional[str] = None,
         index_column: Union[str, Optional[int]] = None,
         columns_obs_only: Optional[List[Union[str]]] = None,
-        return_mudata_object: bool = False,
+        return_mudata: bool = False,
         cache: bool = False,
         backup_url: Optional[str] = None,
     ) -> Union[AnnData, np.ndarray]:
