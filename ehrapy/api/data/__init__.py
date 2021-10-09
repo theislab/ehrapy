@@ -25,7 +25,7 @@ def mimic_3_demo(encode: bool = False, mudata: bool = False):
 
     Args:
         encode: Whether to return an already encoded MuData object
-        mudata: Whether to return a MuData object. Returns a List of AnnData objects by default
+        mudata: Whether to return a MuData object. Returns a Dictionary of file names to AnnData objects if False
 
     Returns:
         An :class:`~mudata.MuData` object with the (optionally encoded) values in X
@@ -34,6 +34,6 @@ def mimic_3_demo(encode: bool = False, mudata: bool = False):
         .. code-block:: python
 
                 import ehrapy.api as ep
-                mudata = eh.data.mimic_3_demo(encode=True, return_mudata_object=True)
+                mudata = eh.data.mimic_3_demo(encode=True, mudata=True)
     """
     return Datasets.mimic_3_demo(encode=encode, mudata=True)

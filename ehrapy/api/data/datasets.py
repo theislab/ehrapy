@@ -34,21 +34,21 @@ class Datasets:
 
         Args:
             encode: Whether to return an already encoded object
-            mudata: Whether to return a MuData object. Returns a List of AnnData if False
+            mudata: Whether to return a MuData object. Returns a Dictionary of file names to AnnData objects if False
 
         Returns:
             :class:`~mudata.MuData` object of the MIMIC-III demo Dataset
         """
-        mudata = DataReader.read(
+        mdata = DataReader.read(
             filename="ehrapy_mimicIII",
             backup_url="https://physionet.org/static/published-projects/mimiciii-demo/mimic-iii-clinical-database-demo-1.4.zip",
-            return_mudata_object=mudata,
+            return_mudata=mudata,
         )
         if encode:
             if not mudata:
                 raise ValueError(
                     "Currently we only support the encoding of a single AnnData object or a single MuData object."
                 )
-            Encoder.encode(mudata, autodetect=True)
+            Encoder.encode(mdata, autodetect=True)
 
-        return mudata
+        return mdata

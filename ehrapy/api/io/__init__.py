@@ -15,7 +15,7 @@ def read(
     delimiter: Optional[str] = None,
     index_column: Union[str, Optional[int]] = None,
     columns_obs_only: Optional[List[Union[str]]] = None,
-    return_mudata_object: bool = False,
+    return_mudata: bool = False,
     cache: bool = False,
     backup_url: Optional[str] = None,
     suppress_warnings: bool = False,
@@ -45,7 +45,7 @@ def read(
              that contain free text information, which may not be useful to perform some algorithms and tools on. This is also required if ``cache`` is ``True``
              since those columns will be kept in obs only, while reading from the cached file.
 
-         return_mudata_object
+         return_mudata
               If set to True, the read function will return a :class:`~mudata.MuData` object instead of a list of AnnData objects. Note, that this
               currently slows down reading speed.
 
@@ -75,7 +75,7 @@ def read(
         delimiter,
         index_column,
         columns_obs_only,
-        return_mudata_object,
+        return_mudata,
         cache,
         backup_url,
         suppress_warnings,

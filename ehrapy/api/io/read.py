@@ -36,7 +36,7 @@ class DataReader:
         delimiter: Optional[str] = None,
         index_column: Union[str, Optional[int]] = None,
         columns_obs_only: Optional[List[Union[str]]] = None,
-        return_mudata_object: bool = False,
+        return_mudata: bool = False,
         cache: bool = False,
         backup_url: Optional[str] = None,
         suppress_warnings: bool = False,
@@ -55,7 +55,7 @@ class DataReader:
             delimiter=delimiter,
             index_column=index_column,
             columns_obs_only=columns_obs_only,
-            return_mudata=return_mudata_object,
+            return_mudata=return_mudata,
             cache=cache,
         )
         return raw_object
@@ -70,7 +70,7 @@ class DataReader:
         return_mudata: bool = False,
         cache: bool = False,
         backup_url: Optional[str] = None,
-    ) -> Union[AnnData, np.ndarray]:
+    ) -> Union[MuData, Dict[str, AnnData], AnnData]:
         """Internal interface of the read method."""
         # check, whether the datafile(s) is/are present or not
         is_present = DataReader._check_datafiles_present_and_download(filename, backup_url=backup_url)
@@ -82,9 +82,7 @@ class DataReader:
 
         # If the filename is a directory, assume it is a mimicIII dataset
         if filename.is_dir():
-            return DataReader._read_multiple_csv(
-                filename, delimiter, index_column, columns_obs_only, return_mudata_object
-            )
+            return DataReader._read_multiple_csv(filename, delimiter, index_column, columns_obs_only, return_mudata)
 
         if extension is not None and extension not in supported_extensions:
             raise ValueError("Please provide one of the available extensions.\n" f"{supported_extensions}")
