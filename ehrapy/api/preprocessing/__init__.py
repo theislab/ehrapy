@@ -31,3 +31,6 @@ def replace_explicit(
             adata_replaced = ep.pp.replace_explicit(adata, replacement=0, copy=True)
     """
     return Imputation.explicit(adata, replacement, copy)
+
+
+from ehrapy.api.preprocessing._scanpy_pp_api import *  # noqa: E402,F403

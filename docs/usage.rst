@@ -56,8 +56,13 @@ Data
 Preprocessing
 ~~~~~~~~~~~~~
 
-.. automodule:: ehrapy.api.preprocessing
-   :members:
+.. currentmodule:: ehrapy.api
+
+.. autosummary::
+    :toctree: preprocessing
+
+    preprocessing.replace_explicit
+    preprocessing.log1p
 
 Tools
 ~~~~~
