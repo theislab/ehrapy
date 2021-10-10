@@ -35,6 +35,7 @@ scanpy = "^1.8.1"
 mudata = "^0.1.0"
 leidenalg = "^0.8.7"
 deepl = "^1.2.0"
+medcat = {git = "https://github.com/CogStack/MedCAT"}
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"
