@@ -63,6 +63,7 @@ Preprocessing
 
     preprocessing.replace_explicit
     preprocessing.log1p
+    preprocessing.pca
 
 Tools
 ~~~~~

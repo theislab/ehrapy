@@ -173,7 +173,7 @@ sys.path.insert(0, os.path.abspath("_ext"))
 
 # General information about the project.
 project = "ehrapy"
-copyright = "2021, Lukas Heumos"
+copyright = "2021, Lukas Heumos, Theislab"
 author = "Lukas Heumos"
 github_repo = "ehrapy"
 
