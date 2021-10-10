@@ -56,6 +56,9 @@ Data
 Preprocessing
 ~~~~~~~~~~~~~
 
+Any transformation of the data matrix that is not a tool.
+Other than tools, preprocessing steps usually don’t return an easily interpretable annotation, but perform a basic transformation on the data matrix.
+
 .. currentmodule:: ehrapy.api
 
 .. autosummary::
@@ -68,6 +71,9 @@ Preprocessing
 Tools
 ~~~~~
 
+Any transformation of the data matrix that is not preprocessing.
+In contrast to a preprocessing function, a tool usually adds an easily interpretable annotation to the data matrix, which can then be visualized with a corresponding plotting function.
+
 .. currentmodule:: ehrapy.api
 
 .. autosummary::
@@ -77,6 +83,9 @@ Tools
 
 Plotting
 ~~~~~~~~
+
+The plotting module scanpy.pl largely parallels the tl.* and a few of the pp.* functions.
+For most tools and for some preprocessing functions, you’ll find a plotting function with the same name.
 
 .. automodule:: ehrapy.api.plot
    :members:

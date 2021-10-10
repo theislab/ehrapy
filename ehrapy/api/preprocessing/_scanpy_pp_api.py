@@ -35,14 +35,15 @@ def log1p(
     """
     return sc.pp.log1p(X, base=base, copy=copy, chunked=chunked, chunk_size=chunk_size, layer=layer, obsm=obsm)
 
+
 def pca(
     data: Union[AnnData, np.ndarray, spmatrix],
     n_comps: Optional[int] = None,
     zero_center: Optional[bool] = True,
-    svd_solver: str = 'arpack',
+    svd_solver: str = "arpack",
     random_state: AnyRandom = 0,
     return_info: bool = False,
-    dtype: str = 'float32',
+    dtype: str = "float32",
     copy: bool = False,
     chunked: bool = False,
     chunk_size: Optional[int] = None,
@@ -100,14 +101,16 @@ def pca(
         `.uns['pca']['variance']`
         Explained variance, equivalent to the eigenvalues of the covariance matrix.
     """
-    return sc.pp.pca(data=data,
-                     n_comps=n_comps,
-                     zero_center=zero_center,
-                     svd_solver=svd_solver,
-                     random_state=random_state,
-                     return_info=return_info,
-                     use_highly_variable=False,
-                     dtype=dtype,
-                     copy=copy,
-                     chunked=chunked,
-                     chunk_size=chunk_size)
+    return sc.pp.pca(
+        data=data,
+        n_comps=n_comps,
+        zero_center=zero_center,
+        svd_solver=svd_solver,
+        random_state=random_state,
+        return_info=return_info,
+        use_highly_variable=False,
+        dtype=dtype,
+        copy=copy,
+        chunked=chunked,
+        chunk_size=chunk_size,
+    )
