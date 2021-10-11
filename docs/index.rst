@@ -13,6 +13,10 @@ Welcome to ehrapy's documentation!
    contributing
    authors
    code_of_conduct
+   references
+
+* Consider citing `Genome Biology (2018)`_ along with original :doc:`references <references>`.
+* A paper for ehrapy is in the works.
 
 Indices and tables
 ==================

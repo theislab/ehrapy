@@ -61,6 +61,9 @@ Other than tools, preprocessing steps usually don’t return an easily interpret
 
 .. currentmodule:: ehrapy.api
 
+Basic preprocessing
++++++++++++++++++++
+
 .. autosummary::
     :toctree: preprocessing
 
@@ -71,6 +74,24 @@ Other than tools, preprocessing steps usually don’t return an easily interpret
     preprocessing.regress_out
     preprocessing.scale
     preprocessing.subsample
+
+Dataset Shift Correction
+++++++++++++++++++++++++
+
+Partially overlaps with dataset integration. Note that a simple batch correction method is available via `pp.regress_out()`.
+
+.. autosummary::
+    :toctree: preprocessing
+
+    preprocessing.combat
+
+Neighbors
++++++++++
+
+.. autosummary::
+    :toctree: preprocessing
+
+    preprocessing.neighbors
 
 Tools
 ~~~~~
