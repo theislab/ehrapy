@@ -67,6 +67,10 @@ Other than tools, preprocessing steps usually don’t return an easily interpret
     preprocessing.replace_explicit
     preprocessing.log1p
     preprocessing.pca
+    preprocessing.normalize_total
+    preprocessing.regress_out
+    preprocessing.scale
+    preprocessing.subsample
 
 Tools
 ~~~~~
