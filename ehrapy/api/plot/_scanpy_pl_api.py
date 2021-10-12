@@ -6,7 +6,7 @@ from cycler import Cycler
 from matplotlib.axes import Axes
 from matplotlib.colors import Colormap, ListedColormap
 
-from ehrapy.util._doc_util import _doc_params, doc_show_save_ax, doc_scatter_basic
+from ehrapy.util._doc_util import _doc_params, doc_scatter_basic, doc_show_save_ax
 
 _Basis = Literal["pca", "tsne", "umap", "diffmap", "draw_graph_fr"]
 _VarNames = Union[str, Sequence[str]]
