@@ -8,7 +8,7 @@ Import the ehrapy API as follows:
 
 .. code:: python
 
-   import ehrapy.api as eh
+   import ehrapy.api as ep
 
 You can then access the respective modules like:
 
@@ -99,6 +99,48 @@ Tools
 Any transformation of the data matrix that is not preprocessing.
 In contrast to a preprocessing function, a tool usually adds an easily interpretable annotation to the data matrix, which can then be visualized with a corresponding plotting function.
 
+Embeddings
+++++++++++
+
+.. currentmodule:: ehrapy.api
+
+.. autosummary::
+    :toctree: tools
+
+    tools.pca
+    tools.tsne
+    tools.umap
+    tools.draw_graph
+    tools.diffmap
+    tools.embedding_density
+
+Clustering and trajectory inference
++++++++++++++++++++++++++++++++++++
+
+.. currentmodule:: ehrapy.api
+
+.. autosummary::
+    :toctree: tools
+
+    tools.leiden
+    tools.louvain
+    tools.dendrogram
+    tools.dpt
+    tools.paga
+
+Dataset integration
++++++++++++++++++++
+
+.. currentmodule:: ehrapy.api
+
+.. autosummary::
+    :toctree: tools
+
+    tools.ingest
+
+Translators
++++++++++++
+
 .. currentmodule:: ehrapy.api
 
 .. autosummary::
@@ -112,8 +154,39 @@ Plotting
 The plotting module scanpy.pl largely parallels the tl.* and a few of the pp.* functions.
 For most tools and for some preprocessing functions, you’ll find a plotting function with the same name.
 
-.. automodule:: ehrapy.api.plot
-   :members:
+Generic
++++++++
+
+.. currentmodule:: ehrapy.api
+
+.. autosummary::
+    :toctree: plot
+
+    plot.scatter
+    plot.heatmap
+    plot.dotplot
+    plot.tracksplot
+    plot.violin
+    plot.stacked_violin
+    plot.matrixplot
+    plot.clustermap
+    plot.ranking
+    plot.dendrogram
+
+Classes
++++++++
+
+Tools
++++++
+
+Embeddings
+++++++++++
+
+Branching trajectories and pseudotime, clustering
++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Settings
+~~~~~~~~
 
 Command-line interface
 -----------------------

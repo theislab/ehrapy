@@ -61,17 +61,13 @@ def pca(
                      Passing `None` decides automatically based on sparseness of the data.
         svd_solver: SVD solver to use:
 
-                    `'arpack'` (the default)
-                    for the ARPACK wrapper in SciPy (:func:`~scipy.sparse.linalg.svds`)
+                    * `'arpack'` (the default) for the ARPACK wrapper in SciPy (:func:`~scipy.sparse.linalg.svds`)
 
-                    `'randomized'`
-                    for the randomized algorithm due to Halko (2009).
+                    * `'randomized'` for the randomized algorithm due to Halko (2009).
 
-                    `'auto'`
-                    chooses automatically depending on the size of the problem.
+                    * `'auto'` chooses automatically depending on the size of the problem.
 
-                    `'lobpcg'`
-                    An alternative SciPy solver.
+                    * `'lobpcg'` An alternative SciPy solver.
 
                     Efficient computation of the principal components of a sparse matrix currently only works with the `'arpack`' or `'lobpcg'` solvers.
         random_state: Change to use different initial states for the optimization. (default: 0)
