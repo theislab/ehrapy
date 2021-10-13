@@ -7,6 +7,7 @@ from cycler import Cycler
 from matplotlib.axes import Axes
 from matplotlib.colors import Colormap, ListedColormap, Normalize
 from scanpy.plotting import DotPlot, MatrixPlot, StackedViolin
+from scanpy.plotting._tools.scatterplots import _wraps_plot_scatter
 from scanpy.plotting._utils import _AxesSubplot
 
 from ehrapy.util._doc_util import (
@@ -15,7 +16,7 @@ from ehrapy.util._doc_util import (
     doc_common_plot_args,
     doc_scatter_basic,
     doc_show_save_ax,
-    doc_vboundnorm,
+    doc_vboundnorm, doc_adata_color_etc, doc_scatter_embedding,
 )
 
 _Basis = Literal["pca", "tsne", "umap", "diffmap", "draw_graph_fr"]
@@ -679,7 +680,7 @@ def ranking(
         labels: Optional labels.
         color: Optional primary color (default: black).
         n_points: Number of points (default: 30)..
-        log: Log object
+        log: Whether logarithmic scale should be used.
         include_lowest: Whether to include the lowest points.
         show: Whether to show the plot.
 
@@ -739,3 +740,114 @@ def dendrogram(
         save=save,
         ax=ax,
     )
+
+
+@_wraps_plot_scatter
+@_doc_params(
+    adata_color_etc=doc_adata_color_etc,
+    scatter_bulk=doc_scatter_embedding,
+    show_save_ax=doc_show_save_ax,
+)
+def pca(
+    adata,
+    *,
+    annotate_var_explained: bool = False,
+    show: Optional[bool] = None,
+    return_fig: Optional[bool] = None,
+    save: Union[bool, str, None] = None,
+    **kwargs,
+) -> Union[Axes, List[Axes], None]:
+    """Scatter plot in PCA coordinates.
+
+    Use the parameter `annotate_var_explained` to annotate the explained variance.
+
+    Args:
+        {adata_color_etc}
+        annotate_var_explained: Whether to only annotate the explained variables.
+        {scatter_bulk}
+        {show_save_ax}
+
+    Returns:
+        If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
+    """
+    return sc.pl.pca(adata=adata,
+                     annotate_var_explained=annotate_var_explained,
+                     show=show,
+                     return_fig=return_fig,
+                     save=save,
+                     **kwargs)
+
+
+def pca_loadings(
+    adata: AnnData,
+    components: Union[str, Sequence[int], None] = None,
+    include_lowest: bool = True,
+    show: Optional[bool] = None,
+    save: Union[str, bool, None] = None,
+):
+    """Rank genes according to contributions to PCs.
+
+    Args:
+        adata: :class:`~anndata.AnnData` object object containing all observations.
+        components: For example, ``'1,2,3'`` means ``[1, 2, 3]``, first, second, third principal component.
+        include_lowest: Whether to show the features with both highest and lowest loadings.
+        show: Show the plot, do not return axis.
+        save: If `True` or a `str`, save the figure. A string is appended to the default filename.
+              Infer the filetype if ending on {`'.pdf'`, `'.png'`, `'.svg'`}.
+
+    Returns:
+        If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
+    """
+    return sc.pl.pca_loadings(adata=adata,
+                              components=components,
+                              include_lowest=include_lowest,
+                              show=show,
+                              save=save)
+
+
+def pca_variance_ratio(
+    adata: AnnData,
+    n_pcs: int = 30,
+    log: bool = False,
+    show: Optional[bool] = None,
+    save: Union[bool, str, None] = None,
+):
+    """Plot the variance ratio.
+
+    Args:
+        adata: :class:`~anndata.AnnData` object object containing all observations.
+        n_pcs: Number of PCs to show.
+        log: Plot on logarithmic scale..
+        show: Show the plot, do not return axis.
+        save: If `True` or a `str`, save the figure.
+              A string is appended to the default filename.
+              Infer the filetype if ending on {`'.pdf'`, `'.png'`, `'.svg'`}.
+
+    Returns:
+        If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
+    """
+    return sc.pl.pca_variance_ratio(adata=adata,
+                                    n_pcs=n_pcs,
+                                    log=log,
+                                    show=show,
+                                    save=save)
+
+
+@_doc_params(scatter_bulk=doc_scatter_embedding, show_save_ax=doc_show_save_ax)
+def pca_overview(adata: AnnData, **params):
+    """Plot PCA results.
+
+    The parameters are the ones of the scatter plot. Call pca_ranking separately
+    if you want to change the default settings.
+
+    Args:
+        adata: :class:`~anndata.AnnData` object object containing all observations.
+        {scatter_bulk}
+        {show_save_ax}
+        **params: Scatterplot parameters
+
+    Returns:
+        If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
+    """
+    return sc.pl.pca_overview(adata=adata,
+                              **params)

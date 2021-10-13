@@ -176,8 +176,27 @@ Generic
 Classes
 +++++++
 
+Please refer to `Scanpy's plotting classes documentation <https://scanpy.readthedocs.io/en/stable/api.html#classes>`_.
+
+Preprocessing
++++++++++++++
+
+Not available at the moment.
+
 Tools
 +++++
+
+Methods that extract and visualize tool-specific annotation in an AnnData object. For any method in module `tl`, there is a method with the same name in `pl`.
+
+.. currentmodule:: ehrapy.api
+
+.. autosummary::
+    :toctree: plot
+
+    plot.pca
+    plot.pca_loadings
+    plot.pca_variance_ratio
+    plot.pca_overview
 
 Embeddings
 ++++++++++
