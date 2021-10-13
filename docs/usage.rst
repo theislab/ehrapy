@@ -201,11 +201,39 @@ Methods that extract and visualize tool-specific annotation in an AnnData object
 Embeddings
 ++++++++++
 
+.. currentmodule:: ehrapy.api
+
+.. autosummary::
+    :toctree: plot
+
+    plot.tsne
+    plot.umap
+    plot.diffmap
+    plot.draw_graph
+    plot.spatial
+    plot.embedding
+    plot.embedding_density
+
 Branching trajectories and pseudotime, clustering
 +++++++++++++++++++++++++++++++++++++++++++++++++
 
+Visualize clusters using one of the embedding methods passing color='leiden'.
+
+.. currentmodule:: ehrapy.api
+
+.. autosummary::
+    :toctree: plot
+
+    plot.dpt_groups_pseudotime
+    plot.dpt_timeseries
+    plot.paga
+    plot.paga_path
+    plot.paga_compare
+
 Settings
 ~~~~~~~~
+
+To be added.
 
 Command-line interface
 -----------------------

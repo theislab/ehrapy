@@ -62,7 +62,7 @@ edges: Show edges.
         neighbors_key: Where to look for neighbors connectivities.
                        If not specified, this looks .obsp['connectivities'] for connectivities
                        (default storage place for pp.neighbors). If specified, this looks at
-                        `.obsp[.uns[neighbors_key]['connectivities_key']]` for connectivities.
+                       `.obsp[.uns[neighbors_key]['connectivities_key']]` for connectivities.
         arrows: Show arrows (deprecated in favour of `scvelo.pl.velocity_embedding`).
         arrows_kwds: Passed to :meth:`~matplotlib.axes.Axes.quiver`\
 """
@@ -100,7 +100,7 @@ sort_order: For continuous annotations used as color parameter, plot data points
         na_in_legend: If there are missing values, whether they get an entry in the legend.
                       Currently only implemented for categorical legends.
         frameon: Draw a frame around the scatter plot. Defaults to value set in :func:`~scanpy.set_figure_params` (default: True).
-        title: Provide title for panels either as string or list of strings, e.g. `['title1', 'title2', ...]`.
+        title: Provide title for panels either as string or list of strings, e.g. `['title1', 'title2', ...]`.\
 """
 
 doc_vbound_percentile = """\
@@ -153,7 +153,6 @@ doc_scatter_embedding = f"""\
         kwargs: Arguments to pass to :func:`matplotlib.pyplot.scatter`,
                 for instance: the maximum and minimum values (e.g. `vmin=-2, vmax=5`).\
 """
-
 
 
 doc_show_save_ax = """\

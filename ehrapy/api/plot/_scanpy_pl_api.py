@@ -1,22 +1,33 @@
-from typing import Callable, Collection, Dict, Iterable, List, Literal, Mapping, Optional, Sequence, Tuple, Union
+from enum import Enum
+from pathlib import Path
+from types import MappingProxyType
+from typing import Any, Callable, Collection, Dict, Iterable, List, Literal, Mapping, Optional, Sequence, Tuple, Union
 
+import numpy as np
 import pandas as pd
 import scanpy as sc
 from anndata import AnnData
 from cycler import Cycler
 from matplotlib.axes import Axes
 from matplotlib.colors import Colormap, ListedColormap, Normalize
+from matplotlib.figure import Figure
 from scanpy.plotting import DotPlot, MatrixPlot, StackedViolin
 from scanpy.plotting._tools.scatterplots import _wraps_plot_scatter
 from scanpy.plotting._utils import _AxesSubplot
 
 from ehrapy.util._doc_util import (
     _doc_params,
+    doc_adata_color_etc,
     doc_common_groupby_plot_args,
     doc_common_plot_args,
+    doc_edges_arrows,
+    doc_panels,
     doc_scatter_basic,
+    doc_scatter_embedding,
+    doc_scatter_spatial,
     doc_show_save_ax,
-    doc_vboundnorm, doc_adata_color_etc, doc_scatter_embedding,
+    doc_vbound_percentile,
+    doc_vboundnorm,
 )
 
 _Basis = Literal["pca", "tsne", "umap", "diffmap", "draw_graph_fr"]
@@ -770,12 +781,14 @@ def pca(
     Returns:
         If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
     """
-    return sc.pl.pca(adata=adata,
-                     annotate_var_explained=annotate_var_explained,
-                     show=show,
-                     return_fig=return_fig,
-                     save=save,
-                     **kwargs)
+    return sc.pl.pca(
+        adata=adata,
+        annotate_var_explained=annotate_var_explained,
+        show=show,
+        return_fig=return_fig,
+        save=save,
+        **kwargs,
+    )
 
 
 def pca_loadings(
@@ -798,11 +811,7 @@ def pca_loadings(
     Returns:
         If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
     """
-    return sc.pl.pca_loadings(adata=adata,
-                              components=components,
-                              include_lowest=include_lowest,
-                              show=show,
-                              save=save)
+    return sc.pl.pca_loadings(adata=adata, components=components, include_lowest=include_lowest, show=show, save=save)
 
 
 def pca_variance_ratio(
@@ -826,11 +835,7 @@ def pca_variance_ratio(
     Returns:
         If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
     """
-    return sc.pl.pca_variance_ratio(adata=adata,
-                                    n_pcs=n_pcs,
-                                    log=log,
-                                    show=show,
-                                    save=save)
+    return sc.pl.pca_variance_ratio(adata=adata, n_pcs=n_pcs, log=log, show=show, save=save)
 
 
 @_doc_params(scatter_bulk=doc_scatter_embedding, show_save_ax=doc_show_save_ax)
@@ -849,5 +854,563 @@ def pca_overview(adata: AnnData, **params):
     Returns:
         If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
     """
-    return sc.pl.pca_overview(adata=adata,
-                              **params)
+    return sc.pl.pca_overview(adata=adata, **params)
+
+
+@_wraps_plot_scatter
+@_doc_params(
+    adata_color_etc=doc_adata_color_etc,
+    edges_arrows=doc_edges_arrows,
+    scatter_bulk=doc_scatter_embedding,
+    show_save_ax=doc_show_save_ax,
+)
+def tsne(adata, **kwargs) -> Union[Axes, List[Axes], None]:
+    """Scatter plot in tSNE basis.
+
+    Args:
+        {adata_color_etc}
+        {edges_arrows}
+        {scatter_bulk}
+        {show_save_ax}
+
+    Returns:
+        If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
+    """
+    return sc.pl.tsne(adata=adata, **kwargs)
+
+
+@_wraps_plot_scatter
+@_doc_params(
+    adata_color_etc=doc_adata_color_etc,
+    edges_arrows=doc_edges_arrows,
+    scatter_bulk=doc_scatter_embedding,
+    show_save_ax=doc_show_save_ax,
+)
+def umap(adata, **kwargs) -> Union[Axes, List[Axes], None]:
+    """Scatter plot in UMAP basis.
+
+    Args:
+        {adata_color_etc}
+        {edges_arrows}
+        {scatter_bulk}
+        {show_save_ax}
+
+    Returns:
+        If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
+    """
+    return sc.pl.umap(adata=adata, **kwargs)
+
+
+@_wraps_plot_scatter
+@_doc_params(
+    adata_color_etc=doc_adata_color_etc,
+    scatter_bulk=doc_scatter_embedding,
+    show_save_ax=doc_show_save_ax,
+)
+def diffmap(adata, **kwargs) -> Union[Axes, List[Axes], None]:
+    """Scatter plot in Diffusion Map basis.
+
+    Args:
+        {adata_color_etc}
+        {scatter_bulk}
+        {show_save_ax}
+
+    Returns:
+        If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
+    """
+    return sc.pl.diffmap(adata=adata, **kwargs)
+
+
+@_wraps_plot_scatter
+@_doc_params(
+    adata_color_etc=doc_adata_color_etc,
+    edges_arrows=doc_edges_arrows,
+    scatter_bulk=doc_scatter_embedding,
+    show_save_ax=doc_show_save_ax,
+)
+def draw_graph(adata: AnnData, *, layout: Optional[_IGraphLayout] = None, **kwargs) -> Union[Axes, List[Axes], None]:
+    """Scatter plot in graph-drawing basis.
+
+    Args:
+        {adata_color_etc}
+        layout: One of the :func:`~scanpy.tl.draw_graph` layouts. By default, the last computed layout is used.
+        {edges_arrows}
+        {scatter_bulk}
+        {show_save_ax}
+
+    Returns:
+        If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
+    """
+    return sc.pl.draw_graph(adata=adata, layout=layout, **kwargs)
+
+
+class Empty(Enum):
+    token = 0
+
+
+_empty = Empty.token
+
+
+@_wraps_plot_scatter
+@_doc_params(
+    adata_color_etc=doc_adata_color_etc,
+    scatter_spatial=doc_scatter_spatial,
+    scatter_bulk=doc_scatter_embedding,
+    show_save_ax=doc_show_save_ax,
+)
+def spatial(
+    adata,
+    *,
+    basis: str = "spatial",
+    img: Union[np.ndarray, None] = None,
+    img_key: Union[str, None, Empty] = _empty,
+    library_id: Union[str, Empty] = _empty,
+    crop_coord: Tuple[int, int, int, int] = None,
+    alpha_img: float = 1.0,
+    bw: Optional[bool] = False,
+    size: float = 1.0,
+    scale_factor: Optional[float] = None,
+    spot_size: Optional[float] = None,
+    na_color: Optional[ColorLike] = None,
+    show: Optional[bool] = None,
+    return_fig: Optional[bool] = None,
+    save: Union[bool, str, None] = None,
+    **kwargs,
+) -> Union[Axes, List[Axes], None]:
+    """Scatter plot in spatial coordinates.
+
+    This function allows overlaying data on top of images.
+    Use the parameter `img_key` to see the image in the background
+    And the parameter `library_id` to select the image.
+    By default, `'hires'` and `'lowres'` are attempted.
+    Use `crop_coord`, `alpha_img`, and `bw` to control how it is displayed.
+    Use `size` to scale the size of the Visium spots plotted on top.
+    As this function is designed to for imaging data, there are two key assumptions
+    about how coordinates are handled:
+
+    1. The origin (e.g `(0, 0)`) is at the top left – as is common convention
+    with image data.
+    2. Coordinates are in the pixel space of the source image, so an equal
+    aspect ratio is assumed.
+    If your anndata object has a `"spatial"` entry in `.uns`, the `img_key`
+    and `library_id` parameters to find values for `img`, `scale_factor`,
+    and `spot_size` arguments. Alternatively, these values be passed directly.
+
+    Args:
+        {adata_color_etc}
+        {scatter_spatial}
+        {scatter_bulk}
+        {show_save_ax}
+
+    Returns:
+        If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
+    """
+    return sc.pl.spatial(
+        adata=adata,
+        basis=basis,
+        img=img,
+        img_key=img_key,
+        library_id=library_id,
+        crop_coord=crop_coord,
+        alpha_img=alpha_img,
+        bw=bw,
+        size=size,
+        scale_factor=scale_factor,
+        spot_size=spot_size,
+        na_color=na_color,
+        show=show,
+        return_fig=return_fig,
+        save=save,
+        **kwargs,
+    )
+
+
+@_doc_params(
+    adata_color_etc=doc_adata_color_etc,
+    edges_arrows=doc_edges_arrows,
+    scatter_bulk=doc_scatter_embedding,
+    show_save_ax=doc_show_save_ax,
+)
+def embedding(
+    adata: AnnData,
+    basis: str,
+    *,
+    color: Union[str, Sequence[str], None] = None,
+    feature_symbols: Optional[str] = None,
+    use_raw: Optional[bool] = None,
+    sort_order: bool = True,
+    edges: bool = False,
+    edges_width: float = 0.1,
+    edges_color: Union[str, Sequence[float], Sequence[str]] = "grey",
+    neighbors_key: Optional[str] = None,
+    arrows: bool = False,
+    arrows_kwds: Optional[Mapping[str, Any]] = None,
+    groups: Optional[str] = None,
+    components: Union[str, Sequence[str]] = None,
+    layer: Optional[str] = None,
+    projection: Literal["2d", "3d"] = "2d",
+    scale_factor: Optional[float] = None,
+    color_map: Union[Colormap, str, None] = None,
+    cmap: Union[Colormap, str, None] = None,
+    palette: Union[str, Sequence[str], Cycler, None] = None,
+    na_color: ColorLike = "lightgray",
+    na_in_legend: bool = True,
+    size: Union[float, Sequence[float], None] = None,
+    frameon: Optional[bool] = None,
+    legend_fontsize: Union[int, float, _FontSize, None] = None,
+    legend_fontweight: Union[int, _FontWeight] = "bold",
+    legend_loc: str = "right margin",
+    legend_fontoutline: Optional[int] = None,
+    vmax: Union[VBound, Sequence[VBound], None] = None,
+    vmin: Union[VBound, Sequence[VBound], None] = None,
+    vcenter: Union[VBound, Sequence[VBound], None] = None,
+    norm: Union[Normalize, Sequence[Normalize], None] = None,
+    add_outline: Optional[bool] = False,
+    outline_width: Tuple[float, float] = (0.3, 0.05),
+    outline_color: Tuple[str, str] = ("black", "white"),
+    ncols: int = 4,
+    hspace: float = 0.25,
+    wspace: Optional[float] = None,
+    title: Union[str, Sequence[str], None] = None,
+    show: Optional[bool] = None,
+    save: Union[bool, str, None] = None,
+    ax: Optional[Axes] = None,
+    return_fig: Optional[bool] = None,
+    **kwargs,
+) -> Union[Figure, Axes, None]:
+    """Scatter plot for user specified embedding basis (e.g. umap, pca, etc)
+
+    Args:
+        basis:
+        {adata_color_etc}
+        {edges_arrows}
+        {scatter_bulk}
+        {show_save_ax}
+
+    Returns:
+        If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
+    """
+    return sc.pl.embedding(
+        adata=adata,
+        basis=basis,
+        color=color,
+        gene_symbols=feature_symbols,
+        use_raw=use_raw,
+        sort_order=sort_order,
+        edges=edges,
+        edges_width=edges_width,
+        edges_color=edges_color,
+        neighbors_key=neighbors_key,
+        arrows=arrows,
+        arrows_kwds=arrows_kwds,
+        groups=groups,
+        components=components,
+        layer=layer,
+        projection=projection,
+        scale_factor=scale_factor,
+        color_map=color_map,
+        cmap=cmap,
+        palette=palette,
+        na_color=na_color,
+        na_in_legend=na_in_legend,
+        size=size,
+        frameon=frameon,
+        legend_fontsize=legend_fontsize,
+        legend_fontweight=legend_fontweight,
+        legend_loc=legend_loc,
+        legend_fontoutline=legend_fontoutline,
+        vmax=vmax,
+        vmin=vmin,
+        vcenter=vcenter,
+        norm=norm,
+        add_outline=add_outline,
+        outline_width=outline_width,
+        outline_color=outline_color,
+        ncols=ncols,
+        hspace=hspace,
+        wspace=wspace,
+        title=title,
+        show=show,
+        save=save,
+        ax=ax,
+        return_fig=return_fig,
+        **kwargs,
+    )
+
+
+@_doc_params(vminmax=doc_vbound_percentile, panels=doc_panels, show_save_ax=doc_show_save_ax)
+def embedding_density(
+    adata: AnnData,
+    basis: str = "umap",  # was positional before 1.4.5
+    key: Optional[str] = None,  # was positional before 1.4.5
+    groupby: Optional[str] = None,
+    group: Optional[Union[str, List[str], None]] = "all",
+    color_map: Union[Colormap, str] = "YlOrRd",
+    bg_dotsize: Optional[int] = 80,
+    fg_dotsize: Optional[int] = 180,
+    vmax: Optional[int] = 1,
+    vmin: Optional[int] = 0,
+    vcenter: Optional[int] = None,
+    norm: Optional[Normalize] = None,
+    ncols: Optional[int] = 4,
+    hspace: Optional[float] = 0.25,
+    wspace: Optional[None] = None,
+    title: str = None,
+    show: Optional[bool] = None,
+    save: Union[bool, str, None] = None,
+    ax: Optional[Axes] = None,
+    return_fig: Optional[bool] = None,
+    **kwargs,
+) -> Union[Figure, Axes, None]:
+    """Plot the density of cells in an embedding (per condition).
+
+    Plots the gaussian kernel density estimates (over condition) from the `sc.tl.embedding_density()` output.
+
+    Args:
+        adata: :class:`~anndata.AnnData` object object containing all observations.
+        basis: The embedding over which the density was calculated.
+               This embedded representation should be found in `adata.obsm['X_[basis]']``.
+        key: Name of the `.obs` covariate that contains the density estimates. Alternatively, pass `groupby`.
+        groupby: Name of the condition used in `tl.embedding_density`. Alternatively, pass `key`.
+        group: The category in the categorical observation annotation to be plotted.
+               For example, 'G1' in the cell cycle 'phase' covariate. If all categories
+               are to be plotted use group='all' (default), If multiple categories
+               want to be plotted use a list (e.g.: ['G1', 'S']. If the overall density wants to be ploted set group to 'None'.
+        color_map: Matplolib color map to use for density plotting.
+        bg_dotsize: Dot size for background data points not in the `group`.
+        fg_dotsize: Dot size for foreground data points in the `group`.
+        vmin: The value representing the lower limit of the color scale. Values smaller than vmin are plotted
+              with the same color as vmin. vmin can be a number, a string, a function or `None`. If
+              vmin is a string and has the format `pN`, this is interpreted as a vmin=percentile(N).
+              For example vmin='p1.5' is interpreted as the 1.5 percentile. If vmin is function, then
+              vmin is interpreted as the return value of the function over the list of values to plot.
+              For example to set vmin tp the mean of the values to plot, `def my_vmin(values): return
+              np.mean(values)` and then set `vmin=my_vmin`. If vmin is None (default) an automatic
+              minimum value is used as defined by matplotlib `scatter` function. When making multiple
+              plots, vmin can be a list of values, one for each plot. For example `vmin=[0.1, 'p1', None, my_vmin]`
+        vmax: The value representing the upper limit of the color scale. The format is the same as for `vmin`.
+        vcenter: The value representing the center of the color scale. Useful for diverging colormaps.
+                 The format is the same as for `vmin`.
+                 Example: sc.pl.umap(adata, color='TREM2', vcenter='p50', cmap='RdBu_r')
+        ncols: Number of panels per row.
+        wspace: Adjust the width of the space between multiple panels.
+        hspace: Adjust the height of the space between multiple panels.
+        return_fig: Return the matplotlib figure.\
+        {show_save_ax}
+
+    Returns:
+        If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
+    """
+    return sc.pl.embedding_density(
+        adata=adata,
+        basis=basis,
+        key=key,
+        groupby=groupby,
+        group=group,
+        color_map=color_map,
+        bg_dotsize=bg_dotsize,
+        fg_dotsize=fg_dotsize,
+        vmax=vmax,
+        vmin=vmin,
+        vcenter=vcenter,
+        norm=norm,
+        ncols=ncols,
+        hspace=hspace,
+        wspace=wspace,
+        title=title,
+        show=show,
+        save=save,
+        ax=ax,
+        return_fig=return_fig,
+        **kwargs,
+    )
+
+
+def dpt_groups_pseudotime(
+    adata: AnnData,
+    color_map: Union[str, Colormap, None] = None,
+    palette: Union[Sequence[str], Cycler, None] = None,
+    show: Optional[bool] = None,
+    save: Union[bool, str, None] = None,
+):
+    """Plot groups and pseudotime.
+
+    Args:
+        adata: :class:`~anndata.AnnData` object object containing all observations.
+        color_map: Matplotlib Colormap
+        palette: Matplotlib color Palette
+        show: Whether to show the plot.
+        save: Whether to save the plot or a path to save the plot.
+    """
+    sc.pl.dpt_groups_pseudotime(adata=adata, color_map=color_map, palette=palette, show=show, save=save)
+
+
+def dpt_timeseries(
+    adata: AnnData,
+    color_map: Union[str, Colormap] = None,
+    as_heatmap: bool = True,
+    show: Optional[bool] = None,
+    save: Optional[bool] = None,
+):
+    """Heatmap of pseudotime series.
+
+    Args:
+        adata: :class:`~anndata.AnnData` object object containing all observations.
+        color_map: Matplotlib Colormap
+        as_heatmap: Whether to render the plot a heatmap
+        show: Whether to show the plot.
+        save: Whether to save the plot or a path to save the plot.
+    """
+    sc.pl.dpt_timeseries(adata=adata, color_map=color_map, show=show, save=save, as_heatmap=as_heatmap)
+
+
+def paga(
+    adata: AnnData,
+    threshold: Optional[float] = None,
+    color: Optional[Union[str, Mapping[Union[str, int], Mapping[Any, float]]]] = None,
+    layout: Optional[_IGraphLayout] = None,
+    layout_kwds: Mapping[str, Any] = MappingProxyType({}),
+    init_pos: Optional[np.ndarray] = None,
+    root: Union[int, str, Sequence[int], None] = 0,
+    labels: Union[str, Sequence[str], Mapping[str, str], None] = None,
+    single_component: bool = False,
+    solid_edges: str = "connectivities",
+    dashed_edges: Optional[str] = None,
+    transitions: Optional[str] = None,
+    fontsize: Optional[int] = None,
+    fontweight: str = "bold",
+    fontoutline: Optional[int] = None,
+    text_kwds: Mapping[str, Any] = MappingProxyType({}),
+    node_size_scale: float = 1.0,
+    node_size_power: float = 0.5,
+    edge_width_scale: float = 1.0,
+    min_edge_width: Optional[float] = None,
+    max_edge_width: Optional[float] = None,
+    arrowsize: int = 30,
+    title: Optional[str] = None,
+    left_margin: float = 0.01,
+    random_state: Optional[int] = 0,
+    pos: Union[np.ndarray, str, Path, None] = None,
+    normalize_to_color: bool = False,
+    cmap: Union[str, Colormap] = None,
+    cax: Optional[Axes] = None,
+    cb_kwds: Mapping[str, Any] = MappingProxyType({}),
+    frameon: Optional[bool] = None,
+    add_pos: bool = True,
+    export_to_gexf: bool = False,
+    use_raw: bool = True,
+    plot: bool = True,
+    show: Optional[bool] = None,
+    save: Union[bool, str, None] = None,
+    ax: Optional[Axes] = None,
+) -> Union[Axes, List[Axes], None]:
+    """Plot the PAGA graph through thresholding low-connectivity edges.
+
+    Compute a coarse-grained layout of the data. Reuse this by passing
+    `init_pos='paga'` to :func:`~scanpy.tl.umap` or
+    :func:`~scanpy.tl.draw_graph` and obtain embeddings with more meaningful
+    global topology [Wolf19]_.
+    This uses ForceAtlas2 or igraph's layout algorithms for most layouts [Csardi06]_.
+
+    Args:
+        adata: :class:`~anndata.AnnData` object object containing all observations.
+        threshold: Do not draw edges for weights below this threshold. Set to 0 if you want
+                   all edges. Discarding low-connectivity edges helps in getting a much clearer picture of the graph.
+        color: Feature name or `obs` annotation defining the node colors.
+               Also plots the degree of the abstracted graph when
+               passing {`'degree_dashed'`, `'degree_solid'`}.
+               Can be also used to visualize pie chart at each node in the following form:
+               `{<group name or index>: {<color>: <fraction>, ...}, ...}`. If the fractions
+               do not sum to 1, a new category called `'rest'` colored grey will be created.
+        layout: The node labels. If `None`, this defaults to the group labels stored in
+                the categorical for which :func:`~scanpy.tl.paga` has been computed.
+        layout_kwds: Keywords for the layout.
+        init_pos: Two-column array storing the x and y coordinates for initializing the layout.
+        root: If choosing a tree layout, this is the index of the root node or a list
+              of root node indices. If this is a non-empty vector then the supplied
+              node IDs are used as the roots of the trees (or a single tree if the
+              graph is connected). If this is `None` or an empty list, the root
+              vertices are automatically calculated based on topological sorting.
+        labels: The node labels. If `None`, this defaults to the group labels stored in
+                the categorical for which :func:`~scanpy.tl.paga` has been computed.
+        single_component: Restrict to largest connected component.
+        solid_edges: Key for `.uns['paga']` that specifies the matrix that stores the edges to be drawn solid black.
+        dashed_edges: Key for `.uns['paga']` that specifies the matrix that stores the edges
+                      to be drawn dashed grey. If `None`, no dashed edges are drawn.
+        transitions: Key for `.uns['paga']` that specifies the matrix that stores the
+                     arrows, for instance `'transitions_confidence'`.
+        fontsize: Font size for node labels.
+        fontweight: Weight of the font.
+        fontoutline: Width of the white outline around fonts.
+        text_kwds: Keywords for :meth:`~matplotlib.axes.Axes.text`.
+        node_size_scale: Increase or decrease the size of the nodes.
+        node_size_power: The power with which groups sizes influence the radius of the nodes.
+        edge_width_scale: Edge with scale in units of `rcParams['lines.linewidth']`.
+        min_edge_width: Min width of solid edges.
+        max_edge_width: Max width of solid and dashed edges.
+        arrowsize: For directed graphs, choose the size of the arrow head head's length and width.
+                   See :py:class: `matplotlib.patches.FancyArrowPatch` for attribute `mutation_scale` for more info.
+        title: Provide a title.
+        left_margin: Margin to the left of the plot.
+        random_state: For layouts with random initialization like `'fr'`, change this to use
+                      different intial states for the optimization. If `None`, the initial state is not reproducible.
+        pos: Two-column array-like storing the x and y coordinates for drawing.
+             Otherwise, path to a `.gdf` file that has been exported from Gephi or
+             a similar graph visualization software.
+        normalize_to_color: Whether to normalize categorical plots to `color` or the underlying grouping.
+        cmap: The Matplotlib color map.
+        cax: A matplotlib axes object for a potential colorbar.
+        cb_kwds: Keyword arguments for :class:`~matplotlib.colorbar.ColorbarBase`, for instance, `ticks`.
+        frameon: Draw a frame around the PAGA graph.
+        add_pos: Add the positions to `adata.uns['paga']`.
+        export_to_gexf: Export to gexf format to be read by graph visualization programs such as Gephi.
+        use_raw: Whether to use `raw` attribute of `adata`. Defaults to `True` if `.raw` is present.
+        plot: If `False`, do not create the figure, simply compute the layout.
+        ax: Matplotlib Axis object.
+        show: Whether to show the plot.
+        save: Whether or where to save the plot.
+
+    Returns:
+        A :class:`~matplotlib.axes.Axes` object, if `ax` is `None`, else `None`.
+        If `return_data`, return the timeseries data in addition to an axes.
+    """
+    return sc.pl.paga(
+        adata=adata,
+        threshold=threshold,
+        color=color,
+        layout=layout,
+        layout_kwds=layout_kwds,
+        init_pos=init_pos,
+        root=root,
+        labels=labels,
+        single_component=single_component,
+        solid_edges=solid_edges,
+        dashed_edges=dashed_edges,
+        transitions=transitions,
+        fontsize=fontsize,
+        fontweight=fontweight,
+        fontoutline=fontoutline,
+        text_kwds=text_kwds,
+        node_size_scale=node_size_scale,
+        node_size_power=node_size_power,
+        edge_width_scale=edge_width_scale,
+        min_edge_width=min_edge_width,
+        max_edge_width=max_edge_width,
+        arrowsize=arrowsize,
+        title=title,
+        left_margin=left_margin,
+        random_state=random_state,
+        pos=pos,
+        normalize_to_color=normalize_to_color,
+        cmap=cmap,
+        cax=cax,
+        cb_kwds=cb_kwds,
+        frameon=frameon,
+        add_pos=add_pos,
+        export_to_gexf=export_to_gexf,
+        use_raw=use_raw,
+        plot=plot,
+        show=show,
+        save=save,
+        ax=ax,
+    )
