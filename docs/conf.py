@@ -173,7 +173,7 @@ sys.path.insert(0, os.path.abspath("_ext"))
 
 # General information about the project.
 project = "ehrapy"
-copyright = "2021, Lukas Heumos"
+copyright = "2021, Lukas Heumos, Theislab"
 author = "Lukas Heumos"
 github_repo = "ehrapy"
 
@@ -243,8 +243,8 @@ autosummary_generate = True
 autodoc_member_order = "groupwise"
 autodoc_typehints = "signature"
 autodoc_docstring_signature = True
-napoleon_google_docstring = False
-napoleon_numpy_docstring = True
+napoleon_google_docstring = True
+napoleon_numpy_docstring = False
 napoleon_include_init_with_doc = False
 napoleon_use_rtype = True
 napoleon_use_param = True

@@ -34,6 +34,13 @@ repos:
             language: system
             types: [python]
             require_serial: true
+            exclude: |
+                (?x)^(
+                    .nox|
+                    .mypy_cache|
+                    .pytest_cache|
+                    dist
+                )$
           - id: trailing-whitespace
             name: Trim Trailing Whitespace
             entry: trailing-whitespace-fixer
