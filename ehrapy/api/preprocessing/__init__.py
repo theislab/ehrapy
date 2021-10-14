@@ -15,9 +15,12 @@ def replace_explicit(
     Args:
         adata: :class:`~anndata.AnnData` object containing X to impute values in
         replacement: Replacement value. Can be one of three possible scenarios:
-        1. Replace all missing values with the specified value. ( str | int )
-        2. Replace all missing values in a subset of columns with the specified value. ( Dict(str: (str, int)) )
-        3. Replace all missing values in a subset of columns with a specified value per column. ( str ,(str, int) )
+
+            value: Specified raw value (str | int)
+
+            Dict: Subset of columns with the specified value ( Dict(str: (str, int)) )
+
+            Tuple: Subset of columns with the specified value per column ( str ,(str, int) )
         copy: Whether to return a copy or act inplace
 
     Returns:
@@ -31,3 +34,6 @@ def replace_explicit(
             adata_replaced = ep.pp.replace_explicit(adata, replacement=0, copy=True)
     """
     return Imputation.explicit(adata, replacement, copy)
+
+
+from ehrapy.api.preprocessing._scanpy_pp_api import *  # noqa: E402,F403
