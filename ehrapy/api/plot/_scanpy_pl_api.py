@@ -1414,3 +1414,187 @@ def paga(
         save=save,
         ax=ax,
     )
+
+
+def paga_path(
+    adata: AnnData,
+    nodes: Sequence[Union[str, int]],
+    keys: Sequence[str],
+    use_raw: bool = True,
+    annotations: Sequence[str] = ("dpt_pseudotime",),
+    color_map: Union[str, Colormap, None] = None,
+    color_maps_annotations: Mapping[str, Union[str, Colormap]] = MappingProxyType(dict(dpt_pseudotime="Greys")),
+    palette_groups: Optional[Sequence[str]] = None,
+    n_avg: int = 1,
+    groups_key: Optional[str] = None,
+    xlim: Tuple[Optional[int], Optional[int]] = (None, None),
+    title: Optional[str] = None,
+    left_margin=None,
+    ytick_fontsize: Optional[int] = None,
+    title_fontsize: Optional[int] = None,
+    show_node_names: bool = True,
+    show_yticks: bool = True,
+    show_colorbar: bool = True,
+    legend_fontsize: Union[int, float, _FontSize, None] = None,
+    legend_fontweight: Union[int, _FontWeight, None] = None,
+    normalize_to_zero_one: bool = False,
+    as_heatmap: bool = True,
+    return_data: bool = False,
+    show: Optional[bool] = None,
+    save: Union[bool, str, None] = None,
+    ax: Optional[Axes] = None,
+) -> Optional[Axes]:
+    """Gene expression and annotation changes along paths in the abstracted graph.
+
+    Args:
+        adata: :class:`~anndata.AnnData` object object containing all observations.
+        nodes: A path through nodes of the abstracted graph, that is, names or indices
+               (within `.categories`) of groups that have been used to run PAGA.
+        keys: Either variables in `adata.var_names` or annotations in `adata.obs`. They are plotted using `color_map`.
+        use_raw: Use `adata.raw` for retrieving feature values if it has been set.
+        annotations: Plot these keys with `color_maps_annotations`. Need to be keys for `adata.obs`.
+        color_map: Matplotlib colormap.
+        color_maps_annotations: Color maps for plotting the annotations. Keys of the dictionary must appear in `annotations`.
+        palette_groups: Usually, use the same `sc.pl.palettes...` as used for coloring the abstracted graph.
+        n_avg: Number of data points to include in computation of running average.
+        groups_key: Key of the grouping used to run PAGA. If `None`, defaults to `adata.uns['paga']['groups']`.
+        xlim: Matplotlib x limit.
+        title: Plot title.
+        left_margin: Margin to the left of the plot.
+        ytick_fontsize: Matplotlib ytick fontsize.
+        title_fontsize: Font size of the title.
+        show_node_names: Whether to plot the node names on the nodes bar.
+        show_yticks: Whether to show the y axis ticks.
+        show_colorbar: Whether to show the color bar.
+        legend_fontsize: Font size of the legend.
+        legend_fontweight: Font weight of the legend.
+        normalize_to_zero_one: Shift and scale the running average to [0, 1] per feature.
+        as_heatmap: Whether to display the plot as heatmap.
+        return_data: Whether to return the timeseries data in addition to the axes if `True`.
+        ax: Matplotlib Axis object.
+        show: Whether to show the plot.
+        save: Whether or where to save the plot.
+
+    Returns:
+        A :class:`~matplotlib.axes.Axes` object, if `ax` is `None`, else `None`.
+        If `return_data`, return the timeseries data in addition to an axes.
+    """
+    return sc.pl.paga_path(
+        adata=adata,
+        nodes=nodes,
+        keys=keys,
+        use_raw=use_raw,
+        annotations=annotations,
+        color_map=color_map,
+        color_maps_annotations=color_maps_annotations,
+        palette_groups=palette_groups,
+        n_avg=n_avg,
+        groups_key=groups_key,
+        xlim=xlim,
+        title=title,
+        left_margin=left_margin,
+        ytick_fontsize=ytick_fontsize,
+        title_fontsize=title_fontsize,
+        show_node_names=show_node_names,
+        show_yticks=show_yticks,
+        show_colorbar=show_colorbar,
+        legend_fontsize=legend_fontsize,
+        legend_fontweight=legend_fontweight,
+        normalize_to_zero_one=normalize_to_zero_one,
+        as_heatmap=as_heatmap,
+        return_data=return_data,
+        show=show,
+        save=save,
+        ax=ax,
+    )
+
+
+def paga_compare(
+    adata: AnnData,
+    basis=None,
+    edges=False,
+    color=None,
+    alpha=None,
+    groups=None,
+    components=None,
+    projection: Literal["2d", "3d"] = "2d",
+    legend_loc="on data",
+    legend_fontsize: Union[int, float, _FontSize, None] = None,
+    legend_fontweight: Union[int, _FontWeight] = "bold",
+    legend_fontoutline=None,
+    color_map=None,
+    palette=None,
+    frameon=False,
+    size=None,
+    title=None,
+    right_margin=None,
+    left_margin=0.05,
+    show=None,
+    save=None,
+    title_graph=None,
+    groups_graph=None,
+    *,
+    pos=None,
+    **paga_graph_params,
+) -> Optional[Axes]:
+    """Scatter and PAGA graph side-by-side.
+
+    Consists in a scatter plot and the abstracted graph. See :func:`~ehrapy.pl.paga` for all related parameters.
+
+    Args:
+        adata: :class:`~anndata.AnnData` object object containing all observations.
+        basis: String that denotes a plotting tool that computed coordinates.
+        edges: Whether to display edges.
+        color: Keys for annotations of observations/patients or features, or a hex color specification, e.g.,
+               `'ann1'`, `'#fe57a1'`, or `['ann1', 'ann2']`.
+        alpha: Alpha value for the image
+        groups: Key of the grouping used to run PAGA. If `None`, defaults to `adata.uns['paga']['groups']`.
+        components: For example, ``'1,2,3'`` means ``[1, 2, 3]``, first, second, third principal component.
+        projection: One of '2d' or '3d'
+        legend_loc: Location of the legend.
+        legend_fontsize: Font size of the legend.
+        legend_fontweight: Font weight of the legend.
+        legend_fontoutline: Font outline of the legend.
+        color_map: Matplotlib color map.
+        palette: Matplotlib color palette.
+        frameon: Whether to display the labels frameon.
+        size: Size of the plot.
+        title: Title of the plot.
+        right_margin: Margin to the right of the plot.
+        left_margin: Margin to the left of the plot.
+        show: Whether to show the plot.
+        save: Whether or where to save the plot.
+        title_graph: The title of the graph.
+        groups_graph: Graph labels.
+        pos: Position of the plot.
+        **paga_graph_params: Keywords for :func:`~ehrapy.pl.paga` and keywords for :func:`~ehrapy.pl.scatter`.
+
+    Returns:
+
+    """
+    return sc.pl.paga_compare(
+        adata=adata,
+        basis=basis,
+        edges=edges,
+        color=color,
+        alpha=alpha,
+        groups=groups,
+        components=components,
+        projection=projection,
+        legend_loc=legend_loc,
+        legend_fontsize=legend_fontsize,
+        legend_fontweight=legend_fontweight,
+        legend_fontoutline=legend_fontoutline,
+        color_map=color_map,
+        palette=palette,
+        frameon=frameon,
+        size=size,
+        title=title,
+        right_margin=right_margin,
+        left_margin=left_margin,
+        show=show,
+        save=save,
+        title_graph=title_graph,
+        groups_graph=groups_graph,
+        pos=pos ** paga_graph_params,
+    )
