@@ -48,6 +48,8 @@ class DataReader:
             output_file_name = backup_url.split("/")[-1]
             is_zip: bool = output_file_name.endswith(".zip")  # TODO can we generalize this to tar files as well?
             Dataloader.download(backup_url, output_file_name=str(filename), output_path=str(Path.cwd()), is_zip=is_zip)
+            # TODO: temporary fix for demo
+            file = Path.cwd() / "mimic-iii-clinical-database-demo-1.4"
 
         raw_object = DataReader._read(
             filename=file,
@@ -79,7 +81,6 @@ class DataReader:
                 "[bold red]Attempted download of missing file(s) failed. Please file an issue at our repository "
                 "[blue]https://github.com/theislab/ehrapy!"
             )
-
         # If the filename is a directory, assume it is a mimicIII dataset
         if filename.is_dir():
             return DataReader._read_multiple_csv(filename, delimiter, index_column, columns_obs_only, return_mudata)
@@ -218,7 +219,7 @@ class DataReader:
             try:
                 pd.to_datetime(initial_df[col])
                 columns_obs_only.append(col)
-            except ValueError:
+            except (ValueError, TypeError):
                 pass
 
         # return the initial AnnData object
