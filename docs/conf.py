@@ -232,7 +232,7 @@ exclude_patterns = [
 suppress_warnings = ["download.not_readable"]
 pygments_style = "sphinx"
 
-html_css_files = ["custom_cookietemple.css"]
+html_css_files = ["custom_cookietemple.css", "sphinx_gallery.css", "nbsphinx.css", "dataframe.css"]
 html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
 html_logo = "_static/img/squidpy_horizontal.png"  # TODO
@@ -366,7 +366,3 @@ def setup(app: Sphinx) -> None:
 
     app.add_config_value("sphinx_gallery_conf", DEFAULT_GALLERY_CONF, "html")
     app.add_directive("minigallery", MaybeMiniGallery)
-    app.add_css_file("css/custom.css")
-    app.add_css_file("css/sphinx_gallery.css")
-    app.add_css_file("css/nbsphinx.css")
-    app.add_css_file("css/dataframe.css")  # had to add this manually
