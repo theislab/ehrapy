@@ -1,4 +1,4 @@
-from typing import List, Literal, Union, Dict, Optional
+from typing import Dict, List, Literal, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -152,16 +152,18 @@ class MedCAT:
         # TODO Figure out a way not to do this inplace and to add an inplace parameter
         cui_filters = set()
         for tui in tui_filters:
-            cui_filters.update(concept_db.addl_info['type_id2cuis'][tui])
-        concept_db.config.linking['filters']['cuis'] = cui_filters
+            cui_filters.update(concept_db.addl_info["type_id2cuis"][tui])
+        concept_db.config.linking["filters"]["cuis"] = cui_filters
         print(f"[bold blue]The size of the concept database is now: {len(cui_filters)}")
 
-    def annotate(self,
-                 data: Union[np.ndarray, pd.Series],
-                 batch_size: int = 100,
-                 min_text_length: int = None,
-                 only_cui: bool = False,
-                 n_jobs: int = settings.n_jobs) -> Optional[Dict]:
+    def annotate(
+        self,
+        data: Union[np.ndarray, pd.Series],
+        batch_size: int = 100,
+        min_text_length: int = None,
+        only_cui: bool = False,
+        n_jobs: int = settings.n_jobs,
+    ) -> Optional[Dict]:
         """
 
         Args:
@@ -194,7 +196,7 @@ class MedCAT:
 
                 for pair in results:
                     row_id = pair[0]
-                    cui_list = set(pair[1]['entities'].values())  # Convert to set to get unique CUIs
+                    cui_list = set(pair[1]["entities"].values())  # Convert to set to get unique CUIs
 
                     for cui in cui_list:
                         if cui in cui_location:
