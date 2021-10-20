@@ -138,5 +138,6 @@ dmypy.json
 *.orig
 
 # Notebook files
+notebooks/data
 notebooks/*.dat
 notebooks/*.csv
