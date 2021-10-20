@@ -19,15 +19,15 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = ">=3.7.1,<3.10"
-click = "^8.0.2"
-rich = "^10.12.0"
+click = ">=7.0.0"
+rich = ">=10.12.0"
 PyYAML = "^5.4.1"
 Jinja2 = "^3.0.1"
-questionary = "^1.10.0"
+questionary = ">=1.10.0"
 requests = "^2.26.0"
 pandas = "^1.3.3"
 anndata = "^0.7.6"
-pypi-latest = "^0.1.0"
+pypi-latest = ">=0.1.1"
 scikit-learn = "^1.0"
 category_encoders = "^2.2.2"
 scanpy = "^1.8.1"
@@ -36,6 +36,9 @@ leidenalg = "^0.8.7"
 deepl = "^1.2.0"
 medcat = {git = "https://github.com/CogStack/MedCAT"}
 pynndescent = "^0.5.4"
+en-core-sci-sm = {url = "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_core_sci_sm-0.4.0.tar.gz", optional = true}
+en-core-sci-md = {url = "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_core_sci_md-0.4.0.tar.gz", optional = true}
+en-core-sci-lg = {url = "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_core_sci_lg-0.4.0.tar.gz", optional = true}
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"
@@ -69,6 +72,11 @@ sphinx-autodoc-typehints = "^1.12.0"
 sphinx-last-updated-by-git = "^0.3.0"
 nbsphinx = "^0.8.7"
 sphinxcontrib-bibtex = "^2.4.1"
+
+[tool.poetry.extras]
+en-core-sci-sm = ["en-core-sci-sm"]
+en-core-sci-md = ["en-core-sci-md"]
+en-core-sci-lg = ["en-core-sci-lg"]
 
 [tool.poetry.scripts]
 ehrapy = "ehrapy.__main__:main"
