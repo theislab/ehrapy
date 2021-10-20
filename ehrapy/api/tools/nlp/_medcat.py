@@ -7,10 +7,18 @@ from medcat.cdb import CDB
 from medcat.cdb_maker import CDBMaker
 from medcat.config import Config
 from medcat.vocab import Vocab
+from rich.progress import track
 from spacy import displacy
 from spacy.tokens.doc import Doc
+from rich import print
 
 from ehrapy.api import settings
+from ehrapy.api._util import check_module_importable
+
+spacy_models_modules: List[str] = list(map(lambda model: model.replace("-", "_"), ["en-core-sci-sm", "en-core-sci-md", "en-core-sci-lg"]))
+for model in spacy_models_modules:
+    if not check_module_importable(model):
+        print(f"[bold yellow]Model {model} is not installed. Refer to the ehrapy installation instructions if required.")
 
 
 class MedCAT:
@@ -149,7 +157,7 @@ class MedCAT:
             concept_db: MedCAT concept database.
             tui_filters: A list of semantic type filters. Example: |T047|Disease or Syndrome -> "T047"
         """
-        # TODO Figure out a way not to do this inplace and to add an inplace parameter
+        # TODO Figure out a way not to do this inplace and add an inplace parameter
         cui_filters = set()
         for tui in tui_filters:
             cui_filters.update(concept_db.addl_info["type_id2cuis"][tui])
@@ -185,9 +193,7 @@ class MedCAT:
         results = None
 
         batch: List = []
-        count: int = 0
-        # TODO Don't use this ugly count but a Rich progressbar
-        for text_id, text in data.iterrows():
+        for text_id, text in track(data.iterrows()):
             if len(text) > min_text_length:
                 batch.append((text_id, text))
 
@@ -211,9 +217,6 @@ class MedCAT:
                                 tui_location[tui].append(row_id)
                             elif tui not in tui_location:
                                 tui_location[tui] = [row_id]
-
-                count += 1
-                print(f"Done: {(count - 1) * batch_size + len(batch)} - rows")
 
                 # Reset the batch
                 batch = []

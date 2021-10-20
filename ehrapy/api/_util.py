@@ -48,6 +48,7 @@ def check_module_importable(package: str) -> bool:
     Returns:
         True if the package is installed, false elsewise
     """
-    spam_spec = importlib.util.find_spec(package)
+    module_information = importlib.util.find_spec(package)
+    module_available = module_information is not None
 
-    return spam_spec is not None
+    return module_available
