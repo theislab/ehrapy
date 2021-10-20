@@ -7,18 +7,22 @@ from medcat.cdb import CDB
 from medcat.cdb_maker import CDBMaker
 from medcat.config import Config
 from medcat.vocab import Vocab
+from rich import print
 from rich.progress import track
 from spacy import displacy
 from spacy.tokens.doc import Doc
-from rich import print
 
 from ehrapy.api import settings
 from ehrapy.api._util import check_module_importable
 
-spacy_models_modules: List[str] = list(map(lambda model: model.replace("-", "_"), ["en-core-sci-sm", "en-core-sci-md", "en-core-sci-lg"]))
+spacy_models_modules: List[str] = list(
+    map(lambda model: model.replace("-", "_"), ["en-core-sci-sm", "en-core-sci-md", "en-core-sci-lg"])
+)
 for model in spacy_models_modules:
     if not check_module_importable(model):
-        print(f"[bold yellow]Model {model} is not installed. Refer to the ehrapy installation instructions if required.")
+        print(
+            f"[bold yellow]Model {model} is not installed. Refer to the ehrapy installation instructions if required."
+        )
 
 
 class MedCAT:
