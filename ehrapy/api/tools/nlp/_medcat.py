@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, List, Literal, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Set, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -11,7 +11,7 @@ from medcat.cdb_maker import CDBMaker
 from medcat.config import Config
 from medcat.vocab import Vocab
 from rich import print
-from rich.progress import Progress, BarColumn
+from rich.progress import BarColumn, Progress
 from spacy import displacy
 from spacy.tokens.doc import Doc
 
@@ -26,6 +26,7 @@ for model in spacy_models_modules:
         print(
             f"[bold yellow]Model {model} is not installed. Refer to the ehrapy installation instructions if required."
         )
+
 
 @dataclass
 class AnnotationResult:
@@ -208,19 +209,19 @@ class MedCAT:
             the last batch will be returned while that and all previous batches will be written to disk (out_save_dir).
         """
         if isinstance(data, np.ndarray):
-            data: pd.Series = pd.Series(data)
+            data = pd.Series(data)
 
         cui_location: Dict = {}  # CUI to a list of documents where it appears
         tui_location: Dict = {}  # TUI to a list of documents where it appears
         results = None
 
         batch: List = []
-        with Progress("[progress.description]{task.description}",
-                      BarColumn(),
-                      "[progress.percentage]{task.percentage:>3.0f}%") as progress:
+        with Progress(
+            "[progress.description]{task.description}", BarColumn(), "[progress.percentage]{task.percentage:>3.0f}%"
+        ) as progress:
             task = progress.add_task("[red]Annotating...", total=data.size)
 
-            for text_id, text in data.iteritems():
+            for text_id, text in data.iteritems():  # type: ignore
                 if len(text) > min_text_length:
                     batch.append((text_id, text))
 
@@ -253,8 +254,8 @@ class MedCAT:
 
     def calculate_disease_proportions(self, cui_locations: Dict, data: pd.Series, subject_id_col="subject_id"):
         # We are going to count the number of subjects (patients) for each CUI
-        cui_subjects = {}
-        cui_subjects_unique = {}
+        cui_subjects: Dict[int, List] = {}
+        cui_subjects_unique: Dict[str, Set] = {}
         for cui in cui_locations:
             for location in cui_locations[cui]:
                 subject_id = data.iat[location, list(data.columns).index(subject_id_col)]
@@ -265,31 +266,31 @@ class MedCAT:
                     cui_subjects[cui] = [subject_id]
                     cui_subjects_unique[cui] = {subject_id}
 
-        cui_nsubjects = [('cui', 'nsubjects')]
+        cui_nsubjects: List[Tuple[Any, Any]] = [("cui", "nsubjects")]
         for cui in cui_subjects_unique.keys():
             cui_nsubjects.append((cui, len(cui_subjects_unique[cui])))
         df_cui_nsubjects = pd.DataFrame(cui_nsubjects[1:], columns=cui_nsubjects[0])
 
-        df_cui_nsubjects = df_cui_nsubjects.sort_values('nsubjects', ascending=False)
+        df_cui_nsubjects = df_cui_nsubjects.sort_values("nsubjects", ascending=False)
         # Add TUI for each CUI
-        df_cui_nsubjects['tui'] = ['unk'] * len(df_cui_nsubjects)
+        df_cui_nsubjects["tui"] = ["unk"] * len(df_cui_nsubjects)
         cols = list(df_cui_nsubjects.columns)
         for i in range(len(df_cui_nsubjects)):
-            cui = df_cui_nsubjects.iat[i, cols.index('cui')]
-            tui = self.concept_db.cui2type_ids.get(cui, 'unk')
-            df_cui_nsubjects.iat[i, cols.index('tui')] = tui
+            cui = df_cui_nsubjects.iat[i, cols.index("cui")]
+            tui = self.concept_db.cui2type_ids.get(cui, "unk")
+            df_cui_nsubjects.iat[i, cols.index("tui")] = tui
 
         # Add name for each CUI
-        df_cui_nsubjects['name'] = ['unk'] * len(df_cui_nsubjects)
+        df_cui_nsubjects["name"] = ["unk"] * len(df_cui_nsubjects)
         cols = list(df_cui_nsubjects.columns)
         for i in range(len(df_cui_nsubjects)):
-            cui = df_cui_nsubjects.iat[i, cols.index('cui')]
-            name = self.concept_db.cui2preferred_name.get(cui, 'unk')
-            df_cui_nsubjects.iat[i, cols.index('name')] = name
+            cui = df_cui_nsubjects.iat[i, cols.index("cui")]
+            name = self.concept_db.cui2preferred_name.get(cui, "unk")
+            df_cui_nsubjects.iat[i, cols.index("name")] = name
 
         # Add the percentage column
-        total_subjects = len(data['subject_id'].unique())
-        df_cui_nsubjects['perc_subjects'] = (df_cui_nsubjects['nsubjects'] / total_subjects) * 100
+        total_subjects = len(data["subject_id"].unique())
+        df_cui_nsubjects["perc_subjects"] = (df_cui_nsubjects["nsubjects"] / total_subjects) * 100
 
         df_cui_nsubjects.reset_index(drop=True, inplace=True)
 
@@ -299,11 +300,7 @@ class MedCAT:
         # TODO this should ideally be drawn with a Scanpy plot or something
         # Needs more options such as saving etc
         sns.reset_defaults()
-        sns.set(
-            rc={'figure.figsize': (5, 12)},
-            style="whitegrid",
-            palette='pastel'
-        )
+        sns.set(rc={"figure.figsize": (5, 12)}, style="whitegrid", palette="pastel")
         f, ax = plt.subplots()
         _data = df_cui_nsubjects.iloc[0:top_diseases]
         sns.barplot(x="perc_subjects", y="name", data=_data, label="Disorder Name", color="b")
