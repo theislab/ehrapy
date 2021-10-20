@@ -1,3 +1,4 @@
+import importlib
 from typing import List, Union
 
 import numpy as np
@@ -36,3 +37,17 @@ def get_column_values(adata: AnnData, indices: Union[int, List[int]]) -> np.ndar
         :class:`~numpy.ndarray` object containing the column values
     """
     return np.take(adata.X, indices, axis=1)
+
+
+def check_module_importable(package: str) -> bool:
+    """Checks whether a module is installed and can be loaded.
+
+    Args:
+        package: The package to check.
+
+    Returns:
+        True if the package is installed, false elsewise
+    """
+    spam_spec = importlib.util.find_spec(package)
+
+    return spam_spec is not None
