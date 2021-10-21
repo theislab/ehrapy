@@ -1,14 +1,17 @@
-from typing import Dict, List, Literal, Optional, Union
+from dataclasses import dataclass
+from typing import Any, Dict, List, Literal, Optional, Set, Tuple, Union
 
 import numpy as np
 import pandas as pd
+import seaborn as sns
+from matplotlib import pyplot as plt
 from medcat.cat import CAT
 from medcat.cdb import CDB
 from medcat.cdb_maker import CDBMaker
 from medcat.config import Config
 from medcat.vocab import Vocab
 from rich import print
-from rich.progress import track
+from rich.progress import BarColumn, Progress
 from spacy import displacy
 from spacy.tokens.doc import Doc
 
@@ -23,6 +26,13 @@ for model in spacy_models_modules:
         print(
             f"[bold yellow]Model {model} is not installed. Refer to the ehrapy installation instructions if required."
         )
+
+
+@dataclass
+class AnnotationResult:
+    medcat_annotation: List[Optional[Dict]]
+    cui_locations: Optional[Dict]
+    tui_locations: Optional[Dict]
 
 
 class MedCAT:
@@ -96,6 +106,9 @@ class MedCAT:
     def update_cat(self, vocabulary: Vocab = None, concept_db: CDB = None):
         self.cat = CAT(cdb=concept_db, config=concept_db.config, vocab=vocabulary)
 
+    def update_cat_config(self, concept_db_config: Config):
+        self.concept_db.config = concept_db_config
+
     def extract_entities_text(self, text: str) -> Doc:
         """Extracts entities for a provided text.
 
@@ -129,6 +142,7 @@ class MedCAT:
             doc: A spacy tokens Doc.
             table: Whether to print a Rich table.
         """
+        # TODO implement Rich table
         for ent in doc.ents:
             print(ent, " - ", self.concept_db.cui2type_ids.get(ent._.cui))
 
@@ -154,12 +168,15 @@ class MedCAT:
         if print_statistics:
             self.concept_db.print_stats()
 
-    def filter_tui(self, concept_db: CDB, tui_filters: List[str]) -> None:
+    def filter_tui(self, concept_db: CDB, tui_filters: List[str]) -> CDB:
         """Filters a concept database by semantic types (TUI)
 
         Args:
             concept_db: MedCAT concept database.
             tui_filters: A list of semantic type filters. Example: |T047|Disease or Syndrome -> "T047"
+
+        Returns:
+            A filtered MedCAT concept database.
         """
         # TODO Figure out a way not to do this inplace and add an inplace parameter
         cui_filters = set()
@@ -168,22 +185,24 @@ class MedCAT:
         concept_db.config.linking["filters"]["cuis"] = cui_filters
         print(f"[bold blue]The size of the concept database is now: {len(cui_filters)}")
 
+        return concept_db
+
     def annotate(
         self,
         data: Union[np.ndarray, pd.Series],
         batch_size: int = 100,
-        min_text_length: int = None,
+        min_text_length: int = 1,
         only_cui: bool = False,
         n_jobs: int = settings.n_jobs,
-    ) -> Optional[Dict]:
+    ) -> AnnotationResult:
         """
 
         Args:
-            data: Text data to annotate
-            batch_size:
-            min_text_length:
+            data: Text data to annotate.
+            batch_size: The length of a single batch of several texts to process.
+            min_text_length: Minimal text length to process.
             only_cui: Returned entities will only have a CUI
-            n_jobs:
+            n_jobs: Number of parallel processes
 
         Returns:
             A dictionary: {id: doc_json, id2: doc_json2, ...}, in case out_split_size is used
@@ -194,41 +213,112 @@ class MedCAT:
 
         cui_location: Dict = {}  # CUI to a list of documents where it appears
         tui_location: Dict = {}  # TUI to a list of documents where it appears
-        results = None
+        all_results = []
 
         batch: List = []
-        for text_id, text in track(data.iterrows()):
-            if len(text) > min_text_length:
-                batch.append((text_id, text))
+        with Progress(
+            "[progress.description]{task.description}", BarColumn(), "[progress.percentage]{task.percentage:>3.0f}%"
+        ) as progress:
+            task = progress.add_task("[red]Annotating...", total=data.size)
 
-            if len(batch) > batch_size or text_id == len(data) - 1:
-                results = self.cat.multiprocessing(batch, nproc=n_jobs, only_cui=only_cui)
+            for text_id, text in data.iteritems():  # type: ignore
+                if len(text) > min_text_length:
+                    batch.append((text_id, text))
 
-                for pair in results:
-                    row_id = pair[0]
-                    cui_list = set(pair[1]["entities"].values())  # Convert to set to get unique CUIs
+                if len(batch) > batch_size or text_id == len(data) - 1:
+                    results = self.cat.multiprocessing(batch, nproc=n_jobs, only_cui=only_cui)
+                    all_results.append(results)
 
-                    for cui in cui_list:
-                        if cui in cui_location:
-                            cui_location[cui].append(row_id)
-                        else:
-                            cui_location[cui] = [row_id]
+                    for result_id, result in results.items():
+                        row_id = result_id
+                        cui_list = set(result["entities"].values())  # Convert to set to get unique CUIs
 
-                        # This is not necessary as it can be done later, we have the cdb.cui2type_id map.
-                        tuis = self.concept_db.cui2type_ids[cui]
-                        for tui in tuis:  # this step is necessary as one cui may map to several tuis
-                            if tui in tui_location and row_id not in tui_location[tui]:
-                                tui_location[tui].append(row_id)
-                            elif tui not in tui_location:
-                                tui_location[tui] = [row_id]
+                        for cui in cui_list:
+                            if cui in cui_location:
+                                cui_location[cui].append(row_id)
+                            else:
+                                cui_location[cui] = [row_id]
 
-                # Reset the batch
-                batch = []
+                            # This is not necessary as it can be done later, we have the cdb.cui2type_id map.
+                            tuis = self.concept_db.cui2type_ids[cui]
+                            for tui in tuis:  # this step is necessary as one cui may map to several tuis
+                                if tui in tui_location and row_id not in tui_location[tui]:
+                                    tui_location[tui].append(row_id)
+                                elif tui not in tui_location:
+                                    tui_location[tui] = [row_id]
 
-        return results
+                    # Reset the batch
+                    batch = []
+                progress.advance(task)
 
-    def plot_subjects_cui(self):
-        pass
+        # TODO flatten the all_results list by actually just removing it @Philipp
+        # we have a list of batches of dictionary but actually only want a dictionary
+        # use https://stackoverflow.com/questions/38987/how-do-i-merge-two-dictionaries-in-a-single-expression-taking-union-of-dictiona
+        return AnnotationResult(all_results, cui_location, tui_location)
 
-    def plot_top_diseases(self):
-        pass
+    def calculate_disease_proportions(
+        self, cui_locations: Dict, data: pd.Series, subject_id_col="subject_id"
+    ) -> pd.DataFrame:
+        """Calculates the relative proportion of found diseases as percentages.
+
+        Args:
+            cui_locations: A dictionary containing the found CUIs and their location.
+            data: The Pandas Series used to obtain the CUIs.
+            subject_id_col: The column header in the data containing the patient/subject IDs.
+
+        Returns:
+            A Pandas Dataframe containing the disease percentages.
+
+            cui 	nsubjects 	tui 	name 	perc_subjects
+        """
+        cui_subjects: Dict[int, List] = {}
+        cui_subjects_unique: Dict[str, Set] = {}
+        for cui in cui_locations:
+            for location in cui_locations[cui]:
+                subject_id = data.iat[location, list(data.columns).index(subject_id_col)]
+                if cui in cui_subjects:
+                    cui_subjects[cui].append(subject_id)
+                    cui_subjects_unique[cui].add(subject_id)
+                else:
+                    cui_subjects[cui] = [subject_id]
+                    cui_subjects_unique[cui] = {subject_id}
+
+        cui_nsubjects: List[Tuple[Any, Any]] = [("cui", "nsubjects")]
+        for cui in cui_subjects_unique.keys():
+            cui_nsubjects.append((cui, len(cui_subjects_unique[cui])))
+        df_cui_nsubjects = pd.DataFrame(cui_nsubjects[1:], columns=cui_nsubjects[0])
+
+        df_cui_nsubjects = df_cui_nsubjects.sort_values("nsubjects", ascending=False)
+        # Add TUI for each CUI
+        df_cui_nsubjects["tui"] = ["unk"] * len(df_cui_nsubjects)
+        cols = list(df_cui_nsubjects.columns)
+        for i in range(len(df_cui_nsubjects)):
+            cui = df_cui_nsubjects.iat[i, cols.index("cui")]
+            tui = self.concept_db.cui2type_ids.get(cui, "unk")
+            df_cui_nsubjects.iat[i, cols.index("tui")] = tui
+
+        # Add name for each CUI
+        df_cui_nsubjects["name"] = ["unk"] * len(df_cui_nsubjects)
+        cols = list(df_cui_nsubjects.columns)
+        for i in range(len(df_cui_nsubjects)):
+            cui = df_cui_nsubjects.iat[i, cols.index("cui")]
+            name = self.concept_db.cui2preferred_name.get(cui, "unk")
+            df_cui_nsubjects.iat[i, cols.index("name")] = name
+
+        # Add the percentage column
+        total_subjects = len(data["subject_id"].unique())
+        df_cui_nsubjects["perc_subjects"] = (df_cui_nsubjects["nsubjects"] / total_subjects) * 100
+
+        df_cui_nsubjects.reset_index(drop=True, inplace=True)
+
+        return df_cui_nsubjects
+
+    def plot_top_diseases(self, df_cui_nsubjects: pd.DataFrame, top_diseases: int = 30):
+        # TODO this should ideally be drawn with a Scanpy plot or something
+        # TODO Needs more options such as saving etc
+        sns.set(rc={"figure.figsize": (5, 12)}, style="whitegrid", palette="pastel")
+        f, ax = plt.subplots()
+        _data = df_cui_nsubjects.iloc[0:top_diseases]
+        sns.barplot(x="perc_subjects", y="name", data=_data, label="Disorder Name", color="b")
+        _ = ax.set(xlim=(0, 70), ylabel="Disease Name", xlabel="Percentage of patients with disease")
+        plt.show()
