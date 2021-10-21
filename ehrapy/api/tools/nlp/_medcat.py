@@ -256,7 +256,9 @@ class MedCAT:
         # use https://stackoverflow.com/questions/38987/how-do-i-merge-two-dictionaries-in-a-single-expression-taking-union-of-dictiona
         return AnnotationResult(all_results, cui_location, tui_location)
 
-    def calculate_disease_proportions(self, cui_locations: Dict, data: pd.Series, subject_id_col="subject_id") -> pd.DataFrame:
+    def calculate_disease_proportions(
+        self, cui_locations: Dict, data: pd.Series, subject_id_col="subject_id"
+    ) -> pd.DataFrame:
         """Calculates the relative proportion of found diseases as percentages.
 
         Args:
