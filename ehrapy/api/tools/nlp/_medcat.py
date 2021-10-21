@@ -30,7 +30,7 @@ for model in spacy_models_modules:
 
 @dataclass
 class AnnotationResult:
-    medcat_annotation: Optional[Dict]
+    medcat_annotation: List[Optional[Dict]]
     cui_locations: Optional[Dict]
     tui_locations: Optional[Dict]
 
@@ -198,9 +198,9 @@ class MedCAT:
         """
 
         Args:
-            data: Text data to annotate
-            batch_size:
-            min_text_length:
+            data: Text data to annotate.
+            batch_size: The length of a single batch of several texts to process.
+            min_text_length: Minimal text length to process.
             only_cui: Returned entities will only have a CUI
             n_jobs: Number of parallel processes
 
@@ -213,7 +213,7 @@ class MedCAT:
 
         cui_location: Dict = {}  # CUI to a list of documents where it appears
         tui_location: Dict = {}  # TUI to a list of documents where it appears
-        results = None
+        all_results = []
 
         batch: List = []
         with Progress(
@@ -227,6 +227,7 @@ class MedCAT:
 
                 if len(batch) > batch_size or text_id == len(data) - 1:
                     results = self.cat.multiprocessing(batch, nproc=n_jobs, only_cui=only_cui)
+                    all_results.append(results)
 
                     for result_id, result in results.items():
                         row_id = result_id
@@ -250,10 +251,24 @@ class MedCAT:
                     batch = []
                 progress.advance(task)
 
-        return AnnotationResult(results, cui_location, tui_location)
+        # TODO flatten the all_results list by actually just removing it @Philipp
+        # we have a list of batches of dictionary but actually only want a dictionary
+        # use https://stackoverflow.com/questions/38987/how-do-i-merge-two-dictionaries-in-a-single-expression-taking-union-of-dictiona
+        return AnnotationResult(all_results, cui_location, tui_location)
 
-    def calculate_disease_proportions(self, cui_locations: Dict, data: pd.Series, subject_id_col="subject_id"):
-        # We are going to count the number of subjects (patients) for each CUI
+    def calculate_disease_proportions(self, cui_locations: Dict, data: pd.Series, subject_id_col="subject_id") -> pd.DataFrame:
+        """Calculates the relative proportion of found diseases as percentages.
+
+        Args:
+            cui_locations: A dictionary containing the found CUIs and their location.
+            data: The Pandas Series used to obtain the CUIs.
+            subject_id_col: The column header in the data containing the patient/subject IDs.
+
+        Returns:
+            A Pandas Dataframe containing the disease percentages.
+
+            cui 	nsubjects 	tui 	name 	perc_subjects
+        """
         cui_subjects: Dict[int, List] = {}
         cui_subjects_unique: Dict[str, Set] = {}
         for cui in cui_locations:
@@ -298,8 +313,7 @@ class MedCAT:
 
     def plot_top_diseases(self, df_cui_nsubjects: pd.DataFrame, top_diseases: int = 30):
         # TODO this should ideally be drawn with a Scanpy plot or something
-        # Needs more options such as saving etc
-        sns.reset_defaults()
+        # TODO Needs more options such as saving etc
         sns.set(rc={"figure.figsize": (5, 12)}, style="whitegrid", palette="pastel")
         f, ax = plt.subplots()
         _data = df_cui_nsubjects.iloc[0:top_diseases]

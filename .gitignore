@@ -138,6 +138,6 @@ dmypy.json
 *.orig
 
 # Notebook files
-notebooks/data
+notebooks/medcat_data
 notebooks/*.dat
 notebooks/*.csv
