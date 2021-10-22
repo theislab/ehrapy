@@ -9,7 +9,7 @@ from anndata import AnnData
 from ehrapy.api.tools.nlp._translators import DeepL
 
 CURRENT_DIR = Path(__file__).parent
-_TEST_PATH = f"{CURRENT_DIR}/test_nlp"
+_TEST_PATH = f"{CURRENT_DIR}/test_data_nlp"
 
 deepl_token: str = os.environ.get("DEEPL_TOKEN")
 

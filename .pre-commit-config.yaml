@@ -11,6 +11,7 @@ repos:
             name: Check for added large files
             entry: check-added-large-files
             language: system
+            args: ["--maxkb=5000"]
           - id: check-toml
             name: Check Toml
             entry: check-toml
@@ -34,6 +35,13 @@ repos:
             language: system
             types: [python]
             require_serial: true
+            exclude: |
+                (?x)^(
+                    .nox|
+                    .mypy_cache|
+                    .pytest_cache|
+                    dist
+                )$
           - id: trailing-whitespace
             name: Trim Trailing Whitespace
             entry: trailing-whitespace-fixer
