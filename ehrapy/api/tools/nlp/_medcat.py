@@ -30,7 +30,7 @@ for model in spacy_models_modules:
 
 @dataclass
 class AnnotationResult:
-    medcat_annotation: List[Optional[Dict]]
+    medcat_annotation: List[Optional[List]]
     cui_locations: Optional[Dict]
     tui_locations: Optional[Dict]
 
@@ -190,7 +190,7 @@ class MedCAT:
     def annotate(
         self,
         data: Union[np.ndarray, pd.Series],
-        batch_size: int = 100,
+        batch_size: int = 1,
         min_text_length: int = 1,
         only_cui: bool = False,
         n_jobs: int = settings.n_jobs,
@@ -251,10 +251,19 @@ class MedCAT:
                     batch = []
                 progress.advance(task)
 
-        # TODO flatten the all_results list by actually just removing it @Philipp
-        # we have a list of batches of dictionary but actually only want a dictionary
-        # use https://stackoverflow.com/questions/38987/how-do-i-merge-two-dictionaries-in-a-single-expression-taking-union-of-dictiona
-        return AnnotationResult(all_results, cui_location, tui_location)
+        # TODO: can we speed this up somehow @Lukas any ideas?
+        total_len = 0
+        for batch in all_results:
+            total_len += len(batch)
+
+        diagnoses = [[] for _ in range(total_len)]
+        for batch in all_results:
+            for line_idx in batch:
+                concepts = batch[line_idx]["entities"]
+                for concept in concepts.values():
+                    diagnoses[int(line_idx)].append(self.concept_db.cui2preferred_name[concept])
+
+        return AnnotationResult(diagnoses, cui_location, tui_location)
 
     def calculate_disease_proportions(
         self, cui_locations: Dict, data: pd.Series, subject_id_col="subject_id"
@@ -275,7 +284,8 @@ class MedCAT:
         cui_subjects_unique: Dict[str, Set] = {}
         for cui in cui_locations:
             for location in cui_locations[cui]:
-                subject_id = data.iat[location, list(data.columns).index(subject_id_col)]
+                # TODO: int casting is required as AnnData requires indices to be str (maybe we can change this) so we dont need type casting here
+                subject_id = data.iat[int(location), list(data.columns).index(subject_id_col)]
                 if cui in cui_subjects:
                     cui_subjects[cui].append(subject_id)
                     cui_subjects_unique[cui].add(subject_id)
