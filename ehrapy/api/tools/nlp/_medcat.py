@@ -30,7 +30,8 @@ for model in spacy_models_modules:
 
 @dataclass
 class AnnotationResult:
-    medcat_annotation: List[Optional[List]]
+    all_medcat_annotation_results: Optional[List]
+    entities_pretty: List[Set]
     cui_locations: Optional[Dict]
     tui_locations: Optional[Dict]
 
@@ -190,7 +191,7 @@ class MedCAT:
     def annotate(
         self,
         data: Union[np.ndarray, pd.Series],
-        batch_size: int = 1,
+        batch_size: int = 67,
         min_text_length: int = 1,
         only_cui: bool = False,
         n_jobs: int = settings.n_jobs,
@@ -214,8 +215,8 @@ class MedCAT:
         cui_location: Dict = {}  # CUI to a list of documents where it appears
         tui_location: Dict = {}  # TUI to a list of documents where it appears
         all_results = []
-
         batch: List = []
+
         with Progress(
             "[progress.description]{task.description}", BarColumn(), "[progress.percentage]{task.percentage:>3.0f}%"
         ) as progress:
@@ -229,41 +230,66 @@ class MedCAT:
                     results = self.cat.multiprocessing(batch, nproc=n_jobs, only_cui=only_cui)
                     all_results.append(results)
 
-                    for result_id, result in results.items():
-                        row_id = result_id
-                        cui_list = set(result["entities"].values())  # Convert to set to get unique CUIs
+                    if only_cui:
+                        for result_id, result in results.items():
+                            row_id = result_id
+                            cui_set = set(result["entities"].values())  # Convert to set to get unique CUIs
 
-                        for cui in cui_list:
-                            if cui in cui_location:
-                                cui_location[cui].append(row_id)
-                            else:
-                                cui_location[cui] = [row_id]
+                            for cui in cui_set:
+                                if cui in cui_location:
+                                    cui_location[cui].append(row_id)
+                                else:
+                                    cui_location[cui] = [row_id]
 
-                            # This is not necessary as it can be done later, we have the cdb.cui2type_id map.
-                            tuis = self.concept_db.cui2type_ids[cui]
-                            for tui in tuis:  # this step is necessary as one cui may map to several tuis
-                                if tui in tui_location and row_id not in tui_location[tui]:
-                                    tui_location[tui].append(row_id)
-                                elif tui not in tui_location:
-                                    tui_location[tui] = [row_id]
+                                # This is not necessary as it can be done later, we have the cdb.cui2type_id map.
+                                tuis = self.concept_db.cui2type_ids[cui]
+                                for tui in tuis:  # this step is necessary as one cui may map to several tuis
+                                    if tui in tui_location and row_id not in tui_location[tui]:
+                                        tui_location[tui].append(row_id)
+                                    elif tui not in tui_location:
+                                        tui_location[tui] = [row_id]
+                    else:
+                        for result_id, result in results.items():
+                            cui_set = set()
+                            row_id = result_id
+
+                            for _, cui_entity in result["entities"].items():
+                                cui_set.add(cui_entity["cui"])
+
+                            for cui in cui_set:
+                                if cui in cui_location:
+                                    cui_location[cui].append(row_id)
+                                else:
+                                    cui_location[cui] = [row_id]
+
+                                # This is not necessary as it can be done later, we have the cdb.cui2type_id map.
+                                tuis = self.concept_db.cui2type_ids[cui]
+                                for tui in tuis:  # this step is necessary as one cui may map to several tuis
+                                    if tui in tui_location and row_id not in tui_location[tui]:
+                                        tui_location[tui].append(row_id)
+                                    elif tui not in tui_location:
+                                        tui_location[tui] = [row_id]
 
                     # Reset the batch
                     batch = []
                 progress.advance(task)
 
-        # TODO: can we speed this up somehow @Lukas any ideas?
-        total_len = 0
-        for batch in all_results:
-            total_len += len(batch)
+            # TODO: rewrite for more performance
+            total_len = 0
+            for batch in all_results:
+                total_len += len(batch)
 
-        diagnoses = [[] for _ in range(total_len)]
-        for batch in all_results:
-            for line_idx in batch:
-                concepts = batch[line_idx]["entities"]
-                for concept in concepts.values():
-                    diagnoses[int(line_idx)].append(self.concept_db.cui2preferred_name[concept])
+            diagnoses: List[Set] = [set() for _ in range(total_len)]
+            for batch in all_results:
+                for line_idx in batch:
+                    concepts = batch[line_idx]["entities"]
+                    for concept in concepts.values():
+                        if only_cui:
+                            diagnoses[int(line_idx)].add(self.concept_db.cui2preferred_name[concept])
+                        else:
+                            diagnoses[int(line_idx)].add(concept["pretty_name"])
 
-        return AnnotationResult(diagnoses, cui_location, tui_location)
+        return AnnotationResult(all_results, diagnoses, cui_location, tui_location)
 
     def calculate_disease_proportions(
         self, cui_locations: Dict, data: pd.Series, subject_id_col="subject_id"
