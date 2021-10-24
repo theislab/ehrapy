@@ -48,8 +48,16 @@ class DataReader:
             output_file_name = backup_url.split("/")[-1]
             is_zip: bool = output_file_name.endswith(".zip")  # TODO can we generalize this to tar files as well?
             Dataloader.download(backup_url, output_file_name=str(filename), output_path=str(Path.cwd()), is_zip=is_zip)
-            # TODO: temporary fix for demo
-            file = Path.cwd() / "mimic-iii-clinical-database-demo-1.4"
+            if is_zip:
+                raw_output_dir = output_file_name[:-4]
+                poss_file = Path.cwd() / raw_output_dir
+
+                if poss_file.is_dir():
+                    file = poss_file
+            else:
+                poss_file = Path.cwd() / output_file_name
+                if poss_file.is_dir():
+                    file = poss_file
 
         raw_object = DataReader._read(
             filename=file,
