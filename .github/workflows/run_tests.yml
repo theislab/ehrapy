@@ -47,11 +47,6 @@ jobs:
                           os: ubuntu-latest,
                           session: "typeguard",
                       }
-                    - {
-                          python-version: 3.8,
-                          os: ubuntu-latest,
-                          session: "xdoctest",
-                      }
 
         env:
             NOXSESSION: ${{ matrix.session }}

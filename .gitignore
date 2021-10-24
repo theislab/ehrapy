@@ -136,3 +136,8 @@ dmypy.json
 
 # Coala
 *.orig
+
+# Notebook files
+notebooks/medcat_data
+notebooks/*.dat
+notebooks/*.csv

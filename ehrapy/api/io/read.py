@@ -80,7 +80,7 @@ class DataReader:
                 "[blue]https://github.com/theislab/ehrapy!"
             )
 
-        # If the filename is a directory, assume it is a mimicIII dataset
+        # If the filename is a directory, assume it is a dataset with multiple files
         if filename.is_dir():
             return DataReader._read_multiple_csv(filename, delimiter, index_column, columns_obs_only, return_mudata)
 
@@ -135,7 +135,7 @@ class DataReader:
         """Read a dataset containing multiple files (in this case .csv or .tsv files).
 
         Args:
-            filename: File path to the directory containing mimicIII dataset.
+            filename: File path to the directory containing multiple csvs dataset.
             delimiter: Delimiter separating the data within the file.
             index_column: Indices or column names of the index columns (obs)
             columns_obs_only: List of columns per file (thus AnnData object) which should only be stored in .obs, but not in X. Useful for free text annotations.
@@ -429,7 +429,6 @@ class DataReader:
     def _extract_index_and_columns_obs_only(identifier: str, index_columns, columns_obs_only):
         """
         Extract the index column (if any) and the columns, for obs only (if any) from the given user input.
-        This function is only called when dealing with mimicIII datasets; when parsing multiple files.
 
         For each file, `index_columns` and `columns_obs_only` can provide three cases:
             1.) The filename (thus the identifier) is not present as a key and no default key is provided or one or both dicts are empty:

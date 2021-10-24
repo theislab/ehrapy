@@ -91,21 +91,12 @@ def write(
 ) -> None:
     """Write :class:`~anndata.AnnData` objects to file.
 
-    Parameters:
-        filename
-            File name to write the file to
-
-        adata
-            Annotated data matrix.
-
-        extension
-            File extension. One of h5, csv, txt
-
-        compression
-            Optional file compression. One of gzip, lzf
-
-        compression_opts
-            See http://docs.h5py.org/en/latest/high/dataset.html.
+    Args:
+        filename: File name or path to write the file to
+        adata: Annotated data matrix.
+        extension: File extension. One of h5, csv, txt
+        compression: Optional file compression. One of gzip, lzf
+        compression_opts: See http://docs.h5py.org/en/latest/high/dataset.html.
 
     Example:
         .. code-block:: python

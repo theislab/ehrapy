@@ -22,8 +22,8 @@ nox.options.sessions = (
     "mypy",
     "tests",
     "typeguard",
-    "xdoctest",
-    #   "docs-build",  Testing via CI since we cannot install external Python scripts into the nox environment
+    # "xdoctest",  Not required because we try to refrain from using executable code in comments
+    #  "docs-build",  Testing via CI since we cannot install external Python scripts into the nox environment
 )
 
 
@@ -82,7 +82,6 @@ def precommit(session: Session) -> None:
     args = session.posargs or ["run", "--all-files"]
     session.install(
         "black",
-        "darglint",
         "flake8",
         "flake8-bandit",
         "flake8-bugbear",
