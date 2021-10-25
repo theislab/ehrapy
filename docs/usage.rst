@@ -43,6 +43,10 @@ Encoding
 
     encode.encode
 
+    encode.type_overview
+
+    encode.undo_encoding
+
 Data
 ~~~~~
 
@@ -52,6 +56,8 @@ Data
     :toctree: data
 
     data.mimic_2
+
+    data.mimic_3
 
 Preprocessing
 ~~~~~~~~~~~~~

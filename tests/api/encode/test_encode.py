@@ -28,17 +28,16 @@ class TestRead:
 
     def test_autodetect_encode(self):
         adata = DataReader.read(filename=f"{_TEST_PATH}/dataset1.csv")
-        encoded_ann_data = Encoder.encode(adata, autodetect=True)
+        encoded_ann_data = Encoder.encode(adata, autodetect=True, encodings={})
         assert list(encoded_ann_data.obs.columns) == ["survival", "clinic_day"]
-        assert (
-            encoded_ann_data.var_names
-            == [
-                "ehrapycat_survival",
-                "ehrapycat_clinic_day",
-                "los_days",
-                "b12_values",
-            ]
-        ).all()
+        assert list(encoded_ann_data.var_names) == [
+            "ehrapycat_survival",
+            "ehrapycat_clinic_day",
+            "patient_id",
+            "los_days",
+            "b12_values",
+        ]
+
         assert encoded_ann_data.uns["current_encodings"] == {
             "survival": "one_hot_encoding",
             "clinic_day": "one_hot_encoding",
@@ -47,8 +46,8 @@ class TestRead:
 
     def test_autodetect_encode_again(self):
         adata = DataReader.read(filename=f"{_TEST_PATH}/dataset1.csv")
-        encoded_ann_data = Encoder.encode(adata, autodetect=True)
-        encoded_ann_data_again = Encoder.encode(encoded_ann_data, autodetect=True)  # noqa: F841
+        encoded_ann_data = Encoder.encode(adata, autodetect=True, encodings={})
+        encoded_ann_data_again = Encoder.encode(encoded_ann_data, autodetect=True, encodings={})  # noqa: F841
         assert encoded_ann_data_again is None
 
     def test_custom_encode(self):
@@ -58,7 +57,7 @@ class TestRead:
             autodetect=False,
             encodings={"label_encoding": ["survival"], "one_hot_encoding": ["clinic_day"]},
         )
-        assert encoded_ann_data.X.shape == (5, 7)
+        assert encoded_ann_data.X.shape == (5, 8)
         assert list(encoded_ann_data.obs.columns) == ["survival", "clinic_day"]
         assert "ehrapycat_survival" in list(encoded_ann_data.var_names)
         assert all(
@@ -86,7 +85,7 @@ class TestRead:
         encoded_ann_data_again = Encoder.encode(
             encoded_ann_data, autodetect=False, encodings={"label_encoding": ["clinic_day"]}
         )
-        assert encoded_ann_data_again.X.shape == (5, 4)
+        assert encoded_ann_data_again.X.shape == (5, 5)
         assert list(encoded_ann_data_again.obs.columns) == ["survival", "clinic_day"]
         assert "ehrapycat_survival" in list(encoded_ann_data_again.var_names)
         assert "ehrapycat_clinic_day" in list(encoded_ann_data_again.var_names)
@@ -115,7 +114,7 @@ class TestRead:
             autodetect=False,
             encodings={"label_encoding": ["survival"], "count_encoding": ["clinic_day"]},
         )
-        assert encoded_ann_data_again.X.shape == (5, 4)
+        assert encoded_ann_data_again.X.shape == (5, 5)
         assert list(encoded_ann_data_again.obs.columns) == ["survival", "clinic_day"]
         assert "ehrapycat_survival" in list(encoded_ann_data_again.var_names)
         assert "ehrapycat_clinic_day" in list(encoded_ann_data_again.var_names)
