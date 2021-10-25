@@ -292,13 +292,13 @@ class MedCAT:
         return AnnotationResult(all_results, diagnoses, cui_location, tui_location)
 
     def calculate_disease_proportions(
-        self, cui_locations: Dict, data: pd.Series, subject_id_col="subject_id"
+        self, adata: pd.Series, cui_locations: Dict, subject_id_col="subject_id"
     ) -> pd.DataFrame:
         """Calculates the relative proportion of found diseases as percentages.
 
         Args:
+            adata: AnnData object. obs of this object must contain the results.
             cui_locations: A dictionary containing the found CUIs and their location.
-            data: The Pandas Series used to obtain the CUIs.
             subject_id_col: The column header in the data containing the patient/subject IDs.
 
         Returns:
@@ -311,7 +311,7 @@ class MedCAT:
         for cui in cui_locations:
             for location in cui_locations[cui]:
                 # TODO: int casting is required as AnnData requires indices to be str (maybe we can change this) so we dont need type casting here
-                subject_id = data.iat[int(location), list(data.columns).index(subject_id_col)]
+                subject_id = adata.obs.iat[int(location), list(adata.obs.columns).index(subject_id_col)]
                 if cui in cui_subjects:
                     cui_subjects[cui].append(subject_id)
                     cui_subjects_unique[cui].add(subject_id)
@@ -342,7 +342,7 @@ class MedCAT:
             df_cui_nsubjects.iat[i, cols.index("name")] = name
 
         # Add the percentage column
-        total_subjects = len(data["subject_id"].unique())
+        total_subjects = len(adata.obs["subject_id"].unique())
         df_cui_nsubjects["perc_subjects"] = (df_cui_nsubjects["nsubjects"] / total_subjects) * 100
 
         df_cui_nsubjects.reset_index(drop=True, inplace=True)
