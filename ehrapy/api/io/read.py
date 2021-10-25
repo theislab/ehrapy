@@ -1,12 +1,12 @@
-import warnings
 from pathlib import Path
-from typing import Generator, Iterable, Iterator, List, NamedTuple, Optional, Sequence, Union
+from typing import Dict, Generator, Iterable, Iterator, List, NamedTuple, Optional, Sequence, Union
 
 import numpy as np
 import pandas as pd
 from _collections import OrderedDict
 from anndata import AnnData
 from anndata import read as read_h5ad
+from mudata import MuData
 from rich import print
 
 from ehrapy.api import settings
@@ -36,10 +36,11 @@ class DataReader:
         delimiter: Optional[str] = None,
         index_column: Union[str, Optional[int]] = None,
         columns_obs_only: Optional[List[Union[str]]] = None,
+        return_mudata: bool = False,
         cache: bool = False,
         backup_url: Optional[str] = None,
         suppress_warnings: bool = False,
-    ) -> AnnData:
+    ) -> Union[AnnData, Dict[str, AnnData], MuData]:
         DataReader.suppress_warnings = suppress_warnings
         file = Path(filename)
         if not file.exists():
@@ -47,16 +48,27 @@ class DataReader:
             output_file_name = backup_url.split("/")[-1]
             is_zip: bool = output_file_name.endswith(".zip")  # TODO can we generalize this to tar files as well?
             Dataloader.download(backup_url, output_file_name=str(filename), output_path=str(Path.cwd()), is_zip=is_zip)
+            if is_zip:
+                raw_output_dir = output_file_name[:-4]
+                poss_file = Path.cwd() / raw_output_dir
 
-        raw_anndata = DataReader._read(
+                if poss_file.is_dir():
+                    file = poss_file
+            else:
+                poss_file = Path.cwd() / output_file_name
+                if poss_file.is_dir():
+                    file = poss_file
+
+        raw_object = DataReader._read(
             filename=file,
             extension=extension,
             delimiter=delimiter,
             index_column=index_column,
             columns_obs_only=columns_obs_only,
+            return_mudata=return_mudata,
             cache=cache,
         )
-        return raw_anndata
+        return raw_object
 
     @staticmethod
     def _read(
@@ -65,10 +77,22 @@ class DataReader:
         delimiter: Optional[str] = None,
         index_column: Union[str, Optional[int]] = None,
         columns_obs_only: Optional[List[Union[str]]] = None,
+        return_mudata: bool = False,
         cache: bool = False,
         backup_url: Optional[str] = None,
-    ) -> Union[AnnData, np.ndarray]:
+    ) -> Union[MuData, Dict[str, AnnData], AnnData]:
         """Internal interface of the read method."""
+        # check, whether the datafile(s) is/are present or not
+        is_present = DataReader._check_datafiles_present_and_download(filename, backup_url=backup_url)
+        if not is_present and not filename.is_dir() and not filename.is_file():
+            print(
+                "[bold red]Attempted download of missing file(s) failed. Please file an issue at our repository "
+                "[blue]https://github.com/theislab/ehrapy!"
+            )
+        # If the filename is a directory, assume it is a dataset with multiple files
+        if filename.is_dir():
+            return DataReader._read_multiple_csv(filename, delimiter, index_column, columns_obs_only, return_mudata)
+
         if extension is not None and extension not in supported_extensions:
             raise ValueError("Please provide one of the available extensions.\n" f"{supported_extensions}")
         else:
@@ -77,7 +101,6 @@ class DataReader:
         if extension in {"h5", "h5ad"}:
             return read_h5ad(filename)
 
-        is_present = DataReader._check_datafile_present_and_download(filename, backup_url=backup_url)
         if not is_present:
             raise FileNotFoundError(f"Did not find file {filename}.")
         path_cache = settings.cachedir / _slugify(filename).replace("." + extension, ".h5ad")  # type: Path
@@ -102,13 +125,63 @@ class DataReader:
             if not path_cache.parent.is_dir():
                 path_cache.parent.mkdir(parents=True)
             # write for faster reading when calling the next time
-            cached_adata = Encoder.encode(adata=raw_anndata, autodetect=True)
+            cached_adata = Encoder.encode(data=raw_anndata, autodetect=True)
             cached_adata.write(path_cache)
             cached_adata.X = cached_adata.X.astype("object")
             cached_adata = DataReader._decode_cached_adata(cached_adata, columns_obs_only)
             return cached_adata
 
         return raw_anndata
+
+    @staticmethod
+    def _read_multiple_csv(  # noqa: N802
+        filename: Path,
+        delimiter: Optional[str] = None,
+        index_column: Union[Union[str, Optional[int]], Dict[str, Union[str, Optional[int]]]] = None,
+        columns_obs_only: Union[Optional[List[Union[str]]], Dict[str, Optional[List[Union[str]]]]] = None,
+        return_mudata_object: bool = False,
+    ) -> Union[MuData, Dict[str, AnnData]]:
+        """Read a dataset containing multiple files (in this case .csv or .tsv files).
+
+        Args:
+            filename: File path to the directory containing multiple csvs dataset.
+            delimiter: Delimiter separating the data within the file.
+            index_column: Indices or column names of the index columns (obs)
+            columns_obs_only: List of columns per file (thus AnnData object) which should only be stored in .obs, but not in X. Useful for free text annotations.
+            return_mudata_object: If set to True, return a :class:`~mudata.MuData` object, else a dict of :class:`~anndata.AnnData` objects
+
+        Returns:
+            An :class:`~mudata.MuData` object or a dict mapping the filename (object name) to the corresponding :class:`~anndata.AnnData` object.
+        """
+        if not return_mudata_object:
+            anndata_dict = {}
+        else:
+            mudata = None
+        for file in filename.iterdir():
+            if file.is_file() and file.suffix in [".csv", ".tsv"]:
+                # slice off the file suffix as this is not needed for identifier
+                adata_identifier = file.name[:-4]
+                index_col, col_obs_only = DataReader._extract_index_and_columns_obs_only(
+                    adata_identifier, index_column, columns_obs_only
+                )
+                adata = DataReader.read_csv(file, delimiter, index_col, col_obs_only)
+                # obs indices have to be unique otherwise updating and working with the MuData object will fail
+                if index_col:
+                    adata.obs_names_make_unique()
+
+                if return_mudata_object:
+                    if not mudata:
+                        mudata = MuData({adata_identifier: adata})
+                    else:
+                        mudata.mod[adata_identifier] = adata
+                else:
+                    anndata_dict[adata_identifier] = adata
+        if return_mudata_object:
+            # create the MuData object with the AnnData objects as modalities
+            mudata.update()
+            return mudata
+        else:
+            return anndata_dict
 
     @staticmethod
     def read_csv(
@@ -129,9 +202,36 @@ class DataReader:
             An :class:`~anndata.AnnData` object
         """
         # read pandas dataframe
-        initial_df = pd.read_csv(filename, delimiter=delimiter)
-        # return the raw AnnData object
-        return DataReader._df_to_anndata(initial_df, index_column, columns_obs_only)
+        try:
+            if index_column and columns_obs_only and index_column in columns_obs_only:
+                print(
+                    f"[bold yellow]Index column [blue]{index_column} [yellow]is also used as a column "
+                    f"for obs only. Using default indices instead and moving [blue]{index_column} [yellow]to column_obs_only."
+                )
+                index_column = None
+            initial_df = pd.read_csv(filename, delimiter=delimiter, index_col=index_column)
+        # possible cause: index column is misspelled (or does not exist at all in this file)
+        except ValueError:
+            raise IndexNotFoundError(
+                f"Could not create AnnData object while reading file {filename}. Does index_column named {index_column} "
+                f"exist in {filename}?"
+            ) from None
+
+        # get all object dtype columns
+        object_type_columns = [col_name for col_name in initial_df.columns if initial_df[col_name].dtype == "object"]
+        # if columns_obs_only is None, initialize it as datetime columns need to be included here
+        if not columns_obs_only:
+            columns_obs_only = []
+
+        for col in object_type_columns:
+            try:
+                pd.to_datetime(initial_df[col])
+                columns_obs_only.append(col)
+            except (ValueError, TypeError):
+                pass
+
+        # return the initial AnnData object
+        return DataReader._df_to_anndata(initial_df, columns_obs_only)
 
     @staticmethod
     def read_text(
@@ -201,7 +301,6 @@ class DataReader:
                         DataReader._cast_values_to_numeric(line_list)
                         data.append(np.array(line_list, dtype=dtype))
                 break
-        # TODO Fix the unused variables
         if not column_names:
             # try reading col_names from the last comment line
             if len(comments) > 0:
@@ -263,12 +362,8 @@ class DataReader:
         )
 
     @staticmethod
-    def _df_to_anndata(
-        df: pd.DataFrame, index_column: Union[str, Optional[int]], columns_obs_only: Optional[List[Union[str]]]
-    ) -> AnnData:
+    def _df_to_anndata(df: pd.DataFrame, columns_obs_only: Optional[List[Union[str]]]) -> AnnData:
         """Create an AnnData object from the initial dataframe"""
-        # set index given or default
-        df = DataReader._set_index(df, index_column)
         # move columns from the input dataframe to later obs
         dataframes = DataReader._move_columns_to_obs(df, columns_obs_only)
         X = dataframes.df.to_numpy(copy=True)
@@ -317,22 +412,22 @@ class DataReader:
         return adata
 
     @staticmethod
-    def _check_datafile_present_and_download(path: Union[str, Path], backup_url=None) -> bool:
-        """Check whether the file is present, otherwise download.
+    def _check_datafiles_present_and_download(path: Union[str, Path], backup_url=None) -> bool:
+        """Check whether the file or directory is present, otherwise download.
 
         Args:
-            path: Path to the file to check
+            path: Path to the file or directory to check
             backup_url: Backup URL if the file cannot be found and has to be downloaded
 
         Returns:
-            True if the file was present. False if not.
+            True if the file or directory was present. False if not.
         """
         path = Path(path)
-        if path.is_file():
+        if path.is_file() or path.is_dir():
             return True
         if backup_url is None:
             return False
-        if not path.parent.is_dir():
+        if not path.is_dir() and not path.parent.is_dir():
             path.parent.mkdir(parents=True)
 
         Dataloader.download(backup_url, output_file_name=str(path))
@@ -340,33 +435,88 @@ class DataReader:
         return True
 
     @staticmethod
-    def _set_index(df: pd.DataFrame, index_column: Union[str, Optional[int]]) -> pd.DataFrame:
-        """Try to set the index, if any given by the index_column parameter.
+    def _extract_index_and_columns_obs_only(identifier: str, index_columns, columns_obs_only):
+        """
+        Extract the index column (if any) and the columns, for obs only (if any) from the given user input.
+
+        For each file, `index_columns` and `columns_obs_only` can provide three cases:
+            1.) The filename (thus the identifier) is not present as a key and no default key is provided or one or both dicts are empty:
+                --> No index column will be set and/or no columns are obs only (based on user input)
+
+                .. code-block:: python
+                       # some setup code here
+                       ...
+                       # filename
+                       identifier1 = "MyFile"
+                       identifier2 = "MyOtherFile"
+                       # no default key and identifier1 is not in the index or columns_obs_only keys
+                       # -> no index column will be set and no columns will be obs only (except datetime, if any)
+                       index_columns = {"MyOtherFile":["MyOtherColumn1"]}
+                       columns_obs_only = {"MyOtherFile":["MyOtherColumn2"]}
+
+            2.) The filename (thus the identifier) is not present as a key, but default key is provided
+                --> The index column will be set and/or columns will be obs only according to the default key
+
+                .. code-block:: python
+                      # some setup code here
+                       ...
+                       # filename
+                       identifier1 = "MyFile"
+                       identifier2 = "MyOtherFile"
+                       # identifier1 is not in the index or columns_obs_only keys, but default key is set for both
+                       # -> index column will be set using MyColumn1 and column obs only will include MyColumn2
+                       index_columns = {"MyOtherFile":["MyOtherColumn1"], "default": "MyColumn1"}
+                       columns_obs_only = {"MyOtherFile":["MyOtherColumn2"], "default": "MyColumn2"}
+
+            3.) The filename is present as a key
+                --> The index column will be set and/or columns are obs only according to its value
+
+                .. code-block:: python
+                       # some setup code here
+                       ...
+                       # filename
+                       identifier1 = "MyFile"
+                       identifier2 = "MyOtherFile"
+                       # identifier1 is in the index and columns_obs_only keys
+                       # -> index column will be MyColumn1 and columns_obs_only will include MyColumn2 and MyColumn3
+                       index_columns = {"MyFile":["MyColumn1"]}
+                       columns_obs_only = {"MyFile":["MyColumn2", "MyColumn3"]}
 
         Args:
-            df: Pandas DataFrame to set the index for
-            index_column: The name of the index column
+            identifier: The name of the
+            index_columns: Index columns
+            columns_obs_only: Columns for obs only
 
         Returns:
-            An :class:`~pd.DataFrame` object
+            Index column (if any) and columns obs only (if any) for this specific AnnData object
         """
-        column_names = list(df.columns)
-        if isinstance(index_column, str):
-            df = df.set_index(index_column)
-        elif isinstance(index_column, int):
-            df = df.set_index(column_names[index_column])
-        else:
-            if "patient_id" == column_names[0]:
-                df = df.set_index("patient_id")
-            else:
-                if not DataReader.suppress_warnings:
-                    warnings.warn(
-                        "Did not find patient_id column at column 0 and no index column was passed. "
-                        "Using default, numerical indices instead!",
-                        IndexColumnWarning,
-                    )
+        _index_column = None
+        _columns_obs_only = None
+        # get index column (if any)
+        if index_columns and identifier in index_columns.keys():
+            _index_column = index_columns[identifier]
+        elif index_columns and "default" in index_columns.keys():
+            _index_column = index_columns["default"]
 
-        return df
+        # get columns obs only (if any)
+        if columns_obs_only and identifier in columns_obs_only.keys():
+            _columns_obs_only = columns_obs_only[identifier]
+        elif columns_obs_only and "default" in columns_obs_only.keys():
+            _columns_obs_only = columns_obs_only["default"]
+
+        # if there is only one obs only column, it might have been passed as single string
+        if isinstance(_columns_obs_only, str):
+            _columns_obs_only = [_columns_obs_only]
+
+        # if index column is also found in column_obs_only, use default indices instead and only move it to obs only, but warn the user
+        if _index_column and _index_column in _columns_obs_only:
+            print(
+                f"[bold yellow]Index column [blue]{_index_column} [yellow]for file [blue]{identifier} [yellow]is also used as a column "
+                f"for obs only. Using default indices instead and moving [blue]{_index_column} [yellow]to column_obs_only."
+            )
+            _index_column = None
+
+        return _index_column, _columns_obs_only
 
     @staticmethod
     def _move_columns_to_obs(df: pd.DataFrame, columns_obs_only: Optional[List[str]]) -> BaseDataframes:
@@ -436,7 +586,7 @@ class DataReader:
         return first_type if all((type(el) is first_type) for el in iseq) else False
 
 
-class IndexColumnWarning(UserWarning):
+class IndexNotFoundError(Exception):
     pass
 
 
