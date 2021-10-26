@@ -29,12 +29,12 @@ class Datasets:
         return adata
 
     @staticmethod
-    def mimic_3_demo(encode: bool = False, return_mudata: bool = False) -> Union[MuData, List[AnnData]]:
+    def mimic_3_demo(encode: bool = False, mudata: bool = False) -> Union[MuData, List[AnnData]]:
         """Loads the MIMIC-III demo dataset
 
         Args:
             encode: Whether to return an already encoded object
-            return_mudata: Whether to return a MuData object. Returns a Dictionary of file names to AnnData objects if False
+            mudata: Whether to return a MuData object. Returns a Dictionary of file names to AnnData objects if False
 
         Returns:
             :class:`~mudata.MuData` object of the MIMIC-III demo Dataset
@@ -42,10 +42,10 @@ class Datasets:
         mdata = DataReader.read(
             filename="ehrapy_mimicIII",
             backup_url="https://physionet.org/static/published-projects/mimiciii-demo/mimic-iii-clinical-database-demo-1.4.zip",
-            return_mudata=return_mudata,
+            return_mudata=mudata,
         )
         if encode:
-            if not return_mudata:
+            if not mudata:
                 raise ValueError(
                     "Currently we only support the encoding of a single AnnData object or a single MuData object."
                 )
