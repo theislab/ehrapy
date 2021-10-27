@@ -1,5 +1,7 @@
 from typing import Dict, List, Optional, Union
 
+import numpy as np
+import pandas as pd
 from anndata import AnnData
 from mudata import MuData
 from rich import print
@@ -103,32 +105,34 @@ def _adata_type_overview(adata: AnnData, sort: bool = False, sort_reversed: bool
         f"[b green]Variable names for AnnData object with {len(adata.var_names)} vars and {len(adata.obs_names)} obs",
         guide_style="underline2 bright_blue",
     )
-    if list(adata.obs.columns):
-        branch = tree.add("Obs", style="b green")
-        column_list = sorted(adata.obs.columns, reverse=sort_reversed) if sort else list(adata.obs.columns)
-        for categorical in column_list:
-            if "current_encodings" in adata.uns.keys():
-                if categorical in adata.uns["current_encodings"].keys():
-                    branch.add(
-                        Text(
-                            f"{categorical} 🔐; {len(adata.obs[categorical].unique())} different categories;"
-                            f" currently {encoding_mapping[adata.uns['current_encodings'][categorical]]} encoded"
-                        ),
-                        style="blue",
-                    )
-                else:
-                    branch.add(Text(f"{categorical}; moved from X to obs"), style="blue")
-            else:
-                branch.add(Text(f"{categorical}; moved from X to obs"), style="blue")
+    is_encoded = False
+    if "current_encodings" in adata.uns.keys():
+        is_encoded = True
+        original_values = adata.uns["original_values_categoricals"]
+        branch = tree.add("🔐 Encoded variables", style="b green")
+        encoded_list = sorted(original_values.keys(), reverse=sort_reversed) if sort else list(original_values.keys())
+        for categorical in encoded_list:
+            unique_categoricals = pd.unique(original_values[categorical].flatten())
+            categorical_type = pd.api.types.infer_dtype(unique_categoricals)
+            is_nan = pd.DataFrame(unique_categoricals).isnull().values.any()
+            branch.add(
+                f"[blue]{categorical} -> {len(unique_categoricals) -1 if is_nan else len(unique_categoricals)} categories;"
+                f" [green]{encoding_mapping[adata.uns['current_encodings'][categorical]]} [blue]encoded; [green]original data type: [blue]{categorical_type}"
+            )
 
     branch_num = tree.add(Text("🔓 Unencoded variables"), style="b green")
 
     var_names = sorted(list(adata.var_names.values), reverse=sort_reversed) if sort else list(adata.var_names.values)
+
     for other_vars in var_names:
-        idx = 0
+        idx = list(adata.var_names.values).index(other_vars)
+        if is_encoded:
+            data_type = "numerical"
+        else:
+            unique_categoricals = pd.unique(adata.X[:, idx : idx + 1].flatten())
+            data_type = pd.api.types.infer_dtype(unique_categoricals)
         if not other_vars.startswith("ehrapycat"):
-            branch_num.add(f"{other_vars}", style="blue")
-        idx += 1
+            branch_num.add(f"[blue]{other_vars} -> [green]data type: [blue]{data_type}")
 
     if sort:
         print(
