@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Literal, Optional, Set, Tuple, Union
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from anndata import AnnData
 from matplotlib import pyplot as plt
 from medcat.cat import CAT
 from medcat.cdb import CDB
@@ -292,7 +293,7 @@ class MedCAT:
         return AnnotationResult(all_results, diagnoses, cui_location, tui_location)
 
     def calculate_disease_proportions(
-        self, adata: pd.Series, cui_locations: Dict, subject_id_col="subject_id"
+        self, adata: AnnData, cui_locations: Dict, subject_id_col="subject_id"
     ) -> pd.DataFrame:
         """Calculates the relative proportion of found diseases as percentages.
 
@@ -311,6 +312,7 @@ class MedCAT:
         for cui in cui_locations:
             for location in cui_locations[cui]:
                 # TODO: int casting is required as AnnData requires indices to be str (maybe we can change this) so we dont need type casting here
+                # TODO maybe replace adata.obs.columns with adata.obs_names
                 subject_id = adata.obs.iat[int(location), list(adata.obs.columns).index(subject_id_col)]
                 if cui in cui_subjects:
                     cui_subjects[cui].append(subject_id)
@@ -342,7 +344,7 @@ class MedCAT:
             df_cui_nsubjects.iat[i, cols.index("name")] = name
 
         # Add the percentage column
-        total_subjects = len(adata.obs["subject_id"].unique())
+        total_subjects = len(adata.obs[subject_id_col].unique())
         df_cui_nsubjects["perc_subjects"] = (df_cui_nsubjects["nsubjects"] / total_subjects) * 100
 
         df_cui_nsubjects.reset_index(drop=True, inplace=True)

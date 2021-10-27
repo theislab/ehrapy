@@ -20,12 +20,12 @@ def mimic_2(encode: bool = False):
     return Datasets.mimic_2(encode=encode)
 
 
-def mimic_3_demo(encode: bool = False, return_mudata: bool = False):
+def mimic_3_demo(encode: bool = False, mudata: bool = False):
     """Downloads and returns a prepared MuData object of the clinical data from the MIMIC-III database (https://physionet.org/content/mimic2-iaccd/1.0/)
 
     Args:
         encode: Whether to return an already encoded MuData object
-        return_mudata: Whether to return a MuData object. Returns a Dictionary of file names to AnnData objects if False
+        mudata: Whether to return a MuData object. Returns a Dictionary of file names to AnnData objects if False
 
     Returns:
         An :class:`~mudata.MuData` object with the (optionally encoded) values in X
@@ -36,4 +36,4 @@ def mimic_3_demo(encode: bool = False, return_mudata: bool = False):
                 import ehrapy.api as ep
                 mudata = eh.data.mimic_3_demo(encode=True, return_mudata=True)
     """
-    return Datasets.mimic_3_demo(encode=encode, return_mudata=return_mudata)
+    return Datasets.mimic_3_demo(encode=encode, mudata=mudata)
