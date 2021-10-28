@@ -1,6 +1,6 @@
-import scanpy as sc
+from ehrapy.api._settings import EhrapyConfig, ehrapy_settings
 
-settings = sc.settings
+settings: EhrapyConfig = ehrapy_settings
 
 from ehrapy.api import data as dt
 from ehrapy.api import encode as ec
