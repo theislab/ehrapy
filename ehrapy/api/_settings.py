@@ -1,7 +1,7 @@
 import inspect
 import logging
 import sys
-from collections import Generator
+from collections.abc import Generator
 from contextlib import contextmanager
 from enum import IntEnum
 from logging import getLevelName
@@ -39,9 +39,7 @@ class Verbosity(IntEnum):
 
     @contextmanager  # type: ignore
     def override(self, verbosity: "Verbosity") -> Generator:
-        """\
-        Temporarily override verbosity
-        """
+        """Temporarily override verbosity."""
         ehrapy_settings.verbosity = verbosity
         yield self
         ehrapy_settings.verbosity = self
@@ -172,8 +170,7 @@ class EhrapyConfig:
     def file_format_data(self) -> str:
         """File format for saving AnnData objects.
 
-        Allowed are 'txt', 'csv' (comma separated value file) for exporting and 'h5ad'
-        (hdf5) for lossless saving.
+        Allowed are 'txt', 'csv' (comma separated value file) for exporting and 'h5ad' (hdf5) for lossless saving.
         """
         return self._file_format_data
 
@@ -189,8 +186,7 @@ class EhrapyConfig:
     def file_format_figs(self) -> str:
         """File format for saving figures.
 
-        For example 'png', 'pdf' or 'svg'. Many other formats work as well (see
-        `matplotlib.pyplot.savefig`).
+        For example 'png', 'pdf' or 'svg'. Many other formats work as well (see `matplotlib.pyplot.savefig`).
         """
         return self._file_format_figs
 
@@ -201,8 +197,7 @@ class EhrapyConfig:
 
     @property
     def autosave(self) -> bool:
-        """\
-        Automatically save figures in :attr:`~scanpy._settings.ScanpyConfig.figdir` (default `False`).
+        """Automatically save figures in :attr:`~scanpy._settings.ScanpyConfig.figdir` (default `False`).
 
         Do not show plots/figures interactively.
         """
@@ -215,8 +210,7 @@ class EhrapyConfig:
 
     @property
     def autoshow(self) -> bool:
-        """\
-        Automatically show figures if `autosave == False` (default `True`).
+        """Automatically show figures if `autosave == False` (default `True`).
 
         There is no need to call the matplotlib pl.show() in this case.
         """
@@ -229,9 +223,7 @@ class EhrapyConfig:
 
     @property
     def writedir(self) -> Path:
-        """\
-        Directory where the function scanpy.write writes to by default.
-        """
+        """Directory where the function scanpy.write writes to by default."""
         return self._writedir
 
     @writedir.setter
@@ -241,9 +233,7 @@ class EhrapyConfig:
 
     @property
     def cachedir(self) -> Path:
-        """\
-        Directory for cache files (default `'./cache/'`).
-        """
+        """Directory for cache files (default `'./cache/'`)."""
         return self._cachedir
 
     @cachedir.setter
@@ -253,9 +243,7 @@ class EhrapyConfig:
 
     @property
     def datasetdir(self) -> Path:
-        """\
-        Directory for example :mod:`~scanpy.datasets` (default `'./data/'`).
-        """
+        """Directory for example :mod:`~scanpy.datasets` (default `'./data/'`)."""
         return self._datasetdir
 
     @datasetdir.setter
@@ -265,9 +253,7 @@ class EhrapyConfig:
 
     @property
     def figdir(self) -> Path:
-        """\
-        Directory for saving figures (default `'./figures/'`).
-        """
+        """Directory for saving figures (default `'./figures/'`)."""
         return self._figdir
 
     @figdir.setter
@@ -277,8 +263,7 @@ class EhrapyConfig:
 
     @property
     def cache_compression(self) -> Optional[str]:
-        """\
-        Compression for `sc.read(..., cache=True)` (default `'lzf'`).
+        """Compression for `sc.read(..., cache=True)` (default `'lzf'`).
 
         May be `'lzf'`, `'gzip'`, or `None`.
         """
@@ -292,8 +277,7 @@ class EhrapyConfig:
 
     @property
     def max_memory(self) -> Union[int, float]:
-        """\
-        Maximal memory usage in Gigabyte.
+        """Maximal memory usage in Gigabyte.
 
         Is currently not well respected....
         """
@@ -306,9 +290,7 @@ class EhrapyConfig:
 
     @property
     def n_jobs(self) -> int:
-        """\
-        Default number of jobs/ CPUs to use for parallel computing.
-        """
+        """Default number of jobs/ CPUs to use for parallel computing."""
         return self._n_jobs
 
     @n_jobs.setter
@@ -318,9 +300,7 @@ class EhrapyConfig:
 
     @property
     def logpath(self) -> Optional[Path]:
-        """\
-        The file path `logfile` was set to.
-        """
+        """The file path `logfile` was set to."""
         return self._logpath  # type: ignore
 
     @logpath.setter
@@ -332,8 +312,7 @@ class EhrapyConfig:
 
     @property
     def logfile(self) -> TextIO:
-        """\
-        The open file to write logs to.
+        """The open file to write logs to.
 
         Set it to a :class:`~pathlib.Path` or :class:`str` to open a new one.
         The default `None` corresponds to :obj:`sys.stdout` in jupyter notebooks
@@ -356,9 +335,7 @@ class EhrapyConfig:
 
     @property
     def categories_to_ignore(self) -> List[str]:
-        """\
-        Categories that are omitted in plotting etc.
-        """
+        """Categories that are omitted in plotting etc."""
         return self._categories_to_ignore
 
     @categories_to_ignore.setter
@@ -397,41 +374,22 @@ class EhrapyConfig:
         ipython_format: str = "png2x",
         dark: bool = False,
     ):
-        """\
-        Set resolution/size, styling and format of figures.
+        """Set resolution/size, styling and format of figures.
 
-        Parameters
-        ----------
-        scanpy
-            Init default values for :obj:`matplotlib.rcParams` suited for Scanpy.
-        dpi
-            Resolution of rendered figures – this influences the size of figures in notebooks.
-        dpi_save
-            Resolution of saved figures. This should typically be higher to achieve
-            publication quality.
-        frameon
-            Add frames and axes labels to scatter plots.
-        vector_friendly
-            Plot scatter plots using `png` backend even when exporting as `pdf` or `svg`.
-        fontsize
-            Set the fontsize for several `rcParams` entries. Ignored if `scanpy=False`.
-        figsize
-            Set plt.rcParams['figure.figsize'].
-        color_map
-            Convenience method for setting the default color map. Ignored if `scanpy=False`.
-        format
-            This sets the default format for saving figures: `file_format_figs`.
-        facecolor
-            Sets backgrounds via `rcParams['figure.facecolor'] = facecolor` and
-            `rcParams['axes.facecolor'] = facecolor`.
-        transparent
-            Save figures with transparent back ground. Sets
-            `rcParams['savefig.transparent']`.
-        ipython_format
-            Only concerns the notebook/IPython environment; see
-            :func:`~IPython.display.set_matplotlib_formats` for details.
-        dark
-            Whether to enable Matplotlibs dark styled. Inverts all colors.
+        Args:
+            scanpy: Init default values for :obj:`matplotlib.rcParams` suited for Scanpy.
+            dpi: Resolution of rendered figures – this influences the size of figures in notebooks.
+            dpi_save: Resolution of saved figures. This should typically be higher to achieve publication quality.
+            frameon: Add frames and axes labels to scatter plots.
+            vector_friendly: Plot scatter plots using `png` backend even when exporting as `pdf` or `svg`.
+            fontsize: Set the fontsize for several `rcParams` entries. Ignored if `scanpy=False`.
+            figsize: Set plt.rcParams['figure.figsize'].
+            color_map: Convenience method for setting the default color map. Ignored if `scanpy=False`.
+            format: This sets the default format for saving figures: `file_format_figs`.
+            facecolor: Sets backgrounds via `rcParams['figure.facecolor'] = facecolor` and `rcParams['axes.facecolor'] = facecolor`.
+            transparent: Save figures with transparent back ground. Sets `rcParams['savefig.transparent']`.
+            ipython_format: Only concerns the notebook/IPython environment; see :func:`~IPython.display.set_matplotlib_formats` for details.
+            dark: Whether to enable Matplotlibs dark styled. Inverts all colors.
         """
         if self._is_run_from_ipython():
             import IPython
@@ -463,7 +421,7 @@ class EhrapyConfig:
 
     @staticmethod
     def _is_run_from_ipython():
-        """Determines whether we're currently in IPython."""
+        """Determines whether we are currently in IPython."""
         import builtins
 
         return getattr(builtins, "__IPYTHON__", False)
