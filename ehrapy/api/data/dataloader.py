@@ -2,6 +2,7 @@ import tempfile
 from pathlib import Path
 from random import choice
 from string import ascii_lowercase
+from typing import Union
 from zipfile import ZipFile
 
 import requests
@@ -16,7 +17,7 @@ class Dataloader:
     def download(  # pragma: no cover
         url: str,
         output_file_name: str = None,
-        output_path: str = None,
+        output_path: Union[str, Path] = None,
         block_size: int = 1024,
         overwrite: bool = False,
         is_zip: bool = False,
@@ -38,7 +39,11 @@ class Dataloader:
         if output_path is None:
             output_path = tempfile.gettempdir()
 
-        download_to_path = f"{output_path}/{output_file_name}"
+        download_to_path = (
+            f"{output_path}{output_file_name}"
+            if str(output_path).endswith("/")
+            else f"{output_path}/{output_file_name}"
+        )
         if Path(download_to_path).exists():
             warning = f"[bold red]File {download_to_path} already exists!"
             if not overwrite:
@@ -52,6 +57,7 @@ class Dataloader:
 
         with Progress() as progress:
             task = progress.add_task("[red]Downloading...", total=total)
+            Path(output_path).mkdir(parents=True, exist_ok=True)
             with open(download_to_path, "wb") as file:
                 for data in response.iter_content(block_size):
                     file.write(data)
@@ -61,3 +67,5 @@ class Dataloader:
             output_path = output_path or tempfile.gettempdir()
             with ZipFile(download_to_path, "r") as zip_obj:
                 zip_obj.extractall(path=output_path)
+                extracted = zip_obj.namelist()
+                print(extracted)

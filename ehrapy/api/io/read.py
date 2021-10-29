@@ -9,7 +9,7 @@ from anndata import read as read_h5ad
 from mudata import MuData
 from rich import print
 
-from ehrapy.api import settings
+from ehrapy.api import ehrapy_settings, settings
 from ehrapy.api.data.dataloader import Dataloader
 from ehrapy.api.encode.encode import Encoder
 from ehrapy.api.io._utility_io import (
@@ -31,7 +31,8 @@ class DataReader:
 
     @staticmethod
     def read(
-        filename: Union[Path, str],
+        file_path: Union[Path, str],
+        download_file_name: Optional[str] = None,
         extension: Optional[str] = None,
         delimiter: Optional[str] = None,
         index_column: Union[str, Optional[int]] = None,
@@ -41,23 +42,51 @@ class DataReader:
         backup_url: Optional[str] = None,
         suppress_warnings: bool = False,
     ) -> Union[AnnData, Dict[str, AnnData], MuData]:
+        """Reads or downloads a desired file.
+
+        Args:
+            file_path: Path to the file to read.
+            download_file_name: Optional name for the downloaded file.
+            extension: File extension. Required to select the appropriate file reader.
+            delimiter: File delimiter. Required for e.g. csv vs tsv files.
+            index_column: The index column of the tables.
+            columns_obs_only: Which columns to only add to obs and not X.
+            return_mudata: Whether to create and return a MuData object.
+            cache: Whether to use the cache when reading.
+            backup_url: URL to download the data file from if not yet existing.
+            suppress_warnings: Whether to suppress warnings.
+
+        Returns:
+
+        """
         DataReader.suppress_warnings = suppress_warnings
-        file = Path(filename)
+        file: Path = Path(file_path)
+        is_zip: bool = False
+        if download_file_name is None and backup_url is not None:
+            download_file_name = backup_url.split("/")[-1]
+            is_zip = download_file_name.endswith(".zip")  # TODO can we generalize this to tar files as well?
+
         if not file.exists():
             print("[bold yellow]Path or dataset does not yet exist. Attempting to download...")
-            output_file_name = backup_url.split("/")[-1]
-            is_zip: bool = output_file_name.endswith(".zip")  # TODO can we generalize this to tar files as well?
-            Dataloader.download(backup_url, output_file_name=str(filename), output_path=str(Path.cwd()), is_zip=is_zip)
+            Dataloader.download(
+                backup_url,
+                output_file_name=str(download_file_name),
+                output_path=ehrapy_settings.datasetdir,
+                is_zip=is_zip,
+            )
             if is_zip:
-                raw_output_dir = output_file_name[:-4]
-                poss_file = Path.cwd() / raw_output_dir
+                raw_output_dir = download_file_name.replace(".zip", "")
+                poss_file = ehrapy_settings.datasetdir / raw_output_dir
 
                 if poss_file.is_dir():
                     file = poss_file
             else:
-                poss_file = Path.cwd() / output_file_name
+                poss_file = ehrapy_settings.datasetdir / download_file_name
                 if poss_file.is_dir():
                     file = poss_file
+
+        if is_zip:
+            file = ehrapy_settings.datasetdir / download_file_name.replace(".zip", "")
 
         raw_object = DataReader._read(
             filename=file,

@@ -139,7 +139,6 @@ dmypy.json
 
 # Notebook files
 notebooks/medcat_data
+notebooks/data
 notebooks/*.dat
 notebooks/*.csv
-notebooks/ehrapy_mimicIII
-notebooks/mimic-iii-clinical-database-demo-1.4

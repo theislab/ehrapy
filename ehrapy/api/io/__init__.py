@@ -70,15 +70,15 @@ def read(
             adata_2 = ep.io.read("mimic_2.h5ad")
     """
     return DataReader.read(
-        filename,
-        extension,
-        delimiter,
-        index_column,
-        columns_obs_only,
-        return_mudata,
-        cache,
-        backup_url,
-        suppress_warnings,
+        file_path=filename,
+        extension=extension,
+        delimiter=delimiter,
+        index_column=index_column,
+        columns_obs_only=columns_obs_only,
+        return_mudata=return_mudata,
+        cache=cache,
+        backup_url=backup_url,
+        suppress_warnings=suppress_warnings,
     )
 
 
