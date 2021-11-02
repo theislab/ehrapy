@@ -142,3 +142,4 @@ notebooks/medcat_data
 notebooks/data
 notebooks/*.dat
 notebooks/*.csv
+notebooks/*-requirements.txt

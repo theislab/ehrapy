@@ -1,8 +1,0 @@
-ehrapy==0.1.0
-rich
-sinfo==0.3.4
-IPython==7.28.0
-jupyter_client==7.0.6
-jupyter_core==4.9.1
-jupyterlab==3.2.1
-notebook==6.4.5
