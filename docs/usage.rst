@@ -247,6 +247,18 @@ An instance of the :class:`~scanpy._settings.ScanpyConfig` is available as `ehra
 Please refer to the `Scanpy settings documentation <https://scanpy.readthedocs.io/en/stable/api.html#settings>`_
 for configuration options. Ehrapy will adapt these in the future and update the documentation.
 
+Dependency Versions
+~~~~~~~~~~~~~~~~~~~
+
+It is possible to get the versions of all dependencies in the current runtime environment.
+This comes in handy when trying to diagnose issues.
+
+Call the function via:
+
+.. code-block:: python
+
+    ep.print_versions()
+
 Command-line interface
 -----------------------
 

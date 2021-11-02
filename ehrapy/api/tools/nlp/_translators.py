@@ -6,7 +6,7 @@ from anndata import AnnData
 from deepl import Formality, GlossaryInfo, TextResult
 from rich import print
 
-from ehrapy.api._util import get_column_indices, get_column_values
+from ehrapy.api._anndata_util import get_column_indices, get_column_values
 
 
 class DeepL:

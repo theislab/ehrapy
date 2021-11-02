@@ -1,42 +1,31 @@
 import importlib
-from typing import List, Union
+import sys
+from io import StringIO
 
-import numpy as np
-from anndata import AnnData
-
-
-def get_column_indices(adata: AnnData, col_names=Union[str, List]) -> List[int]:
-    """Fetches the column indices in X for a given list of column names
-
-    Args:
-        adata: :class:`~anndata.AnnData` object
-        col_names: Column names to extract the indices for
-
-    Returns:
-        Set of column indices
-    """
-    if isinstance(col_names, str):
-        col_names = [col_names]
-
-    indices = list()
-    for idx, col in enumerate(adata.var_names):
-        if col in col_names:
-            indices.append(idx)
-
-    return indices
+from rich import print
+from sinfo import sinfo
 
 
-def get_column_values(adata: AnnData, indices: Union[int, List[int]]) -> np.ndarray:
-    """Fetches the column values for a specific index from X
-
-    Args:
-        adata: :class:`~anndata.AnnData` object
-        indices: The index to extract the values for
-
-    Returns:
-        :class:`~numpy.ndarray` object containing the column values
-    """
-    return np.take(adata.X, indices, axis=1)
+def print_versions(*, file=None):
+    """Print print versions of imported packages"""
+    stdout = sys.stdout
+    try:
+        buf = sys.stdout = StringIO()
+        sinfo(
+            dependencies=True,
+            excludes=[
+                "builtins",
+                "stdlib_list",
+                "importlib_metadata",
+                # Special module present if test coverage being calculated
+                # https://gitlab.com/joelostblom/sinfo/-/issues/10
+                "$coverage",
+            ],
+        )
+    finally:
+        sys.stdout = stdout
+    output = buf.getvalue()
+    print(output, file=file)
 
 
 def check_module_importable(package: str) -> bool:
