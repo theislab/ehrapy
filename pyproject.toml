@@ -38,6 +38,7 @@ pynndescent = "^0.5.4"
 fa2 = "^0.3.5"
 medcat = {git = "https://github.com/CogStack/MedCAT"}
 en-core-web-md = {url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.0.0/en_core_web_md-3.0.0.tar.gz", optional = true}
+sc-toolbox = {version = "^0.10.0", optional = true}
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"
@@ -74,6 +75,7 @@ sphinxcontrib-bibtex = "^2.4.1"
 
 [tool.poetry.extras]
 en-core-web-md = ["en-core-web-md"]
+sc-toolbox = ["sc-toolbox"]
 
 [tool.poetry.scripts]
 ehrapy = "ehrapy.__main__:main"
