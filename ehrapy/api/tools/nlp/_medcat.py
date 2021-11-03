@@ -20,7 +20,7 @@ from ehrapy.api import settings
 from ehrapy.api._util import check_module_importable
 
 spacy_models_modules: List[str] = list(
-    map(lambda model: model.replace("-", "_"), ["en-core-sci-sm", "en-core-sci-md", "en-core-sci-lg"])
+    map(lambda model: model.replace("-", "_"), ["en-core-web-md", "en-core-sci-sm", "en-core-sci-md", "en-core-sci-lg"])
 )
 for model in spacy_models_modules:
     if not check_module_importable(model):

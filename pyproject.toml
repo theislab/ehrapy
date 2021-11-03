@@ -34,12 +34,10 @@ scanpy = "^1.8.1"
 mudata = "^0.1.0"
 leidenalg = "^0.8.7"
 deepl = "^1.2.0"
-medcat = {git = "https://github.com/CogStack/MedCAT"}
 pynndescent = "^0.5.4"
-en-core-sci-sm = {url = "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_core_sci_sm-0.4.0.tar.gz", optional = true}
-en-core-sci-md = {url = "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_core_sci_md-0.4.0.tar.gz", optional = true}
-en-core-sci-lg = {url = "https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_core_sci_lg-0.4.0.tar.gz", optional = true}
 fa2 = "^0.3.5"
+medcat = {git = "https://github.com/CogStack/MedCAT"}
+en-core-web-md = {url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.0.0/en_core_web_md-3.0.0.tar.gz", optional = true}
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"
@@ -75,9 +73,7 @@ nbsphinx = "^0.8.7"
 sphinxcontrib-bibtex = "^2.4.1"
 
 [tool.poetry.extras]
-en-core-sci-sm = ["en-core-sci-sm"]
-en-core-sci-md = ["en-core-sci-md"]
-en-core-sci-lg = ["en-core-sci-lg"]
+en-core-web-md = ["en-core-web-md"]
 
 [tool.poetry.scripts]
 ehrapy = "ehrapy.__main__:main"
