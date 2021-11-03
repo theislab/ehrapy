@@ -20,19 +20,10 @@ jobs:
             - name: Install package
               run: poetry install -E "en-core-web-md sc-toolbox"
 
-            - uses: yaananth/run-notebook@v1
-              env:
-                  RUNNER: ${{ toJson(runner) }}
-                  SECRETS: ${{ toJson(secrets) }}
-                  GITHUB: ${{ toJson(github) }}
-              with:
-                  notebook: "notebooks/mimic_2.ipynb"
-                  # params: "notebooks/ci_params.json"
-                  isReport: False
-            - uses: actions/upload-artifact@master
-              if: always()
-              with:
-                  name: output
-                  path: ${{ RUNNER.temp }}/nb-runner
-              env:
-                  RUNNER: ${{ toJson(runner) }}
+            - name: Install nbconvert
+              run: pip install nbconvert
+
+            - name: Run MIMIC-II Notebook
+              run:  jupyter nbconvert --to notebook --execute notebooks/mimic_2.ipynb
+
+
