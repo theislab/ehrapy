@@ -21,7 +21,7 @@ jobs:
               run: poetry install -E "en-core-web-md sc-toolbox"
 
             - name: Install nbconvert ipykernel
-              run: pip install nbconvert ipykernel
+              run: poetry add nbconvert ipykernel
 
             - name: Run MIMIC-II Notebook
               run: poetry run jupyter nbconvert --to notebook --execute notebooks/mimic_2.ipynb
