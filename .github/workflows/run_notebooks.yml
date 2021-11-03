@@ -5,6 +5,9 @@ on: [push]
 jobs:
     run:
         runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                notebook: [ "notebooks/mimic_2.ipynb", "notebooks/mimic_3_demo.ipynb" ]
         steps:
             - uses: actions/checkout@v2
             - name: Set up Python
@@ -23,5 +26,5 @@ jobs:
             - name: Install nbconvert ipykernel
               run: poetry add nbconvert ipykernel
 
-            - name: Run MIMIC-II Notebook
-              run: poetry run jupyter nbconvert --to notebook --execute notebooks/mimic_2.ipynb
+            - name: Run ${{ matrix.notebook }} Notebook
+              run: poetry run jupyter nbconvert --to notebook --execute ${{ matrix.notebook }}
