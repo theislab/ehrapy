@@ -1,0 +1,31 @@
+name: Run Notebooks
+
+on: [push]
+
+jobs:
+    run:
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                notebook:
+                    ["notebooks/mimic_2.ipynb", "notebooks/mimic_3_demo.ipynb"]
+        steps:
+            - uses: actions/checkout@v2
+            - name: Set up Python
+              uses: actions/setup-python@v2
+              with:
+                  python-version: "3.8"
+
+            - name: Install Poetry
+              run: |
+                  pip install poetry
+                  poetry --version
+
+            - name: Install package
+              run: poetry install -E "en-core-web-md sc-toolbox"
+
+            - name: Install nbconvert ipykernel
+              run: poetry add nbconvert ipykernel
+
+            - name: Run ${{ matrix.notebook }} Notebook
+              run: poetry run jupyter nbconvert --to notebook --execute ${{ matrix.notebook }}
