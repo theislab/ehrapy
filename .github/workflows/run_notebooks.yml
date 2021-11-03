@@ -20,8 +20,8 @@ jobs:
             - name: Install package
               run: poetry install -E "en-core-web-md sc-toolbox"
 
-            - name: Install nbconvert
-              run: pip install nbconvert
+            - name: Install nbconvert nb_conda_kernels
+              run: pip install nbconvert nb_conda_kernels
 
             - name: Run MIMIC-II Notebook
               run:  jupyter nbconvert --to notebook --execute notebooks/mimic_2.ipynb
