@@ -3,33 +3,31 @@ name: Run Notebooks
 on: [push]
 
 jobs:
-  run:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python
-      uses: actions/setup-python@v2
+    run:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+            - name: Set up Python
+              uses: actions/setup-python@v2
 
-    - name: Install Poetry
-      run: |
-       pip install poetry
-       poetry --version
+            - name: Install Poetry
+              run: |
+                  pip install poetry
+                  poetry --version
 
-    - name: Install package
-      run: poetry install -E "en-core-web-md sc-toolbox"
+            - name: Install package
+              run: poetry install -E "en-core-web-md sc-toolbox"
 
-    - uses: yaananth/run-notebook@v1
-      env:
-        RUNNER: ${{ toJson(runner) }}
-      with:
-        notebook: "noteboks/mimic_2.ipynb"
-        isReport: False
-        poll: True
-    - uses: actions/upload-artifact@master
-      if: always()
-      with:
-        name: output
-        path: ${{ RUNNER.temp }}/nb-runner
-      env:
-        RUNNER: ${{ toJson(runner) }}
-
+            - uses: yaananth/run-notebook@v1
+              env:
+                  RUNNER: ${{ toJson(runner) }}
+              with:
+                  notebook: "noteboks/mimic_2.ipynb"
+                  isReport: False
+            - uses: actions/upload-artifact@master
+              if: always()
+              with:
+                  name: output
+                  path: ${{ RUNNER.temp }}/nb-runner
+              env:
+                  RUNNER: ${{ toJson(runner) }}
