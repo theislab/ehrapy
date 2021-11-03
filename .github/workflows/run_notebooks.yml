@@ -27,6 +27,7 @@ jobs:
                   GITHUB: ${{ toJson(github) }}
               with:
                   notebook: "notebooks/mimic_2.ipynb"
+                  params: "notebooks/ci_params.json"
                   isReport: False
             - uses: actions/upload-artifact@master
               if: always()
