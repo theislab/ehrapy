@@ -7,7 +7,8 @@ jobs:
         runs-on: ubuntu-latest
         strategy:
             matrix:
-                notebook: [ "notebooks/mimic_2.ipynb", "notebooks/mimic_3_demo.ipynb" ]
+                notebook:
+                    ["notebooks/mimic_2.ipynb", "notebooks/mimic_3_demo.ipynb"]
         steps:
             - uses: actions/checkout@v2
             - name: Set up Python
