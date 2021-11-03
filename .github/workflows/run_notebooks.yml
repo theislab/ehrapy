@@ -24,4 +24,4 @@ jobs:
               run: pip install nbconvert ipykernel
 
             - name: Run MIMIC-II Notebook
-              run: jupyter nbconvert --to notebook --execute notebooks/mimic_2.ipynb
+              run: poetry run jupyter nbconvert --to notebook --execute notebooks/mimic_2.ipynb
