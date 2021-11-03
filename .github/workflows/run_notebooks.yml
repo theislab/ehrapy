@@ -20,14 +20,14 @@ jobs:
             - name: Install package
               run: poetry install -E "en-core-web-md sc-toolbox"
 
-            - uses: yaananth/run-notebook@v1
+            - uses: asegal/run-notebook@v1
               env:
                   RUNNER: ${{ toJson(runner) }}
                   SECRETS: ${{ toJson(secrets) }}
                   GITHUB: ${{ toJson(github) }}
               with:
                   notebook: "notebooks/mimic_2.ipynb"
-                  params: "notebooks/ci_params.json"
+                  # params: "notebooks/ci_params.json"
                   isReport: False
             - uses: actions/upload-artifact@master
               if: always()
