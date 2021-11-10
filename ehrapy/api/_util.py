@@ -48,6 +48,7 @@ def print_header(*, file=None):
     Matplotlib and Seaborn are excluded from this.
     """
     _DEPENDENCIES_NUMERICS = [
+        "scanpy",
         "anndata",  # anndata actually shouldn't, but as long as it's in development
         "umap",
         "numpy",
@@ -61,7 +62,7 @@ def print_header(*, file=None):
         "pynndescent",
     ]
 
-    modules = ["scanpy"] + _DEPENDENCIES_NUMERICS
+    modules = ["ehrapy"] + _DEPENDENCIES_NUMERICS
     print(
         " ".join(f"{mod}=={ver}" for mod, ver in _versions_dependencies(modules)),
         file=file or sys.stdout,
