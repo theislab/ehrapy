@@ -62,12 +62,14 @@ jobs:
 
             - name: Install Poetry
               run: |
-                  pip install poetry
+                  pipx install poetry
                   poetry --version
 
-            - name: Install Nox
+            - name: Install nox nox-poetry rich
               run: |
-                  pip install nox nox-poetry
+                  pipx install nox
+                  pipx inject nox nox-poetry
+                  pipx inject nox rich
                   nox --version
 
             - name: Install Rich
@@ -129,12 +131,14 @@ jobs:
 
             - name: Install Poetry
               run: |
-                  pip install poetry
+                  pipx install poetry
                   poetry --version
 
-            - name: Install Nox
+            - name: Install nox nox-poetry rich
               run: |
-                  pip install nox nox-poetry
+                  pipx install nox
+                  pipx inject nox nox-poetry
+                  pipx inject nox rich
                   nox --version
 
             - name: Install Rich
