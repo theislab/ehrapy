@@ -72,9 +72,6 @@ jobs:
                   pipx inject nox rich
                   nox --version
 
-            - name: Install Rich
-              run: pip install rich
-
             - name: Compute pre-commit cache key
               if: matrix.session == 'pre-commit'
               id: pre-commit-cache
@@ -140,9 +137,6 @@ jobs:
                   pipx inject nox nox-poetry
                   pipx inject nox rich
                   nox --version
-
-            - name: Install Rich
-              run: pip install rich
 
             - name: Download coverage data
               uses: actions/download-artifact@v2.0.10
