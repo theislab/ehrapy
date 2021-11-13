@@ -136,3 +136,4 @@ dmypy.json
 
 # Coala
 *.orig
+.vscode/settings.json
