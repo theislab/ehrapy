@@ -2,11 +2,149 @@ from functools import wraps
 from typing import Dict, List, Union
 
 import deepl
+import numpy as np
 from anndata import AnnData
+from deep_translator import GoogleTranslator
 from deepl import Formality, GlossaryInfo, TextResult
 from rich import print
 
 from ehrapy.api._util import get_column_indices, get_column_values
+
+
+class Translator:
+    """Implementation of the translator super class"""
+
+    def __init__(self, flavour: str = "deepl", source: str = "de", target: str = "en", token: str = None) -> None:
+        if flavour == "deepl":
+            self.translator = DeepL(token)
+        elif flavour == "googletranslate":
+            self.translator = GoogleTranslate(source, target)
+        else:
+            raise NotImplementedError(f"Flavour '{flavour}' is not supported.")
+        self.flavour = flavour
+        self.source_language = source
+        self.target_language = target
+
+    def translate_text(
+        self, text: Union[str, List], target_language: str = None
+    ) -> Union[TextResult, List[TextResult]]:
+        """Translates the provided text into the target language
+
+        Args:
+            text: The text to translate
+            target_language: The target language to translate the Text into, e.g. EN-GB
+
+        Returns:
+            A :class:`~deepl.TextResult` object
+        """
+        if target_language is None:
+            target_language = self.target_language
+        return self.translator.translate_text(text, target_language=target_language)
+
+    def translate_obs_column(
+        self,
+        adata: AnnData,
+        columns=Union[str, List],
+        translate_column_name: bool = False,
+        inplace: bool = False,
+    ) -> None:
+        """Translates a single obs column and optionally replaces the original values
+
+        Args:
+            adata: :class:`~anndata.AnnData` object containing the obs column to translate
+            target_language: The target language to translate into (default: EN-US)
+            columns: The columns to translate. Can be either a single column (str) or a list of columns
+            translate_column_name: Whether to translate the column name itself
+            inplace: Whether to replace the obs values or add a new obs column
+        """
+        if isinstance(columns, str):
+            columns = [columns]
+
+        translate_text = self.translate_text
+
+        for column in columns:
+            # as of Pandas 1.1.0 the default for new string column is still 'object'
+            if adata.obs[column].dtype != str and adata.obs[column].dtype != object:
+                raise ValueError("Attempted to translate column {column} which does not contain only strings.")
+            target_column = column
+            if translate_column_name:
+                target_column = translate_text(column)
+            if not inplace:
+                target_column = f"{target_column}_{self.target_language}"
+
+            adata.obs[target_column] = adata.obs[column].apply(translate_text)
+
+    def translate_var_column(
+        self,
+        adata: AnnData,
+        columns=Union[str, List],
+        translate_column_name: bool = False,
+        inplace: bool = False,
+    ) -> None:
+        """Translates a single var column and optionally replaces the original values
+
+        Args:
+            adata: :class:`~anndata.AnnData` object containing the obs column to translate
+            target_language: The target language to translate into (default: EN-US)
+            columns: The columns to translate. Can be either a single column (str) or a list of columns
+            translate_column_name: Whether to translate the column name itself
+            inplace: Whether to replace the obs values or add a new obs column
+        """
+        if isinstance(columns, str):
+            columns = [columns]
+
+        translate_text = self.translate_text
+
+        for column in columns:
+            # as of Pandas 1.1.0 the default for new string column is still 'object'
+            if adata.var[column].dtype != str and adata.var[column].dtype != object:
+                raise ValueError("Attempted to translate column {column} which does not contain only strings.")
+            target_column = column
+            if translate_column_name:
+                target_column = translate_text(column)
+            if not inplace:
+                target_column = f"{target_column}_{self.target_language}"
+
+            adata.var[target_column] = adata.var[column].apply(translate_text)
+
+    def translate_X_column(
+        self,
+        adata: AnnData,
+        columns=Union[str, List],
+        translate_column_name: bool = False,
+    ) -> None:
+        """Translates a X column into the target language in place.
+
+        Note that the translation of a column in X is **always** in place.
+
+        Args:
+            adata: :class:`~anndata.AnnData` object containing the var column to translate
+            target_language: The target language to translate into (default: EN-US)
+            columns: The columns to translate. Can be either a single column (str) or a list of columns
+            translate_column_name: Whether to translate the column name itself (only translates var_names, not var)
+        """
+        if isinstance(columns, str):
+            columns = [columns]
+
+        translate_text = self.translate_text
+        indices = get_column_indices(adata, columns)
+
+        for column, index in zip(columns, indices):
+            column_values = get_column_values(adata, index)
+
+            if column_values.dtype != str and column_values.dtype != object:
+                raise ValueError("Attempted to translate column {column} which does not only contain strings.")
+
+            if translate_column_name:
+                translated_column_name = translate_text(column)
+                index_values = adata.var_names.tolist()
+                index_values[index] = translated_column_name
+                adata.var_names = index_values
+
+            translated_column_values: List = translate_text(column_values)  # TODO: Check that structure is still ok
+            # translated_column_values = list(map(lambda text_result: text_result.text, translated_column_values))
+
+            adata.X[:, index] = translated_column_values
 
 
 class DeepL:
@@ -92,7 +230,9 @@ class DeepL:
         Returns:
             A :class:`~deepl.TextResult` object
         """
-        return self.translator.translate_text(text, target_lang=target_language)
+        if isinstance(text, List) or isinstance(text, np.ndarray):
+            return [self.translator.translate_text(t, target_lang=target_language).text for t in text]
+        return self.translator.translate_text(text, target_lang=target_language).text
 
     @_check_usage  # type: ignore # pragma: no cover
     def translate_document(
@@ -175,7 +315,9 @@ class DeepL:
                 target_column = f"{target_column}_{target_language}"
 
             adata.obs[target_column] = adata.obs[column].apply(
-                lambda text: self.translator.translate_text(text, target_lang=target_language).text
+                lambda text: self.translator.translate_text(
+                    text, target_lang=target_language
+                ).text  # TODO: Just change this line dependent on falvour of translator (same for var, X)
             )
 
     def translate_var_column(
@@ -251,3 +393,36 @@ class DeepL:
             translated_column_values = list(map(lambda text_result: text_result.text, translated_column_values))
 
             adata.X[:, index] = translated_column_values
+
+
+class GoogleTranslate:
+    def __init__(self, source="auto", target="en"):
+        self.translator = GoogleTranslator(source, target)
+
+    def print_source_languages(self) -> None:  # pragma: no cover
+        """prints all possible source languages to translate from
+
+        Example: "DE (German)"
+        """
+        for code, language in self.translator.get_supported_languages(as_dict=True).items():
+            print(f"{code} ({language})")
+
+    def print_target_languages(self) -> None:  # pragma: no cover
+        """Prints all possible target languages to translate to"""
+        for code, language in self.translator.get_supported_languages(as_dict=True).items():
+            print(f"{code} ({language})")
+
+    # @_check_usage  # type: ignore
+    def translate_text(self, text: Union[str, List], target_language: str) -> Union[str, List[str]]:
+        """Translates the provided text into the target language
+
+        Args:
+            text: The text to translate
+            target_language: The target language to translate the Text into, e.g. EN-GB
+
+        Returns:
+            A :class:`~deepl.TextResult` object
+        """
+        if isinstance(text, List) or isinstance(text, np.ndarray):
+            return [self.translator.translate(t, target_lang=target_language) for t in text]
+        return self.translator.translate(text, target_lang=target_language)
