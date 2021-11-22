@@ -33,19 +33,6 @@ Reading and writing
 
     io.write
 
-Encoding
-~~~~~~~~
-
-.. currentmodule:: ehrapy.api
-
-.. autosummary::
-    :toctree: encode
-
-    encode.encode
-
-    encode.type_overview
-
-    encode.undo_encoding
 
 Data
 ~~~~~
@@ -80,6 +67,16 @@ Basic preprocessing
     preprocessing.regress_out
     preprocessing.scale
     preprocessing.subsample
+
+Encoding
+++++++++
+
+.. autosummary::
+    :toctree: preprocessing
+
+    preprocessing.encode
+    preprocessing.undo_encoding
+    preprocessing.type_overview
 
 Dataset Shift Correction
 ++++++++++++++++++++++++

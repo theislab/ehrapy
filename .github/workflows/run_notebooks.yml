@@ -22,7 +22,7 @@ jobs:
                   poetry --version
 
             - name: Install package
-              run: poetry install -E "en-core-web-md sc-toolbox"
+              run: poetry install -E "en-core-web-md"
 
             - name: Install nbconvert ipykernel
               run: poetry add nbconvert ipykernel

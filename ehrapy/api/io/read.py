@@ -11,7 +11,6 @@ from rich import print
 
 from ehrapy.api import ehrapy_settings, settings
 from ehrapy.api.data.dataloader import Dataloader
-from ehrapy.api.encode.encode import Encoder
 from ehrapy.api.io._utility_io import (
     _get_file_extension,
     _is_float_convertable,
@@ -19,6 +18,7 @@ from ehrapy.api.io._utility_io import (
     _slugify,
     supported_extensions,
 )
+from ehrapy.api.preprocessing.encoding._encode import Encoder
 
 
 class BaseDataframes(NamedTuple):
