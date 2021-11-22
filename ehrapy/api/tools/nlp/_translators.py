@@ -150,16 +150,16 @@ class DeepL:
         target_language: str = "EN-US",
         columns=Union[str, List],
         translate_column_name: bool = False,
-        inplace: bool = False,
+        in_place: bool = False,
     ) -> None:
-        """Translates a single obs column and optionally replaces the original values
+        """Translates a single obs column and optionally replaces the original values.
 
         Args:
             adata: :class:`~anndata.AnnData` object containing the obs column to translate
             target_language: The target language to translate into (default: EN-US)
             columns: The columns to translate. Can be either a single column (str) or a list of columns
             translate_column_name: Whether to translate the column name itself
-            inplace: Whether to replace the obs values or add a new obs column
+            in_place: Whether to replace the obs values or add a new obs column
         """
         if isinstance(columns, str):
             columns = [columns]
@@ -171,7 +171,7 @@ class DeepL:
             target_column = column
             if translate_column_name:
                 target_column = self.translator.translate_text(column, target_lang=target_language).text
-            if not inplace:
+            if not in_place:
                 target_column = f"{target_column}_{target_language}"
 
             adata.obs[target_column] = adata.obs[column].apply(
@@ -184,7 +184,7 @@ class DeepL:
         target_language: str = "EN-US",
         columns=Union[str, List],
         translate_column_name: bool = False,
-        inplace: bool = False,
+        in_place: bool = False,
     ) -> None:
         """Translates a single var column and optionally replaces the original values
 
@@ -193,7 +193,7 @@ class DeepL:
             target_language: The target language to translate into (default: EN-US)
             columns: The columns to translate. Can be either a single column (str) or a list of columns
             translate_column_name: Whether to translate the column name itself
-            inplace: Whether to replace the obs values or add a new obs column
+            in_place: Whether to replace the obs values or add a new obs column
         """
         if isinstance(columns, str):
             columns = [columns]
@@ -205,7 +205,7 @@ class DeepL:
             target_column = column
             if translate_column_name:
                 target_column = self.translator.translate_text(column, target_lang=target_language).text
-            if not inplace:
+            if not in_place:
                 target_column = f"{target_column}_{target_language}"
 
             adata.var[target_column] = adata.var[column].apply(

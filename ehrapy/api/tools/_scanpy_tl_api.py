@@ -509,7 +509,7 @@ def dendrogram(
     linkage_method: str = "complete",
     optimal_ordering: bool = False,
     key_added: Optional[str] = None,
-    inplace: bool = True,
+    in_place: bool = True,
 ) -> Optional[Dict[str, Any]]:
     """Computes a hierarchical clustering for the given `groupby` categories.
 
@@ -546,10 +546,10 @@ def dendrogram(
         key_added: By default, the dendrogram information is added to
                    `.uns[f'dendrogram_{{groupby}}']`.
                    Notice that the `groupby` information is added to the dendrogram.
-        inplace: If `True`, adds dendrogram information to `adata.uns[key_added]`,
+        in_place: If `True`, adds dendrogram information to `adata.uns[key_added]`,
                  else this function returns the information.
     Returns:
-        If `inplace=False`, returns dendrogram information, else `adata.uns[key_added]` is updated with it.
+        If `in_place=False`, returns dendrogram information, else `adata.uns[key_added]` is updated with it.
 
     Example:
         .. code-block:: python
@@ -570,7 +570,7 @@ def dendrogram(
         linkage_method=linkage_method,
         optimal_ordering=optimal_ordering,
         key_added=key_added,
-        inplace=inplace,
+        inplace=in_place,
     )
 
 
@@ -612,7 +612,7 @@ def dpt(
                        If specified, dpt looks .uns[neighbors_key] for neighbors settings and
                        `.obsp[.uns[neighbors_key]['connectivities_key']]`,
                        `.obsp[.uns[neighbors_key]['distances_key']]` for connectivities and distances respectively.
-        copy: Copy instance before computation and return a copy. Otherwise, perform computation inplace and return `None`.
+        copy: Copy instance before computation and return a copy. Otherwise, perform computation in place and return `None`.
 
     Returns:
         Depending on `copy`, returns or updates `adata` with the following fields.
@@ -679,7 +679,7 @@ def paga(
                        `.obsp[.uns[neighbors_key]['connectivities_key']]`,
                        `.obsp[.uns[neighbors_key]['distances_key']]` for connectivities and distances
         respectively.
-        copy: Copy `adata` before computation and return a copy. Otherwise, perform computation inplace and return `None`.
+        copy: Copy `adata` before computation and return a copy. Otherwise, perform computation in place and return `None`.
 
     Returns:
         **connectivities** : :class:`numpy.ndarray` (adata.uns['connectivities'])
@@ -709,7 +709,7 @@ def ingest(
     embedding_method: Union[str, Iterable[str]] = ("umap", "pca"),
     labeling_method: str = "knn",
     neighbors_key: Optional[str] = None,
-    inplace: bool = True,
+    in_place: bool = True,
     **kwargs,
 ) -> Optional[AnnData]:
     """Map labels and embeddings from reference data to new data.
@@ -738,13 +738,13 @@ def ingest(
         neighbors_key: If not specified, ingest looks adata_ref.uns['neighbors'] for neighbors settings and adata_ref.obsp['distances'] for
                        distances (default storage places for pp.neighbors). If specified, ingest looks adata_ref.uns[neighbors_key] for
                        neighbors settings and adata_ref.obsp[adata_ref.uns[neighbors_key]['distances_key']] for distances.
-        inplace: Only works if `return_joint=False`.
+        in_place: Only works if `return_joint=False`.
                  Add labels and embeddings to the passed `adata` (if `True`) or return a copy of `adata` with mapped embeddings and labels.
         **kwargs: Further keyword arguments for the Neighbor calculation
 
     Returns:
-        * if `inplace=False` returns a copy of `adata` with mapped embeddings and labels in `obsm` and `obs` correspondingly
-        * if `inplace=True` returns `None` and updates `adata.obsm` and `adata.obs` with mapped embeddings and labels
+        * if `in_place=False` returns a copy of `adata` with mapped embeddings and labels in `obsm` and `obs` correspondingly
+        * if `in_place=True` returns `None` and updates `adata.obsm` and `adata.obs` with mapped embeddings and labels
 
     Example:
         .. code-block:: python
@@ -762,6 +762,6 @@ def ingest(
         embedding_method=embedding_method,
         labeling_method=labeling_method,
         neighbors_key=neighbors_key,
-        inplace=inplace,
+        inplace=in_place,
         **kwargs,
     )

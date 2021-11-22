@@ -50,14 +50,14 @@ class TestDeepL:
 
     def test_translate_obs_column(self):
         self.translator.translate_obs_column(
-            self.test_adata, target_language="EN-US", columns="Krankheit", translate_column_name=True, inplace=True
+            self.test_adata, target_language="EN-US", columns="Krankheit", translate_column_name=True, in_place=True
         )
         assert "Disease" in self.test_adata.obs.keys()
         assert "Cancer" in self.test_adata.obs.values
 
     def test_translate_var_column(self):
         self.translator.translate_var_column(
-            self.test_adata, target_language="EN-US", columns="Krankheit", translate_column_name=True, inplace=True
+            self.test_adata, target_language="EN-US", columns="Krankheit", translate_column_name=True, in_place=True
         )
         assert "Disease" in self.test_adata.var.keys()
         assert "Cancer" in self.test_adata.var.values

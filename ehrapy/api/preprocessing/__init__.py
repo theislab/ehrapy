@@ -21,7 +21,7 @@ def replace_explicit(
             Dict: Subset of columns with the specified value ( Dict(str: (str, int)) )
 
             Tuple: Subset of columns with the specified value per column ( str ,(str, int) )
-        copy: Whether to return a copy or act inplace
+        copy: Whether to return a copy or act in place
 
     Returns:
         :class:`~anndata.AnnData` object with imputed X
