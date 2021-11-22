@@ -1,6 +1,5 @@
 from typing import Dict, List, Optional, Union
 
-import numpy as np
 import pandas as pd
 from anndata import AnnData
 from mudata import MuData
@@ -8,7 +7,7 @@ from rich import print
 from rich.text import Text
 from rich.tree import Tree
 
-from ehrapy.api.encode.encode import Encoder
+from ehrapy.api.preprocessing.encoding._encode import Encoder
 
 
 def encode(

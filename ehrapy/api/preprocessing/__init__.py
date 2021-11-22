@@ -3,6 +3,7 @@ from typing import Dict, Optional, Tuple, Union
 from anndata import AnnData
 
 from ehrapy.api.preprocessing._data_imputation import Imputation
+from ehrapy.api.preprocessing.encoding import encode, type_overview, undo_encoding
 
 
 def replace_explicit(

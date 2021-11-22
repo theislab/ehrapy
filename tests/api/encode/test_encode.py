@@ -2,8 +2,8 @@ from pathlib import Path
 
 import pytest
 
-from ehrapy.api.encode.encode import Encoder
 from ehrapy.api.io.read import DataReader
+from ehrapy.api.preprocessing.encoding._encode import Encoder
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_PATH = f"{CURRENT_DIR}/test_data_encode"

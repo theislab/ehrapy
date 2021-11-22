@@ -74,7 +74,6 @@ sphinxcontrib-bibtex = "^2.4.1"
 
 [tool.poetry.extras]
 en-core-web-md = ["en-core-web-md"]
-sc-toolbox = ["sc-toolbox"]
 
 [tool.poetry.scripts]
 ehrapy = "ehrapy.__main__:main"

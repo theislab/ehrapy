@@ -11,7 +11,7 @@ from rich import print
 from rich.progress import BarColumn, Progress
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
-from ehrapy.api.encode._categoricals import _detect_categorical_columns
+from ehrapy.api.preprocessing.encoding._categoricals import _detect_categorical_columns
 
 
 class Encoder:

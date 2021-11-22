@@ -4,8 +4,8 @@ from anndata import AnnData
 from mudata import MuData
 
 from ehrapy.api import ehrapy_settings
-from ehrapy.api.encode import Encoder
 from ehrapy.api.io import DataReader
+from ehrapy.api.preprocessing.encoding import Encoder
 
 
 class Datasets:
