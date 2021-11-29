@@ -1,8 +1,10 @@
 import importlib
 import sys
+from contextlib import closing
 from datetime import datetime
 from io import StringIO
 
+from IPython.utils.io import Tee
 from rich import print
 from scanpy.logging import _versions_dependencies
 from sinfo import sinfo
@@ -10,8 +12,12 @@ from sinfo import sinfo
 from ehrapy import __version__
 
 
-def print_versions(*, file=None):
-    """Print print versions of imported packages."""
+def print_versions(*, output_file=None) -> None:
+    """Print print versions of imported packages.
+
+    Args:
+        output_file: Path to output file
+    """
     stdout = sys.stdout
     try:
         buf = sys.stdout = StringIO()
@@ -25,11 +31,17 @@ def print_versions(*, file=None):
                 # https://gitlab.com/joelostblom/sinfo/-/issues/10
                 "$coverage",
             ],
+            write_req_file=False,
         )
     finally:
         sys.stdout = stdout
     output = buf.getvalue()
-    print(output, file=file)
+
+    if output_file:
+        with closing(Tee(output_file, "w", channel="stdout")):
+            print(output)
+    else:
+        print(output)
 
 
 def print_version_and_date(*, file=None):

@@ -38,6 +38,7 @@ fa2 = "^0.3.5"
 medcat = {git = "https://github.com/CogStack/MedCAT"}
 en-core-web-md = {url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.0.0/en_core_web_md-3.0.0.tar.gz", optional = true}
 scanpy = "^1.8.2"
+ipython = "^7.30.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"
