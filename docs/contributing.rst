@@ -32,7 +32,7 @@ Request features on the `Issue Tracker`_.
 How to set up your development environment
 ------------------------------------------
 
-You need Python 3.7+ and the following tools:
+You need Python 3.8 and the following tools:
 
 - Poetry_
 - Nox_
@@ -89,6 +89,28 @@ Unit tests are located in the ``tests`` directory,
 and are written using the pytest_ testing framework.
 
 .. _pytest: https://pytest.readthedocs.io/
+
+How to build and view the documentation
+---------------------------------------
+
+This project uses Sphinx_ together with several extensions to build the documentation.
+
+To install all required dependencies for the documentation run:
+
+.. code:: console
+
+    $ pip install -r docs/requirements.txt
+
+Please note that ehrapy itself must also be installed. To build the documentation run:
+
+.. code:: console
+
+    $ make html
+
+from inside the docs folder. The generated static HTML files can be found in the `_build/html` folder.
+Simply open them with your favorite browser.
+
+.. _sphinx: https://www.sphinx-doc.org/en/master/
 
 
 How to submit changes

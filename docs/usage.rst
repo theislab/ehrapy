@@ -30,7 +30,6 @@ Reading and writing
     :toctree: io
 
     io.read
-
     io.write
 
 
@@ -43,8 +42,7 @@ Data
     :toctree: data
 
     data.mimic_2
-
-    data.mimic_3
+    data.mimic_3_demo
 
 Preprocessing
 ~~~~~~~~~~~~~
@@ -247,8 +245,8 @@ for configuration options. Ehrapy will adapt these in the future and update the 
 Dependency Versions
 ~~~~~~~~~~~~~~~~~~~
 
-It is possible to get the versions of all dependencies in the current runtime environment.
-This comes in handy when trying to diagnose issues.
+ehrapy is complex software with many dependencies. To ensure a consistent runtime environment you should save
+the tool versions of a conducted analysis. This comes in handy when trying to diagnose issues and to reproduce results.
 
 Call the function via:
 
