@@ -14,11 +14,14 @@ def replace_explicit(
 ) -> Optional[AnnData]:
     """Replaces all missing values in all or the specified columns with the passed value
 
-     Args:
+    Args:
         adata: :class:`~anndata.AnnData` object containing X to impute values in
         replacement: Replacement value. Can be one of three possible scenarios:
+
             value: Specified raw value (str | int)
+
             Dict: Subset of columns with the specified value ( Dict(str: (str, int)) )
+
             Tuple: Subset of columns with the specified value per column ( str ,(str, int) )
         copy: Whether to return a copy or act in place
 
