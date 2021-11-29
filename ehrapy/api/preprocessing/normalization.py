@@ -2,14 +2,12 @@ from typing import Optional
 
 from anndata import AnnData
 
+
 class Normalization:
     """Provides functions to normalize continuous features"""
 
     @staticmethod
-    def identity(
-        adata: AnnData,
-        copy: bool = False
-    ) -> Optional[AnnData]:
+    def identity(adata: AnnData, copy: bool = False) -> Optional[AnnData]:
         """Returns the original object without any normalisation
 
         Created as a template during development. Should be removed before merging.
