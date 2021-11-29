@@ -15,7 +15,9 @@ def encode(
     autodetect: Union[bool, Dict] = False,
     encodings: Union[Dict[str, Dict[str, List[str]]], Dict[str, List[str]]] = None,
 ) -> Optional[AnnData]:
-    """Encode the initial read :class:`~anndata.AnnData or :class:`~mudata.MuData object. Categorical values could be either passed via parameters or autodetected.
+    """Encode the initial read :class:`~anndata.AnnData` or :class:`~mudata.MuData` object.
+
+    Categorical values could be either passed via parameters or autodetected.
     The categorical values are also stored in obs and uns (for keeping the original, unencoded values).
     The current encoding modes for each variable are also stored in uns (`current_encodings` key).
     Variable names in var are updated according to the encoding modes used.
@@ -27,13 +29,13 @@ def encode(
         3. count encoding (https://contrib.scikit-learn.org/category_encoders/count.html)
 
     Args:
-        data: The initial :class:`~anndata.AnnData or :class:`~mudata.MuData object
+        data: The initial :class:`~anndata.AnnData` or :class:`~mudata.MuData` object
         autodetect: Autodetection of categorical values
-        encodings: Only needed if autodetect set to False (or False for some columns in case of a :class:`~mudata.MuData object).
+        encodings: Only needed if autodetect set to False (or False for some columns in case of a :class:`~mudata.MuData` object).
         A dict containing the encoding mode and categorical name for the respective column (for each AnnData object in case of MuData object).
 
     Returns:
-        An :class:`~anndata.AnnData` object with the encoded values in X or None (in case of :class:`~mudata.MuData object)
+        An :class:`~anndata.AnnData` object with the encoded values in X or None (in case of :class:`~mudata.MuData` object)
 
     Example:
         .. code-block:: python
@@ -49,16 +51,18 @@ def encode(
 def undo_encoding(
     adata: AnnData, columns: str = "all", from_cache_file: bool = False, cache_file: str = None
 ) -> AnnData:
-    """Undo the current encodings applied to all columns in X. This currently resets the AnnData object to its initial state.
+    """Undo the current encodings applied to all columns in X.
+
+    This currently resets the AnnData object to its initial state.
     Args:
-        adata: The :class:`~anndata.AnnData object
+        adata: The :class:`~anndata.AnnData` object
         columns: The names of the columns to reset encoding for. Defaults to all columns.
         from_cache_file: Whether to reset all encodings by reading from a cached .h5ad file, if available.
         This resets the :class:`~anndata.AnnData object to its initial state.
         cache_file: The filename of the cache file to read from
 
     Returns:
-        A (partially) encoding reset :class:`~anndata.AnnData object
+        A (partially) encoding reset :class:`~anndata.AnnData` object
 
     Example:
        .. code-block:: python
@@ -72,10 +76,10 @@ def undo_encoding(
 
 
 def type_overview(data: Union[MuData, AnnData], sort: bool = False, sort_reversed: bool = False) -> None:
-    """Prints the current state of an :class:`~anndata.AnnData or :class:`~mudata.MuData object in a tree format.
+    """Prints the current state of an :class:`~anndata.AnnData` or :class:`~mudata.MuData` object in a tree format.
 
     Args:
-        data: :class:`~anndata.AnnData or :class:`~mudata.MuData object to display
+        data: :class:`~anndata.AnnData` or :class:`~mudata.MuData` object to display
         sort: Whether the tree output should be in sorted order
         sort_reversed: Whether to sort in reversed order or not
     """

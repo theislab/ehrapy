@@ -14,8 +14,8 @@ def mimic_2(encode: bool = False):
     Example:
         .. code-block:: python
 
-                import ehrapy.api as ep
-                adata = eh.data.mimic_2(encode=True)
+            import ehrapy.api as ep
+            adata = eh.data.mimic_2(encode=True)
     """
     return Datasets.mimic_2(encode=encode)
 
@@ -33,7 +33,7 @@ def mimic_3_demo(encode: bool = False, mudata: bool = False):
     Example:
         .. code-block:: python
 
-                import ehrapy.api as ep
-                mudata = eh.data.mimic_3_demo(encode=True, return_mudata=True)
+            import ehrapy.api as ep
+            mudata = eh.data.mimic_3_demo(encode=True, return_mudata=True)
     """
     return Datasets.mimic_3_demo(encode=encode, mudata=mudata)
