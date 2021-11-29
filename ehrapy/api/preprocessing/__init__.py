@@ -4,6 +4,7 @@ from anndata import AnnData
 
 from ehrapy.api.preprocessing._data_imputation import Imputation
 from ehrapy.api.preprocessing.encoding import encode, type_overview, undo_encoding
+from ehrapy.api.preprocessing.normalization import Normalization
 
 
 def replace_explicit(
@@ -15,13 +16,6 @@ def replace_explicit(
 
     Args:
         adata: :class:`~anndata.AnnData` object containing X to impute values in
-        replacement: Replacement value. Can be one of three possible scenarios:
-
-            value: Specified raw value (str | int)
-
-            Dict: Subset of columns with the specified value ( Dict(str: (str, int)) )
-
-            Tuple: Subset of columns with the specified value per column ( str ,(str, int) )
         copy: Whether to return a copy or act in place
 
     Returns:
@@ -35,6 +29,31 @@ def replace_explicit(
             adata_replaced = ep.pp.replace_explicit(adata, replacement=0, copy=True)
     """
     return Imputation.explicit(adata, replacement, copy)
+
+
+def norm_identity(
+    adata: AnnData,
+    copy: bool = False,
+) -> Optional[AnnData]:
+    """Returns the original object without any normalisation
+
+    Created as a template during development. Should be removed before merging.
+
+    Args:
+        adata: :class:`~anndata.AnnData` object containing X to normalize values in
+        copy: Whether to return a copy with the normalized data.
+
+    Returns:
+        :class:`~anndata.AnnData` object with normalized X
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy.api as ep
+            adata = ep.data.mimic_2(encode=True)
+            adata_norm = ep.pp.norm_identity(adata, copy=True)
+    """
+    return Normalization.identity(adata, copy)
 
 
 from ehrapy.api.preprocessing._scanpy_pp_api import *  # noqa: E402,F403
