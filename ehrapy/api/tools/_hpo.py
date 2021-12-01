@@ -1,4 +1,5 @@
-from typing import List, Optional, Tuple, Union
+import difflib
+from typing import Dict, List, Optional, Sequence, Tuple
 
 from anndata import AnnData
 from pyhpo import HPOSet, HPOTerm, Ontology
@@ -7,8 +8,10 @@ from pyhpo import HPOSet, HPOTerm, Ontology
 class HPO:
     """Wrapper class for PyHPO. Documentation: https://centogene.github.io/pyhpo/index.html"""
 
+    ontology_values: Optional[Dict[str, List[HPOTerm]]] = None
+
     def __init__(self, ontology: Ontology = None):
-        self.ontology = ontology if ontology else Ontology()
+        self.ontology: Ontology = ontology if ontology else Ontology()
 
     @staticmethod
     def patient_hpo_similarity(patient_1_set: HPOSet, patient_2_set: HPOSet) -> float:
@@ -39,13 +42,36 @@ class HPO:
         """
         return term_1.path_to_other(term_2)
 
+    @classmethod
+    def _load_full_ontology(cls) -> None:
+        """Loads the full ontology with synonyms.
+
+        The full ontology is useful to match queries against it.
+        """
+        cls.ontology_values = {}
+
+        def name_to_term(name: str, hpo_term: HPOTerm):
+            if name not in cls.ontology_values:
+                cls.ontology_values[name] = [hpo_term]
+
+        for term in Ontology:
+            name_to_term(term.name, term)
+            for syn in term.synonym:
+                name_to_term(syn, term)
+
     @staticmethod
-    def map_to_hpo(adata: AnnData, var_names: Union[str, List[str]], copy: bool = False) -> Optional[AnnData]:
+    def map_to_hpo(
+        adata: AnnData, obs_key: str, key: str = "hpo_terms", strict: bool = False, copy: bool = False
+    ) -> Optional[AnnData]:
         """Maps a single column of an AnnData object into HPO terms.
+
+        Adds the determined HPO terms as a new obs column.
 
         Args:
             adata: AnnData object containing a column of non-HPO terms.
-            var_names: The column(s) containing non-HPO terms to map.
+            obs_key: Key in adata.obs which contains the non-HPO terms.
+            key: Name of the new obs column to add.
+            strict: Returns only the closest HPO term match at the cost of a much higher runtime.
             copy: Whether to return a copy.
 
         Returns:
@@ -53,6 +79,22 @@ class HPO:
         """
         if copy:
             adata = adata.copy()
-        if not isinstance(var_names, List):
-            var_names = list(var_names)
-        return None
+
+        # Implemented after https://github.com/Centogene/pyhpo/issues/2#issuecomment-896510747
+        # Gets all terms of the ontology and their synonyms. Then finds the closest match.
+        if strict:
+            if HPO.ontology_values is None:
+                HPO._load_full_ontology()
+
+                def _get_closest_HPOterm_match(name) -> Sequence:
+                    closest_matches = difflib.get_close_matches(name, HPO.ontology_values, 1)
+                    closest_match: str = closest_matches[0]  # type: ignore
+                    return closest_match.strip()
+
+                adata.obs[key] = adata.obs[obs_key].apply(_get_closest_HPOterm_match)
+        else:
+            pass
+
+        # adata.obs[key] = names.apply()
+
+        return adata

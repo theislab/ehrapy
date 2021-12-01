@@ -1,6 +1,10 @@
+import warnings
 from math import isclose
 from pathlib import Path
 
+import numpy as np
+import pandas as pd
+from anndata import AnnData
 from pyhpo import HPOSet, HPOTerm, Ontology
 
 from ehrapy.api.tools import HPO
@@ -8,10 +12,21 @@ from ehrapy.api.tools import HPO
 CURRENT_DIR = Path(__file__).parent
 _TEST_PATH = f"{CURRENT_DIR}/test_data_encode"
 
+warnings.filterwarnings("ignore")
+
 
 class TestHPO:
     def setup_method(self):
         _ = Ontology()
+
+        obs_data = {"disease": ["Lumbar scoliosis"]}
+        var_data = {"values": ["not required"]}
+        self.test_adata = AnnData(
+            X=np.array(np.random.rand(1, 1)),
+            obs=pd.DataFrame(data=obs_data),
+            var=pd.DataFrame(data=var_data),
+            dtype=np.dtype(object),
+        )
 
     def test_patient_hpo_similarity(self):
         patient_1 = HPOSet.from_queries(["HP:0002943", "HP:0008458", "HP:0100884", "HP:0002944", "HP:0002751"])
@@ -52,3 +67,8 @@ class TestHPO:
             3,
             0,
         )
+
+    def test_closest_hpo_term_strict(self):
+        HPO.map_to_hpo(self.test_adata, obs_key="disease", strict=True)
+
+        assert not self.test_adata.obs[self.test_adata.obs.isin(["Lumbar scoliosis"])].empty
