@@ -5,6 +5,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from anndata import AnnData
+from pandas import array
 from pyhpo import HPOSet, HPOTerm, Ontology
 
 from ehrapy.api.tools import HPO
@@ -68,7 +69,15 @@ class TestHPO:
             0,
         )
 
-    def test_closest_hpo_term_strict(self):
+    def test_closest_hpo_term_strict_anndata(self):
         HPO.map_to_hpo(self.test_adata, obs_key="disease", strict=True)
 
-        assert not self.test_adata.obs[self.test_adata.obs.isin(["Lumbar scoliosis"])].empty
+        assert "Lumbar scoliosis" in self.test_adata.obs["hpo_terms"].values
+
+    def test_closest_hpo_term_anndata(self):
+        HPO.map_to_hpo(self.test_adata, obs_key="disease", strict=False)
+
+        assert (
+            array([list(["Thoracolumbar scoliosis", "Lumbar scoliosis"])], dtype=object)
+            in self.test_adata.obs["hpo_terms"].values
+        )

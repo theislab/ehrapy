@@ -61,7 +61,7 @@ class HPO:
 
     @staticmethod
     def map_to_hpo(
-        adata: AnnData, obs_key: str, key: str = "hpo_terms", strict: bool = False, copy: bool = False
+        adata: AnnData, obs_key: str = "disease", key: str = "hpo_terms", strict: bool = False, copy: bool = False
     ) -> Optional[AnnData]:
         """Maps a single column of an AnnData object into HPO terms.
 
@@ -88,13 +88,18 @@ class HPO:
 
                 def _get_closest_HPOterm_match(name) -> Sequence:
                     closest_matches = difflib.get_close_matches(name, HPO.ontology_values, 1)
-                    closest_match: str = closest_matches[0]  # type: ignore
-                    return closest_match.strip()
+                    closest_match: str = closest_matches[0].strip()  # type: ignore
+                    return closest_match
 
                 adata.obs[key] = adata.obs[obs_key].apply(_get_closest_HPOterm_match)
         else:
-            pass
 
-        # adata.obs[key] = names.apply()
+            def _get_all_HPOterm_matches(name) -> Sequence:
+                result = []
+                for term in Ontology.search(name):
+                    result.append(term.name)
+                return result
+
+            adata.obs[key] = adata.obs[obs_key].apply(_get_all_HPOterm_matches)
 
         return adata
