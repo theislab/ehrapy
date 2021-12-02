@@ -20,10 +20,10 @@ class TestHPO:
     def setup_method(self):
         _ = Ontology()
 
-        obs_data = {"disease": ["Lumbar scoliosis"]}
+        obs_data = {"disease": ["Lumbar scoliosis", "Neuroblastoma"]}
         var_data = {"values": ["not required"]}
         self.test_adata = AnnData(
-            X=np.array(np.random.rand(1, 1)),
+            X=np.array(np.random.rand(2, 1)),
             obs=pd.DataFrame(data=obs_data),
             var=pd.DataFrame(data=var_data),
             dtype=np.dtype(object),
@@ -73,11 +73,30 @@ class TestHPO:
         HPO.map_to_hpo(self.test_adata, obs_key="disease", strict=True)
 
         assert "Lumbar scoliosis" in self.test_adata.obs["hpo_terms"].values
+        assert "Neuroblastoma" in self.test_adata.obs["hpo_terms"].values
 
     def test_closest_hpo_term_anndata(self):
         HPO.map_to_hpo(self.test_adata, obs_key="disease", strict=False)
 
         assert (
-            array([list(["Thoracolumbar scoliosis", "Lumbar scoliosis"])], dtype=object)
+            array(
+                [
+                    ["Thoracolumbar scoliosis", "Lumbar scoliosis"],
+                    [
+                        "Neuroblastoma",
+                        "Congenital neuroblastoma",
+                        "Ganglioneuroblastoma",
+                        "Localized neuroblastoma",
+                        "Olfactory esthesioneuroblastoma",
+                    ],
+                ],
+                dtype=object,
+            )
             in self.test_adata.obs["hpo_terms"].values
         )
+
+        # HP: 0003006 | Neuroblastoma
+        # HP: 0006742 | Congenital neuroblastoma
+        # HP: 0006747 | Ganglioneuroblastoma
+        # HP: 0006768 | Localized neuroblastoma
+        # HP: 0030068 | Olfactory esthesioneuroblastoma
