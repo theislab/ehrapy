@@ -61,7 +61,7 @@ class HPO:
 
     @staticmethod
     def map_to_hpo(
-        adata: AnnData, obs_key: str = "disease", key: str = "hpo_terms", strict: bool = False, copy: bool = False
+        adata: AnnData, obs_key: str = None, key: str = "hpo_terms", strict: bool = False, copy: bool = False
     ) -> Optional[AnnData]:
         """Maps a single column of an AnnData object into HPO terms.
 
