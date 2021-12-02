@@ -32,16 +32,14 @@ class Imputation:
         Returns:
             :class:`~anndata.AnnData` object with imputed X
         """
-        adata_to_act_on = adata
         if copy:
-            adata_copy = adata.copy()
-            adata_to_act_on = adata_copy
+            adata = adata.copy()
 
         # scenario 1: Replace all missing values with the specified value
-        impute_conditions = np.logical_or(pd.isnull(adata_to_act_on.X), adata_to_act_on.X == "")
+        impute_conditions = np.logical_or(pd.isnull(adata.X), adata.X == "")
         if not impute_empty_strings:
-            impute_conditions = pd.isnull(adata_to_act_on.X)
-        adata_to_act_on.X[impute_conditions] = replacement
+            impute_conditions = pd.isnull(adata.X)
+        adata.X[impute_conditions] = replacement
 
         # scenario 2: Replace all missing values in a subset of columns with the specified value
         # TODO
@@ -49,4 +47,4 @@ class Imputation:
         # scenario 3: Replace all missing values in a subset of columns with a specified value per column
         # TODO
 
-        return adata_to_act_on
+        return adata

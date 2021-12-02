@@ -39,6 +39,8 @@ medcat = {git = "https://github.com/CogStack/MedCAT"}
 en-core-web-md = {url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.0.0/en_core_web_md-3.0.0.tar.gz", optional = true}
 scanpy = "^1.8.2"
 ipython = "^7.30.0"
+pyhpo = {extras = ["all"], version = "^3.0.0"}
+multipledispatch = "^0.6.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"
@@ -97,6 +99,11 @@ multi_line_output=3
 include_trailing_comma=true
 balanced_wrapping=true
 line_length=120
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
 
 [tool.coverage.paths]
 source = ["ehrapy", "*/site-packages"]
