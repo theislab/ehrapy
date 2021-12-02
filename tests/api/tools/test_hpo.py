@@ -94,9 +94,3 @@ class TestHPO:
             )
             in self.test_adata.obs["hpo_terms"].values
         )
-
-        # HP: 0003006 | Neuroblastoma
-        # HP: 0006742 | Congenital neuroblastoma
-        # HP: 0006747 | Ganglioneuroblastoma
-        # HP: 0006768 | Localized neuroblastoma
-        # HP: 0030068 | Olfactory esthesioneuroblastoma
