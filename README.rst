@@ -30,6 +30,10 @@ ehrapy
 .. |Black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
    :target: https://github.com/psf/black
    :alt: Black
+   
+.. warning::
+    ehrapy is still in development and there is no version on PyPI yet.
+    If you are willing to try out alpha software feel free to install from source or contact us.
 
 
 Features
@@ -58,7 +62,7 @@ Please see the `Usage documentation <Usage_>`_ for details.
 
 .. code:: python
 
-   import ehra.api as ep
+   import ehrapy.api as ep
 
 
 Credits
