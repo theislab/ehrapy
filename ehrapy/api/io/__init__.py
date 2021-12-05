@@ -10,7 +10,7 @@ from ehrapy.api.io.write import DataWriter
 
 
 def read(
-    filename: Union[Path, str],
+    dataset_path: Union[Path, str],
     extension: Optional[str] = None,
     delimiter: Optional[str] = None,
     index_column: Union[str, Optional[int]] = None,
@@ -25,8 +25,8 @@ def read(
     To speed up reading, consider passing ``cache=True``, which creates an hdf5 cache file.
 
     Parameters:
-         filename
-             Name of the input file or directory to read
+         dataset_path
+             Path to the input file or directory to read
 
          extension
              Extension that indicates the file type. If ``None``, uses extension of filename.
@@ -70,7 +70,7 @@ def read(
             adata_2 = ep.io.read("mimic_2.h5ad")
     """
     return DataReader.read(
-        file_path=filename,
+        dataset_path=dataset_path,
         extension=extension,
         delimiter=delimiter,
         index_column=index_column,

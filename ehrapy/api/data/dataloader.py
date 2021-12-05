@@ -67,5 +67,3 @@ class Dataloader:
             output_path = output_path or tempfile.gettempdir()
             with ZipFile(download_to_path, "r") as zip_obj:
                 zip_obj.extractall(path=output_path)
-                extracted = zip_obj.namelist()
-                print(extracted)

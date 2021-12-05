@@ -41,7 +41,7 @@ Data
 .. autosummary::
     :toctree: data
 
-    data.mimic_2
+    data.mimic_2_demo
     data.mimic_3_demo
 
 Preprocessing

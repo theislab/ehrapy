@@ -1,7 +1,7 @@
+import shutil
 from pathlib import Path
-from typing import Dict, Generator, Iterable, Iterator, List, NamedTuple, Optional, Sequence, Union
+from typing import Dict, Iterator, List, NamedTuple, Optional, Union
 
-import numpy as np
 import pandas as pd
 from _collections import OrderedDict
 from anndata import AnnData
@@ -11,13 +11,7 @@ from rich import print
 
 from ehrapy.api import ehrapy_settings, settings
 from ehrapy.api.data.dataloader import Dataloader
-from ehrapy.api.io._utility_io import (
-    _get_file_extension,
-    _is_float_convertable,
-    _is_int_convertable,
-    _slugify,
-    supported_extensions,
-)
+from ehrapy.api.io._utility_io import _get_file_extension, _slugify, supported_extensions
 from ehrapy.api.preprocessing.encoding._encode import Encoder
 
 
@@ -31,8 +25,7 @@ class DataReader:
 
     @staticmethod
     def read(
-        file_path: Union[Path, str],
-        download_file_name: Optional[str] = None,
+        dataset_path: Union[Path, str],
         extension: Optional[str] = None,
         delimiter: Optional[str] = None,
         index_column: Union[str, Optional[int]] = None,
@@ -41,52 +34,54 @@ class DataReader:
         cache: bool = False,
         backup_url: Optional[str] = None,
         suppress_warnings: bool = False,
+        download_dataset_name: Optional[str] = None,
     ) -> Union[AnnData, Dict[str, AnnData], MuData]:
         """Reads or downloads a desired file.
 
         Args:
-            file_path: Path to the file to read.
-            download_file_name: Optional name for the downloaded file.
+            dataset_path: Path to the file to read.
             extension: File extension. Required to select the appropriate file reader.
             delimiter: File delimiter. Required for e.g. csv vs tsv files.
             index_column: The index column of the tables.
             columns_obs_only: Which columns to only add to obs and not X.
             return_mudata: Whether to create and return a MuData object.
             cache: Whether to use the cache when reading.
+            download_dataset_name: Name of the file or directory, in case the dataset is downloaded
             backup_url: URL to download the data file from if not yet existing.
             suppress_warnings: Whether to suppress warnings.
 
         Returns:
+            An :class:`~anndata.AnnData` object, a :class:`~mudata.MuData` object or a dict with an identifier for each
+            :class:`~anndata.AnnData` object in the dict
+
 
         """
         DataReader.suppress_warnings = suppress_warnings
-        file: Path = Path(file_path)
-        is_zip: bool = False
-        if download_file_name is None and backup_url is not None:
-            download_file_name = backup_url.split("/")[-1]
-            is_zip = download_file_name.endswith(".zip")  # TODO can we generalize this to tar files as well?
+        file: Path = Path(dataset_path)
 
         if not file.exists():
+            if backup_url is not None:
+                download_default_name = backup_url.split("/")[-1]
+                download_dataset_name = download_dataset_name or download_default_name
+                is_zip = download_default_name.endswith(".zip")  # TODO can we generalize this to tar files as well?
+            else:
+                raise BackupURLNotProvidedError(
+                    f"File or directory {file} does not exist and no backup_url was provided.\n"
+                    f"Please provide a backup_url or check whether path is spelled correctly."
+                )
             print("[bold yellow]Path or dataset does not yet exist. Attempting to download...")
             Dataloader.download(
                 backup_url,
-                output_file_name=str(download_file_name),
+                output_file_name=download_default_name,
                 output_path=ehrapy_settings.datasetdir,
                 is_zip=is_zip,
             )
-            if is_zip:
-                raw_output_dir = download_file_name.replace(".zip", "")
-                poss_file = ehrapy_settings.datasetdir / raw_output_dir
-
-                if poss_file.is_dir():
-                    file = poss_file
-            else:
-                poss_file = ehrapy_settings.datasetdir / download_file_name
-                if poss_file.is_dir():
-                    file = poss_file
-
-        if is_zip:
-            file = ehrapy_settings.datasetdir / download_file_name.replace(".zip", "")
+            # if zipped, remove .zip suffix
+            output_path_name = download_default_name.replace(".zip", "") if is_zip else download_default_name
+            output_file_or_dir = ehrapy_settings.datasetdir / output_path_name
+            moved_path = Path(str(output_file_or_dir)[: str(output_file_or_dir).rfind("/") + 1]) / download_dataset_name
+            shutil.move(output_file_or_dir, moved_path)
+            file = moved_path
 
         raw_object = DataReader._read(
             filename=file,
@@ -130,35 +125,25 @@ class DataReader:
         if extension in {"h5", "h5ad"}:
             return read_h5ad(filename)
 
-        if not is_present:
-            raise FileNotFoundError(f"Did not find file {filename}.")
+        # read from cache
         path_cache = settings.cachedir / _slugify(filename).replace("." + extension, ".h5ad")  # type: Path
         if path_cache.suffix in {".gz", ".bz2"}:
             path_cache = path_cache.with_suffix("")
+        # previously cached data reading
         if cache and path_cache.is_file():
-            cached_adata = read_h5ad(path_cache)
-            cached_adata.X = cached_adata.X.astype("object")
-            cached_adata = DataReader._decode_cached_adata(cached_adata, columns_obs_only)
+            return DataReader._read_from_cache(path_cache, columns_obs_only)
 
-            return cached_adata
-
-        # do the actual reading
+        # read from other files that are currently supported
         if extension in {"csv", "tsv"}:
             raw_anndata = DataReader.read_csv(filename, delimiter, index_column, columns_obs_only)
-        elif extension in {"txt", "tab", "data"}:
-            raw_anndata = DataReader.read_text(filename, delimiter, dtype="object")
         else:
-            raise ValueError(f"Unknown extension: {extension}.")
+            raise NotImplementedError(f"No parser currently implemented for {extension}!")
 
+        # cache results if wanted
         if cache:
             if not path_cache.parent.is_dir():
                 path_cache.parent.mkdir(parents=True)
-            # write for faster reading when calling the next time
-            cached_adata = Encoder.encode(data=raw_anndata, autodetect=True)
-            cached_adata.write(path_cache)
-            cached_adata.X = cached_adata.X.astype("object")
-            cached_adata = DataReader._decode_cached_adata(cached_adata, columns_obs_only)
-            return cached_adata
+            DataReader._write_cache(raw_anndata, path_cache, columns_obs_only)
 
         return raw_anndata
 
@@ -170,7 +155,7 @@ class DataReader:
         columns_obs_only: Union[Optional[List[Union[str]]], Dict[str, Optional[List[Union[str]]]]] = None,
         return_mudata_object: bool = False,
     ) -> Union[MuData, Dict[str, AnnData]]:
-        """Read a dataset containing multiple files (in this case .csv or .tsv files).
+        """Read a dataset containing multiple files (here: .csv or .tsv files).
 
         Args:
             filename: File path to the directory containing multiple csvs dataset.
@@ -187,7 +172,7 @@ class DataReader:
         else:
             mudata = None
         for file in filename.iterdir():
-            if file.is_file() and file.suffix in [".csv", ".tsv"]:
+            if file.is_file() and file.suffix in {".csv", ".tsv"}:
                 # slice off the file suffix as this is not needed for identifier
                 adata_identifier = file.name[:-4]
                 index_col, col_obs_only = DataReader._extract_index_and_columns_obs_only(
@@ -239,7 +224,7 @@ class DataReader:
                 )
                 index_column = None
             initial_df = pd.read_csv(filename, delimiter=delimiter, index_col=index_column)
-        # possible cause: index column is misspelled (or does not exist at all in this file)
+        # in case the index column is misspelled or does not exist
         except ValueError:
             raise IndexNotFoundError(
                 f"Could not create AnnData object while reading file {filename}. Does index_column named {index_column} "
@@ -263,132 +248,22 @@ class DataReader:
         return DataReader._df_to_anndata(initial_df, columns_obs_only)
 
     @staticmethod
-    def read_text(
-        filename: Union[Path, Iterator[str]],
-        delimiter: Optional[str] = None,
-        dtype: str = "float32",
-    ) -> AnnData:
-        """Read `.txt`, `.tab`, `.data` (text) file.
+    def _read_from_cache(path_cache: Path, columns_obs_only: Optional[List[Union[str]]]) -> AnnData:
+        """Read AnnData object from cached file"""
+        cached_adata = read_h5ad(path_cache)
+        cached_adata.X = cached_adata.X.astype("object")
+        cached_adata = DataReader._decode_cached_adata(cached_adata, columns_obs_only)
 
-        Args:
-            filename: File name or stream
-            delimiter:  Delimiter that separates data within text file.
-            If `None`, will split at arbitrary number of white spaces, which is different from enforcing splitting at single white space `' '`.
-            dtype: Numpy data type.
-
-        Returns:
-            An :class:`~anndata.AnnData` object
-        """
-        if not isinstance(filename, (Path, str, bytes)):
-            return DataReader._read_text(filename, delimiter, dtype)
-
-        filename = Path(filename)
-        with filename.open() as f:
-            return DataReader._read_text(f, delimiter, dtype)
+        return cached_adata
 
     @staticmethod
-    def _iter_lines(file_like: Iterable[str]) -> Generator[str, None, None]:
-        """Helper for iterating only nonempty lines without line breaks"""
-        for line in file_like:
-            line = line.rstrip("\r\n")
-            if line:
-                yield line
-
-    @staticmethod
-    def _read_text(  # noqa:C901
-        file_iterator: Iterator[str],
-        delimiter: Optional[str],
-        dtype: str,
-    ) -> AnnData:
-        comments: List = []
-        data: List = []
-        lines: Generator = DataReader._iter_lines(file_iterator)
-        column_names: List = []
-        row_names: List = []
-        id_column_avail: bool = False
-        # read header and column names
-        for line in lines:
-            if line.startswith("#"):
-                comment = line.lstrip("# ")
-                if comment:
-                    comments.append(comment)
-            else:
-                if delimiter is not None and delimiter not in line:
-                    raise ValueError(f"Did not find delimiter {delimiter!r} in first line.")
-                line_list = line.split(delimiter)
-                # the first column might be row names, so check the last
-                if not _is_float_convertable(line_list[-1]):
-                    column_names = line_list
-                    if "patient_id" == column_names[0].lower():
-                        id_column_avail = True
-                else:
-                    if not _is_float_convertable(line_list[0]):
-                        row_names.append(line_list[0])
-                        DataReader._cast_values_to_numeric(line_list[1:])
-                        data.append(np.array(line_list[1:], dtype=dtype))
-                    else:
-                        DataReader._cast_values_to_numeric(line_list)
-                        data.append(np.array(line_list, dtype=dtype))
-                break
-        if not column_names:
-            # try reading col_names from the last comment line
-            if len(comments) > 0:
-                column_names_arr = np.array(comments[-1].split())
-            # just numbers as col_names
-            else:
-                column_names_arr = np.arange(len(data[0])).astype(str)
-        column_names_arr = np.array(column_names, dtype=str)
-        # read another line to check if first column contains row names or not
-        for line in lines:
-            line_list = line.split(delimiter)
-            if id_column_avail:
-                row_names.append(line_list[0])
-                DataReader._cast_values_to_numeric(line_list[1:])
-                data.append(np.array(line_list[1:], dtype=dtype))
-            else:
-                DataReader._cast_values_to_numeric(line_list)
-                data.append(np.array(line_list, dtype=dtype))
-            break
-        # if row names are just integers
-        if len(data) > 1 and data[0].size != data[1].size:
-            column_names_arr = np.array(data[0]).astype(int).astype(str)
-            row_names.append(data[1][0].astype(int).astype(str))
-            data = [data[1][1:]]
-        # parse the file
-        for line in lines:
-            line_list = line.split(delimiter)
-            if id_column_avail:
-                row_names.append(line_list[0])
-                DataReader._cast_values_to_numeric(line_list[1:])
-                data.append(np.array(line_list[1:], dtype=dtype))
-            else:
-                DataReader._cast_values_to_numeric(line_list)
-                data.append(np.array(line_list, dtype=dtype))
-        if data[0].size != data[-1].size:
-            raise ValueError(
-                f"Length of first line ({data[0].size}) is different " f"from length of last line ({data[-1].size})."
-            )
-        data_array = np.array(data, dtype=dtype)
-        # transform row_names
-        if not row_names:
-            row_names_arr = np.arange(len(data_array)).astype(str)
-        else:
-            row_names_arr = np.array(row_names)
-            for iname, name in enumerate(row_names_arr):
-                row_names_arr[iname] = name.strip('"')
-        # adapt col_names if necessary
-        if column_names_arr.size > data_array.shape[1]:
-            column_names_arr = column_names_arr[1:]
-        for iname, name in enumerate(column_names_arr):
-            column_names_arr[iname] = name.strip('"')
-
-        return AnnData(
-            X=data_array,
-            obs=dict(obs_names=row_names_arr),
-            var=dict(var_names=column_names_arr),
-            dtype=dtype,
-            layers={"original": data_array.copy()},
-        )
+    def _write_cache(raw_anndata: AnnData, path_cache: Path, columns_obs_only: Optional[List[Union[str]]]):
+        """Write AnnData object to cache"""
+        cached_adata = Encoder.encode(data=raw_anndata, autodetect=True)
+        cached_adata.write(path_cache)
+        cached_adata.X = cached_adata.X.astype("object")
+        cached_adata = DataReader._decode_cached_adata(cached_adata, columns_obs_only)
+        return cached_adata
 
     @staticmethod
     def _df_to_anndata(df: pd.DataFrame, columns_obs_only: Optional[List[Union[str]]]) -> AnnData:
@@ -576,48 +451,14 @@ class DataReader:
 
         return BaseDataframes(obs, df)
 
-    @staticmethod
-    def _cast_values_to_numeric(row: List[Optional[Union[str, int, float]]]) -> List[Optional[Union[str, int, float]]]:
-        """Cast values to numerical datatype if possible.
-
-        Args:
-            row: List of values to cast
-
-        Returns:
-            A new List of values casted into the appropriate data type
-        """
-        for idx, val in enumerate(row):
-            _is_int: bool = _is_int_convertable(val)
-            if val == "0":
-                row[idx] = 0
-            elif val == "":
-                row[idx] = None
-            elif _is_int:
-                row[idx] = int(val)
-            elif _is_float_convertable(val):
-                row[idx] = float(val)
-
-        return row
-
-    @staticmethod
-    def _is_homogeneous_type(sequence: Sequence):
-        """Check, whether all elements in an iterable are of the same type.
-
-        Args:
-            sequence: Sequence to check
-
-        Returns:
-            True if all elements are of the same type, False otherwise.
-        """
-        iseq = iter(sequence)
-        first_type = type(next(iseq))
-
-        return first_type if all((type(el) is first_type) for el in iseq) else False
-
 
 class IndexNotFoundError(Exception):
     pass
 
 
 class ColumnNotFoundError(Exception):
+    pass
+
+
+class BackupURLNotProvidedError(Exception):
     pass

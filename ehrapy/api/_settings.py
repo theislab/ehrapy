@@ -71,9 +71,9 @@ class EhrapyConfig:
         file_format_figs: str = "pdf",
         autosave: bool = False,
         autoshow: bool = True,
-        writedir: Union[str, Path] = "./write/",
-        cachedir: Union[str, Path] = "./cache/",
-        datasetdir: Union[str, Path] = "./data/",
+        writedir: Union[str, Path] = "./ehrapy_write/",
+        cachedir: Union[str, Path] = "./ehrapy_cache/",
+        datasetdir: Union[str, Path] = "./ehrapy_data/",
         figdir: Union[str, Path] = "./figures/",
         cache_compression: Union[str, None] = "lzf",
         max_memory=15,
@@ -177,7 +177,7 @@ class EhrapyConfig:
     @file_format_data.setter
     def file_format_data(self, file_format: str):
         _type_check(file_format, "file_format_data", str)
-        file_format_options = {"txt", "csv", "h5ad"}
+        file_format_options = {"csv", "h5ad"}
         if file_format not in file_format_options:
             raise ValueError(f"Cannot set file_format_data to {file_format}. " f"Must be one of {file_format_options}")
         self._file_format_data = file_format
