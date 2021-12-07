@@ -1,9 +1,9 @@
+import shutil
 import tempfile
 from pathlib import Path
 from random import choice
 from string import ascii_lowercase
 from typing import Union
-from zipfile import ZipFile
 
 import requests
 from rich import print
@@ -20,7 +20,7 @@ class Dataloader:
         output_path: Union[str, Path] = None,
         block_size: int = 1024,
         overwrite: bool = False,
-        is_zip: bool = False,
+        is_archived: bool = False,
     ) -> None:
         """Downloads a dataset irrespective of the format.
 
@@ -30,7 +30,7 @@ class Dataloader:
             output_path: Path to download/extract the files to (default: OS tmpdir)
             block_size: Block size for downloads in bytes (default: 1024)
             overwrite: Whether to overwrite existing files (default: False)
-            is_zip: Whether the downloaded file needs to be unzipped (default: False)
+            is_archived: Whether the downloaded file needs to be unarchived (default: False)
         """
         if output_file_name is None:
             letters = ascii_lowercase
@@ -63,7 +63,6 @@ class Dataloader:
                     file.write(data)
                     progress.update(task, advance=block_size)
 
-        if is_zip:
+        if is_archived:
             output_path = output_path or tempfile.gettempdir()
-            with ZipFile(download_to_path, "r") as zip_obj:
-                zip_obj.extractall(path=output_path)
+            shutil.unpack_archive(download_to_path, output_path)

@@ -98,6 +98,13 @@ class Encoder:
         # autodetect categorical values, which could lead to more categoricals
         if autodetect:
             adata.uns["categoricals"] = _detect_categorical_columns(adata.X, adata.var_names)
+            # no categoricals found that need to be encoded
+            # type casting is required; this would have happened during encoding anyways
+            if not adata.uns["categoricals"]["categorical_encoded"]:
+                adata.X = adata.X.astype("float32")
+                adata.layers["original"] = adata.layers["original"].astype("float32")
+                return adata
+
             categoricals_names = adata.uns["categoricals"]["categorical_encoded"]
             if "current_encodings" in adata.uns.keys():
                 print(

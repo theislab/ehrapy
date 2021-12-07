@@ -1,6 +1,6 @@
 import shutil
 from pathlib import Path
-from typing import Dict, Iterator, List, NamedTuple, Optional, Union
+from typing import Dict, Iterator, List, NamedTuple, Optional, Tuple, Union
 
 import pandas as pd
 from _collections import OrderedDict
@@ -63,7 +63,10 @@ class DataReader:
             if backup_url is not None:
                 download_default_name = backup_url.split("/")[-1]
                 download_dataset_name = download_dataset_name or download_default_name
-                is_zip = download_default_name.endswith(".zip")  # TODO can we generalize this to tar files as well?
+                # currently supports zip, tar, gztar, bztar, xztar
+                archive_formats, _ = zip(*shutil.get_archive_formats())
+                is_archived = download_default_name[-3:] in archive_formats
+
             else:
                 raise BackupURLNotProvidedError(
                     f"File or directory {file} does not exist and no backup_url was provided.\n"
@@ -74,10 +77,13 @@ class DataReader:
                 backup_url,
                 output_file_name=download_default_name,
                 output_path=ehrapy_settings.datasetdir,
-                is_zip=is_zip,
+                is_archived=is_archived,
             )
-            # if zipped, remove .zip suffix
-            output_path_name = download_default_name.replace(".zip", "") if is_zip else download_default_name
+            # if archived, remove archive suffix
+            archive_extension = download_default_name[-4:]
+            output_path_name = (
+                download_default_name.replace(archive_extension, "") if is_archived else download_default_name
+            )
             output_file_or_dir = ehrapy_settings.datasetdir / output_path_name
             moved_path = Path(str(output_file_or_dir)[: str(output_file_or_dir).rfind("/") + 1]) / download_dataset_name
             shutil.move(output_file_or_dir, moved_path)
@@ -113,39 +119,54 @@ class DataReader:
                 "[bold red]Attempted download of missing file(s) failed. Please file an issue at our repository "
                 "[blue]https://github.com/theislab/ehrapy!"
             )
+        path_cache_dir = settings.cachedir / filename
+        # read from cache directory if wanted and available
+        if cache and path_cache_dir.is_dir():
+            # return DataReader._read_from_cache_dir(path_cache_dir)
+            # TODO IMPLEMENT
+            pass
         # If the filename is a directory, assume it is a dataset with multiple files
-        if filename.is_dir():
-            return DataReader._read_multiple_csv(filename, delimiter, index_column, columns_obs_only, return_mudata)
-
-        if extension is not None and extension not in supported_extensions:
-            raise ValueError("Please provide one of the available extensions.\n" f"{supported_extensions}")
+        elif filename.is_dir():
+            adata_objects = DataReader._read_multiple_csv(
+                filename, delimiter, index_column, columns_obs_only, return_mudata, cache
+            )
+            if cache:
+                if not path_cache_dir.parent.is_dir():
+                    path_cache_dir.parent.mkdir(parents=True)
+                path_cache_dir.mkdir()
+                return DataReader._write_cache_dir(adata_objects, path_cache_dir, columns_obs_only)
+            return adata_objects
+        # dataset seems to be a single file, not a directory of multiple files
         else:
-            extension = _get_file_extension(filename)
-        # read hdf5 files
-        if extension in {"h5", "h5ad"}:
-            return read_h5ad(filename)
+            if extension is not None and extension not in supported_extensions:
+                raise ValueError("Please provide one of the available extensions.\n" f"{supported_extensions}")
+            else:
+                extension = _get_file_extension(filename)
+            # read hdf5 files
+            if extension in {"h5", "h5ad"}:
+                return read_h5ad(filename)
 
-        # read from cache
-        path_cache = settings.cachedir / _slugify(filename).replace("." + extension, ".h5ad")  # type: Path
-        if path_cache.suffix in {".gz", ".bz2"}:
-            path_cache = path_cache.with_suffix("")
-        # previously cached data reading
-        if cache and path_cache.is_file():
-            return DataReader._read_from_cache(path_cache, columns_obs_only)
+            # read from cache file
+            path_cache = settings.cachedir / _slugify(filename).replace("." + extension, ".h5ad")  # type: Path
+            if path_cache.suffix in {".gz", ".bz2"}:
+                path_cache = path_cache.with_suffix("")
+            # previously cached data reading
+            if cache and path_cache.is_file():
+                return DataReader._read_from_cache(path_cache)
 
-        # read from other files that are currently supported
-        if extension in {"csv", "tsv"}:
-            raw_anndata = DataReader.read_csv(filename, delimiter, index_column, columns_obs_only)
-        else:
-            raise NotImplementedError(f"No parser currently implemented for {extension}!")
-
-        # cache results if wanted
-        if cache:
-            if not path_cache.parent.is_dir():
-                path_cache.parent.mkdir(parents=True)
-            DataReader._write_cache(raw_anndata, path_cache, columns_obs_only)
-
-        return raw_anndata
+            # read from other files that are currently supported
+            elif extension in {"csv", "tsv"}:
+                raw_anndata, columns_obs_only = DataReader.read_csv(
+                    filename, delimiter, index_column, columns_obs_only, cache
+                )
+            else:
+                raise NotImplementedError(f"No parser currently implemented for {extension}!")
+            # cache results if wanted
+            if cache:
+                if not path_cache.parent.is_dir():
+                    path_cache.parent.mkdir(parents=True)
+                return DataReader._write_cache(raw_anndata, path_cache, columns_obs_only)
+            return raw_anndata
 
     @staticmethod
     def _read_multiple_csv(  # noqa: N802
@@ -154,6 +175,7 @@ class DataReader:
         index_column: Union[Union[str, Optional[int]], Dict[str, Union[str, Optional[int]]]] = None,
         columns_obs_only: Union[Optional[List[Union[str]]], Dict[str, Optional[List[Union[str]]]]] = None,
         return_mudata_object: bool = False,
+        cache: bool = False,
     ) -> Union[MuData, Dict[str, AnnData]]:
         """Read a dataset containing multiple files (here: .csv or .tsv files).
 
@@ -163,6 +185,7 @@ class DataReader:
             index_column: Indices or column names of the index columns (obs)
             columns_obs_only: List of columns per file (thus AnnData object) which should only be stored in .obs, but not in X. Useful for free text annotations.
             return_mudata_object: If set to True, return a :class:`~mudata.MuData` object, else a dict of :class:`~anndata.AnnData` objects
+            cache: Whether to cache results or not
 
         Returns:
             An :class:`~mudata.MuData` object or a dict mapping the filename (object name) to the corresponding :class:`~anndata.AnnData` object.
@@ -178,7 +201,7 @@ class DataReader:
                 index_col, col_obs_only = DataReader._extract_index_and_columns_obs_only(
                     adata_identifier, index_column, columns_obs_only
                 )
-                adata = DataReader.read_csv(file, delimiter, index_col, col_obs_only)
+                adata, _ = DataReader.read_csv(file, delimiter, index_col, col_obs_only, cache=cache)
                 # obs indices have to be unique otherwise updating and working with the MuData object will fail
                 if index_col:
                     adata.obs_names_make_unique()
@@ -203,7 +226,8 @@ class DataReader:
         delimiter: Optional[str] = ",",
         index_column: Union[str, Optional[int]] = None,
         columns_obs_only: Optional[List[Union[str]]] = None,
-    ) -> AnnData:
+        cache: bool = False,
+    ) -> Tuple[AnnData, Optional[List[str]]]:
         """Read `.csv` and `.tsv` file.
 
         Args:
@@ -211,6 +235,7 @@ class DataReader:
             delimiter: Delimiter separating the csv data within the file.
             index_column: Index or column name of the index column (obs)
             columns_obs_only: List of columns which only be stored in .obs, but not in X. Useful for free text annotations.
+            cache: Whether the data should be written to cache or not
 
         Returns:
             An :class:`~anndata.AnnData` object
@@ -236,30 +261,61 @@ class DataReader:
         # if columns_obs_only is None, initialize it as datetime columns need to be included here
         if not columns_obs_only:
             columns_obs_only = []
-
+        no_datetime_object_col = []
         for col in object_type_columns:
             try:
                 pd.to_datetime(initial_df[col])
                 columns_obs_only.append(col)
             except (ValueError, TypeError):
-                pass
+                # we only need to fillnans on non datetime, non numerical columns since datetime are obs only
+                no_datetime_object_col.append(col)
 
+        # writing to hd5a files requires non string to be empty in non numerical columns
+        if cache:
+            initial_df[no_datetime_object_col] = initial_df[no_datetime_object_col].fillna("")
         # return the initial AnnData object
-        return DataReader._df_to_anndata(initial_df, columns_obs_only)
+        return DataReader._df_to_anndata(initial_df, columns_obs_only), columns_obs_only
 
     @staticmethod
-    def _read_from_cache(path_cache: Path, columns_obs_only: Optional[List[Union[str]]]) -> AnnData:
+    def _read_from_cache_dir(cache_dir: Path):
+        pass
+        # TODO IMPLEMENT
+
+    @staticmethod
+    def _read_from_cache(path_cache: Path) -> AnnData:
         """Read AnnData object from cached file"""
         cached_adata = read_h5ad(path_cache)
         cached_adata.X = cached_adata.X.astype("object")
+        columns_obs_only = list(cached_adata.uns["cache_temp_obs_only"])
+        del cached_adata.uns["cache_temp_obs_only"]
         cached_adata = DataReader._decode_cached_adata(cached_adata, columns_obs_only)
 
         return cached_adata
 
     @staticmethod
+    def _write_cache_dir(adata_objects: Dict[str, AnnData], path_cache: Path, columns_obs_only):
+        """
+        TODO description
+        Args:
+            adata_objects:
+            path_cache:
+            columns_obs_only:
+
+        Returns:
+
+        """
+        for identifier in adata_objects:
+            _, cols_obs_only = DataReader._extract_index_and_columns_obs_only(identifier, {}, columns_obs_only)
+            adata_objects[identifier] = DataReader._write_cache(
+                adata_objects[identifier], path_cache / (identifier + ".h5ad"), cols_obs_only
+            )
+        return adata_objects
+
+    @staticmethod
     def _write_cache(raw_anndata: AnnData, path_cache: Path, columns_obs_only: Optional[List[Union[str]]]):
         """Write AnnData object to cache"""
         cached_adata = Encoder.encode(data=raw_anndata, autodetect=True)
+        cached_adata.uns["cache_temp_obs_only"] = columns_obs_only or []
         cached_adata.write(path_cache)
         cached_adata.X = cached_adata.X.astype("object")
         cached_adata = DataReader._decode_cached_adata(cached_adata, columns_obs_only)
