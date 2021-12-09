@@ -6,7 +6,7 @@ from scipy.sparse import spmatrix
 
 
 def get_column_indices(adata: AnnData, col_names=Union[str, List]) -> List[int]:
-    """Fetches the column indices in X for a given list of column names
+    """Fetches the column indices in X for a given list of column names.
 
     Args:
         adata: :class:`~anndata.AnnData` object
@@ -27,7 +27,7 @@ def get_column_indices(adata: AnnData, col_names=Union[str, List]) -> List[int]:
 
 
 def get_column_values(adata: AnnData, indices: Union[int, List[int]]) -> np.ndarray:
-    """Fetches the column values for a specific index from X
+    """Fetches the column values for a specific index from X.
 
     Args:
         adata: :class:`~anndata.AnnData` object
@@ -40,7 +40,7 @@ def get_column_values(adata: AnnData, indices: Union[int, List[int]]) -> np.ndar
 
 
 def get_numeric_vars(adata: AnnData) -> List[str]:
-    """Fetches the column names for numeric variables in X
+    """Fetches the column names for numeric variables in X.
 
     Args:
         adata: :class:`~anndata.AnnData` object
@@ -57,7 +57,7 @@ def get_numeric_vars(adata: AnnData) -> List[str]:
 def set_numeric_vars(
     adata: AnnData, values: Union[np.ndarray, spmatrix], vars: Optional[List[str]] = None, copy: bool = False
 ) -> Optional[AnnData]:
-    """Fetches the column names for numeric variables in X
+    """Fetches the column names for numeric variables in X.
 
     Args:
         adata: :class:`~anndata.AnnData` object

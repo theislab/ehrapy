@@ -8,7 +8,7 @@ class Normalization:
 
     @staticmethod
     def identity(adata: AnnData, copy: bool = False) -> Optional[AnnData]:
-        """Returns the original object without any normalisation
+        """Returns the original object without any normalisation.
 
         Created as a template during development. Should be removed before merging.
 
