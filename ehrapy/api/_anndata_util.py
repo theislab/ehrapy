@@ -57,7 +57,7 @@ def get_numeric_vars(adata: AnnData) -> List[str]:
 def set_numeric_vars(
     adata: AnnData, values: Union[np.ndarray, spmatrix], vars: Optional[List[str]] = None, copy: bool = False
 ) -> Optional[AnnData]:
-    """Fetches the column names for numeric variables in X.
+    """Sets the column names for numeric variables in X.
 
     Args:
         adata: :class:`~anndata.AnnData` object
