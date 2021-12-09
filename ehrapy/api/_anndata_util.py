@@ -69,9 +69,7 @@ def set_numeric_vars(
         :class:`~anndata.AnnData` object with updated X
     """
 
-    adata_to_set = adata
     if copy:
-        adata_copy = adata.copy()
-        adata_to_set = adata_copy
+        adata = adata.copy()
 
-    return adata_to_set
+    return adata

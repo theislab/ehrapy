@@ -19,9 +19,8 @@ class Normalization:
         Returns:
             :class:`~anndata.AnnData` object with normalized X
         """
-        adata_to_act_on = adata
-        if copy:
-            adata_copy = adata.copy()
-            adata_to_act_on = adata_copy
 
-        return adata_to_act_on
+        if copy:
+            adata = adata.copy()
+
+        return adata
