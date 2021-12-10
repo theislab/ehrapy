@@ -2,7 +2,6 @@ from typing import List, Optional, Union
 
 import numpy as np
 from anndata import AnnData
-from scipy.sparse import spmatrix
 
 
 def get_column_indices(adata: AnnData, col_names=Union[str, List]) -> List[int]:
@@ -39,6 +38,13 @@ def get_column_values(adata: AnnData, indices: Union[int, List[int]]) -> np.ndar
     return np.take(adata.X, indices, axis=1)
 
 
+def assert_encoded(adata: AnnData):
+    try:
+        assert "categoricals" in adata.uns_keys()
+    except AssertionError:
+        raise NotEncodedError from AssertionError("The AnnData object has not yet been encoded.")
+
+
 def get_numeric_vars(adata: AnnData) -> List[str]:
     """Fetches the column names for numeric variables in X.
 
@@ -49,13 +55,13 @@ def get_numeric_vars(adata: AnnData) -> List[str]:
         Set of column numeric column names
     """
 
-    numeric_vars: List[str] = []
+    assert_encoded(adata)
 
-    return numeric_vars
+    return adata.uns["categoricals"]["not_categorical"]
 
 
 def set_numeric_vars(
-    adata: AnnData, values: Union[np.ndarray, spmatrix], vars: Optional[List[str]] = None, copy: bool = False
+    adata: AnnData, values: np.ndarray, vars: Optional[List[str]] = None, copy: bool = False
 ) -> Optional[AnnData]:
     """Sets the column names for numeric variables in X.
 
@@ -69,7 +75,27 @@ def set_numeric_vars(
         :class:`~anndata.AnnData` object with updated X
     """
 
+    if vars is None:
+        vars = get_numeric_vars(adata)
+
+    if not np.issubdtype(values.dtype, np.number):
+        raise TypeError(f"values must be numeric (current dtype is {values.dtype})")
+
+    n_values = values.shape[1]
+
+    if n_values != len(vars):
+        raise ValueError(f"Number of values ({n_values}) does not much number of vars ({len(vars)})")
+
     if copy:
         adata = adata.copy()
 
+    vars_idx = get_column_indices(adata, vars)
+
+    for i in range(n_values):
+        adata.X[:, vars_idx[i]] = values[:, i]
+
     return adata
+
+
+class NotEncodedError(Exception):
+    pass
