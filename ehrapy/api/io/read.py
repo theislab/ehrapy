@@ -28,8 +28,8 @@ class DataReader:
         dataset_path: Union[Path, str],
         extension: Optional[str] = None,
         delimiter: Optional[str] = None,
-        index_column: Union[str, Optional[int]] = None,
-        columns_obs_only: Optional[List[Union[str]]] = None,
+        index_column: Optional[Union[Dict[str, Union[str, int]], Union[str, int]]] = None,
+        columns_obs_only: Optional[Union[Dict[str, List[str]], List[str]]] = None,
         return_mudata: bool = False,
         cache: bool = False,
         backup_url: Optional[str] = None,
@@ -86,7 +86,7 @@ class DataReader:
             )
             output_file_or_dir = ehrapy_settings.datasetdir / output_path_name
             moved_path = Path(str(output_file_or_dir)[: str(output_file_or_dir).rfind("/") + 1]) / download_dataset_name
-            shutil.move(output_file_or_dir, moved_path)
+            shutil.move(output_file_or_dir, moved_path)  # type: ignore
             file = moved_path
 
         raw_object = DataReader._read(
@@ -105,13 +105,18 @@ class DataReader:
         filename: Path,
         extension: Optional[str] = None,
         delimiter: Optional[str] = None,
-        index_column: Union[str, Optional[int]] = None,
-        columns_obs_only: Optional[List[Union[str]]] = None,
+        index_column: Optional[Union[Dict[str, Union[str, int]], Union[str, int]]] = None,
+        columns_obs_only: Optional[Union[Dict[str, List[str]], List[str]]] = None,
         return_mudata: bool = False,
         cache: bool = False,
         backup_url: Optional[str] = None,
     ) -> Union[MuData, Dict[str, AnnData], AnnData]:
         """Internal interface of the read method."""
+        if cache and return_mudata:
+            raise MudataCachingNotSupportedError(
+                "Caching is currently not supported for MuData objects. Consider setting return_mudata to False in order "
+                "to use caching!"
+            )
         # check, whether the datafile(s) is/are present or not
         is_present = DataReader._check_datafiles_present_and_download(filename, backup_url=backup_url)
         if not is_present and not filename.is_dir() and not filename.is_file():
@@ -122,19 +127,17 @@ class DataReader:
         path_cache_dir = settings.cachedir / filename
         # read from cache directory if wanted and available
         if cache and path_cache_dir.is_dir():
-            # return DataReader._read_from_cache_dir(path_cache_dir)
-            # TODO IMPLEMENT
-            pass
+            return DataReader._read_from_cache_dir(path_cache_dir)
         # If the filename is a directory, assume it is a dataset with multiple files
         elif filename.is_dir():
-            adata_objects = DataReader._read_multiple_csv(
+            adata_objects, columns_obs_only = DataReader._read_multiple_csv(
                 filename, delimiter, index_column, columns_obs_only, return_mudata, cache
             )
             if cache:
                 if not path_cache_dir.parent.is_dir():
                     path_cache_dir.parent.mkdir(parents=True)
                 path_cache_dir.mkdir()
-                return DataReader._write_cache_dir(adata_objects, path_cache_dir, columns_obs_only)
+                return DataReader._write_cache_dir(adata_objects, path_cache_dir, columns_obs_only, index_column)  # type: ignore
             return adata_objects
         # dataset seems to be a single file, not a directory of multiple files
         else:
@@ -157,7 +160,7 @@ class DataReader:
             # read from other files that are currently supported
             elif extension in {"csv", "tsv"}:
                 raw_anndata, columns_obs_only = DataReader.read_csv(
-                    filename, delimiter, index_column, columns_obs_only, cache
+                    filename, delimiter, index_column, columns_obs_only, cache  # type: ignore
                 )
             else:
                 raise NotImplementedError(f"No parser currently implemented for {extension}!")
@@ -165,18 +168,18 @@ class DataReader:
             if cache:
                 if not path_cache.parent.is_dir():
                     path_cache.parent.mkdir(parents=True)
-                return DataReader._write_cache(raw_anndata, path_cache, columns_obs_only)
+                return DataReader._write_cache(raw_anndata, path_cache, columns_obs_only, index_column)  # type: ignore
             return raw_anndata
 
     @staticmethod
     def _read_multiple_csv(  # noqa: N802
         filename: Path,
         delimiter: Optional[str] = None,
-        index_column: Union[Union[str, Optional[int]], Dict[str, Union[str, Optional[int]]]] = None,
+        index_column: Optional[Union[Dict[str, Union[str, int]], Union[str, int]]] = None,
         columns_obs_only: Union[Optional[List[Union[str]]], Dict[str, Optional[List[Union[str]]]]] = None,
         return_mudata_object: bool = False,
         cache: bool = False,
-    ) -> Union[MuData, Dict[str, AnnData]]:
+    ) -> Tuple[Union[MuData, Dict[str, AnnData]], Dict[str, List[str]]]:
         """Read a dataset containing multiple files (here: .csv or .tsv files).
 
         Args:
@@ -190,6 +193,7 @@ class DataReader:
         Returns:
             An :class:`~mudata.MuData` object or a dict mapping the filename (object name) to the corresponding :class:`~anndata.AnnData` object.
         """
+        res = {}
         if not return_mudata_object:
             anndata_dict = {}
         else:
@@ -201,7 +205,10 @@ class DataReader:
                 index_col, col_obs_only = DataReader._extract_index_and_columns_obs_only(
                     adata_identifier, index_column, columns_obs_only
                 )
-                adata, _ = DataReader.read_csv(file, delimiter, index_col, col_obs_only, cache=cache)
+                adata, single_adata_obs_only = DataReader.read_csv(
+                    file, delimiter, index_col, col_obs_only, cache=cache
+                )
+                res[adata_identifier] = single_adata_obs_only
                 # obs indices have to be unique otherwise updating and working with the MuData object will fail
                 if index_col:
                     adata.obs_names_make_unique()
@@ -218,13 +225,13 @@ class DataReader:
             mudata.update()
             return mudata
         else:
-            return anndata_dict
+            return anndata_dict, res
 
     @staticmethod
     def read_csv(
         filename: Union[Path, Iterator[str]],
         delimiter: Optional[str] = ",",
-        index_column: Union[str, Optional[int]] = None,
+        index_column: Optional[Union[str, int]] = None,
         columns_obs_only: Optional[List[Union[str]]] = None,
         cache: bool = False,
     ) -> Tuple[AnnData, Optional[List[str]]]:
@@ -265,7 +272,8 @@ class DataReader:
         for col in object_type_columns:
             try:
                 pd.to_datetime(initial_df[col])
-                columns_obs_only.append(col)
+                if col not in columns_obs_only:
+                    columns_obs_only.append(col)
             except (ValueError, TypeError):
                 # we only need to fillnans on non datetime, non numerical columns since datetime are obs only
                 no_datetime_object_col.append(col)
@@ -277,48 +285,74 @@ class DataReader:
         return DataReader._df_to_anndata(initial_df, columns_obs_only), columns_obs_only
 
     @staticmethod
-    def _read_from_cache_dir(cache_dir: Path):
-        pass
-        # TODO IMPLEMENT
+    def _read_from_cache_dir(cache_dir: Path) -> Dict[str, AnnData]:
+        """Read AnnData objects from the cache directory"""
+        adata_objects = {}
+        for cache_file in cache_dir.iterdir():
+            if cache_file.name.endswith(".h5ad"):
+                adata_objects[cache_file.stem] = DataReader._read_from_cache(cache_file)
+        return adata_objects
 
     @staticmethod
     def _read_from_cache(path_cache: Path) -> AnnData:
         """Read AnnData object from cached file"""
         cached_adata = read_h5ad(path_cache)
         cached_adata.X = cached_adata.X.astype("object")
-        columns_obs_only = list(cached_adata.uns["cache_temp_obs_only"])
-        del cached_adata.uns["cache_temp_obs_only"]
-        cached_adata = DataReader._decode_cached_adata(cached_adata, columns_obs_only)
+        try:
+            columns_obs_only = list(cached_adata.uns["cache_temp_obs_only"])
+            del cached_adata.uns["cache_temp_obs_only"]
+        except KeyError:
+            columns_obs_only = []
+        try:
+            index_col = cached_adata.uns["cache_temp_index_col"]
+            del cached_adata.uns["cache_temp_index_col"]
+        except KeyError:
+            index_col = ""
+        cached_adata = DataReader._decode_cached_adata(cached_adata, columns_obs_only, index_col)
 
         return cached_adata
 
     @staticmethod
-    def _write_cache_dir(adata_objects: Dict[str, AnnData], path_cache: Path, columns_obs_only):
-        """
-        TODO description
+    def _write_cache_dir(
+        adata_objects: Dict[str, AnnData],
+        path_cache: Path,
+        columns_obs_only,
+        index_column: Optional[Union[Dict[str, Union[str, int]]]],  # type ignore
+    ):
+        """Write multiple AnnData objects into a common cache directory keeping index column and columns_obs_only.
+
         Args:
-            adata_objects:
-            path_cache:
-            columns_obs_only:
+            adata_objects: A dictionary with an identifier as key for each of the AnnData objects
+            path_cache: Path to the cache directory
+            columns_obs_only: Columns for obs only
+            index_column: The index columns for each object (if any)
 
         Returns:
 
         """
         for identifier in adata_objects:
-            _, cols_obs_only = DataReader._extract_index_and_columns_obs_only(identifier, {}, columns_obs_only)
+            index_col, cols_obs_only = DataReader._extract_index_and_columns_obs_only(
+                identifier, index_column, columns_obs_only
+            )
             adata_objects[identifier] = DataReader._write_cache(
-                adata_objects[identifier], path_cache / (identifier + ".h5ad"), cols_obs_only
+                adata_objects[identifier], path_cache / (identifier + ".h5ad"), cols_obs_only, index_col
             )
         return adata_objects
 
     @staticmethod
-    def _write_cache(raw_anndata: AnnData, path_cache: Path, columns_obs_only: Optional[List[Union[str]]]):
+    def _write_cache(
+        raw_anndata: AnnData,
+        path_cache: Path,
+        columns_obs_only: Optional[List[Union[str]]],
+        index_col: Optional[Union[str, int]],
+    ):
         """Write AnnData object to cache"""
         cached_adata = Encoder.encode(data=raw_anndata, autodetect=True)
-        cached_adata.uns["cache_temp_obs_only"] = columns_obs_only or []
+        cached_adata.uns["cache_temp_obs_only"] = columns_obs_only
+        cached_adata.uns["cache_temp_index_col"] = index_col
         cached_adata.write(path_cache)
         cached_adata.X = cached_adata.X.astype("object")
-        cached_adata = DataReader._decode_cached_adata(cached_adata, columns_obs_only)
+        cached_adata = DataReader._decode_cached_adata(cached_adata, columns_obs_only, index_col)
         return cached_adata
 
     @staticmethod
@@ -337,12 +371,15 @@ class DataReader:
         )
 
     @staticmethod
-    def _decode_cached_adata(adata: AnnData, column_obs_only: List[str]) -> AnnData:
+    def _decode_cached_adata(
+        adata: AnnData, column_obs_only: List[str], index_col: Optional[Union[str, int]]
+    ) -> AnnData:
         """Decode the label encoding of initial AnnData object
 
         Args:
             adata: The label encoded AnnData object
             column_obs_only: The columns, that should be kept in obs
+            index_col: The index column for the AnnData object
 
         Returns:
             The decoded, initial AnnData object
@@ -361,7 +398,7 @@ class DataReader:
         if column_obs_only:
             adata.obs = adata.obs[column_obs_only]
         else:
-            adata.obs = pd.DataFrame(index=adata.obs.index)
+            adata.obs = pd.DataFrame(index=adata.obs.index if not index_col else index_col)
         # set the new var names (unencoded ones)
         adata.var.index = var_names
         # update original layer as well
@@ -411,7 +448,7 @@ class DataReader:
                        identifier2 = "MyOtherFile"
                        # no default key and identifier1 is not in the index or columns_obs_only keys
                        # -> no index column will be set and no columns will be obs only (except datetime, if any)
-                       index_columns = {"MyOtherFile":["MyOtherColumn1"]}
+                       index_columns = {"MyOtherFile":"MyOtherColumn1"}
                        columns_obs_only = {"MyOtherFile":["MyOtherColumn2"]}
 
             2.) The filename (thus the identifier) is not present as a key, but default key is provided
@@ -425,7 +462,7 @@ class DataReader:
                        identifier2 = "MyOtherFile"
                        # identifier1 is not in the index or columns_obs_only keys, but default key is set for both
                        # -> index column will be set using MyColumn1 and column obs only will include MyColumn2
-                       index_columns = {"MyOtherFile":["MyOtherColumn1"], "default": "MyColumn1"}
+                       index_columns = {"MyOtherFile":"MyOtherColumn1", "default": "MyColumn1"}
                        columns_obs_only = {"MyOtherFile":["MyOtherColumn2"], "default": "MyColumn2"}
 
             3.) The filename is present as a key
@@ -439,7 +476,7 @@ class DataReader:
                        identifier2 = "MyOtherFile"
                        # identifier1 is in the index and columns_obs_only keys
                        # -> index column will be MyColumn1 and columns_obs_only will include MyColumn2 and MyColumn3
-                       index_columns = {"MyFile":["MyColumn1"]}
+                       index_columns = {"MyFile":"MyColumn1"}
                        columns_obs_only = {"MyFile":["MyColumn2", "MyColumn3"]}
 
         Args:
@@ -469,7 +506,7 @@ class DataReader:
             _columns_obs_only = [_columns_obs_only]
 
         # if index column is also found in column_obs_only, use default indices instead and only move it to obs only, but warn the user
-        if _index_column and _index_column in _columns_obs_only:
+        if _index_column and _columns_obs_only and _index_column in _columns_obs_only:
             print(
                 f"[bold yellow]Index column [blue]{_index_column} [yellow]for file [blue]{identifier} [yellow]is also used as a column "
                 f"for obs only. Using default indices instead and moving [blue]{_index_column} [yellow]to column_obs_only."
@@ -517,4 +554,8 @@ class ColumnNotFoundError(Exception):
 
 
 class BackupURLNotProvidedError(Exception):
+    pass
+
+
+class MudataCachingNotSupportedError(Exception):
     pass
