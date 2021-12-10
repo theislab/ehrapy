@@ -47,9 +47,9 @@ class TestNormalization:
             dtype=np.dtype(object),
         )
 
-        adata = self.adata_strings
+        adata = self.adata_strings.copy()
         adata.layers["original"] = adata.X.copy()  # Can be removed once Issue 117 is fixed
-        self.adata_encoded = Encoder.encode(adata, autodetect=True)
+        self.adata_encoded = Encoder.encode(adata, autodetect=True, encodings={})
 
     def test_identity(self):
         """Test for the identity normalization.
