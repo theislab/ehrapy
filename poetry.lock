@@ -1,4 +1,12 @@
 [[package]]
+name = "aiofiles"
+version = "0.8.0"
+description = "File support for asyncio."
+category = "main"
+optional = false
+python-versions = ">=3.6,<4.0"
+
+[[package]]
 name = "aiohttp"
 version = "3.8.1"
 description = "Async http client/server framework (asyncio)"
@@ -1103,7 +1111,7 @@ python-versions = "*"
 
 [[package]]
 name = "medcat"
-version = "1.2.7.dev1"
+version = "1.2.7.dev4"
 description = "Concept annotation tool for Electronic Health Records"
 category = "main"
 optional = false
@@ -1111,6 +1119,7 @@ python-versions = "*"
 develop = false
 
 [package.dependencies]
+aiofiles = ">=0.8.0,<0.9.0"
 datasets = ">=1.14.0,<1.15.0"
 dill = ">=0.3.4,<0.4.0"
 elasticsearch = ">=7.10"
@@ -1132,7 +1141,7 @@ transformers = ">=4.11.3,<4.12.0"
 type = "git"
 url = "https://github.com/CogStack/MedCAT"
 reference = "master"
-resolved_reference = "7dd6b030e346d17ff84a542f2dce05b0010b30d1"
+resolved_reference = "cd1e432b800f9bfdaa393d1a12f973dce05cfaee"
 
 [[package]]
 name = "mistune"
@@ -2779,7 +2788,7 @@ python-versions = "*"
 
 [[package]]
 name = "typeguard"
-version = "2.13.2"
+version = "2.13.3"
 description = "Run-time type checker for Python"
 category = "dev"
 optional = false
@@ -2982,9 +2991,13 @@ en-core-web-md = ["en-core-web-md"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7.1,<3.10"
-content-hash = "f7268051310d1331d79266c8316b45aca2700dc8621886f472e996c78cb5a9a0"
+content-hash = "93bff7bdcfd0b0f8593a58a7ddf5b8bebc3a6774d05f7e94de2b626f70a4e670"
 
 [metadata.files]
+aiofiles = [
+    {file = "aiofiles-0.8.0-py3-none-any.whl", hash = "sha256:7a973fc22b29e9962d0897805ace5856e6a566ab1f0c8e5c91ff6c866519c937"},
+    {file = "aiofiles-0.8.0.tar.gz", hash = "sha256:8334f23235248a3b2e83b2c3a78a22674f39969b96397126cc93664d9a901e59"},
+]
 aiohttp = [
     {file = "aiohttp-3.8.1-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:1ed0b6477896559f17b9eaeb6d38e07f7f9ffe40b9f0f9627ae8b9926ae260a8"},
     {file = "aiohttp-3.8.1-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:7dadf3c307b31e0e61689cbf9e06be7a867c563d5a63ce9dca578f956609abf8"},
@@ -5056,8 +5069,8 @@ typed-ast = [
     {file = "typed_ast-1.4.3.tar.gz", hash = "sha256:fb1bbeac803adea29cedd70781399c99138358c26d05fcbd23c13016b7f5ec65"},
 ]
 typeguard = [
-    {file = "typeguard-2.13.2-py3-none-any.whl", hash = "sha256:4f7da3d80dda5e42d6973f11f33da3542b8bf86edc12ba926b2dbad62adf3fcf"},
-    {file = "typeguard-2.13.2.tar.gz", hash = "sha256:7e50071590ab997509aa0977609eb5cf9d73d84c1f416cb4fab78b77a9d15326"},
+    {file = "typeguard-2.13.3-py3-none-any.whl", hash = "sha256:5e3e3be01e887e7eafae5af63d1f36c849aaa94e3a0112097312aabfa16284f1"},
+    {file = "typeguard-2.13.3.tar.gz", hash = "sha256:00edaa8da3a133674796cf5ea87d9f4b4c367d77476e185e80251cc13dfbb8c4"},
 ]
 typer = [
     {file = "typer-0.3.2-py3-none-any.whl", hash = "sha256:ba58b920ce851b12a2d790143009fa00ac1d05b3ff3257061ff69dbdfc3d161b"},
