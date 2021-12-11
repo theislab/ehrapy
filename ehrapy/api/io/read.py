@@ -36,23 +36,23 @@ class DataReader:
         suppress_warnings: bool = False,
         download_dataset_name: Optional[str] = None,
     ) -> Union[AnnData, Dict[str, AnnData], MuData]:
-        """Reads or downloads a desired file.
+        """Reads or downloads a desired directory or single file.
 
         Args:
-            dataset_path: Path to the file to read.
+            dataset_path: Path to the file or directory to read.
             extension: File extension. Required to select the appropriate file reader.
             delimiter: File delimiter. Required for e.g. csv vs tsv files.
-            index_column: The index column of the tables.
+            index_column: The index column of obs.
             columns_obs_only: Which columns to only add to obs and not X.
             return_mudata: Whether to create and return a MuData object.
             cache: Whether to use the cache when reading.
             download_dataset_name: Name of the file or directory, in case the dataset is downloaded
-            backup_url: URL to download the data file from if not yet existing.
+            backup_url: URL to download the data file(s) from if not yet existing.
             suppress_warnings: Whether to suppress warnings.
 
         Returns:
-            An :class:`~anndata.AnnData` object, a :class:`~mudata.MuData` object or a dict with an identifier for each
-            :class:`~anndata.AnnData` object in the dict
+            An :class:`~anndata.AnnData` object, a :class:`~mudata.MuData` object or a dict with an identifier (usually the filename, without extension)
+            for each :class:`~anndata.AnnData` object in the dict
 
 
         """
@@ -121,7 +121,7 @@ class DataReader:
         is_present = DataReader._check_datafiles_present_and_download(filename, backup_url=backup_url)
         if not is_present and not filename.is_dir() and not filename.is_file():
             print(
-                "[bold red]Attempted download of missing file(s) failed. Please file an issue at our repository "
+                "[bold red]Attempted download of missing dataset file(s) failed. Please file an issue at our repository "
                 "[blue]https://github.com/theislab/ehrapy!"
             )
         path_cache_dir = settings.cachedir / filename
@@ -163,7 +163,7 @@ class DataReader:
                     filename, delimiter, index_column, columns_obs_only, cache  # type: ignore
                 )
             else:
-                raise NotImplementedError(f"No parser currently implemented for {extension}!")
+                raise NotImplementedError(f"There is currently no parser implemented for {extension} files!")
             # cache results if wanted
             if cache:
                 if not path_cache.parent.is_dir():
@@ -180,20 +180,21 @@ class DataReader:
         return_mudata_object: bool = False,
         cache: bool = False,
     ) -> Tuple[Union[MuData, Dict[str, AnnData]], Dict[str, List[str]]]:
-        """Read a dataset containing multiple files (here: .csv or .tsv files).
+        """Read a dataset containing multiple .csv/.tsv files.
 
         Args:
-            filename: File path to the directory containing multiple csvs dataset.
+            filename: File path to the directory containing multiple .csv/.tsv files.
             delimiter: Delimiter separating the data within the file.
-            index_column: Indices or column names of the index columns (obs)
-            columns_obs_only: List of columns per file (thus AnnData object) which should only be stored in .obs, but not in X. Useful for free text annotations.
-            return_mudata_object: If set to True, return a :class:`~mudata.MuData` object, else a dict of :class:`~anndata.AnnData` objects
+            index_column: Column names of the index columns for obs
+            columns_obs_only: List of columns per file (AnnData object) which should only be stored in .obs, but not in X. Useful for free text annotations.
+            return_mudata_object: When set to True, return a :class:`~mudata.MuData` object, otherwise a dict of :class:`~anndata.AnnData` objects
             cache: Whether to cache results or not
 
         Returns:
-            An :class:`~mudata.MuData` object or a dict mapping the filename (object name) to the corresponding :class:`~anndata.AnnData` object.
+            An :class:`~mudata.MuData` object or a dict mapping the filename (object name) to the corresponding :class:`~anndata.AnnData` object and the columns
+            that are obs only for each object
         """
-        res = {}
+        obs_only_all = {}
         if not return_mudata_object:
             anndata_dict = {}
         else:
@@ -208,7 +209,7 @@ class DataReader:
                 adata, single_adata_obs_only = DataReader.read_csv(
                     file, delimiter, index_col, col_obs_only, cache=cache
                 )
-                res[adata_identifier] = single_adata_obs_only
+                obs_only_all[adata_identifier] = single_adata_obs_only
                 # obs indices have to be unique otherwise updating and working with the MuData object will fail
                 if index_col:
                     adata.obs_names_make_unique()
@@ -225,7 +226,7 @@ class DataReader:
             mudata.update()
             return mudata
         else:
-            return anndata_dict, res
+            return anndata_dict, obs_only_all
 
     @staticmethod
     def read_csv(
@@ -245,7 +246,7 @@ class DataReader:
             cache: Whether the data should be written to cache or not
 
         Returns:
-            An :class:`~anndata.AnnData` object
+            An :class:`~anndata.AnnData` object and the column obs only for the object
         """
         # read pandas dataframe
         try:
@@ -272,10 +273,11 @@ class DataReader:
         for col in object_type_columns:
             try:
                 pd.to_datetime(initial_df[col])
+                # only add to column_obs_only if not present already to avoid duplicates
                 if col not in columns_obs_only:
                     columns_obs_only.append(col)
             except (ValueError, TypeError):
-                # we only need to fillnans on non datetime, non numerical columns since datetime are obs only
+                # we only need to replace NANs on non datetime, non numerical columns since datetime are obs only by default
                 no_datetime_object_col.append(col)
 
         # writing to hd5a files requires non string to be empty in non numerical columns
@@ -288,6 +290,7 @@ class DataReader:
     def _read_from_cache_dir(cache_dir: Path) -> Dict[str, AnnData]:
         """Read AnnData objects from the cache directory"""
         adata_objects = {}
+        # read each cache file in the cache directory and store it into a dict
         for cache_file in cache_dir.iterdir():
             if cache_file.name.endswith(".h5ad"):
                 adata_objects[cache_file.stem] = DataReader._read_from_cache(cache_file)
@@ -297,18 +300,16 @@ class DataReader:
     def _read_from_cache(path_cache: Path) -> AnnData:
         """Read AnnData object from cached file"""
         cached_adata = read_h5ad(path_cache)
+        # type cast required; otherwise all values in X would be treated as strings
         cached_adata.X = cached_adata.X.astype("object")
         try:
             columns_obs_only = list(cached_adata.uns["cache_temp_obs_only"])
             del cached_adata.uns["cache_temp_obs_only"]
+        # in case columns_obs_only has not been passed
         except KeyError:
             columns_obs_only = []
-        try:
-            index_col = cached_adata.uns["cache_temp_index_col"]
-            del cached_adata.uns["cache_temp_index_col"]
-        except KeyError:
-            index_col = ""
-        cached_adata = DataReader._decode_cached_adata(cached_adata, columns_obs_only, index_col)
+        # recreate the original AnnData object with the index column for obs and obs only columns
+        cached_adata = DataReader._decode_cached_adata(cached_adata, columns_obs_only)
 
         return cached_adata
 
@@ -318,7 +319,7 @@ class DataReader:
         path_cache: Path,
         columns_obs_only,
         index_column: Optional[Union[Dict[str, Union[str, int]]]],  # type ignore
-    ):
+    ) -> Dict[str, AnnData]:
         """Write multiple AnnData objects into a common cache directory keeping index column and columns_obs_only.
 
         Args:
@@ -328,9 +329,10 @@ class DataReader:
             index_column: The index columns for each object (if any)
 
         Returns:
-
+            A dict containing an unique identifier and an :class:`~anndata.AnnData` object for each file read
         """
         for identifier in adata_objects:
+            # for each identifier (for the AnnData object), we need the index column and obs_only cols (if any) for reuse when reading cache
             index_col, cols_obs_only = DataReader._extract_index_and_columns_obs_only(
                 identifier, index_column, columns_obs_only
             )
@@ -345,14 +347,14 @@ class DataReader:
         path_cache: Path,
         columns_obs_only: Optional[List[Union[str]]],
         index_col: Optional[Union[str, int]],
-    ):
+    ) -> AnnData:
         """Write AnnData object to cache"""
         cached_adata = Encoder.encode(data=raw_anndata, autodetect=True)
+        # temporary key that stores all column names that are obs only for this AnnData object
         cached_adata.uns["cache_temp_obs_only"] = columns_obs_only
-        cached_adata.uns["cache_temp_index_col"] = index_col
         cached_adata.write(path_cache)
         cached_adata.X = cached_adata.X.astype("object")
-        cached_adata = DataReader._decode_cached_adata(cached_adata, columns_obs_only, index_col)
+        cached_adata = DataReader._decode_cached_adata(cached_adata, columns_obs_only)
         return cached_adata
 
     @staticmethod
@@ -371,15 +373,12 @@ class DataReader:
         )
 
     @staticmethod
-    def _decode_cached_adata(
-        adata: AnnData, column_obs_only: List[str], index_col: Optional[Union[str, int]]
-    ) -> AnnData:
+    def _decode_cached_adata(adata: AnnData, column_obs_only: List[str]) -> AnnData:
         """Decode the label encoding of initial AnnData object
 
         Args:
             adata: The label encoded AnnData object
             column_obs_only: The columns, that should be kept in obs
-            index_col: The index column for the AnnData object
 
         Returns:
             The decoded, initial AnnData object
@@ -398,7 +397,7 @@ class DataReader:
         if column_obs_only:
             adata.obs = adata.obs[column_obs_only]
         else:
-            adata.obs = pd.DataFrame(index=adata.obs.index if not index_col else index_col)
+            adata.obs = pd.DataFrame(index=adata.obs.index)
         # set the new var names (unencoded ones)
         adata.var.index = var_names
         # update original layer as well

@@ -10,7 +10,7 @@ from ehrapy.api.preprocessing.encoding import Encoder
 
 class Datasets:
     @staticmethod
-    def mimic_2_demo(encode: bool = False) -> AnnData:
+    def mimic_2(encode: bool = False) -> AnnData:
         """Loads the MIMIC-II dataset
 
         Args:
