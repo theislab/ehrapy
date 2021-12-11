@@ -509,7 +509,7 @@ def dendrogram(
     linkage_method: str = "complete",
     optimal_ordering: bool = False,
     key_added: Optional[str] = None,
-    in_place: bool = True,
+    inplace: bool = True,
 ) -> Optional[Dict[str, Any]]:
     """Computes a hierarchical clustering for the given `groupby` categories.
 
@@ -546,10 +546,10 @@ def dendrogram(
         key_added: By default, the dendrogram information is added to
                    `.uns[f'dendrogram_{{groupby}}']`.
                    Notice that the `groupby` information is added to the dendrogram.
-        in_place: If `True`, adds dendrogram information to `adata.uns[key_added]`,
+        inplace: If `True`, adds dendrogram information to `adata.uns[key_added]`,
                  else this function returns the information.
     Returns:
-        If `in_place=False`, returns dendrogram information, else `adata.uns[key_added]` is updated with it.
+        If `inplace=False`, returns dendrogram information, else `adata.uns[key_added]` is updated with it.
 
     Example:
         .. code-block:: python
@@ -570,7 +570,7 @@ def dendrogram(
         linkage_method=linkage_method,
         optimal_ordering=optimal_ordering,
         key_added=key_added,
-        inplace=in_place,
+        inplace=inplace,
     )
 
 
@@ -709,7 +709,7 @@ def ingest(
     embedding_method: Union[str, Iterable[str]] = ("umap", "pca"),
     labeling_method: str = "knn",
     neighbors_key: Optional[str] = None,
-    in_place: bool = True,
+    inplace: bool = True,
     **kwargs,
 ) -> Optional[AnnData]:
     """Map labels and embeddings from reference data to new data.
@@ -738,13 +738,13 @@ def ingest(
         neighbors_key: If not specified, ingest looks adata_ref.uns['neighbors'] for neighbors settings and adata_ref.obsp['distances'] for
                        distances (default storage places for pp.neighbors). If specified, ingest looks adata_ref.uns[neighbors_key] for
                        neighbors settings and adata_ref.obsp[adata_ref.uns[neighbors_key]['distances_key']] for distances.
-        in_place: Only works if `return_joint=False`.
+        inplace: Only works if `return_joint=False`.
                  Add labels and embeddings to the passed `adata` (if `True`) or return a copy of `adata` with mapped embeddings and labels.
         **kwargs: Further keyword arguments for the Neighbor calculation
 
     Returns:
-        * if `in_place=False` returns a copy of `adata` with mapped embeddings and labels in `obsm` and `obs` correspondingly
-        * if `in_place=True` returns `None` and updates `adata.obsm` and `adata.obs` with mapped embeddings and labels
+        * if `inplace=False` returns a copy of `adata` with mapped embeddings and labels in `obsm` and `obs` correspondingly
+        * if `inplace=True` returns `None` and updates `adata.obsm` and `adata.obs` with mapped embeddings and labels
 
     Example:
         .. code-block:: python
@@ -762,6 +762,6 @@ def ingest(
         embedding_method=embedding_method,
         labeling_method=labeling_method,
         neighbors_key=neighbors_key,
-        inplace=in_place,
+        inplace=inplace,
         **kwargs,
     )
