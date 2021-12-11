@@ -46,7 +46,7 @@ class DataReader:
             columns_obs_only: Which columns to only add to obs and not X.
             return_mudata: Whether to create and return a MuData object.
             cache: Whether to use the cache when reading.
-            download_dataset_name: Name of the file or directory, in case the dataset is downloaded
+            download_dataset_name: Name of the file or directory in case the dataset is downloaded
             backup_url: URL to download the data file(s) from if not yet existing.
             suppress_warnings: Whether to suppress warnings.
 
