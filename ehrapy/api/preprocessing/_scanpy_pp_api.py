@@ -118,7 +118,7 @@ def normalize_total(
     target_sum: Optional[float] = None,
     key_added: Optional[str] = None,
     layer: Optional[str] = None,
-    in_place: bool = True,
+    inplace: bool = True,
     copy: bool = False,
 ) -> Optional[Dict[str, np.ndarray]]:
     """Normalize findings per patient.
@@ -131,8 +131,8 @@ def normalize_total(
         target_sum: If `None`, after normalization, each observation (patient) has a total count equal to the median of total counts for observations before normalization.
         key_added: Name of the field in `adata.obs` where the normalization factor is stored.
         layer: Layer to normalize instead of `X`. If `None`, `X` is normalized.
-        in_place: Whether to update `adata` or return dictionary with normalized copies of `adata.X` and `adata.layers`.
-        copy: Whether to modify copied input object. Not compatible with in_place=False.
+        inplace: Whether to update `adata` or return dictionary with normalized copies of `adata.X` and `adata.layers`.
+        copy: Whether to modify copied input object. Not compatible with inplace=False.
 
     Returns:
 
@@ -144,7 +144,7 @@ def normalize_total(
         max_fraction=0.05,
         key_added=key_added,
         layer=layer,
-        inplace=in_place,
+        inplace=inplace,
         copy=copy,
     )
 
@@ -228,7 +228,7 @@ def combat(
     adata: AnnData,
     key: str = "batch",
     covariates: Optional[Collection[str]] = None,
-    in_place: bool = True,
+    inplace: bool = True,
 ) -> Union[AnnData, np.ndarray, None]:
     """ComBat function for batch effect correction [Johnson07]_ [Leek12]_ [Pedersen12]_.
 
@@ -244,12 +244,12 @@ def combat(
                     This parameter refers to the design matrix `X` in Equation 2.1 in [Johnson07]_ and to the `mod` argument in
                     the original combat function in the sva R package.
                     Note that not including covariates may introduce bias or lead to the removal of signal in unbalanced designs.
-        in_place: Whether to replace adata.X or to return the corrected data
+        inplace: Whether to replace adata.X or to return the corrected data
 
     Returns:
-        Depending on the value of `in_place`, either returns the corrected matrix or or modifies `adata.X`.
+        Depending on the value of `inplace`, either returns the corrected matrix or or modifies `adata.X`.
     """
-    return sc.pp.combat(adata=adata, key=key, covariates=covariates, inplace=in_place)
+    return sc.pp.combat(adata=adata, key=key, covariates=covariates, inplace=inplace)
 
 
 _Method = Literal["umap", "gauss", "rapids"]
