@@ -78,7 +78,7 @@ def _is_categorical_column(col: np.ndarray, col_name: str) -> CategoricalColumnT
         )
         sys.exit(1)
     if c_dtype == "string":
-        # TODO Consider this when we are dealing with freetext
+        # As discussed: will currently leave it as it is; freetext -> medcat first!
         # if len(categorical.categories) >= len(categorical):
         # return CategoricalColumnType(False, "not_categorical")
         return CategoricalColumnType(True, "categorical_encoded")

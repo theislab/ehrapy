@@ -20,8 +20,8 @@ class Datasets:
             :class:`~anndata.AnnData` object of the MIMIC-II dataset
         """
         adata = DataReader.read(
-            file_path=f"{ehrapy_settings.datasetdir}/ehrapy_mimic2.csv",
-            download_file_name="ehrapy_mimic2.csv",
+            dataset_path=f"{ehrapy_settings.datasetdir}/ehrapy_mimic2.csv",
+            download_dataset_name="ehrapy_mimic2.csv",
             backup_url="https://www.physionet.org/files/mimic2-iaccd/1.0/full_cohort_data.csv?download",
             suppress_warnings=True,
         )
@@ -42,7 +42,8 @@ class Datasets:
             :class:`~mudata.MuData` object of the MIMIC-III demo Dataset
         """
         mdata = DataReader.read(
-            file_path=f"{ehrapy_settings.datasetdir}/ehrapy_mimic_3",
+            dataset_path=f"{ehrapy_settings.datasetdir}/ehrapy_mimic_3",
+            download_dataset_name="ehrapy_mimic_3",
             backup_url="https://physionet.org/static/published-projects/mimiciii-demo/mimic-iii-clinical-database-demo-1.4.zip",
             return_mudata=mudata,
         )

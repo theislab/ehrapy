@@ -95,10 +95,11 @@ class Encoder:
         Returns:
             An :class:`~anndata.AnnData` object with the encoded values in X
         """
+        # check whether original layer exists; if not add it
+        if "original" not in adata.layers.keys():
+            adata.layers["original"] = adata.X.copy()
         # autodetect categorical values, which could lead to more categoricals
         if autodetect:
-            adata.uns["categoricals"] = _detect_categorical_columns(adata.X, adata.var_names)
-            categoricals_names = adata.uns["categoricals"]["categorical_encoded"]
             if "current_encodings" in adata.uns.keys():
                 print(
                     "[bold yellow]The current data has already been encoded."
@@ -106,6 +107,15 @@ class Encoder:
                     "[bold red]Aborting..."
                 )
                 return None
+            adata.uns["categoricals"] = _detect_categorical_columns(adata.X, adata.var_names)
+            # no categoricals found that need to be encoded
+            # type casting is required; this would have happened during encoding anyways
+            if not adata.uns["categoricals"]["categorical_encoded"]:
+                adata.X = adata.X.astype("float32")
+                adata.layers["original"] = adata.layers["original"].astype("float32")
+                return adata
+
+            categoricals_names = adata.uns["categoricals"]["categorical_encoded"]
             Encoder._add_categoricals_to_obs(adata, categoricals_names)
             Encoder._add_categoricals_to_uns(adata, categoricals_names)
 
@@ -463,15 +473,7 @@ class Encoder:
         ]
 
         if from_cache_file:
-            # import here to resolve circular dependency issue on module level
-            from ehrapy.api.io.read import DataReader
-
-            # TODO: FIX caching for mudata/multiple datafiles
-            # read from cache file and decode it
-            cached_adata = DataReader.read(cache_file)
-            cached_adata.X = cached_adata.X.astype("object")  # type: ignore
-            cached_adata = DataReader._decode_cached_adata(cached_adata, columns_obs_only)
-            return cached_adata
+            pass
         # maybe implement a way to only reset encoding for specific columns later
         if columns == "all":
             categoricals = list(adata.uns["original_values_categoricals"].keys())
