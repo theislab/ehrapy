@@ -168,7 +168,7 @@ class DataReader:
             if cache:
                 if not path_cache.parent.is_dir():
                     path_cache.parent.mkdir(parents=True)
-                return DataReader._write_cache(raw_anndata, path_cache, columns_obs_only, index_column)  # type: ignore
+                return DataReader._write_cache(raw_anndata, path_cache, columns_obs_only)  # type: ignore
             return raw_anndata
 
     @staticmethod
@@ -279,10 +279,15 @@ class DataReader:
             except (ValueError, TypeError):
                 # we only need to replace NANs on non datetime, non numerical columns since datetime are obs only by default
                 no_datetime_object_col.append(col)
-
         # writing to hd5a files requires non string to be empty in non numerical columns
         if cache:
             initial_df[no_datetime_object_col] = initial_df[no_datetime_object_col].fillna("")
+            # temporary workaround needed; see https://github.com/theislab/anndata/issues/504 and https://github.com/theislab/anndata/issues/662
+            # converting booleans to strings is needed for caching as writing to .h5ad files currently does not support writing boolean values
+            bool_columns = {
+                column_name: "str" for column_name in initial_df.columns if initial_df.dtypes[column_name] == "bool"
+            }
+            initial_df = initial_df.astype(bool_columns)
         # return the initial AnnData object
         return DataReader._df_to_anndata(initial_df, columns_obs_only), columns_obs_only
 
@@ -337,7 +342,7 @@ class DataReader:
                 identifier, index_column, columns_obs_only
             )
             adata_objects[identifier] = DataReader._write_cache(
-                adata_objects[identifier], path_cache / (identifier + ".h5ad"), cols_obs_only, index_col
+                adata_objects[identifier], path_cache / (identifier + ".h5ad"), cols_obs_only
             )
         return adata_objects
 
@@ -346,7 +351,6 @@ class DataReader:
         raw_anndata: AnnData,
         path_cache: Path,
         columns_obs_only: Optional[List[Union[str]]],
-        index_col: Optional[Union[str, int]],
     ) -> AnnData:
         """Write AnnData object to cache"""
         cached_adata = Encoder.encode(data=raw_anndata, autodetect=True)
