@@ -42,7 +42,7 @@ def assert_encoded(adata: AnnData):
     try:
         assert "categoricals" in adata.uns_keys()
     except AssertionError:
-        raise NotEncodedError from AssertionError("The AnnData object has not yet been encoded.")
+        raise NotEncodedError("The AnnData object has not yet been encoded.") from AssertionError
 
 
 def get_numeric_vars(adata: AnnData) -> List[str]:
@@ -75,8 +75,14 @@ def set_numeric_vars(
         :class:`~anndata.AnnData` object with updated X
     """
 
+    assert_encoded(adata)
+
+    num_vars = get_numeric_vars(adata)
+
     if vars is None:
-        vars = get_numeric_vars(adata)
+        vars = num_vars
+    elif not set(vars) <= set(num_vars):
+        raise ValueError("Some selected vars are not numeric")
 
     if not np.issubdtype(values.dtype, np.number):
         raise TypeError(f"values must be numeric (current dtype is {values.dtype})")
@@ -97,5 +103,6 @@ def set_numeric_vars(
     return adata
 
 
-class NotEncodedError(Exception):
-    pass
+class NotEncodedError(AssertionError):
+    def __init__(self, message):
+        super().__init__(message)
