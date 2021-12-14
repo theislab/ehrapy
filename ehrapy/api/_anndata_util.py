@@ -90,7 +90,7 @@ def set_numeric_vars(
     n_values = values.shape[1]
 
     if n_values != len(vars):
-        raise ValueError(f"Number of values ({n_values}) does not much number of vars ({len(vars)})")
+        raise ValueError(f"Number of values ({n_values}) does not match number of vars ({len(vars)})")
 
     if copy:
         adata = adata.copy()

@@ -111,7 +111,7 @@ class TestAnnDataUtil:
             dtype=np.dtype(np.float32),
         )
 
-        with pytest.raises(ValueError, match=r"does not much number of vars"):
+        with pytest.raises(ValueError, match=r"does not match number of vars"):
             set_numeric_vars(self.adata_encoded, extra_values)
 
         with pytest.raises(NotEncodedError, match=r"not yet been encoded"):
