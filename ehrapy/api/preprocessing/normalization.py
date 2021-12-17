@@ -2,7 +2,7 @@ from typing import Dict, Optional, Union
 
 from anndata import AnnData
 from numpy import array
-from sklearn.preprocessing import minmax_scale
+from sklearn.preprocessing import minmax_scale, scale
 
 from ehrapy.api._anndata_util import assert_encoded, get_column_indices, get_column_values, get_numeric_vars
 
@@ -10,7 +10,7 @@ from ehrapy.api._anndata_util import assert_encoded, get_column_indices, get_col
 class Normalization:
     """Provides functions to normalize continuous features"""
 
-    available_methods = {"identity", "minmax"}
+    available_methods = {"scale", "minmax", "identity"}
 
     @staticmethod
     def _normalize(adata: AnnData, methods: Union[Dict[str, str], str], copy: bool = False) -> Optional[AnnData]:
@@ -20,8 +20,9 @@ class Normalization:
 
         Available normalization methods are:
 
-        1. identity (return the un-normalized values)
+        1. scale (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.scale.html#sklearn.preprocessing.scale)
         2. minmax (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MinMaxScaler.html#sklearn.preprocessing.MinMaxScaler)
+        3. identity (return the un-normalized values)
 
         Args:
             adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encode using ~ehrapy.preprocessing.encode.encode.
@@ -59,12 +60,40 @@ class Normalization:
             var_idx = get_column_indices(adata, var)
             var_values = get_column_values(adata, var_idx)
 
-            if method == "identity":
-                adata.X[:, var_idx] = Normalization._norm_identity(var_values)
+            if method == "scale":
+                adata.X[:, var_idx] = Normalization._norm_scale(var_values)
             elif method == "minmax":
                 adata.X[:, var_idx] = Normalization._norm_minmax(var_values)
+            elif method == "identity":
+                adata.X[:, var_idx] = Normalization._norm_identity(var_values)
 
         return adata
+
+    @staticmethod
+    def _norm_scale(values: array) -> Optional[AnnData]:
+        """Apply standard scaling normalization.
+
+        Args:
+            values: A single column numpy array
+
+        Returns:
+            Single column numpy array with scaled values
+        """
+
+        return scale(values)
+
+    @staticmethod
+    def _norm_minmax(values: array) -> Optional[AnnData]:
+        """Apply minmax normalization.
+
+        Args:
+            values: A single column numpy array
+
+        Returns:
+            Single column numpy array with minmax scaled values
+        """
+
+        return minmax_scale(values)
 
     @staticmethod
     def _norm_identity(values: array) -> Optional[AnnData]:
@@ -78,16 +107,3 @@ class Normalization:
         """
 
         return values
-
-    @staticmethod
-    def _norm_minmax(values: array) -> Optional[AnnData]:
-        """Apply minmax normalization.
-
-        Args:
-            values: A single column numpy array
-
-        Returns:
-            Single column numpy array with normalized values
-        """
-
-        return minmax_scale(values)

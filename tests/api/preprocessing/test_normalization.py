@@ -47,13 +47,20 @@ class TestNormalization:
         with pytest.raises(ValueError, match=r"Some values of methods are not available normalization methods"):
             Normalization._normalize(self.adata, methods={"Numeric2": "fail_method"})
 
-    def test_norm_identity(self):
-        """Test for the identity normalization method."""
+    def test_norm_scale(self):
+        """Test for the scaling normalization method."""
 
-        adata_norm = Normalization._normalize(self.adata, methods="identity", copy=True)
+        adata_norm = Normalization._normalize(self.adata, methods="scale", copy=True)
 
-        assert np.allclose(adata_norm.X, self.adata.X, equal_nan=True)
-        assert np.allclose(adata_norm.layers["raw"], self.adata.X, equal_nan=True)
+        num1_norm = np.array([-1.4039999, 0.55506986, 0.84893], dtype=np.float32)
+        num2_norm = np.array([-1.069045, 1.3363061, -0.2672612], dtype=np.float32)
+
+        assert np.array_equal(adata_norm.X[:, 0], self.adata.X[:, 0])
+        assert np.array_equal(adata_norm.X[:, 1], self.adata.X[:, 1])
+        assert np.array_equal(adata_norm.X[:, 2], self.adata.X[:, 2])
+        assert np.allclose(adata_norm.X[:, 3], num1_norm)
+        assert np.allclose(adata_norm.X[:, 4], num2_norm)
+        assert np.allclose(adata_norm.X[:, 5], self.adata.X[:, 5], equal_nan=True)
 
     def test_norm_minmax(self):
         """Test for the minmax normalization method."""
@@ -62,6 +69,31 @@ class TestNormalization:
 
         num1_norm = np.array([0.0, 0.86956537, 0.9999999], dtype=np.dtype(np.float32))
         num2_norm = np.array([0.0, 1.0, 0.3333333], dtype=np.float32)
+
+        assert np.array_equal(adata_norm.X[:, 0], self.adata.X[:, 0])
+        assert np.array_equal(adata_norm.X[:, 1], self.adata.X[:, 1])
+        assert np.array_equal(adata_norm.X[:, 2], self.adata.X[:, 2])
+        assert np.allclose(adata_norm.X[:, 3], num1_norm)
+        assert np.allclose(adata_norm.X[:, 4], num2_norm)
+        assert np.allclose(adata_norm.X[:, 5], self.adata.X[:, 5], equal_nan=True)
+
+    def test_norm_identity(self):
+        """Test for the identity normalization method."""
+
+        adata_norm = Normalization._normalize(self.adata, methods="identity", copy=True)
+
+        assert np.allclose(adata_norm.X, self.adata.X, equal_nan=True)
+        assert np.allclose(adata_norm.layers["raw"], self.adata.X, equal_nan=True)
+
+    def test_norm_mixed(self):
+        """Test for normalization with mixed methods."""
+
+        adata_norm = Normalization._normalize(
+            self.adata, methods={"Numeric1": "minmax", "Numeric2": "scale"}, copy=True
+        )
+
+        num1_norm = np.array([0.0, 0.86956537, 0.9999999], dtype=np.dtype(np.float32))
+        num2_norm = np.array([-1.069045, 1.3363061, -0.2672612], dtype=np.float32)
 
         assert np.array_equal(adata_norm.X[:, 0], self.adata.X[:, 0])
         assert np.array_equal(adata_norm.X[:, 1], self.adata.X[:, 1])
