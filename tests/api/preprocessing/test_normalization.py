@@ -2,6 +2,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import pytest
 from anndata import AnnData
 
 from ehrapy.api.preprocessing import Normalization
@@ -15,48 +16,56 @@ class TestNormalization:
     def setup_method(self):
         obs_data = {"ID": ["Patient1", "Patient2", "Patient3"], "Age": [31, 94, 62]}
 
-        X_numeric = np.array([[1, 3.4, 2.1, 4], [2, 6.9, 7.6, 2], [1, 4.5, 1.3, 7]], dtype=np.dtype(object))
-        var_numeric = {
-            "Feature": ["Numeric1", "Numeric2", "Numeric3", "Numeric4"],
-            "Type": ["Numeric", "Numeric", "Numeric", "Numeric"],
-        }
-        X_strings = np.array(
+        X_data = np.array(
             [
-                [1, 3.4, "A string", "A different string"],
-                [2, 5.4, "Silly string", "A different string"],
-                [2, 5.7, "A string", "What string?"],
+                [1, 3.4, 2.0, 1.0, "A string", "A different string"],
+                [2, 5.4, 5.0, 2.0, "Silly string", "A different string"],
+                [2, 5.7, 3.0, np.nan, "A string", "What string?"],
             ],
             dtype=np.dtype(object),
         )
-        var_strings = {
-            "Feature": ["Numeric1", "Numeric2", "String1", "String2"],
-            "Type": ["Numeric", "Numeric", "String", "String"],
+        var_data = {
+            "Feature": ["Integer1", "Numeric1", "Numeric2", "Numeric3", "String1", "String2"],
+            "Type": ["Integer", "Numeric", "Numeric", "Numeric", "String", "String"],
         }
 
-        self.adata_numeric = AnnData(
-            X=X_numeric,
+        self.adata = AnnData(
+            X=X_data,
             obs=pd.DataFrame(data=obs_data),
-            var=pd.DataFrame(data=var_numeric, index=var_numeric["Feature"]),
+            var=pd.DataFrame(data=var_data, index=var_data["Feature"]),
             dtype=np.dtype(object),
         )
 
-        self.adata_strings = AnnData(
-            X=X_strings,
-            obs=pd.DataFrame(data=obs_data),
-            var=pd.DataFrame(data=var_strings, index=var_strings["Feature"]),
-            dtype=np.dtype(object),
-        )
+        self.adata = Encoder.encode(self.adata, autodetect=True, encodings={})
 
-        self.adata_encoded = Encoder.encode(self.adata_strings.copy(), autodetect=True, encodings={})
+    def test_methods_checks(self):
+        """Test for checks that methods argument is valid."""
 
-    def test_identity(self):
-        """Test for the identity normalization.
+        with pytest.raises(ValueError, match=r"Some keys of methods are not numeric variables"):
+            Normalization._normalize(self.adata, methods={"String1": "identity"})
 
-        Created as a template during development. Should be removed before merging.
-        """
-        # NaN value and empty string replacement with single value
-        nan_empty_str_array = np.array([["column 1", "column 2", "column 3", "column 4"], [5, np.NaN, "", "not empty"]])
-        adata = AnnData(X=nan_empty_str_array, dtype=np.dtype(object))
-        adata_norm = Normalization.identity(adata, copy=True)
+        with pytest.raises(ValueError, match=r"Some values of methods are not available normalization methods"):
+            Normalization._normalize(self.adata, methods={"Numeric2": "fail_method"})
 
-        assert (adata.X == adata_norm.X).all()
+    def test_norm_identity(self):
+        """Test for the identity normalization method."""
+
+        adata_norm = Normalization._normalize(self.adata, methods="identity", copy=True)
+
+        assert np.allclose(adata_norm.X, self.adata.X, equal_nan=True)
+        assert np.allclose(adata_norm.layers["raw"], self.adata.X, equal_nan=True)
+
+    def test_norm_minmax(self):
+        """Test for the minmax normalization method."""
+
+        adata_norm = Normalization._normalize(self.adata, methods="minmax", copy=True)
+
+        num1_norm = np.array([0.0, 0.86956537, 0.9999999], dtype=np.dtype(np.float32))
+        num2_norm = np.array([0.0, 1.0, 0.3333333], dtype=np.float32)
+
+        assert np.array_equal(adata_norm.X[:, 0], self.adata.X[:, 0])
+        assert np.array_equal(adata_norm.X[:, 1], self.adata.X[:, 1])
+        assert np.array_equal(adata_norm.X[:, 2], self.adata.X[:, 2])
+        assert np.allclose(adata_norm.X[:, 3], num1_norm)
+        assert np.allclose(adata_norm.X[:, 4], num2_norm)
+        assert np.allclose(adata_norm.X[:, 5], self.adata.X[:, 5], equal_nan=True)
