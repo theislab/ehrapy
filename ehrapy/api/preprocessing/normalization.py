@@ -13,7 +13,7 @@ class Normalization:
     available_methods = {"identity", "minmax"}
 
     @staticmethod
-    def normalize(adata: AnnData, methods: Union[Dict[str, str], str], copy: bool = False) -> Optional[AnnData]:
+    def _normalize(adata: AnnData, methods: Union[Dict[str, str], str], copy: bool = False) -> Optional[AnnData]:
         """Normalize numeric variable.
 
         This function normalizes the numeric variables in an AnnData object.
