@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Dict, Iterator, List, NamedTuple, Optional, Tuple, Union
 
 import pandas as pd
+import tabula
 from _collections import OrderedDict
 from anndata import AnnData
 from anndata import read as read_h5ad
@@ -126,6 +127,7 @@ class DataReader:
             )
         path_cache_dir = settings.cachedir / filename
         # read from cache directory if wanted and available
+        # TODO: fix here for single pdf file which got cached in a directory
         if cache and path_cache_dir.is_dir():
             return DataReader._read_from_cache_dir(path_cache_dir)
         # If the filename is a directory, assume it is a dataset with multiple files
@@ -162,6 +164,20 @@ class DataReader:
                 raw_anndata, columns_obs_only = DataReader.read_csv(
                     filename, delimiter, index_column, columns_obs_only, cache  # type: ignore
                 )
+            # read from pdf
+            elif extension == "pdf":
+                raw_anndata, columns_obs_only = DataReader.read_pdf(
+                    filename, index_column, columns_obs_only, cache  # type: ignore
+                )
+                # set cache path, since its a single input file which will be stored in (eventually) multiple cache files
+                path_cache = settings.cachedir / filename.name  # type: Path
+                if cache:
+                    if not path_cache.parent.is_dir():
+                        path_cache.parent.mkdir(parents=True)
+                    path_cache_dir.mkdir()
+                    # TODO: replace None once index col fixed
+                    return DataReader._write_cache_dir(raw_anndata, path_cache, columns_obs_only, None)  # type: ignore
+
             else:
                 raise NotImplementedError(f"There is currently no parser implemented for {extension} files!")
             # cache results if wanted
@@ -264,32 +280,94 @@ class DataReader:
                 f"exist in {filename}?"
             ) from None
 
-        # get all object dtype columns
-        object_type_columns = [col_name for col_name in initial_df.columns if initial_df[col_name].dtype == "object"]
-        # if columns_obs_only is None, initialize it as datetime columns need to be included here
-        if not columns_obs_only:
-            columns_obs_only = []
-        no_datetime_object_col = []
-        for col in object_type_columns:
-            try:
-                pd.to_datetime(initial_df[col])
-                # only add to column_obs_only if not present already to avoid duplicates
-                if col not in columns_obs_only:
-                    columns_obs_only.append(col)
-            except (ValueError, TypeError):
-                # we only need to replace NANs on non datetime, non numerical columns since datetime are obs only by default
-                no_datetime_object_col.append(col)
-        # writing to hd5a files requires non string to be empty in non numerical columns
-        if cache:
-            initial_df[no_datetime_object_col] = initial_df[no_datetime_object_col].fillna("")
-            # temporary workaround needed; see https://github.com/theislab/anndata/issues/504 and https://github.com/theislab/anndata/issues/662
-            # converting booleans to strings is needed for caching as writing to .h5ad files currently does not support writing boolean values
-            bool_columns = {
-                column_name: "str" for column_name in initial_df.columns if initial_df.dtypes[column_name] == "bool"
-            }
-            initial_df = initial_df.astype(bool_columns)
+        initial_df, columns_obs_only = DataReader._prepare_dataframe(initial_df, columns_obs_only, cache)
         # return the initial AnnData object
         return DataReader._df_to_anndata(initial_df, columns_obs_only), columns_obs_only
+
+    @staticmethod
+    def read_pdf(
+        filename: Union[Path, Iterator[str]],
+        index_column: Optional[Union[str, int]] = None,
+        columns_obs_only: Dict[str, Optional[List[Union[str]]]] = None,
+        cache: bool = False,
+    ) -> Tuple[Dict[str, AnnData], Dict[str, Optional[List[Union[str]]]]]:
+        """Read `.pdf`. Since a single pdf can contain multiple tables, those will be read into a dict,
+        like it's done for multiple .csv/.tsv files. Currently, ehrapy only supports parsing single pdf's.
+
+        Consider the following example: "my_tables.pdf" contains three different tables, which may
+        also differ in size.
+
+            .. code-block:: python
+                           import ehrapy.ap as ep
+                           # read pdf
+                           adata_dict = ep.io.read("my_tables.pdf")
+                           print(adata_dict)
+                           # prints
+                           # {
+                           # "my_tables_1": AnnData object with X obs, Y vars.,
+                           # "my_tables_2": AnnData object with A obs, B vars.,
+                           # "my_tables_3": AnnData object with C obs, D vars.
+                           # }
+
+            The example above illustrates, that the different tables will be stored under the index of the
+            order they appeared in the pdf, prefixed by the pdf filename. This ensures uniqueness, especially in cases
+            when multiple pdfs will be read, with multiple tables per file.
+
+            It's also important to note, that this has to be considered when passing "columns_obs_only":
+                .. code-block:: python
+                               import ehrapy.ap as ep
+                               # read pdf
+                               adata_dict = ep.io.read("my_tables.pdf", columns_obs_only={"0":["col1ofTable1", "col2OfTable1"],
+                               "1": ["colOfTable2"]})
+                               # this will put col1 and col2 of Table 0 of my_tables.pdf into obs only for this AnnData object
+                               # and col1 of Table 1 of my_tables.pdf into obs only for this respective AnnData object
+
+            Seems complicating at first glance, but this will allow the most flexibility for users, once one gets used to it.
+
+
+        Args:
+            filename: File path to the pdf.
+            index_column: Column name of the index column (obs)
+            columns_obs_only: Set of columns which only be stored in .obs, but not in X. Useful for free text annotations.
+            cache: Whether the data should be written to cache or not
+
+        Returns:
+            A dict of :class:`~anndata.AnnData` objects and the column obs only for each object
+        """
+        # read pandas dataframe
+        # TODO set index for each dataframe (write function)
+        if index_column and columns_obs_only and index_column in columns_obs_only:
+            print(
+                f"[bold yellow]Index column [blue]{index_column} [yellow]is also used as a column "
+                f"for obs only. Using default indices instead and moving [blue]{index_column} [yellow]to column_obs_only."
+            )
+            index_column = None
+        initial_df_list = tabula.read_pdf(filename, pages="all")
+        # in case the index column is misspelled or does not exist
+
+        if not initial_df_list:
+            raise PdfParsingError(
+                f"Failed parsing file {filename}. Could not parse any data."
+                f"Consider converting your data files to .csv/.tsv before parsing!"
+            )
+
+        ann_data_objects = {}
+
+        # one pdf can contain multiple tables, so each of those tables will be one
+        for idx, df in enumerate(initial_df_list):
+            if columns_obs_only:
+                # TODO: index column here as well
+                _, this_obs_only = DataReader._extract_index_and_columns_obs_only(
+                    f"{filename.stem}_{idx}", {}, columns_obs_only
+                )
+                initial_df, columns_obs_only[idx] = DataReader._prepare_dataframe(df, this_obs_only, cache)
+                ann_data_objects[f"{filename.stem}_{idx}"] = DataReader._df_to_anndata(initial_df, this_obs_only)
+            # in case, no columns_obs_only has been passed
+            else:
+                initial_df, _ = DataReader._prepare_dataframe(df, None, cache)
+                ann_data_objects[f"{filename.stem}_{idx}"] = DataReader._df_to_anndata(initial_df, None)
+        # return the initial AnnData object
+        return ann_data_objects, columns_obs_only
 
     @staticmethod
     def _read_from_cache_dir(cache_dir: Path) -> Dict[str, AnnData]:
@@ -375,6 +453,39 @@ class DataReader:
             dtype="object",
             layers={"original": X.copy()},
         )
+
+    @staticmethod
+    def _prepare_dataframe(initial_df: pd.DataFrame, columns_obs_only, cache):
+        """
+
+        Returns:
+
+        """
+        # get all object dtype columns
+        object_type_columns = [col_name for col_name in initial_df.columns if initial_df[col_name].dtype == "object"]
+        # if columns_obs_only is None, initialize it as datetime columns need to be included here
+        if not columns_obs_only:
+            columns_obs_only = []
+        no_datetime_object_col = []
+        for col in object_type_columns:
+            try:
+                pd.to_datetime(initial_df[col])
+                # only add to column_obs_only if not present already to avoid duplicates
+                if col not in columns_obs_only:
+                    columns_obs_only.append(col)
+            except (ValueError, TypeError):
+                # we only need to replace NANs on non datetime, non numerical columns since datetime are obs only by default
+                no_datetime_object_col.append(col)
+        # writing to hd5a files requires non string to be empty in non numerical columns
+        if cache:
+            initial_df[no_datetime_object_col] = initial_df[no_datetime_object_col].fillna("")
+            # temporary workaround needed; see https://github.com/theislab/anndata/issues/504 and https://github.com/theislab/anndata/issues/662
+            # converting booleans to strings is needed for caching as writing to .h5ad files currently does not support writing boolean values
+            bool_columns = {
+                column_name: "str" for column_name in initial_df.columns if initial_df.dtypes[column_name] == "bool"
+            }
+            initial_df = initial_df.astype(bool_columns)
+        return initial_df, columns_obs_only
 
     @staticmethod
     def _decode_cached_adata(adata: AnnData, column_obs_only: List[str]) -> AnnData:
@@ -561,4 +672,8 @@ class BackupURLNotProvidedError(Exception):
 
 
 class MudataCachingNotSupportedError(Exception):
+    pass
+
+
+class PdfParsingError(Exception):
     pass

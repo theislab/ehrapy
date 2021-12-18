@@ -366,10 +366,18 @@ class Encoder:
         Returns
             A Numpy array containing all numericals together with all encoded categoricals
         """
-        # get the index of the first column of the new encoded X, that does not store an encoded categorical
-        new_cat_stop_index = next(i for i in range(len(new_var_names)) if not new_var_names[i].startswith("ehrapycat"))
-        # get the index of the first column of the old encoded X, that does not store an encoded categorical
-        old_cat_stop_index = next(i for i in range(len(old_var_names)) if not old_var_names[i].startswith("ehrapycat"))
+        try:
+            # get the index of the first column of the new encoded X, that does not store an encoded categorical
+            new_cat_stop_index = next(
+                i for i in range(len(new_var_names)) if not new_var_names[i].startswith("ehrapycat")
+            )
+            # get the index of the first column of the old encoded X, that does not store an encoded categorical
+            old_cat_stop_index = next(
+                i for i in range(len(old_var_names)) if not old_var_names[i].startswith("ehrapycat")
+            )
+        # when there are only encoded columns, simply return a copy of the new X, since to originals will be kept in the layer
+        except StopIteration:
+            return new_x.copy().astype("float32")
         # keep track of all indices with original value columns, that are (and were) not encoded
         idx_list = []
         for idx, col_name in enumerate(old_var_names[old_cat_stop_index:]):

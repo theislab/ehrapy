@@ -1,7 +1,7 @@
 from pathlib import Path, PurePath
 from typing import Union
 
-supported_extensions = {"csv", "tsv", "h5ad"}
+supported_extensions = {"csv", "tsv", "h5ad", "pdf"}
 
 
 def _get_file_extension(file_path: Path) -> str:
