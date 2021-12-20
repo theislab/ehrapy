@@ -12,7 +12,7 @@ from rich import print
 
 from ehrapy.api import ehrapy_settings, settings
 from ehrapy.api.data.dataloader import Dataloader
-from ehrapy.api.io._utility_io import _get_file_extension, _slugify, supported_extensions
+from ehrapy.api.io._utility_io import _get_file_extension, _slugify, multi_data_extensions, supported_extensions
 from ehrapy.api.preprocessing.encoding._encode import Encoder
 
 
@@ -36,6 +36,7 @@ class DataReader:
         backup_url: Optional[str] = None,
         suppress_warnings: bool = False,
         download_dataset_name: Optional[str] = None,
+        **kwargs,
     ) -> Union[AnnData, Dict[str, AnnData], MuData]:
         """Reads or downloads a desired directory or single file.
 
@@ -98,6 +99,7 @@ class DataReader:
             columns_obs_only=columns_obs_only,
             return_mudata=return_mudata,
             cache=cache,
+            **kwargs,
         )
         return raw_object
 
@@ -111,36 +113,28 @@ class DataReader:
         return_mudata: bool = False,
         cache: bool = False,
         backup_url: Optional[str] = None,
+        **kwargs,
     ) -> Union[MuData, Dict[str, AnnData], AnnData]:
         """Internal interface of the read method."""
         if cache and return_mudata:
-            raise MudataCachingNotSupportedError(
-                "Caching is currently not supported for MuData objects. Consider setting return_mudata to False in order "
-                "to use caching!"
-            )
+            DataReader._mudata_cache_not_supported()
         # check, whether the datafile(s) is/are present or not
-        is_present = DataReader._check_datafiles_present_and_download(filename, backup_url=backup_url)
-        if not is_present and not filename.is_dir() and not filename.is_file():
-            print(
-                "[bold red]Attempted download of missing dataset file(s) failed. Please file an issue at our repository "
-                "[blue]https://github.com/theislab/ehrapy!"
-            )
-        path_cache_dir = settings.cachedir / filename
+        DataReader._check_files_present(filename, backup_url)
+
+        # multi data format extensions like pdf can contain multiple datasets in one single file and are therefore handled as directories when caching
+        path_cache_dir = settings.cachedir / (
+            filename if filename.suffix not in multi_data_extensions else filename.stem
+        )
         # read from cache directory if wanted and available
-        # TODO: fix here for single pdf file which got cached in a directory
         if cache and path_cache_dir.is_dir():
             return DataReader._read_from_cache_dir(path_cache_dir)
+
         # If the filename is a directory, assume it is a dataset with multiple files
         elif filename.is_dir():
-            adata_objects, columns_obs_only = DataReader._read_multiple_csv(
-                filename, delimiter, index_column, columns_obs_only, return_mudata, cache
+            return DataReader._read_from_directory(
+                filename, extension, delimiter, index_column, columns_obs_only, return_mudata, cache, path_cache_dir
             )
-            if cache:
-                if not path_cache_dir.parent.is_dir():
-                    path_cache_dir.parent.mkdir(parents=True)
-                path_cache_dir.mkdir()
-                return DataReader._write_cache_dir(adata_objects, path_cache_dir, columns_obs_only, index_column)  # type: ignore
-            return adata_objects
+
         # dataset seems to be a single file, not a directory of multiple files
         else:
             if extension is not None and extension not in supported_extensions:
@@ -164,28 +158,63 @@ class DataReader:
                 raw_anndata, columns_obs_only = DataReader.read_csv(
                     filename, delimiter, index_column, columns_obs_only, cache  # type: ignore
                 )
-            # read from pdf
-            elif extension == "pdf":
-                raw_anndata, columns_obs_only = DataReader.read_pdf(
-                    filename, index_column, columns_obs_only, cache  # type: ignore
-                )
-                # set cache path, since its a single input file which will be stored in (eventually) multiple cache files
-                path_cache = settings.cachedir / filename.name  # type: Path
+                # cache results if wanted
                 if cache:
                     if not path_cache.parent.is_dir():
                         path_cache.parent.mkdir(parents=True)
-                    path_cache_dir.mkdir()
-                    # TODO: replace None once index col fixed
-                    return DataReader._write_cache_dir(raw_anndata, path_cache, columns_obs_only, None)  # type: ignore
+                    return DataReader._write_cache(raw_anndata, path_cache, columns_obs_only)  # type: ignore
+
+            # read from pdf
+            elif extension == "pdf":
+                raw_anndata, columns_obs_only = DataReader.read_pdf(
+                    filename, index_column, columns_obs_only, cache, **kwargs  # type: ignore
+                )
+                # set cache path, since its a single input file which will be stored in (eventually) multiple cache files
+                path_cache = settings.cachedir / filename.stem  # type: Path
+                if cache:
+                    if not path_cache.parent.is_dir():
+                        path_cache.parent.mkdir(parents=True)
+                    path_cache.mkdir()
+                    return DataReader._write_cache_dir(raw_anndata, path_cache, columns_obs_only, index_column)  # type: ignore
 
             else:
                 raise NotImplementedError(f"There is currently no parser implemented for {extension} files!")
-            # cache results if wanted
-            if cache:
-                if not path_cache.parent.is_dir():
-                    path_cache.parent.mkdir(parents=True)
-                return DataReader._write_cache(raw_anndata, path_cache, columns_obs_only)  # type: ignore
             return raw_anndata
+
+    @staticmethod
+    def _read_from_directory(
+        filename: Path,
+        extension: Optional[str] = None,
+        delimiter: Optional[str] = None,
+        index_column: Optional[Union[Dict[str, Union[str, int]], Union[str, int]]] = None,
+        columns_obs_only: Optional[Union[Dict[str, List[str]], List[str]]] = None,
+        return_mudata: bool = False,
+        cache: bool = False,
+        path_cache_dir: Optional[Path] = None,
+    ) -> Dict[str, AnnData]:
+        """Parse AnnData objects from a directory containing the data files"""
+
+        if not extension:
+            raise ExtensionMissingError(
+                "Reading from directory, but no extension has been provided!. Please "
+                "provide an extension for ehrapy to determine, which file format to read!"
+            )
+
+        elif extension not in {"csv", "tsv"}:
+            raise UnsupportedDirectoryParsingFormatException(
+                f"Unspported extension {extension} when parsing directory contents."
+                f"Can only parse .csv and .tsv files from a directory currently."
+            )
+
+        adata_objects, columns_obs_only = DataReader._read_multiple_csv(
+            filename, delimiter, index_column, columns_obs_only, return_mudata, cache
+        )
+        if cache:
+            if not path_cache_dir.parent.is_dir():
+                path_cache_dir.parent.mkdir(parents=True)
+            path_cache_dir.mkdir()
+            return DataReader._write_cache_dir(adata_objects, path_cache_dir, columns_obs_only, index_column)  # type: ignore
+        return adata_objects
 
     @staticmethod
     def _read_multiple_csv(  # noqa: N802
@@ -287,9 +316,10 @@ class DataReader:
     @staticmethod
     def read_pdf(
         filename: Union[Path, Iterator[str]],
-        index_column: Optional[Union[str, int]] = None,
+        index_column: Optional[Dict[str, str]] = None,
         columns_obs_only: Dict[str, Optional[List[Union[str]]]] = None,
         cache: bool = False,
+        **kwargs,
     ) -> Tuple[Dict[str, AnnData], Dict[str, Optional[List[Union[str]]]]]:
         """Read `.pdf`. Since a single pdf can contain multiple tables, those will be read into a dict,
         like it's done for multiple .csv/.tsv files. Currently, ehrapy only supports parsing single pdf's.
@@ -335,37 +365,44 @@ class DataReader:
             A dict of :class:`~anndata.AnnData` objects and the column obs only for each object
         """
         # read pandas dataframe
-        # TODO set index for each dataframe (write function)
-        if index_column and columns_obs_only and index_column in columns_obs_only:
-            print(
-                f"[bold yellow]Index column [blue]{index_column} [yellow]is also used as a column "
-                f"for obs only. Using default indices instead and moving [blue]{index_column} [yellow]to column_obs_only."
-            )
-            index_column = None
-        initial_df_list = tabula.read_pdf(filename, pages="all")
+        no_guess = kwargs.get("guess")
+        # passing guess and set it to False may improve parsed result in cases where other methods will fail
+        initial_df_list = tabula.read_pdf(filename, pages="all", guess=False if no_guess == "no" else True)
         # in case the index column is misspelled or does not exist
-
         if not initial_df_list:
             raise PdfParsingError(
                 f"Failed parsing file {filename}. Could not parse any data."
-                f"Consider converting your data files to .csv/.tsv before parsing!"
+                f"Consider converting your data files to .csv/.tsv before parsing or pass the "
+                f"guess to no parameter to the read function, which may improve parsed results!"
             )
 
         ann_data_objects = {}
 
         # one pdf can contain multiple tables, so each of those tables will be one
         for idx, df in enumerate(initial_df_list):
-            if columns_obs_only:
-                # TODO: index column here as well
-                _, this_obs_only = DataReader._extract_index_and_columns_obs_only(
-                    f"{filename.stem}_{idx}", {}, columns_obs_only
+            print(df)
+            this_index_column, this_obs_only = DataReader._extract_index_and_columns_obs_only(
+                f"{filename.stem}_{idx}", index_column, columns_obs_only
+            )
+            # index column cannot be in obs only at the same time
+            if this_index_column and this_obs_only and this_index_column in this_obs_only:
+                print(
+                    f"[bold yellow]Index column [blue]{index_column} [yellow]is also used as a column "
+                    f"for obs only. Using default indices instead and moving [blue]{index_column} [yellow]to column_obs_only."
                 )
-                initial_df, columns_obs_only[idx] = DataReader._prepare_dataframe(df, this_obs_only, cache)
-                ann_data_objects[f"{filename.stem}_{idx}"] = DataReader._df_to_anndata(initial_df, this_obs_only)
+                this_index_column = None
+
+            if columns_obs_only:
+                initial_df, columns_obs_only[idx] = DataReader._prepare_dataframe(df, this_obs_only, cache)  # type: ignore
+                ann_data_objects[f"{filename.stem}_{idx}"] = DataReader._df_to_anndata(
+                    initial_df, this_obs_only, this_index_column if this_index_column else None
+                )
             # in case, no columns_obs_only has been passed
             else:
                 initial_df, _ = DataReader._prepare_dataframe(df, None, cache)
-                ann_data_objects[f"{filename.stem}_{idx}"] = DataReader._df_to_anndata(initial_df, None)
+                ann_data_objects[f"{filename.stem}_{idx}"] = DataReader._df_to_anndata(
+                    initial_df, None, this_index_column if this_index_column else None
+                )
         # return the initial AnnData object
         return ann_data_objects, columns_obs_only
 
@@ -440,11 +477,16 @@ class DataReader:
         return cached_adata
 
     @staticmethod
-    def _df_to_anndata(df: pd.DataFrame, columns_obs_only: Optional[List[Union[str]]]) -> AnnData:
+    def _df_to_anndata(
+        df: pd.DataFrame, columns_obs_only: Optional[List[Union[str]]], index_column: Optional[str] = None
+    ) -> AnnData:
         """Create an AnnData object from the initial dataframe"""
+        if index_column:
+            df = df.set_index(index_column)
         # move columns from the input dataframe to later obs
         dataframes = DataReader._move_columns_to_obs(df, columns_obs_only)
         X = dataframes.df.to_numpy(copy=True)
+        # when index_column is passed (currently when parsing pdf) set it and remove it from future X
 
         return AnnData(
             X=X,
@@ -456,10 +498,10 @@ class DataReader:
 
     @staticmethod
     def _prepare_dataframe(initial_df: pd.DataFrame, columns_obs_only, cache):
-        """
+        """Prepares the dataframe to be casted into an AnnData object.
+        Datetime columns will be detected and added to columns_obs_only.
 
-        Returns:
-
+        Returns: The initially parsed dataframe and an updated list of columns_obs_only
         """
         # get all object dtype columns
         object_type_columns = [col_name for col_name in initial_df.columns if initial_df[col_name].dtype == "object"]
@@ -521,6 +563,15 @@ class DataReader:
         adata.uns = OrderedDict()
 
         return adata
+
+    @staticmethod
+    def _check_files_present(filename: Path, backup_url: str):
+        is_present = DataReader._check_datafiles_present_and_download(filename, backup_url=backup_url)
+        if not is_present and not filename.is_dir() and not filename.is_file():
+            print(
+                "[bold red]Attempted download of missing dataset file(s) failed. Please file an issue at our repository "
+                "[blue]https://github.com/theislab/ehrapy!"
+            )
 
     @staticmethod
     def _check_datafiles_present_and_download(path: Union[str, Path], backup_url=None) -> bool:
@@ -658,6 +709,13 @@ class DataReader:
 
         return BaseDataframes(obs, df)
 
+    @staticmethod
+    def _mudata_cache_not_supported():
+        raise MudataCachingNotSupportedError(
+            "Caching is currently not supported for MuData objects. Consider setting return_mudata to False in order "
+            "to use caching!"
+        )
+
 
 class IndexNotFoundError(Exception):
     pass
@@ -676,4 +734,12 @@ class MudataCachingNotSupportedError(Exception):
 
 
 class PdfParsingError(Exception):
+    pass
+
+
+class ExtensionMissingError(Exception):
+    pass
+
+
+class UnsupportedDirectoryParsingFormatException(Exception):
     pass

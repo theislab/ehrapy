@@ -2,6 +2,8 @@ from pathlib import Path, PurePath
 from typing import Union
 
 supported_extensions = {"csv", "tsv", "h5ad", "pdf"}
+# file extensions with formats, that can contain multiple tables/data in one file
+multi_data_extensions = {".pdf"}
 
 
 def _get_file_extension(file_path: Path) -> str:
