@@ -158,7 +158,7 @@ class DataReader:
                 raw_anndata, columns_obs_only = DataReader.read_csv(
                     filename, delimiter, index_column, columns_obs_only, cache  # type: ignore
                 )
-                # cache results if wanted
+                # cache results if desired
                 if cache:
                     if not path_cache.parent.is_dir():
                         path_cache.parent.mkdir(parents=True)
