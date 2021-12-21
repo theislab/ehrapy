@@ -352,7 +352,7 @@ class DataReader:
                                # this will put col1 and col2 of Table 0 of my_tables.pdf into obs only for this AnnData object
                                # and col1 of Table 1 of my_tables.pdf into obs only for this respective AnnData object
 
-            Seems complicating at first glance, but this will allow the most flexibility for users, once one gets used to it.
+            Seems complicated at first glance, but this will allow the most flexibility for users.
 
 
         Args:
