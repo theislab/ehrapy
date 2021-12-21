@@ -373,7 +373,7 @@ class DataReader:
             raise PdfParsingError(
                 f"Failed parsing file {filename}. Could not parse any data."
                 f"Consider converting your data files to .csv/.tsv before parsing or pass the "
-                f"guess to no parameter to the read function, which may improve parsed results!"
+                f"guess parameter to the read function, which may improve parsed results!"
             )
 
         ann_data_objects = {}
