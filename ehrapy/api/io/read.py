@@ -378,7 +378,7 @@ class DataReader:
 
         ann_data_objects = {}
 
-        # one pdf can contain multiple tables, so each of those tables will be one
+        # one pdf can contain multiple tables, so each of those tables will be one AnnData object
         for idx, df in enumerate(initial_df_list):
             this_index_column, this_obs_only = DataReader._extract_index_and_columns_obs_only(
                 f"{filename.stem}_{idx}", index_column, columns_obs_only
