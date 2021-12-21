@@ -322,7 +322,7 @@ class DataReader:
         **kwargs,
     ) -> Tuple[Dict[str, AnnData], Dict[str, Optional[List[Union[str]]]]]:
         """Read `.pdf`. Since a single pdf can contain multiple tables, those will be read into a dict,
-        like it's done for multiple .csv/.tsv files. Currently, ehrapy only supports parsing single pdf's.
+        like it's done for multiple .csv/.tsv files. Currently, ehrapy only supports parsing single pdfs.
 
         Consider the following example: "my_tables.pdf" contains three different tables, which may
         also differ in size.
