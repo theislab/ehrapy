@@ -50,6 +50,23 @@ class TestRead:
         assert id(ann_data.layers["original"]) != id(ann_data.X)
         assert list(ann_data.obs.index) == ["0", "1", "2", "3", "4"]
 
+    def test_read_pdf(self):
+        ann_data = DataReader.read(dataset_path=f"{_TEST_PATH}/test_pdf.pdf")["test_pdf_0"]
+        assert ann_data.X.shape == (31, 10)
+        assert ann_data.var_names.to_list() == [
+            "mpg",
+            "cyl",
+            "disp",
+            "hp",
+            "drat",
+            "wt",
+            "qsec",
+            "vs",
+            "am",
+            "gear",
+        ]
+        assert id(ann_data.layers["original"]) != id(ann_data.X)
+
     def test_set_default_index(self):
         ann_data = DataReader.read(dataset_path=f"{_TEST_PATH}/dataset3.csv")
         assert ann_data.X.shape == (5, 4)

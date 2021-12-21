@@ -123,8 +123,9 @@ class DataReader:
 
         # multi data format extensions like pdf can contain multiple datasets in one single file and are therefore handled as directories when caching
         path_cache_dir = settings.cachedir / (
-            filename if filename.suffix not in multi_data_extensions else filename.stem
+            filename if filename.suffix[1:] not in multi_data_extensions else filename.stem
         )
+        print(path_cache_dir)
         # read from cache directory if wanted and available
         if cache and path_cache_dir.is_dir():
             return DataReader._read_from_cache_dir(path_cache_dir)
@@ -164,13 +165,12 @@ class DataReader:
                         path_cache.parent.mkdir(parents=True)
                     return DataReader._write_cache(raw_anndata, path_cache, columns_obs_only)  # type: ignore
 
-            # read from pdf
             elif extension == "pdf":
                 raw_anndata, columns_obs_only = DataReader.read_pdf(
                     filename, index_column, columns_obs_only, cache, **kwargs  # type: ignore
                 )
                 # set cache path, since its a single input file which will be stored in (eventually) multiple cache files
-                path_cache = settings.cachedir / filename.stem  # type: Path
+                path_cache = settings.cachedir / filename.stem  # type: ignore
                 if cache:
                     if not path_cache.parent.is_dir():
                         path_cache.parent.mkdir(parents=True)
@@ -197,7 +197,8 @@ class DataReader:
         if not extension:
             raise ExtensionMissingError(
                 "Reading from directory, but no extension has been provided!. Please "
-                "provide an extension for ehrapy to determine, which file format to read!"
+                "provide an extension for ehrapy to determine, which file format to read!\n"
+                f"Valid extensions are: {','.join(ext for ext in supported_extensions)}"
             )
 
         elif extension not in {"csv", "tsv"}:
@@ -381,7 +382,7 @@ class DataReader:
         # one pdf can contain multiple tables, so each of those tables will be one AnnData object
         for idx, df in enumerate(initial_df_list):
             this_index_column, this_obs_only = DataReader._extract_index_and_columns_obs_only(
-                f"{filename.stem}_{idx}", index_column, columns_obs_only
+                f"{filename.stem}_{idx}", index_column, columns_obs_only  # type: ignore
             )
             # index column cannot be in obs only at the same time
             if this_index_column and this_obs_only and this_index_column in this_obs_only:
@@ -393,13 +394,13 @@ class DataReader:
 
             if columns_obs_only:
                 initial_df, columns_obs_only[idx] = DataReader._prepare_dataframe(df, this_obs_only, cache)  # type: ignore
-                ann_data_objects[f"{filename.stem}_{idx}"] = DataReader._df_to_anndata(
+                ann_data_objects[f"{filename.stem}_{idx}"] = DataReader._df_to_anndata(  # type: ignore
                     initial_df, this_obs_only, this_index_column if this_index_column else None
                 )
             # in case, no columns_obs_only has been passed
             else:
                 initial_df, _ = DataReader._prepare_dataframe(df, None, cache)
-                ann_data_objects[f"{filename.stem}_{idx}"] = DataReader._df_to_anndata(
+                ann_data_objects[f"{filename.stem}_{idx}"] = DataReader._df_to_anndata(  # type: ignore
                     initial_df, None, this_index_column if this_index_column else None
                 )
         # return the initial AnnData object
