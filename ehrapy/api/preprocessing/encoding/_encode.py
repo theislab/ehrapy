@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from _collections import OrderedDict
 from anndata import AnnData
-from category_encoders import CountEncoder
+from category_encoders import CountEncoder, HashingEncoder
 from mudata import MuData
 from rich import print
 from rich.progress import BarColumn, Progress
@@ -18,7 +18,8 @@ class Encoder:
     """The main encoder for the initial read MuData or AnnData object providing various encoding solutions for
     non numerical or categorical data"""
 
-    available_encodings = {"one_hot_encoding", "label_encoding", "count_encoding"}
+    available_encodings = {"one_hot_encoding", "label_encoding", "count_encoding", "hash_encoding"}
+    multi_encoding_modes = {"hash_encoding"}
 
     @staticmethod
     def encode(
@@ -83,6 +84,7 @@ class Encoder:
         1. one_hot_encoding (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.OneHotEncoder.html)
         2. label_encoding (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.LabelEncoder.html)
         3. count_encoding (https://contrib.scikit-learn.org/category_encoders/count.html)
+        4. hash_encoding
 
         Label encodes by default which is used to save initially unencoded AnnData objects.
 
@@ -160,8 +162,10 @@ class Encoder:
                     )
 
             adata.uns["categoricals_encoded_with_mode"] = encodings
-            categoricals = list(chain(*encodings.values()))
 
+            categoricals_not_flat = list(chain(*encodings.values()))
+            # this is needed since multi column encoding will get passed a list of list instead of a flat list
+            categoricals = list(chain(*(i if isinstance(i, list) else (i,) for i in categoricals_not_flat)))
             # ensure no categorical column gets encoded twice
             if len(categoricals) != len(set(categoricals)):
                 raise ValueError(
@@ -184,6 +188,7 @@ class Encoder:
                         "one_hot_encoding": Encoder._one_hot_encoding,
                         "label_encoding": Encoder._label_encoding,
                         "count_encoding": Encoder._count_encoding,
+                        "hash_encoding": Encoder._hash_encoding,
                     }
                     progress.update(task, description=f"Running {encoding_mode} ...")
                     # perform the actual encoding
@@ -347,6 +352,47 @@ class Encoder:
         return temp_x, temp_var_names
 
     @staticmethod
+    def _hash_encoding(
+        adata: AnnData,
+        X: Optional[np.ndarray],
+        var_names: List[str],
+        categories: List[List[str]],
+        progress: Optional[Progress] = None,
+        task=None,
+    ) -> Tuple[np.ndarray, List[str]]:
+        """Encode categorical columns using hash encoding.
+
+        Args:
+            adata: The current AnnData object
+            X: Current (encoded) X
+            var_names: Var names of current AnnData object
+            categories: The name of the categorical columns to be encoded
+
+        Returns:
+            Encoded new X and the corresponding new var names
+        """
+        transformed_all, encoded_var_names = None, []
+        for multi_columns in categories:
+            original_values = Encoder._initial_encoding(adata, multi_columns)
+
+            encoder = HashingEncoder(return_df=False).fit(original_values)
+            # maybe let user pass a n_components kwarg here (32 bit might be useful for high cardinality input)
+            encoded_var_names += [f"ehrapycat_hash_{multi_columns[0]}" for _ in range(8)]
+            transformed = encoder.transform(original_values)
+            transformed_all = np.hstack((transformed_all, transformed)) if transformed_all is not None else transformed
+        # X is None if this is the first encoding "round" -> take the former X
+        if X is None:
+            X = adata.X
+        if progress:
+            progress.update(task, description="[blue]Updating hash encoded values ...")
+
+        temp_x, temp_var_names = Encoder._update_multi_encoded_data(
+            X, transformed_all, var_names, encoded_var_names, sum(categories,[])
+        )
+
+        return temp_x, temp_var_names
+
+    @staticmethod
     def _update_layer_after_encoding(
         old_layer: np.ndarray,
         new_x: np.ndarray,
@@ -393,6 +439,46 @@ class Encoder:
         del old_layer
 
         return updated_layer.astype("float32")
+
+    @staticmethod
+    def _update_multi_encoded_data(
+        X: np.ndarray,
+        transformed: np.ndarray,
+        var_names: List[str],
+        encoded_var_names: List[str],
+        categoricals: List[str],
+    ) -> Tuple[np.ndarray, List[str]]:
+        """Update X and var_names after applying multi column encoding modes to some columns
+
+        Args:
+            X: Current (former) X
+            transformed: The encoded (transformed) categorical columns
+            var_names: Var names of current AnnData object
+            encoded_var_names: The name(s) of the encoded column(s)
+            categoricals: The categorical values that were encoded recently
+
+        Returns:
+            Encoded new X and the corresponding new var names
+        """
+
+        # TODO fix here with a clever way in case of reencoding multi column encoded values
+        # maybe just search index column from uns and return all those indices and filter if there are any other
+        # columns that should be reencoded from this index columns group
+        # idx = Encoder._get_categoricals_old_indices(var_names, categoricals)
+        # temporary for debugging purposes
+        idx = []
+        for pos, name in enumerate(var_names):
+            if name in categoricals:
+                idx.append(pos)
+        # delete the original categorical column
+        del_cat_column_x = np.delete(X, list(idx), 1)
+        # create the new, encoded X
+        temp_x = np.hstack((transformed, del_cat_column_x))
+        # delete old categorical name
+        var_names = [col_name for col_idx, col_name in enumerate(var_names) if col_idx not in idx]
+        temp_var_names = encoded_var_names + var_names
+
+        return temp_x, temp_var_names
 
     @staticmethod
     def _update_encoded_data(
