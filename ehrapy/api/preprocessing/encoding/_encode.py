@@ -198,7 +198,12 @@ class Encoder:
 
                     # update encoding history in uns
                     for categorical in encodings[encoding_mode]:
-                        current_encodings[categorical] = encoding_mode
+                        # multi column encoding modes -> multiple encoded columns
+                        if isinstance(categorical, list):
+                            for column_name in categorical:
+                                current_encodings[column_name] = encoding_mode
+                        else:
+                            current_encodings[categorical] = encoding_mode
                         progress.update(task, advance=1)
 
             # update original layer content with the new categorical encoding and the old other values
@@ -399,15 +404,17 @@ class Encoder:
         new_var_names: List[str],
         old_var_names: List[str],
         categories: List[str],
+        multi_column_update: bool = False
     ) -> np.ndarray:
         """Update the original layer containing the initial non categorical values and the latest encoded categorials
 
         Args:
-            old_layer: The previous "oiginal" layer
+            old_layer: The previous "original" layer
             new_x: The new encoded X
             new_var_names: The new encoded var names
             old_var_names: The previous var names
             categories: All previous categorical names
+            multi_column_update: When encoded using multi column encoding mode, expect categories to be a list of lists of column names
 
         Returns
             A Numpy array containing all numericals together with all encoded categoricals
@@ -428,6 +435,8 @@ class Encoder:
         idx_list = []
         for idx, col_name in enumerate(old_var_names[old_cat_stop_index:]):
             # this case is needed when there are one or more numerical (but categorical) columns that was not encoded yet
+            if multi_column_update:
+                categories = sum(categories, [])
             if col_name not in categories:
                 idx_list.append(idx + old_cat_stop_index)
         # slice old original layer using the selector
