@@ -125,7 +125,6 @@ class DataReader:
         path_cache_dir = settings.cachedir / (
             filename if filename.suffix[1:] not in multi_data_extensions else filename.stem
         )
-        print(path_cache_dir)
         # read from cache directory if wanted and available
         if cache and path_cache_dir.is_dir():
             return DataReader._read_from_cache_dir(path_cache_dir)
