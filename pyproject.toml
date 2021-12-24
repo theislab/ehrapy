@@ -103,6 +103,7 @@ line_length=120
 [tool.pytest.ini_options]
 filterwarnings = [
     "ignore::DeprecationWarning",
+    "ignore::anndata._core.anndata.ImplicitModificationWarning"
 ]
 
 [tool.coverage.paths]

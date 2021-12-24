@@ -320,7 +320,7 @@ class DataReader:
         columns_obs_only: Dict[str, Optional[List[Union[str]]]] = None,
         cache: bool = False,
         **kwargs,
-    ) -> Tuple[Dict[str, AnnData], Dict[str, Optional[List[Union[str]]]]]:
+    ) -> Tuple[Dict[str, AnnData], Optional[Dict[str, Optional[List[Union[str]]]]]]:
         """Read `.pdf`. Since a single pdf can contain multiple tables, those will be read into a dict,
         like it's done for multiple .csv/.tsv files. Currently, ehrapy only supports parsing single pdfs.
 
@@ -564,13 +564,14 @@ class DataReader:
         return adata
 
     @staticmethod
-    def _check_files_present(filename: Path, backup_url: str):
-        is_present = DataReader._check_datafiles_present_and_download(filename, backup_url=backup_url)
-        if not is_present and not filename.is_dir() and not filename.is_file():
-            print(
-                "[bold red]Attempted download of missing dataset file(s) failed. Please file an issue at our repository "
-                "[blue]https://github.com/theislab/ehrapy!"
-            )
+    def _check_files_present(filename: Path, backup_url: Optional[str] = None):
+        if backup_url is not None:
+            is_present = DataReader._check_datafiles_present_and_download(filename, backup_url=backup_url)
+            if not is_present and not filename.is_dir() and not filename.is_file():
+                print(
+                    "[bold red]Attempted download of missing dataset file(s) failed. Please file an issue at our repository "
+                    "[blue]https://github.com/theislab/ehrapy!"
+                )
 
     @staticmethod
     def _check_datafiles_present_and_download(path: Union[str, Path], backup_url=None) -> bool:
