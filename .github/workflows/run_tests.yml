@@ -96,6 +96,21 @@ jobs:
                   restore-keys: |
                       ${{ steps.pre-commit-cache.outputs.result }}-
 
+            - name: Install ghostscript windows
+              if: matrix.os == 'windows-latest'
+              run: |
+                  choco install ghostscript
+
+            - name: Install ghostscript Ubuntu
+              if: matrix.os == 'ubuntu-latest'
+              run: |
+                  sudo apt-get install -y ghostscript
+
+            - name: Install ghostscript MacOS
+              if: matrix.os == 'macos-latest'
+              run: |
+                  brew install ghostscript
+
             - name: Run Nox
               run: |
                   nox --force-color --python=${{ matrix.python-version }}

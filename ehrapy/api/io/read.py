@@ -391,10 +391,13 @@ class DataReader:
                 # when the entry in top left corner is empty assume, table has header and index names stored in first row/first column
                 first_empty = df[0][0] == ""
                 headers = df.iloc[0][1 if first_empty else 0 :]
-                index = df.iloc[:, :1][1:].iloc[:, 0] if first_empty else df.index
+                if first_empty:
+                    index = df.iloc[:, :1][1:].iloc[:, 0]
+                else:
+                    index = pd.RangeIndex(start=0, stop=len(df.index) - 1)
                 if first_empty:
                     index.name = ""
-                new_values = df.values[1:, 1:] if first_empty else df.values[:, :]
+                new_values = df.values[1:, 1:] if first_empty else df.values[1:, :]
                 df = pd.DataFrame(new_values, columns=headers, index=index).apply(
                     pd.to_numeric, args=("ignore",)
                 )  # convert all columns of the DataFrame to numeric, if possible

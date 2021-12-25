@@ -68,6 +68,18 @@ class TestRead:
         ]
         assert id(adata.layers["original"]) != id(adata.X)
 
+    def test_read_pdf_no_index(self):
+        adata = DataReader.read(dataset_path=f"{_TEST_PATH}/test_pdf.pdf")["test_pdf_1"]
+        assert adata.X.shape == (6, 5)
+        assert adata.var_names.to_list() == [
+            "Sepal.Length",
+            "Sepal.Width",
+            "Petal.Length",
+            "Petal.Width",
+            "Species",
+        ]
+        assert id(adata.layers["original"]) != id(adata.X)
+
     def test_set_default_index(self):
         adata = DataReader.read(dataset_path=f"{_TEST_PATH}/dataset3.csv")
         assert adata.X.shape == (5, 4)
