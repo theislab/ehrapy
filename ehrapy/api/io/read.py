@@ -328,7 +328,7 @@ class DataReader:
         also differ in size.
 
             .. code-block:: python
-                           import ehrapy.ap as ep
+                           import ehrapy.api as ep
                            # read pdf
                            adata_dict = ep.io.read("my_tables.pdf")
                            print(adata_dict)
