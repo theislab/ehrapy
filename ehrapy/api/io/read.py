@@ -345,7 +345,7 @@ class DataReader:
 
             It's also important to note, that this has to be considered when passing "columns_obs_only":
                 .. code-block:: python
-                               import ehrapy.ap as ep
+                               import ehrapy.api as ep
                                # read pdf
                                adata_dict = ep.io.read("my_tables.pdf", columns_obs_only={"0":["col1ofTable1", "col2OfTable1"],
                                "1": ["colOfTable2"]})
