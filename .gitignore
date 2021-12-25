@@ -143,3 +143,4 @@ notebooks/data
 notebooks/*.dat
 notebooks/*.csv
 notebooks/*-requirements.txt
+notebooks/*.h5ad
