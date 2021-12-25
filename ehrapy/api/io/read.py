@@ -2,8 +2,8 @@ import shutil
 from pathlib import Path
 from typing import Dict, Iterator, List, NamedTuple, Optional, Tuple, Union
 
+import camelot
 import pandas as pd
-import tabula
 from _collections import OrderedDict
 from anndata import AnnData
 from anndata import read as read_h5ad
@@ -364,11 +364,14 @@ class DataReader:
         Returns:
             A dict of :class:`~anndata.AnnData` objects and the column obs only for each object
         """
-        # read pandas dataframe
-        no_guess = kwargs.get("guess")
-        # passing guess and set it to False may improve parsed result in cases where other methods will fail
-        initial_df_list = tabula.read_pdf(filename, pages="all", guess=False if no_guess == "no" else True)
-        # in case the index column is misspelled or does not exist
+        # possible extract modes are lattice (default) or stream; any of them may work better than the other one, depending on the data
+        pdf_extract_mode = kwargs.get("pdf_mode")
+        # camelot does not really parses headers in tables correctly; therefore, if there are any headers in the tables, set them as column names
+        header = kwargs.get("pdf_header")
+        # read a table list from the pdf
+        initial_df_list = camelot.read_pdf(
+            str(filename), flavor=pdf_extract_mode if pdf_extract_mode else "lattice", pages="all"
+        )
         if not initial_df_list:
             raise PdfParsingError(
                 f"Failed parsing file {filename}. Could not parse any data."
@@ -379,7 +382,23 @@ class DataReader:
         ann_data_objects = {}
 
         # one pdf can contain multiple tables, so each of those tables will be one AnnData object
-        for idx, df in enumerate(initial_df_list):
+        for idx, table in enumerate(initial_df_list):
+            df = table.df
+            is_set = isinstance(header, set)
+            # defaults to True, so if header has not been set, assume first row is column names row
+            # if header is a set and table number idx is in header, also assume first row is also column names row
+            if header is None or (is_set and idx in header):
+                # when the entry in top left corner is empty assume, table has header and index names stored in first row/first column
+                first_empty = df[0][0] == ""
+                headers = df.iloc[0][1 if first_empty else 0 :]
+                index = df.iloc[:, :1][1:].iloc[:, 0] if first_empty else df.index
+                if first_empty:
+                    index.name = ""
+                new_values = df.values[1:, 1:] if first_empty else df.values[:, :]
+                df = pd.DataFrame(new_values, columns=headers, index=index).apply(
+                    pd.to_numeric, args=("ignore",)
+                )  # convert all columns of the DataFrame to numeric, if possible
+
             this_index_column, this_obs_only = DataReader._extract_index_and_columns_obs_only(
                 f"{filename.stem}_{idx}", index_column, columns_obs_only  # type: ignore
             )

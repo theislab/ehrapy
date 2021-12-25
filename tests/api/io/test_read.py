@@ -52,7 +52,7 @@ class TestRead:
 
     def test_read_pdf(self):
         adata = DataReader.read(dataset_path=f"{_TEST_PATH}/test_pdf.pdf")["test_pdf_0"]
-        assert adata.X.shape == (31, 10)
+        assert adata.X.shape == (32, 11)
         assert adata.var_names.to_list() == [
             "mpg",
             "cyl",
@@ -64,6 +64,7 @@ class TestRead:
             "vs",
             "am",
             "gear",
+            "carb",
         ]
         assert id(adata.layers["original"]) != id(adata.X)
 
