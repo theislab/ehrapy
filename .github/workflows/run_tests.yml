@@ -107,13 +107,21 @@ jobs:
             - name: Install ghostscript Windows
               if: matrix.os == 'windows-latest'
               run: |
-                  choco install ghostscript
+                  choco install imagemagick dejavufonts ghostscript
                   refreshenv
+
+            - name: Set ghostscript PATH on Windows
+              if matrix.os == 'windows-latest'
+              run: |
+                  $folders = Get-ChildItem "C:\Program Files\ImageMagick*"
+                  foreach ($folder in $folders) {
+                      $imfolder = $folder.FullName
+                  }
                   $folders = Get-ChildItem "C:\Program Files\gs"
                   foreach ($folder in $folders) {
                       $gsfolder = $folder.FullName
                   }
-                  echo "C:\strawberry\c\bin;C:\strawberry\perl\site\bin;C:\strawberry\perl\bin;$gsfolder\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+                  echo "C:\strawberry\c\bin;C:\strawberry\perl\site\bin;C:\strawberry\perl\bin;$imfolder;$gsfolder\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
                   gswin64c -v
 
             - name: Run Nox
