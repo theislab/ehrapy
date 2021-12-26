@@ -19,6 +19,7 @@ def read(
     cache: bool = False,
     backup_url: Optional[str] = None,
     suppress_warnings: bool = False,
+    **kwargs
 ) -> Union[AnnData, Dict[str, AnnData], MuData]:
     """Read file and return either a single :class:`~anndata.AnnData` object, a list of :class:`~anndata.AnnData` objects or a :class:`~mudata.MuData` object.
 
@@ -79,6 +80,7 @@ def read(
         cache=cache,
         backup_url=backup_url,
         suppress_warnings=suppress_warnings,
+        **kwargs
     )
 
 

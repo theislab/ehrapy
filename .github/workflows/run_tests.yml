@@ -34,11 +34,6 @@ jobs:
                       }
                     - {
                           python-version: 3.8,
-                          os: windows-latest,
-                          session: "tests",
-                      }
-                    - {
-                          python-version: 3.8,
                           os: macos-latest,
                           session: "tests",
                       }
@@ -95,6 +90,16 @@ jobs:
                   key: ${{ steps.pre-commit-cache.outputs.result }}-${{ hashFiles('.pre-commit-config.yaml') }}
                   restore-keys: |
                       ${{ steps.pre-commit-cache.outputs.result }}-
+
+            - name: Install ghostscript Ubuntu
+              if: matrix.os == 'ubuntu-latest'
+              run: |
+                  sudo apt-get install -y ghostscript
+
+            - name: Install ghostscript MacOS
+              if: matrix.os == 'macos-latest'
+              run: |
+                  brew install ghostscript
 
             - name: Run Nox
               run: |

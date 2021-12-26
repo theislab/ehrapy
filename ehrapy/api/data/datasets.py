@@ -46,6 +46,7 @@ class Datasets:
             download_dataset_name="ehrapy_mimic_3",
             backup_url="https://physionet.org/static/published-projects/mimiciii-demo/mimic-iii-clinical-database-demo-1.4.zip",
             return_mudata=mudata,
+            extension="csv",
         )
         if encode:
             if not mudata:
