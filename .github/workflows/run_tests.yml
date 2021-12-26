@@ -104,15 +104,11 @@ jobs:
               if: matrix.os == 'macos-latest'
               run: brew install ghostscript
 
-          - name: Install ghostscript MacOS
-              if: matrix.os == 'macos-latest'
-              run: brew install ghostscript
-
-          - name: Install ghostscript Windows
+            - name: Install ghostscript Windows
               if: matrix.os == 'windows-latest'
-              run: choco install ghostscript
-              run: refreshenv
-              run: gswin64c -v
+              - run: choco install ghostscript
+              - run: refreshenv
+              - run: gswin64c -v
 
             - name: Run Nox
               run: nox --force-color --python=${{ matrix.python-version }}
