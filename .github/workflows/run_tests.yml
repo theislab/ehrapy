@@ -111,7 +111,7 @@ jobs:
                   refreshenv
 
             - name: Set ghostscript PATH on Windows
-              if matrix.os == 'windows-latest'
+              if: matrix.os == 'windows-latest'
               run: |
                   $folders = Get-ChildItem "C:\Program Files\ImageMagick*"
                   foreach ($folder in $folders) {
