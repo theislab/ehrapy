@@ -106,9 +106,10 @@ jobs:
 
             - name: Install ghostscript Windows
               if: matrix.os == 'windows-latest'
-              - run: choco install ghostscript
-              - run: refreshenv
-              - run: gswin64c -v
+              run: |
+                  choco install ghostscript
+                  refreshenv
+                  gswin64c -v
 
             - name: Run Nox
               run: nox --force-color --python=${{ matrix.python-version }}
