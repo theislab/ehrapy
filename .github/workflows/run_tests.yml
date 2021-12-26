@@ -34,6 +34,11 @@ jobs:
                       }
                     - {
                           python-version: 3.8,
+                          os: windows-latest,
+                          session: "tests",
+                      }
+                    - {
+                          python-version: 3.8,
                           os: macos-latest,
                           session: "tests",
                       }
@@ -93,17 +98,24 @@ jobs:
 
             - name: Install ghostscript Ubuntu
               if: matrix.os == 'ubuntu-latest'
-              run: |
-                  sudo apt-get install -y ghostscript
+              run: sudo apt-get install -y ghostscript
 
             - name: Install ghostscript MacOS
               if: matrix.os == 'macos-latest'
-              run: |
-                  brew install ghostscript
+              run: brew install ghostscript
+
+          - name: Install ghostscript MacOS
+              if: matrix.os == 'macos-latest'
+              run: brew install ghostscript
+
+            - name: Install ghostscript Windows
+              if: matrix.os == 'windows-latest'
+              run: choco install ghostscript
+              run: refreshenv
+              run: gswin64c -v
 
             - name: Run Nox
-              run: |
-                  nox --force-color --python=${{ matrix.python-version }}
+              run: nox --force-color --python=${{ matrix.python-version }}
 
             - name: Upload coverage data
               if: always() && matrix.session == 'tests'
