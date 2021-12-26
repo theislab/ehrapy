@@ -100,6 +100,7 @@ jobs:
               if: matrix.os == 'windows-latest'
               run: |
                   choco install ghostscript
+                  set PATH=%PATH%;C:\Program Files\gs\gs9.55\bin;C:\Program Files\gs\gs9.55\lib
 
             - name: Install ghostscript Ubuntu
               if: matrix.os == 'ubuntu-latest'
