@@ -107,7 +107,7 @@ jobs:
             - name: Install ghostscript Windows
               if: matrix.os == 'windows-latest'
               run: |
-                  choco install ghostscript
+                  choco install imagemagick dejavufonts ghostscript
 
             - name: Refresh env
               if: matrix.os == 'windows-latest'
