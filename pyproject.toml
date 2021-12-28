@@ -74,7 +74,7 @@ sphinx-autodoc-typehints = "^1.12.0"
 sphinx-last-updated-by-git = "^0.3.0"
 nbsphinx = "^0.8.7"
 sphinxcontrib-bibtex = "^2.4.1"
-sphinx-automodapi = "^0.13"
+sphinx-automodapi = "^0.14"
 
 [tool.poetry.extras]
 en-core-web-md = ["en-core-web-md"]
