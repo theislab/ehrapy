@@ -49,7 +49,7 @@ def encode(
 
 
 def undo_encoding(
-    adata: AnnData, columns: str = "all", from_cache_file: bool = False, cache_file: str = None
+    adata: AnnData, columns: str = "all"
 ) -> AnnData:
     """Undo the current encodings applied to all columns in X.
 
@@ -57,9 +57,6 @@ def undo_encoding(
     Args:
         adata: The :class:`~anndata.AnnData` object
         columns: The names of the columns to reset encoding for. Defaults to all columns.
-        from_cache_file: Whether to reset all encodings by reading from a cached .h5ad file, if available.
-        This resets the :class:`~anndata.AnnData object to its initial state.
-        cache_file: The filename of the cache file to read from
 
     Returns:
         A (partially) encoding reset :class:`~anndata.AnnData` object
@@ -72,7 +69,7 @@ def undo_encoding(
            adata_undone = ep.encode.undo_encoding(adata_encoded)
            # adata_undone is a fully reset AnnData object with no encodings
     """
-    return Encoder.undo_encoding(adata, columns, from_cache_file, cache_file)
+    return Encoder.undo_encoding(adata, columns)
 
 
 def type_overview(data: Union[MuData, AnnData], sort: bool = False, sort_reversed: bool = False) -> None:
