@@ -12,6 +12,5 @@ nbsphinx-link
 sphinx-copybutton
 sphinx-tabs
 sphinx-panels
-pandoc
 sphinx_click>=3.0.0
 click>=8.0.1
