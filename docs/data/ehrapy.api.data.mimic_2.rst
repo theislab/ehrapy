@@ -1,7 +1,7 @@
 ﻿:github_url: ehrapy.api.data.mimic_2
 
 ehrapy.api.data.mimic\_2
-==============================
+========================
 
 .. autofunction:: ehrapy.api.data.mimic_2
 

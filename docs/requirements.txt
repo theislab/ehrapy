@@ -9,5 +9,9 @@ sphinx-autodoc-typehints
 sphinx_gallery
 sphinxcontrib-bibtex
 nbsphinx
+nbsphinx-link
+sphinx-copybutton
+sphinx-tabs
+sphinx-panels
 sphinx_click>=3.0.0
 click>=8.0.1
