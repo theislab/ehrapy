@@ -19,8 +19,8 @@ class Encoder:
     """The main encoder for the initial read MuData or AnnData object providing various encoding solutions for
     non numerical or categorical data"""
 
-    available_encodings = {"one_hot_encoding", "label_encoding", "count_encoding", "hash_encoding"}
     multi_encoding_modes = {"hash_encoding"}
+    available_encodings = {"one_hot_encoding", "label_encoding", "count_encoding", *multi_encoding_modes}
 
     @staticmethod
     def encode(
@@ -159,10 +159,8 @@ class Encoder:
         else:
             # reencode data
             if "current_encodings" in adata.uns.keys():
-                # if data gets reencoded with a multi column algorithm, reset encodings and reencode
-                if any(encoding_mode in Encoder.multi_encoding_modes for encoding_mode in encodings.keys()):
-                    encodings = Encoder._reorder_encodings(adata, encodings)  # type: ignore
-                    adata = Encoder._undo_encoding(adata, "all")
+                encodings = Encoder._reorder_encodings(adata, encodings)  # type: ignore
+                adata = Encoder._undo_encoding(adata, "all")
             # are all specified encodings valid?
             for encoding_mode in encodings.keys():
                 if encoding_mode not in Encoder.available_encodings:
@@ -174,7 +172,14 @@ class Encoder:
 
             categoricals_not_flat = list(chain(*encodings.values()))
             # this is needed since multi column encoding will get passed a list of list instead of a flat list
-            categoricals = list(chain(*(i if isinstance(i, list) else (i,) for i in categoricals_not_flat)))
+            categoricals = list(
+                chain(
+                    *(
+                        _categoricals if isinstance(_categoricals, list) else (_categoricals,)
+                        for _categoricals in categoricals_not_flat
+                    )
+                )
+            )
             # ensure no categorical column gets encoded twice
             if len(categoricals) != len(set(categoricals)):
                 raise ValueError(
@@ -389,8 +394,7 @@ class Encoder:
         for multi_columns in categories:
             original_values = Encoder._initial_encoding(adata, multi_columns)
 
-            encoder = HashingEncoder(return_df=False).fit(original_values)
-            # maybe let user pass a n_components kwarg here (32 bit might be useful for high cardinality input)
+            encoder = HashingEncoder(return_df=False, n_components=8).fit(original_values)
             encoded_var_names += [f"ehrapycat_hash_{multi_columns[0]}" for _ in range(8)]
             transformed = encoder.transform(original_values)
             transformed_all = np.hstack((transformed_all, transformed)) if transformed_all is not None else transformed
@@ -580,8 +584,8 @@ class Encoder:
             return None
         transformed = Encoder._initial_encoding(adata, categoricals)
         temp_x, temp_var_names = Encoder._delete_all_encodings(adata)
-        new_x = np.hstack((transformed, temp_x)) if temp_x else transformed
-        new_var_names = categoricals + temp_var_names if temp_var_names else categoricals
+        new_x = np.hstack((transformed, temp_x)) if temp_x is not None else transformed
+        new_var_names = categoricals + temp_var_names if temp_var_names is not None else categoricals
         # only keep columns in obs that were stored in obs only -> delete every encoded column from obs
         new_obs = adata.obs[columns_obs_only]
         del adata
@@ -602,12 +606,13 @@ class Encoder:
 
         Returns:
             A temporary X were all encoded columns are deleted and all var_names of unencoded columns
+
         """
         var_names = list(adata.var_names)
         if adata.X is not None and var_names is not None:
             idx = 0
-            for var_name in var_names:
-                if not var_name.startswith("ehrapycat"):
+            for var in var_names:
+                if not var.startswith("ehrapycat"):
                     break
                 idx += 1
             # case: only encoded columns were found
@@ -627,6 +632,7 @@ class Encoder:
 
         Returns:
             An updated encoding scheme
+
         """
         flattened_modes: List[Union[List[str], str]] = sum(new_encodings.values(), [])  # type: ignore
         latest_encoded_columns = list(chain(*(i if isinstance(i, list) else (i,) for i in flattened_modes)))
@@ -680,6 +686,14 @@ class Encoder:
         """Update the encoding scheme.
         If the encoding mode exists in the filtered old encodings, append all values (columns that should be encoded using this mode) to this key.
         If not, defaultdict ensures that no KeyError will be raised and the values are simply appended to the default value ([]).
+
+        Args:
+            new_encodings: The new encoding modes passed by the user; basically what will be passed for encodings when calling the encode API
+            filtered_old_encodings: The old encoding modes, but with all columns removed that will be reencoded
+
+        Returns:
+            The updated encoding scheme
+
         """
         updated_encodings = defaultdict(list)  # type: ignore
         for k, v in chain(new_encodings.items(), filtered_old_encodings.items()):

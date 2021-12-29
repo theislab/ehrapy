@@ -43,10 +43,17 @@ def encode(
         .. code-block:: python
 
             import ehrapy.api as ep
-            adata = ep.io.read(...)
-            # encode col1 and col2 using label encoding and encode col3 using one hot encoding
-            adata_encoded = ep.encode.encode(adata, autodetect=False, {'label_encoding': ['col1', 'col2'], 'one_hot_encoding': ['col3']})
 
+            adata_objects = ep.io.read(...)
+            # encode col1 and col2 of adata1 using label encoding and col3 using one hot encoding
+            adata_encoded = ep.encode.encode(
+                adata_objects,
+                autodetect=False,
+                encodings={
+                    "label_encoding": ["col1", "col2"],
+                    "one_hot_encoding": ["col3"],
+                },
+            )
         Another example with multiple :class:`~anndata.AnnData` objects.
 
         .. code-block:: python
@@ -54,8 +61,31 @@ def encode(
             import ehrapy.api as ep
             adata_objects = ep.io.read(...)
             # encode col1 and col2 of adata1 using label encoding and encode col1 of adata2 using one hot encoding
-            adata_encoded = ep.encode.encode(adata_objects, autodetect=False, {'adata1': {'label_encoding': ['col1', 'col2']},
-            'adata2': {'one_hot_encoding': ['col3']}})
+            adata_encoded = ep.encode.encode(
+                adata_objects,
+                autodetect=False,
+                encodings={
+                    "adata1": {"label_encoding": ["col1", "col2"]},
+                    "adata2": {"one_hot_encoding": ["col1"]},
+                },
+            )
+
+        One example with multiple :class:`~anndata.AnnData` objects and multi column encoding modes.
+
+        .. code-block:: python
+
+            import ehrapy.api as ep
+            adata_objects = ep.io.read(...)
+            # encode col1 and col2 of adata1 using hash encoding (note the double [[ and ]]) and encode col1 of adata2 using one hot encoding
+            adata_encoded = ep.encode.encode(
+                adata_objects,
+                autodetect=False,
+                encodings={
+                    "adata1": {"hash_encoding": [["col1", "col2"]]},
+                    "adata2": {"one_hot_encoding": ["col1"]},
+                },
+            )
+
     """
     return Encoder.encode(data, autodetect, encodings)
 
@@ -76,8 +106,9 @@ def undo_encoding(adata: AnnData, columns: str = "all") -> AnnData:
 
            import ehrapy.api as ep
            # adata_encoded is a encoded AnnData object
-           adata_reset = ep.encode.undo_encoding(adata_encoded)
            # adata_reset is a fully reset AnnData object with no encodings
+           adata_reset = ep.encode.undo_encoding(adata_encoded)
+
     """
     return Encoder.undo_encoding(adata, columns)
 
@@ -106,6 +137,7 @@ def _adata_type_overview(adata: AnnData, sort: bool = False, sort_reversed: bool
         adata: The :class:`~anndata.AnnData object to display
         sort: Whether to sort output or not
         sort_reversed: Whether to sort output in reversed order or not
+
     """
     encoding_mapping = {
         encoding: encoding.replace("encoding", "").replace("_", " ").strip() for encoding in Encoder.available_encodings
@@ -159,6 +191,7 @@ def _mudata_type_overview(mudata: AnnData, sort: bool = False, sort_reversed: bo
         mudata: The :class:`~mudata.MuData object to display
         sort: Whether to sort output or not
         sort_reversed: Whether to sort output in reversed order or not
+
     """
     tree = Tree(
         f"[b green]Variable names for AnnData object with {len(mudata.var_names)} vars, {len(mudata.obs_names)} obs and {len(mudata.mod.keys())} modalities\n",
