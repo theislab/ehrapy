@@ -13,7 +13,9 @@ from ehrapy.api.preprocessing.encoding._encode import Encoder
 def encode(
     data: Union[AnnData, MuData],
     autodetect: Union[bool, Dict] = False,
-    encodings: Union[Dict[str, Dict[str, List[str]]], Dict[str, List[str]]] = None,
+    encodings: Optional[
+        Union[Dict[str, Dict[str, Union[List[str], List[List[str]]]]], Dict[str, Union[List[str], List[List[str]]]]]
+    ] = None,
 ) -> Optional[AnnData]:
     """Encode the initial read :class:`~anndata.AnnData` or :class:`~mudata.MuData` object.
 
@@ -27,10 +29,10 @@ def encode(
         1. one-hot encoding (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.OneHotEncoder.html)
         2. label encoding (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.LabelEncoder.html)
         3. count encoding (https://contrib.scikit-learn.org/category_encoders/count.html)
-
+        4. hash_encoding (https://contrib.scikit-learn.org/category_encoders/hashing.html)
     Args:
         data: The initial :class:`~anndata.AnnData` or :class:`~mudata.MuData` object
-        autodetect: Autodetection of categorical values
+        autodetect: Whether to autodetect categorical values
         encodings: Only needed if autodetect set to False (or False for some columns in case of a :class:`~mudata.MuData` object).
         A dict containing the encoding mode and categorical name for the respective column (for each AnnData object in case of MuData object).
 
@@ -44,13 +46,21 @@ def encode(
             adata = ep.io.read(...)
             # encode col1 and col2 using label encoding and encode col3 using one hot encoding
             adata_encoded = ep.encode.encode(adata, autodetect=False, {'label_encoding': ['col1', 'col2'], 'one_hot_encoding': ['col3']})
+
+        Another example with multiple :class:`~anndata.AnnData` objects.
+
+        .. code-block:: python
+
+            import ehrapy.api as ep
+            adata_objects = ep.io.read(...)
+            # encode col1 and col2 of adata1 using label encoding and encode col1 of adata2 using one hot encoding
+            adata_encoded = ep.encode.encode(adata_objects, autodetect=False, {'adata1': {'label_encoding': ['col1', 'col2']},
+            'adata2': {'one_hot_encoding': ['col3']}})
     """
     return Encoder.encode(data, autodetect, encodings)
 
 
-def undo_encoding(
-    adata: AnnData, columns: str = "all"
-) -> AnnData:
+def undo_encoding(adata: AnnData, columns: str = "all") -> AnnData:
     """Undo the current encodings applied to all columns in X.
 
     This currently resets the AnnData object to its initial state.
@@ -59,15 +69,15 @@ def undo_encoding(
         columns: The names of the columns to reset encoding for. Defaults to all columns.
 
     Returns:
-        A (partially) encoding reset :class:`~anndata.AnnData` object
+        A reset, unencoded :class:`~anndata.AnnData` object
 
     Example:
        .. code-block:: python
 
            import ehrapy.api as ep
            # adata_encoded is a encoded AnnData object
-           adata_undone = ep.encode.undo_encoding(adata_encoded)
-           # adata_undone is a fully reset AnnData object with no encodings
+           adata_reset = ep.encode.undo_encoding(adata_encoded)
+           # adata_reset is a fully reset AnnData object with no encodings
     """
     return Encoder.undo_encoding(adata, columns)
 

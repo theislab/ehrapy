@@ -26,7 +26,9 @@ class Encoder:
     def encode(
         data: Union[AnnData, MuData],
         autodetect: Union[bool, Dict] = False,
-        encodings: Union[Dict[str, Dict[str, List[str]]], Dict[str, List[str]]] = None,
+        encodings: Optional[
+            Union[Dict[str, Dict[str, Union[List[str], List[List[str]]]]], Dict[str, Union[List[str], List[List[str]]]]]
+        ] = None,
     ) -> Optional[AnnData]:
         """Driver function for encoding"""
         if isinstance(data, AnnData):
@@ -55,9 +57,7 @@ class Encoder:
         return None
 
     @staticmethod
-    def undo_encoding(
-        data: Union[AnnData, MuData], columns: str = "all"
-    ) -> Optional[AnnData]:
+    def undo_encoding(data: Union[AnnData, MuData], columns: str = "all") -> Optional[AnnData]:
         """Driver function for undo encoding"""
         if isinstance(data, AnnData):
             return Encoder._undo_encoding(data, columns)
@@ -76,7 +76,9 @@ class Encoder:
     def _encode(
         adata: AnnData,
         autodetect: Union[bool, Dict] = False,
-        encodings: Union[Dict[str, Dict[str, List[str]]], Dict[str, List[str]]] = None,
+        encodings: Optional[
+            Union[Dict[str, Dict[str, Union[List[str], List[List[str]]]]], Dict[str, Union[List[str], List[List[str]]]]]
+        ] = None,
     ) -> Union[AnnData, None]:
         """Encode the initial read AnnData object. Categorical values could be either passed via parameters or autodetected.
 
@@ -85,7 +87,8 @@ class Encoder:
         1. one_hot_encoding (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.OneHotEncoder.html)
         2. label_encoding (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.LabelEncoder.html)
         3. count_encoding (https://contrib.scikit-learn.org/category_encoders/count.html)
-        4. hash_encoding
+        4. hash_encoding (https://contrib.scikit-learn.org/category_encoders/hashing.html)
+
 
         Label encodes by default which is used to save initially unencoded AnnData objects.
 
@@ -158,7 +161,7 @@ class Encoder:
             if "current_encodings" in adata.uns.keys():
                 # if data gets reencoded with a multi column algorithm, reset encodings and reencode
                 if any(encoding_mode in Encoder.multi_encoding_modes for encoding_mode in encodings.keys()):
-                    encodings = Encoder._reorder_encodings(adata, encodings)
+                    encodings = Encoder._reorder_encodings(adata, encodings)  # type: ignore
                     adata = Encoder._undo_encoding(adata, "all")
             # are all specified encodings valid?
             for encoding_mode in encodings.keys():
@@ -442,7 +445,7 @@ class Encoder:
         for idx, col_name in enumerate(old_var_names[old_cat_stop_index:]):
             # this case is needed when there are one or more numerical (but categorical) columns that was not encoded yet
             if multi_column_update:
-                categories = sum(categories, [])
+                categories = sum(categories, [])  # type: ignore
             if col_name not in categories:
                 idx_list.append(idx + old_cat_stop_index)
         # slice old original layer using the selector
@@ -475,12 +478,6 @@ class Encoder:
         Returns:
             Encoded new X and the corresponding new var names
         """
-
-        # TODO fix here with a clever way in case of reencoding multi column encoded values
-        # maybe just search index column from uns and return all those indices and filter if there are any other
-        # columns that should be reencoded from this index columns group
-        # idx = Encoder._get_categoricals_old_indices(var_names, categoricals)
-        # temporary for debugging purposes
         idx = []
         for pos, name in enumerate(var_names):
             if name in categoricals:
@@ -598,7 +595,7 @@ class Encoder:
         )
 
     @staticmethod
-    def _delete_all_encodings(adata) -> Tuple[Optional[np.ndarray], Optional[list]]:
+    def _delete_all_encodings(adata: AnnData) -> Tuple[Optional[np.ndarray], Optional[list]]:
         """Delete all encoded columns and keep track of their indices
         Args:
             adata: The AnnData object to operate on
@@ -618,9 +615,10 @@ class Encoder:
                 return None, None
             # don't need to consider case when no encoded columns are there, since undo_encoding would not run anyways in this case
             return adata.X[:, idx:].copy(), var_names[idx:]
+        return None, None
 
     @staticmethod
-    def _reorder_encodings(adata: AnnData, new_encodings):
+    def _reorder_encodings(adata: AnnData, new_encodings: Dict[str, Union[List[List[str]], List[str]]]):
         """Reorder the encodings and update which column will be encoded using which mode (with which columns in case of
         multi column encoding modes).
         Args:
@@ -630,7 +628,7 @@ class Encoder:
         Returns:
             An updated encoding scheme
         """
-        flattened_modes = sum(new_encodings.values(), [])
+        flattened_modes: List[Union[List[str], str]] = sum(new_encodings.values(), [])  # type: ignore
         latest_encoded_columns = list(chain(*(i if isinstance(i, list) else (i,) for i in flattened_modes)))
         # check for duplicates and raise an error if any
         if len(set(latest_encoded_columns)) != len(latest_encoded_columns):
@@ -675,9 +673,15 @@ class Encoder:
         return Encoder._update_new_encode_modes(new_encodings, adata.uns["categoricals_encoded_with_mode"])
 
     @staticmethod
-    def _update_new_encode_modes(new_encodings, filtered_old_encodings):
-        """Update the encodings by "merging" the old, filtered encoding modes and the passed encodings"""
-        updated_encodings = defaultdict(list)
+    def _update_new_encode_modes(
+        new_encodings: Dict[str, Union[List[List[str]], List[str]]],
+        filtered_old_encodings: Dict[str, Union[List[List[str]], List[str]]],
+    ):
+        """Update the encoding scheme.
+        If the encoding mode exists in the filtered old encodings, append all values (columns that should be encoded using this mode) to this key.
+        If not, defaultdict ensures that no KeyError will be raised and the values are simply appended to the default value ([]).
+        """
+        updated_encodings = defaultdict(list)  # type: ignore
         for k, v in chain(new_encodings.items(), filtered_old_encodings.items()):
             updated_encodings[k] += v
 
@@ -816,7 +820,10 @@ class Encoder:
 
     @staticmethod
     def _check_anndata_input_type(
-        autodetect: Union[bool, Dict], encodings: Union[Dict[str, Dict[str, List[str]]], Dict[str, List[str]]]
+        autodetect: Union[bool, Dict],
+        encodings: Optional[
+            Union[Dict[str, Dict[str, Union[List[str], List[List[str]]]]], Dict[str, Union[List[str], List[List[str]]]]]
+        ],
     ) -> bool:
         """
         Check type of passed parameters, whether they match the requirements to encode a MuData object or not.
@@ -843,7 +850,10 @@ class Encoder:
 
     @staticmethod
     def _check_mudata_input_type(
-        autodetect: Union[bool, Dict], encodings: Union[Dict[str, Dict[str, List[str]]], Dict[str, List[str]]]
+        autodetect: Union[bool, Dict],
+        encodings: Optional[
+            Union[Dict[str, Dict[str, Union[List[str], List[List[str]]]]], Dict[str, Union[List[str], List[List[str]]]]]
+        ],
     ) -> bool:
         """
         Check type of passed parameters, whether they match the requirements to encode a MuData object or not.

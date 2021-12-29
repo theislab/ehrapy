@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from ehrapy.api.io.read import DataReader
-from ehrapy.api.preprocessing.encoding._encode import Encoder
+from ehrapy.api.preprocessing.encoding._encode import DuplicateColumnEncodingError, Encoder
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_PATH = f"{CURRENT_DIR}/test_data_encode"
@@ -136,3 +136,186 @@ class TestRead:
             "clinic_day": "count_encoding",
         }
         assert id(encoded_ann_data_again.X) != id(encoded_ann_data_again.layers["original"])
+
+    def test_update_encoding_scheme_1(self):
+        # just a dummy adata object that won't be used actually
+        adata = DataReader.read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
+        adata.uns["categoricals_encoded_with_mode"] = {
+            "label_encoding": ["col1", "col2", "col3"],
+            "count_encoding": ["col4"],
+            "hash_encoding": [["col5", "col6", "col7"], ["col8", "col9"]],
+        }
+        adata.uns["current_encodings"] = {
+            "col1": "label_encoding",
+            "col2": "label_encoding",
+            "col3": "label_encoding",
+            "col4": "count_encoding",
+            "col5": "hash_encoding",
+            "col6": "hash_encoding",
+            "col7": "hash_encoding",
+            "col8": "hash_encoding",
+            "col9": "hash_encoding",
+        }
+        new_encodings = {"label_encoding": ["col4", "col5", "col6"], "hash_encoding": [["col1", "col2", "col3"]]}
+
+        expected_encodings = {
+            "label_encoding": ["col4", "col5", "col6"],
+            "hash_encoding": [["col1", "col2", "col3"], ["col7"], ["col8", "col9"]],
+        }
+        updated_encodings = Encoder._reorder_encodings(adata, new_encodings)
+
+        assert expected_encodings == updated_encodings
+
+    def test_update_encoding_scheme_2(self):
+        # just a dummy adata object that won't be used actually
+        adata = DataReader.read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
+        adata.uns["categoricals_encoded_with_mode"] = {
+            "count_encoding": ["col4"],
+            "hash_encoding": [["col5", "col6", "col7"], ["col8", "col9"]],
+        }
+        adata.uns["current_encodings"] = {
+            "col4": "count_encoding",
+            "col5": "hash_encoding",
+            "col6": "hash_encoding",
+            "col7": "hash_encoding",
+            "col8": "hash_encoding",
+            "col9": "hash_encoding",
+        }
+        new_encodings = {
+            "label_encoding": ["col4", "col5", "col6", "col7", "col8", "col9"],
+            "hash_encoding": [["col1", "col2", "col3"]],
+        }
+
+        expected_encodings = {
+            "label_encoding": ["col4", "col5", "col6", "col7", "col8", "col9"],
+            "hash_encoding": [["col1", "col2", "col3"]],
+        }
+        updated_encodings = Encoder._reorder_encodings(adata, new_encodings)
+
+        assert expected_encodings == updated_encodings
+
+    def test_update_encoding_scheme_3(self):
+        # just a dummy adata object that won't be used actually
+        adata = DataReader.read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
+        adata.uns["categoricals_encoded_with_mode"] = {
+            "label_encoding": ["col1", "col2", "col3"],
+            "count_encoding": ["col4"],
+            "hash_encoding": [["col5", "col6", "col7"], ["col8", "col9"]],
+        }
+        adata.uns["current_encodings"] = {
+            "col1": "label_encoding",
+            "col2": "label_encoding",
+            "col3": "label_encoding",
+            "col4": "count_encoding",
+            "col5": "hash_encoding",
+            "col6": "hash_encoding",
+            "col7": "hash_encoding",
+            "col8": "hash_encoding",
+            "col9": "hash_encoding",
+        }
+        new_encodings = {
+            "label_encoding": ["col10", "col11"],
+            "hash_encoding": [["col12", "col13", "col14"]],
+            "count_encoding": ["col15"],
+        }
+
+        expected_encodings = {
+            "label_encoding": ["col10", "col11", "col1", "col2", "col3"],
+            "hash_encoding": [["col12", "col13", "col14"], ["col5", "col6", "col7"], ["col8", "col9"]],
+            "count_encoding": ["col15", "col4"],
+        }
+        updated_encodings = Encoder._reorder_encodings(adata, new_encodings)
+
+        assert expected_encodings == updated_encodings
+
+    def test_update_encoding_scheme_4(self):
+        # just a dummy adata objec that won't be used actually
+        adata = DataReader.read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
+        adata.uns["categoricals_encoded_with_mode"] = {
+            "label_encoding": ["col1", "col2", "col3"],
+            "count_encoding": ["col4"],
+            "hash_encoding": [["col5", "col6", "col7"], ["col8", "col9"]],
+        }
+        adata.uns["current_encodings"] = {
+            "col1": "label_encoding",
+            "col2": "label_encoding",
+            "col3": "label_encoding",
+            "col4": "count_encoding",
+            "col5": "hash_encoding",
+            "col6": "hash_encoding",
+            "col7": "hash_encoding",
+            "col8": "hash_encoding",
+            "col9": "hash_encoding",
+        }
+        new_encodings = {
+            "label_encoding": ["col1", "col2", "col3"],
+            "count_encoding": ["col5", "col6", "col7", "col8", "col9"],
+        }
+
+        expected_encodings = {
+            "label_encoding": ["col1", "col2", "col3"],
+            "count_encoding": ["col5", "col6", "col7", "col8", "col9", "col4"],
+        }
+        updated_encodings = Encoder._reorder_encodings(adata, new_encodings)
+
+        assert expected_encodings == updated_encodings
+
+    def test_update_encoding_scheme_5(self):
+        # just a dummy adata objec that won't be used actually
+        adata = DataReader.read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
+        adata.uns["categoricals_encoded_with_mode"] = {
+            "label_encoding": ["col1", "col2", "col3"],
+            "count_encoding": ["col4"],
+            "hash_encoding": [["col5", "col6", "col7"], ["col8", "col9"]],
+        }
+        adata.uns["current_encodings"] = {
+            "col1": "label_encoding",
+            "col2": "label_encoding",
+            "col3": "label_encoding",
+            "col4": "count_encoding",
+            "col5": "hash_encoding",
+            "col6": "hash_encoding",
+            "col7": "hash_encoding",
+            "col8": "hash_encoding",
+            "col9": "hash_encoding",
+        }
+        new_encodings = {
+            "hash_encoding": [["col1", "col2", "col9"], ["col3", "col5"], ["col4", "col6", "col7"], ["col8"]]
+        }
+
+        expected_encodings = {
+            "hash_encoding": [["col1", "col2", "col9"], ["col3", "col5"], ["col4", "col6", "col7"], ["col8"]]
+        }
+        updated_encodings = Encoder._reorder_encodings(adata, new_encodings)
+
+        assert expected_encodings == updated_encodings
+
+    def test_update_encoding_scheme_duplicates_raise_error(self):
+        # just a dummy adata objec that won't be used actually
+        adata = DataReader.read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
+        adata.uns["categoricals_encoded_with_mode"] = {
+            "label_encoding": ["col1", "col2", "col3"],
+            "count_encoding": ["col4"],
+            "hash_encoding": [["col5", "col6", "col7"], ["col8", "col9"]],
+        }
+        adata.uns["current_encodings"] = {
+            "col1": "label_encoding",
+            "col2": "label_encoding",
+            "col3": "label_encoding",
+            "col4": "count_encoding",
+            "col5": "hash_encoding",
+            "col6": "hash_encoding",
+            "col7": "hash_encoding",
+            "col8": "hash_encoding",
+            "col9": "hash_encoding",
+        }
+        new_encodings = {
+            "hash_encoding": [["col1", "col2", "col9"], ["col3", "col9"], ["col4", "col6", "col7"], ["col8"]]
+        }
+
+        _ = {
+            "label_encoding": ["col10"],
+            "hash_encoding": [["col1", "col2", "col9"], ["col3", "col5"], ["col4", "col6", "col7"], ["col8"]],
+        }
+        with pytest.raises(DuplicateColumnEncodingError):
+            _ = Encoder._reorder_encodings(adata, new_encodings)
