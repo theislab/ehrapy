@@ -12,6 +12,7 @@ repos:
             entry: check-added-large-files
             language: system
             args: ["--maxkb=5000"]
+            exclude: docs/tutorials/
           - id: check-toml
             name: Check Toml
             entry: check-toml

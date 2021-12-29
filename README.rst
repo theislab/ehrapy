@@ -1,6 +1,3 @@
-ehrapy
-===========================
-
 |PyPI| |Python Version| |License| |Read the Docs| |Build| |Tests| |Codecov| |pre-commit| |Black|
 
 .. |PyPI| image:: https://img.shields.io/pypi/v/ehrapy.svg
@@ -34,6 +31,9 @@ ehrapy
 .. warning::
     ehrapy is still in development and there is no version on PyPI yet.
     If you are willing to try out alpha software feel free to install from source or contact us.
+
+ehrapy overview
+===============
 
 
 Features

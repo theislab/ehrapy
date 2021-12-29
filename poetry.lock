@@ -179,6 +179,21 @@ PyYAML = ">=5.3.1"
 stevedore = ">=1.20.0"
 
 [[package]]
+name = "beautifulsoup4"
+version = "4.10.0"
+description = "Screen-scraping library"
+category = "dev"
+optional = false
+python-versions = ">3.0.0"
+
+[package.dependencies]
+soupsieve = ">1.2"
+
+[package.extras]
+html5lib = ["html5lib"]
+lxml = ["lxml"]
+
+[[package]]
 name = "black"
 version = "21.12b0"
 description = "The uncompromising code formatter."
@@ -1852,6 +1867,23 @@ dotenv = ["python-dotenv (>=0.10.4)"]
 email = ["email-validator (>=1.0.3)"]
 
 [[package]]
+name = "pydata-sphinx-theme"
+version = "0.7.2"
+description = "Bootstrap-based Sphinx theme from the PyData community"
+category = "dev"
+optional = false
+python-versions = ">=3.5"
+
+[package.dependencies]
+beautifulsoup4 = "*"
+docutils = "!=0.17.0"
+sphinx = "*"
+
+[package.extras]
+coverage = ["pytest-cov", "codecov", "sphinx", "numpydoc", "recommonmark", "pandas", "pytest", "pytest-regressions", "beautifulsoup4", "sphinx-sitemap", "jupyter-sphinx", "plotly", "numpy", "xarray", "docutils (==0.16)"]
+test = ["sphinx", "numpydoc", "recommonmark", "pandas", "pytest", "pytest-regressions", "beautifulsoup4", "sphinx-sitemap", "jupyter-sphinx", "plotly", "numpy", "xarray", "docutils (==0.16)"]
+
+[[package]]
 name = "pydocstyle"
 version = "6.1.1"
 description = "Python docstring style checker"
@@ -2350,6 +2382,14 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "soupsieve"
+version = "2.3.1"
+description = "A modern CSS selector implementation for Beautiful Soup."
+category = "dev"
+optional = false
+python-versions = ">=3.6"
+
+[[package]]
 name = "spacy"
 version = "3.0.7"
 description = "Industrial-strength Natural Language Processing (NLP) in Python"
@@ -2547,32 +2587,6 @@ code_style = ["pre-commit (>=2.7.0,<2.8.0)"]
 live-dev = ["sphinx-autobuild", "web-compile (>=0.2.0,<0.3.0)"]
 testing = ["pytest (>=6.0.1,<6.1.0)", "pytest-regressions (>=2.0.1,<2.1.0)"]
 themes = ["sphinx-rtd-theme", "pydata-sphinx-theme (>=0.4.0,<0.5.0)", "sphinx-book-theme (>=0.0.36,<0.1.0)", "myst-parser (>=0.12.9,<0.13.0)"]
-
-[[package]]
-name = "sphinx-rtd-dark-mode"
-version = "1.2.4"
-description = "Dark mode for the Sphinx Read the Docs theme."
-category = "dev"
-optional = false
-python-versions = ">=3.4"
-
-[package.dependencies]
-sphinx-rtd-theme = "*"
-
-[[package]]
-name = "sphinx-rtd-theme"
-version = "1.0.0"
-description = "Read the Docs theme for Sphinx"
-category = "dev"
-optional = false
-python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*"
-
-[package.dependencies]
-docutils = "<0.18"
-sphinx = ">=1.6"
-
-[package.extras]
-dev = ["transifex-client", "sphinxcontrib-httpdomain", "bump2version"]
 
 [[package]]
 name = "sphinx-tabs"
@@ -3170,7 +3184,7 @@ en-core-web-md = ["en-core-web-md"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7.1,<3.10"
-content-hash = "8851796c3cd27f2b48a3cd84c4178af7b7efa8fb1d62cc1b9b54df2c5bfe09e2"
+content-hash = "b53ff7e078424f1399d5c2b388d6b59dd2b9e2b426c57785bfa3128321d7c8c7"
 
 [metadata.files]
 aiohttp = [
@@ -3302,6 +3316,10 @@ backcall = [
 bandit = [
     {file = "bandit-1.7.1-py3-none-any.whl", hash = "sha256:f5acd838e59c038a159b5c621cf0f8270b279e884eadd7b782d7491c02add0d4"},
     {file = "bandit-1.7.1.tar.gz", hash = "sha256:a81b00b5436e6880fa8ad6799bc830e02032047713cbb143a12939ac67eb756c"},
+]
+beautifulsoup4 = [
+    {file = "beautifulsoup4-4.10.0-py3-none-any.whl", hash = "sha256:9a315ce70049920ea4572a4055bc4bd700c940521d36fc858205ad4fcde149bf"},
+    {file = "beautifulsoup4-4.10.0.tar.gz", hash = "sha256:c23ad23c521d818955a4151a67d81580319d4bf548d3d49f4223ae041ff98891"},
 ]
 black = [
     {file = "black-21.12b0-py3-none-any.whl", hash = "sha256:a615e69ae185e08fdd73e4715e260e2479c861b5740057fde6e8b4e3b7dd589f"},
@@ -4621,6 +4639,10 @@ pydantic = [
     {file = "pydantic-1.8.2-py3-none-any.whl", hash = "sha256:fec866a0b59f372b7e776f2d7308511784dace622e0992a0b59ea3ccee0ae833"},
     {file = "pydantic-1.8.2.tar.gz", hash = "sha256:26464e57ccaafe72b7ad156fdaa4e9b9ef051f69e175dbbb463283000c05ab7b"},
 ]
+pydata-sphinx-theme = [
+    {file = "pydata-sphinx-theme-0.7.2.tar.gz", hash = "sha256:671df35fcdd290eafbd23d0595e6d359dbe90b2e64e6c3f4dc88276eed4a065e"},
+    {file = "pydata_sphinx_theme-0.7.2-py3-none-any.whl", hash = "sha256:bc1abc45e103b254c6c7a8f2ddabbaf8aa1f0817d85cae65dd163dd554c52700"},
+]
 pydocstyle = [
     {file = "pydocstyle-6.1.1-py3-none-any.whl", hash = "sha256:6987826d6775056839940041beef5c08cc7e3d71d63149b48e36727f70144dc4"},
     {file = "pydocstyle-6.1.1.tar.gz", hash = "sha256:1d41b7c459ba0ee6c345f2eb9ae827cab14a7533a88c5c6f7e94923f72df92dc"},
@@ -5004,6 +5026,10 @@ snowballstemmer = [
     {file = "snowballstemmer-2.2.0-py2.py3-none-any.whl", hash = "sha256:c8e1716e83cc398ae16824e5572ae04e0d9fc2c6b985fb0f900f5f0c96ecba1a"},
     {file = "snowballstemmer-2.2.0.tar.gz", hash = "sha256:09b16deb8547d3412ad7b590689584cd0fe25ec8db3be37788be3810cbf19cb1"},
 ]
+soupsieve = [
+    {file = "soupsieve-2.3.1-py3-none-any.whl", hash = "sha256:1a3cca2617c6b38c0343ed661b1fa5de5637f257d4fe22bd9f1338010a1efefb"},
+    {file = "soupsieve-2.3.1.tar.gz", hash = "sha256:b8d49b1cd4f037c7082a9683dfa1801aa2597fb11c3a1155b7a5b94829b4f1f9"},
+]
 spacy = [
     {file = "spacy-3.0.7-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:bd0ecec5a9c86c9b8c24f82d2e71cd7d0d5bc71e4aa79f945e1e6e6860e28b85"},
     {file = "spacy-3.0.7-cp36-cp36m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:58588a5f4afb49d42843ef7c6a357227ea9f6f8af6330f4e9e9a6cfa0ea65493"},
@@ -5057,14 +5083,6 @@ sphinx-last-updated-by-git = [
 sphinx-panels = [
     {file = "sphinx-panels-0.6.0.tar.gz", hash = "sha256:d36dcd26358117e11888f7143db4ac2301ebe90873ac00627bf1fe526bf0f058"},
     {file = "sphinx_panels-0.6.0-py3-none-any.whl", hash = "sha256:bd64afaf85c07f8096d21c8247fc6fd757e339d1be97832c8832d6ae5ed2e61d"},
-]
-sphinx-rtd-dark-mode = [
-    {file = "sphinx_rtd_dark_mode-1.2.4-py3-none-any.whl", hash = "sha256:1d97c1e4f7902fb77ae86adcf72926c3b0e48a300f93eeba49266da5aeed8a29"},
-    {file = "sphinx_rtd_dark_mode-1.2.4.tar.gz", hash = "sha256:935bc1f3e62fc76eadd7d2760ac7f48bab907a97e44beda749a48a2706aeed63"},
-]
-sphinx-rtd-theme = [
-    {file = "sphinx_rtd_theme-1.0.0-py2.py3-none-any.whl", hash = "sha256:4d35a56f4508cfee4c4fb604373ede6feae2a306731d533f409ef5c3496fdbd8"},
-    {file = "sphinx_rtd_theme-1.0.0.tar.gz", hash = "sha256:eec6d497e4c2195fa0e8b2016b337532b8a699a68bcb22a512870e16925c6a5c"},
 ]
 sphinx-tabs = [
     {file = "sphinx-tabs-3.2.0.tar.gz", hash = "sha256:33137914ed9b276e6a686d7a337310ee77b1dae316fdcbce60476913a152e0a4"},

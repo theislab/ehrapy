@@ -41,10 +41,9 @@ extensions = [
     "sphinx.ext.mathjax",
     "typed_returns",
     "sphinx_click",
-    "sphinx_rtd_dark_mode",
     "sphinx_copybutton",
     "sphinx_tabs.tabs",
-    "sphinx_panels"
+    "sphinx_panels",
 ]
 intersphinx_mapping = dict(  # noqa: C408
     python=("https://docs.python.org/3", None),
@@ -63,7 +62,7 @@ intersphinx_mapping = dict(  # noqa: C408
     xarray=("https://xarray.pydata.org/en/stable/", None),
 )
 
-default_dark_mode = True
+default_dark_mode = False
 
 templates_path = ["_templates"]
 source_suffix = ".rst"
@@ -83,10 +82,21 @@ suppress_warnings = ["download.not_readable"]
 pygments_style = "sphinx"
 
 html_css_files = ["custom_cookietemple.css", "sphinx_gallery.css", "nbsphinx.css", "dataframe.css"]
-html_theme = "sphinx_rtd_theme"
+html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
 html_logo = "_static/placeholder.png"  # TODO
-html_theme_options = {"navigation_depth": 4, "logo_only": True}
+html_theme_options = {"icon_links": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/theislab/ehrapy",
+            "icon": "fab fa-github-square",
+        },
+        {
+            "name": "Twitter",
+            "url": "https://twitter.com/lukasheumos",
+            "icon": "fab fa-twitter-square",
+        },
+    ],}
 html_show_sphinx = False
 
 autosummary_generate = True
@@ -126,20 +136,21 @@ nbsphinx_execute_arguments = [
     "--InlineBackend.rc={'figure.dpi': 96}",
 ]
 nbsphinx_execute = "never"
+# TODO Fix below URL
 nbsphinx_prolog = r"""
 {% set docname = 'docs/source/' + env.doc2path(env.docname, base=None) %}
 .. raw:: html
 
     <div class="binder-badge docutils container">
         <a class="reference external image-reference"
-           href="https://mybinder.org/v2/gh/theislab/ehrapy/{{ env.config.release|e }}?filepath={{ docname|e }}">
+           href="https://mybinder.org/v2/gh/theislab/ehrapy/development?filepath={{ docname|e }}">
         <img alt="Launch binder" src="https://mybinder.org/badge_logo.svg" width="150px">
         </a>
     </div>
 """  # noqa: E501
 
 nbsphinx_thumbnails = {
-    "notebooks/mimic_2": "_static/tutorials/placeholder.svg",
+    "tutorials/mimic_2": "_static/tutorials/placeholder.png",
 }
 
 # -- Options for HTMLHelp output ---------------------------------------
@@ -209,6 +220,7 @@ texinfo_documents = [
 ]
 
 # -- custom classes ------------------------------
+
 
 class MaybeMiniGallery(MiniGallery):
     def run(self) -> List[str]:
