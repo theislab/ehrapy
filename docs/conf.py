@@ -85,7 +85,8 @@ html_css_files = ["custom_cookietemple.css", "sphinx_gallery.css", "nbsphinx.css
 html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
 html_logo = "_static/placeholder.png"  # TODO
-html_theme_options = {"icon_links": [
+html_theme_options = {
+    "icon_links": [
         {
             "name": "GitHub",
             "url": "https://github.com/theislab/ehrapy",
@@ -96,7 +97,8 @@ html_theme_options = {"icon_links": [
             "url": "https://twitter.com/lukasheumos",
             "icon": "fab fa-twitter-square",
         },
-    ],}
+    ],
+}
 html_show_sphinx = False
 
 autosummary_generate = True
