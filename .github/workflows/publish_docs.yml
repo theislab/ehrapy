@@ -22,7 +22,7 @@ jobs:
               run: pip install -r docs/requirements.txt
 
             - name: Install Pandoc
-              run: apt install pandoc
+              run: sudo apt install pandoc
 
             - name: Build docs
               run: |
