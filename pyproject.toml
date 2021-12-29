@@ -46,7 +46,7 @@ medcat = "^1.2.6"
 pytest = "^6.2.5"
 coverage = {extras = ["toml"], version = "^6.0"}
 safety = "^1.9.0"
-mypy = "^0.920"
+mypy = "^0.930"
 typeguard = "^2.13.3"
 xdoctest = {extras = ["colors"], version = "^0.15.10"}
 sphinx = "^4.3.2"
@@ -74,7 +74,7 @@ sphinx-autodoc-typehints = "^1.12.0"
 sphinx-last-updated-by-git = "^0.3.0"
 nbsphinx = "^0.8.7"
 sphinxcontrib-bibtex = "^2.4.1"
-sphinx-automodapi = "^0.13"
+sphinx-automodapi = "^0.14"
 
 [tool.poetry.extras]
 en-core-web-md = ["en-core-web-md"]
