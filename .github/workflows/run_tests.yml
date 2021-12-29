@@ -106,13 +106,11 @@ jobs:
 
             - name: Install ghostscript Windows
               if: matrix.os == 'windows-latest'
-              run: |
-                  choco install imagemagick dejavufonts ghostscript
+              run: choco install imagemagick dejavufonts ghostscript
 
             - name: Refresh env
               if: matrix.os == 'windows-latest'
-              run: |
-                  refreshenv
+              run: refreshenv
 
             - name: Add to path
               if: matrix.os == 'windows-latest'
@@ -125,8 +123,7 @@ jobs:
 
             - name: Test executables
               if: matrix.os == 'windows-latest'
-              run: |
-                  gswin64c -v
+              run: gswin64c -v
 
             - name: Run Nox
               run: nox --force-color --python=${{ matrix.python-version }}
