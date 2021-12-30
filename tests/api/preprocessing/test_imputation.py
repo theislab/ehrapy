@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 from anndata import AnnData
 
-from ehrapy.api.preprocessing import Imputation
+from ehrapy.api.preprocessing import replace_explicit
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_PATH = f"{CURRENT_DIR}/test_preprocessing"
@@ -18,7 +18,7 @@ class TestImputation:
         # NaN value and empty string replacement with single value
         nan_empty_str_array = np.array([["column 1", "column 2", "column 3", "column 4"], [5, np.NaN, "", "not empty"]])
         adata = AnnData(X=nan_empty_str_array, dtype=np.dtype(object))
-        imputed_adata = Imputation.explicit(adata, replacement=0, impute_empty_strings=True, copy=True)
+        imputed_adata = replace_explicit(adata, replacement=0, impute_empty_strings=True, copy=True)
 
         # Run costly, but explicit checks
         for col in imputed_adata.X:

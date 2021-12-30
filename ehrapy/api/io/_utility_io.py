@@ -24,10 +24,10 @@ def _get_file_extension(file_path: Path) -> str:
         return ext[-1][1:]
     raise ValueError(
         f"""\
-{file_path!r} does not end on a valid extension.
-Please, provide one of the available extensions.
-{supported_extensions}
-"""
+        {file_path!r} does not end on a valid extension.
+        Please, provide one of the available extensions.
+        {supported_extensions}
+        """
     )
 
 
