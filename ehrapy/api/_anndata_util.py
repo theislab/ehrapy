@@ -45,7 +45,7 @@ def assert_encoded(adata: AnnData):
         raise NotEncodedError("The AnnData object has not yet been encoded.") from AssertionError
 
 
-def get_numeric_vars(adata: AnnData) -> List[str]:
+def get_numeric_vars(adata: AnnData) -> list[str]:
     """Fetches the column names for numeric variables in X.
 
     Args:
@@ -61,8 +61,8 @@ def get_numeric_vars(adata: AnnData) -> List[str]:
 
 
 def set_numeric_vars(
-    adata: AnnData, values: np.ndarray, vars: Optional[List[str]] = None, copy: bool = False
-) -> Optional[AnnData]:
+    adata: AnnData, values: np.ndarray, vars: list[str] | None = None, copy: bool = False
+) -> AnnData | None:
     """Sets the column names for numeric variables in X.
 
     Args:
