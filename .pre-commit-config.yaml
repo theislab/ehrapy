@@ -50,6 +50,13 @@ repos:
             types: [text]
             stages: [commit, push, manual]
             exclude: docs/
+          - id: pyupgrade
+            name: pyupgrade
+            description: Automatically upgrade syntax for newer versions.
+            entry: pyupgrade
+            language: system
+            types: [python]
+            args: [--py37-plus]
     - repo: https://github.com/pre-commit/mirrors-prettier
       rev: v2.3.2
       hooks:

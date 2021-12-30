@@ -1,11 +1,13 @@
-from typing import List, Optional, Union
+from __future__ import annotations
+
+from typing import List
 
 import numpy as np
 from anndata import AnnData
 
 
-def get_column_indices(adata: AnnData, col_names=Union[str, List]) -> List[int]:
-    """Fetches the column indices in X for a given list of column names.
+def get_column_indices(adata: AnnData, col_names: str | list[str]) -> list[int]:
+    """Fetches the column indices in X for a given list of column names
 
     Args:
         adata: :class:`~anndata.AnnData` object
@@ -25,8 +27,8 @@ def get_column_indices(adata: AnnData, col_names=Union[str, List]) -> List[int]:
     return indices
 
 
-def get_column_values(adata: AnnData, indices: Union[int, List[int]]) -> np.ndarray:
-    """Fetches the column values for a specific index from X.
+def get_column_values(adata: AnnData, indices: int | list[int]) -> np.ndarray:
+    """Fetches the column values for a specific index from X
 
     Args:
         adata: :class:`~anndata.AnnData` object

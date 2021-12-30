@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from ehrapy.api.io.read import ColumnNotFoundError, read
+from ehrapy.api.io._read import ColumnNotFoundError, read
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_PATH = f"{CURRENT_DIR}/test_data_io"

@@ -1,4 +1,6 @@
-from typing import Dict, Optional, Tuple, Union
+from __future__ import annotations
+
+from typing import Dict, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -7,10 +9,10 @@ from anndata import AnnData
 
 def replace_explicit(
     adata: AnnData,
-    replacement: Union[Union[str, int], Dict[str, Union[str, int]], Tuple[str, Union[str, int]]] = None,
+    replacement: str | int | dict[str, str | int] | tuple[str, str | int] = None,
     impute_empty_strings: bool = True,
     copy: bool = False,
-) -> Optional[AnnData]:
+) -> AnnData | None:
     """Replaces all missing values in all or the specified columns with the passed value
 
     There are several scenarios to cover:

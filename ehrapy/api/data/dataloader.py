@@ -1,9 +1,10 @@
+from __future__ import annotations
+
 import shutil
 import tempfile
 from pathlib import Path
 from random import choice
 from string import ascii_lowercase
-from typing import Union
 
 import requests
 from rich import print
@@ -13,7 +14,7 @@ from rich.progress import Progress
 def download(  # pragma: no cover
     url: str,
     output_file_name: str = None,
-    output_path: Union[str, Path] = None,
+    output_path: str | Path = None,
     block_size: int = 1024,
     overwrite: bool = False,
     is_archived: bool = False,

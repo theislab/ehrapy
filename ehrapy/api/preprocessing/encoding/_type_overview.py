@@ -1,4 +1,4 @@
-from typing import Union
+from __future__ import annotations
 
 import pandas as pd
 from anndata import AnnData
@@ -10,7 +10,7 @@ from rich.tree import Tree
 from ehrapy.api.preprocessing.encoding._encode import available_encodings
 
 
-def type_overview(data: Union[MuData, AnnData], sort: bool = False, sort_reversed: bool = False) -> None:
+def type_overview(data: MuData | AnnData, sort: bool = False, sort_reversed: bool = False) -> None:
     """Prints the current state of an :class:`~anndata.AnnData` or :class:`~mudata.MuData` object in a tree format.
 
     Args:
