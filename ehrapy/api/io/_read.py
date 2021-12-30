@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import shutil
 from pathlib import Path
-from typing import Dict, Iterator, List, NamedTuple, Optional, Tuple, Union
+from typing import Dict, Iterator, List, NamedTuple, Optional, Tuple
 
 import camelot
 import pandas as pd
@@ -22,17 +24,17 @@ class BaseDataframes(NamedTuple):
 
 
 def read(
-    dataset_path: Union[Path, str],
-    extension: Optional[str] = None,
-    delimiter: Optional[str] = None,
-    index_column: Optional[Union[Dict[str, Union[str, int]], Union[str, int]]] = None,
-    columns_obs_only: Optional[Union[Dict[str, List[str]], List[str]]] = None,
+    dataset_path: Path | str,
+    extension: str | None = None,
+    delimiter: str | None = None,
+    index_column: dict[str, str | int] | str | int | None = None,
+    columns_obs_only: dict[str, list[str]] | list[str] | None = None,
     return_mudata: bool = False,
     cache: bool = False,
-    backup_url: Optional[str] = None,
-    download_dataset_name: Optional[str] = None,
+    backup_url: str | None = None,
+    download_dataset_name: str | None = None,
     **kwargs,
-) -> Union[AnnData, Dict[str, AnnData], MuData]:
+) -> AnnData | dict[str, AnnData] | MuData:
     """Reads or downloads a desired directory or single file.
 
     Args:
@@ -105,15 +107,15 @@ def read(
 
 def _read(
     filename: Path,
-    extension: Optional[str] = None,
-    delimiter: Optional[str] = None,
-    index_column: Optional[Union[Dict[str, Union[str, int]], Union[str, int]]] = None,
-    columns_obs_only: Optional[Union[Dict[str, List[str]], List[str]]] = None,
+    extension: str | None = None,
+    delimiter: str | None = None,
+    index_column: dict[str, str | int] | str | int | None = None,
+    columns_obs_only: dict[str, list[str]] | list[str] | None = None,
     return_mudata: bool = False,
     cache: bool = False,
-    backup_url: Optional[str] = None,
+    backup_url: str | None = None,
     **kwargs,
-) -> Union[MuData, Dict[str, AnnData], AnnData]:
+) -> AnnData | dict[str, AnnData] | MuData:
     """Internal interface of the read method."""
     if cache and return_mudata:
         _mudata_cache_not_supported()
@@ -182,14 +184,14 @@ def _read(
 
 def _read_from_directory(
     filename: Path,
-    extension: Optional[str] = None,
-    delimiter: Optional[str] = None,
-    index_column: Optional[Union[Dict[str, Union[str, int]], Union[str, int]]] = None,
-    columns_obs_only: Optional[Union[Dict[str, List[str]], List[str]]] = None,
+    extension: str | None = None,
+    delimiter: str | None = None,
+    index_column: dict[str, str | int] | str | int | None = None,
+    columns_obs_only: dict[str, list[str]] | list[str] | None = None,
     return_mudata: bool = False,
     cache: bool = False,
-    path_cache_dir: Optional[Path] = None,
-) -> Dict[str, AnnData]:
+    path_cache_dir: Path | None = None,
+) -> dict[str, AnnData]:
     """Parse AnnData objects from a directory containing the data files"""
 
     if not extension:
@@ -218,12 +220,12 @@ def _read_from_directory(
 
 def _read_multiple_csv(  # noqa: N802
     filename: Path,
-    delimiter: Optional[str] = None,
-    index_column: Optional[Union[Dict[str, Union[str, int]], Union[str, int]]] = None,
-    columns_obs_only: Union[Optional[List[Union[str]]], Dict[str, Optional[List[Union[str]]]]] = None,
+    delimiter: str | None = None,
+    index_column: dict[str, str | int] | str | int | None = None,
+    columns_obs_only: dict[str, list[str]] | list[str] | None = None,
     return_mudata_object: bool = False,
     cache: bool = False,
-) -> Tuple[Union[MuData, Dict[str, AnnData]], Dict[str, List[str]]]:
+) -> tuple[dict[str, AnnData], dict[str, list[str] | None]]:
     """Read a dataset containing multiple .csv/.tsv files.
 
     Args:
@@ -272,12 +274,12 @@ def _read_multiple_csv(  # noqa: N802
 
 
 def read_csv(
-    filename: Union[Path, Iterator[str]],
-    delimiter: Optional[str] = ",",
-    index_column: Optional[Union[str, int]] = None,
-    columns_obs_only: Optional[List[Union[str]]] = None,
+    filename: Path | Iterator[str],
+    delimiter: str | None = ",",
+    index_column: str | int | None = None,
+    columns_obs_only: list[str] | None = None,
     cache: bool = False,
-) -> Tuple[AnnData, Optional[List[str]]]:
+) -> tuple[AnnData, list[str] | None]:
     """Read `.csv` and `.tsv` file.
 
     Args:
@@ -312,12 +314,12 @@ def read_csv(
 
 
 def read_pdf(
-    filename: Union[Path, Iterator[str]],
-    index_column: Optional[Dict[str, str]] = None,
-    columns_obs_only: Dict[str, Optional[List[Union[str]]]] = None,
+    filename: Path | Iterator[str],
+    index_column: dict[str, str] | None = None,
+    columns_obs_only: dict[str, list[str] | None] = None,
     cache: bool = False,
     **kwargs,
-) -> Tuple[Dict[str, AnnData], Optional[Dict[str, Optional[List[Union[str]]]]]]:
+) -> tuple[dict[str, AnnData], dict[str, list[str] | None] | None]:
     """Read `.pdf`. Since a single pdf can contain multiple tables, those will be read into a dict,
     like it's done for multiple .csv/.tsv files. Currently, ehrapy only supports parsing single pdfs.
 
@@ -425,7 +427,7 @@ def read_pdf(
     return ann_data_objects, columns_obs_only
 
 
-def _read_from_cache_dir(cache_dir: Path) -> Dict[str, AnnData]:
+def _read_from_cache_dir(cache_dir: Path) -> dict[str, AnnData]:
     """Read AnnData objects from the cache directory"""
     adata_objects = {}
     # read each cache file in the cache directory and store it into a dict
@@ -453,11 +455,11 @@ def _read_from_cache(path_cache: Path) -> AnnData:
 
 
 def _write_cache_dir(
-    adata_objects: Dict[str, AnnData],
+    adata_objects: dict[str, AnnData],
     path_cache: Path,
     columns_obs_only,
-    index_column: Optional[Union[Dict[str, Union[str, int]]]],  # type ignore
-) -> Dict[str, AnnData]:
+    index_column: dict[str, str | int] | None,  # type ignore
+) -> dict[str, AnnData]:
     """Write multiple AnnData objects into a common cache directory keeping index column and columns_obs_only.
 
     Args:
@@ -481,7 +483,7 @@ def _write_cache_dir(
 def _write_cache(
     raw_anndata: AnnData,
     path_cache: Path,
-    columns_obs_only: Optional[List[Union[str]]],
+    columns_obs_only: list[str] | None,
 ) -> AnnData:
     """Write AnnData object to cache"""
     cached_adata = encode(data=raw_anndata, autodetect=True)
@@ -494,7 +496,7 @@ def _write_cache(
 
 
 def df_to_anndata(
-    df: pd.DataFrame, columns_obs_only: Optional[List[Union[str]]], index_column: Optional[str] = None
+    df: pd.DataFrame, columns_obs_only: list[str] | None, index_column: str | None = None
 ) -> AnnData:
     """Create an AnnData object from the initial dataframe"""
     if index_column:
@@ -546,7 +548,7 @@ def _prepare_dataframe(initial_df: pd.DataFrame, columns_obs_only, cache):
     return initial_df, columns_obs_only
 
 
-def _decode_cached_adata(adata: AnnData, column_obs_only: List[str]) -> AnnData:
+def _decode_cached_adata(adata: AnnData, column_obs_only: list[str]) -> AnnData:
     """Decode the label encoding of initial AnnData object
 
     Args:
@@ -581,7 +583,7 @@ def _decode_cached_adata(adata: AnnData, column_obs_only: List[str]) -> AnnData:
     return adata
 
 
-def _check_files_present(filename: Path, backup_url: Optional[str] = None):
+def _check_files_present(filename: Path, backup_url: str | None = None):
     if backup_url is not None:
         is_present = _check_datafiles_present_and_download(filename, backup_url=backup_url)
         if not is_present and not filename.is_dir() and not filename.is_file():
@@ -591,7 +593,7 @@ def _check_files_present(filename: Path, backup_url: Optional[str] = None):
             )
 
 
-def _check_datafiles_present_and_download(path: Union[str, Path], backup_url=None) -> bool:
+def _check_datafiles_present_and_download(path: str | Path, backup_url=None) -> bool:
     """Check whether the file or directory is present, otherwise download.
 
     Args:
@@ -698,7 +700,7 @@ def _extract_index_and_columns_obs_only(identifier: str, index_columns, columns_
     return _index_column, _columns_obs_only
 
 
-def _move_columns_to_obs(df: pd.DataFrame, columns_obs_only: Optional[List[str]]) -> BaseDataframes:
+def _move_columns_to_obs(df: pd.DataFrame, columns_obs_only: list[str] | None) -> BaseDataframes:
     """Move the given columns from the original dataframe (and therefore X) to obs.
 
     By moving these values will not get lost and will be stored in obs, but will not appear in X.

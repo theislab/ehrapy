@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 from pathlib import Path, PurePath
-from typing import Union
 
 supported_extensions = {"csv", "tsv", "h5ad", "pdf"}
 # file extensions with formats, that can contain multiple tables/data in one file
@@ -31,7 +32,7 @@ def _get_file_extension(file_path: Path) -> str:
     )
 
 
-def _slugify(file_path: Union[str, PurePath]) -> str:
+def _slugify(file_path: str | PurePath) -> str:
     """Transforms a Path into a string representation which is machine readable.
 
     Args:
@@ -73,7 +74,7 @@ def _is_float_convertable(string) -> bool:
         return False
 
 
-def _is_int_convertable(string: Union[str, float]) -> bool:
+def _is_int_convertable(string: str | float) -> bool:
     """Checks whether a string can be converted into an integer
 
     Args:

@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from functools import wraps
-from typing import Dict, List, Union
+from typing import Dict, List
 
 import deepl
 from anndata import AnnData
@@ -82,7 +84,7 @@ class DeepL:
                 print(f"{language.code} ({language.name})")
 
     @_check_usage  # type: ignore
-    def translate_text(self, text: Union[str, List], target_language: str) -> Union[TextResult, List[TextResult]]:
+    def translate_text(self, text: str | list, target_language: str) -> TextResult | list[TextResult]:
         """Translates the provided text into the target language
 
         Args:
@@ -112,7 +114,7 @@ class DeepL:
 
     @_check_usage  # type: ignore # pragma: no cover
     def create_glossary(
-        self, glossary_name: str, source_language: str, target_language: str, entries: Dict[str, str]
+        self, glossary_name: str, source_language: str, target_language: str, entries: dict[str, str]
     ) -> GlossaryInfo:
         """Creates a DeepL Glossary to translate with.
 
@@ -130,9 +132,7 @@ class DeepL:
         return self.translator.create_glossary(glossary_name, source_language, target_language, entries)
 
     @_check_usage  # type: ignore # pragma: no cover
-    def translate_with_glossary(
-        self, text: Union[str, List], glossary: GlossaryInfo
-    ) -> Union[TextResult, List[TextResult]]:
+    def translate_with_glossary(self, text: str | list, glossary: GlossaryInfo) -> TextResult | list[TextResult]:
         """Translates text with a provided Glossary
 
         Args:
@@ -148,7 +148,7 @@ class DeepL:
         self,
         adata: AnnData,
         target_language: str = "EN-US",
-        columns=Union[str, List],
+        columns: str | list = None,
         translate_column_name: bool = False,
         inplace: bool = False,
     ) -> None:
@@ -182,7 +182,7 @@ class DeepL:
         self,
         adata: AnnData,
         target_language: str = "EN-US",
-        columns=Union[str, List],
+        columns: str | list = None,
         translate_column_name: bool = False,
         inplace: bool = False,
     ) -> None:
@@ -216,7 +216,7 @@ class DeepL:
         self,
         adata: AnnData,
         target_language: str = "EN-US",
-        columns=Union[str, List],
+        columns: str | list = None,
         translate_column_name: bool = False,
     ) -> None:
         """Translates a X column into the target language in place.
@@ -247,7 +247,7 @@ class DeepL:
                 adata.var_names = index_values
 
             translate = lambda text: self.translator.translate_text(text, target_lang=target_language)
-            translated_column_values: List = translate(column_values)
+            translated_column_values: list = translate(column_values)
             translated_column_values = list(map(lambda text_result: text_result.text, translated_column_values))
 
             adata.X[:, index] = translated_column_values

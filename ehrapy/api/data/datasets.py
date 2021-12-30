@@ -4,7 +4,7 @@ from anndata import AnnData
 from mudata import MuData
 
 from ehrapy.api import ehrapy_settings
-from ehrapy.api.io.read import read
+from ehrapy.api.io._read import read
 from ehrapy.api.preprocessing.encoding import encode
 
 

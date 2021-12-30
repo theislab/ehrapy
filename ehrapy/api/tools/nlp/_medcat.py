@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Any, Dict, List, Literal, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Literal, Optional, Set, Tuple
 
 import numpy as np
 import pandas as pd
@@ -19,7 +21,7 @@ from spacy.tokens.doc import Doc
 from ehrapy.api import settings
 from ehrapy.api._util import check_module_importable
 
-spacy_models_modules: List[str] = list(
+spacy_models_modules: list[str] = list(
     map(lambda model: model.replace("-", "_"), ["en-core-web-md", "en-core-sci-sm", "en-core-sci-md", "en-core-sci-lg"])
 )
 for model in spacy_models_modules:
@@ -31,10 +33,10 @@ for model in spacy_models_modules:
 
 @dataclass
 class AnnotationResult:
-    all_medcat_annotation_results: Optional[List]
-    entities_pretty: List[Set]
-    cui_locations: Optional[Dict]
-    tui_locations: Optional[Dict]
+    all_medcat_annotation_results: list | None
+    entities_pretty: list[set]
+    cui_locations: dict | None
+    tui_locations: dict | None
 
 
 class MedCAT:
@@ -65,7 +67,7 @@ class MedCAT:
         return vocabulary
 
     @staticmethod
-    def create_concept_db(csv_path: List[str], config: Config = None) -> CDB:
+    def create_concept_db(csv_path: list[str], config: Config = None) -> CDB:
         """Creates a MedCAT concept database and sets it for the MedCAT object.
 
         Args:
@@ -170,7 +172,7 @@ class MedCAT:
         if print_statistics:
             self.concept_db.print_stats()
 
-    def filter_tui(self, concept_db: CDB, tui_filters: List[str]) -> CDB:
+    def filter_tui(self, concept_db: CDB, tui_filters: list[str]) -> CDB:
         """Filters a concept database by semantic types (TUI)
 
         Args:
@@ -191,7 +193,7 @@ class MedCAT:
 
     def annotate(
         self,
-        data: Union[np.ndarray, pd.Series],
+        data: np.ndarray | pd.Series,
         batch_size: int = 67,
         min_text_length: int = 1,
         only_cui: bool = False,
@@ -213,10 +215,10 @@ class MedCAT:
         if isinstance(data, np.ndarray):
             data = pd.Series(data)
 
-        cui_location: Dict = {}  # CUI to a list of documents where it appears
-        tui_location: Dict = {}  # TUI to a list of documents where it appears
+        cui_location: dict = {}  # CUI to a list of documents where it appears
+        tui_location: dict = {}  # TUI to a list of documents where it appears
         all_results = []
-        batch: List = []
+        batch: list = []
 
         with Progress(
             "[progress.description]{task.description}", BarColumn(), "[progress.percentage]{task.percentage:>3.0f}%"
@@ -280,7 +282,7 @@ class MedCAT:
             for batch in all_results:
                 total_len += len(batch)
 
-            diagnoses: List[Set] = [set() for _ in range(total_len)]
+            diagnoses: list[set] = [set() for _ in range(total_len)]
             for batch in all_results:
                 for line_idx in batch:
                     concepts = batch[line_idx]["entities"]
@@ -293,7 +295,7 @@ class MedCAT:
         return AnnotationResult(all_results, diagnoses, cui_location, tui_location)
 
     def calculate_disease_proportions(
-        self, adata: AnnData, cui_locations: Dict, subject_id_col="subject_id"
+        self, adata: AnnData, cui_locations: dict, subject_id_col="subject_id"
     ) -> pd.DataFrame:
         """Calculates the relative proportion of found diseases as percentages.
 
@@ -307,8 +309,8 @@ class MedCAT:
 
             cui 	nsubjects 	tui 	name 	perc_subjects
         """
-        cui_subjects: Dict[int, List] = {}
-        cui_subjects_unique: Dict[str, Set] = {}
+        cui_subjects: dict[int, list] = {}
+        cui_subjects_unique: dict[str, set] = {}
         for cui in cui_locations:
             for location in cui_locations[cui]:
                 # TODO: int casting is required as AnnData requires indices to be str (maybe we can change this) so we dont need type casting here
@@ -321,7 +323,7 @@ class MedCAT:
                     cui_subjects[cui] = [subject_id]
                     cui_subjects_unique[cui] = {subject_id}
 
-        cui_nsubjects: List[Tuple[Any, Any]] = [("cui", "nsubjects")]
+        cui_nsubjects: list[tuple[Any, Any]] = [("cui", "nsubjects")]
         for cui in cui_subjects_unique.keys():
             cui_nsubjects.append((cui, len(cui_subjects_unique[cui])))
         df_cui_nsubjects = pd.DataFrame(cui_nsubjects[1:], columns=cui_nsubjects[0])
