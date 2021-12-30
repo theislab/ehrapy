@@ -2,8 +2,8 @@ from pathlib import Path
 
 import pytest
 
-from ehrapy.api.io.read import DataReader
-from ehrapy.api.preprocessing.encoding._encode import DuplicateColumnEncodingError, Encoder
+from ehrapy.api.io import read
+from ehrapy.api.preprocessing import encode, _reorder_encodings, DuplicateColumnEncodingError
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_PATH = f"{CURRENT_DIR}/test_data_encode"
@@ -11,24 +11,22 @@ _TEST_PATH = f"{CURRENT_DIR}/test_data_encode"
 
 class TestRead:
     def test_unknown_encode_mode(self):
-        adata = DataReader.read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
+        adata = read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
         with pytest.raises(ValueError):
-            encoded_ann_data = Encoder.encode(  # noqa: F841
-                adata, autodetect=False, encodings={"unknown_mode": ["survival"]}
-            )
+            encoded_ann_data = encode(adata, autodetect=False, encodings={"unknown_mode": ["survival"]})  # noqa: F841
 
     def test_duplicate_column_encoding(self):
-        adata = DataReader.read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
+        adata = read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
         with pytest.raises(ValueError):
-            encoded_ann_data = Encoder.encode(  # noqa: F841
+            encoded_ann_data = encode(  # noqa: F841
                 adata,
                 autodetect=False,
                 encodings={"label_encoding": ["survival"], "count_encoding": ["survival"]},
             )
 
     def test_autodetect_encode(self):
-        adata = DataReader.read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
-        encoded_ann_data = Encoder.encode(adata, autodetect=True, encodings={})
+        adata = read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
+        encoded_ann_data = encode(adata, autodetect=True, encodings={})
         assert list(encoded_ann_data.obs.columns) == ["survival", "clinic_day"]
         assert list(encoded_ann_data.var_names) == [
             "ehrapycat_survival",
@@ -45,14 +43,14 @@ class TestRead:
         assert id(encoded_ann_data.X) != id(encoded_ann_data.layers["original"])
 
     def test_autodetect_encode_again(self):
-        adata = DataReader.read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
-        encoded_ann_data = Encoder.encode(adata, autodetect=True, encodings={})
-        encoded_ann_data_again = Encoder.encode(encoded_ann_data, autodetect=True, encodings={})  # noqa: F841
+        adata = read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
+        encoded_ann_data = encode(adata, autodetect=True, encodings={})
+        encoded_ann_data_again = encode(encoded_ann_data, autodetect=True, encodings={})  # noqa: F841
         assert encoded_ann_data_again is None
 
     def test_custom_encode(self):
-        adata = DataReader.read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
-        encoded_ann_data = Encoder.encode(
+        adata = read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
+        encoded_ann_data = encode(
             adata,
             autodetect=False,
             encodings={"label_encoding": ["survival"], "one_hot_encoding": ["clinic_day"]},
@@ -76,13 +74,13 @@ class TestRead:
         assert id(encoded_ann_data.X) != id(encoded_ann_data.layers["original"])
 
     def test_custom_encode_again_single_columns_encoding(self):
-        adata = DataReader.read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
-        encoded_ann_data = Encoder.encode(
+        adata = read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
+        encoded_ann_data = encode(
             adata,
             autodetect=False,
             encodings={"label_encoding": ["survival"], "one_hot_encoding": ["clinic_day"]},
         )
-        encoded_ann_data_again = Encoder.encode(
+        encoded_ann_data_again = encode(
             encoded_ann_data, autodetect=False, encodings={"label_encoding": ["clinic_day"]}
         )
         assert encoded_ann_data_again.X.shape == (5, 5)
@@ -105,11 +103,9 @@ class TestRead:
         assert id(encoded_ann_data_again.X) != id(encoded_ann_data_again.layers["original"])
 
     def test_custom_encode_again_multiple_columns_encoding(self):
-        adata = DataReader.read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
-        encoded_ann_data = Encoder.encode(
-            adata, autodetect=False, encodings={"one_hot_encoding": ["clinic_day", "survival"]}
-        )
-        encoded_ann_data_again = Encoder.encode(
+        adata = read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
+        encoded_ann_data = encode(adata, autodetect=False, encodings={"one_hot_encoding": ["clinic_day", "survival"]})
+        encoded_ann_data_again = encode(
             encoded_ann_data,
             autodetect=False,
             encodings={"label_encoding": ["survival"], "count_encoding": ["clinic_day"]},
@@ -139,7 +135,7 @@ class TestRead:
 
     def test_update_encoding_scheme_1(self):
         # just a dummy adata object that won't be used actually
-        adata = DataReader.read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
+        adata = read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
         adata.uns["categoricals_encoded_with_mode"] = {
             "label_encoding": ["col1", "col2", "col3"],
             "count_encoding": ["col4"],
@@ -162,13 +158,13 @@ class TestRead:
             "label_encoding": ["col4", "col5", "col6"],
             "hash_encoding": [["col1", "col2", "col3"], ["col7"], ["col8", "col9"]],
         }
-        updated_encodings = Encoder._reorder_encodings(adata, new_encodings)
+        updated_encodings = _reorder_encodings(adata, new_encodings)
 
         assert expected_encodings == updated_encodings
 
     def test_update_encoding_scheme_2(self):
         # just a dummy adata object that won't be used actually
-        adata = DataReader.read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
+        adata = read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
         adata.uns["categoricals_encoded_with_mode"] = {
             "count_encoding": ["col4"],
             "hash_encoding": [["col5", "col6", "col7"], ["col8", "col9"]],
@@ -190,13 +186,13 @@ class TestRead:
             "label_encoding": ["col4", "col5", "col6", "col7", "col8", "col9"],
             "hash_encoding": [["col1", "col2", "col3"]],
         }
-        updated_encodings = Encoder._reorder_encodings(adata, new_encodings)
+        updated_encodings = _reorder_encodings(adata, new_encodings)
 
         assert expected_encodings == updated_encodings
 
     def test_update_encoding_scheme_3(self):
         # just a dummy adata object that won't be used actually
-        adata = DataReader.read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
+        adata = read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
         adata.uns["categoricals_encoded_with_mode"] = {
             "label_encoding": ["col1", "col2", "col3"],
             "count_encoding": ["col4"],
@@ -224,13 +220,13 @@ class TestRead:
             "hash_encoding": [["col12", "col13", "col14"], ["col5", "col6", "col7"], ["col8", "col9"]],
             "count_encoding": ["col15", "col4"],
         }
-        updated_encodings = Encoder._reorder_encodings(adata, new_encodings)
+        updated_encodings = _reorder_encodings(adata, new_encodings)
 
         assert expected_encodings == updated_encodings
 
     def test_update_encoding_scheme_4(self):
         # just a dummy adata objec that won't be used actually
-        adata = DataReader.read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
+        adata = read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
         adata.uns["categoricals_encoded_with_mode"] = {
             "label_encoding": ["col1", "col2", "col3"],
             "count_encoding": ["col4"],
@@ -256,13 +252,13 @@ class TestRead:
             "label_encoding": ["col1", "col2", "col3"],
             "count_encoding": ["col5", "col6", "col7", "col8", "col9", "col4"],
         }
-        updated_encodings = Encoder._reorder_encodings(adata, new_encodings)
+        updated_encodings = _reorder_encodings(adata, new_encodings)
 
         assert expected_encodings == updated_encodings
 
     def test_update_encoding_scheme_5(self):
         # just a dummy adata objec that won't be used actually
-        adata = DataReader.read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
+        adata = read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
         adata.uns["categoricals_encoded_with_mode"] = {
             "label_encoding": ["col1", "col2", "col3"],
             "count_encoding": ["col4"],
@@ -286,13 +282,13 @@ class TestRead:
         expected_encodings = {
             "hash_encoding": [["col1", "col2", "col9"], ["col3", "col5"], ["col4", "col6", "col7"], ["col8"]]
         }
-        updated_encodings = Encoder._reorder_encodings(adata, new_encodings)
+        updated_encodings = _reorder_encodings(adata, new_encodings)
 
         assert expected_encodings == updated_encodings
 
     def test_update_encoding_scheme_duplicates_raise_error(self):
         # just a dummy adata objec that won't be used actually
-        adata = DataReader.read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
+        adata = read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
         adata.uns["categoricals_encoded_with_mode"] = {
             "label_encoding": ["col1", "col2", "col3"],
             "count_encoding": ["col4"],
@@ -318,4 +314,4 @@ class TestRead:
             "hash_encoding": [["col1", "col2", "col9"], ["col3", "col5"], ["col4", "col6", "col7"], ["col8"]],
         }
         with pytest.raises(DuplicateColumnEncodingError):
-            _ = Encoder._reorder_encodings(adata, new_encodings)
+            _ = _reorder_encodings(adata, new_encodings)
