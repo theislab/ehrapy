@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import shutil
 from pathlib import Path
-from typing import Dict, Iterator, List, NamedTuple, Optional, Tuple
+from typing import Iterator, NamedTuple
 
 import camelot
 import pandas as pd
@@ -495,9 +495,7 @@ def _write_cache(
     return cached_adata
 
 
-def df_to_anndata(
-    df: pd.DataFrame, columns_obs_only: list[str] | None, index_column: str | None = None
-) -> AnnData:
+def df_to_anndata(df: pd.DataFrame, columns_obs_only: list[str] | None, index_column: str | None = None) -> AnnData:
     """Create an AnnData object from the initial dataframe"""
     if index_column:
         df = df.set_index(index_column)
