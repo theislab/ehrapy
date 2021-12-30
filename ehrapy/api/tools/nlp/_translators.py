@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from functools import wraps
-from typing import Dict, List
 
 import deepl
 from anndata import AnnData

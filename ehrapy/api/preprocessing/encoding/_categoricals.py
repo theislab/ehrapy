@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import sys
 from dataclasses import dataclass
-from typing import List, Mapping, Optional
+from typing import Mapping
 
 import numpy as np
 import pandas as pd
