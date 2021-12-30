@@ -5,8 +5,7 @@ import pandas as pd
 import pytest
 from anndata import AnnData
 
-from ehrapy.api.preprocessing import Normalization
-from ehrapy.api.preprocessing.encoding._encode import Encoder
+import ehrapy.api as ep
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_PATH = f"{CURRENT_DIR}/test_preprocessing"
@@ -36,21 +35,21 @@ class TestNormalization:
             dtype=np.dtype(object),
         )
 
-        self.adata = Encoder.encode(self.adata, autodetect=True, encodings={})
+        self.adata = ep.pp.encode(self.adata, autodetect=True, encodings={})
 
     def test_methods_checks(self):
         """Test for checks that methods argument is valid."""
 
         with pytest.raises(ValueError, match=r"Some keys of methods are not numeric variables"):
-            Normalization._normalize(self.adata, methods={"String1": "identity"})
+            ep.pp.normalize(self.adata, methods={"String1": "identity"})
 
         with pytest.raises(ValueError, match=r"Some values of methods are not available normalization methods"):
-            Normalization._normalize(self.adata, methods={"Numeric2": "fail_method"})
+            ep.pp.normalize(self.adata, methods={"Numeric2": "fail_method"})
 
     def test_norm_scale(self):
         """Test for the scaling normalization method."""
 
-        adata_norm = Normalization._normalize(self.adata, methods="scale", copy=True)
+        adata_norm = ep.pp.normalize(self.adata, methods="scale", copy=True)
 
         num1_norm = np.array([-1.4039999, 0.55506986, 0.84893], dtype=np.float32)
         num2_norm = np.array([-1.069045, 1.3363061, -0.2672612], dtype=np.float32)
@@ -65,7 +64,7 @@ class TestNormalization:
     def test_norm_minmax(self):
         """Test for the minmax normalization method."""
 
-        adata_norm = Normalization._normalize(self.adata, methods="minmax", copy=True)
+        adata_norm = ep.pp.normalize(self.adata, methods="minmax", copy=True)
 
         num1_norm = np.array([0.0, 0.86956537, 0.9999999], dtype=np.dtype(np.float32))
         num2_norm = np.array([0.0, 1.0, 0.3333333], dtype=np.float32)
@@ -80,7 +79,7 @@ class TestNormalization:
     def test_norm_identity(self):
         """Test for the identity normalization method."""
 
-        adata_norm = Normalization._normalize(self.adata, methods="identity", copy=True)
+        adata_norm = ep.pp.normalize(self.adata, methods="identity", copy=True)
 
         assert np.allclose(adata_norm.X, self.adata.X, equal_nan=True)
         assert np.allclose(adata_norm.layers["raw"], self.adata.X, equal_nan=True)
@@ -88,9 +87,7 @@ class TestNormalization:
     def test_norm_mixed(self):
         """Test for normalization with mixed methods."""
 
-        adata_norm = Normalization._normalize(
-            self.adata, methods={"Numeric1": "minmax", "Numeric2": "scale"}, copy=True
-        )
+        adata_norm = ep.pp.normalize(self.adata, methods={"Numeric1": "minmax", "Numeric2": "scale"}, copy=True)
 
         num1_norm = np.array([0.0, 0.86956537, 0.9999999], dtype=np.dtype(np.float32))
         num2_norm = np.array([-1.069045, 1.3363061, -0.2672612], dtype=np.float32)

@@ -5,8 +5,8 @@ import pandas as pd
 import pytest
 from anndata import AnnData
 
+import ehrapy.api as ep
 from ehrapy.api._anndata_util import NotEncodedError, assert_encoded, get_numeric_vars, set_numeric_vars
-from ehrapy.api.preprocessing.encoding._encode import Encoder
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_PATH = f"{CURRENT_DIR}"
@@ -49,7 +49,7 @@ class TestAnnDataUtil:
             dtype=np.dtype(object),
         )
 
-        self.adata_encoded = Encoder.encode(self.adata_strings.copy(), autodetect=True, encodings={})
+        self.adata_encoded = ep.pp.encode(self.adata_strings.copy(), autodetect=True, encodings={})
 
     def test_assert_encoded(self):
         """Test for the encoding assertion."""
