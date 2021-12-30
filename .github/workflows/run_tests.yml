@@ -96,20 +96,48 @@ jobs:
                   restore-keys: |
                       ${{ steps.pre-commit-cache.outputs.result }}-
 
-            - name: Run Nox
+            - name: Install ghostscript Ubuntu
+              if: matrix.os == 'ubuntu-latest'
+              run: sudo apt-get install -y ghostscript
+
+            - name: Install ghostscript MacOS
+              if: matrix.os == 'macos-latest'
+              run: brew install ghostscript
+
+            - name: Install ghostscript Windows
+              if: matrix.os == 'windows-latest'
+              run: choco install imagemagick dejavufonts ghostscript
+
+            - name: Refresh env
+              if: matrix.os == 'windows-latest'
+              run: refreshenv
+
+            - name: Add to path
+              if: matrix.os == 'windows-latest'
               run: |
-                  nox --force-color --python=${{ matrix.python-version }}
+                  $folders = Get-ChildItem "C:\Program Files\gs"
+                  foreach ($folder in $folders) {
+                      $gsfolder = $folder.FullName
+                  }
+                  echo "C:\strawberry\c\bin;C:\strawberry\perl\site\bin;C:\strawberry\perl\bin;$gsfolder\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+            - name: Test executables
+              if: matrix.os == 'windows-latest'
+              run: gswin64c -v
+
+            - name: Run Nox
+              run: nox --force-color --python=${{ matrix.python-version }}
 
             - name: Upload coverage data
               if: always() && matrix.session == 'tests'
-              uses: "actions/upload-artifact@v2.3.0"
+              uses: "actions/upload-artifact@v2.3.1"
               with:
                   name: coverage-data
                   path: ".coverage.*"
 
             - name: Upload documentation
               if: matrix.session == 'docs-build'
-              uses: actions/upload-artifact@v2.3.0
+              uses: actions/upload-artifact@v2.3.1
               with:
                   name: docs
                   path: docs/_build

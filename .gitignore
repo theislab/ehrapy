@@ -137,6 +137,9 @@ dmypy.json
 # Coala
 *.orig
 
+# AnnData
+*.h5ad
+
 # Notebook files
 notebooks/medcat_data
 notebooks/data
