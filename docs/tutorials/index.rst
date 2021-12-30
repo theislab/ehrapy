@@ -16,7 +16,7 @@ Quick start
 
 .. nbgallery::
 
-   mimic_2
+   notebooks/mimic_2
 
 
 Glossary

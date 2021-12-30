@@ -8,9 +8,13 @@ jobs:
         strategy:
             matrix:
                 notebook:
-                    ["notebooks/mimic_2.ipynb", "notebooks/mimic_3_demo.ipynb"]
+                    ["docs/tutorials/notebooks/mimic_2.ipynb",
+                     "docs/tutorials/notebooks/mimic_3_demo.ipynb"]
         steps:
             - uses: actions/checkout@v2
+              with:
+                  submodules: 'true'
+                  token: "${{ secrets.CT_SYNC_TOKEN }}"
             - name: Set up Python
               uses: actions/setup-python@v2
               with:
