@@ -3,7 +3,8 @@ from pathlib import Path
 import pytest
 
 from ehrapy.api.io import read
-from ehrapy.api.preprocessing import encode, _reorder_encodings, DuplicateColumnEncodingError
+from ehrapy.api.preprocessing import encode
+from ehrapy.api.preprocessing.encoding._encode import DuplicateColumnEncodingError, _reorder_encodings
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_PATH = f"{CURRENT_DIR}/test_data_encode"
