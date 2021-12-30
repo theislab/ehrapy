@@ -152,7 +152,7 @@ nbsphinx_prolog = r"""
 """  # noqa: E501
 
 nbsphinx_thumbnails = {
-    "tutorials/mimic_2": "_static/tutorials/placeholder.png",
+    "tutorials/notebooks/mimic_2": "_static/tutorials/placeholder.png",
 }
 
 # -- Options for HTMLHelp output ---------------------------------------
