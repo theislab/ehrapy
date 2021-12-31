@@ -76,7 +76,7 @@
    tutorials/index
    contributing
    code_of_conduct
-   Discussion <https://github.com/theislab/ehrapy/discussions>
+   Discussions <https://github.com/theislab/ehrapy/discussions>
    authors
    references
 

@@ -17,7 +17,7 @@ class HelpErrorHandling(click.Group):
     """Customise the help command."""
 
     def __init__(self, name=None, commands=None, **kwargs):
-        super(HelpErrorHandling, self).__init__(name, commands, **kwargs)
+        super().__init__(name, commands, **kwargs)
         self.commands = commands or collections.OrderedDict()
 
     def list_commands(self, ctx: click.Context):
@@ -184,7 +184,7 @@ class CustomHelpSubcommand(click.Command):
     """Customize the help output for each subcommand"""
 
     def __init__(self, *args, **kwargs):
-        super(CustomHelpSubcommand, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def format_help(self, ctx: click.Context, formatter: click.HelpFormatter) -> None:
         """Custom implementation of formatting help for each subcommand.

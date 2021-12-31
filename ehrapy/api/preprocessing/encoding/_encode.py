@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 from collections import defaultdict
 from itertools import chain
-from typing import Dict, List, Optional, Set, Tuple, Union
+from typing import Dict, List
 
 import numpy as np
 import pandas as pd
@@ -19,12 +21,10 @@ available_encodings = {"one_hot_encoding", "label_encoding", "count_encoding", *
 
 
 def encode(
-    data: Union[AnnData, MuData],
-    autodetect: Union[bool, Dict] = False,
-    encodings: Optional[
-        Union[Dict[str, Dict[str, Union[List[str], List[List[str]]]]], Dict[str, Union[List[str], List[List[str]]]]]
-    ] = None,
-) -> Optional[AnnData]:
+    data: AnnData | MuData,
+    autodetect: bool | dict = False,
+    encodings: dict[str, dict[str, list[str]]] | dict[str, list[str]] = None,
+) -> AnnData | None:
     """Encode the initial read :class:`~anndata.AnnData` or :class:`~mudata.MuData` object.
 
     Categorical values could be either passed via parameters or autodetected.
@@ -83,8 +83,9 @@ def encode(
 
 
 def undo_encoding(
-    data: Union[AnnData, MuData], columns: str = "all", from_cache_file: bool = False, cache_file: str = None
-) -> Optional[AnnData]:
+    data: AnnData | MuData,
+    columns: str = "all",
+) -> AnnData | None:
     """Undo the current encodings applied to all columns in X.
 
     This currently resets the AnnData object to its initial state.
@@ -92,9 +93,6 @@ def undo_encoding(
     Args:
         adata: The :class:`~anndata.AnnData` object
         columns: The names of the columns to reset encoding for. Defaults to all columns.
-        from_cache_file: Whether to reset all encodings by reading from a cached .h5ad file, if available.
-        This resets the :class:`~anndata.AnnData object to its initial state.
-        cache_file: The filename of the cache file to read from
 
     Returns:
         A (partially) encoding reset :class:`~anndata.AnnData` object
@@ -122,11 +120,9 @@ def undo_encoding(
 
 def _encode(
     adata: AnnData,
-    autodetect: Union[bool, Dict] = False,
-    encodings: Optional[
-        Union[Dict[str, Dict[str, Union[List[str], List[List[str]]]]], Dict[str, Union[List[str], List[List[str]]]]]
-    ] = None,
-) -> Union[AnnData, None]:
+    autodetect: bool | dict = False,
+    encodings: dict[str, dict[str, list[str]]] | dict[str, list[str]] = None,
+) -> AnnData | None:
     """Encode the initial read AnnData object. Categorical values could be either passed via parameters or autodetected.
 
     Label encodes by default which is used to save initially unencoded AnnData objects.
@@ -293,12 +289,12 @@ def _encode(
 
 def _one_hot_encoding(
     adata: AnnData,
-    X: Optional[np.ndarray],
-    var_names: List[str],
-    categories: List[str],
-    progress: Optional[Progress] = None,
+    X: np.ndarray | None,
+    var_names: list[str],
+    categories: list[str],
+    progress: Progress | None = None,
     task=None,
-) -> Tuple[np.ndarray, List[str]]:
+) -> tuple[np.ndarray, list[str]]:
     """Encode categorical columns using one hot encoding.
 
     Args:
@@ -331,12 +327,12 @@ def _one_hot_encoding(
 
 def _label_encoding(
     adata: AnnData,
-    X: Optional[np.ndarray],
-    var_names: List[str],
-    categoricals: List[str],
-    progress: Optional[Progress] = None,
+    X: np.ndarray | None,
+    var_names: list[str],
+    categoricals: list[str],
+    progress: Progress | None = None,
     task=None,
-) -> Tuple[np.ndarray, List[str]]:
+) -> tuple[np.ndarray, list[str]]:
     """Encode categorical columns using label encoding.
 
     Args:
@@ -372,12 +368,12 @@ def _label_encoding(
 
 def _count_encoding(
     adata: AnnData,
-    X: Optional[np.ndarray],
-    var_names: List[str],
-    categoricals: List[str],
-    progress: Optional[Progress] = None,
+    X: np.ndarray | None,
+    var_names: list[str],
+    categoricals: list[str],
+    progress: Progress | None = None,
     task=None,
-) -> Tuple[np.ndarray, List[str]]:
+) -> tuple[np.ndarray, list[str]]:
     """Encode categorical column using count encoding.
 
     Args:
@@ -408,12 +404,12 @@ def _count_encoding(
 
 def _hash_encoding(
     adata: AnnData,
-    X: Optional[np.ndarray],
-    var_names: List[str],
-    categories: List[List[str]],
-    progress: Optional[Progress] = None,
+    X: np.ndarray | None,
+    var_names: list[str],
+    categories: list[list[str]],
+    progress: Progress | None = None,
     task=None,
-) -> Tuple[np.ndarray, List[str]]:
+) -> tuple[np.ndarray, list[str]]:
     """Encode categorical columns using hash encoding.
     Args:
         adata: The current AnnData object
@@ -447,9 +443,9 @@ def _hash_encoding(
 def _update_layer_after_encoding(
     old_layer: np.ndarray,
     new_x: np.ndarray,
-    new_var_names: List[str],
-    old_var_names: List[str],
-    categories: List[str],
+    new_var_names: list[str],
+    old_var_names: list[str],
+    categories: list[str],
 ) -> np.ndarray:
     """Update the original layer containing the initial non categorical values and the latest encoded categorials
 
@@ -491,10 +487,10 @@ def _update_layer_after_encoding(
 def _update_multi_encoded_data(
     X: np.ndarray,
     transformed: np.ndarray,
-    var_names: List[str],
-    encoded_var_names: List[str],
-    categoricals: List[str],
-) -> Tuple[np.ndarray, List[str]]:
+    var_names: list[str],
+    encoded_var_names: list[str],
+    categoricals: list[str],
+) -> tuple[np.ndarray, list[str]]:
     """Update X and var_names after applying multi column encoding modes to some columns
     Args:
         X: Current (former) X
@@ -523,10 +519,10 @@ def _update_multi_encoded_data(
 def _update_encoded_data(
     X: np.ndarray,
     transformed: np.ndarray,
-    var_names: List[str],
-    categorical_prefixes: List[str],
-    categoricals: List[str],
-) -> Tuple[np.ndarray, List[str]]:
+    var_names: list[str],
+    categorical_prefixes: list[str],
+    categoricals: list[str],
+) -> tuple[np.ndarray, list[str]]:
     """Update X and var_names after each encoding
     Args:
         X: Current (former) X
@@ -551,7 +547,7 @@ def _update_encoded_data(
 
 def _initial_encoding(
     adata: AnnData,
-    categoricals: List[str],
+    categoricals: list[str],
 ) -> np.ndarray:
     """Get all original values for all categoricals that need to be encoded (again)
 
@@ -574,7 +570,7 @@ def _undo_encoding(
     adata: AnnData,
     columns: str = "all",
     suppress_warning: bool = False,
-) -> Optional[AnnData]:
+) -> AnnData | None:
     """
     Undo the current encodings applied to all columns in X. This currently resets the AnnData object to its initial state.
     Args:
@@ -618,7 +614,7 @@ def _undo_encoding(
     )
 
 
-def _delete_all_encodings(adata: AnnData) -> Tuple[Optional[np.ndarray], Optional[list]]:
+def _delete_all_encodings(adata: AnnData) -> tuple[np.ndarray | None, list | None]:
     """Delete all encoded columns and keep track of their indices
     Args:
         adata: The AnnData object to operate on
@@ -640,7 +636,7 @@ def _delete_all_encodings(adata: AnnData) -> Tuple[Optional[np.ndarray], Optiona
     return None, None
 
 
-def _reorder_encodings(adata: AnnData, new_encodings: Dict[str, Union[List[List[str]], List[str]]]):
+def _reorder_encodings(adata: AnnData, new_encodings: dict[str, list[list[str]] | list[str]]):
     """Reorder the encodings and update which column will be encoded using which mode (with which columns in case of
     multi column encoding modes).
     Args:
@@ -649,7 +645,7 @@ def _reorder_encodings(adata: AnnData, new_encodings: Dict[str, Union[List[List[
     Returns:
         An updated encoding scheme
     """
-    flattened_modes: List[Union[List[str], str]] = sum(new_encodings.values(), [])  # type: ignore
+    flattened_modes: list[list[str] | str] = sum(new_encodings.values(), [])  # type: ignore
     latest_encoded_columns = list(chain(*(i if isinstance(i, list) else (i,) for i in flattened_modes)))
     # check for duplicates and raise an error if any
     if len(set(latest_encoded_columns)) != len(latest_encoded_columns):
@@ -695,8 +691,8 @@ def _reorder_encodings(adata: AnnData, new_encodings: Dict[str, Union[List[List[
 
 
 def _update_new_encode_modes(
-    new_encodings: Dict[str, Union[List[List[str]], List[str]]],
-    filtered_old_encodings: Dict[str, Union[List[List[str]], List[str]]],
+    new_encodings: dict[str, list[list[str]] | list[str]],
+    filtered_old_encodings: dict[str, list[list[str]] | list[str]],
 ):
     """Update the encoding scheme.
     If the encoding mode exists in the filtered old encodings, append all values (columns that should be encoded using this mode) to this key.
@@ -714,7 +710,7 @@ def _update_new_encode_modes(
     return dict(updated_encodings)
 
 
-def _get_categoricals_old_indices(old_var_names: List[str], encoded_categories: List[str]) -> Set[int]:
+def _get_categoricals_old_indices(old_var_names: list[str], encoded_categories: list[str]) -> set[int]:
     """Get indices of every (possibly encoded) categorical column belonging to a newly encoded categorical value
     Args:
         old_var_names: Former variables names
@@ -736,7 +732,7 @@ def _get_categoricals_old_indices(old_var_names: List[str], encoded_categories: 
     return idx_list
 
 
-def _add_categoricals_to_obs(ann_data: AnnData, categorical_names: List[str]) -> None:
+def _add_categoricals_to_obs(ann_data: AnnData, categorical_names: list[str]) -> None:
     """Add the original categorical values to obs.
 
     Args:
@@ -750,7 +746,7 @@ def _add_categoricals_to_obs(ann_data: AnnData, categorical_names: List[str]) ->
             ann_data.obs[var_name] = ann_data.X[::, idx : idx + 1]
 
 
-def _add_categoricals_to_uns(ann_data: AnnData, categorical_names: List[str]) -> None:
+def _add_categoricals_to_uns(ann_data: AnnData, categorical_names: list[str]) -> None:
     """Add the original categorical values to uns.
 
     Args:
@@ -770,8 +766,8 @@ def _add_categoricals_to_uns(ann_data: AnnData, categorical_names: List[str]) ->
 
 
 def _get_mudata_autodetect_options_and_encoding_modes(
-    identifier: str, autodetect: Dict, encodings: Dict[str, Dict[str, List[str]]]
-) -> Tuple[bool, Optional[Dict]]:
+    identifier: str, autodetect: dict, encodings: dict[str, dict[str, list[str]]]
+) -> tuple[bool, dict | None]:
     """
     Extract the index column (if any) and the columns, for obs only (if any) from the given user input.
     This function is only called when dealing with datasets consisting of multiple files (for example MIMIC-III).
@@ -844,10 +840,7 @@ def _get_mudata_autodetect_options_and_encoding_modes(
 
 
 def _check_anndata_input_type(
-    autodetect: Union[bool, Dict],
-    encodings: Optional[
-        Union[Dict[str, Dict[str, Union[List[str], List[List[str]]]]], Dict[str, Union[List[str], List[List[str]]]]]
-    ],
+    autodetect: bool | dict, encodings: dict[str, dict[str, list[str]]] | dict[str, list[str]]
 ) -> bool:
     """
     Check type of passed parameters, whether they match the requirements to encode a MuData object or not.
@@ -874,10 +867,7 @@ def _check_anndata_input_type(
 
 
 def _check_mudata_input_type(
-    autodetect: Union[bool, Dict],
-    encodings: Optional[
-        Union[Dict[str, Dict[str, Union[List[str], List[List[str]]]]], Dict[str, Union[List[str], List[List[str]]]]]
-    ],
+    autodetect: bool | dict, encodings: dict[str, dict[str, list[str]]] | dict[str, list[str]]
 ) -> bool:
     """
     Check type of passed parameters, whether they match the requirements to encode a MuData object or not.

@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from pathlib import Path
-from typing import Literal, Optional, Union
+from typing import Literal
 
 import numpy as np
 from anndata import AnnData
@@ -9,11 +11,11 @@ from ehrapy.api.io._utility_io import _get_file_extension
 
 
 def write(
-    filename: Union[str, Path],
+    filename: str | Path,
     adata: AnnData,
-    extension: Union[str, bool] = None,
-    compression: Optional[Literal["gzip", "lzf"]] = "gzip",
-    compression_opts: Optional[int] = None,
+    extension: str | bool = None,
+    compression: Literal["gzip", "lzf"] | None = "gzip",
+    compression_opts: int | None = None,
 ) -> None:
     """Write :class:`~anndata.AnnData` objects to file.
 
