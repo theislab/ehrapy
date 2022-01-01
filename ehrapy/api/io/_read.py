@@ -203,7 +203,7 @@ def _read_from_directory(
 
     elif extension not in {"csv", "tsv"}:
         raise UnsupportedDirectoryParsingFormatException(
-            f"Unspported extension {extension} when parsing directory contents."
+            f"Unsupported extension {extension} when parsing directory contents."
             f"Can only parse .csv and .tsv files from a directory currently."
         )
 
@@ -320,11 +320,10 @@ def read_pdf(
     cache: bool = False,
     **kwargs,
 ) -> tuple[dict[str, AnnData], dict[str, list[str] | None] | None]:
-    """Read `.pdf`. Since a single pdf can contain multiple tables, those will be read into a dict,
-    like it's done for multiple .csv/.tsv files. Currently, ehrapy only supports parsing single pdfs.
+    """Read `.pdf`. Since a single pdf can contain multiple tables, those will be read into a dict.
 
-    Consider the following example: "my_tables.pdf" contains three different tables, which may
-    also differ in size.
+    Currently, ehrapy only supports parsing single pdfs.
+    Consider the following example: "my_tables.pdf" contains three different tables, which may also differ in size.
 
         .. code-block:: python
                        import ehrapy.api as ep
@@ -350,9 +349,6 @@ def read_pdf(
                            "1": ["colOfTable2"]})
                            # this will put col1 and col2 of Table 0 of my_tables.pdf into obs only for this AnnData object
                            # and col1 of Table 1 of my_tables.pdf into obs only for this respective AnnData object
-
-        Seems complicated at first glance, but this will allow the most flexibility for users.
-
 
     Args:
         filename: File path to the pdf.
