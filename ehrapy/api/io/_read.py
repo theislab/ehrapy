@@ -6,6 +6,7 @@ from typing import Iterator, NamedTuple
 
 import camelot
 import pandas as pd
+import numpy as np
 from _collections import OrderedDict
 from anndata import AnnData
 from anndata import read as read_h5ad
@@ -497,14 +498,19 @@ def df_to_anndata(df: pd.DataFrame, columns_obs_only: list[str] | None, index_co
         df = df.set_index(index_column)
     # move columns from the input dataframe to later obs
     dataframes = _move_columns_to_obs(df, columns_obs_only)
+    all_num = False
+    # if data is numerical only, short-circuit AnnData creation to have float dtype instead of object
+    if all(np.issubdtype(column_dtype, np.number) for column_dtype in dataframes.df.dtypes):
+        all_num = True
     X = dataframes.df.to_numpy(copy=True)
+
     # when index_column is passed (currently when parsing pdf) set it and remove it from future X
 
     return AnnData(
         X=X,
         obs=dataframes.obs,
         var=pd.DataFrame(index=list(dataframes.df.columns)),
-        dtype="object",
+        dtype="float32" if all_num else "object",
         layers={"original": X.copy()},
     )
 
