@@ -22,7 +22,7 @@ def tsne(
     n_jobs: Optional[int] = None,
     copy: bool = False,
     metric: str = "euclidean",
-) -> Optional[AnnData]:
+) -> Optional[AnnData]:  # pragma: no cover
     """Calculates t-SNE [Maaten08]_ [Amir13]_ [Pedregosa11]_.
 
     t-distributed stochastic neighborhood embedding (tSNE) [Maaten08]_ has been
@@ -94,7 +94,7 @@ def umap(
     copy: bool = False,
     method: Literal["umap", "rapids"] = "umap",
     neighbors_key: Optional[str] = None,
-) -> Optional[AnnData]:
+) -> Optional[AnnData]:  # pragma: no cover
     """Embed the neighborhood graph using UMAP [McInnes18]_.
 
     UMAP (Uniform Manifold Approximation and Projection) is a manifold learning
@@ -195,7 +195,7 @@ def draw_graph(
     obsp: Optional[str] = None,
     copy: bool = False,
     **kwds,
-) -> Optional[AnnData]:
+) -> Optional[AnnData]:  # pragma: no cover
     """Force-directed graph drawing [Islam11]_ [Jacomy14]_ [Chippada18]_.
 
     .. _fa2: https://github.com/bhargavchippada/forceatlas2
@@ -266,7 +266,7 @@ def diffmap(
     neighbors_key: Optional[str] = None,
     random_state: AnyRandom = 0,
     copy: bool = False,
-) -> Optional[AnnData]:
+) -> Optional[AnnData]:  # pragma: no cover
     """Diffusion Maps [Coifman05]_ [Haghverdi15]_ [Wolf18]_.
 
     Diffusion maps [Coifman05]_ has been proposed for visualizing single-cell
@@ -311,7 +311,7 @@ def embedding_density(
     groupby: Optional[str] = None,
     key_added: Optional[str] = None,
     components: Union[str, Sequence[str]] = None,
-) -> None:
+) -> None:  # pragma: no cover
     """Calculate the density of observation in an embedding (per condition).
 
     Gaussian kernel density estimation is used to calculate the density of
@@ -366,7 +366,7 @@ def leiden(
     obsp: Optional[str] = None,
     copy: bool = False,
     **partition_kwargs,
-) -> Optional[AnnData]:
+) -> Optional[AnnData]:  # pragma: no cover
     """Cluster observations into subgroups [Traag18]_.
 
     Cluster observations using the Leiden algorithm [Traag18]_,
@@ -442,7 +442,7 @@ def louvain(
     neighbors_key: Optional[str] = None,
     obsp: Optional[str] = None,
     copy: bool = False,
-) -> Optional[AnnData]:
+) -> Optional[AnnData]:  # pragma: no cover
     """Cluster observations into subgroups [Blondel08]_ [Levine15]_ [Traag17]_.
 
     Cluster observations using the Louvain algorithm [Blondel08]_ in the implementation of [Traag17]_.
@@ -510,7 +510,7 @@ def dendrogram(
     optimal_ordering: bool = False,
     key_added: Optional[str] = None,
     inplace: bool = True,
-) -> Optional[Dict[str, Any]]:
+) -> Optional[Dict[str, Any]]:  # pragma: no cover
     """Computes a hierarchical clustering for the given `groupby` categories.
 
     By default, the PCA representation is used unless `.X` has less than 50 variables.
@@ -582,7 +582,7 @@ def dpt(
     allow_kendall_tau_shift: bool = True,
     neighbors_key: Optional[str] = None,
     copy: bool = False,
-) -> Optional[AnnData]:
+) -> Optional[AnnData]:  # pragma: no cover
     """Infer progression of observations through geodesic distance along the graph [Haghverdi16]_ [Wolf19]_.
 
     Reconstruct the progression of a biological process from snapshot
@@ -642,7 +642,7 @@ def paga(
     model: Literal["v1.2", "v1.0"] = "v1.2",
     neighbors_key: Optional[str] = None,
     copy: bool = False,
-) -> Optional[AnnData]:
+) -> Optional[AnnData]:  # pragma: no cover
     """Mapping out the coarse-grained connectivity structures of complex manifolds [Wolf19]_.
 
     By quantifying the connectivity of partitions (groups, clusters),
@@ -707,7 +707,7 @@ def ingest(
     neighbors_key: Optional[str] = None,
     inplace: bool = True,
     **kwargs,
-) -> Optional[AnnData]:
+) -> Optional[AnnData]:  # pragma: no cover
     """Map labels and embeddings from reference data to new data.
 
     Integrates embeddings and annotations of an `adata` with a reference dataset
@@ -782,7 +782,7 @@ def rank_features_groups(
     tie_correct: bool = False,
     layer: Optional[str] = None,
     **kwds,
-) -> None:
+) -> None:  # pragma: no cover
     """Rank features for characterizing groups.
 
     Expects logarithmized data.
@@ -871,7 +871,7 @@ def filter_rank_features_groups(
     min_in_group_fraction=0.25,
     min_fold_change=1,
     max_out_group_fraction=0.5,
-) -> None:
+) -> None:  # pragma: no cover
     """Filters out features based on fold change and fraction of features containing the feature within and outside the `groupby` categories.
 
     See :func:`~ehrapy.tl.rank_features_groups`.
@@ -928,7 +928,7 @@ def marker_feature_overlap(
     adj_pval_threshold: Optional[float] = None,
     key_added: str = "feature_overlap",
     inplace: bool = False,
-):
+):  # pragma: no cover
     """Calculate an overlap score between data-deriven features and provided marker features.
 
     Marker feature overlap scores can be quoted as overlap counts, overlap

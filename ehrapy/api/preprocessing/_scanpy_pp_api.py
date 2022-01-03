@@ -17,7 +17,7 @@ def log1p(
     chunk_size: Optional[int] = None,
     layer: Optional[str] = None,
     obsm: Optional[str] = None,
-) -> Optional[AnnData]:
+) -> Optional[AnnData]:  # pragma: no cover
     """Logarithmize the data matrix.
 
     Computes :math:`X = \\log(X + 1)`, where :math:`log` denotes the natural logarithm unless a different base is given.
@@ -48,7 +48,7 @@ def pca(
     copy: bool = False,
     chunked: bool = False,
     chunk_size: Optional[int] = None,
-) -> Union[AnnData, np.ndarray, spmatrix]:
+) -> Union[AnnData, np.ndarray, spmatrix]:  # pragma: no cover
     """Computes a principal component analysis.
 
     Computes PCA coordinates, loadings and variance decomposition. Uses the implementation of *scikit-learn*.
@@ -120,7 +120,7 @@ def normalize_total(
     layer: Optional[str] = None,
     inplace: bool = True,
     copy: bool = False,
-) -> Optional[Dict[str, np.ndarray]]:
+) -> Optional[Dict[str, np.ndarray]]:  # pragma: no cover
     """Normalize findings per patient.
 
     Normalize each patient by total counts over all features, so that every patient has the same total count after normalization.
@@ -154,7 +154,7 @@ def regress_out(
     keys: Union[str, Sequence[str]],
     n_jobs: Optional[int] = None,
     copy: bool = False,
-) -> Optional[AnnData]:
+) -> Optional[AnnData]:  # pragma: no cover
     """Regress out (mostly) unwanted sources of variation.
 
     Uses simple linear regression. This is inspired by Seurat's `regressOut` function in R [Satija15].
@@ -179,7 +179,7 @@ def scale(
     copy: bool = False,
     layer: Optional[str] = None,
     obsm: Optional[str] = None,
-) -> Union[AnnData, spmatrix, np.ndarray]:
+) -> Union[AnnData, spmatrix, np.ndarray]:  # pragma: no cover
     """Scale data to unit variance and zero mean.
 
     .. note::
@@ -207,7 +207,7 @@ def subsample(
     n_obs: Optional[int] = None,
     random_state: AnyRandom = 0,
     copy: bool = False,
-) -> Optional[AnnData]:
+) -> Optional[AnnData]:  # pragma: no cover
     """Subsample to a fraction of the number of observations.
 
     Args:
@@ -229,7 +229,7 @@ def combat(
     key: str = "batch",
     covariates: Optional[Collection[str]] = None,
     inplace: bool = True,
-) -> Union[AnnData, np.ndarray, None]:
+) -> Union[AnnData, np.ndarray, None]:  # pragma: no cover
     """ComBat function for batch effect correction [Johnson07]_ [Leek12]_ [Pedersen12]_.
 
     Corrects for batch effects by fitting linear models, gains statistical power via an EB framework where information is borrowed across features.
@@ -289,7 +289,7 @@ def neighbors(
     metric_kwds: Mapping[str, Any] = MappingProxyType({}),
     key_added: Optional[str] = None,
     copy: bool = False,
-) -> Optional[AnnData]:
+) -> Optional[AnnData]:  # pragma: no cover
     """Compute a neighborhood graph of observations [McInnes18]_.
 
     The neighbor search efficiency of this heavily relies on UMAP [McInnes18]_,
