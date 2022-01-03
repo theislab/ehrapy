@@ -5,8 +5,8 @@ from pathlib import Path
 from typing import Iterator, NamedTuple
 
 import camelot
-import pandas as pd
 import numpy as np
+import pandas as pd
 from _collections import OrderedDict
 from anndata import AnnData
 from anndata import read as read_h5ad
@@ -16,7 +16,7 @@ from rich import print
 from ehrapy.api import ehrapy_settings, settings
 from ehrapy.api.data.dataloader import download
 from ehrapy.api.io._utility_io import _get_file_extension, _slugify, multi_data_extensions, supported_extensions
-from ehrapy.api.preprocessing import encode
+from ehrapy.api.preprocessing.encoding import encode
 
 
 class BaseDataframes(NamedTuple):
