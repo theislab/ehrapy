@@ -116,6 +116,16 @@ Clustering and trajectory inference
     tools.dpt
     tools.paga
 
+Group comparison
+++++++++++++++++
+
+.. autosummary::
+    :toctree: tools
+
+    tools.rank_features_groups
+    tools.filter_rank_features_groups
+    tools.marker_feature_overlap
+
 Dataset integration
 +++++++++++++++++++
 
@@ -137,7 +147,7 @@ Translators
 Plotting
 ~~~~~~~~
 
-The plotting module scanpy.pl largely parallels the tl.* and a few of the pp.* functions.
+The plotting module ehrapy.pl largely parallels the tl.* and a few of the pp.* functions.
 For most tools and for some preprocessing functions, you’ll find a plotting function with the same name.
 
 Generic
@@ -207,6 +217,20 @@ Visualize clusters using one of the embedding methods passing color='leiden'.
     plot.paga
     plot.paga_path
     plot.paga_compare
+
+Group comparison
+++++++++++++++++
+
+.. autosummary::
+    :toctree: plot
+
+    plot.rank_features_groups
+    plot.rank_features_groups_violin
+    plot.rank_features_groups_stacked_violin
+    plot.rank_features_groups_heatmap
+    plot.rank_features_groups_dotplot
+    plot.rank_features_groups_matrixplot
+    plot.rank_features_groups_tracksplot
 
 Settings
 ~~~~~~~~
