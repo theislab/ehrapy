@@ -762,25 +762,27 @@ def ingest(
         **kwargs,
     )
 
-_Method = Optional[Literal['logreg', 't-test', 'wilcoxon', 't-test_overestim_var']]
-_CorrMethod = Literal['benjamini-hochberg', 'bonferroni']
+
+_Method = Optional[Literal["logreg", "t-test", "wilcoxon", "t-test_overestim_var"]]
+_CorrMethod = Literal["benjamini-hochberg", "bonferroni"]
 
 
 def rank_features_groups(
     adata: AnnData,
     groupby: str,
-    groups: Union[Literal['all'], Iterable[str]] = 'all',
-    reference: str = 'rest',
+    groups: Union[Literal["all"], Iterable[str]] = "all",
+    reference: str = "rest",
     n_features: Optional[int] = None,
     rankby_abs: bool = False,
     pts: bool = False,
     key_added: Optional[str] = "rank_features_groups",
     copy: bool = False,
     method: _Method = None,
-    corr_method: _CorrMethod = 'benjamini-hochberg',
+    corr_method: _CorrMethod = "benjamini-hochberg",
     tie_correct: bool = False,
     layer: Optional[str] = None,
-    **kwds,):
+    **kwds,
+):
     """Rank features for characterizing groups.
 
     Expects logarithmized data.
@@ -842,18 +844,20 @@ def rank_features_groups(
             ep.tl.rank_features_groups(adata, "service_unit")
             ep.pl.rank_features_groups(adata)
     """
-    return sc.tl.rank_genes_groups(adata=adata,
-                                   groupby=groupby,
-                                   use_raw=False,
-                                   groups=groups,
-                                   reference=reference,
-                                   n_genes=n_features,
-                                   rankby_abs=rankby_abs,
-                                   pts=pts,
-                                   key_added=key_added,
-                                   copy=copy,
-                                   method=method,
-                                   corr_method=corr_method,
-                                   tie_correct=tie_correct,
-                                   layer=layer,
-                                   **kwds)
+    return sc.tl.rank_genes_groups(
+        adata=adata,
+        groupby=groupby,
+        use_raw=False,
+        groups=groups,
+        reference=reference,
+        n_genes=n_features,
+        rankby_abs=rankby_abs,
+        pts=pts,
+        key_added=key_added,
+        copy=copy,
+        method=method,
+        corr_method=corr_method,
+        tie_correct=tie_correct,
+        layer=layer,
+        **kwds,
+    )
