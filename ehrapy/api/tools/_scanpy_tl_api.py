@@ -763,8 +763,8 @@ def ingest(
     )
 
 
-_Method = Optional[Literal["logreg", "t-test", "wilcoxon", "t-test_overestim_var"]]
-_CorrMethod = Literal["benjamini-hochberg", "bonferroni"]
+_rank_features_groups_method = Optional[Literal["logreg", "t-test", "wilcoxon", "t-test_overestim_var"]]
+_corr_method = Literal["benjamini-hochberg", "bonferroni"]
 
 
 def rank_features_groups(
@@ -777,12 +777,12 @@ def rank_features_groups(
     pts: bool = False,
     key_added: Optional[str] = "rank_features_groups",
     copy: bool = False,
-    method: _Method = None,
-    corr_method: _CorrMethod = "benjamini-hochberg",
+    method: _rank_features_groups_method = None,
+    corr_method: _corr_method = "benjamini-hochberg",
     tie_correct: bool = False,
     layer: Optional[str] = None,
     **kwds,
-):
+) -> None:
     """Rank features for characterizing groups.
 
     Expects logarithmized data.
@@ -860,4 +860,119 @@ def rank_features_groups(
         tie_correct=tie_correct,
         layer=layer,
         **kwds,
+    )
+
+
+def filter_rank_features_groups(
+    adata: AnnData,
+    key="rank_features_groups",
+    groupby=None,
+    key_added="rank_features_groups_filtered",
+    min_in_group_fraction=0.25,
+    min_fold_change=1,
+    max_out_group_fraction=0.5,
+) -> None:
+    """Filters out features based on fold change and fraction of features containing the feature within and outside the `groupby` categories.
+
+    See :func:`~ehrapy.tl.rank_features_groups`.
+
+    Results are stored in `adata.uns[key_added]`
+    (default: 'rank_genes_groups_filtered').
+
+    To preserve the original structure of adata.uns['rank_genes_groups'],
+    filtered genes are set to `NaN`.
+
+    Args:
+        adata: Annotated data matrix.
+        key: Key previously added by :func:`~ehrapy.tl.rank_features_groups`
+        groupby: The key of the observations grouping to consider.
+        key_added: The key in `adata.uns` information is saved to.
+        min_in_group_fraction: Minimum in group fraction (default: 0.25).
+        min_fold_change: Miniumum fold change (default: 1).
+        max_out_group_fraction: Maximum out group fraction (default: 0.5).
+
+    Returns:
+        Same output as :func:`ehrapy.tl.rank_features_groups` but with filtered feature names set to `nan`
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy.api as ep
+            adata = eh.dt.mimic_2(encode=True)
+            ep.tl.rank_features_groups(adata, "service_unit")
+            ep.pl.rank_features_groups(adata)
+    """
+    return sc.tl.filter_rank_genes_groups(
+        adata=adata,
+        key=key,
+        groupby=groupby,
+        use_raw=False,
+        key_added=key_added,
+        min_in_group_fraction=min_in_group_fraction,
+        min_fold_change=min_fold_change,
+        max_out_group_fraction=max_out_group_fraction,
+    )
+
+
+_marker_feature_overlap_methods = Literal["overlap_count", "overlap_coef", "jaccard"]
+
+
+def marker_feature_overlap(
+    adata: AnnData,
+    reference_markers: Union[Dict[str, set], Dict[str, list]],
+    *,
+    key: str = "rank_features_groups",
+    method: _marker_feature_overlap_methods = "overlap_count",
+    normalize: Optional[Literal["reference", "data"]] = None,
+    top_n_markers: Optional[int] = None,
+    adj_pval_threshold: Optional[float] = None,
+    key_added: str = "feature_overlap",
+    inplace: bool = False,
+):
+    """Calculate an overlap score between data-deriven features and provided marker features.
+
+    Marker feature overlap scores can be quoted as overlap counts, overlap
+    coefficients, or jaccard indices. The method returns a pandas dataframe
+    which can be used to annotate clusters based on feature overlaps.
+
+    Args:
+        adata: Annotated data matrix.
+        reference_markers: A marker gene dictionary object. Keys should be strings with the
+                           cell identity name and values are sets or lists of strings which match format of `adata.var_name`.
+        key: The key in `adata.uns` where the rank_features_groups output is stored (default: rank_features_groups).
+        method: Method to calculate marker gene overlap. `'overlap_count'` uses the
+                intersection of the feature set, `'overlap_coef'` uses the overlap
+                coefficient, and `'jaccard'` uses the Jaccard index (default: `overlap_count`).
+        normalize: Normalization option for the feature overlap output. This parameter
+                   can only be set when `method` is set to `'overlap_count'`. `'reference'`
+                   normalizes the data by the total number of marker features given in the
+                   reference annotation per group. `'data'` normalizes the data by the
+                   total number of marker genes used for each cluster.
+        top_n_markers: The number of top data-derived marker genes to use. By default the top
+                       100 marker features are used. If `adj_pval_threshold` is set along with
+                       `top_n_markers`, then `adj_pval_threshold` is ignored.
+        adj_pval_threshold: A significance threshold on the adjusted p-values to select marker features.
+                            This can only be used when adjusted p-values are calculated by `ep.tl.rank_features_groups`.
+                            If `adj_pval_threshold` is set along with `top_n_markers`, then `adj_pval_threshold` is ignored.
+        key_added: Name of the `.uns` field that will contain the marker overlap scores.
+        inplace: Return a marker gene dataframe or store it inplace in `adata.uns`.
+
+    Returns:
+        A pandas dataframe with the marker gene overlap scores if `inplace=False`.
+        For `inplace=True` `adata.uns` is updated with an additional field
+        specified by the `key_added` parameter (default = 'marker_gene_overlap').
+
+    Example:
+        TODO
+    """
+    return sc.tl.marker_gene_overlap(
+        adata=adata,
+        reference_markers=reference_markers,
+        key=key,
+        method=method,
+        normalize=normalize,
+        top_n_markers=top_n_markers,
+        adj_pval_threshold=adj_pval_threshold,
+        key_added=key_added,
+        inplace=inplace,
     )

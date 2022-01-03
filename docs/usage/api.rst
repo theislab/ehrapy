@@ -116,6 +116,16 @@ Clustering and trajectory inference
     tools.dpt
     tools.paga
 
+Group comparison
+++++++++++++++++
+
+.. autosummary::
+    :toctree: tools
+
+    tools.rank_features_groups
+    tools.filter_rank_features_groups
+    tools.marker_feature_overlap
+
 Dataset integration
 +++++++++++++++++++
 
