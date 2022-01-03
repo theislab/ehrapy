@@ -8,7 +8,7 @@ from ehrapy.api.io._read import read
 from ehrapy.api.preprocessing.encoding import encode
 
 
-def mimic_2(encoded: bool = False) -> AnnData:
+def mimic_2(encoded: bool = False) -> AnnData:  # pragma: no cover
     """Loads the MIMIC-II dataset
 
     Args:
@@ -35,7 +35,7 @@ def mimic_2(encoded: bool = False) -> AnnData:
     return adata
 
 
-def mimic_3_demo(encoded: bool = False, mudata: bool = False) -> Union[MuData, List[AnnData]]:
+def mimic_3_demo(encoded: bool = False, mudata: bool = False) -> Union[MuData, List[AnnData]]:  # pragma: no cover
     """Loads the MIMIC-III demo dataset
 
     Args:

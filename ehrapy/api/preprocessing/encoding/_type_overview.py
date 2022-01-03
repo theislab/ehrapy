@@ -23,7 +23,7 @@ def type_overview(data: MuData | AnnData, sort: bool = False, sort_reversed: boo
     elif isinstance(data, MuData):
         _mudata_type_overview(data, sort, sort_reversed)
     else:
-        print(f"[b red]Unable to present object of type {type(data)}. Can only display AnnData or Mudata objects!")
+        print(f"[b red]Unable to present object of type {type(data)}. Can only display AnnData or MuData objects!")
         raise EhrapyRepresentationError
 
 

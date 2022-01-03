@@ -12,7 +12,7 @@ from sinfo import sinfo
 from ehrapy import __version__
 
 
-def print_versions(*, output_file=None) -> None:
+def print_versions(*, output_file=None) -> None:  # pragma: no cover
     """Print print versions of imported packages.
 
     Args:
@@ -44,7 +44,7 @@ def print_versions(*, output_file=None) -> None:
         print(output)
 
 
-def print_version_and_date(*, file=None):
+def print_version_and_date(*, file=None):  # pragma: no cover
     """Useful for starting a notebook so you see when you started working."""
     if file is None:
         file = sys.stdout
@@ -54,7 +54,7 @@ def print_version_and_date(*, file=None):
     )
 
 
-def print_header(*, file=None):
+def print_header(*, file=None):  # pragma: no cover
     """Versions that might influence the numerical results.
 
     Matplotlib and Seaborn are excluded from this.
@@ -81,7 +81,7 @@ def print_header(*, file=None):
     )
 
 
-def check_module_importable(package: str) -> bool:
+def check_module_importable(package: str) -> bool:  # pragma: no cover
     """Checks whether a module is installed and can be loaded.
 
     Args:

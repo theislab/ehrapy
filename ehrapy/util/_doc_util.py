@@ -3,7 +3,7 @@ from textwrap import dedent
 from typing import Callable, Optional, Union
 
 
-def getdoc(c_or_f: Union[Callable, type]) -> Optional[str]:
+def getdoc(c_or_f: Union[Callable, type]) -> Optional[str]:  # pragma: no cover
     if getattr(c_or_f, "__doc__", None) is None:
         return None
     doc = inspect.getdoc(c_or_f)
@@ -25,7 +25,7 @@ def getdoc(c_or_f: Union[Callable, type]) -> Optional[str]:
     )
 
 
-def _doc_params(**kwds):
+def _doc_params(**kwds):  # pragma: no cover
     """\
     Docstrings should start with "\" in the first line for proper formatting.
     """
