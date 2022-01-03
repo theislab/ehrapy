@@ -216,6 +216,11 @@ high-resolution jupyter display backend useful for use in notebooks.
 
 An instance of the :class:`~scanpy._settings.ScanpyConfig` is available as `ehrapy.settings` and allows configuring ehrapy.
 
+.. code-block:: python
+
+    import ehrapy.api as ep
+    ep.settings.set_figure_params(dpi=150)
+
 Please refer to the `Scanpy settings documentation <https://scanpy.readthedocs.io/en/stable/api.html#settings>`_
 for configuration options. Ehrapy will adapt these in the future and update the documentation.
 

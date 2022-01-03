@@ -17,6 +17,13 @@ def type_overview(data: MuData | AnnData, sort: bool = False, sort_reversed: boo
         data: :class:`~anndata.AnnData` or :class:`~mudata.MuData` object to display
         sort: Whether the tree output should be in sorted order
         sort_reversed: Whether to sort in reversed order or not
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy.api as ep
+            adata = ep.dt.mimic_2(encode=True)
+            ep.pp.type_overview(adata)
     """
     if isinstance(data, AnnData):
         _adata_type_overview(data, sort, sort_reversed)
