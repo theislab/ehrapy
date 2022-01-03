@@ -150,16 +150,15 @@ def heatmap(
 ):
     """Heatmap of the feature values.
 
-    If `groupby` is given, the heatmap is ordered by the respective group. For
-    example, a list of marker genes can be plotted, ordered by clustering. If
-    the `groupby` observation annotation is not categorical the observation
+    If `groupby` is given, the heatmap is ordered by the respective group.
+    If the `groupby` observation annotation is not categorical the observation
     annotation is turned into a categorical by binning the data into the number specified in `num_categories`.
 
     Args:
         {common_plot_args}
         standard_scale: Whether or not to standardize that dimension between 0 and 1, meaning for each variable or observation,
                         subtract the minimum and divide each by its maximum.
-        swap_axes: By default, the x axis contains `var_names` (e.g. genes) and the y axis the `groupby`
+        swap_axes: By default, the x axis contains `var_names` (e.g. features) and the y axis the `groupby`
                    categories (if any). By setting `swap_axes` then x are the `groupby` categories and y the `var_names`.
         show_feature_labels: By default feature labels are shown when there are 50 or less features. Otherwise the labels are removed.
         {show_save_ax}
@@ -243,7 +242,7 @@ def dotplot(
 
     For each var_name and each `groupby` category a dot is plotted.
     Each dot represents two values: mean expression within each category
-    (visualized by color) and fraction of cells expressing the `var_name` in the
+    (visualized by color) and fraction of observations expressing the `var_name` in the
     category (visualized by the size of the dot). If `groupby` is not given,
     the dotplot assumes that all data belongs to a single category.
 
@@ -484,7 +483,6 @@ def stacked_violin(
     """Stacked violin plots.
 
     Makes a compact image composed of individual violin plots (from :func:`~seaborn.violinplot`) stacked on top of each other.
-    Useful to visualize gene expression per cluster. Wraps :func:`seaborn.violinplot` for :class:`~anndata.AnnData`.
 
     This function provides a convenient interface to the :class:`~scanpy.pl.StackedViolin` class.
     If you need more flexibility, you should use :class:`~scanpy.pl.StackedViolin` directly.
@@ -798,7 +796,7 @@ def pca_loadings(
     show: Optional[bool] = None,
     save: Union[str, bool, None] = None,
 ):
-    """Rank genes according to contributions to PCs.
+    """Rank features according to contributions to PCs.
 
     Args:
         adata: :class:`~anndata.AnnData` object object containing all observations.
@@ -1162,7 +1160,7 @@ def embedding_density(
     return_fig: Optional[bool] = None,
     **kwargs,
 ) -> Union[Figure, Axes, None]:
-    """Plot the density of cells in an embedding (per condition).
+    """Plot the density of observations in an embedding (per condition).
 
     Plots the gaussian kernel density estimates (over condition) from the `sc.tl.embedding_density()` output.
 
@@ -1173,8 +1171,7 @@ def embedding_density(
         key: Name of the `.obs` covariate that contains the density estimates. Alternatively, pass `groupby`.
         groupby: Name of the condition used in `tl.embedding_density`. Alternatively, pass `key`.
         group: The category in the categorical observation annotation to be plotted.
-               For example, 'G1' in the cell cycle 'phase' covariate. If all categories
-               are to be plotted use group='all' (default), If multiple categories
+               If all categories are to be plotted use group='all' (default), If multiple categories
                want to be plotted use a list (e.g.: ['G1', 'S']. If the overall density wants to be ploted set group to 'None'.
         color_map: Matplolib color map to use for density plotting.
         bg_dotsize: Dot size for background data points not in the `group`.
@@ -1444,7 +1441,7 @@ def paga_path(
     save: Union[bool, str, None] = None,
     ax: Optional[Axes] = None,
 ) -> Optional[Axes]:
-    """Gene expression and annotation changes along paths in the abstracted graph.
+    """Feature changes along paths in the abstracted graph.
 
     Args:
         adata: :class:`~anndata.AnnData` object object containing all observations.

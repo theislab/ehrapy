@@ -312,11 +312,11 @@ def embedding_density(
     key_added: Optional[str] = None,
     components: Union[str, Sequence[str]] = None,
 ) -> None:
-    """Calculate the density of cells in an embedding (per condition).
+    """Calculate the density of observation in an embedding (per condition).
 
     Gaussian kernel density estimation is used to calculate the density of
-    cells in an embedded space. This can be performed per category over a
-    categorical cell annotation. The cell density can be plotted using the
+    observations in an embedded space. This can be performed per category over a
+    categorical observation annotation. The cell density can be plotted using the
     `sc.pl.embedding_density()` function.
     Note that density values are scaled to be between 0 and 1. Thus, the
     density value at each cell is only comparable to other densities in
@@ -367,9 +367,9 @@ def leiden(
     copy: bool = False,
     **partition_kwargs,
 ) -> Optional[AnnData]:
-    """Cluster cells into subgroups [Traag18]_.
+    """Cluster observations into subgroups [Traag18]_.
 
-    Cluster cells using the Leiden algorithm [Traag18]_,
+    Cluster observations using the Leiden algorithm [Traag18]_,
     an improved version of the Louvain algorithm [Blondel08]_.
     It has been proposed for single-cell analysis by [Levine15]_.
     This requires having ran :func:`~ehrapy.pp.neighbors` or :func:`~ehrapy.pp.bbknn` first.
@@ -443,9 +443,9 @@ def louvain(
     obsp: Optional[str] = None,
     copy: bool = False,
 ) -> Optional[AnnData]:
-    """Cluster cells into subgroups [Blondel08]_ [Levine15]_ [Traag17]_.
+    """Cluster observations into subgroups [Blondel08]_ [Levine15]_ [Traag17]_.
 
-    Cluster cells using the Louvain algorithm [Blondel08]_ in the implementation of [Traag17]_.
+    Cluster observations using the Louvain algorithm [Blondel08]_ in the implementation of [Traag17]_.
     The Louvain algorithm has been proposed for single-cell analysis by [Levine15]_.
     This requires having ran :func:`~ehrapy.pp.neighbors` or
     :func:`~ehrapy.pp.bbknn` first, or explicitly passing a ``adjacency`` matrix.
@@ -583,7 +583,7 @@ def dpt(
     neighbors_key: Optional[str] = None,
     copy: bool = False,
 ) -> Optional[AnnData]:
-    """Infer progression of cells through geodesic distance along the graph [Haghverdi16]_ [Wolf19]_.
+    """Infer progression of observations through geodesic distance along the graph [Haghverdi16]_ [Wolf19]_.
 
     Reconstruct the progression of a biological process from snapshot
     data. `Diffusion Pseudotime` has been introduced by [Haghverdi16]_ and
@@ -620,7 +620,7 @@ def dpt(
 
         * `dpt_pseudotime` : :class:`pandas.Series` (`adata.obs`, dtype `float`)
           Array of dim (number of samples) that stores the pseudotime of each
-          cell, that is, the DPT distance with respect to the root cell.
+          observation, that is, the DPT distance with respect to the root observation.
         * `dpt_groups` : :class:`pandas.Series` (`adata.obs`, dtype `category`)
           Array of dim (number of samples) that stores the subgroup id ('0', '1', ...) for each observation.
     """
@@ -645,8 +645,8 @@ def paga(
 ) -> Optional[AnnData]:
     """Mapping out the coarse-grained connectivity structures of complex manifolds [Wolf19]_.
 
-    By quantifying the connectivity of partitions (groups, clusters) of the
-    single-cell graph, partition-based graph abstraction (PAGA) generates a much
+    By quantifying the connectivity of partitions (groups, clusters),
+    partition-based graph abstraction (PAGA) generates a much
     simpler abstracted graph (*PAGA graph*) of partitions, in which edge weights
     represent confidence in the presence of connections. By tresholding this
     confidence in :func:`~ehrapy.pl.paga`, a much simpler representation of the
@@ -668,17 +668,13 @@ def paga(
         groups: Key for categorical in `adata.obs`. You can pass your predefined groups
                 by choosing any categorical annotation of observations. Default:
                 The first present key of `'leiden'` or `'louvain'`.
-        use_rna_velocity: Use RNA velocity to orient edges in the abstracted graph and estimate
-                          transitions. Requires that `adata.uns` contains a directed single-cell
-                          graph with key `['velocity_graph']`. This feature might be subject to change in the future.
         model: The PAGA connectivity model.
         neighbors_key: If not specified, paga looks `.uns['neighbors']` for neighbors settings
                        and `.obsp['connectivities']`, `.obsp['distances']` for connectivities and
                        distances respectively (default storage places for `pp.neighbors`).
                        If specified, paga looks `.uns[neighbors_key]` for neighbors settings and
                        `.obsp[.uns[neighbors_key]['connectivities_key']]`,
-                       `.obsp[.uns[neighbors_key]['distances_key']]` for connectivities and distances
-        respectively.
+                       `.obsp[.uns[neighbors_key]['distances_key']]` for connectivities and distances respectively.
         copy: Copy `adata` before computation and return a copy. Otherwise, perform computation in place and return `None`.
 
     Returns:

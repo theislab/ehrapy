@@ -54,7 +54,7 @@ def pca(
     Computes PCA coordinates, loadings and variance decomposition. Uses the implementation of *scikit-learn*.
 
     Args:
-        data: The (annotated) data matrix of shape `n_obs` × `n_vars`. Rows correspond to cells and columns to genes.
+        data: The (annotated) data matrix of shape `n_obs` × `n_vars`. Rows correspond to observations and columns to features.
         n_comps: Number of principal components to compute. Defaults to 50, or 1 - minimum dimension size of selected representation.
         zero_center: If `True`, compute standard PCA from covariance matrix.
                      If `False`, omit zero-centering variables (uses :class:`~sklearn.decomposition.TruncatedSVD`), which allows to handle sparse input efficiently.

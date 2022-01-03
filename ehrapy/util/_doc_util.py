@@ -80,8 +80,8 @@ sort_order: For continuous annotations used as color parameter, plot data points
                            Defaults to `'bold'` if `legend_loc == 'on data'`, otherwise to `'normal'`.
                            See :meth:`~matplotlib.text.Text.set_fontweight`.
         legend_fontoutline: Line width of the legend font outline in pt. Draws a white outline using the path effect :class:`~matplotlib.patheffects.withStroke`.
-        size: Point size. If `None`, is automatically computed as 120000 / n_cells.
-              Can be a sequence containing the size for each cell. The order should be the same as in adata.obs.
+        size: Point size. If `None`, is automatically computed as 120000 / n_features.
+              Can be a sequence containing the size for each observation. The order should be the same as in adata.obs.
         color_map: Color map to use for continous variables. Can be a name or a
                    :class:`~matplotlib.colors.Colormap` instance (e.g. `"magma`", `"viridis"`
                    or `mpl.cm.cividis`), see :func:`~matplotlib.cm.get_cmap`.
