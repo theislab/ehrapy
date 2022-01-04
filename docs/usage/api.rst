@@ -57,6 +57,14 @@ Basic preprocessing
     preprocessing.scale
     preprocessing.subsample
 
+Quality control
++++++++++++++++
+
+.. autosummary::
+    :toctree: preprocessing
+
+    preprocessing.calculate_qc_metrics
+
 Encoding
 ++++++++
 
