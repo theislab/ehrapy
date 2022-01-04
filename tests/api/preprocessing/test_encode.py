@@ -37,7 +37,7 @@ class TestRead:
             "b12_values",
         ]
 
-        assert encoded_ann_data.uns["current_encodings"] == {
+        assert encoded_ann_data.uns["var_to_encoding"] == {
             "survival": "one_hot_encoding",
             "clinic_day": "one_hot_encoding",
         }
@@ -68,7 +68,7 @@ class TestRead:
                 "ehrapycat_clinic_day_Sunday",
             ]
         )
-        assert encoded_ann_data.uns["current_encodings"] == {
+        assert encoded_ann_data.uns["var_to_encoding"] == {
             "survival": "label_encoding",
             "clinic_day": "one_hot_encoding",
         }
@@ -97,7 +97,7 @@ class TestRead:
                 "ehrapycat_clinic_day_Sunday",
             ]
         )
-        assert encoded_ann_data_again.uns["current_encodings"] == {
+        assert encoded_ann_data_again.uns["var_to_encoding"] == {
             "survival": "label_encoding",
             "clinic_day": "label_encoding",
         }
@@ -128,7 +128,7 @@ class TestRead:
             survival_outcome not in list(encoded_ann_data_again.var_names)
             for survival_outcome in ["ehrapycat_survival_False", "ehrapycat_survival_True"]
         )
-        assert encoded_ann_data_again.uns["current_encodings"] == {
+        assert encoded_ann_data_again.uns["var_to_encoding"] == {
             "survival": "label_encoding",
             "clinic_day": "count_encoding",
         }
@@ -137,12 +137,12 @@ class TestRead:
     def test_update_encoding_scheme_1(self):
         # just a dummy adata object that won't be used actually
         adata = read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
-        adata.uns["categoricals_encoded_with_mode"] = {
+        adata.uns["encoding_to_var"] = {
             "label_encoding": ["col1", "col2", "col3"],
             "count_encoding": ["col4"],
             "hash_encoding": [["col5", "col6", "col7"], ["col8", "col9"]],
         }
-        adata.uns["current_encodings"] = {
+        adata.uns["var_to_encoding"] = {
             "col1": "label_encoding",
             "col2": "label_encoding",
             "col3": "label_encoding",
@@ -166,11 +166,11 @@ class TestRead:
     def test_update_encoding_scheme_2(self):
         # just a dummy adata object that won't be used actually
         adata = read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
-        adata.uns["categoricals_encoded_with_mode"] = {
+        adata.uns["encoding_to_var"] = {
             "count_encoding": ["col4"],
             "hash_encoding": [["col5", "col6", "col7"], ["col8", "col9"]],
         }
-        adata.uns["current_encodings"] = {
+        adata.uns["var_to_encoding"] = {
             "col4": "count_encoding",
             "col5": "hash_encoding",
             "col6": "hash_encoding",
@@ -194,12 +194,12 @@ class TestRead:
     def test_update_encoding_scheme_3(self):
         # just a dummy adata object that won't be used actually
         adata = read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
-        adata.uns["categoricals_encoded_with_mode"] = {
+        adata.uns["encoding_to_var"] = {
             "label_encoding": ["col1", "col2", "col3"],
             "count_encoding": ["col4"],
             "hash_encoding": [["col5", "col6", "col7"], ["col8", "col9"]],
         }
-        adata.uns["current_encodings"] = {
+        adata.uns["var_to_encoding"] = {
             "col1": "label_encoding",
             "col2": "label_encoding",
             "col3": "label_encoding",
@@ -228,12 +228,12 @@ class TestRead:
     def test_update_encoding_scheme_4(self):
         # just a dummy adata objec that won't be used actually
         adata = read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
-        adata.uns["categoricals_encoded_with_mode"] = {
+        adata.uns["encoding_to_var"] = {
             "label_encoding": ["col1", "col2", "col3"],
             "count_encoding": ["col4"],
             "hash_encoding": [["col5", "col6", "col7"], ["col8", "col9"]],
         }
-        adata.uns["current_encodings"] = {
+        adata.uns["var_to_encoding"] = {
             "col1": "label_encoding",
             "col2": "label_encoding",
             "col3": "label_encoding",
@@ -260,12 +260,12 @@ class TestRead:
     def test_update_encoding_scheme_5(self):
         # just a dummy adata objec that won't be used actually
         adata = read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
-        adata.uns["categoricals_encoded_with_mode"] = {
+        adata.uns["encoding_to_var"] = {
             "label_encoding": ["col1", "col2", "col3"],
             "count_encoding": ["col4"],
             "hash_encoding": [["col5", "col6", "col7"], ["col8", "col9"]],
         }
-        adata.uns["current_encodings"] = {
+        adata.uns["var_to_encoding"] = {
             "col1": "label_encoding",
             "col2": "label_encoding",
             "col3": "label_encoding",
@@ -290,12 +290,12 @@ class TestRead:
     def test_update_encoding_scheme_duplicates_raise_error(self):
         # just a dummy adata objec that won't be used actually
         adata = read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
-        adata.uns["categoricals_encoded_with_mode"] = {
+        adata.uns["encoding_to_var"] = {
             "label_encoding": ["col1", "col2", "col3"],
             "count_encoding": ["col4"],
             "hash_encoding": [["col5", "col6", "col7"], ["col8", "col9"]],
         }
-        adata.uns["current_encodings"] = {
+        adata.uns["var_to_encoding"] = {
             "col1": "label_encoding",
             "col2": "label_encoding",
             "col3": "label_encoding",

@@ -51,7 +51,7 @@ def _adata_type_overview(adata: AnnData, sort: bool = False, sort_reversed: bool
         guide_style="underline2 bright_blue",
     )
     is_encoded = False
-    if "current_encodings" in adata.uns.keys():
+    if "var_to_encoding" in adata.uns.keys():
         is_encoded = True
         original_values = adata.uns["original_values_categoricals"]
         branch = tree.add("🔐 Encoded variables", style="b green")
@@ -62,7 +62,7 @@ def _adata_type_overview(adata: AnnData, sort: bool = False, sort_reversed: bool
             is_nan = pd.DataFrame(unique_categoricals).isnull().values.any()
             branch.add(
                 f"[blue]{categorical} -> {len(unique_categoricals) - 1 if is_nan else len(unique_categoricals)} categories;"
-                f" [green]{encoding_mapping[adata.uns['current_encodings'][categorical]]} [blue]encoded; [green]original data type: [blue]{categorical_type}"
+                f" [green]{encoding_mapping[adata.uns['var_to_encoding'][categorical]]} [blue]encoded; [green]original data type: [blue]{categorical_type}"
             )
 
     branch_num = tree.add(Text("🔓 Unencoded variables"), style="b green")
