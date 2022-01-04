@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import inspect
 import logging
 import sys
@@ -7,13 +9,13 @@ from enum import IntEnum
 from logging import getLevelName
 from pathlib import Path
 from time import time
-from typing import Any, Iterable, List, Literal, Optional, TextIO, Tuple, Union
+from typing import Any, Iterable, Literal, TextIO
 
 from matplotlib import pyplot as plt
 from scanpy.logging import _RootLogger, _set_log_file, _set_log_level
 from scanpy.plotting import set_rcParams_scanpy
 
-_VERBOSITY_TO_LOGLEVEL = {
+_VERBOSITY_TO_LOGLEVEL: dict[str, str] = {
     "error": "ERROR",
     "warning": "WARNING",
     "info": "INFO",
@@ -21,11 +23,11 @@ _VERBOSITY_TO_LOGLEVEL = {
     "debug": "DEBUG",
 }
 # Python 3.7 ensures iteration order
-for v, level in enumerate(list(_VERBOSITY_TO_LOGLEVEL.values())):
-    _VERBOSITY_TO_LOGLEVEL[v] = level  # type: ignore
+for index, level in enumerate(list(_VERBOSITY_TO_LOGLEVEL.values())):  # pragma: no cover
+    _VERBOSITY_TO_LOGLEVEL[index] = level  # type: ignore
 
 
-class Verbosity(IntEnum):
+class Verbosity(IntEnum):  # pragma: no cover
     error = 0
     warn = 1
     info = 2
@@ -38,14 +40,14 @@ class Verbosity(IntEnum):
         return getLevelName(_VERBOSITY_TO_LOGLEVEL[self])  # type: ignore
 
     @contextmanager  # type: ignore
-    def override(self, verbosity: "Verbosity") -> Generator:
+    def override(self, verbosity: Verbosity) -> Generator:
         """Temporarily override verbosity."""
         ehrapy_settings.verbosity = verbosity
         yield self
         ehrapy_settings.verbosity = self
 
 
-def _type_check(var: Any, varname: str, types: Union[type, Tuple[type, ...]]):
+def _type_check(var: Any, varname: str, types: type | tuple[type, ...]):  # pragma: no cover
     if isinstance(var, types):
         return
     if isinstance(types, type):
@@ -56,7 +58,7 @@ def _type_check(var: Any, varname: str, types: Union[type, Tuple[type, ...]]):
     raise TypeError(f"{varname} must be of type {possible_types_str}")
 
 
-class EhrapyConfig:
+class EhrapyConfig:  # pragma: no cover
     """Configuration manager for ehrapy.
 
     Strongly adapted from Scanpy.
@@ -71,14 +73,14 @@ class EhrapyConfig:
         file_format_figs: str = "pdf",
         autosave: bool = False,
         autoshow: bool = True,
-        writedir: Union[str, Path] = "./ehrapy_write/",
-        cachedir: Union[str, Path] = "./ehrapy_cache/",
-        datasetdir: Union[str, Path] = "./ehrapy_data/",
-        figdir: Union[str, Path] = "./figures/",
-        cache_compression: Union[str, None] = "lzf",
+        writedir: str | Path = "./ehrapy_write/",
+        cachedir: str | Path = "./ehrapy_cache/",
+        datasetdir: str | Path = "./ehrapy_data/",
+        figdir: str | Path = "./figures/",
+        cache_compression: str | None = "lzf",
         max_memory=15,
         n_jobs=1,
-        logfile: Union[str, Path, None] = None,
+        logfile: str | Path | None = None,
         categories_to_ignore: Iterable[str] = ("N/A", "dontknow", "no_gate", "?"),
         _frameon: bool = True,
         _vector_friendly: bool = False,
@@ -138,7 +140,7 @@ class EhrapyConfig:
         return self._verbosity
 
     @verbosity.setter
-    def verbosity(self, verbosity: Union[Verbosity, int, str]):
+    def verbosity(self, verbosity: Verbosity | int | str):
         verbosity_str_options = [v for v in _VERBOSITY_TO_LOGLEVEL if isinstance(v, str)]
         if isinstance(verbosity, Verbosity):
             self._verbosity = verbosity
@@ -227,7 +229,7 @@ class EhrapyConfig:
         return self._writedir
 
     @writedir.setter
-    def writedir(self, writedir: Union[str, Path]):
+    def writedir(self, writedir: str | Path):
         _type_check(writedir, "writedir", (str, Path))
         self._writedir = Path(writedir)
 
@@ -237,7 +239,7 @@ class EhrapyConfig:
         return self._cachedir
 
     @cachedir.setter
-    def cachedir(self, cachedir: Union[str, Path]):
+    def cachedir(self, cachedir: str | Path):
         _type_check(cachedir, "cachedir", (str, Path))
         self._cachedir = Path(cachedir)
 
@@ -247,7 +249,7 @@ class EhrapyConfig:
         return self._datasetdir
 
     @datasetdir.setter
-    def datasetdir(self, datasetdir: Union[str, Path]):
+    def datasetdir(self, datasetdir: str | Path):
         _type_check(datasetdir, "datasetdir", (str, Path))
         self._datasetdir = Path(datasetdir).resolve()
 
@@ -257,12 +259,12 @@ class EhrapyConfig:
         return self._figdir
 
     @figdir.setter
-    def figdir(self, figdir: Union[str, Path]):
+    def figdir(self, figdir: str | Path):
         _type_check(figdir, "figdir", (str, Path))
         self._figdir = Path(figdir)
 
     @property
-    def cache_compression(self) -> Optional[str]:
+    def cache_compression(self) -> str | None:
         """Compression for `sc.read(..., cache=True)` (default `'lzf'`).
 
         May be `'lzf'`, `'gzip'`, or `None`.
@@ -270,13 +272,13 @@ class EhrapyConfig:
         return self._cache_compression
 
     @cache_compression.setter
-    def cache_compression(self, cache_compression: Optional[str]):
+    def cache_compression(self, cache_compression: str | None):
         if cache_compression not in {"lzf", "gzip", None}:
             raise ValueError(f"`cache_compression` ({cache_compression}) " "must be in {'lzf', 'gzip', None}")
         self._cache_compression = cache_compression
 
     @property
-    def max_memory(self) -> Union[int, float]:
+    def max_memory(self) -> int | float:
         """Maximal memory usage in Gigabyte.
 
         Is currently not well respected....
@@ -284,7 +286,7 @@ class EhrapyConfig:
         return self._max_memory
 
     @max_memory.setter
-    def max_memory(self, max_memory: Union[int, float]):
+    def max_memory(self, max_memory: int | float):
         _type_check(max_memory, "max_memory", (int, float))
         self._max_memory = max_memory
 
@@ -299,12 +301,12 @@ class EhrapyConfig:
         self._n_jobs = n_jobs
 
     @property
-    def logpath(self) -> Optional[Path]:
+    def logpath(self) -> Path | None:
         """The file path `logfile` was set to."""
         return self._logpath  # type: ignore
 
     @logpath.setter
-    def logpath(self, logpath: Union[str, Path, None]):
+    def logpath(self, logpath: str | Path | None):
         _type_check(logpath, "logfile", (str, Path))
         # set via “file object” branch of logfile.setter
         self.logfile = Path(logpath).open("a")
@@ -323,7 +325,7 @@ class EhrapyConfig:
         return self._logfile  # type: ignore
 
     @logfile.setter
-    def logfile(self, logfile: Union[str, Path, TextIO, None]):
+    def logfile(self, logfile: str | Path | TextIO | None):
         if not hasattr(logfile, "write") and logfile:
             self.logpath = logfile  # type: ignore
         else:  # file object
@@ -334,7 +336,7 @@ class EhrapyConfig:
             _set_log_file(self)
 
     @property
-    def categories_to_ignore(self) -> List[str]:
+    def categories_to_ignore(self) -> list[str]:
         """Categories that are omitted in plotting etc."""
         return self._categories_to_ignore
 
@@ -366,10 +368,10 @@ class EhrapyConfig:
         frameon: bool = True,
         vector_friendly: bool = True,
         fontsize: int = 14,
-        figsize: Optional[int] = None,
-        color_map: Optional[str] = None,
+        figsize: int | None = None,
+        color_map: str | None = None,
         format: _Format = "pdf",
-        facecolor: Optional[str] = None,
+        facecolor: str | None = None,
         transparent: bool = False,
         ipython_format: str = "png2x",
         dark: bool = False,
@@ -377,7 +379,7 @@ class EhrapyConfig:
         """Set resolution/size, styling and format of figures.
 
         Args:
-            scanpy: Init default values for :obj:`matplotlib.rcParams` suited for Scanpy.
+            scanpy: Init default values for :obj:`matplotlib.rcParams` based on Scanpy's.
             dpi: Resolution of rendered figures – this influences the size of figures in notebooks.
             dpi_save: Resolution of saved figures. This should typically be higher to achieve publication quality.
             frameon: Add frames and axes labels to scatter plots.
@@ -420,7 +422,7 @@ class EhrapyConfig:
         self._frameon = frameon
 
     @staticmethod
-    def _is_run_from_ipython():
+    def _is_run_from_ipython() -> bool:
         """Determines whether we are currently in IPython."""
         import builtins
 

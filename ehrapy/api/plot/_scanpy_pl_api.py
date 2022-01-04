@@ -67,7 +67,7 @@ def scatter(
     show: Optional[bool] = None,
     save: Union[str, bool, None] = None,
     ax: Optional[Axes] = None,
-):
+):  # pragma: no cover
     """Scatter plot along observations or variables axes.
 
     Color the plot using annotations of observations (`.obs`), variables (`.var`) or features (`.var_names`).
@@ -147,19 +147,18 @@ def heatmap(
     vcenter: Optional[float] = None,
     norm: Optional[Normalize] = None,
     **kwds,
-):
+):  # pragma: no cover
     """Heatmap of the feature values.
 
-    If `groupby` is given, the heatmap is ordered by the respective group. For
-    example, a list of marker genes can be plotted, ordered by clustering. If
-    the `groupby` observation annotation is not categorical the observation
+    If `groupby` is given, the heatmap is ordered by the respective group.
+    If the `groupby` observation annotation is not categorical the observation
     annotation is turned into a categorical by binning the data into the number specified in `num_categories`.
 
     Args:
         {common_plot_args}
         standard_scale: Whether or not to standardize that dimension between 0 and 1, meaning for each variable or observation,
                         subtract the minimum and divide each by its maximum.
-        swap_axes: By default, the x axis contains `var_names` (e.g. genes) and the y axis the `groupby`
+        swap_axes: By default, the x axis contains `var_names` (e.g. features) and the y axis the `groupby`
                    categories (if any). By setting `swap_axes` then x are the `groupby` categories and y the `var_names`.
         show_feature_labels: By default feature labels are shown when there are 50 or less features. Otherwise the labels are removed.
         {show_save_ax}
@@ -238,12 +237,12 @@ def dotplot(
     vcenter: Optional[float] = None,
     norm: Optional[Normalize] = None,
     **kwds,
-) -> Union[DotPlot, dict, None]:
+) -> Union[DotPlot, dict, None]:  # pragma: no cover
     """Makes a *dot plot* of the count values of `var_names`.
 
     For each var_name and each `groupby` category a dot is plotted.
     Each dot represents two values: mean expression within each category
-    (visualized by color) and fraction of cells expressing the `var_name` in the
+    (visualized by color) and fraction of observations expressing the `var_name` in the
     category (visualized by the size of the dot). If `groupby` is not given,
     the dotplot assumes that all data belongs to a single category.
 
@@ -327,7 +326,7 @@ def tracksplot(
     save: Union[str, bool, None] = None,
     figsize: Optional[Tuple[float, float]] = None,
     **kwds,
-) -> Optional[Dict[str, List]]:
+) -> Optional[Dict[str, List]]:  # pragma: no cover
     """Plots a filled line plot.
 
     In this type of plot each var_name is plotted as a filled line plot where the
@@ -382,7 +381,7 @@ def violin(
     save: Union[bool, str, None] = None,
     ax: Optional[Axes] = None,
     **kwds,
-):
+):  # pragma: no cover
     """Violin plot.
 
     Wraps :func:`seaborn.violinplot` for :class:`~anndata.AnnData`.
@@ -480,11 +479,10 @@ def stacked_violin(
     vcenter: Optional[float] = None,
     norm: Optional[Normalize] = None,
     **kwds,
-) -> Union[StackedViolin, dict, None]:
+) -> Union[StackedViolin, dict, None]:  # pragma: no cover
     """Stacked violin plots.
 
     Makes a compact image composed of individual violin plots (from :func:`~seaborn.violinplot`) stacked on top of each other.
-    Useful to visualize gene expression per cluster. Wraps :func:`seaborn.violinplot` for :class:`~anndata.AnnData`.
 
     This function provides a convenient interface to the :class:`~scanpy.pl.StackedViolin` class.
     If you need more flexibility, you should use :class:`~scanpy.pl.StackedViolin` directly.
@@ -589,7 +587,7 @@ def matrixplot(
     vcenter: Optional[float] = None,
     norm: Optional[Normalize] = None,
     **kwds,
-) -> Union[MatrixPlot, dict, None]:
+) -> Union[MatrixPlot, dict, None]:  # pragma: no cover
     """Creates a heatmap of the mean count per group of each var_names.
 
     This function provides a convenient interface to the :class:`~scanpy.pl.MatrixPlot`
@@ -646,7 +644,7 @@ def clustermap(
     show: Optional[bool] = None,
     save: Union[bool, str, None] = None,
     **kwds,
-):
+):  # pragma: no cover
     """Hierarchically-clustered heatmap.
 
     Wraps :func:`seaborn.clustermap` for :class:`~anndata.AnnData`.
@@ -677,7 +675,7 @@ def ranking(
     log=False,
     include_lowest=False,
     show=None,
-):
+):  # pragma: no cover
     """Plot rankings.
 
     See, for example, how this is used in pl.pca_ranking.
@@ -724,7 +722,7 @@ def dendrogram(
     show: Optional[bool] = None,
     save: Union[str, bool, None] = None,
     ax: Optional[Axes] = None,
-):
+):  # pragma: no cover
     """Plots a dendrogram of the categories defined in `groupby`.
 
     See :func:`~ehrapy.tl.dendrogram`.
@@ -767,7 +765,7 @@ def pca(
     return_fig: Optional[bool] = None,
     save: Union[bool, str, None] = None,
     **kwargs,
-) -> Union[Axes, List[Axes], None]:
+) -> Union[Axes, List[Axes], None]:  # pragma: no cover
     """Scatter plot in PCA coordinates.
 
     Use the parameter `annotate_var_explained` to annotate the explained variance.
@@ -797,8 +795,8 @@ def pca_loadings(
     include_lowest: bool = True,
     show: Optional[bool] = None,
     save: Union[str, bool, None] = None,
-):
-    """Rank genes according to contributions to PCs.
+):  # pragma: no cover
+    """Rank features according to contributions to PCs.
 
     Args:
         adata: :class:`~anndata.AnnData` object object containing all observations.
@@ -820,7 +818,7 @@ def pca_variance_ratio(
     log: bool = False,
     show: Optional[bool] = None,
     save: Union[bool, str, None] = None,
-):
+):  # pragma: no cover
     """Plot the variance ratio.
 
     Args:
@@ -839,7 +837,7 @@ def pca_variance_ratio(
 
 
 @_doc_params(scatter_bulk=doc_scatter_embedding, show_save_ax=doc_show_save_ax)
-def pca_overview(adata: AnnData, **params):
+def pca_overview(adata: AnnData, **params):  # pragma: no cover
     """Plot PCA results.
 
     The parameters are the ones of the scatter plot. Call pca_ranking separately
@@ -864,7 +862,7 @@ def pca_overview(adata: AnnData, **params):
     scatter_bulk=doc_scatter_embedding,
     show_save_ax=doc_show_save_ax,
 )
-def tsne(adata, **kwargs) -> Union[Axes, List[Axes], None]:
+def tsne(adata, **kwargs) -> Union[Axes, List[Axes], None]:  # pragma: no cover
     """Scatter plot in tSNE basis.
 
     Args:
@@ -886,7 +884,7 @@ def tsne(adata, **kwargs) -> Union[Axes, List[Axes], None]:
     scatter_bulk=doc_scatter_embedding,
     show_save_ax=doc_show_save_ax,
 )
-def umap(adata, **kwargs) -> Union[Axes, List[Axes], None]:
+def umap(adata, **kwargs) -> Union[Axes, List[Axes], None]:  # pragma: no cover
     """Scatter plot in UMAP basis.
 
     Args:
@@ -907,7 +905,7 @@ def umap(adata, **kwargs) -> Union[Axes, List[Axes], None]:
     scatter_bulk=doc_scatter_embedding,
     show_save_ax=doc_show_save_ax,
 )
-def diffmap(adata, **kwargs) -> Union[Axes, List[Axes], None]:
+def diffmap(adata, **kwargs) -> Union[Axes, List[Axes], None]:  # pragma: no cover
     """Scatter plot in Diffusion Map basis.
 
     Args:
@@ -928,7 +926,9 @@ def diffmap(adata, **kwargs) -> Union[Axes, List[Axes], None]:
     scatter_bulk=doc_scatter_embedding,
     show_save_ax=doc_show_save_ax,
 )
-def draw_graph(adata: AnnData, *, layout: Optional[_IGraphLayout] = None, **kwargs) -> Union[Axes, List[Axes], None]:
+def draw_graph(
+    adata: AnnData, *, layout: Optional[_IGraphLayout] = None, **kwargs
+) -> Union[Axes, List[Axes], None]:  # pragma: no cover
     """Scatter plot in graph-drawing basis.
 
     Args:
@@ -976,7 +976,7 @@ def spatial(
     return_fig: Optional[bool] = None,
     save: Union[bool, str, None] = None,
     **kwargs,
-) -> Union[Axes, List[Axes], None]:
+) -> Union[Axes, List[Axes], None]:  # pragma: no cover
     """Scatter plot in spatial coordinates.
 
     This function allows overlaying data on top of images.
@@ -1077,7 +1077,7 @@ def embedding(
     ax: Optional[Axes] = None,
     return_fig: Optional[bool] = None,
     **kwargs,
-) -> Union[Figure, Axes, None]:
+) -> Union[Figure, Axes, None]:  # pragma: no cover
     """Scatter plot for user specified embedding basis (e.g. umap, pca, etc)
 
     Args:
@@ -1161,8 +1161,8 @@ def embedding_density(
     ax: Optional[Axes] = None,
     return_fig: Optional[bool] = None,
     **kwargs,
-) -> Union[Figure, Axes, None]:
-    """Plot the density of cells in an embedding (per condition).
+) -> Union[Figure, Axes, None]:  # pragma: no cover
+    """Plot the density of observations in an embedding (per condition).
 
     Plots the gaussian kernel density estimates (over condition) from the `sc.tl.embedding_density()` output.
 
@@ -1173,8 +1173,7 @@ def embedding_density(
         key: Name of the `.obs` covariate that contains the density estimates. Alternatively, pass `groupby`.
         groupby: Name of the condition used in `tl.embedding_density`. Alternatively, pass `key`.
         group: The category in the categorical observation annotation to be plotted.
-               For example, 'G1' in the cell cycle 'phase' covariate. If all categories
-               are to be plotted use group='all' (default), If multiple categories
+               If all categories are to be plotted use group='all' (default), If multiple categories
                want to be plotted use a list (e.g.: ['G1', 'S']. If the overall density wants to be ploted set group to 'None'.
         color_map: Matplolib color map to use for density plotting.
         bg_dotsize: Dot size for background data points not in the `group`.
@@ -1232,7 +1231,7 @@ def dpt_groups_pseudotime(
     palette: Union[Sequence[str], Cycler, None] = None,
     show: Optional[bool] = None,
     save: Union[bool, str, None] = None,
-):
+):  # pragma: no cover
     """Plot groups and pseudotime.
 
     Args:
@@ -1251,7 +1250,7 @@ def dpt_timeseries(
     as_heatmap: bool = True,
     show: Optional[bool] = None,
     save: Optional[bool] = None,
-):
+):  # pragma: no cover
     """Heatmap of pseudotime series.
 
     Args:
@@ -1303,7 +1302,7 @@ def paga(
     show: Optional[bool] = None,
     save: Union[bool, str, None] = None,
     ax: Optional[Axes] = None,
-) -> Union[Axes, List[Axes], None]:
+) -> Union[Axes, List[Axes], None]:  # pragma: no cover
     """Plot the PAGA graph through thresholding low-connectivity edges.
 
     Compute a coarse-grained layout of the data. Reuse this by passing
@@ -1443,8 +1442,8 @@ def paga_path(
     show: Optional[bool] = None,
     save: Union[bool, str, None] = None,
     ax: Optional[Axes] = None,
-) -> Optional[Axes]:
-    """Gene expression and annotation changes along paths in the abstracted graph.
+) -> Optional[Axes]:  # pragma: no cover
+    """Feature changes along paths in the abstracted graph.
 
     Args:
         adata: :class:`~anndata.AnnData` object object containing all observations.
@@ -1536,7 +1535,7 @@ def paga_compare(
     *,
     pos=None,
     **paga_graph_params,
-) -> Optional[Axes]:
+) -> Optional[Axes]:  # pragma: no cover
     """Scatter and PAGA graph side-by-side.
 
     Consists in a scatter plot and the abstracted graph. See :func:`~ehrapy.pl.paga` for all related parameters.
@@ -1597,4 +1596,388 @@ def paga_compare(
         title_graph=title_graph,
         groups_graph=groups_graph,
         pos=pos ** paga_graph_params,
+    )
+
+
+@_doc_params(show_save_ax=doc_show_save_ax)
+def rank_features_groups(
+    adata: AnnData,
+    groups: Union[str, Sequence[str]] = None,
+    n_features: int = 20,
+    feature_symbols: Optional[str] = None,
+    key: Optional[str] = "rank_features_groups",
+    fontsize: int = 8,
+    ncols: int = 4,
+    share_y: bool = True,
+    show: Optional[bool] = None,
+    save: Optional[bool] = None,
+    ax: Optional[Axes] = None,
+    **kwds,
+):  # pragma: no cover
+    """Plot ranking of features.
+
+    Args:
+        adata: Annotated data matrix.
+        groups: The groups for which to show the feature ranking.
+        n_features: The number of features to plot.
+        feature_symbols: Key for field in `.var` that stores feature symbols if you do not want to use `.var_names`.
+        key: The key of the calculated feature group rankings (default: 'rank_features_groups').
+        fontsize: Fontsize for feature names.
+        ncols: Number of panels shown per row.
+        share_y: Controls if the y-axis of each panels should be shared.
+                 But passing `sharey=False`, each panel has its own y-axis range.
+        {show_save_ax}
+
+    Example:
+        TODO
+    """
+    return sc.pl.rank_genes_groups(
+        adata=adata,
+        groups=groups,
+        n_genes=n_features,
+        gene_symbols=feature_symbols,
+        key=key,
+        fontsize=fontsize,
+        ncols=ncols,
+        sharey=share_y,
+        show=show,
+        save=save,
+        ax=ax,
+        **kwds,
+    )
+
+
+@_doc_params(show_save_ax=doc_show_save_ax)
+def rank_features_groups_violin(
+    adata: AnnData,
+    groups: Optional[Sequence[str]] = None,
+    n_features: int = 20,
+    feature_names: Optional[Iterable[str]] = None,
+    feature_symbols: Optional[str] = None,
+    key: Optional[str] = None,
+    split: bool = True,
+    scale: str = "width",
+    strip: bool = True,
+    jitter: Union[int, float, bool] = True,
+    size: int = 1,
+    ax: Optional[Axes] = None,
+    show: Optional[bool] = None,
+    save: Optional[bool] = None,
+):  # pragma: no cover
+    """Plot ranking of features for all tested comparisons as violin plots.
+
+    Args:
+        adata: Annotated data matrix.
+        groups: List of group names.
+        n_features: Number of features to show. Is ignored if `feature_names` is passed.
+        feature_names: List of features to plot. Is only useful if interested in a custom feature list,
+                       which is not the result of :func:`ehrapy.tl.rank_features_groups`.
+        feature_symbols: Key for field in `.var` that stores feature symbols if you do not want to
+                         use `.var_names` displayed in the plot.
+        key: The key of the calculated feature group rankings (default: 'rank_features_groups').
+        split: Whether to split the violins or not.
+        scale: See :func:`~seaborn.violinplot`.
+        strip: Show a strip plot on top of the violin plot.
+        jitter: If set to 0, no points are drawn. See :func:`~seaborn.stripplot`.
+        size: Size of the jitter points.
+       {show_save_ax}
+
+    Example:
+        TODO
+    """
+    return sc.pl.rank_genes_groups_violin(
+        adata=adata,
+        groups=groups,
+        n_genes=n_features,
+        gene_names=feature_names,
+        gene_symbols=feature_symbols,
+        use_raw=False,
+        key=key,
+        split=split,
+        scale=scale,
+        strip=strip,
+        jitter=jitter,
+        size=size,
+        ax=ax,
+        show=show,
+        save=save,
+    )
+
+
+@_doc_params(show_save_ax=doc_show_save_ax)
+def rank_features_groups_stacked_violin(
+    adata: AnnData,
+    groups: Union[str, Sequence[str]] = None,
+    n_features: Optional[int] = None,
+    groupby: Optional[str] = None,
+    feature_symbols: Optional[str] = None,
+    *,
+    var_names: Optional[Union[Sequence[str], Mapping[str, Sequence[str]]]] = None,
+    min_logfoldchange: Optional[float] = None,
+    key: Optional[str] = None,
+    show: Optional[bool] = None,
+    save: Optional[bool] = None,
+    return_fig: Optional[bool] = False,
+    **kwds,
+):  # pragma: no cover
+    """Plot ranking of genes using stacked_violin plot.
+
+    Args:
+        adata: Annotated data matrix.
+        groups: List of group names.
+        n_features: Number of features to show. Is ignored if `feature_names` is passed.
+        groupby: Which key to group the features by.
+        feature_symbols: Key for field in `.var` that stores feature symbols if you do not want to
+                         use `.var_names` displayed in the plot.
+        var_names: Feature names.
+        min_logfoldchange: Minimum log fold change to consider.
+        key: The key of the calculated feature group rankings (default: 'rank_features_groups').
+        show: Whether to show the plot.
+        save: Where to save the plot.
+        return_fig: Returns :class:`StackedViolin` object. Useful for fine-tuning the plot.
+                    Takes precedence over `show=False`.
+
+    Returns:
+        If `return_fig` is `True`, returns a :class:`StackedViolin` object,
+        else if `show` is false, return axes dict
+
+    Example:
+        TODO
+    """
+    return sc.pl.rank_genes_groups_stacked_violin(
+        adata=adata,
+        groups=groups,
+        n_genes=n_features,
+        groupby=groupby,
+        gene_symbols=feature_symbols,
+        var_names=var_names,
+        min_logfoldchange=min_logfoldchange,
+        key=key,
+        show=show,
+        save=save,
+        return_fig=return_fig,
+        **kwds,
+    )
+
+
+def rank_features_groups_heatmap(
+    adata: AnnData,
+    groups: Union[str, Sequence[str]] = None,
+    n_features: Optional[int] = None,
+    groupby: Optional[str] = None,
+    feature_symbols: Optional[str] = None,
+    var_names: Optional[Union[Sequence[str], Mapping[str, Sequence[str]]]] = None,
+    min_logfoldchange: Optional[float] = None,
+    key: str = None,
+    show: Optional[bool] = None,
+    save: Optional[bool] = None,
+    **kwds,
+):  # pragma: no cover
+    """Plot ranking of genes using heatmap plot (see :func:`~ehrapy.pl.heatmap`)
+
+    Args:
+        adata: Annotated data matrix.
+        groups: List of group names.
+        n_features: Number of features to show. Is ignored if `feature_names` is passed.
+        groupby: Which key to group the features by.
+        feature_symbols: Key for field in `.var` that stores feature symbols if you do not want to
+                         use `.var_names` displayed in the plot.
+        var_names: Feature names.
+        min_logfoldchange: Minimum log fold change to consider.
+        key: The key of the calculated feature group rankings (default: 'rank_features_groups').
+        show: Whether to show the plot.
+        save: Where to save the plot.
+
+    Example:
+        TODO
+    """
+    return sc.pl.rank_genes_groups_heatmap(
+        adata=adata,
+        groups=groups,
+        n_genes=n_features,
+        groupby=groupby,
+        gene_symbols=feature_symbols,
+        var_names=var_names,
+        min_logfoldchange=min_logfoldchange,
+        key=key,
+        show=show,
+        save=save,
+        **kwds,
+    )
+
+
+def rank_features_groups_dotplot(
+    adata: AnnData,
+    groups: Union[str, Sequence[str]] = None,
+    n_features: Optional[int] = None,
+    groupby: Optional[str] = None,
+    values_to_plot: Optional[
+        Literal[
+            "scores",
+            "logfoldchanges",
+            "pvals",
+            "pvals_adj",
+            "log10_pvals",
+            "log10_pvals_adj",
+        ]
+    ] = None,
+    var_names: Optional[Union[Sequence[str], Mapping[str, Sequence[str]]]] = None,
+    feature_symbols: Optional[str] = None,
+    min_logfoldchange: Optional[float] = None,
+    key: Optional[str] = None,
+    show: Optional[bool] = None,
+    save: Optional[bool] = None,
+    return_fig: Optional[bool] = False,
+    **kwds,
+):  # pragma: no cover
+    """Plot ranking of genes using dotplot plot (see :func:`~ehrapy.pl.dotplot`)
+
+    Args:
+        adata: Annotated data matrix.
+        groups: List of group names.
+        n_features: Number of features to show. Is ignored if `feature_names` is passed.
+        groupby: Which key to group the features by.
+        feature_symbols: Key for field in `.var` that stores feature symbols if you do not want to
+                         use `.var_names` displayed in the plot.
+        values_to_plot: Key to plot. One of 'scores', 'logfoldchanges', 'pvals', 'pvalds_adj',
+                        'log10_pvals', 'log10_pvalds_adj'.
+        var_names: Feature names.
+        min_logfoldchange: Minimum log fold change to consider.
+        key: The key of the calculated feature group rankings (default: 'rank_features_groups').
+        show: Whether to show the plot.
+        save: Where to save the plot.
+        return_fig: Returns :class:`StackedViolin` object. Useful for fine-tuning the plot.
+                    Takes precedence over `show=False`.
+
+    Returns:
+        If `return_fig` is `True`, returns a :class:`StackedViolin` object,
+        else if `show` is false, return axes dict
+
+    Example:
+        TODO
+    """
+    return sc.pl.rank_genes_groups_dotplot(
+        adata=adata,
+        groups=groups,
+        n_genes=n_features,
+        groupby=groupby,
+        values_to_plot=values_to_plot,
+        var_names=var_names,
+        gene_symbols=feature_symbols,
+        min_logfoldchange=min_logfoldchange,
+        key=key,
+        show=show,
+        save=save,
+        return_fig=return_fig,
+        **kwds,
+    )
+
+
+def rank_features_groups_matrixplot(
+    adata: AnnData,
+    groups: Union[str, Sequence[str]] = None,
+    n_features: Optional[int] = None,
+    groupby: Optional[str] = None,
+    values_to_plot: Optional[
+        Literal[
+            "scores",
+            "logfoldchanges",
+            "pvals",
+            "pvals_adj",
+            "log10_pvals",
+            "log10_pvals_adj",
+        ]
+    ] = None,
+    var_names: Optional[Union[Sequence[str], Mapping[str, Sequence[str]]]] = None,
+    feature_symbols: Optional[str] = None,
+    min_logfoldchange: Optional[float] = None,
+    key: Optional[str] = None,
+    show: Optional[bool] = None,
+    save: Optional[bool] = None,
+    return_fig: Optional[bool] = False,
+    **kwds,
+):  # pragma: no cover
+    """Plot ranking of genes using matrixplot plot (see :func:`~ehrapy.pl.matrixplot`)
+
+    Args:
+        adata: Annotated data matrix.
+        groups: List of group names.
+        n_features: Number of features to show. Is ignored if `feature_names` is passed.
+        groupby: Which key to group the features by.
+        feature_symbols: Key for field in `.var` that stores feature symbols if you do not want to
+                         use `.var_names` displayed in the plot.
+        values_to_plot: Key to plot. One of 'scores', 'logfoldchanges', 'pvals', 'pvalds_adj',
+                        'log10_pvals', 'log10_pvalds_adj'.
+        var_names: Feature names.
+        min_logfoldchange: Minimum log fold change to consider.
+        key: The key of the calculated feature group rankings (default: 'rank_features_groups').
+        show: Whether to show the plot.
+        save: Where to save the plot.
+        return_fig: Returns :class:`StackedViolin` object. Useful for fine-tuning the plot.
+                    Takes precedence over `show=False`.
+
+    Returns:
+        If `return_fig` is `True`, returns a :class:`MatrixPlot` object,
+        else if `show` is false, return axes dict
+    """
+    return sc.pl.rank_genes_groups_matrixplot(
+        adata=adata,
+        groups=groups,
+        n_genes=n_features,
+        groupby=groupby,
+        values_to_plot=values_to_plot,
+        var_names=var_names,
+        gene_symbols=feature_symbols,
+        min_logfoldchange=min_logfoldchange,
+        key=key,
+        show=show,
+        save=save,
+        return_fig=return_fig,
+        **kwds,
+    )
+
+
+def rank_features_groups_tracksplot(
+    adata: AnnData,
+    groups: Union[str, Sequence[str]] = None,
+    n_features: Optional[int] = None,
+    groupby: Optional[str] = None,
+    var_names: Optional[Union[Sequence[str], Mapping[str, Sequence[str]]]] = None,
+    feature_symbols: Optional[str] = None,
+    min_logfoldchange: Optional[float] = None,
+    key: Optional[str] = None,
+    show: Optional[bool] = None,
+    save: Optional[bool] = None,
+    **kwds,
+):  # pragma: no cover
+    """Plot ranking of genes using tracksplot plot (see :func:`~ehrapy.pl.tracksplot`)
+
+    Args:
+        adata: Annotated data matrix.
+        groups: List of group names.
+        n_features: Number of features to show. Is ignored if `feature_names` is passed.
+        groupby: Which key to group the features by.
+        feature_symbols: Key for field in `.var` that stores feature symbols if you do not want to
+                         use `.var_names` displayed in the plot.
+        var_names: Feature names.
+        min_logfoldchange: Minimum log fold change to consider.
+        key: The key of the calculated feature group rankings (default: 'rank_features_groups').
+        show: Whether to show the plot.
+        save: Where to save the plot.
+
+    Example:
+        TODO
+    """
+    return sc.pl.rank_genes_groups_tracksplot(
+        adata=adata,
+        groups=groups,
+        n_genes=n_features,
+        groupby=groupby,
+        var_names=var_names,
+        feature_symbols=feature_symbols,
+        min_logfoldchange=min_logfoldchange,
+        key=key,
+        show=show,
+        save=save,
+        **kwds,
     )
