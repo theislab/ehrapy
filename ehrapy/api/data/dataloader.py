@@ -11,14 +11,14 @@ from rich import print
 from rich.progress import Progress
 
 
-def download(  # pragma: no cover
+def download(
     url: str,
     output_file_name: str = None,
     output_path: str | Path = None,
     block_size: int = 1024,
     overwrite: bool = False,
     is_archived: bool = False,
-) -> None:
+) -> None:  # pragma: no cover
     """Downloads a dataset irrespective of the format.
 
     Args:

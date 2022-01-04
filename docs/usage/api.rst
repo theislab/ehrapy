@@ -57,6 +57,14 @@ Basic preprocessing
     preprocessing.scale
     preprocessing.subsample
 
+Quality control
++++++++++++++++
+
+.. autosummary::
+    :toctree: preprocessing
+
+    preprocessing.calculate_qc_metrics
+
 Encoding
 ++++++++
 
@@ -116,6 +124,16 @@ Clustering and trajectory inference
     tools.dpt
     tools.paga
 
+Group comparison
+++++++++++++++++
+
+.. autosummary::
+    :toctree: tools
+
+    tools.rank_features_groups
+    tools.filter_rank_features_groups
+    tools.marker_feature_overlap
+
 Dataset integration
 +++++++++++++++++++
 
@@ -137,7 +155,7 @@ Translators
 Plotting
 ~~~~~~~~
 
-The plotting module scanpy.pl largely parallels the tl.* and a few of the pp.* functions.
+The plotting module ehrapy.pl largely parallels the tl.* and a few of the pp.* functions.
 For most tools and for some preprocessing functions, you’ll find a plotting function with the same name.
 
 Generic
@@ -208,6 +226,20 @@ Visualize clusters using one of the embedding methods passing color='leiden'.
     plot.paga_path
     plot.paga_compare
 
+Group comparison
+++++++++++++++++
+
+.. autosummary::
+    :toctree: plot
+
+    plot.rank_features_groups
+    plot.rank_features_groups_violin
+    plot.rank_features_groups_stacked_violin
+    plot.rank_features_groups_heatmap
+    plot.rank_features_groups_dotplot
+    plot.rank_features_groups_matrixplot
+    plot.rank_features_groups_tracksplot
+
 Settings
 ~~~~~~~~
 
@@ -215,6 +247,11 @@ A convenience object for setting some default :obj:`matplotlib.rcParams` and a
 high-resolution jupyter display backend useful for use in notebooks.
 
 An instance of the :class:`~scanpy._settings.ScanpyConfig` is available as `ehrapy.settings` and allows configuring ehrapy.
+
+.. code-block:: python
+
+    import ehrapy.api as ep
+    ep.settings.set_figure_params(dpi=150)
 
 Please refer to the `Scanpy settings documentation <https://scanpy.readthedocs.io/en/stable/api.html#settings>`_
 for configuration options. Ehrapy will adapt these in the future and update the documentation.

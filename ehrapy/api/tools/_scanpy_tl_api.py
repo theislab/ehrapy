@@ -22,7 +22,7 @@ def tsne(
     n_jobs: Optional[int] = None,
     copy: bool = False,
     metric: str = "euclidean",
-) -> Optional[AnnData]:
+) -> Optional[AnnData]:  # pragma: no cover
     """Calculates t-SNE [Maaten08]_ [Amir13]_ [Pedregosa11]_.
 
     t-distributed stochastic neighborhood embedding (tSNE) [Maaten08]_ has been
@@ -94,7 +94,7 @@ def umap(
     copy: bool = False,
     method: Literal["umap", "rapids"] = "umap",
     neighbors_key: Optional[str] = None,
-) -> Optional[AnnData]:
+) -> Optional[AnnData]:  # pragma: no cover
     """Embed the neighborhood graph using UMAP [McInnes18]_.
 
     UMAP (Uniform Manifold Approximation and Projection) is a manifold learning
@@ -195,7 +195,7 @@ def draw_graph(
     obsp: Optional[str] = None,
     copy: bool = False,
     **kwds,
-) -> Optional[AnnData]:
+) -> Optional[AnnData]:  # pragma: no cover
     """Force-directed graph drawing [Islam11]_ [Jacomy14]_ [Chippada18]_.
 
     .. _fa2: https://github.com/bhargavchippada/forceatlas2
@@ -266,7 +266,7 @@ def diffmap(
     neighbors_key: Optional[str] = None,
     random_state: AnyRandom = 0,
     copy: bool = False,
-) -> Optional[AnnData]:
+) -> Optional[AnnData]:  # pragma: no cover
     """Diffusion Maps [Coifman05]_ [Haghverdi15]_ [Wolf18]_.
 
     Diffusion maps [Coifman05]_ has been proposed for visualizing single-cell
@@ -311,12 +311,12 @@ def embedding_density(
     groupby: Optional[str] = None,
     key_added: Optional[str] = None,
     components: Union[str, Sequence[str]] = None,
-) -> None:
-    """Calculate the density of cells in an embedding (per condition).
+) -> None:  # pragma: no cover
+    """Calculate the density of observation in an embedding (per condition).
 
     Gaussian kernel density estimation is used to calculate the density of
-    cells in an embedded space. This can be performed per category over a
-    categorical cell annotation. The cell density can be plotted using the
+    observations in an embedded space. This can be performed per category over a
+    categorical observation annotation. The cell density can be plotted using the
     `sc.pl.embedding_density()` function.
     Note that density values are scaled to be between 0 and 1. Thus, the
     density value at each cell is only comparable to other densities in
@@ -366,10 +366,10 @@ def leiden(
     obsp: Optional[str] = None,
     copy: bool = False,
     **partition_kwargs,
-) -> Optional[AnnData]:
-    """Cluster cells into subgroups [Traag18]_.
+) -> Optional[AnnData]:  # pragma: no cover
+    """Cluster observations into subgroups [Traag18]_.
 
-    Cluster cells using the Leiden algorithm [Traag18]_,
+    Cluster observations using the Leiden algorithm [Traag18]_,
     an improved version of the Louvain algorithm [Blondel08]_.
     It has been proposed for single-cell analysis by [Levine15]_.
     This requires having ran :func:`~ehrapy.pp.neighbors` or :func:`~ehrapy.pp.bbknn` first.
@@ -442,10 +442,10 @@ def louvain(
     neighbors_key: Optional[str] = None,
     obsp: Optional[str] = None,
     copy: bool = False,
-) -> Optional[AnnData]:
-    """Cluster cells into subgroups [Blondel08]_ [Levine15]_ [Traag17]_.
+) -> Optional[AnnData]:  # pragma: no cover
+    """Cluster observations into subgroups [Blondel08]_ [Levine15]_ [Traag17]_.
 
-    Cluster cells using the Louvain algorithm [Blondel08]_ in the implementation of [Traag17]_.
+    Cluster observations using the Louvain algorithm [Blondel08]_ in the implementation of [Traag17]_.
     The Louvain algorithm has been proposed for single-cell analysis by [Levine15]_.
     This requires having ran :func:`~ehrapy.pp.neighbors` or
     :func:`~ehrapy.pp.bbknn` first, or explicitly passing a ``adjacency`` matrix.
@@ -510,7 +510,7 @@ def dendrogram(
     optimal_ordering: bool = False,
     key_added: Optional[str] = None,
     inplace: bool = True,
-) -> Optional[Dict[str, Any]]:
+) -> Optional[Dict[str, Any]]:  # pragma: no cover
     """Computes a hierarchical clustering for the given `groupby` categories.
 
     By default, the PCA representation is used unless `.X` has less than 50 variables.
@@ -582,8 +582,8 @@ def dpt(
     allow_kendall_tau_shift: bool = True,
     neighbors_key: Optional[str] = None,
     copy: bool = False,
-) -> Optional[AnnData]:
-    """Infer progression of cells through geodesic distance along the graph [Haghverdi16]_ [Wolf19]_.
+) -> Optional[AnnData]:  # pragma: no cover
+    """Infer progression of observations through geodesic distance along the graph [Haghverdi16]_ [Wolf19]_.
 
     Reconstruct the progression of a biological process from snapshot
     data. `Diffusion Pseudotime` has been introduced by [Haghverdi16]_ and
@@ -620,7 +620,7 @@ def dpt(
 
         * `dpt_pseudotime` : :class:`pandas.Series` (`adata.obs`, dtype `float`)
           Array of dim (number of samples) that stores the pseudotime of each
-          cell, that is, the DPT distance with respect to the root cell.
+          observation, that is, the DPT distance with respect to the root observation.
         * `dpt_groups` : :class:`pandas.Series` (`adata.obs`, dtype `category`)
           Array of dim (number of samples) that stores the subgroup id ('0', '1', ...) for each observation.
     """
@@ -642,11 +642,11 @@ def paga(
     model: Literal["v1.2", "v1.0"] = "v1.2",
     neighbors_key: Optional[str] = None,
     copy: bool = False,
-) -> Optional[AnnData]:
+) -> Optional[AnnData]:  # pragma: no cover
     """Mapping out the coarse-grained connectivity structures of complex manifolds [Wolf19]_.
 
-    By quantifying the connectivity of partitions (groups, clusters) of the
-    single-cell graph, partition-based graph abstraction (PAGA) generates a much
+    By quantifying the connectivity of partitions (groups, clusters),
+    partition-based graph abstraction (PAGA) generates a much
     simpler abstracted graph (*PAGA graph*) of partitions, in which edge weights
     represent confidence in the presence of connections. By tresholding this
     confidence in :func:`~ehrapy.pl.paga`, a much simpler representation of the
@@ -668,17 +668,13 @@ def paga(
         groups: Key for categorical in `adata.obs`. You can pass your predefined groups
                 by choosing any categorical annotation of observations. Default:
                 The first present key of `'leiden'` or `'louvain'`.
-        use_rna_velocity: Use RNA velocity to orient edges in the abstracted graph and estimate
-                          transitions. Requires that `adata.uns` contains a directed single-cell
-                          graph with key `['velocity_graph']`. This feature might be subject to change in the future.
         model: The PAGA connectivity model.
         neighbors_key: If not specified, paga looks `.uns['neighbors']` for neighbors settings
                        and `.obsp['connectivities']`, `.obsp['distances']` for connectivities and
                        distances respectively (default storage places for `pp.neighbors`).
                        If specified, paga looks `.uns[neighbors_key]` for neighbors settings and
                        `.obsp[.uns[neighbors_key]['connectivities_key']]`,
-                       `.obsp[.uns[neighbors_key]['distances_key']]` for connectivities and distances
-        respectively.
+                       `.obsp[.uns[neighbors_key]['distances_key']]` for connectivities and distances respectively.
         copy: Copy `adata` before computation and return a copy. Otherwise, perform computation in place and return `None`.
 
     Returns:
@@ -711,7 +707,7 @@ def ingest(
     neighbors_key: Optional[str] = None,
     inplace: bool = True,
     **kwargs,
-) -> Optional[AnnData]:
+) -> Optional[AnnData]:  # pragma: no cover
     """Map labels and embeddings from reference data to new data.
 
     Integrates embeddings and annotations of an `adata` with a reference dataset
@@ -764,4 +760,219 @@ def ingest(
         neighbors_key=neighbors_key,
         inplace=inplace,
         **kwargs,
+    )
+
+
+_rank_features_groups_method = Optional[Literal["logreg", "t-test", "wilcoxon", "t-test_overestim_var"]]
+_corr_method = Literal["benjamini-hochberg", "bonferroni"]
+
+
+def rank_features_groups(
+    adata: AnnData,
+    groupby: str,
+    groups: Union[Literal["all"], Iterable[str]] = "all",
+    reference: str = "rest",
+    n_features: Optional[int] = None,
+    rankby_abs: bool = False,
+    pts: bool = False,
+    key_added: Optional[str] = "rank_features_groups",
+    copy: bool = False,
+    method: _rank_features_groups_method = None,
+    corr_method: _corr_method = "benjamini-hochberg",
+    tie_correct: bool = False,
+    layer: Optional[str] = None,
+    **kwds,
+) -> None:  # pragma: no cover
+    """Rank features for characterizing groups.
+
+    Expects logarithmized data.
+
+    Args:
+        adata: Annotated data matrix.
+        groupby: The key of the observations grouping to consider.
+        groups: Subset of groups, e.g. [`'g1'`, `'g2'`, `'g3'`], to which comparison
+                shall be restricted, or `'all'` (default), for all groups.
+        reference: If `'rest'`, compare each group to the union of the rest of the group.
+                   If a group identifier, compare with respect to this group.
+        n_features: The number of features that appear in the returned tables. Defaults to all features.
+        rankby_abs: Rank genes by the absolute value of the score, not by the score.
+                    The returned scores are never the absolute values.
+        pts: Compute the fraction of observations containing the features.
+        key_added: The key in `adata.uns` information is saved to.
+        copy: Whether to return a copy of the AnnData object.
+        method:  The default method is `'t-test'`,
+                 `'t-test_overestim_var'` overestimates variance of each group,
+                 `'wilcoxon'` uses Wilcoxon rank-sum,
+                 `'logreg'` uses logistic regression.
+        corr_method:  p-value correction method.
+                      Used only for `'t-test'`, `'t-test_overestim_var'`, and `'wilcoxon'`.
+        tie_correct: Use tie correction for `'wilcoxon'` scores. Used only for `'wilcoxon'`.
+        layer: Key from `adata.layers` whose value will be used to perform tests on.
+        **kwds: Are passed to test methods. Currently this affects only parameters that
+                are passed to :class:`sklearn.linear_model.LogisticRegression`.
+                For instance, you can pass `penalty='l1'` to try to come up with a
+                minimal set of genes that are good predictors (sparse solution meaning few non-zero fitted coefficients).
+
+    Returns:
+        *names*: structured `np.ndarray` (`.uns['rank_features_groups']`)
+                  Structured array to be indexed by group id storing the gene
+                  names. Ordered according to scores.
+        *scores*: structured `np.ndarray` (`.uns['rank_features_groups']`)
+                  Structured array to be indexed by group id storing the z-score
+                  underlying the computation of a p-value for each gene for each group.
+                  Ordered according to scores.
+        *logfoldchanges*: structured `np.ndarray` (`.uns['rank_features_groups']`)
+                          Structured array to be indexed by group id storing the log2
+                          fold change for each gene for each group. Ordered according to scores.
+                          Only provided if method is 't-test' like.
+                          Note: this is an approximation calculated from mean-log values.
+        *pvals*: structured `np.ndarray` (`.uns['rank_features_groups']`)
+                 p-values.
+        *pvals_adj* : structured `np.ndarray` (`.uns['rank_features_groups']`)
+                      Corrected p-values.
+        *pts*: `pandas.DataFrame` (`.uns['rank_features_groups']`)
+               Fraction of cells expressing the genes for each group.
+        *pts_rest*: `pandas.DataFrame` (`.uns['rank_features_groups']`)
+                    Only if `reference` is set to `'rest'`.
+                    Fraction of observations from the union of the rest of each group containing the features.
+
+     Example:
+        .. code-block:: python
+
+            import ehrapy.api as ep
+            adata = eh.dt.mimic_2(encode=True)
+            ep.tl.rank_features_groups(adata, "service_unit")
+            ep.pl.rank_features_groups(adata)
+    """
+    return sc.tl.rank_genes_groups(
+        adata=adata,
+        groupby=groupby,
+        use_raw=False,
+        groups=groups,
+        reference=reference,
+        n_genes=n_features,
+        rankby_abs=rankby_abs,
+        pts=pts,
+        key_added=key_added,
+        copy=copy,
+        method=method,
+        corr_method=corr_method,
+        tie_correct=tie_correct,
+        layer=layer,
+        **kwds,
+    )
+
+
+def filter_rank_features_groups(
+    adata: AnnData,
+    key="rank_features_groups",
+    groupby=None,
+    key_added="rank_features_groups_filtered",
+    min_in_group_fraction=0.25,
+    min_fold_change=1,
+    max_out_group_fraction=0.5,
+) -> None:  # pragma: no cover
+    """Filters out features based on fold change and fraction of features containing the feature within and outside the `groupby` categories.
+
+    See :func:`~ehrapy.tl.rank_features_groups`.
+
+    Results are stored in `adata.uns[key_added]`
+    (default: 'rank_genes_groups_filtered').
+
+    To preserve the original structure of adata.uns['rank_genes_groups'],
+    filtered genes are set to `NaN`.
+
+    Args:
+        adata: Annotated data matrix.
+        key: Key previously added by :func:`~ehrapy.tl.rank_features_groups`
+        groupby: The key of the observations grouping to consider.
+        key_added: The key in `adata.uns` information is saved to.
+        min_in_group_fraction: Minimum in group fraction (default: 0.25).
+        min_fold_change: Miniumum fold change (default: 1).
+        max_out_group_fraction: Maximum out group fraction (default: 0.5).
+
+    Returns:
+        Same output as :func:`ehrapy.tl.rank_features_groups` but with filtered feature names set to `nan`
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy.api as ep
+            adata = eh.dt.mimic_2(encode=True)
+            ep.tl.rank_features_groups(adata, "service_unit")
+            ep.pl.rank_features_groups(adata)
+    """
+    return sc.tl.filter_rank_genes_groups(
+        adata=adata,
+        key=key,
+        groupby=groupby,
+        use_raw=False,
+        key_added=key_added,
+        min_in_group_fraction=min_in_group_fraction,
+        min_fold_change=min_fold_change,
+        max_out_group_fraction=max_out_group_fraction,
+    )
+
+
+_marker_feature_overlap_methods = Literal["overlap_count", "overlap_coef", "jaccard"]
+
+
+def marker_feature_overlap(
+    adata: AnnData,
+    reference_markers: Union[Dict[str, set], Dict[str, list]],
+    *,
+    key: str = "rank_features_groups",
+    method: _marker_feature_overlap_methods = "overlap_count",
+    normalize: Optional[Literal["reference", "data"]] = None,
+    top_n_markers: Optional[int] = None,
+    adj_pval_threshold: Optional[float] = None,
+    key_added: str = "feature_overlap",
+    inplace: bool = False,
+):  # pragma: no cover
+    """Calculate an overlap score between data-deriven features and provided marker features.
+
+    Marker feature overlap scores can be quoted as overlap counts, overlap
+    coefficients, or jaccard indices. The method returns a pandas dataframe
+    which can be used to annotate clusters based on feature overlaps.
+
+    Args:
+        adata: Annotated data matrix.
+        reference_markers: A marker gene dictionary object. Keys should be strings with the
+                           cell identity name and values are sets or lists of strings which match format of `adata.var_name`.
+        key: The key in `adata.uns` where the rank_features_groups output is stored (default: rank_features_groups).
+        method: Method to calculate marker gene overlap. `'overlap_count'` uses the
+                intersection of the feature set, `'overlap_coef'` uses the overlap
+                coefficient, and `'jaccard'` uses the Jaccard index (default: `overlap_count`).
+        normalize: Normalization option for the feature overlap output. This parameter
+                   can only be set when `method` is set to `'overlap_count'`. `'reference'`
+                   normalizes the data by the total number of marker features given in the
+                   reference annotation per group. `'data'` normalizes the data by the
+                   total number of marker genes used for each cluster.
+        top_n_markers: The number of top data-derived marker genes to use. By default the top
+                       100 marker features are used. If `adj_pval_threshold` is set along with
+                       `top_n_markers`, then `adj_pval_threshold` is ignored.
+        adj_pval_threshold: A significance threshold on the adjusted p-values to select marker features.
+                            This can only be used when adjusted p-values are calculated by `ep.tl.rank_features_groups`.
+                            If `adj_pval_threshold` is set along with `top_n_markers`, then `adj_pval_threshold` is ignored.
+        key_added: Name of the `.uns` field that will contain the marker overlap scores.
+        inplace: Return a marker gene dataframe or store it inplace in `adata.uns`.
+
+    Returns:
+        A pandas dataframe with the marker gene overlap scores if `inplace=False`.
+        For `inplace=True` `adata.uns` is updated with an additional field
+        specified by the `key_added` parameter (default = 'marker_gene_overlap').
+
+    Example:
+        TODO
+    """
+    return sc.tl.marker_gene_overlap(
+        adata=adata,
+        reference_markers=reference_markers,
+        key=key,
+        method=method,
+        normalize=normalize,
+        top_n_markers=top_n_markers,
+        adj_pval_threshold=adj_pval_threshold,
+        key_added=key_added,
+        inplace=inplace,
     )

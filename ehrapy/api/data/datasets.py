@@ -8,7 +8,7 @@ from ehrapy.api.io._read import read
 from ehrapy.api.preprocessing.encoding import encode
 
 
-def mimic_2(encoded: bool = False) -> AnnData:
+def mimic_2(encoded: bool = False) -> AnnData:  # pragma: no cover
     """Loads the MIMIC-II dataset
 
     Args:
@@ -20,8 +20,8 @@ def mimic_2(encoded: bool = False) -> AnnData:
     Example:
         .. code-block:: python
 
-        import ehrapy.api as ep
-        adata = eh.data.mimic_2(encode=True)
+            import ehrapy.api as ep
+            adata = eh.data.mimic_2(encode=True)
     """
     adata = read(
         dataset_path=f"{ehrapy_settings.datasetdir}/ehrapy_mimic2.csv",
@@ -35,7 +35,7 @@ def mimic_2(encoded: bool = False) -> AnnData:
     return adata
 
 
-def mimic_3_demo(encoded: bool = False, mudata: bool = False) -> Union[MuData, List[AnnData]]:
+def mimic_3_demo(encoded: bool = False, mudata: bool = False) -> Union[MuData, List[AnnData]]:  # pragma: no cover
     """Loads the MIMIC-III demo dataset
 
     Args:
@@ -46,10 +46,10 @@ def mimic_3_demo(encoded: bool = False, mudata: bool = False) -> Union[MuData, L
         :class:`~mudata.MuData` object of the MIMIC-III demo Dataset
 
     Example:
-    .. code-block:: python
+        .. code-block:: python
 
-        import ehrapy.api as ep
-        mudata = eh.data.mimic_3_demo(encode=True, return_mudata=True)
+            import ehrapy.api as ep
+            adatas = eh.data.mimic_3_demo(encode=True)
     """
     mdata = read(
         dataset_path=f"{ehrapy_settings.datasetdir}/ehrapy_mimic_3",

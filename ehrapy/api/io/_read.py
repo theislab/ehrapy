@@ -53,13 +53,13 @@ def read(
         An :class:`~anndata.AnnData` object, a :class:`~mudata.MuData` object or a dict with an identifier (usually the filename, without extension)
         for each :class:`~anndata.AnnData` object in the dict
 
-     Example:
+    Example:
         .. code-block:: python
 
-        import ehrapy.api as ep
-        adata = eh.data.mimic_2(encode=True)
-        ep.io.write("mimic_2.h5ad", adata)
-        adata_2 = ep.io.read("mimic_2.h5ad")
+            import ehrapy.api as ep
+            adata = eh.data.mimic_2(encode=True)
+            ep.io.write("mimic_2.h5ad", adata)
+            adata_2 = ep.io.read("mimic_2.h5ad")
     """
     file: Path = Path(dataset_path)
 
