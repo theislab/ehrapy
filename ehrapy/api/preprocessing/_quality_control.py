@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Collection
+from typing import Collection, Literal
 
 import numpy as np
 import pandas as pd
@@ -26,40 +26,85 @@ def calculate_qc_metrics(
 
         Observation level metrics include:
 
-        `test`
-            bla
-        `test_2`
-            bla
+        `missing_values_abs`
+            Absolute amount of missing values.
+        `missing_values_pct`
+            Relative amount of missing values in percent.
 
         Feature level metrics include:
+
+        `missing_values_abs`
+            Absolute amount of missing values.
+        `missing_values_pct`
+            Relative amount of missing values in percent.
+        `mean`
+            Mean value of the features.
+        `median`
+            Median value of the features.
+        `std`
+            Standard deviation of the features.
+        `min`
+            Minimum value of the features.
+        `max`
+            Maximum value of the features.
+
     """
-    # TODO we need to ensure that we are calculating the QC metrics for the original
     obs_metrics = _obs_qc_metrics(adata, layer, qc_vars)
+    var_metrics = _var_qc_metrics(adata, layer)
 
     if inplace:
         adata.obs[obs_metrics.columns] = obs_metrics
+        adata.var[var_metrics.columns] = var_metrics
 
-    return obs_metrics
+    return obs_metrics, var_metrics
+
+
+def missing_values(
+    arr: np.ndarray, shape: tuple[int, int] = None, df_type: Literal["obs", "var"] = "obs"
+) -> np.ndarray:
+    """Calculates the absolute or relative amount of missing values.
+
+    Args:
+        arr: Numpy array containing a data row which is a subset of X (mtx).
+        shape: Shape of X (mtx).
+        df_type: Whether to calculate the proportions for obs or var. One of 'obs' or 'var' (default: 'obs').
+
+    Returns:
+        Absolute or relative amount of missing values.
+    """
+    # Absolute number of missing values
+    if shape is None:
+        return np.isnan(arr).sum()
+    # Relative number of missing values in percent
+    else:
+        n_rows, n_cols = shape
+        if df_type == "obs":
+            return (np.isnan(arr).sum() / n_cols) * 100
+        else:
+            return (np.isnan(arr).sum() / n_rows) * 100
 
 
 def _obs_qc_metrics(
     adata: AnnData, layer: str = None, qc_vars: Collection[str] = (), log1p: bool = True
 ) -> pd.DataFrame:
+    """Calculates quality control metrics for observations.
+
+    See :func:`~ehrapy.api.preprocessing._quality_control.calculate_qc_metrics` for a list of calculated metrics.
+
+    Args:
+        adata: Annotated data matrix.
+        layer: Layer containing the actual data matrix.
+        qc_vars: A list of previously calculated QC metrics to calculate summary statistics for.
+        log1p: Whether to apply log1p normalization for the QC metrics. Only used with parameter 'qc_vars'.
+
+    Returns:
+        A Pandas DataFrame with the calculated metrics.
+    """
     obs_metrics = pd.DataFrame(index=adata.obs_names)
     mtx = adata.X if layer is None else adata.layers[layer]
 
-    def missing_values(arr: np.ndarray, shape: tuple[int, int] = None):
-        if shape is None:
-            return np.isnan(arr).sum()
-        else:
-            n_rows, n_cols = shape
-            return np.isnan(arr).sum() / n_cols
-
-    # Missing values absolute
     obs_metrics["missing_values_abs"] = np.apply_along_axis(missing_values, 1, mtx)
-
-    # Missing values percentage
-    obs_metrics["missing_values_pct"] = np.apply_along_axis(missing_values, 1, mtx, shape=mtx.shape)
+    obs_metrics["missing_values_pct"] = np.apply_along_axis(missing_values, 1, mtx, shape=mtx.shape, df_type="obs")
 
     # Specific QC metrics
     for qc_var in qc_vars:
@@ -74,6 +119,28 @@ def _obs_qc_metrics(
     return obs_metrics
 
 
-def _var_qc_metrics(adata: AnnData, qc_vars: Collection[str]):
-    qc_vars = adata.var_names if qc_vars is None else qc_vars
-    # adata.uns["original_values_categoricals"] <-
+def _var_qc_metrics(adata: AnnData, layer: str = None) -> pd.DataFrame:
+    """Calculates quality control metrics for features.
+
+    See :func:`~ehrapy.api.preprocessing._quality_control.calculate_qc_metrics` for a list of calculated metrics.
+
+    Args:
+        adata: Annotated data matrix.
+        layer: Layer containing the matrix to calculate the metrics for.
+
+    Returns:
+        Pandas DataFrame with the calculated metrics.
+    """
+    # TODO we need to ensure that we are calculating the QC metrics for the original -> look at adata.uns
+    var_metrics = pd.DataFrame(index=adata.var_names)
+    mtx = adata.X if layer is None else adata.layers[layer]
+
+    var_metrics["missing_values_abs"] = np.apply_along_axis(missing_values, 0, mtx)
+    var_metrics["missing_values_pct"] = np.apply_along_axis(missing_values, 0, mtx, shape=mtx.shape, df_type="var")
+    var_metrics["mean"] = mtx.mean(axis=0)
+    var_metrics["median"] = np.median(mtx, axis=0)
+    var_metrics["standard_deviation"] = mtx.std(axis=0)
+    var_metrics["min"] = mtx.min(axis=0)
+    var_metrics["max"] = mtx.max(axis=0)
+
+    return var_metrics

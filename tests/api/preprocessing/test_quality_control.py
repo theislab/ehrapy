@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from anndata import AnnData
 
-from ehrapy.api.preprocessing._quality_control import _obs_qc_metrics
+from ehrapy.api.preprocessing._quality_control import _obs_qc_metrics, _var_qc_metrics, calculate_qc_metrics
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_PATH = f"{CURRENT_DIR}/test_preprocessing"
@@ -32,7 +32,20 @@ class TestQualityControl:
         obs_metrics = _obs_qc_metrics(self.test_adata)
 
         assert np.array_equal(obs_metrics["missing_values_abs"].values, np.array([1, 2]))
-        assert np.allclose(obs_metrics["missing_values_pct"].values, np.array([0.333333, 0.666667]))
+        assert np.allclose(obs_metrics["missing_values_pct"].values, np.array([33.3333, 66.6667]))
 
     def test_var_qc_metrics(self):
-        pass
+        var_metrics = _var_qc_metrics(self.test_adata)
+
+        assert np.array_equal(var_metrics["missing_values_abs"].values, np.array([1, 2, 0]))
+        assert np.allclose(var_metrics["missing_values_pct"].values, np.array([50.0, 100.0, 0.0]))
+        assert np.allclose(var_metrics["mean"].values, np.array([np.nan, np.nan, 24.327]), equal_nan=True)
+        assert np.allclose(var_metrics["median"].values, np.array([np.nan, np.nan, 24.327]), equal_nan=True)
+        assert np.allclose(var_metrics["min"].values, np.array([np.nan, np.nan, 7.234]), equal_nan=True)
+        assert np.allclose(var_metrics["max"].values, np.array([np.nan, np.nan, 41.419998]), equal_nan=True)
+
+    def test_calculate_qc_metrics(self):
+        obs_metrics, var_metrics = calculate_qc_metrics(self.test_adata)
+
+        assert obs_metrics is not None
+        assert var_metrics is not None
