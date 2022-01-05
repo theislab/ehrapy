@@ -15,7 +15,7 @@ def _detect_categorical_columns(data: np.ndarray, col_names: list[str] | pd.Inde
 
     ehrapy makes educated guesses on which columns of the data might be of categorical type.
     These need to be encoded into numbers to allow for downstream analysis.
-    For details see: :func:`~ehrapy.api.data._categoricals._is_categorical_column`
+    For details see: :func:`~ehrapy.api.preprocessing.encoding._categoricals._is_categorical_column`
 
     Args:
         data: Numpy array of the data to inspect. Usually AnnData's X
