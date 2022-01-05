@@ -45,7 +45,10 @@ class TestQualityControl:
         assert np.allclose(var_metrics["max"].values, np.array([np.nan, np.nan, 41.419998]), equal_nan=True)
 
     def test_calculate_qc_metrics(self):
-        obs_metrics, var_metrics = calculate_qc_metrics(self.test_adata)
+        obs_metrics, var_metrics = calculate_qc_metrics(self.test_adata, inplace=True)
 
         assert obs_metrics is not None
         assert var_metrics is not None
+
+        assert self.test_adata.obs.missing_values_abs is not None
+        assert self.test_adata.var.missing_values_abs is not None
