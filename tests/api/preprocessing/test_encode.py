@@ -10,7 +10,7 @@ CURRENT_DIR = Path(__file__).parent
 _TEST_PATH = f"{CURRENT_DIR}/test_data_encode"
 
 
-class TestRead:
+class TestEncode:
     def test_unknown_encode_mode(self):
         adata = read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
         with pytest.raises(ValueError):

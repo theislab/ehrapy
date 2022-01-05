@@ -498,12 +498,9 @@ def df_to_anndata(df: pd.DataFrame, columns_obs_only: list[str] | None, index_co
         df = df.set_index(index_column)
     # move columns from the input dataframe to later obs
     dataframes = _move_columns_to_obs(df, columns_obs_only)
-    all_num = False
     # if data is numerical only, short-circuit AnnData creation to have float dtype instead of object
-    if all(np.issubdtype(column_dtype, np.number) for column_dtype in dataframes.df.dtypes):
-        all_num = True
+    all_num = all(np.issubdtype(column_dtype, np.number) for column_dtype in dataframes.df.dtypes)
     X = dataframes.df.to_numpy(copy=True)
-
     # when index_column is passed (currently when parsing pdf) set it and remove it from future X
 
     return AnnData(
