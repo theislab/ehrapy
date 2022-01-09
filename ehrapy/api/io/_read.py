@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Iterator, NamedTuple
 
 import camelot
+import numpy as np
 import pandas as pd
 from _collections import OrderedDict
 from anndata import AnnData
@@ -15,7 +16,7 @@ from rich import print
 from ehrapy.api import ehrapy_settings, settings
 from ehrapy.api.data.dataloader import download
 from ehrapy.api.io._utility_io import _get_file_extension, _slugify, multi_data_extensions, supported_extensions
-from ehrapy.api.preprocessing import encode
+from ehrapy.api.preprocessing.encoding import encode
 
 
 class BaseDataframes(NamedTuple):
@@ -497,6 +498,8 @@ def df_to_anndata(df: pd.DataFrame, columns_obs_only: list[str] | None, index_co
         df = df.set_index(index_column)
     # move columns from the input dataframe to later obs
     dataframes = _move_columns_to_obs(df, columns_obs_only)
+    # if data is numerical only, short-circuit AnnData creation to have float dtype instead of object
+    all_num = all(np.issubdtype(column_dtype, np.number) for column_dtype in dataframes.df.dtypes)
     X = dataframes.df.to_numpy(copy=True)
     # when index_column is passed (currently when parsing pdf) set it and remove it from future X
 
@@ -504,7 +507,7 @@ def df_to_anndata(df: pd.DataFrame, columns_obs_only: list[str] | None, index_co
         X=X,
         obs=dataframes.obs,
         var=pd.DataFrame(index=list(dataframes.df.columns)),
-        dtype="object",
+        dtype="float32" if all_num else "object",
         layers={"original": X.copy()},
     )
 
