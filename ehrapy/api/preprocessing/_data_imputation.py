@@ -12,9 +12,29 @@ from sklearn.preprocessing import OrdinalEncoder
 from ehrapy.api._anndata_util import get_column_indices
 
 
-def _explicit(
-    adata: AnnData, replacement: (str | int) | (dict[str, str | int]), impute_empty_strings: bool = True
+def explicit_impute(
+    adata: AnnData,
+    replacement: (str | int) | (dict[str, str | int]),
+    impute_empty_strings: bool = True,
+    copy: bool = False,
 ) -> AnnData:
+    """Replaces all missing values in all or the specified columns with the passed value
+
+    There are two scenarios to cover:
+    1. Replace all missing values with the specified value.
+    2. Replace all missing values in a subset of columns with a specified value per column.
+
+    Args:
+        adata: :class:`~anndata.AnnData` object containing X to impute values in.
+        replacement: Value to use as replacement or optionally keys to indicate which columns to replace with which value.
+        impute_empty_strings: Whether to also impute empty strings.
+        copy: Whether to return a copy with the imputed data.
+
+    Returns:
+        :class:`~anndata.AnnData` object with imputed X
+    """
+    if copy:
+        adata = adata.copy()
     # 1: Replace all missing values with the specified value
     if isinstance(replacement, (int, str)):
         _replace_explicit(adata.X, replacement, impute_empty_strings)
@@ -63,51 +83,49 @@ def _extract_impute_value(replacement: dict[str, str | int], column_name: str) -
         return None
 
 
-# ===================== Mean Imputation =========================
+# ===================== Simple Imputation =========================
 
 
-def _mean(adata: AnnData, var_names: list[str] | None) -> AnnData:
-    imputer = SimpleImputer(strategy="mean")
-    try:
-        # impute a subset of columns
-        if isinstance(var_names, list):
-            column_indices = get_column_indices(adata, var_names)
-            adata.X[::, column_indices] = imputer.fit_transform(adata.X[::, column_indices])
-        # impute all columns if None passed
-        else:
-            adata.X = imputer.fit_transform(adata.X)
-    # Imputation using median strategy works with numerical data only
-    except ValueError:
-        raise ImputeStrategyNotAvailableError(
-            "Can only impute numerical data using mean strategy. Try to restrict imputation"
-            "to certain columns using var_names parameter or use a different mode."
-        ) from None
+def simple_impute(
+    adata: AnnData, var_names: list[str] | None = None, strategy: str = "mean", copy: bool = False
+) -> AnnData:
+    """
+    Impute AnnData object using mean imputation. This works for numerical data only.
 
-    return adata
+    Args:
+        adata: The AnnData object to use mean Imputation on
+        var_names: A list of var names indicating which columns to use mean imputation on (if None -> all columns)
+        strategy: Any of mean/median/most_frequent to indicate which strategy to use for simple imputation
+        copy: Whether to return a copy or act in place
 
-
-def _median(adata: AnnData, var_names: list[str] | None) -> AnnData:
-    imputer = SimpleImputer(strategy="median")
-    try:
-        # impute a subset of columns
-        if isinstance(var_names, list):
-            column_indices = get_column_indices(adata, var_names)
-            adata.X[::, column_indices] = imputer.fit_transform(adata.X[::, column_indices])
-        # impute all columns if None passed
-        else:
-            adata.X = imputer.fit_transform(adata.X)
-    # Imputation using median strategy works with numerical data only
-    except ValueError:
-        raise ImputeStrategyNotAvailableError(
-            "Can only impute numerical data using median strategy. Try to restrict imputation"
-            "to certain columns using var_names parameter or use a different mode."
-        ) from None
+    Returns:
+           The imputed AnnData object
+    """
+    if copy:
+        adata = adata.copy()
+    # Imputation using median and mean strategy works with numerical data only
+    if strategy in {"median", "mean"}:
+        try:
+            _simple_impute(adata, var_names, strategy)
+        except ValueError:
+            raise ImputeStrategyNotAvailableError(
+                f"Can only impute numerical data using {strategy} strategy. Try to restrict imputation"
+                "to certain columns using var_names parameter or use a different mode."
+            )
+    # most_frequent imputation works with non numerical data as well
+    elif strategy == "most_frequent":
+        _simple_impute(adata, var_names, strategy)
+    # unknown simple imputation strategy
+    else:
+        raise UnknownImputeStrategyError(
+            f"Unknown impute strategy {strategy} for simple Imputation. Choose any of mean, median or most_frequent."
+        )
 
     return adata
 
 
-def _most_frequent(adata: AnnData, var_names: list[str] | None) -> AnnData:
-    imputer = SimpleImputer(strategy="most_frequent")
+def _simple_impute(adata: AnnData, var_names: list[str] | None, strategy: str) -> None:
+    imputer = SimpleImputer(strategy=strategy)
     # impute a subset of columns
     if isinstance(var_names, list):
         column_indices = get_column_indices(adata, var_names)
@@ -116,13 +134,26 @@ def _most_frequent(adata: AnnData, var_names: list[str] | None) -> AnnData:
     else:
         adata.X = imputer.fit_transform(adata.X)
 
-    return adata
-
 
 # ===================== KNN Imputation =========================
 
 
-def _knn(adata: AnnData, var_names: list[str] | None) -> AnnData:
+def knn_impute(adata: AnnData, var_names: list[str] | None = None, copy: bool = False) -> AnnData:
+    """Impute data using the KNN-Imputer.
+    When using KNN Imputation with mixed data (non-numerical and numerical), encoding using ordinal encoding is required
+    since KNN Imputation can only work on numerical data. The encoding itself is just a utility and will be undone once
+    imputation ran successfully.
+
+     Args:
+         adata: The AnnData object to use KNN Imputation on
+         var_names: A list of var names indicating which columns to use median imputation on (if None -> all columns)
+         copy: Whether to return a copy or act in place
+
+     Returns:
+             The imputed (but unencoded) AnnData object
+    """
+    if copy:
+        adata = adata.copy()
     # numerical only data needs no encoding since KNN Imputation can be applied directly
     if np.issubdtype(adata.X.dtype, np.number):
         _knn_impute(adata, var_names)
@@ -150,7 +181,31 @@ def _knn_impute(adata: AnnData, var_names: list[str] | None) -> None:
         adata.X = imputer.fit_transform(adata.X)
 
 
-def _miss_forest(adata: AnnData, var_names: dict[str, list[str]] | None) -> AnnData:
+# ======================  MissForest Impuation =======================
+
+
+def miss_forest_impute(
+    adata: AnnData,
+    var_names: dict[str, list[str]] | None = None,
+    num_initial_strategy: str = "mean",
+    max_iter: int = 10,
+    random_state: int = 0,
+    copy: bool = False,
+) -> AnnData:
+    """Impute data using the MissForest strategy. See https://academic.oup.com/bioinformatics/article/28/1/112/219101.
+    This requires the computation of which columns in X contain numerical only (including NaNs) and which non numerical data, which is an
+    expensive operation on X with many numerical vars resulting in a long runtime.
+
+    Args:
+        adata: The AnnData object to use MissForest Imputation on
+        var_names: An optional dict with two keys (numerical and non_numerical) indicating which var contains mixed data and which numerical data only
+        copy: Whether to return a copy or act in place
+
+    Returns:
+            The imputed (but unencoded) AnnData object
+    """
+    if copy:
+        adata = adata.copy()
     # var names got passed for faster indices lookup
     if var_names:
         # ensure both keys got passed together
@@ -169,12 +224,21 @@ def _miss_forest(adata: AnnData, var_names: dict[str, list[str]] | None) -> AnnD
     # infer non numerical and numerical indices automatically
     else:
         non_num_indices_set = _get_non_numerical_column_indices(adata.X)
-        num_indices = [ind for ind in range(adata.X.shape[1]) if ind not in non_num_indices_set]
+        num_indices = [idx for idx in range(adata.X.shape[1]) if idx not in non_num_indices_set]
         non_num_indices = list(non_num_indices_set)
 
-    imp_num = IterativeImputer(estimator=ExtraTreesRegressor(), initial_strategy="mean", max_iter=10, random_state=0)
+    imp_num = IterativeImputer(
+        estimator=ExtraTreesRegressor(),
+        initial_strategy=num_initial_strategy,
+        max_iter=max_iter,
+        random_state=random_state,
+    )
+    # initial strategy here will not be parametrized since only most_frequent will be applied to non numerical data
     imp_cat = IterativeImputer(
-        estimator=RandomForestClassifier(), initial_strategy="most_frequent", max_iter=10, random_state=0
+        estimator=RandomForestClassifier(),
+        initial_strategy="most_frequent",
+        max_iter=max_iter,
+        random_state=random_state,
     )
 
     # encode all non numerical columns
@@ -231,6 +295,10 @@ class MissingImputationValue(Exception):
 
 
 class ImputeStrategyNotAvailableError(Exception):
+    pass
+
+
+class UnknownImputeStrategyError(Exception):
     pass
 
 
