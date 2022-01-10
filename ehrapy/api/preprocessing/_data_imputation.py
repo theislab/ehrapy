@@ -89,8 +89,7 @@ def _extract_impute_value(replacement: dict[str, str | int], column_name: str) -
 def simple_impute(
     adata: AnnData, var_names: list[str] | None = None, strategy: str = "mean", copy: bool = False
 ) -> AnnData:
-    """
-    Impute AnnData object using mean imputation. This works for numerical data only.
+    """Impute AnnData object using mean imputation. This works for numerical data only.
 
     Args:
         adata: The AnnData object to use mean Imputation on
@@ -99,7 +98,7 @@ def simple_impute(
         copy: Whether to return a copy or act in place
 
     Returns:
-           The imputed AnnData object
+        The imputed AnnData object
     """
     if copy:
         adata = adata.copy()
@@ -140,17 +139,18 @@ def _simple_impute(adata: AnnData, var_names: list[str] | None, strategy: str) -
 
 def knn_impute(adata: AnnData, var_names: list[str] | None = None, copy: bool = False) -> AnnData:
     """Impute data using the KNN-Imputer.
+
     When using KNN Imputation with mixed data (non-numerical and numerical), encoding using ordinal encoding is required
     since KNN Imputation can only work on numerical data. The encoding itself is just a utility and will be undone once
     imputation ran successfully.
 
-     Args:
-         adata: The AnnData object to use KNN Imputation on
-         var_names: A list of var names indicating which columns to use median imputation on (if None -> all columns)
-         copy: Whether to return a copy or act in place
+    Args:
+        adata: The AnnData object to use KNN Imputation on
+        var_names: A list of var names indicating which columns to use median imputation on (if None -> all columns)
+        copy: Whether to return a copy or act in place
 
-     Returns:
-             The imputed (but unencoded) AnnData object
+    Returns:
+        The imputed (but unencoded) AnnData object
     """
     if copy:
         adata = adata.copy()
@@ -192,9 +192,11 @@ def miss_forest_impute(
     random_state: int = 0,
     copy: bool = False,
 ) -> AnnData:
-    """Impute data using the MissForest strategy. See https://academic.oup.com/bioinformatics/article/28/1/112/219101.
-    This requires the computation of which columns in X contain numerical only (including NaNs) and which non numerical data, which is an
-    expensive operation on X with many numerical vars resulting in a long runtime.
+    """Impute data using the MissForest strategy.
+
+    See https://academic.oup.com/bioinformatics/article/28/1/112/219101.
+    This requires the computation of which columns in X contain numerical only (including NaNs)
+    and which contain non-numerical data. This is an expensive operation on X with many numerical vars resulting in a long runtime.
 
     Args:
         adata: The AnnData object to use MissForest Imputation on
@@ -202,7 +204,7 @@ def miss_forest_impute(
         copy: Whether to return a copy or act in place
 
     Returns:
-            The imputed (but unencoded) AnnData object
+        The imputed (but unencoded) AnnData object
     """
     if copy:
         adata = adata.copy()
