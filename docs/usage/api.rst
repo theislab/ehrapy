@@ -49,7 +49,6 @@ Basic preprocessing
 .. autosummary::
     :toctree: preprocessing
 
-    preprocessing.replace_explicit
     preprocessing.log1p
     preprocessing.pca
     preprocessing.normalize_total
@@ -64,6 +63,17 @@ Quality control
     :toctree: preprocessing
 
     preprocessing.calculate_qc_metrics
+
+Imputation
+++++++++++
+
+.. autosummary::
+    :toctree: imputation
+
+    preprocessing.explicit_impute
+    preprocessing.simple_impute
+    preprocessing.knn_impute
+    preprocessing.miss_forest_impute
 
 Encoding
 ++++++++

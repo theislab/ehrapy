@@ -1680,7 +1680,7 @@ def rank_features_groups_violin(
         strip: Show a strip plot on top of the violin plot.
         jitter: If set to 0, no points are drawn. See :func:`~seaborn.stripplot`.
         size: Size of the jitter points.
-       {show_save_ax}
+        {show_save_ax}
 
     Example:
         TODO

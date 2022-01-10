@@ -16,7 +16,7 @@ from rich import print
 from ehrapy.api import ehrapy_settings, settings
 from ehrapy.api.data.dataloader import download
 from ehrapy.api.io._utility_io import _get_file_extension, _slugify, multi_data_extensions, supported_extensions
-from ehrapy.api.preprocessing.encoding import encode
+from ehrapy.api.preprocessing import encode
 
 
 class BaseDataframes(NamedTuple):
