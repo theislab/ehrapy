@@ -5,7 +5,7 @@ from mudata import MuData
 
 from ehrapy.api import ehrapy_settings
 from ehrapy.api.io._read import read
-from ehrapy.api.preprocessing.encoding import encode
+from ehrapy.api.preprocessing import encode
 
 
 def mimic_2(encoded: bool = False) -> AnnData:  # pragma: no cover
