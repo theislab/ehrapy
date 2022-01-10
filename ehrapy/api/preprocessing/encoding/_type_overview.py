@@ -10,7 +10,7 @@ from rich.tree import Tree
 from ehrapy.api.preprocessing.encoding._encode import available_encodings
 
 
-def type_overview(data: MuData | AnnData, sort: bool = False, sort_reversed: bool = False) -> None:
+def type_overview(data: MuData | AnnData, sort: bool = False, sort_reversed: bool = False) -> None:  # pragma: no cover
     """Prints the current state of an :class:`~anndata.AnnData` or :class:`~mudata.MuData` object in a tree format.
 
     Args:
@@ -34,7 +34,7 @@ def type_overview(data: MuData | AnnData, sort: bool = False, sort_reversed: boo
         raise EhrapyRepresentationError
 
 
-def _adata_type_overview(adata: AnnData, sort: bool = False, sort_reversed: bool = False) -> None:
+def _adata_type_overview(adata: AnnData, sort: bool = False, sort_reversed: bool = False) -> None:  # pragma: no cover
     """Display the :class:`~anndata.AnnData object in its current state (encoded and unencoded variables, obs)
 
     Args:
@@ -51,7 +51,7 @@ def _adata_type_overview(adata: AnnData, sort: bool = False, sort_reversed: bool
         guide_style="underline2 bright_blue",
     )
     is_encoded = False
-    if "current_encodings" in adata.uns.keys():
+    if "var_to_encoding" in adata.uns.keys():
         is_encoded = True
         original_values = adata.uns["original_values_categoricals"]
         branch = tree.add("🔐 Encoded variables", style="b green")
@@ -62,7 +62,7 @@ def _adata_type_overview(adata: AnnData, sort: bool = False, sort_reversed: bool
             is_nan = pd.DataFrame(unique_categoricals).isnull().values.any()
             branch.add(
                 f"[blue]{categorical} -> {len(unique_categoricals) - 1 if is_nan else len(unique_categoricals)} categories;"
-                f" [green]{encoding_mapping[adata.uns['current_encodings'][categorical]]} [blue]encoded; [green]original data type: [blue]{categorical_type}"
+                f" [green]{encoding_mapping[adata.uns['var_to_encoding'][categorical]]} [blue]encoded; [green]original data type: [blue]{categorical_type}"
             )
 
     branch_num = tree.add(Text("🔓 Unencoded variables"), style="b green")
@@ -87,7 +87,7 @@ def _adata_type_overview(adata: AnnData, sort: bool = False, sort_reversed: bool
     print(tree)
 
 
-def _mudata_type_overview(mudata: MuData, sort: bool = False, sort_reversed: bool = False) -> None:
+def _mudata_type_overview(mudata: MuData, sort: bool = False, sort_reversed: bool = False) -> None:  # pragma: no cover
     """Display the :class:`~mudata.MuData object in its current state (:class:`~anndata.AnnData objects with obs, shapes)
 
     Args:
@@ -112,7 +112,7 @@ def _mudata_type_overview(mudata: MuData, sort: bool = False, sort_reversed: boo
     print(tree)
 
 
-def _single_quote_string(name: str) -> str:
+def _single_quote_string(name: str) -> str:  # pragma: no cover
     """Single quote a string to inject it into f-strings, since backslashes cannot be in double f-strings."""
     return f"'{name}'"
 
