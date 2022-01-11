@@ -2,11 +2,19 @@ from __future__ import annotations
 
 import numpy as np
 from anndata import AnnData
-from sklearn.preprocessing import maxabs_scale, minmax_scale, robust_scale, scale
+from sklearn.preprocessing import maxabs_scale, minmax_scale, quantile_transform, robust_scale, scale
 
 from ehrapy.api._anndata_util import assert_encoded, get_column_indices, get_column_values, get_numeric_vars
 
-available_normalization_methods = {"scale", "minmax", "maxabs", "robust_scale", "identity"}
+available_normalization_methods = {
+    "scale",
+    "minmax",
+    "maxabs",
+    "robust_scale",
+    "quantile_uniform",
+    "quantile_normal",
+    "identity",
+}
 
 
 def normalize(adata: AnnData, methods: dict[str, list[str]] | str, copy: bool = False) -> AnnData | None:
@@ -20,7 +28,9 @@ def normalize(adata: AnnData, methods: dict[str, list[str]] | str, copy: bool = 
     2. minmax (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MinMaxScaler.html#sklearn.preprocessing.MinMaxScaler)
     3. maxabs (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.maxabs_scale.html#sklearn.preprocessing.maxabs_scale)
     4. robust_scale (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.robust_scale.html#sklearn.preprocessing.robust_scale)
-    5. identity (return the un-normalized values)
+    5. quantile_uniform (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.quantile_transform.html#sklearn.preprocessing.quantile_transform)
+    6. quantile_normal (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.quantile_transform.html#sklearn.preprocessing.quantile_transform)
+    7. identity (return the un-normalized values)
 
     Args:
         adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encode using ~ehrapy.preprocessing.encode.encode.
@@ -73,6 +83,10 @@ def normalize(adata: AnnData, methods: dict[str, list[str]] | str, copy: bool = 
             adata.X[:, var_idx] = _norm_maxabs(var_values)
         elif method == "robust_scale":
             adata.X[:, var_idx] = _norm_robust_scale(var_values)
+        elif method == "quantile_uniform":
+            adata.X[:, var_idx] = _norm_quantile_uniform(var_values)
+        elif method == "quantile_normal":
+            adata.X[:, var_idx] = _norm_quantile_normal(var_values)
         elif method == "identity":
             adata.X[:, var_idx] = _norm_identity(var_values)
 
@@ -125,6 +139,40 @@ def _norm_robust_scale(values: np.ndarray) -> np.ndarray:
         Single column numpy array with robust scaled values
     """
     return robust_scale(values)
+
+
+def _norm_quantile_uniform(values: np.ndarray) -> np.ndarray:
+    """Apply uniform quantile normalization.
+
+    Args:
+        values: A single column numpy array
+
+    Returns:
+        Single column numpy array with uniform quantile transformed values
+    """
+
+    if values.ndim == 1:
+        values = values.reshape(-1, 1)
+        return np.squeeze(quantile_transform(values, output_distribution="uniform"))
+    else:
+        return quantile_transform(values, output_distribution="uniform")
+
+
+def _norm_quantile_normal(values: np.ndarray) -> np.ndarray:
+    """Apply normal quantile normalization.
+
+    Args:
+        values: A single column numpy array
+
+    Returns:
+        Single column numpy array with normal quantile transformed values
+    """
+
+    if values.ndim == 1:
+        values = values.reshape(-1, 1)
+        return np.squeeze(quantile_transform(values, output_distribution="normal"))
+    else:
+        return quantile_transform(values, output_distribution="normal")
 
 
 def _norm_identity(values: np.ndarray) -> np.ndarray:
