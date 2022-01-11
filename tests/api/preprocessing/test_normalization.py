@@ -40,11 +40,11 @@ class TestNormalization:
     def test_methods_checks(self):
         """Test for checks that methods argument is valid."""
 
-        with pytest.raises(ValueError, match=r"Some keys of methods are not numeric variables"):
-            ep.pp.normalize(self.adata, methods={"String1": "identity"})
+        with pytest.raises(ValueError, match=r"Some keys of methods are not available normalization methods"):
+            ep.pp.normalize(self.adata, methods={"fail_method": ["Numeric2"]})
 
-        with pytest.raises(ValueError, match=r"Some values of methods are not available normalization methods"):
-            ep.pp.normalize(self.adata, methods={"Numeric2": "fail_method"})
+        with pytest.raises(ValueError, match=r"Some values of methods contain items which are not numeric variables"):
+            ep.pp.normalize(self.adata, methods={"identity": ["String1"]})
 
     def test_norm_scale(self):
         """Test for the scaling normalization method."""
@@ -87,7 +87,7 @@ class TestNormalization:
     def test_norm_mixed(self):
         """Test for normalization with mixed methods."""
 
-        adata_norm = ep.pp.normalize(self.adata, methods={"Numeric1": "minmax", "Numeric2": "scale"}, copy=True)
+        adata_norm = ep.pp.normalize(self.adata, methods={"minmax": ["Numeric1"], "scale": ["Numeric2"]}, copy=True)
 
         num1_norm = np.array([0.0, 0.86956537, 0.9999999], dtype=np.dtype(np.float32))
         num2_norm = np.array([-1.069045, 1.3363061, -0.2672612], dtype=np.float32)

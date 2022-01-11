@@ -9,7 +9,7 @@ from ehrapy.api._anndata_util import assert_encoded, get_column_indices, get_col
 available_normalization_methods = {"scale", "minmax", "identity"}
 
 
-def normalize(adata: AnnData, methods: dict[str, str] | str, copy: bool = False) -> AnnData | None:
+def normalize(adata: AnnData, methods: dict[str, list[str]] | str, copy: bool = False) -> AnnData | None:
     """Normalize numeric variable.
 
     This function normalizes the numeric variables in an AnnData object.
@@ -26,7 +26,7 @@ def normalize(adata: AnnData, methods: dict[str, str] | str, copy: bool = False)
 
             str: Name of the method to use for all numeric variable
 
-            Dict: A dictionary specifying the method for each numeric variable where keys are variable and values are methods
+            Dict: A dictionary specifying the method for each numeric variable where keys are methods and values are lists of variables
         copy: Whether to return a copy or act in place
 
     Returns:
@@ -43,23 +43,24 @@ def normalize(adata: AnnData, methods: dict[str, str] | str, copy: bool = False)
 
     num_vars = get_numeric_vars(adata)
     if isinstance(methods, str):
-        methods = dict.fromkeys(num_vars, methods)
+        methods = {methods: num_vars}
     else:
-        if not set(methods.keys()) <= set(num_vars):
-            raise ValueError("Some keys of methods are not numeric variables")
-        if not set(methods.values()) <= available_normalization_methods:
+        if not set(methods.keys()) <= available_normalization_methods:
             raise ValueError(
-                "Some values of methods are not available normalization methods. Available methods are:"
+                "Some keys of methods are not available normalization methods. Available methods are:"
                 f"{available_normalization_methods}"
             )
+        for vars_list in methods.values():
+            if not set(vars_list) <= set(num_vars):
+                raise ValueError("Some values of methods contain items which are not numeric variables")
 
     if copy:
         adata = adata.copy()
 
     adata.layers["raw"] = adata.X.copy()
 
-    for var, method in methods.items():
-        var_idx = get_column_indices(adata, var)
+    for method, vars_list in methods.items():
+        var_idx = get_column_indices(adata, vars_list)
         var_values = get_column_values(adata, var_idx)
 
         if method == "scale":
