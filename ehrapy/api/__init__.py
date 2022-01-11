@@ -1,3 +1,4 @@
+from ehrapy.api._anndata_util import anndata_to_df, df_to_anndata
 from ehrapy.api._settings import EhrapyConfig, ehrapy_settings
 from ehrapy.api._util import print_versions
 
