@@ -1,4 +1,4 @@
-from typing import Dict, Optional, Union
+from __future__ import annotations
 
 import numpy as np
 from anndata import AnnData
@@ -9,7 +9,7 @@ from ehrapy.api._anndata_util import assert_encoded, get_column_indices, get_col
 available_normalization_methods = {"scale", "minmax", "identity"}
 
 
-def normalize(adata: AnnData, methods: Union[Dict[str, str], str], copy: bool = False) -> Optional[AnnData]:
+def normalize(adata: AnnData, methods: dict[str, str] | str, copy: bool = False) -> AnnData | None:
     """Normalize numeric variable.
 
     This function normalizes the numeric variables in an AnnData object.
