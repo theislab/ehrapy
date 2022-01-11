@@ -91,6 +91,21 @@ class TestNormalization:
         assert np.allclose(adata_norm.X[:, 4], num2_norm)
         assert np.allclose(adata_norm.X[:, 5], self.adata.X[:, 5], equal_nan=True)
 
+    def test_norm_robust_scale(self):
+        """Test for the robust_scale normalization method."""
+
+        adata_norm = ep.pp.normalize(self.adata, methods="robust_scale", copy=True)
+
+        num1_norm = np.array([-1.73913043, 0.0, 0.26086957], dtype=np.float32)
+        num2_norm = np.array([-0.66666667, 1.33333333, 0.0], dtype=np.float32)
+
+        assert np.array_equal(adata_norm.X[:, 0], self.adata.X[:, 0])
+        assert np.array_equal(adata_norm.X[:, 1], self.adata.X[:, 1])
+        assert np.array_equal(adata_norm.X[:, 2], self.adata.X[:, 2])
+        assert np.allclose(adata_norm.X[:, 3], num1_norm)
+        assert np.allclose(adata_norm.X[:, 4], num2_norm)
+        assert np.allclose(adata_norm.X[:, 5], self.adata.X[:, 5], equal_nan=True)
+
     def test_norm_identity(self):
         """Test for the identity normalization method."""
 
