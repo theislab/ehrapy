@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 from anndata import AnnData
-from sklearn.preprocessing import maxabs_scale, minmax_scale, quantile_transform, robust_scale, scale
+from sklearn.preprocessing import maxabs_scale, minmax_scale, power_transform, quantile_transform, robust_scale, scale
 
 from ehrapy.api._anndata_util import assert_encoded, get_column_indices, get_column_values, get_numeric_vars
 
@@ -13,6 +13,8 @@ available_normalization_methods = {
     "robust_scale",
     "quantile_uniform",
     "quantile_normal",
+    "power_yeo_johnson",
+    "power_box_cox",
     "identity",
 }
 
@@ -30,7 +32,9 @@ def normalize(adata: AnnData, methods: dict[str, list[str]] | str, copy: bool = 
     4. robust_scale (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.robust_scale.html#sklearn.preprocessing.robust_scale)
     5. quantile_uniform (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.quantile_transform.html#sklearn.preprocessing.quantile_transform)
     6. quantile_normal (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.quantile_transform.html#sklearn.preprocessing.quantile_transform)
-    7. identity (return the un-normalized values)
+    7. power_yeo_johnson (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.power_transform.html#sklearn.preprocessing.power_transform)
+    8. power_box_cox (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.power_transform.html#sklearn.preprocessing.power_transform)
+    8. identity (return the un-normalized values)
 
     Args:
         adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encode using ~ehrapy.preprocessing.encode.encode.
@@ -87,6 +91,10 @@ def normalize(adata: AnnData, methods: dict[str, list[str]] | str, copy: bool = 
             adata.X[:, var_idx] = _norm_quantile_uniform(var_values)
         elif method == "quantile_normal":
             adata.X[:, var_idx] = _norm_quantile_normal(var_values)
+        elif method == "power_yeo_johnson":
+            adata.X[:, var_idx] = _norm_power_yeo_johnson(var_values)
+        elif method == "power_box_cox":
+            adata.X[:, var_idx] = _norm_power_box_cox(var_values)
         elif method == "identity":
             adata.X[:, var_idx] = _norm_identity(var_values)
 
@@ -173,6 +181,40 @@ def _norm_quantile_normal(values: np.ndarray) -> np.ndarray:
         return np.squeeze(quantile_transform(values, output_distribution="normal"))
     else:
         return quantile_transform(values, output_distribution="normal")
+
+
+def _norm_power_yeo_johnson(values: np.ndarray) -> np.ndarray:
+    """Apply Yeo-Johnson power normalization.
+
+    Args:
+        values: A single column numpy array
+
+    Returns:
+        Single column numpy array with Yeo-Johnson transformed values
+    """
+
+    if values.ndim == 1:
+        values = values.reshape(-1, 1)
+        return np.squeeze(power_transform(values, method="yeo-johnson"))
+    else:
+        return power_transform(values, method="yeo-johnson")
+
+
+def _norm_power_box_cox(values: np.ndarray) -> np.ndarray:
+    """Apply Box-Cox power normalization.
+
+    Args:
+        values: A single column numpy array
+
+    Returns:
+        Single column numpy array with Box-Cox transformed values
+    """
+
+    if values.ndim == 1:
+        values = values.reshape(-1, 1)
+        return np.squeeze(power_transform(values, method="box-cox"))
+    else:
+        return power_transform(values, method="box-cox")
 
 
 def _norm_identity(values: np.ndarray) -> np.ndarray:

@@ -146,6 +146,46 @@ class TestNormalization:
 
         assert np.allclose(adata_norm.X[:, 3], num1_norm)
 
+    def test_norm_power_yeo_johnson(self):
+        """Test for the Yeo-Johnson power normalization method."""
+
+        adata_norm = ep.pp.normalize(self.adata, methods="power_yeo_johnson", copy=True)
+
+        num1_norm = np.array([-1.3821232, 0.43163615, 0.950487], dtype=np.float32)
+        num2_norm = np.array([-1.1953654, 1.252149, -0.05678357], dtype=np.float32)
+
+        assert np.array_equal(adata_norm.X[:, 0], self.adata.X[:, 0])
+        assert np.array_equal(adata_norm.X[:, 1], self.adata.X[:, 1])
+        assert np.array_equal(adata_norm.X[:, 2], self.adata.X[:, 2])
+        assert np.allclose(adata_norm.X[:, 3], num1_norm)
+        assert np.allclose(adata_norm.X[:, 4], num2_norm)
+        assert np.allclose(adata_norm.X[:, 5], self.adata.X[:, 5], equal_nan=True)
+
+        # Single column requires extra manipulation so check this works
+        adata_norm = ep.pp.normalize(self.adata, methods={"power_yeo_johnson": ["Numeric1"]}, copy=True)
+
+        assert np.allclose(adata_norm.X[:, 3], num1_norm)
+
+    def test_norm_power_box_cox(self):
+        """Test for the Box-Cox power normalization method."""
+
+        adata_norm = ep.pp.normalize(self.adata, methods="power_box_cox", copy=True)
+
+        num1_norm = np.array([-1.3841851, 0.44104755, 0.9431376], dtype=np.float32)
+        num2_norm = np.array([-1.205321, 1.2432859, -0.037965], dtype=np.float32)
+
+        assert np.array_equal(adata_norm.X[:, 0], self.adata.X[:, 0])
+        assert np.array_equal(adata_norm.X[:, 1], self.adata.X[:, 1])
+        assert np.array_equal(adata_norm.X[:, 2], self.adata.X[:, 2])
+        assert np.allclose(adata_norm.X[:, 3], num1_norm)
+        assert np.allclose(adata_norm.X[:, 4], num2_norm)
+        assert np.allclose(adata_norm.X[:, 5], self.adata.X[:, 5], equal_nan=True)
+
+        # Single column requires extra manipulation so check this works
+        adata_norm = ep.pp.normalize(self.adata, methods={"power_box_cox": ["Numeric1"]}, copy=True)
+
+        assert np.allclose(adata_norm.X[:, 3], num1_norm)
+
     def test_norm_identity(self):
         """Test for the identity normalization method."""
 
