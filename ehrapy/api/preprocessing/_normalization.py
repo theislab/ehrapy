@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import numpy as np
 from anndata import AnnData
-from sklearn.preprocessing import minmax_scale, scale
+from sklearn.preprocessing import maxabs_scale, minmax_scale, scale
 
 from ehrapy.api._anndata_util import assert_encoded, get_column_indices, get_column_values, get_numeric_vars
 
-available_normalization_methods = {"scale", "minmax", "identity"}
+available_normalization_methods = {"scale", "minmax", "maxabs", "identity"}
 
 
 def normalize(adata: AnnData, methods: dict[str, list[str]] | str, copy: bool = False) -> AnnData | None:
@@ -18,7 +18,8 @@ def normalize(adata: AnnData, methods: dict[str, list[str]] | str, copy: bool = 
 
     1. scale (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.scale.html#sklearn.preprocessing.scale)
     2. minmax (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MinMaxScaler.html#sklearn.preprocessing.MinMaxScaler)
-    3. identity (return the un-normalized values)
+    3. maxabs (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.maxabs_scale.html#sklearn.preprocessing.maxabs_scale)
+    4. identity (return the un-normalized values)
 
     Args:
         adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encode using ~ehrapy.preprocessing.encode.encode.
@@ -67,6 +68,8 @@ def normalize(adata: AnnData, methods: dict[str, list[str]] | str, copy: bool = 
             adata.X[:, var_idx] = _norm_scale(var_values)
         elif method == "minmax":
             adata.X[:, var_idx] = _norm_minmax(var_values)
+        elif method == "maxabs":
+            adata.X[:, var_idx] = _norm_maxabs(var_values)
         elif method == "identity":
             adata.X[:, var_idx] = _norm_identity(var_values)
 
@@ -95,6 +98,18 @@ def _norm_minmax(values: np.ndarray) -> np.ndarray:
         Single column numpy array with minmax scaled values
     """
     return minmax_scale(values)
+
+
+def _norm_maxabs(values: np.ndarray) -> np.ndarray:
+    """Apply maxabs normalization.
+
+    Args:
+        values: A single column numpy array
+
+    Returns:
+        Single column numpy array with maxabs scaled values
+    """
+    return maxabs_scale(values)
 
 
 def _norm_identity(values: np.ndarray) -> np.ndarray:
