@@ -15,12 +15,15 @@ available_normalization_methods = {
     "quantile_normal",
     "power_yeo_johnson",
     "power_box_cox",
+    "log1p",
     "identity",
 }
 
 
-def normalize(adata: AnnData, methods: dict[str, list[str]] | str, copy: bool = False) -> AnnData | None:
-    """Normalize numeric variable.
+def normalize(
+    adata: AnnData, methods: dict[str, list[str]] | str, base: int | float | None = None, copy: bool = False
+) -> AnnData | None:
+    """Normalize numeric variables.
 
     This function normalizes the numeric variables in an AnnData object.
 
@@ -34,7 +37,8 @@ def normalize(adata: AnnData, methods: dict[str, list[str]] | str, copy: bool = 
     6. quantile_normal (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.quantile_transform.html#sklearn.preprocessing.quantile_transform)
     7. power_yeo_johnson (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.power_transform.html#sklearn.preprocessing.power_transform)
     8. power_box_cox (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.power_transform.html#sklearn.preprocessing.power_transform)
-    8. identity (return the un-normalized values)
+    9. log1p Computes :math:`x = \\log(x + 1)`, where :math:`log` denotes the natural logarithm unless a different base is given.
+    10. identity (return the un-normalized values)
 
     Args:
         adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encode using ~ehrapy.preprocessing.encode.encode.
@@ -43,6 +47,7 @@ def normalize(adata: AnnData, methods: dict[str, list[str]] | str, copy: bool = 
             str: Name of the method to use for all numeric variable
 
             Dict: A dictionary specifying the method for each numeric variable where keys are methods and values are lists of variables
+        base: Numeric base for logarithm in the log1p method. If None the natural logarithm is used.
         copy: Whether to return a copy or act in place
 
     Returns:
@@ -95,6 +100,8 @@ def normalize(adata: AnnData, methods: dict[str, list[str]] | str, copy: bool = 
             adata.X[:, var_idx] = _norm_power_yeo_johnson(var_values)
         elif method == "power_box_cox":
             adata.X[:, var_idx] = _norm_power_box_cox(var_values)
+        elif method == "log1p":
+            adata.X[:, var_idx] = _norm_log1p(var_values, base)
         elif method == "identity":
             adata.X[:, var_idx] = _norm_identity(var_values)
 
@@ -217,6 +224,25 @@ def _norm_power_box_cox(values: np.ndarray) -> np.ndarray:
         return np.squeeze(power_transform(values, method="box-cox"))
     else:
         return power_transform(values, method="box-cox")
+
+
+def _norm_log1p(values: np.ndarray, base: int | float | None) -> np.ndarray:
+    """Apply log1p normalization.
+
+    Args:
+        values: A single column numpy array
+        base: Numeric base for the logarithm
+
+    Returns:
+        Single column numpy array with log1p transformed values
+    """
+
+    np.log1p(values, out=values)
+
+    if base is not None:
+        np.divide(values, np.log(base), out=values)
+
+    return values
 
 
 def _norm_identity(values: np.ndarray) -> np.ndarray:
