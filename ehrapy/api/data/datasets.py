@@ -21,7 +21,8 @@ def mimic_2(encoded: bool = False) -> AnnData:  # pragma: no cover
         .. code-block:: python
 
             import ehrapy.api as ep
-            adata = eh.data.mimic_2(encode=True)
+
+            adata = ep.data.mimic_2(encode=True)
     """
     adata = read(
         dataset_path=f"{ehrapy_settings.datasetdir}/ehrapy_mimic2.csv",
@@ -49,7 +50,8 @@ def mimic_3_demo(encoded: bool = False, mudata: bool = False) -> Union[MuData, L
         .. code-block:: python
 
             import ehrapy.api as ep
-            adatas = eh.data.mimic_3_demo(encode=True)
+
+            adatas = ep.data.mimic_3_demo(encode=True)
     """
     mdata = read(
         dataset_path=f"{ehrapy_settings.datasetdir}/ehrapy_mimic_3",

@@ -57,6 +57,7 @@ def read(
         .. code-block:: python
 
             import ehrapy.api as ep
+
             adata = eh.data.mimic_2(encode=True)
             ep.io.write("mimic_2.h5ad", adata)
             adata_2 = ep.io.read("mimic_2.h5ad")
@@ -345,6 +346,7 @@ def read_pdf(
         It's also important to note, that this has to be considered when passing "columns_obs_only":
             .. code-block:: python
                            import ehrapy.api as ep
+
                            # read pdf
                            adata_dict = ep.io.read("my_tables.pdf", columns_obs_only={"0":["col1ofTable1", "col2OfTable1"],
                            "1": ["colOfTable2"]})
@@ -514,9 +516,11 @@ def df_to_anndata(df: pd.DataFrame, columns_obs_only: list[str] | None, index_co
 
 def _prepare_dataframe(initial_df: pd.DataFrame, columns_obs_only, cache):
     """Prepares the dataframe to be casted into an AnnData object.
+
     Datetime columns will be detected and added to columns_obs_only.
 
-    Returns: The initially parsed dataframe and an updated list of columns_obs_only
+    Returns:
+         The initially parsed dataframe and an updated list of columns_obs_only
     """
     # get all object dtype columns
     object_type_columns = [col_name for col_name in initial_df.columns if initial_df[col_name].dtype == "object"]

@@ -32,6 +32,14 @@ def explicit_impute(
 
     Returns:
         :class:`~anndata.AnnData` object with imputed X
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy.api as ep
+
+            adata = ep.dt.mimic_2(encode=True)
+            ep.pp.explicit_impute(adata, replacement=0)
     """
     if copy:
         adata = adata.copy()
@@ -68,8 +76,8 @@ def _replace_explicit(x: np.ndarray, replacement: str | int, impute_empty_string
 def _extract_impute_value(replacement: dict[str, str | int], column_name: str) -> str | int:
     """Extract the replacement value for a given column in the :class:`~anndata.AnnData` object
 
-    Returns: The value to replace missing values
-
+    Returns:
+        The value to replace missing values
     """
     # try to get a value for the specific column
     imputation_value = replacement.get(column_name)
@@ -99,6 +107,14 @@ def simple_impute(
 
     Returns:
         The imputed AnnData object
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy.api as ep
+
+            adata = ep.dt.mimic_2(encode=True)
+            ep.pp.simple_impute(adata, strategy="median")
     """
     if copy:
         adata = adata.copy()
@@ -151,6 +167,14 @@ def knn_impute(adata: AnnData, var_names: list[str] | None = None, copy: bool = 
 
     Returns:
         The imputed (but unencoded) AnnData object
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy.api as ep
+
+            adata = ep.dt.mimic_2(encode=True)
+            ep.pp.knn_impute(adata)
     """
     if copy:
         adata = adata.copy()
@@ -205,6 +229,14 @@ def miss_forest_impute(
 
     Returns:
         The imputed (but unencoded) AnnData object
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy.api as ep
+
+            adata = ep.dt.mimic_2(encode=True)
+            ep.pp.miss_forest_impute(adata)
     """
     if copy:
         adata = adata.copy()
