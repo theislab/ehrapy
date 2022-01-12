@@ -159,7 +159,7 @@ def _read(
         # read from other files that are currently supported
         elif extension in {"csv", "tsv"}:
             raw_anndata, columns_obs_only = read_csv(
-                filename, delimiter, index_column, columns_obs_only, cache  # type: ignore
+                filename, delimiter, index_column, columns_obs_only, cache, **kwargs  # type: ignore
             )
             # cache results if desired
             if cache:
@@ -281,6 +281,7 @@ def read_csv(
     index_column: str | int | None = None,
     columns_obs_only: list[str] | None = None,
     cache: bool = False,
+    **kwargs
 ) -> tuple[AnnData, list[str] | None]:
     """Read `.csv` and `.tsv` file.
 
@@ -302,7 +303,7 @@ def read_csv(
                 f"for obs only. Using default indices instead and moving [blue]{index_column} [yellow]to column_obs_only."
             )
             index_column = None
-        initial_df = pd.read_csv(filename, delimiter=delimiter, index_col=index_column)
+        initial_df = pd.read_csv(filename, delimiter=delimiter, index_col=index_column, **kwargs)
     # in case the index column is misspelled or does not exist
     except ValueError:
         raise IndexNotFoundError(
@@ -427,7 +428,7 @@ def read_pdf(
 
 
 def _read_from_cache_dir(cache_dir: Path) -> dict[str, AnnData]:
-    """Read AnnData objects from the cache directory"""
+    """Read AnnData objects from the cache directory."""
     adata_objects = {}
     # read each cache file in the cache directory and store it into a dict
     for cache_file in cache_dir.iterdir():
@@ -437,7 +438,7 @@ def _read_from_cache_dir(cache_dir: Path) -> dict[str, AnnData]:
 
 
 def _read_from_cache(path_cache: Path) -> AnnData:
-    """Read AnnData object from cached file"""
+    """Read AnnData object from cached file."""
     cached_adata = read_h5ad(path_cache)
     # type cast required; otherwise all values in X would be treated as strings
     cached_adata.X = cached_adata.X.astype("object")
@@ -520,7 +521,7 @@ def _prepare_dataframe(initial_df: pd.DataFrame, columns_obs_only, cache):
     Datetime columns will be detected and added to columns_obs_only.
 
     Returns:
-         The initially parsed dataframe and an updated list of columns_obs_only
+         The initially parsed dataframe and an updated list of columns_obs_only.
     """
     # get all object dtype columns
     object_type_columns = [col_name for col_name in initial_df.columns if initial_df[col_name].dtype == "object"]
