@@ -208,3 +208,14 @@ class TestNormalization:
         assert np.allclose(adata_norm.X[:, 3], num1_norm)
         assert np.allclose(adata_norm.X[:, 4], num2_norm)
         assert np.allclose(adata_norm.X[:, 5], self.adata.X[:, 5], equal_nan=True)
+
+    def test_norm_record(self):
+        """Test for logging of applied normalization methods."""
+
+        adata_norm = ep.pp.normalize(self.adata, methods="minmax", copy=True)
+
+        assert adata_norm.uns["normalization"] == {"Numeric1": ["minmax"], "Numeric2": ["minmax"]}
+
+        adata_norm = ep.pp.normalize(adata_norm, methods={"maxabs": ["Numeric1"]}, copy=True)
+
+        assert adata_norm.uns["normalization"] == {"Numeric1": ["minmax", "maxabs"], "Numeric2": ["minmax"]}

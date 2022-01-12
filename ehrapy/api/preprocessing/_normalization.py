@@ -46,7 +46,7 @@ def normalize(adata: AnnData, methods: dict[str, list[str]] | str, copy: bool = 
         copy: Whether to return a copy or act in place
 
     Returns:
-        :class:`~anndata.AnnData` object with normalized X
+        :class:`~anndata.AnnData` object with normalized X. Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
 
     Example:
         .. code-block:: python
@@ -97,6 +97,8 @@ def normalize(adata: AnnData, methods: dict[str, list[str]] | str, copy: bool = 
             adata.X[:, var_idx] = _norm_power_box_cox(var_values)
         elif method == "identity":
             adata.X[:, var_idx] = _norm_identity(var_values)
+
+        _record_norm(adata, vars_list, method)
 
     return adata
 
@@ -227,3 +229,21 @@ def _norm_identity(values: np.ndarray) -> np.ndarray:
         Single column numpy array with normalized values
     """
     return values
+
+
+def _record_norm(adata: AnnData, vars_list: list[str], method: str) -> None:
+
+    if "normalization" in adata.uns_keys():
+        norm_record = adata.uns["normalization"]
+    else:
+        norm_record = {}
+
+    for var in vars_list:
+        if var in norm_record.keys():
+            norm_record[var].append(method)
+        else:
+            norm_record[var] = [method]
+
+    adata.uns["normalization"] = norm_record
+
+    return None
