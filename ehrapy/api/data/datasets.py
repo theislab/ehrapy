@@ -28,7 +28,6 @@ def mimic_2(encoded: bool = False) -> AnnData:  # pragma: no cover
         dataset_path=f"{ehrapy_settings.datasetdir}/ehrapy_mimic2.csv",
         download_dataset_name="ehrapy_mimic2.csv",
         backup_url="https://www.physionet.org/files/mimic2-iaccd/1.0/full_cohort_data.csv?download",
-        suppress_warnings=True,
     )
     if encoded:
         return encode(adata, autodetect=True)

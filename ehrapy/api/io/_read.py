@@ -281,7 +281,7 @@ def read_csv(
     index_column: str | int | None = None,
     columns_obs_only: list[str] | None = None,
     cache: bool = False,
-    **kwargs
+    **kwargs,
 ) -> tuple[AnnData, list[str] | None]:
     """Read `.csv` and `.tsv` file.
 
