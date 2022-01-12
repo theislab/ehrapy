@@ -1,40 +1,11 @@
-from numbers import Number
 from types import MappingProxyType
-from typing import Any, Callable, Collection, Dict, Literal, Mapping, Optional, Sequence, Union
+from typing import Any, Callable, Collection, Literal, Mapping, Optional, Sequence, Union
 
 import numpy as np
 import scanpy as sc
 from anndata import AnnData
 from scanpy._utils import AnyRandom
 from scipy.sparse import spmatrix
-
-
-def log1p(
-    X: Union[AnnData, np.ndarray, spmatrix],
-    base: Optional[Number] = None,
-    copy: bool = False,
-    chunked: bool = None,
-    chunk_size: Optional[int] = None,
-    layer: Optional[str] = None,
-    obsm: Optional[str] = None,
-) -> Optional[AnnData]:  # pragma: no cover
-    """Logarithmize the data matrix.
-
-    Computes :math:`X = \\log(X + 1)`, where :math:`log` denotes the natural logarithm unless a different base is given.
-
-    Args:
-        X: The (annotated) data matrix of shape `n_obs` × `n_vars`. Rows correspond to patient observations and columns to features.
-        base: Base of the logarithm. Natural logarithm is used by default.
-        copy: If an :class:`~anndata.AnnData` is passed, determines whether a copy is returned.
-        chunked: Process the data matrix in chunks, which will save memory. Applies only to :class:`~anndata.AnnData`.
-        chunk_size: `n_obs` of the chunks to process the data in.
-        layer: Entry of layers to tranform.
-        obsm: Entry of obsm to transform.
-
-    Returns:
-        Returns or updates `data`, depending on `copy`.
-    """
-    return sc.pp.log1p(X, base=base, copy=copy, chunked=chunked, chunk_size=chunk_size, layer=layer, obsm=obsm)
 
 
 def pca(
@@ -113,42 +84,6 @@ def pca(
     )
 
 
-def normalize_total(
-    adata: AnnData,
-    target_sum: Optional[float] = None,
-    key_added: Optional[str] = None,
-    layer: Optional[str] = None,
-    inplace: bool = True,
-    copy: bool = False,
-) -> Optional[Dict[str, np.ndarray]]:  # pragma: no cover
-    """Normalize findings per patient.
-
-    Normalize each patient by total counts over all features, so that every patient has the same total count after normalization.
-    If choosing `target_sum=1e6`, this is CPM normalization as commonly used in RNA-Seq.
-
-    Args:
-        adata: The annotated data matrix of shape `n_obs` × `n_vars`. Rows correspond to observations (patients) and columns to features.
-        target_sum: If `None`, after normalization, each observation (patient) has a total count equal to the median of total counts for observations before normalization.
-        key_added: Name of the field in `adata.obs` where the normalization factor is stored.
-        layer: Layer to normalize instead of `X`. If `None`, `X` is normalized.
-        inplace: Whether to update `adata` or return dictionary with normalized copies of `adata.X` and `adata.layers`.
-        copy: Whether to modify copied input object. Not compatible with inplace=False.
-
-    Returns:
-
-    """
-    return sc.pp.normalize_total(
-        adata=adata,
-        target_sum=target_sum,
-        exclude_highly_expressed=False,
-        max_fraction=0.05,
-        key_added=key_added,
-        layer=layer,
-        inplace=inplace,
-        copy=copy,
-    )
-
-
 def regress_out(
     adata: AnnData,
     keys: Union[str, Sequence[str]],
@@ -170,35 +105,6 @@ def regress_out(
         Depending on `copy` returns or updates an :class:`~anndata.AnnData` object with the corrected data matrix.
     """
     return sc.pp.regress_out(adata=adata, keys=keys, n_jobs=n_jobs, copy=copy)
-
-
-def scale(
-    X: Union[AnnData, spmatrix, np.ndarray],
-    zero_center: bool = True,
-    max_value: Optional[float] = None,
-    copy: bool = False,
-    layer: Optional[str] = None,
-    obsm: Optional[str] = None,
-) -> Union[AnnData, spmatrix, np.ndarray]:  # pragma: no cover
-    """Scale data to unit variance and zero mean.
-
-    .. note::
-        Variables (genes) that do not display any variation (are constant across
-        all observations) are retained and (for zero_center==True) set to 0
-        during this operation. In the future, they might be set to NaNs.
-
-    Args:
-        X: The (annotated) data matrix of shape `n_obs` × `n_vars`. Rows correspond to observations (patients) and columns to features.
-        zero_center: If `False`, omit zero-centering variables, which allows to handle sparse input efficiently.
-        max_value: Clip (truncate) to this value after scaling. If `None`, do not clip.
-        copy: Whether this function should be performed inplace. If an AnnData object is passed, this also determines if a copy is returned
-        layer: If provided, which element of layers to scale.
-        obsm: If provided, which element of obsm to scale.
-
-    Returns:
-        Depending on `copy` returns or updates `adata` with a scaled `adata.X`, annotated with `'mean'` and `'std'` in `adata.var`.
-    """
-    return sc.pp.scale(X=X, zero_center=zero_center, max_value=max_value, copy=copy, layer=layer, obsm=obsm)
 
 
 def subsample(
