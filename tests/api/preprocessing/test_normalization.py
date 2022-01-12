@@ -210,6 +210,21 @@ class TestNormalization:
         assert np.allclose(adata_norm.X[:, 3], num1_norm)
         assert np.allclose(adata_norm.X[:, 4], num2_norm)
 
+    def test_norm_sqrt(self):
+        """Test for the square root normalization method."""
+
+        adata_norm = ep.pp.normalize(self.adata, methods="sqrt", copy=True)
+
+        num1_norm = np.array([1.8439089, 2.32379, 2.3874671], dtype=np.float32)
+        num2_norm = np.array([1.4142135, 2.236068, 1.7320508], dtype=np.float32)
+
+        assert np.array_equal(adata_norm.X[:, 0], self.adata.X[:, 0])
+        assert np.array_equal(adata_norm.X[:, 1], self.adata.X[:, 1])
+        assert np.array_equal(adata_norm.X[:, 2], self.adata.X[:, 2])
+        assert np.allclose(adata_norm.X[:, 3], num1_norm)
+        assert np.allclose(adata_norm.X[:, 4], num2_norm)
+        assert np.allclose(adata_norm.X[:, 5], self.adata.X[:, 5], equal_nan=True)
+
     def test_norm_identity(self):
         """Test for the identity normalization method."""
 

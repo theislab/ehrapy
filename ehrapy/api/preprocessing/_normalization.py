@@ -16,6 +16,7 @@ available_normalization_methods = {
     "power_yeo_johnson",
     "power_box_cox",
     "log1p",
+    "sqrt",
     "identity",
 }
 
@@ -38,7 +39,8 @@ def normalize(
     7. power_yeo_johnson (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.power_transform.html#sklearn.preprocessing.power_transform)
     8. power_box_cox (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.power_transform.html#sklearn.preprocessing.power_transform)
     9. log1p Computes :math:`x = \\log(x + 1)`, where :math:`log` denotes the natural logarithm unless a different base is given.
-    10. identity (return the un-normalized values)
+    10. sqrt Computes the square root of the values.
+    11. identity (return the un-normalized values)
 
     Args:
         adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encode using ~ehrapy.preprocessing.encode.encode.
@@ -102,6 +104,8 @@ def normalize(
             adata.X[:, var_idx] = _norm_power_box_cox(var_values)
         elif method == "log1p":
             adata.X[:, var_idx] = _norm_log1p(var_values, base)
+        elif method == "sqrt":
+            adata.X[:, var_idx] = _norm_sqrt(var_values)
         elif method == "identity":
             adata.X[:, var_idx] = _norm_identity(var_values)
 
@@ -243,6 +247,19 @@ def _norm_log1p(values: np.ndarray, base: int | float | None) -> np.ndarray:
         np.divide(values, np.log(base), out=values)
 
     return values
+
+
+def _norm_sqrt(values: np.ndarray) -> np.ndarray:
+    """Apply square root normalization.
+
+    Args:
+        values: A single column numpy array
+
+    Returns:
+        Single column numpy array with square root transformed values
+    """
+
+    return np.sqrt(values)
 
 
 def _norm_identity(values: np.ndarray) -> np.ndarray:
