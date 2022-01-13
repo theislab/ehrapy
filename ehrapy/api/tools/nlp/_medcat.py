@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Literal
+from typing import Literal
 
 import numpy as np
 import pandas as pd
@@ -14,16 +14,14 @@ from medcat.cdb_maker import CDBMaker
 from medcat.config import Config
 from medcat.vocab import Vocab
 from rich import print
-from rich.progress import BarColumn, Progress
+from rich.progress import Progress, SpinnerColumn
 from spacy import displacy
 from spacy.tokens.doc import Doc
 
 from ehrapy.api import settings
 from ehrapy.api._util import check_module_importable
 
-spacy_models_modules: list[str] = list(
-    map(lambda model: model.replace("-", "_"), ["en-core-web-md", "en-core-sci-sm", "en-core-sci-md", "en-core-sci-lg"])
-)
+spacy_models_modules: list[str] = list(map(lambda model: model.replace("-", "_"), ["en-core-web-md"]))
 for model in spacy_models_modules:
     if not check_module_importable(model):
         print(
@@ -34,17 +32,19 @@ for model in spacy_models_modules:
 @dataclass
 class AnnotationResult:
     all_medcat_annotation_results: list | None
-    entities_pretty: list[set]
+    entities_pretty: dict[str, list[str]]
     cui_locations: dict | None
-    tui_locations: dict | None
+    type_ids_location: dict | None
 
 
 class MedCAT:
-    def __init__(self, vocabulary: Vocab = None, concept_db: CDB = None):
+    def __init__(self, vocabulary: Vocab = None, concept_db: CDB = None, model_pack_path=None):
         self.vocabulary = vocabulary
         self.concept_db = concept_db
         if self.vocabulary is not None and self.concept_db is not None:
             self.cat = CAT(cdb=concept_db, config=concept_db.config, vocab=vocabulary)
+        elif model_pack_path is not None:
+            self.cat = CAT.load_model_pack(model_pack_path)
 
     @staticmethod
     def create_vocabulary(vocabulary_data: str, replace: bool = True) -> Vocab:
@@ -84,7 +84,6 @@ class MedCAT:
         """
         if config is None:
             config = Config()
-            # TODO verify that the spacey model actually exists
             config.general["spacy_model"] = "en_core_sci_md"
         maker = CDBMaker(config)
         concept_db = maker.prepare_csvs(csv_path, full_build=True)
@@ -106,6 +105,9 @@ class MedCAT:
         self.concept_db = CDB.load(concept_db_path)
 
         return self.concept_db
+
+    def load_model_pack(self, model_pack_path):
+        self.cat.load_model_pack(model_pack_path)
 
     def update_cat(self, vocabulary: Vocab = None, concept_db: CDB = None):
         self.cat = CAT(cdb=concept_db, config=concept_db.config, vocab=vocabulary)
@@ -194,18 +196,16 @@ class MedCAT:
     def annotate(
         self,
         data: np.ndarray | pd.Series,
-        batch_size: int = 67,
-        min_text_length: int = 1,
-        only_cui: bool = False,
+        batch_size_chars=500000,
+        min_text_length=5,
         n_jobs: int = settings.n_jobs,
     ) -> AnnotationResult:
-        """
+        """Annotates a
 
         Args:
             data: Text data to annotate.
-            batch_size: The length of a single batch of several texts to process.
-            min_text_length: Minimal text length to process.
-            only_cui: Returned entities will only have a CUI
+            batch_size_chars: Batch size in number of characters
+            min_text_length: Minimum text length
             n_jobs: Number of parallel processes
 
         Returns:
@@ -215,84 +215,41 @@ class MedCAT:
         if isinstance(data, np.ndarray):
             data = pd.Series(data)
 
+        data = data[data.apply(lambda word: len(str(word)) > min_text_length)]
+
         cui_location: dict = {}  # CUI to a list of documents where it appears
-        tui_location: dict = {}  # TUI to a list of documents where it appears
-        all_results = []
+        type_ids_location = {}  # TUI to a list of documents where it appears
+
         batch: list = []
-
         with Progress(
-            "[progress.description]{task.description}", BarColumn(), "[progress.percentage]{task.percentage:>3.0f}%"
+            "[progress.description]{task.description}",
+            SpinnerColumn(),
         ) as progress:
-            task = progress.add_task("[red]Annotating...", total=data.size)
-
+            progress.add_task("[red]Annotating...")
             for text_id, text in data.iteritems():  # type: ignore
-                if len(text) > min_text_length:
-                    batch.append((text_id, text))
+                batch.append((text_id, text))
 
-                if len(batch) > batch_size or text_id == len(data) - 1:
-                    results = self.cat.multiprocessing(batch, nproc=n_jobs, only_cui=only_cui)
-                    all_results.append(results)
+            results = self.cat.multiprocessing(batch, batch_size_chars=batch_size_chars, nproc=n_jobs)
 
-                    if only_cui:
-                        for result_id, result in results.items():
-                            row_id = result_id
-                            cui_set = set(result["entities"].values())  # Convert to set to get unique CUIs
-
-                            for cui in cui_set:
-                                if cui in cui_location:
-                                    cui_location[cui].append(row_id)
-                                else:
-                                    cui_location[cui] = [row_id]
-
-                                # This is not necessary as it can be done later, we have the cdb.cui2type_id map.
-                                tuis = self.concept_db.cui2type_ids[cui]
-                                for tui in tuis:  # this step is necessary as one cui may map to several tuis
-                                    if tui in tui_location and row_id not in tui_location[tui]:
-                                        tui_location[tui].append(row_id)
-                                    elif tui not in tui_location:
-                                        tui_location[tui] = [row_id]
+            for doc in list(results.keys()):
+                for annotation in list(results[doc]["entities"].values()):
+                    if annotation["cui"] in cui_location:
+                        cui_location[annotation["cui"]].append(doc)
                     else:
-                        for result_id, result in results.items():
-                            cui_set = set()
-                            row_id = result_id
+                        cui_location[annotation["cui"]] = [doc]
 
-                            for _, cui_entity in result["entities"].items():
-                                cui_set.add(cui_entity["cui"])
+            for cui in cui_location.keys():
+                type_ids_location[list(self.cat.cdb.cui2type_ids[cui])[0]] = cui_location[cui]
 
-                            for cui in cui_set:
-                                if cui in cui_location:
-                                    cui_location[cui].append(row_id)
-                                else:
-                                    cui_location[cui] = [row_id]
+            patient_to_entities: dict[str, list[str]] = {}
+            for patient_id, findings in results.items():
+                entities = []
+                for _, result in findings["entities"].items():
+                    entities.append(result["pretty_name"])
 
-                                # This is not necessary as it can be done later, we have the cdb.cui2type_id map.
-                                tuis = self.concept_db.cui2type_ids[cui]
-                                for tui in tuis:  # this step is necessary as one cui may map to several tuis
-                                    if tui in tui_location and row_id not in tui_location[tui]:
-                                        tui_location[tui].append(row_id)
-                                    elif tui not in tui_location:
-                                        tui_location[tui] = [row_id]
+                patient_to_entities[patient_id] = entities
 
-                    # Reset the batch
-                    batch = []
-                progress.advance(task)
-
-            # TODO: rewrite for more performance
-            total_len = 0
-            for batch in all_results:
-                total_len += len(batch)
-
-            diagnoses: list[set] = [set() for _ in range(total_len)]
-            for batch in all_results:
-                for line_idx in batch:
-                    concepts = batch[line_idx]["entities"]
-                    for concept in concepts.values():
-                        if only_cui:
-                            diagnoses[int(line_idx)].add(self.concept_db.cui2preferred_name[concept])
-                        else:
-                            diagnoses[int(line_idx)].add(concept["pretty_name"])
-
-        return AnnotationResult(all_results, diagnoses, cui_location, tui_location)
+        return AnnotationResult(results, patient_to_entities, cui_location, type_ids_location)
 
     def calculate_disease_proportions(
         self, adata: AnnData, cui_locations: dict, subject_id_col="subject_id"
@@ -309,12 +266,11 @@ class MedCAT:
 
             cui 	nsubjects 	tui 	name 	perc_subjects
         """
-        cui_subjects: dict[int, list] = {}
-        cui_subjects_unique: dict[str, set] = {}
+        cui_subjects: dict[int, list[int]] = {}
+        cui_subjects_unique: dict[int, set[int]] = {}
         for cui in cui_locations:
             for location in cui_locations[cui]:
                 # TODO: int casting is required as AnnData requires indices to be str (maybe we can change this) so we dont need type casting here
-                # TODO maybe replace adata.obs.columns with adata.obs_names
                 subject_id = adata.obs.iat[int(location), list(adata.obs.columns).index(subject_id_col)]
                 if cui in cui_subjects:
                     cui_subjects[cui].append(subject_id)
@@ -323,26 +279,26 @@ class MedCAT:
                     cui_subjects[cui] = [subject_id]
                     cui_subjects_unique[cui] = {subject_id}
 
-        cui_nsubjects: list[tuple[Any, Any]] = [("cui", "nsubjects")]
+        cui_nsubjects = [("cui", "nsubjects")]
         for cui in cui_subjects_unique.keys():
-            cui_nsubjects.append((cui, len(cui_subjects_unique[cui])))
+            cui_nsubjects.append((cui, len(cui_subjects_unique[cui])))  # type: ignore
         df_cui_nsubjects = pd.DataFrame(cui_nsubjects[1:], columns=cui_nsubjects[0])
 
         df_cui_nsubjects = df_cui_nsubjects.sort_values("nsubjects", ascending=False)
-        # Add TUI for each CUI
-        df_cui_nsubjects["tui"] = ["unk"] * len(df_cui_nsubjects)
+        # Add type_ids for each CUI
+        df_cui_nsubjects["type_ids"] = ["unk"] * len(df_cui_nsubjects)
         cols = list(df_cui_nsubjects.columns)
         for i in range(len(df_cui_nsubjects)):
             cui = df_cui_nsubjects.iat[i, cols.index("cui")]
-            tui = self.concept_db.cui2type_ids.get(cui, "unk")
-            df_cui_nsubjects.iat[i, cols.index("tui")] = tui
+            type_ids = self.cat.cdb.cui2type_ids.get(cui, "unk")
+            df_cui_nsubjects.iat[i, cols.index("type_ids")] = type_ids
 
         # Add name for each CUI
         df_cui_nsubjects["name"] = ["unk"] * len(df_cui_nsubjects)
         cols = list(df_cui_nsubjects.columns)
         for i in range(len(df_cui_nsubjects)):
             cui = df_cui_nsubjects.iat[i, cols.index("cui")]
-            name = self.concept_db.cui2preferred_name.get(cui, "unk")
+            name = self.cat.cdb.cui2preferred_name.get(cui, "unk")
             df_cui_nsubjects.iat[i, cols.index("name")] = name
 
         # Add the percentage column

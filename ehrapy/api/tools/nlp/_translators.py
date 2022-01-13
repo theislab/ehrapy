@@ -8,7 +8,7 @@ from deep_translator import GoogleTranslator
 from deepl import Formality, GlossaryInfo, TextResult
 from rich import print
 
-from ehrapy.api._util import get_column_indices, get_column_values
+from ehrapy.api._anndata_util import get_column_indices, get_column_values
 
 
 class Translator:
@@ -18,17 +18,15 @@ class Translator:
         if flavour == "deepl":
             self.translator = DeepL(token)
         elif flavour == "googletranslate":
-            self.translator = GoogleTranslate(source, target)
+            self.translator = GoogleTranslate(source, target)  # type: ignore
         else:
             raise NotImplementedError(f"Flavour '{flavour}' is not supported.")
         self.flavour = flavour
         self.source_language = source
         self.target_language = target
 
-    def translate_text(
-        self, text: Union[str, List], target_language: str = None
-    ) -> Union[TextResult, List[TextResult]]:
-        """Translates the provided text into the target language
+    def translate_text(self, text: Union[str, List], target_language: str = None) -> Union[str, List[str]]:
+        """Translates the provided text into the target language.
 
         Args:
             text: The text to translate
@@ -142,7 +140,9 @@ class Translator:
                 index_values[index] = translated_column_name
                 adata.var_names = index_values
 
-            translated_column_values: List = translate_text(column_values)  # TODO: Check that structure is still ok
+            translated_column_values: List = translate_text(
+                column_values  # type: ignore
+            )  # TODO: Check that structure is still ok
             # translated_column_values = list(map(lambda text_result: text_result.text, translated_column_values))
 
             adata.X[:, index] = translated_column_values
@@ -221,7 +221,7 @@ class DeepL:
                 print(f"{language.code} ({language.name})")
 
     @_check_usage  # type: ignore
-    def translate_text(self, text: Union[str, List], target_language: str) -> Union[TextResult, List[TextResult]]:
+    def translate_text(self, text: Union[str, List], target_language: str) -> Union[List[np.ndarray], str]:
         """Translates the provided text into the target language
 
         Args:
@@ -317,5 +317,5 @@ class GoogleTranslate:
             A :class:`~deepl.TextResult` object
         """
         if isinstance(text, List) or isinstance(text, np.ndarray):
-            return [self.translator.translate(t, target_lang=target_language) for t in text]
+            return [self.translator.translate(word, target_lang=target_language) for word in text]
         return self.translator.translate(text, target_lang=target_language)
