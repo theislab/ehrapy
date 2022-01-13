@@ -2,170 +2,15 @@
 # mypy: ignore-errors
 # ehrapy documentation build configuration file
 import os
-import re
 import sys
-from logging import info, warning
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
-from urllib.parse import urljoin
+from typing import List
 
-import requests
-from enchant.tokenize import Filter
 from sphinx.application import Sphinx
 from sphinx_gallery.directives import MiniGallery
 from sphinx_gallery.gen_gallery import DEFAULT_GALLERY_CONF
 
-CURRENT = Path(__file__).parent
-ENDPOINT_FMT = "https://api.github.com/repos/{org}/{repo}/contents/docs/source/"
-REF = "master"
-HEADERS = {"accept": "application/vnd.github.v3+json"}
-CHUNK_SIZE = 4 * 1024
-DEPTH = 5
-# nbsphinx
-FIXED_TUTORIALS_DIR = "external_tutorials"
-# sphinx-gallery
-EXAMPLES_DIR = "auto_examples"
-TUTORIALS_DIR = "auto_tutorials"
-GENMOD_DIR = "gen_modules"
-
-
-def _cleanup(fn: Callable[..., Tuple[bool, Any]]) -> Callable[..., Tuple[bool, Any]]:
-    def decorator(*args: Any, **kwargs: Any) -> Tuple[bool, Any]:
-        try:
-            ok, resp = fn(*args, **kwargs)
-        except Exception as e:
-            ok, resp = False, e
-
-        if not ok:
-            path = Path(kwargs.pop("path"))
-            try:
-                if path.is_dir():
-                    path.rmdir()
-                elif path.is_file():
-                    path.unlink()
-            except OSError as e:
-                info(f"Not cleaning `{path}`. Reason: `{e}`")
-
-        return ok, resp
-
-    return decorator
-
-
-@_cleanup
-def _download_file(url: str, path: str) -> Tuple[bool, int]:
-    ix = url.rfind("?")
-    if ix != -1:
-        url = url[:ix]
-
-    url = f"{url}?ref={REF}"
-
-    info(f"Processing URL `{url}`")
-    resp = requests.get(url, headers=HEADERS)
-    if resp.ok:
-        with open(path, "wb") as fout:
-            for chunk in resp.iter_content(chunk_size=CHUNK_SIZE):
-                fout.write(chunk)
-
-    return resp.ok, resp.status_code
-
-
-@_cleanup
-def _download_dir(url: str, *, path: Union[str, Path], depth: int) -> Tuple[bool, Optional[Union[Exception, str]]]:
-    if depth == 0:
-        return False, f"Maximum depth `{DEPTH}` reached."
-
-    info(f"Processing URL `{url}`")
-    resp = requests.get(url, headers=HEADERS)
-    if not resp.ok:
-        return False, f"Unable to fetch `{url}`, status: {resp.status_code}."
-
-    path = Path(path)
-    path.mkdir(exist_ok=True)
-
-    for item in resp.json():
-        dest = path / item["name"]
-        if item["type"] == "file":
-            ok, status = _download_file(item["download_url"], path=dest)
-        elif item["type"] == "dir":
-            ok, status = _download_dir(item["url"], path=dest, depth=depth - 1)
-        else:
-            raise NotImplementedError(f"Invalid type: `{item['type']}`.")
-
-        if not ok:
-            raise RuntimeError(f"Unable to process `{dest}`. Reason: `{status}`.")
-
-    return True, None
-
-
-def _download_notebooks(org: str, repo: str, raise_exc: bool = False) -> None:
-    ep = ENDPOINT_FMT.format(org=org, repo=repo)
-    for path in [FIXED_TUTORIALS_DIR, TUTORIALS_DIR, EXAMPLES_DIR, GENMOD_DIR]:
-        ok, reason = _download_dir(urljoin(ep, path), path=path, depth=DEPTH)
-
-        if not ok:
-            if raise_exc:
-                raise RuntimeError(reason)
-            warning(reason)
-
-
-class MaybeMiniGallery(MiniGallery):
-    def run(self) -> List[str]:
-        config = self.state.document.settings.env.config
-        backreferences_dir = config.sphinx_gallery_conf["backreferences_dir"]
-        obj_list = self.arguments[0].split()
-
-        new_list = []
-        for obj in obj_list:
-            path = os.path.join("/", backreferences_dir, f"{obj}.examples")  # Sphinx treats this as the source dir
-
-            if (CURRENT / path[1:]).exists():
-                new_list.append(obj)
-
-        self.arguments[0] = " ".join(new_list)
-        try:
-            return super().run()  # type: ignore[no-any-return]
-        except UnboundLocalError:
-            # no gallery files
-            return []
-
-
-def _get_thumbnails(root: Union[str, Path]) -> Dict[str, str]:
-    res = {}
-    root = Path(root)
-    thumb_path = Path(__file__).parent.parent.parent / "docs" / "source"
-
-    for fname in root.glob("**/*.py"):
-        path, name = os.path.split(str(fname)[:-3])
-        thumb_fname = f"sphx_glr_{name}_thumb.png"
-        if (thumb_path / path / "images" / "thumb" / thumb_fname).is_file():
-            res[str(fname)[:-3]] = f"_images/{thumb_fname}"
-        else:
-            res[str(fname)[:-3]] = "_static/img/squidpy_vertical.png"  # TODO
-
-    return res
-
-
-class ModnameFilter(Filter):
-    """
-    Ignore module names.
-    """
-
-    _pat = re.compile(r"ehrapy\.(ds|pp|tl|pl)\..+")  # TODO
-
-    def _skip(self, word: str) -> bool:
-        return self._pat.match(word) is not None
-
-
-class SignatureFilter(Filter):
-    """
-    Ignore function signature artifacts.
-    """
-
-    _pat = re.compile(r"\([^,]+?(\[?, [^,]*)*\)")
-
-    def _skip(self, word: str) -> bool:
-        return word == "img[" or word == "adata,"
-
+HERE = Path(__file__).parent
 
 sys.path.insert(0, os.path.abspath(".."))
 sys.path.insert(0, os.path.abspath("."))
@@ -173,7 +18,7 @@ sys.path.insert(0, os.path.abspath("_ext"))
 
 # General information about the project.
 project = "ehrapy"
-copyright = "2021, Lukas Heumos"
+copyright = "2021, Lukas Heumos, Theislab"
 author = "Lukas Heumos"
 github_repo = "ehrapy"
 
@@ -191,10 +36,14 @@ extensions = [
     "sphinx.ext.autosummary",
     "sphinx_gallery.load_style",
     "nbsphinx",
+    "nbsphinx_link",
     "sphinxcontrib.bibtex",
+    "sphinx.ext.mathjax",
     "typed_returns",
     "sphinx_click",
-    "sphinx_rtd_dark_mode",
+    "sphinx_copybutton",
+    "sphinx_tabs.tabs",
+    "sphinx_panels",
 ]
 intersphinx_mapping = dict(  # noqa: C408
     python=("https://docs.python.org/3", None),
@@ -213,7 +62,7 @@ intersphinx_mapping = dict(  # noqa: C408
     xarray=("https://xarray.pydata.org/en/stable/", None),
 )
 
-default_dark_mode = True
+default_dark_mode = False
 
 templates_path = ["_templates"]
 source_suffix = ".rst"
@@ -232,19 +81,32 @@ exclude_patterns = [
 suppress_warnings = ["download.not_readable"]
 pygments_style = "sphinx"
 
-html_css_files = ["custom_cookietemple.css"]
-html_theme = "sphinx_rtd_theme"
+html_css_files = ["custom_cookietemple.css", "sphinx_gallery.css", "nbsphinx.css", "dataframe.css"]
+html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
-html_logo = "_static/img/squidpy_horizontal.png"  # TODO
-html_theme_options = {"navigation_depth": 4, "logo_only": True}
+html_logo = "_static/placeholder.png"  # TODO
+html_theme_options = {
+    "icon_links": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/theislab/ehrapy",
+            "icon": "fab fa-github-square",
+        },
+        {
+            "name": "Twitter",
+            "url": "https://twitter.com/lukasheumos",
+            "icon": "fab fa-twitter-square",
+        },
+    ],
+}
 html_show_sphinx = False
 
 autosummary_generate = True
 autodoc_member_order = "groupwise"
 autodoc_typehints = "signature"
 autodoc_docstring_signature = True
-napoleon_google_docstring = False
-napoleon_numpy_docstring = True
+napoleon_google_docstring = True
+napoleon_numpy_docstring = False
 napoleon_include_init_with_doc = False
 napoleon_use_rtype = True
 napoleon_use_param = True
@@ -271,22 +133,27 @@ spelling_filters = [
     "docs.source.utils.SignatureFilter",
 ]
 
-nbsphinx_thumbnails = {**_get_thumbnails("auto_tutorials"), **_get_thumbnails("auto_examples")}
 nbsphinx_execute_arguments = [
     "--InlineBackend.figure_formats={'png', 'pdf'}",  # correct figure resize
     "--InlineBackend.rc={'figure.dpi': 96}",
 ]
+nbsphinx_execute = "never"
+# TODO Fix below URL
 nbsphinx_prolog = r"""
 {% set docname = 'docs/source/' + env.doc2path(env.docname, base=None) %}
 .. raw:: html
 
     <div class="binder-badge docutils container">
         <a class="reference external image-reference"
-           href="https://mybinder.org/v2/gh/theislab/squidpy_notebooks/{{ env.config.release|e }}?filepath={{ docname|e }}">
+           href="https://mybinder.org/v2/gh/theislab/ehrapy/development?filepath={{ docname|e }}">
         <img alt="Launch binder" src="https://mybinder.org/badge_logo.svg" width="150px">
         </a>
     </div>
 """  # noqa: E501
+
+nbsphinx_thumbnails = {
+    "tutorials/notebooks/mimic_2": "_static/tutorials/catheter.png",
+}
 
 # -- Options for HTMLHelp output ---------------------------------------
 
@@ -354,19 +221,38 @@ texinfo_documents = [
     ),
 ]
 
+# -- custom classes ------------------------------
+
+
+class MaybeMiniGallery(MiniGallery):
+    def run(self) -> List[str]:
+        config = self.state.document.settings.env.config
+        backreferences_dir = config.sphinx_gallery_conf["backreferences_dir"]
+        obj_list = self.arguments[0].split()
+
+        new_list = []
+        for obj in obj_list:
+            path = os.path.join("/", backreferences_dir, f"{obj}.examples")  # Sphinx treats this as the source dir
+
+            if (HERE / path[1:]).exists():
+                new_list.append(obj)
+
+        self.arguments[0] = " ".join(new_list)
+        try:
+            return super().run()  # type: ignore[no-any-return]
+        except UnboundLocalError:
+            # no gallery files
+            return []
+
 
 def setup(app: Sphinx) -> None:
-    DEFAULT_GALLERY_CONF["src_dir"] = str(CURRENT)
+    DEFAULT_GALLERY_CONF["src_dir"] = str(HERE)
     DEFAULT_GALLERY_CONF["backreferences_dir"] = "gen_modules/backreferences"
     DEFAULT_GALLERY_CONF["download_all_examples"] = False
     DEFAULT_GALLERY_CONF["show_signature"] = False
     DEFAULT_GALLERY_CONF["log_level"] = {"backreference_missing": "info"}
     DEFAULT_GALLERY_CONF["gallery_dirs"] = ["auto_examples", "auto_tutorials"]
-    DEFAULT_GALLERY_CONF["default_thumb_file"] = "docs/source/_static/img/squidpy_vertical.png"
+    DEFAULT_GALLERY_CONF["default_thumb_file"] = "docs/source/_static/placeholder.png"  # todo
 
     app.add_config_value("sphinx_gallery_conf", DEFAULT_GALLERY_CONF, "html")
-    app.add_directive("minigallery", MaybeMiniGallery)
-    app.add_css_file("css/custom.css")
-    app.add_css_file("css/sphinx_gallery.css")
-    app.add_css_file("css/nbsphinx.css")
-    app.add_css_file("css/dataframe.css")  # had to add this manually
+    app.add_directive("minigallery", MaybeMiniGallery)  # Required for Scanpy based classes

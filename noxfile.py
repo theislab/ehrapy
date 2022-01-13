@@ -11,7 +11,7 @@ try:
     from nox_poetry import Session, session
 except ImportError:
     print("[bold red]Did not found nox-poetry installed in your current environment!")
-    print("[bold blue]Try installing it using [bold green]pip install nox-poetry [bold blue]! ")
+    print("[bold blue]Try installing it using [green]pip install nox-poetry [blue]! ")
     sys.exit(1)
 
 package = "ehrapy"
@@ -21,9 +21,9 @@ nox.options.sessions = (
     "safety",
     "mypy",
     "tests",
-    "typeguard",
-    "xdoctest",
-    #   "docs-build",  Testing via CI since we cannot install external Python scripts into the nox environment
+    # "typeguard",
+    # "xdoctest",  Not required because we try to refrain from using executable code in comments
+    #  "docs-build",  Testing via CI since we cannot install external Python scripts into the nox environment
 )
 
 
@@ -82,7 +82,6 @@ def precommit(session: Session) -> None:
     args = session.posargs or ["run", "--all-files"]
     session.install(
         "black",
-        "darglint",
         "flake8",
         "flake8-bandit",
         "flake8-bugbear",
@@ -91,7 +90,7 @@ def precommit(session: Session) -> None:
         "pep8-naming",
         "pre-commit",
         "pre-commit-hooks",
-        "reorder-python-imports",
+        "pyupgrade",
     )
     session.run("pre-commit", *args)
     if args and args[0] == "install":

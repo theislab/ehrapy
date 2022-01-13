@@ -1,32 +1,142 @@
 from pathlib import Path
 
 import numpy as np
-from anndata import AnnData
+import pytest
 
-from ehrapy.api.preprocessing import Imputation
+from ehrapy.api.io import read
+from ehrapy.api.preprocessing import explicit_impute, knn_impute, miss_forest_impute, simple_impute
+from ehrapy.api.preprocessing._data_imputation import ImputeStrategyNotAvailableError
 
 CURRENT_DIR = Path(__file__).parent
-_TEST_PATH = f"{CURRENT_DIR}/test_preprocessing"
+_TEST_PATH = f"{CURRENT_DIR}/test_data_imputation"
 
 
 class TestImputation:
-    def test_explicit_replace_single_value(self):
-        """Tests for scenario one of explicit_replace.
+    def test_mean_impute_no_copy(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute_num.csv")
+        adata_imputed = simple_impute(adata)
 
-        We want to ensure that all np.NaNs as well as empty strings are being imputed.
-        """
-        # NaN value and empty string replacement with single value
-        nan_empty_str_array = np.array([["column 1", "column 2", "column 3", "column 4"], [5, np.NaN, "", "not empty"]])
-        adata = AnnData(X=nan_empty_str_array, dtype=np.dtype(object))
-        imputed_adata = Imputation.explicit(adata, replacement=0, impute_empty_strings=True, copy=True)
+        assert id(adata) == id(adata_imputed)
+        assert not np.isnan(adata_imputed.X).any()
 
-        # Run costly, but explicit checks
-        for col in imputed_adata.X:
-            for val in col:
-                assert val != "" and val != np.NaN
+    def test_mean_impute_copy(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute_num.csv")
+        adata_imputed = simple_impute(adata, copy=True)
 
-    def test_explicit_replace_subset_columns(self):
-        pass
+        assert id(adata) != id(adata_imputed)
+        assert not np.isnan(adata_imputed.X).any()
 
-    def test_explicit_replace_multiple_subset_columns(self):
-        pass
+    def test_mean_impute_throws_error_non_numerical(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute.csv")
+
+        with pytest.raises(ImputeStrategyNotAvailableError):
+            _ = simple_impute(adata)
+
+    def test_mean_impute_subset(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute.csv")
+        adata_imputed = simple_impute(adata, var_names=["intcol", "indexcol"])
+
+        assert not np.all([item != item for item in adata_imputed.X[::, 1:2]])
+        assert np.any([item != item for item in adata_imputed.X[::, 3:4]])
+
+    def test_median_impute_no_copy(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute_num.csv")
+        adata_imputed = simple_impute(adata, strategy="median")
+
+        assert id(adata) == id(adata_imputed)
+        assert not np.isnan(adata_imputed.X).any()
+
+    def test_median_impute_copy(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute_num.csv")
+        adata_imputed = simple_impute(adata, strategy="median", copy=True)
+
+        assert id(adata) != id(adata_imputed)
+        assert not np.isnan(adata_imputed.X).any()
+
+    def test_median_impute_throws_error_non_numerical(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute.csv")
+
+        with pytest.raises(ImputeStrategyNotAvailableError):
+            _ = simple_impute(adata, strategy="median")
+
+    def test_median_impute_subset(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute.csv")
+        adata_imputed = simple_impute(adata, var_names=["intcol", "indexcol"], strategy="median")
+
+        assert not np.all([item != item for item in adata_imputed.X[::, 1:2]])
+        assert np.any([item != item for item in adata_imputed.X[::, 3:4]])
+
+    def test_most_frequent_impute_no_copy(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute.csv")
+        adata_imputed = simple_impute(adata, strategy="most_frequent")
+
+        assert id(adata) == id(adata_imputed)
+        assert not (np.all([item != item for item in adata_imputed.X]))
+
+    def test_most_frequent_impute_copy(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute.csv")
+        adata_imputed = simple_impute(adata, strategy="most_frequent", copy=True)
+
+        assert id(adata) != id(adata_imputed)
+        assert not (np.all([item != item for item in adata_imputed.X]))
+
+    def test_most_frequent_impute_subset(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute.csv")
+        adata_imputed = simple_impute(adata, var_names=["intcol", "strcol"], strategy="most_frequent")
+
+        assert not (np.all([item != item for item in adata_imputed.X[::, 1:3]]))
+
+    def test_knn_impute_no_copy(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute_num.csv")
+        adata_imputed = knn_impute(adata)
+
+        assert id(adata) == id(adata_imputed)
+
+    def test_knn_impute_copy(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute_num.csv")
+        adata_imputed = knn_impute(adata, copy=True)
+
+        assert id(adata) != id(adata_imputed)
+
+    def test_knn_impute_non_numerical_data(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute.csv")
+        adata_imputed = knn_impute(adata)
+
+        assert not (np.all([item != item for item in adata_imputed.X]))
+
+    def test_knn_impute_numerical_data(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute_num.csv")
+        adata_imputed = knn_impute(adata)
+
+        assert not (np.all([item != item for item in adata_imputed.X]))
+
+    def test_missforest_impute_non_numerical_data(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute.csv")
+        adata_imputed = miss_forest_impute(adata)
+
+        assert not (np.all([item != item for item in adata_imputed.X]))
+
+    def test_missforest_impute_numerical_data(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute_num.csv")
+        adata_imputed = miss_forest_impute(adata)
+
+        assert not (np.all([item != item for item in adata_imputed.X]))
+
+    def test_missforest_impute_subset(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute_num.csv")
+        adata_imputed = miss_forest_impute(adata, var_names={"non_numerical": ["intcol"], "numerical": ["strcol"]})
+
+        assert not (np.all([item != item for item in adata_imputed.X]))
+
+    def test_explicit_impute_all(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute_num.csv")
+        adata_imputed = explicit_impute(adata, replacement=1011)
+
+        assert (adata_imputed.X == 1011).sum() == 3
+
+    def test_explicit_impute_subset(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute.csv")
+        adata_imputed = explicit_impute(adata, replacement={"strcol": "REPLACED", "intcol": 1011})
+
+        assert (adata_imputed.X == 1011).sum() == 1
+        assert (adata_imputed.X == "REPLACED").sum() == 1

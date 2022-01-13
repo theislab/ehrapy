@@ -42,16 +42,11 @@ jobs:
                           os: macos-latest,
                           session: "tests",
                       }
-                    - {
-                          python-version: 3.8,
-                          os: ubuntu-latest,
-                          session: "typeguard",
-                      }
-                    - {
-                          python-version: 3.8,
-                          os: ubuntu-latest,
-                          session: "xdoctest",
-                      }
+        #                     - {
+        #                           python-version: 3.8,
+        #                           os: ubuntu-latest,
+        #                           session: "typeguard",
+        #                       }
 
         env:
             NOXSESSION: ${{ matrix.session }}
@@ -67,16 +62,15 @@ jobs:
 
             - name: Install Poetry
               run: |
-                  pip install poetry
+                  pipx install poetry
                   poetry --version
 
-            - name: Install Nox
+            - name: Install nox nox-poetry rich
               run: |
-                  pip install nox nox-poetry
+                  pipx install nox
+                  pipx inject nox nox-poetry
+                  pipx inject nox rich
                   nox --version
-
-            - name: Install Rich
-              run: pip install rich
 
             - name: Compute pre-commit cache key
               if: matrix.session == 'pre-commit'
@@ -94,7 +88,7 @@ jobs:
                   print("::set-output name=result::{}".format(result))
 
             - name: Restore pre-commit cache
-              uses: actions/cache@v2.1.6
+              uses: actions/cache@v2.1.7
               if: matrix.session == 'pre-commit'
               with:
                   path: ~/.cache/pre-commit
@@ -102,20 +96,48 @@ jobs:
                   restore-keys: |
                       ${{ steps.pre-commit-cache.outputs.result }}-
 
-            - name: Run Nox
+            - name: Install ghostscript Ubuntu
+              if: matrix.os == 'ubuntu-latest'
+              run: sudo apt-get install -y ghostscript
+
+            - name: Install ghostscript MacOS
+              if: matrix.os == 'macos-latest'
+              run: brew install ghostscript
+
+            - name: Install ghostscript Windows
+              if: matrix.os == 'windows-latest'
+              run: choco install imagemagick dejavufonts ghostscript
+
+            - name: Refresh env
+              if: matrix.os == 'windows-latest'
+              run: refreshenv
+
+            - name: Add to path
+              if: matrix.os == 'windows-latest'
               run: |
-                  nox --force-color --python=${{ matrix.python-version }}
+                  $folders = Get-ChildItem "C:\Program Files\gs"
+                  foreach ($folder in $folders) {
+                      $gsfolder = $folder.FullName
+                  }
+                  echo "C:\strawberry\c\bin;C:\strawberry\perl\site\bin;C:\strawberry\perl\bin;$gsfolder\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+            - name: Test executables
+              if: matrix.os == 'windows-latest'
+              run: gswin64c -v
+
+            - name: Run Nox
+              run: nox --force-color --python=${{ matrix.python-version }}
 
             - name: Upload coverage data
               if: always() && matrix.session == 'tests'
-              uses: "actions/upload-artifact@v2.2.4"
+              uses: "actions/upload-artifact@v2.3.1"
               with:
                   name: coverage-data
                   path: ".coverage.*"
 
             - name: Upload documentation
               if: matrix.session == 'docs-build'
-              uses: actions/upload-artifact@v2.2.4
+              uses: actions/upload-artifact@v2.3.1
               with:
                   name: docs
                   path: docs/_build
@@ -134,19 +156,18 @@ jobs:
 
             - name: Install Poetry
               run: |
-                  pip install poetry
+                  pipx install poetry
                   poetry --version
 
-            - name: Install Nox
+            - name: Install nox nox-poetry rich
               run: |
-                  pip install nox nox-poetry
+                  pipx install nox
+                  pipx inject nox nox-poetry
+                  pipx inject nox rich
                   nox --version
 
-            - name: Install Rich
-              run: pip install rich
-
             - name: Download coverage data
-              uses: actions/download-artifact@v2.0.10
+              uses: actions/download-artifact@v2.1.0
               with:
                   name: coverage-data
 

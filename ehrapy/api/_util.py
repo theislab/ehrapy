@@ -1,38 +1,96 @@
-from typing import List, Union
+import importlib
+import sys
+from contextlib import closing
+from datetime import datetime
+from io import StringIO
 
-import numpy as np
-from anndata import AnnData
+from IPython.utils.io import Tee
+from rich import print
+from scanpy.logging import _versions_dependencies
+from sinfo import sinfo
 
-
-def get_column_indices(adata: AnnData, col_names=Union[str, List]) -> List[int]:
-    """Fetches the column indices in X for a given list of column names
-
-    Args:
-        adata: :class:`~anndata.AnnData` object
-        col_names: Column names to extract the indices for
-
-    Returns:
-        Set of column indices
-    """
-    if isinstance(col_names, str):
-        col_names = [col_names]
-
-    indices = list()
-    for idx, col in enumerate(adata.var_names):
-        if col in col_names:
-            indices.append(idx)
-
-    return indices
+from ehrapy import __version__
 
 
-def get_column_values(adata: AnnData, indices: Union[int, List[int]]) -> np.ndarray:
-    """Fetches the column values for a specific index from X
+def print_versions(*, output_file=None) -> None:  # pragma: no cover
+    """Print print versions of imported packages.
 
     Args:
-        adata: :class:`~anndata.AnnData` object
-        indices: The index to extract the values for
+        output_file: Path to output file
+    """
+    stdout = sys.stdout
+    try:
+        buf = sys.stdout = StringIO()
+        sinfo(
+            dependencies=True,
+            excludes=[
+                "builtins",
+                "stdlib_list",
+                "importlib_metadata",
+                # Special module present if test coverage being calculated
+                # https://gitlab.com/joelostblom/sinfo/-/issues/10
+                "$coverage",
+            ],
+            write_req_file=False,
+        )
+    finally:
+        sys.stdout = stdout
+    output = buf.getvalue()
+
+    if output_file:
+        with closing(Tee(output_file, "w", channel="stdout")):
+            print(output)
+    else:
+        print(output)
+
+
+def print_version_and_date(*, file=None):  # pragma: no cover
+    """Useful for starting a notebook so you see when you started working."""
+    if file is None:
+        file = sys.stdout
+    print(
+        f"Running ehrapy {__version__}, " f"on {datetime.now():%Y-%m-%d %H:%M}.",
+        file=file,
+    )
+
+
+def print_header(*, file=None):  # pragma: no cover
+    """Versions that might influence the numerical results.
+
+    Matplotlib and Seaborn are excluded from this.
+    """
+    _DEPENDENCIES_NUMERICS = [
+        "scanpy",
+        "anndata",  # anndata actually shouldn't, but as long as it's in development
+        "umap",
+        "numpy",
+        "scipy",
+        "pandas",
+        ("sklearn", "scikit-learn"),
+        "statsmodels",
+        ("igraph", "python-igraph"),
+        "louvain",
+        "leidenalg",
+        "pynndescent",
+    ]
+
+    modules = ["ehrapy"] + _DEPENDENCIES_NUMERICS
+    print(
+        " ".join(f"{mod}=={ver}" for mod, ver in _versions_dependencies(modules)),
+        file=file or sys.stdout,
+    )
+
+
+def check_module_importable(package: str) -> bool:  # pragma: no cover
+    """Checks whether a module is installed and can be loaded.
+
+    Args:
+        package: The package to check.
 
     Returns:
-        :class:`~numpy.ndarray` object containing the column values
+        True if the package is installed, false elsewise
     """
-    return np.take(adata.X, indices, axis=1)
+    module_information = importlib.util.find_spec(package)
+    module_available = module_information is not None
+
+    return module_available

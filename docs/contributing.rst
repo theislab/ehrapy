@@ -28,11 +28,21 @@ How to request a feature
 
 Request features on the `Issue Tracker`_.
 
+Getting the code
+----------------
+
+ehrapy uses submodules for the tutorials. Hence, the project must be cloned as:
+
+.. code:: console
+
+    $ git clone --recurse-submodules --remote-submodules https://github.com/theislab/ehrapy
+
+This will automatically also clone and update the submodules.
 
 How to set up your development environment
 ------------------------------------------
 
-You need Python 3.7+ and the following tools:
+You need Python 3.8 and the following tools:
 
 - Poetry_
 - Nox_
@@ -62,7 +72,6 @@ or the command-line interface:
 .. _Nox: https://nox.thea.codes/
 .. _nox-poetry: https://nox-poetry.readthedocs.io/
 
-
 How to test the project
 -----------------------
 
@@ -90,6 +99,29 @@ and are written using the pytest_ testing framework.
 
 .. _pytest: https://pytest.readthedocs.io/
 
+How to build and view the documentation
+---------------------------------------
+
+This project uses Sphinx_ together with several extensions to build the documentation.
+It further requires Pandoc_ to translate various formats.
+
+To install all required dependencies for the documentation run:
+
+.. code:: console
+
+    $ pip install -r docs/requirements.txt
+
+Please note that ehrapy itself must also be installed. To build the documentation run:
+
+.. code:: console
+
+    $ make html
+
+from inside the docs folder. The generated static HTML files can be found in the `_build/html` folder.
+Simply open them with your favorite browser.
+
+.. _sphinx: https://www.sphinx-doc.org/en/master/
+.. _pandoc: https://pandoc.org/
 
 How to submit changes
 ---------------------
