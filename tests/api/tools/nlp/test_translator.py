@@ -13,7 +13,6 @@ _TEST_PATH = f"{CURRENT_DIR}/test_nlp"
 
 deepl_token: str = os.environ.get("DEEPL_TOKEN")
 
-
 if deepl_token is None:
     pytest.skip(
         "Skipping DeepL translation tests. Require DEEPL_TOKEN as environment variable", allow_module_level=True
