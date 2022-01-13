@@ -34,12 +34,12 @@ mudata = ">=0.1.1"
 leidenalg = ">=0.8.7"
 deepl = ">=1.2.0"
 pynndescent = ">=0.5.4"
-en-core-web-md = {url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.0.0/en_core_web_md-3.0.0.tar.gz", optional = true}
 scanpy = ">=1.8.2"
 ipython = ">=7.30.1"
 pyhpo = {extras = ["all"], version = ">=3.0.0"}
 camelot-py = {extras = ["base"], version = ">=0.10.1"}
 medcat = ">=1.2.6"
+deep-translator = "^1.6.0"
 
 [tool.poetry.dev-dependencies]
 pytest = ">=6.2.5"

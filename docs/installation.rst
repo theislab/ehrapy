@@ -18,11 +18,10 @@ This is the preferred method to install ehrapy, as it will always install the mo
 
 If you don't have `pip`_ installed, this `Python installation guide`_ can guide you through the process.
 
-To install MedCAT/Spacy language models you can run the installation with extra dependency groups like:
-
+If you intend to run MedCAT you have to install a language model like:
 .. code-block:: console
 
-    $ pip install ehrapy[en_core_web_md]
+    $ python -m spacy download en_core_web_sm
 
 .. _pip: https://pip.pypa.io
 .. _Python installation guide: http://docs.python-guide.org/en/latest/starting/installation/
