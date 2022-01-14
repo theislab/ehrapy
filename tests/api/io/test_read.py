@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from ehrapy.api._anndata_util import ColumnNotFoundError
+from ehrapy.api.anndata_ext import ColumnNotFoundError
 from ehrapy.api.io._read import read
 
 CURRENT_DIR = Path(__file__).parent

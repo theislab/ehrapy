@@ -44,7 +44,6 @@ def df_to_anndata(
 
 def _move_columns_to_obs(df: pd.DataFrame, columns_obs_only: list[str] | None) -> BaseDataframes:
     """Move the given columns from the original dataframe (and therefore X) to obs.
-
     By moving these values will not get lost and will be stored in obs, but will not appear in X.
     This may be useful for textual values like free text.
 
@@ -72,7 +71,8 @@ def _move_columns_to_obs(df: pd.DataFrame, columns_obs_only: list[str] | None) -
 
 
 def anndata_to_df(adata: AnnData, add_from_obs: list[str] | str | None = None) -> pd.DataFrame:
-    """Transform an AnnData object to a pandas Dataframe
+    """Transform an AnnData object to a pandas dataframe.
+
     Args:
         adata: The AnnData object to be transformed into a pandas Dataframe
         add_from_obs: Either "all" or a list of obs names or None, if no columns should be kept from obs
