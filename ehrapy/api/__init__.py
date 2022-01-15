@@ -1,5 +1,6 @@
 from ehrapy.api._settings import EhrapyConfig, ehrapy_settings
 from ehrapy.api._util import print_versions
+from ehrapy.api.anndata_ext import anndata_to_df, df_to_anndata
 
 settings: EhrapyConfig = ehrapy_settings
 

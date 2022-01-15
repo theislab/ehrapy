@@ -250,6 +250,19 @@ Group comparison
     plot.rank_features_groups_matrixplot
     plot.rank_features_groups_tracksplot
 
+AnnData object transformation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ehrapy API exposes functions to transform a pandas dataframe into an AnnData object
+and vice versa.
+
+.. autosummary::
+    :toctree: ext
+
+    anndata_ext.df_to_anndata
+    anndata_ext.anndata_to_df
+
+
 Settings
 ~~~~~~~~
 

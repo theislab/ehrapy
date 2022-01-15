@@ -2,10 +2,9 @@ from __future__ import annotations
 
 import shutil
 from pathlib import Path
-from typing import Iterator, NamedTuple
+from typing import Iterator
 
 import camelot
-import numpy as np
 import pandas as pd
 from _collections import OrderedDict
 from anndata import AnnData
@@ -14,14 +13,10 @@ from mudata import MuData
 from rich import print
 
 from ehrapy.api import ehrapy_settings, settings
+from ehrapy.api.anndata_ext import df_to_anndata
 from ehrapy.api.data.dataloader import download
 from ehrapy.api.io._utility_io import _get_file_extension, _slugify, multi_data_extensions, supported_extensions
 from ehrapy.api.preprocessing import encode
-
-
-class BaseDataframes(NamedTuple):
-    obs: pd.DataFrame
-    df: pd.DataFrame
 
 
 def read(
@@ -495,26 +490,6 @@ def _write_cache(
     return cached_adata
 
 
-def df_to_anndata(df: pd.DataFrame, columns_obs_only: list[str] | None, index_column: str | None = None) -> AnnData:
-    """Create an AnnData object from the initial dataframe"""
-    if index_column:
-        df = df.set_index(index_column)
-    # move columns from the input dataframe to later obs
-    dataframes = _move_columns_to_obs(df, columns_obs_only)
-    # if data is numerical only, short-circuit AnnData creation to have float dtype instead of object
-    all_num = all(np.issubdtype(column_dtype, np.number) for column_dtype in dataframes.df.dtypes)
-    X = dataframes.df.to_numpy(copy=True)
-    # when index_column is passed (currently when parsing pdf) set it and remove it from future X
-
-    return AnnData(
-        X=X,
-        obs=dataframes.obs,
-        var=pd.DataFrame(index=list(dataframes.df.columns)),
-        dtype="float32" if all_num else "object",
-        layers={"original": X.copy()},
-    )
-
-
 def _prepare_dataframe(initial_df: pd.DataFrame, columns_obs_only, cache):
     """Prepares the dataframe to be casted into an AnnData object.
 
@@ -702,35 +677,6 @@ def _extract_index_and_columns_obs_only(identifier: str, index_columns, columns_
     return _index_column, _columns_obs_only
 
 
-def _move_columns_to_obs(df: pd.DataFrame, columns_obs_only: list[str] | None) -> BaseDataframes:
-    """Move the given columns from the original dataframe (and therefore X) to obs.
-
-    By moving these values will not get lost and will be stored in obs, but will not appear in X.
-    This may be useful for textual values like free text.
-
-    Args:
-        df: Pandas Dataframe to move the columns for
-        columns_obs_only: Columns to move to obs only
-
-    Returns:
-        A modified :class:`~pd.DataFrame` object
-    """
-    if columns_obs_only:
-        try:
-            obs = df[columns_obs_only].copy()
-            obs = obs.set_index(df.index.map(str))
-            df = df.drop(columns_obs_only, axis=1)
-        except KeyError:
-            raise ColumnNotFoundError from KeyError(
-                "One or more column names passed to column_obs_only were not found in the input data. "
-                "Make sure you spelled the column names correctly."
-            )
-    else:
-        obs = pd.DataFrame(index=df.index.map(str))
-
-    return BaseDataframes(obs, df)
-
-
 def _mudata_cache_not_supported():
     raise MudataCachingNotSupportedError(
         "Caching is currently not supported for MuData objects. Consider setting return_mudata to False in order "
@@ -739,10 +685,6 @@ def _mudata_cache_not_supported():
 
 
 class IndexNotFoundError(Exception):
-    pass
-
-
-class ColumnNotFoundError(Exception):
     pass
 
 

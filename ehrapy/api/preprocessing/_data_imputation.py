@@ -9,7 +9,7 @@ from sklearn.experimental import enable_iterative_imputer  # noqa: F401
 from sklearn.impute import IterativeImputer, KNNImputer, SimpleImputer
 from sklearn.preprocessing import OrdinalEncoder
 
-from ehrapy.api._anndata_util import get_column_indices
+from ehrapy.api.anndata_ext import get_column_indices
 
 
 def explicit_impute(
