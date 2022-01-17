@@ -228,7 +228,7 @@ class TestNormalization:
     def test_norm_identity(self):
         """Test for the identity normalization method."""
 
-        adata_norm = ep.pp.normalize(self.adata, methods="identity", copy=True)
+        adata_norm = ep.pp.norm_identity(self.adata, copy=True)
 
         assert np.allclose(adata_norm.X, self.adata.X, equal_nan=True)
         assert np.allclose(adata_norm.layers["raw_norm"], self.adata.X, equal_nan=True)

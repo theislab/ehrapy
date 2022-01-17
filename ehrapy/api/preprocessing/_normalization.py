@@ -10,6 +10,7 @@ from ehrapy.api._anndata_util import (
     get_column_indices,
     get_column_values,
     get_numeric_vars,
+    set_numeric_vars,
 )
 
 available_normalization_methods = {
@@ -107,8 +108,6 @@ def normalize(
             adata.X[:, var_idx] = _norm_log1p(var_values, base)
         elif method == "sqrt":
             adata.X[:, var_idx] = _norm_sqrt(var_values)
-        elif method == "identity":
-            adata.X[:, var_idx] = _norm_identity(var_values)
 
         _record_norm(adata, vars_list, method)
 
@@ -263,16 +262,40 @@ def _norm_sqrt(values: np.ndarray) -> np.ndarray:
     return np.sqrt(values)
 
 
-def _norm_identity(values: np.ndarray) -> np.ndarray:
+def norm_identity(adata: AnnData, vars: list[str] | None = None, copy: bool = False) -> AnnData | None:
     """Apply identity normalization.
 
     Args:
-        values: A single column numpy array
+        adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encoded using ~ehrapy.preprocessing.encode.encode.
+        vars: List of the names of the numeric variables to normalize. If None (default) all numeric variables will be normalized.
+        copy: Whether to return a copy or act in place
 
     Returns:
-        Single column numpy array with normalized values
+        :class:`~anndata.AnnData` object with normalized X. Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy.api as ep
+            adata = ep.data.mimic_2(encode=True)
+            adata_norm = ep.pp.norma_identity(adata, copy=True)
     """
-    return values
+
+    if vars is None:
+        vars = get_numeric_vars(adata)
+    else:
+        assert_numeric_vars(adata, vars)
+
+    adata = _prep_adata_norm(adata, copy)
+
+    var_idx = get_column_indices(adata, vars)
+    var_values = get_column_values(adata, var_idx)
+
+    set_numeric_vars(adata, var_values, vars)
+
+    _record_norm(adata, vars, "identity")
+
+    return adata
 
 
 def _prep_adata_norm(adata: AnnData, copy: bool = False) -> AnnData | None:
