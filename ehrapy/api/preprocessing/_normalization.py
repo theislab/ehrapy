@@ -88,11 +88,7 @@ def normalize(
         var_idx = get_column_indices(adata, vars_list)
         var_values = get_column_values(adata, var_idx)
 
-        if method == "power_yeo_johnson":
-            adata.X[:, var_idx] = _norm_power_yeo_johnson(var_values)
-        elif method == "power_box_cox":
-            adata.X[:, var_idx] = _norm_power_box_cox(var_values)
-        elif method == "log1p":
+        if method == "log1p":
             adata.X[:, var_idx] = _norm_log1p(var_values, base)
         elif method == "sqrt":
             adata.X[:, var_idx] = _norm_sqrt(var_values)
@@ -306,38 +302,45 @@ def norm_quantile(adata: AnnData, vars: list[str] | None = None, copy: bool = Fa
     return adata
 
 
-def _norm_power_yeo_johnson(values: np.ndarray) -> np.ndarray:
-    """Apply Yeo-Johnson power normalization.
+def norm_power(adata: AnnData, vars: list[str] | None = None, copy: bool = False, **kwargs) -> AnnData | None:
+    """Apply power transformation normalization.
+
+    Functionality is provided by ~sklearn.preprocessing.power_transform, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.power_transform.html for details.
 
     Args:
-        values: A single column numpy array
+        adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encoded using ~ehrapy.preprocessing.encode.encode.
+        vars: List of the names of the numeric variables to normalize. If None (default) all numeric variables will be normalized.
+        copy: Whether to return a copy or act in place
+        **kwargs: Additional arguments passed to ~sklearn.preprocessing.power_transform
 
     Returns:
-        Single column numpy array with Yeo-Johnson transformed values
+        :class:`~anndata.AnnData` object with normalized X. Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy.api as ep
+            adata = ep.data.mimic_2(encode=True)
+            adata_norm = ep.pp.norm_power(adata, copy=True)
     """
 
-    if values.ndim == 1:
-        values = values.reshape(-1, 1)
-        return np.squeeze(power_transform(values, method="yeo-johnson"))
+    if vars is None:
+        vars = get_numeric_vars(adata)
     else:
-        return power_transform(values, method="yeo-johnson")
+        assert_numeric_vars(adata, vars)
 
+    adata = _prep_adata_norm(adata, copy)
 
-def _norm_power_box_cox(values: np.ndarray) -> np.ndarray:
-    """Apply Box-Cox power normalization.
+    var_idx = get_column_indices(adata, vars)
+    var_values = get_column_values(adata, var_idx)
 
-    Args:
-        values: A single column numpy array
+    var_values = power_transform(var_values, **kwargs)
 
-    Returns:
-        Single column numpy array with Box-Cox transformed values
-    """
+    set_numeric_vars(adata, var_values, vars)
 
-    if values.ndim == 1:
-        values = values.reshape(-1, 1)
-        return np.squeeze(power_transform(values, method="box-cox"))
-    else:
-        return power_transform(values, method="box-cox")
+    _record_norm(adata, vars, "power")
+
+    return adata
 
 
 def _norm_log1p(values: np.ndarray, base: int | float | None) -> np.ndarray:
