@@ -88,9 +88,7 @@ def normalize(
         var_idx = get_column_indices(adata, vars_list)
         var_values = get_column_values(adata, var_idx)
 
-        if method == "scale":
-            adata.X[:, var_idx] = _norm_scale(var_values)
-        elif method == "minmax":
+        if method == "minmax":
             adata.X[:, var_idx] = _norm_minmax(var_values)
         elif method == "maxabs":
             adata.X[:, var_idx] = _norm_maxabs(var_values)
@@ -114,16 +112,45 @@ def normalize(
     return adata
 
 
-def _norm_scale(values: np.ndarray) -> np.ndarray:
-    """Apply standard scaling normalization.
+def norm_scale(adata: AnnData, vars: list[str] | None = None, copy: bool = False, **kwargs) -> AnnData | None:
+    """Apply scaling normalization.
+
+    Functionality is provided by ~sklearn.preprocessing.scale, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.scale.html#sklearn.preprocessing.scale for details.
 
     Args:
-        values: A single column numpy array
+        adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encoded using ~ehrapy.preprocessing.encode.encode.
+        vars: List of the names of the numeric variables to normalize. If None (default) all numeric variables will be normalized.
+        copy: Whether to return a copy or act in place
+        **kwargs: Additional arguments passed to ~sklearn.preprocessing.scale
 
     Returns:
-        Single column numpy array with scaled values
+        :class:`~anndata.AnnData` object with normalized X. Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy.api as ep
+            adata = ep.data.mimic_2(encode=True)
+            adata_norm = ep.pp.norma_scale(adata, copy=True)
     """
-    return scale(values)
+
+    if vars is None:
+        vars = get_numeric_vars(adata)
+    else:
+        assert_numeric_vars(adata, vars)
+
+    adata = _prep_adata_norm(adata, copy)
+
+    var_idx = get_column_indices(adata, vars)
+    var_values = get_column_values(adata, var_idx)
+
+    var_values = scale(var_values, **kwargs)
+
+    set_numeric_vars(adata, var_values, vars)
+
+    _record_norm(adata, vars, "scale")
+
+    return adata
 
 
 def _norm_minmax(values: np.ndarray) -> np.ndarray:

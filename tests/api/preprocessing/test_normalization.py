@@ -49,7 +49,7 @@ class TestNormalization:
     def test_norm_scale(self):
         """Test for the scaling normalization method."""
 
-        adata_norm = ep.pp.normalize(self.adata, methods="scale", copy=True)
+        adata_norm = ep.pp.norm_scale(self.adata, copy=True)
 
         num1_norm = np.array([-1.4039999, 0.55506986, 0.84893], dtype=np.float32)
         num2_norm = np.array([-1.069045, 1.3363061, -0.2672612], dtype=np.float32)
@@ -60,6 +60,15 @@ class TestNormalization:
         assert np.allclose(adata_norm.X[:, 3], num1_norm)
         assert np.allclose(adata_norm.X[:, 4], num2_norm)
         assert np.allclose(adata_norm.X[:, 5], self.adata.X[:, 5], equal_nan=True)
+
+        # Test passing kwargs works
+        adata_norm = ep.pp.norm_scale(self.adata, copy=True, with_mean=False)
+
+        num1_norm = np.array([3.3304186, 5.2894883, 5.5833483], dtype=np.float32)
+        num2_norm = np.array([1.6035674, 4.0089183, 2.405351], dtype=np.float32)
+
+        assert np.allclose(adata_norm.X[:, 3], num1_norm)
+        assert np.allclose(adata_norm.X[:, 4], num2_norm)
 
     def test_norm_minmax(self):
         """Test for the minmax normalization method."""
@@ -233,20 +242,20 @@ class TestNormalization:
         assert np.allclose(adata_norm.X, self.adata.X, equal_nan=True)
         assert np.allclose(adata_norm.layers["raw_norm"], self.adata.X, equal_nan=True)
 
-    def test_norm_mixed(self):
-        """Test for normalization with mixed methods."""
+    # def test_norm_mixed(self):
+    #     """Test for normalization with mixed methods."""
 
-        adata_norm = ep.pp.normalize(self.adata, methods={"minmax": ["Numeric1"], "scale": ["Numeric2"]}, copy=True)
+    #     adata_norm = ep.pp.normalize(self.adata, methods={"minmax": ["Numeric1"], "scale": ["Numeric2"]}, copy=True)
 
-        num1_norm = np.array([0.0, 0.86956537, 0.9999999], dtype=np.dtype(np.float32))
-        num2_norm = np.array([-1.069045, 1.3363061, -0.2672612], dtype=np.float32)
+    #     num1_norm = np.array([0.0, 0.86956537, 0.9999999], dtype=np.dtype(np.float32))
+    #     num2_norm = np.array([-1.069045, 1.3363061, -0.2672612], dtype=np.float32)
 
-        assert np.array_equal(adata_norm.X[:, 0], self.adata.X[:, 0])
-        assert np.array_equal(adata_norm.X[:, 1], self.adata.X[:, 1])
-        assert np.array_equal(adata_norm.X[:, 2], self.adata.X[:, 2])
-        assert np.allclose(adata_norm.X[:, 3], num1_norm)
-        assert np.allclose(adata_norm.X[:, 4], num2_norm)
-        assert np.allclose(adata_norm.X[:, 5], self.adata.X[:, 5], equal_nan=True)
+    #     assert np.array_equal(adata_norm.X[:, 0], self.adata.X[:, 0])
+    #     assert np.array_equal(adata_norm.X[:, 1], self.adata.X[:, 1])
+    #     assert np.array_equal(adata_norm.X[:, 2], self.adata.X[:, 2])
+    #     assert np.allclose(adata_norm.X[:, 3], num1_norm)
+    #     assert np.allclose(adata_norm.X[:, 4], num2_norm)
+    #     assert np.allclose(adata_norm.X[:, 5], self.adata.X[:, 5], equal_nan=True)
 
     def test_norm_record(self):
         """Test for logging of applied normalization methods."""
