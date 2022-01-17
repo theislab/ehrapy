@@ -88,11 +88,7 @@ def normalize(
         var_idx = get_column_indices(adata, vars_list)
         var_values = get_column_values(adata, var_idx)
 
-        if method == "maxabs":
-            adata.X[:, var_idx] = _norm_maxabs(var_values)
-        elif method == "robust_scale":
-            adata.X[:, var_idx] = _norm_robust_scale(var_values)
-        elif method == "quantile_uniform":
+        if method == "quantile_uniform":
             adata.X[:, var_idx] = _norm_quantile_uniform(var_values)
         elif method == "quantile_normal":
             adata.X[:, var_idx] = _norm_quantile_normal(var_values)
@@ -113,7 +109,7 @@ def normalize(
 def norm_scale(adata: AnnData, vars: list[str] | None = None, copy: bool = False, **kwargs) -> AnnData | None:
     """Apply scaling normalization.
 
-    Functionality is provided by ~sklearn.preprocessing.scale, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.scale.html#sklearn.preprocessing.scale for details.
+    Functionality is provided by ~sklearn.preprocessing.scale, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.scale.html for details.
 
     Args:
         adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encoded using ~ehrapy.preprocessing.encode.encode.
@@ -154,7 +150,7 @@ def norm_scale(adata: AnnData, vars: list[str] | None = None, copy: bool = False
 def norm_minmax(adata: AnnData, vars: list[str] | None = None, copy: bool = False, **kwargs) -> AnnData | None:
     """Apply min-max normalization.
 
-    Functionality is provided by ~sklearn.preprocessing.minmax_scale, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.minmax_scale.html#sklearn.preprocessing.minmax_scale for details.
+    Functionality is provided by ~sklearn.preprocessing.minmax_scale, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.minmax_scale.html for details.
 
     Args:
         adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encoded using ~ehrapy.preprocessing.encode.encode.
@@ -187,33 +183,90 @@ def norm_minmax(adata: AnnData, vars: list[str] | None = None, copy: bool = Fals
 
     set_numeric_vars(adata, var_values, vars)
 
-    _record_norm(adata, vars, "scale")
+    _record_norm(adata, vars, "minmax")
 
     return adata
 
 
-def _norm_maxabs(values: np.ndarray) -> np.ndarray:
-    """Apply maxabs normalization.
+def norm_maxabs(adata: AnnData, vars: list[str] | None = None, copy: bool = False) -> AnnData | None:
+    """Apply max-abs normalization.
+
+    Functionality is provided by ~sklearn.preprocessing.maxabs_scale, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.maxabs_scale.html for details.
 
     Args:
-        values: A single column numpy array
+        adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encoded using ~ehrapy.preprocessing.encode.encode.
+        vars: List of the names of the numeric variables to normalize. If None (default) all numeric variables will be normalized.
+        copy: Whether to return a copy or act in place
 
     Returns:
-        Single column numpy array with maxabs scaled values
+        :class:`~anndata.AnnData` object with normalized X. Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy.api as ep
+            adata = ep.data.mimic_2(encode=True)
+            adata_norm = ep.pp.norm_maxabs(adata, copy=True)
     """
-    return maxabs_scale(values)
+
+    if vars is None:
+        vars = get_numeric_vars(adata)
+    else:
+        assert_numeric_vars(adata, vars)
+
+    adata = _prep_adata_norm(adata, copy)
+
+    var_idx = get_column_indices(adata, vars)
+    var_values = get_column_values(adata, var_idx)
+
+    var_values = maxabs_scale(var_values)
+
+    set_numeric_vars(adata, var_values, vars)
+
+    _record_norm(adata, vars, "maxabs")
+
+    return adata
 
 
-def _norm_robust_scale(values: np.ndarray) -> np.ndarray:
-    """Apply robust_scale normalization.
+def norm_robust_scale(adata: AnnData, vars: list[str] | None = None, copy: bool = False, **kwargs) -> AnnData | None:
+    """Apply robust scaling normalization.
+
+    Functionality is provided by ~sklearn.preprocessing.robust_scale, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.robust_scale.html for details.
 
     Args:
-        values: A single column numpy array
+        adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encoded using ~ehrapy.preprocessing.encode.encode.
+        vars: List of the names of the numeric variables to normalize. If None (default) all numeric variables will be normalized.
+        copy: Whether to return a copy or act in place
+        **kwargs: Additional arguments passed to ~sklearn.preprocessing.robust_scale
 
     Returns:
-        Single column numpy array with robust scaled values
+        :class:`~anndata.AnnData` object with normalized X. Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy.api as ep
+            adata = ep.data.mimic_2(encode=True)
+            adata_norm = ep.pp.norm_maxabs(adata, copy=True)
     """
-    return robust_scale(values)
+
+    if vars is None:
+        vars = get_numeric_vars(adata)
+    else:
+        assert_numeric_vars(adata, vars)
+
+    adata = _prep_adata_norm(adata, copy)
+
+    var_idx = get_column_indices(adata, vars)
+    var_values = get_column_values(adata, var_idx)
+
+    var_values = robust_scale(var_values, **kwargs)
+
+    set_numeric_vars(adata, var_values, vars)
+
+    _record_norm(adata, vars, "robust_scale")
+
+    return adata
 
 
 def _norm_quantile_uniform(values: np.ndarray) -> np.ndarray:

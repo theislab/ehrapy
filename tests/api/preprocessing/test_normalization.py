@@ -97,7 +97,7 @@ class TestNormalization:
     def test_norm_maxabs(self):
         """Test for the maxabs normalization method."""
 
-        adata_norm = ep.pp.normalize(self.adata, methods="maxabs", copy=True)
+        adata_norm = ep.pp.norm_maxabs(self.adata, copy=True)
 
         num1_norm = np.array([0.5964913, 0.94736844, 1.0], dtype=np.float32)
         num2_norm = np.array([0.4, 1.0, 0.6], dtype=np.float32)
@@ -112,7 +112,7 @@ class TestNormalization:
     def test_norm_robust_scale(self):
         """Test for the robust_scale normalization method."""
 
-        adata_norm = ep.pp.normalize(self.adata, methods="robust_scale", copy=True)
+        adata_norm = ep.pp.norm_robust_scale(self.adata, copy=True)
 
         num1_norm = np.array([-1.73913043, 0.0, 0.26086957], dtype=np.float32)
         num2_norm = np.array([-0.66666667, 1.33333333, 0.0], dtype=np.float32)
@@ -123,6 +123,15 @@ class TestNormalization:
         assert np.allclose(adata_norm.X[:, 3], num1_norm)
         assert np.allclose(adata_norm.X[:, 4], num2_norm)
         assert np.allclose(adata_norm.X[:, 5], self.adata.X[:, 5], equal_nan=True)
+
+        # Test passing kwargs works
+        adata_norm = ep.pp.norm_robust_scale(self.adata, copy=True, with_scaling=False)
+
+        num1_norm = np.array([-2.0, 0.0, 0.2999997], dtype=np.float32)
+        num2_norm = np.array([-1.0, 2.0, 0.0], dtype=np.float32)
+
+        assert np.allclose(adata_norm.X[:, 3], num1_norm)
+        assert np.allclose(adata_norm.X[:, 4], num2_norm)
 
     def test_norm_quantile_uniform(self):
         """Test for the uniform quantile normalization method."""
