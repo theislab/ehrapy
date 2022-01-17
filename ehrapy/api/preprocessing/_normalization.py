@@ -85,11 +85,6 @@ def normalize(
     adata = _prep_adata_norm(adata, copy)
 
     for method, vars_list in methods.items():
-        var_idx = get_column_indices(adata, vars_list)
-        var_values = get_column_values(adata, var_idx)
-
-        if method == "sqrt":
-            adata.X[:, var_idx] = _norm_sqrt(var_values)
 
         _record_norm(adata, vars_list, method)
 
@@ -397,21 +392,10 @@ def norm_log(
     return adata
 
 
-def _norm_sqrt(values: np.ndarray) -> np.ndarray:
+def norm_sqrt(adata: AnnData, vars: list[str] | None = None, copy: bool = False) -> AnnData | None:
     """Apply square root normalization.
 
-    Args:
-        values: A single column numpy array
-
-    Returns:
-        Single column numpy array with square root transformed values
-    """
-
-    return np.sqrt(values)
-
-
-def norm_identity(adata: AnnData, vars: list[str] | None = None, copy: bool = False) -> AnnData | None:
-    """Apply identity normalization.
+    Take the square root of all values.
 
     Args:
         adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encoded using ~ehrapy.preprocessing.encode.encode.
@@ -426,7 +410,47 @@ def norm_identity(adata: AnnData, vars: list[str] | None = None, copy: bool = Fa
 
             import ehrapy.api as ep
             adata = ep.data.mimic_2(encode=True)
-            adata_norm = ep.pp.norma_identity(adata, copy=True)
+            adata_norm = ep.pp.norm_sqrt(adata, copy=True)
+    """
+
+    if vars is None:
+        vars = get_numeric_vars(adata)
+    else:
+        assert_numeric_vars(adata, vars)
+
+    adata = _prep_adata_norm(adata, copy)
+
+    var_idx = get_column_indices(adata, vars)
+    var_values = get_column_values(adata, var_idx)
+
+    var_values = np.sqrt(var_values)
+
+    set_numeric_vars(adata, var_values, vars)
+
+    _record_norm(adata, vars, "sqrt")
+
+    return adata
+
+
+def norm_identity(adata: AnnData, vars: list[str] | None = None, copy: bool = False) -> AnnData | None:
+    """Apply identity normalization.
+
+    Returns the original, un-normalized values
+
+    Args:
+        adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encoded using ~ehrapy.preprocessing.encode.encode.
+        vars: List of the names of the numeric variables to normalize. If None (default) all numeric variables will be normalized.
+        copy: Whether to return a copy or act in place
+
+    Returns:
+        :class:`~anndata.AnnData` object with normalized X. Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy.api as ep
+            adata = ep.data.mimic_2(encode=True)
+            adata_norm = ep.pp.norm_identity(adata, copy=True)
     """
 
     if vars is None:

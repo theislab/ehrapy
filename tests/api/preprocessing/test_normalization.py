@@ -217,7 +217,7 @@ class TestNormalization:
     def test_norm_sqrt(self):
         """Test for the square root normalization method."""
 
-        adata_norm = ep.pp.normalize(self.adata, methods="sqrt", copy=True)
+        adata_norm = ep.pp.norm_sqrt(self.adata, copy=True)
 
         num1_norm = np.array([1.8439089, 2.32379, 2.3874671], dtype=np.float32)
         num2_norm = np.array([1.4142135, 2.236068, 1.7320508], dtype=np.float32)
