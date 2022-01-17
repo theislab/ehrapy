@@ -73,7 +73,7 @@ class TestNormalization:
     def test_norm_minmax(self):
         """Test for the minmax normalization method."""
 
-        adata_norm = ep.pp.normalize(self.adata, methods="minmax", copy=True)
+        adata_norm = ep.pp.norm_minmax(self.adata, copy=True)
 
         num1_norm = np.array([0.0, 0.86956537, 0.9999999], dtype=np.dtype(np.float32))
         num2_norm = np.array([0.0, 1.0, 0.3333333], dtype=np.float32)
@@ -84,6 +84,15 @@ class TestNormalization:
         assert np.allclose(adata_norm.X[:, 3], num1_norm)
         assert np.allclose(adata_norm.X[:, 4], num2_norm)
         assert np.allclose(adata_norm.X[:, 5], self.adata.X[:, 5], equal_nan=True)
+
+        # Test passing kwargs works
+        adata_norm = ep.pp.norm_minmax(self.adata, copy=True, feature_range=(0, 2))
+
+        num1_norm = np.array([0.0, 1.7391307, 1.9999998], dtype=np.float32)
+        num2_norm = np.array([0.0, 2.0, 0.6666666], dtype=np.float32)
+
+        assert np.allclose(adata_norm.X[:, 3], num1_norm)
+        assert np.allclose(adata_norm.X[:, 4], num2_norm)
 
     def test_norm_maxabs(self):
         """Test for the maxabs normalization method."""

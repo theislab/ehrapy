@@ -88,9 +88,7 @@ def normalize(
         var_idx = get_column_indices(adata, vars_list)
         var_values = get_column_values(adata, var_idx)
 
-        if method == "minmax":
-            adata.X[:, var_idx] = _norm_minmax(var_values)
-        elif method == "maxabs":
+        if method == "maxabs":
             adata.X[:, var_idx] = _norm_maxabs(var_values)
         elif method == "robust_scale":
             adata.X[:, var_idx] = _norm_robust_scale(var_values)
@@ -131,7 +129,7 @@ def norm_scale(adata: AnnData, vars: list[str] | None = None, copy: bool = False
 
             import ehrapy.api as ep
             adata = ep.data.mimic_2(encode=True)
-            adata_norm = ep.pp.norma_scale(adata, copy=True)
+            adata_norm = ep.pp.norm_scale(adata, copy=True)
     """
 
     if vars is None:
@@ -153,16 +151,45 @@ def norm_scale(adata: AnnData, vars: list[str] | None = None, copy: bool = False
     return adata
 
 
-def _norm_minmax(values: np.ndarray) -> np.ndarray:
-    """Apply minmax normalization.
+def norm_minmax(adata: AnnData, vars: list[str] | None = None, copy: bool = False, **kwargs) -> AnnData | None:
+    """Apply min-max normalization.
+
+    Functionality is provided by ~sklearn.preprocessing.minmax_scale, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.minmax_scale.html#sklearn.preprocessing.minmax_scale for details.
 
     Args:
-        values: A single column numpy array
+        adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encoded using ~ehrapy.preprocessing.encode.encode.
+        vars: List of the names of the numeric variables to normalize. If None (default) all numeric variables will be normalized.
+        copy: Whether to return a copy or act in place
+        **kwargs: Additional arguments passed to ~sklearn.preprocessing.minmax_scale
 
     Returns:
-        Single column numpy array with minmax scaled values
+        :class:`~anndata.AnnData` object with normalized X. Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy.api as ep
+            adata = ep.data.mimic_2(encode=True)
+            adata_norm = ep.pp.norm_minmax(adata, copy=True)
     """
-    return minmax_scale(values)
+
+    if vars is None:
+        vars = get_numeric_vars(adata)
+    else:
+        assert_numeric_vars(adata, vars)
+
+    adata = _prep_adata_norm(adata, copy)
+
+    var_idx = get_column_indices(adata, vars)
+    var_values = get_column_values(adata, var_idx)
+
+    var_values = minmax_scale(var_values, **kwargs)
+
+    set_numeric_vars(adata, var_values, vars)
+
+    _record_norm(adata, vars, "scale")
+
+    return adata
 
 
 def _norm_maxabs(values: np.ndarray) -> np.ndarray:
