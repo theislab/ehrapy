@@ -134,9 +134,9 @@ class TestNormalization:
         assert np.allclose(adata_norm.X[:, 4], num2_norm)
 
     def test_norm_quantile_uniform(self):
-        """Test for the uniform quantile normalization method."""
+        """Test for the quantile normalization method."""
 
-        adata_norm = ep.pp.normalize(self.adata, methods="quantile_uniform", copy=True)
+        adata_norm = ep.pp.norm_quantile(self.adata, copy=True)
 
         num1_norm = np.array([0.0, 0.5, 1.0], dtype=np.float32)
         num2_norm = np.array([0.0, 1.0, 0.5], dtype=np.float32)
@@ -148,30 +148,14 @@ class TestNormalization:
         assert np.allclose(adata_norm.X[:, 4], num2_norm)
         assert np.allclose(adata_norm.X[:, 5], self.adata.X[:, 5], equal_nan=True)
 
-        # Single column requires extra manipulation so check this works
-        adata_norm = ep.pp.normalize(self.adata, methods={"quantile_uniform": ["Numeric1"]}, copy=True)
-
-        assert np.allclose(adata_norm.X[:, 3], num1_norm)
-
-    def test_norm_quantile_normal(self):
-        """Test for the normal quantile normalization method."""
-
-        adata_norm = ep.pp.normalize(self.adata, methods="quantile_normal", copy=True)
+        # Test passing kwargs works
+        adata_norm = ep.pp.norm_quantile(self.adata, copy=True, output_distribution="normal")
 
         num1_norm = np.array([-5.19933758, 0.0, 5.19933758], dtype=np.float32)
         num2_norm = np.array([-5.19933758, 5.19933758, 0.0], dtype=np.float32)
 
-        assert np.array_equal(adata_norm.X[:, 0], self.adata.X[:, 0])
-        assert np.array_equal(adata_norm.X[:, 1], self.adata.X[:, 1])
-        assert np.array_equal(adata_norm.X[:, 2], self.adata.X[:, 2])
         assert np.allclose(adata_norm.X[:, 3], num1_norm)
         assert np.allclose(adata_norm.X[:, 4], num2_norm)
-        assert np.allclose(adata_norm.X[:, 5], self.adata.X[:, 5], equal_nan=True)
-
-        # Single column requires extra manipulation so check this works
-        adata_norm = ep.pp.normalize(self.adata, methods={"quantile_normal": ["Numeric1"]}, copy=True)
-
-        assert np.allclose(adata_norm.X[:, 3], num1_norm)
 
     def test_norm_power_yeo_johnson(self):
         """Test for the Yeo-Johnson power normalization method."""

@@ -88,11 +88,7 @@ def normalize(
         var_idx = get_column_indices(adata, vars_list)
         var_values = get_column_values(adata, var_idx)
 
-        if method == "quantile_uniform":
-            adata.X[:, var_idx] = _norm_quantile_uniform(var_values)
-        elif method == "quantile_normal":
-            adata.X[:, var_idx] = _norm_quantile_normal(var_values)
-        elif method == "power_yeo_johnson":
+        if method == "power_yeo_johnson":
             adata.X[:, var_idx] = _norm_power_yeo_johnson(var_values)
         elif method == "power_box_cox":
             adata.X[:, var_idx] = _norm_power_box_cox(var_values)
@@ -247,7 +243,7 @@ def norm_robust_scale(adata: AnnData, vars: list[str] | None = None, copy: bool 
 
             import ehrapy.api as ep
             adata = ep.data.mimic_2(encode=True)
-            adata_norm = ep.pp.norm_maxabs(adata, copy=True)
+            adata_norm = ep.pp.norm_robust_scale(adata, copy=True)
     """
 
     if vars is None:
@@ -269,38 +265,45 @@ def norm_robust_scale(adata: AnnData, vars: list[str] | None = None, copy: bool 
     return adata
 
 
-def _norm_quantile_uniform(values: np.ndarray) -> np.ndarray:
-    """Apply uniform quantile normalization.
+def norm_quantile(adata: AnnData, vars: list[str] | None = None, copy: bool = False, **kwargs) -> AnnData | None:
+    """Apply quantile normalization.
+
+    Functionality is provided by ~sklearn.preprocessing.quantile_transform, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.quantile_transform.html for details.
 
     Args:
-        values: A single column numpy array
+        adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encoded using ~ehrapy.preprocessing.encode.encode.
+        vars: List of the names of the numeric variables to normalize. If None (default) all numeric variables will be normalized.
+        copy: Whether to return a copy or act in place
+        **kwargs: Additional arguments passed to ~sklearn.preprocessing.quantile_transform
 
     Returns:
-        Single column numpy array with uniform quantile transformed values
+        :class:`~anndata.AnnData` object with normalized X. Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy.api as ep
+            adata = ep.data.mimic_2(encode=True)
+            adata_norm = ep.pp.norm_quantile(adata, copy=True)
     """
 
-    if values.ndim == 1:
-        values = values.reshape(-1, 1)
-        return np.squeeze(quantile_transform(values, output_distribution="uniform"))
+    if vars is None:
+        vars = get_numeric_vars(adata)
     else:
-        return quantile_transform(values, output_distribution="uniform")
+        assert_numeric_vars(adata, vars)
 
+    adata = _prep_adata_norm(adata, copy)
 
-def _norm_quantile_normal(values: np.ndarray) -> np.ndarray:
-    """Apply normal quantile normalization.
+    var_idx = get_column_indices(adata, vars)
+    var_values = get_column_values(adata, var_idx)
 
-    Args:
-        values: A single column numpy array
+    var_values = quantile_transform(var_values, **kwargs)
 
-    Returns:
-        Single column numpy array with normal quantile transformed values
-    """
+    set_numeric_vars(adata, var_values, vars)
 
-    if values.ndim == 1:
-        values = values.reshape(-1, 1)
-        return np.squeeze(quantile_transform(values, output_distribution="normal"))
-    else:
-        return quantile_transform(values, output_distribution="normal")
+    _record_norm(adata, vars, "quantile")
+
+    return adata
 
 
 def _norm_power_yeo_johnson(values: np.ndarray) -> np.ndarray:

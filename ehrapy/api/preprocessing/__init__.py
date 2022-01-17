@@ -3,6 +3,7 @@ from ehrapy.api.preprocessing._normalization import (
     norm_identity,
     norm_maxabs,
     norm_minmax,
+    norm_quantile,
     norm_robust_scale,
     norm_scale,
     normalize,
