@@ -43,7 +43,7 @@ class TestNormalization:
         with pytest.raises(ValueError, match=r"Some keys of methods are not available normalization methods"):
             ep.pp.normalize(self.adata, methods={"fail_method": ["Numeric2"]})
 
-        with pytest.raises(ValueError, match=r"Some values of methods contain items which are not numeric variables"):
+        with pytest.raises(ValueError, match=r"Some selected vars are not numeric"):
             ep.pp.normalize(self.adata, methods={"identity": ["String1"]})
 
     def test_norm_scale(self):
@@ -231,7 +231,7 @@ class TestNormalization:
         adata_norm = ep.pp.normalize(self.adata, methods="identity", copy=True)
 
         assert np.allclose(adata_norm.X, self.adata.X, equal_nan=True)
-        assert np.allclose(adata_norm.layers["raw"], self.adata.X, equal_nan=True)
+        assert np.allclose(adata_norm.layers["raw_norm"], self.adata.X, equal_nan=True)
 
     def test_norm_mixed(self):
         """Test for normalization with mixed methods."""

@@ -4,7 +4,13 @@ import numpy as np
 from anndata import AnnData
 from sklearn.preprocessing import maxabs_scale, minmax_scale, power_transform, quantile_transform, robust_scale, scale
 
-from ehrapy.api._anndata_util import assert_encoded, get_column_indices, get_column_values, get_numeric_vars
+from ehrapy.api._anndata_util import (
+    assert_encoded,
+    assert_numeric_vars,
+    get_column_indices,
+    get_column_values,
+    get_numeric_vars,
+)
 
 available_normalization_methods = {
     "scale",
@@ -64,9 +70,8 @@ def normalize(
     """
     assert_encoded(adata)
 
-    num_vars = get_numeric_vars(adata)
     if isinstance(methods, str):
-        methods = {methods: num_vars}
+        methods = {methods: get_numeric_vars(adata)}
     else:
         if not set(methods.keys()) <= available_normalization_methods:
             raise ValueError(
@@ -74,13 +79,9 @@ def normalize(
                 f"{available_normalization_methods}"
             )
         for vars_list in methods.values():
-            if not set(vars_list) <= set(num_vars):
-                raise ValueError("Some values of methods contain items which are not numeric variables")
+            assert_numeric_vars(adata, vars_list)
 
-    if copy:
-        adata = adata.copy()
-
-    adata.layers["raw"] = adata.X.copy()
+    adata = _prep_adata_norm(adata, copy)
 
     for method, vars_list in methods.items():
         var_idx = get_column_indices(adata, vars_list)
@@ -272,6 +273,17 @@ def _norm_identity(values: np.ndarray) -> np.ndarray:
         Single column numpy array with normalized values
     """
     return values
+
+
+def _prep_adata_norm(adata: AnnData, copy: bool = False) -> AnnData | None:
+
+    if copy:
+        adata = adata.copy()
+
+    if "raw_norm" not in adata.layers.keys():
+        adata.layers["raw_norm"] = adata.X.copy()
+
+    return adata
 
 
 def _record_norm(adata: AnnData, vars_list: list[str], method: str) -> None:

@@ -60,6 +60,16 @@ def get_numeric_vars(adata: AnnData) -> list[str]:
     return adata.uns["categoricals"]["not_categorical"]
 
 
+def assert_numeric_vars(adata: AnnData, vars: list[str]):
+
+    num_vars = get_numeric_vars(adata)
+
+    try:
+        assert set(vars) <= set(num_vars)
+    except AssertionError:
+        raise ValueError("Some selected vars are not numeric")
+
+
 def set_numeric_vars(
     adata: AnnData, values: np.ndarray, vars: list[str] | None = None, copy: bool = False
 ) -> AnnData | None:
@@ -77,12 +87,10 @@ def set_numeric_vars(
 
     assert_encoded(adata)
 
-    num_vars = get_numeric_vars(adata)
-
     if vars is None:
-        vars = num_vars
-    elif not set(vars) <= set(num_vars):
-        raise ValueError("Some selected vars are not numeric")
+        vars = get_numeric_vars(adata)
+    else:
+        assert_numeric_vars(adata, vars)
 
     if not np.issubdtype(values.dtype, np.number):
         raise TypeError(f"values must be numeric (current dtype is {values.dtype})")

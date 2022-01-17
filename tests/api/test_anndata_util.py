@@ -6,7 +6,13 @@ import pytest
 from anndata import AnnData
 
 import ehrapy.api as ep
-from ehrapy.api._anndata_util import NotEncodedError, assert_encoded, get_numeric_vars, set_numeric_vars
+from ehrapy.api._anndata_util import (
+    NotEncodedError,
+    assert_encoded,
+    assert_numeric_vars,
+    get_numeric_vars,
+    set_numeric_vars,
+)
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_PATH = f"{CURRENT_DIR}"
@@ -73,6 +79,14 @@ class TestAnnDataUtil:
 
         with pytest.raises(NotEncodedError, match=r"not yet been encoded"):
             get_numeric_vars(self.adata_strings)
+
+    def test_assert_numeric_vars(self):
+        "Test for the numeric vars assertion."
+
+        assert_numeric_vars(self.adata_encoded, ["Numeric2"])
+
+        with pytest.raises(ValueError, match=r"Some selected vars are not numeric"):
+            assert_numeric_vars(self.adata_encoded, ["Numeric2", "String1"])
 
     def test_set_numeric_vars(self):
         """Test for the numeric vars setter."""
