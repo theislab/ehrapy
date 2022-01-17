@@ -5,90 +5,12 @@ from anndata import AnnData
 from sklearn.preprocessing import maxabs_scale, minmax_scale, power_transform, quantile_transform, robust_scale, scale
 
 from ehrapy.api._anndata_util import (
-    assert_encoded,
     assert_numeric_vars,
     get_column_indices,
     get_column_values,
     get_numeric_vars,
     set_numeric_vars,
 )
-
-available_normalization_methods = {
-    "scale",
-    "minmax",
-    "maxabs",
-    "robust_scale",
-    "quantile_uniform",
-    "quantile_normal",
-    "power_yeo_johnson",
-    "power_box_cox",
-    "log1p",
-    "sqrt",
-    "identity",
-}
-
-
-def normalize(
-    adata: AnnData, methods: dict[str, list[str]] | str, base: int | float | None = None, copy: bool = False
-) -> AnnData | None:
-    """Normalize numeric variables.
-
-    This function normalizes the numeric variables in an AnnData object.
-
-    Available normalization methods are:
-
-    1. scale (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.scale.html#sklearn.preprocessing.scale)
-    2. minmax (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MinMaxScaler.html#sklearn.preprocessing.MinMaxScaler)
-    3. maxabs (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.maxabs_scale.html#sklearn.preprocessing.maxabs_scale)
-    4. robust_scale (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.robust_scale.html#sklearn.preprocessing.robust_scale)
-    5. quantile_uniform (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.quantile_transform.html#sklearn.preprocessing.quantile_transform)
-    6. quantile_normal (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.quantile_transform.html#sklearn.preprocessing.quantile_transform)
-    7. power_yeo_johnson (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.power_transform.html#sklearn.preprocessing.power_transform)
-    8. power_box_cox (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.power_transform.html#sklearn.preprocessing.power_transform)
-    9. log1p Computes :math:`x = \\log(x + 1)`, where :math:`log` denotes the natural logarithm unless a different base is given.
-    10. sqrt Computes the square root of the values.
-    11. identity (return the un-normalized values)
-
-    Args:
-        adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encode using ~ehrapy.preprocessing.encode.encode.
-        methods: Methods to use for normalization. Either:
-
-            str: Name of the method to use for all numeric variable
-
-            Dict: A dictionary specifying the method for each numeric variable where keys are methods and values are lists of variables
-        base: Numeric base for logarithm in the log1p method. If None the natural logarithm is used.
-        copy: Whether to return a copy or act in place
-
-    Returns:
-        :class:`~anndata.AnnData` object with normalized X. Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
-
-    Example:
-        .. code-block:: python
-
-            import ehrapy.api as ep
-            adata = ep.data.mimic_2(encode=True)
-            adata_norm = ep.pp.normalize(adata, method="minmax", copy=True)
-    """
-    assert_encoded(adata)
-
-    if isinstance(methods, str):
-        methods = {methods: get_numeric_vars(adata)}
-    else:
-        if not set(methods.keys()) <= available_normalization_methods:
-            raise ValueError(
-                "Some keys of methods are not available normalization methods. Available methods are:"
-                f"{available_normalization_methods}"
-            )
-        for vars_list in methods.values():
-            assert_numeric_vars(adata, vars_list)
-
-    adata = _prep_adata_norm(adata, copy)
-
-    for method, vars_list in methods.items():
-
-        _record_norm(adata, vars_list, method)
-
-    return adata
 
 
 def norm_scale(adata: AnnData, vars: list[str] | None = None, copy: bool = False, **kwargs) -> AnnData | None:

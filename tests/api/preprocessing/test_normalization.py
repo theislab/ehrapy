@@ -37,14 +37,11 @@ class TestNormalization:
 
         self.adata = ep.pp.encode(self.adata, autodetect=True, encodings={})
 
-    def test_methods_checks(self):
-        """Test for checks that methods argument is valid."""
-
-        with pytest.raises(ValueError, match=r"Some keys of methods are not available normalization methods"):
-            ep.pp.normalize(self.adata, methods={"fail_method": ["Numeric2"]})
+    def test_vars_checks(self):
+        """Test for checks that vars argument is valid."""
 
         with pytest.raises(ValueError, match=r"Some selected vars are not numeric"):
-            ep.pp.normalize(self.adata, methods={"identity": ["String1"]})
+            ep.pp.norm_scale(self.adata, vars=["String1"])
 
     def test_norm_scale(self):
         """Test for the scaling normalization method."""
@@ -237,28 +234,13 @@ class TestNormalization:
         assert np.allclose(adata_norm.X, self.adata.X, equal_nan=True)
         assert np.allclose(adata_norm.layers["raw_norm"], self.adata.X, equal_nan=True)
 
-    # def test_norm_mixed(self):
-    #     """Test for normalization with mixed methods."""
-
-    #     adata_norm = ep.pp.normalize(self.adata, methods={"minmax": ["Numeric1"], "scale": ["Numeric2"]}, copy=True)
-
-    #     num1_norm = np.array([0.0, 0.86956537, 0.9999999], dtype=np.dtype(np.float32))
-    #     num2_norm = np.array([-1.069045, 1.3363061, -0.2672612], dtype=np.float32)
-
-    #     assert np.array_equal(adata_norm.X[:, 0], self.adata.X[:, 0])
-    #     assert np.array_equal(adata_norm.X[:, 1], self.adata.X[:, 1])
-    #     assert np.array_equal(adata_norm.X[:, 2], self.adata.X[:, 2])
-    #     assert np.allclose(adata_norm.X[:, 3], num1_norm)
-    #     assert np.allclose(adata_norm.X[:, 4], num2_norm)
-    #     assert np.allclose(adata_norm.X[:, 5], self.adata.X[:, 5], equal_nan=True)
-
     def test_norm_record(self):
         """Test for logging of applied normalization methods."""
 
-        adata_norm = ep.pp.normalize(self.adata, methods="minmax", copy=True)
+        adata_norm = ep.pp.norm_minmax(self.adata, copy=True)
 
         assert adata_norm.uns["normalization"] == {"Numeric1": ["minmax"], "Numeric2": ["minmax"]}
 
-        adata_norm = ep.pp.normalize(adata_norm, methods={"maxabs": ["Numeric1"]}, copy=True)
+        adata_norm = ep.pp.norm_maxabs(adata_norm, vars=["Numeric1"], copy=True)
 
         assert adata_norm.uns["normalization"] == {"Numeric1": ["minmax", "maxabs"], "Numeric2": ["minmax"]}

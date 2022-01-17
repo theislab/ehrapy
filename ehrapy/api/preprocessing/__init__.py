@@ -9,7 +9,6 @@ from ehrapy.api.preprocessing._normalization import (
     norm_robust_scale,
     norm_scale,
     norm_sqrt,
-    normalize,
 )
 from ehrapy.api.preprocessing._quality_control import calculate_qc_metrics
 from ehrapy.api.preprocessing._scanpy_pp_api import *  # noqa: E402,F403
