@@ -88,9 +88,7 @@ def normalize(
         var_idx = get_column_indices(adata, vars_list)
         var_values = get_column_values(adata, var_idx)
 
-        if method == "log1p":
-            adata.X[:, var_idx] = _norm_log1p(var_values, base)
-        elif method == "sqrt":
+        if method == "sqrt":
             adata.X[:, var_idx] = _norm_sqrt(var_values)
 
         _record_norm(adata, vars_list, method)
@@ -343,23 +341,60 @@ def norm_power(adata: AnnData, vars: list[str] | None = None, copy: bool = False
     return adata
 
 
-def _norm_log1p(values: np.ndarray, base: int | float | None) -> np.ndarray:
-    """Apply log1p normalization.
+def norm_log(
+    adata: AnnData,
+    vars: list[str] | None = None,
+    base: int | float | None = None,
+    offset: int | float = 1,
+    copy: bool = False,
+) -> AnnData | None:
+    """Apply log normalization.
+
+    Computes :math:`x = \\log(x + offset)`, where :math:`log` denotes the natural logarithm unless a different base is given and the default :math:`offset` is :math:`1`
 
     Args:
-        values: A single column numpy array
-        base: Numeric base for the logarithm
+        adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encoded using ~ehrapy.preprocessing.encode.encode.
+        vars: List of the names of the numeric variables to normalize. If None (default) all numeric variables will be normalized.
+        base: Numeric base for logarithm. If None the natural logarithm is used.
+        offset: Offset added to values before computing the logarithm. The default is 1.
+        copy: Whether to return a copy or act in place
+        **kwargs: Additional arguments passed to ~sklearn.preprocessing.power_transform
 
     Returns:
-        Single column numpy array with log1p transformed values
+        :class:`~anndata.AnnData` object with normalized X. Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy.api as ep
+            adata = ep.data.mimic_2(encode=True)
+            adata_norm = ep.pp.norm_log(adata, copy=True)
     """
 
-    np.log1p(values, out=values)
+    if vars is None:
+        vars = get_numeric_vars(adata)
+    else:
+        assert_numeric_vars(adata, vars)
+
+    adata = _prep_adata_norm(adata, copy)
+
+    var_idx = get_column_indices(adata, vars)
+    var_values = get_column_values(adata, var_idx)
+
+    if offset == 1:
+        np.log1p(var_values, out=var_values)
+    else:
+        var_values = var_values + offset
+        np.log(var_values, out=var_values)
 
     if base is not None:
-        np.divide(values, np.log(base), out=values)
+        np.divide(var_values, np.log(base), out=var_values)
 
-    return values
+    set_numeric_vars(adata, var_values, vars)
+
+    _record_norm(adata, vars, "log")
+
+    return adata
 
 
 def _norm_sqrt(values: np.ndarray) -> np.ndarray:

@@ -182,9 +182,9 @@ class TestNormalization:
         assert np.allclose(adata_norm.X[:, 4], num2_norm)
 
     def test_norm_log1p(self):
-        """Test for the log1p normalization method."""
+        """Test for the log normalization method."""
 
-        adata_norm = ep.pp.normalize(self.adata, methods="log1p", copy=True)
+        adata_norm = ep.pp.norm_log(self.adata, copy=True)
 
         num1_norm = np.array([1.4816046, 1.856298, 1.9021075], dtype=np.float32)
         num2_norm = np.array([1.0986123, 1.7917595, 1.3862944], dtype=np.float32)
@@ -197,10 +197,19 @@ class TestNormalization:
         assert np.allclose(adata_norm.X[:, 5], self.adata.X[:, 5], equal_nan=True)
 
         # Check alternative base works
-        adata_norm = ep.pp.normalize(self.adata, methods="log1p", base=10, copy=True)
+        adata_norm = ep.pp.norm_log(self.adata, base=10, copy=True)
 
         num1_norm = np.divide(np.array([1.4816046, 1.856298, 1.9021075], dtype=np.float32), np.log(10))
         num2_norm = np.divide(np.array([1.0986123, 1.7917595, 1.3862944], dtype=np.float32), np.log(10))
+
+        assert np.allclose(adata_norm.X[:, 3], num1_norm)
+        assert np.allclose(adata_norm.X[:, 4], num2_norm)
+
+        # Check alternative offset works
+        adata_norm = ep.pp.norm_log(self.adata, offset=0.5, copy=True)
+
+        num1_norm = np.array([1.3609766, 1.7749524, 1.8245492], dtype=np.float32)
+        num2_norm = np.array([0.91629076, 1.7047482, 1.252763], dtype=np.float32)
 
         assert np.allclose(adata_norm.X[:, 3], num1_norm)
         assert np.allclose(adata_norm.X[:, 4], num2_norm)
