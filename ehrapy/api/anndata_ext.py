@@ -4,7 +4,7 @@ from typing import NamedTuple
 
 import numpy as np
 import pandas as pd
-from anndata import AnnData
+from anndata import AnnData, concat
 
 
 class BaseDataframes(NamedTuple):
@@ -95,6 +95,26 @@ def anndata_to_df(adata: AnnData, add_from_obs: list[str] | str | None = None) -
     return df
 
 
+def move_to_obs(adata: AnnData, to_obs: list[str] | str) -> None:
+    """Move some columns from X to obs inplace
+    Args:
+        adata: The AnnData object
+        to_obs: The columns to move to obs
+
+    Returns:
+        The original AnnData object with moved columns from X to obs
+    """
+    if isinstance(to_obs, str):
+        to_obs = [to_obs]
+    # don't allow moving encoded columns as this could lead to inconsistent data in X and obs
+    if any(column.startswith("ehrapycat") for column in to_obs):
+        raise ObsMoveError("Cannot move encoded columns from X to obs. Either undo encoding or remove them from the list!")
+    indices = adata.var_names.isin(to_obs)
+    df = adata[:, indices].to_df()
+    adata._inplace_subset_var(~indices)
+    adata.obs = adata.obs.join(df)
+
+
 def get_column_indices(adata: AnnData, col_names: str | list[str]) -> list[int]:
     """Fetches the column indices in X for a given list of column names
 
@@ -134,4 +154,8 @@ class ColumnNotFoundError(Exception):
 
 
 class ObsEmptyError(Exception):
+    pass
+
+
+class ObsMoveError(Exception):
     pass
