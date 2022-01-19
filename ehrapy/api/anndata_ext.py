@@ -105,7 +105,7 @@ def get_column_indices(adata: AnnData, col_names: str | list[str]) -> list[int]:
     Returns:
         Set of column indices
     """
-    if isinstance(col_names, str):
+    if isinstance(col_names, str):  # pragma: no cover
         col_names = [col_names]
 
     indices = list()

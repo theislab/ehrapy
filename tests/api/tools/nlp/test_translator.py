@@ -13,15 +13,14 @@ _TEST_PATH = f"{CURRENT_DIR}/test_data_nlp"
 
 deepl_token: str = os.environ.get("DEEPL_TOKEN")
 
-if deepl_token is None:
-    pytest.skip(
-        "Skipping DeepL translation tests. Require DEEPL_TOKEN as environment variable", allow_module_level=True
-    )
-
 
 @pytest.mark.parametrize("flavour", ["deepl", "googletranslate"])
 class TestTranslator:
     def setup_translator(self, flavour):
+        if deepl_token is None and flavour == "deepl":
+            print("Skipping DeepL translation tests. Require DEEPL_TOKEN as environment variable")
+            assert True
+
         target = "en-us" if flavour == "deepl" else "en"
         token = deepl_token if flavour == "deepl" else None
         self.translator = Translator(flavour, target=target, token=token)
