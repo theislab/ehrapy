@@ -97,7 +97,7 @@ def _extract_impute_value(replacement: dict[str, str | int], column_name: str) -
 def simple_impute(
     adata: AnnData, var_names: list[str] | None = None, strategy: str = "mean", copy: bool = False
 ) -> AnnData:
-    """Impute AnnData object using mean imputation. This works for numerical data only.
+    """Impute AnnData object using mean/median/most frequent imputation. This works for numerical data only.
 
     Args:
         adata: The AnnData object to use mean Imputation on
