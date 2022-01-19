@@ -17,10 +17,6 @@ deepl_token: str = os.environ.get("DEEPL_TOKEN")
 @pytest.mark.parametrize("flavour", ["deepl", "googletranslate"])
 class TestTranslator:
     def setup_translator(self, flavour):
-        if deepl_token is None and flavour == "deepl":
-            print("Skipping DeepL translation tests. Require DEEPL_TOKEN as environment variable")
-            assert True
-
         target = "en-us" if flavour == "deepl" else "en"
         token = deepl_token if flavour == "deepl" else None
         self.translator = Translator(flavour, target=target, token=token)
@@ -44,12 +40,18 @@ class TestTranslator:
         )
 
     def test_text_translation(self, flavour):
+        if deepl_token is None and flavour == "deepl":
+            pytest.skip("Skipping DeepL translation tests. Require DEEPL_TOKEN as environment variable")
+
         self.setup_translator(flavour)
         assert self.translator.flavour == flavour
         result = self.translator.translate_text("Ich mag Züge.")
         assert result == "I like trains."
 
     def test_translate_obs_column(self, flavour):
+        if deepl_token is None and flavour == "deepl":
+            pytest.skip("Skipping DeepL translation tests. Require DEEPL_TOKEN as environment variable")
+
         self.setup_translator(flavour)
         self.translator.translate_obs_column(
             self.test_adata,
@@ -61,6 +63,9 @@ class TestTranslator:
         assert self.test_adata.obs.melt()["value"].str.lower().isin(["cancer"]).any()
 
     def test_translate_var_column(self, flavour):
+        if deepl_token is None and flavour == "deepl":
+            pytest.skip("Skipping DeepL translation tests. Require DEEPL_TOKEN as environment variable")
+
         self.setup_translator(flavour)
         self.translator.translate_var_column(
             self.test_adata,
@@ -72,6 +77,9 @@ class TestTranslator:
         assert self.test_adata.var.melt()["value"].str.lower().isin(["cancer"]).any()
 
     def test_translate_X_column(self, flavour):
+        if deepl_token is None and flavour == "deepl":
+            pytest.skip("Skipping DeepL translation tests. Require DEEPL_TOKEN as environment variable")
+
         self.setup_translator(flavour)
         self.translator.translate_X_column(
             self.test_adata,
