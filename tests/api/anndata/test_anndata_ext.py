@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import numpy as np
 import pytest
 from anndata import AnnData
@@ -89,7 +91,7 @@ class TestAnndataExt:
             _ = anndata_to_df(adata, add_from_obs=["some_missing_column"])
 
     @staticmethod
-    def _setup_df_to_anndata() -> (DataFrame, list, list, list):
+    def _setup_df_to_anndata() -> Tuple[DataFrame, list, list, list]:
         col1_val = ["str" + str(idx) for idx in range(100)]
         col2_val = ["another_str" + str(idx) for idx in range(100)]
         col3_val = [idx for idx in range(100)]
@@ -98,7 +100,7 @@ class TestAnndataExt:
         return df, col1_val, col2_val, col3_val
 
     @staticmethod
-    def _setup_anndata_to_df() -> (list, list, list):
+    def _setup_anndata_to_df() -> Tuple[list, list, list]:
         col1_val = ["patient" + str(idx) for idx in range(100)]
         col2_val = ["feature" + str(idx) for idx in range(100)]
         col3_val = [idx for idx in range(100)]

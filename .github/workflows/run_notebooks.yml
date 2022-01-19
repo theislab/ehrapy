@@ -1,6 +1,8 @@
 name: Run Notebooks
 
-on: [push]
+on:
+    - push
+    - pull_request_target
 
 jobs:
     run:
@@ -26,6 +28,11 @@ jobs:
               run: |
                   pip install poetry
                   poetry --version
+
+            - name: Install ghostscript Ubuntu
+              run: |
+                  sudo apt update
+                  sudo apt install -y ghostscript
 
             - name: Install package
               run: poetry install -E "en-core-web-md"
