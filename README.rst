@@ -29,12 +29,15 @@
    :alt: Black
 
 .. warning::
-    ehrapy is still in development and there is no version on PyPI yet.
+    ehrapy is still in development.
     If you are willing to try out alpha software feel free to install from source or contact us.
 
 ehrapy overview
 ===============
 
+.. figure:: https://user-images.githubusercontent.com/21954664/150370356-9f9b170d-76d1-4376-9fd7-54f9f3fb2ae4.png
+   :scale: 100 %
+   :alt: ehrapy overview
 
 Features
 --------
