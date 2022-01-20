@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from functools import wraps
-from typing import Dict, List, Union
+from typing import List, Union
 
 import deepl
 import numpy as np
@@ -12,7 +14,7 @@ from ehrapy.api.anndata_ext import get_column_indices, get_column_values
 
 
 class Translator:
-    """Implementation of the translator super class"""
+    """Class providing an interface to all translation functions. Requires a flavour."""
 
     def __init__(
         self, flavour: str = "deepl", source: str = "de", target: str = "en", token: str = None
@@ -27,9 +29,7 @@ class Translator:
         self.source_language = source
         self.target_language = target
 
-    def translate_text(
-        self, text: Union[str, List], target_language: str = None
-    ) -> Union[str, List[str]]:  # pragma: no cover
+    def translate_text(self, text: str | list, target_language: str = None) -> str | list[str]:  # pragma: no cover
         """Translates the provided text into the target language.
 
         Args:
@@ -144,7 +144,7 @@ class Translator:
                 index_values[index] = translated_column_name
                 adata.var_names = index_values
 
-            translated_column_values: List = translate_text(
+            translated_column_values: list = translate_text(
                 column_values  # type: ignore
             )  # TODO: Check that structure is still ok
             # translated_column_values = list(map(lambda text_result: text_result.text, translated_column_values))
@@ -225,7 +225,7 @@ class DeepL:
                 print(f"{language.code} ({language.name})")
 
     @_check_usage  # type: ignore
-    def translate_text(self, text: Union[str, List], target_language: str) -> Union[List[np.ndarray], str]:
+    def translate_text(self, text: str | list, target_language: str) -> list[np.ndarray] | str:
         """Translates the provided text into the target language
 
         Args:
@@ -259,7 +259,7 @@ class DeepL:
 
     @_check_usage  # type: ignore # pragma: no cover
     def create_glossary(
-        self, glossary_name: str, source_language: str, target_language: str, entries: Dict[str, str]
+        self, glossary_name: str, source_language: str, target_language: str, entries: dict[str, str]
     ) -> GlossaryInfo:
         """Creates a DeepL Glossary to translate with.
 
@@ -277,9 +277,7 @@ class DeepL:
         return self.translator.create_glossary(glossary_name, source_language, target_language, entries)
 
     @_check_usage  # type: ignore # pragma: no cover
-    def translate_with_glossary(
-        self, text: Union[str, List], glossary: GlossaryInfo
-    ) -> Union[TextResult, List[TextResult]]:
+    def translate_with_glossary(self, text: str | list, glossary: GlossaryInfo) -> TextResult | list[TextResult]:
         """Translates text with a provided Glossary
 
         Args:
@@ -310,7 +308,7 @@ class GoogleTranslate:
             print(f"{code} ({language})")
 
     # @_check_usage  # type: ignore
-    def translate_text(self, text: Union[str, List], target_language: str) -> Union[str, List[str]]:
+    def translate_text(self, text: str | list, target_language: str) -> str | list[str]:
         """Translates the provided text into the target language
 
         Args:
