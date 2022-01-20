@@ -147,8 +147,6 @@ Group comparison
 Dataset integration
 +++++++++++++++++++
 
-.. currentmodule:: ehrapy.api
-
 .. autosummary::
     :toctree: tools
 
@@ -160,7 +158,7 @@ Translators
 .. autosummary::
     :toctree: tools
 
-    tools.DeepL
+    tools.Translator
 
 Plotting
 ~~~~~~~~

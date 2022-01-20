@@ -14,7 +14,7 @@ from rich import print
 
 from ehrapy.api import ehrapy_settings, settings
 from ehrapy.api.anndata_ext import df_to_anndata
-from ehrapy.api.data.dataloader import download
+from ehrapy.api.data._dataloader import download
 from ehrapy.api.io._utility_io import _get_file_extension, _slugify, multi_data_extensions, supported_extensions
 from ehrapy.api.preprocessing import encode
 
@@ -33,13 +33,23 @@ def read(
 ) -> AnnData | dict[str, AnnData] | MuData:
     """Reads or downloads a desired directory or single file.
 
+    This read method is a master method which works for several file types and file extensions.
+    The appropriate read function is automatically determined by the file extensions but can also be specified explicitly
+    using the `extension` parameter.
+
+    Allowed file formats are:
+        * `.h5ad`
+        * `.csv` or a folder containing several csv files.
+        * `.tsv` or a folder containing several tsv files.
+        * '.pdf'
+
     Args:
         dataset_path: Path to the file or directory to read.
         extension: File extension. Required to select the appropriate file reader.
         delimiter: File delimiter. Required for e.g. csv vs tsv files.
-        index_column: The index column of obs.
+        index_column: The index column of obs. Usually the patient visit ID or the patient ID.
         columns_obs_only: Which columns to only add to obs and not X.
-        return_mudata: Whether to create and return a MuData object.
+        return_mudata: Whether to create and return a MuData object. This is primarily used for complex datasets which require several AnnData files.
         cache: Whether to use the cache when reading.
         download_dataset_name: Name of the file or directory in case the dataset is downloaded
         backup_url: URL to download the data file(s) from if not yet existing.
@@ -552,7 +562,6 @@ def _decode_cached_adata(adata: AnnData, column_obs_only: list[str]) -> AnnData:
         adata.obs = pd.DataFrame(index=adata.obs.index)
     # set the new var names (unencoded ones)
     adata.var.index = var_names
-    # update original layer as well
     adata.layers["original"] = adata.X.copy()
     # reset uns
     adata.uns = OrderedDict()
