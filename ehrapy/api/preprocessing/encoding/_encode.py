@@ -228,13 +228,12 @@ def _encode(
         var_to_encoding = {} if "var_to_encoding" not in adata.uns.keys() else adata.uns["var_to_encoding"]
         encoded_x = None
         encoded_var_names = adata.var_names.to_list()
-
         with Progress(
             "[progress.description]{task.description}", BarColumn(), "[progress.percentage]{task.percentage:>3.0f}%"
         ) as progress:
 
             for encoding_mode in encodings.keys():
-                task = progress.add_task(f"[red] Setting up {encoding_mode}", total=len(encodings[encoding_mode]))
+                task = progress.add_task(f"[red] Setting up {encoding_mode}", total=1)
                 encode_mode_switcher = {
                     "one_hot_encoding": _one_hot_encoding,
                     "label_encoding": _label_encoding,
@@ -246,7 +245,6 @@ def _encode(
                 encoded_x, encoded_var_names = encode_mode_switcher[encoding_mode](
                     adata, encoded_x, encoded_var_names, encodings[encoding_mode], progress, task  # type: ignore
                 )
-
                 # update encoding history in uns
                 for categorical in encodings[encoding_mode]:
                     # multi column encoding modes -> multiple encoded columns
@@ -255,7 +253,6 @@ def _encode(
                             var_to_encoding[column_name] = encoding_mode
                     else:
                         var_to_encoding[categorical] = encoding_mode
-                    progress.update(task, advance=1)
 
         # update original layer content with the new categorical encoding and the old other values
         updated_layer = _update_layer_after_encoding(
@@ -282,7 +279,7 @@ def _encode(
                 "[bold red]Creation of AnnData object failed. "
                 "Ensure that you passed all non numerical, categorical values for encoding!"
             )
-            raise AnnDataCreationError from None
+            raise AnnDataCreationError
     del adata.obs
     del adata.X
 
@@ -309,7 +306,8 @@ def _one_hot_encoding(
         Encoded new X and the corresponding new var names
     """
     original_values = _initial_encoding(adata, categories)
-
+    if progress:
+        progress.update(task, description="[blue]Running one hot encoding encoding on passed columns ...")
     encoder = OneHotEncoder(handle_unknown="ignore", sparse=False).fit(original_values)
     categorical_prefixes = [
         f"ehrapycat_{category}_{str(suffix).strip()}"
@@ -321,7 +319,8 @@ def _one_hot_encoding(
     if X is None:
         X = adata.X
     if progress:
-        progress.update(task, description="[blue]Updating one hot encoded values ...")
+        progress.advance(task, 1)
+        progress.update(task, description="[blue]Updating X and var ...")
     temp_x, temp_var_names = _update_encoded_data(X, transformed, var_names, categorical_prefixes, categories)
 
     return temp_x, temp_var_names
@@ -357,12 +356,14 @@ def _label_encoding(
         transformed = label_encoder.transform(row_vec)
         # need a column vector instead of row vector
         original_values[:, idx : idx + 1] = transformed[..., None]
+        if progress:
+            progress.advance(task, 1 / len(categoricals))
     category_prefixes = [f"ehrapycat_{categorical}" for categorical in categoricals]
     # X is None if this is the first encoding "round" -> take the former X
     if X is None:
         X = adata.X
     if progress:
-        progress.update(task, description="[blue]Updating label encoded values ...")
+        progress.update(task, description="[blue]Updating X and var ...")
     temp_x, temp_var_names = _update_encoded_data(X, original_values, var_names, category_prefixes, categoricals)
 
     return temp_x, temp_var_names
@@ -389,6 +390,8 @@ def _count_encoding(
     """
     original_values = _initial_encoding(adata, categoricals)
 
+    if progress:
+        progress.update(task, description="[blue]Running label encoding encoding on passed columns ...")
     # returns a pandas dataframe per default, but numpy array is needed
     count_encoder = CountEncoder(return_df=False)
     count_encoder.fit(original_values)
@@ -398,7 +401,8 @@ def _count_encoding(
     if X is None:
         X = adata.X  # noqa: N806
     if progress:
-        progress.update(task, description="[blue]Updating count encoded values ...")
+        progress.advance(task, 1)
+        progress.update(task, description="[blue]Updating X and var ...")
     temp_x, temp_var_names = _update_encoded_data(X, transformed, var_names, category_prefix, categoricals)
 
     return temp_x, temp_var_names
@@ -422,22 +426,32 @@ def _hash_encoding(
         Encoded new X and the corresponding new var names
     """
     transformed_all, encoded_var_names = None, []
-    for multi_columns in categories:
+    for idx, multi_columns in enumerate(categories):
+        if progress:
+            progress.update(task, description=f"Running hash encoding on {idx + 1}. list ...")
         original_values = _initial_encoding(adata, multi_columns)
 
         encoder = HashingEncoder(return_df=False, n_components=8).fit(original_values)
         encoded_var_names += [f"ehrapycat_hash_{multi_columns[0]}" for _ in range(8)]
         transformed = encoder.transform(original_values)
         transformed_all = np.hstack((transformed_all, transformed)) if transformed_all is not None else transformed
+        if progress:
+            progress.advance(task, 1 / len(categories))
+
     # X is None if this is the first encoding "round" -> take the former X
     if X is None:
         X = adata.X
     if progress:
-        progress.update(task, description="[blue]Updating hash encoded values ...")
+        progress.update(task, description="[blue]Updating X and var ...")
 
     temp_x, temp_var_names = _update_multi_encoded_data(
         X, transformed_all, var_names, encoded_var_names, sum(categories, [])
     )
+    if temp_x.shape[1] != len(temp_var_names):
+        raise HashEncodingError(
+            "Hash encoding of input data failed. Note that hash encoding is not "
+            "suitable for datasets with low number of data points and low cardinality!"
+        )
 
     return temp_x, temp_var_names
 
@@ -920,4 +934,8 @@ class AnnDataCreationError(ValueError):
 
 
 class DuplicateColumnEncodingError(ValueError):
+    pass
+
+
+class HashEncodingError(Exception):
     pass
