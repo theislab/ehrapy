@@ -253,7 +253,6 @@ def _encode(
                             var_to_encoding[column_name] = encoding_mode
                     else:
                         var_to_encoding[categorical] = encoding_mode
-                # progress.advance(task, advance=1)
 
         # update original layer content with the new categorical encoding and the old other values
         updated_layer = _update_layer_after_encoding(
@@ -264,7 +263,6 @@ def _encode(
             categoricals,
         )
         try:
-            print(encoded_x)
             encoded_ann_data = AnnData(
                 encoded_x,
                 obs=adata.obs.copy(),
