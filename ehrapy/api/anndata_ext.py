@@ -115,6 +115,22 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str) -> None:
     adata.obs = adata.obs.join(df)
 
 
+def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
+    """Move some columns from obs to X inplace
+    Args:
+        adata: The AnnData object
+        to_x: The columns to move to X
+
+    Returns:
+        A new AnnData object with moved columns from obs to X. This should not be used for datetime columns currently.
+    """
+    if isinstance(to_x, str):
+        to_x = [to_x]
+    new_adata = concat([adata, AnnData(adata.obs[to_x], dtype="object")], axis=1)
+
+    return new_adata
+
+
 def get_column_indices(adata: AnnData, col_names: str | list[str]) -> list[int]:
     """Fetches the column indices in X for a given list of column names
 
