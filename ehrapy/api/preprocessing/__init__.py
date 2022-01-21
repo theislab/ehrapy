@@ -1,6 +1,5 @@
 from ehrapy.api.preprocessing._data_imputation import explicit_impute, knn_impute, miss_forest_impute, simple_impute
 from ehrapy.api.preprocessing._normalization import (
-    norm_identity,
     norm_log,
     norm_maxabs,
     norm_minmax,

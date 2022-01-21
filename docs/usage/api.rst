@@ -49,11 +49,8 @@ Basic preprocessing
 .. autosummary::
     :toctree: preprocessing
 
-    preprocessing.log1p
     preprocessing.pca
-    preprocessing.normalize_total
     preprocessing.regress_out
-    preprocessing.scale
     preprocessing.subsample
 
 Quality control
@@ -91,7 +88,14 @@ Normalization
 .. autosummary::
     :toctree: preprocessing
 
-    preprocessing.normalize
+    preprocessing.norm_log
+    preprocessing.norm_maxabs
+    preprocessing.norm_minmax
+    preprocessing.norm_power
+    preprocessing.norm_quantile
+    preprocessing.norm_robust_scale
+    preprocessing.norm_scale
+    preprocessing.norm_sqrt
 
 Dataset Shift Correction
 ++++++++++++++++++++++++
