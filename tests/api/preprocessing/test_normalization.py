@@ -1,4 +1,5 @@
 import warnings
+from collections import OrderedDict
 from pathlib import Path
 
 import numpy as np
@@ -28,14 +29,14 @@ class TestNormalization:
             "Feature": ["Integer1", "Numeric1", "Numeric2", "Numeric3", "String1", "String2"],
             "Type": ["Integer", "Numeric", "Numeric", "Numeric", "String", "String"],
         }
-
         self.adata = AnnData(
             X=X_data,
             obs=pd.DataFrame(data=obs_data),
             var=pd.DataFrame(data=var_data, index=var_data["Feature"]),
             dtype=np.dtype(object),
+            uns=OrderedDict(),
         )
-
+        self.adata.uns["numerical_columns"] = ["Numeric1", "Numeric2"]
         self.adata = ep.pp.encode(self.adata, autodetect=True, encodings={})
 
     def test_vars_checks(self):

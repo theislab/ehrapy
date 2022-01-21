@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import OrderedDict
 from typing import NamedTuple
 
 import numpy as np
@@ -32,13 +33,18 @@ def df_to_anndata(
     # if data is numerical only, short-circuit AnnData creation to have float dtype instead of object
     all_num = all(np.issubdtype(column_dtype, np.number) for column_dtype in dataframes.df.dtypes)
     X = dataframes.df.to_numpy(copy=True)
-
+    # initializing an OrderedDict with a non-empty dict might not be intended,
+    # see: https://stackoverflow.com/questions/25480089/right-way-to-initialize-an-ordereddict-using-its-constructor-such-that-it-retain/25480206
+    uns = OrderedDict()
+    # store all numerical columns (used for normalization)
+    uns["numerical_columns"] = list(df.select_dtypes("number").columns)
     return AnnData(
         X=X,
         obs=dataframes.obs,
         var=pd.DataFrame(index=list(dataframes.df.columns)),
         dtype="float32" if all_num else "object",
         layers={"original": X.copy()},
+        uns=uns,
     )
 
 
@@ -131,7 +137,7 @@ def get_column_values(adata: AnnData, indices: int | list[int]) -> np.ndarray:
 
 def assert_encoded(adata: AnnData):
     try:
-        assert "categoricals" in adata.uns_keys()
+        assert any(enc_flag in adata.uns_keys() for enc_flag in ["categoricals", "encoding_to_var"])
     except AssertionError:
         raise NotEncodedError("The AnnData object has not yet been encoded.") from AssertionError
 
@@ -143,11 +149,11 @@ def get_numeric_vars(adata: AnnData) -> list[str]:
         adata: :class:`~anndata.AnnData` object
 
     Returns:
-        Set of column numeric column names
+        List of column numeric column names
     """
     assert_encoded(adata)
 
-    return adata.uns["categoricals"]["not_categorical"]
+    return adata.uns["numerical_columns"]
 
 
 def assert_numeric_vars(adata: AnnData, vars: list[str]):
