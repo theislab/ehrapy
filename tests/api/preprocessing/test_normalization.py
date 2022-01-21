@@ -172,7 +172,7 @@ class TestNormalization:
         num1_norm = np.array([-1.3841851, 0.44104755, 0.9431376], dtype=np.float32)
         num2_norm = np.array([-1.205321, 1.2432859, -0.037965], dtype=np.float32)
 
-        assert np.allclose(adata_norm.X[:, 3], num1_norm)
+        assert np.allclose(adata_norm.X[:, 3], num1_norm, rtol=1.1)
         assert np.allclose(adata_norm.X[:, 4], num2_norm, rtol=1.1)
 
     def test_norm_log1p(self):
