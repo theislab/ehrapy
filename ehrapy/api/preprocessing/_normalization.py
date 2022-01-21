@@ -34,7 +34,6 @@ def norm_scale(adata: AnnData, vars: list[str] | None = None, copy: bool = False
             adata = ep.data.mimic_2(encode=True)
             adata_norm = ep.pp.norm_scale(adata, copy=True)
     """
-
     if vars is None:
         vars = get_numeric_vars(adata)
     else:
@@ -75,7 +74,6 @@ def norm_minmax(adata: AnnData, vars: list[str] | None = None, copy: bool = Fals
             adata = ep.data.mimic_2(encode=True)
             adata_norm = ep.pp.norm_minmax(adata, copy=True)
     """
-
     if vars is None:
         vars = get_numeric_vars(adata)
     else:
@@ -115,7 +113,6 @@ def norm_maxabs(adata: AnnData, vars: list[str] | None = None, copy: bool = Fals
             adata = ep.data.mimic_2(encode=True)
             adata_norm = ep.pp.norm_maxabs(adata, copy=True)
     """
-
     if vars is None:
         vars = get_numeric_vars(adata)
     else:
@@ -156,7 +153,6 @@ def norm_robust_scale(adata: AnnData, vars: list[str] | None = None, copy: bool 
             adata = ep.data.mimic_2(encode=True)
             adata_norm = ep.pp.norm_robust_scale(adata, copy=True)
     """
-
     if vars is None:
         vars = get_numeric_vars(adata)
     else:
@@ -197,7 +193,6 @@ def norm_quantile(adata: AnnData, vars: list[str] | None = None, copy: bool = Fa
             adata = ep.data.mimic_2(encode=True)
             adata_norm = ep.pp.norm_quantile(adata, copy=True)
     """
-
     if vars is None:
         vars = get_numeric_vars(adata)
     else:
@@ -238,7 +233,6 @@ def norm_power(adata: AnnData, vars: list[str] | None = None, copy: bool = False
             adata = ep.data.mimic_2(encode=True)
             adata_norm = ep.pp.norm_power(adata, copy=True)
     """
-
     if vars is None:
         vars = get_numeric_vars(adata)
     else:
@@ -287,7 +281,6 @@ def norm_log(
             adata = ep.data.mimic_2(encode=True)
             adata_norm = ep.pp.norm_log(adata, copy=True)
     """
-
     if vars is None:
         vars = get_numeric_vars(adata)
     else:
@@ -334,7 +327,6 @@ def norm_sqrt(adata: AnnData, vars: list[str] | None = None, copy: bool = False)
             adata = ep.data.mimic_2(encode=True)
             adata_norm = ep.pp.norm_sqrt(adata, copy=True)
     """
-
     if vars is None:
         vars = get_numeric_vars(adata)
     else:
@@ -355,7 +347,6 @@ def norm_sqrt(adata: AnnData, vars: list[str] | None = None, copy: bool = False)
 
 
 def _prep_adata_norm(adata: AnnData, copy: bool = False) -> AnnData | None:
-
     if copy:
         adata = adata.copy()
 
@@ -366,7 +357,6 @@ def _prep_adata_norm(adata: AnnData, copy: bool = False) -> AnnData | None:
 
 
 def _record_norm(adata: AnnData, vars_list: list[str], method: str) -> None:
-
     if "normalization" in adata.uns_keys():
         norm_record = adata.uns["normalization"]
     else:
