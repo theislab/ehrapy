@@ -3,13 +3,21 @@ from typing import Tuple
 import numpy as np
 import pandas as pd
 import pytest
-import ehrapy.api as ep
 from anndata import AnnData
 from pandas import DataFrame
 from pandas.testing import assert_frame_equal
 
-from ehrapy.api.anndata_ext import ObsEmptyError, anndata_to_df, df_to_anndata, assert_encoded, NotEncodedError, \
-    get_numeric_vars, assert_numeric_vars, set_numeric_vars
+import ehrapy.api as ep
+from ehrapy.api.anndata_ext import (
+    NotEncodedError,
+    ObsEmptyError,
+    anndata_to_df,
+    assert_encoded,
+    assert_numeric_vars,
+    df_to_anndata,
+    get_numeric_vars,
+    set_numeric_vars,
+)
 
 
 class TestAnndataExt:
@@ -109,6 +117,7 @@ class TestAnndataExt:
         col3_val = [idx for idx in range(100)]
 
         return col1_val, col2_val, col3_val
+
 
 class TestAnnDataUtil:
     def setup_method(self):

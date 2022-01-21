@@ -4,7 +4,7 @@ import numpy as np
 from anndata import AnnData
 from sklearn.preprocessing import maxabs_scale, minmax_scale, power_transform, quantile_transform, robust_scale, scale
 
-from ehrapy.api._anndata_util import (
+from ehrapy.api.anndata_ext import (
     assert_numeric_vars,
     get_column_indices,
     get_column_values,
