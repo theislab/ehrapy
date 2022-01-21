@@ -9,7 +9,7 @@ from sklearn.experimental import enable_iterative_imputer  # noqa: F401
 from sklearn.impute import IterativeImputer, KNNImputer, SimpleImputer
 from sklearn.preprocessing import OrdinalEncoder
 
-from ehrapy.api._anndata_util import get_column_indices
+from ehrapy.api.anndata_ext import get_column_indices
 
 
 def explicit_impute(
@@ -32,8 +32,16 @@ def explicit_impute(
 
     Returns:
         :class:`~anndata.AnnData` object with imputed X
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy.api as ep
+
+            adata = ep.dt.mimic_2(encode=True)
+            ep.pp.explicit_impute(adata, replacement=0)
     """
-    if copy:
+    if copy:  # pragma: no cover
         adata = adata.copy()
     # 1: Replace all missing values with the specified value
     if isinstance(replacement, (int, str)):
@@ -49,27 +57,27 @@ def explicit_impute(
             else:
                 print(f"[bold yellow]No replace value passed and found for var [not bold green]{column_name}.")
     else:
-        raise ReplacementDatatypeError(
+        raise ReplacementDatatypeError(  # pragma: no cover
             f"Type {type(replacement)} is not a valid datatype for replacement parameter. Either use int, str or a dict!"
         )
 
     return adata
 
 
-def _replace_explicit(x: np.ndarray, replacement: str | int, impute_empty_strings: bool) -> None:
+def _replace_explicit(arr: np.ndarray, replacement: str | int, impute_empty_strings: bool) -> None:
     """Replace one column or whole X with a value where missing values are stored."""
-    if not impute_empty_strings:
-        impute_conditions = pd.isnull(x)
+    if not impute_empty_strings:  # pragma: no cover
+        impute_conditions = pd.isnull(arr)
     else:
-        impute_conditions = np.logical_or(pd.isnull(x), x == "")
-    x[impute_conditions] = replacement
+        impute_conditions = np.logical_or(pd.isnull(arr), arr == "")
+    arr[impute_conditions] = replacement
 
 
 def _extract_impute_value(replacement: dict[str, str | int], column_name: str) -> str | int:
     """Extract the replacement value for a given column in the :class:`~anndata.AnnData` object
 
-    Returns: The value to replace missing values
-
+    Returns:
+        The value to replace missing values
     """
     # try to get a value for the specific column
     imputation_value = replacement.get(column_name)
@@ -77,7 +85,7 @@ def _extract_impute_value(replacement: dict[str, str | int], column_name: str) -
         return imputation_value
     # search for a default value in case no value was specified for that column
     imputation_value = replacement.get("default")
-    if imputation_value:
+    if imputation_value:  # pragma: no cover
         return imputation_value
     else:
         return None
@@ -89,8 +97,7 @@ def _extract_impute_value(replacement: dict[str, str | int], column_name: str) -
 def simple_impute(
     adata: AnnData, var_names: list[str] | None = None, strategy: str = "mean", copy: bool = False
 ) -> AnnData:
-    """
-    Impute AnnData object using mean imputation. This works for numerical data only.
+    """Impute AnnData object using mean/median/most frequent imputation. This works for numerical data only.
 
     Args:
         adata: The AnnData object to use mean Imputation on
@@ -99,7 +106,15 @@ def simple_impute(
         copy: Whether to return a copy or act in place
 
     Returns:
-           The imputed AnnData object
+        The imputed AnnData object
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy.api as ep
+
+            adata = ep.dt.mimic_2(encode=True)
+            ep.pp.simple_impute(adata, strategy="median")
     """
     if copy:
         adata = adata.copy()
@@ -117,7 +132,7 @@ def simple_impute(
         _simple_impute(adata, var_names, strategy)
     # unknown simple imputation strategy
     else:
-        raise UnknownImputeStrategyError(
+        raise UnknownImputeStrategyError(  # pragma: no cover
             f"Unknown impute strategy {strategy} for simple Imputation. Choose any of mean, median or most_frequent."
         )
 
@@ -140,17 +155,26 @@ def _simple_impute(adata: AnnData, var_names: list[str] | None, strategy: str) -
 
 def knn_impute(adata: AnnData, var_names: list[str] | None = None, copy: bool = False) -> AnnData:
     """Impute data using the KNN-Imputer.
+
     When using KNN Imputation with mixed data (non-numerical and numerical), encoding using ordinal encoding is required
     since KNN Imputation can only work on numerical data. The encoding itself is just a utility and will be undone once
     imputation ran successfully.
 
-     Args:
-         adata: The AnnData object to use KNN Imputation on
-         var_names: A list of var names indicating which columns to use median imputation on (if None -> all columns)
-         copy: Whether to return a copy or act in place
+    Args:
+        adata: The AnnData object to use KNN Imputation on
+        var_names: A list of var names indicating which columns to use median imputation on (if None -> all columns)
+        copy: Whether to return a copy or act in place
 
-     Returns:
-             The imputed (but unencoded) AnnData object
+    Returns:
+        The imputed (but unencoded) AnnData object
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy.api as ep
+
+            adata = ep.dt.mimic_2(encode=True)
+            ep.pp.knn_impute(adata)
     """
     if copy:
         adata = adata.copy()
@@ -173,7 +197,7 @@ def _knn_impute(adata: AnnData, var_names: list[str] | None) -> None:
     """Utility function to impute data using KNN-Imputer"""
     imputer = KNNImputer(n_neighbors=1)
 
-    if isinstance(var_names, list):
+    if isinstance(var_names, list):  # TODO This requires a test
         column_indices = get_column_indices(adata, var_names)
         adata.X[::, column_indices] = imputer.fit_transform(adata.X[::, column_indices])
     # impute all columns if None passed
@@ -192,9 +216,11 @@ def miss_forest_impute(
     random_state: int = 0,
     copy: bool = False,
 ) -> AnnData:
-    """Impute data using the MissForest strategy. See https://academic.oup.com/bioinformatics/article/28/1/112/219101.
-    This requires the computation of which columns in X contain numerical only (including NaNs) and which non numerical data, which is an
-    expensive operation on X with many numerical vars resulting in a long runtime.
+    """Impute data using the MissForest strategy.
+
+    See https://academic.oup.com/bioinformatics/article/28/1/112/219101.
+    This requires the computation of which columns in X contain numerical only (including NaNs)
+    and which contain non-numerical data. This is an expensive operation on X with many numerical vars resulting in a long runtime.
 
     Args:
         adata: The AnnData object to use MissForest Imputation on
@@ -202,9 +228,17 @@ def miss_forest_impute(
         copy: Whether to return a copy or act in place
 
     Returns:
-            The imputed (but unencoded) AnnData object
+        The imputed (but unencoded) AnnData object
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy.api as ep
+
+            adata = ep.dt.mimic_2(encode=True)
+            ep.pp.miss_forest_impute(adata)
     """
-    if copy:
+    if copy:  # pragma: no cover
         adata = adata.copy()
     # var names got passed for faster indices lookup
     if var_names:
@@ -212,7 +246,7 @@ def miss_forest_impute(
         try:
             non_num_vars = var_names["non_numerical"]
             num_vars = var_names["numerical"]
-        except KeyError:
+        except KeyError:  # pragma: no cover
             raise MissForestKeyError(
                 "One or both of your keys provided for var_names are unknown. Only "
                 "numerical and non_numerical are available!"
@@ -267,7 +301,7 @@ def _get_non_numerical_column_indices(X: np.ndarray) -> set:
     return non_num_indices
 
 
-def _is_float_or_nan(val):
+def _is_float_or_nan(val):  # pragma: no cover
     """Check whether a given item is a float or np.nan"""
     try:
         float(val)

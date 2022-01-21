@@ -2,10 +2,9 @@ from __future__ import annotations
 
 import shutil
 from pathlib import Path
-from typing import Iterator, NamedTuple
+from typing import Iterator
 
 import camelot
-import numpy as np
 import pandas as pd
 from _collections import OrderedDict
 from anndata import AnnData
@@ -14,14 +13,10 @@ from mudata import MuData
 from rich import print
 
 from ehrapy.api import ehrapy_settings, settings
-from ehrapy.api.data.dataloader import download
+from ehrapy.api.anndata_ext import df_to_anndata
+from ehrapy.api.data._dataloader import download
 from ehrapy.api.io._utility_io import _get_file_extension, _slugify, multi_data_extensions, supported_extensions
 from ehrapy.api.preprocessing import encode
-
-
-class BaseDataframes(NamedTuple):
-    obs: pd.DataFrame
-    df: pd.DataFrame
 
 
 def read(
@@ -38,13 +33,23 @@ def read(
 ) -> AnnData | dict[str, AnnData] | MuData:
     """Reads or downloads a desired directory or single file.
 
+    This read method is a master method which works for several file types and file extensions.
+    The appropriate read function is automatically determined by the file extensions but can also be specified explicitly
+    using the `extension` parameter.
+
+    Allowed file formats are:
+        * `.h5ad`
+        * `.csv` or a folder containing several csv files.
+        * `.tsv` or a folder containing several tsv files.
+        * '.pdf'
+
     Args:
         dataset_path: Path to the file or directory to read.
         extension: File extension. Required to select the appropriate file reader.
         delimiter: File delimiter. Required for e.g. csv vs tsv files.
-        index_column: The index column of obs.
+        index_column: The index column of obs. Usually the patient visit ID or the patient ID.
         columns_obs_only: Which columns to only add to obs and not X.
-        return_mudata: Whether to create and return a MuData object.
+        return_mudata: Whether to create and return a MuData object. This is primarily used for complex datasets which require several AnnData files.
         cache: Whether to use the cache when reading.
         download_dataset_name: Name of the file or directory in case the dataset is downloaded
         backup_url: URL to download the data file(s) from if not yet existing.
@@ -57,6 +62,7 @@ def read(
         .. code-block:: python
 
             import ehrapy.api as ep
+
             adata = eh.data.mimic_2(encode=True)
             ep.io.write("mimic_2.h5ad", adata)
             adata_2 = ep.io.read("mimic_2.h5ad")
@@ -158,7 +164,7 @@ def _read(
         # read from other files that are currently supported
         elif extension in {"csv", "tsv"}:
             raw_anndata, columns_obs_only = read_csv(
-                filename, delimiter, index_column, columns_obs_only, cache  # type: ignore
+                filename, delimiter, index_column, columns_obs_only, cache, **kwargs  # type: ignore
             )
             # cache results if desired
             if cache:
@@ -280,6 +286,7 @@ def read_csv(
     index_column: str | int | None = None,
     columns_obs_only: list[str] | None = None,
     cache: bool = False,
+    **kwargs,
 ) -> tuple[AnnData, list[str] | None]:
     """Read `.csv` and `.tsv` file.
 
@@ -301,7 +308,7 @@ def read_csv(
                 f"for obs only. Using default indices instead and moving [blue]{index_column} [yellow]to column_obs_only."
             )
             index_column = None
-        initial_df = pd.read_csv(filename, delimiter=delimiter, index_col=index_column)
+        initial_df = pd.read_csv(filename, delimiter=delimiter, index_col=index_column, **kwargs)
     # in case the index column is misspelled or does not exist
     except ValueError:
         raise IndexNotFoundError(
@@ -345,6 +352,7 @@ def read_pdf(
         It's also important to note, that this has to be considered when passing "columns_obs_only":
             .. code-block:: python
                            import ehrapy.api as ep
+
                            # read pdf
                            adata_dict = ep.io.read("my_tables.pdf", columns_obs_only={"0":["col1ofTable1", "col2OfTable1"],
                            "1": ["colOfTable2"]})
@@ -425,7 +433,7 @@ def read_pdf(
 
 
 def _read_from_cache_dir(cache_dir: Path) -> dict[str, AnnData]:
-    """Read AnnData objects from the cache directory"""
+    """Read AnnData objects from the cache directory."""
     adata_objects = {}
     # read each cache file in the cache directory and store it into a dict
     for cache_file in cache_dir.iterdir():
@@ -435,7 +443,7 @@ def _read_from_cache_dir(cache_dir: Path) -> dict[str, AnnData]:
 
 
 def _read_from_cache(path_cache: Path) -> AnnData:
-    """Read AnnData object from cached file"""
+    """Read AnnData object from cached file."""
     cached_adata = read_h5ad(path_cache)
     # type cast required; otherwise all values in X would be treated as strings
     cached_adata.X = cached_adata.X.astype("object")
@@ -492,31 +500,13 @@ def _write_cache(
     return cached_adata
 
 
-def df_to_anndata(df: pd.DataFrame, columns_obs_only: list[str] | None, index_column: str | None = None) -> AnnData:
-    """Create an AnnData object from the initial dataframe"""
-    if index_column:
-        df = df.set_index(index_column)
-    # move columns from the input dataframe to later obs
-    dataframes = _move_columns_to_obs(df, columns_obs_only)
-    # if data is numerical only, short-circuit AnnData creation to have float dtype instead of object
-    all_num = all(np.issubdtype(column_dtype, np.number) for column_dtype in dataframes.df.dtypes)
-    X = dataframes.df.to_numpy(copy=True)
-    # when index_column is passed (currently when parsing pdf) set it and remove it from future X
-
-    return AnnData(
-        X=X,
-        obs=dataframes.obs,
-        var=pd.DataFrame(index=list(dataframes.df.columns)),
-        dtype="float32" if all_num else "object",
-        layers={"original": X.copy()},
-    )
-
-
 def _prepare_dataframe(initial_df: pd.DataFrame, columns_obs_only, cache):
     """Prepares the dataframe to be casted into an AnnData object.
+
     Datetime columns will be detected and added to columns_obs_only.
 
-    Returns: The initially parsed dataframe and an updated list of columns_obs_only
+    Returns:
+         The initially parsed dataframe and an updated list of columns_obs_only.
     """
     # get all object dtype columns
     object_type_columns = [col_name for col_name in initial_df.columns if initial_df[col_name].dtype == "object"]
@@ -572,7 +562,6 @@ def _decode_cached_adata(adata: AnnData, column_obs_only: list[str]) -> AnnData:
         adata.obs = pd.DataFrame(index=adata.obs.index)
     # set the new var names (unencoded ones)
     adata.var.index = var_names
-    # update original layer as well
     adata.layers["original"] = adata.X.copy()
     # reset uns
     adata.uns = OrderedDict()
@@ -697,35 +686,6 @@ def _extract_index_and_columns_obs_only(identifier: str, index_columns, columns_
     return _index_column, _columns_obs_only
 
 
-def _move_columns_to_obs(df: pd.DataFrame, columns_obs_only: list[str] | None) -> BaseDataframes:
-    """Move the given columns from the original dataframe (and therefore X) to obs.
-
-    By moving these values will not get lost and will be stored in obs, but will not appear in X.
-    This may be useful for textual values like free text.
-
-    Args:
-        df: Pandas Dataframe to move the columns for
-        columns_obs_only: Columns to move to obs only
-
-    Returns:
-        A modified :class:`~pd.DataFrame` object
-    """
-    if columns_obs_only:
-        try:
-            obs = df[columns_obs_only].copy()
-            obs = obs.set_index(df.index.map(str))
-            df = df.drop(columns_obs_only, axis=1)
-        except KeyError:
-            raise ColumnNotFoundError from KeyError(
-                "One or more column names passed to column_obs_only were not found in the input data. "
-                "Make sure you spelled the column names correctly."
-            )
-    else:
-        obs = pd.DataFrame(index=df.index.map(str))
-
-    return BaseDataframes(obs, df)
-
-
 def _mudata_cache_not_supported():
     raise MudataCachingNotSupportedError(
         "Caching is currently not supported for MuData objects. Consider setting return_mudata to False in order "
@@ -734,10 +694,6 @@ def _mudata_cache_not_supported():
 
 
 class IndexNotFoundError(Exception):
-    pass
-
-
-class ColumnNotFoundError(Exception):
     pass
 
 

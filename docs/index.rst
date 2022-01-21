@@ -41,7 +41,7 @@
     API reference
     ^^^^^^^^^^^^^
 
-    The API reference contains a detailed description of the scvi-tools API.
+    The API reference contains a detailed description of the ehrpay API.
 
     +++
 
@@ -56,8 +56,7 @@
     Tutorials
     ^^^^^^^^^^^
 
-    The tutorials walk you through real-world applications of scvi-tools models.
-    Developer tutorials help you build new probabilistic models.
+    The tutorials walk you through real-world applications of ehrapy.
 
     +++
 

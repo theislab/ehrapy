@@ -48,6 +48,17 @@ def calculate_qc_metrics(
         `max`
             Maximum value of the features.
 
+        Example:
+            .. code-block:: python
+
+                import ehrapy.api as ep
+                import seaborn as sns
+                import matplotlib.pyplot as plt
+
+                adata = ep.dt.mimic_2(encode=True)
+                ep.pp.calculate_qc_metrics(adata)
+                sns.displot(adata.obs["missing_values_abs"])
+                plt.show()
     """
     obs_metrics = _obs_qc_metrics(adata, layer, qc_vars)
     var_metrics = _var_qc_metrics(adata, layer)
@@ -59,7 +70,7 @@ def calculate_qc_metrics(
     return obs_metrics, var_metrics
 
 
-def missing_values(
+def _missing_values(
     arr: np.ndarray, shape: tuple[int, int] = None, df_type: Literal["obs", "var"] = "obs"
 ) -> np.ndarray:
     """Calculates the absolute or relative amount of missing values.
@@ -103,8 +114,8 @@ def _obs_qc_metrics(
     obs_metrics = pd.DataFrame(index=adata.obs_names)
     mtx = adata.X if layer is None else adata.layers[layer]
 
-    obs_metrics["missing_values_abs"] = np.apply_along_axis(missing_values, 1, mtx)
-    obs_metrics["missing_values_pct"] = np.apply_along_axis(missing_values, 1, mtx, shape=mtx.shape, df_type="obs")
+    obs_metrics["missing_values_abs"] = np.apply_along_axis(_missing_values, 1, mtx)
+    obs_metrics["missing_values_pct"] = np.apply_along_axis(_missing_values, 1, mtx, shape=mtx.shape, df_type="obs")
 
     # Specific QC metrics
     for qc_var in qc_vars:
@@ -135,8 +146,8 @@ def _var_qc_metrics(adata: AnnData, layer: str = None) -> pd.DataFrame:
     var_metrics = pd.DataFrame(index=adata.var_names)
     mtx = adata.X if layer is None else adata.layers[layer]
 
-    var_metrics["missing_values_abs"] = np.apply_along_axis(missing_values, 0, mtx)
-    var_metrics["missing_values_pct"] = np.apply_along_axis(missing_values, 0, mtx, shape=mtx.shape, df_type="var")
+    var_metrics["missing_values_abs"] = np.apply_along_axis(_missing_values, 0, mtx)
+    var_metrics["missing_values_pct"] = np.apply_along_axis(_missing_values, 0, mtx, shape=mtx.shape, df_type="var")
     var_metrics["mean"] = mtx.mean(axis=0)
     var_metrics["median"] = np.median(mtx, axis=0)
     var_metrics["standard_deviation"] = mtx.std(axis=0)

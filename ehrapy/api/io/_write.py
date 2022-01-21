@@ -30,6 +30,7 @@ def write(
         .. code-block:: python
 
             import ehrapy.api as ep
+
             adata = eh.data.mimic_2(encode=True)
             ep.io.write("mimic_2.h5ad", adata)
     """
