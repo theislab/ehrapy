@@ -98,7 +98,17 @@ html_theme_options = {
             "icon": "fab fa-twitter-square",
         },
     ],
+    "use_edit_page_button": True,
 }
+
+html_context = {
+    # "github_url": "https://github.com", # or your GitHub Enterprise interprise
+    "github_user": "theislab",
+    "github_repo": "ehrapy",
+    "github_version": "development",
+    "doc_path": "docs",
+}
+
 html_show_sphinx = False
 
 autosummary_generate = True
