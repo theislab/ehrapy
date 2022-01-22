@@ -11,7 +11,7 @@ jobs:
             matrix:
                 notebook:
                     [
-                        "docs/tutorials/notebooks/mimic_2.ipynb",
+                        "docs/tutorials/notebooks/mimic_2_introduction.ipynb",
                         "docs/tutorials/notebooks/mimic_3_demo.ipynb",
                     ]
         steps:

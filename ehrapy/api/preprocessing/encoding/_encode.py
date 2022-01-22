@@ -14,8 +14,6 @@ from rich import print
 from rich.progress import BarColumn, Progress
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
-from ehrapy.api.preprocessing.encoding._categoricals import _detect_categorical_columns
-
 multi_encoding_modes = {"hash_encoding"}
 available_encodings = {"one_hot_encoding", "label_encoding", "count_encoding", *multi_encoding_modes}
 
@@ -89,14 +87,14 @@ def undo_encoding(
 ) -> AnnData | None:
     """Undo the current encodings applied to all columns in X.
 
-    This currently resets the AnnData object to its initial state.
+    This currently resets the AnnData or MuData object to its initial state.
 
     Args:
-        adata: The :class:`~anndata.AnnData` object
+        data: The :class:`~anndata.AnnData` or MuData object
         columns: The names of the columns to reset encoding for. Defaults to all columns.
 
     Returns:
-        A (partially) encoding reset :class:`~anndata.AnnData` object
+        A (partially) encoding reset :class:`~anndata.AnnData` or MuData object
 
     Example:
        .. code-block:: python
@@ -150,54 +148,61 @@ def _encode(
                 "[bold red]Aborting..."
             )
             return None
-        adata.uns["categoricals"] = _detect_categorical_columns(adata.X, adata.var_names)
-        # no categoricals found that need to be encoded
-        # type casting is required; this would have happened during encoding anyways
-        if not adata.uns["categoricals"]["categorical_encoded"]:
-            adata.X = adata.X.astype("float32")
-            adata.layers["original"] = adata.layers["original"].astype("float32")
-            return adata
 
-        categoricals_names = adata.uns["categoricals"]["categorical_encoded"]
+        categoricals_names = adata.uns["non_numerical_columns"]
         _add_categoricals_to_obs(adata, categoricals_names)
         _add_categoricals_to_uns(adata, categoricals_names)
 
         encoded_x = None
         encoded_var_names = adata.var_names.to_list()
+        with Progress(
+            "[progress.description]{task.description}",
+            BarColumn(),
+            "[progress.percentage]{task.percentage:>3.0f}%",
+            refresh_per_second=1500,
+        ) as progress:
+            task = progress.add_task("[red]Running label encode on detected columns ...", total=1)
+            # Label encode by default. The primary usage of this is to save unencoded AnnData objects
+            encoded_x, encoded_var_names = _label_encoding(
+                adata,
+                encoded_x,
+                encoded_var_names,
+                categoricals_names,
+                progress,
+                task,
+            )
+            progress.update(task, description="Updating layer originals ...")
+            # update layer content with the latest categorical encoding and the old other values
+            updated_layer = _update_layer_after_encoding(
+                adata.layers["original"],
+                encoded_x,
+                encoded_var_names,
+                adata.var_names.to_list(),
+                categoricals_names,
+            )
+            progress.update(task, description="Finished label encoding of autodetected columns.")
 
-        # Label encode by default. The primary usage of this is to save unencoded AnnData objects
-        encoded_x, encoded_var_names = _label_encoding(
-            adata,
-            encoded_x,
-            encoded_var_names,
-            categoricals_names,
-        )
-
-        # update layer content with the latest categorical encoding and the old other values
-        updated_layer = _update_layer_after_encoding(
-            adata.layers["original"],
-            encoded_x,
-            encoded_var_names,
-            adata.var_names.to_list(),
-            categoricals_names,
-        )
-        encoded_ann_data = AnnData(
-            encoded_x,
-            obs=adata.obs.copy(),
-            var=dict(var_names=encoded_var_names),
-            uns=adata.uns.copy(),
-            layers={"original": updated_layer},
-        )
-        encoded_ann_data.uns["var_to_encoding"] = {
-            categorical: "one_hot_encoding" for categorical in categoricals_names
-        }
+            encoded_ann_data = AnnData(
+                encoded_x,
+                obs=adata.obs.copy(),
+                var=dict(var_names=encoded_var_names),
+                uns=adata.uns.copy(),
+                layers={"original": updated_layer},
+            )
+            encoded_ann_data.uns["var_to_encoding"] = {
+                categorical: "label_encoding" for categorical in categoricals_names
+            }
+            encoded_ann_data.uns["encoding_to_var"] = {"label_encoding": categoricals_names}
 
     # user passed categorical values with encoding mode for each of them
     else:
+        # Required since this would be deleted through side references
+        non_numericals = adata.uns["non_numerical_columns"].copy()
         # reencode data
         if "var_to_encoding" in adata.uns.keys():
             encodings = _reorder_encodings(adata, encodings)  # type: ignore
             adata = _undo_encoding(adata, "all")
+        adata.uns["non_numerical_columns"] = non_numericals
         # are all specified encodings valid?
         for encoding_mode in encodings.keys():
             if encoding_mode not in available_encodings:
@@ -229,7 +234,10 @@ def _encode(
         encoded_x = None
         encoded_var_names = adata.var_names.to_list()
         with Progress(
-            "[progress.description]{task.description}", BarColumn(), "[progress.percentage]{task.percentage:>3.0f}%"
+            "[progress.description]{task.description}",
+            BarColumn(),
+            "[progress.percentage]{task.percentage:>3.0f}%",
+            refresh_per_second=1500,
         ) as progress:
 
             for encoding_mode in encodings.keys():
@@ -291,8 +299,8 @@ def _one_hot_encoding(
     X: np.ndarray | None,
     var_names: list[str],
     categories: list[str],
-    progress: Progress | None = None,
-    task=None,
+    progress: Progress,
+    task,
 ) -> tuple[np.ndarray, list[str]]:
     """Encode categorical columns using one hot encoding.
 
@@ -306,8 +314,7 @@ def _one_hot_encoding(
         Encoded new X and the corresponding new var names
     """
     original_values = _initial_encoding(adata, categories)
-    if progress:
-        progress.update(task, description="[blue]Running one hot encoding encoding on passed columns ...")
+    progress.update(task, description="[blue]Running one hot encoding on passed columns ...")
     encoder = OneHotEncoder(handle_unknown="ignore", sparse=False).fit(original_values)
     categorical_prefixes = [
         f"ehrapycat_{category}_{str(suffix).strip()}"
@@ -318,10 +325,11 @@ def _one_hot_encoding(
     # X is None if this is the first encoding "round" -> take the former X
     if X is None:
         X = adata.X
-    if progress:
-        progress.advance(task, 1)
-        progress.update(task, description="[blue]Updating X and var ...")
+    progress.advance(task, 1)
+    progress.update(task, description="[blue]Updating X and var ...")
+
     temp_x, temp_var_names = _update_encoded_data(X, transformed, var_names, categorical_prefixes, categories)
+    progress.update(task, description="[blue]Finished one hot encoding.")
 
     return temp_x, temp_var_names
 
@@ -331,8 +339,8 @@ def _label_encoding(
     X: np.ndarray | None,
     var_names: list[str],
     categoricals: list[str],
-    progress: Progress | None = None,
-    task=None,
+    progress: Progress,
+    task,
 ) -> tuple[np.ndarray, list[str]]:
     """Encode categorical columns using label encoding.
 
@@ -348,23 +356,23 @@ def _label_encoding(
     original_values = _initial_encoding(adata, categoricals)
     # label encoding expects input array to be 1D, so iterate over all columns and encode them one by one
     for idx in range(original_values.shape[1]):
-        if progress:
-            progress.update(task, description=f"[blue]Running label encoding on column {categoricals[idx]} ...")
+        progress.update(task, description=f"[blue]Running label encoding on column {categoricals[idx]} ...")
+
         label_encoder = LabelEncoder()
         row_vec = original_values[:, idx : idx + 1].ravel()  # type: ignore
         label_encoder.fit(row_vec)
         transformed = label_encoder.transform(row_vec)
         # need a column vector instead of row vector
         original_values[:, idx : idx + 1] = transformed[..., None]
-        if progress:
-            progress.advance(task, 1 / len(categoricals))
+        progress.advance(task, 1 / len(categoricals))
     category_prefixes = [f"ehrapycat_{categorical}" for categorical in categoricals]
     # X is None if this is the first encoding "round" -> take the former X
     if X is None:
         X = adata.X
-    if progress:
-        progress.update(task, description="[blue]Updating X and var ...")
+
+    progress.update(task, description="[blue]Updating X and var ...")
     temp_x, temp_var_names = _update_encoded_data(X, original_values, var_names, category_prefixes, categoricals)
+    progress.update(task, description="[blue]Finished label encoding.")
 
     return temp_x, temp_var_names
 
@@ -374,8 +382,8 @@ def _count_encoding(
     X: np.ndarray | None,
     var_names: list[str],
     categoricals: list[str],
-    progress: Progress | None = None,
-    task=None,
+    progress: Progress,
+    task,
 ) -> tuple[np.ndarray, list[str]]:
     """Encode categorical column using count encoding.
 
@@ -389,9 +397,7 @@ def _count_encoding(
         Encoded new X and the corresponding new var names
     """
     original_values = _initial_encoding(adata, categoricals)
-
-    if progress:
-        progress.update(task, description="[blue]Running label encoding encoding on passed columns ...")
+    progress.update(task, description="[blue]Running label encoding encoding on passed columns ...")
     # returns a pandas dataframe per default, but numpy array is needed
     count_encoder = CountEncoder(return_df=False)
     count_encoder.fit(original_values)
@@ -400,10 +406,11 @@ def _count_encoding(
     # X is None if this is the first encoding "round" -> take the former X
     if X is None:
         X = adata.X  # noqa: N806
-    if progress:
-        progress.advance(task, 1)
-        progress.update(task, description="[blue]Updating X and var ...")
+
+    progress.advance(task, 1)
+    progress.update(task, description="[blue]Updating X and var ...")
     temp_x, temp_var_names = _update_encoded_data(X, transformed, var_names, category_prefix, categoricals)
+    progress.update(task, description="[blue]Finished count encoding.")
 
     return temp_x, temp_var_names
 
@@ -413,36 +420,35 @@ def _hash_encoding(
     X: np.ndarray | None,
     var_names: list[str],
     categories: list[list[str]],
-    progress: Progress | None = None,
-    task=None,
+    progress: Progress,
+    task,
 ) -> tuple[np.ndarray, list[str]]:
     """Encode categorical columns using hash encoding.
+
     Args:
         adata: The current AnnData object
         X: Current (encoded) X
         var_names: Var names of current AnnData object
         categories: The name of the categorical columns to be encoded
+
     Returns:
         Encoded new X and the corresponding new var names
     """
     transformed_all, encoded_var_names = None, []
     for idx, multi_columns in enumerate(categories):
-        if progress:
-            progress.update(task, description=f"Running hash encoding on {idx + 1}. list ...")
+        progress.update(task, description=f"Running hash encoding on {idx + 1}. list ...")
         original_values = _initial_encoding(adata, multi_columns)
 
         encoder = HashingEncoder(return_df=False, n_components=8).fit(original_values)
         encoded_var_names += [f"ehrapycat_hash_{multi_columns[0]}" for _ in range(8)]
         transformed = encoder.transform(original_values)
         transformed_all = np.hstack((transformed_all, transformed)) if transformed_all is not None else transformed
-        if progress:
-            progress.advance(task, 1 / len(categories))
+        progress.advance(task, 1 / len(categories))
 
     # X is None if this is the first encoding "round" -> take the former X
     if X is None:
         X = adata.X
-    if progress:
-        progress.update(task, description="[blue]Updating X and var ...")
+    progress.update(task, description="[blue]Updating X and var ...")
 
     temp_x, temp_var_names = _update_multi_encoded_data(
         X, transformed_all, var_names, encoded_var_names, sum(categories, [])
@@ -452,6 +458,7 @@ def _hash_encoding(
             "Hash encoding of input data failed. Note that hash encoding is not "
             "suitable for datasets with low number of data points and low cardinality!"
         )
+    progress.update(task, description="[blue]Finished hash encoding.")
 
     return temp_x, temp_var_names
 
@@ -621,12 +628,14 @@ def _undo_encoding(
     new_var_names = categoricals + temp_var_names if temp_var_names is not None else categoricals
     # only keep columns in obs that were stored in obs only -> delete every encoded column from obs
     new_obs = adata.obs[columns_obs_only]
+    uns = OrderedDict()
+    uns["numerical_columns"] = adata.uns["numerical_columns"]
     del adata
     return AnnData(
         new_x,
         obs=new_obs,
         var=pd.DataFrame(index=new_var_names),
-        uns=OrderedDict(),
+        uns=uns,
         dtype="object",
         layers={"original": new_x.copy()},
     )
