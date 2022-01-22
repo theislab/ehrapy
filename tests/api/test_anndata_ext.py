@@ -152,6 +152,7 @@ class TestAnnDataUtil:
         )
 
         self.adata_numeric.uns["numerical_columns"] = ["Numeric1", "Numeric2"]
+        self.adata_numeric.uns["non_numerical_columns"] = ["String1", "String2"]
         self.adata_strings = AnnData(
             X=X_strings,
             obs=pd.DataFrame(data=obs_data),
@@ -159,7 +160,8 @@ class TestAnnDataUtil:
             dtype=np.dtype(object),
         )
         self.adata_strings.uns["numerical_columns"] = ["Numeric1", "Numeric2"]
-        self.adata_encoded = ep.pp.encode(self.adata_strings.copy(), autodetect=True, encodings={})
+        self.adata_strings.uns["non_numerical_columns"] = ["String1", "String2"]
+        self.adata_encoded = ep.pp.encode(self.adata_strings.copy(), autodetect=True)
 
     def test_assert_encoded(self):
         """Test for the encoding assertion."""

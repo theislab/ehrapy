@@ -37,6 +37,7 @@ class TestNormalization:
             uns=OrderedDict(),
         )
         self.adata.uns["numerical_columns"] = ["Numeric1", "Numeric2"]
+        self.adata.uns["non_numerical_columns"] = ["String1", "String2"]
         self.adata = ep.pp.encode(self.adata, autodetect=True, encodings={})
 
     def test_vars_checks(self):
