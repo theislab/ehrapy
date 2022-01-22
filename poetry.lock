@@ -434,13 +434,13 @@ xxhash = "*"
 apache-beam = ["apache-beam (>=2.26.0)"]
 audio = ["librosa"]
 benchmarks = ["numpy (==1.18.5)", "tensorflow (==2.3.0)", "torch (==1.6.0)", "transformers (==3.0.2)"]
-dev = ["absl-py", "pytest", "pytest-datadir", "pytest-xdist", "apache-beam (>=2.26.0)", "elasticsearch", "aiobotocore", "boto3", "botocore", "fsspec", "moto[server,s3] (==2.0.4)", "rarfile (>=4.0)", "s3fs (==2021.08.1)", "tensorflow (>=2.3)", "torch", "torchaudio", "transformers", "bs4", "conllu", "langdetect", "lxml", "mwparserfromhell", "nltk", "openpyxl", "py7zr", "tldextract", "zstandard", "bert-score (>=0.3.6)", "rouge-score", "sacrebleu", "scipy", "seqeval", "scikit-learn", "jiwer", "sentencepiece", "toml (>=0.10.1)", "requests-file (>=1.5.1)", "tldextract (>=3.1.0)", "texttable (>=1.6.3)", "Werkzeug (>=1.0.1)", "six (>=1.15.0,<1.16.0)", "black (==21.4b0)", "flake8 (==3.7.9)", "isort", "pyyaml (>=5.3.1)", "importlib-resources"]
+dev = ["absl-py", "pytest", "pytest-datadir", "pytest-xdist", "apache-beam (>=2.26.0)", "elasticsearch", "aiobotocore", "boto3", "botocore", "fsspec", "moto[s3,server] (==2.0.4)", "rarfile (>=4.0)", "s3fs (==2021.08.1)", "tensorflow (>=2.3)", "torch", "torchaudio", "transformers", "bs4", "conllu", "langdetect", "lxml", "mwparserfromhell", "nltk", "openpyxl", "py7zr", "tldextract", "zstandard", "bert-score (>=0.3.6)", "rouge-score", "sacrebleu", "scipy", "seqeval", "scikit-learn", "jiwer", "sentencepiece", "toml (>=0.10.1)", "requests-file (>=1.5.1)", "tldextract (>=3.1.0)", "texttable (>=1.6.3)", "Werkzeug (>=1.0.1)", "six (>=1.15.0,<1.16.0)", "black (==21.4b0)", "flake8 (==3.7.9)", "isort", "pyyaml (>=5.3.1)", "importlib-resources"]
 docs = ["docutils (==0.16.0)", "recommonmark", "sphinx (==3.1.2)", "sphinx-markdown-tables", "sphinx-rtd-theme (==0.4.3)", "sphinxext-opengraph (==0.4.1)", "sphinx-copybutton", "fsspec (<2021.9.0)", "s3fs", "sphinx-panels", "sphinx-inline-tabs", "myst-parser"]
 quality = ["black (==21.4b0)", "flake8 (==3.7.9)", "isort", "pyyaml (>=5.3.1)"]
 s3 = ["fsspec", "boto3", "botocore", "s3fs"]
 tensorflow = ["tensorflow (>=2.2.0)"]
 tensorflow_gpu = ["tensorflow-gpu (>=2.2.0)"]
-tests = ["absl-py", "pytest", "pytest-datadir", "pytest-xdist", "apache-beam (>=2.26.0)", "elasticsearch", "aiobotocore", "boto3", "botocore", "fsspec", "moto[server,s3] (==2.0.4)", "rarfile (>=4.0)", "s3fs (==2021.08.1)", "tensorflow (>=2.3)", "torch", "torchaudio", "transformers", "bs4", "conllu", "langdetect", "lxml", "mwparserfromhell", "nltk", "openpyxl", "py7zr", "tldextract", "zstandard", "bert-score (>=0.3.6)", "rouge-score", "sacrebleu", "scipy", "seqeval", "scikit-learn", "jiwer", "sentencepiece", "toml (>=0.10.1)", "requests-file (>=1.5.1)", "tldextract (>=3.1.0)", "texttable (>=1.6.3)", "Werkzeug (>=1.0.1)", "six (>=1.15.0,<1.16.0)", "importlib-resources"]
+tests = ["absl-py", "pytest", "pytest-datadir", "pytest-xdist", "apache-beam (>=2.26.0)", "elasticsearch", "aiobotocore", "boto3", "botocore", "fsspec", "moto[s3,server] (==2.0.4)", "rarfile (>=4.0)", "s3fs (==2021.08.1)", "tensorflow (>=2.3)", "torch", "torchaudio", "transformers", "bs4", "conllu", "langdetect", "lxml", "mwparserfromhell", "nltk", "openpyxl", "py7zr", "tldextract", "zstandard", "bert-score (>=0.3.6)", "rouge-score", "sacrebleu", "scipy", "seqeval", "scikit-learn", "jiwer", "sentencepiece", "toml (>=0.10.1)", "requests-file (>=1.5.1)", "tldextract (>=3.1.0)", "texttable (>=1.6.3)", "Werkzeug (>=1.0.1)", "six (>=1.15.0,<1.16.0)", "importlib-resources"]
 torch = ["torch"]
 
 [[package]]
@@ -1009,7 +1009,7 @@ format_nongpl = ["fqdn", "idna", "isoduration", "jsonpointer (>1.13)", "rfc3339-
 
 [[package]]
 name = "jupyter-client"
-version = "7.1.1"
+version = "7.1.2"
 description = "Jupyter protocol implementation and client libraries"
 category = "dev"
 optional = false
@@ -3813,8 +3813,8 @@ jsonschema = [
     {file = "jsonschema-4.4.0.tar.gz", hash = "sha256:636694eb41b3535ed608fe04129f26542b59ed99808b4f688aa32dcf55317a83"},
 ]
 jupyter-client = [
-    {file = "jupyter_client-7.1.1-py3-none-any.whl", hash = "sha256:f0c576cce235c727e30b0a0da88c2755d0947d0070fa1bc45f195079ffd64e66"},
-    {file = "jupyter_client-7.1.1.tar.gz", hash = "sha256:540ca35e57e83c5ece81abd9b781a57cba39a37c60a2a30c8c1b2f6663544343"},
+    {file = "jupyter_client-7.1.2-py3-none-any.whl", hash = "sha256:d56f1c57bef42ff31e61b1185d3348a5b2bcde7c9a05523ae4dbe5ee0871797c"},
+    {file = "jupyter_client-7.1.2.tar.gz", hash = "sha256:4ea61033726c8e579edb55626d8ee2e6bf0a83158ddf3751b8dd46b2c5cd1e96"},
 ]
 jupyter-core = [
     {file = "jupyter_core-4.9.1-py3-none-any.whl", hash = "sha256:1c091f3bbefd6f2a8782f2c1db662ca8478ac240e962ae2c66f0b87c818154ea"},
