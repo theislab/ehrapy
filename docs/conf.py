@@ -162,7 +162,9 @@ nbsphinx_prolog = r"""
 """  # noqa: E501
 
 nbsphinx_thumbnails = {
-    "tutorials/notebooks/mimic_2": "_static/tutorials/catheter.png",
+    "tutorials/notebooks/ehrapy_introduciton": "_static/tutorials/catheter.png",
+    "tutorials/notebooks/mimic_2_introduction": "_static/tutorials/catheter.png",
+    "tutorials/notebooks/mimic_2_fate": "_static/tutorials/fate.png",
 }
 
 # -- Options for HTMLHelp output ---------------------------------------
