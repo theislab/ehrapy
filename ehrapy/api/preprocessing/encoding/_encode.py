@@ -87,14 +87,14 @@ def undo_encoding(
 ) -> AnnData | None:
     """Undo the current encodings applied to all columns in X.
 
-    This currently resets the AnnData object to its initial state.
+    This currently resets the AnnData or MuData object to its initial state.
 
     Args:
-        data: The :class:`~anndata.AnnData` object
+        data: The :class:`~anndata.AnnData` or MuData object
         columns: The names of the columns to reset encoding for. Defaults to all columns.
 
     Returns:
-        A (partially) encoding reset :class:`~anndata.AnnData` object
+        A (partially) encoding reset :class:`~anndata.AnnData` or MuData object
 
     Example:
        .. code-block:: python
@@ -161,7 +161,7 @@ def _encode(
             "[progress.percentage]{task.percentage:>3.0f}%",
             refresh_per_second=1500,
         ) as progress:
-            task = progress.add_task("[red] Running label encode on detected columns ...", total=1)
+            task = progress.add_task("[red]Running label encode on detected columns ...", total=1)
             # Label encode by default. The primary usage of this is to save unencoded AnnData objects
             encoded_x, encoded_var_names = _label_encoding(
                 adata,
@@ -196,7 +196,7 @@ def _encode(
 
     # user passed categorical values with encoding mode for each of them
     else:
-        # needed since, through side references, this would be deleted
+        # Required since this would be deleted through side references
         non_numericals = adata.uns["non_numerical_columns"].copy()
         # reencode data
         if "var_to_encoding" in adata.uns.keys():
@@ -314,7 +314,7 @@ def _one_hot_encoding(
         Encoded new X and the corresponding new var names
     """
     original_values = _initial_encoding(adata, categories)
-    progress.update(task, description="[blue]Running one hot encoding encoding on passed columns ...")
+    progress.update(task, description="[blue]Running one hot encoding on passed columns ...")
     encoder = OneHotEncoder(handle_unknown="ignore", sparse=False).fit(original_values)
     categorical_prefixes = [
         f"ehrapycat_{category}_{str(suffix).strip()}"
