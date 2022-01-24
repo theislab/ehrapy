@@ -158,7 +158,6 @@ def get_numeric_vars(adata: AnnData) -> list[str]:
 
 
 def assert_numeric_vars(adata: AnnData, vars: list[str]):
-
     num_vars = get_numeric_vars(adata)
 
     try:
@@ -175,7 +174,7 @@ def set_numeric_vars(
     Args:
         adata: :class:`~anndata.AnnData` object
         values: Matrix containing the replacement values
-        vars: List of names of the numeric variables to replace. If `None` they will be detected using ~ehrapy.pp.get_numeric_vars.
+        vars: List of names of the numeric variables to replace. If `None` they will be detected using :func:`~ehrapy.api.preprocessing.get_numeric_vars`.
         copy: Whether to return a copy with the normalized data.
 
     Returns:
@@ -208,8 +207,7 @@ def set_numeric_vars(
 
 
 class NotEncodedError(AssertionError):
-    def __init__(self, message):
-        super().__init__(message)
+    pass
 
 
 class ColumnNotFoundError(Exception):
