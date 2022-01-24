@@ -37,8 +37,8 @@ def df_to_anndata(
     # see: https://stackoverflow.com/questions/25480089/right-way-to-initialize-an-ordereddict-using-its-constructor-such-that-it-retain/25480206
     uns = OrderedDict()
     # store all numerical/non-numerical columns that are not obs only
-    uns["numerical_columns"] = list(df.select_dtypes("number").columns)
-    uns["non_numerical_columns"] = list(set(df.columns) ^ set(uns["numerical_columns"]))
+    uns["numerical_columns"] = list(dataframes.df.select_dtypes("number").columns)
+    uns["non_numerical_columns"] = list(set(dataframes.df.columns) ^ set(uns["numerical_columns"]))
     return AnnData(
         X=X,
         obs=dataframes.obs,
@@ -138,7 +138,7 @@ def get_column_values(adata: AnnData, indices: int | list[int]) -> np.ndarray:
 
 def assert_encoded(adata: AnnData):
     try:
-        assert any(enc_flag in adata.uns_keys() for enc_flag in ["categoricals", "encoding_to_var"])
+        assert np.issubdtype(adata.X.dtype, np.number)
     except AssertionError:
         raise NotEncodedError("The AnnData object has not yet been encoded.") from AssertionError
 
