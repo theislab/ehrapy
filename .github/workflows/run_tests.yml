@@ -2,7 +2,7 @@ name: Run ehrapy Tests
 
 on:
     - push
-    - pull_request
+    - pull_request_target
 
 jobs:
     tests:
@@ -98,7 +98,9 @@ jobs:
 
             - name: Install ghostscript Ubuntu
               if: matrix.os == 'ubuntu-latest'
-              run: sudo apt-get install -y ghostscript
+              run: |
+                  sudo apt update
+                  sudo apt install -y ghostscript
 
             - name: Install ghostscript MacOS
               if: matrix.os == 'macos-latest'

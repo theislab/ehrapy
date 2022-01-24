@@ -16,7 +16,9 @@ Quick start
 
 .. nbgallery::
 
-   notebooks/mimic_2
+   notebooks/ehrapy_introduction
+   notebooks/mimic_2_introduction
+   notebooks/mimic_2_fate
 
 
 Glossary

@@ -26,26 +26,26 @@ class TestEncode:
 
     def test_autodetect_encode(self):
         adata = read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
-        encoded_ann_data = encode(adata, autodetect=True, encodings={})
+        encoded_ann_data = encode(adata, autodetect=True)
         assert list(encoded_ann_data.obs.columns) == ["survival", "clinic_day"]
-        assert list(encoded_ann_data.var_names) == [
+        assert set(encoded_ann_data.var_names) == {
             "ehrapycat_survival",
             "ehrapycat_clinic_day",
             "patient_id",
             "los_days",
             "b12_values",
-        ]
+        }
 
         assert encoded_ann_data.uns["var_to_encoding"] == {
-            "survival": "one_hot_encoding",
-            "clinic_day": "one_hot_encoding",
+            "survival": "label_encoding",
+            "clinic_day": "label_encoding",
         }
         assert id(encoded_ann_data.X) != id(encoded_ann_data.layers["original"])
 
     def test_autodetect_encode_again(self):
         adata = read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
         encoded_ann_data = encode(adata, autodetect=True, encodings={})
-        encoded_ann_data_again = encode(encoded_ann_data, autodetect=True, encodings={})  # noqa: F841
+        encoded_ann_data_again = encode(encoded_ann_data, autodetect=True)  # noqa: F841
         assert encoded_ann_data_again is None
 
     def test_custom_encode(self):

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import OrderedDict
 from typing import NamedTuple
 
 import numpy as np
@@ -32,13 +33,19 @@ def df_to_anndata(
     # if data is numerical only, short-circuit AnnData creation to have float dtype instead of object
     all_num = all(np.issubdtype(column_dtype, np.number) for column_dtype in dataframes.df.dtypes)
     X = dataframes.df.to_numpy(copy=True)
-
+    # initializing an OrderedDict with a non-empty dict might not be intended,
+    # see: https://stackoverflow.com/questions/25480089/right-way-to-initialize-an-ordereddict-using-its-constructor-such-that-it-retain/25480206
+    uns = OrderedDict()
+    # store all numerical/non-numerical columns that are not obs only
+    uns["numerical_columns"] = list(dataframes.df.select_dtypes("number").columns)
+    uns["non_numerical_columns"] = list(set(dataframes.df.columns) ^ set(uns["numerical_columns"]))
     return AnnData(
         X=X,
         obs=dataframes.obs,
         var=pd.DataFrame(index=list(dataframes.df.columns)),
         dtype="float32" if all_num else "object",
         layers={"original": X.copy()},
+        uns=uns,
     )
 
 
@@ -141,7 +148,7 @@ def get_column_indices(adata: AnnData, col_names: str | list[str]) -> list[int]:
     Returns:
         Set of column indices
     """
-    if isinstance(col_names, str):
+    if isinstance(col_names, str):  # pragma: no cover
         col_names = [col_names]
 
     indices = list()
@@ -163,6 +170,80 @@ def get_column_values(adata: AnnData, indices: int | list[int]) -> np.ndarray:
         :class:`~numpy.ndarray` object containing the column values
     """
     return np.take(adata.X, indices, axis=1)
+
+
+def assert_encoded(adata: AnnData):
+    try:
+        assert np.issubdtype(adata.X.dtype, np.number)
+    except AssertionError:
+        raise NotEncodedError("The AnnData object has not yet been encoded.") from AssertionError
+
+
+def get_numeric_vars(adata: AnnData) -> list[str]:
+    """Fetches the column names for numeric variables in X.
+
+    Args:
+        adata: :class:`~anndata.AnnData` object
+
+    Returns:
+        List of column numeric column names
+    """
+    assert_encoded(adata)
+
+    return adata.uns["numerical_columns"]
+
+
+def assert_numeric_vars(adata: AnnData, vars: list[str]):
+    num_vars = get_numeric_vars(adata)
+
+    try:
+        assert set(vars) <= set(num_vars)
+    except AssertionError:
+        raise ValueError("Some selected vars are not numeric")
+
+
+def set_numeric_vars(
+    adata: AnnData, values: np.ndarray, vars: list[str] | None = None, copy: bool = False
+) -> AnnData | None:
+    """Sets the column names for numeric variables in X.
+
+    Args:
+        adata: :class:`~anndata.AnnData` object
+        values: Matrix containing the replacement values
+        vars: List of names of the numeric variables to replace. If `None` they will be detected using :func:`~ehrapy.api.preprocessing.get_numeric_vars`.
+        copy: Whether to return a copy with the normalized data.
+
+    Returns:
+        :class:`~anndata.AnnData` object with updated X
+    """
+    assert_encoded(adata)
+
+    if vars is None:
+        vars = get_numeric_vars(adata)
+    else:
+        assert_numeric_vars(adata, vars)
+
+    if not np.issubdtype(values.dtype, np.number):
+        raise TypeError(f"values must be numeric (current dtype is {values.dtype})")
+
+    n_values = values.shape[1]
+
+    if n_values != len(vars):
+        raise ValueError(f"Number of values ({n_values}) does not match number of vars ({len(vars)})")
+
+    if copy:
+        adata = adata.copy()
+
+    vars_idx = get_column_indices(adata, vars)
+
+    for i in range(n_values):
+        adata.X[:, vars_idx[i]] = values[:, i]
+
+    return adata
+
+
+class NotEncodedError(AssertionError):
+    pass
 
 
 class ColumnNotFoundError(Exception):

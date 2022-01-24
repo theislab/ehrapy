@@ -1,7 +1,9 @@
+import warnings
 from pathlib import Path
 
 import numpy as np
 import pytest
+from sklearn.exceptions import ConvergenceWarning
 
 from ehrapy.api.io import read
 from ehrapy.api.preprocessing import explicit_impute, knn_impute, miss_forest_impute, simple_impute
@@ -117,6 +119,7 @@ class TestImputation:
         assert not (np.all([item != item for item in adata_imputed.X]))
 
     def test_missforest_impute_numerical_data(self):
+        warnings.filterwarnings("ignore", category=ConvergenceWarning)
         adata = read(dataset_path=f"{_TEST_PATH}/test_impute_num.csv")
         adata_imputed = miss_forest_impute(adata)
 

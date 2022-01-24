@@ -50,7 +50,7 @@ def download(
     response = requests.get(url, stream=True)
     total = int(response.headers.get("content-length", 0))
 
-    with Progress() as progress:
+    with Progress(refresh_per_second=1500) as progress:
         task = progress.add_task("[red]Downloading...", total=total)
         Path(output_path).mkdir(parents=True, exist_ok=True)
         with open(download_to_path, "wb") as file:

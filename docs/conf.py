@@ -98,7 +98,17 @@ html_theme_options = {
             "icon": "fab fa-twitter-square",
         },
     ],
+    "use_edit_page_button": True,
 }
+
+html_context = {
+    # "github_url": "https://github.com", # or your GitHub Enterprise interprise
+    "github_user": "theislab",
+    "github_repo": "ehrapy",
+    "github_version": "development",
+    "doc_path": "docs",
+}
+
 html_show_sphinx = False
 
 autosummary_generate = True
@@ -152,7 +162,9 @@ nbsphinx_prolog = r"""
 """  # noqa: E501
 
 nbsphinx_thumbnails = {
-    "tutorials/notebooks/mimic_2": "_static/tutorials/catheter.png",
+    "tutorials/notebooks/ehrapy_introduciton": "_static/tutorials/catheter.png",
+    "tutorials/notebooks/mimic_2_introduction": "_static/tutorials/catheter.png",
+    "tutorials/notebooks/mimic_2_fate": "_static/tutorials/fate.png",
 }
 
 # -- Options for HTMLHelp output ---------------------------------------
