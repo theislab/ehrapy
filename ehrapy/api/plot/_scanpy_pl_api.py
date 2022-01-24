@@ -601,6 +601,7 @@ def matrixplot(
         {vminmax}
         kwds:
             Are passed to :func:`matplotlib.pyplot.pcolor`.
+
     Returns:
         If `return_fig` is `True`, returns a :class:`~scanpy.pl.MatrixPlot` object, else if `show` is false, return axes dict
     """
@@ -775,6 +776,19 @@ def pca(
         annotate_var_explained: Whether to only annotate the explained variables.
         {scatter_bulk}
         {show_save_ax}
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy.api as ep
+
+            adata = ep.data.mimic_2(encode=True)
+            ep.pp.knn_impute(adata)
+            ep.pp.pca(adata)
+            ep.pl.pca(adata, color="service_unit")
+
+    Preview:
+        .. image:: /_images/docstring_previews/pl_pca.png
 
     Returns:
         If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
