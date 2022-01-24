@@ -120,6 +120,9 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str) -> None:
     df = adata[:, indices].to_df()
     adata._inplace_subset_var(~indices)
     adata.obs = adata.obs.join(df)
+    updated_num_uns, updated_non_num_uns = _update_uns(adata, to_obs)
+    adata.uns["numerical_columns"] = updated_num_uns
+    adata.uns["non_numerical_columns"] = updated_non_num_uns
 
 
 def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
@@ -134,6 +137,11 @@ def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
     if isinstance(to_x, str):
         to_x = [to_x]
     new_adata = concat([adata, AnnData(adata.obs[to_x], dtype="object")], axis=1)
+    # update uns (copy maybe: could be a costly operation but reduces reference cycles)
+    # users might save those as separate AnnData object and this could be unexpected behaviour if we dont copy
+    num_columns_moved, non_num_columns_moved = _update_uns(adata, to_x, True)
+    new_adata.uns["numerical_columns"] = adata.uns["numerical_columns"] + num_columns_moved
+    new_adata.uns["non_numerical_columns"] = adata.uns["non_numerical_columns"] + non_num_columns_moved
 
     return new_adata
 
@@ -240,6 +248,28 @@ def set_numeric_vars(
         adata.X[:, vars_idx[i]] = values[:, i]
 
     return adata
+
+
+def _update_uns(adata: AnnData, moved_columns: list[str], to_x: bool = False) ->[list[str], list[str]]:
+    """Update .uns of adata to reflect the changes made on the object by moving columns from X to obs or vice versa.
+
+    1.) Moving `col1` from `X` to `obs`: `col1` is either numerical or non_numerical, so delete it from the corresponding entry in `uns`
+    2.) Moving `col1` from `obs` to `X`: `col1` is either numerical or non_numerical, so add it to the corresponding entry in `uns`
+    """
+    moved_columns_set = set(moved_columns)
+    num_set = set(adata.uns["numerical_columns"])
+    non_num_set = set(adata.uns["non_numerical_columns"])
+    if not to_x:
+        for var in moved_columns:
+            if var in num_set:
+                num_set -= {var}
+            elif var in non_num_set:
+                non_num_set -= {var}
+        return list(num_set), list(non_num_set)
+    else:
+        all_moved_non_num_columns = moved_columns_set ^ set(adata.obs.select_dtypes("number").columns)
+        all_moved_num_columns = list(moved_columns_set ^ all_moved_non_num_columns)
+        return all_moved_num_columns, list(all_moved_non_num_columns)
 
 
 class NotEncodedError(AssertionError):
