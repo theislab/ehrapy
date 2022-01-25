@@ -6,7 +6,11 @@ from typing import List, Union
 import deepl
 import numpy as np
 from anndata import AnnData
-from deep_translator import GoogleTranslator
+
+try:
+    from deep_translator import GoogleTranslator
+except ConnectionError:
+    print("[bold red]Unable to import GoogleTranslator. Do you have an internet connection?")
 from deepl import Formality, GlossaryInfo, TextResult
 from rich import print
 
