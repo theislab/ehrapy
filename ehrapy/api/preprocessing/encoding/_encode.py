@@ -241,7 +241,7 @@ def _encode(
         ) as progress:
 
             for encoding_mode in encodings.keys():
-                task = progress.add_task(f"[red] Setting up {encoding_mode}", total=1)
+                task = progress.add_task(f"[red]Setting up {encoding_mode}", total=1)
                 encode_mode_switcher = {
                     "one_hot_encoding": _one_hot_encoding,
                     "label_encoding": _label_encoding,
