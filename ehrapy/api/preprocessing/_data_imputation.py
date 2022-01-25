@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 from anndata import AnnData
 from rich import print
+from rich.progress import Progress, SpinnerColumn
 from sklearn.ensemble import ExtraTreesRegressor, RandomForestClassifier
 from sklearn.experimental import enable_iterative_imputer  # noqa: F401
 from sklearn.impute import IterativeImputer, KNNImputer, SimpleImputer
@@ -43,23 +44,30 @@ def explicit_impute(
     """
     if copy:  # pragma: no cover
         adata = adata.copy()
-    # 1: Replace all missing values with the specified value
-    if isinstance(replacement, (int, str)):
-        _replace_explicit(adata.X, replacement, impute_empty_strings)
 
-    # 2: Replace all missing values in a subset of columns with a specified value per column or a default value, when the column is not explicitly named
-    elif isinstance(replacement, dict):
-        for idx, column_name in enumerate(adata.var_names):
-            imputation_value = _extract_impute_value(replacement, column_name)
-            # only replace if an explicit value got passed or could be extracted from replacement
-            if imputation_value:
-                _replace_explicit(adata.X[:, idx : idx + 1], imputation_value, impute_empty_strings)
-            else:
-                print(f"[bold yellow]No replace value passed and found for var [not bold green]{column_name}.")
-    else:
-        raise ReplacementDatatypeError(  # pragma: no cover
-            f"Type {type(replacement)} is not a valid datatype for replacement parameter. Either use int, str or a dict!"
-        )
+    with Progress(
+        "[progress.description]{task.description}",
+        SpinnerColumn(),
+        refresh_per_second=1500,
+    ) as progress:
+        progress.add_task("[blue]Running explicit imputation", total=1)
+        # 1: Replace all missing values with the specified value
+        if isinstance(replacement, (int, str)):
+            _replace_explicit(adata.X, replacement, impute_empty_strings)
+
+        # 2: Replace all missing values in a subset of columns with a specified value per column or a default value, when the column is not explicitly named
+        elif isinstance(replacement, dict):
+            for idx, column_name in enumerate(adata.var_names):
+                imputation_value = _extract_impute_value(replacement, column_name)
+                # only replace if an explicit value got passed or could be extracted from replacement
+                if imputation_value:
+                    _replace_explicit(adata.X[:, idx : idx + 1], imputation_value, impute_empty_strings)
+                else:
+                    print(f"[bold yellow]No replace value passed and found for var [not bold green]{column_name}.")
+        else:
+            raise ReplacementDatatypeError(  # pragma: no cover
+                f"Type {type(replacement)} is not a valid datatype for replacement parameter. Either use int, str or a dict!"
+            )
 
     return adata
 
@@ -118,23 +126,30 @@ def simple_impute(
     """
     if copy:
         adata = adata.copy()
-    # Imputation using median and mean strategy works with numerical data only
-    if strategy in {"median", "mean"}:
-        try:
+
+    with Progress(
+        "[progress.description]{task.description}",
+        SpinnerColumn(),
+        refresh_per_second=1500,
+    ) as progress:
+        progress.add_task(f"[blue]Running simple imputation with {strategy}", total=1)
+        # Imputation using median and mean strategy works with numerical data only
+        if strategy in {"median", "mean"}:
+            try:
+                _simple_impute(adata, var_names, strategy)
+            except ValueError:
+                raise ImputeStrategyNotAvailableError(
+                    f"Can only impute numerical data using {strategy} strategy. Try to restrict imputation"
+                    "to certain columns using var_names parameter or use a different mode."
+                )
+        # most_frequent imputation works with non numerical data as well
+        elif strategy == "most_frequent":
             _simple_impute(adata, var_names, strategy)
-        except ValueError:
-            raise ImputeStrategyNotAvailableError(
-                f"Can only impute numerical data using {strategy} strategy. Try to restrict imputation"
-                "to certain columns using var_names parameter or use a different mode."
+        # unknown simple imputation strategy
+        else:
+            raise UnknownImputeStrategyError(  # pragma: no cover
+                f"Unknown impute strategy {strategy} for simple Imputation. Choose any of mean, median or most_frequent."
             )
-    # most_frequent imputation works with non numerical data as well
-    elif strategy == "most_frequent":
-        _simple_impute(adata, var_names, strategy)
-    # unknown simple imputation strategy
-    else:
-        raise UnknownImputeStrategyError(  # pragma: no cover
-            f"Unknown impute strategy {strategy} for simple Imputation. Choose any of mean, median or most_frequent."
-        )
 
     return adata
 
@@ -178,17 +193,24 @@ def knn_impute(adata: AnnData, var_names: list[str] | None = None, copy: bool = 
     """
     if copy:
         adata = adata.copy()
-    # numerical only data needs no encoding since KNN Imputation can be applied directly
-    if np.issubdtype(adata.X.dtype, np.number):
-        _knn_impute(adata, var_names)
-    else:
-        # ordinal encoding is used since non-numerical data can not be imputed using KNN Imputation
-        enc = OrdinalEncoder()
-        adata.X = enc.fit_transform(adata.X)
-        # impute the data using KNN imputation
-        _knn_impute(adata, var_names)
-        # decode ordinal encoding to obtain imputed original data
-        adata.X = enc.inverse_transform(adata.X)
+
+    with Progress(
+        "[progress.description]{task.description}",
+        SpinnerColumn(),
+        refresh_per_second=1500,
+    ) as progress:
+        progress.add_task("[blue]Running KNN imputation", total=1)
+        # numerical only data needs no encoding since KNN Imputation can be applied directly
+        if np.issubdtype(adata.X.dtype, np.number):
+            _knn_impute(adata, var_names)
+        else:
+            # ordinal encoding is used since non-numerical data can not be imputed using KNN Imputation
+            enc = OrdinalEncoder()
+            adata.X = enc.fit_transform(adata.X)
+            # impute the data using KNN imputation
+            _knn_impute(adata, var_names)
+            # decode ordinal encoding to obtain imputed original data
+            adata.X = enc.inverse_transform(adata.X)
 
     return adata
 
@@ -240,52 +262,59 @@ def miss_forest_impute(
     """
     if copy:  # pragma: no cover
         adata = adata.copy()
-    # var names got passed for faster indices lookup
-    if var_names:
-        # ensure both keys got passed together
-        try:
-            non_num_vars = var_names["non_numerical"]
-            num_vars = var_names["numerical"]
-        except KeyError:  # pragma: no cover
-            raise MissForestKeyError(
-                "One or both of your keys provided for var_names are unknown. Only "
-                "numerical and non_numerical are available!"
-            )
-        # get the indices from the var names
-        non_num_indices = get_column_indices(adata, non_num_vars)
-        num_indices = get_column_indices(adata, num_vars)
 
-    # infer non numerical and numerical indices automatically
-    else:
-        non_num_indices_set = _get_non_numerical_column_indices(adata.X)
-        num_indices = [idx for idx in range(adata.X.shape[1]) if idx not in non_num_indices_set]
-        non_num_indices = list(non_num_indices_set)
+    with Progress(
+        "[progress.description]{task.description}",
+        SpinnerColumn(),
+        refresh_per_second=1500,
+    ) as progress:
+        progress.add_task("[blue]Running MissForest imputation", total=1)
+        # var names got passed for faster indices lookup
+        if var_names:
+            # ensure both keys got passed together
+            try:
+                non_num_vars = var_names["non_numerical"]
+                num_vars = var_names["numerical"]
+            except KeyError:  # pragma: no cover
+                raise MissForestKeyError(
+                    "One or both of your keys provided for var_names are unknown. Only "
+                    "numerical and non_numerical are available!"
+                )
+            # get the indices from the var names
+            non_num_indices = get_column_indices(adata, non_num_vars)
+            num_indices = get_column_indices(adata, num_vars)
 
-    imp_num = IterativeImputer(
-        estimator=ExtraTreesRegressor(),
-        initial_strategy=num_initial_strategy,
-        max_iter=max_iter,
-        random_state=random_state,
-    )
-    # initial strategy here will not be parametrized since only most_frequent will be applied to non numerical data
-    imp_cat = IterativeImputer(
-        estimator=RandomForestClassifier(),
-        initial_strategy="most_frequent",
-        max_iter=max_iter,
-        random_state=random_state,
-    )
+        # infer non numerical and numerical indices automatically
+        else:
+            non_num_indices_set = _get_non_numerical_column_indices(adata.X)
+            num_indices = [idx for idx in range(adata.X.shape[1]) if idx not in non_num_indices_set]
+            non_num_indices = list(non_num_indices_set)
 
-    # encode all non numerical columns
-    if non_num_indices:
-        enc = OrdinalEncoder()
-        adata.X[::, non_num_indices] = enc.fit_transform(adata.X[::, non_num_indices])
-    # this step is the most expensive one and might extremely slow down the impute process
-    if num_indices:
-        adata.X[::, num_indices] = imp_num.fit_transform(adata.X[::, num_indices])
-    if non_num_indices:
-        adata.X[::, non_num_indices] = imp_cat.fit_transform(adata.X[::, non_num_indices])
-        # decode ordinal encoding to obtain imputed original data
-        adata.X[::, non_num_indices] = enc.inverse_transform(adata.X[::, non_num_indices])
+        imp_num = IterativeImputer(
+            estimator=ExtraTreesRegressor(),
+            initial_strategy=num_initial_strategy,
+            max_iter=max_iter,
+            random_state=random_state,
+        )
+        # initial strategy here will not be parametrized since only most_frequent will be applied to non numerical data
+        imp_cat = IterativeImputer(
+            estimator=RandomForestClassifier(),
+            initial_strategy="most_frequent",
+            max_iter=max_iter,
+            random_state=random_state,
+        )
+
+        # encode all non numerical columns
+        if non_num_indices:
+            enc = OrdinalEncoder()
+            adata.X[::, non_num_indices] = enc.fit_transform(adata.X[::, non_num_indices])
+        # this step is the most expensive one and might extremely slow down the impute process
+        if num_indices:
+            adata.X[::, num_indices] = imp_num.fit_transform(adata.X[::, num_indices])
+        if non_num_indices:
+            adata.X[::, non_num_indices] = imp_cat.fit_transform(adata.X[::, non_num_indices])
+            # decode ordinal encoding to obtain imputed original data
+            adata.X[::, non_num_indices] = enc.inverse_transform(adata.X[::, non_num_indices])
 
     return adata
 
