@@ -319,6 +319,35 @@ def miss_forest_impute(
     return adata
 
 
+def _warn_imputation_threshold(adata: AnnData, var_names: list[str] | None, threshold: int = 30) -> dict[str, int]:
+    """Warns the user if the more than $threshold percent had to be imputed.
+
+    Args:
+        adata: The AnnData object to check
+        var_names: The var names which were imputed.
+        threshold: A percentage value from 0 to 100 used as minimum.
+    """
+    try:
+        adata.var["missing_values_pct"]
+    except KeyError:
+        print("[bold yellow]Quality control metrics missing. Calculating...")
+        from ehrapy.api.preprocessing import calculate_qc_metrics
+
+        calculate_qc_metrics(adata)
+    used_var_names = set(adata.var_names) if var_names is None else set(var_names)
+
+    thresholded_var_names = set(adata.var[adata.var["missing_values_pct"] > threshold].index) & set(used_var_names)
+
+    var_name_to_pct: dict[str, int] = {}
+    for var in thresholded_var_names:
+        var_name_to_pct[var] = adata.var["missing_values_pct"].loc[var]
+        print(
+            f"[bold yellow]Feature [blue]{var} [yellow]had more than [blue]{var_name_to_pct[var]}% [yellow]missing values!"
+        )
+
+    return var_name_to_pct
+
+
 def _get_non_numerical_column_indices(X: np.ndarray) -> set:
     """Return indices of columns, that contain at least one non numerical value that is not "Nan"."""
     is_numeric_numpy = np.vectorize(_is_float_or_nan, otypes=[bool])

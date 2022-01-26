@@ -7,7 +7,7 @@ from sklearn.exceptions import ConvergenceWarning
 
 from ehrapy.api.io import read
 from ehrapy.api.preprocessing import explicit_impute, knn_impute, miss_forest_impute, simple_impute
-from ehrapy.api.preprocessing._data_imputation import ImputeStrategyNotAvailableError
+from ehrapy.api.preprocessing._data_imputation import ImputeStrategyNotAvailableError, _warn_imputation_threshold
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_PATH = f"{CURRENT_DIR}/test_data_imputation"
@@ -143,3 +143,8 @@ class TestImputation:
 
         assert (adata_imputed.X == 1011).sum() == 1
         assert (adata_imputed.X == "REPLACED").sum() == 1
+
+    def test_warning(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute_num.csv")
+        warning_results = _warn_imputation_threshold(adata, threshold=20, var_names=None)
+        assert warning_results == {"col1": 25, "col3": 50}
