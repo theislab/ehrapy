@@ -14,6 +14,8 @@ from rich import print
 from rich.progress import BarColumn, Progress
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
+from ehrapy.api.anndata_ext import _update_uns
+
 multi_encoding_modes = {"hash_encoding"}
 available_encodings = {"one_hot_encoding", "label_encoding", "count_encoding", *multi_encoding_modes}
 
@@ -194,6 +196,9 @@ def _encode(
             }
             encoded_ann_data.uns["encoding_to_var"] = {"label_encoding": categoricals_names}
 
+            encoded_ann_data.uns["numerical_columns"] = adata.uns["numerical_columns"].copy()
+            encoded_ann_data.uns["non_numerical_columns"] = []
+
     # user passed categorical values with encoding mode for each of them
     else:
         # Required since this would be deleted through side references
@@ -227,6 +232,11 @@ def _encode(
             raise ValueError(
                 "The categorical column names given contain at least one duplicate column. "
                 "Check the column names to ensure that no column is encoded twice!"
+            )
+        elif any(cat in adata.uns["numerical_columns"] for cat in categoricals):
+            print(
+                "[bold yellow]At least one of passed column names seems to have numerical dtype. In general it is not recommended "
+                "to encode numerical columns!"
             )
         _add_categoricals_to_obs(adata, categoricals)
         _add_categoricals_to_uns(adata, categoricals)
@@ -288,6 +298,11 @@ def _encode(
                 "Ensure that you passed all non numerical, categorical values for encoding!"
             )
             raise AnnDataCreationError
+
+        updated_num_uns, updated_non_num_uns, _ = _update_uns(adata, categoricals)
+        encoded_ann_data.uns["numerical_columns"] = updated_num_uns
+        encoded_ann_data.uns["non_numerical_columns"] = updated_non_num_uns
+
     del adata.obs
     del adata.X
 
@@ -629,7 +644,18 @@ def _undo_encoding(
     # only keep columns in obs that were stored in obs only -> delete every encoded column from obs
     new_obs = adata.obs[columns_obs_only]
     uns = OrderedDict()
-    uns["numerical_columns"] = adata.uns["numerical_columns"]
+    # reset uns and keep numerical/non-numerical columns
+    num_vars, non_num_vars = adata.uns["numerical_columns"], adata.uns["non_numerical_columns"]
+    for cat in categoricals:
+        original_values = adata.uns["original_values_categoricals"][cat]
+        type_first_nan = original_values[np.where(original_values != np.nan)][0]
+        if isinstance(type_first_nan, (int, float, complex)) and not isinstance(type_first_nan, bool):
+            num_vars.append(cat)
+        else:
+            non_num_vars.append(cat)
+
+    uns["numerical_columns"] = num_vars
+    uns["non_numerical_columns"] = non_num_vars
     del adata
     return AnnData(
         new_x,
