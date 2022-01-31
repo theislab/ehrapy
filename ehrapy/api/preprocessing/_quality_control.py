@@ -85,14 +85,14 @@ def _missing_values(
     """
     # Absolute number of missing values
     if shape is None:
-        return np.isnan(arr).sum()
+        return pd.isnull(arr).sum()
     # Relative number of missing values in percent
     else:
         n_rows, n_cols = shape
         if df_type == "obs":
-            return (np.isnan(arr).sum() / n_cols) * 100
+            return (pd.isnull(arr).sum() / n_cols) * 100
         else:
-            return (np.isnan(arr).sum() / n_rows) * 100
+            return (pd.isnull(arr).sum() / n_rows) * 100
 
 
 def _obs_qc_metrics(
@@ -148,10 +148,17 @@ def _var_qc_metrics(adata: AnnData, layer: str = None) -> pd.DataFrame:
 
     var_metrics["missing_values_abs"] = np.apply_along_axis(_missing_values, 0, mtx)
     var_metrics["missing_values_pct"] = np.apply_along_axis(_missing_values, 0, mtx, shape=mtx.shape, df_type="var")
-    var_metrics["mean"] = mtx.mean(axis=0)
-    var_metrics["median"] = np.median(mtx, axis=0)
-    var_metrics["standard_deviation"] = mtx.std(axis=0)
-    var_metrics["min"] = mtx.min(axis=0)
-    var_metrics["max"] = mtx.max(axis=0)
+    try:
+        var_metrics["mean"] = mtx.mean(axis=0)
+        var_metrics["median"] = np.median(mtx, axis=0)
+        var_metrics["standard_deviation"] = mtx.std(axis=0)
+        var_metrics["min"] = mtx.min(axis=0)
+        var_metrics["max"] = mtx.max(axis=0)
+    except TypeError:
+        var_metrics["mean"] = np.nan
+        var_metrics["median"] = np.nan
+        var_metrics["standard_deviation"] = np.nan
+        var_metrics["min"] = np.nan
+        var_metrics["max"] = np.nan
 
     return var_metrics
