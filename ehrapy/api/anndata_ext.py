@@ -102,15 +102,20 @@ def anndata_to_df(adata: AnnData, add_from_obs: list[str] | str | None = None) -
     return df
 
 
-def move_to_obs(adata: AnnData, to_obs: list[str] | str) -> None:
+def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy: bool = False) -> AnnData:
     """Move some columns from X to obs inplace
+
     Args:
         adata: The AnnData object
         to_obs: The columns to move to obs
+        copy: Whether to return a copy or not
 
     Returns:
         The original AnnData object with moved columns from X to obs
     """
+    if copy:
+        adata = adata.copy()
+
     if isinstance(to_obs, str):
         to_obs = [to_obs]
     # don't allow moving encoded columns as this could lead to inconsistent data in X and obs
@@ -127,9 +132,12 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str) -> None:
     adata.uns["numerical_columns"] = updated_num_uns
     adata.uns["non_numerical_columns"] = updated_non_num_uns
 
+    return adata
+
 
 def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
     """Move some columns from obs to X inplace
+
     Args:
         adata: The AnnData object
         to_x: The columns to move to X

@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from pathlib import Path
 from typing import Tuple
 
 import numpy as np
@@ -17,11 +18,57 @@ from ehrapy.api.anndata_ext import (
     assert_numeric_vars,
     df_to_anndata,
     get_numeric_vars,
+    move_to_obs,
+    move_to_x,
     set_numeric_vars,
 )
 
+CUR_DIR = Path(__file__).parent.resolve()
+
 
 class TestAnndataExt:
+    def test_move_to_obs_only_num(self):
+        adata = ep.io.read(CUR_DIR / "io/test_data_io/dataset5.csv")
+        move_to_obs(adata, ["los_days", "b12_values"])
+        assert list(adata.obs.columns) == ["los_days", "b12_values"]
+        assert {str(col) for col in adata.obs.dtypes} == {"float32"}
+        assert_frame_equal(
+            adata.obs,
+            DataFrame(
+                {"los_days": [14.0, 7.0, 10.0, 11.0, 3.0], "b12_values": [500.0, 330.0, 800.0, 765.0, 800.0]},
+                index=[str(idx) for idx in range(5)],
+            ).astype({"b12_values": "float32", "los_days": "float32"}),
+        )
+
+    def test_move_to_obs_mixed(self):
+        adata = ep.io.read(CUR_DIR / "io/test_data_io/dataset4.csv")
+        move_to_obs(adata, ["name", "clinic_id"])
+        assert set(adata.obs.columns) == {"name", "clinic_id"}
+        assert {str(col) for col in adata.obs.dtypes} == {"float32", "object"}
+        assert_frame_equal(
+            adata.obs,
+            DataFrame(
+                {"clinic_id": [i for i in range(1, 6)], "name": ["foo", "bar", "baz", "buz", "ber"]},
+                index=[str(idx) for idx in range(5)],
+            ).astype({"clinic_id": "float32"}),
+        )
+
+    def test_move_to_obs_copy(self):
+        adata = ep.io.read(CUR_DIR / "io/test_data_io/dataset4.csv")
+        cp_adata = move_to_obs(adata, ["name", "clinic_id"], copy=True)
+        assert id(cp_adata) != id(adata)
+        assert set(cp_adata.obs.columns) == {"name", "clinic_id"}
+        assert {str(col) for col in cp_adata.obs.dtypes} == {"float32", "object"}
+        assert not set(adata.obs.columns) == {"name", "clinic_id"}
+        assert not {str(col) for col in adata.obs.dtypes} == {"float32", "object"}
+        assert_frame_equal(
+            cp_adata.obs,
+            DataFrame(
+                {"clinic_id": [i for i in range(1, 6)], "name": ["foo", "bar", "baz", "buz", "ber"]},
+                index=[str(idx) for idx in range(5)],
+            ).astype({"clinic_id": "float32"}),
+        )
+
     def test_df_to_anndata_simple(self):
         df, col1_val, col2_val, col3_val = TestAnndataExt._setup_df_to_anndata()
         expected_x = np.array([col1_val, col2_val, col3_val], dtype="object").transpose()
