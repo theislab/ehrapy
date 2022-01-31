@@ -1,4 +1,4 @@
-from typing import List, Union
+from __future__ import annotations
 
 from anndata import AnnData
 from mudata import MuData
@@ -8,7 +8,10 @@ from ehrapy.api.io._read import read
 from ehrapy.api.preprocessing import encode
 
 
-def mimic_2(encoded: bool = False) -> AnnData:  # pragma: no cover
+def mimic_2(
+    encoded: bool = False,
+    columns_obs_only: dict[str, list[str]] | list[str] | None = None,
+) -> AnnData:  # pragma: no cover
     """Loads the MIMIC-II dataset
 
     Args:
@@ -28,6 +31,7 @@ def mimic_2(encoded: bool = False) -> AnnData:  # pragma: no cover
         dataset_path=f"{ehrapy_settings.datasetdir}/ehrapy_mimic2.csv",
         download_dataset_name="ehrapy_mimic2.csv",
         backup_url="https://www.physionet.org/files/mimic2-iaccd/1.0/full_cohort_data.csv?download",
+        columns_obs_only=columns_obs_only,
     )
     if encoded:
         return encode(adata, autodetect=True)
@@ -35,7 +39,11 @@ def mimic_2(encoded: bool = False) -> AnnData:  # pragma: no cover
     return adata
 
 
-def mimic_3_demo(encoded: bool = False, mudata: bool = False) -> Union[MuData, List[AnnData]]:  # pragma: no cover
+def mimic_3_demo(
+    encoded: bool = False,
+    mudata: bool = False,
+    columns_obs_only: dict[str, list[str]] | list[str] | None = None,
+) -> MuData | list[AnnData]:  # pragma: no cover
     """Loads the MIMIC-III demo dataset
 
     Args:
@@ -56,6 +64,7 @@ def mimic_3_demo(encoded: bool = False, mudata: bool = False) -> Union[MuData, L
         dataset_path=f"{ehrapy_settings.datasetdir}/ehrapy_mimic_3",
         download_dataset_name="ehrapy_mimic_3",
         backup_url="https://physionet.org/static/published-projects/mimiciii-demo/mimic-iii-clinical-database-demo-1.4.zip",
+        columns_obs_only=columns_obs_only,
         return_mudata=mudata,
         extension="csv",
     )
