@@ -132,7 +132,7 @@ def simple_impute(
     if copy:
         adata = adata.copy()
 
-    # _warn_imputation_threshold(adata, var_names)
+    _warn_imputation_threshold(adata, var_names)
 
     with Progress(
         "[progress.description]{task.description}",
@@ -201,7 +201,7 @@ def knn_impute(adata: AnnData, var_names: list[str] | None = None, copy: bool = 
     if copy:
         adata = adata.copy()
 
-    # _warn_imputation_threshold(adata, var_names)
+    _warn_imputation_threshold(adata, var_names)
 
     with Progress(
         "[progress.description]{task.description}",
@@ -272,7 +272,10 @@ def miss_forest_impute(
     if copy:  # pragma: no cover
         adata = adata.copy()
 
-    # _warn_imputation_threshold(adata, var_names.keys())  # type: ignore
+    if var_names is None:
+        _warn_imputation_threshold(adata, list(adata.var_names))
+    else:
+        _warn_imputation_threshold(adata, var_names.keys())  # type: ignore
 
     with Progress(
         "[progress.description]{task.description}",
