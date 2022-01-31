@@ -45,6 +45,11 @@ def explicit_impute(
     if copy:  # pragma: no cover
         adata = adata.copy()
 
+    if isinstance(replacement, int) or isinstance(replacement, str):
+        _warn_imputation_threshold(adata, var_names=list(adata.var_names))
+    else:
+        _warn_imputation_threshold(adata, var_names=replacement.keys())  # type: ignore
+
     with Progress(
         "[progress.description]{task.description}",
         SpinnerColumn(),
@@ -127,6 +132,8 @@ def simple_impute(
     if copy:
         adata = adata.copy()
 
+    _warn_imputation_threshold(adata, var_names)
+
     with Progress(
         "[progress.description]{task.description}",
         SpinnerColumn(),
@@ -193,6 +200,8 @@ def knn_impute(adata: AnnData, var_names: list[str] | None = None, copy: bool = 
     """
     if copy:
         adata = adata.copy()
+
+    _warn_imputation_threshold(adata, var_names)
 
     with Progress(
         "[progress.description]{task.description}",
@@ -263,6 +272,11 @@ def miss_forest_impute(
     if copy:  # pragma: no cover
         adata = adata.copy()
 
+    if var_names is None:
+        _warn_imputation_threshold(adata, list(adata.var_names))
+    else:
+        _warn_imputation_threshold(adata, var_names.keys())  # type: ignore
+
     with Progress(
         "[progress.description]{task.description}",
         SpinnerColumn(),
@@ -317,6 +331,35 @@ def miss_forest_impute(
             adata.X[::, non_num_indices] = enc.inverse_transform(adata.X[::, non_num_indices])
 
     return adata
+
+
+def _warn_imputation_threshold(adata: AnnData, var_names: list[str] | None, threshold: int = 30) -> dict[str, int]:
+    """Warns the user if the more than $threshold percent had to be imputed.
+
+    Args:
+        adata: The AnnData object to check
+        var_names: The var names which were imputed.
+        threshold: A percentage value from 0 to 100 used as minimum.
+    """
+    try:
+        adata.var["missing_values_pct"]
+    except KeyError:
+        print("[bold yellow]Quality control metrics missing. Calculating...")
+        from ehrapy.api.preprocessing import calculate_qc_metrics
+
+        calculate_qc_metrics(adata)
+    used_var_names = set(adata.var_names) if var_names is None else set(var_names)
+
+    thresholded_var_names = set(adata.var[adata.var["missing_values_pct"] > threshold].index) & set(used_var_names)
+
+    var_name_to_pct: dict[str, int] = {}
+    for var in thresholded_var_names:
+        var_name_to_pct[var] = adata.var["missing_values_pct"].loc[var]
+        print(
+            f"[bold yellow]Feature [blue]{var} [yellow]had more than [blue]{var_name_to_pct[var]}% [yellow]missing values!"
+        )
+
+    return var_name_to_pct
 
 
 def _get_non_numerical_column_indices(X: np.ndarray) -> set:
