@@ -136,7 +136,7 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy: bool = False) -> 
 
 
 def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
-    """Move some columns from obs to X inplace
+    """Move features from obs to X inplace.
 
     Args:
         adata: The AnnData object
