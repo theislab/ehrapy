@@ -103,7 +103,7 @@ def anndata_to_df(adata: AnnData, add_from_obs: list[str] | str | None = None) -
 
 
 def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy: bool = False) -> AnnData:
-    """Move some columns from X to obs inplace
+    """Move features from X to obs inplace.
 
     Args:
         adata: The AnnData object
