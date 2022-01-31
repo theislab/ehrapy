@@ -19,7 +19,6 @@ from ehrapy.api.anndata_ext import (
     df_to_anndata,
     get_numeric_vars,
     move_to_obs,
-    move_to_x,
     set_numeric_vars,
 )
 
