@@ -1609,7 +1609,7 @@ def paga_compare(
         save=save,
         title_graph=title_graph,
         groups_graph=groups_graph,
-        pos=pos ** paga_graph_params,
+        pos=pos**paga_graph_params,
     )
 
 
