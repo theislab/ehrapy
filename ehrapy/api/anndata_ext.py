@@ -5,7 +5,7 @@ from typing import NamedTuple
 
 import numpy as np
 import pandas as pd
-from anndata import AnnData
+from anndata import AnnData, concat
 
 
 class BaseDataframes(NamedTuple):
@@ -100,6 +100,62 @@ def anndata_to_df(adata: AnnData, add_from_obs: list[str] | str | None = None) -
         df = pd.concat([df, obs_slice], axis=1)
 
     return df
+
+
+def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy: bool = False) -> AnnData:
+    """Move features from X to obs inplace.
+
+    Args:
+        adata: The AnnData object
+        to_obs: The columns to move to obs
+        copy: Whether to return a copy or not
+
+    Returns:
+        The original AnnData object with moved columns from X to obs
+    """
+    if copy:
+        adata = adata.copy()
+
+    if isinstance(to_obs, str):
+        to_obs = [to_obs]
+    # don't allow moving encoded columns as this could lead to inconsistent data in X and obs
+    if any(column.startswith("ehrapycat") for column in to_obs):
+        raise ObsMoveError(
+            "Cannot move encoded columns from X to obs. Either undo encoding or remove them from the list!"
+        )
+    indices = adata.var_names.isin(to_obs)
+    df = adata[:, indices].to_df()
+    adata._inplace_subset_var(~indices)
+    adata.obs = adata.obs.join(df)
+    updated_num_uns, updated_non_num_uns, num_var = _update_uns(adata, to_obs)
+    adata.obs[num_var] = adata.obs[num_var].apply(pd.to_numeric, errors="ignore", downcast="float")
+    adata.uns["numerical_columns"] = updated_num_uns
+    adata.uns["non_numerical_columns"] = updated_non_num_uns
+
+    return adata
+
+
+def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
+    """Move features from obs to X inplace.
+
+    Args:
+        adata: The AnnData object
+        to_x: The columns to move to X
+
+    Returns:
+        A new AnnData object with moved columns from obs to X. This should not be used for datetime columns currently.
+    """
+    if isinstance(to_x, str):
+        to_x = [to_x]
+    new_adata = concat([adata, AnnData(adata.obs[to_x], dtype="object")], axis=1)
+    new_adata.obs = adata.obs[adata.obs.columns[~adata.obs.columns.isin(to_x)]]
+    # update uns (copy maybe: could be a costly operation but reduces reference cycles)
+    # users might save those as separate AnnData object and this could be unexpected behaviour if we dont copy
+    num_columns_moved, non_num_columns_moved, _ = _update_uns(adata, to_x, True)
+    new_adata.uns["numerical_columns"] = adata.uns["numerical_columns"] + num_columns_moved
+    new_adata.uns["non_numerical_columns"] = adata.uns["non_numerical_columns"] + non_num_columns_moved
+
+    return new_adata
 
 
 def get_column_indices(adata: AnnData, col_names: str | list[str]) -> list[int]:
@@ -206,6 +262,32 @@ def set_numeric_vars(
     return adata
 
 
+def _update_uns(
+    adata: AnnData, moved_columns: list[str], to_x: bool = False
+) -> tuple[list[str], list[str], list[str] | None]:
+    """Update .uns of adata to reflect the changes made on the object by moving columns from X to obs or vice versa.
+
+    1.) Moving `col1` from `X` to `obs`: `col1` is either numerical or non_numerical, so delete it from the corresponding entry in `uns`
+    2.) Moving `col1` from `obs` to `X`: `col1` is either numerical or non_numerical, so add it to the corresponding entry in `uns`
+    """
+    moved_columns_set = set(moved_columns)
+    num_set = set(adata.uns["numerical_columns"])
+    non_num_set = set(adata.uns["non_numerical_columns"])
+    if not to_x:
+        var_num = []
+        for var in moved_columns:
+            if var in num_set:
+                var_num.append(var)
+                num_set -= {var}
+            elif var in non_num_set:
+                non_num_set -= {var}
+        return list(num_set), list(non_num_set), var_num
+    else:
+        all_moved_non_num_columns = moved_columns_set ^ set(adata.obs.select_dtypes("number").columns)
+        all_moved_num_columns = list(moved_columns_set ^ all_moved_non_num_columns)
+        return all_moved_num_columns, list(all_moved_non_num_columns), None
+
+
 class NotEncodedError(AssertionError):
     pass
 
@@ -215,4 +297,8 @@ class ColumnNotFoundError(Exception):
 
 
 class ObsEmptyError(Exception):
+    pass
+
+
+class ObsMoveError(Exception):
     pass

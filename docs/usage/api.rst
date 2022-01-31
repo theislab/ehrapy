@@ -271,6 +271,8 @@ and vice versa.
 
     anndata_ext.df_to_anndata
     anndata_ext.anndata_to_df
+    anndata_ext.move_to_obs
+    anndata_ext.move_to_x
 
 
 Settings
