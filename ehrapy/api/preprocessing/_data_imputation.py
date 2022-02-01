@@ -276,8 +276,8 @@ def miss_forest_impute(
         _warn_imputation_threshold(adata, list(adata.var_names))
     elif isinstance(var_names, dict):
         _warn_imputation_threshold(adata, var_names.keys())  # type: ignore
-    else:
-        _warn_imputation_threshold(adata, var_names)  # type: ignore
+    elif isinstance(var_names, list):
+        _warn_imputation_threshold(adata, var_names)
 
     with Progress(
         "[progress.description]{task.description}",
