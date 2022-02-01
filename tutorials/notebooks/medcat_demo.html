@@ -1,0 +1,982 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Custom MedCAT object &#8212; ehrapy 0.1.0 documentation</title>
+    
+    <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  
+    
+    <link rel="stylesheet"
+      href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+  
+    
+      
+  
+    
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/pydata-sphinx-theme.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/tabs.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom_cookietemple.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx_gallery.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/dataframe.css" />
+    
+    <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+  
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/clipboard.min.js"></script>
+    <script src="../../_static/copybutton.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+
+<a class="navbar-brand" href="../../index.html">
+  <img src="../../_static/placeholder.png" class="logo" alt="logo">
+</a>
+
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../installation.html">
+  Installation
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../usage/usage.html">
+  Usage
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../index.html">
+  Tutorials
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../contributing.html">
+  Contributor Guide
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../code_of_conduct.html">
+  Code of Conduct
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference external nav-link" href="https://github.com/theislab/ehrapy/discussions">
+  Discussions
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../authors.html">
+  Credits
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../references.html">
+  References
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/theislab/ehrapy" rel="noopener" target="_blank" title="GitHub"><span><i class="fab fa-github-square"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://twitter.com/lukasheumos" rel="noopener" target="_blank" title="Twitter"><span><i class="fab fa-twitter-square"></i></span>
+            <label class="sr-only">Twitter</label></a>
+        </li>
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+              
+              <div class="toc-item">
+                
+<div class="tocsection onthispage pt-5 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#">
+   Custom MedCAT object
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#Extracting-disease-entities-from-an-existing-dataset">
+   Extracting disease entities from an existing dataset
+  </a>
+ </li>
+</ul>
+
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+
+<div class="tocsection editthispage">
+    <a href="https://github.com/theislab/ehrapy/edit/development/docs/tutorials/notebooks/medcat_demo.ipynb">
+        <i class="fas fa-pencil-alt"></i> Edit this page
+    </a>
+</div>
+
+              </div>
+              
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  
+<style>
+/* CSS for nbsphinx extension */
+
+/* remove conflicting styling from Sphinx themes */
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt *,
+div.nbinput.container div.input_area pre,
+div.nboutput.container div.output_area pre,
+div.nbinput.container div.input_area .highlight,
+div.nboutput.container div.output_area .highlight {
+    border: none;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+div.nbinput.container > div[class*=highlight],
+div.nboutput.container > div[class*=highlight] {
+    margin: 0;
+}
+
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt * {
+    background: none;
+}
+
+div.nboutput.container div.output_area .highlight,
+div.nboutput.container div.output_area pre {
+    background: unset;
+}
+
+div.nboutput.container div.output_area div.highlight {
+    color: unset;  /* override Pygments text color */
+}
+
+/* avoid gaps between output lines */
+div.nboutput.container div[class*=highlight] pre {
+    line-height: normal;
+}
+
+/* input/output containers */
+div.nbinput.container,
+div.nboutput.container {
+    display: -webkit-flex;
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
+    width: 100%;
+}
+@media (max-width: 540px) {
+    div.nbinput.container,
+    div.nboutput.container {
+        flex-direction: column;
+    }
+}
+
+/* input container */
+div.nbinput.container {
+    padding-top: 5px;
+}
+
+/* last container */
+div.nblast.container {
+    padding-bottom: 5px;
+}
+
+/* input prompt */
+div.nbinput.container div.prompt pre {
+    color: #307FC1;
+}
+
+/* output prompt */
+div.nboutput.container div.prompt pre {
+    color: #BF5B3D;
+}
+
+/* all prompts */
+div.nbinput.container div.prompt,
+div.nboutput.container div.prompt {
+    width: 4.5ex;
+    padding-top: 5px;
+    position: relative;
+    user-select: none;
+}
+
+div.nbinput.container div.prompt > div,
+div.nboutput.container div.prompt > div {
+    position: absolute;
+    right: 0;
+    margin-right: 0.3ex;
+}
+
+@media (max-width: 540px) {
+    div.nbinput.container div.prompt,
+    div.nboutput.container div.prompt {
+        width: unset;
+        text-align: left;
+        padding: 0.4em;
+    }
+    div.nboutput.container div.prompt.empty {
+        padding: 0;
+    }
+
+    div.nbinput.container div.prompt > div,
+    div.nboutput.container div.prompt > div {
+        position: unset;
+    }
+}
+
+/* disable scrollbars on prompts */
+div.nbinput.container div.prompt pre,
+div.nboutput.container div.prompt pre {
+    overflow: hidden;
+}
+
+/* input/output area */
+div.nbinput.container div.input_area,
+div.nboutput.container div.output_area {
+    -webkit-flex: 1;
+    flex: 1;
+    overflow: auto;
+}
+@media (max-width: 540px) {
+    div.nbinput.container div.input_area,
+    div.nboutput.container div.output_area {
+        width: 100%;
+    }
+}
+
+/* input area */
+div.nbinput.container div.input_area {
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+    /*background: #f5f5f5;*/
+}
+
+/* override MathJax center alignment in output cells */
+div.nboutput.container div[class*=MathJax] {
+    text-align: left !important;
+}
+
+/* override sphinx.ext.imgmath center alignment in output cells */
+div.nboutput.container div.math p {
+    text-align: left;
+}
+
+/* standard error */
+div.nboutput.container div.output_area.stderr {
+    background: #fdd;
+}
+
+/* ANSI colors */
+.ansi-black-fg { color: #3E424D; }
+.ansi-black-bg { background-color: #3E424D; }
+.ansi-black-intense-fg { color: #282C36; }
+.ansi-black-intense-bg { background-color: #282C36; }
+.ansi-red-fg { color: #E75C58; }
+.ansi-red-bg { background-color: #E75C58; }
+.ansi-red-intense-fg { color: #B22B31; }
+.ansi-red-intense-bg { background-color: #B22B31; }
+.ansi-green-fg { color: #00A250; }
+.ansi-green-bg { background-color: #00A250; }
+.ansi-green-intense-fg { color: #007427; }
+.ansi-green-intense-bg { background-color: #007427; }
+.ansi-yellow-fg { color: #DDB62B; }
+.ansi-yellow-bg { background-color: #DDB62B; }
+.ansi-yellow-intense-fg { color: #B27D12; }
+.ansi-yellow-intense-bg { background-color: #B27D12; }
+.ansi-blue-fg { color: #208FFB; }
+.ansi-blue-bg { background-color: #208FFB; }
+.ansi-blue-intense-fg { color: #0065CA; }
+.ansi-blue-intense-bg { background-color: #0065CA; }
+.ansi-magenta-fg { color: #D160C4; }
+.ansi-magenta-bg { background-color: #D160C4; }
+.ansi-magenta-intense-fg { color: #A03196; }
+.ansi-magenta-intense-bg { background-color: #A03196; }
+.ansi-cyan-fg { color: #60C6C8; }
+.ansi-cyan-bg { background-color: #60C6C8; }
+.ansi-cyan-intense-fg { color: #258F8F; }
+.ansi-cyan-intense-bg { background-color: #258F8F; }
+.ansi-white-fg { color: #C5C1B4; }
+.ansi-white-bg { background-color: #C5C1B4; }
+.ansi-white-intense-fg { color: #A1A6B2; }
+.ansi-white-intense-bg { background-color: #A1A6B2; }
+
+.ansi-default-inverse-fg { color: #FFFFFF; }
+.ansi-default-inverse-bg { background-color: #000000; }
+
+.ansi-bold { font-weight: bold; }
+.ansi-underline { text-decoration: underline; }
+
+
+div.nbinput.container div.input_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight].math,
+div.nboutput.container div.output_area.rendered_html,
+div.nboutput.container div.output_area > div.output_javascript,
+div.nboutput.container div.output_area:not(.rendered_html) > img{
+    padding: 5px;
+    margin: 0;
+}
+
+/* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
+div.nbinput.container div.input_area > div[class^='highlight'],
+div.nboutput.container div.output_area > div[class^='highlight']{
+    overflow-y: hidden;
+}
+
+/* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
+.prompt .copybtn {
+    display: none;
+}
+
+/* Some additional styling taken form the Jupyter notebook CSS */
+div.rendered_html table {
+  border: none;
+  border-collapse: collapse;
+  border-spacing: 0;
+  color: black;
+  font-size: 12px;
+  table-layout: fixed;
+}
+div.rendered_html thead {
+  border-bottom: 1px solid black;
+  vertical-align: bottom;
+}
+div.rendered_html tr,
+div.rendered_html th,
+div.rendered_html td {
+  text-align: right;
+  vertical-align: middle;
+  padding: 0.5em 0.5em;
+  line-height: normal;
+  white-space: normal;
+  max-width: none;
+  border: none;
+}
+div.rendered_html th {
+  font-weight: bold;
+}
+div.rendered_html tbody tr:nth-child(odd) {
+  background: #f5f5f5;
+}
+div.rendered_html tbody tr:hover {
+  background: rgba(66, 165, 245, 0.2);
+}
+</style>
+<div class="binder-badge docutils container">
+    <a class="reference external image-reference"
+       href="https://mybinder.org/v2/gh/theislab/ehrapy/development?filepath=docs/source/tutorials/notebooks/medcat_demo.ipynb">
+    <img alt="Launch binder" src="https://mybinder.org/badge_logo.svg" width="150px">
+    </a>
+</div><div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import ehrapy.api as ep
+import spacy
+import pandas as pd
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #800000; text-decoration-color: #800000; font-weight: bold">Unable to contact PyPI to check for the latest ehrapy version. Do you have an internet </span>
+<span style="color: #800000; text-decoration-color: #800000; font-weight: bold">connection?</span>
+</pre></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/home/zeth/miniconda3/envs/ehrapy/lib/python3.8/site-packages/medcat/cat.py:16: TqdmExperimentalWarning: Using `tqdm.autonotebook.tqdm` in notebook mode. Use `tqdm.tqdm` instead to force console mode (e.g. in jupyter console)
+  from tqdm.autonotebook import tqdm
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.settings.n_jobs=8
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># !python -m spacy download en_core_web_sm
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># !wget https://medcat.rosalind.kcl.ac.uk/media/vocab.dat -P ./medcat_data/
+# !wget https://medcat.rosalind.kcl.ac.uk/media/cdb-medmen-v1_2.dat -P ./medcat_data/
+# !wget https://raw.githubusercontent.com/CogStack/MedCAT/master/tutorial/data/pt_notes.csv -P ./medcat_data/
+# !wget https://medcat.rosalind.kcl.ac.uk/media/medmen_wstatus_2021_oct.zip -P ./medcat_data/
+</pre></div>
+</div>
+</div>
+<div class="section" id="Custom-MedCAT-object">
+<h1>Custom MedCAT object<a class="headerlink" href="#Custom-MedCAT-object" title="Permalink to this headline">¶</a></h1>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># Mind your dependencies and environments. This may clash with existing Spacy models!
+# !pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_core_sci_lg-0.4.0.tar.gz
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>medcat = ep.tl.MedCAT()
+
+vocabulary = medcat.load_vocabulary(&quot;./medcat_data/vocab.dat&quot;)
+concept_db = medcat.load_concept_db(&quot;./medcat_data/cdb-medmen-v1.dat&quot;)
+
+concept_db.config.ner[&#39;min_name_len&#39;] = 2
+concept_db.config.ner[&#39;upper_case_limit_len&#39;] = 3
+concept_db.config.general[&#39;spell_check&#39;] = True
+concept_db.config.linking[&#39;train_count_threshold&#39;] = 10
+concept_db.config.linking[&#39;similarity_threshold&#39;] = 0.3
+concept_db.config.linking[&#39;train&#39;] = True
+concept_db.config.linking[&#39;disamb_length_limit&#39;] = 5
+concept_db.config.general[&#39;full_unlink&#39;] = True
+
+medcat.update_cat(vocabulary=vocabulary, concept_db=concept_db)
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>text = &quot;He was diagnosed with kidney failure&quot;
+doc = medcat.cat(text)
+doc.ents
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(diagnosed, kidney failure)
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>medcat.cat.get_entities(&quot;He was diagnosed with kidney failure&quot;, only_cui=False)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{&#39;entities&#39;: {0: {&#39;pretty_name&#39;: &#39;Diagnosis&#39;,
+   &#39;cui&#39;: &#39;C0011900&#39;,
+   &#39;type_ids&#39;: [&#39;T060&#39;],
+   &#39;types&#39;: [&#39;Diagnostic Procedure&#39;],
+   &#39;source_value&#39;: &#39;diagnosed&#39;,
+   &#39;detected_name&#39;: &#39;diagnosed&#39;,
+   &#39;acc&#39;: 0.3913008909798732,
+   &#39;context_similarity&#39;: 0.3913008909798732,
+   &#39;start&#39;: 7,
+   &#39;end&#39;: 16,
+   &#39;icd10&#39;: [],
+   &#39;ontologies&#39;: [],
+   &#39;snomed&#39;: [],
+   &#39;id&#39;: 0,
+   &#39;meta_anns&#39;: {}},
+  2: {&#39;pretty_name&#39;: &#39;Kidney Failure&#39;,
+   &#39;cui&#39;: &#39;C0035078&#39;,
+   &#39;type_ids&#39;: [&#39;T047&#39;],
+   &#39;types&#39;: [&#39;Disease or Syndrome&#39;],
+   &#39;source_value&#39;: &#39;kidney failure&#39;,
+   &#39;detected_name&#39;: &#39;kidney~failure&#39;,
+   &#39;acc&#39;: 1.0,
+   &#39;context_similarity&#39;: 1.0,
+   &#39;start&#39;: 22,
+   &#39;end&#39;: 36,
+   &#39;icd10&#39;: [],
+   &#39;ontologies&#39;: [],
+   &#39;snomed&#39;: [],
+   &#39;id&#39;: 2,
+   &#39;meta_anns&#39;: {}}},
+ &#39;tokens&#39;: []}
+</pre></div></div>
+</div>
+</div>
+<div class="section" id="Extracting-disease-entities-from-an-existing-dataset">
+<h1>Extracting disease entities from an existing dataset<a class="headerlink" href="#Extracting-disease-entities-from-an-existing-dataset" title="Permalink to this headline">¶</a></h1>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>data = pd.read_csv(&quot;./medcat_data/pt_notes.csv&quot;)
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>data.head()
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Unnamed: 0_x</th>
+      <th>subject_id</th>
+      <th>chartdate</th>
+      <th>category</th>
+      <th>text</th>
+      <th>create_year</th>
+      <th>Unnamed: 0_y</th>
+      <th>gender</th>
+      <th>dob</th>
+      <th>dob_year</th>
+      <th>age_year</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>6</td>
+      <td>1</td>
+      <td>2079-01-01</td>
+      <td>General Medicine</td>
+      <td>HISTORY OF PRESENT ILLNESS:, The patient is a ...</td>
+      <td>2079</td>
+      <td>1</td>
+      <td>F</td>
+      <td>2018-01-01</td>
+      <td>2018</td>
+      <td>61</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>7</td>
+      <td>1</td>
+      <td>2079-01-01</td>
+      <td>Rheumatology</td>
+      <td>HISTORY OF PRESENT ILLNESS: , A 71-year-old fe...</td>
+      <td>2079</td>
+      <td>1</td>
+      <td>F</td>
+      <td>2018-01-01</td>
+      <td>2018</td>
+      <td>61</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>8</td>
+      <td>1</td>
+      <td>2079-01-01</td>
+      <td>Consult - History and Phy.</td>
+      <td>HISTORY OF PRESENT ILLNESS:, The patient is a ...</td>
+      <td>2079</td>
+      <td>1</td>
+      <td>F</td>
+      <td>2018-01-01</td>
+      <td>2018</td>
+      <td>61</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>9</td>
+      <td>2</td>
+      <td>2037-01-01</td>
+      <td>Consult - History and Phy.</td>
+      <td>CHIEF COMPLAINT:,1.  Infection.,2.  Pelvic pai...</td>
+      <td>2037</td>
+      <td>2</td>
+      <td>F</td>
+      <td>2018-01-01</td>
+      <td>2018</td>
+      <td>19</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>10</td>
+      <td>2</td>
+      <td>2037-01-01</td>
+      <td>Dermatology</td>
+      <td>SUBJECTIVE:,  This is a 29-year-old Vietnamese...</td>
+      <td>2037</td>
+      <td>2</td>
+      <td>F</td>
+      <td>2018-01-01</td>
+      <td>2018</td>
+      <td>19</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>with pd.option_context(&#39;display.max_rows&#39;, None, &#39;display.max_columns&#39;, None):
+    print(data[&quot;text&quot;][0])
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+HISTORY OF PRESENT ILLNESS:, The patient is a 71-year-old Caucasian female with a history of diabetes, osteoarthritis, atrial fibrillation, hypertension, asthma, obstructive sleep apnea on CPAP, diabetic foot ulcer, anemia and left lower extremity cellulitis. She was brought in by the EMS service to Erlanger emergency department with pulseless electrical activity. Her husband states that he was at home with his wife, when she presented to him complaining of fever and chills. She became acutely unresponsive. She was noted to have worsening of her breathing. She took several of her MDIs and then was placed on her CPAP. He went to notify EMS and when he returned, she was found to not be breathing. He stated that she was noted to have no breathing in excess of 10 minutes. He states that the EMS system arrived at the home and she was found not breathing. The patient was intubated at the scene and upon arrival to Erlanger Medical Center, she was found to have pupils fixed and dilated. She was seen by me in the emergency department and was on Neo-Synephrine, dopamine with a blood pressure of 97/22 with a rapid heart rate and again, in an unresponsive state.,REVIEW OF SYSTEMS:, Review of systems was not obtainable.,PAST MEDICAL HISTORY:, Diabetes, osteoarthritis, hypertension, asthma, atrial fibrillation, diabetic foot ulcer and anemia.,PAST SURGICAL HISTORY:, Noncontributory to above.,FAMILY HISTORY:, Mother with history of coronary artery disease.,SOCIAL HISTORY:, The patient is married. She uses no ethanol, no tobacco and no illicits. She has a very support family unit.,MEDICATIONS:, Augmentin; Detrol LA; lisinopril.,IMMUNIZATIONS:, Immunizations were up to date for influenza, negative for Pneumovax.,ALLERGIES:, PENICILLIN.,LABORATORY AT PRESENTATION:, White blood cell count 11, hemoglobin 10.5, hematocrit 32.2, platelets 175,000. Sodium 148, potassium 5.2, BUN 30, creatinine 2.2 and glucose 216. PT was 22.4.,RADIOLOGIC DATA:, Chest x-ray revealed a diffuse pulmonary edema.,PHYSICAL EXAMINATION:,VITAL SIGNS: Blood pressure 97/52, pulse of 79, respirations 16, O2 sat 100%.,HEENT: The patient&#39;s pupils were again, fixed and dilated and intubated on the monitor.,CHEST: Poor air movement bilateral with bilateral rales.,CARDIOVASCULAR: Regular rate and rhythm.,ABDOMEN: The abdomen was obese, nondistended and nontender.,EXTREMITIES: Left diabetic foot had oozing pus drainage from the foot.,GU: Foley catheter was in place.,IMPRESSION AND PLAN:,1. Acute cardiac arrest with pulseless electrical activity with hypotensive shock and respiratory failure: Will continue ventilator support. Will rule out pulmonary embolus, rule out myocardial infarction. Continue pressors. The patient is currently on dopamine, Neo-Synephrine and Levophed.,2. Acute respiratory distress syndrome: Will continue ventilatory support.,3. Questionable sepsis: Will obtain blood cultures, intravenous vancomycin and Rocephin given.,4. Hypotensive shock: Will continue pressors. Will check random cortisol. Hydrocortisone was added.,Further inpatient management for this patient will be provided by Dr. R. The patient&#39;s status was discussed with her daughter and her husband. The husband states that his wife has been very ill in the past with multiple admissions, but he had never seen her as severely ill as with this event. He states that she completely was not breathing at all and he is aware of the severity of her illness and the gravity of her current prognosis. Will obtain the assistance with cardiology with this admission and will continue pressors and supportive therapy. The family will make an assessment and final decision concerning her long-term management after a 24 hour period.
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata = ep.io.read(&quot;medcat_data/pt_notes.csv&quot;, columns_obs_only=[&quot;subject_id&quot;, &quot;chartdate&quot;, &quot;text&quot;, &quot;dob_year&quot;])
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>medcat = ep.tl.MedCAT(model_pack_path=&quot;medcat_data/medmen_wstatus_2021_oct.zip&quot;)
+medcat.concept_db = medcat.cat.cdb
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Found an existing unziped model pack at: medcat_data/medmen_wstatus_2021_oct, the provided zip will not be touched.
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>medcat.concept_db = medcat.filter_tui(medcat.concept_db, [&#39;T047&#39;, &#39;T048&#39;])
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">The size of the concept database is now: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">1763</span>
+</pre></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>annotation = medcat.annotate(adata.obs.text)
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "ba5b961748034fb0a808c8bf43c0ee75", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Annotated until now: 0 docs; Current BS: 157 docs; Elapsed time: 0.00 minutes
+Annotated until now: 157 docs; Current BS: 165 docs; Elapsed time: 1.32 minutes
+Annotated until now: 322 docs; Current BS: 151 docs; Elapsed time: 2.58 minutes
+Annotated until now: 473 docs; Current BS: 160 docs; Elapsed time: 3.84 minutes
+Annotated until now: 633 docs; Current BS: 152 docs; Elapsed time: 5.01 minutes
+Annotated until now: 785 docs; Current BS: 130 docs; Elapsed time: 6.18 minutes
+Annotated until now: 915 docs; Current BS: 157 docs; Elapsed time: 7.17 minutes
+Annotated until now: 1072 docs; Current BS: 16 docs; Elapsed time: 8.06 minutes
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata.obs[&quot;diagnoses&quot;] = annotation.entities_pretty.values()
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata.obs.diagnoses[0]
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[&#39;Diabetes&#39;,
+ &#39;Degenerative polyarthritis&#39;,
+ &#39;Atrial Fibrillation&#39;,
+ &#39;Hypertensive disease&#39;,
+ &#39;Asthma&#39;,
+ &#39;Sleep Apnea, Obstructive&#39;,
+ &#39;Diabetic foot ulcer&#39;,
+ &#39;Anemia&#39;,
+ &#39;Diabetes&#39;,
+ &#39;Degenerative polyarthritis&#39;,
+ &#39;Hypertensive disease&#39;,
+ &#39;Asthma&#39;,
+ &#39;Atrial Fibrillation&#39;,
+ &#39;Diabetic foot ulcer&#39;,
+ &#39;Anemia&#39;,
+ &#39;Coronary Arteriosclerosis&#39;,
+ &#39;Cardiac Arrest&#39;,
+ &#39;Respiratory Failure&#39;,
+ &#39;Pulmonary Embolism&#39;,
+ &#39;Myocardial Infarction&#39;,
+ &#39;Respiratory Distress Syndrome, Adult&#39;,
+ &#39;Sepsis&#39;]
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>subjects_diseases_pcts = medcat.calculate_disease_proportions(adata,
+                                                              annotation.cui_locations,
+                                                              subject_id_col=&quot;subject_id&quot;)
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>medcat.plot_top_diseases(subjects_diseases_pcts, 30)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/tutorials_notebooks_medcat_demo_20_0.png" src="../../_images/tutorials_notebooks_medcat_demo_20_0.png" />
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+              </div>
+              
+              
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+</div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+    <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+  <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2021, Lukas Heumos, Theislab.<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>
