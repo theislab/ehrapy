@@ -241,7 +241,7 @@ def _knn_impute(adata: AnnData, var_names: list[str] | None) -> None:
 
 def miss_forest_impute(
     adata: AnnData,
-    var_names: dict[str, list[str]] | None = None,
+    var_names: dict[str, list[str]] | list[str] | None = None,
     num_initial_strategy: str = "mean",
     max_iter: int = 10,
     random_state: int = 0,
@@ -250,16 +250,16 @@ def miss_forest_impute(
     """Impute data using the MissForest strategy.
 
     See https://academic.oup.com/bioinformatics/article/28/1/112/219101.
-    This requires the computation of which columns in X contain numerical only (including NaNs)
-    and which contain non-numerical data. This is an expensive operation on X with many numerical vars resulting in a long runtime.
+    This requires the computation of which columns in X contain numerical only (including NaNs) and which contain non-numerical data.
 
     Args:
-        adata: The AnnData object to use MissForest Imputation on
-        var_names: An optional dict with two keys (numerical and non_numerical) indicating which var contains mixed data and which numerical data only
-        copy: Whether to return a copy or act in place
+        adata: The AnnData object to use MissForest Imputation on.
+        var_names: List of columns to impute or a dict with two keys (numerical and non_numerical) indicating which var
+                   contain mixed data and which numerical data only.
+        copy: Whether to return a copy or act in place.
 
     Returns:
-        The imputed (but unencoded) AnnData object
+        The imputed (but unencoded) AnnData object.
 
     Example:
         .. code-block:: python
@@ -274,8 +274,10 @@ def miss_forest_impute(
 
     if var_names is None:
         _warn_imputation_threshold(adata, list(adata.var_names))
-    else:
+    elif isinstance(var_names, dict):
         _warn_imputation_threshold(adata, var_names.keys())  # type: ignore
+    else:
+        _warn_imputation_threshold(adata, var_names)  # type: ignore
 
     with Progress(
         "[progress.description]{task.description}",
@@ -283,26 +285,6 @@ def miss_forest_impute(
         refresh_per_second=1500,
     ) as progress:
         progress.add_task("[blue]Running MissForest imputation", total=1)
-        # var names got passed for faster indices lookup
-        if var_names:
-            # ensure both keys got passed together
-            try:
-                non_num_vars = var_names["non_numerical"]
-                num_vars = var_names["numerical"]
-            except KeyError:  # pragma: no cover
-                raise MissForestKeyError(
-                    "One or both of your keys provided for var_names are unknown. Only "
-                    "numerical and non_numerical are available!"
-                )
-            # get the indices from the var names
-            non_num_indices = get_column_indices(adata, non_num_vars)
-            num_indices = get_column_indices(adata, num_vars)
-
-        # infer non numerical and numerical indices automatically
-        else:
-            non_num_indices_set = _get_non_numerical_column_indices(adata.X)
-            num_indices = [idx for idx in range(adata.X.shape[1]) if idx not in non_num_indices_set]
-            non_num_indices = list(non_num_indices_set)
 
         imp_num = IterativeImputer(
             estimator=ExtraTreesRegressor(),
@@ -318,17 +300,39 @@ def miss_forest_impute(
             random_state=random_state,
         )
 
-        # encode all non numerical columns
-        if non_num_indices:
-            enc = OrdinalEncoder()
-            adata.X[::, non_num_indices] = enc.fit_transform(adata.X[::, non_num_indices])
-        # this step is the most expensive one and might extremely slow down the impute process
-        if num_indices:
-            adata.X[::, num_indices] = imp_num.fit_transform(adata.X[::, num_indices])
-        if non_num_indices:
-            adata.X[::, non_num_indices] = imp_cat.fit_transform(adata.X[::, non_num_indices])
-            # decode ordinal encoding to obtain imputed original data
-            adata.X[::, non_num_indices] = enc.inverse_transform(adata.X[::, non_num_indices])
+        if isinstance(var_names, list):
+            var_indices = get_column_indices(adata, var_names)  # type: ignore
+            adata.X[::, var_indices] = imp_num.fit_transform(adata.X[::, var_indices])
+        elif isinstance(var_names, dict) or None:
+            if var_names:
+                try:
+                    non_num_vars = var_names["non_numerical"]
+                    num_vars = var_names["numerical"]
+                except KeyError:  # pragma: no cover
+                    raise MissForestKeyError(
+                        "One or both of your keys provided for var_names are unknown. Only "
+                        "numerical and non_numerical are available!"
+                    )
+                non_num_indices = get_column_indices(adata, non_num_vars)
+                num_indices = get_column_indices(adata, num_vars)
+
+            # infer non numerical and numerical indices automatically
+            else:
+                non_num_indices_set = _get_non_numerical_column_indices(adata.X)
+                num_indices = [idx for idx in range(adata.X.shape[1]) if idx not in non_num_indices_set]
+                non_num_indices = list(non_num_indices_set)
+
+            # encode all non numerical columns
+            if non_num_indices:
+                enc = OrdinalEncoder()
+                adata.X[::, non_num_indices] = enc.fit_transform(adata.X[::, non_num_indices])
+            # this step is the most expensive one and might extremely slow down the impute process
+            if num_indices:
+                adata.X[::, num_indices] = imp_num.fit_transform(adata.X[::, num_indices])
+            if non_num_indices:
+                adata.X[::, non_num_indices] = imp_cat.fit_transform(adata.X[::, non_num_indices])
+                # decode ordinal encoding to obtain imputed original data
+                adata.X[::, non_num_indices] = enc.inverse_transform(adata.X[::, non_num_indices])
 
     return adata
 
