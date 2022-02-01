@@ -8,7 +8,7 @@ from rich.progress import Progress, SpinnerColumn
 from sklearn.experimental import enable_iterative_imputer  # noqa: F401
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OrdinalEncoder
-from sklearnex import unpatch_sklearn
+from sklearnex import patch_sklearn, unpatch_sklearn
 
 from ehrapy.api import settings
 from ehrapy.api.anndata_ext import get_column_indices
@@ -204,8 +204,6 @@ def knn_impute(adata: AnnData, var_names: list[str] | None = None, copy: bool = 
 
     _warn_imputation_threshold(adata, var_names)
 
-    from sklearnex import patch_sklearn
-
     patch_sklearn()
 
     with Progress(
@@ -288,8 +286,6 @@ def miss_forest_impute(
         _warn_imputation_threshold(adata, var_names.keys())  # type: ignore
     elif isinstance(var_names, list):
         _warn_imputation_threshold(adata, var_names)
-
-    from sklearnex import patch_sklearn
 
     patch_sklearn()
 
