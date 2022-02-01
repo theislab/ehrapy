@@ -15,5 +15,5 @@ full_name: Lukas Heumos
 email: lukas.heumos@posteo.net
 project_name: ehrapy
 project_short_description: Electronic Health Record Analysis with Python.
-version: 0.1.0
+version: 0.2.0
 license: Apache2.0
