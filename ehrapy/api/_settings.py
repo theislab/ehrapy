@@ -79,7 +79,7 @@ class EhrapyConfig:  # pragma: no cover
         figdir: str | Path = "./figures/",
         cache_compression: str | None = "lzf",
         max_memory=15,
-        n_jobs=1,
+        n_jobs: int = 1,
         logfile: str | Path | None = None,
         categories_to_ignore: Iterable[str] = ("N/A", "dontknow", "no_gate", "?"),
         _frameon: bool = True,

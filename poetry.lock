@@ -412,6 +412,29 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "daal"
+version = "2021.5.3"
+description = "Intel® oneAPI Data Analytics Library"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+tbb = ">=2021.0.0,<2022.0.0"
+
+[[package]]
+name = "daal4py"
+version = "2021.5.3"
+description = "daal4py is a Convenient Python API to the Intel® oneAPI Data Analytics Library (oneDAL)"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+daal = "2021.5.3"
+numpy = ">=1.15"
+
+[[package]]
 name = "datasets"
 version = "1.14.0"
 description = "HuggingFace community-driven open-source library of datasets"
@@ -438,13 +461,13 @@ xxhash = "*"
 apache-beam = ["apache-beam (>=2.26.0)"]
 audio = ["librosa"]
 benchmarks = ["numpy (==1.18.5)", "tensorflow (==2.3.0)", "torch (==1.6.0)", "transformers (==3.0.2)"]
-dev = ["absl-py", "pytest", "pytest-datadir", "pytest-xdist", "apache-beam (>=2.26.0)", "elasticsearch", "aiobotocore", "boto3", "botocore", "fsspec", "moto[server,s3] (==2.0.4)", "rarfile (>=4.0)", "s3fs (==2021.08.1)", "tensorflow (>=2.3)", "torch", "torchaudio", "transformers", "bs4", "conllu", "langdetect", "lxml", "mwparserfromhell", "nltk", "openpyxl", "py7zr", "tldextract", "zstandard", "bert-score (>=0.3.6)", "rouge-score", "sacrebleu", "scipy", "seqeval", "scikit-learn", "jiwer", "sentencepiece", "toml (>=0.10.1)", "requests-file (>=1.5.1)", "tldextract (>=3.1.0)", "texttable (>=1.6.3)", "Werkzeug (>=1.0.1)", "six (>=1.15.0,<1.16.0)", "black (==21.4b0)", "flake8 (==3.7.9)", "isort", "pyyaml (>=5.3.1)", "importlib-resources"]
+dev = ["absl-py", "pytest", "pytest-datadir", "pytest-xdist", "apache-beam (>=2.26.0)", "elasticsearch", "aiobotocore", "boto3", "botocore", "fsspec", "moto[s3,server] (==2.0.4)", "rarfile (>=4.0)", "s3fs (==2021.08.1)", "tensorflow (>=2.3)", "torch", "torchaudio", "transformers", "bs4", "conllu", "langdetect", "lxml", "mwparserfromhell", "nltk", "openpyxl", "py7zr", "tldextract", "zstandard", "bert-score (>=0.3.6)", "rouge-score", "sacrebleu", "scipy", "seqeval", "scikit-learn", "jiwer", "sentencepiece", "toml (>=0.10.1)", "requests-file (>=1.5.1)", "tldextract (>=3.1.0)", "texttable (>=1.6.3)", "Werkzeug (>=1.0.1)", "six (>=1.15.0,<1.16.0)", "black (==21.4b0)", "flake8 (==3.7.9)", "isort", "pyyaml (>=5.3.1)", "importlib-resources"]
 docs = ["docutils (==0.16.0)", "recommonmark", "sphinx (==3.1.2)", "sphinx-markdown-tables", "sphinx-rtd-theme (==0.4.3)", "sphinxext-opengraph (==0.4.1)", "sphinx-copybutton", "fsspec (<2021.9.0)", "s3fs", "sphinx-panels", "sphinx-inline-tabs", "myst-parser"]
 quality = ["black (==21.4b0)", "flake8 (==3.7.9)", "isort", "pyyaml (>=5.3.1)"]
 s3 = ["fsspec", "boto3", "botocore", "s3fs"]
 tensorflow = ["tensorflow (>=2.2.0)"]
 tensorflow_gpu = ["tensorflow-gpu (>=2.2.0)"]
-tests = ["absl-py", "pytest", "pytest-datadir", "pytest-xdist", "apache-beam (>=2.26.0)", "elasticsearch", "aiobotocore", "boto3", "botocore", "fsspec", "moto[server,s3] (==2.0.4)", "rarfile (>=4.0)", "s3fs (==2021.08.1)", "tensorflow (>=2.3)", "torch", "torchaudio", "transformers", "bs4", "conllu", "langdetect", "lxml", "mwparserfromhell", "nltk", "openpyxl", "py7zr", "tldextract", "zstandard", "bert-score (>=0.3.6)", "rouge-score", "sacrebleu", "scipy", "seqeval", "scikit-learn", "jiwer", "sentencepiece", "toml (>=0.10.1)", "requests-file (>=1.5.1)", "tldextract (>=3.1.0)", "texttable (>=1.6.3)", "Werkzeug (>=1.0.1)", "six (>=1.15.0,<1.16.0)", "importlib-resources"]
+tests = ["absl-py", "pytest", "pytest-datadir", "pytest-xdist", "apache-beam (>=2.26.0)", "elasticsearch", "aiobotocore", "boto3", "botocore", "fsspec", "moto[s3,server] (==2.0.4)", "rarfile (>=4.0)", "s3fs (==2021.08.1)", "tensorflow (>=2.3)", "torch", "torchaudio", "transformers", "bs4", "conllu", "langdetect", "lxml", "mwparserfromhell", "nltk", "openpyxl", "py7zr", "tldextract", "zstandard", "bert-score (>=0.3.6)", "rouge-score", "sacrebleu", "scipy", "seqeval", "scikit-learn", "jiwer", "sentencepiece", "toml (>=0.10.1)", "requests-file (>=1.5.1)", "tldextract (>=3.1.0)", "texttable (>=1.6.3)", "Werkzeug (>=1.0.1)", "six (>=1.15.0,<1.16.0)", "importlib-resources"]
 torch = ["torch"]
 
 [[package]]
@@ -2274,6 +2297,18 @@ examples = ["matplotlib (>=2.2.3)", "scikit-image (>=0.14.5)", "pandas (>=0.25.0
 tests = ["matplotlib (>=2.2.3)", "scikit-image (>=0.14.5)", "pandas (>=0.25.0)", "pytest (>=5.0.1)", "pytest-cov (>=2.9.0)", "flake8 (>=3.8.2)", "black (>=21.6b0)", "mypy (>=0.770)", "pyamg (>=4.0.0)"]
 
 [[package]]
+name = "scikit-learn-intelex"
+version = "2021.5.3"
+description = "Intel(R) Extension for Scikit-learn is a seamless way to speed up your Scikit-learn application."
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+daal4py = "2021.5.3"
+scikit-learn = ">=0.22"
+
+[[package]]
 name = "scipy"
 version = "1.6.1"
 description = "SciPy: Scientific Library for Python"
@@ -2767,6 +2802,14 @@ python-versions = "*"
 widechars = ["wcwidth"]
 
 [[package]]
+name = "tbb"
+version = "2021.5.1"
+description = "Intel® oneAPI Threading Building Blocks (oneTBB)"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "testpath"
 version = "0.5.0"
 description = "Test utilities for code working with files and commands"
@@ -3194,7 +3237,7 @@ en-core-web-md = []
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7.1,<4"
-content-hash = "56a05587d337d57b481b9e789d1212385e03e4add80108213faf2b8ed0863e06"
+content-hash = "c09e277bd464c8ff588458d1a9c7dbe02cd5d1dedacbd9141f759af0d13466e4"
 
 [metadata.files]
 aiohttp = [
@@ -3555,6 +3598,20 @@ cymem = [
     {file = "cymem-2.0.6-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:04676d696596b0db3f3c5a3936bab12fb6f24278921a6622bb185e61765b2b4d"},
     {file = "cymem-2.0.6-cp39-cp39-win_amd64.whl", hash = "sha256:c59293b232b53ebb47427f16cf648e937022f489cff36c11d1d8a1f0075b6609"},
     {file = "cymem-2.0.6.tar.gz", hash = "sha256:169725b5816959d34de2545b33fee6a8021a6e08818794a426c5a4f981f17e5e"},
+]
+daal = [
+    {file = "daal-2021.5.3-py2.py3-none-manylinux1_x86_64.whl", hash = "sha256:5e9c1cf5936ce5fbc5f34bebce60654f9dd4788ef884aa9ee0f27d4dbd938e2f"},
+    {file = "daal-2021.5.3-py2.py3-none-win_amd64.whl", hash = "sha256:61113eb2aa7047f0ff60506b6b07e5a3e938165b8711025808ca4dca4f793a8a"},
+]
+daal4py = [
+    {file = "daal4py-2021.5.3-py36-none-manylinux1_x86_64.whl", hash = "sha256:f30fccaf371f2f72b41cca6f7845387f48b5e7c39713474d5663be747a77225a"},
+    {file = "daal4py-2021.5.3-py36-none-win_amd64.whl", hash = "sha256:552db974937a0873ee5ecacd3c315dded3ee16666ee5ee05718904ed14a09ab0"},
+    {file = "daal4py-2021.5.3-py37-none-manylinux1_x86_64.whl", hash = "sha256:ed6231a45e15d3a0ce794b54f8c81706a06393bcd087bb88280a02667c9a2ee2"},
+    {file = "daal4py-2021.5.3-py37-none-win_amd64.whl", hash = "sha256:d7e4a1ba1a1afc665c4405d7186ad694aa97b0eae28d725efeb47b8bd7aa90cf"},
+    {file = "daal4py-2021.5.3-py38-none-manylinux1_x86_64.whl", hash = "sha256:e3098c6075d2e544f2e071bb54f9f23d6889e752757d447cdcab476e5b3ac282"},
+    {file = "daal4py-2021.5.3-py38-none-win_amd64.whl", hash = "sha256:9d45101f35226c4e9ce573bb848150f3bfef518ec031d2f970655098cb2032bd"},
+    {file = "daal4py-2021.5.3-py39-none-manylinux1_x86_64.whl", hash = "sha256:3d65febe56cd04678391d314b8cad999e0beed2eac7d2ce109ba65fff131c58a"},
+    {file = "daal4py-2021.5.3-py39-none-win_amd64.whl", hash = "sha256:d9c9c15a654b248331ce0b1bddf928c685f6e1978e17e1b31785e2ac7f8b6bb7"},
 ]
 datasets = [
     {file = "datasets-1.14.0-py3-none-any.whl", hash = "sha256:c16f2c164486c4b33545840a002f00b63238921b961b9aec04961b02de216564"},
@@ -5008,6 +5065,16 @@ scikit-learn = [
     {file = "scikit_learn-1.0.2-cp39-cp39-win32.whl", hash = "sha256:e174242caecb11e4abf169342641778f68e1bfaba80cd18acd6bc84286b9a534"},
     {file = "scikit_learn-1.0.2-cp39-cp39-win_amd64.whl", hash = "sha256:b54a62c6e318ddbfa7d22c383466d38d2ee770ebdb5ddb668d56a099f6eaf75f"},
 ]
+scikit-learn-intelex = [
+    {file = "scikit_learn_intelex-2021.5.3-py36-none-manylinux1_x86_64.whl", hash = "sha256:b58197423daf5cac821c6376ab702f445cfd72a964de6ff436b4ecc592b2ff6e"},
+    {file = "scikit_learn_intelex-2021.5.3-py36-none-win_amd64.whl", hash = "sha256:7a84998fa7724855af5227ffe9fb1d25a917ed9f1237d6b5ddc21fdedcb30c0e"},
+    {file = "scikit_learn_intelex-2021.5.3-py37-none-manylinux1_x86_64.whl", hash = "sha256:dfba15d74e823ddda4684596040a9b042c3ea6d6b78d9737ffba17136343ad51"},
+    {file = "scikit_learn_intelex-2021.5.3-py37-none-win_amd64.whl", hash = "sha256:f331b9aa81163913a1c8ab1f237b8a3afe88e5178e74530c05278d89e7071466"},
+    {file = "scikit_learn_intelex-2021.5.3-py38-none-manylinux1_x86_64.whl", hash = "sha256:a2f57d8a88d20b6c17216a9ca406fd333ec5722eb2b07b4d6720dedefc126d2c"},
+    {file = "scikit_learn_intelex-2021.5.3-py38-none-win_amd64.whl", hash = "sha256:a7d883a62c94831e3abe114771e3a9fadaeba1dbf61151cff8f836e6cea5c5aa"},
+    {file = "scikit_learn_intelex-2021.5.3-py39-none-manylinux1_x86_64.whl", hash = "sha256:0f27775cc65e9fe224c373163fe5630f58c98d860b507abd91ce92a6ad1b7edd"},
+    {file = "scikit_learn_intelex-2021.5.3-py39-none-win_amd64.whl", hash = "sha256:79607e19d493df422bb434e6277029934cc55d4c83304d66e5c09815aab592c6"},
+]
 scipy = [
     {file = "scipy-1.6.1-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:a15a1f3fc0abff33e792d6049161b7795909b40b97c6cc2934ed54384017ab76"},
     {file = "scipy-1.6.1-cp37-cp37m-manylinux1_i686.whl", hash = "sha256:e79570979ccdc3d165456dd62041d9556fb9733b86b4b6d818af7a0afc15f092"},
@@ -5227,6 +5294,12 @@ tables = [
 tabulate = [
     {file = "tabulate-0.8.9-py3-none-any.whl", hash = "sha256:d7c013fe7abbc5e491394e10fa845f8f32fe54f8dc60c6622c6cf482d25d47e4"},
     {file = "tabulate-0.8.9.tar.gz", hash = "sha256:eb1d13f25760052e8931f2ef80aaf6045a6cceb47514db8beab24cded16f13a7"},
+]
+tbb = [
+    {file = "tbb-2021.5.1-py2.py3-none-manylinux1_i686.whl", hash = "sha256:ccb6bad2891d3b1234e7c8d053cdf52e5a546438657924882247d25d461f25c9"},
+    {file = "tbb-2021.5.1-py2.py3-none-manylinux1_x86_64.whl", hash = "sha256:6578ae9485140efc0dccde98ccec03706d5c9aa7645f06ecfe1bb3cd720c0432"},
+    {file = "tbb-2021.5.1-py3-none-win32.whl", hash = "sha256:e120162a188bd8a51b3817bba16573c594374473241278ab07c921bdfebd3c8e"},
+    {file = "tbb-2021.5.1-py3-none-win_amd64.whl", hash = "sha256:949fade8d1542ab0bb42bf2d84b674e9de14978ef7dc5dcf87d9c4c70be2a05a"},
 ]
 testpath = [
     {file = "testpath-0.5.0-py3-none-any.whl", hash = "sha256:8044f9a0bab6567fc644a3593164e872543bb44225b0e24846e2c89237937589"},
