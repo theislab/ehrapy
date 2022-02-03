@@ -92,6 +92,7 @@ def scatter(
         .. code-block:: python
 
             import ehrapy.api as ep
+
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.norm_log(adata, offset=1)
@@ -186,6 +187,7 @@ def heatmap(
         .. code-block:: python
 
             import ehrapy.api as ep
+
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.norm_log(adata, offset=1)
@@ -306,14 +308,17 @@ def dotplot(
         .. code-block:: python
 
             import ehrapy.api as ep
+
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.neighbors(adata)
             ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
-            ep.pl.dotplot(adata, var_names=['age', 'gender_num', 'weight_first', 'bmi',
-            'wbc_first', 'hgb_first', 'platelet_first', 'sodium_first',
-            'potassium_first', 'tco2_first', 'chloride_first', 'bun_first',
-            'creatinine_first', 'po2_first', 'pco2_first'], groupby="leiden_0_5")
+            ep.pl.dotplot(adata,
+                          var_names=['age', 'gender_num', 'weight_first', 'bmi',
+                          'wbc_first', 'hgb_first', 'platelet_first', 'sodium_first',
+                          'potassium_first', 'tco2_first', 'chloride_first', 'bun_first',
+                          'creatinine_first', 'po2_first', 'pco2_first'],
+                           groupby="leiden_0_5")
 
     Preview:
         .. image:: /_images/docstring_previews/dotplot.png
@@ -393,6 +398,7 @@ def tracksplot(
         .. code-block:: python
 
             import ehrapy.api as ep
+
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.neighbors(adata)
@@ -481,6 +487,7 @@ def violin(
         .. code-block:: python
 
             import ehrapy.api as ep
+
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.norm_log(adata, offset=1)
@@ -594,6 +601,7 @@ def stacked_violin(
         .. code-block:: python
 
             import ehrapy.api as ep
+
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.norm_log(adata, offset=1)
@@ -702,6 +710,7 @@ def matrixplot(
         .. code-block:: python
 
             import ehrapy.api as ep
+
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.norm_log(adata, offset=1)
@@ -775,6 +784,7 @@ def clustermap(
         .. code-block:: python
 
             import ehrapy.api as ep
+
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.norm_log(adata, offset=1)
@@ -874,6 +884,7 @@ def dendrogram(
         .. code-block:: python
 
             import ehrapy.api as ep
+
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.norm_log(adata, offset=1)
@@ -928,6 +939,7 @@ def pca(
         .. code-block:: python
 
             import ehrapy.api as ep
+
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.norm_log(adata, offset=1)
@@ -972,6 +984,7 @@ def pca_loadings(
         .. code-block:: python
 
             import ehrapy.api as ep
+
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.norm_log(adata, offset=1)
@@ -1010,6 +1023,7 @@ def pca_variance_ratio(
         .. code-block:: python
 
             import ehrapy.api as ep
+
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.norm_log(adata, offset=1)
@@ -1043,6 +1057,7 @@ def pca_overview(adata: AnnData, **params):  # pragma: no cover
         .. code-block:: python
 
             import ehrapy.api as ep
+
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.norm_log(adata, offset=1)
@@ -1083,6 +1098,7 @@ def tsne(adata, **kwargs) -> Union[Axes, List[Axes], None]:  # pragma: no cover
         .. code-block:: python
 
             import ehrapy.api as ep
+
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.norm_log(adata, offset=1)
@@ -1131,6 +1147,7 @@ def umap(adata, **kwargs) -> Union[Axes, List[Axes], None]:  # pragma: no cover
         .. code-block:: python
 
             import ehrapy.api as ep
+
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.norm_log(adata, offset=1)
@@ -1177,6 +1194,7 @@ def diffmap(adata, **kwargs) -> Union[Axes, List[Axes], None]:  # pragma: no cov
         .. code-block:: python
 
             import ehrapy.api as ep
+
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.norm_log(adata, offset=1)
@@ -1216,6 +1234,7 @@ def draw_graph(
         .. code-block:: python
 
             import ehrapy.api as ep
+
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.norm_log(adata, offset=1)
@@ -1389,6 +1408,7 @@ def embedding(
         .. code-block:: python
 
             import ehrapy.api as ep
+
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.norm_log(adata, offset=1)
@@ -1513,6 +1533,7 @@ def embedding_density(
         .. code-block:: python
 
             import ehrapy.api as ep
+
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.norm_log(adata, offset=1)
@@ -1570,6 +1591,7 @@ def dpt_groups_pseudotime(
         .. code-block:: python
 
             import ehrapy.api as ep
+
             import numpy as np
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
@@ -1607,6 +1629,7 @@ def dpt_timeseries(
         .. code-block:: python
 
             import ehrapy.api as ep
+
             import numpy as np
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
@@ -1738,6 +1761,7 @@ def paga(
         .. code-block:: python
 
             import ehrapy.api as ep
+
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.norm_log(adata, offset=1)
@@ -1950,6 +1974,7 @@ def paga_compare(
         **paga_graph_params: Keywords for :func:`~ehrapy.pl.paga` and keywords for :func:`~ehrapy.pl.scatter`.
 
     Returns:
+        Matplotlib axes.
     """
     return sc.pl.paga_compare(
         adata=adata,
@@ -2012,6 +2037,7 @@ def rank_features_groups(
         .. code-block:: python
 
             import ehrapy.api as ep
+
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.norm_log(adata, offset=1)
@@ -2078,6 +2104,7 @@ def rank_features_groups_violin(
         .. code-block:: python
 
             import ehrapy.api as ep
+
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.norm_log(adata, offset=1)
@@ -2155,6 +2182,7 @@ def rank_features_groups_stacked_violin(
         .. code-block:: python
 
             import ehrapy.api as ep
+
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.norm_log(adata, offset=1)
@@ -2214,6 +2242,7 @@ def rank_features_groups_heatmap(
         .. code-block:: python
 
             import ehrapy.api as ep
+
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.norm_log(adata, offset=1)
@@ -2291,6 +2320,7 @@ def rank_features_groups_dotplot(
         .. code-block:: python
 
             import ehrapy.api as ep
+
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.neighbors(adata)
@@ -2369,6 +2399,7 @@ def rank_features_groups_matrixplot(
         .. code-block:: python
 
             import ehrapy.api as ep
+
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.neighbors(adata)
@@ -2429,6 +2460,7 @@ def rank_features_groups_tracksplot(
         .. code-block:: python
 
             import ehrapy.api as ep
+
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.norm_log(adata, offset=1)
