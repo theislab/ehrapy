@@ -121,20 +121,21 @@ def diabetes_130(
 
     Args:
         encoded: Whether to return an already encoded object
+        columns_obs_only: Columns to include in obs only and not X.
 
     Returns:
-        :class:`~anndata.AnnData` object of the MIMIC-II dataset
+        :class:`~anndata.AnnData` object of the Diabetes 130 dataset
 
     Example:
         .. code-block:: python
 
             import ehrapy.api as ep
 
-            adata = ep.data.diabetes_130(encode=True)
+            adata = ep.dt.diabetes_130(encode=True)
     """
     adata = read(
-        dataset_path=f"{ehrapy_settings.datasetdir}/diabetes_ehrapy_prepared.csv",
-        download_dataset_name="diabetes_ehrapy_prepared.csv",
+        dataset_path=f"{ehrapy_settings.datasetdir}/diabetes_130.csv",
+        download_dataset_name="diabetes_130.csv",
         backup_url="https://figshare.com/ndownloader/files/33950546",
         columns_obs_only=columns_obs_only,
     )
