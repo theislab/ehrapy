@@ -11,7 +11,7 @@ from ehrapy.api.preprocessing import encode
 def mimic_2(
     encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
-) -> AnnData:  # pragma: no cover
+) -> AnnData:
     """Loads the MIMIC-II dataset.
 
     More details: https://physionet.org/content/mimic2-iaccd/1.0/
@@ -46,7 +46,7 @@ def mimic_3_demo(
     encoded: bool = False,
     mudata: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
-) -> MuData | list[AnnData]:  # pragma: no cover
+) -> MuData | list[AnnData]:
     """Loads the MIMIC-III demo dataset.
 
     Args:
@@ -81,7 +81,7 @@ def mimic_3_demo(
     return mdata
 
 
-def heart_failure(columns_obs_only: dict[str, list[str]] | list[str] | None = None) -> AnnData:  # pragma: no cover
+def heart_failure(columns_obs_only: dict[str, list[str]] | list[str] | None = None) -> AnnData:
     """Loads the heart failure dataset.
 
     More details: http://archive.ics.uci.edu/ml/datasets/Heart+failure+clinical+records
@@ -107,5 +107,40 @@ def heart_failure(columns_obs_only: dict[str, list[str]] | list[str] | None = No
         backup_url="https://figshare.com/ndownloader/files/33952934",
         columns_obs_only=columns_obs_only,
     )
+
+    return adata
+
+
+def diabetes_130(
+    encoded: bool = False,
+    columns_obs_only: dict[str, list[str]] | list[str] | None = None,
+) -> AnnData:
+    """Loads the diabetes-130 dataset
+
+    More details: http://archive.ics.uci.edu/ml/datasets/Diabetes+130-US+hospitals+for+years+1999-2008
+    Preprocessing: https://github.com/theislab/ehrapy-datasets/tree/main/diabetes_130/diabetes_130.ipynb
+
+    Args:
+        encoded: Whether to return an already encoded object
+        columns_obs_only: Columns to include in obs only and not X.
+
+    Returns:
+        :class:`~anndata.AnnData` object of the Diabetes 130 dataset
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy.api as ep
+
+            adata = ep.dt.diabetes_130(encode=True)
+    """
+    adata = read(
+        dataset_path=f"{ehrapy_settings.datasetdir}/diabetes_130.csv",
+        download_dataset_name="diabetes_130.csv",
+        backup_url="https://figshare.com/ndownloader/files/33950546",
+        columns_obs_only=columns_obs_only,
+    )
+    if encoded:
+        return encode(adata, autodetect=True)
 
     return adata
