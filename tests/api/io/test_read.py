@@ -3,6 +3,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
+from ehrapy.api._util import shell_command_accessible
 from ehrapy.api.anndata_ext import ColumnNotFoundError
 from ehrapy.api.io._read import read
 
@@ -51,6 +52,7 @@ class TestRead:
         assert id(adata.layers["original"]) != id(adata.X)
         assert list(adata.obs.index) == ["0", "1", "2", "3", "4"]
 
+    @pytest.mark.skipif(not shell_command_accessible(["gs", "-h"]), reason="Requires ghostscript to be installed.")
     def test_read_pdf(self):
         adata = read(dataset_path=f"{_TEST_PATH}/test_pdf.pdf")["test_pdf_0"]
         assert adata.X.shape == (32, 11)
@@ -69,6 +71,7 @@ class TestRead:
         ]
         assert id(adata.layers["original"]) != id(adata.X)
 
+    @pytest.mark.skipif(not shell_command_accessible(["gs", "-h"]), reason="Requires ghostscript to be installed.")
     def test_read_pdf_no_index(self):
         adata = read(dataset_path=f"{_TEST_PATH}/test_pdf.pdf")["test_pdf_1"]
         assert adata.X.shape == (6, 5)
