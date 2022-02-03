@@ -110,6 +110,7 @@ def heart_failure(columns_obs_only: dict[str, list[str]] | list[str] | None = No
 
     return adata
 
+
 def diabetes_130(
     encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
