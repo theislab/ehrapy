@@ -11,7 +11,7 @@ from ehrapy.api.preprocessing import encode
 def mimic_2(
     encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
-) -> AnnData:  # pragma: no cover
+) -> AnnData:
     """Loads the MIMIC-II dataset.
 
     More details: https://physionet.org/content/mimic2-iaccd/1.0/
@@ -46,7 +46,7 @@ def mimic_3_demo(
     encoded: bool = False,
     mudata: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
-) -> MuData | list[AnnData]:  # pragma: no cover
+) -> MuData | list[AnnData]:
     """Loads the MIMIC-III demo dataset.
 
     Args:
@@ -81,7 +81,7 @@ def mimic_3_demo(
     return mdata
 
 
-def heart_failure(columns_obs_only: dict[str, list[str]] | list[str] | None = None) -> AnnData:  # pragma: no cover
+def heart_failure(columns_obs_only: dict[str, list[str]] | list[str] | None = None) -> AnnData:
     """Loads the heart failure dataset.
 
     More details: http://archive.ics.uci.edu/ml/datasets/Heart+failure+clinical+records
@@ -110,10 +110,11 @@ def heart_failure(columns_obs_only: dict[str, list[str]] | list[str] | None = No
 
     return adata
 
+
 def diabetes_130(
     encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
-) -> AnnData:  # pragma: no cover
+) -> AnnData:
     """Loads the diabetes-130 dataset
 
     More details: http://archive.ics.uci.edu/ml/datasets/Diabetes+130-US+hospitals+for+years+1999-2008
