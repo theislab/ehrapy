@@ -109,3 +109,36 @@ def heart_failure(columns_obs_only: dict[str, list[str]] | list[str] | None = No
     )
 
     return adata
+
+def diabetes_130(
+    encoded: bool = False,
+    columns_obs_only: dict[str, list[str]] | list[str] | None = None,
+) -> AnnData:  # pragma: no cover
+    """Loads the diabetes-130 dataset
+
+    More details: http://archive.ics.uci.edu/ml/datasets/Diabetes+130-US+hospitals+for+years+1999-2008
+    Preprocessing: https://github.com/theislab/ehrapy-datasets/tree/main/diabetes_130/diabetes_130.ipynb
+
+    Args:
+        encoded: Whether to return an already encoded object
+
+    Returns:
+        :class:`~anndata.AnnData` object of the MIMIC-II dataset
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy.api as ep
+
+            adata = ep.data.diabetes_130(encode=True)
+    """
+    adata = read(
+        dataset_path=f"{ehrapy_settings.datasetdir}/diabetes_ehrapy_prepared.csv",
+        download_dataset_name="diabetes_ehrapy_prepared.csv",
+        backup_url="https://figshare.com/ndownloader/files/33950546",
+        columns_obs_only=columns_obs_only,
+    )
+    if encoded:
+        return encode(adata, autodetect=True)
+
+    return adata
