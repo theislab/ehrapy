@@ -99,7 +99,7 @@ def heart_failure(columns_obs_only: dict[str, list[str]] | list[str] | None = No
 
             import ehrapy.api as ep
 
-            adata = ep.dt.heart_failure(encode=True)
+            adata = ep.dt.heart_failure()
     """
     adata = read(
         dataset_path=f"{ehrapy_settings.datasetdir}/heart_failure.csv",
