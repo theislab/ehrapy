@@ -116,7 +116,7 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy: bool = False) -> 
     if copy:
         adata = adata.copy()
 
-    if isinstance(to_obs, str):
+    if isinstance(to_obs, str):  # pragma: no cover
         to_obs = [to_obs]
     # don't allow moving encoded columns as this could lead to inconsistent data in X and obs
     if any(column.startswith("ehrapycat") for column in to_obs):
@@ -145,7 +145,7 @@ def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
     Returns:
         A new AnnData object with moved columns from obs to X. This should not be used for datetime columns currently.
     """
-    if isinstance(to_x, str):
+    if isinstance(to_x, str):  # pragma: no cover
         to_x = [to_x]
     new_adata = concat([adata, AnnData(adata.obs[to_x], dtype="object")], axis=1)
     new_adata.obs = adata.obs[adata.obs.columns[~adata.obs.columns.isin(to_x)]]
