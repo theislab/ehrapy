@@ -54,7 +54,7 @@ class TestRead:
         assert list(adata.obs.index) == ["0", "1", "2", "3", "4"]
 
     @pytest.mark.skipif(
-        (os.name != "nt" and not not shell_command_accessible(["gs", "-h"]))
+        (os.name != "nt" and not shell_command_accessible(["gs", "-h"]))
         or (os.name == "nt" and not shell_command_accessible(["gswin64c", " -v"])),
         reason="Requires ghostscript to be installed.",
     )
@@ -77,7 +77,7 @@ class TestRead:
         assert id(adata.layers["original"]) != id(adata.X)
 
     @pytest.mark.skipif(
-        (os.name != "nt" and not not shell_command_accessible(["gs", "-h"]))
+        (os.name != "nt" and not shell_command_accessible(["gs", "-h"]))
         or (os.name == "nt" and not shell_command_accessible(["gswin64c", " -v"])),
         reason="Requires ghostscript to be installed.",
     )
