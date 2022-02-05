@@ -82,8 +82,8 @@ class TestRead:
     @pytest.mark.skipif(
         (
             os.name != "nt"
-            and not not shell_command_accessible(["gs", "-h"])
-            or (os.name == "nt" and not shell_command_accessible(["gswin64c", " -v"]))
+            and not not shell_command_accessible(["gs", "-h"]))
+            or (os.name == "nt" and not shell_command_accessible(["gswin64c", " -v"])
         ),
         reason="Requires ghostscript to be installed.",
     )
