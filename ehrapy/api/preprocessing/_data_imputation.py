@@ -8,9 +8,9 @@ from rich.progress import Progress, SpinnerColumn
 from sklearn.experimental import enable_iterative_imputer  # noqa: F401
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OrdinalEncoder
-from sklearnex import patch_sklearn, unpatch_sklearn
 
 from ehrapy.api import settings
+from ehrapy.api._util import check_module_importable
 from ehrapy.api.anndata_ext import get_column_indices
 
 
@@ -204,7 +204,14 @@ def knn_impute(adata: AnnData, var_names: list[str] | None = None, copy: bool = 
 
     _warn_imputation_threshold(adata, var_names)
 
-    patch_sklearn()
+    if check_module_importable("sklearnex"):
+        from sklearnex import patch_sklearn, unpatch_sklearn
+
+        patch_sklearn()
+    else:
+        print(
+            "[bold yellow]scikit-learn-intelex is not available. Install via [blue]pip install scikit-learn-intelex [yellow] for faster imputations."
+        )
 
     with Progress(
         "[progress.description]{task.description}",
@@ -224,7 +231,8 @@ def knn_impute(adata: AnnData, var_names: list[str] | None = None, copy: bool = 
             # decode ordinal encoding to obtain imputed original data
             adata.X = enc.inverse_transform(adata.X)
 
-    unpatch_sklearn()
+    if check_module_importable("sklearnex"):
+        unpatch_sklearn()
 
     return adata
 
@@ -287,7 +295,14 @@ def miss_forest_impute(
     elif isinstance(var_names, list):
         _warn_imputation_threshold(adata, var_names)
 
-    patch_sklearn()
+    if check_module_importable("sklearnex"):
+        from sklearnex import patch_sklearn, unpatch_sklearn
+
+        patch_sklearn()
+    else:
+        print(
+            "[bold yellow]scikit-learn-intelex is not available. Install via [blue]pip install scikit-learn-intelex [yellow] for faster imputations."
+        )
 
     from sklearn.ensemble import ExtraTreesRegressor, RandomForestClassifier
     from sklearn.impute import IterativeImputer
@@ -350,7 +365,8 @@ def miss_forest_impute(
                 # decode ordinal encoding to obtain imputed original data
                 adata.X[::, non_num_indices] = enc.inverse_transform(adata.X[::, non_num_indices])
 
-    unpatch_sklearn()
+    if check_module_importable("sklearnex"):
+        unpatch_sklearn()
 
     return adata
 
