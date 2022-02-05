@@ -118,6 +118,7 @@ branch = true
 source = ["ehrapy"]
 omit = [
     "ehrapy/__main__.py",  # Just providing the interface for all click functions
+    "ehrapy/api/data/_datasets.py",  # Difficult to test
     "ehrapy/cli/custom_cli/questionary.py",  # Just wrapper over questionary - tested in other projects
     "ehrapy/cli/custom_cli/click.py",  # Really difficult to test - tested in other projects
     "ehrapy/cli/custom_cli/rich.py",  # Just a Rich console
