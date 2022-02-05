@@ -108,7 +108,7 @@ def shell_command_accessible(command: list[str]) -> bool:  # pragma: no cover
     Returns:
         True if the command is accessible, false otherwise.
     """
-    command_accessible = Popen(command, stdout=PIPE, stderr=PIPE, universal_newlines=True)
+    command_accessible = Popen(command, stdout=PIPE, stderr=PIPE, universal_newlines=True, shell=True)
     (commmand_stdout, command_stderr) = command_accessible.communicate()
     if command_accessible.returncode != 0:
         return False

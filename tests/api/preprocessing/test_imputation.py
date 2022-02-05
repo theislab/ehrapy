@@ -131,7 +131,15 @@ class TestImputation:
 
         assert not (np.all([item != item for item in adata_imputed.X]))
 
+    def test_missforest_impute_list_str(self):
+        warnings.filterwarnings("ignore", category=ConvergenceWarning)
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute_num.csv")
+        adata_imputed = miss_forest_impute(adata, var_names=["col1", "col2", "col3"])
+
+        assert not (np.all([item != item for item in adata_imputed.X]))
+
     def test_explicit_impute_all(self):
+        warnings.filterwarnings("ignore", category=FutureWarning)
         adata = read(dataset_path=f"{_TEST_PATH}/test_impute_num.csv")
         adata_imputed = explicit_impute(adata, replacement=1011)
 
