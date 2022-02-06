@@ -106,6 +106,8 @@ def heart_failure(columns_obs_only: dict[str, list[str]] | list[str] | None = No
         download_dataset_name="heart_failure.csv",
         backup_url="https://figshare.com/ndownloader/files/33952934",
         columns_obs_only=columns_obs_only,
+        extension="csv",
+        index_column="patient_id"
     )
 
     return adata

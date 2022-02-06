@@ -246,7 +246,6 @@ def _knn_impute(adata: AnnData, var_names: list[str] | None) -> None:
     if isinstance(var_names, list):  # TODO This requires a test
         column_indices = get_column_indices(adata, var_names)
         adata.X[::, column_indices] = imputer.fit_transform(adata.X[::, column_indices])
-    # impute all columns if None passed
     else:
         adata.X = imputer.fit_transform(adata.X)
 
@@ -334,7 +333,7 @@ def miss_forest_impute(
         if isinstance(var_names, list):
             var_indices = get_column_indices(adata, var_names)  # type: ignore
             adata.X[::, var_indices] = imp_num.fit_transform(adata.X[::, var_indices])
-        elif isinstance(var_names, dict) or None:
+        elif isinstance(var_names, dict) or var_names is None:
             if var_names:
                 try:
                     non_num_vars = var_names["non_numerical"]
