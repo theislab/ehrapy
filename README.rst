@@ -65,7 +65,7 @@ Please see the `Usage documentation <Usage_>`_ for details.
 
 .. code:: python
 
-   import ehrapy.api as ep
+   import ehrapy as ep
 
 
 Credits

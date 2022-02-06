@@ -40,7 +40,7 @@ pyhpo = {extras = ["all"], version = ">=3.0.0"}
 camelot-py = {extras = ["base"], version = ">=0.10.1"}
 medcat = ">=1.2.6"
 deep-translator = ">=1.6.1"
-scikit-learn-intelex = {version = "^2021.5.3", optional = true}
+scikit-learn-intelex = {version = ">=2021.5.3", optional = true}
 
 [tool.poetry.dev-dependencies]
 pytest = ">=6.2.5"
@@ -118,11 +118,7 @@ branch = true
 source = ["ehrapy"]
 omit = [
     "ehrapy/__main__.py",  # Just providing the interface for all click functions
-    "ehrapy/api/data/_datasets.py",  # Difficult to test
-    "ehrapy/cli/custom_cli/questionary.py",  # Just wrapper over questionary - tested in other projects
-    "ehrapy/cli/custom_cli/click.py",  # Really difficult to test - tested in other projects
-    "ehrapy/cli/custom_cli/rich.py",  # Just a Rich console
-    "ehrapy/cli/upgrade.py"  # Difficult to test - tested in other projects
+    "ehrapy/data/_datasets.py",  # Difficult to test
 ]
 
 [tool.coverage.report]

@@ -6,21 +6,21 @@ Import the ehrapy API as follows:
 
 .. code:: python
 
-   import ehrapy.api as ep
+   import ehrapy as ep
 
 You can then access the respective modules like:
 
 .. code:: python
 
-   eh.pl.cool_fancy_plot()
+   ep.pl.cool_fancy_plot()
 
 
-.. currentmodule:: ehrapy.api
+.. currentmodule:: ehrapy
 
 Reading and writing
 ~~~~~~~~~~~~~~~~~~~~
 
-.. module:: ehrapy.api
+.. module:: ehrapy
 
 .. autosummary::
     :toctree: io
@@ -36,6 +36,8 @@ Data
 
     data.mimic_2
     data.mimic_3_demo
+    data.diabetes_130
+    data.heart_failure
 
 Preprocessing
 ~~~~~~~~~~~~~
@@ -285,7 +287,7 @@ An instance of the :class:`~scanpy._settings.ScanpyConfig` is available as `ehra
 
 .. code-block:: python
 
-    import ehrapy.api as ep
+    import ehrapy as ep
     ep.settings.set_figure_params(dpi=150)
 
 Please refer to the `Scanpy settings documentation <https://scanpy.readthedocs.io/en/stable/api.html#settings>`_

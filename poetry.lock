@@ -2565,7 +2565,7 @@ sphinx = ">=2.0"
 
 [[package]]
 name = "sphinx-copybutton"
-version = "0.4.0"
+version = "0.5.0"
 description = "Add a copy button to each of your code cells."
 category = "dev"
 optional = false
@@ -2576,7 +2576,7 @@ sphinx = ">=1.8"
 
 [package.extras]
 code_style = ["pre-commit (==2.12.1)"]
-rtd = ["sphinx", "ipython", "sphinx-book-theme"]
+rtd = ["sphinx", "ipython", "myst-nb", "sphinx-book-theme"]
 
 [[package]]
 name = "sphinx-gallery"
@@ -3128,7 +3128,7 @@ socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 
 [[package]]
 name = "virtualenv"
-version = "20.13.0"
+version = "20.13.1"
 description = "Virtual Python Environment builder"
 category = "dev"
 optional = false
@@ -3237,7 +3237,7 @@ scikit-learn-intelex = ["scikit-learn-intelex"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7.1,<4"
-content-hash = "4e305da895506106765a614970748b8ec38749ee579606a5605a60ded9931a2a"
+content-hash = "37666649c2d1998f33a7e469a1a333f4612eae6805a317dc34b97da18b064e81"
 
 [metadata.files]
 aiohttp = [
@@ -5161,8 +5161,8 @@ sphinx-click = [
     {file = "sphinx_click-3.1.0-py3-none-any.whl", hash = "sha256:8fb0b048a577d346d741782e44d041d7e908922858273d99746f305870116121"},
 ]
 sphinx-copybutton = [
-    {file = "sphinx-copybutton-0.4.0.tar.gz", hash = "sha256:8daed13a87afd5013c3a9af3575cc4d5bec052075ccd3db243f895c07a689386"},
-    {file = "sphinx_copybutton-0.4.0-py3-none-any.whl", hash = "sha256:4340d33c169dac6dd82dce2c83333412aa786a42dd01a81a8decac3b130dc8b0"},
+    {file = "sphinx-copybutton-0.5.0.tar.gz", hash = "sha256:a0c059daadd03c27ba750da534a92a63e7a36a7736dcf684f26ee346199787f6"},
+    {file = "sphinx_copybutton-0.5.0-py3-none-any.whl", hash = "sha256:9684dec7434bd73f0eea58dda93f9bb879d24bff2d8b187b1f2ec08dfe7b5f48"},
 ]
 sphinx-gallery = [
     {file = "sphinx-gallery-0.10.1.tar.gz", hash = "sha256:953f32b0833b0a689ff33516d0866865fb8601c0626811b95d2e844286d207e4"},
@@ -5484,8 +5484,8 @@ urllib3 = [
     {file = "urllib3-1.26.8.tar.gz", hash = "sha256:0e7c33d9a63e7ddfcb86780aac87befc2fbddf46c58dbb487e0855f7ceec283c"},
 ]
 virtualenv = [
-    {file = "virtualenv-20.13.0-py2.py3-none-any.whl", hash = "sha256:339f16c4a86b44240ba7223d0f93a7887c3ca04b5f9c8129da7958447d079b09"},
-    {file = "virtualenv-20.13.0.tar.gz", hash = "sha256:d8458cf8d59d0ea495ad9b34c2599487f8a7772d796f9910858376d1600dd2dd"},
+    {file = "virtualenv-20.13.1-py2.py3-none-any.whl", hash = "sha256:45e1d053cad4cd453181ae877c4ffc053546ae99e7dd049b9ff1d9be7491abf7"},
+    {file = "virtualenv-20.13.1.tar.gz", hash = "sha256:e0621bcbf4160e4e1030f05065c8834b4e93f4fcc223255db2a823440aca9c14"},
 ]
 wasabi = [
     {file = "wasabi-0.9.0-py3-none-any.whl", hash = "sha256:f40f317981d019903db5b69eb2bf78519c9e165c1dfdbd0452e4ca81ff9a31d2"},
