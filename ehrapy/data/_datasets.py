@@ -139,6 +139,8 @@ def diabetes_130(
         download_dataset_name="diabetes_130.csv",
         backup_url="https://figshare.com/ndownloader/files/33950546",
         columns_obs_only=columns_obs_only,
+        extension="csv",
+        index_column="encounter_id"
     )
     if encoded:
         return encode(adata, autodetect=True)
