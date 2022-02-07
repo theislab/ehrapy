@@ -12,13 +12,22 @@ CURRENT_DIR = Path(__file__).parent
 _TEST_PATH = f"{CURRENT_DIR}/test_data_nlp"
 
 deepl_token: str = os.environ.get("DEEPL_TOKEN")
+microsoft_token: str = os.environ.get("MICROSOFT_TOKEN")
+yandex_token: str = os.environ.get("YANDEX_TOKEN")
 
 
-@pytest.mark.parametrize("flavour", ["deepl", "googletranslate"])
+@pytest.mark.parametrize("flavour", ["deepl", "googletranslate", "libre", "mymemory", "microsoft", "yandex"])
 class TestTranslator:
     def setup_translator(self, flavour):
         target = "en-us" if flavour == "deepl" else "en"
-        token = deepl_token if flavour == "deepl" else None
+        if flavour == "deepl":
+            token = microsoft_token
+        elif flavour == "microsoft":
+            token = deepl_token
+        elif flavour == "yandex":
+            token = yandex_token
+        else:
+            token = None
         self.translator = Translator(flavour, target=target, token=token)
 
     def setup_method(self, method):
@@ -40,17 +49,23 @@ class TestTranslator:
         )
 
     def test_text_translation(self, flavour):
-        if deepl_token is None and flavour == "deepl":
-            pytest.skip("Skipping DeepL translation tests. Require DEEPL_TOKEN as environment variable")
+        flavour_token = f"{flavour}_token"
+        if flavour_token in list(globals()) and globals()[flavour_token] is None:
+            pytest.skip(
+                f"Skipping {flavour} translation tests. Require {flavour.upper()}_TOKEN as environment variable"
+            )
 
         self.setup_translator(flavour)
         assert self.translator.flavour == flavour
         result = self.translator.translate_text("Ich mag Züge.")
-        assert result == "I like trains."
+        assert pd.Series([result]).isin(["I like trains.", "I like moves."]).any()
 
     def test_translate_obs_column(self, flavour):
-        if deepl_token is None and flavour == "deepl":
-            pytest.skip("Skipping DeepL translation tests. Require DEEPL_TOKEN as environment variable")
+        flavour_token = f"{flavour}_token"
+        if flavour_token in list(globals()) and globals()[flavour_token] is None:
+            pytest.skip(
+                f"Skipping {flavour} translation tests. Require {flavour.upper()}_TOKEN as environment variable"
+            )
 
         self.setup_translator(flavour)
         self.translator.translate_obs_column(
@@ -59,12 +74,15 @@ class TestTranslator:
             translate_column_name=True,
             inplace=True,
         )
-        assert self.test_adata.obs.columns.str.lower().isin(["disease", "illness"]).any()
+        assert self.test_adata.obs.columns.str.lower().isin(["disease", "illness", "health"]).any()
         assert self.test_adata.obs.melt()["value"].str.lower().isin(["cancer"]).any()
 
     def test_translate_var_column(self, flavour):
-        if deepl_token is None and flavour == "deepl":
-            pytest.skip("Skipping DeepL translation tests. Require DEEPL_TOKEN as environment variable")
+        flavour_token = f"{flavour}_token"
+        if flavour_token in list(globals()) and globals()[flavour_token] is None:
+            pytest.skip(
+                f"Skipping {flavour} translation tests. Require {flavour.upper()}_TOKEN as environment variable"
+            )
 
         self.setup_translator(flavour)
         self.translator.translate_var_column(
@@ -73,12 +91,15 @@ class TestTranslator:
             translate_column_name=True,
             inplace=True,
         )
-        assert self.test_adata.var.columns.str.lower().isin(["disease", "illness"]).any()
+        assert self.test_adata.var.columns.str.lower().isin(["disease", "illness", "health"]).any()
         assert self.test_adata.var.melt()["value"].str.lower().isin(["cancer"]).any()
 
     def test_translate_X_column(self, flavour):
-        if deepl_token is None and flavour == "deepl":
-            pytest.skip("Skipping DeepL translation tests. Require DEEPL_TOKEN as environment variable")
+        flavour_token = f"{flavour}_token"
+        if flavour_token in list(globals()) and globals()[flavour_token] is None:
+            pytest.skip(
+                f"Skipping {flavour} translation tests. Require {flavour.upper()}_TOKEN as environment variable"
+            )
 
         self.setup_translator(flavour)
         self.translator.translate_X_column(
@@ -89,4 +110,4 @@ class TestTranslator:
         assert pd.Series(self.test_adata.X[0]).str.lower().isin(["tumor"]).any()
         assert pd.Series(self.test_adata.X[1]).str.lower().isin(["cancer"]).any()
 
-        assert self.test_adata.var_names.str.lower().isin(["disease", "illness"]).any()
+        assert self.test_adata.var_names.str.lower().isin(["disease", "illness", "prädisposition"]).any()
