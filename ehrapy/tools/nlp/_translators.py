@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import wraps
-from typing import List, Union
+from typing import Iterable, List, Union
 
 import deepl
 import numpy as np
@@ -29,25 +29,29 @@ class Translator:
     def __init__(
         self, flavour: str = "deepl", source: str = "de", target: str = "en", token: str = None
     ) -> None:  # pragma: no cover
+
+        self.translator: DeepL | GoogleTranslate | LibreTranslate | MyMemoryTranslate | MicrosoftTranslate | YandexTranslate = (
+            None
+        )
         if flavour == "deepl":
             self.translator = DeepL(token)
         elif flavour == "googletranslate":
-            self.translator = GoogleTranslate(source, target)
+            self.translator = GoogleTranslate(source, target)  # type: ignore
         elif flavour == "libre":
-            self.translator = LibreTranslate(source, target)
+            self.translator = LibreTranslate(source, target)  # type: ignore
         elif flavour == "mymemory":
-            self.translator = MyMemoryTranslate(source, target)
+            self.translator = MyMemoryTranslate(source, target)  # type: ignore
         elif flavour == "microsoft":
-            self.translator = MicrosoftTranslate(token, source, target)
+            self.translator = MicrosoftTranslate(token, source, target)  # type: ignore
         elif flavour == "yandex":
-            self.translator = YandexTranslate(token, source, target)
+            self.translator = YandexTranslate(token, source, target)  # type: ignore
         else:
             raise NotImplementedError(f"Flavour '{flavour}' is not supported.")
         self.flavour = flavour
         self.source_language = source
         self.target_language = target
 
-    def translate_text(self, text: str | list, target_language: str = None) -> str | list[str]:  # pragma: no cover
+    def translate_text(self, text: str | Iterable, target_language: str = None) -> str | list[str]:  # pragma: no cover
         """Translates the provided text into the target language.
 
         Args:
@@ -162,7 +166,9 @@ class Translator:
                 index_values[index] = translated_column_name
                 adata.var_names = index_values
 
-            translated_column_values: list = translate_text(column_values)  # TODO: Check that structure is still ok
+            translated_column_values: str | list[str] = translate_text(
+                column_values
+            )  # TODO: Check that structure is still ok
             # translated_column_values = list(map(lambda text_result: text_result.text, translated_column_values))
 
             adata.X[:, index] = translated_column_values
@@ -174,7 +180,7 @@ class DeepL:
     def __init__(self, authentication_key: str):
         self.translator = deepl.Translator(authentication_key)
 
-    def _check_usage(function):  # type ignore # noqa # pragma: no cover
+    def _check_usage(function):  # noqa # pragma: no cover
         """Checks the usage limit of the DeepL Account.
 
         Prints a warning if the DeepL usage limit is exceeded.
@@ -211,11 +217,11 @@ class DeepL:
                     )
                     print(f"[bold yellow]Current usage: {usage.team_document.count}")
 
-                return function(self, *args, **kwargs)
+                return function(self, *args, **kwargs)  # type: ignore
 
         return wrapper
 
-    @_check_usage
+    # @_check_usage
     def authenticate(self, authentication_key: str) -> None:
         """Authenticates the DeepL user
 
@@ -240,8 +246,8 @@ class DeepL:
             else:
                 print(f"{language.code} ({language.name})")
 
-    @_check_usage
-    def translate_text(self, text: str | list, target_language: str) -> list[np.ndarray] | str:
+    # @_check_usage
+    def translate_text(self, text: str | Iterable, target_language: str) -> list[str] | str:
         """Translates the provided text into the target language
 
         Args:
@@ -257,7 +263,7 @@ class DeepL:
             ]
         return self.translator.translate_text(text, target_lang=target_language).text
 
-    @_check_usage  # pragma: no cover
+    # @_check_usage # pragma: no cover
     def translate_document(
         self, input_file_path: str, output_path: str, target_language: str, formality: str = Formality.DEFAULT
     ) -> None:
@@ -273,7 +279,7 @@ class DeepL:
             input_file_path, output_path, target_lang=target_language, formality=formality
         )
 
-    @_check_usage  # pragma: no cover
+    # @_check_usage # pragma: no cover
     def create_glossary(
         self, glossary_name: str, source_language: str, target_language: str, entries: dict[str, str]
     ) -> GlossaryInfo:
@@ -292,7 +298,7 @@ class DeepL:
         """
         return self.translator.create_glossary(glossary_name, source_language, target_language, entries)
 
-    @_check_usage
+    # @_check_usage
     def translate_with_glossary(self, text: str | list, glossary: GlossaryInfo) -> TextResult | list[TextResult]:
         """Translates text with a provided Glossary
 
@@ -323,7 +329,7 @@ class GoogleTranslate:
         for code, language in self.translator.get_supported_languages(as_dict=True).items():
             print(f"{code} ({language})")
 
-    def translate_text(self, text: str | list, target_language: str) -> str | list[str]:
+    def translate_text(self, text: str | Iterable, target_language: str) -> str | list[str]:
         """Translates the provided text into the target language
 
         Args:
@@ -355,7 +361,7 @@ class LibreTranslate:
         for code, language in self.translator.get_supported_languages(as_dict=True).items():
             print(f"{code} ({language})")
 
-    def translate_text(self, text: str | list, target_language: str) -> str | list[str]:
+    def translate_text(self, text: str | Iterable, target_language: str) -> str | list[str]:
         """Translates the provided text into the target language
 
         Args:
@@ -387,7 +393,7 @@ class MyMemoryTranslate:
         for code, language in self.translator.get_supported_languages(as_dict=True).items():
             print(f"{code} ({language})")
 
-    def translate_text(self, text: str | list, target_language: str) -> str | list[str]:
+    def translate_text(self, text: str | Iterable, target_language: str) -> str | list[str]:
         """Translates the provided text into the target language
 
         Args:
@@ -419,7 +425,7 @@ class MicrosoftTranslate:
         for code, language in self.translator.get_supported_languages(as_dict=True).items():
             print(f"{code} ({language})")
 
-    def translate_text(self, text: str | list, target_language: str) -> str | list[str]:
+    def translate_text(self, text: str | Iterable, target_language: str) -> str | list[str]:
         """Translates the provided text into the target language
 
         Args:
@@ -451,7 +457,7 @@ class YandexTranslate:
         for code, language in self.translator.get_supported_languages(as_dict=True).items():
             print(f"{code} ({language})")
 
-    def translate_text(self, text: str | list, target_language: str) -> str | list[str]:
+    def translate_text(self, text: str | Iterable, target_language: str) -> str | list[str]:
         """Translates the provided text into the target language
 
         Args:
