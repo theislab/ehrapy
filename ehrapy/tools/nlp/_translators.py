@@ -8,7 +8,13 @@ import numpy as np
 from anndata import AnnData
 
 try:
-    from deep_translator import GoogleTranslator
+    from deep_translator import (
+        GoogleTranslator,
+        LibreTranslator,
+        MyMemoryTranslator,
+        MicrosoftTranslator,
+        YandexTranslator,
+    )
 except ConnectionError:
     print("[bold red]Unable to import GoogleTranslator. Do you have an internet connection?")
 from deepl import Formality, GlossaryInfo, TextResult
@@ -27,6 +33,14 @@ class Translator:
             self.translator = DeepL(token)
         elif flavour == "googletranslate":
             self.translator = GoogleTranslate(source, target)  # type: ignore
+        elif flavour == "libre":
+            self.translator = LibreTranslate(source, target)
+        elif flavour == "mymemory":
+            self.translator = MyMemoryTranslate(source, target)
+        elif flavour == "microsoft":
+            self.translator = MicrosoftTranslate(token, source, target)
+        elif flavour == "yandex":
+            self.translator = YandexTranslate(token, source, target)
         else:
             raise NotImplementedError(f"Flavour '{flavour}' is not supported.")
         self.flavour = flavour
@@ -320,7 +334,139 @@ class GoogleTranslate:
             target_language: The target language to translate the Text into, e.g. EN-GB
 
         Returns:
-            A :class:`~deepl.TextResult` object
+            The translated text.
+        """
+        if isinstance(text, List) or isinstance(text, np.ndarray):
+            return [self.translator.translate(word, target_lang=target_language) for word in text]
+        return self.translator.translate(text, target_lang=target_language)
+
+
+class LibreTranslate:
+    def __init__(self, source="auto", target="en"):
+        self.translator = LibreTranslator(source, target)
+
+    def print_source_languages(self) -> None:  # pragma: no cover
+        """prints all possible source languages to translate from
+
+        Example: "DE (German)"
+        """
+        for code, language in self.translator.get_supported_languages(as_dict=True).items():
+            print(f"{code} ({language})")
+
+    def print_target_languages(self) -> None:  # pragma: no cover
+        """Prints all possible target languages to translate to"""
+        for code, language in self.translator.get_supported_languages(as_dict=True).items():
+            print(f"{code} ({language})")
+
+    # @_check_usage  # type: ignore
+    def translate_text(self, text: str | list, target_language: str) -> str | list[str]:
+        """Translates the provided text into the target language
+
+        Args:
+            text: The text to translate
+            target_language: The target language to translate the Text into, e.g. EN-GB
+
+        Returns:
+            The translated text.
+        """
+        if isinstance(text, List) or isinstance(text, np.ndarray):
+            return [self.translator.translate(word, target_lang=target_language) for word in text]
+        return self.translator.translate(text, target_lang=target_language)
+
+
+class MyMemoryTranslate:
+    def __init__(self, source="auto", target="en"):
+        self.translator = MyMemoryTranslator(source, target)
+
+    def print_source_languages(self) -> None:  # pragma: no cover
+        """prints all possible source languages to translate from
+
+        Example: "DE (German)"
+        """
+        for code, language in self.translator.get_supported_languages(as_dict=True).items():
+            print(f"{code} ({language})")
+
+    def print_target_languages(self) -> None:  # pragma: no cover
+        """Prints all possible target languages to translate to"""
+        for code, language in self.translator.get_supported_languages(as_dict=True).items():
+            print(f"{code} ({language})")
+
+    # @_check_usage  # type: ignore
+    def translate_text(self, text: str | list, target_language: str) -> str | list[str]:
+        """Translates the provided text into the target language
+
+        Args:
+            text: The text to translate
+            target_language: The target language to translate the Text into, e.g. EN-GB
+
+        Returns:
+            The translated text.
+        """
+        if isinstance(text, List) or isinstance(text, np.ndarray):
+            return [self.translator.translate(word, target_lang=target_language) for word in text]
+        return self.translator.translate(text, target_lang=target_language)
+
+
+class MicrosoftTranslate:
+    def __init__(self, authentication_key, source="auto", target="en"):
+        self.translator = MicrosoftTranslator(api_key=authentication_key, source=source, target=target)
+
+    def print_source_languages(self) -> None:  # pragma: no cover
+        """prints all possible source languages to translate from
+
+        Example: "DE (German)"
+        """
+        for code, language in self.translator.get_supported_languages(as_dict=True).items():
+            print(f"{code} ({language})")
+
+    def print_target_languages(self) -> None:  # pragma: no cover
+        """Prints all possible target languages to translate to"""
+        for code, language in self.translator.get_supported_languages(as_dict=True).items():
+            print(f"{code} ({language})")
+
+    # @_check_usage  # type: ignore
+    def translate_text(self, text: str | list, target_language: str) -> str | list[str]:
+        """Translates the provided text into the target language
+
+        Args:
+            text: The text to translate
+            target_language: The target language to translate the Text into, e.g. EN-GB
+
+        Returns:
+            The translated text.
+        """
+        if isinstance(text, List) or isinstance(text, np.ndarray):
+            return [self.translator.translate(word, target_lang=target_language) for word in text]
+        return self.translator.translate(text, target_lang=target_language)
+
+
+class YandexTranslate:
+    def __init__(self, authentication_key, source="auto", target="en"):
+        self.translator = YandexTranslator(api_key=authentication_key, source=source, target=target)
+
+    def print_source_languages(self) -> None:  # pragma: no cover
+        """prints all possible source languages to translate from
+
+        Example: "DE (German)"
+        """
+        for code, language in self.translator.get_supported_languages(as_dict=True).items():
+            print(f"{code} ({language})")
+
+    def print_target_languages(self) -> None:  # pragma: no cover
+        """Prints all possible target languages to translate to"""
+        for code, language in self.translator.get_supported_languages(as_dict=True).items():
+            print(f"{code} ({language})")
+
+    # @_check_usage  # type: ignore
+    def translate_text(self, text: str | list, target_language: str) -> str | list[str]:
+        """Translates the provided text into the target language
+
+        Args:
+            text: The text to translate
+            target_language: The target language to translate the Text into, e.g. EN-GB
+
+        Returns:
+            The translated text.
         """
         if isinstance(text, List) or isinstance(text, np.ndarray):
             return [self.translator.translate(word, target_lang=target_language) for word in text]
