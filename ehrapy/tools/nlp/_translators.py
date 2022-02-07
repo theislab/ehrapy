@@ -11,8 +11,8 @@ try:
     from deep_translator import (
         GoogleTranslator,
         LibreTranslator,
-        MyMemoryTranslator,
         MicrosoftTranslator,
+        MyMemoryTranslator,
         YandexTranslator,
     )
 except ConnectionError:
@@ -32,7 +32,7 @@ class Translator:
         if flavour == "deepl":
             self.translator = DeepL(token)
         elif flavour == "googletranslate":
-            self.translator = GoogleTranslate(source, target)  # type: ignore
+            self.translator = GoogleTranslate(source, target)
         elif flavour == "libre":
             self.translator = LibreTranslate(source, target)
         elif flavour == "mymemory":
@@ -162,9 +162,7 @@ class Translator:
                 index_values[index] = translated_column_name
                 adata.var_names = index_values
 
-            translated_column_values: list = translate_text(
-                column_values  # type: ignore
-            )  # TODO: Check that structure is still ok
+            translated_column_values: list = translate_text(column_values)  # TODO: Check that structure is still ok
             # translated_column_values = list(map(lambda text_result: text_result.text, translated_column_values))
 
             adata.X[:, index] = translated_column_values
@@ -176,7 +174,7 @@ class DeepL:
     def __init__(self, authentication_key: str):
         self.translator = deepl.Translator(authentication_key)
 
-    def _check_usage(function) -> ():  # type: ignore # noqa # pragma: no cover
+    def _check_usage(function):  # type ignore # noqa # pragma: no cover
         """Checks the usage limit of the DeepL Account.
 
         Prints a warning if the DeepL usage limit is exceeded.
@@ -185,7 +183,7 @@ class DeepL:
             function: The function to actually call
         """
 
-        @wraps(function)  # type: ignore
+        @wraps(function)
         def wrapper(self, *args, **kwargs) -> None:
             usage = self.translator.get_usage()
             if usage.any_limit_exceeded:
@@ -213,11 +211,11 @@ class DeepL:
                     )
                     print(f"[bold yellow]Current usage: {usage.team_document.count}")
 
-                return function(self, *args, **kwargs)  # type: ignore
+                return function(self, *args, **kwargs)
 
         return wrapper
 
-    @_check_usage  # type: ignore # pragma: no cover
+    @_check_usage
     def authenticate(self, authentication_key: str) -> None:
         """Authenticates the DeepL user
 
@@ -242,7 +240,7 @@ class DeepL:
             else:
                 print(f"{language.code} ({language.name})")
 
-    @_check_usage  # type: ignore
+    @_check_usage
     def translate_text(self, text: str | list, target_language: str) -> list[np.ndarray] | str:
         """Translates the provided text into the target language
 
@@ -259,7 +257,7 @@ class DeepL:
             ]
         return self.translator.translate_text(text, target_lang=target_language).text
 
-    @_check_usage  # type: ignore # pragma: no cover
+    @_check_usage  # pragma: no cover
     def translate_document(
         self, input_file_path: str, output_path: str, target_language: str, formality: str = Formality.DEFAULT
     ) -> None:
@@ -275,7 +273,7 @@ class DeepL:
             input_file_path, output_path, target_lang=target_language, formality=formality
         )
 
-    @_check_usage  # type: ignore # pragma: no cover
+    @_check_usage  # pragma: no cover
     def create_glossary(
         self, glossary_name: str, source_language: str, target_language: str, entries: dict[str, str]
     ) -> GlossaryInfo:
@@ -294,7 +292,7 @@ class DeepL:
         """
         return self.translator.create_glossary(glossary_name, source_language, target_language, entries)
 
-    @_check_usage  # type: ignore # pragma: no cover
+    @_check_usage
     def translate_with_glossary(self, text: str | list, glossary: GlossaryInfo) -> TextResult | list[TextResult]:
         """Translates text with a provided Glossary
 
@@ -325,7 +323,6 @@ class GoogleTranslate:
         for code, language in self.translator.get_supported_languages(as_dict=True).items():
             print(f"{code} ({language})")
 
-    # @_check_usage  # type: ignore
     def translate_text(self, text: str | list, target_language: str) -> str | list[str]:
         """Translates the provided text into the target language
 
@@ -358,7 +355,6 @@ class LibreTranslate:
         for code, language in self.translator.get_supported_languages(as_dict=True).items():
             print(f"{code} ({language})")
 
-    # @_check_usage  # type: ignore
     def translate_text(self, text: str | list, target_language: str) -> str | list[str]:
         """Translates the provided text into the target language
 
@@ -391,7 +387,6 @@ class MyMemoryTranslate:
         for code, language in self.translator.get_supported_languages(as_dict=True).items():
             print(f"{code} ({language})")
 
-    # @_check_usage  # type: ignore
     def translate_text(self, text: str | list, target_language: str) -> str | list[str]:
         """Translates the provided text into the target language
 
@@ -424,7 +419,6 @@ class MicrosoftTranslate:
         for code, language in self.translator.get_supported_languages(as_dict=True).items():
             print(f"{code} ({language})")
 
-    # @_check_usage  # type: ignore
     def translate_text(self, text: str | list, target_language: str) -> str | list[str]:
         """Translates the provided text into the target language
 
@@ -457,7 +451,6 @@ class YandexTranslate:
         for code, language in self.translator.get_supported_languages(as_dict=True).items():
             print(f"{code} ({language})")
 
-    # @_check_usage  # type: ignore
     def translate_text(self, text: str | list, target_language: str) -> str | list[str]:
         """Translates the provided text into the target language
 
