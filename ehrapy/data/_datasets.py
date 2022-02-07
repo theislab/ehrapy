@@ -107,7 +107,7 @@ def heart_failure(columns_obs_only: dict[str, list[str]] | list[str] | None = No
         backup_url="https://figshare.com/ndownloader/files/33952934",
         columns_obs_only=columns_obs_only,
         extension="csv",
-        index_column="patient_id"
+        index_column="patient_id",
     )
 
     return adata
@@ -142,7 +142,7 @@ def diabetes_130(
         backup_url="https://figshare.com/ndownloader/files/33950546",
         columns_obs_only=columns_obs_only,
         extension="csv",
-        index_column="encounter_id"
+        index_column="encounter_id",
     )
     if encoded:
         return encode(adata, autodetect=True)
