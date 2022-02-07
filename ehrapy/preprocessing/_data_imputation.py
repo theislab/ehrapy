@@ -258,8 +258,8 @@ def miss_forest_impute(
     var_names: dict[str, list[str]] | list[str] | None = None,
     num_initial_strategy: str = "mean",
     max_iter: int = 10,
-    random_state: int = 0,
     n_estimators=100,
+    random_state: int = 0,
     copy: bool = False,
 ) -> AnnData:
     """Impute data using the MissForest strategy.
@@ -271,6 +271,11 @@ def miss_forest_impute(
         adata: The AnnData object to use MissForest Imputation on.
         var_names: List of columns to impute or a dict with two keys (numerical and non_numerical) indicating which var
                    contain mixed data and which numerical data only.
+        num_initial_strategy: The initial strategy to replace all missing values with (default: 'mean').
+        max_iter: The maximum number of iterations if the stop criterion has not been met yet.
+        n_estimators: The number of trees to fit for every missing variable. Has a big effect on the run time.
+                      Decrease for faster computations (default: 100).
+        random_state: The random seed for the initialization.
         copy: Whether to return a copy or act in place.
 
     Returns:
@@ -361,7 +366,6 @@ def miss_forest_impute(
                 adata.X[::, num_indices] = imp_num.fit_transform(adata.X[::, num_indices])
             if non_num_indices:
                 adata.X[::, non_num_indices] = imp_cat.fit_transform(adata.X[::, non_num_indices])
-                # decode ordinal encoding to obtain imputed original data
                 adata.X[::, non_num_indices] = enc.inverse_transform(adata.X[::, non_num_indices])
 
     if check_module_importable("sklearnex"):
