@@ -39,6 +39,8 @@ class AnnotationResult:
 
 class MedCAT:
     def __init__(self, vocabulary: Vocab = None, concept_db: CDB = None, model_pack_path=None):
+        if not check_module_importable("medcat"):
+            raise RuntimeError("medcat is not importable. Please install via pip install medcat")
         self.vocabulary = vocabulary
         self.concept_db = concept_db
         if self.vocabulary is not None and self.concept_db is not None:

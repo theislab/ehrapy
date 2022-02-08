@@ -3,7 +3,7 @@ name = "aiohttp"
 version = "3.8.1"
 description = "Async http client/server framework (asyncio)"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.6"
 
 [package.dependencies]
@@ -25,7 +25,7 @@ name = "aiosignal"
 version = "1.2.0"
 description = "aiosignal: a list of registered asynchronous callbacks"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.6"
 
 [package.dependencies]
@@ -75,7 +75,7 @@ name = "async-timeout"
 version = "4.0.2"
 description = "Timeout context manager for asyncio programs"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.6"
 
 [package.dependencies]
@@ -86,7 +86,7 @@ name = "asynctest"
 version = "0.13.0"
 description = "Enhance the standard unittest package with features for testing asyncio libraries"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.5"
 
 [[package]]
@@ -215,7 +215,7 @@ name = "blis"
 version = "0.7.5"
 description = "The Blis BLAS-like linear algebra library, as a self-contained C-extension."
 category = "main"
-optional = false
+optional = true
 python-versions = "*"
 
 [package.dependencies]
@@ -262,7 +262,7 @@ name = "catalogue"
 version = "2.0.6"
 description = "Super lightweight function registries for your library"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.6"
 
 [package.dependencies]
@@ -408,7 +408,7 @@ name = "cymem"
 version = "2.0.6"
 description = "Manage calls to calloc/free through Cython"
 category = "main"
-optional = false
+optional = true
 python-versions = "*"
 
 [[package]]
@@ -439,7 +439,7 @@ name = "datasets"
 version = "1.14.0"
 description = "HuggingFace community-driven open-source library of datasets"
 category = "main"
-optional = false
+optional = true
 python-versions = "*"
 
 [package.dependencies]
@@ -461,13 +461,13 @@ xxhash = "*"
 apache-beam = ["apache-beam (>=2.26.0)"]
 audio = ["librosa"]
 benchmarks = ["numpy (==1.18.5)", "tensorflow (==2.3.0)", "torch (==1.6.0)", "transformers (==3.0.2)"]
-dev = ["absl-py", "pytest", "pytest-datadir", "pytest-xdist", "apache-beam (>=2.26.0)", "elasticsearch", "aiobotocore", "boto3", "botocore", "fsspec", "moto[s3,server] (==2.0.4)", "rarfile (>=4.0)", "s3fs (==2021.08.1)", "tensorflow (>=2.3)", "torch", "torchaudio", "transformers", "bs4", "conllu", "langdetect", "lxml", "mwparserfromhell", "nltk", "openpyxl", "py7zr", "tldextract", "zstandard", "bert-score (>=0.3.6)", "rouge-score", "sacrebleu", "scipy", "seqeval", "scikit-learn", "jiwer", "sentencepiece", "toml (>=0.10.1)", "requests-file (>=1.5.1)", "tldextract (>=3.1.0)", "texttable (>=1.6.3)", "Werkzeug (>=1.0.1)", "six (>=1.15.0,<1.16.0)", "black (==21.4b0)", "flake8 (==3.7.9)", "isort", "pyyaml (>=5.3.1)", "importlib-resources"]
+dev = ["absl-py", "pytest", "pytest-datadir", "pytest-xdist", "apache-beam (>=2.26.0)", "elasticsearch", "aiobotocore", "boto3", "botocore", "fsspec", "moto[server,s3] (==2.0.4)", "rarfile (>=4.0)", "s3fs (==2021.08.1)", "tensorflow (>=2.3)", "torch", "torchaudio", "transformers", "bs4", "conllu", "langdetect", "lxml", "mwparserfromhell", "nltk", "openpyxl", "py7zr", "tldextract", "zstandard", "bert-score (>=0.3.6)", "rouge-score", "sacrebleu", "scipy", "seqeval", "scikit-learn", "jiwer", "sentencepiece", "toml (>=0.10.1)", "requests-file (>=1.5.1)", "tldextract (>=3.1.0)", "texttable (>=1.6.3)", "Werkzeug (>=1.0.1)", "six (>=1.15.0,<1.16.0)", "black (==21.4b0)", "flake8 (==3.7.9)", "isort", "pyyaml (>=5.3.1)", "importlib-resources"]
 docs = ["docutils (==0.16.0)", "recommonmark", "sphinx (==3.1.2)", "sphinx-markdown-tables", "sphinx-rtd-theme (==0.4.3)", "sphinxext-opengraph (==0.4.1)", "sphinx-copybutton", "fsspec (<2021.9.0)", "s3fs", "sphinx-panels", "sphinx-inline-tabs", "myst-parser"]
 quality = ["black (==21.4b0)", "flake8 (==3.7.9)", "isort", "pyyaml (>=5.3.1)"]
 s3 = ["fsspec", "boto3", "botocore", "s3fs"]
 tensorflow = ["tensorflow (>=2.2.0)"]
 tensorflow_gpu = ["tensorflow-gpu (>=2.2.0)"]
-tests = ["absl-py", "pytest", "pytest-datadir", "pytest-xdist", "apache-beam (>=2.26.0)", "elasticsearch", "aiobotocore", "boto3", "botocore", "fsspec", "moto[s3,server] (==2.0.4)", "rarfile (>=4.0)", "s3fs (==2021.08.1)", "tensorflow (>=2.3)", "torch", "torchaudio", "transformers", "bs4", "conllu", "langdetect", "lxml", "mwparserfromhell", "nltk", "openpyxl", "py7zr", "tldextract", "zstandard", "bert-score (>=0.3.6)", "rouge-score", "sacrebleu", "scipy", "seqeval", "scikit-learn", "jiwer", "sentencepiece", "toml (>=0.10.1)", "requests-file (>=1.5.1)", "tldextract (>=3.1.0)", "texttable (>=1.6.3)", "Werkzeug (>=1.0.1)", "six (>=1.15.0,<1.16.0)", "importlib-resources"]
+tests = ["absl-py", "pytest", "pytest-datadir", "pytest-xdist", "apache-beam (>=2.26.0)", "elasticsearch", "aiobotocore", "boto3", "botocore", "fsspec", "moto[server,s3] (==2.0.4)", "rarfile (>=4.0)", "s3fs (==2021.08.1)", "tensorflow (>=2.3)", "torch", "torchaudio", "transformers", "bs4", "conllu", "langdetect", "lxml", "mwparserfromhell", "nltk", "openpyxl", "py7zr", "tldextract", "zstandard", "bert-score (>=0.3.6)", "rouge-score", "sacrebleu", "scipy", "seqeval", "scikit-learn", "jiwer", "sentencepiece", "toml (>=0.10.1)", "requests-file (>=1.5.1)", "tldextract (>=3.1.0)", "texttable (>=1.6.3)", "Werkzeug (>=1.0.1)", "six (>=1.15.0,<1.16.0)", "importlib-resources"]
 torch = ["torch"]
 
 [[package]]
@@ -514,7 +514,7 @@ name = "dill"
 version = "0.3.4"
 description = "serialize all of python"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=2.7, !=3.0.*"
 
 [package.extras]
@@ -557,7 +557,7 @@ name = "elasticsearch"
 version = "7.17.0"
 description = "Python client for Elasticsearch"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, <4"
 
 [package.dependencies]
@@ -703,7 +703,7 @@ name = "frozenlist"
 version = "1.3.0"
 description = "A list-like structure which implements collections.abc.MutableSequence"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.7"
 
 [[package]]
@@ -711,7 +711,7 @@ name = "fsspec"
 version = "2022.1.0"
 description = "File-system specification"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.6"
 
 [package.dependencies]
@@ -745,7 +745,7 @@ name = "gensim"
 version = "4.1.2"
 description = "Python framework for fast Vector Space Modelling"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.6"
 
 [package.dependencies]
@@ -807,7 +807,7 @@ name = "huggingface-hub"
 version = "0.0.19"
 description = "Client library to download and publish models on the huggingface.co hub"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.6.0"
 
 [package.dependencies]
@@ -914,7 +914,7 @@ name = "interchange"
 version = "2021.0.4"
 description = "Data types and interchange formats"
 category = "main"
-optional = false
+optional = true
 python-versions = "*"
 
 [package.dependencies]
@@ -1003,7 +1003,7 @@ name = "jsonpickle"
 version = "2.0.0"
 description = "Python library for serializing any arbitrary object graph into JSON"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=2.7"
 
 [package.dependencies]
@@ -1178,7 +1178,7 @@ name = "medcat"
 version = "1.2.6"
 description = "Concept annotation tool for Electronic Health Records"
 category = "main"
-optional = false
+optional = true
 python-versions = "*"
 
 [package.dependencies]
@@ -1212,7 +1212,7 @@ name = "monotonic"
 version = "1.6"
 description = "An implementation of time.monotonic() for Python 2 & < 3.3"
 category = "main"
-optional = false
+optional = true
 python-versions = "*"
 
 [[package]]
@@ -1237,7 +1237,7 @@ name = "multidict"
 version = "6.0.2"
 description = "multidict implementation"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.7"
 
 [[package]]
@@ -1245,7 +1245,7 @@ name = "multiprocess"
 version = "0.70.12.2"
 description = "better multiprocessing and multithreading in python"
 category = "main"
-optional = false
+optional = true
 python-versions = "*"
 
 [package.dependencies]
@@ -1256,7 +1256,7 @@ name = "murmurhash"
 version = "1.0.6"
 description = "Cython bindings for MurmurHash"
 category = "main"
-optional = false
+optional = true
 python-versions = "*"
 
 [[package]]
@@ -1551,7 +1551,7 @@ name = "pansi"
 version = "2020.7.3"
 description = "ANSI escape code library for Python"
 category = "main"
-optional = false
+optional = true
 python-versions = "*"
 
 [package.dependencies]
@@ -1582,7 +1582,7 @@ name = "pathy"
 version = "0.6.1"
 description = "pathlib.Path subclasses for local and cloud bucket storage"
 category = "main"
-optional = false
+optional = true
 python-versions = ">= 3.6"
 
 [package.dependencies]
@@ -1612,7 +1612,7 @@ test = ["pytest", "pytest-cov", "scipy"]
 
 [[package]]
 name = "pbr"
-version = "5.8.0"
+version = "5.8.1"
 description = "Python Build Reasonableness"
 category = "dev"
 optional = false
@@ -1748,7 +1748,7 @@ name = "preshed"
 version = "3.0.6"
 description = "Cython hash table that trusts the keys are pre-hashed"
 category = "main"
-optional = false
+optional = true
 python-versions = "*"
 
 [package.dependencies]
@@ -1757,7 +1757,7 @@ murmurhash = ">=0.28.0,<1.1.0"
 
 [[package]]
 name = "prompt-toolkit"
-version = "3.0.26"
+version = "3.0.27"
 description = "Library for building powerful interactive command lines in Python"
 category = "main"
 optional = false
@@ -1771,7 +1771,7 @@ name = "psutil"
 version = "5.9.0"
 description = "Cross-platform lib for process and system monitoring in Python."
 category = "main"
-optional = false
+optional = true
 python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
 [package.extras]
@@ -1798,7 +1798,7 @@ name = "py2neo"
 version = "2021.2.3"
 description = "Python client library and toolkit for Neo4j"
 category = "main"
-optional = false
+optional = true
 python-versions = "*"
 
 [package.dependencies]
@@ -1816,7 +1816,7 @@ name = "pyarrow"
 version = "7.0.0"
 description = "Python library for Apache Arrow"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.7"
 
 [package.dependencies]
@@ -2130,7 +2130,7 @@ name = "regex"
 version = "2022.1.18"
 description = "Alternative regular expression module, to replace re."
 category = "main"
-optional = false
+optional = true
 python-versions = "*"
 
 [[package]]
@@ -2207,7 +2207,7 @@ name = "sacremoses"
 version = "0.0.47"
 description = "SacreMoses"
 category = "main"
-optional = false
+optional = true
 python-versions = "*"
 
 [package.dependencies]
@@ -2372,7 +2372,7 @@ name = "sklearn"
 version = "0.0"
 description = "A set of python modules for machine learning and data mining"
 category = "main"
-optional = false
+optional = true
 python-versions = "*"
 
 [package.dependencies]
@@ -2383,7 +2383,7 @@ name = "smart-open"
 version = "5.2.1"
 description = "Utils for streaming large files (S3, HDFS, GCS, Azure Blob Storage, gzip, bz2...)"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.6,<4.0"
 
 [package.extras]
@@ -2424,7 +2424,7 @@ name = "spacy"
 version = "3.1.3"
 description = "Industrial-strength Natural Language Processing (NLP) in Python"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.6"
 
 [package.dependencies]
@@ -2471,7 +2471,7 @@ name = "spacy-legacy"
 version = "3.0.8"
 description = "Legacy registered functions for spaCy backwards compatibility"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.6"
 
 [[package]]
@@ -2725,7 +2725,7 @@ name = "srsly"
 version = "2.4.2"
 description = "Modern high-performance serialization utilities for Python"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.6"
 
 [package.dependencies]
@@ -2832,7 +2832,7 @@ name = "thinc"
 version = "8.0.13"
 description = "A refreshing functional take on deep learning, compatible with your favorite libraries"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.6"
 
 [package.dependencies]
@@ -2887,7 +2887,7 @@ name = "tokenizers"
 version = "0.10.3"
 description = "Fast and Customizable Tokenizers"
 category = "main"
-optional = false
+optional = true
 python-versions = "*"
 
 [package.extras]
@@ -2903,7 +2903,7 @@ python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
 
 [[package]]
 name = "tomli"
-version = "2.0.0"
+version = "2.0.1"
 description = "A lil' TOML parser"
 category = "main"
 optional = false
@@ -2914,7 +2914,7 @@ name = "torch"
 version = "1.9.1"
 description = "Tensors and Dynamic neural networks in Python with strong GPU acceleration"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.6.2"
 
 [package.dependencies]
@@ -2960,7 +2960,7 @@ name = "transformers"
 version = "4.11.3"
 description = "State-of-the-art Natural Language Processing for TensorFlow 2.0 and PyTorch"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.6.0"
 
 [package.dependencies]
@@ -3038,7 +3038,7 @@ name = "typer"
 version = "0.4.0"
 description = "Typer, build great CLIs. Easy to code. Based on Python type hints."
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.6"
 
 [package.dependencies]
@@ -3150,7 +3150,7 @@ name = "wasabi"
 version = "0.9.0"
 description = "A lightweight console printing and formatting toolkit"
 category = "main"
-optional = false
+optional = true
 python-versions = "*"
 
 [[package]]
@@ -3202,7 +3202,7 @@ name = "xxhash"
 version = "2.0.2"
 description = "Python binding for xxHash"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
 
 [[package]]
@@ -3210,7 +3210,7 @@ name = "yarl"
 version = "1.7.2"
 description = "Yet another URL library"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.6"
 
 [package.dependencies]
@@ -3232,12 +3232,13 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 
 [extras]
 en-core-web-md = []
+medcat = ["medcat"]
 scikit-learn-intelex = ["scikit-learn-intelex"]
 
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7.1,<4"
-content-hash = "37666649c2d1998f33a7e469a1a333f4612eae6805a317dc34b97da18b064e81"
+content-hash = "eee58fb0b795aed2a4737685cd8145c734c1f752f597f2a0cf8d24a548f7f4fb"
 
 [metadata.files]
 aiohttp = [
@@ -4485,8 +4486,8 @@ patsy = [
     {file = "patsy-0.5.2.tar.gz", hash = "sha256:5053de7804676aba62783dbb0f23a2b3d74e35e5bfa238b88b7cbf148a38b69d"},
 ]
 pbr = [
-    {file = "pbr-5.8.0-py2.py3-none-any.whl", hash = "sha256:176e8560eaf61e127817ef93d8a844803abb27a4d4637f0ff3bb783129be2e0a"},
-    {file = "pbr-5.8.0.tar.gz", hash = "sha256:672d8ebee84921862110f23fcec2acea191ef58543d34dfe9ef3d9f13c31cddf"},
+    {file = "pbr-5.8.1-py2.py3-none-any.whl", hash = "sha256:27108648368782d07bbf1cb468ad2e2eeef29086affd14087a6d04b7de8af4ec"},
+    {file = "pbr-5.8.1.tar.gz", hash = "sha256:66bc5a34912f408bb3925bf21231cb6f59206267b7f63f3503ef865c1a292e25"},
 ]
 "pdfminer.six" = [
     {file = "pdfminer.six-20211012-py3-none-any.whl", hash = "sha256:d3efb75c0249b51c1bf795e3a8bddf1726b276c77bf75fb136adea471ee2825b"},
@@ -4591,8 +4592,8 @@ preshed = [
     {file = "preshed-3.0.6.tar.gz", hash = "sha256:fb3b7588a3a0f2f2f1bf3fe403361b2b031212b73a37025aea1df7215af3772a"},
 ]
 prompt-toolkit = [
-    {file = "prompt_toolkit-3.0.26-py3-none-any.whl", hash = "sha256:4bcf119be2200c17ed0d518872ef922f1de336eb6d1ddbd1e089ceb6447d97c6"},
-    {file = "prompt_toolkit-3.0.26.tar.gz", hash = "sha256:a51d41a6a45fd9def54365bca8f0402c8f182f2b6f7e29c74d55faeb9fb38ac4"},
+    {file = "prompt_toolkit-3.0.27-py3-none-any.whl", hash = "sha256:cb7dae7d2c59188c85a1d6c944fad19aded6a26bd9c8ae115a4e1c20eb90b713"},
+    {file = "prompt_toolkit-3.0.27.tar.gz", hash = "sha256:f2b6a8067a4fb959d3677d1ed764cc4e63e0f6f565b9a4fc7edc2b18bf80217b"},
 ]
 psutil = [
     {file = "psutil-5.9.0-cp27-cp27m-manylinux2010_i686.whl", hash = "sha256:55ce319452e3d139e25d6c3f85a1acf12d1607ddedea5e35fb47a552c051161b"},
@@ -5350,8 +5351,8 @@ toml = [
     {file = "toml-0.10.2.tar.gz", hash = "sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f"},
 ]
 tomli = [
-    {file = "tomli-2.0.0-py3-none-any.whl", hash = "sha256:b5bde28da1fed24b9bd1d4d2b8cba62300bfb4ec9a6187a957e8ddb9434c5224"},
-    {file = "tomli-2.0.0.tar.gz", hash = "sha256:c292c34f58502a1eb2bbb9f5bbc9a5ebc37bee10ffb8c2d6bbdfa8eb13cc14e1"},
+    {file = "tomli-2.0.1-py3-none-any.whl", hash = "sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc"},
+    {file = "tomli-2.0.1.tar.gz", hash = "sha256:de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f"},
 ]
 torch = [
     {file = "torch-1.9.1-cp36-cp36m-manylinux1_x86_64.whl", hash = "sha256:06435080ba0a2c8f88b65af0550b973c5aa7771eacd9b17f69057fc7436a8ae2"},
