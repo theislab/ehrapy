@@ -118,6 +118,12 @@ class TestImputation:
 
         assert not (np.all([item != item for item in adata_imputed.X]))
 
+    def test_knn_impute_list_str(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute.csv")
+        adata_imputed = knn_impute(adata, var_names=["intcol", "strcol", "boolcol"])
+
+        assert not (np.all([item != item for item in adata_imputed.X]))
+
     def test_missforest_impute_non_numerical_data(self):
         adata = read(dataset_path=f"{_TEST_PATH}/test_impute.csv")
         adata_imputed = miss_forest_impute(adata)
@@ -141,6 +147,15 @@ class TestImputation:
         warnings.filterwarnings("ignore", category=ConvergenceWarning)
         adata = read(dataset_path=f"{_TEST_PATH}/test_impute_num.csv")
         adata_imputed = miss_forest_impute(adata, var_names=["col1", "col2", "col3"])
+
+        assert not (np.all([item != item for item in adata_imputed.X]))
+
+    def test_missforest_impute_dict(self):
+        warnings.filterwarnings("ignore", category=ConvergenceWarning)
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute.csv")
+        adata_imputed = miss_forest_impute(
+            adata, var_names={"numerical": ["intcol", "datetime"], "non_numerical": ["strcol", "boolcol"]}
+        )
 
         assert not (np.all([item != item for item in adata_imputed.X]))
 

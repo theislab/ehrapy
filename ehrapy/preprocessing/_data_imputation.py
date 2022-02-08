@@ -204,7 +204,7 @@ def knn_impute(adata: AnnData, var_names: list[str] | None = None, copy: bool = 
 
     _warn_imputation_threshold(adata, var_names)
 
-    if check_module_importable("sklearnex"):
+    if check_module_importable("sklearnex"):  # pragma: no cover
         from sklearnex import patch_sklearn, unpatch_sklearn
 
         patch_sklearn()
@@ -231,7 +231,7 @@ def knn_impute(adata: AnnData, var_names: list[str] | None = None, copy: bool = 
             # decode ordinal encoding to obtain imputed original data
             adata.X = enc.inverse_transform(adata.X)
 
-    if check_module_importable("sklearnex"):
+    if check_module_importable("sklearnex"):  # pragma: no cover
         unpatch_sklearn()
 
     return adata
@@ -243,7 +243,7 @@ def _knn_impute(adata: AnnData, var_names: list[str] | None) -> None:
 
     imputer = KNNImputer(n_neighbors=1)
 
-    if isinstance(var_names, list):  # TODO This requires a test
+    if isinstance(var_names, list):
         column_indices = get_column_indices(adata, var_names)
         adata.X[::, column_indices] = imputer.fit_transform(adata.X[::, column_indices])
     else:
@@ -269,7 +269,7 @@ def miss_forest_impute(
 
     Args:
         adata: The AnnData object to use MissForest Imputation on.
-        var_names: List of columns to impute or a dict with two keys (numerical and non_numerical) indicating which var
+        var_names: List of columns to impute or a dict with two keys ('numerical' and 'non_numerical') indicating which var
                    contain mixed data and which numerical data only.
         num_initial_strategy: The initial strategy to replace all missing values with (default: 'mean').
         max_iter: The maximum number of iterations if the stop criterion has not been met yet.
@@ -299,7 +299,7 @@ def miss_forest_impute(
     elif isinstance(var_names, list):
         _warn_imputation_threshold(adata, var_names)
 
-    if check_module_importable("sklearnex"):
+    if check_module_importable("sklearnex"):  # pragma: no cover
         from sklearnex import patch_sklearn, unpatch_sklearn
 
         patch_sklearn()
@@ -318,7 +318,7 @@ def miss_forest_impute(
     ) as progress:
         progress.add_task("[blue]Running MissForest imputation", total=1)
 
-        if settings.n_jobs == 1:
+        if settings.n_jobs == 1:  # pragma: no cover
             print("[bold yellow]The number of jobs is only 1. To decrease the runtime set [blue]ep.settings.n_jobs=-1.")
 
         imp_num = IterativeImputer(
@@ -368,7 +368,7 @@ def miss_forest_impute(
                 adata.X[::, non_num_indices] = imp_cat.fit_transform(adata.X[::, non_num_indices])
                 adata.X[::, non_num_indices] = enc.inverse_transform(adata.X[::, non_num_indices])
 
-    if check_module_importable("sklearnex"):
+    if check_module_importable("sklearnex"):  # pragma: no cover
         unpatch_sklearn()
 
     return adata
