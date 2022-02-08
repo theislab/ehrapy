@@ -148,3 +148,36 @@ def diabetes_130(
         return encode(adata, autodetect=True)
 
     return adata
+
+
+def chronic_kidney_disease(
+    columns_obs_only: dict[str, list[str]] | list[str] | None = None,
+) -> AnnData:  # pragma: no cover
+    """Loads the Chronic Kidney Disease dataset
+
+    More details: https://archive.ics.uci.edu/ml/datasets/Chronic_Kidney_Disease
+    Preprocessing: https://github.com/theislab/ehrapy-datasets/tree/main/chronic_kidney_disease/chronic_kidney_disease.ipynb
+
+    Args:
+        columns_obs_only: Columns to include in obs only and not X.
+
+    Returns:
+        :class:`~anndata.AnnData` object of the Chronic Kidney Disease dataset
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy as ep
+
+            adata = ep.data.chronic_kidney_disease()
+    """
+    adata = read(
+        dataset_path=f"{ehrapy_settings.datasetdir}/chronic_kidney_disease_precessed.csv",
+        download_dataset_name="chronic_kidney_disease.csv",
+        backup_url="https://figshare.com/ndownloader/files/33989261",
+        columns_obs_only=columns_obs_only,
+        extension="csv",
+        index_column="Patient_id",
+    )
+
+    return adata
