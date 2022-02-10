@@ -18,6 +18,7 @@ def explicit_impute(
     adata: AnnData,
     replacement: (str | int) | (dict[str, str | int]),
     impute_empty_strings: bool = True,
+    warning_threshold: int = 30,
     copy: bool = False,
 ) -> AnnData:
     """Replaces all missing values in all or the specified columns with the passed value
@@ -30,6 +31,7 @@ def explicit_impute(
         adata: :class:`~anndata.AnnData` object containing X to impute values in.
         replacement: Value to use as replacement or optionally keys to indicate which columns to replace with which value.
         impute_empty_strings: Whether to also impute empty strings.
+        warning_threshold: Threshold of percentage of missing values to display a warning for (default: 30)
         copy: Whether to return a copy with the imputed data.
 
     Returns:
@@ -47,9 +49,9 @@ def explicit_impute(
         adata = adata.copy()
 
     if isinstance(replacement, int) or isinstance(replacement, str):
-        _warn_imputation_threshold(adata, var_names=list(adata.var_names))
+        _warn_imputation_threshold(adata, var_names=list(adata.var_names), threshold=warning_threshold)
     else:
-        _warn_imputation_threshold(adata, var_names=replacement.keys())  # type: ignore
+        _warn_imputation_threshold(adata, var_names=replacement.keys(), threshold=warning_threshold)  # type: ignore
 
     with Progress(
         "[progress.description]{task.description}",
@@ -109,7 +111,11 @@ def _extract_impute_value(replacement: dict[str, str | int], column_name: str) -
 
 
 def simple_impute(
-    adata: AnnData, var_names: list[str] | None = None, strategy: str = "mean", copy: bool = False
+    adata: AnnData,
+    var_names: list[str] | None = None,
+    strategy: str = "mean",
+    copy: bool = False,
+    warning_threshold: int = 30,
 ) -> AnnData:
     """Impute AnnData object using mean/median/most frequent imputation. This works for numerical data only.
 
@@ -117,6 +123,7 @@ def simple_impute(
         adata: The AnnData object to use mean Imputation on
         var_names: A list of var names indicating which columns to use mean imputation on (if None -> all columns)
         strategy: Any of mean/median/most_frequent to indicate which strategy to use for simple imputation
+        warning_threshold: Threshold of percentage of missing values to display a warning for (default: 30)
         copy: Whether to return a copy or act in place
 
     Returns:
@@ -133,7 +140,7 @@ def simple_impute(
     if copy:
         adata = adata.copy()
 
-    _warn_imputation_threshold(adata, var_names)
+    _warn_imputation_threshold(adata, var_names, threshold=warning_threshold)
 
     with Progress(
         "[progress.description]{task.description}",
@@ -176,7 +183,9 @@ def _simple_impute(adata: AnnData, var_names: list[str] | None, strategy: str) -
 # ===================== KNN Imputation =========================
 
 
-def knn_impute(adata: AnnData, var_names: list[str] | None = None, copy: bool = False) -> AnnData:
+def knn_impute(
+    adata: AnnData, var_names: list[str] | None = None, copy: bool = False, warning_threshold: int = 30
+) -> AnnData:
     """Impute data using the KNN-Imputer.
 
     When using KNN Imputation with mixed data (non-numerical and numerical), encoding using ordinal encoding is required
@@ -186,6 +195,7 @@ def knn_impute(adata: AnnData, var_names: list[str] | None = None, copy: bool = 
     Args:
         adata: The AnnData object to use KNN Imputation on
         var_names: A list of var names indicating which columns to use median imputation on (if None -> all columns)
+        warning_threshold: Threshold of percentage of missing values to display a warning for (default: 30)
         copy: Whether to return a copy or act in place
 
     Returns:
@@ -202,7 +212,7 @@ def knn_impute(adata: AnnData, var_names: list[str] | None = None, copy: bool = 
     if copy:
         adata = adata.copy()
 
-    _warn_imputation_threshold(adata, var_names)
+    _warn_imputation_threshold(adata, var_names, threshold=warning_threshold)
 
     if check_module_importable("sklearnex"):  # pragma: no cover
         from sklearnex import patch_sklearn, unpatch_sklearn
@@ -260,6 +270,7 @@ def miss_forest_impute(
     max_iter: int = 10,
     n_estimators=100,
     random_state: int = 0,
+    warning_threshold: int = 30,
     copy: bool = False,
 ) -> AnnData:
     """Impute data using the MissForest strategy.
@@ -276,6 +287,7 @@ def miss_forest_impute(
         n_estimators: The number of trees to fit for every missing variable. Has a big effect on the run time.
                       Decrease for faster computations (default: 100).
         random_state: The random seed for the initialization.
+        warning_threshold: Threshold of percentage of missing values to display a warning for (default: 30).
         copy: Whether to return a copy or act in place.
 
     Returns:
@@ -293,11 +305,11 @@ def miss_forest_impute(
         adata = adata.copy()
 
     if var_names is None:
-        _warn_imputation_threshold(adata, list(adata.var_names))
+        _warn_imputation_threshold(adata, list(adata.var_names), threshold=warning_threshold)
     elif isinstance(var_names, dict):
-        _warn_imputation_threshold(adata, var_names.keys())  # type: ignore
+        _warn_imputation_threshold(adata, var_names.keys(), threshold=warning_threshold)  # type: ignore
     elif isinstance(var_names, list):
-        _warn_imputation_threshold(adata, var_names)
+        _warn_imputation_threshold(adata, var_names, threshold=warning_threshold)
 
     if check_module_importable("sklearnex"):  # pragma: no cover
         from sklearnex import patch_sklearn, unpatch_sklearn
