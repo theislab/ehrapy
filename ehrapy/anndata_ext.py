@@ -11,9 +11,6 @@ from rich import print
 from rich.text import Text
 from rich.tree import Tree
 
-multi_encoding_modes = {"hash_encoding"}
-available_encodings = {"one_hot_encoding", "label_encoding", "count_encoding", *multi_encoding_modes}
-
 
 class BaseDataframes(NamedTuple):
     obs: pd.DataFrame
@@ -199,12 +196,17 @@ def get_column_values(adata: AnnData, indices: int | list[int]) -> np.ndarray:
     return np.take(adata.X, indices, axis=1)
 
 
-def type_overview(data: MuData | AnnData, sort_by: dict[str, str] | str | None = None, sort_reversed: bool = False) -> None:  # pragma: no cover
+def type_overview(
+    data: MuData | AnnData, sort_by: str | None = None, sort_reversed: bool = False
+) -> None:  # pragma: no cover
     """Prints the current state of an :class:`~anndata.AnnData` or :class:`~mudata.MuData` object in a tree format.
+    Output could be printed in sorted format by using one of `dtype`, `order`, `num_cats` or `None`, which sorts by data type, lexicographical order,
+    number of unique values (excluding NaN's) and unsorted respectively. Note that sorting by `num_cats` only affects
+    encoded variables currently and will display unencoded vars unsorted.
 
     Args:
         data: :class:`~anndata.AnnData` or :class:`~mudata.MuData` object to display
-        sort_by: How the tree output should be sorted. One of `data_type`, `encode_mode`, `order` or `None` (defaults to None -> unsorted)
+        sort_by: How the tree output should be sorted. One of `dtype`, `order`, `num_cats` or `None` (defaults to None -> unsorted)
         sort_reversed: Whether to sort in reversed order or not
 
     Example:
@@ -224,7 +226,9 @@ def type_overview(data: MuData | AnnData, sort_by: dict[str, str] | str | None =
         raise EhrapyRepresentationError
 
 
-def _adata_type_overview(adata: AnnData, sort_by: bool = False, sort_reversed: bool = False) -> None:  # pragma: no cover
+def _adata_type_overview(
+    adata: AnnData, sort_by: str | None = None, sort_reversed: bool = False
+) -> None:  # pragma: no cover
     """Display the :class:`~anndata.AnnData object in its current state (encoded and unencoded variables, obs)
 
     Args:
@@ -232,9 +236,6 @@ def _adata_type_overview(adata: AnnData, sort_by: bool = False, sort_reversed: b
         sort_by: Whether to sort output or not
         sort_reversed: Whether to sort output in reversed order or not
     """
-    encoding_mapping = {
-        encoding: encoding.replace("encoding", "").replace("_", " ").strip() for encoding in available_encodings
-    }
 
     tree = Tree(
         f"[b green]Variable names for AnnData object with {len(adata.obs_names)} obs and {len(adata.var_names)} vars",
@@ -243,22 +244,42 @@ def _adata_type_overview(adata: AnnData, sort_by: bool = False, sort_reversed: b
     if "var_to_encoding" in adata.uns.keys():
         original_values = adata.uns["original_values_categoricals"]
         branch = tree.add("🔐 Encoded variables", style="b green")
-        encoded_list = sorted(original_values.keys(), reverse=sort_reversed) if sort_by else list(original_values.keys())
-        for categorical in encoded_list:
-            unique_categoricals = pd.unique(original_values[categorical].flatten())
-            categorical_type = pd.api.types.infer_dtype(unique_categoricals)
-            is_nan = pd.DataFrame(unique_categoricals).isnull().values.any()
-            branch.add(
-                f"[blue]{categorical} -> {len(unique_categoricals) - 1 if is_nan else len(unique_categoricals)} categories;"
-                f" [green]{encoding_mapping[adata.uns['var_to_encoding'][categorical]]} [blue]encoded; [green]original data type: [blue]{categorical_type}"
-            )
-
+        dtype_dict = _infer_dtype_per_encoded_var(list(original_values.keys()), original_values)
+        # sort encoded vars by lexicographical order of original values
+        if sort_by == "order":
+            encoded_list = sorted(original_values.keys(), reverse=sort_reversed)
+            for categorical in encoded_list:
+                branch.add(
+                    f"[blue]{categorical} -> {dtype_dict[categorical][1]} categories;"
+                    f" [green]{adata.uns['var_to_encoding'][categorical].replace('encoding', '').replace('_', ' ').strip()} [blue]encoded; [green]original data type: [blue]{dtype_dict[categorical][0]}"
+                )
+        # sort encoded vars by data type of the original values or the number of unique values in original data (excluding NaNs)
+        elif sort_by == "dtype" or sort_by == "num_cats":
+            sorted_by_type = {
+                var: _type
+                for var, _type in sorted(
+                    dtype_dict.items(), key=lambda item: item[1][0 if sort_by == "dtype" else 1], reverse=sort_reversed
+                )
+            }
+            for categorical in sorted_by_type:
+                branch.add(
+                    f"[blue]{categorical} -> {sorted_by_type[categorical][1]} categories;"
+                    f" [green]{adata.uns['var_to_encoding'][categorical].replace('encoding', '').replace('_', ' ').strip()} [blue]encoded; [green]original data type: [blue]{sorted_by_type[categorical][0]}"
+                )
+        # display in unsorted order
+        else:
+            encoded_list = original_values.keys()
+            for categorical in encoded_list:
+                branch.add(
+                    f"[blue]{categorical} -> {dtype_dict[categorical][1]} categories;"
+                    f" [green]{adata.uns['var_to_encoding'][categorical].replace('encoding', '').replace('_', ' ').strip()} [blue]encoded; [green]original data type: [blue]{dtype_dict[categorical][0]}"
+                )
     branch_num = tree.add(Text("🔓 Unencoded variables"), style="b green")
 
-    if sort_by == 'order':
+    if sort_by == "order":
         var_names = sorted(list(adata.var_names.values), reverse=sort_reversed)
         _sort_by_order_or_none(adata, branch_num, var_names)
-    elif sort_by == 'data_type':
+    elif sort_by == "dtype":
         var_names = list(adata.var_names.values)
         _sort_by_type(adata, branch_num, var_names, sort_reversed)
     else:
@@ -273,7 +294,9 @@ def _adata_type_overview(adata: AnnData, sort_by: bool = False, sort_reversed: b
     print(tree)
 
 
-def _mudata_type_overview(mudata: MuData, sort: bool = False, sort_reversed: bool = False) -> None:  # pragma: no cover
+def _mudata_type_overview(
+    mudata: MuData, sort: str | None = None, sort_reversed: bool = False
+) -> None:  # pragma: no cover
     """Display the :class:`~mudata.MuData object in its current state (:class:`~anndata.AnnData objects with obs, shapes)
 
     Args:
@@ -299,8 +322,7 @@ def _mudata_type_overview(mudata: MuData, sort: bool = False, sort_reversed: boo
 
 
 def _sort_by_order_or_none(adata: AnnData, branch, var_names: list[str]):
-    """Add branches to tree for sorting by order or unsorted.
-    """
+    """Add branches to tree for sorting by order or unsorted."""
     var_names_val = list(adata.var_names.values)
     for other_vars in var_names:
         if not other_vars.startswith("ehrapycat"):
@@ -311,8 +333,7 @@ def _sort_by_order_or_none(adata: AnnData, branch, var_names: list[str]):
 
 
 def _sort_by_type(adata: AnnData, branch, var_names: list[str], sort_reversed: bool):
-    """Sort tree output by datatype
-    """
+    """Sort tree output by datatype"""
     tmp_dict = {}
     var_names_val = list(adata.var_names.values)
 
@@ -323,9 +344,22 @@ def _sort_by_type(adata: AnnData, branch, var_names: list[str], sort_reversed: b
             data_type = pd.api.types.infer_dtype(unique_categoricals)
             tmp_dict[other_vars] = data_type
 
-    sorted_by_type = {var: _type for var, _type in sorted(tmp_dict.items(), key=lambda item: item[1], reverse=sort_reversed)}
+    sorted_by_type = {
+        var: _type for var, _type in sorted(tmp_dict.items(), key=lambda item: item[1], reverse=sort_reversed)
+    }
     for var in sorted_by_type:
         branch.add(f"[blue]{var} -> [green]data type: [blue]{sorted_by_type[var]}")
+
+
+def _infer_dtype_per_encoded_var(encoded_list: list[str], original_values) -> dict[str, tuple[str, int]]:
+    """Infer dtype of each encoded varibale of an AnnData object."""
+    dtype_dict = {}
+    for categorical in encoded_list:
+        unique_categoricals = pd.unique(original_values[categorical].flatten())
+        categorical_type = pd.api.types.infer_dtype(unique_categoricals)
+        num_unique_values = pd.DataFrame(unique_categoricals).dropna()[0].nunique()
+        dtype_dict[categorical] = (categorical_type, num_unique_values)
+    return dtype_dict
 
 
 def _single_quote_string(name: str) -> str:  # pragma: no cover
