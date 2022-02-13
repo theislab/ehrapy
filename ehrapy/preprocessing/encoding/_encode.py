@@ -23,7 +23,7 @@ available_encodings = {"one_hot_encoding", "label_encoding", "count_encoding", *
 def encode(
     data: AnnData | MuData,
     autodetect: bool | dict = False,
-    encodings: dict[str, dict[str, list[str]]] | dict[str, list[str]] = None,
+    encodings: dict[str, dict[str, list[str]]] | dict[str, list[str]] | str | None = None,
 ) -> AnnData | None:
     """Encode the initial read :class:`~anndata.AnnData` or :class:`~mudata.MuData` object.
 
@@ -48,7 +48,25 @@ def encode(
     Returns:
         An :class:`~anndata.AnnData` object with the encoded values in X or None (in case of :class:`~mudata.MuData` object)
 
-    Example:
+    Example using autodetect with default label encoding:
+        .. code-block:: python
+
+            import ehrapy as ep
+
+            adata = ep.io.read(...)
+            # encode all autodetected (non numerical) columns using label encoding
+            adata_encoded = ep.encode.encode(adata, autodetect=True)
+
+    Example using autodetect with non-default encoding mode:
+        .. code-block:: python
+
+            import ehrapy as ep
+
+            adata = ep.io.read(...)
+            # encode all autodetected (non numerical) columns using one hot encoding (this only works for single column encoding modes, not hash encoding)
+            adata_encoded = ep.encode.encode(adata, autodetect=True, 'one_hot_encoding')
+
+    Example using custom encodings per columns:
         .. code-block:: python
 
             import ehrapy as ep
@@ -123,7 +141,7 @@ def undo_encoding(
 def _encode(
     adata: AnnData,
     autodetect: bool | dict = False,
-    encodings: dict[str, dict[str, list[str]]] | dict[str, list[str]] = None,
+    encodings: dict[str, dict[str, list[str]]] | dict[str, list[str]] | str = None,
 ) -> AnnData | None:
     """Encode the initial read AnnData object. Categorical values could be either passed via parameters or autodetected.
 
@@ -154,22 +172,35 @@ def _encode(
         categoricals_names = adata.uns["non_numerical_columns"]
         # no columns were detected, that would require an encoding (e.g. non numerical columns)
         if not categoricals_names:
-            print("[bold yellow]No columns needed to be encoded were detected. Leaving passed AnnData object unchanged.")
+            print(
+                "[bold yellow]No columns needed to be encoded were detected. Leaving passed AnnData object unchanged."
+            )
             return adata
         _add_categoricals_to_obs(adata, categoricals_names)
         _add_categoricals_to_uns(adata, categoricals_names)
 
         encoded_x = None
         encoded_var_names = adata.var_names.to_list()
+        encode_mode = "label_encoding" if encodings is None else encodings
+        if encode_mode not in available_encodings - multi_encoding_modes:
+            raise ValueError(
+                f"Unknown encoding mode {encode_mode}. Please provide one of the following encoding modes:\n"
+                f"{available_encodings - multi_encoding_modes}"
+            )
+        single_encode_mode_switcher = {
+            "one_hot_encoding": _one_hot_encoding,
+            "label_encoding": _label_encoding,
+            "count_encoding": _count_encoding,
+        }
         with Progress(
             "[progress.description]{task.description}",
             BarColumn(),
             "[progress.percentage]{task.percentage:>3.0f}%",
             refresh_per_second=1500,
         ) as progress:
-            task = progress.add_task("[red]Running label encode on detected columns ...", total=1)
-            # Label encode by default. The primary usage of this is to save unencoded AnnData objects
-            encoded_x, encoded_var_names = _label_encoding(
+            task = progress.add_task(f"[red]Running {encode_mode} on detected columns ...", total=1)
+            # encode using the desired mode
+            encoded_x, encoded_var_names = single_encode_mode_switcher[encode_mode](
                 adata,
                 encoded_x,
                 encoded_var_names,
@@ -186,7 +217,7 @@ def _encode(
                 adata.var_names.to_list(),
                 categoricals_names,
             )
-            progress.update(task, description="Finished label encoding of autodetected columns.")
+            progress.update(task, description=f"Finished {encode_mode} of autodetected columns.")
 
             encoded_ann_data = AnnData(
                 encoded_x,
@@ -906,14 +937,13 @@ def _get_mudata_autodetect_options_and_encoding_modes(
 
 
 def _check_anndata_input_type(
-    autodetect: bool | dict, encodings: dict[str, dict[str, list[str]]] | dict[str, list[str]]
+    autodetect: bool | dict, encodings: dict[str, dict[str, list[str]]] | dict[str, list[str]] | str | None
 ) -> bool:
     """
-    Check type of passed parameters, whether they match the requirements to encode a MuData object or not.
+    Check type of passed parameters, whether they match the requirements to encode an AnnData object or not.
 
     Args:
         autodetect: Whether columns, that should be encoded, should be autodetected or not
-        encodings: (Different) encoding mode(s) and their columns to be applied on
 
     Returns:
         Whether they match type requirements or not
@@ -924,12 +954,15 @@ def _check_anndata_input_type(
             f"Please provide a boolean value for [bold blue]autodetect [bold red]when encoding a single AnnData object!"
         )
         return False
-    elif encodings and any(isinstance(column, Dict) for column in encodings.keys()):
+    elif isinstance(encodings, str) and not autodetect:
+        print(f"[bold red]Passing a string for parameter encodings is only possible when using autodetect=True!")
+        return False
+    elif autodetect and not isinstance(encodings, (str, type(None))):
         print(
-            "[bold red]Encoding a single AnnData object only allows a single dict passed for parameter [bold blue]encodings[bold red], containing"
-            "encoding modes as keys; but found a dict as key, which is only allowed when passing a MuData object!"
+            f"[bold red]Setting encode mode when autodetect=True only works by passing a string (encode mode name) or None not {type(encodings)}!"
         )
         return False
+
     return True
 
 
