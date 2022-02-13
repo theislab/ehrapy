@@ -152,6 +152,10 @@ def _encode(
             return None
 
         categoricals_names = adata.uns["non_numerical_columns"]
+        # no columns were detected, that would require an encoding (e.g. non numerical columns)
+        if not categoricals_names:
+            print("[bold yellow]No columns needed to be encoded were detected. Leaving passed AnnData object unchanged.")
+            return adata
         _add_categoricals_to_obs(adata, categoricals_names)
         _add_categoricals_to_uns(adata, categoricals_names)
 
