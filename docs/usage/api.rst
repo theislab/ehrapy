@@ -82,7 +82,6 @@ Encoding
 
     preprocessing.encode
     preprocessing.undo_encoding
-    preprocessing.type_overview
 
 Normalization
 +++++++++++++
@@ -275,6 +274,7 @@ and vice versa.
     anndata_ext.anndata_to_df
     anndata_ext.move_to_obs
     anndata_ext.move_to_x
+    anndata_ext.type_overview
 
 
 Settings
