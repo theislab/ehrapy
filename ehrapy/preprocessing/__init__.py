@@ -12,4 +12,3 @@ from ehrapy.preprocessing._normalization import (
 from ehrapy.preprocessing._quality_control import calculate_qc_metrics
 from ehrapy.preprocessing._scanpy_pp_api import *  # noqa: E402,F403
 from ehrapy.preprocessing.encoding._encode import encode, undo_encoding
-from ehrapy.preprocessing.encoding._type_overview import type_overview
