@@ -170,9 +170,7 @@ def _encode(
         categoricals_names = adata.uns["non_numerical_columns"]
         # no columns were detected, that would require an encoding (e.g. non numerical columns)
         if not categoricals_names:
-            print(
-                "[bold yellow]No columns needed to be encoded were detected. Leaving passed AnnData object unchanged."
-            )
+            print("[bold yellow]Detected no columns that need to be encoded. Leaving passed AnnData object unchanged.")
             return adata
         _add_categoricals_to_obs(adata, categoricals_names)
         _add_categoricals_to_uns(adata, categoricals_names)
@@ -980,7 +978,7 @@ def _check_mudata_input_type(
             f"Please provide a dictionary for [bold blue]autodetect [bold red]when encoding a MuData object!"
         )
         return False
-    elif encodings and any(isinstance(column, List) for column in encodings.values()): # type: ignore
+    elif encodings and any(isinstance(column, List) for column in encodings.values()):  # type: ignore
         print(
             "[bold red]Encoding a MuData object requires a dictionary passed for every AnnData object, that should be encoded, containing the "
             "encoding modes and columns, as required for a single AnnData object!"
