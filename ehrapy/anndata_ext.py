@@ -206,7 +206,7 @@ def type_overview(
 
     Args:
         data: :class:`~anndata.AnnData` or :class:`~mudata.MuData` object to display
-        sort_by: How the tree output should be sorted. One of `dtype`, `order`, `num_cats` or `None` (defaults to None -> unsorted)
+        sort_by: How the tree output should be sorted. One of `dtype`, `order`, `num_cats` or None (defaults to None -> unsorted)
         sort_reversed: Whether to sort in reversed order or not
 
     Example:
@@ -222,8 +222,9 @@ def type_overview(
     elif isinstance(data, MuData):
         _mudata_type_overview(data, sort_by, sort_reversed)
     else:
-        print(f"[b red]Unable to present object of type {type(data)}. Can only display AnnData or MuData objects!")
-        raise EhrapyRepresentationError
+        raise EhrapyRepresentationError(
+            f"Unable to present object of type {type(data)}. Can only display AnnData or MuData objects!"
+        )
 
 
 def _adata_type_overview(
