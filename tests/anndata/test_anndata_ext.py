@@ -13,8 +13,8 @@ import ehrapy as ep
 from ehrapy.anndata.anndata_ext import (
     NotEncodedError,
     ObsEmptyError,
-    anndata_to_df,
     _assert_encoded,
+    anndata_to_df,
     assert_numeric_vars,
     df_to_anndata,
     get_numeric_vars,
