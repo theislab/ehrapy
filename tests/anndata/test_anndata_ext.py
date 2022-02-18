@@ -14,7 +14,7 @@ from ehrapy.anndata.anndata_ext import (
     NotEncodedError,
     ObsEmptyError,
     anndata_to_df,
-    assert_encoded,
+    _assert_encoded,
     assert_numeric_vars,
     df_to_anndata,
     get_numeric_vars,
@@ -211,13 +211,13 @@ class TestAnnDataUtil:
 
     def test_assert_encoded(self):
         """Test for the encoding assertion."""
-        assert_encoded(self.adata_encoded)
+        _assert_encoded(self.adata_encoded)
 
         with pytest.raises(NotEncodedError, match=r"not yet been encoded"):
-            assert_encoded(self.adata_numeric)
+            _assert_encoded(self.adata_numeric)
 
         with pytest.raises(NotEncodedError, match=r"not yet been encoded"):
-            assert_encoded(self.adata_strings)
+            _assert_encoded(self.adata_strings)
 
     def test_get_numeric_vars(self):
         """Test for the numeric vars getter."""

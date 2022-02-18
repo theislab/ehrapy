@@ -368,7 +368,7 @@ def _single_quote_string(name: str) -> str:  # pragma: no cover
     return f"'{name}'"
 
 
-def assert_encoded(adata: AnnData):
+def _assert_encoded(adata: AnnData):
     try:
         assert np.issubdtype(adata.X.dtype, np.number)
     except AssertionError:
@@ -384,7 +384,7 @@ def get_numeric_vars(adata: AnnData) -> list[str]:
     Returns:
         List of column numeric column names
     """
-    assert_encoded(adata)
+    _assert_encoded(adata)
 
     return adata.uns["numerical_columns"]
 
@@ -412,7 +412,7 @@ def set_numeric_vars(
     Returns:
         :class:`~anndata.AnnData` object with updated X
     """
-    assert_encoded(adata)
+    _assert_encoded(adata)
 
     if vars is None:
         vars = get_numeric_vars(adata)
