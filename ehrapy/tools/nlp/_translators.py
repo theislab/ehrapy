@@ -20,7 +20,7 @@ except ConnectionError:
 from deepl import Formality, GlossaryInfo, TextResult
 from rich import print
 
-from ehrapy.anndata_ext import get_column_indices, get_column_values
+from ehrapy.anndata.anndata_ext import get_column_indices, get_column_values
 
 
 class Translator:

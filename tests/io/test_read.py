@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 
 from ehrapy._util import shell_command_accessible
-from ehrapy.anndata_ext import ColumnNotFoundError
+from ehrapy.anndata.anndata_ext import ColumnNotFoundError
 from ehrapy.io._read import read
 
 CURRENT_DIR = Path(__file__).parent

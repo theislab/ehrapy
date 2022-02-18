@@ -13,7 +13,7 @@ from mudata import MuData
 from rich import print
 
 from ehrapy import ehrapy_settings, settings
-from ehrapy.anndata_ext import df_to_anndata
+from ehrapy.anndata.anndata_ext import df_to_anndata
 from ehrapy.data._dataloader import download
 from ehrapy.io._utility_io import _get_file_extension, _slugify, multi_data_extensions, supported_extensions
 from ehrapy.preprocessing.encoding._encode import encode

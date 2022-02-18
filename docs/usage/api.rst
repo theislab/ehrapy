@@ -268,13 +268,13 @@ The ehrapy API exposes functions to transform a pandas dataframe into an AnnData
 and vice versa.
 
 .. autosummary::
-    :toctree: ext
+    :toctree: ad
 
-    anndata_ext.df_to_anndata
-    anndata_ext.anndata_to_df
-    anndata_ext.move_to_obs
-    anndata_ext.move_to_x
-    anndata_ext.type_overview
+    anndata.df_to_anndata
+    anndata.anndata_to_df
+    anndata.move_to_obs
+    anndata.move_to_x
+    anndata.type_overview
 
 
 Settings

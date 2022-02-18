@@ -14,10 +14,10 @@ traceback.install(width=200, word_wrap=True)
 
 from ehrapy._settings import EhrapyConfig, ehrapy_settings
 from ehrapy._util import print_versions
-from ehrapy.anndata_ext import anndata_to_df, df_to_anndata, type_overview
 
 settings: EhrapyConfig = ehrapy_settings
 
+from ehrapy import anndata as ad
 from ehrapy import data as dt
 from ehrapy import io
 from ehrapy import plot as pl

@@ -46,7 +46,6 @@ class TestEncode:
         adata = read(dataset_path=f"{_TEST_PATH}/dataset2.csv")
         encoded_ann_data = encode(adata, autodetect=True)
         out, err = capfd.readouterr()
-        assert "No columns needed to be encoded were detected" in out
         assert id(encoded_ann_data) == id(adata)
 
     def test_autodetect_custom_mode(self):

@@ -14,7 +14,7 @@ from rich import print
 from rich.progress import BarColumn, Progress
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
-from ehrapy.anndata_ext import _update_uns
+from ehrapy.anndata.anndata_ext import _update_uns
 
 multi_encoding_modes = {"hash_encoding"}
 available_encodings = {"one_hot_encoding", "label_encoding", "count_encoding", *multi_encoding_modes}
