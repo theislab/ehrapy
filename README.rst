@@ -28,10 +28,6 @@
    :target: https://github.com/psf/black
    :alt: Black
 
-.. warning::
-    ehrapy is still in development.
-    If you are willing to try out alpha software feel free to install from source or contact us.
-
 ehrapy overview
 ===============
 

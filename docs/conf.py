@@ -84,7 +84,7 @@ pygments_style = "sphinx"
 html_css_files = ["custom_cookietemple.css", "sphinx_gallery.css", "nbsphinx.css", "dataframe.css"]
 html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
-html_logo = "_static/placeholder.png"  # TODO
+html_logo = "_static/ehrapy_logo.png"
 html_theme_options = {
     "icon_links": [
         {
@@ -165,6 +165,8 @@ nbsphinx_thumbnails = {
     "tutorials/notebooks/ehrapy_introduciton": "_static/tutorials/catheter.png",
     "tutorials/notebooks/mimic_2_introduction": "_static/tutorials/catheter.png",
     "tutorials/notebooks/mimic_2_fate": "_static/tutorials/fate.png",
+    "tutorials/notebooks/diabetes_130": "_static/tutorials/diabetes.png",
+    "tutorials/notebooks/medcat": "_static/tutorials/nlp.png",
 }
 
 # -- Options for HTMLHelp output ---------------------------------------

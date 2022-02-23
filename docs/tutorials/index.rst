@@ -19,6 +19,8 @@ Quick start
    notebooks/ehrapy_introduction
    notebooks/mimic_2_introduction
    notebooks/mimic_2_fate
+   notebooks/diabetes_130
+   notebooks/medcat
 
 
 Glossary
