@@ -5,13 +5,13 @@ from anndata import AnnData
 from pyhpo import HPOSet, HPOTerm, Ontology
 
 
-class HPO:
+class HPOMapper:
     """Wrapper class for PyHPO. Documentation: https://centogene.github.io/pyhpo/index.html"""
 
     ontology_values: Optional[Dict[str, List[HPOTerm]]] = None
 
-    def __init__(self, ontology: Ontology = None):
-        self.ontology: Ontology = ontology if ontology else Ontology()
+    def __init__(self, ontology=None):
+        self.ontology = ontology if ontology else Ontology()
 
     @staticmethod
     def patient_hpo_similarity(patient_1_set: HPOSet, patient_2_set: HPOSet) -> float:
@@ -83,11 +83,11 @@ class HPO:
         # Implemented after https://github.com/Centogene/pyhpo/issues/2#issuecomment-896510747
         # Gets all terms of the ontology and their synonyms. Then finds the closest match.
         if strict:
-            if HPO.ontology_values is None:
-                HPO._load_full_ontology()
+            if HPOMapper.ontology_values is None:
+                HPOMapper._load_full_ontology()
 
                 def _get_closest_HPOterm_match(name) -> Sequence:
-                    closest_matches = difflib.get_close_matches(name, HPO.ontology_values, 1)
+                    closest_matches = difflib.get_close_matches(name, HPOMapper.ontology_values, 1)
                     closest_match: str = closest_matches[0].strip()  # type: ignore
                     return closest_match
 

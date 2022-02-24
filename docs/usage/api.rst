@@ -165,19 +165,21 @@ Dataset integration
 
     tools.ingest
 
-Translators
-+++++++++++
+Natural language processing
++++++++++++++++++++++++++++
 
 .. autosummary::
     :toctree: tools
 
     tools.Translator
+    tools.HPOMapper
+    tools.MedCAT
 
 Plotting
 ~~~~~~~~
 
 The plotting module ehrapy.pl largely parallels the tl.* and a few of the pp.* functions.
-For most tools and for some preprocessing functions, you’ll find a plotting function with the same name.
+For most tools and for some preprocessing functions, you will find a plotting function with the same name.
 
 Generic
 +++++++

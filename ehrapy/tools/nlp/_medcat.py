@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from dataclasses import dataclass
 from typing import Literal
 
@@ -92,29 +93,67 @@ class MedCAT:
 
         return concept_db
 
-    def save_vocabulary(self, output_path: str):
+    def save_vocabulary(self, output_path: str) -> None:
+        """Saves a MedCAT vocabulary.
+
+        Args:
+            output_path: Path to write the vocabulary to.
+        """
         self.vocabulary.save(output_path)
 
-    def load_vocabulary(self, vocabulary_path):
+    def load_vocabulary(self, vocabulary_path) -> Vocab:
+        """Loads a MedCAT vocabulary.
+
+        Args:
+            vocabulary_path: Path to load the vocabulary from.
+        """
         self.vocabulary = Vocab.load(vocabulary_path)
 
         return self.vocabulary
 
-    def save_concept_db(self, output_path: str):
+    def save_concept_db(self, output_path: str) -> None:
+        """Saves a MedCAT concept database.
+
+        Args:
+            output_path: Path to save the concept database to.
+        """
         self.concept_db.save(output_path)
 
-    def load_concept_db(self, concept_db_path):
+    def load_concept_db(self, concept_db_path) -> CDB:
+        """Loads the concept database.
+
+        Args:
+            concept_db_path: Path to load the concept database from.
+        """
         self.concept_db = CDB.load(concept_db_path)
 
         return self.concept_db
 
-    def load_model_pack(self, model_pack_path):
+    def load_model_pack(self, model_pack_path) -> None:
+        """Loads a MedCAt model pack.
+
+        Updates the MedCAT object.
+
+        Args:
+            model_pack_path: Path to save the model from.
+        """
         self.cat.load_model_pack(model_pack_path)
 
     def update_cat(self, vocabulary: Vocab = None, concept_db: CDB = None):
+        """Updates the current MedCAT instance with new Vocabularies and Concept Databases.
+
+        Args:
+            vocabulary: Vocabulary to update to.
+            concept_db: Concept Database to update to.
+        """
         self.cat = CAT(cdb=concept_db, config=concept_db.config, vocab=vocabulary)
 
-    def update_cat_config(self, concept_db_config: Config):
+    def update_cat_config(self, concept_db_config: Config) -> None:
+        """Updates the MedCAT configuration.
+
+        Args:
+            concept_db_config: Concept to update to.
+        """
         self.concept_db.config = concept_db_config
 
     def extract_entities_text(self, text: str) -> Doc:
@@ -177,11 +216,11 @@ class MedCAT:
             self.concept_db.print_stats()
 
     def filter_tui(self, concept_db: CDB, tui_filters: list[str]) -> CDB:
-        """Filters a concept database by semantic types (TUI)
+        """Filters a concept database by semantic types (TUI).
 
         Args:
             concept_db: MedCAT concept database.
-            tui_filters: A list of semantic type filters. Example: |T047|Disease or Syndrome -> "T047"
+            tui_filters: A list of semantic type filters. Example: T047 Disease or Syndrome -> "T047"
 
         Returns:
             A filtered MedCAT concept database.
@@ -202,7 +241,7 @@ class MedCAT:
         min_text_length=5,
         n_jobs: int = settings.n_jobs,
     ) -> AnnotationResult:
-        """Annotates a
+        """Annotates a set of texts.
 
         Args:
             data: Text data to annotate.
@@ -311,7 +350,14 @@ class MedCAT:
 
         return df_cui_nsubjects
 
-    def plot_top_diseases(self, df_cui_nsubjects: pd.DataFrame, top_diseases: int = 30):
+    def plot_top_diseases(self, df_cui_nsubjects: pd.DataFrame, top_diseases: int = 30) -> None:
+        """Plots the top n (default: 30) found diseases.
+
+        Args:
+            df_cui_nsubjects: Pandas DataFrame containing the determined annotations.
+            top_diseases: Number of top diseases to plot
+        """
+        warnings.warn("This function will be moved and likely removed in a future version!", FutureWarning)
         # TODO this should ideally be drawn with a Scanpy plot or something
         # TODO Needs more options such as saving etc
         sns.set(rc={"figure.figsize": (5, 12)}, style="whitegrid", palette="pastel")

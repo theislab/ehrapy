@@ -8,7 +8,7 @@ from anndata import AnnData
 from pandas import array
 from pyhpo import HPOSet, HPOTerm, Ontology
 
-from ehrapy.tools.nlp._hpo import HPO
+from ehrapy.tools.nlp._hpo import HPOMapper
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_PATH = f"{CURRENT_DIR}/test_data_encode"
@@ -37,14 +37,14 @@ class TestHPO:
                 "HP:0010674",
             ]
         )
-        similarity = HPO.patient_hpo_similarity(patient_1, patient_2)
+        similarity = HPOMapper.patient_hpo_similarity(patient_1, patient_2)
 
         assert isclose(similarity, 0.8294613647308435)
 
     def test_hpo_term_similarity(self):
         term_1 = Ontology.get_hpo_object("Scoliosis")
         term_2 = Ontology.get_hpo_object("Abnormal axial skeleton morphology")
-        path = HPO.hpo_term_similarity(term_1, term_2)
+        path = HPOMapper.hpo_term_similarity(term_1, term_2)
 
         assert path == (
             3,
@@ -75,13 +75,13 @@ class TestHPO:
         )
 
     def test_closest_hpo_term_strict_anndata(self):
-        HPO.map_to_hpo(self.test_adata, obs_key="disease", strict=True)
+        HPOMapper.map_to_hpo(self.test_adata, obs_key="disease", strict=True)
 
         assert "Lumbar scoliosis" in self.test_adata.obs["hpo_terms"].values
         assert "Neuroblastoma" in self.test_adata.obs["hpo_terms"].values
 
     def test_closest_hpo_term_anndata(self):
-        HPO.map_to_hpo(self.test_adata, obs_key="disease", strict=False)
+        HPOMapper.map_to_hpo(self.test_adata, obs_key="disease", strict=False)
 
         assert (
             array(
