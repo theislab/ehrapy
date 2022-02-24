@@ -30,11 +30,16 @@ class TestHPO:
         )
 
     def test_patient_hpo_similarity(self):
-        patient_1 = HPOSet.from_queries(["HP:0002943", "HP:0008458", "HP:0100884", "HP:0002944", "HP:0002751"])
-        patient_2 = HPOSet.from_queries(["HP:0002650", "HP:0010674", "HP:0000925", "HP:0009121"])
+        patient_1 = HPOSet.from_queries(["HP:0002943", "HP:0008458"])
+        patient_2 = HPOSet.from_queries(
+            [
+                "HP:0002650",
+                "HP:0010674",
+            ]
+        )
         similarity = HPO.patient_hpo_similarity(patient_1, patient_2)
 
-        assert isclose(similarity, 0.7583849517696274)
+        assert isclose(similarity, 0.8294613647308435)
 
     def test_hpo_term_similarity(self):
         term_1 = Ontology.get_hpo_object("Scoliosis")
