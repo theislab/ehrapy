@@ -7,12 +7,14 @@ from anndata import AnnData
 from scipy import sparse
 
 
+def generate_adata():
+    pass
+
+
 def gen_adata(
     shape: Tuple[int, int],
     X_type=sparse.csr_matrix,
     X_dtype=np.float32,
-    # obs_dtypes,
-    # var_dtypes,
     obsm_types: Collection = (sparse.csr_matrix, np.ndarray, pd.DataFrame),
     varm_types: Collection = (sparse.csr_matrix, np.ndarray, pd.DataFrame),
     layers_types: Collection = (sparse.csr_matrix, np.ndarray, pd.DataFrame),
