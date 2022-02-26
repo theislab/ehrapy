@@ -9,6 +9,6 @@ from ehrapy.preprocessing._normalization import (
     norm_scale,
     norm_sqrt,
 )
-from ehrapy.preprocessing._quality_control import calculate_qc_metrics
+from ehrapy.preprocessing._quality_control import calculate_qc_metrics, display_qc_metrics
 from ehrapy.preprocessing._scanpy_pp_api import *  # noqa: E402,F403
 from ehrapy.preprocessing.encoding._encode import encode, undo_encoding

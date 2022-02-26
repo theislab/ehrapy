@@ -70,6 +70,29 @@ def calculate_qc_metrics(
     return obs_metrics, var_metrics
 
 
+def display_qc_metrics(adata: AnnData) -> None:
+    """Displays the calculated quality control metrics for var of adata.
+
+    Args:
+        adata: Annotated data matrix.
+    """
+    from rich.console import Console
+    from rich.table import Table
+
+    table = Table(title="[bold blue]Ehrapy qc metrics of var")
+    table.add_column("[bold blue]Column name", justify="right", style="bold green")
+    var_names = list(adata.var_names)
+
+    for col in adata.var.columns:
+        table.add_column(f"[bold blue]{col}", justify="right", style="bold green")
+
+    for var in range(len(adata.var)):
+        table.add_row(var_names[var], *map(str, list(adata.var.iloc[var])))
+
+    console = Console()
+    console.print(table)
+
+
 def _missing_values(
     arr: np.ndarray, shape: tuple[int, int] = None, df_type: Literal["obs", "var"] = "obs"
 ) -> np.ndarray:
