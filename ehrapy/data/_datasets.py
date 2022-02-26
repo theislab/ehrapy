@@ -181,3 +181,245 @@ def chronic_kidney_disease(
     )
 
     return adata
+
+
+def breast_tissue(
+    columns_obs_only: dict[str, list[str]] | list[str] | None = None,
+) -> AnnData:
+    """Loads the Breast Tissue Data Set
+
+    More details: http://archive.ics.uci.edu/ml/datasets/Breast+Tissue
+    Preprocessing: https://github.com/theislab/ehrapy-datasets/blob/thyroid_dataset/breast_tissue/breast_tissue.ipynb
+
+    Args:
+        columns_obs_only: Columns to include in obs only and not X.
+
+    Returns:
+        :class:`~anndata.AnnData` object of the Breast Tissue Data Set
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy as ep
+
+            adata = ep.dt.breast_tissue()
+    """
+    adata = read(
+        dataset_path=f"{ehrapy_settings.datasetdir}/breast_tissue.csv",
+        download_dataset_name="breast_tissue.csv",
+        backup_url="https://figshare.com/ndownloader/files/34179264",
+        columns_obs_only=columns_obs_only,
+        extension="csv",
+        index_column="patient_id",
+    )
+
+    return adata
+
+
+def cervical_cancer_risk_factors(
+    columns_obs_only: dict[str, list[str]] | list[str] | None = None,
+) -> AnnData:
+    """Loads the Cervical cancer (Risk Factors) Data Set
+
+    More details: http://archive.ics.uci.edu/ml/datasets/Cervical+cancer+%28Risk+Factors%29
+    Preprocessing: https://github.com/theislab/ehrapy-datasets/blob/thyroid_dataset/cervical_cancer_risk_factors/cervical_cancer_risk_factors.ipynb
+
+    Args:
+        columns_obs_only: Columns to include in obs only and not X.
+
+    Returns:
+        :class:`~anndata.AnnData` object of the Cervical cancer (Risk Factors) Data Set
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy as ep
+
+            adata = ep.dt.cervical_cancer_risk_factors()
+    """
+    adata = read(
+        dataset_path=f"{ehrapy_settings.datasetdir}/cervical_cancer_risk_factors.csv",
+        download_dataset_name="cervical_cancer_risk_factors.csv",
+        backup_url="https://figshare.com/ndownloader/files/34179291",
+        columns_obs_only=columns_obs_only,
+        extension="csv",
+        index_column="patient_id",
+    )
+
+    return adata
+
+
+def dermatology(
+    columns_obs_only: dict[str, list[str]] | list[str] | None = None,
+) -> AnnData:
+    """Loads the Dermatology Data Set
+
+    More details: http://archive.ics.uci.edu/ml/datasets/Dermatology
+    Preprocessing: https://github.com/theislab/ehrapy-datasets/blob/thyroid_dataset/dermatology/dermatology.ipynb
+
+    Args:
+        columns_obs_only: Columns to include in obs only and not X.
+
+    Returns:
+        :class:`~anndata.AnnData` object of the Dermatology Data Set
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy as ep
+
+            adata = ep.dt.dermatology()
+    """
+    adata = read(
+        dataset_path=f"{ehrapy_settings.datasetdir}/dermatology.csv",
+        download_dataset_name="dermatology.csv",
+        backup_url="https://figshare.com/ndownloader/files/34179300",
+        columns_obs_only=columns_obs_only,
+        extension="csv",
+        index_column="patient_id",
+    )
+
+    return adata
+
+
+def echocardiogram(
+    columns_obs_only: dict[str, list[str]] | list[str] | None = None,
+) -> AnnData:
+    """Loads the Echocardiogram Data Set
+
+    More details: http://archive.ics.uci.edu/ml/datasets/Echocardiogram
+    Preprocessing: https://github.com/theislab/ehrapy-datasets/blob/thyroid_dataset/echocardiogram/echocardiogram.ipynb
+
+    Args:
+        columns_obs_only: Columns to include in obs only and not X.
+
+    Returns:
+        :class:`~anndata.AnnData` object of the Echocardiogram Data Set
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy as ep
+
+            adata = ep.dt.echocardiogram()
+    """
+    adata = read(
+        dataset_path=f"{ehrapy_settings.datasetdir}/echocardiogram.csv",
+        download_dataset_name="echocardiogram.csv",
+        backup_url="https://figshare.com/ndownloader/files/34179306",
+        columns_obs_only=columns_obs_only,
+        extension="csv",
+        index_column="patient_id",
+    )
+
+    return adata
+
+
+def hepatitis(
+    columns_obs_only: dict[str, list[str]] | list[str] | None = None,
+) -> AnnData:
+    """Loads the Hepatitis Data Set
+
+    More details: http://archive.ics.uci.edu/ml/datasets/Hepatitis
+    Preprocessing: https://github.com/theislab/ehrapy-datasets/blob/thyroid_dataset/hepatitis/hepatitis.ipynb
+
+    Args:
+        columns_obs_only: Columns to include in obs only and not X.
+
+    Returns:
+        :class:`~anndata.AnnData` object of the Hepatitis Data Set
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy as ep
+
+            adata = ep.dt.hepatitis()
+    """
+    adata = read(
+        dataset_path=f"{ehrapy_settings.datasetdir}/hepatitis.csv",
+        download_dataset_name="hepatitis.csv",
+        backup_url="https://figshare.com/ndownloader/files/34179318",
+        columns_obs_only=columns_obs_only,
+        extension="csv",
+        index_column="patient_id",
+    )
+
+    return adata
+
+
+def statlog_heart(
+    columns_obs_only: dict[str, list[str]] | list[str] | None = None,
+) -> AnnData:
+    """Loads the Statlog (Heart) Data Set
+
+    More details: http://archive.ics.uci.edu/ml/datasets/Statlog+%28Heart%29
+    Preprocessing: https://github.com/theislab/ehrapy-datasets/blob/main/statlog_heart/statlog_heart.ipynb
+
+    Args:
+        columns_obs_only: Columns to include in obs only and not X.
+
+    Returns:
+        :class:`~anndata.AnnData` object of the Statlog (Heart) Data Set
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy as ep
+
+            adata = ep.dt.statlog_heart()
+    """
+    adata = read(
+        dataset_path=f"{ehrapy_settings.datasetdir}/statlog_heart.csv",
+        download_dataset_name="statlog_heart.csv",
+        backup_url="https://figshare.com/ndownloader/files/34179327",
+        columns_obs_only=columns_obs_only,
+        extension="csv",
+        index_column="patient_id",
+    )
+
+    return adata
+
+
+def thyroid(
+    name: str,
+    encoded: bool = False,
+    columns_obs_only: dict[str, list[str]] | list[str] | None = None,
+) -> AnnData:
+    """Loads the Thyroid Data Set
+
+    More details: http://archive.ics.uci.edu/ml/datasets/Thyroid+Disease
+    Preprocessing: https://github.com/theislab/ehrapy-datasets/blob/main/thyroid/thyroid.ipynb
+
+    Args:
+        name: Name of the dataset
+        encoded: Whether to return an already encoded object
+        columns_obs_only: Columns to include in obs only and not X.
+
+    Returns:
+        :class:`~anndata.AnnData` object of the Thyroid Data Set
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy as ep
+
+            adata = ep.dt.thyroid(name='sick', encode=True)
+    """
+    if columns_obs_only is None:
+        columns_obs_only = ['dataset_name']
+    else:
+        columns_obs_only = columns_obs_only.append('dataset_name')
+    adata = read(
+        dataset_path=f"{ehrapy_settings.datasetdir}/thyroid.csv",
+        download_dataset_name="thyroid.csv",
+        backup_url="https://figshare.com/ndownloader/files/34179333",
+        columns_obs_only=columns_obs_only,
+        extension="csv",
+        index_column="patient_id",
+    )
+    adata = adata[adata.obs['dataset_name'] == name].copy()
+    if encoded:
+        return encode(adata, autodetect=True)
+
+    return adata
