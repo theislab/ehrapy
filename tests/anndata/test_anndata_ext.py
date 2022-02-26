@@ -17,6 +17,7 @@ from ehrapy.anndata.anndata_ext import (
     anndata_to_df,
     assert_numeric_vars,
     df_to_anndata,
+    generate_anndata,
     get_numeric_vars,
     move_to_obs,
     set_numeric_vars,
@@ -164,6 +165,14 @@ class TestAnndataExt:
         col3_val = [idx for idx in range(100)]
 
         return col1_val, col2_val, col3_val
+
+    def test_generate_anndata(self):
+        adata = generate_anndata((3, 3), include_nlp=False)
+        assert adata.X.shape == (3, 3)
+
+        adata = generate_anndata((2, 2), include_nlp=True)
+        assert adata.X.shape == (2, 2)
+        assert "nlp" in adata.obs.columns
 
 
 class TestAnnDataUtil:

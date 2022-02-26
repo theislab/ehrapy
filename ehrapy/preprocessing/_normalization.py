@@ -371,7 +371,7 @@ def norm_sqrt(adata: AnnData, vars: str | list[str] | None = None, copy: bool = 
     return adata
 
 
-def _prep_adata_norm(adata: AnnData, copy: bool = False) -> AnnData | None:
+def _prep_adata_norm(adata: AnnData, copy: bool = False) -> AnnData | None:  # pragma: no cover
     if copy:
         adata = adata.copy()
 
