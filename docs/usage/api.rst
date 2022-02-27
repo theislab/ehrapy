@@ -62,6 +62,7 @@ Quality control
     :toctree: preprocessing
 
     preprocessing.calculate_qc_metrics
+    preprocessing.display_qc_metrics
 
 Imputation
 ++++++++++
