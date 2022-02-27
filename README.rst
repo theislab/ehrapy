@@ -74,4 +74,4 @@ This package was created with cookietemple_ using Cookiecutter_ based on Hypermo
 .. _PyPI: https://pypi.org/
 .. _Hypermodern_Python_Cookiecutter: https://github.com/cjolowicz/cookiecutter-hypermodern-python
 .. _pip: https://pip.pypa.io/
-.. _Usage: https://ehrapy.readthedocs.io/en/latest/usage.html
+.. _Usage: https://ehrapy.readthedocs.io/en/latest/usage/usage.html
