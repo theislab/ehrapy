@@ -548,7 +548,10 @@ def _update_layer_after_encoding(
     updated_layer = np.hstack((encoded_categoricals, old_layer_view))
     del old_layer
 
-    return updated_layer.astype("float32")
+    try:
+        return updated_layer.astype("float32")
+    except ValueError as e:
+        raise ValueError("Ensure that all columns which require encoding are being encoded.") from e
 
 
 def _update_multi_encoded_data(
