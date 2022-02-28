@@ -381,9 +381,10 @@ def statlog_heart(
     return adata
 
 
-def thyroid(encoded: bool = False,
-            columns_obs_only: dict[str, list[str]] | list[str] | None = None,
-            ) -> AnnData:
+def thyroid(
+    encoded: bool = False,
+    columns_obs_only: dict[str, list[str]] | list[str] | None = None,
+) -> AnnData:
     """Loads the Thyroid Data Set
 
     More details: http://archive.ics.uci.edu/ml/datasets/Thyroid+Disease
