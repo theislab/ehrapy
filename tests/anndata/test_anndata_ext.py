@@ -149,6 +149,18 @@ class TestAnndataExt:
         with pytest.raises(ObsEmptyError):
             _ = anndata_to_df(adata, add_from_obs=["some_missing_column"])
 
+    def test_detect_binary_columns(self):
+        binary_df = TestAnndataExt._setup_binary_df_to_anndata()
+        adata = df_to_anndata(binary_df)
+        assert set(adata.uns["non_numerical_columns"]) == {
+            "col1",
+            "col2",
+            "col7_binary_int",
+            "col8_binary_float",
+            "col9_binary_missing_values",
+        }
+        assert set(adata.uns["numerical_columns"]) == {f"col{idx}" for idx in range(3, 7)}
+
     @staticmethod
     def _setup_df_to_anndata() -> Tuple[DataFrame, list, list, list]:
         col1_val = ["str" + str(idx) for idx in range(100)]
@@ -157,6 +169,33 @@ class TestAnndataExt:
         df = DataFrame({"col1": col1_val, "col2": col2_val, "col3": col3_val})
 
         return df, col1_val, col2_val, col3_val
+
+    @staticmethod
+    def _setup_binary_df_to_anndata() -> DataFrame:
+        col1_val = ["str" + str(idx) for idx in range(100)]
+        col2_val = ["another_str" + str(idx) for idx in range(100)]
+        col3_val = [0 for _ in range(100)]
+        col4_val = [1.0 for _ in range(100)]
+        col5_val = [np.NaN for _ in range(100)]
+        col6_val = [0.0 if idx % 2 == 0 else np.NaN for idx in range(100)]
+        col7_val = [idx % 2 for idx in range(100)]
+        col8_val = [float(idx % 2) for idx in range(100)]
+        col9_val = [idx % 3 if idx % 3 in {0, 1} else np.NaN for idx in range(100)]
+        df = DataFrame(
+            {
+                "col1": col1_val,
+                "col2": col2_val,
+                "col3": col3_val,
+                "col4": col4_val,
+                "col5": col5_val,
+                "col6": col6_val,
+                "col7_binary_int": col7_val,
+                "col8_binary_float": col8_val,
+                "col9_binary_missing_values": col9_val,
+            }
+        )
+
+        return df
 
     @staticmethod
     def _setup_anndata_to_df() -> Tuple[list, list, list]:
