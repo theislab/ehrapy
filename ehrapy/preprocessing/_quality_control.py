@@ -7,7 +7,7 @@ import pandas as pd
 from anndata import AnnData
 
 
-def calculate_qc_metrics(
+def qc_metrics(
     adata: AnnData, qc_vars: Collection[str] = (), layer: str = None, inplace: bool = True
 ) -> pd.DataFrame | None:
     """Calculates various quality control metrics.

@@ -61,7 +61,7 @@ Quality control
 .. autosummary::
     :toctree: preprocessing
 
-    preprocessing.calculate_qc_metrics
+    preprocessing.qc_metrics
 
 Imputation
 ++++++++++
@@ -197,6 +197,14 @@ Generic
     plot.clustermap
     plot.ranking
     plot.dendrogram
+
+Specific
+++++++++
+
+.. autosummary::
+    :toctree: plot
+
+    plot.qc_metrics
 
 Classes
 +++++++

@@ -398,9 +398,9 @@ def _warn_imputation_threshold(adata: AnnData, var_names: list[str] | None, thre
         adata.var["missing_values_pct"]
     except KeyError:
         print("[bold yellow]Quality control metrics missing. Calculating...")
-        from ehrapy.preprocessing import calculate_qc_metrics
+        from ehrapy.preprocessing import qc_metrics
 
-        calculate_qc_metrics(adata)
+        qc_metrics(adata)
     used_var_names = set(adata.var_names) if var_names is None else set(var_names)
 
     thresholded_var_names = set(adata.var[adata.var["missing_values_pct"] > threshold].index) & set(used_var_names)
