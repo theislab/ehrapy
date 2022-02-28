@@ -381,15 +381,17 @@ def statlog_heart(
     return adata
 
 
-def thyroid(name: str, encoded: bool = False) -> AnnData:
+def thyroid(encoded: bool = False,
+            columns_obs_only: dict[str, list[str]] | list[str] | None = None,
+            ) -> AnnData:
     """Loads the Thyroid Data Set
 
     More details: http://archive.ics.uci.edu/ml/datasets/Thyroid+Disease
     Preprocessing: https://github.com/theislab/ehrapy-datasets/blob/main/thyroid/thyroid.ipynb
 
     Args:
-        name: Name of the dataset
         encoded: Whether to return an already encoded object.
+        columns_obs_only: Columns to include in obs only and not X.
 
     Returns:
         :class:`~anndata.AnnData` object of the Thyroid Data Set
@@ -399,9 +401,8 @@ def thyroid(name: str, encoded: bool = False) -> AnnData:
 
             import ehrapy as ep
 
-            adata = ep.dt.thyroid(name='sick', encode=True)
+            adata = ep.dt.thyroid()
     """
-    columns_obs_only = ["dataset_name"]
     adata: AnnData = read(
         dataset_path=f"{ehrapy_settings.datasetdir}/thyroid.csv",
         download_dataset_name="thyroid.csv",
@@ -410,7 +411,6 @@ def thyroid(name: str, encoded: bool = False) -> AnnData:
         extension="csv",
         index_column="patient_id",
     )
-    adata = adata[adata.obs["dataset_name"] == name].copy()
     if encoded:
         return encode(adata, autodetect=True)
 
