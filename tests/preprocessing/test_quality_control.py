@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from anndata import AnnData
 
-from ehrapy.preprocessing._quality_control import _obs_qc_metrics, _var_qc_metrics, calculate_qc_metrics
+from ehrapy.preprocessing._quality_control import _obs_qc_metrics, _var_qc_metrics, qc_metrics
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_PATH = f"{CURRENT_DIR}/test_preprocessing"
@@ -45,7 +45,7 @@ class TestQualityControl:
         assert np.allclose(var_metrics["max"].values, np.array([np.nan, np.nan, 41.419998]), equal_nan=True)
 
     def test_calculate_qc_metrics(self):
-        obs_metrics, var_metrics = calculate_qc_metrics(self.test_adata, inplace=True)
+        obs_metrics, var_metrics = qc_metrics(self.test_adata, inplace=True)
 
         assert obs_metrics is not None
         assert var_metrics is not None
