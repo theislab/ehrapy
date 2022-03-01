@@ -470,15 +470,14 @@ def _update_uns(
 
 
 def _detect_binary_columns(df: pd.DataFrame, numerical_columns: list[str]) -> list[str]:
-    """
-    Detect all columns that contain only 0 and 1 (besides NaNs)
+    """Detect all columns that contain only 0 and 1 (besides NaNs).
 
     Args:
-        df: The dataframe to check
-        numerical_columns: All numerical columns of df
+        df: The dataframe to check.
+        numerical_columns: All numerical columns of the dataframe.
 
     Returns:
-            List of column names that are binary (contiain only 0 and 1 (+NaNs))
+            List of column names that are binary (containing only 0 and 1 (+NaNs))
     """
     binary_columns = []
     for column in numerical_columns:
@@ -486,6 +485,7 @@ def _detect_binary_columns(df: pd.DataFrame, numerical_columns: list[str]) -> li
         # only columns that contain at least one 0 and one 1 are counted as binary (or 0.0/1.0)
         if df[column].isin([0.0, 1.0, np.NaN, 0, 1]).all() and df[column].nunique() == 2:
             binary_columns.append(column)
+
     return binary_columns
 
 

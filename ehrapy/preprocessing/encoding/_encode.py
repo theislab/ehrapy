@@ -41,7 +41,7 @@ def encode(
 
     Args:
         data: The initial :class:`~anndata.AnnData` or :class:`~mudata.MuData` object
-        autodetect: Autodetection of categorical values
+        autodetect: Autodetection of categorical values. Also detects binary values such as only 0 and 1 in columns.
         encodings: Only needed if autodetect set to False (or False for some columns in case of a :class:`~mudata.MuData` object).
         A dict containing the encoding mode and categorical name for the respective column (for each AnnData object in case of MuData object).
 
