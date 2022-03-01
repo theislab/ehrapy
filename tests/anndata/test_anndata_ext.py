@@ -159,6 +159,18 @@ class TestAnndataExt:
 
         assert_frame_equal(anndata_df, expected_df)
 
+    def test_anndata_to_df_layers(self):
+        col1_val, col2_val, col3_val = TestAnndataExt._setup_anndata_to_df()
+        expected_df = DataFrame({"col1": col1_val, "col2": col2_val, "col3": col3_val})
+        obs = DataFrame({"col2": col2_val, "col3": col3_val})
+        adata_x = np.array([col1_val], dtype="object").transpose()
+        adata = AnnData(
+            X=adata_x, obs=obs, var=DataFrame(index=["col1"]), dtype="object", layers={"raw": adata_x.copy()}
+        )
+        anndata_df = anndata_to_df(adata, obs_cols=list(adata.obs.columns), layer="raw")
+
+        assert_frame_equal(anndata_df, expected_df)
+
     def test_detect_binary_columns(self):
         binary_df = TestAnndataExt._setup_binary_df_to_anndata()
         adata = df_to_anndata(binary_df)

@@ -13,6 +13,7 @@ from rich import print
 from rich.text import Text
 from rich.tree import Tree
 from scipy import sparse
+from scipy.sparse import issparse
 
 
 class BaseDataframes(NamedTuple):
@@ -87,19 +88,27 @@ def _move_columns_to_obs(df: pd.DataFrame, columns_obs_only: list[str] | None) -
 
 
 def anndata_to_df(
-    adata: AnnData, obs_cols: list[str] | str | None = None, var_cols: list[str] | str | None = None
+    adata: AnnData, layer: str = None, obs_cols: list[str] | str | None = None, var_cols: list[str] | str | None = None
 ) -> pd.DataFrame:
     """Transform an AnnData object to a pandas dataframe.
 
     Args:
         adata: The AnnData object to be transformed into a pandas Dataframe
+        layer: The layer to use for X.
         obs_cols: List of obs columns to add to X.
         var_cols: List of var columns to add to X.
 
     Returns:
         The AnnData object as a pandas Dataframe
     """
-    df = pd.DataFrame(adata.X, columns=list(adata.var_names))
+    if layer is not None:
+        X = adata.layers[layer]
+    else:
+        X = adata.X
+    if issparse(X):
+        X = X.toarray()
+
+    df = pd.DataFrame(X, columns=list(adata.var_names))
     if obs_cols:
         if len(adata.obs.columns) == 0:
             raise ObsEmptyError("Cannot slice columns from empty obs!")
