@@ -38,6 +38,14 @@ Data
     data.mimic_3_demo
     data.diabetes_130
     data.heart_failure
+    data.chronic_kidney_disease
+    data.breast_tissue
+    data.cervical_cancer_risk_factors
+    data.dermatology
+    data.echocardiogram
+    data.hepatitis
+    data.statlog_heart
+    data.thyroid
 
 Preprocessing
 ~~~~~~~~~~~~~

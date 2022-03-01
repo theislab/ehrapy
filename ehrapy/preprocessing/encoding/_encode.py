@@ -98,6 +98,7 @@ def encode(
     else:
         print(f"[b red]Cannot encode object of type {type(data)}. Can only encode AnnData or MuData objects!")
         raise ValueError
+
     return None
 
 
@@ -135,6 +136,7 @@ def undo_encoding(
     else:
         print(f"[b red]Cannot decode object of type {type(data)}. Can only dencode AnnData or MuData objects!")
         raise ValueError
+
     return None
 
 
