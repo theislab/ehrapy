@@ -86,27 +86,40 @@ def _move_columns_to_obs(df: pd.DataFrame, columns_obs_only: list[str] | None) -
     return BaseDataframes(obs, df)
 
 
-def anndata_to_df(adata: AnnData, add_from_obs: list[str] | str | None = None) -> pd.DataFrame:
+def anndata_to_df(
+    adata: AnnData, obs_cols: list[str] | str | None = None, var_cols: list[str] | str | None = None
+) -> pd.DataFrame:
     """Transform an AnnData object to a pandas dataframe.
 
     Args:
         adata: The AnnData object to be transformed into a pandas Dataframe
-        add_from_obs: Either "all" or a list of obs names or None, if no columns should be kept from obs
+        obs_cols: List of obs columns to add to X.
+        var_cols: List of var columns to add to X.
 
     Returns:
         The AnnData object as a pandas Dataframe
     """
     df = pd.DataFrame(adata.X, columns=list(adata.var_names))
-    if add_from_obs:
+    if obs_cols:
         if len(adata.obs.columns) == 0:
             raise ObsEmptyError("Cannot slice columns from empty obs!")
-        if isinstance(add_from_obs, list):
-            obs_slice = adata.obs[add_from_obs]
-        else:
-            obs_slice = adata.obs
+        if isinstance(obs_cols, str):
+            obs_cols = list(obs_cols)
+        if isinstance(obs_cols, list):
+            obs_slice = adata.obs[obs_cols]
         # reset index needed since we slice all or at least some columns from obs DataFrame
         obs_slice = obs_slice.reset_index(drop=True)
         df = pd.concat([df, obs_slice], axis=1)
+    if var_cols:
+        if len(adata.var.columns) == 0:
+            raise VarEmptyError("Cannot slice columns from empty var!")
+        if isinstance(var_cols, str):
+            var_cols = list(var_cols)
+        if isinstance(var_cols, list):
+            var_slice = adata.var[var_cols]
+        # reset index needed since we slice all or at least some columns from var DataFrame
+        var_slice = var_slice.reset_index(drop=True)
+        df = pd.concat([df, var_slice], axis=1)
 
     return df
 
@@ -635,6 +648,10 @@ class ColumnNotFoundError(Exception):
 
 
 class ObsEmptyError(Exception):
+    pass
+
+
+class VarEmptyError(Exception):
     pass
 
 

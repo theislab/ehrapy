@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from anndata import AnnData
+from deep_translator.exceptions import TooManyRequests
 
 from ehrapy.tools.nlp._translators import Translator
 
@@ -57,7 +58,10 @@ class TestTranslator:
 
         self.setup_translator(flavour)
         assert self.translator.flavour == flavour
-        result = self.translator.translate_text("Ich mag Züge.")
+        try:
+            result = self.translator.translate_text("Ich mag Züge.")
+        except TooManyRequests:
+            pytest.skip("Request limit reached")
         assert pd.Series([result]).isin(["I like trains.", "I like moves."]).any()
 
     def test_translate_obs_column(self, flavour):
@@ -68,12 +72,15 @@ class TestTranslator:
             )
 
         self.setup_translator(flavour)
-        self.translator.translate_obs_column(
-            self.test_adata,
-            columns="Krankheit",
-            translate_column_name=True,
-            inplace=True,
-        )
+        try:
+            self.translator.translate_obs_column(
+                self.test_adata,
+                columns="Krankheit",
+                translate_column_name=True,
+                inplace=True,
+            )
+        except TooManyRequests:
+            pytest.skip("Request limit reached")
         assert self.test_adata.obs.columns.str.lower().isin(["disease", "illness", "health"]).any()
         assert self.test_adata.obs.melt()["value"].str.lower().isin(["cancer"]).any()
 
@@ -84,13 +91,16 @@ class TestTranslator:
                 f"Skipping {flavour} translation tests. Require {flavour.upper()}_TOKEN as environment variable"
             )
 
-        self.setup_translator(flavour)
-        self.translator.translate_var_column(
-            self.test_adata,
-            columns="Krankheit",
-            translate_column_name=True,
-            inplace=True,
-        )
+        try:
+            self.setup_translator(flavour)
+            self.translator.translate_var_column(
+                self.test_adata,
+                columns="Krankheit",
+                translate_column_name=True,
+                inplace=True,
+            )
+        except TooManyRequests:
+            pytest.skip("Request limit reached")
         assert self.test_adata.var.columns.str.lower().isin(["disease", "illness", "health"]).any()
         assert self.test_adata.var.melt()["value"].str.lower().isin(["cancer"]).any()
 
@@ -102,11 +112,14 @@ class TestTranslator:
             )
 
         self.setup_translator(flavour)
-        self.translator.translate_X_column(
-            self.test_adata,
-            columns="Krankheit",
-            translate_column_name=True,
-        )
+        try:
+            self.translator.translate_X_column(
+                self.test_adata,
+                columns="Krankheit",
+                translate_column_name=True,
+            )
+        except TooManyRequests:
+            pytest.skip("Request limit reached")
         assert pd.Series(self.test_adata.X[0]).str.lower().isin(["tumor"]).any()
         assert pd.Series(self.test_adata.X[1]).str.lower().isin(["cancer"]).any()
 

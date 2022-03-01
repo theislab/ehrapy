@@ -125,7 +125,7 @@ class TestAnndataExt:
         obs = DataFrame({"col2": col2_val, "col3": col3_val})
         adata_x = np.array([col1_val], dtype="object").transpose()
         adata = AnnData(X=adata_x, obs=obs, var=DataFrame(index=["col1"]), dtype="object")
-        anndata_df = anndata_to_df(adata, add_from_obs="all")
+        anndata_df = anndata_to_df(adata, obs_cols=list(adata.obs.columns))
 
         assert_frame_equal(anndata_df, expected_df)
 
@@ -135,7 +135,7 @@ class TestAnndataExt:
         obs = DataFrame({"col2": col2_val, "col3": col3_val})
         adata_x = np.array([col1_val], dtype="object").transpose()
         adata = AnnData(X=adata_x, obs=obs, var=DataFrame(index=["col1"]), dtype="object")
-        anndata_df = anndata_to_df(adata, add_from_obs=["col3"])
+        anndata_df = anndata_to_df(adata, obs_cols=["col3"])
 
         assert_frame_equal(anndata_df, expected_df)
 
@@ -147,7 +147,17 @@ class TestAnndataExt:
         )
 
         with pytest.raises(ObsEmptyError):
-            _ = anndata_to_df(adata, add_from_obs=["some_missing_column"])
+            _ = anndata_to_df(adata, obs_cols=["some_missing_column"])
+
+    def test_anndata_to_df_all_columns(self):
+        col1_val, col2_val, col3_val = TestAnndataExt._setup_anndata_to_df()
+        expected_df = DataFrame({"col1": col1_val})
+        var = DataFrame(index=["col1"])
+        adata_x = np.array([col1_val], dtype="object").transpose()
+        adata = AnnData(X=adata_x, obs=DataFrame({"col2": col2_val, "col3": col3_val}), var=var, dtype="object")
+        anndata_df = anndata_to_df(adata, obs_cols=list(adata.var.columns))
+
+        assert_frame_equal(anndata_df, expected_df)
 
     def test_detect_binary_columns(self):
         binary_df = TestAnndataExt._setup_binary_df_to_anndata()

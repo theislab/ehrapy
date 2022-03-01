@@ -5,7 +5,7 @@ from rich.console import Console
 from rich.table import Table
 
 
-def qc_metrics(adata: AnnData, extra_columns: list[str] | None = None) -> None:
+def qc_metrics(adata: AnnData, extra_columns: list[str] | None = None) -> None:  # pragma: no cover
     """Plots the calculated quality control metrics for var of adata. Per default this will display the following features:
     ``missing_values_abs``, ``missing_values_pct``, ``mean``, ``median``, ``standard_deviation``, ``max``, ``min``.
 
