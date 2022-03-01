@@ -44,7 +44,9 @@ def df_to_anndata(
     # see: https://stackoverflow.com/questions/25480089/right-way-to-initialize-an-ordereddict-using-its-constructor-such-that-it-retain/25480206
     uns = OrderedDict()
     # store all numerical/non-numerical columns that are not obs only
-    uns["numerical_columns"] = list(dataframes.df.select_dtypes("number").columns)
+    numerical_columns = list(dataframes.df.select_dtypes("number").columns)
+    binary_columns = _detect_binary_columns(df, numerical_columns)
+    uns["numerical_columns"] = list(set(numerical_columns) ^ set(binary_columns))
     uns["non_numerical_columns"] = list(set(dataframes.df.columns) ^ set(uns["numerical_columns"]))
     return AnnData(
         X=X,
@@ -465,6 +467,26 @@ def _update_uns(
         all_moved_non_num_columns = moved_columns_set ^ set(adata.obs.select_dtypes("number").columns)
         all_moved_num_columns = list(moved_columns_set ^ all_moved_non_num_columns)
         return all_moved_num_columns, list(all_moved_non_num_columns), None
+
+
+def _detect_binary_columns(df: pd.DataFrame, numerical_columns: list[str]) -> list[str]:
+    """Detect all columns that contain only 0 and 1 (besides NaNs).
+
+    Args:
+        df: The dataframe to check.
+        numerical_columns: All numerical columns of the dataframe.
+
+    Returns:
+            List of column names that are binary (containing only 0 and 1 (+NaNs))
+    """
+    binary_columns = []
+    for column in numerical_columns:
+        # checking for float and int as well as NaNs (this is safe since checked columns are numericals only)
+        # only columns that contain at least one 0 and one 1 are counted as binary (or 0.0/1.0)
+        if df[column].isin([0.0, 1.0, np.NaN, 0, 1]).all() and df[column].nunique() == 2:
+            binary_columns.append(column)
+
+    return binary_columns
 
 
 def generate_anndata(
