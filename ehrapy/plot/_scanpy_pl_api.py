@@ -2366,7 +2366,7 @@ def rank_features_groups_matrixplot(
     var_names: Optional[Union[Sequence[str], Mapping[str, Sequence[str]]]] = None,
     feature_symbols: Optional[str] = None,
     min_logfoldchange: Optional[float] = None,
-    key: Optional[str] = None,
+    key: Optional[str] = "rank_features_groups",
     show: Optional[bool] = None,
     save: Optional[bool] = None,
     return_fig: Optional[bool] = False,
