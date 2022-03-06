@@ -81,7 +81,7 @@ def mimic_3_demo(
     return mdata
 
 
-def heart_failure(columns_obs_only: dict[str, list[str]] | list[str] | None = None) -> AnnData:
+def heart_failure(encoded: bool = False, columns_obs_only: dict[str, list[str]] | list[str] | None = None) -> AnnData:
     """Loads the heart failure dataset.
 
     More details: http://archive.ics.uci.edu/ml/datasets/Heart+failure+clinical+records
@@ -89,6 +89,7 @@ def heart_failure(columns_obs_only: dict[str, list[str]] | list[str] | None = No
     This dataset only contains numericals and therefore does not need any encoding.
 
     Args:
+        encoded: Whether to return an already encoded object
         columns_obs_only: Columns to include in obs only and not X.
 
     Returns:
@@ -99,7 +100,7 @@ def heart_failure(columns_obs_only: dict[str, list[str]] | list[str] | None = No
 
             import ehrapy as ep
 
-            adata = ep.dt.heart_failure()
+            adata = ep.dt.heart_failure(encode=True)
     """
     adata = read(
         dataset_path=f"{ehrapy_settings.datasetdir}/heart_failure.csv",
@@ -109,6 +110,8 @@ def heart_failure(columns_obs_only: dict[str, list[str]] | list[str] | None = No
         extension="csv",
         index_column="patient_id",
     )
+    if encoded:
+        return encode(adata, autodetect=True)
 
     return adata
 
@@ -151,6 +154,7 @@ def diabetes_130(
 
 
 def chronic_kidney_disease(
+    encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
 ) -> AnnData:  # pragma: no cover
     """Loads the Chronic Kidney Disease dataset
@@ -159,6 +163,7 @@ def chronic_kidney_disease(
     Preprocessing: https://github.com/theislab/ehrapy-datasets/tree/main/chronic_kidney_disease/chronic_kidney_disease.ipynb
 
     Args:
+        encoded: Whether to return an already encoded object
         columns_obs_only: Columns to include in obs only and not X.
 
     Returns:
@@ -169,7 +174,7 @@ def chronic_kidney_disease(
 
             import ehrapy as ep
 
-            adata = ep.data.chronic_kidney_disease()
+            adata = ep.data.chronic_kidney_disease(encode=True)
     """
     adata = read(
         dataset_path=f"{ehrapy_settings.datasetdir}/chronic_kidney_disease_precessed.csv",
@@ -179,11 +184,14 @@ def chronic_kidney_disease(
         extension="csv",
         index_column="Patient_id",
     )
+    if encoded:
+        return encode(adata, autodetect=True)
 
     return adata
 
 
 def breast_tissue(
+    encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
 ) -> AnnData:
     """Loads the Breast Tissue Data Set
@@ -192,6 +200,7 @@ def breast_tissue(
     Preprocessing: https://github.com/theislab/ehrapy-datasets/blob/thyroid_dataset/breast_tissue/breast_tissue.ipynb
 
     Args:
+        encoded: Whether to return an already encoded object
         columns_obs_only: Columns to include in obs only and not X.
 
     Returns:
@@ -202,7 +211,7 @@ def breast_tissue(
 
             import ehrapy as ep
 
-            adata = ep.dt.breast_tissue()
+            adata = ep.dt.breast_tissue(encode=True)
     """
     adata = read(
         dataset_path=f"{ehrapy_settings.datasetdir}/breast_tissue.csv",
@@ -212,11 +221,14 @@ def breast_tissue(
         extension="csv",
         index_column="patient_id",
     )
+    if encoded:
+        return encode(adata, autodetect=True)
 
     return adata
 
 
 def cervical_cancer_risk_factors(
+    encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
 ) -> AnnData:
     """Loads the Cervical cancer (Risk Factors) Data Set
@@ -225,6 +237,7 @@ def cervical_cancer_risk_factors(
     Preprocessing: https://github.com/theislab/ehrapy-datasets/blob/thyroid_dataset/cervical_cancer_risk_factors/cervical_cancer_risk_factors.ipynb
 
     Args:
+        encoded: Whether to return an already encoded object
         columns_obs_only: Columns to include in obs only and not X.
 
     Returns:
@@ -235,7 +248,7 @@ def cervical_cancer_risk_factors(
 
             import ehrapy as ep
 
-            adata = ep.dt.cervical_cancer_risk_factors()
+            adata = ep.dt.cervical_cancer_risk_factors(encode=True)
     """
     adata = read(
         dataset_path=f"{ehrapy_settings.datasetdir}/cervical_cancer_risk_factors.csv",
@@ -245,11 +258,14 @@ def cervical_cancer_risk_factors(
         extension="csv",
         index_column="patient_id",
     )
+    if encoded:
+        return encode(adata, autodetect=True)
 
     return adata
 
 
 def dermatology(
+    encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
 ) -> AnnData:
     """Loads the Dermatology Data Set
@@ -258,6 +274,7 @@ def dermatology(
     Preprocessing: https://github.com/theislab/ehrapy-datasets/blob/thyroid_dataset/dermatology/dermatology.ipynb
 
     Args:
+        encoded: Whether to return an already encoded object
         columns_obs_only: Columns to include in obs only and not X.
 
     Returns:
@@ -268,7 +285,7 @@ def dermatology(
 
             import ehrapy as ep
 
-            adata = ep.dt.dermatology()
+            adata = ep.dt.dermatology(encode=True)
     """
     adata = read(
         dataset_path=f"{ehrapy_settings.datasetdir}/dermatology.csv",
@@ -278,11 +295,14 @@ def dermatology(
         extension="csv",
         index_column="patient_id",
     )
+    if encoded:
+        return encode(adata, autodetect=True)
 
     return adata
 
 
 def echocardiogram(
+    encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
 ) -> AnnData:
     """Loads the Echocardiogram Data Set
@@ -291,6 +311,7 @@ def echocardiogram(
     Preprocessing: https://github.com/theislab/ehrapy-datasets/blob/thyroid_dataset/echocardiogram/echocardiogram.ipynb
 
     Args:
+        encoded: Whether to return an already encoded object
         columns_obs_only: Columns to include in obs only and not X.
 
     Returns:
@@ -301,7 +322,7 @@ def echocardiogram(
 
             import ehrapy as ep
 
-            adata = ep.dt.echocardiogram()
+            adata = ep.dt.echocardiogram(encode=True)
     """
     adata = read(
         dataset_path=f"{ehrapy_settings.datasetdir}/echocardiogram.csv",
@@ -311,11 +332,14 @@ def echocardiogram(
         extension="csv",
         index_column="patient_id",
     )
+    if encoded:
+        return encode(adata, autodetect=True)
 
     return adata
 
 
 def hepatitis(
+    encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
 ) -> AnnData:
     """Loads the Hepatitis Data Set
@@ -324,6 +348,7 @@ def hepatitis(
     Preprocessing: https://github.com/theislab/ehrapy-datasets/blob/thyroid_dataset/hepatitis/hepatitis.ipynb
 
     Args:
+        encoded: Whether to return an already encoded object
         columns_obs_only: Columns to include in obs only and not X.
 
     Returns:
@@ -334,7 +359,7 @@ def hepatitis(
 
             import ehrapy as ep
 
-            adata = ep.dt.hepatitis()
+            adata = ep.dt.hepatitis(encode=True)
     """
     adata = read(
         dataset_path=f"{ehrapy_settings.datasetdir}/hepatitis.csv",
@@ -344,11 +369,14 @@ def hepatitis(
         extension="csv",
         index_column="patient_id",
     )
+    if encoded:
+        return encode(adata, autodetect=True)
 
     return adata
 
 
 def statlog_heart(
+    encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
 ) -> AnnData:
     """Loads the Statlog (Heart) Data Set
@@ -357,6 +385,7 @@ def statlog_heart(
     Preprocessing: https://github.com/theislab/ehrapy-datasets/blob/main/statlog_heart/statlog_heart.ipynb
 
     Args:
+        encoded: Whether to return an already encoded object
         columns_obs_only: Columns to include in obs only and not X.
 
     Returns:
@@ -367,7 +396,7 @@ def statlog_heart(
 
             import ehrapy as ep
 
-            adata = ep.dt.statlog_heart()
+            adata = ep.dt.statlog_heart(encode=True)
     """
     adata = read(
         dataset_path=f"{ehrapy_settings.datasetdir}/statlog_heart.csv",
@@ -377,6 +406,8 @@ def statlog_heart(
         extension="csv",
         index_column="patient_id",
     )
+    if encoded:
+        return encode(adata, autodetect=True)
 
     return adata
 
@@ -402,7 +433,7 @@ def thyroid(
 
             import ehrapy as ep
 
-            adata = ep.dt.thyroid()
+            adata = ep.dt.thyroid(encode=True)
     """
     adata: AnnData = read(
         dataset_path=f"{ehrapy_settings.datasetdir}/thyroid.csv",
