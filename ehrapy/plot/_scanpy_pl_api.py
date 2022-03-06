@@ -100,7 +100,7 @@ def scatter(
             ep.pl.scatter(adata, x='age', y='icu_los_day', color='icu_los_day')
 
     Preview:
-        .. image:: /_images/docstring_previews/scatter.png
+        .. image:: /_static/docstring_previews/scatter.png
     """
     return sc.pl.scatter(
         adata=adata,
@@ -199,7 +199,7 @@ def heatmap(
                 'creatinine_first', 'po2_first', 'pco2_first', 'iv_day_1'], groupby="leiden_0_5")
 
     Preview:
-        .. image:: /_images/docstring_previews/heatmap.png
+        .. image:: /_static/docstring_previews/heatmap.png
     """
     return sc.pl.heatmap(
         adata=adata,
@@ -321,7 +321,7 @@ def dotplot(
                            groupby="leiden_0_5")
 
     Preview:
-        .. image:: /_images/docstring_previews/dotplot.png
+        .. image:: /_static/docstring_previews/dotplot.png
     """
     return sc.pl.dotplot(
         adata=adata,
@@ -408,7 +408,7 @@ def tracksplot(
                 'hour_icu_intime'], groupby="leiden_0_5")
 
     Preview:
-        .. image:: /_images/docstring_previews/tracksplot.png
+        .. image:: /_static/docstring_previews/tracksplot.png
     """
     return sc.pl.tracksplot(
         adata=adata,
@@ -496,7 +496,7 @@ def violin(
             ep.pl.violin(adata, keys=['age'], groupby="leiden_0_5")
 
     Preview:
-        .. image:: /_images/docstring_previews/violin.png
+        .. image:: /_static/docstring_previews/violin.png
     """
     return sc.pl.violin(
         adata=adata,
@@ -613,7 +613,7 @@ def stacked_violin(
                 'hour_icu_intime'], groupby="leiden_0_5")
 
     Preview:
-        .. image:: /_images/docstring_previews/stacked_violin.png
+        .. image:: /_static/docstring_previews/stacked_violin.png
     """
     return sc.pl.stacked_violin(
         adata=adata,
@@ -722,7 +722,7 @@ def matrixplot(
                 'creatinine_first', 'po2_first', 'pco2_first', 'iv_day_1'], groupby="leiden_0_5")
 
     Preview:
-        .. image:: /_images/docstring_previews/matrixplot.png
+        .. image:: /_static/docstring_previews/matrixplot.png
     """
     return sc.pl.matrixplot(
         adata=adata,
@@ -793,7 +793,7 @@ def clustermap(
             ep.pl.clustermap(adata)
 
     Preview:
-        .. image:: /_images/docstring_previews/clustermap.png
+        .. image:: /_static/docstring_previews/clustermap.png
     """
     return sc.pl.clustermap(adata=adata, obs_keys=obs_keys, use_raw=use_raw, show=show, save=save, **kwds)
 
@@ -893,7 +893,7 @@ def dendrogram(
             ep.pl.dendrogram(adata, groupby="leiden_0_5")
 
     Preview:
-        .. image:: /_images/docstring_previews/dendrogram.png
+        .. image:: /_static/docstring_previews/dendrogram.png
     """
     return sc.pl.dendrogram(
         adata=adata,
@@ -948,7 +948,7 @@ def pca(
             ep.pl.dendrogram(adata, groupby="leiden_0_5")
 
     Preview:
-        .. image:: /_images/docstring_previews/pca.png
+        .. image:: /_static/docstring_previews/pca.png
     """
     return sc.pl.pca(
         adata=adata,
@@ -993,7 +993,7 @@ def pca_loadings(
             ep.pl.pca_loadings(adata, components='1,2,3')
 
     Preview:
-        .. image:: /_images/docstring_previews/pca_loadings.png
+        .. image:: /_static/docstring_previews/pca_loadings.png
     """
     return sc.pl.pca_loadings(adata=adata, components=components, include_lowest=include_lowest, show=show, save=save)
 
@@ -1032,7 +1032,7 @@ def pca_variance_ratio(
             ep.pl.pca_variance_ratio(adata, n_pcs=8)
 
     Preview:
-        .. image:: /_images/docstring_previews/pca_variance_ratio.png
+        .. image:: /_static/docstring_previews/pca_variance_ratio.png
     """
     return sc.pl.pca_variance_ratio(adata=adata, n_pcs=n_pcs, log=log, show=show, save=save)
 
@@ -1066,11 +1066,11 @@ def pca_overview(adata: AnnData, **params):  # pragma: no cover
             ep.pl.pca_overview(adata, components='1,2,3', color="service_unit")
 
     Preview:
-        .. image:: /_images/docstring_previews/pca_overview_1.png
+        .. image:: /_static/docstring_previews/pca_overview_1.png
 
-        .. image:: /_images/docstring_previews/pca_overview_2.png
+        .. image:: /_static/docstring_previews/pca_overview_2.png
 
-        .. image:: /_images/docstring_previews/pca_overview_3.png
+        .. image:: /_static/docstring_previews/pca_overview_3.png
     """
     return sc.pl.pca_overview(adata=adata, **params)
 
@@ -1106,20 +1106,20 @@ def tsne(adata, **kwargs) -> Union[Axes, List[Axes], None]:  # pragma: no cover
             ep.tl.tsne(adata)
             ep.pl.tsne(adata)
 
-        .. image:: /_images/docstring_previews/tsne_1.png
+        .. image:: /_static/docstring_previews/tsne_1.png
 
         .. code-block:: python
 
             ep.pl.tsne(adata, color=["day_icu_intime", "service_unit"], wspace=0.5, title=["Day of ICU admission", "Service unit"])
 
-        .. image:: /_images/docstring_previews/tsne_2.png
+        .. image:: /_static/docstring_previews/tsne_2.png
 
         .. code-block:: python
 
             ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
             ep.pl.tsne(adata, color=["leiden_0_5"], title="Leiden 0.5")
 
-        .. image:: /_images/docstring_previews/tsne_3.png
+        .. image:: /_static/docstring_previews/tsne_3.png
     """
     return sc.pl.tsne(adata=adata, **kwargs)
 
@@ -1155,20 +1155,20 @@ def umap(adata, **kwargs) -> Union[Axes, List[Axes], None]:  # pragma: no cover
             ep.tl.umap(adata)
             ep.pl.umap(adata)
 
-        .. image:: /_images/docstring_previews/umap_1.png
+        .. image:: /_static/docstring_previews/umap_1.png
 
         .. code-block:: python
 
             ep.pl.umap(adata, color=["day_icu_intime", "service_unit"], wspace=0.5, title=["Day of ICU admission", "Service unit"])
 
-        .. image:: /_images/docstring_previews/umap_2.png
+        .. image:: /_static/docstring_previews/umap_2.png
 
         .. code-block:: python
 
             ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
             ep.pl.umap(adata, color=["leiden_0_5"], title="Leiden 0.5")
 
-        .. image:: /_images/docstring_previews/umap_3.png
+        .. image:: /_static/docstring_previews/umap_3.png
     """
     return sc.pl.umap(adata=adata, **kwargs)
 
@@ -1203,7 +1203,7 @@ def diffmap(adata, **kwargs) -> Union[Axes, List[Axes], None]:  # pragma: no cov
             ep.pl.diffmap(adata, color='day_icu_intime')
 
     Preview:
-        .. image:: /_images/docstring_previews/diffmap.png
+        .. image:: /_static/docstring_previews/diffmap.png
     """
     return sc.pl.diffmap(adata=adata, **kwargs)
 
@@ -1251,9 +1251,9 @@ def draw_graph(
             ep.pl.draw_graph(adata, color=["leiden_0_5", "icu_exp_flg"], legend_loc="on data")
 
     Preview:
-        .. image:: /_images/docstring_previews/draw_graph_1.png
+        .. image:: /_static/docstring_previews/draw_graph_1.png
 
-        .. image:: /_images/docstring_previews/draw_graph_2.png
+        .. image:: /_static/docstring_previews/draw_graph_2.png
     """
     return sc.pl.draw_graph(adata=adata, layout=layout, **kwargs)
 
@@ -1417,7 +1417,7 @@ def embedding(
             ep.pl.embedding(adata, 'X_umap', color='icu_exp_flg')
 
     Preview:
-        .. image:: /_images/docstring_previews/embedding.png
+        .. image:: /_static/docstring_previews/embedding.png
     """
     return sc.pl.embedding(
         adata=adata,
@@ -1544,7 +1544,7 @@ def embedding_density(
             ep.pl.embedding_density(adata, key='icu_exp_flg')
 
     Preview:
-        .. image:: /_images/docstring_previews/embedding_density.png
+        .. image:: /_static/docstring_previews/embedding_density.png
     """
     return sc.pl.embedding_density(
         adata=adata,
@@ -1604,7 +1604,7 @@ def dpt_groups_pseudotime(
             ep.pl.dpt_groups_pseudotime(adata)
 
     Preview:
-        .. image:: /_images/docstring_previews/dpt_groups_pseudotime.png
+        .. image:: /_static/docstring_previews/dpt_groups_pseudotime.png
     """
     sc.pl.dpt_groups_pseudotime(adata=adata, color_map=color_map, palette=palette, show=show, save=save)
 
@@ -1642,7 +1642,7 @@ def dpt_timeseries(
             ep.pl.dpt_timeseries(adata)
 
     Preview:
-        .. image:: /_images/docstring_previews/dpt_timeseries.png
+        .. image:: /_static/docstring_previews/dpt_timeseries.png
     """
     sc.pl.dpt_timeseries(adata=adata, color_map=color_map, show=show, save=save, as_heatmap=as_heatmap)
 
@@ -1776,7 +1776,7 @@ def paga(
             )
 
     Preview:
-        .. image:: /_images/docstring_previews/paga.png
+        .. image:: /_static/docstring_previews/paga.png
     """
     return sc.pl.paga(
         adata=adata,
@@ -2047,7 +2047,7 @@ def rank_features_groups(
             ep.pl.rank_features_groups(adata, key="rank_features_groups")
 
     Preview:
-        .. image:: /_images/docstring_previews/rank_features_groups.png
+        .. image:: /_static/docstring_previews/rank_features_groups.png
     """
     return sc.pl.rank_genes_groups(
         adata=adata,
@@ -2114,13 +2114,13 @@ def rank_features_groups_violin(
             ep.pl.rank_features_groups_violin(adata, key="rank_features_groups", n_features=5)
 
     Preview:
-        .. image:: /_images/docstring_previews/rank_features_groups_violin_1.png
+        .. image:: /_static/docstring_previews/rank_features_groups_violin_1.png
 
-        .. image:: /_images/docstring_previews/rank_features_groups_violin_2.png
+        .. image:: /_static/docstring_previews/rank_features_groups_violin_2.png
 
-        .. image:: /_images/docstring_previews/rank_features_groups_violin_3.png
+        .. image:: /_static/docstring_previews/rank_features_groups_violin_3.png
 
-        .. image:: /_images/docstring_previews/rank_features_groups_violin_4.png
+        .. image:: /_static/docstring_previews/rank_features_groups_violin_4.png
     """
     return sc.pl.rank_genes_groups_violin(
         adata=adata,
@@ -2192,7 +2192,7 @@ def rank_features_groups_stacked_violin(
             ep.pl.rank_features_groups_stacked_violin(adata, key="rank_features_groups", n_features=5)
 
     Preview:
-        .. image:: /_images/docstring_previews/rank_features_groups_stacked_violin.png
+        .. image:: /_static/docstring_previews/rank_features_groups_stacked_violin.png
     """
     return sc.pl.rank_genes_groups_stacked_violin(
         adata=adata,
@@ -2252,7 +2252,7 @@ def rank_features_groups_heatmap(
             ep.pl.rank_features_groups_heatmap(adata, key="rank_features_groups")
 
     Preview:
-        .. image:: /_images/docstring_previews/rank_features_groups_heatmap.png
+        .. image:: /_static/docstring_previews/rank_features_groups_heatmap.png
     """
     return sc.pl.rank_genes_groups_heatmap(
         adata=adata,
@@ -2329,7 +2329,7 @@ def rank_features_groups_dotplot(
             ep.pl.rank_features_groups_dotplot(adata, key="rank_features_groups", groupby="leiden_0_5")
 
     Preview:
-        .. image:: /_images/docstring_previews/rank_features_groups_dotplot.png
+        .. image:: /_static/docstring_previews/rank_features_groups_dotplot.png
     """
     return sc.pl.rank_genes_groups_dotplot(
         adata=adata,
@@ -2408,7 +2408,7 @@ def rank_features_groups_matrixplot(
             ep.pl.rank_features_groups_matrixplot(adata, key="rank_features_groups", groupby="leiden_0_5")
 
     Preview:
-        .. image:: /_images/docstring_previews/rank_features_groups_matrixplot.png
+        .. image:: /_static/docstring_previews/rank_features_groups_matrixplot.png
 
     """
     return sc.pl.rank_genes_groups_matrixplot(
@@ -2470,7 +2470,7 @@ def rank_features_groups_tracksplot(
             ep.pl.rank_features_groups_tracksplot(adata, key="rank_features_groups")
 
     Preview:
-        .. image:: /_images/docstring_previews/rank_features_groups_tracksplot.png
+        .. image:: /_static/docstring_previews/rank_features_groups_tracksplot.png
     """
     return sc.pl.rank_genes_groups_tracksplot(
         adata=adata,

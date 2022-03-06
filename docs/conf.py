@@ -84,7 +84,7 @@ pygments_style = "sphinx"
 html_css_files = ["custom_cookietemple.css", "sphinx_gallery.css", "nbsphinx.css", "dataframe.css"]
 html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
-html_logo = "_static/ehrapy_logo.png"
+html_logo = "_static/ehrapy_logos/ehrapy_pure.png"
 html_theme_options = {
     "icon_links": [
         {
