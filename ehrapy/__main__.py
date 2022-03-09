@@ -5,7 +5,7 @@ from rich import traceback
 
 
 @click.command()
-@click.version_option()
+@click.version_option(version="0.2.0", message=click.style("ehrapy Version: 0.2.0"))
 def main() -> None:
     """ehrapy."""
 

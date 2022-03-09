@@ -3,7 +3,7 @@ updates:
     - package-ecosystem: github-actions
       directory: "/"
       schedule:
-          interval: daily
+          interval: weekly
       open-pull-requests-limit: 3
       target-branch: development
       labels:
@@ -14,7 +14,7 @@ updates:
     - package-ecosystem: pip
       directory: "/.github/workflows"
       schedule:
-          interval: daily
+          interval: weekly
       open-pull-requests-limit: 3
       target-branch: development
       labels:
@@ -25,7 +25,7 @@ updates:
     - package-ecosystem: pip
       directory: "/docs"
       schedule:
-          interval: daily
+          interval: weekly
       open-pull-requests-limit: 3
       target-branch: development
       labels:
@@ -36,7 +36,7 @@ updates:
     - package-ecosystem: pip
       directory: "/"
       schedule:
-          interval: daily
+          interval: weekly
       open-pull-requests-limit: 3
       target-branch: development
       labels:

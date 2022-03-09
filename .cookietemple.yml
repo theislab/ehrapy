@@ -1,9 +1,9 @@
-cookietemple_version: '1.3.7 # <<COOKIETEMPLE_NO_BUMP>>'
+cookietemple_version: '1.4.0 # <<COOKIETEMPLE_NO_BUMP>>'
 domain: cli
 language: python
 project_slug: ehrapy
 project_slug_no_hyphen: ehrapy
-template_version: '2.0.1 # <<COOKIETEMPLE_NO_BUMP>>'
+template_version: '2.1.0 # <<COOKIETEMPLE_NO_BUMP>>'
 template_handle: cli-python
 github_username: theislab
 creator_github_username: zethson
@@ -15,5 +15,5 @@ full_name: Lukas Heumos
 email: lukas.heumos@posteo.net
 project_name: ehrapy
 project_short_description: Electronic Health Record Analysis with Python.
-version: 0.1.0
+version: 0.2.0
 license: Apache2.0
