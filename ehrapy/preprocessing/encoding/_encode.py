@@ -27,11 +27,16 @@ def encode(
 ) -> AnnData | None:
     """Encode the initial read :class:`~anndata.AnnData` or :class:`~mudata.MuData` object.
 
-    Categorical values could be either passed via parameters or autodetected.
+    Categorical values could be either passed via parameters or are autodetected on the fly.
     The categorical values are also stored in obs and uns (for keeping the original, unencoded values).
     The current encoding modes for each variable are also stored in uns (`var_to_encoding` key).
-    Variable names in var are updated according to the encoding modes used.
-    A variable name starting with `ehrapycat_` indicates an encoded column (or part of it).
+    Variable names in var are updated according to the encoding modes used. A variable name starting with `ehrapycat_`
+    indicates an encoded column (or part of it).
+
+    Autodetect mode:
+        This can be used for convenience and when there are many columns that need to be encoded. Note that missing valus to not influence the result.
+        By using this mode, every column that contains non-numerical values is encoded. In addition, every binary
+        column will be encoded too. These are those columns which contain only 1's and 0's (could be either integers or floats).
 
     Available encodings are:
         1. one_hot_encoding (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.OneHotEncoder.html)
@@ -41,7 +46,7 @@ def encode(
 
     Args:
         data: The initial :class:`~anndata.AnnData` or :class:`~mudata.MuData` object
-        autodetect: Autodetection of categorical values. Also detects binary values such as only 0 and 1 in columns.
+        autodetect: Whether to autodetect categorical values that will be encoded.
         encodings: Only needed if autodetect set to False (or False for some columns in case of a :class:`~mudata.MuData` object).
         A dict containing the encoding mode and categorical name for the respective column (for each AnnData object in case of MuData object).
 

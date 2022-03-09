@@ -2,7 +2,7 @@
 name = "ehrapy"
 version = "0.2.0"  # <<COOKIETEMPLE_FORCE_BUMP>>
 description = "Electronic Health Record Analysis with Python."
-authors = ["Lukas Heumos <lukas.heumos@posteo.net>"]
+authors = ["Lukas Heumos <lukas.heumos@posteo.net>", "Philipp Ehmele <philipp_ehm@protonmail.com>"]
 license = "Apache2.0"
 readme = "README.rst"
 homepage = "https://github.com/theislab/ehrapy"
