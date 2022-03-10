@@ -36,10 +36,11 @@ def df_to_anndata(
     """
     if index_column:
         df = df.set_index(index_column)
+    non_numerical_columns = list(df[columns_obs_only].select_dtypes(exclude="number").columns)
     # move columns from the input dataframe to later obs
     dataframes = _move_columns_to_obs(df, columns_obs_only)
     # if data is numerical only, short-circuit AnnData creation to have float dtype instead of object
-    all_num = all(np.issubdtype(column_dtype, np.number) for column_dtype in dataframes.df.dtypes)
+    all_num = True if not non_numerical_columns else False
     X = dataframes.df.to_numpy(copy=True)
     # initializing an OrderedDict with a non-empty dict might not be intended,
     # see: https://stackoverflow.com/questions/25480089/right-way-to-initialize-an-ordereddict-using-its-constructor-such-that-it-retain/25480206
@@ -49,6 +50,9 @@ def df_to_anndata(
     binary_columns = _detect_binary_columns(df, numerical_columns)
     uns["numerical_columns"] = list(set(numerical_columns) ^ set(binary_columns))
     uns["non_numerical_columns"] = list(set(dataframes.df.columns) ^ set(uns["numerical_columns"]))
+    # cast non numerical obs only columns to category dtype
+    dataframes.obs[non_numerical_columns] = dataframes.obs[non_numerical_columns].astype("category")
+
     return AnnData(
         X=X,
         obs=dataframes.obs,
