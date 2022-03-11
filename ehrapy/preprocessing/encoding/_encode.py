@@ -844,6 +844,13 @@ def _add_categoricals_to_obs(ann_data: AnnData, categorical_names: list[str]) ->
             continue
         elif var_name in categorical_names:
             ann_data.obs[var_name] = ann_data.X[::, idx : idx + 1]
+            # note: this will count binary columns (0 and 1 only) as well
+            # needed for writing to .h5ad files
+            if set(pd.unique(ann_data.obs[var_name])).issubset({False, True, np.NaN}):
+                ann_data.obs[var_name] = ann_data.obs[var_name].astype("bool")
+    # get all non bool object columns and cast the to category dtype
+    object_columns = list(ann_data.obs.select_dtypes(include="object").columns)
+    ann_data.obs[object_columns] = ann_data.obs[object_columns].astype("category")
 
 
 def _add_categoricals_to_uns(ann_data: AnnData, categorical_names: list[str]) -> None:
@@ -862,7 +869,7 @@ def _add_categoricals_to_uns(ann_data: AnnData, categorical_names: list[str]) ->
         if is_initial and var_name in ann_data.uns["original_values_categoricals"]:
             continue
         elif var_name in categorical_names:
-            ann_data.uns["original_values_categoricals"][var_name] = ann_data.X[::, idx : idx + 1]
+            ann_data.uns["original_values_categoricals"][var_name] = ann_data.X[::, idx : idx + 1].astype("str")
 
 
 def _get_mudata_autodetect_options_and_encoding_modes(

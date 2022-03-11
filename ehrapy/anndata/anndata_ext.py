@@ -24,7 +24,8 @@ class BaseDataframes(NamedTuple):
 def df_to_anndata(
     df: pd.DataFrame, columns_obs_only: list[str] | None = None, index_column: str | None = None
 ) -> AnnData:
-    """Transform a given pandas dataframe into an AnnData object.
+    """Transform a given pandas dataframe into an AnnData object. Note that columns containing boolean values (either 0/1 or T(t)rue/F(f)alse)
+    will be stored as boolean columns whereas the other non numerical columns will be stored as categorical values.
 
     Args:
         df: The pandas dataframe to be transformed
@@ -38,20 +39,23 @@ def df_to_anndata(
         df = df.set_index(index_column)
     # move columns from the input dataframe to later obs
     dataframes = _move_columns_to_obs(df, columns_obs_only)
+    numerical_columns = list(dataframes.df.select_dtypes("number").columns)
     # if data is numerical only, short-circuit AnnData creation to have float dtype instead of object
-    all_num = all(np.issubdtype(column_dtype, np.number) for column_dtype in dataframes.df.dtypes)
+    all_num = True if len(numerical_columns) == len(list(dataframes.df.columns)) else False
     X = dataframes.df.to_numpy(copy=True)
+
     # initializing an OrderedDict with a non-empty dict might not be intended,
     # see: https://stackoverflow.com/questions/25480089/right-way-to-initialize-an-ordereddict-using-its-constructor-such-that-it-retain/25480206
     uns = OrderedDict()
     # store all numerical/non-numerical columns that are not obs only
-    numerical_columns = list(dataframes.df.select_dtypes("number").columns)
     binary_columns = _detect_binary_columns(df, numerical_columns)
     uns["numerical_columns"] = list(set(numerical_columns) ^ set(binary_columns))
     uns["non_numerical_columns"] = list(set(dataframes.df.columns) ^ set(uns["numerical_columns"]))
+
+    # cast non numerical obs only columns to category or bool dtype, which is needed for writing to .h5ad files
     return AnnData(
         X=X,
-        obs=dataframes.obs,
+        obs=_cast_obs_columns(dataframes.obs),
         var=pd.DataFrame(index=list(dataframes.df.columns)),
         dtype="float32" if all_num else "object",
         layers={"original": X.copy()},
@@ -134,7 +138,8 @@ def anndata_to_df(
 
 
 def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy: bool = False) -> AnnData:
-    """Move features from X to obs inplace.
+    """Move features from X to obs inplace. Note that columns containing boolean values (either 0/1 or True(true)/False(false))
+    will be stored as boolean columns whereas the other non numerical columns will be stored as category.
 
     Args:
         adata: The AnnData object
@@ -159,7 +164,10 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy: bool = False) -> 
     adata._inplace_subset_var(~indices)
     adata.obs = adata.obs.join(df)
     updated_num_uns, updated_non_num_uns, num_var = _update_uns(adata, to_obs)
+    # cast numerical values from object
     adata.obs[num_var] = adata.obs[num_var].apply(pd.to_numeric, errors="ignore", downcast="float")
+    # cast non numerical values from object to either bool (if possible) or category
+    adata.obs = _cast_obs_columns(adata.obs)
     adata.uns["numerical_columns"] = updated_num_uns
     adata.uns["non_numerical_columns"] = updated_non_num_uns
 
@@ -509,6 +517,26 @@ def _detect_binary_columns(df: pd.DataFrame, numerical_columns: list[str]) -> li
             binary_columns.append(column)
 
     return binary_columns
+
+
+def _cast_obs_columns(obs: pd.DataFrame) -> pd.DataFrame:
+    """Cast non numerical obs columns to either category or bool.
+    Args:
+        obs: Obs of an AnnData object
+
+    Returns:
+        The type casted obs.
+    """
+    # only cast non numerical columns
+    object_columns = list(obs.select_dtypes(exclude=["number", "category", "bool"]).columns)
+    # type cast each non numerical column to either bool (if possible) or category else
+    obs[object_columns] = obs[object_columns].apply(
+        lambda obs_name: obs_name.astype("category")
+        if not set(pd.unique(obs_name)).issubset({False, True, np.NaN})
+        else obs_name.astype("bool"),
+        axis=0,
+    )
+    return obs
 
 
 def generate_anndata(
