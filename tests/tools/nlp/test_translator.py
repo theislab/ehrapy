@@ -17,7 +17,9 @@ microsoft_token: str = os.environ.get("MICROSOFT_TOKEN")
 yandex_token: str = os.environ.get("YANDEX_TOKEN")
 
 
-@pytest.mark.parametrize("flavour", ["deepl", "googletranslate", "libre", "mymemory", "microsoft", "yandex"])
+@pytest.mark.parametrize(
+    "flavour", ["deepl", "googletranslate", "mymemory", "microsoft", "yandex"]
+)  # "libre" temporarily removed
 class TestTranslator:
     def setup_translator(self, flavour):
         target = "en-us" if flavour == "deepl" else "en"
@@ -62,6 +64,8 @@ class TestTranslator:
             result = self.translator.translate_text("Ich mag Züge.")
         except TooManyRequests:
             pytest.skip("Request limit reached")
+        if flavour == "libre":
+            print(result)
         assert pd.Series([result]).isin(["I like trains.", "I like moves."]).any()
 
     def test_translate_obs_column(self, flavour):

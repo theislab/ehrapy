@@ -1,6 +1,6 @@
-Sphinx>=4.0.1
+Sphinx
 pydata-sphinx-theme
-sphinx-automodapi>=0.13
+sphinx-automodapi>
 sphinx-autodoc-annotation
 sphinx_last_updated_by_git
 sphinxcontrib-spelling
@@ -12,5 +12,5 @@ nbsphinx-link
 sphinx-copybutton
 sphinx-tabs
 sphinx-panels
-sphinx_click>=3.0.0
-click>=8.0.1
+sphinx_click
+click
