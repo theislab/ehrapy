@@ -18,12 +18,15 @@ def write(
     compression: Literal["gzip", "lzf"] | None = "gzip",
     compression_opts: int | None = None,
 ) -> None:
-    """Write :class:`~anndata.AnnData` objects to file.
+    """Write :class:`~anndata.AnnData` objects to file. It is possbile to either write an :class:`~anndata.AnnData` object to
+    a .csv file or a .h5ad file.
+    The .h5ad file can be used as a cache to save the current state of the object and to retrieve it faster once needed. This preserves
+    the object state at the time of writing. It is possible to write both, encoded and unencoded objects.
 
     Args:
         filename: File name or path to write the file to
         adata: Annotated data matrix.
-        extension: File extension. One of h5, csv, txt
+        extension: File extension. One of h5ad, csv
         compression: Optional file compression. One of gzip, lzf
         compression_opts: See http://docs.h5py.org/en/latest/high/dataset.html.
 
@@ -45,7 +48,7 @@ def write(
             raise ValueError(
                 "It suffices to provide the file type by "
                 "providing a proper extension to the filename."
-                'One of "txt", "csv", "h5".'
+                'One of "csv", "h5".'
             )
     else:
         key = filename
@@ -54,6 +57,7 @@ def write(
     if extension == "csv":
         adata.write_csvs(filename)
     else:
+        # dummy encoding when there is non numerical data in X
         if not np.issubdtype(adata.X.dtype, np.number) and extension == "h5ad":
             # flag to indicate an Anndata object has been dummy encoded to write it to .h5ad file
             # this could be the case when writing to cache file or when writing an unencoded non numerical AnnData object

@@ -24,7 +24,8 @@ class BaseDataframes(NamedTuple):
 def df_to_anndata(
     df: pd.DataFrame, columns_obs_only: list[str] | None = None, index_column: str | None = None
 ) -> AnnData:
-    """Transform a given pandas dataframe into an AnnData object.
+    """Transform a given pandas dataframe into an AnnData object. Note that columns containing boolean values (either 0/1 or T(t)rue/F(f)alse)
+    will be stored as boolean columns whereas the other non numerical columns will be stored as categorical values.
 
     Args:
         df: The pandas dataframe to be transformed
@@ -137,7 +138,8 @@ def anndata_to_df(
 
 
 def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy: bool = False) -> AnnData:
-    """Move features from X to obs inplace.
+    """Move features from X to obs inplace. Note that columns containing boolean values (either 0/1 or True(true)/False(false))
+    will be stored as boolean columns whereas the other non numerical columns will be stored as category.
 
     Args:
         adata: The AnnData object
@@ -361,7 +363,7 @@ def _sort_by_order_or_none(adata: AnnData, branch, var_names: list[str]):
     for other_vars in var_names:
         if not other_vars.startswith("ehrapycat"):
             idx = var_names_val.index(other_vars)
-            unique_categoricals = pd.unique(adata.X[:, idx: idx + 1].flatten())
+            unique_categoricals = pd.unique(adata.X[:, idx : idx + 1].flatten())
             data_type = pd.api.types.infer_dtype(unique_categoricals)
             branch.add(f"[blue]{other_vars} -> [green]data type: [blue]{data_type}")
 
@@ -374,7 +376,7 @@ def _sort_by_type(adata: AnnData, branch, var_names: list[str], sort_reversed: b
     for other_vars in var_names:
         if not other_vars.startswith("ehrapycat"):
             idx = var_names_val.index(other_vars)
-            unique_categoricals = pd.unique(adata.X[:, idx: idx + 1].flatten())
+            unique_categoricals = pd.unique(adata.X[:, idx : idx + 1].flatten())
             data_type = pd.api.types.infer_dtype(unique_categoricals)
             tmp_dict[other_vars] = data_type
 
@@ -529,8 +531,11 @@ def _cast_obs_columns(obs: pd.DataFrame) -> pd.DataFrame:
     object_columns = list(obs.select_dtypes(exclude=["number", "category", "bool"]).columns)
     # type cast each non numerical column to either bool (if possible) or category else
     obs[object_columns] = obs[object_columns].apply(
-        lambda obs_name: obs_name.astype('category') if not set(pd.unique(obs_name)).issubset(
-            {False, True, np.NaN}) else obs_name.astype('bool'), axis=0)
+        lambda obs_name: obs_name.astype("category")
+        if not set(pd.unique(obs_name)).issubset({False, True, np.NaN})
+        else obs_name.astype("bool"),
+        axis=0,
+    )
     return obs
 
 

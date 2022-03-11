@@ -846,7 +846,7 @@ def _add_categoricals_to_obs(ann_data: AnnData, categorical_names: list[str]) ->
             ann_data.obs[var_name] = ann_data.X[::, idx : idx + 1]
             # note: this will count binary columns (0 and 1 only) as well
             # needed for writing to .h5ad files
-            if set(pd.unique(ann_data.obs[var_name])).issubset({False,True,np.NaN}):
+            if set(pd.unique(ann_data.obs[var_name])).issubset({False, True, np.NaN}):
                 ann_data.obs[var_name] = ann_data.obs[var_name].astype("bool")
     # get all non bool object columns and cast the to category dtype
     object_columns = list(ann_data.obs.select_dtypes(include="object").columns)

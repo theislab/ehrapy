@@ -5,8 +5,8 @@ from pathlib import Path
 from typing import Iterator
 
 import camelot
-import pandas as pd
 import numpy as np
+import pandas as pd
 from _collections import OrderedDict
 from anndata import AnnData
 from anndata import read as read_h5ad

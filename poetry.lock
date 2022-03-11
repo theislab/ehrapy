@@ -181,7 +181,7 @@ python-versions = ">=3.6.0"
 name = "bandit"
 version = "1.7.4"
 description = "Security oriented static analyser for python code."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 
@@ -485,13 +485,13 @@ xxhash = "*"
 apache-beam = ["apache-beam (>=2.26.0)"]
 audio = ["librosa"]
 benchmarks = ["numpy (==1.18.5)", "tensorflow (==2.3.0)", "torch (==1.6.0)", "transformers (==3.0.2)"]
-dev = ["absl-py", "pytest", "pytest-datadir", "pytest-xdist", "apache-beam (>=2.26.0)", "elasticsearch", "aiobotocore", "boto3", "botocore", "fsspec", "moto[s3,server] (==2.0.4)", "rarfile (>=4.0)", "s3fs (==2021.08.1)", "tensorflow (>=2.3)", "torch", "torchaudio", "transformers", "bs4", "conllu", "langdetect", "lxml", "mwparserfromhell", "nltk", "openpyxl", "py7zr", "tldextract", "zstandard", "bert-score (>=0.3.6)", "rouge-score", "sacrebleu", "scipy", "seqeval", "scikit-learn", "jiwer", "sentencepiece", "toml (>=0.10.1)", "requests-file (>=1.5.1)", "tldextract (>=3.1.0)", "texttable (>=1.6.3)", "Werkzeug (>=1.0.1)", "six (>=1.15.0,<1.16.0)", "black (==21.4b0)", "flake8 (==3.7.9)", "isort", "pyyaml (>=5.3.1)", "importlib-resources"]
+dev = ["absl-py", "pytest", "pytest-datadir", "pytest-xdist", "apache-beam (>=2.26.0)", "elasticsearch", "aiobotocore", "boto3", "botocore", "fsspec", "moto[server,s3] (==2.0.4)", "rarfile (>=4.0)", "s3fs (==2021.08.1)", "tensorflow (>=2.3)", "torch", "torchaudio", "transformers", "bs4", "conllu", "langdetect", "lxml", "mwparserfromhell", "nltk", "openpyxl", "py7zr", "tldextract", "zstandard", "bert-score (>=0.3.6)", "rouge-score", "sacrebleu", "scipy", "seqeval", "scikit-learn", "jiwer", "sentencepiece", "toml (>=0.10.1)", "requests-file (>=1.5.1)", "tldextract (>=3.1.0)", "texttable (>=1.6.3)", "Werkzeug (>=1.0.1)", "six (>=1.15.0,<1.16.0)", "black (==21.4b0)", "flake8 (==3.7.9)", "isort", "pyyaml (>=5.3.1)", "importlib-resources"]
 docs = ["docutils (==0.16.0)", "recommonmark", "sphinx (==3.1.2)", "sphinx-markdown-tables", "sphinx-rtd-theme (==0.4.3)", "sphinxext-opengraph (==0.4.1)", "sphinx-copybutton", "fsspec (<2021.9.0)", "s3fs", "sphinx-panels", "sphinx-inline-tabs", "myst-parser"]
 quality = ["black (==21.4b0)", "flake8 (==3.7.9)", "isort", "pyyaml (>=5.3.1)"]
 s3 = ["fsspec", "boto3", "botocore", "s3fs"]
 tensorflow = ["tensorflow (>=2.2.0)"]
 tensorflow_gpu = ["tensorflow-gpu (>=2.2.0)"]
-tests = ["absl-py", "pytest", "pytest-datadir", "pytest-xdist", "apache-beam (>=2.26.0)", "elasticsearch", "aiobotocore", "boto3", "botocore", "fsspec", "moto[s3,server] (==2.0.4)", "rarfile (>=4.0)", "s3fs (==2021.08.1)", "tensorflow (>=2.3)", "torch", "torchaudio", "transformers", "bs4", "conllu", "langdetect", "lxml", "mwparserfromhell", "nltk", "openpyxl", "py7zr", "tldextract", "zstandard", "bert-score (>=0.3.6)", "rouge-score", "sacrebleu", "scipy", "seqeval", "scikit-learn", "jiwer", "sentencepiece", "toml (>=0.10.1)", "requests-file (>=1.5.1)", "tldextract (>=3.1.0)", "texttable (>=1.6.3)", "Werkzeug (>=1.0.1)", "six (>=1.15.0,<1.16.0)", "importlib-resources"]
+tests = ["absl-py", "pytest", "pytest-datadir", "pytest-xdist", "apache-beam (>=2.26.0)", "elasticsearch", "aiobotocore", "boto3", "botocore", "fsspec", "moto[server,s3] (==2.0.4)", "rarfile (>=4.0)", "s3fs (==2021.08.1)", "tensorflow (>=2.3)", "torch", "torchaudio", "transformers", "bs4", "conllu", "langdetect", "lxml", "mwparserfromhell", "nltk", "openpyxl", "py7zr", "tldextract", "zstandard", "bert-score (>=0.3.6)", "rouge-score", "sacrebleu", "scipy", "seqeval", "scikit-learn", "jiwer", "sentencepiece", "toml (>=0.10.1)", "requests-file (>=1.5.1)", "tldextract (>=3.1.0)", "texttable (>=1.6.3)", "Werkzeug (>=1.0.1)", "six (>=1.15.0,<1.16.0)", "importlib-resources"]
 torch = ["torch"]
 
 [[package]]
@@ -654,7 +654,7 @@ testing = ["covdefaults (>=1.2.0)", "coverage (>=4)", "pytest (>=4)", "pytest-co
 name = "flake8"
 version = "4.0.1"
 description = "the modular source code checker: pep8 pyflakes and co"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 
@@ -665,14 +665,14 @@ pyflakes = ">=2.4.0,<2.5.0"
 
 [[package]]
 name = "flake8-bandit"
-version = "2.1.2"
+version = "3.0.0"
 description = "Automated security testing with bandit and flake8."
-category = "dev"
+category = "main"
 optional = false
-python-versions = "*"
+python-versions = ">=3.6"
 
 [package.dependencies]
-bandit = "*"
+bandit = ">=1.7.3"
 flake8 = "*"
 flake8-polyfill = "*"
 pycodestyle = "*"
@@ -708,7 +708,7 @@ pydocstyle = ">=2.1"
 name = "flake8-polyfill"
 version = "1.0.2"
 description = "Polyfill package for Flake8 plugins"
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
 
@@ -822,7 +822,7 @@ python-versions = "*"
 name = "gitdb"
 version = "4.0.9"
 description = "Git Object Database"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 
@@ -833,7 +833,7 @@ smmap = ">=3.0.1,<6"
 name = "gitpython"
 version = "3.1.27"
 description = "GitPython is a python library used to interact with Git repositories"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 
@@ -1264,7 +1264,7 @@ traitlets = "*"
 name = "mccabe"
 version = "0.6.1"
 description = "McCabe checker, plugin for flake8"
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
 
@@ -1716,7 +1716,7 @@ test = ["pytest", "pytest-cov", "scipy"]
 name = "pbr"
 version = "5.8.1"
 description = "Python Build Reasonableness"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=2.6"
 
@@ -1974,7 +1974,7 @@ pybtex = ">=0.16"
 name = "pycodestyle"
 version = "2.8.0"
 description = "Python style guide checker"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
@@ -2046,7 +2046,7 @@ python-versions = ">=3.5"
 name = "pyflakes"
 version = "2.4.0"
 description = "passive checker of Python programs"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
@@ -2520,7 +2520,7 @@ webhdfs = ["requests"]
 name = "smmap"
 version = "5.0.0"
 description = "A pure Python implementation of a sliding window memory map manager"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 
@@ -2903,7 +2903,7 @@ develop = ["sphinx"]
 name = "stevedore"
 version = "3.5.0"
 description = "Manage dynamic plugins for Python applications"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 
@@ -3390,7 +3390,7 @@ scikit-learn-intelex = ["scikit-learn-intelex"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8.0,<4"
-content-hash = "fdbbbaf39f079964d179f318b69de7891f72d3284063b40c71c3619db34ebc2c"
+content-hash = "797cc1c5264bbcdd0695afbcfd30a6ec402fe5d75aaccd821eedcaeda6f6372d"
 
 [metadata.files]
 aiofiles = [
@@ -3873,7 +3873,8 @@ flake8 = [
     {file = "flake8-4.0.1.tar.gz", hash = "sha256:806e034dda44114815e23c16ef92f95c91e4c71100ff52813adf7132a6ad870d"},
 ]
 flake8-bandit = [
-    {file = "flake8_bandit-2.1.2.tar.gz", hash = "sha256:687fc8da2e4a239b206af2e54a90093572a60d0954f3054e23690739b0b0de3b"},
+    {file = "flake8_bandit-3.0.0-py2.py3-none-any.whl", hash = "sha256:61b617f4f7cdaa0e2b1e6bf7b68afb2b619a227bb3e3ae00dd36c213bd17900a"},
+    {file = "flake8_bandit-3.0.0.tar.gz", hash = "sha256:54d19427e6a8d50322a7b02e1841c0a7c22d856975f3459803320e0e18e2d6a1"},
 ]
 flake8-bugbear = [
     {file = "flake8-bugbear-22.1.11.tar.gz", hash = "sha256:4c2a4136bd4ecb8bf02d5159af302ffc067642784c9d0488b33ce4610da825ee"},
