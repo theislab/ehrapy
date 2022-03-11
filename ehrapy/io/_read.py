@@ -569,6 +569,7 @@ def _decode_cached_adata(adata: AnnData, column_obs_only: list[str]) -> AnnData:
     numerical_columns = adata.uns["numerical_columns"]
     adata.uns = OrderedDict()
     adata.uns["numerical_columns"] = numerical_columns
+    adata.uns["non_numerical_columns"] = list(set(adata.var_names) ^ set(numerical_columns))
 
     return adata
 

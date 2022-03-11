@@ -36,13 +36,13 @@ def df_to_anndata(
     """
     if index_column:
         df = df.set_index(index_column)
-    non_numerical_columns = list(df[columns_obs_only].select_dtypes(exclude="number").columns)
     # move columns from the input dataframe to later obs
     dataframes = _move_columns_to_obs(df, columns_obs_only)
     numerical_columns = list(dataframes.df.select_dtypes("number").columns)
     # if data is numerical only, short-circuit AnnData creation to have float dtype instead of object
     all_num = True if len(numerical_columns) == len(list(dataframes.df.columns)) else False
     X = dataframes.df.to_numpy(copy=True)
+
     # initializing an OrderedDict with a non-empty dict might not be intended,
     # see: https://stackoverflow.com/questions/25480089/right-way-to-initialize-an-ordereddict-using-its-constructor-such-that-it-retain/25480206
     uns = OrderedDict()
@@ -50,12 +50,11 @@ def df_to_anndata(
     binary_columns = _detect_binary_columns(df, numerical_columns)
     uns["numerical_columns"] = list(set(numerical_columns) ^ set(binary_columns))
     uns["non_numerical_columns"] = list(set(dataframes.df.columns) ^ set(uns["numerical_columns"]))
-    # cast non numerical obs only columns to category dtype
-    dataframes.obs[non_numerical_columns] = dataframes.obs[non_numerical_columns].astype("category")
 
+    # cast non numerical obs only columns to category or bool dtype, which is needed for writing to .h5ad files
     return AnnData(
         X=X,
-        obs=dataframes.obs,
+        obs=_cast_obs_columns(dataframes.obs),
         var=pd.DataFrame(index=list(dataframes.df.columns)),
         dtype="float32" if all_num else "object",
         layers={"original": X.copy()},
@@ -359,7 +358,7 @@ def _sort_by_order_or_none(adata: AnnData, branch, var_names: list[str]):
     for other_vars in var_names:
         if not other_vars.startswith("ehrapycat"):
             idx = var_names_val.index(other_vars)
-            unique_categoricals = pd.unique(adata.X[:, idx : idx + 1].flatten())
+            unique_categoricals = pd.unique(adata.X[:, idx: idx + 1].flatten())
             data_type = pd.api.types.infer_dtype(unique_categoricals)
             branch.add(f"[blue]{other_vars} -> [green]data type: [blue]{data_type}")
 
@@ -372,7 +371,7 @@ def _sort_by_type(adata: AnnData, branch, var_names: list[str], sort_reversed: b
     for other_vars in var_names:
         if not other_vars.startswith("ehrapycat"):
             idx = var_names_val.index(other_vars)
-            unique_categoricals = pd.unique(adata.X[:, idx : idx + 1].flatten())
+            unique_categoricals = pd.unique(adata.X[:, idx: idx + 1].flatten())
             data_type = pd.api.types.infer_dtype(unique_categoricals)
             tmp_dict[other_vars] = data_type
 
@@ -513,6 +512,23 @@ def _detect_binary_columns(df: pd.DataFrame, numerical_columns: list[str]) -> li
             binary_columns.append(column)
 
     return binary_columns
+
+
+def _cast_obs_columns(obs: pd.DataFrame) -> pd.DataFrame:
+    """Cast non numerical obs columns to either category or bool.
+    Args:
+        obs: Obs of an AnnData object
+
+    Returns:
+        The type casted obs.
+    """
+    # only cast non numerical columns
+    non_numerical_columns = list(obs.select_dtypes(exclude="number").columns)
+    # type cast each non numerical column to either bool (if possible) or category else
+    obs[non_numerical_columns] = obs[non_numerical_columns].apply(
+        lambda obs_name: obs_name.astype('category') if not set(pd.unique(obs_name)).issubset(
+            {False, True, np.NaN}) and not obs_name.dtype == "category" else obs_name.astype('bool'), axis=0)
+    return obs
 
 
 def generate_anndata(
