@@ -8,6 +8,7 @@ from anndata import AnnData
 
 from ehrapy import settings
 from ehrapy.io._utility_io import _get_file_extension
+from ehrapy.preprocessing.encoding._encode import encode
 
 
 def write(
@@ -54,11 +55,16 @@ def write(
         adata.write_csvs(filename)
     else:
         if not np.issubdtype(adata.X.dtype, np.number) and extension == "h5ad":
-            raise ValueError(
-                "Cannot write AnnData object containing non-numerical values to .h5ad file. Please "
-                "encode your AnnData object before writing!"
-            )
-        adata.write(filename, compression=compression, compression_opts=compression_opts)
+            # flag to indicate an Anndata object has been dummy encoded to write it to .h5ad file
+            # this could be the case when writing to cache file or when writing an unencoded non numerical AnnData object
+            adata_cp = adata.copy()
+            adata_cp.uns["ehrapy_dummy_encoding"] = True
+            adata_cp.uns["columns_obs_only"] = list(adata_cp.obs.columns)
+            # TODO: THIS SHOULD BE FIXED WITH PR #348, SO NO COPY SHOULD BE NEEDED THEN SINCE THE ORIGINAL WILL NOT BE MUTATED
+            encoded_adata_cp = encode(adata_cp, autodetect=True)
+            encoded_adata_cp.write(filename, compression=compression, compression_opts=compression_opts)
+        else:
+            adata.write(filename, compression=compression, compression_opts=compression_opts)
 
 
 def _get_filename_from_key(key, extension=None) -> Path:

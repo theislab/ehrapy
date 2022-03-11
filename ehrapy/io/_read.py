@@ -152,7 +152,14 @@ def _read(
             extension = _get_file_extension(filename)
         # read hdf5 files
         if extension in {"h5", "h5ad"}:
-            return read_h5ad(filename)
+            adata = read_h5ad(filename)
+            if "ehrapy_dummy_encoding" in adata.uns.keys():
+                # if dummy encoding was needed, the original dtype of X could not be numerical, so cast it to object
+                adata.X = adata.X.astype("object")
+                decoded_adata = _decode_cached_adata(adata, list(adata.uns["columns_obs_only"]))
+                return decoded_adata
+            else:
+                return adata
 
         # read from cache file
         path_cache = settings.cachedir / _slugify(filename).replace("." + extension, ".h5ad")  # type: Path
@@ -503,6 +510,7 @@ def _write_cache(
     # temporary key that stores all column names that are obs only for this AnnData object
     cached_adata.uns["cache_temp_obs_only"] = columns_obs_only
     cached_adata.write(path_cache)
+    # preserve original dtype of X (either numerical or object)
     cached_adata.X = cached_adata.X.astype(original_x_dtype)
     cached_adata = _decode_cached_adata(cached_adata, columns_obs_only)
     return cached_adata
