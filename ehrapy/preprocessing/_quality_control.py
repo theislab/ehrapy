@@ -162,3 +162,54 @@ def _var_qc_metrics(adata: AnnData, layer: str = None) -> pd.DataFrame:
         var_metrics["max"] = np.nan
 
     return var_metrics
+
+
+def qc_lab_measurements(
+    adata: AnnData,
+    overwrites: dict[str, tuple[int, int]] = None,
+    layer: str = None,
+    age_col: str = "age",
+    sex_col: str = "sex",
+    ethnicity_col: str = "race",
+) -> pd.DataFrame:
+    """Examines lab measurements for reference ranges and outliers.
+
+    Source:
+        The used reference values were obtained from https://accessmedicine.mhmedical.com/content.aspx?bookid=1069&sectionid=60775149 .
+        This table is compiled from data in the following sources:
+
+        * Tietz NW, ed. Clinical Guide to Laboratory Tests. 3rd ed. Philadelphia: WB Saunders Co; 1995;
+        * Laposata M. SI Unit Conversion Guide. Boston: NEJM Books; 1992;
+        * American Medical Association Manual of Style: A Guide for Authors and Editors. 9th ed. Chicago: AMA; 1998:486–503. Copyright 1998, American Medical Association;
+        * Jacobs DS, DeMott WR, Oxley DK, eds. Jacobs & DeMott Laboratory Test Handbook With Key Word Index. 5th ed. Hudson, OH: Lexi-Comp Inc; 2001;
+        * Henry JB, ed. Clinical Diagnosis and Management by Laboratory Methods. 20th ed. Philadelphia: WB Saunders Co; 2001;
+        * Kratz A, et al. Laboratory reference values. N Engl J Med. 2006;351:1548–1563; 7) Burtis CA, ed. Tietz Textbook of Clinical Chemistry and Molecular Diagnostics. 5th ed. St. Louis: Elsevier; 2012.
+
+        This version of the table of reference ranges was reviewed and updated by Jessica Franco-Colon, PhD, and Kay Brooks.
+
+    Limitations:
+        * Reference ranges differ between continents, countries and even laboratories (https://informatics.bmj.com/content/28/1/e100419).
+          The default values used here are only one of many options.
+        * Ensure that the values used as input are provided with the correct units. We recommend the usage of SI values.
+        * The reference values pertain to adults. Many of the reference ranges need to be adapted for children.
+        * By default if no gender is provided and no unisex values are available, we use the **male** reference ranges.
+        * The used reference ranges may be biased for ethnicity. Please examine the primary sources if required.
+
+    Args:
+        adata: Annotated data matrix.
+        layer: Layer containing the matrix to calculate the metrics for.
+        age_col: Column containing age values.
+        sex_col: Column containing sex values.
+        ethnicity_col: Column containing ethnicity values.
+
+    Returns:
+        A Pandas DataFrame denoting for every observation which values were in or not in the reference ranges.
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy as ep
+
+            adata = ep.dt.mimic_2(encode=True)
+            ep.pp.lab_measurements_qc(adata)
+    """

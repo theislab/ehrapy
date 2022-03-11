@@ -70,6 +70,7 @@ Quality control
     :toctree: preprocessing
 
     preprocessing.qc_metrics
+    preprocessing.qc_lab_measurements
 
 Imputation
 ++++++++++
