@@ -162,7 +162,10 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy: bool = False) -> 
     adata._inplace_subset_var(~indices)
     adata.obs = adata.obs.join(df)
     updated_num_uns, updated_non_num_uns, num_var = _update_uns(adata, to_obs)
+    # cast numerical values from object
     adata.obs[num_var] = adata.obs[num_var].apply(pd.to_numeric, errors="ignore", downcast="float")
+    # cast non numerical values from object to either bool (if possible) or category
+    adata.obs = _cast_obs_columns(adata.obs)
     adata.uns["numerical_columns"] = updated_num_uns
     adata.uns["non_numerical_columns"] = updated_non_num_uns
 
@@ -523,11 +526,11 @@ def _cast_obs_columns(obs: pd.DataFrame) -> pd.DataFrame:
         The type casted obs.
     """
     # only cast non numerical columns
-    non_numerical_columns = list(obs.select_dtypes(exclude="number").columns)
+    object_columns = list(obs.select_dtypes(exclude=["number", "category", "bool"]).columns)
     # type cast each non numerical column to either bool (if possible) or category else
-    obs[non_numerical_columns] = obs[non_numerical_columns].apply(
+    obs[object_columns] = obs[object_columns].apply(
         lambda obs_name: obs_name.astype('category') if not set(pd.unique(obs_name)).issubset(
-            {False, True, np.NaN}) and not obs_name.dtype == "category" else obs_name.astype('bool'), axis=0)
+            {False, True, np.NaN}) else obs_name.astype('bool'), axis=0)
     return obs
 
 
