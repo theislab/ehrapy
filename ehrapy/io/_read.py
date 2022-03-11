@@ -6,6 +6,7 @@ from typing import Iterator
 
 import camelot
 import pandas as pd
+import numpy as np
 from _collections import OrderedDict
 from anndata import AnnData
 from anndata import read as read_h5ad
@@ -445,8 +446,9 @@ def _read_from_cache_dir(cache_dir: Path) -> dict[str, AnnData]:
 def _read_from_cache(path_cache: Path) -> AnnData:
     """Read AnnData object from cached file."""
     cached_adata = read_h5ad(path_cache)
-    # type cast required; otherwise all values in X would be treated as strings
-    cached_adata.X = cached_adata.X.astype("object")
+    # type cast required when dealing with non numerical data; otherwise all values in X would be treated as strings
+    if not np.issubdtype(cached_adata.X.dtype, np.number):
+        cached_adata.X = cached_adata.X.astype("object")
     try:
         columns_obs_only = list(cached_adata.uns["cache_temp_obs_only"])
         del cached_adata.uns["cache_temp_obs_only"]
@@ -493,11 +495,15 @@ def _write_cache(
     columns_obs_only: list[str] | None,
 ) -> AnnData:
     """Write AnnData object to cache"""
-    cached_adata = encode(data=raw_anndata, autodetect=True)
+    original_x_dtype = raw_anndata.X.dtype
+    if not np.issubdtype(original_x_dtype, np.number):
+        cached_adata = encode(data=raw_anndata, autodetect=True)
+    else:
+        cached_adata = raw_anndata
     # temporary key that stores all column names that are obs only for this AnnData object
     cached_adata.uns["cache_temp_obs_only"] = columns_obs_only
     cached_adata.write(path_cache)
-    cached_adata.X = cached_adata.X.astype("object")
+    cached_adata.X = cached_adata.X.astype(original_x_dtype)
     cached_adata = _decode_cached_adata(cached_adata, columns_obs_only)
     return cached_adata
 
