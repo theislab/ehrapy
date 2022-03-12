@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import pandas as pd
 import pytest
 
 from ehrapy.io._read import read
@@ -41,6 +42,19 @@ class TestEncode:
             "clinic_day": "label_encoding",
         }
         assert id(encoded_ann_data.X) != id(encoded_ann_data.layers["original"])
+        assert adata is not None and adata.X is not None and adata.obs is not None and adata.uns is not None
+        assert id(encoded_ann_data) != id(adata)
+        assert id(encoded_ann_data.obs) != id(adata.obs)
+        assert id(encoded_ann_data.uns) != id(adata.uns)
+        assert id(encoded_ann_data.var) != id(adata.var)
+        assert all(column in set(encoded_ann_data.obs.columns) for column in ["survival", "clinic_day"])
+        assert not any(column in set(adata.obs.columns) for column in ["survival", "clinic_day"])
+        assert all(column in set(adata.uns["non_numerical_columns"]) for column in ["survival", "clinic_day"])
+        assert not any(
+            column in set(encoded_ann_data.uns["non_numerical_columns"]) for column in ["survival", "clinic_day"]
+        )
+        assert pd.api.types.is_bool_dtype(encoded_ann_data.obs["survival"].dtype)
+        assert pd.api.types.is_categorical_dtype(encoded_ann_data.obs["clinic_day"].dtype)
 
     def test_autodetect_num_only(self, capfd):
         adata = read(dataset_path=f"{_TEST_PATH}/dataset2.csv")
@@ -65,6 +79,19 @@ class TestEncode:
             "clinic_day": "count_encoding",
         }
         assert id(encoded_ann_data.X) != id(encoded_ann_data.layers["original"])
+        assert adata is not None and adata.X is not None and adata.obs is not None and adata.uns is not None
+        assert id(encoded_ann_data) != id(adata)
+        assert id(encoded_ann_data.obs) != id(adata.obs)
+        assert id(encoded_ann_data.uns) != id(adata.uns)
+        assert id(encoded_ann_data.var) != id(adata.var)
+        assert all(column in set(encoded_ann_data.obs.columns) for column in ["survival", "clinic_day"])
+        assert not any(column in set(adata.obs.columns) for column in ["survival", "clinic_day"])
+        assert all(column in set(adata.uns["non_numerical_columns"]) for column in ["survival", "clinic_day"])
+        assert not any(
+            column in set(encoded_ann_data.uns["non_numerical_columns"]) for column in ["survival", "clinic_day"]
+        )
+        assert pd.api.types.is_bool_dtype(encoded_ann_data.obs["survival"].dtype)
+        assert pd.api.types.is_categorical_dtype(encoded_ann_data.obs["clinic_day"].dtype)
 
     def test_autodetect_encode_again(self):
         adata = read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
@@ -96,6 +123,19 @@ class TestEncode:
             "clinic_day": "one_hot_encoding",
         }
         assert id(encoded_ann_data.X) != id(encoded_ann_data.layers["original"])
+        assert adata is not None and adata.X is not None and adata.obs is not None and adata.uns is not None
+        assert id(encoded_ann_data) != id(adata)
+        assert id(encoded_ann_data.obs) != id(adata.obs)
+        assert id(encoded_ann_data.uns) != id(adata.uns)
+        assert id(encoded_ann_data.var) != id(adata.var)
+        assert all(column in set(encoded_ann_data.obs.columns) for column in ["survival", "clinic_day"])
+        assert not any(column in set(adata.obs.columns) for column in ["survival", "clinic_day"])
+        assert all(column in set(adata.uns["non_numerical_columns"]) for column in ["survival", "clinic_day"])
+        assert not any(
+            column in set(encoded_ann_data.uns["non_numerical_columns"]) for column in ["survival", "clinic_day"]
+        )
+        assert pd.api.types.is_bool_dtype(encoded_ann_data.obs["survival"].dtype)
+        assert pd.api.types.is_categorical_dtype(encoded_ann_data.obs["clinic_day"].dtype)
 
     def test_custom_encode_again_single_columns_encoding(self):
         adata = read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
@@ -125,6 +165,8 @@ class TestEncode:
             "clinic_day": "label_encoding",
         }
         assert id(encoded_ann_data_again.X) != id(encoded_ann_data_again.layers["original"])
+        assert pd.api.types.is_bool_dtype(encoded_ann_data.obs["survival"].dtype)
+        assert pd.api.types.is_categorical_dtype(encoded_ann_data.obs["clinic_day"].dtype)
 
     def test_custom_encode_again_multiple_columns_encoding(self):
         adata = read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
@@ -156,6 +198,8 @@ class TestEncode:
             "clinic_day": "count_encoding",
         }
         assert id(encoded_ann_data_again.X) != id(encoded_ann_data_again.layers["original"])
+        assert pd.api.types.is_bool_dtype(encoded_ann_data.obs["survival"].dtype)
+        assert pd.api.types.is_categorical_dtype(encoded_ann_data.obs["clinic_day"].dtype)
 
     def test_update_encoding_scheme_1(self):
         # just a dummy adata object that won't be used actually

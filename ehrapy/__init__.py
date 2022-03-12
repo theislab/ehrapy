@@ -13,7 +13,7 @@ ehrapy_pypi_latest.check_latest()
 traceback.install(width=200, word_wrap=True)
 
 from ehrapy._settings import EhrapyConfig, ehrapy_settings
-from ehrapy._util import print_versions
+from ehrapy.core.meta_information import print_versions
 
 settings: EhrapyConfig = ehrapy_settings
 

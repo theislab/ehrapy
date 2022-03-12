@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-import importlib
 import sys
 from contextlib import closing
 from datetime import datetime
 from io import StringIO
-from subprocess import PIPE, Popen
 
 from IPython.utils.io import Tee
 from rich import print
@@ -64,7 +62,7 @@ def print_header(*, file=None):  # pragma: no cover
     """
     _DEPENDENCIES_NUMERICS = [
         "scanpy",
-        "anndata",  # anndata actually shouldn't, but as long as it's in development
+        "anndata",
         "umap",
         "numpy",
         "scipy",
@@ -82,35 +80,3 @@ def print_header(*, file=None):  # pragma: no cover
         " ".join(f"{mod}=={ver}" for mod, ver in _versions_dependencies(modules)),
         file=file or sys.stdout,
     )
-
-
-def check_module_importable(package: str) -> bool:  # pragma: no cover
-    """Checks whether a module is installed and can be loaded.
-
-    Args:
-        package: The package to check.
-
-    Returns:
-        True if the package is installed, false elsewise
-    """
-    module_information = importlib.util.find_spec(package)
-    module_available = module_information is not None
-
-    return module_available
-
-
-def shell_command_accessible(command: list[str]) -> bool:  # pragma: no cover
-    """Checks whether the provided command is accessible in the current shell.
-
-    Args:
-        command: The command to check. Spaces are separated as list elements.
-
-    Returns:
-        True if the command is accessible, false otherwise.
-    """
-    command_accessible = Popen(command, stdout=PIPE, stderr=PIPE, universal_newlines=True, shell=True)
-    (commmand_stdout, command_stderr) = command_accessible.communicate()
-    if command_accessible.returncode != 0:
-        return False
-
-    return True

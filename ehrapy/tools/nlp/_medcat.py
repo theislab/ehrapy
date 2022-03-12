@@ -20,7 +20,7 @@ from spacy import displacy
 from spacy.tokens.doc import Doc
 
 from ehrapy import settings
-from ehrapy._util import check_module_importable
+from ehrapy.core.tool_available import check_module_importable
 
 spacy_models_modules: list[str] = list(map(lambda model: model.replace("-", "_"), ["en-core-web-md"]))
 for model in spacy_models_modules:

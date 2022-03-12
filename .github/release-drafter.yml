@@ -1,5 +1,8 @@
 name-template: "0.2.0 🌈" # <<COOKIETEMPLE_FORCE_BUMP>>
 tag-template: 0.2.0 # <<COOKIETEMPLE_FORCE_BUMP>>
+exclude-labels:
+    - "skip-changelog"
+
 categories:
     - title: "🚀 Features"
       labels:

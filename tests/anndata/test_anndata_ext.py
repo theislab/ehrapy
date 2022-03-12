@@ -44,13 +44,13 @@ class TestAnndataExt:
         adata = ep.io.read(CUR_DIR / "../io/test_data_io/dataset4.csv")
         move_to_obs(adata, ["name", "clinic_id"])
         assert set(adata.obs.columns) == {"name", "clinic_id"}
-        assert {str(col) for col in adata.obs.dtypes} == {"float32", "object"}
+        assert {str(col) for col in adata.obs.dtypes} == {"float32", "category"}
         assert_frame_equal(
             adata.obs,
             DataFrame(
                 {"clinic_id": [i for i in range(1, 6)], "name": ["foo", "bar", "baz", "buz", "ber"]},
                 index=[str(idx) for idx in range(5)],
-            ).astype({"clinic_id": "float32"}),
+            ).astype({"clinic_id": "float32", "name": "category"}),
         )
 
     def test_move_to_obs_copy(self):
@@ -58,15 +58,15 @@ class TestAnndataExt:
         cp_adata = move_to_obs(adata, ["name", "clinic_id"], copy=True)
         assert id(cp_adata) != id(adata)
         assert set(cp_adata.obs.columns) == {"name", "clinic_id"}
-        assert {str(col) for col in cp_adata.obs.dtypes} == {"float32", "object"}
+        assert {str(col) for col in cp_adata.obs.dtypes} == {"float32", "category"}
         assert not set(adata.obs.columns) == {"name", "clinic_id"}
-        assert not {str(col) for col in adata.obs.dtypes} == {"float32", "object"}
+        assert not {str(col) for col in adata.obs.dtypes} == {"float32", "category"}
         assert_frame_equal(
             cp_adata.obs,
             DataFrame(
                 {"clinic_id": [i for i in range(1, 6)], "name": ["foo", "bar", "baz", "buz", "ber"]},
                 index=[str(idx) for idx in range(5)],
-            ).astype({"clinic_id": "float32"}),
+            ).astype({"clinic_id": "float32", "name": "category"}),
         )
 
     def test_df_to_anndata_simple(self):
@@ -94,7 +94,8 @@ class TestAnndataExt:
         assert adata.X.dtype == "float32"
         assert adata.X.shape == (100, 1)
         assert_frame_equal(
-            adata.obs, DataFrame({"col1": col1_val, "col2": col2_val}, index=[str(idx) for idx in range(100)])
+            adata.obs,
+            DataFrame({"col1": col1_val, "col2": col2_val}, index=[str(idx) for idx in range(100)]).astype("category"),
         )
 
     def test_df_to_anndata_all_num(self):

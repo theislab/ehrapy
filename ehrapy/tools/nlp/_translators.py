@@ -15,7 +15,7 @@ try:
         MyMemoryTranslator,
         YandexTranslator,
     )
-except ConnectionError:
+except ConnectionError:  # pragma: no cover
     print("[bold red]Unable to import GoogleTranslator. Do you have an internet connection?")
 from deepl import Formality, GlossaryInfo, TextResult
 from rich import print
@@ -166,10 +166,7 @@ class Translator:
                 index_values[index] = translated_column_name
                 adata.var_names = index_values
 
-            translated_column_values: str | list[str] = translate_text(
-                column_values
-            )  # TODO: Check that structure is still ok
-            # translated_column_values = list(map(lambda text_result: text_result.text, translated_column_values))
+            translated_column_values: str | list[str] = translate_text(column_values)
 
             adata.X[:, index] = translated_column_values
 
@@ -177,7 +174,7 @@ class Translator:
 class DeepL:
     """Implementation of the DeepL translator"""
 
-    def __init__(self, authentication_key: str):
+    def __init__(self, authentication_key: str):  # pragma: no cover
         self.translator = deepl.Translator(authentication_key)
 
     def _check_usage(function):  # noqa # pragma: no cover
@@ -222,7 +219,7 @@ class DeepL:
         return wrapper
 
     # @_check_usage
-    def authenticate(self, authentication_key: str) -> None:
+    def authenticate(self, authentication_key: str) -> None:  # pragma: no cover
         """Authenticates the DeepL user
 
         Args:
@@ -441,7 +438,7 @@ class MicrosoftTranslate:
 
 
 class YandexTranslate:
-    def __init__(self, authentication_key, source="auto", target="en"):
+    def __init__(self, authentication_key, source="auto", target="en"):  # pragma: no cover
         self.translator = YandexTranslator(api_key=authentication_key, source=source, target=target)
 
     def print_source_languages(self) -> None:  # pragma: no cover

@@ -10,8 +10,8 @@ from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OrdinalEncoder
 
 from ehrapy import settings
-from ehrapy._util import check_module_importable
 from ehrapy.anndata.anndata_ext import get_column_indices
+from ehrapy.core.tool_available import check_module_importable
 
 
 def explicit_impute(

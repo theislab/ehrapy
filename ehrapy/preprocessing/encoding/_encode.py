@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from itertools import chain
-from typing import Dict, List, Any
+from typing import Any, Dict, List
 
 import numpy as np
 import pandas as pd
@@ -51,7 +51,8 @@ def encode(
         A dict containing the encoding mode and categorical name for the respective column (for each AnnData object in case of MuData object).
 
     Returns:
-        An :class:`~anndata.AnnData` object with the encoded values in X or None (in case of :class:`~mudata.MuData` object)
+        An :class:`~anndata.AnnData` object with the encoded values in X or None (in case of :class:`~mudata.MuData` object). The :class:`~anndata.AnnData`
+        that got encoded won't be mutated by the encoding.
 
     Example using autodetect with default label encoding:
         .. code-block:: python
@@ -344,7 +345,6 @@ def _encode(
         encoded_ann_data.uns["non_numerical_columns"] = updated_non_num_uns
 
         _add_categoricals_to_obs(adata, encoded_ann_data, categoricals)
-
 
     return encoded_ann_data
 
@@ -648,10 +648,10 @@ def _initial_encoding(
     Returns:
         Numpy array of all original categorial values
     """
-    uns: dict[str, np.ndarray] = uns
+    uns_: dict[str, np.ndarray] = uns
     # create numpy array from all original categorical values, that will be encoded (again)
     array = np.array(
-        [uns["original_values_categoricals"][categoricals[i]].ravel() for i in range(len(categoricals))]
+        [uns_["original_values_categoricals"][categoricals[i]].ravel() for i in range(len(categoricals))]
     ).transpose()
 
     return array
@@ -855,6 +855,13 @@ def _add_categoricals_to_obs(from_: AnnData, to: AnnData, categorical_names: lis
             continue
         elif var_name in categorical_names:
             to.obs[var_name] = from_.X[::, idx : idx + 1]
+            # note: this will count binary columns (0 and 1 only) as well
+            # needed for writing to .h5ad files
+            if set(pd.unique(to.obs[var_name])).issubset({False, True, np.NaN}):
+                to.obs[var_name] = to.obs[var_name].astype("bool")
+    # get all non bool object columns and cast the to category dtype
+    object_columns = list(to.obs.select_dtypes(include="object").columns)
+    to.obs[object_columns] = to.obs[object_columns].astype("category")
 
 
 def _add_categoricals_to_uns(from_: AnnData, to, categorical_names: list[str]) -> None:
@@ -865,15 +872,17 @@ def _add_categoricals_to_uns(from_: AnnData, to, categorical_names: list[str]) -
         categorical_names: Name of each categorical column
     """
     is_initial = "original_values_categoricals" in from_.uns.keys()
-    to["original_values_categoricals"] = (
-        {} if not is_initial else from_.uns["original_values_categoricals"].copy()
-    )
+    to["original_values_categoricals"] = {} if not is_initial else from_.uns["original_values_categoricals"].copy()
 
     for idx, var_name in enumerate(from_.var_names):
         if is_initial and var_name in to["original_values_categoricals"]:
             continue
         elif var_name in categorical_names:
-            to["original_values_categoricals"][var_name] = from_.X[::, idx : idx + 1]
+            # keep numerical dtype when writing original values to uns
+            if var_name in from_.uns["numerical_columns"]:
+                to["original_values_categoricals"][var_name] = from_.X[::, idx : idx + 1].astype("float")
+            else:
+                to["original_values_categoricals"][var_name] = from_.X[::, idx : idx + 1].astype("str")
 
 
 def _get_mudata_autodetect_options_and_encoding_modes(

@@ -2,10 +2,11 @@ import os
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import pytest
 
-from ehrapy._util import shell_command_accessible
 from ehrapy.anndata.anndata_ext import ColumnNotFoundError
+from ehrapy.core.tool_available import shell_command_accessible
 from ehrapy.io._read import read
 
 CURRENT_DIR = Path(__file__).parent
@@ -52,6 +53,31 @@ class TestRead:
         assert (adata.layers["original"] == matrix).all()
         assert id(adata.layers["original"]) != id(adata.X)
         assert list(adata.obs.index) == ["0", "1", "2", "3", "4"]
+
+    def test_read_csv_with_bools_obs_only(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/dataset1.csv", columns_obs_only=["survival", "b12_values"])
+        matrix = np.array([[12, 14], [13, 7], [14, 10], [15, 11], [16, 3]])
+        assert adata.X.shape == (5, 2)
+        assert (adata.X == matrix).all()
+        assert adata.var_names.to_list() == ["patient_id", "los_days"]
+        assert (adata.layers["original"] == matrix).all()
+        assert id(adata.layers["original"]) != id(adata.X)
+        assert set(adata.obs.columns) == {"b12_values", "survival"}
+        assert pd.api.types.is_bool_dtype(adata.obs["survival"].dtype)
+        assert pd.api.types.is_numeric_dtype(adata.obs["b12_values"].dtype)
+
+    def test_read_csv_with_bools_and_cats_obs_only(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/dataset6.csv", columns_obs_only=["b12_values", "name", "survival"])
+        matrix = np.array([[1, 14], [2, 7], [3, 10], [4, 11], [5, 3]])
+        assert adata.X.shape == (5, 2)
+        assert (adata.X == matrix).all()
+        assert adata.var_names.to_list() == ["clinic_id", "los_days"]
+        assert (adata.layers["original"] == matrix).all()
+        assert id(adata.layers["original"]) != id(adata.X)
+        assert set(adata.obs.columns) == {"b12_values", "survival", "name"}
+        assert pd.api.types.is_bool_dtype(adata.obs["survival"].dtype)
+        assert pd.api.types.is_numeric_dtype(adata.obs["b12_values"].dtype)
+        assert pd.api.types.is_categorical_dtype(adata.obs["name"].dtype)
 
     @pytest.mark.skipif(
         (os.name != "nt" and not shell_command_accessible(["gs", "-h"]))
