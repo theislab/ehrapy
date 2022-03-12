@@ -24,6 +24,7 @@ class TestStrMatcher:
     def test_calculate_bigrams_single_str(self):
         expected_bigrams = ["so", "om", "me", "es", "st", "tr", "ri", "in", "ng"]
         calculated_bigrams = StrMatcher.calculate_bigrams_single_str("somestring")
+
         assert expected_bigrams == calculated_bigrams
 
     def test_calculate_bigrams_list_str(self):
@@ -40,11 +41,13 @@ class TestStrMatcher:
     def test_best_match(self):
         expected_match = (0.6818181818181818, "Chlordiazepoxide (therapeutic)")
         calculated_best_match = self.str_matcher.best_match(query=self.queries[-1])
+
         assert expected_match == calculated_best_match
 
     def test_first_match(self):
         expected_match = (0.6818181818181818, "Chlordiazepoxide (therapeutic)")
         calculated_best_match = self.str_matcher.first_match(query=self.queries[-1])
+
         assert expected_match == calculated_best_match
 
     def test_get_closest_matches(self):
