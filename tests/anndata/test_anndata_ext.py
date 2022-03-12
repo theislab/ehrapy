@@ -11,6 +11,7 @@ from pandas.testing import assert_frame_equal
 
 import ehrapy as ep
 from ehrapy.anndata.anndata_ext import (
+    IndexNotFoundError,
     NotEncodedError,
     ObsEmptyError,
     _assert_encoded,
@@ -87,6 +88,31 @@ class TestAnndataExt:
         assert adata.X.shape == (100, 2)
         np.testing.assert_array_equal(adata.X, expected_x)
         assert list(adata.obs.index) == col1_val
+        assert adata.obs.index.name == "col1"
+
+    def test_df_to_anndata_index_column_num(self):
+        df, col1_val, col2_val, col3_val = TestAnndataExt._setup_df_to_anndata()
+        expected_x = np.array([col2_val, col3_val], dtype="object").transpose()
+        adata = df_to_anndata(df, index_column=0)
+
+        assert adata.X.dtype == "object"
+        assert adata.X.shape == (100, 2)
+        np.testing.assert_array_equal(adata.X, expected_x)
+        assert list(adata.obs.index) == col1_val
+        assert adata.obs.index.name == "col1"
+
+    def test_df_to_anndata_index_column_index(self):
+        d = {"col1": [0, 1, 2, 3], "col2": pd.Series([2, 3])}
+        df = pd.DataFrame(data=d, index=[0, 1, 2, 3])
+        df.index.set_names("quarter", inplace=True)
+        adata = ep.ad.df_to_anndata(df, index_column="quarter")
+        assert adata.obs.index.name == "quarter"
+        assert list(adata.obs.index) == ["0", "1", "2", "3"]
+
+    def test_df_to_anndata_invalid_index_throws_error(self):
+        df, col1_val, col2_val, col3_val = TestAnndataExt._setup_df_to_anndata()
+        with pytest.raises(IndexNotFoundError):
+            _ = df_to_anndata(df, index_column="UnknownCol")
 
     def test_df_to_anndata_cols_obs_only(self):
         df, col1_val, col2_val, col3_val = TestAnndataExt._setup_df_to_anndata()

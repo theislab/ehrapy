@@ -30,13 +30,30 @@ def df_to_anndata(
     Args:
         df: The pandas dataframe to be transformed
         columns_obs_only: An optional list of column names that should belong to obs only and not X
-        index_column: The (optional) index column of obs
+        index_column: The index column of obs. This can be either a column name (or its numerical index in the dataframe) or the index of the dataframe
 
     Returns:
         An AnnData object created from the given pandas dataframe
     """
-    if index_column:
-        df = df.set_index(index_column)
+    # allow index 0
+    if index_column is not None:
+        df_columns = list(df.columns)
+        # if the index of the dataframe is the index_column leave it as it is
+        if index_column == df.index.name:
+            pass
+        # if index column is either numerical or not the actual index name, search for index_column in the columns
+        elif isinstance(index_column, int) or index_column != df.index.name:
+            if isinstance(index_column, str) and index_column in df_columns:
+                df = df.set_index(index_column)
+            # also ensure that the index is in range
+            elif isinstance(index_column, int) and index_column < len(df_columns):
+                df = df.set_index(df_columns[index_column])
+            else:
+                raise IndexNotFoundError(f"Did not found column {index_column} in neither index or columns!")
+        # index_column is neither in the index or in the columns or passed as some value that could not be understood
+        else:
+            raise IndexNotFoundError(f"Did not found column {index_column} in neither index or columns!")
+
     # move columns from the input dataframe to later obs
     dataframes = _move_columns_to_obs(df, columns_obs_only)
     numerical_columns = list(dataframes.df.select_dtypes("number").columns)
@@ -83,7 +100,7 @@ def _move_columns_to_obs(df: pd.DataFrame, columns_obs_only: list[str] | None) -
         except KeyError:
             raise ColumnNotFoundError from KeyError(
                 "One or more column names passed to column_obs_only were not found in the input data. "
-                "Make sure you spelled the column names correctly."
+                "Are the column names spelled correctly?"
             )
     else:
         obs = pd.DataFrame(index=df.index.map(str))
@@ -681,6 +698,10 @@ class NotEncodedError(AssertionError):
 
 
 class ColumnNotFoundError(Exception):
+    pass
+
+
+class IndexNotFoundError(Exception):
     pass
 
 
