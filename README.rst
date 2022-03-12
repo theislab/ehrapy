@@ -1,6 +1,3 @@
-ehrapy
-===========================
-
 |PyPI| |Python Version| |License| |Read the Docs| |Build| |Tests| |Codecov| |pre-commit| |Black|
 
 .. |PyPI| image:: https://img.shields.io/pypi/v/ehrapy.svg
@@ -31,11 +28,23 @@ ehrapy
    :target: https://github.com/psf/black
    :alt: Black
 
+.. figure:: https://user-images.githubusercontent.com/21954664/156930990-0d668468-0cd9-496e-995a-96d2c2407cf5.png
+   :alt: ehrapy logo
+
+ehrapy overview
+===============
+
+.. figure:: https://user-images.githubusercontent.com/21954664/150370356-9f9b170d-76d1-4376-9fd7-54f9f3fb2ae4.png
+   :scale: 100 %
+   :alt: ehrapy overview
 
 Features
 --------
 
-* TODO
+* Exploratory analysis of Electronic Health Records
+* Quality control & preprocessing
+* Clustering & trajectory inference
+* Visualization & Exploration
 
 
 Installation
@@ -51,7 +60,11 @@ You can install *ehrapy* via pip_ from PyPI_:
 Usage
 -----
 
-Please see the `Command-line Reference <Usage_>`_ for details.
+Please see the `Usage documentation <Usage_>`_ for details.
+
+.. code:: python
+
+   import ehrapy as ep
 
 
 Credits
@@ -64,4 +77,4 @@ This package was created with cookietemple_ using Cookiecutter_ based on Hypermo
 .. _PyPI: https://pypi.org/
 .. _Hypermodern_Python_Cookiecutter: https://github.com/cjolowicz/cookiecutter-hypermodern-python
 .. _pip: https://pip.pypa.io/
-.. _Usage: https://ehrapy.readthedocs.io/en/latest/usage.html
+.. _Usage: https://ehrapy.readthedocs.io/en/latest/usage/usage.html

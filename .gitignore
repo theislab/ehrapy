@@ -136,3 +136,15 @@ dmypy.json
 
 # Coala
 *.orig
+
+.vscode/settings.json
+
+# AnnData
+*.h5ad
+
+# Notebook files
+notebooks/medcat_data
+notebooks/data
+notebooks/*.dat
+notebooks/*.csv
+notebooks/*-requirements.txt

@@ -1,0 +1,6 @@
+clinic_id,los_days,b12_values,name,survival
+1,14,500,foo,False
+2,7,330,bar,True
+3,10,800,baz,false
+4,11,765,buz,True
+5,3,800,ber,True

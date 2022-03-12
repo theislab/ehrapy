@@ -1,0 +1,44 @@
+name: Run Notebooks
+
+on:
+    - push
+    - pull_request_target
+
+jobs:
+    run:
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                notebook:
+                    [
+                        "docs/tutorials/notebooks/mimic_2_introduction.ipynb",
+                        "docs/tutorials/notebooks/mimic_3_demo.ipynb",
+                    ]
+        steps:
+            - uses: actions/checkout@v3
+              with:
+                  submodules: "true"
+                  token: "${{ secrets.CT_SYNC_TOKEN }}"
+            - name: Set up Python
+              uses: actions/setup-python@v3
+              with:
+                  python-version: "3.8"
+
+            - name: Install Poetry
+              run: |
+                  pip install poetry
+                  poetry --version
+
+            - name: Install ghostscript Ubuntu
+              run: |
+                  sudo apt update
+                  sudo apt install -y ghostscript
+
+            - name: Install package
+              run: poetry install -E "en-core-web-md"
+
+            - name: Install nbconvert ipykernel
+              run: poetry add nbconvert ipykernel
+
+            - name: Run ${{ matrix.notebook }} Notebook
+              run: poetry run jupyter nbconvert --to notebook --execute ${{ matrix.notebook }}

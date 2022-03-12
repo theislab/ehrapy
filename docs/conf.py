@@ -1,45 +1,71 @@
 #!/usr/bin/env python
 # mypy: ignore-errors
 # ehrapy documentation build configuration file
-#
-# If extensions (or modules to document with autodoc) are in another
-# directory, add these directories to sys.path here. If the directory is
-# relative to the documentation root, use os.path.abspath to make it
-# absolute, like shown here.
-#
 import os
 import sys
+from pathlib import Path
+from typing import List
+
+from sphinx.application import Sphinx
+from sphinx_gallery.directives import MiniGallery
+from sphinx_gallery.gen_gallery import DEFAULT_GALLERY_CONF
+
+HERE = Path(__file__).parent
 
 sys.path.insert(0, os.path.abspath(".."))
+sys.path.insert(0, os.path.abspath("."))
+sys.path.insert(0, os.path.abspath("_ext"))
 
+# General information about the project.
+project = "ehrapy"
+copyright = "2021, Lukas Heumos, Theislab"
+author = "Lukas Heumos"
+github_repo = "ehrapy"
+
+version = "0.2.0"
+release = "0.2.0"
 
 # -- General configuration ---------------------------------------------
-
-# If your documentation needs a minimal Sphinx version, state it here.
-# needs_sphinx = '1.0'
-
-# Add any Sphinx extension module names here, as strings. They can be
-# extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-
-# Add 'sphinx_automodapi.automodapi' if you want to build modules
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.viewcode",
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
+    "sphinx_autodoc_typehints",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.autosummary",
+    "sphinx_gallery.load_style",
+    "nbsphinx",
+    "nbsphinx_link",
+    "sphinxcontrib.bibtex",
+    "sphinx.ext.mathjax",
+    "typed_returns",
     "sphinx_click",
-    "sphinx_rtd_dark_mode",
+    "sphinx_copybutton",
+    "sphinx_tabs.tabs",
+    "sphinx_panels",
 ]
+intersphinx_mapping = dict(  # noqa: C408
+    python=("https://docs.python.org/3", None),
+    numpy=("https://docs.scipy.org/doc/numpy/", None),
+    statsmodels=("https://www.statsmodels.org/stable/", None),
+    scipy=("https://docs.scipy.org/doc/scipy/reference/", None),
+    pandas=("https://pandas.pydata.org/pandas-docs/stable/", None),
+    anndata=("https://anndata.readthedocs.io/en/stable/", None),
+    scanpy=("https://scanpy.readthedocs.io/en/stable/", None),
+    matplotlib=("https://matplotlib.org/", None),
+    seaborn=("https://seaborn.pydata.org/", None),
+    joblib=("https://joblib.readthedocs.io/en/latest/", None),
+    networkx=("https://networkx.org/documentation/stable/", None),
+    dask=("https://docs.dask.org/en/latest/", None),
+    numba=("https://numba.readthedocs.io/en/stable/", None),
+    xarray=("https://xarray.pydata.org/en/stable/", None),
+)
 
-default_dark_mode = True
+default_dark_mode = False
 
-# Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
-
-# The suffix(es) of source filenames.
 source_suffix = ".rst"
-
-# The master toctree document.
 master_doc = "index"
 
 # General information about the project.
@@ -63,42 +89,110 @@ release = "0.2.0"
 # Usually you set "language" from the command line for these cases.
 language = None
 
-# List of patterns, relative to source directory, that match files and
-# directories to ignore when looking for source files.
-# This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
-
-# The name of the Pygments (syntax highlighting) style to use.
+exclude_patterns = [
+    "_build",
+    "Thumbs.db",
+    ".DS_Store",
+    "auto_*/**.ipynb",
+    "auto_*/**.md5",
+    "auto_*/**.py",
+    "**.ipynb_checkpoints",
+]
+suppress_warnings = ["download.not_readable"]
 pygments_style = "sphinx"
 
-# If true, `todo` and `todoList` produce output, else they produce nothing.
+html_css_files = ["custom_cookietemple.css", "sphinx_gallery.css", "nbsphinx.css", "dataframe.css"]
+html_theme = "pydata_sphinx_theme"
+html_static_path = ["_static"]
+html_logo = "_static/ehrapy_logos/ehrapy_pure.png"
+html_theme_options = {
+    "icon_links": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/theislab/ehrapy",
+            "icon": "fab fa-github-square",
+        },
+        {
+            "name": "Twitter",
+            "url": "https://twitter.com/lukasheumos",
+            "icon": "fab fa-twitter-square",
+        },
+    ],
+    "use_edit_page_button": True,
+}
+
+html_context = {
+    # "github_url": "https://github.com", # or your GitHub Enterprise interprise
+    "github_user": "theislab",
+    "github_repo": "ehrapy",
+    "github_version": "development",
+    "doc_path": "docs",
+}
+
+html_show_sphinx = False
+
+autosummary_generate = True
+autodoc_member_order = "groupwise"
+autodoc_typehints = "signature"
+autodoc_docstring_signature = True
+napoleon_google_docstring = True
+napoleon_numpy_docstring = False
+napoleon_include_init_with_doc = False
+napoleon_use_rtype = True
+napoleon_use_param = True
+napoleon_custom_sections = [("Params", "Parameters")]
 todo_include_todos = False
 
+# bibliography
+bibtex_bibfiles = ["references.bib"]
+bibtex_reference_style = "author_year"
+bibtex_default_style = "alpha"
 
-# -- Options for HTML output -------------------------------------------
+# spelling
+spelling_lang = "en_US"
+spelling_warning = True
+spelling_word_list_filename = "spelling_wordlist.txt"
+spelling_add_pypi_package_names = True
+spelling_show_suggestions = True
+spelling_exclude_patterns = ["references.rst"]
+# see: https://pyenchant.github.io/pyenchant/api/enchant.tokenize.html
+spelling_filters = [
+    "enchant.tokenize.URLFilter",
+    "enchant.tokenize.EmailFilter",
+    "docs.source.utils.ModnameFilter",
+    "docs.source.utils.SignatureFilter",
+]
 
-# The theme to use for HTML and HTML Help pages.  See the documentation for
-# a list of builtin themes.
-#
-html_theme = "sphinx_rtd_theme"
+nbsphinx_execute_arguments = [
+    "--InlineBackend.figure_formats={'png', 'pdf'}",  # correct figure resize
+    "--InlineBackend.rc={'figure.dpi': 96}",
+]
+nbsphinx_execute = "never"
+# TODO Fix below URL
+nbsphinx_prolog = r"""
+{% set docname = 'docs/source/' + env.doc2path(env.docname, base=None) %}
+.. raw:: html
 
-# Theme options are theme-specific and customize the look and feel of a
-# theme further.  For a list of options available for each theme, see the
-# documentation.
-#
-# html_theme_options = {}
+    <div class="binder-badge docutils container">
+        <a class="reference external image-reference"
+           href="https://mybinder.org/v2/gh/theislab/ehrapy/development?filepath={{ docname|e }}">
+        <img alt="Launch binder" src="https://mybinder.org/badge_logo.svg" width="150px">
+        </a>
+    </div>
+"""  # noqa: E501
 
-# Add any paths that contain custom static files (such as style sheets) here,
-# relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ["_static"]
-
+nbsphinx_thumbnails = {
+    "tutorials/notebooks/ehrapy_introduciton": "_static/tutorials/catheter.png",
+    "tutorials/notebooks/mimic_2_introduction": "_static/tutorials/catheter.png",
+    "tutorials/notebooks/mimic_2_fate": "_static/tutorials/fate.png",
+    "tutorials/notebooks/diabetes_130": "_static/tutorials/diabetes.png",
+    "tutorials/notebooks/medcat": "_static/tutorials/nlp.png",
+}
 
 # -- Options for HTMLHelp output ---------------------------------------
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = "ehrapydoc"
-
 
 # -- Options for LaTeX output ------------------------------------------
 
@@ -130,7 +224,6 @@ latex_documents = [
     ),
 ]
 
-
 # -- Options for manual page output ------------------------------------
 
 # One entry per manual page. List of tuples
@@ -144,9 +237,6 @@ man_pages = [
         1,
     )
 ]
-
-autodoc_typehints = "description"
-
 
 # -- Options for Texinfo output ----------------------------------------
 
@@ -165,6 +255,38 @@ texinfo_documents = [
     ),
 ]
 
-html_css_files = [
-    "custom_cookietemple.css",
-]
+# -- custom classes ------------------------------
+
+
+class MaybeMiniGallery(MiniGallery):
+    def run(self) -> List[str]:
+        config = self.state.document.settings.env.config
+        backreferences_dir = config.sphinx_gallery_conf["backreferences_dir"]
+        obj_list = self.arguments[0].split()
+
+        new_list = []
+        for obj in obj_list:
+            path = os.path.join("/", backreferences_dir, f"{obj}.examples")  # Sphinx treats this as the source dir
+
+            if (HERE / path[1:]).exists():
+                new_list.append(obj)
+
+        self.arguments[0] = " ".join(new_list)
+        try:
+            return super().run()  # type: ignore[no-any-return]
+        except UnboundLocalError:
+            # no gallery files
+            return []
+
+
+def setup(app: Sphinx) -> None:
+    DEFAULT_GALLERY_CONF["src_dir"] = str(HERE)
+    DEFAULT_GALLERY_CONF["backreferences_dir"] = "gen_modules/backreferences"
+    DEFAULT_GALLERY_CONF["download_all_examples"] = False
+    DEFAULT_GALLERY_CONF["show_signature"] = False
+    DEFAULT_GALLERY_CONF["log_level"] = {"backreference_missing": "info"}
+    DEFAULT_GALLERY_CONF["gallery_dirs"] = ["auto_examples", "auto_tutorials"]
+    DEFAULT_GALLERY_CONF["default_thumb_file"] = "docs/source/_static/placeholder.png"  # todo
+
+    app.add_config_value("sphinx_gallery_conf", DEFAULT_GALLERY_CONF, "html")
+    app.add_directive("minigallery", MaybeMiniGallery)  # Required for Scanpy based classes

@@ -13,18 +13,19 @@ try:
     from nox_poetry import Session, session
 except ImportError:
     print("[bold red]Did not find nox-poetry installed in your current environment!")
-    print("[bold blue]Try installing it using [bold green]pip install nox-poetry [bold blue]! ")
+    print("[bold blue]Try installing it using [bold green]pip install nox-poetry [bold blue]!")
     sys.exit(1)
 
 package = "ehrapy"
-python_versions = ["3.8", "3.9"]
+python_versions = ["3.8"]
 nox.options.sessions = (
     "pre-commit",
     "safety",
     "mypy",
     "tests",
-    "xdoctest",
-    "docs-build",
+    # "typeguard",
+    # "xdoctest",  Not required because we try to refrain from using executable code in comments
+    #  "docs-build",  Testing via CI since we cannot install external Python scripts into the nox environment
 )
 
 
@@ -187,7 +188,7 @@ def docs_build(session: Session) -> None:
     """Build the documentation."""
     args = session.posargs or ["docs", "docs/_build"]
     session.install(".")
-    session.install("sphinx", "sphinx-click", "sphinx-rtd-theme", "sphinx-rtd-dark-mode")
+    session.install("sphinx", "sphinx-click", "sphinx-rtd-theme", "sphinx-rtd-dark-mode", "sphinx-gallery")
 
     build_dir = Path("docs", "_build")
     if build_dir.exists():

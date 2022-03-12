@@ -9,10 +9,10 @@ jobs:
         strategy:
             matrix:
                 os: [macos-latest, ubuntu-latest, windows-latest]
-                python: [3.7, 3.8, 3.9]
+                python: [3.8, 3.9]
 
         steps:
-            - uses: actions/checkout@v2
+            - uses: actions/checkout@v3
               name: Check out source-code repository
 
             - name: Setup Python

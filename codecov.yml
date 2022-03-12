@@ -6,4 +6,6 @@ coverage:
                 target: auto
         patch:
             default:
-                target: auto
+                enabled: no
+    ignore:
+        - "test/"

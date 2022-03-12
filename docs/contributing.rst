@@ -28,6 +28,16 @@ How to request a feature
 
 Request features on the `Issue Tracker`_.
 
+Getting the code
+----------------
+
+ehrapy uses submodules for the tutorials. Hence, the project must be cloned as:
+
+.. code:: console
+
+    $ git clone --recurse-submodules --remote-submodules https://github.com/theislab/ehrapy
+
+This will automatically also clone and update the submodules.
 
 How to set up your development environment
 ------------------------------------------
@@ -61,7 +71,6 @@ or the command-line interface:
 .. _Poetry: https://python-poetry.org/
 .. _Nox: https://nox.thea.codes/
 .. _nox-poetry: https://nox-poetry.readthedocs.io/
-
 
 How to test the project
 -----------------------
