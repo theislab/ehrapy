@@ -60,13 +60,11 @@ def write(
         # dummy encoding when there is non numerical data in X
         if not np.issubdtype(adata.X.dtype, np.number) and extension == "h5ad":
             # flag to indicate an Anndata object has been dummy encoded to write it to .h5ad file
-            # this could be the case when writing to cache file or when writing an unencoded non numerical AnnData object
-            adata_cp = adata.copy()
-            adata_cp.uns["ehrapy_dummy_encoding"] = True
-            adata_cp.uns["columns_obs_only"] = list(adata_cp.obs.columns)
-            # TODO: THIS SHOULD BE FIXED WITH PR #348, SO NO COPY SHOULD BE NEEDED THEN SINCE THE ORIGINAL WILL NOT BE MUTATED
-            encoded_adata_cp = encode(adata_cp, autodetect=True)
-            encoded_adata_cp.write(filename, compression=compression, compression_opts=compression_opts)
+            # Case of writing an unencoded non numerical AnnData object
+            encoded_adata = encode(adata, autodetect=True)
+            encoded_adata.uns["ehrapy_dummy_encoding"] = True
+            encoded_adata.uns["columns_obs_only"] = list(adata.obs.columns)
+            encoded_adata.write(filename, compression=compression, compression_opts=compression_opts)
         else:
             adata.write(filename, compression=compression, compression_opts=compression_opts)
 

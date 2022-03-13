@@ -42,6 +42,17 @@ class TestEncode:
             "clinic_day": "label_encoding",
         }
         assert id(encoded_ann_data.X) != id(encoded_ann_data.layers["original"])
+        assert adata is not None and adata.X is not None and adata.obs is not None and adata.uns is not None
+        assert id(encoded_ann_data) != id(adata)
+        assert id(encoded_ann_data.obs) != id(adata.obs)
+        assert id(encoded_ann_data.uns) != id(adata.uns)
+        assert id(encoded_ann_data.var) != id(adata.var)
+        assert all(column in set(encoded_ann_data.obs.columns) for column in ["survival", "clinic_day"])
+        assert not any(column in set(adata.obs.columns) for column in ["survival", "clinic_day"])
+        assert all(column in set(adata.uns["non_numerical_columns"]) for column in ["survival", "clinic_day"])
+        assert not any(
+            column in set(encoded_ann_data.uns["non_numerical_columns"]) for column in ["survival", "clinic_day"]
+        )
         assert pd.api.types.is_bool_dtype(encoded_ann_data.obs["survival"].dtype)
         assert pd.api.types.is_categorical_dtype(encoded_ann_data.obs["clinic_day"].dtype)
 
@@ -68,6 +79,17 @@ class TestEncode:
             "clinic_day": "count_encoding",
         }
         assert id(encoded_ann_data.X) != id(encoded_ann_data.layers["original"])
+        assert adata is not None and adata.X is not None and adata.obs is not None and adata.uns is not None
+        assert id(encoded_ann_data) != id(adata)
+        assert id(encoded_ann_data.obs) != id(adata.obs)
+        assert id(encoded_ann_data.uns) != id(adata.uns)
+        assert id(encoded_ann_data.var) != id(adata.var)
+        assert all(column in set(encoded_ann_data.obs.columns) for column in ["survival", "clinic_day"])
+        assert not any(column in set(adata.obs.columns) for column in ["survival", "clinic_day"])
+        assert all(column in set(adata.uns["non_numerical_columns"]) for column in ["survival", "clinic_day"])
+        assert not any(
+            column in set(encoded_ann_data.uns["non_numerical_columns"]) for column in ["survival", "clinic_day"]
+        )
         assert pd.api.types.is_bool_dtype(encoded_ann_data.obs["survival"].dtype)
         assert pd.api.types.is_categorical_dtype(encoded_ann_data.obs["clinic_day"].dtype)
 
@@ -101,6 +123,17 @@ class TestEncode:
             "clinic_day": "one_hot_encoding",
         }
         assert id(encoded_ann_data.X) != id(encoded_ann_data.layers["original"])
+        assert adata is not None and adata.X is not None and adata.obs is not None and adata.uns is not None
+        assert id(encoded_ann_data) != id(adata)
+        assert id(encoded_ann_data.obs) != id(adata.obs)
+        assert id(encoded_ann_data.uns) != id(adata.uns)
+        assert id(encoded_ann_data.var) != id(adata.var)
+        assert all(column in set(encoded_ann_data.obs.columns) for column in ["survival", "clinic_day"])
+        assert not any(column in set(adata.obs.columns) for column in ["survival", "clinic_day"])
+        assert all(column in set(adata.uns["non_numerical_columns"]) for column in ["survival", "clinic_day"])
+        assert not any(
+            column in set(encoded_ann_data.uns["non_numerical_columns"]) for column in ["survival", "clinic_day"]
+        )
         assert pd.api.types.is_bool_dtype(encoded_ann_data.obs["survival"].dtype)
         assert pd.api.types.is_categorical_dtype(encoded_ann_data.obs["clinic_day"].dtype)
 

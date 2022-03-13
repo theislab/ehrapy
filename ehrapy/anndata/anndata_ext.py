@@ -499,8 +499,8 @@ def _update_uns(
     2.) Moving `col1` from `obs` to `X`: `col1` is either numerical or non_numerical, so add it to the corresponding entry in `uns`
     """
     moved_columns_set = set(moved_columns)
-    num_set = set(adata.uns["numerical_columns"])
-    non_num_set = set(adata.uns["non_numerical_columns"])
+    num_set = set(adata.uns["numerical_columns"].copy())
+    non_num_set = set(adata.uns["non_numerical_columns"].copy())
     if not to_x:
         var_num = []
         for var in moved_columns:
