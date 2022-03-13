@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Collection, Literal
 
 import numpy as np
 import pandas as pd
 from anndata import AnnData
+
+from ehrapy.core.str_matching import StrMatcher
 
 
 def qc_metrics(
@@ -166,12 +169,16 @@ def _var_qc_metrics(adata: AnnData, layer: str = None) -> pd.DataFrame:
 
 def qc_lab_measurements(
     adata: AnnData,
-    overwrites: dict[str, tuple[int, int]] = None,
+    reference_table: pd.DataFrame = None,
+    measurements: list[str] = None,
+    unit: Literal["traditional", "SI"] = "SI",
     layer: str = None,
+    threshold: float = 0.2,
     age_col: str = "age",
     sex_col: str = "sex",
     ethnicity_col: str = "race",
-) -> pd.DataFrame:
+    copy: bool = False,
+) -> AnnData:
     """Examines lab measurements for reference ranges and outliers.
 
     Source:
@@ -197,13 +204,19 @@ def qc_lab_measurements(
 
     Args:
         adata: Annotated data matrix.
+        reference_table: A custom DataFrame with reference values. Defaults to the laposata table if not specified.
+        measurements: A list of measurements to check.
+        unit: The unit of the measurements. (default: SI)
         layer: Layer containing the matrix to calculate the metrics for.
+        threshold: Minimum required matching confidence score of the bigrams.
+                   0 = low requirements, 1 = high requirements.
         age_col: Column containing age values.
         sex_col: Column containing sex values.
         ethnicity_col: Column containing ethnicity values.
+        copy: Whether to return a copy (default: False).
 
     Returns:
-        A Pandas DataFrame denoting for every observation which values were in or not in the reference ranges.
+        A modified AnnData object (copy if specified).
 
     Example:
         .. code-block:: python
@@ -213,3 +226,36 @@ def qc_lab_measurements(
             adata = ep.dt.mimic_2(encode=True)
             ep.pp.lab_measurements_qc(adata)
     """
+    if copy:
+        adata = adata.copy()
+
+    preprocessing_dir = Path(__file__).parent.resolve()
+    if reference_table is None:
+        reference_table = pd.read_csv(
+            f"{preprocessing_dir}/laboratory_reference_tables/laposata.tsv", sep="\t", index_col="Measurement"
+        )
+
+    str_matcher = StrMatcher(list(reference_table.index))
+
+    for column in measurements:
+        score, best_column_match = str_matcher.best_match(query=column, threshold=threshold)
+        reference_column = "SI Reference Interval" if unit == "SI" else "Traditional Reference Interval"
+
+        reference_values = reference_table.loc[best_column_match, reference_column]
+        if layer is not None:
+            actual_measurements = adata[:, column].layers[layer]
+        else:
+            actual_measurements = adata[:, column].X
+
+        print(reference_values)
+        print(actual_measurements)
+
+    # check for sex, age, ethnicity etc
+
+    # check for the type of check (< - or >)
+
+    # get the results
+
+    # adapt var with the results
+
+    return adata

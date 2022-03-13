@@ -1,4 +1,4 @@
-Measurement 	Specimen	Traditional Reference Interval	Traditional Units	Conversion Factor 	SI Reference Interval	SI Units	Gender
+Measurement	Specimen	Traditional Reference Interval	Traditional Units	Conversion Factor 	SI Reference Interval	SI Units	Gender
 Acetaminophen (therapeutic)	Serum, plasma	10-30	μg/mL	6.62	70-200	μmol/L	U
 Acetoacetic acid	Serum, plasma	<1	mg/dL	0.098	<0.1	mmol/L	U
 Acetone	Serum, plasma	<2.0	mg/dL	0.172	<0.34	mmol/L	U
@@ -58,9 +58,9 @@ Angiotensin II	Plasma	10-60	pg/mL	1.0	10-60	ng/L	U
 Angiotensin-converting enzyme (ACE)	Serum	8-52	U/L	0.017	0.14-0.88	μKat/L	U
 Anion gap (Na+)−(Cl− + HCO3−)	Serum, plasma	8-16	mEq/L	1.0	8-16	nmol/L	U
 Antidiuretic hormone (ADH, vasopressin)	Plasma	1-5	pg/mL	0.926	0.9-4.6	pmol/L	U
-α2-Antiplasmin	Plasma	80-130	%	0.01	0.8-1.3	Fraction of 1.0	U
+α2-Antiplasmin (fraction)	Plasma	80-130	%	0.01	0.8-1.3	Fraction of 1.0	U
 Antithrombin III	Plasma	21-30	mg/dL	10.0	210-300	mg/L	U
-Antithrombin III activity	Plasma	80-130	%	0.01	0.8-1.3	Fraction of 1.0	U
+Antithrombin III activity (fraction)	Plasma	80-130	%	0.01	0.8-1.3	Fraction of 1.0	U
 α1-Antitrypsin	Serum	80-200	mg/dL	0.01	0.8-2.0	g/L	U
 Apolipoprotein A	Serum	80-151	mg/dL	0.01	0.8-1.5	g/L	M
 Apolipoprotein A	Serum	80-170	mg/dL	0.01	0.8-1.5	g/L	F
@@ -101,8 +101,8 @@ Calcium, total	Serum	8.2-10.2	mg/dL	0.25	2.05-2.55	mmol/L	U
 Calcium, normal diet	Urine	<250	mg/24 h	0.025	<6.2	mmol/day	U
 Carbamazepine (therapeutic)	Serum, plasma	8-12	μg/mL	4.23	34-51	μmol/L	U
 Carbon dioxide	Serum, plasma, venous blood	22-28	mEq/L	1.0	22-28	mmol/L	U
-Carboxyhemoglobin (carbon monoxide) Nonsmoker	Whole blood	<2.0	%	0.01	<0.02	Fraction of 1.0	U
-Carboxyhemoglobin (carbon monoxide) Toxic	Whole blood	>20	%	0.01	>0.2	Fraction of 1.0	U
+Carboxyhemoglobin (carbon monoxide) Nonsmoker (fraction)	Whole blood	<2.0	%	0.01	<0.02	Fraction of 1.0	U
+Carboxyhemoglobin (carbon monoxide) Toxic (fraction)	Whole blood	>20	%	0.01	>0.2	Fraction of 1.0	U
 β-Carotene	Serum	10-85	μg/dL	0.0186	0.2-1.6	μmol/L	U
 CEA, nonsmoker	Serum	<3	ng/mL	1.0	<3	μg/L	U
 CEA, smoker	Serum	<5	ng/mL	1.0	<5	μg/L	U
@@ -126,18 +126,18 @@ Citrate	Serum	1.2-3.0	mg/dL	52.05	60-160	μmol/L	U
 Citrulline	Plasma	0.4-2.4	mg/dL	57.1	20-135	μmol/L	U
 Clonazepam (therapeutic)	Serum	15-60	ng/mL	3.17	48-190	nmol/L	U
 Coagulation factor I (fibrinogen)	Plasma	150-400	mg/dL	0.01	1.5-4.0	g/L	U
-Coagulation factor II (prothrombin)	Plasma	60-140	%	0.01	0.60-1.40	Fraction of 1.0	U
-Coagulation factor V	Plasma	60-140	%	0.01	0.60-1.40	Fraction of 1.0	U
-Coagulation factor VII	Plasma	60-140	%	0.01	0.60-1.40	Fraction of 1.0	U
-Coagulation factor VIII	Plasma	50-200	%	0.01	0.50-2.00	Fraction of 1.0	U
-Coagulation factor IX	Plasma	60-140	%	0.01	0.60-1.40	Fraction of 1.0	U
-Coagulation factor X	Plasma	60-140	%	0.01	0.60-1.40	Fraction of 1.0	U
-Coagulation factor XI	Plasma	60-140	%	0.01	0.60-1.40	Fraction of 1.0	U
-Coagulation factor XII	Plasma	60-140	%	0.01	0.60-1.40	Fraction of 1.0	U
+Coagulation factor II (prothrombin) (fraction)	Plasma	60-140	%	0.01	0.60-1.40	Fraction of 1.0	U
+Coagulation factor V (fraction)	Plasma	60-140	%	0.01	0.60-1.40	Fraction of 1.0	U
+Coagulation factor VII (fraction)	Plasma	60-140	%	0.01	0.60-1.40	Fraction of 1.0	U
+Coagulation factor VIII (fraction)	Plasma	50-200	%	0.01	0.50-2.00	Fraction of 1.0	U
+Coagulation factor IX (fraction)	Plasma	60-140	%	0.01	0.60-1.40	Fraction of 1.0	U
+Coagulation factor X (fraction)	Plasma	60-140	%	0.01	0.60-1.40	Fraction of 1.0	U
+Coagulation factor XI (fraction)	Plasma	60-140	%	0.01	0.60-1.40	Fraction of 1.0	U
+Coagulation factor XII (fraction)	Plasma	60-140	%	0.01	0.60-1.40	Fraction of 1.0	U
 Cobalt	Serum	<1.0	μg/L	16.97	<17	nmol/L	U
 Codeine (therapeutic)	Serum	10-100	ng/mL	3.34	33-334	nmol/L	U
-Hematocrit	Whole blood	41-50	%	0.01	0.41-0.50	Fraction of 1.0	M
-Hematocrit	Whole blood	35-45	%	0.01	0.35-0.45	Fraction of 1.0	F
+Hematocrit (fraction)	Whole blood	41-50	%	0.01	0.41-0.50	Fraction of 1.0	M
+Hematocrit (fraction)	Whole blood	35-45	%	0.01	0.35-0.45	Fraction of 1.0	F
 Hemoglobin (mass concentration)	Whole blood	13.5-17.5	g/dL	10.0	135-175	g/L	M
 Hemoglobin (mass concentration)	Whole blood	12.0-15.5	g/dL	10.0	120-155	g/L	F
 Hemoglobin (substance concentration, Hb [Fe])	Whole blood	13.6-17.2	g/dL	0.6206	8.44-10.65	mmol/L	M
@@ -159,12 +159,12 @@ Lymphocytes (absolute)	Whole blood	1000-4800	μL−1	1.0	1.0-4.8	10^9 L^−1	U
 Monocytes (absolute)	Whole blood	0-800	μL−1	1.0	0.00-0.80	10^9 L^−1	U
 Eosinophils (absolute)	Whole blood	0-450	μL−1	1.0	0.00-0.45	10^9 L^−1	U
 Basophils (absolute)	Whole blood	0-200	μL−1	1.0	0.00-0.20	10^9 L^−1	U
-Neutrophils (differential)	Whole blood	56	%	0.01	0.56	Fraction of 1.0	U
-Bands (differential)	Whole blood	3	%	0.01	0.03	Fraction of 1.0	U
-Lymphocytes (differential)	Whole blood	34	%	0.01	0.34	Fraction of 1.0	U
-Monocytes (differential)	Whole blood	4	%	0.01	0.04	Fraction of 1.0	U
-Eosinophils (differential)	Whole blood	2.7	%	0.01	0.027	Fraction of 1.0	U
-Basophils (differential)	Whole blood	0.3	%	0.01	0.003	Fraction of 1.0	U
+Neutrophils (differential, fraction)	Whole blood	56	%	0.01	0.56	Fraction of 1.0	U
+Bands (differential, fraction)	Whole blood	3	%	0.01	0.03	Fraction of 1.0	U
+Lymphocytes (differential, fraction)	Whole blood	34	%	0.01	0.34	Fraction of 1.0	U
+Monocytes (differential, fraction)	Whole blood	4	%	0.01	0.04	Fraction of 1.0	U
+Eosinophils (differential, fraction)	Whole blood	2.7	%	0.01	0.027	Fraction of 1.0	U
+Basophils (differential, fraction)	Whole blood	0.3	%	0.01	0.003	Fraction of 1.0	U
 Copper	Serum	70-140	μg/dL	0.1574	11.0-22.0	μmol/L	U
 Coproporphyrin	Urine	<200	μg/24 h	1.527	<300	nmol/day	U
 Corticotropin (08:00)	Plasma	<120	pg/mL	0.22	<26	pmol/L	U
@@ -177,7 +177,7 @@ C-peptide	Serum	0.5-3.5	ng/mL	0.333	0.17-1.17	nmol/L	U
 Creatine	Serum	0.2-0.7	mg/dL	76.3	15.3-53.3	μmol/L	M
 Creatine	Serum	0.3-0.9	mg/dL	76.3	22.9-68.6	μmol/L	F
 Creatine kinase (CK)a	Serum	50-200	U/L	0.017	0.85-3.40	μKat/L	U
-CK-MB fraction	Serum	<6	%	0.01	<0.06	Fraction of 1.0	U
+CK-MB (fraction)	Serum	<6	%	0.01	<0.06	Fraction of 1.0	U
 Creatinine	Serum, plasma	0.6-1.2	mg/dL	88.4	53-106	μmol/L	U
 Creatinine	Urine	1-2	g/24 h	8.84	8.8-17.7	mmol/day	U
 Creatinine clearance, glomerular filtration rate	Serum, urine	75-125	mL/min/1.73 m2	0.00963	0.72-1.2	mL/s/m2	U
@@ -251,14 +251,14 @@ Glutamine	Plasma	6.1-10.2	mg/dL	68.42	420-700	μmol/L	U
 γ-Glutamyltransferase (GGT; γ-glutamyl transpeptidase)	Serum	<50	U/L	0.017	<0.85	μKat/L	M
 Glycerol (free)	Serum	<1.5	mg/dL	0.1086	<0.16	mmol/L	U
 Glycine	Plasma	0.9-4.2	mg/dL	133.3	120-560	μmol/L	U
-Glycated hemoglobin (hemoglobin A1, A1c) Whole blood	Whole blood	4-5.6	% of total Hb	1.0	4-5.6	Fraction of total Hb	U
-Glycated hemoglobin (hemoglobin A1, A1c) Diagnosis	Whole blood	>6.5	% of total Hb	1.0	>6.5	Fraction of total Hb	U
+Glycated hemoglobin (hemoglobin A1, A1c, fraction) Whole blood	Whole blood	4-5.6	% of total Hb	1.0	4-5.6	Fraction of total Hb	U
+Glycated hemoglobin (hemoglobin A1, A1c, fraction) Diagnosis	Whole blood	>6.5	% of total Hb	1.0	>6.5	Fraction of total Hb	U
 Gold (therapeutic)	Serum	100-200	μg/dL	0.05077	5.1-10.2	μmol/L	U
 Growth hormone, adult (GH, somatotropin)	Plasma, serum	<10	ng/mL	1.0	<10	μg/L	U
 Haloperidol (therapeutic)	Serum, plasma	5-20	ng/mL	2.6	13-52	nmol/L	U
 Haptoglobin	Serum	40-180	mg/dL	0.01	0.4-1.8	g/L	U
-Hemoglobin A2	Whole blood	2.0-3.5	% total Hb	nan	2.0-3.5	Fraction of 1.0	U
-Hemoglobin F (fetal hemoglobin in adult)	Whole blood	<2	%	0.01	<2	Fraction of 1.0	U
+Hemoglobin A2 (fraction)	Whole blood	2.0-3.5	% total Hb	nan	2.0-3.5	Fraction of 1.0	U
+Hemoglobin F (fraction) (fetal hemoglobin in adult)	Whole blood	<2	%	0.01	<2	Fraction of 1.0	U
 Histidine	Plasma	0.5-1.7	mg/dL	64.5	32-110	μmol/L	U
 Homocysteine (total)	Plasma, serum	4-12	μmol/L	1.0	4-12	μmol/L	U
 Homovanillic acid	Urine	<8	mg/24 h	5.489	<45	μmol/day	U
@@ -320,7 +320,7 @@ Metanephrines (total)	Urine	<1.0	mg/24 h	5.07	<5	μmol/day	U
 Methadone (therapeutic)	Serum, plasma	100-400	ng/mL	0.00323	0.32-1.29	μmol/L	U
 Methanol	Whole blood, serum	<1.5	mg/L	0.0312	<0.05	mmol/L	U
 Methemoglobin	Whole blood	<0.24	g/dL	155.0	<37.2	μmol/L	U
-Methemoglobin	Whole blood	<1.0	% of total Hb	0.01	<0.01	Fraction of total Hb	U
+Methemoglobin (fraction)	Whole blood	<1.0	% of total Hb	0.01	<0.01	Fraction of total Hb	U
 Methionine	Plasma	0.1-0.6	mg/dL	67.1	6-40	μmol/L	U
 Methsuximide (therapeutic)	Serum, plasma	10-40	μg/mL	5.29	53-212	μmol/L	U
 Methyldopa (therapeutic)	Serum, plasma	1-5	μg/mL	4.73	5-24	μmol/L	U
@@ -348,8 +348,8 @@ Oxalate	Serum	1.0-2.4	mg/L	11.4	11-27	μmol/L	U
 Oxazepam (therapeutic)	Serum, plasma	0.2-1.4	μg/mL	3.49	0.7-54.9	μmol/L	U
 Oxycodone (therapeutic)	Plasma, serum	10-100	ng/mL	3.17	32-317	nmol/L	U
 Oxygen, partial pressure (PO2)	Arterial blood	80-100	mm Hg	1.0	80-100	mm Hg	U
-Parathyroid hormone   Intactb	Serum	10-50	pg/mL	1.0	10-50	ng/L	U
-Parathyroid hormone   N-terminal specificb	Serum	8-24	pg/mL	1.0	8-24	ng/L	U
+Parathyroid hormone   Intact	Serum	10-50	pg/mL	1.0	10-50	ng/L	U
+Parathyroid hormone   N-terminal specific	Serum	8-24	pg/mL	1.0	8-24	ng/L	U
 Parathyroid hormone   C-terminal (mid-molecule)	Serum	0-340	pg/mL	1.0	0-340	ng/L	U
 Pentobarbital (therapeutic)	Serum, plasma	1-5	μg/mL	4.42	4.0-22	μmol/L	U
 Pepsinogen I	Serum	28-100	ng/mL	1.0	28-100	μg/L	U
@@ -360,7 +360,7 @@ Phosphatase, tartrate-resistant acid	Serum	1.5-4.5	U/L	0.017	0.03-0.08	μKat/L	U
 Phosphorus (inorganic)	Serum	2.3-4.7	mg/dL	0.3229	0.74-1.52	mmol/L	U
 Phosphorus (inorganic)	Urine	0.4-1.3	g/24 h	32.29	12.9-42.0	mmol/day	U
 Plasminogen	Plasma	8.4-14.0	mg/dL	10.0	84-140	mg/L	U
-Plasminogen relative	Plasma	80-120	%	0.01	0.80-1.20	Fraction of 1.0	U
+Plasminogen (fraction)	Plasma	80-120	%	0.01	0.80-1.20	Fraction of 1.0	U
 Plasminogen activator inhibitor	Plasma	<15	IU/mL	1.0	<15	kIU/L	U
 Porphobilinogen deaminase	Red blood cells	>7.0	nmol/s/L	1.0	>7.0	nmol/(s L)	U
 Potassium	Plasma	3.5-5.0	mEq/L	1.0	3.5-5.0	mmol/L	U
@@ -379,7 +379,7 @@ Proline	Plasma	1.2-3.9	mg/dL	86.9	104-340	μmol/L	U
 Propoxyphene (therapeutic)	Serum	0.1-0.4	μg/mL	2.946	0.3-1.2	μmol/L	U
 Propanolol (therapeutic)	Serum, plasma	50-100	ng/mL	3.86	190-386	nmol/L	U
 Protein (total)	Serum	6.0-8.0	g/dL	10.0	60-80	g/L	U
-Protein C	Plasma	70-140	%	0.01	0.70-1.40	Fraction of 1.0	U
+Protein C (fraction)	Plasma	70-140	%	0.01	0.70-1.40	Fraction of 1.0	U
 Protein electrophoresis (SPEP, fraction of total protein Albumin)	Serum	52-65	%	0.01	0.52-0.65	Fraction of 1.0	U
 Protein electrophoresis (SPEP, fraction of total protein α1-Globulin)	Serum	2.5-5.0	%	0.01	0.025-0.05	Fraction of 1.0	U
 Protein electrophoresis (SPEP, fraction of total protein α2-Globulin)	Serum	7.0-13.0	%	0.01	0.07-0.13	Fraction of 1.0	U
@@ -390,7 +390,7 @@ Protein electrophoresis (SPEP, concentration)   α1-Globulin	Serum	0.1-0.4	g/dL	
 Protein electrophoresis (SPEP, concentration)   α2-Globulin	Serum	0.4-1.2	g/dL	10.0	4-12	g/L	U
 Protein electrophoresis (SPEP, concentration)   β-Globulin	Serum	0.5-1.1	g/dL	10.0	5-11	g/L	U
 Protein electrophoresis (SPEP, concentration)   γ-Globulin	Serum	0.5-1.6	g/dL	10.0	5-16	g/L	U
-Protein S (activity)	Plasma	70-140	%	0.01	0.70-1.40	Fraction of 1.0	U
+Protein S (activity, fraction)	Plasma	70-140	%	0.01	0.70-1.40	Fraction of 1.0	U
 Prothrombin time (PT)	Plasma	10-13	s	1.0	10-13	s	U
 Protoporphyrin	Red blood cells	15-50	μg/dL	0.0177	0.27-0.89	μmol/L	U
 PSA	Serum	0-4.0	ng/mL	1.0	0-4.0	μg/L	U
@@ -413,7 +413,7 @@ Sodium	Plasma	136-142	mEq/L	1.0	136-142	mmol/L	U
 Somatostatin	Plasma	<25	pg/mL	1.0	<25	ng/L	U
 Strychnine (toxic)	Whole blood	>0.5	mg/L	2.99	>1.5	μmol/L	U
 Substance P	Plasma	<240	pg/mL	1.0	<240	ng/L	U
-Sulfhemoglobin	Whole blood	<1.0	% of total Hb	0.01	<0.010	Fraction of total Hb	U
+Sulfhemoglobin (fraction)	Whole blood	<1.0	% of total Hb	0.01	<0.010	Fraction of total Hb	U
 Tacrolimus	Whole blood	3-20	ng/mL	1.24	4-25	nmol/L	U
 Taurineb	Plasma	0.3-2.1	mg/dL	80.0	24-168	μmol/L	U
 Testosterone	Plasma, serum	300-1200	ng/dL	0.0347	10.4-41.6	nmol/L	M
@@ -436,7 +436,7 @@ Topiramate	Serum, plasma	5-20	μg/mL	2.95	15-59	μmol/L	U
 Transferrin (siderophilin)	Serum	200-380	mg/dL	0.01	2.0-3.8	g/L	U
 Triglycerides	Plasma, serum	10-190	mg/dL	0.01129	0.11-2.15	mmol/L	U
 Triiodothyronine, free (FT3)	Serum	260-480	pg/dL	0.0154	4.0-7.4	pmol/L	U
-Triiodothyronine, resin uptake	Serum	25-35	%	0.01	0.25-0.35	Fraction of 1.0	U
+Triiodothyronine, resin uptake (fraction)	Serum	25-35	%	0.01	0.25-0.35	Fraction of 1.0	U
 Triiodothyronine, total (T3)	Serum	70-200	ng/dL	0.0154	1.08-3.14	nmol/L	U
 Troponin I (cardiac)	Serum	0-0.4	ng/mL	1.0	0-0.4	μg/L	U
 Troponin T (cardiac)	Serum	0-0.1	ng/mL	1.0	0-0.1	μg/L	U
@@ -462,7 +462,7 @@ Vitamin D, 1,25-dihydroxyvitamin D	Plasma, serum	16-65	pg/mL	2.6	42-169	pmol/L	U
 Vitamin D, 25-hydroxyvitamin D	Plasma, serum	14-60	ng/mL	2.496	35-150	nmol/L	U
 Vitamin E (α-tocopherol)	Plasma, serum	0.5-1.8	mg/dL	23.22	12-42	μmol/L	U
 Vitamin K	Plasma, serum	0.13-1.19	ng/mL	2.22	0.29-2.64	nmol/L	U
-von Willebrand factor	Plasma	70-140	%	0.01	0.70-1.40	Fraction of 1.0	U
+von Willebrand factor (fraction)	Plasma	70-140	%	0.01	0.70-1.40	Fraction of 1.0	U
 Warfarin (therapeutic)	Plasma, serum	1.0-10	μg/mL	3.24	3.2-32.4	μmol/L	U
 White blood cell count	Whole blood	4.5-11.0	103 μL−1	1.0	4.5-11.0	10^9 L^−1	U
 Xylose absorption test (25-g dose)	Whole blood	>25 mg/dL	mg/dL	0.06661	>1.7	mmol/L	U
