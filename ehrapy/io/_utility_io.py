@@ -3,8 +3,6 @@ from __future__ import annotations
 from pathlib import Path, PurePath
 
 supported_extensions = {"csv", "tsv", "h5ad", "pdf"}
-# file extensions with formats, that can contain multiple tables/data in one file
-multi_data_extensions = {"pdf"}
 
 
 def _get_file_extension(file_path: Path) -> str:
