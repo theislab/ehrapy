@@ -386,6 +386,414 @@ def miss_forest_impute(
     return adata
 
 
+# ===================== SoftImpute =========================
+
+
+def soft_impute(
+    adata: AnnData,
+    var_names: list[str] | None = None,
+    copy: bool = False,
+    warning_threshold: int = 30,
+    shrinkage_value: float | None = None,
+    convergence_threshold: float = 0.001,
+    max_iters: int = 100,
+    max_rank: int | None = None,
+    n_power_iterations: int = 1,
+    init_fill_method: str = "zero",
+    min_value: float | None = None,
+    max_value: float | None = None,
+    normalizer: object | None = None,
+    verbose: bool = True,
+) -> AnnData:
+    """Impute data using the SoftImpute.
+
+    See https://github.com/iskandr/fancyimpute/blob/master/fancyimpute/soft_impute.py
+    Matrix completion by iterative soft thresholding of SVD decompositions.
+
+    Args:
+        adata: The AnnData object to use SoftImpute on.
+        var_names: A list of var names indicating which columns to use median imputation on (if None -> all columns).
+        copy: Whether to return a copy or act in place.
+        warning_threshold: Threshold of percentage of missing values to display a warning for (default: 30).
+        shrinkage_value : Value by which we shrink singular values on each iteration. If omitted then the default value will be the maximum singular value of the initialized matrix (zeros for missing values) divided by 50.
+        convergence_threshold : Minimum ration difference between iterations (as a fraction of the Frobenius norm of the current solution) before stopping.
+        max_iters: Maximum number of SVD iterations.
+        max_rank: Perform a truncated SVD on each iteration with this value as its rank.
+        n_power_iterations: Number of power iterations to perform with randomized SVD.
+        init_fill_method: How to initialize missing values of data matrix, default is to fill them with zeros.
+        min_value: Smallest allowable value in the solution.
+        max_value: Largest allowable value in the solution.
+        normalizer: Any object (such as BiScaler) with fit() and transform() methods.
+        verbose: Print debugging info.
+
+    Returns:
+        The imputed (but unencoded) AnnData object
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy as ep
+
+            adata = ep.dt.mimic_2(encoded=True)
+            ep.pp.soft_impute(adata)
+    """
+    if copy:
+        adata = adata.copy()
+
+    _warn_imputation_threshold(adata, var_names, threshold=warning_threshold)
+
+    if check_module_importable("fancyimpute"):
+        from fancyimpute import SoftImpute
+
+        SoftImpute()
+    else:
+        print("[bold yellow]fancyimpute is not available. Install via [blue]pip install fancyimpute.")
+
+    with Progress(
+        "[progress.description]{task.description}",
+        SpinnerColumn(),
+        refresh_per_second=1500,
+    ) as progress:
+        progress.add_task("[blue]Running SoftImpute", total=1)
+        if np.issubdtype(adata.X.dtype, np.number):
+            _soft_impute(
+                adata,
+                var_names,
+                shrinkage_value,
+                convergence_threshold,
+                max_iters,
+                max_rank,
+                n_power_iterations,
+                init_fill_method,
+                min_value,
+                max_value,
+                normalizer,
+                verbose,
+            )
+        else:
+            # ordinal encoding is used since non-numerical data can not be imputed using SoftImpute
+            enc = OrdinalEncoder()
+            adata.X = enc.fit_transform(adata.X)
+            # impute the data using SoftImpute
+            _soft_impute(
+                adata,
+                var_names,
+                shrinkage_value,
+                convergence_threshold,
+                max_iters,
+                max_rank,
+                n_power_iterations,
+                init_fill_method,
+                min_value,
+                max_value,
+                normalizer,
+                verbose,
+            )
+            # decode ordinal encoding to obtain imputed original data
+            adata.X = enc.inverse_transform(adata.X)
+
+    return adata
+
+
+def _soft_impute(
+    adata: AnnData,
+    var_names: list[str] | None,
+    shrinkage_value,
+    convergence_threshold,
+    max_iters,
+    max_rank,
+    n_power_iterations,
+    init_fill_method,
+    min_value,
+    max_value,
+    normalizer,
+    verbose,
+) -> None:
+    """Utility function to impute data using SoftImpute"""
+    from fancyimpute import SoftImpute
+
+    imputer = SoftImpute(
+        shrinkage_value,
+        convergence_threshold,
+        max_iters,
+        max_rank,
+        n_power_iterations,
+        init_fill_method,
+        min_value,
+        max_value,
+        normalizer,
+        verbose,
+    )
+
+    if isinstance(var_names, list):
+        column_indices = get_column_indices(adata, var_names)
+        adata.X[::, column_indices] = imputer.fit_transform(adata.X[::, column_indices])
+    else:
+        adata.X = imputer.fit_transform(adata.X)
+
+
+# ===================== IterativeSVD =========================
+
+
+def IterativeSVD_impute(
+    adata: AnnData,
+    var_names: list[str] | None = None,
+    copy: bool = False,
+    warning_threshold: int = 30,
+    rank: int = 10,
+    convergence_threshold: float = 0.00001,
+    max_iters: int = 200,
+    gradual_rank_increase: bool = True,
+    svd_algorithm: str = "arpack",
+    init_fill_method: str = "zero",
+    min_value: float | None = None,
+    max_value: float | None = None,
+    verbose: bool = True,
+) -> AnnData:
+    """Impute data using the IterativeSVD.
+
+    See https://github.com/iskandr/fancyimpute/blob/master/fancyimpute/iterative_svd.py
+    Matrix completion by iterative low-rank SVD decomposition.
+
+    Args:
+        adata: The AnnData object to use SoftImpute on.
+        var_names: A list of var names indicating which columns to use median imputation on (if None -> all columns).
+        copy: Whether to return a copy or act in place.
+        warning_threshold: Threshold of percentage of missing values to display a warning for (default: 30).
+
+    Returns:
+        The imputed (but unencoded) AnnData object
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy as ep
+
+            adata = ep.dt.mimic_2(encoded=True)
+            ep.pp.IterativeSVD_impute(adata)
+    """
+    if copy:
+        adata = adata.copy()
+
+    _warn_imputation_threshold(adata, var_names, threshold=warning_threshold)
+
+    if check_module_importable("fancyimpute"):
+        from fancyimpute import IterativeSVD
+
+        IterativeSVD()
+    else:
+        print("[bold yellow]fancyimpute is not available. Install via [blue]pip install fancyimpute.")
+
+    with Progress(
+        "[progress.description]{task.description}",
+        SpinnerColumn(),
+        refresh_per_second=1500,
+    ) as progress:
+        progress.add_task("[blue]Running IterativeSVD", total=1)
+        if np.issubdtype(adata.X.dtype, np.number):
+            _IterativeSVD_impute(
+                adata,
+                var_names,
+                rank,
+                convergence_threshold,
+                max_iters,
+                gradual_rank_increase,
+                svd_algorithm,
+                init_fill_method,
+                min_value,
+                max_value,
+                verbose,
+            )
+        else:
+            # ordinal encoding is used since non-numerical data can not be imputed using IterativeSVD
+            enc = OrdinalEncoder()
+            adata.X = enc.fit_transform(adata.X)
+            # impute the data using IterativeSVD
+            _IterativeSVD_impute(
+                adata,
+                var_names,
+                rank,
+                convergence_threshold,
+                max_iters,
+                gradual_rank_increase,
+                svd_algorithm,
+                init_fill_method,
+                min_value,
+                max_value,
+                verbose,
+            )
+            # decode ordinal encoding to obtain imputed original data
+            adata.X = enc.inverse_transform(adata.X)
+
+    return adata
+
+
+def _IterativeSVD_impute(
+    adata,
+    var_names,
+    rank,
+    convergence_threshold,
+    max_iters,
+    gradual_rank_increase,
+    svd_algorithm,
+    init_fill_method,
+    min_value,
+    max_value,
+    verbose,
+) -> None:
+    """Utility function to impute data using IterativeSVD"""
+    from fancyimpute import IterativeSVD
+
+    imputer = IterativeSVD(
+        rank,
+        convergence_threshold,
+        max_iters,
+        gradual_rank_increase,
+        svd_algorithm,
+        init_fill_method,
+        min_value,
+        max_value,
+        verbose,
+    )
+
+    if isinstance(var_names, list):
+        column_indices = get_column_indices(adata, var_names)
+        adata.X[::, column_indices] = imputer.fit_transform(adata.X[::, column_indices])
+    else:
+        adata.X = imputer.fit_transform(adata.X)
+
+
+# ===================== MatrixFactorization =========================
+
+
+def MatrixFactorization_impute(
+    adata: AnnData,
+    var_names: list[str] | None = None,
+    copy: bool = False,
+    warning_threshold: int = 30,
+    rank: int = 10,
+    convergence_threshold: float = 0.00001,
+    max_iters: int = 200,
+    gradual_rank_increase: bool = True,
+    svd_algorithm: str = "arpack",
+    init_fill_method: str = "zero",
+    min_value: float | None = None,
+    max_value: float | None = None,
+    verbose: bool = True,
+) -> AnnData:
+    """Impute data using the IterativeSVD.
+
+    See https://github.com/iskandr/fancyimpute/blob/master/fancyimpute/iterative_svd.py
+    Matrix completion by iterative low-rank SVD decomposition.
+
+    Args:
+        adata: The AnnData object to use SoftImpute on.
+        var_names: A list of var names indicating which columns to use median imputation on (if None -> all columns).
+        copy: Whether to return a copy or act in place.
+        warning_threshold: Threshold of percentage of missing values to display a warning for (default: 30).
+
+    Returns:
+        The imputed (but unencoded) AnnData object
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy as ep
+
+            adata = ep.dt.mimic_2(encoded=True)
+            ep.pp.IterativeSVD_impute(adata)
+    """
+    if copy:
+        adata = adata.copy()
+
+    _warn_imputation_threshold(adata, var_names, threshold=warning_threshold)
+
+    if check_module_importable("fancyimpute"):
+        from fancyimpute import IterativeSVD
+
+        IterativeSVD()
+    else:
+        print("[bold yellow]fancyimpute is not available. Install via [blue]pip install fancyimpute.")
+
+    with Progress(
+        "[progress.description]{task.description}",
+        SpinnerColumn(),
+        refresh_per_second=1500,
+    ) as progress:
+        progress.add_task("[blue]Running IterativeSVD", total=1)
+        if np.issubdtype(adata.X.dtype, np.number):
+            _IterativeSVD_impute(
+                adata,
+                var_names,
+                rank,
+                convergence_threshold,
+                max_iters,
+                gradual_rank_increase,
+                svd_algorithm,
+                init_fill_method,
+                min_value,
+                max_value,
+                verbose,
+            )
+        else:
+            # ordinal encoding is used since non-numerical data can not be imputed using IterativeSVD
+            enc = OrdinalEncoder()
+            adata.X = enc.fit_transform(adata.X)
+            # impute the data using IterativeSVD
+            _IterativeSVD_impute(
+                adata,
+                var_names,
+                rank,
+                convergence_threshold,
+                max_iters,
+                gradual_rank_increase,
+                svd_algorithm,
+                init_fill_method,
+                min_value,
+                max_value,
+                verbose,
+            )
+            # decode ordinal encoding to obtain imputed original data
+            adata.X = enc.inverse_transform(adata.X)
+
+    return adata
+
+
+def _MatrixFactorization_impute(
+    adata,
+    var_names,
+    rank,
+    convergence_threshold,
+    max_iters,
+    gradual_rank_increase,
+    svd_algorithm,
+    init_fill_method,
+    min_value,
+    max_value,
+    verbose,
+) -> None:
+    """Utility function to impute data using IterativeSVD"""
+    from fancyimpute import IterativeSVD
+
+    imputer = IterativeSVD(
+        rank,
+        convergence_threshold,
+        max_iters,
+        gradual_rank_increase,
+        svd_algorithm,
+        init_fill_method,
+        min_value,
+        max_value,
+        verbose,
+    )
+
+    if isinstance(var_names, list):
+        column_indices = get_column_indices(adata, var_names)
+        adata.X[::, column_indices] = imputer.fit_transform(adata.X[::, column_indices])
+    else:
+        adata.X = imputer.fit_transform(adata.X)
+
+
 def _warn_imputation_threshold(adata: AnnData, var_names: list[str] | None, threshold: int = 30) -> dict[str, int]:
     """Warns the user if the more than $threshold percent had to be imputed.
 

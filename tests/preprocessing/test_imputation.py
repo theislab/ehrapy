@@ -8,11 +8,13 @@ from sklearn.exceptions import ConvergenceWarning
 from ehrapy.io._read import read
 from ehrapy.preprocessing._data_imputation import (
     ImputeStrategyNotAvailableError,
+    IterativeSVD_impute,
     _warn_imputation_threshold,
     explicit_impute,
     knn_impute,
     miss_forest_impute,
     simple_impute,
+    soft_impute,
 )
 
 CURRENT_DIR = Path(__file__).parent
@@ -156,6 +158,66 @@ class TestImputation:
         adata_imputed = miss_forest_impute(
             adata, var_names={"numerical": ["intcol", "datetime"], "non_numerical": ["strcol", "boolcol"]}
         )
+
+        assert not (np.all([item != item for item in adata_imputed.X]))
+
+    def test_soft_impute_no_copy(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute_num.csv")
+        adata_imputed = soft_impute(adata)
+
+        assert id(adata) == id(adata_imputed)
+
+    def test_soft_impute_copy(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute_num.csv")
+        adata_imputed = soft_impute(adata, copy=True)
+
+        assert id(adata) != id(adata_imputed)
+
+    def test_soft_impute_non_numerical_data(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute.csv")
+        adata_imputed = soft_impute(adata)
+
+        assert not (np.all([item != item for item in adata_imputed.X]))
+
+    def test_soft_impute_numerical_data(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute_num.csv")
+        adata_imputed = soft_impute(adata)
+
+        assert not (np.all([item != item for item in adata_imputed.X]))
+
+    def test_soft_impute_list_str(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute.csv")
+        adata_imputed = soft_impute(adata, var_names=["intcol", "strcol", "boolcol"])
+
+        assert not (np.all([item != item for item in adata_imputed.X]))
+
+    def test_IterativeSVD_impute_no_copy(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute_num.csv")
+        adata_imputed = IterativeSVD_impute(adata, rank=2)
+
+        assert id(adata) == id(adata_imputed)
+
+    def test_IterativeSVD_impute_copy(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute_num.csv")
+        adata_imputed = IterativeSVD_impute(adata, rank=2, copy=True)
+
+        assert id(adata) != id(adata_imputed)
+
+    def test_IterativeSVD_impute_non_numerical_data(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute.csv")
+        adata_imputed = IterativeSVD_impute(adata, rank=3)
+
+        assert not (np.all([item != item for item in adata_imputed.X]))
+
+    def test_IterativeSVD_impute_numerical_data(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute_num.csv")
+        adata_imputed = IterativeSVD_impute(adata, rank=2)
+
+        assert not (np.all([item != item for item in adata_imputed.X]))
+
+    def test_IterativeSVD_impute_list_str(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute.csv")
+        adata_imputed = IterativeSVD_impute(adata, var_names=["intcol", "strcol", "boolcol"], rank=2)
 
         assert not (np.all([item != item for item in adata_imputed.X]))
 
