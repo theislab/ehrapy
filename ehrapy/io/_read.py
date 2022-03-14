@@ -50,7 +50,7 @@ def read_csv(
         .. code-block:: python
 
             import ehrapy as ep
-            adata = ep.io.read_cvs("myfile.csv")
+            adata = ep.io.read_csv("myfile.csv")
     """
     file: Path = Path(dataset_path)
     if not file.exists():
@@ -91,7 +91,7 @@ def read_h5ad(
 
             adata = eh.data.mimic_2(encode=True)
             ep.io.write("mimic_2.h5ad", adata)
-            adata_2 = ep.io.read("mimic_2.h5ad")
+            adata_2 = ep.io.read_h5ad("mimic_2.h5ad")
     """
     file: Path = Path(dataset_path)
     if not file.exists():
@@ -130,7 +130,7 @@ def read_pdf(
 
             import ehrapy as ep
 
-            adatas = ep.io.read("myfile.pdf")
+            adatas = ep.io.read_pdf("myfile.pdf")
     """
     file: Path = Path(dataset_path)
 
@@ -287,7 +287,7 @@ def _read_multiple_csv(  # noqa: N802
         mudata = None
     for file in filename.iterdir():
         if file.is_file() and file.suffix in {".csv", ".tsv"}:
-            # slice off the file suffix as this is not needed for identifier
+            # slice off the file suffix .csv or .tsv
             adata_identifier = file.name[:-4]
             index_col, col_obs_only = _extract_index_and_columns_obs_only(
                 adata_identifier, index_column, columns_obs_only
@@ -329,9 +329,9 @@ def _read_multiple_h5ad(  # noqa: N802
     anndata_dict = {}
     for file in filename.iterdir():
         if file.is_file() and file.suffix == ".h5ad":
-            # slice off the file suffix as this is not needed for identifier
-            adata_identifier = file.name[:-4]
-            adata = _do_read_h5ad(filename)
+            # slice off the file suffix .h5ad
+            adata_identifier = file.name[:-5]
+            adata = _do_read_h5ad(file)
             anndata_dict[adata_identifier] = adata
     return anndata_dict
 

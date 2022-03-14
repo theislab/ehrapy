@@ -25,7 +25,9 @@ Reading and writing
 .. autosummary::
     :toctree: io
 
-    io.read
+    io.read_csv
+    io.read_h5ad
+    io.read_pdf
     io.write
 
 Data
