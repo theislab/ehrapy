@@ -4,7 +4,7 @@ from anndata import AnnData
 from mudata import MuData
 
 from ehrapy import ehrapy_settings
-from ehrapy.io._read import read
+from ehrapy.io._read import read_csv
 from ehrapy.preprocessing.encoding._encode import encode
 
 
@@ -30,7 +30,7 @@ def mimic_2(
 
             adata = ep.dt.mimic_2(encode=True)
     """
-    adata = read(
+    adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/ehrapy_mimic2.csv",
         download_dataset_name="ehrapy_mimic2.csv",
         backup_url="https://www.physionet.org/files/mimic2-iaccd/1.0/full_cohort_data.csv?download",
@@ -63,13 +63,12 @@ def mimic_3_demo(
 
             adatas = ep.dt.mimic_3_demo(encode=True)
     """
-    mdata = read(
+    mdata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/ehrapy_mimic_3",
         download_dataset_name="ehrapy_mimic_3",
         backup_url="https://physionet.org/static/published-projects/mimiciii-demo/mimic-iii-clinical-database-demo-1.4.zip",
         columns_obs_only=columns_obs_only,
         return_mudata=mudata,
-        extension="csv",
     )
     if encoded:
         if not mudata:
@@ -102,12 +101,11 @@ def heart_failure(encoded: bool = False, columns_obs_only: dict[str, list[str]] 
 
             adata = ep.dt.heart_failure(encode=True)
     """
-    adata = read(
+    adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/heart_failure.csv",
         download_dataset_name="heart_failure.csv",
         backup_url="https://figshare.com/ndownloader/files/33952934",
         columns_obs_only=columns_obs_only,
-        extension="csv",
         index_column="patient_id",
     )
     if encoded:
@@ -139,12 +137,11 @@ def diabetes_130(
 
             adata = ep.dt.diabetes_130(encode=True)
     """
-    adata = read(
+    adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/diabetes_130.csv",
         download_dataset_name="diabetes_130.csv",
         backup_url="https://figshare.com/ndownloader/files/33950546",
         columns_obs_only=columns_obs_only,
-        extension="csv",
         index_column="encounter_id",
     )
     if encoded:
@@ -176,12 +173,11 @@ def chronic_kidney_disease(
 
             adata = ep.data.chronic_kidney_disease(encode=True)
     """
-    adata = read(
+    adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/chronic_kidney_disease_precessed.csv",
         download_dataset_name="chronic_kidney_disease.csv",
         backup_url="https://figshare.com/ndownloader/files/33989261",
         columns_obs_only=columns_obs_only,
-        extension="csv",
         index_column="Patient_id",
     )
     if encoded:
@@ -213,12 +209,11 @@ def breast_tissue(
 
             adata = ep.dt.breast_tissue(encode=True)
     """
-    adata = read(
+    adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/breast_tissue.csv",
         download_dataset_name="breast_tissue.csv",
         backup_url="https://figshare.com/ndownloader/files/34179264",
         columns_obs_only=columns_obs_only,
-        extension="csv",
         index_column="patient_id",
     )
     if encoded:
@@ -250,12 +245,11 @@ def cervical_cancer_risk_factors(
 
             adata = ep.dt.cervical_cancer_risk_factors(encode=True)
     """
-    adata = read(
+    adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/cervical_cancer_risk_factors.csv",
         download_dataset_name="cervical_cancer_risk_factors.csv",
         backup_url="https://figshare.com/ndownloader/files/34179291",
         columns_obs_only=columns_obs_only,
-        extension="csv",
         index_column="patient_id",
     )
     if encoded:
@@ -287,12 +281,11 @@ def dermatology(
 
             adata = ep.dt.dermatology(encode=True)
     """
-    adata = read(
+    adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/dermatology.csv",
         download_dataset_name="dermatology.csv",
         backup_url="https://figshare.com/ndownloader/files/34179300",
         columns_obs_only=columns_obs_only,
-        extension="csv",
         index_column="patient_id",
     )
     if encoded:
@@ -324,12 +317,11 @@ def echocardiogram(
 
             adata = ep.dt.echocardiogram(encode=True)
     """
-    adata = read(
+    adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/echocardiogram.csv",
         download_dataset_name="echocardiogram.csv",
         backup_url="https://figshare.com/ndownloader/files/34179306",
         columns_obs_only=columns_obs_only,
-        extension="csv",
         index_column="patient_id",
     )
     if encoded:
@@ -361,12 +353,11 @@ def hepatitis(
 
             adata = ep.dt.hepatitis(encode=True)
     """
-    adata = read(
+    adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/hepatitis.csv",
         download_dataset_name="hepatitis.csv",
         backup_url="https://figshare.com/ndownloader/files/34179318",
         columns_obs_only=columns_obs_only,
-        extension="csv",
         index_column="patient_id",
     )
     if encoded:
@@ -398,12 +389,11 @@ def statlog_heart(
 
             adata = ep.dt.statlog_heart(encode=True)
     """
-    adata = read(
+    adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/statlog_heart.csv",
         download_dataset_name="statlog_heart.csv",
         backup_url="https://figshare.com/ndownloader/files/34179327",
         columns_obs_only=columns_obs_only,
-        extension="csv",
         index_column="patient_id",
     )
     if encoded:
@@ -435,12 +425,11 @@ def thyroid(
 
             adata = ep.dt.thyroid(encode=True)
     """
-    adata: AnnData = read(
+    adata: AnnData = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/thyroid.csv",
         download_dataset_name="thyroid.csv",
         backup_url="https://figshare.com/ndownloader/files/34179333",
         columns_obs_only=columns_obs_only,
-        extension="csv",
         index_column="patient_id",
     )
     if encoded:

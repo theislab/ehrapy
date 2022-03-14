@@ -1,0 +1,5 @@
+indexcol,intcol,strcol,datetime,boolcol,binary_col
+0,,hi,,false,1
+1,2,,2164-10-23 00:00:00,true,0
+2,3,haha,2164-10-23 00:00:00,TRUE,1
+3,4,eh,2164-10-23 00:00:00,FALSE,0

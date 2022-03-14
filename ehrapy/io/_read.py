@@ -9,21 +9,19 @@ import numpy as np
 import pandas as pd
 from _collections import OrderedDict
 from anndata import AnnData
-from anndata import read as read_h5ad
+from anndata import read as read_h5
 from mudata import MuData
 from rich import print
 
 from ehrapy import ehrapy_settings, settings
 from ehrapy.anndata.anndata_ext import df_to_anndata
 from ehrapy.data._dataloader import download
-from ehrapy.io._utility_io import _get_file_extension, _slugify, multi_data_extensions, supported_extensions
 from ehrapy.preprocessing.encoding._encode import encode
 
 
-def read(
+def read_csv(
     dataset_path: Path | str,
-    extension: str | None = None,
-    delimiter: str | None = None,
+    sep: str = ",",
     index_column: dict[str, str | int] | str | int | None = None,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
     return_mudata: bool = False,
@@ -32,31 +30,58 @@ def read(
     download_dataset_name: str | None = None,
     **kwargs,
 ) -> AnnData | dict[str, AnnData] | MuData:
-    """Reads or downloads a desired directory or single file.
-
-    This read method is a master method which works for several file types and file extensions.
-    The appropriate read function is automatically determined by the file extensions but can also be specified explicitly
-    using the `extension` parameter.
-
-    Allowed file formats are:
-        * `.h5ad`
-        * `.csv` or a folder containing several csv files.
-        * `.tsv` or a folder containing several tsv files.
-        * '.pdf'
+    """Reads or downloads a desired directory of csv/tsv files or a single csv/tsv file.
 
     Args:
         dataset_path: Path to the file or directory to read.
-        extension: File extension. Required to select the appropriate file reader.
-        delimiter: File delimiter. Required for e.g. csv vs tsv files.
+        sep: Separator in the file; either , (default) or \t.
         index_column: The index column of obs. Usually the patient visit ID or the patient ID.
-        columns_obs_only: Which columns to only add to obs and not X.
+        columns_obs_only: These columns will be added to obs only and not X.
         return_mudata: Whether to create and return a MuData object. This is primarily used for complex datasets which require several AnnData files.
         cache: Whether to use the cache when reading.
         download_dataset_name: Name of the file or directory in case the dataset is downloaded
         backup_url: URL to download the data file(s) from if not yet existing.
 
     Returns:
-        An :class:`~anndata.AnnData` object, a :class:`~mudata.MuData` object or a dict with an identifier (usually the filename, without extension)
+        An :class:`~anndata.AnnData` object, a :class:`~mudata.MuData` object or a dict with an identifier (the filename, without extension)
+        for each :class:`~anndata.AnnData` object in the dict
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy as ep
+            adata = ep.io.read_csv("myfile.csv")
+    """
+    file: Path = Path(dataset_path)
+    if not file.exists():
+        file = _get_non_existing_files(file, download_dataset_name, backup_url)
+
+    adata = _read_csv(
+        filename=file,
+        sep=sep,
+        index_column=index_column,
+        columns_obs_only=columns_obs_only,
+        return_mudata=return_mudata,
+        cache=cache,
+        **kwargs,
+    )
+    return adata
+
+
+def read_h5ad(
+    dataset_path: Path | str,
+    backup_url: str | None = None,
+    download_dataset_name: str | None = None,
+) -> AnnData | dict[str, AnnData] | MuData:
+    """Reads or downloads a desired directory of h5ad files or a single h5ad file.
+
+    Args:
+        dataset_path: Path to the file or directory to read.
+        download_dataset_name: Name of the file or directory in case the dataset is downloaded
+        backup_url: URL to download the data file(s) from if not yet existing.
+
+    Returns:
+        An :class:`~anndata.AnnData` object or a dict with an identifier (the filename, without extension)
         for each :class:`~anndata.AnnData` object in the dict
 
     Example:
@@ -66,176 +91,176 @@ def read(
 
             adata = eh.data.mimic_2(encode=True)
             ep.io.write("mimic_2.h5ad", adata)
-            adata_2 = ep.io.read("mimic_2.h5ad")
+            adata_2 = ep.io.read_h5ad("mimic_2.h5ad")
     """
     file: Path = Path(dataset_path)
-
     if not file.exists():
-        if backup_url is not None:
-            download_default_name = backup_url.split("/")[-1]
-            download_dataset_name = download_dataset_name or download_default_name
-            # currently supports zip, tar, gztar, bztar, xztar
-            archive_formats, _ = zip(*shutil.get_archive_formats())
-            is_archived = download_default_name[-3:] in archive_formats
+        file = _get_non_existing_files(file, download_dataset_name, backup_url)
 
-        else:
-            raise BackupURLNotProvidedError(
-                f"File or directory {file} does not exist and no backup_url was provided.\n"
-                f"Please provide a backup_url or check whether path is spelled correctly."
-            )
-        print("[bold yellow]Path or dataset does not yet exist. Attempting to download...")
-        download(
-            backup_url,
-            output_file_name=download_default_name,
-            output_path=ehrapy_settings.datasetdir,
-            is_archived=is_archived,
-        )
-        # if archived, remove archive suffix
-        archive_extension = download_default_name[-4:]
-        output_path_name = (
-            download_default_name.replace(archive_extension, "") if is_archived else download_default_name
-        )
-        output_file_or_dir = ehrapy_settings.datasetdir / output_path_name
-        moved_path = Path(str(output_file_or_dir)[: str(output_file_or_dir).rfind("/") + 1]) / download_dataset_name
-        shutil.move(output_file_or_dir, moved_path)  # type: ignore
-        file = moved_path
-
-    raw_object = _read(
-        filename=file,
-        extension=extension,
-        delimiter=delimiter,
-        index_column=index_column,
-        columns_obs_only=columns_obs_only,
-        return_mudata=return_mudata,
-        cache=cache,
-        **kwargs,
-    )
-    return raw_object
+    adata = _read_h5ad(filename=file)
+    return adata
 
 
-def _read(
-    filename: Path,
-    extension: str | None = None,
-    delimiter: str | None = None,
+def read_pdf(
+    dataset_path: Path | str,
     index_column: dict[str, str | int] | str | int | None = None,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
     return_mudata: bool = False,
     cache: bool = False,
     backup_url: str | None = None,
-    **kwargs,
+    download_dataset_name: str | None = None,
 ) -> AnnData | dict[str, AnnData] | MuData:
-    """Internal interface of the read method."""
-    if cache and return_mudata:
-        _mudata_cache_not_supported()
-    # check, whether the datafile(s) is/are present or not
-    _check_files_present(filename, backup_url)
+    """Reads or downloads a desired directory of pdf files or a single pdf file.
 
-    # multi data format extensions like pdf can contain multiple datasets in one single file and are therefore handled as directories when caching
-    path_cache_dir = settings.cachedir / (
-        filename if filename.suffix[1:] not in multi_data_extensions else filename.stem
+    Args:
+        dataset_path: Path to the file or directory to read.
+        index_column: The index column of obs. Usually the patient visit ID or the patient ID.
+        columns_obs_only: These columns will be added to obs only and not X.
+        return_mudata: Whether to create and return a MuData object. This is primarily used for complex datasets which require several AnnData files.
+        cache: Whether to use the cache when reading.
+        download_dataset_name: Name of the file or directory in case the dataset is downloaded
+        backup_url: URL to download the data file(s) from if not yet existing.
+
+    Returns:
+        An :class:`~anndata.AnnData` object, a :class:`~mudata.MuData` object or a dict with an identifier (the filename, without extension)
+        for each :class:`~anndata.AnnData` object in the dict
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy as ep
+
+            adatas = ep.io.read_pdf("myfile.pdf")
+    """
+    file: Path = Path(dataset_path)
+
+    if not file.exists():
+        file = _get_non_existing_files(file, download_dataset_name, backup_url)
+
+    adata = _read_pdf(
+        filename=file,
+        index_column=index_column,
+        columns_obs_only=columns_obs_only,
+        return_mudata=return_mudata,
+        cache=cache,
     )
-    # read from cache directory if wanted and available
-    if cache and path_cache_dir.is_dir():
-        return _read_from_cache_dir(path_cache_dir)
-
-    # If the filename is a directory, assume it is a dataset with multiple files
-    elif filename.is_dir():
-        return _read_from_directory(
-            filename, extension, delimiter, index_column, columns_obs_only, return_mudata, cache, path_cache_dir
-        )
-
-    # dataset seems to be a single file, not a directory of multiple files
-    else:
-        if extension is not None and extension not in supported_extensions:
-            raise ValueError("Please provide one of the available extensions.\n" f"{supported_extensions}")
-        else:
-            extension = _get_file_extension(filename)
-        # read hdf5 files
-        if extension in {"h5", "h5ad"}:
-            adata = read_h5ad(filename)
-            if "ehrapy_dummy_encoding" in adata.uns.keys():
-                # if dummy encoding was needed, the original dtype of X could not be numerical, so cast it to object
-                adata.X = adata.X.astype("object")
-                decoded_adata = _decode_cached_adata(adata, list(adata.uns["columns_obs_only"]))
-                return decoded_adata
-            else:
-                return adata
-
-        # read from cache file
-        path_cache = settings.cachedir / _slugify(filename).replace("." + extension, ".h5ad")  # type: Path
-        if path_cache.suffix in {".gz", ".bz2"}:
-            path_cache = path_cache.with_suffix("")
-        # previously cached data reading
-        if cache and path_cache.is_file():
-            return _read_from_cache(path_cache)
-
-        # read from other files that are currently supported
-        elif extension in {"csv", "tsv"}:
-            raw_anndata, columns_obs_only = read_csv(
-                filename, delimiter, index_column, columns_obs_only, cache, **kwargs  # type: ignore
-            )
-            # cache results if desired
-            if cache:
-                if not path_cache.parent.is_dir():
-                    path_cache.parent.mkdir(parents=True)
-                return _write_cache(raw_anndata, path_cache, columns_obs_only)  # type: ignore
-
-        elif extension == "pdf":
-            raw_anndata, columns_obs_only = read_pdf(
-                filename, index_column, columns_obs_only, cache, **kwargs  # type: ignore
-            )
-            # set cache path, since its a single input file which will be stored in (eventually) multiple cache files
-            path_cache = settings.cachedir / filename.stem  # type: ignore
-            if cache:
-                if not path_cache.parent.is_dir():
-                    path_cache.parent.mkdir(parents=True)
-                path_cache.mkdir()
-                return _write_cache_dir(raw_anndata, path_cache, columns_obs_only, index_column)  # type: ignore
-
-        else:
-            raise NotImplementedError(f"There is currently no parser implemented for {extension} files!")
-        return raw_anndata
+    return adata
 
 
-def _read_from_directory(
+def _read_csv(
     filename: Path,
-    extension: str | None = None,
-    delimiter: str | None = None,
+    sep: str,
     index_column: dict[str, str | int] | str | int | None = None,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
     return_mudata: bool = False,
     cache: bool = False,
-    path_cache_dir: Path | None = None,
+    **kwargs,
+) -> AnnData | dict[str, AnnData] | MuData:
+    """Internal interface of the read_csv method."""
+    if cache and return_mudata:
+        _mudata_cache_not_supported()
+    path_cache = settings.cachedir / filename
+    # reading from (cache) file is separated in the read_h5ad function
+    if cache and (path_cache.is_dir() or path_cache.is_file()):
+        raise CacheExistsException(
+            f"{path_cache} already exists. Use the read_h5ad function instead to read from cache!"
+        )
+    # If the filename is a directory, assume it is a dataset with multiple files
+    elif filename.is_dir():
+        return _read_from_directory(filename, cache, path_cache, sep, index_column, columns_obs_only, return_mudata)
+    # input is a single file
+    else:
+        if sep not in {",", "\t"}:
+            raise ValueError("Please provide one of the available separators , or tab")
+        adata, columns_obs_only = _do_read_csv(
+            filename, sep, index_column, columns_obs_only, cache, **kwargs  # type: ignore
+        )
+        # cache results if desired
+        if cache:
+            if not path_cache.parent.is_dir():
+                path_cache.parent.mkdir(parents=True)
+            return _write_cache(adata, path_cache, columns_obs_only)  # type: ignore
+        return adata
+
+
+def _read_h5ad(
+    filename: Path,
+) -> AnnData | dict[str, AnnData]:
+    """Internal interface of the read_h5ad method."""
+
+    # If the filename is a directory, assume it is a dataset with h5ad multiple files
+    if filename.is_dir():
+        return _read_from_directory(filename, False, None, "h5ad")
+    # dataset is a single h5ad file
+    else:
+        return _do_read_h5ad(filename)
+
+
+def _read_pdf(
+    filename: Path,
+    index_column: dict[str, str | int] | str | int | None = None,
+    columns_obs_only: dict[str, list[str]] | list[str] | None = None,
+    return_mudata: bool = False,
+    cache: bool = False,
+    **kwargs,
+) -> AnnData | dict[str, AnnData] | MuData:
+    """Internal interface of the read_pdf method."""
+    if cache and return_mudata:
+        _mudata_cache_not_supported()
+    path_cache = settings.cachedir / filename.stem
+    if cache and (path_cache.is_dir() or path_cache.is_file()):
+        raise CacheExistsException(
+            f"{path_cache} already exists. Use the read_h5ad function instead to read from cache!"
+        )
+    elif filename.is_dir():
+        raise UnsupportedDirectoryParsingFormatException(
+            "Can only parse csv, tsv or h5ad files from a directory, not pdf!"
+        )
+    # dataset is a single pdf file
+    else:
+        adata, columns_obs_only = _do_read_pdf(filename, index_column, columns_obs_only, cache, **kwargs)  # type: ignore
+        # set cache path, since its a single input file which will be stored in (eventually) multiple cache files
+        path_cache = settings.cachedir / filename.stem  # type: ignore
+        if cache:
+            if not path_cache.parent.is_dir():
+                path_cache.parent.mkdir(parents=True)
+            path_cache.mkdir()
+            return _write_cache_dir(adata, path_cache, columns_obs_only, index_column)  # type: ignore
+        return adata
+
+
+def _read_from_directory(
+    filename: Path,
+    cache: bool,
+    path_cache_dir: Path | None,
+    extension: str,
+    index_column: dict[str, str | int] | str | int | None = None,
+    columns_obs_only: dict[str, list[str]] | list[str] | None = None,
+    return_mudata: bool = False,
 ) -> dict[str, AnnData]:
     """Parse AnnData objects from a directory containing the data files"""
-
-    if not extension:
-        raise ExtensionMissingError(
-            "Reading from directory, but no extension has been provided!. Please "
-            "provide an extension for ehrapy to determine, which file format to read!\n"
-            f"Valid extensions are: {','.join(ext for ext in supported_extensions)}"
+    if extension in {",", "\t"}:
+        adata_objects, columns_obs_only = _read_multiple_csv(
+            filename, extension, index_column, columns_obs_only, return_mudata
         )
-
-    elif extension not in {"csv", "tsv"}:
-        raise UnsupportedDirectoryParsingFormatException(
-            f"Unsupported extension {extension} when parsing directory contents."
-            f"Can only parse .csv and .tsv files from a directory currently."
-        )
-
-    adata_objects, columns_obs_only = _read_multiple_csv(
-        filename, delimiter, index_column, columns_obs_only, return_mudata, cache
-    )
-    if cache:
-        if not path_cache_dir.parent.is_dir():
-            path_cache_dir.parent.mkdir(parents=True)
-        path_cache_dir.mkdir()
-        return _write_cache_dir(adata_objects, path_cache_dir, columns_obs_only, index_column)  # type: ignore
-    return adata_objects
+        # cache results
+        if cache:
+            if not path_cache_dir.parent.is_dir():
+                path_cache_dir.parent.mkdir(parents=True)
+            path_cache_dir.mkdir()
+            return _write_cache_dir(adata_objects, path_cache_dir, columns_obs_only, index_column)  # type: ignore
+        return adata_objects
+    # read multiple h5ad files
+    elif extension == "h5ad":
+        return _read_multiple_h5ad(filename)
+    # only for development reasons, users should never see this
+    else:
+        raise NotImplementedError(f"Reading from directory with .{extension} files is not implemented yet!")
 
 
 def _read_multiple_csv(  # noqa: N802
     filename: Path,
-    delimiter: str | None = None,
+    sep: str,
     index_column: dict[str, str | int] | str | int | None = None,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
     return_mudata_object: bool = False,
@@ -245,7 +270,7 @@ def _read_multiple_csv(  # noqa: N802
 
     Args:
         filename: File path to the directory containing multiple .csv/.tsv files.
-        delimiter: Delimiter separating the data within the file.
+        sep: Either , or \t to determine which files to read.
         index_column: Column names of the index columns for obs
         columns_obs_only: List of columns per file (AnnData object) which should only be stored in .obs, but not in X. Useful for free text annotations.
         return_mudata_object: When set to True, return a :class:`~mudata.MuData` object, otherwise a dict of :class:`~anndata.AnnData` objects
@@ -262,12 +287,12 @@ def _read_multiple_csv(  # noqa: N802
         mudata = None
     for file in filename.iterdir():
         if file.is_file() and file.suffix in {".csv", ".tsv"}:
-            # slice off the file suffix as this is not needed for identifier
+            # slice off the file suffix .csv or .tsv
             adata_identifier = file.name[:-4]
             index_col, col_obs_only = _extract_index_and_columns_obs_only(
                 adata_identifier, index_column, columns_obs_only
             )
-            adata, single_adata_obs_only = read_csv(file, delimiter, index_col, col_obs_only, cache=cache)
+            adata, single_adata_obs_only = _do_read_csv(file, sep, index_col, col_obs_only, cache=cache)
             obs_only_all[adata_identifier] = single_adata_obs_only
             # obs indices have to be unique otherwise updating and working with the MuData object will fail
             if index_col:
@@ -288,7 +313,28 @@ def _read_multiple_csv(  # noqa: N802
         return anndata_dict, obs_only_all
 
 
-def read_csv(
+def _read_multiple_h5ad(  # noqa: N802
+    filename: Path,
+) -> dict[str, AnnData]:
+    """Read a dataset containing multiple .h5ad files.
+
+    Args:
+        filename: File path to the directory containing multiple .csv/.tsv files.
+
+    Returns:
+        A dict mapping the filename (object name) to the corresponding :class:`~anndata.AnnData` object
+    """
+    anndata_dict = {}
+    for file in filename.iterdir():
+        if file.is_file() and file.suffix == ".h5ad":
+            # slice off the file suffix .h5ad
+            adata_identifier = file.name[:-5]
+            adata = _do_read_h5ad(file)
+            anndata_dict[adata_identifier] = adata
+    return anndata_dict
+
+
+def _do_read_csv(
     filename: Path | Iterator[str],
     delimiter: str | None = ",",
     index_column: str | int | None = None,
@@ -329,7 +375,24 @@ def read_csv(
     return df_to_anndata(initial_df, columns_obs_only), columns_obs_only
 
 
-def read_pdf(
+def _do_read_h5ad(filename: Path | Iterator[str]) -> AnnData:
+    """Read from a h5ad file.
+    Args:
+        filename: Path to the h5ad file
+
+    Returns:
+        An AnnData object.
+    """
+    adata = read_h5(filename)
+    if "ehrapy_dummy_encoding" in adata.uns.keys():
+        # if dummy encoding was needed, the original dtype of X could not be numerical, so cast it to object
+        adata.X = adata.X.astype("object")
+        decoded_adata = _decode_cached_adata(adata, list(adata.uns["columns_obs_only"]))
+        return decoded_adata
+    return adata
+
+
+def _do_read_pdf(
     filename: Path | Iterator[str],
     index_column: dict[str, str] | None = None,
     columns_obs_only: dict[str, list[str] | None] = None,
@@ -440,6 +503,46 @@ def read_pdf(
     return ann_data_objects, columns_obs_only
 
 
+def _get_non_existing_files(file: Path, download_dataset_name: str, backup_url: str) -> Path:
+    """Handle non existing files or directories by trying to download from a backup_url and moving them
+    in the correct directory.
+
+    Args:
+        backup_url: Backup URL to lookup for the datafile(s)
+
+    Returns:
+        The file or directory path of the downloaded content
+    """
+    if backup_url is not None:
+        download_default_name = backup_url.split("/")[-1]
+        download_dataset_name = download_dataset_name or download_default_name
+        # currently supports zip, tar, gztar, bztar, xztar
+        archive_formats, _ = zip(*shutil.get_archive_formats())
+        is_archived = download_default_name[-3:] in archive_formats
+
+    else:
+        raise BackupURLNotProvidedError(
+            f"File or directory {file} does not exist and no backup_url was provided.\n"
+            f"Please provide a backup_url or check whether path is spelled correctly."
+        )
+    print("[bold yellow]Path or dataset does not yet exist. Attempting to download...")
+    download(
+        backup_url,
+        output_file_name=download_default_name,
+        output_path=ehrapy_settings.datasetdir,
+        is_archived=is_archived,
+    )
+    # if archived, remove archive suffix
+    archive_extension = download_default_name[-4:]
+    output_path_name = download_default_name.replace(archive_extension, "") if is_archived else download_default_name
+    output_file_or_dir = ehrapy_settings.datasetdir / output_path_name
+    moved_path = Path(str(output_file_or_dir)[: str(output_file_or_dir).rfind("/") + 1]) / download_dataset_name
+    shutil.move(output_file_or_dir, moved_path)  # type: ignore
+    file = moved_path
+
+    return file
+
+
 def _read_from_cache_dir(cache_dir: Path) -> dict[str, AnnData]:
     """Read AnnData objects from the cache directory."""
     adata_objects = {}
@@ -452,13 +555,13 @@ def _read_from_cache_dir(cache_dir: Path) -> dict[str, AnnData]:
 
 def _read_from_cache(path_cache: Path) -> AnnData:
     """Read AnnData object from cached file."""
-    cached_adata = read_h5ad(path_cache)
+    cached_adata = read_h5(path_cache)
     # type cast required when dealing with non numerical data; otherwise all values in X would be treated as strings
     if not np.issubdtype(cached_adata.X.dtype, np.number):
         cached_adata.X = cached_adata.X.astype("object")
     try:
-        columns_obs_only = list(cached_adata.uns["cache_temp_obs_only"])
-        del cached_adata.uns["cache_temp_obs_only"]
+        columns_obs_only = list(cached_adata.uns["columns_obs_only"])
+        del cached_adata.uns["columns_obs_only"]
     # in case columns_obs_only has not been passed
     except KeyError:
         columns_obs_only = []
@@ -508,7 +611,14 @@ def _write_cache(
     else:
         cached_adata = raw_anndata
     # temporary key that stores all column names that are obs only for this AnnData object
-    cached_adata.uns["cache_temp_obs_only"] = columns_obs_only
+    cached_adata.uns["columns_obs_only"] = columns_obs_only
+    cached_adata.uns["ehrapy_dummy_encoding"] = True
+    # append correct file suffix
+    if not path_cache.suffix == ".h5ad":
+        if path_cache.suffix in {".tsv", ".csv"}:
+            path_cache = Path(str(path_cache)[:-4] + ".h5ad")
+        else:
+            path_cache = Path(str(path_cache) + ".h5ad")
     cached_adata.write(path_cache)
     # preserve original dtype of X (either numerical or object)
     cached_adata.X = cached_adata.X.astype(original_x_dtype)
@@ -541,6 +651,7 @@ def _prepare_dataframe(initial_df: pd.DataFrame, columns_obs_only, cache):
             no_datetime_object_col.append(col)
     # writing to hd5a files requires non string to be empty in non numerical columns
     if cache:
+        # TODO remove this when anndata 0.8.0 is released
         initial_df[no_datetime_object_col] = initial_df[no_datetime_object_col].fillna("")
         # temporary workaround needed; see https://github.com/theislab/anndata/issues/504 and https://github.com/theislab/anndata/issues/662
         # converting booleans to strings is needed for caching as writing to .h5ad files currently does not support writing boolean values
@@ -586,39 +697,6 @@ def _decode_cached_adata(adata: AnnData, column_obs_only: list[str]) -> AnnData:
     adata.uns["non_numerical_columns"] = list(set(adata.var_names) ^ set(numerical_columns))
 
     return adata
-
-
-def _check_files_present(filename: Path, backup_url: str | None = None):
-    if backup_url is not None:
-        is_present = _check_datafiles_present_and_download(filename, backup_url=backup_url)
-        if not is_present and not filename.is_dir() and not filename.is_file():
-            print(
-                "[bold red]Attempted download of missing dataset file(s) failed. Please file an issue at our repository "
-                "[blue]https://github.com/theislab/ehrapy!"
-            )
-
-
-def _check_datafiles_present_and_download(path: str | Path, backup_url=None) -> bool:
-    """Check whether the file or directory is present, otherwise download.
-
-    Args:
-        path: Path to the file or directory to check
-        backup_url: Backup URL if the file cannot be found and has to be downloaded
-
-    Returns:
-        True if the file or directory was present. False if not.
-    """
-    path = Path(path)
-    if path.is_file() or path.is_dir():
-        return True
-    if backup_url is None:
-        return False
-    if not path.is_dir() and not path.parent.is_dir():
-        path.parent.mkdir(parents=True)
-
-    download(backup_url, output_file_name=str(path))
-
-    return True
 
 
 def _extract_index_and_columns_obs_only(identifier: str, index_columns, columns_obs_only):
@@ -733,4 +811,8 @@ class ExtensionMissingError(Exception):
 
 
 class UnsupportedDirectoryParsingFormatException(Exception):
+    pass
+
+
+class CacheExistsException(Exception):
     pass
