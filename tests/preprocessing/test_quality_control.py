@@ -73,3 +73,6 @@ class TestQualityControl:
                 measurements=list(self.test_lab_measurements_simple_adata.var_names),
             )
         )
+
+    def test_qc_lab_measurements_simple_layer(self):
+        pass
