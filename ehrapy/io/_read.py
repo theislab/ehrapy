@@ -21,7 +21,7 @@ from ehrapy.preprocessing.encoding._encode import encode
 
 def read_csv(
     dataset_path: Path | str,
-    extension: str = "csv",
+    sep: str = ",",
     index_column: dict[str, str | int] | str | int | None = None,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
     return_mudata: bool = False,
@@ -34,9 +34,9 @@ def read_csv(
 
     Args:
         dataset_path: Path to the file or directory to read.
-        extension: File extension; either csv (default) or tsv
+        sep: Separator in the file; either , (default) or \t.
         index_column: The index column of obs. Usually the patient visit ID or the patient ID.
-        columns_obs_only: Which columns to only add to obs and not X.
+        columns_obs_only: These columns will be added to obs only and not X.
         return_mudata: Whether to create and return a MuData object. This is primarily used for complex datasets which require several AnnData files.
         cache: Whether to use the cache when reading.
         download_dataset_name: Name of the file or directory in case the dataset is downloaded
@@ -58,7 +58,7 @@ def read_csv(
 
     adata = _read_csv(
         filename=file,
-        extension=extension,
+        sep=sep,
         index_column=index_column,
         columns_obs_only=columns_obs_only,
         return_mudata=return_mudata,
@@ -115,7 +115,7 @@ def read_pdf(
     Args:
         dataset_path: Path to the file or directory to read.
         index_column: The index column of obs. Usually the patient visit ID or the patient ID.
-        columns_obs_only: Which columns to only add to obs and not X.
+        columns_obs_only: These columns will be added to obs only and not X.
         return_mudata: Whether to create and return a MuData object. This is primarily used for complex datasets which require several AnnData files.
         cache: Whether to use the cache when reading.
         download_dataset_name: Name of the file or directory in case the dataset is downloaded
@@ -149,7 +149,7 @@ def read_pdf(
 
 def _read_csv(
     filename: Path,
-    extension: str,
+    sep: str,
     index_column: dict[str, str | int] | str | int | None = None,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
     return_mudata: bool = False,
@@ -162,19 +162,18 @@ def _read_csv(
     path_cache = settings.cachedir / filename
     # reading from (cache) file is separated in the read_h5ad function
     if cache and (path_cache.is_dir() or path_cache.is_file()):
-        # TODO custom exc
-        raise ValueError(f"{path_cache} already exists. Use the read_h5ad function instead to read from cache!")
+        raise CacheExistsException(
+            f"{path_cache} already exists. Use the read_h5ad function instead to read from cache!"
+        )
     # If the filename is a directory, assume it is a dataset with multiple files
     elif filename.is_dir():
-        return _read_from_directory(
-            filename, cache, path_cache, extension, index_column, columns_obs_only, return_mudata
-        )
+        return _read_from_directory(filename, cache, path_cache, sep, index_column, columns_obs_only, return_mudata)
     # input is a single file
     else:
-        if extension not in {"csv", "tsv"}:
-            raise ValueError("Please provide one of the available extensions csv or tsv.")
+        if sep not in {",", "\t"}:
+            raise ValueError("Please provide one of the available separators , or tab")
         adata, columns_obs_only = _do_read_csv(
-            filename, "," if extension == "csv" else "\t", index_column, columns_obs_only, cache, **kwargs  # type: ignore
+            filename, sep, index_column, columns_obs_only, cache, **kwargs  # type: ignore
         )
         # cache results if desired
         if cache:
@@ -210,15 +209,16 @@ def _read_pdf(
         _mudata_cache_not_supported()
     path_cache = settings.cachedir / filename.stem
     if cache and (path_cache.is_dir() or path_cache.is_file()):
-        # TODO custom exc
-        raise ValueError(f"{path_cache} already exists. Use the read_h5ad function instead to read from cache!")
+        raise CacheExistsException(
+            f"{path_cache} already exists. Use the read_h5ad function instead to read from cache!"
+        )
     elif filename.is_dir():
         raise UnsupportedDirectoryParsingFormatException(
             "Can only parse csv, tsv or h5ad files from a directory, not pdf!"
         )
     # dataset is a single pdf file
     else:
-        adata, columns_obs_only = _read_pdf(filename, index_column, columns_obs_only, cache, **kwargs)  # type: ignore
+        adata, columns_obs_only = _do_read_pdf(filename, index_column, columns_obs_only, cache, **kwargs)  # type: ignore
         # set cache path, since its a single input file which will be stored in (eventually) multiple cache files
         path_cache = settings.cachedir / filename.stem  # type: ignore
         if cache:
@@ -239,7 +239,7 @@ def _read_from_directory(
     return_mudata: bool = False,
 ) -> dict[str, AnnData]:
     """Parse AnnData objects from a directory containing the data files"""
-    if extension in {"tsv", "csv"}:
+    if extension in {",", "\t"}:
         adata_objects, columns_obs_only = _read_multiple_csv(
             filename, extension, index_column, columns_obs_only, return_mudata
         )
@@ -260,7 +260,7 @@ def _read_from_directory(
 
 def _read_multiple_csv(  # noqa: N802
     filename: Path,
-    extension: str,
+    sep: str,
     index_column: dict[str, str | int] | str | int | None = None,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
     return_mudata_object: bool = False,
@@ -270,7 +270,7 @@ def _read_multiple_csv(  # noqa: N802
 
     Args:
         filename: File path to the directory containing multiple .csv/.tsv files.
-        extension: Either csv or tsv to determine which files to read.
+        sep: Either , or \t to determine which files to read.
         index_column: Column names of the index columns for obs
         columns_obs_only: List of columns per file (AnnData object) which should only be stored in .obs, but not in X. Useful for free text annotations.
         return_mudata_object: When set to True, return a :class:`~mudata.MuData` object, otherwise a dict of :class:`~anndata.AnnData` objects
@@ -292,9 +292,7 @@ def _read_multiple_csv(  # noqa: N802
             index_col, col_obs_only = _extract_index_and_columns_obs_only(
                 adata_identifier, index_column, columns_obs_only
             )
-            adata, single_adata_obs_only = _do_read_csv(
-                file, "," if extension == "csv" else "\t", index_col, col_obs_only, cache=cache
-            )
+            adata, single_adata_obs_only = _do_read_csv(file, sep, index_col, col_obs_only, cache=cache)
             obs_only_all[adata_identifier] = single_adata_obs_only
             # obs indices have to be unique otherwise updating and working with the MuData object will fail
             if index_col:
@@ -653,11 +651,10 @@ def _prepare_dataframe(initial_df: pd.DataFrame, columns_obs_only, cache):
             no_datetime_object_col.append(col)
     # writing to hd5a files requires non string to be empty in non numerical columns
     if cache:
-        # TODO remove this when anndata 0.8.0 got released
+        # TODO remove this when anndata 0.8.0 is released
         initial_df[no_datetime_object_col] = initial_df[no_datetime_object_col].fillna("")
         # temporary workaround needed; see https://github.com/theislab/anndata/issues/504 and https://github.com/theislab/anndata/issues/662
         # converting booleans to strings is needed for caching as writing to .h5ad files currently does not support writing boolean values
-        # TODO CAN REMOVE???
         bool_columns = {
             column_name: "str" for column_name in initial_df.columns if initial_df.dtypes[column_name] == "bool"
         }
@@ -814,4 +811,8 @@ class ExtensionMissingError(Exception):
 
 
 class UnsupportedDirectoryParsingFormatException(Exception):
+    pass
+
+
+class CacheExistsException(Exception):
     pass

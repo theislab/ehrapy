@@ -29,7 +29,7 @@ CUR_DIR = Path(__file__).parent.resolve()
 
 class TestAnndataExt:
     def test_move_to_obs_only_num(self):
-        adata = ep.io.read(CUR_DIR / "../io/test_data_io/dataset5.csv")
+        adata = ep.io.read_csv(CUR_DIR / "../io/test_data_io/dataset5.csv")
         move_to_obs(adata, ["los_days", "b12_values"])
         assert list(adata.obs.columns) == ["los_days", "b12_values"]
         assert {str(col) for col in adata.obs.dtypes} == {"float32"}
@@ -42,7 +42,7 @@ class TestAnndataExt:
         )
 
     def test_move_to_obs_mixed(self):
-        adata = ep.io.read(CUR_DIR / "../io/test_data_io/dataset4.csv")
+        adata = ep.io.read_csv(CUR_DIR / "../io/test_data_io/dataset4.csv")
         move_to_obs(adata, ["name", "clinic_id"])
         assert set(adata.obs.columns) == {"name", "clinic_id"}
         assert {str(col) for col in adata.obs.dtypes} == {"float32", "category"}
@@ -55,7 +55,7 @@ class TestAnndataExt:
         )
 
     def test_move_to_obs_copy(self):
-        adata = ep.io.read(CUR_DIR / "../io/test_data_io/dataset4.csv")
+        adata = ep.io.read_csv(CUR_DIR / "../io/test_data_io/dataset4.csv")
         cp_adata = move_to_obs(adata, ["name", "clinic_id"], copy=True)
         assert id(cp_adata) != id(adata)
         assert set(cp_adata.obs.columns) == {"name", "clinic_id"}

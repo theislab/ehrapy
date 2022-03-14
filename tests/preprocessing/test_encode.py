@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from ehrapy.io._read import read
+from ehrapy.io._read import read_csv
 from ehrapy.preprocessing.encoding._encode import DuplicateColumnEncodingError, _reorder_encodings, encode
 
 CURRENT_DIR = Path(__file__).parent
@@ -12,12 +12,12 @@ _TEST_PATH = f"{CURRENT_DIR}/test_data_encode"
 
 class TestEncode:
     def test_unknown_encode_mode(self):
-        adata = read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
+        adata = read_csv(dataset_path=f"{_TEST_PATH}/dataset1.csv")
         with pytest.raises(ValueError):
             encoded_ann_data = encode(adata, autodetect=False, encodings={"unknown_mode": ["survival"]})  # noqa: F841
 
     def test_duplicate_column_encoding(self):
-        adata = read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
+        adata = read_csv(dataset_path=f"{_TEST_PATH}/dataset1.csv")
         with pytest.raises(ValueError):
             encoded_ann_data = encode(  # noqa: F841
                 adata,
@@ -26,7 +26,7 @@ class TestEncode:
             )
 
     def test_autodetect_encode(self):
-        adata = read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
+        adata = read_csv(dataset_path=f"{_TEST_PATH}/dataset1.csv")
         encoded_ann_data = encode(adata, autodetect=True)
         assert list(encoded_ann_data.obs.columns) == ["survival", "clinic_day"]
         assert set(encoded_ann_data.var_names) == {
@@ -57,13 +57,13 @@ class TestEncode:
         assert pd.api.types.is_categorical_dtype(encoded_ann_data.obs["clinic_day"].dtype)
 
     def test_autodetect_num_only(self, capfd):
-        adata = read(dataset_path=f"{_TEST_PATH}/dataset2.csv")
+        adata = read_csv(dataset_path=f"{_TEST_PATH}/dataset2.csv")
         encoded_ann_data = encode(adata, autodetect=True)
         out, err = capfd.readouterr()
         assert id(encoded_ann_data) == id(adata)
 
     def test_autodetect_custom_mode(self):
-        adata = read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
+        adata = read_csv(dataset_path=f"{_TEST_PATH}/dataset1.csv")
         encoded_ann_data = encode(adata, autodetect=True, encodings="count_encoding")
         assert list(encoded_ann_data.obs.columns) == ["survival", "clinic_day"]
         assert set(encoded_ann_data.var_names) == {
@@ -94,13 +94,13 @@ class TestEncode:
         assert pd.api.types.is_categorical_dtype(encoded_ann_data.obs["clinic_day"].dtype)
 
     def test_autodetect_encode_again(self):
-        adata = read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
+        adata = read_csv(dataset_path=f"{_TEST_PATH}/dataset1.csv")
         encoded_ann_data = encode(adata, autodetect=True)
         encoded_ann_data_again = encode(encoded_ann_data, autodetect=True)  # noqa: F841
         assert id(encoded_ann_data_again) == id(encoded_ann_data)
 
     def test_custom_encode(self):
-        adata = read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
+        adata = read_csv(dataset_path=f"{_TEST_PATH}/dataset1.csv")
         encoded_ann_data = encode(
             adata,
             autodetect=False,
@@ -138,7 +138,7 @@ class TestEncode:
         assert pd.api.types.is_categorical_dtype(encoded_ann_data.obs["clinic_day"].dtype)
 
     def test_custom_encode_again_single_columns_encoding(self):
-        adata = read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
+        adata = read_csv(dataset_path=f"{_TEST_PATH}/dataset1.csv")
         encoded_ann_data = encode(
             adata,
             autodetect=False,
@@ -169,7 +169,7 @@ class TestEncode:
         assert pd.api.types.is_categorical_dtype(encoded_ann_data.obs["clinic_day"].dtype)
 
     def test_custom_encode_again_multiple_columns_encoding(self):
-        adata = read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
+        adata = read_csv(dataset_path=f"{_TEST_PATH}/dataset1.csv")
         encoded_ann_data = encode(adata, autodetect=False, encodings={"one_hot_encoding": ["clinic_day", "survival"]})
         encoded_ann_data_again = encode(
             encoded_ann_data,
@@ -203,7 +203,7 @@ class TestEncode:
 
     def test_update_encoding_scheme_1(self):
         # just a dummy adata object that won't be used actually
-        adata = read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
+        adata = read_csv(dataset_path=f"{_TEST_PATH}/dataset1.csv")
         adata.uns["encoding_to_var"] = {
             "label_encoding": ["col1", "col2", "col3"],
             "count_encoding": ["col4"],
@@ -232,7 +232,7 @@ class TestEncode:
 
     def test_update_encoding_scheme_2(self):
         # just a dummy adata object that won't be used actually
-        adata = read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
+        adata = read_csv(dataset_path=f"{_TEST_PATH}/dataset1.csv")
         adata.uns["encoding_to_var"] = {
             "count_encoding": ["col4"],
             "hash_encoding": [["col5", "col6", "col7"], ["col8", "col9"]],
@@ -260,7 +260,7 @@ class TestEncode:
 
     def test_update_encoding_scheme_3(self):
         # just a dummy adata object that won't be used actually
-        adata = read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
+        adata = read_csv(dataset_path=f"{_TEST_PATH}/dataset1.csv")
         adata.uns["encoding_to_var"] = {
             "label_encoding": ["col1", "col2", "col3"],
             "count_encoding": ["col4"],
@@ -294,7 +294,7 @@ class TestEncode:
 
     def test_update_encoding_scheme_4(self):
         # just a dummy adata objec that won't be used actually
-        adata = read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
+        adata = read_csv(dataset_path=f"{_TEST_PATH}/dataset1.csv")
         adata.uns["encoding_to_var"] = {
             "label_encoding": ["col1", "col2", "col3"],
             "count_encoding": ["col4"],
@@ -326,7 +326,7 @@ class TestEncode:
 
     def test_update_encoding_scheme_5(self):
         # just a dummy adata objec that won't be used actually
-        adata = read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
+        adata = read_csv(dataset_path=f"{_TEST_PATH}/dataset1.csv")
         adata.uns["encoding_to_var"] = {
             "label_encoding": ["col1", "col2", "col3"],
             "count_encoding": ["col4"],
@@ -356,7 +356,7 @@ class TestEncode:
 
     def test_update_encoding_scheme_duplicates_raise_error(self):
         # just a dummy adata objec that won't be used actually
-        adata = read(dataset_path=f"{_TEST_PATH}/dataset1.csv")
+        adata = read_csv(dataset_path=f"{_TEST_PATH}/dataset1.csv")
         adata.uns["encoding_to_var"] = {
             "label_encoding": ["col1", "col2", "col3"],
             "count_encoding": ["col4"],
