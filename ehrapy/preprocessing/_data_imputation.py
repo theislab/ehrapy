@@ -412,7 +412,7 @@ def soft_impute(
 
     Args:
         adata: The AnnData object to use SoftImpute on.
-        var_names: A list of var names indicating which columns to use median imputation on (if None -> all columns).
+        var_names: A list of var names indicating which columns to impute (if None -> all columns).
         copy: Whether to return a copy or act in place.
         warning_threshold: Threshold of percentage of missing values to display a warning for (default: 30).
         shrinkage_value : Value by which we shrink singular values on each iteration. If omitted then the default value will be the maximum singular value of the initialized matrix (zeros for missing values) divided by 50.
@@ -557,7 +557,7 @@ def IterativeSVD_impute(
 
     Args:
         adata: The AnnData object to use SoftImpute on.
-        var_names: A list of var names indicating which columns to use median imputation on (if None -> all columns).
+        var_names: A list of var names indicating which columns to impute (if None -> all columns).
         copy: Whether to return a copy or act in place.
         warning_threshold: Threshold of percentage of missing values to display a warning for (default: 30).
 
