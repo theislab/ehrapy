@@ -11,7 +11,7 @@ from ehrapy.io._read import read_csv, read_h5ad, read_pdf
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_PATH = f"{CURRENT_DIR}/test_data_io"
-_TEST_PATH_H5AD = f"{CURRENT_DIR}/test_data_io_h5ad"
+_TEST_PATH_H5AD = f"{CURRENT_DIR}/test_data_io/h5ad"
 _TEST_PATH_MULTIPLE = f"{CURRENT_DIR}/test_data_io_multiple"
 
 
