@@ -286,17 +286,17 @@ def qc_lab_measurements(
             upperbound = float(check_str.replace("<", ""))
             upperbound_check_results = actual_measurements < upperbound
             upperbound_check_results_array: np.ndarray = upperbound_check_results.copy()
-            adata.obs[f"{measurement}_normal"] = upperbound_check_results_array
+            adata.obs[f"{measurement} normal"] = upperbound_check_results_array
         elif ">" in check_str:
             lower_bound = float(check_str.replace(">", ""))
             lower_bound_check_results = actual_measurements > lower_bound
             lower_bound_check_results_array = lower_bound_check_results.copy()
-            adata.obs[f"{measurement}_normal"] = lower_bound_check_results_array
+            adata.obs[f"{measurement} normal"] = lower_bound_check_results_array
         else:  # "-" range case
             min_value = float(check_str.split("-")[0])
             max_value = float(check_str.split("-")[1])
             range_check_results = (actual_measurements >= min_value) & (actual_measurements <= max_value)
             range_check_results_array: np.ndarray = range_check_results.copy()
-            adata.obs[f"{measurement}_normal"] = range_check_results_array
+            adata.obs[f"{measurement} normal"] = range_check_results_array
 
     return adata

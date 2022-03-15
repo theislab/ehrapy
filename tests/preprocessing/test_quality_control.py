@@ -29,11 +29,20 @@ class TestQualityControl:
             var=pd.DataFrame(data=var_data, index=["Acetaminophen", "hospital", "crazy"]),
         )
 
+        X = np.array([[73, 0.02, 1.00], [148, 0.25, 3.55]], dtype=np.float32)
         self.test_lab_measurements_simple_adata = AnnData(
-            X=np.array([[73, 0.02, 0.04], [148, 0.25, 0.34]], dtype=np.float32),
+            X=X,
             obs=pd.DataFrame(data=obs_data),
-            var=pd.DataFrame(data=var_data, index=["Acetaminophen", "Acetoacetic acid", "Acetone"]),
+            var=pd.DataFrame(data=var_data, index=["Acetaminophen", "Acetoacetic acid", "Beryllium, toxic"]),
         )
+        self.test_lab_measurements_layer_adata = AnnData(
+            X=X,
+            obs=pd.DataFrame(data=obs_data),
+            var=pd.DataFrame(data=var_data, index=["Acetaminophen", "Acetoacetic acid", "Beryllium, toxic"]),
+            layers={"layer_copy": X},
+        )
+
+        print(self.test_lab_measurements_layer_adata.layers)
 
     def test_obs_qc_metrics(self):
         obs_metrics = _obs_qc_metrics(self.test_missing_values_adata)
@@ -61,18 +70,62 @@ class TestQualityControl:
         assert self.test_missing_values_adata.var.missing_values_abs is not None
 
     def test_qc_lab_measurements_simple(self):
-        expected_var_data = {  # noqa F841
-            "Acetaminophen_reference_range": [True, True],
-            "Acetoacetic acid": [True, False],
-            "Acetone": [True, False],
-        }
+        expected_obs_data = pd.Series(
+            data={
+                "Acetaminophen normal": [True, True],
+                "Acetoacetic acid normal": [True, False],
+                "Beryllium, toxic normal": [False, True],
+            }
+        )
 
-        print(
-            ep.pp.qc_lab_measurements(
-                self.test_lab_measurements_simple_adata,
-                measurements=list(self.test_lab_measurements_simple_adata.var_names),
-            )
+        ep.pp.qc_lab_measurements(
+            self.test_lab_measurements_simple_adata,
+            measurements=list(self.test_lab_measurements_simple_adata.var_names),
+        )
+
+        assert list(self.test_lab_measurements_simple_adata.obs["Acetaminophen normal"]) == (
+            expected_obs_data["Acetaminophen normal"]
+        )
+        assert list(self.test_lab_measurements_simple_adata.obs["Acetoacetic acid normal"]) == (
+            expected_obs_data["Acetoacetic acid normal"]
+        )
+        assert list(self.test_lab_measurements_simple_adata.obs["Beryllium, toxic normal"]) == (
+            expected_obs_data["Beryllium, toxic normal"]
         )
 
     def test_qc_lab_measurements_simple_layer(self):
+        expected_obs_data = pd.Series(
+            data={
+                "Acetaminophen normal": [True, True],
+                "Acetoacetic acid normal": [True, False],
+                "Beryllium, toxic normal": [False, True],
+            }
+        )
+
+        ep.pp.qc_lab_measurements(
+            self.test_lab_measurements_layer_adata,
+            measurements=list(self.test_lab_measurements_layer_adata.var_names),
+            layer="layer_copy",
+        )
+
+        assert list(self.test_lab_measurements_layer_adata.obs["Acetaminophen normal"]) == (
+            expected_obs_data["Acetaminophen normal"]
+        )
+        assert list(self.test_lab_measurements_layer_adata.obs["Acetoacetic acid normal"]) == (
+            expected_obs_data["Acetoacetic acid normal"]
+        )
+        assert list(self.test_lab_measurements_layer_adata.obs["Beryllium, toxic normal"]) == (
+            expected_obs_data["Beryllium, toxic normal"]
+        )
+
+    def test_qc_lab_measurements_age(self):
+        # TODO
+        pass
+
+    def test_qc_lab_measurements_sex(self):
+        # TODO
+        pass
+
+    def test_qc_lab_measurements_ethnicity(self):
+        # TODO
         pass
