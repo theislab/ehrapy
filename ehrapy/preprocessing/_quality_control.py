@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Collection, Literal
 
 import numpy as np
 import pandas as pd
 from anndata import AnnData
+
+from ehrapy.core.str_matching import StrMatcher
 
 
 def qc_metrics(
@@ -166,12 +169,19 @@ def _var_qc_metrics(adata: AnnData, layer: str = None) -> pd.DataFrame:
 
 def qc_lab_measurements(
     adata: AnnData,
-    overwrites: dict[str, tuple[int, int]] = None,
+    reference_table: pd.DataFrame = None,
+    measurements: list[str] = None,
+    unit: Literal["traditional", "SI"] = "SI",
     layer: str = None,
-    age_col: str = "age",
-    sex_col: str = "sex",
-    ethnicity_col: str = "race",
-) -> pd.DataFrame:
+    threshold: float = 0.2,
+    age_col: str = None,
+    age_range: str = None,
+    sex_col: str = None,
+    sex: str = None,
+    ethnicity_col: str = None,
+    ethnicity: str = None,
+    copy: bool = False,
+) -> AnnData:
     """Examines lab measurements for reference ranges and outliers.
 
     Source:
@@ -195,15 +205,29 @@ def qc_lab_measurements(
         * By default if no gender is provided and no unisex values are available, we use the **male** reference ranges.
         * The used reference ranges may be biased for ethnicity. Please examine the primary sources if required.
 
+    If you want to specify your own table as a Pandas DataFrame please examine the existing default table.
+    Ethnicity and age columns can be added.
+    https://github.com/theislab/ehrapy/ehrapy/preprocessing/laboratory_reference_tables/laposata.tsv
+
     Args:
         adata: Annotated data matrix.
+        reference_table: A custom DataFrame with reference values. Defaults to the laposata table if not specified.
+        measurements: A list of measurements to check.
+        unit: The unit of the measurements. (default: SI)
         layer: Layer containing the matrix to calculate the metrics for.
+        threshold: Minimum required matching confidence score of the bigrams.
+                   0 = low requirements, 1 = high requirements.
         age_col: Column containing age values.
+        age_range: The inclusive age-range to filter for. e.g. 5-99
         sex_col: Column containing sex values.
+        sex: Sex to filter the reference values for. Use U for unisex which uses male values when male and female conflict.
+             (default: U|M)
         ethnicity_col: Column containing ethnicity values.
+        ethnicity: Ethnicity to filter for.
+        copy: Whether to return a copy (default: False).
 
     Returns:
-        A Pandas DataFrame denoting for every observation which values were in or not in the reference ranges.
+        A modified AnnData object (copy if specified).
 
     Example:
         .. code-block:: python
@@ -213,3 +237,66 @@ def qc_lab_measurements(
             adata = ep.dt.mimic_2(encode=True)
             ep.pp.lab_measurements_qc(adata)
     """
+    if copy:
+        adata = adata.copy()
+
+    preprocessing_dir = Path(__file__).parent.resolve()
+    if reference_table is None:
+        reference_table = pd.read_csv(
+            f"{preprocessing_dir}/laboratory_reference_tables/laposata.tsv", sep="\t", index_col="Measurement"
+        )
+
+    str_matcher = StrMatcher(list(reference_table.index))
+
+    for measurement in measurements:
+        score, best_column_match = str_matcher.best_match(query=measurement, threshold=threshold)
+        reference_column = "SI Reference Interval" if unit == "SI" else "Traditional Reference Interval"
+
+        # Fetch all non None columns from the reference measures
+        not_none_columns = [col for col in [sex_col, age_col, ethnicity_col] if col is not None]
+        not_none_columns.append(reference_column)
+        reference_values = reference_table.loc[[best_column_match], not_none_columns]
+
+        # Fetch reference values
+        try:
+            if age_col:
+                min_age, max_age = age_range.split("-")
+                reference_values = reference_values[
+                    (reference_values[age_col].str.split("-").str[0].astype(int) >= int(min_age))
+                    and (reference_values[age_col].str.split("-").str[1].astype(int) <= int(max_age))
+                ]
+            if sex_col:
+                sexes = "U|M" if sex is None else sex
+                reference_values = reference_values[reference_values[sex_col].str.contains(sexes)]
+            if ethnicity_col:
+                reference_values = reference_values[reference_values[ethnicity_col].isin([ethnicity])]
+
+            if layer is not None:
+                actual_measurements = adata[:, measurement].layers[layer]
+            else:
+                actual_measurements = adata[:, measurement].X
+        except TypeError:
+            print(f"[bold yellow]Unable to find specified reference values for {measurement}.")
+
+        # Check whether the measurements are inside the reference ranges
+        check = reference_values[reference_column].values
+        check_str: str = np.array2string(check)
+        check_str = check_str.replace("[", "").replace("]", "").replace("'", "")
+        if "<" in check_str:
+            upperbound = float(check_str.replace("<", ""))
+            upperbound_check_results = actual_measurements < upperbound
+            upperbound_check_results_array: np.ndarray = upperbound_check_results.copy()
+            adata.obs[f"{measurement} normal"] = upperbound_check_results_array
+        elif ">" in check_str:
+            lower_bound = float(check_str.replace(">", ""))
+            lower_bound_check_results = actual_measurements > lower_bound
+            lower_bound_check_results_array = lower_bound_check_results.copy()
+            adata.obs[f"{measurement} normal"] = lower_bound_check_results_array
+        else:  # "-" range case
+            min_value = float(check_str.split("-")[0])
+            max_value = float(check_str.split("-")[1])
+            range_check_results = (actual_measurements >= min_value) & (actual_measurements <= max_value)
+            range_check_results_array: np.ndarray = range_check_results.copy()
+            adata.obs[f"{measurement} normal"] = range_check_results_array
+
+    return adata
