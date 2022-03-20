@@ -1,8 +1,10 @@
 from ehrapy.preprocessing._data_imputation import (
-    IterativeSVD_impute,
     explicit_impute,
+    iterative_svd_impute,
     knn_impute,
+    matrix_factorization_impute,
     miss_forest_impute,
+    nuclear_norm_minimization_impute,
     simple_impute,
     soft_impute,
 )

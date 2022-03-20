@@ -427,7 +427,7 @@ def soft_impute(
         verbose: Print debugging info.
 
     Returns:
-        The imputed (but unencoded) AnnData object
+        The imputed AnnData object
 
     Example:
         .. code-block:: python
@@ -441,13 +441,6 @@ def soft_impute(
         adata = adata.copy()
 
     _warn_imputation_threshold(adata, var_names, threshold=warning_threshold)
-
-    if check_module_importable("fancyimpute"):
-        from fancyimpute import SoftImpute
-
-        SoftImpute()
-    else:
-        print("[bold yellow]fancyimpute is not available. Install via [blue]pip install fancyimpute.")
 
     with Progress(
         "[progress.description]{task.description}",
@@ -535,7 +528,7 @@ def _soft_impute(
 # ===================== IterativeSVD =========================
 
 
-def IterativeSVD_impute(
+def iterative_svd_impute(
     adata: AnnData,
     var_names: list[str] | None = None,
     copy: bool = False,
@@ -556,13 +549,13 @@ def IterativeSVD_impute(
     Matrix completion by iterative low-rank SVD decomposition.
 
     Args:
-        adata: The AnnData object to use SoftImpute on.
+        adata: The AnnData object to use IterativeSVD on.
         var_names: A list of var names indicating which columns to impute (if None -> all columns).
         copy: Whether to return a copy or act in place.
         warning_threshold: Threshold of percentage of missing values to display a warning for (default: 30).
 
     Returns:
-        The imputed (but unencoded) AnnData object
+        The imputed AnnData object
 
     Example:
         .. code-block:: python
@@ -570,19 +563,12 @@ def IterativeSVD_impute(
             import ehrapy as ep
 
             adata = ep.dt.mimic_2(encoded=True)
-            ep.pp.IterativeSVD_impute(adata)
+            ep.pp.iterative_svd_impute(adata)
     """
     if copy:
         adata = adata.copy()
 
     _warn_imputation_threshold(adata, var_names, threshold=warning_threshold)
-
-    if check_module_importable("fancyimpute"):
-        from fancyimpute import IterativeSVD
-
-        IterativeSVD()
-    else:
-        print("[bold yellow]fancyimpute is not available. Install via [blue]pip install fancyimpute.")
 
     with Progress(
         "[progress.description]{task.description}",
@@ -591,7 +577,7 @@ def IterativeSVD_impute(
     ) as progress:
         progress.add_task("[blue]Running IterativeSVD", total=1)
         if np.issubdtype(adata.X.dtype, np.number):
-            _IterativeSVD_impute(
+            _iterative_svd_impute(
                 adata,
                 var_names,
                 rank,
@@ -609,7 +595,7 @@ def IterativeSVD_impute(
             enc = OrdinalEncoder()
             adata.X = enc.fit_transform(adata.X)
             # impute the data using IterativeSVD
-            _IterativeSVD_impute(
+            _iterative_svd_impute(
                 adata,
                 var_names,
                 rank,
@@ -628,7 +614,7 @@ def IterativeSVD_impute(
     return adata
 
 
-def _IterativeSVD_impute(
+def _iterative_svd_impute(
     adata,
     var_names,
     rank,
@@ -653,6 +639,242 @@ def _IterativeSVD_impute(
         init_fill_method,
         min_value,
         max_value,
+        verbose,
+    )
+
+    if isinstance(var_names, list):
+        column_indices = get_column_indices(adata, var_names)
+        adata.X[::, column_indices] = imputer.fit_transform(adata.X[::, column_indices])
+    else:
+        adata.X = imputer.fit_transform(adata.X)
+
+
+# ===================== MatrixFactorization =========================
+
+
+def matrix_factorization_impute(
+    adata: AnnData,
+    var_names: list[str] | None = None,
+    copy: bool = False,
+    warning_threshold: int = 30,
+    rank: int = 40,
+    learning_rate: float = 0.01,
+    max_iters: int = 50,
+    shrinkage_value: float = 0,
+    min_value: float | None = None,
+    max_value: float | None = None,
+    verbose: bool = True,
+) -> AnnData:
+    """Impute data using the MatrixFactorization.
+
+    See https://github.com/iskandr/fancyimpute/blob/master/fancyimpute/matrix_factorization.py
+    Train a matrix factorization model to predict empty entries in a matrix.
+
+    Args:
+        adata: The AnnData object to use MatrixFactorization on.
+        var_names: A list of var names indicating which columns to impute (if None -> all columns).
+        copy: Whether to return a copy or act in place.
+        warning_threshold: Threshold of percentage of missing values to display a warning for (default: 30).
+        rank: Number of latent factors to use in matrix factorization model
+        learning_rate: Learning rate for optimizer
+        max_iters: Number of max_iters to train for
+        shrinkage_value: Regularization term for sgd penalty
+        min_value: Smallest possible imputed value
+        max_value: Largest possible imputed value
+        verbose: Whether or not to printout training progress
+
+    Returns:
+        The imputed AnnData object
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy as ep
+
+            adata = ep.dt.mimic_2(encoded=True)
+            ep.pp.matrix_factorization_impute(adata)
+    """
+    if copy:
+        adata = adata.copy()
+
+    _warn_imputation_threshold(adata, var_names, threshold=warning_threshold)
+
+    with Progress(
+        "[progress.description]{task.description}",
+        SpinnerColumn(),
+        refresh_per_second=1500,
+    ) as progress:
+        progress.add_task("[blue]Running MatrixFactorization", total=1)
+        if np.issubdtype(adata.X.dtype, np.number):
+            _matrix_factorization_impute(
+                adata,
+                var_names,
+                rank,
+                learning_rate,
+                max_iters,
+                shrinkage_value,
+                min_value,
+                max_value,
+                verbose,
+            )
+        else:
+            # ordinal encoding is used since non-numerical data can not be imputed using MatrixFactorization
+            enc = OrdinalEncoder()
+            adata.X = enc.fit_transform(adata.X)
+            # impute the data using MatrixFactorization
+            _matrix_factorization_impute(
+                adata,
+                var_names,
+                rank,
+                learning_rate,
+                max_iters,
+                shrinkage_value,
+                min_value,
+                max_value,
+                verbose,
+            )
+            # decode ordinal encoding to obtain imputed original data
+            adata.X = enc.inverse_transform(adata.X)
+
+    return adata
+
+
+def _matrix_factorization_impute(
+    adata,
+    var_names,
+    rank,
+    learning_rate,
+    max_iters,
+    shrinkage_value,
+    min_value,
+    max_value,
+    verbose,
+) -> None:
+    """Utility function to impute data using MatrixFactorization"""
+    from fancyimpute import MatrixFactorization
+
+    imputer = MatrixFactorization(
+        rank,
+        learning_rate,
+        max_iters,
+        shrinkage_value,
+        min_value,
+        max_value,
+        verbose,
+    )
+
+    if isinstance(var_names, list):
+        column_indices = get_column_indices(adata, var_names)
+        adata.X[::, column_indices] = imputer.fit_transform(adata.X[::, column_indices])
+    else:
+        adata.X = imputer.fit_transform(adata.X)
+
+
+# ===================== NuclearNormMinimization =========================
+
+
+def nuclear_norm_minimization_impute(
+    adata: AnnData,
+    var_names: list[str] | None = None,
+    copy: bool = False,
+    warning_threshold: int = 30,
+    require_symmetric_solution: bool = False,
+    min_value: float | None = None,
+    max_value: float | None = None,
+    error_tolerance: float = 0.0001,
+    max_iters: int = 50000,
+    verbose: bool = True,
+) -> AnnData:
+    """Impute data using the NuclearNormMinimization.
+
+    See https://github.com/iskandr/fancyimpute/blob/master/fancyimpute/nuclear_norm_minimization.py
+    Simple implementation of "Exact Matrix Completion via Convex Optimization" by Emmanuel Candes and Benjamin Recht using cvxpy.
+
+    Args:
+        adata: The AnnData object to use NuclearNormMinimization on.
+        var_names: A list of var names indicating which columns to impute (if None -> all columns).
+        copy: Whether to return a copy or act in place.
+        warning_threshold: Threshold of percentage of missing values to display a warning for (default: 30).
+        require_symmetric_solution: Add symmetry constraint to convex problem
+        min_value: Smallest possible imputed value
+        max_value: Largest possible imputed value
+        error_tolerance: Degree of error allowed on reconstructed values. If omitted then defaults to 0.0001
+        max_iters: Maximum number of iterations for the convex solver
+        verbose: Print debug info
+
+    Returns:
+        The imputed AnnData object
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy as ep
+
+            adata = ep.dt.mimic_2(encoded=True)
+            ep.pp.nuclear_norm_minimization_impute(adata)
+    """
+    if copy:
+        adata = adata.copy()
+
+    _warn_imputation_threshold(adata, var_names, threshold=warning_threshold)
+
+    with Progress(
+        "[progress.description]{task.description}",
+        SpinnerColumn(),
+        refresh_per_second=1500,
+    ) as progress:
+        progress.add_task("[blue]Running NuclearNormMinimization", total=1)
+        if np.issubdtype(adata.X.dtype, np.number):
+            _nuclear_norm_minimization_impute(
+                adata,
+                var_names,
+                require_symmetric_solution,
+                min_value,
+                max_value,
+                error_tolerance,
+                max_iters,
+                verbose,
+            )
+        else:
+            # ordinal encoding is used since non-numerical data can not be imputed using NuclearNormMinimization
+            enc = OrdinalEncoder()
+            adata.X = enc.fit_transform(adata.X)
+            # impute the data using NuclearNormMinimization
+            _nuclear_norm_minimization_impute(
+                adata,
+                var_names,
+                require_symmetric_solution,
+                min_value,
+                max_value,
+                error_tolerance,
+                max_iters,
+                verbose,
+            )
+            # decode ordinal encoding to obtain imputed original data
+            adata.X = enc.inverse_transform(adata.X)
+
+    return adata
+
+
+def _nuclear_norm_minimization_impute(
+    adata,
+    var_names,
+    require_symmetric_solution,
+    min_value,
+    max_value,
+    error_tolerance,
+    max_iters,
+    verbose,
+) -> None:
+    """Utility function to impute data using NuclearNormMinimization"""
+    from fancyimpute import NuclearNormMinimization
+
+    imputer = NuclearNormMinimization(
+        require_symmetric_solution,
+        min_value,
+        max_value,
+        error_tolerance,
+        max_iters,
         verbose,
     )
 

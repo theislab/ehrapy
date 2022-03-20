@@ -8,11 +8,13 @@ from sklearn.exceptions import ConvergenceWarning
 from ehrapy.io._read import read
 from ehrapy.preprocessing._data_imputation import (
     ImputeStrategyNotAvailableError,
-    IterativeSVD_impute,
     _warn_imputation_threshold,
     explicit_impute,
+    iterative_svd_impute,
     knn_impute,
+    matrix_factorization_impute,
     miss_forest_impute,
+    nuclear_norm_minimization_impute,
     simple_impute,
     soft_impute,
 )
@@ -193,31 +195,91 @@ class TestImputation:
 
     def test_IterativeSVD_impute_no_copy(self):
         adata = read(dataset_path=f"{_TEST_PATH}/test_impute_num.csv")
-        adata_imputed = IterativeSVD_impute(adata, rank=2)
+        adata_imputed = iterative_svd_impute(adata, rank=2)
 
         assert id(adata) == id(adata_imputed)
 
     def test_IterativeSVD_impute_copy(self):
         adata = read(dataset_path=f"{_TEST_PATH}/test_impute_num.csv")
-        adata_imputed = IterativeSVD_impute(adata, rank=2, copy=True)
+        adata_imputed = iterative_svd_impute(adata, rank=2, copy=True)
 
         assert id(adata) != id(adata_imputed)
 
     def test_IterativeSVD_impute_non_numerical_data(self):
         adata = read(dataset_path=f"{_TEST_PATH}/test_impute.csv")
-        adata_imputed = IterativeSVD_impute(adata, rank=3)
+        adata_imputed = iterative_svd_impute(adata, rank=3)
 
         assert not (np.all([item != item for item in adata_imputed.X]))
 
     def test_IterativeSVD_impute_numerical_data(self):
         adata = read(dataset_path=f"{_TEST_PATH}/test_impute_num.csv")
-        adata_imputed = IterativeSVD_impute(adata, rank=2)
+        adata_imputed = iterative_svd_impute(adata, rank=2)
 
         assert not (np.all([item != item for item in adata_imputed.X]))
 
     def test_IterativeSVD_impute_list_str(self):
         adata = read(dataset_path=f"{_TEST_PATH}/test_impute.csv")
-        adata_imputed = IterativeSVD_impute(adata, var_names=["intcol", "strcol", "boolcol"], rank=2)
+        adata_imputed = iterative_svd_impute(adata, var_names=["intcol", "strcol", "boolcol"], rank=2)
+
+        assert not (np.all([item != item for item in adata_imputed.X]))
+
+    def test_matrix_factorization_impute_no_copy(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute_num.csv")
+        adata_imputed = matrix_factorization_impute(adata)
+
+        assert id(adata) == id(adata_imputed)
+
+    def test_matrix_factorization_impute_copy(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute_num.csv")
+        adata_imputed = matrix_factorization_impute(adata, copy=True)
+
+        assert id(adata) != id(adata_imputed)
+
+    def test_matrix_factorization_impute_non_numerical_data(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute.csv")
+        adata_imputed = matrix_factorization_impute(adata)
+
+        assert not (np.all([item != item for item in adata_imputed.X]))
+
+    def test_matrix_factorization_impute_numerical_data(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute_num.csv")
+        adata_imputed = matrix_factorization_impute(adata)
+
+        assert not (np.all([item != item for item in adata_imputed.X]))
+
+    def test_matrix_factorization_impute_list_str(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute.csv")
+        adata_imputed = matrix_factorization_impute(adata, var_names=["intcol", "strcol", "boolcol"])
+
+        assert not (np.all([item != item for item in adata_imputed.X]))
+
+    def test_nuclear_norm_minimization_impute_no_copy(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute_num.csv")
+        adata_imputed = nuclear_norm_minimization_impute(adata)
+
+        assert id(adata) == id(adata_imputed)
+
+    def test_nuclear_norm_minimization_impute_copy(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute_num.csv")
+        adata_imputed = nuclear_norm_minimization_impute(adata, copy=True)
+
+        assert id(adata) != id(adata_imputed)
+
+    def test_nuclear_norm_minimization_impute_non_numerical_data(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute.csv")
+        adata_imputed = nuclear_norm_minimization_impute(adata)
+
+        assert not (np.all([item != item for item in adata_imputed.X]))
+
+    def test_nuclear_norm_minimization_impute_numerical_data(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute_num.csv")
+        adata_imputed = nuclear_norm_minimization_impute(adata)
+
+        assert not (np.all([item != item for item in adata_imputed.X]))
+
+    def test_nuclear_norm_minimization_impute_list_str(self):
+        adata = read(dataset_path=f"{_TEST_PATH}/test_impute.csv")
+        adata_imputed = nuclear_norm_minimization_impute(adata, var_names=["intcol", "strcol", "boolcol"])
 
         assert not (np.all([item != item for item in adata_imputed.X]))
 
