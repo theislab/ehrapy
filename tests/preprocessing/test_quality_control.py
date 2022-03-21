@@ -81,6 +81,7 @@ class TestQualityControl:
         ep.pp.qc_lab_measurements(
             self.test_lab_measurements_simple_adata,
             measurements=list(self.test_lab_measurements_simple_adata.var_names),
+            unit="SI",
         )
 
         assert list(self.test_lab_measurements_simple_adata.obs["Acetaminophen normal"]) == (
@@ -105,6 +106,7 @@ class TestQualityControl:
         ep.pp.qc_lab_measurements(
             self.test_lab_measurements_layer_adata,
             measurements=list(self.test_lab_measurements_layer_adata.var_names),
+            unit="SI",
             layer="layer_copy",
         )
 
