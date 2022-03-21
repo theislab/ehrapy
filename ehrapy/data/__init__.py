@@ -1,4 +1,5 @@
 from ehrapy.data._datasets import (
+    breast_cancer_coimbra,
     breast_tissue,
     cervical_cancer_risk_factors,
     chronic_kidney_disease,
@@ -9,6 +10,10 @@ from ehrapy.data._datasets import (
     hepatitis,
     mimic_2,
     mimic_3_demo,
+    parkinson_dataset_with_replicated_acoustic_features,
+    parkinsons,
+    parkinsons_disease_classification,
+    parkinsons_telemonitoring,
     statlog_heart,
     thyroid,
 )
