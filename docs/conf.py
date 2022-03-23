@@ -7,8 +7,6 @@ from pathlib import Path
 HERE = Path(__file__).parent
 sys.path[:0] = [str(HERE.parent), str(HERE / "extensions")]
 
-import ehrapy  # noqa
-
 needs_sphinx = "4.3"  # Nicer param docs
 
 # General information about the project.
