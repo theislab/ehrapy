@@ -10,7 +10,8 @@ sphinxcontrib-bibtex
 nbsphinx
 nbsphinx-link
 sphinx-copybutton
-sphinx-tabs
-sphinx-panels
-sphinx_click
-click
+furo
+myst-parser
+sphinx-remove-toctrees
+sphinx-design
+sphinxext-opengraph
