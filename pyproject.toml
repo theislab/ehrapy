@@ -78,6 +78,11 @@ sphinx-tabs = ">=3.2.0"
 sphinx-panels = ">=0.6.0"
 pydata-sphinx-theme = ">=0.7.2"
 pyupgrade = ">=2.30.1"
+furo = "^2022.3.4"
+myst-parser = "^0.17.0"
+sphinx-remove-toctrees = "^0.0.3"
+sphinx-design = "^0.0.13"
+sphinxext-opengraph = "^0.6.2"
 
 [tool.poetry.extras]
 en-core-web-md = ["en-core-web-md"]
