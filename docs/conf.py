@@ -7,8 +7,6 @@ from pathlib import Path
 HERE = Path(__file__).parent
 sys.path[:0] = [str(HERE.parent), str(HERE / "extensions")]
 
-import ehrapy  # noqa
-
 needs_sphinx = "4.3"  # Nicer param docs
 
 # General information about the project.
@@ -175,7 +173,7 @@ nbsphinx_prolog = r"""
     version=version, docname="{{ docname|e }}"
 )
 nbsphinx_thumbnails = {
-    "tutorials/notebooks/ehrapy_introduciton": "_static/tutorials/catheter.png",
+    "tutorials/notebooks/ehrapy_introduction": "_static/ehrapy_logos/ehrapy_pure.png",
     "tutorials/notebooks/mimic_2_introduction": "_static/tutorials/catheter.png",
     "tutorials/notebooks/mimic_2_fate": "_static/tutorials/fate.png",
     "tutorials/notebooks/diabetes_130": "_static/tutorials/diabetes.png",

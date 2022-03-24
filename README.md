@@ -16,14 +16,14 @@
 
 ## Features
 
-- Exploratory analysis of Electronic Health Records
-- Quality control & preprocessing
-- Clustering & trajectory inference
-- Visualization & Exploration
+-   Exploratory analysis of Electronic Health Records
+-   Quality control & preprocessing
+-   Clustering & trajectory inference
+-   Visualization & Exploration
 
 ## Installation
 
-You can install *ehrapy* via [pip] from [PyPI]:
+You can install _ehrapy_ via [pip] from [PyPI]:
 
 ```console
 $ pip install ehrapy

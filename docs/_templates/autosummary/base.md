@@ -1,5 +1,5 @@
 ---
-github_url: '{{ fullname }}'
+github_url: "{{ fullname }}"
 ---
 
 {% extends "!autosummary/base.rst" %}
