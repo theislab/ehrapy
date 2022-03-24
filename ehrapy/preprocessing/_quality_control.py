@@ -321,4 +321,5 @@ def qc_lab_measurements(
             range_check_results_array: np.ndarray = range_check_results.copy()
             adata.obs[f"{measurement} normal"] = range_check_results_array
 
-    return adata
+    if copy:
+        return adata

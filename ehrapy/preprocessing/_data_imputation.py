@@ -77,7 +77,8 @@ def explicit_impute(
                 f"Type {type(replacement)} is not a valid datatype for replacement parameter. Either use int, str or a dict!"
             )
 
-    return adata
+    if copy:
+        return adata
 
 
 def _replace_explicit(arr: np.ndarray, replacement: str | int, impute_empty_strings: bool) -> None:
@@ -166,7 +167,8 @@ def simple_impute(
                 f"Unknown impute strategy {strategy} for simple Imputation. Choose any of mean, median or most_frequent."
             )
 
-    return adata
+    if copy:
+        return adata
 
 
 def _simple_impute(adata: AnnData, var_names: list[str] | None, strategy: str) -> None:
@@ -243,8 +245,8 @@ def knn_impute(
 
     if check_module_importable("sklearnex"):  # pragma: no cover
         unpatch_sklearn()
-
-    return adata
+    if copy:
+        return adata
 
 
 def _knn_impute(adata: AnnData, var_names: list[str] | None) -> None:
@@ -383,7 +385,8 @@ def miss_forest_impute(
     if check_module_importable("sklearnex"):  # pragma: no cover
         unpatch_sklearn()
 
-    return adata
+    if copy:
+        return adata
 
 
 def _warn_imputation_threshold(adata: AnnData, var_names: list[str] | None, threshold: int = 30) -> dict[str, int]:
