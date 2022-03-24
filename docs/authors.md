@@ -3,7 +3,7 @@
 ## Development Lead
 
 -   [Lukas Heumos](mailto:lukas.heumos@posteo.net)
--   [Philipp Ehmele] (mailto:philipp_ehm@protonmail.com)
+-   [Philipp Ehmele](mailto:philipp_ehm@protonmail.com)
 
 ## Contributors
 
