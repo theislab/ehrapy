@@ -885,6 +885,135 @@ def _nuclear_norm_minimization_impute(
         adata.X = imputer.fit_transform(adata.X)
 
 
+# ===================== miceforest =========================
+
+
+def miceforest_impute(
+    adata: AnnData,
+    var_names: list[str] | None = None,
+    copy: bool = False,
+    warning_threshold: int = 30,
+    save_all_iterations: bool = True,
+    random_state: int | None = None,
+    inplace: bool = False,
+    iterations: int = 5,
+    variable_parameters: dict | None = None,
+    verbose: bool = False,
+) -> AnnData:
+    """Impute data using the miceforest.
+
+    See https://github.com/AnotherSamWilson/miceforest
+    Fast, memory efficient Multiple Imputation by Chained Equations (MICE) with lightgbm.
+
+    Args:
+        adata: The AnnData object to use miceforest on.
+        var_names: A list of var names indicating which columns to impute (if None -> all columns).
+        copy: Whether to return a copy or act in place.
+        warning_threshold: Threshold of percentage of missing values to display a warning for (default: 30).
+        save_all_iterations: Save all the imputation values from all iterations, or just the latest. Saving all iterations allows for additional plotting, but may take more memory.
+        random_state: The random_state ensures script reproducibility. It only ensures reproducible results if the same script is called multiple times. It does not guarantee reproducible results at the record level, if a record is imputed multiple different times. If reproducible record-results are desired, a seed must be passed for each record in the random_seed_array parameter.
+        inplace: Using inplace=False returns a copy of the completed data. Since the raw data is already stored in kernel.working_data, you can set inplace=True to complete the data without returning a copy.
+        iterations: The number of iterations to run.
+        variable_parameters: Model parameters can be specified by variable here. Keys should be variable names or indices, and values should be a dict of parameter which should apply to that variable only.
+        verbose: Should information about the process be printed.
+    Returns:
+        The imputed AnnData object
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy as ep
+
+            adata = ep.dt.mimic_2(encoded=True)
+            ep.pp.miceforest_impute(adata)
+    """
+    if copy:
+        adata = adata.copy()
+
+    _warn_imputation_threshold(adata, var_names, threshold=warning_threshold)
+
+    with Progress(
+        "[progress.description]{task.description}",
+        SpinnerColumn(),
+        refresh_per_second=1500,
+    ) as progress:
+        progress.add_task("[blue]Running miceforest", total=1)
+        if np.issubdtype(adata.X.dtype, np.number):
+            _miceforest_impute(
+                adata,
+                var_names,
+                save_all_iterations,
+                random_state,
+                inplace,
+                iterations,
+                variable_parameters,
+                verbose
+            )
+        else:
+            # ordinal encoding is used since non-numerical data can not be imputed using miceforest
+            enc = OrdinalEncoder()
+            adata.X = enc.fit_transform(adata.X)
+            # impute the data using miceforest
+            _miceforest_impute(
+                adata,
+                var_names,
+                save_all_iterations,
+                random_state,
+                inplace,
+                iterations,
+                variable_parameters,
+                verbose
+            )
+            # decode ordinal encoding to obtain imputed original data
+            adata.X = enc.inverse_transform(adata.X)
+
+    return adata
+
+
+def _miceforest_impute(
+                adata,
+                var_names,
+                save_all_iterations,
+                random_state,
+                inplace,
+                iterations,
+                variable_parameters,
+                verbose
+) -> None:
+    """Utility function to impute data using miceforest"""
+    import miceforest as mf
+
+
+    if isinstance(var_names, list):
+        column_indices = get_column_indices(adata, var_names)
+
+        # Create kernel.
+        kernel = mf.ImputationKernel(
+            adata.X[::, column_indices],
+            datasets=1,
+            save_all_iterations=save_all_iterations,
+            random_state=random_state
+        )
+
+        kernel.mice(iterations=iterations, variable_parameters=variable_parameters, verbose=verbose)
+
+        adata.X[::, column_indices] = kernel.complete_data(dataset=0, inplace=inplace)
+
+    else:
+
+        # Create kernel.
+        kernel = mf.ImputationKernel(
+            adata.X,
+            datasets=1,
+            save_all_iterations=save_all_iterations,
+            random_state=random_state
+        )
+
+        kernel.mice(iterations=iterations, variable_parameters=variable_parameters, verbose=verbose)
+
+        adata.X = kernel.complete_data(dataset=0, inplace=inplace)
+
+
 def _warn_imputation_threshold(adata: AnnData, var_names: list[str] | None, threshold: int = 30) -> dict[str, int]:
     """Warns the user if the more than $threshold percent had to be imputed.
 

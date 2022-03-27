@@ -7,6 +7,7 @@ from ehrapy.preprocessing._data_imputation import (
     nuclear_norm_minimization_impute,
     simple_impute,
     soft_impute,
+    miceforest_impute
 )
 from ehrapy.preprocessing._normalization import (
     norm_log,
