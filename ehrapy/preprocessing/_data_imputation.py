@@ -943,14 +943,7 @@ def miceforest_impute(
         progress.add_task("[blue]Running miceforest", total=1)
         if np.issubdtype(adata.X.dtype, np.number):
             _miceforest_impute(
-                adata,
-                var_names,
-                save_all_iterations,
-                random_state,
-                inplace,
-                iterations,
-                variable_parameters,
-                verbose
+                adata, var_names, save_all_iterations, random_state, inplace, iterations, variable_parameters, verbose
             )
         else:
             # ordinal encoding is used since non-numerical data can not be imputed using miceforest
@@ -958,14 +951,7 @@ def miceforest_impute(
             adata.X = enc.fit_transform(adata.X)
             # impute the data using miceforest
             _miceforest_impute(
-                adata,
-                var_names,
-                save_all_iterations,
-                random_state,
-                inplace,
-                iterations,
-                variable_parameters,
-                verbose
+                adata, var_names, save_all_iterations, random_state, inplace, iterations, variable_parameters, verbose
             )
             # decode ordinal encoding to obtain imputed original data
             adata.X = enc.inverse_transform(adata.X)
@@ -974,28 +960,17 @@ def miceforest_impute(
 
 
 def _miceforest_impute(
-                adata,
-                var_names,
-                save_all_iterations,
-                random_state,
-                inplace,
-                iterations,
-                variable_parameters,
-                verbose
+    adata, var_names, save_all_iterations, random_state, inplace, iterations, variable_parameters, verbose
 ) -> None:
     """Utility function to impute data using miceforest"""
     import miceforest as mf
-
 
     if isinstance(var_names, list):
         column_indices = get_column_indices(adata, var_names)
 
         # Create kernel.
         kernel = mf.ImputationKernel(
-            adata.X[::, column_indices],
-            datasets=1,
-            save_all_iterations=save_all_iterations,
-            random_state=random_state
+            adata.X[::, column_indices], datasets=1, save_all_iterations=save_all_iterations, random_state=random_state
         )
 
         kernel.mice(iterations=iterations, variable_parameters=variable_parameters, verbose=verbose)
@@ -1006,10 +981,7 @@ def _miceforest_impute(
 
         # Create kernel.
         kernel = mf.ImputationKernel(
-            adata.X,
-            datasets=1,
-            save_all_iterations=save_all_iterations,
-            random_state=random_state
+            adata.X, datasets=1, save_all_iterations=save_all_iterations, random_state=random_state
         )
 
         kernel.mice(iterations=iterations, variable_parameters=variable_parameters, verbose=verbose)

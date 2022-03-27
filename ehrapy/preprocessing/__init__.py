@@ -3,11 +3,11 @@ from ehrapy.preprocessing._data_imputation import (
     iterative_svd_impute,
     knn_impute,
     matrix_factorization_impute,
+    miceforest_impute,
     miss_forest_impute,
     nuclear_norm_minimization_impute,
     simple_impute,
     soft_impute,
-    miceforest_impute
 )
 from ehrapy.preprocessing._normalization import (
     norm_log,
