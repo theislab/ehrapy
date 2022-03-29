@@ -99,14 +99,14 @@ class TestImputation:
 
     def test_knn_impute_copy(self):
         adata = read_csv(dataset_path=f"{_TEST_PATH}/test_impute_num.csv")
-        adata_imputed = knn_impute(adata, copy=True)
+        adata_imputed = knn_impute(adata, n_neighbours=3, copy=True)
 
         assert id(adata) != id(adata_imputed)
         assert not (np.all([item != item for item in adata_imputed.X]))
 
     def test_knn_impute_non_numerical_data(self):
         adata = read_csv(dataset_path=f"{_TEST_PATH}/test_impute.csv")
-        adata_imputed = knn_impute(adata, copy=True)
+        adata_imputed = knn_impute(adata, n_neighbours=3, copy=True)
 
         assert not (np.all([item != item for item in adata_imputed.X]))
 
