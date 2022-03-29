@@ -188,7 +188,8 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy: bool = False) -> 
     adata.uns["numerical_columns"] = updated_num_uns
     adata.uns["non_numerical_columns"] = updated_non_num_uns
 
-    return adata
+    if copy:
+        return adata
 
 
 def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:

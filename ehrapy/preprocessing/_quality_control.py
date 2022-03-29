@@ -6,6 +6,7 @@ from typing import Collection, Literal
 import numpy as np
 import pandas as pd
 from anndata import AnnData
+from rich import print
 
 from ehrapy.core.str_matching import StrMatcher
 
@@ -171,7 +172,7 @@ def qc_lab_measurements(
     adata: AnnData,
     reference_table: pd.DataFrame = None,
     measurements: list[str] = None,
-    unit: Literal["traditional", "SI"] = "SI",
+    unit: Literal["traditional", "SI"] = None,
     layer: str = None,
     threshold: float = 0.2,
     age_col: str = None,
@@ -181,6 +182,7 @@ def qc_lab_measurements(
     ethnicity_col: str = None,
     ethnicity: str = None,
     copy: bool = False,
+    verbose: bool = False,
 ) -> AnnData:
     """Examines lab measurements for reference ranges and outliers.
 
@@ -205,6 +207,9 @@ def qc_lab_measurements(
         * By default if no gender is provided and no unisex values are available, we use the **male** reference ranges.
         * The used reference ranges may be biased for ethnicity. Please examine the primary sources if required.
 
+    Additional values:
+        * Interleukin-6 based on https://pubmed.ncbi.nlm.nih.gov/33155686/
+
     If you want to specify your own table as a Pandas DataFrame please examine the existing default table.
     Ethnicity and age columns can be added.
     https://github.com/theislab/ehrapy/ehrapy/preprocessing/laboratory_reference_tables/laposata.tsv
@@ -225,6 +230,7 @@ def qc_lab_measurements(
         ethnicity_col: Column containing ethnicity values.
         ethnicity: Ethnicity to filter for.
         copy: Whether to return a copy (default: False).
+        verbose: Whether to have verbose stdout. Notifes user of matched columns and value ranges.
 
     Returns:
         A modified AnnData object (copy if specified).
@@ -234,8 +240,7 @@ def qc_lab_measurements(
 
             import ehrapy as ep
 
-            adata = ep.dt.mimic_2(encode=True)
-            ep.pp.lab_measurements_qc(adata)
+            ep.pp.qc_lab_measurements(adata, measurements=["Interleukin-6[pg/ml]"], verbose=True)
     """
     if copy:
         adata = adata.copy()
@@ -250,6 +255,14 @@ def qc_lab_measurements(
 
     for measurement in measurements:
         score, best_column_match = str_matcher.best_match(query=measurement, threshold=threshold)
+        if best_column_match is None:
+            print(f"[bold yellow]Unable to find a match for {measurement}")
+            continue
+        if verbose:
+            print(
+                f"[bold blue]Detected [green]{best_column_match}[blue] for [green]{measurement}[blue] with score [green]{score}."
+            )
+
         reference_column = "SI Reference Interval" if unit == "SI" else "Traditional Reference Interval"
 
         # Fetch all non None columns from the reference measures
@@ -284,19 +297,29 @@ def qc_lab_measurements(
         check_str = check_str.replace("[", "").replace("]", "").replace("'", "")
         if "<" in check_str:
             upperbound = float(check_str.replace("<", ""))
+            if verbose:
+                print(f"[bold blue]Using upperbound [green]{upperbound}")
+
             upperbound_check_results = actual_measurements < upperbound
             upperbound_check_results_array: np.ndarray = upperbound_check_results.copy()
             adata.obs[f"{measurement} normal"] = upperbound_check_results_array
         elif ">" in check_str:
             lower_bound = float(check_str.replace(">", ""))
+            if verbose:
+                print(f"[bold blue]Using lowerbound [green]{lower_bound}")
+
             lower_bound_check_results = actual_measurements > lower_bound
             lower_bound_check_results_array = lower_bound_check_results.copy()
             adata.obs[f"{measurement} normal"] = lower_bound_check_results_array
         else:  # "-" range case
             min_value = float(check_str.split("-")[0])
             max_value = float(check_str.split("-")[1])
+            if verbose:
+                print(f"[bold blue]Using minimum of [green]{min_value}[blue] and maximum of [green]{max_value}")
+
             range_check_results = (actual_measurements >= min_value) & (actual_measurements <= max_value)
             range_check_results_array: np.ndarray = range_check_results.copy()
             adata.obs[f"{measurement} normal"] = range_check_results_array
 
-    return adata
+    if copy:
+        return adata
