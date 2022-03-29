@@ -237,11 +237,13 @@ def knn_impute(
         else:
             # ordinal encoding is used since non-numerical data can not be imputed using KNN Imputation
             enc = OrdinalEncoder()
-            adata.X = enc.fit_transform(adata.X)
+            column_indices = get_column_indices(adata, adata.uns["non_numerical_columns"])
+            adata.X[::, column_indices] = enc.fit_transform(adata.X[::, column_indices])
             # impute the data using KNN imputation
             _knn_impute(adata, var_names)
+            adata.X = adata.X.astype("object")
             # decode ordinal encoding to obtain imputed original data
-            adata.X = enc.inverse_transform(adata.X)
+            adata.X[::, column_indices] = enc.inverse_transform(adata.X[::, column_indices])
 
     if check_module_importable("sklearnex"):  # pragma: no cover
         unpatch_sklearn()
@@ -469,7 +471,8 @@ def soft_impute(
         else:
             # ordinal encoding is used since non-numerical data can not be imputed using SoftImpute
             enc = OrdinalEncoder()
-            adata.X = enc.fit_transform(adata.X)
+            column_indices = get_column_indices(adata, adata.uns["non_numerical_columns"])
+            adata.X[::, column_indices] = enc.fit_transform(adata.X[::, column_indices])
             # impute the data using SoftImpute
             _soft_impute(
                 adata,
@@ -485,8 +488,9 @@ def soft_impute(
                 normalizer,
                 verbose,
             )
+            adata.X = adata.X.astype("object")
             # decode ordinal encoding to obtain imputed original data
-            adata.X = enc.inverse_transform(adata.X)
+            adata.X[::, column_indices] = enc.inverse_transform(adata.X[::, column_indices])
 
     return adata
 
@@ -596,7 +600,8 @@ def iterative_svd_impute(
         else:
             # ordinal encoding is used since non-numerical data can not be imputed using IterativeSVD
             enc = OrdinalEncoder()
-            adata.X = enc.fit_transform(adata.X)
+            column_indices = get_column_indices(adata, adata.uns["non_numerical_columns"])
+            adata.X[::, column_indices] = enc.fit_transform(adata.X[::, column_indices])
             # impute the data using IterativeSVD
             _iterative_svd_impute(
                 adata,
@@ -611,8 +616,9 @@ def iterative_svd_impute(
                 max_value,
                 verbose,
             )
+            adata.X = adata.X.astype("object")
             # decode ordinal encoding to obtain imputed original data
-            adata.X = enc.inverse_transform(adata.X)
+            adata.X[::, column_indices] = enc.inverse_transform(adata.X[::, column_indices])
 
     return adata
 
@@ -723,7 +729,8 @@ def matrix_factorization_impute(
         else:
             # ordinal encoding is used since non-numerical data can not be imputed using MatrixFactorization
             enc = OrdinalEncoder()
-            adata.X = enc.fit_transform(adata.X)
+            column_indices = get_column_indices(adata, adata.uns["non_numerical_columns"])
+            adata.X[::, column_indices] = enc.fit_transform(adata.X[::, column_indices])
             # impute the data using MatrixFactorization
             _matrix_factorization_impute(
                 adata,
@@ -736,8 +743,9 @@ def matrix_factorization_impute(
                 max_value,
                 verbose,
             )
+            adata.X = adata.X.astype("object")
             # decode ordinal encoding to obtain imputed original data
-            adata.X = enc.inverse_transform(adata.X)
+            adata.X[::, column_indices] = enc.inverse_transform(adata.X[::, column_indices])
 
     return adata
 
@@ -841,7 +849,8 @@ def nuclear_norm_minimization_impute(
         else:
             # ordinal encoding is used since non-numerical data can not be imputed using NuclearNormMinimization
             enc = OrdinalEncoder()
-            adata.X = enc.fit_transform(adata.X)
+            column_indices = get_column_indices(adata, adata.uns["non_numerical_columns"])
+            adata.X[::, column_indices] = enc.fit_transform(adata.X[::, column_indices])
             # impute the data using NuclearNormMinimization
             _nuclear_norm_minimization_impute(
                 adata,
@@ -853,8 +862,9 @@ def nuclear_norm_minimization_impute(
                 max_iters,
                 verbose,
             )
+            adata.X = adata.X.astype("object")
             # decode ordinal encoding to obtain imputed original data
-            adata.X = enc.inverse_transform(adata.X)
+            adata.X[::, column_indices] = enc.inverse_transform(adata.X[::, column_indices])
 
     return adata
 
@@ -948,13 +958,15 @@ def miceforest_impute(
         else:
             # ordinal encoding is used since non-numerical data can not be imputed using miceforest
             enc = OrdinalEncoder()
-            adata.X = enc.fit_transform(adata.X)
+            column_indices = get_column_indices(adata, adata.uns["non_numerical_columns"])
+            adata.X[::, column_indices] = enc.fit_transform(adata.X[::, column_indices])
             # impute the data using miceforest
             _miceforest_impute(
                 adata, var_names, save_all_iterations, random_state, inplace, iterations, variable_parameters, verbose
             )
+            adata.X = adata.X.astype("object")
             # decode ordinal encoding to obtain imputed original data
-            adata.X = enc.inverse_transform(adata.X)
+            adata.X[::, column_indices] = enc.inverse_transform(adata.X[::, column_indices])
 
     return adata
 
