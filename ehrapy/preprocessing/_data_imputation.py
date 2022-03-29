@@ -186,7 +186,11 @@ def _simple_impute(adata: AnnData, var_names: list[str] | None, strategy: str) -
 
 
 def knn_impute(
-    adata: AnnData, var_names: list[str] | None = None, copy: bool = False, warning_threshold: int = 30
+    adata: AnnData,
+    var_names: list[str] | None = None,
+    n_neighbours: int = 1,
+    copy: bool = False,
+    warning_threshold: int = 30,
 ) -> AnnData:
     """Impute data using the KNN-Imputer.
 
@@ -197,6 +201,7 @@ def knn_impute(
     Args:
         adata: The AnnData object to use KNN Imputation on
         var_names: A list of var names indicating which columns to use median imputation on (if None -> all columns)
+        n_neighbours: Number of neighbours to consider while imputing
         warning_threshold: Threshold of percentage of missing values to display a warning for (default: 30)
         copy: Whether to return a copy or act in place
 
@@ -233,14 +238,18 @@ def knn_impute(
         progress.add_task("[blue]Running KNN imputation", total=1)
         # numerical only data needs no encoding since KNN Imputation can be applied directly
         if np.issubdtype(adata.X.dtype, np.number):
-            _knn_impute(adata, var_names)
+            _knn_impute(adata, var_names, n_neighbours)
         else:
             # ordinal encoding is used since non-numerical data can not be imputed using KNN Imputation
             enc = OrdinalEncoder()
             column_indices = get_column_indices(adata, adata.uns["non_numerical_columns"])
             adata.X[::, column_indices] = enc.fit_transform(adata.X[::, column_indices])
             # impute the data using KNN imputation
-            _knn_impute(adata, var_names)
+            _knn_impute(adata, var_names, n_neighbours)
+            # imputing on encoded columns might result in float numbers; those can not be decoded
+            # cast them to int to ensure they can be decoded
+            adata.X[::, column_indices] = np.rint(adata.X[::, column_indices]).astype(int)
+            # knn imputer transforms X dtype to numerical (encoded), but object is needed for decoding
             adata.X = adata.X.astype("object")
             # decode ordinal encoding to obtain imputed original data
             adata.X[::, column_indices] = enc.inverse_transform(adata.X[::, column_indices])
@@ -251,15 +260,17 @@ def knn_impute(
         return adata
 
 
-def _knn_impute(adata: AnnData, var_names: list[str] | None) -> None:
+def _knn_impute(adata: AnnData, var_names: list[str] | None, n_neighbours: int) -> None:
     """Utility function to impute data using KNN-Imputer"""
     from sklearn.impute import KNNImputer
 
-    imputer = KNNImputer(n_neighbors=1)
+    imputer = KNNImputer(n_neighbors=n_neighbours)
 
     if isinstance(var_names, list):
         column_indices = get_column_indices(adata, var_names)
         adata.X[::, column_indices] = imputer.fit_transform(adata.X[::, column_indices])
+        # this is required since X dtype has to be numerical in order to correctly round floats
+        adata.X = adata.X.astype("float64")
     else:
         adata.X = imputer.fit_transform(adata.X)
 
