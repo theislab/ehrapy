@@ -248,7 +248,9 @@ def knn_impute(
             _knn_impute(adata, var_names, n_neighbours)
             # imputing on encoded columns might result in float numbers; those can not be decoded
             # cast them to int to ensure they can be decoded
-            adata.X[::, column_indices] = adata.X[::, column_indices].astype(int)
+            adata.X[::, column_indices] = np.rint(adata.X[::, column_indices]).astype(int)
+            # knn imputer transforms X dtype to numerical (encoded), but object is needed for decoding
+            adata.X = adata.X.astype("object")
             # decode ordinal encoding to obtain imputed original data
             adata.X[::, column_indices] = enc.inverse_transform(adata.X[::, column_indices])
 
@@ -267,10 +269,10 @@ def _knn_impute(adata: AnnData, var_names: list[str] | None, n_neighbours: int) 
     if isinstance(var_names, list):
         column_indices = get_column_indices(adata, var_names)
         adata.X[::, column_indices] = imputer.fit_transform(adata.X[::, column_indices])
+        # this is required since X dtype has to be numerical in order to correctly round floats
+        adata.X = adata.X.astype("float64")
     else:
         adata.X = imputer.fit_transform(adata.X)
-    # knn imputer transforms X dtype to numerical (encoded), but object is needed for decoding
-    adata.X = adata.X.astype("object")
 
 
 # ======================  MissForest Impuation =======================
