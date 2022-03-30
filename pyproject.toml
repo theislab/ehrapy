@@ -41,6 +41,8 @@ deep-translator = ">=1.6.1"
 scikit-learn-intelex = {version = ">=2021.5.3", optional = true}
 medcat = {version = ">=1.2.6", optional = true}
 anndata = ">=0.7.8"
+fancyimpute = "^0.7.0"
+miceforest = "^5.3.0"
 
 [tool.poetry.dev-dependencies]
 pytest = ">=6.2.5"
