@@ -106,24 +106,6 @@ jobs:
               if: matrix.os == 'macos-latest'
               run: brew install ghostscript
 
-            - name: Download Numpy+MKL Windows
-              if: matrix.os == 'windows-latest'
-              run: |
-                  curl https://download.lfd.uci.edu/pythonlibs/x6hvwk7i/numpy-1.22.3+mkl-cp38-cp38-win_amd64.whl --output numpy-1.22.3+mkl-cp38-cp38-win_amd64.whl
-
-            - name: Install Numpy+MKL Windows
-              if: matrix.os == 'windows-latest'
-              run: pip install numpy-1.22.3+mkl-cp38-cp38-win_amd64.whl
-
-            - name: Download scikit_misc Windows
-              if: matrix.os == 'windows-latest'
-              run: |
-                  curl https://download.lfd.uci.edu/pythonlibs/x6hvwk7i/scikit_misc-0.1.4-cp38-cp38-win_amd64.whl --output scikit_misc-0.1.4-cp38-cp38-win_amd64.whl
-
-            - name: Install scikit_misc Windows
-              if: matrix.os == 'windows-latest'
-              run: pip install scikit_misc-0.1.4-cp38-cp38-win_amd64.whl
-
             - name: Install ghostscript Windows
               if: matrix.os == 'windows-latest'
               run: choco install imagemagick dejavufonts ghostscript
