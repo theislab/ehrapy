@@ -1,5 +1,12 @@
+import sys
+
+import pytest
+
 import ehrapy as ep
 from ehrapy.preprocessing._scanpy_pp_api import highly_variable_features
+
+if not sys.platform.startswith("win"):
+    pytest.skip("skipping windows-only tests", allow_module_level=True)
 
 
 class TestScanpyPPAPI:
