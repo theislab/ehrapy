@@ -52,6 +52,11 @@ ep.pl.cool_fancy_plot()
     data.hepatitis
     data.statlog_heart
     data.thyroid
+    data.breast_cancer_coimbra
+    data.parkinson_dataset_with_replicated_acoustic_features
+    data.parkinsons
+    data.parkinsons_disease_classification
+    data.parkinsons_telemonitoring
 ```
 
 ## Preprocessing
@@ -94,6 +99,11 @@ Other than tools, preprocessing steps usually don’t return an easily interpret
     preprocessing.simple_impute
     preprocessing.knn_impute
     preprocessing.miss_forest_impute
+    preprocessing.soft_impute
+    preprocessing.iterative_svd_impute
+    preprocessing.matrix_factorization_impute
+    preprocessing.nuclear_norm_minimization_impute
+    preprocessing.miceforest_impute
 ```
 
 ### Encoding
