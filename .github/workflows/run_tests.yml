@@ -109,11 +109,11 @@ jobs:
             - name: Download Numpy+MKL Windows
               if: matrix.os == 'windows-latest'
               run: |
-                  curl https://download.lfd.uci.edu/pythonlibs/x6hvwk7i/numpy-1.22.3+mkl-pp38-pypy38_pp73-win_amd64.whl --output numpy-1.22.3+mkl-pp38-pypy38_pp73-win_amd64.whl
+                  curl https://download.lfd.uci.edu/pythonlibs/x6hvwk7i/numpy-1.22.3+mkl-cp38-cp38-win_amd64.whl --output numpy-1.22.3+mkl-cp38-cp38-win_amd64.whl
 
             - name: Install Numpy+MKL Windows
               if: matrix.os == 'windows-latest'
-              run: pip install numpy-1.22.3+mkl-pp38-pypy38_pp73-win_amd64.whl
+              run: pip install numpy-1.22.3+mkl-cp38-cp38-win_amd64.whl
 
             - name: Install ghostscript Windows
               if: matrix.os == 'windows-latest'
