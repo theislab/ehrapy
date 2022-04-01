@@ -3,13 +3,13 @@ import sys
 import pytest
 
 import ehrapy as ep
-from ehrapy.preprocessing._scanpy_pp_api import highly_variable_features
+from ehrapy.preprocessing.highly_variable_features import highly_variable_features
 
 if sys.platform.startswith("win"):
     pytest.skip("skipping windows-only tests", allow_module_level=True)
 
 
-class TestScanpyPPAPI:
+class TestHighlyVariableFeatures:
     def test_highly_variable_features(self):
         adata = ep.dt.dermatology(encoded=True)
         ep.pp.knn_impute(adata)
