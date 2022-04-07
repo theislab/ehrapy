@@ -6,7 +6,7 @@ import pytest
 from sklearn.exceptions import ConvergenceWarning
 
 from ehrapy.io._read import read_csv
-from ehrapy.preprocessing._data_imputation import (  # nuclear_norm_minimization_impute,
+from ehrapy.preprocessing._data_imputation import (
     ImputeStrategyNotAvailableError,
     _warn_imputation_threshold,
     explicit_impute,
@@ -15,6 +15,7 @@ from ehrapy.preprocessing._data_imputation import (  # nuclear_norm_minimization
     matrix_factorization_impute,
     miceforest_impute,
     miss_forest_impute,
+    nuclear_norm_minimization_impute,
     simple_impute,
     soft_impute,
 )
@@ -253,7 +254,6 @@ class TestImputation:
 
         assert not (np.all([item != item for item in adata_imputed.X]))
 
-    """
     def test_nuclear_norm_minimization_impute_no_copy(self):
         adata = read_csv(dataset_path=f"{_TEST_PATH}/test_impute_num.csv")
         adata_imputed = nuclear_norm_minimization_impute(adata)
@@ -283,7 +283,6 @@ class TestImputation:
         adata_imputed = nuclear_norm_minimization_impute(adata, var_names=["intcol", "strcol", "boolcol"])
 
         assert not (np.all([item != item for item in adata_imputed.X]))
-    """
 
     def test_miceforest_impute_no_copy(self):
         adata = read_csv(dataset_path=f"{_TEST_PATH}/test_impute_iris.csv")
