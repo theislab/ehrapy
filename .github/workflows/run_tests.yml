@@ -105,10 +105,14 @@ jobs:
             - name: Install ghostscript MacOS
               if: matrix.os == 'macos-latest'
               run: brew install ghostscript
-            
+
             - name: Install scikit_misc MacOS
+              if: matrix.os == 'ubuntu-latest'
+              run: pip install --user scikit-misc
+
+            - name: Install scikit_misc Ubuntu
               if: matrix.os == 'macos-latest'
-              run: poetry add scikit-misc
+              run: pip install --user scikit-misc
 
             - name: Download Numpy+MKL Windows
               if: matrix.os == 'windows-latest'
