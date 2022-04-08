@@ -35,8 +35,8 @@ def highly_variable_features(
         check_values: Check if counts in selected layer are integers. A Warning is returned if set to True.
 
     Returns:
-    Depending on `inplace` returns calculated metrics (:class:`~pandas.DataFrame`) or
-    updates `.var` with the following fields
+        Depending on `inplace` returns calculated metrics (:class:`~pandas.DataFrame`) or
+        updates `.var` with the following fields
 
     highly_variable : bool
         boolean indicator of highly-variable features

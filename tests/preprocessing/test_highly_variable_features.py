@@ -1,5 +1,5 @@
 import ehrapy as ep
-from ehrapy.preprocessing.highly_variable_features import highly_variable_features
+from ehrapy.preprocessing._highly_variable_features import highly_variable_features
 
 
 class TestHighlyVariableFeatures:
