@@ -1,12 +1,5 @@
-import sys
-
-import pytest
-
 import ehrapy as ep
 from ehrapy.preprocessing.highly_variable_features import highly_variable_features
-
-if sys.platform.startswith("win"):
-    pytest.skip("skipping windows-only tests", allow_module_level=True)
 
 
 class TestHighlyVariableFeatures:
