@@ -5,10 +5,10 @@ from contextlib import closing
 from datetime import datetime
 from io import StringIO
 
+import session_info
 from IPython.utils.io import Tee
 from rich import print
 from scanpy.logging import _versions_dependencies
-from sinfo import sinfo
 
 from ehrapy import __version__
 
@@ -22,17 +22,18 @@ def print_versions(*, output_file=None) -> None:  # pragma: no cover
     stdout = sys.stdout
     try:
         buf = sys.stdout = StringIO()
-        sinfo(
+        session_info.show(
             dependencies=True,
             excludes=[
                 "builtins",
                 "stdlib_list",
                 "importlib_metadata",
                 # Special module present if test coverage being calculated
-                # https://gitlab.com/joelostblom/sinfo/-/issues/10
+                # https://gitlab.com/joelostblom/session_info/-/issues/10
                 "$coverage",
             ],
             write_req_file=False,
+            html=False,
         )
     finally:
         sys.stdout = stdout

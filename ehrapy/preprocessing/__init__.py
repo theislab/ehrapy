@@ -9,6 +9,7 @@ from ehrapy.preprocessing._data_imputation import (
     simple_impute,
     soft_impute,
 )
+from ehrapy.preprocessing._highly_variable_features import highly_variable_features
 from ehrapy.preprocessing._normalization import (
     norm_log,
     norm_maxabs,
