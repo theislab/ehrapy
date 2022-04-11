@@ -204,10 +204,23 @@ def run_unsupervised_training(ep_cat: MedCAT, text: pd.Series, progress_print: i
         ep_cat.cat.cdb.print_stats()
 
 
-def annotate_text(ep_cat: MedCAT, obs: pd.DataFrame, text_column: str, n_proc: int = 2, batch_size_chars: int = 500000) -> None:
-    """Annotate the original free text data. Note this will only annotate non null rows. The result
-    will be a (large) dict containing all the entities extracted from the free text (and in case filtered before via set_filter_by_tui function).
-    This dict will be the base for all further analyses, for example coloring umaps by specific diseases.
+def annotate_text(ep_cat: MedCAT, obs: pd.DataFrame, text_column: str, n_proc: int = 2, batch_size_chars: int = 500000) -> pd.DataFrame:
+    """Annotate the original free text data. Note this will only annotate non null rows.
+    The result will be a MultiIndex DataFrame (see example below).
+    This dataframe will be the base for all further analyses, for example coloring umaps by specific diseases.
+
+        .. code-block:: python
+                   # some setup code here
+                   ...
+                   res = ep.tl.annotate_text(ep_cat, adata.obs, "text")
+                   print(res)
+                   # res looks like this:
+                   #                                                pretty_name meta ...
+                   #
+                   # 1 0 (first entitiy extracted from first row)   diabetes11  fb11 ...
+                   #   1 (second entitiy extracted from first row)  diabetes12  fb12 ...
+                   # 2 0 (first entitiy extracted from second row)  diabetes21  fb21 ...
+                   #   1 (second entitiy extracted from second row) diabetes22  fb22 ...
 
     Args:
         ep_cat: Ehrapy's custom MedCAT object
@@ -216,14 +229,25 @@ def annotate_text(ep_cat: MedCAT, obs: pd.DataFrame, text_column: str, n_proc: i
         n_proc: Number of processors to use
         batch_size_chars: batch size to control for the variablity between document sizes
 
+    Returns:
+        A MultiIndex pandas DataFrame containing all extracted entities
+
     """
     non_null_text = _filter_null_values(obs, text_column)
     formatted_text_column = _format_df_column(non_null_text, text_column)
     results = ep_cat.cat.multiprocessing(formatted_text_column, batch_size_chars=batch_size_chars, nproc=n_proc)
     # TODO: Discuss: Should we return a brand new custom "result" object here (as this is basically the base for downstream analysis) or
     # TODO: just add it to the existing ehrapy MedCAT object as the "result" attribute.
-    # for testing and debugging, going with simply returning it
-    return results
+    flattened_res = _flatten_annotated_results(results)
+
+    return _annotated_results_to_df(flattened_res)
+
+
+def _annotated_results_to_df(flattened_results: dict) -> pd.DataFrame:
+    """Turn the flattened annotated results into a pandas DataFrame.
+    The resulting DataFrame will be a MultiIndex Frame and looks like the following example:
+    """
+    return pd.concat({row: pd.DataFrame(entities) for row, entities in flattened_results.items()}, axis=0)
 
 
 def _flatten_annotated_results(annotation_results: dict) -> dict:
@@ -235,7 +259,8 @@ def _flatten_annotated_results(annotation_results: dict) -> dict:
 
     # row numbers where the text column is located in the original data
     for row_id in annotation_results.keys():
-        # TODO: check for empty row_id (no entities found), add them somehow so they are not missed later on
+        # TODO: check for empty row_id (no entities found), add them somehow so they are not missed later on (no issue???)
+        # TODO: What to do with duplicates (same entity from same row)
         flattened_annotated_dict[row_id] = {}
         # all entities extracted from a given row
         entities = annotation_results[row_id]["entities"]
