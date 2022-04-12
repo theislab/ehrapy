@@ -147,3 +147,5 @@ notebooks/data
 notebooks/*.dat
 notebooks/*.csv
 notebooks/*-requirements.txt
+
+ehrapy_data/
