@@ -15,31 +15,10 @@ from medcat.cdb_maker import CDBMaker
 from medcat.config import Config
 from medcat.vocab import Vocab
 from rich import print
-from rich.progress import Progress, SpinnerColumn
-from spacy import displacy
-from spacy.tokens.doc import Doc
-
-from ehrapy import settings
 from ehrapy.core.tool_available import check_module_importable
 
 
 # TODO: State in docs those models are only needed when not using a model pack (cdb and vocab separatly)
-# so this check can be removed
-spacy_models_modules: list[str] = list(map(lambda model: model.replace("-", "_"), ["en-core-web-md"]))
-for model in spacy_models_modules:
-    if not check_module_importable(model):
-        print(
-            f"[bold yellow]Model {model} is not installed. Refer to the ehrapy installation instructions if required."
-        )
-
-
-# TODO: Discuss this could be used as a custom class for results
-@dataclass
-class AnnotationResult:
-    all_medcat_annotation_results: list | None
-    entities_pretty: dict[str, list[str]]
-    cui_locations: dict | None
-    type_ids_location: dict | None
 
 
 class MedCAT:
@@ -52,6 +31,8 @@ class MedCAT:
             self.cat = CAT(cdb=concept_db, config=concept_db.config, vocab=vocabulary)
         elif model_pack_path is not None:
             self.cat = CAT.load_model_pack(model_pack_path)
+        # will be initialized as None, but will get updated when running annotate_text
+        self.annotated_results = None
 
     def update_cat(self, vocabulary: Vocab = None, concept_db: CDB = None):
         """Updates the current MedCAT instance with new Vocabularies and Concept Databases.
@@ -206,7 +187,7 @@ def run_unsupervised_training(ep_cat: MedCAT, text: pd.Series, progress_print: i
 
 def annotate_text(ep_cat: MedCAT, obs: pd.DataFrame, text_column: str, n_proc: int = 2, batch_size_chars: int = 500000) -> pd.DataFrame:
     """Annotate the original free text data. Note this will only annotate non null rows.
-    The result will be a MultiIndex DataFrame (see example below).
+    The result will be a MultiIndex DataFrame (see example below). It will be set as the annotated_results attribute for the passed MedCat object.
     This dataframe will be the base for all further analyses, for example coloring umaps by specific diseases.
 
         .. code-block:: python
@@ -223,24 +204,32 @@ def annotate_text(ep_cat: MedCAT, obs: pd.DataFrame, text_column: str, n_proc: i
                    #   1 (second entitiy extracted from second row) diabetes22  fb22 ...
 
     Args:
-        ep_cat: Ehrapy's custom MedCAT object
+        ep_cat: Ehrapy's custom MedCAT object. The annotated_results attribute will be set here.
         obs: AnnData obs containing the free text column
         text_column: Name of the column that should be annotated
         n_proc: Number of processors to use
         batch_size_chars: batch size to control for the variablity between document sizes
 
-    Returns:
-        A MultiIndex pandas DataFrame containing all extracted entities
-
     """
     non_null_text = _filter_null_values(obs, text_column)
     formatted_text_column = _format_df_column(non_null_text, text_column)
     results = ep_cat.cat.multiprocessing(formatted_text_column, batch_size_chars=batch_size_chars, nproc=n_proc)
-    # TODO: Discuss: Should we return a brand new custom "result" object here (as this is basically the base for downstream analysis) or
-    # TODO: just add it to the existing ehrapy MedCAT object as the "result" attribute.
     flattened_res = _flatten_annotated_results(results)
+    ep_cat.annotated_results = _annotated_results_to_df(flattened_res)
 
-    return _annotated_results_to_df(flattened_res)
+
+def get_annotation_overview(ep_cat: MedCAT) -> pd.DataFrame:
+    """Provide an overview for the annotation results. An overview will look like the following:
+       cui (the CUI), nsubjects (from how many rows this one got extracted), type_ids (TUIs), name(name of the entitiy), perc_subjects (how many rows relative
+       to absolute number of rows)
+
+    Args:
+        ep_cat: The current MedCAT object which holds all infos on medcat analysis with ehrapy.
+
+    Returns:
+        A pandas DataFrame with the overview stats.
+    """
+
 
 
 def _annotated_results_to_df(flattened_results: dict) -> pd.DataFrame:
@@ -278,14 +267,11 @@ def _flatten_annotated_results(annotation_results: dict) -> dict:
                     if entity_key in ["pretty_name", "cui", "type_ids", "types"]:
                         single_entity[entity_key] = entities[entity_id][entity_key]
                     elif entity_key == "meta_anns":
-                        # TODO: Should we check here if status is affirmed and if not, exclude it from results, since its negative
                         single_entity[entity_key] = entities[entity_id][entity_key]["Status"]["value"]
                 # append alters list inplace so the flattened result in the specific row_id gets updated here as well
                 entities_info.append(single_entity)
 
     return flattened_annotated_dict
-
-
 
 
 def _format_df_column(df: pd.DataFrame, column_name: str) -> list[tuple[int, str]]:
