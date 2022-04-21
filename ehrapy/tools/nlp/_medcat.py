@@ -1,20 +1,14 @@
 from __future__ import annotations
 
-import warnings
-from dataclasses import dataclass
-from typing import Literal
-
-import numpy as np
 import pandas as pd
-import seaborn as sns
-from anndata import AnnData
-from matplotlib import pyplot as plt
 from medcat.cat import CAT
 from medcat.cdb import CDB
 from medcat.cdb_maker import CDBMaker
 from medcat.config import Config
 from medcat.vocab import Vocab
-from rich import print
+from rich import print, box
+from rich.table import Table
+from rich.console import Console
 from ehrapy.core.tool_available import check_module_importable
 
 
@@ -218,24 +212,51 @@ def annotate_text(ep_cat: MedCAT, obs: pd.DataFrame, text_column: str, n_proc: i
     ep_cat.annotated_results = _annotated_results_to_df(flattened_res)
 
 
-def get_annotation_overview(ep_cat: MedCAT) -> pd.DataFrame:
+def get_annotation_overview(ep_cat: MedCAT, n: int = 10, status: str = "Affirmed", save_to_csv: bool = False) -> pd.DataFrame:
     """Provide an overview for the annotation results. An overview will look like the following:
        cui (the CUI), nsubjects (from how many rows this one got extracted), type_ids (TUIs), name(name of the entitiy), perc_subjects (how many rows relative
        to absolute number of rows)
 
     Args:
         ep_cat: The current MedCAT object which holds all infos on medcat analysis with ehrapy.
+        n: Basically the parameter for head() of pandas Dataframe. How many of the most common entities should be shown?
+        status: One of "Affirmed" (default), "Other" or "Both". Displays stats for either only affirmed entities, negated ones or both.
+        save_to_csv: Whether to save the overview dataframe to a local .csv file in the current working directory or not.
 
     Returns:
         A pandas DataFrame with the overview stats.
     """
+    df = _filter_df_by_status(ep_cat.annotated_results, status)
+    # group by CUI as this is a unique identifier per entity
+    grouped = df.groupby('cui')
+    # get absolute number of rows with this entity
+    # note for overview, only one TUI and type is shown (there shouldn't be much situations were multiple are even possible or useful)
+    res = grouped.agg({"pretty_name": (lambda x: next(iter(set(x)))), "type_ids": (lambda x: next(iter(x))[0]), "types": (lambda x: next(iter(x))[0]), "row_nr":"nunique"})
+    res.rename(columns={"row_nr": "n_patients"})
+    # relative amount of patients with the specific entity to all patients (or rows in the original data)
+    # note that this might not be the actual number of patients if one patient has data in multiple rows
+    res["n_patients_percent"] = (res["n_patients"]/df["row_nr"].nunique()) * 100
+    res.round({'n_patients_percent': 1})
+    # save to csv if wanted
+    if save_to_csv:
+        res.to_csv(".")
+
+    overview_table = _df_to_rich_table(res.nlargest(n, 'n_patients'))
+    console = Console()
+    console.print(overview_table)
+
+
 
 
 
 def _annotated_results_to_df(flattened_results: dict) -> pd.DataFrame:
-    """Turn the flattened annotated results into a pandas DataFrame.
+    """Turn the flattened annotated results into a pandas DataFrame and remove duplicates.
     """
-    return pd.DataFrame.from_dict(flattened_results, orient='index')
+    df = pd.DataFrame.from_dict(flattened_results, orient='index')
+    # remove duplicate entries; for example when a single entity like a disease is mentioned multiple times without any meaningful context changes
+    # Example: The patient suffers from Diabetes. Cause of the Diabetes, he receives drug X.
+    df.drop_duplicates(subset=['cui', 'row_nr', 'meta_anns'])
+    return df
 
 
 def _flatten_annotated_results(annotation_results: dict) -> dict:
@@ -282,3 +303,39 @@ def _filter_null_values(df: pd.DataFrame, column: str) -> pd.DataFrame:
     """Filter null values of a given column and return that column without the null values
     """
     return pd.DataFrame(df[column][~df[column].isnull()])
+
+
+def _filter_df_by_status(df: pd.DataFrame, status: str) -> pd.DataFrame:
+    """Util function to filter passed dataframe by status.
+    """
+    df_res = df
+    if status != "Both":
+        if status not in {"Affirmed", "Other"}:
+            raise StatusNotSupportedError(f"{status} is not available. Please use either Affirmed, Other or Both!")
+        mask = df["meta_anns"].values == status
+        df_res = df[mask]
+    return df_res
+
+
+def _df_to_rich_table(df: pd.DataFrame) -> Table:
+    """Convert a pandas dataframe to a rich Table
+    """
+    table = Table(show_header=True, header_style="bold magenta")
+
+    for column in df.columns:
+        table.add_column(str(column))
+
+    for index, value_list in enumerate(df.values.tolist()):
+        row = []
+        row += [str(x) for x in value_list]
+        table.add_row(*row)
+
+    # Update the style of the table
+    table.row_styles = ["none", "dim"]
+    table.box = box.SIMPLE_HEAD
+
+    return table
+
+
+class StatusNotSupportedError(Exception):
+    pass
