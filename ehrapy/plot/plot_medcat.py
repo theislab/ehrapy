@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 
-def plot_medcat_top_entities(medcat_results: pd.DataFrame, tuis: list[str], n: int = 10, status: str = "Affirmed") -> None
+def plot_medcat_top_entities(medcat_results: pd.DataFrame, tuis, n: int = 10, status: str = "Affirmed") -> None:
     """Plot top entities.
 
     Args:

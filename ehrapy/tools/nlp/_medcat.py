@@ -234,33 +234,26 @@ def get_annotation_overview(ep_cat: MedCAT) -> pd.DataFrame:
 
 def _annotated_results_to_df(flattened_results: dict) -> pd.DataFrame:
     """Turn the flattened annotated results into a pandas DataFrame.
-    The resulting DataFrame will be a MultiIndex Frame and looks like the following example:
     """
-    return pd.concat({row: pd.DataFrame(entities) for row, entities in flattened_results.items()}, axis=0)
+    return pd.DataFrame.from_dict(flattened_results, orient='index')
 
 
 def _flatten_annotated_results(annotation_results: dict) -> dict:
     """Flattens the nested set (usually 5 level nested) of annotation results.
-       annotation_results is a dict like: {"1": {entities: {1: { some entity info }, 2: {...}}, "2" :{ ... }}}. What we want is a dict like the following:
-       {"1": {first_entitiy_info, second_entity_info, ...}, "2" : {first_entitiy_info, second_entity_info, ...}, ... }.
+       annotation_results is just a simple flattened dict with infos on all entities found
     """
     flattened_annotated_dict = {}
+    entry_nr = 0
 
     # row numbers where the text column is located in the original data
     for row_id in annotation_results.keys():
-        # TODO: check for empty row_id (no entities found), add them somehow so they are not missed later on (no issue???)
-        # TODO: What to do with duplicates (same entity from same row)
-        flattened_annotated_dict[row_id] = {}
         # all entities extracted from a given row
         entities = annotation_results[row_id]["entities"]
-        # info superset for all entities extracted from one row
-        entities_info = []
-        flattened_annotated_dict[row_id] = entities_info
         # iterate over all entities extracted from the specific row
         for entity_id in entities.keys():
             # ignore tokens for now
             if entity_id != "tokens":
-                single_entity = {}
+                single_entity = {"row_nr": row_id}
                 entity = entities[entity_id]
                 # iterate over all info attributes of a single entity found in a specific row
                 for entity_key in entity.keys():
@@ -268,9 +261,8 @@ def _flatten_annotated_results(annotation_results: dict) -> dict:
                         single_entity[entity_key] = entities[entity_id][entity_key]
                     elif entity_key == "meta_anns":
                         single_entity[entity_key] = entities[entity_id][entity_key]["Status"]["value"]
-                # append alters list inplace so the flattened result in the specific row_id gets updated here as well
-                entities_info.append(single_entity)
-
+                flattened_annotated_dict[entry_nr] = single_entity
+                entry_nr += 1
     return flattened_annotated_dict
 
 
