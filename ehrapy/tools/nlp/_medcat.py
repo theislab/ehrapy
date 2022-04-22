@@ -1,17 +1,17 @@
 from __future__ import annotations
 
 import pandas as pd
+from anndata import AnnData
 from medcat.cat import CAT
 from medcat.cdb import CDB
 from medcat.cdb_maker import CDBMaker
 from medcat.config import Config
 from medcat.vocab import Vocab
-from anndata import AnnData
-from rich import print, box
-from rich.table import Table
+from rich import box, print
 from rich.console import Console
-from ehrapy.core.tool_available import check_module_importable
+from rich.table import Table
 
+from ehrapy.core.tool_available import check_module_importable
 
 # TODO: State in docs those models are only needed when not using a model pack (cdb and vocab separatly)
 
@@ -62,12 +62,12 @@ class MedCAT:
 
         """
         if tuis is None:
-            tuis = ['T047', 'T048']
+            tuis = ["T047", "T048"]
         # the filtered cui's that fall into the type of the filter tui's
         cui_filters = set()
         for type_id in tuis:
-            cui_filters.update(self.cat.cdb.addl_info['type_id2cuis'][type_id])
-        self.cat.cdb.config.linking['filters']['cuis'] = cui_filters
+            cui_filters.update(self.cat.cdb.addl_info["type_id2cuis"][type_id])
+        self.cat.cdb.config.linking["filters"]["cuis"] = cui_filters
 
 
 def create_vocabulary(vocabulary_data: str, replace: bool = True) -> Vocab:
@@ -164,7 +164,9 @@ def save_model_pack(ep_cat: MedCAT, model_pack_dir: str = ".", name: str = "ehra
     _ = ep_cat.cat.create_model_pack(name)
 
 
-def run_unsupervised_training(ep_cat: MedCAT, text: pd.Series, progress_print: int = 100, print_statistics: bool = False) -> None:
+def run_unsupervised_training(
+    ep_cat: MedCAT, text: pd.Series, progress_print: int = 100, print_statistics: bool = False
+) -> None:
     """Performs MedCAT unsupervised training on a provided text column.
 
     Args:
@@ -180,9 +182,11 @@ def run_unsupervised_training(ep_cat: MedCAT, text: pd.Series, progress_print: i
         ep_cat.cat.cdb.print_stats()
 
 
-def annotate_text(ep_cat: MedCAT, obs: pd.DataFrame, text_column: str, n_proc: int = 2, batch_size_chars: int = 500000) -> pd.DataFrame:
+def annotate_text(
+    ep_cat: MedCAT, obs: pd.DataFrame, text_column: str, n_proc: int = 2, batch_size_chars: int = 500000
+) -> pd.DataFrame:
     """Annotate the original free text data. Note this will only annotate non null rows.
-    The result will be a MultiIndex DataFrame (see example below). It will be set as the annotated_results attribute for the passed MedCat object.
+    The result will be a DataFrame (see example below). It will be set as the annotated_results attribute for the passed MedCat object.
     This dataframe will be the base for all further analyses, for example coloring umaps by specific diseases.
 
         .. code-block:: python
@@ -194,16 +198,16 @@ def annotate_text(ep_cat: MedCAT, obs: pd.DataFrame, text_column: str, n_proc: i
                    #                                                pretty_name meta ...
                    #
                    # 1 0 (first entitiy extracted from first row)   diabetes11  fb11 ...
-                   #   1 (second entitiy extracted from first row)  diabetes12  fb12 ...
-                   # 2 0 (first entitiy extracted from second row)  diabetes21  fb21 ...
-                   #   1 (second entitiy extracted from second row) diabetes22  fb22 ...
+                   # 2 0 (second entitiy extracted from first row)  diabetes12  fb12 ...
+                   # 3 1 (first entitiy extracted from second row)  diabetes21  fb21 ...
+                   # 4 1 (second entitiy extracted from second row) diabetes22  fb22 ...
 
     Args:
         ep_cat: Ehrapy's custom MedCAT object. The annotated_results attribute will be set here.
         obs: AnnData obs containing the free text column
         text_column: Name of the column that should be annotated
         n_proc: Number of processors to use
-        batch_size_chars: batch size to control for the variablity between document sizes
+        batch_size_chars: batch size to control for the variability between document sizes
 
     """
     non_null_text = _filter_null_values(obs, text_column)
@@ -211,7 +215,7 @@ def annotate_text(ep_cat: MedCAT, obs: pd.DataFrame, text_column: str, n_proc: i
     results = ep_cat.cat.multiprocessing(formatted_text_column, batch_size_chars=batch_size_chars, nproc=n_proc)
     flattened_res = _flatten_annotated_results(results)
     # sort for row number in ascending order and reset index to keep index updated
-    ep_cat.annotated_results = _annotated_results_to_df(flattened_res).sort_values(by=['row_nr']).reset_index(drop=True)
+    ep_cat.annotated_results = _annotated_results_to_df(flattened_res).sort_values(by=["row_nr"]).reset_index(drop=True)
 
 
 def get_annotation_overview(ep_cat: MedCAT, n: int = 10, status: str = "Affirmed", save_to_csv: bool = False) -> None:
@@ -230,20 +234,27 @@ def get_annotation_overview(ep_cat: MedCAT, n: int = 10, status: str = "Affirmed
     """
     df = _filter_df_by_status(ep_cat.annotated_results, status)
     # group by CUI as this is a unique identifier per entity
-    grouped = df.groupby('cui')
+    grouped = df.groupby("cui")
     # get absolute number of rows with this entity
     # note for overview, only one TUI and type is shown (there shouldn't be much situations were multiple are even possible or useful)
-    res = grouped.agg({"pretty_name": (lambda x: next(iter(set(x)))), "type_ids": (lambda x: next(iter(x))[0]), "types": (lambda x: next(iter(x))[0]), "row_nr":"nunique"})
+    res = grouped.agg(
+        {
+            "pretty_name": (lambda x: next(iter(set(x)))),
+            "type_ids": (lambda x: next(iter(x))[0]),
+            "types": (lambda x: next(iter(x))[0]),
+            "row_nr": "nunique",
+        }
+    )
     res = res.rename(columns={"row_nr": "n_patients"})
     # relative amount of patients with the specific entity to all patients (or rows in the original data)
     # note that this might not be the actual number of patients if one patient has data in multiple rows
-    res["n_patients_percent"] = (res["n_patients"]/df["row_nr"].nunique()) * 100
-    res.round({'n_patients_percent': 1})
+    res["n_patients_percent"] = (res["n_patients"] / df["row_nr"].nunique()) * 100
+    res.round({"n_patients_percent": 1})
     # save to csv if wanted
     if save_to_csv:
         res.to_csv(".")
 
-    overview_table = _df_to_rich_table(res.nlargest(n, 'n_patients'))
+    overview_table = _df_to_rich_table(res.nlargest(n, "n_patients"))
     console = Console()
     console.print(overview_table)
 
@@ -260,18 +271,17 @@ def _add_binary_column_to_obs(ep_cat: MedCAT, adata: AnnData, name: str) -> None
 
 
 def _annotated_results_to_df(flattened_results: dict) -> pd.DataFrame:
-    """Turn the flattened annotated results into a pandas DataFrame and remove duplicates.
-    """
-    df = pd.DataFrame.from_dict(flattened_results, orient='index')
+    """Turn the flattened annotated results into a pandas DataFrame and remove duplicates."""
+    df = pd.DataFrame.from_dict(flattened_results, orient="index")
     # remove duplicate entries; for example when a single entity like a disease is mentioned multiple times without any meaningful context changes
     # Example: The patient suffers from Diabetes. Cause of the Diabetes, he receives drug X.
-    df.drop_duplicates(subset=['cui', 'row_nr', 'meta_anns'])
+    df.drop_duplicates(subset=["cui", "row_nr", "meta_anns"])
     return df
 
 
 def _flatten_annotated_results(annotation_results: dict) -> dict:
     """Flattens the nested set (usually 5 level nested) of annotation results.
-       annotation_results is just a simple flattened dict with infos on all entities found
+    annotation_results is just a simple flattened dict with infos on all entities found
     """
     flattened_annotated_dict = {}
     entry_nr = 0
@@ -310,14 +320,12 @@ def _format_df_column(df: pd.DataFrame, column_name: str) -> list[tuple[int, str
 
 
 def _filter_null_values(df: pd.DataFrame, column: str) -> pd.DataFrame:
-    """Filter null values of a given column and return that column without the null values
-    """
+    """Filter null values of a given column and return that column without the null values"""
     return pd.DataFrame(df[column][~df[column].isnull()])
 
 
 def _filter_df_by_status(df: pd.DataFrame, status: str) -> pd.DataFrame:
-    """Util function to filter passed dataframe by status.
-    """
+    """Util function to filter passed dataframe by status."""
     df_res = df
     if status != "Both":
         if status not in {"Affirmed", "Other"}:
@@ -328,14 +336,13 @@ def _filter_df_by_status(df: pd.DataFrame, status: str) -> pd.DataFrame:
 
 
 def _df_to_rich_table(df: pd.DataFrame) -> Table:
-    """Convert a pandas dataframe to a rich Table
-    """
+    """Convert a pandas dataframe to a rich Table"""
     table = Table(show_header=True, header_style="bold magenta")
 
     for column in df.columns:
         table.add_column(str(column))
 
-    for index, value_list in enumerate(df.values.tolist()):
+    for _, value_list in enumerate(df.values.tolist()):
         row = []
         row += [str(x) for x in value_list]
         table.add_row(*row)

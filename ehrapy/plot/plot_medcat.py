@@ -1,5 +1,5 @@
-import pandas as pd
 import matplotlib.pyplot as plt
+import pandas as pd
 import seaborn as sns
 
 
@@ -17,7 +17,9 @@ def plot_medcat_top_entities(medcat_results: pd.DataFrame, tuis, n: int = 10, st
     # filter by status if wanted and count unique values of entities in the results
     # TODO: find efficient way to check if tuis is part of the type_ids since this could be a list with multiple entries
     if status != "Both":
-        value_counts = medcat_results[(medcat_results["meta_anns"] == "Affirmed") & (medcat_results["type_ids"] == tuis)]["pretty_name"].value_counts()
+        value_counts = medcat_results[
+            (medcat_results["meta_anns"] == "Affirmed") & (medcat_results["type_ids"] == tuis)
+        ]["pretty_name"].value_counts()
     else:
         value_counts = medcat_results[medcat_results["type_ids"] == tuis]["pretty_name"].value_counts()
     # plot
