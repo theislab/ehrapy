@@ -6,6 +6,7 @@ from medcat.cdb import CDB
 from medcat.cdb_maker import CDBMaker
 from medcat.config import Config
 from medcat.vocab import Vocab
+from anndata import AnnData
 from rich import print, box
 from rich.table import Table
 from rich.console import Console
@@ -209,10 +210,11 @@ def annotate_text(ep_cat: MedCAT, obs: pd.DataFrame, text_column: str, n_proc: i
     formatted_text_column = _format_df_column(non_null_text, text_column)
     results = ep_cat.cat.multiprocessing(formatted_text_column, batch_size_chars=batch_size_chars, nproc=n_proc)
     flattened_res = _flatten_annotated_results(results)
-    ep_cat.annotated_results = _annotated_results_to_df(flattened_res)
+    # sort for row number in ascending order and reset index to keep index updated
+    ep_cat.annotated_results = _annotated_results_to_df(flattened_res).sort_values(by=['row_nr']).reset_index(drop=True)
 
 
-def get_annotation_overview(ep_cat: MedCAT, n: int = 10, status: str = "Affirmed", save_to_csv: bool = False) -> pd.DataFrame:
+def get_annotation_overview(ep_cat: MedCAT, n: int = 10, status: str = "Affirmed", save_to_csv: bool = False) -> None:
     """Provide an overview for the annotation results. An overview will look like the following:
        cui (the CUI), nsubjects (from how many rows this one got extracted), type_ids (TUIs), name(name of the entitiy), perc_subjects (how many rows relative
        to absolute number of rows)
@@ -232,7 +234,7 @@ def get_annotation_overview(ep_cat: MedCAT, n: int = 10, status: str = "Affirmed
     # get absolute number of rows with this entity
     # note for overview, only one TUI and type is shown (there shouldn't be much situations were multiple are even possible or useful)
     res = grouped.agg({"pretty_name": (lambda x: next(iter(set(x)))), "type_ids": (lambda x: next(iter(x))[0]), "types": (lambda x: next(iter(x))[0]), "row_nr":"nunique"})
-    res.rename(columns={"row_nr": "n_patients"})
+    res = res.rename(columns={"row_nr": "n_patients"})
     # relative amount of patients with the specific entity to all patients (or rows in the original data)
     # note that this might not be the actual number of patients if one patient has data in multiple rows
     res["n_patients_percent"] = (res["n_patients"]/df["row_nr"].nunique()) * 100
@@ -246,7 +248,15 @@ def get_annotation_overview(ep_cat: MedCAT, n: int = 10, status: str = "Affirmed
     console.print(overview_table)
 
 
-
+def _add_binary_column_to_obs(ep_cat: MedCAT, adata: AnnData, name: str) -> None:
+    """Adds a binary column to obs (temporarily) for plotting infos extracted from freetext.
+    Indicates whether the specific entity to color by has been found in that row or not.
+    """
+    # only extract affirmed entities
+    df = _filter_df_by_status(ep_cat.annotated_results, "Affirmed")
+    # currently, only the pretty_name column is supported
+    # TODO: add support for CUI/types and hierarchical entities (in case of diseases implement this with ICD mapping feature)
+    adata.obs[name] = df.groupby("row_nr").agg({"pretty_name": (lambda x: any(x.isin([name])))})
 
 
 def _annotated_results_to_df(flattened_results: dict) -> pd.DataFrame:
