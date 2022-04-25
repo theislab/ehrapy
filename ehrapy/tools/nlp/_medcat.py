@@ -20,6 +20,7 @@ class MedCAT:
     """Wrapper class for Medcat. This class will hold references to the current AnnData object, which holds the data, the current model (with vocab and concept database) and should be
     passed to all functions exposed to the ehrapy nlp API when required.
     """
+
     def __init__(self, anndata: AnnData, vocabulary: Vocab = None, concept_db: CDB = None, model_pack_path=None):
         if not check_module_importable("medcat"):
             raise RuntimeError("medcat is not importable. Please install via pip install medcat")
@@ -169,6 +170,7 @@ class EhrapyMedcat:
     """Wrapper class to perform medcat analysis with ehrapy for free text data. This can be simply called by `ep.tl.mc`. This class is not supposed to be
     instantiated at any time, it just serves as a wrapper for import.
     """
+
     @staticmethod
     def run_unsupervised_training(
         medcat_obj: MedCAT, text: pd.Series, progress_print: int = 100, print_statistics: bool = False
@@ -221,10 +223,14 @@ class EhrapyMedcat:
         results = medcat_obj.cat.multiprocessing(formatted_text_column, batch_size_chars=batch_size_chars, nproc=n_proc)
         flattened_res = EhrapyMedcat._flatten_annotated_results(results)
         # sort for row number in ascending order and reset index to keep index updated
-        medcat_obj.annotated_results = EhrapyMedcat._annotated_results_to_df(flattened_res).sort_values(by=["row_nr"]).reset_index(drop=True)
+        medcat_obj.annotated_results = (
+            EhrapyMedcat._annotated_results_to_df(flattened_res).sort_values(by=["row_nr"]).reset_index(drop=True)
+        )
 
     @staticmethod
-    def get_annotation_overview(medcat_obj: MedCAT, n: int = 10, status: str = "Affirmed", save_to_csv: bool = False) -> None:
+    def get_annotation_overview(
+        medcat_obj: MedCAT, n: int = 10, status: str = "Affirmed", save_to_csv: bool = False
+    ) -> None:
         """Provide an overview for the annotation results. An overview will look like the following:
            cui (the CUI), nsubjects (from how many rows this one got extracted), type_ids (TUIs), name(name of the entitiy), perc_subjects (how many rows relative
            to absolute number of rows)
