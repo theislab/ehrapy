@@ -17,12 +17,13 @@ from ehrapy.core.tool_available import check_module_importable
 
 
 class MedCAT:
-    """Wrapper class for Medcat. This class will hold references to the current model (with vocab and concept database) and should be
+    """Wrapper class for Medcat. This class will hold references to the current AnnData object, which holds the data, the current model (with vocab and concept database) and should be
     passed to all functions exposed to the ehrapy nlp API when required.
     """
-    def __init__(self, vocabulary: Vocab = None, concept_db: CDB = None, model_pack_path=None):
+    def __init__(self, anndata: AnnData, vocabulary: Vocab = None, concept_db: CDB = None, model_pack_path=None):
         if not check_module_importable("medcat"):
             raise RuntimeError("medcat is not importable. Please install via pip install medcat")
+        self.anndata = anndata
         self.vocabulary = vocabulary
         self.concept_db = concept_db
         if self.vocabulary is not None and self.concept_db is not None:
@@ -49,7 +50,7 @@ class MedCAT:
         """
         self.concept_db.config = concept_db_config
 
-    def set_filter_by_tui(self, tuis: list[str] | None = None) -> None:
+    def set_filter_by_tui(self, tuis: list[str]) -> None:
         """Restrict results of annotation step to certain tui's (type unique identifiers).
 
         Note that this will change the MedCat object by updating the concept database config. In every annotation
@@ -58,14 +59,12 @@ class MedCAT:
 
         As an example:
         Setting tuis=["T047", "T048"] will only annotate concepts (identified by a CUI (concept unique identifier)) in UMLS that are either diseases or
-        syndroms (T047) or mental/behavioural dysfunctions (T048). This is the default value.
+        syndroms (T047) or mental/behavioural dysfunctions (T048).
 
         Args:
             tuis: list of TUI's (default is
 
         """
-        if tuis is None:
-            tuis = ["T047", "T048"]
         # the filtered cui's that fall into the type of the filter tui's
         cui_filters = set()
         for type_id in tuis:
@@ -172,25 +171,25 @@ class EhrapyMedcat:
     """
     @staticmethod
     def run_unsupervised_training(
-        ep_cat: MedCAT, text: pd.Series, progress_print: int = 100, print_statistics: bool = False
+        medcat_obj: MedCAT, text: pd.Series, progress_print: int = 100, print_statistics: bool = False
     ) -> None:
         """Performs MedCAT unsupervised training on a provided text column.
 
         Args:
-            ep_cat: ehrapy's custom MedCAT object, that keeps track of the vocab, concept database and the (annotated) results
+            medcat_obj: ehrapy's custom MedCAT object, that keeps track of the vocab, concept database and the (annotated) results
             text: Pandas Series of (free) text to annotate.
             progress_print: print progress after that many training documents
             print_statistics: Whether to print training statistics after training.
         """
         print(f"[bold blue]Running unsupervised training using {len(text)} documents.")
-        ep_cat.cat.train(text.values, progress_print=progress_print)
+        medcat_obj.cat.train(text.values, progress_print=progress_print)
 
         if print_statistics:
-            ep_cat.cat.cdb.print_stats()
+            medcat_obj.cat.cdb.print_stats()
 
     @staticmethod
     def annotate_text(
-        ep_cat: MedCAT, obs: pd.DataFrame, text_column: str, n_proc: int = 2, batch_size_chars: int = 500000
+        medcat_obj: MedCAT, obs: pd.DataFrame, text_column: str, n_proc: int = 2, batch_size_chars: int = 500000
     ) -> None:
         """Annotate the original free text data. Note this will only annotate non null rows.
         The result will be a DataFrame (see example below). It will be set as the annotated_results attribute for the passed MedCat object.
@@ -199,7 +198,7 @@ class EhrapyMedcat:
             .. code-block:: python
                        # some setup code here
                        ...
-                       res = ep.tl.annotate_text(ep_cat, adata.obs, "text")
+                       res = ep.tl.annotate_text(medcat_obj, adata.obs, "text")
                        print(res)
                        # res looks like this:
                        #                                                pretty_name meta ...
@@ -210,7 +209,7 @@ class EhrapyMedcat:
                        # 4 1 (second entitiy extracted from second row) diabetes22  fb22 ...
 
         Args:
-            ep_cat: Ehrapy's custom MedCAT object. The annotated_results attribute will be set here.
+            medcat_obj: Ehrapy's custom MedCAT object. The annotated_results attribute will be set here.
             obs: AnnData obs containing the free text column
             text_column: Name of the column that should be annotated
             n_proc: Number of processors to use
@@ -219,19 +218,19 @@ class EhrapyMedcat:
         """
         non_null_text = EhrapyMedcat._filter_null_values(obs, text_column)
         formatted_text_column = EhrapyMedcat._format_df_column(non_null_text, text_column)
-        results = ep_cat.cat.multiprocessing(formatted_text_column, batch_size_chars=batch_size_chars, nproc=n_proc)
+        results = medcat_obj.cat.multiprocessing(formatted_text_column, batch_size_chars=batch_size_chars, nproc=n_proc)
         flattened_res = EhrapyMedcat._flatten_annotated_results(results)
         # sort for row number in ascending order and reset index to keep index updated
-        ep_cat.annotated_results = EhrapyMedcat._annotated_results_to_df(flattened_res).sort_values(by=["row_nr"]).reset_index(drop=True)
+        medcat_obj.annotated_results = EhrapyMedcat._annotated_results_to_df(flattened_res).sort_values(by=["row_nr"]).reset_index(drop=True)
 
     @staticmethod
-    def get_annotation_overview(ep_cat: MedCAT, n: int = 10, status: str = "Affirmed", save_to_csv: bool = False) -> None:
+    def get_annotation_overview(medcat_obj: MedCAT, n: int = 10, status: str = "Affirmed", save_to_csv: bool = False) -> None:
         """Provide an overview for the annotation results. An overview will look like the following:
            cui (the CUI), nsubjects (from how many rows this one got extracted), type_ids (TUIs), name(name of the entitiy), perc_subjects (how many rows relative
            to absolute number of rows)
 
         Args:
-            ep_cat: The current MedCAT object which holds all infos on medcat analysis with ehrapy.
+            medcat_obj: The current MedCAT object which holds all infos on medcat analysis with ehrapy.
             n: Basically the parameter for head() of pandas Dataframe. How many of the most common entities should be shown?
             status: One of "Affirmed" (default), "Other" or "Both". Displays stats for either only affirmed entities, negated ones or both.
             save_to_csv: Whether to save the overview dataframe to a local .csv file in the current working directory or not.
@@ -239,7 +238,7 @@ class EhrapyMedcat:
         Returns:
             A pandas DataFrame with the overview stats.
         """
-        df = EhrapyMedcat._filter_df_by_status(ep_cat.annotated_results, status)
+        df = EhrapyMedcat._filter_df_by_status(medcat_obj.annotated_results, status)
         # group by CUI as this is a unique identifier per entity
         grouped = df.groupby("cui")
         # get absolute number of rows with this entity
@@ -265,16 +264,17 @@ class EhrapyMedcat:
         console.print(overview_table)
 
     @staticmethod
-    def _add_binary_column_to_obs(ep_cat: MedCAT, adata: AnnData, name: str) -> None:
+    def add_binary_column_to_obs(medcat_obj: MedCAT, adata: AnnData, name: str) -> None:
         """Adds a binary column to obs (temporarily) for plotting infos extracted from freetext.
         Indicates whether the specific entity to color by has been found in that row or not.
 
         """
         # only extract affirmed entities
-        df = EhrapyMedcat._filter_df_by_status(ep_cat.annotated_results, "Affirmed")
+        df = EhrapyMedcat._filter_df_by_status(medcat_obj.annotated_results, "Affirmed")
         # currently, only the pretty_name column is supported
-        # TODO: add support for CUI/types and hierarchical entities (in case of diseases implement this with ICD mapping feature)
-        adata.obs[name] = df.groupby("row_nr").agg({"pretty_name": (lambda x: any(x.isin([name])))})
+        adata.obs[name] = df.groupby("row_nr").agg({"pretty_name": (lambda x: int(any(x.isin([name]))))})
+        # set value to 0 for rows, where medcat did not extract any entity
+        adata.obs[name] = adata.obs[name].fillna(0)
 
     @staticmethod
     def _annotated_results_to_df(flattened_results: dict) -> pd.DataFrame:
@@ -319,7 +319,6 @@ class EhrapyMedcat:
         as this is required by medcat's multiprocessing annotation step
 
         """
-        # TODO This can be very memory consuming -> possible to use generators here instead (medcat compatible?)?
         formatted_data = []
         for id, row in df.iterrows():
             text = row[column_name]

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from enum import Enum
 from pathlib import Path
 from types import MappingProxyType
@@ -7,6 +9,7 @@ import numpy as np
 import pandas as pd
 import scanpy as sc
 from anndata import AnnData
+from ehrapy.tools.nlp._medcat import MedCAT, EhrapyMedcat
 from cycler import Cycler
 from matplotlib.axes import Axes
 from matplotlib.colors import Colormap, ListedColormap, Normalize
@@ -1131,7 +1134,7 @@ def tsne(adata, **kwargs) -> Union[Axes, List[Axes], None]:  # pragma: no cover
     scatter_bulk=doc_scatter_embedding,
     show_save_ax=doc_show_save_ax,
 )
-def umap(adata, **kwargs) -> Union[Axes, List[Axes], None]:  # pragma: no cover
+def umap(adata: AnnData | MedCAT, **kwargs) -> Union[Axes, List[Axes], None]:  # pragma: no cover
     """Scatter plot in UMAP basis.
 
     Args:
@@ -1170,7 +1173,25 @@ def umap(adata, **kwargs) -> Union[Axes, List[Axes], None]:  # pragma: no cover
 
         .. image:: /_static/docstring_previews/umap_3.png
     """
-    return sc.pl.umap(adata=adata, **kwargs)
+    if isinstance(adata, MedCAT):
+        if kwargs.get("color") and isinstance(kwargs["color"], list):
+            additional_columns = []
+            for colored_column in kwargs["color"]:
+                if colored_column not in set(adata.anndata.var_names) and colored_column not in set(adata.anndata.obs_names):
+                    EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, colored_column)
+                    additional_columns.append(colored_column)
+            umap = sc.pl.umap(adata=adata.anndata, **kwargs)
+            if additional_columns:
+                adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
+            return umap
+
+        elif kwargs.get("color") and isinstance(kwargs["color"], str):
+            EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, kwargs["color"])
+            umap = sc.pl.umap(adata=adata.anndata, **kwargs)
+            adata.anndata.obs.drop(kwargs["color"], inplace=True, axis=1)
+            return umap
+    elif isinstance(adata, AnnData):
+        return sc.pl.umap(adata=adata, **kwargs)
 
 
 @_wraps_plot_scatter
