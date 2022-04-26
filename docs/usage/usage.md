@@ -49,6 +49,7 @@ ep.pl.cool_fancy_plot()
     data.cervical_cancer_risk_factors
     data.dermatology
     data.echocardiogram
+    data.heart_disease
     data.hepatitis
     data.statlog_heart
     data.thyroid
