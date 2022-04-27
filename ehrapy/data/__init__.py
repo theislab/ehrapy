@@ -6,6 +6,7 @@ from ehrapy.data._datasets import (
     dermatology,
     diabetes_130,
     echocardiogram,
+    heart_disease,
     heart_failure,
     hepatitis,
     mimic_2,

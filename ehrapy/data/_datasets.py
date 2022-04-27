@@ -616,3 +616,39 @@ def parkinson_dataset_with_replicated_acoustic_features(
         return encode(adata, autodetect=True)
 
     return adata
+
+
+def heart_disease(
+    encoded: bool = False,
+    columns_obs_only: dict[str, list[str]] | list[str] | None = None,
+) -> AnnData:
+    """Loads the Heart Disease Data Set
+
+    More details: http://archive.ics.uci.edu/ml/datasets/Heart+Disease
+    Preprocessing: https://github.com/theislab/ehrapy-datasets/blob/main/heart_disease/heart_disease.ipynb
+
+    Args:
+        encoded: Whether to return an already encoded object.
+        columns_obs_only: Columns to include in obs only and not X.
+
+    Returns:
+        :class:`~anndata.AnnData` object of the Heart Disease Data Set
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy as ep
+
+            adata = ep.dt.heart_disease(encoded=True)
+    """
+    adata: AnnData = read_csv(
+        dataset_path=f"{ehrapy_settings.datasetdir}/processed_heart_disease.csv",
+        download_dataset_name="processed_heart_disease.csv",
+        backup_url="https://figshare.com/ndownloader/files/34906647",
+        columns_obs_only=columns_obs_only,
+        index_column="patient_id",
+    )
+    if encoded:
+        return encode(adata, autodetect=True)
+
+    return adata
