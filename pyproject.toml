@@ -45,6 +45,7 @@ fancyimpute = ">=0.7.0"
 miceforest = ">=5.3.0"
 scikit-misc = ">=0.1.4"
 session-info = ">=1.0.0"
+lifelines = "^0.27.0"
 
 [tool.poetry.dev-dependencies]
 pytest = ">=6.2.5"
