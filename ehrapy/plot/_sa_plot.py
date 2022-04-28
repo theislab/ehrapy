@@ -193,7 +193,7 @@ def kmf_plot(
     plt.figure(figsize=figsize)
     for i, kmf in enumerate(kmfs):
         if i == 0:
-            ax = kmf.plot(
+            ax = kmf.plot_survival_function(
                 ci_alpha=ci_alpha[i],
                 ci_force_lines=ci_force_lines[i],
                 ci_show=ci_show[i],
@@ -202,7 +202,7 @@ def kmf_plot(
                 color=color[i],
             )
         else:
-            ax = kmf.plot(
+            ax = kmf.plot_survival_function(
                 ax=ax,
                 ci_alpha=ci_alpha[i],
                 ci_force_lines=ci_force_lines[i],
