@@ -1,37 +1,40 @@
 from __future__ import annotations
+
 from xmlrpc.client import Boolean
-from anndata import AnnData
-from typing import Optional, Tuple, List, Union
-from statsmodels.regression.linear_model import RegressionResults
-import numpy as np
-from numpy import ndarray
+
 import matplotlib.pyplot as plt
-import ehrapy as ep
+import numpy as np
+from anndata import AnnData
 from lifelines import KaplanMeierFitter
+from numpy import ndarray
+from statsmodels.regression.linear_model import RegressionResults
+
+import ehrapy as ep
+
 
 def ols_plot(
     adata: AnnData | None = None,
     x: str | None = None,
     y: str | None = None,
-    scatter_plot: Optional[Boolean] = True,
-    ols_results: List[RegressionResults] | None = None,
-    ols_color: Optional[List[str]] | None = None,
-    xlabel: Optional[str] = None,
-    ylabel: Optional[str] = None,
-    figsize: Optional[Tuple[float, float]] = (6.4, 4.8),
-    lines: Optional[list[Tuple[Union[ndarray, float], Union[ndarray, float]]]] = None,
-    lines_color: Optional[List[str]] | None = None,
-    lines_style: Optional[List[str]] | None = None,
-    lines_label: Optional[List[str]] | None = None,
-    xlim: Optional[Tuple[float, float]] = None,
-    ylim: Optional[Tuple[float, float]] = None,
+    scatter_plot: Boolean | None = True,
+    ols_results: list[RegressionResults] | None = None,
+    ols_color: list[str] | None | None = None,
+    xlabel: str | None = None,
+    ylabel: str | None = None,
+    figsize: tuple[float, float] | None = (6.4, 4.8),
+    lines: list[tuple[ndarray | float, ndarray | float]] | None = None,
+    lines_color: list[str] | None | None = None,
+    lines_style: list[str] | None | None = None,
+    lines_label: list[str] | None | None = None,
+    xlim: tuple[float, float] | None = None,
+    ylim: tuple[float, float] | None = None,
     **kwds,
 ):
     """Plots a Ordinary Least Squares (OLS) Model result, scatter plot, and line plot.
-    
+
     Args:
         adata: :class:`~anndata.AnnData` object object containing all observations.
-        x: x coordinate, for scatter plotting 
+        x: x coordinate, for scatter plotting
         y: y coordinate, for scatter plotting
         scatter_plot: If True, show scatter plot. Default is True
         ols_results: List of RegressionResults. From ehrapy.tl.ols. Example: [result_1, result_2]
@@ -54,7 +57,7 @@ def ols_plot(
             adata = ep.data.mimic_2(encoded=False)
             co2_lm_result = ep.tl.ols(adata, var_names=['pco2_first', 'tco2_first'], formula='tco2_first ~ pco2_first', missing="drop").fit()
             ep.pl.ols_plot(adata, x='pco2_first', y='tco2_first', ols_results=[co2_lm_result], ols_color=['red'], xlabel="PCO2", ylabel="TCO2")
-        
+
         .. image:: /_static/docstring_previews/ols_plot_1.png
 
         .. code-block:: python
@@ -71,7 +74,7 @@ def ols_plot(
             # Line plot only
             import ehrapy as ep
             ep.pl.ols_plot(lines=[(0.25, 10), (0.3, 20)], lines_color=['red', 'blue'], lines_style=['-', ':'], lines_label=['Line1', 'Line2'], xlim=(0, 150), ylim=(0, 50))
-        
+
         .. image:: /_static/docstring_previews/ols_plot_3.png
     """
     _, ax = plt.subplots(figsize=figsize)
@@ -80,13 +83,13 @@ def ols_plot(
     if ylim is not None:
         plt.ylim(ylim)
     if ols_color is None and ols_results is not None:
-        ols_color = [None]*len(ols_results)
+        ols_color = [None] * len(ols_results)
     if lines_color is None and lines is not None:
-        lines_color = [None]*len(lines)
+        lines_color = [None] * len(lines)
     if lines_style is None and lines is not None:
-        lines_style = [None]*len(lines)
+        lines_style = [None] * len(lines)
     if lines_label is None and lines is not None:
-        lines_label = [None]*len(lines)
+        lines_label = [None] * len(lines)
     if adata is not None and x is not None and y is not None:
         x_processed = np.array(adata[:, x].X).astype(float)
         x_processed = x_processed[~np.isnan(x_processed)]
@@ -99,7 +102,7 @@ def ols_plot(
     if lines is not None:
         for i, line in enumerate(lines):
             a, b = line
-            if np.ndim(a) == 0 and np.ndim(b) == 0 :
+            if np.ndim(a) == 0 and np.ndim(b) == 0:
                 line_x = np.array(ax.get_xlim())
                 line_y = a * line_x + b
                 ax.plot(line_x, line_y, linestyle=lines_style[i], color=lines_color[i], label=lines_label[i])
@@ -112,24 +115,24 @@ def ols_plot(
 
 
 def kmf_plot(
-    kmfs: List[KaplanMeierFitter] = None,
-    ci_alpha: Optional[List[float]] = None,
-    ci_force_lines: Optional[List[Boolean]] = None,
-    ci_show: Optional[List[Boolean]] = None,
-    ci_legend: Optional[List[Boolean]] = None,
-    at_risk_counts: Optional[List[Boolean]] = None,
-    color: Optional[List[str]] | None = None,
-    grid: Optional[Boolean] = False,
-    xlim: Optional[Tuple[float, float]] = None,
-    ylim: Optional[Tuple[float, float]] = None,
-    xlabel: Optional[str] = None,
-    ylabel: Optional[str] = None,
-    figsize: Optional[Tuple[float, float]] = (6.4, 4.8),
+    kmfs: list[KaplanMeierFitter] = None,
+    ci_alpha: list[float] | None = None,
+    ci_force_lines: list[Boolean] | None = None,
+    ci_show: list[Boolean] | None = None,
+    ci_legend: list[Boolean] | None = None,
+    at_risk_counts: list[Boolean] | None = None,
+    color: list[str] | None | None = None,
+    grid: Boolean | None = False,
+    xlim: tuple[float, float] | None = None,
+    ylim: tuple[float, float] | None = None,
+    xlabel: str | None = None,
+    ylabel: str | None = None,
+    figsize: tuple[float, float] | None = (6.4, 4.8),
 ):
     """Plots a pretty figure of the Fitted KaplanMeierFitter model
 
     See https://lifelines.readthedocs.io/en/latest/fitters/univariate/KaplanMeierFitter.html
-    
+
     Args:
         kmfs: Lists of fitted KaplanMeierFitter object
         ci_alpha: The transparency level of the confidence interval. Default: 0.3. If more than one kmfs, this should be a list
@@ -144,7 +147,7 @@ def kmf_plot(
         xlabel: The x-axis label text
         ylabel: The y-axis label text
         figsize: Width, height in inches. Default is: [6.4, 4.8]
-        
+
     Example:
         .. code-block:: python
 
@@ -159,7 +162,7 @@ def kmf_plot(
         .. image:: /_static/docstring_previews/kmf_plot_1.png
 
         .. code-block:: python
-            
+
             import ehrapy as ep
             import numpy as np
             from lifelines import KaplanMeierFitter
@@ -171,28 +174,43 @@ def kmf_plot(
             kmf_2 = KaplanMeierFitter().fit(T[ix2], E[ix2], label='MICU')
             kmf_3 = KaplanMeierFitter().fit(T[ix3], E[ix3], label='SICU')
 
-            ep.pl.kmf_plot([kmf_1, kmf_2, kmf_3], ci_show=[False,False,False], color=['k','r', 'g'], xlim=[0, 750], ylim=[0, 1], xlabel="Days", ylabel="Proportion Survived")    
-    
+            ep.pl.kmf_plot([kmf_1, kmf_2, kmf_3], ci_show=[False,False,False], color=['k','r', 'g'], xlim=[0, 750], ylim=[0, 1], xlabel="Days", ylabel="Proportion Survived")
+
         .. image:: /_static/docstring_previews/kmf_plot_2.png
     """
     if ci_alpha is None:
-        ci_alpha = [0.3]*len(kmfs)
+        ci_alpha = [0.3] * len(kmfs)
     if ci_force_lines is None:
-        ci_force_lines = [False]*len(kmfs)
+        ci_force_lines = [False] * len(kmfs)
     if ci_show is None:
-        ci_show = [True]*len(kmfs)
+        ci_show = [True] * len(kmfs)
     if ci_legend is None:
-        ci_legend = [False]*len(kmfs)
+        ci_legend = [False] * len(kmfs)
     if at_risk_counts is None:
-        at_risk_counts = [False]*len(kmfs)
+        at_risk_counts = [False] * len(kmfs)
     if color is None:
-        color = [None]*len(kmfs)
+        color = [None] * len(kmfs)
     plt.figure(figsize=figsize)
     for i, kmf in enumerate(kmfs):
         if i == 0:
-            ax = kmf.plot(ci_alpha=ci_alpha[i], ci_force_lines=ci_force_lines[i], ci_show=ci_show[i], ci_legend=ci_legend[i], at_risk_counts=at_risk_counts[i], color=color[i])
+            ax = kmf.plot(
+                ci_alpha=ci_alpha[i],
+                ci_force_lines=ci_force_lines[i],
+                ci_show=ci_show[i],
+                ci_legend=ci_legend[i],
+                at_risk_counts=at_risk_counts[i],
+                color=color[i],
+            )
         else:
-            ax = kmf.plot(ax=ax, ci_alpha=ci_alpha[i], ci_force_lines=ci_force_lines[i], ci_show=ci_show[i], ci_legend=ci_legend[i], at_risk_counts=at_risk_counts[i], color=color[i])
+            ax = kmf.plot(
+                ax=ax,
+                ci_alpha=ci_alpha[i],
+                ci_force_lines=ci_force_lines[i],
+                ci_show=ci_show[i],
+                ci_legend=ci_legend[i],
+                at_risk_counts=at_risk_counts[i],
+                color=color[i],
+            )
     ax.grid(grid)
     plt.xlim(xlim)
     plt.ylim(ylim)
