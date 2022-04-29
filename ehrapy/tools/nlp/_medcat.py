@@ -2,11 +2,15 @@ from __future__ import annotations
 
 import pandas as pd
 from anndata import AnnData
-from medcat.cat import CAT
-from medcat.cdb import CDB
-from medcat.cdb_maker import CDBMaker
-from medcat.config import Config
-from medcat.vocab import Vocab
+
+try:
+    from medcat.cat import CAT
+    from medcat.cdb import CDB
+    from medcat.cdb_maker import CDBMaker
+    from medcat.config import Config
+    from medcat.vocab import Vocab
+except ModuleNotFoundError:
+    print("Medcat could've not been found! Install medcat package if you want to use medcat with ehrapy.")
 from rich import box, print
 from rich.console import Console
 from rich.table import Table

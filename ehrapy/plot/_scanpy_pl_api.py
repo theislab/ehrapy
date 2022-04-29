@@ -3,7 +3,7 @@ from __future__ import annotations
 from enum import Enum
 from pathlib import Path
 from types import MappingProxyType
-from typing import Any, Callable, Collection, Dict, Iterable, List, Literal, Mapping, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, Collection, Iterable, Literal, Mapping, Sequence, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -47,7 +47,7 @@ def scatter(
     adata: AnnData,
     x: str | None = None,
     y: str | None = None,
-    color: str | List[str] = None,
+    color: str | list[str] = None,
     use_raw: bool | None = None,
     layers: str | Collection[str] = None,
     sort_order: bool = True,
@@ -109,39 +109,41 @@ def scatter(
         if color and isinstance(color, list):
             additional_columns = []
             for colored_column in color:
-                if colored_column not in set(adata.anndata.var_names) and colored_column not in set(
-                    adata.anndata.obs_names
-                ) and not colored_column.startswith("#"):  # hex codes are not treated as extracted entities
+                if (
+                    colored_column not in set(adata.anndata.var_names)
+                    and colored_column not in set(adata.anndata.obs_names)
+                    and not colored_column.startswith("#")
+                ):  # hex codes are not treated as extracted entities
                     EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, colored_column)
                     additional_columns.append(colored_column)
             scatter = sc.pl.scatter(
-                    adata=adata.anndata,
-                    x=x,
-                    y=y,
-                    color=color,
-                    use_raw=use_raw,
-                    layers=layers,
-                    sort_order=sort_order,
-                    alpha=alpha,
-                    basis=basis,
-                    groups=groups,
-                    components=components,
-                    projection=projection,
-                    legend_loc=legend_loc,
-                    legend_fontsize=legend_fontsize,
-                    legend_fontweight=legend_fontweight,
-                    legend_fontoutline=legend_fontoutline,
-                    color_map=color_map,
-                    palette=palette,
-                    frameon=frameon,
-                    right_margin=right_margin,
-                    left_margin=left_margin,
-                    size=size,
-                    title=title,
-                    show=show,
-                    save=save,
-                    ax=ax,
-                )
+                adata=adata.anndata,
+                x=x,
+                y=y,
+                color=color,
+                use_raw=use_raw,
+                layers=layers,
+                sort_order=sort_order,
+                alpha=alpha,
+                basis=basis,
+                groups=groups,
+                components=components,
+                projection=projection,
+                legend_loc=legend_loc,
+                legend_fontsize=legend_fontsize,
+                legend_fontweight=legend_fontweight,
+                legend_fontoutline=legend_fontoutline,
+                color_map=color_map,
+                palette=palette,
+                frameon=frameon,
+                right_margin=right_margin,
+                left_margin=left_margin,
+                size=size,
+                title=title,
+                show=show,
+                save=save,
+                ax=ax,
+            )
             if additional_columns:
                 adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
             return scatter
@@ -149,35 +151,65 @@ def scatter(
         elif color and isinstance(color, str):
             EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, color)
             scatter = sc.pl.scatter(
-            adata=adata.anndata,
-            x=x,
-            y=y,
-            color=color,
-            use_raw=use_raw,
-            layers=layers,
-            sort_order=sort_order,
-            alpha=alpha,
-            basis=basis,
-            groups=groups,
-            components=components,
-            projection=projection,
-            legend_loc=legend_loc,
-            legend_fontsize=legend_fontsize,
-            legend_fontweight=legend_fontweight,
-            legend_fontoutline=legend_fontoutline,
-            color_map=color_map,
-            palette=palette,
-            frameon=frameon,
-            right_margin=right_margin,
-            left_margin=left_margin,
-            size=size,
-            title=title,
-            show=show,
-            save=save,
-            ax=ax,
-        )
+                adata=adata.anndata,
+                x=x,
+                y=y,
+                color=color,
+                use_raw=use_raw,
+                layers=layers,
+                sort_order=sort_order,
+                alpha=alpha,
+                basis=basis,
+                groups=groups,
+                components=components,
+                projection=projection,
+                legend_loc=legend_loc,
+                legend_fontsize=legend_fontsize,
+                legend_fontweight=legend_fontweight,
+                legend_fontoutline=legend_fontoutline,
+                color_map=color_map,
+                palette=palette,
+                frameon=frameon,
+                right_margin=right_margin,
+                left_margin=left_margin,
+                size=size,
+                title=title,
+                show=show,
+                save=save,
+                ax=ax,
+            )
             adata.anndata.obs.drop(color, inplace=True, axis=1)
             return scatter
+        else:
+            return sc.pl.scatter(
+                adata=adata,
+                x=x,
+                y=y,
+                color=color,
+                use_raw=use_raw,
+                layers=layers,
+                sort_order=sort_order,
+                alpha=alpha,
+                basis=basis,
+                groups=groups,
+                components=components,
+                projection=projection,
+                legend_loc=legend_loc,
+                legend_fontsize=legend_fontsize,
+                legend_fontweight=legend_fontweight,
+                legend_fontoutline=legend_fontoutline,
+                color_map=color_map,
+                palette=palette,
+                frameon=frameon,
+                right_margin=right_margin,
+                left_margin=left_margin,
+                size=size,
+                title=title,
+                show=show,
+                save=save,
+                ax=ax,
+            )
+
     else:
         return sc.pl.scatter(
             adata=adata,
@@ -1037,12 +1069,12 @@ def pca(
                     EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, colored_column)
                     additional_columns.append(colored_column)
             pca = sc.pl.pca(
-            adata=adata.anndata,
-            annotate_var_explained=annotate_var_explained,
-            show=show,
-            return_fig=return_fig,
-            save=save,
-            **kwargs,
+                adata=adata.anndata,
+                annotate_var_explained=annotate_var_explained,
+                show=show,
+                return_fig=return_fig,
+                save=save,
+                **kwargs,
             )
             if additional_columns:
                 adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
@@ -1051,15 +1083,25 @@ def pca(
         elif kwargs.get("color") and isinstance(kwargs["color"], str):
             EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, kwargs["color"])
             pca = sc.pl.pca(
-            adata=adata.anndata,
-            annotate_var_explained=annotate_var_explained,
-            show=show,
-            return_fig=return_fig,
-            save=save,
-            **kwargs,
+                adata=adata.anndata,
+                annotate_var_explained=annotate_var_explained,
+                show=show,
+                return_fig=return_fig,
+                save=save,
+                **kwargs,
             )
             adata.anndata.obs.drop(kwargs["color"], inplace=True, axis=1)
             return pca
+        else:
+            return sc.pl.pca(
+                adata=adata.anndata,
+                annotate_var_explained=annotate_var_explained,
+                show=show,
+                return_fig=return_fig,
+                save=save,
+                **kwargs,
+            )
+
     else:
         return sc.pl.pca(
             adata=adata,
@@ -1251,6 +1293,8 @@ def tsne(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover
             tsne = sc.pl.tsne(adata=adata.anndata, **kwargs)
             adata.anndata.obs.drop(kwargs["color"], inplace=True, axis=1)
             return tsne
+        else:
+            return sc.pl.tsne(adata=adata, **kwargs)
     else:
         return sc.pl.tsne(adata=adata, **kwargs)
 
@@ -1320,6 +1364,8 @@ def umap(adata: AnnData | MedCAT, **kwargs) -> Axes | list[Axes] | None:  # prag
             umap = sc.pl.umap(adata=adata.anndata, **kwargs)
             adata.anndata.obs.drop(kwargs["color"], inplace=True, axis=1)
             return umap
+        else:
+            return sc.pl.umap(adata=adata.anndata, **kwargs)
     else:
         return sc.pl.umap(adata=adata, **kwargs)
 
@@ -1356,7 +1402,29 @@ def diffmap(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover
     Preview:
         .. image:: /_static/docstring_previews/diffmap.png
     """
-    return sc.pl.diffmap(adata=adata, **kwargs)
+    if isinstance(adata, MedCAT):
+        if kwargs.get("color") and isinstance(kwargs["color"], list):
+            additional_columns = []
+            for colored_column in kwargs["color"]:
+                if colored_column not in set(adata.anndata.var_names) and colored_column not in set(
+                    adata.anndata.obs_names
+                ):
+                    EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, colored_column)
+                    additional_columns.append(colored_column)
+            diffmap = sc.pl.diffmap(adata=adata.anndata, **kwargs)
+            if additional_columns:
+                adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
+            return diffmap
+
+        elif kwargs.get("color") and isinstance(kwargs["color"], str):
+            EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, kwargs["color"])
+            diffmap = sc.pl.diffmap(adata=adata.anndata, **kwargs)
+            adata.anndata.obs.drop(kwargs["color"], inplace=True, axis=1)
+            return diffmap
+        else:
+            return sc.pl.diffmap(adata=adata.anndata, **kwargs)
+    else:
+        return sc.pl.diffmap(adata=adata, **kwargs)
 
 
 @_wraps_plot_scatter
@@ -1978,9 +2046,7 @@ def paga_path(
     use_raw: bool = True,
     annotations: Sequence[str] = ("dpt_pseudotime",),
     color_map: str | Colormap | None = None,
-    color_maps_annotations: Mapping[str, str | Colormap] = MappingProxyType(
-        dict(dpt_pseudotime="Greys")  # noqa: B006
-    ),
+    color_maps_annotations: Mapping[str, str | Colormap] = MappingProxyType(dict(dpt_pseudotime="Greys")),  # noqa: B006
     palette_groups: Sequence[str] | None = None,
     n_avg: int = 1,
     groups_key: str | None = None,
@@ -2427,7 +2493,8 @@ def rank_features_groups_dotplot(
     groups: str | Sequence[str] = None,
     n_features: int | None = None,
     groupby: str | None = None,
-    values_to_plot: None | (
+    values_to_plot: None
+    | (
         Literal[
             "scores",
             "logfoldchanges",
@@ -2506,7 +2573,8 @@ def rank_features_groups_matrixplot(
     groups: str | Sequence[str] = None,
     n_features: int | None = None,
     groupby: str | None = None,
-    values_to_plot: None | (
+    values_to_plot: None
+    | (
         Literal[
             "scores",
             "logfoldchanges",
