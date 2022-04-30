@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from functools import partial
 from enum import Enum
 from pathlib import Path
 from types import MappingProxyType
@@ -105,140 +106,112 @@ def scatter(
     Preview:
         .. image:: /_static/docstring_previews/scatter.png
     """
+    scatter_partial = partial(_scatter_part, x=x,
+                y=y,
+                color=color,
+                use_raw=use_raw,
+                layers=layers,
+                sort_order=sort_order,
+                alpha=alpha,
+                basis=basis,
+                groups=groups,
+                components=components,
+                projection=projection,
+                legend_loc=legend_loc,
+                legend_fontsize=legend_fontsize,
+                legend_fontweight=legend_fontweight,
+                legend_fontoutline=legend_fontoutline,
+                color_map=color_map,
+                palette=palette,
+                frameon=frameon,
+                right_margin=right_margin,
+                left_margin=left_margin,
+                size=size,
+                title=title,
+                show=show,
+                save=save,
+                ax=ax,
+            )
     if isinstance(adata, MedCAT):
-        if color and isinstance(color, list):
+        if color:
+            if isinstance(color, str):
+                color = [color]
             additional_columns = []
             for colored_column in color:
                 if (
                     colored_column not in set(adata.anndata.var_names)
-                    and colored_column not in set(adata.anndata.obs_names)
+                    and colored_column not in set(adata.anndata.obs.columns)
                     and not colored_column.startswith("#")
                 ):  # hex codes are not treated as extracted entities
                     EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, colored_column)
                     additional_columns.append(colored_column)
-            scatter = sc.pl.scatter(
-                adata=adata.anndata,
-                x=x,
-                y=y,
-                color=color,
-                use_raw=use_raw,
-                layers=layers,
-                sort_order=sort_order,
-                alpha=alpha,
-                basis=basis,
-                groups=groups,
-                components=components,
-                projection=projection,
-                legend_loc=legend_loc,
-                legend_fontsize=legend_fontsize,
-                legend_fontweight=legend_fontweight,
-                legend_fontoutline=legend_fontoutline,
-                color_map=color_map,
-                palette=palette,
-                frameon=frameon,
-                right_margin=right_margin,
-                left_margin=left_margin,
-                size=size,
-                title=title,
-                show=show,
-                save=save,
-                ax=ax,
-            )
+            scatter = scatter_partial(adata=adata.anndata)
             if additional_columns:
                 adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
             return scatter
 
-        elif color and isinstance(color, str):
-            EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, color)
-            scatter = sc.pl.scatter(
-                adata=adata.anndata,
-                x=x,
-                y=y,
-                color=color,
-                use_raw=use_raw,
-                layers=layers,
-                sort_order=sort_order,
-                alpha=alpha,
-                basis=basis,
-                groups=groups,
-                components=components,
-                projection=projection,
-                legend_loc=legend_loc,
-                legend_fontsize=legend_fontsize,
-                legend_fontweight=legend_fontweight,
-                legend_fontoutline=legend_fontoutline,
-                color_map=color_map,
-                palette=palette,
-                frameon=frameon,
-                right_margin=right_margin,
-                left_margin=left_margin,
-                size=size,
-                title=title,
-                show=show,
-                save=save,
-                ax=ax,
-            )
-            adata.anndata.obs.drop(color, inplace=True, axis=1)
-            return scatter
         else:
-            return sc.pl.scatter(
-                adata=adata,
-                x=x,
-                y=y,
-                color=color,
-                use_raw=use_raw,
-                layers=layers,
-                sort_order=sort_order,
-                alpha=alpha,
-                basis=basis,
-                groups=groups,
-                components=components,
-                projection=projection,
-                legend_loc=legend_loc,
-                legend_fontsize=legend_fontsize,
-                legend_fontweight=legend_fontweight,
-                legend_fontoutline=legend_fontoutline,
-                color_map=color_map,
-                palette=palette,
-                frameon=frameon,
-                right_margin=right_margin,
-                left_margin=left_margin,
-                size=size,
-                title=title,
-                show=show,
-                save=save,
-                ax=ax,
-            )
+            return scatter_partial(adata=adata.anndata)
 
     else:
-        return sc.pl.scatter(
-            adata=adata,
-            x=x,
-            y=y,
-            color=color,
-            use_raw=use_raw,
-            layers=layers,
-            sort_order=sort_order,
-            alpha=alpha,
-            basis=basis,
-            groups=groups,
-            components=components,
-            projection=projection,
-            legend_loc=legend_loc,
-            legend_fontsize=legend_fontsize,
-            legend_fontweight=legend_fontweight,
-            legend_fontoutline=legend_fontoutline,
-            color_map=color_map,
-            palette=palette,
-            frameon=frameon,
-            right_margin=right_margin,
-            left_margin=left_margin,
-            size=size,
-            title=title,
-            show=show,
-            save=save,
-            ax=ax,
-        )
+        return scatter_partial(adata=adata)
+
+
+def _scatter_part(adata: AnnData,
+    x: str | None = None,
+    y: str | None = None,
+    color: str | list[str] = None,
+    use_raw: bool | None = None,
+    layers: str | Collection[str] = None,
+    sort_order: bool = True,
+    alpha: float | None = None,
+    basis: _Basis | None = None,
+    groups: str | Iterable[str] = None,
+    components: str | Collection[str] = None,
+    projection: Literal["2d", "3d"] = "2d",
+    legend_loc: str = "right margin",
+    legend_fontsize: int | float | _FontSize | None = None,
+    legend_fontweight: int | _FontWeight | None = None,
+    legend_fontoutline: float = None,
+    color_map: str | Colormap = None,
+    palette: Cycler | ListedColormap | ColorLike | Sequence[ColorLike] = None,
+    frameon: bool | None = None,
+    right_margin: float | None = None,
+    left_margin: float | None = None,
+    size: int | float | None = None,
+    title: str | None = None,
+    show: bool | None = None,
+    save: str | bool | None = None,
+    ax: Axes | None = None):
+
+    return sc.pl.scatter(
+        adata=adata,
+        x=x,
+        y=y,
+        color=color,
+        use_raw=use_raw,
+        layers=layers,
+        sort_order=sort_order,
+        alpha=alpha,
+        basis=basis,
+        groups=groups,
+        components=components,
+        projection=projection,
+        legend_loc=legend_loc,
+        legend_fontsize=legend_fontsize,
+        legend_fontweight=legend_fontweight,
+        legend_fontoutline=legend_fontoutline,
+        color_map=color_map,
+        palette=palette,
+        frameon=frameon,
+        right_margin=right_margin,
+        left_margin=left_margin,
+        size=size,
+        title=title,
+        show=show,
+        save=save,
+        ax=ax,
+    )
 
 
 @_doc_params(
@@ -1059,58 +1032,49 @@ def pca(
     Preview:
         .. image:: /_static/docstring_previews/pca.png
     """
+    pca_partial = partial(_pca_part, annotate_var_explained=annotate_var_explained, show=show,
+            return_fig=return_fig,
+            save=save,
+            **kwargs)
     if isinstance(adata, MedCAT):
-        if kwargs.get("color") and isinstance(kwargs["color"], list):
+        if kwargs.get("color"):
+            if isinstance(kwargs["color"], str):
+                kwargs["color"] = [kwargs["color"]]
             additional_columns = []
             for colored_column in kwargs["color"]:
                 if colored_column not in set(adata.anndata.var_names) and colored_column not in set(
-                    adata.anndata.obs_names
+                    adata.anndata.obs.columns
                 ):
                     EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, colored_column)
                     additional_columns.append(colored_column)
-            pca = sc.pl.pca(
-                adata=adata.anndata,
-                annotate_var_explained=annotate_var_explained,
-                show=show,
-                return_fig=return_fig,
-                save=save,
-                **kwargs,
-            )
+            pca = pca_partial(adata=adata.anndata)
             if additional_columns:
                 adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
             return pca
 
-        elif kwargs.get("color") and isinstance(kwargs["color"], str):
-            EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, kwargs["color"])
-            pca = sc.pl.pca(
-                adata=adata.anndata,
-                annotate_var_explained=annotate_var_explained,
-                show=show,
-                return_fig=return_fig,
-                save=save,
-                **kwargs,
-            )
-            adata.anndata.obs.drop(kwargs["color"], inplace=True, axis=1)
-            return pca
         else:
-            return sc.pl.pca(
-                adata=adata.anndata,
-                annotate_var_explained=annotate_var_explained,
-                show=show,
-                return_fig=return_fig,
-                save=save,
-                **kwargs,
-            )
+            return pca_partial(adata=adata.anndata)
 
     else:
-        return sc.pl.pca(
-            adata=adata,
-            annotate_var_explained=annotate_var_explained,
-            show=show,
-            return_fig=return_fig,
-            save=save,
-            **kwargs,
-        )
+        return pca_partial(adata=adata)
+
+
+def _pca_part(adata,
+    *,
+    annotate_var_explained: bool = False,
+    show: bool | None = None,
+    return_fig: bool | None = None,
+    save: bool | str | None = None,
+    **kwargs,):
+
+    return sc.pl.pca(
+        adata=adata,
+        annotate_var_explained=annotate_var_explained,
+        show=show,
+        return_fig=return_fig,
+        save=save,
+        **kwargs,
+    )
 
 
 def pca_loadings(
@@ -1274,29 +1238,31 @@ def tsne(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover
 
         .. image:: /_static/docstring_previews/tsne_3.png
     """
+    tsne_partial = partial(_tsne_part, **kwargs)
     if isinstance(adata, MedCAT):
-        if kwargs.get("color") and isinstance(kwargs["color"], list):
+        if kwargs.get("color"):
+            if isinstance(kwargs["color"], str):
+                kwargs["color"] = [kwargs["color"]]
             additional_columns = []
             for colored_column in kwargs["color"]:
                 if colored_column not in set(adata.anndata.var_names) and colored_column not in set(
-                    adata.anndata.obs_names
+                    adata.anndata.obs.columns
                 ):
                     EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, colored_column)
                     additional_columns.append(colored_column)
-            tsne = sc.pl.tsne(adata=adata.anndata, **kwargs)
+            tsne = tsne_partial(adata=adata.anndata)
             if additional_columns:
                 adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
             return tsne
 
-        elif kwargs.get("color") and isinstance(kwargs["color"], str):
-            EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, kwargs["color"])
-            tsne = sc.pl.tsne(adata=adata.anndata, **kwargs)
-            adata.anndata.obs.drop(kwargs["color"], inplace=True, axis=1)
-            return tsne
         else:
-            return sc.pl.tsne(adata=adata, **kwargs)
+            return tsne_partial(adata=adata.anndata)
     else:
-        return sc.pl.tsne(adata=adata, **kwargs)
+        return tsne_partial(adata=adata)
+
+
+def _tsne_part(adata, **kwargs):
+    return sc.pl.tsne(adata=adata, **kwargs)
 
 
 @_wraps_plot_scatter
@@ -1345,29 +1311,32 @@ def umap(adata: AnnData | MedCAT, **kwargs) -> Axes | list[Axes] | None:  # prag
 
         .. image:: /_static/docstring_previews/umap_3.png
     """
+    umap_partial = partial(_umap_part, **kwargs)
     if isinstance(adata, MedCAT):
-        if kwargs.get("color") and isinstance(kwargs["color"], list):
+        if kwargs.get("color"):
+            if isinstance(kwargs["color"], str):
+                kwargs["color"] = [kwargs["color"]]
             additional_columns = []
             for colored_column in kwargs["color"]:
                 if colored_column not in set(adata.anndata.var_names) and colored_column not in set(
-                    adata.anndata.obs_names
+                    adata.anndata.obs.columns
                 ):
                     EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, colored_column)
                     additional_columns.append(colored_column)
-            umap = sc.pl.umap(adata=adata.anndata, **kwargs)
+            umap = umap_partial(adata=adata.anndata)
             if additional_columns:
                 adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
             return umap
 
-        elif kwargs.get("color") and isinstance(kwargs["color"], str):
-            EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, kwargs["color"])
-            umap = sc.pl.umap(adata=adata.anndata, **kwargs)
-            adata.anndata.obs.drop(kwargs["color"], inplace=True, axis=1)
-            return umap
         else:
-            return sc.pl.umap(adata=adata.anndata, **kwargs)
+            return umap_partial(adata=adata.anndata)
+
     else:
-        return sc.pl.umap(adata=adata, **kwargs)
+        return umap_partial(adata=adata)
+
+
+def _umap_part(adata, **kwargs):
+    return sc.pl.umap(adata=adata, **kwargs)
 
 
 @_wraps_plot_scatter
@@ -1402,29 +1371,32 @@ def diffmap(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover
     Preview:
         .. image:: /_static/docstring_previews/diffmap.png
     """
+    diffmap_partial = partial(_diffmap_part, **kwargs)
     if isinstance(adata, MedCAT):
-        if kwargs.get("color") and isinstance(kwargs["color"], list):
+        if kwargs.get("color"):
+            if isinstance(kwargs["color"], str):
+                kwargs["color"] = [kwargs["color"]]
             additional_columns = []
             for colored_column in kwargs["color"]:
                 if colored_column not in set(adata.anndata.var_names) and colored_column not in set(
-                    adata.anndata.obs_names
+                    adata.anndata.obs.columns
                 ):
                     EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, colored_column)
                     additional_columns.append(colored_column)
-            diffmap = sc.pl.diffmap(adata=adata.anndata, **kwargs)
+            diffmap = diffmap_partial(adata=adata.anndata)
             if additional_columns:
                 adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
             return diffmap
 
-        elif kwargs.get("color") and isinstance(kwargs["color"], str):
-            EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, kwargs["color"])
-            diffmap = sc.pl.diffmap(adata=adata.anndata, **kwargs)
-            adata.anndata.obs.drop(kwargs["color"], inplace=True, axis=1)
-            return diffmap
         else:
-            return sc.pl.diffmap(adata=adata.anndata, **kwargs)
+            return diffmap_partial(adata=adata.anndata)
+
     else:
-        return sc.pl.diffmap(adata=adata, **kwargs)
+        return diffmap_partial(adata=adata)
+
+
+def _diffmap_part(adata, **kwargs):
+    return sc.pl.diffmap(adata=adata, **kwargs)
 
 
 @_wraps_plot_scatter
@@ -1474,6 +1446,31 @@ def draw_graph(
 
         .. image:: /_static/docstring_previews/draw_graph_2.png
     """
+    draw_graph_part = partial(_draw_graph_part, layout=layout, **kwargs)
+    if isinstance(adata, MedCAT):
+        if kwargs.get("color"):
+            if isinstance(kwargs["color"], str):
+                kwargs["color"] = [kwargs["color"]]
+            additional_columns = []
+            for colored_column in kwargs["color"]:
+                if colored_column not in set(adata.anndata.var_names) and colored_column not in set(
+                    adata.anndata.obs.columns
+                ):
+                    EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, colored_column)
+                    additional_columns.append(colored_column)
+            graph = draw_graph_part(adata=adata.anndata)
+            if additional_columns:
+                adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
+            return graph
+
+        else:
+            return draw_graph_part(adata=adata.anndata)
+
+    else:
+        return draw_graph_part(adata=adata)
+
+
+def _draw_graph_part(adata: AnnData, *, layout: _IGraphLayout | None = None, **kwargs):
     return sc.pl.draw_graph(adata=adata, layout=layout, **kwargs)
 
 

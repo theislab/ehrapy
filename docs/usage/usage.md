@@ -229,7 +229,7 @@ In contrast to a preprocessing function, a tool usually adds an easily interpret
 
 ## Plotting
 
-The plotting module ehrapy.p\*\*l largely parallels the tl.\* and a few of the pp.\* functions.
+The plotting module ehrapy.pl.\* largely parallels the tl.\* and a few of the pp.\* functions.
 For most tools and for some preprocessing functions, you will find a plotting function with the same name.
 
 ### Generic
