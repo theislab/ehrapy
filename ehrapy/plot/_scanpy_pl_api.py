@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from functools import partial
 from enum import Enum
+from functools import partial
 from pathlib import Path
 from types import MappingProxyType
 from typing import Any, Callable, Collection, Iterable, Literal, Mapping, Sequence, Tuple, Union
@@ -106,32 +106,34 @@ def scatter(
     Preview:
         .. image:: /_static/docstring_previews/scatter.png
     """
-    scatter_partial = partial(_scatter_part, x=x,
-                y=y,
-                color=color,
-                use_raw=use_raw,
-                layers=layers,
-                sort_order=sort_order,
-                alpha=alpha,
-                basis=basis,
-                groups=groups,
-                components=components,
-                projection=projection,
-                legend_loc=legend_loc,
-                legend_fontsize=legend_fontsize,
-                legend_fontweight=legend_fontweight,
-                legend_fontoutline=legend_fontoutline,
-                color_map=color_map,
-                palette=palette,
-                frameon=frameon,
-                right_margin=right_margin,
-                left_margin=left_margin,
-                size=size,
-                title=title,
-                show=show,
-                save=save,
-                ax=ax,
-            )
+    scatter_partial = partial(
+        _scatter_part,
+        x=x,
+        y=y,
+        color=color,
+        use_raw=use_raw,
+        layers=layers,
+        sort_order=sort_order,
+        alpha=alpha,
+        basis=basis,
+        groups=groups,
+        components=components,
+        projection=projection,
+        legend_loc=legend_loc,
+        legend_fontsize=legend_fontsize,
+        legend_fontweight=legend_fontweight,
+        legend_fontoutline=legend_fontoutline,
+        color_map=color_map,
+        palette=palette,
+        frameon=frameon,
+        right_margin=right_margin,
+        left_margin=left_margin,
+        size=size,
+        title=title,
+        show=show,
+        save=save,
+        ax=ax,
+    )
     if isinstance(adata, MedCAT):
         if color:
             if isinstance(color, str):
@@ -157,7 +159,8 @@ def scatter(
         return scatter_partial(adata=adata)
 
 
-def _scatter_part(adata: AnnData,
+def _scatter_part(
+    adata: AnnData,
     x: str | None = None,
     y: str | None = None,
     color: str | list[str] = None,
@@ -182,7 +185,8 @@ def _scatter_part(adata: AnnData,
     title: str | None = None,
     show: bool | None = None,
     save: str | bool | None = None,
-    ax: Axes | None = None):
+    ax: Axes | None = None,
+):
 
     return sc.pl.scatter(
         adata=adata,
@@ -1032,10 +1036,9 @@ def pca(
     Preview:
         .. image:: /_static/docstring_previews/pca.png
     """
-    pca_partial = partial(_pca_part, annotate_var_explained=annotate_var_explained, show=show,
-            return_fig=return_fig,
-            save=save,
-            **kwargs)
+    pca_partial = partial(
+        _pca_part, annotate_var_explained=annotate_var_explained, show=show, return_fig=return_fig, save=save, **kwargs
+    )
     if isinstance(adata, MedCAT):
         if kwargs.get("color"):
             if isinstance(kwargs["color"], str):
@@ -1059,13 +1062,15 @@ def pca(
         return pca_partial(adata=adata)
 
 
-def _pca_part(adata,
+def _pca_part(
+    adata,
     *,
     annotate_var_explained: bool = False,
     show: bool | None = None,
     return_fig: bool | None = None,
     save: bool | str | None = None,
-    **kwargs,):
+    **kwargs,
+):
 
     return sc.pl.pca(
         adata=adata,
