@@ -107,7 +107,7 @@ def scatter(
         .. image:: /_static/docstring_previews/scatter.png
     """
     scatter_partial = partial(
-        _scatter_part,
+        sc.pl.scatter,
         x=x,
         y=y,
         color=color,
@@ -157,65 +157,6 @@ def scatter(
 
     else:
         return scatter_partial(adata=adata)
-
-
-def _scatter_part(
-    adata: AnnData,
-    x: str | None = None,
-    y: str | None = None,
-    color: str | list[str] = None,
-    use_raw: bool | None = None,
-    layers: str | Collection[str] = None,
-    sort_order: bool = True,
-    alpha: float | None = None,
-    basis: _Basis | None = None,
-    groups: str | Iterable[str] = None,
-    components: str | Collection[str] = None,
-    projection: Literal["2d", "3d"] = "2d",
-    legend_loc: str = "right margin",
-    legend_fontsize: int | float | _FontSize | None = None,
-    legend_fontweight: int | _FontWeight | None = None,
-    legend_fontoutline: float = None,
-    color_map: str | Colormap = None,
-    palette: Cycler | ListedColormap | ColorLike | Sequence[ColorLike] = None,
-    frameon: bool | None = None,
-    right_margin: float | None = None,
-    left_margin: float | None = None,
-    size: int | float | None = None,
-    title: str | None = None,
-    show: bool | None = None,
-    save: str | bool | None = None,
-    ax: Axes | None = None,
-):
-
-    return sc.pl.scatter(
-        adata=adata,
-        x=x,
-        y=y,
-        color=color,
-        use_raw=use_raw,
-        layers=layers,
-        sort_order=sort_order,
-        alpha=alpha,
-        basis=basis,
-        groups=groups,
-        components=components,
-        projection=projection,
-        legend_loc=legend_loc,
-        legend_fontsize=legend_fontsize,
-        legend_fontweight=legend_fontweight,
-        legend_fontoutline=legend_fontoutline,
-        color_map=color_map,
-        palette=palette,
-        frameon=frameon,
-        right_margin=right_margin,
-        left_margin=left_margin,
-        size=size,
-        title=title,
-        show=show,
-        save=save,
-        ax=ax,
-    )
 
 
 @_doc_params(
@@ -1037,7 +978,7 @@ def pca(
         .. image:: /_static/docstring_previews/pca.png
     """
     pca_partial = partial(
-        _pca_part, annotate_var_explained=annotate_var_explained, show=show, return_fig=return_fig, save=save, **kwargs
+        sc.pl.pca, annotate_var_explained=annotate_var_explained, show=show, return_fig=return_fig, save=save, **kwargs
     )
     if isinstance(adata, MedCAT):
         if kwargs.get("color"):
@@ -1060,26 +1001,6 @@ def pca(
 
     else:
         return pca_partial(adata=adata)
-
-
-def _pca_part(
-    adata,
-    *,
-    annotate_var_explained: bool = False,
-    show: bool | None = None,
-    return_fig: bool | None = None,
-    save: bool | str | None = None,
-    **kwargs,
-):
-
-    return sc.pl.pca(
-        adata=adata,
-        annotate_var_explained=annotate_var_explained,
-        show=show,
-        return_fig=return_fig,
-        save=save,
-        **kwargs,
-    )
 
 
 def pca_loadings(
@@ -1243,7 +1164,7 @@ def tsne(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover
 
         .. image:: /_static/docstring_previews/tsne_3.png
     """
-    tsne_partial = partial(_tsne_part, **kwargs)
+    tsne_partial = partial(sc.pl.tsne, **kwargs)
     if isinstance(adata, MedCAT):
         if kwargs.get("color"):
             if isinstance(kwargs["color"], str):
@@ -1264,10 +1185,6 @@ def tsne(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover
             return tsne_partial(adata=adata.anndata)
     else:
         return tsne_partial(adata=adata)
-
-
-def _tsne_part(adata, **kwargs):
-    return sc.pl.tsne(adata=adata, **kwargs)
 
 
 @_wraps_plot_scatter
@@ -1316,7 +1233,7 @@ def umap(adata: AnnData | MedCAT, **kwargs) -> Axes | list[Axes] | None:  # prag
 
         .. image:: /_static/docstring_previews/umap_3.png
     """
-    umap_partial = partial(_umap_part, **kwargs)
+    umap_partial = partial(sc.pl.umap, **kwargs)
     if isinstance(adata, MedCAT):
         if kwargs.get("color"):
             if isinstance(kwargs["color"], str):
@@ -1338,10 +1255,6 @@ def umap(adata: AnnData | MedCAT, **kwargs) -> Axes | list[Axes] | None:  # prag
 
     else:
         return umap_partial(adata=adata)
-
-
-def _umap_part(adata, **kwargs):
-    return sc.pl.umap(adata=adata, **kwargs)
 
 
 @_wraps_plot_scatter
@@ -1376,7 +1289,7 @@ def diffmap(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover
     Preview:
         .. image:: /_static/docstring_previews/diffmap.png
     """
-    diffmap_partial = partial(_diffmap_part, **kwargs)
+    diffmap_partial = partial(sc.pl.diffmap, **kwargs)
     if isinstance(adata, MedCAT):
         if kwargs.get("color"):
             if isinstance(kwargs["color"], str):
@@ -1398,10 +1311,6 @@ def diffmap(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover
 
     else:
         return diffmap_partial(adata=adata)
-
-
-def _diffmap_part(adata, **kwargs):
-    return sc.pl.diffmap(adata=adata, **kwargs)
 
 
 @_wraps_plot_scatter
@@ -1451,7 +1360,7 @@ def draw_graph(
 
         .. image:: /_static/docstring_previews/draw_graph_2.png
     """
-    draw_graph_part = partial(_draw_graph_part, layout=layout, **kwargs)
+    draw_graph_part = partial(sc.pl.draw_graph, layout=layout, **kwargs)
     if isinstance(adata, MedCAT):
         if kwargs.get("color"):
             if isinstance(kwargs["color"], str):
@@ -1473,10 +1382,6 @@ def draw_graph(
 
     else:
         return draw_graph_part(adata=adata)
-
-
-def _draw_graph_part(adata: AnnData, *, layout: _IGraphLayout | None = None, **kwargs):
-    return sc.pl.draw_graph(adata=adata, layout=layout, **kwargs)
 
 
 class Empty(Enum):

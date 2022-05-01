@@ -10,14 +10,10 @@ try:
     from medcat.config import Config
     from medcat.vocab import Vocab
 except ModuleNotFoundError:
-    print("Medcat could've not been found! Install medcat package if you want to use medcat with ehrapy.")
+    print("Package medcat could not be found. Install package medcat to use medcat with ehrapy.")
 from rich import box, print
 from rich.console import Console
 from rich.table import Table
-
-from ehrapy.core.tool_available import check_module_importable
-
-# TODO: State in docs those models are only needed when not using a model pack (cdb and vocab separatly)
 
 
 class MedCAT:
@@ -26,8 +22,6 @@ class MedCAT:
     """
 
     def __init__(self, anndata: AnnData, vocabulary: Vocab = None, concept_db: CDB = None, model_pack_path=None):
-        if not check_module_importable("medcat"):
-            raise RuntimeError("medcat is not importable. Please install via pip install medcat")
         self.anndata = anndata
         self.vocabulary = vocabulary
         self.concept_db = concept_db
