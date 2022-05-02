@@ -228,8 +228,8 @@ def heatmap(
     Preview:
         .. image:: /_static/docstring_previews/heatmap.png
     """
-    return sc.pl.heatmap(
-        adata=adata,
+    heatmap_partial = partial(
+        sc.pl.heatmap,
         var_names=var_names,
         groupby=groupby,
         use_raw=use_raw,
@@ -253,6 +253,25 @@ def heatmap(
         norm=norm,
         **kwds,
     )
+    if isinstance(adata, MedCAT):
+        if groupby:
+            if isinstance(groupby, str):
+                groupby = [groupby]
+            additional_columns = []
+            for grp_column in groupby:
+                if grp_column not in set(adata.anndata.var_names) and grp_column not in set(adata.anndata.obs.columns):
+                    EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, grp_column)
+                    additional_columns.append(grp_column)
+            heatmap = heatmap_partial(adata=adata.anndata)
+            if additional_columns:
+                adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
+            return heatmap
+
+        else:
+            return heatmap_partial(adata=adata.anndata)
+
+    else:
+        return heatmap_partial(adata=adata)
 
 
 @_doc_params(
@@ -350,8 +369,8 @@ def dotplot(
     Preview:
         .. image:: /_static/docstring_previews/dotplot.png
     """
-    return sc.pl.dotplot(
-        adata=adata,
+    dotplot_partial = partial(
+        sc.pl.dotplot,
         var_names=var_names,
         groupby=groupby,
         use_raw=use_raw,
@@ -386,6 +405,25 @@ def dotplot(
         norm=norm,
         **kwds,
     )
+    if isinstance(adata, MedCAT):
+        if groupby:
+            if isinstance(groupby, str):
+                groupby = [groupby]
+            additional_columns = []
+            for grp_column in groupby:
+                if grp_column not in set(adata.anndata.var_names) and grp_column not in set(adata.anndata.obs.columns):
+                    EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, grp_column)
+                    additional_columns.append(grp_column)
+            dotplot = dotplot_partial(adata=adata.anndata)
+            if additional_columns:
+                adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
+            return dotplot
+
+        else:
+            return dotplot_partial(adata=adata.anndata)
+
+    else:
+        return dotplot_partial(adata=adata)
 
 
 @_doc_params(show_save_ax=doc_show_save_ax, common_plot_args=doc_common_plot_args)
@@ -437,8 +475,8 @@ def tracksplot(
     Preview:
         .. image:: /_static/docstring_previews/tracksplot.png
     """
-    return sc.pl.tracksplot(
-        adata=adata,
+    tracksplot_partial = partial(
+        sc.pl.tracksplot,
         var_names=var_names,
         groupby=groupby,
         use_raw=use_raw,
@@ -453,6 +491,25 @@ def tracksplot(
         figsize=figsize,
         **kwds,
     )
+    if isinstance(adata, MedCAT):
+        if groupby:
+            if isinstance(groupby, str):
+                groupby = [groupby]
+            additional_columns = []
+            for grp_col in groupby:
+                if grp_col not in set(adata.anndata.var_names) and grp_col not in set(adata.anndata.obs.columns):
+                    EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, grp_col)
+                    additional_columns.append(grp_col)
+            tracksplot = tracksplot_partial(adata=adata.anndata)
+            if additional_columns:
+                adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
+            return tracksplot
+
+        else:
+            return tracksplot_partial(adata=adata.anndata)
+
+    else:
+        return tracksplot_partial(adata=adata)
 
 
 def violin(
@@ -483,7 +540,7 @@ def violin(
     Args:
         adata: :class:`~anndata.AnnData` object object containing all observations.
         keys: Keys for accessing variables of `.var_names` or fields of `.obs`.
-        groupby: The key of the observation grouping to consider.
+        groupby: The key of the observation grouping to consider. Could also be an entity extracted by ehrapy's medcat tool.
         log: Plot on logarithmic axis.
         use_raw: Whether to use `raw` attribute of `adata`. Defaults to `True` if `.raw` is present.
         stripplot: Add a stripplot on top of the violin plot. See :func:`~seaborn.stripplot`.
@@ -525,8 +582,8 @@ def violin(
     Preview:
         .. image:: /_static/docstring_previews/violin.png
     """
-    return sc.pl.violin(
-        adata=adata,
+    violin_partial = partial(
+        sc.pl.violin,
         keys=keys,
         groupby=groupby,
         log=log,
@@ -546,6 +603,22 @@ def violin(
         ax=ax,
         **kwds,
     )
+    if isinstance(adata, MedCAT):
+        if groupby:
+            grp_flag = False
+            if groupby not in set(adata.anndata.var_names) and groupby not in set(adata.anndata.obs.columns):
+                EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, groupby)
+                grp_flag = True
+            violin = violin_partial(adata=adata.anndata)
+            if grp_flag:
+                adata.anndata.obs.drop(groupby, inplace=True, axis=1)
+            return violin
+
+        else:
+            return violin_partial(adata=adata.anndata)
+
+    else:
+        return violin_partial(adata=adata)
 
 
 @_doc_params(
@@ -642,8 +715,8 @@ def stacked_violin(
     Preview:
         .. image:: /_static/docstring_previews/stacked_violin.png
     """
-    return sc.pl.stacked_violin(
-        adata=adata,
+    stacked_vio_partial = partial(
+        sc.pl.stacked_violin,
         var_names=var_names,
         groupby=groupby,
         log=log,
@@ -678,6 +751,27 @@ def stacked_violin(
         norm=norm,
         **kwds,
     )
+    if isinstance(adata, MedCAT):
+        if groupby:
+            if isinstance(groupby, str):
+                groupby = [groupby]
+            additional_columns = []
+            for colored_column in groupby:
+                if colored_column not in set(adata.anndata.var_names) and colored_column not in set(
+                    adata.anndata.obs.columns
+                ):
+                    EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, colored_column)
+                    additional_columns.append(colored_column)
+            stacked_violin = stacked_vio_partial(adata=adata.anndata)
+            if additional_columns:
+                adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
+            return stacked_violin
+
+        else:
+            return stacked_vio_partial(adata=adata.anndata)
+
+    else:
+        return stacked_vio_partial(adata=adata)
 
 
 @_doc_params(
@@ -751,8 +845,8 @@ def matrixplot(
     Preview:
         .. image:: /_static/docstring_previews/matrixplot.png
     """
-    return sc.pl.matrixplot(
-        adata=adata,
+    matrix_partial = partial(
+        sc.pl.matrixplot,
         var_names=var_names,
         groupby=groupby,
         use_raw=use_raw,
@@ -781,12 +875,33 @@ def matrixplot(
         norm=norm,
         **kwds,
     )
+    if isinstance(adata, MedCAT):
+        if groupby:
+            if isinstance(groupby, str):
+                groupby = [groupby]
+            additional_columns = []
+            for colored_column in groupby:
+                if colored_column not in set(adata.anndata.var_names) and colored_column not in set(
+                    adata.anndata.obs.columns
+                ):
+                    EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, colored_column)
+                    additional_columns.append(colored_column)
+            matrixplot = matrix_partial(adata=adata.anndata)
+            if additional_columns:
+                adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
+            return matrixplot
+
+        else:
+            return matrix_partial(adata=adata.anndata)
+
+    else:
+        return matrix_partial(adata=adata)
 
 
 @_doc_params(show_save_ax=doc_show_save_ax)
 def clustermap(
     adata: AnnData,
-    obs_keys: str = None,
+    obs_keys: str | None = None,
     use_raw: bool | None = None,
     show: bool | None = None,
     save: bool | str | None = None,
@@ -822,7 +937,23 @@ def clustermap(
     Preview:
         .. image:: /_static/docstring_previews/clustermap.png
     """
-    return sc.pl.clustermap(adata=adata, obs_keys=obs_keys, use_raw=use_raw, show=show, save=save, **kwds)
+    clustermap_partial = partial(sc.pl.clustermap, obs_keys=obs_keys, use_raw=use_raw, show=show, save=save, **kwds)
+    if isinstance(adata, MedCAT):
+        if obs_keys:
+            grp_flag = False
+            if obs_keys not in set(adata.anndata.var_names) and obs_keys not in set(adata.anndata.obs.columns):
+                EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, obs_keys)
+                grp_flag = True
+            clustermap = clustermap_partial(adata=adata.anndata)
+            if grp_flag:
+                adata.anndata.obs.drop(obs_keys, inplace=True, axis=1)
+            return clustermap
+
+        else:
+            return clustermap_partial(adata=adata.anndata)
+
+    else:
+        return clustermap_partial(adata=adata)
 
 
 def ranking(
@@ -922,8 +1053,8 @@ def dendrogram(
     Preview:
         .. image:: /_static/docstring_previews/dendrogram.png
     """
-    return sc.pl.dendrogram(
-        adata=adata,
+    dendrogram_partial = partial(
+        sc.pl.dendrogram,
         groupby=groupby,
         dendrogram_key=dendrogram_key,
         orientation=orientation,
@@ -932,6 +1063,22 @@ def dendrogram(
         save=save,
         ax=ax,
     )
+    if isinstance(adata, MedCAT):
+        if groupby:
+            grp_flag = False
+            if groupby not in set(adata.anndata.var_names) and groupby not in set(adata.anndata.obs.columns):
+                EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, groupby)
+                grp_flag = True
+            dendrogram = dendrogram_partial(adata=adata.anndata)
+            if grp_flag:
+                adata.anndata.obs.drop(groupby, inplace=True, axis=1)
+            return dendrogram
+
+        else:
+            return dendrogram_partial(adata=adata.anndata)
+
+    else:
+        return dendrogram_partial(adata=adata)
 
 
 @_wraps_plot_scatter
