@@ -1692,8 +1692,8 @@ def embedding(
     Preview:
         .. image:: /_static/docstring_previews/embedding.png
     """
-    return sc.pl.embedding(
-        adata=adata,
+    embedding_partial = partial(
+        sc.pl.embedding,
         basis=basis,
         color=color,
         gene_symbols=feature_symbols,
@@ -1739,6 +1739,28 @@ def embedding(
         **kwargs,
     )
 
+    if isinstance(adata, MedCAT):
+        if color:
+            if isinstance(color, str):
+                color = [color]
+            additional_columns = []
+            for colored_column in color:
+                if colored_column not in set(adata.anndata.var_names) and colored_column not in set(
+                    adata.anndata.obs.columns
+                ):
+                    EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, colored_column)
+                    additional_columns.append(colored_column)
+            _embedding = embedding_partial(adata=adata.anndata)
+            if additional_columns:
+                adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
+            return _embedding
+
+        else:
+            return embedding_partial(adata=adata.anndata)
+
+    else:
+        return embedding_partial(adata=adata)
+
 
 @_doc_params(vminmax=doc_vbound_percentile, panels=doc_panels, show_save_ax=doc_show_save_ax)
 def embedding_density(
@@ -1756,7 +1778,7 @@ def embedding_density(
     norm: Normalize | None = None,
     ncols: int | None = 4,
     hspace: float | None = 0.25,
-    wspace: None | None = None,
+    wspace: None = None,
     title: str = None,
     show: bool | None = None,
     save: bool | str | None = None,
@@ -1765,9 +1787,8 @@ def embedding_density(
     **kwargs,
 ) -> Figure | Axes | None:  # pragma: no cover
     """Plot the density of observations in an embedding (per condition).
-
-    Plots the gaussian kernel density estimates (over condition) from the `sc.tl.embedding_density()` output.
-
+    Plots the gaussian kernel density estimates (over condition) from the `sc.tl.embedding_density()` output. This currently
+    does not support extracted medcat entities.
     Args:
         adata: :class:`~anndata.AnnData` object object containing all observations.
         basis: The embedding over which the density was calculated.
@@ -1798,15 +1819,11 @@ def embedding_density(
         hspace: Adjust the height of the space between multiple panels.
         return_fig: Return the matplotlib figure.\
         {show_save_ax}
-
     Returns:
         If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
-
     Example:
         .. code-block:: python
-
             import ehrapy as ep
-
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.norm_log(adata, offset=1)
@@ -1815,7 +1832,6 @@ def embedding_density(
             ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
             ep.tl.embedding_density(adata, groupby='leiden_0_5', key_added='icu_exp_flg')
             ep.pl.embedding_density(adata, key='icu_exp_flg')
-
     Preview:
         .. image:: /_static/docstring_previews/embedding_density.png
     """

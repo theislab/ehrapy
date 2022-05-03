@@ -277,6 +277,7 @@ class EhrapyMedcat:
         df = EhrapyMedcat._filter_df_by_status(medcat_obj.annotated_results, "Affirmed")
         # currently, only the pretty_name column is supported
         adata.obs[name] = df.groupby("row_nr").agg({"pretty_name": (lambda x: int(any(x.isin([name]))))})
+        adata.obs = adata.obs.replace({name: {1.0: "yes", 0.0: "no"}})
         # set value to 0 for rows, where medcat did not extract any entity
         adata.obs[name] = adata.obs[name].fillna(0).astype("category")
 
