@@ -12,7 +12,6 @@ def plot_medcat_top_entities(medcat_results: pd.DataFrame, tuis, n: int = 10, st
         n: maximal number of entities to plot
         status: One of "Affirmed", "Other" or "Both". Affirmed reflect positive diagnoses, symptoms, ..., "Other" reflects absence of such entities and "Both"
         just uses all
-
     """
     # filter by status if wanted and count unique values of entities in the results
     # TODO: find efficient way to check if tuis is part of the type_ids since this could be a list with multiple entries
