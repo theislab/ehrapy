@@ -1,8 +1,9 @@
 from __future__ import annotations
+from numpy import ndarray
 
 
 class StrMatcher:
-    def __init__(self, references: list[str]):
+    def __init__(self, references: list[str] | ndarray):
         self.reference_bigrams = self.calculate_bigrams_list_str(references)
 
     @classmethod
@@ -22,6 +23,7 @@ class StrMatcher:
         Returns:
             A dictionary associating input strings against sets of bigrams and their amounts.
         """
+        # could be optimized for ndarrays
         all_bigrams: dict[str, tuple[set[str], int]] = {}
         for string in all_strings:
             bigrams = cls.calculate_bigrams_single_str(string)

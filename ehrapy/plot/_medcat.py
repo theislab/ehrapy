@@ -3,7 +3,7 @@ import pandas as pd
 import seaborn as sns
 
 
-def plot_medcat_top_entities(medcat_results: pd.DataFrame, tuis, n: int = 10, status: str = "Affirmed") -> None:
+def medcat_top_entities(medcat_results: pd.DataFrame, tuis, n: int = 10, status: str = "Affirmed") -> None:
     """Plot top entities.
 
     Args:
@@ -14,7 +14,7 @@ def plot_medcat_top_entities(medcat_results: pd.DataFrame, tuis, n: int = 10, st
         just uses all
 
     """
-    # filter by status if wanted and count unique values of entities in the results
+    # filter by status if desired and count unique values of entities in the results
     # TODO: find efficient way to check if tuis is part of the type_ids since this could be a list with multiple entries
     if status != "Both":
         value_counts = medcat_results[

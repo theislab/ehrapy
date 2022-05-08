@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import pandas as pd
 from anndata import AnnData
+from ehrapy.core.str_matching import StrMatcher
+from ehrapy.tools.nlp._util import _list_replace
 
 try:
     from medcat.cat import CAT
@@ -227,7 +229,7 @@ class EhrapyMedcat:
 
     @staticmethod
     def get_annotation_overview(
-        medcat_obj: MedCAT, n: int = 10, status: str = "Affirmed", save_to_csv: bool = False
+        medcat_obj: MedCAT, n: int = 10, status: str = "Affirmed", save_to_csv: bool = False, save_path: str = "."
     ) -> None:
         """Provide an overview for the annotation results. An overview will look like the following:
            cui (the CUI), nsubjects (from how many rows this one got extracted), type_ids (TUIs), name(name of the entitiy), perc_subjects (how many rows relative
@@ -238,6 +240,7 @@ class EhrapyMedcat:
             n: Basically the parameter for head() of pandas Dataframe. How many of the most common entities should be shown?
             status: One of "Affirmed" (default), "Other" or "Both". Displays stats for either only affirmed entities, negated ones or both.
             save_to_csv: Whether to save the overview dataframe to a local .csv file in the current working directory or not.
+            save_path: Path to save the overview as .csv file. Defaults to current working directory.
 
         Returns:
             A pandas DataFrame with the overview stats.
@@ -259,27 +262,41 @@ class EhrapyMedcat:
         # relative amount of patient visits with the specific entity to all patient visits (or rows in the original data)
         res["n_patient_visit_percent"] = (res["n_patient_visit"] / df["row_nr"].nunique()) * 100
         res.round({"n_patient_visit_percent": 1})
-        # save to csv if wanted
+        # save to csv if desired
         if save_to_csv:
-            res.to_csv(".")
+            res.to_csv(save_path)
 
         overview_table = EhrapyMedcat._df_to_rich_table(res.nlargest(n, "n_patient_visit"))
         console = Console()
         console.print(overview_table)
 
     @staticmethod
-    def add_binary_column_to_obs(medcat_obj: MedCAT, adata: AnnData, name: str) -> None:
+    def add_binary_column_to_obs(medcat_obj: MedCAT, adata: AnnData, name: str, all_names: str | list[str], add_cols: list[str] | None) -> None:
         """Adds a binary column to obs (temporarily) for plotting infos extracted from freetext.
         Indicates whether the specific entity to color by has been found in that row or not.
 
         """
         # only extract affirmed entities
         df = EhrapyMedcat._filter_df_by_status(medcat_obj.annotated_results, "Affirmed")
+        # check whether the name is in the extracted entities to handle possible typos to a certain extend
         # currently, only the pretty_name column is supported
-        adata.obs[name] = df.groupby("row_nr").agg({"pretty_name": (lambda x: int(any(x.isin([name]))))})
+            #_list_replace(color, colored_column, colored_column_tmp)
+        if name not in df["pretty_name"].values:
+            str_matcher = StrMatcher(references=df["pretty_name"].unique())
+            _, new_name = str_matcher.best_match(name, 0.5)
+            if new_name:
+                print(f"[bold yellow]Did not found [blue]{name} in medcat's extracted entities. Will use best match {new_name} for coloring/grouping!")
+                _list_replace(all_names, name, new_name)
+                name = new_name
+            else:
+                raise EntitiyNotFoundError(f"Did not found {name} in medcat's extracted entities and could not determine a best matching equivalent.")
+        # add column to additional to remove it later on
+        if add_cols is not None:
+            add_cols.append(name)
+        adata.obs[name] = df.groupby("row_nr").agg({"pretty_name": (lambda x: int(any(x.isin([name]))))}).astype("category")
         adata.obs = adata.obs.replace({name: {1.0: "yes", 0.0: "no"}})
         # set value to 0 for rows, where medcat did not extract any entity
-        adata.obs[name] = adata.obs[name].fillna(0).astype("category")
+        adata.obs[name] = adata.obs[name].fillna("no").astype("category")
 
     @staticmethod
     def _annotated_results_to_df(flattened_results: dict) -> pd.DataFrame:
@@ -304,7 +321,7 @@ class EhrapyMedcat:
             # all entities extracted from a given row
             entities = annotation_results[row_id]["entities"]
             for entity_id in entities.keys():
-                # ignore tokens for now
+                # tokens are currently ignored, as they will not appear with the current basic model used by ehrapy from medcat
                 if entity_id != "tokens":
                     single_entity = {"row_nr": row_id}
                     entity = entities[entity_id]
@@ -367,4 +384,7 @@ class EhrapyMedcat:
 
 
 class StatusNotSupportedError(Exception):
+    pass
+
+class EntitiyNotFoundError(Exception):
     pass
