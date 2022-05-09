@@ -6,13 +6,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 from anndata import AnnData
 from lifelines import KaplanMeierFitter
+from matplotlib.axes import Axes
 from numpy import ndarray
 from statsmodels.regression.linear_model import RegressionResults
 
 import ehrapy as ep
 
 
-def ols_plot(
+def ols(
     adata: AnnData | None = None,
     x: str | None = None,
     y: str | None = None,
@@ -21,13 +22,15 @@ def ols_plot(
     ols_color: list[str] | None | None = None,
     xlabel: str | None = None,
     ylabel: str | None = None,
-    figsize: tuple[float, float] | None = (6.4, 4.8),
+    figsize: tuple[float, float] | None = None,
     lines: list[tuple[ndarray | float, ndarray | float]] | None = None,
     lines_color: list[str] | None | None = None,
     lines_style: list[str] | None | None = None,
     lines_label: list[str] | None | None = None,
     xlim: tuple[float, float] | None = None,
     ylim: tuple[float, float] | None = None,
+    show: bool | None = None,
+    ax: Axes | None = None,
     **kwds,
 ):
     """Plots a Ordinary Least Squares (OLS) Model result, scatter plot, and line plot.
@@ -41,14 +44,15 @@ def ols_plot(
         ols_color: List of colors for each ols_results. Example: ['red', 'blue']
         xlabel: The x-axis label text
         ylabel: The y-axis label text
-        figsize: Width, height in inches. Default is: [6.4, 4.8]
+        figsize: Width, height in inches. Default is None
         lines: List of Tuples of (slope, intercept) or (x, y). Plot lines by slope and intercept or data points. Example: plot two lines (y = x + 2 and y = 2*x + 1): [(1, 2), (2, 1)]
         lines_color: List of colors for each line. Example: ['red', 'blue']
         lines_style: List of line styles for each line. Example: ['-', '--']
         lines_label: List of line labels for each line. Example: ['Line1', 'Line2']
         xlim: Set the x-axis view limits. Required for only ploting lines using slope and intercept.
         ylim: Set the y-axis view limits. Required for only ploting lines using slope and intercept.
-
+        show: Show the plot, do not return axis.
+        ax: A matplotlib axes object. Only works if plotting a single component.
     Example:
         .. code-block:: python
 
@@ -56,7 +60,7 @@ def ols_plot(
             import ehrapy as ep
             adata = ep.data.mimic_2(encoded=False)
             co2_lm_result = ep.tl.ols(adata, var_names=['pco2_first', 'tco2_first'], formula='tco2_first ~ pco2_first', missing="drop").fit()
-            ep.pl.ols_plot(adata, x='pco2_first', y='tco2_first', ols_results=[co2_lm_result], ols_color=['red'], xlabel="PCO2", ylabel="TCO2")
+            ep.pl.ols(adata, x='pco2_first', y='tco2_first', ols_results=[co2_lm_result], ols_color=['red'], xlabel="PCO2", ylabel="TCO2")
 
         .. image:: /_static/docstring_previews/ols_plot_1.png
 
@@ -65,7 +69,7 @@ def ols_plot(
             # Scatter plot and line plot
             import ehrapy as ep
             adata = ep.data.mimic_2(encoded=False)
-            ep.pl.ols_plot(adata, x='pco2_first', y='tco2_first', lines=[(0.25, 10), (0.3, 20)], lines_color=['red', 'blue'], lines_style=['-', ':'], lines_label=['Line1', 'Line2'])
+            ep.pl.ols(adata, x='pco2_first', y='tco2_first', lines=[(0.25, 10), (0.3, 20)], lines_color=['red', 'blue'], lines_style=['-', ':'], lines_label=['Line1', 'Line2'])
 
         .. image:: /_static/docstring_previews/ols_plot_2.png
 
@@ -73,11 +77,12 @@ def ols_plot(
 
             # Line plot only
             import ehrapy as ep
-            ep.pl.ols_plot(lines=[(0.25, 10), (0.3, 20)], lines_color=['red', 'blue'], lines_style=['-', ':'], lines_label=['Line1', 'Line2'], xlim=(0, 150), ylim=(0, 50))
+            ep.pl.ols(lines=[(0.25, 10), (0.3, 20)], lines_color=['red', 'blue'], lines_style=['-', ':'], lines_label=['Line1', 'Line2'], xlim=(0, 150), ylim=(0, 50))
 
         .. image:: /_static/docstring_previews/ols_plot_3.png
     """
-    _, ax = plt.subplots(figsize=figsize)
+    if ax is None:
+        _, ax = plt.subplots(figsize=figsize)
     if xlim is not None:
         plt.xlim(xlim)
     if ylim is not None:
@@ -112,9 +117,11 @@ def ols_plot(
     plt.ylabel(ylabel)
     if lines_label is not None and lines_label[0] is not None:
         plt.legend()
+    if not show:
+        return ax
 
 
-def kmf_plot(
+def kmf(
     kmfs: list[KaplanMeierFitter] = None,
     ci_alpha: list[float] | None = None,
     ci_force_lines: list[Boolean] | None = None,
@@ -127,7 +134,8 @@ def kmf_plot(
     ylim: tuple[float, float] | None = None,
     xlabel: str | None = None,
     ylabel: str | None = None,
-    figsize: tuple[float, float] | None = (6.4, 4.8),
+    figsize: tuple[float, float] | None = None,
+    show: bool | None = None,
 ):
     """Plots a pretty figure of the Fitted KaplanMeierFitter model
 
@@ -146,7 +154,7 @@ def kmf_plot(
         ylim: Set the y-axis view limits
         xlabel: The x-axis label text
         ylabel: The y-axis label text
-        figsize: Width, height in inches. Default is: [6.4, 4.8]
+        figsize: Width, height in inches. Default is None
 
     Example:
         .. code-block:: python
@@ -174,7 +182,7 @@ def kmf_plot(
             kmf_2 = KaplanMeierFitter().fit(T[ix2], E[ix2], label='MICU')
             kmf_3 = KaplanMeierFitter().fit(T[ix3], E[ix3], label='SICU')
 
-            ep.pl.kmf_plot([kmf_1, kmf_2, kmf_3], ci_show=[False,False,False], color=['k','r', 'g'], xlim=[0, 750], ylim=[0, 1], xlabel="Days", ylabel="Proportion Survived")
+            ep.pl.kmf([kmf_1, kmf_2, kmf_3], ci_show=[False,False,False], color=['k','r', 'g'], xlim=[0, 750], ylim=[0, 1], xlabel="Days", ylabel="Proportion Survived")
 
         .. image:: /_static/docstring_previews/kmf_plot_2.png
     """
@@ -216,3 +224,5 @@ def kmf_plot(
     plt.ylim(ylim)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
+    if not show:
+        return ax

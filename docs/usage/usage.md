@@ -344,8 +344,8 @@ Visualize clusters using one of the embedding methods passing color='leiden'.
     :toctree: tools
     :nosignatures:
 
-    plot.ols_plot
-    plot.kmf_plot
+    plot.ols
+    plot.kmf
 ```
 
 ## AnnData object transformation
