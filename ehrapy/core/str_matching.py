@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from numpy import ndarray
 
 
@@ -14,7 +15,7 @@ class StrMatcher:
         return [string_lower[i : i + 2] for i in range(len(string_lower) - 1)]
 
     @classmethod
-    def calculate_bigrams_list_str(cls, all_strings: list[str]) -> dict[str, tuple[set[str], int]]:
+    def calculate_bigrams_list_str(cls, all_strings: list[str] | ndarray) -> dict[str, tuple[set[str], int]]:
         """Calculates all bigrams for a list of strings.
 
         Args:

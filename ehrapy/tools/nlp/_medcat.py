@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import pandas as pd
 from anndata import AnnData
+
 from ehrapy.core.str_matching import StrMatcher
+from ehrapy.core.tool_available import check_module_importable
 from ehrapy.tools.nlp._util import _list_replace
 
 try:
@@ -12,7 +14,7 @@ try:
     from medcat.config import Config
     from medcat.vocab import Vocab
 except ModuleNotFoundError:
-    print("Package medcat could not be found. Install package medcat to use medcat with ehrapy.")
+    pass
 from rich import box, print
 from rich.console import Console
 from rich.table import Table
@@ -24,6 +26,8 @@ class MedCAT:
     """
 
     def __init__(self, anndata: AnnData, vocabulary: Vocab = None, concept_db: CDB = None, model_pack_path=None):
+        if not check_module_importable("medcat"):
+            raise RuntimeError("medcat is not importable. Please install via pip install medcat")
         self.anndata = anndata
         self.vocabulary = vocabulary
         self.concept_db = concept_db
@@ -271,7 +275,9 @@ class EhrapyMedcat:
         console.print(overview_table)
 
     @staticmethod
-    def add_binary_column_to_obs(medcat_obj: MedCAT, adata: AnnData, name: str, all_names: str | list[str], add_cols: list[str] | None) -> None:
+    def add_binary_column_to_obs(
+        medcat_obj: MedCAT, adata: AnnData, name: str, all_names: list[str], add_cols: list[str] | None
+    ) -> None:
         """Adds a binary column to obs (temporarily) for plotting infos extracted from freetext.
         Indicates whether the specific entity to color by has been found in that row or not.
 
@@ -280,20 +286,26 @@ class EhrapyMedcat:
         df = EhrapyMedcat._filter_df_by_status(medcat_obj.annotated_results, "Affirmed")
         # check whether the name is in the extracted entities to handle possible typos to a certain extend
         # currently, only the pretty_name column is supported
-            #_list_replace(color, colored_column, colored_column_tmp)
+        # _list_replace(color, colored_column, colored_column_tmp)
         if name not in df["pretty_name"].values:
             str_matcher = StrMatcher(references=df["pretty_name"].unique())
             _, new_name = str_matcher.best_match(name, 0.5)
             if new_name:
-                print(f"[bold yellow]Did not found [blue]{name} in medcat's extracted entities. Will use best match {new_name} for coloring/grouping!")
+                print(
+                    f"[bold yellow]Did not found [blue]{name} in medcat's extracted entities. Will use best match {new_name}!"
+                )
                 _list_replace(all_names, name, new_name)
                 name = new_name
             else:
-                raise EntitiyNotFoundError(f"Did not found {name} in medcat's extracted entities and could not determine a best matching equivalent.")
+                raise EntitiyNotFoundError(
+                    f"Did not found {name} in medcat's extracted entities and could not determine a best matching equivalent."
+                )
         # add column to additional to remove it later on
         if add_cols is not None:
             add_cols.append(name)
-        adata.obs[name] = df.groupby("row_nr").agg({"pretty_name": (lambda x: int(any(x.isin([name]))))}).astype("category")
+        adata.obs[name] = (
+            df.groupby("row_nr").agg({"pretty_name": (lambda x: int(any(x.isin([name]))))}).astype("category")
+        )
         adata.obs = adata.obs.replace({name: {1.0: "yes", 0.0: "no"}})
         # set value to 0 for rows, where medcat did not extract any entity
         adata.obs[name] = adata.obs[name].fillna("no").astype("category")
@@ -385,6 +397,7 @@ class EhrapyMedcat:
 
 class StatusNotSupportedError(Exception):
     pass
+
 
 class EntitiyNotFoundError(Exception):
     pass
