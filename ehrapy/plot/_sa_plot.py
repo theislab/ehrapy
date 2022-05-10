@@ -142,19 +142,20 @@ def kmf(
     See https://lifelines.readthedocs.io/en/latest/fitters/univariate/KaplanMeierFitter.html
 
     Args:
-        kmfs: Lists of fitted KaplanMeierFitter object
-        ci_alpha: The transparency level of the confidence interval. Default: 0.3. If more than one kmfs, this should be a list
-        ci_force_lines: Force the confidence intervals to be line plots (versus default shaded areas). Default: False. If more than one kmfs, this should be a list
-        ci_show: Show confidence intervals. Default: True. If more than one kmfs, this should be a list
-        ci_legend: If ci_force_lines is True, this is a boolean flag to add the lines' labels to the legend. Default: False. If more than one kmfs, this should be a list
-        at_risk_counts: Show group sizes at time points. Default: False. If more than one kmfs, this should be a list
-        color: List of colors for each kmf. If more than one kmfs, this should be a list
-        grid: If True, plot grid lines
-        xlim: Set the x-axis view limits
-        ylim: Set the y-axis view limits
-        xlabel: The x-axis label text
-        ylabel: The y-axis label text
-        figsize: Width, height in inches. Default is None
+        kmfs: Lists of fitted KaplanMeierFitter object.
+        ci_alpha: The transparency level of the confidence interval. Default: 0.3. If more than one kmfs, this should be a list.
+        ci_force_lines: Force the confidence intervals to be line plots (versus default shaded areas). Default: False. If more than one kmfs, this should be a list.
+        ci_show: Show confidence intervals. Default: True. If more than one kmfs, this should be a list.
+        ci_legend: If ci_force_lines is True, this is a boolean flag to add the lines' labels to the legend. Default: False. If more than one kmfs, this should be a list.
+        at_risk_counts: Show group sizes at time points. Default: False. If more than one kmfs, this should be a list.
+        color: List of colors for each kmf. If more than one kmfs, this should be a list.
+        grid: If True, plot grid lines.
+        xlim: Set the x-axis view limits.
+        ylim: Set the y-axis view limits.
+        xlabel: The x-axis label text.
+        ylabel: The y-axis label text.
+        figsize: Width, height in inches. Default is None.
+        show: Show the plot, do not return axis.
 
     Example:
         .. code-block:: python

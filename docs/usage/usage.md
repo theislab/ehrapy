@@ -234,6 +234,7 @@ In contrast to a preprocessing function, a tool usually adds an easily interpret
 
     tools.ols
     tools.glm
+    tools.kmf
 ```
 
 ## Plotting
