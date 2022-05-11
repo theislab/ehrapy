@@ -102,11 +102,19 @@ def glm(
 
 
 def kmf(
-    durations, event_observed=None, timeline=None, entry=None, label=None, alpha=None, ci_labels=None, weights=None
+    durations,
+    event_observed=None,
+    timeline=None,
+    entry=None,
+    label=None,
+    alpha=None,
+    ci_labels=None,
+    weights=None,
+    censoring=None,
 ) -> sm.GLM:
     """Fit the Kaplan-Meier estimate for the survival function.
 
-    See https://lifelines.readthedocs.io/en/latest/fitters/univariate/KaplanMeierFitter.html#lifelines.fitters.kaplan_meier_fitter.KaplanMeierFitter.fit
+    See https://lifelines.readthedocs.io/en/latest/fitters/univariate/KaplanMeierFitter.html#module-lifelines.fitters.kaplan_meier_fitter
     Class for fitting the Kaplan-Meier estimate for the survival function.
 
     Args:
@@ -129,6 +137,9 @@ def kmf(
             if providing a weighted dataset. For example, instead
             of providing every subject as a single element of `durations` and `event_observed`, one could
             weigh subject differently.
+        censoring: string, optional. One of ('right', 'left)
+            'right' for fitting the model to a right-censored dataset. 'left' for fitting the model to a left-censored dataset.
+            Default is to fit the model to a right-censored dataset.
 
     Returns:
         Fitted KaplanMeierFitter
@@ -145,14 +156,26 @@ def kmf(
             kmf = ep.tl.kmf(adata[:, ['mort_day_censored']].X, adata[:, ['censor_flg']].X)
     """
     kmf = KaplanMeierFitter()
-    kmf.fit(
-        durations=durations,
-        event_observed=event_observed,
-        timeline=timeline,
-        entry=entry,
-        label=label,
-        alpha=alpha,
-        ci_labels=ci_labels,
-        weights=weights,
-    )
+    if censoring == "None" or "right":
+        kmf.fit(
+            durations=durations,
+            event_observed=event_observed,
+            timeline=timeline,
+            entry=entry,
+            label=label,
+            alpha=alpha,
+            ci_labels=ci_labels,
+            weights=weights,
+        )
+    elif censoring == "left":
+        kmf.fit_left_censoring(
+            durations=durations,
+            event_observed=event_observed,
+            timeline=timeline,
+            entry=entry,
+            label=label,
+            alpha=alpha,
+            ci_labels=ci_labels,
+            weights=weights,
+        )
     return kmf
