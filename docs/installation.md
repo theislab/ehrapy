@@ -52,6 +52,12 @@ $ poetry install -E en_core_web_md
 
 ## MedCAT/Spacy language models
 
+If you want to run and use medcat with ehrapy, you first have to install medcat:
+
+```console
+$ poetry install -E medcat
+```
+
 Available language models are
 
 -   en_core_web_md (python -m spacy download en_core_web_md)

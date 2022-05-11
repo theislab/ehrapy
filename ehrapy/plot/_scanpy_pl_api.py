@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 from enum import Enum
+from functools import partial
 from pathlib import Path
 from types import MappingProxyType
-from typing import Any, Callable, Collection, Dict, Iterable, List, Literal, Mapping, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, Collection, Iterable, Literal, Mapping, Sequence, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -15,6 +18,7 @@ from scanpy.plotting import DotPlot, MatrixPlot, StackedViolin
 from scanpy.plotting._tools.scatterplots import _wraps_plot_scatter
 from scanpy.plotting._utils import _AxesSubplot
 
+from ehrapy.tools.nlp._medcat import EhrapyMedcat, MedCAT
 from ehrapy.util._doc_util import (
     _doc_params,
     doc_adata_color_etc,
@@ -42,31 +46,31 @@ VBound = Union[str, float, Callable[[Sequence[float]], float]]
 @_doc_params(scatter_temp=doc_scatter_basic, show_save_ax=doc_show_save_ax)
 def scatter(
     adata: AnnData,
-    x: Optional[str] = None,
-    y: Optional[str] = None,
-    color: Union[str, Collection[str]] = None,
-    use_raw: Optional[bool] = None,
-    layers: Union[str, Collection[str]] = None,
+    x: str | None = None,
+    y: str | None = None,
+    color: str = None,
+    use_raw: bool | None = None,
+    layers: str | Collection[str] = None,
     sort_order: bool = True,
-    alpha: Optional[float] = None,
-    basis: Optional[_Basis] = None,
-    groups: Union[str, Iterable[str]] = None,
-    components: Union[str, Collection[str]] = None,
+    alpha: float | None = None,
+    basis: _Basis | None = None,
+    groups: str | Iterable[str] = None,
+    components: str | Collection[str] = None,
     projection: Literal["2d", "3d"] = "2d",
     legend_loc: str = "right margin",
-    legend_fontsize: Union[int, float, _FontSize, None] = None,
-    legend_fontweight: Union[int, _FontWeight, None] = None,
+    legend_fontsize: int | float | _FontSize | None = None,
+    legend_fontweight: int | _FontWeight | None = None,
     legend_fontoutline: float = None,
-    color_map: Union[str, Colormap] = None,
-    palette: Union[Cycler, ListedColormap, ColorLike, Sequence[ColorLike]] = None,
-    frameon: Optional[bool] = None,
-    right_margin: Optional[float] = None,
-    left_margin: Optional[float] = None,
-    size: Union[int, float, None] = None,
-    title: Optional[str] = None,
-    show: Optional[bool] = None,
-    save: Union[str, bool, None] = None,
-    ax: Optional[Axes] = None,
+    color_map: str | Colormap = None,
+    palette: Cycler | ListedColormap | ColorLike | Sequence[ColorLike] = None,
+    frameon: bool | None = None,
+    right_margin: float | None = None,
+    left_margin: float | None = None,
+    size: int | float | None = None,
+    title: str | None = None,
+    show: bool | None = None,
+    save: str | bool | None = None,
+    ax: Axes | None = None,
 ):  # pragma: no cover
     """Scatter plot along observations or variables axes.
 
@@ -74,10 +78,10 @@ def scatter(
 
     Args:
         adata: :class:`~anndata.AnnData` object object containing all observations.
-        x: x coordinate
-        y: y coordinate
+        x: x coordinate (MedCat entities currently not supported)
+        y: y coordinate (MedCat entities currently not supported)
         color: Keys for annotations of observations/patients or features, or a hex color specification, e.g.,
-               `'ann1'`, `'#fe57a1'`, or `['ann1', 'ann2']`.
+               `'ann1'`, `'#fe57a1'`, or `['ann1', 'ann2']` or extracted entities from ehrapy's MedCat tool.
         use_raw: Whether to use `raw` attribute of `adata`. Defaults to `True` if `.raw` is present.
         layers: Use the `layers` attribute of `adata` if present: specify the layer for `x`, `y` and `color`.
                 If `layers` is a string, then it is expanded to `(layers, layers, layers)`.
@@ -102,11 +106,10 @@ def scatter(
     Preview:
         .. image:: /_static/docstring_previews/scatter.png
     """
-    return sc.pl.scatter(
-        adata=adata,
+    scatter_partial = partial(
+        sc.pl.scatter,
         x=x,
         y=y,
-        color=color,
         use_raw=use_raw,
         layers=layers,
         sort_order=sort_order,
@@ -130,6 +133,30 @@ def scatter(
         save=save,
         ax=ax,
     )
+    if isinstance(adata, MedCAT):
+        if color:
+            if isinstance(color, str):
+                color = [color]  # type: ignore
+            additional_columns: list[str] = []
+            for colored_column in color:
+                if (
+                    colored_column not in set(adata.anndata.var_names)
+                    and colored_column not in set(adata.anndata.obs.columns)
+                    and not colored_column.startswith("#")
+                ):  # hex codes are not treated as extracted entities
+                    EhrapyMedcat.add_binary_column_to_obs(
+                        adata, adata.anndata, colored_column, color, additional_columns  # type: ignore
+                    )
+
+            scatter = scatter_partial(adata=adata.anndata, color=color[0])
+            adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
+            return scatter
+
+        else:
+            return scatter_partial(adata=adata.anndata)
+
+    else:
+        return scatter_partial(adata=adata, color=color)
 
 
 @_doc_params(
@@ -139,27 +166,27 @@ def scatter(
 )
 def heatmap(
     adata: AnnData,
-    var_names: Union[_VarNames, Mapping[str, _VarNames]],
-    groupby: Union[str, Sequence[str]],
-    use_raw: Optional[bool] = None,
+    var_names: _VarNames | Mapping[str, _VarNames],
+    groupby: str | Sequence[str],
+    use_raw: bool | None = None,
     log: bool = False,
     num_categories: int = 7,
-    dendrogram: Union[bool, str] = False,
-    feature_symbols: Optional[str] = None,
-    var_group_positions: Optional[Sequence[Tuple[int, int]]] = None,
-    var_group_labels: Optional[Sequence[str]] = None,
-    var_group_rotation: Optional[float] = None,
-    layer: Optional[str] = None,
-    standard_scale: Optional[Literal["var", "obs"]] = None,
+    dendrogram: bool | str = False,
+    feature_symbols: str | None = None,
+    var_group_positions: Sequence[tuple[int, int]] | None = None,
+    var_group_labels: Sequence[str] | None = None,
+    var_group_rotation: float | None = None,
+    layer: str | None = None,
+    standard_scale: Literal["var", "obs"] | None = None,
     swap_axes: bool = False,
-    show_feature_labels: Optional[bool] = None,
-    show: Optional[bool] = None,
-    save: Union[str, bool, None] = None,
-    figsize: Optional[Tuple[float, float]] = None,
-    vmin: Optional[float] = None,
-    vmax: Optional[float] = None,
-    vcenter: Optional[float] = None,
-    norm: Optional[Normalize] = None,
+    show_feature_labels: bool | None = None,
+    show: bool | None = None,
+    save: str | bool | None = None,
+    figsize: tuple[float, float] | None = None,
+    vmin: float | None = None,
+    vmax: float | None = None,
+    vcenter: float | None = None,
+    norm: Normalize | None = None,
     **kwds,
 ):  # pragma: no cover
     """Heatmap of the feature values.
@@ -201,10 +228,9 @@ def heatmap(
     Preview:
         .. image:: /_static/docstring_previews/heatmap.png
     """
-    return sc.pl.heatmap(
-        adata=adata,
+    heatmap_partial = partial(
+        sc.pl.heatmap,
         var_names=var_names,
-        groupby=groupby,
         use_raw=use_raw,
         log=log,
         num_categories=num_categories,
@@ -226,6 +252,18 @@ def heatmap(
         norm=norm,
         **kwds,
     )
+    if isinstance(adata, MedCAT):
+        if isinstance(groupby, str):
+            groupby = [groupby]
+        additional_columns: list[str] = []
+        for grp_column in groupby:
+            if grp_column not in set(adata.anndata.var_names) and grp_column not in set(adata.anndata.obs.columns):
+                EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, grp_column, groupby, additional_columns)  # type: ignore
+        heatmap = heatmap_partial(adata=adata.anndata, groupby=groupby)
+        adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
+        return heatmap
+    else:
+        return heatmap_partial(adata=adata, groupby=groupby)
 
 
 @_doc_params(
@@ -236,40 +274,40 @@ def heatmap(
 )
 def dotplot(
     adata: AnnData,
-    var_names: Union[_VarNames, Mapping[str, _VarNames]],
-    groupby: Union[str, Sequence[str]],
-    use_raw: Optional[bool] = None,
+    var_names: _VarNames | Mapping[str, _VarNames],
+    groupby: str,
+    use_raw: bool | None = None,
     log: bool = False,
     num_categories: int = 7,
     feature_cutoff: float = 0.0,
     mean_only_counts: bool = False,
     cmap: str = "Reds",
-    dot_max: Optional[float] = DotPlot.DEFAULT_DOT_MAX,
-    dot_min: Optional[float] = DotPlot.DEFAULT_DOT_MIN,
-    standard_scale: Optional[Literal["var", "group"]] = None,
-    smallest_dot: Optional[float] = DotPlot.DEFAULT_SMALLEST_DOT,
-    title: Optional[str] = None,
-    colorbar_title: Optional[str] = DotPlot.DEFAULT_COLOR_LEGEND_TITLE,
-    size_title: Optional[str] = DotPlot.DEFAULT_SIZE_LEGEND_TITLE,
-    figsize: Optional[Tuple[float, float]] = None,
-    dendrogram: Union[bool, str] = False,
-    feature_symbols: Optional[str] = None,
-    var_group_positions: Optional[Sequence[Tuple[int, int]]] = None,
-    var_group_labels: Optional[Sequence[str]] = None,
-    var_group_rotation: Optional[float] = None,
-    layer: Optional[str] = None,
-    swap_axes: Optional[bool] = False,
-    dot_color_df: Optional[pd.DataFrame] = None,
-    show: Optional[bool] = None,
-    save: Union[str, bool, None] = None,
-    ax: Optional[_AxesSubplot] = None,
-    return_fig: Optional[bool] = False,
-    vmin: Optional[float] = None,
-    vmax: Optional[float] = None,
-    vcenter: Optional[float] = None,
-    norm: Optional[Normalize] = None,
+    dot_max: float | None = DotPlot.DEFAULT_DOT_MAX,
+    dot_min: float | None = DotPlot.DEFAULT_DOT_MIN,
+    standard_scale: Literal["var", "group"] | None = None,
+    smallest_dot: float | None = DotPlot.DEFAULT_SMALLEST_DOT,
+    title: str | None = None,
+    colorbar_title: str | None = DotPlot.DEFAULT_COLOR_LEGEND_TITLE,
+    size_title: str | None = DotPlot.DEFAULT_SIZE_LEGEND_TITLE,
+    figsize: tuple[float, float] | None = None,
+    dendrogram: bool | str = False,
+    feature_symbols: str | None = None,
+    var_group_positions: Sequence[tuple[int, int]] | None = None,
+    var_group_labels: Sequence[str] | None = None,
+    var_group_rotation: float | None = None,
+    layer: str | None = None,
+    swap_axes: bool | None = False,
+    dot_color_df: pd.DataFrame | None = None,
+    show: bool | None = None,
+    save: str | bool | None = None,
+    ax: _AxesSubplot | None = None,
+    return_fig: bool | None = False,
+    vmin: float | None = None,
+    vmax: float | None = None,
+    vcenter: float | None = None,
+    norm: Normalize | None = None,
     **kwds,
-) -> Union[DotPlot, dict, None]:  # pragma: no cover
+) -> DotPlot | dict | None:  # pragma: no cover
     """Makes a *dot plot* of the count values of `var_names`.
 
     For each var_name and each `groupby` category a dot is plotted.
@@ -323,10 +361,9 @@ def dotplot(
     Preview:
         .. image:: /_static/docstring_previews/dotplot.png
     """
-    return sc.pl.dotplot(
-        adata=adata,
+    dotplot_partial = partial(
+        sc.pl.dotplot,
         var_names=var_names,
-        groupby=groupby,
         use_raw=use_raw,
         log=log,
         num_categories=num_categories,
@@ -359,25 +396,38 @@ def dotplot(
         norm=norm,
         **kwds,
     )
+    if isinstance(adata, MedCAT):
+        # keep loop and lists in case dotplot will accept sequences
+        if isinstance(groupby, str):
+            groupby = [groupby]  # type: ignore
+        additional_columns: list[str] = []
+        for grp_column in groupby:
+            if grp_column not in set(adata.anndata.var_names) and grp_column not in set(adata.anndata.obs.columns):
+                EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, grp_column, groupby, additional_columns)  # type: ignore
+        dotplot = dotplot_partial(adata=adata.anndata, groupby=groupby[0])
+        adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
+        return dotplot
+    else:
+        return dotplot_partial(adata=adata, groupby=groupby)
 
 
 @_doc_params(show_save_ax=doc_show_save_ax, common_plot_args=doc_common_plot_args)
 def tracksplot(
     adata: AnnData,
-    var_names: Union[_VarNames, Mapping[str, _VarNames]],
-    groupby: Union[str, Sequence[str]],
-    use_raw: Optional[bool] = None,
+    var_names: _VarNames | Mapping[str, _VarNames],
+    groupby: str,
+    use_raw: bool | None = None,
     log: bool = False,
-    dendrogram: Union[bool, str] = False,
-    feature_symbols: Optional[str] = None,
-    var_group_positions: Optional[Sequence[Tuple[int, int]]] = None,
-    var_group_labels: Optional[Sequence[str]] = None,
-    layer: Optional[str] = None,
-    show: Optional[bool] = None,
-    save: Union[str, bool, None] = None,
-    figsize: Optional[Tuple[float, float]] = None,
+    dendrogram: bool | str = False,
+    feature_symbols: str | None = None,
+    var_group_positions: Sequence[tuple[int, int]] | None = None,
+    var_group_labels: Sequence[str] | None = None,
+    layer: str | None = None,
+    show: bool | None = None,
+    save: str | bool | None = None,
+    figsize: tuple[float, float] | None = None,
     **kwds,
-) -> Optional[Dict[str, List]]:  # pragma: no cover
+) -> dict[str, list] | None:  # pragma: no cover
     """Plots a filled line plot.
 
     In this type of plot each var_name is plotted as a filled line plot where the
@@ -410,10 +460,9 @@ def tracksplot(
     Preview:
         .. image:: /_static/docstring_previews/tracksplot.png
     """
-    return sc.pl.tracksplot(
-        adata=adata,
+    tracksplot_partial = partial(
+        sc.pl.tracksplot,
         var_names=var_names,
-        groupby=groupby,
         use_raw=use_raw,
         log=log,
         dendrogram=dendrogram,
@@ -426,27 +475,39 @@ def tracksplot(
         figsize=figsize,
         **kwds,
     )
+    if isinstance(adata, MedCAT):
+        # keep the list and loop in case of groupby could be a sequence in future
+        groupby = [groupby]  # type: ignore
+        additional_columns: list[str] = []
+        for grp_col in groupby:
+            if grp_col not in set(adata.anndata.var_names) and grp_col not in set(adata.anndata.obs.columns):
+                EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, grp_col, groupby, additional_columns)  # type: ignore
+        tracksplot = tracksplot_partial(adata=adata.anndata, groupby=groupby[0])
+        adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
+        return tracksplot
+    else:
+        return tracksplot_partial(adata=adata, groupby=groupby)
 
 
 def violin(
     adata: AnnData,
-    keys: Union[str, Sequence[str]],
-    groupby: Optional[str] = None,
+    keys: str | Sequence[str],
+    groupby: str | None = None,
     log: bool = False,
-    use_raw: Optional[bool] = None,
+    use_raw: bool | None = None,
     stripplot: bool = True,
-    jitter: Union[float, bool] = True,
+    jitter: float | bool = True,
     size: int = 1,
-    layer: Optional[str] = None,
+    layer: str | None = None,
     scale: Literal["area", "count", "width"] = "width",
-    order: Optional[Sequence[str]] = None,
-    multi_panel: Optional[bool] = None,
+    order: Sequence[str] | None = None,
+    multi_panel: bool | None = None,
     xlabel: str = "",
-    ylabel: Optional[Union[str, Sequence[str]]] = None,
-    rotation: Optional[float] = None,
-    show: Optional[bool] = None,
-    save: Union[bool, str, None] = None,
-    ax: Optional[Axes] = None,
+    ylabel: str | Sequence[str] | None = None,
+    rotation: float | None = None,
+    show: bool | None = None,
+    save: bool | str | None = None,
+    ax: Axes | None = None,
     **kwds,
 ):  # pragma: no cover
     """Violin plot.
@@ -456,7 +517,7 @@ def violin(
     Args:
         adata: :class:`~anndata.AnnData` object object containing all observations.
         keys: Keys for accessing variables of `.var_names` or fields of `.obs`.
-        groupby: The key of the observation grouping to consider.
+        groupby: The key of the observation grouping to consider. Could also be an entity extracted by ehrapy's medcat tool.
         log: Plot on logarithmic axis.
         use_raw: Whether to use `raw` attribute of `adata`. Defaults to `True` if `.raw` is present.
         stripplot: Add a stripplot on top of the violin plot. See :func:`~seaborn.stripplot`.
@@ -498,10 +559,9 @@ def violin(
     Preview:
         .. image:: /_static/docstring_previews/violin.png
     """
-    return sc.pl.violin(
-        adata=adata,
+    violin_partial = partial(
+        sc.pl.violin,
         keys=keys,
-        groupby=groupby,
         log=log,
         use_raw=use_raw,
         stripplot=stripplot,
@@ -519,6 +579,23 @@ def violin(
         ax=ax,
         **kwds,
     )
+    if isinstance(adata, MedCAT):
+        if groupby:
+            if isinstance(groupby, str):
+                groupby = [groupby]  # type: ignore
+            additional_columns: list[str] = []
+            for grp_column in groupby:
+                if grp_column not in set(adata.anndata.var_names) and grp_column not in set(adata.anndata.obs.columns):
+                    EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, grp_column, groupby, additional_columns)  # type: ignore
+            violin = violin_partial(adata=adata.anndata, groupby=groupby[0])
+            adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
+            return violin
+
+        else:
+            return violin_partial(adata=adata.anndata, groupby=None)
+
+    else:
+        return violin_partial(adata=adata, groupby=groupby)
 
 
 @_doc_params(
@@ -529,40 +606,40 @@ def violin(
 )
 def stacked_violin(
     adata: AnnData,
-    var_names: Union[_VarNames, Mapping[str, _VarNames]],
-    groupby: Union[str, Sequence[str]],
+    var_names: _VarNames | Mapping[str, _VarNames],
+    groupby: str | Sequence[str],
     log: bool = False,
-    use_raw: Optional[bool] = None,
+    use_raw: bool | None = None,
     num_categories: int = 7,
-    title: Optional[str] = None,
-    colorbar_title: Optional[str] = StackedViolin.DEFAULT_COLOR_LEGEND_TITLE,
-    figsize: Optional[Tuple[float, float]] = None,
-    dendrogram: Union[bool, str] = False,
-    gene_symbols: Optional[str] = None,
-    var_group_positions: Optional[Sequence[Tuple[int, int]]] = None,
-    var_group_labels: Optional[Sequence[str]] = None,
-    standard_scale: Optional[Literal["var", "obs"]] = None,
-    var_group_rotation: Optional[float] = None,
-    layer: Optional[str] = None,
+    title: str | None = None,
+    colorbar_title: str | None = StackedViolin.DEFAULT_COLOR_LEGEND_TITLE,
+    figsize: tuple[float, float] | None = None,
+    dendrogram: bool | str = False,
+    gene_symbols: str | None = None,
+    var_group_positions: Sequence[tuple[int, int]] | None = None,
+    var_group_labels: Sequence[str] | None = None,
+    standard_scale: Literal["var", "obs"] | None = None,
+    var_group_rotation: float | None = None,
+    layer: str | None = None,
     stripplot: bool = StackedViolin.DEFAULT_STRIPPLOT,
-    jitter: Union[float, bool] = StackedViolin.DEFAULT_JITTER,
+    jitter: float | bool = StackedViolin.DEFAULT_JITTER,
     size: int = StackedViolin.DEFAULT_JITTER_SIZE,
     scale: Literal["area", "count", "width"] = StackedViolin.DEFAULT_SCALE,
-    yticklabels: Optional[bool] = StackedViolin.DEFAULT_PLOT_YTICKLABELS,
-    order: Optional[Sequence[str]] = None,
+    yticklabels: bool | None = StackedViolin.DEFAULT_PLOT_YTICKLABELS,
+    order: Sequence[str] | None = None,
     swap_axes: bool = False,
-    show: Optional[bool] = None,
-    save: Union[bool, str, None] = None,
-    return_fig: Optional[bool] = False,
-    row_palette: Optional[str] = StackedViolin.DEFAULT_ROW_PALETTE,
-    cmap: Optional[str] = StackedViolin.DEFAULT_COLORMAP,
-    ax: Optional[_AxesSubplot] = None,
-    vmin: Optional[float] = None,
-    vmax: Optional[float] = None,
-    vcenter: Optional[float] = None,
-    norm: Optional[Normalize] = None,
+    show: bool | None = None,
+    save: bool | str | None = None,
+    return_fig: bool | None = False,
+    row_palette: str | None = StackedViolin.DEFAULT_ROW_PALETTE,
+    cmap: str | None = StackedViolin.DEFAULT_COLORMAP,
+    ax: _AxesSubplot | None = None,
+    vmin: float | None = None,
+    vmax: float | None = None,
+    vcenter: float | None = None,
+    norm: Normalize | None = None,
     **kwds,
-) -> Union[StackedViolin, dict, None]:  # pragma: no cover
+) -> StackedViolin | dict | None:  # pragma: no cover
     """Stacked violin plots.
 
     Makes a compact image composed of individual violin plots (from :func:`~seaborn.violinplot`) stacked on top of each other.
@@ -615,10 +692,9 @@ def stacked_violin(
     Preview:
         .. image:: /_static/docstring_previews/stacked_violin.png
     """
-    return sc.pl.stacked_violin(
-        adata=adata,
+    stacked_vio_partial = partial(
+        sc.pl.stacked_violin,
         var_names=var_names,
-        groupby=groupby,
         log=log,
         use_raw=use_raw,
         num_categories=num_categories,
@@ -651,6 +727,23 @@ def stacked_violin(
         norm=norm,
         **kwds,
     )
+    if isinstance(adata, MedCAT):
+        if isinstance(groupby, str):
+            groupby = [groupby]  # type: ignore
+        additional_columns: list[str] = []
+        for colored_column in groupby:
+            if colored_column not in set(adata.anndata.var_names) and colored_column not in set(
+                adata.anndata.obs.columns
+            ):
+                EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, colored_column, groupby, additional_columns)  # type: ignore
+        stacked_violin = stacked_vio_partial(
+            adata=adata.anndata, groupby=groupby if isinstance(groupby, Sequence) else groupby[0]
+        )
+        if additional_columns:
+            adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
+        return stacked_violin
+    else:
+        return stacked_vio_partial(adata=adata, groupby=groupby)
 
 
 @_doc_params(
@@ -661,34 +754,34 @@ def stacked_violin(
 )
 def matrixplot(
     adata: AnnData,
-    var_names: Union[_VarNames, Mapping[str, _VarNames]],
-    groupby: Union[str, Sequence[str]],
-    use_raw: Optional[bool] = None,
+    var_names: _VarNames | Mapping[str, _VarNames],
+    groupby: str | Sequence[str],
+    use_raw: bool | None = None,
     log: bool = False,
     num_categories: int = 7,
-    figsize: Optional[Tuple[float, float]] = None,
-    dendrogram: Union[bool, str] = False,
-    title: Optional[str] = None,
-    cmap: Optional[str] = MatrixPlot.DEFAULT_COLORMAP,
-    colorbar_title: Optional[str] = MatrixPlot.DEFAULT_COLOR_LEGEND_TITLE,
-    gene_symbols: Optional[str] = None,
-    var_group_positions: Optional[Sequence[Tuple[int, int]]] = None,
-    var_group_labels: Optional[Sequence[str]] = None,
-    var_group_rotation: Optional[float] = None,
-    layer: Optional[str] = None,
+    figsize: tuple[float, float] | None = None,
+    dendrogram: bool | str = False,
+    title: str | None = None,
+    cmap: str | None = MatrixPlot.DEFAULT_COLORMAP,
+    colorbar_title: str | None = MatrixPlot.DEFAULT_COLOR_LEGEND_TITLE,
+    gene_symbols: str | None = None,
+    var_group_positions: Sequence[tuple[int, int]] | None = None,
+    var_group_labels: Sequence[str] | None = None,
+    var_group_rotation: float | None = None,
+    layer: str | None = None,
     standard_scale: Literal["var", "group"] = None,
-    values_df: Optional[pd.DataFrame] = None,
+    values_df: pd.DataFrame | None = None,
     swap_axes: bool = False,
-    show: Optional[bool] = None,
-    save: Union[str, bool, None] = None,
-    ax: Optional[_AxesSubplot] = None,
-    return_fig: Optional[bool] = False,
-    vmin: Optional[float] = None,
-    vmax: Optional[float] = None,
-    vcenter: Optional[float] = None,
-    norm: Optional[Normalize] = None,
+    show: bool | None = None,
+    save: str | bool | None = None,
+    ax: _AxesSubplot | None = None,
+    return_fig: bool | None = False,
+    vmin: float | None = None,
+    vmax: float | None = None,
+    vcenter: float | None = None,
+    norm: Normalize | None = None,
     **kwds,
-) -> Union[MatrixPlot, dict, None]:  # pragma: no cover
+) -> MatrixPlot | dict | None:  # pragma: no cover
     """Creates a heatmap of the mean count per group of each var_names.
 
     This function provides a convenient interface to the :class:`~scanpy.pl.MatrixPlot`
@@ -724,10 +817,9 @@ def matrixplot(
     Preview:
         .. image:: /_static/docstring_previews/matrixplot.png
     """
-    return sc.pl.matrixplot(
-        adata=adata,
+    matrix_partial = partial(
+        sc.pl.matrixplot,
         var_names=var_names,
-        groupby=groupby,
         use_raw=use_raw,
         log=log,
         num_categories=num_categories,
@@ -754,15 +846,30 @@ def matrixplot(
         norm=norm,
         **kwds,
     )
+    if isinstance(adata, MedCAT):
+        if isinstance(groupby, str):
+            groupby = [groupby]  # type: ignore
+        additional_columns: list[str] = []
+        for colored_column in groupby:
+            if colored_column not in set(adata.anndata.var_names) and colored_column not in set(
+                adata.anndata.obs.columns
+            ):
+                EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, colored_column, groupby, additional_columns)  # type: ignore
+        matrixplot = matrix_partial(adata=adata.anndata, groupby=groupby)
+        if additional_columns:
+            adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
+        return matrixplot
+    else:
+        return matrix_partial(adata=adata, groupby=groupby)
 
 
 @_doc_params(show_save_ax=doc_show_save_ax)
 def clustermap(
     adata: AnnData,
-    obs_keys: str = None,
-    use_raw: Optional[bool] = None,
-    show: Optional[bool] = None,
-    save: Union[bool, str, None] = None,
+    obs_keys: str | None = None,
+    use_raw: bool | None = None,
+    show: bool | None = None,
+    save: bool | str | None = None,
     **kwds,
 ):  # pragma: no cover
     """Hierarchically-clustered heatmap.
@@ -795,13 +902,30 @@ def clustermap(
     Preview:
         .. image:: /_static/docstring_previews/clustermap.png
     """
-    return sc.pl.clustermap(adata=adata, obs_keys=obs_keys, use_raw=use_raw, show=show, save=save, **kwds)
+    clustermap_partial = partial(sc.pl.clustermap, use_raw=use_raw, show=show, save=save, **kwds)
+    if isinstance(adata, MedCAT):
+        if obs_keys:
+            grp_flag = False
+            obs_keys = [obs_keys]  # type: ignore
+            if obs_keys[0] not in set(adata.anndata.var_names) and obs_keys[0] not in set(adata.anndata.obs.columns):
+                EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, obs_keys[0], obs_keys, None)  # type: ignore
+                grp_flag = True
+            clustermap = clustermap_partial(adata=adata.anndata, obs_keys=obs_keys[0])
+            if grp_flag:
+                adata.anndata.obs.drop(obs_keys[0], inplace=True, axis=1)
+            return clustermap
+
+        else:
+            return clustermap_partial(adata=adata.anndata, obs_keys=None)
+
+    else:
+        return clustermap_partial(adata=adata, obs_keys=obs_keys)
 
 
 def ranking(
     adata: AnnData,
     attr: Literal["var", "obs", "uns", "varm", "obsm"],
-    keys: Union[str, Sequence[str]],
+    keys: str | Sequence[str],
     dictionary=None,
     indices=None,
     labels=None,
@@ -857,12 +981,12 @@ def dendrogram(
     adata: AnnData,
     groupby: str,
     *,
-    dendrogram_key: Optional[str] = None,
+    dendrogram_key: str | None = None,
     orientation: Literal["top", "bottom", "left", "right"] = "top",
     remove_labels: bool = False,
-    show: Optional[bool] = None,
-    save: Union[str, bool, None] = None,
-    ax: Optional[Axes] = None,
+    show: bool | None = None,
+    save: str | bool | None = None,
+    ax: Axes | None = None,
 ):  # pragma: no cover
     """Plots a dendrogram of the categories defined in `groupby`.
 
@@ -895,9 +1019,8 @@ def dendrogram(
     Preview:
         .. image:: /_static/docstring_previews/dendrogram.png
     """
-    return sc.pl.dendrogram(
-        adata=adata,
-        groupby=groupby,
+    dendrogram_partial = partial(
+        sc.pl.dendrogram,
         dendrogram_key=dendrogram_key,
         orientation=orientation,
         remove_labels=remove_labels,
@@ -905,6 +1028,19 @@ def dendrogram(
         save=save,
         ax=ax,
     )
+    if isinstance(adata, MedCAT):
+        grp_flag = False
+        groupby = [groupby]  # type: ignore
+        if groupby[0] not in set(adata.anndata.var_names) and groupby[0] not in set(adata.anndata.obs.columns):
+            EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, groupby[0], groupby, None)  # type: ignore
+            grp_flag = True
+        dendrogram = dendrogram_partial(adata=adata.anndata, groupby=groupby[0])
+        if grp_flag:
+            adata.anndata.obs.drop(groupby[0], inplace=True, axis=1)
+        return dendrogram
+
+    else:
+        return dendrogram_partial(adata=adata, groupby=groupby)
 
 
 @_wraps_plot_scatter
@@ -917,11 +1053,11 @@ def pca(
     adata,
     *,
     annotate_var_explained: bool = False,
-    show: Optional[bool] = None,
-    return_fig: Optional[bool] = None,
-    save: Union[bool, str, None] = None,
+    show: bool | None = None,
+    return_fig: bool | None = None,
+    save: bool | str | None = None,
     **kwargs,
-) -> Union[Axes, List[Axes], None]:  # pragma: no cover
+) -> Axes | list[Axes] | None:  # pragma: no cover
     """Scatter plot in PCA coordinates.
 
     Use the parameter `annotate_var_explained` to annotate the explained variance.
@@ -944,28 +1080,45 @@ def pca(
             ep.pp.knn_impute(adata)
             ep.pp.norm_log(adata, offset=1)
             ep.pp.neighbors(adata)
-            ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
-            ep.pl.dendrogram(adata, groupby="leiden_0_5")
+            ep.tl.pca(adata)
+            ep.pl.pca(adata, color="service_unit)
 
     Preview:
         .. image:: /_static/docstring_previews/pca.png
     """
-    return sc.pl.pca(
-        adata=adata,
-        annotate_var_explained=annotate_var_explained,
-        show=show,
-        return_fig=return_fig,
-        save=save,
-        **kwargs,
+    pca_partial = partial(
+        sc.pl.pca, annotate_var_explained=annotate_var_explained, show=show, return_fig=return_fig, save=save
     )
+    if isinstance(adata, MedCAT):
+        if kwargs.get("color"):
+            if isinstance(kwargs["color"], str):
+                kwargs["color"] = [kwargs["color"]]
+            additional_columns: list[str] = []
+            for colored_column in kwargs["color"]:
+                if colored_column not in set(adata.anndata.var_names) and colored_column not in set(
+                    adata.anndata.obs.columns
+                ):
+                    EhrapyMedcat.add_binary_column_to_obs(
+                        adata, adata.anndata, colored_column, kwargs["color"], additional_columns
+                    )
+            pca = pca_partial(adata=adata.anndata, **kwargs)
+            if additional_columns:
+                adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
+            return pca
+
+        else:
+            return pca_partial(adata=adata.anndata, **kwargs)
+
+    else:
+        return pca_partial(adata=adata, **kwargs)
 
 
 def pca_loadings(
     adata: AnnData,
-    components: Union[str, Sequence[int], None] = None,
+    components: str | Sequence[int] | None = None,
     include_lowest: bool = True,
-    show: Optional[bool] = None,
-    save: Union[str, bool, None] = None,
+    show: bool | None = None,
+    save: str | bool | None = None,
 ):  # pragma: no cover
     """Rank features according to contributions to PCs.
 
@@ -1002,8 +1155,8 @@ def pca_variance_ratio(
     adata: AnnData,
     n_pcs: int = 30,
     log: bool = False,
-    show: Optional[bool] = None,
-    save: Union[bool, str, None] = None,
+    show: bool | None = None,
+    save: bool | str | None = None,
 ):  # pragma: no cover
     """Plot the variance ratio.
 
@@ -1082,7 +1235,7 @@ def pca_overview(adata: AnnData, **params):  # pragma: no cover
     scatter_bulk=doc_scatter_embedding,
     show_save_ax=doc_show_save_ax,
 )
-def tsne(adata, **kwargs) -> Union[Axes, List[Axes], None]:  # pragma: no cover
+def tsne(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover
     """Scatter plot in tSNE basis.
 
     Args:
@@ -1121,7 +1274,27 @@ def tsne(adata, **kwargs) -> Union[Axes, List[Axes], None]:  # pragma: no cover
 
         .. image:: /_static/docstring_previews/tsne_3.png
     """
-    return sc.pl.tsne(adata=adata, **kwargs)
+    if isinstance(adata, MedCAT):
+        if kwargs.get("color"):
+            if isinstance(kwargs["color"], str):
+                kwargs["color"] = [kwargs["color"]]
+            additional_columns: list[str] = []
+            for colored_column in kwargs["color"]:
+                if colored_column not in set(adata.anndata.var_names) and colored_column not in set(
+                    adata.anndata.obs.columns
+                ):
+                    EhrapyMedcat.add_binary_column_to_obs(
+                        adata, adata.anndata, colored_column, kwargs["color"], additional_columns
+                    )
+            tsne = sc.pl.tsne(adata=adata.anndata, **kwargs)
+            if additional_columns:
+                adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
+            return tsne
+
+        else:
+            return sc.pl.tsne(adata=adata.anndata, **kwargs)
+    else:
+        return sc.pl.tsne(adata=adata, **kwargs)
 
 
 @_wraps_plot_scatter
@@ -1131,7 +1304,7 @@ def tsne(adata, **kwargs) -> Union[Axes, List[Axes], None]:  # pragma: no cover
     scatter_bulk=doc_scatter_embedding,
     show_save_ax=doc_show_save_ax,
 )
-def umap(adata, **kwargs) -> Union[Axes, List[Axes], None]:  # pragma: no cover
+def umap(adata: AnnData | MedCAT, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover
     """Scatter plot in UMAP basis.
 
     Args:
@@ -1170,7 +1343,27 @@ def umap(adata, **kwargs) -> Union[Axes, List[Axes], None]:  # pragma: no cover
 
         .. image:: /_static/docstring_previews/umap_3.png
     """
-    return sc.pl.umap(adata=adata, **kwargs)
+    if isinstance(adata, MedCAT):
+        if kwargs.get("color"):
+            if isinstance(kwargs["color"], str):
+                kwargs["color"] = [kwargs["color"]]
+            additional_columns: list[str] = []
+            for colored_column in kwargs["color"]:
+                if colored_column not in set(adata.anndata.var_names) and colored_column not in set(
+                    adata.anndata.obs.columns
+                ):
+                    EhrapyMedcat.add_binary_column_to_obs(
+                        adata, adata.anndata, colored_column, kwargs["color"], additional_columns
+                    )
+            umap = sc.pl.umap(adata=adata.anndata, **kwargs)
+            adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
+            return umap
+
+        else:
+            return sc.pl.umap(adata=adata.anndata, **kwargs)
+
+    else:
+        return sc.pl.umap(adata=adata, **kwargs)
 
 
 @_wraps_plot_scatter
@@ -1179,7 +1372,7 @@ def umap(adata, **kwargs) -> Union[Axes, List[Axes], None]:  # pragma: no cover
     scatter_bulk=doc_scatter_embedding,
     show_save_ax=doc_show_save_ax,
 )
-def diffmap(adata, **kwargs) -> Union[Axes, List[Axes], None]:  # pragma: no cover
+def diffmap(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover
     """Scatter plot in Diffusion Map basis.
 
     Args:
@@ -1205,7 +1398,28 @@ def diffmap(adata, **kwargs) -> Union[Axes, List[Axes], None]:  # pragma: no cov
     Preview:
         .. image:: /_static/docstring_previews/diffmap.png
     """
-    return sc.pl.diffmap(adata=adata, **kwargs)
+    if isinstance(adata, MedCAT):
+        if kwargs.get("color"):
+            if isinstance(kwargs["color"], str):
+                kwargs["color"] = [kwargs["color"]]
+            additional_columns: list[str] = []
+            for colored_column in kwargs["color"]:
+                if colored_column not in set(adata.anndata.var_names) and colored_column not in set(
+                    adata.anndata.obs.columns
+                ):
+                    EhrapyMedcat.add_binary_column_to_obs(
+                        adata, adata.anndata, colored_column, kwargs["color"], additional_columns
+                    )
+            diffmap = sc.pl.diffmap(adata=adata.anndata, **kwargs)
+            if additional_columns:
+                adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
+            return diffmap
+
+        else:
+            return sc.pl.diffmap(adata=adata.anndata, **kwargs)
+
+    else:
+        return sc.pl.diffmap(adata=adata, **kwargs)
 
 
 @_wraps_plot_scatter
@@ -1216,8 +1430,8 @@ def diffmap(adata, **kwargs) -> Union[Axes, List[Axes], None]:  # pragma: no cov
     show_save_ax=doc_show_save_ax,
 )
 def draw_graph(
-    adata: AnnData, *, layout: Optional[_IGraphLayout] = None, **kwargs
-) -> Union[Axes, List[Axes], None]:  # pragma: no cover
+    adata: AnnData, *, layout: _IGraphLayout | None = None, **kwargs
+) -> Axes | list[Axes] | None:  # pragma: no cover
     """Scatter plot in graph-drawing basis.
 
     Args:
@@ -1255,7 +1469,29 @@ def draw_graph(
 
         .. image:: /_static/docstring_previews/draw_graph_2.png
     """
-    return sc.pl.draw_graph(adata=adata, layout=layout, **kwargs)
+    draw_graph_part = partial(sc.pl.draw_graph, layout=layout)
+    if isinstance(adata, MedCAT):
+        if kwargs.get("color"):
+            if isinstance(kwargs["color"], str):
+                kwargs["color"] = [kwargs["color"]]
+            additional_columns: list[str] = []
+            for colored_column in kwargs["color"]:
+                if colored_column not in set(adata.anndata.var_names) and colored_column not in set(
+                    adata.anndata.obs.columns
+                ):
+                    EhrapyMedcat.add_binary_column_to_obs(
+                        adata, adata.anndata, colored_column, kwargs["color"], additional_columns
+                    )
+            graph = draw_graph_part(adata=adata.anndata, **kwargs)
+            if additional_columns:
+                adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
+            return graph
+
+        else:
+            return draw_graph_part(adata=adata.anndata, **kwargs)
+
+    else:
+        return draw_graph_part(adata=adata, **kwargs)
 
 
 class Empty(Enum):
@@ -1276,21 +1512,21 @@ def spatial(
     adata,
     *,
     basis: str = "spatial",
-    img: Union[np.ndarray, None] = None,
-    img_key: Union[str, None, Empty] = _empty,
-    library_id: Union[str, Empty] = _empty,
-    crop_coord: Tuple[int, int, int, int] = None,
+    img: np.ndarray | None = None,
+    img_key: str | None | Empty = _empty,
+    library_id: str | Empty = _empty,
+    crop_coord: tuple[int, int, int, int] = None,
     alpha_img: float = 1.0,
-    bw: Optional[bool] = False,
+    bw: bool | None = False,
     size: float = 1.0,
-    scale_factor: Optional[float] = None,
-    spot_size: Optional[float] = None,
-    na_color: Optional[ColorLike] = None,
-    show: Optional[bool] = None,
-    return_fig: Optional[bool] = None,
-    save: Union[bool, str, None] = None,
+    scale_factor: float | None = None,
+    spot_size: float | None = None,
+    na_color: ColorLike | None = None,
+    show: bool | None = None,
+    return_fig: bool | None = None,
+    save: bool | str | None = None,
     **kwargs,
-) -> Union[Axes, List[Axes], None]:  # pragma: no cover
+) -> Axes | list[Axes] | None:  # pragma: no cover
     """Scatter plot in spatial coordinates.
 
     This function allows overlaying data on top of images.
@@ -1349,49 +1585,49 @@ def embedding(
     adata: AnnData,
     basis: str,
     *,
-    color: Union[str, Sequence[str], None] = None,
-    feature_symbols: Optional[str] = None,
-    use_raw: Optional[bool] = None,
+    color: str | Sequence[str] | None = None,
+    feature_symbols: str | None = None,
+    use_raw: bool | None = None,
     sort_order: bool = True,
     edges: bool = False,
     edges_width: float = 0.1,
-    edges_color: Union[str, Sequence[float], Sequence[str]] = "grey",
-    neighbors_key: Optional[str] = None,
+    edges_color: str | Sequence[float] | Sequence[str] = "grey",
+    neighbors_key: str | None = None,
     arrows: bool = False,
-    arrows_kwds: Optional[Mapping[str, Any]] = None,
-    groups: Optional[str] = None,
-    components: Union[str, Sequence[str]] = None,
-    layer: Optional[str] = None,
+    arrows_kwds: Mapping[str, Any] | None = None,
+    groups: str | None = None,
+    components: str | Sequence[str] = None,
+    layer: str | None = None,
     projection: Literal["2d", "3d"] = "2d",
-    scale_factor: Optional[float] = None,
-    color_map: Union[Colormap, str, None] = None,
-    cmap: Union[Colormap, str, None] = None,
-    palette: Union[str, Sequence[str], Cycler, None] = None,
+    scale_factor: float | None = None,
+    color_map: Colormap | str | None = None,
+    cmap: Colormap | str | None = None,
+    palette: str | Sequence[str] | Cycler | None = None,
     na_color: ColorLike = "lightgray",
     na_in_legend: bool = True,
-    size: Union[float, Sequence[float], None] = None,
-    frameon: Optional[bool] = None,
-    legend_fontsize: Union[int, float, _FontSize, None] = None,
-    legend_fontweight: Union[int, _FontWeight] = "bold",
+    size: float | Sequence[float] | None = None,
+    frameon: bool | None = None,
+    legend_fontsize: int | float | _FontSize | None = None,
+    legend_fontweight: int | _FontWeight = "bold",
     legend_loc: str = "right margin",
-    legend_fontoutline: Optional[int] = None,
-    vmax: Union[VBound, Sequence[VBound], None] = None,
-    vmin: Union[VBound, Sequence[VBound], None] = None,
-    vcenter: Union[VBound, Sequence[VBound], None] = None,
-    norm: Union[Normalize, Sequence[Normalize], None] = None,
-    add_outline: Optional[bool] = False,
-    outline_width: Tuple[float, float] = (0.3, 0.05),
-    outline_color: Tuple[str, str] = ("black", "white"),
+    legend_fontoutline: int | None = None,
+    vmax: VBound | Sequence[VBound] | None = None,
+    vmin: VBound | Sequence[VBound] | None = None,
+    vcenter: VBound | Sequence[VBound] | None = None,
+    norm: Normalize | Sequence[Normalize] | None = None,
+    add_outline: bool | None = False,
+    outline_width: tuple[float, float] = (0.3, 0.05),
+    outline_color: tuple[str, str] = ("black", "white"),
     ncols: int = 4,
     hspace: float = 0.25,
-    wspace: Optional[float] = None,
-    title: Union[str, Sequence[str], None] = None,
-    show: Optional[bool] = None,
-    save: Union[bool, str, None] = None,
-    ax: Optional[Axes] = None,
-    return_fig: Optional[bool] = None,
+    wspace: float | None = None,
+    title: str | Sequence[str] | None = None,
+    show: bool | None = None,
+    save: bool | str | None = None,
+    ax: Axes | None = None,
+    return_fig: bool | None = None,
     **kwargs,
-) -> Union[Figure, Axes, None]:  # pragma: no cover
+) -> Figure | Axes | None:  # pragma: no cover
     """Scatter plot for user specified embedding basis (e.g. umap, pca, etc)
 
     Args:
@@ -1419,10 +1655,9 @@ def embedding(
     Preview:
         .. image:: /_static/docstring_previews/embedding.png
     """
-    return sc.pl.embedding(
-        adata=adata,
+    embedding_partial = partial(
+        sc.pl.embedding,
         basis=basis,
-        color=color,
         gene_symbols=feature_symbols,
         use_raw=use_raw,
         sort_order=sort_order,
@@ -1466,35 +1701,57 @@ def embedding(
         **kwargs,
     )
 
+    if isinstance(adata, MedCAT):
+        if color:
+            if isinstance(color, str):
+                color = [color]  # type: ignore
+            additional_columns: list[str] = []
+            for colored_column in color:
+                if colored_column not in set(adata.anndata.var_names) and colored_column not in set(
+                    adata.anndata.obs.columns
+                ):
+                    EhrapyMedcat.add_binary_column_to_obs(
+                        adata, adata.anndata, colored_column, color, additional_columns  # type: ignore
+                    )
+            _embedding = embedding_partial(adata=adata.anndata, color=color)
+            if additional_columns:
+                adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
+            return _embedding
+
+        else:
+            return embedding_partial(adata=adata.anndata, color=None)
+
+    else:
+        return embedding_partial(adata=adata, color=color)
+
 
 @_doc_params(vminmax=doc_vbound_percentile, panels=doc_panels, show_save_ax=doc_show_save_ax)
 def embedding_density(
     adata: AnnData,
     basis: str = "umap",  # was positional before 1.4.5
-    key: Optional[str] = None,  # was positional before 1.4.5
-    groupby: Optional[str] = None,
-    group: Optional[Union[str, List[str], None]] = "all",
-    color_map: Union[Colormap, str] = "YlOrRd",
-    bg_dotsize: Optional[int] = 80,
-    fg_dotsize: Optional[int] = 180,
-    vmax: Optional[int] = 1,
-    vmin: Optional[int] = 0,
-    vcenter: Optional[int] = None,
-    norm: Optional[Normalize] = None,
-    ncols: Optional[int] = 4,
-    hspace: Optional[float] = 0.25,
-    wspace: Optional[None] = None,
+    key: str | None = None,  # was positional before 1.4.5
+    groupby: str | None = None,
+    group: str | list[str] | None | None = "all",
+    color_map: Colormap | str = "YlOrRd",
+    bg_dotsize: int | None = 80,
+    fg_dotsize: int | None = 180,
+    vmax: int | None = 1,
+    vmin: int | None = 0,
+    vcenter: int | None = None,
+    norm: Normalize | None = None,
+    ncols: int | None = 4,
+    hspace: float | None = 0.25,
+    wspace: None = None,
     title: str = None,
-    show: Optional[bool] = None,
-    save: Union[bool, str, None] = None,
-    ax: Optional[Axes] = None,
-    return_fig: Optional[bool] = None,
+    show: bool | None = None,
+    save: bool | str | None = None,
+    ax: Axes | None = None,
+    return_fig: bool | None = None,
     **kwargs,
-) -> Union[Figure, Axes, None]:  # pragma: no cover
+) -> Figure | Axes | None:  # pragma: no cover
     """Plot the density of observations in an embedding (per condition).
-
-    Plots the gaussian kernel density estimates (over condition) from the `sc.tl.embedding_density()` output.
-
+    Plots the gaussian kernel density estimates (over condition) from the `sc.tl.embedding_density()` output. This currently
+    does not support extracted medcat entities.
     Args:
         adata: :class:`~anndata.AnnData` object object containing all observations.
         basis: The embedding over which the density was calculated.
@@ -1525,15 +1782,11 @@ def embedding_density(
         hspace: Adjust the height of the space between multiple panels.
         return_fig: Return the matplotlib figure.\
         {show_save_ax}
-
     Returns:
         If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
-
     Example:
         .. code-block:: python
-
             import ehrapy as ep
-
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.norm_log(adata, offset=1)
@@ -1542,7 +1795,6 @@ def embedding_density(
             ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
             ep.tl.embedding_density(adata, groupby='leiden_0_5', key_added='icu_exp_flg')
             ep.pl.embedding_density(adata, key='icu_exp_flg')
-
     Preview:
         .. image:: /_static/docstring_previews/embedding_density.png
     """
@@ -1573,10 +1825,10 @@ def embedding_density(
 
 def dpt_groups_pseudotime(
     adata: AnnData,
-    color_map: Union[str, Colormap, None] = None,
-    palette: Union[Sequence[str], Cycler, None] = None,
-    show: Optional[bool] = None,
-    save: Union[bool, str, None] = None,
+    color_map: str | Colormap | None = None,
+    palette: Sequence[str] | Cycler | None = None,
+    show: bool | None = None,
+    save: bool | str | None = None,
 ):  # pragma: no cover
     """Plot groups and pseudotime.
 
@@ -1611,10 +1863,10 @@ def dpt_groups_pseudotime(
 
 def dpt_timeseries(
     adata: AnnData,
-    color_map: Union[str, Colormap] = None,
+    color_map: str | Colormap = None,
     as_heatmap: bool = True,
-    show: Optional[bool] = None,
-    save: Optional[bool] = None,
+    show: bool | None = None,
+    save: bool | None = None,
 ):  # pragma: no cover
     """Heatmap of pseudotime series.
 
@@ -1649,44 +1901,44 @@ def dpt_timeseries(
 
 def paga(
     adata: AnnData,
-    threshold: Optional[float] = None,
-    color: Optional[Union[str, Mapping[Union[str, int], Mapping[Any, float]]]] = None,
-    layout: Optional[_IGraphLayout] = None,
+    threshold: float | None = None,
+    color: str | Mapping[str | int, Mapping[Any, float]] | None = None,
+    layout: _IGraphLayout | None = None,
     layout_kwds: Mapping[str, Any] = MappingProxyType({}),
-    init_pos: Optional[np.ndarray] = None,
-    root: Union[int, str, Sequence[int], None] = 0,
-    labels: Union[str, Sequence[str], Mapping[str, str], None] = None,
+    init_pos: np.ndarray | None = None,
+    root: int | str | Sequence[int] | None = 0,
+    labels: str | Sequence[str] | Mapping[str, str] | None = None,
     single_component: bool = False,
     solid_edges: str = "connectivities",
-    dashed_edges: Optional[str] = None,
-    transitions: Optional[str] = None,
-    fontsize: Optional[int] = None,
+    dashed_edges: str | None = None,
+    transitions: str | None = None,
+    fontsize: int | None = None,
     fontweight: str = "bold",
-    fontoutline: Optional[int] = None,
+    fontoutline: int | None = None,
     text_kwds: Mapping[str, Any] = MappingProxyType({}),
     node_size_scale: float = 1.0,
     node_size_power: float = 0.5,
     edge_width_scale: float = 1.0,
-    min_edge_width: Optional[float] = None,
-    max_edge_width: Optional[float] = None,
+    min_edge_width: float | None = None,
+    max_edge_width: float | None = None,
     arrowsize: int = 30,
-    title: Optional[str] = None,
+    title: str | None = None,
     left_margin: float = 0.01,
-    random_state: Optional[int] = 0,
-    pos: Union[np.ndarray, str, Path, None] = None,
+    random_state: int | None = 0,
+    pos: np.ndarray | str | Path | None = None,
     normalize_to_color: bool = False,
-    cmap: Union[str, Colormap] = None,
-    cax: Optional[Axes] = None,
+    cmap: str | Colormap = None,
+    cax: Axes | None = None,
     cb_kwds: Mapping[str, Any] = MappingProxyType({}),
-    frameon: Optional[bool] = None,
+    frameon: bool | None = None,
     add_pos: bool = True,
     export_to_gexf: bool = False,
     use_raw: bool = True,
     plot: bool = True,
-    show: Optional[bool] = None,
-    save: Union[bool, str, None] = None,
-    ax: Optional[Axes] = None,
-) -> Union[Axes, List[Axes], None]:  # pragma: no cover
+    show: bool | None = None,
+    save: bool | str | None = None,
+    ax: Axes | None = None,
+) -> Axes | list[Axes] | None:  # pragma: no cover
     """Plot the PAGA graph through thresholding low-connectivity edges.
 
     Compute a coarse-grained layout of the data. Reuse this by passing
@@ -1822,34 +2074,32 @@ def paga(
 
 def paga_path(
     adata: AnnData,
-    nodes: Sequence[Union[str, int]],
+    nodes: Sequence[str | int],
     keys: Sequence[str],
     use_raw: bool = True,
     annotations: Sequence[str] = ("dpt_pseudotime",),
-    color_map: Union[str, Colormap, None] = None,
-    color_maps_annotations: Mapping[str, Union[str, Colormap]] = MappingProxyType(
-        dict(dpt_pseudotime="Greys")  # noqa: B006
-    ),
-    palette_groups: Optional[Sequence[str]] = None,
+    color_map: str | Colormap | None = None,
+    color_maps_annotations: Mapping[str, str | Colormap] = MappingProxyType(dict(dpt_pseudotime="Greys")),  # noqa: B006
+    palette_groups: Sequence[str] | None = None,
     n_avg: int = 1,
-    groups_key: Optional[str] = None,
-    xlim: Tuple[Optional[int], Optional[int]] = (None, None),
-    title: Optional[str] = None,
+    groups_key: str | None = None,
+    xlim: tuple[int | None, int | None] = (None, None),
+    title: str | None = None,
     left_margin=None,
-    ytick_fontsize: Optional[int] = None,
-    title_fontsize: Optional[int] = None,
+    ytick_fontsize: int | None = None,
+    title_fontsize: int | None = None,
     show_node_names: bool = True,
     show_yticks: bool = True,
     show_colorbar: bool = True,
-    legend_fontsize: Union[int, float, _FontSize, None] = None,
-    legend_fontweight: Union[int, _FontWeight, None] = None,
+    legend_fontsize: int | float | _FontSize | None = None,
+    legend_fontweight: int | _FontWeight | None = None,
     normalize_to_zero_one: bool = False,
     as_heatmap: bool = True,
     return_data: bool = False,
-    show: Optional[bool] = None,
-    save: Union[bool, str, None] = None,
-    ax: Optional[Axes] = None,
-) -> Optional[Axes]:  # pragma: no cover
+    show: bool | None = None,
+    save: bool | str | None = None,
+    ax: Axes | None = None,
+) -> Axes | None:  # pragma: no cover
     """Feature changes along paths in the abstracted graph.
 
     Args:
@@ -1925,8 +2175,8 @@ def paga_compare(
     components=None,
     projection: Literal["2d", "3d"] = "2d",
     legend_loc="on data",
-    legend_fontsize: Union[int, float, _FontSize, None] = None,
-    legend_fontweight: Union[int, _FontWeight] = "bold",
+    legend_fontsize: int | float | _FontSize | None = None,
+    legend_fontweight: int | _FontWeight = "bold",
     legend_fontoutline=None,
     color_map=None,
     palette=None,
@@ -1942,7 +2192,7 @@ def paga_compare(
     *,
     pos=None,
     **paga_graph_params,
-) -> Optional[Axes]:  # pragma: no cover
+) -> Axes | None:  # pragma: no cover
     """Scatter and PAGA graph side-by-side.
 
     Consists in a scatter plot and the abstracted graph. See :func:`~ehrapy.pl.paga` for all related parameters.
@@ -2009,16 +2259,16 @@ def paga_compare(
 @_doc_params(show_save_ax=doc_show_save_ax)
 def rank_features_groups(
     adata: AnnData,
-    groups: Union[str, Sequence[str]] = None,
+    groups: str | Sequence[str] = None,
     n_features: int = 20,
-    feature_symbols: Optional[str] = None,
-    key: Optional[str] = "rank_features_groups",
+    feature_symbols: str | None = None,
+    key: str | None = "rank_features_groups",
     fontsize: int = 8,
     ncols: int = 4,
     share_y: bool = True,
-    show: Optional[bool] = None,
-    save: Optional[bool] = None,
-    ax: Optional[Axes] = None,
+    show: bool | None = None,
+    save: bool | None = None,
+    ax: Axes | None = None,
     **kwds,
 ):  # pragma: no cover
     """Plot ranking of features.
@@ -2070,19 +2320,19 @@ def rank_features_groups(
 @_doc_params(show_save_ax=doc_show_save_ax)
 def rank_features_groups_violin(
     adata: AnnData,
-    groups: Optional[Sequence[str]] = None,
+    groups: Sequence[str] | None = None,
     n_features: int = 20,
-    feature_names: Optional[Iterable[str]] = None,
-    feature_symbols: Optional[str] = None,
-    key: Optional[str] = None,
+    feature_names: Iterable[str] | None = None,
+    feature_symbols: str | None = None,
+    key: str | None = None,
     split: bool = True,
     scale: str = "width",
     strip: bool = True,
-    jitter: Union[int, float, bool] = True,
+    jitter: int | float | bool = True,
     size: int = 1,
-    ax: Optional[Axes] = None,
-    show: Optional[bool] = None,
-    save: Optional[bool] = None,
+    ax: Axes | None = None,
+    show: bool | None = None,
+    save: bool | None = None,
 ):  # pragma: no cover
     """Plot ranking of features for all tested comparisons as violin plots.
 
@@ -2146,17 +2396,17 @@ def rank_features_groups_violin(
 @_doc_params(show_save_ax=doc_show_save_ax)
 def rank_features_groups_stacked_violin(
     adata: AnnData,
-    groups: Union[str, Sequence[str]] = None,
-    n_features: Optional[int] = None,
-    groupby: Optional[str] = None,
-    feature_symbols: Optional[str] = None,
+    groups: str | Sequence[str] = None,
+    n_features: int | None = None,
+    groupby: str | None = None,
+    feature_symbols: str | None = None,
     *,
-    var_names: Optional[Union[Sequence[str], Mapping[str, Sequence[str]]]] = None,
-    min_logfoldchange: Optional[float] = None,
-    key: Optional[str] = None,
-    show: Optional[bool] = None,
-    save: Optional[bool] = None,
-    return_fig: Optional[bool] = False,
+    var_names: Sequence[str] | Mapping[str, Sequence[str]] | None = None,
+    min_logfoldchange: float | None = None,
+    key: str | None = None,
+    show: bool | None = None,
+    save: bool | None = None,
+    return_fig: bool | None = False,
     **kwds,
 ):  # pragma: no cover
     """Plot ranking of genes using stacked_violin plot.
@@ -2214,15 +2464,15 @@ def rank_features_groups_stacked_violin(
 
 def rank_features_groups_heatmap(
     adata: AnnData,
-    groups: Union[str, Sequence[str]] = None,
-    n_features: Optional[int] = None,
-    groupby: Optional[str] = None,
-    feature_symbols: Optional[str] = None,
-    var_names: Optional[Union[Sequence[str], Mapping[str, Sequence[str]]]] = None,
-    min_logfoldchange: Optional[float] = None,
+    groups: str | Sequence[str] = None,
+    n_features: int | None = None,
+    groupby: str | None = None,
+    feature_symbols: str | None = None,
+    var_names: Sequence[str] | Mapping[str, Sequence[str]] | None = None,
+    min_logfoldchange: float | None = None,
     key: str = None,
-    show: Optional[bool] = None,
-    save: Optional[bool] = None,
+    show: bool | None = None,
+    save: bool | None = None,
     **kwds,
 ):  # pragma: no cover
     """Plot ranking of genes using heatmap plot (see :func:`~ehrapy.pl.heatmap`)
@@ -2273,10 +2523,11 @@ def rank_features_groups_heatmap(
 
 def rank_features_groups_dotplot(
     adata: AnnData,
-    groups: Union[str, Sequence[str]] = None,
-    n_features: Optional[int] = None,
-    groupby: Optional[str] = None,
-    values_to_plot: Optional[
+    groups: str | Sequence[str] = None,
+    n_features: int | None = None,
+    groupby: str | None = None,
+    values_to_plot: None
+    | (
         Literal[
             "scores",
             "logfoldchanges",
@@ -2285,14 +2536,14 @@ def rank_features_groups_dotplot(
             "log10_pvals",
             "log10_pvals_adj",
         ]
-    ] = None,
-    var_names: Optional[Union[Sequence[str], Mapping[str, Sequence[str]]]] = None,
-    feature_symbols: Optional[str] = None,
-    min_logfoldchange: Optional[float] = None,
-    key: Optional[str] = None,
-    show: Optional[bool] = None,
-    save: Optional[bool] = None,
-    return_fig: Optional[bool] = False,
+    ) = None,
+    var_names: Sequence[str] | Mapping[str, Sequence[str]] | None = None,
+    feature_symbols: str | None = None,
+    min_logfoldchange: float | None = None,
+    key: str | None = None,
+    show: bool | None = None,
+    save: bool | None = None,
+    return_fig: bool | None = False,
     **kwds,
 ):  # pragma: no cover
     """Plot ranking of genes using dotplot plot (see :func:`~ehrapy.pl.dotplot`)
@@ -2352,10 +2603,11 @@ def rank_features_groups_dotplot(
 
 def rank_features_groups_matrixplot(
     adata: AnnData,
-    groups: Union[str, Sequence[str]] = None,
-    n_features: Optional[int] = None,
-    groupby: Optional[str] = None,
-    values_to_plot: Optional[
+    groups: str | Sequence[str] = None,
+    n_features: int | None = None,
+    groupby: str | None = None,
+    values_to_plot: None
+    | (
         Literal[
             "scores",
             "logfoldchanges",
@@ -2364,14 +2616,14 @@ def rank_features_groups_matrixplot(
             "log10_pvals",
             "log10_pvals_adj",
         ]
-    ] = None,
-    var_names: Optional[Union[Sequence[str], Mapping[str, Sequence[str]]]] = None,
-    feature_symbols: Optional[str] = None,
-    min_logfoldchange: Optional[float] = None,
-    key: Optional[str] = "rank_features_groups",
-    show: Optional[bool] = None,
-    save: Optional[bool] = None,
-    return_fig: Optional[bool] = False,
+    ) = None,
+    var_names: Sequence[str] | Mapping[str, Sequence[str]] | None = None,
+    feature_symbols: str | None = None,
+    min_logfoldchange: float | None = None,
+    key: str | None = "rank_features_groups",
+    show: bool | None = None,
+    save: bool | None = None,
+    return_fig: bool | None = False,
     **kwds,
 ):  # pragma: no cover
     """Plot ranking of genes using matrixplot plot (see :func:`~ehrapy.pl.matrixplot`)
@@ -2432,15 +2684,15 @@ def rank_features_groups_matrixplot(
 
 def rank_features_groups_tracksplot(
     adata: AnnData,
-    groups: Union[str, Sequence[str]] = None,
-    n_features: Optional[int] = None,
-    groupby: Optional[str] = None,
-    var_names: Optional[Union[Sequence[str], Mapping[str, Sequence[str]]]] = None,
-    feature_symbols: Optional[str] = None,
-    min_logfoldchange: Optional[float] = None,
-    key: Optional[str] = None,
-    show: Optional[bool] = None,
-    save: Optional[bool] = None,
+    groups: str | Sequence[str] = None,
+    n_features: int | None = None,
+    groupby: str | None = None,
+    var_names: Sequence[str] | Mapping[str, Sequence[str]] | None = None,
+    feature_symbols: str | None = None,
+    min_logfoldchange: float | None = None,
+    key: str | None = None,
+    show: bool | None = None,
+    save: bool | None = None,
     **kwds,
 ):  # pragma: no cover
     """Plot ranking of genes using tracksplot plot (see :func:`~ehrapy.pl.tracksplot`)
