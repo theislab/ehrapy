@@ -14,7 +14,6 @@ class TestSA:
         formula = "tco2_first ~ pco2_first"
         var_names = ["tco2_first", "pco2_first"]
         ols = ep.tl.ols(adata, var_names, formula, missing="drop")
-        # s stands for slope of the line, i stands for intercept of the line
         s = ols.fit().params[1]
         i = ols.fit().params[0]
         assert isinstance(ols, statsmodels.regression.linear_model.OLS)

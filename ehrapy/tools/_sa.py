@@ -65,8 +65,8 @@ def glm(
         adata: The AnnData object for the GLM model.
         var_names: A list of var names indicating which columns are for the GLM model.
         formula: The formula specifying the model.
-        family: The distribution families. Available options are 'Gaussian', 'Binomial', 'Gamma', and 'InverseGaussian'. Default is 'Gaussian'.
-        missing: Available options are 'none', 'drop', and 'raise'. If 'none', no nan checking is done. If 'drop', any observations with nans are dropped. If 'raise', an error is raised. Default is 'none'.
+        family: The distribution families. Available options are 'Gaussian', 'Binomial', 'Gamma', and 'InverseGaussian', (default: 'Gaussian').
+        missing: Available options are 'none', 'drop', and 'raise'. If 'none', no nan checking is done. If 'drop', any observations with nans are dropped. If 'raise', an error is raised (default: 'none').
         ascontinus: A list of var names indicating which columns are continus rather than categorical. The corresponding columns will be set as type float.
 
     Returns:
@@ -121,7 +121,7 @@ def kmf(
         durations: an array, list, pd.DataFrame or pd.Series
             length n -- duration (relative to subject's birth) the subject was alive for.
         event_observed: an array, list, pd.DataFrame, or pd.Series, optional
-            True if the the death was observed, False if the event was lost (right-censored). Defaults all True if event_observed==None
+            True if the the death was observed, False if the event was lost (right-censored) (default: all True if event_observed==None).
         timeline: an array, list, pd.DataFrame, or pd.Series, optional
             return the best estimate at the values in timelines (positively increasing)
         entry: an array, list, pd.DataFrame, or pd.Series, optional
@@ -132,14 +132,13 @@ def kmf(
         alpha: float, optional
             the alpha value in the confidence intervals. Overrides the initializing alpha for this call to fit only.
         ci_labels: tuple, optional
-            add custom column names to the generated confidence intervals as a length-2 list: [<lower-bound name>, <upper-bound name>]. Default: <label>_lower_<1-alpha/2>
+            add custom column names to the generated confidence intervals as a length-2 list: [<lower-bound name>, <upper-bound name>] (default: <label>_lower_<1-alpha/2>).
         weights: an array, list, pd.DataFrame, or pd.Series, optional
             if providing a weighted dataset. For example, instead
             of providing every subject as a single element of `durations` and `event_observed`, one could
             weigh subject differently.
         censoring: string, optional. One of ('right', 'left)
-            'right' for fitting the model to a right-censored dataset. 'left' for fitting the model to a left-censored dataset.
-            Default is to fit the model to a right-censored dataset.
+            'right' for fitting the model to a right-censored dataset. 'left' for fitting the model to a left-censored dataset (default: fit the model to a right-censored dataset).
 
     Returns:
         Fitted KaplanMeierFitter
