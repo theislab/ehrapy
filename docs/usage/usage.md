@@ -228,6 +228,18 @@ In contrast to a preprocessing function, a tool usually adds an easily interpret
     tools.mc.get_annotation_overview
 ```
 
+### Data Analysis (Linear Regression, Logistic Regression)
+
+```{eval-rst}
+.. autosummary::
+    :toctree: tools
+    :nosignatures:
+
+    tools.ols
+    tools.glm
+    tools.kmf
+```
+
 ## Plotting
 
 The plotting module ehrapy.pl.\* largely parallels the tl.\* and a few of the pp.\* functions.
@@ -327,6 +339,17 @@ Visualize clusters using one of the embedding methods passing color='leiden'.
     plot.rank_features_groups_dotplot
     plot.rank_features_groups_matrixplot
     plot.rank_features_groups_tracksplot
+```
+
+### Data Analysis (Linear Regression, Survival Analysis)
+
+```{eval-rst}
+.. autosummary::
+    :toctree: tools
+    :nosignatures:
+
+    plot.ols
+    plot.kmf
 ```
 
 ## AnnData object transformation
