@@ -39,12 +39,12 @@ def ols(
         adata: :class:`~anndata.AnnData` object object containing all observations.
         x: x coordinate, for scatter plotting
         y: y coordinate, for scatter plotting
-        scatter_plot: If True, show scatter plot. Default is True
-        ols_results: List of RegressionResults. From ehrapy.tl.ols. Example: [result_1, result_2]
+        scatter_plot: If True, show scatter plot (default: True)
+        ols_results: List of RegressionResults from ehrapy.tl.ols. Example: [result_1, result_2]
         ols_color: List of colors for each ols_results. Example: ['red', 'blue']
         xlabel: The x-axis label text
         ylabel: The y-axis label text
-        figsize: Width, height in inches. Default is None
+        figsize: Width, height in inches (default: None)
         lines: List of Tuples of (slope, intercept) or (x, y). Plot lines by slope and intercept or data points. Example: plot two lines (y = x + 2 and y = 2*x + 1): [(1, 2), (2, 1)]
         lines_color: List of colors for each line. Example: ['red', 'blue']
         lines_style: List of line styles for each line. Example: ['-', '--']
@@ -143,18 +143,18 @@ def kmf(
 
     Args:
         kmfs: Lists of fitted KaplanMeierFitter object.
-        ci_alpha: The transparency level of the confidence interval. Default: 0.3. If more than one kmfs, this should be a list.
-        ci_force_lines: Force the confidence intervals to be line plots (versus default shaded areas). Default: False. If more than one kmfs, this should be a list.
-        ci_show: Show confidence intervals. Default: True. If more than one kmfs, this should be a list.
-        ci_legend: If ci_force_lines is True, this is a boolean flag to add the lines' labels to the legend. Default: False. If more than one kmfs, this should be a list.
-        at_risk_counts: Show group sizes at time points. Default: False. If more than one kmfs, this should be a list.
+        ci_alpha: The transparency level of the confidence interval. If more than one kmfs, this should be a list (default: 0.3).
+        ci_force_lines: Force the confidence intervals to be line plots (versus default shaded areas). If more than one kmfs, this should be a list (default: False).
+        ci_show: Show confidence intervals. If more than one kmfs, this should be a list (default: True).
+        ci_legend: If ci_force_lines is True, this is a boolean flag to add the lines' labels to the legend. If more than one kmfs, this should be a list (default: False).
+        at_risk_counts: Show group sizes at time points. If more than one kmfs, this should be a list (default: False).
         color: List of colors for each kmf. If more than one kmfs, this should be a list.
         grid: If True, plot grid lines.
         xlim: Set the x-axis view limits.
         ylim: Set the y-axis view limits.
         xlabel: The x-axis label text.
         ylabel: The y-axis label text.
-        figsize: Width, height in inches. Default is None.
+        figsize: Width, height in inches (default: None).
         show: Show the plot, do not return axis.
 
     Example:
@@ -162,27 +162,27 @@ def kmf(
 
             import ehrapy as ep
             import numpy as np
-            from lifelines import KaplanMeierFitter
-            adata = ep.data.mimic_2(encoded=False)
+            adata = ep.dt.mimic_2(encoded=False)
+            # Because in MIMIC-II database, `censor_fl` is censored or death (binary: 0 = death, 1 = censored).
+            # While in KaplanMeierFitter, `event_observed` is True if the the death was observed, False if the event was lost (right-censored).
+            # So we need to flip `censor_fl` when pass `censor_fl` to KaplanMeierFitter
             adata[:, ['censor_flg']].X = np.where(adata[:, ['censor_flg']].X == 0, 1, 0)
-            kmf = KaplanMeierFitter().fit(adata[:, ['mort_day_censored']].X, adata[:, ['censor_flg']].X)
-            ep.pl.kmf_plot([kmf], color=['r'], xlim=[0, 700], ylim=[0, 1], xlabel="Days", ylabel="Proportion Survived")
+            kmf = ep.tl.kmf(adata[:, ['mort_day_censored']].X, adata[:, ['censor_flg']].X)
+            ep.pl.kmf([kmf], color=['r'], xlim=[0, 700], ylim=[0, 1], xlabel="Days", ylabel="Proportion Survived", show=True)
 
         .. image:: /_static/docstring_previews/kmf_plot_1.png
 
         .. code-block:: python
 
-            import ehrapy as ep
-            import numpy as np
-            from lifelines import KaplanMeierFitter
-            adata = ep.data.mimic_2(encoded=False)
-            adata[:, ['censor_flg']].X = np.where(adata[:, ['censor_flg']].X == 0, 1, 0)
-            T = adata_subset[:, ['mort_day_censored']].X
-            E = adata_subset[:, ['censor_flg']].X
-            kmf_1 = KaplanMeierFitter().fit(T[ix1], E[ix1], label='FICU')
-            kmf_2 = KaplanMeierFitter().fit(T[ix2], E[ix2], label='MICU')
-            kmf_3 = KaplanMeierFitter().fit(T[ix3], E[ix3], label='SICU')
-
+            T = adata[:, ['mort_day_censored']].X
+            E = adata[:, ['censor_flg']].X
+            groups = adata[:, ['service_unit']].X
+            ix1 = (groups == 'FICU')
+            ix2 = (groups == 'MICU')
+            ix3 = (groups == 'SICU')
+            kmf_1 = ep.tl.kmf(T[ix1], E[ix1], label='FICU')
+            kmf_2 = ep.tl.kmf(T[ix2], E[ix2], label='MICU')
+            kmf_3 = ep.tl.kmf(T[ix3], E[ix3], label='SICU')
             ep.pl.kmf([kmf_1, kmf_2, kmf_3], ci_show=[False,False,False], color=['k','r', 'g'], xlim=[0, 750], ylim=[0, 1], xlabel="Days", ylabel="Proportion Survived")
 
         .. image:: /_static/docstring_previews/kmf_plot_2.png
