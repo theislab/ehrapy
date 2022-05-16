@@ -24,6 +24,7 @@ def read_csv(
     sep: str = ",",
     index_column: dict[str, str | int] | str | int | None = None,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
+    columns_x_only: dict[str, list[str]] | list[str] | None = None,
     return_mudata: bool = False,
     cache: bool = False,
     backup_url: str | None = None,
@@ -36,7 +37,8 @@ def read_csv(
         dataset_path: Path to the file or directory to read.
         sep: Separator in the file; either , (default) or \t.
         index_column: The index column of obs. Usually the patient visit ID or the patient ID.
-        columns_obs_only: These columns will be added to obs only and not X.
+        columns_obs_only: These columns will be added to obs only and not X. Can not be used together with columns_x_only.
+        columns_x_only: These columns will be added to X only and all remaining columns to obs. Can not be used together with columns_obs_only.
         return_mudata: Whether to create and return a MuData object. This is primarily used for complex datasets which require several AnnData files.
         cache: Whether to use the cache when reading.
         download_dataset_name: Name of the file or directory in case the dataset is downloaded
@@ -52,6 +54,8 @@ def read_csv(
             import ehrapy as ep
             adata = ep.io.read_csv("myfile.csv")
     """
+    if columns_obs_only and columns_x_only:
+        raise ValueError("Can not use columns_obs_only together with columns_x_only. At least one has to be None!")
     file: Path = Path(dataset_path)
     if not file.exists():
         file = _get_non_existing_files(file, download_dataset_name, backup_url)
@@ -105,6 +109,7 @@ def read_pdf(
     dataset_path: Path | str,
     index_column: dict[str, str | int] | str | int | None = None,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
+    columns_x_only: dict[str, list[str]] | list[str] | None = None,
     return_mudata: bool = False,
     cache: bool = False,
     backup_url: str | None = None,
@@ -116,6 +121,7 @@ def read_pdf(
         dataset_path: Path to the file or directory to read.
         index_column: The index column of obs. Usually the patient visit ID or the patient ID.
         columns_obs_only: These columns will be added to obs only and not X.
+        columns_x_only: These columns will be added to X only and all remaining columns to obs. Can not be used together with columns_obs_only.
         return_mudata: Whether to create and return a MuData object. This is primarily used for complex datasets which require several AnnData files.
         cache: Whether to use the cache when reading.
         download_dataset_name: Name of the file or directory in case the dataset is downloaded
@@ -132,8 +138,10 @@ def read_pdf(
 
             adatas = ep.io.read_pdf("myfile.pdf")
     """
-    file: Path = Path(dataset_path)
+    if columns_obs_only and columns_x_only:
+        raise ValueError("Can not use columns_obs_only together with columns_x_only. At least one has to be None!")
 
+    file: Path = Path(dataset_path)
     if not file.exists():
         file = _get_non_existing_files(file, download_dataset_name, backup_url)
 
@@ -487,7 +495,6 @@ def _do_read_pdf(
                 f"for obs only. Using default indices instead and moving [blue]{index_column} [yellow]to column_obs_only."
             )
             this_index_column = None
-
         if columns_obs_only:
             initial_df, columns_obs_only[idx] = _prepare_dataframe(df, this_obs_only, cache)  # type: ignore
             ann_data_objects[f"{filename.stem}_{idx}"] = df_to_anndata(  # type: ignore
@@ -634,6 +641,7 @@ def _prepare_dataframe(initial_df: pd.DataFrame, columns_obs_only, cache):
     Returns:
          The initially parsed dataframe and an updated list of columns_obs_only.
     """
+    # TODO: pass X_only option here and convert x_only to obs_only (if necessary): basically just diff all columns and x_only
     # get all object dtype columns
     object_type_columns = [col_name for col_name in initial_df.columns if initial_df[col_name].dtype == "object"]
     # if columns_obs_only is None, initialize it as datetime columns need to be included here
