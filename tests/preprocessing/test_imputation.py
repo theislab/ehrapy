@@ -13,7 +13,7 @@ from ehrapy.preprocessing._data_imputation import (
     iterative_svd_impute,
     knn_impute,
     matrix_factorization_impute,
-    miceforest_impute,
+    mice_forest_impute,
     miss_forest_impute,
     nuclear_norm_minimization_impute,
     simple_impute,
@@ -286,31 +286,31 @@ class TestImputation:
 
     def test_miceforest_impute_no_copy(self):
         adata = read_csv(dataset_path=f"{_TEST_PATH}/test_impute_iris.csv")
-        adata_imputed = miceforest_impute(adata)
+        adata_imputed = mice_forest_impute(adata)
 
         assert id(adata) == id(adata_imputed)
 
     def test_miceforest_impute_copy(self):
         adata = read_csv(dataset_path=f"{_TEST_PATH}/test_impute_iris.csv")
-        adata_imputed = miceforest_impute(adata, copy=True)
+        adata_imputed = mice_forest_impute(adata, copy=True)
 
         assert id(adata) != id(adata_imputed)
 
     def test_miceforest_impute_non_numerical_data(self):
         adata = read_csv(dataset_path=f"{_TEST_PATH}/test_impute_titanic.csv")
-        adata_imputed = miceforest_impute(adata)
+        adata_imputed = mice_forest_impute(adata)
 
         assert not (np.all([item != item for item in adata_imputed.X]))
 
     def test_miceforest_impute_numerical_data(self):
         adata = read_csv(dataset_path=f"{_TEST_PATH}/test_impute_iris.csv")
-        adata_imputed = miceforest_impute(adata)
+        adata_imputed = mice_forest_impute(adata)
 
         assert not (np.all([item != item for item in adata_imputed.X]))
 
     def test_miceforest_impute_list_str(self):
         adata = read_csv(dataset_path=f"{_TEST_PATH}/test_impute_titanic.csv")
-        adata_imputed = miceforest_impute(adata, var_names=["Cabin", "Age"])
+        adata_imputed = mice_forest_impute(adata, var_names=["Cabin", "Age"])
 
         assert not (np.all([item != item for item in adata_imputed.X]))
 

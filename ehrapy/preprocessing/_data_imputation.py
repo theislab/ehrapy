@@ -912,7 +912,7 @@ def _nuclear_norm_minimization_impute(
 # ===================== miceforest =========================
 
 
-def miceforest_impute(
+def mice_forest_impute(
     adata: AnnData,
     var_names: list[str] | None = None,
     copy: bool = False,
