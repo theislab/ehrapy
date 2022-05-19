@@ -194,9 +194,7 @@ class EhrapyMedcat:
             medcat_obj.cat.cdb.print_stats()
 
     @staticmethod
-    def annotate_text(
-        medcat_obj: MedCAT, text_column: str, n_proc: int = 2, batch_size_chars: int = 500000
-    ) -> None:
+    def annotate_text(medcat_obj: MedCAT, text_column: str, n_proc: int = 2, batch_size_chars: int = 500000) -> None:
         """Annotate the original free text data. Note this will only annotate non null rows.
         The result will be a DataFrame (see example below). It will be set as the annotated_results attribute for the passed MedCat object.
         This dataframe will be the base for all further analyses, for example coloring umaps by specific diseases.
