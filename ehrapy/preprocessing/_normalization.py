@@ -13,7 +13,7 @@ from ehrapy.anndata.anndata_ext import (
 )
 
 
-def norm_scale(adata: AnnData, vars: str | list[str] | None = None, copy: bool = False, **kwargs) -> AnnData | None:
+def scale_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool = False, **kwargs) -> AnnData | None:
     """Apply scaling normalization.
 
     Functionality is provided by :func:`~sklearn.preprocessing.scale`, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.scale.html for details.
@@ -56,7 +56,7 @@ def norm_scale(adata: AnnData, vars: str | list[str] | None = None, copy: bool =
     return adata
 
 
-def norm_minmax(adata: AnnData, vars: str | list[str] | None = None, copy: bool = False, **kwargs) -> AnnData | None:
+def minmax_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool = False, **kwargs) -> AnnData | None:
     """Apply min-max normalization.
 
     Functionality is provided by :func:`~sklearn.preprocessing.minmax_scale`, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.minmax_scale.html for details.
@@ -99,7 +99,7 @@ def norm_minmax(adata: AnnData, vars: str | list[str] | None = None, copy: bool 
     return adata
 
 
-def norm_maxabs(adata: AnnData, vars: str | list[str] | None = None, copy: bool = False) -> AnnData | None:
+def maxabs_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool = False) -> AnnData | None:
     """Apply max-abs normalization.
 
     Functionality is provided by :func:`~sklearn.preprocessing.maxabs_scale`, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.maxabs_scale.html for details.
@@ -141,7 +141,7 @@ def norm_maxabs(adata: AnnData, vars: str | list[str] | None = None, copy: bool 
     return adata
 
 
-def norm_robust_scale(
+def robust_scale_norm(
     adata: AnnData, vars: str | list[str] | None = None, copy: bool = False, **kwargs
 ) -> AnnData | None:
     """Apply robust scaling normalization.
@@ -186,7 +186,7 @@ def norm_robust_scale(
     return adata
 
 
-def norm_quantile(adata: AnnData, vars: str | list[str] | None = None, copy: bool = False, **kwargs) -> AnnData | None:
+def quantile_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool = False, **kwargs) -> AnnData | None:
     """Apply quantile normalization.
 
     Functionality is provided by ~sklearn.preprocessing.quantile_transform, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.quantile_transform.html for details.
@@ -229,7 +229,7 @@ def norm_quantile(adata: AnnData, vars: str | list[str] | None = None, copy: boo
     return adata
 
 
-def norm_power(adata: AnnData, vars: str | list[str] | None = None, copy: bool = False, **kwargs) -> AnnData | None:
+def power_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool = False, **kwargs) -> AnnData | None:
     """Apply power transformation normalization.
 
     Functionality is provided by :func:`~sklearn.preprocessing.power_transform`, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.power_transform.html for details.
@@ -272,7 +272,7 @@ def norm_power(adata: AnnData, vars: str | list[str] | None = None, copy: bool =
     return adata
 
 
-def norm_log(
+def log_norm(
     adata: AnnData,
     vars: str | list[str] | None = None,
     base: int | float | None = None,
@@ -329,7 +329,7 @@ def norm_log(
     return adata
 
 
-def norm_sqrt(adata: AnnData, vars: str | list[str] | None = None, copy: bool = False) -> AnnData | None:
+def sqrt_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool = False) -> AnnData | None:
     """Apply square root normalization.
 
     Take the square root of all values.
