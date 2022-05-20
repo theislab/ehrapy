@@ -16,7 +16,7 @@ jobs:
                         "docs/tutorials/notebooks/mimic_2_survival_analysis.ipynb",
                         "docs/tutorials/notebooks/mimic_2_fate.ipynb",
                         "docs/tutorials/notebooks/mimic_3_demo.ipynb",
-                        "docs/tutorial/notebooks/medcat.ipynb",
+                        "docs/tutorials/notebooks/medcat.ipynb",
                     ]
         steps:
             - uses: actions/checkout@v3
