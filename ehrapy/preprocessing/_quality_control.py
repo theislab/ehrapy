@@ -153,12 +153,13 @@ def _var_qc_metrics(adata: AnnData, layer: str = None) -> pd.DataFrame:
     var_metrics["missing_values_abs"] = np.apply_along_axis(_missing_values, 0, mtx)
     var_metrics["missing_values_pct"] = np.apply_along_axis(_missing_values, 0, mtx, shape=mtx.shape, df_type="var")
     try:
-        var_metrics["mean"] = mtx.mean(axis=0)
-        var_metrics["median"] = np.median(mtx, axis=0)
-        var_metrics["standard_deviation"] = mtx.std(axis=0)
-        var_metrics["min"] = mtx.min(axis=0)
-        var_metrics["max"] = mtx.max(axis=0)
+        var_metrics["mean"] = np.nanmean(mtx, axis=0)
+        var_metrics["median"] = np.nanmedian(mtx, axis=0)
+        var_metrics["standard_deviation"] = np.nanstd(mtx, axis=0)
+        var_metrics["min"] = np.nanmin(mtx, axis=0)
+        var_metrics["max"] = np.nanmax(mtx, axis=0)
     except TypeError:
+        print("[bold yellow]TypeError! Setting quality control metrics to nan. Did you encode your data?")
         var_metrics["mean"] = np.nan
         var_metrics["median"] = np.nan
         var_metrics["standard_deviation"] = np.nan
