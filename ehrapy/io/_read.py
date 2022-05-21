@@ -16,6 +16,7 @@ from rich import print
 from ehrapy import ehrapy_settings, settings
 from ehrapy.anndata.anndata_ext import df_to_anndata
 from ehrapy.data._dataloader import download
+from ehrapy.io._utility_io import _check_columns_only_params
 from ehrapy.preprocessing.encoding._encode import encode
 
 
@@ -37,10 +38,10 @@ def read_csv(
         dataset_path: Path to the file or directory to read.
         sep: Separator in the file; either , (default) or \t.
         index_column: The index column of obs. Usually the patient visit ID or the patient ID.
-        columns_obs_only: These columns will be added to obs only and not X. Can not be used together with columns_x_only.
-        columns_x_only: These columns will be added to X only and all remaining columns to obs. Can not be used together with columns_obs_only.
+        columns_obs_only: These columns will be added to obs only and not X.
+        columns_x_only: These columns will be added to X only and all remaining columns to obs. Note that datetime columns will always be added to .obs though.
         return_mudata: Whether to create and return a MuData object. This is primarily used for complex datasets which require several AnnData files.
-        cache: Whether to use the cache when reading.
+        cache: Whether to write to cache when reading or not.
         download_dataset_name: Name of the file or directory in case the dataset is downloaded
         backup_url: URL to download the data file(s) from if not yet existing.
 
@@ -54,8 +55,7 @@ def read_csv(
             import ehrapy as ep
             adata = ep.io.read_csv("myfile.csv")
     """
-    if columns_obs_only and columns_x_only:
-        raise ValueError("Can not use columns_obs_only together with columns_x_only. At least one has to be None!")
+    _check_columns_only_params(columns_obs_only, columns_x_only)
     file: Path = Path(dataset_path)
     if not file.exists():
         file = _get_non_existing_files(file, download_dataset_name, backup_url)
@@ -65,6 +65,7 @@ def read_csv(
         sep=sep,
         index_column=index_column,
         columns_obs_only=columns_obs_only,
+        columns_x_only=columns_x_only,
         return_mudata=return_mudata,
         cache=cache,
         **kwargs,
@@ -121,9 +122,9 @@ def read_pdf(
         dataset_path: Path to the file or directory to read.
         index_column: The index column of obs. Usually the patient visit ID or the patient ID.
         columns_obs_only: These columns will be added to obs only and not X.
-        columns_x_only: These columns will be added to X only and all remaining columns to obs. Can not be used together with columns_obs_only.
+        columns_x_only: These columns will be added to X only and all remaining columns to obs. Note that datetime columns will always be added to .obs though.
         return_mudata: Whether to create and return a MuData object. This is primarily used for complex datasets which require several AnnData files.
-        cache: Whether to use the cache when reading.
+        cache: Whether to write to cache when reading or not.
         download_dataset_name: Name of the file or directory in case the dataset is downloaded
         backup_url: URL to download the data file(s) from if not yet existing.
 
@@ -138,9 +139,7 @@ def read_pdf(
 
             adatas = ep.io.read_pdf("myfile.pdf")
     """
-    if columns_obs_only and columns_x_only:
-        raise ValueError("Can not use columns_obs_only together with columns_x_only. At least one has to be None!")
-
+    _check_columns_only_params(columns_obs_only, columns_x_only)
     file: Path = Path(dataset_path)
     if not file.exists():
         file = _get_non_existing_files(file, download_dataset_name, backup_url)
@@ -149,6 +148,7 @@ def read_pdf(
         filename=file,
         index_column=index_column,
         columns_obs_only=columns_obs_only,
+        columns_x_only=columns_x_only,
         return_mudata=return_mudata,
         cache=cache,
     )
@@ -158,8 +158,9 @@ def read_pdf(
 def _read_csv(
     filename: Path,
     sep: str,
-    index_column: dict[str, str | int] | str | int | None = None,
-    columns_obs_only: dict[str, list[str]] | list[str] | None = None,
+    index_column: dict[str, str | int] | str | int | None,
+    columns_obs_only: dict[str, list[str]] | list[str] | None,
+    columns_x_only: dict[str, list[str]] | list[str] | None,
     return_mudata: bool = False,
     cache: bool = False,
     **kwargs,
@@ -175,13 +176,15 @@ def _read_csv(
         )
     # If the filename is a directory, assume it is a dataset with multiple files
     elif filename.is_dir():
-        return _read_from_directory(filename, cache, path_cache, sep, index_column, columns_obs_only, return_mudata)
+        return _read_from_directory(
+            filename, cache, path_cache, sep, index_column, columns_obs_only, columns_x_only, return_mudata  # type: ignore
+        )
     # input is a single file
     else:
         if sep not in {",", "\t"}:
             raise ValueError("Please provide one of the available separators , or tab")
         adata, columns_obs_only = _do_read_csv(
-            filename, sep, index_column, columns_obs_only, cache, **kwargs  # type: ignore
+            filename, sep, index_column, columns_obs_only, columns_x_only, cache, **kwargs  # type: ignore
         )
         # cache results if desired
         if cache:
@@ -206,8 +209,9 @@ def _read_h5ad(
 
 def _read_pdf(
     filename: Path,
-    index_column: dict[str, str | int] | str | int | None = None,
-    columns_obs_only: dict[str, list[str]] | list[str] | None = None,
+    index_column: dict[str, str | int] | str | int | None,
+    columns_obs_only: dict[str, list[str]] | list[str] | None,
+    columns_x_only: dict[str, list[str]] | list[str] | None,
     return_mudata: bool = False,
     cache: bool = False,
     **kwargs,
@@ -226,7 +230,7 @@ def _read_pdf(
         )
     # dataset is a single pdf file
     else:
-        adata, columns_obs_only = _do_read_pdf(filename, index_column, columns_obs_only, cache, **kwargs)  # type: ignore
+        adata, columns_obs_only = _do_read_pdf(filename, index_column, columns_obs_only, columns_x_only, cache, **kwargs)  # type: ignore
         # set cache path, since its a single input file which will be stored in (eventually) multiple cache files
         path_cache = settings.cachedir / filename.stem  # type: ignore
         if cache:
@@ -243,13 +247,14 @@ def _read_from_directory(
     path_cache_dir: Path | None,
     extension: str,
     index_column: dict[str, str | int] | str | int | None = None,
-    columns_obs_only: dict[str, list[str]] | list[str] | None = None,
+    columns_obs_only: dict[str, list[str]] | None = None,
+    columns_x_only: dict[str, list[str]] | None = None,
     return_mudata: bool = False,
 ) -> dict[str, AnnData]:
     """Parse AnnData objects from a directory containing the data files"""
     if extension in {",", "\t"}:
         adata_objects, columns_obs_only = _read_multiple_csv(
-            filename, extension, index_column, columns_obs_only, return_mudata
+            filename, extension, index_column, columns_obs_only, columns_x_only, return_mudata
         )
         # cache results
         if cache:
@@ -270,7 +275,8 @@ def _read_multiple_csv(  # noqa: N802
     filename: Path,
     sep: str,
     index_column: dict[str, str | int] | str | int | None = None,
-    columns_obs_only: dict[str, list[str]] | list[str] | None = None,
+    columns_obs_only: dict[str, list[str]] | None = None,
+    columns_x_only: dict[str, list[str]] | None = None,
     return_mudata_object: bool = False,
     cache: bool = False,
 ) -> tuple[dict[str, AnnData], dict[str, list[str] | None]]:
@@ -281,6 +287,7 @@ def _read_multiple_csv(  # noqa: N802
         sep: Either , or \t to determine which files to read.
         index_column: Column names of the index columns for obs
         columns_obs_only: List of columns per file (AnnData object) which should only be stored in .obs, but not in X. Useful for free text annotations.
+        columns_x_only: List of columns per file (AnnData object) which should only be stored in .X, but not in obs. Datetime columns will be added to .obs regardless.
         return_mudata_object: When set to True, return a :class:`~mudata.MuData` object, otherwise a dict of :class:`~anndata.AnnData` objects
         cache: Whether to cache results or not
 
@@ -297,10 +304,10 @@ def _read_multiple_csv(  # noqa: N802
         if file.is_file() and file.suffix in {".csv", ".tsv"}:
             # slice off the file suffix .csv or .tsv
             adata_identifier = file.name[:-4]
-            index_col, col_obs_only = _extract_index_and_columns_obs_only(
-                adata_identifier, index_column, columns_obs_only
+            index_col, col_obs_only, col_x_only = _extract_index_and_columns_obs_only(
+                adata_identifier, index_column, columns_obs_only, columns_x_only
             )
-            adata, single_adata_obs_only = _do_read_csv(file, sep, index_col, col_obs_only, cache=cache)
+            adata, single_adata_obs_only = _do_read_csv(file, sep, index_col, col_obs_only, col_x_only, cache=cache)
             obs_only_all[adata_identifier] = single_adata_obs_only
             # obs indices have to be unique otherwise updating and working with the MuData object will fail
             if index_col:
@@ -347,6 +354,7 @@ def _do_read_csv(
     delimiter: str | None = ",",
     index_column: str | int | None = None,
     columns_obs_only: list[str] | None = None,
+    columns_x_only: list[str] | None = None,
     cache: bool = False,
     **kwargs,
 ) -> tuple[AnnData, list[str] | None]:
@@ -357,6 +365,8 @@ def _do_read_csv(
         delimiter: Delimiter separating the csv data within the file.
         index_column: Index or column name of the index column (obs)
         columns_obs_only: List of columns which only be stored in .obs, but not in X. Useful for free text annotations.
+        columns_x_only: List of columns which only be stored in X, but not in .obs.
+
         cache: Whether the data should be written to cache or not
 
     Returns:
@@ -378,7 +388,7 @@ def _do_read_csv(
             f"exist in {filename}?"
         ) from None
 
-    initial_df, columns_obs_only = _prepare_dataframe(initial_df, columns_obs_only, cache)
+    initial_df, columns_obs_only = _prepare_dataframe(initial_df, columns_obs_only, columns_x_only, cache)
     # return the initial AnnData object
     return df_to_anndata(initial_df, columns_obs_only), columns_obs_only
 
@@ -404,6 +414,7 @@ def _do_read_pdf(
     filename: Path | Iterator[str],
     index_column: dict[str, str] | None = None,
     columns_obs_only: dict[str, list[str] | None] = None,
+    columns_x_only: dict[str, list[str] | None] = None,
     cache: bool = False,
     **kwargs,
 ) -> tuple[dict[str, AnnData], dict[str, list[str] | None] | None]:
@@ -441,7 +452,8 @@ def _do_read_pdf(
     Args:
         filename: File path to the pdf.
         index_column: Column name of the index column (obs)
-        columns_obs_only: Set of columns which only be stored in .obs, but not in X. Useful for free text annotations.
+        columns_obs_only: List (per table) of columns which only be stored in .obs, but not in X. Useful for free text annotations.
+        columns_obs_only: List (per table) of columns which only be stored in X, but not in .obs.
         cache: Whether the data should be written to cache or not
 
     Returns:
@@ -485,24 +497,22 @@ def _do_read_pdf(
                 pd.to_numeric, args=("ignore",)
             )  # convert all columns of the DataFrame to numeric, if possible
 
-        this_index_column, this_obs_only = _extract_index_and_columns_obs_only(
-            f"{filename.stem}_{idx}", index_column, columns_obs_only  # type: ignore
+        this_index_column, this_obs_only, this_x_only = _extract_index_and_columns_obs_only(
+            f"{filename.stem}_{idx}", index_column, columns_obs_only, columns_x_only  # type: ignore
         )
-        # index column cannot be in obs only at the same time
-        if this_index_column and this_obs_only and this_index_column in this_obs_only:
-            print(
-                f"[bold yellow]Index column [blue]{index_column} [yellow]is also used as a column "
-                f"for obs only. Using default indices instead and moving [blue]{index_column} [yellow]to column_obs_only."
-            )
-            this_index_column = None
-        if columns_obs_only:
-            initial_df, columns_obs_only[idx] = _prepare_dataframe(df, this_obs_only, cache)  # type: ignore
+
+        # handle x only by moving the asymmetric difference to obs only instead
+        if this_x_only:
+            this_obs_only = list(set(df.columns) - set(this_x_only))
+
+        if columns_obs_only or columns_x_only:
+            initial_df, columns_obs_only[idx] = _prepare_dataframe(df, this_obs_only, columns_x_only, cache)  # type: ignore
             ann_data_objects[f"{filename.stem}_{idx}"] = df_to_anndata(  # type: ignore
                 initial_df, this_obs_only, this_index_column if this_index_column else None
             )
         # in case, no columns_obs_only has been passed
         else:
-            initial_df, _ = _prepare_dataframe(df, None, cache)
+            initial_df, _ = _prepare_dataframe(df, None, None, cache)
             ann_data_objects[f"{filename.stem}_{idx}"] = df_to_anndata(  # type: ignore
                 initial_df, None, this_index_column if this_index_column else None
             )
@@ -599,7 +609,7 @@ def _write_cache_dir(
     """
     for identifier in adata_objects:
         # for each identifier (for the AnnData object), we need the index column and obs_only cols (if any) for reuse when reading cache
-        index_col, cols_obs_only = _extract_index_and_columns_obs_only(identifier, index_column, columns_obs_only)
+        index_col, cols_obs_only, _ = _extract_index_and_columns_obs_only(identifier, index_column, columns_obs_only)
         adata_objects[identifier] = _write_cache(
             adata_objects[identifier], path_cache / (identifier + ".h5ad"), cols_obs_only
         )
@@ -633,7 +643,7 @@ def _write_cache(
     return cached_adata
 
 
-def _prepare_dataframe(initial_df: pd.DataFrame, columns_obs_only, cache):
+def _prepare_dataframe(initial_df: pd.DataFrame, columns_obs_only, columns_x_only=None, cache=False):
     """Prepares the dataframe to be casted into an AnnData object.
 
     Datetime columns will be detected and added to columns_obs_only.
@@ -641,7 +651,9 @@ def _prepare_dataframe(initial_df: pd.DataFrame, columns_obs_only, cache):
     Returns:
          The initially parsed dataframe and an updated list of columns_obs_only.
     """
-    # TODO: pass X_only option here and convert x_only to obs_only (if necessary): basically just diff all columns and x_only
+    # when passing columns x only, simply handle the (asymmetric) difference to be obs only and everything else is kept in X
+    if columns_x_only:
+        columns_obs_only = list(set(initial_df.columns) - set(columns_x_only))
     # get all object dtype columns
     object_type_columns = [col_name for col_name in initial_df.columns if initial_df[col_name].dtype == "object"]
     # if columns_obs_only is None, initialize it as datetime columns need to be included here
@@ -707,7 +719,7 @@ def _decode_cached_adata(adata: AnnData, column_obs_only: list[str]) -> AnnData:
     return adata
 
 
-def _extract_index_and_columns_obs_only(identifier: str, index_columns, columns_obs_only):
+def _extract_index_and_columns_obs_only(identifier: str, index_columns, columns_obs_only, columns_x_only=None):
     """
     Extract the index column (if any) and the columns, for obs only (if any) from the given user input.
 
@@ -738,7 +750,7 @@ def _extract_index_and_columns_obs_only(identifier: str, index_columns, columns_
                    # identifier1 is not in the index or columns_obs_only keys, but default key is set for both
                    # -> index column will be set using MyColumn1 and column obs only will include MyColumn2
                    index_columns = {"MyOtherFile":"MyOtherColumn1", "default": "MyColumn1"}
-                   columns_obs_only = {"MyOtherFile":["MyOtherColumn2"], "default": "MyColumn2"}
+                   columns_obs_only = {"MyOtherFile":["MyOtherColumn2"], "default": ["MyColumn2"]}
 
         3.) The filename is present as a key
             --> The index column will be set and/or columns are obs only according to its value
@@ -764,6 +776,7 @@ def _extract_index_and_columns_obs_only(identifier: str, index_columns, columns_
     """
     _index_column = None
     _columns_obs_only = None
+    _columns_x_only = None
     # get index column (if any)
     if index_columns and identifier in index_columns.keys():
         _index_column = index_columns[identifier]
@@ -776,19 +789,23 @@ def _extract_index_and_columns_obs_only(identifier: str, index_columns, columns_
     elif columns_obs_only and "default" in columns_obs_only.keys():
         _columns_obs_only = columns_obs_only["default"]
 
-    # if there is only one obs only column, it might have been passed as single string
-    if isinstance(_columns_obs_only, str):
-        _columns_obs_only = [_columns_obs_only]
+    # get columns x only (if any)
+    if columns_x_only and identifier in columns_x_only.keys():
+        _columns_x_only = columns_x_only[identifier]
+    elif columns_x_only and "default" in columns_x_only.keys():
+        _columns_x_only = columns_x_only["default"]
 
-    # if index column is also found in column_obs_only, use default indices instead and only move it to obs only, but warn the user
-    if _index_column and _columns_obs_only and _index_column in _columns_obs_only:
+    # if index column is also found in column_obs_only or x_only, use default indices instead and only move it to obs/X, but warn the user
+    if (_index_column and _columns_obs_only or _index_column and _columns_x_only) and (
+        _index_column in _columns_obs_only or _index_column in _columns_x_only
+    ):
         print(
             f"[bold yellow]Index column [blue]{_index_column} [yellow]for file [blue]{identifier} [yellow]is also used as a column "
-            f"for obs only. Using default indices instead and moving [blue]{_index_column} [yellow]to column_obs_only."
+            f"for obs or X only. Using default indices instead and moving [blue]{_index_column} [yellow]to obs/X!."
         )
         _index_column = None
 
-    return _index_column, _columns_obs_only
+    return _index_column, _columns_obs_only, _columns_x_only
 
 
 def _mudata_cache_not_supported():
