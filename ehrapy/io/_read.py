@@ -41,7 +41,7 @@ def read_csv(
         columns_obs_only: These columns will be added to obs only and not X.
         columns_x_only: These columns will be added to X only and all remaining columns to obs. Note that datetime columns will always be added to .obs though.
         return_mudata: Whether to create and return a MuData object. This is primarily used for complex datasets which require several AnnData files.
-        cache: Whether to write to cache when reading or not.
+        cache: Whether to write to cache when reading or not. (default: False)
         download_dataset_name: Name of the file or directory in case the dataset is downloaded
         backup_url: URL to download the data file(s) from if not yet existing.
 
