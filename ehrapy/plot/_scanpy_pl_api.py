@@ -1788,6 +1788,7 @@ def embedding_density(
         If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
     Example:
         .. code-block:: python
+
             import ehrapy as ep
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)

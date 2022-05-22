@@ -171,8 +171,8 @@ class MedCAT:
 
 
 class EhrapyMedcat:
-    """Wrapper class to perform medcat analysis with ehrapy for free text data. This can be simply called by `ep.tl.mc`. This class is not supposed to be
-    instantiated at any time, it just serves as a wrapper for import.
+    """Wrapper class to perform medcat analysis with ehrapy for free text data. This can be simply called by `ep.tl.mc`.
+    This class is not supposed to be instantiated at any time, it just serves as a wrapper for import.
     """
 
     @staticmethod
@@ -196,28 +196,29 @@ class EhrapyMedcat:
     @staticmethod
     def annotate_text(medcat_obj: MedCAT, text_column: str, n_proc: int = 2, batch_size_chars: int = 500000) -> None:
         """Annotate the original free text data. Note this will only annotate non null rows.
-        The result will be a DataFrame (see example below). It will be set as the annotated_results attribute for the passed MedCat object.
-        This dataframe will be the base for all further analyses, for example coloring umaps by specific diseases.
 
+        The result will be a DataFrame (see example below). It will be set as the annotated_results attribute for the passed MedCat object.
+        This dataframe will be the base for all further analyses, for example coloring UMAPs by specific diseases.
+        Example:
             .. code-block:: python
-                       # some setup code here
-                       ...
-                       res = ep.tl.annotate_text(medcat_obj, adata.obs, "text")
-                       print(res)
-                       # res looks like this:
-                       #                                                pretty_name meta ...
-                       #
-                       # 1 0 (first entitiy extracted from first row)   diabetes11  fb11 ...
-                       # 2 0 (second entitiy extracted from first row)  diabetes12  fb12 ...
-                       # 3 1 (first entitiy extracted from second row)  diabetes21  fb21 ...
-                       # 4 1 (second entitiy extracted from second row) diabetes22  fb22 ...
+
+                   # some setup code here
+                   ...
+                   res = ep.tl.annotate_text(medcat_obj, adata.obs, "text")
+                   print(res)
+                   # res looks like this:
+                   #                                                pretty_name meta ...
+                   #
+                   # 1 0 (first entitiy extracted from first row)   diabetes11  fb11 ...
+                   # 2 0 (second entitiy extracted from first row)  diabetes12  fb12 ...
+                   # 3 1 (first entitiy extracted from second row)  diabetes21  fb21 ...
+                   # 4 1 (second entitiy extracted from second row) diabetes22  fb22 ...
 
         Args:
             medcat_obj: Ehrapy's custom MedCAT object. The annotated_results attribute will be set here.
             text_column: Name of the column that should be annotated
             n_proc: Number of processors to use
             batch_size_chars: batch size to control for the variability between document sizes
-
         """
         non_null_text = EhrapyMedcat._filter_null_values(medcat_obj.anndata.obs, text_column)
         formatted_text_column = EhrapyMedcat._format_df_column(non_null_text, text_column)
@@ -233,18 +234,19 @@ class EhrapyMedcat:
         medcat_obj: MedCAT, n: int = 10, status: str = "Affirmed", save_to_csv: bool = False, save_path: str = "."
     ) -> None:
         """Provide an overview for the annotation results. An overview will look like the following:
-           cui (the CUI), nsubjects (from how many rows this one got extracted), type_ids (TUIs), name(name of the entitiy), perc_subjects (how many rows relative
-           to absolute number of rows)
 
-        Args:
-            medcat_obj: The current MedCAT object which holds all infos on medcat analysis with ehrapy.
-            n: Basically the parameter for head() of pandas Dataframe. How many of the most common entities should be shown?
-            status: One of "Affirmed" (default), "Other" or "Both". Displays stats for either only affirmed entities, negated ones or both.
-            save_to_csv: Whether to save the overview dataframe to a local .csv file in the current working directory or not.
-            save_path: Path to save the overview as .csv file. Defaults to current working directory.
+        cui (the CUI), nsubjects (from how many rows this one got extracted), type_ids (TUIs), name(name of the entitiy), perc_subjects (how many rows relative
+        to absolute number of rows)
 
-        Returns:
-            A pandas DataFrame with the overview stats.
+         Args:
+             medcat_obj: The current MedCAT object which holds all infos on medcat analysis with ehrapy.
+             n: Basically the parameter for head() of pandas Dataframe. How many of the most common entities should be shown?
+             status: One of "Affirmed" (default), "Other" or "Both". Displays stats for either only affirmed entities, negated ones or both.
+             save_to_csv: Whether to save the overview dataframe to a local .csv file in the current working directory or not.
+             save_path: Path to save the overview as .csv file. Defaults to current working directory.
+
+         Returns:
+             A Pandas DataFrame with the overview stats.
         """
         df = EhrapyMedcat._filter_df_by_status(medcat_obj.annotated_results, status)
         # group by CUI as this is a unique identifier per entity
