@@ -1628,7 +1628,7 @@ def embedding(
     return_fig: bool | None = None,
     **kwargs,
 ) -> Figure | Axes | None:  # pragma: no cover
-    """Scatter plot for user specified embedding basis (e.g. umap, pca, etc)
+    """Scatter plot for user specified embedding basis (e.g. umap, pca, etc).
 
     Args:
         basis:
@@ -1750,8 +1750,10 @@ def embedding_density(
     **kwargs,
 ) -> Figure | Axes | None:  # pragma: no cover
     """Plot the density of observations in an embedding (per condition).
+
     Plots the gaussian kernel density estimates (over condition) from the `sc.tl.embedding_density()` output. This currently
     does not support extracted medcat entities.
+
     Args:
         adata: :class:`~anndata.AnnData` object object containing all observations.
         basis: The embedding over which the density was calculated.
