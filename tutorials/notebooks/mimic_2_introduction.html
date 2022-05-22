@@ -1,346 +1,250 @@
+<!doctype html>
+<html class="no-js">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-<!DOCTYPE html>
+<meta property="og:title" content="MIMIC-II IAC Introduction" />
+  
+<meta property="og:type" content="website" />
+  
+<meta property="og:url" content="https://ehrapy.readthedocs.io/en/latest/tutorials/notebooks/mimic_2_introduction.html" />
+  
+<meta property="og:description" content="This tutorial explores the MIMIC-II IAC dataset. It was created for the purpose of a case study in the book: Secondary Analysis of Electronic Health Records, published by Springer in 2016. In parti..." />
+  
+<meta property="og:image" content="https://ehrapy.readthedocs.io/en/latest//_static/logo.png" />
+  
+<meta property="og:image:alt" content="MIMIC-II IAC Introduction" />
+  <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="MIMIC-II Patient Fate" href="mimic_2_fate.html" /><link rel="prev" title="ehrapy Introduction" href="ehrapy_introduction.html" />
 
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MIMIC-II IAC Introduction &#8212; ehrapy 0.2.0 documentation</title>
-    
-    <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-<link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-  
-    
-    <link rel="stylesheet"
-      href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-  
-    
-      
-  
-    
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/pydata-sphinx-theme.css" />
+    <meta name="generator" content="sphinx-4.5.0, furo 2022.04.07"/>
+        <title>MIMIC-II IAC Introduction - ehrapy</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=68f4518137b9aefe99b631505a2064c3c42c9852" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/tabs.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/custom_cookietemple.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/sphinx_gallery.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/dataframe.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/override.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/sphinx_gallery.css" />
     
-    <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  --color-brand-primary: #003262;
+  --color-brand-content: #003262;
+  --admonition-font-size: var(--font-size-normal);
+  --admonition-title-font-size: var(--font-size-normal);
+  --code-font-size: var(--font-size--small);
   
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/jquery.js"></script>
-    <script src="../../_static/underscore.js"></script>
-    <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/clipboard.min.js"></script>
-    <script src="../../_static/copybutton.js"></script>
-    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-    <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="MIMIC-II Patient Fate" href="mimic_2_fate.html" />
-    <link rel="prev" title="ehrapy introduction" href="ehrapy_introduction.html" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="docsearch:language" content="None">
-    
-
-    <!-- Google Analytics -->
-    
-  </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
-    
-    <div class="container-fluid" id="banner"></div>
-
-    
-    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
-
-  <div id="navbar-start">
-    
-    
-
-<a class="navbar-brand" href="../../index.html">
-  <img src="../../_static/placeholder.png" class="logo" alt="logo">
-</a>
-
-
-    
-  </div>
-
-  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-  </button>
-
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
   
-  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
-    <div id="navbar-center" class="mr-auto">
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">ehrapy</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
       
-      <div class="navbar-center-item">
-        <ul id="navbar-main-elements" class="navbar-nav">
-    <li class="toctree-l1 nav-item">
- <a class="reference internal nav-link" href="../../installation.html">
-  Installation
- </a>
-</li>
-
-<li class="toctree-l1 nav-item">
- <a class="reference internal nav-link" href="../../usage/usage.html">
-  Usage
- </a>
-</li>
-
-<li class="toctree-l1 current active nav-item">
- <a class="reference internal nav-link" href="../index.html">
-  Tutorials
- </a>
-</li>
-
-<li class="toctree-l1 nav-item">
- <a class="reference internal nav-link" href="../../contributing.html">
-  Contributor Guide
- </a>
-</li>
-
-<li class="toctree-l1 nav-item">
- <a class="reference internal nav-link" href="../../code_of_conduct.html">
-  Code of Conduct
- </a>
-</li>
-
-<li class="toctree-l1 nav-item">
- <a class="reference external nav-link" href="https://github.com/theislab/ehrapy/discussions">
-  Discussions
- </a>
-</li>
-
-<li class="toctree-l1 nav-item">
- <a class="reference internal nav-link" href="../../authors.html">
-  Credits
- </a>
-</li>
-
-<li class="toctree-l1 nav-item">
- <a class="reference internal nav-link" href="../../references.html">
-  References
- </a>
-</li>
-
-    
+      <div class="sidebar-sticky"><a class="sidebar-brand centered" href="../../index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../_static/ehrapy_pure.png" alt="Logo"/>
+  </div>
+  
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder=Search name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage/usage.html">Usage</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../index.html">Tutorials</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="ehrapy_introduction.html">ehrapy Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ehrapy_introduction.html#Fundamental-Principles">Fundamental Principles</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">MIMIC-II IAC Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Preprocessing">Preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#PCA-&amp;-UMAP">PCA &amp; UMAP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Batch-effect-check">Batch effect check</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Leiden-clustering">Leiden clustering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Hospital-&amp;-ICU-statistics">Hospital &amp; ICU statistics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Death">Death</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Demographics">Demographics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Comorbidities">Comorbidities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Initial-lab-measurements">Initial lab measurements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Annotation">Annotation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Paga">Paga</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mimic_2_fate.html">MIMIC-II Patient Fate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mimic_2_fate.html#Determining-patient-fate-using-a-ConnectivityKernel">Determining patient fate using a ConnectivityKernel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mimic_2_fate.html#Determining-patient-fate-with-a-PseudotimeKernel">Determining patient fate with a PseudotimeKernel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="diabetes_130.html">Diabetes 130 Vignette</a></li>
+<li class="toctree-l2"><a class="reference internal" href="diabetes_130.html#Visual-Exploration">Visual Exploration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="medcat.html">Extracting from free text with MedCAT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="medcat.html#Custom-MedCAT-object-of-ehrapy">Custom MedCAT object of ehrapy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="medcat.html#Extracting-and-visualizing-all-disease-entities">Extracting and visualizing all disease entities</a></li>
 </ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributor Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../code_of_conduct.html">Code of Conduct</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/theislab/ehrapy/discussions">Discussions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../authors.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../references.html">References</a></li>
+</ul>
+
+</div>
+</div>
+
       </div>
       
     </div>
-
-    <div id="navbar-end">
-      
-      <div class="navbar-end-item">
-        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
-        <li class="nav-item">
-          <a class="nav-link" href="https://github.com/theislab/ehrapy" rel="noopener" target="_blank" title="GitHub"><span><i class="fab fa-github-square"></i></span>
-            <label class="sr-only">GitHub</label></a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="https://twitter.com/lukasheumos" rel="noopener" target="_blank" title="Twitter"><span><i class="fab fa-twitter-square"></i></span>
-            <label class="sr-only">Twitter</label></a>
-        </li>
-      </ul>
-      </div>
-      
-    </div>
-  </div>
-</div>
-    </nav>
-    
-
-    <div class="container-xl">
-      <div class="row">
-          
-            
-            <!-- Only show if we have sidebars configured, else just a small margin  -->
-            <div class="col-12 col-md-3 bd-sidebar">
-              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../search.html" method="get">
-  <i class="icon fas fa-search"></i>
-  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
-</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
-  <div class="bd-toc-item active">
-    <ul class="current nav bd-sidenav">
- <li class="toctree-l1">
-  <a class="reference internal" href="ehrapy_introduction.html">
-   ehrapy introduction
-  </a>
- </li>
- <li class="toctree-l1 current active">
-  <a class="current reference internal" href="#">
-   MIMIC-II IAC Introduction
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="mimic_2_fate.html">
-   MIMIC-II Patient Fate
-  </a>
- </li>
-</ul>
-
-  </div>
-</nav>
-              </div>
-              <div class="sidebar-end-items">
-              </div>
-            </div>
-            
-          
-
-          
-          <div class="d-none d-xl-block col-xl-2 bd-toc">
-            
-              
-              <div class="toc-item">
-                
-<div class="tocsection onthispage pt-5 pb-3">
-    <i class="fas fa-list"></i> On this page
-</div>
-
-<nav id="bd-toc-nav">
-    <ul class="visible nav section-nav flex-column">
- <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#">
-   MIMIC-II IAC Introduction
-  </a>
-  <ul class="visible nav section-nav flex-column">
-   <li class="toc-h2 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#Importing-ehrapy-and-setting-plotting-parameters">
-     Importing ehrapy and setting plotting parameters
-    </a>
-   </li>
-   <li class="toc-h2 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#Fetching-the-MIMIC-II-dataset-and-encoding-it">
-     Fetching the MIMIC II dataset and encoding it
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#Preprocessing">
-   Preprocessing
-  </a>
-  <ul class="visible nav section-nav flex-column">
-   <li class="toc-h2 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#Quality-control---missing-values">
-     Quality control - missing values
-    </a>
-   </li>
-   <li class="toc-h2 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#Missing-Data-Imputation">
-     Missing Data Imputation
-    </a>
-   </li>
-   <li class="toc-h2 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#Quality-Control---Data-Distribution">
-     Quality Control - Data Distribution
-    </a>
-   </li>
-   <li class="toc-h2 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#Normalization">
-     Normalization
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#PCA-&amp;-UMAP">
-   PCA &amp; UMAP
-  </a>
- </li>
- <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#Batch-effect-check">
-   Batch effect check
-  </a>
- </li>
- <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#Leiden-clustering">
-   Leiden clustering
-  </a>
- </li>
- <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#Hospital-&amp;-ICU-statistics">
-   Hospital &amp; ICU statistics
-  </a>
- </li>
- <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#Death">
-   Death
-  </a>
- </li>
- <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#Demographics">
-   Demographics
-  </a>
- </li>
- <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#Comorbidities">
-   Comorbidities
-  </a>
- </li>
- <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#Initial-lab-measurements">
-   Initial lab measurements
-  </a>
- </li>
- <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#Annotation">
-   Annotation
-  </a>
- </li>
- <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#Paga">
-   Paga
-  </a>
-  <ul class="visible nav section-nav flex-column">
-   <li class="toc-h2 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#Writing-the-results-into-a-file">
-     Writing the results into a file
-    </a>
-   </li>
-  </ul>
- </li>
-</ul>
-
-</nav>
-              </div>
-              
-              <div class="toc-item">
-                
-
-<div class="tocsection editthispage">
-    <a href="https://github.com/theislab/ehrapy/edit/development/docs/tutorials/notebooks/mimic_2_introduction.ipynb">
-        <i class="fas fa-pencil-alt"></i> Edit this page
-    </a>
-</div>
-
-              </div>
-              
-            
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container"><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
           </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
           
-
-          
-          
-            
-          
-          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
-              
-              <div>
-                
-  
 <style>
 /* CSS for nbsphinx extension */
 
@@ -588,44 +492,57 @@ div.rendered_html tbody tr:hover {
   background: rgba(66, 165, 245, 0.2);
 }
 </style>
-<div class="binder-badge docutils container">
-    <a class="reference external image-reference"
-       href="https://mybinder.org/v2/gh/theislab/ehrapy/development?filepath=docs/source/tutorials/notebooks/mimic_2_introduction.ipynb">
-    <img alt="Launch binder" src="https://mybinder.org/badge_logo.svg" width="150px">
-    </a>
-</div><div class="section" id="MIMIC-II-IAC-Introduction">
-<h1>MIMIC-II IAC Introduction<a class="headerlink" href="#MIMIC-II-IAC-Introduction" title="Permalink to this headline">¶</a></h1>
+<style>
+    p {
+        margin-bottom: 0.5rem;
+    }
+    /* Main index page overview cards */
+    /* https://github.com/spatialaudio/nbsphinx/pull/635/files */
+    .jp-RenderedHTMLCommon table,
+    div.rendered_html table {
+    border: none;
+    border-collapse: collapse;
+    border-spacing: 0;
+    font-size: 12px;
+    table-layout: fixed;
+    color: inherit;
+    }
+
+    body:not([data-theme=light]) .jp-RenderedHTMLCommon tbody tr:nth-child(odd),
+    body:not([data-theme=light]) div.rendered_html tbody tr:nth-child(odd) {
+    background: rgba(255, 255, 255, .1);
+    }
+</style><div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>
+    This page was generated from
+    <a class="reference external" href="https://github.com/theislab/ehrapy/tree/0.2.0/">mimic_2_introduction.ipynb</a>.
+    Some tutorial content may look better in light mode.
+    </p>
+</div><section id="MIMIC-II-IAC-Introduction">
+<h1>MIMIC-II IAC Introduction<a class="headerlink" href="#MIMIC-II-IAC-Introduction" title="Permalink to this headline">#</a></h1>
 <p>This tutorial explores the MIMIC-II IAC dataset. It was created for the purpose of a case study in the book: Secondary Analysis of Electronic Health Records, published by Springer in 2016. In particular, the dataset was used throughout Chapter 16 (Data Analysis) by Raffa J. et al. to investigate the effectiveness of indwelling arterial catheters in hemodynamically stable patients with respiratory failure for mortality outcomes. The dataset is derived from MIMIC-II, the publicly-accessible
 critical care database. It contains summary clinical data and outcomes for 1,776 patients.</p>
 <p>More details on the dataset can be found here: <a class="reference external" href="https://physionet.org/content/mimic2-iaccd/1.0/">https://physionet.org/content/mimic2-iaccd/1.0/</a>.</p>
-<div class="section" id="Importing-ehrapy-and-setting-plotting-parameters">
-<h2>Importing ehrapy and setting plotting parameters<a class="headerlink" href="#Importing-ehrapy-and-setting-plotting-parameters" title="Permalink to this headline">¶</a></h2>
+<section id="Importing-ehrapy-and-setting-plotting-parameters">
+<h2>Importing ehrapy and setting plotting parameters<a class="headerlink" href="#Importing-ehrapy-and-setting-plotting-parameters" title="Permalink to this headline">#</a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import ehrapy.api as ep
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import ehrapy as ep
 import seaborn as sns
 import matplotlib.pyplot as plt
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area rendered_html docutils container">
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #800000; text-decoration-color: #800000; font-weight: bold">Unable to contact PyPI to check for the latest ehrapy version. Do you have an internet </span>
-<span style="color: #800000; text-decoration-color: #800000; font-weight: bold">connection?</span>
-</pre></div>
-</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-/home/zeth/miniconda3/envs/ehrapy/lib/python3.8/site-packages/medcat/cat.py:16: TqdmExperimentalWarning: Using `tqdm.autonotebook.tqdm` in notebook mode. Use `tqdm.tqdm` instead to force console mode (e.g. in jupyter console)
-  from tqdm.autonotebook import tqdm
-</pre></div></div>
+<div class="output_area rendered_html docutils container">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #808000; text-decoration-color: #808000; font-weight: bold">Installed version </span><span style="color: #808000; text-decoration-color: #808000; font-weight: bold">0.2</span><span style="color: #808000; text-decoration-color: #808000; font-weight: bold">.</span><span style="color: #808000; text-decoration-color: #808000; font-weight: bold">0</span><span style="color: #808000; text-decoration-color: #808000; font-weight: bold"> of ehrapy is newer than the latest release </span><span style="color: #808000; text-decoration-color: #808000; font-weight: bold">0.1</span><span style="color: #808000; text-decoration-color: #808000; font-weight: bold">.</span><span style="color: #808000; text-decoration-color: #808000; font-weight: bold">0</span><span style="color: #808000; text-decoration-color: #808000; font-weight: bold">! You are running a </span>
+<span style="color: #808000; text-decoration-color: #808000; font-weight: bold">nightly version and features may break!</span>
+</pre></div>
 </div>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
@@ -633,9 +550,9 @@ import matplotlib.pyplot as plt
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import warnings
 
-warnings.simplefilter(&quot;ignore&quot;, category=UserWarning)
-warnings.simplefilter(&quot;ignore&quot;, category=FutureWarning)
-warnings.simplefilter(&quot;ignore&quot;, category=DeprecationWarning)
+warnings.simplefilter("ignore", category=UserWarning)
+warnings.simplefilter("ignore", category=FutureWarning)
+warnings.simplefilter("ignore", category=DeprecationWarning)
 </pre></div>
 </div>
 </div>
@@ -658,50 +575,40 @@ this message. For the latest features and bug fixes, please install `session_inf
 The usage and defaults also changed slightly, so please review the latest README at
 <span style="color: #0000ff; text-decoration-color: #0000ff; text-decoration: underline">https://gitlab.com/joelostblom/session_info.</span>
 -----
-ehrapy      <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.1</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span>
+ehrapy      <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.2</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span>
 rich        NA
 scanpy      <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1.8</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2</span>
 sinfo       <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.3</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">4</span>
 -----
-PIL                         <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">9.0</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span>
+PIL                         <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">9.0</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1</span>
 PyPDF2                      <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1.26</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span>
 anndata                     <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.7</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">8</span>
 anyio                       NA
 attr                        <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">21.4</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span>
 babel                       <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2.9</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1</span>
 backcall                    <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.2</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span>
-backports                   NA
-beta_ufunc                  NA
-binom_ufunc                 NA
-blis                        NA
 bs4                         <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">4.10</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span>
 camelot                     <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.10</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1</span>
-catalogue                   NA
 category_encoders           <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2.3</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span>
 certifi                     <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2021.10</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">08</span>
 cffi                        <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1.15</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span>
 chardet                     <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">4.0</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span>
-charset_normalizer          <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2.0</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">10</span>
-click                       <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">8.0</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">3</span>
+charset_normalizer          <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2.0</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">12</span>
+cloudpickle                 <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2.0</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span>
 colorama                    <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.4</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">4</span>
 cryptography                <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">36.0</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1</span>
 cv2                         <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">4.5</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">5</span>
 cycler                      <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.10</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span>
-cymem                       NA
 cython_runtime              NA
 dateutil                    <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2.8</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2</span>
 debugpy                     <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1.5</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1</span>
 decorator                   <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">5.1</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1</span>
 deep_translator             <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1.6</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1</span>
-deepl                       <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1.4</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span>
+deepl                       <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1.4</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1</span>
 defusedxml                  <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.7</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1</span>
-dill                        <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.3</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">4</span>
-entrypoints                 <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.3</span>
-filelock                    <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">3.4</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2</span>
-gensim                      <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">4.1</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2</span>
+entrypoints                 <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.4</span>
 h5py                        <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">3.6</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span>
 html5lib                    <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1.1</span>
-huggingface_hub             <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.0</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">19</span>
 idna                        <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">3.3</span>
 igraph                      <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.9</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">9</span>
 importlib_resources         NA
@@ -712,26 +619,21 @@ jedi                        <span style="color: #008080; text-decoration-color: 
 jinja2                      <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">3.0</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">3</span>
 joblib                      <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1.1</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span>
 json5                       NA
-jsonpickle                  <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2.0</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span>
 jsonschema                  <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">4.4</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span>
 jupyter_server              <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1.11</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2</span>
 jupyterlab_server           <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2.8</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2</span>
 kiwisolver                  <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1.3</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2</span>
 leidenalg                   <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.8</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">8</span>
-llvmlite                    <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.38</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span>
+llvmlite                    <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.34</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span>
 markupsafe                  <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2.0</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1</span>
 matplotlib                  <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">3.5</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1</span>
 matplotlib_inline           NA
-medcat                      NA
 mpl_toolkits                NA
 mudata                      <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.1</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1</span>
-multiprocess                <span style="color: #00ff00; text-decoration-color: #00ff00; font-weight: bold">0.70.12.2</span>
-murmurhash                  NA
-natsort                     <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">8.0</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2</span>
+natsort                     <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">8.1</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span>
 nbclassic                   NA
 nbformat                    <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">5.1</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">3</span>
-nbinom_ufunc                NA
-numba                       <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.55</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span>
+numba                       <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.51</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2</span>
 numexpr                     <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2.8</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1</span>
 numpy                       <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1.20</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">3</span>
 packaging                   <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">21.3</span>
@@ -742,14 +644,12 @@ pdfminer                    <span style="color: #008080; text-decoration-color: 
 pexpect                     <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">4.8</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span>
 pickleshare                 <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.7</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">5</span>
 pkg_resources               NA
-preshed                     NA
 prometheus_client           NA
-prompt_toolkit              <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">3.0</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">24</span>
+prompt_toolkit              <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">3.0</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">28</span>
 psutil                      <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">5.9</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span>
 ptyprocess                  <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.7</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span>
 pvectorc                    NA
-pyarrow                     <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">6.0</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1</span>
-pydantic                    NA
+pyarrow                     <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">7.0</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span>
 pydev_ipython               NA
 pydevconsole                NA
 pydevd                      <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2.6</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span>
@@ -758,62 +658,50 @@ pydevd_file_utils           NA
 pydevd_plugins              NA
 pydevd_tracing              NA
 pygments                    <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2.11</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2</span>
-pyhpo                       <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">3.0</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span>
 pyparsing                   <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">3.0</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">7</span>
-pypi_latest                 <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.1</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1</span>
+pypi_latest                 <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.1</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2</span>
 pyrsistent                  NA
 pytz                        <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2021.3</span>
 questionary                 <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1.10</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span>
 requests                    <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2.27</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1</span>
 ruamel                      NA
-scipy                       <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1.7</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1</span>
+scipy                       <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1.6</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1</span>
 seaborn                     <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.11</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2</span>
 send2trash                  NA
 setuptools_scm              NA
-shellingham                 <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1.4</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span>
 six                         <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1.16</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span>
 sklearn                     <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1.0</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2</span>
-smart_open                  <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">5.2</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1</span>
 sniffio                     <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1.2</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span>
 soupsieve                   <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2.3</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1</span>
-spacy                       <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">3.1</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">3</span>
 sphinxcontrib               NA
-srsly                       <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2.4</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2</span>
-statsmodels                 <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.13</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1</span>
+statsmodels                 <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.13</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2</span>
 storemagic                  NA
 tables                      <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">3.7</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span>
 terminado                   <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.12</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1</span>
 texttable                   <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1.6</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">4</span>
-thinc                       <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">8.0</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">13</span>
-threadpoolctl               <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">3.0</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span>
-tokenizers                  <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.10</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">3</span>
-torch                       <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1.9</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1</span>+cu102
+threadpoolctl               <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">3.1</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span>
 tornado                     <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">6.1</span>
-tqdm                        <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">4.62</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">3</span>
 traitlets                   <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">5.1</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1</span>
-transformers                <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">4.11</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">3</span>
-typer                       <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.4</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span>
 typing_extensions           NA
 urllib3                     <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1.26</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">8</span>
-wasabi                      <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.9</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span>
 wcwidth                     <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.2</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">5</span>
 webencodings                <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.5</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1</span>
 websocket                   <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1.2</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1</span>
-yaml                        <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">5.4</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1</span>
+yaml                        <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">6.0</span>
 zipp                        NA
 zmq                         <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">22.3</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span>
 -----
 IPython             <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">7.31</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1</span>
 jupyter_client      <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">7.1</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2</span>
-jupyter_core        <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">4.9</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1</span>
+jupyter_core        <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">4.9</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2</span>
 jupyterlab          <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">3.2</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1</span>
 notebook            <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">6.4</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">5</span>
 -----
 Python <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">3.8</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">12</span> <span style="font-weight: bold">(</span>default, Oct <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">12</span> <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2021</span>, <span style="color: #00ff00; text-decoration-color: #00ff00; font-weight: bold">13:49:34</span><span style="font-weight: bold">)</span> <span style="font-weight: bold">[</span>GCC <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">7.5</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span><span style="font-weight: bold">]</span>
-Linux-<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">5.16</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1</span>-arch1-<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1</span>-x86_64-with-glibc2.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">17</span>
+Linux-<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">5.16</span>.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">8</span>-arch1-<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1</span>-x86_64-with-glibc2.<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">17</span>
 <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">8</span> logical CPU cores
 -----
-Session information updated at <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2022</span>-<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">01</span>-<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">23</span> <span style="color: #00ff00; text-decoration-color: #00ff00; font-weight: bold">00:20</span>
+Session information updated at <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2022</span>-<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">02</span>-<span style="color: #008080; text-decoration-color: #008080; font-weight: bold">18</span> <span style="color: #00ff00; text-decoration-color: #00ff00; font-weight: bold">12:16</span>
 
 </pre></div>
 </div>
@@ -825,9 +713,9 @@ Session information updated at <span style="color: #008080; text-decoration-colo
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="Fetching-the-MIMIC-II-dataset-and-encoding-it">
-<h2>Fetching the MIMIC II dataset and encoding it<a class="headerlink" href="#Fetching-the-MIMIC-II-dataset-and-encoding-it" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="MIMIC-II-dataset-preparation">
+<h2>MIMIC-II dataset preparation<a class="headerlink" href="#MIMIC-II-dataset-preparation" title="Permalink to this headline">#</a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
@@ -852,18 +740,18 @@ Session information updated at <span style="color: #008080; text-decoration-colo
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 AnnData object with n_obs × n_vars = 1776 × 46
-    uns: &#39;numerical_columns&#39;, &#39;non_numerical_columns&#39;
-    layers: &#39;original&#39;
+    uns: 'numerical_columns', 'non_numerical_columns'
+    layers: 'original'
 </pre></div></div>
 </div>
 <p>The MIMIC-II dataset has 1776 patients as described above with 46 features.</p>
-<p>The <strong>service_unit</strong> and <strong>day_icu_intime</strong> variables are categorical</p>
+<p>The <strong>service_unit</strong> and <strong>day_icu_intime</strong> variables are categorical. We will therefore encode them first with one-hot encoding. This ensures that no ordering is preserved.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata = ep.pp.encode(
-    adata, encodings={&quot;one_hot_encoding&quot;: [&quot;service_unit&quot;, &quot;day_icu_intime&quot;]}
+    adata, encodings={"one_hot_encoding": ["service_unit", "day_icu_intime"]}
 )
 </pre></div>
 </div>
@@ -872,7 +760,7 @@ AnnData object with n_obs × n_vars = 1776 × 46
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<script type="application/vnd.jupyter.widget-view+json">{"model_id": "06b36786960248d9a864f7ff184afc66", "version_major": 2, "version_minor": 0}</script></div>
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "03cac310bb8d443a8fa03f03e9bf5344", "version_major": 2, "version_minor": 0}</script></div>
 </div>
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
@@ -902,9 +790,9 @@ AnnData object with n_obs × n_vars = 1776 × 46
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 AnnData object with n_obs × n_vars = 1776 × 54
-    obs: &#39;service_unit&#39;, &#39;day_icu_intime&#39;
-    uns: &#39;numerical_columns&#39;, &#39;non_numerical_columns&#39;, &#39;encoding_to_var&#39;, &#39;original_values_categoricals&#39;, &#39;var_to_encoding&#39;
-    layers: &#39;original&#39;
+    obs: 'service_unit', 'day_icu_intime'
+    uns: 'numerical_columns', 'non_numerical_columns', 'encoding_to_var', 'original_values_categoricals', 'var_to_encoding'
+    layers: 'original'
 </pre></div></div>
 </div>
 <p>After one-hot encoding the two columns we’ve expanded our matrix from 46 to 54 features. Let’s verify that we’ve indeed encoded all columns and are ready to proceed.</p>
@@ -912,7 +800,7 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pp.type_overview(adata)
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.ad.type_overview(adata)
 </pre></div>
 </div>
 </div>
@@ -920,69 +808,70 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area rendered_html docutils container">
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">Variable names for AnnData object with 54 vars and 1776 obs</span>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">Variable names for AnnData object with 1776 obs and 54 vars</span>
 <span style="color: #0000ff; text-decoration-color: #0000ff">╠══ </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">🔐 Encoded variables                                                                     </span>
 <span style="color: #0000ff; text-decoration-color: #0000ff">║   ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">service_unit -&gt; 3 categories; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">one hot </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">encoded; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">original data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">string</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">            </span>
 <span style="color: #0000ff; text-decoration-color: #0000ff">║   ╚══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">day_icu_intime -&gt; 7 categories; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">one hot </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">encoded; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">original data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">string</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">          </span>
 <span style="color: #0000ff; text-decoration-color: #0000ff">╚══ </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">🔓 Unencoded variables                                                                   </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">aline_flg -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                    </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">icu_los_day -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                  </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">hospital_los_day -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                             </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">age -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                          </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">gender_num -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                   </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">weight_first -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                 </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">bmi -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                          </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">sapsi_first -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                  </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">sofa_first -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                   </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">service_num -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                  </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">day_icu_intime_num -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                           </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">hour_icu_intime -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                              </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">hosp_exp_flg -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                 </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">icu_exp_flg -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                  </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">day_28_flg -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                   </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">mort_day_censored -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                            </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">censor_flg -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                   </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">sepsis_flg -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                   </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">chf_flg -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                      </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">afib_flg -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                     </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">renal_flg -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                    </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">liver_flg -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                    </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">copd_flg -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                     </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">cad_flg -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                      </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">stroke_flg -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                   </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">mal_flg -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                      </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">resp_flg -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                     </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">map_1st -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                      </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">hr_1st -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                       </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">temp_1st -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                     </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">spo2_1st -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                     </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">abg_count -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                    </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">wbc_first -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                    </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">hgb_first -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                    </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">platelet_first -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                               </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">sodium_first -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                 </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">potassium_first -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                              </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">tco2_first -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                   </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">chloride_first -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                               </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">bun_first -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                    </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">creatinine_first -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                             </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">po2_first -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                    </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">pco2_first -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                   </span>
-<span style="color: #0000ff; text-decoration-color: #0000ff">    ╚══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">iv_day_1 -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">numerical</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                     </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">aline_flg -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                     </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">icu_los_day -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                   </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">hospital_los_day -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                              </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">age -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                           </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">gender_num -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                    </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">weight_first -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                  </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">bmi -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                           </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">sapsi_first -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                   </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">sofa_first -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                    </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">service_num -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                   </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">day_icu_intime_num -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                            </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">hour_icu_intime -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                               </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">hosp_exp_flg -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                  </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">icu_exp_flg -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                   </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">day_28_flg -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                    </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">mort_day_censored -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                             </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">censor_flg -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                    </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">sepsis_flg -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                    </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">chf_flg -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                       </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">afib_flg -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                      </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">renal_flg -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                     </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">liver_flg -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                     </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">copd_flg -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                      </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">cad_flg -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                       </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">stroke_flg -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                    </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">mal_flg -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                       </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">resp_flg -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                      </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">map_1st -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                       </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">hr_1st -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                        </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">temp_1st -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                      </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">spo2_1st -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                      </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">abg_count -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                     </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">wbc_first -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                     </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">hgb_first -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                     </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">platelet_first -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">sodium_first -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                  </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">potassium_first -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                               </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">tco2_first -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                    </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">chloride_first -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">bun_first -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                     </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">creatinine_first -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                              </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">po2_first -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                     </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╠══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">pco2_first -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                    </span>
+<span style="color: #0000ff; text-decoration-color: #0000ff">    ╚══ </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">iv_day_1 -&gt; </span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">data type: </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">floating</span><span style="color: #008000; text-decoration-color: #008000; font-weight: bold">                                                      </span>
 </pre></div>
 </div>
-</div>
-</div>
-<div class="section" id="Preprocessing">
-<h1>Preprocessing<a class="headerlink" href="#Preprocessing" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="Quality-control---missing-values">
-<h2>Quality control - missing values<a class="headerlink" href="#Quality-control---missing-values" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="Preprocessing">
+<h1>Preprocessing<a class="headerlink" href="#Preprocessing" title="Permalink to this headline">#</a></h1>
+<section id="Quality-control---missing-values">
+<h2>Quality control - missing values<a class="headerlink" href="#Quality-control---missing-values" title="Permalink to this headline">#</a></h2>
 <p>ehrapy’s <strong>qc_metrics</strong> function will calculate several useful metrics such as the absolute number and percentages of missing values and properties like the mean/median/min/max of all features.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>_ = ep.pp.calculate_qc_metrics(adata)
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>_ = ep.pp.qc_metrics(adata)
+ep.pl.qc_metrics(adata)
 </pre></div>
 </div>
 </div>
@@ -1000,7 +889,7 @@ AnnData object with n_obs × n_vars = 1776 × 54
 </div>
 <div class="output_area rendered_html docutils container">
 <div>
-<style scoped>
+<style scoped="">
     .dataframe tbody tr th:only-of-type {
         vertical-align: middle;
     }
@@ -1013,96 +902,96 @@ AnnData object with n_obs × n_vars = 1776 × 54
         text-align: right;
     }
 </style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>service_unit</th>
-      <th>day_icu_intime</th>
-      <th>missing_values_abs</th>
-      <th>missing_values_pct</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>SICU</td>
-      <td>Friday</td>
-      <td>0</td>
-      <td>0.000000</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>MICU</td>
-      <td>Saturday</td>
-      <td>12</td>
-      <td>22.222222</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>MICU</td>
-      <td>Friday</td>
-      <td>0</td>
-      <td>0.000000</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>SICU</td>
-      <td>Saturday</td>
-      <td>3</td>
-      <td>5.555556</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>SICU</td>
-      <td>Saturday</td>
-      <td>0</td>
-      <td>0.000000</td>
-    </tr>
-    <tr>
-      <th>...</th>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-    </tr>
-    <tr>
-      <th>1771</th>
-      <td>MICU</td>
-      <td>Sunday</td>
-      <td>1</td>
-      <td>1.851852</td>
-    </tr>
-    <tr>
-      <th>1772</th>
-      <td>SICU</td>
-      <td>Saturday</td>
-      <td>1</td>
-      <td>1.851852</td>
-    </tr>
-    <tr>
-      <th>1773</th>
-      <td>MICU</td>
-      <td>Tuesday</td>
-      <td>3</td>
-      <td>5.555556</td>
-    </tr>
-    <tr>
-      <th>1774</th>
-      <td>SICU</td>
-      <td>Wednesday</td>
-      <td>1</td>
-      <td>1.851852</td>
-    </tr>
-    <tr>
-      <th>1775</th>
-      <td>MICU</td>
-      <td>Monday</td>
-      <td>1</td>
-      <td>1.851852</td>
-    </tr>
-  </tbody>
-</table>
+<div class="table-wrapper"><table border="1" class="dataframe">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>service_unit</th>
+<th>day_icu_intime</th>
+<th>missing_values_abs</th>
+<th>missing_values_pct</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>SICU</td>
+<td>Friday</td>
+<td>0</td>
+<td>0.000000</td>
+</tr>
+<tr>
+<th>1</th>
+<td>MICU</td>
+<td>Saturday</td>
+<td>12</td>
+<td>22.222222</td>
+</tr>
+<tr>
+<th>2</th>
+<td>MICU</td>
+<td>Friday</td>
+<td>0</td>
+<td>0.000000</td>
+</tr>
+<tr>
+<th>3</th>
+<td>SICU</td>
+<td>Saturday</td>
+<td>3</td>
+<td>5.555556</td>
+</tr>
+<tr>
+<th>4</th>
+<td>SICU</td>
+<td>Saturday</td>
+<td>0</td>
+<td>0.000000</td>
+</tr>
+<tr>
+<th>...</th>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+</tr>
+<tr>
+<th>1771</th>
+<td>MICU</td>
+<td>Sunday</td>
+<td>1</td>
+<td>1.851852</td>
+</tr>
+<tr>
+<th>1772</th>
+<td>SICU</td>
+<td>Saturday</td>
+<td>1</td>
+<td>1.851852</td>
+</tr>
+<tr>
+<th>1773</th>
+<td>MICU</td>
+<td>Tuesday</td>
+<td>3</td>
+<td>5.555556</td>
+</tr>
+<tr>
+<th>1774</th>
+<td>SICU</td>
+<td>Wednesday</td>
+<td>1</td>
+<td>1.851852</td>
+</tr>
+<tr>
+<th>1775</th>
+<td>MICU</td>
+<td>Monday</td>
+<td>1</td>
+<td>1.851852</td>
+</tr>
+</tbody>
+</table></div>
 <p>1776 rows × 4 columns</p>
 </div></div>
 </div>
@@ -1110,10 +999,10 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>_ = sns.displot(adata.obs[&quot;missing_values_abs&quot;])
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>_ = sns.displot(adata.obs["missing_values_abs"])
 plt.show()
 
-_ = sns.displot(adata.obs[&quot;missing_values_pct&quot;])
+_ = sns.displot(adata.obs["missing_values_pct"])
 </pre></div>
 </div>
 </div>
@@ -1121,14 +1010,14 @@ _ = sns.displot(adata.obs[&quot;missing_values_pct&quot;])
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_23_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_23_0.png" style="width: 382px; height: 380px;" />
+<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_23_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_23_0.png" style="width: 382px; height: 380px;"/>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_23_1.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_23_1.png" style="width: 382px; height: 380px;" />
+<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_23_1.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_23_1.png" style="width: 382px; height: 380px;"/>
 </div>
 </div>
 <div class="nbinput docutils container">
@@ -1145,7 +1034,7 @@ _ = sns.displot(adata.obs[&quot;missing_values_pct&quot;])
 </div>
 <div class="output_area rendered_html docutils container">
 <div>
-<style scoped>
+<style scoped="">
     .dataframe tbody tr th:only-of-type {
         vertical-align: middle;
     }
@@ -1158,572 +1047,572 @@ _ = sns.displot(adata.obs[&quot;missing_values_pct&quot;])
         text-align: right;
     }
 </style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>missing_values_abs</th>
-      <th>missing_values_pct</th>
-      <th>mean</th>
-      <th>median</th>
-      <th>standard_deviation</th>
-      <th>min</th>
-      <th>max</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>ehrapycat_service_unit_FICU</th>
-      <td>0</td>
-      <td>0.000000</td>
-      <td>0.034910</td>
-      <td>0.000000</td>
-      <td>0.183549</td>
-      <td>0.00000</td>
-      <td>1.000000</td>
-    </tr>
-    <tr>
-      <th>ehrapycat_service_unit_MICU</th>
-      <td>0</td>
-      <td>0.000000</td>
-      <td>0.412162</td>
-      <td>0.000000</td>
-      <td>0.492226</td>
-      <td>0.00000</td>
-      <td>1.000000</td>
-    </tr>
-    <tr>
-      <th>ehrapycat_service_unit_SICU</th>
-      <td>0</td>
-      <td>0.000000</td>
-      <td>0.552928</td>
-      <td>1.000000</td>
-      <td>0.497186</td>
-      <td>0.00000</td>
-      <td>1.000000</td>
-    </tr>
-    <tr>
-      <th>ehrapycat_day_icu_intime_Friday</th>
-      <td>0</td>
-      <td>0.000000</td>
-      <td>0.131757</td>
-      <td>0.000000</td>
-      <td>0.338227</td>
-      <td>0.00000</td>
-      <td>1.000000</td>
-    </tr>
-    <tr>
-      <th>ehrapycat_day_icu_intime_Monday</th>
-      <td>0</td>
-      <td>0.000000</td>
-      <td>0.146396</td>
-      <td>0.000000</td>
-      <td>0.353506</td>
-      <td>0.00000</td>
-      <td>1.000000</td>
-    </tr>
-    <tr>
-      <th>ehrapycat_day_icu_intime_Saturday</th>
-      <td>0</td>
-      <td>0.000000</td>
-      <td>0.156532</td>
-      <td>0.000000</td>
-      <td>0.363361</td>
-      <td>0.00000</td>
-      <td>1.000000</td>
-    </tr>
-    <tr>
-      <th>ehrapycat_day_icu_intime_Sunday</th>
-      <td>0</td>
-      <td>0.000000</td>
-      <td>0.129505</td>
-      <td>0.000000</td>
-      <td>0.335756</td>
-      <td>0.00000</td>
-      <td>1.000000</td>
-    </tr>
-    <tr>
-      <th>ehrapycat_day_icu_intime_Thursday</th>
-      <td>0</td>
-      <td>0.000000</td>
-      <td>0.146959</td>
-      <td>0.000000</td>
-      <td>0.354062</td>
-      <td>0.00000</td>
-      <td>1.000000</td>
-    </tr>
-    <tr>
-      <th>ehrapycat_day_icu_intime_Tuesday</th>
-      <td>0</td>
-      <td>0.000000</td>
-      <td>0.144707</td>
-      <td>0.000000</td>
-      <td>0.351803</td>
-      <td>0.00000</td>
-      <td>1.000000</td>
-    </tr>
-    <tr>
-      <th>ehrapycat_day_icu_intime_Wednesday</th>
-      <td>0</td>
-      <td>0.000000</td>
-      <td>0.144144</td>
-      <td>0.000000</td>
-      <td>0.351237</td>
-      <td>0.00000</td>
-      <td>1.000000</td>
-    </tr>
-    <tr>
-      <th>aline_flg</th>
-      <td>0</td>
-      <td>0.000000</td>
-      <td>0.554054</td>
-      <td>1.000000</td>
-      <td>0.497066</td>
-      <td>0.00000</td>
-      <td>1.000000</td>
-    </tr>
-    <tr>
-      <th>icu_los_day</th>
-      <td>0</td>
-      <td>0.000000</td>
-      <td>3.346498</td>
-      <td>2.185000</td>
-      <td>3.355314</td>
-      <td>0.50000</td>
-      <td>28.240000</td>
-    </tr>
-    <tr>
-      <th>hospital_los_day</th>
-      <td>0</td>
-      <td>0.000000</td>
-      <td>8.110924</td>
-      <td>6.000000</td>
-      <td>8.154866</td>
-      <td>1.00000</td>
-      <td>112.000000</td>
-    </tr>
-    <tr>
-      <th>age</th>
-      <td>0</td>
-      <td>0.000000</td>
-      <td>54.379585</td>
-      <td>53.678585</td>
-      <td>21.056919</td>
-      <td>15.18023</td>
-      <td>99.110947</td>
-    </tr>
-    <tr>
-      <th>gender_num</th>
-      <td>1</td>
-      <td>0.056306</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-    </tr>
-    <tr>
-      <th>weight_first</th>
-      <td>110</td>
-      <td>6.193694</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-    </tr>
-    <tr>
-      <th>bmi</th>
-      <td>466</td>
-      <td>26.238739</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-    </tr>
-    <tr>
-      <th>sapsi_first</th>
-      <td>85</td>
-      <td>4.786036</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-    </tr>
-    <tr>
-      <th>sofa_first</th>
-      <td>6</td>
-      <td>0.337838</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-    </tr>
-    <tr>
-      <th>service_num</th>
-      <td>0</td>
-      <td>0.000000</td>
-      <td>0.552928</td>
-      <td>1.000000</td>
-      <td>0.497186</td>
-      <td>0.00000</td>
-      <td>1.000000</td>
-    </tr>
-    <tr>
-      <th>day_icu_intime_num</th>
-      <td>0</td>
-      <td>0.000000</td>
-      <td>4.054054</td>
-      <td>4.000000</td>
-      <td>1.993913</td>
-      <td>1.00000</td>
-      <td>7.000000</td>
-    </tr>
-    <tr>
-      <th>hour_icu_intime</th>
-      <td>0</td>
-      <td>0.000000</td>
-      <td>10.585586</td>
-      <td>9.000000</td>
-      <td>7.922734</td>
-      <td>0.00000</td>
-      <td>23.000000</td>
-    </tr>
-    <tr>
-      <th>hosp_exp_flg</th>
-      <td>0</td>
-      <td>0.000000</td>
-      <td>0.137387</td>
-      <td>0.000000</td>
-      <td>0.344255</td>
-      <td>0.00000</td>
-      <td>1.000000</td>
-    </tr>
-    <tr>
-      <th>icu_exp_flg</th>
-      <td>0</td>
-      <td>0.000000</td>
-      <td>0.095721</td>
-      <td>0.000000</td>
-      <td>0.294206</td>
-      <td>0.00000</td>
-      <td>1.000000</td>
-    </tr>
-    <tr>
-      <th>day_28_flg</th>
-      <td>0</td>
-      <td>0.000000</td>
-      <td>0.159347</td>
-      <td>0.000000</td>
-      <td>0.365998</td>
-      <td>0.00000</td>
-      <td>1.000000</td>
-    </tr>
-    <tr>
-      <th>mort_day_censored</th>
-      <td>0</td>
-      <td>0.000000</td>
-      <td>614.329529</td>
-      <td>731.000000</td>
-      <td>402.995514</td>
-      <td>0.00000</td>
-      <td>3094.080078</td>
-    </tr>
-    <tr>
-      <th>censor_flg</th>
-      <td>0</td>
-      <td>0.000000</td>
-      <td>0.720158</td>
-      <td>1.000000</td>
-      <td>0.448918</td>
-      <td>0.00000</td>
-      <td>1.000000</td>
-    </tr>
-    <tr>
-      <th>sepsis_flg</th>
-      <td>0</td>
-      <td>0.000000</td>
-      <td>0.000000</td>
-      <td>0.000000</td>
-      <td>0.000000</td>
-      <td>0.00000</td>
-      <td>0.000000</td>
-    </tr>
-    <tr>
-      <th>chf_flg</th>
-      <td>0</td>
-      <td>0.000000</td>
-      <td>0.119932</td>
-      <td>0.000000</td>
-      <td>0.324885</td>
-      <td>0.00000</td>
-      <td>1.000000</td>
-    </tr>
-    <tr>
-      <th>afib_flg</th>
-      <td>0</td>
-      <td>0.000000</td>
-      <td>0.116554</td>
-      <td>0.000000</td>
-      <td>0.320888</td>
-      <td>0.00000</td>
-      <td>1.000000</td>
-    </tr>
-    <tr>
-      <th>renal_flg</th>
-      <td>0</td>
-      <td>0.000000</td>
-      <td>0.033784</td>
-      <td>0.000000</td>
-      <td>0.180671</td>
-      <td>0.00000</td>
-      <td>1.000000</td>
-    </tr>
-    <tr>
-      <th>liver_flg</th>
-      <td>0</td>
-      <td>0.000000</td>
-      <td>0.055743</td>
-      <td>0.000000</td>
-      <td>0.229425</td>
-      <td>0.00000</td>
-      <td>1.000000</td>
-    </tr>
-    <tr>
-      <th>copd_flg</th>
-      <td>0</td>
-      <td>0.000000</td>
-      <td>0.088401</td>
-      <td>0.000000</td>
-      <td>0.283876</td>
-      <td>0.00000</td>
-      <td>1.000000</td>
-    </tr>
-    <tr>
-      <th>cad_flg</th>
-      <td>0</td>
-      <td>0.000000</td>
-      <td>0.069257</td>
-      <td>0.000000</td>
-      <td>0.253892</td>
-      <td>0.00000</td>
-      <td>1.000000</td>
-    </tr>
-    <tr>
-      <th>stroke_flg</th>
-      <td>0</td>
-      <td>0.000000</td>
-      <td>0.125000</td>
-      <td>0.000000</td>
-      <td>0.330719</td>
-      <td>0.00000</td>
-      <td>1.000000</td>
-    </tr>
-    <tr>
-      <th>mal_flg</th>
-      <td>0</td>
-      <td>0.000000</td>
-      <td>0.144144</td>
-      <td>0.000000</td>
-      <td>0.351237</td>
-      <td>0.00000</td>
-      <td>1.000000</td>
-    </tr>
-    <tr>
-      <th>resp_flg</th>
-      <td>0</td>
-      <td>0.000000</td>
-      <td>0.318131</td>
-      <td>0.000000</td>
-      <td>0.465748</td>
-      <td>0.00000</td>
-      <td>1.000000</td>
-    </tr>
-    <tr>
-      <th>map_1st</th>
-      <td>0</td>
-      <td>0.000000</td>
-      <td>88.246994</td>
-      <td>87.000000</td>
-      <td>17.590710</td>
-      <td>5.00000</td>
-      <td>195.000000</td>
-    </tr>
-    <tr>
-      <th>hr_1st</th>
-      <td>0</td>
-      <td>0.000000</td>
-      <td>87.914978</td>
-      <td>87.000000</td>
-      <td>18.753557</td>
-      <td>30.00000</td>
-      <td>158.000000</td>
-    </tr>
-    <tr>
-      <th>temp_1st</th>
-      <td>3</td>
-      <td>0.168919</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-    </tr>
-    <tr>
-      <th>spo2_1st</th>
-      <td>0</td>
-      <td>0.000000</td>
-      <td>98.432999</td>
-      <td>100.000000</td>
-      <td>5.510852</td>
-      <td>4.00000</td>
-      <td>100.000000</td>
-    </tr>
-    <tr>
-      <th>abg_count</th>
-      <td>0</td>
-      <td>0.000000</td>
-      <td>5.984797</td>
-      <td>3.000000</td>
-      <td>8.681959</td>
-      <td>0.00000</td>
-      <td>115.000000</td>
-    </tr>
-    <tr>
-      <th>wbc_first</th>
-      <td>8</td>
-      <td>0.450450</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-    </tr>
-    <tr>
-      <th>hgb_first</th>
-      <td>8</td>
-      <td>0.450450</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-    </tr>
-    <tr>
-      <th>platelet_first</th>
-      <td>8</td>
-      <td>0.450450</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-    </tr>
-    <tr>
-      <th>sodium_first</th>
-      <td>5</td>
-      <td>0.281532</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-    </tr>
-    <tr>
-      <th>potassium_first</th>
-      <td>5</td>
-      <td>0.281532</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-    </tr>
-    <tr>
-      <th>tco2_first</th>
-      <td>5</td>
-      <td>0.281532</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-    </tr>
-    <tr>
-      <th>chloride_first</th>
-      <td>5</td>
-      <td>0.281532</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-    </tr>
-    <tr>
-      <th>bun_first</th>
-      <td>5</td>
-      <td>0.281532</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-    </tr>
-    <tr>
-      <th>creatinine_first</th>
-      <td>6</td>
-      <td>0.337838</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-    </tr>
-    <tr>
-      <th>po2_first</th>
-      <td>186</td>
-      <td>10.472973</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-    </tr>
-    <tr>
-      <th>pco2_first</th>
-      <td>186</td>
-      <td>10.472973</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-    </tr>
-    <tr>
-      <th>iv_day_1</th>
-      <td>143</td>
-      <td>8.051802</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-    </tr>
-  </tbody>
-</table>
+<div class="table-wrapper"><table border="1" class="dataframe">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>missing_values_abs</th>
+<th>missing_values_pct</th>
+<th>mean</th>
+<th>median</th>
+<th>standard_deviation</th>
+<th>min</th>
+<th>max</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>ehrapycat_service_unit_FICU</th>
+<td>0</td>
+<td>0.000000</td>
+<td>0.034910</td>
+<td>0.000000</td>
+<td>0.183549</td>
+<td>0.00000</td>
+<td>1.000000</td>
+</tr>
+<tr>
+<th>ehrapycat_service_unit_MICU</th>
+<td>0</td>
+<td>0.000000</td>
+<td>0.412162</td>
+<td>0.000000</td>
+<td>0.492226</td>
+<td>0.00000</td>
+<td>1.000000</td>
+</tr>
+<tr>
+<th>ehrapycat_service_unit_SICU</th>
+<td>0</td>
+<td>0.000000</td>
+<td>0.552928</td>
+<td>1.000000</td>
+<td>0.497186</td>
+<td>0.00000</td>
+<td>1.000000</td>
+</tr>
+<tr>
+<th>ehrapycat_day_icu_intime_Friday</th>
+<td>0</td>
+<td>0.000000</td>
+<td>0.131757</td>
+<td>0.000000</td>
+<td>0.338227</td>
+<td>0.00000</td>
+<td>1.000000</td>
+</tr>
+<tr>
+<th>ehrapycat_day_icu_intime_Monday</th>
+<td>0</td>
+<td>0.000000</td>
+<td>0.146396</td>
+<td>0.000000</td>
+<td>0.353506</td>
+<td>0.00000</td>
+<td>1.000000</td>
+</tr>
+<tr>
+<th>ehrapycat_day_icu_intime_Saturday</th>
+<td>0</td>
+<td>0.000000</td>
+<td>0.156532</td>
+<td>0.000000</td>
+<td>0.363361</td>
+<td>0.00000</td>
+<td>1.000000</td>
+</tr>
+<tr>
+<th>ehrapycat_day_icu_intime_Sunday</th>
+<td>0</td>
+<td>0.000000</td>
+<td>0.129505</td>
+<td>0.000000</td>
+<td>0.335756</td>
+<td>0.00000</td>
+<td>1.000000</td>
+</tr>
+<tr>
+<th>ehrapycat_day_icu_intime_Thursday</th>
+<td>0</td>
+<td>0.000000</td>
+<td>0.146959</td>
+<td>0.000000</td>
+<td>0.354062</td>
+<td>0.00000</td>
+<td>1.000000</td>
+</tr>
+<tr>
+<th>ehrapycat_day_icu_intime_Tuesday</th>
+<td>0</td>
+<td>0.000000</td>
+<td>0.144707</td>
+<td>0.000000</td>
+<td>0.351803</td>
+<td>0.00000</td>
+<td>1.000000</td>
+</tr>
+<tr>
+<th>ehrapycat_day_icu_intime_Wednesday</th>
+<td>0</td>
+<td>0.000000</td>
+<td>0.144144</td>
+<td>0.000000</td>
+<td>0.351237</td>
+<td>0.00000</td>
+<td>1.000000</td>
+</tr>
+<tr>
+<th>aline_flg</th>
+<td>0</td>
+<td>0.000000</td>
+<td>0.554054</td>
+<td>1.000000</td>
+<td>0.497066</td>
+<td>0.00000</td>
+<td>1.000000</td>
+</tr>
+<tr>
+<th>icu_los_day</th>
+<td>0</td>
+<td>0.000000</td>
+<td>3.346498</td>
+<td>2.185000</td>
+<td>3.355314</td>
+<td>0.50000</td>
+<td>28.240000</td>
+</tr>
+<tr>
+<th>hospital_los_day</th>
+<td>0</td>
+<td>0.000000</td>
+<td>8.110924</td>
+<td>6.000000</td>
+<td>8.154866</td>
+<td>1.00000</td>
+<td>112.000000</td>
+</tr>
+<tr>
+<th>age</th>
+<td>0</td>
+<td>0.000000</td>
+<td>54.379585</td>
+<td>53.678585</td>
+<td>21.056919</td>
+<td>15.18023</td>
+<td>99.110947</td>
+</tr>
+<tr>
+<th>gender_num</th>
+<td>1</td>
+<td>0.056306</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+</tr>
+<tr>
+<th>weight_first</th>
+<td>110</td>
+<td>6.193694</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+</tr>
+<tr>
+<th>bmi</th>
+<td>466</td>
+<td>26.238739</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+</tr>
+<tr>
+<th>sapsi_first</th>
+<td>85</td>
+<td>4.786036</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+</tr>
+<tr>
+<th>sofa_first</th>
+<td>6</td>
+<td>0.337838</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+</tr>
+<tr>
+<th>service_num</th>
+<td>0</td>
+<td>0.000000</td>
+<td>0.552928</td>
+<td>1.000000</td>
+<td>0.497186</td>
+<td>0.00000</td>
+<td>1.000000</td>
+</tr>
+<tr>
+<th>day_icu_intime_num</th>
+<td>0</td>
+<td>0.000000</td>
+<td>4.054054</td>
+<td>4.000000</td>
+<td>1.993913</td>
+<td>1.00000</td>
+<td>7.000000</td>
+</tr>
+<tr>
+<th>hour_icu_intime</th>
+<td>0</td>
+<td>0.000000</td>
+<td>10.585586</td>
+<td>9.000000</td>
+<td>7.922734</td>
+<td>0.00000</td>
+<td>23.000000</td>
+</tr>
+<tr>
+<th>hosp_exp_flg</th>
+<td>0</td>
+<td>0.000000</td>
+<td>0.137387</td>
+<td>0.000000</td>
+<td>0.344255</td>
+<td>0.00000</td>
+<td>1.000000</td>
+</tr>
+<tr>
+<th>icu_exp_flg</th>
+<td>0</td>
+<td>0.000000</td>
+<td>0.095721</td>
+<td>0.000000</td>
+<td>0.294206</td>
+<td>0.00000</td>
+<td>1.000000</td>
+</tr>
+<tr>
+<th>day_28_flg</th>
+<td>0</td>
+<td>0.000000</td>
+<td>0.159347</td>
+<td>0.000000</td>
+<td>0.365998</td>
+<td>0.00000</td>
+<td>1.000000</td>
+</tr>
+<tr>
+<th>mort_day_censored</th>
+<td>0</td>
+<td>0.000000</td>
+<td>614.329529</td>
+<td>731.000000</td>
+<td>402.995514</td>
+<td>0.00000</td>
+<td>3094.080078</td>
+</tr>
+<tr>
+<th>censor_flg</th>
+<td>0</td>
+<td>0.000000</td>
+<td>0.720158</td>
+<td>1.000000</td>
+<td>0.448918</td>
+<td>0.00000</td>
+<td>1.000000</td>
+</tr>
+<tr>
+<th>sepsis_flg</th>
+<td>0</td>
+<td>0.000000</td>
+<td>0.000000</td>
+<td>0.000000</td>
+<td>0.000000</td>
+<td>0.00000</td>
+<td>0.000000</td>
+</tr>
+<tr>
+<th>chf_flg</th>
+<td>0</td>
+<td>0.000000</td>
+<td>0.119932</td>
+<td>0.000000</td>
+<td>0.324885</td>
+<td>0.00000</td>
+<td>1.000000</td>
+</tr>
+<tr>
+<th>afib_flg</th>
+<td>0</td>
+<td>0.000000</td>
+<td>0.116554</td>
+<td>0.000000</td>
+<td>0.320888</td>
+<td>0.00000</td>
+<td>1.000000</td>
+</tr>
+<tr>
+<th>renal_flg</th>
+<td>0</td>
+<td>0.000000</td>
+<td>0.033784</td>
+<td>0.000000</td>
+<td>0.180671</td>
+<td>0.00000</td>
+<td>1.000000</td>
+</tr>
+<tr>
+<th>liver_flg</th>
+<td>0</td>
+<td>0.000000</td>
+<td>0.055743</td>
+<td>0.000000</td>
+<td>0.229425</td>
+<td>0.00000</td>
+<td>1.000000</td>
+</tr>
+<tr>
+<th>copd_flg</th>
+<td>0</td>
+<td>0.000000</td>
+<td>0.088401</td>
+<td>0.000000</td>
+<td>0.283876</td>
+<td>0.00000</td>
+<td>1.000000</td>
+</tr>
+<tr>
+<th>cad_flg</th>
+<td>0</td>
+<td>0.000000</td>
+<td>0.069257</td>
+<td>0.000000</td>
+<td>0.253892</td>
+<td>0.00000</td>
+<td>1.000000</td>
+</tr>
+<tr>
+<th>stroke_flg</th>
+<td>0</td>
+<td>0.000000</td>
+<td>0.125000</td>
+<td>0.000000</td>
+<td>0.330719</td>
+<td>0.00000</td>
+<td>1.000000</td>
+</tr>
+<tr>
+<th>mal_flg</th>
+<td>0</td>
+<td>0.000000</td>
+<td>0.144144</td>
+<td>0.000000</td>
+<td>0.351237</td>
+<td>0.00000</td>
+<td>1.000000</td>
+</tr>
+<tr>
+<th>resp_flg</th>
+<td>0</td>
+<td>0.000000</td>
+<td>0.318131</td>
+<td>0.000000</td>
+<td>0.465748</td>
+<td>0.00000</td>
+<td>1.000000</td>
+</tr>
+<tr>
+<th>map_1st</th>
+<td>0</td>
+<td>0.000000</td>
+<td>88.246994</td>
+<td>87.000000</td>
+<td>17.590710</td>
+<td>5.00000</td>
+<td>195.000000</td>
+</tr>
+<tr>
+<th>hr_1st</th>
+<td>0</td>
+<td>0.000000</td>
+<td>87.914978</td>
+<td>87.000000</td>
+<td>18.753557</td>
+<td>30.00000</td>
+<td>158.000000</td>
+</tr>
+<tr>
+<th>temp_1st</th>
+<td>3</td>
+<td>0.168919</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+</tr>
+<tr>
+<th>spo2_1st</th>
+<td>0</td>
+<td>0.000000</td>
+<td>98.432999</td>
+<td>100.000000</td>
+<td>5.510852</td>
+<td>4.00000</td>
+<td>100.000000</td>
+</tr>
+<tr>
+<th>abg_count</th>
+<td>0</td>
+<td>0.000000</td>
+<td>5.984797</td>
+<td>3.000000</td>
+<td>8.681959</td>
+<td>0.00000</td>
+<td>115.000000</td>
+</tr>
+<tr>
+<th>wbc_first</th>
+<td>8</td>
+<td>0.450450</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+</tr>
+<tr>
+<th>hgb_first</th>
+<td>8</td>
+<td>0.450450</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+</tr>
+<tr>
+<th>platelet_first</th>
+<td>8</td>
+<td>0.450450</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+</tr>
+<tr>
+<th>sodium_first</th>
+<td>5</td>
+<td>0.281532</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+</tr>
+<tr>
+<th>potassium_first</th>
+<td>5</td>
+<td>0.281532</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+</tr>
+<tr>
+<th>tco2_first</th>
+<td>5</td>
+<td>0.281532</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+</tr>
+<tr>
+<th>chloride_first</th>
+<td>5</td>
+<td>0.281532</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+</tr>
+<tr>
+<th>bun_first</th>
+<td>5</td>
+<td>0.281532</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+</tr>
+<tr>
+<th>creatinine_first</th>
+<td>6</td>
+<td>0.337838</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+</tr>
+<tr>
+<th>po2_first</th>
+<td>186</td>
+<td>10.472973</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+</tr>
+<tr>
+<th>pco2_first</th>
+<td>186</td>
+<td>10.472973</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+</tr>
+<tr>
+<th>iv_day_1</th>
+<td>143</td>
+<td>8.051802</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+</tr>
+</tbody>
+</table></div>
 </div></div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>_ = sns.displot(adata.var[&quot;missing_values_abs&quot;])
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>_ = sns.displot(adata.var["missing_values_abs"])
 plt.show()
 
-_ = sns.displot(adata.var[&quot;missing_values_pct&quot;])
+_ = sns.displot(adata.var["missing_values_pct"])
 </pre></div>
 </div>
 </div>
@@ -1731,20 +1620,20 @@ _ = sns.displot(adata.var[&quot;missing_values_pct&quot;])
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_25_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_25_0.png" style="width: 382px; height: 380px;" />
+<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_25_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_25_0.png" style="width: 382px; height: 380px;"/>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_25_1.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_25_1.png" style="width: 382px; height: 380px;" />
+<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_25_1.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_25_1.png" style="width: 382px; height: 380px;"/>
 </div>
 </div>
 <p>The data still has several features with missing values, but none of them exceed more than 27% (BMI) of percentage of missing values. Hence, there is no need to drop any of the observations nor features. We can simply impute the missing values.</p>
-</div>
-<div class="section" id="Missing-Data-Imputation">
-<h2>Missing Data Imputation<a class="headerlink" href="#Missing-Data-Imputation" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="Missing-Data-Imputation">
+<h2>Missing Data Imputation<a class="headerlink" href="#Missing-Data-Imputation" title="Permalink to this headline">#</a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
@@ -1753,6 +1642,25 @@ _ = sns.displot(adata.var[&quot;missing_values_pct&quot;])
 </pre></div>
 </div>
 </div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "0e66fc66549a41988717b905be6c83cc", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre></div>
+</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
@@ -1760,35 +1668,27 @@ _ = sns.displot(adata.var[&quot;missing_values_pct&quot;])
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 AnnData object with n_obs × n_vars = 1776 × 54
-    obs: &#39;service_unit&#39;, &#39;day_icu_intime&#39;, &#39;missing_values_abs&#39;, &#39;missing_values_pct&#39;
-    var: &#39;missing_values_abs&#39;, &#39;missing_values_pct&#39;, &#39;mean&#39;, &#39;median&#39;, &#39;standard_deviation&#39;, &#39;min&#39;, &#39;max&#39;
-    uns: &#39;numerical_columns&#39;, &#39;non_numerical_columns&#39;, &#39;encoding_to_var&#39;, &#39;original_values_categoricals&#39;, &#39;var_to_encoding&#39;
-    layers: &#39;original&#39;
+    obs: 'service_unit', 'day_icu_intime', 'missing_values_abs', 'missing_values_pct'
+    var: 'missing_values_abs', 'missing_values_pct', 'mean', 'median', 'standard_deviation', 'min', 'max'
+    uns: 'numerical_columns', 'non_numerical_columns', 'encoding_to_var', 'original_values_categoricals', 'var_to_encoding'
+    layers: 'original'
 </pre></div></div>
-</div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>_ = ep.pp.calculate_qc_metrics(adata)
-</pre></div>
-</div>
 </div>
 <p>We can now confirm that there are indeed no missing values present.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>_ = sns.displot(adata.obs[&quot;missing_values_abs&quot;])
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>_ = sns.displot(adata.obs["missing_values_abs"])
 plt.show()
 
-_ = sns.displot(adata.obs[&quot;missing_values_pct&quot;])
+_ = sns.displot(adata.obs["missing_values_pct"])
 plt.show()
 
-_ = sns.displot(adata.var[&quot;missing_values_abs&quot;])
+_ = sns.displot(adata.var["missing_values_abs"])
 plt.show()
 
-_ = sns.displot(adata.var[&quot;missing_values_pct&quot;])
+_ = sns.displot(adata.var["missing_values_pct"])
 </pre></div>
 </div>
 </div>
@@ -1796,45 +1696,45 @@ _ = sns.displot(adata.var[&quot;missing_values_pct&quot;])
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_31_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_31_0.png" style="width: 382px; height: 380px;" />
+<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_30_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_30_0.png" style="width: 382px; height: 380px;"/>
 </div>
 </div>
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_31_1.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_31_1.png" style="width: 382px; height: 380px;" />
+<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_30_1.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_30_1.png" style="width: 382px; height: 380px;"/>
 </div>
 </div>
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_31_2.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_31_2.png" style="width: 382px; height: 380px;" />
+<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_30_2.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_30_2.png" style="width: 382px; height: 380px;"/>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_31_3.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_31_3.png" style="width: 382px; height: 380px;" />
+<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_30_3.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_30_3.png" style="width: 382px; height: 380px;"/>
 </div>
 </div>
-</div>
-<div class="section" id="Quality-Control---Data-Distribution">
-<h2>Quality Control - Data Distribution<a class="headerlink" href="#Quality-Control---Data-Distribution" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="Quality-Control---Data-Distribution">
+<h2>Quality Control - Data Distribution<a class="headerlink" href="#Quality-Control---Data-Distribution" title="Permalink to this headline">#</a></h2>
 <p>Depending on the measurement and the unit of a measurement the value ranges of features may be huge. Clusterings and differential comparisons especially may be greatly influenced by exceptionally big values.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>_ = sns.displot(adata.var[&quot;min&quot;])
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>_ = sns.displot(adata.var["min"])
 plt.show()
 
-_ = sns.displot(adata.var[&quot;max&quot;])
+_ = sns.displot(adata.var["max"])
 plt.show()
 
-_ = sns.displot(adata.var[&quot;standard_deviation&quot;])
+_ = sns.displot(adata.var["standard_deviation"])
 </pre></div>
 </div>
 </div>
@@ -1842,28 +1742,28 @@ _ = sns.displot(adata.var[&quot;standard_deviation&quot;])
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_34_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_34_0.png" style="width: 382px; height: 381px;" />
+<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_33_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_33_0.png" style="width: 382px; height: 381px;"/>
 </div>
 </div>
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_34_1.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_34_1.png" style="width: 382px; height: 381px;" />
+<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_33_1.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_33_1.png" style="width: 382px; height: 381px;"/>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_34_2.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_34_2.png" style="width: 382px; height: 380px;" />
+<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_33_2.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_33_2.png" style="width: 382px; height: 380px;"/>
 </div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata.var[adata.var[&quot;standard_deviation&quot;] &gt; 500]
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata.var[adata.var["standard_deviation"] &gt; 500]
 </pre></div>
 </div>
 </div>
@@ -1873,7 +1773,7 @@ _ = sns.displot(adata.var[&quot;standard_deviation&quot;])
 </div>
 <div class="output_area rendered_html docutils container">
 <div>
-<style scoped>
+<style scoped="">
     .dataframe tbody tr th:only-of-type {
         vertical-align: middle;
     }
@@ -1886,44 +1786,44 @@ _ = sns.displot(adata.var[&quot;standard_deviation&quot;])
         text-align: right;
     }
 </style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>missing_values_abs</th>
-      <th>missing_values_pct</th>
-      <th>mean</th>
-      <th>median</th>
-      <th>standard_deviation</th>
-      <th>min</th>
-      <th>max</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>iv_day_1</th>
-      <td>0</td>
-      <td>0.0</td>
-      <td>1613.186646</td>
-      <td>1086.674927</td>
-      <td>1652.056885</td>
-      <td>0.0</td>
-      <td>13910.0</td>
-    </tr>
-  </tbody>
-</table>
+<div class="table-wrapper"><table border="1" class="dataframe">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>missing_values_abs</th>
+<th>missing_values_pct</th>
+<th>mean</th>
+<th>median</th>
+<th>standard_deviation</th>
+<th>min</th>
+<th>max</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>iv_day_1</th>
+<td>0</td>
+<td>0.0</td>
+<td>1613.186646</td>
+<td>1086.674927</td>
+<td>1652.056885</td>
+<td>0.0</td>
+<td>13910.0</td>
+</tr>
+</tbody>
+</table></div>
 </div></div>
 </div>
 <p>The standard deviation of the feature <strong>iv_day_1</strong> is huge together with a very low miniumum value of 0 and a maximum value of 13910. This feature requires normalization.</p>
-</div>
-<div class="section" id="Normalization">
-<h2>Normalization<a class="headerlink" href="#Normalization" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="Normalization">
+<h2>Normalization<a class="headerlink" href="#Normalization" title="Permalink to this headline">#</a></h2>
 <p>ehrapy offers several options to normalize data. While it is possible to normalize all numerical values at once with the same normalization function we might be able to get away with just normalizing the <code class="docutils literal notranslate"><span class="pre">iv_day_1</span></code> feature. log normalization with an offset of 1 to add pseudocounts seems appropriate.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pp.norm_log(adata, vars=[&quot;iv_day_1&quot;], offset=1)
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pp.log_norm(adata, vars=["iv_day_1"], offset=1)
 </pre></div>
 </div>
 </div>
@@ -1934,16 +1834,25 @@ _ = sns.displot(adata.var[&quot;standard_deviation&quot;])
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 AnnData object with n_obs × n_vars = 1776 × 54
-    obs: &#39;service_unit&#39;, &#39;day_icu_intime&#39;, &#39;missing_values_abs&#39;, &#39;missing_values_pct&#39;
-    var: &#39;missing_values_abs&#39;, &#39;missing_values_pct&#39;, &#39;mean&#39;, &#39;median&#39;, &#39;standard_deviation&#39;, &#39;min&#39;, &#39;max&#39;
-    uns: &#39;numerical_columns&#39;, &#39;non_numerical_columns&#39;, &#39;encoding_to_var&#39;, &#39;original_values_categoricals&#39;, &#39;var_to_encoding&#39;, &#39;normalization&#39;
-    layers: &#39;original&#39;, &#39;raw_norm&#39;
+    obs: 'service_unit', 'day_icu_intime', 'missing_values_abs', 'missing_values_pct'
+    var: 'missing_values_abs', 'missing_values_pct', 'mean', 'median', 'standard_deviation', 'min', 'max'
+    uns: 'numerical_columns', 'non_numerical_columns', 'encoding_to_var', 'original_values_categoricals', 'var_to_encoding', 'normalization'
+    layers: 'original', 'raw_norm'
 </pre></div></div>
 </div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>_ = ep.pp.qc_metrics(adata)
+ep.pl.qc_metrics
+</pre></div>
 </div>
 </div>
-<div class="section" id="PCA-&amp;-UMAP">
-<h1>PCA &amp; UMAP<a class="headerlink" href="#PCA-&-UMAP" title="Permalink to this headline">¶</a></h1>
+</section>
+</section>
+<section id="PCA-&amp;-UMAP">
+<h1>PCA &amp; UMAP<a class="headerlink" href="#PCA-&amp;-UMAP" title="Permalink to this headline">#</a></h1>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
 </pre></div>
@@ -1956,7 +1865,7 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.pca(adata, color=&quot;service_unit&quot;)
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.pca(adata, color="service_unit")
 </pre></div>
 </div>
 </div>
@@ -1965,15 +1874,15 @@ AnnData object with n_obs × n_vars = 1776 × 54
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-... storing &#39;service_unit&#39; as categorical
-... storing &#39;day_icu_intime&#39; as categorical
+... storing 'service_unit' as categorical
+... storing 'day_icu_intime' as categorical
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_42_1.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_42_1.png" style="width: 353px; height: 296px;" />
+<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_42_1.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_42_1.png" style="width: 353px; height: 296px;"/>
 </div>
 </div>
 <div class="nbinput nblast docutils container">
@@ -1992,18 +1901,18 @@ AnnData object with n_obs × n_vars = 1776 × 54
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="Batch-effect-check">
-<h1>Batch effect check<a class="headerlink" href="#Batch-effect-check" title="Permalink to this headline">¶</a></h1>
+</section>
+<section id="Batch-effect-check">
+<h1>Batch effect check<a class="headerlink" href="#Batch-effect-check" title="Permalink to this headline">#</a></h1>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.umap(
     adata,
-    color=[&quot;day_icu_intime&quot;, &quot;service_unit&quot;],
+    color=["day_icu_intime", "service_unit"],
     wspace=0.5,
-    title=[&quot;Day of ICU admission&quot;, &quot;Service unit&quot;],
+    title=["Day of ICU admission", "Service unit"],
 )
 </pre></div>
 </div>
@@ -2012,17 +1921,17 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_46_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_46_0.png" style="width: 839px; height: 299px;" />
+<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_46_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_46_0.png" style="width: 839px; height: 299px;"/>
 </div>
 </div>
-</div>
-<div class="section" id="Leiden-clustering">
-<h1>Leiden clustering<a class="headerlink" href="#Leiden-clustering" title="Permalink to this headline">¶</a></h1>
+</section>
+<section id="Leiden-clustering">
+<h1>Leiden clustering<a class="headerlink" href="#Leiden-clustering" title="Permalink to this headline">#</a></h1>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.tl.leiden(adata, resolution=0.5, key_added=&quot;leiden_0_5&quot;)
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
 </pre></div>
 </div>
 </div>
@@ -2030,7 +1939,7 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.umap(adata, color=[&quot;leiden_0_5&quot;], title=&quot;Leiden 0.5&quot;)
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.umap(adata, color=["leiden_0_5"], title="Leiden 0.5")
 </pre></div>
 </div>
 </div>
@@ -2038,21 +1947,21 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_49_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_49_0.png" style="width: 325px; height: 296px;" />
+<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_49_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_49_0.png" style="width: 325px; height: 296px;"/>
 </div>
 </div>
-</div>
-<div class="section" id="Hospital-&amp;-ICU-statistics">
-<h1>Hospital &amp; ICU statistics<a class="headerlink" href="#Hospital-&-ICU-statistics" title="Permalink to this headline">¶</a></h1>
+</section>
+<section id="Hospital-&amp;-ICU-statistics">
+<h1>Hospital &amp; ICU statistics<a class="headerlink" href="#Hospital-&amp;-ICU-statistics" title="Permalink to this headline">#</a></h1>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.umap(
     adata,
-    color=[&quot;aline_flg&quot;, &quot;icu_los_day&quot;, &quot;hospital_los_day&quot;],
+    color=["aline_flg", "icu_los_day", "hospital_los_day"],
     cmap=ep.pl.Colormaps.grey_red.value,
-    title=[&quot;IAC used&quot;, &quot;Length of stay in ICU&quot;, &quot;Length of hospital stay&quot;],
+    title=["IAC used", "Length of stay in ICU", "Length of hospital stay"],
 )
 </pre></div>
 </div>
@@ -2061,12 +1970,12 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_51_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_51_0.png" style="width: 982px; height: 299px;" />
+<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_51_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_51_0.png" style="width: 982px; height: 299px;"/>
 </div>
 </div>
-</div>
-<div class="section" id="Death">
-<h1>Death<a class="headerlink" href="#Death" title="Permalink to this headline">¶</a></h1>
+</section>
+<section id="Death">
+<h1>Death<a class="headerlink" href="#Death" title="Permalink to this headline">#</a></h1>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
 </pre></div>
@@ -2074,19 +1983,19 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.umap(
     adata,
     color=[
-        &quot;hosp_exp_flg&quot;,
-        &quot;icu_exp_flg&quot;,
-        &quot;day_28_flg&quot;,
-        &quot;mort_day_censored&quot;,
-        &quot;censor_flg&quot;,
+        "hosp_exp_flg",
+        "icu_exp_flg",
+        "day_28_flg",
+        "mort_day_censored",
+        "censor_flg",
     ],
     cmap=ep.pl.Colormaps.grey_red.value,
     title=[
-        &quot;Died in hospital&quot;,
-        &quot;Died in ICU&quot;,
-        &quot;Died in less than 28 days&quot;,
-        &quot;Day of death or censoring post ICU&quot;,
-        &quot;Censored or dead&quot;,
+        "Died in hospital",
+        "Died in ICU",
+        "Died in less than 28 days",
+        "Day of death or censoring post ICU",
+        "Censored or dead",
     ],
 )
 </pre></div>
@@ -2096,12 +2005,12 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_53_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_53_0.png" style="width: 1301px; height: 577px;" />
+<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_53_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_53_0.png" style="width: 1301px; height: 577px;"/>
 </div>
 </div>
-</div>
-<div class="section" id="Demographics">
-<h1>Demographics<a class="headerlink" href="#Demographics" title="Permalink to this headline">¶</a></h1>
+</section>
+<section id="Demographics">
+<h1>Demographics<a class="headerlink" href="#Demographics" title="Permalink to this headline">#</a></h1>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
 </pre></div>
@@ -2109,12 +2018,12 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.umap(
     adata,
     color=[
-        &quot;age&quot;,
-        &quot;gender_num&quot;,
-        &quot;weight_first&quot;,
-        &quot;bmi&quot;,
+        "age",
+        "gender_num",
+        "weight_first",
+        "bmi",
     ],
-    title=[&quot;Age&quot;, &quot;Gender&quot;, &quot;Initial weight in kg&quot;, &quot;BMI&quot;],
+    title=["Age", "Gender", "Initial weight in kg", "BMI"],
 )
 </pre></div>
 </div>
@@ -2123,12 +2032,12 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_55_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_55_0.png" style="width: 1282px; height: 299px;" />
+<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_55_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_55_0.png" style="width: 1282px; height: 299px;"/>
 </div>
 </div>
-</div>
-<div class="section" id="Comorbidities">
-<h1>Comorbidities<a class="headerlink" href="#Comorbidities" title="Permalink to this headline">¶</a></h1>
+</section>
+<section id="Comorbidities">
+<h1>Comorbidities<a class="headerlink" href="#Comorbidities" title="Permalink to this headline">#</a></h1>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
 </pre></div>
@@ -2136,27 +2045,27 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.umap(
     adata,
     color=[
-        &quot;sapsi_first&quot;,
-        &quot;sofa_first&quot;,
-        &quot;renal_flg&quot;,
-        &quot;liver_flg&quot;,
-        &quot;copd_flg&quot;,
-        &quot;resp_flg&quot;,
-        &quot;cad_flg&quot;,
-        &quot;stroke_flg&quot;,
-        &quot;mal_flg&quot;,
+        "sapsi_first",
+        "sofa_first",
+        "renal_flg",
+        "liver_flg",
+        "copd_flg",
+        "resp_flg",
+        "cad_flg",
+        "stroke_flg",
+        "mal_flg",
     ],
     cmap=ep.pl.Colormaps.grey_red.value,
     title=[
-        &quot;Initial SAPS II score&quot;,
-        &quot;Initial SOFA score&quot;,
-        &quot;Chronic renal disease&quot;,
-        &quot;Liver disease&quot;,
-        &quot;COPD&quot;,
-        &quot;Respiratory disease w/o COPD&quot;,
-        &quot;Coronary artery disease&quot;,
-        &quot;Stroke&quot;,
-        &quot;Malignancy&quot;,
+        "Initial SAPS II score",
+        "Initial SOFA score",
+        "Chronic renal disease",
+        "Liver disease",
+        "COPD",
+        "Respiratory disease w/o COPD",
+        "Coronary artery disease",
+        "Stroke",
+        "Malignancy",
     ],
 )
 </pre></div>
@@ -2166,12 +2075,12 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_57_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_57_0.png" style="width: 1286px; height: 856px;" />
+<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_57_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_57_0.png" style="width: 1286px; height: 856px;"/>
 </div>
 </div>
-</div>
-<div class="section" id="Initial-lab-measurements">
-<h1>Initial lab measurements<a class="headerlink" href="#Initial-lab-measurements" title="Permalink to this headline">¶</a></h1>
+</section>
+<section id="Initial-lab-measurements">
+<h1>Initial lab measurements<a class="headerlink" href="#Initial-lab-measurements" title="Permalink to this headline">#</a></h1>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[32]:
 </pre></div>
@@ -2179,43 +2088,43 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.umap(
     adata,
     color=[
-        &quot;map_1st&quot;,
-        &quot;hr_1st&quot;,
-        &quot;temp_1st&quot;,
-        &quot;spo2_1st&quot;,
-        &quot;abg_count&quot;,
-        &quot;wbc_first&quot;,
-        &quot;hgb_first&quot;,
-        &quot;platelet_first&quot;,
-        &quot;sodium_first&quot;,
-        &quot;potassium_first&quot;,
-        &quot;tco2_first&quot;,
-        &quot;chloride_first&quot;,
-        &quot;bun_first&quot;,
-        &quot;creatinine_first&quot;,
-        &quot;po2_first&quot;,
-        &quot;pco2_first&quot;,
-        &quot;iv_day_1&quot;,
+        "map_1st",
+        "hr_1st",
+        "temp_1st",
+        "spo2_1st",
+        "abg_count",
+        "wbc_first",
+        "hgb_first",
+        "platelet_first",
+        "sodium_first",
+        "potassium_first",
+        "tco2_first",
+        "chloride_first",
+        "bun_first",
+        "creatinine_first",
+        "po2_first",
+        "pco2_first",
+        "iv_day_1",
     ],
     cmap=ep.pl.Colormaps.grey_red.value,
     title=[
-        &quot;Mean arterial pressure (mmHg)&quot;,
-        &quot;Heart Rate&quot;,
-        &quot;Temperature (F)&quot;,
-        &quot;SpO2 oxygen (%)&quot;,
-        &quot;Artherial blood gas count (number tests)&quot;,
-        &quot;White blood cell count (K/u)&quot;,
-        &quot;Hemoglobin (g/dl)&quot;,
-        &quot;Platelets (K/u)&quot;,
-        &quot;Sodium (mEq/L)&quot;,
-        &quot;Potassum (mEq/L)&quot;,
-        &quot;Bicarbonate (mEq/L)&quot;,
-        &quot;Chloride (mEq/L)&quot;,
-        &quot;Blood urea nitrogen (mg/dl)&quot;,
-        &quot;Creatinine (ml/dL)&quot;,
-        &quot;PaO2 (mmHg)&quot;,
-        &quot;PaCO2 (mmHg)&quot;,
-        &quot;Input fluids by IV&quot;,
+        "Mean arterial pressure (mmHg)",
+        "Heart Rate",
+        "Temperature (F)",
+        "SpO2 oxygen (%)",
+        "Artherial blood gas count (number tests)",
+        "White blood cell count (K/u)",
+        "Hemoglobin (g/dl)",
+        "Platelets (K/u)",
+        "Sodium (mEq/L)",
+        "Potassum (mEq/L)",
+        "Bicarbonate (mEq/L)",
+        "Chloride (mEq/L)",
+        "Blood urea nitrogen (mg/dl)",
+        "Creatinine (ml/dL)",
+        "PaO2 (mmHg)",
+        "PaCO2 (mmHg)",
+        "Input fluids by IV",
     ],
 )
 </pre></div>
@@ -2225,17 +2134,17 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_59_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_59_0.png" style="width: 1309px; height: 1413px;" />
+<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_59_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_59_0.png" style="width: 1309px; height: 1413px;"/>
 </div>
 </div>
-</div>
-<div class="section" id="Annotation">
-<h1>Annotation<a class="headerlink" href="#Annotation" title="Permalink to this headline">¶</a></h1>
+</section>
+<section id="Annotation">
+<h1>Annotation<a class="headerlink" href="#Annotation" title="Permalink to this headline">#</a></h1>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[33]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.tl.rank_features_groups(adata, groupby=&quot;leiden_0_5&quot;)
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.tl.rank_features_groups(adata, groupby="leiden_0_5")
 </pre></div>
 </div>
 </div>
@@ -2244,7 +2153,7 @@ AnnData object with n_obs × n_vars = 1776 × 54
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-WARNING: Default of the method has been changed to &#39;t-test&#39; from &#39;t-test_overestim_var&#39;
+WARNING: Default of the method has been changed to 't-test' from 't-test_overestim_var'
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -2260,7 +2169,9 @@ WARNING: Default of the method has been changed to &#39;t-test&#39; from &#39;t-
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[34]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.rank_features_groups_dotplot(adata, key=&quot;rank_features_groups&quot;, groupby=&quot;leiden_0_5&quot;)
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.rank_features_groups_dotplot(
+    adata, key="rank_features_groups", groupby="leiden_0_5"
+)
 </pre></div>
 </div>
 </div>
@@ -2276,14 +2187,16 @@ WARNING: dendrogram data not found (using key=dendrogram_leiden_0_5). Running `s
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_62_1.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_62_1.png" style="width: 2262px; height: 526px;" />
+<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_62_1.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_62_1.png" style="width: 2262px; height: 526px;"/>
 </div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[35]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.rank_features_groups_matrixplot(adata, key=&quot;rank_features_groups&quot;, groupby=&quot;leiden_0_5&quot;)
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.rank_features_groups_matrixplot(
+    adata, key="rank_features_groups", groupby="leiden_0_5"
+)
 </pre></div>
 </div>
 </div>
@@ -2291,14 +2204,14 @@ WARNING: dendrogram data not found (using key=dendrogram_leiden_0_5). Running `s
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_63_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_63_0.png" style="width: 2262px; height: 526px;" />
+<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_63_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_63_0.png" style="width: 2262px; height: 526px;"/>
 </div>
 </div>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[36]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata.obs[&quot;annotation&quot;] = &quot;NA&quot;
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata.obs["annotation"] = "NA"
 </pre></div>
 </div>
 </div>
@@ -2307,19 +2220,19 @@ WARNING: dendrogram data not found (using key=dendrogram_leiden_0_5). Running `s
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>annotation = {
-    &quot;0&quot;: &quot;age+/death+/stroke+/pao2+&quot;,
-    &quot;1&quot;: &quot;age+/death+/stroke+/tumor+&quot;,
-    &quot;2&quot;: &quot;resp+&quot;,
-    &quot;3&quot;: &quot;resp+&quot;,
-    &quot;4&quot;: &quot;resp+&quot;,
-    &quot;5&quot;: &quot;resp+/liver+/tumor+&quot;,
-    &quot;6&quot;: &quot;resp+&quot;,
-    &quot;7&quot;: &quot;input fluids+&quot;,
-    &quot;8&quot;: &quot;resp+/pao2+&quot;,
-    &quot;9&quot;: &quot;input fluids+&quot;,
-    &quot;10&quot;: &quot;input fluids+&quot;,
-    &quot;11&quot;: &quot;input fluids++/death+&quot;,
-    &quot;12&quot;: &quot;Late death&quot;,
+    "0": "age+/death+/stroke+/pao2+",
+    "1": "age+/death+/stroke+/tumor+",
+    "2": "resp+",
+    "3": "resp+",
+    "4": "resp+",
+    "5": "resp+/liver+/tumor+",
+    "6": "resp+",
+    "7": "input fluids+",
+    "8": "resp+/pao2+",
+    "9": "input fluids+",
+    "10": "input fluids+",
+    "11": "input fluids++/death+",
+    "12": "Late death",
 }
 </pre></div>
 </div>
@@ -2328,20 +2241,20 @@ WARNING: dendrogram data not found (using key=dendrogram_leiden_0_5). Running `s
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[38]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata.obs[&quot;annotation&quot;] = [
-    annotation[l] if l in annotation.keys() else l for l in adata.obs[&quot;leiden_0_5&quot;]
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata.obs["annotation"] = [
+    annotation[l] if l in annotation.keys() else l for l in adata.obs["leiden_0_5"]
 ]
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="Paga">
-<h1>Paga<a class="headerlink" href="#Paga" title="Permalink to this headline">¶</a></h1>
+</section>
+<section id="Paga">
+<h1>Paga<a class="headerlink" href="#Paga" title="Permalink to this headline">#</a></h1>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[39]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.tl.paga(adata, groups=&quot;leiden_0_5&quot;)
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.tl.paga(adata, groups="leiden_0_5")
 </pre></div>
 </div>
 </div>
@@ -2350,7 +2263,7 @@ WARNING: dendrogram data not found (using key=dendrogram_leiden_0_5). Running `s
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-... storing &#39;annotation&#39; as categorical
+... storing 'annotation' as categorical
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -2359,13 +2272,13 @@ WARNING: dendrogram data not found (using key=dendrogram_leiden_0_5). Running `s
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.paga(
     adata,
-    color=[&quot;leiden_0_5&quot;, &quot;day_28_flg&quot;],
+    color=["leiden_0_5", "day_28_flg"],
     cmap=ep.pl.Colormaps.grey_red.value,
-    title=[&quot;Leiden 0.5&quot;, &quot;Died in less than 28 days&quot;],
+    title=["Leiden 0.5", "Died in less than 28 days"],
 )
 
-ep.tl.umap(adata, init_pos=&quot;paga&quot;)
-ep.pl.umap(adata, color=[&quot;annotation&quot;])
+ep.tl.umap(adata, init_pos="paga")
+ep.pl.umap(adata, color=["annotation"])
 </pre></div>
 </div>
 </div>
@@ -2373,21 +2286,21 @@ ep.pl.umap(adata, color=[&quot;annotation&quot;])
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_69_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_69_0.png" style="width: 615px; height: 308px;" />
+<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_69_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_69_0.png" style="width: 615px; height: 308px;"/>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_69_1.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_69_1.png" style="width: 533px; height: 296px;" />
+<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_69_1.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_69_1.png" style="width: 533px; height: 296px;"/>
 </div>
 </div>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[41]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.tl.draw_graph(adata, init_pos=&quot;paga&quot;)
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.tl.draw_graph(adata, init_pos="paga")
 </pre></div>
 </div>
 </div>
@@ -2395,7 +2308,7 @@ ep.pl.umap(adata, color=[&quot;annotation&quot;])
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[42]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.draw_graph(adata, color=[&quot;leiden_0_5&quot;, &quot;icu_exp_flg&quot;], legend_loc=&quot;on data&quot;)
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.draw_graph(adata, color=["leiden_0_5", "icu_exp_flg"], legend_loc="on data")
 </pre></div>
 </div>
 </div>
@@ -2403,68 +2316,123 @@ ep.pl.umap(adata, color=[&quot;annotation&quot;])
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_71_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_71_0.png" style="width: 667px; height: 299px;" />
+<img alt="../../_images/tutorials_notebooks_mimic_2_introduction_71_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_mimic_2_introduction_71_0.png" style="width: 667px; height: 299px;"/>
 </div>
 </div>
-<div class="section" id="Writing-the-results-into-a-file">
-<h2>Writing the results into a file<a class="headerlink" href="#Writing-the-results-into-a-file" title="Permalink to this headline">¶</a></h2>
-<p>We save all of our computations and our final state into an <code class="docutils literal notranslate"><span class="pre">.h5ad</span></code> file. It can then be read again like <code class="docutils literal notranslate"><span class="pre">ep.io.read(&quot;mimic_2.h5ad&quot;,</span> <span class="pre">adata)</span></code></p>
+<section id="Writing-the-results-into-a-file">
+<h2>Writing the results into a file<a class="headerlink" href="#Writing-the-results-into-a-file" title="Permalink to this headline">#</a></h2>
+<p>We save all of our computations and our final state into an <code class="docutils literal notranslate"><span class="pre">.h5ad</span></code> file. It can then be read again like <code class="docutils literal notranslate"><span class="pre">ep.io.read("mimic_2.h5ad",</span> <span class="pre">adata)</span></code></p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[43]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.io.write(&quot;mimic_2.h5ad&quot;, adata)
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.io.write("mimic_2.h5ad", adata)
 </pre></div>
 </div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
-
-              </div>
-              
-              
-              <!-- Previous / next buttons -->
-<div class='prev-next-area'>
-    <a class='left-prev' id="prev-link" href="ehrapy_introduction.html" title="previous page">
-        <i class="fas fa-angle-left"></i>
-        <div class="prev-next-info">
-            <p class="prev-next-subtitle">previous</p>
-            <p class="prev-next-title">ehrapy introduction</p>
-        </div>
-    </a>
-    <a class='right-next' id="next-link" href="mimic_2_fate.html" title="next page">
-    <div class="prev-next-info">
-        <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">MIMIC-II Patient Fate</p>
-    </div>
-    <i class="fas fa-angle-right"></i>
-    </a>
-</div>
-              
-          </main>
-          
-
+        </article>
       </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="mimic_2_fate.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">MIMIC-II Patient Fate</div>
+              </div>
+              <svg><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="ehrapy_introduction.html">
+              <svg><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">ehrapy Introduction</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2021, Lukas Heumos, Theislab
+            </div>
+            Made with 
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            <div class="icons">
+              
+            </div>
+          </div>
+        </div>
+        
+      </footer>
     </div>
-  
-    <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-  <footer class="footer mt-5 mt-md-0">
-  <div class="container">
-    
-    <div class="footer-item">
-      <p class="copyright">
-    &copy; Copyright 2021, Lukas Heumos, Theislab.<br>
-</p>
-    </div>
-    
-    <div class="footer-item">
-      <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
-</p>
-    </div>
-    
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            Contents
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">MIMIC-II IAC Introduction</a><ul>
+<li><a class="reference internal" href="#Importing-ehrapy-and-setting-plotting-parameters">Importing ehrapy and setting plotting parameters</a></li>
+<li><a class="reference internal" href="#MIMIC-II-dataset-preparation">MIMIC-II dataset preparation</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#Preprocessing">Preprocessing</a><ul>
+<li><a class="reference internal" href="#Quality-control---missing-values">Quality control - missing values</a></li>
+<li><a class="reference internal" href="#Missing-Data-Imputation">Missing Data Imputation</a></li>
+<li><a class="reference internal" href="#Quality-Control---Data-Distribution">Quality Control - Data Distribution</a></li>
+<li><a class="reference internal" href="#Normalization">Normalization</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#PCA-&amp;-UMAP">PCA &amp; UMAP</a></li>
+<li><a class="reference internal" href="#Batch-effect-check">Batch effect check</a></li>
+<li><a class="reference internal" href="#Leiden-clustering">Leiden clustering</a></li>
+<li><a class="reference internal" href="#Hospital-&amp;-ICU-statistics">Hospital &amp; ICU statistics</a></li>
+<li><a class="reference internal" href="#Death">Death</a></li>
+<li><a class="reference internal" href="#Demographics">Demographics</a></li>
+<li><a class="reference internal" href="#Comorbidities">Comorbidities</a></li>
+<li><a class="reference internal" href="#Initial-lab-measurements">Initial lab measurements</a></li>
+<li><a class="reference internal" href="#Annotation">Annotation</a></li>
+<li><a class="reference internal" href="#Paga">Paga</a><ul>
+<li><a class="reference internal" href="#Writing-the-results-into-a-file">Writing the results into a file</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
   </div>
-</footer>
-  </body>
+</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/scripts/furo.js"></script>
+    <script src="../../_static/clipboard.min.js"></script>
+    <script src="../../_static/copybutton.js"></script>
+    <script src="../../_static/design-tabs.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    </body>
 </html>

@@ -1,226 +1,248 @@
+<!doctype html>
+<html class="no-js">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-<!DOCTYPE html>
+<meta property="og:title" content="<no title>" />
+  
+<meta property="og:type" content="website" />
+  
+<meta property="og:url" content="https://ehrapy.readthedocs.io/en/latest/tutorials/notebooks/mimic_3_demo.html" />
+  
+<meta property="og:image" content="https://ehrapy.readthedocs.io/en/latest//_static/logo.png" />
+  
+<meta property="og:image:alt" content="<no title>" />
+  <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" />
 
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>&lt;no title&gt; &#8212; ehrapy 0.2.0 documentation</title>
-    
-    <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-<link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-  
-    
-    <link rel="stylesheet"
-      href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-  
-    
-      
-  
-    
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/pydata-sphinx-theme.css" />
+    <meta name="generator" content="sphinx-4.5.0, furo 2022.04.07"/>
+        <title>&lt;no title&gt; - ehrapy</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=68f4518137b9aefe99b631505a2064c3c42c9852" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/tabs.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/custom_cookietemple.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/sphinx_gallery.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/dataframe.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/override.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/sphinx_gallery.css" />
     
-    <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  --color-brand-primary: #003262;
+  --color-brand-content: #003262;
+  --admonition-font-size: var(--font-size-normal);
+  --admonition-title-font-size: var(--font-size-normal);
+  --code-font-size: var(--font-size--small);
   
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/jquery.js"></script>
-    <script src="../../_static/underscore.js"></script>
-    <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/clipboard.min.js"></script>
-    <script src="../../_static/copybutton.js"></script>
-    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-    <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="docsearch:language" content="None">
-    
-
-    <!-- Google Analytics -->
-    
-  </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
-    
-    <div class="container-fluid" id="banner"></div>
-
-    
-    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
-
-  <div id="navbar-start">
-    
-    
-
-<a class="navbar-brand" href="../../index.html">
-  <img src="../../_static/placeholder.png" class="logo" alt="logo">
-</a>
-
-
-    
-  </div>
-
-  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-  </button>
-
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
   
-  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
-    <div id="navbar-center" class="mr-auto">
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">ehrapy</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
       
-      <div class="navbar-center-item">
-        <ul id="navbar-main-elements" class="navbar-nav">
-    <li class="toctree-l1 nav-item">
- <a class="reference internal nav-link" href="../../installation.html">
-  Installation
- </a>
-</li>
-
-<li class="toctree-l1 nav-item">
- <a class="reference internal nav-link" href="../../usage/usage.html">
-  Usage
- </a>
-</li>
-
-<li class="toctree-l1 nav-item">
- <a class="reference internal nav-link" href="../index.html">
-  Tutorials
- </a>
-</li>
-
-<li class="toctree-l1 nav-item">
- <a class="reference internal nav-link" href="../../contributing.html">
-  Contributor Guide
- </a>
-</li>
-
-<li class="toctree-l1 nav-item">
- <a class="reference internal nav-link" href="../../code_of_conduct.html">
-  Code of Conduct
- </a>
-</li>
-
-<li class="toctree-l1 nav-item">
- <a class="reference external nav-link" href="https://github.com/theislab/ehrapy/discussions">
-  Discussions
- </a>
-</li>
-
-<li class="toctree-l1 nav-item">
- <a class="reference internal nav-link" href="../../authors.html">
-  Credits
- </a>
-</li>
-
-<li class="toctree-l1 nav-item">
- <a class="reference internal nav-link" href="../../references.html">
-  References
- </a>
-</li>
-
-    
+      <div class="sidebar-sticky"><a class="sidebar-brand centered" href="../../index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../_static/ehrapy_pure.png" alt="Logo"/>
+  </div>
+  
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder=Search name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage/usage.html">Usage</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../index.html">Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="ehrapy_introduction.html">ehrapy Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ehrapy_introduction.html#Fundamental-Principles">Fundamental Principles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mimic_2_introduction.html">MIMIC-II IAC Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mimic_2_introduction.html#Preprocessing">Preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mimic_2_introduction.html#PCA-&amp;-UMAP">PCA &amp; UMAP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mimic_2_introduction.html#Batch-effect-check">Batch effect check</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mimic_2_introduction.html#Leiden-clustering">Leiden clustering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mimic_2_introduction.html#Hospital-&amp;-ICU-statistics">Hospital &amp; ICU statistics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mimic_2_introduction.html#Death">Death</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mimic_2_introduction.html#Demographics">Demographics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mimic_2_introduction.html#Comorbidities">Comorbidities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mimic_2_introduction.html#Initial-lab-measurements">Initial lab measurements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mimic_2_introduction.html#Annotation">Annotation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mimic_2_introduction.html#Paga">Paga</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mimic_2_fate.html">MIMIC-II Patient Fate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mimic_2_fate.html#Determining-patient-fate-using-a-ConnectivityKernel">Determining patient fate using a ConnectivityKernel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mimic_2_fate.html#Determining-patient-fate-with-a-PseudotimeKernel">Determining patient fate with a PseudotimeKernel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="diabetes_130.html">Diabetes 130 Vignette</a></li>
+<li class="toctree-l2"><a class="reference internal" href="diabetes_130.html#Visual-Exploration">Visual Exploration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="medcat.html">Extracting from free text with MedCAT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="medcat.html#Custom-MedCAT-object-of-ehrapy">Custom MedCAT object of ehrapy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="medcat.html#Extracting-and-visualizing-all-disease-entities">Extracting and visualizing all disease entities</a></li>
 </ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributor Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../code_of_conduct.html">Code of Conduct</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/theislab/ehrapy/discussions">Discussions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../authors.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../references.html">References</a></li>
+</ul>
+
+</div>
+</div>
+
       </div>
       
     </div>
-
-    <div id="navbar-end">
-      
-      <div class="navbar-end-item">
-        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
-        <li class="nav-item">
-          <a class="nav-link" href="https://github.com/theislab/ehrapy" rel="noopener" target="_blank" title="GitHub"><span><i class="fab fa-github-square"></i></span>
-            <label class="sr-only">GitHub</label></a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="https://twitter.com/lukasheumos" rel="noopener" target="_blank" title="Twitter"><span><i class="fab fa-twitter-square"></i></span>
-            <label class="sr-only">Twitter</label></a>
-        </li>
-      </ul>
-      </div>
-      
-    </div>
-  </div>
-</div>
-    </nav>
-    
-
-    <div class="container-xl">
-      <div class="row">
-          
-            
-            <!-- Only show if we have sidebars configured, else just a small margin  -->
-            <div class="col-12 col-md-3 bd-sidebar">
-              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../search.html" method="get">
-  <i class="icon fas fa-search"></i>
-  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
-</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
-  <div class="bd-toc-item active">
-    
-  </div>
-</nav>
-              </div>
-              <div class="sidebar-end-items">
-              </div>
-            </div>
-            
-          
-
-          
-          <div class="d-none d-xl-block col-xl-2 bd-toc">
-            
-              
-              <div class="toc-item">
-                
-<div class="tocsection onthispage pt-5 pb-3">
-    <i class="fas fa-list"></i> On this page
-</div>
-
-<nav id="bd-toc-nav">
-    <ul class="simple visible nav section-nav flex-column">
-</ul>
-
-</nav>
-              </div>
-              
-              <div class="toc-item">
-                
-
-<div class="tocsection editthispage">
-    <a href="https://github.com/theislab/ehrapy/edit/development/docs/tutorials/notebooks/mimic_3_demo.ipynb">
-        <i class="fas fa-pencil-alt"></i> Edit this page
-    </a>
-</div>
-
-              </div>
-              
-            
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container"><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
           </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
           
-
-          
-          
-            
-          
-          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
-              
-              <div>
-                
-  
 <style>
 /* CSS for nbsphinx extension */
 
@@ -468,16 +490,38 @@ div.rendered_html tbody tr:hover {
   background: rgba(66, 165, 245, 0.2);
 }
 </style>
-<div class="binder-badge docutils container">
-    <a class="reference external image-reference"
-       href="https://mybinder.org/v2/gh/theislab/ehrapy/development?filepath=docs/source/tutorials/notebooks/mimic_3_demo.ipynb">
-    <img alt="Launch binder" src="https://mybinder.org/badge_logo.svg" width="150px">
-    </a>
+<style>
+    p {
+        margin-bottom: 0.5rem;
+    }
+    /* Main index page overview cards */
+    /* https://github.com/spatialaudio/nbsphinx/pull/635/files */
+    .jp-RenderedHTMLCommon table,
+    div.rendered_html table {
+    border: none;
+    border-collapse: collapse;
+    border-spacing: 0;
+    font-size: 12px;
+    table-layout: fixed;
+    color: inherit;
+    }
+
+    body:not([data-theme=light]) .jp-RenderedHTMLCommon tbody tr:nth-child(odd),
+    body:not([data-theme=light]) div.rendered_html tbody tr:nth-child(odd) {
+    background: rgba(255, 255, 255, .1);
+    }
+</style><div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>
+    This page was generated from
+    <a class="reference external" href="https://github.com/theislab/ehrapy/tree/0.2.0/">mimic_3_demo.ipynb</a>.
+    Some tutorial content may look better in light mode.
+    </p>
 </div><div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import ehrapy.api as ep
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import ehrapy as ep
 </pre></div>
 </div>
 </div>
@@ -511,9 +555,9 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-/home/zeth/PycharmProjects/ehrapy/ehrapy/api/io/_read.py:252: DtypeWarning: Columns (17,20,21) have mixed types.Specify dtype option on import or set low_memory=False.
+/home/zeth/PycharmProjects/ehrapy/ehrapy/api/io/_read.py:262: DtypeWarning: Columns (17,20,21) have mixed types.Specify dtype option on import or set low_memory=False.
   adata, single_adata_obs_only = read_csv(file, delimiter, index_col, col_obs_only, cache=cache)
-/home/zeth/PycharmProjects/ehrapy/ehrapy/api/io/_read.py:252: DtypeWarning: Columns (8,10,13,14) have mixed types.Specify dtype option on import or set low_memory=False.
+/home/zeth/PycharmProjects/ehrapy/ehrapy/api/io/_read.py:262: DtypeWarning: Columns (8,10,13,14) have mixed types.Specify dtype option on import or set low_memory=False.
   adata, single_adata_obs_only = read_csv(file, delimiter, index_col, col_obs_only, cache=cache)
 </pre></div></div>
 </div>
@@ -531,82 +575,108 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-{&#39;DRGCODES&#39;: AnnData object with n_obs × n_vars = 297 × 8
-     layers: &#39;original&#39;,
- &#39;CAREGIVERS&#39;: AnnData object with n_obs × n_vars = 7567 × 4
-     layers: &#39;original&#39;,
- &#39;INPUTEVENTS_CV&#39;: AnnData object with n_obs × n_vars = 34799 × 20
-     obs: &#39;charttime&#39;, &#39;storetime&#39;
-     layers: &#39;original&#39;,
- &#39;D_ICD_PROCEDURES&#39;: AnnData object with n_obs × n_vars = 3882 × 4
-     layers: &#39;original&#39;,
- &#39;CALLOUT&#39;: AnnData object with n_obs × n_vars = 77 × 18
-     obs: &#39;createtime&#39;, &#39;updatetime&#39;, &#39;acknowledgetime&#39;, &#39;outcometime&#39;, &#39;firstreservationtime&#39;, &#39;currentreservationtime&#39;
-     layers: &#39;original&#39;,
- &#39;LABEVENTS&#39;: AnnData object with n_obs × n_vars = 76074 × 8
-     obs: &#39;charttime&#39;
-     layers: &#39;original&#39;,
- &#39;PRESCRIPTIONS&#39;: AnnData object with n_obs × n_vars = 10398 × 17
-     obs: &#39;startdate&#39;, &#39;enddate&#39;
-     layers: &#39;original&#39;,
- &#39;DATETIMEEVENTS&#39;: AnnData object with n_obs × n_vars = 15551 × 11
-     obs: &#39;charttime&#39;, &#39;storetime&#39;, &#39;value&#39;
-     layers: &#39;original&#39;,
- &#39;INPUTEVENTS_MV&#39;: AnnData object with n_obs × n_vars = 13224 × 27
-     obs: &#39;starttime&#39;, &#39;endtime&#39;, &#39;storetime&#39;, &#39;comments_date&#39;
-     layers: &#39;original&#39;,
- &#39;CPTEVENTS&#39;: AnnData object with n_obs × n_vars = 1579 × 11
-     obs: &#39;chartdate&#39;
-     layers: &#39;original&#39;,
- &#39;D_LABITEMS&#39;: AnnData object with n_obs × n_vars = 753 × 6
-     layers: &#39;original&#39;,
- &#39;DIAGNOSES_ICD&#39;: AnnData object with n_obs × n_vars = 1761 × 5
-     layers: &#39;original&#39;,
- &#39;D_ITEMS&#39;: AnnData object with n_obs × n_vars = 12487 × 10
-     layers: &#39;original&#39;,
- &#39;D_CPT&#39;: AnnData object with n_obs × n_vars = 134 × 9
-     layers: &#39;original&#39;,
- &#39;PROCEDURES_ICD&#39;: AnnData object with n_obs × n_vars = 506 × 5
-     layers: &#39;original&#39;,
- &#39;OUTPUTEVENTS&#39;: AnnData object with n_obs × n_vars = 11320 × 11
-     obs: &#39;charttime&#39;, &#39;storetime&#39;
-     layers: &#39;original&#39;,
- &#39;CHARTEVENTS&#39;: AnnData object with n_obs × n_vars = 758355 × 13
-     obs: &#39;charttime&#39;, &#39;storetime&#39;
-     layers: &#39;original&#39;,
- &#39;NOTEEVENTS&#39;: AnnData object with n_obs × n_vars = 0 × 0
-     obs: &#39;row_id&#39;, &#39;subject_id&#39;, &#39;hadm_id&#39;, &#39;chartdate&#39;, &#39;charttime&#39;, &#39;storetime&#39;, &#39;category&#39;, &#39;description&#39;, &#39;cgid&#39;, &#39;iserror&#39;, &#39;text&#39;
-     layers: &#39;original&#39;,
- &#39;ICUSTAYS&#39;: AnnData object with n_obs × n_vars = 136 × 10
-     obs: &#39;intime&#39;, &#39;outtime&#39;
-     layers: &#39;original&#39;,
- &#39;MICROBIOLOGYEVENTS&#39;: AnnData object with n_obs × n_vars = 2003 × 14
-     obs: &#39;chartdate&#39;, &#39;charttime&#39;
-     layers: &#39;original&#39;,
- &#39;D_ICD_DIAGNOSES&#39;: AnnData object with n_obs × n_vars = 14567 × 4
-     layers: &#39;original&#39;,
- &#39;ADMISSIONS&#39;: AnnData object with n_obs × n_vars = 129 × 14
-     obs: &#39;admittime&#39;, &#39;dischtime&#39;, &#39;deathtime&#39;, &#39;edregtime&#39;, &#39;edouttime&#39;
-     layers: &#39;original&#39;,
- &#39;PROCEDUREEVENTS_MV&#39;: AnnData object with n_obs × n_vars = 753 × 21
-     obs: &#39;starttime&#39;, &#39;endtime&#39;, &#39;storetime&#39;, &#39;comments_date&#39;
-     layers: &#39;original&#39;,
- &#39;PATIENTS&#39;: AnnData object with n_obs × n_vars = 100 × 4
-     obs: &#39;dob&#39;, &#39;dod&#39;, &#39;dod_hosp&#39;, &#39;dod_ssn&#39;
-     layers: &#39;original&#39;,
- &#39;TRANSFERS&#39;: AnnData object with n_obs × n_vars = 524 × 11
-     obs: &#39;intime&#39;, &#39;outtime&#39;
-     layers: &#39;original&#39;,
- &#39;SERVICES&#39;: AnnData object with n_obs × n_vars = 163 × 5
-     obs: &#39;transfertime&#39;
-     layers: &#39;original&#39;}
+{'DRGCODES': AnnData object with n_obs × n_vars = 297 × 8
+     uns: 'numerical_columns', 'non_numerical_columns'
+     layers: 'original',
+ 'CAREGIVERS': AnnData object with n_obs × n_vars = 7567 × 4
+     uns: 'numerical_columns', 'non_numerical_columns'
+     layers: 'original',
+ 'INPUTEVENTS_CV': AnnData object with n_obs × n_vars = 34799 × 20
+     obs: 'charttime', 'storetime'
+     uns: 'numerical_columns', 'non_numerical_columns'
+     layers: 'original',
+ 'D_ICD_PROCEDURES': AnnData object with n_obs × n_vars = 3882 × 4
+     uns: 'numerical_columns', 'non_numerical_columns'
+     layers: 'original',
+ 'CALLOUT': AnnData object with n_obs × n_vars = 77 × 18
+     obs: 'createtime', 'updatetime', 'acknowledgetime', 'outcometime', 'firstreservationtime', 'currentreservationtime'
+     uns: 'numerical_columns', 'non_numerical_columns'
+     layers: 'original',
+ 'LABEVENTS': AnnData object with n_obs × n_vars = 76074 × 8
+     obs: 'charttime'
+     uns: 'numerical_columns', 'non_numerical_columns'
+     layers: 'original',
+ 'PRESCRIPTIONS': AnnData object with n_obs × n_vars = 10398 × 17
+     obs: 'startdate', 'enddate'
+     uns: 'numerical_columns', 'non_numerical_columns'
+     layers: 'original',
+ 'DATETIMEEVENTS': AnnData object with n_obs × n_vars = 15551 × 11
+     obs: 'charttime', 'storetime', 'value'
+     uns: 'numerical_columns', 'non_numerical_columns'
+     layers: 'original',
+ 'INPUTEVENTS_MV': AnnData object with n_obs × n_vars = 13224 × 27
+     obs: 'starttime', 'endtime', 'storetime', 'comments_date'
+     uns: 'numerical_columns', 'non_numerical_columns'
+     layers: 'original',
+ 'CPTEVENTS': AnnData object with n_obs × n_vars = 1579 × 11
+     obs: 'chartdate'
+     uns: 'numerical_columns', 'non_numerical_columns'
+     layers: 'original',
+ 'D_LABITEMS': AnnData object with n_obs × n_vars = 753 × 6
+     uns: 'numerical_columns', 'non_numerical_columns'
+     layers: 'original',
+ 'DIAGNOSES_ICD': AnnData object with n_obs × n_vars = 1761 × 5
+     uns: 'numerical_columns', 'non_numerical_columns'
+     layers: 'original',
+ 'D_ITEMS': AnnData object with n_obs × n_vars = 12487 × 10
+     uns: 'numerical_columns', 'non_numerical_columns'
+     layers: 'original',
+ 'D_CPT': AnnData object with n_obs × n_vars = 134 × 9
+     uns: 'numerical_columns', 'non_numerical_columns'
+     layers: 'original',
+ 'PROCEDURES_ICD': AnnData object with n_obs × n_vars = 506 × 5
+     uns: 'numerical_columns', 'non_numerical_columns'
+     layers: 'original',
+ 'OUTPUTEVENTS': AnnData object with n_obs × n_vars = 11320 × 11
+     obs: 'charttime', 'storetime'
+     uns: 'numerical_columns', 'non_numerical_columns'
+     layers: 'original',
+ 'CHARTEVENTS': AnnData object with n_obs × n_vars = 758355 × 13
+     obs: 'charttime', 'storetime'
+     uns: 'numerical_columns', 'non_numerical_columns'
+     layers: 'original',
+ 'NOTEEVENTS': AnnData object with n_obs × n_vars = 0 × 0
+     obs: 'row_id', 'subject_id', 'hadm_id', 'chartdate', 'charttime', 'storetime', 'category', 'description', 'cgid', 'iserror', 'text'
+     uns: 'numerical_columns', 'non_numerical_columns'
+     layers: 'original',
+ 'ICUSTAYS': AnnData object with n_obs × n_vars = 136 × 10
+     obs: 'intime', 'outtime'
+     uns: 'numerical_columns', 'non_numerical_columns'
+     layers: 'original',
+ 'MICROBIOLOGYEVENTS': AnnData object with n_obs × n_vars = 2003 × 14
+     obs: 'chartdate', 'charttime'
+     uns: 'numerical_columns', 'non_numerical_columns'
+     layers: 'original',
+ 'D_ICD_DIAGNOSES': AnnData object with n_obs × n_vars = 14567 × 4
+     uns: 'numerical_columns', 'non_numerical_columns'
+     layers: 'original',
+ 'ADMISSIONS': AnnData object with n_obs × n_vars = 129 × 14
+     obs: 'admittime', 'dischtime', 'deathtime', 'edregtime', 'edouttime'
+     uns: 'numerical_columns', 'non_numerical_columns'
+     layers: 'original',
+ 'PROCEDUREEVENTS_MV': AnnData object with n_obs × n_vars = 753 × 21
+     obs: 'starttime', 'endtime', 'storetime', 'comments_date'
+     uns: 'numerical_columns', 'non_numerical_columns'
+     layers: 'original',
+ 'PATIENTS': AnnData object with n_obs × n_vars = 100 × 4
+     obs: 'dob', 'dod', 'dod_hosp', 'dod_ssn'
+     uns: 'numerical_columns', 'non_numerical_columns'
+     layers: 'original',
+ 'TRANSFERS': AnnData object with n_obs × n_vars = 524 × 11
+     obs: 'intime', 'outtime'
+     uns: 'numerical_columns', 'non_numerical_columns'
+     layers: 'original',
+ 'SERVICES': AnnData object with n_obs × n_vars = 163 × 5
+     obs: 'transfertime'
+     uns: 'numerical_columns', 'non_numerical_columns'
+     layers: 'original'}
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adatas[&quot;INPUTEVENTS_CV&quot;].obs
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adatas["INPUTEVENTS_CV"].obs
 </pre></div>
 </div>
 </div>
@@ -616,7 +686,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area rendered_html docutils container">
 <div>
-<style scoped>
+<style scoped="">
     .dataframe tbody tr th:only-of-type {
         vertical-align: middle;
     }
@@ -629,72 +699,72 @@ div.rendered_html tbody tr:hover {
         text-align: right;
     }
 </style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>charttime</th>
-      <th>storetime</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>2171-11-03 15:00:00</td>
-      <td>2171-11-03 16:27:00</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>2171-11-03 20:00:00</td>
-      <td>2171-11-03 20:52:00</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>2171-11-03 23:00:00</td>
-      <td>2171-11-03 23:25:00</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>2171-11-04 02:00:00</td>
-      <td>2171-11-04 02:08:00</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>2171-11-04 05:00:00</td>
-      <td>2171-11-04 06:26:00</td>
-    </tr>
-    <tr>
-      <th>...</th>
-      <td>...</td>
-      <td>...</td>
-    </tr>
-    <tr>
-      <th>34794</th>
-      <td>2148-01-16 10:00:00</td>
-      <td>2148-01-16 10:58:00</td>
-    </tr>
-    <tr>
-      <th>34795</th>
-      <td>2148-01-16 11:00:00</td>
-      <td>2148-01-16 10:58:00</td>
-    </tr>
-    <tr>
-      <th>34796</th>
-      <td>2148-01-16 12:00:00</td>
-      <td>2148-01-16 12:18:00</td>
-    </tr>
-    <tr>
-      <th>34797</th>
-      <td>2148-01-16 13:00:00</td>
-      <td>2148-01-16 13:07:00</td>
-    </tr>
-    <tr>
-      <th>34798</th>
-      <td>2148-01-16 14:00:00</td>
-      <td>2148-01-16 14:16:00</td>
-    </tr>
-  </tbody>
-</table>
+<div class="table-wrapper"><table border="1" class="dataframe">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>charttime</th>
+<th>storetime</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>2171-11-03 15:00:00</td>
+<td>2171-11-03 16:27:00</td>
+</tr>
+<tr>
+<th>1</th>
+<td>2171-11-03 20:00:00</td>
+<td>2171-11-03 20:52:00</td>
+</tr>
+<tr>
+<th>2</th>
+<td>2171-11-03 23:00:00</td>
+<td>2171-11-03 23:25:00</td>
+</tr>
+<tr>
+<th>3</th>
+<td>2171-11-04 02:00:00</td>
+<td>2171-11-04 02:08:00</td>
+</tr>
+<tr>
+<th>4</th>
+<td>2171-11-04 05:00:00</td>
+<td>2171-11-04 06:26:00</td>
+</tr>
+<tr>
+<th>...</th>
+<td>...</td>
+<td>...</td>
+</tr>
+<tr>
+<th>34794</th>
+<td>2148-01-16 10:00:00</td>
+<td>2148-01-16 10:58:00</td>
+</tr>
+<tr>
+<th>34795</th>
+<td>2148-01-16 11:00:00</td>
+<td>2148-01-16 10:58:00</td>
+</tr>
+<tr>
+<th>34796</th>
+<td>2148-01-16 12:00:00</td>
+<td>2148-01-16 12:18:00</td>
+</tr>
+<tr>
+<th>34797</th>
+<td>2148-01-16 13:00:00</td>
+<td>2148-01-16 13:07:00</td>
+</tr>
+<tr>
+<th>34798</th>
+<td>2148-01-16 14:00:00</td>
+<td>2148-01-16 14:16:00</td>
+</tr>
+</tbody>
+</table></div>
 <p>34799 rows × 2 columns</p>
 </div></div>
 </div>
@@ -702,12 +772,12 @@ div.rendered_html tbody tr:hover {
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata = adatas[&quot;INPUTEVENTS_CV&quot;]
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata = adatas["INPUTEVENTS_CV"]
 </pre></div>
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pp.knn_impute(adata)
@@ -715,15 +785,24 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 AnnData object with n_obs × n_vars = 34799 × 20
-    obs: &#39;charttime&#39;, &#39;storetime&#39;
-    layers: &#39;original&#39;
+    obs: 'charttime', 'storetime'
+    uns: 'numerical_columns', 'non_numerical_columns'
+    layers: 'original'
 </pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata
+</pre></div>
+</div>
 </div>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
@@ -748,16 +827,16 @@ AnnData object with n_obs × n_vars = 34799 × 20
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 AnnData object with n_obs × n_vars = 34799 × 20
-    obs: &#39;charttime&#39;, &#39;storetime&#39;, &#39;amountuom&#39;, &#39;rateuom&#39;, &#39;stopped&#39;, &#39;originalamountuom&#39;, &#39;originalroute&#39;, &#39;originalrateuom&#39;, &#39;originalsite&#39;
-    uns: &#39;categoricals&#39;, &#39;original_values_categoricals&#39;, &#39;var_to_encoding&#39;
-    layers: &#39;original&#39;
+    obs: 'charttime', 'storetime', 'amountuom', 'rateuom', 'stopped', 'originalamountuom', 'originalroute', 'originalrateuom', 'originalsite'
+    uns: 'categoricals', 'original_values_categoricals', 'var_to_encoding'
+    layers: 'original'
 </pre></div></div>
 </div>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># ep.io.write(&quot;test.h5ad&quot;, adata)
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># ep.io.write("test.h5ad", adata)
 </pre></div>
 </div>
 </div>
@@ -770,37 +849,48 @@ AnnData object with n_obs × n_vars = 34799 × 20
 </div>
 </div>
 
-
-              </div>
-              
-              
-              <!-- Previous / next buttons -->
-<div class='prev-next-area'>
-</div>
-              
-          </main>
-          
-
+        </article>
       </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2021, Lukas Heumos, Theislab
+            </div>
+            Made with 
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            <div class="icons">
+              
+            </div>
+          </div>
+        </div>
+        
+      </footer>
     </div>
-  
-    <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-  <footer class="footer mt-5 mt-md-0">
-  <div class="container">
-    
-    <div class="footer-item">
-      <p class="copyright">
-    &copy; Copyright 2021, Lukas Heumos, Theislab.<br>
-</p>
-    </div>
-    
-    <div class="footer-item">
-      <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
-</p>
-    </div>
-    
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
   </div>
-</footer>
-  </body>
+</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/scripts/furo.js"></script>
+    <script src="../../_static/clipboard.min.js"></script>
+    <script src="../../_static/copybutton.js"></script>
+    <script src="../../_static/design-tabs.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    </body>
 </html>
