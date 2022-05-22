@@ -342,7 +342,7 @@ def embedding_density(
         .. code-block:: python
 
             import ehrapy as ep
-            
+
             adata = ep.data.mimic_2(encode=True)
             ep.tl.umap(adata)
             ep.tl.embedding_density(adata, basis='umap', groupby='phase')
