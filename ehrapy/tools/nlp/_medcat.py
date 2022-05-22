@@ -166,7 +166,6 @@ class MedCAT:
             model_pack_dir: Path to save the model to (defaults to current working directory).
             name: Name of the new model pack
         """
-        # TODO Pathing is weird here (home/myname/...) will fo example create dir myname inside home inside the cwd instead of using the path
         _ = self.cat.create_model_pack(name)
 
 
@@ -198,21 +197,8 @@ class EhrapyMedcat:
         medcat_obj: MedCAT, obs: pd.DataFrame, text_column: str, n_proc: int = 2, batch_size_chars: int = 500000
     ) -> None:
         """Annotate the original free text data. Note this will only annotate non null rows.
-        The result will be a DataFrame (see example below). It will be set as the annotated_results attribute for the passed MedCat object.
+        The result will be a DataFrame. It will be set as the annotated_results attribute for the passed MedCat object.
         This dataframe will be the base for all further analyses, for example coloring umaps by specific diseases.
-
-            .. code-block:: python
-                       # some setup code here
-                       ...
-                       res = ep.tl.annotate_text(medcat_obj, adata.obs, "text")
-                       print(res)
-                       # res looks like this:
-                       #                                                pretty_name meta ...
-                       #
-                       # 1 0 (first entitiy extracted from first row)   diabetes11  fb11 ...
-                       # 2 0 (second entitiy extracted from first row)  diabetes12  fb12 ...
-                       # 3 1 (first entitiy extracted from second row)  diabetes21  fb21 ...
-                       # 4 1 (second entitiy extracted from second row) diabetes22  fb22 ...
 
         Args:
             medcat_obj: Ehrapy's custom MedCAT object. The annotated_results attribute will be set here.

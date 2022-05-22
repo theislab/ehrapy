@@ -313,7 +313,6 @@ def embedding_density(
     components: Union[str, Sequence[str]] = None,
 ) -> None:  # pragma: no cover
     """Calculate the density of observation in an embedding (per condition).
-
     Gaussian kernel density estimation is used to calculate the density of
     observations in an embedded space. This can be performed per category over a
     categorical observation annotation. The cell density can be plotted using the
@@ -343,7 +342,7 @@ def embedding_density(
         .. code-block:: python
 
             import ehrapy as ep
-
+            
             adata = ep.data.mimic_2(encode=True)
             ep.tl.umap(adata)
             ep.tl.embedding_density(adata, basis='umap', groupby='phase')
