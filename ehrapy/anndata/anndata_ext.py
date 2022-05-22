@@ -49,10 +49,10 @@ def df_to_anndata(
             elif isinstance(index_column, int) and index_column < len(df_columns):
                 df = df.set_index(df_columns[index_column])
             else:
-                raise IndexNotFoundError(f"Did not found column {index_column} in neither index or columns!")
+                raise IndexNotFoundError(f"Did not find column {index_column} in neither index or columns!")
         # index_column is neither in the index or in the columns or passed as some value that could not be understood
         else:
-            raise IndexNotFoundError(f"Did not found column {index_column} in neither index or columns!")
+            raise IndexNotFoundError(f"Did not find column {index_column} in neither index or columns!")
 
     # move columns from the input dataframe to later obs
     dataframes = _move_columns_to_obs(df, columns_obs_only)

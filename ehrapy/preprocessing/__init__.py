@@ -3,7 +3,7 @@ from ehrapy.preprocessing._data_imputation import (
     iterative_svd_impute,
     knn_impute,
     matrix_factorization_impute,
-    miceforest_impute,
+    mice_forest_impute,
     miss_forest_impute,
     nuclear_norm_minimization_impute,
     simple_impute,
@@ -11,14 +11,14 @@ from ehrapy.preprocessing._data_imputation import (
 )
 from ehrapy.preprocessing._highly_variable_features import highly_variable_features
 from ehrapy.preprocessing._normalization import (
-    norm_log,
-    norm_maxabs,
-    norm_minmax,
-    norm_power,
-    norm_quantile,
-    norm_robust_scale,
-    norm_scale,
-    norm_sqrt,
+    log_norm,
+    maxabs_norm,
+    minmax_norm,
+    power_norm,
+    quantile_norm,
+    robust_scale_norm,
+    scale_norm,
+    sqrt_norm,
 )
 from ehrapy.preprocessing._quality_control import qc_lab_measurements, qc_metrics
 from ehrapy.preprocessing._scanpy_pp_api import *  # noqa: E402,F403

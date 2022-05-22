@@ -170,8 +170,8 @@ class MedCAT:
 
 
 class EhrapyMedcat:
-    """Wrapper class to perform medcat analysis with ehrapy for free text data. This can be simply called by `ep.tl.mc`. This class is not supposed to be
-    instantiated at any time, it just serves as a wrapper for import.
+    """Wrapper class to perform medcat analysis with ehrapy for free text data. This can be simply called by `ep.tl.mc`.
+    This class is not supposed to be instantiated at any time, it just serves as a wrapper for import.
     """
 
     @staticmethod
@@ -193,22 +193,18 @@ class EhrapyMedcat:
             medcat_obj.cat.cdb.print_stats()
 
     @staticmethod
-    def annotate_text(
-        medcat_obj: MedCAT, obs: pd.DataFrame, text_column: str, n_proc: int = 2, batch_size_chars: int = 500000
-    ) -> None:
+    def annotate_text(medcat_obj: MedCAT, text_column: str, n_proc: int = 2, batch_size_chars: int = 500000) -> None:
         """Annotate the original free text data. Note this will only annotate non null rows.
         The result will be a DataFrame. It will be set as the annotated_results attribute for the passed MedCat object.
         This dataframe will be the base for all further analyses, for example coloring umaps by specific diseases.
 
         Args:
             medcat_obj: Ehrapy's custom MedCAT object. The annotated_results attribute will be set here.
-            obs: AnnData obs containing the free text column
             text_column: Name of the column that should be annotated
             n_proc: Number of processors to use
             batch_size_chars: batch size to control for the variability between document sizes
-
         """
-        non_null_text = EhrapyMedcat._filter_null_values(obs, text_column)
+        non_null_text = EhrapyMedcat._filter_null_values(medcat_obj.anndata.obs, text_column)
         formatted_text_column = EhrapyMedcat._format_df_column(non_null_text, text_column)
         results = medcat_obj.cat.multiprocessing(formatted_text_column, batch_size_chars=batch_size_chars, nproc=n_proc)
         flattened_res = EhrapyMedcat._flatten_annotated_results(results)
@@ -222,18 +218,19 @@ class EhrapyMedcat:
         medcat_obj: MedCAT, n: int = 10, status: str = "Affirmed", save_to_csv: bool = False, save_path: str = "."
     ) -> None:
         """Provide an overview for the annotation results. An overview will look like the following:
-           cui (the CUI), nsubjects (from how many rows this one got extracted), type_ids (TUIs), name(name of the entitiy), perc_subjects (how many rows relative
-           to absolute number of rows)
 
-        Args:
-            medcat_obj: The current MedCAT object which holds all infos on medcat analysis with ehrapy.
-            n: Basically the parameter for head() of pandas Dataframe. How many of the most common entities should be shown?
-            status: One of "Affirmed" (default), "Other" or "Both". Displays stats for either only affirmed entities, negated ones or both.
-            save_to_csv: Whether to save the overview dataframe to a local .csv file in the current working directory or not.
-            save_path: Path to save the overview as .csv file. Defaults to current working directory.
+        cui (the CUI), nsubjects (from how many rows this one got extracted), type_ids (TUIs), name(name of the entitiy), perc_subjects (how many rows relative
+        to absolute number of rows)
 
-        Returns:
-            A pandas DataFrame with the overview stats.
+         Args:
+             medcat_obj: The current MedCAT object which holds all infos on medcat analysis with ehrapy.
+             n: Basically the parameter for head() of pandas Dataframe. How many of the most common entities should be shown?
+             status: One of "Affirmed" (default), "Other" or "Both". Displays stats for either only affirmed entities, negated ones or both.
+             save_to_csv: Whether to save the overview dataframe to a local .csv file in the current working directory or not.
+             save_path: Path to save the overview as .csv file. Defaults to current working directory.
+
+         Returns:
+             A Pandas DataFrame with the overview stats.
         """
         df = EhrapyMedcat._filter_df_by_status(medcat_obj.annotated_results, status)
         # group by CUI as this is a unique identifier per entity
@@ -265,8 +262,8 @@ class EhrapyMedcat:
         medcat_obj: MedCAT, adata: AnnData, name: str, all_names: list[str], add_cols: list[str] | None
     ) -> None:
         """Adds a binary column to obs (temporarily) for plotting infos extracted from freetext.
-        Indicates whether the specific entity to color by has been found in that row or not.
 
+        Indicates whether the specific entity to color by has been found in that row or not.
         """
         # only extract affirmed entities
         df = EhrapyMedcat._filter_df_by_status(medcat_obj.annotated_results, "Affirmed")
@@ -278,13 +275,13 @@ class EhrapyMedcat:
             _, new_name = str_matcher.best_match(name, 0.5)
             if new_name:
                 print(
-                    f"[bold yellow]Did not found [blue]{name} in medcat's extracted entities. Will use best match {new_name}!"
+                    f"[bold yellow]Did not find [blue]{name} [yellow]in medcat's extracted entities. Will use best match {new_name}!"
                 )
                 _list_replace(all_names, name, new_name)
                 name = new_name
             else:
                 raise EntitiyNotFoundError(
-                    f"Did not found {name} in medcat's extracted entities and could not determine a best matching equivalent."
+                    f"Did not find {name} in medcat's extracted entities and could not determine a best matching equivalent."
                 )
         # add column to additional to remove it later on
         if add_cols is not None:
@@ -293,7 +290,7 @@ class EhrapyMedcat:
             df.groupby("row_nr").agg({"pretty_name": (lambda x: int(any(x.isin([name]))))}).astype("category")
         )
         adata.obs = adata.obs.replace({name: {1.0: "yes", 0.0: "no"}})
-        # set value to 0 for rows, where medcat did not extract any entity
+        # set value to 0 for rows, where MedCAT did not extract any entity
         adata.obs[name] = adata.obs[name].fillna("no").astype("category")
 
     @staticmethod
@@ -308,8 +305,8 @@ class EhrapyMedcat:
     @staticmethod
     def _flatten_annotated_results(annotation_results: dict) -> dict:
         """Flattens the nested set (usually 5 level nested) of annotation results.
-        annotation_results is just a simple flattened dict with infos on all entities found
 
+        annotation_results is just a simple flattened dict with infos on all entities found
         """
         flattened_annotated_dict = {}
         entry_nr = 0

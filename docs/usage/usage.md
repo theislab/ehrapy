@@ -104,7 +104,7 @@ Other than tools, preprocessing steps usually don’t return an easily interpret
     preprocessing.iterative_svd_impute
     preprocessing.matrix_factorization_impute
     preprocessing.nuclear_norm_minimization_impute
-    preprocessing.miceforest_impute
+    preprocessing.mice_forest_impute
 ```
 
 ### Encoding
@@ -125,14 +125,14 @@ Other than tools, preprocessing steps usually don’t return an easily interpret
     :toctree: preprocessing
     :nosignatures:
 
-    preprocessing.norm_log
-    preprocessing.norm_maxabs
-    preprocessing.norm_minmax
-    preprocessing.norm_power
-    preprocessing.norm_quantile
-    preprocessing.norm_robust_scale
-    preprocessing.norm_scale
-    preprocessing.norm_sqrt
+    preprocessing.log_norm
+    preprocessing.maxabs_norm
+    preprocessing.minmax_norm
+    preprocessing.power_norm
+    preprocessing.quantile_norm
+    preprocessing.robust_scale_norm
+    preprocessing.scale_norm
+    preprocessing.sqrt_norm
 ```
 
 ### Dataset Shift Correction
