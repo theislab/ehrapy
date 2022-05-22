@@ -16,7 +16,6 @@ from rich import print
 from ehrapy import ehrapy_settings, settings
 from ehrapy.anndata.anndata_ext import df_to_anndata
 from ehrapy.data._dataloader import download
-from ehrapy.io._utility_io import _check_columns_only_params
 from ehrapy.preprocessing.encoding._encode import encode
 
 
@@ -806,6 +805,33 @@ def _extract_index_and_columns_obs_only(identifier: str, index_columns, columns_
         _index_column = None
 
     return _index_column, _columns_obs_only, _columns_x_only
+
+
+def _check_columns_only_params(
+    obs_only: dict[str, list[str]] | list[str] | None, x_only: dict[str, list[str]] | list[str] | None
+) -> None:
+    """Check whether columns_obs_only and columns_x_only are passed exclusively.
+
+    For a single AnnData object (thus parameters being a list of strings) it's not desirable to pass both, obs_only and x_only.
+    For multiple AnnData objects (thus the parameters being dicts of string keys with a list value), it is possible to pass both. But the keys
+    (unique identifiers of the AnData objects, basically its names) should share no common identifier,
+    thus a single AnnData object is either in x_only OR obs_only, but not in both.
+    """
+    if not obs_only or not x_only:
+        return
+    if obs_only and x_only and isinstance(obs_only, list):
+        raise ValueError(
+            "Can not use columns_obs_only together with columns_x_only with a single AnnData object. "
+            "At least one has to be None!"
+        )
+    else:
+        common_keys = obs_only.keys() & x_only.keys()  # type: ignore
+        if common_keys:
+            raise ValueError(
+                "Can not use columns_obs_only together with columns_x_only for a single AnnData object. "
+                "The following anndata identifiers where found"
+                f"in both: {','.join(key for key in common_keys)}!"
+            )
 
 
 def _mudata_cache_not_supported():
