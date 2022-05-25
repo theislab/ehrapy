@@ -44,14 +44,19 @@ def mimic_2(
 
 def mimic_3_demo(
     encoded: bool = False,
-    mudata: bool = False,
+    anndata: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
-) -> MuData | list[AnnData]:
-    """Loads the MIMIC-III demo dataset.
+) -> MuData | dict[str, AnnData]:
+    """Loads the MIMIC-III demo dataset as a dictionary of Pandas DataFrames.
+
+    The MIMIC-III dataset comes in the form of 26 CSV tables. Although, it is possible to return one AnnData object per
+    csv table, it might be easier to start with Pandas DataFrames to aggregate the desired measurements with Pandas SQL.
+    https://github.com/yhat/pandasql/ might be useful.
+    The resulting DataFrame can then be transformed into an AnnData object with :func:`~ehrapy.anndata.df_to_anndata`.
 
     Args:
         encoded: Whether to return an already encoded object
-        mudata: Whether to return a MuData object. Returns a Dictionary of file names to AnnData objects if False
+        anndata: Whether to return one AnnData object per CSV file (default: False)
 
     Returns:
         :class:`~mudata.MuData` object of the MIMIC-III demo Dataset
@@ -63,21 +68,20 @@ def mimic_3_demo(
 
             adatas = ep.dt.mimic_3_demo(encoded=True)
     """
-    mdata = read_csv(
+    data = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/ehrapy_mimic_3",
         download_dataset_name="ehrapy_mimic_3",
         backup_url="https://physionet.org/static/published-projects/mimiciii-demo/mimic-iii-clinical-database-demo-1.4.zip",
+        return_mudata=False,
+        return_dfs=False if anndata else True,
         columns_obs_only=columns_obs_only,
-        return_mudata=mudata,
     )
     if encoded:
-        if not mudata:
-            raise ValueError(
-                "Currently we only support the encoding of a single AnnData object or a single MuData object."
-            )
-        encode(mdata, autodetect=True)
+        if not anndata:
+            raise ValueError("Can only encode AnnData objects. Set 'anndata=True' to get AnnData objects.")
+        encode(data, autodetect=True)
 
-    return mdata
+    return data
 
 
 def heart_failure(encoded: bool = False, columns_obs_only: dict[str, list[str]] | list[str] | None = None) -> AnnData:

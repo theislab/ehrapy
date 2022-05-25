@@ -25,6 +25,7 @@ def read_csv(
     index_column: dict[str, str | int] | str | int | None = None,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
     columns_x_only: dict[str, list[str]] | list[str] | None = None,
+    return_dfs: bool = False,
     return_mudata: bool = False,
     cache: bool = False,
     backup_url: str | None = None,
@@ -39,6 +40,7 @@ def read_csv(
         index_column: The index column of obs. Usually the patient visit ID or the patient ID.
         columns_obs_only: These columns will be added to obs only and not X.
         columns_x_only: These columns will be added to X only and all remaining columns to obs. Note that datetime columns will always be added to .obs though.
+        return_dfs: Whether to return one or several Pandas DataFrames.
         return_mudata: Whether to create and return a MuData object. This is primarily used for complex datasets which require several AnnData files.
         cache: Whether to write to cache when reading or not. (default: False)
         download_dataset_name: Name of the file or directory in case the dataset is downloaded
@@ -65,6 +67,7 @@ def read_csv(
         index_column=index_column,
         columns_obs_only=columns_obs_only,
         columns_x_only=columns_x_only,
+        return_dfs=return_dfs,
         return_mudata=return_mudata,
         cache=cache,
         **kwargs,
@@ -160,6 +163,7 @@ def _read_csv(
     index_column: dict[str, str | int] | str | int | None,
     columns_obs_only: dict[str, list[str]] | list[str] | None,
     columns_x_only: dict[str, list[str]] | list[str] | None,
+    return_dfs: bool = False,
     return_mudata: bool = False,
     cache: bool = False,
     **kwargs,
@@ -176,7 +180,15 @@ def _read_csv(
     # If the filename is a directory, assume it is a dataset with multiple files
     elif filename.is_dir():
         return _read_from_directory(
-            filename, cache, path_cache, sep, index_column, columns_obs_only, columns_x_only, return_mudata  # type: ignore
+            filename,
+            cache,
+            path_cache,
+            extension=sep,
+            index_column=index_column,
+            columns_obs_only=columns_obs_only,
+            columns_x_only=columns_x_only,
+            return_dfs=return_dfs,
+            return_mudata=return_mudata,  # type: ignore
         )
     # input is a single file
     else:
@@ -246,14 +258,24 @@ def _read_from_directory(
     path_cache_dir: Path | None,
     extension: str,
     index_column: dict[str, str | int] | str | int | None = None,
-    columns_obs_only: dict[str, list[str]] | None = None,
-    columns_x_only: dict[str, list[str]] | None = None,
+    columns_obs_only: dict[str, list[str]] | list[str] | None = None,
+    columns_x_only: dict[str, list[str]] | list[str] | None = None,
+    return_dfs: bool = False,
     return_mudata: bool = False,
-) -> dict[str, AnnData]:
-    """Parse AnnData objects from a directory containing the data files"""
+) -> dict[str, AnnData] | dict[str, pd.DataFrame]:
+    """Parse AnnData objects or Pandas DataFrames from a directory containing the data files"""
+    if return_dfs:
+        dfs = _read_multiple_csv(filename, sep=extension, return_dfs=True)
+        return dfs  # type: ignore
     if extension in {",", "\t"}:
-        adata_objects, columns_obs_only = _read_multiple_csv(
-            filename, extension, index_column, columns_obs_only, columns_x_only, return_mudata
+        adata_objects, columns_obs_only = _read_multiple_csv(  # type: ignore
+            filename,
+            sep=extension,
+            index_column=index_column,
+            columns_obs_only=columns_obs_only,
+            columns_x_only=columns_x_only,
+            return_dfs=False,
+            return_mudata=return_mudata,
         )
         # cache results
         if cache:
@@ -261,11 +283,9 @@ def _read_from_directory(
                 path_cache_dir.parent.mkdir(parents=True)
             path_cache_dir.mkdir()
             return _write_cache_dir(adata_objects, path_cache_dir, columns_obs_only, index_column)  # type: ignore
-        return adata_objects
-    # read multiple h5ad files
+        return adata_objects  # type: ignore
     elif extension == "h5ad":
         return _read_multiple_h5ad(filename)
-    # only for development reasons, users should never see this
     else:
         raise NotImplementedError(f"Reading from directory with .{extension} files is not implemented yet!")
 
@@ -274,11 +294,13 @@ def _read_multiple_csv(  # noqa: N802
     filename: Path,
     sep: str,
     index_column: dict[str, str | int] | str | int | None = None,
-    columns_obs_only: dict[str, list[str]] | None = None,
-    columns_x_only: dict[str, list[str]] | None = None,
+    columns_obs_only: dict[str, list[str]] | list[str] | None = None,
+    columns_x_only: dict[str, list[str]] | list[str] | None = None,
+    return_dfs: bool = False,
     return_mudata_object: bool = False,
     cache: bool = False,
-) -> tuple[dict[str, AnnData], dict[str, list[str] | None]]:
+    **kwargs,
+) -> tuple[dict[str, AnnData], dict[str, list[str] | None]] | MuData | dict[str, pd.DataFrame]:
     """Read a dataset containing multiple .csv/.tsv files.
 
     Args:
@@ -287,42 +309,52 @@ def _read_multiple_csv(  # noqa: N802
         index_column: Column names of the index columns for obs
         columns_obs_only: List of columns per file (AnnData object) which should only be stored in .obs, but not in X. Useful for free text annotations.
         columns_x_only: List of columns per file (AnnData object) which should only be stored in .X, but not in obs. Datetime columns will be added to .obs regardless.
+        return_dfs: When set to True, return a dictionary of Pandas DataFrames.
         return_mudata_object: When set to True, return a :class:`~mudata.MuData` object, otherwise a dict of :class:`~anndata.AnnData` objects
         cache: Whether to cache results or not
+        kwargs: Keyword arguments for Pandas read_csv
 
     Returns:
         An :class:`~mudata.MuData` object or a dict mapping the filename (object name) to the corresponding :class:`~anndata.AnnData` object and the columns
         that are obs only for each object
     """
     obs_only_all = {}
-    if not return_mudata_object:
+    if not return_mudata_object and not return_dfs:
         anndata_dict = {}
-    else:
+    elif return_dfs:
+        df_dict: dict[str, pd.DataFrame] = {}
+    elif return_mudata_object:
         mudata = None
     for file in filename.iterdir():
         if file.is_file() and file.suffix in {".csv", ".tsv"}:
-            # slice off the file suffix .csv or .tsv
-            adata_identifier = file.name[:-4]
+            # slice off the file suffix .csv or .tsv for a clean file name
+            file_identifier = file.name[:-4]
+            if return_dfs:
+                df = pd.read_csv(file, sep=sep, **kwargs)
+                df_dict[file_identifier] = df
+                continue
+
             index_col, col_obs_only, col_x_only = _extract_index_and_columns_obs_only(
-                adata_identifier, index_column, columns_obs_only, columns_x_only
+                file_identifier, index_column, columns_obs_only, columns_x_only
             )
             adata, single_adata_obs_only = _do_read_csv(file, sep, index_col, col_obs_only, col_x_only, cache=cache)
-            obs_only_all[adata_identifier] = single_adata_obs_only
+            obs_only_all[file_identifier] = single_adata_obs_only
             # obs indices have to be unique otherwise updating and working with the MuData object will fail
             if index_col:
                 adata.obs_names_make_unique()
 
             if return_mudata_object:
                 if not mudata:
-                    mudata = MuData({adata_identifier: adata})
+                    mudata = MuData({file_identifier: adata})
                 else:
-                    mudata.mod[adata_identifier] = adata
+                    mudata.mod[file_identifier] = adata
             else:
-                anndata_dict[adata_identifier] = adata
+                anndata_dict[file_identifier] = adata
     if return_mudata_object:
-        # create the MuData object with the AnnData objects as modalities
         mudata.update()
         return mudata
+    elif return_dfs:
+        return df_dict
     else:
         return anndata_dict, obs_only_all
 
@@ -371,7 +403,6 @@ def _do_read_csv(
     Returns:
         An :class:`~anndata.AnnData` object and the column obs only for the object
     """
-    # read pandas dataframe
     try:
         if index_column and columns_obs_only and index_column in columns_obs_only:
             print(
@@ -388,7 +419,6 @@ def _do_read_csv(
         ) from None
 
     initial_df, columns_obs_only = _prepare_dataframe(initial_df, columns_obs_only, columns_x_only, cache)
-    # return the initial AnnData object
     return df_to_anndata(initial_df, columns_obs_only), columns_obs_only
 
 

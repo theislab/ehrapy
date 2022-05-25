@@ -44,7 +44,7 @@ class TestRead:
         assert (adata.layers["original"] == matrix).all()
         assert id(adata.layers["original"]) != id(adata.X)
 
-    def test_read_multiple_csv(self):
+    def test_read_multiple_csv_to_anndatas(self):
         adatas = read_csv(dataset_path=f"{_TEST_PATH_MULTIPLE}")
         adata_ids = set(adatas.keys())
         assert all(adata_id in adata_ids for adata_id in {"dataset_non_num_with_missing", "dataset_num_with_missing"})
@@ -56,6 +56,19 @@ class TestRead:
             "binary_col",
         }
         assert set(adatas["dataset_num_with_missing"].var_names) == {"col" + str(i) for i in range(1, 4)}
+
+    def test_read_multiple_csvs_to_dfs(self):
+        dfs = read_csv(dataset_path=f"{_TEST_PATH_MULTIPLE}", return_dfs=True)
+        dfs_ids = set(dfs.keys())
+        assert all(id in dfs_ids for id in {"dataset_non_num_with_missing", "dataset_num_with_missing"})
+        assert set(dfs["dataset_non_num_with_missing"].columns) == {
+            "indexcol",
+            "intcol",
+            "strcol",
+            "boolcol",
+            "binary_col",
+            "datetime",
+        }
 
     def test_read_multiple_csv_with_obs_only(self):
         adatas = read_csv(

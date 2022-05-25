@@ -39,7 +39,7 @@ class TestHPO:
         )
         similarity = HPOMapper.patient_hpo_similarity(patient_1, patient_2)
 
-        assert isclose(similarity, 0.8294613647308435)
+        assert isclose(similarity, 0.8294613647308435, rel_tol=1e-3)
 
     def test_hpo_term_similarity(self):
         term_1 = Ontology.get_hpo_object("Scoliosis")
