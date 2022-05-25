@@ -31,7 +31,7 @@ $ pip install ehrapy
 
 ## Usage
 
-Please see the [Usage documentation][usage] for details.
+Please have a look at the [Usage documentation][usage] and the [tutorials][tutorials].
 
 ```python
 import ehrapy as ep
@@ -39,7 +39,7 @@ import ehrapy as ep
 
 ## Credits
 
-This package was created with [cookietemple] using [Cookiecutter] based on [Hypermodern_Python_Cookiecutter].
+This package was created with [cookietemple] using [cookiecutter] based on [hypermodern_python_cookiecutter].
 
 [cookiecutter]: https://github.com/audreyr/cookiecutter
 [cookietemple]: https://cookietemple.com
@@ -47,3 +47,4 @@ This package was created with [cookietemple] using [Cookiecutter] based on [Hype
 [pip]: https://pip.pypa.io/
 [pypi]: https://pypi.org/
 [usage]: https://ehrapy.readthedocs.io/en/latest/usage/usage.html
+[tutorials]: https://ehrapy.readthedocs.io/en/latest/tutorials/index.html
