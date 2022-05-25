@@ -1784,12 +1784,15 @@ def embedding_density(
         hspace: Adjust the height of the space between multiple panels.
         return_fig: Return the matplotlib figure.\
         {show_save_ax}
+
     Returns:
         If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
+
     Example:
         .. code-block:: python
 
             import ehrapy as ep
+
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.norm_log(adata, offset=1)
@@ -1798,6 +1801,7 @@ def embedding_density(
             ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
             ep.tl.embedding_density(adata, groupby='leiden_0_5', key_added='icu_exp_flg')
             ep.pl.embedding_density(adata, key='icu_exp_flg')
+
     Preview:
         .. image:: /_static/docstring_previews/embedding_density.png
     """
@@ -1846,8 +1850,8 @@ def dpt_groups_pseudotime(
         .. code-block:: python
 
             import ehrapy as ep
-
             import numpy as np
+
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.norm_log(adata, offset=1)
