@@ -10,7 +10,7 @@
 
 ```{eval-rst}
 .. card:: API reference :octicon:`book;1em;`
-    :link: api/index
+    :link: usage/usage
     :link-type: doc
 
     The API reference contains a detailed description of the ehrapy API.

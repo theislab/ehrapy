@@ -44,7 +44,7 @@ class TestRead:
         assert (adata.layers["original"] == matrix).all()
         assert id(adata.layers["original"]) != id(adata.X)
 
-    def test_read_multiple_csv(self):
+    def test_read_multiple_csv_to_anndatas(self):
         adatas = read_csv(dataset_path=f"{_TEST_PATH_MULTIPLE}")
         adata_ids = set(adatas.keys())
         assert all(adata_id in adata_ids for adata_id in {"dataset_non_num_with_missing", "dataset_num_with_missing"})
@@ -56,6 +56,19 @@ class TestRead:
             "binary_col",
         }
         assert set(adatas["dataset_num_with_missing"].var_names) == {"col" + str(i) for i in range(1, 4)}
+
+    def test_read_multiple_csvs_to_dfs(self):
+        dfs = read_csv(dataset_path=f"{_TEST_PATH_MULTIPLE}", return_dfs=True)
+        dfs_ids = set(dfs.keys())
+        assert all(id in dfs_ids for id in {"dataset_non_num_with_missing", "dataset_num_with_missing"})
+        assert set(dfs["dataset_non_num_with_missing"].columns) == {
+            "indexcol",
+            "intcol",
+            "strcol",
+            "boolcol",
+            "binary_col",
+            "datetime",
+        }
 
     def test_read_multiple_csv_with_obs_only(self):
         adatas = read_csv(
@@ -199,3 +212,88 @@ class TestRead:
         assert adata.X.shape == (5, 2)
         assert list(adata.obs.columns) == ["b12_values", "survival"]
         assert "b12_values" not in list(adata.var_names.values) and "survival" not in list(adata.var_names.values)
+
+    def test_read_raises_error_with_duplicates_columns_only_single_1(self):
+        with pytest.raises(ValueError):
+            _ = read_csv(
+                dataset_path=f"{_TEST_PATH}/dataset_basic.csv",
+                columns_obs_only=["survival", "b12_values"],
+                columns_x_only=["survival", "b12_values"],
+            )
+
+    def test_read_raises_error_with_duplicates_columns_only_single_2(self):
+        with pytest.raises(ValueError):
+            _ = read_csv(
+                dataset_path=f"{_TEST_PATH}/dataset_basic.csv",
+                columns_obs_only=["survival"],
+                columns_x_only=["survival", "b12_values"],
+            )
+
+    def test_read_raises_error_with_duplicates_columns_only_multiple_1(self):
+        with pytest.raises(ValueError):
+            _ = read_csv(
+                dataset_path=f"{_TEST_PATH_MULTIPLE}",
+                columns_obs_only={
+                    "dataset_non_num_with_missing": ["intcol"],
+                    "dataset_num_with_missing": ["col1", "col2"],
+                },
+                columns_x_only={"dataset_non_num_with_missing": ["intcol"]},
+            )
+
+    def test_read_raises_error_with_duplicates_columns_only_multiple_2(self):
+        with pytest.raises(ValueError):
+            _ = read_csv(
+                dataset_path=f"{_TEST_PATH_MULTIPLE}",
+                columns_obs_only={
+                    "dataset_non_num_with_missing": ["intcol"],
+                    "dataset_num_with_missing": ["col1", "col2"],
+                },
+                columns_x_only={"dataset_non_num_with_missing": ["indexcol"], "dataset_num_with_missing": ["col3"]},
+            )
+
+    def test_move_single_column_to_x(self):
+        adata = read_csv(dataset_path=f"{_TEST_PATH}/dataset_basic.csv", columns_x_only=["b12_values"])
+        assert adata.X.shape == (5, 1)
+        assert list(adata.var_names) == ["b12_values"]
+        assert "b12_values" not in list(adata.obs.columns)
+        assert all(obs_names in list(adata.obs.columns) for obs_names in ["los_days", "patient_id", "survival"])
+
+    def test_move_multiple_columns_to_x(self):
+        adata = read_csv(dataset_path=f"{_TEST_PATH}/dataset_basic.csv", columns_x_only=["b12_values", "survival"])
+        assert adata.X.shape == (5, 2)
+        assert all(var_names in list(adata.var_names) for var_names in ["b12_values", "survival"])
+        assert all(obs_names in list(adata.obs.columns) for obs_names in ["los_days", "patient_id"])
+        assert all(var_names not in list(adata.obs.columns) for var_names in ["b12_values", "survival"])
+
+    def test_read_multiple_csv_with_x_only(self):
+        adatas = read_csv(
+            dataset_path=f"{_TEST_PATH_MULTIPLE}",
+            columns_x_only={"dataset_non_num_with_missing": ["strcol"], "dataset_num_with_missing": ["col1"]},
+        )
+        adata_ids = set(adatas.keys())
+        assert all(adata_id in adata_ids for adata_id in {"dataset_non_num_with_missing", "dataset_num_with_missing"})
+        assert set(adatas["dataset_non_num_with_missing"].obs.columns) == {
+            "indexcol",
+            "intcol",
+            "boolcol",
+            "binary_col",
+            "datetime",
+        }
+        assert set(adatas["dataset_num_with_missing"].obs.columns) == {"col" + str(i) for i in range(2, 4)}
+        assert set(adatas["dataset_non_num_with_missing"].var_names) == {"strcol"}
+        assert set(adatas["dataset_num_with_missing"].var_names) == {"col1"}
+
+    def test_read_multiple_csv_with_x_only_2(self):
+        adatas = read_csv(
+            dataset_path=f"{_TEST_PATH_MULTIPLE}",
+            columns_x_only={
+                "dataset_non_num_with_missing": ["strcol", "intcol", "boolcol"],
+                "dataset_num_with_missing": ["col1", "col3"],
+            },
+        )
+        adata_ids = set(adatas.keys())
+        assert all(adata_id in adata_ids for adata_id in {"dataset_non_num_with_missing", "dataset_num_with_missing"})
+        assert set(adatas["dataset_non_num_with_missing"].obs.columns) == {"indexcol", "binary_col", "datetime"}
+        assert set(adatas["dataset_num_with_missing"].obs.columns) == {"col2"}
+        assert set(adatas["dataset_non_num_with_missing"].var_names) == {"strcol", "intcol", "boolcol"}
+        assert set(adatas["dataset_num_with_missing"].var_names) == {"col1", "col3"}

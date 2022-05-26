@@ -55,10 +55,10 @@ class TestQualityControl:
 
         assert np.array_equal(var_metrics["missing_values_abs"].values, np.array([1, 2, 0]))
         assert np.allclose(var_metrics["missing_values_pct"].values, np.array([50.0, 100.0, 0.0]))
-        assert np.allclose(var_metrics["mean"].values, np.array([np.nan, np.nan, 24.327]), equal_nan=True)
-        assert np.allclose(var_metrics["median"].values, np.array([np.nan, np.nan, 24.327]), equal_nan=True)
-        assert np.allclose(var_metrics["min"].values, np.array([np.nan, np.nan, 7.234]), equal_nan=True)
-        assert np.allclose(var_metrics["max"].values, np.array([np.nan, np.nan, 41.419998]), equal_nan=True)
+        assert np.allclose(var_metrics["mean"].values, np.array([0.21, np.nan, 24.327]), equal_nan=True)
+        assert np.allclose(var_metrics["median"].values, np.array([0.21, np.nan, 24.327]), equal_nan=True)
+        assert np.allclose(var_metrics["min"].values, np.array([0.21, np.nan, 7.234]), equal_nan=True)
+        assert np.allclose(var_metrics["max"].values, np.array([0.21, np.nan, 41.419998]), equal_nan=True)
 
     def test_calculate_qc_metrics(self):
         obs_metrics, var_metrics = ep.pp.qc_metrics(self.test_missing_values_adata, inplace=True)

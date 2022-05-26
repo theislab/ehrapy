@@ -287,7 +287,7 @@ def dotplot(
     standard_scale: Literal["var", "group"] | None = None,
     smallest_dot: float | None = DotPlot.DEFAULT_SMALLEST_DOT,
     title: str | None = None,
-    colorbar_title: str | None = DotPlot.DEFAULT_COLOR_LEGEND_TITLE,
+    colorbar_title: str | None = "Mean value in group",
     size_title: str | None = DotPlot.DEFAULT_SIZE_LEGEND_TITLE,
     figsize: tuple[float, float] | None = None,
     dendrogram: bool | str = False,
@@ -612,7 +612,7 @@ def stacked_violin(
     use_raw: bool | None = None,
     num_categories: int = 7,
     title: str | None = None,
-    colorbar_title: str | None = StackedViolin.DEFAULT_COLOR_LEGEND_TITLE,
+    colorbar_title: str | None = "Median value\n in group",
     figsize: tuple[float, float] | None = None,
     dendrogram: bool | str = False,
     gene_symbols: str | None = None,
@@ -763,7 +763,7 @@ def matrixplot(
     dendrogram: bool | str = False,
     title: str | None = None,
     cmap: str | None = MatrixPlot.DEFAULT_COLORMAP,
-    colorbar_title: str | None = MatrixPlot.DEFAULT_COLOR_LEGEND_TITLE,
+    colorbar_title: str | None = "Mean value\n in group",
     gene_symbols: str | None = None,
     var_group_positions: Sequence[tuple[int, int]] | None = None,
     var_group_labels: Sequence[str] | None = None,
@@ -1628,7 +1628,7 @@ def embedding(
     return_fig: bool | None = None,
     **kwargs,
 ) -> Figure | Axes | None:  # pragma: no cover
-    """Scatter plot for user specified embedding basis (e.g. umap, pca, etc)
+    """Scatter plot for user specified embedding basis (e.g. umap, pca, etc).
 
     Args:
         basis:
@@ -1750,8 +1750,10 @@ def embedding_density(
     **kwargs,
 ) -> Figure | Axes | None:  # pragma: no cover
     """Plot the density of observations in an embedding (per condition).
+
     Plots the gaussian kernel density estimates (over condition) from the `sc.tl.embedding_density()` output. This currently
     does not support extracted medcat entities.
+
     Args:
         adata: :class:`~anndata.AnnData` object object containing all observations.
         basis: The embedding over which the density was calculated.
@@ -1782,11 +1784,15 @@ def embedding_density(
         hspace: Adjust the height of the space between multiple panels.
         return_fig: Return the matplotlib figure.\
         {show_save_ax}
+
     Returns:
         If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
+
     Example:
         .. code-block:: python
+
             import ehrapy as ep
+
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.norm_log(adata, offset=1)
@@ -1795,6 +1801,7 @@ def embedding_density(
             ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
             ep.tl.embedding_density(adata, groupby='leiden_0_5', key_added='icu_exp_flg')
             ep.pl.embedding_density(adata, key='icu_exp_flg')
+
     Preview:
         .. image:: /_static/docstring_previews/embedding_density.png
     """
@@ -1843,8 +1850,8 @@ def dpt_groups_pseudotime(
         .. code-block:: python
 
             import ehrapy as ep
-
             import numpy as np
+
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.norm_log(adata, offset=1)
