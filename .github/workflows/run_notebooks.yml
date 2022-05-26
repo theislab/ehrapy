@@ -11,8 +11,12 @@ jobs:
             matrix:
                 notebook:
                     [
+                        "docs/tutorials/notebooks/ehrapy_introduction.ipynb",
                         "docs/tutorials/notebooks/mimic_2_introduction.ipynb",
+                        "docs/tutorials/notebooks/mimic_2_survival_analysis.ipynb",
+                        "docs/tutorials/notebooks/mimic_2_fate.ipynb",
                         "docs/tutorials/notebooks/mimic_3_demo.ipynb",
+                        "docs/tutorials/notebooks/medcat.ipynb",
                     ]
         steps:
             - uses: actions/checkout@v3
@@ -35,7 +39,7 @@ jobs:
                   sudo apt install -y ghostscript
 
             - name: Install package
-              run: poetry install -E "en-core-web-md"
+              run: poetry install -E "en-core-web-md" -E "medcat"
 
             - name: Install nbconvert ipykernel
               run: poetry add nbconvert ipykernel
