@@ -27,7 +27,7 @@ class MedCAT:
 
     def __init__(self, anndata: AnnData, vocabulary: Vocab = None, concept_db: CDB = None, model_pack_path=None):
         if not check_module_importable("medcat"):
-            raise RuntimeError("medcat is not importable. Please install via pip install medcat")
+            raise RuntimeError("Package medcat is not importable. Please install via pip install medcat")
         self.anndata = anndata
         self.vocabulary = vocabulary
         self.concept_db = concept_db
@@ -170,7 +170,7 @@ class MedCAT:
 
 
 class EhrapyMedcat:
-    """Wrapper class to perform medcat analysis with ehrapy for free text data. This can be simply called by `ep.tl.mc`.
+    """Wrapper class to perform feature extraction from free text data using MedCAT with ehrapy. This can be simply called by `ep.tl.mc`.
     This class is not supposed to be instantiated at any time, it just serves as a wrapper for import.
     """
 
@@ -223,7 +223,7 @@ class EhrapyMedcat:
         to absolute number of rows)
 
          Args:
-             medcat_obj: The current MedCAT object which holds all infos on medcat analysis with ehrapy.
+             medcat_obj: The current MedCAT object which holds all infos on NLP analysis with MedCAT and ehrapy.
              n: Basically the parameter for head() of pandas Dataframe. How many of the most common entities should be shown?
              status: One of "Affirmed" (default), "Other" or "Both". Displays stats for either only affirmed entities, negated ones or both.
              save_to_csv: Whether to save the overview dataframe to a local .csv file in the current working directory or not.
@@ -275,13 +275,13 @@ class EhrapyMedcat:
             _, new_name = str_matcher.best_match(name, 0.5)
             if new_name:
                 print(
-                    f"[bold yellow]Did not find [blue]{name} [yellow]in medcat's extracted entities. Will use best match {new_name}!"
+                    f"[bold yellow]Did not find [blue]{name} [yellow]in MedCAT's extracted entities. Will use best match {new_name}!"
                 )
                 _list_replace(all_names, name, new_name)
                 name = new_name
             else:
                 raise EntitiyNotFoundError(
-                    f"Did not find {name} in medcat's extracted entities and could not determine a best matching equivalent."
+                    f"Did not find {name} in MedCAT's extracted entities and could not determine a best matching equivalent."
                 )
         # add column to additional to remove it later on
         if add_cols is not None:
@@ -290,7 +290,6 @@ class EhrapyMedcat:
             df.groupby("row_nr").agg({"pretty_name": (lambda x: int(any(x.isin([name]))))}).astype("category")
         )
         adata.obs = adata.obs.replace({name: {1.0: "yes", 0.0: "no"}})
-        # set value to 0 for rows, where MedCAT did not extract any entity
         adata.obs[name] = adata.obs[name].fillna("no").astype("category")
 
     @staticmethod
@@ -316,7 +315,7 @@ class EhrapyMedcat:
             # all entities extracted from a given row
             entities = annotation_results[row_id]["entities"]
             for entity_id in entities.keys():
-                # tokens are currently ignored, as they will not appear with the current basic model used by ehrapy from medcat
+                # tokens are currently ignored, as they will not appear with the current basic model used by ehrapy from MedCAT
                 if entity_id != "tokens":
                     single_entity = {"row_nr": row_id}
                     entity = entities[entity_id]
@@ -333,7 +332,7 @@ class EhrapyMedcat:
     @staticmethod
     def _format_df_column(df: pd.DataFrame, column_name: str) -> list[tuple[int, str]]:
         """Format the df to match: formatted_data = [(row_id, row_text), (row_id, row_text), ...]
-        as this is required by medcat's multiprocessing annotation step
+        as this is required by MedCAT's multiprocessing annotation step
 
         """
         formatted_data = []
