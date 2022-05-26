@@ -869,9 +869,7 @@ def _check_columns_only_params(
 
 
 def _cache_not_supported():
-    raise MudataCachingNotSupportedError(
-        "Caching is currently not supported for MuData or Pandas DataFrame objects."
-    )
+    raise MudataCachingNotSupportedError("Caching is currently not supported for MuData or Pandas DataFrame objects.")
 
 
 class IndexNotFoundError(Exception):
