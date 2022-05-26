@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+import pandas as pd
 from anndata import AnnData
-from mudata import MuData
 
 from ehrapy import ehrapy_settings
 from ehrapy.io._read import read_csv
@@ -46,7 +46,7 @@ def mimic_3_demo(
     encoded: bool = False,
     anndata: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
-) -> MuData | dict[str, AnnData]:
+) -> dict[str, AnnData] | dict[str, pd.DataFrame]:
     """Loads the MIMIC-III demo dataset as a dictionary of Pandas DataFrames.
 
     The MIMIC-III dataset comes in the form of 26 CSV tables. Although, it is possible to return one AnnData object per
@@ -59,14 +59,14 @@ def mimic_3_demo(
         anndata: Whether to return one AnnData object per CSV file (default: False)
 
     Returns:
-        :class:`~mudata.MuData` object of the MIMIC-III demo Dataset
+        A dictionary of AnnData objects or a dictionary of Pandas DataFrames
 
     Example:
         .. code-block:: python
 
             import ehrapy as ep
 
-            adatas = ep.dt.mimic_3_demo(encoded=True)
+            dfs = ep.dt.mimic_3_demo()
     """
     data = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/ehrapy_mimic_3",

@@ -169,8 +169,12 @@ def _read_csv(
     **kwargs,
 ) -> AnnData | dict[str, AnnData] | MuData:
     """Internal interface of the read_csv method."""
-    if cache and return_mudata:
+    if cache and return_mudata and return_dfs:
         _mudata_cache_not_supported()
+    if return_dfs and (columns_x_only or columns_obs_only):
+        raise ValueError(
+            "Parameters columns_x_only and columns_obs_only are not supported when returning Pandas DataFrames."
+        )
     path_cache = settings.cachedir / filename
     # reading from (cache) file is separated in the read_h5ad function
     if cache and (path_cache.is_dir() or path_cache.is_file()):
