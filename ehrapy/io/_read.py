@@ -169,8 +169,8 @@ def _read_csv(
     **kwargs,
 ) -> AnnData | dict[str, AnnData] | MuData:
     """Internal interface of the read_csv method."""
-    if cache and return_mudata and return_dfs:
-        _mudata_cache_not_supported()
+    if cache and (return_mudata or return_dfs):
+        _cache_not_supported()
     if return_dfs and (columns_x_only or columns_obs_only):
         raise Warning(
             "Parameters columns_x_only and columns_obs_only are not supported when returning Pandas DataFrames."
@@ -233,7 +233,7 @@ def _read_pdf(
 ) -> AnnData | dict[str, AnnData] | MuData:
     """Internal interface of the read_pdf method."""
     if cache and return_mudata:
-        _mudata_cache_not_supported()
+        _cache_not_supported()
     path_cache = settings.cachedir / filename.stem
     if cache and (path_cache.is_dir() or path_cache.is_file()):
         raise CacheExistsException(
@@ -868,10 +868,9 @@ def _check_columns_only_params(
             )
 
 
-def _mudata_cache_not_supported():
+def _cache_not_supported():
     raise MudataCachingNotSupportedError(
-        "Caching is currently not supported for MuData objects. Consider setting return_mudata to False in order "
-        "to use caching!"
+        "Caching is currently not supported for MuData or Pandas DataFrame objects."
     )
 
 
