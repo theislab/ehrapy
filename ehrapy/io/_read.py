@@ -172,7 +172,7 @@ def _read_csv(
     if cache and return_mudata and return_dfs:
         _mudata_cache_not_supported()
     if return_dfs and (columns_x_only or columns_obs_only):
-        raise ValueError(
+        raise Warning(
             "Parameters columns_x_only and columns_obs_only are not supported when returning Pandas DataFrames."
         )
     path_cache = settings.cachedir / filename
