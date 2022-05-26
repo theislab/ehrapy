@@ -98,6 +98,7 @@ def glm(
     if ascontinus is not None:
         data[ascontinus] = data[ascontinus].astype(float)
     glm = smf.glm(formula, data=data, family=family, missing=missing)
+
     return glm
 
 
@@ -111,7 +112,7 @@ def kmf(
     ci_labels=None,
     weights=None,
     censoring=None,
-) -> sm.GLM:
+) -> KaplanMeierFitter:
     """Fit the Kaplan-Meier estimate for the survival function.
 
     See https://lifelines.readthedocs.io/en/latest/fitters/univariate/KaplanMeierFitter.html#module-lifelines.fitters.kaplan_meier_fitter
@@ -177,4 +178,5 @@ def kmf(
             ci_labels=ci_labels,
             weights=weights,
         )
+
     return kmf
