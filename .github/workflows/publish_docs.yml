@@ -21,14 +21,14 @@ jobs:
             - name: Install pip
               run: python -m pip install --upgrade pip
 
+            - name: Install ehrapy
+              run: pip install .
+
             - name: Install doc dependencies
               run: pip install -r docs/requirements.txt
 
             - name: Install Pandoc
               run: sudo apt install pandoc
-
-            - name: test
-              run: python -c "import ehrapy as ep"
 
             - name: Build docs
               run: |
