@@ -96,7 +96,7 @@ intersphinx_mapping = dict(
     jax=("https://jax.readthedocs.io/en/latest/", None),
 )
 
-language = None
+language = "en"
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = "default"
