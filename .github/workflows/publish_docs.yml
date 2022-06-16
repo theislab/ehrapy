@@ -27,6 +27,9 @@ jobs:
             - name: Install Pandoc
               run: sudo apt install pandoc
 
+            - name: test
+              run: python -c "import ehrapy as ep"
+
             - name: Build docs
               run: |
                   cd docs
