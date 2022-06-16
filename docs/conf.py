@@ -176,6 +176,7 @@ nbsphinx_thumbnails = {
     "tutorials/notebooks/ehrapy_introduction": "_static/ehrapy_logos/ehrapy_pure.png",
     "tutorials/notebooks/mimic_2_introduction": "_static/tutorials/catheter.png",
     "tutorials/notebooks/mimic_2_fate": "_static/tutorials/fate.png",
+    "tutorials/notebooks/mimic_2_survival_analysis": "_static/tutorials/survival.png",
     "tutorials/notebooks/diabetes_130": "_static/tutorials/diabetes.png",
     "tutorials/notebooks/medcat": "_static/tutorials/nlp.png",
 }
