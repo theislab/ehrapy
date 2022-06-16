@@ -183,7 +183,7 @@ scipy = ">=1.2.0"
 
 [[package]]
 name = "babel"
-version = "2.10.1"
+version = "2.10.3"
 description = "Internationalization utilities"
 category = "dev"
 optional = false
@@ -355,7 +355,7 @@ statsmodels = ">=0.9.0"
 
 [[package]]
 name = "certifi"
-version = "2022.5.18.1"
+version = "2022.6.15"
 description = "Python package for providing Mozilla's CA Bundle."
 category = "main"
 optional = false
@@ -412,7 +412,7 @@ colorama = {version = "*", markers = "platform_system == \"Windows\""}
 
 [[package]]
 name = "colorama"
-version = "0.4.4"
+version = "0.4.5"
 description = "Cross-platform colored terminal text."
 category = "main"
 optional = false
@@ -627,7 +627,7 @@ python-versions = "*"
 
 [[package]]
 name = "docutils"
-version = "0.17.1"
+version = "0.18.1"
 description = "Docutils -- Python Documentation Utilities"
 category = "dev"
 optional = false
@@ -1073,7 +1073,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 
 [[package]]
 name = "importlib-resources"
-version = "5.7.1"
+version = "5.8.0"
 description = "Read resources from Python packages"
 category = "main"
 optional = false
@@ -1116,7 +1116,7 @@ python-versions = ">=3.7,<4.0"
 
 [[package]]
 name = "ipykernel"
-version = "6.14.0"
+version = "6.15.0"
 description = "IPython Kernel for Jupyter"
 category = "main"
 optional = true
@@ -1131,6 +1131,7 @@ matplotlib-inline = ">=0.1"
 nest-asyncio = "*"
 packaging = "*"
 psutil = "*"
+pyzmq = ">=17"
 tornado = ">=6.1"
 traitlets = ">=5.1.0"
 
@@ -1782,7 +1783,7 @@ python-versions = ">=3.5"
 
 [[package]]
 name = "networkx"
-version = "2.8.3"
+version = "2.8.4"
 description = "Python package for creating and manipulating graphs and networks"
 category = "main"
 optional = false
@@ -1791,7 +1792,7 @@ python-versions = ">=3.8"
 [package.extras]
 default = ["numpy (>=1.19)", "scipy (>=1.8)", "matplotlib (>=3.4)", "pandas (>=1.3)"]
 developer = ["pre-commit (>=2.19)", "mypy (>=0.960)"]
-doc = ["sphinx (>=4.5)", "pydata-sphinx-theme (>=0.8.1)", "sphinx-gallery (>=0.10)", "numpydoc (>=1.3)", "pillow (>=9.1)", "nb2plots (>=0.6)", "texext (>=0.6.6)"]
+doc = ["sphinx (>=5)", "pydata-sphinx-theme (>=0.9)", "sphinx-gallery (>=0.10)", "numpydoc (>=1.4)", "pillow (>=9.1)", "nb2plots (>=0.6)", "texext (>=0.6.6)"]
 extra = ["lxml (>=4.6)", "pygraphviz (>=1.9)", "pydot (>=1.4.2)", "sympy (>=1.10)"]
 test = ["pytest (>=7.1)", "pytest-cov (>=3.0)", "codecov (>=2.1)"]
 
@@ -2384,7 +2385,7 @@ diagrams = ["railroad-diagrams", "jinja2"]
 
 [[package]]
 name = "pypdf2"
-version = "2.1.1"
+version = "2.2.0"
 description = "A pure-python PDF library capable of splitting, merging, cropping, and transforming PDF files"
 category = "main"
 optional = false
@@ -2911,7 +2912,7 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "sphinx"
-version = "4.5.0"
+version = "5.0.1"
 description = "Python documentation generator"
 category = "dev"
 optional = false
@@ -2921,7 +2922,7 @@ python-versions = ">=3.6"
 alabaster = ">=0.7,<0.8"
 babel = ">=1.3"
 colorama = {version = ">=0.3.5", markers = "sys_platform == \"win32\""}
-docutils = ">=0.14,<0.18"
+docutils = ">=0.14,<0.19"
 imagesize = "*"
 importlib-metadata = {version = ">=4.4", markers = "python_version < \"3.10\""}
 Jinja2 = ">=2.3"
@@ -2938,8 +2939,8 @@ sphinxcontrib-serializinghtml = ">=1.1.5"
 
 [package.extras]
 docs = ["sphinxcontrib-websupport"]
-lint = ["flake8 (>=3.5.0)", "isort", "mypy (>=0.931)", "docutils-stubs", "types-typed-ast", "types-requests"]
-test = ["pytest", "pytest-cov", "html5lib", "cython", "typed-ast"]
+lint = ["flake8 (>=3.5.0)", "isort", "mypy (>=0.950)", "docutils-stubs", "types-typed-ast", "types-requests"]
+test = ["pytest (>=4.6)", "html5lib", "cython", "typed-ast"]
 
 [[package]]
 name = "sphinx-autobuild"
@@ -3030,21 +3031,21 @@ rtd = ["sphinx", "ipython", "myst-nb", "sphinx-book-theme"]
 
 [[package]]
 name = "sphinx-design"
-version = "0.1.0"
+version = "0.2.0"
 description = "A sphinx extension for designing beautiful, view size responsive web components."
 category = "dev"
 optional = false
 python-versions = ">=3.7"
 
 [package.dependencies]
-sphinx = ">=3,<5"
+sphinx = ">=4,<6"
 
 [package.extras]
 code_style = ["pre-commit (>=2.12,<3.0)"]
-rtd = ["myst-parser (>=0.17.0,<0.18.0)"]
-testing = ["myst-parser (>=0.17.0,<0.18.0)", "pytest (>=6.2,<7.0)", "pytest-cov", "pytest-regressions"]
-theme_furo = ["furo (==2022.04.07)"]
-theme_pydata = ["pydata-sphinx-theme (>=0.8.1,<0.9.0)"]
+rtd = ["myst-parser (>=0.18.0,<0.19.0)"]
+testing = ["myst-parser (>=0.18.0,<0.19.0)", "pytest (>=7.1,<8.0)", "pytest-cov", "pytest-regressions"]
+theme_furo = ["furo (>=2022.06.04,<2022.07)"]
+theme_pydata = ["pydata-sphinx-theme (>=0.9.0,<0.10.0)"]
 theme_rtd = ["sphinx-rtd-theme (>=1.0,<2.0)"]
 theme_sbt = ["sphinx-book-theme (>=0.3.0,<0.4.0)"]
 
@@ -3195,7 +3196,7 @@ catalogue = ">=2.0.3,<2.1.0"
 
 [[package]]
 name = "stack-data"
-version = "0.2.0"
+version = "0.3.0"
 description = "Extract data from python stack frames and tracebacks for informative displays"
 category = "main"
 optional = false
@@ -3873,8 +3874,8 @@ autograd-gamma = [
     {file = "autograd-gamma-0.5.0.tar.gz", hash = "sha256:f27abb7b8bb9cffc8badcbf59f3fe44a9db39e124ecacf1992b6d952934ac9c4"},
 ]
 babel = [
-    {file = "Babel-2.10.1-py3-none-any.whl", hash = "sha256:3f349e85ad3154559ac4930c3918247d319f21910d5ce4b25d439ed8693b98d2"},
-    {file = "Babel-2.10.1.tar.gz", hash = "sha256:98aeaca086133efb3e1e2aad0396987490c8425929ddbcfe0550184fdc54cd13"},
+    {file = "Babel-2.10.3-py3-none-any.whl", hash = "sha256:ff56f4892c1c4bf0d814575ea23471c230d544203c7748e8c68f0089478d48eb"},
+    {file = "Babel-2.10.3.tar.gz", hash = "sha256:7614553711ee97490f732126dc077f8d0ae084ebc6a96e23db1482afabdb2c51"},
 ]
 backcall = [
     {file = "backcall-0.2.0-py2.py3-none-any.whl", hash = "sha256:fbbce6a29f263178a1f7915c1940bde0ec2b2a967566fe1c65c1dfb7422bd255"},
@@ -3970,8 +3971,8 @@ category-encoders = [
     {file = "category_encoders-2.5.0.tar.gz", hash = "sha256:64dc68cd30dea32a390b3eed880f6e365635118c916b082dde99b76741155c15"},
 ]
 certifi = [
-    {file = "certifi-2022.5.18.1-py3-none-any.whl", hash = "sha256:f1d53542ee8cbedbe2118b5686372fb33c297fcd6379b050cca0ef13a597382a"},
-    {file = "certifi-2022.5.18.1.tar.gz", hash = "sha256:9c5705e395cd70084351dd8ad5c41e65655e08ce46f2ec9cf6c2c08390f71eb7"},
+    {file = "certifi-2022.6.15-py3-none-any.whl", hash = "sha256:fe86415d55e84719d75f8b69414f6438ac3547d2078ab91b67e779ef69378412"},
+    {file = "certifi-2022.6.15.tar.gz", hash = "sha256:84c85a9078b11105f04f3036a9482ae10e4621616db313fe045dd24743a0820d"},
 ]
 cffi = [
     {file = "cffi-1.15.0-cp27-cp27m-macosx_10_9_x86_64.whl", hash = "sha256:c2502a1a03b6312837279c8c1bd3ebedf6c12c4228ddbad40912d671ccc8a962"},
@@ -4042,8 +4043,8 @@ click = [
     {file = "click-8.0.4.tar.gz", hash = "sha256:8458d7b1287c5fb128c90e23381cf99dcde74beaf6c7ff6384ce84d6fe090adb"},
 ]
 colorama = [
-    {file = "colorama-0.4.4-py2.py3-none-any.whl", hash = "sha256:9f47eda37229f68eee03b24b9748937c7dc3868f906e8ba69fbcbdd3bc5dc3e2"},
-    {file = "colorama-0.4.4.tar.gz", hash = "sha256:5941b2b48a20143d2267e95b1c2a7603ce057ee39fd88e7329b0c292aa16869b"},
+    {file = "colorama-0.4.5-py2.py3-none-any.whl", hash = "sha256:854bf444933e37f5824ae7bfc1e98d5bce2ebe4160d46b5edf346a89358e99da"},
+    {file = "colorama-0.4.5.tar.gz", hash = "sha256:e6c6b4334fc50988a639d9b98aa429a0b57da6e17b9a44f0451f930b6967b7a4"},
 ]
 commonmark = [
     {file = "commonmark-0.9.1-py2.py3-none-any.whl", hash = "sha256:da2f38c92590f83de410ba1a3cbceafbc74fee9def35f9251ba9a971d6d66fd9"},
@@ -4234,8 +4235,8 @@ distlib = [
     {file = "distlib-0.3.4.zip", hash = "sha256:e4b58818180336dc9c529bfb9a0b58728ffc09ad92027a3f30b7cd91e3458579"},
 ]
 docutils = [
-    {file = "docutils-0.17.1-py2.py3-none-any.whl", hash = "sha256:cf316c8370a737a022b72b56874f6602acf974a37a9fba42ec2876387549fc61"},
-    {file = "docutils-0.17.1.tar.gz", hash = "sha256:686577d2e4c32380bb50cbb22f575ed742d58168cee37e99117a854bcd88f125"},
+    {file = "docutils-0.18.1-py2.py3-none-any.whl", hash = "sha256:23010f129180089fbcd3bc08cfefccb3b890b0050e1ca00c867036e9d161b98c"},
+    {file = "docutils-0.18.1.tar.gz", hash = "sha256:679987caf361a7539d76e584cbeddc311e3aee937877c87346f31debc63e9d06"},
 ]
 dparse = [
     {file = "dparse-0.5.1-py3-none-any.whl", hash = "sha256:e953a25e44ebb60a5c6efc2add4420c177f1d8404509da88da9729202f306994"},
@@ -4531,8 +4532,8 @@ importlib-metadata = [
     {file = "importlib_metadata-4.11.4.tar.gz", hash = "sha256:5d26852efe48c0a32b0509ffbc583fda1a2266545a78d104a6f4aff3db17d700"},
 ]
 importlib-resources = [
-    {file = "importlib_resources-5.7.1-py3-none-any.whl", hash = "sha256:e447dc01619b1e951286f3929be820029d48c75eb25d265c28b92a16548212b8"},
-    {file = "importlib_resources-5.7.1.tar.gz", hash = "sha256:b6062987dfc51f0fcb809187cffbd60f35df7acb4589091f154214af6d0d49d3"},
+    {file = "importlib_resources-5.8.0-py3-none-any.whl", hash = "sha256:7952325ffd516c05a8ad0858c74dff2c3343f136fe66a6002b2623dd1d43f223"},
+    {file = "importlib_resources-5.8.0.tar.gz", hash = "sha256:568c9f16cb204f9decc8d6d24a572eeea27dacbb4cee9e6b03a8025736769751"},
 ]
 iniconfig = [
     {file = "iniconfig-1.1.1-py2.py3-none-any.whl", hash = "sha256:011e24c64b7f47f6ebd835bb12a743f2fbe9a26d4cecaa7f53bc4f35ee9da8b3"},
@@ -4547,8 +4548,8 @@ interface-meta = [
     {file = "interface_meta-1.3.0.tar.gz", hash = "sha256:8a4493f8bdb73fb9655dcd5115bc897e207319e36c8835f39c516a2d7e9d79a1"},
 ]
 ipykernel = [
-    {file = "ipykernel-6.14.0-py3-none-any.whl", hash = "sha256:cbf50ed3dc9998d4077d8cd263275f232cbe67dbd2e79cd6d2644f3a4418148b"},
-    {file = "ipykernel-6.14.0.tar.gz", hash = "sha256:720f2a07aadf70ca05b034f2cdd0590a8bd56581ddf3b7ec4a37075366270e89"},
+    {file = "ipykernel-6.15.0-py3-none-any.whl", hash = "sha256:b9ed519a29eb819eb82e87e0d3754088237b233e5c647b8bb0ff23c8c70ed16f"},
+    {file = "ipykernel-6.15.0.tar.gz", hash = "sha256:b59f9d9672c3a483494bb75915a2b315e78b833a38b039b1ee36dc28683f0d89"},
 ]
 ipython = [
     {file = "ipython-8.4.0-py3-none-any.whl", hash = "sha256:7ca74052a38fa25fe9bedf52da0be7d3fdd2fb027c3b778ea78dfe8c212937d1"},
@@ -4992,8 +4993,8 @@ nest-asyncio = [
     {file = "nest_asyncio-1.5.5.tar.gz", hash = "sha256:e442291cd942698be619823a17a86a5759eabe1f8613084790de189fe9e16d65"},
 ]
 networkx = [
-    {file = "networkx-2.8.3-py3-none-any.whl", hash = "sha256:f151edac6f9b0cf11fecce93e236ac22b499bb9ff8d6f8393b9fef5ad09506cc"},
-    {file = "networkx-2.8.3.tar.gz", hash = "sha256:67fab04a955a73eb660fe7bf281b6fa71a003bc6e23a92d2f6227654c5223dbe"},
+    {file = "networkx-2.8.4-py3-none-any.whl", hash = "sha256:6933b9b3174a0bdf03c911bb4a1ee43a86ce3edeb813e37e1d4c553b3f4a2c4f"},
+    {file = "networkx-2.8.4.tar.gz", hash = "sha256:5e53f027c0d567cf1f884dbb283224df525644e43afd1145d64c9d88a3584762"},
 ]
 nodeenv = [
     {file = "nodeenv-1.6.0-py2.py3-none-any.whl", hash = "sha256:621e6b7076565ddcacd2db0294c0381e01fd28945ab36bcf00f41c5daf63bef7"},
@@ -5407,8 +5408,8 @@ pyparsing = [
     {file = "pyparsing-3.0.9.tar.gz", hash = "sha256:2b020ecf7d21b687f219b71ecad3631f644a47f01403fa1d1036b0c6416d70fb"},
 ]
 pypdf2 = [
-    {file = "PyPDF2-2.1.1-py3-none-any.whl", hash = "sha256:50685e01c98fa8ae593cab7fa54128865d3fc0d97e35d0a4b55831c22091d761"},
-    {file = "PyPDF2-2.1.1.tar.gz", hash = "sha256:572f1314b64330679dd6fb703781fe33d0f28b59fb2cfebad5e7eb9edca92738"},
+    {file = "PyPDF2-2.2.0-py3-none-any.whl", hash = "sha256:6167a965a2b44f6e763f0bb2028810898bace2caae5ddd5040a8b57e1c6aaa5a"},
+    {file = "PyPDF2-2.2.0.tar.gz", hash = "sha256:12a289d7be1cac0b066b05854ebc40dfaaeea31244ec45ea02682e51deefb7e8"},
 ]
 pypi-latest = [
     {file = "pypi-latest-0.1.2.tar.gz", hash = "sha256:b195654567e6abaac6acfec37638d8e000838f419bc6b129962a896eedc4ed4e"},
@@ -5862,8 +5863,8 @@ spacy-legacy = [
     {file = "spacy_legacy-3.0.9-py2.py3-none-any.whl", hash = "sha256:dfd58b0cc65b3596cb06f7b95e7bf4fff34668297c59eb179eb050db07b199df"},
 ]
 sphinx = [
-    {file = "Sphinx-4.5.0-py3-none-any.whl", hash = "sha256:ebf612653238bcc8f4359627a9b7ce44ede6fdd75d9d30f68255c7383d3a6226"},
-    {file = "Sphinx-4.5.0.tar.gz", hash = "sha256:7bf8ca9637a4ee15af412d1a1d9689fec70523a68ca9bb9127c2f3eeb344e2e6"},
+    {file = "Sphinx-5.0.1-py3-none-any.whl", hash = "sha256:36aa2a3c2f6d5230be94585bc5d74badd5f9ed8f3388b8eedc1726fe45b1ad30"},
+    {file = "Sphinx-5.0.1.tar.gz", hash = "sha256:f4da1187785a5bc7312cc271b0e867a93946c319d106363e102936a3d9857306"},
 ]
 sphinx-autobuild = [
     {file = "sphinx-autobuild-2021.3.14.tar.gz", hash = "sha256:de1ca3b66e271d2b5b5140c35034c89e47f263f2cd5db302c9217065f7443f05"},
@@ -5890,8 +5891,8 @@ sphinx-copybutton = [
     {file = "sphinx_copybutton-0.5.0-py3-none-any.whl", hash = "sha256:9684dec7434bd73f0eea58dda93f9bb879d24bff2d8b187b1f2ec08dfe7b5f48"},
 ]
 sphinx-design = [
-    {file = "sphinx_design-0.1.0-py3-none-any.whl", hash = "sha256:151ab25fda162ded010f0782d1770d014073c3f3fea8e02c45178e0ae6f7e0a0"},
-    {file = "sphinx_design-0.1.0.tar.gz", hash = "sha256:68edba2453a175df5b0390d481ec0e9329112064f211860426729768b3501706"},
+    {file = "sphinx_design-0.2.0-py3-none-any.whl", hash = "sha256:5c7117cb4b566bd769dcb4314a64d72257ae89724b4917a8f2ef55459e1d861b"},
+    {file = "sphinx_design-0.2.0.tar.gz", hash = "sha256:b148a5258061a46ee826d57ea0729260f29b4e9131d2a681545e0d4f3c0f19ee"},
 ]
 sphinx-gallery = [
     {file = "sphinx-gallery-0.10.1.tar.gz", hash = "sha256:953f32b0833b0a689ff33516d0866865fb8601c0626811b95d2e844286d207e4"},
@@ -5955,8 +5956,8 @@ srsly = [
     {file = "srsly-2.4.3.tar.gz", hash = "sha256:dbe91f6dd4aea9e819493628356dc715bd9c606486297bb7ca5748e6e003841c"},
 ]
 stack-data = [
-    {file = "stack_data-0.2.0-py3-none-any.whl", hash = "sha256:999762f9c3132308789affa03e9271bbbe947bf78311851f4d485d8402ed858e"},
-    {file = "stack_data-0.2.0.tar.gz", hash = "sha256:45692d41bd633a9503a5195552df22b583caf16f0b27c4e58c98d88c8b648e12"},
+    {file = "stack_data-0.3.0-py3-none-any.whl", hash = "sha256:aa1d52d14d09c7a9a12bb740e6bdfffe0f5e8f4f9218d85e7c73a8c37f7ae38d"},
+    {file = "stack_data-0.3.0.tar.gz", hash = "sha256:77bec1402dcd0987e9022326473fdbcc767304892a533ed8c29888dacb7dddbc"},
 ]
 statsmodels = [
     {file = "statsmodels-0.13.2-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:3e7ca5b7e678c0bb7a24f5c735d58ac104a50eb61b17c484cce0e221a095560f"},
