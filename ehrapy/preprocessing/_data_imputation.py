@@ -1035,7 +1035,7 @@ def _warn_imputation_threshold(adata: AnnData, var_names: list[str] | None, thre
     for var in thresholded_var_names:
         var_name_to_pct[var] = adata.var["missing_values_pct"].loc[var]
         print(
-            f"[bold yellow]Feature [blue]{var} [yellow]had more than [blue]{var_name_to_pct[var]}% [yellow]missing values!"
+            f"[bold yellow]Feature [blue]{var} [yellow]had more than [blue]{var_name_to_pct[var]:.2f}% [yellow]missing values!"
         )
 
     return var_name_to_pct
