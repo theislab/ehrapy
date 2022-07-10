@@ -207,6 +207,7 @@ def qc_lab_measurements(
         * The reference values pertain to adults. Many of the reference ranges need to be adapted for children.
         * By default if no gender is provided and no unisex values are available, we use the **male** reference ranges.
         * The used reference ranges may be biased for ethnicity. Please examine the primary sources if required.
+        * We recommend a glance at https://www.nature.com/articles/s41591-021-01468-6 for the effect of such covariates.
 
     Additional values:
         * Interleukin-6 based on https://pubmed.ncbi.nlm.nih.gov/33155686/
