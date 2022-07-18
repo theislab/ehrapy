@@ -5,7 +5,7 @@ from anndata import AnnData
 
 from ehrapy import ehrapy_settings
 from ehrapy.io._read import read_csv
-from ehrapy.preprocessing.encoding._encode import encode
+from ehrapy.preprocessing._encode import encode
 
 
 def mimic_2(

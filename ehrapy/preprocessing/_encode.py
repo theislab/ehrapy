@@ -60,7 +60,7 @@ def encode(
 
             adata = ep.io.read(...)
             # encode all autodetected (non numerical) columns using label encoding
-            adata_encoded = ep.encode.encode(adata, autodetect=True)
+            adata_encoded = ep.pp.encode(adata, autodetect=True)
 
     Example using autodetect with non-default encoding mode:
         .. code-block:: python
@@ -69,7 +69,7 @@ def encode(
 
             adata = ep.io.read(...)
             # encode all autodetected (non numerical) columns using one hot encoding (this only works for single column encoding modes, not hash encoding)
-            adata_encoded = ep.encode.encode(adata, autodetect=True, 'one_hot_encoding')
+            adata_encoded = ep.pp.encode(adata, autodetect=True, 'one_hot_encoding')
 
     Example using custom encodings per columns:
         .. code-block:: python
@@ -78,7 +78,7 @@ def encode(
 
             adata = ep.io.read(...)
             # encode col1 and col2 using label encoding and encode col3 using one hot encoding
-            adata_encoded = ep.encode.encode(adata, autodetect=False, {'label_encoding': ['col1', 'col2'], 'one_hot_encoding': ['col3']})
+            adata_encoded = ep.pp.encode(adata, autodetect=False, {'label_encoding': ['col1', 'col2'], 'one_hot_encoding': ['col3']})
     """
     if isinstance(data, AnnData):
         # basic type checking for passed parameters when encoding a single AnnData object

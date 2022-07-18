@@ -8,7 +8,7 @@ from anndata import AnnData
 
 from ehrapy import settings
 from ehrapy.io._utility_io import _get_file_extension
-from ehrapy.preprocessing.encoding._encode import encode
+from ehrapy.preprocessing._encode import encode
 
 
 def write(

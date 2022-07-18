@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 
 from ehrapy.io._read import read_csv
-from ehrapy.preprocessing.encoding._encode import DuplicateColumnEncodingError, _reorder_encodings, encode
+from ehrapy.preprocessing._encode import DuplicateColumnEncodingError, _reorder_encodings, encode
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_PATH = f"{CURRENT_DIR}/test_data_encode"

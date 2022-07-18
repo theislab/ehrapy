@@ -16,7 +16,7 @@ from rich import print
 from ehrapy import ehrapy_settings, settings
 from ehrapy.anndata.anndata_ext import df_to_anndata
 from ehrapy.data._dataloader import download
-from ehrapy.preprocessing.encoding._encode import encode
+from ehrapy.preprocessing._encode import encode
 
 
 def read_csv(

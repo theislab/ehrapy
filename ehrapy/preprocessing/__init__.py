@@ -9,6 +9,7 @@ from ehrapy.preprocessing._data_imputation import (
     simple_impute,
     soft_impute,
 )
+from ehrapy.preprocessing._encode import encode, undo_encoding
 from ehrapy.preprocessing._highly_variable_features import highly_variable_features
 from ehrapy.preprocessing._normalization import (
     log_norm,
@@ -22,4 +23,3 @@ from ehrapy.preprocessing._normalization import (
 )
 from ehrapy.preprocessing._quality_control import qc_lab_measurements, qc_metrics
 from ehrapy.preprocessing._scanpy_pp_api import *  # noqa: E402,F403
-from ehrapy.preprocessing.encoding._encode import encode, undo_encoding
