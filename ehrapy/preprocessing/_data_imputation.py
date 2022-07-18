@@ -188,7 +188,7 @@ def _simple_impute(adata: AnnData, var_names: list[str] | None, strategy: str) -
 def knn_impute(
     adata: AnnData,
     var_names: list[str] | None = None,
-    n_neighbours: int = 1,
+    n_neighbours: int = 5,
     copy: bool = False,
     warning_threshold: int = 30,
 ) -> AnnData:
@@ -201,7 +201,7 @@ def knn_impute(
     Args:
         adata: The AnnData object to use KNN Imputation on
         var_names: A list of var names indicating which columns to use median imputation on (if None -> all columns)
-        n_neighbours: Number of neighbours to consider while imputing
+        n_neighbours: Number of neighbours to consider while imputing (default: 5)
         warning_threshold: Threshold of percentage of missing values to display a warning for (default: 30)
         copy: Whether to return a copy or act in place
 
