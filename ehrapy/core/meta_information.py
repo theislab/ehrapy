@@ -30,6 +30,7 @@ def print_versions(*, output_file=None) -> None:  # pragma: no cover
                 "importlib_metadata",
                 # Special module present if test coverage being calculated
                 # https://gitlab.com/joelostblom/session_info/-/issues/10
+                "transformers",
                 "$coverage",
             ],
             write_req_file=False,
