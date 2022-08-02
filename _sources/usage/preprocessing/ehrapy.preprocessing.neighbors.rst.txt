@@ -1,0 +1,6 @@
+﻿ehrapy.preprocessing.neighbors
+==============================
+
+.. currentmodule:: ehrapy.preprocessing
+
+.. autofunction:: neighbors

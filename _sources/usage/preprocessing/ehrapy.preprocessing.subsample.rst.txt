@@ -1,0 +1,6 @@
+﻿ehrapy.preprocessing.subsample
+==============================
+
+.. currentmodule:: ehrapy.preprocessing
+
+.. autofunction:: subsample

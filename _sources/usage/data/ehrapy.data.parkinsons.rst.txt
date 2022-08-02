@@ -1,0 +1,6 @@
+﻿ehrapy.data.parkinsons
+======================
+
+.. currentmodule:: ehrapy.data
+
+.. autofunction:: parkinsons

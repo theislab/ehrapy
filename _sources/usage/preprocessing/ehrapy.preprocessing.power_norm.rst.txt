@@ -1,0 +1,6 @@
+﻿ehrapy.preprocessing.power\_norm
+================================
+
+.. currentmodule:: ehrapy.preprocessing
+
+.. autofunction:: power_norm

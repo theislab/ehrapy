@@ -1,0 +1,441 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+<meta property="og:title" content="ehrapy.tools.ols" />
+  
+<meta property="og:type" content="website" />
+  
+<meta property="og:url" content="https://ehrapy.readthedocs.io/en/latest/usage/tools/ehrapy.tools.ols.html" />
+  
+<meta property="og:image" content="https://ehrapy.readthedocs.io/en/latest//_static/logo.png" />
+  
+<meta property="og:image:alt" content="ehrapy.tools.ols" />
+  <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="ehrapy.tools.glm" href="ehrapy.tools.glm.html" /><link rel="prev" title="ehrapy.tools.mc.get_annotation_overview" href="ehrapy.tools.mc.get_annotation_overview.html" />
+
+    <meta name="generator" content="sphinx-5.1.1, furo 2022.06.21"/>
+        <title>ehrapy.tools.ols - ehrapy</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=40978830699223671f4072448e654b5958f38b89" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/override.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/sphinx_gallery.css" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  --color-brand-primary: #003262;
+  --color-brand-content: #003262;
+  --admonition-font-size: var(--font-size-normal);
+  --admonition-title-font-size: var(--font-size-normal);
+  --code-font-size: var(--font-size--small);
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">ehrapy</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand centered" href="../../index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../_static/ehrapy_pure.png" alt="Logo"/>
+  </div>
+  
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder=Search name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../usage.html">Usage</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../io/ehrapy.io.read_csv.html">ehrapy.io.read_csv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../io/ehrapy.io.read_h5ad.html">ehrapy.io.read_h5ad</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../io/ehrapy.io.read_pdf.html">ehrapy.io.read_pdf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../io/ehrapy.io.write.html">ehrapy.io.write</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/ehrapy.data.mimic_2.html">ehrapy.data.mimic_2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/ehrapy.data.mimic_3_demo.html">ehrapy.data.mimic_3_demo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/ehrapy.data.diabetes_130.html">ehrapy.data.diabetes_130</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/ehrapy.data.heart_failure.html">ehrapy.data.heart_failure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/ehrapy.data.chronic_kidney_disease.html">ehrapy.data.chronic_kidney_disease</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/ehrapy.data.breast_tissue.html">ehrapy.data.breast_tissue</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/ehrapy.data.cervical_cancer_risk_factors.html">ehrapy.data.cervical_cancer_risk_factors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/ehrapy.data.dermatology.html">ehrapy.data.dermatology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/ehrapy.data.echocardiogram.html">ehrapy.data.echocardiogram</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/ehrapy.data.heart_disease.html">ehrapy.data.heart_disease</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/ehrapy.data.hepatitis.html">ehrapy.data.hepatitis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/ehrapy.data.statlog_heart.html">ehrapy.data.statlog_heart</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/ehrapy.data.thyroid.html">ehrapy.data.thyroid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/ehrapy.data.breast_cancer_coimbra.html">ehrapy.data.breast_cancer_coimbra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/ehrapy.data.parkinson_dataset_with_replicated_acoustic_features.html">ehrapy.data.parkinson_dataset_with_replicated_acoustic_features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/ehrapy.data.parkinsons.html">ehrapy.data.parkinsons</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/ehrapy.data.parkinsons_disease_classification.html">ehrapy.data.parkinsons_disease_classification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/ehrapy.data.parkinsons_telemonitoring.html">ehrapy.data.parkinsons_telemonitoring</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.pca.html">ehrapy.preprocessing.pca</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.regress_out.html">ehrapy.preprocessing.regress_out</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.subsample.html">ehrapy.preprocessing.subsample</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.highly_variable_features.html">ehrapy.preprocessing.highly_variable_features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.qc_metrics.html">ehrapy.preprocessing.qc_metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.qc_lab_measurements.html">ehrapy.preprocessing.qc_lab_measurements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../imputation/ehrapy.preprocessing.explicit_impute.html">ehrapy.preprocessing.explicit_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../imputation/ehrapy.preprocessing.simple_impute.html">ehrapy.preprocessing.simple_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../imputation/ehrapy.preprocessing.knn_impute.html">ehrapy.preprocessing.knn_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../imputation/ehrapy.preprocessing.miss_forest_impute.html">ehrapy.preprocessing.miss_forest_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../imputation/ehrapy.preprocessing.soft_impute.html">ehrapy.preprocessing.soft_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../imputation/ehrapy.preprocessing.iterative_svd_impute.html">ehrapy.preprocessing.iterative_svd_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../imputation/ehrapy.preprocessing.matrix_factorization_impute.html">ehrapy.preprocessing.matrix_factorization_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../imputation/ehrapy.preprocessing.nuclear_norm_minimization_impute.html">ehrapy.preprocessing.nuclear_norm_minimization_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../imputation/ehrapy.preprocessing.mice_forest_impute.html">ehrapy.preprocessing.mice_forest_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.encode.html">ehrapy.preprocessing.encode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.undo_encoding.html">ehrapy.preprocessing.undo_encoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.log_norm.html">ehrapy.preprocessing.log_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.maxabs_norm.html">ehrapy.preprocessing.maxabs_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.minmax_norm.html">ehrapy.preprocessing.minmax_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.power_norm.html">ehrapy.preprocessing.power_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.quantile_norm.html">ehrapy.preprocessing.quantile_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.robust_scale_norm.html">ehrapy.preprocessing.robust_scale_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.scale_norm.html">ehrapy.preprocessing.scale_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.sqrt_norm.html">ehrapy.preprocessing.sqrt_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.combat.html">ehrapy.preprocessing.combat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.neighbors.html">ehrapy.preprocessing.neighbors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ehrapy.tools.pca.html">ehrapy.tools.pca</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ehrapy.tools.tsne.html">ehrapy.tools.tsne</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ehrapy.tools.umap.html">ehrapy.tools.umap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ehrapy.tools.draw_graph.html">ehrapy.tools.draw_graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ehrapy.tools.diffmap.html">ehrapy.tools.diffmap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ehrapy.tools.embedding_density.html">ehrapy.tools.embedding_density</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ehrapy.tools.leiden.html">ehrapy.tools.leiden</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ehrapy.tools.louvain.html">ehrapy.tools.louvain</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ehrapy.tools.dendrogram.html">ehrapy.tools.dendrogram</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ehrapy.tools.dpt.html">ehrapy.tools.dpt</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ehrapy.tools.paga.html">ehrapy.tools.paga</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ehrapy.tools.rank_features_groups.html">ehrapy.tools.rank_features_groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ehrapy.tools.filter_rank_features_groups.html">ehrapy.tools.filter_rank_features_groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ehrapy.tools.marker_feature_overlap.html">ehrapy.tools.marker_feature_overlap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ehrapy.tools.ingest.html">ehrapy.tools.ingest</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ehrapy.tools.Translator.html">ehrapy.tools.Translator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ehrapy.tools.HPOMapper.html">ehrapy.tools.HPOMapper</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ehrapy.tools.MedCAT.html">ehrapy.tools.MedCAT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ehrapy.tools.mc.run_unsupervised_training.html">ehrapy.tools.mc.run_unsupervised_training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ehrapy.tools.mc.annotate_text.html">ehrapy.tools.mc.annotate_text</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ehrapy.tools.mc.get_annotation_overview.html">ehrapy.tools.mc.get_annotation_overview</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">ehrapy.tools.ols</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ehrapy.tools.glm.html">ehrapy.tools.glm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ehrapy.tools.kmf.html">ehrapy.tools.kmf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../plot/ehrapy.plot.scatter.html">ehrapy.plot.scatter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../plot/ehrapy.plot.heatmap.html">ehrapy.plot.heatmap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../plot/ehrapy.plot.dotplot.html">ehrapy.plot.dotplot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../plot/ehrapy.plot.tracksplot.html">ehrapy.plot.tracksplot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../plot/ehrapy.plot.violin.html">ehrapy.plot.violin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../plot/ehrapy.plot.stacked_violin.html">ehrapy.plot.stacked_violin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../plot/ehrapy.plot.matrixplot.html">ehrapy.plot.matrixplot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../plot/ehrapy.plot.clustermap.html">ehrapy.plot.clustermap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../plot/ehrapy.plot.ranking.html">ehrapy.plot.ranking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../plot/ehrapy.plot.dendrogram.html">ehrapy.plot.dendrogram</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../plot/ehrapy.plot.qc_metrics.html">ehrapy.plot.qc_metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../plot/ehrapy.plot.pca.html">ehrapy.plot.pca</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../plot/ehrapy.plot.pca_loadings.html">ehrapy.plot.pca_loadings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../plot/ehrapy.plot.pca_variance_ratio.html">ehrapy.plot.pca_variance_ratio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../plot/ehrapy.plot.pca_overview.html">ehrapy.plot.pca_overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../plot/ehrapy.plot.tsne.html">ehrapy.plot.tsne</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../plot/ehrapy.plot.umap.html">ehrapy.plot.umap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../plot/ehrapy.plot.diffmap.html">ehrapy.plot.diffmap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../plot/ehrapy.plot.draw_graph.html">ehrapy.plot.draw_graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../plot/ehrapy.plot.spatial.html">ehrapy.plot.spatial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../plot/ehrapy.plot.embedding.html">ehrapy.plot.embedding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../plot/ehrapy.plot.embedding_density.html">ehrapy.plot.embedding_density</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../plot/ehrapy.plot.dpt_groups_pseudotime.html">ehrapy.plot.dpt_groups_pseudotime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../plot/ehrapy.plot.dpt_timeseries.html">ehrapy.plot.dpt_timeseries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../plot/ehrapy.plot.paga.html">ehrapy.plot.paga</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../plot/ehrapy.plot.paga_path.html">ehrapy.plot.paga_path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../plot/ehrapy.plot.paga_compare.html">ehrapy.plot.paga_compare</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../plot/ehrapy.plot.rank_features_groups.html">ehrapy.plot.rank_features_groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../plot/ehrapy.plot.rank_features_groups_violin.html">ehrapy.plot.rank_features_groups_violin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../plot/ehrapy.plot.rank_features_groups_stacked_violin.html">ehrapy.plot.rank_features_groups_stacked_violin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../plot/ehrapy.plot.rank_features_groups_heatmap.html">ehrapy.plot.rank_features_groups_heatmap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../plot/ehrapy.plot.rank_features_groups_dotplot.html">ehrapy.plot.rank_features_groups_dotplot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../plot/ehrapy.plot.rank_features_groups_matrixplot.html">ehrapy.plot.rank_features_groups_matrixplot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../plot/ehrapy.plot.rank_features_groups_tracksplot.html">ehrapy.plot.rank_features_groups_tracksplot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ehrapy.plot.ols.html">ehrapy.plot.ols</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ehrapy.plot.kmf.html">ehrapy.plot.kmf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../anndata/ehrapy.anndata.df_to_anndata.html">ehrapy.anndata.df_to_anndata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../anndata/ehrapy.anndata.anndata_to_df.html">ehrapy.anndata.anndata_to_df</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../anndata/ehrapy.anndata.move_to_obs.html">ehrapy.anndata.move_to_obs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../anndata/ehrapy.anndata.move_to_x.html">ehrapy.anndata.move_to_x</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../anndata/ehrapy.anndata.type_overview.html">ehrapy.anndata.type_overview</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../tutorials/index.html">Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/notebooks/ehrapy_introduction.html">Introduction to ehrapy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/notebooks/mimic_2_introduction.html">MIMIC-II IAC Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/notebooks/mimic_2_fate.html">MIMIC-II Patient Fate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/notebooks/mimic_2_survival_analysis.html">MIMIC-II Survival Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/notebooks/diabetes_130.html">Diabetes 130 Vignette</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/notebooks/medcat.html">Extracting from free text with MedCAT</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributor Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../code_of_conduct.html">Code of Conduct</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/theislab/ehrapy/discussions">Discussions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../authors.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../references.html">References</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="ehrapy-tools-ols">
+<h1>ehrapy.tools.ols<a class="headerlink" href="#ehrapy-tools-ols" title="Permalink to this heading">#</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="ehrapy.tools.ols">
+<span class="sig-prename descclassname"><span class="pre">ehrapy.tools.</span></span><span class="sig-name descname"><span class="pre">ols</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">formula</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">missing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/ehrapy/tools/_sa.html#ols"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ehrapy.tools.ols" title="Permalink to this definition">#</a></dt>
+<dd><p>Create a Ordinary Least Squares (OLS) Model from a formula and AnnData.</p>
+<p>See <a class="reference external" href="https://www.statsmodels.org/stable/generated/statsmodels.formula.api.ols.html#statsmodels.formula.api.ols">https://www.statsmodels.org/stable/generated/statsmodels.formula.api.ols.html#statsmodels.formula.api.ols</a>
+Internally use the statsmodel to create a OLS Model from a formula and dataframe.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>adata</strong> – The AnnData object for the OLS model.</p></li>
+<li><p><strong>var_names</strong> – A list of var names indicating which columns are for the OLS model.</p></li>
+<li><p><strong>formula</strong> – The formula specifying the model.</p></li>
+<li><p><strong>missing</strong> – Available options are ‘none’, ‘drop’, and ‘raise’. If ‘none’, no nan checking is done. If ‘drop’, any observations with nans are dropped. If ‘raise’, an error is raised. Default is ‘none’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The OLS model instance.</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">ehrapy</span> <span class="k">as</span> <span class="nn">ep</span>
+
+<span class="n">adata</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">mimic_2</span><span class="p">(</span><span class="n">encoded</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">formula</span> <span class="o">=</span> <span class="s1">&#39;tco2_first ~ pco2_first&#39;</span>
+<span class="n">var_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;tco2_first&#39;</span><span class="p">,</span> <span class="s1">&#39;pco2_first&#39;</span><span class="p">]</span>
+<span class="n">ols</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">ols</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">var_names</span><span class="p">,</span> <span class="n">formula</span><span class="p">,</span> <span class="n">missing</span> <span class="o">=</span> <span class="s1">&#39;drop&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="ehrapy.tools.glm.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">ehrapy.tools.glm</div>
+              </div>
+              <svg><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="ehrapy.tools.mc.get_annotation_overview.html">
+              <svg><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">ehrapy.tools.mc.get_annotation_overview</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2021, Lukas Heumos, Theislab
+            </div>
+            Made with 
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            <div class="icons">
+              
+            </div>
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/scripts/furo.js"></script>
+    <script src="../../_static/clipboard.min.js"></script>
+    <script src="../../_static/copybutton.js"></script>
+    <script src="../../_static/design-tabs.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    </body>
+</html>

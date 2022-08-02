@@ -1,0 +1,6 @@
+﻿ehrapy.preprocessing.qc\_metrics
+================================
+
+.. currentmodule:: ehrapy.preprocessing
+
+.. autofunction:: qc_metrics

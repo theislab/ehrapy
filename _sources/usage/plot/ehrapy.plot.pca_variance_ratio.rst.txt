@@ -1,0 +1,6 @@
+﻿ehrapy.plot.pca\_variance\_ratio
+================================
+
+.. currentmodule:: ehrapy.plot
+
+.. autofunction:: pca_variance_ratio

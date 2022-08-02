@@ -1,0 +1,6 @@
+﻿ehrapy.tools.pca
+================
+
+.. currentmodule:: ehrapy.tools
+
+.. autofunction:: pca

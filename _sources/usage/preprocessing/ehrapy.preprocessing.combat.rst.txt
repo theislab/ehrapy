@@ -1,0 +1,6 @@
+﻿ehrapy.preprocessing.combat
+===========================
+
+.. currentmodule:: ehrapy.preprocessing
+
+.. autofunction:: combat

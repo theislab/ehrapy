@@ -1,0 +1,6 @@
+﻿ehrapy.tools.mc.annotate\_text
+==============================
+
+.. currentmodule:: ehrapy.tools
+
+.. automethod:: mc.annotate_text

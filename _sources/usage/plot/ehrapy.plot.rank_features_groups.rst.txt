@@ -1,0 +1,6 @@
+﻿ehrapy.plot.rank\_features\_groups
+==================================
+
+.. currentmodule:: ehrapy.plot
+
+.. autofunction:: rank_features_groups

@@ -1,8 +1,8 @@
 <!doctype html>
-<html class="no-js">
+<html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
 <meta property="og:title" content="Diabetes 130 Vignette" />
   
@@ -15,12 +15,12 @@
 <meta property="og:image" content="https://ehrapy.readthedocs.io/en/latest//_static/logo.png" />
   
 <meta property="og:image:alt" content="Diabetes 130 Vignette" />
-  <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Extracting from free text with MedCAT" href="medcat.html" /><link rel="prev" title="MIMIC-II Patient Fate" href="mimic_2_fate.html" />
+  <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Extracting from free text with MedCAT" href="medcat.html" /><link rel="prev" title="MIMIC-II Survival Analysis" href="mimic_2_survival_analysis.html" />
 
-    <meta name="generator" content="sphinx-4.5.0, furo 2022.04.07"/>
+    <meta name="generator" content="sphinx-5.1.1, furo 2022.06.21"/>
         <title>Diabetes 130 Vignette - ehrapy</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=68f4518137b9aefe99b631505a2064c3c42c9852" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=40978830699223671f4072448e654b5958f38b89" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" />
@@ -181,30 +181,130 @@
   <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../usage/usage.html">Usage</a></li>
-<li class="toctree-l1 current has-children"><a class="reference internal" href="../index.html">Tutorials</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="ehrapy_introduction.html">ehrapy Introduction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ehrapy_introduction.html#Fundamental-Principles">Fundamental Principles</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../usage/usage.html">Usage</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/io/ehrapy.io.read_csv.html">ehrapy.io.read_csv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/io/ehrapy.io.read_h5ad.html">ehrapy.io.read_h5ad</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/io/ehrapy.io.read_pdf.html">ehrapy.io.read_pdf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/io/ehrapy.io.write.html">ehrapy.io.write</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.mimic_2.html">ehrapy.data.mimic_2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.mimic_3_demo.html">ehrapy.data.mimic_3_demo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.diabetes_130.html">ehrapy.data.diabetes_130</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.heart_failure.html">ehrapy.data.heart_failure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.chronic_kidney_disease.html">ehrapy.data.chronic_kidney_disease</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.breast_tissue.html">ehrapy.data.breast_tissue</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.cervical_cancer_risk_factors.html">ehrapy.data.cervical_cancer_risk_factors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.dermatology.html">ehrapy.data.dermatology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.echocardiogram.html">ehrapy.data.echocardiogram</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.heart_disease.html">ehrapy.data.heart_disease</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.hepatitis.html">ehrapy.data.hepatitis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.statlog_heart.html">ehrapy.data.statlog_heart</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.thyroid.html">ehrapy.data.thyroid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.breast_cancer_coimbra.html">ehrapy.data.breast_cancer_coimbra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.parkinson_dataset_with_replicated_acoustic_features.html">ehrapy.data.parkinson_dataset_with_replicated_acoustic_features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.parkinsons.html">ehrapy.data.parkinsons</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.parkinsons_disease_classification.html">ehrapy.data.parkinsons_disease_classification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.parkinsons_telemonitoring.html">ehrapy.data.parkinsons_telemonitoring</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.pca.html">ehrapy.preprocessing.pca</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.regress_out.html">ehrapy.preprocessing.regress_out</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.subsample.html">ehrapy.preprocessing.subsample</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.highly_variable_features.html">ehrapy.preprocessing.highly_variable_features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.qc_metrics.html">ehrapy.preprocessing.qc_metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.qc_lab_measurements.html">ehrapy.preprocessing.qc_lab_measurements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.explicit_impute.html">ehrapy.preprocessing.explicit_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.simple_impute.html">ehrapy.preprocessing.simple_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.knn_impute.html">ehrapy.preprocessing.knn_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.miss_forest_impute.html">ehrapy.preprocessing.miss_forest_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.soft_impute.html">ehrapy.preprocessing.soft_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.iterative_svd_impute.html">ehrapy.preprocessing.iterative_svd_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.matrix_factorization_impute.html">ehrapy.preprocessing.matrix_factorization_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.nuclear_norm_minimization_impute.html">ehrapy.preprocessing.nuclear_norm_minimization_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.mice_forest_impute.html">ehrapy.preprocessing.mice_forest_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.encode.html">ehrapy.preprocessing.encode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.undo_encoding.html">ehrapy.preprocessing.undo_encoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.log_norm.html">ehrapy.preprocessing.log_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.maxabs_norm.html">ehrapy.preprocessing.maxabs_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.minmax_norm.html">ehrapy.preprocessing.minmax_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.power_norm.html">ehrapy.preprocessing.power_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.quantile_norm.html">ehrapy.preprocessing.quantile_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.robust_scale_norm.html">ehrapy.preprocessing.robust_scale_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.scale_norm.html">ehrapy.preprocessing.scale_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.sqrt_norm.html">ehrapy.preprocessing.sqrt_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.combat.html">ehrapy.preprocessing.combat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.neighbors.html">ehrapy.preprocessing.neighbors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.pca.html">ehrapy.tools.pca</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.tsne.html">ehrapy.tools.tsne</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.umap.html">ehrapy.tools.umap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.draw_graph.html">ehrapy.tools.draw_graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.diffmap.html">ehrapy.tools.diffmap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.embedding_density.html">ehrapy.tools.embedding_density</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.leiden.html">ehrapy.tools.leiden</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.louvain.html">ehrapy.tools.louvain</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.dendrogram.html">ehrapy.tools.dendrogram</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.dpt.html">ehrapy.tools.dpt</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.paga.html">ehrapy.tools.paga</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.rank_features_groups.html">ehrapy.tools.rank_features_groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.filter_rank_features_groups.html">ehrapy.tools.filter_rank_features_groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.marker_feature_overlap.html">ehrapy.tools.marker_feature_overlap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.ingest.html">ehrapy.tools.ingest</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.Translator.html">ehrapy.tools.Translator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.HPOMapper.html">ehrapy.tools.HPOMapper</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.MedCAT.html">ehrapy.tools.MedCAT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.mc.run_unsupervised_training.html">ehrapy.tools.mc.run_unsupervised_training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.mc.annotate_text.html">ehrapy.tools.mc.annotate_text</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.mc.get_annotation_overview.html">ehrapy.tools.mc.get_annotation_overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.ols.html">ehrapy.tools.ols</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.glm.html">ehrapy.tools.glm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.kmf.html">ehrapy.tools.kmf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.scatter.html">ehrapy.plot.scatter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.heatmap.html">ehrapy.plot.heatmap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.dotplot.html">ehrapy.plot.dotplot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.tracksplot.html">ehrapy.plot.tracksplot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.violin.html">ehrapy.plot.violin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.stacked_violin.html">ehrapy.plot.stacked_violin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.matrixplot.html">ehrapy.plot.matrixplot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.clustermap.html">ehrapy.plot.clustermap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.ranking.html">ehrapy.plot.ranking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.dendrogram.html">ehrapy.plot.dendrogram</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.qc_metrics.html">ehrapy.plot.qc_metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.pca.html">ehrapy.plot.pca</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.pca_loadings.html">ehrapy.plot.pca_loadings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.pca_variance_ratio.html">ehrapy.plot.pca_variance_ratio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.pca_overview.html">ehrapy.plot.pca_overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.tsne.html">ehrapy.plot.tsne</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.umap.html">ehrapy.plot.umap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.diffmap.html">ehrapy.plot.diffmap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.draw_graph.html">ehrapy.plot.draw_graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.spatial.html">ehrapy.plot.spatial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.embedding.html">ehrapy.plot.embedding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.embedding_density.html">ehrapy.plot.embedding_density</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.dpt_groups_pseudotime.html">ehrapy.plot.dpt_groups_pseudotime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.dpt_timeseries.html">ehrapy.plot.dpt_timeseries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.paga.html">ehrapy.plot.paga</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.paga_path.html">ehrapy.plot.paga_path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.paga_compare.html">ehrapy.plot.paga_compare</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.rank_features_groups.html">ehrapy.plot.rank_features_groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.rank_features_groups_violin.html">ehrapy.plot.rank_features_groups_violin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.rank_features_groups_stacked_violin.html">ehrapy.plot.rank_features_groups_stacked_violin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.rank_features_groups_heatmap.html">ehrapy.plot.rank_features_groups_heatmap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.rank_features_groups_dotplot.html">ehrapy.plot.rank_features_groups_dotplot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.rank_features_groups_matrixplot.html">ehrapy.plot.rank_features_groups_matrixplot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.rank_features_groups_tracksplot.html">ehrapy.plot.rank_features_groups_tracksplot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.plot.ols.html">ehrapy.plot.ols</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.plot.kmf.html">ehrapy.plot.kmf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/anndata/ehrapy.anndata.df_to_anndata.html">ehrapy.anndata.df_to_anndata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/anndata/ehrapy.anndata.anndata_to_df.html">ehrapy.anndata.anndata_to_df</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/anndata/ehrapy.anndata.move_to_obs.html">ehrapy.anndata.move_to_obs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/anndata/ehrapy.anndata.move_to_x.html">ehrapy.anndata.move_to_x</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/anndata/ehrapy.anndata.type_overview.html">ehrapy.anndata.type_overview</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../index.html">Tutorials</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="ehrapy_introduction.html">Introduction to ehrapy</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mimic_2_introduction.html">MIMIC-II IAC Introduction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mimic_2_introduction.html#Preprocessing">Preprocessing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mimic_2_introduction.html#PCA-&amp;-UMAP">PCA &amp; UMAP</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mimic_2_introduction.html#Batch-effect-check">Batch effect check</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mimic_2_introduction.html#Leiden-clustering">Leiden clustering</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mimic_2_introduction.html#Hospital-&amp;-ICU-statistics">Hospital &amp; ICU statistics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mimic_2_introduction.html#Death">Death</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mimic_2_introduction.html#Demographics">Demographics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mimic_2_introduction.html#Comorbidities">Comorbidities</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mimic_2_introduction.html#Initial-lab-measurements">Initial lab measurements</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mimic_2_introduction.html#Annotation">Annotation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mimic_2_introduction.html#Paga">Paga</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mimic_2_fate.html">MIMIC-II Patient Fate</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mimic_2_fate.html#Determining-patient-fate-using-a-ConnectivityKernel">Determining patient fate using a ConnectivityKernel</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mimic_2_fate.html#Determining-patient-fate-with-a-PseudotimeKernel">Determining patient fate with a PseudotimeKernel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mimic_2_survival_analysis.html">MIMIC-II Survival Analysis</a></li>
 <li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Diabetes 130 Vignette</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#Visual-Exploration">Visual Exploration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="medcat.html">Extracting from free text with MedCAT</a></li>
-<li class="toctree-l2"><a class="reference internal" href="medcat.html#Custom-MedCAT-object-of-ehrapy">Custom MedCAT object of ehrapy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="medcat.html#Extracting-and-visualizing-all-disease-entities">Extracting and visualizing all disease entities</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributor Guide</a></li>
@@ -230,7 +330,8 @@
           </svg>
           <span>Back to top</span>
         </a>
-        <div class="content-icon-container"><div class="theme-toggle-container theme-toggle-content">
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
             <button class="theme-toggle">
               <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
               <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
@@ -459,6 +560,7 @@ div.nboutput.container div.output_area > div[class^='highlight']{
 }
 
 /* Some additional styling taken form the Jupyter notebook CSS */
+.jp-RenderedHTMLCommon table,
 div.rendered_html table {
   border: none;
   border-collapse: collapse;
@@ -467,10 +569,14 @@ div.rendered_html table {
   font-size: 12px;
   table-layout: fixed;
 }
+.jp-RenderedHTMLCommon thead,
 div.rendered_html thead {
   border-bottom: 1px solid black;
   vertical-align: bottom;
 }
+.jp-RenderedHTMLCommon tr,
+.jp-RenderedHTMLCommon th,
+.jp-RenderedHTMLCommon td,
 div.rendered_html tr,
 div.rendered_html th,
 div.rendered_html td {
@@ -482,12 +588,15 @@ div.rendered_html td {
   max-width: none;
   border: none;
 }
+.jp-RenderedHTMLCommon th,
 div.rendered_html th {
   font-weight: bold;
 }
+.jp-RenderedHTMLCommon tbody tr:nth-child(odd),
 div.rendered_html tbody tr:nth-child(odd) {
   background: #f5f5f5;
 }
+.jp-RenderedHTMLCommon tbody tr:hover,
 div.rendered_html tbody tr:hover {
   background: rgba(66, 165, 245, 0.2);
 }
@@ -513,26 +622,26 @@ div.rendered_html tbody tr:hover {
     background: rgba(255, 255, 255, .1);
     }
 </style><div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>
+    <p class="admonition-title">Note</p>
+    <p>
     This page was generated from
-    <a class="reference external" href="https://github.com/theislab/ehrapy/tree/0.2.0/">diabetes_130.ipynb</a>.
+    <a class="reference external" href="https://github.com/theislab/ehrapy/tree/0.3.0/">diabetes_130.ipynb</a>.
     Some tutorial content may look better in light mode.
     </p>
 </div><section id="Diabetes-130-Vignette">
-<h1>Diabetes 130 Vignette<a class="headerlink" href="#Diabetes-130-Vignette" title="Permalink to this headline">#</a></h1>
+<h1>Diabetes 130 Vignette<a class="headerlink" href="#Diabetes-130-Vignette" title="Permalink to this heading">#</a></h1>
 <p>This tutorial explores the Diabetes 130-US hospitals for years 1999-2008 dataset. This data has been prepared to analyze factors related to readmission as well as other outcomes pertaining to patients with diabetes. We use ehrapy’s slightly preprocessed dataset (<a class="reference external" href="https://github.com/theislab/ehrapy-datasets/tree/main/diabetes_130">https://github.com/theislab/ehrapy-datasets/tree/main/diabetes_130</a>).</p>
 <p>More details on the dataset can be found here: <a class="reference external" href="http://archive.ics.uci.edu/ml/datasets/Diabetes+130-US+hospitals+for+years+1999-2008">http://archive.ics.uci.edu/ml/datasets/Diabetes+130-US+hospitals+for+years+1999-2008</a>.</p>
 <p>It is recommended to work through the MIMIC-II tutorials first before examining this one.</p>
 <section id="Importing-ehrapy-and-setting-plotting-parameters">
-<h2>Importing ehrapy and setting plotting parameters<a class="headerlink" href="#Importing-ehrapy-and-setting-plotting-parameters" title="Permalink to this headline">#</a></h2>
+<h2>Importing ehrapy and setting plotting parameters<a class="headerlink" href="#Importing-ehrapy-and-setting-plotting-parameters" title="Permalink to this heading">#</a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import ehrapy as ep
-import seaborn as sns
-import matplotlib.pyplot as plt
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">ehrapy</span> <span class="k">as</span> <span class="nn">ep</span>
+<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 </pre></div>
 </div>
 </div>
@@ -548,11 +657,11 @@ import matplotlib.pyplot as plt
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import warnings
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">warnings</span>
 
-warnings.simplefilter("ignore", category=UserWarning)
-warnings.simplefilter("ignore", category=FutureWarning)
-warnings.simplefilter("ignore", category=DeprecationWarning)
+<span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">UserWarning</span><span class="p">)</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">FutureWarning</span><span class="p">)</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">DeprecationWarning</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -560,7 +669,7 @@ warnings.simplefilter("ignore", category=DeprecationWarning)
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.print_versions()
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">print_versions</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -709,25 +818,29 @@ Session information updated at <span style="color: #008080; text-decoration-colo
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.settings.set_figure_params(figsize=(4, 4))
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">set_figure_params</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
 </section>
 <section id="Diabetes-130-dataset-preprocessing">
-<h2>Diabetes 130 dataset preprocessing<a class="headerlink" href="#Diabetes-130-dataset-preprocessing" title="Permalink to this headline">#</a></h2>
+<h2>Diabetes 130 dataset preprocessing<a class="headerlink" href="#Diabetes-130-dataset-preprocessing" title="Permalink to this heading">#</a></h2>
 <p>There are a couple of columns which have a high amount of missing data or are not informative to the model. We will move them to obs only.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata = ep.dt.diabetes_130(encoded=False, columns_obs_only=["age",
-                                                            "age_mean",
-                                                            "weight_mean",
-                                                            "weight",
-                                                            "patient_nbr",
-                                                            "payer_code"
-                                                            ])
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">adata</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">diabetes_130</span><span class="p">(</span>
+    <span class="n">encoded</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">columns_obs_only</span><span class="o">=</span><span class="p">[</span>
+        <span class="s2">&quot;age&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;age_mean&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;weight_mean&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;weight&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;patient_nbr&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;payer_code&quot;</span><span class="p">,</span>
+    <span class="p">],</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -744,7 +857,7 @@ Session information updated at <span style="color: #008080; text-decoration-colo
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.ad.type_overview(adata)
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">ad</span><span class="o">.</span><span class="n">type_overview</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -805,7 +918,7 @@ Session information updated at <span style="color: #008080; text-decoration-colo
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata=ep.pp.encode(adata,autodetect=True)
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">adata</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">autodetect</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -832,7 +945,7 @@ Session information updated at <span style="color: #008080; text-decoration-colo
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>_ = ep.pp.calculate_qc_metrics(adata)
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">_</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">calculate_qc_metrics</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -840,10 +953,10 @@ Session information updated at <span style="color: #008080; text-decoration-colo
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>_ = sns.displot(adata.obs["missing_values_abs"])
-plt.show()
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">_</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">displot</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;missing_values_abs&quot;</span><span class="p">])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
-_ = sns.displot(adata.obs["missing_values_pct"])
+<span class="n">_</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">displot</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;missing_values_pct&quot;</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
@@ -851,24 +964,24 @@ _ = sns.displot(adata.obs["missing_values_pct"])
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_diabetes_130_13_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_diabetes_130_13_0.png" style="width: 383px; height: 380px;"/>
+<img alt="../../_images/tutorials_notebooks_diabetes_130_13_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_diabetes_130_13_0.png" style="width: 383px; height: 380px;" />
 </div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_diabetes_130_13_1.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_diabetes_130_13_1.png" style="width: 383px; height: 380px;"/>
+<img alt="../../_images/tutorials_notebooks_diabetes_130_13_1.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_diabetes_130_13_1.png" style="width: 383px; height: 380px;" />
 </div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>_ = sns.displot(adata.var["missing_values_abs"])
-plt.show()
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">_</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">displot</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">var</span><span class="p">[</span><span class="s2">&quot;missing_values_abs&quot;</span><span class="p">])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
-_ = sns.displot(adata.var["missing_values_pct"])
+<span class="n">_</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">displot</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">var</span><span class="p">[</span><span class="s2">&quot;missing_values_pct&quot;</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
@@ -876,21 +989,21 @@ _ = sns.displot(adata.var["missing_values_pct"])
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_diabetes_130_14_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_diabetes_130_14_0.png" style="width: 382px; height: 380px;"/>
+<img alt="../../_images/tutorials_notebooks_diabetes_130_14_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_diabetes_130_14_0.png" style="width: 382px; height: 380px;" />
 </div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_diabetes_130_14_1.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_diabetes_130_14_1.png" style="width: 382px; height: 380px;"/>
+<img alt="../../_images/tutorials_notebooks_diabetes_130_14_1.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_diabetes_130_14_1.png" style="width: 382px; height: 380px;" />
 </div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pp.knn_impute(adata)
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">knn_impute</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -928,21 +1041,20 @@ Intel(R) Extension for Scikit-learn* enabled (https://github.com/intel/scikit-le
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 AnnData object with n_obs × n_vars = 101766 × 45
-    obs: 'age', 'age_mean', 'weight_mean', 'weight', 'patient_nbr', 'payer_code', 'race', 'admission_type_id', 'discharge_disposition_id', 'admission_source_id', 'medical_specialty', 'diag_1', 'diag_2', 'diag_3', 'max_glu_serum', 'A1Cresult', 'metformin', 'repaglinide', 'nateglinide', 'chlorpropamide', 'glimepiride', 'acetohexamide', 'glipizide', 'glyburide', 'tolbutamide', 'pioglitazone', 'rosiglitazone', 'acarbose', 'miglitol', 'troglitazone', 'tolazamide', 'examide', 'citoglipton', 'insulin', 'glyburide-metformin', 'glipizide-metformin', 'glimepiride-pioglitazone', 'metformin-rosiglitazone', 'metformin-pioglitazone', 'change_of_meds', 'diabetesMed', 'readmitted', 'missing_values_abs', 'missing_values_pct'
-    var: 'missing_values_abs', 'missing_values_pct', 'mean', 'median', 'standard_deviation', 'min', 'max'
-    uns: 'numerical_columns', 'non_numerical_columns', 'original_values_categoricals', 'var_to_encoding', 'encoding_to_var'
-    layers: 'original'
+    obs: &#39;age&#39;, &#39;age_mean&#39;, &#39;weight_mean&#39;, &#39;weight&#39;, &#39;patient_nbr&#39;, &#39;payer_code&#39;, &#39;race&#39;, &#39;admission_type_id&#39;, &#39;discharge_disposition_id&#39;, &#39;admission_source_id&#39;, &#39;medical_specialty&#39;, &#39;diag_1&#39;, &#39;diag_2&#39;, &#39;diag_3&#39;, &#39;max_glu_serum&#39;, &#39;A1Cresult&#39;, &#39;metformin&#39;, &#39;repaglinide&#39;, &#39;nateglinide&#39;, &#39;chlorpropamide&#39;, &#39;glimepiride&#39;, &#39;acetohexamide&#39;, &#39;glipizide&#39;, &#39;glyburide&#39;, &#39;tolbutamide&#39;, &#39;pioglitazone&#39;, &#39;rosiglitazone&#39;, &#39;acarbose&#39;, &#39;miglitol&#39;, &#39;troglitazone&#39;, &#39;tolazamide&#39;, &#39;examide&#39;, &#39;citoglipton&#39;, &#39;insulin&#39;, &#39;glyburide-metformin&#39;, &#39;glipizide-metformin&#39;, &#39;glimepiride-pioglitazone&#39;, &#39;metformin-rosiglitazone&#39;, &#39;metformin-pioglitazone&#39;, &#39;change_of_meds&#39;, &#39;diabetesMed&#39;, &#39;readmitted&#39;, &#39;missing_values_abs&#39;, &#39;missing_values_pct&#39;
+    var: &#39;missing_values_abs&#39;, &#39;missing_values_pct&#39;, &#39;mean&#39;, &#39;median&#39;, &#39;standard_deviation&#39;, &#39;min&#39;, &#39;max&#39;
+    uns: &#39;numerical_columns&#39;, &#39;non_numerical_columns&#39;, &#39;original_values_categoricals&#39;, &#39;var_to_encoding&#39;, &#39;encoding_to_var&#39;
+    layers: &#39;original&#39;
 </pre></div></div>
 </div>
 </section>
-</section>
 <section id="Visual-Exploration">
-<h1>Visual Exploration<a class="headerlink" href="#Visual-Exploration" title="Permalink to this headline">#</a></h1>
+<h2>Visual Exploration<a class="headerlink" href="#Visual-Exploration" title="Permalink to this heading">#</a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pp.pca(adata)
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">pca</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -950,7 +1062,7 @@ AnnData object with n_obs × n_vars = 101766 × 45
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pp.neighbors(adata)
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -958,7 +1070,7 @@ AnnData object with n_obs × n_vars = 101766 × 45
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.tl.umap(adata)
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -966,8 +1078,8 @@ AnnData object with n_obs × n_vars = 101766 × 45
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
-ep.pl.umap(adata, color=["leiden_0_5"], title="Leiden 0.5")
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">leiden</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">key_added</span><span class="o">=</span><span class="s2">&quot;leiden_0_5&quot;</span><span class="p">)</span>
+<span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;leiden_0_5&quot;</span><span class="p">],</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Leiden 0.5&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -976,57 +1088,66 @@ ep.pl.umap(adata, color=["leiden_0_5"], title="Leiden 0.5")
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-... storing 'age' as categorical
-... storing 'weight' as categorical
-... storing 'payer_code' as categorical
-... storing 'race' as categorical
-... storing 'admission_type_id' as categorical
-... storing 'discharge_disposition_id' as categorical
-... storing 'admission_source_id' as categorical
-... storing 'medical_specialty' as categorical
-... storing 'diag_1' as categorical
-... storing 'diag_2' as categorical
-... storing 'diag_3' as categorical
-... storing 'max_glu_serum' as categorical
-... storing 'A1Cresult' as categorical
-... storing 'metformin' as categorical
-... storing 'repaglinide' as categorical
-... storing 'nateglinide' as categorical
-... storing 'chlorpropamide' as categorical
-... storing 'glimepiride' as categorical
-... storing 'acetohexamide' as categorical
-... storing 'glipizide' as categorical
-... storing 'glyburide' as categorical
-... storing 'tolbutamide' as categorical
-... storing 'pioglitazone' as categorical
-... storing 'rosiglitazone' as categorical
-... storing 'acarbose' as categorical
-... storing 'miglitol' as categorical
-... storing 'troglitazone' as categorical
-... storing 'tolazamide' as categorical
-... storing 'examide' as categorical
-... storing 'citoglipton' as categorical
-... storing 'insulin' as categorical
-... storing 'glyburide-metformin' as categorical
-... storing 'glipizide-metformin' as categorical
-... storing 'glimepiride-pioglitazone' as categorical
-... storing 'metformin-rosiglitazone' as categorical
-... storing 'metformin-pioglitazone' as categorical
-... storing 'readmitted' as categorical
+... storing &#39;age&#39; as categorical
+... storing &#39;weight&#39; as categorical
+... storing &#39;payer_code&#39; as categorical
+... storing &#39;race&#39; as categorical
+... storing &#39;admission_type_id&#39; as categorical
+... storing &#39;discharge_disposition_id&#39; as categorical
+... storing &#39;admission_source_id&#39; as categorical
+... storing &#39;medical_specialty&#39; as categorical
+... storing &#39;diag_1&#39; as categorical
+... storing &#39;diag_2&#39; as categorical
+... storing &#39;diag_3&#39; as categorical
+... storing &#39;max_glu_serum&#39; as categorical
+... storing &#39;A1Cresult&#39; as categorical
+... storing &#39;metformin&#39; as categorical
+... storing &#39;repaglinide&#39; as categorical
+... storing &#39;nateglinide&#39; as categorical
+... storing &#39;chlorpropamide&#39; as categorical
+... storing &#39;glimepiride&#39; as categorical
+... storing &#39;acetohexamide&#39; as categorical
+... storing &#39;glipizide&#39; as categorical
+... storing &#39;glyburide&#39; as categorical
+... storing &#39;tolbutamide&#39; as categorical
+... storing &#39;pioglitazone&#39; as categorical
+... storing &#39;rosiglitazone&#39; as categorical
+... storing &#39;acarbose&#39; as categorical
+... storing &#39;miglitol&#39; as categorical
+... storing &#39;troglitazone&#39; as categorical
+... storing &#39;tolazamide&#39; as categorical
+... storing &#39;examide&#39; as categorical
+... storing &#39;citoglipton&#39; as categorical
+... storing &#39;insulin&#39; as categorical
+... storing &#39;glyburide-metformin&#39; as categorical
+... storing &#39;glipizide-metformin&#39; as categorical
+... storing &#39;glimepiride-pioglitazone&#39; as categorical
+... storing &#39;metformin-rosiglitazone&#39; as categorical
+... storing &#39;metformin-pioglitazone&#39; as categorical
+... storing &#39;readmitted&#39; as categorical
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_diabetes_130_20_1.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_diabetes_130_20_1.png" style="width: 384px; height: 296px;"/>
+<img alt="../../_images/tutorials_notebooks_diabetes_130_20_1.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_diabetes_130_20_1.png" style="width: 384px; height: 296px;" />
 </div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.umap(adata, color=["admission_type_id", "discharge_disposition_id", "admission_source_id",], ncols=1, wspace=0.75)
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span>
+    <span class="n">adata</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="p">[</span>
+        <span class="s2">&quot;admission_type_id&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;discharge_disposition_id&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;admission_source_id&quot;</span><span class="p">,</span>
+    <span class="p">],</span>
+    <span class="n">ncols</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">wspace</span><span class="o">=</span><span class="mf">0.75</span><span class="p">,</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1034,14 +1155,14 @@ ep.pl.umap(adata, color=["leiden_0_5"], title="Leiden 0.5")
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_diabetes_130_21_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_diabetes_130_21_0.png" style="width: 1961px; height: 856px;"/>
+<img alt="../../_images/tutorials_notebooks_diabetes_130_21_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_diabetes_130_21_0.png" style="width: 1961px; height: 856px;" />
 </div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.umap(adata, color=["age_mean", "weight_mean", "gender"], wspace=0.3)
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;age_mean&quot;</span><span class="p">,</span> <span class="s2">&quot;weight_mean&quot;</span><span class="p">,</span> <span class="s2">&quot;gender&quot;</span><span class="p">],</span> <span class="n">wspace</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1049,14 +1170,14 @@ ep.pl.umap(adata, color=["leiden_0_5"], title="Leiden 0.5")
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_diabetes_130_22_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_diabetes_130_22_0.png" style="width: 1047px; height: 299px;"/>
+<img alt="../../_images/tutorials_notebooks_diabetes_130_22_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_diabetes_130_22_0.png" style="width: 1047px; height: 299px;" />
 </div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.umap(adata, color=["readmitted", "change_of_meds", "diabetesMed"])
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;readmitted&quot;</span><span class="p">,</span> <span class="s2">&quot;change_of_meds&quot;</span><span class="p">,</span> <span class="s2">&quot;diabetesMed&quot;</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
@@ -1064,14 +1185,14 @@ ep.pl.umap(adata, color=["leiden_0_5"], title="Leiden 0.5")
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_diabetes_130_23_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_diabetes_130_23_0.png" style="width: 977px; height: 299px;"/>
+<img alt="../../_images/tutorials_notebooks_diabetes_130_23_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_diabetes_130_23_0.png" style="width: 977px; height: 299px;" />
 </div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.umap(adata, color=["diag_1", "diag_2", "diag_3"], ncols=1)
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;diag_1&quot;</span><span class="p">,</span> <span class="s2">&quot;diag_2&quot;</span><span class="p">,</span> <span class="s2">&quot;diag_3&quot;</span><span class="p">],</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1079,14 +1200,14 @@ ep.pl.umap(adata, color=["leiden_0_5"], title="Leiden 0.5")
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_diabetes_130_24_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_diabetes_130_24_0.png" style="width: 1131px; height: 856px;"/>
+<img alt="../../_images/tutorials_notebooks_diabetes_130_24_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_diabetes_130_24_0.png" style="width: 1131px; height: 856px;" />
 </div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.umap(adata, color=list(adata.var_names))
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">var_names</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
@@ -1094,7 +1215,7 @@ ep.pl.umap(adata, color=["leiden_0_5"], title="Leiden 0.5")
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_diabetes_130_25_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_diabetes_130_25_0.png" style="width: 1286px; height: 3361px;"/>
+<img alt="../../_images/tutorials_notebooks_diabetes_130_25_0.png" class="no-scaled-link" src="../../_images/tutorials_notebooks_diabetes_130_25_0.png" style="width: 1286px; height: 3361px;" />
 </div>
 </div>
 <div class="nbinput nblast docutils container">
@@ -1105,6 +1226,7 @@ ep.pl.umap(adata, color=["leiden_0_5"], title="Leiden 0.5")
 </pre></div>
 </div>
 </div>
+</section>
 </section>
 
         </article>
@@ -1121,14 +1243,14 @@ ep.pl.umap(adata, color=["leiden_0_5"], title="Leiden 0.5")
               </div>
               <svg><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="mimic_2_fate.html">
+          <a class="prev-page" href="mimic_2_survival_analysis.html">
               <svg><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">MIMIC-II Patient Fate</div>
+                <div class="title">MIMIC-II Survival Analysis</div>
                 
               </div>
             </a>
@@ -1166,9 +1288,9 @@ ep.pl.umap(adata, color=["leiden_0_5"], title="Leiden 0.5")
 <li><a class="reference internal" href="#">Diabetes 130 Vignette</a><ul>
 <li><a class="reference internal" href="#Importing-ehrapy-and-setting-plotting-parameters">Importing ehrapy and setting plotting parameters</a></li>
 <li><a class="reference internal" href="#Diabetes-130-dataset-preprocessing">Diabetes 130 dataset preprocessing</a></li>
+<li><a class="reference internal" href="#Visual-Exploration">Visual Exploration</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#Visual-Exploration">Visual Exploration</a></li>
 </ul>
 
           </div>
@@ -1181,6 +1303,7 @@ ep.pl.umap(adata, color=["leiden_0_5"], title="Leiden 0.5")
 </div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../_static/doctools.js"></script>
     <script src="../../_static/scripts/furo.js"></script>
     <script src="../../_static/clipboard.min.js"></script>

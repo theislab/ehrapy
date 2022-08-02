@@ -1,0 +1,6 @@
+﻿ehrapy.data.hepatitis
+=====================
+
+.. currentmodule:: ehrapy.data
+
+.. autofunction:: hepatitis

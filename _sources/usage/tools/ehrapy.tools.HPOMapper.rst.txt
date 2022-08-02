@@ -1,0 +1,67 @@
+﻿ehrapy.tools.HPOMapper
+======================
+
+.. currentmodule:: ehrapy.tools
+
+.. add toctree option to make autodoc generate the pages
+
+.. autoclass:: HPOMapper
+
+
+
+Attributes table
+~~~~~~~~~~~~~~~~~~
+
+.. autosummary::
+
+    ~ehrapy.tools.HPOMapper.ontology_values
+
+
+
+
+
+Methods table
+~~~~~~~~~~~~~
+
+.. autosummary::
+
+    ~ehrapy.tools.HPOMapper.hpo_term_similarity
+    ~ehrapy.tools.HPOMapper.map_to_hpo
+    ~ehrapy.tools.HPOMapper.patient_hpo_similarity
+
+
+
+
+
+Attributes
+~~~~~~~~~~~
+
+
+ontology_values
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoattribute:: HPOMapper.ontology_values
+
+
+
+
+
+
+Methods
+~~~~~~~
+
+
+hpo_term_similarity
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automethod:: HPOMapper.hpo_term_similarity
+map_to_hpo
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automethod:: HPOMapper.map_to_hpo
+patient_hpo_similarity
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automethod:: HPOMapper.patient_hpo_similarity
+
+

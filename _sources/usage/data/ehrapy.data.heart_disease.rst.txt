@@ -1,0 +1,6 @@
+﻿ehrapy.data.heart\_disease
+==========================
+
+.. currentmodule:: ehrapy.data
+
+.. autofunction:: heart_disease

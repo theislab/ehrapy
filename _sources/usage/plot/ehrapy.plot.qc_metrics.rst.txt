@@ -1,0 +1,6 @@
+﻿ehrapy.plot.qc\_metrics
+=======================
+
+.. currentmodule:: ehrapy.plot
+
+.. autofunction:: qc_metrics

@@ -1,0 +1,6 @@
+﻿ehrapy.data.parkinson\_dataset\_with\_replicated\_acoustic\_features
+====================================================================
+
+.. currentmodule:: ehrapy.data
+
+.. autofunction:: parkinson_dataset_with_replicated_acoustic_features

@@ -1,0 +1,6 @@
+﻿ehrapy.preprocessing.undo\_encoding
+===================================
+
+.. currentmodule:: ehrapy.preprocessing
+
+.. autofunction:: undo_encoding

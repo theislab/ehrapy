@@ -1,0 +1,6 @@
+﻿ehrapy.data.parkinsons\_disease\_classification
+===============================================
+
+.. currentmodule:: ehrapy.data
+
+.. autofunction:: parkinsons_disease_classification

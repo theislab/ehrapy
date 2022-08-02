@@ -19,6 +19,7 @@ For questions about the usage of ehrapy use [Github Discussions].
    notebooks/ehrapy_introduction
    notebooks/mimic_2_introduction
    notebooks/mimic_2_fate
+   notebooks/mimic_2_survival_analysis
    notebooks/diabetes_130
    notebooks/medcat
 

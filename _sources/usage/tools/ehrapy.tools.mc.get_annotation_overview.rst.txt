@@ -1,0 +1,6 @@
+﻿ehrapy.tools.mc.get\_annotation\_overview
+=========================================
+
+.. currentmodule:: ehrapy.tools
+
+.. automethod:: mc.get_annotation_overview

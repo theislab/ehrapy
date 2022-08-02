@@ -1,0 +1,6 @@
+﻿ehrapy.plot.diffmap
+===================
+
+.. currentmodule:: ehrapy.plot
+
+.. autofunction:: diffmap

@@ -1,0 +1,6 @@
+﻿ehrapy.preprocessing.minmax\_norm
+=================================
+
+.. currentmodule:: ehrapy.preprocessing
+
+.. autofunction:: minmax_norm

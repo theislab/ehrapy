@@ -1,0 +1,6 @@
+﻿ehrapy.plot.dotplot
+===================
+
+.. currentmodule:: ehrapy.plot
+
+.. autofunction:: dotplot

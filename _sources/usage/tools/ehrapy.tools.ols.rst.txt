@@ -1,0 +1,6 @@
+﻿ehrapy.tools.ols
+================
+
+.. currentmodule:: ehrapy.tools
+
+.. autofunction:: ols

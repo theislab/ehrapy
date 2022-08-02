@@ -1,0 +1,6 @@
+﻿ehrapy.plot.paga\_path
+======================
+
+.. currentmodule:: ehrapy.plot
+
+.. autofunction:: paga_path

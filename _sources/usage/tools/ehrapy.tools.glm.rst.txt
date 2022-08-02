@@ -1,0 +1,6 @@
+﻿ehrapy.tools.glm
+================
+
+.. currentmodule:: ehrapy.tools
+
+.. autofunction:: glm

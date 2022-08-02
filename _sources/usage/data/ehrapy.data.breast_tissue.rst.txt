@@ -1,0 +1,6 @@
+﻿ehrapy.data.breast\_tissue
+==========================
+
+.. currentmodule:: ehrapy.data
+
+.. autofunction:: breast_tissue

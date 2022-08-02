@@ -1,0 +1,6 @@
+﻿ehrapy.data.chronic\_kidney\_disease
+====================================
+
+.. currentmodule:: ehrapy.data
+
+.. autofunction:: chronic_kidney_disease

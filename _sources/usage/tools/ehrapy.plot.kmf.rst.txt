@@ -1,0 +1,6 @@
+﻿ehrapy.plot.kmf
+===============
+
+.. currentmodule:: ehrapy.plot
+
+.. autofunction:: kmf

@@ -1,8 +1,8 @@
 <!doctype html>
-<html class="no-js">
+<html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
 <meta property="og:title" content="Usage" />
   
@@ -15,12 +15,12 @@
 <meta property="og:image" content="https://ehrapy.readthedocs.io/en/latest//_static/logo.png" />
   
 <meta property="og:image:alt" content="Usage" />
-  <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Tutorials" href="../tutorials/index.html" /><link rel="prev" title="Installation" href="../installation.html" />
+  <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="ehrapy.io.read_csv" href="io/ehrapy.io.read_csv.html" /><link rel="prev" title="Installation" href="../installation.html" />
 
-    <meta name="generator" content="sphinx-4.5.0, furo 2022.04.07"/>
+    <meta name="generator" content="sphinx-5.1.1, furo 2022.06.21"/>
         <title>Usage - ehrapy</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=68f4518137b9aefe99b631505a2064c3c42c9852" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=40978830699223671f4072448e654b5958f38b89" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css" />
     <link rel="stylesheet" type="text/css" href="../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" />
@@ -181,30 +181,130 @@
   <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
-<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Usage</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials/index.html">Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/notebooks/ehrapy_introduction.html">ehrapy Introduction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/notebooks/ehrapy_introduction.html#Fundamental-Principles">Fundamental Principles</a></li>
+<li class="toctree-l1 current has-children current-page"><a class="current reference internal" href="#">Usage</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="io/ehrapy.io.read_csv.html">ehrapy.io.read_csv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io/ehrapy.io.read_h5ad.html">ehrapy.io.read_h5ad</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io/ehrapy.io.read_pdf.html">ehrapy.io.read_pdf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io/ehrapy.io.write.html">ehrapy.io.write</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data/ehrapy.data.mimic_2.html">ehrapy.data.mimic_2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data/ehrapy.data.mimic_3_demo.html">ehrapy.data.mimic_3_demo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data/ehrapy.data.diabetes_130.html">ehrapy.data.diabetes_130</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data/ehrapy.data.heart_failure.html">ehrapy.data.heart_failure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data/ehrapy.data.chronic_kidney_disease.html">ehrapy.data.chronic_kidney_disease</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data/ehrapy.data.breast_tissue.html">ehrapy.data.breast_tissue</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data/ehrapy.data.cervical_cancer_risk_factors.html">ehrapy.data.cervical_cancer_risk_factors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data/ehrapy.data.dermatology.html">ehrapy.data.dermatology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data/ehrapy.data.echocardiogram.html">ehrapy.data.echocardiogram</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data/ehrapy.data.heart_disease.html">ehrapy.data.heart_disease</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data/ehrapy.data.hepatitis.html">ehrapy.data.hepatitis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data/ehrapy.data.statlog_heart.html">ehrapy.data.statlog_heart</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data/ehrapy.data.thyroid.html">ehrapy.data.thyroid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data/ehrapy.data.breast_cancer_coimbra.html">ehrapy.data.breast_cancer_coimbra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data/ehrapy.data.parkinson_dataset_with_replicated_acoustic_features.html">ehrapy.data.parkinson_dataset_with_replicated_acoustic_features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data/ehrapy.data.parkinsons.html">ehrapy.data.parkinsons</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data/ehrapy.data.parkinsons_disease_classification.html">ehrapy.data.parkinsons_disease_classification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data/ehrapy.data.parkinsons_telemonitoring.html">ehrapy.data.parkinsons_telemonitoring</a></li>
+<li class="toctree-l2"><a class="reference internal" href="preprocessing/ehrapy.preprocessing.pca.html">ehrapy.preprocessing.pca</a></li>
+<li class="toctree-l2"><a class="reference internal" href="preprocessing/ehrapy.preprocessing.regress_out.html">ehrapy.preprocessing.regress_out</a></li>
+<li class="toctree-l2"><a class="reference internal" href="preprocessing/ehrapy.preprocessing.subsample.html">ehrapy.preprocessing.subsample</a></li>
+<li class="toctree-l2"><a class="reference internal" href="preprocessing/ehrapy.preprocessing.highly_variable_features.html">ehrapy.preprocessing.highly_variable_features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="preprocessing/ehrapy.preprocessing.qc_metrics.html">ehrapy.preprocessing.qc_metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="preprocessing/ehrapy.preprocessing.qc_lab_measurements.html">ehrapy.preprocessing.qc_lab_measurements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imputation/ehrapy.preprocessing.explicit_impute.html">ehrapy.preprocessing.explicit_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imputation/ehrapy.preprocessing.simple_impute.html">ehrapy.preprocessing.simple_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imputation/ehrapy.preprocessing.knn_impute.html">ehrapy.preprocessing.knn_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imputation/ehrapy.preprocessing.miss_forest_impute.html">ehrapy.preprocessing.miss_forest_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imputation/ehrapy.preprocessing.soft_impute.html">ehrapy.preprocessing.soft_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imputation/ehrapy.preprocessing.iterative_svd_impute.html">ehrapy.preprocessing.iterative_svd_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imputation/ehrapy.preprocessing.matrix_factorization_impute.html">ehrapy.preprocessing.matrix_factorization_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imputation/ehrapy.preprocessing.nuclear_norm_minimization_impute.html">ehrapy.preprocessing.nuclear_norm_minimization_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imputation/ehrapy.preprocessing.mice_forest_impute.html">ehrapy.preprocessing.mice_forest_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="preprocessing/ehrapy.preprocessing.encode.html">ehrapy.preprocessing.encode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="preprocessing/ehrapy.preprocessing.undo_encoding.html">ehrapy.preprocessing.undo_encoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="preprocessing/ehrapy.preprocessing.log_norm.html">ehrapy.preprocessing.log_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="preprocessing/ehrapy.preprocessing.maxabs_norm.html">ehrapy.preprocessing.maxabs_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="preprocessing/ehrapy.preprocessing.minmax_norm.html">ehrapy.preprocessing.minmax_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="preprocessing/ehrapy.preprocessing.power_norm.html">ehrapy.preprocessing.power_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="preprocessing/ehrapy.preprocessing.quantile_norm.html">ehrapy.preprocessing.quantile_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="preprocessing/ehrapy.preprocessing.robust_scale_norm.html">ehrapy.preprocessing.robust_scale_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="preprocessing/ehrapy.preprocessing.scale_norm.html">ehrapy.preprocessing.scale_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="preprocessing/ehrapy.preprocessing.sqrt_norm.html">ehrapy.preprocessing.sqrt_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="preprocessing/ehrapy.preprocessing.combat.html">ehrapy.preprocessing.combat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="preprocessing/ehrapy.preprocessing.neighbors.html">ehrapy.preprocessing.neighbors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools/ehrapy.tools.pca.html">ehrapy.tools.pca</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools/ehrapy.tools.tsne.html">ehrapy.tools.tsne</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools/ehrapy.tools.umap.html">ehrapy.tools.umap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools/ehrapy.tools.draw_graph.html">ehrapy.tools.draw_graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools/ehrapy.tools.diffmap.html">ehrapy.tools.diffmap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools/ehrapy.tools.embedding_density.html">ehrapy.tools.embedding_density</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools/ehrapy.tools.leiden.html">ehrapy.tools.leiden</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools/ehrapy.tools.louvain.html">ehrapy.tools.louvain</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools/ehrapy.tools.dendrogram.html">ehrapy.tools.dendrogram</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools/ehrapy.tools.dpt.html">ehrapy.tools.dpt</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools/ehrapy.tools.paga.html">ehrapy.tools.paga</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools/ehrapy.tools.rank_features_groups.html">ehrapy.tools.rank_features_groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools/ehrapy.tools.filter_rank_features_groups.html">ehrapy.tools.filter_rank_features_groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools/ehrapy.tools.marker_feature_overlap.html">ehrapy.tools.marker_feature_overlap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools/ehrapy.tools.ingest.html">ehrapy.tools.ingest</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools/ehrapy.tools.Translator.html">ehrapy.tools.Translator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools/ehrapy.tools.HPOMapper.html">ehrapy.tools.HPOMapper</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools/ehrapy.tools.MedCAT.html">ehrapy.tools.MedCAT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools/ehrapy.tools.mc.run_unsupervised_training.html">ehrapy.tools.mc.run_unsupervised_training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools/ehrapy.tools.mc.annotate_text.html">ehrapy.tools.mc.annotate_text</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools/ehrapy.tools.mc.get_annotation_overview.html">ehrapy.tools.mc.get_annotation_overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools/ehrapy.tools.ols.html">ehrapy.tools.ols</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools/ehrapy.tools.glm.html">ehrapy.tools.glm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools/ehrapy.tools.kmf.html">ehrapy.tools.kmf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot/ehrapy.plot.scatter.html">ehrapy.plot.scatter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot/ehrapy.plot.heatmap.html">ehrapy.plot.heatmap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot/ehrapy.plot.dotplot.html">ehrapy.plot.dotplot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot/ehrapy.plot.tracksplot.html">ehrapy.plot.tracksplot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot/ehrapy.plot.violin.html">ehrapy.plot.violin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot/ehrapy.plot.stacked_violin.html">ehrapy.plot.stacked_violin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot/ehrapy.plot.matrixplot.html">ehrapy.plot.matrixplot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot/ehrapy.plot.clustermap.html">ehrapy.plot.clustermap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot/ehrapy.plot.ranking.html">ehrapy.plot.ranking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot/ehrapy.plot.dendrogram.html">ehrapy.plot.dendrogram</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot/ehrapy.plot.qc_metrics.html">ehrapy.plot.qc_metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot/ehrapy.plot.pca.html">ehrapy.plot.pca</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot/ehrapy.plot.pca_loadings.html">ehrapy.plot.pca_loadings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot/ehrapy.plot.pca_variance_ratio.html">ehrapy.plot.pca_variance_ratio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot/ehrapy.plot.pca_overview.html">ehrapy.plot.pca_overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot/ehrapy.plot.tsne.html">ehrapy.plot.tsne</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot/ehrapy.plot.umap.html">ehrapy.plot.umap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot/ehrapy.plot.diffmap.html">ehrapy.plot.diffmap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot/ehrapy.plot.draw_graph.html">ehrapy.plot.draw_graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot/ehrapy.plot.spatial.html">ehrapy.plot.spatial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot/ehrapy.plot.embedding.html">ehrapy.plot.embedding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot/ehrapy.plot.embedding_density.html">ehrapy.plot.embedding_density</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot/ehrapy.plot.dpt_groups_pseudotime.html">ehrapy.plot.dpt_groups_pseudotime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot/ehrapy.plot.dpt_timeseries.html">ehrapy.plot.dpt_timeseries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot/ehrapy.plot.paga.html">ehrapy.plot.paga</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot/ehrapy.plot.paga_path.html">ehrapy.plot.paga_path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot/ehrapy.plot.paga_compare.html">ehrapy.plot.paga_compare</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot/ehrapy.plot.rank_features_groups.html">ehrapy.plot.rank_features_groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot/ehrapy.plot.rank_features_groups_violin.html">ehrapy.plot.rank_features_groups_violin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot/ehrapy.plot.rank_features_groups_stacked_violin.html">ehrapy.plot.rank_features_groups_stacked_violin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot/ehrapy.plot.rank_features_groups_heatmap.html">ehrapy.plot.rank_features_groups_heatmap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot/ehrapy.plot.rank_features_groups_dotplot.html">ehrapy.plot.rank_features_groups_dotplot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot/ehrapy.plot.rank_features_groups_matrixplot.html">ehrapy.plot.rank_features_groups_matrixplot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot/ehrapy.plot.rank_features_groups_tracksplot.html">ehrapy.plot.rank_features_groups_tracksplot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools/ehrapy.plot.ols.html">ehrapy.plot.ols</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools/ehrapy.plot.kmf.html">ehrapy.plot.kmf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="anndata/ehrapy.anndata.df_to_anndata.html">ehrapy.anndata.df_to_anndata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="anndata/ehrapy.anndata.anndata_to_df.html">ehrapy.anndata.anndata_to_df</a></li>
+<li class="toctree-l2"><a class="reference internal" href="anndata/ehrapy.anndata.move_to_obs.html">ehrapy.anndata.move_to_obs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="anndata/ehrapy.anndata.move_to_x.html">ehrapy.anndata.move_to_x</a></li>
+<li class="toctree-l2"><a class="reference internal" href="anndata/ehrapy.anndata.type_overview.html">ehrapy.anndata.type_overview</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials/index.html">Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/notebooks/ehrapy_introduction.html">Introduction to ehrapy</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/notebooks/mimic_2_introduction.html">MIMIC-II IAC Introduction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/notebooks/mimic_2_introduction.html#Preprocessing">Preprocessing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/notebooks/mimic_2_introduction.html#PCA-&amp;-UMAP">PCA &amp; UMAP</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/notebooks/mimic_2_introduction.html#Batch-effect-check">Batch effect check</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/notebooks/mimic_2_introduction.html#Leiden-clustering">Leiden clustering</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/notebooks/mimic_2_introduction.html#Hospital-&amp;-ICU-statistics">Hospital &amp; ICU statistics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/notebooks/mimic_2_introduction.html#Death">Death</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/notebooks/mimic_2_introduction.html#Demographics">Demographics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/notebooks/mimic_2_introduction.html#Comorbidities">Comorbidities</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/notebooks/mimic_2_introduction.html#Initial-lab-measurements">Initial lab measurements</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/notebooks/mimic_2_introduction.html#Annotation">Annotation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/notebooks/mimic_2_introduction.html#Paga">Paga</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/notebooks/mimic_2_fate.html">MIMIC-II Patient Fate</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/notebooks/mimic_2_fate.html#Determining-patient-fate-using-a-ConnectivityKernel">Determining patient fate using a ConnectivityKernel</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/notebooks/mimic_2_fate.html#Determining-patient-fate-with-a-PseudotimeKernel">Determining patient fate with a PseudotimeKernel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/notebooks/mimic_2_survival_analysis.html">MIMIC-II Survival Analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/notebooks/diabetes_130.html">Diabetes 130 Vignette</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/notebooks/diabetes_130.html#Visual-Exploration">Visual Exploration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/notebooks/medcat.html">Extracting from free text with MedCAT</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/notebooks/medcat.html#Custom-MedCAT-object-of-ehrapy">Custom MedCAT object of ehrapy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/notebooks/medcat.html#Extracting-and-visualizing-all-disease-entities">Extracting and visualizing all disease entities</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributor Guide</a></li>
@@ -230,7 +330,8 @@
           </svg>
           <span>Back to top</span>
         </a>
-        <div class="content-icon-container"><div class="theme-toggle-container theme-toggle-content">
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
             <button class="theme-toggle">
               <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
               <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
@@ -245,7 +346,7 @@
         </div>
         <article role="main">
           <section class="tex2jax_ignore mathjax_ignore" id="usage">
-<h1>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">#</a></h1>
+<h1>Usage<a class="headerlink" href="#usage" title="Permalink to this heading">#</a></h1>
 <p>Import the ehrapy API as follows:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">ehrapy</span> <span class="k">as</span> <span class="nn">ep</span>
 </pre></div>
@@ -255,284 +356,580 @@
 </pre></div>
 </div>
 <section id="module-ehrapy">
-<span id="reading-and-writing"></span><h2>Reading and writing<a class="headerlink" href="#module-ehrapy" title="Permalink to this headline">#</a></h2>
-<div class="table-wrapper"><table class="autosummary longtable docutils align-default">
-<colgroup>
-<col style="width: 10%"/>
-<col style="width: 90%"/>
-</colgroup>
+<span id="reading-and-writing"></span><h2>Reading and writing<a class="headerlink" href="#module-ehrapy" title="Permalink to this heading">#</a></h2>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="io/ehrapy.io.read_csv.html#ehrapy.io.read_csv" title="ehrapy.io.read_csv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">io.read_csv</span></code></a></p></td>
+<td><p>Reads or downloads a desired directory of csv/tsv files or a single csv/tsv file.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="io/ehrapy.io.read_h5ad.html#ehrapy.io.read_h5ad" title="ehrapy.io.read_h5ad"><code class="xref py py-obj docutils literal notranslate"><span class="pre">io.read_h5ad</span></code></a></p></td>
+<td><p>Reads or downloads a desired directory of h5ad files or a single h5ad file.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="io/ehrapy.io.read_pdf.html#ehrapy.io.read_pdf" title="ehrapy.io.read_pdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">io.read_pdf</span></code></a></p></td>
+<td><p>Reads or downloads a desired directory of pdf files or a single pdf file.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="io/ehrapy.io.write.html#ehrapy.io.write" title="ehrapy.io.write"><code class="xref py py-obj docutils literal notranslate"><span class="pre">io.write</span></code></a></p></td>
+<td><p>Write <a class="reference external" href="https://anndata.readthedocs.io/en/stable/generated/anndata.AnnData.html#anndata.AnnData" title="(in anndata v0.8.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code></a> objects to file.</p></td>
+</tr>
 </tbody>
-</table></div>
+</table>
+</div>
 </section>
 <section id="data">
-<h2>Data<a class="headerlink" href="#data" title="Permalink to this headline">#</a></h2>
-<div class="table-wrapper"><table class="autosummary longtable docutils align-default">
-<colgroup>
-<col style="width: 10%"/>
-<col style="width: 90%"/>
-</colgroup>
+<h2>Data<a class="headerlink" href="#data" title="Permalink to this heading">#</a></h2>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="data/ehrapy.data.mimic_2.html#ehrapy.data.mimic_2" title="ehrapy.data.mimic_2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">data.mimic_2</span></code></a></p></td>
+<td><p>Loads the MIMIC-II dataset.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="data/ehrapy.data.mimic_3_demo.html#ehrapy.data.mimic_3_demo" title="ehrapy.data.mimic_3_demo"><code class="xref py py-obj docutils literal notranslate"><span class="pre">data.mimic_3_demo</span></code></a></p></td>
+<td><p>Loads the MIMIC-III demo dataset as a dictionary of Pandas DataFrames.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="data/ehrapy.data.diabetes_130.html#ehrapy.data.diabetes_130" title="ehrapy.data.diabetes_130"><code class="xref py py-obj docutils literal notranslate"><span class="pre">data.diabetes_130</span></code></a></p></td>
+<td><p>Loads the diabetes-130 dataset</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="data/ehrapy.data.heart_failure.html#ehrapy.data.heart_failure" title="ehrapy.data.heart_failure"><code class="xref py py-obj docutils literal notranslate"><span class="pre">data.heart_failure</span></code></a></p></td>
+<td><p>Loads the heart failure dataset.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="data/ehrapy.data.chronic_kidney_disease.html#ehrapy.data.chronic_kidney_disease" title="ehrapy.data.chronic_kidney_disease"><code class="xref py py-obj docutils literal notranslate"><span class="pre">data.chronic_kidney_disease</span></code></a></p></td>
+<td><p>Loads the Chronic Kidney Disease dataset</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="data/ehrapy.data.breast_tissue.html#ehrapy.data.breast_tissue" title="ehrapy.data.breast_tissue"><code class="xref py py-obj docutils literal notranslate"><span class="pre">data.breast_tissue</span></code></a></p></td>
+<td><p>Loads the Breast Tissue Data Set</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="data/ehrapy.data.cervical_cancer_risk_factors.html#ehrapy.data.cervical_cancer_risk_factors" title="ehrapy.data.cervical_cancer_risk_factors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">data.cervical_cancer_risk_factors</span></code></a></p></td>
+<td><p>Loads the Cervical cancer (Risk Factors) Data Set</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="data/ehrapy.data.dermatology.html#ehrapy.data.dermatology" title="ehrapy.data.dermatology"><code class="xref py py-obj docutils literal notranslate"><span class="pre">data.dermatology</span></code></a></p></td>
+<td><p>Loads the Dermatology Data Set</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="data/ehrapy.data.echocardiogram.html#ehrapy.data.echocardiogram" title="ehrapy.data.echocardiogram"><code class="xref py py-obj docutils literal notranslate"><span class="pre">data.echocardiogram</span></code></a></p></td>
+<td><p>Loads the Echocardiogram Data Set</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="data/ehrapy.data.heart_disease.html#ehrapy.data.heart_disease" title="ehrapy.data.heart_disease"><code class="xref py py-obj docutils literal notranslate"><span class="pre">data.heart_disease</span></code></a></p></td>
+<td><p>Loads the Heart Disease Data Set</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="data/ehrapy.data.hepatitis.html#ehrapy.data.hepatitis" title="ehrapy.data.hepatitis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">data.hepatitis</span></code></a></p></td>
+<td><p>Loads the Hepatitis Data Set</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="data/ehrapy.data.statlog_heart.html#ehrapy.data.statlog_heart" title="ehrapy.data.statlog_heart"><code class="xref py py-obj docutils literal notranslate"><span class="pre">data.statlog_heart</span></code></a></p></td>
+<td><p>Loads the Statlog (Heart) Data Set</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="data/ehrapy.data.thyroid.html#ehrapy.data.thyroid" title="ehrapy.data.thyroid"><code class="xref py py-obj docutils literal notranslate"><span class="pre">data.thyroid</span></code></a></p></td>
+<td><p>Loads the Thyroid Data Set</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="data/ehrapy.data.breast_cancer_coimbra.html#ehrapy.data.breast_cancer_coimbra" title="ehrapy.data.breast_cancer_coimbra"><code class="xref py py-obj docutils literal notranslate"><span class="pre">data.breast_cancer_coimbra</span></code></a></p></td>
+<td><p>Loads the Breast Cancer Coimbra Data Set</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="data/ehrapy.data.parkinson_dataset_with_replicated_acoustic_features.html#ehrapy.data.parkinson_dataset_with_replicated_acoustic_features" title="ehrapy.data.parkinson_dataset_with_replicated_acoustic_features"><code class="xref py py-obj docutils literal notranslate"><span class="pre">data.parkinson_dataset_with_replicated_acoustic_features</span></code></a></p></td>
+<td><p>Loads the Parkinson Dataset with replicated acoustic features Data Set</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="data/ehrapy.data.parkinsons.html#ehrapy.data.parkinsons" title="ehrapy.data.parkinsons"><code class="xref py py-obj docutils literal notranslate"><span class="pre">data.parkinsons</span></code></a></p></td>
+<td><p>Loads the Parkinsons Data Set</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="data/ehrapy.data.parkinsons_disease_classification.html#ehrapy.data.parkinsons_disease_classification" title="ehrapy.data.parkinsons_disease_classification"><code class="xref py py-obj docutils literal notranslate"><span class="pre">data.parkinsons_disease_classification</span></code></a></p></td>
+<td><p>Loads the Parkinson's Disease Classification Data Set</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="data/ehrapy.data.parkinsons_telemonitoring.html#ehrapy.data.parkinsons_telemonitoring" title="ehrapy.data.parkinsons_telemonitoring"><code class="xref py py-obj docutils literal notranslate"><span class="pre">data.parkinsons_telemonitoring</span></code></a></p></td>
+<td><p>Loads the Parkinsons Telemonitoring Data Set</p></td>
+</tr>
 </tbody>
-</table></div>
+</table>
+</div>
 </section>
 <section id="preprocessing">
-<h2>Preprocessing<a class="headerlink" href="#preprocessing" title="Permalink to this headline">#</a></h2>
+<h2>Preprocessing<a class="headerlink" href="#preprocessing" title="Permalink to this heading">#</a></h2>
 <p>Any transformation of the data matrix that is not a tool.
 Other than tools, preprocessing steps usually don’t return an easily interpretable annotation, but perform a basic transformation on the data matrix.</p>
 <section id="basic-preprocessing">
-<h3>Basic preprocessing<a class="headerlink" href="#basic-preprocessing" title="Permalink to this headline">#</a></h3>
-<div class="table-wrapper"><table class="autosummary longtable docutils align-default">
-<colgroup>
-<col style="width: 10%"/>
-<col style="width: 90%"/>
-</colgroup>
+<h3>Basic preprocessing<a class="headerlink" href="#basic-preprocessing" title="Permalink to this heading">#</a></h3>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="preprocessing/ehrapy.preprocessing.pca.html#ehrapy.preprocessing.pca" title="ehrapy.preprocessing.pca"><code class="xref py py-obj docutils literal notranslate"><span class="pre">preprocessing.pca</span></code></a></p></td>
+<td><p>Computes a principal component analysis.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="preprocessing/ehrapy.preprocessing.regress_out.html#ehrapy.preprocessing.regress_out" title="ehrapy.preprocessing.regress_out"><code class="xref py py-obj docutils literal notranslate"><span class="pre">preprocessing.regress_out</span></code></a></p></td>
+<td><p>Regress out (mostly) unwanted sources of variation.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="preprocessing/ehrapy.preprocessing.subsample.html#ehrapy.preprocessing.subsample" title="ehrapy.preprocessing.subsample"><code class="xref py py-obj docutils literal notranslate"><span class="pre">preprocessing.subsample</span></code></a></p></td>
+<td><p>Subsample to a fraction of the number of observations.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="preprocessing/ehrapy.preprocessing.highly_variable_features.html#ehrapy.preprocessing.highly_variable_features" title="ehrapy.preprocessing.highly_variable_features"><code class="xref py py-obj docutils literal notranslate"><span class="pre">preprocessing.highly_variable_features</span></code></a></p></td>
+<td><p>Annotate highly variable features.</p></td>
+</tr>
 </tbody>
-</table></div>
+</table>
+</div>
 </section>
 <section id="quality-control">
-<h3>Quality control<a class="headerlink" href="#quality-control" title="Permalink to this headline">#</a></h3>
-<div class="table-wrapper"><table class="autosummary longtable docutils align-default">
-<colgroup>
-<col style="width: 10%"/>
-<col style="width: 90%"/>
-</colgroup>
+<h3>Quality control<a class="headerlink" href="#quality-control" title="Permalink to this heading">#</a></h3>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="preprocessing/ehrapy.preprocessing.qc_metrics.html#ehrapy.preprocessing.qc_metrics" title="ehrapy.preprocessing.qc_metrics"><code class="xref py py-obj docutils literal notranslate"><span class="pre">preprocessing.qc_metrics</span></code></a></p></td>
+<td><p>Calculates various quality control metrics.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="preprocessing/ehrapy.preprocessing.qc_lab_measurements.html#ehrapy.preprocessing.qc_lab_measurements" title="ehrapy.preprocessing.qc_lab_measurements"><code class="xref py py-obj docutils literal notranslate"><span class="pre">preprocessing.qc_lab_measurements</span></code></a></p></td>
+<td><p>Examines lab measurements for reference ranges and outliers.</p></td>
+</tr>
 </tbody>
-</table></div>
+</table>
+</div>
 </section>
 <section id="imputation">
-<h3>Imputation<a class="headerlink" href="#imputation" title="Permalink to this headline">#</a></h3>
-<div class="table-wrapper"><table class="autosummary longtable docutils align-default">
-<colgroup>
-<col style="width: 10%"/>
-<col style="width: 90%"/>
-</colgroup>
+<h3>Imputation<a class="headerlink" href="#imputation" title="Permalink to this heading">#</a></h3>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="imputation/ehrapy.preprocessing.explicit_impute.html#ehrapy.preprocessing.explicit_impute" title="ehrapy.preprocessing.explicit_impute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">preprocessing.explicit_impute</span></code></a></p></td>
+<td><p>Replaces all missing values in all or the specified columns with the passed value</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="imputation/ehrapy.preprocessing.simple_impute.html#ehrapy.preprocessing.simple_impute" title="ehrapy.preprocessing.simple_impute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">preprocessing.simple_impute</span></code></a></p></td>
+<td><p>Impute AnnData object using mean/median/most frequent imputation.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="imputation/ehrapy.preprocessing.knn_impute.html#ehrapy.preprocessing.knn_impute" title="ehrapy.preprocessing.knn_impute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">preprocessing.knn_impute</span></code></a></p></td>
+<td><p>Impute data using the KNN-Imputer.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="imputation/ehrapy.preprocessing.miss_forest_impute.html#ehrapy.preprocessing.miss_forest_impute" title="ehrapy.preprocessing.miss_forest_impute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">preprocessing.miss_forest_impute</span></code></a></p></td>
+<td><p>Impute data using the MissForest strategy.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="imputation/ehrapy.preprocessing.soft_impute.html#ehrapy.preprocessing.soft_impute" title="ehrapy.preprocessing.soft_impute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">preprocessing.soft_impute</span></code></a></p></td>
+<td><p>Impute data using the SoftImpute.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="imputation/ehrapy.preprocessing.iterative_svd_impute.html#ehrapy.preprocessing.iterative_svd_impute" title="ehrapy.preprocessing.iterative_svd_impute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">preprocessing.iterative_svd_impute</span></code></a></p></td>
+<td><p>Impute data using the IterativeSVD.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="imputation/ehrapy.preprocessing.matrix_factorization_impute.html#ehrapy.preprocessing.matrix_factorization_impute" title="ehrapy.preprocessing.matrix_factorization_impute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">preprocessing.matrix_factorization_impute</span></code></a></p></td>
+<td><p>Impute data using the MatrixFactorization.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="imputation/ehrapy.preprocessing.nuclear_norm_minimization_impute.html#ehrapy.preprocessing.nuclear_norm_minimization_impute" title="ehrapy.preprocessing.nuclear_norm_minimization_impute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">preprocessing.nuclear_norm_minimization_impute</span></code></a></p></td>
+<td><p>Impute data using the NuclearNormMinimization.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="imputation/ehrapy.preprocessing.mice_forest_impute.html#ehrapy.preprocessing.mice_forest_impute" title="ehrapy.preprocessing.mice_forest_impute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">preprocessing.mice_forest_impute</span></code></a></p></td>
+<td><p>Impute data using the miceforest.</p></td>
+</tr>
 </tbody>
-</table></div>
+</table>
+</div>
 </section>
 <section id="encoding">
-<h3>Encoding<a class="headerlink" href="#encoding" title="Permalink to this headline">#</a></h3>
-<div class="table-wrapper"><table class="autosummary longtable docutils align-default">
-<colgroup>
-<col style="width: 10%"/>
-<col style="width: 90%"/>
-</colgroup>
+<h3>Encoding<a class="headerlink" href="#encoding" title="Permalink to this heading">#</a></h3>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="preprocessing/ehrapy.preprocessing.encode.html#ehrapy.preprocessing.encode" title="ehrapy.preprocessing.encode"><code class="xref py py-obj docutils literal notranslate"><span class="pre">preprocessing.encode</span></code></a></p></td>
+<td><p>Encode the initial read <a class="reference external" href="https://anndata.readthedocs.io/en/stable/generated/anndata.AnnData.html#anndata.AnnData" title="(in anndata v0.8.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code></a> or <code class="xref py py-class docutils literal notranslate"><span class="pre">MuData</span></code> object.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="preprocessing/ehrapy.preprocessing.undo_encoding.html#ehrapy.preprocessing.undo_encoding" title="ehrapy.preprocessing.undo_encoding"><code class="xref py py-obj docutils literal notranslate"><span class="pre">preprocessing.undo_encoding</span></code></a></p></td>
+<td><p>Undo the current encodings applied to all columns in X.</p></td>
+</tr>
 </tbody>
-</table></div>
+</table>
+</div>
 </section>
 <section id="normalization">
-<h3>Normalization<a class="headerlink" href="#normalization" title="Permalink to this headline">#</a></h3>
-<div class="table-wrapper"><table class="autosummary longtable docutils align-default">
-<colgroup>
-<col style="width: 10%"/>
-<col style="width: 90%"/>
-</colgroup>
+<h3>Normalization<a class="headerlink" href="#normalization" title="Permalink to this heading">#</a></h3>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="preprocessing/ehrapy.preprocessing.log_norm.html#ehrapy.preprocessing.log_norm" title="ehrapy.preprocessing.log_norm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">preprocessing.log_norm</span></code></a></p></td>
+<td><p>Apply log normalization.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="preprocessing/ehrapy.preprocessing.maxabs_norm.html#ehrapy.preprocessing.maxabs_norm" title="ehrapy.preprocessing.maxabs_norm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">preprocessing.maxabs_norm</span></code></a></p></td>
+<td><p>Apply max-abs normalization.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="preprocessing/ehrapy.preprocessing.minmax_norm.html#ehrapy.preprocessing.minmax_norm" title="ehrapy.preprocessing.minmax_norm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">preprocessing.minmax_norm</span></code></a></p></td>
+<td><p>Apply min-max normalization.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="preprocessing/ehrapy.preprocessing.power_norm.html#ehrapy.preprocessing.power_norm" title="ehrapy.preprocessing.power_norm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">preprocessing.power_norm</span></code></a></p></td>
+<td><p>Apply power transformation normalization.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="preprocessing/ehrapy.preprocessing.quantile_norm.html#ehrapy.preprocessing.quantile_norm" title="ehrapy.preprocessing.quantile_norm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">preprocessing.quantile_norm</span></code></a></p></td>
+<td><p>Apply quantile normalization.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="preprocessing/ehrapy.preprocessing.robust_scale_norm.html#ehrapy.preprocessing.robust_scale_norm" title="ehrapy.preprocessing.robust_scale_norm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">preprocessing.robust_scale_norm</span></code></a></p></td>
+<td><p>Apply robust scaling normalization.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="preprocessing/ehrapy.preprocessing.scale_norm.html#ehrapy.preprocessing.scale_norm" title="ehrapy.preprocessing.scale_norm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">preprocessing.scale_norm</span></code></a></p></td>
+<td><p>Apply scaling normalization.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="preprocessing/ehrapy.preprocessing.sqrt_norm.html#ehrapy.preprocessing.sqrt_norm" title="ehrapy.preprocessing.sqrt_norm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">preprocessing.sqrt_norm</span></code></a></p></td>
+<td><p>Apply square root normalization.</p></td>
+</tr>
 </tbody>
-</table></div>
+</table>
+</div>
 </section>
 <section id="dataset-shift-correction">
-<h3>Dataset Shift Correction<a class="headerlink" href="#dataset-shift-correction" title="Permalink to this headline">#</a></h3>
+<h3>Dataset Shift Correction<a class="headerlink" href="#dataset-shift-correction" title="Permalink to this heading">#</a></h3>
 <p>Partially overlaps with dataset integration. Note that a simple batch correction method is available via <code class="docutils literal notranslate"><span class="pre">pp.regress_out()</span></code>.</p>
-<div class="table-wrapper"><table class="autosummary longtable docutils align-default">
-<colgroup>
-<col style="width: 10%"/>
-<col style="width: 90%"/>
-</colgroup>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="preprocessing/ehrapy.preprocessing.combat.html#ehrapy.preprocessing.combat" title="ehrapy.preprocessing.combat"><code class="xref py py-obj docutils literal notranslate"><span class="pre">preprocessing.combat</span></code></a></p></td>
+<td><p>ComBat function for batch effect correction <a class="reference internal" href="../references.html#johnson07" id="id1"><span>[Johnson07]</span></a> <a class="reference internal" href="../references.html#leek12" id="id2"><span>[Leek12]</span></a> <a class="reference internal" href="../references.html#pedersen12" id="id3"><span>[Pedersen12]</span></a>.</p></td>
+</tr>
 </tbody>
-</table></div>
+</table>
+</div>
 </section>
 <section id="neighbors">
-<h3>Neighbors<a class="headerlink" href="#neighbors" title="Permalink to this headline">#</a></h3>
-<div class="table-wrapper"><table class="autosummary longtable docutils align-default">
-<colgroup>
-<col style="width: 10%"/>
-<col style="width: 90%"/>
-</colgroup>
+<h3>Neighbors<a class="headerlink" href="#neighbors" title="Permalink to this heading">#</a></h3>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="preprocessing/ehrapy.preprocessing.neighbors.html#ehrapy.preprocessing.neighbors" title="ehrapy.preprocessing.neighbors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">preprocessing.neighbors</span></code></a></p></td>
+<td><p>Compute a neighborhood graph of observations <a class="reference internal" href="../references.html#mcinnes18" id="id1"><span>[McInnes18]</span></a>.</p></td>
+</tr>
 </tbody>
-</table></div>
+</table>
+</div>
 </section>
 </section>
 <section id="tools">
-<h2>Tools<a class="headerlink" href="#tools" title="Permalink to this headline">#</a></h2>
+<h2>Tools<a class="headerlink" href="#tools" title="Permalink to this heading">#</a></h2>
 <p>Any transformation of the data matrix that is not preprocessing.
 In contrast to a preprocessing function, a tool usually adds an easily interpretable annotation to the data matrix, which can then be visualized with a corresponding plotting function.</p>
 <section id="embeddings">
-<h3>Embeddings<a class="headerlink" href="#embeddings" title="Permalink to this headline">#</a></h3>
-<div class="table-wrapper"><table class="autosummary longtable docutils align-default">
-<colgroup>
-<col style="width: 10%"/>
-<col style="width: 90%"/>
-</colgroup>
+<h3>Embeddings<a class="headerlink" href="#embeddings" title="Permalink to this heading">#</a></h3>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="tools/ehrapy.tools.pca.html#ehrapy.tools.pca" title="ehrapy.tools.pca"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tools.pca</span></code></a></p></td>
+<td><p>Computes a principal component analysis.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tools/ehrapy.tools.tsne.html#ehrapy.tools.tsne" title="ehrapy.tools.tsne"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tools.tsne</span></code></a></p></td>
+<td><p>Calculates t-SNE <a class="reference internal" href="../references.html#maaten08" id="id1"><span>[Maaten08]</span></a> <a class="reference internal" href="../references.html#amir13" id="id2"><span>[Amir13]</span></a> <a class="reference internal" href="../references.html#pedregosa11" id="id3"><span>[Pedregosa11]</span></a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tools/ehrapy.tools.umap.html#ehrapy.tools.umap" title="ehrapy.tools.umap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tools.umap</span></code></a></p></td>
+<td><p>Embed the neighborhood graph using UMAP <a class="reference internal" href="../references.html#mcinnes18" id="id4"><span>[McInnes18]</span></a>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tools/ehrapy.tools.draw_graph.html#ehrapy.tools.draw_graph" title="ehrapy.tools.draw_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tools.draw_graph</span></code></a></p></td>
+<td><p>Force-directed graph drawing <a class="reference internal" href="../references.html#islam11" id="id5"><span>[Islam11]</span></a> <a class="reference internal" href="../references.html#jacomy14" id="id6"><span>[Jacomy14]</span></a> <a class="reference internal" href="../references.html#chippada18" id="id7"><span>[Chippada18]</span></a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tools/ehrapy.tools.diffmap.html#ehrapy.tools.diffmap" title="ehrapy.tools.diffmap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tools.diffmap</span></code></a></p></td>
+<td><p>Diffusion Maps <a class="reference internal" href="../references.html#coifman05" id="id8"><span>[Coifman05]</span></a> <a class="reference internal" href="../references.html#haghverdi15" id="id9"><span>[Haghverdi15]</span></a> <a class="reference internal" href="../references.html#wolf18" id="id10"><span>[Wolf18]</span></a>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tools/ehrapy.tools.embedding_density.html#ehrapy.tools.embedding_density" title="ehrapy.tools.embedding_density"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tools.embedding_density</span></code></a></p></td>
+<td><p>Calculate the density of observation in an embedding (per condition).</p></td>
+</tr>
 </tbody>
-</table></div>
+</table>
+</div>
 </section>
 <section id="clustering-and-trajectory-inference">
-<h3>Clustering and trajectory inference<a class="headerlink" href="#clustering-and-trajectory-inference" title="Permalink to this headline">#</a></h3>
-<div class="table-wrapper"><table class="autosummary longtable docutils align-default">
-<colgroup>
-<col style="width: 10%"/>
-<col style="width: 90%"/>
-</colgroup>
+<h3>Clustering and trajectory inference<a class="headerlink" href="#clustering-and-trajectory-inference" title="Permalink to this heading">#</a></h3>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="tools/ehrapy.tools.leiden.html#ehrapy.tools.leiden" title="ehrapy.tools.leiden"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tools.leiden</span></code></a></p></td>
+<td><p>Cluster observations into subgroups <a class="reference internal" href="../references.html#traag18" id="id1"><span>[Traag18]</span></a>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tools/ehrapy.tools.louvain.html#ehrapy.tools.louvain" title="ehrapy.tools.louvain"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tools.louvain</span></code></a></p></td>
+<td><p>Cluster observations into subgroups <a class="reference internal" href="../references.html#blondel08" id="id2"><span>[Blondel08]</span></a> <a class="reference internal" href="../references.html#levine15" id="id3"><span>[Levine15]</span></a> <a class="reference internal" href="../references.html#traag17" id="id4"><span>[Traag17]</span></a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tools/ehrapy.tools.dendrogram.html#ehrapy.tools.dendrogram" title="ehrapy.tools.dendrogram"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tools.dendrogram</span></code></a></p></td>
+<td><p>Computes a hierarchical clustering for the given <cite>groupby</cite> categories.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tools/ehrapy.tools.dpt.html#ehrapy.tools.dpt" title="ehrapy.tools.dpt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tools.dpt</span></code></a></p></td>
+<td><p>Infer progression of observations through geodesic distance along the graph <a class="reference internal" href="../references.html#haghverdi16" id="id5"><span>[Haghverdi16]</span></a> <a class="reference internal" href="../references.html#wolf19" id="id6"><span>[Wolf19]</span></a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tools/ehrapy.tools.paga.html#ehrapy.tools.paga" title="ehrapy.tools.paga"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tools.paga</span></code></a></p></td>
+<td><p>Mapping out the coarse-grained connectivity structures of complex manifolds <a class="reference internal" href="../references.html#wolf19" id="id7"><span>[Wolf19]</span></a>.</p></td>
+</tr>
 </tbody>
-</table></div>
+</table>
+</div>
 </section>
 <section id="group-comparison">
-<h3>Group comparison<a class="headerlink" href="#group-comparison" title="Permalink to this headline">#</a></h3>
-<div class="table-wrapper"><table class="autosummary longtable docutils align-default">
-<colgroup>
-<col style="width: 10%"/>
-<col style="width: 90%"/>
-</colgroup>
+<h3>Group comparison<a class="headerlink" href="#group-comparison" title="Permalink to this heading">#</a></h3>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="tools/ehrapy.tools.rank_features_groups.html#ehrapy.tools.rank_features_groups" title="ehrapy.tools.rank_features_groups"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tools.rank_features_groups</span></code></a></p></td>
+<td><p>Rank features for characterizing groups.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tools/ehrapy.tools.filter_rank_features_groups.html#ehrapy.tools.filter_rank_features_groups" title="ehrapy.tools.filter_rank_features_groups"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tools.filter_rank_features_groups</span></code></a></p></td>
+<td><p>Filters out features based on fold change and fraction of features containing the feature within and outside the <cite>groupby</cite> categories.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tools/ehrapy.tools.marker_feature_overlap.html#ehrapy.tools.marker_feature_overlap" title="ehrapy.tools.marker_feature_overlap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tools.marker_feature_overlap</span></code></a></p></td>
+<td><p>Calculate an overlap score between data-deriven features and provided marker features.</p></td>
+</tr>
 </tbody>
-</table></div>
+</table>
+</div>
 </section>
 <section id="dataset-integration">
-<h3>Dataset integration<a class="headerlink" href="#dataset-integration" title="Permalink to this headline">#</a></h3>
-<div class="table-wrapper"><table class="autosummary longtable docutils align-default">
-<colgroup>
-<col style="width: 10%"/>
-<col style="width: 90%"/>
-</colgroup>
+<h3>Dataset integration<a class="headerlink" href="#dataset-integration" title="Permalink to this heading">#</a></h3>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="tools/ehrapy.tools.ingest.html#ehrapy.tools.ingest" title="ehrapy.tools.ingest"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tools.ingest</span></code></a></p></td>
+<td><p>Map labels and embeddings from reference data to new data.</p></td>
+</tr>
 </tbody>
-</table></div>
+</table>
+</div>
 </section>
 <section id="natural-language-processing">
-<h3>Natural language processing<a class="headerlink" href="#natural-language-processing" title="Permalink to this headline">#</a></h3>
-<div class="table-wrapper"><table class="autosummary longtable docutils align-default">
-<colgroup>
-<col style="width: 10%"/>
-<col style="width: 90%"/>
-</colgroup>
+<h3>Natural language processing<a class="headerlink" href="#natural-language-processing" title="Permalink to this heading">#</a></h3>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="tools/ehrapy.tools.Translator.html#ehrapy.tools.Translator" title="ehrapy.tools.Translator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tools.Translator</span></code></a></p></td>
+<td><p>Class providing an interface to all translation functions.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tools/ehrapy.tools.HPOMapper.html#ehrapy.tools.HPOMapper" title="ehrapy.tools.HPOMapper"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tools.HPOMapper</span></code></a></p></td>
+<td><p>Wrapper class for PyHPO.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tools/ehrapy.tools.MedCAT.html#ehrapy.tools.MedCAT" title="ehrapy.tools.MedCAT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tools.MedCAT</span></code></a></p></td>
+<td><p>Wrapper class for Medcat.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tools/ehrapy.tools.mc.run_unsupervised_training.html#ehrapy.tools.mc.run_unsupervised_training" title="ehrapy.tools.mc.run_unsupervised_training"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tools.mc.run_unsupervised_training</span></code></a></p></td>
+<td><p>Performs MedCAT unsupervised training on a provided text column.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tools/ehrapy.tools.mc.annotate_text.html#ehrapy.tools.mc.annotate_text" title="ehrapy.tools.mc.annotate_text"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tools.mc.annotate_text</span></code></a></p></td>
+<td><p>Annotate the original free text data.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tools/ehrapy.tools.mc.get_annotation_overview.html#ehrapy.tools.mc.get_annotation_overview" title="ehrapy.tools.mc.get_annotation_overview"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tools.mc.get_annotation_overview</span></code></a></p></td>
+<td><p>Provide an overview for the annotation results.</p></td>
+</tr>
 </tbody>
-</table></div>
+</table>
+</div>
 </section>
 <section id="data-analysis-linear-regression-logistic-regression">
-<h3>Data Analysis (Linear Regression, Logistic Regression)<a class="headerlink" href="#data-analysis-linear-regression-logistic-regression" title="Permalink to this headline">#</a></h3>
-<div class="table-wrapper"><table class="autosummary longtable docutils align-default">
-<colgroup>
-<col style="width: 10%"/>
-<col style="width: 90%"/>
-</colgroup>
+<h3>Data Analysis (Linear Regression, Logistic Regression)<a class="headerlink" href="#data-analysis-linear-regression-logistic-regression" title="Permalink to this heading">#</a></h3>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="tools/ehrapy.tools.ols.html#ehrapy.tools.ols" title="ehrapy.tools.ols"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tools.ols</span></code></a></p></td>
+<td><p>Create a Ordinary Least Squares (OLS) Model from a formula and AnnData.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tools/ehrapy.tools.glm.html#ehrapy.tools.glm" title="ehrapy.tools.glm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tools.glm</span></code></a></p></td>
+<td><p>Create a Generalized Linear Model (GLM) from a formula, a distribution, and AnnData.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tools/ehrapy.tools.kmf.html#ehrapy.tools.kmf" title="ehrapy.tools.kmf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tools.kmf</span></code></a></p></td>
+<td><p>Fit the Kaplan-Meier estimate for the survival function.</p></td>
+</tr>
 </tbody>
-</table></div>
+</table>
+</div>
 </section>
 </section>
 <section id="plotting">
-<h2>Plotting<a class="headerlink" href="#plotting" title="Permalink to this headline">#</a></h2>
+<h2>Plotting<a class="headerlink" href="#plotting" title="Permalink to this heading">#</a></h2>
 <p>The plotting module ehrapy.pl.* largely parallels the tl.* and a few of the pp.* functions.
 For most tools and for some preprocessing functions, you will find a plotting function with the same name.</p>
 <section id="generic">
-<h3>Generic<a class="headerlink" href="#generic" title="Permalink to this headline">#</a></h3>
-<div class="table-wrapper"><table class="autosummary longtable docutils align-default">
-<colgroup>
-<col style="width: 10%"/>
-<col style="width: 90%"/>
-</colgroup>
+<h3>Generic<a class="headerlink" href="#generic" title="Permalink to this heading">#</a></h3>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="plot/ehrapy.plot.scatter.html#ehrapy.plot.scatter" title="ehrapy.plot.scatter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot.scatter</span></code></a></p></td>
+<td><p>Scatter plot along observations or variables axes.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="plot/ehrapy.plot.heatmap.html#ehrapy.plot.heatmap" title="ehrapy.plot.heatmap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot.heatmap</span></code></a></p></td>
+<td><p>Heatmap of the feature values.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="plot/ehrapy.plot.dotplot.html#ehrapy.plot.dotplot" title="ehrapy.plot.dotplot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot.dotplot</span></code></a></p></td>
+<td><p>Makes a <em>dot plot</em> of the count values of <cite>var_names</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="plot/ehrapy.plot.tracksplot.html#ehrapy.plot.tracksplot" title="ehrapy.plot.tracksplot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot.tracksplot</span></code></a></p></td>
+<td><p>Plots a filled line plot.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="plot/ehrapy.plot.violin.html#ehrapy.plot.violin" title="ehrapy.plot.violin"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot.violin</span></code></a></p></td>
+<td><p>Violin plot.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="plot/ehrapy.plot.stacked_violin.html#ehrapy.plot.stacked_violin" title="ehrapy.plot.stacked_violin"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot.stacked_violin</span></code></a></p></td>
+<td><p>Stacked violin plots.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="plot/ehrapy.plot.matrixplot.html#ehrapy.plot.matrixplot" title="ehrapy.plot.matrixplot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot.matrixplot</span></code></a></p></td>
+<td><p>Creates a heatmap of the mean count per group of each var_names.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="plot/ehrapy.plot.clustermap.html#ehrapy.plot.clustermap" title="ehrapy.plot.clustermap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot.clustermap</span></code></a></p></td>
+<td><p>Hierarchically-clustered heatmap.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="plot/ehrapy.plot.ranking.html#ehrapy.plot.ranking" title="ehrapy.plot.ranking"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot.ranking</span></code></a></p></td>
+<td><p>Plot rankings.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="plot/ehrapy.plot.dendrogram.html#ehrapy.plot.dendrogram" title="ehrapy.plot.dendrogram"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot.dendrogram</span></code></a></p></td>
+<td><p>Plots a dendrogram of the categories defined in <cite>groupby</cite>.</p></td>
+</tr>
 </tbody>
-</table></div>
+</table>
+</div>
 </section>
 <section id="id1">
-<h3>Quality Control<a class="headerlink" href="#id1" title="Permalink to this headline">#</a></h3>
-<div class="table-wrapper"><table class="autosummary longtable docutils align-default">
-<colgroup>
-<col style="width: 10%"/>
-<col style="width: 90%"/>
-</colgroup>
+<h3>Quality Control<a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h3>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="plot/ehrapy.plot.qc_metrics.html#ehrapy.plot.qc_metrics" title="ehrapy.plot.qc_metrics"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot.qc_metrics</span></code></a></p></td>
+<td><p>Plots the calculated quality control metrics for var of adata.</p></td>
+</tr>
 </tbody>
-</table></div>
+</table>
+</div>
 </section>
 <section id="classes">
-<h3>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">#</a></h3>
+<h3>Classes<a class="headerlink" href="#classes" title="Permalink to this heading">#</a></h3>
 <p>Please refer to <a class="reference external" href="https://scanpy.readthedocs.io/en/stable/api.html#classes">Scanpy’s plotting classes documentation</a>.</p>
 </section>
 <section id="id2">
-<h3>Tools<a class="headerlink" href="#id2" title="Permalink to this headline">#</a></h3>
+<h3>Tools<a class="headerlink" href="#id2" title="Permalink to this heading">#</a></h3>
 <p>Methods that extract and visualize tool-specific annotation in an AnnData object. For any method in module <code class="docutils literal notranslate"><span class="pre">tl</span></code>, there is a method with the same name in <code class="docutils literal notranslate"><span class="pre">pl</span></code>.</p>
-<div class="table-wrapper"><table class="autosummary longtable docutils align-default">
-<colgroup>
-<col style="width: 10%"/>
-<col style="width: 90%"/>
-</colgroup>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="plot/ehrapy.plot.pca.html#ehrapy.plot.pca" title="ehrapy.plot.pca"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot.pca</span></code></a></p></td>
+<td><p>Scatter plot in PCA coordinates.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="plot/ehrapy.plot.pca_loadings.html#ehrapy.plot.pca_loadings" title="ehrapy.plot.pca_loadings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot.pca_loadings</span></code></a></p></td>
+<td><p>Rank features according to contributions to PCs.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="plot/ehrapy.plot.pca_variance_ratio.html#ehrapy.plot.pca_variance_ratio" title="ehrapy.plot.pca_variance_ratio"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot.pca_variance_ratio</span></code></a></p></td>
+<td><p>Plot the variance ratio.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="plot/ehrapy.plot.pca_overview.html#ehrapy.plot.pca_overview" title="ehrapy.plot.pca_overview"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot.pca_overview</span></code></a></p></td>
+<td><p>Plot PCA results.</p></td>
+</tr>
 </tbody>
-</table></div>
+</table>
+</div>
 </section>
 <section id="id3">
-<h3>Embeddings<a class="headerlink" href="#id3" title="Permalink to this headline">#</a></h3>
-<div class="table-wrapper"><table class="autosummary longtable docutils align-default">
-<colgroup>
-<col style="width: 10%"/>
-<col style="width: 90%"/>
-</colgroup>
+<h3>Embeddings<a class="headerlink" href="#id3" title="Permalink to this heading">#</a></h3>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="plot/ehrapy.plot.tsne.html#ehrapy.plot.tsne" title="ehrapy.plot.tsne"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot.tsne</span></code></a></p></td>
+<td><p>Scatter plot in tSNE basis.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="plot/ehrapy.plot.umap.html#ehrapy.plot.umap" title="ehrapy.plot.umap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot.umap</span></code></a></p></td>
+<td><p>Scatter plot in UMAP basis.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="plot/ehrapy.plot.diffmap.html#ehrapy.plot.diffmap" title="ehrapy.plot.diffmap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot.diffmap</span></code></a></p></td>
+<td><p>Scatter plot in Diffusion Map basis.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="plot/ehrapy.plot.draw_graph.html#ehrapy.plot.draw_graph" title="ehrapy.plot.draw_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot.draw_graph</span></code></a></p></td>
+<td><p>Scatter plot in graph-drawing basis.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="plot/ehrapy.plot.spatial.html#ehrapy.plot.spatial" title="ehrapy.plot.spatial"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot.spatial</span></code></a></p></td>
+<td><p>Scatter plot in spatial coordinates.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="plot/ehrapy.plot.embedding.html#ehrapy.plot.embedding" title="ehrapy.plot.embedding"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot.embedding</span></code></a></p></td>
+<td><p>Scatter plot for user specified embedding basis (e.g.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="plot/ehrapy.plot.embedding_density.html#ehrapy.plot.embedding_density" title="ehrapy.plot.embedding_density"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot.embedding_density</span></code></a></p></td>
+<td><p>Plot the density of observations in an embedding (per condition).</p></td>
+</tr>
 </tbody>
-</table></div>
+</table>
+</div>
 </section>
 <section id="branching-trajectories-and-pseudotime-clustering">
-<h3>Branching trajectories and pseudotime, clustering<a class="headerlink" href="#branching-trajectories-and-pseudotime-clustering" title="Permalink to this headline">#</a></h3>
+<h3>Branching trajectories and pseudotime, clustering<a class="headerlink" href="#branching-trajectories-and-pseudotime-clustering" title="Permalink to this heading">#</a></h3>
 <p>Visualize clusters using one of the embedding methods passing color=’leiden’.</p>
-<div class="table-wrapper"><table class="autosummary longtable docutils align-default">
-<colgroup>
-<col style="width: 10%"/>
-<col style="width: 90%"/>
-</colgroup>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="plot/ehrapy.plot.dpt_groups_pseudotime.html#ehrapy.plot.dpt_groups_pseudotime" title="ehrapy.plot.dpt_groups_pseudotime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot.dpt_groups_pseudotime</span></code></a></p></td>
+<td><p>Plot groups and pseudotime.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="plot/ehrapy.plot.dpt_timeseries.html#ehrapy.plot.dpt_timeseries" title="ehrapy.plot.dpt_timeseries"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot.dpt_timeseries</span></code></a></p></td>
+<td><p>Heatmap of pseudotime series.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="plot/ehrapy.plot.paga.html#ehrapy.plot.paga" title="ehrapy.plot.paga"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot.paga</span></code></a></p></td>
+<td><p>Plot the PAGA graph through thresholding low-connectivity edges.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="plot/ehrapy.plot.paga_path.html#ehrapy.plot.paga_path" title="ehrapy.plot.paga_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot.paga_path</span></code></a></p></td>
+<td><p>Feature changes along paths in the abstracted graph.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="plot/ehrapy.plot.paga_compare.html#ehrapy.plot.paga_compare" title="ehrapy.plot.paga_compare"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot.paga_compare</span></code></a></p></td>
+<td><p>Scatter and PAGA graph side-by-side.</p></td>
+</tr>
 </tbody>
-</table></div>
+</table>
+</div>
 </section>
 <section id="id4">
-<h3>Group comparison<a class="headerlink" href="#id4" title="Permalink to this headline">#</a></h3>
-<div class="table-wrapper"><table class="autosummary longtable docutils align-default">
-<colgroup>
-<col style="width: 10%"/>
-<col style="width: 90%"/>
-</colgroup>
+<h3>Group comparison<a class="headerlink" href="#id4" title="Permalink to this heading">#</a></h3>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="plot/ehrapy.plot.rank_features_groups.html#ehrapy.plot.rank_features_groups" title="ehrapy.plot.rank_features_groups"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot.rank_features_groups</span></code></a></p></td>
+<td><p>Plot ranking of features.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="plot/ehrapy.plot.rank_features_groups_violin.html#ehrapy.plot.rank_features_groups_violin" title="ehrapy.plot.rank_features_groups_violin"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot.rank_features_groups_violin</span></code></a></p></td>
+<td><p>Plot ranking of features for all tested comparisons as violin plots.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="plot/ehrapy.plot.rank_features_groups_stacked_violin.html#ehrapy.plot.rank_features_groups_stacked_violin" title="ehrapy.plot.rank_features_groups_stacked_violin"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot.rank_features_groups_stacked_violin</span></code></a></p></td>
+<td><p>Plot ranking of genes using stacked_violin plot.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="plot/ehrapy.plot.rank_features_groups_heatmap.html#ehrapy.plot.rank_features_groups_heatmap" title="ehrapy.plot.rank_features_groups_heatmap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot.rank_features_groups_heatmap</span></code></a></p></td>
+<td><p>Plot ranking of genes using heatmap plot (see <code class="xref py py-func docutils literal notranslate"><span class="pre">heatmap()</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="plot/ehrapy.plot.rank_features_groups_dotplot.html#ehrapy.plot.rank_features_groups_dotplot" title="ehrapy.plot.rank_features_groups_dotplot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot.rank_features_groups_dotplot</span></code></a></p></td>
+<td><p>Plot ranking of genes using dotplot plot (see <code class="xref py py-func docutils literal notranslate"><span class="pre">dotplot()</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="plot/ehrapy.plot.rank_features_groups_matrixplot.html#ehrapy.plot.rank_features_groups_matrixplot" title="ehrapy.plot.rank_features_groups_matrixplot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot.rank_features_groups_matrixplot</span></code></a></p></td>
+<td><p>Plot ranking of genes using matrixplot plot (see <code class="xref py py-func docutils literal notranslate"><span class="pre">matrixplot()</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="plot/ehrapy.plot.rank_features_groups_tracksplot.html#ehrapy.plot.rank_features_groups_tracksplot" title="ehrapy.plot.rank_features_groups_tracksplot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot.rank_features_groups_tracksplot</span></code></a></p></td>
+<td><p>Plot ranking of genes using tracksplot plot (see <code class="xref py py-func docutils literal notranslate"><span class="pre">tracksplot()</span></code>)</p></td>
+</tr>
 </tbody>
-</table></div>
+</table>
+</div>
 </section>
 <section id="data-analysis-linear-regression-survival-analysis">
-<h3>Data Analysis (Linear Regression, Survival Analysis)<a class="headerlink" href="#data-analysis-linear-regression-survival-analysis" title="Permalink to this headline">#</a></h3>
-<div class="table-wrapper"><table class="autosummary longtable docutils align-default">
-<colgroup>
-<col style="width: 10%"/>
-<col style="width: 90%"/>
-</colgroup>
+<h3>Data Analysis (Linear Regression, Survival Analysis)<a class="headerlink" href="#data-analysis-linear-regression-survival-analysis" title="Permalink to this heading">#</a></h3>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="tools/ehrapy.plot.ols.html#ehrapy.plot.ols" title="ehrapy.plot.ols"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot.ols</span></code></a></p></td>
+<td><p>Plots a Ordinary Least Squares (OLS) Model result, scatter plot, and line plot.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tools/ehrapy.plot.kmf.html#ehrapy.plot.kmf" title="ehrapy.plot.kmf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot.kmf</span></code></a></p></td>
+<td><p>Plots a pretty figure of the Fitted KaplanMeierFitter model</p></td>
+</tr>
 </tbody>
-</table></div>
+</table>
+</div>
 </section>
 </section>
 <section id="anndata-object-transformation">
-<h2>AnnData object transformation<a class="headerlink" href="#anndata-object-transformation" title="Permalink to this headline">#</a></h2>
+<h2>AnnData object transformation<a class="headerlink" href="#anndata-object-transformation" title="Permalink to this heading">#</a></h2>
 <p>The ehrapy API exposes functions to transform a pandas dataframe into an AnnData object
 and vice versa.</p>
-<div class="table-wrapper"><table class="autosummary longtable docutils align-default">
-<colgroup>
-<col style="width: 10%"/>
-<col style="width: 90%"/>
-</colgroup>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="anndata/ehrapy.anndata.df_to_anndata.html#ehrapy.anndata.df_to_anndata" title="ehrapy.anndata.df_to_anndata"><code class="xref py py-obj docutils literal notranslate"><span class="pre">anndata.df_to_anndata</span></code></a></p></td>
+<td><p>Transform a given pandas dataframe into an AnnData object.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="anndata/ehrapy.anndata.anndata_to_df.html#ehrapy.anndata.anndata_to_df" title="ehrapy.anndata.anndata_to_df"><code class="xref py py-obj docutils literal notranslate"><span class="pre">anndata.anndata_to_df</span></code></a></p></td>
+<td><p>Transform an AnnData object to a pandas dataframe.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="anndata/ehrapy.anndata.move_to_obs.html#ehrapy.anndata.move_to_obs" title="ehrapy.anndata.move_to_obs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">anndata.move_to_obs</span></code></a></p></td>
+<td><p>Move features from X to obs inplace.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="anndata/ehrapy.anndata.move_to_x.html#ehrapy.anndata.move_to_x" title="ehrapy.anndata.move_to_x"><code class="xref py py-obj docutils literal notranslate"><span class="pre">anndata.move_to_x</span></code></a></p></td>
+<td><p>Move features from obs to X inplace.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="anndata/ehrapy.anndata.type_overview.html#ehrapy.anndata.type_overview" title="ehrapy.anndata.type_overview"><code class="xref py py-obj docutils literal notranslate"><span class="pre">anndata.type_overview</span></code></a></p></td>
+<td><p>Prints the current state of an <a class="reference external" href="https://anndata.readthedocs.io/en/stable/generated/anndata.AnnData.html#anndata.AnnData" title="(in anndata v0.8.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code></a> or <code class="xref py py-class docutils literal notranslate"><span class="pre">MuData</span></code> object in a tree format.</p></td>
+</tr>
 </tbody>
-</table></div>
+</table>
+</div>
 </section>
 <section id="settings">
-<h2>Settings<a class="headerlink" href="#settings" title="Permalink to this headline">#</a></h2>
+<h2>Settings<a class="headerlink" href="#settings" title="Permalink to this heading">#</a></h2>
 <p>A convenience object for setting some default <a class="reference external" href="https://matplotlib.org/stable/api/matplotlib_configuration_api.html#matplotlib.rcParams" title="(in Matplotlib v3.5.2)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">matplotlib.rcParams</span></code></a> and a
 high-resolution jupyter display backend useful for use in notebooks.</p>
 <p>An instance of the <a class="reference external" href="https://scanpy.readthedocs.io/en/stable/generated/scanpy._settings.ScanpyConfig.html#scanpy._settings.ScanpyConfig" title="(in Scanpy v1.9.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScanpyConfig</span></code></a> is available as <code class="docutils literal notranslate"><span class="pre">ehrapy.settings</span></code> and allows configuring ehrapy.</p>
@@ -544,7 +941,7 @@ high-resolution jupyter display backend useful for use in notebooks.</p>
 for configuration options. Ehrapy will adapt these in the future and update the documentation.</p>
 </section>
 <section id="dependency-versions">
-<h2>Dependency Versions<a class="headerlink" href="#dependency-versions" title="Permalink to this headline">#</a></h2>
+<h2>Dependency Versions<a class="headerlink" href="#dependency-versions" title="Permalink to this heading">#</a></h2>
 <p>ehrapy is complex software with many dependencies. To ensure a consistent runtime environment you should save
 the tool versions of a conducted analysis. This comes in handy when trying to diagnose issues and to reproduce results.</p>
 <p>Call the function via:</p>
@@ -559,12 +956,12 @@ the tool versions of a conducted analysis. This comes in handy when trying to di
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="../tutorials/index.html">
+          <a class="next-page" href="io/ehrapy.io.read_csv.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Tutorials</div>
+                <div class="title">ehrapy.io.read_csv</div>
               </div>
               <svg><use href="#svg-arrow-right"></use></svg>
             </a>
@@ -660,6 +1057,7 @@ the tool versions of a conducted analysis. This comes in handy when trying to di
 </div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
     <script src="../_static/scripts/furo.js"></script>
     <script src="../_static/clipboard.min.js"></script>

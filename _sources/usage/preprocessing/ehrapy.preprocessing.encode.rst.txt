@@ -1,0 +1,6 @@
+﻿ehrapy.preprocessing.encode
+===========================
+
+.. currentmodule:: ehrapy.preprocessing
+
+.. autofunction:: encode

@@ -1,0 +1,6 @@
+﻿ehrapy.preprocessing.regress\_out
+=================================
+
+.. currentmodule:: ehrapy.preprocessing
+
+.. autofunction:: regress_out

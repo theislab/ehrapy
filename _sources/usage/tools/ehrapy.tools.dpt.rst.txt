@@ -1,0 +1,6 @@
+﻿ehrapy.tools.dpt
+================
+
+.. currentmodule:: ehrapy.tools
+
+.. autofunction:: dpt

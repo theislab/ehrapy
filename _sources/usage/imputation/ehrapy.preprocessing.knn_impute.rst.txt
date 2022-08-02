@@ -1,0 +1,6 @@
+﻿ehrapy.preprocessing.knn\_impute
+================================
+
+.. currentmodule:: ehrapy.preprocessing
+
+.. autofunction:: knn_impute

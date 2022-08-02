@@ -1,0 +1,6 @@
+﻿ehrapy.anndata.move\_to\_obs
+============================
+
+.. currentmodule:: ehrapy.anndata
+
+.. autofunction:: move_to_obs

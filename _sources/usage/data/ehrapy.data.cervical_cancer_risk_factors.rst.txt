@@ -1,0 +1,6 @@
+﻿ehrapy.data.cervical\_cancer\_risk\_factors
+===========================================
+
+.. currentmodule:: ehrapy.data
+
+.. autofunction:: cervical_cancer_risk_factors

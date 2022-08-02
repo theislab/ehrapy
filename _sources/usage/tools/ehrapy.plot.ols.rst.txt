@@ -1,0 +1,6 @@
+﻿ehrapy.plot.ols
+===============
+
+.. currentmodule:: ehrapy.plot
+
+.. autofunction:: ols

@@ -1,8 +1,8 @@
 <!doctype html>
-<html class="no-js">
+<html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
 <meta property="og:title" content="Extracting from free text with MedCAT" />
   
@@ -17,10 +17,10 @@
 <meta property="og:image:alt" content="Extracting from free text with MedCAT" />
   <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Contributor Guide" href="../../contributing.html" /><link rel="prev" title="Diabetes 130 Vignette" href="diabetes_130.html" />
 
-    <meta name="generator" content="sphinx-4.5.0, furo 2022.04.07"/>
+    <meta name="generator" content="sphinx-5.1.1, furo 2022.06.21"/>
         <title>Extracting from free text with MedCAT - ehrapy</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=68f4518137b9aefe99b631505a2064c3c42c9852" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=40978830699223671f4072448e654b5958f38b89" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" />
@@ -181,30 +181,130 @@
   <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../usage/usage.html">Usage</a></li>
-<li class="toctree-l1 current has-children"><a class="reference internal" href="../index.html">Tutorials</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="ehrapy_introduction.html">ehrapy Introduction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ehrapy_introduction.html#Fundamental-Principles">Fundamental Principles</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../usage/usage.html">Usage</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/io/ehrapy.io.read_csv.html">ehrapy.io.read_csv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/io/ehrapy.io.read_h5ad.html">ehrapy.io.read_h5ad</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/io/ehrapy.io.read_pdf.html">ehrapy.io.read_pdf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/io/ehrapy.io.write.html">ehrapy.io.write</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.mimic_2.html">ehrapy.data.mimic_2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.mimic_3_demo.html">ehrapy.data.mimic_3_demo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.diabetes_130.html">ehrapy.data.diabetes_130</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.heart_failure.html">ehrapy.data.heart_failure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.chronic_kidney_disease.html">ehrapy.data.chronic_kidney_disease</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.breast_tissue.html">ehrapy.data.breast_tissue</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.cervical_cancer_risk_factors.html">ehrapy.data.cervical_cancer_risk_factors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.dermatology.html">ehrapy.data.dermatology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.echocardiogram.html">ehrapy.data.echocardiogram</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.heart_disease.html">ehrapy.data.heart_disease</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.hepatitis.html">ehrapy.data.hepatitis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.statlog_heart.html">ehrapy.data.statlog_heart</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.thyroid.html">ehrapy.data.thyroid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.breast_cancer_coimbra.html">ehrapy.data.breast_cancer_coimbra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.parkinson_dataset_with_replicated_acoustic_features.html">ehrapy.data.parkinson_dataset_with_replicated_acoustic_features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.parkinsons.html">ehrapy.data.parkinsons</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.parkinsons_disease_classification.html">ehrapy.data.parkinsons_disease_classification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.parkinsons_telemonitoring.html">ehrapy.data.parkinsons_telemonitoring</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.pca.html">ehrapy.preprocessing.pca</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.regress_out.html">ehrapy.preprocessing.regress_out</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.subsample.html">ehrapy.preprocessing.subsample</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.highly_variable_features.html">ehrapy.preprocessing.highly_variable_features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.qc_metrics.html">ehrapy.preprocessing.qc_metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.qc_lab_measurements.html">ehrapy.preprocessing.qc_lab_measurements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.explicit_impute.html">ehrapy.preprocessing.explicit_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.simple_impute.html">ehrapy.preprocessing.simple_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.knn_impute.html">ehrapy.preprocessing.knn_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.miss_forest_impute.html">ehrapy.preprocessing.miss_forest_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.soft_impute.html">ehrapy.preprocessing.soft_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.iterative_svd_impute.html">ehrapy.preprocessing.iterative_svd_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.matrix_factorization_impute.html">ehrapy.preprocessing.matrix_factorization_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.nuclear_norm_minimization_impute.html">ehrapy.preprocessing.nuclear_norm_minimization_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.mice_forest_impute.html">ehrapy.preprocessing.mice_forest_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.encode.html">ehrapy.preprocessing.encode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.undo_encoding.html">ehrapy.preprocessing.undo_encoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.log_norm.html">ehrapy.preprocessing.log_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.maxabs_norm.html">ehrapy.preprocessing.maxabs_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.minmax_norm.html">ehrapy.preprocessing.minmax_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.power_norm.html">ehrapy.preprocessing.power_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.quantile_norm.html">ehrapy.preprocessing.quantile_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.robust_scale_norm.html">ehrapy.preprocessing.robust_scale_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.scale_norm.html">ehrapy.preprocessing.scale_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.sqrt_norm.html">ehrapy.preprocessing.sqrt_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.combat.html">ehrapy.preprocessing.combat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.neighbors.html">ehrapy.preprocessing.neighbors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.pca.html">ehrapy.tools.pca</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.tsne.html">ehrapy.tools.tsne</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.umap.html">ehrapy.tools.umap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.draw_graph.html">ehrapy.tools.draw_graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.diffmap.html">ehrapy.tools.diffmap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.embedding_density.html">ehrapy.tools.embedding_density</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.leiden.html">ehrapy.tools.leiden</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.louvain.html">ehrapy.tools.louvain</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.dendrogram.html">ehrapy.tools.dendrogram</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.dpt.html">ehrapy.tools.dpt</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.paga.html">ehrapy.tools.paga</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.rank_features_groups.html">ehrapy.tools.rank_features_groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.filter_rank_features_groups.html">ehrapy.tools.filter_rank_features_groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.marker_feature_overlap.html">ehrapy.tools.marker_feature_overlap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.ingest.html">ehrapy.tools.ingest</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.Translator.html">ehrapy.tools.Translator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.HPOMapper.html">ehrapy.tools.HPOMapper</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.MedCAT.html">ehrapy.tools.MedCAT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.mc.run_unsupervised_training.html">ehrapy.tools.mc.run_unsupervised_training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.mc.annotate_text.html">ehrapy.tools.mc.annotate_text</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.mc.get_annotation_overview.html">ehrapy.tools.mc.get_annotation_overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.ols.html">ehrapy.tools.ols</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.glm.html">ehrapy.tools.glm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.kmf.html">ehrapy.tools.kmf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.scatter.html">ehrapy.plot.scatter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.heatmap.html">ehrapy.plot.heatmap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.dotplot.html">ehrapy.plot.dotplot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.tracksplot.html">ehrapy.plot.tracksplot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.violin.html">ehrapy.plot.violin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.stacked_violin.html">ehrapy.plot.stacked_violin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.matrixplot.html">ehrapy.plot.matrixplot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.clustermap.html">ehrapy.plot.clustermap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.ranking.html">ehrapy.plot.ranking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.dendrogram.html">ehrapy.plot.dendrogram</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.qc_metrics.html">ehrapy.plot.qc_metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.pca.html">ehrapy.plot.pca</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.pca_loadings.html">ehrapy.plot.pca_loadings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.pca_variance_ratio.html">ehrapy.plot.pca_variance_ratio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.pca_overview.html">ehrapy.plot.pca_overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.tsne.html">ehrapy.plot.tsne</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.umap.html">ehrapy.plot.umap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.diffmap.html">ehrapy.plot.diffmap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.draw_graph.html">ehrapy.plot.draw_graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.spatial.html">ehrapy.plot.spatial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.embedding.html">ehrapy.plot.embedding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.embedding_density.html">ehrapy.plot.embedding_density</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.dpt_groups_pseudotime.html">ehrapy.plot.dpt_groups_pseudotime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.dpt_timeseries.html">ehrapy.plot.dpt_timeseries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.paga.html">ehrapy.plot.paga</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.paga_path.html">ehrapy.plot.paga_path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.paga_compare.html">ehrapy.plot.paga_compare</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.rank_features_groups.html">ehrapy.plot.rank_features_groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.rank_features_groups_violin.html">ehrapy.plot.rank_features_groups_violin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.rank_features_groups_stacked_violin.html">ehrapy.plot.rank_features_groups_stacked_violin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.rank_features_groups_heatmap.html">ehrapy.plot.rank_features_groups_heatmap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.rank_features_groups_dotplot.html">ehrapy.plot.rank_features_groups_dotplot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.rank_features_groups_matrixplot.html">ehrapy.plot.rank_features_groups_matrixplot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.rank_features_groups_tracksplot.html">ehrapy.plot.rank_features_groups_tracksplot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.plot.ols.html">ehrapy.plot.ols</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.plot.kmf.html">ehrapy.plot.kmf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/anndata/ehrapy.anndata.df_to_anndata.html">ehrapy.anndata.df_to_anndata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/anndata/ehrapy.anndata.anndata_to_df.html">ehrapy.anndata.anndata_to_df</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/anndata/ehrapy.anndata.move_to_obs.html">ehrapy.anndata.move_to_obs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/anndata/ehrapy.anndata.move_to_x.html">ehrapy.anndata.move_to_x</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/anndata/ehrapy.anndata.type_overview.html">ehrapy.anndata.type_overview</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../index.html">Tutorials</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="ehrapy_introduction.html">Introduction to ehrapy</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mimic_2_introduction.html">MIMIC-II IAC Introduction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mimic_2_introduction.html#Preprocessing">Preprocessing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mimic_2_introduction.html#PCA-&amp;-UMAP">PCA &amp; UMAP</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mimic_2_introduction.html#Batch-effect-check">Batch effect check</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mimic_2_introduction.html#Leiden-clustering">Leiden clustering</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mimic_2_introduction.html#Hospital-&amp;-ICU-statistics">Hospital &amp; ICU statistics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mimic_2_introduction.html#Death">Death</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mimic_2_introduction.html#Demographics">Demographics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mimic_2_introduction.html#Comorbidities">Comorbidities</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mimic_2_introduction.html#Initial-lab-measurements">Initial lab measurements</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mimic_2_introduction.html#Annotation">Annotation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mimic_2_introduction.html#Paga">Paga</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mimic_2_fate.html">MIMIC-II Patient Fate</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mimic_2_fate.html#Determining-patient-fate-using-a-ConnectivityKernel">Determining patient fate using a ConnectivityKernel</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mimic_2_fate.html#Determining-patient-fate-with-a-PseudotimeKernel">Determining patient fate with a PseudotimeKernel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mimic_2_survival_analysis.html">MIMIC-II Survival Analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="diabetes_130.html">Diabetes 130 Vignette</a></li>
-<li class="toctree-l2"><a class="reference internal" href="diabetes_130.html#Visual-Exploration">Visual Exploration</a></li>
 <li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Extracting from free text with MedCAT</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#Custom-MedCAT-object-of-ehrapy">Custom MedCAT object of ehrapy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#Extracting-and-visualizing-all-disease-entities">Extracting and visualizing all disease entities</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributor Guide</a></li>
@@ -230,7 +330,8 @@
           </svg>
           <span>Back to top</span>
         </a>
-        <div class="content-icon-container"><div class="theme-toggle-container theme-toggle-content">
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
             <button class="theme-toggle">
               <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
               <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
@@ -459,6 +560,7 @@ div.nboutput.container div.output_area > div[class^='highlight']{
 }
 
 /* Some additional styling taken form the Jupyter notebook CSS */
+.jp-RenderedHTMLCommon table,
 div.rendered_html table {
   border: none;
   border-collapse: collapse;
@@ -467,10 +569,14 @@ div.rendered_html table {
   font-size: 12px;
   table-layout: fixed;
 }
+.jp-RenderedHTMLCommon thead,
 div.rendered_html thead {
   border-bottom: 1px solid black;
   vertical-align: bottom;
 }
+.jp-RenderedHTMLCommon tr,
+.jp-RenderedHTMLCommon th,
+.jp-RenderedHTMLCommon td,
 div.rendered_html tr,
 div.rendered_html th,
 div.rendered_html td {
@@ -482,12 +588,15 @@ div.rendered_html td {
   max-width: none;
   border: none;
 }
+.jp-RenderedHTMLCommon th,
 div.rendered_html th {
   font-weight: bold;
 }
+.jp-RenderedHTMLCommon tbody tr:nth-child(odd),
 div.rendered_html tbody tr:nth-child(odd) {
   background: #f5f5f5;
 }
+.jp-RenderedHTMLCommon tbody tr:hover,
 div.rendered_html tbody tr:hover {
   background: rgba(66, 165, 245, 0.2);
 }
@@ -513,14 +622,14 @@ div.rendered_html tbody tr:hover {
     background: rgba(255, 255, 255, .1);
     }
 </style><div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>
+    <p class="admonition-title">Note</p>
+    <p>
     This page was generated from
-    <a class="reference external" href="https://github.com/theislab/ehrapy/tree/0.2.0/">medcat.ipynb</a>.
+    <a class="reference external" href="https://github.com/theislab/ehrapy/tree/0.3.0/">medcat.ipynb</a>.
     Some tutorial content may look better in light mode.
     </p>
 </div><section id="Extracting-from-free-text-with-MedCAT">
-<h1>Extracting from free text with MedCAT<a class="headerlink" href="#Extracting-from-free-text-with-MedCAT" title="Permalink to this headline">#</a></h1>
+<h1>Extracting from free text with MedCAT<a class="headerlink" href="#Extracting-from-free-text-with-MedCAT" title="Permalink to this heading">#</a></h1>
 <p>This tutorial serves as an introduction on how to use <em>ehrapy</em> together with <a class="reference external" href="https://github.com/CogStack/MedCAT">MedCAT</a>. <em>MedCat</em> is a tool to extract medical entities from free text and link it to biomedical ontologies. Biomedical entities could be anything biomedical; not only diagnoses or diseases but also symptoms, drugs or even peptides. It also tries to keep the context of an extracted entitiy (for example, whether a specific disease has been diagnosed or not). This is especially
 important for electronic health records data, as most of the time doctors notes are simply copied and pasted into the data and not preprocessed in any form. Consider the following example:</p>
 <ul class="simple">
@@ -535,9 +644,8 @@ important for electronic health records data, as most of the time doctors notes 
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import ehrapy as ep
-import spacy
-import pandas as pd
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">ehrapy</span> <span class="k">as</span> <span class="nn">ep</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 </pre></div>
 </div>
 </div>
@@ -545,7 +653,7 @@ import pandas as pd
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area rendered_html docutils container">
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #808000; text-decoration-color: #808000; font-weight: bold">Installed version </span><span style="color: #808000; text-decoration-color: #808000; font-weight: bold">0.2</span><span style="color: #808000; text-decoration-color: #808000; font-weight: bold">.</span><span style="color: #808000; text-decoration-color: #808000; font-weight: bold">0</span><span style="color: #808000; text-decoration-color: #808000; font-weight: bold"> of ehrapy is newer than the latest release </span><span style="color: #808000; text-decoration-color: #808000; font-weight: bold">0.1</span><span style="color: #808000; text-decoration-color: #808000; font-weight: bold">.</span><span style="color: #808000; text-decoration-color: #808000; font-weight: bold">0</span><span style="color: #808000; text-decoration-color: #808000; font-weight: bold">! You are running a </span>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #808000; text-decoration-color: #808000; font-weight: bold">Installed version </span><span style="color: #808000; text-decoration-color: #808000; font-weight: bold">0.3</span><span style="color: #808000; text-decoration-color: #808000; font-weight: bold">.</span><span style="color: #808000; text-decoration-color: #808000; font-weight: bold">0</span><span style="color: #808000; text-decoration-color: #808000; font-weight: bold"> of ehrapy is newer than the latest release </span><span style="color: #808000; text-decoration-color: #808000; font-weight: bold">0.2</span><span style="color: #808000; text-decoration-color: #808000; font-weight: bold">.</span><span style="color: #808000; text-decoration-color: #808000; font-weight: bold">0</span><span style="color: #808000; text-decoration-color: #808000; font-weight: bold">! You are running a </span>
 <span style="color: #808000; text-decoration-color: #808000; font-weight: bold">nightly version and features may break!</span>
 </pre></div>
 </div>
@@ -562,7 +670,7 @@ import pandas as pd
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.settings.n_jobs = 8
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">n_jobs</span> <span class="o">=</span> <span class="mi">8</span>
 </pre></div>
 </div>
 </div>
@@ -571,8 +679,8 @@ import pandas as pd
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>!wget -nc https://raw.githubusercontent.com/CogStack/MedCAT/master/tutorial/data/pt_notes.csv -P ./medcat_data/
-!wget -nc https://medcat.rosalind.kcl.ac.uk/media/medmen_wstatus_2021_oct.zip -P ./medcat_data/
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>wget -nc https://raw.githubusercontent.com/CogStack/MedCATtutorials/main/notebooks/introductory/data/pt_notes.csv -P ./medcat_data/
+<span class="o">!</span>wget -nc https://medcat.rosalind.kcl.ac.uk/media/medmen_wstatus_2021_oct.zip -P ./medcat_data/
 </pre></div>
 </div>
 </div>
@@ -587,25 +695,24 @@ File ‘./medcat_data/medmen_wstatus_2021_oct.zip’ already there; not retrievi
 
 </pre></div></div>
 </div>
-</section>
 <section id="Custom-MedCAT-object-of-ehrapy">
-<h1>Custom MedCAT object of ehrapy<a class="headerlink" href="#Custom-MedCAT-object-of-ehrapy" title="Permalink to this headline">#</a></h1>
+<h2>Custom MedCAT object of ehrapy<a class="headerlink" href="#Custom-MedCAT-object-of-ehrapy" title="Permalink to this heading">#</a></h2>
 <p>To allow for seemless interoperability of ehrapy and MedCAT, we require a “superobject” that references the AnnData object while providing the MedCAT functionality. This object further stores MedCAT related features such as a <em>vocabulary</em>, a <em>concept database</em> and (later on in this tutorial) also the <em>annotated results</em>.</p>
 <p>First, we read the example data into an AnnData object, encode the data and calculate neighbors for subsequent processing. As a next step, we create the MedCAT object with a modelpack and set default TUI filters. A full list of TUI’s can be found at: <a class="reference external" href="https://lhncbc.nlm.nih.gov/ii/tools/MetaMap/Docs/SemanticTypes_2018AB.txt">https://lhncbc.nlm.nih.gov/ii/tools/MetaMap/Docs/SemanticTypes_2018AB.txt</a></p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata = ep.io.read_csv("medcat_data/pt_notes.csv", columns_obs_only=["text"])
-adata_encoded = ep.pp.encode(adata, autodetect=True)
-ep.pp.neighbors(adata_encoded)
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">adata</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;medcat_data/pt_notes.csv&quot;</span><span class="p">,</span> <span class="n">columns_obs_only</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;text&quot;</span><span class="p">])</span>
+<span class="n">adata_encoded</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">autodetect</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ep</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">adata_encoded</span><span class="p">)</span>
 
-# create the main ehrapy medcat object used for medical entitiy analysis using ehrapy and medcat
-ep_medcat = ep.tl.MedCAT(
-    adata_encoded, model_pack_path="./medcat_data/medmen_wstatus_2021_oct"
-)
-# only use diseases and behavioural disorders diagnoses in this example by filtering by TUI
-ep_medcat.set_filter_by_tui(tuis=["T047", "T048"])
+<span class="c1"># create the main ehrapy medcat object used for medical entitiy analysis using ehrapy and medcat</span>
+<span class="n">ep_medcat</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">MedCAT</span><span class="p">(</span>
+    <span class="n">adata_encoded</span><span class="p">,</span> <span class="n">model_pack_path</span><span class="o">=</span><span class="s2">&quot;./medcat_data/medmen_wstatus_2021_oct.zip&quot;</span>
+<span class="p">)</span>
+<span class="c1"># only use diseases and behavioural disorders diagnoses in this example by filtering by TUI</span>
+<span class="n">ep_medcat</span><span class="o">.</span><span class="n">set_filter_by_tui</span><span class="p">(</span><span class="n">tuis</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;T047&quot;</span><span class="p">,</span> <span class="s2">&quot;T048&quot;</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
@@ -613,18 +720,7 @@ ep_medcat.set_filter_by_tui(tuis=["T047", "T048"])
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<script type="application/vnd.jupyter.widget-view+json">{"model_id": "784ebdbe1b224205a0553ade70dff2a9", "version_major": 2, "version_minor": 0}</script></div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area rendered_html docutils container">
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">/home/zeth/PycharmProjects/ehrapy/ehrapy/preprocessing/encoding/_encode.py:227:
-FutureWarning: X.dtype being converted to np.float32 from object. In the next version of
-anndata (0.9) conversion will not be automatic. Pass dtype explicitly to avoid this warning.
-Pass `AnnData(X, dtype=X.dtype, ...)` to get the future behavour.
-  encoded_ann_data = AnnData(
-</pre></div>
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "8ce12cbbceee431a8454f5df73eee63d", "version_major": 2, "version_minor": 0}</script></div>
 </div>
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
@@ -644,40 +740,40 @@ Pass `AnnData(X, dtype=X.dtype, ...)` to get the future behavour.
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Found an existing unziped model pack at: ./medcat_data/medmen_wstatus_2021_oct, the provided zip will not be touched.
+Unziping the model pack and loading models.
 {
-  "Model ID": null,
-  "Last Modifed On": null,
-  "History (from least to most recent)": [],
-  "Description": "No description",
-  "Source Ontology": null,
-  "Location": null,
-  "MetaCAT models": {},
-  "Basic CDB Stats": {},
-  "Performance": {
-    "ner": {},
-    "meta": {}
+  &#34;Model ID&#34;: null,
+  &#34;Last Modifed On&#34;: null,
+  &#34;History (from least to most recent)&#34;: [],
+  &#34;Description&#34;: &#34;No description&#34;,
+  &#34;Source Ontology&#34;: null,
+  &#34;Location&#34;: null,
+  &#34;MetaCAT models&#34;: {},
+  &#34;Basic CDB Stats&#34;: {},
+  &#34;Performance&#34;: {
+    &#34;ner&#34;: {},
+    &#34;meta&#34;: {}
   },
-  "Important Parameters (Partial view, all available in cat.config)": {
-    "config.ner['min_name_len']": {
-      "value": 3,
-      "description": "Minimum detection length (found terms/mentions shorter than this will not be detected)."
+  &#34;Important Parameters (Partial view, all available in cat.config)&#34;: {
+    &#34;config.ner[&#39;min_name_len&#39;]&#34;: {
+      &#34;value&#34;: 3,
+      &#34;description&#34;: &#34;Minimum detection length (found terms/mentions shorter than this will not be detected).&#34;
     },
-    "config.ner['upper_case_limit_len']": {
-      "value": 3,
-      "description": "All detected terms shorter than this value have to be uppercase, otherwise they will be ignored."
+    &#34;config.ner[&#39;upper_case_limit_len&#39;]&#34;: {
+      &#34;value&#34;: 3,
+      &#34;description&#34;: &#34;All detected terms shorter than this value have to be uppercase, otherwise they will be ignored.&#34;
     },
-    "config.linking['similarity_threshold']": {
-      "value": 0.2,
-      "description": "If the confidence of the model is lower than this a detection will be ignore."
+    &#34;config.linking[&#39;similarity_threshold&#39;]&#34;: {
+      &#34;value&#34;: 0.2,
+      &#34;description&#34;: &#34;If the confidence of the model is lower than this a detection will be ignore.&#34;
     },
-    "config.general['spell_check']": {
-      "value": true,
-      "description": "Is spell checking enabled."
+    &#34;config.general[&#39;spell_check&#39;]&#34;: {
+      &#34;value&#34;: true,
+      &#34;description&#34;: &#34;Is spell checking enabled.&#34;
     },
-    "config.general['spell_check_len_limit']": {
-      "value": 7,
-      "description": "Words shorter than this will not be spell checked."
+    &#34;config.general[&#39;spell_check_len_limit&#39;]&#34;: {
+      &#34;value&#34;: 7,
+      &#34;description&#34;: &#34;Words shorter than this will not be spell checked.&#34;
     }
   }
 }
@@ -688,9 +784,9 @@ Found an existing unziped model pack at: ./medcat_data/medmen_wstatus_2021_oct, 
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>text = "He was diagnosed with kidney failure"
-doc = ep_medcat.cat(text)
-doc.ents
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;He was diagnosed with kidney failure&quot;</span>
+<span class="n">doc</span> <span class="o">=</span> <span class="n">ep_medcat</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+<span class="n">doc</span><span class="o">.</span><span class="n">ents</span>
 </pre></div>
 </div>
 </div>
@@ -707,9 +803,9 @@ doc.ents
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># Example output of an extracted medcat entity; note that ehrapy will deal with this automatically and the here displayed manual extraction is not required.
-# CUI: Concept Unique Identifier, which is just an unique identifier for each concept extracted
-ep_medcat.cat.get_entities("He was diagnosed with kidney failure", only_cui=False)
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Example output of an extracted medcat entity; note that ehrapy will deal with this automatically and the here displayed manual extraction is not required.</span>
+<span class="c1"># CUI: Concept Unique Identifier, which is just an unique identifier for each concept extracted</span>
+<span class="n">ep_medcat</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">get_entities</span><span class="p">(</span><span class="s2">&quot;He was diagnosed with kidney failure&quot;</span><span class="p">,</span> <span class="n">only_cui</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -719,35 +815,35 @@ ep_medcat.cat.get_entities("He was diagnosed with kidney failure", only_cui=Fals
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-{'entities': {2: {'pretty_name': 'Kidney Failure',
-   'cui': 'C0035078',
-   'type_ids': ['T047'],
-   'types': ['Disease or Syndrome'],
-   'source_value': 'kidney failure',
-   'detected_name': 'kidney~failure',
-   'acc': 1.0,
-   'context_similarity': 1.0,
-   'start': 22,
-   'end': 36,
-   'icd10': [],
-   'ontologies': [],
-   'snomed': [],
-   'id': 2,
-   'meta_anns': {'Status': {'value': 'Affirmed',
-     'confidence': 0.9999961853027344,
-     'name': 'Status'}}}},
- 'tokens': []}
+{&#39;entities&#39;: {2: {&#39;pretty_name&#39;: &#39;Kidney Failure&#39;,
+   &#39;cui&#39;: &#39;C0035078&#39;,
+   &#39;type_ids&#39;: [&#39;T047&#39;],
+   &#39;types&#39;: [&#39;Disease or Syndrome&#39;],
+   &#39;source_value&#39;: &#39;kidney failure&#39;,
+   &#39;detected_name&#39;: &#39;kidney~failure&#39;,
+   &#39;acc&#39;: 1.0,
+   &#39;context_similarity&#39;: 1.0,
+   &#39;start&#39;: 22,
+   &#39;end&#39;: 36,
+   &#39;icd10&#39;: [],
+   &#39;ontologies&#39;: [],
+   &#39;snomed&#39;: [],
+   &#39;id&#39;: 2,
+   &#39;meta_anns&#39;: {&#39;Status&#39;: {&#39;value&#39;: &#39;Affirmed&#39;,
+     &#39;confidence&#39;: 0.9999961853027344,
+     &#39;name&#39;: &#39;Status&#39;}}}},
+ &#39;tokens&#39;: []}
 </pre></div></div>
 </div>
 </section>
 <section id="Extracting-and-visualizing-all-disease-entities">
-<h1>Extracting and visualizing all disease entities<a class="headerlink" href="#Extracting-and-visualizing-all-disease-entities" title="Permalink to this headline">#</a></h1>
+<h2>Extracting and visualizing all disease entities<a class="headerlink" href="#Extracting-and-visualizing-all-disease-entities" title="Permalink to this heading">#</a></h2>
 <p>To extract all disease entities from our example dataset we require a complete annotation of the dataset. This step is computationally expensive and may take some time.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.tl.mc.annotate_text(ep_medcat, text_column="text", n_proc=8)
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">mc</span><span class="o">.</span><span class="n">annotate_text</span><span class="p">(</span><span class="n">ep_medcat</span><span class="p">,</span> <span class="n">text_column</span><span class="o">=</span><span class="s2">&quot;text&quot;</span><span class="p">,</span> <span class="n">n_proc</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -757,13 +853,13 @@ ep_medcat.cat.get_entities("He was diagnosed with kidney failure", only_cui=Fals
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
 Annotated until now: 0 docs; Current BS: 157 docs; Elapsed time: 0.00 minutes
-Annotated until now: 0 docs; Current BS: 165 docs; Elapsed time: 0.08 minutes
-Annotated until now: 15 docs; Current BS: 151 docs; Elapsed time: 0.18 minutes
-Annotated until now: 36 docs; Current BS: 160 docs; Elapsed time: 0.30 minutes
-Annotated until now: 54 docs; Current BS: 152 docs; Elapsed time: 0.41 minutes
-Annotated until now: 68 docs; Current BS: 130 docs; Elapsed time: 0.51 minutes
-Annotated until now: 89 docs; Current BS: 157 docs; Elapsed time: 0.63 minutes
-Annotated until now: 120 docs; Current BS: 16 docs; Elapsed time: 0.76 minutes
+Annotated until now: 157 docs; Current BS: 165 docs; Elapsed time: 0.37 minutes
+Annotated until now: 322 docs; Current BS: 151 docs; Elapsed time: 0.86 minutes
+Annotated until now: 473 docs; Current BS: 160 docs; Elapsed time: 1.36 minutes
+Annotated until now: 633 docs; Current BS: 152 docs; Elapsed time: 1.87 minutes
+Annotated until now: 785 docs; Current BS: 130 docs; Elapsed time: 2.35 minutes
+Annotated until now: 915 docs; Current BS: 157 docs; Elapsed time: 2.81 minutes
+Annotated until now: 1072 docs; Current BS: 16 docs; Elapsed time: 3.26 minutes
 </pre></div></div>
 </div>
 <p>The annotated results as extracted by MedCAT are transformed and stored into a Pandas DataFrame</p>
@@ -771,7 +867,7 @@ Annotated until now: 120 docs; Current BS: 16 docs; Elapsed time: 0.76 minutes
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep_medcat.annotated_results
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep_medcat</span><span class="o">.</span><span class="n">annotated_results</span>
 </pre></div>
 </div>
 </div>
@@ -781,7 +877,7 @@ Annotated until now: 120 docs; Current BS: 16 docs; Elapsed time: 0.76 minutes
 </div>
 <div class="output_area rendered_html docutils container">
 <div>
-<style scoped="">
+<style scoped>
     .dataframe tbody tr th:only-of-type {
         vertical-align: middle;
     }
@@ -794,121 +890,121 @@ Annotated until now: 120 docs; Current BS: 16 docs; Elapsed time: 0.76 minutes
         text-align: right;
     }
 </style>
-<div class="table-wrapper"><table border="1" class="dataframe">
-<thead>
-<tr style="text-align: right;">
-<th></th>
-<th>row_nr</th>
-<th>pretty_name</th>
-<th>cui</th>
-<th>type_ids</th>
-<th>types</th>
-<th>meta_anns</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<th>0</th>
-<td>1072</td>
-<td>Pneumonia</td>
-<td>C0032285</td>
-<td>[T047]</td>
-<td>[Disease or Syndrome]</td>
-<td>Affirmed</td>
-</tr>
-<tr>
-<th>1</th>
-<td>1072</td>
-<td>Rheumatism</td>
-<td>C0035435</td>
-<td>[T047]</td>
-<td>[Disease or Syndrome]</td>
-<td>Other</td>
-</tr>
-<tr>
-<th>2</th>
-<td>1072</td>
-<td>Anxiety state</td>
-<td>C0700613</td>
-<td>[T048]</td>
-<td>[Mental or Behavioral Dysfunction]</td>
-<td>Affirmed</td>
-</tr>
-<tr>
-<th>3</th>
-<td>1072</td>
-<td>Cerebrovascular accident</td>
-<td>C0038454</td>
-<td>[T047]</td>
-<td>[Disease or Syndrome]</td>
-<td>Other</td>
-</tr>
-<tr>
-<th>4</th>
-<td>1072</td>
-<td>Memory impairment</td>
-<td>C0233794</td>
-<td>[T048]</td>
-<td>[Mental or Behavioral Dysfunction]</td>
-<td>Affirmed</td>
-</tr>
-<tr>
-<th>...</th>
-<td>...</td>
-<td>...</td>
-<td>...</td>
-<td>...</td>
-<td>...</td>
-<td>...</td>
-</tr>
-<tr>
-<th>1287</th>
-<td>945</td>
-<td>Hematological Disease</td>
-<td>C0018939</td>
-<td>[T047]</td>
-<td>[Disease or Syndrome]</td>
-<td>Other</td>
-</tr>
-<tr>
-<th>1288</th>
-<td>945</td>
-<td>Erythema</td>
-<td>C0041834</td>
-<td>[T047]</td>
-<td>[Disease or Syndrome]</td>
-<td>Other</td>
-</tr>
-<tr>
-<th>1289</th>
-<td>945</td>
-<td>Disease</td>
-<td>C0012634</td>
-<td>[T047]</td>
-<td>[Disease or Syndrome]</td>
-<td>Affirmed</td>
-</tr>
-<tr>
-<th>1290</th>
-<td>945</td>
-<td>Abscess</td>
-<td>C0000833</td>
-<td>[T047]</td>
-<td>[Disease or Syndrome]</td>
-<td>Other</td>
-</tr>
-<tr>
-<th>1291</th>
-<td>945</td>
-<td>Erythema</td>
-<td>C0041834</td>
-<td>[T047]</td>
-<td>[Disease or Syndrome]</td>
-<td>Other</td>
-</tr>
-</tbody>
-</table></div>
-<p>1292 rows × 6 columns</p>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>row_nr</th>
+      <th>pretty_name</th>
+      <th>cui</th>
+      <th>type_ids</th>
+      <th>types</th>
+      <th>meta_anns</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0</td>
+      <td>Diabetes</td>
+      <td>C0011847</td>
+      <td>[T047]</td>
+      <td>[Disease or Syndrome]</td>
+      <td>Affirmed</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0</td>
+      <td>Sepsis</td>
+      <td>C0243026</td>
+      <td>[T047]</td>
+      <td>[Disease or Syndrome]</td>
+      <td>Other</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0</td>
+      <td>Respiratory Distress Syndrome, Adult</td>
+      <td>C0035222</td>
+      <td>[T047]</td>
+      <td>[Disease or Syndrome]</td>
+      <td>Affirmed</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0</td>
+      <td>Pulmonary Embolism</td>
+      <td>C0034065</td>
+      <td>[T047]</td>
+      <td>[Disease or Syndrome]</td>
+      <td>Other</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0</td>
+      <td>Respiratory Failure</td>
+      <td>C1145670</td>
+      <td>[T047]</td>
+      <td>[Disease or Syndrome]</td>
+      <td>Affirmed</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>10781</th>
+      <td>999</td>
+      <td>Diabetes</td>
+      <td>C0011847</td>
+      <td>[T047]</td>
+      <td>[Disease or Syndrome]</td>
+      <td>Affirmed</td>
+    </tr>
+    <tr>
+      <th>10782</th>
+      <td>999</td>
+      <td>Diabetes</td>
+      <td>C0011847</td>
+      <td>[T047]</td>
+      <td>[Disease or Syndrome]</td>
+      <td>Affirmed</td>
+    </tr>
+    <tr>
+      <th>10783</th>
+      <td>999</td>
+      <td>Diabetes</td>
+      <td>C0011847</td>
+      <td>[T047]</td>
+      <td>[Disease or Syndrome]</td>
+      <td>Affirmed</td>
+    </tr>
+    <tr>
+      <th>10784</th>
+      <td>999</td>
+      <td>Diabetes</td>
+      <td>C0011847</td>
+      <td>[T047]</td>
+      <td>[Disease or Syndrome]</td>
+      <td>Other</td>
+    </tr>
+    <tr>
+      <th>10785</th>
+      <td>999</td>
+      <td>Diabetes Mellitus, Non-Insulin-Dependent</td>
+      <td>C0011860</td>
+      <td>[T047]</td>
+      <td>[Disease or Syndrome]</td>
+      <td>Affirmed</td>
+    </tr>
+  </tbody>
+</table>
+<p>10786 rows × 6 columns</p>
 </div></div>
 </div>
 <p>We can also get a proper overview for the top 10 most entities found in the data (affirmed diagnoses only).</p>
@@ -916,7 +1012,7 @@ Annotated until now: 120 docs; Current BS: 16 docs; Elapsed time: 0.76 minutes
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.tl.mc.get_annotation_overview(ep_medcat)
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">mc</span><span class="o">.</span><span class="n">get_annotation_overview</span><span class="p">(</span><span class="n">ep_medcat</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -927,26 +1023,26 @@ Annotated until now: 120 docs; Current BS: 16 docs; Elapsed time: 0.76 minutes
 <pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
  <span style="color: #800080; text-decoration-color: #800080; font-weight: bold"> pretty_name        </span> <span style="color: #800080; text-decoration-color: #800080; font-weight: bold"> type_ids </span> <span style="color: #800080; text-decoration-color: #800080; font-weight: bold"> types              </span> <span style="color: #800080; text-decoration-color: #800080; font-weight: bold"> n_patient_visit </span> <span style="color: #800080; text-decoration-color: #800080; font-weight: bold"> n_patient_visit_p… </span>
  ───────────────────────────────────────────────────────────────────────────────────────────
-  Hypertensive         T047       Disease or           63                50.4
+  Hypertensive         T047       Disease or           432               42.39450441609421
   disease                         Syndrome
- <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Obesity            </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> T047     </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Disease or         </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> 47              </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> 37.6               </span>
+ <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Obesity            </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> T047     </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Disease or         </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> 245             </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> 24.043179587831208 </span>
  <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                    </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">          </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Syndrome           </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                 </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                    </span>
-  Coronary             T047       Disease or           23                18.4
-  Arteriosclerosis                Syndrome
- <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Diabetes Mellitus  </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> T047     </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Disease or         </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> 21              </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> 16.8               </span>
+  Diabetes             T047       Disease or           149               14.622178606476938
+                                  Syndrome
+ <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Coronary           </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> T047     </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Disease or         </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> 127             </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> 12.463199214916584 </span>
+ <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Arteriosclerosis   </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">          </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Syndrome           </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                 </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                    </span>
+  Diabetes Mellitus    T047       Disease or           118               11.579980372914623
+                                  Syndrome
+ <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Disease            </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> T047     </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Disease or         </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> 110             </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> 10.794896957801766 </span>
  <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                    </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">          </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Syndrome           </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                 </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                    </span>
-  Cerebrovascular      T047       Disease or           20                16.0
+  Cerebrovascular      T047       Disease or           110               10.794896957801766
   accident                        Syndrome
- <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Hypercholesterole… </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> T047     </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Disease or         </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> 19              </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> 15.2               </span>
+ <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Asthma             </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> T047     </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Disease or         </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> 97              </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> 9.519136408243375  </span>
  <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                    </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">          </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Syndrome           </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                 </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                    </span>
-  Diabetes             T047       Disease or           16                12.8
-                                  Syndrome
- <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Anxiety state      </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> T048     </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Mental or          </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> 16              </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> 12.8               </span>
- <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                    </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">          </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Behavioral         </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                 </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                    </span>
- <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                    </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">          </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Dysfunction        </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                 </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                    </span>
-  Asthma               T047       Disease or           15                12.0
-                                  Syndrome
- <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Mental Depression  </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> T048     </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Mental or          </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> 15              </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> 12.0               </span>
+  Chronic              T047       Disease or           92                9.028459273797841
+  Obstructive Airway              Syndrome
+  Disease
+ <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Mental Depression  </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> T048     </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Mental or          </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> 91              </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> 8.930323846908735  </span>
  <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                    </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">          </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Behavioral         </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                 </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                    </span>
  <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                    </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">          </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Dysfunction        </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                 </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                    </span>
 
@@ -957,7 +1053,7 @@ Annotated until now: 120 docs; Current BS: 16 docs; Elapsed time: 0.76 minutes
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.tl.mc.get_annotation_overview(ep_medcat, status="Other")
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">mc</span><span class="o">.</span><span class="n">get_annotation_overview</span><span class="p">(</span><span class="n">ep_medcat</span><span class="p">,</span> <span class="n">status</span><span class="o">=</span><span class="s2">&quot;Other&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -968,26 +1064,26 @@ Annotated until now: 120 docs; Current BS: 16 docs; Elapsed time: 0.76 minutes
 <pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
  <span style="color: #800080; text-decoration-color: #800080; font-weight: bold"> pretty_name        </span> <span style="color: #800080; text-decoration-color: #800080; font-weight: bold"> type_ids </span> <span style="color: #800080; text-decoration-color: #800080; font-weight: bold"> types              </span> <span style="color: #800080; text-decoration-color: #800080; font-weight: bold"> n_patient_visit </span> <span style="color: #800080; text-decoration-color: #800080; font-weight: bold"> n_patient_visit_p… </span>
  ───────────────────────────────────────────────────────────────────────────────────────────
-  Cerebrovascular      T047       Disease or           17                17.17171717171717
+  Cerebrovascular      T047       Disease or           119               15.973154362416109
   accident                        Syndrome
- <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Diabetes           </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> T047     </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Disease or         </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> 9               </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> 9.090909090909092  </span>
+ <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Erythema           </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> T047     </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Disease or         </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> 85              </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> 11.409395973154362 </span>
  <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                    </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">          </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Syndrome           </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                 </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                    </span>
-  Disease              T047       Disease or           9                 9.090909090909092
+  Diabetes             T047       Disease or           78                10.46979865771812
                                   Syndrome
- <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Incontinence       </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> T047     </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Disease or         </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> 8               </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> 8.080808080808081  </span>
+ <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Hypertensive       </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> T047     </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Disease or         </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> 68              </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> 9.12751677852349   </span>
+ <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> disease            </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">          </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Syndrome           </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                 </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                    </span>
+  disorder lesions     T047       Disease or           68                9.12751677852349
+  skin                            Syndrome
+ <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Lymphadenopathy    </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> T047     </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Disease or         </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> 64              </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> 8.590604026845638  </span>
  <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                    </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">          </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Syndrome           </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                 </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                    </span>
-  Rheumatism           T047       Disease or           8                 8.080808080808081
-                                  Syndrome
- <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Dementia           </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> T048     </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Mental or          </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> 8               </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> 8.080808080808081  </span>
- <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                    </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">          </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Behavioral         </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                 </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                    </span>
- <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                    </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">          </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Dysfunction        </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                 </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                    </span>
-  Coronary             T047       Disease or           7                 7.07070707070707
-  Arteriosclerosis                Syndrome
- <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Erythema           </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> T047     </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Disease or         </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> 7               </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> 7.07070707070707   </span>
- <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                    </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">          </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Syndrome           </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                 </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                    </span>
-  Dehydration          T047       Disease or           6                 6.0606060606060606
-                                  Syndrome
- <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Pulmonary Embolism </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> T047     </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Disease or         </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> 6               </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> 6.0606060606060606 </span>
+  nervous system       T047       Disease or           58                7.785234899328859
+  disorder                        Syndrome
+ <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Coronary           </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> T047     </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Disease or         </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> 50              </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> 6.7114093959731544 </span>
+ <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Arteriosclerosis   </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">          </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Syndrome           </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                 </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                    </span>
+  Drug abuse           T048       Mental or            50                6.7114093959731544
+                                  Behavioral
+                                  Dysfunction
+ <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Pneumonia          </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> T047     </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Disease or         </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> 50              </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> 6.7114093959731544 </span>
  <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                    </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">          </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> Syndrome           </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                 </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                    </span>
 
 </pre></div>
@@ -997,8 +1093,8 @@ Annotated until now: 120 docs; Current BS: 16 docs; Elapsed time: 0.76 minutes
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.tl.umap(ep_medcat.anndata)
-ep.pl.umap(ep_medcat, color=["Diabetes", "Congestive heart failure"])
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span><span class="n">ep_medcat</span><span class="o">.</span><span class="n">anndata</span><span class="p">)</span>
+<span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span><span class="n">ep_medcat</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Diabetes&quot;</span><span class="p">,</span> <span class="s2">&quot;Congestive heart failure&quot;</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
@@ -1006,7 +1102,7 @@ ep.pl.umap(ep_medcat, color=["Diabetes", "Congestive heart failure"])
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_medcat_20_0.png" src="../../_images/tutorials_notebooks_medcat_20_0.png"/>
+<img alt="../../_images/tutorials_notebooks_medcat_20_0.png" src="../../_images/tutorials_notebooks_medcat_20_0.png" />
 </div>
 </div>
 <p>It is still possible to color by the original columns in the AnnData object with the MedCAT object.</p>
@@ -1014,7 +1110,7 @@ ep.pl.umap(ep_medcat, color=["Diabetes", "Congestive heart failure"])
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.umap(ep_medcat, color=["gender", "age_year", "Diabetes"])
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span><span class="n">ep_medcat</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;gender&quot;</span><span class="p">,</span> <span class="s2">&quot;age_year&quot;</span><span class="p">,</span> <span class="s2">&quot;Diabetes&quot;</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
@@ -1022,7 +1118,7 @@ ep.pl.umap(ep_medcat, color=["Diabetes", "Congestive heart failure"])
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_medcat_22_0.png" src="../../_images/tutorials_notebooks_medcat_22_0.png"/>
+<img alt="../../_images/tutorials_notebooks_medcat_22_0.png" src="../../_images/tutorials_notebooks_medcat_22_0.png" />
 </div>
 </div>
 <p>Passing an AnnData object instead of an ehrapy MedCAT object will also work, but not with extracted entities.</p>
@@ -1030,7 +1126,7 @@ ep.pl.umap(ep_medcat, color=["Diabetes", "Congestive heart failure"])
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.umap(ep_medcat.anndata, color=["gender", "age_year"])
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span><span class="n">ep_medcat</span><span class="o">.</span><span class="n">anndata</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;gender&quot;</span><span class="p">,</span> <span class="s2">&quot;age_year&quot;</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
@@ -1038,7 +1134,7 @@ ep.pl.umap(ep_medcat, color=["Diabetes", "Congestive heart failure"])
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_medcat_24_0.png" src="../../_images/tutorials_notebooks_medcat_24_0.png"/>
+<img alt="../../_images/tutorials_notebooks_medcat_24_0.png" src="../../_images/tutorials_notebooks_medcat_24_0.png" />
 </div>
 </div>
 <p>Typos are automatically fixed by ehrapy whenever possible.</p>
@@ -1046,7 +1142,7 @@ ep.pl.umap(ep_medcat, color=["Diabetes", "Congestive heart failure"])
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.umap(ep_medcat, color=["Diubetes", "Heart Failure"])
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span><span class="n">ep_medcat</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Diubetes&quot;</span><span class="p">,</span> <span class="s2">&quot;Heart Failure&quot;</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
@@ -1061,15 +1157,14 @@ ep.pl.umap(ep_medcat, color=["Diabetes", "Congestive heart failure"])
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area rendered_html docutils container">
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #808000; text-decoration-color: #808000; font-weight: bold">Did not find </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">Heart Failure </span><span style="color: #808000; text-decoration-color: #808000; font-weight: bold">in medcat's extracted entities. Will use best match Congestive </span>
-<span style="color: #808000; text-decoration-color: #808000; font-weight: bold">heart failure!</span>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #808000; text-decoration-color: #808000; font-weight: bold">Did not find </span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">Heart Failure </span><span style="color: #808000; text-decoration-color: #808000; font-weight: bold">in medcat's extracted entities. Will use best match Heart failure!</span>
 </pre></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_medcat_26_2.png" src="../../_images/tutorials_notebooks_medcat_26_2.png"/>
+<img alt="../../_images/tutorials_notebooks_medcat_26_2.png" src="../../_images/tutorials_notebooks_medcat_26_2.png" />
 </div>
 </div>
 <p>All other features of ehrapy are of course also available.</p>
@@ -1077,16 +1172,16 @@ ep.pl.umap(ep_medcat, color=["Diabetes", "Congestive heart failure"])
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.tl.leiden(ep_medcat.anndata, resolution=0.5, key_added="leiden_0_5")
-ep.tl.paga(ep_medcat.anndata, groups="leiden_0_5")
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">leiden</span><span class="p">(</span><span class="n">ep_medcat</span><span class="o">.</span><span class="n">anndata</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">key_added</span><span class="o">=</span><span class="s2">&quot;leiden_0_5&quot;</span><span class="p">)</span>
+<span class="n">ep</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">paga</span><span class="p">(</span><span class="n">ep_medcat</span><span class="o">.</span><span class="n">anndata</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="s2">&quot;leiden_0_5&quot;</span><span class="p">)</span>
 
-# paga currently does not support medcat extracted entities directly (as of ehrapy 0.2.0)
-ep.pl.paga(
-    ep_medcat.anndata,
-    color=["leiden_0_5", "gender"],
-    cmap=ep.pl.Colormaps.grey_red.value,
-    title=["Leiden 0.5", "Gender"],
-)
+<span class="c1"># paga currently does not support medcat extracted entities directly (as of ehrapy 0.2.0)</span>
+<span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">paga</span><span class="p">(</span>
+    <span class="n">ep_medcat</span><span class="o">.</span><span class="n">anndata</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;leiden_0_5&quot;</span><span class="p">,</span> <span class="s2">&quot;gender&quot;</span><span class="p">],</span>
+    <span class="n">cmap</span><span class="o">=</span><span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">Colormaps</span><span class="o">.</span><span class="n">grey_red</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+    <span class="n">title</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Leiden 0.5&quot;</span><span class="p">,</span> <span class="s2">&quot;Gender&quot;</span><span class="p">],</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1094,15 +1189,15 @@ ep.pl.paga(
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_medcat_28_0.png" src="../../_images/tutorials_notebooks_medcat_28_0.png"/>
+<img alt="../../_images/tutorials_notebooks_medcat_28_0.png" src="../../_images/tutorials_notebooks_medcat_28_0.png" />
 </div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.tl.draw_graph(ep_medcat.anndata, init_pos="paga")
-ep.pl.draw_graph(ep_medcat, color=["gender", "Diabetes"], legend_loc="on data")
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">draw_graph</span><span class="p">(</span><span class="n">ep_medcat</span><span class="o">.</span><span class="n">anndata</span><span class="p">,</span> <span class="n">init_pos</span><span class="o">=</span><span class="s2">&quot;paga&quot;</span><span class="p">)</span>
+<span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">draw_graph</span><span class="p">(</span><span class="n">ep_medcat</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;gender&quot;</span><span class="p">,</span> <span class="s2">&quot;Diabetes&quot;</span><span class="p">],</span> <span class="n">legend_loc</span><span class="o">=</span><span class="s2">&quot;on data&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1110,14 +1205,14 @@ ep.pl.draw_graph(ep_medcat, color=["gender", "Diabetes"], legend_loc="on data")
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_medcat_29_0.png" src="../../_images/tutorials_notebooks_medcat_29_0.png"/>
+<img alt="../../_images/tutorials_notebooks_medcat_29_0.png" src="../../_images/tutorials_notebooks_medcat_29_0.png" />
 </div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.tracksplot(ep_medcat, list(ep_medcat.anndata.var_names), groupby="Diabetes")
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">tracksplot</span><span class="p">(</span><span class="n">ep_medcat</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">ep_medcat</span><span class="o">.</span><span class="n">anndata</span><span class="o">.</span><span class="n">var_names</span><span class="p">),</span> <span class="n">groupby</span><span class="o">=</span><span class="s2">&quot;Diabetes&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1125,9 +1220,10 @@ ep.pl.draw_graph(ep_medcat, color=["gender", "Diabetes"], legend_loc="on data")
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_notebooks_medcat_30_0.png" src="../../_images/tutorials_notebooks_medcat_30_0.png"/>
+<img alt="../../_images/tutorials_notebooks_medcat_30_0.png" src="../../_images/tutorials_notebooks_medcat_30_0.png" />
 </div>
 </div>
+</section>
 </section>
 
         </article>
@@ -1186,9 +1282,11 @@ ep.pl.draw_graph(ep_medcat, color=["gender", "Diabetes"], legend_loc="on data")
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">Extracting from free text with MedCAT</a></li>
+<li><a class="reference internal" href="#">Extracting from free text with MedCAT</a><ul>
 <li><a class="reference internal" href="#Custom-MedCAT-object-of-ehrapy">Custom MedCAT object of ehrapy</a></li>
 <li><a class="reference internal" href="#Extracting-and-visualizing-all-disease-entities">Extracting and visualizing all disease entities</a></li>
+</ul>
+</li>
 </ul>
 
           </div>
@@ -1201,6 +1299,7 @@ ep.pl.draw_graph(ep_medcat, color=["gender", "Diabetes"], legend_loc="on data")
 </div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../_static/doctools.js"></script>
     <script src="../../_static/scripts/furo.js"></script>
     <script src="../../_static/clipboard.min.js"></script>

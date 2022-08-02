@@ -359,7 +359,7 @@ and vice versa.
 
 ```{eval-rst}
 .. autosummary::
-    :toctree: ad
+    :toctree: anndata
     :nosignatures:
 
     anndata.df_to_anndata

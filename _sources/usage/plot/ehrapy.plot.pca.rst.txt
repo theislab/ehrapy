@@ -1,0 +1,6 @@
+﻿ehrapy.plot.pca
+===============
+
+.. currentmodule:: ehrapy.plot
+
+.. autofunction:: pca

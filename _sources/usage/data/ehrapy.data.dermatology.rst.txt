@@ -1,0 +1,6 @@
+﻿ehrapy.data.dermatology
+=======================
+
+.. currentmodule:: ehrapy.data
+
+.. autofunction:: dermatology

@@ -1,0 +1,6 @@
+﻿ehrapy.plot.clustermap
+======================
+
+.. currentmodule:: ehrapy.plot
+
+.. autofunction:: clustermap

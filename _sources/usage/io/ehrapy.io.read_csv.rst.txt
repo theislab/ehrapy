@@ -1,0 +1,6 @@
+﻿ehrapy.io.read\_csv
+===================
+
+.. currentmodule:: ehrapy.io
+
+.. autofunction:: read_csv

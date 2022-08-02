@@ -1,0 +1,1280 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" />
+
+    <meta name="generator" content="sphinx-5.1.1, furo 2022.06.21"/>
+        <title>ehrapy.io._read - ehrapy</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?digest=40978830699223671f4072448e654b5958f38b89" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/override.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/sphinx_gallery.css" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  --color-brand-primary: #003262;
+  --color-brand-content: #003262;
+  --admonition-font-size: var(--font-size-normal);
+  --admonition-title-font-size: var(--font-size-normal);
+  --code-font-size: var(--font-size--small);
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../../index.html"><div class="brand">ehrapy</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand centered" href="../../../index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../../_static/ehrapy_pure.png" alt="Logo"/>
+  </div>
+  
+  
+</a><form class="sidebar-search-container" method="get" action="../../../search.html" role="search">
+  <input class="sidebar-search" placeholder=Search name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../usage/usage.html">Usage</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/io/ehrapy.io.read_csv.html">ehrapy.io.read_csv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/io/ehrapy.io.read_h5ad.html">ehrapy.io.read_h5ad</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/io/ehrapy.io.read_pdf.html">ehrapy.io.read_pdf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/io/ehrapy.io.write.html">ehrapy.io.write</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/data/ehrapy.data.mimic_2.html">ehrapy.data.mimic_2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/data/ehrapy.data.mimic_3_demo.html">ehrapy.data.mimic_3_demo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/data/ehrapy.data.diabetes_130.html">ehrapy.data.diabetes_130</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/data/ehrapy.data.heart_failure.html">ehrapy.data.heart_failure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/data/ehrapy.data.chronic_kidney_disease.html">ehrapy.data.chronic_kidney_disease</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/data/ehrapy.data.breast_tissue.html">ehrapy.data.breast_tissue</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/data/ehrapy.data.cervical_cancer_risk_factors.html">ehrapy.data.cervical_cancer_risk_factors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/data/ehrapy.data.dermatology.html">ehrapy.data.dermatology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/data/ehrapy.data.echocardiogram.html">ehrapy.data.echocardiogram</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/data/ehrapy.data.heart_disease.html">ehrapy.data.heart_disease</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/data/ehrapy.data.hepatitis.html">ehrapy.data.hepatitis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/data/ehrapy.data.statlog_heart.html">ehrapy.data.statlog_heart</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/data/ehrapy.data.thyroid.html">ehrapy.data.thyroid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/data/ehrapy.data.breast_cancer_coimbra.html">ehrapy.data.breast_cancer_coimbra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/data/ehrapy.data.parkinson_dataset_with_replicated_acoustic_features.html">ehrapy.data.parkinson_dataset_with_replicated_acoustic_features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/data/ehrapy.data.parkinsons.html">ehrapy.data.parkinsons</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/data/ehrapy.data.parkinsons_disease_classification.html">ehrapy.data.parkinsons_disease_classification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/data/ehrapy.data.parkinsons_telemonitoring.html">ehrapy.data.parkinsons_telemonitoring</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/preprocessing/ehrapy.preprocessing.pca.html">ehrapy.preprocessing.pca</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/preprocessing/ehrapy.preprocessing.regress_out.html">ehrapy.preprocessing.regress_out</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/preprocessing/ehrapy.preprocessing.subsample.html">ehrapy.preprocessing.subsample</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/preprocessing/ehrapy.preprocessing.highly_variable_features.html">ehrapy.preprocessing.highly_variable_features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/preprocessing/ehrapy.preprocessing.qc_metrics.html">ehrapy.preprocessing.qc_metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/preprocessing/ehrapy.preprocessing.qc_lab_measurements.html">ehrapy.preprocessing.qc_lab_measurements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/imputation/ehrapy.preprocessing.explicit_impute.html">ehrapy.preprocessing.explicit_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/imputation/ehrapy.preprocessing.simple_impute.html">ehrapy.preprocessing.simple_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/imputation/ehrapy.preprocessing.knn_impute.html">ehrapy.preprocessing.knn_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/imputation/ehrapy.preprocessing.miss_forest_impute.html">ehrapy.preprocessing.miss_forest_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/imputation/ehrapy.preprocessing.soft_impute.html">ehrapy.preprocessing.soft_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/imputation/ehrapy.preprocessing.iterative_svd_impute.html">ehrapy.preprocessing.iterative_svd_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/imputation/ehrapy.preprocessing.matrix_factorization_impute.html">ehrapy.preprocessing.matrix_factorization_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/imputation/ehrapy.preprocessing.nuclear_norm_minimization_impute.html">ehrapy.preprocessing.nuclear_norm_minimization_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/imputation/ehrapy.preprocessing.mice_forest_impute.html">ehrapy.preprocessing.mice_forest_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/preprocessing/ehrapy.preprocessing.encode.html">ehrapy.preprocessing.encode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/preprocessing/ehrapy.preprocessing.undo_encoding.html">ehrapy.preprocessing.undo_encoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/preprocessing/ehrapy.preprocessing.log_norm.html">ehrapy.preprocessing.log_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/preprocessing/ehrapy.preprocessing.maxabs_norm.html">ehrapy.preprocessing.maxabs_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/preprocessing/ehrapy.preprocessing.minmax_norm.html">ehrapy.preprocessing.minmax_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/preprocessing/ehrapy.preprocessing.power_norm.html">ehrapy.preprocessing.power_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/preprocessing/ehrapy.preprocessing.quantile_norm.html">ehrapy.preprocessing.quantile_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/preprocessing/ehrapy.preprocessing.robust_scale_norm.html">ehrapy.preprocessing.robust_scale_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/preprocessing/ehrapy.preprocessing.scale_norm.html">ehrapy.preprocessing.scale_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/preprocessing/ehrapy.preprocessing.sqrt_norm.html">ehrapy.preprocessing.sqrt_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/preprocessing/ehrapy.preprocessing.combat.html">ehrapy.preprocessing.combat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/preprocessing/ehrapy.preprocessing.neighbors.html">ehrapy.preprocessing.neighbors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/tools/ehrapy.tools.pca.html">ehrapy.tools.pca</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/tools/ehrapy.tools.tsne.html">ehrapy.tools.tsne</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/tools/ehrapy.tools.umap.html">ehrapy.tools.umap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/tools/ehrapy.tools.draw_graph.html">ehrapy.tools.draw_graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/tools/ehrapy.tools.diffmap.html">ehrapy.tools.diffmap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/tools/ehrapy.tools.embedding_density.html">ehrapy.tools.embedding_density</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/tools/ehrapy.tools.leiden.html">ehrapy.tools.leiden</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/tools/ehrapy.tools.louvain.html">ehrapy.tools.louvain</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/tools/ehrapy.tools.dendrogram.html">ehrapy.tools.dendrogram</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/tools/ehrapy.tools.dpt.html">ehrapy.tools.dpt</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/tools/ehrapy.tools.paga.html">ehrapy.tools.paga</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/tools/ehrapy.tools.rank_features_groups.html">ehrapy.tools.rank_features_groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/tools/ehrapy.tools.filter_rank_features_groups.html">ehrapy.tools.filter_rank_features_groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/tools/ehrapy.tools.marker_feature_overlap.html">ehrapy.tools.marker_feature_overlap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/tools/ehrapy.tools.ingest.html">ehrapy.tools.ingest</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/tools/ehrapy.tools.Translator.html">ehrapy.tools.Translator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/tools/ehrapy.tools.HPOMapper.html">ehrapy.tools.HPOMapper</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/tools/ehrapy.tools.MedCAT.html">ehrapy.tools.MedCAT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/tools/ehrapy.tools.mc.run_unsupervised_training.html">ehrapy.tools.mc.run_unsupervised_training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/tools/ehrapy.tools.mc.annotate_text.html">ehrapy.tools.mc.annotate_text</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/tools/ehrapy.tools.mc.get_annotation_overview.html">ehrapy.tools.mc.get_annotation_overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/tools/ehrapy.tools.ols.html">ehrapy.tools.ols</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/tools/ehrapy.tools.glm.html">ehrapy.tools.glm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/tools/ehrapy.tools.kmf.html">ehrapy.tools.kmf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/plot/ehrapy.plot.scatter.html">ehrapy.plot.scatter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/plot/ehrapy.plot.heatmap.html">ehrapy.plot.heatmap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/plot/ehrapy.plot.dotplot.html">ehrapy.plot.dotplot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/plot/ehrapy.plot.tracksplot.html">ehrapy.plot.tracksplot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/plot/ehrapy.plot.violin.html">ehrapy.plot.violin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/plot/ehrapy.plot.stacked_violin.html">ehrapy.plot.stacked_violin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/plot/ehrapy.plot.matrixplot.html">ehrapy.plot.matrixplot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/plot/ehrapy.plot.clustermap.html">ehrapy.plot.clustermap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/plot/ehrapy.plot.ranking.html">ehrapy.plot.ranking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/plot/ehrapy.plot.dendrogram.html">ehrapy.plot.dendrogram</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/plot/ehrapy.plot.qc_metrics.html">ehrapy.plot.qc_metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/plot/ehrapy.plot.pca.html">ehrapy.plot.pca</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/plot/ehrapy.plot.pca_loadings.html">ehrapy.plot.pca_loadings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/plot/ehrapy.plot.pca_variance_ratio.html">ehrapy.plot.pca_variance_ratio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/plot/ehrapy.plot.pca_overview.html">ehrapy.plot.pca_overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/plot/ehrapy.plot.tsne.html">ehrapy.plot.tsne</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/plot/ehrapy.plot.umap.html">ehrapy.plot.umap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/plot/ehrapy.plot.diffmap.html">ehrapy.plot.diffmap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/plot/ehrapy.plot.draw_graph.html">ehrapy.plot.draw_graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/plot/ehrapy.plot.spatial.html">ehrapy.plot.spatial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/plot/ehrapy.plot.embedding.html">ehrapy.plot.embedding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/plot/ehrapy.plot.embedding_density.html">ehrapy.plot.embedding_density</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/plot/ehrapy.plot.dpt_groups_pseudotime.html">ehrapy.plot.dpt_groups_pseudotime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/plot/ehrapy.plot.dpt_timeseries.html">ehrapy.plot.dpt_timeseries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/plot/ehrapy.plot.paga.html">ehrapy.plot.paga</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/plot/ehrapy.plot.paga_path.html">ehrapy.plot.paga_path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/plot/ehrapy.plot.paga_compare.html">ehrapy.plot.paga_compare</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/plot/ehrapy.plot.rank_features_groups.html">ehrapy.plot.rank_features_groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/plot/ehrapy.plot.rank_features_groups_violin.html">ehrapy.plot.rank_features_groups_violin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/plot/ehrapy.plot.rank_features_groups_stacked_violin.html">ehrapy.plot.rank_features_groups_stacked_violin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/plot/ehrapy.plot.rank_features_groups_heatmap.html">ehrapy.plot.rank_features_groups_heatmap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/plot/ehrapy.plot.rank_features_groups_dotplot.html">ehrapy.plot.rank_features_groups_dotplot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/plot/ehrapy.plot.rank_features_groups_matrixplot.html">ehrapy.plot.rank_features_groups_matrixplot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/plot/ehrapy.plot.rank_features_groups_tracksplot.html">ehrapy.plot.rank_features_groups_tracksplot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/tools/ehrapy.plot.ols.html">ehrapy.plot.ols</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/tools/ehrapy.plot.kmf.html">ehrapy.plot.kmf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/anndata/ehrapy.anndata.df_to_anndata.html">ehrapy.anndata.df_to_anndata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/anndata/ehrapy.anndata.anndata_to_df.html">ehrapy.anndata.anndata_to_df</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/anndata/ehrapy.anndata.move_to_obs.html">ehrapy.anndata.move_to_obs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/anndata/ehrapy.anndata.move_to_x.html">ehrapy.anndata.move_to_x</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage/anndata/ehrapy.anndata.type_overview.html">ehrapy.anndata.type_overview</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../tutorials/index.html">Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorials/notebooks/ehrapy_introduction.html">Introduction to ehrapy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorials/notebooks/mimic_2_introduction.html">MIMIC-II IAC Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorials/notebooks/mimic_2_fate.html">MIMIC-II Patient Fate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorials/notebooks/mimic_2_survival_analysis.html">MIMIC-II Survival Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorials/notebooks/diabetes_130.html">Diabetes 130 Vignette</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorials/notebooks/medcat.html">Extracting from free text with MedCAT</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributor Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../code_of_conduct.html">Code of Conduct</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/theislab/ehrapy/discussions">Discussions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authors.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../references.html">References</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <h1>Source code for ehrapy.io._read</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Iterator</span>
+
+<span class="kn">import</span> <span class="nn">camelot</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">_collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span> <span class="nn">anndata</span> <span class="kn">import</span> <span class="n">AnnData</span>
+<span class="kn">from</span> <span class="nn">anndata</span> <span class="kn">import</span> <span class="n">read</span> <span class="k">as</span> <span class="n">read_h5</span>
+<span class="kn">from</span> <span class="nn">mudata</span> <span class="kn">import</span> <span class="n">MuData</span>
+<span class="kn">from</span> <span class="nn">rich</span> <span class="kn">import</span> <span class="nb">print</span>
+
+<span class="kn">from</span> <span class="nn">ehrapy</span> <span class="kn">import</span> <span class="n">ehrapy_settings</span><span class="p">,</span> <span class="n">settings</span>
+<span class="kn">from</span> <span class="nn">ehrapy.anndata.anndata_ext</span> <span class="kn">import</span> <span class="n">df_to_anndata</span>
+<span class="kn">from</span> <span class="nn">ehrapy.data._dataloader</span> <span class="kn">import</span> <span class="n">download</span>
+<span class="kn">from</span> <span class="nn">ehrapy.preprocessing._encode</span> <span class="kn">import</span> <span class="n">encode</span>
+
+
+<div class="viewcode-block" id="read_csv"><a class="viewcode-back" href="../../../usage/io/ehrapy.io.read_csv.html#ehrapy.io.read_csv">[docs]</a><span class="k">def</span> <span class="nf">read_csv</span><span class="p">(</span>
+    <span class="n">dataset_path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">sep</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="p">,</span>
+    <span class="n">index_column</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">columns_obs_only</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">columns_x_only</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">return_dfs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">return_mudata</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">cache</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">backup_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">download_dataset_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AnnData</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AnnData</span><span class="p">]</span> <span class="o">|</span> <span class="n">MuData</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Reads or downloads a desired directory of csv/tsv files or a single csv/tsv file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        dataset_path: Path to the file or directory to read.</span>
+<span class="sd">        sep: Separator in the file; either , (default) or \t.</span>
+<span class="sd">        index_column: The index column of obs. Usually the patient visit ID or the patient ID.</span>
+<span class="sd">        columns_obs_only: These columns will be added to obs only and not X.</span>
+<span class="sd">        columns_x_only: These columns will be added to X only and all remaining columns to obs. Note that datetime columns will always be added to .obs though.</span>
+<span class="sd">        return_dfs: Whether to return one or several Pandas DataFrames.</span>
+<span class="sd">        return_mudata: Whether to create and return a MuData object. This is primarily used for complex datasets which require several AnnData files.</span>
+<span class="sd">        cache: Whether to write to cache when reading or not. (default: False)</span>
+<span class="sd">        download_dataset_name: Name of the file or directory in case the dataset is downloaded</span>
+<span class="sd">        backup_url: URL to download the data file(s) from if not yet existing.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        An :class:`~anndata.AnnData` object, a :class:`~mudata.MuData` object or a dict with an identifier (the filename, without extension)</span>
+<span class="sd">        for each :class:`~anndata.AnnData` object in the dict</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            import ehrapy as ep</span>
+<span class="sd">            adata = ep.io.read_csv(&quot;myfile.csv&quot;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_check_columns_only_params</span><span class="p">(</span><span class="n">columns_obs_only</span><span class="p">,</span> <span class="n">columns_x_only</span><span class="p">)</span>
+    <span class="n">file</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">dataset_path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="n">file</span> <span class="o">=</span> <span class="n">_get_non_existing_files</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">download_dataset_name</span><span class="p">,</span> <span class="n">backup_url</span><span class="p">)</span>
+
+    <span class="n">adata</span> <span class="o">=</span> <span class="n">_read_csv</span><span class="p">(</span>
+        <span class="n">filename</span><span class="o">=</span><span class="n">file</span><span class="p">,</span>
+        <span class="n">sep</span><span class="o">=</span><span class="n">sep</span><span class="p">,</span>
+        <span class="n">index_column</span><span class="o">=</span><span class="n">index_column</span><span class="p">,</span>
+        <span class="n">columns_obs_only</span><span class="o">=</span><span class="n">columns_obs_only</span><span class="p">,</span>
+        <span class="n">columns_x_only</span><span class="o">=</span><span class="n">columns_x_only</span><span class="p">,</span>
+        <span class="n">return_dfs</span><span class="o">=</span><span class="n">return_dfs</span><span class="p">,</span>
+        <span class="n">return_mudata</span><span class="o">=</span><span class="n">return_mudata</span><span class="p">,</span>
+        <span class="n">cache</span><span class="o">=</span><span class="n">cache</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">adata</span></div>
+
+
+<div class="viewcode-block" id="read_h5ad"><a class="viewcode-back" href="../../../usage/io/ehrapy.io.read_h5ad.html#ehrapy.io.read_h5ad">[docs]</a><span class="k">def</span> <span class="nf">read_h5ad</span><span class="p">(</span>
+    <span class="n">dataset_path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">backup_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">download_dataset_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AnnData</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AnnData</span><span class="p">]</span> <span class="o">|</span> <span class="n">MuData</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Reads or downloads a desired directory of h5ad files or a single h5ad file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        dataset_path: Path to the file or directory to read.</span>
+<span class="sd">        download_dataset_name: Name of the file or directory in case the dataset is downloaded</span>
+<span class="sd">        backup_url: URL to download the data file(s) from if not yet existing.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        An :class:`~anndata.AnnData` object or a dict with an identifier (the filename, without extension)</span>
+<span class="sd">        for each :class:`~anndata.AnnData` object in the dict</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            import ehrapy as ep</span>
+
+<span class="sd">            adata = eh.data.mimic_2(encode=True)</span>
+<span class="sd">            ep.io.write(&quot;mimic_2.h5ad&quot;, adata)</span>
+<span class="sd">            adata_2 = ep.io.read_h5ad(&quot;mimic_2.h5ad&quot;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">file</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">dataset_path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="n">file</span> <span class="o">=</span> <span class="n">_get_non_existing_files</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">download_dataset_name</span><span class="p">,</span> <span class="n">backup_url</span><span class="p">)</span>
+
+    <span class="n">adata</span> <span class="o">=</span> <span class="n">_read_h5ad</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">file</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">adata</span></div>
+
+
+<div class="viewcode-block" id="read_pdf"><a class="viewcode-back" href="../../../usage/io/ehrapy.io.read_pdf.html#ehrapy.io.read_pdf">[docs]</a><span class="k">def</span> <span class="nf">read_pdf</span><span class="p">(</span>
+    <span class="n">dataset_path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">index_column</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">columns_obs_only</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">columns_x_only</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">return_mudata</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">cache</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">backup_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">download_dataset_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AnnData</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AnnData</span><span class="p">]</span> <span class="o">|</span> <span class="n">MuData</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Reads or downloads a desired directory of pdf files or a single pdf file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        dataset_path: Path to the file or directory to read.</span>
+<span class="sd">        index_column: The index column of obs. Usually the patient visit ID or the patient ID.</span>
+<span class="sd">        columns_obs_only: These columns will be added to obs only and not X.</span>
+<span class="sd">        columns_x_only: These columns will be added to X only and all remaining columns to obs. Note that datetime columns will always be added to .obs though.</span>
+<span class="sd">        return_mudata: Whether to create and return a MuData object. This is primarily used for complex datasets which require several AnnData files.</span>
+<span class="sd">        cache: Whether to write to cache when reading or not.</span>
+<span class="sd">        download_dataset_name: Name of the file or directory in case the dataset is downloaded</span>
+<span class="sd">        backup_url: URL to download the data file(s) from if not yet existing.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        An :class:`~anndata.AnnData` object, a :class:`~mudata.MuData` object or a dict with an identifier (the filename, without extension)</span>
+<span class="sd">        for each :class:`~anndata.AnnData` object in the dict</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            import ehrapy as ep</span>
+
+<span class="sd">            adatas = ep.io.read_pdf(&quot;myfile.pdf&quot;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_check_columns_only_params</span><span class="p">(</span><span class="n">columns_obs_only</span><span class="p">,</span> <span class="n">columns_x_only</span><span class="p">)</span>
+    <span class="n">file</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">dataset_path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="n">file</span> <span class="o">=</span> <span class="n">_get_non_existing_files</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">download_dataset_name</span><span class="p">,</span> <span class="n">backup_url</span><span class="p">)</span>
+
+    <span class="n">adata</span> <span class="o">=</span> <span class="n">_read_pdf</span><span class="p">(</span>
+        <span class="n">filename</span><span class="o">=</span><span class="n">file</span><span class="p">,</span>
+        <span class="n">index_column</span><span class="o">=</span><span class="n">index_column</span><span class="p">,</span>
+        <span class="n">columns_obs_only</span><span class="o">=</span><span class="n">columns_obs_only</span><span class="p">,</span>
+        <span class="n">columns_x_only</span><span class="o">=</span><span class="n">columns_x_only</span><span class="p">,</span>
+        <span class="n">return_mudata</span><span class="o">=</span><span class="n">return_mudata</span><span class="p">,</span>
+        <span class="n">cache</span><span class="o">=</span><span class="n">cache</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">adata</span></div>
+
+
+<span class="k">def</span> <span class="nf">_read_csv</span><span class="p">(</span>
+    <span class="n">filename</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">sep</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">index_column</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">columns_obs_only</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">columns_x_only</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">return_dfs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">return_mudata</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">cache</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AnnData</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AnnData</span><span class="p">]</span> <span class="o">|</span> <span class="n">MuData</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Internal interface of the read_csv method.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">cache</span> <span class="ow">and</span> <span class="p">(</span><span class="n">return_mudata</span> <span class="ow">or</span> <span class="n">return_dfs</span><span class="p">):</span>
+        <span class="n">_cache_not_supported</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">return_dfs</span> <span class="ow">and</span> <span class="p">(</span><span class="n">columns_x_only</span> <span class="ow">or</span> <span class="n">columns_obs_only</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">Warning</span><span class="p">(</span>
+            <span class="s2">&quot;Parameters columns_x_only and columns_obs_only are not supported when returning Pandas DataFrames.&quot;</span>
+        <span class="p">)</span>
+    <span class="n">path_cache</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">cachedir</span> <span class="o">/</span> <span class="n">filename</span>
+    <span class="c1"># reading from (cache) file is separated in the read_h5ad function</span>
+    <span class="k">if</span> <span class="n">cache</span> <span class="ow">and</span> <span class="p">(</span><span class="n">path_cache</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()</span> <span class="ow">or</span> <span class="n">path_cache</span><span class="o">.</span><span class="n">is_file</span><span class="p">()):</span>
+        <span class="k">raise</span> <span class="n">CacheExistsException</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">path_cache</span><span class="si">}</span><span class="s2"> already exists. Use the read_h5ad function instead to read from cache!&quot;</span>
+        <span class="p">)</span>
+    <span class="c1"># If the filename is a directory, assume it is a dataset with multiple files</span>
+    <span class="k">elif</span> <span class="n">filename</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+        <span class="k">return</span> <span class="n">_read_from_directory</span><span class="p">(</span>
+            <span class="n">filename</span><span class="p">,</span>
+            <span class="n">cache</span><span class="p">,</span>
+            <span class="n">path_cache</span><span class="p">,</span>
+            <span class="n">extension</span><span class="o">=</span><span class="n">sep</span><span class="p">,</span>
+            <span class="n">index_column</span><span class="o">=</span><span class="n">index_column</span><span class="p">,</span>
+            <span class="n">columns_obs_only</span><span class="o">=</span><span class="n">columns_obs_only</span><span class="p">,</span>
+            <span class="n">columns_x_only</span><span class="o">=</span><span class="n">columns_x_only</span><span class="p">,</span>
+            <span class="n">return_dfs</span><span class="o">=</span><span class="n">return_dfs</span><span class="p">,</span>
+            <span class="n">return_mudata</span><span class="o">=</span><span class="n">return_mudata</span><span class="p">,</span>  <span class="c1"># type: ignore</span>
+        <span class="p">)</span>
+    <span class="c1"># input is a single file</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">sep</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">}:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Please provide one of the available separators , or tab&quot;</span><span class="p">)</span>
+        <span class="n">adata</span><span class="p">,</span> <span class="n">columns_obs_only</span> <span class="o">=</span> <span class="n">_do_read_csv</span><span class="p">(</span>
+            <span class="n">filename</span><span class="p">,</span> <span class="n">sep</span><span class="p">,</span> <span class="n">index_column</span><span class="p">,</span> <span class="n">columns_obs_only</span><span class="p">,</span> <span class="n">columns_x_only</span><span class="p">,</span> <span class="n">cache</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>  <span class="c1"># type: ignore</span>
+        <span class="p">)</span>
+        <span class="c1"># cache results if desired</span>
+        <span class="k">if</span> <span class="n">cache</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">path_cache</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+                <span class="n">path_cache</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">_write_cache</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">path_cache</span><span class="p">,</span> <span class="n">columns_obs_only</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+        <span class="k">return</span> <span class="n">adata</span>
+
+
+<span class="k">def</span> <span class="nf">_read_h5ad</span><span class="p">(</span>
+    <span class="n">filename</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AnnData</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AnnData</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Internal interface of the read_h5ad method.&quot;&quot;&quot;</span>
+
+    <span class="c1"># If the filename is a directory, assume it is a dataset with h5ad multiple files</span>
+    <span class="k">if</span> <span class="n">filename</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+        <span class="k">return</span> <span class="n">_read_from_directory</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;h5ad&quot;</span><span class="p">)</span>
+    <span class="c1"># dataset is a single h5ad file</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_do_read_h5ad</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_read_pdf</span><span class="p">(</span>
+    <span class="n">filename</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">index_column</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">columns_obs_only</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">columns_x_only</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">return_mudata</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">cache</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AnnData</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AnnData</span><span class="p">]</span> <span class="o">|</span> <span class="n">MuData</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Internal interface of the read_pdf method.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">cache</span> <span class="ow">and</span> <span class="n">return_mudata</span><span class="p">:</span>
+        <span class="n">_cache_not_supported</span><span class="p">()</span>
+    <span class="n">path_cache</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">cachedir</span> <span class="o">/</span> <span class="n">filename</span><span class="o">.</span><span class="n">stem</span>
+    <span class="k">if</span> <span class="n">cache</span> <span class="ow">and</span> <span class="p">(</span><span class="n">path_cache</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()</span> <span class="ow">or</span> <span class="n">path_cache</span><span class="o">.</span><span class="n">is_file</span><span class="p">()):</span>
+        <span class="k">raise</span> <span class="n">CacheExistsException</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">path_cache</span><span class="si">}</span><span class="s2"> already exists. Use the read_h5ad function instead to read from cache!&quot;</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">filename</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">UnsupportedDirectoryParsingFormatException</span><span class="p">(</span>
+            <span class="s2">&quot;Can only parse csv, tsv or h5ad files from a directory, not pdf!&quot;</span>
+        <span class="p">)</span>
+    <span class="c1"># dataset is a single pdf file</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">adata</span><span class="p">,</span> <span class="n">columns_obs_only</span> <span class="o">=</span> <span class="n">_do_read_pdf</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">index_column</span><span class="p">,</span> <span class="n">columns_obs_only</span><span class="p">,</span> <span class="n">columns_x_only</span><span class="p">,</span> <span class="n">cache</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+        <span class="c1"># set cache path, since its a single input file which will be stored in (eventually) multiple cache files</span>
+        <span class="n">path_cache</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">cachedir</span> <span class="o">/</span> <span class="n">filename</span><span class="o">.</span><span class="n">stem</span>  <span class="c1"># type: ignore</span>
+        <span class="k">if</span> <span class="n">cache</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">path_cache</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+                <span class="n">path_cache</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">path_cache</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">_write_cache_dir</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">path_cache</span><span class="p">,</span> <span class="n">columns_obs_only</span><span class="p">,</span> <span class="n">index_column</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+        <span class="k">return</span> <span class="n">adata</span>
+
+
+<span class="k">def</span> <span class="nf">_read_from_directory</span><span class="p">(</span>
+    <span class="n">filename</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">cache</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">path_cache_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">extension</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">index_column</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">columns_obs_only</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">columns_x_only</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">return_dfs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">return_mudata</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AnnData</span><span class="p">]</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Parse AnnData objects or Pandas DataFrames from a directory containing the data files&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">return_dfs</span><span class="p">:</span>
+        <span class="n">dfs</span> <span class="o">=</span> <span class="n">_read_multiple_csv</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="n">extension</span><span class="p">,</span> <span class="n">return_dfs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">dfs</span>  <span class="c1"># type: ignore</span>
+    <span class="k">if</span> <span class="n">extension</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">}:</span>
+        <span class="n">adata_objects</span><span class="p">,</span> <span class="n">columns_obs_only</span> <span class="o">=</span> <span class="n">_read_multiple_csv</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
+            <span class="n">filename</span><span class="p">,</span>
+            <span class="n">sep</span><span class="o">=</span><span class="n">extension</span><span class="p">,</span>
+            <span class="n">index_column</span><span class="o">=</span><span class="n">index_column</span><span class="p">,</span>
+            <span class="n">columns_obs_only</span><span class="o">=</span><span class="n">columns_obs_only</span><span class="p">,</span>
+            <span class="n">columns_x_only</span><span class="o">=</span><span class="n">columns_x_only</span><span class="p">,</span>
+            <span class="n">return_dfs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">return_mudata</span><span class="o">=</span><span class="n">return_mudata</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="c1"># cache results</span>
+        <span class="k">if</span> <span class="n">cache</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">path_cache_dir</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+                <span class="n">path_cache_dir</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">path_cache_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">_write_cache_dir</span><span class="p">(</span><span class="n">adata_objects</span><span class="p">,</span> <span class="n">path_cache_dir</span><span class="p">,</span> <span class="n">columns_obs_only</span><span class="p">,</span> <span class="n">index_column</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+        <span class="k">return</span> <span class="n">adata_objects</span>  <span class="c1"># type: ignore</span>
+    <span class="k">elif</span> <span class="n">extension</span> <span class="o">==</span> <span class="s2">&quot;h5ad&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_read_multiple_h5ad</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reading from directory with .</span><span class="si">{</span><span class="n">extension</span><span class="si">}</span><span class="s2"> files is not implemented yet!&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_read_multiple_csv</span><span class="p">(</span>  <span class="c1"># noqa: N802</span>
+    <span class="n">filename</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">sep</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">index_column</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">columns_obs_only</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">columns_x_only</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">return_dfs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">return_mudata_object</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">cache</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AnnData</span><span class="p">],</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">|</span> <span class="n">MuData</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Read a dataset containing multiple .csv/.tsv files.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        filename: File path to the directory containing multiple .csv/.tsv files.</span>
+<span class="sd">        sep: Either , or \t to determine which files to read.</span>
+<span class="sd">        index_column: Column names of the index columns for obs</span>
+<span class="sd">        columns_obs_only: List of columns per file (AnnData object) which should only be stored in .obs, but not in X. Useful for free text annotations.</span>
+<span class="sd">        columns_x_only: List of columns per file (AnnData object) which should only be stored in .X, but not in obs. Datetime columns will be added to .obs regardless.</span>
+<span class="sd">        return_dfs: When set to True, return a dictionary of Pandas DataFrames.</span>
+<span class="sd">        return_mudata_object: When set to True, return a :class:`~mudata.MuData` object, otherwise a dict of :class:`~anndata.AnnData` objects</span>
+<span class="sd">        cache: Whether to cache results or not</span>
+<span class="sd">        kwargs: Keyword arguments for Pandas read_csv</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        An :class:`~mudata.MuData` object or a dict mapping the filename (object name) to the corresponding :class:`~anndata.AnnData` object and the columns</span>
+<span class="sd">        that are obs only for each object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">obs_only_all</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">return_mudata_object</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">return_dfs</span><span class="p">:</span>
+        <span class="n">anndata_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">elif</span> <span class="n">return_dfs</span><span class="p">:</span>
+        <span class="n">df_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">elif</span> <span class="n">return_mudata_object</span><span class="p">:</span>
+        <span class="n">mudata</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">filename</span><span class="o">.</span><span class="n">iterdir</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="ow">and</span> <span class="n">file</span><span class="o">.</span><span class="n">suffix</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;.csv&quot;</span><span class="p">,</span> <span class="s2">&quot;.tsv&quot;</span><span class="p">}:</span>
+            <span class="c1"># slice off the file suffix .csv or .tsv for a clean file name</span>
+            <span class="n">file_identifier</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">name</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">return_dfs</span><span class="p">:</span>
+                <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="n">sep</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="n">df_dict</span><span class="p">[</span><span class="n">file_identifier</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span>
+                <span class="k">continue</span>
+
+            <span class="n">index_col</span><span class="p">,</span> <span class="n">col_obs_only</span><span class="p">,</span> <span class="n">col_x_only</span> <span class="o">=</span> <span class="n">_extract_index_and_columns_obs_only</span><span class="p">(</span>
+                <span class="n">file_identifier</span><span class="p">,</span> <span class="n">index_column</span><span class="p">,</span> <span class="n">columns_obs_only</span><span class="p">,</span> <span class="n">columns_x_only</span>
+            <span class="p">)</span>
+            <span class="n">adata</span><span class="p">,</span> <span class="n">single_adata_obs_only</span> <span class="o">=</span> <span class="n">_do_read_csv</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">sep</span><span class="p">,</span> <span class="n">index_col</span><span class="p">,</span> <span class="n">col_obs_only</span><span class="p">,</span> <span class="n">col_x_only</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="n">cache</span><span class="p">)</span>
+            <span class="n">obs_only_all</span><span class="p">[</span><span class="n">file_identifier</span><span class="p">]</span> <span class="o">=</span> <span class="n">single_adata_obs_only</span>
+            <span class="c1"># obs indices have to be unique otherwise updating and working with the MuData object will fail</span>
+            <span class="k">if</span> <span class="n">index_col</span><span class="p">:</span>
+                <span class="n">adata</span><span class="o">.</span><span class="n">obs_names_make_unique</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">return_mudata_object</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">mudata</span><span class="p">:</span>
+                    <span class="n">mudata</span> <span class="o">=</span> <span class="n">MuData</span><span class="p">({</span><span class="n">file_identifier</span><span class="p">:</span> <span class="n">adata</span><span class="p">})</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">mudata</span><span class="o">.</span><span class="n">mod</span><span class="p">[</span><span class="n">file_identifier</span><span class="p">]</span> <span class="o">=</span> <span class="n">adata</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">anndata_dict</span><span class="p">[</span><span class="n">file_identifier</span><span class="p">]</span> <span class="o">=</span> <span class="n">adata</span>
+    <span class="k">if</span> <span class="n">return_mudata_object</span><span class="p">:</span>
+        <span class="n">mudata</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">mudata</span>
+    <span class="k">elif</span> <span class="n">return_dfs</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">df_dict</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">anndata_dict</span><span class="p">,</span> <span class="n">obs_only_all</span>
+
+
+<span class="k">def</span> <span class="nf">_read_multiple_h5ad</span><span class="p">(</span>  <span class="c1"># noqa: N802</span>
+    <span class="n">filename</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AnnData</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Read a dataset containing multiple .h5ad files.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        filename: File path to the directory containing multiple .csv/.tsv files.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A dict mapping the filename (object name) to the corresponding :class:`~anndata.AnnData` object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">anndata_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">filename</span><span class="o">.</span><span class="n">iterdir</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="ow">and</span> <span class="n">file</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.h5ad&quot;</span><span class="p">:</span>
+            <span class="c1"># slice off the file suffix .h5ad</span>
+            <span class="n">adata_identifier</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">name</span><span class="p">[:</span><span class="o">-</span><span class="mi">5</span><span class="p">]</span>
+            <span class="n">adata</span> <span class="o">=</span> <span class="n">_do_read_h5ad</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+            <span class="n">anndata_dict</span><span class="p">[</span><span class="n">adata_identifier</span><span class="p">]</span> <span class="o">=</span> <span class="n">adata</span>
+    <span class="k">return</span> <span class="n">anndata_dict</span>
+
+
+<span class="k">def</span> <span class="nf">_do_read_csv</span><span class="p">(</span>
+    <span class="n">filename</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">delimiter</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="p">,</span>
+    <span class="n">index_column</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">columns_obs_only</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">columns_x_only</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">cache</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">AnnData</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Read `.csv` and `.tsv` file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        filename: File path to the csv file.</span>
+<span class="sd">        delimiter: Delimiter separating the csv data within the file.</span>
+<span class="sd">        index_column: Index or column name of the index column (obs)</span>
+<span class="sd">        columns_obs_only: List of columns which only be stored in .obs, but not in X. Useful for free text annotations.</span>
+<span class="sd">        columns_x_only: List of columns which only be stored in X, but not in .obs.</span>
+
+<span class="sd">        cache: Whether the data should be written to cache or not</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        An :class:`~anndata.AnnData` object and the column obs only for the object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">index_column</span> <span class="ow">and</span> <span class="n">columns_obs_only</span> <span class="ow">and</span> <span class="n">index_column</span> <span class="ow">in</span> <span class="n">columns_obs_only</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;[bold yellow]Index column [blue]</span><span class="si">{</span><span class="n">index_column</span><span class="si">}</span><span class="s2"> [yellow]is also used as a column &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;for obs only. Using default indices instead and moving [blue]</span><span class="si">{</span><span class="n">index_column</span><span class="si">}</span><span class="s2"> [yellow]to column_obs_only.&quot;</span>
+            <span class="p">)</span>
+            <span class="n">index_column</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">initial_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="n">delimiter</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="n">index_column</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="c1"># in case the index column is misspelled or does not exist</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">IndexNotFoundError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Could not create AnnData object while reading file </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">. Does index_column named </span><span class="si">{</span><span class="n">index_column</span><span class="si">}</span><span class="s2"> &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;exist in </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">?&quot;</span>
+        <span class="p">)</span> <span class="kn">from</span> <span class="bp">None</span>
+
+    <span class="n">initial_df</span><span class="p">,</span> <span class="n">columns_obs_only</span> <span class="o">=</span> <span class="n">_prepare_dataframe</span><span class="p">(</span><span class="n">initial_df</span><span class="p">,</span> <span class="n">columns_obs_only</span><span class="p">,</span> <span class="n">columns_x_only</span><span class="p">,</span> <span class="n">cache</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">df_to_anndata</span><span class="p">(</span><span class="n">initial_df</span><span class="p">,</span> <span class="n">columns_obs_only</span><span class="p">),</span> <span class="n">columns_obs_only</span>
+
+
+<span class="k">def</span> <span class="nf">_do_read_h5ad</span><span class="p">(</span><span class="n">filename</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">AnnData</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Read from a h5ad file.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        filename: Path to the h5ad file</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        An AnnData object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">adata</span> <span class="o">=</span> <span class="n">read_h5</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">&quot;ehrapy_dummy_encoding&quot;</span> <span class="ow">in</span> <span class="n">adata</span><span class="o">.</span><span class="n">uns</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="c1"># if dummy encoding was needed, the original dtype of X could not be numerical, so cast it to object</span>
+        <span class="n">adata</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;object&quot;</span><span class="p">)</span>
+        <span class="n">decoded_adata</span> <span class="o">=</span> <span class="n">_decode_cached_adata</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s2">&quot;columns_obs_only&quot;</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="n">decoded_adata</span>
+    <span class="k">return</span> <span class="n">adata</span>
+
+
+<span class="k">def</span> <span class="nf">_do_read_pdf</span><span class="p">(</span>
+    <span class="n">filename</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">index_column</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">columns_obs_only</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">columns_x_only</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">cache</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AnnData</span><span class="p">],</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Read `.pdf`. Since a single pdf can contain multiple tables, those will be read into a dict.</span>
+
+<span class="sd">    Currently, ehrapy only supports parsing single pdfs.</span>
+<span class="sd">    Consider the following example: &quot;my_tables.pdf&quot; contains three different tables, which may also differ in size.</span>
+
+<span class="sd">        .. code-block:: python</span>
+<span class="sd">                       import ehrapy as ep</span>
+<span class="sd">                       # read pdf</span>
+<span class="sd">                       adata_dict = ep.io.read(&quot;my_tables.pdf&quot;)</span>
+<span class="sd">                       print(adata_dict)</span>
+<span class="sd">                       # prints</span>
+<span class="sd">                       # {</span>
+<span class="sd">                       # &quot;my_tables_1&quot;: AnnData object with X obs, Y vars.,</span>
+<span class="sd">                       # &quot;my_tables_2&quot;: AnnData object with A obs, B vars.,</span>
+<span class="sd">                       # &quot;my_tables_3&quot;: AnnData object with C obs, D vars.</span>
+<span class="sd">                       # }</span>
+
+<span class="sd">        The example above illustrates, that the different tables will be stored under the index of the</span>
+<span class="sd">        order they appeared in the pdf, prefixed by the pdf filename. This ensures uniqueness, especially in cases</span>
+<span class="sd">        when multiple pdfs will be read, with multiple tables per file.</span>
+
+<span class="sd">        It&#39;s also important to note, that this has to be considered when passing &quot;columns_obs_only&quot;:</span>
+<span class="sd">            .. code-block:: python</span>
+<span class="sd">                           import ehrapy as ep</span>
+
+<span class="sd">                           # read pdf</span>
+<span class="sd">                           adata_dict = ep.io.read(&quot;my_tables.pdf&quot;, columns_obs_only={&quot;0&quot;:[&quot;col1ofTable1&quot;, &quot;col2OfTable1&quot;],</span>
+<span class="sd">                           &quot;1&quot;: [&quot;colOfTable2&quot;]})</span>
+<span class="sd">                           # this will put col1 and col2 of Table 0 of my_tables.pdf into obs only for this AnnData object</span>
+<span class="sd">                           # and col1 of Table 1 of my_tables.pdf into obs only for this respective AnnData object</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        filename: File path to the pdf.</span>
+<span class="sd">        index_column: Column name of the index column (obs)</span>
+<span class="sd">        columns_obs_only: List (per table) of columns which only be stored in .obs, but not in X. Useful for free text annotations.</span>
+<span class="sd">        columns_obs_only: List (per table) of columns which only be stored in X, but not in .obs.</span>
+<span class="sd">        cache: Whether the data should be written to cache or not</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A dict of :class:`~anndata.AnnData` objects and the column obs only for each object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># possible extract modes are lattice (default) or stream; any of them may work better than the other one, depending on the data</span>
+    <span class="n">pdf_extract_mode</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;pdf_mode&quot;</span><span class="p">)</span>
+    <span class="c1"># camelot does not really parses headers in tables correctly; therefore, if there are any headers in the tables, set them as column names</span>
+    <span class="n">header</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;pdf_header&quot;</span><span class="p">)</span>
+    <span class="c1"># read a table list from the pdf</span>
+    <span class="n">initial_df_list</span> <span class="o">=</span> <span class="n">camelot</span><span class="o">.</span><span class="n">read_pdf</span><span class="p">(</span>
+        <span class="nb">str</span><span class="p">(</span><span class="n">filename</span><span class="p">),</span> <span class="n">flavor</span><span class="o">=</span><span class="n">pdf_extract_mode</span> <span class="k">if</span> <span class="n">pdf_extract_mode</span> <span class="k">else</span> <span class="s2">&quot;lattice&quot;</span><span class="p">,</span> <span class="n">pages</span><span class="o">=</span><span class="s2">&quot;all&quot;</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">initial_df_list</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">PdfParsingError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Failed parsing file </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">. Could not parse any data.&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Consider converting your data files to .csv/.tsv before parsing or pass the &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;guess parameter to the read function, which may improve parsed results!&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">ann_data_objects</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="c1"># one pdf can contain multiple tables, so each of those tables will be one AnnData object</span>
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">table</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">initial_df_list</span><span class="p">):</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">df</span>
+        <span class="n">is_set</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">header</span><span class="p">,</span> <span class="nb">set</span><span class="p">)</span>
+        <span class="c1"># defaults to True, so if header has not been set, assume first row is column names row</span>
+        <span class="c1"># if header is a set and table number idx is in header, also assume first row is also column names row</span>
+        <span class="k">if</span> <span class="n">header</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="p">(</span><span class="n">is_set</span> <span class="ow">and</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">header</span><span class="p">):</span>
+            <span class="c1"># when the entry in top left corner is empty assume, table has header and index names stored in first row/first column</span>
+            <span class="n">first_empty</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span> <span class="k">if</span> <span class="n">first_empty</span> <span class="k">else</span> <span class="mi">0</span> <span class="p">:]</span>
+            <span class="k">if</span> <span class="n">first_empty</span><span class="p">:</span>
+                <span class="n">index</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">RangeIndex</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">first_empty</span><span class="p">:</span>
+                <span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="n">new_values</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="mi">1</span><span class="p">:]</span> <span class="k">if</span> <span class="n">first_empty</span> <span class="k">else</span> <span class="n">df</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="p">:]</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">new_values</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+                <span class="n">pd</span><span class="o">.</span><span class="n">to_numeric</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,)</span>
+            <span class="p">)</span>  <span class="c1"># convert all columns of the DataFrame to numeric, if possible</span>
+
+        <span class="n">this_index_column</span><span class="p">,</span> <span class="n">this_obs_only</span><span class="p">,</span> <span class="n">this_x_only</span> <span class="o">=</span> <span class="n">_extract_index_and_columns_obs_only</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">filename</span><span class="o">.</span><span class="n">stem</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">index_column</span><span class="p">,</span> <span class="n">columns_obs_only</span><span class="p">,</span> <span class="n">columns_x_only</span>  <span class="c1"># type: ignore</span>
+        <span class="p">)</span>
+
+        <span class="c1"># handle x only by moving the asymmetric difference to obs only instead</span>
+        <span class="k">if</span> <span class="n">this_x_only</span><span class="p">:</span>
+            <span class="n">this_obs_only</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">this_x_only</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">columns_obs_only</span> <span class="ow">or</span> <span class="n">columns_x_only</span><span class="p">:</span>
+            <span class="n">initial_df</span><span class="p">,</span> <span class="n">columns_obs_only</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">_prepare_dataframe</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">this_obs_only</span><span class="p">,</span> <span class="n">columns_x_only</span><span class="p">,</span> <span class="n">cache</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+            <span class="n">ann_data_objects</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">filename</span><span class="o">.</span><span class="n">stem</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_to_anndata</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
+                <span class="n">initial_df</span><span class="p">,</span> <span class="n">this_obs_only</span><span class="p">,</span> <span class="n">this_index_column</span> <span class="k">if</span> <span class="n">this_index_column</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="p">)</span>
+        <span class="c1"># in case, no columns_obs_only has been passed</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">initial_df</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_prepare_dataframe</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">cache</span><span class="p">)</span>
+            <span class="n">ann_data_objects</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">filename</span><span class="o">.</span><span class="n">stem</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_to_anndata</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
+                <span class="n">initial_df</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">this_index_column</span> <span class="k">if</span> <span class="n">this_index_column</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="p">)</span>
+    <span class="c1"># return the initial AnnData object</span>
+    <span class="k">return</span> <span class="n">ann_data_objects</span><span class="p">,</span> <span class="n">columns_obs_only</span>
+
+
+<span class="k">def</span> <span class="nf">_get_non_existing_files</span><span class="p">(</span><span class="n">file</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">download_dataset_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">backup_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Handle non existing files or directories by trying to download from a backup_url and moving them</span>
+<span class="sd">    in the correct directory.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        backup_url: Backup URL to lookup for the datafile(s)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The file or directory path of the downloaded content</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">backup_url</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">download_default_name</span> <span class="o">=</span> <span class="n">backup_url</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">download_dataset_name</span> <span class="o">=</span> <span class="n">download_dataset_name</span> <span class="ow">or</span> <span class="n">download_default_name</span>
+        <span class="c1"># currently supports zip, tar, gztar, bztar, xztar</span>
+        <span class="n">archive_formats</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">shutil</span><span class="o">.</span><span class="n">get_archive_formats</span><span class="p">())</span>
+        <span class="n">is_archived</span> <span class="o">=</span> <span class="n">download_default_name</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">:]</span> <span class="ow">in</span> <span class="n">archive_formats</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">BackupURLNotProvidedError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;File or directory </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2"> does not exist and no backup_url was provided.</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Please provide a backup_url or check whether path is spelled correctly.&quot;</span>
+        <span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[bold yellow]Path or dataset does not yet exist. Attempting to download...&quot;</span><span class="p">)</span>
+    <span class="n">download</span><span class="p">(</span>
+        <span class="n">backup_url</span><span class="p">,</span>
+        <span class="n">output_file_name</span><span class="o">=</span><span class="n">download_default_name</span><span class="p">,</span>
+        <span class="n">output_path</span><span class="o">=</span><span class="n">ehrapy_settings</span><span class="o">.</span><span class="n">datasetdir</span><span class="p">,</span>
+        <span class="n">is_archived</span><span class="o">=</span><span class="n">is_archived</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="c1"># if archived, remove archive suffix</span>
+    <span class="n">archive_extension</span> <span class="o">=</span> <span class="n">download_default_name</span><span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">:]</span>
+    <span class="n">output_path_name</span> <span class="o">=</span> <span class="n">download_default_name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">archive_extension</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">is_archived</span> <span class="k">else</span> <span class="n">download_default_name</span>
+    <span class="n">output_file_or_dir</span> <span class="o">=</span> <span class="n">ehrapy_settings</span><span class="o">.</span><span class="n">datasetdir</span> <span class="o">/</span> <span class="n">output_path_name</span>
+    <span class="n">moved_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">output_file_or_dir</span><span class="p">)[:</span> <span class="nb">str</span><span class="p">(</span><span class="n">output_file_or_dir</span><span class="p">)</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="n">download_dataset_name</span>
+    <span class="n">shutil</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">output_file_or_dir</span><span class="p">,</span> <span class="n">moved_path</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+    <span class="n">file</span> <span class="o">=</span> <span class="n">moved_path</span>
+
+    <span class="k">return</span> <span class="n">file</span>
+
+
+<span class="k">def</span> <span class="nf">_read_from_cache_dir</span><span class="p">(</span><span class="n">cache_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AnnData</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Read AnnData objects from the cache directory.&quot;&quot;&quot;</span>
+    <span class="n">adata_objects</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="c1"># read each cache file in the cache directory and store it into a dict</span>
+    <span class="k">for</span> <span class="n">cache_file</span> <span class="ow">in</span> <span class="n">cache_dir</span><span class="o">.</span><span class="n">iterdir</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">cache_file</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.h5ad&quot;</span><span class="p">):</span>
+            <span class="n">adata_objects</span><span class="p">[</span><span class="n">cache_file</span><span class="o">.</span><span class="n">stem</span><span class="p">]</span> <span class="o">=</span> <span class="n">_read_from_cache</span><span class="p">(</span><span class="n">cache_file</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">adata_objects</span>
+
+
+<span class="k">def</span> <span class="nf">_read_from_cache</span><span class="p">(</span><span class="n">path_cache</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AnnData</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Read AnnData object from cached file.&quot;&quot;&quot;</span>
+    <span class="n">cached_adata</span> <span class="o">=</span> <span class="n">read_h5</span><span class="p">(</span><span class="n">path_cache</span><span class="p">)</span>
+    <span class="c1"># type cast required when dealing with non numerical data; otherwise all values in X would be treated as strings</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">cached_adata</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">number</span><span class="p">):</span>
+        <span class="n">cached_adata</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">cached_adata</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;object&quot;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">columns_obs_only</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">cached_adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s2">&quot;columns_obs_only&quot;</span><span class="p">])</span>
+        <span class="k">del</span> <span class="n">cached_adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s2">&quot;columns_obs_only&quot;</span><span class="p">]</span>
+    <span class="c1"># in case columns_obs_only has not been passed</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">columns_obs_only</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># required since reading from cache returns a numpy array instead of a list here</span>
+    <span class="n">cached_adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s2">&quot;numerical_columns&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">cached_adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s2">&quot;numerical_columns&quot;</span><span class="p">])</span>
+    <span class="c1"># recreate the original AnnData object with the index column for obs and obs only columns</span>
+    <span class="n">cached_adata</span> <span class="o">=</span> <span class="n">_decode_cached_adata</span><span class="p">(</span><span class="n">cached_adata</span><span class="p">,</span> <span class="n">columns_obs_only</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">cached_adata</span>
+
+
+<span class="k">def</span> <span class="nf">_write_cache_dir</span><span class="p">(</span>
+    <span class="n">adata_objects</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AnnData</span><span class="p">],</span>
+    <span class="n">path_cache</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">columns_obs_only</span><span class="p">,</span>
+    <span class="n">index_column</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># type ignore</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AnnData</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Write multiple AnnData objects into a common cache directory keeping index column and columns_obs_only.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        adata_objects: A dictionary with an identifier as key for each of the AnnData objects</span>
+<span class="sd">        path_cache: Path to the cache directory</span>
+<span class="sd">        columns_obs_only: Columns for obs only</span>
+<span class="sd">        index_column: The index columns for each object (if any)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A dict containing an unique identifier and an :class:`~anndata.AnnData` object for each file read</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">identifier</span> <span class="ow">in</span> <span class="n">adata_objects</span><span class="p">:</span>
+        <span class="c1"># for each identifier (for the AnnData object), we need the index column and obs_only cols (if any) for reuse when reading cache</span>
+        <span class="n">index_col</span><span class="p">,</span> <span class="n">cols_obs_only</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_extract_index_and_columns_obs_only</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">index_column</span><span class="p">,</span> <span class="n">columns_obs_only</span><span class="p">)</span>
+        <span class="n">adata_objects</span><span class="p">[</span><span class="n">identifier</span><span class="p">]</span> <span class="o">=</span> <span class="n">_write_cache</span><span class="p">(</span>
+            <span class="n">adata_objects</span><span class="p">[</span><span class="n">identifier</span><span class="p">],</span> <span class="n">path_cache</span> <span class="o">/</span> <span class="p">(</span><span class="n">identifier</span> <span class="o">+</span> <span class="s2">&quot;.h5ad&quot;</span><span class="p">),</span> <span class="n">cols_obs_only</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">adata_objects</span>
+
+
+<span class="k">def</span> <span class="nf">_write_cache</span><span class="p">(</span>
+    <span class="n">raw_anndata</span><span class="p">:</span> <span class="n">AnnData</span><span class="p">,</span>
+    <span class="n">path_cache</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">columns_obs_only</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AnnData</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Write AnnData object to cache&quot;&quot;&quot;</span>
+    <span class="n">original_x_dtype</span> <span class="o">=</span> <span class="n">raw_anndata</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">dtype</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">original_x_dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">number</span><span class="p">):</span>
+        <span class="n">cached_adata</span> <span class="o">=</span> <span class="n">encode</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">raw_anndata</span><span class="p">,</span> <span class="n">autodetect</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cached_adata</span> <span class="o">=</span> <span class="n">raw_anndata</span>
+    <span class="c1"># temporary key that stores all column names that are obs only for this AnnData object</span>
+    <span class="n">cached_adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s2">&quot;columns_obs_only&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">columns_obs_only</span>
+    <span class="n">cached_adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s2">&quot;ehrapy_dummy_encoding&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="c1"># append correct file suffix</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">path_cache</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.h5ad&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">path_cache</span><span class="o">.</span><span class="n">suffix</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;.tsv&quot;</span><span class="p">,</span> <span class="s2">&quot;.csv&quot;</span><span class="p">}:</span>
+            <span class="n">path_cache</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">path_cache</span><span class="p">)[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;.h5ad&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">path_cache</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">path_cache</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.h5ad&quot;</span><span class="p">)</span>
+    <span class="n">cached_adata</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">path_cache</span><span class="p">)</span>
+    <span class="c1"># preserve original dtype of X (either numerical or object)</span>
+    <span class="n">cached_adata</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">cached_adata</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">original_x_dtype</span><span class="p">)</span>
+    <span class="n">cached_adata</span> <span class="o">=</span> <span class="n">_decode_cached_adata</span><span class="p">(</span><span class="n">cached_adata</span><span class="p">,</span> <span class="n">columns_obs_only</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">cached_adata</span>
+
+
+<span class="k">def</span> <span class="nf">_prepare_dataframe</span><span class="p">(</span><span class="n">initial_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">columns_obs_only</span><span class="p">,</span> <span class="n">columns_x_only</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Prepares the dataframe to be casted into an AnnData object.</span>
+
+<span class="sd">    Datetime columns will be detected and added to columns_obs_only.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">         The initially parsed dataframe and an updated list of columns_obs_only.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># when passing columns x only, simply handle the (asymmetric) difference to be obs only and everything else is kept in X</span>
+    <span class="k">if</span> <span class="n">columns_x_only</span><span class="p">:</span>
+        <span class="n">columns_obs_only</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">initial_df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">columns_x_only</span><span class="p">))</span>
+    <span class="c1"># get all object dtype columns</span>
+    <span class="n">object_type_columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">col_name</span> <span class="k">for</span> <span class="n">col_name</span> <span class="ow">in</span> <span class="n">initial_df</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">initial_df</span><span class="p">[</span><span class="n">col_name</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="s2">&quot;object&quot;</span><span class="p">]</span>
+    <span class="c1"># if columns_obs_only is None, initialize it as datetime columns need to be included here</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">columns_obs_only</span><span class="p">:</span>
+        <span class="n">columns_obs_only</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">no_datetime_object_col</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">object_type_columns</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">initial_df</span><span class="p">[</span><span class="n">col</span><span class="p">])</span>
+            <span class="c1"># only add to column_obs_only if not present already to avoid duplicates</span>
+            <span class="k">if</span> <span class="n">col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">columns_obs_only</span><span class="p">:</span>
+                <span class="n">columns_obs_only</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+            <span class="c1"># we only need to replace NANs on non datetime, non numerical columns since datetime are obs only by default</span>
+            <span class="n">no_datetime_object_col</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+    <span class="c1"># writing to hd5a files requires non string to be empty in non numerical columns</span>
+    <span class="k">if</span> <span class="n">cache</span><span class="p">:</span>
+        <span class="c1"># TODO remove this when anndata 0.8.0 is released</span>
+        <span class="n">initial_df</span><span class="p">[</span><span class="n">no_datetime_object_col</span><span class="p">]</span> <span class="o">=</span> <span class="n">initial_df</span><span class="p">[</span><span class="n">no_datetime_object_col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="c1"># temporary workaround needed; see https://github.com/theislab/anndata/issues/504 and https://github.com/theislab/anndata/issues/662</span>
+        <span class="c1"># converting booleans to strings is needed for caching as writing to .h5ad files currently does not support writing boolean values</span>
+        <span class="n">bool_columns</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">column_name</span><span class="p">:</span> <span class="s2">&quot;str&quot;</span> <span class="k">for</span> <span class="n">column_name</span> <span class="ow">in</span> <span class="n">initial_df</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">initial_df</span><span class="o">.</span><span class="n">dtypes</span><span class="p">[</span><span class="n">column_name</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;bool&quot;</span>
+        <span class="p">}</span>
+        <span class="n">initial_df</span> <span class="o">=</span> <span class="n">initial_df</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">bool_columns</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">initial_df</span><span class="p">,</span> <span class="n">columns_obs_only</span>
+
+
+<span class="k">def</span> <span class="nf">_decode_cached_adata</span><span class="p">(</span><span class="n">adata</span><span class="p">:</span> <span class="n">AnnData</span><span class="p">,</span> <span class="n">column_obs_only</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">AnnData</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Decode the label encoding of initial AnnData object</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        adata: The label encoded AnnData object</span>
+<span class="sd">        column_obs_only: The columns, that should be kept in obs</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The decoded, initial AnnData object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">var_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">var_names</span><span class="p">)</span>
+    <span class="c1"># for each encoded categorical, replace its encoded values with its original values in X</span>
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">var_names</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">var_name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;ehrapycat_&quot;</span><span class="p">):</span>
+            <span class="k">break</span>
+        <span class="n">value_name</span> <span class="o">=</span> <span class="n">var_name</span><span class="p">[</span><span class="mi">10</span><span class="p">:]</span>
+        <span class="n">original_values</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s2">&quot;original_values_categoricals&quot;</span><span class="p">][</span><span class="n">value_name</span><span class="p">]</span>
+        <span class="n">adata</span><span class="o">.</span><span class="n">X</span><span class="p">[:,</span> <span class="n">idx</span> <span class="p">:</span> <span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">original_values</span>
+        <span class="c1"># update var name per categorical</span>
+        <span class="n">var_names</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">value_name</span>
+    <span class="c1"># drop all columns, that are not obs only in obs</span>
+    <span class="k">if</span> <span class="n">column_obs_only</span><span class="p">:</span>
+        <span class="n">adata</span><span class="o">.</span><span class="n">obs</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">column_obs_only</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">adata</span><span class="o">.</span><span class="n">obs</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    <span class="c1"># set the new var names (unencoded ones)</span>
+    <span class="n">adata</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">var_names</span>
+    <span class="n">adata</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="s2">&quot;original&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="c1"># reset uns but keep numerical columns</span>
+    <span class="n">numerical_columns</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s2">&quot;numerical_columns&quot;</span><span class="p">]</span>
+    <span class="n">adata</span><span class="o">.</span><span class="n">uns</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+    <span class="n">adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s2">&quot;numerical_columns&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">numerical_columns</span>
+    <span class="n">adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s2">&quot;non_numerical_columns&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">var_names</span><span class="p">)</span> <span class="o">^</span> <span class="nb">set</span><span class="p">(</span><span class="n">numerical_columns</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">adata</span>
+
+
+<span class="k">def</span> <span class="nf">_extract_index_and_columns_obs_only</span><span class="p">(</span><span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">index_columns</span><span class="p">,</span> <span class="n">columns_obs_only</span><span class="p">,</span> <span class="n">columns_x_only</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extract the index column (if any) and the columns, for obs only (if any) from the given user input.</span>
+
+<span class="sd">    For each file, `index_columns` and `columns_obs_only` can provide three cases:</span>
+<span class="sd">        1.) The filename (thus the identifier) is not present as a key and no default key is provided or one or both dicts are empty:</span>
+<span class="sd">            --&gt; No index column will be set and/or no columns are obs only (based on user input)</span>
+
+<span class="sd">            .. code-block:: python</span>
+<span class="sd">                   # some setup code here</span>
+<span class="sd">                   ...</span>
+<span class="sd">                   # filename</span>
+<span class="sd">                   identifier1 = &quot;MyFile&quot;</span>
+<span class="sd">                   identifier2 = &quot;MyOtherFile&quot;</span>
+<span class="sd">                   # no default key and identifier1 is not in the index or columns_obs_only keys</span>
+<span class="sd">                   # -&gt; no index column will be set and no columns will be obs only (except datetime, if any)</span>
+<span class="sd">                   index_columns = {&quot;MyOtherFile&quot;:&quot;MyOtherColumn1&quot;}</span>
+<span class="sd">                   columns_obs_only = {&quot;MyOtherFile&quot;:[&quot;MyOtherColumn2&quot;]}</span>
+
+<span class="sd">        2.) The filename (thus the identifier) is not present as a key, but default key is provided</span>
+<span class="sd">            --&gt; The index column will be set and/or columns will be obs only according to the default key</span>
+
+<span class="sd">            .. code-block:: python</span>
+<span class="sd">                  # some setup code here</span>
+<span class="sd">                   ...</span>
+<span class="sd">                   # filename</span>
+<span class="sd">                   identifier1 = &quot;MyFile&quot;</span>
+<span class="sd">                   identifier2 = &quot;MyOtherFile&quot;</span>
+<span class="sd">                   # identifier1 is not in the index or columns_obs_only keys, but default key is set for both</span>
+<span class="sd">                   # -&gt; index column will be set using MyColumn1 and column obs only will include MyColumn2</span>
+<span class="sd">                   index_columns = {&quot;MyOtherFile&quot;:&quot;MyOtherColumn1&quot;, &quot;default&quot;: &quot;MyColumn1&quot;}</span>
+<span class="sd">                   columns_obs_only = {&quot;MyOtherFile&quot;:[&quot;MyOtherColumn2&quot;], &quot;default&quot;: [&quot;MyColumn2&quot;]}</span>
+
+<span class="sd">        3.) The filename is present as a key</span>
+<span class="sd">            --&gt; The index column will be set and/or columns are obs only according to its value</span>
+
+<span class="sd">            .. code-block:: python</span>
+<span class="sd">                   # some setup code here</span>
+<span class="sd">                   ...</span>
+<span class="sd">                   # filename</span>
+<span class="sd">                   identifier1 = &quot;MyFile&quot;</span>
+<span class="sd">                   identifier2 = &quot;MyOtherFile&quot;</span>
+<span class="sd">                   # identifier1 is in the index and columns_obs_only keys</span>
+<span class="sd">                   # -&gt; index column will be MyColumn1 and columns_obs_only will include MyColumn2 and MyColumn3</span>
+<span class="sd">                   index_columns = {&quot;MyFile&quot;:&quot;MyColumn1&quot;}</span>
+<span class="sd">                   columns_obs_only = {&quot;MyFile&quot;:[&quot;MyColumn2&quot;, &quot;MyColumn3&quot;]}</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        identifier: The name of the</span>
+<span class="sd">        index_columns: Index columns</span>
+<span class="sd">        columns_obs_only: Columns for obs only</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Index column (if any) and columns obs only (if any) for this specific AnnData object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_index_column</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">_columns_obs_only</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">_columns_x_only</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="c1"># get index column (if any)</span>
+    <span class="k">if</span> <span class="n">index_columns</span> <span class="ow">and</span> <span class="n">identifier</span> <span class="ow">in</span> <span class="n">index_columns</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">_index_column</span> <span class="o">=</span> <span class="n">index_columns</span><span class="p">[</span><span class="n">identifier</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">index_columns</span> <span class="ow">and</span> <span class="s2">&quot;default&quot;</span> <span class="ow">in</span> <span class="n">index_columns</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">_index_column</span> <span class="o">=</span> <span class="n">index_columns</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">]</span>
+
+    <span class="c1"># get columns obs only (if any)</span>
+    <span class="k">if</span> <span class="n">columns_obs_only</span> <span class="ow">and</span> <span class="n">identifier</span> <span class="ow">in</span> <span class="n">columns_obs_only</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">_columns_obs_only</span> <span class="o">=</span> <span class="n">columns_obs_only</span><span class="p">[</span><span class="n">identifier</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">columns_obs_only</span> <span class="ow">and</span> <span class="s2">&quot;default&quot;</span> <span class="ow">in</span> <span class="n">columns_obs_only</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">_columns_obs_only</span> <span class="o">=</span> <span class="n">columns_obs_only</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">]</span>
+
+    <span class="c1"># get columns x only (if any)</span>
+    <span class="k">if</span> <span class="n">columns_x_only</span> <span class="ow">and</span> <span class="n">identifier</span> <span class="ow">in</span> <span class="n">columns_x_only</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">_columns_x_only</span> <span class="o">=</span> <span class="n">columns_x_only</span><span class="p">[</span><span class="n">identifier</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">columns_x_only</span> <span class="ow">and</span> <span class="s2">&quot;default&quot;</span> <span class="ow">in</span> <span class="n">columns_x_only</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">_columns_x_only</span> <span class="o">=</span> <span class="n">columns_x_only</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">]</span>
+
+    <span class="c1"># if index column is also found in column_obs_only or x_only, use default indices instead and only move it to obs/X, but warn the user</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">_index_column</span> <span class="ow">and</span> <span class="n">_columns_obs_only</span> <span class="ow">or</span> <span class="n">_index_column</span> <span class="ow">and</span> <span class="n">_columns_x_only</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span>
+        <span class="n">_index_column</span> <span class="ow">in</span> <span class="n">_columns_obs_only</span> <span class="ow">or</span> <span class="n">_index_column</span> <span class="ow">in</span> <span class="n">_columns_x_only</span>
+    <span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;[bold yellow]Index column [blue]</span><span class="si">{</span><span class="n">_index_column</span><span class="si">}</span><span class="s2"> [yellow]for file [blue]</span><span class="si">{</span><span class="n">identifier</span><span class="si">}</span><span class="s2"> [yellow]is also used as a column &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;for obs or X only. Using default indices instead and moving [blue]</span><span class="si">{</span><span class="n">_index_column</span><span class="si">}</span><span class="s2"> [yellow]to obs/X!.&quot;</span>
+        <span class="p">)</span>
+        <span class="n">_index_column</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="n">_index_column</span><span class="p">,</span> <span class="n">_columns_obs_only</span><span class="p">,</span> <span class="n">_columns_x_only</span>
+
+
+<span class="k">def</span> <span class="nf">_check_columns_only_params</span><span class="p">(</span>
+    <span class="n">obs_only</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">x_only</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Check whether columns_obs_only and columns_x_only are passed exclusively.</span>
+
+<span class="sd">    For a single AnnData object (thus parameters being a list of strings) it&#39;s not desirable to pass both, obs_only and x_only.</span>
+<span class="sd">    For multiple AnnData objects (thus the parameters being dicts of string keys with a list value), it is possible to pass both. But the keys</span>
+<span class="sd">    (unique identifiers of the AnData objects, basically its names) should share no common identifier,</span>
+<span class="sd">    thus a single AnnData object is either in x_only OR obs_only, but not in both.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">obs_only</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">x_only</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="k">if</span> <span class="n">obs_only</span> <span class="ow">and</span> <span class="n">x_only</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obs_only</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Can not use columns_obs_only together with columns_x_only with a single AnnData object. &quot;</span>
+            <span class="s2">&quot;At least one has to be None!&quot;</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">common_keys</span> <span class="o">=</span> <span class="n">obs_only</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">&amp;</span> <span class="n">x_only</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>  <span class="c1"># type: ignore</span>
+        <span class="k">if</span> <span class="n">common_keys</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Can not use columns_obs_only together with columns_x_only for a single AnnData object. &quot;</span>
+                <span class="s2">&quot;The following anndata identifiers where found&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;in both: </span><span class="si">{</span><span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">common_keys</span><span class="p">)</span><span class="si">}</span><span class="s2">!&quot;</span>
+            <span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_cache_not_supported</span><span class="p">():</span>
+    <span class="k">raise</span> <span class="n">MudataCachingNotSupportedError</span><span class="p">(</span><span class="s2">&quot;Caching is currently not supported for MuData or Pandas DataFrame objects.&quot;</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">IndexNotFoundError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">BackupURLNotProvidedError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">MudataCachingNotSupportedError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">PdfParsingError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">ExtensionMissingError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">UnsupportedDirectoryParsingFormatException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">CacheExistsException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span>
+</pre></div>
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2021, Lukas Heumos, Theislab
+            </div>
+            Made with 
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            <div class="icons">
+              
+            </div>
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div><script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/scripts/furo.js"></script>
+    <script src="../../../_static/clipboard.min.js"></script>
+    <script src="../../../_static/copybutton.js"></script>
+    <script src="../../../_static/design-tabs.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    </body>
+</html>

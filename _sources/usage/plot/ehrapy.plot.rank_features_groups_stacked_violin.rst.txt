@@ -1,0 +1,6 @@
+﻿ehrapy.plot.rank\_features\_groups\_stacked\_violin
+===================================================
+
+.. currentmodule:: ehrapy.plot
+
+.. autofunction:: rank_features_groups_stacked_violin

@@ -1,0 +1,6 @@
+﻿ehrapy.plot.paga\_compare
+=========================
+
+.. currentmodule:: ehrapy.plot
+
+.. autofunction:: paga_compare

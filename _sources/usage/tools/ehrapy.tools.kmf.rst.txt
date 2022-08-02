@@ -1,0 +1,6 @@
+﻿ehrapy.tools.kmf
+================
+
+.. currentmodule:: ehrapy.tools
+
+.. autofunction:: kmf

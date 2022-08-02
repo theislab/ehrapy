@@ -1,0 +1,6 @@
+﻿ehrapy.preprocessing.log\_norm
+==============================
+
+.. currentmodule:: ehrapy.preprocessing
+
+.. autofunction:: log_norm

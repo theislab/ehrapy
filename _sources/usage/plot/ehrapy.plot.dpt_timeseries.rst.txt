@@ -1,0 +1,6 @@
+﻿ehrapy.plot.dpt\_timeseries
+===========================
+
+.. currentmodule:: ehrapy.plot
+
+.. autofunction:: dpt_timeseries

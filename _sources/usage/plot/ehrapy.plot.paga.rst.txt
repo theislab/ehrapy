@@ -1,0 +1,6 @@
+﻿ehrapy.plot.paga
+================
+
+.. currentmodule:: ehrapy.plot
+
+.. autofunction:: paga

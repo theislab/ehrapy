@@ -1,0 +1,6 @@
+﻿ehrapy.preprocessing.matrix\_factorization\_impute
+==================================================
+
+.. currentmodule:: ehrapy.preprocessing
+
+.. autofunction:: matrix_factorization_impute
