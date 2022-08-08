@@ -8,6 +8,8 @@ import statsmodels.api as sm
 import statsmodels.formula.api as smf
 from anndata import AnnData
 from lifelines import KaplanMeierFitter
+from scipy import stats
+from statsmodels.genmod.generalized_linear_model import GLMResultsWrapper
 
 
 def ols(
@@ -180,3 +182,42 @@ def kmf(
         )
 
     return kmf
+
+
+def calculate_nested_f_statistic(small_model, big_model):
+    # Using code from https://stackoverflow.com/questions/27328623/anova-test-for-glm-in-python/60769343#60769343
+    """Given two fitted GLMs, the larger of which contains the parameter space of the smaller, return the P value corresponding to the larger model adding explanatory power"""
+    addtl_params = big_model.df_model - small_model.df_model
+    f_stat = (small_model.deviance - big_model.deviance) / (addtl_params * big_model.scale)
+    df_numerator = addtl_params
+    df_denom = big_model.fittedvalues.shape[0] - big_model.df_model
+    p_value = stats.f.sf(f_stat, df_numerator, df_denom)
+
+    return p_value
+
+
+def anova_glm(result_1: GLMResultsWrapper, result_2: GLMResultsWrapper, formula_1: str, formula_2: str):
+    """
+    Anova table for two fitted generalized linear models.
+
+    Args:
+        result_1: fitted generalized linear models.
+        result_2: fitted generalized linear models.
+        formula_1: The formula specifying the model.
+        formula_2: The formula specifying the model.
+
+    Returns:
+        Dataframe of Anova table.
+    """
+    p_value = calculate_nested_f_statistic(result_1, result_2)
+
+    table = {
+        "Model": [1, 2],
+        "formula": [formula_1, formula_2],
+        "Df Resid.": [result_1.df_resid, result_2.df_resid],
+        "Dev.": [result_1.deviance, result_2.deviance],
+        "Df_diff": [None, result_2.df_model - result_1.df_model],
+        "Pr(>Chi)": [None, p_value],
+    }
+    dataframe = pd.DataFrame(data=table)
+    return dataframe
