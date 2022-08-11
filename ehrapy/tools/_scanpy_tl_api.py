@@ -159,23 +159,26 @@ def umap(
 
         **X_umap** : `adata.obsm` field UMAP coordinates of data.
     """
-    return sc.tl.umap(
-        adata=adata,
-        min_dist=min_dist,
-        spread=spread,
-        n_components=n_components,
-        maxiter=maxiter,
-        alpha=alpha,
-        gamma=gamma,
-        negative_sample_rate=negative_sample_rate,
-        init_pos=init_pos,
-        random_state=random_state,
-        a=a,
-        b=b,
-        copy=copy,
-        method=method,
-        neighbors_key=neighbors_key,
-    )
+    if adata.uns["neighbors"] is None or neighbors_key not in adata.uns:
+        return sc.tl.umap(
+            adata=adata,
+            min_dist=min_dist,
+            spread=spread,
+            n_components=n_components,
+            maxiter=maxiter,
+            alpha=alpha,
+            gamma=gamma,
+            negative_sample_rate=negative_sample_rate,
+            init_pos=init_pos,
+            random_state=random_state,
+            a=a,
+            b=b,
+            copy=copy,
+            method=method,
+            neighbors_key=neighbors_key,
+        )
+    else:
+        raise ValueError(f'.uns["{neighbors_key}"] or .uns["neighbors"] were not found. Run `ep.pp.neighbors` first.')
 
 
 _LAYOUTS = ("fr", "drl", "kk", "grid_fr", "lgl", "rt", "rt_circular", "fa")
