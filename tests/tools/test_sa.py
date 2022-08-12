@@ -56,3 +56,5 @@ class TestSA:
 
         assert len(dataframe) == 2
         assert dataframe.shape == (2, 6)
+        assert dataframe.iloc[1, 4] == 2
+        assert pytest.approx(dataframe.iloc[1, 5], 0.1) == 0.103185
