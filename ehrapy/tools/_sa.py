@@ -186,14 +186,15 @@ def kmf(
 
 def calculate_nested_f_statistic(small_model: GLMResultsWrapper, big_model: GLMResultsWrapper) -> float:
     """Given two fitted GLMs, the larger of which contains the parameter space of the smaller, return the P value corresponding to the larger model adding explanatory power
+
     See https://stackoverflow.com/questions/27328623/anova-test-for-glm-in-python/60769343#60769343
 
     Args:
-        small_model: fitted generalized linear models.
-        big_model: fitted generalized linear models.
+        small_model (GLMResultsWrapper): fitted generalized linear models.
+        big_model (GLMResultsWrapper): fitted generalized linear models.
 
     Returns:
-        p_value.
+        float: p_value
     """
     addtl_params = big_model.df_model - small_model.df_model
     f_stat = (small_model.deviance - big_model.deviance) / (addtl_params * big_model.scale)
@@ -208,13 +209,13 @@ def anova_glm(result_1: GLMResultsWrapper, result_2: GLMResultsWrapper, formula_
     """Anova table for two fitted generalized linear models.
 
     Args:
-        result_1: fitted generalized linear models.
-        result_2: fitted generalized linear models.
-        formula_1: The formula specifying the model.
-        formula_2: The formula specifying the model.
+        result_1 (GLMResultsWrapper): fitted generalized linear models.
+        result_2 (GLMResultsWrapper): fitted generalized linear models.
+        formula_1 (str): The formula specifying the model.
+        formula_2 (str): The formula specifying the model.
 
     Returns:
-        Dataframe of Anova table.
+        pd.DataFrame: Anova table.
     """
     p_value = calculate_nested_f_statistic(result_1, result_2)
 
