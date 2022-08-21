@@ -70,6 +70,21 @@ class TestAnndataExt:
             ).astype({"clinic_id": "float32", "name": "category"}),
         )
 
+    def test_move_to_obs_copy_obs(self):
+        adata = ep.io.read_csv(CUR_DIR / "../io/test_data_io/dataset_move_obs_mix.csv")
+        adata_dim_old = adata.X.shape
+        move_to_obs(adata, ["name", "clinic_id"], copy_obs=True)
+        assert set(adata.obs.columns) == {"name", "clinic_id"}
+        assert adata.X.shape == adata_dim_old
+        assert {str(col) for col in adata.obs.dtypes} == {"float32", "category"}
+        assert_frame_equal(
+            adata.obs,
+            DataFrame(
+                {"clinic_id": [i for i in range(1, 6)], "name": ["foo", "bar", "baz", "buz", "ber"]},
+                index=[str(idx) for idx in range(5)],
+            ).astype({"clinic_id": "float32", "name": "category"}),
+        )
+
     def test_df_to_anndata_simple(self):
         df, col1_val, col2_val, col3_val = TestAnndataExt._setup_df_to_anndata()
         expected_x = np.array([col1_val, col2_val, col3_val], dtype="object").transpose()

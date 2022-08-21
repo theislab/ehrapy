@@ -154,17 +154,19 @@ def anndata_to_df(
     return df
 
 
-def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy: bool = False) -> AnnData:
-    """Move features from X to obs inplace. Note that columns containing boolean values (either 0/1 or True(true)/False(false))
-    will be stored as boolean columns whereas the other non numerical columns will be stored as category.
+def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False, copy: bool = False) -> AnnData:
+    """Move inplace or copy features from X to obs. Note that columns containing boolean values (either 0/1 or True(
+    true)/False(false)) will be stored as boolean columns whereas the other non numerical columns will be stored as
+    category.
 
     Args:
         adata: The AnnData object
         to_obs: The columns to move to obs
+        copy_obs: The values are copied to obs (and therefore kept in X) instead of moved completely
         copy: Whether to return a copy or not
 
     Returns:
-        The original AnnData object with moved columns from X to obs
+        The original AnnData object with moved or copied columns from X to obs
     """
     if copy:
         adata = adata.copy()
@@ -176,17 +178,30 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy: bool = False) -> 
         raise ObsMoveError(
             "Cannot move encoded columns from X to obs. Either undo encoding or remove them from the list!"
         )
-    indices = adata.var_names.isin(to_obs)
-    df = adata[:, indices].to_df()
-    adata._inplace_subset_var(~indices)
-    adata.obs = adata.obs.join(df)
-    updated_num_uns, updated_non_num_uns, num_var = _update_uns(adata, to_obs)
-    # cast numerical values from object
-    adata.obs[num_var] = adata.obs[num_var].apply(pd.to_numeric, errors="ignore", downcast="float")
-    # cast non numerical values from object to either bool (if possible) or category
-    adata.obs = _cast_obs_columns(adata.obs)
-    adata.uns["numerical_columns"] = updated_num_uns
-    adata.uns["non_numerical_columns"] = updated_non_num_uns
+
+    if copy_obs:
+        indices = adata.var_names.isin(to_obs)
+        df = adata[:, indices].to_df()
+        adata.obs = adata.obs.join(df)
+        updated_num_uns, updated_non_num_uns, num_var = _update_uns(adata, to_obs)
+        # cast numerical values from object
+        adata.obs[num_var] = adata.obs[num_var].apply(pd.to_numeric, errors="ignore", downcast="float")
+        # cast non numerical values from object to either bool (if possible) or category
+        adata.obs = _cast_obs_columns(adata.obs)
+        adata.uns["numerical_columns"] = updated_num_uns
+        adata.uns["non_numerical_columns"] = updated_non_num_uns
+    else:
+        indices = adata.var_names.isin(to_obs)
+        df = adata[:, indices].to_df()
+        adata._inplace_subset_var(~indices)
+        adata.obs = adata.obs.join(df)
+        updated_num_uns, updated_non_num_uns, num_var = _update_uns(adata, to_obs)
+        # cast numerical values from object
+        adata.obs[num_var] = adata.obs[num_var].apply(pd.to_numeric, errors="ignore", downcast="float")
+        # cast non numerical values from object to either bool (if possible) or category
+        adata.obs = _cast_obs_columns(adata.obs)
+        adata.uns["numerical_columns"] = updated_num_uns
+        adata.uns["non_numerical_columns"] = updated_non_num_uns
 
     if copy:
         return adata
