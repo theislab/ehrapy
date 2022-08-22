@@ -183,13 +183,6 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False,
         indices = adata.var_names.isin(to_obs)
         df = adata[:, indices].to_df()
         adata.obs = adata.obs.join(df)
-        updated_num_uns, updated_non_num_uns, num_var = _update_uns(adata, to_obs)
-        # cast numerical values from object
-        adata.obs[num_var] = adata.obs[num_var].apply(pd.to_numeric, errors="ignore", downcast="float")
-        # cast non numerical values from object to either bool (if possible) or category
-        adata.obs = _cast_obs_columns(adata.obs)
-        adata.uns["numerical_columns"] = updated_num_uns
-        adata.uns["non_numerical_columns"] = updated_non_num_uns
     else:
         indices = adata.var_names.isin(to_obs)
         df = adata[:, indices].to_df()
@@ -219,13 +212,17 @@ def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
     """
     if isinstance(to_x, str):  # pragma: no cover
         to_x = [to_x]
-    new_adata = concat([adata, AnnData(adata.obs[to_x], dtype="object")], axis=1)
-    new_adata.obs = adata.obs[adata.obs.columns[~adata.obs.columns.isin(to_x)]]
-    # update uns (copy maybe: could be a costly operation but reduces reference cycles)
-    # users might save those as separate AnnData object and this could be unexpected behaviour if we dont copy
-    num_columns_moved, non_num_columns_moved, _ = _update_uns(adata, to_x, True)
-    new_adata.uns["numerical_columns"] = adata.uns["numerical_columns"] + num_columns_moved
-    new_adata.uns["non_numerical_columns"] = adata.uns["non_numerical_columns"] + non_num_columns_moved
+    if set(to_x).issubset(set(adata.var_names)):
+        new_adata = adata
+        new_adata.obs = adata.obs.drop(to_x, axis=1)
+    else:
+        new_adata = concat([adata, AnnData(adata.obs[to_x], dtype="object")], axis=1)
+        new_adata.obs = adata.obs[adata.obs.columns[~adata.obs.columns.isin(to_x)]]
+        # update uns (copy maybe: could be a costly operation but reduces reference cycles)
+        # users might save those as separate AnnData object and this could be unexpected behaviour if we dont copy
+        num_columns_moved, non_num_columns_moved, _ = _update_uns(adata, to_x, True)
+        new_adata.uns["numerical_columns"] = adata.uns["numerical_columns"] + num_columns_moved
+        new_adata.uns["non_numerical_columns"] = adata.uns["non_numerical_columns"] + non_num_columns_moved
 
     return new_adata
 
@@ -396,7 +393,7 @@ def _sort_by_order_or_none(adata: AnnData, branch, var_names: list[str]):
     for other_vars in var_names:
         if not other_vars.startswith("ehrapycat"):
             idx = var_names_val.index(other_vars)
-            unique_categoricals = pd.unique(adata.X[:, idx : idx + 1].flatten())
+            unique_categoricals = pd.unique(adata.X[:, idx: idx + 1].flatten())
             data_type = pd.api.types.infer_dtype(unique_categoricals)
             branch.add(f"[blue]{other_vars} -> [green]data type: [blue]{data_type}")
 
@@ -409,7 +406,7 @@ def _sort_by_type(adata: AnnData, branch, var_names: list[str], sort_reversed: b
     for other_vars in var_names:
         if not other_vars.startswith("ehrapycat"):
             idx = var_names_val.index(other_vars)
-            unique_categoricals = pd.unique(adata.X[:, idx : idx + 1].flatten())
+            unique_categoricals = pd.unique(adata.X[:, idx: idx + 1].flatten())
             data_type = pd.api.types.infer_dtype(unique_categoricals)
             tmp_dict[other_vars] = data_type
 
