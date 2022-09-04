@@ -21,7 +21,8 @@ from ehrapy.anndata.anndata_ext import (
     generate_anndata,
     get_numeric_vars,
     move_to_obs,
-    set_numeric_vars,
+    move_to_x,
+    set_numeric_vars
 )
 
 CUR_DIR = Path(__file__).parent.resolve()
@@ -83,6 +84,33 @@ class TestAnndataExt:
                 {"clinic_id": [i for i in range(1, 6)], "name": ["foo", "bar", "baz", "buz", "ber"]},
                 index=[str(idx) for idx in range(5)],
             ).astype({"clinic_id": "float32", "name": "category"}),
+        )
+
+    def test_move_to_x(self):
+        adata = ep.io.read_csv(CUR_DIR / "../io/test_data_io/dataset_move_obs_mix.csv")
+        move_to_obs(adata, ["name"], copy_obs=True)
+        move_to_obs(adata, ["clinic_id"], copy_obs=False)
+        new_adata_num = move_to_x(adata, ["clinic_id"])
+        new_adata_non_num = move_to_x(adata, ["name"])
+        assert set(new_adata_num.obs.columns) == {"name"}
+        assert set(new_adata_non_num.obs.columns) == {"clinic_id"}
+        assert {str(col) for col in new_adata_num.obs.dtypes} == {"category"}
+        assert {str(col) for col in new_adata_non_num.obs.dtypes} == {"float32"}
+        assert len(sum(list(new_adata_num.uns.values()), [])) == len(list(new_adata_num.var_names))
+        assert len(sum(list(new_adata_non_num.uns.values()), [])) == len(list(new_adata_non_num.var_names))
+        assert_frame_equal(
+            new_adata_num.obs,
+            DataFrame(
+                {"name": ["foo", "bar", "baz", "buz", "ber"]},
+                index=[str(idx) for idx in range(5)],
+            ).astype({"name": "category"}),
+        )
+        assert_frame_equal(
+            new_adata_non_num.obs,
+            DataFrame(
+                {"clinic_id": [i for i in range(1, 6)]},
+                index=[str(idx) for idx in range(5)],
+            ).astype({"clinic_id": "float32"}),
         )
 
     def test_df_to_anndata_simple(self):
