@@ -244,12 +244,8 @@ def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
     # update uns (copy maybe: could be a costly operation but reduces reference cycles)
     # users might save those as separate AnnData object and this could be unexpected behaviour if we dont copy
     num_columns_moved, non_num_columns_moved, _ = _update_uns(adata, cols_not_in_x, True)
-    #print(num_columns_moved)
-    #print(non_num_columns_moved)
     new_adata.uns["numerical_columns"] = adata.uns["numerical_columns"] + num_columns_moved
     new_adata.uns["non_numerical_columns"] = adata.uns["non_numerical_columns"] + non_num_columns_moved
-    #print(new_adata.uns)
-    #print(new_adata.obs)
     return new_adata
 
 
