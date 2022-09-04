@@ -77,7 +77,12 @@ def print_header(*, file=None):  # pragma: no cover
         "pynndescent",
     ]
 
-    modules = ["ehrapy"] + _DEPENDENCIES_NUMERICS
+    _DEPENDENCIES_PLOTTING = [
+        "matplotlib",
+        "seaborn"
+    ]
+
+    modules = ["ehrapy"] + _DEPENDENCIES_NUMERICS + _DEPENDENCIES_PLOTTING
     print(
         " ".join(f"{mod}=={ver}" for mod, ver in _versions_dependencies(modules)),
         file=file or sys.stdout,

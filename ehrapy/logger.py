@@ -81,24 +81,6 @@ class _LogFormatter(logging.Formatter):
         return result
 
 
-_DEPENDENCIES_NUMERICS = [
-    "scanpy",
-    "anndata",
-    "umap",
-    "numpy",
-    "scipy",
-    "pandas",
-    ("sklearn", "scikit-learn"),
-    "statsmodels",
-    ("igraph", "python-igraph"),
-    "louvain",
-    "leidenalg",
-    "pynndescent",
-]
-
-_DEPENDENCIES_PLOTTING = ["matplotlib", "seaborn"]
-
-
 def _versions_dependencies(dependencies):
     for mod in dependencies:
         mod_name, dist_name = mod if isinstance(mod, tuple) else (mod, mod)
@@ -107,31 +89,6 @@ def _versions_dependencies(dependencies):
             yield dist_name, imp.__version__
         except (ImportError, AttributeError):
             pass
-
-
-def print_versions():
-    """Print package versions that might influence the numerical and plotting results."""
-    from ehrapy import settings
-
-    modules = ["ehrapy"] + _DEPENDENCIES_NUMERICS + _DEPENDENCIES_PLOTTING
-    print(
-        " ".join(f"{mod}=={ver}" for mod, ver in _versions_dependencies(modules)),
-        file=settings.logfile,
-    )
-
-
-def print_version_and_date():
-    """
-    Print version and date.
-    Useful for starting a notebook so you see when you started working.
-    """
-
-    from ehrapy import settings, __full_version__
-
-    print(
-        f"Running Ehrapy {__full_version__}, on {datetime.now():%Y-%m-%d %H:%M}.",
-        file=settings.logfile,
-    )
 
 
 def _copy_docs_and_signature(fn):
