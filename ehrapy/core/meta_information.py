@@ -8,9 +8,9 @@ from io import StringIO
 import session_info
 from IPython.utils.io import Tee
 from rich import print
-from scanpy.logging import _versions_dependencies
 
 from ehrapy import __version__
+from ehrapy.logger import _versions_dependencies
 
 
 def print_versions(*, output_file=None) -> None:  # pragma: no cover
@@ -58,9 +58,8 @@ def print_version_and_date(*, file=None):  # pragma: no cover
 
 
 def print_header(*, file=None):  # pragma: no cover
-    """Versions that might influence the numerical results.
-
-    Matplotlib and Seaborn are excluded from this.
+    """
+    Versions that might influence the numerical results.
     """
     _DEPENDENCIES_NUMERICS = [
         "scanpy",
@@ -77,10 +76,7 @@ def print_header(*, file=None):  # pragma: no cover
         "pynndescent",
     ]
 
-    _DEPENDENCIES_PLOTTING = [
-        "matplotlib",
-        "seaborn"
-    ]
+    _DEPENDENCIES_PLOTTING = ["matplotlib", "seaborn"]
 
     modules = ["ehrapy"] + _DEPENDENCIES_NUMERICS + _DEPENDENCIES_PLOTTING
     print(

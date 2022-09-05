@@ -104,24 +104,16 @@ def error(
 ) -> datetime:
     """
     Log message with specific level and return current time.
-    Parameters
-    ----------
-    msg
-        Message to display.
-    time
-        A time in the past. If this is passed, the time difference from then
-        to now is appended to `msg` as ` (HH:MM:SS)`.
-        If `msg` contains `{time_passed}`, the time difference is instead
-        inserted at that position.
-    deep
-        If the current verbosity is higher than the log function’s level,
-        this gets displayed as well
-    extra
-        Additional values you can specify in `msg` like `{time_passed}`.
-    Returns
-    -------
-    :class:`datetime.datetime`
-        The current time.
+
+    Args:
+        msg: Message to display.
+        time: A time in the past. If this is passed, the time difference from then to now is appended to `msg` as ` (HH:MM:SS)`.
+         If `msg` contains `{time_passed}`, the time difference is instead inserted at that position
+        deep: If the current verbosity is higher than the log function’s level, this gets displayed as well
+        extra: Additional values you can specify in `msg` like `{time_passed}`.
+
+    Returns:
+        :class:`datetime.datetime` The current time.
     """
     from ehrapy import settings
 
