@@ -60,7 +60,7 @@ def qc_metrics(
                 import matplotlib.pyplot as plt
 
                 adata = ep.dt.mimic_2(encode=True)
-                ep.pp.calculate_qc_metrics(adata)
+                ep.pp.qc_metrics(adata)
                 sns.displot(adata.obs["missing_values_abs"])
                 plt.show()
     """
