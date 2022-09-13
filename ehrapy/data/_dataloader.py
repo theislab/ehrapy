@@ -61,3 +61,7 @@ def download(
     if is_archived:
         output_path = output_path or tempfile.gettempdir()
         shutil.unpack_archive(download_to_path, output_path)
+
+    logg.info(
+        f"Loaded `{output_file_name}` to `{output_path}`."
+    )

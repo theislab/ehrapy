@@ -275,7 +275,7 @@ def _knn_impute(adata: AnnData, var_names: list[str] | None, n_neighbours: int) 
         adata.X = imputer.fit_transform(adata.X)
 
 
-# ======================  MissForest Impuation =======================
+# ======================  MissForest Imputation =======================
 
 
 def miss_forest_impute(
@@ -332,7 +332,8 @@ def miss_forest_impute(
         patch_sklearn()
     else:
         print(
-            "[bold yellow]scikit-learn-intelex is not available. Install via [blue]pip install scikit-learn-intelex [yellow] for faster imputations."
+            "[bold yellow]scikit-learn-intelex is not available. Install via [blue]pip install scikit-learn-intelex ["
+            "yellow] for faster imputations. "
         )
 
     from sklearn.ensemble import ExtraTreesRegressor, RandomForestClassifier

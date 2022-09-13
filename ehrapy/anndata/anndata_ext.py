@@ -14,6 +14,7 @@ from rich.text import Text
 from rich.tree import Tree
 from scipy import sparse
 from scipy.sparse import issparse
+from ehrapy import logger as logg
 
 
 class BaseDataframes(NamedTuple):
@@ -70,7 +71,7 @@ def df_to_anndata(
     uns["non_numerical_columns"] = list(set(dataframes.df.columns) ^ set(uns["numerical_columns"]))
 
     # cast non numerical obs only columns to category or bool dtype, which is needed for writing to .h5ad files
-    return AnnData(
+    adata = AnnData(
         X=X,
         obs=_cast_obs_columns(dataframes.obs),
         var=pd.DataFrame(index=list(dataframes.df.columns)),
@@ -78,6 +79,12 @@ def df_to_anndata(
         layers={"original": X.copy()},
         uns=uns,
     )
+
+    logg.info(
+        f"Transformed given dataframe into an AnnData object with n_obs x n_vars = `{adata.n_obs}` x `{adata.n_vars}`"
+    )
+
+    return adata
 
 
 def _move_columns_to_obs(df: pd.DataFrame, columns_obs_only: list[str] | None) -> BaseDataframes:
@@ -97,6 +104,9 @@ def _move_columns_to_obs(df: pd.DataFrame, columns_obs_only: list[str] | None) -
             obs = df[columns_obs_only].copy()
             obs = obs.set_index(df.index.map(str))
             df = df.drop(columns_obs_only, axis=1)
+            logg.info(
+                f"Moved `{columns_obs_only}` to `obs`."
+            )
         except KeyError:
             raise ColumnNotFoundError from KeyError(
                 "One or more column names passed to column_obs_only were not found in the input data. "
@@ -140,6 +150,9 @@ def anndata_to_df(
         # reset index needed since we slice all or at least some columns from obs DataFrame
         obs_slice = obs_slice.reset_index(drop=True)
         df = pd.concat([df, obs_slice], axis=1)
+        logg.info(
+            f"Added `{obs_cols}` columns to `X`."
+        )
     if var_cols:
         if len(adata.var.columns) == 0:
             raise VarEmptyError("Cannot slice columns from empty var!")
@@ -150,23 +163,22 @@ def anndata_to_df(
         # reset index needed since we slice all or at least some columns from var DataFrame
         var_slice = var_slice.reset_index(drop=True)
         df = pd.concat([df, var_slice], axis=1)
+        logg.info(
+            f"Added `{var_cols}` columns to `X`."
+        )
 
     return df
 
 
-def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False, copy: bool = False) -> AnnData:
-    """Move inplace or copy features from X to obs. Note that columns containing boolean values (either 0/1 or True(
-    true)/False(false)) will be stored as boolean columns whereas the other non numerical columns will be stored as
-    category.
-
+def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy: bool = False) -> AnnData:
+    """Move features from X to obs inplace. Note that columns containing boolean values (either 0/1 or True(true)/False(false))
+    will be stored as boolean columns whereas the other non numerical columns will be stored as category.
     Args:
         adata: The AnnData object
         to_obs: The columns to move to obs
-        copy_obs: The values are copied to obs (and therefore kept in X) instead of moved completely
         copy: Whether to return a copy or not
-
     Returns:
-        The original AnnData object with moved or copied columns from X to obs
+        The original AnnData object with moved columns from X to obs
     """
     if copy:
         adata = adata.copy()
@@ -178,23 +190,21 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False,
         raise ObsMoveError(
             "Cannot move encoded columns from X to obs. Either undo encoding or remove them from the list!"
         )
+    indices = adata.var_names.isin(to_obs)
+    df = adata[:, indices].to_df()
+    adata._inplace_subset_var(~indices)
+    adata.obs = adata.obs.join(df)
+    updated_num_uns, updated_non_num_uns, num_var = _update_uns(adata, to_obs)
+    # cast numerical values from object
+    adata.obs[num_var] = adata.obs[num_var].apply(pd.to_numeric, errors="ignore", downcast="float")
+    # cast non numerical values from object to either bool (if possible) or category
+    adata.obs = _cast_obs_columns(adata.obs)
+    adata.uns["numerical_columns"] = updated_num_uns
+    adata.uns["non_numerical_columns"] = updated_non_num_uns
 
-    if copy_obs:
-        indices = adata.var_names.isin(to_obs)
-        df = adata[:, indices].to_df()
-        adata.obs = adata.obs.join(df)
-    else:
-        indices = adata.var_names.isin(to_obs)
-        df = adata[:, indices].to_df()
-        adata._inplace_subset_var(~indices)
-        adata.obs = adata.obs.join(df)
-        updated_num_uns, updated_non_num_uns, num_var = _update_uns(adata, to_obs)
-        # cast numerical values from object
-        adata.obs[num_var] = adata.obs[num_var].apply(pd.to_numeric, errors="ignore", downcast="float")
-        # cast non numerical values from object to either bool (if possible) or category
-        adata.obs = _cast_obs_columns(adata.obs)
-        adata.uns["numerical_columns"] = updated_num_uns
-        adata.uns["non_numerical_columns"] = updated_non_num_uns
+    logg.info(
+        f"Moved `{to_obs}` columns to `obs`."
+    )
 
     if copy:
         return adata
@@ -202,27 +212,25 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False,
 
 def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
     """Move features from obs to X inplace.
-
     Args:
         adata: The AnnData object
         to_x: The columns to move to X
-
     Returns:
         A new AnnData object with moved columns from obs to X. This should not be used for datetime columns currently.
     """
     if isinstance(to_x, str):  # pragma: no cover
         to_x = [to_x]
-    if set(to_x).issubset(set(adata.var_names)):
-        new_adata = adata
-        new_adata.obs = adata.obs.drop(to_x, axis=1)
-    else:
-        new_adata = concat([adata, AnnData(adata.obs[to_x], dtype="object")], axis=1)
-        new_adata.obs = adata.obs[adata.obs.columns[~adata.obs.columns.isin(to_x)]]
-        # update uns (copy maybe: could be a costly operation but reduces reference cycles)
-        # users might save those as separate AnnData object and this could be unexpected behaviour if we dont copy
-        num_columns_moved, non_num_columns_moved, _ = _update_uns(adata, to_x, True)
-        new_adata.uns["numerical_columns"] = adata.uns["numerical_columns"] + num_columns_moved
-        new_adata.uns["non_numerical_columns"] = adata.uns["non_numerical_columns"] + non_num_columns_moved
+    new_adata = concat([adata, AnnData(adata.obs[to_x], dtype="object")], axis=1)
+    new_adata.obs = adata.obs[adata.obs.columns[~adata.obs.columns.isin(to_x)]]
+    # update uns (copy maybe: could be a costly operation but reduces reference cycles)
+    # users might save those as separate AnnData object and this could be unexpected behaviour if we dont copy
+    num_columns_moved, non_num_columns_moved, _ = _update_uns(adata, to_x, True)
+    new_adata.uns["numerical_columns"] = adata.uns["numerical_columns"] + num_columns_moved
+    new_adata.uns["non_numerical_columns"] = adata.uns["non_numerical_columns"] + non_num_columns_moved
+
+    logg.info(
+        f"Moved `{to_x}` features to `X`."
+    )
 
     return new_adata
 

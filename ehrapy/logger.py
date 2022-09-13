@@ -2,7 +2,7 @@ import logging
 from logging import CRITICAL, ERROR, WARNING, INFO, DEBUG
 from datetime import datetime, timezone, timedelta
 from functools import partial, update_wrapper
-from typing import Optional, IO
+from typing import Optional
 
 HINT = (INFO + DEBUG) // 2
 logging.addLevelName(HINT, "HINT")

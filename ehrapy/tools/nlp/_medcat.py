@@ -109,6 +109,7 @@ class MedCAT:
                       7,coronavirus
             config: Optional MedCAT concept database configuration.
                     If not provided a default configuration with config.general['spacy_model'] = 'en_core_sci_md' is created.
+
         Returns:
             Instance of a MedCAT CDB concept database
         """
