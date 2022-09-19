@@ -158,4 +158,4 @@ jobs:
               run: nox --force-color --session=coverage -- xml -i
 
             - name: Upload coverage report
-              uses: codecov/codecov-action@v3.1.0
+              uses: codecov/codecov-action@v3.1.1
