@@ -4,6 +4,8 @@ from datetime import datetime, timezone, timedelta
 from functools import partial, update_wrapper
 from typing import Optional
 
+from ehrapy import settings
+
 HINT = (INFO + DEBUG) // 2
 logging.addLevelName(HINT, "HINT")
 
@@ -23,8 +25,6 @@ class _RootLogger(logging.RootLogger):
         time: datetime = None,
         deep: Optional[str] = None,
     ) -> datetime:
-        from ehrapy import settings
-
         now = datetime.now(timezone.utc)
         time_passed: timedelta = None if time is None else now - time
         extra = {
@@ -116,34 +116,24 @@ def error(
     Returns:
         :class:`datetime.datetime` The current time.
     """
-    from ehrapy import settings
-
     return settings._root_logger.error(msg, time=time, deep=deep, extra=extra)
 
 
 @_copy_docs_and_signature(error)
 def warning(msg: str, *, time=None, deep=None, extra=None) -> datetime:  # noqa
-    from ehrapy import settings
-
     return settings._root_logger.warning(msg, time=time, deep=deep, extra=extra)
 
 
 @_copy_docs_and_signature(error)
 def info(msg: str, *, time=None, deep=None, extra=None) -> datetime:  # noqa
-    from ehrapy import settings
-
     return settings._root_logger.info(msg, time=time, deep=deep, extra=extra)
 
 
 @_copy_docs_and_signature(error)
 def hint(msg: str, *, time=None, deep=None, extra=None) -> datetime:  # noqa
-    from ehrapy import settings
-
     return settings._root_logger.hint(msg, time=time, deep=deep, extra=extra)
 
 
 @_copy_docs_and_signature(error)
 def debug(msg: str, *, time=None, deep=None, extra=None) -> datetime:  # noqa
-    from ehrapy import settings
-
     return settings._root_logger.debug(msg, time=time, deep=deep, extra=extra)

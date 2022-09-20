@@ -105,7 +105,7 @@ def _move_columns_to_obs(df: pd.DataFrame, columns_obs_only: list[str] | None) -
             obs = obs.set_index(df.index.map(str))
             df = df.drop(columns_obs_only, axis=1)
             logg.info(
-                f"Moved `{columns_obs_only}` to `obs`."
+                f"Columns `{columns_obs_only}` were successfully moved to `obs`"
             )
         except KeyError:
             raise ColumnNotFoundError from KeyError(
@@ -114,6 +114,9 @@ def _move_columns_to_obs(df: pd.DataFrame, columns_obs_only: list[str] | None) -
             )
     else:
         obs = pd.DataFrame(index=df.index.map(str))
+        logg.info(
+            f"All columns were successfully moved to `obs`"
+        )
 
     return BaseDataframes(obs, df)
 
@@ -150,6 +153,7 @@ def anndata_to_df(
         # reset index needed since we slice all or at least some columns from obs DataFrame
         obs_slice = obs_slice.reset_index(drop=True)
         df = pd.concat([df, obs_slice], axis=1)
+
         logg.info(
             f"Added `{obs_cols}` columns to `X`."
         )
@@ -163,9 +167,14 @@ def anndata_to_df(
         # reset index needed since we slice all or at least some columns from var DataFrame
         var_slice = var_slice.reset_index(drop=True)
         df = pd.concat([df, var_slice], axis=1)
+
         logg.info(
             f"Added `{var_cols}` columns to `X`."
         )
+
+    logg.info(
+        f"AnnData object was transformed to a pandas dataframe."
+    )
 
     return df
 
@@ -190,6 +199,7 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy: bool = False) -> 
         raise ObsMoveError(
             "Cannot move encoded columns from X to obs. Either undo encoding or remove them from the list!"
         )
+
     indices = adata.var_names.isin(to_obs)
     df = adata[:, indices].to_df()
     adata._inplace_subset_var(~indices)
@@ -508,6 +518,10 @@ def set_numeric_vars(
     for i in range(n_values):
         adata.X[:, vars_idx[i]] = values[:, i]
 
+    logg.info(
+        f"Column names for numeric variables {vars} were replaced."
+    )
+
     return adata
 
 
@@ -530,10 +544,16 @@ def _update_uns(
                 num_set -= {var}
             elif var in non_num_set:
                 non_num_set -= {var}
+        logg.info(
+            f"Moved `{moved_columns}` columns to `X`."
+        )
         return list(num_set), list(non_num_set), var_num
     else:
         all_moved_non_num_columns = moved_columns_set ^ set(adata.obs.select_dtypes("number").columns)
         all_moved_num_columns = list(moved_columns_set ^ all_moved_non_num_columns)
+        logg.info(
+            f"Moved `{moved_columns}` columns to `obs`."
+        )
         return all_moved_num_columns, list(all_moved_non_num_columns), None
 
 
@@ -710,6 +730,9 @@ def generate_anndata(
         varp=varp,
         dtype=X_dtype,
         uns=uns,
+    )
+    logg.info(
+        f"Generated an AnnData object with n_obs x n_vars = `{adata.n_obs}` x `{adata.n_vars}`"
     )
     return adata
 

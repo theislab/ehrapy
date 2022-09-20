@@ -11,6 +11,7 @@ from ehrapy.anndata.anndata_ext import (
     get_numeric_vars,
     set_numeric_vars,
 )
+from ehrapy import logger as logg
 
 
 def scale_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool = False, **kwargs) -> AnnData | None:
@@ -52,6 +53,8 @@ def scale_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool =
     set_numeric_vars(adata, var_values, vars)
 
     _record_norm(adata, vars, "scale")
+
+    logg.info(f"Scaling normalization was applied on `X`.")
 
     return adata
 
@@ -96,6 +99,8 @@ def minmax_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool 
 
     _record_norm(adata, vars, "minmax")
 
+    logg.info(f"AnnData's `X` was min-max normalized.")
+
     return adata
 
 
@@ -137,6 +142,8 @@ def maxabs_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool 
     set_numeric_vars(adata, var_values, vars)
 
     _record_norm(adata, vars, "maxabs")
+
+    logg.info(f"AnnData's `X` was max-abs normalized.")
 
     return adata
 
@@ -183,6 +190,8 @@ def robust_scale_norm(
 
     _record_norm(adata, vars, "robust_scale")
 
+    logg.info(f"Robust scaling normalization was applied on `X`.")
+
     return adata
 
 
@@ -226,6 +235,8 @@ def quantile_norm(adata: AnnData, vars: str | list[str] | None = None, copy: boo
 
     _record_norm(adata, vars, "quantile")
 
+    logg.info(f"AnnData's `X` was quantile normalized.")
+
     return adata
 
 
@@ -268,6 +279,8 @@ def power_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool =
     set_numeric_vars(adata, var_values, vars)
 
     _record_norm(adata, vars, "power")
+
+    logg.info(f"Power transformation normalization was applied on `X`.")
 
     return adata
 
@@ -326,6 +339,8 @@ def log_norm(
 
     _record_norm(adata, vars, "log")
 
+    logg.info(f"Log normalization was applied on `X`.")
+
     return adata
 
 
@@ -367,6 +382,8 @@ def sqrt_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool = 
     set_numeric_vars(adata, var_values, vars)
 
     _record_norm(adata, vars, "sqrt")
+
+    logg.info(f"Square root normalization was applied on `X`.")
 
     return adata
 

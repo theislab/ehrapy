@@ -6,6 +6,7 @@ import scanpy as sc
 from anndata import AnnData
 from scanpy._utils import AnyRandom
 from scipy.sparse import spmatrix
+from ehrapy import logger as logg
 
 
 def pca(
@@ -104,6 +105,9 @@ def regress_out(
     Returns:
         Depending on `copy` returns or updates an :class:`~anndata.AnnData` object with the corrected data matrix.
     """
+
+    logg.info(f"Corrected data matrix in the AnnData object.")
+
     return sc.pp.regress_out(adata=adata, keys=keys, n_jobs=n_jobs, copy=copy)
 
 
@@ -127,6 +131,8 @@ def subsample(
         Returns `X[obs_indices], obs_indices` if data is array-like, otherwise subsamples the passed
         :class:`~anndata.AnnData` (`copy == False`) or returns a subsampled copy of it (`copy == True`).
     """
+    logg.info(f"Subsampled the data matrix.")
+
     return sc.pp.subsample(data=data, fraction=fraction, n_obs=n_obs, random_state=random_state, copy=copy)
 
 
@@ -155,6 +161,7 @@ def combat(
     Returns:
         Depending on the value of `inplace`, either returns the corrected matrix or or modifies `adata.X`.
     """
+    logg.info(f"Corrected for batch effects in the AnnData object.")
     return sc.pp.combat(adata=adata, key=key, covariates=covariates, inplace=inplace)
 
 
@@ -237,6 +244,7 @@ def neighbors(
          **distances** : sparse matrix of dtype `float32`.
          Instead of decaying weights, this stores distances for each pair of neighbors.
     """
+    logg.info(f"Computed a neighborhood graph of observations.")
     return sc.pp.neighbors(
         adata=adata,
         n_neighbors=n_neighbors,

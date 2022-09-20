@@ -9,7 +9,7 @@ from anndata import AnnData
 from ehrapy import settings
 from ehrapy.io._utility_io import _get_file_extension
 from ehrapy.preprocessing._encode import encode
-
+from ehrapy import logger as logg
 
 def write(
     filename: str | Path,
@@ -18,7 +18,7 @@ def write(
     compression: Literal["gzip", "lzf"] | None = "gzip",
     compression_opts: int | None = None,
 ) -> None:
-    """Write :class:`~anndata.AnnData` objects to file. It is possbile to either write an :class:`~anndata.AnnData` object to
+    """Write :class:`~anndata.AnnData` objects to file. It is possible to either write an :class:`~anndata.AnnData` object to
     a .csv file or a .h5ad file.
     The .h5ad file can be used as a cache to save the current state of the object and to retrieve it faster once needed. This preserves
     the object state at the time of writing. It is possible to write both, encoded and unencoded objects.
@@ -56,6 +56,9 @@ def write(
         filename = _get_filename_from_key(key, extension)
     if extension == "csv":
         adata.write_csvs(filename)
+        logg.info(
+            f"Wrote AnnData object to a .csv file with filename `{filename}`.csv."
+        )
     else:
         # dummy encoding when there is non numerical data in X
         if not np.issubdtype(adata.X.dtype, np.number) and extension == "h5ad":
@@ -65,8 +68,14 @@ def write(
             encoded_adata.uns["ehrapy_dummy_encoding"] = True
             encoded_adata.uns["columns_obs_only"] = list(adata.obs.columns)
             encoded_adata.write(filename, compression=compression, compression_opts=compression_opts)
+            logg.info(
+                f"Wrote AnnData object to a .h5ad file with filename `{filename}`.h5ad."
+            )
         else:
             adata.write(filename, compression=compression, compression_opts=compression_opts)
+            logg.info(
+                f"Wrote AnnData object to a .h5ad file with filename `{filename}`.h5ad."
+            )
 
 
 def _get_filename_from_key(key, extension=None) -> Path:

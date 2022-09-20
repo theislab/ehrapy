@@ -9,6 +9,7 @@ from anndata import AnnData
 from rich import print
 
 from ehrapy.core.str_matching import StrMatcher
+from ehrapy import logger as logg
 
 
 def qc_metrics(
@@ -70,6 +71,7 @@ def qc_metrics(
     if inplace:
         adata.obs[obs_metrics.columns] = obs_metrics
         adata.var[var_metrics.columns] = var_metrics
+        logg.info(f"Added the calculated metrics to `obs` and `var`.")
 
     return obs_metrics, var_metrics
 
