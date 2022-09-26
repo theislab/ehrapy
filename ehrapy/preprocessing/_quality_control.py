@@ -71,7 +71,7 @@ def qc_metrics(
     if inplace:
         adata.obs[obs_metrics.columns] = obs_metrics
         adata.var[var_metrics.columns] = var_metrics
-        logg.info(f"Added the calculated metrics to `obs` and `var`.")
+        logg.info(f"Added the calculated metrics to AnnData's `obs` and `var`.")
 
     return obs_metrics, var_metrics
 

@@ -96,9 +96,6 @@ def _replace_explicit(arr: np.ndarray, replacement: str | int, impute_empty_stri
     else:
         impute_conditions = np.logical_or(pd.isnull(arr), arr == "")
     arr[impute_conditions] = replacement
-    logg.info(
-        f"Replaced missing values by `{replacement}`."
-    )
 
 
 def _extract_impute_value(replacement: dict[str, str | int], column_name: str) -> str | int:
@@ -165,7 +162,7 @@ def simple_impute(
             try:
                 _simple_impute(adata, var_names, strategy)
                 logg.info(
-                    f"Imputed the AnnData object using `{strategy}` imputation."
+                    f"Imputed the AnnData object using `{strategy}` Imputation."
                 )
             except ValueError:
                 raise ImputeStrategyNotAvailableError(
@@ -176,7 +173,7 @@ def simple_impute(
         elif strategy == "most_frequent":
             _simple_impute(adata, var_names, strategy)
             logg.info(
-                f"Imputed the AnnData object using `most_frequent` imputation."
+                f"Imputed the AnnData object using `most_frequent` Imputation."
             )
         # unknown simple imputation strategy
         else:
@@ -197,7 +194,7 @@ def _simple_impute(adata: AnnData, var_names: list[str] | None, strategy: str) -
     # impute all columns if None passed
     else:
         adata.X = imputer.fit_transform(adata.X)
-    logg.info(f"Imputed the AnnData object using `{strategy}` imputation.")
+    logg.info(f"Imputed the AnnData object using `{strategy}` Imputation.")
 
 
 # ===================== KNN Imputation =========================
@@ -277,10 +274,10 @@ def knn_impute(
 
     if var_names:
         logg.info(
-            f"Imputed the columns `{var_names}` in the AnnData object using kNN Imputation with {n_neighbours} number of neighbours considered.")
+            f"Imputed the columns `{var_names}` in the AnnData object using kNN Imputation with {n_neighbours} neighbours considered.")
     elif not var_names:
         logg.info(
-            f"Imputed the data in the AnnData object using kNN Imputation with {n_neighbours} number of neighbours considered.")
+            f"Imputed the data in the AnnData object using kNN Imputation with {n_neighbours} neighbours considered.")
 
     if copy:
         return adata
@@ -364,7 +361,7 @@ def miss_forest_impute(
 
         patch_sklearn()
     else:
-        logg.info(
+        print(
             "[bold yellow]scikit-learn-intelex is not available. Install via [blue]pip install scikit-learn-intelex ["
             "yellow] for faster imputations. ")
 
@@ -545,10 +542,10 @@ def soft_impute(
 
     if var_names:
         logg.info(
-            f"Imputed the columns `{var_names}` in the AnnData object with Soft Imputation using `{num_initial_strategy}` strategy with shrinkage value `{shrinkage_value}`.")
+            f"Imputed the columns `{var_names}` in the AnnData object using Soft Imputation with shrinkage value of `{shrinkage_value}`.")
     elif not var_names:
         logg.info(
-            f"Imputed the data in the AnnData object with Soft Imputation using `{num_initial_strategy}` strategy with shrinkage value `{shrinkage_value}`.")
+            f"Imputed the data in the AnnData object using Soft Imputation with shrinkage value of `{shrinkage_value}`.")
 
     return adata
 
@@ -591,10 +588,10 @@ def _soft_impute(
 
     if var_names:
         logg.info(
-            f"Imputed the columns `{var_names}` in the AnnData object with Soft Imputation using `{num_initial_strategy}` strategy with shrinkage value `{shrinkage_value}`.")
+            f"Imputed the columns `{var_names}` in the AnnData object using Soft Imputation with shrinkage value of `{shrinkage_value}`.")
     elif not var_names:
         logg.info(
-            f"Imputed the data in the AnnData object with Soft Imputation using `{num_initial_strategy}` strategy with shrinkage value `{shrinkage_value}`.")
+            f"Imputed the data in the AnnData object using Soft Imputation with shrinkage value of `{shrinkage_value}`.")
 
 
 # ===================== IterativeSVD =========================
@@ -687,10 +684,10 @@ def iterative_svd_impute(
 
     if var_names:
         logg.info(
-            f"Imputed the columns `{var_names}` in the AnnData object with IterativeSVD Imputation.")
+            f"Imputed the columns `{var_names}` in the AnnData object using IterativeSVD Imputation.")
     elif not var_names:
         logg.info(
-            f"Imputed the data in the AnnData object with IterativeSVD Imputation.")
+            f"Imputed the data in the AnnData object using IterativeSVD Imputation.")
 
     return adata
 
@@ -731,10 +728,10 @@ def _iterative_svd_impute(
 
     if var_names:
         logg.info(
-            f"Imputed the columns `{var_names}` in the AnnData object with IterativeSVD Imputation.")
+            f"Imputed the columns `{var_names}` in the AnnData object using IterativeSVD Imputation.")
     elif not var_names:
         logg.info(
-            f"Imputed the data in the AnnData object with IterativeSVD Imputation.")
+            f"Imputed the data in the AnnData object using IterativeSVD Imputation.")
 
 
 # ===================== MatrixFactorization =========================
@@ -828,10 +825,10 @@ def matrix_factorization_impute(
 
     if var_names:
         logg.info(
-            f"Imputed the columns `{var_names}` in the AnnData object with MatrixFactorization Imputation with learning rate `{learning_rate}` and shrinkage value `{shrinkage_value}`.")
+            f"Imputed the columns `{var_names}` in the AnnData object using MatrixFactorization Imputation with learning rate `{learning_rate}` and shrinkage value `{shrinkage_value}`.")
     elif not var_names:
         logg.info(
-            f"Imputed the data in the AnnData object with MatrixFactorization Imputation with learning rate `{learning_rate}` and shrinkage value `{shrinkage_value}`.")
+            f"Imputed the data in the AnnData object using MatrixFactorization Imputation with learning rate `{learning_rate}` and shrinkage value `{shrinkage_value}`.")
 
     return adata
 
@@ -868,10 +865,10 @@ def _matrix_factorization_impute(
 
     if var_names:
         logg.info(
-            f"Imputed the columns `{var_names}` in the AnnData object with MatrixFactorization Imputation with learning rate `{learning_rate}` and shrinkage value `{shrinkage_value}`.")
+            f"Imputed the columns `{var_names}` in the AnnData object using MatrixFactorization Imputation with learning rate `{learning_rate}` and shrinkage value `{shrinkage_value}`.")
     elif not var_names:
         logg.info(
-            f"Imputed the data in the AnnData object with MatrixFactorization Imputation with learning rate `{learning_rate}` and shrinkage value `{shrinkage_value}`.")
+            f"Imputed the data in the AnnData object using MatrixFactorization Imputation with learning rate `{learning_rate}` and shrinkage value `{shrinkage_value}`.")
 
 
 # ===================== NuclearNormMinimization =========================
@@ -961,10 +958,10 @@ def nuclear_norm_minimization_impute(
 
     if var_names:
         logg.info(
-            f"Imputed the columns `{var_names}` in the AnnData object with NuclearNormMinimization Imputation with error tolerance `{error_tolerance}`.")
+            f"Imputed the columns `{var_names}` in the AnnData object using NuclearNormMinimization Imputation with error tolerance of `{error_tolerance}`.")
     elif not var_names:
         logg.info(
-            f"Imputed the data in the AnnData object with NuclearNormMinimization Imputation with error tolerance `{error_tolerance}`.")
+            f"Imputed the data in the AnnData object using NuclearNormMinimization Imputation with error tolerance of `{error_tolerance}`.")
 
     return adata
 
@@ -999,10 +996,10 @@ def _nuclear_norm_minimization_impute(
 
     if var_names:
         logg.info(
-            f"Imputed the columns `{var_names}` in the AnnData object with NuclearNormMinimization Imputation with error tolerance `{error_tolerance}`.")
+            f"Imputed the columns `{var_names}` in the AnnData object using NuclearNormMinimization Imputation with error tolerance of `{error_tolerance}`.")
     elif not var_names:
         logg.info(
-            f"Imputed the data in the AnnData object with NuclearNormMinimization Imputation with error tolerance `{error_tolerance}`.")
+            f"Imputed the data in the AnnData object using NuclearNormMinimization Imputation with error tolerance of `{error_tolerance}`.")
 
 
 # ===================== miceforest =========================
@@ -1077,10 +1074,10 @@ def mice_forest_impute(
 
     if var_names:
         logg.info(
-            f"Imputed the columns `{var_names}` in the AnnData object with MiceForest Imputation with `{iterations}` iterations.")
+            f"Imputed the columns `{var_names}` in the AnnData object using MiceForest Imputation with `{iterations}` iterations.")
     elif not var_names:
         logg.info(
-            f"Imputed the data in the AnnData object with MiceForest Imputation with `{iterations}` iterations.")
+            f"Imputed the data in the AnnData object using MiceForest Imputation with `{iterations}` iterations.")
 
     return adata
 
@@ -1109,10 +1106,10 @@ def _miceforest_impute(
 
     if var_names:
         logg.info(
-            f"Imputed the columns `{var_names}` in the AnnData object with MiceForest Imputation with `{iterations}` iterations.")
+            f"Imputed the columns `{var_names}` in the AnnData object using MiceForest Imputation with `{iterations}` iterations.")
     elif not var_names:
         logg.info(
-            f"Imputed the data in the AnnData object with MiceForest Imputation with `{iterations}` iterations.")
+            f"Imputed the data in the AnnData object using MiceForest Imputation with `{iterations}` iterations.")
 
 
 def _warn_imputation_threshold(adata: AnnData, var_names: list[str] | None, threshold: int = 30) -> dict[str, int]:
@@ -1137,7 +1134,8 @@ def _warn_imputation_threshold(adata: AnnData, var_names: list[str] | None, thre
     var_name_to_pct: dict[str, int] = {}
     for var in thresholded_var_names:
         var_name_to_pct[var] = adata.var["missing_values_pct"].loc[var]
-        logg.info(f"[bold yellow]Feature [blue]{var} [yellow]had more than [blue]{var_name_to_pct[var]:.2f}% [yellow]missing values!")
+        print(
+            f"[bold yellow]Feature [blue]{var} [yellow]had more than [blue]{var_name_to_pct[var]:.2f}% [yellow]missing values!")
 
     return var_name_to_pct
 

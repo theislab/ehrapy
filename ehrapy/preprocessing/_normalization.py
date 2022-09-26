@@ -190,7 +190,7 @@ def robust_scale_norm(
 
     _record_norm(adata, vars, "robust_scale")
 
-    logg.info(f"Robust scaling normalization was applied on `X`.")
+    logg.info(f"Robust scaling normalization was applied on AnnData's `X`.")
 
     return adata
 
@@ -280,7 +280,7 @@ def power_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool =
 
     _record_norm(adata, vars, "power")
 
-    logg.info(f"Power transformation normalization was applied on `X`.")
+    logg.info(f"Power transformation normalization was applied on AnnData's `X`.")
 
     return adata
 
@@ -339,7 +339,7 @@ def log_norm(
 
     _record_norm(adata, vars, "log")
 
-    logg.info(f"Log normalization was applied on `X`.")
+    logg.info(f"Log normalization was applied on AnnData's `X`.")
 
     return adata
 
@@ -383,7 +383,7 @@ def sqrt_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool = 
 
     _record_norm(adata, vars, "sqrt")
 
-    logg.info(f"Square root normalization was applied on `X`.")
+    logg.info(f"Square root normalization was applied on AnnData's `X`.")
 
     return adata
 

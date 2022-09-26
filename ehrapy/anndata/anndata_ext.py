@@ -81,7 +81,7 @@ def df_to_anndata(
     )
 
     logg.info(
-        f"Transformed given dataframe into an AnnData object with n_obs x n_vars = `{adata.n_obs}` x `{adata.n_vars}`"
+        f"Transformed passed dataframe into an AnnData object with n_obs x n_vars = `{adata.n_obs}` x `{adata.n_vars}`"
     )
 
     return adata
@@ -105,7 +105,7 @@ def _move_columns_to_obs(df: pd.DataFrame, columns_obs_only: list[str] | None) -
             obs = obs.set_index(df.index.map(str))
             df = df.drop(columns_obs_only, axis=1)
             logg.info(
-                f"Columns `{columns_obs_only}` were successfully moved to `obs`"
+                f"Added columns `{columns_obs_only}` to `obs`"
             )
         except KeyError:
             raise ColumnNotFoundError from KeyError(
@@ -115,7 +115,7 @@ def _move_columns_to_obs(df: pd.DataFrame, columns_obs_only: list[str] | None) -
     else:
         obs = pd.DataFrame(index=df.index.map(str))
         logg.info(
-            f"All columns were successfully moved to `obs`"
+            f"Added all columns to `obs`"
         )
 
     return BaseDataframes(obs, df)
@@ -168,10 +168,6 @@ def anndata_to_df(
         var_slice = var_slice.reset_index(drop=True)
         df = pd.concat([df, var_slice], axis=1)
 
-        logg.info(
-            f"Added `{var_cols}` columns to `X`."
-        )
-
     logg.info(
         f"AnnData object was transformed to a pandas dataframe."
     )
@@ -213,7 +209,7 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy: bool = False) -> 
     adata.uns["non_numerical_columns"] = updated_non_num_uns
 
     logg.info(
-        f"Moved `{to_obs}` columns to `obs`."
+        f"Added `{to_obs}` to `obs`."
     )
 
     if copy:
@@ -239,7 +235,7 @@ def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
     new_adata.uns["non_numerical_columns"] = adata.uns["non_numerical_columns"] + non_num_columns_moved
 
     logg.info(
-        f"Moved `{to_x}` features to `X`."
+        f"Added `{to_x}` features to `X`."
     )
 
     return new_adata
@@ -545,14 +541,14 @@ def _update_uns(
             elif var in non_num_set:
                 non_num_set -= {var}
         logg.info(
-            f"Moved `{moved_columns}` columns to `X`."
+            f"Added `{moved_columns}` columns to `X`."
         )
         return list(num_set), list(non_num_set), var_num
     else:
         all_moved_non_num_columns = moved_columns_set ^ set(adata.obs.select_dtypes("number").columns)
         all_moved_num_columns = list(moved_columns_set ^ all_moved_non_num_columns)
         logg.info(
-            f"Moved `{moved_columns}` columns to `obs`."
+            f"Added `{moved_columns}` columns to `obs`."
         )
         return all_moved_num_columns, list(all_moved_non_num_columns), None
 

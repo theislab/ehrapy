@@ -4,8 +4,6 @@ from datetime import datetime, timezone, timedelta
 from functools import partial, update_wrapper
 from typing import Optional
 
-from ehrapy import settings
-
 HINT = (INFO + DEBUG) // 2
 logging.addLevelName(HINT, "HINT")
 
@@ -25,6 +23,7 @@ class _RootLogger(logging.RootLogger):
         time: datetime = None,
         deep: Optional[str] = None,
     ) -> datetime:
+        from ehrapy import settings
         now = datetime.now(timezone.utc)
         time_passed: timedelta = None if time is None else now - time
         extra = {
@@ -52,6 +51,27 @@ class _RootLogger(logging.RootLogger):
 
     def debug(self, msg, *, time=None, deep=None, extra=None) -> datetime:
         return self.log(DEBUG, msg, time=time, deep=deep, extra=extra)
+
+
+def _set_log_file(settings):
+    file = settings.logfile
+    name = settings.logpath
+    root = settings._root_logger
+    h = logging.StreamHandler(file) if name is None else logging.FileHandler(name)
+    h.setFormatter(_LogFormatter())
+    h.setLevel(root.level)
+    if len(root.handlers) == 1:
+        root.removeHandler(root.handlers[0])
+    elif len(root.handlers) > 1:
+        raise RuntimeError('Ehrapy’s root logger got more than one handler')
+    root.addHandler(h)
+
+
+def _set_log_level(settings, level: int):
+    root = settings._root_logger
+    root.setLevel(level)
+    (h,) = root.handlers  # may only be 1
+    h.setLevel(level)
 
 
 class _LogFormatter(logging.Formatter):
@@ -116,24 +136,29 @@ def error(
     Returns:
         :class:`datetime.datetime` The current time.
     """
+    from ehrapy import settings
     return settings._root_logger.error(msg, time=time, deep=deep, extra=extra)
 
 
 @_copy_docs_and_signature(error)
 def warning(msg: str, *, time=None, deep=None, extra=None) -> datetime:  # noqa
+    from ehrapy import settings
     return settings._root_logger.warning(msg, time=time, deep=deep, extra=extra)
 
 
 @_copy_docs_and_signature(error)
 def info(msg: str, *, time=None, deep=None, extra=None) -> datetime:  # noqa
+    from ehrapy import settings
     return settings._root_logger.info(msg, time=time, deep=deep, extra=extra)
 
 
 @_copy_docs_and_signature(error)
 def hint(msg: str, *, time=None, deep=None, extra=None) -> datetime:  # noqa
+    from ehrapy import settings
     return settings._root_logger.hint(msg, time=time, deep=deep, extra=extra)
 
 
 @_copy_docs_and_signature(error)
 def debug(msg: str, *, time=None, deep=None, extra=None) -> datetime:  # noqa
+    from ehrapy import settings
     return settings._root_logger.debug(msg, time=time, deep=deep, extra=extra)

@@ -95,16 +95,16 @@ def encode(
                                                                                         encodings)  # type: ignore
             # autodetect is set to False, but no encodings were provided; warn and skip this object
             if not detect and not encodings_modes:
-                logg.warning(
-                    f"[bold yellow]Skipped encoding modality {adata}, as autodetect is set to false and no encodings were provided!")
+                print(
+                    f"[bold yellow]Skipped encoding modality {adata}, as autodetect is set to false and no encodings were provided!"
+                )
             if encodings_modes:
                 data.mod[adata] = _encode(data.mod[adata], detect, encodings_modes)
             data.update()
             # no need to return since this references the original MuData object
     else:
-        raise ValueError(
-            f"[b red]Cannot encode object of type {type(data)}. Can only encode AnnData or MuData objects!")
-
+        print(f"[b red]Cannot encode object of type {type(data)}. Can only encode AnnData or MuData objects!")
+        raise ValueError
     if isinstance(data, AnnData):
         logg.info(f"Encoded the AnnData object.")
     elif isinstance(data, MuData):
@@ -145,9 +145,8 @@ def undo_encoding(
                 data.mod[adata] = reset_adata
         data.update()
     else:
-        raise ValueError(
-            f"[b red]Cannot decode object of type {type(data)}. Can only decode AnnData or MuData objects!")
-
+        print(f"[b red]Cannot decode object of type {type(data)}. Can only decode AnnData or MuData objects!")
+        raise ValueError
     if isinstance(data, AnnData):
         logg.info(f"Decoded the AnnData object.")
     elif isinstance(data, MuData):
@@ -180,15 +179,17 @@ def _encode(
     # autodetect categorical values, which could lead to more categoricals
     if autodetect:
         if "var_to_encoding" in adata.uns.keys():
-            logg.warning(
-                f"[bold yellow]The current AnnData object has been already encoded. Returning original AnnData object!")
+            print(
+                f"[bold yellow]The current AnnData object has been already encoded. Returning original AnnData object!"
+            )
             return adata
 
         categoricals_names = adata.uns["non_numerical_columns"]
         # no columns were detected, that would require an encoding (e.g. non numerical columns)
         if not categoricals_names:
-            logg.warning(
-                f"[bold yellow]Detected no columns that need to be encoded. Leaving passed AnnData object unchanged.")
+            print(
+                f"[bold yellow]Detected no columns that need to be encoded. Leaving passed AnnData object unchanged."
+            )
             return adata
         # copy uns so it can be used in encoding process without mutating the original anndata object
         orig_uns_copy = adata.uns.copy()
@@ -198,10 +199,9 @@ def _encode(
         encoded_var_names = adata.var_names.to_list()
         encode_mode = encodings if encodings is not None else "label_encoding"
         if encode_mode not in available_encodings - multi_encoding_modes:
-            raise ValueError(
-                f"Unknown encoding mode {encode_mode}. Please provide one of the following encoding modes:\n"
-                f"{available_encodings - multi_encoding_modes}"
-            )
+            print(f"Unknown encoding mode {encode_mode}. Please provide one of the following encoding modes:\n"
+                  f"{available_encodings - multi_encoding_modes}")
+            raise ValueError
         single_encode_mode_switcher = {
             "one_hot_encoding": _one_hot_encoding,
             "label_encoding": _label_encoding,
@@ -262,10 +262,11 @@ def _encode(
         # are all specified encodings valid?
         for encoding_mode in encodings.keys():  # type: ignore
             if encoding_mode not in available_encodings:
-                raise ValueError(
+                print(
                     f"Unknown encoding mode {encoding_mode}. Please provide one of the following encoding modes:\n"
                     f"{available_encodings}"
                 )
+                raise ValueError
         adata.uns["encoding_to_var"] = encodings
 
         categoricals_not_flat = list(chain(*encodings.values()))  # type: ignore
@@ -280,12 +281,13 @@ def _encode(
         )
         # ensure no categorical column gets encoded twice
         if len(categoricals) != len(set(categoricals)):
-            raise ValueError(
+            print(
                 "The categorical column names given contain at least one duplicate column. "
                 "Check the column names to ensure that no column is encoded twice!"
             )
+            raise ValueError
         elif any(cat in adata.uns["numerical_columns"] for cat in categoricals):
-            logg.warning(
+            print(
                 f"[bold yellow]At least one of passed column names seems to have numerical dtype. In general it is not recommended "
                 "to encode numerical columns!")
         orig_uns_copy = adata.uns.copy()
@@ -344,9 +346,9 @@ def _encode(
 
         # if the user did not pass every non numerical column for encoding, a Anndata object cannot be created
         except ValueError:
-            raise AnnDataCreationError(
-                f"[bold red]Creation of AnnData object failed. Ensure that you passed all non numerical, categorical values for encoding!")
-
+            print(f"[bold red]Creation of AnnData object failed. Ensure that you passed all non numerical, "
+                  f"categorical values for encoding!")
+            raise AnnDataCreationError
         updated_num_uns, updated_non_num_uns, _ = _update_uns(adata, categoricals)
         encoded_ann_data.uns["numerical_columns"] = updated_num_uns
         encoded_ann_data.uns["non_numerical_columns"] = updated_non_num_uns
@@ -686,7 +688,7 @@ def _undo_encoding(
     """
     if "var_to_encoding" not in adata.uns.keys():
         if not suppress_warning:
-            logg.warning(f"[bold yellow]Calling undo_encoding on unencoded AnnData object.")
+            print(f"[bold yellow]Calling undo_encoding on unencoded AnnData object.")
         return None
 
     # get all encoded variables
@@ -699,7 +701,7 @@ def _undo_encoding(
     if columns == "all":
         categoricals = list(adata.uns["original_values_categoricals"].keys())
     else:
-        logg.warning(f"[bold yellow]Currently, one can only reset encodings for all columns! [bold red]Aborting...")
+        print(f"[bold yellow]Currently, one can only reset encodings for all columns! [bold red]Aborting...")
         return None
     transformed = _initial_encoding(adata.uns, categoricals)
     temp_x, temp_var_names = _delete_all_encodings(adata)
@@ -772,9 +774,10 @@ def _reorder_encodings(adata: AnnData, new_encodings: dict[str, list[list[str]] 
     latest_encoded_columns = list(chain(*(i if isinstance(i, list) else (i,) for i in flattened_modes)))
     # check for duplicates and raise an error if any
     if len(set(latest_encoded_columns)) != len(latest_encoded_columns):
-        raise DuplicateColumnEncodingError(
+        print(
             f"[bold red]Reencoding AnnData object failed. You have at least one duplicate in your encodings. A column "
             "cannot be encoded at the same time using different encoding modes!")
+        raise DuplicateColumnEncodingError
     old_encode_mode = adata.uns["var_to_encoding"]
     for categorical in latest_encoded_columns:
         encode_mode = old_encode_mode.get(categorical)
@@ -996,16 +999,16 @@ def _check_anndata_input_type(
         Whether they match type requirements or not
     """
     if not isinstance(autodetect, bool):
-        logg.warning(
+        print(
             f"[bold red]Attempted to encode an AnnData object, but passed parameter for [bold blue]autodetect [bold red]{autodetect} is not a boolean."
             f"Please provide a boolean value for [bold blue]autodetect [bold red]when encoding a single AnnData object!"
         )
         return False
     elif isinstance(encodings, str) and not autodetect:
-        logg.warning(f"[bold red]Passing a string for parameter encodings is only possible when using autodetect=True!")
+        print(f"[bold red]Passing a string for parameter encodings is only possible when using autodetect=True!")
         return False
     elif autodetect and not isinstance(encodings, (str, type(None))):
-        logg.warning(
+        print(
             f"[bold red]Setting encode mode when autodetect=True only works by passing a string (encode mode name) or None not {type(encodings)}!")
         return False
 
@@ -1025,12 +1028,12 @@ def _check_mudata_input_type(
         Whether they match type requirements or not
     """
     if not isinstance(autodetect, Dict):
-        logg.error(
+        print(
             f"[bold red]Tried encoding a MuData object, but passed parameter for [bold blue]autodetect [bold red]{autodetect} is not a dictionary. "
             f"Please provide a dictionary for [bold blue]autodetect [bold red]when encoding a MuData object!")
         return False
     elif encodings and any(isinstance(column, List) for column in encodings.values()):  # type: ignore
-        logg.warning(
+        print(
             f"[bold red]Encoding a MuData object requires a dictionary passed for every AnnData object, that should be encoded, containing the "
             "encoding modes and columns, as required for a single AnnData object!")
         return False

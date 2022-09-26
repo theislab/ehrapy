@@ -12,7 +12,7 @@ from time import time
 from typing import Any, Iterable, Literal, TextIO
 
 from matplotlib import pyplot as plt
-from scanpy.logging import _RootLogger, _set_log_file, _set_log_level
+from ehrapy.logger import _RootLogger, _set_log_file, _set_log_level
 from scanpy.plotting import set_rcParams_scanpy
 
 _VERBOSITY_TO_LOGLEVEL: dict[str, str] = {

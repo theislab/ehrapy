@@ -7,6 +7,7 @@ from random import choice
 from string import ascii_lowercase
 
 import requests
+from ehrapy import logger as logg
 from rich import print
 from rich.progress import Progress
 

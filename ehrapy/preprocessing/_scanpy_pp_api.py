@@ -106,7 +106,7 @@ def regress_out(
         Depending on `copy` returns or updates an :class:`~anndata.AnnData` object with the corrected data matrix.
     """
 
-    logg.info(f"Corrected data matrix in the AnnData object.")
+    logg.info(f"Corrected the data matrix in the AnnData object.")
 
     return sc.pp.regress_out(adata=adata, keys=keys, n_jobs=n_jobs, copy=copy)
 
@@ -131,7 +131,7 @@ def subsample(
         Returns `X[obs_indices], obs_indices` if data is array-like, otherwise subsamples the passed
         :class:`~anndata.AnnData` (`copy == False`) or returns a subsampled copy of it (`copy == True`).
     """
-    logg.info(f"Subsampled the data matrix.")
+    logg.info(f"Subsampled the data matrix in the AnnData object.")
 
     return sc.pp.subsample(data=data, fraction=fraction, n_obs=n_obs, random_state=random_state, copy=copy)
 
