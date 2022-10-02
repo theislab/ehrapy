@@ -81,7 +81,7 @@ def df_to_anndata(
     )
 
     logg.info(
-        f"Transformed passed dataframe into an AnnData object with n_obs x n_vars = `{adata.n_obs}` x `{adata.n_vars}`"
+        f"Transformed passed dataframe into an AnnData object with n_obs x n_vars = `{adata.n_obs}` x `{adata.n_vars}`."
     )
 
     return adata
@@ -105,7 +105,7 @@ def _move_columns_to_obs(df: pd.DataFrame, columns_obs_only: list[str] | None) -
             obs = obs.set_index(df.index.map(str))
             df = df.drop(columns_obs_only, axis=1)
             logg.info(
-                f"Added columns `{columns_obs_only}` to `obs`"
+                f"Added columns `{columns_obs_only}` to `obs`."
             )
         except KeyError:
             raise ColumnNotFoundError from KeyError(
@@ -115,7 +115,7 @@ def _move_columns_to_obs(df: pd.DataFrame, columns_obs_only: list[str] | None) -
     else:
         obs = pd.DataFrame(index=df.index.map(str))
         logg.info(
-            f"Added all columns to `obs`"
+            f"Added all columns to `obs`."
         )
 
     return BaseDataframes(obs, df)
@@ -728,7 +728,7 @@ def generate_anndata(
         uns=uns,
     )
     logg.info(
-        f"Generated an AnnData object with n_obs x n_vars = `{adata.n_obs}` x `{adata.n_vars}`"
+        f"Generated an AnnData object with n_obs x n_vars = `{adata.n_obs}` x `{adata.n_vars}`."
     )
     return adata
 

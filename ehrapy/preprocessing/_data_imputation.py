@@ -194,7 +194,6 @@ def _simple_impute(adata: AnnData, var_names: list[str] | None, strategy: str) -
     # impute all columns if None passed
     else:
         adata.X = imputer.fit_transform(adata.X)
-    logg.info(f"Imputed the AnnData object using `{strategy}` Imputation.")
 
 
 # ===================== KNN Imputation =========================
@@ -296,13 +295,6 @@ def _knn_impute(adata: AnnData, var_names: list[str] | None, n_neighbours: int) 
         adata.X = adata.X.astype("float64")
     else:
         adata.X = imputer.fit_transform(adata.X)
-
-    if var_names:
-        logg.info(
-            f"Imputed the columns `{var_names}` in the AnnData object using kNN Imputation with {n_neighbours} neighbours considered.")
-    elif not var_names:
-        logg.info(
-            f"Imputed the data in the AnnData object using kNN Imputation with {n_neighbours} neighbours considered.")
 
 
 # ======================  MissForest Imputation =======================
@@ -586,13 +578,6 @@ def _soft_impute(
     else:
         adata.X = imputer.fit_transform(adata.X)
 
-    if var_names:
-        logg.info(
-            f"Imputed the columns `{var_names}` in the AnnData object using Soft Imputation with shrinkage value of `{shrinkage_value}`.")
-    elif not var_names:
-        logg.info(
-            f"Imputed the data in the AnnData object using Soft Imputation with shrinkage value of `{shrinkage_value}`.")
-
 
 # ===================== IterativeSVD =========================
 
@@ -726,13 +711,6 @@ def _iterative_svd_impute(
     else:
         adata.X = imputer.fit_transform(adata.X)
 
-    if var_names:
-        logg.info(
-            f"Imputed the columns `{var_names}` in the AnnData object using IterativeSVD Imputation.")
-    elif not var_names:
-        logg.info(
-            f"Imputed the data in the AnnData object using IterativeSVD Imputation.")
-
 
 # ===================== MatrixFactorization =========================
 
@@ -863,13 +841,6 @@ def _matrix_factorization_impute(
     else:
         adata.X = imputer.fit_transform(adata.X)
 
-    if var_names:
-        logg.info(
-            f"Imputed the columns `{var_names}` in the AnnData object using MatrixFactorization Imputation with learning rate `{learning_rate}` and shrinkage value `{shrinkage_value}`.")
-    elif not var_names:
-        logg.info(
-            f"Imputed the data in the AnnData object using MatrixFactorization Imputation with learning rate `{learning_rate}` and shrinkage value `{shrinkage_value}`.")
-
 
 # ===================== NuclearNormMinimization =========================
 
@@ -994,13 +965,6 @@ def _nuclear_norm_minimization_impute(
     else:
         adata.X = imputer.fit_transform(adata.X)
 
-    if var_names:
-        logg.info(
-            f"Imputed the columns `{var_names}` in the AnnData object using NuclearNormMinimization Imputation with error tolerance of `{error_tolerance}`.")
-    elif not var_names:
-        logg.info(
-            f"Imputed the data in the AnnData object using NuclearNormMinimization Imputation with error tolerance of `{error_tolerance}`.")
-
 
 # ===================== miceforest =========================
 
@@ -1103,13 +1067,6 @@ def _miceforest_impute(
         )
         kernel.mice(iterations=iterations, variable_parameters=variable_parameters, verbose=verbose)
         adata.X = kernel.complete_data(dataset=0, inplace=inplace)
-
-    if var_names:
-        logg.info(
-            f"Imputed the columns `{var_names}` in the AnnData object using MiceForest Imputation with `{iterations}` iterations.")
-    elif not var_names:
-        logg.info(
-            f"Imputed the data in the AnnData object using MiceForest Imputation with `{iterations}` iterations.")
 
 
 def _warn_imputation_threshold(adata: AnnData, var_names: list[str] | None, threshold: int = 30) -> dict[str, int]:

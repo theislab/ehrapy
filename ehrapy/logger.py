@@ -75,30 +75,25 @@ def _set_log_level(settings, level: int):
 
 
 class _LogFormatter(logging.Formatter):
-    def __init__(self, fmt="{levelname}: {message}", datefmt="%Y-%m-%d %H:%M", style="{"):
-        super().__init__(fmt, datefmt, style)
+    grey = "\x1b[38;20m"
+    yellow = "\x1b[33;20m"
+    red = "\x1b[31;20m"
+    bold_red = "\x1b[31;1m"
+    reset = "\x1b[0m"
+    format = "%(asctime)s - %(levelname)s - %(message)s"
 
-    def format(self, record: logging.LogRecord):
-        format_orig = self._style._fmt
-        if record.levelno == INFO:
-            self._style._fmt = "{message}"
-        elif record.levelno == HINT:
-            self._style._fmt = "--> {message}"
-        elif record.levelno == DEBUG:
-            self._style._fmt = "    {message}"
-        if record.time_passed:
-            # strip microseconds
-            if record.time_passed.microseconds:
-                record.time_passed = timedelta(seconds=int(record.time_passed.total_seconds()))
-            if "{time_passed}" in record.msg:
-                record.msg = record.msg.replace("{time_passed}", str(record.time_passed))
-            else:
-                self._style._fmt += " ({time_passed})"
-        if record.deep:
-            record.msg = f"{record.msg}: {record.deep}"
-        result = logging.Formatter.format(self, record)
-        self._style._fmt = format_orig
-        return result
+    FORMATS = {
+        logging.DEBUG: grey + format + reset,
+        logging.INFO: grey + format + reset,
+        logging.WARNING: yellow + format + reset,
+        logging.ERROR: red + format + reset,
+        logging.CRITICAL: bold_red + format + reset
+    }
+
+    def format(self, record):
+        log_fmt = self.FORMATS.get(record.levelno)
+        formatter = logging.Formatter(log_fmt)
+        return formatter.format(record)
 
 
 def _versions_dependencies(dependencies):

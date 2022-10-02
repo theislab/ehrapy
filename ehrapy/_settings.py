@@ -435,3 +435,6 @@ class EhrapyConfig:  # pragma: no cover
 
 
 ehrapy_settings = EhrapyConfig()
+# start logger
+ehrapy_settings._root_logger = _RootLogger(ehrapy_settings.verbosity)
+_set_log_file(ehrapy_settings)
