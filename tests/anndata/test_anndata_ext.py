@@ -86,6 +86,13 @@ class TestAnndataExt:
             ).astype({"clinic_id": "float32", "name": "category"}),
         )
 
+    def test_move_to_obs_invalid_column_name(self):
+        adata = ep.io.read_csv(CUR_DIR / "../io/test_data_io/dataset_move_obs_mix.csv")
+        with pytest.raises(ValueError):
+            _ = move_to_obs(adata, ["nam"])
+            _ = move_to_obs(adata, ["clic_id"])
+            _ = move_to_obs(adata, ["nam", "clic_id"])
+
     def test_move_to_x(self):
         adata = ep.io.read_csv(CUR_DIR / "../io/test_data_io/dataset_move_obs_mix.csv")
         move_to_obs(adata, ["name"], copy_obs=True)
@@ -112,6 +119,34 @@ class TestAnndataExt:
                 index=[str(idx) for idx in range(5)],
             ).astype({"clinic_id": "float32"}),
         )
+
+    def test_move_to_x_invalid_column_names(self):
+        adata = ep.io.read_csv(CUR_DIR / "../io/test_data_io/dataset_move_obs_mix.csv")
+        move_to_obs(adata, ["name"], copy_obs=True)
+        move_to_obs(adata, ["clinic_id"], copy_obs=False)
+        with pytest.raises(ValueError):
+            _ = move_to_x(adata, ["blabla1"])
+            _ = move_to_x(adata, ["blabla1", "blabla2"])
+
+    def test_move_to_x_move_to_obs(self):
+        adata = ep.io.read_csv(CUR_DIR / "../io/test_data_io/dataset_move_obs_mix.csv")
+        adata_dim_old = adata.X.shape
+        # moving columns from X to obs and back
+        # case 1:  move some column from obs to X and this col was copied previously from X to obs
+        move_to_obs(adata, ["name"], copy_obs=True)
+        move_to_x(adata, ["name"])
+        assert not {"name"}.issubset(set(adata.obs.columns))  # check if the copied column was removed from obs
+        assert {"name"}.issubset(set(adata.var_names))  # check if the copied column is still in X
+        assert adata.X.shape == adata_dim_old  # the shape of X should be the same as previously
+
+        # case 2: move some column from obs to X and this col was previously moved inplace from X to obs
+        # move_to_obs(adata, ["clinic_id"], copy_obs=False)
+        # move_to_x(adata, ["clinic_id"])
+
+        # case 3: move columns from obs to X and some of them were copied or moved inplace previously form X to obs
+        # move_to_obs(adata, ['los_days'], copy_obs=True)
+        # move_to_obs(adata, ['b12_values'], copy_obs=False)
+        # move_to_x(adata, ['los_days', 'b12_values'])
 
     def test_df_to_anndata_simple(self):
         df, col1_val, col2_val, col3_val = TestAnndataExt._setup_df_to_anndata()
