@@ -5,7 +5,6 @@ from anndata import AnnData
 
 from ehrapy.core.str_matching import StrMatcher
 from ehrapy.core.tool_available import check_module_importable
-from ehrapy.tools.nlp._util import _list_replace
 
 try:
     from medcat.cat import CAT
@@ -277,6 +276,17 @@ class EhrapyMedcat:
                 print(
                     f"[bold yellow]Did not find [blue]{name} [yellow]in MedCAT's extracted entities. Will use best match {new_name}!"
                 )
+
+                def _list_replace(lst, old: str, new: str):
+                    """replace list elements (inplace)"""
+                    i = -1
+                    try:
+                        while True:
+                            i = lst.index(old, i + 1)
+                            lst[i] = new
+                    except ValueError:
+                        pass
+
                 _list_replace(all_names, name, new_name)
                 name = new_name
             else:
