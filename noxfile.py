@@ -20,7 +20,7 @@ package = "ehrapy"
 python_versions = ["3.8"]
 nox.options.sessions = (
     "pre-commit",
-    "safety",
+    # "safety",
     "mypy",
     "tests",
     # "typeguard",
