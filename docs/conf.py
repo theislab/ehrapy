@@ -121,6 +121,7 @@ html_theme_options = {
         "admonition-title-font-size": "var(--font-size-normal)",
         "code-font-size": "var(--font-size--small)",
     },
+    "top_of_page_button": None,
 }
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
