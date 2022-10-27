@@ -223,6 +223,26 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False,
         return adata
 
 
+def delete_from_obs(adata: AnnData, to_delete: list[str] | str) -> AnnData:
+    """Delete previously copied features from obs.
+    Args:
+        adata: The AnnData object
+        to_delete: The columns to delete from obs
+    Returns:
+        AnnData object with deleted columns from obs.
+    """
+
+    if isinstance(to_delete, str):  # pragma: no cover
+        to_delete = [to_delete]
+
+    if not set(to_delete).issubset(set(adata.obs.columns)):
+        raise ValueError(
+            "Cannot delete columns with invalid names."
+        )
+
+    adata.obs = adata.obs[adata.obs.columns[~adata.obs.columns.isin(to_delete)]]
+
+
 def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
     """Move features from obs to X inplace.
     Args:
@@ -249,16 +269,21 @@ def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
         else:
             cols_not_in_x.append(col)
 
+    new_adata = adata
+
+    if cols_present_in_x:
+        print(
+            f"Columns `{cols_present_in_x}` are already in X. Skipped moving `{cols_present_in_x}` to X. "
+            f"If you want to permanently delete these columns from obs, please use the function delete_from_obs()."
+        )
+
     if cols_not_in_x:
         new_adata = concat([adata, AnnData(adata.obs[cols_not_in_x], dtype="object")], axis=1)
-    else:
-        new_adata = adata
-    new_adata.obs = adata.obs[adata.obs.columns[~adata.obs.columns.isin(to_x)]]
-    # update uns (copy maybe: could be a costly operation but reduces reference cycles)
-    # users might save those as separate AnnData object and this could be unexpected behaviour if we dont copy
-    num_columns_moved, non_num_columns_moved, _ = _update_uns(adata, cols_not_in_x, True)
-    new_adata.uns["numerical_columns"] = adata.uns["numerical_columns"] + num_columns_moved
-    new_adata.uns["non_numerical_columns"] = adata.uns["non_numerical_columns"] + non_num_columns_moved
+        new_adata.obs = adata.obs[adata.obs.columns[~adata.obs.columns.isin(cols_not_in_x)]]
+        num_columns_moved, non_num_columns_moved, _ = _update_uns(adata, cols_not_in_x, True)
+        new_adata.uns["numerical_columns"] = adata.uns["numerical_columns"] + num_columns_moved
+        new_adata.uns["non_numerical_columns"] = adata.uns["non_numerical_columns"] + non_num_columns_moved
+
     return new_adata
 
 
@@ -558,7 +583,7 @@ def _update_uns(
     moved_columns_set = set(moved_columns)
     num_set = set(adata.uns["numerical_columns"].copy())
     non_num_set = set(adata.uns["non_numerical_columns"].copy())
-    if not to_x:
+    if not to_x:  # moving from `X` to `obs`, delete it from the corresponding entry in `uns`.
         var_num = []
         for var in moved_columns_set:
             if var in num_set:
@@ -567,7 +592,7 @@ def _update_uns(
             elif var in non_num_set:
                 non_num_set -= {var}
         return list(num_set), list(non_num_set), var_num
-    else:
+    else:  # moving from `obs` to `X`, add it to the corresponding entry in `uns`.
         all_moved_non_num_columns = moved_columns_set & set(adata.obs.select_dtypes(exclude="number").columns)
         all_moved_num_columns = list(moved_columns_set ^ all_moved_non_num_columns)
         return all_moved_num_columns, list(all_moved_non_num_columns), None
