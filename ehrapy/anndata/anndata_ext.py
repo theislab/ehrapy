@@ -154,7 +154,7 @@ def anndata_to_df(
     return df
 
 
-def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False, copy: bool = False) -> AnnData:
+def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False) -> AnnData:
     """Move inplace or copy features from X to obs. Note that columns containing boolean values (either 0/1 or True(
     true)/False(false)) will be stored as boolean columns whereas the other non numerical columns will be stored as
     category.
@@ -163,7 +163,6 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False,
         adata: The AnnData object
         to_obs: The columns to move to obs
         copy_obs: The values are copied to obs (and therefore kept in X) instead of moved completely
-        copy: Whether to return a copy or not
 
     Returns:
         The original AnnData object with moved or copied columns from X to obs
@@ -178,19 +177,13 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False,
             "Cannot move encoded columns from X to obs. Either undo encoding or remove them from the list!"
         )
 
-    if not set(to_obs).issubset(set(adata.var_names)):
-        raise ValueError(
-            "Cannot move columns with invalid names."
-        )
-
-    if copy:
-        adata = adata.copy()
+    if not all(elem in adata.var_names.values for elem in to_obs):
+        raise ValueError(f"Columns `{[x for x in to_obs if x not in adata.var_names.values]}` are not in var_names.")
 
     if copy_obs:
         indices = adata.var_names.isin(to_obs)
         df = adata[:, indices].to_df()
         adata.obs = adata.obs.join(df)
-
         num_set = set(adata.uns["numerical_columns"].copy())
         non_num_set = set(adata.uns["non_numerical_columns"].copy())
         var_num = []
@@ -200,12 +193,10 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False,
                 var_num.append(var)
             elif var in non_num_set:
                 var_non_num.append(var)
-
         # cast numerical values from object
         adata.obs[var_num] = adata.obs[var_num].apply(pd.to_numeric, errors="ignore", downcast="float")
         # cast non numerical values from object to either bool (if possible) or category
         adata.obs = _cast_obs_columns(adata.obs)
-
     else:
         indices = adata.var_names.isin(to_obs)
         df = adata[:, indices].to_df()
@@ -219,46 +210,48 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False,
         adata.uns["numerical_columns"] = updated_num_uns
         adata.uns["non_numerical_columns"] = updated_non_num_uns
 
-    if copy:
-        return adata
+    return adata
 
 
-def delete_from_obs(adata: AnnData, to_delete: list[str] | str) -> AnnData:
-    """Delete previously copied features from obs.
+def delete_from_obs(adata: AnnData, to_delete: list[str]) -> AnnData:
+    """Delete features from obs.
+
     Args:
         adata: The AnnData object
         to_delete: The columns to delete from obs
+
     Returns:
-        AnnData object with deleted columns from obs.
+        The original AnnData object with deleted columns from obs.
     """
 
     if isinstance(to_delete, str):  # pragma: no cover
         to_delete = [to_delete]
 
-    if not set(to_delete).issubset(set(adata.obs.columns)):
-        raise ValueError(
-            "Cannot delete columns with invalid names."
-        )
+    if not all(elem in adata.obs.columns.values for elem in to_delete):
+        raise ValueError(f"Columns `{[x for x in to_delete if x not in adata.obs.columns.values]}` are not in obs.")
 
     adata.obs = adata.obs[adata.obs.columns[~adata.obs.columns.isin(to_delete)]]
 
+    return adata
 
-def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
+
+def move_to_x(adata: AnnData, to_x: list[str] | str, copy: bool = False) -> AnnData:
     """Move features from obs to X inplace.
+
     Args:
         adata: The AnnData object
         to_x: The columns to move to X
+        copy: Whether to return a copy or not
+
     Returns:
         A new AnnData object with moved columns from obs to X. This should not be used for datetime columns currently.
     """
 
+    if not all(elem in adata.obs.columns.values for elem in to_x):
+        raise ValueError(f"Columns `{[x for x in to_x if x not in adata.obs.columns.values]}` are not in obs.")
+
     if isinstance(to_x, str):  # pragma: no cover
         to_x = [to_x]
-
-    if not set(to_x).issubset(set(adata.obs.columns)):
-        raise ValueError(
-            "Cannot move columns with invalid names."
-        )
 
     cols_present_in_x = []
     cols_not_in_x = []
@@ -269,9 +262,7 @@ def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
         else:
             cols_not_in_x.append(col)
 
-    new_adata = adata
-
-    if cols_present_in_x:
+    if cols_present_in_x:  # if there are some columns that were already in X, we skip the moving
         print(
             f"Columns `{cols_present_in_x}` are already in X. Skipped moving `{cols_present_in_x}` to X. "
             f"If you want to permanently delete these columns from obs, please use the function delete_from_obs()."
@@ -280,9 +271,13 @@ def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
     if cols_not_in_x:
         new_adata = concat([adata, AnnData(adata.obs[cols_not_in_x], dtype="object")], axis=1)
         new_adata.obs = adata.obs[adata.obs.columns[~adata.obs.columns.isin(cols_not_in_x)]]
+        # update uns (copy maybe: could be a costly operation but reduces reference cycles)
+        # users might save those as separate AnnData object and this could be unexpected behaviour if we dont copy
         num_columns_moved, non_num_columns_moved, _ = _update_uns(adata, cols_not_in_x, True)
         new_adata.uns["numerical_columns"] = adata.uns["numerical_columns"] + num_columns_moved
         new_adata.uns["non_numerical_columns"] = adata.uns["non_numerical_columns"] + non_num_columns_moved
+    else:
+        new_adata = adata
 
     return new_adata
 
@@ -581,9 +576,9 @@ def _update_uns(
 
     """
     moved_columns_set = set(moved_columns)
-    num_set = set(adata.uns["numerical_columns"].copy())
-    non_num_set = set(adata.uns["non_numerical_columns"].copy())
     if not to_x:  # moving from `X` to `obs`, delete it from the corresponding entry in `uns`.
+        num_set = set(adata.uns["numerical_columns"].copy())
+        non_num_set = set(adata.uns["non_numerical_columns"].copy())
         var_num = []
         for var in moved_columns_set:
             if var in num_set:
