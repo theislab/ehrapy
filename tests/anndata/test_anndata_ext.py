@@ -20,8 +20,10 @@ from ehrapy.anndata.anndata_ext import (
     df_to_anndata,
     generate_anndata,
     get_numeric_vars,
+    delete_from_obs,
     move_to_obs,
-    set_numeric_vars,
+    move_to_x,
+    set_numeric_vars
 )
 
 CUR_DIR = Path(__file__).parent.resolve()
@@ -54,21 +56,107 @@ class TestAnndataExt:
             ).astype({"clinic_id": "float32", "name": "category"}),
         )
 
-    def test_move_to_obs_copy(self):
+    def test_move_to_obs_copy_obs(self):
         adata = ep.io.read_csv(CUR_DIR / "../io/test_data_io/dataset_move_obs_mix.csv")
-        cp_adata = move_to_obs(adata, ["name", "clinic_id"], copy=True)
-        assert id(cp_adata) != id(adata)
-        assert set(cp_adata.obs.columns) == {"name", "clinic_id"}
-        assert {str(col) for col in cp_adata.obs.dtypes} == {"float32", "category"}
-        assert not set(adata.obs.columns) == {"name", "clinic_id"}
-        assert not {str(col) for col in adata.obs.dtypes} == {"float32", "category"}
+        adata_dim_old = adata.X.shape
+        move_to_obs(adata, ["name", "clinic_id"], copy_obs=True)
+        assert set(adata.obs.columns) == {"name", "clinic_id"}
+        assert adata.X.shape == adata_dim_old
+        assert {str(col) for col in adata.obs.dtypes} == {"float32", "category"}
         assert_frame_equal(
-            cp_adata.obs,
+            adata.obs,
             DataFrame(
                 {"clinic_id": [i for i in range(1, 6)], "name": ["foo", "bar", "baz", "buz", "ber"]},
                 index=[str(idx) for idx in range(5)],
             ).astype({"clinic_id": "float32", "name": "category"}),
         )
+
+    def test_move_to_obs_invalid_column_name(self):
+        adata = ep.io.read_csv(CUR_DIR / "../io/test_data_io/dataset_move_obs_mix.csv")
+        with pytest.raises(ValueError):
+            _ = move_to_obs(adata, "nam")
+            _ = move_to_obs(adata, "clic_id")
+            _ = move_to_obs(adata, ["nam", "clic_id"])
+
+    def test_move_to_x(self):
+        adata = ep.io.read_csv(CUR_DIR / "../io/test_data_io/dataset_move_obs_mix.csv")
+        move_to_obs(adata, ["name"], copy_obs=True)
+        move_to_obs(adata, ["clinic_id"], copy_obs=False)
+        new_adata_non_num = move_to_x(adata, ["name"])
+        new_adata_num = move_to_x(adata, ["clinic_id"])
+        assert set(new_adata_non_num.obs.columns) == {"name", "clinic_id"}
+        assert set(new_adata_num.obs.columns) == {"name"}
+        assert {str(col) for col in new_adata_num.obs.dtypes} == {"category"}
+        assert {str(col) for col in new_adata_non_num.obs.dtypes} == {"float32", "category"}
+        assert len(sum(list(new_adata_num.uns.values()), [])) == len(list(new_adata_num.var_names))
+        assert len(sum(list(new_adata_non_num.uns.values()), [])) == len(list(new_adata_non_num.var_names))
+        assert_frame_equal(
+            new_adata_num.obs,
+            DataFrame(
+                {"name": ["foo", "bar", "baz", "buz", "ber"]},
+                index=[str(idx) for idx in range(5)],
+            ).astype({"name": "category"}),
+        )
+        assert_frame_equal(
+            new_adata_non_num.obs,
+            DataFrame(
+                {"name": ["foo", "bar", "baz", "buz", "ber"], "clinic_id": [i for i in range(1, 6)]},
+                index=[str(idx) for idx in range(5)],
+            ).astype({"clinic_id": "float32", "name": "category"}),
+        )
+
+    def test_move_to_x_invalid_column_names(self):
+        adata = ep.io.read_csv(CUR_DIR / "../io/test_data_io/dataset_move_obs_mix.csv")
+        move_to_obs(adata, ["name"], copy_obs=True)
+        move_to_obs(adata, ["clinic_id"], copy_obs=False)
+        with pytest.raises(ValueError):
+            _ = move_to_x(adata, ["blabla1"])
+            _ = move_to_x(adata, ["blabla1", "blabla2"])
+
+    def test_move_to_x_move_to_obs(self):
+        adata = ep.io.read_csv(CUR_DIR / "../io/test_data_io/dataset_move_obs_mix.csv")
+        adata_dim_old = adata.X.shape
+        # moving columns from X to obs and back
+        # case 1:  move some column from obs to X and this col was copied previously from X to obs
+        move_to_obs(adata, ["name"], copy_obs=True)
+        adata = move_to_x(adata, ["name"], copy=False)
+        assert {"name"}.issubset(set(adata.var_names))  # check if the copied column is still in X
+        assert adata.X.shape == adata_dim_old  # the shape of X should be the same as previously
+        assert "name" in [item for sublist in adata.uns.values() for item in sublist]  # check if the column in in uns
+        delete_from_obs(adata, ["name"])  # delete the column from obs to restore the original adata state
+
+        # case 2: move some column from obs to X and this col was previously moved inplace from X to obs
+        move_to_obs(adata, ["clinic_id"], copy_obs=False)
+        adata = move_to_x(adata, ["clinic_id"], copy=False)
+        assert not {"clinic_id"}.issubset(set(adata.obs.columns))  # check if the copied column was removed from obs
+        assert {"clinic_id"}.issubset(set(adata.var_names))  # check if the copied column is now in X
+        assert adata.X.shape == adata_dim_old  # the shape of X should be the same as previously
+        assert "clinic_id" in [
+            item for sublist in adata.uns.values() for item in sublist
+        ]  # check if the column in in uns
+
+        # case 3: move multiple columns from obs to X and some of them were copied or moved inplace previously from X to obs
+        move_to_obs(adata, ["los_days"], copy_obs=True)
+        move_to_obs(adata, ["b12_values"], copy_obs=False)
+        adata = move_to_x(adata, ["los_days", "b12_values"], copy=False)
+        delete_from_obs(adata, ["los_days"])
+        assert not {"los_days"}.issubset(
+            set(adata.obs.columns)
+        )  # check if the copied column was removed from obs by delete_from_obs()
+        assert not {"b12_values"}.issubset(set(adata.obs.columns))  # check if the moved column was removed from obs
+        assert {"los_days", "b12_values"}.issubset(set(adata.var_names))  # check if the copied column is now in X
+        assert adata.X.shape == adata_dim_old  # the shape of X should be the same as previously
+        assert {"los_days", "b12_values"}.issubset(
+            set([item for sublist in adata.uns.values() for item in sublist])
+        )  # check if the column in in uns
+
+    def test_delete_from_obs(self):
+        adata = ep.io.read_csv(CUR_DIR / "../io/test_data_io/dataset_move_obs_mix.csv")
+        adata = move_to_obs(adata, ["los_days"], copy_obs=True)
+        adata = delete_from_obs(adata, ["los_days"])
+        assert not {"los_days"}.issubset(set(adata.obs.columns))
+        assert {"los_days"}.issubset(set(adata.var_names))
+        assert {"los_days"}.issubset(set([item for sublist in adata.uns.values() for item in sublist]))
 
     def test_df_to_anndata_simple(self):
         df, col1_val, col2_val, col3_val = TestAnndataExt._setup_df_to_anndata()
