@@ -20,7 +20,7 @@ jobs:
             # NOTE - this may not work if the PR is coming from a fork, due to limitations in GitHub actions secrets
             - name: Post PR comment
               if: failure()
-              uses: mshick/add-pr-comment@v1
+              uses: mshick/add-pr-comment@v2
               with:
                   message: |
                       Hi @${{ github.event.pull_request.user.login }},
@@ -61,7 +61,7 @@ jobs:
             # NOTE - this may not work if the PR is coming from a fork, due to limitations in GitHub actions secrets
             - name: Post PR comment
               if: failure()
-              uses: mshick/add-pr-comment@v1
+              uses: mshick/add-pr-comment@v2
               with:
                   message: |
                       Hi @${{ github.event.pull_request.user.login }},
