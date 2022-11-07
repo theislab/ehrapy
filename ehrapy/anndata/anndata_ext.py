@@ -24,7 +24,9 @@ class BaseDataframes(NamedTuple):
 def df_to_anndata(
     df: pd.DataFrame, columns_obs_only: list[str] | None = None, index_column: str | None = None
 ) -> AnnData:
-    """Transform a given pandas dataframe into an AnnData object. Note that columns containing boolean values (either 0/1 or T(t)rue/F(f)alse)
+    """Transform a given pandas dataframe into an AnnData object.
+
+    Note that columns containing boolean values (either 0/1 or T(t)rue/F(f)alse)
     will be stored as boolean columns whereas the other non numerical columns will be stored as categorical values.
 
     Args:
@@ -82,6 +84,7 @@ def df_to_anndata(
 
 def _move_columns_to_obs(df: pd.DataFrame, columns_obs_only: list[str] | None) -> BaseDataframes:
     """Move the given columns from the original dataframe (and therefore X) to obs.
+
     By moving these values will not get lost and will be stored in obs, but will not appear in X.
     This may be useful for textual values like free text.
 
@@ -155,7 +158,9 @@ def anndata_to_df(
 
 
 def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False) -> AnnData:
-    """Move inplace or copy features from X to obs. Note that columns containing boolean values (either 0/1 or True(
+    """Move inplace or copy features from X to obs.
+
+    Note that columns containing boolean values (either 0/1 or True(
     true)/False(false)) will be stored as boolean columns whereas the other non numerical columns will be stored as
     category.
 
@@ -178,12 +183,13 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False)
         )
 
     if not all(elem in adata.var_names.values for elem in to_obs):
-        raise ValueError(f"Columns `{[x for x in to_obs if x not in adata.var_names.values]}` are not in var_names.")
+        raise ValueError(
+            f"Columns `{[col for col in to_obs if col not in adata.var_names.values]}` are not in var_names.")
 
     if copy_obs:
-        indices = adata.var_names.isin(to_obs)
-        df = adata[:, indices].to_df()
-        adata.obs = adata.obs.join(df)
+        cols_to_obs_indices = adata.var_names.isin(to_obs)
+        cols_to_obs = adata[:, cols_to_obs_indices].to_df()
+        adata.obs = adata.obs.join(cols_to_obs)
         num_set = set(adata.uns["numerical_columns"].copy())
         non_num_set = set(adata.uns["non_numerical_columns"].copy())
         var_num = []
@@ -193,19 +199,15 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False)
                 var_num.append(var)
             elif var in non_num_set:
                 var_non_num.append(var)
-        # cast numerical values from object
         adata.obs[var_num] = adata.obs[var_num].apply(pd.to_numeric, errors="ignore", downcast="float")
-        # cast non numerical values from object to either bool (if possible) or category
         adata.obs = _cast_obs_columns(adata.obs)
     else:
-        indices = adata.var_names.isin(to_obs)
-        df = adata[:, indices].to_df()
-        adata._inplace_subset_var(~indices)
+        cols_to_obs_indices = adata.var_names.isin(to_obs)
+        df = adata[:, cols_to_obs_indices].to_df()
+        adata._inplace_subset_var(~cols_to_obs_indices)
         adata.obs = adata.obs.join(df)
         updated_num_uns, updated_non_num_uns, num_var = _update_uns(adata, to_obs)
-        # cast numerical values from object
         adata.obs[num_var] = adata.obs[num_var].apply(pd.to_numeric, errors="ignore", downcast="float")
-        # cast non numerical values from object to either bool (if possible) or category
         adata.obs = _cast_obs_columns(adata.obs)
         adata.uns["numerical_columns"] = updated_num_uns
         adata.uns["non_numerical_columns"] = updated_non_num_uns
@@ -228,7 +230,8 @@ def delete_from_obs(adata: AnnData, to_delete: list[str]) -> AnnData:
         to_delete = [to_delete]
 
     if not all(elem in adata.obs.columns.values for elem in to_delete):
-        raise ValueError(f"Columns `{[x for x in to_delete if x not in adata.obs.columns.values]}` are not in obs.")
+        raise ValueError(
+            f"Columns `{[col for col in to_delete if col not in adata.obs.columns.values]}` are not in obs.")
 
     adata.obs = adata.obs[adata.obs.columns[~adata.obs.columns.isin(to_delete)]]
 
@@ -248,7 +251,7 @@ def move_to_x(adata: AnnData, to_x: list[str] | str, copy: bool = False) -> AnnD
     """
 
     if not all(elem in adata.obs.columns.values for elem in to_x):
-        raise ValueError(f"Columns `{[x for x in to_x if x not in adata.obs.columns.values]}` are not in obs.")
+        raise ValueError(f"Columns `{[col for col in to_x if col not in adata.obs.columns.values]}` are not in obs.")
 
     if isinstance(to_x, str):  # pragma: no cover
         to_x = [to_x]
@@ -262,7 +265,7 @@ def move_to_x(adata: AnnData, to_x: list[str] | str, copy: bool = False) -> AnnD
         else:
             cols_not_in_x.append(col)
 
-    if cols_present_in_x:  # if there are some columns that were already in X, we skip the moving
+    if cols_present_in_x:
         print(
             f"Columns `{cols_present_in_x}` are already in X. Skipped moving `{cols_present_in_x}` to X. "
             f"If you want to permanently delete these columns from obs, please use the function delete_from_obs()."
@@ -320,6 +323,7 @@ def type_overview(
     data: MuData | AnnData, sort_by: str | None = None, sort_reversed: bool = False
 ) -> None:  # pragma: no cover
     """Prints the current state of an :class:`~anndata.AnnData` or :class:`~mudata.MuData` object in a tree format.
+
     Output could be printed in sorted format by using one of `dtype`, `order`, `num_cats` or `None`, which sorts by data type, lexicographical order,
     number of unique values (excluding NaN's) and unsorted respectively. Note that sorting by `num_cats` only affects
     encoded variables currently and will display unencoded vars unsorted.
