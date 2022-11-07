@@ -17,13 +17,13 @@ from ehrapy.anndata.anndata_ext import (
     _assert_encoded,
     anndata_to_df,
     assert_numeric_vars,
+    delete_from_obs,
     df_to_anndata,
     generate_anndata,
     get_numeric_vars,
-    delete_from_obs,
     move_to_obs,
     move_to_x,
-    set_numeric_vars
+    set_numeric_vars,
 )
 
 CUR_DIR = Path(__file__).parent.resolve()
@@ -147,7 +147,7 @@ class TestAnndataExt:
         assert {"los_days", "b12_values"}.issubset(set(adata.var_names))  # check if the copied column is now in X
         assert adata.X.shape == adata_dim_old  # the shape of X should be the same as previously
         assert {"los_days", "b12_values"}.issubset(
-            set([item for sublist in adata.uns.values() for item in sublist])
+            {item for sublist in adata.uns.values() for item in sublist}
         )  # check if the column in in uns
 
     def test_delete_from_obs(self):
@@ -156,7 +156,7 @@ class TestAnndataExt:
         adata = delete_from_obs(adata, ["los_days"])
         assert not {"los_days"}.issubset(set(adata.obs.columns))
         assert {"los_days"}.issubset(set(adata.var_names))
-        assert {"los_days"}.issubset(set([item for sublist in adata.uns.values() for item in sublist]))
+        assert {"los_days"}.issubset({item for sublist in adata.uns.values() for item in sublist})
 
     def test_df_to_anndata_simple(self):
         df, col1_val, col2_val, col3_val = TestAnndataExt._setup_df_to_anndata()

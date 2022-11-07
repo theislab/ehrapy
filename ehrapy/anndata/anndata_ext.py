@@ -184,7 +184,8 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False)
 
     if not all(elem in adata.var_names.values for elem in to_obs):
         raise ValueError(
-            f"Columns `{[col for col in to_obs if col not in adata.var_names.values]}` are not in var_names.")
+            f"Columns `{[col for col in to_obs if col not in adata.var_names.values]}` are not in var_names."
+        )
 
     if copy_obs:
         cols_to_obs_indices = adata.var_names.isin(to_obs)
@@ -231,7 +232,8 @@ def delete_from_obs(adata: AnnData, to_delete: list[str]) -> AnnData:
 
     if not all(elem in adata.obs.columns.values for elem in to_delete):
         raise ValueError(
-            f"Columns `{[col for col in to_delete if col not in adata.obs.columns.values]}` are not in obs.")
+            f"Columns `{[col for col in to_delete if col not in adata.obs.columns.values]}` are not in obs."
+        )
 
     adata.obs = adata.obs[adata.obs.columns[~adata.obs.columns.isin(to_delete)]]
 
@@ -452,7 +454,7 @@ def _sort_by_order_or_none(adata: AnnData, branch, var_names: list[str]):
     for other_vars in var_names:
         if not other_vars.startswith("ehrapycat"):
             idx = var_names_val.index(other_vars)
-            unique_categoricals = pd.unique(adata.X[:, idx: idx + 1].flatten())
+            unique_categoricals = pd.unique(adata.X[:, idx : idx + 1].flatten())
             data_type = pd.api.types.infer_dtype(unique_categoricals)
             branch.add(f"[blue]{other_vars} -> [green]data type: [blue]{data_type}")
 
@@ -465,7 +467,7 @@ def _sort_by_type(adata: AnnData, branch, var_names: list[str], sort_reversed: b
     for other_vars in var_names:
         if not other_vars.startswith("ehrapycat"):
             idx = var_names_val.index(other_vars)
-            unique_categoricals = pd.unique(adata.X[:, idx: idx + 1].flatten())
+            unique_categoricals = pd.unique(adata.X[:, idx : idx + 1].flatten())
             data_type = pd.api.types.infer_dtype(unique_categoricals)
             tmp_dict[other_vars] = data_type
 
