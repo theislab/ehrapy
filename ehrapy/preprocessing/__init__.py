@@ -21,5 +21,6 @@ from ehrapy.preprocessing._normalization import (
     scale_norm,
     sqrt_norm,
 )
+from ehrapy.preprocessing._outliers import clip_quantile, winsorize
 from ehrapy.preprocessing._quality_control import qc_lab_measurements, qc_metrics
 from ehrapy.preprocessing._scanpy_pp_api import *  # noqa: E402,F403
