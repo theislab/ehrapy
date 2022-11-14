@@ -68,11 +68,7 @@ def winsorize(
 
 
 def clip_quantile(
-    adata: AnnData,
-    vars: list[str],
-    obs_cols: list[str],
-    limits: list[float],
-    copy: bool = False
+    adata: AnnData, vars: list[str], obs_cols: list[str], limits: list[float], copy: bool = False
 ) -> AnnData:
     """Clips (limits) features
 
@@ -111,11 +107,7 @@ def clip_quantile(
 
 
 def filter_quantiles(
-    adata: AnnData,
-    vars: str | list[str],
-    quantile_top: int | None,
-    quantile_bottom: int | None,
-    copy: bool = False
+    adata: AnnData, vars: str | list[str], quantile_top: int | None, quantile_bottom: int | None, copy: bool = False
 ) -> AnnData:
     """Filter numeric features by top/bottom quantiles
 
