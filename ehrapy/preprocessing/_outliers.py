@@ -10,7 +10,7 @@ def winsorize(
     adata: AnnData,
     vars: str | list[str] = None,
     obs_cols: str | list[str] = None,
-    limits: list[float] = [0.01, 0.99],
+    limits: list[float] = None,
     copy: bool = False,
     **kwargs,
 ) -> AnnData:
@@ -47,6 +47,9 @@ def winsorize(
 
     if copy:  # pragma: no cover
         adata = adata.copy()
+
+    if limits is None:
+        limits = [0.01, 0.99]
 
     if vars:
         for var in vars:
@@ -106,8 +109,6 @@ def clip_quantile(
     if copy:
         return adata
 
-    pass
-
 
 def filter_quantiles(
     adata: AnnData,
@@ -141,5 +142,3 @@ def filter_quantiles(
 
     if copy:
         return adata
-
-    pass
