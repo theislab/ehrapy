@@ -8,8 +8,8 @@ from anndata import AnnData
 
 def winsorize(
     adata: AnnData,
-    vars: list[str] = None,
-    obs_cols: list[str] = None,
+    vars: str | list[str] = None,
+    obs_cols: str | list[str] = None,
     limits: list[float] = [0.01, 0.99],
     copy: bool = False,
     **kwargs,
@@ -21,6 +21,7 @@ def winsorize(
     Args:
         adata: AnnData object to winsorize
         vars: The features to winsorize
+        obs_cols: Columns in obs with features to winsorize
         limits: Tuple of the percentages to cut on each side of the array as floats between 0. and 1. (default: 0.01 and 0.99).
         copy: Whether to return a copy or not
         **kwargs: Keywords arguments get passed to scipy.stats.mstats.winsorize
@@ -28,6 +29,22 @@ def winsorize(
     Returns:
         Winsorized AnnData object if copy is True
     """
+    if vars is not None and not all(elem in adata.var_names.values for elem in vars):
+        raise ValueError(
+            f"Columns `{[col for col in vars if col not in adata.var_names.values]}` are not in var_names."
+        )
+
+    if obs_cols is not None and not all(elem in adata.obs.columns.values for elem in obs_cols):
+        raise ValueError(
+            f"Columns `{[col for col in obs_cols if col not in adata.obs.columns.values]}` are not in obs."
+        )
+
+    if isinstance(vars, str):  # pragma: no cover
+        vars = [vars]
+
+    if isinstance(obs_cols, str):  # pragma: no cover
+        obs_cols = [obs_cols]
+
     if copy:  # pragma: no cover
         adata = adata.copy()
 
@@ -51,6 +68,78 @@ def clip_quantile(
     adata: AnnData,
     vars: list[str],
     obs_cols: list[str],
-):
+    limits: list[float],
+    copy: bool = False
+) -> AnnData:
+    """Clips (limits) features
+
+    Args:
+        adata: The AnnData object
+        vars: Columns in var with features to clip
+        obs_cols: Columns in obs with features to clip
+        limits: Interval, values outside of which are clipped to the interval edges
+        copy: Whether to return a copy of AnnData or not
+
+    Returns:
+        A copy of original AnnData object with clipped features.
+    """
     # https://numpy.org/doc/stable/reference/generated/numpy.clip.html
+    if not all(elem in adata.var_names.values for elem in vars):
+        raise ValueError(
+            f"Columns `{[col for col in vars if col not in adata.var_names.values]}` are not in var_names."
+        )
+
+    if not all(elem in adata.obs.columns.values for elem in obs_cols):
+        raise ValueError(
+            f"Columns `{[col for col in obs_cols if col not in adata.obs.columns.values]}` are not in obs."
+        )
+
+    if isinstance(vars, str):  # pragma: no cover
+        vars = [vars]
+
+    if isinstance(obs_cols, str):  # pragma: no cover
+        obs_cols = [obs_cols]
+
+    if copy:  # pragma: no cover
+        adata = adata.copy()
+
+    if copy:
+        return adata
+
+    pass
+
+
+def filter_quantiles(
+    adata: AnnData,
+    vars: str | list[str],
+    quantile_top: int | None,
+    quantile_bottom: int | None,
+    copy: bool = False
+) -> AnnData:
+    """Filter numeric features by top/bottom quantiles
+
+    Args:
+        adata: The AnnData object
+        vars: Columns with features to filter
+        quantile_top: Remove the top % largest values.
+        quantile_bottom: Remove the bottom % lowest values.
+        copy: Whether to return a copy of AnnData or not
+
+    Returns:
+        A copy of original AnnData object with filtered features.
+    """
+    if not all(elem in adata.var_names.values for elem in vars):
+        raise ValueError(
+            f"Columns `{[col for col in vars if col not in adata.var_names.values]}` are not in var_names."
+        )
+
+    if isinstance(vars, str):  # pragma: no cover
+        vars = [vars]
+
+    if copy:  # pragma: no cover
+        adata = adata.copy()
+
+    if copy:
+        return adata
+
     pass
