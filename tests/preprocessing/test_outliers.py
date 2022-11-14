@@ -1,8 +1,6 @@
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
-from anndata import AnnData
 
 import ehrapy as ep
 
@@ -12,25 +10,24 @@ _TEST_PATH = f"{CURRENT_DIR}/test_preprocessing"
 
 class TestOutliers:
     def setup_method(self):
-        obs_data = {
-            "disease": ["cancer", "tumor"],
-            "country": ["Germany", "switzerland"],
-            "age": [17, 36],
-        }
-        var_data = {
-            "alive": ["yes", "no", "maybe"],
-            "hospital": ["hospital 1", "hospital 2", "hospital 1"],
-            "crazy": ["yes", "yes", "yes"],
-        }
-        self.test_outliers = AnnData(
-            X=np.array([[0.21, 14.52, 41.42], [5.42, 96.2, 7.234]], dtype=np.float32),
-            obs=pd.DataFrame(data=obs_data),
-            var=pd.DataFrame(data=var_data, index=["Acetaminophen", "co2", "po2"]),
+        self.mimic_2_10 = ep.dt.mimic_2()[:10]
+
+    def test_winsorize_var(self):
+        winsorized_adata = ep.pp.winsorize(self.mimic_2_10, vars=["age"], limits=[0.2, 0.2], copy=True)
+        expected = np.array(
+            [71.43198, 64.92076, 36.5, 44.49191, 25.41667, 36.54657, 25.41667, 71.43198, 71.43198, 25.41667]
+        ).reshape((10, 1))
+
+        np.testing.assert_allclose(np.array(winsorized_adata[:, "age"].X, dtype=np.float32), expected)
+
+    def test_winsorized_obs(self):
+        to_winsorize_obs = ep.ad.move_to_obs(self.mimic_2_10, "age")
+        winsorized_adata = ep.pp.winsorize(to_winsorize_obs, obs_cols=["age"], limits=[0.2, 0.2], copy=True)
+        expected = np.array(
+            [71.43198, 64.92076, 36.5, 44.49191, 25.41667, 36.54657, 25.41667, 71.43198, 71.43198, 25.41667]
         )
 
-    def test_winsorize(self):
-        #ep.pp.winsorize(self.test_outliers, vars=["co2"], limits=[13, 65], copy=False)
-        pass
+        np.testing.assert_allclose(np.array(winsorized_adata.obs["age"]), expected)
 
     def test_quantile(self):
         # adata_filtered = ep.pp.filter_quantiles(self.test_outliers, vars=["feature 1, feature 2"], quantile_top=1, copy=True)
