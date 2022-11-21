@@ -58,11 +58,35 @@ def missing_values_matrix(
 
     if not categoricals:
         non_categorical_columns = [col for col in df if not col.startswith("ehrapycat")]
-        return msno.matrix(df[non_categorical_columns], filter, max_cols, max_percentage, sort,
-                           figsize, width_ratios, color, fontsize, labels, label_rotation, sparkline)
+        return msno.matrix(
+            df[non_categorical_columns],
+            filter,
+            max_cols,
+            max_percentage,
+            sort,
+            figsize,
+            width_ratios,
+            color,
+            fontsize,
+            labels,
+            label_rotation,
+            sparkline,
+        )
     else:
-        return msno.matrix(df, filter, max_cols, max_percentage, sort,
-                           figsize, width_ratios, color, fontsize, labels, label_rotation, sparkline)
+        return msno.matrix(
+            df,
+            filter,
+            max_cols,
+            max_percentage,
+            sort,
+            figsize,
+            width_ratios,
+            color,
+            fontsize,
+            labels,
+            label_rotation,
+            sparkline,
+        )
 
 
 def missing_values_barplot(
@@ -115,11 +139,35 @@ def missing_values_barplot(
 
     if not categoricals:
         non_categorical_columns = [col for col in df if not col.startswith("ehrapycat")]
-        return msno.bar(df[non_categorical_columns], figsize, fontsize, labels, label_rotation, log,
-                        color, filter, max_cols, max_percentage, sort, orientation)
+        return msno.bar(
+            df[non_categorical_columns],
+            figsize,
+            fontsize,
+            labels,
+            label_rotation,
+            log,
+            color,
+            filter,
+            max_cols,
+            max_percentage,
+            sort,
+            orientation,
+        )
     else:
-        return msno.bar(df, figsize, fontsize, labels, label_rotation, log,
-                        color, filter, max_cols, max_percentage, sort, orientation)
+        return msno.bar(
+            df,
+            figsize,
+            fontsize,
+            labels,
+            label_rotation,
+            log,
+            color,
+            filter,
+            max_cols,
+            max_percentage,
+            sort,
+            orientation,
+        )
 
 
 def missing_values_heatmap(
@@ -176,11 +224,37 @@ def missing_values_heatmap(
 
     if not categoricals:
         non_categorical_columns = [col for col in df if not col.startswith("ehrapycat")]
-        return msno.heatmap(df[non_categorical_columns], filter, max_cols, max_percentage, sort, figsize, fontsize,
-                            labels, label_rotation, cmap, vmin, vmax, cbar)
+        return msno.heatmap(
+            df[non_categorical_columns],
+            filter,
+            max_cols,
+            max_percentage,
+            sort,
+            figsize,
+            fontsize,
+            labels,
+            label_rotation,
+            cmap,
+            vmin,
+            vmax,
+            cbar,
+        )
     else:
-        return msno.heatmap(df, filter, max_cols, max_percentage, sort, figsize, fontsize,
-                            labels, label_rotation, cmap, vmin, vmax, cbar)
+        return msno.heatmap(
+            df,
+            filter,
+            max_cols,
+            max_percentage,
+            sort,
+            figsize,
+            fontsize,
+            labels,
+            label_rotation,
+            cmap,
+            vmin,
+            vmax,
+            cbar,
+        )
 
 
 def missing_values_dendrogram(
@@ -231,8 +305,18 @@ def missing_values_dendrogram(
 
     if not categoricals:
         non_categorical_columns = [col for col in df if not col.startswith("ehrapycat")]
-        return msno.dendrogram(df[non_categorical_columns], method, filter, max_cols, max_percentage, orientation,
-                               figsize, fontsize, label_rotation)
+        return msno.dendrogram(
+            df[non_categorical_columns],
+            method,
+            filter,
+            max_cols,
+            max_percentage,
+            orientation,
+            figsize,
+            fontsize,
+            label_rotation,
+        )
     else:
-        return msno.dendrogram(df, method, filter, max_cols, max_percentage, orientation,
-                               figsize, fontsize, label_rotation)
+        return msno.dendrogram(
+            df, method, filter, max_cols, max_percentage, orientation, figsize, fontsize, label_rotation
+        )
