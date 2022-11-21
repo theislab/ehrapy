@@ -381,13 +381,13 @@ def _prep_adata_norm(adata: AnnData, copy: bool = False) -> AnnData | None:  # p
     return adata
 
 
-def _record_norm(adata: AnnData, vars_list: list[str], method: str) -> None:
+def _record_norm(adata: AnnData, vars: list[str], method: str) -> None:
     if "normalization" in adata.uns_keys():
         norm_record = adata.uns["normalization"]
     else:
         norm_record = {}
 
-    for var in vars_list:
+    for var in vars:
         if var in norm_record.keys():
             norm_record[var].append(method)
         else:
@@ -396,3 +396,35 @@ def _record_norm(adata: AnnData, vars_list: list[str], method: str) -> None:
     adata.uns["normalization"] = norm_record
 
     return None
+
+
+def offset_negative_values(adata: AnnData, layer: str = None, copy: bool = False) -> AnnData:
+    """Offsets negative values into positive ones with the lowest negative value becoming 0.
+
+    This is primarily used to enable the usage of functions such as log_norm that
+    do not allow negative values for mathematical or technical reasons.
+
+    Args:
+        adata: :class:`~anndata.AnnData` object containing X to normalize values in.
+        layer: The layer to
+        copy: Whether to return a modified copy of the AnnData object.
+
+    Returns:
+        Copy of AnnData object if copy is True.
+    """
+    if copy:
+        adata = adata.copy()
+
+    def _get_minimum(col):
+        min = np.min(col)
+        if min < 0:
+            col = col + abs(min)
+            return col
+
+    if layer:
+        adata[layer] = np.apply_along_axis(_get_minimum, 0, adata[layer])
+    else:
+        adata.X = np.apply_along_axis(_get_minimum, 0, adata.X)
+
+    if copy:
+        return adata
