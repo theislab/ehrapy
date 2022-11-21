@@ -264,7 +264,7 @@ For most tools and for some preprocessing functions, you will find a plotting fu
     plot.dendrogram
 ```
 
-### Quality Control
+### Quality Control and missing values
 
 ```{eval-rst}
 .. autosummary::
@@ -272,6 +272,10 @@ For most tools and for some preprocessing functions, you will find a plotting fu
     :nosignatures:
 
     plot.qc_metrics
+    plot.missing_values_matrix
+    plot.missing_values_barplot
+    plot.missing_values_heatmap
+    plot.missing_values_dendrogram
 ```
 
 ### Classes
@@ -341,11 +345,11 @@ Visualize clusters using one of the embedding methods passing color='leiden'.
     plot.rank_features_groups_tracksplot
 ```
 
-### Data Analysis (Linear Regression, Survival Analysis)
+### Survival Analysis
 
 ```{eval-rst}
 .. autosummary::
-    :toctree: tools
+    :toctree: plot
     :nosignatures:
 
     plot.ols
