@@ -310,6 +310,13 @@ def log_norm(
 
     adata = _prep_adata_norm(adata, copy)
 
+    if sum(np.sum(adata.X < 0, axis=0)) > 0:
+        raise ValueError(
+            "Matrix of X contains negative values. "
+            "Undefined behavior for log normalization. "
+            "Please offset negative values with ep.pp.offset_negative_values()."
+        )
+
     var_idx = get_column_indices(adata, vars)
     var_values = get_column_values(adata, var_idx)
 
