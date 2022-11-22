@@ -232,3 +232,10 @@ class TestNormalization:
         adata_norm = ep.pp.maxabs_norm(adata_norm, vars=["Numeric1"], copy=True)
 
         assert adata_norm.uns["normalization"] == {"Numeric1": ["minmax", "maxabs"], "Numeric2": ["minmax"]}
+
+    def test_offset_negative_values(self):
+        """Test for the offset_negative_values method."""
+        to_offset_adata = AnnData(X=np.array([[-1, -5, -10], [5, 6, -20]]))
+        expected_adata = AnnData(X=np.array([[0, 0, 10], [6, 11, 0]]))
+
+        assert np.array_equal(expected_adata.X, ep.pp.offset_negative_values(to_offset_adata, copy=True).X)

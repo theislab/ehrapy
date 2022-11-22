@@ -133,6 +133,7 @@ Other than tools, preprocessing steps usually don’t return an easily interpret
     preprocessing.robust_scale_norm
     preprocessing.scale_norm
     preprocessing.sqrt_norm
+    preprocessing.offset_negative_values
 ```
 
 ### Dataset Shift Correction

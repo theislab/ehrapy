@@ -15,6 +15,7 @@ from ehrapy.preprocessing._normalization import (
     log_norm,
     maxabs_norm,
     minmax_norm,
+    offset_negative_values,
     power_norm,
     quantile_norm,
     robust_scale_norm,
