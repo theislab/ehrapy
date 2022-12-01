@@ -22,7 +22,7 @@ class _RootLogger(logging.RootLogger):
         extra: Optional[dict] = None,
         time: datetime = None,
         deep: Optional[str] = None,
-    ) -> datetime:
+    ) -> datetime:  # type: ignore
         from ehrapy import settings
 
         now = datetime.now(timezone.utc)
@@ -35,22 +35,22 @@ class _RootLogger(logging.RootLogger):
         super().log(level, msg, extra=extra)
         return now
 
-    def critical(self, msg, *, time=None, deep=None, extra=None) -> datetime:
+    def critical(self, msg, *, time=None, deep=None, extra=None) -> datetime:  # type: ignore
         return self.log(CRITICAL, msg, time=time, deep=deep, extra=extra)
 
-    def error(self, msg, *, time=None, deep=None, extra=None) -> datetime:
+    def error(self, msg, *, time=None, deep=None, extra=None) -> datetime:  # type: ignore
         return self.log(ERROR, msg, time=time, deep=deep, extra=extra)
 
-    def warning(self, msg, *, time=None, deep=None, extra=None) -> datetime:
+    def warning(self, msg, *, time=None, deep=None, extra=None) -> datetime:  # type: ignore
         return self.log(WARNING, msg, time=time, deep=deep, extra=extra)
 
-    def info(self, msg, *, time=None, deep=None, extra=None) -> datetime:
+    def info(self, msg, *, time=None, deep=None, extra=None) -> datetime:  # type: ignore
         return self.log(INFO, msg, time=time, deep=deep, extra=extra)
 
-    def hint(self, msg, *, time=None, deep=None, extra=None) -> datetime:
+    def hint(self, msg, *, time=None, deep=None, extra=None) -> datetime:  # type: ignore
         return self.log(HINT, msg, time=time, deep=deep, extra=extra)
 
-    def debug(self, msg, *, time=None, deep=None, extra=None) -> datetime:
+    def debug(self, msg, *, time=None, deep=None, extra=None) -> datetime:  # type: ignore
         return self.log(DEBUG, msg, time=time, deep=deep, extra=extra)
 
 
