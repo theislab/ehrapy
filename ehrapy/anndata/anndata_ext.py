@@ -251,7 +251,7 @@ def delete_from_obs(adata: AnnData, to_delete: list[str]) -> AnnData:
 
     adata.obs = adata.obs[adata.obs.columns[~adata.obs.columns.isin(to_delete)]]
 
-    logg.info(f"Deleted `{to_delete}` from `obs`.")
+    logg.info(f"Removed `{to_delete}` from `obs`.")
 
     return adata
 

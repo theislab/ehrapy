@@ -107,9 +107,9 @@ def encode(
         print(f"[b red]Cannot encode object of type {type(data)}. Can only encode AnnData or MuData objects!")
         raise ValueError
     if isinstance(data, AnnData):
-        logg.info("Encoded the AnnData object.")
+        logg.debug("Encoded the AnnData object.")
     elif isinstance(data, MuData):
-        logg.info("Encoded the MuData object.")
+        logg.debug("Encoded the MuData object.")
 
     return None
 
@@ -149,9 +149,9 @@ def undo_encoding(
         print(f"[b red]Cannot decode object of type {type(data)}. Can only decode AnnData or MuData objects!")
         raise ValueError
     if isinstance(data, AnnData):
-        logg.info("Decoded the AnnData object.")
+        logg.debug("Decoded the AnnData object.")
     elif isinstance(data, MuData):
-        logg.info("Decoded the MuData object.")
+        logg.debug("Decoded the MuData object.")
 
     return None
 
@@ -364,7 +364,7 @@ def _encode(
 
         _add_categoricals_to_obs(adata, encoded_ann_data, categoricals)
 
-    logg.info("Successfully encoded the AnnData object.")
+    logg.debug("Successfully encoded the AnnData object.")
 
     return encoded_ann_data
 
@@ -552,7 +552,7 @@ def _update_layer_after_encoding(
     old_var_names: list[str],
     categories: list[str],
 ) -> np.ndarray:
-    """Update the original layer containing the initial non categorical values and the latest encoded categoricals
+    """Update the original layer containing the initial non categorical values and the latest encoded categoricals.
 
     Args:
         old_layer: The previous "original" layer
@@ -562,7 +562,7 @@ def _update_layer_after_encoding(
         categories: All previous categorical names
 
     Returns
-        A Numpy array containing all numericals together with all encoded categoricals
+        A Numpy array containing all numericals together with all encoded categoricals.
     """
     try:
         # get the index of the first column of the new encoded X, that does not store an encoded categorical
@@ -586,7 +586,7 @@ def _update_layer_after_encoding(
     updated_layer = np.hstack((encoded_categoricals, old_layer_view))
 
     try:
-        logg.info("Updated the original layer.")
+        logg.info("Updated the original layer after encoding.")
         return updated_layer.astype("float32")
     except ValueError as e:
         raise ValueError("Ensure that all columns which require encoding are being encoded.") from e
@@ -623,7 +623,7 @@ def _update_multi_encoded_data(
     var_names = [col_name for col_idx, col_name in enumerate(var_names) if col_idx not in idx]
     temp_var_names = encoded_var_names + var_names
 
-    logg.info("Updated `X` and `var_names` after applying multi column encoding modes.")
+    logg.debug("Updated `X` and `var_names` after applying multi column encoding modes.")
 
     return temp_x, temp_var_names
 
@@ -656,7 +656,7 @@ def _update_encoded_data(
     var_names = [col_name for col_idx, col_name in enumerate(var_names) if col_idx not in idx]
     temp_var_names = categorical_prefixes + var_names
 
-    logg.info("Updated `X` and `var_names` after each encoding.")
+    logg.debug("Updated `X` and `var_names` after each encoding.")
 
     return temp_x, temp_var_names
 
@@ -736,7 +736,7 @@ def _undo_encoding(
     uns["numerical_columns"] = num_vars
     uns["non_numerical_columns"] = non_num_vars
 
-    logg.info("Encoding of the AnnData object was reset.")
+    logg.debug("Encoding of the AnnData object was reset.")
 
     return AnnData(
         new_x,
@@ -849,7 +849,7 @@ def _update_new_encode_modes(
     for k, v in chain(new_encodings.items(), filtered_old_encodings.items()):
         updated_encodings[k] += v
 
-    logg.info("Updated the encoding scheme.")
+    logg.debug("Updated the encoding scheme.")
 
     return dict(updated_encodings)
 

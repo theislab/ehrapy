@@ -359,6 +359,7 @@ class EhrapyConfig:  # pragma: no cover
         'pdf', 'ps', 'eps', 'svg', 'svgz', 'pgf',
         'raw', 'rgba',
     ]
+
     # fmt: on
 
     def set_figure_params(
@@ -439,3 +440,4 @@ ehrapy_settings = EhrapyConfig()
 
 ehrapy_settings._root_logger = _RootLogger(ehrapy_settings.verbosity)
 _set_log_file(ehrapy_settings)
+_set_log_level(ehrapy_settings, level=20)  # default level info

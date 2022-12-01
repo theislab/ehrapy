@@ -79,10 +79,9 @@ def _set_log_level(settings, level: int):
 # Adapted logging coloring from here:
 # https://github.com/herzog0/best_python_logger/blob/master/best_python_logger/core.py
 class _LogFormatter(logging.Formatter):
-    def __init__(self, auto_colorized=True, custom_format: str = None):
+    def __init__(self, auto_colorized=True):
         super().__init__()
         self.auto_colorized = auto_colorized
-        self.custom_format = custom_format
         self.FORMATS = self.define_format()
 
     def define_format(self):
@@ -96,35 +95,21 @@ class _LogFormatter(logging.Formatter):
         reset = "\x1b[0m"
         blink_red = "\x1b[5m\x1b[1;31m"
 
-        if self.auto_colorized:
-            format_prefix = f"{purple}%(asctime)s{reset} - " f"{blue}%(name)s{reset} "
+        format_prefix = f"{purple}%(asctime)s{reset} - " f"{blue}%(name)s{reset} "
 
-            # format_prefix = f"{purple}%(asctime)s{reset} " \
-            #                 f"{blue}%(name)s{reset} " \
-            #                 f"{light_blue}(%(filename)s:%(lineno)s){reset} "
+        # format_prefix = f"{purple}%(asctime)s{reset} " \
+        #                 f"{blue}%(name)s{reset} " \
+        #                 f"{light_blue}(%(filename)s:%(lineno)s){reset} "
 
-            format_suffix = "%(levelname)s - %(message)s"
+        format_suffix = "%(levelname)s - %(message)s"
 
-            return {
-                logging.DEBUG: format_prefix + green + format_suffix + reset,
-                logging.INFO: format_prefix + grey + format_suffix + reset,
-                logging.WARNING: format_prefix + yellow + format_suffix + reset,
-                logging.ERROR: format_prefix + red + format_suffix + reset,
-                logging.CRITICAL: format_prefix + blink_red + format_suffix + reset,
-            }
-
-        else:
-            if self.custom_format:
-                _format = self.custom_format
-            else:
-                _format = "%(asctime)s %(name)s (%(filename)s:%(lineno)s) %(levelname)s - %(message)s"
-            return {
-                logging.DEBUG: _format,
-                logging.INFO: _format,
-                logging.WARNING: _format,
-                logging.ERROR: _format,
-                logging.CRITICAL: _format,
-            }
+        return {
+            logging.DEBUG: format_prefix + green + format_suffix + reset,
+            logging.INFO: format_prefix + grey + format_suffix + reset,
+            logging.WARNING: format_prefix + yellow + format_suffix + reset,
+            logging.ERROR: format_prefix + red + format_suffix + reset,
+            logging.CRITICAL: format_prefix + blink_red + format_suffix + reset,
+        }
 
     def format(self, record):
         log_fmt = self.FORMATS.get(record.levelno)
