@@ -12,8 +12,9 @@ from time import time
 from typing import Any, Iterable, Literal, TextIO
 
 from matplotlib import pyplot as plt
-from scanpy.logging import _RootLogger, _set_log_file, _set_log_level
 from scanpy.plotting import set_rcParams_scanpy
+
+from ehrapy.logging import _RootLogger, _set_log_file, _set_log_level
 
 _VERBOSITY_TO_LOGLEVEL: dict[str, str] = {
     "error": "ERROR",
@@ -358,6 +359,7 @@ class EhrapyConfig:  # pragma: no cover
         'pdf', 'ps', 'eps', 'svg', 'svgz', 'pgf',
         'raw', 'rgba',
     ]
+
     # fmt: on
 
     def set_figure_params(
@@ -435,3 +437,7 @@ class EhrapyConfig:  # pragma: no cover
 
 
 ehrapy_settings = EhrapyConfig()
+
+ehrapy_settings._root_logger = _RootLogger(ehrapy_settings.verbosity)
+_set_log_file(ehrapy_settings)
+_set_log_level(ehrapy_settings, level=20)  # default level info
