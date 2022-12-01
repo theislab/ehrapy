@@ -12,8 +12,9 @@ from time import time
 from typing import Any, Iterable, Literal, TextIO
 
 from matplotlib import pyplot as plt
-from ehrapy.logging import _RootLogger, _set_log_file, _set_log_level
 from scanpy.plotting import set_rcParams_scanpy
+
+from ehrapy.logging import _RootLogger, _set_log_file, _set_log_level
 
 _VERBOSITY_TO_LOGLEVEL: dict[str, str] = {
     "error": "ERROR",

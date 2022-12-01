@@ -1,5 +1,4 @@
 import logging
-from rich.logging import RichHandler
 from datetime import datetime, timedelta, timezone
 from functools import partial, update_wrapper
 from logging import CRITICAL, DEBUG, ERROR, INFO, WARNING
@@ -80,7 +79,7 @@ def _set_log_level(settings, level: int):
 # Copied the coloring from here: https://github.com/herzog0/best_python_logger/blob/master/best_python_logger/core.py
 class _LogFormatter(logging.Formatter):
     def __init__(self, auto_colorized=True, custom_format: str = None):
-        super(_LogFormatter, self).__init__()
+        super().__init__()
         self.auto_colorized = auto_colorized
         self.custom_format = custom_format
         self.FORMATS = self.define_format()
@@ -92,7 +91,7 @@ class _LogFormatter(logging.Formatter):
         red = "\x1b[1;31m"
         purple = "\x1b[1;35m"
         blue = "\x1b[1;34m"
-        light_blue = "\x1b[1;36m"
+        # light_blue = "\x1b[1;36m"
         reset = "\x1b[0m"
         blink_red = "\x1b[5m\x1b[1;31m"
 
@@ -117,7 +116,7 @@ class _LogFormatter(logging.Formatter):
             if self.custom_format:
                 _format = self.custom_format
             else:
-                _format = f"%(asctime)s %(name)s (%(filename)s:%(lineno)s) %(levelname)s - %(message)s"
+                _format = "%(asctime)s %(name)s (%(filename)s:%(lineno)s) %(levelname)s - %(message)s"
             return {
                 logging.DEBUG: _format,
                 logging.INFO: _format,
