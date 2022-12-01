@@ -164,8 +164,6 @@ def anndata_to_df(
         var_slice = var_slice.reset_index(drop=True)
         df = pd.concat([df, var_slice], axis=1)
 
-    logg.info("AnnData object was transformed to a pandas dataframe.")
-
     return df
 
 

@@ -64,4 +64,4 @@ def download(
         output_path = output_path or tempfile.gettempdir()
         shutil.unpack_archive(download_to_path, output_path)
 
-    logg.info(f"Loaded `{output_file_name}` to `{output_path}`.")
+    logg.debug(f"Loaded `{output_file_name}` to `{output_path}`.")
