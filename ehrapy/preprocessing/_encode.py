@@ -91,9 +91,7 @@ def encode(
         if not _check_mudata_input_type(autodetect, encodings):
             raise EncodingInputValueError
         for adata in data.mod.keys():
-            detect, encodings_modes = _get_mudata_autodetect_options_and_encoding_modes(
-                adata, autodetect, encodings
-            )  # type: ignore
+            detect, encodings_modes = _get_mudata_autodetect_options_and_encoding_modes(adata, autodetect, encodings)  # type: ignore
             # autodetect is set to False, but no encodings were provided; warn and skip this object
             if not detect and not encodings_modes:
                 print(
@@ -313,16 +311,7 @@ def _encode(
                 }
                 progress.update(task, description=f"Running {encoding_mode} ...")
                 # perform the actual encoding
-                encoded_x, encoded_var_names = encode_mode_switcher[encoding_mode](
-                    adata,
-                    encoded_x,
-                    orig_uns_copy,
-                    encoded_var_names,
-                    encodings[encoding_mode],
-                    progress,
-                    task
-                    # type: ignore
-                )
+                encoded_x, encoded_var_names = encode_mode_switcher[encoding_mode](adata, encoded_x, orig_uns_copy, encoded_var_names, encodings[encoding_mode], progress, task)  # type: ignore
                 # update encoding history in uns
                 for categorical in encodings[encoding_mode]:  # type: ignore
                     # multi column encoding modes -> multiple encoded columns
