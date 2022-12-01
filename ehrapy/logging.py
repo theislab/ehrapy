@@ -14,7 +14,7 @@ class _RootLogger(logging.RootLogger):
         self.propagate = False
         _RootLogger.manager = logging.Manager(self)
 
-    def log(
+    def log(  # type: ignore
         self,
         level: int,
         msg: str,
