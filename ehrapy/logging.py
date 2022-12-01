@@ -22,7 +22,7 @@ class _RootLogger(logging.RootLogger):
         extra: Optional[dict] = None,
         time: datetime = None,
         deep: Optional[str] = None,
-    ) -> datetime:  # type: ignore
+    ) -> datetime:
         from ehrapy import settings
 
         now = datetime.now(timezone.utc)
@@ -76,7 +76,8 @@ def _set_log_level(settings, level: int):
     h.setLevel(level)
 
 
-# Copied the coloring from here: https://github.com/herzog0/best_python_logger/blob/master/best_python_logger/core.py
+# Adapted logging coloring from here:
+# https://github.com/herzog0/best_python_logger/blob/master/best_python_logger/core.py
 class _LogFormatter(logging.Formatter):
     def __init__(self, auto_colorized=True, custom_format: str = None):
         super().__init__()

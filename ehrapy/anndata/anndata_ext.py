@@ -15,6 +15,8 @@ from rich.tree import Tree
 from scipy import sparse
 from scipy.sparse import issparse
 
+from ehrapy import logging as logg
+
 
 class BaseDataframes(NamedTuple):
     obs: pd.DataFrame
@@ -72,7 +74,7 @@ def df_to_anndata(
     uns["non_numerical_columns"] = list(set(dataframes.df.columns) ^ set(uns["numerical_columns"]))
 
     # cast non numerical obs only columns to category or bool dtype, which is needed for writing to .h5ad files
-    return AnnData(
+    adata = AnnData(
         X=X,
         obs=_cast_obs_columns(dataframes.obs),
         var=pd.DataFrame(index=list(dataframes.df.columns)),
@@ -80,6 +82,12 @@ def df_to_anndata(
         layers={"original": X.copy()},
         uns=uns,
     )
+
+    logg.info(
+        f"Transformed passed dataframe into an AnnData object with n_obs x n_vars = `{adata.n_obs}` x `{adata.n_vars}`."
+    )
+
+    return adata
 
 
 def _move_columns_to_obs(df: pd.DataFrame, columns_obs_only: list[str] | None) -> BaseDataframes:
@@ -107,6 +115,7 @@ def _move_columns_to_obs(df: pd.DataFrame, columns_obs_only: list[str] | None) -
             )
     else:
         obs = pd.DataFrame(index=df.index.map(str))
+        logg.info("Added all columns to `obs`.")
 
     return BaseDataframes(obs, df)
 
@@ -143,6 +152,7 @@ def anndata_to_df(
         # reset index needed since we slice all or at least some columns from obs DataFrame
         obs_slice = obs_slice.reset_index(drop=True)
         df = pd.concat([df, obs_slice], axis=1)
+        logg.info(f"Added `{obs_cols}` columns to `X`.")
     if var_cols:
         if len(adata.var.columns) == 0:
             raise VarEmptyError("Cannot slice columns from empty var!")
@@ -153,6 +163,8 @@ def anndata_to_df(
         # reset index needed since we slice all or at least some columns from var DataFrame
         var_slice = var_slice.reset_index(drop=True)
         df = pd.concat([df, var_slice], axis=1)
+
+    logg.info("AnnData object was transformed to a pandas dataframe.")
 
     return df
 
@@ -213,6 +225,8 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False)
         adata.uns["numerical_columns"] = updated_num_uns
         adata.uns["non_numerical_columns"] = updated_non_num_uns
 
+    logg.info(f"Added `{to_obs}` to `obs`.")
+
     return adata
 
 
@@ -236,6 +250,8 @@ def delete_from_obs(adata: AnnData, to_delete: list[str]) -> AnnData:
         )
 
     adata.obs = adata.obs[adata.obs.columns[~adata.obs.columns.isin(to_delete)]]
+
+    logg.info(f"Deleted `{to_delete}` from `obs`.")
 
     return adata
 
@@ -268,7 +284,7 @@ def move_to_x(adata: AnnData, to_x: list[str] | str, copy: bool = False) -> AnnD
             cols_not_in_x.append(col)
 
     if cols_present_in_x:
-        print(
+        logg.info(
             f"Columns `{cols_present_in_x}` are already in X. Skipped moving `{cols_present_in_x}` to X. "
             f"If you want to permanently delete these columns from obs, please use the function delete_from_obs()."
         )
@@ -281,6 +297,7 @@ def move_to_x(adata: AnnData, to_x: list[str] | str, copy: bool = False) -> AnnD
         num_columns_moved, non_num_columns_moved, _ = _update_uns(adata, cols_not_in_x, True)
         new_adata.uns["numerical_columns"] = adata.uns["numerical_columns"] + num_columns_moved
         new_adata.uns["non_numerical_columns"] = adata.uns["non_numerical_columns"] + non_num_columns_moved
+        logg.info(f"Added `{cols_not_in_x}` features to `X`.")
     else:
         new_adata = adata
 
@@ -414,9 +431,8 @@ def _adata_type_overview(
         _sort_by_order_or_none(adata, branch_num, var_names)
 
     if sort_by:
-        print(
-            "[b yellow]Displaying AnnData object in sorted mode. "
-            "Note that this might not be the exact same order of the variables in X or var are stored!"
+        logg.info(
+            "Displaying AnnData object in sorted mode. Note that this might not be the exact same order of the variables in X or var are stored!"
         )
     print(tree)
 
@@ -561,6 +577,8 @@ def set_numeric_vars(
     for i in range(n_values):
         adata.X[:, vars_idx[i]] = values[:, i]
 
+    logg.info(f"Column names for numeric variables {vars} were replaced.")
+
     return adata
 
 
@@ -592,10 +610,12 @@ def _update_uns(
                 num_set -= {var}
             elif var in non_num_set:
                 non_num_set -= {var}
+        logg.info(f"Added `{moved_columns}` columns to `X`.")
         return list(num_set), list(non_num_set), var_num
     else:  # moving from `obs` to `X`, add it to the corresponding entry in `uns`.
         all_moved_non_num_columns = moved_columns_set & set(adata.obs.select_dtypes(exclude="number").columns)
         all_moved_num_columns = list(moved_columns_set ^ all_moved_non_num_columns)
+        logg.info(f"Added `{moved_columns}` columns to `obs`.")
         return all_moved_num_columns, list(all_moved_non_num_columns), None
 
 
@@ -773,6 +793,9 @@ def generate_anndata(
         dtype=X_dtype,
         uns=uns,
     )
+
+    logg.info(f"Generated an AnnData object with n_obs x n_vars = `{adata.n_obs}` x `{adata.n_vars}`.")
+
     return adata
 
 

@@ -9,6 +9,7 @@ from sklearn.experimental import enable_iterative_imputer  # noqa: F401
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OrdinalEncoder
 
+from ehrapy import logging as logg
 from ehrapy import settings
 from ehrapy.anndata.anndata_ext import get_column_indices
 from ehrapy.core.tool_available import check_module_importable
@@ -42,7 +43,7 @@ def explicit_impute(
 
             import ehrapy as ep
 
-            adata = ep.dt.mimic_2(encode=True)
+            adata = ep.dt.mimic_2(encoded=True)
             ep.pp.explicit_impute(adata, replacement=0)
     """
     if copy:  # pragma: no cover
@@ -62,6 +63,7 @@ def explicit_impute(
         # 1: Replace all missing values with the specified value
         if isinstance(replacement, (int, str)):
             _replace_explicit(adata.X, replacement, impute_empty_strings)
+            logg.info(f"Imputed missing values in the AnnData object by `{replacement}`")
 
         # 2: Replace all missing values in a subset of columns with a specified value per column or a default value, when the column is not explicitly named
         elif isinstance(replacement, dict):
@@ -72,6 +74,9 @@ def explicit_impute(
                     _replace_explicit(adata.X[:, idx : idx + 1], imputation_value, impute_empty_strings)
                 else:
                     print(f"[bold yellow]No replace value passed and found for var [not bold green]{column_name}.")
+            logg.info(
+                f"Imputed missing values in columns `{replacement.keys()}` by `{replacement.values()}` respectively."
+            )
         else:
             raise ReplacementDatatypeError(  # pragma: no cover
                 f"Type {type(replacement)} is not a valid datatype for replacement parameter. Either use int, str or a dict!"
@@ -135,7 +140,7 @@ def simple_impute(
 
             import ehrapy as ep
 
-            adata = ep.dt.mimic_2(encode=True)
+            adata = ep.dt.mimic_2(encoded=True)
             ep.pp.simple_impute(adata, strategy="median")
     """
     if copy:
@@ -153,6 +158,7 @@ def simple_impute(
         if strategy in {"median", "mean"}:
             try:
                 _simple_impute(adata, var_names, strategy)
+                logg.info(f"Imputed the AnnData object using `{strategy}` Imputation.")
             except ValueError:
                 raise ImputeStrategyNotAvailableError(
                     f"Can only impute numerical data using {strategy} strategy. Try to restrict imputation"
@@ -161,6 +167,7 @@ def simple_impute(
         # most_frequent imputation works with non numerical data as well
         elif strategy == "most_frequent":
             _simple_impute(adata, var_names, strategy)
+            logg.info("Imputed the AnnData object using `most_frequent` Imputation.")
         # unknown simple imputation strategy
         else:
             raise UnknownImputeStrategyError(  # pragma: no cover
@@ -213,7 +220,7 @@ def knn_impute(
 
             import ehrapy as ep
 
-            adata = ep.dt.mimic_2(encode=True)
+            adata = ep.dt.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
     """
     if copy:
@@ -256,6 +263,16 @@ def knn_impute(
 
     if check_module_importable("sklearnex"):  # pragma: no cover
         unpatch_sklearn()
+
+    if var_names:
+        logg.info(
+            f"Imputed the columns `{var_names}` in the AnnData object using kNN Imputation with {n_neighbours} neighbours considered."
+        )
+    elif not var_names:
+        logg.info(
+            f"Imputed the data in the AnnData object using kNN Imputation with {n_neighbours} neighbours considered."
+        )
+
     if copy:
         return adata
 
@@ -313,7 +330,7 @@ def miss_forest_impute(
 
             import ehrapy as ep
 
-            adata = ep.dt.mimic_2(encode=True)
+            adata = ep.dt.mimic_2(encoded=True)
             ep.pp.miss_forest_impute(adata)
     """
     if copy:  # pragma: no cover
@@ -397,6 +414,13 @@ def miss_forest_impute(
 
     if check_module_importable("sklearnex"):  # pragma: no cover
         unpatch_sklearn()
+
+    if var_names:
+        logg.info(
+            f"Imputed the columns `{var_names}` in the AnnData object with MissForest Imputation using {num_initial_strategy} strategy."
+        )
+    elif not var_names:
+        logg.info("Imputed the data in the AnnData object using MissForest Imputation.")
 
     if copy:
         return adata
@@ -502,6 +526,15 @@ def soft_impute(
             adata.X = adata.X.astype("object")
             # decode ordinal encoding to obtain imputed original data
             adata.X[::, column_indices] = enc.inverse_transform(adata.X[::, column_indices])
+
+    if var_names:
+        logg.info(
+            f"Imputed the columns `{var_names}` in the AnnData object using Soft Imputation with shrinkage value of `{shrinkage_value}`."
+        )
+    elif not var_names:
+        logg.info(
+            f"Imputed the data in the AnnData object using Soft Imputation with shrinkage value of `{shrinkage_value}`."
+        )
 
     return adata
 
@@ -631,6 +664,11 @@ def iterative_svd_impute(
             # decode ordinal encoding to obtain imputed original data
             adata.X[::, column_indices] = enc.inverse_transform(adata.X[::, column_indices])
 
+    if var_names:
+        logg.info(f"Imputed the columns `{var_names}` in the AnnData object using IterativeSVD Imputation.")
+    elif not var_names:
+        logg.info("Imputed the data in the AnnData object using IterativeSVD Imputation.")
+
     return adata
 
 
@@ -758,6 +796,15 @@ def matrix_factorization_impute(
             # decode ordinal encoding to obtain imputed original data
             adata.X[::, column_indices] = enc.inverse_transform(adata.X[::, column_indices])
 
+    if var_names:
+        logg.info(
+            f"Imputed the columns `{var_names}` in the AnnData object using MatrixFactorization Imputation with learning rate `{learning_rate}` and shrinkage value `{shrinkage_value}`."
+        )
+    elif not var_names:
+        logg.info(
+            f"Imputed the data in the AnnData object using MatrixFactorization Imputation with learning rate `{learning_rate}` and shrinkage value `{shrinkage_value}`."
+        )
+
     return adata
 
 
@@ -877,6 +924,15 @@ def nuclear_norm_minimization_impute(
             # decode ordinal encoding to obtain imputed original data
             adata.X[::, column_indices] = enc.inverse_transform(adata.X[::, column_indices])
 
+    if var_names:
+        logg.info(
+            f"Imputed the columns `{var_names}` in the AnnData object using NuclearNormMinimization Imputation with error tolerance of `{error_tolerance}`."
+        )
+    elif not var_names:
+        logg.info(
+            f"Imputed the data in the AnnData object using NuclearNormMinimization Imputation with error tolerance of `{error_tolerance}`."
+        )
+
     return adata
 
 
@@ -978,6 +1034,13 @@ def mice_forest_impute(
             adata.X = adata.X.astype("object")
             # decode ordinal encoding to obtain imputed original data
             adata.X[::, column_indices] = enc.inverse_transform(adata.X[::, column_indices])
+
+    if var_names:
+        logg.info(
+            f"Imputed the columns `{var_names}` in the AnnData object using MiceForest Imputation with `{iterations}` iterations."
+        )
+    elif not var_names:
+        logg.info(f"Imputed the data in the AnnData object using MiceForest Imputation with `{iterations}` iterations.")
 
     return adata
 
