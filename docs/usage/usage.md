@@ -76,6 +76,8 @@ Other than tools, preprocessing steps usually don’t return an easily interpret
     preprocessing.regress_out
     preprocessing.subsample
     preprocessing.highly_variable_features
+    preprocessing.winsorize
+    preprocessing.clip_quantile
 ```
 
 ### Quality control
@@ -155,17 +157,6 @@ Partially overlaps with dataset integration. Note that a simple batch correction
     :nosignatures:
 
     preprocessing.neighbors
-```
-
-### Outlier removal
-
-```{eval-rst}
-.. autosummary::
-    :toctree: preprocessing
-    :nosignatures:
-
-    preprocessing.winsorize
-    preprocessing.clip_quantile
 ```
 
 ## Tools
