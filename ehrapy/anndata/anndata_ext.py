@@ -111,7 +111,8 @@ def _move_columns_to_obs(df: pd.DataFrame, columns_obs_only: list[str] | None) -
         except KeyError as e:
             raise ColumnNotFoundError(
                 "One or more column names passed to column_obs_only were not found in the input data. "
-                "Are the column names spelled correctly?") from e
+                "Are the column names spelled correctly?"
+            ) from e
     else:
         obs = pd.DataFrame(index=df.index.map(str))
         logg.info("Added all columns to `obs`.")
@@ -467,7 +468,7 @@ def _sort_by_order_or_none(adata: AnnData, branch, var_names: list[str]):
     for other_vars in var_names:
         if not other_vars.startswith("ehrapycat"):
             idx = var_names_val.index(other_vars)
-            unique_categoricals = pd.unique(adata.X[:, idx: idx + 1].flatten())
+            unique_categoricals = pd.unique(adata.X[:, idx : idx + 1].flatten())
             data_type = pd.api.types.infer_dtype(unique_categoricals)
             branch.add(f"[blue]{other_vars} -> [green]data type: [blue]{data_type}")
 
@@ -480,7 +481,7 @@ def _sort_by_type(adata: AnnData, branch, var_names: list[str], sort_reversed: b
     for other_vars in var_names:
         if not other_vars.startswith("ehrapycat"):
             idx = var_names_val.index(other_vars)
-            unique_categoricals = pd.unique(adata.X[:, idx: idx + 1].flatten())
+            unique_categoricals = pd.unique(adata.X[:, idx : idx + 1].flatten())
             data_type = pd.api.types.infer_dtype(unique_categoricals)
             tmp_dict[other_vars] = data_type
 
