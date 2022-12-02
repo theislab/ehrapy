@@ -68,7 +68,7 @@ def df_to_anndata(
     uns = OrderedDict()
     # store all numerical/non-numerical columns that are not obs only
     binary_columns = _detect_binary_columns(df, numerical_columns)
-    uns["numerical_columns"] = list(set(numerical_columns) ^ set(binary_columns))
+    uns["numerical_columns"] = list(set(numerical_columns) | set(binary_columns))
     uns["non_numerical_columns"] = list(set(dataframes.df.columns) ^ set(uns["numerical_columns"]))
 
     # cast non numerical obs only columns to category or bool dtype, which is needed for writing to .h5ad files
@@ -454,7 +454,7 @@ def _sort_by_order_or_none(adata: AnnData, branch, var_names: list[str]):
     for other_vars in var_names:
         if not other_vars.startswith("ehrapycat"):
             idx = var_names_val.index(other_vars)
-            unique_categoricals = pd.unique(adata.X[:, idx : idx + 1].flatten())
+            unique_categoricals = pd.unique(adata.X[:, idx: idx + 1].flatten())
             data_type = pd.api.types.infer_dtype(unique_categoricals)
             branch.add(f"[blue]{other_vars} -> [green]data type: [blue]{data_type}")
 
@@ -467,7 +467,7 @@ def _sort_by_type(adata: AnnData, branch, var_names: list[str], sort_reversed: b
     for other_vars in var_names:
         if not other_vars.startswith("ehrapycat"):
             idx = var_names_val.index(other_vars)
-            unique_categoricals = pd.unique(adata.X[:, idx : idx + 1].flatten())
+            unique_categoricals = pd.unique(adata.X[:, idx: idx + 1].flatten())
             data_type = pd.api.types.infer_dtype(unique_categoricals)
             tmp_dict[other_vars] = data_type
 
