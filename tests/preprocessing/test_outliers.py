@@ -41,7 +41,3 @@ class TestOutliers:
         expected = np.array([50, 50, 36.5, 44.49191, 25, 36.54657, 25, 50, 50, 25.41667])
 
         np.testing.assert_allclose(np.array(clipped_adata.obs["age"]), expected)
-
-    def test_quantile(self):
-        # adata_filtered = ep.pp.filter_quantiles(self.test_outliers, vars=["feature 1, feature 2"], quantile_top=1, copy=True)
-        pass

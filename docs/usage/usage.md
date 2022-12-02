@@ -93,7 +93,7 @@ Other than tools, preprocessing steps usually don’t return an easily interpret
 
 ```{eval-rst}
 .. autosummary::
-    :toctree: imputation
+    :toctree: preprocessing
     :nosignatures:
 
     preprocessing.explicit_impute
@@ -155,6 +155,17 @@ Partially overlaps with dataset integration. Note that a simple batch correction
     :nosignatures:
 
     preprocessing.neighbors
+```
+
+### Outlier removal
+
+```{eval-rst}
+.. autosummary::
+    :toctree: preprocessing
+    :nosignatures:
+
+    preprocessing.winsorize
+    preprocessing.clip_quantile
 ```
 
 ## Tools
