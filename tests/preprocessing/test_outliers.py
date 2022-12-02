@@ -29,6 +29,19 @@ class TestOutliers:
 
         np.testing.assert_allclose(np.array(winsorized_adata.obs["age"]), expected)
 
+    def test_clip_var(self):
+        clipped_adata = ep.pp.clip_quantile(self.mimic_2_10, vars=["age"], limits=[25, 50], copy=True)
+        expected = np.array([50, 50, 36.5, 44.49191, 25, 36.54657, 25, 50, 50, 25.41667]).reshape((10, 1))
+
+        np.testing.assert_allclose(np.array(clipped_adata[:, "age"].X, dtype=np.float32), expected)
+
+    def test_clip_obs(self):
+        to_clip_obs = ep.ad.move_to_obs(self.mimic_2_10, "age")
+        clipped_adata = ep.pp.clip_quantile(to_clip_obs, obs_cols=["age"], limits=[25, 50], copy=True)
+        expected = np.array([50, 50, 36.5, 44.49191, 25, 36.54657, 25, 50, 50, 25.41667])
+
+        np.testing.assert_allclose(np.array(clipped_adata.obs["age"]), expected)
+
     def test_quantile(self):
         # adata_filtered = ep.pp.filter_quantiles(self.test_outliers, vars=["feature 1, feature 2"], quantile_top=1, copy=True)
         pass
