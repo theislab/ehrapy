@@ -292,11 +292,24 @@ class TestAnndataExt:
         assert set(adata.uns["non_numerical_columns"]) == {
             "col1",
             "col2",
+        }
+        assert set(adata.uns["numerical_columns"]) == {
+            "col3",
+            "col4",
+            "col5",
+            "col6",
             "col7_binary_int",
             "col8_binary_float",
             "col9_binary_missing_values",
         }
-        assert set(adata.uns["numerical_columns"]) == {f"col{idx}" for idx in range(3, 7)}
+
+    def test_detect_mixed_binary_columns(self):
+        df = pd.DataFrame(
+            {"Col1": [i for i in range(4)], "Col2": ["str" + str(i) for i in range(4)], "Col3": [1.0, 0.0, np.nan, 1.0]}
+        )
+        adata = ep.ad.df_to_anndata(df)
+        assert set(adata.uns["non_numerical_columns"]) == {"Col2"}
+        assert set(adata.uns["numerical_columns"]) == {"Col1", "Col3"}
 
     @staticmethod
     def _setup_df_to_anndata() -> Tuple[DataFrame, list, list, list]:

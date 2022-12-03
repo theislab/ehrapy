@@ -70,7 +70,7 @@ def df_to_anndata(
     uns = OrderedDict()
     # store all numerical/non-numerical columns that are not obs only
     binary_columns = _detect_binary_columns(df, numerical_columns)
-    uns["numerical_columns"] = list(set(numerical_columns) ^ set(binary_columns))
+    uns["numerical_columns"] = list(set(numerical_columns) | set(binary_columns))
     uns["non_numerical_columns"] = list(set(dataframes.df.columns) ^ set(uns["numerical_columns"]))
 
     # cast non numerical obs only columns to category or bool dtype, which is needed for writing to .h5ad files
