@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 from pathlib import Path
 from typing import Collection, Literal
 
@@ -118,7 +119,19 @@ def _obs_qc_metrics(
         A Pandas DataFrame with the calculated metrics.
     """
     obs_metrics = pd.DataFrame(index=adata.obs_names)
+    var_metrics = pd.DataFrame(index=adata.var_names)
     mtx = adata.X if layer is None else adata.layers[layer]
+    if "original_values_categoricals" in adata.uns:
+        for original_values_categorical in list(adata.uns["original_values_categoricals"]):
+            mtx = mtx.astype(object)
+            index = np.where(var_metrics.index.str.contains(original_values_categorical))[0]
+            mtx[:, index[0]] = np.squeeze(
+                np.where(
+                    adata.uns["original_values_categoricals"][original_values_categorical].astype(object) == "nan",
+                    np.nan,
+                    adata.uns["original_values_categoricals"][original_values_categorical].astype(object),
+                )
+            )
 
     obs_metrics["missing_values_abs"] = np.apply_along_axis(_missing_values, 1, mtx)
     obs_metrics["missing_values_pct"] = np.apply_along_axis(_missing_values, 1, mtx, shape=mtx.shape, df_type="obs")
@@ -148,9 +161,20 @@ def _var_qc_metrics(adata: AnnData, layer: str = None) -> pd.DataFrame:
     Returns:
         Pandas DataFrame with the calculated metrics.
     """
-    # TODO we need to ensure that we are calculating the QC metrics for the original -> look at adata.uns
     var_metrics = pd.DataFrame(index=adata.var_names)
     mtx = adata.X if layer is None else adata.layers[layer]
+    if "original_values_categoricals" in adata.uns:
+        for original_values_categorical in list(adata.uns["original_values_categoricals"]):
+            mtx = copy.deepcopy(mtx.astype(object))
+            index = np.where(var_metrics.index.str.contains(original_values_categorical))[0]
+            mtx[:, index] = np.tile(
+                np.where(
+                    adata.uns["original_values_categoricals"][original_values_categorical].astype(object) == "nan",
+                    np.nan,
+                    adata.uns["original_values_categoricals"][original_values_categorical].astype(object),
+                ),
+                mtx[:, index].shape[1],
+            )
 
     var_metrics["missing_values_abs"] = np.apply_along_axis(_missing_values, 0, mtx)
     var_metrics["missing_values_pct"] = np.apply_along_axis(_missing_values, 0, mtx, shape=mtx.shape, df_type="var")

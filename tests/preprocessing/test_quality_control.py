@@ -5,10 +5,13 @@ import pandas as pd
 from anndata import AnnData
 
 import ehrapy as ep
+from ehrapy.io._read import read_csv
+from ehrapy.preprocessing._encode import encode
 from ehrapy.preprocessing._quality_control import _obs_qc_metrics, _var_qc_metrics
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_PATH = f"{CURRENT_DIR}/test_preprocessing"
+_TEST_PATH_ENCODE = f"{CURRENT_DIR}/test_data_encode"
 
 
 class TestQualityControl:
@@ -59,6 +62,24 @@ class TestQualityControl:
         assert np.allclose(var_metrics["median"].values, np.array([0.21, np.nan, 24.327]), equal_nan=True)
         assert np.allclose(var_metrics["min"].values, np.array([0.21, np.nan, 7.234]), equal_nan=True)
         assert np.allclose(var_metrics["max"].values, np.array([0.21, np.nan, 41.419998]), equal_nan=True)
+
+    def test_obs_nan_qc_metrics(self):
+        adata = read_csv(dataset_path=f"{_TEST_PATH_ENCODE}/dataset1.csv")
+        adata.X[0][4] = np.nan
+        adata2 = encode(adata, encodings={"one_hot_encoding": ["clinic_day"]})
+        obs_metrics = _obs_qc_metrics(adata2)
+        assert obs_metrics.iloc[0][0] == 1
+
+    def test_var_nan_qc_metrics(self):
+        adata = read_csv(dataset_path=f"{_TEST_PATH_ENCODE}/dataset1.csv")
+        adata.X[0][4] = np.nan
+        adata2 = encode(adata, encodings={"one_hot_encoding": ["clinic_day"]})
+        var_metrics = _var_qc_metrics(adata2)
+        assert var_metrics.iloc[0][0] == 1
+        assert var_metrics.iloc[1][0] == 1
+        assert var_metrics.iloc[2][0] == 1
+        assert var_metrics.iloc[3][0] == 1
+        assert var_metrics.iloc[4][0] == 1
 
     def test_calculate_qc_metrics(self):
         obs_metrics, var_metrics = ep.pp.qc_metrics(self.test_missing_values_adata, inplace=True)
