@@ -36,7 +36,6 @@ pynndescent = ">=0.5.4"
 scanpy = ">=1.8.2"
 ipython = ">=7.30.1"
 pyhpo = {extras = ["all"], version = ">=3.0.0"}
-camelot-py = {extras = ["base"], version = ">=0.10.1"}
 deep-translator = ">=1.6.1"
 scikit-learn-intelex = {version = ">=2021.5.3", optional = true}
 medcat = {version = ">=1.2.6", optional = true}

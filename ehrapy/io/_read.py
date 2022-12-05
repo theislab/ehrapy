@@ -108,55 +108,6 @@ def read_h5ad(
     return adata
 
 
-def read_pdf(
-    dataset_path: Path | str,
-    index_column: dict[str, str | int] | str | int | None = None,
-    columns_obs_only: dict[str, list[str]] | list[str] | None = None,
-    columns_x_only: dict[str, list[str]] | list[str] | None = None,
-    return_mudata: bool = False,
-    cache: bool = False,
-    backup_url: str | None = None,
-    download_dataset_name: str | None = None,
-) -> AnnData | dict[str, AnnData] | MuData:
-    """Reads or downloads a desired directory of pdf files or a single pdf file.
-
-    Args:
-        dataset_path: Path to the file or directory to read.
-        index_column: The index column of obs. Usually the patient visit ID or the patient ID.
-        columns_obs_only: These columns will be added to obs only and not X.
-        columns_x_only: These columns will be added to X only and all remaining columns to obs. Note that datetime columns will always be added to .obs though.
-        return_mudata: Whether to create and return a MuData object. This is primarily used for complex datasets which require several AnnData files.
-        cache: Whether to write to cache when reading or not.
-        download_dataset_name: Name of the file or directory in case the dataset is downloaded
-        backup_url: URL to download the data file(s) from if not yet existing.
-
-    Returns:
-        An :class:`~anndata.AnnData` object, a :class:`~mudata.MuData` object or a dict with an identifier (the filename, without extension)
-        for each :class:`~anndata.AnnData` object in the dict
-
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adatas = ep.io.read_pdf("myfile.pdf")
-    """
-    _check_columns_only_params(columns_obs_only, columns_x_only)
-    file: Path = Path(dataset_path)
-    if not file.exists():
-        file = _get_non_existing_files(file, download_dataset_name, backup_url)
-
-    adata = _read_pdf(
-        filename=file,
-        index_column=index_column,
-        columns_obs_only=columns_obs_only,
-        columns_x_only=columns_x_only,
-        return_mudata=return_mudata,
-        cache=cache,
-    )
-    return adata
-
-
 def _read_csv(
     filename: Path,
     sep: str,
@@ -220,40 +171,6 @@ def _read_h5ad(
     # dataset is a single h5ad file
     else:
         return _do_read_h5ad(filename)
-
-
-def _read_pdf(
-    filename: Path,
-    index_column: dict[str, str | int] | str | int | None,
-    columns_obs_only: dict[str, list[str]] | list[str] | None,
-    columns_x_only: dict[str, list[str]] | list[str] | None,
-    return_mudata: bool = False,
-    cache: bool = False,
-    **kwargs,
-) -> AnnData | dict[str, AnnData] | MuData:
-    """Internal interface of the read_pdf method."""
-    if cache and return_mudata:
-        _cache_not_supported()
-    path_cache = settings.cachedir / filename.stem
-    if cache and (path_cache.is_dir() or path_cache.is_file()):
-        raise CacheExistsException(
-            f"{path_cache} already exists. Use the read_h5ad function instead to read from cache!"
-        )
-    elif filename.is_dir():
-        raise UnsupportedDirectoryParsingFormatException(
-            "Can only parse csv, tsv or h5ad files from a directory, not pdf!"
-        )
-    # dataset is a single pdf file
-    else:
-        adata, columns_obs_only = _do_read_pdf(filename, index_column, columns_obs_only, columns_x_only, cache, **kwargs)  # type: ignore
-        # set cache path, since its a single input file which will be stored in (eventually) multiple cache files
-        path_cache = settings.cachedir / filename.stem  # type: ignore
-        if cache:
-            if not path_cache.parent.is_dir():
-                path_cache.parent.mkdir(parents=True)
-            path_cache.mkdir()
-            return _write_cache_dir(adata, path_cache, columns_obs_only, index_column)  # type: ignore
-        return adata
 
 
 def _read_from_directory(
@@ -442,115 +359,6 @@ def _do_read_h5ad(filename: Path | Iterator[str]) -> AnnData:
         return decoded_adata
     return adata
 
-
-def _do_read_pdf(
-    filename: Path | Iterator[str],
-    index_column: dict[str, str] | None = None,
-    columns_obs_only: dict[str, list[str] | None] = None,
-    columns_x_only: dict[str, list[str] | None] = None,
-    cache: bool = False,
-    **kwargs,
-) -> tuple[dict[str, AnnData], dict[str, list[str] | None] | None]:
-    """Read `.pdf`. Since a single pdf can contain multiple tables, those will be read into a dict.
-
-    Currently, ehrapy only supports parsing single pdfs.
-    Consider the following example: "my_tables.pdf" contains three different tables, which may also differ in size.
-
-        .. code-block:: python
-                       import ehrapy as ep
-                       # read pdf
-                       adata_dict = ep.io.read("my_tables.pdf")
-                       print(adata_dict)
-                       # prints
-                       # {
-                       # "my_tables_1": AnnData object with X obs, Y vars.,
-                       # "my_tables_2": AnnData object with A obs, B vars.,
-                       # "my_tables_3": AnnData object with C obs, D vars.
-                       # }
-
-        The example above illustrates, that the different tables will be stored under the index of the
-        order they appeared in the pdf, prefixed by the pdf filename. This ensures uniqueness, especially in cases
-        when multiple pdfs will be read, with multiple tables per file.
-
-        It's also important to note, that this has to be considered when passing "columns_obs_only":
-            .. code-block:: python
-                           import ehrapy as ep
-
-                           # read pdf
-                           adata_dict = ep.io.read("my_tables.pdf", columns_obs_only={"0":["col1ofTable1", "col2OfTable1"],
-                           "1": ["colOfTable2"]})
-                           # this will put col1 and col2 of Table 0 of my_tables.pdf into obs only for this AnnData object
-                           # and col1 of Table 1 of my_tables.pdf into obs only for this respective AnnData object
-
-    Args:
-        filename: File path to the pdf.
-        index_column: Column name of the index column (obs)
-        columns_obs_only: List (per table) of columns which only be stored in .obs, but not in X. Useful for free text annotations.
-        columns_obs_only: List (per table) of columns which only be stored in X, but not in .obs.
-        cache: Whether the data should be written to cache or not
-
-    Returns:
-        A dict of :class:`~anndata.AnnData` objects and the column obs only for each object
-    """
-    # possible extract modes are lattice (default) or stream; any of them may work better than the other one, depending on the data
-    pdf_extract_mode = kwargs.get("pdf_mode")
-    # camelot does not really parses headers in tables correctly; therefore, if there are any headers in the tables, set them as column names
-    header = kwargs.get("pdf_header")
-    # read a table list from the pdf
-    initial_df_list = camelot.read_pdf(
-        str(filename), flavor=pdf_extract_mode if pdf_extract_mode else "lattice", pages="all"
-    )
-    if not initial_df_list:
-        raise PdfParsingError(
-            f"Failed parsing file {filename}. Could not parse any data."
-            f"Consider converting your data files to .csv/.tsv before parsing or pass the "
-            f"guess parameter to the read function, which may improve parsed results!"
-        )
-
-    ann_data_objects = {}
-
-    # one pdf can contain multiple tables, so each of those tables will be one AnnData object
-    for idx, table in enumerate(initial_df_list):
-        df = table.df
-        is_set = isinstance(header, set)
-        # defaults to True, so if header has not been set, assume first row is column names row
-        # if header is a set and table number idx is in header, also assume first row is also column names row
-        if header is None or (is_set and idx in header):
-            # when the entry in top left corner is empty assume, table has header and index names stored in first row/first column
-            first_empty = df[0][0] == ""
-            headers = df.iloc[0][1 if first_empty else 0 :]
-            if first_empty:
-                index = df.iloc[:, :1][1:].iloc[:, 0]
-            else:
-                index = pd.RangeIndex(start=0, stop=len(df.index) - 1)
-            if first_empty:
-                index.name = ""
-            new_values = df.values[1:, 1:] if first_empty else df.values[1:, :]
-            df = pd.DataFrame(new_values, columns=headers, index=index).apply(
-                pd.to_numeric, args=("ignore",)
-            )  # convert all columns of the DataFrame to numeric, if possible
-
-        this_index_column, this_obs_only, this_x_only = _extract_index_and_columns_obs_only(
-            f"{filename.stem}_{idx}", index_column, columns_obs_only, columns_x_only  # type: ignore
-        )
-
-        # handle x only by moving the asymmetric difference to obs only instead
-        if this_x_only:
-            this_obs_only = list(set(df.columns) - set(this_x_only))
-
-        if columns_obs_only or columns_x_only:
-            initial_df, columns_obs_only[idx] = _prepare_dataframe(df, this_obs_only, columns_x_only, cache)  # type: ignore
-            ann_data_objects[f"{filename.stem}_{idx}"] = df_to_anndata(  # type: ignore
-                initial_df, this_obs_only, this_index_column if this_index_column else None
-            )
-        # in case, no columns_obs_only has been passed
-        else:
-            initial_df, _ = _prepare_dataframe(df, None, None, cache)
-            ann_data_objects[f"{filename.stem}_{idx}"] = df_to_anndata(  # type: ignore
-                initial_df, None, this_index_column if this_index_column else None
-            )
-    # return the initial AnnData object
-    return ann_data_objects, columns_obs_only
 
 
 def _get_non_existing_files(file: Path, download_dataset_name: str, backup_url: str) -> Path:
@@ -881,10 +689,6 @@ class BackupURLNotProvidedError(Exception):
 
 
 class MudataCachingNotSupportedError(Exception):
-    pass
-
-
-class PdfParsingError(Exception):
     pass
 
 
