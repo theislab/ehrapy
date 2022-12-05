@@ -4,7 +4,6 @@ import shutil
 from pathlib import Path
 from typing import Iterator
 
-import camelot
 import numpy as np
 import pandas as pd
 from _collections import OrderedDict
@@ -358,7 +357,6 @@ def _do_read_h5ad(filename: Path | Iterator[str]) -> AnnData:
         decoded_adata = _decode_cached_adata(adata, list(adata.uns["columns_obs_only"]))
         return decoded_adata
     return adata
-
 
 
 def _get_non_existing_files(file: Path, download_dataset_name: str, backup_url: str) -> Path:
