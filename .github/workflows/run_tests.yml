@@ -91,16 +91,6 @@ jobs:
                   restore-keys: |
                       ${{ steps.pre-commit-cache.outputs.result }}-
 
-            - name: Install ghostscript Ubuntu
-              if: matrix.os == 'ubuntu-latest'
-              run: |
-                  sudo apt update
-                  sudo apt install -y ghostscript
-
-            - name: Install ghostscript MacOS
-              if: matrix.os == 'macos-latest'
-              run: brew install ghostscript
-
             - name: Install lightgbm
               if: matrix.os == 'macos-latest'
               run: brew install lightgbm
