@@ -45,8 +45,6 @@ class TestQualityControl:
             layers={"layer_copy": X},
         )
 
-        print(self.test_lab_measurements_layer_adata.layers)
-
     def test_obs_qc_metrics(self):
         obs_metrics = _obs_qc_metrics(self.test_missing_values_adata)
 
