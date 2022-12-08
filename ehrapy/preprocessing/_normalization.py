@@ -4,6 +4,7 @@ import numpy as np
 from anndata import AnnData
 from sklearn.preprocessing import maxabs_scale, minmax_scale, power_transform, quantile_transform, robust_scale, scale
 
+from ehrapy import logging as logg
 from ehrapy.anndata.anndata_ext import (
     assert_numeric_vars,
     get_column_indices,
@@ -53,6 +54,8 @@ def scale_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool =
 
     _record_norm(adata, vars, "scale")
 
+    logg.debug("Scaling normalization was applied on `X`.")
+
     return adata
 
 
@@ -96,6 +99,8 @@ def minmax_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool 
 
     _record_norm(adata, vars, "minmax")
 
+    logg.debug("AnnData's `X` was min-max normalized.")
+
     return adata
 
 
@@ -137,6 +142,8 @@ def maxabs_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool 
     set_numeric_vars(adata, var_values, vars)
 
     _record_norm(adata, vars, "maxabs")
+
+    logg.debug("AnnData's `X` was max-abs normalized.")
 
     return adata
 
@@ -183,6 +190,8 @@ def robust_scale_norm(
 
     _record_norm(adata, vars, "robust_scale")
 
+    logg.debug("Robust scaling normalization was applied on AnnData's `X`.")
+
     return adata
 
 
@@ -225,6 +234,8 @@ def quantile_norm(adata: AnnData, vars: str | list[str] | None = None, copy: boo
     set_numeric_vars(adata, var_values, vars)
 
     _record_norm(adata, vars, "quantile")
+
+    logg.debug("AnnData's `X` was quantile normalized.")
 
     return adata
 
@@ -269,6 +280,8 @@ def power_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool =
 
     _record_norm(adata, vars, "power")
 
+    logg.debug("Power transformation normalization was applied on AnnData's `X`.")
+
     return adata
 
 
@@ -310,6 +323,13 @@ def log_norm(
 
     adata = _prep_adata_norm(adata, copy)
 
+    if sum(np.sum(adata.X < 0, axis=0)) > 0:
+        raise ValueError(
+            "Matrix of X contains negative values. "
+            "Undefined behavior for log normalization. "
+            "Please offset negative values with ep.pp.offset_negative_values()."
+        )
+
     var_idx = get_column_indices(adata, vars)
     var_values = get_column_values(adata, var_idx)
 
@@ -325,6 +345,8 @@ def log_norm(
     set_numeric_vars(adata, var_values, vars)
 
     _record_norm(adata, vars, "log")
+
+    logg.debug("Log normalization was applied on AnnData's `X`.")
 
     return adata
 
@@ -368,6 +390,8 @@ def sqrt_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool = 
 
     _record_norm(adata, vars, "sqrt")
 
+    logg.debug("Square root normalization was applied on AnnData's `X`.")
+
     return adata
 
 
@@ -381,13 +405,13 @@ def _prep_adata_norm(adata: AnnData, copy: bool = False) -> AnnData | None:  # p
     return adata
 
 
-def _record_norm(adata: AnnData, vars_list: list[str], method: str) -> None:
+def _record_norm(adata: AnnData, vars: list[str], method: str) -> None:
     if "normalization" in adata.uns_keys():
         norm_record = adata.uns["normalization"]
     else:
         norm_record = {}
 
-    for var in vars_list:
+    for var in vars:
         if var in norm_record.keys():
             norm_record[var].append(method)
         else:
@@ -396,3 +420,35 @@ def _record_norm(adata: AnnData, vars_list: list[str], method: str) -> None:
     adata.uns["normalization"] = norm_record
 
     return None
+
+
+def offset_negative_values(adata: AnnData, layer: str = None, copy: bool = False) -> AnnData:
+    """Offsets negative values into positive ones with the lowest negative value becoming 0.
+
+    This is primarily used to enable the usage of functions such as log_norm that
+    do not allow negative values for mathematical or technical reasons.
+
+    Args:
+        adata: :class:`~anndata.AnnData` object containing X to normalize values in.
+        layer: The layer to
+        copy: Whether to return a modified copy of the AnnData object.
+
+    Returns:
+        Copy of AnnData object if copy is True.
+    """
+    if copy:
+        adata = adata.copy()
+
+    def _get_minimum(col):
+        min = np.min(col)
+        if min < 0:
+            col = col + abs(min)
+            return col
+
+    if layer:
+        adata[layer] = np.apply_along_axis(_get_minimum, 0, adata[layer])
+    else:
+        adata.X = np.apply_along_axis(_get_minimum, 0, adata.X)
+
+    if copy:
+        return adata

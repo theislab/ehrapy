@@ -8,9 +8,9 @@ from io import StringIO
 import session_info
 from IPython.utils.io import Tee
 from rich import print
-from scanpy.logging import _versions_dependencies
 
 from ehrapy import __version__
+from ehrapy.logging import _versions_dependencies
 
 
 def print_versions(*, output_file=None) -> None:  # pragma: no cover

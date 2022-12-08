@@ -6,6 +6,7 @@ from typing import Literal
 import numpy as np
 from anndata import AnnData
 
+from ehrapy import logging as logg
 from ehrapy import settings
 from ehrapy.io._utility_io import _get_file_extension
 from ehrapy.preprocessing._encode import encode
@@ -56,6 +57,7 @@ def write(
         filename = _get_filename_from_key(key, extension)
     if extension == "csv":
         adata.write_csvs(filename)
+        logg.info(f"Wrote AnnData object to a .csv file with filename `{filename}`.csv.")
     else:
         # dummy encoding when there is non numerical data in X
         if not np.issubdtype(adata.X.dtype, np.number) and extension == "h5ad":
@@ -65,8 +67,10 @@ def write(
             encoded_adata.uns["ehrapy_dummy_encoding"] = True
             encoded_adata.uns["columns_obs_only"] = list(adata.obs.columns)
             encoded_adata.write(filename, compression=compression, compression_opts=compression_opts)
+            logg.info(f"Wrote AnnData object to a .h5ad file with filename `{filename}`.h5ad.")
         else:
             adata.write(filename, compression=compression, compression_opts=compression_opts)
+            logg.info(f"Wrote AnnData object to a .h5ad file with filename `{filename}`.h5ad.")
 
 
 def _get_filename_from_key(key, extension=None) -> Path:

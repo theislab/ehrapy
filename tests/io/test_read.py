@@ -7,7 +7,7 @@ import pytest
 
 from ehrapy.anndata.anndata_ext import ColumnNotFoundError
 from ehrapy.core.tool_available import shell_command_accessible
-from ehrapy.io._read import read_csv, read_h5ad, read_pdf
+from ehrapy.io._read import read_csv, read_h5ad
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_PATH = f"{CURRENT_DIR}/test_data_io"
@@ -144,41 +144,6 @@ class TestRead:
         or (os.name == "nt" and not shell_command_accessible(["gswin64c", " -v"])),
         reason="Requires ghostscript to be installed.",
     )
-    def test_read_pdf(self):
-        adata = read_pdf(dataset_path=f"{_TEST_PATH}/test_pdf.pdf")["test_pdf_0"]
-        assert adata.X.shape == (32, 11)
-        assert adata.var_names.to_list() == [
-            "mpg",
-            "cyl",
-            "disp",
-            "hp",
-            "drat",
-            "wt",
-            "qsec",
-            "vs",
-            "am",
-            "gear",
-            "carb",
-        ]
-        assert id(adata.layers["original"]) != id(adata.X)
-
-    @pytest.mark.skipif(
-        (os.name != "nt" and not shell_command_accessible(["gs", "-h"]))
-        or (os.name == "nt" and not shell_command_accessible(["gswin64c", " -v"])),
-        reason="Requires ghostscript to be installed.",
-    )
-    def test_read_pdf_no_index(self):
-        adata = read_pdf(dataset_path=f"{_TEST_PATH}/test_pdf.pdf")["test_pdf_1"]
-        assert adata.X.shape == (6, 5)
-        assert adata.var_names.to_list() == [
-            "Sepal.Length",
-            "Sepal.Width",
-            "Petal.Length",
-            "Petal.Width",
-            "Species",
-        ]
-        assert id(adata.layers["original"]) != id(adata.X)
-
     def test_set_default_index(self):
         adata = read_csv(dataset_path=f"{_TEST_PATH}/dataset_index.csv")
         assert adata.X.shape == (5, 4)

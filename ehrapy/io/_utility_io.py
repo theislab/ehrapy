@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-supported_extensions = {"csv", "tsv", "h5ad", "pdf"}
+supported_extensions = {"csv", "tsv", "h5ad"}
 
 
 def _get_file_extension(file_path: Path) -> str:

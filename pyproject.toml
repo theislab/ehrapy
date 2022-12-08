@@ -36,7 +36,6 @@ pynndescent = ">=0.5.4"
 scanpy = ">=1.8.2"
 ipython = ">=7.30.1"
 pyhpo = {extras = ["all"], version = ">=3.0.0"}
-camelot-py = {extras = ["base"], version = ">=0.10.1"}
 deep-translator = ">=1.6.1"
 scikit-learn-intelex = {version = ">=2021.5.3", optional = true}
 medcat = {version = ">=1.2.6", optional = true}
@@ -47,6 +46,8 @@ scikit-misc = ">=0.1.4"
 session-info = ">=1.0.0"
 lifelines = "^0.27.0"
 ipywidgets = "^8.0.2"
+missingno = "^0.5.1"
+tabulate = "^0.9.0"
 
 [tool.poetry.dev-dependencies]
 pytest = ">=6.2.5"
