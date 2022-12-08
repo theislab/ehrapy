@@ -8,8 +8,8 @@ from anndata import AnnData
 
 def winsorize(
     adata: AnnData,
-    vars: str | list[str] = None,
-    obs_cols: str | list[str] = None,
+    vars: str | set[str] | list[str] = None,
+    obs_cols: str | list[str] | list[str] = None,
     limits: list[float] = None,
     copy: bool = False,
     **kwargs,
@@ -29,21 +29,7 @@ def winsorize(
     Returns:
         Winsorized AnnData object if copy is True
     """
-    if vars is not None and not all(elem in adata.var_names.values for elem in vars):
-        raise ValueError(
-            f"Columns `{[col for col in vars if col not in adata.var_names.values]}` are not in var_names."
-        )
-
-    if obs_cols is not None and not all(elem in adata.obs.columns.values for elem in obs_cols):
-        raise ValueError(
-            f"Columns `{[col for col in obs_cols if col not in adata.obs.columns.values]}` are not in obs."
-        )
-
-    if isinstance(vars, str):  # pragma: no cover
-        vars = [vars]
-
-    if isinstance(obs_cols, str):  # pragma: no cover
-        obs_cols = [obs_cols]
+    _validate_outlier_input(adata, obs_cols, vars)
 
     if copy:  # pragma: no cover
         adata = adata.copy()
@@ -59,8 +45,7 @@ def winsorize(
 
     if obs_cols:
         for col in obs_cols:
-            obs_array = adata.obs[col].to_numpy()
-            winsorized_array = scipy.stats.mstats.winsorize(obs_array, limits=limits, nan_policy="omit", **kwargs)
+            winsorized_array = scipy.stats.mstats.winsorize(adata.obs[col], limits=limits, nan_policy="omit", **kwargs)
             adata.obs[col] = pd.Series(winsorized_array).values
 
     if copy:
@@ -70,8 +55,8 @@ def winsorize(
 def clip_quantile(
     adata: AnnData,
     limits: list[float],
-    vars: str | list[str] = None,
-    obs_cols: str | list[str] = None,
+    vars: str | list[str] | list[str] = None,
+    obs_cols: str | list[str] | list[str] = None,
     copy: bool = False,
 ) -> AnnData:
     """Clips (limits) features.
@@ -90,21 +75,7 @@ def clip_quantile(
     Returns:
         A copy of original AnnData object with clipped features.
     """
-    if vars is not None and not all(elem in adata.var_names.values for elem in vars):
-        raise ValueError(
-            f"Columns `{[col for col in vars if col not in adata.var_names.values]}` are not in var_names."
-        )
-
-    if obs_cols is not None and not all(elem in adata.obs.columns.values for elem in obs_cols):
-        raise ValueError(
-            f"Columns `{[col for col in obs_cols if col not in adata.obs.columns.values]}` are not in obs."
-        )
-
-    if isinstance(vars, str):  # pragma: no cover
-        vars = [vars]
-
-    if isinstance(obs_cols, str):  # pragma: no cover
-        obs_cols = [obs_cols]
+    obs_cols, vars = _validate_outlier_input(adata, obs_cols, vars)  # type: ignore
 
     if vars:
         for var in vars:
@@ -121,3 +92,33 @@ def clip_quantile(
 
     if copy:
         return adata
+
+
+def _validate_outlier_input(
+    adata, obs_cols: str | list[str] | set[str], vars: str | list[str] | set[str]
+) -> tuple[set[str], set[str]]:
+    """Validates the obs/var columns for outlier preprocessing.
+
+    Args:
+        adata: AnnData object
+        obs_cols: str or list of obs columns
+        vars: str or list of var names
+
+    Returns:
+        A tuple of lists of obs/var columns
+    """
+    if isinstance(vars, str) or isinstance(vars, list):  # pragma: no cover
+        vars = set(vars)
+    if isinstance(obs_cols, str) or isinstance(obs_cols, list):  # pragma: no cover
+        obs_cols = set(obs_cols)
+
+    if vars is not None:
+        diff = vars - set(adata.var_names)
+        if len(diff) != 0:
+            raise ValueError(f"Columns {','.join(var for var in diff)} are not in var_names.")
+    if obs_cols is not None:
+        diff = obs_cols - set(adata.obs.columns.values)
+        if len(diff) != 0:
+            raise ValueError(f"Columns {','.join(var for var in diff)} are not in obs.")
+
+    return obs_cols, vars
