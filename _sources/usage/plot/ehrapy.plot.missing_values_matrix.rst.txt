@@ -1,0 +1,6 @@
+﻿ehrapy.plot.missing\_values\_matrix
+===================================
+
+.. currentmodule:: ehrapy.plot
+
+.. autofunction:: missing_values_matrix

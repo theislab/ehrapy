@@ -2,26 +2,22 @@
 <html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
-
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 <meta property="og:title" content="ehrapy.plot.rank_features_groups_tracksplot" />
-  
 <meta property="og:type" content="website" />
-  
 <meta property="og:url" content="https://ehrapy.readthedocs.io/en/latest/usage/plot/ehrapy.plot.rank_features_groups_tracksplot.html" />
-  
+<meta property="og:site_name" content="ehrapy" />
 <meta property="og:image" content="https://ehrapy.readthedocs.io/en/latest//_static/logo.png" />
-  
-<meta property="og:image:alt" content="ehrapy.plot.rank_features_groups_tracksplot" />
-  <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="ehrapy.plot.ols" href="../tools/ehrapy.plot.ols.html" /><link rel="prev" title="ehrapy.plot.rank_features_groups_matrixplot" href="ehrapy.plot.rank_features_groups_matrixplot.html" />
+<meta property="og:image:alt" content="ehrapy" />
+<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="ehrapy.plot.ols" href="ehrapy.plot.ols.html" /><link rel="prev" title="ehrapy.plot.rank_features_groups_matrixplot" href="ehrapy.plot.rank_features_groups_matrixplot.html" />
 
-    <meta name="generator" content="sphinx-5.1.1, furo 2022.06.21"/>
+    <!-- Generated with Sphinx 5.3.0 and Furo 2022.12.07 -->
         <title>ehrapy.plot.rank_features_groups_tracksplot - ehrapy</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=40978830699223671f4072448e654b5958f38b89" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/override.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/sphinx_gallery.css" />
@@ -154,7 +150,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -171,7 +167,7 @@
   
   
 </a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
-  <input class="sidebar-search" placeholder=Search name="q" aria-label="Search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
   <input type="hidden" name="check_keywords" value="yes">
   <input type="hidden" name="area" value="default">
 </form>
@@ -182,7 +178,6 @@
 <li class="toctree-l1 current has-children"><a class="reference internal" href="../usage.html">Usage</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../io/ehrapy.io.read_csv.html">ehrapy.io.read_csv</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../io/ehrapy.io.read_h5ad.html">ehrapy.io.read_h5ad</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../io/ehrapy.io.read_pdf.html">ehrapy.io.read_pdf</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../io/ehrapy.io.write.html">ehrapy.io.write</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../data/ehrapy.data.mimic_2.html">ehrapy.data.mimic_2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../data/ehrapy.data.mimic_3_demo.html">ehrapy.data.mimic_3_demo</a></li>
@@ -206,17 +201,19 @@
 <li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.regress_out.html">ehrapy.preprocessing.regress_out</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.subsample.html">ehrapy.preprocessing.subsample</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.highly_variable_features.html">ehrapy.preprocessing.highly_variable_features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.winsorize.html">ehrapy.preprocessing.winsorize</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.clip_quantile.html">ehrapy.preprocessing.clip_quantile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.qc_metrics.html">ehrapy.preprocessing.qc_metrics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.qc_lab_measurements.html">ehrapy.preprocessing.qc_lab_measurements</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../imputation/ehrapy.preprocessing.explicit_impute.html">ehrapy.preprocessing.explicit_impute</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../imputation/ehrapy.preprocessing.simple_impute.html">ehrapy.preprocessing.simple_impute</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../imputation/ehrapy.preprocessing.knn_impute.html">ehrapy.preprocessing.knn_impute</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../imputation/ehrapy.preprocessing.miss_forest_impute.html">ehrapy.preprocessing.miss_forest_impute</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../imputation/ehrapy.preprocessing.soft_impute.html">ehrapy.preprocessing.soft_impute</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../imputation/ehrapy.preprocessing.iterative_svd_impute.html">ehrapy.preprocessing.iterative_svd_impute</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../imputation/ehrapy.preprocessing.matrix_factorization_impute.html">ehrapy.preprocessing.matrix_factorization_impute</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../imputation/ehrapy.preprocessing.nuclear_norm_minimization_impute.html">ehrapy.preprocessing.nuclear_norm_minimization_impute</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../imputation/ehrapy.preprocessing.mice_forest_impute.html">ehrapy.preprocessing.mice_forest_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.explicit_impute.html">ehrapy.preprocessing.explicit_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.simple_impute.html">ehrapy.preprocessing.simple_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.knn_impute.html">ehrapy.preprocessing.knn_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.miss_forest_impute.html">ehrapy.preprocessing.miss_forest_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.soft_impute.html">ehrapy.preprocessing.soft_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.iterative_svd_impute.html">ehrapy.preprocessing.iterative_svd_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.matrix_factorization_impute.html">ehrapy.preprocessing.matrix_factorization_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.nuclear_norm_minimization_impute.html">ehrapy.preprocessing.nuclear_norm_minimization_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.mice_forest_impute.html">ehrapy.preprocessing.mice_forest_impute</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.encode.html">ehrapy.preprocessing.encode</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.undo_encoding.html">ehrapy.preprocessing.undo_encoding</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.log_norm.html">ehrapy.preprocessing.log_norm</a></li>
@@ -227,6 +224,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.robust_scale_norm.html">ehrapy.preprocessing.robust_scale_norm</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.scale_norm.html">ehrapy.preprocessing.scale_norm</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.sqrt_norm.html">ehrapy.preprocessing.sqrt_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.offset_negative_values.html">ehrapy.preprocessing.offset_negative_values</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.combat.html">ehrapy.preprocessing.combat</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../preprocessing/ehrapy.preprocessing.neighbors.html">ehrapy.preprocessing.neighbors</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tools/ehrapy.tools.pca.html">ehrapy.tools.pca</a></li>
@@ -264,6 +262,10 @@
 <li class="toctree-l2"><a class="reference internal" href="ehrapy.plot.ranking.html">ehrapy.plot.ranking</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ehrapy.plot.dendrogram.html">ehrapy.plot.dendrogram</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ehrapy.plot.qc_metrics.html">ehrapy.plot.qc_metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ehrapy.plot.missing_values_matrix.html">ehrapy.plot.missing_values_matrix</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ehrapy.plot.missing_values_barplot.html">ehrapy.plot.missing_values_barplot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ehrapy.plot.missing_values_heatmap.html">ehrapy.plot.missing_values_heatmap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ehrapy.plot.missing_values_dendrogram.html">ehrapy.plot.missing_values_dendrogram</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ehrapy.plot.pca.html">ehrapy.plot.pca</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ehrapy.plot.pca_loadings.html">ehrapy.plot.pca_loadings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ehrapy.plot.pca_variance_ratio.html">ehrapy.plot.pca_variance_ratio</a></li>
@@ -287,11 +289,12 @@
 <li class="toctree-l2"><a class="reference internal" href="ehrapy.plot.rank_features_groups_dotplot.html">ehrapy.plot.rank_features_groups_dotplot</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ehrapy.plot.rank_features_groups_matrixplot.html">ehrapy.plot.rank_features_groups_matrixplot</a></li>
 <li class="toctree-l2 current current-page"><a class="current reference internal" href="#">ehrapy.plot.rank_features_groups_tracksplot</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tools/ehrapy.plot.ols.html">ehrapy.plot.ols</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tools/ehrapy.plot.kmf.html">ehrapy.plot.kmf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ehrapy.plot.ols.html">ehrapy.plot.ols</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ehrapy.plot.kmf.html">ehrapy.plot.kmf</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../anndata/ehrapy.anndata.df_to_anndata.html">ehrapy.anndata.df_to_anndata</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../anndata/ehrapy.anndata.anndata_to_df.html">ehrapy.anndata.anndata_to_df</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../anndata/ehrapy.anndata.move_to_obs.html">ehrapy.anndata.move_to_obs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../anndata/ehrapy.anndata.delete_from_obs.html">ehrapy.anndata.delete_from_obs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../anndata/ehrapy.anndata.move_to_x.html">ehrapy.anndata.move_to_x</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../anndata/ehrapy.anndata.type_overview.html">ehrapy.anndata.type_overview</a></li>
 </ul>
@@ -337,7 +340,7 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
@@ -353,16 +356,16 @@
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>adata</strong> (<em>AnnData</em>) – Annotated data matrix.</p></li>
-<li><p><strong>groups</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em> | </em><em>Sequence</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>]</em>) – List of group names.</p></li>
-<li><p><strong>n_features</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em> | </em><em>None</em>) – Number of features to show. Is ignored if <cite>feature_names</cite> is passed.</p></li>
-<li><p><strong>groupby</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em> | </em><em>None</em>) – Which key to group the features by.</p></li>
-<li><p><strong>feature_symbols</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em> | </em><em>None</em>) – Key for field in <cite>.var</cite> that stores feature symbols if you do not want to
+<li><p><strong>groups</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em> | </em><em>Sequence</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>]</em>) – List of group names.</p></li>
+<li><p><strong>n_features</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em> | </em><em>None</em>) – Number of features to show. Is ignored if <cite>feature_names</cite> is passed.</p></li>
+<li><p><strong>groupby</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em> | </em><em>None</em>) – Which key to group the features by.</p></li>
+<li><p><strong>feature_symbols</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em> | </em><em>None</em>) – Key for field in <cite>.var</cite> that stores feature symbols if you do not want to
 use <cite>.var_names</cite> displayed in the plot.</p></li>
-<li><p><strong>var_names</strong> (<em>Sequence</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>] </em><em>| </em><em>Mapping</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><em>Sequence</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>]</em><em>] </em><em>| </em><em>None</em>) – Feature names.</p></li>
-<li><p><strong>min_logfoldchange</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em> | </em><em>None</em>) – Minimum log fold change to consider.</p></li>
-<li><p><strong>key</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em> | </em><em>None</em>) – The key of the calculated feature group rankings (default: ‘rank_features_groups’).</p></li>
-<li><p><strong>show</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em> | </em><em>None</em>) – Whether to show the plot.</p></li>
-<li><p><strong>save</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em> | </em><em>None</em>) – Where to save the plot.</p></li>
+<li><p><strong>var_names</strong> (<em>Sequence</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>] </em><em>| </em><em>Mapping</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>Sequence</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>]</em><em>] </em><em>| </em><em>None</em>) – Feature names.</p></li>
+<li><p><strong>min_logfoldchange</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em> | </em><em>None</em>) – Minimum log fold change to consider.</p></li>
+<li><p><strong>key</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em> | </em><em>None</em>) – The key of the calculated feature group rankings (default: ‘rank_features_groups’).</p></li>
+<li><p><strong>show</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em> | </em><em>None</em>) – Whether to show the plot.</p></li>
+<li><p><strong>save</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em> | </em><em>None</em>) – Where to save the plot.</p></li>
 </ul>
 </dd>
 </dl>
@@ -391,17 +394,17 @@ use <cite>.var_names</cite> displayed in the plot.</p></li>
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="../tools/ehrapy.plot.ols.html">
+          <a class="next-page" href="ehrapy.plot.ols.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
                 <div class="title">ehrapy.plot.ols</div>
               </div>
-              <svg><use href="#svg-arrow-right"></use></svg>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
           <a class="prev-page" href="ehrapy.plot.rank_features_groups_matrixplot.html">
-              <svg><use href="#svg-arrow-right"></use></svg>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
@@ -422,16 +425,33 @@ use <cite>.var_names</cite> displayed in the plot.</p></li>
             
           </div>
           <div class="right-details">
-            <div class="icons">
-              
-            </div>
+            
           </div>
         </div>
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">ehrapy.plot.rank_features_groups_tracksplot</a><ul>
+<li><a class="reference internal" href="#ehrapy.plot.rank_features_groups_tracksplot"><code class="docutils literal notranslate"><span class="pre">rank_features_groups_tracksplot()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>
@@ -441,6 +461,7 @@ use <cite>.var_names</cite> displayed in the plot.</p></li>
     <script src="../../_static/underscore.js"></script>
     <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/scripts/furo.js"></script>
     <script src="../../_static/clipboard.min.js"></script>
     <script src="../../_static/copybutton.js"></script>

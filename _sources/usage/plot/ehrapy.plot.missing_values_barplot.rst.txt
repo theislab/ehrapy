@@ -1,0 +1,6 @@
+﻿ehrapy.plot.missing\_values\_barplot
+====================================
+
+.. currentmodule:: ehrapy.plot
+
+.. autofunction:: missing_values_barplot

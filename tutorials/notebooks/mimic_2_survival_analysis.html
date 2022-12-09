@@ -2,28 +2,24 @@
 <html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
-
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 <meta property="og:title" content="MIMIC-II Survival Analysis" />
-  
 <meta property="og:type" content="website" />
-  
 <meta property="og:url" content="https://ehrapy.readthedocs.io/en/latest/tutorials/notebooks/mimic_2_survival_analysis.html" />
-  
+<meta property="og:site_name" content="ehrapy" />
 <meta property="og:description" content="This tutorial explores the MIMIC-II IAC dataset. It was created for the purpose of a case study in the book: Secondary Analysis of Electronic Health Records, published by Springer in 2016. In parti..." />
-  
 <meta property="og:image" content="https://ehrapy.readthedocs.io/en/latest//_static/logo.png" />
-  
-<meta property="og:image:alt" content="MIMIC-II Survival Analysis" />
-  <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Diabetes 130 Vignette" href="diabetes_130.html" /><link rel="prev" title="MIMIC-II Patient Fate" href="mimic_2_fate.html" />
+<meta property="og:image:alt" content="ehrapy" />
+<meta name="description" content="This tutorial explores the MIMIC-II IAC dataset. It was created for the purpose of a case study in the book: Secondary Analysis of Electronic Health Records, published by Springer in 2016. In parti..." />
+<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Diabetes 130 Vignette" href="diabetes_130.html" /><link rel="prev" title="MIMIC-II Patient Fate" href="mimic_2_fate.html" />
 
-    <meta name="generator" content="sphinx-5.1.1, furo 2022.06.21"/>
+    <!-- Generated with Sphinx 5.3.0 and Furo 2022.12.07 -->
         <title>MIMIC-II Survival Analysis - ehrapy</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=40978830699223671f4072448e654b5958f38b89" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/override.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/sphinx_gallery.css" />
@@ -173,7 +169,7 @@
   
   
 </a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
-  <input class="sidebar-search" placeholder=Search name="q" aria-label="Search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
   <input type="hidden" name="check_keywords" value="yes">
   <input type="hidden" name="area" value="default">
 </form>
@@ -184,7 +180,6 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../usage/usage.html">Usage</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/io/ehrapy.io.read_csv.html">ehrapy.io.read_csv</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/io/ehrapy.io.read_h5ad.html">ehrapy.io.read_h5ad</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../usage/io/ehrapy.io.read_pdf.html">ehrapy.io.read_pdf</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/io/ehrapy.io.write.html">ehrapy.io.write</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.mimic_2.html">ehrapy.data.mimic_2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.mimic_3_demo.html">ehrapy.data.mimic_3_demo</a></li>
@@ -208,17 +203,19 @@
 <li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.regress_out.html">ehrapy.preprocessing.regress_out</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.subsample.html">ehrapy.preprocessing.subsample</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.highly_variable_features.html">ehrapy.preprocessing.highly_variable_features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.winsorize.html">ehrapy.preprocessing.winsorize</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.clip_quantile.html">ehrapy.preprocessing.clip_quantile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.qc_metrics.html">ehrapy.preprocessing.qc_metrics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.qc_lab_measurements.html">ehrapy.preprocessing.qc_lab_measurements</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.explicit_impute.html">ehrapy.preprocessing.explicit_impute</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.simple_impute.html">ehrapy.preprocessing.simple_impute</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.knn_impute.html">ehrapy.preprocessing.knn_impute</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.miss_forest_impute.html">ehrapy.preprocessing.miss_forest_impute</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.soft_impute.html">ehrapy.preprocessing.soft_impute</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.iterative_svd_impute.html">ehrapy.preprocessing.iterative_svd_impute</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.matrix_factorization_impute.html">ehrapy.preprocessing.matrix_factorization_impute</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.nuclear_norm_minimization_impute.html">ehrapy.preprocessing.nuclear_norm_minimization_impute</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.mice_forest_impute.html">ehrapy.preprocessing.mice_forest_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.explicit_impute.html">ehrapy.preprocessing.explicit_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.simple_impute.html">ehrapy.preprocessing.simple_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.knn_impute.html">ehrapy.preprocessing.knn_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.miss_forest_impute.html">ehrapy.preprocessing.miss_forest_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.soft_impute.html">ehrapy.preprocessing.soft_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.iterative_svd_impute.html">ehrapy.preprocessing.iterative_svd_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.matrix_factorization_impute.html">ehrapy.preprocessing.matrix_factorization_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.nuclear_norm_minimization_impute.html">ehrapy.preprocessing.nuclear_norm_minimization_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.mice_forest_impute.html">ehrapy.preprocessing.mice_forest_impute</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.encode.html">ehrapy.preprocessing.encode</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.undo_encoding.html">ehrapy.preprocessing.undo_encoding</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.log_norm.html">ehrapy.preprocessing.log_norm</a></li>
@@ -229,6 +226,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.robust_scale_norm.html">ehrapy.preprocessing.robust_scale_norm</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.scale_norm.html">ehrapy.preprocessing.scale_norm</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.sqrt_norm.html">ehrapy.preprocessing.sqrt_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.offset_negative_values.html">ehrapy.preprocessing.offset_negative_values</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.combat.html">ehrapy.preprocessing.combat</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.neighbors.html">ehrapy.preprocessing.neighbors</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.pca.html">ehrapy.tools.pca</a></li>
@@ -266,6 +264,10 @@
 <li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.ranking.html">ehrapy.plot.ranking</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.dendrogram.html">ehrapy.plot.dendrogram</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.qc_metrics.html">ehrapy.plot.qc_metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.missing_values_matrix.html">ehrapy.plot.missing_values_matrix</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.missing_values_barplot.html">ehrapy.plot.missing_values_barplot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.missing_values_heatmap.html">ehrapy.plot.missing_values_heatmap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.missing_values_dendrogram.html">ehrapy.plot.missing_values_dendrogram</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.pca.html">ehrapy.plot.pca</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.pca_loadings.html">ehrapy.plot.pca_loadings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.pca_variance_ratio.html">ehrapy.plot.pca_variance_ratio</a></li>
@@ -289,11 +291,12 @@
 <li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.rank_features_groups_dotplot.html">ehrapy.plot.rank_features_groups_dotplot</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.rank_features_groups_matrixplot.html">ehrapy.plot.rank_features_groups_matrixplot</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.rank_features_groups_tracksplot.html">ehrapy.plot.rank_features_groups_tracksplot</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.plot.ols.html">ehrapy.plot.ols</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.plot.kmf.html">ehrapy.plot.kmf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.ols.html">ehrapy.plot.ols</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.kmf.html">ehrapy.plot.kmf</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/anndata/ehrapy.anndata.df_to_anndata.html">ehrapy.anndata.df_to_anndata</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/anndata/ehrapy.anndata.anndata_to_df.html">ehrapy.anndata.anndata_to_df</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/anndata/ehrapy.anndata.move_to_obs.html">ehrapy.anndata.move_to_obs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/anndata/ehrapy.anndata.delete_from_obs.html">ehrapy.anndata.delete_from_obs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/anndata/ehrapy.anndata.move_to_x.html">ehrapy.anndata.move_to_x</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/anndata/ehrapy.anndata.type_overview.html">ehrapy.anndata.type_overview</a></li>
 </ul>
@@ -455,10 +458,11 @@ div.nboutput.container div.prompt > div {
     }
 }
 
-/* disable scrollbars on prompts */
+/* disable scrollbars and line breaks on prompts */
 div.nbinput.container div.prompt pre,
 div.nboutput.container div.prompt pre {
     overflow: hidden;
+    white-space: pre;
 }
 
 /* input/output area */
@@ -643,13 +647,13 @@ critical care database. It contains summary clinical data and outcomes for 1,776
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">ehrapy</span> <span class="k">as</span> <span class="nn">ep</span>
-<span class="kn">from</span> <span class="nn">tabulate</span> <span class="kn">import</span> <span class="n">tabulate</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">statsmodels.stats.anova</span> <span class="kn">import</span> <span class="n">anova_lm</span>
-<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">product</span>
-<span class="kn">from</span> <span class="nn">lifelines</span> <span class="kn">import</span> <span class="n">CoxPHFitter</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import ehrapy as ep
+from tabulate import tabulate
+import pandas as pd
+import numpy as np
+from statsmodels.stats.anova import anova_lm
+from itertools import product
+from lifelines import CoxPHFitter
 </pre></div>
 </div>
 </div>
@@ -657,9 +661,9 @@ critical care database. It contains summary clinical data and outcomes for 1,776
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">warnings</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import warnings
 
-<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+warnings.filterwarnings(&quot;ignore&quot;)
 </pre></div>
 </div>
 </div>
@@ -667,7 +671,7 @@ critical care database. It contains summary clinical data and outcomes for 1,776
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">print_versions</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.print_versions()
 </pre></div>
 </div>
 </div>
@@ -800,7 +804,7 @@ Session information updated at <span style="color: #008080; text-decoration-colo
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">adata</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">mimic_2</span><span class="p">(</span><span class="n">encoded</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata = ep.dt.mimic_2(encoded=False)
 </pre></div>
 </div>
 </div>
@@ -810,7 +814,7 @@ Session information updated at <span style="color: #008080; text-decoration-colo
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">adata</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata
 </pre></div>
 </div>
 </div>
@@ -837,7 +841,7 @@ AnnData object with n_obs × n_vars = 1776 × 46
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ax</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;pco2_first&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;tco2_first&quot;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ax = ep.pl.scatter(adata, x=&quot;pco2_first&quot;, y=&quot;tco2_first&quot;)
 </pre></div>
 </div>
 </div>
@@ -853,9 +857,9 @@ AnnData object with n_obs × n_vars = 1776 × 46
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">var_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;pco2_first&quot;</span><span class="p">,</span> <span class="s2">&quot;tco2_first&quot;</span><span class="p">,</span> <span class="s2">&quot;gender_num&quot;</span><span class="p">]</span>
-<span class="n">formula</span> <span class="o">=</span> <span class="s2">&quot;tco2_first ~ pco2_first&quot;</span>
-<span class="n">co2_lm</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">ols</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">var_names</span><span class="p">,</span> <span class="n">formula</span><span class="p">,</span> <span class="n">missing</span><span class="o">=</span><span class="s2">&quot;drop&quot;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>var_names = [&quot;pco2_first&quot;, &quot;tco2_first&quot;, &quot;gender_num&quot;]
+formula = &quot;tco2_first ~ pco2_first&quot;
+co2_lm = ep.tl.ols(adata, var_names, formula, missing=&quot;drop&quot;)
 </pre></div>
 </div>
 </div>
@@ -867,8 +871,8 @@ modeling in <code class="docutils literal notranslate"><span class="pre">Python<
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">co2_lm_result</span> <span class="o">=</span> <span class="n">co2_lm</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
-<span class="n">co2_lm_result</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>co2_lm_result = co2_lm.fit()
+co2_lm_result.summary()
 </pre></div>
 </div>
 </div>
@@ -948,11 +952,11 @@ fit line we are trying to estimate. This output is telling us that the best fit 
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">formula</span> <span class="o">=</span> <span class="s2">&quot;tco2_first ~ pco2_first + np.square(pco2_first)&quot;</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>formula = &quot;tco2_first ~ pco2_first + np.square(pco2_first)&quot;
 
-<span class="n">o2_quad_lm</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">ols</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">var_names</span><span class="p">,</span> <span class="n">formula</span><span class="p">,</span> <span class="n">missing</span><span class="o">=</span><span class="s2">&quot;drop&quot;</span><span class="p">)</span>
-<span class="n">co2_quad_lm_result</span> <span class="o">=</span> <span class="n">o2_quad_lm</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
-<span class="n">co2_quad_lm_result</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+o2_quad_lm = ep.tl.ols(adata, var_names, formula, missing=&quot;drop&quot;)
+co2_quad_lm_result = o2_quad_lm.fit()
+co2_quad_lm_result.summary()
 </pre></div>
 </div>
 </div>
@@ -1027,16 +1031,16 @@ fit line we are trying to estimate. This output is telling us that the best fit 
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">ols</span><span class="p">(</span>
-    <span class="n">adata</span><span class="p">,</span>
-    <span class="n">x</span><span class="o">=</span><span class="s2">&quot;pco2_first&quot;</span><span class="p">,</span>
-    <span class="n">y</span><span class="o">=</span><span class="s2">&quot;tco2_first&quot;</span><span class="p">,</span>
-    <span class="n">ols_results</span><span class="o">=</span><span class="p">[</span><span class="n">co2_lm_result</span><span class="p">,</span> <span class="n">co2_quad_lm_result</span><span class="p">],</span>
-    <span class="n">ols_color</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="s2">&quot;blue&quot;</span><span class="p">],</span>
-    <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;PCO2&quot;</span><span class="p">,</span>
-    <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;TCO2&quot;</span><span class="p">,</span>
-    <span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-<span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.ols(
+    adata,
+    x=&quot;pco2_first&quot;,
+    y=&quot;tco2_first&quot;,
+    ols_results=[co2_lm_result, co2_quad_lm_result],
+    ols_color=[&quot;red&quot;, &quot;blue&quot;],
+    xlabel=&quot;PCO2&quot;,
+    ylabel=&quot;TCO2&quot;,
+    show=True,
+)
 </pre></div>
 </div>
 </div>
@@ -1056,11 +1060,11 @@ fit line we are trying to estimate. This output is telling us that the best fit 
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">formula</span> <span class="o">=</span> <span class="s2">&quot;tco2_first ~ pco2_first + gender_num&quot;</span>
-<span class="n">var_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;tco2_first&quot;</span><span class="p">,</span> <span class="s2">&quot;pco2_first&quot;</span><span class="p">,</span> <span class="s2">&quot;gender_num&quot;</span><span class="p">]</span>
-<span class="n">co2_gender_lm</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">ols</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">var_names</span><span class="p">,</span> <span class="n">formula</span><span class="p">,</span> <span class="n">missing</span><span class="o">=</span><span class="s2">&quot;drop&quot;</span><span class="p">)</span>
-<span class="n">co2_gender_lm_result</span> <span class="o">=</span> <span class="n">co2_gender_lm</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
-<span class="n">co2_gender_lm_result</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>formula = &quot;tco2_first ~ pco2_first + gender_num&quot;
+var_names = [&quot;tco2_first&quot;, &quot;pco2_first&quot;, &quot;gender_num&quot;]
+co2_gender_lm = ep.tl.ols(adata, var_names, formula, missing=&quot;drop&quot;)
+co2_gender_lm_result = co2_gender_lm.fit()
+co2_gender_lm_result.summary()
 </pre></div>
 </div>
 </div>
@@ -1133,21 +1137,21 @@ fit line we are trying to estimate. This output is telling us that the best fit 
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># s stands for slope of the line, i stands for intercept of the line</span>
-<span class="n">s_female</span> <span class="o">=</span> <span class="n">co2_gender_lm_result</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-<span class="n">i_female</span> <span class="o">=</span> <span class="n">co2_gender_lm_result</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="n">s_male</span> <span class="o">=</span> <span class="n">co2_gender_lm_result</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-<span class="n">i_male</span> <span class="o">=</span> <span class="n">co2_gender_lm_result</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">co2_gender_lm_result</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
-<span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">ols</span><span class="p">(</span>
-    <span class="n">lines</span><span class="o">=</span><span class="p">[(</span><span class="n">s_female</span><span class="p">,</span> <span class="n">i_female</span><span class="p">),</span> <span class="p">(</span><span class="n">s_male</span><span class="p">,</span> <span class="n">i_male</span><span class="p">)],</span>
-    <span class="n">lines_color</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;k&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">],</span>
-    <span class="n">lines_label</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Female&quot;</span><span class="p">,</span> <span class="s2">&quot;Male&quot;</span><span class="p">],</span>
-    <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;PCO2&quot;</span><span class="p">,</span>
-    <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;TCO2&quot;</span><span class="p">,</span>
-    <span class="n">xlim</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">40</span><span class="p">),</span>
-    <span class="n">ylim</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span>
-    <span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-<span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># s stands for slope of the line, i stands for intercept of the line
+s_female = co2_gender_lm_result.params[1]
+i_female = co2_gender_lm_result.params[0]
+s_male = co2_gender_lm_result.params[1]
+i_male = co2_gender_lm_result.params[0] + co2_gender_lm_result.params[2]
+ep.pl.ols(
+    lines=[(s_female, i_female), (s_male, i_male)],
+    lines_color=[&quot;k&quot;, &quot;r&quot;],
+    lines_label=[&quot;Female&quot;, &quot;Male&quot;],
+    xlabel=&quot;PCO2&quot;,
+    ylabel=&quot;TCO2&quot;,
+    xlim=(0, 40),
+    ylim=(15, 25),
+    show=True,
+)
 </pre></div>
 </div>
 </div>
@@ -1165,12 +1169,12 @@ zero.</p>
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">formula</span> <span class="o">=</span> <span class="s2">&quot;tco2_first ~ pco2_first * gender_num&quot;</span>
-<span class="n">var_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;tco2_first&quot;</span><span class="p">,</span> <span class="s2">&quot;pco2_first&quot;</span><span class="p">,</span> <span class="s2">&quot;gender_num&quot;</span><span class="p">]</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>formula = &quot;tco2_first ~ pco2_first * gender_num&quot;
+var_names = [&quot;tco2_first&quot;, &quot;pco2_first&quot;, &quot;gender_num&quot;]
 
-<span class="n">co2_gender_interaction_lm</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">ols</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">var_names</span><span class="p">,</span> <span class="n">formula</span><span class="p">,</span> <span class="n">missing</span><span class="o">=</span><span class="s2">&quot;drop&quot;</span><span class="p">)</span>
-<span class="n">co2_gender_interaction_lm_result</span> <span class="o">=</span> <span class="n">co2_gender_interaction_lm</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
-<span class="n">co2_gender_interaction_lm_result</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+co2_gender_interaction_lm = ep.tl.ols(adata, var_names, formula, missing=&quot;drop&quot;)
+co2_gender_interaction_lm_result = co2_gender_interaction_lm.fit()
+co2_gender_interaction_lm_result.summary()
 </pre></div>
 </div>
 </div>
@@ -1250,43 +1254,43 @@ zero.</p>
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># s stands for slope of the line, i stands for intercept of the line</span>
-<span class="n">s_female_interaction</span> <span class="o">=</span> <span class="n">co2_gender_interaction_lm_result</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-<span class="n">i_female_interaction</span> <span class="o">=</span> <span class="n">co2_gender_interaction_lm_result</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="n">s_male_interaction</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">co2_gender_interaction_lm_result</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="o">+</span> <span class="n">co2_gender_interaction_lm_result</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
-<span class="p">)</span>
-<span class="n">i_male_interaction</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">co2_gender_interaction_lm_result</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="o">+</span> <span class="n">co2_gender_interaction_lm_result</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
-<span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># s stands for slope of the line, i stands for intercept of the line
+s_female_interaction = co2_gender_interaction_lm_result.params[1]
+i_female_interaction = co2_gender_interaction_lm_result.params[0]
+s_male_interaction = (
+    co2_gender_interaction_lm_result.params[1]
+    + co2_gender_interaction_lm_result.params[3]
+)
+i_male_interaction = (
+    co2_gender_interaction_lm_result.params[0]
+    + co2_gender_interaction_lm_result.params[2]
+)
 
-<span class="n">lines</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="p">(</span><span class="n">s_female</span><span class="p">,</span> <span class="n">i_female</span><span class="p">),</span>
-    <span class="p">(</span><span class="n">s_male</span><span class="p">,</span> <span class="n">i_male</span><span class="p">),</span>
-    <span class="p">(</span><span class="n">s_female_interaction</span><span class="p">,</span> <span class="n">i_female_interaction</span><span class="p">),</span>
-    <span class="p">(</span><span class="n">s_male_interaction</span><span class="p">,</span> <span class="n">i_male_interaction</span><span class="p">),</span>
-<span class="p">]</span>
-<span class="n">lines_color</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;k&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="s2">&quot;k&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">]</span>
-<span class="n">lines_style</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="s2">&quot;:&quot;</span><span class="p">]</span>
-<span class="n">lines_label</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">&quot;Female&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;Male&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;Female (Interaction Model)&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;Male (Interaction Model)&quot;</span><span class="p">,</span>
-<span class="p">]</span>
-<span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">ols</span><span class="p">(</span>
-    <span class="n">lines</span><span class="o">=</span><span class="n">lines</span><span class="p">,</span>
-    <span class="n">lines_color</span><span class="o">=</span><span class="n">lines_color</span><span class="p">,</span>
-    <span class="n">lines_style</span><span class="o">=</span><span class="n">lines_style</span><span class="p">,</span>
-    <span class="n">lines_label</span><span class="o">=</span><span class="n">lines_label</span><span class="p">,</span>
-    <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;PCO2&quot;</span><span class="p">,</span>
-    <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;TCO2&quot;</span><span class="p">,</span>
-    <span class="n">xlim</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">40</span><span class="p">),</span>
-    <span class="n">ylim</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span>
-    <span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-<span class="p">)</span>
+lines = [
+    (s_female, i_female),
+    (s_male, i_male),
+    (s_female_interaction, i_female_interaction),
+    (s_male_interaction, i_male_interaction),
+]
+lines_color = [&quot;k&quot;, &quot;r&quot;, &quot;k&quot;, &quot;r&quot;]
+lines_style = [&quot;-&quot;, &quot;-&quot;, &quot;:&quot;, &quot;:&quot;]
+lines_label = [
+    &quot;Female&quot;,
+    &quot;Male&quot;,
+    &quot;Female (Interaction Model)&quot;,
+    &quot;Male (Interaction Model)&quot;,
+]
+ep.pl.ols(
+    lines=lines,
+    lines_color=lines_color,
+    lines_style=lines_style,
+    lines_label=lines_label,
+    xlabel=&quot;PCO2&quot;,
+    ylabel=&quot;TCO2&quot;,
+    xlim=(0, 40),
+    ylim=(15, 25),
+    show=True,
+)
 </pre></div>
 </div>
 </div>
@@ -1309,7 +1313,7 @@ F-test applies only to <em>nested models</em> – the larger model <em>must</em>
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">anova_lm</span><span class="p">(</span><span class="n">co2_lm_result</span><span class="p">,</span> <span class="n">co2_gender_interaction_lm_result</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>anova_lm(co2_lm_result, co2_gender_interaction_lm_result)
 </pre></div>
 </div>
 </div>
@@ -1380,7 +1384,7 @@ typically used significance level (<span class="math notranslate nohighlight">\(
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">co2_lm_result</span><span class="o">.</span><span class="n">conf_int</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>co2_lm_result.conf_int()
 </pre></div>
 </div>
 </div>
@@ -1433,9 +1437,9 @@ we have only one covariate (<code class="docutils literal notranslate"><span cla
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pco2_first</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">adata</span><span class="p">[:,</span> <span class="s2">&quot;pco2_first&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">X</span><span class="p">)</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
-<span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;pco2_first&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">pco2_first</span><span class="o">.</span><span class="n">min</span><span class="p">()[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pco2_first</span><span class="o">.</span><span class="n">max</span><span class="p">()[</span><span class="mi">0</span><span class="p">])]}</span>
-<span class="n">grid_pred</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>pco2_first = pd.DataFrame(adata[:, &quot;pco2_first&quot;].X).dropna().astype(int)
+data = {&quot;pco2_first&quot;: [i for i in range(pco2_first.min()[0], pco2_first.max()[0])]}
+grid_pred = pd.DataFrame(data)
 </pre></div>
 </div>
 </div>
@@ -1443,10 +1447,10 @@ we have only one covariate (<code class="docutils literal notranslate"><span cla
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">preds</span> <span class="o">=</span> <span class="n">co2_lm_result</span><span class="o">.</span><span class="n">get_prediction</span><span class="p">(</span><span class="n">grid_pred</span><span class="p">)</span><span class="o">.</span><span class="n">summary_frame</span><span class="p">()[</span>
-    <span class="p">[</span><span class="s2">&quot;mean&quot;</span><span class="p">,</span> <span class="s2">&quot;obs_ci_lower&quot;</span><span class="p">,</span> <span class="s2">&quot;obs_ci_upper&quot;</span><span class="p">]</span>
-<span class="p">]</span>
-<span class="n">preds</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>preds = co2_lm_result.get_prediction(grid_pred).summary_frame()[
+    [&quot;mean&quot;, &quot;obs_ci_lower&quot;, &quot;obs_ci_upper&quot;]
+]
+preds[0:2]
 </pre></div>
 </div>
 </div>
@@ -1501,22 +1505,22 @@ predictions generated from such a model. It is a good idea to capture this quali
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">ols</span><span class="p">(</span>
-    <span class="n">adata</span><span class="p">,</span>
-    <span class="n">x</span><span class="o">=</span><span class="s2">&quot;pco2_first&quot;</span><span class="p">,</span>
-    <span class="n">y</span><span class="o">=</span><span class="s2">&quot;tco2_first&quot;</span><span class="p">,</span>
-    <span class="n">ols_results</span><span class="o">=</span><span class="p">[</span><span class="n">co2_lm_result</span><span class="p">],</span>
-    <span class="n">ols_color</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;red&quot;</span><span class="p">],</span>
-    <span class="n">lines</span><span class="o">=</span><span class="p">[</span>
-        <span class="p">(</span><span class="n">grid_pred</span><span class="p">[</span><span class="s2">&quot;pco2_first&quot;</span><span class="p">],</span> <span class="n">preds</span><span class="p">[</span><span class="s2">&quot;obs_ci_upper&quot;</span><span class="p">]),</span>
-        <span class="p">(</span><span class="n">grid_pred</span><span class="p">[</span><span class="s2">&quot;pco2_first&quot;</span><span class="p">],</span> <span class="n">preds</span><span class="p">[</span><span class="s2">&quot;obs_ci_lower&quot;</span><span class="p">]),</span>
-    <span class="p">],</span>
-    <span class="n">lines_color</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;k&quot;</span><span class="p">,</span> <span class="s2">&quot;k&quot;</span><span class="p">],</span>
-    <span class="n">lines_style</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="s2">&quot;--&quot;</span><span class="p">],</span>
-    <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;PCO2&quot;</span><span class="p">,</span>
-    <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;TCO2&quot;</span><span class="p">,</span>
-    <span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-<span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.ols(
+    adata,
+    x=&quot;pco2_first&quot;,
+    y=&quot;tco2_first&quot;,
+    ols_results=[co2_lm_result],
+    ols_color=[&quot;red&quot;],
+    lines=[
+        (grid_pred[&quot;pco2_first&quot;], preds[&quot;obs_ci_upper&quot;]),
+        (grid_pred[&quot;pco2_first&quot;], preds[&quot;obs_ci_lower&quot;]),
+    ],
+    lines_color=[&quot;k&quot;, &quot;k&quot;],
+    lines_style=[&quot;--&quot;, &quot;--&quot;],
+    xlabel=&quot;PCO2&quot;,
+    ylabel=&quot;TCO2&quot;,
+    show=True,
+)
 </pre></div>
 </div>
 </div>
@@ -1538,9 +1542,9 @@ predictions generated from such a model. It is a good idea to capture this quali
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">var_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;age&quot;</span><span class="p">,</span> <span class="s2">&quot;day_28_flg&quot;</span><span class="p">,</span> <span class="s2">&quot;service_unit&quot;</span><span class="p">]</span>
-<span class="n">dat</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">adata</span><span class="p">[:,</span> <span class="n">var_names</span><span class="p">]</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">var_names</span><span class="p">)</span>
-<span class="n">dat</span><span class="p">[</span><span class="s2">&quot;age&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dat</span><span class="p">[</span><span class="s2">&quot;age&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;float&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>var_names = [&quot;age&quot;, &quot;day_28_flg&quot;, &quot;service_unit&quot;]
+dat = pd.DataFrame(adata[:, var_names].X, columns=var_names)
+dat[&quot;age&quot;] = dat[&quot;age&quot;].astype(&quot;float&quot;).dropna(axis=0)
 </pre></div>
 </div>
 </div>
@@ -1550,9 +1554,9 @@ previous subchapter.</p>
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dat</span><span class="p">[</span><span class="s2">&quot;age_cat&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">dat</span><span class="p">[</span><span class="s2">&quot;age&quot;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">55</span><span class="p">,</span> <span class="s2">&quot;&lt;=55&quot;</span><span class="p">,</span> <span class="s2">&quot;&gt;55&quot;</span><span class="p">)</span>
-<span class="n">dat</span><span class="p">[</span><span class="s2">&quot;age_cat&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dat</span><span class="p">[</span><span class="s2">&quot;age_cat&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;category&quot;</span><span class="p">)</span>
-<span class="n">dat</span><span class="p">[</span><span class="s2">&quot;age_cat&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>dat[&quot;age_cat&quot;] = np.where(dat[&quot;age&quot;] &lt;= 55, &quot;&lt;=55&quot;, &quot;&gt;55&quot;)
+dat[&quot;age_cat&quot;] = dat[&quot;age_cat&quot;].astype(&quot;category&quot;)
+dat[&quot;age_cat&quot;].value_counts()
 </pre></div>
 </div>
 </div>
@@ -1572,10 +1576,10 @@ Name: age_cat, dtype: int64
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">age_cat_day_28_flg</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">crosstab</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">dat</span><span class="p">[</span><span class="s2">&quot;age_cat&quot;</span><span class="p">],</span> <span class="n">columns</span><span class="o">=</span><span class="n">dat</span><span class="p">[</span><span class="s2">&quot;day_28_flg&quot;</span><span class="p">])</span>
-<span class="n">age_cat_day_28_flg</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;0&quot;</span><span class="p">,</span> <span class="s2">&quot;1&quot;</span><span class="p">]</span>
-<span class="n">age_cat_day_28_flg</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;&lt;=55&quot;</span><span class="p">,</span> <span class="s2">&quot;&gt;55&quot;</span><span class="p">]</span>
-<span class="n">age_cat_day_28_flg</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>age_cat_day_28_flg = pd.crosstab(index=dat[&quot;age_cat&quot;], columns=dat[&quot;day_28_flg&quot;])
+age_cat_day_28_flg.columns = [&quot;0&quot;, &quot;1&quot;]
+age_cat_day_28_flg.index = [&quot;&lt;=55&quot;, &quot;&gt;55&quot;]
+age_cat_day_28_flg
 </pre></div>
 </div>
 </div>
@@ -1626,10 +1630,10 @@ Name: age_cat, dtype: int64
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">deathbyservice</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">crosstab</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">dat</span><span class="p">[</span><span class="s2">&quot;service_unit&quot;</span><span class="p">],</span> <span class="n">columns</span><span class="o">=</span><span class="n">dat</span><span class="p">[</span><span class="s2">&quot;day_28_flg&quot;</span><span class="p">])</span>
-<span class="n">deathbyservice</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;0&quot;</span><span class="p">,</span> <span class="s2">&quot;1&quot;</span><span class="p">]</span>
-<span class="n">deathbyservice</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;FICU&quot;</span><span class="p">,</span> <span class="s2">&quot;MICU&quot;</span><span class="p">,</span> <span class="s2">&quot;SICU&quot;</span><span class="p">]</span>
-<span class="n">deathbyservice</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>deathbyservice = pd.crosstab(index=dat[&quot;service_unit&quot;], columns=dat[&quot;day_28_flg&quot;])
+deathbyservice.columns = [&quot;0&quot;, &quot;1&quot;]
+deathbyservice.index = [&quot;FICU&quot;, &quot;MICU&quot;, &quot;SICU&quot;]
+deathbyservice
 </pre></div>
 </div>
 </div>
@@ -1685,7 +1689,7 @@ Name: age_cat, dtype: int64
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">deathbyservice</span><span class="o">.</span><span class="n">div</span><span class="p">(</span><span class="n">deathbyservice</span><span class="p">[</span><span class="s2">&quot;0&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">deathbyservice</span><span class="p">[</span><span class="s2">&quot;1&quot;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>deathbyservice.div(deathbyservice[&quot;0&quot;] + deathbyservice[&quot;1&quot;], axis=0)
 </pre></div>
 </div>
 </div>
@@ -1741,7 +1745,7 @@ Name: age_cat, dtype: int64
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">deathbyservice</span><span class="p">[</span><span class="s2">&quot;1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">div</span><span class="p">(</span><span class="n">deathbyservice</span><span class="p">[</span><span class="s2">&quot;0&quot;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>deathbyservice[&quot;1&quot;].div(deathbyservice[&quot;0&quot;], axis=0)
 </pre></div>
 </div>
 </div>
@@ -1769,7 +1773,7 @@ no clear reference group, but since the FICU is so much smaller than the other t
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dat</span><span class="p">[</span><span class="s2">&quot;day_28_flg&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">dat</span><span class="p">[</span><span class="s2">&quot;day_28_flg&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>dat[&quot;day_28_flg&quot;] = np.where(dat[&quot;day_28_flg&quot;] == 0, 1, 0)
 </pre></div>
 </div>
 </div>
@@ -1777,7 +1781,7 @@ no clear reference group, but since the FICU is so much smaller than the other t
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">adata_new</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">ad</span><span class="o">.</span><span class="n">df_to_anndata</span><span class="p">(</span><span class="n">dat</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata_new = ep.ad.df_to_anndata(dat)
 </pre></div>
 </div>
 </div>
@@ -1785,12 +1789,12 @@ no clear reference group, but since the FICU is so much smaller than the other t
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">formula</span> <span class="o">=</span> <span class="s2">&quot;day_28_flg ~ age_cat&quot;</span>
-<span class="n">var_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;day_28_flg&quot;</span><span class="p">,</span> <span class="s2">&quot;age_cat&quot;</span><span class="p">]</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>formula = &quot;day_28_flg ~ age_cat&quot;
+var_names = [&quot;day_28_flg&quot;, &quot;age_cat&quot;]
 
-<span class="n">age_glm</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">glm</span><span class="p">(</span><span class="n">adata_new</span><span class="p">,</span> <span class="n">var_names</span><span class="p">,</span> <span class="n">formula</span><span class="p">,</span> <span class="n">family</span><span class="o">=</span><span class="s2">&quot;Binomial&quot;</span><span class="p">,</span> <span class="n">missing</span><span class="o">=</span><span class="s2">&quot;drop&quot;</span><span class="p">)</span>
-<span class="n">age_glm_result</span> <span class="o">=</span> <span class="n">age_glm</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">age_glm_result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+age_glm = ep.tl.glm(adata_new, var_names, formula, family=&quot;Binomial&quot;, missing=&quot;drop&quot;)
+age_glm_result = age_glm.fit()
+print(age_glm_result.summary())
 </pre></div>
 </div>
 </div>
@@ -1829,14 +1833,14 @@ continuous quantities, instead of discretizing them into categories. For example
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">formula</span> <span class="o">=</span> <span class="s2">&quot;day_28_flg ~ age_cat + service_unit&quot;</span>
-<span class="n">var_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;day_28_flg&quot;</span><span class="p">,</span> <span class="s2">&quot;age_cat&quot;</span><span class="p">,</span> <span class="s2">&quot;service_unit&quot;</span><span class="p">]</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>formula = &quot;day_28_flg ~ age_cat + service_unit&quot;
+var_names = [&quot;day_28_flg&quot;, &quot;age_cat&quot;, &quot;service_unit&quot;]
 
-<span class="n">ageunit_glm</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">glm</span><span class="p">(</span>
-    <span class="n">adata_new</span><span class="p">,</span> <span class="n">var_names</span><span class="p">,</span> <span class="n">formula</span><span class="p">,</span> <span class="n">family</span><span class="o">=</span><span class="s2">&quot;Binomial&quot;</span><span class="p">,</span> <span class="n">missing</span><span class="o">=</span><span class="s2">&quot;drop&quot;</span>
-<span class="p">)</span>
-<span class="n">ageunit_glm_result</span> <span class="o">=</span> <span class="n">ageunit_glm</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">ageunit_glm_result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+ageunit_glm = ep.tl.glm(
+    adata_new, var_names, formula, family=&quot;Binomial&quot;, missing=&quot;drop&quot;
+)
+ageunit_glm_result = ageunit_glm.fit()
+print(ageunit_glm_result.summary())
 </pre></div>
 </div>
 </div>
@@ -1878,13 +1882,13 @@ many others. Such is almost always the case with observational data, and this is
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">formula</span> <span class="o">=</span> <span class="s2">&quot;day_28_flg ~ age&quot;</span>
-<span class="n">var_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;day_28_flg&quot;</span><span class="p">,</span> <span class="s2">&quot;age&quot;</span><span class="p">]</span>
-<span class="n">agects_glm</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">glm</span><span class="p">(</span>
-    <span class="n">adata_new</span><span class="p">,</span> <span class="n">var_names</span><span class="p">,</span> <span class="n">formula</span><span class="p">,</span> <span class="n">family</span><span class="o">=</span><span class="s2">&quot;Binomial&quot;</span><span class="p">,</span> <span class="n">missing</span><span class="o">=</span><span class="s2">&quot;drop&quot;</span><span class="p">,</span> <span class="n">ascontinus</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;age&quot;</span><span class="p">]</span>
-<span class="p">)</span>
-<span class="n">agects_glm_result</span> <span class="o">=</span> <span class="n">agects_glm</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">agects_glm_result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>formula = &quot;day_28_flg ~ age&quot;
+var_names = [&quot;day_28_flg&quot;, &quot;age&quot;]
+agects_glm = ep.tl.glm(
+    adata_new, var_names, formula, family=&quot;Binomial&quot;, missing=&quot;drop&quot;, ascontinus=[&quot;age&quot;]
+)
+agects_glm_result = agects_glm.fit()
+print(agects_glm_result.summary())
 </pre></div>
 </div>
 </div>
@@ -1926,20 +1930,20 @@ test if <span class="math notranslate nohighlight">\(\beta_{MICU}\)</span> and <
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># From https://stackoverflow.com/questions/27328623/anova-test-for-glm-in-python/60769343#60769343</span>
-<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">stats</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># From https://stackoverflow.com/questions/27328623/anova-test-for-glm-in-python/60769343#60769343
+from scipy import stats
 
 
-<span class="k">def</span> <span class="nf">calculate_nested_f_statistic</span><span class="p">(</span><span class="n">small_model</span><span class="p">,</span> <span class="n">big_model</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Given two fitted GLMs, the larger of which contains the parameter space of the smaller, return the P value corresponding to the larger model adding explanatory power&quot;&quot;&quot;</span>
-    <span class="n">addtl_params</span> <span class="o">=</span> <span class="n">big_model</span><span class="o">.</span><span class="n">df_model</span> <span class="o">-</span> <span class="n">small_model</span><span class="o">.</span><span class="n">df_model</span>
-    <span class="n">f_stat</span> <span class="o">=</span> <span class="p">(</span><span class="n">small_model</span><span class="o">.</span><span class="n">deviance</span> <span class="o">-</span> <span class="n">big_model</span><span class="o">.</span><span class="n">deviance</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span>
-        <span class="n">addtl_params</span> <span class="o">*</span> <span class="n">big_model</span><span class="o">.</span><span class="n">scale</span>
-    <span class="p">)</span>
-    <span class="n">df_numerator</span> <span class="o">=</span> <span class="n">addtl_params</span>
-    <span class="n">df_denom</span> <span class="o">=</span> <span class="n">big_model</span><span class="o">.</span><span class="n">fittedvalues</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">big_model</span><span class="o">.</span><span class="n">df_model</span>
-    <span class="n">p_value</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">f_stat</span><span class="p">,</span> <span class="n">df_numerator</span><span class="p">,</span> <span class="n">df_denom</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">p_value</span>
+def calculate_nested_f_statistic(small_model, big_model):
+    &quot;&quot;&quot;Given two fitted GLMs, the larger of which contains the parameter space of the smaller, return the P value corresponding to the larger model adding explanatory power&quot;&quot;&quot;
+    addtl_params = big_model.df_model - small_model.df_model
+    f_stat = (small_model.deviance - big_model.deviance) / (
+        addtl_params * big_model.scale
+    )
+    df_numerator = addtl_params
+    df_denom = big_model.fittedvalues.shape[0] - big_model.df_model
+    p_value = stats.f.sf(f_stat, df_numerator, df_denom)
+    return p_value
 </pre></div>
 </div>
 </div>
@@ -1947,7 +1951,7 @@ test if <span class="math notranslate nohighlight">\(\beta_{MICU}\)</span> and <
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[32]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">p_value</span> <span class="o">=</span> <span class="n">calculate_nested_f_statistic</span><span class="p">(</span><span class="n">age_glm_result</span><span class="p">,</span> <span class="n">ageunit_glm_result</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>p_value = calculate_nested_f_statistic(age_glm_result, ageunit_glm_result)
 </pre></div>
 </div>
 </div>
@@ -1955,19 +1959,19 @@ test if <span class="math notranslate nohighlight">\(\beta_{MICU}\)</span> and <
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[33]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">table</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="p">[</span><span class="s2">&quot;Model 1:&quot;</span><span class="p">,</span> <span class="s2">&quot;day_28_flg ~ age_cat&quot;</span><span class="p">],</span>
-    <span class="p">[</span><span class="s2">&quot;Model 2:&quot;</span><span class="p">,</span> <span class="s2">&quot;day_28_flg ~ age_cat + service_unit&quot;</span><span class="p">],</span>
-    <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;Df Resid.&quot;</span><span class="p">,</span> <span class="s2">&quot;Dev.&quot;</span><span class="p">,</span> <span class="s2">&quot;Df&quot;</span><span class="p">,</span> <span class="s2">&quot;Pr(&gt;Chi)&quot;</span><span class="p">],</span>
-    <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">age_glm_result</span><span class="o">.</span><span class="n">df_resid</span><span class="p">,</span> <span class="n">age_glm_result</span><span class="o">.</span><span class="n">deviance</span><span class="p">],</span>
-    <span class="p">[</span>
-        <span class="mi">2</span><span class="p">,</span>
-        <span class="n">ageunit_glm_result</span><span class="o">.</span><span class="n">df_resid</span><span class="p">,</span>
-        <span class="n">ageunit_glm_result</span><span class="o">.</span><span class="n">deviance</span><span class="p">,</span>
-        <span class="n">ageunit_glm_result</span><span class="o">.</span><span class="n">df_model</span> <span class="o">-</span> <span class="n">age_glm_result</span><span class="o">.</span><span class="n">df_model</span><span class="p">,</span>
-        <span class="n">p_value</span><span class="p">,</span>
-    <span class="p">],</span>
-<span class="p">]</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>table = [
+    [&quot;Model 1:&quot;, &quot;day_28_flg ~ age_cat&quot;],
+    [&quot;Model 2:&quot;, &quot;day_28_flg ~ age_cat + service_unit&quot;],
+    [&quot;&quot;, &quot;Df Resid.&quot;, &quot;Dev.&quot;, &quot;Df&quot;, &quot;Pr(&gt;Chi)&quot;],
+    [1, age_glm_result.df_resid, age_glm_result.deviance],
+    [
+        2,
+        ageunit_glm_result.df_resid,
+        ageunit_glm_result.deviance,
+        ageunit_glm_result.df_model - age_glm_result.df_model,
+        p_value,
+    ],
+]
 </pre></div>
 </div>
 </div>
@@ -1975,7 +1979,7 @@ test if <span class="math notranslate nohighlight">\(\beta_{MICU}\)</span> and <
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[34]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">tabulate</span><span class="p">(</span><span class="n">table</span><span class="p">))</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>print(tabulate(table))
 </pre></div>
 </div>
 </div>
@@ -2004,7 +2008,7 @@ one, which corresponds with the output from the <code class="docutils literal no
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[35]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ageunit_glm_result</span><span class="o">.</span><span class="n">params</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ageunit_glm_result.params
 </pre></div>
 </div>
 </div>
@@ -2025,7 +2029,7 @@ dtype: float64
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[36]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ageunit_glm_result</span><span class="o">.</span><span class="n">conf_int</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ageunit_glm_result.conf_int(alpha=0.05)
 </pre></div>
 </div>
 </div>
@@ -2086,7 +2090,7 @@ dtype: float64
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[37]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">ageunit_glm_result</span><span class="o">.</span><span class="n">params</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>np.exp(ageunit_glm_result.params)
 </pre></div>
 </div>
 </div>
@@ -2107,7 +2111,7 @@ dtype: float64
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[38]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">ageunit_glm_result</span><span class="o">.</span><span class="n">conf_int</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.025</span><span class="p">))</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>np.exp(ageunit_glm_result.conf_int(alpha=0.025))
 </pre></div>
 </div>
 </div>
@@ -2172,16 +2176,16 @@ dtype: float64
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[39]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">expand_grid</span><span class="p">(</span><span class="n">dictionary</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
-        <span class="p">[</span><span class="n">row</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="n">dictionary</span><span class="o">.</span><span class="n">values</span><span class="p">())],</span> <span class="n">columns</span><span class="o">=</span><span class="n">dictionary</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
-    <span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>def expand_grid(dictionary):
+    return pd.DataFrame(
+        [row for row in product(*dictionary.values())], columns=dictionary.keys()
+    )
 
 
-<span class="n">dictionary</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;age_cat&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;&lt;=55&quot;</span><span class="p">,</span> <span class="s2">&quot;&gt;55&quot;</span><span class="p">],</span> <span class="s2">&quot;service_unit&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;FICU&quot;</span><span class="p">,</span> <span class="s2">&quot;MICU&quot;</span><span class="p">,</span> <span class="s2">&quot;SICU&quot;</span><span class="p">]}</span>
+dictionary = {&quot;age_cat&quot;: [&quot;&lt;=55&quot;, &quot;&gt;55&quot;], &quot;service_unit&quot;: [&quot;FICU&quot;, &quot;MICU&quot;, &quot;SICU&quot;]}
 
-<span class="n">newdat</span> <span class="o">=</span> <span class="n">expand_grid</span><span class="p">(</span><span class="n">dictionary</span><span class="p">)</span>
-<span class="n">newdat</span>
+newdat = expand_grid(dictionary)
+newdat
 </pre></div>
 </div>
 </div>
@@ -2251,8 +2255,8 @@ dtype: float64
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[40]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">newdat</span><span class="p">[</span><span class="s2">&quot;pred&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ageunit_glm_result</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">newdat</span><span class="p">)</span>
-<span class="n">newdat</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>newdat[&quot;pred&quot;] = ageunit_glm_result.predict(newdat)
+newdat
 </pre></div>
 </div>
 </div>
@@ -2335,9 +2339,9 @@ dtype: float64
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[41]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">adata_subset</span> <span class="o">=</span> <span class="n">adata</span><span class="p">[</span>
-    <span class="p">:,</span> <span class="p">[</span><span class="s2">&quot;mort_day_censored&quot;</span><span class="p">,</span> <span class="s2">&quot;censor_flg&quot;</span><span class="p">,</span> <span class="s2">&quot;gender_num&quot;</span><span class="p">,</span> <span class="s2">&quot;service_unit&quot;</span><span class="p">]</span>
-<span class="p">]</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata_subset = adata[
+    :, [&quot;mort_day_censored&quot;, &quot;censor_flg&quot;, &quot;gender_num&quot;, &quot;service_unit&quot;]
+]
 </pre></div>
 </div>
 </div>
@@ -2346,7 +2350,7 @@ dtype: float64
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[42]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">adata_subset</span><span class="p">[:,</span> <span class="p">[</span><span class="s2">&quot;mort_day_censored&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">X</span><span class="p">[</span><span class="n">adata_subset</span><span class="p">[:,</span> <span class="p">[</span><span class="s2">&quot;censor_flg&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">X</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">731</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata_subset[:, [&quot;mort_day_censored&quot;]].X[adata_subset[:, [&quot;censor_flg&quot;]].X == 1] = 731
 </pre></div>
 </div>
 </div>
@@ -2360,9 +2364,9 @@ variable.</p>
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[43]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">adata_subset</span><span class="p">[:,</span> <span class="p">[</span><span class="s2">&quot;censor_flg&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
-    <span class="n">adata_subset</span><span class="p">[:,</span> <span class="p">[</span><span class="s2">&quot;censor_flg&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">X</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span>
-<span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata_subset[:, [&quot;censor_flg&quot;]].X = np.where(
+    adata_subset[:, [&quot;censor_flg&quot;]].X == 0, 1, 0
+)
 </pre></div>
 </div>
 </div>
@@ -2371,13 +2375,13 @@ variable.</p>
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[44]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">T</span> <span class="o">=</span> <span class="n">adata_subset</span><span class="p">[:,</span> <span class="p">[</span><span class="s2">&quot;mort_day_censored&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">X</span>
-<span class="n">E</span> <span class="o">=</span> <span class="n">adata_subset</span><span class="p">[:,</span> <span class="p">[</span><span class="s2">&quot;censor_flg&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">X</span>
-<span class="n">groups</span> <span class="o">=</span> <span class="n">adata_subset</span><span class="p">[:,</span> <span class="p">[</span><span class="s2">&quot;gender_num&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">X</span>
-<span class="n">ix1</span> <span class="o">=</span> <span class="n">groups</span> <span class="o">==</span> <span class="mi">0</span>
-<span class="n">ix2</span> <span class="o">=</span> <span class="n">groups</span> <span class="o">==</span> <span class="mi">1</span>
-<span class="n">kmf_1</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">kmf</span><span class="p">(</span><span class="n">T</span><span class="p">[</span><span class="n">ix1</span><span class="p">],</span> <span class="n">E</span><span class="p">[</span><span class="n">ix1</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Women&quot;</span><span class="p">)</span>
-<span class="n">kmf_2</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">kmf</span><span class="p">(</span><span class="n">T</span><span class="p">[</span><span class="n">ix2</span><span class="p">],</span> <span class="n">E</span><span class="p">[</span><span class="n">ix2</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Men&quot;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>T = adata_subset[:, [&quot;mort_day_censored&quot;]].X
+E = adata_subset[:, [&quot;censor_flg&quot;]].X
+groups = adata_subset[:, [&quot;gender_num&quot;]].X
+ix1 = groups == 0
+ix2 = groups == 1
+kmf_1 = ep.tl.kmf(T[ix1], E[ix1], label=&quot;Women&quot;)
+kmf_2 = ep.tl.kmf(T[ix2], E[ix2], label=&quot;Men&quot;)
 </pre></div>
 </div>
 </div>
@@ -2385,15 +2389,15 @@ variable.</p>
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[45]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">kmf</span><span class="p">(</span>
-    <span class="p">[</span><span class="n">kmf_1</span><span class="p">,</span> <span class="n">kmf_2</span><span class="p">],</span>
-    <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;k&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">],</span>
-    <span class="n">xlim</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">750</span><span class="p">],</span>
-    <span class="n">ylim</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
-    <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;Days&quot;</span><span class="p">,</span>
-    <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;Proportion Who Survived&quot;</span><span class="p">,</span>
-    <span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-<span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.kmf(
+    [kmf_1, kmf_2],
+    color=[&quot;k&quot;, &quot;r&quot;],
+    xlim=[0, 750],
+    ylim=[0, 1],
+    xlabel=&quot;Days&quot;,
+    ylabel=&quot;Proportion Who Survived&quot;,
+    show=True,
+)
 </pre></div>
 </div>
 </div>
@@ -2410,13 +2414,13 @@ variable.</p>
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[46]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">groups</span> <span class="o">=</span> <span class="n">adata_subset</span><span class="p">[:,</span> <span class="p">[</span><span class="s2">&quot;service_unit&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">X</span>
-<span class="n">ix1</span> <span class="o">=</span> <span class="n">groups</span> <span class="o">==</span> <span class="s2">&quot;FICU&quot;</span>
-<span class="n">ix2</span> <span class="o">=</span> <span class="n">groups</span> <span class="o">==</span> <span class="s2">&quot;MICU&quot;</span>
-<span class="n">ix3</span> <span class="o">=</span> <span class="n">groups</span> <span class="o">==</span> <span class="s2">&quot;SICU&quot;</span>
-<span class="n">kmf_1</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">kmf</span><span class="p">(</span><span class="n">T</span><span class="p">[</span><span class="n">ix1</span><span class="p">],</span> <span class="n">E</span><span class="p">[</span><span class="n">ix1</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;FICU&quot;</span><span class="p">)</span>
-<span class="n">kmf_2</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">kmf</span><span class="p">(</span><span class="n">T</span><span class="p">[</span><span class="n">ix2</span><span class="p">],</span> <span class="n">E</span><span class="p">[</span><span class="n">ix2</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;MICU&quot;</span><span class="p">)</span>
-<span class="n">kmf_3</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">kmf</span><span class="p">(</span><span class="n">T</span><span class="p">[</span><span class="n">ix3</span><span class="p">],</span> <span class="n">E</span><span class="p">[</span><span class="n">ix3</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;SICU&quot;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>groups = adata_subset[:, [&quot;service_unit&quot;]].X
+ix1 = groups == &quot;FICU&quot;
+ix2 = groups == &quot;MICU&quot;
+ix3 = groups == &quot;SICU&quot;
+kmf_1 = ep.tl.kmf(T[ix1], E[ix1], label=&quot;FICU&quot;)
+kmf_2 = ep.tl.kmf(T[ix2], E[ix2], label=&quot;MICU&quot;)
+kmf_3 = ep.tl.kmf(T[ix3], E[ix3], label=&quot;SICU&quot;)
 </pre></div>
 </div>
 </div>
@@ -2424,16 +2428,16 @@ variable.</p>
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[47]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">kmf</span><span class="p">(</span>
-    <span class="p">[</span><span class="n">kmf_1</span><span class="p">,</span> <span class="n">kmf_2</span><span class="p">,</span> <span class="n">kmf_3</span><span class="p">],</span>
-    <span class="n">ci_show</span><span class="o">=</span><span class="p">[</span><span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">],</span>
-    <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;k&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="s2">&quot;g&quot;</span><span class="p">],</span>
-    <span class="n">xlim</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">750</span><span class="p">],</span>
-    <span class="n">ylim</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
-    <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;Days&quot;</span><span class="p">,</span>
-    <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;Proportion Who Survived&quot;</span><span class="p">,</span>
-    <span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-<span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.kmf(
+    [kmf_1, kmf_2, kmf_3],
+    ci_show=[False, False, False],
+    color=[&quot;k&quot;, &quot;r&quot;, &quot;g&quot;],
+    xlim=[0, 750],
+    ylim=[0, 1],
+    xlabel=&quot;Days&quot;,
+    ylabel=&quot;Proportion Who Survived&quot;,
+    show=True,
+)
 </pre></div>
 </div>
 </div>
@@ -2453,7 +2457,7 @@ variable.</p>
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[48]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">adata_subset</span> <span class="o">=</span> <span class="n">adata_subset</span><span class="p">[:,</span> <span class="p">[</span><span class="s2">&quot;mort_day_censored&quot;</span><span class="p">,</span> <span class="s2">&quot;censor_flg&quot;</span><span class="p">,</span> <span class="s2">&quot;gender_num&quot;</span><span class="p">]]</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata_subset = adata_subset[:, [&quot;mort_day_censored&quot;, &quot;censor_flg&quot;, &quot;gender_num&quot;]]
 </pre></div>
 </div>
 </div>
@@ -2462,7 +2466,7 @@ variable.</p>
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[49]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">adata_subset</span><span class="p">[:,</span> <span class="p">[</span><span class="s2">&quot;mort_day_censored&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">X</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata_subset[:, [&quot;mort_day_censored&quot;]].X
 </pre></div>
 </div>
 </div>
@@ -2486,8 +2490,8 @@ ArrayView([[11.92],
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[50]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">ad</span><span class="o">.</span><span class="n">anndata_to_df</span><span class="p">(</span><span class="n">adata_subset</span><span class="p">)</span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>data = ep.ad.anndata_to_df(adata_subset)
+data = data.dropna()
 </pre></div>
 </div>
 </div>
@@ -2495,8 +2499,8 @@ ArrayView([[11.92],
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[51]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">gender_coxph</span> <span class="o">=</span> <span class="n">CoxPHFitter</span><span class="p">()</span>
-<span class="n">gender_coxph</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">duration_col</span><span class="o">=</span><span class="s2">&quot;mort_day_censored&quot;</span><span class="p">,</span> <span class="n">event_col</span><span class="o">=</span><span class="s2">&quot;censor_flg&quot;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>gender_coxph = CoxPHFitter()
+gender_coxph.fit(data, duration_col=&quot;mort_day_censored&quot;, event_col=&quot;censor_flg&quot;)
 </pre></div>
 </div>
 </div>
@@ -2513,7 +2517,7 @@ ArrayView([[11.92],
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[52]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">gender_coxph</span><span class="o">.</span><span class="n">print_summary</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>gender_coxph.print_summary()
 </pre></div>
 </div>
 </div>
@@ -2648,9 +2652,9 @@ ArrayView([[11.92],
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[53]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">adata_subset</span> <span class="o">=</span> <span class="n">adata</span><span class="p">[:,</span> <span class="p">[</span><span class="s2">&quot;mort_day_censored&quot;</span><span class="p">,</span> <span class="s2">&quot;censor_flg&quot;</span><span class="p">,</span> <span class="s2">&quot;gender_num&quot;</span><span class="p">,</span> <span class="s2">&quot;afib_flg&quot;</span><span class="p">]]</span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">ad</span><span class="o">.</span><span class="n">anndata_to_df</span><span class="p">(</span><span class="n">adata_subset</span><span class="p">)</span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata_subset = adata[:, [&quot;mort_day_censored&quot;, &quot;censor_flg&quot;, &quot;gender_num&quot;, &quot;afib_flg&quot;]]
+data = ep.ad.anndata_to_df(adata_subset)
+data = data.dropna()
 </pre></div>
 </div>
 </div>
@@ -2658,7 +2662,7 @@ ArrayView([[11.92],
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[54]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">data</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>data
 </pre></div>
 </div>
 </div>
@@ -2778,9 +2782,9 @@ ArrayView([[11.92],
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[55]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">genderafib_coxph</span> <span class="o">=</span> <span class="n">CoxPHFitter</span><span class="p">()</span>
-<span class="n">genderafib_coxph</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">duration_col</span><span class="o">=</span><span class="s2">&quot;mort_day_censored&quot;</span><span class="p">,</span> <span class="n">event_col</span><span class="o">=</span><span class="s2">&quot;censor_flg&quot;</span><span class="p">)</span>
-<span class="n">genderafib_coxph</span><span class="o">.</span><span class="n">print_summary</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>genderafib_coxph = CoxPHFitter()
+genderafib_coxph.fit(data, duration_col=&quot;mort_day_censored&quot;, event_col=&quot;censor_flg&quot;)
+genderafib_coxph.print_summary()
 </pre></div>
 </div>
 </div>
@@ -2947,10 +2951,10 @@ in this section should not be used directly. Generally the standard error estima
                 </div>
                 <div class="title">Diabetes 130 Vignette</div>
               </div>
-              <svg><use href="#svg-arrow-right"></use></svg>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
           <a class="prev-page" href="mimic_2_fate.html">
-              <svg><use href="#svg-arrow-right"></use></svg>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
@@ -2971,9 +2975,7 @@ in this section should not be used directly. Generally the standard error estima
             
           </div>
           <div class="right-details">
-            <div class="icons">
-              
-            </div>
+            
           </div>
         </div>
         
@@ -2985,7 +2987,7 @@ in this section should not be used directly. Generally the standard error estima
       <div class="toc-sticky toc-scroll">
         <div class="toc-title-container">
           <span class="toc-title">
-            Contents
+            On this page
           </span>
         </div>
         <div class="toc-tree-container">
@@ -3037,6 +3039,7 @@ in this section should not be used directly. Generally the standard error estima
     <script src="../../_static/underscore.js"></script>
     <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/scripts/furo.js"></script>
     <script src="../../_static/clipboard.min.js"></script>
     <script src="../../_static/copybutton.js"></script>

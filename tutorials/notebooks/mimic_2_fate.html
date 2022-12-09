@@ -2,28 +2,24 @@
 <html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
-
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 <meta property="og:title" content="MIMIC-II Patient Fate" />
-  
 <meta property="og:type" content="website" />
-  
 <meta property="og:url" content="https://ehrapy.readthedocs.io/en/latest/tutorials/notebooks/mimic_2_fate.html" />
-  
+<meta property="og:site_name" content="ehrapy" />
 <meta property="og:description" content="This tutorial focuses on the determination of patient fate. The goal is to detect terminal states and the corresponding origins based on pseudotime. Very rarely does the actual real time reflect th..." />
-  
 <meta property="og:image" content="https://ehrapy.readthedocs.io/en/latest//_static/logo.png" />
-  
-<meta property="og:image:alt" content="MIMIC-II Patient Fate" />
-  <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="MIMIC-II Survival Analysis" href="mimic_2_survival_analysis.html" /><link rel="prev" title="MIMIC-II IAC Introduction" href="mimic_2_introduction.html" />
+<meta property="og:image:alt" content="ehrapy" />
+<meta name="description" content="This tutorial focuses on the determination of patient fate. The goal is to detect terminal states and the corresponding origins based on pseudotime. Very rarely does the actual real time reflect th..." />
+<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="MIMIC-II Survival Analysis" href="mimic_2_survival_analysis.html" /><link rel="prev" title="MIMIC-II IAC Introduction" href="mimic_2_introduction.html" />
 
-    <meta name="generator" content="sphinx-5.1.1, furo 2022.06.21"/>
+    <!-- Generated with Sphinx 5.3.0 and Furo 2022.12.07 -->
         <title>MIMIC-II Patient Fate - ehrapy</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=40978830699223671f4072448e654b5958f38b89" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/override.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/sphinx_gallery.css" />
@@ -173,7 +169,7 @@
   
   
 </a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
-  <input class="sidebar-search" placeholder=Search name="q" aria-label="Search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
   <input type="hidden" name="check_keywords" value="yes">
   <input type="hidden" name="area" value="default">
 </form>
@@ -184,7 +180,6 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../usage/usage.html">Usage</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/io/ehrapy.io.read_csv.html">ehrapy.io.read_csv</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/io/ehrapy.io.read_h5ad.html">ehrapy.io.read_h5ad</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../usage/io/ehrapy.io.read_pdf.html">ehrapy.io.read_pdf</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/io/ehrapy.io.write.html">ehrapy.io.write</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.mimic_2.html">ehrapy.data.mimic_2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.mimic_3_demo.html">ehrapy.data.mimic_3_demo</a></li>
@@ -208,17 +203,19 @@
 <li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.regress_out.html">ehrapy.preprocessing.regress_out</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.subsample.html">ehrapy.preprocessing.subsample</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.highly_variable_features.html">ehrapy.preprocessing.highly_variable_features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.winsorize.html">ehrapy.preprocessing.winsorize</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.clip_quantile.html">ehrapy.preprocessing.clip_quantile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.qc_metrics.html">ehrapy.preprocessing.qc_metrics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.qc_lab_measurements.html">ehrapy.preprocessing.qc_lab_measurements</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.explicit_impute.html">ehrapy.preprocessing.explicit_impute</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.simple_impute.html">ehrapy.preprocessing.simple_impute</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.knn_impute.html">ehrapy.preprocessing.knn_impute</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.miss_forest_impute.html">ehrapy.preprocessing.miss_forest_impute</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.soft_impute.html">ehrapy.preprocessing.soft_impute</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.iterative_svd_impute.html">ehrapy.preprocessing.iterative_svd_impute</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.matrix_factorization_impute.html">ehrapy.preprocessing.matrix_factorization_impute</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.nuclear_norm_minimization_impute.html">ehrapy.preprocessing.nuclear_norm_minimization_impute</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.mice_forest_impute.html">ehrapy.preprocessing.mice_forest_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.explicit_impute.html">ehrapy.preprocessing.explicit_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.simple_impute.html">ehrapy.preprocessing.simple_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.knn_impute.html">ehrapy.preprocessing.knn_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.miss_forest_impute.html">ehrapy.preprocessing.miss_forest_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.soft_impute.html">ehrapy.preprocessing.soft_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.iterative_svd_impute.html">ehrapy.preprocessing.iterative_svd_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.matrix_factorization_impute.html">ehrapy.preprocessing.matrix_factorization_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.nuclear_norm_minimization_impute.html">ehrapy.preprocessing.nuclear_norm_minimization_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.mice_forest_impute.html">ehrapy.preprocessing.mice_forest_impute</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.encode.html">ehrapy.preprocessing.encode</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.undo_encoding.html">ehrapy.preprocessing.undo_encoding</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.log_norm.html">ehrapy.preprocessing.log_norm</a></li>
@@ -229,6 +226,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.robust_scale_norm.html">ehrapy.preprocessing.robust_scale_norm</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.scale_norm.html">ehrapy.preprocessing.scale_norm</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.sqrt_norm.html">ehrapy.preprocessing.sqrt_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.offset_negative_values.html">ehrapy.preprocessing.offset_negative_values</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.combat.html">ehrapy.preprocessing.combat</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.neighbors.html">ehrapy.preprocessing.neighbors</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.pca.html">ehrapy.tools.pca</a></li>
@@ -266,6 +264,10 @@
 <li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.ranking.html">ehrapy.plot.ranking</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.dendrogram.html">ehrapy.plot.dendrogram</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.qc_metrics.html">ehrapy.plot.qc_metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.missing_values_matrix.html">ehrapy.plot.missing_values_matrix</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.missing_values_barplot.html">ehrapy.plot.missing_values_barplot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.missing_values_heatmap.html">ehrapy.plot.missing_values_heatmap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.missing_values_dendrogram.html">ehrapy.plot.missing_values_dendrogram</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.pca.html">ehrapy.plot.pca</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.pca_loadings.html">ehrapy.plot.pca_loadings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.pca_variance_ratio.html">ehrapy.plot.pca_variance_ratio</a></li>
@@ -289,11 +291,12 @@
 <li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.rank_features_groups_dotplot.html">ehrapy.plot.rank_features_groups_dotplot</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.rank_features_groups_matrixplot.html">ehrapy.plot.rank_features_groups_matrixplot</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.rank_features_groups_tracksplot.html">ehrapy.plot.rank_features_groups_tracksplot</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.plot.ols.html">ehrapy.plot.ols</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.plot.kmf.html">ehrapy.plot.kmf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.ols.html">ehrapy.plot.ols</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.kmf.html">ehrapy.plot.kmf</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/anndata/ehrapy.anndata.df_to_anndata.html">ehrapy.anndata.df_to_anndata</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/anndata/ehrapy.anndata.anndata_to_df.html">ehrapy.anndata.anndata_to_df</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/anndata/ehrapy.anndata.move_to_obs.html">ehrapy.anndata.move_to_obs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/anndata/ehrapy.anndata.delete_from_obs.html">ehrapy.anndata.delete_from_obs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/anndata/ehrapy.anndata.move_to_x.html">ehrapy.anndata.move_to_x</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/anndata/ehrapy.anndata.type_overview.html">ehrapy.anndata.type_overview</a></li>
 </ul>
@@ -455,10 +458,11 @@ div.nboutput.container div.prompt > div {
     }
 }
 
-/* disable scrollbars on prompts */
+/* disable scrollbars and line breaks on prompts */
 div.nbinput.container div.prompt pre,
 div.nboutput.container div.prompt pre {
     overflow: hidden;
+    white-space: pre;
 }
 
 /* input/output area */
@@ -663,14 +667,14 @@ care database. It contains summary clinical data and outcomes for 1,776 patients
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">ehrapy</span> <span class="k">as</span> <span class="nn">ep</span>
-<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">cellrank</span> <span class="k">as</span> <span class="nn">cr</span>
-<span class="kn">from</span> <span class="nn">cellrank.tl.kernels</span> <span class="kn">import</span> <span class="n">ConnectivityKernel</span>
-<span class="kn">from</span> <span class="nn">cellrank.tl.kernels</span> <span class="kn">import</span> <span class="n">PseudotimeKernel</span>
-<span class="kn">import</span> <span class="nn">scvelo</span> <span class="k">as</span> <span class="nn">scv</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import ehrapy as ep
+import seaborn as sns
+import matplotlib.pyplot as plt
+import numpy as np
+import cellrank as cr
+from cellrank.tl.kernels import ConnectivityKernel
+from cellrank.tl.kernels import PseudotimeKernel
+import scvelo as scv
 </pre></div>
 </div>
 </div>
@@ -695,13 +699,13 @@ care database. It contains summary clinical data and outcomes for 1,776 patients
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">warnings</span>
-<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
-<span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import warnings
+warnings.filterwarnings(&quot;ignore&quot;)
+warnings.simplefilter(&quot;ignore&quot;)
 
-<span class="c1"># This is required to catch warnings when the multiprocessing module is used</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;PYTHONWARNINGS&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;ignore&quot;</span>
+# This is required to catch warnings when the multiprocessing module is used
+import os
+os.environ[&quot;PYTHONWARNINGS&quot;] = &quot;ignore&quot;
 </pre></div>
 </div>
 </div>
@@ -712,7 +716,7 @@ care database. It contains summary clinical data and outcomes for 1,776 patients
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">adata</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">mimic_2</span><span class="p">(</span><span class="n">encoded</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata = ep.dt.mimic_2(encoded=True)
 </pre></div>
 </div>
 </div>
@@ -739,7 +743,7 @@ care database. It contains summary clinical data and outcomes for 1,776 patients
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">knn_impute</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pp.knn_impute(adata)
 </pre></div>
 </div>
 </div>
@@ -780,10 +784,10 @@ care database. It contains summary clinical data and outcomes for 1,776 patients
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">pca</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
-<span class="n">ep</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
-<span class="n">ep</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
-<span class="n">ep</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">leiden</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">key_added</span><span class="o">=</span><span class="s2">&quot;leiden_0_5&quot;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pp.pca(adata)
+ep.pp.neighbors(adata)
+ep.tl.umap(adata)
+ep.tl.leiden(adata, resolution=0.5, key_added=&quot;leiden_0_5&quot;)
 </pre></div>
 </div>
 </div>
@@ -791,7 +795,7 @@ care database. It contains summary clinical data and outcomes for 1,776 patients
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;leiden_0_5&quot;</span><span class="p">],</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Leiden 0.5&quot;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.umap(adata, color=[&quot;leiden_0_5&quot;], title=&quot;Leiden 0.5&quot;)
 </pre></div>
 </div>
 </div>
@@ -814,9 +818,9 @@ care database. It contains summary clinical data and outcomes for 1,776 patients
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ck</span> <span class="o">=</span> <span class="n">ConnectivityKernel</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
-<span class="n">ck</span><span class="o">.</span><span class="n">compute_transition_matrix</span><span class="p">()</span>
-<span class="n">ck</span><span class="o">.</span><span class="n">compute_projection</span><span class="p">(</span><span class="n">basis</span><span class="o">=</span><span class="s2">&quot;umap&quot;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ck = ConnectivityKernel(adata)
+ck.compute_transition_matrix()
+ck.compute_projection(basis=&quot;umap&quot;)
 </pre></div>
 </div>
 </div>
@@ -826,7 +830,7 @@ care database. It contains summary clinical data and outcomes for 1,776 patients
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">scv</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">velocity_embedding_stream</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">vkey</span><span class="o">=</span><span class="s2">&quot;T_fwd&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;umap&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;leiden_0_5&quot;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>scv.pl.velocity_embedding_stream(adata, vkey=&quot;T_fwd&quot;, basis=&quot;umap&quot;, color=&quot;leiden_0_5&quot;)
 </pre></div>
 </div>
 </div>
@@ -842,7 +846,7 @@ care database. It contains summary clinical data and outcomes for 1,776 patients
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;hosp_exp_flg&quot;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Died in Hospital&quot;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.umap(adata, color=&quot;hosp_exp_flg&quot;, title=&quot;Died in Hospital&quot;)
 </pre></div>
 </div>
 </div>
@@ -862,7 +866,7 @@ care database. It contains summary clinical data and outcomes for 1,776 patients
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">g</span> <span class="o">=</span> <span class="n">cr</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">estimators</span><span class="o">.</span><span class="n">GPCCA</span><span class="p">(</span><span class="n">ck</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>g = cr.tl.estimators.GPCCA(ck)
 </pre></div>
 </div>
 </div>
@@ -871,7 +875,7 @@ care database. It contains summary clinical data and outcomes for 1,776 patients
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">compute_macrostates</span><span class="p">(</span><span class="n">n_states</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">cluster_key</span><span class="o">=</span><span class="s2">&quot;leiden_0_5&quot;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>g.compute_macrostates(n_states=10, cluster_key=&quot;leiden_0_5&quot;)
 </pre></div>
 </div>
 </div>
@@ -888,7 +892,7 @@ WARNING: For `method=&#39;brandts&#39;`, dense matrix is required. Densifying
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">macrostates_memberships</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>g.macrostates_memberships
 </pre></div>
 </div>
 </div>
@@ -903,8 +907,8 @@ WARNING: For `method=&#39;brandts&#39;`, dense matrix is required. Densifying
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">plot_macrostates</span><span class="p">()</span>
-<span class="n">g</span><span class="o">.</span><span class="n">plot_macrostates</span><span class="p">(</span><span class="n">discrete</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>g.plot_macrostates()
+g.plot_macrostates(discrete=True)
 </pre></div>
 </div>
 </div>
@@ -927,7 +931,7 @@ WARNING: For `method=&#39;brandts&#39;`, dense matrix is required. Densifying
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">plot_macrostates</span><span class="p">(</span><span class="n">same_plot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>g.plot_macrostates(same_plot=False, ncols=2)
 </pre></div>
 </div>
 </div>
@@ -943,7 +947,7 @@ WARNING: For `method=&#39;brandts&#39;`, dense matrix is required. Densifying
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">set_terminal_states_from_macrostates</span><span class="p">([</span><span class="s2">&quot;4&quot;</span><span class="p">,</span> <span class="s2">&quot;6&quot;</span><span class="p">,</span> <span class="s2">&quot;7&quot;</span><span class="p">])</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>g.set_terminal_states_from_macrostates([&quot;4&quot;, &quot;6&quot;, &quot;7&quot;])
 </pre></div>
 </div>
 </div>
@@ -951,7 +955,7 @@ WARNING: For `method=&#39;brandts&#39;`, dense matrix is required. Densifying
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">plot_terminal_states</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>g.plot_terminal_states()
 </pre></div>
 </div>
 </div>
@@ -971,7 +975,7 @@ WARNING: For `method=&#39;brandts&#39;`, dense matrix is required. Densifying
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">compute_absorption_probabilities</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>g.compute_absorption_probabilities()
 </pre></div>
 </div>
 </div>
@@ -994,7 +998,7 @@ Defaulting to `&#39;gmres&#39;` solver.
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">plot_absorption_probabilities</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>g.plot_absorption_probabilities()
 </pre></div>
 </div>
 </div>
@@ -1010,8 +1014,8 @@ Defaulting to `&#39;gmres&#39;` solver.
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">compute_absorption_probabilities</span><span class="p">(</span><span class="n">time_to_absorption</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">)</span>
-<span class="n">g</span><span class="o">.</span><span class="n">absorption_times</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>g.compute_absorption_probabilities(time_to_absorption=&quot;all&quot;)
+g.absorption_times
 </pre></div>
 </div>
 </div>
@@ -1107,8 +1111,8 @@ Defaulting to `&#39;gmres&#39;` solver.
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;mean_time_to_absorption&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">absorption_times</span><span class="p">[</span><span class="s2">&quot;4, 6, 7 mean&quot;</span><span class="p">]</span>
-<span class="n">scv</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;mean_time_to_absorption&quot;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata.obs[&quot;mean_time_to_absorption&quot;] = g.absorption_times[&quot;4, 6, 7 mean&quot;]
+scv.pl.scatter(adata, color=&quot;mean_time_to_absorption&quot;)
 </pre></div>
 </div>
 </div>
@@ -1127,7 +1131,7 @@ Defaulting to `&#39;gmres&#39;` solver.
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">compute_lineage_drivers</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>g.compute_lineage_drivers()
 </pre></div>
 </div>
 </div>
@@ -2008,7 +2012,7 @@ Defaulting to `&#39;gmres&#39;` solver.
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">plot_lineage_drivers</span><span class="p">(</span><span class="n">lineage</span><span class="o">=</span><span class="s2">&quot;4&quot;</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>g.plot_lineage_drivers(lineage=&quot;4&quot;, ncols=2)
 </pre></div>
 </div>
 </div>
@@ -2024,7 +2028,7 @@ Defaulting to `&#39;gmres&#39;` solver.
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">plot_lineage_drivers</span><span class="p">(</span><span class="n">lineage</span><span class="o">=</span><span class="s2">&quot;6&quot;</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>g.plot_lineage_drivers(lineage=&quot;6&quot;, ncols=2)
 </pre></div>
 </div>
 </div>
@@ -2040,7 +2044,7 @@ Defaulting to `&#39;gmres&#39;` solver.
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">plot_lineage_drivers</span><span class="p">(</span><span class="n">lineage</span><span class="o">=</span><span class="s2">&quot;7&quot;</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>g.plot_lineage_drivers(lineage=&quot;7&quot;, ncols=2)
 </pre></div>
 </div>
 </div>
@@ -2061,7 +2065,7 @@ Defaulting to `&#39;gmres&#39;` solver.
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cr</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">cluster_fates</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;bar&quot;</span><span class="p">,</span> <span class="n">cluster_key</span><span class="o">=</span><span class="s2">&quot;leiden_0_5&quot;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>cr.pl.cluster_fates(adata, mode=&quot;bar&quot;, cluster_key=&quot;leiden_0_5&quot;)
 </pre></div>
 </div>
 </div>
@@ -2076,8 +2080,8 @@ Defaulting to `&#39;gmres&#39;` solver.
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cr</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">cluster_fates</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;heatmap&quot;</span><span class="p">,</span> <span class="n">cluster_key</span><span class="o">=</span><span class="s2">&quot;leiden_0_5&quot;</span><span class="p">)</span>
-<span class="n">cr</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">cluster_fates</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;clustermap&quot;</span><span class="p">,</span> <span class="n">cluster_key</span><span class="o">=</span><span class="s2">&quot;leiden_0_5&quot;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>cr.pl.cluster_fates(adata, mode=&quot;heatmap&quot;, cluster_key=&quot;leiden_0_5&quot;)
+cr.pl.cluster_fates(adata, mode=&quot;clustermap&quot;, cluster_key=&quot;leiden_0_5&quot;)
 </pre></div>
 </div>
 </div>
@@ -2100,7 +2104,7 @@ Defaulting to `&#39;gmres&#39;` solver.
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">paga</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="s2">&quot;leiden_0_5&quot;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.tl.paga(adata, groups=&quot;leiden_0_5&quot;)
 </pre></div>
 </div>
 </div>
@@ -2108,7 +2112,7 @@ Defaulting to `&#39;gmres&#39;` solver.
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cr</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">cluster_fates</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;paga_pie&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;umap&quot;</span><span class="p">,</span> <span class="n">cluster_key</span><span class="o">=</span><span class="s2">&quot;leiden_0_5&quot;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>cr.pl.cluster_fates(adata, mode=&quot;paga_pie&quot;, basis=&quot;umap&quot;, cluster_key=&quot;leiden_0_5&quot;)
 </pre></div>
 </div>
 </div>
@@ -2144,9 +2148,9 @@ in Networkx 3.0. Use `from_scipy_sparse_array` instead.
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cr</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">cluster_fates</span><span class="p">(</span>
-    <span class="n">adata</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;paga&quot;</span><span class="p">,</span> <span class="n">legend_loc</span><span class="o">=</span><span class="s2">&quot;on data&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;umap&quot;</span><span class="p">,</span> <span class="n">cluster_key</span><span class="o">=</span><span class="s2">&quot;leiden_0_5&quot;</span>
-<span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>cr.pl.cluster_fates(
+    adata, mode=&quot;paga&quot;, legend_loc=&quot;on data&quot;, basis=&quot;umap&quot;, cluster_key=&quot;leiden_0_5&quot;
+)
 </pre></div>
 </div>
 </div>
@@ -2197,9 +2201,9 @@ in Networkx 3.0. Use `from_scipy_sparse_array` instead.
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cr</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">circular_projection</span><span class="p">(</span>
-    <span class="n">adata</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;leiden_0_5&quot;</span><span class="p">,</span> <span class="s2">&quot;kl_divergence&quot;</span><span class="p">],</span> <span class="n">legend_loc</span><span class="o">=</span><span class="s2">&quot;upper right&quot;</span>
-<span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>cr.pl.circular_projection(
+    adata, keys=[&quot;leiden_0_5&quot;, &quot;kl_divergence&quot;], legend_loc=&quot;upper right&quot;
+)
 </pre></div>
 </div>
 </div>
@@ -2220,12 +2224,12 @@ in Networkx 3.0. Use `from_scipy_sparse_array` instead.
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[32]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">adata</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">mimic_2</span><span class="p">(</span><span class="n">encoded</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">ep</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">knn_impute</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
-<span class="n">ep</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">pca</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
-<span class="n">ep</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
-<span class="n">ep</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
-<span class="n">ep</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">leiden</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">key_added</span><span class="o">=</span><span class="s2">&quot;leiden_0_5&quot;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata = ep.dt.mimic_2(encoded=True)
+ep.pp.knn_impute(adata)
+ep.pp.pca(adata)
+ep.pp.neighbors(adata)
+ep.tl.umap(adata)
+ep.tl.leiden(adata, resolution=0.5, key_added=&quot;leiden_0_5&quot;)
 </pre></div>
 </div>
 </div>
@@ -2514,7 +2518,7 @@ Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdo
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[33]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;leiden_0_5&quot;</span><span class="p">],</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Leiden 0.5&quot;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.umap(adata, color=[&quot;leiden_0_5&quot;], title=&quot;Leiden 0.5&quot;)
 </pre></div>
 </div>
 </div>
@@ -2533,8 +2537,8 @@ Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdo
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[34]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s2">&quot;iroot&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;leiden_0_5&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;10&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-<span class="n">ep</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">dpt</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata.uns[&quot;iroot&quot;] = np.flatnonzero(adata.obs[&quot;leiden_0_5&quot;] == &quot;10&quot;)[0]
+ep.tl.dpt(adata)
 </pre></div>
 </div>
 </div>
@@ -2550,9 +2554,9 @@ WARNING: Trying to run `tl.dpt` without prior call of `tl.diffmap`. Falling back
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[35]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pk</span> <span class="o">=</span> <span class="n">PseudotimeKernel</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
-<span class="n">pk</span><span class="o">.</span><span class="n">compute_transition_matrix</span><span class="p">()</span>
-<span class="n">pk</span><span class="o">.</span><span class="n">compute_projection</span><span class="p">(</span><span class="n">basis</span><span class="o">=</span><span class="s2">&quot;umap&quot;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>pk = PseudotimeKernel(adata)
+pk.compute_transition_matrix()
+pk.compute_projection(basis=&quot;umap&quot;)
 </pre></div>
 </div>
 </div>
@@ -2578,7 +2582,7 @@ in Networkx 3.0. Use `from_scipy_sparse_array` instead.
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[36]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">scv</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">velocity_embedding_stream</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">vkey</span><span class="o">=</span><span class="s2">&quot;T_fwd&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;umap&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;leiden_0_5&quot;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>scv.pl.velocity_embedding_stream(adata, vkey=&quot;T_fwd&quot;, basis=&quot;umap&quot;, color=&quot;leiden_0_5&quot;)
 </pre></div>
 </div>
 </div>
@@ -2598,14 +2602,14 @@ in Networkx 3.0. Use `from_scipy_sparse_array` instead.
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[37]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pk</span><span class="o">.</span><span class="n">plot_random_walks</span><span class="p">(</span>
-    <span class="mi">100</span><span class="p">,</span>
-    <span class="n">start_ixs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;leiden_0_5&quot;</span><span class="p">:</span> <span class="s2">&quot;10&quot;</span><span class="p">},</span>
-    <span class="n">max_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
-    <span class="n">show_progress_bar</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">ixs_legend_loc</span><span class="o">=</span><span class="s2">&quot;best&quot;</span><span class="p">,</span>
-    <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
-<span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>pk.plot_random_walks(
+    100,
+    start_ixs={&quot;leiden_0_5&quot;: &quot;10&quot;},
+    max_iter=100,
+    show_progress_bar=False,
+    ixs_legend_loc=&quot;best&quot;,
+    seed=42,
+)
 </pre></div>
 </div>
 </div>
@@ -2621,16 +2625,16 @@ in Networkx 3.0. Use `from_scipy_sparse_array` instead.
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[38]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pk</span><span class="o">.</span><span class="n">plot_random_walks</span><span class="p">(</span>
-    <span class="mi">200</span><span class="p">,</span>
-    <span class="n">start_ixs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;leiden_0_5&quot;</span><span class="p">:</span> <span class="s2">&quot;10&quot;</span><span class="p">},</span>
-    <span class="n">stop_ixs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;leiden_0_5&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;4&quot;</span><span class="p">,</span> <span class="s2">&quot;6&quot;</span><span class="p">,</span> <span class="s2">&quot;7&quot;</span><span class="p">]},</span>
-    <span class="n">max_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
-    <span class="n">successive_hits</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
-    <span class="n">show_progress_bar</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;viridis&quot;</span><span class="p">,</span>
-    <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
-<span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>pk.plot_random_walks(
+    200,
+    start_ixs={&quot;leiden_0_5&quot;: &quot;10&quot;},
+    stop_ixs={&quot;leiden_0_5&quot;: [&quot;4&quot;, &quot;6&quot;, &quot;7&quot;]},
+    max_iter=100,
+    successive_hits=50,
+    show_progress_bar=False,
+    cmap=&quot;viridis&quot;,
+    seed=42,
+)
 </pre></div>
 </div>
 </div>
@@ -2649,10 +2653,10 @@ in Networkx 3.0. Use `from_scipy_sparse_array` instead.
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[39]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">g</span> <span class="o">=</span> <span class="n">cr</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">estimators</span><span class="o">.</span><span class="n">GPCCA</span><span class="p">(</span><span class="n">pk</span><span class="p">)</span>
-<span class="n">g</span><span class="o">.</span><span class="n">compute_schur</span><span class="p">()</span>
-<span class="n">g</span><span class="o">.</span><span class="n">compute_macrostates</span><span class="p">(</span><span class="n">cluster_key</span><span class="o">=</span><span class="s2">&quot;leiden_0_5&quot;</span><span class="p">)</span>
-<span class="n">g</span><span class="o">.</span><span class="n">macrostates_memberships</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>g = cr.tl.estimators.GPCCA(pk)
+g.compute_schur()
+g.compute_macrostates(cluster_key=&quot;leiden_0_5&quot;)
+g.macrostates_memberships
 </pre></div>
 </div>
 </div>
@@ -2677,8 +2681,8 @@ WARNING: Using `10` components would split a block of complex conjugate eigenval
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[40]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">plot_macrostates</span><span class="p">()</span>
-<span class="n">g</span><span class="o">.</span><span class="n">plot_macrostates</span><span class="p">(</span><span class="n">discrete</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>g.plot_macrostates()
+g.plot_macrostates(discrete=True)
 </pre></div>
 </div>
 </div>
@@ -2700,7 +2704,7 @@ WARNING: Using `10` components would split a block of complex conjugate eigenval
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[41]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">plot_macrostates</span><span class="p">(</span><span class="n">same_plot</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>g.plot_macrostates(same_plot=False)
 </pre></div>
 </div>
 </div>
@@ -2716,7 +2720,7 @@ WARNING: Using `10` components would split a block of complex conjugate eigenval
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[42]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;iv_day_1&quot;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.umap(adata, color=&quot;iv_day_1&quot;)
 </pre></div>
 </div>
 </div>
@@ -2736,8 +2740,8 @@ WARNING: Using `10` components would split a block of complex conjugate eigenval
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[43]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">compute_terminal_states</span><span class="p">()</span>
-<span class="n">g</span><span class="o">.</span><span class="n">plot_terminal_states</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>g.compute_terminal_states()
+g.plot_terminal_states()
 </pre></div>
 </div>
 </div>
@@ -2752,8 +2756,8 @@ WARNING: Using `10` components would split a block of complex conjugate eigenval
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[44]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">compute_absorption_probabilities</span><span class="p">(</span><span class="n">preconditioner</span><span class="o">=</span><span class="s2">&quot;ilu&quot;</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-15</span><span class="p">)</span>
-<span class="n">g</span><span class="o">.</span><span class="n">plot_absorption_probabilities</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>g.compute_absorption_probabilities(preconditioner=&quot;ilu&quot;, tol=1e-15)
+g.plot_absorption_probabilities()
 </pre></div>
 </div>
 </div>
@@ -2782,10 +2786,10 @@ WARNING: `1` solution(s) did not converge
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[45]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">compute_absorption_probabilities</span><span class="p">(</span>
-    <span class="n">time_to_absorption</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="n">preconditioner</span><span class="o">=</span><span class="s2">&quot;ilu&quot;</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-15</span>
-<span class="p">)</span>
-<span class="n">g</span><span class="o">.</span><span class="n">absorption_times</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>g.compute_absorption_probabilities(
+    time_to_absorption=&quot;all&quot;, preconditioner=&quot;ilu&quot;, tol=1e-15
+)
+g.absorption_times
 </pre></div>
 </div>
 </div>
@@ -2897,8 +2901,8 @@ WARNING: `1` solution(s) did not converge
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[46]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;mean_time_to_absorption&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">absorption_times</span><span class="p">[</span><span class="s2">&quot;10, 4 mean&quot;</span><span class="p">]</span>
-<span class="n">scv</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;mean_time_to_absorption&quot;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata.obs[&quot;mean_time_to_absorption&quot;] = g.absorption_times[&quot;10, 4 mean&quot;]
+scv.pl.scatter(adata, color=&quot;mean_time_to_absorption&quot;)
 </pre></div>
 </div>
 </div>
@@ -2917,8 +2921,8 @@ WARNING: `1` solution(s) did not converge
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[47]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">compute_lineage_drivers</span><span class="p">()</span>
-<span class="n">g</span><span class="o">.</span><span class="n">plot_lineage_drivers</span><span class="p">(</span><span class="n">lineage</span><span class="o">=</span><span class="s2">&quot;4&quot;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>g.compute_lineage_drivers()
+g.plot_lineage_drivers(lineage=&quot;4&quot;)
 </pre></div>
 </div>
 </div>
@@ -2937,14 +2941,14 @@ WARNING: `1` solution(s) did not converge
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[48]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">cr</span><span class="o">.</span><span class="n">ul</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">GAM</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
-<span class="n">cr</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">gene_trends</span><span class="p">(</span>
-    <span class="n">adata</span><span class="p">,</span>
-    <span class="n">model</span><span class="p">,</span>
-    <span class="p">[</span><span class="s2">&quot;iv_day_1&quot;</span><span class="p">],</span>
-    <span class="n">time_key</span><span class="o">=</span><span class="s2">&quot;dpt_pseudotime&quot;</span><span class="p">,</span>
-    <span class="n">show_progress_bar</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-<span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>model = cr.ul.models.GAM(adata)
+cr.pl.gene_trends(
+    adata,
+    model,
+    [&quot;iv_day_1&quot;],
+    time_key=&quot;dpt_pseudotime&quot;,
+    show_progress_bar=False,
+)
 </pre></div>
 </div>
 </div>
@@ -2999,15 +3003,15 @@ Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdo
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[49]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cr</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">gene_trends</span><span class="p">(</span>
-    <span class="n">adata</span><span class="p">,</span>
-    <span class="n">model</span><span class="p">,</span>
-    <span class="p">[</span><span class="s2">&quot;iv_day_1&quot;</span><span class="p">],</span>
-    <span class="n">same_plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">hide_cells</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">time_key</span><span class="o">=</span><span class="s2">&quot;dpt_pseudotime&quot;</span><span class="p">,</span>
-    <span class="n">show_progress_bar</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-<span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>cr.pl.gene_trends(
+    adata,
+    model,
+    [&quot;iv_day_1&quot;],
+    same_plot=True,
+    hide_cells=True,
+    time_key=&quot;dpt_pseudotime&quot;,
+    show_progress_bar=False,
+)
 </pre></div>
 </div>
 </div>
@@ -3074,10 +3078,10 @@ Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdo
                 </div>
                 <div class="title">MIMIC-II Survival Analysis</div>
               </div>
-              <svg><use href="#svg-arrow-right"></use></svg>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
           <a class="prev-page" href="mimic_2_introduction.html">
-              <svg><use href="#svg-arrow-right"></use></svg>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
@@ -3098,9 +3102,7 @@ Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdo
             
           </div>
           <div class="right-details">
-            <div class="icons">
-              
-            </div>
+            
           </div>
         </div>
         
@@ -3112,7 +3114,7 @@ Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdo
       <div class="toc-sticky toc-scroll">
         <div class="toc-title-container">
           <span class="toc-title">
-            Contents
+            On this page
           </span>
         </div>
         <div class="toc-tree-container">
@@ -3156,6 +3158,7 @@ Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdo
     <script src="../../_static/underscore.js"></script>
     <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/scripts/furo.js"></script>
     <script src="../../_static/clipboard.min.js"></script>
     <script src="../../_static/copybutton.js"></script>

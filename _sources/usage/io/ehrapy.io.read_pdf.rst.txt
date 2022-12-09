@@ -1,6 +1,0 @@
-﻿ehrapy.io.read\_pdf
-===================
-
-.. currentmodule:: ehrapy.io
-
-.. autofunction:: read_pdf

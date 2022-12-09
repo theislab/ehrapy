@@ -1,0 +1,6 @@
+﻿ehrapy.preprocessing.winsorize
+==============================
+
+.. currentmodule:: ehrapy.preprocessing
+
+.. autofunction:: winsorize

@@ -2,28 +2,24 @@
 <html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
-
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 <meta property="og:title" content="MIMIC-II IAC Introduction" />
-  
 <meta property="og:type" content="website" />
-  
 <meta property="og:url" content="https://ehrapy.readthedocs.io/en/latest/tutorials/notebooks/mimic_2_introduction.html" />
-  
+<meta property="og:site_name" content="ehrapy" />
 <meta property="og:description" content="This tutorial explores the MIMIC-II IAC dataset. It was created for the purpose of a case study in the book: Secondary Analysis of Electronic Health Records, published by Springer in 2016. In parti..." />
-  
 <meta property="og:image" content="https://ehrapy.readthedocs.io/en/latest//_static/logo.png" />
-  
-<meta property="og:image:alt" content="MIMIC-II IAC Introduction" />
-  <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="MIMIC-II Patient Fate" href="mimic_2_fate.html" /><link rel="prev" title="Introduction to ehrapy" href="ehrapy_introduction.html" />
+<meta property="og:image:alt" content="ehrapy" />
+<meta name="description" content="This tutorial explores the MIMIC-II IAC dataset. It was created for the purpose of a case study in the book: Secondary Analysis of Electronic Health Records, published by Springer in 2016. In parti..." />
+<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="MIMIC-II Patient Fate" href="mimic_2_fate.html" /><link rel="prev" title="Introduction to ehrapy" href="ehrapy_introduction.html" />
 
-    <meta name="generator" content="sphinx-5.1.1, furo 2022.06.21"/>
+    <!-- Generated with Sphinx 5.3.0 and Furo 2022.12.07 -->
         <title>MIMIC-II IAC Introduction - ehrapy</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=40978830699223671f4072448e654b5958f38b89" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/design-style.b7bb847fb20b106c3d81b95245e65545.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/override.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/sphinx_gallery.css" />
@@ -173,7 +169,7 @@
   
   
 </a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
-  <input class="sidebar-search" placeholder=Search name="q" aria-label="Search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
   <input type="hidden" name="check_keywords" value="yes">
   <input type="hidden" name="area" value="default">
 </form>
@@ -184,7 +180,6 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../usage/usage.html">Usage</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/io/ehrapy.io.read_csv.html">ehrapy.io.read_csv</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/io/ehrapy.io.read_h5ad.html">ehrapy.io.read_h5ad</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../usage/io/ehrapy.io.read_pdf.html">ehrapy.io.read_pdf</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/io/ehrapy.io.write.html">ehrapy.io.write</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.mimic_2.html">ehrapy.data.mimic_2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/data/ehrapy.data.mimic_3_demo.html">ehrapy.data.mimic_3_demo</a></li>
@@ -208,17 +203,19 @@
 <li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.regress_out.html">ehrapy.preprocessing.regress_out</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.subsample.html">ehrapy.preprocessing.subsample</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.highly_variable_features.html">ehrapy.preprocessing.highly_variable_features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.winsorize.html">ehrapy.preprocessing.winsorize</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.clip_quantile.html">ehrapy.preprocessing.clip_quantile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.qc_metrics.html">ehrapy.preprocessing.qc_metrics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.qc_lab_measurements.html">ehrapy.preprocessing.qc_lab_measurements</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.explicit_impute.html">ehrapy.preprocessing.explicit_impute</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.simple_impute.html">ehrapy.preprocessing.simple_impute</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.knn_impute.html">ehrapy.preprocessing.knn_impute</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.miss_forest_impute.html">ehrapy.preprocessing.miss_forest_impute</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.soft_impute.html">ehrapy.preprocessing.soft_impute</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.iterative_svd_impute.html">ehrapy.preprocessing.iterative_svd_impute</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.matrix_factorization_impute.html">ehrapy.preprocessing.matrix_factorization_impute</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.nuclear_norm_minimization_impute.html">ehrapy.preprocessing.nuclear_norm_minimization_impute</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../usage/imputation/ehrapy.preprocessing.mice_forest_impute.html">ehrapy.preprocessing.mice_forest_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.explicit_impute.html">ehrapy.preprocessing.explicit_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.simple_impute.html">ehrapy.preprocessing.simple_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.knn_impute.html">ehrapy.preprocessing.knn_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.miss_forest_impute.html">ehrapy.preprocessing.miss_forest_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.soft_impute.html">ehrapy.preprocessing.soft_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.iterative_svd_impute.html">ehrapy.preprocessing.iterative_svd_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.matrix_factorization_impute.html">ehrapy.preprocessing.matrix_factorization_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.nuclear_norm_minimization_impute.html">ehrapy.preprocessing.nuclear_norm_minimization_impute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.mice_forest_impute.html">ehrapy.preprocessing.mice_forest_impute</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.encode.html">ehrapy.preprocessing.encode</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.undo_encoding.html">ehrapy.preprocessing.undo_encoding</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.log_norm.html">ehrapy.preprocessing.log_norm</a></li>
@@ -229,6 +226,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.robust_scale_norm.html">ehrapy.preprocessing.robust_scale_norm</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.scale_norm.html">ehrapy.preprocessing.scale_norm</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.sqrt_norm.html">ehrapy.preprocessing.sqrt_norm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.offset_negative_values.html">ehrapy.preprocessing.offset_negative_values</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.combat.html">ehrapy.preprocessing.combat</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/preprocessing/ehrapy.preprocessing.neighbors.html">ehrapy.preprocessing.neighbors</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.tools.pca.html">ehrapy.tools.pca</a></li>
@@ -266,6 +264,10 @@
 <li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.ranking.html">ehrapy.plot.ranking</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.dendrogram.html">ehrapy.plot.dendrogram</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.qc_metrics.html">ehrapy.plot.qc_metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.missing_values_matrix.html">ehrapy.plot.missing_values_matrix</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.missing_values_barplot.html">ehrapy.plot.missing_values_barplot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.missing_values_heatmap.html">ehrapy.plot.missing_values_heatmap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.missing_values_dendrogram.html">ehrapy.plot.missing_values_dendrogram</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.pca.html">ehrapy.plot.pca</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.pca_loadings.html">ehrapy.plot.pca_loadings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.pca_variance_ratio.html">ehrapy.plot.pca_variance_ratio</a></li>
@@ -289,11 +291,12 @@
 <li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.rank_features_groups_dotplot.html">ehrapy.plot.rank_features_groups_dotplot</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.rank_features_groups_matrixplot.html">ehrapy.plot.rank_features_groups_matrixplot</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.rank_features_groups_tracksplot.html">ehrapy.plot.rank_features_groups_tracksplot</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.plot.ols.html">ehrapy.plot.ols</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../usage/tools/ehrapy.plot.kmf.html">ehrapy.plot.kmf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.ols.html">ehrapy.plot.ols</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/plot/ehrapy.plot.kmf.html">ehrapy.plot.kmf</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/anndata/ehrapy.anndata.df_to_anndata.html">ehrapy.anndata.df_to_anndata</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/anndata/ehrapy.anndata.anndata_to_df.html">ehrapy.anndata.anndata_to_df</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/anndata/ehrapy.anndata.move_to_obs.html">ehrapy.anndata.move_to_obs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage/anndata/ehrapy.anndata.delete_from_obs.html">ehrapy.anndata.delete_from_obs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/anndata/ehrapy.anndata.move_to_x.html">ehrapy.anndata.move_to_x</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage/anndata/ehrapy.anndata.type_overview.html">ehrapy.anndata.type_overview</a></li>
 </ul>
@@ -455,10 +458,11 @@ div.nboutput.container div.prompt > div {
     }
 }
 
-/* disable scrollbars on prompts */
+/* disable scrollbars and line breaks on prompts */
 div.nbinput.container div.prompt pre,
 div.nboutput.container div.prompt pre {
     overflow: hidden;
+    white-space: pre;
 }
 
 /* input/output area */
@@ -639,9 +643,9 @@ critical care database. It contains summary clinical data and outcomes for 1,776
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">ehrapy</span> <span class="k">as</span> <span class="nn">ep</span>
-<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import ehrapy as ep
+import seaborn as sns
+import matplotlib.pyplot as plt
 </pre></div>
 </div>
 </div>
@@ -666,11 +670,11 @@ critical care database. It contains summary clinical data and outcomes for 1,776
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">warnings</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import warnings
 
-<span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">UserWarning</span><span class="p">)</span>
-<span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">FutureWarning</span><span class="p">)</span>
-<span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">DeprecationWarning</span><span class="p">)</span>
+warnings.simplefilter(&quot;ignore&quot;, category=UserWarning)
+warnings.simplefilter(&quot;ignore&quot;, category=FutureWarning)
+warnings.simplefilter(&quot;ignore&quot;, category=DeprecationWarning)
 </pre></div>
 </div>
 </div>
@@ -678,7 +682,7 @@ critical care database. It contains summary clinical data and outcomes for 1,776
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">print_versions</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.print_versions()
 </pre></div>
 </div>
 </div>
@@ -851,7 +855,7 @@ Session information updated at <span style="color: #008080; text-decoration-colo
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">set_figure_params</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.settings.set_figure_params(figsize=(4, 4))
 </pre></div>
 </div>
 </div>
@@ -862,7 +866,7 @@ Session information updated at <span style="color: #008080; text-decoration-colo
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">adata</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">mimic_2</span><span class="p">(</span><span class="n">encoded</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata = ep.dt.mimic_2(encoded=False)
 </pre></div>
 </div>
 </div>
@@ -871,7 +875,7 @@ Session information updated at <span style="color: #008080; text-decoration-colo
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">adata</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata
 </pre></div>
 </div>
 </div>
@@ -892,9 +896,9 @@ AnnData object with n_obs × n_vars = 1776 × 46
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">adata</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span>
-    <span class="n">adata</span><span class="p">,</span> <span class="n">encodings</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;one_hot_encoding&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;service_unit&quot;</span><span class="p">,</span> <span class="s2">&quot;day_icu_intime&quot;</span><span class="p">]}</span>
-<span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata = ep.pp.encode(
+    adata, encodings={&quot;one_hot_encoding&quot;: [&quot;service_unit&quot;, &quot;day_icu_intime&quot;]}
+)
 </pre></div>
 </div>
 </div>
@@ -921,7 +925,7 @@ AnnData object with n_obs × n_vars = 1776 × 46
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">adata</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata
 </pre></div>
 </div>
 </div>
@@ -942,7 +946,7 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">ad</span><span class="o">.</span><span class="n">type_overview</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.ad.type_overview(adata)
 </pre></div>
 </div>
 </div>
@@ -1011,8 +1015,8 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">_</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">qc_metrics</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
-<span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">qc_metrics</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>_ = ep.pp.qc_metrics(adata)
+ep.pl.qc_metrics(adata)
 </pre></div>
 </div>
 </div>
@@ -1085,7 +1089,7 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata.obs
 </pre></div>
 </div>
 </div>
@@ -1205,10 +1209,10 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">_</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">displot</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;missing_values_abs&quot;</span><span class="p">])</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>_ = sns.displot(adata.obs[&quot;missing_values_abs&quot;])
+plt.show()
 
-<span class="n">_</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">displot</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;missing_values_pct&quot;</span><span class="p">])</span>
+_ = sns.displot(adata.obs[&quot;missing_values_pct&quot;])
 </pre></div>
 </div>
 </div>
@@ -1230,7 +1234,7 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">adata</span><span class="o">.</span><span class="n">var</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata.var
 </pre></div>
 </div>
 </div>
@@ -1815,10 +1819,10 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">_</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">displot</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">var</span><span class="p">[</span><span class="s2">&quot;missing_values_abs&quot;</span><span class="p">])</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>_ = sns.displot(adata.var[&quot;missing_values_abs&quot;])
+plt.show()
 
-<span class="n">_</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">displot</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">var</span><span class="p">[</span><span class="s2">&quot;missing_values_pct&quot;</span><span class="p">])</span>
+_ = sns.displot(adata.var[&quot;missing_values_pct&quot;])
 </pre></div>
 </div>
 </div>
@@ -1844,7 +1848,7 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">knn_impute</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pp.knn_impute(adata)
 </pre></div>
 </div>
 </div>
@@ -1879,16 +1883,16 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">_</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">displot</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;missing_values_abs&quot;</span><span class="p">])</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>_ = sns.displot(adata.obs[&quot;missing_values_abs&quot;])
+plt.show()
 
-<span class="n">_</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">displot</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;missing_values_pct&quot;</span><span class="p">])</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+_ = sns.displot(adata.obs[&quot;missing_values_pct&quot;])
+plt.show()
 
-<span class="n">_</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">displot</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">var</span><span class="p">[</span><span class="s2">&quot;missing_values_abs&quot;</span><span class="p">])</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+_ = sns.displot(adata.var[&quot;missing_values_abs&quot;])
+plt.show()
 
-<span class="n">_</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">displot</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">var</span><span class="p">[</span><span class="s2">&quot;missing_values_pct&quot;</span><span class="p">])</span>
+_ = sns.displot(adata.var[&quot;missing_values_pct&quot;])
 </pre></div>
 </div>
 </div>
@@ -1928,13 +1932,13 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">_</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">displot</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">var</span><span class="p">[</span><span class="s2">&quot;min&quot;</span><span class="p">])</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>_ = sns.displot(adata.var[&quot;min&quot;])
+plt.show()
 
-<span class="n">_</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">displot</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">var</span><span class="p">[</span><span class="s2">&quot;max&quot;</span><span class="p">])</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+_ = sns.displot(adata.var[&quot;max&quot;])
+plt.show()
 
-<span class="n">_</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">displot</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">var</span><span class="p">[</span><span class="s2">&quot;standard_deviation&quot;</span><span class="p">])</span>
+_ = sns.displot(adata.var[&quot;standard_deviation&quot;])
 </pre></div>
 </div>
 </div>
@@ -1963,7 +1967,7 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">adata</span><span class="o">.</span><span class="n">var</span><span class="p">[</span><span class="n">adata</span><span class="o">.</span><span class="n">var</span><span class="p">[</span><span class="s2">&quot;standard_deviation&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">500</span><span class="p">]</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata.var[adata.var[&quot;standard_deviation&quot;] &gt; 500]
 </pre></div>
 </div>
 </div>
@@ -2024,7 +2028,7 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">log_norm</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="nb">vars</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;iv_day_1&quot;</span><span class="p">],</span> <span class="n">offset</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pp.log_norm(adata, vars=[&quot;iv_day_1&quot;], offset=1)
 </pre></div>
 </div>
 </div>
@@ -2045,8 +2049,8 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">_</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">qc_metrics</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
-<span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">qc_metrics</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>_ = ep.pp.qc_metrics(adata)
+ep.pl.qc_metrics
 </pre></div>
 </div>
 </div>
@@ -2066,7 +2070,7 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">pca</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pp.pca(adata)
 </pre></div>
 </div>
 </div>
@@ -2074,7 +2078,7 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">pca</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;service_unit&quot;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.pca(adata, color=&quot;service_unit&quot;)
 </pre></div>
 </div>
 </div>
@@ -2089,7 +2093,7 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pp.neighbors(adata)
 </pre></div>
 </div>
 </div>
@@ -2097,7 +2101,7 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.tl.umap(adata)
 </pre></div>
 </div>
 </div>
@@ -2108,12 +2112,12 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span>
-    <span class="n">adata</span><span class="p">,</span>
-    <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;day_icu_intime&quot;</span><span class="p">,</span> <span class="s2">&quot;service_unit&quot;</span><span class="p">],</span>
-    <span class="n">wspace</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
-    <span class="n">title</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Day of ICU admission&quot;</span><span class="p">,</span> <span class="s2">&quot;Service unit&quot;</span><span class="p">],</span>
-<span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.umap(
+    adata,
+    color=[&quot;day_icu_intime&quot;, &quot;service_unit&quot;],
+    wspace=0.5,
+    title=[&quot;Day of ICU admission&quot;, &quot;Service unit&quot;],
+)
 </pre></div>
 </div>
 </div>
@@ -2131,7 +2135,7 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">leiden</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">key_added</span><span class="o">=</span><span class="s2">&quot;leiden_0_5&quot;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.tl.leiden(adata, resolution=0.5, key_added=&quot;leiden_0_5&quot;)
 </pre></div>
 </div>
 </div>
@@ -2139,7 +2143,7 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;leiden_0_5&quot;</span><span class="p">],</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Leiden 0.5&quot;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.umap(adata, color=[&quot;leiden_0_5&quot;], title=&quot;Leiden 0.5&quot;)
 </pre></div>
 </div>
 </div>
@@ -2157,13 +2161,13 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span>
-    <span class="n">adata</span><span class="p">,</span>
-    <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;aline_flg&quot;</span><span class="p">,</span> <span class="s2">&quot;icu_los_day&quot;</span><span class="p">,</span> <span class="s2">&quot;hospital_los_day&quot;</span><span class="p">],</span>
-    <span class="n">cmap</span><span class="o">=</span><span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">Colormaps</span><span class="o">.</span><span class="n">grey_red</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
-    <span class="n">title</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;IAC used&quot;</span><span class="p">,</span> <span class="s2">&quot;Length of stay in ICU&quot;</span><span class="p">,</span> <span class="s2">&quot;Length of hospital stay&quot;</span><span class="p">],</span>
-    <span class="n">ncols</span><span class="o">=</span><span class="mi">2</span>
-<span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.umap(
+    adata,
+    color=[&quot;aline_flg&quot;, &quot;icu_los_day&quot;, &quot;hospital_los_day&quot;],
+    cmap=ep.pl.Colormaps.grey_red.value,
+    title=[&quot;IAC used&quot;, &quot;Length of stay in ICU&quot;, &quot;Length of hospital stay&quot;],
+    ncols=2
+)
 </pre></div>
 </div>
 </div>
@@ -2181,25 +2185,25 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span>
-    <span class="n">adata</span><span class="p">,</span>
-    <span class="n">color</span><span class="o">=</span><span class="p">[</span>
-        <span class="s2">&quot;hosp_exp_flg&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;icu_exp_flg&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;day_28_flg&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;mort_day_censored&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;censor_flg&quot;</span><span class="p">,</span>
-    <span class="p">],</span>
-    <span class="n">cmap</span><span class="o">=</span><span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">Colormaps</span><span class="o">.</span><span class="n">grey_red</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
-    <span class="n">title</span><span class="o">=</span><span class="p">[</span>
-        <span class="s2">&quot;Died in hospital&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;Died in ICU&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;Died in less than 28 days&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;Day of death or censoring post ICU&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;Censored or dead&quot;</span><span class="p">,</span>
-    <span class="p">],</span>
-    <span class="n">ncols</span><span class="o">=</span><span class="mi">2</span>
-<span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.umap(
+    adata,
+    color=[
+        &quot;hosp_exp_flg&quot;,
+        &quot;icu_exp_flg&quot;,
+        &quot;day_28_flg&quot;,
+        &quot;mort_day_censored&quot;,
+        &quot;censor_flg&quot;,
+    ],
+    cmap=ep.pl.Colormaps.grey_red.value,
+    title=[
+        &quot;Died in hospital&quot;,
+        &quot;Died in ICU&quot;,
+        &quot;Died in less than 28 days&quot;,
+        &quot;Day of death or censoring post ICU&quot;,
+        &quot;Censored or dead&quot;,
+    ],
+    ncols=2
+)
 </pre></div>
 </div>
 </div>
@@ -2217,17 +2221,17 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span>
-    <span class="n">adata</span><span class="p">,</span>
-    <span class="n">color</span><span class="o">=</span><span class="p">[</span>
-        <span class="s2">&quot;age&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;gender_num&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;weight_first&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;bmi&quot;</span><span class="p">,</span>
-    <span class="p">],</span>
-    <span class="n">title</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Age&quot;</span><span class="p">,</span> <span class="s2">&quot;Gender&quot;</span><span class="p">,</span> <span class="s2">&quot;Initial weight in kg&quot;</span><span class="p">,</span> <span class="s2">&quot;BMI&quot;</span><span class="p">],</span>
-    <span class="n">ncols</span><span class="o">=</span><span class="mi">2</span>
-<span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.umap(
+    adata,
+    color=[
+        &quot;age&quot;,
+        &quot;gender_num&quot;,
+        &quot;weight_first&quot;,
+        &quot;bmi&quot;,
+    ],
+    title=[&quot;Age&quot;, &quot;Gender&quot;, &quot;Initial weight in kg&quot;, &quot;BMI&quot;],
+    ncols=2
+)
 </pre></div>
 </div>
 </div>
@@ -2245,33 +2249,33 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span>
-    <span class="n">adata</span><span class="p">,</span>
-    <span class="n">color</span><span class="o">=</span><span class="p">[</span>
-        <span class="s2">&quot;sapsi_first&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;sofa_first&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;renal_flg&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;liver_flg&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;copd_flg&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;resp_flg&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;cad_flg&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;stroke_flg&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;mal_flg&quot;</span><span class="p">,</span>
-    <span class="p">],</span>
-    <span class="n">cmap</span><span class="o">=</span><span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">Colormaps</span><span class="o">.</span><span class="n">grey_red</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
-    <span class="n">title</span><span class="o">=</span><span class="p">[</span>
-        <span class="s2">&quot;Initial SAPS II score&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;Initial SOFA score&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;Chronic renal disease&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;Liver disease&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;COPD&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;Respiratory disease w/o COPD&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;Coronary artery disease&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;Stroke&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;Malignancy&quot;</span><span class="p">,</span>
-    <span class="p">],</span>
-    <span class="n">ncols</span><span class="o">=</span><span class="mi">2</span>
-<span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.umap(
+    adata,
+    color=[
+        &quot;sapsi_first&quot;,
+        &quot;sofa_first&quot;,
+        &quot;renal_flg&quot;,
+        &quot;liver_flg&quot;,
+        &quot;copd_flg&quot;,
+        &quot;resp_flg&quot;,
+        &quot;cad_flg&quot;,
+        &quot;stroke_flg&quot;,
+        &quot;mal_flg&quot;,
+    ],
+    cmap=ep.pl.Colormaps.grey_red.value,
+    title=[
+        &quot;Initial SAPS II score&quot;,
+        &quot;Initial SOFA score&quot;,
+        &quot;Chronic renal disease&quot;,
+        &quot;Liver disease&quot;,
+        &quot;COPD&quot;,
+        &quot;Respiratory disease w/o COPD&quot;,
+        &quot;Coronary artery disease&quot;,
+        &quot;Stroke&quot;,
+        &quot;Malignancy&quot;,
+    ],
+    ncols=2
+)
 </pre></div>
 </div>
 </div>
@@ -2289,49 +2293,49 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[32]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span>
-    <span class="n">adata</span><span class="p">,</span>
-    <span class="n">color</span><span class="o">=</span><span class="p">[</span>
-        <span class="s2">&quot;map_1st&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;hr_1st&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;temp_1st&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;spo2_1st&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;abg_count&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;wbc_first&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;hgb_first&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;platelet_first&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;sodium_first&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;potassium_first&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;tco2_first&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;chloride_first&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;bun_first&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;creatinine_first&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;po2_first&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;pco2_first&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;iv_day_1&quot;</span><span class="p">,</span>
-    <span class="p">],</span>
-    <span class="n">cmap</span><span class="o">=</span><span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">Colormaps</span><span class="o">.</span><span class="n">grey_red</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
-    <span class="n">title</span><span class="o">=</span><span class="p">[</span>
-        <span class="s2">&quot;Mean arterial pressure (mmHg)&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;Heart Rate&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;Temperature (F)&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;SpO2 oxygen (%)&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;Artherial blood gas count (number tests)&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;White blood cell count (K/u)&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;Hemoglobin (g/dl)&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;Platelets (K/u)&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;Sodium (mEq/L)&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;Potassum (mEq/L)&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;Bicarbonate (mEq/L)&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;Chloride (mEq/L)&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;Blood urea nitrogen (mg/dl)&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;Creatinine (ml/dL)&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;PaO2 (mmHg)&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;PaCO2 (mmHg)&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;Input fluids by IV&quot;</span><span class="p">,</span>
-    <span class="p">],</span>
-    <span class="n">ncols</span><span class="o">=</span><span class="mi">2</span>
-<span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.umap(
+    adata,
+    color=[
+        &quot;map_1st&quot;,
+        &quot;hr_1st&quot;,
+        &quot;temp_1st&quot;,
+        &quot;spo2_1st&quot;,
+        &quot;abg_count&quot;,
+        &quot;wbc_first&quot;,
+        &quot;hgb_first&quot;,
+        &quot;platelet_first&quot;,
+        &quot;sodium_first&quot;,
+        &quot;potassium_first&quot;,
+        &quot;tco2_first&quot;,
+        &quot;chloride_first&quot;,
+        &quot;bun_first&quot;,
+        &quot;creatinine_first&quot;,
+        &quot;po2_first&quot;,
+        &quot;pco2_first&quot;,
+        &quot;iv_day_1&quot;,
+    ],
+    cmap=ep.pl.Colormaps.grey_red.value,
+    title=[
+        &quot;Mean arterial pressure (mmHg)&quot;,
+        &quot;Heart Rate&quot;,
+        &quot;Temperature (F)&quot;,
+        &quot;SpO2 oxygen (%)&quot;,
+        &quot;Artherial blood gas count (number tests)&quot;,
+        &quot;White blood cell count (K/u)&quot;,
+        &quot;Hemoglobin (g/dl)&quot;,
+        &quot;Platelets (K/u)&quot;,
+        &quot;Sodium (mEq/L)&quot;,
+        &quot;Potassum (mEq/L)&quot;,
+        &quot;Bicarbonate (mEq/L)&quot;,
+        &quot;Chloride (mEq/L)&quot;,
+        &quot;Blood urea nitrogen (mg/dl)&quot;,
+        &quot;Creatinine (ml/dL)&quot;,
+        &quot;PaO2 (mmHg)&quot;,
+        &quot;PaCO2 (mmHg)&quot;,
+        &quot;Input fluids by IV&quot;,
+    ],
+    ncols=2
+)
 </pre></div>
 </div>
 </div>
@@ -2349,7 +2353,7 @@ AnnData object with n_obs × n_vars = 1776 × 54
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[33]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">rank_features_groups</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">groupby</span><span class="o">=</span><span class="s2">&quot;leiden_0_5&quot;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.tl.rank_features_groups(adata, groupby=&quot;leiden_0_5&quot;)
 </pre></div>
 </div>
 </div>
@@ -2384,9 +2388,9 @@ WARNING: Default of the method has been changed to &#39;t-test&#39; from &#39;t-
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[34]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">rank_features_groups_dotplot</span><span class="p">(</span>
-    <span class="n">adata</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;rank_features_groups&quot;</span><span class="p">,</span> <span class="n">groupby</span><span class="o">=</span><span class="s2">&quot;leiden_0_5&quot;</span>
-<span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.rank_features_groups_dotplot(
+    adata, key=&quot;rank_features_groups&quot;, groupby=&quot;leiden_0_5&quot;
+)
 </pre></div>
 </div>
 </div>
@@ -2409,9 +2413,9 @@ WARNING: dendrogram data not found (using key=dendrogram_leiden_0_5). Running `s
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[35]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">rank_features_groups_matrixplot</span><span class="p">(</span>
-    <span class="n">adata</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;rank_features_groups&quot;</span><span class="p">,</span> <span class="n">groupby</span><span class="o">=</span><span class="s2">&quot;leiden_0_5&quot;</span>
-<span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.rank_features_groups_matrixplot(
+    adata, key=&quot;rank_features_groups&quot;, groupby=&quot;leiden_0_5&quot;
+)
 </pre></div>
 </div>
 </div>
@@ -2426,7 +2430,7 @@ WARNING: dendrogram data not found (using key=dendrogram_leiden_0_5). Running `s
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[36]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;annotation&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;NA&quot;</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata.obs[&quot;annotation&quot;] = &quot;NA&quot;
 </pre></div>
 </div>
 </div>
@@ -2434,21 +2438,21 @@ WARNING: dendrogram data not found (using key=dendrogram_leiden_0_5). Running `s
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[37]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">annotation</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;0&quot;</span><span class="p">:</span> <span class="s2">&quot;age+/death+/stroke+/pao2+&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;1&quot;</span><span class="p">:</span> <span class="s2">&quot;age+/death+/stroke+/tumor+&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;2&quot;</span><span class="p">:</span> <span class="s2">&quot;resp+&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;3&quot;</span><span class="p">:</span> <span class="s2">&quot;resp+&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;4&quot;</span><span class="p">:</span> <span class="s2">&quot;resp+&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;5&quot;</span><span class="p">:</span> <span class="s2">&quot;resp+/liver+/tumor+&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;6&quot;</span><span class="p">:</span> <span class="s2">&quot;resp+&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;7&quot;</span><span class="p">:</span> <span class="s2">&quot;input fluids+&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;8&quot;</span><span class="p">:</span> <span class="s2">&quot;resp+/pao2+&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;9&quot;</span><span class="p">:</span> <span class="s2">&quot;input fluids+&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;10&quot;</span><span class="p">:</span> <span class="s2">&quot;input fluids+&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;11&quot;</span><span class="p">:</span> <span class="s2">&quot;input fluids++/death+&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;12&quot;</span><span class="p">:</span> <span class="s2">&quot;Late death&quot;</span><span class="p">,</span>
-<span class="p">}</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>annotation = {
+    &quot;0&quot;: &quot;age+/death+/stroke+/pao2+&quot;,
+    &quot;1&quot;: &quot;age+/death+/stroke+/tumor+&quot;,
+    &quot;2&quot;: &quot;resp+&quot;,
+    &quot;3&quot;: &quot;resp+&quot;,
+    &quot;4&quot;: &quot;resp+&quot;,
+    &quot;5&quot;: &quot;resp+/liver+/tumor+&quot;,
+    &quot;6&quot;: &quot;resp+&quot;,
+    &quot;7&quot;: &quot;input fluids+&quot;,
+    &quot;8&quot;: &quot;resp+/pao2+&quot;,
+    &quot;9&quot;: &quot;input fluids+&quot;,
+    &quot;10&quot;: &quot;input fluids+&quot;,
+    &quot;11&quot;: &quot;input fluids++/death+&quot;,
+    &quot;12&quot;: &quot;Late death&quot;,
+}
 </pre></div>
 </div>
 </div>
@@ -2456,9 +2460,9 @@ WARNING: dendrogram data not found (using key=dendrogram_leiden_0_5). Running `s
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[38]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;annotation&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="n">annotation</span><span class="p">[</span><span class="n">l</span><span class="p">]</span> <span class="k">if</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">annotation</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">else</span> <span class="n">l</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;leiden_0_5&quot;</span><span class="p">]</span>
-<span class="p">]</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>adata.obs[&quot;annotation&quot;] = [
+    annotation[l] if l in annotation.keys() else l for l in adata.obs[&quot;leiden_0_5&quot;]
+]
 </pre></div>
 </div>
 </div>
@@ -2469,7 +2473,7 @@ WARNING: dendrogram data not found (using key=dendrogram_leiden_0_5). Running `s
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[39]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">paga</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="s2">&quot;leiden_0_5&quot;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.tl.paga(adata, groups=&quot;leiden_0_5&quot;)
 </pre></div>
 </div>
 </div>
@@ -2485,15 +2489,15 @@ WARNING: dendrogram data not found (using key=dendrogram_leiden_0_5). Running `s
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[40]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">paga</span><span class="p">(</span>
-    <span class="n">adata</span><span class="p">,</span>
-    <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;leiden_0_5&quot;</span><span class="p">,</span> <span class="s2">&quot;day_28_flg&quot;</span><span class="p">],</span>
-    <span class="n">cmap</span><span class="o">=</span><span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">Colormaps</span><span class="o">.</span><span class="n">grey_red</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
-    <span class="n">title</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Leiden 0.5&quot;</span><span class="p">,</span> <span class="s2">&quot;Died in less than 28 days&quot;</span><span class="p">],</span>
-<span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.paga(
+    adata,
+    color=[&quot;leiden_0_5&quot;, &quot;day_28_flg&quot;],
+    cmap=ep.pl.Colormaps.grey_red.value,
+    title=[&quot;Leiden 0.5&quot;, &quot;Died in less than 28 days&quot;],
+)
 
-<span class="n">ep</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">init_pos</span><span class="o">=</span><span class="s2">&quot;paga&quot;</span><span class="p">)</span>
-<span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;annotation&quot;</span><span class="p">])</span>
+ep.tl.umap(adata, init_pos=&quot;paga&quot;)
+ep.pl.umap(adata, color=[&quot;annotation&quot;])
 </pre></div>
 </div>
 </div>
@@ -2515,7 +2519,7 @@ WARNING: dendrogram data not found (using key=dendrogram_leiden_0_5). Running `s
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[41]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">draw_graph</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">init_pos</span><span class="o">=</span><span class="s2">&quot;paga&quot;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.tl.draw_graph(adata, init_pos=&quot;paga&quot;)
 </pre></div>
 </div>
 </div>
@@ -2523,7 +2527,7 @@ WARNING: dendrogram data not found (using key=dendrogram_leiden_0_5). Running `s
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[42]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">draw_graph</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;leiden_0_5&quot;</span><span class="p">,</span> <span class="s2">&quot;icu_exp_flg&quot;</span><span class="p">],</span> <span class="n">legend_loc</span><span class="o">=</span><span class="s2">&quot;on data&quot;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.pl.draw_graph(adata, color=[&quot;leiden_0_5&quot;, &quot;icu_exp_flg&quot;], legend_loc=&quot;on data&quot;)
 </pre></div>
 </div>
 </div>
@@ -2542,7 +2546,7 @@ WARNING: dendrogram data not found (using key=dendrogram_leiden_0_5). Running `s
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[43]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ep</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;mimic_2.h5ad&quot;</span><span class="p">,</span> <span class="n">adata</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ep.io.write(&quot;mimic_2.h5ad&quot;, adata)
 </pre></div>
 </div>
 </div>
@@ -2561,10 +2565,10 @@ WARNING: dendrogram data not found (using key=dendrogram_leiden_0_5). Running `s
                 </div>
                 <div class="title">MIMIC-II Patient Fate</div>
               </div>
-              <svg><use href="#svg-arrow-right"></use></svg>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
           <a class="prev-page" href="ehrapy_introduction.html">
-              <svg><use href="#svg-arrow-right"></use></svg>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
@@ -2585,9 +2589,7 @@ WARNING: dendrogram data not found (using key=dendrogram_leiden_0_5). Running `s
             
           </div>
           <div class="right-details">
-            <div class="icons">
-              
-            </div>
+            
           </div>
         </div>
         
@@ -2599,7 +2601,7 @@ WARNING: dendrogram data not found (using key=dendrogram_leiden_0_5). Running `s
       <div class="toc-sticky toc-scroll">
         <div class="toc-title-container">
           <span class="toc-title">
-            Contents
+            On this page
           </span>
         </div>
         <div class="toc-tree-container">
@@ -2642,6 +2644,7 @@ WARNING: dendrogram data not found (using key=dendrogram_leiden_0_5). Running `s
     <script src="../../_static/underscore.js"></script>
     <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/scripts/furo.js"></script>
     <script src="../../_static/clipboard.min.js"></script>
     <script src="../../_static/copybutton.js"></script>
