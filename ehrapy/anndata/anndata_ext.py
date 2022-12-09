@@ -108,11 +108,11 @@ def _move_columns_to_obs(df: pd.DataFrame, columns_obs_only: list[str] | None) -
             obs = df[columns_obs_only].copy()
             obs = obs.set_index(df.index.map(str))
             df = df.drop(columns_obs_only, axis=1)
-        except KeyError:
-            raise ColumnNotFoundError from KeyError(
+        except KeyError as e:
+            raise ColumnNotFoundError(
                 "One or more column names passed to column_obs_only were not found in the input data. "
                 "Are the column names spelled correctly?"
-            )
+            ) from e
     else:
         obs = pd.DataFrame(index=df.index.map(str))
         logg.info("Added all columns to `obs`.")
