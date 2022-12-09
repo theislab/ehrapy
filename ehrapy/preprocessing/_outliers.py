@@ -8,8 +8,8 @@ from anndata import AnnData
 
 def winsorize(
     adata: AnnData,
-    vars: str | set[str] | list[str] = None,
-    obs_cols: str | list[str] | list[str] = None,
+    vars: str | list[str] | set[str] = None,
+    obs_cols: str | list[str] | set[str] = None,
     limits: list[float] = None,
     copy: bool = False,
     **kwargs,
@@ -55,8 +55,8 @@ def winsorize(
 def clip_quantile(
     adata: AnnData,
     limits: list[float],
-    vars: str | list[str] | list[str] = None,
-    obs_cols: str | list[str] | list[str] = None,
+    vars: str | list[str] | set[str] = None,
+    obs_cols: str | list[str] | set[str] = None,
     copy: bool = False,
 ) -> AnnData:
     """Clips (limits) features.
