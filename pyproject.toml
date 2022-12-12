@@ -49,6 +49,7 @@ lifelines = "^0.27.0"
 ipywidgets = "^8.0.2"
 missingno = "^0.5.1"
 thefuzz = {extras = ["speedup"], version = "^0.19.0"}
+python-levenshtein = "^0.20.8"
 
 [tool.poetry.dev-dependencies]
 pytest = ">=6.2.5"

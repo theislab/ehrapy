@@ -3840,7 +3840,7 @@ scikit-learn-intelex = ["scikit-learn-intelex"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8.0,<4"
-content-hash = "04a84176ceb62b3a0e4fa62cc1aa3c6f63c56b021083bd8dcbd026df761638ba"
+content-hash = "4c837215a86bc82d7e8665da55dbb1189851fa23809482540fc3e666919faecc"
 
 [metadata.files]
 aiohttp = [
