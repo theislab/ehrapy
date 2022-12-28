@@ -1066,7 +1066,6 @@ def _miceforest_impute(
         adata.X[::, column_indices] = kernel.complete_data(dataset=0, inplace=inplace)
 
     else:
-
         # Create kernel.
         kernel = mf.ImputationKernel(
             adata.X, datasets=1, save_all_iterations=save_all_iterations, random_state=random_state
