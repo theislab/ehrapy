@@ -8,9 +8,9 @@ import numpy as np
 import pandas as pd
 from anndata import AnnData
 from rich import print
+from thefuzz import process
 
 from ehrapy import logging as logg
-from ehrapy.core.str_matching import StrMatcher
 
 
 def qc_metrics(
@@ -201,7 +201,7 @@ def qc_lab_measurements(
     measurements: list[str] = None,
     unit: Literal["traditional", "SI"] = None,
     layer: str = None,
-    threshold: float = 0.2,
+    threshold: int = 20,
     age_col: str = None,
     age_range: str = None,
     sex_col: str = None,
@@ -248,8 +248,8 @@ def qc_lab_measurements(
         measurements: A list of measurements to check.
         unit: The unit of the measurements. (default: SI)
         layer: Layer containing the matrix to calculate the metrics for.
-        threshold: Minimum required matching confidence score of the bigrams.
-                   0 = low requirements, 1 = high requirements.
+        threshold: Minimum required matching confidence score of the fuzzysearch.
+                   0 = no matches, 100 = all must match. (default 20)
         age_col: Column containing age values.
         age_range: The inclusive age-range to filter for. e.g. 5-99
         sex_col: Column containing sex values.
@@ -258,7 +258,7 @@ def qc_lab_measurements(
         ethnicity_col: Column containing ethnicity values.
         ethnicity: Ethnicity to filter for.
         copy: Whether to return a copy (default: False).
-        verbose: Whether to have verbose stdout. Notifes user of matched columns and value ranges.
+        verbose: Whether to have verbose stdout. Notifies user of matched columns and value ranges.
 
     Returns:
         A modified AnnData object (copy if specified).
@@ -279,10 +279,10 @@ def qc_lab_measurements(
             f"{preprocessing_dir}/laboratory_reference_tables/laposata.tsv", sep="\t", index_col="Measurement"
         )
 
-    str_matcher = StrMatcher(list(reference_table.index))
-
     for measurement in measurements:
-        score, best_column_match = str_matcher.best_match(query=measurement, threshold=threshold)
+        best_column_match, score = process.extractOne(
+            query=measurement, choices=reference_table.index, score_cutoff=threshold
+        )
         if best_column_match is None:
             print(f"[bold yellow]Unable to find a match for {measurement}")
             continue

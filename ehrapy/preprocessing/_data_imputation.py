@@ -12,7 +12,7 @@ from sklearn.preprocessing import OrdinalEncoder
 from ehrapy import logging as logg
 from ehrapy import settings
 from ehrapy.anndata.anndata_ext import get_column_indices
-from ehrapy.core.tool_available import check_module_importable
+from ehrapy.core._tool_available import _check_module_importable
 
 
 def explicit_impute(
@@ -228,7 +228,7 @@ def knn_impute(
 
     _warn_imputation_threshold(adata, var_names, threshold=warning_threshold)
 
-    if check_module_importable("sklearnex"):  # pragma: no cover
+    if _check_module_importable("sklearnex"):  # pragma: no cover
         from sklearnex import patch_sklearn, unpatch_sklearn
 
         patch_sklearn()
@@ -261,7 +261,7 @@ def knn_impute(
             # decode ordinal encoding to obtain imputed original data
             adata.X[::, column_indices] = enc.inverse_transform(adata.X[::, column_indices])
 
-    if check_module_importable("sklearnex"):  # pragma: no cover
+    if _check_module_importable("sklearnex"):  # pragma: no cover
         unpatch_sklearn()
 
     if var_names:
@@ -343,7 +343,7 @@ def miss_forest_impute(
     elif isinstance(var_names, list):
         _warn_imputation_threshold(adata, var_names, threshold=warning_threshold)
 
-    if check_module_importable("sklearnex"):  # pragma: no cover
+    if _check_module_importable("sklearnex"):  # pragma: no cover
         from sklearnex import patch_sklearn, unpatch_sklearn
 
         patch_sklearn()
@@ -412,7 +412,7 @@ def miss_forest_impute(
                 adata.X[::, non_num_indices] = imp_cat.fit_transform(adata.X[::, non_num_indices])
                 adata.X[::, non_num_indices] = enc.inverse_transform(adata.X[::, non_num_indices])
 
-    if check_module_importable("sklearnex"):  # pragma: no cover
+    if _check_module_importable("sklearnex"):  # pragma: no cover
         unpatch_sklearn()
 
     if var_names:

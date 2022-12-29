@@ -6,7 +6,7 @@ import pandas as pd
 import pytest
 
 from ehrapy.anndata.anndata_ext import ColumnNotFoundError
-from ehrapy.core.tool_available import shell_command_accessible
+from ehrapy.core._tool_available import _shell_command_accessible
 from ehrapy.io._read import read_csv, read_h5ad
 
 CURRENT_DIR = Path(__file__).parent
@@ -140,8 +140,8 @@ class TestRead:
         assert pd.api.types.is_categorical_dtype(adata.obs["name"].dtype)
 
     @pytest.mark.skipif(
-        (os.name != "nt" and not shell_command_accessible(["gs", "-h"]))
-        or (os.name == "nt" and not shell_command_accessible(["gswin64c", " -v"])),
+        (os.name != "nt" and not _shell_command_accessible(["gs", "-h"]))
+        or (os.name == "nt" and not _shell_command_accessible(["gswin64c", " -v"])),
         reason="Requires ghostscript to be installed.",
     )
     def test_set_default_index(self):
