@@ -300,7 +300,6 @@ def _encode(
             "[progress.percentage]{task.percentage:>3.0f}%",
             refresh_per_second=1500,
         ) as progress:
-
             for encoding_mode in encodings.keys():  # type: ignore
                 task = progress.add_task(f"[red]Setting up {encoding_mode}", total=1)
                 encode_mode_switcher = {

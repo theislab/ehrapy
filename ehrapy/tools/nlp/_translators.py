@@ -29,7 +29,6 @@ class Translator:
     def __init__(
         self, flavour: str = "deepl", source: str = "de", target: str = "en", token: str = None
     ) -> None:  # pragma: no cover
-
         self.translator: DeepL | GoogleTranslate | LibreTranslate | MyMemoryTranslate | MicrosoftTranslate | YandexTranslate = (
             None
         )

@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import pandas as pd
 from anndata import AnnData
+from thefuzz import process
 
-from ehrapy.core.str_matching import StrMatcher
-from ehrapy.core.tool_available import check_module_importable
+from ehrapy.core._tool_available import _check_module_importable
 
 try:
     from medcat.cat import CAT
@@ -25,7 +25,7 @@ class MedCAT:
     """
 
     def __init__(self, anndata: AnnData, vocabulary: Vocab = None, concept_db: CDB = None, model_pack_path=None):
-        if not check_module_importable("medcat"):
+        if not _check_module_importable("medcat"):
             raise RuntimeError("Package medcat is not importable. Please install via pip install medcat")
         self.anndata = anndata
         self.vocabulary = vocabulary
@@ -270,11 +270,11 @@ class EhrapyMedcat:
         # currently, only the pretty_name column is supported
         # _list_replace(color, colored_column, colored_column_tmp)
         if name not in df["pretty_name"].values:
-            str_matcher = StrMatcher(references=df["pretty_name"].unique())
-            _, new_name = str_matcher.best_match(name, 0.5)
+            new_name, _ = process.extractOne(query=name, choices=df["pretty_name"].unique(), score_cutoff=50)
             if new_name:
                 print(
-                    f"[bold yellow]Did not find [blue]{name} [yellow]in MedCAT's extracted entities. Will use best match {new_name}!"
+                    f"[bold yellow]Did not find [blue]{name} [yellow]in MedCAT's extracted entities. "
+                    f"Will use best match {new_name}!"
                 )
 
                 def _list_replace(lst, old: str, new: str):

@@ -29,7 +29,6 @@ ep.pl.cool_fancy_plot()
 
     io.read_csv
     io.read_h5ad
-    io.read_pdf
     io.write
 ```
 
@@ -76,6 +75,8 @@ Other than tools, preprocessing steps usually don’t return an easily interpret
     preprocessing.regress_out
     preprocessing.subsample
     preprocessing.highly_variable_features
+    preprocessing.winsorize
+    preprocessing.clip_quantile
 ```
 
 ### Quality control
@@ -93,7 +94,7 @@ Other than tools, preprocessing steps usually don’t return an easily interpret
 
 ```{eval-rst}
 .. autosummary::
-    :toctree: imputation
+    :toctree: preprocessing
     :nosignatures:
 
     preprocessing.explicit_impute
