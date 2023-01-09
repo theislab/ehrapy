@@ -9,13 +9,12 @@ build:
     os: ubuntu-22.04
     tools:
         python: "3.10"
-
-python:
-    install:
-        - method: pip
-          path: .
-          extra_requirements:
-              - docs
+    jobs:
+        post_create_environment:
+            - pip install poetry
+            - poetry config virtualenvs.create false
+        post_install:
+            - poetry install --with docs
 
 submodules:
     include: all
