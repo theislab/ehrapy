@@ -22,9 +22,6 @@ jobs:
                   python-version: "3.10"
                   cache: "poetry"
 
-            - name: Disable Poetry virtual environment
-              run: poetry config virtualenvs.create false
-
             - name: Install ehrapy with docs
               run: poetry install --with docs
 
