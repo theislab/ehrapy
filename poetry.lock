@@ -498,7 +498,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
 [[package]]
 name = "cvxpy"
-version = "1.2.2"
+version = "1.3.0"
 description = "A domain-specific language for modeling convex optimization problems in Python."
 category = "main"
 optional = false
@@ -510,6 +510,25 @@ numpy = ">=1.15"
 osqp = ">=0.4.1"
 scipy = ">=1.1.0"
 scs = ">=1.1.6"
+setuptools = "<=64.0.2"
+
+[package.extras]
+cbc = ["cylp (>=0.91.5)"]
+clarabel = ["clarabel"]
+cvxopt = ["cvxopt"]
+diffcp = ["diffcp"]
+glop = ["ortools (>=9.3,<9.5)"]
+glpk = ["cvxopt"]
+glpk-mi = ["cvxopt"]
+gurobi = ["gurobipy"]
+highs = ["scipy (>=1.6.1)"]
+mosek = ["Mosek"]
+pdlp = ["ortools (>=9.3,<9.5)"]
+proxqp = ["proxsuite"]
+scip = ["PySCIPOpt"]
+scipy = ["scipy"]
+scs = ["setuptools (<64.0.2)"]
+xpress = ["xpress"]
 
 [[package]]
 name = "cycler"
@@ -2282,14 +2301,11 @@ scipy = ">=0.13.2"
 
 [[package]]
 name = "packaging"
-version = "21.3"
+version = "23.0"
 description = "Core utilities for Python packages"
 category = "main"
 optional = false
-python-versions = ">=3.6"
-
-[package.dependencies]
-pyparsing = ">=2.0.2,<3.0.5 || >3.0.5"
+python-versions = ">=3.7"
 
 [[package]]
 name = "pandas"
@@ -3026,7 +3042,7 @@ python-versions = ">=3.5"
 
 [[package]]
 name = "safety"
-version = "2.3.5"
+version = "2.3.4"
 description = "Checks installed dependencies for known vulnerabilities and licenses."
 category = "dev"
 optional = false
@@ -3035,7 +3051,7 @@ python-versions = "*"
 [package.dependencies]
 Click = ">=8.0.2"
 dparse = ">=0.6.2"
-packaging = ">=21.0,<22.0"
+packaging = ">=21.0"
 requests = "*"
 "ruamel.yaml" = ">=0.17.21"
 setuptools = ">=19.3"
@@ -3212,15 +3228,15 @@ stdlib_list = "*"
 
 [[package]]
 name = "setuptools"
-version = "65.6.3"
+version = "64.0.2"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
 category = "main"
 optional = false
 python-versions = ">=3.7"
 
 [package.extras]
-docs = ["furo", "jaraco.packaging (>=9)", "jaraco.tidelift (>=1.4)", "pygments-github-lexers (==0.0.5)", "rst.linker (>=1.9)", "sphinx (>=3.5)", "sphinx-favicon", "sphinx-hoverxref (<2)", "sphinx-inline-tabs", "sphinx-notfound-page (==0.8.3)", "sphinx-reredirects", "sphinxcontrib-towncrier"]
-testing = ["build[virtualenv]", "filelock (>=3.4.0)", "flake8 (<5)", "flake8-2020", "ini2toml[lite] (>=0.9)", "jaraco.envs (>=2.2)", "jaraco.path (>=3.2.0)", "pip (>=19.1)", "pip-run (>=8.8)", "pytest (>=6)", "pytest-black (>=0.3.7)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=1.3)", "pytest-flake8", "pytest-mypy (>=0.9.1)", "pytest-perf", "pytest-timeout", "pytest-xdist", "tomli-w (>=1.0.0)", "virtualenv (>=13.0.0)", "wheel"]
+docs = ["furo", "jaraco.packaging (>=9)", "jaraco.tidelift (>=1.4)", "pygments-github-lexers (==0.0.5)", "rst.linker (>=1.9)", "sphinx", "sphinx-favicon", "sphinx-hoverxref (<2)", "sphinx-inline-tabs", "sphinx-notfound-page (==0.8.3)", "sphinx-reredirects", "sphinxcontrib-towncrier"]
+testing = ["build[virtualenv]", "filelock (>=3.4.0)", "flake8 (<5)", "flake8-2020", "ini2toml[lite] (>=0.9)", "jaraco.envs (>=2.2)", "jaraco.path (>=3.2.0)", "mock", "pip (>=19.1)", "pip-run (>=8.8)", "pytest (>=6)", "pytest-black (>=0.3.7)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=1.3)", "pytest-flake8", "pytest-mypy (>=0.9.1)", "pytest-perf", "pytest-xdist", "tomli-w (>=1.0.0)", "virtualenv (>=13.0.0)", "wheel"]
 testing-integration = ["build[virtualenv]", "filelock (>=3.4.0)", "jaraco.envs (>=2.2)", "jaraco.path (>=3.2.0)", "pytest", "pytest-enabler", "pytest-xdist", "tomli", "virtualenv (>=13.0.0)", "wheel"]
 
 [[package]]
@@ -3455,6 +3471,17 @@ sphinx = "*"
 test = ["pytest", "pytest-cov"]
 
 [[package]]
+name = "sphinx-autodoc-annotation"
+version = "1.0-1"
+description = "Use Python 3 annotations in sphinx-enabled docstrings"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+sphinx = ">=1.1"
+
+[[package]]
 name = "sphinx-autodoc-typehints"
 version = "1.20.1"
 description = "Type hints (PEP 484) support for the Sphinx autodoc extension"
@@ -3669,6 +3696,21 @@ python-versions = ">=3.5"
 [package.extras]
 lint = ["docutils-stubs", "flake8", "mypy"]
 test = ["pytest"]
+
+[[package]]
+name = "sphinxcontrib-spelling"
+version = "7.7.0"
+description = "Sphinx spelling extension"
+category = "dev"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+PyEnchant = ">=3.1.1"
+Sphinx = ">=3.0.0"
+
+[package.extras]
+test = ["coverage (>=4.0,!=4.4)", "pytest", "pytest-cov"]
 
 [[package]]
 name = "sphinxext-opengraph"
@@ -4311,7 +4353,7 @@ scikit-learn-intelex = ["scikit-learn-intelex"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8.0,<3.11"
-content-hash = "b4388096990ffde6979498d9d0f15682c20d882f18cf7bd8200f204cc21e556b"
+content-hash = "8598cc0e1afc008bb685400f34b1412fccb51bbdb376ef5c69582e0cd096f29d"
 
 [metadata.files]
 aiofiles = [
@@ -4830,22 +4872,26 @@ cvxopt = [
     {file = "cvxopt-1.3.0.tar.gz", hash = "sha256:00b1b232f9d1f902d578a9d75814b67fa020758d5ae422e28ca8cef6269fa5c6"},
 ]
 cvxpy = [
-    {file = "cvxpy-1.2.2-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:a0280e486f1eaa942a85ddbd4f660e69335a06d075381c202645679a98f9655e"},
-    {file = "cvxpy-1.2.2-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:1af7a07246e9d8518c819e18b46a888adfe514a809f5d1393b106118fcc2260e"},
-    {file = "cvxpy-1.2.2-cp310-cp310-manylinux_2_24_x86_64.whl", hash = "sha256:9d051a0186063e7e71ada198fca1c304645a00881fac63ee482fc47eb241fc06"},
-    {file = "cvxpy-1.2.2-cp310-cp310-win_amd64.whl", hash = "sha256:3029fbcd99a0dac4426f989c00db77c2c76389e6366dc1af82de0ed5658f1939"},
-    {file = "cvxpy-1.2.2-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:dbcf638d6948ed1e6324924b1200bce3e75a3bf675a356bbbe06f7758300e0aa"},
-    {file = "cvxpy-1.2.2-cp37-cp37m-manylinux_2_24_x86_64.whl", hash = "sha256:b0041dfe7e158307755910dbb72fd360144fc8602640873ddb364cbfc7363b47"},
-    {file = "cvxpy-1.2.2-cp37-cp37m-win_amd64.whl", hash = "sha256:ab6e635d6849a5c8a82cd4f1a4578a24fa85ba9cd50dcd73ee0b3758acba2d57"},
-    {file = "cvxpy-1.2.2-cp38-cp38-macosx_10_9_universal2.whl", hash = "sha256:99edcd3bf4b60ea7776fa9b13ae11f828017f00b32a824965c0a397e27548bdf"},
-    {file = "cvxpy-1.2.2-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:174297709f6d68ea60e6f482e21c54237fe6a1424cc7fd8bbd296afc1b1f6695"},
-    {file = "cvxpy-1.2.2-cp38-cp38-manylinux_2_24_x86_64.whl", hash = "sha256:28b37a498821699714ad3fe487837661c34efdfbf156a5b0ce02d64f69930436"},
-    {file = "cvxpy-1.2.2-cp38-cp38-win_amd64.whl", hash = "sha256:711391e46dd6a9a01a7ea412de09616c8ef413c0c339f6416da35090607238b9"},
-    {file = "cvxpy-1.2.2-cp39-cp39-macosx_10_9_universal2.whl", hash = "sha256:129b37ca74e27c07593ef1d2a463f8e6f61f88fd6b87302acf3deab15d135b18"},
-    {file = "cvxpy-1.2.2-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:f6fe6952bb2ed2296ad03c9d50a3a31f4753555c6b7babe5a39cad48983678c5"},
-    {file = "cvxpy-1.2.2-cp39-cp39-manylinux_2_24_x86_64.whl", hash = "sha256:da2c8338a580dc3430142c3a5022a4806eb87859b7293d11edd3ca376926a9de"},
-    {file = "cvxpy-1.2.2-cp39-cp39-win_amd64.whl", hash = "sha256:aad6784de16d64320a1ee7ad4aa1c7910bc59a5a7f49b84b0f7d48cd92190155"},
-    {file = "cvxpy-1.2.2.tar.gz", hash = "sha256:c8e91545585eb632ce030fbf2c301d573ec3cf7971f9a387a0f0a61a2feae6b8"},
+    {file = "cvxpy-1.3.0-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:515a23e38a512e6143b0bec4b7f1b94804f63a04ed071142ed7abe6e7858a4ab"},
+    {file = "cvxpy-1.3.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:fb0223ab7a6fc8827e0d7e46bfcd0ea3549b659bb153aaf2c450407632ab9e30"},
+    {file = "cvxpy-1.3.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:89a72500daebb5cedead5c961ba2c0cdaf2c0f6deef89faec91ee8a47c89d284"},
+    {file = "cvxpy-1.3.0-cp310-cp310-win_amd64.whl", hash = "sha256:7941eae0364fa80f76fbc3375f1f8e34903dde8f52df5f552bccfd0dde741758"},
+    {file = "cvxpy-1.3.0-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:3ea0798a67165dbb1a799b5762ceab5cf27743b383ad8b2f052b3ffa61b31c91"},
+    {file = "cvxpy-1.3.0-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:ccbd346a751a200136c678d35de6b1aca4398840cce293ec95c63516adab9043"},
+    {file = "cvxpy-1.3.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:834243d38d14088b1f9ec9839f4a5e4b7b01f213b79202b7475f487ca9e20f5c"},
+    {file = "cvxpy-1.3.0-cp311-cp311-win_amd64.whl", hash = "sha256:061a28c054522853a9469c68dea2f4bb36765d57698c898ef46805e6f416cd1b"},
+    {file = "cvxpy-1.3.0-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:2e0a8b6fccced8722cfb2f527e6a9c226ce63a90c8f9f620d89fd28c47092c42"},
+    {file = "cvxpy-1.3.0-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8e12621231ea345a57011811b039f0a2481666019817ba876273550b45acf66e"},
+    {file = "cvxpy-1.3.0-cp37-cp37m-win_amd64.whl", hash = "sha256:bbe59c1c35cb256ef0fbbdfdbfcec7531823a4bde189a4e88bbacdf75a5c8744"},
+    {file = "cvxpy-1.3.0-cp38-cp38-macosx_10_9_universal2.whl", hash = "sha256:8a88ebefb79606b04afb253b095c88b532806e276eb89f6efb0f53411a66f93d"},
+    {file = "cvxpy-1.3.0-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:9c88e35f2e5a427e5748dfe16debe989f4c0cdb8e76a9211851d26111393306d"},
+    {file = "cvxpy-1.3.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f3f84f430a5666e25acc68a329f15fa1f8eef7b59c28b1461e7712098139edb1"},
+    {file = "cvxpy-1.3.0-cp38-cp38-win_amd64.whl", hash = "sha256:aa106570672161dc27e3156e3926299914dfed6deb4c2041208543014bbac69b"},
+    {file = "cvxpy-1.3.0-cp39-cp39-macosx_10_9_universal2.whl", hash = "sha256:b265bfc0a3b3283d488779e7e6d8a7004fa11d5719cde7145b7e7c7363eb729c"},
+    {file = "cvxpy-1.3.0-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:24888d9a5f1e6ca2d5483d3ec0529f381979677917305b109cb7c45ad5d65d1c"},
+    {file = "cvxpy-1.3.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:e98d2a98bfca2447b5c9a34c373db907e6a47af3de7b73c8fa6329baa90a74b6"},
+    {file = "cvxpy-1.3.0-cp39-cp39-win_amd64.whl", hash = "sha256:4fcd3ad92d7179fcbedb043a8eee0725b370df5989ed061034ce4e8999777342"},
+    {file = "cvxpy-1.3.0.tar.gz", hash = "sha256:66cce67bdc635b9b29066510474392c0cfc0d95db8adda4010dc8cdd8e046250"},
 ]
 cycler = [
     {file = "cycler-0.11.0-py3-none-any.whl", hash = "sha256:3a27e95f763a428a739d2add979fa7494c912a32c17c4c38c4d5f082cad165a3"},
@@ -6133,8 +6179,8 @@ osqp = [
     {file = "osqp-0.6.2.post8.tar.gz", hash = "sha256:23d6bae4a3612f60d5f652d0e5fa4b2ead507cabfff5d930d822057ae6ed6677"},
 ]
 packaging = [
-    {file = "packaging-21.3-py3-none-any.whl", hash = "sha256:ef103e05f519cdc783ae24ea4e2e0f508a9c99b2d4969652eed6a2e1ea5bd522"},
-    {file = "packaging-21.3.tar.gz", hash = "sha256:dd47c42927d89ab911e606518907cc2d3a1f38bbd026385970643f9c5b8ecfeb"},
+    {file = "packaging-23.0-py3-none-any.whl", hash = "sha256:714ac14496c3e68c99c29b00845f7a2b85f3bb6f1078fd9f72fd20f0570002b2"},
+    {file = "packaging-23.0.tar.gz", hash = "sha256:b6ad297f8907de0fa2fe1ccbd26fdaf387f5f47c7275fedf8cce89f99446cf97"},
 ]
 pandas = [
     {file = "pandas-1.5.2-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:e9dbacd22555c2d47f262ef96bb4e30880e5956169741400af8b306bbb24a273"},
@@ -6933,8 +6979,8 @@ ruamel-yaml-clib = [
     {file = "ruamel.yaml.clib-0.2.7.tar.gz", hash = "sha256:1f08fd5a2bea9c4180db71678e850b995d2a5f4537be0e94557668cf0f5f9497"},
 ]
 safety = [
-    {file = "safety-2.3.5-py3-none-any.whl", hash = "sha256:2227fcac1b22b53c1615af78872b48348661691450aa25d6704a5504dbd1f7e2"},
-    {file = "safety-2.3.5.tar.gz", hash = "sha256:a60c11f8952f412cbb165d70cb1f673a3b43a2ba9a93ce11f97e6a4de834aa3a"},
+    {file = "safety-2.3.4-py3-none-any.whl", hash = "sha256:6224dcd9b20986a2b2c5e7acfdfba6bca42bb11b2783b24ed04f32317e5167ea"},
+    {file = "safety-2.3.4.tar.gz", hash = "sha256:b9e74e794e82f54d11f4091c5d820c4d2d81de9f953bf0b4f33ac8bc402ae72c"},
 ]
 scanpy = [
     {file = "scanpy-1.9.1-py3-none-any.whl", hash = "sha256:9fca3597aef176034ebc3438be3bf859db5c47441e36481d7f9272bd4cd51d2a"},
@@ -7083,8 +7129,8 @@ session-info = [
     {file = "session_info-1.0.0.tar.gz", hash = "sha256:3cda5e03cca703f32ae2eadbd6bd80b6c21442cfb60e412c21cb8ad6d5cbb6b7"},
 ]
 setuptools = [
-    {file = "setuptools-65.6.3-py3-none-any.whl", hash = "sha256:57f6f22bde4e042978bcd50176fdb381d7c21a9efa4041202288d3737a0c6a54"},
-    {file = "setuptools-65.6.3.tar.gz", hash = "sha256:a7620757bf984b58deaf32fc8a4577a9bbc0850cf92c20e1ce41c38c19e5fb75"},
+    {file = "setuptools-64.0.2-py3-none-any.whl", hash = "sha256:2fc6046e3cddf0ef48493410c18a3f0e4fc888b4460f35e07808591481cdc2ac"},
+    {file = "setuptools-64.0.2.tar.gz", hash = "sha256:74432f2e66b9afb4a4fceed175d9f3f24986cabf325ecbf1278ec93f846726d3"},
 ]
 setuptools-scm = [
     {file = "setuptools_scm-7.1.0-py3-none-any.whl", hash = "sha256:73988b6d848709e2af142aa48c986ea29592bbcfca5375678064708205253d8e"},
@@ -7172,6 +7218,9 @@ sphinx-autobuild = [
     {file = "sphinx-autobuild-2021.3.14.tar.gz", hash = "sha256:de1ca3b66e271d2b5b5140c35034c89e47f263f2cd5db302c9217065f7443f05"},
     {file = "sphinx_autobuild-2021.3.14-py3-none-any.whl", hash = "sha256:8fe8cbfdb75db04475232f05187c776f46f6e9e04cacf1e49ce81bdac649ccac"},
 ]
+sphinx-autodoc-annotation = [
+    {file = "sphinx-autodoc-annotation-1.0-1.tar.gz", hash = "sha256:4a3d03081efe1e5f2bc9b9d00746550f45b9f543b0c79519c523168ca7f7d89a"},
+]
 sphinx-autodoc-typehints = [
     {file = "sphinx_autodoc_typehints-1.20.1-py3-none-any.whl", hash = "sha256:3d7a8005058f4eaf3d540d1467f2b2d909992c6256e927cbf15a7aec62cb5c2a"},
     {file = "sphinx_autodoc_typehints-1.20.1.tar.gz", hash = "sha256:a41d36bb0c592bdf3e3afb545567587c92ea4fe895ecce26d0409899adf45efb"},
@@ -7234,6 +7283,10 @@ sphinxcontrib-qthelp = [
 sphinxcontrib-serializinghtml = [
     {file = "sphinxcontrib-serializinghtml-1.1.5.tar.gz", hash = "sha256:aa5f6de5dfdf809ef505c4895e51ef5c9eac17d0f287933eb49ec495280b6952"},
     {file = "sphinxcontrib_serializinghtml-1.1.5-py2.py3-none-any.whl", hash = "sha256:352a9a00ae864471d3a7ead8d7d79f5fc0b57e8b3f95e9867eb9eb28999b92fd"},
+]
+sphinxcontrib-spelling = [
+    {file = "sphinxcontrib-spelling-7.7.0.tar.gz", hash = "sha256:56561c3f6a155b0946914e4de988729859315729dc181b5e4dc8a68fe78de35a"},
+    {file = "sphinxcontrib_spelling-7.7.0-py3-none-any.whl", hash = "sha256:95a0defef8ffec6526f9e83b20cc24b08c9179298729d87976891840e3aa3064"},
 ]
 sphinxext-opengraph = [
     {file = "sphinxext-opengraph-0.7.5.tar.gz", hash = "sha256:caf061fb3bea8d8f2228f7a1d55cb8f6809f2b5c806bf3600e21ce1a3cf906d1"},
