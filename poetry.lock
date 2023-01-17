@@ -1185,14 +1185,14 @@ files = [
 
 [[package]]
 name = "deep-translator"
-version = "1.9.1"
+version = "1.9.2"
 description = "A flexible free and unlimited python tool to translate between different languages in a simple way using multiple translators"
 category = "main"
 optional = false
 python-versions = ">=3.7,<4.0"
 files = [
-    {file = "deep-translator-1.9.1.tar.gz", hash = "sha256:8282dcff805b54a5241fe72c8202a6e8428799155bbf88b402aecdfbfe569e65"},
-    {file = "deep_translator-1.9.1-py3-none-any.whl", hash = "sha256:37f634119ab333b9c32d9e608918a0cced10acdb426dd97d3fd9152e751e66eb"},
+    {file = "deep-translator-1.9.2.tar.gz", hash = "sha256:8872b5038e1266a27937e0f67adb3beb1b94d26af2193ed37a1338c2bc81fc06"},
+    {file = "deep_translator-1.9.2-py3-none-any.whl", hash = "sha256:5ba891a70c1302244977798be82e1b7705cb1b6590829531dbc7f0c9bc50d0a2"},
 ]
 
 [package.dependencies]
