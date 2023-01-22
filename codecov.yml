@@ -9,3 +9,5 @@ coverage:
                 enabled: no
     ignore:
         - "test/"
+github_checks:
+  annotations: false
