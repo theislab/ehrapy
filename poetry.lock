@@ -1062,15 +1062,13 @@ files = [
 
 [[package]]
 name = "daal"
-version = "2023.0.1"
+version = "2023.0.2"
 description = "Intel® oneAPI Data Analytics Library"
 category = "main"
 optional = true
 python-versions = "*"
 files = [
-    {file = "daal-2023.0.1-py2.py3-none-macosx_10_15_x86_64.macosx_11_0_x86_64.whl", hash = "sha256:6c1c7e97feb226e3218bc87d9f248d86b22c938e1a1bcc96d9e8fef037339d3a"},
-    {file = "daal-2023.0.1-py2.py3-none-manylinux1_x86_64.whl", hash = "sha256:0e862934e90f89b7bf60a6e4b2e32a4bb996994afb59e1b968ee725a63ec84aa"},
-    {file = "daal-2023.0.1-py2.py3-none-win_amd64.whl", hash = "sha256:3ef448d05b5138dbebddba92757da3d5765d45449bc81e0e26a80270122ec966"},
+    {file = "daal-2023.0.2-py2.py3-none-macosx_10_15_x86_64.macosx_11_0_x86_64.whl", hash = "sha256:4584222bd5260b120f729418bd8cb854916297f17b2877503e00eedd91a26795"},
 ]
 
 [package.dependencies]
@@ -1078,28 +1076,20 @@ tbb = ">=2021.0.0,<2022.0.0"
 
 [[package]]
 name = "daal4py"
-version = "2023.0.1"
+version = "2023.0.2"
 description = "daal4py is a Convenient Python API to the Intel® oneAPI Data Analytics Library (oneDAL)"
 category = "main"
 optional = true
 python-versions = ">=3.7"
 files = [
-    {file = "daal4py-2023.0.1-py310-none-macosx_10_15_x86_64.macosx_11_0_x86_64.whl", hash = "sha256:28d329b77c1389634e4e16893ad99214c44ad2f19242af225461846213d95167"},
-    {file = "daal4py-2023.0.1-py310-none-manylinux1_x86_64.whl", hash = "sha256:2e5bedbbc981416b9685e42bdf9341972b70fc82ea9849fcf4d2673d5fcd62c7"},
-    {file = "daal4py-2023.0.1-py310-none-win_amd64.whl", hash = "sha256:df022501a09ff3a79cff0f933d4305892d272bcb1413b8e1f0b31afe14e4fe81"},
-    {file = "daal4py-2023.0.1-py37-none-macosx_10_15_x86_64.macosx_11_0_x86_64.whl", hash = "sha256:1e615136be10f65df6f38aecb464540106223bedefbe312e6814d3c147c10db4"},
-    {file = "daal4py-2023.0.1-py37-none-manylinux1_x86_64.whl", hash = "sha256:53c056c9e24a2c83b84ac7f4057ddb2bb02633c98bb2a181d1c11e92da1baf54"},
-    {file = "daal4py-2023.0.1-py37-none-win_amd64.whl", hash = "sha256:73a73992b6d96180881e5d37ae8401ebdb6f64898592cd13d85ebf06ad27453c"},
-    {file = "daal4py-2023.0.1-py38-none-macosx_10_15_x86_64.macosx_11_0_x86_64.whl", hash = "sha256:d52868f13746a2c78c42709e65f1a533827d4416d87b0d028d0896a693fa2397"},
-    {file = "daal4py-2023.0.1-py38-none-manylinux1_x86_64.whl", hash = "sha256:db7f93e4ee8005ee58f4bb899a5d70388f6fb2f7894c6ebc7f7da7d50a436c41"},
-    {file = "daal4py-2023.0.1-py38-none-win_amd64.whl", hash = "sha256:821b048fd7245677cd8b7665c5fcc001814f8247bb06adee1abd8bf682a3b1ba"},
-    {file = "daal4py-2023.0.1-py39-none-macosx_10_15_x86_64.macosx_11_0_x86_64.whl", hash = "sha256:a9c41849a908fb5ae7f977620fcc43ac595d061281174851c39fe5d489b7c90c"},
-    {file = "daal4py-2023.0.1-py39-none-manylinux1_x86_64.whl", hash = "sha256:2eb35ff57f027f418c8b5e94f7acce68902ee90088703bc5411c62c59f0fa8a3"},
-    {file = "daal4py-2023.0.1-py39-none-win_amd64.whl", hash = "sha256:df75acc50cba92c0d0afadf2945c3de1d29100b3b5f89ace2803bbb45be15ac1"},
+    {file = "daal4py-2023.0.2-py310-none-macosx_10_15_x86_64.macosx_11_0_x86_64.whl", hash = "sha256:fe930c75a6151479eeb76d8f59cfe05c542c2779a1b72f5dc798b76910efa219"},
+    {file = "daal4py-2023.0.2-py37-none-macosx_10_15_x86_64.macosx_11_0_x86_64.whl", hash = "sha256:521f0fc9d7b399a3a51e424a9c84af3ad9a20525e47c1331347a8b6c197cccef"},
+    {file = "daal4py-2023.0.2-py38-none-macosx_10_15_x86_64.macosx_11_0_x86_64.whl", hash = "sha256:c1ea7714881474660cd110eaebf5111abdb7aaef94f3255a5b7cbd8362329d77"},
+    {file = "daal4py-2023.0.2-py39-none-macosx_10_15_x86_64.macosx_11_0_x86_64.whl", hash = "sha256:06cbaf6a8cf8bfdfb72a0213194b3535dc1297ef15dd9066b7d3922e3bc563cb"},
 ]
 
 [package.dependencies]
-daal = "2023.0.1"
+daal = "2023.0.2"
 numpy = ">=1.15"
 
 [[package]]
@@ -4131,6 +4121,13 @@ files = [
     {file = "Pillow-9.4.0-1-cp39-cp39-macosx_10_10_x86_64.whl", hash = "sha256:b8c2f6eb0df979ee99433d8b3f6d193d9590f735cf12274c108bd954e30ca858"},
     {file = "Pillow-9.4.0-1-pp38-pypy38_pp73-macosx_10_10_x86_64.whl", hash = "sha256:b70756ec9417c34e097f987b4d8c510975216ad26ba6e57ccb53bc758f490dab"},
     {file = "Pillow-9.4.0-1-pp39-pypy39_pp73-macosx_10_10_x86_64.whl", hash = "sha256:43521ce2c4b865d385e78579a082b6ad1166ebed2b1a2293c3be1d68dd7ca3b9"},
+    {file = "Pillow-9.4.0-2-cp310-cp310-macosx_10_10_x86_64.whl", hash = "sha256:9d9a62576b68cd90f7075876f4e8444487db5eeea0e4df3ba298ee38a8d067b0"},
+    {file = "Pillow-9.4.0-2-cp311-cp311-macosx_10_10_x86_64.whl", hash = "sha256:87708d78a14d56a990fbf4f9cb350b7d89ee8988705e58e39bdf4d82c149210f"},
+    {file = "Pillow-9.4.0-2-cp37-cp37m-macosx_10_10_x86_64.whl", hash = "sha256:8a2b5874d17e72dfb80d917213abd55d7e1ed2479f38f001f264f7ce7bae757c"},
+    {file = "Pillow-9.4.0-2-cp38-cp38-macosx_10_10_x86_64.whl", hash = "sha256:83125753a60cfc8c412de5896d10a0a405e0bd88d0470ad82e0869ddf0cb3848"},
+    {file = "Pillow-9.4.0-2-cp39-cp39-macosx_10_10_x86_64.whl", hash = "sha256:9e5f94742033898bfe84c93c831a6f552bb629448d4072dd312306bab3bd96f1"},
+    {file = "Pillow-9.4.0-2-pp38-pypy38_pp73-macosx_10_10_x86_64.whl", hash = "sha256:013016af6b3a12a2f40b704677f8b51f72cb007dac785a9933d5c86a72a7fe33"},
+    {file = "Pillow-9.4.0-2-pp39-pypy39_pp73-macosx_10_10_x86_64.whl", hash = "sha256:99d92d148dd03fd19d16175b6d355cc1b01faf80dae93c6c3eb4163709edc0a9"},
     {file = "Pillow-9.4.0-cp310-cp310-macosx_10_10_x86_64.whl", hash = "sha256:2968c58feca624bb6c8502f9564dd187d0e1389964898f5e9e1fbc8533169157"},
     {file = "Pillow-9.4.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:c5c1362c14aee73f50143d74389b2c158707b4abce2cb055b7ad37ce60738d47"},
     {file = "Pillow-9.4.0-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:bd752c5ff1b4a870b7661234694f24b1d2b9076b8bf337321a814c612665f343"},
@@ -5546,28 +5543,20 @@ tests = ["black (>=22.3.0)", "flake8 (>=3.8.2)", "matplotlib (>=3.1.2)", "mypy (
 
 [[package]]
 name = "scikit-learn-intelex"
-version = "2023.0.1"
+version = "2023.0.2"
 description = "Intel(R) Extension for Scikit-learn is a seamless way to speed up your Scikit-learn application."
 category = "main"
 optional = true
 python-versions = ">=3.7"
 files = [
-    {file = "scikit_learn_intelex-2023.0.1-py310-none-macosx_10_15_x86_64.macosx_11_0_x86_64.whl", hash = "sha256:cc213e064e9a33acac8c45690aa263d7dffa5d51f55fc536c09abdce9a47c1b0"},
-    {file = "scikit_learn_intelex-2023.0.1-py310-none-manylinux1_x86_64.whl", hash = "sha256:05f165a94de06bc9374aa4dad762c7dc0a899335abe1789f1d4f376858a1d34f"},
-    {file = "scikit_learn_intelex-2023.0.1-py310-none-win_amd64.whl", hash = "sha256:5eada6ee4ea589cb1e6e174ce758e0c559afaba006701c34ef7e395a37604e03"},
-    {file = "scikit_learn_intelex-2023.0.1-py37-none-macosx_10_15_x86_64.macosx_11_0_x86_64.whl", hash = "sha256:bc0e67af2242a8f169669a9f3f24f0349dfe3acaefeaabb6953c3ac98276fd33"},
-    {file = "scikit_learn_intelex-2023.0.1-py37-none-manylinux1_x86_64.whl", hash = "sha256:34fffec39268d89b0643d1f65bce0e89102b43dc51f0574f82509c01e8b194b0"},
-    {file = "scikit_learn_intelex-2023.0.1-py37-none-win_amd64.whl", hash = "sha256:9388f1f26ce3b0bd23cddc2445af5c752b1ffe2f973da442edaa9fd6d8d211d2"},
-    {file = "scikit_learn_intelex-2023.0.1-py38-none-macosx_10_15_x86_64.macosx_11_0_x86_64.whl", hash = "sha256:bff0145d01968196071b2565601630ec2334a0dd58f6c2d407f7a2d732c0a7a4"},
-    {file = "scikit_learn_intelex-2023.0.1-py38-none-manylinux1_x86_64.whl", hash = "sha256:8468babeb86dd11c24ed88f50b514dfb22119f6ec6ec090995dabaf1562179b3"},
-    {file = "scikit_learn_intelex-2023.0.1-py38-none-win_amd64.whl", hash = "sha256:df8985ae59da2e4ad5e623fb7ffc7ae0253fb4dbd4a582f962c115abaabbc351"},
-    {file = "scikit_learn_intelex-2023.0.1-py39-none-macosx_10_15_x86_64.macosx_11_0_x86_64.whl", hash = "sha256:d3a568fc84fe2bb589412f815c330b141c05073ccd1afde15c87cf37f5ad404f"},
-    {file = "scikit_learn_intelex-2023.0.1-py39-none-manylinux1_x86_64.whl", hash = "sha256:b2024d3e72e8a021a44b740308aef41916f7fa8d29fa09b0dbf9352539066929"},
-    {file = "scikit_learn_intelex-2023.0.1-py39-none-win_amd64.whl", hash = "sha256:5ee16fd3b003bcccf74514824170da25e2ea94c4310ce88d68463b1acc603267"},
+    {file = "scikit_learn_intelex-2023.0.2-py310-none-macosx_10_15_x86_64.macosx_11_0_x86_64.whl", hash = "sha256:fd063d7d5888a94b7165d3e5e2061d3ce5ed40aba92e503b03a45946d399a10e"},
+    {file = "scikit_learn_intelex-2023.0.2-py37-none-macosx_10_15_x86_64.macosx_11_0_x86_64.whl", hash = "sha256:853b6f96e429b96949a52568a58078f96f2059e8d8043ae0f4d7b735ef3aac79"},
+    {file = "scikit_learn_intelex-2023.0.2-py38-none-macosx_10_15_x86_64.macosx_11_0_x86_64.whl", hash = "sha256:604e3cea275f50e19c263da0a67e6efff428ff03ab5bb68bf5198eefcebe03d9"},
+    {file = "scikit_learn_intelex-2023.0.2-py39-none-macosx_10_15_x86_64.macosx_11_0_x86_64.whl", hash = "sha256:6772c345d6b4a21267e3d8386878d3ef01d1fe50d0f59d0d1c75568dc3c7a9cf"},
 ]
 
 [package.dependencies]
-daal4py = "2023.0.1"
+daal4py = "2023.0.2"
 scikit-learn = ">=0.22"
 
 [[package]]
