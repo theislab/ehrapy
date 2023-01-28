@@ -10,4 +10,4 @@ coverage:
     ignore:
         - "test/"
 github_checks:
-  annotations: false
+    annotations: false

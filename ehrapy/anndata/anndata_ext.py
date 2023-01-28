@@ -58,8 +58,21 @@ def df_to_anndata(
         else:
             raise IndexNotFoundError(f"Did not find column {index_column} in neither index or columns!")
 
-    # move columns from the input dataframe to later obs
-    dataframes = _move_columns_to_obs(df, columns_obs_only)
+    # move columns from the input dataframe to obs
+    if columns_obs_only:
+        try:
+            obs = df[columns_obs_only].copy()
+            obs = obs.set_index(df.index.map(str))
+            df = df.drop(columns_obs_only, axis=1)
+        except KeyError as e:
+            raise ColumnNotFoundError(
+                "One or more column names passed to column_obs_only were not found in the input data. "
+                "Are the column names spelled correctly?"
+            ) from e
+    else:
+        obs = pd.DataFrame(index=df.index.map(str))
+        logg.info("Added all columns to `obs`.")
+    dataframes = BaseDataframes(obs, df)
     numerical_columns = list(dataframes.df.select_dtypes("number").columns)
     # if data is numerical only, short-circuit AnnData creation to have float dtype instead of object
     all_num = True if len(numerical_columns) == len(list(dataframes.df.columns)) else False
@@ -88,36 +101,6 @@ def df_to_anndata(
     )
 
     return adata
-
-
-def _move_columns_to_obs(df: pd.DataFrame, columns_obs_only: list[str] | None) -> BaseDataframes:
-    """Move the given columns from the original dataframe (and therefore X) to obs.
-
-    By moving these values will not get lost and will be stored in obs, but will not appear in X.
-    This may be useful for textual values like free text.
-
-    Args:
-        df: Pandas Dataframe to move the columns for
-        columns_obs_only: Columns to move to obs only
-
-    Returns:
-        A modified :class:`~pd.DataFrame` object
-    """
-    if columns_obs_only:
-        try:
-            obs = df[columns_obs_only].copy()
-            obs = obs.set_index(df.index.map(str))
-            df = df.drop(columns_obs_only, axis=1)
-        except KeyError as e:
-            raise ColumnNotFoundError(
-                "One or more column names passed to column_obs_only were not found in the input data. "
-                "Are the column names spelled correctly?"
-            ) from e
-    else:
-        obs = pd.DataFrame(index=df.index.map(str))
-        logg.info("Added all columns to `obs`.")
-
-    return BaseDataframes(obs, df)
 
 
 def anndata_to_df(
@@ -657,7 +640,7 @@ def _cast_obs_columns(obs: pd.DataFrame) -> pd.DataFrame:
     return obs
 
 
-def generate_anndata(
+def generate_anndata(  # pragma: no cover
     shape: tuple[int, int],
     X_type=sparse.csr_matrix,
     X_dtype=np.float32,
