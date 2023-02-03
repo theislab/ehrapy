@@ -1182,14 +1182,14 @@ files = [
 
 [[package]]
 name = "deep-translator"
-version = "1.9.2"
+version = "1.9.3"
 description = "A flexible free and unlimited python tool to translate between different languages in a simple way using multiple translators"
 category = "main"
 optional = false
 python-versions = ">=3.7,<4.0"
 files = [
-    {file = "deep-translator-1.9.2.tar.gz", hash = "sha256:8872b5038e1266a27937e0f67adb3beb1b94d26af2193ed37a1338c2bc81fc06"},
-    {file = "deep_translator-1.9.2-py3-none-any.whl", hash = "sha256:5ba891a70c1302244977798be82e1b7705cb1b6590829531dbc7f0c9bc50d0a2"},
+    {file = "deep-translator-1.9.3.tar.gz", hash = "sha256:ed5b0437ab7d73414cc34cc75a7c672328a5426435dbbad711f2eb0186ad2847"},
+    {file = "deep_translator-1.9.3-py3-none-any.whl", hash = "sha256:cf6fce978a577c7816b3ad30917e875fa30af54283a002c787ecf26e08b3df6e"},
 ]
 
 [package.dependencies]
@@ -2098,22 +2098,23 @@ files = [
 
 [[package]]
 name = "ipykernel"
-version = "6.20.2"
+version = "6.21.1"
 description = "IPython Kernel for Jupyter"
 category = "main"
 optional = true
 python-versions = ">=3.8"
 files = [
-    {file = "ipykernel-6.20.2-py3-none-any.whl", hash = "sha256:5d0675d5f48bf6a95fd517d7b70bcb3b2c5631b2069949b5c2d6e1d7477fb5a0"},
-    {file = "ipykernel-6.20.2.tar.gz", hash = "sha256:1893c5b847033cd7a58f6843b04a9349ffb1031bc6588401cadc9adb58da428e"},
+    {file = "ipykernel-6.21.1-py3-none-any.whl", hash = "sha256:1a04bb359212e23e46adc0116ec82ea128c1e5bd532fde4fbe679787ff36f0cf"},
+    {file = "ipykernel-6.21.1.tar.gz", hash = "sha256:a0f8eece39cab1ee352c9b59ec67bbe44d8299f8238e4c16ff7f4cf0052d3378"},
 ]
 
 [package.dependencies]
 appnope = {version = "*", markers = "platform_system == \"Darwin\""}
 comm = ">=0.1.1"
-debugpy = ">=1.0"
+debugpy = ">=1.6.5"
 ipython = ">=7.23.1"
 jupyter-client = ">=6.1.12"
+jupyter-core = ">=4.12,<5.0.0 || >=5.1.0"
 matplotlib-inline = ">=0.1"
 nest-asyncio = "*"
 packaging = "*"
@@ -2400,18 +2401,18 @@ test = ["click", "coverage", "pre-commit", "pytest (>=7.0)", "pytest-asyncio (>=
 
 [[package]]
 name = "jupyter-server"
-version = "2.2.0"
+version = "2.2.1"
 description = "The backend—i.e. core services, APIs, and REST endpoints—to Jupyter web applications."
 category = "main"
 optional = true
 python-versions = ">=3.8"
 files = [
-    {file = "jupyter_server-2.2.0-py3-none-any.whl", hash = "sha256:9c79b7227a7e3974856265908da40715ab49b7014ac39478d80b07e164b5a70e"},
-    {file = "jupyter_server-2.2.0.tar.gz", hash = "sha256:f901efcb4adce2370c64dc5942be587bd181119644660a1eb123435c3cd01f95"},
+    {file = "jupyter_server-2.2.1-py3-none-any.whl", hash = "sha256:854fb7d49f6b7f545d4f8354172b004dcda887ba0699def7112daf785ba3c9ce"},
+    {file = "jupyter_server-2.2.1.tar.gz", hash = "sha256:5afb8a0cdfee37d02d69bdf470ae9cbb1dee5d4788f9bc6cc8e54bd8c83fb096"},
 ]
 
 [package.dependencies]
-anyio = ">=3.1.0,<4"
+anyio = ">=3.1.0"
 argon2-cffi = "*"
 jinja2 = "*"
 jupyter-client = ">=7.4.4"
