@@ -13,7 +13,7 @@ jobs:
             matrix:
                 include:
                     - {
-                          python-version: 3.8,
+                          python-version: 3.10,
                           os: ubuntu-latest,
                           session: "pre-commit",
                       }
@@ -23,17 +23,17 @@ jobs:
                     #                          session: "safety",
                     #                      }
                     - {
-                          python-version: 3.8,
+                          python-version: 3.10,
                           os: ubuntu-latest,
                           session: "mypy",
                       }
                     - {
-                          python-version: 3.8,
+                          python-version: 3.10,
                           os: ubuntu-latest,
                           session: "tests",
                       }
                     - {
-                          python-version: 3.8,
+                          python-version: 3.10,
                           os: macos-latest,
                           session: "tests",
                       }
@@ -119,10 +119,10 @@ jobs:
             - name: Check out the repository
               uses: actions/checkout@v3
 
-            - name: Set up Python 3.8
+            - name: Set up Python 3.10
               uses: actions/setup-python@v4
               with:
-                  python-version: 3.8
+                  python-version: 3.10
 
             - name: Install Poetry
               run: |

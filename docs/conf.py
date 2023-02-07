@@ -180,4 +180,5 @@ nbsphinx_thumbnails = {
     "tutorials/notebooks/mimic_2_survival_analysis": "_static/tutorials/survival.png",
     "tutorials/notebooks/diabetes_130": "_static/tutorials/diabetes.png",
     "tutorials/notebooks/medcat": "_static/tutorials/nlp.png",
+    "tutorials/notebooks/ml_usecases": "_static/tutorials/machine_learning.png",
 }

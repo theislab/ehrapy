@@ -113,9 +113,6 @@ def _extract_impute_value(replacement: dict[str, str | int], column_name: str) -
         return None
 
 
-# ===================== Simple Imputation =========================
-
-
 def simple_impute(
     adata: AnnData,
     var_names: list[str] | None = None,
@@ -187,9 +184,6 @@ def _simple_impute(adata: AnnData, var_names: list[str] | None, strategy: str) -
     # impute all columns if None passed
     else:
         adata.X = imputer.fit_transform(adata.X)
-
-
-# ===================== KNN Imputation =========================
 
 
 def knn_impute(
@@ -290,9 +284,6 @@ def _knn_impute(adata: AnnData, var_names: list[str] | None, n_neighbours: int) 
         adata.X = adata.X.astype("float64")
     else:
         adata.X = imputer.fit_transform(adata.X)
-
-
-# ======================  MissForest Impuation =======================
 
 
 def miss_forest_impute(
@@ -424,9 +415,6 @@ def miss_forest_impute(
 
     if copy:
         return adata
-
-
-# ===================== SoftImpute =========================
 
 
 def soft_impute(
@@ -576,9 +564,6 @@ def _soft_impute(
         adata.X = imputer.fit_transform(adata.X)
 
 
-# ===================== IterativeSVD =========================
-
-
 def iterative_svd_impute(
     adata: AnnData,
     var_names: list[str] | None = None,
@@ -705,9 +690,6 @@ def _iterative_svd_impute(
         adata.X[::, column_indices] = imputer.fit_transform(adata.X[::, column_indices])
     else:
         adata.X = imputer.fit_transform(adata.X)
-
-
-# ===================== MatrixFactorization =========================
 
 
 def matrix_factorization_impute(
@@ -839,9 +821,6 @@ def _matrix_factorization_impute(
         adata.X = imputer.fit_transform(adata.X)
 
 
-# ===================== NuclearNormMinimization =========================
-
-
 def nuclear_norm_minimization_impute(
     adata: AnnData,
     var_names: list[str] | None = None,
@@ -963,9 +942,6 @@ def _nuclear_norm_minimization_impute(
         adata.X[::, column_indices] = imputer.fit_transform(adata.X[::, column_indices])
     else:
         adata.X = imputer.fit_transform(adata.X)
-
-
-# ===================== miceforest =========================
 
 
 def mice_forest_impute(
