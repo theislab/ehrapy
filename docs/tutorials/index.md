@@ -22,6 +22,7 @@ For questions about the usage of ehrapy use [Github Discussions].
    notebooks/mimic_2_survival_analysis
    notebooks/diabetes_130
    notebooks/medcat
+   notebooks/ml_usecases
 
 ```
 
