@@ -12,7 +12,7 @@
 
 # ehrapy overview
 
-<img src="ehrapy_fig.png![grafik](https://user-images.githubusercontent.com/99650244/217562449-e05ab1dd-9c04-44fc-a042-b993dd9d4eea.png)" alt="ehrapy overview">
+<img src="https://user-images.githubusercontent.com/99650244/217562449-e05ab1dd-9c04-44fc-a042-b993dd9d4eea.png" alt="ehrapy overview">
 
 ## Features
 
