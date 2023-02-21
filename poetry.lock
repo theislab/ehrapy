@@ -1181,21 +1181,23 @@ files = [
 
 [[package]]
 name = "deep-translator"
-version = "1.10.0"
+version = "1.10.1"
 description = "A flexible free and unlimited python tool to translate between different languages in a simple way using multiple translators"
 category = "main"
 optional = false
 python-versions = ">=3.7,<4.0"
 files = [
-    {file = "deep-translator-1.10.0.tar.gz", hash = "sha256:febc91add8a20c4bf1414b3d7b0d5e2faa9938e33afdb86fbe6eee04b494000d"},
-    {file = "deep_translator-1.10.0-py3-none-any.whl", hash = "sha256:69a2b401a367f333fbd9237cd341073c747b7076b6597c77b9bc6dc607b7e316"},
+    {file = "deep_translator-1.10.1-py3-none-any.whl", hash = "sha256:8581e93c4d33746cd6e662607fefb26c457eae9b197de0648e3f25f324ef6534"},
+    {file = "deep_translator-1.10.1.tar.gz", hash = "sha256:e99438dab70e3bebcda932e3f5e86fd3d32b43f87d66ed9f8b6816db146f1d9f"},
 ]
 
 [package.dependencies]
 beautifulsoup4 = ">=4.9.1,<5.0.0"
-docx2txt = {version = ">=0.8,<0.9", extras = ["docx"]}
-pypdf = {version = ">=3.3.0,<4.0.0", extras = ["pdf"]}
 requests = ">=2.23.0,<3.0.0"
+
+[package.extras]
+docx = ["docx2txt (>=0.8,<0.9)"]
+pdf = ["pypdf (>=3.3.0,<4.0.0)"]
 
 [[package]]
 name = "deepl"
@@ -1264,17 +1266,6 @@ python-versions = ">=3.7"
 files = [
     {file = "docutils-0.19-py3-none-any.whl", hash = "sha256:5e1de4d849fee02c63b040a4a3fd567f4ab104defd8a5511fbbc24a8a017efbc"},
     {file = "docutils-0.19.tar.gz", hash = "sha256:33995a6753c30b7f577febfc2c50411fec6aac7f7ffeb7c4cfe5991072dcf9e6"},
-]
-
-[[package]]
-name = "docx2txt"
-version = "0.8"
-description = "A pure python-based utility to extract text and images from docx files."
-category = "main"
-optional = false
-python-versions = "*"
-files = [
-    {file = "docx2txt-0.8.tar.gz", hash = "sha256:2c06d98d7cfe2d3947e5760a57d924e3ff07745b379c8737723922e7009236e5"},
 ]
 
 [[package]]
@@ -4700,28 +4691,6 @@ files = [
 
 [package.extras]
 diagrams = ["jinja2", "railroad-diagrams"]
-
-[[package]]
-name = "pypdf"
-version = "3.4.0"
-description = "A pure-python PDF library capable of splitting, merging, cropping, and transforming PDF files"
-category = "main"
-optional = false
-python-versions = ">=3.6"
-files = [
-    {file = "pypdf-3.4.0-py3-none-any.whl", hash = "sha256:1f40d69a40ed99528cc3c8782bfe719bc26cf31d9a4958c06f17b5ee3d2ae0f4"},
-    {file = "pypdf-3.4.0.tar.gz", hash = "sha256:3aac40e539e6a25a31bdc0240229e7ac6670eec9932ebd27e95106c5d83befe8"},
-]
-
-[package.dependencies]
-typing_extensions = {version = ">=3.10.0.0", markers = "python_version < \"3.10\""}
-
-[package.extras]
-crypto = ["PyCryptodome"]
-dev = ["black", "flit", "pip-tools", "pre-commit (<2.18.0)", "pytest-cov", "wheel"]
-docs = ["myst_parser", "sphinx", "sphinx_rtd_theme"]
-full = ["Pillow", "PyCryptodome"]
-image = ["Pillow"]
 
 [[package]]
 name = "pypi-latest"
