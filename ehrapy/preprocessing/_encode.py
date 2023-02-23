@@ -241,7 +241,7 @@ def _encode(
                 var=dict(var_names=encoded_var_names),
                 uns=orig_uns_copy,
                 layers={"original": updated_layer},
-                dtype=np.float32
+                dtype=np.float32,
             )
             encoded_ann_data.uns["var_to_encoding"] = {categorical: encode_mode for categorical in categoricals_names}
             encoded_ann_data.uns["encoding_to_var"] = {encode_mode: categoricals_names}
@@ -337,7 +337,7 @@ def _encode(
                 var=dict(var_names=encoded_var_names),
                 uns=orig_uns_copy,
                 layers={"original": updated_layer},
-                dtype=np.float32
+                dtype=np.float32,
             )
             # update current encodings in uns
             encoded_ann_data.uns["var_to_encoding"] = var_to_encoding
