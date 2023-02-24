@@ -29,6 +29,7 @@ ep.pl.cool_fancy_plot()
 
     io.read_csv
     io.read_h5ad
+    io.read_fhir
     io.write
 ```
 
