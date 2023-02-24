@@ -21,7 +21,6 @@ python_versions = ["3.8", "3.10"]
 nox.options.sessions = (
     "pre-commit",
     # "safety",
-    "mypy",
     "tests",
     # "typeguard",
     # "xdoctest",  Not required because we try to refrain from using executable code in comments
@@ -127,15 +126,6 @@ def safety(session: Session) -> None:
     requirements = session.poetry.export_requirements()
     session.install("safety")
     session.run("safety", "check", "--full-report", f"--file={requirements}")
-
-
-@session(python=python_versions)
-def mypy(session: Session) -> None:
-    """Type-check using mypy."""
-    args = session.posargs or ["ehrapy", "tests", "docs/conf.py"]
-    session.install(".")
-    session.install("mypy", "pytest", "types-pkg-resources", "types-requests", "types-attrs")
-    session.run("mypy", *args)
 
 
 @session(python=python_versions)

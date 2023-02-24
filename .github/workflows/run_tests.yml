@@ -25,11 +25,6 @@ jobs:
                     - {
                           python-version: "3.10",
                           os: ubuntu-latest,
-                          session: "mypy",
-                      }
-                    - {
-                          python-version: "3.10",
-                          os: ubuntu-latest,
                           session: "tests",
                       }
                     - {

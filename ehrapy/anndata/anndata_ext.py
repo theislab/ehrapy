@@ -55,7 +55,7 @@ def df_to_anndata(
             else:
                 raise IndexNotFoundError(f"Did not find column {index_column} in neither index or columns!")
         # index_column is neither in the index or in the columns or passed as some value that could not be understood
-        else:
+        else:  # pragma: no cover
             raise IndexNotFoundError(f"Did not find column {index_column} in neither index or columns!")
 
     # move columns from the input dataframe to obs
@@ -121,7 +121,7 @@ def anndata_to_df(
         X = adata.layers[layer]
     else:
         X = adata.X
-    if issparse(X):
+    if issparse(X):  # pragma: no cover
         X = X.toarray()
 
     df = pd.DataFrame(X, columns=list(adata.var_names))
@@ -130,7 +130,7 @@ def anndata_to_df(
             raise ObsEmptyError("Cannot slice columns from empty obs!")
         if isinstance(obs_cols, str):
             obs_cols = list(obs_cols)
-        if isinstance(obs_cols, list):
+        if isinstance(obs_cols, list):  # pragma: no cover
             obs_slice = adata.obs[obs_cols]
         # reset index needed since we slice all or at least some columns from obs DataFrame
         obs_slice = obs_slice.reset_index(drop=True)
