@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 
 import numpy as np
@@ -6,13 +5,13 @@ import pandas as pd
 import pytest
 
 from ehrapy.anndata.anndata_ext import ColumnNotFoundError
-from ehrapy.core._tool_available import _shell_command_accessible
-from ehrapy.io._read import read_csv, read_h5ad
+from ehrapy.io._read import read_csv, read_fhir, read_h5ad
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_PATH = f"{CURRENT_DIR}/test_data_io"
 _TEST_PATH_H5AD = f"{CURRENT_DIR}/test_data_io/h5ad"
 _TEST_PATH_MULTIPLE = f"{CURRENT_DIR}/test_data_io_multiple"
+_TEST_PATH_FHIR = f"{CURRENT_DIR}/test_data_io/fhir/json"
 
 
 class TestRead:
@@ -139,11 +138,6 @@ class TestRead:
         assert pd.api.types.is_numeric_dtype(adata.obs["b12_values"].dtype)
         assert pd.api.types.is_categorical_dtype(adata.obs["name"].dtype)
 
-    @pytest.mark.skipif(
-        (os.name != "nt" and not _shell_command_accessible(["gs", "-h"]))
-        or (os.name == "nt" and not _shell_command_accessible(["gswin64c", " -v"])),
-        reason="Requires ghostscript to be installed.",
-    )
     def test_set_default_index(self):
         adata = read_csv(dataset_path=f"{_TEST_PATH}/dataset_index.csv")
         assert adata.X.shape == (5, 4)
@@ -262,3 +256,9 @@ class TestRead:
         assert set(adatas["dataset_num_with_missing"].obs.columns) == {"col2"}
         assert set(adatas["dataset_non_num_with_missing"].var_names) == {"strcol", "intcol", "boolcol"}
         assert set(adatas["dataset_num_with_missing"].var_names) == {"col1", "col3"}
+
+    def test_read_fhir_json(self):
+        adata = read_fhir(_TEST_PATH_FHIR)
+
+        assert adata.shape == (4928, 80)
+        assert "resource.birthDate" in adata.obs.columns
