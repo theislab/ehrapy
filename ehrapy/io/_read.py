@@ -74,39 +74,6 @@ def read_csv(
     return adata
 
 
-def read_h5ad(
-    dataset_path: Path | str,
-    backup_url: str | None = None,
-    download_dataset_name: str | None = None,
-) -> AnnData | dict[str, AnnData] | MuData:
-    """Reads or downloads a desired directory of h5ad files or a single h5ad file.
-
-    Args:
-        dataset_path: Path to the file or directory to read.
-        download_dataset_name: Name of the file or directory in case the dataset is downloaded
-        backup_url: URL to download the data file(s) from if not yet existing.
-
-    Returns:
-        An :class:`~anndata.AnnData` object or a dict with an identifier (the filename, without extension)
-        for each :class:`~anndata.AnnData` object in the dict
-
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = eh.data.mimic_2(encode=True)
-            ep.io.write("mimic_2.h5ad", adata)
-            adata_2 = ep.io.read_h5ad("mimic_2.h5ad")
-    """
-    file: Path = Path(dataset_path)
-    if not file.exists():
-        file = _get_non_existing_files(file, download_dataset_name, backup_url)
-
-    adata = _read_h5ad(filename=file)
-    return adata
-
-
 def _read_csv(
     filename: Path,
     sep: str,
@@ -159,17 +126,41 @@ def _read_csv(
         return adata
 
 
-def _read_h5ad(
-    filename: Path,
-) -> AnnData | dict[str, AnnData]:
-    """Internal interface of the read_h5ad method."""
+def read_h5ad(
+    dataset_path: Path | str,
+    backup_url: str | None = None,
+    download_dataset_name: str | None = None,
+) -> AnnData | dict[str, AnnData] | MuData:
+    """Reads or downloads a desired directory of h5ad files or a single h5ad file.
 
-    # If the filename is a directory, assume it is a dataset with h5ad multiple files
-    if filename.is_dir():
-        return _read_from_directory(filename, False, None, "h5ad")
-    # dataset is a single h5ad file
+    Args:
+        dataset_path: Path to the file or directory to read.
+        download_dataset_name: Name of the file or directory in case the dataset is downloaded
+        backup_url: URL to download the data file(s) from if not yet existing.
+
+    Returns:
+        An :class:`~anndata.AnnData` object or a dict with an identifier (the filename, without extension)
+        for each :class:`~anndata.AnnData` object in the dict
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy as ep
+
+            adata = eh.data.mimic_2(encode=True)
+            ep.io.write("mimic_2.h5ad", adata)
+            adata_2 = ep.io.read_h5ad("mimic_2.h5ad")
+    """
+    file: Path = Path(dataset_path)
+    if not file.exists():
+        file = _get_non_existing_files(file, download_dataset_name, backup_url)
+
+    if file.is_dir():
+        adata = _read_from_directory(file, False, None, "h5ad")
     else:
-        return _do_read_h5ad(filename)
+        adata = _do_read_h5ad(file)
+
+    return adata
 
 
 def _read_from_directory(
@@ -691,10 +682,6 @@ class MudataCachingNotSupportedError(Exception):
 
 
 class ExtensionMissingError(Exception):
-    pass
-
-
-class UnsupportedDirectoryParsingFormatException(Exception):
     pass
 
 
