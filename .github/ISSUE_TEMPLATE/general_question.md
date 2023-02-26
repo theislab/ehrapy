@@ -1,10 +1,11 @@
 name: Question
-description: Ask a usage question about ehrapy
+description: Ask a question about ehrapy
 labels: enhancement
-body: - type: textarea
-id: description
-attributes:
-label: Description of Question
-description: Please ask your question here. The more precise, the more likely we can help.
-validations:
-required: true
+body:
+    - type: textarea
+      id: description
+      attributes:
+          label: Question
+          description: Please ask a clear and well-defined question.
+      validations:
+          required: true

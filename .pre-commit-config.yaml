@@ -61,6 +61,7 @@ repos:
       rev: v2.5.1
       hooks:
           - id: prettier
+            exclude: .github/ISSUE_TEMPLATE
     - repo: https://github.com/pycqa/isort
       rev: 5.12.0
       hooks:

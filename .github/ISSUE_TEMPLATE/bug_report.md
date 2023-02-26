@@ -1,14 +1,16 @@
 name: Bug report
 description: Report something that is broken or incorrect
 labels: bug
-body: - type: markdown
-attributes:
-value: |
-**Note**: Please read [this guide](https://matthewrocklin.com/blog/work/2018/02/28/minimal-bug-reports)
-detailing how to provide the necessary information for us to reproduce your bug. In brief:
-_ Please provide exact steps how to reproduce the bug in a clean Python environment.
-_ In case it's not clear what's causing this bug, please provide the data or the data generation procedure. \* Sometimes it is not possible to share the data, but usually it is possible to replicate problems on publicly
-available datasets or to share a subset of your data.
+body:
+    - type: markdown
+      attributes:
+          value: |
+              **Note**: Please read [this guide](https://matthewrocklin.com/blog/work/2018/02/28/minimal-bug-reports)
+              detailing how to provide the necessary information for us to reproduce your bug. In brief:
+                * Please provide exact steps how to reproduce the bug in a clean Python environment.
+                * In case it's not clear what's causing this bug, please provide the data or the data generation procedure.
+                * Sometimes it is not possible to share the data, but usually it is possible to replicate problems on publicly
+                  available datasets or to share a subset of your data.
 
     - type: textarea
       id: report
