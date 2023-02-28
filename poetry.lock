@@ -2933,14 +2933,14 @@ scipy = ">=1.0.0"
 
 [[package]]
 name = "missingno"
-version = "0.5.1"
+version = "0.5.2"
 description = "Missing data visualization module for Python."
 category = "main"
 optional = false
 python-versions = "*"
 files = [
-    {file = "missingno-0.5.1-py3-none-any.whl", hash = "sha256:74e8fa1ea68c9482479a9429009856ae6cc64725f085092429950e30a8d78f55"},
-    {file = "missingno-0.5.1.tar.gz", hash = "sha256:22e1735a9213df7425e76123ebcc627d11a2608a1d725b90c6a2d7329db718db"},
+    {file = "missingno-0.5.2-py3-none-any.whl", hash = "sha256:55782621ce09ba0f0a1d08e5bd6d6fe1946469fb03951fadf7d209911ca5b072"},
+    {file = "missingno-0.5.2.tar.gz", hash = "sha256:4a4baa9ca9f9e4e0d9402455df26b656632e94b99e87fa64c0cdbbbc722837ac"},
 ]
 
 [package.dependencies]
