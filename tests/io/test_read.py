@@ -262,3 +262,9 @@ class TestRead:
 
         assert adata.shape == (4928, 80)
         assert "resource.birthDate" in adata.obs.columns
+
+    def test_read_fhir_json_obs_only(self):
+        adata = read_fhir(_TEST_PATH_FHIR, columns_obs_only=["fullUrl"])
+
+        assert adata.shape == (4928, 79)
+        assert "fullUrl" in adata.obs.columns
