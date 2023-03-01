@@ -1320,6 +1320,23 @@ files = [
 devel = ["colorama", "json-spec", "jsonschema", "pylint", "pytest", "pytest-benchmark", "pytest-cache", "validictory"]
 
 [[package]]
+name = "fhiry"
+version = "2.1.0"
+description = "FHIR to pandas.dataframe for AI and ML"
+category = "main"
+optional = false
+python-versions = "*"
+files = [
+    {file = "fhiry-2.1.0-py2.py3-none-any.whl", hash = "sha256:4e9c52cfbdcd6d12bbfc0a3d603e84a132062a875abb2f0a12fd98c826c78d48"},
+]
+
+[package.dependencies]
+pandas = "*"
+
+[package.extras]
+testing = ["pytest", "pytest-cov", "setuptools"]
+
+[[package]]
 name = "filelock"
 version = "3.9.0"
 description = "A platform independent file lock."
@@ -7235,4 +7252,4 @@ scikit-learn-intelex = ["scikit-learn-intelex"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8.0,<3.11"
-content-hash = "f67e82cc6018bab1455c9a469a14c1b5ef5176d3e29627b2841e0dbc4848f711"
+content-hash = "c3b3d5422b716fa119be740032e9cdee914f105cec089c7e0a8a424c8f6a18b9"

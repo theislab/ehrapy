@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import shutil
 from pathlib import Path
-from typing import Iterator
+from typing import Iterator, Literal
 
+import fhiry.parallel as fp
 import numpy as np
 import pandas as pd
 from _collections import OrderedDict
@@ -61,7 +62,7 @@ def read_csv(
         file = _get_non_existing_files(file, download_dataset_name, backup_url)
 
     adata = _read_csv(
-        filename=file,
+        file_path=file,
         sep=sep,
         index_column=index_column,
         columns_obs_only=columns_obs_only,
@@ -72,6 +73,58 @@ def read_csv(
         **kwargs,
     )
     return adata
+
+
+def _read_csv(
+    file_path: Path,
+    sep: str,
+    index_column: dict[str, str | int] | str | int | None,
+    columns_obs_only: dict[str, list[str]] | list[str] | None,
+    columns_x_only: dict[str, list[str]] | list[str] | None,
+    return_dfs: bool = False,
+    return_mudata: bool = False,
+    cache: bool = False,
+    **kwargs,
+) -> AnnData | dict[str, AnnData] | MuData:
+    """Internal interface of the read_csv method."""
+    if cache and (return_mudata or return_dfs):
+        raise CachingNotSupported("Caching is currently not supported for MuData or Pandas DataFrame objects.")
+    if return_dfs and (columns_x_only or columns_obs_only):
+        raise Warning(
+            "Parameters columns_x_only and columns_obs_only are not supported when returning Pandas DataFrames."
+        )
+    path_cache = settings.cachedir / file_path
+    # reading from (cache) file is separated in the read_h5ad function
+    if cache and (path_cache.is_dir() or path_cache.is_file()):
+        raise CacheExistsException(
+            f"{path_cache} already exists. Use the read_h5ad function instead to read from cache!"
+        )
+    # If the the file path is a directory, assume it is a dataset with multiple files
+    elif file_path.is_dir():
+        return _read_from_directory(
+            file_path,
+            cache,
+            path_cache,
+            extension=sep,
+            index_column=index_column,
+            columns_obs_only=columns_obs_only,
+            columns_x_only=columns_x_only,
+            return_dfs=return_dfs,
+            return_mudata=return_mudata,  # type: ignore
+        )
+    # input is a single file
+    else:
+        if sep not in {",", "\t"}:
+            raise ValueError("Please provide one of the available separators , or tab")
+        adata, columns_obs_only = _do_read_csv(
+            file_path, sep, index_column, columns_obs_only, columns_x_only, cache, **kwargs  # type: ignore
+        )
+        # cache results if desired
+        if cache:
+            if not path_cache.parent.is_dir():
+                path_cache.parent.mkdir(parents=True)
+            return _write_cache(adata, path_cache, columns_obs_only)  # type: ignore
+        return adata
 
 
 def read_h5ad(
@@ -99,81 +152,20 @@ def read_h5ad(
             ep.io.write("mimic_2.h5ad", adata)
             adata_2 = ep.io.read_h5ad("mimic_2.h5ad")
     """
-    file: Path = Path(dataset_path)
-    if not file.exists():
-        file = _get_non_existing_files(file, download_dataset_name, backup_url)
+    file_path: Path = Path(dataset_path)
+    if not file_path.exists():
+        file_path = _get_non_existing_files(file_path, download_dataset_name, backup_url)
 
-    adata = _read_h5ad(filename=file)
+    if file_path.is_dir():
+        adata = _read_from_directory(file_path, False, None, "h5ad")
+    else:
+        adata = _do_read_h5ad(file_path)
+
     return adata
 
 
-def _read_csv(
-    filename: Path,
-    sep: str,
-    index_column: dict[str, str | int] | str | int | None,
-    columns_obs_only: dict[str, list[str]] | list[str] | None,
-    columns_x_only: dict[str, list[str]] | list[str] | None,
-    return_dfs: bool = False,
-    return_mudata: bool = False,
-    cache: bool = False,
-    **kwargs,
-) -> AnnData | dict[str, AnnData] | MuData:
-    """Internal interface of the read_csv method."""
-    if cache and (return_mudata or return_dfs):
-        _cache_not_supported()
-    if return_dfs and (columns_x_only or columns_obs_only):
-        raise Warning(
-            "Parameters columns_x_only and columns_obs_only are not supported when returning Pandas DataFrames."
-        )
-    path_cache = settings.cachedir / filename
-    # reading from (cache) file is separated in the read_h5ad function
-    if cache and (path_cache.is_dir() or path_cache.is_file()):
-        raise CacheExistsException(
-            f"{path_cache} already exists. Use the read_h5ad function instead to read from cache!"
-        )
-    # If the filename is a directory, assume it is a dataset with multiple files
-    elif filename.is_dir():
-        return _read_from_directory(
-            filename,
-            cache,
-            path_cache,
-            extension=sep,
-            index_column=index_column,
-            columns_obs_only=columns_obs_only,
-            columns_x_only=columns_x_only,
-            return_dfs=return_dfs,
-            return_mudata=return_mudata,  # type: ignore
-        )
-    # input is a single file
-    else:
-        if sep not in {",", "\t"}:
-            raise ValueError("Please provide one of the available separators , or tab")
-        adata, columns_obs_only = _do_read_csv(
-            filename, sep, index_column, columns_obs_only, columns_x_only, cache, **kwargs  # type: ignore
-        )
-        # cache results if desired
-        if cache:
-            if not path_cache.parent.is_dir():
-                path_cache.parent.mkdir(parents=True)
-            return _write_cache(adata, path_cache, columns_obs_only)  # type: ignore
-        return adata
-
-
-def _read_h5ad(
-    filename: Path,
-) -> AnnData | dict[str, AnnData]:
-    """Internal interface of the read_h5ad method."""
-
-    # If the filename is a directory, assume it is a dataset with h5ad multiple files
-    if filename.is_dir():
-        return _read_from_directory(filename, False, None, "h5ad")
-    # dataset is a single h5ad file
-    else:
-        return _do_read_h5ad(filename)
-
-
 def _read_from_directory(
-    filename: Path,
+    file_path: Path,
     cache: bool,
     path_cache_dir: Path | None,
     extension: str,
@@ -185,11 +177,11 @@ def _read_from_directory(
 ) -> dict[str, AnnData] | dict[str, pd.DataFrame]:
     """Parse AnnData objects or Pandas DataFrames from a directory containing the data files"""
     if return_dfs:
-        dfs = _read_multiple_csv(filename, sep=extension, return_dfs=True)
+        dfs = _read_multiple_csv(file_path, sep=extension, return_dfs=True)
         return dfs  # type: ignore
     if extension in {",", "\t"}:
         adata_objects, columns_obs_only = _read_multiple_csv(  # type: ignore
-            filename,
+            file_path,
             sep=extension,
             index_column=index_column,
             columns_obs_only=columns_obs_only,
@@ -205,13 +197,13 @@ def _read_from_directory(
             return _write_cache_dir(adata_objects, path_cache_dir, columns_obs_only, index_column)  # type: ignore
         return adata_objects  # type: ignore
     elif extension == "h5ad":
-        return _read_multiple_h5ad(filename)
+        return _read_multiple_h5ad(file_path)
     else:
         raise NotImplementedError(f"Reading from directory with .{extension} files is not implemented yet!")
 
 
 def _read_multiple_csv(  # noqa: N802
-    filename: Path,
+    file_path: Path,
     sep: str,
     index_column: dict[str, str | int] | str | int | None = None,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
@@ -224,7 +216,7 @@ def _read_multiple_csv(  # noqa: N802
     """Read a dataset containing multiple .csv/.tsv files.
 
     Args:
-        filename: File path to the directory containing multiple .csv/.tsv files.
+        file_path: File path to the directory containing multiple .csv/.tsv files.
         sep: Either , or \t to determine which files to read.
         index_column: Column names of the index columns for obs
         columns_obs_only: List of columns per file (AnnData object) which should only be stored in .obs, but not in X. Useful for free text annotations.
@@ -245,7 +237,7 @@ def _read_multiple_csv(  # noqa: N802
         df_dict: dict[str, pd.DataFrame] = {}
     elif return_mudata_object:
         mudata = None
-    for file in filename.iterdir():
+    for file in file_path.iterdir():
         if file.is_file() and file.suffix in {".csv", ".tsv"}:
             # slice off the file suffix .csv or .tsv for a clean file name
             file_identifier = file.name[:-4]
@@ -279,29 +271,8 @@ def _read_multiple_csv(  # noqa: N802
         return anndata_dict, obs_only_all
 
 
-def _read_multiple_h5ad(  # noqa: N802
-    filename: Path,
-) -> dict[str, AnnData]:
-    """Read a dataset containing multiple .h5ad files.
-
-    Args:
-        filename: File path to the directory containing multiple .csv/.tsv files.
-
-    Returns:
-        A dict mapping the filename (object name) to the corresponding :class:`~anndata.AnnData` object
-    """
-    anndata_dict = {}
-    for file in filename.iterdir():
-        if file.is_file() and file.suffix == ".h5ad":
-            # slice off the file suffix .h5ad
-            adata_identifier = file.name[:-5]
-            adata = _do_read_h5ad(file)
-            anndata_dict[adata_identifier] = adata
-    return anndata_dict
-
-
 def _do_read_csv(
-    filename: Path | Iterator[str],
+    file_path: Path | Iterator[str],
     delimiter: str | None = ",",
     index_column: str | int | None = None,
     columns_obs_only: list[str] | None = None,
@@ -312,7 +283,7 @@ def _do_read_csv(
     """Read `.csv` and `.tsv` file.
 
     Args:
-        filename: File path to the csv file.
+        file_path: File path to the csv file.
         delimiter: Delimiter separating the csv data within the file.
         index_column: Index or column name of the index column (obs)
         columns_obs_only: List of columns which only be stored in .obs, but not in X. Useful for free text annotations.
@@ -330,32 +301,146 @@ def _do_read_csv(
                 f"for obs only. Using default indices instead and moving [blue]{index_column} [yellow]to column_obs_only."
             )
             index_column = None
-        initial_df = pd.read_csv(filename, delimiter=delimiter, index_col=index_column, **kwargs)
+        initial_df = pd.read_csv(file_path, delimiter=delimiter, index_col=index_column, **kwargs)
     # in case the index column is misspelled or does not exist
     except ValueError:
         raise IndexNotFoundError(
-            f"Could not create AnnData object while reading file {filename}. Does index_column named {index_column} "
-            f"exist in {filename}?"
+            f"Could not create AnnData object while reading file {file_path}. Does index_column named {index_column} "
+            f"exist in {file_path}?"
         ) from None
 
     initial_df, columns_obs_only = _prepare_dataframe(initial_df, columns_obs_only, columns_x_only, cache)
+
     return df_to_anndata(initial_df, columns_obs_only), columns_obs_only
 
 
-def _do_read_h5ad(filename: Path | Iterator[str]) -> AnnData:
+def _read_multiple_h5ad(  # noqa: N802
+    file_path: Path,
+) -> dict[str, AnnData]:
+    """Read a dataset containing multiple .h5ad files.
+
+    Args:
+        file_path: File path to the directory containing multiple .csv/.tsv files.
+
+    Returns:
+        A dict mapping the filename (object name) to the corresponding :class:`~anndata.AnnData` object
+    """
+    anndata_dict = {}
+    for file in file_path.iterdir():
+        if file.is_file() and file.suffix == ".h5ad":
+            # slice off the file suffix .h5ad
+            adata_identifier = file.name[:-5]
+            adata = _do_read_h5ad(file)
+            anndata_dict[adata_identifier] = adata
+    return anndata_dict
+
+
+def _do_read_h5ad(file_path: Path | Iterator[str]) -> AnnData:
     """Read from a h5ad file.
     Args:
-        filename: Path to the h5ad file
+        file_path: Path to the h5ad file
 
     Returns:
         An AnnData object.
     """
-    adata = read_h5(filename)
+    adata = read_h5(file_path)
     if "ehrapy_dummy_encoding" in adata.uns.keys():
         # if dummy encoding was needed, the original dtype of X could not be numerical, so cast it to object
         adata.X = adata.X.astype("object")
         decoded_adata = _decode_cached_adata(adata, list(adata.uns["columns_obs_only"]))
         return decoded_adata
+    return adata
+
+
+def read_fhir(
+    dataset_path: str,
+    format: Literal["json", "ndjson"] = "json",
+    columns_obs_only: list[str] | None = None,
+    columns_x_only: list[str] | None = None,
+    return_df: bool = False,
+    cache: bool = False,
+    backup_url: str | None = None,
+    index_column: str | int | None = None,
+    download_dataset_name: str | None = None,
+) -> pd.DataFrame | AnnData:
+    """Reads one or multiple FHIR files using fhiry.
+
+    Uses https://github.com/dermatologist/fhiry to read the FHIR file into a Pandas DataFrame
+    which is subsequently transformed into an AnnData object.
+
+    Args:
+        dataset_path: Path to one or multiple FHIR files.
+        format: The file format of the FHIR data. One of 'json' or 'ndjson'. Defaults to 'json'.
+        columns_obs_only: These columns will be added to obs only and not X.
+        columns_x_only: These columns will be added to X only and all remaining columns to obs. Note that datetime columns will always be added to .obs though.
+        return_df: Whether to return one or several Pandas DataFrames.
+        cache: Whether to write to cache when reading or not. Defaults to False.
+        download_dataset_name: Name of the file or directory in case the dataset is downloaded
+        index_column: The index column for the generated object. Usually the patient or visit ID.
+        backup_url: URL to download the data file(s) from if not yet existing.
+
+    Returns:
+        A Pandas DataFrame or AnnData object of the read in FHIR file(s).
+    """
+    _check_columns_only_params(columns_obs_only, columns_x_only)
+    file_path: Path = Path(dataset_path)
+    if not file_path.exists():
+        file_path = _get_non_existing_files(file_path, download_dataset_name, backup_url)
+
+    adata = _read_fhir(
+        file_path=str(file_path.resolve()),
+        format=format,
+        index_column=index_column,
+        columns_obs_only=columns_obs_only,
+        columns_x_only=columns_x_only,
+        return_df=return_df,
+        cache=cache,
+    )
+    return adata
+
+
+def _read_fhir(
+    file_path: str,
+    format: Literal["json", "ndjson"],
+    index_column: dict[str, str | int] | str | int | None,
+    columns_obs_only: list[str] | None,
+    columns_x_only: list[str] | None,
+    return_df: bool = False,
+    cache: bool = False,
+) -> AnnData | dict[str, AnnData] | MuData:
+    """Internal interface of the read_csv method."""
+    if cache and return_df:
+        raise CachingNotSupported("Caching is currently not supported for MuData or Pandas DataFrame objects.")
+    if return_df and (columns_x_only or columns_obs_only):
+        raise Warning(
+            "Parameters columns_x_only and columns_obs_only are not supported when returning Pandas DataFrames."
+        )
+    path_cache = settings.cachedir / file_path
+    if cache and (path_cache.is_dir() or path_cache.is_file()):
+        raise CacheExistsException(
+            f"{path_cache} already exists. Use the read_h5ad function instead to read from cache!"
+        )
+    if format == "json":
+        df = fp.process(file_path)
+    elif format == "ndjson":
+        df = fp.ndjson(file_path)
+    else:
+        raise ValueError("Only folders containing json and ndjson in FHIR format are supported.")
+
+    df, columns_obs_only = _prepare_dataframe(df, columns_obs_only, columns_x_only, cache)
+    if index_column:
+        df.set_index(index_column)
+
+    if return_df:
+        return df
+    else:
+        adata = df_to_anndata(df, columns_obs_only)
+
+    if cache:
+        if not path_cache.parent.is_dir():
+            path_cache.parent.mkdir(parents=True)
+        return _write_cache(adata, path_cache, columns_obs_only)  # type: ignore
+
     return adata
 
 
@@ -559,8 +644,7 @@ def _decode_cached_adata(adata: AnnData, column_obs_only: list[str]) -> AnnData:
 
 
 def _extract_index_and_columns_obs_only(identifier: str, index_columns, columns_obs_only, columns_x_only=None):
-    """
-    Extract the index column (if any) and the columns, for obs only (if any) from the given user input.
+    """Extract the index column (if any) and the columns, for obs only (if any) from the given user input.
 
     For each file, `index_columns` and `columns_obs_only` can provide three cases:
         1.) The filename (thus the identifier) is not present as a key and no default key is provided or one or both dicts are empty:
@@ -674,10 +758,6 @@ def _check_columns_only_params(
             )
 
 
-def _cache_not_supported():
-    raise MudataCachingNotSupportedError("Caching is currently not supported for MuData or Pandas DataFrame objects.")
-
-
 class IndexNotFoundError(Exception):
     pass
 
@@ -686,15 +766,11 @@ class BackupURLNotProvidedError(Exception):
     pass
 
 
-class MudataCachingNotSupportedError(Exception):
+class CachingNotSupported(Exception):
     pass
 
 
 class ExtensionMissingError(Exception):
-    pass
-
-
-class UnsupportedDirectoryParsingFormatException(Exception):
     pass
 
 
