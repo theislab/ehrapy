@@ -101,7 +101,7 @@ sphinxext-opengraph = ">=0.6.2"
 sphinx-click = ">=3.0.0"
 furo = ">=2022.3.4"
 sphinx-autodoc-annotation = "^1.0.post1"
-sphinxcontrib-spelling = "^7.7.0"
+sphinxcontrib-spelling = ">=7.7,<9.0"
 
 [tool.poetry.scripts]
 ehrapy = "ehrapy.__main__:main"
