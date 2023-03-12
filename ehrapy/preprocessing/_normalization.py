@@ -6,9 +6,9 @@ from sklearn.preprocessing import maxabs_scale, minmax_scale, power_transform, q
 
 from ehrapy import logging as logg
 from ehrapy.anndata.anndata_ext import (
+    _get_column_values,
     assert_numeric_vars,
     get_column_indices,
-    get_column_values,
     get_numeric_vars,
     set_numeric_vars,
 )
@@ -46,7 +46,7 @@ def scale_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool =
     adata = _prep_adata_norm(adata, copy)
 
     var_idx = get_column_indices(adata, vars)
-    var_values = get_column_values(adata, var_idx)
+    var_values = _get_column_values(adata, var_idx)
 
     var_values = scale(var_values, **kwargs)
 
@@ -91,7 +91,7 @@ def minmax_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool 
     adata = _prep_adata_norm(adata, copy)
 
     var_idx = get_column_indices(adata, vars)
-    var_values = get_column_values(adata, var_idx)
+    var_values = _get_column_values(adata, var_idx)
 
     var_values = minmax_scale(var_values, **kwargs)
 
@@ -135,7 +135,7 @@ def maxabs_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool 
     adata = _prep_adata_norm(adata, copy)
 
     var_idx = get_column_indices(adata, vars)
-    var_values = get_column_values(adata, var_idx)
+    var_values = _get_column_values(adata, var_idx)
 
     var_values = maxabs_scale(var_values)
 
@@ -182,7 +182,7 @@ def robust_scale_norm(
     adata = _prep_adata_norm(adata, copy)
 
     var_idx = get_column_indices(adata, vars)
-    var_values = get_column_values(adata, var_idx)
+    var_values = _get_column_values(adata, var_idx)
 
     var_values = robust_scale(var_values, **kwargs)
 
@@ -227,7 +227,7 @@ def quantile_norm(adata: AnnData, vars: str | list[str] | None = None, copy: boo
     adata = _prep_adata_norm(adata, copy)
 
     var_idx = get_column_indices(adata, vars)
-    var_values = get_column_values(adata, var_idx)
+    var_values = _get_column_values(adata, var_idx)
 
     var_values = quantile_transform(var_values, **kwargs)
 
@@ -272,7 +272,7 @@ def power_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool =
     adata = _prep_adata_norm(adata, copy)
 
     var_idx = get_column_indices(adata, vars)
-    var_values = get_column_values(adata, var_idx)
+    var_values = _get_column_values(adata, var_idx)
 
     var_values = power_transform(var_values, **kwargs)
 
@@ -331,7 +331,7 @@ def log_norm(
         )
 
     var_idx = get_column_indices(adata, vars)
-    var_values = get_column_values(adata, var_idx)
+    var_values = _get_column_values(adata, var_idx)
 
     if offset == 1:
         np.log1p(var_values, out=var_values)
@@ -382,7 +382,7 @@ def sqrt_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool = 
     adata = _prep_adata_norm(adata, copy)
 
     var_idx = get_column_indices(adata, vars)
-    var_values = get_column_values(adata, var_idx)
+    var_values = _get_column_values(adata, var_idx)
 
     var_values = np.sqrt(var_values)
 

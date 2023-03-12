@@ -11,9 +11,7 @@ from pandas.testing import assert_frame_equal
 
 import ehrapy as ep
 from ehrapy.anndata.anndata_ext import (
-    IndexNotFoundError,
     NotEncodedError,
-    ObsEmptyError,
     _assert_encoded,
     anndata_to_df,
     assert_numeric_vars,
@@ -119,7 +117,7 @@ class TestAnndataExt:
         # moving columns from X to obs and back
         # case 1:  move some column from obs to X and this col was copied previously from X to obs
         move_to_obs(adata, ["name"], copy_obs=True)
-        adata = move_to_x(adata, ["name"], copy=False)
+        adata = move_to_x(adata, ["name"])
         assert {"name"}.issubset(set(adata.var_names))  # check if the copied column is still in X
         assert adata.X.shape == adata_dim_old  # the shape of X should be the same as previously
         assert "name" in [item for sublist in adata.uns.values() for item in sublist]  # check if the column in in uns
@@ -127,7 +125,7 @@ class TestAnndataExt:
 
         # case 2: move some column from obs to X and this col was previously moved inplace from X to obs
         move_to_obs(adata, ["clinic_id"], copy_obs=False)
-        adata = move_to_x(adata, ["clinic_id"], copy=False)
+        adata = move_to_x(adata, ["clinic_id"])
         assert not {"clinic_id"}.issubset(set(adata.obs.columns))  # check if the copied column was removed from obs
         assert {"clinic_id"}.issubset(set(adata.var_names))  # check if the copied column is now in X
         assert adata.X.shape == adata_dim_old  # the shape of X should be the same as previously
@@ -138,7 +136,7 @@ class TestAnndataExt:
         # case 3: move multiple columns from obs to X and some of them were copied or moved inplace previously from X to obs
         move_to_obs(adata, ["los_days"], copy_obs=True)
         move_to_obs(adata, ["b12_values"], copy_obs=False)
-        adata = move_to_x(adata, ["los_days", "b12_values"], copy=False)
+        adata = move_to_x(adata, ["los_days", "b12_values"])
         delete_from_obs(adata, ["los_days"])
         assert not {"los_days"}.issubset(
             set(adata.obs.columns)
@@ -199,7 +197,7 @@ class TestAnndataExt:
 
     def test_df_to_anndata_invalid_index_throws_error(self):
         df, col1_val, col2_val, col3_val = TestAnndataExt._setup_df_to_anndata()
-        with pytest.raises(IndexNotFoundError):
+        with pytest.raises(ValueError):
             _ = df_to_anndata(df, index_column="UnknownCol")
 
     def test_df_to_anndata_cols_obs_only(self):
@@ -261,7 +259,7 @@ class TestAnndataExt:
             X=adata_x, obs=DataFrame(index=[idx for idx in range(100)]), var=DataFrame(index=["col1"]), dtype="object"
         )
 
-        with pytest.raises(ObsEmptyError):
+        with pytest.raises(ValueError):
             _ = anndata_to_df(adata, obs_cols=["some_missing_column"])
 
     def test_anndata_to_df_all_columns(self):
@@ -429,7 +427,7 @@ class TestAnnDataUtil:
             get_numeric_vars(self.adata_strings)
 
     def test_assert_numeric_vars(self):
-        "Test for the numeric vars assertion."
+        """Test for the numeric vars assertion."""
         assert_numeric_vars(self.adata_encoded, ["Numeric1", "Numeric2"])
 
         with pytest.raises(ValueError, match=r"Some selected vars are not numeric"):

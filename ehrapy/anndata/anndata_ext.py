@@ -53,10 +53,10 @@ def df_to_anndata(
             elif isinstance(index_column, int) and index_column < len(df_columns):
                 df = df.set_index(df_columns[index_column])
             else:
-                raise IndexNotFoundError(f"Did not find column {index_column} in neither index or columns!")
+                raise ValueError(f"Did not find column {index_column} in neither index or columns!")
         # index_column is neither in the index or in the columns or passed as some value that could not be understood
         else:  # pragma: no cover
-            raise IndexNotFoundError(f"Did not find column {index_column} in neither index or columns!")
+            raise ValueError(f"Did not find column {index_column} in neither index or columns!")
 
     # move columns from the input dataframe to obs
     if columns_obs_only:
@@ -65,7 +65,7 @@ def df_to_anndata(
             obs = obs.set_index(df.index.map(str))
             df = df.drop(columns_obs_only, axis=1)
         except KeyError as e:
-            raise ColumnNotFoundError(
+            raise ValueError(
                 "One or more column names passed to column_obs_only were not found in the input data. "
                 "Are the column names spelled correctly?"
             ) from e
@@ -127,7 +127,7 @@ def anndata_to_df(
     df = pd.DataFrame(X, columns=list(adata.var_names))
     if obs_cols:
         if len(adata.obs.columns) == 0:
-            raise ObsEmptyError("Cannot slice columns from empty obs!")
+            raise ValueError("Cannot slice columns from empty obs!")
         if isinstance(obs_cols, str):
             obs_cols = list(obs_cols)
         if isinstance(obs_cols, list):  # pragma: no cover
@@ -138,7 +138,7 @@ def anndata_to_df(
         logg.info(f"Added `{obs_cols}` columns to `X`.")
     if var_cols:
         if len(adata.var.columns) == 0:
-            raise VarEmptyError("Cannot slice columns from empty var!")
+            raise ValueError("Cannot slice columns from empty var!")
         if isinstance(var_cols, str):
             var_cols = list(var_cols)
         if isinstance(var_cols, list):
@@ -165,13 +165,12 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False)
     Returns:
         The original AnnData object with moved or copied columns from X to obs
     """
-
     if isinstance(to_obs, str):  # pragma: no cover
         to_obs = [to_obs]
 
     # don't allow moving encoded columns as this could lead to inconsistent data in X and obs
     if any(column.startswith("ehrapycat") for column in to_obs):
-        raise ObsMoveError(
+        raise ValueError(
             "Cannot move encoded columns from X to obs. Either undo encoding or remove them from the list!"
         )
 
@@ -221,7 +220,6 @@ def delete_from_obs(adata: AnnData, to_delete: list[str]) -> AnnData:
     Returns:
         The original AnnData object with deleted columns from obs.
     """
-
     if isinstance(to_delete, str):  # pragma: no cover
         to_delete = [to_delete]
 
@@ -237,7 +235,7 @@ def delete_from_obs(adata: AnnData, to_delete: list[str]) -> AnnData:
     return adata
 
 
-def move_to_x(adata: AnnData, to_x: list[str] | str, copy: bool = False) -> AnnData:
+def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
     """Move features from obs to X inplace.
 
     Args:
@@ -305,7 +303,7 @@ def get_column_indices(adata: AnnData, col_names: str | list[str]) -> list[int]:
     return indices
 
 
-def get_column_values(adata: AnnData, indices: int | list[int]) -> np.ndarray:
+def _get_column_values(adata: AnnData, indices: int | list[int]) -> np.ndarray:
     """Fetches the column values for a specific index from X
 
     Args:
@@ -345,9 +343,7 @@ def type_overview(
     elif isinstance(data, MuData):
         _mudata_type_overview(data, sort_by, sort_reversed)
     else:
-        raise EhrapyRepresentationError(
-            f"Unable to present object of type {type(data)}. Can only display AnnData or MuData objects!"
-        )
+        raise ValueError(f"Unable to present object of type {type(data)}. Can only display AnnData or MuData objects!")
 
 
 def _adata_type_overview(
@@ -780,28 +776,4 @@ def generate_anndata(  # pragma: no cover
 
 
 class NotEncodedError(AssertionError):
-    pass
-
-
-class ColumnNotFoundError(Exception):
-    pass
-
-
-class IndexNotFoundError(Exception):
-    pass
-
-
-class ObsEmptyError(Exception):
-    pass
-
-
-class VarEmptyError(Exception):
-    pass
-
-
-class ObsMoveError(Exception):
-    pass
-
-
-class EhrapyRepresentationError(ValueError):
     pass

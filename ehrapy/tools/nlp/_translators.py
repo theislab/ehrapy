@@ -20,7 +20,7 @@ except ConnectionError:  # pragma: no cover
 from deepl import Formality, GlossaryInfo, TextResult
 from rich import print
 
-from ehrapy.anndata.anndata_ext import get_column_indices, get_column_values
+from ehrapy.anndata.anndata_ext import _get_column_values, get_column_indices
 
 
 class Translator:
@@ -154,7 +154,7 @@ class Translator:
         indices = get_column_indices(adata, columns)
 
         for column, index in zip(columns, indices):
-            column_values = get_column_values(adata, index)
+            column_values = _get_column_values(adata, index)
 
             if column_values.dtype != str and column_values.dtype != object:  # pragma: no cover
                 raise ValueError("Attempted to translate column {column} which does not only contain strings.")

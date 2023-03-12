@@ -117,6 +117,7 @@ def ols(
     plt.ylabel(ylabel)
     if lines_label is not None and lines_label[0] is not None:
         plt.legend()
+
     if not show:
         return ax
 
@@ -225,5 +226,6 @@ def kmf(
     plt.ylim(ylim)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
+
     if not show:
         return ax
