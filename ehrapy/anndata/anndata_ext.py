@@ -248,12 +248,11 @@ def move_to_x(adata: AnnData, to_x: list[str] | str, copy: bool = False) -> AnnD
     Returns:
         A new AnnData object with moved columns from obs to X. This should not be used for datetime columns currently.
     """
+    if isinstance(to_x, str):  # pragma: no cover
+        to_x = [to_x]
 
     if not all(elem in adata.obs.columns.values for elem in to_x):
         raise ValueError(f"Columns `{[col for col in to_x if col not in adata.obs.columns.values]}` are not in obs.")
-
-    if isinstance(to_x, str):  # pragma: no cover
-        to_x = [to_x]
 
     cols_present_in_x = []
     cols_not_in_x = []
