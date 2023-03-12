@@ -28,7 +28,9 @@ def highly_variable_features(
         layer: If provided, use `adata.layers[layer]` for expression values instead of `adata.X`.
         top_features_percentage: Percentage of highly-variable features to keep.
         span: The fraction of the data used when estimating the variance in the loess model fit.
-        n_bins: Number of bins for binning. Normalization is done with respect to each bin. If just a single observation falls into a bin, the normalized dispersion is artificially set to 1. You'll be informed about this if you set `settings.verbosity = 4`.
+        n_bins: Number of bins for binning. Normalization is done with respect to each bin.
+                If just a single observation falls into a bin, the normalized dispersion is artificially set to 1.
+                You'll be informed about this if you set `settings.verbosity = 4`.
         flavor: Choose the flavor for identifying highly variable features.
         subset: Inplace subset to highly-variable features if `True` otherwise merely indicate highly variable features.
         inplace: Whether to place calculated metrics in `.var` or return them.

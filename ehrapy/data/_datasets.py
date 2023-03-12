@@ -55,8 +55,8 @@ def mimic_3_demo(
     The resulting DataFrame can then be transformed into an AnnData object with :func:`~ehrapy.anndata.df_to_anndata`.
 
     Args:
-        encoded: Whether to return an already encoded object
-        anndata: Whether to return one AnnData object per CSV file (default: False)
+        encoded: Whether to return an already encoded object.
+        anndata: Whether to return one AnnData object per CSV file. Defaults to False
 
     Returns:
         A dictionary of AnnData objects or a dictionary of Pandas DataFrames

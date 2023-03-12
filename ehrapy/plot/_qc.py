@@ -33,7 +33,7 @@ def qc_metrics(adata: AnnData, extra_columns: list[str] | None = None) -> None: 
     columns_to_display = fixed_qc_columns if not extra_columns else fixed_qc_columns + extra_columns
     # check whether all columns exist (qc has been executed before and extra columns are var columns)
     if (set(columns_to_display) & set(adata.var.columns)) != set(columns_to_display):
-        raise QCDisplayError(
+        raise AttributeError(
             "Cannot display QC metrics of current AnnData object. Either QC has not been executed before or "
             "some column(s) of the extra_columns parameter are not in var!"
         )
@@ -46,7 +46,3 @@ def qc_metrics(adata: AnnData, extra_columns: list[str] | None = None) -> None: 
 
     console = Console()
     console.print(table)
-
-
-class QCDisplayError(Exception):
-    pass

@@ -327,7 +327,7 @@ def type_overview(
 
     Args:
         data: :class:`~anndata.AnnData` or :class:`~mudata.MuData` object to display
-        sort_by: How the tree output should be sorted. One of `dtype`, `order`, `num_cats` or None (defaults to None -> unsorted)
+        sort_by: How the tree output should be sorted. One of `dtype`, `order`, `num_cats` or None (Defaults to None -> unsorted)
         sort_reversed: Whether to sort in reversed order or not
 
     Example:
