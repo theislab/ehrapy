@@ -85,7 +85,7 @@ def _missing_values(
     Args:
         arr: Numpy array containing a data row which is a subset of X (mtx).
         shape: Shape of X (mtx).
-        df_type: Whether to calculate the proportions for obs or var. One of 'obs' or 'var' (default: 'obs').
+        df_type: Whether to calculate the proportions for obs or var. One of 'obs' or 'var'. Defaults to 'obs' .
 
     Returns:
         Absolute or relative amount of missing values.
@@ -246,18 +246,18 @@ def qc_lab_measurements(
         adata: Annotated data matrix.
         reference_table: A custom DataFrame with reference values. Defaults to the laposata table if not specified.
         measurements: A list of measurements to check.
-        unit: The unit of the measurements. (default: SI)
+        unit: The unit of the measurements. Defaults to SI .
         layer: Layer containing the matrix to calculate the metrics for.
         threshold: Minimum required matching confidence score of the fuzzysearch.
-                   0 = no matches, 100 = all must match. (default 20)
+                   0 = no matches, 100 = all must match. Defaults to 20 .
         age_col: Column containing age values.
         age_range: The inclusive age-range to filter for. e.g. 5-99
         sex_col: Column containing sex values.
         sex: Sex to filter the reference values for. Use U for unisex which uses male values when male and female conflict.
-             (default: U|M)
+             Defaults to 'U|M'
         ethnicity_col: Column containing ethnicity values.
         ethnicity: Ethnicity to filter for.
-        copy: Whether to return a copy (default: False).
+        copy: Whether to return a copy. Defaults to False .
         verbose: Whether to have verbose stdout. Notifies user of matched columns and value ranges.
 
     Returns:

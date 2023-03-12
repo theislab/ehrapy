@@ -20,14 +20,15 @@ def winsorize(
 
     Args:
         adata: AnnData object to winsorize
-        vars: The features to winsorize
-        obs_cols: Columns in obs with features to winsorize
-        limits: Tuple of the percentages to cut on each side of the array as floats between 0. and 1. (default: 0.01 and 0.99)
+        vars: The features to winsorize.
+        obs_cols: Columns in obs with features to winsorize.
+        limits: Tuple of the percentages to cut on each side of the array as floats between 0. and 1.
+                Defaults to (0.01, 0.99)
         copy: Whether to return a copy or not
         **kwargs: Keywords arguments get passed to scipy.stats.mstats.winsorize
 
     Returns:
-        Winsorized AnnData object if copy is True
+        Winsorized AnnData object if copy is True.
     """
     _validate_outlier_input(adata, obs_cols, vars)
 

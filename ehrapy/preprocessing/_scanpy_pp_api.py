@@ -26,7 +26,8 @@ def pca(
 
     Args:
         data: The (annotated) data matrix of shape `n_obs` × `n_vars`. Rows correspond to observations and columns to features.
-        n_comps: Number of principal components to compute. Defaults to 50, or 1 - minimum dimension size of selected representation.
+        n_comps: Number of principal components to compute.
+                 Defaults to 50, or 1 - minimum dimension size of selected representation.
         zero_center: If `True`, compute standard PCA from covariance matrix.
                      If `False`, omit zero-centering variables (uses :class:`~sklearn.decomposition.TruncatedSVD`), which allows to handle sparse input efficiently.
                      Passing `None` decides automatically based on sparseness of the data.
@@ -41,9 +42,9 @@ def pca(
                     * `'lobpcg'` An alternative SciPy solver.
 
                     Efficient computation of the principal components of a sparse matrix currently only works with the `'arpack`' or `'lobpcg'` solvers.
-        random_state: Change to use different initial states for the optimization. (default: 0)
+        random_state: Change to use different initial states for the optimization. Defaults to 0 .
         return_info: Only relevant when not passing an :class:`~anndata.AnnData`: see “**Returns**”.
-        dtype: Numpy data type string to which to convert the result. (default: float32)
+        dtype: Numpy data type string to which to convert the result. Defaults to float32 .
         copy: If an :class:`~anndata.AnnData` is passed, determines whether a copy is returned. Is ignored otherwise.
         chunked: If `True`, perform an incremental PCA on segments of `chunk_size`.
                   The incremental PCA automatically zero centers and ignores settings of

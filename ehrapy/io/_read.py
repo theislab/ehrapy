@@ -36,7 +36,7 @@ def read_csv(
 
     Args:
         dataset_path: Path to the file or directory to read.
-        sep: Separator in the file. One of either , or \t. Defaults to ,
+        sep: Separator in the file. One of either , (comma) or \t (tab). Defaults to , (comma)
         index_column: The index column of obs. Usually the patient visit ID or the patient ID.
         columns_obs_only: These columns will be added to obs only and not X.
         columns_x_only: These columns will be added to X only and all remaining columns to obs.
