@@ -3,7 +3,7 @@ from __future__ import annotations
 import random
 from collections import OrderedDict
 from string import ascii_letters
-from typing import Collection, NamedTuple
+from typing import Collection, Iterable, NamedTuple
 
 import numpy as np
 import pandas as pd
@@ -12,6 +12,7 @@ from mudata import MuData
 from rich import print
 from rich.text import Text
 from rich.tree import Tree
+from scanpy.get import obs_df, rank_genes_groups_df, var_df
 from scipy import sparse
 from scipy.sparse import issparse
 
@@ -773,6 +774,87 @@ def generate_anndata(  # pragma: no cover
     logg.info(f"Generated an AnnData object with n_obs x n_vars = `{adata.n_obs}` x `{adata.n_vars}`.")
 
     return adata
+
+
+def get_obs_df(  # pragma: no cover
+    adata: AnnData,
+    keys: Iterable[str] = (),
+    obsm_keys: Iterable[tuple[str, int]] = (),
+    *,
+    layer: str = None,
+    features: str = None,
+):
+    """Return values for observations in adata.
+
+    Args:
+        adata: AnnData object to get values from.
+        keys: Keys from either `.var_names`, `.var[gene_symbols]`, or `.obs.columns`.
+        obsm_keys: Tuple of `(key from obsm, column index of obsm[key])`.
+        layer: Layer of `adata`.
+        features: Column of `adata.var` to search for `keys` in.
+
+    Returns:
+        A dataframe with `adata.obs_names` as index, and values specified by `keys` and `obsm_keys`.
+    """
+    return obs_df(adata=adata, keys=keys, obsm_keys=obsm_keys, layer=layer, gene_symbols=features)
+
+
+def get_var_df(  # pragma: no cover
+    adata: AnnData,
+    keys: Iterable[str] = (),
+    varm_keys: Iterable[tuple[str, int]] = (),
+    *,
+    layer: str = None,
+):
+    """Return values for observations in adata.
+
+    Args:
+        adata: AnnData object to get values from.
+        keys: Keys from either `.obs_names`, or `.var.columns`.
+        varm_keys: Tuple of `(key from varm, column index of varm[key])`.
+        layer: Layer of `adata`.
+
+    Returns:
+        A dataframe with `adata.var_names` as index, and values specified by `keys` and `varm_keys`.
+    """
+    return var_df(adata=adata, keys=keys, varm_keys=varm_keys, layer=layer)
+
+
+def get_rank_features_df(
+    adata: AnnData,
+    group: str | Iterable[str],
+    *,
+    key: str = "rank_genes_groups",
+    pval_cutoff: float | None = None,
+    log2fc_min: float | None = None,
+    log2fc_max: float | None = None,
+    features: str | None = None,
+):
+    """:func:`ehrapy.tl.rank_features_groups` results in the form of a :class:`~pandas.DataFrame`.
+
+    Args:
+        adata: AnnData object to get values from.
+        group: Which group (as in :func:`ehrapy.tl.rank_genes_groups`'s `groupby` argument)
+               to return results from. Can be a list. All groups are returned if groups is `None`.
+        key: Key differential groups were stored under.
+        pval_cutoff: Return only adjusted p-values below the  cutoff.
+        log2fc_min: Minimum logfc to return.
+        log2fc_max: Maximum logfc to return.
+        features: Column name in `.var` DataFrame that stores gene symbols.
+                  Specifying this will add that column to the returned DataFrame.
+
+    Returns:
+        A Pandas DataFrame of all rank genes groups results.
+    """
+    return rank_genes_groups_df(
+        adata=adata,
+        group=group,
+        key=key,
+        pval_cutoff=pval_cutoff,
+        log2fc_min=log2fc_min,
+        log2fc_max=log2fc_max,
+        gene_symbols=features,
+    )
 
 
 class NotEncodedError(AssertionError):
