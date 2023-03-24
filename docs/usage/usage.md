@@ -41,6 +41,7 @@ ep.pl.cool_fancy_plot()
     :nosignatures:
 
     data.mimic_2
+    data.mimic_2_preprocessed
     data.mimic_3_demo
     data.diabetes_130
     data.heart_failure
