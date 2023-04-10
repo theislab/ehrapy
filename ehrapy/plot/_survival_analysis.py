@@ -31,6 +31,7 @@ def ols(
     ylim: tuple[float, float] | None = None,
     show: bool | None = None,
     ax: Axes | None = None,
+    title: str | None = None,
     **kwds,
 ):
     """Plots a Ordinary Least Squares (OLS) Model result, scatter plot, and line plot.
@@ -53,6 +54,7 @@ def ols(
         ylim: Set the y-axis view limits. Required for only ploting lines using slope and intercept.
         show: Show the plot, do not return axis.
         ax: A matplotlib axes object. Only works if plotting a single component.
+        title: Set the title of the plot.
     Example:
         .. code-block:: python
 
@@ -115,6 +117,8 @@ def ols(
                 ax.plot(a, b, lines_style[i], color=lines_color[i], label=lines_label[i])
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
+    if title:
+        plt.title(title)
     if lines_label is not None and lines_label[0] is not None:
         plt.legend()
 
@@ -137,6 +141,7 @@ def kmf(
     ylabel: str | None = None,
     figsize: tuple[float, float] | None = None,
     show: bool | None = None,
+    title: str | None = None,
 ):
     """Plots a pretty figure of the Fitted KaplanMeierFitter model
 
@@ -159,6 +164,7 @@ def kmf(
         ylabel: The y-axis label text.
         figsize: Width, height in inches. Defaults to None .
         show: Show the plot, do not return axis.
+        title: Set the title of the plot.
 
     Example:
         .. code-block:: python
@@ -228,6 +234,8 @@ def kmf(
     plt.ylim(ylim)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
+    if title:
+        plt.title(title)
 
     if not show:
         return ax
