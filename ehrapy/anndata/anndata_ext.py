@@ -165,6 +165,14 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False)
 
     Returns:
         The original AnnData object with moved or copied columns from X to obs
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy as ep
+
+            adata = ep.dt.mimic_2(encoded=True)
+            ep.anndata_ext.move_to_obs(adata, ['age'], copy_obs=False)
     """
     if isinstance(to_obs, str):  # pragma: no cover
         to_obs = [to_obs]
@@ -220,6 +228,15 @@ def delete_from_obs(adata: AnnData, to_delete: list[str]) -> AnnData:
 
     Returns:
         The original AnnData object with deleted columns from obs.
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy as ep
+
+            adata = ep.dt.mimic_2(encoded=True)
+            ep.anndata_ext.move_to_obs(adata, ['age'], copy_obs=True)
+            ep.anndata_ext.delete_from_obs(adata, ['age'])
     """
     if isinstance(to_delete, str):  # pragma: no cover
         to_delete = [to_delete]
@@ -246,6 +263,15 @@ def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
 
     Returns:
         A new AnnData object with moved columns from obs to X. This should not be used for datetime columns currently.
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy as ep
+
+            adata = ep.dt.mimic_2(encoded=True)
+            ep.anndata_ext.move_to_obs(adata, ['age'], copy_obs=False)
+            new_adata = ep.anndata_ext.move_to_x(adata, ['age'])
     """
     if isinstance(to_x, str):  # pragma: no cover
         to_x = [to_x]
@@ -292,6 +318,14 @@ def get_column_indices(adata: AnnData, col_names: str | list[str]) -> list[int]:
 
     Returns:
         Set of column indices
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy as ep
+
+            adata = ep.dt.mimic_2(encoded=True)
+            ep.anndata_ext.get_column_indices(adata, ['age', 'gender_num', 'bmi'])
     """
     if isinstance(col_names, str):  # pragma: no cover
         col_names = [col_names]
@@ -336,7 +370,7 @@ def type_overview(
 
             import ehrapy as ep
 
-            adata = ep.dt.mimic_2(encode=True)
+            adata = ep.dt.mimic_2(encoded=True)
             ep.anndata_ext.type_overview(adata)
     """
     if isinstance(data, AnnData):
@@ -554,7 +588,7 @@ def set_numeric_vars(
     for i in range(n_values):
         adata.X[:, vars_idx[i]] = values[:, i]
 
-    logg.info(f"Column names for numeric variables {vars} were replaced.")
+    logg.info(f"Column names for numeric variables {vars} were replaced by {values}.")
 
     return adata
 
