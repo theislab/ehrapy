@@ -206,6 +206,8 @@ def _var_qc_metrics(adata: AnnData, layer: str = None) -> pd.DataFrame:
         )
     except TypeError:
         print("[bold yellow]TypeError! Setting quality control metrics to nan. Did you encode your data?")
+    except ValueError:
+        print("[bold yellow]ValueError! Setting quality control metrics to nan. Did you encode your data?")
 
     return var_metrics
 
