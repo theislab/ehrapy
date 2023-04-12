@@ -149,3 +149,5 @@ notebooks/*.csv
 notebooks/*-requirements.txt
 
 ehrapy_data/
+
+*.DS_Store

@@ -163,10 +163,11 @@ def _var_qc_metrics(adata: AnnData, layer: str = None) -> pd.DataFrame:
     """
     var_metrics = pd.DataFrame(index=adata.var_names)
     mtx = adata.X if layer is None else adata.layers[layer]
+    categorical_indices = np.ndarray([0], dtype=int)
     if "original_values_categoricals" in adata.uns:
         for original_values_categorical in list(adata.uns["original_values_categoricals"]):
             mtx = copy.deepcopy(mtx.astype(object))
-            index = np.where(var_metrics.index.str.contains(original_values_categorical))[0]
+            index = np.where(var_metrics.index.str.startswith("ehrapycat_" + original_values_categorical))[0]
             mtx[:, index] = np.tile(
                 np.where(
                     adata.uns["original_values_categoricals"][original_values_categorical].astype(object) == "nan",
@@ -175,22 +176,38 @@ def _var_qc_metrics(adata: AnnData, layer: str = None) -> pd.DataFrame:
                 ),
                 mtx[:, index].shape[1],
             )
-
+            categorical_indices = np.concatenate([categorical_indices, index])
+    non_categorical_indices = np.ones(mtx.shape[1], dtype=bool)
+    non_categorical_indices[categorical_indices] = False
     var_metrics["missing_values_abs"] = np.apply_along_axis(_missing_values, 0, mtx)
     var_metrics["missing_values_pct"] = np.apply_along_axis(_missing_values, 0, mtx, shape=mtx.shape, df_type="var")
+
+    var_metrics["mean"] = np.nan
+    var_metrics["median"] = np.nan
+    var_metrics["standard_deviation"] = np.nan
+    var_metrics["min"] = np.nan
+    var_metrics["max"] = np.nan
+
     try:
-        var_metrics["mean"] = np.nanmean(mtx, axis=0)
-        var_metrics["median"] = np.nanmedian(mtx, axis=0)
-        var_metrics["standard_deviation"] = np.nanstd(mtx, axis=0)
-        var_metrics["min"] = np.nanmin(mtx, axis=0)
-        var_metrics["max"] = np.nanmax(mtx, axis=0)
+        var_metrics.loc[non_categorical_indices, "mean"] = np.nanmean(
+            np.array(mtx[:, non_categorical_indices], dtype=np.float64), axis=0
+        )
+        var_metrics.loc[non_categorical_indices, "median"] = np.nanmedian(
+            np.array(mtx[:, non_categorical_indices], dtype=np.float64), axis=0
+        )
+        var_metrics.loc[non_categorical_indices, "standard_deviation"] = np.nanstd(
+            np.array(mtx[:, non_categorical_indices], dtype=np.float64), axis=0
+        )
+        var_metrics.loc[non_categorical_indices, "min"] = np.nanmin(
+            np.array(mtx[:, non_categorical_indices], dtype=np.float64), axis=0
+        )
+        var_metrics.loc[non_categorical_indices, "max"] = np.nanmax(
+            np.array(mtx[:, non_categorical_indices], dtype=np.float64), axis=0
+        )
     except TypeError:
         print("[bold yellow]TypeError! Setting quality control metrics to nan. Did you encode your data?")
-        var_metrics["mean"] = np.nan
-        var_metrics["median"] = np.nan
-        var_metrics["standard_deviation"] = np.nan
-        var_metrics["min"] = np.nan
-        var_metrics["max"] = np.nan
+    except ValueError:
+        print("[bold yellow]ValueError! Setting quality control metrics to nan. Did you encode your data?")
 
     return var_metrics
 

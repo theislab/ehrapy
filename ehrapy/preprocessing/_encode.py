@@ -233,7 +233,7 @@ def _encode(
                 adata.var_names.to_list(),
                 categoricals_names,
             )
-            progress.update(task, description=f"Finished {encode_mode} of autodetected columns.")
+            progress.update(task, description=f"[bold blue]Finished {encode_mode} of autodetected columns.")
 
             encoded_ann_data = AnnData(
                 encoded_x,
