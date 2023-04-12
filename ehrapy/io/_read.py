@@ -56,6 +56,7 @@ def read_csv(
         .. code-block:: python
 
             import ehrapy as ep
+
             adata = ep.io.read_csv("myfile.csv")
     """
     _check_columns_only_params(columns_obs_only, columns_x_only)
@@ -150,7 +151,7 @@ def read_h5ad(
 
             import ehrapy as ep
 
-            adata = eh.data.mimic_2(encode=True)
+            adata = ep.dt.mimic_2(encoded=True)
             ep.io.write("mimic_2.h5ad", adata)
             adata_2 = ep.io.read_h5ad("mimic_2.h5ad")
     """
@@ -383,6 +384,13 @@ def read_fhir(
 
     Returns:
         A Pandas DataFrame or AnnData object of the read in FHIR file(s).
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy as ep
+
+            adata = ep.io.read_fhir("/path/to/fhir/resources")
     """
     _check_columns_only_params(columns_obs_only, columns_x_only)
     file_path: Path = Path(dataset_path)

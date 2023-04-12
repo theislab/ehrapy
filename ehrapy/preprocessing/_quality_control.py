@@ -61,7 +61,7 @@ def qc_metrics(
                 import seaborn as sns
                 import matplotlib.pyplot as plt
 
-                adata = ep.dt.mimic_2(encode=True)
+                adata = ep.dt.mimic_2(encoded=True)
                 ep.pp.qc_metrics(adata)
                 sns.displot(adata.obs["missing_values_abs"])
                 plt.show()
@@ -268,7 +268,8 @@ def qc_lab_measurements(
 
             import ehrapy as ep
 
-            ep.pp.qc_lab_measurements(adata, measurements=["Interleukin-6[pg/ml]"], verbose=True)
+            adata = ep.dt.mimic_2(encoded=True)
+            ep.pp.qc_lab_measurements(adata, measurements=["potassium_first"], verbose=True)
     """
     if copy:
         adata = adata.copy()

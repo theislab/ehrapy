@@ -99,7 +99,7 @@ def scatter(
 
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
-            ep.pp.norm_log(adata, offset=1)
+            ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
             ep.pl.scatter(adata, x='age', y='icu_los_day', color='icu_los_day')
 
@@ -217,7 +217,7 @@ def heatmap(
 
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
-            ep.pp.norm_log(adata, offset=1)
+            ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
             ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
             ep.pl.heatmap(adata, var_names=['map_1st', 'hr_1st', 'temp_1st', 'spo2_1st',
@@ -551,7 +551,7 @@ def violin(
 
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
-            ep.pp.norm_log(adata, offset=1)
+            ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
             ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
             ep.pl.violin(adata, keys=['age'], groupby="leiden_0_5")
@@ -681,7 +681,7 @@ def stacked_violin(
 
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
-            ep.pp.norm_log(adata, offset=1)
+            ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
             ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
             ep.pl.stacked_violin(adata, var_names=['icu_los_day',
@@ -806,7 +806,7 @@ def matrixplot(
 
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
-            ep.pp.norm_log(adata, offset=1)
+            ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
             ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
             ep.pl.matrixplot(adata, var_names=[
@@ -894,7 +894,7 @@ def clustermap(
 
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
-            ep.pp.norm_log(adata, offset=1)
+            ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
             ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
             ep.pl.clustermap(adata)
@@ -937,7 +937,7 @@ def ranking(
 ):  # pragma: no cover
     """Plot rankings.
 
-    See, for example, how this is used in pl.pca_ranking.
+    See, for example, how this is used in pl.pca_loadings.
 
     Args:
         adata: :class:`~anndata.AnnData` object object containing all observations.
@@ -960,6 +960,12 @@ def ranking(
 
             import ehrapy as ep
 
+            adata = ep.data.mimic_2(encoded=True)
+            ep.pp.knn_impute(adata)
+            ep.pp.log_norm(adata, offset=1)
+            ep.pp.neighbors(adata)
+            ep.pp.pca(adata)
+            TODO: ep.pl.ranking(adata)
     """
     return sc.pl.ranking(
         adata=adata,
@@ -1011,7 +1017,7 @@ def dendrogram(
 
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
-            ep.pp.norm_log(adata, offset=1)
+            ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
             ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
             ep.pl.dendrogram(adata, groupby="leiden_0_5")
@@ -1078,7 +1084,7 @@ def pca(
 
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
-            ep.pp.norm_log(adata, offset=1)
+            ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
             ep.tl.pca(adata)
             ep.pl.pca(adata, color="service_unit)
@@ -1140,7 +1146,7 @@ def pca_loadings(
 
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
-            ep.pp.norm_log(adata, offset=1)
+            ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
             ep.pp.pca(adata)
             ep.pl.pca_loadings(adata, components='1,2,3')
@@ -1179,7 +1185,7 @@ def pca_variance_ratio(
 
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
-            ep.pp.norm_log(adata, offset=1)
+            ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
             ep.pp.pca(adata)
             ep.pl.pca_variance_ratio(adata, n_pcs=8)
@@ -1213,7 +1219,7 @@ def pca_overview(adata: AnnData, **params):  # pragma: no cover
 
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
-            ep.pp.norm_log(adata, offset=1)
+            ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
             ep.pp.pca(adata)
             ep.pl.pca_overview(adata, components='1,2,3', color="service_unit")
@@ -1254,7 +1260,7 @@ def tsne(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover
 
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
-            ep.pp.norm_log(adata, offset=1)
+            ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
             ep.tl.tsne(adata)
             ep.pl.tsne(adata)
@@ -1323,7 +1329,7 @@ def umap(adata: AnnData | MedCAT, **kwargs) -> Axes | list[Axes] | None:  # prag
 
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
-            ep.pp.norm_log(adata, offset=1)
+            ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
             ep.tl.umap(adata)
             ep.pl.umap(adata)
@@ -1390,7 +1396,7 @@ def diffmap(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover
 
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
-            ep.pp.norm_log(adata, offset=1)
+            ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
             ep.tl.diffmap(adata)
             ep.pl.diffmap(adata, color='day_icu_intime')
@@ -1451,7 +1457,7 @@ def draw_graph(
 
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
-            ep.pp.norm_log(adata, offset=1)
+            ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
             ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
             ep.tl.paga(adata, groups="leiden_0_5")
@@ -1647,7 +1653,7 @@ def embedding(
 
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
-            ep.pp.norm_log(adata, offset=1)
+            ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
             ep.tl.umap(adata)
             ep.pl.embedding(adata, 'X_umap', color='icu_exp_flg')
@@ -1795,7 +1801,7 @@ def embedding_density(
 
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
-            ep.pp.norm_log(adata, offset=1)
+            ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
             ep.tl.umap(adata)
             ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
@@ -1854,7 +1860,7 @@ def dpt_groups_pseudotime(
 
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
-            ep.pp.norm_log(adata, offset=1)
+            ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata, method='gauss')
             ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
             ep.tl.diffmap(adata, n_comps=10)
@@ -1892,7 +1898,7 @@ def dpt_timeseries(
             import numpy as np
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
-            ep.pp.norm_log(adata, offset=1)
+            ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata, method='gauss')
             ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
             ep.tl.diffmap(adata, n_comps=10)
@@ -2023,7 +2029,7 @@ def paga(
 
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
-            ep.pp.norm_log(adata, offset=1)
+            ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
             ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
             ep.tl.paga(adata, groups="leiden_0_5")
@@ -2299,7 +2305,7 @@ def rank_features_groups(
 
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
-            ep.pp.norm_log(adata, offset=1)
+            ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
             ep.tl.leiden(adata, resolution=0.15, key_added="leiden_0_5")
             ep.tl.rank_features_groups(adata, groupby="leiden_0_5")
@@ -2366,7 +2372,7 @@ def rank_features_groups_violin(
 
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
-            ep.pp.norm_log(adata, offset=1)
+            ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
             ep.tl.leiden(adata, resolution=0.15, key_added="leiden_0_5")
             ep.tl.rank_features_groups(adata, groupby="leiden_0_5")
@@ -2444,7 +2450,7 @@ def rank_features_groups_stacked_violin(
 
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
-            ep.pp.norm_log(adata, offset=1)
+            ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
             ep.tl.leiden(adata, resolution=0.15, key_added="leiden_0_5")
             ep.tl.rank_features_groups(adata, groupby="leiden_0_5")
@@ -2504,7 +2510,7 @@ def rank_features_groups_heatmap(
 
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
-            ep.pp.norm_log(adata, offset=1)
+            ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
             ep.tl.leiden(adata, resolution=0.15, key_added="leiden_0_5")
             ep.tl.rank_features_groups(adata, groupby="leiden_0_5")
@@ -2724,7 +2730,7 @@ def rank_features_groups_tracksplot(
 
             adata = ep.data.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
-            ep.pp.norm_log(adata, offset=1)
+            ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
             ep.tl.leiden(adata, resolution=0.15, key_added="leiden_0_5")
             ep.tl.rank_features_groups(adata, groupby="leiden_0_5")
