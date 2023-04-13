@@ -34,7 +34,7 @@ def scale_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool =
 
             import ehrapy as ep
 
-            adata = ep.data.mimic_2(encode=True)
+            adata = ep.data.mimic_2(encoded=True)
             adata_norm = ep.pp.scale_norm(adata, copy=True)
     """
     if isinstance(vars, str):
@@ -83,7 +83,7 @@ def minmax_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool 
 
             import ehrapy as ep
 
-            adata = ep.data.mimic_2(encode=True)
+            adata = ep.data.mimic_2(encoded=True)
             adata_norm = ep.pp.minmax_norm(adata, copy=True)
     """
     if isinstance(vars, str):
@@ -131,7 +131,7 @@ def maxabs_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool 
 
             import ehrapy as ep
 
-            adata = ep.data.mimic_2(encode=True)
+            adata = ep.data.mimic_2(encoded=True)
             adata_norm = ep.pp.maxabs_norm(adata, copy=True)
     """
     if isinstance(vars, str):
@@ -182,7 +182,7 @@ def robust_scale_norm(
 
             import ehrapy as ep
 
-            adata = ep.data.mimic_2(encode=True)
+            adata = ep.data.mimic_2(encoded=True)
             adata_norm = ep.pp.robust_scale_norm(adata, copy=True)
     """
     if isinstance(vars, str):
@@ -230,7 +230,7 @@ def quantile_norm(adata: AnnData, vars: str | list[str] | None = None, copy: boo
 
             import ehrapy as ep
 
-            adata = ep.data.mimic_2(encode=True)
+            adata = ep.data.mimic_2(encoded=True)
             adata_norm = ep.pp.quantile_norm(adata, copy=True)
     """
     if isinstance(vars, str):
@@ -279,7 +279,7 @@ def power_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool =
 
             import ehrapy as ep
 
-            adata = ep.data.mimic_2(encode=True)
+            adata = ep.data.mimic_2(encoded=True)
             adata_norm = ep.pp.power_norm(adata, copy=True)
     """
     if isinstance(vars, str):
@@ -334,7 +334,7 @@ def log_norm(
 
             import ehrapy as ep
 
-            adata = ep.data.mimic_2(encode=True)
+            adata = ep.data.mimic_2(encoded=True)
             adata_norm = ep.pp.log_norm(adata, copy=True)
     """
     if isinstance(vars, str):
@@ -395,7 +395,7 @@ def sqrt_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool = 
 
             import ehrapy as ep
 
-            adata = ep.data.mimic_2(encode=True)
+            adata = ep.data.mimic_2(encoded=True)
             adata_norm = ep.pp.sqrt_norm(adata, copy=True)
     """
     if isinstance(vars, str):

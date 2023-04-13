@@ -200,7 +200,7 @@ def chronic_kidney_disease(
 
             import ehrapy as ep
 
-            adata = ep.data.chronic_kidney_disease(encoded=True)
+            adata = ep.dt.chronic_kidney_disease(encoded=True)
     """
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/chronic_kidney_disease_precessed.csv",

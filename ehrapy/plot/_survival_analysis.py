@@ -60,6 +60,7 @@ def ols(
 
             # Scatter plot and OLS regression plot
             import ehrapy as ep
+
             adata = ep.data.mimic_2(encoded=False)
             co2_lm_result = ep.tl.ols(adata, var_names=['pco2_first', 'tco2_first'], formula='tco2_first ~ pco2_first', missing="drop").fit()
             ep.pl.ols(adata, x='pco2_first', y='tco2_first', ols_results=[co2_lm_result], ols_color=['red'], xlabel="PCO2", ylabel="TCO2")
@@ -70,6 +71,7 @@ def ols(
 
             # Scatter plot and line plot
             import ehrapy as ep
+
             adata = ep.data.mimic_2(encoded=False)
             ep.pl.ols(adata, x='pco2_first', y='tco2_first', lines=[(0.25, 10), (0.3, 20)], lines_color=['red', 'blue'], lines_style=['-', ':'], lines_label=['Line1', 'Line2'])
 
@@ -79,6 +81,7 @@ def ols(
 
             # Line plot only
             import ehrapy as ep
+
             ep.pl.ols(lines=[(0.25, 10), (0.3, 20)], lines_color=['red', 'blue'], lines_style=['-', ':'], lines_label=['Line1', 'Line2'], xlim=(0, 150), ylim=(0, 50))
 
         .. image:: /_static/docstring_previews/ols_plot_3.png
@@ -171,6 +174,7 @@ def kmf(
 
             import ehrapy as ep
             import numpy as np
+
             adata = ep.dt.mimic_2(encoded=False)
             # Because in MIMIC-II database, `censor_fl` is censored or death (binary: 0 = death, 1 = censored).
             # While in KaplanMeierFitter, `event_observed` is True if the the death was observed, False if the event was lost (right-censored).

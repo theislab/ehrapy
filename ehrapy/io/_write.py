@@ -35,7 +35,7 @@ def write(
 
             import ehrapy as ep
 
-            adata = eh.data.mimic_2(encode=True)
+            adata = ep.dt.mimic_2(encoded=True)
             ep.io.write("mimic_2.h5ad", adata)
     """
     filename = Path(filename)  # allow passing strings
