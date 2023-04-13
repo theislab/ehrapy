@@ -59,7 +59,7 @@ def write(
     else:
         # dummy encoding when there is non numerical data in X
         if not np.issubdtype(adata.X.dtype, np.number) and extension == "h5ad":
-            # flag to indicate an anndata object has been dummy encoded to write it to .h5ad file
+            # flag to indicate an Anndata object has been dummy encoded to write it to .h5ad file
             # Case of writing an unencoded non numerical AnnData object
             encoded_adata = encode(adata, autodetect=True)
             encoded_adata.uns["ehrapy_dummy_encoding"] = True
