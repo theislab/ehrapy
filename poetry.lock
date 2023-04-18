@@ -150,14 +150,14 @@ files = [
 
 [[package]]
 name = "anndata"
-version = "0.9.0"
+version = "0.9.1"
 description = "Annotated data."
 category = "main"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "anndata-0.9.0-py3-none-any.whl", hash = "sha256:7ee025ff3986076f2d55d76ebab154726b2e61ac3a13ec487e0c422428ac6c5a"},
-    {file = "anndata-0.9.0.tar.gz", hash = "sha256:6c867201d0414ff3011a9eb7f93e098d67b81cff8e7c05efdf506d5362a0eb81"},
+    {file = "anndata-0.9.1-py3-none-any.whl", hash = "sha256:6666a39f9d6c4645a70115f38c17ccc2e2ffd9c0d08a1636c395253d73de26f1"},
+    {file = "anndata-0.9.1.tar.gz", hash = "sha256:1f28f2c427e67b0b99bdd2b281717c92a12660dfd23e0694939b6e733f0eb2c4"},
 ]
 
 [package.dependencies]
