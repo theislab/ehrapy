@@ -61,7 +61,7 @@ def qc_metrics(
                 import seaborn as sns
                 import matplotlib.pyplot as plt
 
-                adata = ep.dt.mimic_2(encode=True)
+                adata = ep.dt.mimic_2(encoded=True)
                 ep.pp.qc_metrics(adata)
                 sns.displot(adata.obs["missing_values_abs"])
                 plt.show()
@@ -85,7 +85,7 @@ def _missing_values(
     Args:
         arr: Numpy array containing a data row which is a subset of X (mtx).
         shape: Shape of X (mtx).
-        df_type: Whether to calculate the proportions for obs or var. One of 'obs' or 'var' (default: 'obs').
+        df_type: Whether to calculate the proportions for obs or var. One of 'obs' or 'var'. Defaults to 'obs' .
 
     Returns:
         Absolute or relative amount of missing values.
@@ -163,10 +163,11 @@ def _var_qc_metrics(adata: AnnData, layer: str = None) -> pd.DataFrame:
     """
     var_metrics = pd.DataFrame(index=adata.var_names)
     mtx = adata.X if layer is None else adata.layers[layer]
+    categorical_indices = np.ndarray([0], dtype=int)
     if "original_values_categoricals" in adata.uns:
         for original_values_categorical in list(adata.uns["original_values_categoricals"]):
             mtx = copy.deepcopy(mtx.astype(object))
-            index = np.where(var_metrics.index.str.contains(original_values_categorical))[0]
+            index = np.where(var_metrics.index.str.startswith("ehrapycat_" + original_values_categorical))[0]
             mtx[:, index] = np.tile(
                 np.where(
                     adata.uns["original_values_categoricals"][original_values_categorical].astype(object) == "nan",
@@ -175,22 +176,38 @@ def _var_qc_metrics(adata: AnnData, layer: str = None) -> pd.DataFrame:
                 ),
                 mtx[:, index].shape[1],
             )
-
+            categorical_indices = np.concatenate([categorical_indices, index])
+    non_categorical_indices = np.ones(mtx.shape[1], dtype=bool)
+    non_categorical_indices[categorical_indices] = False
     var_metrics["missing_values_abs"] = np.apply_along_axis(_missing_values, 0, mtx)
     var_metrics["missing_values_pct"] = np.apply_along_axis(_missing_values, 0, mtx, shape=mtx.shape, df_type="var")
+
+    var_metrics["mean"] = np.nan
+    var_metrics["median"] = np.nan
+    var_metrics["standard_deviation"] = np.nan
+    var_metrics["min"] = np.nan
+    var_metrics["max"] = np.nan
+
     try:
-        var_metrics["mean"] = np.nanmean(mtx, axis=0)
-        var_metrics["median"] = np.nanmedian(mtx, axis=0)
-        var_metrics["standard_deviation"] = np.nanstd(mtx, axis=0)
-        var_metrics["min"] = np.nanmin(mtx, axis=0)
-        var_metrics["max"] = np.nanmax(mtx, axis=0)
+        var_metrics.loc[non_categorical_indices, "mean"] = np.nanmean(
+            np.array(mtx[:, non_categorical_indices], dtype=np.float64), axis=0
+        )
+        var_metrics.loc[non_categorical_indices, "median"] = np.nanmedian(
+            np.array(mtx[:, non_categorical_indices], dtype=np.float64), axis=0
+        )
+        var_metrics.loc[non_categorical_indices, "standard_deviation"] = np.nanstd(
+            np.array(mtx[:, non_categorical_indices], dtype=np.float64), axis=0
+        )
+        var_metrics.loc[non_categorical_indices, "min"] = np.nanmin(
+            np.array(mtx[:, non_categorical_indices], dtype=np.float64), axis=0
+        )
+        var_metrics.loc[non_categorical_indices, "max"] = np.nanmax(
+            np.array(mtx[:, non_categorical_indices], dtype=np.float64), axis=0
+        )
     except TypeError:
         print("[bold yellow]TypeError! Setting quality control metrics to nan. Did you encode your data?")
-        var_metrics["mean"] = np.nan
-        var_metrics["median"] = np.nan
-        var_metrics["standard_deviation"] = np.nan
-        var_metrics["min"] = np.nan
-        var_metrics["max"] = np.nan
+    except ValueError:
+        print("[bold yellow]ValueError! Setting quality control metrics to nan. Did you encode your data?")
 
     return var_metrics
 
@@ -246,18 +263,18 @@ def qc_lab_measurements(
         adata: Annotated data matrix.
         reference_table: A custom DataFrame with reference values. Defaults to the laposata table if not specified.
         measurements: A list of measurements to check.
-        unit: The unit of the measurements. (default: SI)
+        unit: The unit of the measurements. Defaults to SI .
         layer: Layer containing the matrix to calculate the metrics for.
         threshold: Minimum required matching confidence score of the fuzzysearch.
-                   0 = no matches, 100 = all must match. (default 20)
+                   0 = no matches, 100 = all must match. Defaults to 20 .
         age_col: Column containing age values.
         age_range: The inclusive age-range to filter for. e.g. 5-99
         sex_col: Column containing sex values.
         sex: Sex to filter the reference values for. Use U for unisex which uses male values when male and female conflict.
-             (default: U|M)
+             Defaults to 'U|M'
         ethnicity_col: Column containing ethnicity values.
         ethnicity: Ethnicity to filter for.
-        copy: Whether to return a copy (default: False).
+        copy: Whether to return a copy. Defaults to False .
         verbose: Whether to have verbose stdout. Notifies user of matched columns and value ranges.
 
     Returns:
@@ -268,7 +285,8 @@ def qc_lab_measurements(
 
             import ehrapy as ep
 
-            ep.pp.qc_lab_measurements(adata, measurements=["Interleukin-6[pg/ml]"], verbose=True)
+            adata = ep.dt.mimic_2(encoded=True)
+            ep.pp.qc_lab_measurements(adata, measurements=["potassium_first"], verbose=True)
     """
     if copy:
         adata = adata.copy()

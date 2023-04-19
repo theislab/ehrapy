@@ -6,9 +6,9 @@ from sklearn.preprocessing import maxabs_scale, minmax_scale, power_transform, q
 
 from ehrapy import logging as logg
 from ehrapy.anndata.anndata_ext import (
+    _get_column_values,
     assert_numeric_vars,
     get_column_indices,
-    get_column_values,
     get_numeric_vars,
     set_numeric_vars,
 )
@@ -21,8 +21,9 @@ def scale_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool =
 
     Args:
         adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
-        vars: List of the names of the numeric variables to normalize. If None (default) all numeric variables will be normalized.
-        copy: Whether to return a copy or act in place (default: False)
+        vars: List of the names of the numeric variables to normalize.
+              If None all numeric variables will be normalized. Defaults to None .
+        copy: Whether to return a copy or act in place . Defaults to False .
         **kwargs: Additional arguments passed to :func:`~sklearn.preprocessing.scale`
 
     Returns:
@@ -33,7 +34,7 @@ def scale_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool =
 
             import ehrapy as ep
 
-            adata = ep.data.mimic_2(encode=True)
+            adata = ep.data.mimic_2(encoded=True)
             adata_norm = ep.pp.scale_norm(adata, copy=True)
     """
     if isinstance(vars, str):
@@ -46,7 +47,7 @@ def scale_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool =
     adata = _prep_adata_norm(adata, copy)
 
     var_idx = get_column_indices(adata, vars)
-    var_values = get_column_values(adata, var_idx)
+    var_values = _get_column_values(adata, var_idx)
 
     var_values = scale(var_values, **kwargs)
 
@@ -62,23 +63,27 @@ def scale_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool =
 def minmax_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool = False, **kwargs) -> AnnData | None:
     """Apply min-max normalization.
 
-    Functionality is provided by :func:`~sklearn.preprocessing.minmax_scale`, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.minmax_scale.html for details.
+    Functionality is provided by :func:`~sklearn.preprocessing.minmax_scale`,
+    see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.minmax_scale.html for details.
 
     Args:
-        adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
-        vars: List of the names of the numeric variables to normalize. If None (default) all numeric variables will be normalized.
-        copy: Whether to return a copy or act in place (default: False)
+        adata: :class:`~anndata.AnnData` object containing X to normalize values in.
+               Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
+        vars: List of the names of the numeric variables to normalize.
+              If None all numeric variables will be normalized. Defaults to False .
+        copy: Whether to return a copy or act in place. Defaults to False .
         **kwargs: Additional arguments passed to :func:`~sklearn.preprocessing.minmax_scale`
 
     Returns:
-        :class:`~anndata.AnnData` object with normalized X. Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
+        :class:`~anndata.AnnData` object with normalized X.
+        Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
 
     Example:
         .. code-block:: python
 
             import ehrapy as ep
 
-            adata = ep.data.mimic_2(encode=True)
+            adata = ep.data.mimic_2(encoded=True)
             adata_norm = ep.pp.minmax_norm(adata, copy=True)
     """
     if isinstance(vars, str):
@@ -91,7 +96,7 @@ def minmax_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool 
     adata = _prep_adata_norm(adata, copy)
 
     var_idx = get_column_indices(adata, vars)
-    var_values = get_column_values(adata, var_idx)
+    var_values = _get_column_values(adata, var_idx)
 
     var_values = minmax_scale(var_values, **kwargs)
 
@@ -107,22 +112,26 @@ def minmax_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool 
 def maxabs_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool = False) -> AnnData | None:
     """Apply max-abs normalization.
 
-    Functionality is provided by :func:`~sklearn.preprocessing.maxabs_scale`, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.maxabs_scale.html for details.
+    Functionality is provided by :func:`~sklearn.preprocessing.maxabs_scale`,
+    see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.maxabs_scale.html for details.
 
     Args:
-        adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
-        vars: List of the names of the numeric variables to normalize. If None (default) all numeric variables will be normalized.
-        copy: Whether to return a copy or act in place (default: False)
+        adata: :class:`~anndata.AnnData` object containing X to normalize values in.
+               Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
+        vars: List of the names of the numeric variables to normalize.
+              If None all numeric variables will be normalized. Defaults to None .
+        copy: Whether to return a copy or act in place. Defaults to False .
 
     Returns:
-        :class:`~anndata.AnnData` object with normalized X. Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
+        :class:`~anndata.AnnData` object with normalized X.
+        Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
 
     Example:
         .. code-block:: python
 
             import ehrapy as ep
 
-            adata = ep.data.mimic_2(encode=True)
+            adata = ep.data.mimic_2(encoded=True)
             adata_norm = ep.pp.maxabs_norm(adata, copy=True)
     """
     if isinstance(vars, str):
@@ -135,7 +144,7 @@ def maxabs_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool 
     adata = _prep_adata_norm(adata, copy)
 
     var_idx = get_column_indices(adata, vars)
-    var_values = get_column_values(adata, var_idx)
+    var_values = _get_column_values(adata, var_idx)
 
     var_values = maxabs_scale(var_values)
 
@@ -153,23 +162,27 @@ def robust_scale_norm(
 ) -> AnnData | None:
     """Apply robust scaling normalization.
 
-    Functionality is provided by :func:`~sklearn.preprocessing.robust_scale`, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.robust_scale.html for details.
+    Functionality is provided by :func:`~sklearn.preprocessing.robust_scale`,
+    see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.robust_scale.html for details.
 
     Args:
-        adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
-        vars: List of the names of the numeric variables to normalize. If None (default) all numeric variables will be normalized.
-        copy: Whether to return a copy or act in place (default: False)
+        adata: :class:`~anndata.AnnData` object containing X to normalize values in.
+               Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
+        vars: List of the names of the numeric variables to normalize.
+              If None all numeric variables will be normalized. Defaults to None .
+        copy: Whether to return a copy or act in place. Defaults to False .
         **kwargs: Additional arguments passed to :func:`~sklearn.preprocessing.robust_scale`
 
     Returns:
-        :class:`~anndata.AnnData` object with normalized X. Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
+        :class:`~anndata.AnnData` object with normalized X.
+        Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
 
     Example:
         .. code-block:: python
 
             import ehrapy as ep
 
-            adata = ep.data.mimic_2(encode=True)
+            adata = ep.data.mimic_2(encoded=True)
             adata_norm = ep.pp.robust_scale_norm(adata, copy=True)
     """
     if isinstance(vars, str):
@@ -182,7 +195,7 @@ def robust_scale_norm(
     adata = _prep_adata_norm(adata, copy)
 
     var_idx = get_column_indices(adata, vars)
-    var_values = get_column_values(adata, var_idx)
+    var_values = _get_column_values(adata, var_idx)
 
     var_values = robust_scale(var_values, **kwargs)
 
@@ -198,23 +211,26 @@ def robust_scale_norm(
 def quantile_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool = False, **kwargs) -> AnnData | None:
     """Apply quantile normalization.
 
-    Functionality is provided by ~sklearn.preprocessing.quantile_transform, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.quantile_transform.html for details.
+    Functionality is provided by ~sklearn.preprocessing.quantile_transform,
+    see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.quantile_transform.html for details.
 
     Args:
         adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encoded using ~ehrapy.preprocessing.encode.encode.
-        vars: List of the names of the numeric variables to normalize. If None (default) all numeric variables will be normalized.
-        copy: Whether to return a copy or act in place (default: False)
+        vars: List of the names of the numeric variables to normalize.
+              If None all numeric variables will be normalized. Defaults to None .
+        copy: Whether to return a copy or act in place. Defaults to False .
         **kwargs: Additional arguments passed to :func:`~sklearn.preprocessing.quantile_transform`
 
     Returns:
-        :class:`~anndata.AnnData` object with normalized X. Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
+        :class:`~anndata.AnnData` object with normalized X.
+        Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
 
     Example:
         .. code-block:: python
 
             import ehrapy as ep
 
-            adata = ep.data.mimic_2(encode=True)
+            adata = ep.data.mimic_2(encoded=True)
             adata_norm = ep.pp.quantile_norm(adata, copy=True)
     """
     if isinstance(vars, str):
@@ -227,7 +243,7 @@ def quantile_norm(adata: AnnData, vars: str | list[str] | None = None, copy: boo
     adata = _prep_adata_norm(adata, copy)
 
     var_idx = get_column_indices(adata, vars)
-    var_values = get_column_values(adata, var_idx)
+    var_values = _get_column_values(adata, var_idx)
 
     var_values = quantile_transform(var_values, **kwargs)
 
@@ -243,23 +259,27 @@ def quantile_norm(adata: AnnData, vars: str | list[str] | None = None, copy: boo
 def power_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool = False, **kwargs) -> AnnData | None:
     """Apply power transformation normalization.
 
-    Functionality is provided by :func:`~sklearn.preprocessing.power_transform`, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.power_transform.html for details.
+    Functionality is provided by :func:`~sklearn.preprocessing.power_transform`,
+    see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.power_transform.html for details.
 
     Args:
-        adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
-        vars: List of the names of the numeric variables to normalize. If None (default) all numeric variables will be normalized.
-        copy: Whether to return a copy or act in place (default: False)
+        adata: :class:`~anndata.AnnData` object containing X to normalize values in.
+               Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
+        vars: List of the names of the numeric variables to normalize.
+              If None all numeric variables will be normalized. Defaults to None .
+        copy: Whether to return a copy or act in place. Defaults to False .
         **kwargs: Additional arguments passed to :func:`~sklearn.preprocessing.power_transform`
 
     Returns:
-        :class:`~anndata.AnnData` object with normalized X. Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
+        :class:`~anndata.AnnData` object with normalized X.
+        Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
 
     Example:
         .. code-block:: python
 
             import ehrapy as ep
 
-            adata = ep.data.mimic_2(encode=True)
+            adata = ep.data.mimic_2(encoded=True)
             adata_norm = ep.pp.power_norm(adata, copy=True)
     """
     if isinstance(vars, str):
@@ -272,7 +292,7 @@ def power_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool =
     adata = _prep_adata_norm(adata, copy)
 
     var_idx = get_column_indices(adata, vars)
-    var_values = get_column_values(adata, var_idx)
+    var_values = _get_column_values(adata, var_idx)
 
     var_values = power_transform(var_values, **kwargs)
 
@@ -294,24 +314,27 @@ def log_norm(
 ) -> AnnData | None:
     """Apply log normalization.
 
-    Computes :math:`x = \\log(x + offset)`, where :math:`log` denotes the natural logarithm unless a different base is given and the default :math:`offset` is :math:`1`
+    Computes :math:`x = \\log(x + offset)`, where :math:`log` denotes the natural logarithm
+    unless a different base is given and the default :math:`offset` is :math:`1`
 
     Args:
         adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
-        vars: List of the names of the numeric variables to normalize. If None (default) all numeric variables will be normalized.
+        vars: List of the names of the numeric variables to normalize.
+              If None all numeric variables will be normalized. Defaults to None.
         base: Numeric base for logarithm. If None the natural logarithm is used.
-        offset: Offset added to values before computing the logarithm. (default: 1)
-        copy: Whether to return a copy or act in place (default: False)
+        offset: Offset added to values before computing the logarithm. Defaults to 1 .
+        copy: Whether to return a copy or act in place. Defaults to False .
 
     Returns:
-        :class:`~anndata.AnnData` object with normalized X. Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
+        :class:`~anndata.AnnData` object with normalized X.
+        Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
 
     Example:
         .. code-block:: python
 
             import ehrapy as ep
 
-            adata = ep.data.mimic_2(encode=True)
+            adata = ep.data.mimic_2(encoded=True)
             adata_norm = ep.pp.log_norm(adata, copy=True)
     """
     if isinstance(vars, str):
@@ -331,7 +354,7 @@ def log_norm(
         )
 
     var_idx = get_column_indices(adata, vars)
-    var_values = get_column_values(adata, var_idx)
+    var_values = _get_column_values(adata, var_idx)
 
     if offset == 1:
         np.log1p(var_values, out=var_values)
@@ -357,19 +380,22 @@ def sqrt_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool = 
     Take the square root of all values.
 
     Args:
-        adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
-        vars: List of the names of the numeric variables to normalize. If None (default) all numeric variables will be normalized.
-        copy: Whether to return a copy or act in place (default: False)
+        adata: :class:`~anndata.AnnData` object containing X to normalize values in.
+               Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
+        vars: List of the names of the numeric variables to normalize.
+              If None all numeric variables will be normalized. Defaults to None .
+        copy: Whether to return a copy or act in place. Defaults to False .
 
     Returns:
-        :class:`~anndata.AnnData` object with normalized X. Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
+        :class:`~anndata.AnnData` object with normalized X.
+        Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
 
     Example:
         .. code-block:: python
 
             import ehrapy as ep
 
-            adata = ep.data.mimic_2(encode=True)
+            adata = ep.data.mimic_2(encoded=True)
             adata_norm = ep.pp.sqrt_norm(adata, copy=True)
     """
     if isinstance(vars, str):
@@ -382,7 +408,7 @@ def sqrt_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool = 
     adata = _prep_adata_norm(adata, copy)
 
     var_idx = get_column_indices(adata, vars)
-    var_values = get_column_values(adata, var_idx)
+    var_values = _get_column_values(adata, var_idx)
 
     var_values = np.sqrt(var_values)
 

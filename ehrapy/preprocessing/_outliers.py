@@ -20,14 +20,23 @@ def winsorize(
 
     Args:
         adata: AnnData object to winsorize
-        vars: The features to winsorize
-        obs_cols: Columns in obs with features to winsorize
-        limits: Tuple of the percentages to cut on each side of the array as floats between 0. and 1. (default: 0.01 and 0.99)
+        vars: The features to winsorize.
+        obs_cols: Columns in obs with features to winsorize.
+        limits: Tuple of the percentages to cut on each side of the array as floats between 0. and 1.
+                Defaults to (0.01, 0.99)
         copy: Whether to return a copy or not
         **kwargs: Keywords arguments get passed to scipy.stats.mstats.winsorize
 
     Returns:
-        Winsorized AnnData object if copy is True
+        Winsorized AnnData object if copy is True.
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy as ep
+
+            adata = ep.data.mimic_2(encoded=True)
+            ep.pp.winsorize(adata, ['bmi'])
     """
     _validate_outlier_input(adata, obs_cols, vars)
 
@@ -74,6 +83,14 @@ def clip_quantile(
 
     Returns:
         A copy of original AnnData object with clipped features.
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy as ep
+
+            adata = ep.data.mimic_2(encoded=True)
+            ep.pp.clip_quantile(adata, ['bmi'])
     """
     obs_cols, vars = _validate_outlier_input(adata, obs_cols, vars)  # type: ignore
 

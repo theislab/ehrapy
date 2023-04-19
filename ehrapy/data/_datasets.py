@@ -4,7 +4,7 @@ import pandas as pd
 from anndata import AnnData
 
 from ehrapy import ehrapy_settings
-from ehrapy.io._read import read_csv
+from ehrapy.io._read import read_csv, read_h5ad
 from ehrapy.preprocessing._encode import encode
 
 
@@ -42,6 +42,31 @@ def mimic_2(
     return adata
 
 
+def mimic_2_preprocessed() -> AnnData:
+    """Loads the preprocessed MIMIC-II dataset.
+
+    More details: https://physionet.org/content/mimic2-iaccd/1.0/
+    The dataset was preprocessed according to: https://github.com/theislab/ehrapy-datasets/tree/main/mimic_2
+
+    Returns:
+        :class:`~anndata.AnnData` object of the prprocessed MIMIC-II dataset
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy as ep
+
+            adata = ep.dt.mimic_2_preprocessed()
+    """
+    adata = read_h5ad(
+        dataset_path=f"{ehrapy_settings.datasetdir}/ehrapy_mimic2.csv",
+        download_dataset_name="ehrapy_mimic_2_preprocessed.h5ad",
+        backup_url="https://figshare.com/ndownloader/files/39727936",
+    )
+
+    return adata
+
+
 def mimic_3_demo(
     encoded: bool = False,
     anndata: bool = False,
@@ -55,8 +80,8 @@ def mimic_3_demo(
     The resulting DataFrame can then be transformed into an AnnData object with :func:`~ehrapy.anndata.df_to_anndata`.
 
     Args:
-        encoded: Whether to return an already encoded object
-        anndata: Whether to return one AnnData object per CSV file (default: False)
+        encoded: Whether to return an already encoded object.
+        anndata: Whether to return one AnnData object per CSV file. Defaults to False
 
     Returns:
         A dictionary of AnnData objects or a dictionary of Pandas DataFrames
@@ -175,7 +200,7 @@ def chronic_kidney_disease(
 
             import ehrapy as ep
 
-            adata = ep.data.chronic_kidney_disease(encoded=True)
+            adata = ep.dt.chronic_kidney_disease(encoded=True)
     """
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/chronic_kidney_disease_precessed.csv",

@@ -59,7 +59,9 @@ def tsne(
         metric: Distance metric calculate neighbors on.
 
     Returns:
+        Depending on `copy`, returns or updates `adata` with the following fields.
 
+        **X_tsne** : `np.ndarray` (`adata.obs`, dtype `float`) tSNE coordinates of data.
     """
     return sc.tl.tsne(
         adata=adata,
@@ -346,7 +348,7 @@ def embedding_density(
 
             import ehrapy as ep
 
-            adata = ep.data.mimic_2(encode=True)
+            adata = ep.data.mimic_2(encoded=True)
             ep.tl.umap(adata)
             ep.tl.embedding_density(adata, basis='umap', groupby='phase')
             ep.pl.embedding_density(adata, basis='umap', key='umap_density_phase', group='G1')
@@ -558,7 +560,7 @@ def dendrogram(
         .. code-block:: python
 
             import ehrapy as ep
-            adata = ep.data.mimic_2(encode=True)
+            adata = ep.data.mimic_2(encoded=True)
             ep.tl.dendrogram(adata, groupby='service_unit')
             ep.pl.dendrogram(adata)
     """
@@ -843,7 +845,7 @@ def rank_features_groups(
         .. code-block:: python
 
             import ehrapy as ep
-            adata = eh.dt.mimic_2(encode=True)
+            adata = ep.dt.mimic_2(encoded=True)
             ep.tl.rank_features_groups(adata, "service_unit")
             ep.pl.rank_features_groups(adata)
     """
@@ -901,7 +903,7 @@ def filter_rank_features_groups(
         .. code-block:: python
 
             import ehrapy as ep
-            adata = eh.dt.mimic_2(encode=True)
+            adata = ep.dt.mimic_2(encoded=True)
             ep.tl.rank_features_groups(adata, "service_unit")
             ep.pl.rank_features_groups(adata)
     """

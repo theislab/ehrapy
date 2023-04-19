@@ -41,6 +41,7 @@ ep.pl.cool_fancy_plot()
     :nosignatures:
 
     data.mimic_2
+    data.mimic_2_preprocessed
     data.mimic_3_demo
     data.diabetes_130
     data.heart_failure
@@ -374,6 +375,9 @@ and vice versa.
     anndata.move_to_obs
     anndata.delete_from_obs
     anndata.move_to_x
+    anndata.get_obs_df
+    anndata.get_var_df
+    get_rank_features_df
     anndata.type_overview
 
 ```

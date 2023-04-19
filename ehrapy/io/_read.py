@@ -36,14 +36,16 @@ def read_csv(
 
     Args:
         dataset_path: Path to the file or directory to read.
-        sep: Separator in the file; either , (default) or \t.
+        sep: Separator in the file. One of either , (comma) or \t (tab). Defaults to , (comma)
         index_column: The index column of obs. Usually the patient visit ID or the patient ID.
         columns_obs_only: These columns will be added to obs only and not X.
-        columns_x_only: These columns will be added to X only and all remaining columns to obs. Note that datetime columns will always be added to .obs though.
+        columns_x_only: These columns will be added to X only and all remaining columns to obs.
+                        Note that datetime columns will always be added to .obs though.
         return_dfs: Whether to return one or several Pandas DataFrames.
-        return_mudata: Whether to create and return a MuData object. This is primarily used for complex datasets which require several AnnData files.
-        cache: Whether to write to cache when reading or not. (default: False)
-        download_dataset_name: Name of the file or directory in case the dataset is downloaded
+        return_mudata: Whether to create and return a MuData object.
+                       This is primarily used for complex datasets which require several AnnData files.
+        cache: Whether to write to cache when reading or not. Defaults to False .
+        download_dataset_name: Name of the file or directory in case the dataset is downloaded.
         backup_url: URL to download the data file(s) from if not yet existing.
 
     Returns:
@@ -54,6 +56,7 @@ def read_csv(
         .. code-block:: python
 
             import ehrapy as ep
+
             adata = ep.io.read_csv("myfile.csv")
     """
     _check_columns_only_params(columns_obs_only, columns_x_only)
@@ -148,7 +151,7 @@ def read_h5ad(
 
             import ehrapy as ep
 
-            adata = eh.data.mimic_2(encode=True)
+            adata = ep.dt.mimic_2(encoded=True)
             ep.io.write("mimic_2.h5ad", adata)
             adata_2 = ep.io.read_h5ad("mimic_2.h5ad")
     """
@@ -381,6 +384,13 @@ def read_fhir(
 
     Returns:
         A Pandas DataFrame or AnnData object of the read in FHIR file(s).
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy as ep
+
+            adata = ep.io.read_fhir("/path/to/fhir/resources")
     """
     _check_columns_only_params(columns_obs_only, columns_x_only)
     file_path: Path = Path(dataset_path)

@@ -9,7 +9,7 @@ def _get_file_extension(file_path: Path) -> str:
     """Check whether the argument is a filename.
 
     Args:
-        file_path: Path to the file
+        file_path: Path to the file.
 
     Returns:
         File extension of the specified file

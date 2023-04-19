@@ -27,7 +27,7 @@ def missing_values_matrix(
 
     Args:
         adata: :class:`~anndata.AnnData` object object containing all observations.
-        filter: The filter to apply to the matrix. Should be one of "top", "bottom", or None (default).
+        filter: The filter to apply to the matrix. Should be one of "top", "bottom", or None. Defaults to None .
         max_cols: The max number of columns from the AnnData object to include.
         max_percentage: The max percentage fill of the columns from the AnnData object.
         sort: The row sort order to apply. Can be "ascending", "descending", or None.
@@ -109,7 +109,7 @@ def missing_values_barplot(
     Args:
         adata: :class:`~anndata.AnnData` object object containing all observations.
         log: Whether or not to display a logarithmic plot.
-        filter: The filter to apply to the barplot. Should be one of "top", "bottom", or None (default).
+        filter: The filter to apply to the barplot. Should be one of "top", "bottom", or None. Defaults to None .
         max_cols: The max number of columns from the AnnData object to include.
         max_percentage: The max percentage fill of the columns from the AnnData object.
         sort: The row sort order to apply. Can be "ascending", "descending", or None.
@@ -192,7 +192,7 @@ def missing_values_heatmap(
 
     Args:
         adata: :class:`~anndata.AnnData` object object containing all observations.
-        filter: The filter to apply to the heatmap. Should be one of "top", "bottom", or None (default).
+        filter: The filter to apply to the heatmap. Should be one of "top", "bottom", or None. Defaults to None .
         max_cols: The max number of columns from the AnnData object to include.
         max_percentage: The max percentage fill of the columns from the AnnData object.
         sort: The row sort order to apply. Can be "ascending", "descending", or None.
@@ -278,7 +278,7 @@ def missing_values_dendrogram(
     Args:
         adata: :class:`~anndata.AnnData` object object containing all observations.
         method: The distance measure being used for clustering. This parameter is passed to `scipy.hierarchy`.
-        filter: The filter to apply to the dendrogram. Should be one of "top", "bottom", or None (default).
+        filter: The filter to apply to the dendrogram. Should be one of "top", "bottom", or None. Defaults to None .
         max_cols: The max number of columns from the AnnData object to include.
         max_percentage: The max percentage fill of the columns from the AnnData object.
         figsize: The size of the figure to display.

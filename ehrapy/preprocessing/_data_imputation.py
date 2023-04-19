@@ -32,7 +32,7 @@ def explicit_impute(
         adata: :class:`~anndata.AnnData` object containing X to impute values in.
         replacement: Value to use as replacement or optionally keys to indicate which columns to replace with which value.
         impute_empty_strings: Whether to also impute empty strings.
-        warning_threshold: Threshold of percentage of missing values to display a warning for (default: 30)
+        warning_threshold: Threshold of percentage of missing values to display a warning for. Defaults to 30 .
         copy: Whether to return a copy with the imputed data.
 
     Returns:
@@ -126,7 +126,7 @@ def simple_impute(
         adata: The AnnData object to use mean Imputation on
         var_names: A list of var names indicating which columns to use mean imputation on (if None -> all columns)
         strategy: Any of mean/median/most_frequent to indicate which strategy to use for simple imputation
-        warning_threshold: Threshold of percentage of missing values to display a warning for (default: 30)
+        warning_threshold: Threshold of percentage of missing values to display a warning for. Defaults to 30 .
         copy: Whether to return a copy or act in place
 
     Returns:
@@ -202,8 +202,8 @@ def knn_impute(
     Args:
         adata: The AnnData object to use KNN Imputation on
         var_names: A list of var names indicating which columns to use median imputation on (if None -> all columns)
-        n_neighbours: Number of neighbours to consider while imputing (default: 5)
-        warning_threshold: Threshold of percentage of missing values to display a warning for (default: 30)
+        n_neighbours: Number of neighbours to consider while imputing. Defaults to 5 .
+        warning_threshold: Threshold of percentage of missing values to display a warning for. Defaults to 30 .
         copy: Whether to return a copy or act in place
 
     Returns:
@@ -305,12 +305,12 @@ def miss_forest_impute(
         adata: The AnnData object to use MissForest Imputation on.
         var_names: List of columns to impute or a dict with two keys ('numerical' and 'non_numerical') indicating which var
                    contain mixed data and which numerical data only.
-        num_initial_strategy: The initial strategy to replace all missing values with (default: 'mean').
+        num_initial_strategy: The initial strategy to replace all missing values with. Defaults to 'mean' .
         max_iter: The maximum number of iterations if the stop criterion has not been met yet.
         n_estimators: The number of trees to fit for every missing variable. Has a big effect on the run time.
-                      Decrease for faster computations (default: 100).
+                      Decrease for faster computations. Defaults to 100 .
         random_state: The random seed for the initialization.
-        warning_threshold: Threshold of percentage of missing values to display a warning for (default: 30).
+        warning_threshold: Threshold of percentage of missing values to display a warning for. Defaults to 30 .
         copy: Whether to return a copy or act in place.
 
     Returns:
@@ -442,8 +442,9 @@ def soft_impute(
         adata: The AnnData object to use SoftImpute on.
         var_names: A list of var names indicating which columns to impute (if None -> all columns).
         copy: Whether to return a copy or act in place.
-        warning_threshold: Threshold of percentage of missing values to display a warning for (default: 30).
-        shrinkage_value : Value by which we shrink singular values on each iteration. If omitted then the default value will be the maximum singular value of the initialized matrix (zeros for missing values) divided by 50.
+        warning_threshold: Threshold of percentage of missing values to display a warning for. Defaults to 30 .
+        shrinkage_value : Value by which we shrink singular values on each iteration.
+                          If omitted then the default value will be the maximum singular value of the initialized matrix (zeros for missing values) divided by 50.
         convergence_threshold : Minimum ration difference between iterations (as a fraction of the Frobenius norm of the current solution) before stopping.
         max_iters: Maximum number of SVD iterations.
         max_rank: Perform a truncated SVD on each iteration with this value as its rank.
@@ -588,7 +589,7 @@ def iterative_svd_impute(
         adata: The AnnData object to use IterativeSVD on.
         var_names: A list of var names indicating which columns to impute (if None -> all columns).
         copy: Whether to return a copy or act in place.
-        warning_threshold: Threshold of percentage of missing values to display a warning for (default: 30).
+        warning_threshold: Threshold of percentage of missing values to display a warning for. Defaults to 30 .
 
     Returns:
         The imputed AnnData object
@@ -714,7 +715,7 @@ def matrix_factorization_impute(
         adata: The AnnData object to use MatrixFactorization on.
         var_names: A list of var names indicating which columns to impute (if None -> all columns).
         copy: Whether to return a copy or act in place.
-        warning_threshold: Threshold of percentage of missing values to display a warning for (default: 30).
+        warning_threshold: Threshold of percentage of missing values to display a warning for. Defaults to 30 .
         rank: Number of latent factors to use in matrix factorization model
         learning_rate: Learning rate for optimizer
         max_iters: Number of max_iters to train for
@@ -842,7 +843,7 @@ def nuclear_norm_minimization_impute(
         adata: The AnnData object to use NuclearNormMinimization on.
         var_names: A list of var names indicating which columns to impute (if None -> all columns).
         copy: Whether to return a copy or act in place.
-        warning_threshold: Threshold of percentage of missing values to display a warning for (default: 30).
+        warning_threshold: Threshold of percentage of missing values to display a warning for. Defaults to 30 .
         require_symmetric_solution: Add symmetry constraint to convex problem
         min_value: Smallest possible imputed value
         max_value: Largest possible imputed value

@@ -26,10 +26,10 @@ def download(
     Args:
         url: URL to download
         output_file_name: Name of the downloaded file
-        output_path: Path to download/extract the files to (default: OS tmpdir)
-        block_size: Block size for downloads in bytes (default: 1024)
-        overwrite: Whether to overwrite existing files (default: False)
-        is_archived: Whether the downloaded file needs to be unarchived (default: False)
+        output_path: Path to download/extract the files to. Defaults to 'OS tmpdir'
+        block_size: Block size for downloads in bytes.Defaults to 1024
+        overwrite: Whether to overwrite existing files. Defaults to False
+        is_archived: Whether the downloaded file needs to be unarchived.Defaults to False
     """
     if output_file_name is None:
         letters = ascii_lowercase

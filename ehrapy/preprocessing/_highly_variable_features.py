@@ -1,4 +1,4 @@
-from typing import Literal, Optional
+from __future__ import annotations
 
 import pandas as pd
 import scanpy as sc
@@ -7,15 +7,14 @@ from anndata import AnnData
 
 def highly_variable_features(
     adata: AnnData,
-    layer: Optional[str] = None,
+    layer: str | None = None,
     top_features_percentage: float = 0.2,
-    span: Optional[float] = 0.3,
+    span: float | None = 0.3,
     n_bins: int = 20,
-    flavor: Literal["normalized_variance"] = "normalized_variance",
     subset: bool = False,
     inplace: bool = True,
     check_values: bool = True,
-) -> Optional[pd.DataFrame]:
+) -> pd.DataFrame | None:
     """Annotate highly variable features.
 
     Expects count data. A normalized variance for each feature is computed. First, the data
@@ -25,14 +24,17 @@ def highly_variable_features(
 
     Args:
         adata: The annotated data matrix of shape `n_obs` × `n_vars`.
-        layer: If provided, use `adata.layers[layer]` for expression values instead of `adata.X`.
-        top_features_percentage: Percentage of highly-variable features to keep.
-        span: The fraction of the data used when estimating the variance in the loess model fit.
-        n_bins: Number of bins for binning. Normalization is done with respect to each bin. If just a single observation falls into a bin, the normalized dispersion is artificially set to 1. You'll be informed about this if you set `settings.verbosity = 4`.
-        flavor: Choose the flavor for identifying highly variable features.
+        layer: If provided, use `adata.layers[layer]` for expression values instead of `adata.X`. Defaults to None .
+        top_features_percentage: Percentage of highly-variable features to keep. Defaults to 0.2 .
+        span: The fraction of the data used when estimating the variance in the loess model fit. Defaults to 0.3 .
+        n_bins: Number of bins for binning. Normalization is done with respect to each bin.
+                If just a single observation falls into a bin, the normalized dispersion is artificially set to 1.
+                You'll be informed about this if you set `settings.verbosity = 4`. Defaults to 20 .
         subset: Inplace subset to highly-variable features if `True` otherwise merely indicate highly variable features.
-        inplace: Whether to place calculated metrics in `.var` or return them.
+                Defaults to False .
+        inplace: Whether to place calculated metrics in `.var` or return them. Defaults to True .
         check_values: Check if counts in selected layer are integers. A Warning is returned if set to True.
+                      Defaults to True .
 
     Returns:
         Depending on `inplace` returns calculated metrics (:class:`~pandas.DataFrame`) or
@@ -50,15 +52,15 @@ def highly_variable_features(
         rank of the feature according to normalized variance, median rank in the case of multiple batches
     """
     n_top_features = int(top_features_percentage * len(adata.var))
-    if flavor == "normalized_variance":
-        return sc.pp.highly_variable_genes(
-            adata=adata,
-            layer=layer,
-            n_top_genes=n_top_features,
-            span=span,
-            n_bins=n_bins,
-            flavor="seurat_v3",
-            subset=subset,
-            inplace=inplace,
-            check_values=check_values,
-        )
+
+    return sc.pp.highly_variable_genes(
+        adata=adata,
+        layer=layer,
+        n_top_genes=n_top_features,
+        span=span,
+        n_bins=n_bins,
+        flavor="seurat_v3",
+        subset=subset,
+        inplace=inplace,
+        check_values=check_values,
+    )

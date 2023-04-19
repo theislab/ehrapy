@@ -10,6 +10,7 @@ from ehrapy.data._datasets import (
     heart_failure,
     hepatitis,
     mimic_2,
+    mimic_2_preprocessed,
     mimic_3_demo,
     parkinson_dataset_with_replicated_acoustic_features,
     parkinsons,

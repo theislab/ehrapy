@@ -14,6 +14,15 @@ def qc_metrics(adata: AnnData, extra_columns: list[str] | None = None) -> None: 
     Args:
         adata: Annotated data matrix.
         extra_columns: List of custom (qc) var columns to be displayed additionally.
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy as ep
+
+            adata = ep.dt.mimic_2(encoded=True)
+            ep.pp.qc_metrics(adata)
+            ep.pl.qc_metrics(adata)
     """
     table = Table(title="[bold blue]Ehrapy qc metrics of var")
     # add special column header for the column name
@@ -33,7 +42,7 @@ def qc_metrics(adata: AnnData, extra_columns: list[str] | None = None) -> None: 
     columns_to_display = fixed_qc_columns if not extra_columns else fixed_qc_columns + extra_columns
     # check whether all columns exist (qc has been executed before and extra columns are var columns)
     if (set(columns_to_display) & set(adata.var.columns)) != set(columns_to_display):
-        raise QCDisplayError(
+        raise AttributeError(
             "Cannot display QC metrics of current AnnData object. Either QC has not been executed before or "
             "some column(s) of the extra_columns parameter are not in var!"
         )
@@ -46,7 +55,3 @@ def qc_metrics(adata: AnnData, extra_columns: list[str] | None = None) -> None: 
 
     console = Console()
     console.print(table)
-
-
-class QCDisplayError(Exception):
-    pass

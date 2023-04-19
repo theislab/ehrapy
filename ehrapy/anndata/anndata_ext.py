@@ -3,7 +3,7 @@ from __future__ import annotations
 import random
 from collections import OrderedDict
 from string import ascii_letters
-from typing import Collection, NamedTuple
+from typing import Collection, Iterable, NamedTuple
 
 import numpy as np
 import pandas as pd
@@ -12,6 +12,7 @@ from mudata import MuData
 from rich import print
 from rich.text import Text
 from rich.tree import Tree
+from scanpy.get import obs_df, rank_genes_groups_df, var_df
 from scipy import sparse
 from scipy.sparse import issparse
 
@@ -53,10 +54,10 @@ def df_to_anndata(
             elif isinstance(index_column, int) and index_column < len(df_columns):
                 df = df.set_index(df_columns[index_column])
             else:
-                raise IndexNotFoundError(f"Did not find column {index_column} in neither index or columns!")
+                raise ValueError(f"Did not find column {index_column} in neither index or columns!")
         # index_column is neither in the index or in the columns or passed as some value that could not be understood
         else:  # pragma: no cover
-            raise IndexNotFoundError(f"Did not find column {index_column} in neither index or columns!")
+            raise ValueError(f"Did not find column {index_column} in neither index or columns!")
 
     # move columns from the input dataframe to obs
     if columns_obs_only:
@@ -65,7 +66,7 @@ def df_to_anndata(
             obs = obs.set_index(df.index.map(str))
             df = df.drop(columns_obs_only, axis=1)
         except KeyError as e:
-            raise ColumnNotFoundError(
+            raise ValueError(
                 "One or more column names passed to column_obs_only were not found in the input data. "
                 "Are the column names spelled correctly?"
             ) from e
@@ -127,7 +128,7 @@ def anndata_to_df(
     df = pd.DataFrame(X, columns=list(adata.var_names))
     if obs_cols:
         if len(adata.obs.columns) == 0:
-            raise ObsEmptyError("Cannot slice columns from empty obs!")
+            raise ValueError("Cannot slice columns from empty obs!")
         if isinstance(obs_cols, str):
             obs_cols = list(obs_cols)
         if isinstance(obs_cols, list):  # pragma: no cover
@@ -138,7 +139,7 @@ def anndata_to_df(
         logg.info(f"Added `{obs_cols}` columns to `X`.")
     if var_cols:
         if len(adata.var.columns) == 0:
-            raise VarEmptyError("Cannot slice columns from empty var!")
+            raise ValueError("Cannot slice columns from empty var!")
         if isinstance(var_cols, str):
             var_cols = list(var_cols)
         if isinstance(var_cols, list):
@@ -164,14 +165,21 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False)
 
     Returns:
         The original AnnData object with moved or copied columns from X to obs
-    """
 
+    Example:
+        .. code-block:: python
+
+            import ehrapy as ep
+
+            adata = ep.dt.mimic_2(encoded=True)
+            ep.anndata_ext.move_to_obs(adata, ['age'], copy_obs=False)
+    """
     if isinstance(to_obs, str):  # pragma: no cover
         to_obs = [to_obs]
 
     # don't allow moving encoded columns as this could lead to inconsistent data in X and obs
     if any(column.startswith("ehrapycat") for column in to_obs):
-        raise ObsMoveError(
+        raise ValueError(
             "Cannot move encoded columns from X to obs. Either undo encoding or remove them from the list!"
         )
 
@@ -220,8 +228,16 @@ def delete_from_obs(adata: AnnData, to_delete: list[str]) -> AnnData:
 
     Returns:
         The original AnnData object with deleted columns from obs.
-    """
 
+    Example:
+        .. code-block:: python
+
+            import ehrapy as ep
+
+            adata = ep.dt.mimic_2(encoded=True)
+            ep.anndata_ext.move_to_obs(adata, ['age'], copy_obs=True)
+            ep.anndata_ext.delete_from_obs(adata, ['age'])
+    """
     if isinstance(to_delete, str):  # pragma: no cover
         to_delete = [to_delete]
 
@@ -237,7 +253,7 @@ def delete_from_obs(adata: AnnData, to_delete: list[str]) -> AnnData:
     return adata
 
 
-def move_to_x(adata: AnnData, to_x: list[str] | str, copy: bool = False) -> AnnData:
+def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
     """Move features from obs to X inplace.
 
     Args:
@@ -247,13 +263,21 @@ def move_to_x(adata: AnnData, to_x: list[str] | str, copy: bool = False) -> AnnD
 
     Returns:
         A new AnnData object with moved columns from obs to X. This should not be used for datetime columns currently.
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy as ep
+
+            adata = ep.dt.mimic_2(encoded=True)
+            ep.anndata_ext.move_to_obs(adata, ['age'], copy_obs=False)
+            new_adata = ep.anndata_ext.move_to_x(adata, ['age'])
     """
+    if isinstance(to_x, str):  # pragma: no cover
+        to_x = [to_x]
 
     if not all(elem in adata.obs.columns.values for elem in to_x):
         raise ValueError(f"Columns `{[col for col in to_x if col not in adata.obs.columns.values]}` are not in obs.")
-
-    if isinstance(to_x, str):  # pragma: no cover
-        to_x = [to_x]
 
     cols_present_in_x = []
     cols_not_in_x = []
@@ -294,6 +318,14 @@ def get_column_indices(adata: AnnData, col_names: str | list[str]) -> list[int]:
 
     Returns:
         Set of column indices
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy as ep
+
+            adata = ep.dt.mimic_2(encoded=True)
+            ep.anndata_ext.get_column_indices(adata, ['age', 'gender_num', 'bmi'])
     """
     if isinstance(col_names, str):  # pragma: no cover
         col_names = [col_names]
@@ -306,7 +338,7 @@ def get_column_indices(adata: AnnData, col_names: str | list[str]) -> list[int]:
     return indices
 
 
-def get_column_values(adata: AnnData, indices: int | list[int]) -> np.ndarray:
+def _get_column_values(adata: AnnData, indices: int | list[int]) -> np.ndarray:
     """Fetches the column values for a specific index from X
 
     Args:
@@ -330,7 +362,7 @@ def type_overview(
 
     Args:
         data: :class:`~anndata.AnnData` or :class:`~mudata.MuData` object to display
-        sort_by: How the tree output should be sorted. One of `dtype`, `order`, `num_cats` or None (defaults to None -> unsorted)
+        sort_by: How the tree output should be sorted. One of `dtype`, `order`, `num_cats` or None (Defaults to None -> unsorted)
         sort_reversed: Whether to sort in reversed order or not
 
     Example:
@@ -338,7 +370,7 @@ def type_overview(
 
             import ehrapy as ep
 
-            adata = ep.dt.mimic_2(encode=True)
+            adata = ep.dt.mimic_2(encoded=True)
             ep.anndata_ext.type_overview(adata)
     """
     if isinstance(data, AnnData):
@@ -346,9 +378,7 @@ def type_overview(
     elif isinstance(data, MuData):
         _mudata_type_overview(data, sort_by, sort_reversed)
     else:
-        raise EhrapyRepresentationError(
-            f"Unable to present object of type {type(data)}. Can only display AnnData or MuData objects!"
-        )
+        raise ValueError(f"Unable to present object of type {type(data)}. Can only display AnnData or MuData objects!")
 
 
 def _adata_type_overview(
@@ -558,7 +588,7 @@ def set_numeric_vars(
     for i in range(n_values):
         adata.X[:, vars_idx[i]] = values[:, i]
 
-    logg.info(f"Column names for numeric variables {vars} were replaced.")
+    logg.info(f"Column names for numeric variables {vars} were replaced by {values}.")
 
     return adata
 
@@ -780,29 +810,86 @@ def generate_anndata(  # pragma: no cover
     return adata
 
 
+def get_obs_df(  # pragma: no cover
+    adata: AnnData,
+    keys: Iterable[str] = (),
+    obsm_keys: Iterable[tuple[str, int]] = (),
+    *,
+    layer: str = None,
+    features: str = None,
+):
+    """Return values for observations in adata.
+
+    Args:
+        adata: AnnData object to get values from.
+        keys: Keys from either `.var_names`, `.var[gene_symbols]`, or `.obs.columns`.
+        obsm_keys: Tuple of `(key from obsm, column index of obsm[key])`.
+        layer: Layer of `adata`.
+        features: Column of `adata.var` to search for `keys` in.
+
+    Returns:
+        A dataframe with `adata.obs_names` as index, and values specified by `keys` and `obsm_keys`.
+    """
+    return obs_df(adata=adata, keys=keys, obsm_keys=obsm_keys, layer=layer, gene_symbols=features)
+
+
+def get_var_df(  # pragma: no cover
+    adata: AnnData,
+    keys: Iterable[str] = (),
+    varm_keys: Iterable[tuple[str, int]] = (),
+    *,
+    layer: str = None,
+):
+    """Return values for observations in adata.
+
+    Args:
+        adata: AnnData object to get values from.
+        keys: Keys from either `.obs_names`, or `.var.columns`.
+        varm_keys: Tuple of `(key from varm, column index of varm[key])`.
+        layer: Layer of `adata`.
+
+    Returns:
+        A dataframe with `adata.var_names` as index, and values specified by `keys` and `varm_keys`.
+    """
+    return var_df(adata=adata, keys=keys, varm_keys=varm_keys, layer=layer)
+
+
+def get_rank_features_df(
+    adata: AnnData,
+    group: str | Iterable[str],
+    *,
+    key: str = "rank_genes_groups",
+    pval_cutoff: float | None = None,
+    log2fc_min: float | None = None,
+    log2fc_max: float | None = None,
+    features: str | None = None,
+):
+    """:func:`ehrapy.tl.rank_features_groups` results in the form of a :class:`~pandas.DataFrame`.
+
+    Args:
+        adata: AnnData object to get values from.
+        group: Which group (as in :func:`ehrapy.tl.rank_genes_groups`'s `groupby` argument)
+               to return results from. Can be a list. All groups are returned if groups is `None`.
+        key: Key differential groups were stored under.
+        pval_cutoff: Return only adjusted p-values below the  cutoff.
+        log2fc_min: Minimum logfc to return.
+        log2fc_max: Maximum logfc to return.
+        features: Column name in `.var` DataFrame that stores gene symbols.
+                  Specifying this will add that column to the returned DataFrame.
+
+    Returns:
+        A Pandas DataFrame of all rank genes groups results.
+    """
+    return rank_genes_groups_df(
+        adata=adata,
+        group=group,
+        key=key,
+        pval_cutoff=pval_cutoff,
+        log2fc_min=log2fc_min,
+        log2fc_max=log2fc_max,
+        gene_symbols=features,
+    )
+
+
 class NotEncodedError(AssertionError):
-    pass
-
-
-class ColumnNotFoundError(Exception):
-    pass
-
-
-class IndexNotFoundError(Exception):
-    pass
-
-
-class ObsEmptyError(Exception):
-    pass
-
-
-class VarEmptyError(Exception):
-    pass
-
-
-class ObsMoveError(Exception):
-    pass
-
-
-class EhrapyRepresentationError(ValueError):
     pass
