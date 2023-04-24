@@ -263,13 +263,13 @@ def qc_lab_measurements(
         adata: Annotated data matrix.
         reference_table: A custom DataFrame with reference values. Defaults to the laposata table if not specified.
         measurements: A list of measurements to check.
-        unit: The unit of the measurements. Defaults to SI .
+        unit: The unit of the measurements. Defaults to 'traditional'.
         layer: Layer containing the matrix to calculate the metrics for.
         threshold: Minimum required matching confidence score of the fuzzysearch.
-                   0 = no matches, 100 = all must match. Defaults to 20 .
+                   0 = no matches, 100 = all must match. Defaults to 20.
         age_col: Column containing age values.
         age_range: The inclusive age-range to filter for. e.g. 5-99
-        sex_col: Column containing sex values.
+        sex_col: Column containing sex values. Column must contain 'U', 'M' or 'F'.
         sex: Sex to filter the reference values for. Use U for unisex which uses male values when male and female conflict.
              Defaults to 'U|M'
         ethnicity_col: Column containing ethnicity values.
@@ -315,6 +315,17 @@ def qc_lab_measurements(
         not_none_columns = [col for col in [sex_col, age_col, ethnicity_col] if col is not None]
         not_none_columns.append(reference_column)
         reference_values = reference_table.loc[[best_column_match], not_none_columns]
+
+        additional_columns = False
+        if sex_col or age_col or ethnicity_col:  # check if additional columns were provided
+            additional_columns = True
+
+        # Check if multiple reference values occur and no additional information is available:
+        if reference_values.shape[0] > 1 and additional_columns is False:
+            raise ValueError(
+                f"Several options for {best_column_match} reference value are available. Please specify sex, age or "
+                f"ethnicity columns and their values."
+            )
 
         # Fetch reference values
         try:
