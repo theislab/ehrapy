@@ -1,0 +1,142 @@
+from typing import Dict
+import warnings
+
+import anndata
+import dowhy
+import dowhy.datasets
+import numpy as np
+import pytest
+import ehrapy as ep
+import networkx as nx
+
+
+warnings.filterwarnings("ignore")
+
+
+@pytest.fixture
+def test_data():
+    adata = anndata.AnnData(X=np.array([[1, 2], [3, 4]]), obs={"condition": ["A", "B"]})
+    return adata
+
+
+class TestCausal:
+    def setup_method(self):
+        self.seed = 8
+        np.random.seed(8)
+
+        linear_data = dowhy.datasets.linear_dataset(
+            beta=10,
+            num_common_causes=5,
+            num_instruments=2,
+            num_samples=1000,
+            treatment_is_binary=True,
+        )
+        self.linear_data = anndata.AnnData(linear_data["df"])
+        self.linear_graph = linear_data["gml_graph"]
+        self.outcome_name = "y"
+        self.treatment_name = "v0"
+
+    def test_dowhy_linear_dataset(self):
+        np.random.seed(self.seed)
+        estimate, refute_results = ep.tl.causal_inference(
+            adata=self.linear_data,
+            graph=self.linear_graph,
+            treatment=self.treatment_name,
+            outcome=self.outcome_name,
+            estimation_method="backdoor.linear_regression",
+            return_as="estimate+refute",
+        )
+
+        assert isinstance(refute_results, dict)
+        assert len(refute_results) == 3
+        assert isinstance(estimate, dowhy.causal_estimator.CausalEstimate)
+        assert np.round(refute_results["Refute: Add a random common cause"]["test_significance"], 3) == 10.002
+        assert np.round(refute_results["Refute: Use a subset of data"]["test_significance"], 3) == 10.002
+
+    def test_causal_inference_input_types(self) -> None:
+        # Test if function raises TypeError for invalid input types
+        with pytest.raises(TypeError):
+            ep.tl.causal_inference(
+                adata=123,
+                graph=self.linear_graph,
+                treatment="treatment",
+                outcome="outcome",
+                estimation_method="backdoor.doubly_robust_weighting",
+            )
+
+        with pytest.raises(TypeError):
+            ep.tl.causal_inference(
+                adata=self.linear_data,
+                graph=123,
+                treatment="treatment",
+                outcome="outcome",
+                estimation_method="backdoor.doubly_robust_weighting",
+            )
+
+        with pytest.raises(TypeError):
+            ep.tl.causal_inference(
+                adata=self.linear_data,
+                graph=self.linear_graph,
+                treatment=123,
+                outcome="outcome",
+                estimation_method="backdoor.doubly_robust_weighting",
+            )
+
+        with pytest.raises(TypeError):
+            ep.tl.causal_inference(
+                adata=self.linear_data,
+                graph=self.linear_graph,
+                treatment="treatment",
+                outcome=123,
+                estimation_method="backdoor.doubly_robust_weighting",
+            )
+
+        with pytest.raises(TypeError):
+            ep.tl.causal_inference(
+                adata=self.linear_data,
+                graph=self.linear_graph,
+                treatment="treatment",
+                outcome="outcome",
+                estimation_method=123,
+            )
+
+        with pytest.raises(ValueError):
+            ep.tl.causal_inference(
+                adata=self.linear_data,
+                graph=self.linear_graph,
+                treatment="treatment",
+                outcome="outcome",
+                estimation_method="123",
+            )
+
+        with pytest.raises(TypeError):
+            ep.tl.causal_inference(
+                adata=self.linear_data,
+                graph=self.linear_graph,
+                treatment="treatment",
+                outcome="outcome",
+                estimation_method="backdoor.doubly_robust_weighting",
+                refute_methods=["placebo_treatment_refuter", "random_common_cause", 123]
+            )
+
+        with pytest.raises(ValueError):
+            ep.tl.causal_inference(
+                adata=self.linear_data,
+                graph=self.linear_graph,
+                treatment="treatment",
+                outcome="outcome",
+                estimation_method="backdoor.doubly_robust_weighting",
+                refute_methods=["placebo_treatment_refuter", "random_common_cause", "123"]
+            )
+        # with pytest.raises(TypeError):
+        #     ep.tl.causal_inference(data, 123, "treatment", "outcome")
+        # with pytest.raises(TypeError):
+        #     ep.tl.causal_inference(data, graph, 123, "outcome")
+        # with pytest.raises(TypeError):
+        #     ep.tl.causal_inference(data, graph, "treatment", 123)
+        # with pytest.raises(TypeError):
+        #     ep.tl.causal_inference(data, graph, "treatment", "outcome", refute_methods=123)
+        # with pytest.raises(TypeError):
+        #     ep.tl.causal_inference(data, graph, "treatment", "outcome", estimation_method=123)
+        # with pytest.raises(TypeError):
+        #     ep.tl.causal_inference(data, graph, "treatment", "outcome", return_as=123)
