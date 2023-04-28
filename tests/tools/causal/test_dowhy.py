@@ -1,4 +1,3 @@
-from typing import Dict
 import warnings
 
 import anndata
@@ -6,9 +5,8 @@ import dowhy
 import dowhy.datasets
 import numpy as np
 import pytest
-import ehrapy as ep
-import networkx as nx
 
+import ehrapy as ep
 
 warnings.filterwarnings("ignore")
 
@@ -57,7 +55,7 @@ class TestCausal:
         # Test if function raises TypeError for invalid input types
         with pytest.raises(TypeError):
             ep.tl.causal_inference(
-                adata=123,
+                adata=123,  # type: ignore
                 graph=self.linear_graph,
                 treatment="treatment",
                 outcome="outcome",
@@ -77,7 +75,7 @@ class TestCausal:
             ep.tl.causal_inference(
                 adata=self.linear_data,
                 graph=self.linear_graph,
-                treatment=123,
+                treatment=123,  # type: ignore
                 outcome="outcome",
                 estimation_method="backdoor.doubly_robust_weighting",
             )
@@ -87,7 +85,7 @@ class TestCausal:
                 adata=self.linear_data,
                 graph=self.linear_graph,
                 treatment="treatment",
-                outcome=123,
+                outcome=123,  # type: ignore
                 estimation_method="backdoor.doubly_robust_weighting",
             )
 
@@ -97,7 +95,7 @@ class TestCausal:
                 graph=self.linear_graph,
                 treatment="treatment",
                 outcome="outcome",
-                estimation_method=123,
+                estimation_method=123,  # type: ignore
             )
 
         with pytest.raises(ValueError):
@@ -106,7 +104,7 @@ class TestCausal:
                 graph=self.linear_graph,
                 treatment="treatment",
                 outcome="outcome",
-                estimation_method="123",
+                estimation_method="123",  # type: ignore
             )
 
         with pytest.raises(TypeError):
@@ -116,7 +114,7 @@ class TestCausal:
                 treatment="treatment",
                 outcome="outcome",
                 estimation_method="backdoor.doubly_robust_weighting",
-                refute_methods=["placebo_treatment_refuter", "random_common_cause", 123]
+                refute_methods=["placebo_treatment_refuter", "random_common_cause", 123],  # type: ignore
             )
 
         with pytest.raises(ValueError):
@@ -126,7 +124,7 @@ class TestCausal:
                 treatment="treatment",
                 outcome="outcome",
                 estimation_method="backdoor.doubly_robust_weighting",
-                refute_methods=["placebo_treatment_refuter", "random_common_cause", "123"]
+                refute_methods=["placebo_treatment_refuter", "random_common_cause", "123"],  # type: ignore
             )
         # with pytest.raises(TypeError):
         #     ep.tl.causal_inference(data, 123, "treatment", "outcome")

@@ -1,20 +1,20 @@
 from __future__ import annotations
 
 import io
+import warnings
 from contextlib import redirect_stdout
-from typing import Any, Dict, List, Literal, Optional, Tuple, Union
-import networkx as nx
+from typing import Any, Literal
+
 import anndata
 import dowhy
-import pygraphviz
-import warnings
+import networkx as nx
 
 warnings.filterwarnings("ignore")
 
 
-def causal_inference(
+def causal_inference(  # type: ignore
     adata: anndata.AnnData,
-    graph: Union[nx.DiGraph, str],
+    graph: nx.DiGraph | str,
     treatment: str,
     outcome: str,
     estimation_method: Literal[
@@ -27,17 +27,13 @@ def causal_inference(
         "backdoor.doubly_robust_weighting",
         "backdoor.panel_regression",
     ],
-    refute_methods: List[Literal["placebo_treatment_refuter", "random_common_cause", "data_subset_refuter"]] = [
-        "placebo_treatment_refuter",
-        "random_common_cause",
-        "data_subset_refuter",
-    ],
+    refute_methods: list[Literal["placebo_treatment_refuter", "random_common_cause", "data_subset_refuter"]] = None,
     return_as: Literal["summary", "estimate", "refute", "estimate+refute"] = "summary",
-    # optional kwargs arguments
-    identify_kwargs: Optional[Dict[str, Any]] = None,
-    estimate_kwargs: Optional[Dict[str, Any]] = None,
-    refute_kwargs: Optional[Dict[str, Any]] = None,
-) -> Tuple[dowhy.CausalEstimate, Dict[str, Union[str, Dict[str, float]]]]:
+    *,
+    identify_kwargs: dict[str, Any] | None = None,
+    estimate_kwargs: dict[str, Any] | None = None,
+    refute_kwargs: dict[str, Any] | None = None,
+) -> tuple[dowhy.CausalEstimate, dict[str, str | dict[str, float]]]:
     """
     Performs causal inference on an AnnData object using the specified causal model and returns a tuple containing the causal estimate and the results of any refutation tests.
 
@@ -77,7 +73,6 @@ def causal_inference(
         >>>     estimation_method="backdoor.propensity_score_stratification",
         >>> )
     """
-
     if not isinstance(adata, anndata.AnnData):
         raise TypeError("Parameter 'adata' must be an instance of anndata.AnnData.")
 
@@ -89,6 +84,13 @@ def causal_inference(
 
     if not isinstance(outcome, str):
         raise TypeError("outcome must be a string")
+
+    if refute_methods is None:
+        refute_methods = [
+            "placebo_treatment_refuter",
+            "random_common_cause",
+            "data_subset_refuter",
+        ]
 
     if not isinstance(refute_methods, (list, str)):
         raise TypeError("Parameter 'refute_methods' must be a list or a string")
@@ -162,14 +164,14 @@ def causal_inference(
                 "test_significance": test_significance,
             }
         except ValueError as e:
-            refute_results[method] = str(e)
+            refute_results[method] = str(e)  # type: ignore
     output_buffer.close()
 
     # Create the summary string
     summary = f"Causal inference results for treatment variable '{treatment}' and outcome variable '{outcome}':\n"
     summary += f"Estimated effect: {estimate.value}\n"
     summary += "Refutation results:\n"
-    for method, results in refute_results.items():
+    for method, results in refute_results.items():  # type: ignore
         if isinstance(results, str):
             summary += f"{method}: {results}\n"
         else:
@@ -184,8 +186,8 @@ def causal_inference(
     elif return_as == "estimate":
         return estimate
     elif return_as == "refute":
-        return refute_results
+        return refute_results  # type: ignore
     elif return_as == "estimate+refute":
-        return estimate, refute_results
+        return estimate, refute_results  # type: ignore
     else:
         raise ValueError(f"Invalid return_as argument: {return_as}")
