@@ -2,8 +2,8 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import pytest
 from anndata import AnnData
+import pytest
 
 import ehrapy as ep
 from ehrapy.io._read import read_csv
@@ -153,8 +153,8 @@ class TestQualityControl:
         pass
 
     def test_qc_lab_measurements_multiple_measurements(self):
-        data = pd.DataFrame(np.array([[100, 98], [162, 107]]), columns=['oxygen saturation', 'glucose'], index=[0, 1])
+        data = pd.DataFrame(np.array([[100, 98], [162, 107]]), columns=["oxygen saturation", "glucose"], index=[0, 1])
 
         with pytest.raises(ValueError):
             adata = ep.ad.df_to_anndata(data)
-            ep.pp.qc_lab_measurements(adata, measurements=['oxygen saturation', 'glucose'], unit='SI')
+            ep.pp.qc_lab_measurements(adata, measurements=["oxygen saturation", "glucose"], unit="SI")
