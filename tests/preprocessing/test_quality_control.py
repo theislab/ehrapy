@@ -2,8 +2,8 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from anndata import AnnData
 import pytest
+from anndata import AnnData
 
 import ehrapy as ep
 from ehrapy.io._read import read_csv
