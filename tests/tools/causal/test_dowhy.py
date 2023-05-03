@@ -126,15 +126,3 @@ class TestCausal:
                 estimation_method="backdoor.doubly_robust_weighting",
                 refute_methods=["placebo_treatment_refuter", "random_common_cause", "123"],  # type: ignore
             )
-        # with pytest.raises(TypeError):
-        #     ep.tl.causal_inference(data, 123, "treatment", "outcome")
-        # with pytest.raises(TypeError):
-        #     ep.tl.causal_inference(data, graph, 123, "outcome")
-        # with pytest.raises(TypeError):
-        #     ep.tl.causal_inference(data, graph, "treatment", 123)
-        # with pytest.raises(TypeError):
-        #     ep.tl.causal_inference(data, graph, "treatment", "outcome", refute_methods=123)
-        # with pytest.raises(TypeError):
-        #     ep.tl.causal_inference(data, graph, "treatment", "outcome", estimation_method=123)
-        # with pytest.raises(TypeError):
-        #     ep.tl.causal_inference(data, graph, "treatment", "outcome", return_as=123)
