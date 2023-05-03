@@ -734,7 +734,7 @@ def _undo_encoding(
         obs=new_obs,
         var=pd.DataFrame(index=new_var_names),
         uns=uns,
-        dtype="object",
+        dtype=np.dtype(object),
         layers={"original": new_x.copy()},
     )
 
@@ -881,7 +881,7 @@ def _add_categoricals_to_obs(original: AnnData, new: AnnData, categorical_names:
         if var_name in new.obs.columns:
             continue
         elif var_name in categorical_names:
-            new.obs[var_name] = original.X[::, idx : idx + 1]
+            new.obs[var_name] = original.X[::, idx : idx + 1].flatten()
             # note: this will count binary columns (0 and 1 only) as well
             # needed for writing to .h5ad files
             if set(pd.unique(new.obs[var_name])).issubset({False, True, np.NaN}):
