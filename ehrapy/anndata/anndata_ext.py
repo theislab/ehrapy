@@ -488,7 +488,6 @@ def _single_quote_string(name: str) -> str:  # pragma: no cover
 
 
 def _assert_encoded(adata: AnnData):
-    print("REE")
     try:
         assert np.issubdtype(adata.X.dtype, np.number)
     except AssertionError:
