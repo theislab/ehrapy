@@ -4,7 +4,7 @@ import pandas as pd
 from anndata import AnnData
 
 from ehrapy import ehrapy_settings
-from ehrapy.io._read import read_csv, read_h5ad
+from ehrapy.io._read import read_csv, read_fhir, read_h5ad
 from ehrapy.preprocessing._encode import encode
 
 
@@ -82,6 +82,7 @@ def mimic_3_demo(
     Args:
         encoded: Whether to return an already encoded object.
         anndata: Whether to return one AnnData object per CSV file. Defaults to False
+        columns_obs_only: Columns to include in obs only and not X.
 
     Returns:
         A dictionary of AnnData objects or a dictionary of Pandas DataFrames
@@ -677,6 +678,43 @@ def heart_disease(
         columns_obs_only=columns_obs_only,
         index_column="patient_id",
     )
+    if encoded:
+        return encode(adata, autodetect=True)
+
+    return adata
+
+
+def synthea_sample(
+    encoded: bool = False,
+    columns_obs_only: list[str] | None = None,
+) -> AnnData:
+    """Loads the 1K Sample Synthetic Patient Records Data Set
+
+    More details: https://synthea.mitre.org/downloads
+    Preprocessing: TODO: add preprocessing link
+
+    Args:
+        encoded: Whether to return an already encoded object.
+        columns_obs_only: Columns to include in obs only and not X.
+
+    Returns:
+        :class:`~anndata.AnnData` object of the 1K Sample Synthetic Patient Records Data Set
+
+    Example:
+        .. code-block:: python
+
+            import ehrapy as ep
+
+            adata = ep.dt.synthea_sample(encoded=True)
+    """
+    adata: AnnData = read_fhir(
+        dataset_path=f"{ehrapy_settings.datasetdir}/synthea_sample",
+        download_dataset_name="synthea_sample",
+        backup_url="https://synthetichealth.github.io/synthea-sample-data/downloads/synthea_sample_data_fhir_r4_sep2019.zip",
+        columns_obs_only=columns_obs_only,
+        index_column="id",
+    )
+
     if encoded:
         return encode(adata, autodetect=True)
 

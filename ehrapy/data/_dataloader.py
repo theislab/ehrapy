@@ -29,7 +29,7 @@ def download(
         output_path: Path to download/extract the files to. Defaults to 'OS tmpdir'
         block_size: Block size for downloads in bytes.Defaults to 1024
         overwrite: Whether to overwrite existing files. Defaults to False
-        is_archived: Whether the downloaded file needs to be unarchived.Defaults to False
+        is_archived: Whether the downloaded file needs to be unarchived. Defaults to False
     """
     if output_file_name is None:
         letters = ascii_lowercase
@@ -62,6 +62,11 @@ def download(
 
     if is_archived:
         output_path = output_path or tempfile.gettempdir()
+        output_path = (
+            f"{output_path}{output_file_name.split('.')[0]}"
+            if str(output_path).endswith("/")
+            else f"{output_path}/{output_file_name.split('.')[0]}"
+        )
         shutil.unpack_archive(download_to_path, output_path)
 
     logg.debug(f"Loaded `{output_file_name}` to `{output_path}`.")
