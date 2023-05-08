@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import sys
-from io import StringIO
 import warnings
+from io import StringIO
 from typing import Any, Literal
 
 import anndata
@@ -26,13 +26,12 @@ class capture_output(list):
         sys.stdout = self._stdout
 
 
-def causal_inference(  # type: ignore
+def causal_inference(
     adata: anndata.AnnData,
     graph: nx.DiGraph | str,
     treatment: str,
     outcome: str,
     estimation_method: Literal[
-        # dowhy methods from https://github.com/py-why/dowhy/blob/8fb32a7bf617c1a64a2f8b61ed7a4a50ccaf8d8c/dowhy/causal_model.py#L247
         "backdoor.propensity_score_matching",
         "backdoor.propensity_score_stratification",
         "backdoor.propensity_score_weighting",
@@ -40,7 +39,6 @@ def causal_inference(  # type: ignore
         "backdoor.generalized_linear_model",
         "iv.instrumental_variable",
         "iv.regression_discontinuity",
-        # EconML estimators
         "backdoor.econml.linear_model.LinearDML",
         "backdoor.econml.nonparametric_model.NonParamDML",
         "backdoor.econml.causal_forest.CausalForestDML",
@@ -51,11 +49,15 @@ def causal_inference(  # type: ignore
         "backdoor.econml.xgboost.XGBTEstimator",
         "backdoor.econml.metalearners.XLearner",
     ],
-    refute_methods: list[
-        Literal[
-            "placebo_treatment_refuter", "random_common_cause", "data_subset_refuter", "add_unobserved_common_cause"
+    refute_methods: None
+    | list[str]
+    | (
+        list[
+            Literal[
+                "placebo_treatment_refuter", "random_common_cause", "data_subset_refuter", "add_unobserved_common_cause"
+            ]
         ]
-    ] = None,
+    ) = None,
     print_summary: bool = True,
     return_as: Literal["estimate", "refute", "estimate+refute"] = "estimate",
     show_graph: bool = False,
@@ -105,6 +107,19 @@ def causal_inference(  # type: ignore
         >>>     outcome="y",
         >>>     estimation_method="backdoor.propensity_score_stratification",
         >>> )
+        >>>
+        >>> estimate = ep.tl.causal_inference(
+        >>>     adata=self.linear_data,
+        >>>     graph=self.linear_graph,
+        >>>     treatment="treatment",
+        >>>     outcome="outcome",
+        >>>     estimation_method="backdoor.linear_regression",
+        >>>     return_as="estimate",
+        >>>     show_graph=True,
+        >>>     show_refute_plots=True,
+        >>> )
+        >>> ep.tl.plot_causal_effect(estimate)
+
     """
     if not isinstance(adata, anndata.AnnData):
         raise TypeError("Parameter 'adata' must be an instance of anndata.AnnData.")
@@ -145,18 +160,6 @@ def causal_inference(  # type: ignore
     if not isinstance(estimation_method, str):
         raise TypeError("estimation_method must be a string")
 
-    # if estimation_method not in [
-    #     "backdoor.propensity_score_stratification",
-    #     "backdoor.propensity_score_weighting",
-    #     "backdoor.linear_regression",
-    #     "backdoor.propensity_score_matching",
-    #     "backdoor.frontdoor_propensity_score_matching",
-    #     "backdoor.instrumental_variable",
-    #     "backdoor.doubly_robust_weighting",
-    #     "backdoor.panel_regression",
-    # ]:
-    #     raise ValueError(f"Unknown estimation method '{estimation_method}': {estimation_method}")
-
     if not isinstance(return_as, str):
         raise TypeError("return_as must be a string")
 
@@ -192,7 +195,7 @@ def causal_inference(  # type: ignore
         estimate = model.estimate_effect(identified_estimand, method_name=estimation_method, **estimate_kwargs)
 
     # Refute estimate using specified methods
-    refute_results = {}
+    refute_results: dict[str, str | dict[str, str]] = {}
     for method in refute_methods:
         refute_kwargs = refute_kwargs or {}
         if show_refute_plots is None or show_refute_plots is False:
@@ -222,7 +225,7 @@ def causal_inference(  # type: ignore
             # Try to extract pval, fails for "add_unobserved_common_cause" refuter
             try:
                 pval = f"{refute.refutation_result['p_value']:.2f}"
-            except:
+            except KeyError:
                 pval = "Not applicable"
 
             # Format effect, can be list when refuter is "add_unobserved_common_cause"
@@ -274,13 +277,30 @@ def causal_inference(  # type: ignore
         raise ValueError(f"Invalid return_as argument: {return_as}")
 
 
-def plot_causal_effect(
-    estimate: dowhy.causal_estimator.CausalEstimate,
-    precision: int = 3,
-    **kwargs
-):
-    """Plot the causal effect estimate."""
+def plot_causal_effect(estimate: dowhy.causal_estimator.CausalEstimate, precision: int = 3, **kwargs):
+    """Plot the causal effect estimate.
 
+    This function plots the causal effect of treatment on outcome, assuming a
+    linear relationship between the two. It uses the data, treatment name,
+    outcome name, and estimate object to determine the data to plot. It then
+    creates a plot with the treatment on the x-axis and the outcome on the
+    y-axis. The observed data is plotted as gray dots, and the causal variation
+    is plotted as a black line. The function then returns the plot.
+
+    Args:
+        estimate (dowhy.causal_estimator.CausalEstimate): The causal effect estimate to plot.
+        precision (int, optional): The number of decimal places to round the estimate to in the plot title.
+            Defaults to 3.
+        **kwargs: Additional keyword arguments to be passed to the underlying plotting functions.
+
+    Returns:
+        matplotlib.axes.Axes: The matplotlib Axes object containing the plot.
+
+    Raises:
+        TypeError: If the `estimate` parameter is not an instance of `dowhy.causal_estimator.CausalEstimate`.
+        ValueError: If the estimation method in `estimate` is not supported for this plot type.
+
+    """
     if not isinstance(estimate, dowhy.causal_estimator.CausalEstimate):
         raise TypeError("Parameter 'estimate' must be a dowhy.causal_estimator.CausalEstimate object")
 
@@ -306,3 +326,5 @@ def plot_causal_effect(
     ax.legend(loc="upper left")
     ax.set_xlabel("Treatment")
     ax.set_ylabel("Outcome")
+
+    return ax

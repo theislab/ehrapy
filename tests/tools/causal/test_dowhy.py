@@ -3,18 +3,13 @@ import warnings
 import anndata
 import dowhy
 import dowhy.datasets
+import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
 import ehrapy as ep
 
 warnings.filterwarnings("ignore")
-
-
-@pytest.fixture
-def test_data():
-    adata = anndata.AnnData(X=np.array([[1, 2], [3, 4]]), obs={"condition": ["A", "B"]})
-    return adata
 
 
 class TestCausal:
@@ -46,7 +41,7 @@ class TestCausal:
         )
 
         assert isinstance(refute_results, dict)
-        assert len(refute_results) == 3
+        assert len(refute_results) == 4
         assert isinstance(estimate, dowhy.causal_estimator.CausalEstimate)
         assert np.round(refute_results["Refute: Add a random common cause"]["test_significance"], 3) == 10.002
         assert np.round(refute_results["Refute: Use a subset of data"]["test_significance"], 3) == 10.002
@@ -57,18 +52,18 @@ class TestCausal:
             ep.tl.causal_inference(
                 adata=123,  # type: ignore
                 graph=self.linear_graph,
-                treatment="treatment",
-                outcome="outcome",
-                estimation_method="backdoor.doubly_robust_weighting",
+                treatment=self.treatment_name,
+                outcome=self.outcome_name,
+                estimation_method="backdoor.propensity_score_matching",
             )
 
         with pytest.raises(TypeError):
             ep.tl.causal_inference(
                 adata=self.linear_data,
                 graph=123,
-                treatment="treatment",
-                outcome="outcome",
-                estimation_method="backdoor.doubly_robust_weighting",
+                treatment=self.treatment_name,
+                outcome=self.outcome_name,
+                estimation_method="backdoor.propensity_score_matching",
             )
 
         with pytest.raises(TypeError):
@@ -76,25 +71,25 @@ class TestCausal:
                 adata=self.linear_data,
                 graph=self.linear_graph,
                 treatment=123,  # type: ignore
-                outcome="outcome",
-                estimation_method="backdoor.doubly_robust_weighting",
+                outcome=self.outcome_name,
+                estimation_method="backdoor.propensity_score_matching",
             )
 
         with pytest.raises(TypeError):
             ep.tl.causal_inference(
                 adata=self.linear_data,
                 graph=self.linear_graph,
-                treatment="treatment",
+                treatment=self.treatment_name,
                 outcome=123,  # type: ignore
-                estimation_method="backdoor.doubly_robust_weighting",
+                estimation_method="backdoor.propensity_score_matching",
             )
 
         with pytest.raises(TypeError):
             ep.tl.causal_inference(
                 adata=self.linear_data,
                 graph=self.linear_graph,
-                treatment="treatment",
-                outcome="outcome",
+                treatment=self.treatment_name,
+                outcome=self.outcome_name,
                 estimation_method=123,  # type: ignore
             )
 
@@ -102,8 +97,8 @@ class TestCausal:
             ep.tl.causal_inference(
                 adata=self.linear_data,
                 graph=self.linear_graph,
-                treatment="treatment",
-                outcome="outcome",
+                treatment=self.treatment_name,
+                outcome=self.outcome_name,
                 estimation_method="123",  # type: ignore
             )
 
@@ -111,9 +106,9 @@ class TestCausal:
             ep.tl.causal_inference(
                 adata=self.linear_data,
                 graph=self.linear_graph,
-                treatment="treatment",
-                outcome="outcome",
-                estimation_method="backdoor.doubly_robust_weighting",
+                treatment=self.treatment_name,
+                outcome=self.outcome_name,
+                estimation_method="backdoor.propensity_score_matching",
                 refute_methods=["placebo_treatment_refuter", "random_common_cause", 123],  # type: ignore
             )
 
@@ -121,8 +116,28 @@ class TestCausal:
             ep.tl.causal_inference(
                 adata=self.linear_data,
                 graph=self.linear_graph,
-                treatment="treatment",
-                outcome="outcome",
-                estimation_method="backdoor.doubly_robust_weighting",
+                treatment=self.treatment_name,
+                outcome=self.outcome_name,
+                estimation_method="backdoor.propensity_score_matching",
                 refute_methods=["placebo_treatment_refuter", "random_common_cause", "123"],  # type: ignore
             )
+
+    def test_plot_causal_effect(self):
+        estimate = ep.tl.causal_inference(
+            adata=self.linear_data,
+            graph=self.linear_graph,
+            treatment=self.treatment_name,
+            outcome=self.outcome_name,
+            estimation_method="backdoor.linear_regression",
+            return_as="estimate",
+            show_graph=False,
+            show_refute_plots=False,
+        )
+        ax = ep.tl.plot_causal_effect(estimate)
+
+        assert isinstance(ax, plt.Axes)
+        legend = ax.get_legend()
+        assert len(legend.get_texts()) == 2  # Check the number of legend labels
+        assert legend.get_texts()[0].get_text() == "Observed data"
+        assert legend.get_texts()[1].get_text() == "Causal variation"
+        assert "10.002" in str(ax.get_title())
