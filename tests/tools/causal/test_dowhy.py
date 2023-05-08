@@ -24,7 +24,7 @@ class TestCausal:
             num_samples=1000,
             treatment_is_binary=True,
         )
-        self.linear_data = anndata.AnnData(linear_data["df"])
+        self.linear_data = anndata.AnnData(linear_data["df"].astype(np.float32))
         self.linear_graph = linear_data["gml_graph"]
         self.outcome_name = "y"
         self.treatment_name = "v0"

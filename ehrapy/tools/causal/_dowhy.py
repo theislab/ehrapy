@@ -160,6 +160,28 @@ def causal_inference(
     if not isinstance(estimation_method, str):
         raise TypeError("estimation_method must be a string")
 
+    valid_estimation_methods = [
+        "backdoor.propensity_score_matching",
+        "backdoor.propensity_score_stratification",
+        "backdoor.propensity_score_weighting",
+        "backdoor.linear_regression",
+        "backdoor.generalized_linear_model",
+        "iv.instrumental_variable",
+        "iv.regression_discontinuity",
+        "backdoor.econml.linear_model.LinearDML",
+        "backdoor.econml.nonparametric_model.NonParamDML",
+        "backdoor.econml.causal_forest.CausalForestDML",
+        "backdoor.econml.forecast_model.ForestDML",
+        "backdoor.econml.dml.DML",
+        "backdoor.econml.dml.DMLCate",
+        "backdoor.econml.xgboost.XGBTRegressor",
+        "backdoor.econml.xgboost.XGBTEstimator",
+        "backdoor.econml.metalearners.XLearner",
+    ]
+
+    if estimation_method not in valid_estimation_methods:
+        raise ValueError(f"Unknown estimation method '{estimation_method}'.")
+
     if not isinstance(return_as, str):
         raise TypeError("return_as must be a string")
 
@@ -191,7 +213,7 @@ def causal_inference(
     estimate_kwargs = estimate_kwargs or {}
     assert set(estimate_kwargs.keys()).issubset(valid_kwargs["estimate_effect"]), "Invalid estimate_kwargs"
 
-    with capture_output() as _:
+    with capture_output() as _:  # otherwise prints estimation_method
         estimate = model.estimate_effect(identified_estimand, method_name=estimation_method, **estimate_kwargs)
 
     # Refute estimate using specified methods
@@ -225,7 +247,7 @@ def causal_inference(
             # Try to extract pval, fails for "add_unobserved_common_cause" refuter
             try:
                 pval = f"{refute.refutation_result['p_value']:.2f}"
-            except KeyError:
+            except TypeError:
                 pval = "Not applicable"
 
             # Format effect, can be list when refuter is "add_unobserved_common_cause"
@@ -307,7 +329,7 @@ def plot_causal_effect(estimate: dowhy.causal_estimator.CausalEstimate, precisio
     if "LinearRegressionEstimator" not in str(estimate.params["estimator_class"]):
         raise ValueError(f"Estimation method {estimate.params['estimator_class']} is not supported for this plot type.")
 
-    treatment_name = estimate.estimator._treatment_name
+    treatment_name = estimate.estimator._treatment_name[0]
     outcome_name = estimate.estimator._outcome_name
     data = estimate.estimator._data
     treatment = data[treatment_name].values
@@ -316,15 +338,20 @@ def plot_causal_effect(estimate: dowhy.causal_estimator.CausalEstimate, precisio
     _, ax = plt.subplots()
     x_min = 0
     x_max = max(treatment)
+    if isinstance(x_max, np.ndarray) and len(x_max) == 1:
+        x_max = x_max[0]
     y_min = estimate.params["intercept"]
     y_max = y_min + estimate.value * (x_max - x_min)
+    if isinstance(y_max, np.ndarray) and len(y_max) == 1:
+        y_max = y_max[0]
     ax.scatter(treatment, outcome, c="gray", marker="o", label="Observed data")
     ax.plot([x_min, x_max], [y_min, y_max], c="black", ls="solid", lw=4, label="Causal variation")
     ax.set_ylim(0, max(outcome))
     ax.set_xlim(0, x_max)
     ax.set_title(r"DoWhy estimate $\rho$ (slope) = " + str(round(estimate.value, precision)))
     ax.legend(loc="upper left")
-    ax.set_xlabel("Treatment")
-    ax.set_ylabel("Outcome")
+    ax.set_xlabel(treatment_name)
+    ax.set_ylabel(outcome_name)
+    plt.tight_layout()
 
     return ax
