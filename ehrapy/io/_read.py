@@ -489,11 +489,9 @@ def _get_non_existing_files(file: Path, download_dataset_name: str, backup_url: 
     output_file_or_dir = ehrapy_settings.datasetdir / output_path_name
     moved_path = Path(str(output_file_or_dir)[: str(output_file_or_dir).rfind("/") + 1]) / download_dataset_name
     shutil.move(output_file_or_dir, moved_path)  # type: ignore
+    file = moved_path
 
-    if len(list(moved_path.iterdir())) == 2 and list(moved_path.iterdir())[1].is_dir():
-        moved_path = list(moved_path.iterdir())[1]
-
-    return moved_path
+    return file
 
 
 def _read_from_cache_dir(cache_dir: Path) -> dict[str, AnnData]:

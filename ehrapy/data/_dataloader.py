@@ -62,11 +62,6 @@ def download(
 
     if is_archived:
         output_path = output_path or tempfile.gettempdir()
-        output_path = (
-            f"{output_path}{output_file_name.split('.')[0]}"
-            if str(output_path).endswith("/")
-            else f"{output_path}/{output_file_name.split('.')[0]}"
-        )
         shutil.unpack_archive(download_to_path, output_path)
 
     logg.debug(f"Loaded `{output_file_name}` to `{output_path}`.")
