@@ -4909,14 +4909,14 @@ plugins = ["importlib-metadata"]
 
 [[package]]
 name = "pyhpo"
-version = "3.1.4"
+version = "3.1.5"
 description = "A Python package to work with the HPO Ontology"
 category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "pyhpo-3.1.4-py3-none-any.whl", hash = "sha256:33020ecf808870557d27d291899e1667aa5c5a0d3592629664a74c20f6edf350"},
-    {file = "pyhpo-3.1.4.tar.gz", hash = "sha256:e48cfb405bcf0c4a9f817383f8f578ed833f8d64330b2ecf6de9bb0812f65125"},
+    {file = "pyhpo-3.1.5-py3-none-any.whl", hash = "sha256:fd2589faa7a7ceefc9ff79121a0c9addabdd72abec4425a6356d7bd687c500d4"},
+    {file = "pyhpo-3.1.5.tar.gz", hash = "sha256:ed208f567c6e6921c8f20be9f6accf98ddd27ba0ddcaadbbef53c2daaa720375"},
 ]
 
 [package.dependencies]
