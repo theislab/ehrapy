@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Iterable, Literal
 
 import numpy as np  # noqa: F401 # This package is implicitly used
 import pandas as pd
@@ -105,15 +105,15 @@ def glm(
 
 
 def kmf(
-    durations,
-    event_observed=None,
-    timeline=None,
-    entry=None,
-    label=None,
-    alpha=None,
-    ci_labels=None,
-    weights=None,
-    censoring=None,
+    durations: Iterable,
+    event_observed: Iterable | None = None,
+    timeline: Iterable = None,
+    entry: Iterable | None = None,
+    label: str | None = None,
+    alpha: float | None = None,
+    ci_labels: tuple[str, str] = None,
+    weights: Iterable | None = None,
+    censoring: Literal["right", "left"] = None,
 ) -> KaplanMeierFitter:
     """Fit the Kaplan-Meier estimate for the survival function.
 
@@ -121,27 +121,18 @@ def kmf(
     Class for fitting the Kaplan-Meier estimate for the survival function.
 
     Args:
-        durations: an array, list, pd.DataFrame or pd.Series
-            length n -- duration (relative to subject's birth) the subject was alive for.
-        event_observed: an array, list, pd.DataFrame, or pd.Series, optional
-            True if the the death was observed, False if the event was lost (right-censored) (default: all True if event_observed==None).
-        timeline: an array, list, pd.DataFrame, or pd.Series, optional
-            return the best estimate at the values in timelines (positively increasing)
-        entry: an array, list, pd.DataFrame, or pd.Series, optional
-            relative time when a subject entered the study. This is useful for left-truncated (not left-censored) observations. If None, all members of the population
-            entered study when they were "born".
-        label: string, optional
-            a string to name the column of the estimate.
-        alpha: float, optional
-            the alpha value in the confidence intervals. Overrides the initializing alpha for this call to fit only.
-        ci_labels: tuple, optional
-            add custom column names to the generated confidence intervals as a length-2 list: [<lower-bound name>, <upper-bound name>] (default: <label>_lower_<1-alpha/2>).
-        weights: an array, list, pd.DataFrame, or pd.Series, optional
-            if providing a weighted dataset. For example, instead
-            of providing every subject as a single element of `durations` and `event_observed`, one could
-            weigh subject differently.
-        censoring: string, optional. One of ('right', 'left)
-            'right' for fitting the model to a right-censored dataset. 'left' for fitting the model to a left-censored dataset (default: fit the model to a right-censored dataset).
+        durations: length n -- duration (relative to subject's birth) the subject was alive for.
+        event_observed: True if the the death was observed, False if the event was lost (right-censored). Defaults to all True if event_observed==None.
+        timeline: return the best estimate at the values in timelines (positively increasing)
+        entry: Relative time when a subject entered the study. This is useful for left-truncated (not left-censored) observations.
+         If None, all members of the population entered study when they were "born".
+        label: A string to name the column of the estimate.
+        alpha: The alpha value in the confidence intervals. Overrides the initializing alpha for this call to fit only.
+        ci_labels: Add custom column names to the generated confidence intervals as a length-2 list: [<lower-bound name>, <upper-bound name>] (default: <label>_lower_<1-alpha/2>).
+        weights: If providing a weighted dataset. For example, instead of providing every subject
+                 as a single element of `durations` and `event_observed`, one could weigh subject differently.
+        censoring: 'right' for fitting the model to a right-censored dataset.
+                   'left' for fitting the model to a left-censored dataset (default: fit the model to a right-censored dataset).
 
     Returns:
         Fitted KaplanMeierFitter
@@ -185,7 +176,7 @@ def kmf(
 
 
 def calculate_nested_f_statistic(small_model: GLMResultsWrapper, big_model: GLMResultsWrapper) -> float:
-    """Given two fitted GLMs, the larger of which contains the parameter space of the smaller, return the P value corresponding to the larger model adding explanatory power
+    """Given two fitted GLMs, the larger of which contains the parameter space of the smaller, return the P value corresponding to the larger model adding explanatory power.
 
     See https://stackoverflow.com/questions/27328623/anova-test-for-glm-in-python/60769343#60769343
 
