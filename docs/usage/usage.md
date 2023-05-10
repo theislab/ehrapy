@@ -232,7 +232,7 @@ In contrast to a preprocessing function, a tool usually adds an easily interpret
     tools.mc.get_annotation_overview
 ```
 
-### Data Analysis (Linear Regression, Logistic Regression)
+### Survival Analysis
 
 ```{eval-rst}
 .. autosummary::
@@ -242,6 +242,8 @@ In contrast to a preprocessing function, a tool usually adds an easily interpret
     tools.ols
     tools.glm
     tools.kmf
+    tools.test_kmf_logrank
+    tools.test_nested_f_statistic
 ```
 
 ## Plotting
@@ -377,7 +379,7 @@ and vice versa.
     anndata.move_to_x
     anndata.get_obs_df
     anndata.get_var_df
-    get_rank_features_df
+    anndata.get_rank_features_df
     anndata.type_overview
 
 ```

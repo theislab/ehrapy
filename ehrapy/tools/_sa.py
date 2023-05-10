@@ -8,6 +8,7 @@ import statsmodels.api as sm
 import statsmodels.formula.api as smf
 from anndata import AnnData
 from lifelines import KaplanMeierFitter
+from lifelines.statistics import StatisticalResult, logrank_test
 from scipy import stats
 from statsmodels.genmod.generalized_linear_model import GLMResultsWrapper
 
@@ -47,6 +48,7 @@ def ols(
     else:
         data = pd.DataFrame(adata.X, columns=adata.var_names)
     ols = smf.ols(formula, data=data, missing=missing)
+
     return ols
 
 
@@ -175,7 +177,48 @@ def kmf(
     return kmf
 
 
-def calculate_nested_f_statistic(small_model: GLMResultsWrapper, big_model: GLMResultsWrapper) -> float:
+def test_kmf_logrank(
+    kmf_A: KaplanMeierFitter,
+    kmf_B: KaplanMeierFitter,
+    t_0: float | None = -1,
+    weightings: Literal["wilcoxon", "tarone-ware", "peto", "fleming-harrington"] | None = None,
+) -> StatisticalResult:
+    """Calculates the p-value for the logrank test comparing the survival functions of two groups.
+
+    See https://lifelines.readthedocs.io/en/latest/lifelines.statistics.html
+
+    Measures and reports on whether two intensity processes are different.
+    That is, given two event series, determines whether the data generating processes are statistically different.
+    The test-statistic is chi-squared under the null hypothesis.
+
+    Args:
+        kmf_A: The first KaplanMeierFitter object containing the durations and events.
+        kmf_B: The second KaplanMeierFitter object containing the durations and events.
+        t_0: The final time period under observation, and subjects who experience the event after this time are set to be censored.
+             Specify -1 to use all time. Defaults to -1.
+        weightings: Apply a weighted logrank test: options are "wilcoxon" for Wilcoxon (also known as Breslow), "tarone-ware"
+                    for Tarone-Ware, "peto" for Peto test and "fleming-harrington" for Fleming-Harrington test.
+                    These are useful for testing for early or late differences in the survival curve. For the Fleming-Harrington
+                    test, keyword arguments p and q must also be provided with non-negative values.
+
+    Returns:
+        The p-value for the logrank test comparing the survival functions of the two groups.
+    """
+    results_pairwise = logrank_test(
+        durations_A=kmf_A.durations,
+        durations_B=kmf_B.durations,
+        event_observed_A=kmf_A.event_observed,
+        event_observed_B=kmf_B.event_observed,
+        weights_A=kmf_A.weights,
+        weights_B=kmf_B.weights,
+        t_0=t_0,
+        weightings=weightings,
+    )
+
+    return results_pairwise
+
+
+def test_nested_f_statistic(small_model: GLMResultsWrapper, big_model: GLMResultsWrapper) -> float:
     """Given two fitted GLMs, the larger of which contains the parameter space of the smaller, return the P value corresponding to the larger model adding explanatory power.
 
     See https://stackoverflow.com/questions/27328623/anova-test-for-glm-in-python/60769343#60769343
@@ -208,7 +251,7 @@ def anova_glm(result_1: GLMResultsWrapper, result_2: GLMResultsWrapper, formula_
     Returns:
         pd.DataFrame: Anova table.
     """
-    p_value = calculate_nested_f_statistic(result_1, result_2)
+    p_value = test_nested_f_statistic(result_1, result_2)
 
     table = {
         "Model": [1, 2],

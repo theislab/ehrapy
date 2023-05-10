@@ -1,7 +1,7 @@
-import lifelines
 import numpy as np
 import pytest
 import statsmodels
+from lifelines import KaplanMeierFitter
 
 import ehrapy as ep
 
@@ -35,9 +35,26 @@ class TestSA:
         adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
         kmf = ep.tl.kmf(adata[:, ["mort_day_censored"]].X, adata[:, ["censor_flg"]].X)
 
-        assert isinstance(kmf, lifelines.fitters.kaplan_meier_fitter.KaplanMeierFitter)
+        assert isinstance(kmf, KaplanMeierFitter)
         assert len(kmf.durations) == 1776
         assert sum(kmf.event_observed) == 497
+
+    @pytest.mark.parametrize("weightings", ["wilcoxon", "tarone-ware", "peto", "fleming-harrington"])
+    def test_calculate_logrank_pvalue(self, weightings):
+        durations_A = [1, 2, 3]
+        event_observed_A = [1, 1, 0]
+        durations_B = [1, 2, 3, 4]
+        event_observed_B = [1, 0, 0, 1]
+
+        kmf1 = KaplanMeierFitter()
+        kmf1.fit(durations_A, event_observed_A)
+
+        kmf2 = KaplanMeierFitter()
+        kmf2.fit(durations_B, event_observed_B)
+
+        results_pairwise = ep.tl.test_kmf_logrank(kmf1, kmf2)
+        p_value_pairwise = results_pairwise.p_value
+        assert 0 < p_value_pairwise < 1
 
     def test_anova_glm(self):
         adata = ep.dt.mimic_2(encoded=False)
