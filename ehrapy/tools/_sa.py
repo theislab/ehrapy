@@ -54,11 +54,11 @@ def ols(
 
 def glm(
     adata: AnnData,
-    var_names: list[str] | None = None,
+    var_names: Iterable[str] | None = None,
     formula: str | None = None,
     family: Literal["Gaussian", "Binomial", "Gamma", "Gaussian", "InverseGaussian"] = "Gaussian",
     missing: Literal["none", "drop", "raise"] = "none",
-    ascontinus: list[str] | None | None = None,
+    as_continuous: Iterable[str] | None | None = None,
 ) -> sm.GLM:
     """Create a Generalized Linear Model (GLM) from a formula, a distribution, and AnnData.
 
@@ -69,9 +69,12 @@ def glm(
         adata: The AnnData object for the GLM model.
         var_names: A list of var names indicating which columns are for the GLM model.
         formula: The formula specifying the model.
-        family: The distribution families. Available options are 'Gaussian', 'Binomial', 'Gamma', and 'InverseGaussian', (default: 'Gaussian').
-        missing: Available options are 'none', 'drop', and 'raise'. If 'none', no nan checking is done. If 'drop', any observations with nans are dropped. If 'raise', an error is raised (default: 'none').
-        ascontinus: A list of var names indicating which columns are continus rather than categorical. The corresponding columns will be set as type float.
+        family: The distribution families. Available options are 'Gaussian', 'Binomial', 'Gamma', and 'InverseGaussian'.
+                Defaults to 'Gaussian'.
+        missing: Available options are 'none', 'drop', and 'raise'. If 'none', no nan checking is done.
+                 If 'drop', any observations with nans are dropped. If 'raise', an error is raised (default: 'none').
+        ascontinus: A list of var names indicating which columns are continuous rather than categorical.
+                    The corresponding columns will be set as type float.
 
     Returns:
         The GLM model instance.
@@ -99,8 +102,8 @@ def glm(
         data = pd.DataFrame(adata[:, var_names].X, columns=var_names)
     else:
         data = pd.DataFrame(adata.X, columns=adata.var_names)
-    if ascontinus is not None:
-        data[ascontinus] = data[ascontinus].astype(float)
+    if as_continuous is not None:
+        data[as_continuous] = data[as_continuous].astype(float)
     glm = smf.glm(formula, data=data, family=family, missing=missing)
 
     return glm
