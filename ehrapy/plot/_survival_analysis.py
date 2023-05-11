@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from typing import Sequence
 from xmlrpc.client import Boolean
 
 import matplotlib.pyplot as plt
@@ -38,14 +39,14 @@ def ols(
 
     Args:
         adata: :class:`~anndata.AnnData` object object containing all observations.
-        x: x coordinate, for scatter plotting
-        y: y coordinate, for scatter plotting
-        scatter_plot: If True, show scatter plot. Defaults to True .
+        x: x coordinate, for scatter plotting.
+        y: y coordinate, for scatter plotting.
+        scatter_plot: If True, show scatter plot. Defaults to True.
         ols_results: List of RegressionResults from ehrapy.tl.ols. Example: [result_1, result_2]
-        ols_color: List of colors for each ols_results. Example: ['red', 'blue']
-        xlabel: The x-axis label text
-        ylabel: The y-axis label text
-        figsize: Width, height in inches. Defaults to None .
+        ols_color: List of colors for each ols_results. Example: ['red', 'blue'].
+        xlabel: The x-axis label text.
+        ylabel: The y-axis label text.
+        figsize: Width, height in inches. Defaults to None.
         lines: List of Tuples of (slope, intercept) or (x, y). Plot lines by slope and intercept or data points.
                Example: plot two lines (y = x + 2 and y = 2*x + 1): [(1, 2), (2, 1)]
         lines_color: List of colors for each line. Example: ['red', 'blue']
@@ -127,7 +128,7 @@ def ols(
 
 
 def kmf(
-    kmfs: list[KaplanMeierFitter] = None,
+    kmfs: Sequence[KaplanMeierFitter] = None,
     ci_alpha: list[float] | None = None,
     ci_force_lines: list[Boolean] | None = None,
     ci_show: list[Boolean] | None = None,
@@ -148,7 +149,7 @@ def kmf(
     See https://lifelines.readthedocs.io/en/latest/fitters/univariate/KaplanMeierFitter.html
 
     Args:
-        kmfs: Lists of fitted KaplanMeierFitter object.
+        kmfs: Iterables of fitted KaplanMeierFitter objects.
         ci_alpha: The transparency level of the confidence interval. If more than one kmfs, this should be a list. Defaults to 0.3.
         ci_force_lines: Force the confidence intervals to be line plots (versus default shaded areas).
                         If more than one kmfs, this should be a list. Defaults to False .
