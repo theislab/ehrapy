@@ -46,43 +46,40 @@ def ols(
         xlabel: The x-axis label text
         ylabel: The y-axis label text
         figsize: Width, height in inches. Defaults to None .
-        lines: List of Tuples of (slope, intercept) or (x, y). Plot lines by slope and intercept or data points. Example: plot two lines (y = x + 2 and y = 2*x + 1): [(1, 2), (2, 1)]
+        lines: List of Tuples of (slope, intercept) or (x, y). Plot lines by slope and intercept or data points.
+               Example: plot two lines (y = x + 2 and y = 2*x + 1): [(1, 2), (2, 1)]
         lines_color: List of colors for each line. Example: ['red', 'blue']
         lines_style: List of line styles for each line. Example: ['-', '--']
         lines_label: List of line labels for each line. Example: ['Line1', 'Line2']
-        xlim: Set the x-axis view limits. Required for only ploting lines using slope and intercept.
-        ylim: Set the y-axis view limits. Required for only ploting lines using slope and intercept.
+        xlim: Set the x-axis view limits. Required for only plotting lines using slope and intercept.
+        ylim: Set the y-axis view limits. Required for only plotting lines using slope and intercept.
         show: Show the plot, do not return axis.
         ax: A matplotlib axes object. Only works if plotting a single component.
         title: Set the title of the plot.
+
     Example:
-        .. code-block:: python
+        >>> # Scatter plot and OLS regression plot
+        >>> import ehrapy as ep
 
-            # Scatter plot and OLS regression plot
-            import ehrapy as ep
-
-            adata = ep.data.mimic_2(encoded=False)
-            co2_lm_result = ep.tl.ols(adata, var_names=['pco2_first', 'tco2_first'], formula='tco2_first ~ pco2_first', missing="drop").fit()
-            ep.pl.ols(adata, x='pco2_first', y='tco2_first', ols_results=[co2_lm_result], ols_color=['red'], xlabel="PCO2", ylabel="TCO2")
+        >>> adata = ep.data.mimic_2(encoded=False)
+        >>> co2_lm_result = ep.tl.ols(adata, var_names=['pco2_first', 'tco2_first'], formula='tco2_first ~ pco2_first', missing="drop").fit()
+        >>> ep.pl.ols(adata, x='pco2_first', y='tco2_first', ols_results=[co2_lm_result], ols_color=['red'], xlabel="PCO2", ylabel="TCO2")
 
         .. image:: /_static/docstring_previews/ols_plot_1.png
 
-        .. code-block:: python
-
+        Example:
             # Scatter plot and line plot
-            import ehrapy as ep
-
-            adata = ep.data.mimic_2(encoded=False)
-            ep.pl.ols(adata, x='pco2_first', y='tco2_first', lines=[(0.25, 10), (0.3, 20)], lines_color=['red', 'blue'], lines_style=['-', ':'], lines_label=['Line1', 'Line2'])
+            >>> import ehrapy as ep
+            >>> adata = ep.dt.mimic_2(encoded=False)
+            >>> ep.pl.ols(adata, x='pco2_first', y='tco2_first', lines=[(0.25, 10), (0.3, 20)],
+            >>>           lines_color=['red', 'blue'], lines_style=['-', ':'], lines_label=['Line1', 'Line2'])
 
         .. image:: /_static/docstring_previews/ols_plot_2.png
 
-        .. code-block:: python
-
             # Line plot only
-            import ehrapy as ep
-
-            ep.pl.ols(lines=[(0.25, 10), (0.3, 20)], lines_color=['red', 'blue'], lines_style=['-', ':'], lines_label=['Line1', 'Line2'], xlim=(0, 150), ylim=(0, 50))
+            >>> import ehrapy as ep
+            >>> ep.pl.ols(lines=[(0.25, 10), (0.3, 20)], lines_color=['red', 'blue'], lines_style=['-', ':'],
+            >>>           lines_label=['Line1', 'Line2'], xlim=(0, 150), ylim=(0, 50))
 
         .. image:: /_static/docstring_previews/ols_plot_3.png
     """
@@ -152,13 +149,13 @@ def kmf(
 
     Args:
         kmfs: Lists of fitted KaplanMeierFitter object.
-        ci_alpha: The transparency level of the confidence interval. If more than one kmfs, this should be a list. Defaults to 0.3 .
+        ci_alpha: The transparency level of the confidence interval. If more than one kmfs, this should be a list. Defaults to 0.3.
         ci_force_lines: Force the confidence intervals to be line plots (versus default shaded areas).
                         If more than one kmfs, this should be a list. Defaults to False .
         ci_show: Show confidence intervals. If more than one kmfs, this should be a list. Defaults to True .
         ci_legend: If ci_force_lines is True, this is a boolean flag to add the lines' labels to the legend.
                    If more than one kmfs, this should be a list. Defaults to False .
-        at_risk_counts: Show group sizes at time points. If more than one kmfs, this should be a list. Defaults to False .
+        at_risk_counts: Show group sizes at time points. If more than one kmfs, this should be a list. Defaults to False.
         color: List of colors for each kmf. If more than one kmfs, this should be a list.
         grid: If True, plot grid lines.
         xlim: Set the x-axis view limits.
@@ -170,33 +167,30 @@ def kmf(
         title: Set the title of the plot.
 
     Example:
-        .. code-block:: python
+        >>> import ehrapy as ep
+        >>> import numpy as np
 
-            import ehrapy as ep
-            import numpy as np
-
-            adata = ep.dt.mimic_2(encoded=False)
-            # Because in MIMIC-II database, `censor_fl` is censored or death (binary: 0 = death, 1 = censored).
-            # While in KaplanMeierFitter, `event_observed` is True if the the death was observed, False if the event was lost (right-censored).
-            # So we need to flip `censor_fl` when pass `censor_fl` to KaplanMeierFitter
-            adata[:, ['censor_flg']].X = np.where(adata[:, ['censor_flg']].X == 0, 1, 0)
-            kmf = ep.tl.kmf(adata[:, ['mort_day_censored']].X, adata[:, ['censor_flg']].X)
-            ep.pl.kmf([kmf], color=['r'], xlim=[0, 700], ylim=[0, 1], xlabel="Days", ylabel="Proportion Survived", show=True)
+        >>> adata = ep.dt.mimic_2(encoded=False)
+        # Because in MIMIC-II database, `censor_fl` is censored or death (binary: 0 = death, 1 = censored).
+        # While in KaplanMeierFitter, `event_observed` is True if the the death was observed, False if the event was lost (right-censored).
+        # So we need to flip `censor_fl` when pass `censor_fl` to KaplanMeierFitter
+        >>> adata[:, ['censor_flg']].X = np.where(adata[:, ['censor_flg']].X == 0, 1, 0)
+        >>> kmf = ep.tl.kmf(adata[:, ['mort_day_censored']].X, adata[:, ['censor_flg']].X)
+        >>> ep.pl.kmf([kmf], color=['r'], xlim=[0, 700], ylim=[0, 1], xlabel="Days", ylabel="Proportion Survived", show=True)
 
         .. image:: /_static/docstring_previews/kmf_plot_1.png
 
-        .. code-block:: python
-
-            T = adata[:, ['mort_day_censored']].X
-            E = adata[:, ['censor_flg']].X
-            groups = adata[:, ['service_unit']].X
-            ix1 = (groups == 'FICU')
-            ix2 = (groups == 'MICU')
-            ix3 = (groups == 'SICU')
-            kmf_1 = ep.tl.kmf(T[ix1], E[ix1], label='FICU')
-            kmf_2 = ep.tl.kmf(T[ix2], E[ix2], label='MICU')
-            kmf_3 = ep.tl.kmf(T[ix3], E[ix3], label='SICU')
-            ep.pl.kmf([kmf_1, kmf_2, kmf_3], ci_show=[False,False,False], color=['k','r', 'g'], xlim=[0, 750], ylim=[0, 1], xlabel="Days", ylabel="Proportion Survived")
+        >>> T = adata[:, ['mort_day_censored']].X
+        >>> E = adata[:, ['censor_flg']].X
+        >>> groups = adata[:, ['service_unit']].X
+        >>> ix1 = (groups == 'FICU')
+        >>> ix2 = (groups == 'MICU')
+        >>> ix3 = (groups == 'SICU')
+        >>> kmf_1 = ep.tl.kmf(T[ix1], E[ix1], label='FICU')
+        >>> kmf_2 = ep.tl.kmf(T[ix2], E[ix2], label='MICU')
+        >>> kmf_3 = ep.tl.kmf(T[ix3], E[ix3], label='SICU')
+        >>> ep.pl.kmf([kmf_1, kmf_2, kmf_3], ci_show=[False,False,False], color=['k','r', 'g'],
+        >>>           xlim=[0, 750], ylim=[0, 1], xlabel="Days", ylabel="Proportion Survived")
 
         .. image:: /_static/docstring_previews/kmf_plot_2.png
     """
@@ -213,6 +207,7 @@ def kmf(
     if color is None:
         color = [None] * len(kmfs)
     plt.figure(figsize=figsize)
+
     for i, kmf in enumerate(kmfs):
         if i == 0:
             ax = kmf.plot_survival_function(
