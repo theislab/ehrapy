@@ -8,7 +8,6 @@ from sklearn.exceptions import ConvergenceWarning
 
 from ehrapy.io._read import read_csv
 from ehrapy.preprocessing._data_imputation import (
-    ImputeStrategyNotAvailableError,
     _warn_imputation_threshold,
     explicit_impute,
     iterative_svd_impute,
@@ -42,7 +41,7 @@ class TestImputation:
     def test_mean_impute_throws_error_non_numerical(self):
         adata = read_csv(dataset_path=f"{_TEST_PATH}/test_impute.csv")
 
-        with pytest.raises(ImputeStrategyNotAvailableError):
+        with pytest.raises(ValueError):
             simple_impute(adata)
 
     def test_mean_impute_subset(self):
@@ -68,7 +67,7 @@ class TestImputation:
     def test_median_impute_throws_error_non_numerical(self):
         adata = read_csv(dataset_path=f"{_TEST_PATH}/test_impute.csv")
 
-        with pytest.raises(ImputeStrategyNotAvailableError):
+        with pytest.raises(ValueError):
             simple_impute(adata, strategy="median")
 
     def test_median_impute_subset(self):

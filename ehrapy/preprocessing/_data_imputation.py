@@ -81,7 +81,7 @@ def explicit_impute(
                 f"Imputed missing values in columns `{replacement.keys()}` by `{replacement.values()}` respectively."
             )
         else:
-            raise ReplacementDatatypeError(  # pragma: no cover
+            raise ValueError(  # pragma: no cover
                 f"Type {type(replacement)} is not a valid datatype for replacement parameter. Either use int, str or a dict!"
             )
 
@@ -136,9 +136,9 @@ def simple_impute(
         An updated AnnData object with imputed values.
 
     Raises:
-        ImputeStrategyNotAvailableError:
+        ValueError:
             If the selected imputation strategy is not applicable to the data.
-        UnknownImputeStrategyError:
+        ValueError:
             If an unknown imputation strategy is provided.
 
     Example:
@@ -163,7 +163,7 @@ def simple_impute(
                 _simple_impute(adata, var_names, strategy)
                 logg.debug(f"Imputed the AnnData object using `{strategy}` Imputation.")
             except ValueError:
-                raise ImputeStrategyNotAvailableError(
+                raise ValueError(
                     f"Can only impute numerical data using {strategy} strategy. Try to restrict imputation"
                     "to certain columns using var_names parameter or use a different mode."
                 )
@@ -173,7 +173,7 @@ def simple_impute(
             logg.debug("Imputed the AnnData object using `most_frequent` Imputation.")
         # unknown simple imputation strategy
         else:
-            raise UnknownImputeStrategyError(  # pragma: no cover
+            raise ValueError(  # pragma: no cover
                 f"Unknown impute strategy {strategy} for simple Imputation. Choose any of mean, median or most_frequent."
             )
 
@@ -388,7 +388,7 @@ def miss_forest_impute(
                     non_num_vars = var_names["non_numerical"]
                     num_vars = var_names["numerical"]
                 except KeyError:  # pragma: no cover
-                    raise MissForestKeyError(
+                    raise ValueError(
                         "One or both of your keys provided for var_names are unknown. Only "
                         "numerical and non_numerical are available!"
                     )
@@ -629,26 +629,6 @@ def iterative_svd_impute(
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.iterative_svd_impute(adata)
     """
-
-    """Impute data using the IterativeSVD.
-
-    See https://github.com/iskandr/fancyimpute/blob/master/fancyimpute/iterative_svd.py
-    Matrix completion by iterative low-rank SVD decomposition.
-
-    Args:
-        adata: The AnnData object to use IterativeSVD on.
-        var_names: A list of var names indicating which columns to impute (if None -> all columns).
-        copy: Whether to return a copy or act in place.
-        warning_threshold: Threshold of percentage of missing values to display a warning for. Defaults to 30 .
-
-    Returns:
-        The imputed AnnData object
-
-    Example:
-        >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.pp.iterative_svd_impute(adata)
-    """
     if copy:
         adata = adata.copy()
 
@@ -743,7 +723,6 @@ def _iterative_svd_impute(
 def matrix_factorization_impute(
     adata: AnnData,
     var_names: Iterable[str] | None = None,
-    copy: bool = False,
     warning_threshold: int = 30,
     rank: int = 40,
     learning_rate: float = 0.01,
@@ -752,6 +731,7 @@ def matrix_factorization_impute(
     min_value: float | None = None,
     max_value: float | None = None,
     verbose: bool = False,
+    copy: bool = False,
 ) -> AnnData:
     """Impute data using the MatrixFactorization.
 
@@ -759,17 +739,30 @@ def matrix_factorization_impute(
     Train a matrix factorization model to predict empty entries in a matrix.
 
     Args:
+
         adata: The AnnData object to use MatrixFactorization on.
         var_names: A list of var names indicating which columns to impute (if None -> all columns).
-        copy: Whether to return a copy or act in place.
         warning_threshold: Threshold of percentage of missing values to display a warning for. Defaults to 30 .
-        rank: Number of latent factors to use in matrix factorization model
-        learning_rate: Learning rate for optimizer
-        max_iters: Number of max_iters to train for
-        shrinkage_value: Regularization term for sgd penalty
-        min_value: Smallest possible imputed value
-        max_value: Largest possible imputed value
+        rank: Number of latent factors to use in the matrix factorization model.
+              It determines the size of the latent feature space that will be used to estimate the missing values.
+              A higher rank will allow for more complex relationships between the features, but it can also lead to overfitting.
+              Defaults to 40.
+        learning_rate: The learning rate is the step size at which the optimization algorithm updates the model parameters during training.
+                       A larger learning rate can lead to faster convergence, but if it is set too high, the optimization can become unstable.
+                       Defaults to 0.01.
+        max_iters: Maximum number of iterations to train the matrix factorization model for.
+                   The algorithm stops once this number of iterations is reached, or if convergence is achieved earlier.
+                   Defaults to 50.
+        shrinkage_value: The shrinkage value is a regularization parameter that controls the amount of shrinkage applied to the estimated values during optimization.
+                         This term is added to the loss function and serves to penalize large values in the estimated matrix.
+                         A higher shrinkage value can help prevent overfitting, but can also lead to underfitting if set too high.
+                         Defaults to 0.
+        min_value: The minimum value allowed for the imputed data. Any imputed value less than `min_value` is clipped to `min_value`.
+                   Defaults to None.
+        max_value: The maximum value allowed for the imputed data. Any imputed value greater than `max_value` is clipped to `max_value`.
+                   Defaults to None.
         verbose: Whether or not to printout training progress. Defaults to False.
+        copy: Whether to return a copy or act in place. Defaults to False.
 
     Returns:
         The imputed AnnData object
@@ -872,14 +865,14 @@ def _matrix_factorization_impute(
 def nuclear_norm_minimization_impute(
     adata: AnnData,
     var_names: Iterable[str] | None = None,
-    copy: bool = False,
     warning_threshold: int = 30,
     require_symmetric_solution: bool = False,
     min_value: float | None = None,
     max_value: float | None = None,
     error_tolerance: float = 0.0001,
     max_iters: int = 50000,
-    verbose: bool = True,
+    verbose: bool = False,
+    copy: bool = False,
 ) -> AnnData:
     """Impute data using the NuclearNormMinimization.
 
@@ -887,27 +880,24 @@ def nuclear_norm_minimization_impute(
     Simple implementation of "Exact Matrix Completion via Convex Optimization" by Emmanuel Candes and Benjamin Recht using cvxpy.
 
     Args:
-        adata: The AnnData object to use NuclearNormMinimization on.
-        var_names: A list of var names indicating which columns to impute (if None -> all columns).
-        copy: Whether to return a copy or act in place.
-        warning_threshold: Threshold of percentage of missing values to display a warning for. Defaults to 30 .
-        require_symmetric_solution: Add symmetry constraint to convex problem
-        min_value: Smallest possible imputed value
-        max_value: Largest possible imputed value
-        error_tolerance: Degree of error allowed on reconstructed values. If omitted then defaults to 0.0001
-        max_iters: Maximum number of iterations for the convex solver
-        verbose: Print debug info
+        adata: The AnnData object to apply NuclearNormMinimization on.
+        var_names: Var names indicating which columns to impute (if None -> all columns).
+        warning_threshold: Threshold of percentage of missing values to display a warning for. Defaults to 30.
+        require_symmetric_solution: Whether to add a symmetry constraint to the convex problem. Defaults to False.
+        min_value: Smallest possible imputed value. Defaults to None (no minimum value constraint).
+        max_value: Largest possible imputed value. Defaults to None (no maximum value constraint).
+        error_tolerance: Degree of error allowed on reconstructed values. Defaults to 0.0001.
+        max_iters: Maximum number of iterations for the convex solver. Defaults to 50000.
+        verbose: Whether to print debug information. Defaults to False.
+        copy: Whether to return a copy of the AnnData object or act in place. Defaults to False (act in place).
 
     Returns:
-        The imputed AnnData object
+        The imputed AnnData object.
 
     Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.dt.mimic_2(encoded=True)
-            ep.pp.nuclear_norm_minimization_impute(adata)
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> ep.pp.nuclear_norm_minimization_impute(adata)
     """
     if copy:
         adata = adata.copy()
@@ -995,7 +985,6 @@ def _nuclear_norm_minimization_impute(
 def mice_forest_impute(
     adata: AnnData,
     var_names: Iterable[str] | None = None,
-    copy: bool = False,
     warning_threshold: int = 30,
     save_all_iterations: bool = True,
     random_state: int | None = None,
@@ -1003,6 +992,7 @@ def mice_forest_impute(
     iterations: int = 5,
     variable_parameters: dict | None = None,
     verbose: bool = False,
+    copy: bool = False,
 ) -> AnnData:
     """Impute data using the miceforest.
 
@@ -1010,26 +1000,31 @@ def mice_forest_impute(
     Fast, memory efficient Multiple Imputation by Chained Equations (MICE) with lightgbm.
 
     Args:
-        adata: The AnnData object to use miceforest on.
-        var_names: A list of var names indicating which columns to impute (if None -> all columns).
-        copy: Whether to return a copy or act in place.
-        warning_threshold: Threshold of percentage of missing values to display a warning for (default: 30).
-        save_all_iterations: Save all the imputation values from all iterations, or just the latest. Saving all iterations allows for additional plotting, but may take more memory.
-        random_state: The random_state ensures script reproducibility. It only ensures reproducible results if the same script is called multiple times. It does not guarantee reproducible results at the record level, if a record is imputed multiple different times. If reproducible record-results are desired, a seed must be passed for each record in the random_seed_array parameter.
-        inplace: Using inplace=False returns a copy of the completed data. Since the raw data is already stored in kernel.working_data, you can set inplace=True to complete the data without returning a copy.
-        iterations: The number of iterations to run.
-        variable_parameters: Model parameters can be specified by variable here. Keys should be variable names or indices, and values should be a dict of parameter which should apply to that variable only.
-        verbose: Should information about the process be printed.
+        adata: The AnnData object containing the data to impute.
+        var_names: A list of variable names to impute. If None, impute all variables.
+        warning_threshold: Threshold of percentage of missing values to display a warning for.
+                           Defaults to 30.
+        save_all_iterations: Whether to save all imputed values from all iterations or just the latest.
+                             Saving all iterations allows for additional plotting, but may take more memory. Defaults to True.
+        random_state: The random state ensures script reproducibility.
+                      Defaults to None.
+        inplace: If True, modify the input AnnData object in-place and return None.
+                 If False, return a copy of the modified AnnData object. Default is False.
+        iterations: The number of iterations to run. Defaults to 5.
+        variable_parameters: Model parameters can be specified by variable here.
+                             Keys should be variable names or indices, and values should be a dict of parameter which should apply to that variable only.
+                             Defaults to None.
+        verbose: Whether to print information about the imputation process. Defaults to False.
+        copy: Whether to return a copy of the AnnData object or modify it in-place. Defaults to False.
+
     Returns:
-        The imputed AnnData object
+        The imputed AnnData object.
 
     Example:
-        .. code-block:: python
+        >>> import ehrapy as ep
 
-            import ehrapy as ep
-
-            adata = ep.dt.mimic_2(encoded=True)
-            ep.pp.miceforest_impute(adata)
+        >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> ep.pp.mice_forest_impute(adata)
     """
     if copy:
         adata = adata.copy()
@@ -1153,27 +1148,3 @@ def _is_float_or_nan(val):  # pragma: no cover
             return True
         else:
             return False
-
-
-class MissingImputeValuesError(Exception):
-    pass
-
-
-class ReplacementDatatypeError(Exception):
-    pass
-
-
-class MissingImputationValue(Exception):
-    pass
-
-
-class ImputeStrategyNotAvailableError(Exception):
-    pass
-
-
-class UnknownImputeStrategyError(Exception):
-    pass
-
-
-class MissForestKeyError(Exception):
-    pass
