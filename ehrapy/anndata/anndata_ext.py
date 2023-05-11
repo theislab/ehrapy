@@ -167,12 +167,10 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False)
         The original AnnData object with moved or copied columns from X to obs
 
     Example:
-        .. code-block:: python
 
-            import ehrapy as ep
-
-            adata = ep.dt.mimic_2(encoded=True)
-            ep.anndata_ext.move_to_obs(adata, ['age'], copy_obs=False)
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> ep.ad.move_to_obs(adata, ['age'], copy_obs=False)
     """
     if isinstance(to_obs, str):  # pragma: no cover
         to_obs = [to_obs]
@@ -230,13 +228,10 @@ def delete_from_obs(adata: AnnData, to_delete: list[str]) -> AnnData:
         The original AnnData object with deleted columns from obs.
 
     Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.dt.mimic_2(encoded=True)
-            ep.anndata_ext.move_to_obs(adata, ['age'], copy_obs=True)
-            ep.anndata_ext.delete_from_obs(adata, ['age'])
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> ep.anndata_ext.move_to_obs(adata, ['age'], copy_obs=True)
+        >>> ep.anndata_ext.delete_from_obs(adata, ['age'])
     """
     if isinstance(to_delete, str):  # pragma: no cover
         to_delete = [to_delete]
