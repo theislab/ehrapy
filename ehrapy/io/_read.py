@@ -488,8 +488,8 @@ def _get_non_existing_files(file: Path, download_dataset_name: str, backup_url: 
     )
 
     directories_after_download = [x for x in ehrapy_settings.datasetdir.iterdir() if x.is_dir()]
-    output_path_name = list(set(directories_after_download) - set(directories_before_download))[0].name
-    output_file_or_dir = ehrapy_settings.datasetdir / output_path_name
+    output_path_name = list(set(directories_after_download) - set(directories_before_download))[0]
+    output_file_or_dir = output_path_name
     moved_path = Path(str(output_file_or_dir)[: str(output_file_or_dir).rfind("/") + 1]) / download_dataset_name
     shutil.move(output_file_or_dir, moved_path)  # type: ignore
     file = moved_path
