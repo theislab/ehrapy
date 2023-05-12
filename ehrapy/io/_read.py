@@ -477,19 +477,16 @@ def _get_non_existing_files(file: Path, download_dataset_name: str, backup_url: 
             f"Please provide a backup_url or check whether path is spelled correctly."
         )
     print("[bold yellow]Path or dataset does not yet exist. Attempting to download...")
-
-    directories_before_download = [x for x in ehrapy_settings.datasetdir.iterdir() if x.is_dir()]
-
     download(
         backup_url,
         output_file_name=download_default_name,
         output_path=ehrapy_settings.datasetdir,
         is_archived=is_archived,
     )
-
-    directories_after_download = [x for x in ehrapy_settings.datasetdir.iterdir() if x.is_dir()]
-    output_path_name = list(set(directories_after_download) - set(directories_before_download))[0]
-    output_file_or_dir = output_path_name
+    # if archived, remove archive suffix
+    archive_extension = download_default_name[-4:]
+    output_path_name = download_default_name.replace(archive_extension, "") if is_archived else download_default_name
+    output_file_or_dir = ehrapy_settings.datasetdir / output_path_name
     moved_path = Path(str(output_file_or_dir)[: str(output_file_or_dir).rfind("/") + 1]) / download_dataset_name
     shutil.move(output_file_or_dir, moved_path)  # type: ignore
     file = moved_path
