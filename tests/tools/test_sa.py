@@ -23,7 +23,7 @@ class TestSA:
         formula = "day_28_flg ~ age"
         var_names = ["day_28_flg", "age"]
         family = "Binomial"
-        glm = ep.tl.glm(adata, var_names, formula, family, missing="drop", ascontinus=["age"])
+        glm = ep.tl.glm(adata, var_names, formula, family, missing="drop", as_continuous=["age"])
         Intercept = glm.fit().params[0]
         age = glm.fit().params[1]
         assert isinstance(glm, statsmodels.genmod.generalized_linear_model.GLM)

@@ -260,13 +260,10 @@ def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
         A new AnnData object with moved columns from obs to X. This should not be used for datetime columns currently.
 
     Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.dt.mimic_2(encoded=True)
-            ep.anndata_ext.move_to_obs(adata, ['age'], copy_obs=False)
-            new_adata = ep.anndata_ext.move_to_x(adata, ['age'])
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> ep.anndata_ext.move_to_obs(adata, ['age'], copy_obs=False)
+        >>> new_adata = ep.anndata_ext.move_to_x(adata, ['age'])
     """
     if isinstance(to_x, str):  # pragma: no cover
         to_x = [to_x]
@@ -315,12 +312,9 @@ def get_column_indices(adata: AnnData, col_names: str | list[str]) -> list[int]:
         Set of column indices
 
     Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.dt.mimic_2(encoded=True)
-            ep.anndata_ext.get_column_indices(adata, ['age', 'gender_num', 'bmi'])
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> ep.ad.get_column_indices(adata, ['age', 'gender_num', 'bmi'])
     """
     if isinstance(col_names, str):  # pragma: no cover
         col_names = [col_names]
@@ -361,12 +355,9 @@ def type_overview(
         sort_reversed: Whether to sort in reversed order or not
 
     Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.dt.mimic_2(encoded=True)
-            ep.anndata_ext.type_overview(adata)
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> ep.anndata_ext.type_overview(adata)
     """
     if isinstance(data, AnnData):
         _adata_type_overview(data, sort_by, sort_reversed)
@@ -603,7 +594,6 @@ def _update_uns(
 
     Returns:
         :class:`~anndata.AnnData` object with updated .uns
-
     """
     moved_columns_set = set(moved_columns)
     if not to_x:  # moving from `X` to `obs`, delete it from the corresponding entry in `uns`.
@@ -690,11 +680,8 @@ def generate_anndata(  # pragma: no cover
         A specified AnnData object.
 
     Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.ad.generate_anndata((2, 2), include_nlp=True)
+        >>> import ehrapy as ep
+        >>> adata = ep.ad.generate_anndata((2, 2), include_nlp=True)
     """
     example_diseases: list[str] = ["diabetes melitus", "breast cancer", "dementia", "pneumonia"]
 

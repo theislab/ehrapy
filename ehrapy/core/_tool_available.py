@@ -11,7 +11,7 @@ def _check_module_importable(package: str) -> bool:  # pragma: no cover
         package: The package to check.
 
     Returns:
-        True if the package is installed, false elsewise
+        True if the package is installed, False otherweise
     """
     module_information = importlib.util.find_spec(package)
     module_available = module_information is not None
@@ -26,7 +26,7 @@ def _shell_command_accessible(command: list[str]) -> bool:  # pragma: no cover
         command: The command to check. Spaces are separated as list elements.
 
     Returns:
-        True if the command is accessible, false otherwise.
+        True if the command is accessible, False otherwise.
     """
     command_accessible = Popen(command, stdout=PIPE, stderr=PIPE, universal_newlines=True, shell=True)
     (commmand_stdout, command_stderr) = command_accessible.communicate()

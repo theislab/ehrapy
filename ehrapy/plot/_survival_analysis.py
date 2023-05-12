@@ -165,11 +165,12 @@ def kmf(
     Example:
         >>> import ehrapy as ep
         >>> import numpy as np
-
         >>> adata = ep.dt.mimic_2(encoded=False)
+
         # Because in MIMIC-II database, `censor_fl` is censored or death (binary: 0 = death, 1 = censored).
         # While in KaplanMeierFitter, `event_observed` is True if the the death was observed, False if the event was lost (right-censored).
         # So we need to flip `censor_fl` when pass `censor_fl` to KaplanMeierFitter
+
         >>> adata[:, ['censor_flg']].X = np.where(adata[:, ['censor_flg']].X == 0, 1, 0)
         >>> kmf = ep.tl.kmf(adata[:, ['mort_day_censored']].X, adata[:, ['censor_flg']].X)
         >>> ep.pl.kmf([kmf], color=['r'], xlim=[0, 700], ylim=[0, 1], xlabel="Days", ylabel="Proportion Survived", show=True)
