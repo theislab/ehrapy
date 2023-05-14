@@ -488,8 +488,18 @@ def _get_non_existing_files(file: Path, download_dataset_name: str, backup_url: 
     output_path_name = download_default_name.replace(archive_extension, "") if is_archived else download_default_name
     output_file_or_dir = ehrapy_settings.datasetdir / output_path_name
     moved_path = Path(str(output_file_or_dir)[: str(output_file_or_dir).rfind("/") + 1]) / download_dataset_name
-    shutil.move(output_file_or_dir, moved_path)  # type: ignore
-    file = moved_path
+    if moved_path.exists():
+        shutil.move(output_file_or_dir, moved_path)  # type: ignore
+        file = moved_path
+    elif not moved_path.exists():
+        list_of_paths = [
+            path
+            for path in ehrapy_settings.datasetdir.glob("*/")
+            if not path.name.startswith(".")
+        ]
+        latest_path = max(list_of_paths, key=lambda x: x.stat().st_ctime)
+        shutil.move(latest_path, moved_path)  # type: ignore
+        file = moved_path
 
     return file
 
@@ -633,7 +643,7 @@ def _decode_cached_adata(adata: AnnData, column_obs_only: list[str]) -> AnnData:
             break
         value_name = var_name[10:]
         original_values = adata.uns["original_values_categoricals"][value_name]
-        adata.X[:, idx : idx + 1] = original_values
+        adata.X[:, idx: idx + 1] = original_values
         # update var name per categorical
         var_names[idx] = value_name
     # drop all columns, that are not obs only in obs
