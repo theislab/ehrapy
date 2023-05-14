@@ -684,7 +684,7 @@ def heart_disease(
     return adata
 
 
-def synthea_sample(
+def synthea_1k_sample(
     encoded: bool = False,
     columns_obs_only: list[str] | None = None,
 ) -> AnnData:
@@ -705,12 +705,12 @@ def synthea_sample(
 
             import ehrapy as ep
 
-            adata = ep.dt.synthea_sample(encoded=True)
+            adata = ep.dt.synthea_1k_sample(encoded=True)
     """
     adata: AnnData = read_fhir(
         dataset_path=f"{ehrapy_settings.datasetdir}/synthea_sample",
         download_dataset_name="synthea_sample",
-        backup_url="https://synthetichealth.github.io/synthea-sample-data/downloads/synthea_sample_data_fhir_r4_sep2019.zip",
+        backup_url="https://synthetichealth.github.io/synthea-sample-data/downloads/synthea_sample_data_fhir_dstu2_sep2019.zip",
         columns_obs_only=columns_obs_only,
         index_column="id",
     )
