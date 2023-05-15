@@ -27,7 +27,6 @@ def mimic_2(
         .. code-block:: python
 
             >>> import ehrapy as ep
-
             >>> adata = ep.dt.mimic_2(encoded=True)
     """
     adata = read_csv(
@@ -55,7 +54,6 @@ def mimic_2_preprocessed() -> AnnData:
         .. code-block:: python
 
             >>> import ehrapy as ep
-
             >>> adata = ep.dt.mimic_2_preprocessed()
     """
     adata = read_h5ad(
@@ -91,7 +89,6 @@ def mimic_3_demo(
         .. code-block:: python
 
             >>> import ehrapy as ep
-
             >>> dfs = ep.dt.mimic_3_demo()
     """
     data = read_csv(
@@ -128,7 +125,6 @@ def heart_failure(encoded: bool = False, columns_obs_only: dict[str, list[str]] 
         .. code-block:: python
 
             >>> import ehrapy as ep
-
             >>> adata = ep.dt.heart_failure(encoded=True)
     """
     adata = read_csv(
@@ -164,7 +160,6 @@ def diabetes_130(
         .. code-block:: python
 
             >>> import ehrapy as ep
-
             >>> adata = ep.dt.diabetes_130(encoded=True)
     """
     adata = read_csv(
@@ -200,7 +195,6 @@ def chronic_kidney_disease(
         .. code-block:: python
 
             >>> import ehrapy as ep
-
             >>> adata = ep.dt.chronic_kidney_disease(encoded=True)
     """
     adata = read_csv(
@@ -236,7 +230,6 @@ def breast_tissue(
         .. code-block:: python
 
             >>> import ehrapy as ep
-
             >>> adata = ep.dt.breast_tissue(encoded=True)
     """
     adata = read_csv(
@@ -272,7 +265,6 @@ def cervical_cancer_risk_factors(
         .. code-block:: python
 
             >>> import ehrapy as ep
-
             >>> adata = ep.dt.cervical_cancer_risk_factors(encoded=True)
     """
     adata = read_csv(
@@ -308,7 +300,6 @@ def dermatology(
         .. code-block:: python
 
             >>> import ehrapy as ep
-
             >>> adata = ep.dt.dermatology(encoded=True)
     """
     adata = read_csv(
@@ -344,7 +335,6 @@ def echocardiogram(
         .. code-block:: python
 
             >>> import ehrapy as ep
-
             >>> adata = ep.dt.echocardiogram(encoded=True)
     """
     adata = read_csv(
@@ -380,7 +370,6 @@ def hepatitis(
         .. code-block:: python
 
             >>> import ehrapy as ep
-
             >>> adata = ep.dt.hepatitis(encoded=True)
     """
     adata = read_csv(
@@ -416,7 +405,6 @@ def statlog_heart(
         .. code-block:: python
 
             >>> import ehrapy as ep
-
             >>> adata = ep.dt.statlog_heart(encoded=True)
     """
     adata = read_csv(
@@ -452,7 +440,6 @@ def thyroid(
         .. code-block:: python
 
             >>> import ehrapy as ep
-
             >>> adata = ep.dt.thyroid(encoded=True)
     """
     adata: AnnData = read_csv(
@@ -488,7 +475,6 @@ def breast_cancer_coimbra(
         .. code-block:: python
 
             >>> import ehrapy as ep
-
             >>> adata = ep.dt.breast_cancer_coimbra(encoded=True)
     """
     adata: AnnData = read_csv(
@@ -524,7 +510,6 @@ def parkinsons(
         .. code-block:: python
 
             >>> import ehrapy as ep
-
             >>> adata = ep.dt.parkinsons(columns_obs_only=['name'], encoded=True)
     """
     adata: AnnData = read_csv(
@@ -560,7 +545,6 @@ def parkinsons_telemonitoring(
         .. code-block:: python
 
             >>> import ehrapy as ep
-
             >>> adata = ep.dt.parkinsons_telemonitoring(encoded=True)
     """
     adata: AnnData = read_csv(
@@ -596,7 +580,6 @@ def parkinsons_disease_classification(
         .. code-block:: python
 
             >>> import ehrapy as ep
-
             >>> adata = ep.dt.parkinsons_disease_classification(encoded=True)
     """
     adata: AnnData = read_csv(
@@ -632,7 +615,6 @@ def parkinson_dataset_with_replicated_acoustic_features(
         .. code-block:: python
 
             >>> import ehrapy as ep
-
             >>> adata = ep.dt.parkinson_dataset_with_replicated_acoustic_features(columns_obs_only=['ID'], encoded=True)
     """
     adata: AnnData = read_csv(
@@ -668,7 +650,6 @@ def heart_disease(
         .. code-block:: python
 
             >>> import ehrapy as ep
-
             >>> adata = ep.dt.heart_disease(encoded=True)
     """
     adata: AnnData = read_csv(
@@ -704,7 +685,6 @@ def synthea_1k_sample(
         .. code-block:: python
 
             >>> import ehrapy as ep
-
             >>> adata = ep.dt.synthea_1k_sample(encoded=True)
     """
     adata: AnnData = read_fhir(
