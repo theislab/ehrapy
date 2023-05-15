@@ -26,9 +26,9 @@ def mimic_2(
     Example:
         .. code-block:: python
 
-            import ehrapy as ep
+            >>> import ehrapy as ep
 
-            adata = ep.dt.mimic_2(encoded=True)
+            >>> adata = ep.dt.mimic_2(encoded=True)
     """
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/ehrapy_mimic2.csv",
@@ -54,9 +54,9 @@ def mimic_2_preprocessed() -> AnnData:
     Example:
         .. code-block:: python
 
-            import ehrapy as ep
+            >>> import ehrapy as ep
 
-            adata = ep.dt.mimic_2_preprocessed()
+            >>> adata = ep.dt.mimic_2_preprocessed()
     """
     adata = read_h5ad(
         dataset_path=f"{ehrapy_settings.datasetdir}/ehrapy_mimic2.csv",
@@ -90,9 +90,9 @@ def mimic_3_demo(
     Example:
         .. code-block:: python
 
-            import ehrapy as ep
+            >>> import ehrapy as ep
 
-            dfs = ep.dt.mimic_3_demo()
+            >>> dfs = ep.dt.mimic_3_demo()
     """
     data = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/ehrapy_mimic_3",
@@ -127,9 +127,9 @@ def heart_failure(encoded: bool = False, columns_obs_only: dict[str, list[str]] 
     Example:
         .. code-block:: python
 
-            import ehrapy as ep
+            >>> import ehrapy as ep
 
-            adata = ep.dt.heart_failure(encoded=True)
+            >>> adata = ep.dt.heart_failure(encoded=True)
     """
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/heart_failure.csv",
@@ -163,9 +163,9 @@ def diabetes_130(
     Example:
         .. code-block:: python
 
-            import ehrapy as ep
+            >>> import ehrapy as ep
 
-            adata = ep.dt.diabetes_130(encoded=True)
+            >>> adata = ep.dt.diabetes_130(encoded=True)
     """
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/diabetes_130.csv",
@@ -199,9 +199,9 @@ def chronic_kidney_disease(
     Example:
         .. code-block:: python
 
-            import ehrapy as ep
+            >>> import ehrapy as ep
 
-            adata = ep.dt.chronic_kidney_disease(encoded=True)
+            >>> adata = ep.dt.chronic_kidney_disease(encoded=True)
     """
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/chronic_kidney_disease_precessed.csv",
@@ -235,9 +235,9 @@ def breast_tissue(
     Example:
         .. code-block:: python
 
-            import ehrapy as ep
+            >>> import ehrapy as ep
 
-            adata = ep.dt.breast_tissue(encoded=True)
+            >>> adata = ep.dt.breast_tissue(encoded=True)
     """
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/breast_tissue.csv",
@@ -271,9 +271,9 @@ def cervical_cancer_risk_factors(
     Example:
         .. code-block:: python
 
-            import ehrapy as ep
+            >>> import ehrapy as ep
 
-            adata = ep.dt.cervical_cancer_risk_factors(encoded=True)
+            >>> adata = ep.dt.cervical_cancer_risk_factors(encoded=True)
     """
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/cervical_cancer_risk_factors.csv",
@@ -307,9 +307,9 @@ def dermatology(
     Example:
         .. code-block:: python
 
-            import ehrapy as ep
+            >>> import ehrapy as ep
 
-            adata = ep.dt.dermatology(encoded=True)
+            >>> adata = ep.dt.dermatology(encoded=True)
     """
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/dermatology.csv",
@@ -343,9 +343,9 @@ def echocardiogram(
     Example:
         .. code-block:: python
 
-            import ehrapy as ep
+            >>> import ehrapy as ep
 
-            adata = ep.dt.echocardiogram(encoded=True)
+            >>> adata = ep.dt.echocardiogram(encoded=True)
     """
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/echocardiogram.csv",
@@ -379,9 +379,9 @@ def hepatitis(
     Example:
         .. code-block:: python
 
-            import ehrapy as ep
+            >>> import ehrapy as ep
 
-            adata = ep.dt.hepatitis(encoded=True)
+            >>> adata = ep.dt.hepatitis(encoded=True)
     """
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/hepatitis.csv",
@@ -415,9 +415,9 @@ def statlog_heart(
     Example:
         .. code-block:: python
 
-            import ehrapy as ep
+            >>> import ehrapy as ep
 
-            adata = ep.dt.statlog_heart(encoded=True)
+            >>> adata = ep.dt.statlog_heart(encoded=True)
     """
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/statlog_heart.csv",
@@ -451,9 +451,9 @@ def thyroid(
     Example:
         .. code-block:: python
 
-            import ehrapy as ep
+            >>> import ehrapy as ep
 
-            adata = ep.dt.thyroid(encoded=True)
+            >>> adata = ep.dt.thyroid(encoded=True)
     """
     adata: AnnData = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/thyroid.csv",
@@ -487,9 +487,9 @@ def breast_cancer_coimbra(
     Example:
         .. code-block:: python
 
-            import ehrapy as ep
+            >>> import ehrapy as ep
 
-            adata = ep.dt.breast_cancer_coimbra(encoded=True)
+            >>> adata = ep.dt.breast_cancer_coimbra(encoded=True)
     """
     adata: AnnData = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/breast_cancer_coimbra.csv",
@@ -523,9 +523,9 @@ def parkinsons(
     Example:
         .. code-block:: python
 
-            import ehrapy as ep
+            >>> import ehrapy as ep
 
-            adata = ep.dt.parkinsons(columns_obs_only=['name'], encoded=True)
+            >>> adata = ep.dt.parkinsons(columns_obs_only=['name'], encoded=True)
     """
     adata: AnnData = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/parkinsons.csv",
@@ -559,9 +559,9 @@ def parkinsons_telemonitoring(
     Example:
         .. code-block:: python
 
-            import ehrapy as ep
+            >>> import ehrapy as ep
 
-            adata = ep.dt.parkinsons_telemonitoring(encoded=True)
+            >>> adata = ep.dt.parkinsons_telemonitoring(encoded=True)
     """
     adata: AnnData = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/parkinsons_telemonitoring.csv",
@@ -595,9 +595,9 @@ def parkinsons_disease_classification(
     Example:
         .. code-block:: python
 
-            import ehrapy as ep
+            >>> import ehrapy as ep
 
-            adata = ep.dt.parkinsons_disease_classification(encoded=True)
+            >>> adata = ep.dt.parkinsons_disease_classification(encoded=True)
     """
     adata: AnnData = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/parkinson's_disease_classification_prepared.csv",
@@ -631,9 +631,9 @@ def parkinson_dataset_with_replicated_acoustic_features(
     Example:
         .. code-block:: python
 
-            import ehrapy as ep
+            >>> import ehrapy as ep
 
-            adata = ep.dt.parkinson_dataset_with_replicated_acoustic_features(columns_obs_only=['ID'], encoded=True)
+            >>> adata = ep.dt.parkinson_dataset_with_replicated_acoustic_features(columns_obs_only=['ID'], encoded=True)
     """
     adata: AnnData = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/parkinson_dataset_with_replicated_acoustic_features.csv",
@@ -667,9 +667,9 @@ def heart_disease(
     Example:
         .. code-block:: python
 
-            import ehrapy as ep
+            >>> import ehrapy as ep
 
-            adata = ep.dt.heart_disease(encoded=True)
+            >>> adata = ep.dt.heart_disease(encoded=True)
     """
     adata: AnnData = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/processed_heart_disease.csv",
@@ -703,9 +703,9 @@ def synthea_1k_sample(
     Example:
         .. code-block:: python
 
-            import ehrapy as ep
+            >>> import ehrapy as ep
 
-            adata = ep.dt.synthea_1k_sample(encoded=True)
+            >>> adata = ep.dt.synthea_1k_sample(encoded=True)
     """
     adata: AnnData = read_fhir(
         dataset_path=f"{ehrapy_settings.datasetdir}/synthea_sample",

@@ -491,9 +491,11 @@ def _get_non_existing_files(file: Path, download_dataset_name: str, backup_url: 
     if moved_path.exists():
         shutil.move(output_file_or_dir, moved_path)  # type: ignore
         file = moved_path
-    elif not moved_path.exists():
+    elif (
+        not moved_path.exists()
+    ):  # if the unpacked directory does not have the same name as the .zip file, look for the latest created file in datasetdir
         list_of_paths = [path for path in ehrapy_settings.datasetdir.glob("*/") if not path.name.startswith(".")]
-        latest_path = max(list_of_paths, key=lambda x: x.stat().st_ctime)
+        latest_path = max(list_of_paths, key=lambda path: path.stat().st_ctime)
         shutil.move(latest_path, moved_path)  # type: ignore
         file = moved_path
 
