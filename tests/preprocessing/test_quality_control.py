@@ -2,6 +2,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import pytest
 from anndata import AnnData
 
 import ehrapy as ep
@@ -150,3 +151,10 @@ class TestQualityControl:
     def test_qc_lab_measurements_ethnicity(self):
         # TODO
         pass
+
+    def test_qc_lab_measurements_multiple_measurements(self):
+        data = pd.DataFrame(np.array([[100, 98], [162, 107]]), columns=["oxygen saturation", "glucose"], index=[0, 1])
+
+        with pytest.raises(ValueError):
+            adata = ep.ad.df_to_anndata(data)
+            ep.pp.qc_lab_measurements(adata, measurements=["oxygen saturation", "glucose"], unit="SI")
