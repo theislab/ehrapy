@@ -26,10 +26,10 @@ jobs:
                   poetry --version
 
             - name: Install additional dependencies
-              run: poetry install medcat cellrank
+              run: poetry add medcat cellrank
 
             - name: Install nbconvert ipykernel
-              run: poetry install nbconvert ipykernel
+              run: poetry add nbconvert ipykernel
 
             - name: Run ${{ matrix.notebook }} Notebook
               run: poetry run jupyter nbconvert --to notebook --execute ${{ matrix.notebook }}
