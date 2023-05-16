@@ -16,10 +16,10 @@
 
 ## Features
 
--   Exploratory analysis of Electronic Health Records
+-   Exploratory and targeted analysis of Electronic Health Records
 -   Quality control & preprocessing
--   Clustering & trajectory inference
 -   Visualization & Exploration
+-   Clustering & trajectory inference
 
 ## Installation
 
