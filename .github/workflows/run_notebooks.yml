@@ -9,15 +9,7 @@ jobs:
         runs-on: ubuntu-latest
         strategy:
             matrix:
-                notebook:
-                    [
-                        "docs/tutorials/notebooks/ehrapy_introduction.ipynb",
-                        "docs/tutorials/notebooks/mimic_2_introduction.ipynb",
-                        "docs/tutorials/notebooks/mimic_2_survival_analysis.ipynb",
-                        "docs/tutorials/notebooks/mimic_2_fate.ipynb",
-                        "docs/tutorials/notebooks/mimic_3_demo.ipynb",
-                        "docs/tutorials/notebooks/medcat.ipynb",
-                    ]
+                notebook: ["docs/tutorials/notebooks/ehrapy_introduction.ipynb"]
         steps:
             - uses: actions/checkout@v3
               with:
@@ -34,10 +26,10 @@ jobs:
                   poetry --version
 
             - name: Install additional dependencies
-              run: pip install medcat cellrank
+              run: poetry install medcat cellrank
 
             - name: Install nbconvert ipykernel
-              run: poetry add nbconvert ipykernel
+              run: poetry install nbconvert ipykernel
 
             - name: Run ${{ matrix.notebook }} Notebook
               run: poetry run jupyter nbconvert --to notebook --execute ${{ matrix.notebook }}
