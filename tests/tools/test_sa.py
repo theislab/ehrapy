@@ -1,7 +1,7 @@
-import lifelines
 import numpy as np
 import pytest
 import statsmodels
+from lifelines import KaplanMeierFitter
 
 import ehrapy as ep
 
@@ -23,7 +23,7 @@ class TestSA:
         formula = "day_28_flg ~ age"
         var_names = ["day_28_flg", "age"]
         family = "Binomial"
-        glm = ep.tl.glm(adata, var_names, formula, family, missing="drop", ascontinus=["age"])
+        glm = ep.tl.glm(adata, var_names, formula, family, missing="drop", as_continuous=["age"])
         Intercept = glm.fit().params[0]
         age = glm.fit().params[1]
         assert isinstance(glm, statsmodels.genmod.generalized_linear_model.GLM)
@@ -35,20 +35,37 @@ class TestSA:
         adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
         kmf = ep.tl.kmf(adata[:, ["mort_day_censored"]].X, adata[:, ["censor_flg"]].X)
 
-        assert isinstance(kmf, lifelines.fitters.kaplan_meier_fitter.KaplanMeierFitter)
+        assert isinstance(kmf, KaplanMeierFitter)
         assert len(kmf.durations) == 1776
         assert sum(kmf.event_observed) == 497
+
+    @pytest.mark.parametrize("weightings", ["wilcoxon", "tarone-ware", "peto", "fleming-harrington"])
+    def test_calculate_logrank_pvalue(self, weightings):
+        durations_A = [1, 2, 3]
+        event_observed_A = [1, 1, 0]
+        durations_B = [1, 2, 3, 4]
+        event_observed_B = [1, 0, 0, 1]
+
+        kmf1 = KaplanMeierFitter()
+        kmf1.fit(durations_A, event_observed_A)
+
+        kmf2 = KaplanMeierFitter()
+        kmf2.fit(durations_B, event_observed_B)
+
+        results_pairwise = ep.tl.test_kmf_logrank(kmf1, kmf2)
+        p_value_pairwise = results_pairwise.p_value
+        assert 0 < p_value_pairwise < 1
 
     def test_anova_glm(self):
         adata = ep.dt.mimic_2(encoded=False)
         formula = "day_28_flg ~ age"
         var_names = ["day_28_flg", "age"]
         family = "Binomial"
-        age_glm = ep.tl.glm(adata, var_names, formula, family, missing="drop", ascontinus=["age"])
+        age_glm = ep.tl.glm(adata, var_names, formula, family, missing="drop", as_continuous=["age"])
         age_glm_result = age_glm.fit()
         formula = "day_28_flg ~ age + service_unit"
         var_names = ["day_28_flg", "age", "service_unit"]
-        ageunit_glm = ep.tl.glm(adata, var_names, formula, family="Binomial", missing="drop", ascontinus=["age"])
+        ageunit_glm = ep.tl.glm(adata, var_names, formula, family="Binomial", missing="drop", as_continuous=["age"])
         ageunit_glm_result = ageunit_glm.fit()
         dataframe = ep.tl.anova_glm(
             age_glm_result, ageunit_glm_result, "day_28_flg ~ age", "day_28_flg ~ age + service_unit"

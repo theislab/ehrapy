@@ -17,5 +17,6 @@ from ehrapy.data._datasets import (
     parkinsons_disease_classification,
     parkinsons_telemonitoring,
     statlog_heart,
+    synthea_1k_sample,
     thyroid,
 )

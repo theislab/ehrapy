@@ -4,6 +4,7 @@ from ehrapy.anndata.anndata_ext import (
     df_to_anndata,
     generate_anndata,
     get_obs_df,
+    get_rank_features_df,
     get_var_df,
     move_to_obs,
     move_to_x,

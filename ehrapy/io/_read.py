@@ -418,7 +418,7 @@ def _read_fhir(
     return_df: bool = False,
     cache: bool = False,
 ) -> AnnData | dict[str, AnnData] | MuData:
-    """Internal interface of the read_csv method."""
+    """Internal interface of the read_fhir method."""
     if cache and return_df:
         raise CachingNotSupported("Caching is currently not supported for MuData or Pandas DataFrame objects.")
     if return_df and (columns_x_only or columns_obs_only):
@@ -488,8 +488,16 @@ def _get_non_existing_files(file: Path, download_dataset_name: str, backup_url: 
     output_path_name = download_default_name.replace(archive_extension, "") if is_archived else download_default_name
     output_file_or_dir = ehrapy_settings.datasetdir / output_path_name
     moved_path = Path(str(output_file_or_dir)[: str(output_file_or_dir).rfind("/") + 1]) / download_dataset_name
-    shutil.move(output_file_or_dir, moved_path)  # type: ignore
-    file = moved_path
+    if moved_path.exists():
+        shutil.move(output_file_or_dir, moved_path)  # type: ignore
+        file = moved_path
+    elif (
+        not moved_path.exists()
+    ):  # some zip files change their name when unzipped. Hence, we look for the latest created file in datasetdir
+        list_of_paths = [path for path in ehrapy_settings.datasetdir.glob("*/") if not path.name.startswith(".")]
+        latest_path = max(list_of_paths, key=lambda path: path.stat().st_ctime)
+        shutil.move(latest_path, moved_path)  # type: ignore
+        file = moved_path
 
     return file
 

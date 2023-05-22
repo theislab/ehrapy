@@ -29,7 +29,7 @@ def download(
         output_path: Path to download/extract the files to. Defaults to 'OS tmpdir'
         block_size: Block size for downloads in bytes.Defaults to 1024
         overwrite: Whether to overwrite existing files. Defaults to False
-        is_archived: Whether the downloaded file needs to be unarchived.Defaults to False
+        is_archived: Whether the downloaded file needs to be unarchived. Defaults to False
     """
     if output_file_name is None:
         letters = ascii_lowercase
