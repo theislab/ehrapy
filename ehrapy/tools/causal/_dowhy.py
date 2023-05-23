@@ -11,6 +11,8 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 
+from ehrapy import logging as logg
+
 warnings.filterwarnings("ignore")
 
 
@@ -58,10 +60,12 @@ def causal_inference(
             ]
         ]
     ) = None,
+    print_causal_estimate: bool = False,
     print_summary: bool = True,
     return_as: Literal["estimate", "refute", "estimate+refute"] = "estimate",
     show_graph: bool = False,
     show_refute_plots: bool | Literal["colormesh", "contour", "line"] | None = None,
+    attempts: int = 10,
     *,
     identify_kwargs: dict[str, Any] | None = None,
     estimate_kwargs: dict[str, Any] | None = None,
@@ -75,11 +79,14 @@ def causal_inference(
         graph: A str representing the causal graph to use.
         treatment: A str representing the treatment variable in the causal graph.
         outcome: A str representing the outcome variable in the causal graph.
-        refute_methods: An optional List of Literal specifying the methods to use for refutation tests. Defaults to ["placebo_treatment_refuter", "random_common_cause", "data_subset_refuter"].
         estimation_method: An optional Literal specifying the estimation method to use. Defaults to "backdoor.propensity_score_stratification".
+        refute_methods: An optional List of Literal specifying the methods to use for refutation tests. Defaults to ["placebo_treatment_refuter", "random_common_cause", "data_subset_refuter"].
+        print_causal_estimate: Whether to print the causal estimate or not, default is False.
+        print_summary: Whether to print the causal model summary or not, default is True.
         return_as: An optional Literal specifying the type of output to return. Defaults to "summary".
         show_graph: Whether to display the graph or not, default is False.
         show_refute_plots: Whether to display the refutation plots or not, default is False.
+        attempts: Number of attempts to try to generate a valid causal estimate, default is 10.
         identify_kwargs: Optional keyword arguments for dowhy.CausalModel.identify_effect().
         estimate_kwargs: Optional keyword arguments for dowhy.CausalModel.estimate_effect().
         refute_kwargs: Optional keyword arguments for dowhy.CausalModel.refute_estimate().
@@ -191,77 +198,94 @@ def causal_inference(
     if not isinstance(show_graph, bool):
         raise TypeError("Parameter 'show_graph' must be a boolean.")
 
-    # Define dictionary containing valid kwargs for each function
-    valid_kwargs = {
-        "identify_effect": ["proceed_when_unidentifiable"],
-        "estimate_effect": ["method_name", "method_params"],
-        "refute_estimate": ["method_name", "confounders_frontdoor", "confounders_backdoor", "plotmethod"],
-    }
+    identify_kwargs = identify_kwargs or {}
+    estimate_kwargs = estimate_kwargs or {}
+    refute_kwargs = refute_kwargs or {}
 
-    # Create causal model
+    if show_refute_plots is None or show_refute_plots is False:
+        refute_kwargs["plotmethod"] = None
+    elif isinstance(show_refute_plots, str):
+        refute_kwargs["plotmethod"] = show_refute_plots
+    elif show_refute_plots is True:
+        refute_kwargs["plotmethod"] = "colormesh"
+
+    user_gave_num_simulations = "num_simulations" in refute_kwargs
+    user_gave_random_seed = "random_state" in refute_kwargs
+    found_problematic_pvalues = True
+
     model = dowhy.CausalModel(data=adata.to_df(), graph=graph, treatment=treatment, outcome=outcome)
 
     if show_graph:
         model.view_model()
 
-    # Identify effect
-    identify_kwargs = identify_kwargs or {}
-    assert set(identify_kwargs.keys()).issubset(valid_kwargs["identify_effect"]), "Invalid identify_kwargs"
-    identified_estimand = model.identify_effect(**identify_kwargs)
+    # For some reason, dowhy sometimes fails to calculate a pval
+    # and spits out NaN or values greater than 1. In that case we just try again.
+    failed_attempts = 0
+    while found_problematic_pvalues:
+        if not user_gave_num_simulations:
+            refute_kwargs["num_simulations"] = np.random.randint(70, 90)
+        if not user_gave_random_seed:
+            refute_kwargs["random_seed"] = np.random.randint(0, 100)
 
-    # Estimate effect
-    estimate_kwargs = estimate_kwargs or {}
-    assert set(estimate_kwargs.keys()).issubset(valid_kwargs["estimate_effect"]), "Invalid estimate_kwargs"
+        identified_estimand = model.identify_effect(**identify_kwargs)
 
-    with capture_output() as _:  # otherwise prints estimation_method
-        estimate = model.estimate_effect(identified_estimand, method_name=estimation_method, **estimate_kwargs)
+        with capture_output() as _:  # otherwise prints estimation_method
+            estimate = model.estimate_effect(identified_estimand, method_name=estimation_method, **estimate_kwargs)
 
-    # Refute estimate using specified methods
-    refute_results: dict[str, str | dict[str, str]] = {}
-    for method in refute_methods:
-        refute_kwargs = refute_kwargs or {}
-        if show_refute_plots is None or show_refute_plots is False:
-            refute_kwargs["plotmethod"] = None
-        elif isinstance(show_refute_plots, str):
-            refute_kwargs["plotmethod"] = show_refute_plots
-        elif show_refute_plots is True:
-            refute_kwargs["plotmethod"] = "colormesh"
+        refute_results: dict[str, str | dict[str, str]] = {}
 
-        assert set(refute_kwargs.keys()).issubset(valid_kwargs["refute_estimate"]), "Invalid refute_kwargs"
-
-        # Attempt to refute
-        try:
-            with capture_output() as _:
-                refute = model.refute_estimate(
-                    identified_estimand, estimate, method_name=method, verbose=False, **refute_kwargs
-                )
-                refute_failed = False
-
-        except ValueError as e:
-            refute_failed = True
-            refute_results[method] = str(e)  # type: ignore
-
-        if not refute_failed:
-            test_significance = refute.estimated_effect
-
-            # Try to extract pval, fails for "add_unobserved_common_cause" refuter
+        for method in refute_methods:
             try:
-                pval = f"{refute.refutation_result['p_value']:.2f}"
-            except TypeError:
-                pval = "Not applicable"
+                with capture_output() as _:
+                    refute = model.refute_estimate(
+                        identified_estimand, estimate, method_name=method, verbose=False, **refute_kwargs
+                    )
+                    refute_failed = False
+            except ValueError as e:
+                refute_failed = True
+                refute_results[method] = str(e)  # type: ignore
 
-            # Format effect, can be list when refuter is "add_unobserved_common_cause"
-            if isinstance(refute.new_effect, (list, tuple)):
-                new_effect = ", ".join([str(np.round(x, 2)) for x in refute.new_effect])
+            if refute_failed:
+                logg.warning(f"[dowhy] Refutation '{method}' failed.")
             else:
-                new_effect = f"{refute.new_effect:.2f}"
+                # only returns dict when pval should be a number
+                if isinstance(refute.refutation_result, dict):
+                    if 0 <= refute.refutation_result["p_value"] <= 1:
+                        found_problematic_pvalues = False
+                    else:
+                        failed_attempts += 1
+                        if failed_attempts <= attempts:
+                            found_problematic_pvalues = True
+                            logg.warning(
+                                f"[dowhy] Refutation '{method}' returned invalid pval '{str(refute.refutation_result['p_value'])}', retrying ({failed_attempts}/{attempts})"
+                            )
+                            break
+                        else:
+                            found_problematic_pvalues = False
+                else:
+                    found_problematic_pvalues = False
 
-            refute_results[str(refute.refutation_type)] = {
-                "Estimated effect": refute.estimated_effect,
-                "New effect": new_effect,
-                "p-value": pval,
-                "test_significance": test_significance,
-            }
+            if not refute_failed:
+                test_significance = refute.estimated_effect
+
+                # Try to extract pval, fails for "add_unobserved_common_cause" refuter
+                try:
+                    pval = f"{refute.refutation_result['p_value']:.3f}"
+                except TypeError:
+                    pval = "Not applicable"
+
+                # Format effect, can be list when refuter is "add_unobserved_common_cause"
+                if isinstance(refute.new_effect, (list, tuple)):
+                    new_effect = ", ".join([str(np.round(x, 2)) for x in refute.new_effect])
+                else:
+                    new_effect = f"{refute.new_effect:.3f}"
+
+                refute_results[str(refute.refutation_type)] = {
+                    "Estimated effect": refute.estimated_effect,
+                    "New effect": new_effect,
+                    "p-value": pval,
+                    "test_significance": test_significance,
+                }
 
     # Create the summary string
     summary = f"Causal inference results for treatment variable '{treatment}' and outcome variable '{outcome}':\n"
@@ -285,6 +309,9 @@ def causal_inference(
             summary += f"{left_char}    ├- New effect: {results['New effect']}\n"
             summary += f"{left_char}    ├- p-value: {results['p-value']}\n"
             summary += f"{left_char}    └- Test significance: {results['test_significance']:.2f}\n"
+
+    if print_causal_estimate:
+        print(estimate)
 
     if print_summary:
         print(summary)
