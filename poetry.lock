@@ -6146,14 +6146,14 @@ sphinx = ">=1.8.3"
 
 [[package]]
 name = "sphinx-last-updated-by-git"
-version = "0.3.4"
+version = "0.3.5"
 description = "Get the \"last updated\" time for each Sphinx page from Git"
 category = "dev"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.7"
 files = [
-    {file = "sphinx-last-updated-by-git-0.3.4.tar.gz", hash = "sha256:6fd4ed156b64cdc1513ed25c5c4ea6b621271be2a4322292a52379ef64ab73b5"},
-    {file = "sphinx_last_updated_by_git-0.3.4-py3-none-any.whl", hash = "sha256:633db0377a6d7ac38d73d80dfa0fdadecc1995b33f3d828eca2e372beae132be"},
+    {file = "sphinx-last-updated-by-git-0.3.5.tar.gz", hash = "sha256:17b81028d1a353b01bda54b019fb45c8628008cf592694acd54af8365ac9dc93"},
+    {file = "sphinx_last_updated_by_git-0.3.5-py3-none-any.whl", hash = "sha256:f16080a972981d0d22d108e813ee7c75dfce84d181983cfed9f727ede3f8f741"},
 ]
 
 [package.dependencies]
