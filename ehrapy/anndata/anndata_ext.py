@@ -39,6 +39,18 @@ def df_to_anndata(
 
     Returns:
         An AnnData object created from the given pandas dataframe
+
+    Example:
+        >>> import ehrapy as ep
+        >>> import pandas as pd
+        >>> df = pd.DataFrame(
+        ...     {
+        ...         "patient_id": ["0", "1", "2", "3", "4"],
+        ...         "age": [65, 72, 58, 78, 82],
+        ...         "sex": ["M", "F", "F", "M", "F"],
+        ...     }
+        ... )
+        >>> adata = ep.df_to_anndata(df, index_column="patient_id")
     """
     # allow index 0
     if index_column is not None:
@@ -117,6 +129,11 @@ def anndata_to_df(
 
     Returns:
         The AnnData object as a pandas Dataframe
+
+    Example:
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> df = ep.ad.anndata_to_df(adata)
     """
     if layer is not None:
         X = adata.layers[layer]
@@ -167,7 +184,6 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False)
         The original AnnData object with moved or copied columns from X to obs
 
     Example:
-
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.ad.move_to_obs(adata, ['age'], copy_obs=False)
@@ -230,8 +246,8 @@ def delete_from_obs(adata: AnnData, to_delete: list[str]) -> AnnData:
     Example:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.anndata_ext.move_to_obs(adata, ['age'], copy_obs=True)
-        >>> ep.anndata_ext.delete_from_obs(adata, ['age'])
+        >>> ep.ad.move_to_obs(adata, ['age'], copy_obs=True)
+        >>> ep.ad.delete_from_obs(adata, ['age'])
     """
     if isinstance(to_delete, str):  # pragma: no cover
         to_delete = [to_delete]
@@ -262,8 +278,8 @@ def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
     Example:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.anndata_ext.move_to_obs(adata, ['age'], copy_obs=False)
-        >>> new_adata = ep.anndata_ext.move_to_x(adata, ['age'])
+        >>> ep.ad.move_to_obs(adata, ['age'], copy_obs=False)
+        >>> new_adata = ep.ad.move_to_x(adata, ['age'])
     """
     if isinstance(to_x, str):  # pragma: no cover
         to_x = [to_x]
@@ -357,7 +373,7 @@ def type_overview(
     Example:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.anndata_ext.type_overview(adata)
+        >>> ep.ad.type_overview(adata)
     """
     if isinstance(data, AnnData):
         _adata_type_overview(data, sort_by, sort_reversed)
@@ -811,6 +827,11 @@ def get_obs_df(  # pragma: no cover
 
     Returns:
         A dataframe with `adata.obs_names` as index, and values specified by `keys` and `obsm_keys`.
+
+    Example:
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> ages = ep.ad.get_obs_df(adata, keys = ['age'])
     """
     return obs_df(adata=adata, keys=keys, obsm_keys=obsm_keys, layer=layer, gene_symbols=features)
 
@@ -832,6 +853,11 @@ def get_var_df(  # pragma: no cover
 
     Returns:
         A dataframe with `adata.var_names` as index, and values specified by `keys` and `varm_keys`.
+
+    Example:
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> four_patients = ep.ad.get_var_df(adata, keys = ['0', '1', '2', '3'])
     """
     return var_df(adata=adata, keys=keys, varm_keys=varm_keys, layer=layer)
 
@@ -861,6 +887,11 @@ def get_rank_features_df(
 
     Returns:
         A Pandas DataFrame of all rank genes groups results.
+
+    Example:
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> TODO
     """
     return rank_genes_groups_df(
         adata=adata,
