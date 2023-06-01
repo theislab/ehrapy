@@ -40,7 +40,7 @@ def df_to_anndata(
     Returns:
         An AnnData object created from the given pandas dataframe
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> import pandas as pd
         >>> df = pd.DataFrame(
@@ -130,7 +130,7 @@ def anndata_to_df(
     Returns:
         The AnnData object as a pandas Dataframe
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> df = ep.ad.anndata_to_df(adata)
@@ -183,7 +183,7 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False)
     Returns:
         The original AnnData object with moved or copied columns from X to obs
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.ad.move_to_obs(adata, ['age'], copy_obs=False)
@@ -243,7 +243,7 @@ def delete_from_obs(adata: AnnData, to_delete: list[str]) -> AnnData:
     Returns:
         The original AnnData object with deleted columns from obs.
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.ad.move_to_obs(adata, ['age'], copy_obs=True)
@@ -275,7 +275,7 @@ def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
     Returns:
         A new AnnData object with moved columns from obs to X. This should not be used for datetime columns currently.
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.ad.move_to_obs(adata, ['age'], copy_obs=False)
@@ -327,7 +327,7 @@ def get_column_indices(adata: AnnData, col_names: str | list[str]) -> list[int]:
     Returns:
         Set of column indices
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.ad.get_column_indices(adata, ['age', 'gender_num', 'bmi'])
@@ -370,7 +370,7 @@ def type_overview(
         sort_by: How the tree output should be sorted. One of `dtype`, `order`, `num_cats` or None (Defaults to None -> unsorted)
         sort_reversed: Whether to sort in reversed order or not
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.ad.type_overview(adata)
@@ -695,7 +695,7 @@ def generate_anndata(  # pragma: no cover
     Returns:
         A specified AnnData object.
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.ad.generate_anndata((2, 2), include_nlp=True)
     """
@@ -828,7 +828,7 @@ def get_obs_df(  # pragma: no cover
     Returns:
         A dataframe with `adata.obs_names` as index, and values specified by `keys` and `obsm_keys`.
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ages = ep.ad.get_obs_df(adata, keys = ['age'])
@@ -854,7 +854,7 @@ def get_var_df(  # pragma: no cover
     Returns:
         A dataframe with `adata.var_names` as index, and values specified by `keys` and `varm_keys`.
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> four_patients = ep.ad.get_var_df(adata, keys = ['0', '1', '2', '3'])
@@ -866,7 +866,7 @@ def get_rank_features_df(
     adata: AnnData,
     group: str | Iterable[str],
     *,
-    key: str = "rank_genes_groups",
+    key: str = "rank_features_groups",
     pval_cutoff: float | None = None,
     log2fc_min: float | None = None,
     log2fc_max: float | None = None,
@@ -888,7 +888,7 @@ def get_rank_features_df(
     Returns:
         A Pandas DataFrame of all rank genes groups results.
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> TODO
