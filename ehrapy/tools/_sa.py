@@ -33,15 +33,12 @@ def ols(
     Returns:
         The OLS model instance.
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.dt.mimic_2(encoded=False)
-            formula = 'tco2_first ~ pco2_first'
-            var_names = ['tco2_first', 'pco2_first']
-            ols = ep.tl.ols(adata, var_names, formula, missing = 'drop')
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=False)
+        >>> formula = 'tco2_first ~ pco2_first'
+        >>> var_names = ['tco2_first', 'pco2_first']
+        >>> ols = ep.tl.ols(adata, var_names, formula, missing = 'drop')
     """
     if isinstance(var_names, list):
         data = pd.DataFrame(adata[:, var_names].X, columns=var_names).astype(float)
@@ -79,16 +76,13 @@ def glm(
     Returns:
         The GLM model instance.
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.dt.mimic_2(encoded=False)
-            formula = 'day_28_flg ~ age'
-            var_names = ['day_28_flg', 'age']
-            family = 'Binomial'
-            glm = ep.tl.glmglm(adata, var_names, formula, family, missing = 'drop', ascontinus = ['age'])
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=False)
+        >>> formula = 'day_28_flg ~ age'
+        >>> var_names = ['day_28_flg', 'age']
+        >>> family = 'Binomial'
+        >>> glm = ep.tl.glmglm(adata, var_names, formula, family, missing = 'drop', ascontinus = ['age'])
     """
     family_dict = {
         "Gaussian": sm.families.Gaussian(),
@@ -142,16 +136,14 @@ def kmf(
     Returns:
         Fitted KaplanMeierFitter
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-            adata = ep.dt.mimic_2(encoded=False)
-            # Because in MIMIC-II database, `censor_fl` is censored or death (binary: 0 = death, 1 = censored).
-            # While in KaplanMeierFitter, `event_observed` is True if the the death was observed, False if the event was lost (right-censored).
-            # So we need to flip `censor_fl` when pass `censor_fl` to KaplanMeierFitter
-            adata[:, ['censor_flg']].X = np.where(adata[:, ['censor_flg']].X == 0, 1, 0)
-            kmf = ep.tl.kmf(adata[:, ['mort_day_censored']].X, adata[:, ['censor_flg']].X)
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=False)
+        >>> # Because in MIMIC-II database, `censor_fl` is censored or death (binary: 0 = death, 1 = censored).
+        >>> # While in KaplanMeierFitter, `event_observed` is True if the the death was observed, False if the event was lost (right-censored).
+        >>> # So we need to flip `censor_fl` when pass `censor_fl` to KaplanMeierFitter
+        >>> adata[:, ['censor_flg']].X = np.where(adata[:, ['censor_flg']].X == 0, 1, 0)
+        >>> kmf = ep.tl.kmf(adata[:, ['mort_day_censored']].X, adata[:, ['censor_flg']].X)
     """
     kmf = KaplanMeierFitter()
     if censoring == "None" or "right":

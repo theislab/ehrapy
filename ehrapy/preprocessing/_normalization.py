@@ -29,13 +29,10 @@ def scale_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool =
     Returns:
         :class:`~anndata.AnnData` object with normalized X. Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.data.mimic_2(encoded=True)
-            adata_norm = ep.pp.scale_norm(adata, copy=True)
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata_norm = ep.pp.scale_norm(adata, copy=True)
     """
     if isinstance(vars, str):
         vars = [vars]
@@ -78,13 +75,10 @@ def minmax_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool 
         :class:`~anndata.AnnData` object with normalized X.
         Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.data.mimic_2(encoded=True)
-            adata_norm = ep.pp.minmax_norm(adata, copy=True)
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata_norm = ep.pp.minmax_norm(adata, copy=True)
     """
     if isinstance(vars, str):
         vars = [vars]
@@ -126,13 +120,10 @@ def maxabs_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool 
         :class:`~anndata.AnnData` object with normalized X.
         Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.data.mimic_2(encoded=True)
-            adata_norm = ep.pp.maxabs_norm(adata, copy=True)
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata_norm = ep.pp.maxabs_norm(adata, copy=True)
     """
     if isinstance(vars, str):
         vars = [vars]
@@ -177,13 +168,10 @@ def robust_scale_norm(
         :class:`~anndata.AnnData` object with normalized X.
         Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.data.mimic_2(encoded=True)
-            adata_norm = ep.pp.robust_scale_norm(adata, copy=True)
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata_norm = ep.pp.robust_scale_norm(adata, copy=True)
     """
     if isinstance(vars, str):
         vars = [vars]
@@ -225,13 +213,10 @@ def quantile_norm(adata: AnnData, vars: str | list[str] | None = None, copy: boo
         :class:`~anndata.AnnData` object with normalized X.
         Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.data.mimic_2(encoded=True)
-            adata_norm = ep.pp.quantile_norm(adata, copy=True)
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata_norm = ep.pp.quantile_norm(adata, copy=True)
     """
     if isinstance(vars, str):
         vars = [vars]
@@ -274,13 +259,10 @@ def power_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool =
         :class:`~anndata.AnnData` object with normalized X.
         Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.data.mimic_2(encoded=True)
-            adata_norm = ep.pp.power_norm(adata, copy=True)
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata_norm = ep.pp.power_norm(adata, copy=True)
     """
     if isinstance(vars, str):
         vars = [vars]
@@ -329,13 +311,10 @@ def log_norm(
         :class:`~anndata.AnnData` object with normalized X.
         Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.data.mimic_2(encoded=True)
-            adata_norm = ep.pp.log_norm(adata, copy=True)
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata_norm = ep.pp.log_norm(adata, copy=True)
     """
     if isinstance(vars, str):
         vars = [vars]
@@ -390,13 +369,10 @@ def sqrt_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool = 
         :class:`~anndata.AnnData` object with normalized X.
         Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.data.mimic_2(encoded=True)
-            adata_norm = ep.pp.sqrt_norm(adata, copy=True)
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata_norm = ep.pp.sqrt_norm(adata, copy=True)
     """
     if isinstance(vars, str):
         vars = [vars]

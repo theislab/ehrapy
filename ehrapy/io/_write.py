@@ -30,13 +30,10 @@ def write(
         compression: Optional file compression. One of gzip, lzf
         compression_opts: See http://docs.h5py.org/en/latest/high/dataset.html.
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.dt.mimic_2(encoded=True)
-            ep.io.write("mimic_2.h5ad", adata)
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> ep.io.write("mimic_2.h5ad", adata)
     """
     filename = Path(filename)  # allow passing strings
     if _get_file_extension(filename):

@@ -54,32 +54,23 @@ def encode(
     Returns:
         An :class:`~anndata.AnnData` object with the encoded values in X or None (in case of :class:`~mudata.MuData` object).
 
-    Example using autodetect with default label encoding:
-        .. code-block:: python
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.io.read(...)
+        >>> # encode all autodetected (non numerical) columns using label encoding
+        >>> adata_encoded = ep.pp.encode(adata, autodetect=True)
 
-            import ehrapy as ep
+    # Example using autodetect with non-default encoding mode:
+        >>> import ehrapy as ep
+        >>> adata = ep.io.read(...)
+        >>> # encode all autodetected (non numerical) columns using one hot encoding (this only works for single column encoding modes, not hash encoding)
+        >>> adata_encoded = ep.pp.encode(adata, autodetect=True, 'one_hot_encoding')
 
-            adata = ep.io.read(...)
-            # encode all autodetected (non numerical) columns using label encoding
-            adata_encoded = ep.pp.encode(adata, autodetect=True)
-
-    Example using autodetect with non-default encoding mode:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.io.read(...)
-            # encode all autodetected (non numerical) columns using one hot encoding (this only works for single column encoding modes, not hash encoding)
-            adata_encoded = ep.pp.encode(adata, autodetect=True, 'one_hot_encoding')
-
-    Example using custom encodings per columns:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.io.read(...)
-            # encode col1 and col2 using label encoding and encode col3 using one hot encoding
-            adata_encoded = ep.pp.encode(adata, autodetect=False, {'label_encoding': ['col1', 'col2'], 'one_hot_encoding': ['col3']})
+    # Example using custom encodings per columns:
+        >>> import ehrapy as ep
+        >>> adata = ep.io.read(...)
+        >>> # encode col1 and col2 using label encoding and encode col3 using one hot encoding
+        >>> adata_encoded = ep.pp.encode(adata, autodetect=False, {'label_encoding': ['col1', 'col2'], 'one_hot_encoding': ['col3']})
     """
     if isinstance(data, AnnData):
         # basic type checking for passed parameters when encoding a single AnnData object
@@ -127,13 +118,10 @@ def undo_encoding(
     Returns:
         A (partially) encoding reset :class:`~anndata.AnnData` or MuData object
 
-    Example:
-       .. code-block:: python
-
-           import ehrapy as ep
-
-           # adata_encoded is an encoded AnnData object
-           adata_undone = ep.encode.undo_encoding(adata_encoded)
+    Examples:
+        >>> import ehrapy as ep
+        >>> # adata_encoded is an encoded AnnData object
+        >>> adata_undone = ep.encode.undo_encoding(adata_encoded)
     """
     if isinstance(data, AnnData):
         return _undo_encoding(data, columns)

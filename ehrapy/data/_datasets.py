@@ -23,7 +23,7 @@ def mimic_2(
     Returns:
         :class:`~anndata.AnnData` object of the MIMIC-II dataset
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
     """
@@ -48,7 +48,7 @@ def mimic_2_preprocessed() -> AnnData:
     Returns:
         :class:`~anndata.AnnData` object of the prprocessed MIMIC-II dataset
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2_preprocessed()
     """
@@ -81,7 +81,7 @@ def mimic_3_demo(
     Returns:
         A dictionary of AnnData objects or a dictionary of Pandas DataFrames
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> dfs = ep.dt.mimic_3_demo()
     """
@@ -115,7 +115,7 @@ def heart_failure(encoded: bool = False, columns_obs_only: dict[str, list[str]] 
     Returns:
         :class:`~anndata.AnnData` object of the MIMIC-II dataset
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.heart_failure(encoded=True)
     """
@@ -148,7 +148,7 @@ def diabetes_130(
     Returns:
         :class:`~anndata.AnnData` object of the Diabetes 130 dataset
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.diabetes_130(encoded=True)
     """
@@ -181,7 +181,7 @@ def chronic_kidney_disease(
     Returns:
         :class:`~anndata.AnnData` object of the Chronic Kidney Disease dataset
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.chronic_kidney_disease(encoded=True)
     """
@@ -214,7 +214,7 @@ def breast_tissue(
     Returns:
         :class:`~anndata.AnnData` object of the Breast Tissue Data Set
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.breast_tissue(encoded=True)
     """
@@ -247,7 +247,7 @@ def cervical_cancer_risk_factors(
     Returns:
         :class:`~anndata.AnnData` object of the Cervical cancer (Risk Factors) Data Set
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.cervical_cancer_risk_factors(encoded=True)
     """
@@ -280,7 +280,7 @@ def dermatology(
     Returns:
         :class:`~anndata.AnnData` object of the Dermatology Data Set
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.dermatology(encoded=True)
     """
@@ -313,7 +313,7 @@ def echocardiogram(
     Returns:
         :class:`~anndata.AnnData` object of the Echocardiogram Data Set
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.echocardiogram(encoded=True)
     """
@@ -346,7 +346,7 @@ def hepatitis(
     Returns:
         :class:`~anndata.AnnData` object of the Hepatitis Data Set
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.hepatitis(encoded=True)
     """
@@ -379,7 +379,7 @@ def statlog_heart(
     Returns:
         :class:`~anndata.AnnData` object of the Statlog (Heart) Data Set
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.statlog_heart(encoded=True)
     """
@@ -412,7 +412,7 @@ def thyroid(
     Returns:
         :class:`~anndata.AnnData` object of the Thyroid Data Set
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.thyroid(encoded=True)
     """
@@ -445,7 +445,7 @@ def breast_cancer_coimbra(
     Returns:
         :class:`~anndata.AnnData` object of the Breast Cancer Coimbra Data Set
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.breast_cancer_coimbra(encoded=True)
     """
@@ -478,7 +478,7 @@ def parkinsons(
     Returns:
         :class:`~anndata.AnnData` object of the Parkinsons Data Set
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.parkinsons(columns_obs_only=['name'], encoded=True)
     """
@@ -511,7 +511,7 @@ def parkinsons_telemonitoring(
     Returns:
         :class:`~anndata.AnnData` object of the Parkinsons Telemonitoring Data Set
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.parkinsons_telemonitoring(encoded=True)
     """
@@ -544,7 +544,7 @@ def parkinsons_disease_classification(
     Returns:
         :class:`~anndata.AnnData` object of the Parkinson's Disease Classification Data Set
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.parkinsons_disease_classification(encoded=True)
     """
@@ -577,7 +577,7 @@ def parkinson_dataset_with_replicated_acoustic_features(
     Returns:
         :class:`~anndata.AnnData` object of the Parkinson Dataset with replicated acoustic features Data Set
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.parkinson_dataset_with_replicated_acoustic_features(columns_obs_only=['ID'], encoded=True)
     """
@@ -610,7 +610,7 @@ def heart_disease(
     Returns:
         :class:`~anndata.AnnData` object of the Heart Disease Data Set
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.heart_disease(encoded=True)
     """
@@ -643,7 +643,7 @@ def synthea_1k_sample(
     Returns:
         :class:`~anndata.AnnData` object of the 1K Sample Synthetic Patient Records Data Set
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.synthea_1k_sample(encoded=True)
     """

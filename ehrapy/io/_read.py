@@ -52,12 +52,9 @@ def read_csv(
         An :class:`~anndata.AnnData` object, a :class:`~mudata.MuData` object or a dict with an identifier (the filename, without extension)
         for each :class:`~anndata.AnnData` object in the dict
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.io.read_csv("myfile.csv")
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.io.read_csv("myfile.csv")
     """
     _check_columns_only_params(columns_obs_only, columns_x_only)
     file: Path = Path(dataset_path)
@@ -146,14 +143,11 @@ def read_h5ad(
         An :class:`~anndata.AnnData` object or a dict with an identifier (the filename, without extension)
         for each :class:`~anndata.AnnData` object in the dict
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.dt.mimic_2(encoded=True)
-            ep.io.write("mimic_2.h5ad", adata)
-            adata_2 = ep.io.read_h5ad("mimic_2.h5ad")
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> ep.io.write("mimic_2.h5ad", adata)
+        >>> adata_2 = ep.io.read_h5ad("mimic_2.h5ad")
     """
     file_path: Path = Path(dataset_path)
     if not file_path.exists():
@@ -385,12 +379,9 @@ def read_fhir(
     Returns:
         A Pandas DataFrame or AnnData object of the read in FHIR file(s).
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.io.read_fhir("/path/to/fhir/resources")
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.io.read_fhir("/path/to/fhir/resources")
     """
     _check_columns_only_params(columns_obs_only, columns_x_only)
     file_path: Path = Path(dataset_path)

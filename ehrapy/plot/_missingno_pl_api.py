@@ -43,13 +43,10 @@ def missing_values_matrix(
     Returns:
         The plot axis.
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.data.mimic_2(encoded=True)
-            ep.pl.missing_values_matrix(adata, filter='bottom', max_cols=15, max_percentage=0.999)
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> ep.pl.missing_values_matrix(adata, filter='bottom', max_cols=15, max_percentage=0.999)
 
     Preview:
         .. image:: /_static/docstring_previews/missingno_matrix.png
@@ -124,13 +121,10 @@ def missing_values_barplot(
     Returns:
         The plot axis.
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.data.mimic_2(encoded=True)
-            ep.pl.missing_values_barplot(adata, filter='bottom', max_cols=15, max_percentage=0.999)
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> ep.pl.missing_values_barplot(adata, filter='bottom', max_cols=15, max_percentage=0.999)
 
     Preview:
         .. image:: /_static/docstring_previews/missingno_barplot.png
@@ -209,13 +203,10 @@ def missing_values_heatmap(
     Returns:
         The plot axis.
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.data.mimic_2(encoded=True)
-            ep.pl.missing_values_heatmap(adata, filter='bottom', max_cols=15, max_percentage=0.999)
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> ep.pl.missing_values_heatmap(adata, filter='bottom', max_cols=15, max_percentage=0.999)
 
     Preview:
         .. image:: /_static/docstring_previews/missingno_heatmap.png
@@ -291,12 +282,9 @@ def missing_values_dendrogram(
         The plot axis.
 
     Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.data.mimic_2(encoded=True)
-            ep.pl.missing_values_dendrogram(adata, filter='bottom', max_cols=15, max_percentage=0.999)
+        >>> import ehrapy as ep
+        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> ep.pl.missing_values_dendrogram(adata, filter='bottom', max_cols=15, max_percentage=0.999)
 
     Preview:
         .. image:: /_static/docstring_previews/missingno_dendrogram.png
