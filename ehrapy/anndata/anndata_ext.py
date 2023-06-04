@@ -891,7 +891,8 @@ def get_rank_features_df(
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> TODO
+        >>> ep.tl.rank_features_groups(adata, "service_unit")
+        >>> df = ep.ad.get_rank_features_df(adata, group="FICU")
     """
     return rank_genes_groups_df(
         adata=adata,
