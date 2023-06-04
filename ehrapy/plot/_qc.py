@@ -15,14 +15,11 @@ def qc_metrics(adata: AnnData, extra_columns: list[str] | None = None) -> None: 
         adata: Annotated data matrix.
         extra_columns: List of custom (qc) var columns to be displayed additionally.
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.dt.mimic_2(encoded=True)
-            ep.pp.qc_metrics(adata)
-            ep.pl.qc_metrics(adata)
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> ep.pp.qc_metrics(adata)
+        >>> ep.pl.qc_metrics(adata)
     """
     table = Table(title="[bold blue]Ehrapy qc metrics of var")
     # add special column header for the column name
