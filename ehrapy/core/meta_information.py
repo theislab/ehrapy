@@ -18,6 +18,10 @@ def print_versions(*, output_file=None) -> None:  # pragma: no cover
 
     Args:
         output_file: Path to output file
+
+    Examples:
+        >>> import ehrapy as ep
+        >>> ep.print_versions()
     """
     stdout = sys.stdout
     try:
