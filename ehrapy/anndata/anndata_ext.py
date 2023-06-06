@@ -772,7 +772,7 @@ def generate_anndata(  # pragma: no cover
         size = m * n
         lengths = np.random.randint(3, 5, size)
         letters = np.array(list(ascii_letters))
-        gen_word = lambda l: "".join(np.random.choice(letters, l))
+        gen_word = lambda w: "".join(np.random.choice(letters, w))
         arr = np.array([gen_word(length) for length in lengths]).reshape(m, n)
 
         return pd.DataFrame(arr, columns=[gen_word(5) for _ in range(n)]).to_records(index=False, column_dtypes=dtype)
