@@ -1,6 +1,0 @@
-﻿ehrapy.data.parkinsons\_telemonitoring
-======================================
-
-.. currentmodule:: ehrapy.data
-
-.. autofunction:: parkinsons_telemonitoring

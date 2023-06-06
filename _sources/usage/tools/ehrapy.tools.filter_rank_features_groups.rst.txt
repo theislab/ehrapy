@@ -1,6 +1,0 @@
-﻿ehrapy.tools.filter\_rank\_features\_groups
-===========================================
-
-.. currentmodule:: ehrapy.tools
-
-.. autofunction:: filter_rank_features_groups

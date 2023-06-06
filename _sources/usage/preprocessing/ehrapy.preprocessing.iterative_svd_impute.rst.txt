@@ -1,6 +1,0 @@
-﻿ehrapy.preprocessing.iterative\_svd\_impute
-===========================================
-
-.. currentmodule:: ehrapy.preprocessing
-
-.. autofunction:: iterative_svd_impute

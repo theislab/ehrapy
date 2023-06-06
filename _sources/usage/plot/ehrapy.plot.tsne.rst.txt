@@ -1,6 +1,0 @@
-﻿ehrapy.plot.tsne
-================
-
-.. currentmodule:: ehrapy.plot
-
-.. autofunction:: tsne

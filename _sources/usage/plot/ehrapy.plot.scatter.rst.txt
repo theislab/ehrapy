@@ -1,6 +1,0 @@
-﻿ehrapy.plot.scatter
-===================
-
-.. currentmodule:: ehrapy.plot
-
-.. autofunction:: scatter

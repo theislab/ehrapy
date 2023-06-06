@@ -1,6 +1,0 @@
-﻿ehrapy.plot.spatial
-===================
-
-.. currentmodule:: ehrapy.plot
-
-.. autofunction:: spatial

@@ -1,6 +1,0 @@
-﻿ehrapy.preprocessing.simple\_impute
-===================================
-
-.. currentmodule:: ehrapy.preprocessing
-
-.. autofunction:: simple_impute

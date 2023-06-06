@@ -1,6 +1,0 @@
-﻿ehrapy.tools.paga
-=================
-
-.. currentmodule:: ehrapy.tools
-
-.. autofunction:: paga

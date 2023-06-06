@@ -1,6 +1,0 @@
-﻿ehrapy.data.breast\_cancer\_coimbra
-===================================
-
-.. currentmodule:: ehrapy.data
-
-.. autofunction:: breast_cancer_coimbra

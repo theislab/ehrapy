@@ -1,6 +1,0 @@
-﻿ehrapy.data.mimic\_2
-====================
-
-.. currentmodule:: ehrapy.data
-
-.. autofunction:: mimic_2

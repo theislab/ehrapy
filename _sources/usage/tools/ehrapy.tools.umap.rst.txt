@@ -1,6 +1,0 @@
-﻿ehrapy.tools.umap
-=================
-
-.. currentmodule:: ehrapy.tools
-
-.. autofunction:: umap

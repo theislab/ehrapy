@@ -1,6 +1,0 @@
-﻿ehrapy.tools.dendrogram
-=======================
-
-.. currentmodule:: ehrapy.tools
-
-.. autofunction:: dendrogram

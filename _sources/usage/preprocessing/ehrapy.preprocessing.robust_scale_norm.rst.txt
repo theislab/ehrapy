@@ -1,6 +1,0 @@
-﻿ehrapy.preprocessing.robust\_scale\_norm
-========================================
-
-.. currentmodule:: ehrapy.preprocessing
-
-.. autofunction:: robust_scale_norm

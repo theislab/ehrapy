@@ -1,6 +1,0 @@
-﻿ehrapy.preprocessing.mice\_forest\_impute
-=========================================
-
-.. currentmodule:: ehrapy.preprocessing
-
-.. autofunction:: mice_forest_impute

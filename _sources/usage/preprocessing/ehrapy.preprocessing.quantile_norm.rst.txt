@@ -1,6 +1,0 @@
-﻿ehrapy.preprocessing.quantile\_norm
-===================================
-
-.. currentmodule:: ehrapy.preprocessing
-
-.. autofunction:: quantile_norm

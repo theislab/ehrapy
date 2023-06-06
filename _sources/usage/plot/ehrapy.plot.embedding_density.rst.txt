@@ -1,6 +1,0 @@
-﻿ehrapy.plot.embedding\_density
-==============================
-
-.. currentmodule:: ehrapy.plot
-
-.. autofunction:: embedding_density

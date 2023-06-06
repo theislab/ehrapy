@@ -1,6 +1,0 @@
-﻿ehrapy.plot.umap
-================
-
-.. currentmodule:: ehrapy.plot
-
-.. autofunction:: umap

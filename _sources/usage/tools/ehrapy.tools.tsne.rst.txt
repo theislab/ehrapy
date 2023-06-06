@@ -1,6 +1,0 @@
-﻿ehrapy.tools.tsne
-=================
-
-.. currentmodule:: ehrapy.tools
-
-.. autofunction:: tsne

@@ -1,6 +1,0 @@
-﻿ehrapy.data.thyroid
-===================
-
-.. currentmodule:: ehrapy.data
-
-.. autofunction:: thyroid

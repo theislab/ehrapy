@@ -1,6 +1,0 @@
-﻿ehrapy.tools.ingest
-===================
-
-.. currentmodule:: ehrapy.tools
-
-.. autofunction:: ingest

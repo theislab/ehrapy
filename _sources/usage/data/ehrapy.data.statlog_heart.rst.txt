@@ -1,6 +1,0 @@
-﻿ehrapy.data.statlog\_heart
-==========================
-
-.. currentmodule:: ehrapy.data
-
-.. autofunction:: statlog_heart

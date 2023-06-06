@@ -1,6 +1,0 @@
-﻿ehrapy.plot.heatmap
-===================
-
-.. currentmodule:: ehrapy.plot
-
-.. autofunction:: heatmap

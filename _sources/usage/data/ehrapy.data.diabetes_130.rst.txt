@@ -1,6 +1,0 @@
-﻿ehrapy.data.diabetes\_130
-=========================
-
-.. currentmodule:: ehrapy.data
-
-.. autofunction:: diabetes_130

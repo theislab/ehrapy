@@ -1,6 +1,0 @@
-﻿ehrapy.anndata.type\_overview
-=============================
-
-.. currentmodule:: ehrapy.anndata
-
-.. autofunction:: type_overview

@@ -1,6 +1,0 @@
-﻿ehrapy.plot.ranking
-===================
-
-.. currentmodule:: ehrapy.plot
-
-.. autofunction:: ranking

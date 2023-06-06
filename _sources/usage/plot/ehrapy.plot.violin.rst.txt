@@ -1,6 +1,0 @@
-﻿ehrapy.plot.violin
-==================
-
-.. currentmodule:: ehrapy.plot
-
-.. autofunction:: violin

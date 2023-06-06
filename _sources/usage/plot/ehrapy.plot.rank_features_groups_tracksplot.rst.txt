@@ -1,6 +1,0 @@
-﻿ehrapy.plot.rank\_features\_groups\_tracksplot
-==============================================
-
-.. currentmodule:: ehrapy.plot
-
-.. autofunction:: rank_features_groups_tracksplot

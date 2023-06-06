@@ -1,6 +1,0 @@
-﻿ehrapy.anndata.anndata\_to\_df
-==============================
-
-.. currentmodule:: ehrapy.anndata
-
-.. autofunction:: anndata_to_df

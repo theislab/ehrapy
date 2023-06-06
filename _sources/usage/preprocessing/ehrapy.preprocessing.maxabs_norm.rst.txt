@@ -1,6 +1,0 @@
-﻿ehrapy.preprocessing.maxabs\_norm
-=================================
-
-.. currentmodule:: ehrapy.preprocessing
-
-.. autofunction:: maxabs_norm

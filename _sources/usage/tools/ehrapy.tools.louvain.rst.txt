@@ -1,6 +1,0 @@
-﻿ehrapy.tools.louvain
-====================
-
-.. currentmodule:: ehrapy.tools
-
-.. autofunction:: louvain

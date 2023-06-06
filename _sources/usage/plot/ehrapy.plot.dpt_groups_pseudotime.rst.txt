@@ -1,6 +1,0 @@
-﻿ehrapy.plot.dpt\_groups\_pseudotime
-===================================
-
-.. currentmodule:: ehrapy.plot
-
-.. autofunction:: dpt_groups_pseudotime

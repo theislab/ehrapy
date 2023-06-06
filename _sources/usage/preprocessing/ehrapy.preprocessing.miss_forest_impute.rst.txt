@@ -1,6 +1,0 @@
-﻿ehrapy.preprocessing.miss\_forest\_impute
-=========================================
-
-.. currentmodule:: ehrapy.preprocessing
-
-.. autofunction:: miss_forest_impute

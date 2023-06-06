@@ -1,6 +1,0 @@
-﻿ehrapy.plot.matrixplot
-======================
-
-.. currentmodule:: ehrapy.plot
-
-.. autofunction:: matrixplot

@@ -1,6 +1,0 @@
-﻿ehrapy.data.heart\_failure
-==========================
-
-.. currentmodule:: ehrapy.data
-
-.. autofunction:: heart_failure

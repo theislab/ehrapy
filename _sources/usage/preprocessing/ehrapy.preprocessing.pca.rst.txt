@@ -1,6 +1,0 @@
-﻿ehrapy.preprocessing.pca
-========================
-
-.. currentmodule:: ehrapy.preprocessing
-
-.. autofunction:: pca

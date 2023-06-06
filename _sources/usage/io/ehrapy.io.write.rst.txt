@@ -1,6 +1,0 @@
-﻿ehrapy.io.write
-===============
-
-.. currentmodule:: ehrapy.io
-
-.. autofunction:: write

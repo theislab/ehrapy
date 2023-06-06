@@ -1,6 +1,0 @@
-﻿ehrapy.preprocessing.scale\_norm
-================================
-
-.. currentmodule:: ehrapy.preprocessing
-
-.. autofunction:: scale_norm

@@ -1,6 +1,0 @@
-﻿ehrapy.plot.stacked\_violin
-===========================
-
-.. currentmodule:: ehrapy.plot
-
-.. autofunction:: stacked_violin

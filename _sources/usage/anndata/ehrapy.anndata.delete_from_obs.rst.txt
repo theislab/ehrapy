@@ -1,6 +1,0 @@
-﻿ehrapy.anndata.delete\_from\_obs
-================================
-
-.. currentmodule:: ehrapy.anndata
-
-.. autofunction:: delete_from_obs

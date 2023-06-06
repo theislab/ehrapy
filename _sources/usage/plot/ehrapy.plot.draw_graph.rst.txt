@@ -1,6 +1,0 @@
-﻿ehrapy.plot.draw\_graph
-=======================
-
-.. currentmodule:: ehrapy.plot
-
-.. autofunction:: draw_graph

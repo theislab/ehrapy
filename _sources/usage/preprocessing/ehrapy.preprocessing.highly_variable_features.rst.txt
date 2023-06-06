@@ -1,6 +1,0 @@
-﻿ehrapy.preprocessing.highly\_variable\_features
-===============================================
-
-.. currentmodule:: ehrapy.preprocessing
-
-.. autofunction:: highly_variable_features

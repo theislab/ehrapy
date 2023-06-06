@@ -1,6 +1,0 @@
-﻿ehrapy.preprocessing.clip\_quantile
-===================================
-
-.. currentmodule:: ehrapy.preprocessing
-
-.. autofunction:: clip_quantile

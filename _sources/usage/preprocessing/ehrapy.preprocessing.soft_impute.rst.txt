@@ -1,6 +1,0 @@
-﻿ehrapy.preprocessing.soft\_impute
-=================================
-
-.. currentmodule:: ehrapy.preprocessing
-
-.. autofunction:: soft_impute

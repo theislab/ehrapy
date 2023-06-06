@@ -1,6 +1,0 @@
-﻿ehrapy.plot.embedding
-=====================
-
-.. currentmodule:: ehrapy.plot
-
-.. autofunction:: embedding

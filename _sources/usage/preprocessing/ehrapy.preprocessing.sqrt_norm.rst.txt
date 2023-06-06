@@ -1,6 +1,0 @@
-﻿ehrapy.preprocessing.sqrt\_norm
-===============================
-
-.. currentmodule:: ehrapy.preprocessing
-
-.. autofunction:: sqrt_norm
