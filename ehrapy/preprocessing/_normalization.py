@@ -335,9 +335,10 @@ def log_norm(
     offset_tmp_applied = adata_to_check_for_negatives.X + offset
     if np.any(offset_tmp_applied < 0):
         raise ValueError(
-            "Matrix of X contains negative values. "
+            "Matrix X contains negative values. "
             "Undefined behavior for log normalization. "
-            "Please offset negative values with ep.pp.offset_negative_values()."
+            "Please specifiy a higher offset to this function "
+            "or offset negative values with ep.pp.offset_negative_values()."
         )
 
     var_idx = get_column_indices(adata, vars)
