@@ -56,31 +56,31 @@ def encode(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.io.read(...)
+        >>> adata = ep.dt.mimic_2()
         >>> # encode all autodetected (non numerical) columns using label encoding
         >>> adata_encoded = ep.pp.encode(adata, autodetect=True)
 
-    # Example using autodetect with non-default encoding mode:
+        # Example using autodetect with non-default encoding mode:
         >>> import ehrapy as ep
-        >>> adata = ep.io.read(...)
+        >>> adata = ep.dt.mimic_2()
         >>> # encode all autodetected (non numerical) columns using one hot encoding (this only works for single column encoding modes, not hash encoding)
-        >>> adata_encoded = ep.pp.encode(adata, autodetect=True, 'one_hot_encoding')
+        >>> adata_encoded = ep.pp.encode(adata, autodetect=True, encodings='one_hot_encoding')
 
-    # Example using custom encodings per columns:
+        # Example using custom encodings per columns:
         >>> import ehrapy as ep
-        >>> adata = ep.io.read(...)
+        >>> adata = ep.dt.mimic_2()
         >>> # encode col1 and col2 using label encoding and encode col3 using one hot encoding
-        >>> adata_encoded = ep.pp.encode(adata, autodetect=False, {'label_encoding': ['col1', 'col2'], 'one_hot_encoding': ['col3']})
+        >>> adata_encoded = ep.pp.encode(adata,
+        >>>                              autodetect=False,
+        >>>                              encodings={'label_encoding': ['col1', 'col2'], 'one_hot_encoding': ['col3']})
     """
     if isinstance(data, AnnData):
         # basic type checking for passed parameters when encoding a single AnnData object
-        if not _check_anndata_input_type(autodetect, encodings):
-            raise EncodingInputValueError
+        _check_anndata_input_type(autodetect, encodings)
         return _encode(adata=data, autodetect=autodetect, encodings=encodings)
     elif isinstance(data, MuData):
         # basic type checking for passed parameters when encoding a MuData object (collection of multiple AnnData objects)
-        if not _check_mudata_input_type(autodetect, encodings):
-            raise EncodingInputValueError
+        _check_mudata_input_type(autodetect, encodings)
         for adata in data.mod.keys():
             detect, encodings_modes = _get_mudata_autodetect_options_and_encoding_modes(adata, autodetect, encodings)  # type: ignore
             # autodetect is set to False, but no encodings were provided; warn and skip this object
@@ -93,12 +93,8 @@ def encode(
             data.update()
             # no need to return since this references the original MuData object
     else:
-        print(f"[b red]Cannot encode object of type {type(data)}. Can only encode AnnData or MuData objects!")
-        raise ValueError
-    if isinstance(data, AnnData):
-        logg.debug("Encoded the AnnData object.")
-    elif isinstance(data, MuData):
-        logg.debug("Encoded the MuData object.")
+        raise ValueError(f"Cannot encode object of type {type(data)}. Can only encode AnnData or MuData objects!")
+    logg.debug(f"Encoding of {data.__class__.__name__} successful")
 
     return None
 
@@ -981,7 +977,7 @@ def _get_mudata_autodetect_options_and_encoding_modes(
 
 def _check_anndata_input_type(
     autodetect: bool | dict, encodings: dict[str, dict[str, list[str]]] | dict[str, list[str]] | str | None
-) -> bool:
+) -> None:
     """
     Check type of passed parameters, whether they match the requirements to encode an AnnData object or not.
 
@@ -992,26 +988,21 @@ def _check_anndata_input_type(
         Whether they match type requirements or not
     """
     if not isinstance(autodetect, bool):
-        print(
-            f"[bold red]Attempted to encode an AnnData object, but passed parameter for [bold blue]autodetect [bold red]{autodetect} is not a boolean."
-            f"Please provide a boolean value for [bold blue]autodetect [bold red]when encoding a single AnnData object!"
+        raise ValueError(
+            f"Attempted to encode an AnnData object, but passed parameter for autodetect {autodetect} is not a boolean."
+            f"Please provide a boolean value for autodetect when encoding a single AnnData object!"
         )
-        return False
     elif isinstance(encodings, str) and not autodetect:
-        print("[bold red]Passing a string for parameter encodings is only possible when using autodetect=True!")
-        return False
+        raise ValueError("Passing a string for parameter encodings is only possible when using autodetect=True!")
     elif autodetect and not isinstance(encodings, (str, type(None))):
-        print(
-            "[bold red]Setting encode mode when autodetect=True only works by passing a string (encode mode name) or None not {type(encodings)}!"
+        raise ValueError(
+            "[Setting encode mode when autodetect=True only works by passing a string (encode mode name) or None not {type(encodings)}!"
         )
-        return False
-
-    return True
 
 
 def _check_mudata_input_type(
     autodetect: bool | dict, encodings: dict[str, dict[str, list[str]]] | dict[str, list[str]] | str | None
-) -> bool:
+) -> None:
     """Check type of passed parameters, whether they match the requirements to encode a MuData object or not.
 
     Args:
@@ -1022,18 +1013,15 @@ def _check_mudata_input_type(
         Whether they match type requirements or not
     """
     if not isinstance(autodetect, Dict):
-        print(
-            f"[bold red]Tried encoding a MuData object, but passed parameter for [bold blue]autodetect [bold red]{autodetect} is not a dictionary. "
+        raise ValueError(
+            f"Attempted to encode a MuData object, but passed parameter for autodetect {autodetect} is not a dictionary. "
             f"Please provide a dictionary for [bold blue]autodetect [bold red]when encoding a MuData object!"
         )
-        return False
     elif encodings and any(isinstance(column, List) for column in encodings.values()):  # type: ignore
-        print(
-            "[bold red]Encoding a MuData object requires a dictionary passed for every AnnData object, that should be encoded, containing the "
+        raise ValueError(
+            "Encoding a MuData object requires a dictionary passed for every AnnData object, that should be encoded, containing the "
             "encoding modes and columns, as required for a single AnnData object!"
         )
-        return False
-    return True
 
 
 class AlreadyEncodedWarning(UserWarning):
