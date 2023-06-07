@@ -247,6 +247,6 @@ class TestNormalization:
     def test_offset_negative_values(self):
         """Test for the offset_negative_values method."""
         to_offset_adata = AnnData(X=np.array([[-1, -5, -10], [5, 6, -20]], dtype=np.float32))
-        expected_adata = AnnData(X=np.array([[0, 0, 10], [6, 11, 0]], dtype=np.float32))
+        expected_adata = AnnData(X=np.array([[19, 15, 10], [25, 26, 0]], dtype=np.float32))
 
         assert np.array_equal(expected_adata.X, ep.pp.offset_negative_values(to_offset_adata, copy=True).X)

@@ -441,7 +441,7 @@ def offset_negative_values(adata: AnnData, layer: str = None, copy: bool = False
 
     Args:
         adata: :class:`~anndata.AnnData` object containing X to normalize values in.
-        layer: The layer to
+        layer: The layer to offset.
         copy: Whether to return a modified copy of the AnnData object.
 
     Returns:
@@ -450,16 +450,14 @@ def offset_negative_values(adata: AnnData, layer: str = None, copy: bool = False
     if copy:
         adata = adata.copy()
 
-    def _get_minimum(col):
-        min = np.min(col)
-        if min < 0:
-            col = col + abs(min)
-            return col
-
     if layer:
-        adata[layer] = np.apply_along_axis(_get_minimum, 0, adata[layer])
+        minimum = np.min(adata[layer])
+        if minimum < 0:
+            adata[layer] = adata[layer] + np.abs(minimum)
     else:
-        adata.X = np.apply_along_axis(_get_minimum, 0, adata.X)
+        minimum = np.min(adata.X)
+        if minimum < 0:
+            adata.X = adata.X + np.abs(minimum)
 
     if copy:
         return adata
