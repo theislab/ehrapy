@@ -7,8 +7,23 @@ from anndata import AnnData
 from leidenalg.VertexPartition import MutableVertexPartition
 from scanpy._utils import AnyRandom
 from scipy.sparse import spmatrix
+from scipy.stats import chi2_contingency
+import pandas as pd
 
 from ehrapy.preprocessing._scanpy_pp_api import pca  # noqa: E402,F403,F401
+
+def _merge_arrays(recarray, array, groups_order):
+    """Merge `recarray` obtained from scanpy with manually created numpy `array`"""
+
+    # The easiest way to convert recarray to a normal array is through pandas
+    df = pd.DataFrame(recarray)
+
+    # In case groups have different order
+    converted_recarray = df[groups_order]
+    concatenated_arrays = pd.concat([converted_recarray, pd.DataFrame(array, columns=groups_order)],
+                                    ignore_index=True, axis=0)
+    
+    return concatenated_arrays.to_records(index=False)
 
 
 def tsne(
@@ -762,6 +777,7 @@ def ingest(
 
 _rank_features_groups_method = Optional[Literal["logreg", "t-test", "wilcoxon", "t-test_overestim_var"]]
 _corr_method = Literal["benjamini-hochberg", "bonferroni"]
+_rank_features_groups_cat_method = Literal["chi-square", "g-test", "freeman-tukey", "mod-log-likelihood", "neyman", "cressie-read"]
 
 
 def rank_features_groups(
@@ -775,6 +791,7 @@ def rank_features_groups(
     key_added: Optional[str] = "rank_features_groups",
     copy: bool = False,
     method: _rank_features_groups_method = None,
+    categorical_method: _rank_features_groups_cat_method = "g-test",
     corr_method: _corr_method = "benjamini-hochberg",
     tie_correct: bool = False,
     layer: Optional[str] = None,
@@ -801,6 +818,7 @@ def rank_features_groups(
                  `'t-test_overestim_var'` overestimates variance of each group,
                  `'wilcoxon'` uses Wilcoxon rank-sum,
                  `'logreg'` uses logistic regression.
+        categorical_method: statistical method to calculate differences between categories
         corr_method:  p-value correction method.
                       Used only for `'t-test'`, `'t-test_overestim_var'`, and `'wilcoxon'`.
         tie_correct: Use tie correction for `'wilcoxon'` scores. Used only for `'wilcoxon'`.
@@ -839,23 +857,134 @@ def rank_features_groups(
          >>> ep.tl.rank_features_groups(adata, "service_unit")
          >>> ep.pl.rank_features_groups(adata)
     """
-    return sc.tl.rank_genes_groups(
-        adata=adata,
-        groupby=groupby,
-        use_raw=False,
-        groups=groups,
-        reference=reference,
-        n_genes=n_features,
-        rankby_abs=rankby_abs,
-        pts=pts,
-        key_added=key_added,
-        copy=copy,
-        method=method,
-        corr_method=corr_method,
-        tie_correct=tie_correct,
-        layer=layer,
-        **kwds,
-    )
+    adata = adata.copy() if copy else adata
+    
+    if groupby not in adata.obs.columns and groupby in adata.var_names:
+        # TODO: delete it from obs afterwards?
+        adata.obs[groupby] = adata[:, groupby].X.flatten().tolist()
+        
+    if not adata.obs[groupby].dtype == "category":
+        adata.obs[groupby] = pd.Categorical(adata.obs[groupby])
+
+    if adata.uns["numerical_columns"]:
+        # Rank numerical features
+        numerical_adata = adata[:, adata.uns["numerical_columns"]].copy()
+        # Without copying `numerical_adata` is a view, and code throws an error
+        # because of "object" type of .X
+        numerical_adata.X = numerical_adata.X.astype(float)
+        
+        sc.tl.rank_genes_groups(
+            numerical_adata,
+            groupby,
+            groups=groups,
+            reference=reference,
+            n_features=n_features,
+            rankby_abs=rankby_abs,
+            pts=pts,
+            key_added=key_added,
+            copy=False,
+            method=method,
+            corr_method=corr_method,
+            tie_correct=tie_correct,
+            layer=layer,
+            **kwds,
+        )
+
+        # Update adata.uns with numerical result
+        if 'logfoldchanges' in numerical_adata.uns[key_added]:
+            numerical_logfoldchanges = numerical_adata.uns[key_added]['logfoldchanges']
+        else:
+            numerical_logfoldchanges = None
+        if 'pts' in numerical_adata.uns[key_added]:
+            numerical_pts = numerical_adata.uns[key_added]['pts']
+        else:
+            numerical_pts = None
+        adata.uns[key_added] = {
+            'names': numerical_adata.uns[key_added]['names'],
+            'scores': numerical_adata.uns[key_added]['scores'],
+            'pvals': numerical_adata.uns[key_added]['pvals'],
+            'pvals_adj': numerical_adata.uns[key_added]['pvals_adj'],
+            'logfoldchanges': numerical_logfoldchanges,
+            'pts': numerical_pts,
+        }
+        
+        adata.uns[key_added]['params'] = numerical_adata.uns[key_added]['params']
+
+    if adata.uns["non_numerical_columns"]:
+        categorical_names = []
+        categorical_scores = []
+        categorical_pvals = []
+
+        tests_to_lambdas = {
+            "chi-square": 1,
+            "g-test": 0,
+            "freeman-tukey": -1/2,
+            "mod-log-likelihood": -1,
+            "neyman": -2,
+            "cressie-read": 2/3,
+        }
+        
+        groups = adata.obs[groupby].to_numpy()
+        group_names = pd.Categorical(adata.obs[groupby].astype(str)).categories.tolist()
+
+        for feature in adata.uns["non_numerical_columns"]:
+            if feature == groupby:
+                continue
+                
+            feature_values = adata[:, feature].X.flatten().toarray()
+
+            pvals = []
+            scores = []
+
+            for group in group_names:    
+                if reference == "rest":
+                    reference_mask = groups != group
+                    contingency_table = pd.crosstab(feature_values, reference_mask)
+                else:
+                    obs_to_take = np.isin(groups, [group, reference])
+                    reference_mask = groups[obs_to_take] == reference
+                    contingency_table = pd.crosstab(feature_values[obs_to_take], reference_mask)
+
+                score, p_value, _, _ = chi2_contingency(
+                    contingency_table.values, lambda_=tests_to_lambdas[categorical_method])
+                scores.append(score)
+                pvals.append(p_value)
+            
+            categorical_names.append([feature] * len(group_names))
+            categorical_scores.append(scores)
+            categorical_pvals.append(pvals)
+
+        # Append categorical results to adata.uns
+    
+        if key_added not in adata.uns:
+            adata.uns[key_added] = {
+                'names': np.array(categorical_names),
+                'scores': np.array(categorical_scores),
+                'pvals': np.array(categorical_pvals),
+            }
+        else:
+            
+            adata.uns[key_added]['names'] = _merge_arrays(
+                recarray=adata.uns[key_added]["names"],
+                array=np.array(categorical_names),
+                groups_order=group_names
+            )
+            
+            adata.uns[key_added]['scores'] = _merge_arrays(
+                recarray=adata.uns[key_added]["scores"],
+                array=np.array(categorical_scores),
+                groups_order=group_names
+            )
+            
+            adata.uns[key_added]['pvals'] = _merge_arrays(
+                recarray=adata.uns[key_added]["pvals"],
+                array=np.array(categorical_pvals),
+                groups_order=group_names
+            )    
+            
+        # Adjust p values    
+
+    return adata if copy else None
 
 
 def filter_rank_features_groups(
