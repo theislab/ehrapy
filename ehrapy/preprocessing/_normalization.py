@@ -331,7 +331,9 @@ def log_norm(
 
     adata = _prep_adata_norm(adata, copy)
 
-    if sum(np.sum(adata.X < 0, axis=0)) > 0:
+    adata_to_check_for_negatives = adata[:, vars] if vars else adata
+    offset_tmp_applied = adata_to_check_for_negatives.X + offset
+    if np.any(offset_tmp_applied < 0):
         raise ValueError(
             "Matrix of X contains negative values. "
             "Undefined behavior for log normalization. "
