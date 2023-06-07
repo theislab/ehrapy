@@ -3,7 +3,7 @@ from __future__ import annotations
 import random
 from collections import OrderedDict
 from string import ascii_letters
-from typing import Collection, Iterable, NamedTuple
+from typing import Collection, Iterable, NamedTuple, Sequence
 
 import numpy as np
 import pandas as pd
@@ -317,7 +317,7 @@ def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
     return new_adata
 
 
-def get_column_indices(adata: AnnData, col_names: str | list[str]) -> list[int]:
+def get_column_indices(adata: AnnData, col_names: str | Sequence[str]) -> list[int]:
     """Fetches the column indices in X for a given list of column names
 
     Args:
@@ -544,7 +544,7 @@ def get_numeric_vars(adata: AnnData) -> list[str]:
     return adata.uns["numerical_columns"]
 
 
-def assert_numeric_vars(adata: AnnData, vars: list[str]):
+def assert_numeric_vars(adata: AnnData, vars: Sequence[str]):
     num_vars = get_numeric_vars(adata)
 
     try:
@@ -554,7 +554,7 @@ def assert_numeric_vars(adata: AnnData, vars: list[str]):
 
 
 def set_numeric_vars(
-    adata: AnnData, values: np.ndarray, vars: list[str] | None = None, copy: bool = False
+    adata: AnnData, values: np.ndarray, vars: Sequence[str] | None = None, copy: bool = False
 ) -> AnnData | None:
     """Sets the column names for numeric variables in X.
 
