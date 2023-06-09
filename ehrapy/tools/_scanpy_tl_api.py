@@ -837,6 +837,26 @@ def _sort_features(adata, key_added="rank_features_groups") -> None:
             # Sort every key (e.g. pvals, names) by adjusted p-value in an increasing order
             adata.uns[key_added][key][group] = adata.uns[key_added][key][group][sorted_indexes]
 
+def _save_rank_features_result(adata, key_added, names, scores, pvals, pvals_adj=None, logfoldchanges=None, pts=None, groups_order=None):
+    fields = (names, scores, pvals, pvals_adj, logfoldchanges, pts)
+    field_names = ("names", "scores", "pvals", "pvals_adj", "logfoldchanges", "pts")
+    
+    if key_added not in adata.uns:
+        adata.uns[key_added] = {}
+
+    for values, key in zip(fields, field_names):
+        if values is None or not len(values):
+            continue
+
+        if key not in adata.uns[key_added]:
+            adata.uns[key_added][key] = values
+        else:
+            adata.uns[key_added][key] = _merge_arrays(
+                recarray=adata.uns[key_added][key],
+                array=np.array(values),
+                groups_order=groups_order
+            )
+
 
 def rank_features_groups(
     adata: AnnData,
@@ -920,6 +940,9 @@ def rank_features_groups(
     if not adata.obs[groupby].dtype == "category":
         adata.obs[groupby] = pd.Categorical(adata.obs[groupby])
 
+    groups_values = adata.obs[groupby].to_numpy()
+    group_names = pd.Categorical(adata.obs[groupby].astype(str)).categories.tolist()
+
     if adata.uns["numerical_columns"]:
         # Rank numerical features
         numerical_adata = adata[:, adata.uns["numerical_columns"]].copy()
@@ -945,20 +968,17 @@ def rank_features_groups(
         )
 
         # Update adata.uns with numerical result
-        if "logfoldchanges" in numerical_adata.uns[key_added]:
-            numerical_logfoldchanges = numerical_adata.uns[key_added]["logfoldchanges"]
-        else:
-            numerical_logfoldchanges = None
-        adata.uns[key_added] = {
-            "names": numerical_adata.uns[key_added]["names"],
-            "scores": numerical_adata.uns[key_added]["scores"],
-            "pvals": numerical_adata.uns[key_added]["pvals"],
-            "pvals_adj": numerical_adata.uns[key_added]["pvals_adj"],
-            "logfoldchanges": numerical_logfoldchanges,
-        }
-        
-        if "pts" in numerical_adata.uns[key_added]:
-            adata.uns[key_added]["pts"] = numerical_adata.uns[key_added]["pts"]
+        _save_rank_features_result(
+            adata,
+            key_added,
+            names=numerical_adata.uns[key_added]["names"],
+            scores=numerical_adata.uns[key_added]["scores"],
+            pvals=numerical_adata.uns[key_added]["pvals"],
+            pvals_adj=numerical_adata.uns[key_added].get("pvals_adj", None),
+            logfoldchanges=numerical_adata.uns[key_added].get("logfoldchanges", None),
+            pts=numerical_adata.uns[key_added].get("pts", None),
+            groups_order=group_names
+        )
         
         adata.uns[key_added]["params"] = numerical_adata.uns[key_added]["params"]
 
@@ -977,9 +997,6 @@ def rank_features_groups(
             "neyman": -2,
             "cressie-read": 2/3,
         }
-        
-        groups = adata.obs[groupby].to_numpy()
-        group_names = pd.Categorical(adata.obs[groupby].astype(str)).categories.tolist()
 
         for feature in adata.uns["non_numerical_columns"]:
             if feature == groupby:
@@ -992,11 +1009,11 @@ def rank_features_groups(
 
             for group in group_names:    
                 if reference == "rest":
-                    reference_mask = groups != group
+                    reference_mask = groups_values != group
                     contingency_table = pd.crosstab(feature_values, reference_mask)
                 else:
-                    obs_to_take = np.isin(groups, [group, reference])
-                    reference_mask = groups[obs_to_take] == reference
+                    obs_to_take = np.isin(groups_values, [group, reference])
+                    reference_mask = groups_values[obs_to_take] == reference
                     contingency_table = pd.crosstab(feature_values[obs_to_take], reference_mask)
 
                 score, p_value, _, _ = chi2_contingency(
@@ -1010,52 +1027,20 @@ def rank_features_groups(
             # It is not clear, how to interpret logFC or percentages for categorical data
             # For now, leave some values so that plotting and sorting methods work
             categorical_logfoldchanges.append(np.ones(len(group_names)))
-            categorical_pts.append(np.ones(len(group_names)))
-
-        # Append categorical results to adata.uns
-    
-        if key_added not in adata.uns:
-            adata.uns[key_added] = {
-                "names": np.array(categorical_names),
-                "scores": np.array(categorical_scores),
-                "pvals": np.array(categorical_pvals),
-                "logfoldchanges": np.array(categorical_logfoldchanges),
-            }
-            
             if pts:
-                adata.uns[key_added]["pts"]: np.array(categorical_pts)
-        else:
-            # TODO: remove copy pasting
-            adata.uns[key_added]["names"] = _merge_arrays(
-                recarray=adata.uns[key_added]["names"],
-                array=np.array(categorical_names),
-                groups_order=group_names
-            )
-            
-            adata.uns[key_added]["scores"] = _merge_arrays(
-                recarray=adata.uns[key_added]["scores"],
-                array=np.array(categorical_scores),
-                groups_order=group_names
-            )
-            
-            adata.uns[key_added]["pvals"] = _merge_arrays(
-                recarray=adata.uns[key_added]["pvals"],
-                array=np.array(categorical_pvals),
-                groups_order=group_names
-            )
+                categorical_pts.append(np.ones(len(group_names)))
 
-            adata.uns[key_added]["logfoldchanges"] = _merge_arrays(
-                recarray=adata.uns[key_added]["logfoldchanges"],
-                array=np.array(categorical_logfoldchanges),
-                groups_order=group_names
-            )
-
-            if pts:
-                adata.uns[key_added]["pts"] = _merge_arrays(
-                    recarray=adata.uns[key_added]["pts"],
-                    array=np.array(categorical_pts),
-                    groups_order=group_names
-                )
+        _save_rank_features_result(
+            adata,
+            key_added,
+            names=np.array(categorical_names),
+            scores=np.array(categorical_scores),
+            pvals=np.array(categorical_pvals),
+            pvals_adj=np.array(categorical_pvals),
+            logfoldchanges=np.array(categorical_logfoldchanges),
+            pts=np.array(categorical_pts),
+            groups_order=group_names
+        )
             
     # Adjust p values  
     if "pvals" in adata.uns[key_added]:
