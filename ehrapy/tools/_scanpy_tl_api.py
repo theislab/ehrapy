@@ -924,7 +924,7 @@ def _evaluate_categorical_features(
     groups_values = adata.obs[groupby].to_numpy()
 
     for feature in adata.uns["non_numerical_columns"]:
-        if feature == groupby or "ehrapycat_" + feature == groupby:
+        if feature == groupby or "ehrapycat_" + feature == groupby or feature == "ehrapycat_" + groupby:
             continue
             
         feature_values = adata[:, feature].X.flatten().toarray()
