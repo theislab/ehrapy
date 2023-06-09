@@ -840,9 +840,6 @@ def _sort_features(adata, key_added="rank_features_groups") -> None:
 def _save_rank_features_result(adata, key_added, names, scores, pvals, pvals_adj=None, logfoldchanges=None, pts=None, groups_order=None):
     fields = (names, scores, pvals, pvals_adj, logfoldchanges, pts)
     field_names = ("names", "scores", "pvals", "pvals_adj", "logfoldchanges", "pts")
-    
-    if key_added not in adata.uns:
-        adata.uns[key_added] = {}
 
     for values, key in zip(fields, field_names):
         if values is None or not len(values):
@@ -939,6 +936,16 @@ def rank_features_groups(
         
     if not adata.obs[groupby].dtype == "category":
         adata.obs[groupby] = pd.Categorical(adata.obs[groupby])
+
+    adata.uns[key_added] = {}
+    adata.uns[key_added]["params"] = dict(
+        groupby=groupby,
+        reference=reference,
+        method=method,
+        categorical_method=categorical_method,
+        layer=layer,
+        corr_method=corr_method,
+    )
 
     groups_values = adata.obs[groupby].to_numpy()
     group_names = pd.Categorical(adata.obs[groupby].astype(str)).categories.tolist()
