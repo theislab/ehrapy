@@ -925,18 +925,16 @@ def rank_features_groups(
             numerical_logfoldchanges = numerical_adata.uns[key_added]["logfoldchanges"]
         else:
             numerical_logfoldchanges = None
-        if "pts" in numerical_adata.uns[key_added]:
-            numerical_pts = numerical_adata.uns[key_added]["pts"]
-        else:
-            numerical_pts = None
         adata.uns[key_added] = {
             "names": numerical_adata.uns[key_added]["names"],
             "scores": numerical_adata.uns[key_added]["scores"],
             "pvals": numerical_adata.uns[key_added]["pvals"],
             "pvals_adj": numerical_adata.uns[key_added]["pvals_adj"],
             "logfoldchanges": numerical_logfoldchanges,
-            "pts": numerical_pts,
         }
+        
+        if "pts" in numerical_adata.uns[key_added]:
+            adata.uns[key_added]["pts"] = numerical_adata.uns[key_added]["pts"]
         
         adata.uns[key_added]["params"] = numerical_adata.uns[key_added]["params"]
 
@@ -998,8 +996,10 @@ def rank_features_groups(
                 "scores": np.array(categorical_scores),
                 "pvals": np.array(categorical_pvals),
                 "logfoldchanges": np.array(categorical_logfoldchanges),
-                "pts": np.array(categorical_pts),
             }
+            
+            if pts:
+                adata.uns[key_added]["pts"]: np.array(categorical_pts)
         else:
             # TODO: remove copy pasting
             adata.uns[key_added]["names"] = _merge_arrays(
@@ -1026,15 +1026,20 @@ def rank_features_groups(
                 groups_order=group_names
             )
 
-            adata.uns[key_added]["pts"] = _merge_arrays(
-                recarray=adata.uns[key_added]["pts"],
-                array=np.array(categorical_pts),
-                groups_order=group_names
-            )
+            if pts:
+                adata.uns[key_added]["pts"] = _merge_arrays(
+                    recarray=adata.uns[key_added]["pts"],
+                    array=np.array(categorical_pts),
+                    groups_order=group_names
+                )
             
     # Adjust p values  
     if "pvals" in adata.uns[key_added]:
         adata.uns[key_added]["pvals_adj"] = _adjust_pvalues(adata.uns[key_added]["pvals"], corr_method=corr_method)
+        
+    # For some reason, pts should be a DataFrame
+    if "pts" in adata.uns[key_added]:
+        adata.uns[key_added]["pts"] = pd.DataFrame(adata.uns[key_added]["pts"])
 
     return adata if copy else None
 
