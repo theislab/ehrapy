@@ -780,6 +780,36 @@ _corr_method = Literal["benjamini-hochberg", "bonferroni"]
 _rank_features_groups_cat_method = Literal["chi-square", "g-test", "freeman-tukey", "mod-log-likelihood", "neyman", "cressie-read"]
 
 
+def _adjust_pvalues(pvals: np.recarray, corr_method: _corr_method):
+    """Perform per group p-values correction with a given `corr_method`
+    
+    Args:
+        pvals: numpy records array with p-values. The resulting p-values are corrected per group (i.e. column)
+        corr_method: p-value correction method
+
+    Returns:
+        Records array of the same format as an input but with corrected p-values
+    """
+    from statsmodels.stats.multitest import multipletests
+
+    method_map = {
+        "benjamini-hochberg": "fdr_bh",
+        "bonferroni": "bonferroni"
+    }
+
+    pvals_adj = np.ones_like(pvals)
+
+    for group in pvals.dtype.names:
+        group_pvals = pvals[group]
+        
+        _, group_pvals_adj, _, _ = multipletests(
+            group_pvals, alpha=0.05, method=method_map[corr_method]
+        )
+        pvals_adj[group] = group_pvals_adj
+
+    return pvals_adj
+
+
 def rank_features_groups(
     adata: AnnData,
     groupby: str,
@@ -982,7 +1012,9 @@ def rank_features_groups(
                 groups_order=group_names
             )    
             
-        # Adjust p values    
+    # Adjust p values  
+    if "pvals" in adata.uns[key_added]:
+        adata.uns[key_added]["pvals_adj"] = _adjust_pvalues(adata.uns[key_added]["pvals"], corr_method=corr_method)
 
     return adata if copy else None
 
