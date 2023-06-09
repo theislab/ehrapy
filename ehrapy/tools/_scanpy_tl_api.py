@@ -837,7 +837,22 @@ def _sort_features(adata, key_added="rank_features_groups") -> None:
             # Sort every key (e.g. pvals, names) by adjusted p-value in an increasing order
             adata.uns[key_added][key][group] = adata.uns[key_added][key][group][sorted_indexes]
 
-def _save_rank_features_result(adata, key_added, names, scores, pvals, pvals_adj=None, logfoldchanges=None, pts=None, groups_order=None):
+def _save_rank_features_result(adata, key_added, names, scores, pvals, pvals_adj=None, logfoldchanges=None, pts=None, groups_order=None) -> None:
+    """Write keys with statistical test results to adata.uns
+    
+    Args:
+        adata: Annotated data matrix after running :func:`~ehrapy.tl.rank_features_groups`
+        key_added: The key in `adata.uns` information is saved to.
+        names: Structured array storing the feature names
+        scores: Array with the statistics
+        logfoldchanges: logarithm of fold changes or other info to store under logfoldchanges key
+        pvals: p-values of a statistical test 
+        pts: Percentages of cells containing features
+        groups_order: order of groups in structured arrays
+
+    Returns:
+        Nothing. The operation is performed in place
+    """
     fields = (names, scores, pvals, pvals_adj, logfoldchanges, pts)
     field_names = ("names", "scores", "pvals", "pvals_adj", "logfoldchanges", "pts")
 
