@@ -810,6 +810,34 @@ def _adjust_pvalues(pvals: np.recarray, corr_method: _corr_method):
     return pvals_adj
 
 
+def _sort_features(adata, key_added="rank_features_groups") -> None:
+    """Sort results of :func:`~ehrapy.tl.rank_features_groups` by adjusted p-value
+    
+    Args:
+        adata: Annotated data matrix after running :func:`~ehrapy.tl.rank_features_groups`
+        key_added: The key in `adata.uns` information is saved to.
+
+    Returns:
+        Nothing. The operation is performed in place
+    """
+    if key_added not in adata.uns:
+        return
+
+    pvals_adj = adata.uns[key_added]["pvals_adj"]
+
+    for group in pvals_adj.dtype.names:
+        group_pvals = pvals_adj[group]
+        sorted_indexes = np.argsort(group_pvals)
+        
+        for key in adata.uns[key_added].keys():
+            if key == "params":
+                # This key only stores technical information, nothing to sort here
+                continue
+            
+            # Sort every key (e.g. pvals, names) by adjusted p-value in an increasing order
+            adata.uns[key_added][key][group] = adata.uns[key_added][key][group][sorted_indexes]
+
+
 def rank_features_groups(
     adata: AnnData,
     groupby: str,
@@ -1040,6 +1068,8 @@ def rank_features_groups(
     # For some reason, pts should be a DataFrame
     if "pts" in adata.uns[key_added]:
         adata.uns[key_added]["pts"] = pd.DataFrame(adata.uns[key_added]["pts"])
+
+    _sort_features(adata, key_added)
 
     return adata if copy else None
 
