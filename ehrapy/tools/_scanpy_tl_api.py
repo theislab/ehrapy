@@ -903,6 +903,19 @@ def _evaluate_categorical_features(
                    If a group identifier, compare with respect to this group.
         pts: Whether to add 'pts' key to output. Doesn't contain useful information in this case.
         categorical_method: statistical method to calculate differences between categories
+
+    Returns:
+        *names*: `np.array` 
+                  Structured array to be indexed by group id storing the feature names
+        *scores*: `np.array`
+                  Array to be indexed by group id storing the statistic underlying
+                  the computation of a p-value for each feature for each group.
+        *logfoldchanges*: `np.array`
+                          Always equal to 1 for this function 
+        *pvals*: `np.array`
+                 p-values of a statistical test 
+        *pts*: `np.array`
+                 Always equal to 1 for this function
     """
     tests_to_lambdas = {
         "chi-square": 1,
