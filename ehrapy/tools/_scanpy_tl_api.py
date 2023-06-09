@@ -916,10 +916,6 @@ def rank_features_groups(
          >>> ep.pl.rank_features_groups(adata)
     """
     adata = adata.copy() if copy else adata
-    
-    if groupby not in adata.obs.columns and groupby in adata.var_names:
-        # TODO: delete it from obs afterwards?
-        adata.obs[groupby] = adata[:, groupby].X.flatten().tolist()
         
     if not adata.obs[groupby].dtype == "category":
         adata.obs[groupby] = pd.Categorical(adata.obs[groupby])
