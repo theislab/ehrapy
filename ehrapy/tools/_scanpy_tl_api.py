@@ -944,6 +944,8 @@ def rank_features_groups(
         categorical_names = []
         categorical_scores = []
         categorical_pvals = []
+        categorical_logfoldchanges = []
+        categorical_pts = []
 
         tests_to_lambdas = {
             "chi-square": 1,
@@ -983,6 +985,10 @@ def rank_features_groups(
             categorical_names.append([feature] * len(group_names))
             categorical_scores.append(scores)
             categorical_pvals.append(pvals)
+            # It is not clear, how to interpret logFC or percentages for categorical data
+            # For now, leave some values so that plotting and sorting methods work
+            categorical_logfoldchanges.append(np.ones(len(group_names)))
+            categorical_pts.append(np.ones(len(group_names)))
 
         # Append categorical results to adata.uns
     
@@ -991,9 +997,11 @@ def rank_features_groups(
                 "names": np.array(categorical_names),
                 "scores": np.array(categorical_scores),
                 "pvals": np.array(categorical_pvals),
+                "logfoldchanges": np.array(categorical_logfoldchanges),
+                "pts": np.array(categorical_pts),
             }
         else:
-            
+            # TODO: remove copy pasting
             adata.uns[key_added]["names"] = _merge_arrays(
                 recarray=adata.uns[key_added]["names"],
                 array=np.array(categorical_names),
@@ -1010,7 +1018,19 @@ def rank_features_groups(
                 recarray=adata.uns[key_added]["pvals"],
                 array=np.array(categorical_pvals),
                 groups_order=group_names
-            )    
+            )
+
+            adata.uns[key_added]["logfoldchanges"] = _merge_arrays(
+                recarray=adata.uns[key_added]["logfoldchanges"],
+                array=np.array(categorical_logfoldchanges),
+                groups_order=group_names
+            )
+
+            adata.uns[key_added]["pts"] = _merge_arrays(
+                recarray=adata.uns[key_added]["pts"],
+                array=np.array(categorical_pts),
+                groups_order=group_names
+            )
             
     # Adjust p values  
     if "pvals" in adata.uns[key_added]:
