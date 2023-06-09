@@ -921,24 +921,24 @@ def rank_features_groups(
         )
 
         # Update adata.uns with numerical result
-        if 'logfoldchanges' in numerical_adata.uns[key_added]:
-            numerical_logfoldchanges = numerical_adata.uns[key_added]['logfoldchanges']
+        if "logfoldchanges" in numerical_adata.uns[key_added]:
+            numerical_logfoldchanges = numerical_adata.uns[key_added]["logfoldchanges"]
         else:
             numerical_logfoldchanges = None
-        if 'pts' in numerical_adata.uns[key_added]:
-            numerical_pts = numerical_adata.uns[key_added]['pts']
+        if "pts" in numerical_adata.uns[key_added]:
+            numerical_pts = numerical_adata.uns[key_added]["pts"]
         else:
             numerical_pts = None
         adata.uns[key_added] = {
-            'names': numerical_adata.uns[key_added]['names'],
-            'scores': numerical_adata.uns[key_added]['scores'],
-            'pvals': numerical_adata.uns[key_added]['pvals'],
-            'pvals_adj': numerical_adata.uns[key_added]['pvals_adj'],
-            'logfoldchanges': numerical_logfoldchanges,
-            'pts': numerical_pts,
+            "names": numerical_adata.uns[key_added]["names"],
+            "scores": numerical_adata.uns[key_added]["scores"],
+            "pvals": numerical_adata.uns[key_added]["pvals"],
+            "pvals_adj": numerical_adata.uns[key_added]["pvals_adj"],
+            "logfoldchanges": numerical_logfoldchanges,
+            "pts": numerical_pts,
         }
         
-        adata.uns[key_added]['params'] = numerical_adata.uns[key_added]['params']
+        adata.uns[key_added]["params"] = numerical_adata.uns[key_added]["params"]
 
     if adata.uns["non_numerical_columns"]:
         categorical_names = []
@@ -988,25 +988,25 @@ def rank_features_groups(
     
         if key_added not in adata.uns:
             adata.uns[key_added] = {
-                'names': np.array(categorical_names),
-                'scores': np.array(categorical_scores),
-                'pvals': np.array(categorical_pvals),
+                "names": np.array(categorical_names),
+                "scores": np.array(categorical_scores),
+                "pvals": np.array(categorical_pvals),
             }
         else:
             
-            adata.uns[key_added]['names'] = _merge_arrays(
+            adata.uns[key_added]["names"] = _merge_arrays(
                 recarray=adata.uns[key_added]["names"],
                 array=np.array(categorical_names),
                 groups_order=group_names
             )
             
-            adata.uns[key_added]['scores'] = _merge_arrays(
+            adata.uns[key_added]["scores"] = _merge_arrays(
                 recarray=adata.uns[key_added]["scores"],
                 array=np.array(categorical_scores),
                 groups_order=group_names
             )
             
-            adata.uns[key_added]['pvals'] = _merge_arrays(
+            adata.uns[key_added]["pvals"] = _merge_arrays(
                 recarray=adata.uns[key_added]["pvals"],
                 array=np.array(categorical_pvals),
                 groups_order=group_names
