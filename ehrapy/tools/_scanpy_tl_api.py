@@ -1097,9 +1097,7 @@ def rank_features_groups(
             pts=numerical_adata.uns[key_added].get("pts", None),
             groups_order=group_names
         )
-        
-        adata.uns[key_added]["params"] = numerical_adata.uns[key_added]["params"]
-
+    
     if adata.uns["non_numerical_columns"]:
         categorical_names, categorical_scores, categorical_pvals, categorical_logfoldchanges, categorical_pts = _evaluate_categorical_features(
             adata=adata,
