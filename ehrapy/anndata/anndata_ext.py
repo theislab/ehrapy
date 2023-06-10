@@ -8,7 +8,6 @@ from typing import Collection, Iterable, NamedTuple, Sequence
 import numpy as np
 import pandas as pd
 from anndata import AnnData, concat
-from mudata import MuData
 from rich import print
 from rich.text import Text
 from rich.tree import Tree
@@ -356,17 +355,15 @@ def _get_column_values(adata: AnnData, indices: int | list[int]) -> np.ndarray:
     return np.take(adata.X, indices, axis=1)
 
 
-def type_overview(
-    data: MuData | AnnData, sort_by: str | None = None, sort_reversed: bool = False
-) -> None:  # pragma: no cover
-    """Prints the current state of an :class:`~anndata.AnnData` or :class:`~mudata.MuData` object in a tree format.
+def type_overview(data: AnnData, sort_by: str | None = None, sort_reversed: bool = False) -> None:  # pragma: no cover
+    """Prints the current state of an :class:`~anndata.AnnData` object in a tree format.
 
     Output could be printed in sorted format by using one of `dtype`, `order`, `num_cats` or `None`, which sorts by data type, lexicographical order,
     number of unique values (excluding NaN's) and unsorted respectively. Note that sorting by `num_cats` only affects
     encoded variables currently and will display unencoded vars unsorted.
 
     Args:
-        data: :class:`~anndata.AnnData` or :class:`~mudata.MuData` object to display
+        data: :class:`~anndata.AnnData` object to display
         sort_by: How the tree output should be sorted. One of `dtype`, `order`, `num_cats` or None (Defaults to None -> unsorted)
         sort_reversed: Whether to sort in reversed order or not
 
@@ -377,10 +374,8 @@ def type_overview(
     """
     if isinstance(data, AnnData):
         _adata_type_overview(data, sort_by, sort_reversed)
-    elif isinstance(data, MuData):
-        _mudata_type_overview(data, sort_by, sort_reversed)
     else:
-        raise ValueError(f"Unable to present object of type {type(data)}. Can only display AnnData or MuData objects!")
+        raise ValueError(f"Unable to present object of type {type(data)}. Can only display AnnData objects!")
 
 
 def _adata_type_overview(
@@ -447,33 +442,6 @@ def _adata_type_overview(
         logg.info(
             "Displaying AnnData object in sorted mode. Note that this might not be the exact same order of the variables in X or var are stored!"
         )
-    print(tree)
-
-
-def _mudata_type_overview(
-    mudata: MuData, sort: str | None = None, sort_reversed: bool = False
-) -> None:  # pragma: no cover
-    """Display the :class:`~mudata.MuData object in its current state (:class:`~anndata.AnnData objects with obs, shapes)
-
-    Args:
-        mudata: The :class:`~mudata.MuData object to display
-        sort: Whether to sort output or not
-        sort_reversed: Whether to sort output in reversed order or not
-    """
-    tree = Tree(
-        f"[b green]Variable names for AnnData object with {len(mudata.obs_names)} obs, {len(mudata.var_names)} vars and {len(mudata.mod.keys())} modalities\n",
-        guide_style="underline2 bright_blue",
-    )
-
-    modalities = sorted(list(mudata.mod.keys()), reverse=sort_reversed) if sort else list(mudata.mod.keys())
-    for mod in modalities:
-        branch = tree.add(
-            f"[b green]{mod}: [not b blue]n_vars x n_obs: {mudata.mod[mod].n_vars} x {mudata.mod[mod].n_obs}"
-        )
-        branch.add(
-            f"[blue]obs: [black]{', '.join(f'{_single_quote_string(col_name)}' for col_name in mudata.mod[mod].obs.columns)}"
-        )
-        branch.add(f"[blue]layers: [black]{', '.join(layer for layer in mudata.mod[mod].layers)}\n")
     print(tree)
 
 
