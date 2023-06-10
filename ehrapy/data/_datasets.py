@@ -89,7 +89,6 @@ def mimic_3_demo(
         dataset_path=f"{ehrapy_settings.datasetdir}/ehrapy_mimic_3",
         download_dataset_name="ehrapy_mimic_3",
         backup_url="https://physionet.org/static/published-projects/mimiciii-demo/mimic-iii-clinical-database-demo-1.4.zip",
-        return_mudata=False,
         return_dfs=False if anndata else True,
         columns_obs_only=columns_obs_only,
     )

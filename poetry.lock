@@ -3172,27 +3172,6 @@ gmpy = ["gmpy2 (>=2.1.0a4)"]
 tests = ["pytest (>=4.6)"]
 
 [[package]]
-name = "mudata"
-version = "0.2.3"
-description = "Multimodal omics analysis framework"
-optional = false
-python-versions = ">= 3.8"
-files = [
-    {file = "mudata-0.2.3-py3-none-any.whl", hash = "sha256:39f234b5943d800d30622009e448189fbc635b6f9b51b985f9e6926b313ea7a0"},
-    {file = "mudata-0.2.3.tar.gz", hash = "sha256:45288ac150bfc598d68acb7c2c1c43c38c5c39522107e04f7efbf3360c7f2035"},
-]
-
-[package.dependencies]
-anndata = ">=0.8"
-h5py = "*"
-numpy = "*"
-pandas = "*"
-
-[package.extras]
-docs = ["nbsphinx", "pydata-sphinx-theme (==0.8.1)", "readthedocs-sphinx-search", "sphinx (>=4.0)", "sphinx-book-theme (==0.3.3)", "sphinx_automodapi"]
-test = ["zarr"]
-
-[[package]]
 name = "multidict"
 version = "6.0.4"
 description = "multidict implementation"
@@ -7139,4 +7118,4 @@ scikit-learn-intelex = ["scikit-learn-intelex"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9.0,<4"
-content-hash = "23745998bc7fa581fb43dcc8c0a2c0071c04fcf0ec66ba0ae9dd2a8b1645e1c7"
+content-hash = "b2f5c14ea1a8f272f80fb6b4f5bdea223ff4107423fe59148703b66975b256c2"
