@@ -48,7 +48,8 @@ def encode(
         data: A :class:`~anndata.AnnData` object.
         autodetect: Whether to autodetect categorical values that will be encoded.
         encodings: Only needed if autodetect set to False.
-        A dict containing the encoding mode and categorical name for the respective column.
+                   A dict containing the encoding mode and categorical name for the respective column
+                   or the specified encoding that will be applied to all columns.
 
     Returns:
         An :class:`~anndata.AnnData` object with the encoded values in X.
@@ -62,7 +63,7 @@ def encode(
         # Example using autodetect with non-default encoding mode:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2()
-        >>> # encode all autodetected (non numerical) columns using one hot encoding (this only works for single column encoding modes, not hash encoding)
+        >>> # encode all autodetected (non numerical) columns using one hot encoding
         >>> adata_encoded = ep.pp.encode(adata, autodetect=True, encodings='one_hot_encoding')
 
         # Example using custom encodings per columns:
