@@ -7177,4 +7177,4 @@ scikit-learn-intelex = ["scikit-learn-intelex"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9.0,<4"
-content-hash = "f420ea5a72949a0b1cfdfb703d868f967c58d09cd33e6baf0c47c2e61cd6566e"
+content-hash = "f4e88d965a883ce546a5d625bce0a73457e8bbdad6176c179b13474ddca759fa"
