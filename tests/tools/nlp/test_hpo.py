@@ -23,10 +23,7 @@ class TestHPO:
         obs_data = {"disease": ["Lumbar scoliosis", "Neuroblastoma"]}
         var_data = {"values": ["not required"]}
         self.test_adata = AnnData(
-            X=np.array(np.random.rand(2, 1)),
-            obs=pd.DataFrame(data=obs_data),
-            var=pd.DataFrame(data=var_data),
-            dtype=np.dtype(object),
+            X=np.array(np.random.rand(2, 1)), obs=pd.DataFrame(data=obs_data), var=pd.DataFrame(data=var_data)
         )
 
     def test_patient_hpo_similarity(self):

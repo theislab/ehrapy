@@ -7,7 +7,7 @@ from pathlib import Path
 HERE = Path(__file__).parent
 sys.path[:0] = [str(HERE.parent), str(HERE / "extensions")]
 
-needs_sphinx = "4.3"  # Nicer param docs
+needs_sphinx = "4.3"
 
 # General information about the project.
 project = "ehrapy"
@@ -94,6 +94,7 @@ intersphinx_mapping = dict(
     pymde=("https://pymde.org/", None),
     flax=("https://flax.readthedocs.io/en/latest/", None),
     jax=("https://jax.readthedocs.io/en/latest/", None),
+    lamin=("https://lamin.ai/docs", None),
 )
 
 language = "en"
