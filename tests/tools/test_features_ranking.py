@@ -131,4 +131,30 @@ class TestHelperFunctions:
             # Reference not in group_names
             _utils._get_groups_order(groups_subset=("A", "B"), group_names=("A", "B", "C"), reference="D")
 
-    def test_evaluate_categorical_features():
+
+    def test_evaluate_categorical_features(self):
+        adata = ep.dt.mimic_2(encoded=True)
+
+        if not adata.uns["non_numerical_columns"]:
+            # Manually set categorical features because of the issue #543
+            adata.uns["non_numerical_columns"] = ['ehrapycat_day_icu_intime', 'ehrapycat_service_unit']
+
+        group_names = pd.Categorical(adata.obs["service_unit"].astype(str)).categories.tolist()
+
+        for method in ("chi-square", "g-test", "freeman-tukey", "mod-log-likelihood", "neyman", "cressie-read"):
+            names, scores, pvals, logfc, pts = _utils._evaluate_categorical_features(
+                adata, groupby="service_unit", group_names=group_names, categorical_method=method)
+            
+            # Check that important fields are not empty
+            assert len(names)
+            assert len(scores)
+            assert len(pvals)
+            assert len(logfc)
+            assert not len(pts)  # Because pts == False by default
+
+            assert (pvals >= 0).all()
+            assert (pvals <= 1).all()
+
+            # Check that grouping feature is not in the results
+            assert "service_unit" not in names
+            assert "ehrapycat_service_unit" not in names
