@@ -903,7 +903,7 @@ def rank_features_groups(
             names=categorical_names,
             scores=categorical_scores,
             pvals=categorical_pvals,
-            pvals_adj=categorical_pvals,
+            pvals_adj=categorical_pvals.copy(),
             logfoldchanges=categorical_logfoldchanges,
             pts=categorical_pts,
             groups_order=group_names
