@@ -11,12 +11,12 @@ class TestHelperFunctions:
         expected_result_bh = pd.DataFrame({"group1": (0.04, 0.04, 0.04, 1.00), "group2": (0.08, 0.08, 0.08, 0.99)}).to_records()
         expected_result_bf = pd.DataFrame({"group1": (0.04, 0.08, 0.12, 1.00), "group2": (0.16, 0.20, 0.24, 1.00)}).to_records()
 
-        result_bh = _utils._adjust_pvalues(pvals, method="benjamini-hochberg")
+        result_bh = _utils._adjust_pvalues(pvals, corr_method="benjamini-hochberg")
         assert pvals["group1"] <= result_bh["group1"]
         assert pvals["group2"] <= result_bh["group2"]
         assert np.allclose(result_bh, expected_result_bh)
         
-        result_bf = _utils._adjust_pvalues(pvals, method="bonferroni")
+        result_bf = _utils._adjust_pvalues(pvals, corr_method="bonferroni")
         assert pvals["group1"] <= result_bf["group1"]
         assert pvals["group2"] <= result_bf["group2"]
         assert np.allclose(result_bf, expected_result_bf)
