@@ -6,16 +6,22 @@ import pandas as pd
 from ehrapy.tools import _datatypes
 
 
-def _merge_arrays(recarray, array, groups_order):
+def _merge_arrays(arrays: Iterable[Iterable], groups_order):
     """Merge `recarray` obtained from scanpy with manually created numpy `array`"""
 
-    # The easiest way to convert recarray to a normal array is through pandas
-    df = pd.DataFrame(recarray)
+    groups_order = list(groups_order)
 
-    # In case groups have different order. List conversion helps to prevent error, when `groups_order` is hashable (e.g. tuple)
-    converted_recarray = df[list(groups_order)]
-    concatenated_arrays = pd.concat([converted_recarray, pd.DataFrame(array, columns=groups_order)],
-                                    ignore_index=True, axis=0)
+    # The easiest way to merge recarrays is through dataframe conversion
+    dfs = []
+    for array in arrays:
+        if type(array) == np.recarray:
+            dfs.append(pd.DataFrame(array)[groups_order])
+        elif type(array) == np.ndarray:
+            dfs.append(pd.DataFrame(array, columns=groups_order))
+        elif type(array) == pd.DataFrame:
+            dfs.append(array[groups_order])
+
+    concatenated_arrays = pd.concat(dfs, ignore_index=True, axis=0)
     
     return concatenated_arrays.to_records(index=False)
 
@@ -102,13 +108,9 @@ def _save_rank_features_result(adata, key_added, names, scores, pvals, pvals_adj
             continue
 
         if key not in adata.uns[key_added]:
-            adata.uns[key_added][key] = values
+            adata.uns[key_added][key] = pd.DataFrame(values, columns=groups_order).to_records()
         else:
-            adata.uns[key_added][key] = _merge_arrays(
-                recarray=adata.uns[key_added][key],
-                array=np.array(values),
-                groups_order=groups_order
-            )
+            adata.uns[key_added][key] = _merge_arrays([adata.uns[key_added][key], values], groups_order=groups_order)
 
 def _get_groups_order(groups_subset, group_names, reference):
     """Convert `groups` parameter of :func:`~ehrapy.tl.rank_features_groups` to a list of groups
