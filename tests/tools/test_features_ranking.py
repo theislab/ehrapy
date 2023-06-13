@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import pytest
 
 import ehrapy as ep
 from ehrapy.tools import _utils
@@ -147,3 +148,17 @@ class TestHelperFunctions:
         assert "logfoldchanges" not in adata.uns["rank_features_groups"]
         assert "pvals_adj" not in adata.uns["rank_features_groups"]
         assert "pts" not in adata.uns["rank_features_groups"]
+
+
+    def test_get_groups_order(self):
+        assert _utils._get_groups_order(groups_subset="all", group_names=("A", "B", "C"), reference="B") == ("A", "B", "C") 
+        assert _utils._get_groups_order(groups_subset=("A", "B"), group_names=("A", "B", "C"), reference="B") == ("A", "B")
+        assert _utils._get_groups_order(groups_subset=("A", "B"), group_names=("A", "B", "C"), reference="rest") == ("A", "B")
+        assert _utils._get_groups_order(groups_subset=("A", "B"), group_names=("A", "B", "C"), reference="C") == ("A", "B", "C")
+
+        # Check that array with ints (e.g. leiden clusters) works correctly
+        assert _utils._get_groups_order(groups_subset=(1, 2), group_names=np.arange(3), reference="rest") == ("1", "2")
+
+        with pytest.raises(ValueError):
+            # Reference not in group_names
+            _utils._get_groups_order(groups_subset=("A", "B"), group_names=("A", "B", "C"), reference="D")
