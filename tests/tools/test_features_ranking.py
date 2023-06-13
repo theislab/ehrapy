@@ -7,19 +7,23 @@ from ehrapy.tools import _utils
 
 class TestHelperFunctions:
     def test_adjust_pvalues(self):
+        groups = ("group1", "group2")
+
         pvals: np.recarray = pd.DataFrame({"group1": (0.01, 0.02, 0.03, 1.00), "group2": (0.04, 0.05, 0.06, 0.99)}).to_records()
         expected_result_bh = pd.DataFrame({"group1": (0.04, 0.04, 0.04, 1.00), "group2": (0.08, 0.08, 0.08, 0.99)}).to_records()
         expected_result_bf = pd.DataFrame({"group1": (0.04, 0.08, 0.12, 1.00), "group2": (0.16, 0.20, 0.24, 1.00)}).to_records()
 
         result_bh = _utils._adjust_pvalues(pvals, corr_method="benjamini-hochberg")
-        assert (pvals["group1"] <= result_bh["group1"]).all()
-        assert (pvals["group2"] <= result_bh["group2"]).all()
-        assert np.allclose(result_bh, expected_result_bh)
+
+        for group in groups:
+            assert (pvals[group] <= result_bh[group]).all()
+            assert np.allclose(result_bh[group], expected_result_bh[group])
         
         result_bf = _utils._adjust_pvalues(pvals, corr_method="bonferroni")
-        assert (pvals["group1"] <= result_bf["group1"]).all()
-        assert (pvals["group2"] <= result_bf["group2"]).all()
-        assert np.allclose(result_bf, expected_result_bf)
+
+        for group in groups:
+            assert (pvals[group] <= result_bf[group]).all()
+            assert np.allclose(result_bf[group], expected_result_bf[group])
 
 
     def test_sort_features(self):
