@@ -158,3 +158,29 @@ class TestHelperFunctions:
             # Check that grouping feature is not in the results
             assert "service_unit" not in names
             assert "ehrapycat_service_unit" not in names
+
+
+class TestRankFeaturesGroups():
+    def test_real_dataset(self):
+        adata = ep.dt.mimic_2(encoded=True)
+
+        if not adata.uns["non_numerical_columns"]:
+            # Manually set categorical features because of the issue #543
+            adata.uns["non_numerical_columns"] = ['ehrapycat_day_icu_intime', 'ehrapycat_service_unit']
+
+        ep.tl.rank_features_groups(adata, groupby="service_unit")
+
+        assert "rank_features_groups" in adata.uns
+        assert "names" in adata.uns["rank_features_groups"]
+        assert "pvals" in adata.uns["rank_features_groups"]
+        assert "scores" in adata.uns["rank_features_groups"]
+        assert "logfoldchanges" in adata.uns["rank_features_groups"]
+        assert "pvals_adj" in adata.uns["rank_features_groups"]
+
+        assert "params" in adata.uns["rank_features_groups"]
+        assert "method" in adata.uns["rank_features_groups"]["params"]
+        assert "categorical_method" in adata.uns["rank_features_groups"]["params"]
+        assert "reference" in adata.uns["rank_features_groups"]["params"]
+        assert "groupby" in adata.uns["rank_features_groups"]["params"]
+        assert "layer" in adata.uns["rank_features_groups"]["params"]
+        assert "corr_method" in adata.uns["rank_features_groups"]["params"]
