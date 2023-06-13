@@ -85,11 +85,6 @@ class TestHelperFunctions:
             assert _is_sorted(adata.uns["rank_features_groups"][key]["group1"])
             assert _is_sorted(adata.uns["rank_features_groups"][key]["group2"])
 
-    # Write a test for _save_rank_features_result
-    # Test several cases
-    # 1. All keys are present
-    # 2. Some keys are missing
-    # 3. Some keys are present but empty (e.g. lists, empty arrays)
     def test_save_rank_features_result(self):
         groups = ("group1", "group2")
 
@@ -101,8 +96,9 @@ class TestHelperFunctions:
         names =  pd.DataFrame({"group1": ("gene2", "gene1", "gene4", "gene3"), "group2": ("gene5", "gene6", "gene7", "gene8")}).to_records()
         pvals =  pd.DataFrame({"group1": (0.02, 0.01, 1.00, 0.03), "group2": (0.04, 0.05, 0.06, 0.99)}).to_records()
         scores =  pd.DataFrame({"group1": (2, 1, 100, 3), "group2": (4, 5, 6, 7)}).to_records()
-        log2foldchanges = pd.DataFrame({"group1": (2, 1, 10, 3), "group2": (4, 5, 6, 7)}).to_records()
-        
+        logfoldchanges = pd.DataFrame({"group1": (2, 1, 10, 3), "group2": (4, 5, 6, 7)}).to_records()
+
+        # Chack that adding onle required keys works        
         adata_only_required = adata.copy()
         _utils._save_rank_features_result(adata_only_required, key_added="rank_features_groups", groups_order=groups, names=names, scores=scores, pvals=pvals)
 
@@ -112,7 +108,7 @@ class TestHelperFunctions:
         assert "log2foldchanges" not in adata_only_required.uns["rank_features_groups"]
         assert "pvals_adj" not in adata_only_required.uns["rank_features_groups"]
         assert "pts" not in adata_only_required.uns["rank_features_groups"]
-        assert adata_only_required.uns["rank_features_groups"]["names"].dtype.names[1: ] == ("group1", "group2")
+        assert adata_only_required.uns["rank_features_groups"]["names"].dtype.names[1: ] == groups
         assert len(adata_only_required.uns["rank_features_groups"]["names"]) == 4  # It only captures the length of each group
         assert len(adata_only_required.uns["rank_features_groups"]["pvals"]) == 4
         assert len(adata_only_required.uns["rank_features_groups"]["scores"]) == 4
@@ -122,3 +118,32 @@ class TestHelperFunctions:
         assert len(adata_only_required.uns["rank_features_groups"]["names"]) == 8
         assert len(adata_only_required.uns["rank_features_groups"]["pvals"]) == 8
         assert len(adata_only_required.uns["rank_features_groups"]["scores"]) == 8
+
+        # Check that adding other keys works
+        adata_all_keys = adata.copy()
+        _utils._save_rank_features_result(adata_all_keys, key_added="rank_features_groups", groups_order=groups, names=names, scores=scores, 
+                                          pvals=pvals, pvals_adj=pvals.copy(), pts=pvals.copy(), logfoldchanges=logfoldchanges)
+
+        assert "names" in adata_all_keys.uns["rank_features_groups"]
+        assert "pvals" in adata_all_keys.uns["rank_features_groups"]
+        assert "scores" in adata_all_keys.uns["rank_features_groups"]
+        assert "logfoldchanges" in adata_all_keys.uns["rank_features_groups"]
+        assert "pvals_adj" in adata_all_keys.uns["rank_features_groups"]
+        assert "pts" in adata_all_keys.uns["rank_features_groups"]
+        assert adata_all_keys.uns["rank_features_groups"]["names"].dtype.names[1: ] == groups
+        assert len(adata_all_keys.uns["rank_features_groups"]["names"]) == 4
+        assert len(adata_all_keys.uns["rank_features_groups"]["pvals"]) == 4
+        assert len(adata_all_keys.uns["rank_features_groups"]["pvals_adj"]) == 4
+        assert len(adata_all_keys.uns["rank_features_groups"]["logfoldchanges"]) == 4
+        assert len(adata_all_keys.uns["rank_features_groups"]["scores"]) == 4
+        assert len(adata_all_keys.uns["rank_features_groups"]["pts"]) == 4
+
+        # Check that passing empty objects doesn't add keys
+        _utils._save_rank_features_result(adata, key_added="rank_features_groups", groups_order=groups, names=names, scores=scores, 
+                                          pvals=pvals, pvals_adj=[], pts=np.array([]), logfoldchanges=pd.DataFrame([]))
+        assert "names" in adata.uns["rank_features_groups"]
+        assert "pvals" in adata.uns["rank_features_groups"]
+        assert "scores" in adata.uns["rank_features_groups"]
+        assert "logfoldchanges" not in adata.uns["rank_features_groups"]
+        assert "pvals_adj" not in adata.uns["rank_features_groups"]
+        assert "pts" not in adata.uns["rank_features_groups"]
