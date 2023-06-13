@@ -128,7 +128,7 @@ def _get_groups_order(groups_subset, group_names, reference):
         >>> _get_groups_order(groups_subset=("A", "B"), group_names=("A", "B", "C"), reference="rest")
         ('A', 'B')
         >>> _get_groups_order(groups_subset=("A", "B"), group_names=("A", "B", "C"), reference="C")
-        ('A', 'B', 'C'])
+        ('A', 'B', 'C')
     """
     if groups_subset == "all":
         groups_order = group_names
