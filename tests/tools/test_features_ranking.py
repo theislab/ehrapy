@@ -25,8 +25,7 @@ class TestHelperFunctions:
         def _is_sorted(arr: np.array):
             return np.all(arr[:-1] <= arr[1:])
 
-        adata = ep.datasets.pbmc3k()
-        
+        adata = ep.dt.mimic_2(encoded=False)        
         adata.uns["rank_features_groups"] = {
             "params": {"whatever": "here is", "it does": "not matter", "but this key should be": "present for testing"},
             "names": pd.DataFrame({"group1": ("gene2", "gene1", "gene4", "gene3"), "group2": ("gene5", "gene6", "gene7", "gene8")}).to_records(),
