@@ -12,8 +12,8 @@ def _merge_arrays(recarray, array, groups_order):
     # The easiest way to convert recarray to a normal array is through pandas
     df = pd.DataFrame(recarray)
 
-    # In case groups have different order
-    converted_recarray = df[groups_order]
+    # In case groups have different order. List conversion helps to prevent error, when `groups_order` is hashable (e.g. tuple)
+    converted_recarray = df[list(groups_order)]
     concatenated_arrays = pd.concat([converted_recarray, pd.DataFrame(array, columns=groups_order)],
                                     ignore_index=True, axis=0)
     
