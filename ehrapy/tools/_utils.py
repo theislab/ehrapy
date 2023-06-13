@@ -137,7 +137,7 @@ def _get_groups_order(groups_subset, group_names, reference):
             f"reference = {reference} needs to be one of groupby = {group_names}."
         )
     
-    return groups_order
+    return tuple(groups_order)
 
 def _evaluate_categorical_features(
         adata,
