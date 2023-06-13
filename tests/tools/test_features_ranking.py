@@ -184,3 +184,15 @@ class TestRankFeaturesGroups():
         assert "groupby" in adata.uns["rank_features_groups"]["params"]
         assert "layer" in adata.uns["rank_features_groups"]["params"]
         assert "corr_method" in adata.uns["rank_features_groups"]["params"]
+
+    def test_only_continous_features(self):
+        adata = ep.dt.mimic_2(encoded=True)
+        adata.uns["non_numerical_columns"] = []
+
+        ep.tl.rank_features_groups(adata, groupby="service_unit")
+        assert "rank_features_groups" in adata.uns
+        assert "names" in adata.uns["rank_features_groups"]
+        assert "pvals" in adata.uns["rank_features_groups"]
+        assert "scores" in adata.uns["rank_features_groups"]
+        assert "logfoldchanges" in adata.uns["rank_features_groups"]
+        assert "pvals_adj" in adata.uns["rank_features_groups"]
