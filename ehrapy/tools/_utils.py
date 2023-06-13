@@ -121,6 +121,14 @@ def _get_groups_order(groups_subset, group_names, reference):
 
     Returns:
         List of groups, subsetted or full
+
+    Examples:
+        >>> _get_groups_order(groups_subset="all", group_names=("A", "B", "C"), reference="B")
+        ('A', 'B', 'C')
+        >>> _get_groups_order(groups_subset=("A", "B"), group_names=("A", "B", "C"), reference="rest")
+        ('A', 'B')
+        >>> _get_groups_order(groups_subset=("A", "B"), group_names=("A", "B", "C"), reference="C")
+        ('A', 'B', 'C'])
     """
     if groups_subset == "all":
         groups_order = group_names
