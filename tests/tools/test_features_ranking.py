@@ -40,7 +40,7 @@ class TestHelperFunctions:
             "log2foldchanges": pd.DataFrame({"group1": (2, 1, 10, 3), "group2": (4, 5, 6, 7)}).to_records(),
         }
         # Doesn't really matter that they are the same here but order should be preserved
-        adata.uns["rank_features_groups"]["pvals_adj"] = adata.uns["rank_features_groups"]["pvals"]
+        adata.uns["rank_features_groups"]["pvals_adj"] = adata.uns["rank_features_groups"]["pvals"].copy()
 
         _utils._sort_features(adata)
 
