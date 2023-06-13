@@ -5,38 +5,6 @@ import pytest
 import ehrapy as ep
 from ehrapy.tools import _utils
 
-def _save_rank_features_result(adata, key_added, names, scores, pvals, pvals_adj=None, logfoldchanges=None, pts=None, groups_order=None) -> None:
-    """Write keys with statistical test results to adata.uns
-    
-    Args:
-        adata: Annotated data matrix after running :func:`~ehrapy.tl.rank_features_groups`
-        key_added: The key in `adata.uns` information is saved to.
-        names: Structured array storing the feature names
-        scores: Array with the statistics
-        logfoldchanges: logarithm of fold changes or other info to store under logfoldchanges key
-        pvals: p-values of a statistical test 
-        pts: Percentages of cells containing features
-        groups_order: order of groups in structured arrays
-
-    Returns:
-        Nothing. The operation is performed in place
-    """
-    fields = (names, scores, pvals, pvals_adj, logfoldchanges, pts)
-    field_names = ("names", "scores", "pvals", "pvals_adj", "logfoldchanges", "pts")
-
-    for values, key in zip(fields, field_names):
-        if values is None or not len(values):
-            continue
-
-        if key not in adata.uns[key_added]:
-            adata.uns[key_added][key] = values
-        else:
-            adata.uns[key_added][key] = _merge_arrays(
-                recarray=adata.uns[key_added][key],
-                array=np.array(values),
-                groups_order=groups_order
-            )
-
 
 class TestHelperFunctions:
     def test_adjust_pvalues(self):
@@ -162,3 +130,5 @@ class TestHelperFunctions:
         with pytest.raises(ValueError):
             # Reference not in group_names
             _utils._get_groups_order(groups_subset=("A", "B"), group_names=("A", "B", "C"), reference="D")
+
+    def test_evaluate_categorical_features():
