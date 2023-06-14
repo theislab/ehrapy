@@ -2,14 +2,13 @@ from __future__ import annotations
 
 from collections import defaultdict
 from itertools import chain
-from typing import Any, Dict, List
+from typing import Any
 
 import numpy as np
 import pandas as pd
 from _collections import OrderedDict
 from anndata import AnnData
 from category_encoders import CountEncoder, HashingEncoder
-from mudata import MuData
 from rich import print
 from rich.progress import BarColumn, Progress
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
@@ -22,11 +21,11 @@ available_encodings = {"one_hot_encoding", "label_encoding", "count_encoding", *
 
 
 def encode(
-    data: AnnData | MuData,
+    data: AnnData,
     autodetect: bool | dict = False,
     encodings: dict[str, dict[str, list[str]]] | dict[str, list[str]] | str | None = None,
-) -> AnnData | None:
-    """Encode the initial read :class:`~anndata.AnnData` or :class:`~mudata.MuData` object.
+) -> AnnData:
+    """Encode categoricals of an :class:`~anndata.AnnData` object.
 
     Categorical values could be either passed via parameters or are autodetected on the fly.
     The categorical values are also stored in obs and uns (for keeping the original, unencoded values).
@@ -46,98 +45,68 @@ def encode(
         4. hash_encoding (https://contrib.scikit-learn.org/category_encoders/hashing.html)
 
     Args:
-        data: The initial :class:`~anndata.AnnData` or :class:`~mudata.MuData` object
+        data: A :class:`~anndata.AnnData` object.
         autodetect: Whether to autodetect categorical values that will be encoded.
-        encodings: Only needed if autodetect set to False (or False for some columns in case of a :class:`~mudata.MuData` object).
-        A dict containing the encoding mode and categorical name for the respective column (for each AnnData object in case of MuData object).
+        encodings: Only needed if autodetect set to False.
+                   A dict containing the encoding mode and categorical name for the respective column
+                   or the specified encoding that will be applied to all columns.
 
     Returns:
-        An :class:`~anndata.AnnData` object with the encoded values in X or None (in case of :class:`~mudata.MuData` object).
+        An :class:`~anndata.AnnData` object with the encoded values in X.
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.io.read(...)
+        >>> adata = ep.dt.mimic_2()
         >>> # encode all autodetected (non numerical) columns using label encoding
         >>> adata_encoded = ep.pp.encode(adata, autodetect=True)
 
-    # Example using autodetect with non-default encoding mode:
+        # Example using autodetect with non-default encoding mode:
         >>> import ehrapy as ep
-        >>> adata = ep.io.read(...)
-        >>> # encode all autodetected (non numerical) columns using one hot encoding (this only works for single column encoding modes, not hash encoding)
-        >>> adata_encoded = ep.pp.encode(adata, autodetect=True, 'one_hot_encoding')
+        >>> adata = ep.dt.mimic_2()
+        >>> # encode all autodetected (non numerical) columns using one hot encoding
+        >>> adata_encoded = ep.pp.encode(adata, autodetect=True, encodings='one_hot_encoding')
 
-    # Example using custom encodings per columns:
+        # Example using custom encodings per columns:
         >>> import ehrapy as ep
-        >>> adata = ep.io.read(...)
+        >>> adata = ep.dt.mimic_2()
         >>> # encode col1 and col2 using label encoding and encode col3 using one hot encoding
-        >>> adata_encoded = ep.pp.encode(adata, autodetect=False, {'label_encoding': ['col1', 'col2'], 'one_hot_encoding': ['col3']})
+        >>> adata_encoded = ep.pp.encode(adata,
+        >>>                              autodetect=False,
+        >>>                              encodings={'label_encoding': ['col1', 'col2'], 'one_hot_encoding': ['col3']})
     """
     if isinstance(data, AnnData):
         # basic type checking for passed parameters when encoding a single AnnData object
-        if not _check_anndata_input_type(autodetect, encodings):
-            raise EncodingInputValueError
+        _check_anndata_input_type(autodetect, encodings)
         return _encode(adata=data, autodetect=autodetect, encodings=encodings)
-    elif isinstance(data, MuData):
-        # basic type checking for passed parameters when encoding a MuData object (collection of multiple AnnData objects)
-        if not _check_mudata_input_type(autodetect, encodings):
-            raise EncodingInputValueError
-        for adata in data.mod.keys():
-            detect, encodings_modes = _get_mudata_autodetect_options_and_encoding_modes(adata, autodetect, encodings)  # type: ignore
-            # autodetect is set to False, but no encodings were provided; warn and skip this object
-            if not detect and not encodings_modes:
-                print(
-                    f"[bold yellow]Skipped encoding modality {adata}, as autodetect is set to false and no encodings were provided!"
-                )
-            if encodings_modes:
-                data.mod[adata] = _encode(data.mod[adata], detect, encodings_modes)
-            data.update()
-            # no need to return since this references the original MuData object
     else:
-        print(f"[b red]Cannot encode object of type {type(data)}. Can only encode AnnData or MuData objects!")
-        raise ValueError
-    if isinstance(data, AnnData):
-        logg.debug("Encoded the AnnData object.")
-    elif isinstance(data, MuData):
-        logg.debug("Encoded the MuData object.")
-
-    return None
+        raise ValueError(f"Cannot encode object of type {type(data)}. Can only encode AnnData objects!")
 
 
 def undo_encoding(
-    data: AnnData | MuData,
+    data: AnnData,
     columns: str = "all",
 ) -> AnnData | None:
     """Undo the current encodings applied to all columns in X.
 
-    This currently resets the AnnData or MuData object to its initial state.
+    This currently resets the AnnData object to its initial state.
 
     Args:
-        data: The :class:`~anndata.AnnData` or MuData object
+        data: The :class:`~anndata.AnnData` object
         columns: The names of the columns to reset encoding for. Defaults to all columns.
 
     Returns:
-        A (partially) encoding reset :class:`~anndata.AnnData` or MuData object
+        A (partially) encoding reset :class:`~anndata.AnnData`
 
     Examples:
         >>> import ehrapy as ep
         >>> # adata_encoded is an encoded AnnData object
-        >>> adata_undone = ep.encode.undo_encoding(adata_encoded)
+        >>> adata_undone = ep.pp.encode.undo_encoding(adata_encoded)
     """
     if isinstance(data, AnnData):
         return _undo_encoding(data, columns)
-    elif isinstance(data, MuData):
-        for adata in data.mod.keys():
-            reset_adata = _undo_encoding(data.mod[adata], columns)
-            if reset_adata:
-                data.mod[adata] = reset_adata
-        data.update()
     else:
-        print(f"[b red]Cannot decode object of type {type(data)}. Can only decode AnnData or MuData objects!")
+        print(f"[b red]Cannot decode object of type {type(data)}. Can only decode AnnData objects!")
         raise ValueError
-    if isinstance(data, AnnData):
-        logg.debug("Decoded the AnnData object.")
-    elif isinstance(data, MuData):
-        logg.debug("Decoded the MuData object.")
 
     return None
 
@@ -300,7 +269,9 @@ def _encode(
                 }
                 progress.update(task, description=f"Running {encoding_mode} ...")
                 # perform the actual encoding
-                encoded_x, encoded_var_names = encode_mode_switcher[encoding_mode](adata, encoded_x, orig_uns_copy, encoded_var_names, encodings[encoding_mode], progress, task)  # type: ignore
+                encoded_x, encoded_var_names = encode_mode_switcher[encoding_mode](
+                    adata, encoded_x, orig_uns_copy, encoded_var_names, encodings[encoding_mode], progress, task  # type: ignore
+                )
                 # update encoding history in uns
                 for categorical in encodings[encoding_mode]:  # type: ignore
                     # multi column encoding modes -> multiple encoded columns
@@ -673,7 +644,7 @@ def _undo_encoding(
     Args:
         adata: The AnnData object
         columns: The names of the columns to reset encoding for. Defaults to all columns. This resets the AnnData object to its initial state.
-        suppress_warning: Whether warnings should be suppressed or not (only True if called from a MuData object)
+        suppress_warning: Whether warnings should be suppressed or not.
 
     Returns:
         A (partially) encoding reset AnnData object
@@ -904,84 +875,9 @@ def _add_categoricals_to_uns(original: AnnData, new: AnnData, categorical_names:
     logg.info(f"The original categorical values `{categorical_names}` were added to uns.")
 
 
-def _get_mudata_autodetect_options_and_encoding_modes(
-    identifier: str, autodetect: dict, encodings: dict[str, dict[str, list[str]]]
-) -> tuple[bool, dict | None]:
-    """
-    Extract the index column (if any) and the columns, for obs only (if any) from the given user input.
-
-    This function is only called when dealing with datasets consisting of multiple files (for example MIMIC-III).
-
-    For each file, `index_columns` and `columns_obs_only` can provide three cases:
-        1.) The filename (thus the identifier) is not present as a key and no default key is provided or one or both dicts are empty:
-            --> No index column will be set and/or no columns are obs only (based on user input)
-
-            .. code-block:: python
-                   # some setup code here
-                   ...
-                   # filename
-                   identifier1 = "MyFile"
-                   identifier2 = "MyOtherFile"
-                   # no default key and identifier1 is not in the index or columns_obs_only keys
-                   # -> no index column will be set and no columns will be obs only (except datetime, if any)
-                   index_columns = {"MyOtherFile":["MyOtherColumn1"]}
-                   columns_obs_only = {"MyOtherFile":["MyOtherColumn2"]}
-
-        2.) The filename (thus the identifier) is not present as a key, but default key is provided
-            --> The index column will be set and/or columns will be obs only according to the default key
-
-            .. code-block:: python
-                  # some setup code here
-                   ...
-                   # filename
-                   identifier1 = "MyFile"
-                   identifier2 = "MyOtherFile"
-                   # identifier1 is not in the index or columns_obs_only keys, but default key is set for both
-                   # -> index column will be set using MyColumn1 and column obs only will include MyColumn2
-                   index_columns = {"MyOtherFile":["MyOtherColumn1"], "default": "MyColumn1"}
-                   columns_obs_only = {"MyOtherFile":["MyOtherColumn2"], "default": "MyColumn2"}
-
-        3.) The filename is present as a key
-            --> The index column will be set and/or columns are obs only according to its value
-
-            .. code-block:: python
-                   # some setup code here
-                   ...
-                   # filename
-                   identifier1 = "MyFile"
-                   identifier2 = "MyOtherFile"
-                   # identifier1 is in the index and columns_obs_only keys
-                   # -> index column will be MyColumn1 and columns_obs_only will include MyColumn2 and MyColumn3
-                   index_columns = {"MyFile":["MyColumn1"]}
-                   columns_obs_only = {"MyFile":["MyColumn2", "MyColumn3"]}
-
-    Args:
-        identifier: The name of the file
-        autodetect: A Dictionary of files to autodetected categorical columns
-        encodings: A Dictionary from mapping to columns
-
-    Returns:
-        Index column (if any) and columns obs only (if any) for this specific AnnData object
-    """
-    _autodetect = False
-    _encodings = None
-    # should use autodetect on this object?
-    if identifier in autodetect:
-        _autodetect = autodetect[identifier]
-    elif "default" in autodetect:
-        _autodetect = autodetect["default"]
-
-    # get encodings (if autodetection is not used)
-    if not _autodetect:
-        if identifier in encodings:
-            _encodings = encodings[identifier]
-
-    return _autodetect, _encodings
-
-
 def _check_anndata_input_type(
     autodetect: bool | dict, encodings: dict[str, dict[str, list[str]]] | dict[str, list[str]] | str | None
-) -> bool:
+) -> None:
     """
     Check type of passed parameters, whether they match the requirements to encode an AnnData object or not.
 
@@ -992,48 +888,16 @@ def _check_anndata_input_type(
         Whether they match type requirements or not
     """
     if not isinstance(autodetect, bool):
-        print(
-            f"[bold red]Attempted to encode an AnnData object, but passed parameter for [bold blue]autodetect [bold red]{autodetect} is not a boolean."
-            f"Please provide a boolean value for [bold blue]autodetect [bold red]when encoding a single AnnData object!"
+        raise ValueError(
+            f"Attempted to encode an AnnData object, but passed parameter for autodetect {autodetect} is not a boolean."
+            f"Please provide a boolean value for autodetect when encoding a single AnnData object!"
         )
-        return False
     elif isinstance(encodings, str) and not autodetect:
-        print("[bold red]Passing a string for parameter encodings is only possible when using autodetect=True!")
-        return False
+        raise ValueError("Passing a string for parameter encodings is only possible when using autodetect=True!")
     elif autodetect and not isinstance(encodings, (str, type(None))):
-        print(
-            "[bold red]Setting encode mode when autodetect=True only works by passing a string (encode mode name) or None not {type(encodings)}!"
+        raise ValueError(
+            "[Setting encode mode when autodetect=True only works by passing a string (encode mode name) or None not {type(encodings)}!"
         )
-        return False
-
-    return True
-
-
-def _check_mudata_input_type(
-    autodetect: bool | dict, encodings: dict[str, dict[str, list[str]]] | dict[str, list[str]] | str | None
-) -> bool:
-    """Check type of passed parameters, whether they match the requirements to encode a MuData object or not.
-
-    Args:
-        autodetect: Whether columns, that should be encoded, should be autodetected or not
-        encodings: (Different) encoding mode(s) and their columns to be applied on
-
-    Returns:
-        Whether they match type requirements or not
-    """
-    if not isinstance(autodetect, Dict):
-        print(
-            f"[bold red]Tried encoding a MuData object, but passed parameter for [bold blue]autodetect [bold red]{autodetect} is not a dictionary. "
-            f"Please provide a dictionary for [bold blue]autodetect [bold red]when encoding a MuData object!"
-        )
-        return False
-    elif encodings and any(isinstance(column, List) for column in encodings.values()):  # type: ignore
-        print(
-            "[bold red]Encoding a MuData object requires a dictionary passed for every AnnData object, that should be encoded, containing the "
-            "encoding modes and columns, as required for a single AnnData object!"
-        )
-        return False
-    return True
 
 
 class AlreadyEncodedWarning(UserWarning):

@@ -60,6 +60,9 @@ def download(
                 file.write(data)
                 progress.update(task, advance=block_size)
 
+        # force the progress bar to 100% at the end
+        progress.update(task, completed=total, refresh=True)
+
     if is_archived:
         output_path = output_path or tempfile.gettempdir()
         shutil.unpack_archive(download_to_path, output_path)

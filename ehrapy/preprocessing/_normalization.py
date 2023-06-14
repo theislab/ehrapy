@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Sequence
+
 import numpy as np
 from anndata import AnnData
 from sklearn.preprocessing import maxabs_scale, minmax_scale, power_transform, quantile_transform, robust_scale, scale
@@ -14,7 +16,7 @@ from ehrapy.anndata.anndata_ext import (
 )
 
 
-def scale_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool = False, **kwargs) -> AnnData | None:
+def scale_norm(adata: AnnData, vars: str | Sequence[str] | None = None, copy: bool = False, **kwargs) -> AnnData | None:
     """Apply scaling normalization.
 
     Functionality is provided by :func:`~sklearn.preprocessing.scale`, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.scale.html for details.
@@ -31,7 +33,7 @@ def scale_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool =
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.scale_norm(adata, copy=True)
     """
     if isinstance(vars, str):
@@ -57,7 +59,9 @@ def scale_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool =
     return adata
 
 
-def minmax_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool = False, **kwargs) -> AnnData | None:
+def minmax_norm(
+    adata: AnnData, vars: str | Sequence[str] | None = None, copy: bool = False, **kwargs
+) -> AnnData | None:
     """Apply min-max normalization.
 
     Functionality is provided by :func:`~sklearn.preprocessing.minmax_scale`,
@@ -77,7 +81,7 @@ def minmax_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool 
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.minmax_norm(adata, copy=True)
     """
     if isinstance(vars, str):
@@ -103,7 +107,7 @@ def minmax_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool 
     return adata
 
 
-def maxabs_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool = False) -> AnnData | None:
+def maxabs_norm(adata: AnnData, vars: str | Sequence[str] | None = None, copy: bool = False) -> AnnData | None:
     """Apply max-abs normalization.
 
     Functionality is provided by :func:`~sklearn.preprocessing.maxabs_scale`,
@@ -122,7 +126,7 @@ def maxabs_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool 
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.maxabs_norm(adata, copy=True)
     """
     if isinstance(vars, str):
@@ -149,7 +153,7 @@ def maxabs_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool 
 
 
 def robust_scale_norm(
-    adata: AnnData, vars: str | list[str] | None = None, copy: bool = False, **kwargs
+    adata: AnnData, vars: str | Sequence[str] | None = None, copy: bool = False, **kwargs
 ) -> AnnData | None:
     """Apply robust scaling normalization.
 
@@ -170,7 +174,7 @@ def robust_scale_norm(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.robust_scale_norm(adata, copy=True)
     """
     if isinstance(vars, str):
@@ -196,7 +200,9 @@ def robust_scale_norm(
     return adata
 
 
-def quantile_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool = False, **kwargs) -> AnnData | None:
+def quantile_norm(
+    adata: AnnData, vars: str | Sequence[str] | None = None, copy: bool = False, **kwargs
+) -> AnnData | None:
     """Apply quantile normalization.
 
     Functionality is provided by ~sklearn.preprocessing.quantile_transform,
@@ -215,7 +221,7 @@ def quantile_norm(adata: AnnData, vars: str | list[str] | None = None, copy: boo
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.quantile_norm(adata, copy=True)
     """
     if isinstance(vars, str):
@@ -241,7 +247,7 @@ def quantile_norm(adata: AnnData, vars: str | list[str] | None = None, copy: boo
     return adata
 
 
-def power_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool = False, **kwargs) -> AnnData | None:
+def power_norm(adata: AnnData, vars: str | Sequence[str] | None = None, copy: bool = False, **kwargs) -> AnnData | None:
     """Apply power transformation normalization.
 
     Functionality is provided by :func:`~sklearn.preprocessing.power_transform`,
@@ -261,7 +267,7 @@ def power_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool =
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.power_norm(adata, copy=True)
     """
     if isinstance(vars, str):
@@ -289,7 +295,7 @@ def power_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool =
 
 def log_norm(
     adata: AnnData,
-    vars: str | list[str] | None = None,
+    vars: str | Sequence[str] | None = None,
     base: int | float | None = None,
     offset: int | float = 1,
     copy: bool = False,
@@ -313,7 +319,7 @@ def log_norm(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.log_norm(adata, copy=True)
     """
     if isinstance(vars, str):
@@ -325,11 +331,14 @@ def log_norm(
 
     adata = _prep_adata_norm(adata, copy)
 
-    if sum(np.sum(adata.X < 0, axis=0)) > 0:
+    adata_to_check_for_negatives = adata[:, vars] if vars else adata
+    offset_tmp_applied = adata_to_check_for_negatives.X + offset
+    if np.any(offset_tmp_applied < 0):
         raise ValueError(
-            "Matrix of X contains negative values. "
+            "Matrix X contains negative values. "
             "Undefined behavior for log normalization. "
-            "Please offset negative values with ep.pp.offset_negative_values()."
+            "Please specifiy a higher offset to this function "
+            "or offset negative values with ep.pp.offset_negative_values()."
         )
 
     var_idx = get_column_indices(adata, vars)
@@ -353,7 +362,7 @@ def log_norm(
     return adata
 
 
-def sqrt_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool = False) -> AnnData | None:
+def sqrt_norm(adata: AnnData, vars: str | Sequence[str] | None = None, copy: bool = False) -> AnnData | None:
     """Apply square root normalization.
 
     Take the square root of all values.
@@ -371,7 +380,7 @@ def sqrt_norm(adata: AnnData, vars: str | list[str] | None = None, copy: bool = 
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.sqrt_norm(adata, copy=True)
     """
     if isinstance(vars, str):
@@ -407,7 +416,7 @@ def _prep_adata_norm(adata: AnnData, copy: bool = False) -> AnnData | None:  # p
     return adata
 
 
-def _record_norm(adata: AnnData, vars: list[str], method: str) -> None:
+def _record_norm(adata: AnnData, vars: Sequence[str], method: str) -> None:
     if "normalization" in adata.uns_keys():
         norm_record = adata.uns["normalization"]
     else:
@@ -432,7 +441,7 @@ def offset_negative_values(adata: AnnData, layer: str = None, copy: bool = False
 
     Args:
         adata: :class:`~anndata.AnnData` object containing X to normalize values in.
-        layer: The layer to
+        layer: The layer to offset.
         copy: Whether to return a modified copy of the AnnData object.
 
     Returns:
@@ -441,16 +450,14 @@ def offset_negative_values(adata: AnnData, layer: str = None, copy: bool = False
     if copy:
         adata = adata.copy()
 
-    def _get_minimum(col):
-        min = np.min(col)
-        if min < 0:
-            col = col + abs(min)
-            return col
-
     if layer:
-        adata[layer] = np.apply_along_axis(_get_minimum, 0, adata[layer])
+        minimum = np.min(adata[layer])
+        if minimum < 0:
+            adata[layer] = adata[layer] + np.abs(minimum)
     else:
-        adata.X = np.apply_along_axis(_get_minimum, 0, adata.X)
+        minimum = np.min(adata.X)
+        if minimum < 0:
+            adata.X = adata.X + np.abs(minimum)
 
     if copy:
         return adata

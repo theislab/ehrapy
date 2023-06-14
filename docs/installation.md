@@ -16,6 +16,9 @@ This is the preferred method to install ehrapy, as it will always install the mo
 
 If you don't have [pip] installed, this [Python installation guide] can guide you through the process.
 
+If you run into "RuntimeError: CMake must be installed to build qdldl" ensure that you have CMake installed to build lightgbm.
+Run `conda install -c anaconda cmake` and `conda install -c conda-forge lightgbm` to do so.
+
 If you intend to run MedCAT you have to install a language model like:
 .. code-block:: console
 

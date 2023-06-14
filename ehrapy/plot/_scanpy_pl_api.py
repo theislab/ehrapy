@@ -2253,7 +2253,7 @@ def rank_features_groups(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.knn_impute(adata)
         >>> ep.pp.log_norm(adata, offset=1)
         >>> ep.pp.neighbors(adata)
@@ -2317,7 +2317,7 @@ def rank_features_groups_violin(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.knn_impute(adata)
         >>> ep.pp.log_norm(adata, offset=1)
         >>> ep.pp.neighbors(adata)
@@ -2548,6 +2548,7 @@ def rank_features_groups_dotplot(
         show=show,
         save=save,
         return_fig=return_fig,
+        colorbar_title="Mean value in group",
         **kwds,
     )
 
