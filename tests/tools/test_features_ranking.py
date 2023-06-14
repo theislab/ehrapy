@@ -10,9 +10,9 @@ class TestHelperFunctions:
     def test_adjust_pvalues(self):
         groups = ("group1", "group2")
 
-        pvals: np.recarray = pd.DataFrame({"group1": (0.01, 0.02, 0.03, 1.00), "group2": (0.04, 0.05, 0.06, 0.99)}).to_records()
-        expected_result_bh = pd.DataFrame({"group1": (0.04, 0.04, 0.04, 1.00), "group2": (0.08, 0.08, 0.08, 0.99)}).to_records()
-        expected_result_bf = pd.DataFrame({"group1": (0.04, 0.08, 0.12, 1.00), "group2": (0.16, 0.20, 0.24, 1.00)}).to_records()
+        pvals: np.recarray = pd.DataFrame({"group1": (0.01, 0.02, 0.03, 1.00), "group2": (0.04, 0.05, 0.06, 0.99)}).to_records(index=False)
+        expected_result_bh = pd.DataFrame({"group1": (0.04, 0.04, 0.04, 1.00), "group2": (0.08, 0.08, 0.08, 0.99)}).to_records(index=False)
+        expected_result_bf = pd.DataFrame({"group1": (0.04, 0.08, 0.12, 1.00), "group2": (0.16, 0.20, 0.24, 1.00)}).to_records(index=False)
 
         result_bh = _utils._adjust_pvalues(pvals, corr_method="benjamini-hochberg")
 
@@ -34,11 +34,11 @@ class TestHelperFunctions:
         adata = ep.dt.mimic_2(encoded=False)        
         adata.uns["rank_features_groups"] = {
             "params": {"whatever": "here is", "it does": "not matter", "but this key should be": "present for testing"},
-            "names": pd.DataFrame({"group1": ("gene2", "gene1", "gene4", "gene3"), "group2": ("gene5", "gene6", "gene7", "gene8")}).to_records(),
+            "names": pd.DataFrame({"group1": ("gene2", "gene1", "gene4", "gene3"), "group2": ("gene5", "gene6", "gene7", "gene8")}).to_records(index=False),
             # Let's mix genes in group1, and leave them sorted in group2
-            "pvals": pd.DataFrame({"group1": (0.02, 0.01, 1.00, 0.03), "group2": (0.04, 0.05, 0.06, 0.99)}).to_records(),
-            "scores": pd.DataFrame({"group1": (2, 1, 100, 3), "group2": (4, 5, 6, 7)}).to_records(),
-            "log2foldchanges": pd.DataFrame({"group1": (2, 1, 10, 3), "group2": (4, 5, 6, 7)}).to_records(),
+            "pvals": pd.DataFrame({"group1": (0.02, 0.01, 1.00, 0.03), "group2": (0.04, 0.05, 0.06, 0.99)}).to_records(index=False),
+            "scores": pd.DataFrame({"group1": (2, 1, 100, 3), "group2": (4, 5, 6, 7)}).to_records(index=False),
+            "log2foldchanges": pd.DataFrame({"group1": (2, 1, 10, 3), "group2": (4, 5, 6, 7)}).to_records(index=False),
         }
         # Doesn't really matter that they are the same here but order should be preserved
         adata.uns["rank_features_groups"]["pvals_adj"] = adata.uns["rank_features_groups"]["pvals"].copy()
@@ -62,10 +62,10 @@ class TestHelperFunctions:
             "params": {"whatever": "here is", "it does": "not matter", "but this key should be": "present for testing"}
         }
         
-        names =  pd.DataFrame({"group1": ("gene2", "gene1", "gene4", "gene3"), "group2": ("gene5", "gene6", "gene7", "gene8")}).to_records()
-        pvals =  pd.DataFrame({"group1": (0.02, 0.01, 1.00, 0.03), "group2": (0.04, 0.05, 0.06, 0.99)}).to_records()
-        scores =  pd.DataFrame({"group1": (2, 1, 100, 3), "group2": (4, 5, 6, 7)}).to_records()
-        logfoldchanges = pd.DataFrame({"group1": (2, 1, 10, 3), "group2": (4, 5, 6, 7)}).to_records()
+        names =  pd.DataFrame({"group1": ("gene2", "gene1", "gene4", "gene3"), "group2": ("gene5", "gene6", "gene7", "gene8")}).to_records(index=False)
+        pvals =  pd.DataFrame({"group1": (0.02, 0.01, 1.00, 0.03), "group2": (0.04, 0.05, 0.06, 0.99)}).to_records(index=False)
+        scores =  pd.DataFrame({"group1": (2, 1, 100, 3), "group2": (4, 5, 6, 7)}).to_records(index=False)
+        logfoldchanges = pd.DataFrame({"group1": (2, 1, 10, 3), "group2": (4, 5, 6, 7)}).to_records(index=False)
 
         # Chack that adding onle required keys works        
         adata_only_required = adata.copy()
@@ -77,7 +77,7 @@ class TestHelperFunctions:
         assert "log2foldchanges" not in adata_only_required.uns["rank_features_groups"]
         assert "pvals_adj" not in adata_only_required.uns["rank_features_groups"]
         assert "pts" not in adata_only_required.uns["rank_features_groups"]
-        assert adata_only_required.uns["rank_features_groups"]["names"].dtype.names[1: ] == groups
+        assert adata_only_required.uns["rank_features_groups"]["names"].dtype.names == groups
         assert len(adata_only_required.uns["rank_features_groups"]["names"]) == 4  # It only captures the length of each group
         assert len(adata_only_required.uns["rank_features_groups"]["pvals"]) == 4
         assert len(adata_only_required.uns["rank_features_groups"]["scores"]) == 4
@@ -99,7 +99,7 @@ class TestHelperFunctions:
         assert "logfoldchanges" in adata_all_keys.uns["rank_features_groups"]
         assert "pvals_adj" in adata_all_keys.uns["rank_features_groups"]
         assert "pts" in adata_all_keys.uns["rank_features_groups"]
-        assert adata_all_keys.uns["rank_features_groups"]["names"].dtype.names[1: ] == groups
+        assert adata_all_keys.uns["rank_features_groups"]["names"].dtype.names == groups
         assert len(adata_all_keys.uns["rank_features_groups"]["names"]) == 4
         assert len(adata_all_keys.uns["rank_features_groups"]["pvals"]) == 4
         assert len(adata_all_keys.uns["rank_features_groups"]["pvals_adj"]) == 4
