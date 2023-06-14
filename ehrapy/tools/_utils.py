@@ -106,7 +106,7 @@ def _save_rank_features_result(adata, key_added, names, scores, pvals, pvals_adj
             continue
 
         if key not in adata.uns[key_added]:
-            adata.uns[key_added][key] = pd.DataFrame(values, columns=groups_order).to_records()
+            adata.uns[key_added][key] = pd.DataFrame(values, columns=groups_order).to_records(index=False)
         else:
             adata.uns[key_added][key] = _merge_arrays([adata.uns[key_added][key], values], groups_order=groups_order)
 
