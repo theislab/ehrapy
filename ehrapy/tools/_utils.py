@@ -1,4 +1,4 @@
-from typing import Union, Iterable, Literal
+from typing import Iterable, Literal, Union
 
 import numpy as np
 import pandas as pd
@@ -20,13 +20,13 @@ def _merge_arrays(arrays: Iterable[Iterable], groups_order):
             dfs.append(array[groups_order])
 
     concatenated_arrays = pd.concat(dfs, ignore_index=True, axis=0)
-    
+
     return concatenated_arrays.to_records(index=False)
 
 
 def _adjust_pvalues(pvals: np.recarray, corr_method: _datatypes._corr_method):
     """Perform per group p-values correction with a given `corr_method`
-    
+
     Args:
         pvals: numpy records array with p-values. The resulting p-values are corrected per group (i.e. column)
         corr_method: p-value correction method
@@ -36,19 +36,14 @@ def _adjust_pvalues(pvals: np.recarray, corr_method: _datatypes._corr_method):
     """
     from statsmodels.stats.multitest import multipletests
 
-    method_map = {
-        "benjamini-hochberg": "fdr_bh",
-        "bonferroni": "bonferroni"
-    }
+    method_map = {"benjamini-hochberg": "fdr_bh", "bonferroni": "bonferroni"}
 
     pvals_adj = np.ones_like(pvals)
 
     for group in pvals.dtype.names:
         group_pvals = pvals[group]
-        
-        _, group_pvals_adj, _, _ = multipletests(
-            group_pvals, alpha=0.05, method=method_map[corr_method]
-        )
+
+        _, group_pvals_adj, _, _ = multipletests(group_pvals, alpha=0.05, method=method_map[corr_method])
         pvals_adj[group] = group_pvals_adj
 
     return pvals_adj
@@ -56,7 +51,7 @@ def _adjust_pvalues(pvals: np.recarray, corr_method: _datatypes._corr_method):
 
 def _sort_features(adata, key_added="rank_features_groups") -> None:
     """Sort results of :func:`~ehrapy.tl.rank_features_groups` by adjusted p-value
-    
+
     Args:
         adata: Annotated data matrix after running :func:`~ehrapy.tl.rank_features_groups`
         key_added: The key in `adata.uns` information is saved to.
@@ -72,26 +67,28 @@ def _sort_features(adata, key_added="rank_features_groups") -> None:
     for group in pvals_adj.dtype.names:
         group_pvals = pvals_adj[group]
         sorted_indexes = np.argsort(group_pvals)
-        
+
         for key in adata.uns[key_added].keys():
             if key == "params":
                 # This key only stores technical information, nothing to sort here
                 continue
-            
+
             # Sort every key (e.g. pvals, names) by adjusted p-value in an increasing order
             adata.uns[key_added][key][group] = adata.uns[key_added][key][group][sorted_indexes]
 
 
-def _save_rank_features_result(adata, key_added, names, scores, pvals, pvals_adj=None, logfoldchanges=None, pts=None, groups_order=None) -> None:
+def _save_rank_features_result(
+    adata, key_added, names, scores, pvals, pvals_adj=None, logfoldchanges=None, pts=None, groups_order=None
+) -> None:
     """Write keys with statistical test results to adata.uns
-    
+
     Args:
         adata: Annotated data matrix after running :func:`~ehrapy.tl.rank_features_groups`
         key_added: The key in `adata.uns` information is saved to.
         names: Structured array storing the feature names
         scores: Array with the statistics
         logfoldchanges: logarithm of fold changes or other info to store under logfoldchanges key
-        pvals: p-values of a statistical test 
+        pvals: p-values of a statistical test
         pts: Percentages of cells containing features
         groups_order: order of groups in structured arrays
 
@@ -110,9 +107,10 @@ def _save_rank_features_result(adata, key_added, names, scores, pvals, pvals_adj
         else:
             adata.uns[key_added][key] = _merge_arrays([adata.uns[key_added][key], values], groups_order=groups_order)
 
+
 def _get_groups_order(groups_subset, group_names, reference):
     """Convert `groups` parameter of :func:`~ehrapy.tl.rank_features_groups` to a list of groups
-    
+
     Args:
         groups_subset: Subset of groups, e.g. [`'g1'`, `'g2'`, `'g3'`], to which comparison
                        shall be restricted, or `'all'` (default), for all groups.
@@ -141,20 +139,19 @@ def _get_groups_order(groups_subset, group_names, reference):
         if reference != "rest" and reference not in groups_order:
             groups_order += [reference]
     if reference != "rest" and reference not in group_names:
-        raise ValueError(
-            f"reference = {reference} needs to be one of groupby = {group_names}."
-        )
-    
+        raise ValueError(f"reference = {reference} needs to be one of groupby = {group_names}.")
+
     return tuple(groups_order)
 
+
 def _evaluate_categorical_features(
-        adata,
-        groupby,
-        group_names,
-        groups: Union[Literal["all"], Iterable[str]] = "all",
-        reference: str = "rest", 
-        categorical_method: _datatypes._rank_features_groups_cat_method = "g-test", 
-        pts=False
+    adata,
+    groupby,
+    group_names,
+    groups: Union[Literal["all"], Iterable[str]] = "all",
+    reference: str = "rest",
+    categorical_method: _datatypes._rank_features_groups_cat_method = "g-test",
+    pts=False,
 ):
     """Run statistical test for categorical features
 
@@ -169,15 +166,15 @@ def _evaluate_categorical_features(
         categorical_method: statistical method to calculate differences between categories
 
     Returns:
-        *names*: `np.array` 
+        *names*: `np.array`
                   Structured array to be indexed by group id storing the feature names
         *scores*: `np.array`
                   Array to be indexed by group id storing the statistic underlying
                   the computation of a p-value for each feature for each group.
         *logfoldchanges*: `np.array`
-                          Always equal to 1 for this function 
+                          Always equal to 1 for this function
         *pvals*: `np.array`
-                 p-values of a statistical test 
+                 p-values of a statistical test
         *pts*: `np.array`
                  Always equal to 1 for this function
     """
@@ -186,10 +183,10 @@ def _evaluate_categorical_features(
     tests_to_lambdas = {
         "chi-square": 1,
         "g-test": 0,
-        "freeman-tukey": -1/2,
+        "freeman-tukey": -1 / 2,
         "mod-log-likelihood": -1,
         "neyman": -2,
-        "cressie-read": 2/3,
+        "cressie-read": 2 / 3,
     }
 
     categorical_names = []
@@ -205,7 +202,7 @@ def _evaluate_categorical_features(
     for feature in adata.uns["non_numerical_columns"]:
         if feature == groupby or "ehrapycat_" + feature == groupby or feature == "ehrapycat_" + groupby:
             continue
-            
+
         feature_values = adata[:, feature].X.flatten().toarray()
 
         pvals = []
@@ -224,10 +221,11 @@ def _evaluate_categorical_features(
                 contingency_table = pd.crosstab(feature_values[obs_to_take], reference_mask)
 
             score, p_value, _, _ = chi2_contingency(
-                contingency_table.values, lambda_=tests_to_lambdas[categorical_method])
+                contingency_table.values, lambda_=tests_to_lambdas[categorical_method]
+            )
             scores.append(score)
             pvals.append(p_value)
-        
+
         categorical_names.append([feature] * len(group_names))
         categorical_scores.append(scores)
         categorical_pvals.append(pvals)
@@ -238,9 +236,9 @@ def _evaluate_categorical_features(
             categorical_pts.append(np.ones(len(group_names)))
 
     return (
-        np.array(categorical_names), 
+        np.array(categorical_names),
         np.array(categorical_scores),
         np.array(categorical_pvals),
         np.array(categorical_logfoldchanges),
-        np.array(categorical_pts)
+        np.array(categorical_pts),
     )

@@ -2,16 +2,15 @@ from types import MappingProxyType
 from typing import Any, Dict, Iterable, Literal, Mapping, Optional, Sequence, Tuple, Type, Union
 
 import numpy as np
+import pandas as pd
 import scanpy as sc
 from anndata import AnnData
 from leidenalg.VertexPartition import MutableVertexPartition
 from scanpy._utils import AnyRandom
 from scipy.sparse import spmatrix
-import pandas as pd
 
 from ehrapy.preprocessing._scanpy_pp_api import pca  # noqa: E402,F403,F401
-from ehrapy.tools import _datatypes
-from ehrapy.tools import _utils
+from ehrapy.tools import _datatypes, _utils
 
 
 def tsne(
@@ -834,7 +833,7 @@ def rank_features_groups(
          >>> ep.pl.rank_features_groups(adata)
     """
     adata = adata.copy() if copy else adata
-        
+
     if not adata.obs[groupby].dtype == "category":
         adata.obs[groupby] = pd.Categorical(adata.obs[groupby])
 
@@ -856,7 +855,7 @@ def rank_features_groups(
         # Without copying `numerical_adata` is a view, and code throws an error
         # because of "object" type of .X
         numerical_adata.X = numerical_adata.X.astype(float)
-        
+
         sc.tl.rank_genes_groups(
             numerical_adata,
             groupby,
@@ -884,17 +883,23 @@ def rank_features_groups(
             pvals_adj=numerical_adata.uns[key_added].get("pvals_adj", None),
             logfoldchanges=numerical_adata.uns[key_added].get("logfoldchanges", None),
             pts=numerical_adata.uns[key_added].get("pts", None),
-            groups_order=group_names
+            groups_order=group_names,
         )
-    
+
     if adata.uns["non_numerical_columns"]:
-        categorical_names, categorical_scores, categorical_pvals, categorical_logfoldchanges, categorical_pts = _utils._evaluate_categorical_features(
+        (
+            categorical_names,
+            categorical_scores,
+            categorical_pvals,
+            categorical_logfoldchanges,
+            categorical_pts,
+        ) = _utils._evaluate_categorical_features(
             adata=adata,
             groupby=groupby,
             group_names=group_names,
             groups=groups,
             reference=reference,
-            categorical_method=categorical_method
+            categorical_method=categorical_method,
         )
 
         _utils._save_rank_features_result(
@@ -906,13 +911,15 @@ def rank_features_groups(
             pvals_adj=categorical_pvals.copy(),
             logfoldchanges=categorical_logfoldchanges,
             pts=categorical_pts,
-            groups_order=group_names
+            groups_order=group_names,
         )
-            
-    # Adjust p values  
+
+    # Adjust p values
     if "pvals" in adata.uns[key_added]:
-        adata.uns[key_added]["pvals_adj"] = _utils._adjust_pvalues(adata.uns[key_added]["pvals"], corr_method=corr_method)
-        
+        adata.uns[key_added]["pvals_adj"] = _utils._adjust_pvalues(
+            adata.uns[key_added]["pvals"], corr_method=corr_method
+        )
+
     # For some reason, pts should be a DataFrame
     if "pts" in adata.uns[key_added]:
         adata.uns[key_added]["pts"] = pd.DataFrame(adata.uns[key_added]["pts"])
