@@ -159,6 +159,9 @@ class TestHelperFunctions:
             assert "service_unit" not in names
             assert "ehrapycat_service_unit" not in names
 
+            # Check that the only other categorical feature is in the results
+            assert "ehrapycat_day_icu_intime" in names
+
 
 class TestRankFeaturesGroups():
     def test_real_dataset(self):
