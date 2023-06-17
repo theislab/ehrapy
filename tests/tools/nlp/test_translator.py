@@ -48,7 +48,6 @@ class TestTranslator:
             X=np.array([["Deutschland", "Zöliakie", "Tumor"], ["Frankreich", "Allergie", "Krebs"]], np.dtype(object)),
             obs=pd.DataFrame(data=obs_data),
             var=pd.DataFrame(data=var_data, index=["Land", "Prädisposition", "Krankheit"]),
-            dtype=np.dtype(object),
         )
 
     def test_text_translation(self, flavour):

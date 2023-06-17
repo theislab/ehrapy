@@ -19,7 +19,7 @@ class TestNormalization:
 
         X_data = np.array(
             [
-                [1, 3.4, 2.0, 1.0, "A string", "A different string"],
+                [1, 3.4, -2.0, 1.0, "A string", "A different string"],
                 [2, 5.4, 5.0, 2.0, "Silly string", "A different string"],
                 [2, 5.7, 3.0, np.nan, "A string", "What string?"],
             ],
@@ -52,7 +52,7 @@ class TestNormalization:
         adata_norm = ep.pp.scale_norm(self.adata, copy=True)
 
         num1_norm = np.array([-1.4039999, 0.55506986, 0.84893], dtype=np.float32)
-        num2_norm = np.array([-1.069045, 1.3363061, -0.2672612], dtype=np.float32)
+        num2_norm = np.array([-1.3587323, 1.0190493, 0.3396831], dtype=np.float32)
 
         assert np.array_equal(adata_norm.X[:, 0], self.adata.X[:, 0])
         assert np.array_equal(adata_norm.X[:, 1], self.adata.X[:, 1])
@@ -65,7 +65,7 @@ class TestNormalization:
         adata_norm = ep.pp.scale_norm(self.adata, copy=True, with_mean=False)
 
         num1_norm = np.array([3.3304186, 5.2894883, 5.5833483], dtype=np.float32)
-        num2_norm = np.array([1.6035674, 4.0089183, 2.405351], dtype=np.float32)
+        num2_norm = np.array([-0.6793662, 1.6984155, 1.0190493], dtype=np.float32)
 
         assert np.allclose(adata_norm.X[:, 3], num1_norm)
         assert np.allclose(adata_norm.X[:, 4], num2_norm)
@@ -75,7 +75,7 @@ class TestNormalization:
         adata_norm = ep.pp.minmax_norm(self.adata, copy=True)
 
         num1_norm = np.array([0.0, 0.86956537, 0.9999999], dtype=np.dtype(np.float32))
-        num2_norm = np.array([0.0, 1.0, 0.3333333], dtype=np.float32)
+        num2_norm = np.array([0.0, 1.0, 0.71428573], dtype=np.float32)
 
         assert np.array_equal(adata_norm.X[:, 0], self.adata.X[:, 0])
         assert np.array_equal(adata_norm.X[:, 1], self.adata.X[:, 1])
@@ -88,7 +88,7 @@ class TestNormalization:
         adata_norm = ep.pp.minmax_norm(self.adata, copy=True, feature_range=(0, 2))
 
         num1_norm = np.array([0.0, 1.7391307, 1.9999998], dtype=np.float32)
-        num2_norm = np.array([0.0, 2.0, 0.6666666], dtype=np.float32)
+        num2_norm = np.array([0.0, 2.0, 1.4285715], dtype=np.float32)
 
         assert np.allclose(adata_norm.X[:, 3], num1_norm)
         assert np.allclose(adata_norm.X[:, 4], num2_norm)
@@ -98,7 +98,7 @@ class TestNormalization:
         adata_norm = ep.pp.maxabs_norm(self.adata, copy=True)
 
         num1_norm = np.array([0.5964913, 0.94736844, 1.0], dtype=np.float32)
-        num2_norm = np.array([0.4, 1.0, 0.6], dtype=np.float32)
+        num2_norm = np.array([-0.4, 1.0, 0.6], dtype=np.float32)
 
         assert np.array_equal(adata_norm.X[:, 0], self.adata.X[:, 0])
         assert np.array_equal(adata_norm.X[:, 1], self.adata.X[:, 1])
@@ -112,7 +112,7 @@ class TestNormalization:
         adata_norm = ep.pp.robust_scale_norm(self.adata, copy=True)
 
         num1_norm = np.array([-1.73913043, 0.0, 0.26086957], dtype=np.float32)
-        num2_norm = np.array([-0.66666667, 1.33333333, 0.0], dtype=np.float32)
+        num2_norm = np.array([-1.4285715, 0.5714286, 0.0], dtype=np.float32)
 
         assert np.array_equal(adata_norm.X[:, 0], self.adata.X[:, 0])
         assert np.array_equal(adata_norm.X[:, 1], self.adata.X[:, 1])
@@ -125,7 +125,7 @@ class TestNormalization:
         adata_norm = ep.pp.robust_scale_norm(self.adata, copy=True, with_scaling=False)
 
         num1_norm = np.array([-2.0, 0.0, 0.2999997], dtype=np.float32)
-        num2_norm = np.array([-1.0, 2.0, 0.0], dtype=np.float32)
+        num2_norm = np.array([-5.0, 2.0, 0.0], dtype=np.float32)
 
         assert np.allclose(adata_norm.X[:, 3], num1_norm)
         assert np.allclose(adata_norm.X[:, 4], num2_norm)
@@ -159,7 +159,7 @@ class TestNormalization:
         adata_norm = ep.pp.power_norm(self.adata, copy=True)
 
         num1_norm = np.array([-1.3821232, 0.43163615, 0.950487], dtype=np.float32)
-        num2_norm = np.array([-1.1953654, 1.252149, -0.05678357], dtype=np.float32)
+        num2_norm = np.array([-1.340104, 1.0613203, 0.27878374], dtype=np.float32)
 
         assert np.array_equal(adata_norm.X[:, 0], self.adata.X[:, 0])
         assert np.array_equal(adata_norm.X[:, 1], self.adata.X[:, 1])
@@ -168,21 +168,19 @@ class TestNormalization:
         assert np.allclose(adata_norm.X[:, 4], num2_norm, rtol=1.1)
         assert np.allclose(adata_norm.X[:, 5], self.adata.X[:, 5], equal_nan=True)
 
-        # Test passing kwargs works
-        adata_norm = ep.pp.power_norm(self.adata, copy=True, method="box-cox")
-
-        num1_norm = np.array([-1.3841851, 0.44104755, 0.9431376], dtype=np.float32)
-        num2_norm = np.array([-1.205321, 1.2432859, -0.037965], dtype=np.float32)
-
-        assert np.allclose(adata_norm.X[:, 3], num1_norm, rtol=1.1)
-        assert np.allclose(adata_norm.X[:, 4], num2_norm, rtol=1.1)
+        with pytest.raises(ValueError):
+            ep.pp.power_norm(self.adata, copy=True, method="box-cox")
 
     def test_norm_log1p(self):
         """Test for the log normalization method."""
-        adata_norm = ep.pp.log_norm(self.adata, copy=True)
+        # Ensure that some test data is strictly positive
+        log_adata = self.adata.copy()
+        log_adata.X[0, 4] = 1
+
+        adata_norm = ep.pp.log_norm(log_adata, copy=True)
 
         num1_norm = np.array([1.4816046, 1.856298, 1.9021075], dtype=np.float32)
-        num2_norm = np.array([1.0986123, 1.7917595, 1.3862944], dtype=np.float32)
+        num2_norm = np.array([0.6931472, 1.7917595, 1.3862944], dtype=np.float32)
 
         assert np.array_equal(adata_norm.X[:, 0], self.adata.X[:, 0])
         assert np.array_equal(adata_norm.X[:, 1], self.adata.X[:, 1])
@@ -192,26 +190,39 @@ class TestNormalization:
         assert np.allclose(adata_norm.X[:, 5], self.adata.X[:, 5], equal_nan=True)
 
         # Check alternative base works
-        adata_norm = ep.pp.log_norm(self.adata, base=10, copy=True)
+        adata_norm = ep.pp.log_norm(log_adata, base=10, copy=True)
 
         num1_norm = np.divide(np.array([1.4816046, 1.856298, 1.9021075], dtype=np.float32), np.log(10))
-        num2_norm = np.divide(np.array([1.0986123, 1.7917595, 1.3862944], dtype=np.float32), np.log(10))
+        num2_norm = np.divide(np.array([0.6931472, 1.7917595, 1.3862944], dtype=np.float32), np.log(10))
 
         assert np.allclose(adata_norm.X[:, 3], num1_norm)
         assert np.allclose(adata_norm.X[:, 4], num2_norm)
 
         # Check alternative offset works
-        adata_norm = ep.pp.log_norm(self.adata, offset=0.5, copy=True)
+        adata_norm = ep.pp.log_norm(log_adata, offset=0.5, copy=True)
 
         num1_norm = np.array([1.3609766, 1.7749524, 1.8245492], dtype=np.float32)
-        num2_norm = np.array([0.91629076, 1.7047482, 1.252763], dtype=np.float32)
+        num2_norm = np.array([0.4054651, 1.7047482, 1.252763], dtype=np.float32)
 
         assert np.allclose(adata_norm.X[:, 3], num1_norm)
         assert np.allclose(adata_norm.X[:, 4], num2_norm)
 
+        try:
+            ep.pp.log_norm(self.adata, vars="Numeric2", offset=3, copy=True)
+        except ValueError:
+            pytest.fail("Unexpected ValueError exception was raised.")
+
+        with pytest.raises(ValueError):
+            ep.pp.log_norm(self.adata, copy=True)
+
+        with pytest.raises(ValueError):
+            ep.pp.log_norm(self.adata, vars="Numeric2", offset=1, copy=True)
+
     def test_norm_sqrt(self):
         """Test for the square root normalization method."""
-        adata_norm = ep.pp.sqrt_norm(self.adata, copy=True)
+        sqrt_adata = self.adata.copy()
+        sqrt_adata.X[0, 4] = 2
+        adata_norm = ep.pp.sqrt_norm(sqrt_adata, copy=True)
 
         num1_norm = np.array([1.8439089, 2.32379, 2.3874671], dtype=np.float32)
         num2_norm = np.array([1.4142135, 2.236068, 1.7320508], dtype=np.float32)
@@ -236,6 +247,6 @@ class TestNormalization:
     def test_offset_negative_values(self):
         """Test for the offset_negative_values method."""
         to_offset_adata = AnnData(X=np.array([[-1, -5, -10], [5, 6, -20]], dtype=np.float32))
-        expected_adata = AnnData(X=np.array([[0, 0, 10], [6, 11, 0]], dtype=np.float32))
+        expected_adata = AnnData(X=np.array([[19, 15, 10], [25, 26, 0]], dtype=np.float32))
 
         assert np.array_equal(expected_adata.X, ep.pp.offset_negative_values(to_offset_adata, copy=True).X)

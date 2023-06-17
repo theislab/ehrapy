@@ -54,17 +54,14 @@ def qc_metrics(
         `max`
             Maximum value of the features.
 
-        Example:
-            .. code-block:: python
-
-                import ehrapy as ep
-                import seaborn as sns
-                import matplotlib.pyplot as plt
-
-                adata = ep.dt.mimic_2(encoded=True)
-                ep.pp.qc_metrics(adata)
-                sns.displot(adata.obs["missing_values_abs"])
-                plt.show()
+        Examples:
+            >>> import ehrapy as ep
+            >>> import seaborn as sns
+            >>> import matplotlib.pyplot as plt
+            >>> adata = ep.dt.mimic_2(encoded=True)
+            >>> ep.pp.qc_metrics(adata)
+            >>> sns.displot(adata.obs["missing_values_abs"])
+            >>> plt.show()
     """
     obs_metrics = _obs_qc_metrics(adata, layer, qc_vars)
     var_metrics = _var_qc_metrics(adata, layer)
@@ -280,13 +277,10 @@ def qc_lab_measurements(
     Returns:
         A modified AnnData object (copy if specified).
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.dt.mimic_2(encoded=True)
-            ep.pp.qc_lab_measurements(adata, measurements=["potassium_first"], verbose=True)
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> ep.pp.qc_lab_measurements(adata, measurements=["potassium_first"], verbose=True)
     """
     if copy:
         adata = adata.copy()

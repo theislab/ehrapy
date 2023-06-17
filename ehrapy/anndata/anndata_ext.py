@@ -3,12 +3,11 @@ from __future__ import annotations
 import random
 from collections import OrderedDict
 from string import ascii_letters
-from typing import Collection, Iterable, NamedTuple
+from typing import Collection, Iterable, NamedTuple, Sequence
 
 import numpy as np
 import pandas as pd
 from anndata import AnnData, concat
-from mudata import MuData
 from rich import print
 from rich.text import Text
 from rich.tree import Tree
@@ -39,6 +38,18 @@ def df_to_anndata(
 
     Returns:
         An AnnData object created from the given pandas dataframe
+
+    Examples:
+        >>> import ehrapy as ep
+        >>> import pandas as pd
+        >>> df = pd.DataFrame(
+        ...     {
+        ...         "patient_id": ["0", "1", "2", "3", "4"],
+        ...         "age": [65, 72, 58, 78, 82],
+        ...         "sex": ["M", "F", "F", "M", "F"],
+        ...     }
+        ... )
+        >>> adata = ep.df_to_anndata(df, index_column="patient_id")
     """
     # allow index 0
     if index_column is not None:
@@ -117,6 +128,11 @@ def anndata_to_df(
 
     Returns:
         The AnnData object as a pandas Dataframe
+
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> df = ep.ad.anndata_to_df(adata)
     """
     if layer is not None:
         X = adata.layers[layer]
@@ -166,8 +182,7 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False)
     Returns:
         The original AnnData object with moved or copied columns from X to obs
 
-    Example:
-
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.ad.move_to_obs(adata, ['age'], copy_obs=False)
@@ -227,11 +242,11 @@ def delete_from_obs(adata: AnnData, to_delete: list[str]) -> AnnData:
     Returns:
         The original AnnData object with deleted columns from obs.
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.anndata_ext.move_to_obs(adata, ['age'], copy_obs=True)
-        >>> ep.anndata_ext.delete_from_obs(adata, ['age'])
+        >>> ep.ad.move_to_obs(adata, ['age'], copy_obs=True)
+        >>> ep.ad.delete_from_obs(adata, ['age'])
     """
     if isinstance(to_delete, str):  # pragma: no cover
         to_delete = [to_delete]
@@ -259,11 +274,11 @@ def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
     Returns:
         A new AnnData object with moved columns from obs to X. This should not be used for datetime columns currently.
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.anndata_ext.move_to_obs(adata, ['age'], copy_obs=False)
-        >>> new_adata = ep.anndata_ext.move_to_x(adata, ['age'])
+        >>> ep.ad.move_to_obs(adata, ['age'], copy_obs=False)
+        >>> new_adata = ep.ad.move_to_x(adata, ['age'])
     """
     if isinstance(to_x, str):  # pragma: no cover
         to_x = [to_x]
@@ -301,7 +316,7 @@ def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
     return new_adata
 
 
-def get_column_indices(adata: AnnData, col_names: str | list[str]) -> list[int]:
+def get_column_indices(adata: AnnData, col_names: str | Sequence[str]) -> list[int]:
     """Fetches the column indices in X for a given list of column names
 
     Args:
@@ -311,7 +326,7 @@ def get_column_indices(adata: AnnData, col_names: str | list[str]) -> list[int]:
     Returns:
         Set of column indices
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.ad.get_column_indices(adata, ['age', 'gender_num', 'bmi'])
@@ -340,31 +355,27 @@ def _get_column_values(adata: AnnData, indices: int | list[int]) -> np.ndarray:
     return np.take(adata.X, indices, axis=1)
 
 
-def type_overview(
-    data: MuData | AnnData, sort_by: str | None = None, sort_reversed: bool = False
-) -> None:  # pragma: no cover
-    """Prints the current state of an :class:`~anndata.AnnData` or :class:`~mudata.MuData` object in a tree format.
+def type_overview(data: AnnData, sort_by: str | None = None, sort_reversed: bool = False) -> None:  # pragma: no cover
+    """Prints the current state of an :class:`~anndata.AnnData` object in a tree format.
 
     Output could be printed in sorted format by using one of `dtype`, `order`, `num_cats` or `None`, which sorts by data type, lexicographical order,
     number of unique values (excluding NaN's) and unsorted respectively. Note that sorting by `num_cats` only affects
     encoded variables currently and will display unencoded vars unsorted.
 
     Args:
-        data: :class:`~anndata.AnnData` or :class:`~mudata.MuData` object to display
+        data: :class:`~anndata.AnnData` object to display
         sort_by: How the tree output should be sorted. One of `dtype`, `order`, `num_cats` or None (Defaults to None -> unsorted)
         sort_reversed: Whether to sort in reversed order or not
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.anndata_ext.type_overview(adata)
+        >>> ep.ad.type_overview(adata)
     """
     if isinstance(data, AnnData):
         _adata_type_overview(data, sort_by, sort_reversed)
-    elif isinstance(data, MuData):
-        _mudata_type_overview(data, sort_by, sort_reversed)
     else:
-        raise ValueError(f"Unable to present object of type {type(data)}. Can only display AnnData or MuData objects!")
+        raise ValueError(f"Unable to present object of type {type(data)}. Can only display AnnData objects!")
 
 
 def _adata_type_overview(
@@ -431,33 +442,6 @@ def _adata_type_overview(
         logg.info(
             "Displaying AnnData object in sorted mode. Note that this might not be the exact same order of the variables in X or var are stored!"
         )
-    print(tree)
-
-
-def _mudata_type_overview(
-    mudata: MuData, sort: str | None = None, sort_reversed: bool = False
-) -> None:  # pragma: no cover
-    """Display the :class:`~mudata.MuData object in its current state (:class:`~anndata.AnnData objects with obs, shapes)
-
-    Args:
-        mudata: The :class:`~mudata.MuData object to display
-        sort: Whether to sort output or not
-        sort_reversed: Whether to sort output in reversed order or not
-    """
-    tree = Tree(
-        f"[b green]Variable names for AnnData object with {len(mudata.obs_names)} obs, {len(mudata.var_names)} vars and {len(mudata.mod.keys())} modalities\n",
-        guide_style="underline2 bright_blue",
-    )
-
-    modalities = sorted(list(mudata.mod.keys()), reverse=sort_reversed) if sort else list(mudata.mod.keys())
-    for mod in modalities:
-        branch = tree.add(
-            f"[b green]{mod}: [not b blue]n_vars x n_obs: {mudata.mod[mod].n_vars} x {mudata.mod[mod].n_obs}"
-        )
-        branch.add(
-            f"[blue]obs: [black]{', '.join(f'{_single_quote_string(col_name)}' for col_name in mudata.mod[mod].obs.columns)}"
-        )
-        branch.add(f"[blue]layers: [black]{', '.join(layer for layer in mudata.mod[mod].layers)}\n")
     print(tree)
 
 
@@ -528,7 +512,7 @@ def get_numeric_vars(adata: AnnData) -> list[str]:
     return adata.uns["numerical_columns"]
 
 
-def assert_numeric_vars(adata: AnnData, vars: list[str]):
+def assert_numeric_vars(adata: AnnData, vars: Sequence[str]):
     num_vars = get_numeric_vars(adata)
 
     try:
@@ -538,7 +522,7 @@ def assert_numeric_vars(adata: AnnData, vars: list[str]):
 
 
 def set_numeric_vars(
-    adata: AnnData, values: np.ndarray, vars: list[str] | None = None, copy: bool = False
+    adata: AnnData, values: np.ndarray, vars: Sequence[str] | None = None, copy: bool = False
 ) -> AnnData | None:
     """Sets the column names for numeric variables in X.
 
@@ -679,7 +663,7 @@ def generate_anndata(  # pragma: no cover
     Returns:
         A specified AnnData object.
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.ad.generate_anndata((2, 2), include_nlp=True)
     """
@@ -756,7 +740,7 @@ def generate_anndata(  # pragma: no cover
         size = m * n
         lengths = np.random.randint(3, 5, size)
         letters = np.array(list(ascii_letters))
-        gen_word = lambda l: "".join(np.random.choice(letters, l))
+        gen_word = lambda w: "".join(np.random.choice(letters, w))
         arr = np.array([gen_word(length) for length in lengths]).reshape(m, n)
 
         return pd.DataFrame(arr, columns=[gen_word(5) for _ in range(n)]).to_records(index=False, column_dtypes=dtype)
@@ -811,6 +795,11 @@ def get_obs_df(  # pragma: no cover
 
     Returns:
         A dataframe with `adata.obs_names` as index, and values specified by `keys` and `obsm_keys`.
+
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> ages = ep.ad.get_obs_df(adata, keys = ['age'])
     """
     return obs_df(adata=adata, keys=keys, obsm_keys=obsm_keys, layer=layer, gene_symbols=features)
 
@@ -832,6 +821,11 @@ def get_var_df(  # pragma: no cover
 
     Returns:
         A dataframe with `adata.var_names` as index, and values specified by `keys` and `varm_keys`.
+
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> four_patients = ep.ad.get_var_df(adata, keys = ['0', '1', '2', '3'])
     """
     return var_df(adata=adata, keys=keys, varm_keys=varm_keys, layer=layer)
 
@@ -840,7 +834,7 @@ def get_rank_features_df(
     adata: AnnData,
     group: str | Iterable[str],
     *,
-    key: str = "rank_genes_groups",
+    key: str = "rank_features_groups",
     pval_cutoff: float | None = None,
     log2fc_min: float | None = None,
     log2fc_max: float | None = None,
@@ -861,6 +855,12 @@ def get_rank_features_df(
 
     Returns:
         A Pandas DataFrame of all rank genes groups results.
+
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> ep.tl.rank_features_groups(adata, "service_unit")
+        >>> df = ep.ad.get_rank_features_df(adata, group="FICU")
     """
     return rank_genes_groups_df(
         adata=adata,

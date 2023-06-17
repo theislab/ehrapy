@@ -225,7 +225,6 @@ In contrast to a preprocessing function, a tool usually adds an easily interpret
     :nosignatures:
 
     tools.Translator
-    tools.HPOMapper
     tools.MedCAT
     tools.mc.run_unsupervised_training
     tools.mc.annotate_text
@@ -362,7 +361,7 @@ Visualize clusters using one of the embedding methods passing color='leiden'.
     plot.kmf
 ```
 
-## AnnData object transformation
+## AnnData utilities
 
 The ehrapy API exposes functions to transform a pandas dataframe into an AnnData object
 and vice versa.
@@ -381,7 +380,6 @@ and vice versa.
     anndata.get_var_df
     anndata.get_rank_features_df
     anndata.type_overview
-
 ```
 
 ## Settings
@@ -397,15 +395,16 @@ ep.settings.set_figure_params(dpi=150)
 ```
 
 Please refer to the [Scanpy settings documentation](https://scanpy.readthedocs.io/en/stable/api.html#settings)
-for configuration options. Ehrapy will adapt these in the future and update the documentation.
+for configuration options. ehrapy will adapt these in the future and update the documentation.
 
 ## Dependency Versions
 
-ehrapy is complex software with many dependencies. To ensure a consistent runtime environment you should save
-the tool versions of a conducted analysis. This comes in handy when trying to diagnose issues and to reproduce results.
+ehrapy is complex software with many dependencies. To ensure a consistent runtime environment you should save all
+versions that were used for an analysis. This comes in handy when trying to diagnose issues and to reproduce results.
 
 Call the function via:
 
 ```python
+import ehrapy as ep
 ep.print_versions()
 ```

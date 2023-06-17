@@ -3,7 +3,7 @@ version: 2
 sphinx:
     configuration: docs/conf.py
 
-formats: all
+formats: []
 
 build:
     os: ubuntu-22.04

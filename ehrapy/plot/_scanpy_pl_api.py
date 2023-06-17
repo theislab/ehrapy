@@ -1077,17 +1077,14 @@ def pca(
     Returns:
         If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.data.mimic_2(encoded=True)
-            ep.pp.knn_impute(adata)
-            ep.pp.log_norm(adata, offset=1)
-            ep.pp.neighbors(adata)
-            ep.tl.pca(adata)
-            ep.pl.pca(adata, color="service_unit)
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> ep.pp.knn_impute(adata)
+        >>> ep.pp.log_norm(adata, offset=1)
+        >>> ep.pp.neighbors(adata)
+        >>> ep.tl.pca(adata)
+        >>> ep.pl.pca(adata, color="service_unit")
 
     Preview:
         .. image:: /_static/docstring_previews/pca.png
@@ -1139,17 +1136,14 @@ def pca_loadings(
     Returns:
         If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.data.mimic_2(encoded=True)
-            ep.pp.knn_impute(adata)
-            ep.pp.log_norm(adata, offset=1)
-            ep.pp.neighbors(adata)
-            ep.pp.pca(adata)
-            ep.pl.pca_loadings(adata, components='1,2,3')
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> ep.pp.knn_impute(adata)
+        >>> ep.pp.log_norm(adata, offset=1)
+        >>> ep.pp.neighbors(adata)
+        >>> ep.pp.pca(adata)
+        >>> ep.pl.pca_loadings(adata, components='1,2,3')
 
     Preview:
         .. image:: /_static/docstring_previews/pca_loadings.png
@@ -1178,17 +1172,14 @@ def pca_variance_ratio(
     Returns:
         If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.data.mimic_2(encoded=True)
-            ep.pp.knn_impute(adata)
-            ep.pp.log_norm(adata, offset=1)
-            ep.pp.neighbors(adata)
-            ep.pp.pca(adata)
-            ep.pl.pca_variance_ratio(adata, n_pcs=8)
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> ep.pp.knn_impute(adata)
+        >>> ep.pp.log_norm(adata, offset=1)
+        >>> ep.pp.neighbors(adata)
+        >>> ep.pp.pca(adata)
+        >>> ep.pl.pca_variance_ratio(adata, n_pcs=8)
 
     Preview:
         .. image:: /_static/docstring_previews/pca_variance_ratio.png
@@ -1212,17 +1203,14 @@ def pca_overview(adata: AnnData, **params):  # pragma: no cover
     Returns:
         If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.data.mimic_2(encoded=True)
-            ep.pp.knn_impute(adata)
-            ep.pp.log_norm(adata, offset=1)
-            ep.pp.neighbors(adata)
-            ep.pp.pca(adata)
-            ep.pl.pca_overview(adata, components='1,2,3', color="service_unit")
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> ep.pp.knn_impute(adata)
+        >>> ep.pp.log_norm(adata, offset=1)
+        >>> ep.pp.neighbors(adata)
+        >>> ep.pp.pca(adata)
+        >>> ep.pl.pca_overview(adata, components='1,2,3', color="service_unit")
 
     Preview:
         .. image:: /_static/docstring_previews/pca_overview_1.png
@@ -1253,30 +1241,23 @@ def tsne(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover
     Returns:
         If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.data.mimic_2(encoded=True)
-            ep.pp.knn_impute(adata)
-            ep.pp.log_norm(adata, offset=1)
-            ep.pp.neighbors(adata)
-            ep.tl.tsne(adata)
-            ep.pl.tsne(adata)
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> ep.pp.knn_impute(adata)
+        >>> ep.pp.log_norm(adata, offset=1)
+        >>> ep.pp.neighbors(adata)
+        >>> ep.tl.tsne(adata)
+        >>> ep.pl.tsne(adata)
 
         .. image:: /_static/docstring_previews/tsne_1.png
 
-        .. code-block:: python
-
-            ep.pl.tsne(adata, color=["day_icu_intime", "service_unit"], wspace=0.5, title=["Day of ICU admission", "Service unit"])
+        >>> ep.pl.tsne(adata, color=["day_icu_intime", "service_unit"], wspace=0.5, title=["Day of ICU admission", "Service unit"])
 
         .. image:: /_static/docstring_previews/tsne_2.png
 
-        .. code-block:: python
-
-            ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
-            ep.pl.tsne(adata, color=["leiden_0_5"], title="Leiden 0.5")
+        >>> ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
+        >>> ep.pl.tsne(adata, color=["leiden_0_5"], title="Leiden 0.5")
 
         .. image:: /_static/docstring_previews/tsne_3.png
     """
@@ -1322,30 +1303,23 @@ def umap(adata: AnnData | MedCAT, **kwargs) -> Axes | list[Axes] | None:  # prag
     Returns:
         If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.data.mimic_2(encoded=True)
-            ep.pp.knn_impute(adata)
-            ep.pp.log_norm(adata, offset=1)
-            ep.pp.neighbors(adata)
-            ep.tl.umap(adata)
-            ep.pl.umap(adata)
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> ep.pp.knn_impute(adata)
+        >>> ep.pp.log_norm(adata, offset=1)
+        >>> ep.pp.neighbors(adata)
+        >>> ep.tl.umap(adata)
+        >>> ep.pl.umap(adata)
 
         .. image:: /_static/docstring_previews/umap_1.png
 
-        .. code-block:: python
-
-            ep.pl.umap(adata, color=["day_icu_intime", "service_unit"], wspace=0.5, title=["Day of ICU admission", "Service unit"])
+        >>> ep.pl.umap(adata, color=["day_icu_intime", "service_unit"], wspace=0.5, title=["Day of ICU admission", "Service unit"])
 
         .. image:: /_static/docstring_previews/umap_2.png
 
-        .. code-block:: python
-
-            ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
-            ep.pl.umap(adata, color=["leiden_0_5"], title="Leiden 0.5")
+        >>> ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
+        >>> ep.pl.umap(adata, color=["leiden_0_5"], title="Leiden 0.5")
 
         .. image:: /_static/docstring_previews/umap_3.png
     """
@@ -1389,17 +1363,14 @@ def diffmap(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover
     Returns:
         If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.data.mimic_2(encoded=True)
-            ep.pp.knn_impute(adata)
-            ep.pp.log_norm(adata, offset=1)
-            ep.pp.neighbors(adata)
-            ep.tl.diffmap(adata)
-            ep.pl.diffmap(adata, color='day_icu_intime')
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> ep.pp.knn_impute(adata)
+        >>> ep.pp.log_norm(adata, offset=1)
+        >>> ep.pp.neighbors(adata)
+        >>> ep.tl.diffmap(adata)
+        >>> ep.pl.diffmap(adata, color='day_icu_intime')
 
     Preview:
         .. image:: /_static/docstring_previews/diffmap.png
@@ -1450,25 +1421,22 @@ def draw_graph(
     Returns:
         If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.data.mimic_2(encoded=True)
-            ep.pp.knn_impute(adata)
-            ep.pp.log_norm(adata, offset=1)
-            ep.pp.neighbors(adata)
-            ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
-            ep.tl.paga(adata, groups="leiden_0_5")
-            ep.pl.paga(
-                adata,
-                color=["leiden_0_5", "day_28_flg"],
-                cmap=ep.pl.Colormaps.grey_red.value,
-                title=["Leiden 0.5", "Died in less than 28 days"],
-            )
-            ep.tl.draw_graph(adata, init_pos="paga")
-            ep.pl.draw_graph(adata, color=["leiden_0_5", "icu_exp_flg"], legend_loc="on data")
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> ep.pp.knn_impute(adata)
+        >>> ep.pp.log_norm(adata, offset=1)
+        >>> ep.pp.neighbors(adata)
+        >>> ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
+        >>> ep.tl.paga(adata, groups="leiden_0_5")
+        >>> ep.pl.paga(
+        ...     adata,
+        ...     color=["leiden_0_5", "day_28_flg"],
+        ...     cmap=ep.pl.Colormaps.grey_red.value,
+        ...     title=["Leiden 0.5", "Died in less than 28 days"],
+        ... )
+        >>> ep.tl.draw_graph(adata, init_pos="paga")
+        >>> ep.pl.draw_graph(adata, color=["leiden_0_5", "icu_exp_flg"], legend_loc="on data")
 
     Preview:
         .. image:: /_static/docstring_previews/draw_graph_1.png
@@ -1646,17 +1614,14 @@ def embedding(
     Returns:
         If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.data.mimic_2(encoded=True)
-            ep.pp.knn_impute(adata)
-            ep.pp.log_norm(adata, offset=1)
-            ep.pp.neighbors(adata)
-            ep.tl.umap(adata)
-            ep.pl.embedding(adata, 'X_umap', color='icu_exp_flg')
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> ep.pp.knn_impute(adata)
+        >>> ep.pp.log_norm(adata, offset=1)
+        >>> ep.pp.neighbors(adata)
+        >>> ep.tl.umap(adata)
+        >>> ep.pl.embedding(adata, 'X_umap', color='icu_exp_flg')
 
     Preview:
         .. image:: /_static/docstring_previews/embedding.png
@@ -1794,19 +1759,16 @@ def embedding_density(
     Returns:
         If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.data.mimic_2(encoded=True)
-            ep.pp.knn_impute(adata)
-            ep.pp.log_norm(adata, offset=1)
-            ep.pp.neighbors(adata)
-            ep.tl.umap(adata)
-            ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
-            ep.tl.embedding_density(adata, groupby='leiden_0_5', key_added='icu_exp_flg')
-            ep.pl.embedding_density(adata, key='icu_exp_flg')
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> ep.pp.knn_impute(adata)
+        >>> ep.pp.log_norm(adata, offset=1)
+        >>> ep.pp.neighbors(adata)
+        >>> ep.tl.umap(adata)
+        >>> ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
+        >>> ep.tl.embedding_density(adata, groupby='leiden_0_5', key_added='icu_exp_flg')
+        >>> ep.pl.embedding_density(adata, key='icu_exp_flg')
 
     Preview:
         .. image:: /_static/docstring_previews/embedding_density.png
@@ -1852,21 +1814,18 @@ def dpt_groups_pseudotime(
         show: Whether to show the plot.
         save: Whether to save the plot or a path to save the plot.
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-            import numpy as np
-
-            adata = ep.data.mimic_2(encoded=True)
-            ep.pp.knn_impute(adata)
-            ep.pp.log_norm(adata, offset=1)
-            ep.pp.neighbors(adata, method='gauss')
-            ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
-            ep.tl.diffmap(adata, n_comps=10)
-            adata.uns['iroot'] = np.flatnonzero(adata.obs['leiden_0_5'] == '0')[0]
-            ep.tl.dpt(adata, n_branchings=3)
-            ep.pl.dpt_groups_pseudotime(adata)
+    Examples:
+        >>> import ehrapy as ep
+        >>> import numpy as np
+        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> ep.pp.knn_impute(adata)
+        >>> ep.pp.log_norm(adata, offset=1)
+        >>> ep.pp.neighbors(adata, method='gauss')
+        >>> ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
+        >>> ep.tl.diffmap(adata, n_comps=10)
+        >>> adata.uns['iroot'] = np.flatnonzero(adata.obs['leiden_0_5'] == '0')[0]
+        >>> ep.tl.dpt(adata, n_branchings=3)
+        >>> ep.pl.dpt_groups_pseudotime(adata)
 
     Preview:
         .. image:: /_static/docstring_previews/dpt_groups_pseudotime.png
@@ -1890,21 +1849,18 @@ def dpt_timeseries(
         show: Whether to show the plot.
         save: Whether to save the plot or a path to save the plot.
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            import numpy as np
-            adata = ep.data.mimic_2(encoded=True)
-            ep.pp.knn_impute(adata)
-            ep.pp.log_norm(adata, offset=1)
-            ep.pp.neighbors(adata, method='gauss')
-            ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
-            ep.tl.diffmap(adata, n_comps=10)
-            adata.uns['iroot'] = np.flatnonzero(adata.obs['leiden_0_5'] == '0')[0]
-            ep.tl.dpt(adata, n_branchings=3)
-            ep.pl.dpt_timeseries(adata)
+    Examples:
+        >>> import ehrapy as ep
+        >>> import numpy as np
+        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> ep.pp.knn_impute(adata)
+        >>> ep.pp.log_norm(adata, offset=1)
+        >>> ep.pp.neighbors(adata, method='gauss')
+        >>> ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
+        >>> ep.tl.diffmap(adata, n_comps=10)
+        >>> adata.uns['iroot'] = np.flatnonzero(adata.obs['leiden_0_5'] == '0')[0]
+        >>> ep.tl.dpt(adata, n_branchings=3)
+        >>> ep.pl.dpt_timeseries(adata)
 
     Preview:
         .. image:: /_static/docstring_previews/dpt_timeseries.png
@@ -2022,23 +1978,20 @@ def paga(
         A :class:`~matplotlib.axes.Axes` object, if `ax` is `None`, else `None`.
         If `return_data`, return the timeseries data in addition to an axes.
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.data.mimic_2(encoded=True)
-            ep.pp.knn_impute(adata)
-            ep.pp.log_norm(adata, offset=1)
-            ep.pp.neighbors(adata)
-            ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
-            ep.tl.paga(adata, groups="leiden_0_5")
-            ep.pl.paga(
-                adata,
-                color=["leiden_0_5", "day_28_flg"],
-                cmap=ep.pl.Colormaps.grey_red.value,
-                title=["Leiden 0.5", "Died in less than 28 days"],
-            )
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> ep.pp.knn_impute(adata)
+        >>> ep.pp.log_norm(adata, offset=1)
+        >>> ep.pp.neighbors(adata)
+        >>> ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
+        >>> ep.tl.paga(adata, groups="leiden_0_5")
+        >>> ep.pl.paga(
+        ...     adata,
+        ...     color=["leiden_0_5", "day_28_flg"],
+        ...     cmap=ep.pl.Colormaps.grey_red.value,
+        ...     title=["Leiden 0.5", "Died in less than 28 days"],
+        ... )
 
     Preview:
         .. image:: /_static/docstring_previews/paga.png
@@ -2298,18 +2251,15 @@ def rank_features_groups(
                  But passing `sharey=False`, each panel has its own y-axis range.
         {show_save_ax}
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.data.mimic_2(encoded=True)
-            ep.pp.knn_impute(adata)
-            ep.pp.log_norm(adata, offset=1)
-            ep.pp.neighbors(adata)
-            ep.tl.leiden(adata, resolution=0.15, key_added="leiden_0_5")
-            ep.tl.rank_features_groups(adata, groupby="leiden_0_5")
-            ep.pl.rank_features_groups(adata, key="rank_features_groups")
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> ep.pp.knn_impute(adata)
+        >>> ep.pp.log_norm(adata, offset=1)
+        >>> ep.pp.neighbors(adata)
+        >>> ep.tl.leiden(adata, resolution=0.15, key_added="leiden_0_5")
+        >>> ep.tl.rank_features_groups(adata, groupby="leiden_0_5")
+        >>> ep.pl.rank_features_groups(adata, key="rank_features_groups")
 
     Preview:
         .. image:: /_static/docstring_previews/rank_features_groups.png
@@ -2365,18 +2315,15 @@ def rank_features_groups_violin(
         size: Size of the jitter points.
         {show_save_ax}
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.data.mimic_2(encoded=True)
-            ep.pp.knn_impute(adata)
-            ep.pp.log_norm(adata, offset=1)
-            ep.pp.neighbors(adata)
-            ep.tl.leiden(adata, resolution=0.15, key_added="leiden_0_5")
-            ep.tl.rank_features_groups(adata, groupby="leiden_0_5")
-            ep.pl.rank_features_groups_violin(adata, key="rank_features_groups", n_features=5)
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> ep.pp.knn_impute(adata)
+        >>> ep.pp.log_norm(adata, offset=1)
+        >>> ep.pp.neighbors(adata)
+        >>> ep.tl.leiden(adata, resolution=0.15, key_added="leiden_0_5")
+        >>> ep.tl.rank_features_groups(adata, groupby="leiden_0_5")
+        >>> ep.pl.rank_features_groups_violin(adata, key="rank_features_groups", n_features=5)
 
     Preview:
         .. image:: /_static/docstring_previews/rank_features_groups_violin_1.png
@@ -2443,18 +2390,15 @@ def rank_features_groups_stacked_violin(
         If `return_fig` is `True`, returns a :class:`StackedViolin` object,
         else if `show` is false, return axes dict
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.data.mimic_2(encoded=True)
-            ep.pp.knn_impute(adata)
-            ep.pp.log_norm(adata, offset=1)
-            ep.pp.neighbors(adata)
-            ep.tl.leiden(adata, resolution=0.15, key_added="leiden_0_5")
-            ep.tl.rank_features_groups(adata, groupby="leiden_0_5")
-            ep.pl.rank_features_groups_stacked_violin(adata, key="rank_features_groups", n_features=5)
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> ep.pp.knn_impute(adata)
+        >>> ep.pp.log_norm(adata, offset=1)
+        >>> ep.pp.neighbors(adata)
+        >>> ep.tl.leiden(adata, resolution=0.15, key_added="leiden_0_5")
+        >>> ep.tl.rank_features_groups(adata, groupby="leiden_0_5")
+        >>> ep.pl.rank_features_groups_stacked_violin(adata, key="rank_features_groups", n_features=5)
 
     Preview:
         .. image:: /_static/docstring_previews/rank_features_groups_stacked_violin.png
@@ -2503,18 +2447,15 @@ def rank_features_groups_heatmap(
         show: Whether to show the plot.
         save: Where to save the plot.
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.data.mimic_2(encoded=True)
-            ep.pp.knn_impute(adata)
-            ep.pp.log_norm(adata, offset=1)
-            ep.pp.neighbors(adata)
-            ep.tl.leiden(adata, resolution=0.15, key_added="leiden_0_5")
-            ep.tl.rank_features_groups(adata, groupby="leiden_0_5")
-            ep.pl.rank_features_groups_heatmap(adata, key="rank_features_groups")
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> ep.pp.knn_impute(adata)
+        >>> ep.pp.log_norm(adata, offset=1)
+        >>> ep.pp.neighbors(adata)
+        >>> ep.tl.leiden(adata, resolution=0.15, key_added="leiden_0_5")
+        >>> ep.tl.rank_features_groups(adata, groupby="leiden_0_5")
+        >>> ep.pl.rank_features_groups_heatmap(adata, key="rank_features_groups")
 
     Preview:
         .. image:: /_static/docstring_previews/rank_features_groups_heatmap.png
@@ -2583,16 +2524,13 @@ def rank_features_groups_dotplot(
         else if `show` is false, return axes dict
 
     Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.data.mimic_2(encoded=True)
-            ep.pp.knn_impute(adata)
-            ep.pp.neighbors(adata)
-            ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
-            ep.tl.rank_features_groups(adata, groupby="leiden_0_5")
-            ep.pl.rank_features_groups_dotplot(adata, key="rank_features_groups", groupby="leiden_0_5")
+        >>> import ehrapy as ep
+        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> ep.pp.knn_impute(adata)
+        >>> ep.pp.neighbors(adata)
+        >>> ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
+        >>> ep.tl.rank_features_groups(adata, groupby="leiden_0_5")
+        >>> ep.pl.rank_features_groups_dotplot(adata, key="rank_features_groups", groupby="leiden_0_5")
 
     Preview:
         .. image:: /_static/docstring_previews/rank_features_groups_dotplot.png
@@ -2610,6 +2548,7 @@ def rank_features_groups_dotplot(
         show=show,
         save=save,
         return_fig=return_fig,
+        colorbar_title="Mean value in group",
         **kwds,
     )
 
@@ -2663,16 +2602,13 @@ def rank_features_groups_matrixplot(
         else if `show` is false, return axes dict
 
     Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.data.mimic_2(encoded=True)
-            ep.pp.knn_impute(adata)
-            ep.pp.neighbors(adata)
-            ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
-            ep.tl.rank_features_groups(adata, groupby="leiden_0_5")
-            ep.pl.rank_features_groups_matrixplot(adata, key="rank_features_groups", groupby="leiden_0_5")
+        >>> import ehrapy as ep
+        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> ep.pp.knn_impute(adata)
+        >>> ep.pp.neighbors(adata)
+        >>> ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
+        >>> ep.tl.rank_features_groups(adata, groupby="leiden_0_5")
+        >>> ep.pl.rank_features_groups_matrixplot(adata, key="rank_features_groups", groupby="leiden_0_5")
 
     Preview:
         .. image:: /_static/docstring_previews/rank_features_groups_matrixplot.png
@@ -2723,18 +2659,15 @@ def rank_features_groups_tracksplot(
         show: Whether to show the plot.
         save: Where to save the plot.
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.data.mimic_2(encoded=True)
-            ep.pp.knn_impute(adata)
-            ep.pp.log_norm(adata, offset=1)
-            ep.pp.neighbors(adata)
-            ep.tl.leiden(adata, resolution=0.15, key_added="leiden_0_5")
-            ep.tl.rank_features_groups(adata, groupby="leiden_0_5")
-            ep.pl.rank_features_groups_tracksplot(adata, key="rank_features_groups")
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> ep.pp.knn_impute(adata)
+        >>> ep.pp.log_norm(adata, offset=1)
+        >>> ep.pp.neighbors(adata)
+        >>> ep.tl.leiden(adata, resolution=0.15, key_added="leiden_0_5")
+        >>> ep.tl.rank_features_groups(adata, groupby="leiden_0_5")
+        >>> ep.pl.rank_features_groups_tracksplot(adata, key="rank_features_groups")
 
     Preview:
         .. image:: /_static/docstring_previews/rank_features_groups_tracksplot.png

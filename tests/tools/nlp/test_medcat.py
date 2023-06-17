@@ -24,7 +24,4 @@ class TestMedCAT:
             X=np.array([["Deutschland", "Zöliakie", "Tumor"], ["Frankreich", "Allergie", "Krebs"]], np.dtype(object)),
             obs=pd.DataFrame(data=obs_data),
             var=pd.DataFrame(data=var_data, index=["Land", "Prädisposition", "Krankheit"]),
-            dtype=np.dtype(object),
         )
-
-        # patient_notes = pd.read_csv(f"{_TEST_PATH}/pt_notes.csv")

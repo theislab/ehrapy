@@ -58,7 +58,7 @@ def ols(
         ax: A matplotlib axes object. Only works if plotting a single component.
         title: Set the title of the plot.
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=False)
         >>> co2_lm_result = ep.tl.ols(adata, var_names=['pco2_first', 'tco2_first'], formula='tco2_first ~ pco2_first', missing="drop").fit()
@@ -162,7 +162,7 @@ def kmf(
         show: Show the plot, do not return axis.
         title: Set the title of the plot.
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> import numpy as np
         >>> adata = ep.dt.mimic_2(encoded=False)

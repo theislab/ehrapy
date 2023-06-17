@@ -42,7 +42,7 @@ def explicit_impute(
         If copy is True, a modified copy of the original AnnData object with imputed X.
         If copy is False, the original AnnData object is modified in place.
 
-    Example:
+    Examples:
         Replace all missing values in adata with the value 0:
 
         >>> import ehrapy as ep
@@ -141,7 +141,7 @@ def simple_impute(
         ValueError:
             If an unknown imputation strategy is provided.
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.simple_impute(adata, strategy="median")
@@ -220,7 +220,7 @@ def knn_impute(
         Raises:
             ValueError: If the input data matrix contains only categorical (non-numeric) values.
 
-        Example:
+        Examples:
             >>> import ehrapy as ep
             >>> adata = ep.dt.mimic_2(encoded=True)
             >>> ep.pp.knn_impute(adata)
@@ -328,7 +328,7 @@ def miss_forest_impute(
     Returns:
         The imputed (but unencoded) AnnData object.
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.miss_forest_impute(adata)
@@ -467,7 +467,7 @@ def soft_impute(
     Returns:
         The AnnData object with imputed missing values.
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.soft_impute(adata)
@@ -624,7 +624,7 @@ def iterative_svd_impute(
         ValueError:
             If `init_fill_method` is not one of `{'zero', 'mean', 'median'}`.
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.iterative_svd_impute(adata)
@@ -767,13 +767,10 @@ def matrix_factorization_impute(
     Returns:
         The imputed AnnData object
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.dt.mimic_2(encoded=True)
-            ep.pp.matrix_factorization_impute(adata)
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> ep.pp.matrix_factorization_impute(adata)
     """
     if copy:
         adata = adata.copy()
@@ -894,7 +891,7 @@ def nuclear_norm_minimization_impute(
     Returns:
         The imputed AnnData object.
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.nuclear_norm_minimization_impute(adata)
@@ -1020,9 +1017,8 @@ def mice_forest_impute(
     Returns:
         The imputed AnnData object.
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
-
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.mice_forest_impute(adata)
     """

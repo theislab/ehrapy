@@ -343,15 +343,12 @@ def embedding_density(
         and `[groupby]` denotes the parameter input.
         Updates `adata.uns` with an additional field `[key_added]_params`.
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.data.mimic_2(encoded=True)
-            ep.tl.umap(adata)
-            ep.tl.embedding_density(adata, basis='umap', groupby='phase')
-            ep.pl.embedding_density(adata, basis='umap', key='umap_density_phase', group='G1')
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> ep.tl.umap(adata)
+        >>> ep.tl.embedding_density(adata, basis='umap', groupby='phase')
+        >>> ep.pl.embedding_density(adata, basis='umap', key='umap_density_phase', group='G1')
     """
     sc.tl.embedding_density(adata=adata, basis=basis, groupby=groupby, key_added=key_added, components=components)
 
@@ -556,13 +553,11 @@ def dendrogram(
     Returns:
         If `inplace=False`, returns dendrogram information, else `adata.uns[key_added]` is updated with it.
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-            adata = ep.data.mimic_2(encoded=True)
-            ep.tl.dendrogram(adata, groupby='service_unit')
-            ep.pl.dendrogram(adata)
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> ep.tl.dendrogram(adata, groupby='service_unit')
+        >>> ep.pl.dendrogram(adata)
     """
     return sc.tl.dendrogram(
         adata=adata,
@@ -747,14 +742,11 @@ def ingest(
         * if `inplace=False` returns a copy of `adata` with mapped embeddings and labels in `obsm` and `obs` correspondingly
         * if `inplace=True` returns `None` and updates `adata.obsm` and `adata.obs` with mapped embeddings and labels
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            ep.pp.neighbors(adata_ref)
-            ep.tl.umap(adata_ref)
-            ep.tl.ingest(adata, adata_ref, obs="service_unit")
+    Examples:
+        >>> import ehrapy as ep
+        >>> ep.pp.neighbors(adata_ref)
+        >>> ep.tl.umap(adata_ref)
+        >>> ep.tl.ingest(adata, adata_ref, obs="service_unit")
     """
     return sc.tl.ingest(
         adata=adata,
@@ -841,13 +833,11 @@ def rank_features_groups(
                     Only if `reference` is set to `'rest'`.
                     Fraction of observations from the union of the rest of each group containing the features.
 
-     Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-            adata = ep.dt.mimic_2(encoded=True)
-            ep.tl.rank_features_groups(adata, "service_unit")
-            ep.pl.rank_features_groups(adata)
+     Examples:
+         >>> import ehrapy as ep
+         >>> adata = ep.dt.mimic_2(encoded=True)
+         >>> ep.tl.rank_features_groups(adata, "service_unit")
+         >>> ep.pl.rank_features_groups(adata)
     """
     return sc.tl.rank_genes_groups(
         adata=adata,
@@ -899,13 +889,11 @@ def filter_rank_features_groups(
     Returns:
         Same output as :func:`ehrapy.tl.rank_features_groups` but with filtered feature names set to `nan`
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-            adata = ep.dt.mimic_2(encoded=True)
-            ep.tl.rank_features_groups(adata, "service_unit")
-            ep.pl.rank_features_groups(adata)
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> ep.tl.rank_features_groups(adata, "service_unit")
+        >>> ep.pl.rank_features_groups(adata)
     """
     return sc.tl.filter_rank_genes_groups(
         adata=adata,
@@ -967,7 +955,7 @@ def marker_feature_overlap(
         For `inplace=True` `adata.uns` is updated with an additional field
         specified by the `key_added` parameter (default = 'marker_gene_overlap').
 
-    Example:
+    Examples:
         TODO
     """
     return sc.tl.marker_gene_overlap(

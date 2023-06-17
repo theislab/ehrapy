@@ -31,7 +31,7 @@ This will automatically also clone and update the submodules.
 
 ## How to set up your development environment
 
-You need Python 3.8+ and the following tools:
+You need Python 3.9+ and the following tools:
 
 -   [Poetry]
 -   [Nox]

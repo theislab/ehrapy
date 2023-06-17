@@ -7,7 +7,7 @@ from pathlib import Path
 HERE = Path(__file__).parent
 sys.path[:0] = [str(HERE.parent), str(HERE / "extensions")]
 
-needs_sphinx = "4.3"  # Nicer param docs
+needs_sphinx = "4.3"
 
 # General information about the project.
 project = "ehrapy"
@@ -15,8 +15,8 @@ copyright = "2021, Lukas Heumos, Theislab"
 author = "Lukas Heumos"
 github_repo = "ehrapy"
 
-version = "0.4.0"
-release = "0.4.0"
+version = "0.5.0"
+release = "0.5.0"
 
 extensions = [
     "myst_parser",
@@ -94,6 +94,7 @@ intersphinx_mapping = dict(
     pymde=("https://pymde.org/", None),
     flax=("https://flax.readthedocs.io/en/latest/", None),
     jax=("https://jax.readthedocs.io/en/latest/", None),
+    lamin=("https://lamin.ai/docs", None),
 )
 
 language = "en"
@@ -178,7 +179,9 @@ nbsphinx_thumbnails = {
     "tutorials/notebooks/mimic_2_introduction": "_static/tutorials/catheter.png",
     "tutorials/notebooks/mimic_2_fate": "_static/tutorials/fate.png",
     "tutorials/notebooks/mimic_2_survival_analysis": "_static/tutorials/survival.png",
+    "tutorials/notebooks/mimic_2_causal_inference": "_static/tutorials/causal_inference.png",
     "tutorials/notebooks/diabetes_130": "_static/tutorials/diabetes.png",
     "tutorials/notebooks/medcat": "_static/tutorials/nlp.png",
     "tutorials/notebooks/ml_usecases": "_static/tutorials/machine_learning.png",
+    "tutorials/notebooks/ontology_mapping": "_static/tutorials/ontology.png",
 }

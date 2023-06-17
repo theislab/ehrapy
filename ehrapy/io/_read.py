@@ -10,7 +10,6 @@ import pandas as pd
 from _collections import OrderedDict
 from anndata import AnnData
 from anndata import read as read_h5
-from mudata import MuData
 from rich import print
 
 from ehrapy import ehrapy_settings, settings
@@ -26,12 +25,11 @@ def read_csv(
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
     columns_x_only: dict[str, list[str]] | list[str] | None = None,
     return_dfs: bool = False,
-    return_mudata: bool = False,
     cache: bool = False,
     backup_url: str | None = None,
     download_dataset_name: str | None = None,
     **kwargs,
-) -> AnnData | dict[str, AnnData] | MuData:
+) -> AnnData | dict[str, AnnData]:
     """Reads or downloads a desired directory of csv/tsv files or a single csv/tsv file.
 
     Args:
@@ -42,22 +40,17 @@ def read_csv(
         columns_x_only: These columns will be added to X only and all remaining columns to obs.
                         Note that datetime columns will always be added to .obs though.
         return_dfs: Whether to return one or several Pandas DataFrames.
-        return_mudata: Whether to create and return a MuData object.
-                       This is primarily used for complex datasets which require several AnnData files.
         cache: Whether to write to cache when reading or not. Defaults to False .
         download_dataset_name: Name of the file or directory in case the dataset is downloaded.
         backup_url: URL to download the data file(s) from if not yet existing.
 
     Returns:
-        An :class:`~anndata.AnnData` object, a :class:`~mudata.MuData` object or a dict with an identifier (the filename, without extension)
+        An :class:`~anndata.AnnData` object or a dict with an identifier (the filename, without extension)
         for each :class:`~anndata.AnnData` object in the dict
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.io.read_csv("myfile.csv")
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.io.read_csv("myfile.csv")
     """
     _check_columns_only_params(columns_obs_only, columns_x_only)
     file: Path = Path(dataset_path)
@@ -71,7 +64,6 @@ def read_csv(
         columns_obs_only=columns_obs_only,
         columns_x_only=columns_x_only,
         return_dfs=return_dfs,
-        return_mudata=return_mudata,
         cache=cache,
         **kwargs,
     )
@@ -85,13 +77,12 @@ def _read_csv(
     columns_obs_only: dict[str, list[str]] | list[str] | None,
     columns_x_only: dict[str, list[str]] | list[str] | None,
     return_dfs: bool = False,
-    return_mudata: bool = False,
     cache: bool = False,
     **kwargs,
-) -> AnnData | dict[str, AnnData] | MuData:
+) -> AnnData | dict[str, AnnData]:
     """Internal interface of the read_csv method."""
-    if cache and (return_mudata or return_dfs):
-        raise CachingNotSupported("Caching is currently not supported for MuData or Pandas DataFrame objects.")
+    if cache and return_dfs:
+        raise CachingNotSupported("Caching is currently not supported for Pandas DataFrame objects.")
     if return_dfs and (columns_x_only or columns_obs_only):
         raise Warning(
             "Parameters columns_x_only and columns_obs_only are not supported when returning Pandas DataFrames."
@@ -113,7 +104,6 @@ def _read_csv(
             columns_obs_only=columns_obs_only,
             columns_x_only=columns_x_only,
             return_dfs=return_dfs,
-            return_mudata=return_mudata,  # type: ignore
         )
     # input is a single file
     else:
@@ -134,7 +124,7 @@ def read_h5ad(
     dataset_path: Path | str,
     backup_url: str | None = None,
     download_dataset_name: str | None = None,
-) -> AnnData | dict[str, AnnData] | MuData:
+) -> AnnData | dict[str, AnnData]:
     """Reads or downloads a desired directory of h5ad files or a single h5ad file.
 
     Args:
@@ -146,14 +136,11 @@ def read_h5ad(
         An :class:`~anndata.AnnData` object or a dict with an identifier (the filename, without extension)
         for each :class:`~anndata.AnnData` object in the dict
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.dt.mimic_2(encoded=True)
-            ep.io.write("mimic_2.h5ad", adata)
-            adata_2 = ep.io.read_h5ad("mimic_2.h5ad")
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> ep.io.write("mimic_2.h5ad", adata)
+        >>> adata_2 = ep.io.read_h5ad("mimic_2.h5ad")
     """
     file_path: Path = Path(dataset_path)
     if not file_path.exists():
@@ -176,7 +163,6 @@ def _read_from_directory(
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
     columns_x_only: dict[str, list[str]] | list[str] | None = None,
     return_dfs: bool = False,
-    return_mudata: bool = False,
 ) -> dict[str, AnnData] | dict[str, pd.DataFrame]:
     """Parse AnnData objects or Pandas DataFrames from a directory containing the data files"""
     if return_dfs:
@@ -190,7 +176,6 @@ def _read_from_directory(
             columns_obs_only=columns_obs_only,
             columns_x_only=columns_x_only,
             return_dfs=False,
-            return_mudata=return_mudata,
         )
         # cache results
         if cache:
@@ -212,10 +197,9 @@ def _read_multiple_csv(  # noqa: N802
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
     columns_x_only: dict[str, list[str]] | list[str] | None = None,
     return_dfs: bool = False,
-    return_mudata_object: bool = False,
     cache: bool = False,
     **kwargs,
-) -> tuple[dict[str, AnnData], dict[str, list[str] | None]] | MuData | dict[str, pd.DataFrame]:
+) -> tuple[dict[str, AnnData], dict[str, list[str] | None]] | dict[str, pd.DataFrame]:
     """Read a dataset containing multiple .csv/.tsv files.
 
     Args:
@@ -225,21 +209,19 @@ def _read_multiple_csv(  # noqa: N802
         columns_obs_only: List of columns per file (AnnData object) which should only be stored in .obs, but not in X. Useful for free text annotations.
         columns_x_only: List of columns per file (AnnData object) which should only be stored in .X, but not in obs. Datetime columns will be added to .obs regardless.
         return_dfs: When set to True, return a dictionary of Pandas DataFrames.
-        return_mudata_object: When set to True, return a :class:`~mudata.MuData` object, otherwise a dict of :class:`~anndata.AnnData` objects
         cache: Whether to cache results or not
         kwargs: Keyword arguments for Pandas read_csv
 
     Returns:
-        An :class:`~mudata.MuData` object or a dict mapping the filename (object name) to the corresponding :class:`~anndata.AnnData` object and the columns
+        A Dict mapping the filename (object name) to the corresponding :class:`~anndata.AnnData` object and the columns
         that are obs only for each object
     """
     obs_only_all = {}
-    if not return_mudata_object and not return_dfs:
-        anndata_dict = {}
-    elif return_dfs:
+    if return_dfs:
         df_dict: dict[str, pd.DataFrame] = {}
-    elif return_mudata_object:
-        mudata = None
+    else:
+        anndata_dict = {}
+
     for file in file_path.iterdir():
         if file.is_file() and file.suffix in {".csv", ".tsv"}:
             # slice off the file suffix .csv or .tsv for a clean file name
@@ -254,21 +236,12 @@ def _read_multiple_csv(  # noqa: N802
             )
             adata, single_adata_obs_only = _do_read_csv(file, sep, index_col, col_obs_only, col_x_only, cache=cache)
             obs_only_all[file_identifier] = single_adata_obs_only
-            # obs indices have to be unique otherwise updating and working with the MuData object will fail
+            # obs indices have to be unique otherwise updating and working with the object will fail
             if index_col:
                 adata.obs_names_make_unique()
 
-            if return_mudata_object:
-                if not mudata:
-                    mudata = MuData({file_identifier: adata})
-                else:
-                    mudata.mod[file_identifier] = adata
-            else:
-                anndata_dict[file_identifier] = adata
-    if return_mudata_object:
-        mudata.update()
-        return mudata
-    elif return_dfs:
+            anndata_dict[file_identifier] = adata
+    if return_dfs:
         return df_dict
     else:
         return anndata_dict, obs_only_all
@@ -385,12 +358,9 @@ def read_fhir(
     Returns:
         A Pandas DataFrame or AnnData object of the read in FHIR file(s).
 
-    Example:
-        .. code-block:: python
-
-            import ehrapy as ep
-
-            adata = ep.io.read_fhir("/path/to/fhir/resources")
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.io.read_fhir("/path/to/fhir/resources")
     """
     _check_columns_only_params(columns_obs_only, columns_x_only)
     file_path: Path = Path(dataset_path)
@@ -417,10 +387,10 @@ def _read_fhir(
     columns_x_only: list[str] | None,
     return_df: bool = False,
     cache: bool = False,
-) -> AnnData | dict[str, AnnData] | MuData:
+) -> AnnData | dict[str, AnnData]:
     """Internal interface of the read_fhir method."""
     if cache and return_df:
-        raise CachingNotSupported("Caching is currently not supported for MuData or Pandas DataFrame objects.")
+        raise CachingNotSupported("Caching is currently not supported for or Pandas DataFrame objects.")
     if return_df and (columns_x_only or columns_obs_only):
         raise Warning(
             "Parameters columns_x_only and columns_obs_only are not supported when returning Pandas DataFrames."
