@@ -167,28 +167,6 @@ def causal_inference(
     if not isinstance(estimation_method, str):
         raise TypeError("estimation_method must be a string")
 
-    valid_estimation_methods = [
-        "backdoor.propensity_score_matching",
-        "backdoor.propensity_score_stratification",
-        "backdoor.propensity_score_weighting",
-        "backdoor.linear_regression",
-        "backdoor.generalized_linear_model",
-        "iv.instrumental_variable",
-        "iv.regression_discontinuity",
-        "backdoor.econml.linear_model.LinearDML",
-        "backdoor.econml.nonparametric_model.NonParamDML",
-        "backdoor.econml.causal_forest.CausalForestDML",
-        "backdoor.econml.forecast_model.ForestDML",
-        "backdoor.econml.dml.DML",
-        "backdoor.econml.dml.DMLCate",
-        "backdoor.econml.xgboost.XGBTRegressor",
-        "backdoor.econml.xgboost.XGBTEstimator",
-        "backdoor.econml.metalearners.XLearner",
-    ]
-
-    if estimation_method not in valid_estimation_methods:
-        raise ValueError(f"Unknown estimation method '{estimation_method}'.")
-
     if not isinstance(return_as, str):
         raise TypeError("return_as must be a string")
 
