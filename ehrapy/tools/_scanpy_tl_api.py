@@ -844,7 +844,7 @@ def rank_features_groups(
         method=num_cols_method,
         categorical_method=cat_cols_method,
         layer=layer,
-        corr_method=corr_method,
+        corr_method=correction_method,
     )
 
     group_names = pd.Categorical(adata.obs[groupby].astype(str)).categories.tolist()
