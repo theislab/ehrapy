@@ -765,8 +765,8 @@ def rank_features_groups(
     pts: bool = False,
     key_added: Optional[str] = "rank_features_groups",
     copy: bool = False,
-    method: _datatypes._rank_features_groups_method = None,
-    categorical_method: _datatypes._rank_features_groups_cat_method = "g-test",
+    num_cols_method: _datatypes._rank_features_groups_method = None,
+    cat_cols_method: _datatypes._rank_features_groups_cat_method = "g-test",
     corr_method: _datatypes._corr_method = "benjamini-hochberg",
     tie_correct: bool = False,
     layer: Optional[str] = None,
@@ -789,11 +789,11 @@ def rank_features_groups(
         pts: Compute the fraction of observations containing the features.
         key_added: The key in `adata.uns` information is saved to.
         copy: Whether to return a copy of the AnnData object.
-        method:  The default method is `'t-test'`,
-                 `'t-test_overestim_var'` overestimates variance of each group,
-                 `'wilcoxon'` uses Wilcoxon rank-sum,
-                 `'logreg'` uses logistic regression.
-        categorical_method: statistical method to calculate differences between categories
+        num_cols_method:  Statistical method to rank numerical features. The default method is `'t-test'`,
+                          `'t-test_overestim_var'` overestimates variance of each group,
+                          `'wilcoxon'` uses Wilcoxon rank-sum,
+                          `'logreg'` uses logistic regression.
+        cat_cols_method: statistical method to calculate differences between categories
         corr_method:  p-value correction method.
                       Used only for `'t-test'`, `'t-test_overestim_var'`, and `'wilcoxon'`.
         tie_correct: Use tie correction for `'wilcoxon'` scores. Used only for `'wilcoxon'`.
@@ -841,8 +841,8 @@ def rank_features_groups(
     adata.uns[key_added]["params"] = dict(
         groupby=groupby,
         reference=reference,
-        method=method,
-        categorical_method=categorical_method,
+        method=num_cols_method,
+        categorical_method=cat_cols_method,
         layer=layer,
         corr_method=corr_method,
     )
@@ -866,7 +866,7 @@ def rank_features_groups(
             pts=pts,
             key_added=key_added,
             copy=False,
-            method=method,
+            method=num_cols_method,
             corr_method=corr_method,
             tie_correct=tie_correct,
             layer=layer,
@@ -899,7 +899,7 @@ def rank_features_groups(
             group_names=group_names,
             groups=groups,
             reference=reference,
-            categorical_method=categorical_method,
+            categorical_method=cat_cols_method,
         )
 
         _utils._save_rank_features_result(
