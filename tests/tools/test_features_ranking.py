@@ -3,8 +3,7 @@ import pandas as pd
 import pytest
 
 import ehrapy as ep
-from ehrapy.tools import _utils
-
+import ehrapy.tools.feature_ranking._rank_features_groups as _utils
 
 class TestHelperFunctions:
     def test_adjust_pvalues(self):
