@@ -5,6 +5,7 @@ import pytest
 import ehrapy as ep
 import ehrapy.tools.feature_ranking._rank_features_groups as _utils
 
+
 class TestHelperFunctions:
     def test_adjust_pvalues(self):
         groups = ("group1", "group2")

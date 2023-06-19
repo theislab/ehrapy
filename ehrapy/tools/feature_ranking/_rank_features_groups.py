@@ -1,9 +1,9 @@
-from typing import Iterable, Literal, Union, Optional
+from typing import Iterable, Literal, Optional, Union
 
-from anndata import AnnData
 import numpy as np
 import pandas as pd
 import scanpy as sc
+from anndata import AnnData
 
 from ehrapy.tools import _datatypes
 
