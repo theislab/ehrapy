@@ -767,7 +767,7 @@ def rank_features_groups(
     copy: bool = False,
     num_cols_method: _datatypes._rank_features_groups_method = None,
     cat_cols_method: _datatypes._rank_features_groups_cat_method = "g-test",
-    corr_method: _datatypes._corr_method = "benjamini-hochberg",
+    correction_method: _datatypes._correction_method = "benjamini-hochberg",
     tie_correct: bool = False,
     layer: Optional[str] = None,
     **kwds,
@@ -794,8 +794,8 @@ def rank_features_groups(
                           `'wilcoxon'` uses Wilcoxon rank-sum,
                           `'logreg'` uses logistic regression.
         cat_cols_method: statistical method to calculate differences between categories
-        corr_method:  p-value correction method.
-                      Used only for `'t-test'`, `'t-test_overestim_var'`, and `'wilcoxon'`.
+        correction_method:  p-value correction method.
+                            Used only for statistical tests (e.g. doesn't work for "logreg" `num_cols_method`)
         tie_correct: Use tie correction for `'wilcoxon'` scores. Used only for `'wilcoxon'`.
         layer: Key from `adata.layers` whose value will be used to perform tests on.
         **kwds: Are passed to test methods. Currently this affects only parameters that
@@ -867,7 +867,7 @@ def rank_features_groups(
             key_added=key_added,
             copy=False,
             method=num_cols_method,
-            corr_method=corr_method,
+            corr_method=correction_method,
             tie_correct=tie_correct,
             layer=layer,
             **kwds,
@@ -917,7 +917,7 @@ def rank_features_groups(
     # Adjust p values
     if "pvals" in adata.uns[key_added]:
         adata.uns[key_added]["pvals_adj"] = _utils._adjust_pvalues(
-            adata.uns[key_added]["pvals"], corr_method=corr_method
+            adata.uns[key_added]["pvals"], corr_method=correction_method
         )
 
     # For some reason, pts should be a DataFrame

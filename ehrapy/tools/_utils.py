@@ -24,7 +24,7 @@ def _merge_arrays(arrays: Iterable[Iterable], groups_order):
     return concatenated_arrays.to_records(index=False)
 
 
-def _adjust_pvalues(pvals: np.recarray, corr_method: _datatypes._corr_method):
+def _adjust_pvalues(pvals: np.recarray, corr_method: _datatypes._correction_method):
     """Perform per group p-values correction with a given `corr_method`
 
     Args:
