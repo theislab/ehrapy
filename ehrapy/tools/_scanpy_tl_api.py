@@ -851,7 +851,7 @@ def rank_features_groups(
 
     if adata.uns["numerical_columns"]:
         # Rank numerical features
-        
+
         # Without copying `numerical_adata` is a view, and code throws an error
         # because of "object" type of .X
         numerical_adata = adata[:, adata.uns["numerical_columns"]].copy()

@@ -40,7 +40,10 @@ class TestHelperFunctions:
         adata.uns["rank_features_groups"] = {
             "params": {"whatever": "here is", "it does": "not matter", "but this key should be": "present for testing"},
             "names": pd.DataFrame(
-                {"group1": ("feature2", "feature1", "feature4", "feature3"), "group2": ("feature5", "feature6", "feature7", "feature8")}
+                {
+                    "group1": ("feature2", "feature1", "feature4", "feature3"),
+                    "group2": ("feature5", "feature6", "feature7", "feature8"),
+                }
             ).to_records(index=False),
             # Let's mix features in group1, and leave them sorted in group2
             "pvals": pd.DataFrame({"group1": (0.02, 0.01, 1.00, 0.03), "group2": (0.04, 0.05, 0.06, 0.99)}).to_records(
@@ -72,7 +75,10 @@ class TestHelperFunctions:
         }
 
         names = pd.DataFrame(
-            {"group1": ("feature2", "feature1", "feature4", "feature3"), "group2": ("feature5", "feature6", "feature7", "feature8")}
+            {
+                "group1": ("feature2", "feature1", "feature4", "feature3"),
+                "group2": ("feature5", "feature6", "feature7", "feature8"),
+            }
         ).to_records(index=False)
         pvals = pd.DataFrame({"group1": (0.02, 0.01, 1.00, 0.03), "group2": (0.04, 0.05, 0.06, 0.99)}).to_records(
             index=False
