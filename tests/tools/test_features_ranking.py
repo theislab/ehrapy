@@ -80,7 +80,7 @@ class TestHelperFunctions:
         scores = pd.DataFrame({"group1": (2, 1, 100, 3), "group2": (4, 5, 6, 7)}).to_records(index=False)
         logfoldchanges = pd.DataFrame({"group1": (2, 1, 10, 3), "group2": (4, 5, 6, 7)}).to_records(index=False)
 
-        # Chack that adding onle required keys works
+        # Check that adding only required keys works
         adata_only_required = adata.copy()
         _utils._save_rank_features_result(
             adata_only_required,
