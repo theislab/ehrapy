@@ -9,6 +9,8 @@ from scanpy._utils import AnyRandom
 from scipy.sparse import spmatrix
 
 from ehrapy.preprocessing._scanpy_pp_api import pca  # noqa: E402,F403,F401
+from ehrapy.tools import _method_options
+from ehrapy.tools.feature_ranking._rank_features_groups import rank_features_groups  # noqa: E402,F403,F401
 
 
 def tsne(
@@ -77,9 +79,6 @@ def tsne(
     )
 
 
-_InitPos = Literal["paga", "spectral", "random"]
-
-
 def umap(
     adata: AnnData,
     min_dist: float = 0.5,
@@ -89,7 +88,7 @@ def umap(
     alpha: float = 1.0,
     gamma: float = 1.0,
     negative_sample_rate: int = 5,
-    init_pos: Union[_InitPos, np.ndarray, None] = "spectral",
+    init_pos: Union[_method_options._InitPos, np.ndarray, None] = "spectral",
     random_state: AnyRandom = 0,
     a: Optional[float] = None,
     b: Optional[float] = None,
@@ -183,13 +182,9 @@ def umap(
         raise ValueError(f'.uns["{neighbors_key}"] or .uns["neighbors"] were not found. Run `ep.pp.neighbors` first.')
 
 
-_LAYOUTS = ("fr", "drl", "kk", "grid_fr", "lgl", "rt", "rt_circular", "fa")
-_Layout = Literal[_LAYOUTS]  # type: ignore
-
-
 def draw_graph(
     adata: AnnData,
-    layout: _Layout = "fa",
+    layout: _method_options._Layout = "fa",
     init_pos: Union[str, bool, None] = None,
     root: Optional[int] = None,
     random_state: AnyRandom = 0,
@@ -760,104 +755,6 @@ def ingest(
     )
 
 
-_rank_features_groups_method = Optional[Literal["logreg", "t-test", "wilcoxon", "t-test_overestim_var"]]
-_corr_method = Literal["benjamini-hochberg", "bonferroni"]
-
-
-def rank_features_groups(
-    adata: AnnData,
-    groupby: str,
-    groups: Union[Literal["all"], Iterable[str]] = "all",
-    reference: str = "rest",
-    n_features: Optional[int] = None,
-    rankby_abs: bool = False,
-    pts: bool = False,
-    key_added: Optional[str] = "rank_features_groups",
-    copy: bool = False,
-    method: _rank_features_groups_method = None,
-    corr_method: _corr_method = "benjamini-hochberg",
-    tie_correct: bool = False,
-    layer: Optional[str] = None,
-    **kwds,
-) -> None:  # pragma: no cover
-    """Rank features for characterizing groups.
-
-    Expects logarithmized data.
-
-    Args:
-        adata: Annotated data matrix.
-        groupby: The key of the observations grouping to consider.
-        groups: Subset of groups, e.g. [`'g1'`, `'g2'`, `'g3'`], to which comparison
-                shall be restricted, or `'all'` (default), for all groups.
-        reference: If `'rest'`, compare each group to the union of the rest of the group.
-                   If a group identifier, compare with respect to this group.
-        n_features: The number of features that appear in the returned tables. Defaults to all features.
-        rankby_abs: Rank genes by the absolute value of the score, not by the score.
-                    The returned scores are never the absolute values.
-        pts: Compute the fraction of observations containing the features.
-        key_added: The key in `adata.uns` information is saved to.
-        copy: Whether to return a copy of the AnnData object.
-        method:  The default method is `'t-test'`,
-                 `'t-test_overestim_var'` overestimates variance of each group,
-                 `'wilcoxon'` uses Wilcoxon rank-sum,
-                 `'logreg'` uses logistic regression.
-        corr_method:  p-value correction method.
-                      Used only for `'t-test'`, `'t-test_overestim_var'`, and `'wilcoxon'`.
-        tie_correct: Use tie correction for `'wilcoxon'` scores. Used only for `'wilcoxon'`.
-        layer: Key from `adata.layers` whose value will be used to perform tests on.
-        **kwds: Are passed to test methods. Currently this affects only parameters that
-                are passed to :class:`sklearn.linear_model.LogisticRegression`.
-                For instance, you can pass `penalty='l1'` to try to come up with a
-                minimal set of genes that are good predictors (sparse solution meaning few non-zero fitted coefficients).
-
-    Returns:
-        *names*: structured `np.ndarray` (`.uns['rank_features_groups']`)
-                  Structured array to be indexed by group id storing the gene
-                  names. Ordered according to scores.
-        *scores*: structured `np.ndarray` (`.uns['rank_features_groups']`)
-                  Structured array to be indexed by group id storing the z-score
-                  underlying the computation of a p-value for each gene for each group.
-                  Ordered according to scores.
-        *logfoldchanges*: structured `np.ndarray` (`.uns['rank_features_groups']`)
-                          Structured array to be indexed by group id storing the log2
-                          fold change for each gene for each group. Ordered according to scores.
-                          Only provided if method is 't-test' like.
-                          Note: this is an approximation calculated from mean-log values.
-        *pvals*: structured `np.ndarray` (`.uns['rank_features_groups']`)
-                 p-values.
-        *pvals_adj* : structured `np.ndarray` (`.uns['rank_features_groups']`)
-                      Corrected p-values.
-        *pts*: `pandas.DataFrame` (`.uns['rank_features_groups']`)
-               Fraction of cells expressing the genes for each group.
-        *pts_rest*: `pandas.DataFrame` (`.uns['rank_features_groups']`)
-                    Only if `reference` is set to `'rest'`.
-                    Fraction of observations from the union of the rest of each group containing the features.
-
-     Examples:
-         >>> import ehrapy as ep
-         >>> adata = ep.dt.mimic_2(encoded=True)
-         >>> ep.tl.rank_features_groups(adata, "service_unit")
-         >>> ep.pl.rank_features_groups(adata)
-    """
-    return sc.tl.rank_genes_groups(
-        adata=adata,
-        groupby=groupby,
-        use_raw=False,
-        groups=groups,
-        reference=reference,
-        n_genes=n_features,
-        rankby_abs=rankby_abs,
-        pts=pts,
-        key_added=key_added,
-        copy=copy,
-        method=method,
-        corr_method=corr_method,
-        tie_correct=tie_correct,
-        layer=layer,
-        **kwds,
-    )
-
-
 def filter_rank_features_groups(
     adata: AnnData,
     key="rank_features_groups",
@@ -907,15 +804,12 @@ def filter_rank_features_groups(
     )
 
 
-_marker_feature_overlap_methods = Literal["overlap_count", "overlap_coef", "jaccard"]
-
-
 def marker_feature_overlap(
     adata: AnnData,
     reference_markers: Union[Dict[str, set], Dict[str, list]],
     *,
     key: str = "rank_features_groups",
-    method: _marker_feature_overlap_methods = "overlap_count",
+    method: _method_options._marker_feature_overlap_methods = "overlap_count",
     normalize: Optional[Literal["reference", "data"]] = None,
     top_n_markers: Optional[int] = None,
     adj_pval_threshold: Optional[float] = None,
