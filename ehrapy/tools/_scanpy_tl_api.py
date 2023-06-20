@@ -2,7 +2,6 @@ from types import MappingProxyType
 from typing import Any, Dict, Iterable, Literal, Mapping, Optional, Sequence, Tuple, Type, Union
 
 import numpy as np
-import pandas as pd
 import scanpy as sc
 from anndata import AnnData
 from leidenalg.VertexPartition import MutableVertexPartition
@@ -10,7 +9,7 @@ from scanpy._utils import AnyRandom
 from scipy.sparse import spmatrix
 
 from ehrapy.preprocessing._scanpy_pp_api import pca  # noqa: E402,F403,F401
-from ehrapy.tools import _datatypes
+from ehrapy.tools import _method_options
 from ehrapy.tools.feature_ranking._rank_features_groups import rank_features_groups  # noqa: E402,F403,F401
 
 
@@ -89,7 +88,7 @@ def umap(
     alpha: float = 1.0,
     gamma: float = 1.0,
     negative_sample_rate: int = 5,
-    init_pos: Union[_datatypes._InitPos, np.ndarray, None] = "spectral",
+    init_pos: Union[_method_options._InitPos, np.ndarray, None] = "spectral",
     random_state: AnyRandom = 0,
     a: Optional[float] = None,
     b: Optional[float] = None,
@@ -185,7 +184,7 @@ def umap(
 
 def draw_graph(
     adata: AnnData,
-    layout: _datatypes._Layout = "fa",
+    layout: _method_options._Layout = "fa",
     init_pos: Union[str, bool, None] = None,
     root: Optional[int] = None,
     random_state: AnyRandom = 0,
@@ -810,7 +809,7 @@ def marker_feature_overlap(
     reference_markers: Union[Dict[str, set], Dict[str, list]],
     *,
     key: str = "rank_features_groups",
-    method: _datatypes._marker_feature_overlap_methods = "overlap_count",
+    method: _method_options._marker_feature_overlap_methods = "overlap_count",
     normalize: Optional[Literal["reference", "data"]] = None,
     top_n_markers: Optional[int] = None,
     adj_pval_threshold: Optional[float] = None,

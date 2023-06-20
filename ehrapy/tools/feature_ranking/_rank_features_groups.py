@@ -5,12 +5,11 @@ import pandas as pd
 import scanpy as sc
 from anndata import AnnData
 
-from ehrapy.tools import _datatypes
+from ehrapy.tools import _method_options
 
 
-def _merge_arrays(arrays: Iterable[Iterable], groups_order):
+def _merge_arrays(arrays: Iterable[Iterable], groups_order) -> np.recarray:
     """Merge `recarray` obtained from scanpy with manually created numpy `array`"""
-
     groups_order = list(groups_order)
 
     # The easiest way to merge recarrays is through dataframe conversion
@@ -26,7 +25,7 @@ def _merge_arrays(arrays: Iterable[Iterable], groups_order):
     return concatenated_arrays.to_records(index=False)
 
 
-def _adjust_pvalues(pvals: np.recarray, corr_method: _datatypes._correction_method):
+def _adjust_pvalues(pvals: np.recarray, corr_method: _method_options._correction_method) -> np.array:
     """Perform per group p-values correction with a given `corr_method`
 
     Args:
@@ -57,9 +56,6 @@ def _sort_features(adata, key_added="rank_features_groups") -> None:
     Args:
         adata: Annotated data matrix after running :func:`~ehrapy.tl.rank_features_groups`
         key_added: The key in `adata.uns` information is saved to.
-
-    Returns:
-        Nothing. The operation is performed in place
     """
     if key_added not in adata.uns:
         return
@@ -93,9 +89,6 @@ def _save_rank_features_result(
         pvals: p-values of a statistical test
         pts: Percentages of cells containing features
         groups_order: order of groups in structured arrays
-
-    Returns:
-        Nothing. The operation is performed in place
     """
     fields = (names, scores, pvals, pvals_adj, logfoldchanges, pts)
     field_names = ("names", "scores", "pvals", "pvals_adj", "logfoldchanges", "pts")
@@ -152,10 +145,10 @@ def _evaluate_categorical_features(
     group_names,
     groups: Union[Literal["all"], Iterable[str]] = "all",
     reference: str = "rest",
-    categorical_method: _datatypes._rank_features_groups_cat_method = "g-test",
+    categorical_method: _method_options._rank_features_groups_cat_method = "g-test",
     pts=False,
 ):
-    """Run statistical test for categorical features
+    """Run statistical test for categorical features.
 
     Args:
         adata: Annotated data matrix.
@@ -256,9 +249,9 @@ def rank_features_groups(
     pts: bool = False,
     key_added: Optional[str] = "rank_features_groups",
     copy: bool = False,
-    num_cols_method: _datatypes._rank_features_groups_method = None,
-    cat_cols_method: _datatypes._rank_features_groups_cat_method = "g-test",
-    correction_method: _datatypes._correction_method = "benjamini-hochberg",
+    num_cols_method: _method_options._rank_features_groups_method = None,
+    cat_cols_method: _method_options._rank_features_groups_cat_method = "g-test",
+    correction_method: _method_options._correction_method = "benjamini-hochberg",
     tie_correct: bool = False,
     layer: Optional[str] = None,
     **kwds,
@@ -284,7 +277,12 @@ def rank_features_groups(
                           `'t-test_overestim_var'` overestimates variance of each group,
                           `'wilcoxon'` uses Wilcoxon rank-sum,
                           `'logreg'` uses logistic regression.
-        cat_cols_method: statistical method to calculate differences between categories
+        cat_cols_method: Statistical method to calculate differences between categorical features. The default method is `'g-test'`,
+                             `'Chi-square'` tests goodness-of-fit test for categorical data,
+                             `'Freeman-Tukey'` tests comparing frequency distributions,
+                             `'Mod-log-likelihood'` maximum likelihood estimation,
+                             `'Neyman'` tests hypotheses using asymptotic theory,
+                             `'Cressie-Read'` is a generalized likelihood test,
         correction_method:  p-value correction method.
                             Used only for statistical tests (e.g. doesn't work for "logreg" `num_cols_method`)
         tie_correct: Use tie correction for `'wilcoxon'` scores. Used only for `'wilcoxon'`.
@@ -307,10 +305,8 @@ def rank_features_groups(
                           fold change for each gene for each group. Ordered according to scores.
                           Only provided if method is 't-test' like.
                           Note: this is an approximation calculated from mean-log values.
-        *pvals*: structured `np.ndarray` (`.uns['rank_features_groups']`)
-                 p-values.
-        *pvals_adj* : structured `np.ndarray` (`.uns['rank_features_groups']`)
-                      Corrected p-values.
+        *pvals*: structured `np.ndarray` (`.uns['rank_features_groups']`) p-values.
+        *pvals_adj* : structured `np.ndarray` (`.uns['rank_features_groups']`) Corrected p-values.
         *pts*: `pandas.DataFrame` (`.uns['rank_features_groups']`)
                Fraction of cells expressing the genes for each group.
         *pts_rest*: `pandas.DataFrame` (`.uns['rank_features_groups']`)
