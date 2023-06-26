@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import platform
 import shutil
 import tempfile
-import platform
 from pathlib import Path
 from random import choice
 from string import ascii_lowercase
