@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import platform
 import shutil
 import tempfile
 from pathlib import Path
@@ -39,18 +38,9 @@ def download(
     if output_path is None:
         output_path = tempfile.gettempdir()
 
-    if platform.system() == "Windows":
-        download_to_path = (
-            f"{output_path}{output_file_name}"
-            if str(output_path).endswith("\\")
-            else f"{output_path}\\{output_file_name}"
-        )
-    else:
-        download_to_path = (
-            f"{output_path}{output_file_name}"
-            if str(output_path).endswith("/")
-            else f"{output_path}/{output_file_name}"
-        )
+    download_to_path = (
+        f"{output_path}{output_file_name}" if str(output_path).endswith("/") else f"{output_path}/{output_file_name}"
+    )
 
     if Path(download_to_path).exists():
         warning = f"[bold red]File {download_to_path} already exists!"
