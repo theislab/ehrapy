@@ -42,7 +42,9 @@ def download(
         f"{output_path}{output_file_name}" if str(output_path).endswith("/") else f"{output_path}/{output_file_name}"
     )
 
-    if Path(download_to_path).exists():
+    download_to_path = Path(download_to_path).resolve()
+
+    if download_to_path.exists():
         warning = f"[bold red]File {download_to_path} already exists!"
         if not overwrite:
             print(warning)
