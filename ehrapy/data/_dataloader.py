@@ -42,9 +42,7 @@ def download(
         f"{output_path}{output_file_name}" if str(output_path).endswith("/") else f"{output_path}/{output_file_name}"
     )
 
-    download_to_path = Path(download_to_path).resolve()
-
-    if download_to_path.exists():
+    if Path(download_to_path).exists():
         warning = f"[bold red]File {download_to_path} already exists!"
         if not overwrite:
             print(warning)
@@ -58,7 +56,7 @@ def download(
     with Progress(refresh_per_second=1500) as progress:
         task = progress.add_task("[red]Downloading...", total=total)
         Path(output_path).mkdir(parents=True, exist_ok=True)
-        with open(download_to_path, "wb") as file:
+        with open(Path(download_to_path), "wb") as file:
             for data in response.iter_content(block_size):
                 file.write(data)
                 progress.update(task, advance=block_size)
