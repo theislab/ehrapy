@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import platform
 import shutil
 import tempfile
 from pathlib import Path
@@ -42,6 +43,9 @@ def download(
         f"{output_path}{output_file_name}" if str(output_path).endswith("/") else f"{output_path}/{output_file_name}"
     )
 
+    if platform.system() == "Windows":
+        download_to_path = "".join([c for c in download_to_path if c not in r'\/:*?"<>|'])
+
     if Path(download_to_path).exists():
         warning = f"[bold red]File {download_to_path} already exists!"
         if not overwrite:
@@ -56,7 +60,7 @@ def download(
     with Progress(refresh_per_second=1500) as progress:
         task = progress.add_task("[red]Downloading...", total=total)
         Path(output_path).mkdir(parents=True, exist_ok=True)
-        with open(Path(download_to_path).resolve(), "wb") as file:
+        with open(Path(download_to_path), "wb") as file:
             for data in response.iter_content(block_size):
                 file.write(data)
                 progress.update(task, advance=block_size)
