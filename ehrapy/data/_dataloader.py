@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import shutil
 import tempfile
 from pathlib import Path
@@ -21,7 +22,7 @@ def download(
     overwrite: bool = False,
     is_archived: bool = False,
 ) -> None:  # pragma: no cover
-    """Downloads a dataset irrespective of the format.
+    """Downloads a dataset irrespective of format.
 
     Args:
         url: URL to download
@@ -38,10 +39,28 @@ def download(
     if output_path is None:
         output_path = tempfile.gettempdir()
 
-    download_to_path = (
-        f"{output_path}{output_file_name}" if str(output_path).endswith("/") else f"{output_path}/{output_file_name}"
+    print(output_path)
+
+    def _sanitize_file_name(file_name):
+        # Remove forbidden characters for Windows
+        if os.name == "nt":
+            windows_forbidden = '<>:"/\\|?*'
+            file_name = "".join(c for c in file_name if c not in windows_forbidden)
+
+        # Remove trailing periods and whitespace (valid for all platforms)
+        file_name = file_name.rstrip(". ").strip()
+
+        return file_name
+
+    download_to_path = Path(
+        _sanitize_file_name(
+            f"{output_path}{output_file_name}"
+            if str(output_path).endswith("/")
+            else f"{output_path}/{output_file_name}"
+        )
     )
-    if Path(download_to_path).exists():
+
+    if download_to_path.exists():
         warning = f"[bold red]File {download_to_path} already exists!"
         if not overwrite:
             print(warning)
@@ -55,7 +74,7 @@ def download(
     with Progress(refresh_per_second=1500) as progress:
         task = progress.add_task("[red]Downloading...", total=total)
         Path(output_path).mkdir(parents=True, exist_ok=True)
-        with open(download_to_path, "wb") as file:
+        with open(download_to_path.resolve(), "wb") as file:
             for data in response.iter_content(block_size):
                 file.write(data)
                 progress.update(task, advance=block_size)
@@ -67,4 +86,4 @@ def download(
         output_path = output_path or tempfile.gettempdir()
         shutil.unpack_archive(download_to_path, output_path)
 
-    logg.debug(f"Loaded `{output_file_name}` to `{output_path}`.")
+    logg.debug(f"Downloaded `{output_file_name}` to `{output_path}`.")
