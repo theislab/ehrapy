@@ -435,11 +435,9 @@ def _get_non_existing_files(file: Path, download_dataset_name: str, backup_url: 
         The file or directory path of the downloaded content
     """
     if backup_url is not None:
-        download_default_name = backup_url.split("/")[-1]
-        download_dataset_name = download_dataset_name or download_default_name
         # currently supports zip, tar, gztar, bztar, xztar
         archive_formats, _ = zip(*shutil.get_archive_formats())
-        is_archived = download_default_name[-3:] in archive_formats
+        is_archived = download_dataset_name[-3:] in archive_formats
 
     else:
         raise BackupURLNotProvidedError(
@@ -449,15 +447,14 @@ def _get_non_existing_files(file: Path, download_dataset_name: str, backup_url: 
     print("[bold yellow]Path or dataset does not yet exist. Attempting to download...")
     download(
         backup_url,
-        output_file_name=download_default_name,
+        output_file_name=download_dataset_name,
         output_path=ehrapy_settings.datasetdir,
         is_archived=is_archived,
     )
-    # if archived, remove archive suffix
-    archive_extension = download_default_name[-4:]
-    output_path_name = download_default_name.replace(archive_extension, "") if is_archived else download_default_name
-    output_file_or_dir = ehrapy_settings.datasetdir / output_path_name
+
+    output_file_or_dir = ehrapy_settings.datasetdir / download_dataset_name
     moved_path = Path(str(output_file_or_dir)[: str(output_file_or_dir).rfind("/") + 1]) / download_dataset_name
+
     if moved_path.exists():
         shutil.move(output_file_or_dir, moved_path)  # type: ignore
         file = moved_path
