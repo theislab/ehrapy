@@ -22,15 +22,15 @@ def download(
     overwrite: bool = False,
     is_archived: bool = False,
 ) -> None:  # pragma: no cover
-    """Downloads a dataset irrespective of format.
+    """Downloads a file irrespective of format.
 
     Args:
-        url: URL to download
-        output_file_name: Name of the downloaded file
-        output_path: Path to download/extract the files to. Defaults to 'OS tmpdir'
-        block_size: Block size for downloads in bytes.Defaults to 1024
-        overwrite: Whether to overwrite existing files. Defaults to False
-        is_archived: Whether the downloaded file needs to be unarchived. Defaults to False
+        url: URL to download.
+        output_file_name: Name of the downloaded file.
+        output_path: Path to download/extract the files to. Defaults to 'OS tmpdir'.
+        block_size: Block size for downloads in bytes.Defaults to 1024.
+        overwrite: Whether to overwrite existing files. Defaults to False.
+        is_archived: Whether the downloaded file needs to be unarchived. Defaults to False.
     """
     if output_file_name is None:
         letters = ascii_lowercase
@@ -38,8 +38,6 @@ def download(
 
     if output_path is None:
         output_path = tempfile.gettempdir()
-
-    print(output_path)
 
     def _sanitize_file_name(file_name):
         # Remove forbidden characters for Windows

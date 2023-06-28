@@ -87,12 +87,14 @@ def _read_csv(
         raise Warning(
             "Parameters columns_x_only and columns_obs_only are not supported when returning Pandas DataFrames."
         )
+
     path_cache = settings.cachedir / file_path
     # reading from (cache) file is separated in the read_h5ad function
     if cache and (path_cache.is_dir() or path_cache.is_file()):
         raise CacheExistsException(
             f"{path_cache} already exists. Use the read_h5ad function instead to read from cache!"
         )
+
     # If the the file path is a directory, assume it is a dataset with multiple files
     elif file_path.is_dir():
         return _read_from_directory(
