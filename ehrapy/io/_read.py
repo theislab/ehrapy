@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import shutil
 from pathlib import Path
 from typing import Iterator, Literal
 
@@ -14,7 +13,7 @@ from rich import print
 
 from ehrapy import ehrapy_settings, settings
 from ehrapy.anndata.anndata_ext import df_to_anndata
-from ehrapy.data._dataloader import download
+from ehrapy.data._dataloader import download, remove_archive_extension
 from ehrapy.preprocessing._encode import encode
 
 
@@ -28,6 +27,7 @@ def read_csv(
     cache: bool = False,
     backup_url: str | None = None,
     download_dataset_name: str | None = None,
+    archive_format: Literal["zip", "tar", "tar.gz", "tgz"] = None,
     **kwargs,
 ) -> AnnData | dict[str, AnnData]:
     """Reads or downloads a desired directory of csv/tsv files or a single csv/tsv file.
@@ -41,8 +41,9 @@ def read_csv(
                         Note that datetime columns will always be added to .obs though.
         return_dfs: Whether to return one or several Pandas DataFrames.
         cache: Whether to write to cache when reading or not. Defaults to False .
-        download_dataset_name: Name of the file or directory in case the dataset is downloaded.
-        backup_url: URL to download the data file(s) from if not yet existing.
+        download_dataset_name: Name of the file or directory after download.
+        backup_url: URL to download the data file(s) from, if the dataset is not yet on disk.
+        is_archive: Whether the downlodaed file is an archive.
 
     Returns:
         An :class:`~anndata.AnnData` object or a dict with an identifier (the filename, without extension)
@@ -53,12 +54,12 @@ def read_csv(
         >>> adata = ep.io.read_csv("myfile.csv")
     """
     _check_columns_only_params(columns_obs_only, columns_x_only)
-    file: Path = Path(dataset_path)
-    if not file.exists():
-        file = _get_non_existing_files(file, download_dataset_name, backup_url)
+    dataset_path = Path(dataset_path)
+    if not dataset_path.exists():
+        dataset_path = _get_non_existing_files(dataset_path, download_dataset_name, backup_url, archive_format)
 
     adata = _read_csv(
-        file_path=file,
+        file_path=dataset_path,
         sep=sep,
         index_column=index_column,
         columns_obs_only=columns_obs_only,
@@ -283,7 +284,7 @@ def _do_read_csv(
     # in case the index column is misspelled or does not exist
     except ValueError:
         raise IndexNotFoundError(
-            f"Could not create AnnData object while reading file {file_path}. Does index_column named {index_column} "
+            f"Could not create AnnData object while reading file {file_path} . Does index_column named {index_column} "
             f"exist in {file_path}?"
         ) from None
 
@@ -426,24 +427,20 @@ def _read_fhir(
     return adata
 
 
-def _get_non_existing_files(file: Path, download_dataset_name: str, backup_url: str) -> Path:
-    """Handle non existing files or directories by trying to download from a backup_url and moving them
-    in the correct directory.
-
-    Args:
-        backup_url: Backup URL to lookup for the datafile(s)
+def _get_non_existing_files(
+    dataset_path: Path,
+    download_dataset_name: str,
+    backup_url: str,
+    archive_format: Literal["zip", "tar", "tar.gz", "tgz"] = None,
+) -> Path:
+    """Handle non existing files or directories by trying to download from a backup_url and moving them in the correct directory.
 
     Returns:
-        The file or directory path of the downloaded content
+        The file or directory path of the downloaded content.
     """
-    if backup_url is not None:
-        # currently supports zip, tar, gztar, bztar, xztar
-        archive_formats, _ = zip(*shutil.get_archive_formats())
-        is_archived = download_dataset_name[-3:] in archive_formats
-
-    else:
-        raise BackupURLNotProvidedError(
-            f"File or directory {file} does not exist and no backup_url was provided.\n"
+    if backup_url is None and not dataset_path.exists():
+        raise ValueError(
+            f"File or directory {dataset_path} does not exist and no backup_url was provided.\n"
             f"Please provide a backup_url or check whether path is spelled correctly."
         )
     print("[bold yellow]Path or dataset does not yet exist. Attempting to download...")
@@ -451,24 +448,20 @@ def _get_non_existing_files(file: Path, download_dataset_name: str, backup_url: 
         backup_url,
         output_file_name=download_dataset_name,
         output_path=ehrapy_settings.datasetdir,
-        is_archived=is_archived,
+        archive_format=archive_format,
     )
 
-    output_file_or_dir = ehrapy_settings.datasetdir / download_dataset_name
-    moved_path = Path(str(output_file_or_dir)[: str(output_file_or_dir).rfind("/") + 1]) / download_dataset_name
+    # output_file_or_dir = ehrapy_settings.datasetdir / download_dataset_name
+    # moved_path = Path(str(output_file_or_dir)[: str(output_file_or_dir).rfind("/") + 1]) / download_dataset_name
+    #
+    # if moved_path.exists():
+    #     shutil.move(output_file_or_dir, moved_path)  # type: ignore
+    #     dataset_path = moved_path
 
-    if moved_path.exists():
-        shutil.move(output_file_or_dir, moved_path)  # type: ignore
-        file = moved_path
-    elif (
-        not moved_path.exists()
-    ):  # some zip files change their name when unzipped. Hence, we look for the latest created file in datasetdir
-        list_of_paths = [path for path in ehrapy_settings.datasetdir.glob("*/") if not path.name.startswith(".")]
-        latest_path = max(list_of_paths, key=lambda path: path.stat().st_ctime)
-        shutil.move(latest_path, moved_path)  # type: ignore
-        file = moved_path
+    if archive_format:
+        dataset_path = remove_archive_extension(dataset_path)
 
-    return file
+    return dataset_path
 
 
 def _read_from_cache_dir(cache_dir: Path) -> dict[str, AnnData]:
@@ -746,10 +739,6 @@ def _check_columns_only_params(
 
 
 class IndexNotFoundError(Exception):
-    pass
-
-
-class BackupURLNotProvidedError(Exception):
     pass
 
 

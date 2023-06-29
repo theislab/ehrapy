@@ -91,6 +91,7 @@ def mimic_3_demo(
         backup_url="https://physionet.org/static/published-projects/mimiciii-demo/mimic-iii-clinical-database-demo-1.4.zip",
         return_dfs=False if anndata else True,
         columns_obs_only=columns_obs_only,
+        archive_format="zip",
     )
     if encoded:
         if not anndata:

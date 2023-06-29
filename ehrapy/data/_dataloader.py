@@ -6,6 +6,7 @@ import tempfile
 from pathlib import Path
 from random import choice
 from string import ascii_lowercase
+from typing import Literal
 
 import requests
 from rich import print
@@ -16,21 +17,21 @@ from ehrapy import logging as logg
 
 def download(
     url: str,
+    archive_format: Literal["zip", "tar", "tar.gz", "tgz"] = None,
     output_file_name: str = None,
     output_path: str | Path = None,
     block_size: int = 1024,
     overwrite: bool = False,
-    is_archived: bool = False,
 ) -> None:  # pragma: no cover
     """Downloads a file irrespective of format.
 
     Args:
         url: URL to download.
+        archive_format: The format if an archive file.
         output_file_name: Name of the downloaded file.
         output_path: Path to download/extract the files to. Defaults to 'OS tmpdir'.
         block_size: Block size for downloads in bytes.Defaults to 1024.
         overwrite: Whether to overwrite existing files. Defaults to False.
-        is_archived: Whether the downloaded file needs to be unarchived. Defaults to False.
     """
     if output_file_name is None:
         letters = ascii_lowercase
@@ -80,8 +81,23 @@ def download(
         # force the progress bar to 100% at the end
         progress.update(task, completed=total, refresh=True)
 
-    if is_archived:
+    if archive_format:
         output_path = output_path or tempfile.gettempdir()
-        shutil.unpack_archive(download_to_path, output_path)
+        shutil.unpack_archive(download_to_path, output_path, format=archive_format)
+        download_to_path.unlink()
+        list_of_paths = [path for path in Path(output_path).resolve().glob("*/") if not path.name.startswith(".")]
+        latest_path = max(list_of_paths, key=lambda path: path.stat().st_ctime)
+        shutil.move(latest_path, latest_path.parent / remove_archive_extension(output_file_name))  # type: ignore
 
     logg.debug(f"Downloaded `{output_file_name}` to `{output_path}`.")
+
+
+def remove_archive_extension(file_path):
+    return (
+        str(Path(file_path).with_suffix(""))
+        if any(
+            Path(file_path).suffix.endswith(ext)
+            for ext in [".zip", ".tar", ".tar.gz", ".tgz", ".tar.bz2", ".tbz2", ".tar.xz", ".txz"]
+        )
+        else file_path
+    )
