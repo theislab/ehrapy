@@ -33,7 +33,6 @@ extensions = [
     "sphinx_gallery.load_style",
     "sphinx_remove_toctrees",
     "sphinx_design",
-    "sphinxext.opengraph",
 ]
 
 # remove_from_toctrees = ["tutorials/notebooks/*", "api/reference/*"]
