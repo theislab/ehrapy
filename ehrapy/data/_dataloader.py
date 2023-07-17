@@ -41,9 +41,8 @@ def download(
         output_path = tempfile.gettempdir()
 
     def _sanitize_file_name(file_name):
-        # Remove forbidden characters for Windows
         if os.name == "nt":
-            file_name = file_name.replace("?", "_")
+            file_name = file_name.replace("?", "_").replace("*", "_")
         return file_name
 
     download_to_path = Path(
@@ -61,9 +60,6 @@ def download(
             return
         else:
             print(f"{warning} Overwriting...")
-
-    print(download_to_path)
-    print(download_to_path.resolve())
 
     response = requests.get(url, stream=True)
     total = int(response.headers.get("content-length", 0))
