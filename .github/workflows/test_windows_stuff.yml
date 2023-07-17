@@ -31,4 +31,4 @@ jobs:
                   "
             - name: Dir
               if: always()
-              run: dir /s /b
+              run: dir "/s /b"
