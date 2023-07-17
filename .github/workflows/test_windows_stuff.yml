@@ -1,0 +1,31 @@
+name: Build ehrapy Package
+
+on: [push, pull_request]
+
+jobs:
+    build:
+        runs-on: ${{ matrix.os }}
+        if: "!contains(github.event.head_commit.message, '[skip ci]') && !contains(github.event.head_commit.message, '[ci skip]')"
+        strategy:
+            matrix:
+                os: [windows-latest]
+                python: ["3.11"]
+
+        steps:
+            - uses: actions/checkout@v3
+              name: Check out source-code repository
+
+            - name: Setup Python
+              uses: actions/setup-python@v4
+              with:
+                  python-version: ${{ matrix.python }}
+
+            - name: Build package
+              run: pip install .
+
+            - name: get mimic 2
+              run: |
+                  python -c "
+                  import ehrapy as ep
+                  ep.dt.mimic_2()
+                  "
