@@ -453,13 +453,6 @@ def _get_non_existing_files(
         archive_format=archive_format,
     )
 
-    # output_file_or_dir = ehrapy_settings.datasetdir / download_dataset_name
-    # moved_path = Path(str(output_file_or_dir)[: str(output_file_or_dir).rfind("/") + 1]) / download_dataset_name
-    #
-    # if moved_path.exists():
-    #     shutil.move(output_file_or_dir, moved_path)  # type: ignore
-    #     dataset_path = moved_path
-
     if archive_format:
         dataset_path = remove_archive_extension(dataset_path)
 

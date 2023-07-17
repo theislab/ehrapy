@@ -67,6 +67,9 @@ def download(
         else:
             print(f"{warning} Overwriting...")
 
+    print(download_to_path)
+    print(download_to_path.resolve())
+
     response = requests.get(url, stream=True)
     total = int(response.headers.get("content-length", 0))
 
