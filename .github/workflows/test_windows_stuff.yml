@@ -31,4 +31,7 @@ jobs:
                   "
             - name: Dir
               if: always()
-              run: find /c/ -name "ehrapy_mimic_2.csv"
+              run: |
+                  choco install tree -y
+                  refreshenv  # Refresh environment variables
+                  tree
