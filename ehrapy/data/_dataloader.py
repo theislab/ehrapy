@@ -43,12 +43,7 @@ def download(
     def _sanitize_file_name(file_name):
         # Remove forbidden characters for Windows
         if os.name == "nt":
-            windows_forbidden = '<>:"/\\|?*'
-            file_name = "".join(c for c in file_name if c not in windows_forbidden)
-
-        # Remove trailing periods and whitespace (valid for all platforms)
-        file_name = file_name.rstrip(". ").strip()
-
+            file_name = file_name.replace("?", "_")
         return file_name
 
     download_to_path = Path(
