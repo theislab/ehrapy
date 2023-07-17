@@ -1,4 +1,4 @@
-name: Build ehrapy Package
+name: Test windows stuff
 
 on: [push, pull_request]
 
@@ -29,3 +29,6 @@ jobs:
                   import ehrapy as ep
                   ep.dt.mimic_2()
                   "
+            - name: Dir
+              if: always()
+              run: dir
