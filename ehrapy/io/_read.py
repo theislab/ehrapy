@@ -43,7 +43,7 @@ def read_csv(
         cache: Whether to write to cache when reading or not. Defaults to False .
         download_dataset_name: Name of the file or directory after download.
         backup_url: URL to download the data file(s) from, if the dataset is not yet on disk.
-        is_archive: Whether the downlodaed file is an archive.
+        is_archive: Whether the downloaded file is an archive.
 
     Returns:
         An :class:`~anndata.AnnData` object or a dict with an identifier (the filename, without extension)
@@ -127,6 +127,7 @@ def read_h5ad(
     dataset_path: Path | str,
     backup_url: str | None = None,
     download_dataset_name: str | None = None,
+    archive_format: Literal["zip", "tar", "tar.gz", "tgz"] = None,
 ) -> AnnData | dict[str, AnnData]:
     """Reads or downloads a desired directory of h5ad files or a single h5ad file.
 
@@ -147,7 +148,7 @@ def read_h5ad(
     """
     file_path: Path = Path(dataset_path)
     if not file_path.exists():
-        file_path = _get_non_existing_files(file_path, download_dataset_name, backup_url)
+        file_path = _get_non_existing_files(file_path, download_dataset_name, backup_url, archive_format=archive_format)
 
     if file_path.is_dir():
         adata = _read_from_directory(file_path, False, None, "h5ad")
@@ -341,6 +342,7 @@ def read_fhir(
     backup_url: str | None = None,
     index_column: str | int | None = None,
     download_dataset_name: str | None = None,
+    archive_format: Literal["zip", "tar", "tar.gz", "tgz"] = None,
 ) -> pd.DataFrame | AnnData:
     """Reads one or multiple FHIR files using fhiry.
 
@@ -368,7 +370,7 @@ def read_fhir(
     _check_columns_only_params(columns_obs_only, columns_x_only)
     file_path: Path = Path(dataset_path)
     if not file_path.exists():
-        file_path = _get_non_existing_files(file_path, download_dataset_name, backup_url)
+        file_path = _get_non_existing_files(file_path, download_dataset_name, backup_url, archive_format)
 
     adata = _read_fhir(
         file_path=str(file_path.resolve()),
