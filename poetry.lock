@@ -4655,13 +4655,13 @@ files = [
 
 [[package]]
 name = "pyupgrade"
-version = "3.8.0"
+version = "3.9.0"
 description = "A tool to automatically upgrade syntax for newer versions."
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.8.1"
 files = [
-    {file = "pyupgrade-3.8.0-py2.py3-none-any.whl", hash = "sha256:08d0e6129f5e9da7e7a581bdbea689e0d49c3c93eeaf156a07ae2fd794f52660"},
-    {file = "pyupgrade-3.8.0.tar.gz", hash = "sha256:1facb0b8407cca468dfcc1d13717e3a85aa37b9e6e7338664ad5bfe5ef50c867"},
+    {file = "pyupgrade-3.9.0-py2.py3-none-any.whl", hash = "sha256:1807e324a1432f05a830bc1847095c90b604c91de66237fff55cb98b99d4da10"},
+    {file = "pyupgrade-3.9.0.tar.gz", hash = "sha256:a4c7132f4614f7acbacb756275c8a7881ad418f8a1c6ff6512c30dcf4c98f500"},
 ]
 
 [package.dependencies]
@@ -6062,21 +6062,6 @@ Sphinx = ">=3.0.0"
 test = ["coverage (>=4.0,!=4.4)", "pytest", "pytest-cov"]
 
 [[package]]
-name = "sphinxext-opengraph"
-version = "0.8.2"
-description = "Sphinx Extension to enable OGP support"
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "sphinxext-opengraph-0.8.2.tar.gz", hash = "sha256:45a693b6704052c426576f0a1f630649c55b4188bc49eb63e9587e24a923db39"},
-    {file = "sphinxext_opengraph-0.8.2-py3-none-any.whl", hash = "sha256:6a05bdfe5176d9dd0a1d58a504f17118362ab976631213cd36fb44c4c40544c9"},
-]
-
-[package.dependencies]
-matplotlib = "*"
-sphinx = ">=4.0"
-
-[[package]]
 name = "srsly"
 version = "2.4.6"
 description = "Modern high-performance serialization utilities for Python"
@@ -7178,4 +7163,4 @@ scikit-learn-intelex = ["scikit-learn-intelex"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9.0,<4"
-content-hash = "f4e88d965a883ce546a5d625bce0a73457e8bbdad6176c179b13474ddca759fa"
+content-hash = "3277df368c9bdff2ab49064da0600b8866be8e639fc32ae1fad72b21079f3f9c"
