@@ -31,4 +31,4 @@ jobs:
                   "
             - name: Dir
               if: always()
-              run: dir
+              run: dir ehrapy_data
