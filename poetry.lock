@@ -5392,35 +5392,35 @@ scikit-learn = ">=0.22"
 
 [[package]]
 name = "scikit-misc"
-version = "0.2.0"
+version = "0.3.0"
 description = "Miscellaneous tools for scientific computing."
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.9"
 files = [
-    {file = "scikit_misc-0.2.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:b0cb9707c40f0fb51db45750cb90d5d9fc84d70eb6b87a299cc1c8791a09c072"},
-    {file = "scikit_misc-0.2.0-cp310-cp310-macosx_12_0_arm64.whl", hash = "sha256:2fd3b3f3a8677111b8fff3007eb3feb4f4f6d5e7f5e91e80ad06928b03b55a8e"},
-    {file = "scikit_misc-0.2.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:682710b5e2a48c40e5ef7a94f57571a7a34fff744339473e0abc40d1b5d7a07a"},
-    {file = "scikit_misc-0.2.0-cp310-cp310-win_amd64.whl", hash = "sha256:9013b6dd7039288b89acdcf34f169cfd7de3fb18e398e3b04f461aab108bcc32"},
-    {file = "scikit_misc-0.2.0-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:023624b9c7db2655bd352add228b0d1a9d1b249cc8e4be6c97d6120a1c998bf6"},
-    {file = "scikit_misc-0.2.0-cp311-cp311-macosx_12_0_arm64.whl", hash = "sha256:77fec1644dc024496cb57b92df4fd48807a246343b0e3bbacd2cc2a019bd272a"},
-    {file = "scikit_misc-0.2.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0632a61d63c7636d1a2b82b5aeb0b6dbd135be112b42030a82e201b9419849e1"},
-    {file = "scikit_misc-0.2.0-cp311-cp311-win_amd64.whl", hash = "sha256:16aa63c78898c2ee771136aa9aa13d36e7f766f3089551709136654b48dd36f1"},
-    {file = "scikit_misc-0.2.0-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:6e80977662c679e01abf4aa36b3d7808c48162a532e10791ce88e61dcdaa0bed"},
-    {file = "scikit_misc-0.2.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:fea8b86e7c17478d16b227e450ed9db337d9f05a3e7d38af2ea2daa1fa5dbd99"},
-    {file = "scikit_misc-0.2.0-cp38-cp38-win_amd64.whl", hash = "sha256:603fd4bd2e165128760f62459dd297bc98c7f1a9bceccd8188aa0563cde64e60"},
-    {file = "scikit_misc-0.2.0-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:5c71ee5711848a2d6a6a6a1e27a99b1e2af065427635e990f47504e20cd84b32"},
-    {file = "scikit_misc-0.2.0-cp39-cp39-macosx_12_0_arm64.whl", hash = "sha256:6b25482460c43cb614e852afd84a42cc3e0e9bf346d1e18570038ca5c20889d7"},
-    {file = "scikit_misc-0.2.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ba264c1e9aa86e29cf3e77de18d3c08223105d1165e848c69e5586a8da29158c"},
-    {file = "scikit_misc-0.2.0-cp39-cp39-win_amd64.whl", hash = "sha256:e4342582fb57987efc49f3fdf329c4f4edd08d9938e76dc4916b3df55ba4aa4c"},
-    {file = "scikit_misc-0.2.0.tar.gz", hash = "sha256:ac14dd4e935e442fc34ab1c583b6611d4603d06f48828a85c7e03e2c2c582bbc"},
+    {file = "scikit_misc-0.3.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:5ef10e748544ae16436ab98fd99d9985d7c3776bae15ae714e71e6bb387a5489"},
+    {file = "scikit_misc-0.3.0-cp310-cp310-macosx_12_0_arm64.whl", hash = "sha256:e946b7f238148786f332882388028849f8515201a527b4bdb0fc36a0b193f6c7"},
+    {file = "scikit_misc-0.3.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:e7917142aa677af1aa8510f32df59900d04ccc45915278c86547f1e76270c1be"},
+    {file = "scikit_misc-0.3.0-cp310-cp310-win_amd64.whl", hash = "sha256:fb9fd11adc079323231e4c8b160ee758a6f0031b1686c49fe3304bb579c7fe57"},
+    {file = "scikit_misc-0.3.0-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:7b72d83246c8b68d38450cb98ba04f7dfbde43ac9a94de82335484469a8ce4b5"},
+    {file = "scikit_misc-0.3.0-cp311-cp311-macosx_12_0_arm64.whl", hash = "sha256:6ccc6f550e633f7b65d0c5af3c322c9a70088bf62f72613ec9b68f4fca953f44"},
+    {file = "scikit_misc-0.3.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:b81a0b4ff3189a3cb4009923acfc3adf139afae6a589b016abec4d56dfdd0b66"},
+    {file = "scikit_misc-0.3.0-cp311-cp311-win_amd64.whl", hash = "sha256:c8084f11a9a34d85b8895e45671ea8aa74ae16ee24f9819050ee0dae8d51ca20"},
+    {file = "scikit_misc-0.3.0-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:9d55964ffaa6aded3393df4cfbd850d2038671429d23493b9ee4616d80964c1b"},
+    {file = "scikit_misc-0.3.0-cp39-cp39-macosx_12_0_arm64.whl", hash = "sha256:3f98424b144ec18ab81b3c29c9f93e486c8b2b89dcd24187217b5789c89de418"},
+    {file = "scikit_misc-0.3.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:cc752d9da0edb4aa8460e16b503c3796ffaa5e8f4c7791b6306681360cca32cc"},
+    {file = "scikit_misc-0.3.0-cp39-cp39-win_amd64.whl", hash = "sha256:33257a55b701cf925d912ba8349330c458977a7b9edafe5b59b10a5f90406113"},
+    {file = "scikit_misc-0.3.0.tar.gz", hash = "sha256:9a89b40a1f9bddb56212b87db9e5588867d5cf9490512a8209c1ac049efe36b8"},
 ]
 
 [package.dependencies]
 numpy = ">=1.22.3"
 
 [package.extras]
+all = ["scikit-misc[build]", "scikit-misc[dev]", "scikit-misc[doc]", "scikit-misc[lint]", "scikit-misc[test]"]
+build = ["build", "meson", "meson-python", "spin"]
 dev = ["twine", "wheel"]
 doc = ["numydoc", "sphinx"]
+lint = ["ruff"]
 test = ["pytest-cov"]
 
 [[package]]
