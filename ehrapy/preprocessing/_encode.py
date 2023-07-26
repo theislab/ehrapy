@@ -205,6 +205,9 @@ def _encode(
 
             encoded_ann_data.uns["numerical_columns"] = adata.uns["numerical_columns"].copy()
             encoded_ann_data.uns["non_numerical_columns"] = []
+            encoded_ann_data.uns["encoded_non_numerical_columns"] = [
+                column for column in encoded_ann_data.var_names if column.startswith("ehrapycat_")
+            ]
 
             _add_categoricals_to_obs(adata, encoded_ann_data, categoricals_names)
 
@@ -311,6 +314,9 @@ def _encode(
         updated_num_uns, updated_non_num_uns, _ = _update_uns(adata, categoricals)
         encoded_ann_data.uns["numerical_columns"] = updated_num_uns
         encoded_ann_data.uns["non_numerical_columns"] = updated_non_num_uns
+        encoded_ann_data.uns["encoded_non_numerical_columns"] = [
+            column for column in encoded_ann_data.var_names if column.startswith("ehrapycat_")
+        ]
 
         _add_categoricals_to_obs(adata, encoded_ann_data, categoricals)
 

@@ -194,7 +194,7 @@ def _evaluate_categorical_features(
 
     groups_values = adata.obs[groupby].to_numpy()
 
-    for feature in adata.uns["non_numerical_columns"]:
+    for feature in adata.uns["encoded_non_numerical_columns"]:
         if feature == groupby or "ehrapycat_" + feature == groupby or feature == "ehrapycat_" + groupby:
             continue
 
@@ -374,7 +374,7 @@ def rank_features_groups(
             groups_order=group_names,
         )
 
-    if adata.uns["non_numerical_columns"]:
+    if adata.uns["encoded_non_numerical_columns"]:
         (
             categorical_names,
             categorical_scores,
