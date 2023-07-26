@@ -53,6 +53,10 @@ class TestEncode:
         assert not any(
             column in set(encoded_ann_data.uns["non_numerical_columns"]) for column in ["survival", "clinic_day"]
         )
+        assert all(
+            column in set(encoded_ann_data.uns["encoded_non_numerical_columns"])
+            for column in ["ehrapycat_survival", "ehrapycat_clinic_day"]
+        )
         assert pd.api.types.is_bool_dtype(encoded_ann_data.obs["survival"].dtype)
         assert pd.api.types.is_categorical_dtype(encoded_ann_data.obs["clinic_day"].dtype)
 
@@ -89,6 +93,10 @@ class TestEncode:
         assert all(column in set(adata.uns["non_numerical_columns"]) for column in ["survival", "clinic_day"])
         assert not any(
             column in set(encoded_ann_data.uns["non_numerical_columns"]) for column in ["survival", "clinic_day"]
+        )
+        assert all(
+            column in set(encoded_ann_data.uns["encoded_non_numerical_columns"])
+            for column in ["ehrapycat_survival", "ehrapycat_clinic_day"]
         )
         assert pd.api.types.is_bool_dtype(encoded_ann_data.obs["survival"].dtype)
         assert pd.api.types.is_categorical_dtype(encoded_ann_data.obs["clinic_day"].dtype)
@@ -133,6 +141,16 @@ class TestEncode:
         assert all(column in set(adata.uns["non_numerical_columns"]) for column in ["survival", "clinic_day"])
         assert not any(
             column in set(encoded_ann_data.uns["non_numerical_columns"]) for column in ["survival", "clinic_day"]
+        )
+        assert all(
+            column in set(encoded_ann_data.uns["encoded_non_numerical_columns"])
+            for column in [
+                "ehrapycat_survival",
+                "ehrapycat_clinic_day_Friday",
+                "ehrapycat_clinic_day_Monday",
+                "ehrapycat_clinic_day_Saturday",
+                "ehrapycat_clinic_day_Sunday",
+            ]
         )
         assert pd.api.types.is_bool_dtype(encoded_ann_data.obs["survival"].dtype)
         assert pd.api.types.is_categorical_dtype(encoded_ann_data.obs["clinic_day"].dtype)
