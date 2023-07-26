@@ -245,6 +245,16 @@ In contrast to a preprocessing function, a tool usually adds an easily interpret
     tools.test_nested_f_statistic
 ```
 
+### Causal Inference
+
+```{eval-rst}
+.. autosummary::
+    :toctree: tools
+    :nosignatures:
+
+    tools.causal_inference
+```
+
 ## Plotting
 
 The plotting module ehrapy.pl.\* largely parallels the tl.\* and a few of the pp.\* functions.
@@ -359,6 +369,16 @@ Visualize clusters using one of the embedding methods passing color='leiden'.
 
     plot.ols
     plot.kmf
+```
+
+### Causal Inference
+
+```{eval-rst}
+.. autosummary::
+    :toctree: plot
+    :nosignatures:
+
+    plot.causal_effect
 ```
 
 ## AnnData utilities
