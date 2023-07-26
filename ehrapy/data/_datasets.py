@@ -91,6 +91,7 @@ def mimic_3_demo(
         backup_url="https://physionet.org/static/published-projects/mimiciii-demo/mimic-iii-clinical-database-demo-1.4.zip",
         return_dfs=False if anndata else True,
         columns_obs_only=columns_obs_only,
+        archive_format="zip",
     )
     if encoded:
         if not anndata:
@@ -630,7 +631,7 @@ def synthea_1k_sample(
     encoded: bool = False,
     columns_obs_only: list[str] | None = None,
 ) -> AnnData:
-    """Loads the 1K Sample Synthetic Patient Records Data Set
+    """Loads the 1K Sample Synthetic Patient Records Data Set.
 
     More details: https://synthea.mitre.org/downloads
     Preprocessing: TODO: add preprocessing link
@@ -652,6 +653,7 @@ def synthea_1k_sample(
         backup_url="https://synthetichealth.github.io/synthea-sample-data/downloads/synthea_sample_data_fhir_dstu2_sep2019.zip",
         columns_obs_only=columns_obs_only,
         index_column="id",
+        archive_format="zip",
     )
 
     if encoded:

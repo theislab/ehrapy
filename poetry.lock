@@ -7129,21 +7129,6 @@ Sphinx = ">=3.0.0"
 test = ["coverage (>=4.0,!=4.4)", "pytest", "pytest-cov"]
 
 [[package]]
-name = "sphinxext-opengraph"
-version = "0.8.2"
-description = "Sphinx Extension to enable OGP support"
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "sphinxext-opengraph-0.8.2.tar.gz", hash = "sha256:45a693b6704052c426576f0a1f630649c55b4188bc49eb63e9587e24a923db39"},
-    {file = "sphinxext_opengraph-0.8.2-py3-none-any.whl", hash = "sha256:6a05bdfe5176d9dd0a1d58a504f17118362ab976631213cd36fb44c4c40544c9"},
-]
-
-[package.dependencies]
-matplotlib = "*"
-sphinx = ">=4.0"
-
-[[package]]
 name = "srsly"
 version = "2.4.7"
 description = "Modern high-performance serialization utilities for Python"
@@ -8547,4 +8532,4 @@ scikit-learn-intelex = ["scikit-learn-intelex"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9.0,<3.11"
-content-hash = "531ad1b52239cce112ce7139fcceacce50e5bfb657ceb5cc30af1715da2b42d5"
+content-hash = "9ea056bf1988ddc9e7d6fd11ea11eed8a83c392d783d89914c73dc2aacedc10c"
