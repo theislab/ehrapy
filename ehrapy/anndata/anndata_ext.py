@@ -543,7 +543,7 @@ def set_numeric_vars(
         assert_numeric_vars(adata, vars)
 
     if not np.issubdtype(values.dtype, np.number):
-        raise TypeError(f"values must be numeric (current dtype is {values.dtype})")
+        raise TypeError(f"Values must be numeric (current dtype is {values.dtype})")
 
     n_values = values.shape[1]
 
