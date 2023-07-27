@@ -442,7 +442,7 @@ class TestAnnDataUtil:
             ]
         )
 
-        with pytest.raises(TypeError, match=r"values must be numeric"):
+        with pytest.raises(TypeError, match=r"Values must be numeric"):
             set_numeric_vars(self.adata_encoded, string_values)
 
         extra_values = np.array(
