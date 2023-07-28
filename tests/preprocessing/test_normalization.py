@@ -254,8 +254,6 @@ class TestNormalization:
     def test_norm_numerical_only(self):
         """Test for the log_norm method."""
         to_normalize_adata = AnnData(X=np.array([[1, 0, 0], [0, 0, 1]], dtype=np.float32))
-        expected_adata = AnnData(
-            X=np.array([[0.6931472, 0, 0], [0, 0, 0.6931472]], dtype=np.float32)
-        )
+        expected_adata = AnnData(X=np.array([[0.6931472, 0, 0], [0, 0, 0.6931472]], dtype=np.float32))
 
         assert np.array_equal(expected_adata.X, ep.pp.log_norm(to_normalize_adata, copy=True).X)
