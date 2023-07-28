@@ -413,6 +413,12 @@ class TestAnnDataUtil:
         with pytest.raises(NotEncodedError, match=r"not yet been encoded"):
             get_numeric_vars(self.adata_strings)
 
+    def test_get_numeric_vars_numeric_only(self):
+        """Test for the numeric vars getter when AnnData does not require encoding."""
+        adata = AnnData(X=np.array([[1, 2, 3], [4, 0, 6]], dtype=np.float32))
+        vars = get_numeric_vars(adata)
+        assert vars == ["0", "1", "2"]
+
     def test_assert_numeric_vars(self):
         """Test for the numeric vars assertion."""
         assert_numeric_vars(self.adata_encoded, ["Numeric1", "Numeric2"])

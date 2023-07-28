@@ -527,7 +527,7 @@ def assert_numeric_vars(adata: AnnData, vars: Sequence[str]):
 def set_numeric_vars(
     adata: AnnData, values: np.ndarray, vars: Sequence[str] | None = None, copy: bool = False
 ) -> AnnData | None:
-    """Sets the column names for numeric variables in X.
+    """Sets the numeric values in given column names in X.
 
     Args:
         adata: :class:`~anndata.AnnData` object
@@ -561,7 +561,7 @@ def set_numeric_vars(
     for i in range(n_values):
         adata.X[:, vars_idx[i]] = values[:, i]
 
-    logg.info(f"Column names for numeric variables {vars} were replaced by {values}.")
+    logg.info(f"Values in columns {vars} were replaced by {values}.")
 
     return adata
 
