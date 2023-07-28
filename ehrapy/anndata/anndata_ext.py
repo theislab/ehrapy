@@ -509,10 +509,10 @@ def get_numeric_vars(adata: AnnData) -> list[str]:
     """
     _assert_encoded(adata)
 
-    if "numerical_columns" in adata.uns_keys():
-        return adata.uns["numerical_columns"]
-    elif "numerical_columns" not in adata.uns_keys() and np.issubdtype(adata.X.dtype, np.number):
+    if "numerical_columns" not in adata.uns_keys():
         return list(adata.var_names.values)
+    else:
+        return adata.uns["numerical_columns"]
 
 
 def assert_numeric_vars(adata: AnnData, vars: Sequence[str]):
