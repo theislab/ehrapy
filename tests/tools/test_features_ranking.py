@@ -200,10 +200,6 @@ class TestHelperFunctions:
     def test_evaluate_categorical_features(self):
         adata = ep.dt.mimic_2(encoded=True)
 
-        if not adata.uns["non_numerical_columns"]:
-            # Manually set categorical features because of the issue #543
-            adata.uns["non_numerical_columns"] = ["ehrapycat_day_icu_intime", "ehrapycat_service_unit"]
-
         group_names = pd.Categorical(adata.obs["service_unit"].astype(str)).categories.tolist()
 
         for method in ("chi-square", "g-test", "freeman-tukey", "mod-log-likelihood", "neyman", "cressie-read"):
@@ -232,10 +228,6 @@ class TestHelperFunctions:
 class TestRankFeaturesGroups:
     def test_real_dataset(self):
         adata = ep.dt.mimic_2(encoded=True)
-
-        if not adata.uns["non_numerical_columns"]:
-            # Manually set categorical features because of the issue #543
-            adata.uns["non_numerical_columns"] = ["ehrapycat_day_icu_intime", "ehrapycat_service_unit"]
 
         ep.tl.rank_features_groups(adata, groupby="service_unit")
 
@@ -269,10 +261,6 @@ class TestRankFeaturesGroups:
     def test_only_cat_features(self):
         adata = ep.dt.mimic_2(encoded=True)
         adata.uns["numerical_columns"] = []
-
-        if not adata.uns["non_numerical_columns"]:
-            # Manually set categorical features because of the issue #543
-            adata.uns["non_numerical_columns"] = ["ehrapycat_day_icu_intime", "ehrapycat_service_unit"]
 
         ep.tl.rank_features_groups(adata, groupby="service_unit")
         assert "rank_features_groups" in adata.uns
