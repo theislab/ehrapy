@@ -15,9 +15,9 @@ def _merge_arrays(arrays: Iterable[Iterable], groups_order) -> np.recarray:
     # The easiest way to merge recarrays is through dataframe conversion
     dfs = []
     for array in arrays:
-        if type(array) == np.recarray or type(array) == np.ndarray:
+        if isinstance(array, np.recarray) or isinstance(array, np.ndarray):
             dfs.append(pd.DataFrame(array, columns=groups_order))
-        elif type(array) == pd.DataFrame:
+        elif isinstance(array, pd.DataFrame):
             dfs.append(array[groups_order])
 
     concatenated_arrays = pd.concat(dfs, ignore_index=True, axis=0)
