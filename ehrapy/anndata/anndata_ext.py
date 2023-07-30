@@ -509,7 +509,10 @@ def get_numeric_vars(adata: AnnData) -> list[str]:
     """
     _assert_encoded(adata)
 
-    return adata.uns["numerical_columns"]
+    if "numerical_columns" not in adata.uns_keys():
+        return list(adata.var_names.values)
+    else:
+        return adata.uns["numerical_columns"]
 
 
 def assert_numeric_vars(adata: AnnData, vars: Sequence[str]):
@@ -524,7 +527,7 @@ def assert_numeric_vars(adata: AnnData, vars: Sequence[str]):
 def set_numeric_vars(
     adata: AnnData, values: np.ndarray, vars: Sequence[str] | None = None, copy: bool = False
 ) -> AnnData | None:
-    """Sets the column names for numeric variables in X.
+    """Sets the numeric values in given column names in X.
 
     Args:
         adata: :class:`~anndata.AnnData` object
@@ -543,7 +546,7 @@ def set_numeric_vars(
         assert_numeric_vars(adata, vars)
 
     if not np.issubdtype(values.dtype, np.number):
-        raise TypeError(f"values must be numeric (current dtype is {values.dtype})")
+        raise TypeError(f"Values must be numeric (current dtype is {values.dtype})")
 
     n_values = values.shape[1]
 
@@ -558,7 +561,7 @@ def set_numeric_vars(
     for i in range(n_values):
         adata.X[:, vars_idx[i]] = values[:, i]
 
-    logg.info(f"Column names for numeric variables {vars} were replaced by {values}.")
+    logg.info(f"Values in columns {vars} were replaced by {values}.")
 
     return adata
 
