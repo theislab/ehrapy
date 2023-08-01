@@ -296,6 +296,11 @@ def causal_inference(
             summary += f"{left_char}    ├- p-value: {results['p-value']}\n"
             summary += f"{left_char}    └- Test significance: {results['test_significance']:.2f}\n"
 
+    # Some older dowhy versions don't seem to store treatment and outcome name in the estimator
+    # so we manually do it
+    estimate.estimator._treatment_name = [treatment]
+    estimate.estimator._outcome_name = outcome
+
     if print_causal_estimate:
         print(estimate)
 
