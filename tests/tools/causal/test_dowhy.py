@@ -133,7 +133,7 @@ class TestCausal:
             show_graph=False,
             show_refute_plots=False,
         )
-        ax = ep.tl.plot_causal_effect(estimate)
+        ax = ep.pl.causal_effect(estimate)
 
         assert isinstance(ax, plt.Axes)
         legend = ax.get_legend()

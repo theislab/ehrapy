@@ -206,7 +206,16 @@ def causal_inference(
 
         identified_estimand = model.identify_effect(**identify_kwargs)
 
-        with capture_output() as _:  # otherwise prints estimation_method
+        # otherwise prints estimation_method
+        with capture_output() as _:
+            # input validation since `dowhy` does not do it
+            if "." not in estimation_method:
+                raise ValueError(f"Estimation method '{estimation_method}' not supported.")
+            else:
+                if len(estimation_method.split(".")) > 2:
+                    if not any(["dowhy" in estimation_method, "_estimator" in estimation_method]):
+                        raise ValueError(f"Estimation method '{estimation_method}' not supported.")
+
             estimate = model.estimate_effect(identified_estimand, method_name=estimation_method, **estimate_kwargs)
 
         refute_results: dict[str, str | dict[str, str]] = {}
