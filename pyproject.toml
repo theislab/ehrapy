@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ehrapy"
-version = "0.5.0"  # <<COOKIETEMPLE_FORCE_BUMP>>
+version = "0.6.0"  # <<COOKIETEMPLE_FORCE_BUMP>>
 description = "Electronic Health Record Analysis with Python."
 authors = ["Lukas Heumos <lukas.heumos@posteo.net>", "Philipp Ehmele <philipp_ehm@protonmail.com>"]
 license = "Apache2.0"
