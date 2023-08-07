@@ -12,7 +12,7 @@
 
 # ehrapy overview
 
-<img src="https://user-images.githubusercontent.com/99650244/217562449-e05ab1dd-9c04-44fc-a042-b993dd9d4eea.png" alt="ehrapy overview">
+![fig_1](https://github.com/theislab/ehrapy/assets/99650244/cc0babfa-fff9-49ca-becc-0694997aa897)
 
 ## Features
 
