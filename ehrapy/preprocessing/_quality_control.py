@@ -305,7 +305,7 @@ def qc_lab_measurements(
 
         reference_column = "SI Reference Interval" if unit == "SI" else "Traditional Reference Interval"
 
-        # Fetch all non None columns from the reference measures
+        # Fetch all non None columns from the reference statistics
         not_none_columns = [col for col in [sex_col, age_col, ethnicity_col] if col is not None]
         not_none_columns.append(reference_column)
         reference_values = reference_table.loc[[best_column_match], not_none_columns]
