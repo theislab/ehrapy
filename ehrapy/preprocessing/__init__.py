@@ -10,6 +10,7 @@ from ehrapy.preprocessing._data_imputation import (
     soft_impute,
 )
 from ehrapy.preprocessing._encode import encode, undo_encoding
+from ehrapy.preprocessing._expand_measurements import expand_measurements
 from ehrapy.preprocessing._highly_variable_features import highly_variable_features
 from ehrapy.preprocessing._normalization import (
     log_norm,
