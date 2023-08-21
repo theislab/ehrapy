@@ -5894,20 +5894,21 @@ testing = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "diff-cover (>=7.5)", "p
 
 [[package]]
 name = "sphinx-automodapi"
-version = "0.15.0"
+version = "0.16.0"
 description = "Sphinx extension for auto-generating API documentation for entire modules"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "sphinx-automodapi-0.15.0.tar.gz", hash = "sha256:fd5871e054df7f3e299dde959afffa849f4d01c6eac274c366b06472afcb06aa"},
-    {file = "sphinx_automodapi-0.15.0-py3-none-any.whl", hash = "sha256:06848f261fb127b25d35f27c2c4fddb041e76498733da064504f8077cbd27bec"},
+    {file = "sphinx-automodapi-0.16.0.tar.gz", hash = "sha256:6c673ef93066408e5ad3e2fa3533044d432a47fe6a826212b9ebf5f52a872554"},
+    {file = "sphinx_automodapi-0.16.0-py3-none-any.whl", hash = "sha256:68fc47064804604b90aa27c047016e86aaf970981d90a0082d5b5dd2e9d38afd"},
 ]
 
 [package.dependencies]
-sphinx = ">=2"
+sphinx = ">=4"
 
 [package.extras]
-test = ["codecov", "coverage", "cython", "pytest", "pytest-cov"]
+rtd = ["sphinx (<7)", "sphinx-rtd-theme"]
+test = ["coverage", "cython", "pytest", "pytest-cov", "setuptools"]
 
 [[package]]
 name = "sphinx-basic-ng"
