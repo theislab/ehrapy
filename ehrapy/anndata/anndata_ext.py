@@ -89,7 +89,6 @@ def df_to_anndata(
     dataframes = BaseDataframes(obs, df)
     numerical_columns = list(dataframes.df.select_dtypes("number").columns)
     # if data is numerical only, short-circuit AnnData creation to have float dtype instead of object
-    True if len(numerical_columns) == len(list(dataframes.df.columns)) else False
     X = dataframes.df.to_numpy(copy=True)
 
     # initializing an OrderedDict with a non-empty dict might not be intended,
@@ -100,6 +99,8 @@ def df_to_anndata(
     uns["numerical_columns"] = list(set(numerical_columns) | set(binary_columns))
     uns["non_numerical_columns"] = list(set(dataframes.df.columns) ^ set(uns["numerical_columns"]))
 
+    all_num = True if len(numerical_columns) == len(list(dataframes.df.columns)) else False
+    X = X.astype(np.number) if all_num else X.astype(object)
     # cast non numerical obs only columns to category or bool dtype, which is needed for writing to .h5ad files
     adata = AnnData(
         X=X,

@@ -76,12 +76,7 @@ def encode(
     """
     if isinstance(data, AnnData):
         # basic type checking for passed parameters when encoding a single AnnData object
-        if not isinstance(autodetect, bool):
-            raise ValueError(
-                f"Attempted to encode an AnnData object, but passed parameter for autodetect {autodetect} is not a boolean."
-                f"Please provide a boolean value for autodetect when encoding a single AnnData object!"
-            )
-        elif isinstance(encodings, str) and not autodetect:
+        if isinstance(encodings, str) and not autodetect:
             raise ValueError("Passing a string for parameter encodings is only possible when using autodetect=True!")
         elif autodetect and not isinstance(encodings, (str, type(None))):
             raise ValueError(
