@@ -3,6 +3,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
+
 from ehrapy.io._read import read_csv, read_fhir, read_h5ad
 
 CURRENT_DIR = Path(__file__).parent
