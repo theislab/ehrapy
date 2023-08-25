@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
+
 from ehrapy.io._read import read_csv
 from ehrapy.preprocessing._encode import DuplicateColumnEncodingError, _reorder_encodings, encode
 
