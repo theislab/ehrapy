@@ -1,15 +1,13 @@
+from __future__ import annotations
+
 from collections import OrderedDict
 from pathlib import Path
-from typing import Tuple
 
+import ehrapy as ep
 import numpy as np
 import pandas as pd
 import pytest
 from anndata import AnnData
-from pandas import DataFrame
-from pandas.testing import assert_frame_equal
-
-import ehrapy as ep
 from ehrapy.anndata.anndata_ext import (
     NotEncodedError,
     _assert_encoded,
@@ -23,6 +21,8 @@ from ehrapy.anndata.anndata_ext import (
     move_to_x,
     set_numeric_vars,
 )
+from pandas import DataFrame
+from pandas.testing import assert_frame_equal
 
 CUR_DIR = Path(__file__).parent.resolve()
 
@@ -49,7 +49,7 @@ class TestAnndataExt:
         assert_frame_equal(
             adata.obs,
             DataFrame(
-                {"clinic_id": [i for i in range(1, 6)], "name": ["foo", "bar", "baz", "buz", "ber"]},
+                {"clinic_id": list(range(1, 6)), "name": ["foo", "bar", "baz", "buz", "ber"]},
                 index=[str(idx) for idx in range(5)],
             ).astype({"clinic_id": "float32", "name": "category"}),
         )
@@ -64,7 +64,7 @@ class TestAnndataExt:
         assert_frame_equal(
             adata.obs,
             DataFrame(
-                {"clinic_id": [i for i in range(1, 6)], "name": ["foo", "bar", "baz", "buz", "ber"]},
+                {"clinic_id": list(range(1, 6)), "name": ["foo", "bar", "baz", "buz", "ber"]},
                 index=[str(idx) for idx in range(5)],
             ).astype({"clinic_id": "float32", "name": "category"}),
         )
@@ -98,7 +98,7 @@ class TestAnndataExt:
         assert_frame_equal(
             new_adata_non_num.obs,
             DataFrame(
-                {"name": ["foo", "bar", "baz", "buz", "ber"], "clinic_id": [i for i in range(1, 6)]},
+                {"name": ["foo", "bar", "baz", "buz", "ber"], "clinic_id": list(range(1, 6))},
                 index=[str(idx) for idx in range(5)],
             ).astype({"clinic_id": "float32", "name": "category"}),
         )
@@ -224,7 +224,7 @@ class TestAnndataExt:
         adata_x = np.array([col1_val, col2_val, col3_val], dtype="object").transpose()
         adata = AnnData(
             X=adata_x,
-            obs=DataFrame(index=[idx for idx in range(100)]),
+            obs=DataFrame(index=list(range(100))),
             var=DataFrame(index=["col" + str(idx) for idx in range(1, 4)]),
         )
         anndata_df = anndata_to_df(adata)
@@ -254,7 +254,7 @@ class TestAnndataExt:
     def test_anndata_to_df_throws_error_with_empty_obs(self):
         col1_val = ["patient" + str(idx) for idx in range(100)]
         adata_x = np.array([col1_val], dtype="object").transpose()
-        adata = AnnData(X=adata_x, obs=DataFrame(index=[idx for idx in range(100)]), var=DataFrame(index=["col1"]))
+        adata = AnnData(X=adata_x, obs=DataFrame(index=list(range(100))), var=DataFrame(index=["col1"]))
 
         with pytest.raises(ValueError):
             _ = anndata_to_df(adata, obs_cols=["some_missing_column"])
@@ -298,17 +298,17 @@ class TestAnndataExt:
 
     def test_detect_mixed_binary_columns(self):
         df = pd.DataFrame(
-            {"Col1": [i for i in range(4)], "Col2": ["str" + str(i) for i in range(4)], "Col3": [1.0, 0.0, np.nan, 1.0]}
+            {"Col1": list(range(4)), "Col2": ["str" + str(i) for i in range(4)], "Col3": [1.0, 0.0, np.nan, 1.0]}
         )
         adata = ep.ad.df_to_anndata(df)
         assert set(adata.uns["non_numerical_columns"]) == {"Col2"}
         assert set(adata.uns["numerical_columns"]) == {"Col1", "Col3"}
 
     @staticmethod
-    def _setup_df_to_anndata() -> Tuple[DataFrame, list, list, list]:
+    def _setup_df_to_anndata() -> tuple[DataFrame, list, list, list]:
         col1_val = ["str" + str(idx) for idx in range(100)]
         col2_val = ["another_str" + str(idx) for idx in range(100)]
-        col3_val = [idx for idx in range(100)]
+        col3_val = list(range(100))
         df = DataFrame({"col1": col1_val, "col2": col2_val, "col3": col3_val})
 
         return df, col1_val, col2_val, col3_val
@@ -341,10 +341,10 @@ class TestAnndataExt:
         return df
 
     @staticmethod
-    def _setup_anndata_to_df() -> Tuple[list, list, list]:
+    def _setup_anndata_to_df() -> tuple[list, list, list]:
         col1_val = ["patient" + str(idx) for idx in range(100)]
         col2_val = ["feature" + str(idx) for idx in range(100)]
-        col3_val = [idx for idx in range(100)]
+        col3_val = list(range(100))
 
         return col1_val, col2_val, col3_val
 

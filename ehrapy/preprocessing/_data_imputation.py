@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-from typing import Iterable, Literal
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import pandas as pd
-from anndata import AnnData
 from rich import print
 from rich.progress import Progress, SpinnerColumn
-from sklearn.experimental import enable_iterative_imputer  # noqa: F401
+from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OrdinalEncoder
 
@@ -15,6 +14,11 @@ from ehrapy import logging as logg
 from ehrapy import settings
 from ehrapy.anndata.anndata_ext import get_column_indices
 from ehrapy.core._tool_available import _check_module_importable
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from anndata import AnnData
 
 
 def explicit_impute(
@@ -166,7 +170,7 @@ def simple_impute(
                 raise ValueError(
                     f"Can only impute numerical data using {strategy} strategy. Try to restrict imputation"
                     "to certain columns using var_names parameter or use a different mode."
-                )
+                ) from None
         # most_frequent imputation works with non numerical data as well
         elif strategy == "most_frequent":
             _simple_impute(adata, var_names, strategy)
@@ -175,7 +179,7 @@ def simple_impute(
         else:
             raise ValueError(  # pragma: no cover
                 f"Unknown impute strategy {strategy} for simple Imputation. Choose any of mean, median or most_frequent."
-            )
+            ) from None
 
     if copy:
         return adata
@@ -391,7 +395,7 @@ def miss_forest_impute(
                     raise ValueError(
                         "One or both of your keys provided for var_names are unknown. Only "
                         "numerical and non_numerical are available!"
-                    )
+                    ) from None
                 non_num_indices = get_column_indices(adata, non_num_vars)
                 num_indices = get_column_indices(adata, num_vars)
 

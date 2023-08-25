@@ -1,8 +1,12 @@
 from __future__ import annotations
 
-from anndata import AnnData
+from typing import TYPE_CHECKING
+
 from rich.console import Console
 from rich.table import Table
+
+if TYPE_CHECKING:
+    from anndata import AnnData
 
 
 def qc_metrics(adata: AnnData, extra_columns: list[str] | None = None) -> None:  # pragma: no cover

@@ -1,4 +1,5 @@
-from typing import Iterable, Literal, Optional, Union
+from collections.abc import Iterable
+from typing import Literal, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -325,14 +326,14 @@ def rank_features_groups(
         adata.obs[groupby] = pd.Categorical(adata.obs[groupby])
 
     adata.uns[key_added] = {}
-    adata.uns[key_added]["params"] = dict(
-        groupby=groupby,
-        reference=reference,
-        method=num_cols_method,
-        categorical_method=cat_cols_method,
-        layer=layer,
-        corr_method=correction_method,
-    )
+    adata.uns[key_added]["params"] = {
+        "groupby": groupby,
+        "reference": reference,
+        "method": num_cols_method,
+        "categorical_method": cat_cols_method,
+        "layer": layer,
+        "corr_method": correction_method,
+    }
 
     group_names = pd.Categorical(adata.obs[groupby].astype(str)).categories.tolist()
 

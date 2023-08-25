@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import missingno as msno
-from anndata import AnnData
 
 from ehrapy.anndata import anndata_ext as ae
+
+if TYPE_CHECKING:
+    from anndata import AnnData
 
 # Functionality provided by https://github.com/ResidentMario/missingno
 

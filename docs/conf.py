@@ -77,24 +77,24 @@ myst_enable_extensions = [
 # The master toctree document.
 master_doc = "index"
 
-intersphinx_mapping = dict(
-    anndata=("https://anndata.readthedocs.io/en/stable/", None),
-    ipython=("https://ipython.readthedocs.io/en/stable/", None),
-    matplotlib=("https://matplotlib.org/", None),
-    numpy=("https://numpy.org/doc/stable/", None),
-    pandas=("https://pandas.pydata.org/docs/", None),
-    python=("https://docs.python.org/3", None),
-    scipy=("https://docs.scipy.org/doc/scipy/reference/", None),
-    sklearn=("https://scikit-learn.org/stable/", None),
-    torch=("https://pytorch.org/docs/master/", None),
-    scanpy=("https://scanpy.readthedocs.io/en/stable/", None),
-    pytorch_lightning=("https://pytorch-lightning.readthedocs.io/en/stable/", None),
-    pyro=("http://docs.pyro.ai/en/stable/", None),
-    pymde=("https://pymde.org/", None),
-    flax=("https://flax.readthedocs.io/en/latest/", None),
-    jax=("https://jax.readthedocs.io/en/latest/", None),
-    lamin=("https://lamin.ai/docs", None),
-)
+intersphinx_mapping = {
+    "anndata": ("https://anndata.readthedocs.io/en/stable/", None),
+    "ipython": ("https://ipython.readthedocs.io/en/stable/", None),
+    "matplotlib": ("https://matplotlib.org/", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
+    "pandas": ("https://pandas.pydata.org/docs/", None),
+    "python": ("https://docs.python.org/3", None),
+    "scipy": ("https://docs.scipy.org/doc/scipy/reference/", None),
+    "sklearn": ("https://scikit-learn.org/stable/", None),
+    "torch": ("https://pytorch.org/docs/master/", None),
+    "scanpy": ("https://scanpy.readthedocs.io/en/stable/", None),
+    "pytorch_lightning": ("https://pytorch-lightning.readthedocs.io/en/stable/", None),
+    "pyro": ("http://docs.pyro.ai/en/stable/", None),
+    "pymde": ("https://pymde.org/", None),
+    "flax": ("https://flax.readthedocs.io/en/latest/", None),
+    "jax": ("https://jax.readthedocs.io/en/latest/", None),
+    "lamin": ("https://lamin.ai/docs", None),
+}
 
 language = "en"
 

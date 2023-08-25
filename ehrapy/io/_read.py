@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Iterator, Literal
+from typing import TYPE_CHECKING, Literal
 
 import fhiry.parallel as fp
 import numpy as np
@@ -15,6 +15,9 @@ from ehrapy import ehrapy_settings, settings
 from ehrapy.anndata.anndata_ext import df_to_anndata
 from ehrapy.data._dataloader import download, remove_archive_extension
 from ehrapy.preprocessing._encode import encode
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 
 def read_csv(
@@ -194,7 +197,7 @@ def _read_from_directory(
         raise NotImplementedError(f"Reading from directory with .{extension} files is not implemented yet!")
 
 
-def _read_multiple_csv(  # noqa: N802
+def _read_multiple_csv(
     file_path: Path,
     sep: str,
     index_column: dict[str, str | int] | str | int | None = None,
@@ -294,7 +297,7 @@ def _do_read_csv(
     return df_to_anndata(initial_df, columns_obs_only), columns_obs_only
 
 
-def _read_multiple_h5ad(  # noqa: N802
+def _read_multiple_h5ad(
     file_path: Path,
 ) -> dict[str, AnnData]:
     """Read a dataset containing multiple .h5ad files.
@@ -625,44 +628,11 @@ def _extract_index_and_columns_obs_only(identifier: str, index_columns, columns_
         1.) The filename (thus the identifier) is not present as a key and no default key is provided or one or both dicts are empty:
             --> No index column will be set and/or no columns are obs only (based on user input)
 
-            .. code-block:: python
-                   # some setup code here
-                   ...
-                   # filename
-                   identifier1 = "MyFile"
-                   identifier2 = "MyOtherFile"
-                   # no default key and identifier1 is not in the index or columns_obs_only keys
-                   # -> no index column will be set and no columns will be obs only (except datetime, if any)
-                   index_columns = {"MyOtherFile":"MyOtherColumn1"}
-                   columns_obs_only = {"MyOtherFile":["MyOtherColumn2"]}
-
         2.) The filename (thus the identifier) is not present as a key, but default key is provided
             --> The index column will be set and/or columns will be obs only according to the default key
 
-            .. code-block:: python
-                  # some setup code here
-                   ...
-                   # filename
-                   identifier1 = "MyFile"
-                   identifier2 = "MyOtherFile"
-                   # identifier1 is not in the index or columns_obs_only keys, but default key is set for both
-                   # -> index column will be set using MyColumn1 and column obs only will include MyColumn2
-                   index_columns = {"MyOtherFile":"MyOtherColumn1", "default": "MyColumn1"}
-                   columns_obs_only = {"MyOtherFile":["MyOtherColumn2"], "default": ["MyColumn2"]}
-
         3.) The filename is present as a key
             --> The index column will be set and/or columns are obs only according to its value
-
-            .. code-block:: python
-                   # some setup code here
-                   ...
-                   # filename
-                   identifier1 = "MyFile"
-                   identifier2 = "MyOtherFile"
-                   # identifier1 is in the index and columns_obs_only keys
-                   # -> index column will be MyColumn1 and columns_obs_only will include MyColumn2 and MyColumn3
-                   index_columns = {"MyFile":"MyColumn1"}
-                   columns_obs_only = {"MyFile":["MyColumn2", "MyColumn3"]}
 
     Args:
         identifier: The name of the

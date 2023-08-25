@@ -1,5 +1,6 @@
+from collections.abc import Iterable, Mapping, Sequence
 from types import MappingProxyType
-from typing import Any, Dict, Iterable, Literal, Mapping, Optional, Sequence, Tuple, Type, Union
+from typing import Any, Literal, Optional, Union
 
 import numpy as np
 import scanpy as sc
@@ -8,9 +9,9 @@ from leidenalg.VertexPartition import MutableVertexPartition
 from scanpy._utils import AnyRandom
 from scipy.sparse import spmatrix
 
-from ehrapy.preprocessing._scanpy_pp_api import pca  # noqa: E402,F403,F401
+from ehrapy.preprocessing._scanpy_pp_api import pca
 from ehrapy.tools import _method_options
-from ehrapy.tools.feature_ranking._rank_features_groups import rank_features_groups  # noqa: E402,F403,F401
+from ehrapy.tools.feature_ranking._rank_features_groups import rank_features_groups
 
 
 def tsne(
@@ -351,14 +352,14 @@ def embedding_density(
 def leiden(
     adata: AnnData,
     resolution: float = 1,
-    restrict_to: Optional[Tuple[str, Sequence[str]]] = None,
+    restrict_to: Optional[tuple[str, Sequence[str]]] = None,
     random_state: AnyRandom = 0,
     key_added: str = "leiden",
     adjacency: Optional[spmatrix] = None,
     directed: bool = True,
     use_weights: bool = True,
     n_iterations: int = -1,
-    partition_type: Optional[Type[MutableVertexPartition]] = None,
+    partition_type: Optional[type[MutableVertexPartition]] = None,
     neighbors_key: Optional[str] = None,
     obsp: Optional[str] = None,
     copy: bool = False,
@@ -428,13 +429,13 @@ def louvain(
     adata: AnnData,
     resolution: Optional[float] = None,
     random_state: AnyRandom = 0,
-    restrict_to: Optional[Tuple[str, Sequence[str]]] = None,
+    restrict_to: Optional[tuple[str, Sequence[str]]] = None,
     key_added: str = "louvain",
     adjacency: Optional[spmatrix] = None,
     flavor: Literal["vtraag", "igraph", "rapids"] = "vtraag",
     directed: bool = True,
     use_weights: bool = False,
-    partition_type: Optional[Type[MutableVertexPartition]] = None,
+    partition_type: Optional[type[MutableVertexPartition]] = None,
     partition_kwargs: Mapping[str, Any] = MappingProxyType({}),
     neighbors_key: Optional[str] = None,
     obsp: Optional[str] = None,
@@ -507,7 +508,7 @@ def dendrogram(
     optimal_ordering: bool = False,
     key_added: Optional[str] = None,
     inplace: bool = True,
-) -> Optional[Dict[str, Any]]:  # pragma: no cover
+) -> Optional[dict[str, Any]]:  # pragma: no cover
     """Computes a hierarchical clustering for the given `groupby` categories.
 
     By default, the PCA representation is used unless `.X` has less than 50 variables.
@@ -806,7 +807,7 @@ def filter_rank_features_groups(
 
 def marker_feature_overlap(
     adata: AnnData,
-    reference_markers: Union[Dict[str, set], Dict[str, list]],
+    reference_markers: Union[dict[str, set], dict[str, list]],
     *,
     key: str = "rank_features_groups",
     method: _method_options._marker_feature_overlap_methods = "overlap_count",

@@ -16,7 +16,6 @@ python:
           path: .
           extra_requirements:
               - doc
-              - medcat
 
 submodules:
     include: all

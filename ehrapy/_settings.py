@@ -3,18 +3,20 @@ from __future__ import annotations
 import inspect
 import logging
 import sys
-from collections.abc import Generator
 from contextlib import contextmanager
 from enum import IntEnum
 from logging import getLevelName
 from pathlib import Path
 from time import time
-from typing import Any, Iterable, Literal, TextIO
+from typing import TYPE_CHECKING, Any, Literal, TextIO
 
 from matplotlib import pyplot as plt
 from scanpy.plotting import set_rcParams_scanpy
 
 from ehrapy.logging import _RootLogger, _set_log_file, _set_log_level
+
+if TYPE_CHECKING:
+    from collections.abc import Generator, Iterable
 
 _VERBOSITY_TO_LOGLEVEL: dict[str, str] = {
     "error": "ERROR",
