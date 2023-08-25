@@ -86,7 +86,6 @@ def df_to_anndata(
             ) from e
     else:
         obs = pd.DataFrame(index=df.index.map(str))
-        logg.info("Added all columns to `obs`.")
     dataframes = BaseDataframes(obs, df)
     numerical_columns = list(dataframes.df.select_dtypes("number").columns)
     # if data is numerical only, short-circuit AnnData creation to have float dtype instead of object

@@ -40,7 +40,7 @@ def encode(
 
     Available encodings are:
         1. one-hot (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.OneHotEncoder.html)
-        2. labe (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.LabelEncoder.html)
+        2. label (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.LabelEncoder.html)
         3. count (https://contrib.scikit-learn.org/category_encoders/count.html)
         4. hash (https://contrib.scikit-learn.org/category_encoders/hashing.html)
 
@@ -352,7 +352,7 @@ def _one_hot_encoding(
         Encoded new X and the corresponding new var names
     """
     original_values = _initial_encoding(uns, categories)
-    progress.update(task, description="[blue]Running one hot encoding on passed columns ...")
+    progress.update(task, description="[bold blue]Running one hot encoding on passed columns ...")
     encoder = OneHotEncoder(handle_unknown="ignore", sparse=False).fit(original_values)
     categorical_prefixes = [
         f"ehrapycat_{category}_{str(suffix).strip()}"
