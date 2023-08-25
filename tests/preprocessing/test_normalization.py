@@ -2,12 +2,11 @@ import warnings
 from collections import OrderedDict
 from pathlib import Path
 
+import ehrapy as ep
 import numpy as np
 import pandas as pd
 import pytest
 from anndata import AnnData
-
-import ehrapy as ep
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_PATH = f"{CURRENT_DIR}/test_preprocessing"

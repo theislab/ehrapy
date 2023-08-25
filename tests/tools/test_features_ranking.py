@@ -1,9 +1,8 @@
+import ehrapy as ep
+import ehrapy.tools.feature_ranking._rank_features_groups as _utils
 import numpy as np
 import pandas as pd
 import pytest
-
-import ehrapy as ep
-import ehrapy.tools.feature_ranking._rank_features_groups as _utils
 
 
 class TestHelperFunctions:
