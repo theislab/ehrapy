@@ -85,7 +85,7 @@ class _LogFormatter(logging.Formatter):
         self.FORMATS = self.define_format()
 
     def define_format(self):
-        grey = "\x1b[1;30m"
+        white = "\x1b[1;37m"
         green = "\x1b[1;32m"
         yellow = "\x1b[1;33m"
         red = "\x1b[1;31m"
@@ -96,15 +96,11 @@ class _LogFormatter(logging.Formatter):
 
         format_prefix = f"{purple}%(asctime)s{reset} - " f"{blue}%(name)s{reset} "
 
-        # format_prefix = f"{purple}%(asctime)s{reset} " \
-        #                 f"{blue}%(name)s{reset} " \
-        #                 f"{light_blue}(%(filename)s:%(lineno)s){reset} "
-
         format_suffix = "%(levelname)s - %(message)s"
 
         return {
             logging.DEBUG: format_prefix + green + format_suffix + reset,
-            logging.INFO: format_prefix + grey + format_suffix + reset,
+            logging.INFO: format_prefix + white + format_suffix + reset,
             logging.WARNING: format_prefix + yellow + format_suffix + reset,
             logging.ERROR: format_prefix + red + format_suffix + reset,
             logging.CRITICAL: format_prefix + blink_red + format_suffix + reset,

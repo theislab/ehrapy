@@ -3,10 +3,11 @@ import warnings
 import anndata
 import dowhy
 import dowhy.datasets
-import ehrapy as ep
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
+
+import ehrapy as ep
 
 warnings.filterwarnings("ignore")
 

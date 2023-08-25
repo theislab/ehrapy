@@ -103,7 +103,8 @@ markers = [
 ]
 filterwarnings = [
     "ignore::DeprecationWarning",
-    "ignore::anndata._core.anndata.ImplicitModificationWarning"
+    "ignore::anndata._core.anndata.ImplicitModificationWarning",
+    "ignore::anndata.OldFormatWarning:",
 ]
 minversion = 6.0
 norecursedirs = [ '.*', 'build', 'dist', '*.egg', 'data', '__pycache__']
@@ -112,7 +113,6 @@ norecursedirs = [ '.*', 'build', 'dist', '*.egg', 'data', '__pycache__']
 line-length = 120
 
 [tool.ruff]
-src = ["src"]
 line-length = 120
 select = [
     "F",  # Errors detected by Pyflakes

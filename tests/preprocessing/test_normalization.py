@@ -2,11 +2,12 @@ import warnings
 from collections import OrderedDict
 from pathlib import Path
 
-import ehrapy as ep
 import numpy as np
 import pandas as pd
 import pytest
 from anndata import AnnData
+
+import ehrapy as ep
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_PATH = f"{CURRENT_DIR}/test_preprocessing"
@@ -32,12 +33,11 @@ def adata_to_norm():
         X=X_data,
         obs=pd.DataFrame(data=obs_data),
         var=pd.DataFrame(data=var_data, index=var_data["Feature"]),
-        dtype=np.dtype(object),
         uns=OrderedDict(),
     )
     adata.uns["numerical_columns"] = ["Numeric1", "Numeric2"]
     adata.uns["non_numerical_columns"] = ["String1", "String2"]
-    adata = ep.pp.encode(adata, autodetect=True)
+    adata = ep.pp.encode(adata, autodetect=True, encodings="label")
 
     return adata
 

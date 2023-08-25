@@ -3,11 +3,14 @@ from __future__ import annotations
 from collections import OrderedDict
 from pathlib import Path
 
-import ehrapy as ep
 import numpy as np
 import pandas as pd
 import pytest
 from anndata import AnnData
+from pandas import DataFrame
+from pandas.testing import assert_frame_equal
+
+import ehrapy as ep
 from ehrapy.anndata.anndata_ext import (
     NotEncodedError,
     _assert_encoded,
@@ -21,8 +24,6 @@ from ehrapy.anndata.anndata_ext import (
     move_to_x,
     set_numeric_vars,
 )
-from pandas import DataFrame
-from pandas.testing import assert_frame_equal
 
 CUR_DIR = Path(__file__).parent.resolve()
 
@@ -203,7 +204,7 @@ class TestAnndataExt:
     def test_df_to_anndata_cols_obs_only(self):
         df, col1_val, col2_val, col3_val = TestAnndataExt._setup_df_to_anndata()
         adata = df_to_anndata(df, columns_obs_only=["col1", "col2"])
-        assert adata.X.dtype == "float32"
+        assert adata.X.dtype == "float64"
         assert adata.X.shape == (100, 1)
         assert_frame_equal(
             adata.obs,
@@ -215,7 +216,7 @@ class TestAnndataExt:
         df = DataFrame(test_array, columns=["col" + str(idx) for idx in range(5)])
         adata = df_to_anndata(df)
 
-        assert adata.X.dtype == "float32"
+        assert adata.X.dtype == "float64"
         np.testing.assert_array_equal(test_array, adata.X)
 
     def test_anndata_to_df_simple(self):
@@ -264,7 +265,7 @@ class TestAnndataExt:
         expected_df = DataFrame({"col1": col1_val})
         var = DataFrame(index=["col1"])
         adata_x = np.array([col1_val], dtype="object").transpose()
-        adata = AnnData(X=adata_x, obs=DataFrame({"col2": col2_val, "col3": col3_val}), var=var, dtype="object")
+        adata = AnnData(X=adata_x, obs=DataFrame({"col2": col2_val, "col3": col3_val}), var=var)
         anndata_df = anndata_to_df(adata, obs_cols=list(adata.var.columns))
 
         assert_frame_equal(anndata_df, expected_df)
@@ -396,7 +397,7 @@ class TestAnnDataUtil:
         )
         self.adata_strings.uns["numerical_columns"] = ["Numeric1", "Numeric2"]
         self.adata_strings.uns["non_numerical_columns"] = ["String1", "String2"]
-        self.adata_encoded = ep.pp.encode(self.adata_strings.copy(), autodetect=True)
+        self.adata_encoded = ep.pp.encode(self.adata_strings.copy(), autodetect=True, encodings="label")
 
     def test_assert_encoded(self):
         """Test for the encoding assertion."""

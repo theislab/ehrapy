@@ -4,6 +4,8 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+from sklearn.exceptions import ConvergenceWarning
+
 from ehrapy.io._read import read_csv
 from ehrapy.preprocessing._data_imputation import (
     _warn_imputation_threshold,
@@ -17,7 +19,6 @@ from ehrapy.preprocessing._data_imputation import (
     simple_impute,
     soft_impute,
 )
-from sklearn.exceptions import ConvergenceWarning
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_PATH = f"{CURRENT_DIR}/test_data_imputation"

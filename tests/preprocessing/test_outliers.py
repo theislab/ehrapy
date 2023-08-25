@@ -1,8 +1,9 @@
 from pathlib import Path
 
-import ehrapy as ep
 import numpy as np
 import pytest
+
+import ehrapy as ep
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_PATH = f"{CURRENT_DIR}/test_preprocessing"
