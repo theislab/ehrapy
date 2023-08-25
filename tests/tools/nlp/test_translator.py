@@ -6,6 +6,7 @@ import pandas as pd
 import pytest
 from anndata import AnnData
 from deep_translator.exceptions import TooManyRequests
+
 from ehrapy.tools.nlp._translators import Translator
 
 CURRENT_DIR = Path(__file__).parent

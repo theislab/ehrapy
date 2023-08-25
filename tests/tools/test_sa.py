@@ -1,8 +1,9 @@
-import ehrapy as ep
 import numpy as np
 import pytest
 import statsmodels
 from lifelines import KaplanMeierFitter
+
+import ehrapy as ep
 
 
 class TestSA:
