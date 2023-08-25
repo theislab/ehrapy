@@ -1,8 +1,9 @@
-import ehrapy as ep
-import ehrapy.tools.feature_ranking._rank_features_groups as _utils
 import numpy as np
 import pandas as pd
 import pytest
+
+import ehrapy as ep
+import ehrapy.tools.feature_ranking._rank_features_groups as _utils
 
 
 class TestHelperFunctions:
@@ -197,7 +198,8 @@ class TestHelperFunctions:
             _utils._get_groups_order(groups_subset=("A", "B"), group_names=("A", "B", "C"), reference="D")
 
     def test_evaluate_categorical_features(self):
-        adata = ep.dt.mimic_2(encoded=True)
+        adata = ep.dt.mimic_2(encoded=False)
+        adata = ep.pp.encode(adata, autodetect=True, encodings="label")
 
         group_names = pd.Categorical(adata.obs["service_unit"].astype(str)).categories.tolist()
 
