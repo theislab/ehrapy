@@ -1,81 +1,57 @@
+fail_fast: false
+default_language_version:
+    python: python3
+default_stages:
+    - commit
+    - push
+minimum_pre_commit_version: 2.16.0
 repos:
-    - repo: local
+    - repo: https://github.com/psf/black
+      rev: "23.7.0"
       hooks:
           - id: black
-            name: black
-            entry: black
-            language: system
-            types: [python]
-            require_serial: true
-          - id: check-added-large-files
-            name: Check for added large files
-            entry: check-added-large-files
-            language: system
-            args: ["--maxkb=5000"]
-            exclude: docs/tutorials/
-          - id: check-toml
-            name: Check Toml
-            entry: check-toml
-            language: system
-            types: [toml]
-          - id: check-yaml
-            name: Check Yaml
-            entry: check-yaml
-            language: system
-            types: [yaml]
-          - id: end-of-file-fixer
-            name: Fix End of Files
-            entry: end-of-file-fixer
-            language: system
-            types: [text]
-            stages: [commit, push, manual]
-            exclude: docs/
-          - id: flake8
-            name: flake8
-            entry: flake8
-            language: system
-            types: [python]
-            require_serial: true
-            exclude: |
-                (?x)^(
-                    .nox|
-                    .mypy_cache|
-                    .pytest_cache|
-                    dist
-                )$
-          - id: trailing-whitespace
-            name: Trim Trailing Whitespace
-            entry: trailing-whitespace-fixer
-            language: system
-            types: [text]
-            stages: [commit, push, manual]
-            exclude: docs/
-          - id: pyupgrade
-            name: pyupgrade
-            description: Automatically upgrade syntax for newer versions.
-            entry: pyupgrade
-            language: system
-            types: [python]
-            args: [--py38-plus]
+    - repo: https://github.com/asottile/blacken-docs
+      rev: 1.15.0
+      hooks:
+          - id: blacken-docs
     - repo: https://github.com/pre-commit/mirrors-prettier
-      rev: v3.0.0
+      rev: v3.0.1
       hooks:
           - id: prettier
-    - repo: https://github.com/pycqa/isort
-      rev: 5.12.0
+            # Newer versions of node don't work on systems that have an older version of GLIBC
+            # (in particular Ubuntu 18.04 and Centos 7)
+            # EOL of Centos 7 is in 2024-06, we can probably get rid of this then.
+            # See https://github.com/scverse/cookiecutter-scverse/issues/143 and
+            # https://github.com/jupyterlab/jupyterlab/issues/12675
+            language_version: "17.9.1"
+    - repo: https://github.com/astral-sh/ruff-pre-commit
+      rev: v0.0.285
       hooks:
-          - id: isort
-            name: isort (python)
-          - id: isort
-            name: isort (cython)
-            types: [cython]
-          - id: isort
-            name: isort (pyi)
-            types: [pyi]
+          - id: ruff
+            args: [--fix, --exit-non-zero-on-fix]
+    - repo: https://github.com/pre-commit/pre-commit-hooks
+      rev: v4.4.0
+      hooks:
+          - id: detect-private-key
+          - id: check-ast
+          - id: end-of-file-fixer
+          - id: mixed-line-ending
+            args: [--fix=lf]
+          - id: trailing-whitespace
+          - id: check-case-conflict
     - repo: https://github.com/pre-commit/mirrors-mypy
-      rev: v1.3.0
+      rev: v0.940
       hooks:
           - id: mypy
             args: [--no-strict-optional, --ignore-missing-imports]
             additional_dependencies:
                 ["types-pkg-resources", "types-requests", "types-attrs"]
+    - repo: local
+      hooks:
+          - id: forbid-to-commit
+            name: Don't commit rej files
+            entry: |
+                Cannot commit .rej files. These indicate merge conflicts that arise during automated template updates.
+                Fix the merge conflicts manually and remove the .rej files.
+            language: fail
+            files: '.*\.rej$'

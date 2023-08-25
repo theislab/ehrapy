@@ -1,0 +1,30 @@
+name: Release
+
+on:
+    push:
+        tags:
+            - "*.*.*"
+
+jobs:
+    release:
+        name: Release
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v3
+
+            - name: Set up Python 3.11
+              uses: actions/setup-python@v4
+              with:
+                  python-version: "3.11"
+
+            - name: Install hatch
+              run: pip install hatch
+
+            - name: Build project for distribution
+              run: hatch build
+
+            - name: Publish a Python distribution to PyPI
+              uses: pypa/gh-action-pypi-publish@release/v1
+              with:
+                  password: ${{ secrets.PYPI_TOKEN }}

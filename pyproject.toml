@@ -1,105 +1,176 @@
-[tool.poetry]
+[build-system]
+build-backend = "hatchling.build"
+requires = ["hatchling"]
+
+[project]
 name = "ehrapy"
-version = "0.6.0"  # <<COOKIETEMPLE_FORCE_BUMP>>
+version = "0.6.0"
 description = "Electronic Health Record Analysis with Python."
-authors = ["Lukas Heumos <lukas.heumos@posteo.net>", "Philipp Ehmele <philipp_ehm@protonmail.com>"]
-license = "Apache2.0"
 readme = "README.md"
-homepage = "https://github.com/theislab/ehrapy"
-repository = "https://github.com/theislab/ehrapy"
-documentation = "https://ehrapy.readthedocs.io"
-packages = [
-    { include = "ehrapy" },
+requires-python = ">=3.9"
+license = {file = "LICENSE"}
+authors = [
+    {name = "Lukas Heumos"},
+    {name = "Philipp Ehmele"},
+    {name = "Altana Namsaraeva"},
+    {name = "Vladimir Shitov"},
+    {name = "Luke Zappia"},
 ]
-classifiers = [
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
+maintainers = [
+    {name = "Lukas Heumos", email = "lukas.heumos@posteo.net"},
+]
+urls.Documentation = "https://ehrapy.readthedocs.io"
+urls.Source = "https://github.com/theislab/ehrapy"
+urls.Home-page = "https://github.com/theislab/ehrapy"
+
+dependencies = [
+    "rich",
+    "scanpy[leiden]",
+    "pyyaml",
+    "requests",
+    "scikit-learn",
+    "category_encoders",
+    "deepl",
+    "pynndescent",
+    "ipython",
+    "deep-translator",
+    "scikit-learn-intelex",
+    "fancyimpute",
+    "miceforest",
+    "scikit-misc",
+    "session-info",
+    "lifelines",
+    "missingno",
+    "thefuzz[speedup]",
+    "tabulate",
+    "fhiry",
+    "dowhy"
 ]
 
-[tool.poetry.dependencies]
-python = ">=3.9.0,<3.12"
-rich = ">=10.12.0"
-PyYAML = ">=5.4.1"
-requests = ">=2.26.0"
-scikit-learn = ">=1.0"
-category_encoders = ">=2.2.2"
-deepl = ">=1.2.0"
-pynndescent = ">=0.5.4"
-scanpy = {extras = ["leiden"], version = "^1.9.3"}
-ipython = ">=7.30.1"
-pyhpo = {extras = ["all"], version = ">=3.0.0"}
-deep-translator = ">=1.6.1"
-scikit-learn-intelex = {version = ">=2021.5.3", optional = true}
-medcat = {version = "^1.5.0", optional = true}
-fancyimpute = ">=0.7.0"
-miceforest = ">=5.3.0"
-scikit-misc = ">=0.1.4"
-session-info = ">=1.0.0"
-lifelines = ">=0.27.0"
-missingno = ">=0.5.1"
-thefuzz = {extras = ["speedup"], version = ">=0.19.0"}
-tabulate = ">=0.9.0"
-fhiry = ">=2.1"
-numba = ">=0.57.1"
-dowhy = ">=0.10"
+[project.optional-dependencies]
+medcat = [
+    "medcat",
+]
+dev = [
+    "pre-commit",
+]
+doc = [
+    "docutils>=0.8,!=0.18.*,!=0.19.*",
+    "sphinx>=4",
+    "furo",
+    "myst-nb",
+    "myst-parser",
+    "sphinxcontrib-bibtex>=1.0.0",
+    "sphinx-gallery",
+    "sphinx-autodoc-typehints",
+    "sphinx-copybutton",
+    "sphinx-remove-toctrees",
+    "sphinx-design",
+    "sphinx-last-updated-by-git",
+    "sphinx-automodapi",
+    "sphinxext-opengraph",
+    "pygments",
+    "pyenchant",
+    "nbsphinx",
+    "nbsphinx-link",
+    "ipykernel",
+    "ipython",
+]
+test = [
+    "pytest",
+    "pytest-cov",
+]
 
+[tool.hatch.version]
+source = "vcs"
 
-[tool.poetry.dev-dependencies]
-pytest = ">=6.2.5"
-coverage = {extras = ["toml"], version = ">=6.0"}
-mypy = ">=0.930"
-typeguard = ">=2.13.3"
-xdoctest = {extras = ["colors"], version = ">=0.15.10"}
-pre-commit = ">=2.16.0"
-black = {extras = ["jupyter"], version = ">=21.12b0"}
-flake8 = ">=4.0.1"
-flake8-bandit = ">=2.1.2"
-flake8-bugbear = ">=21.11.29"
-flake8-docstrings = ">=1.5.0"
-flake8-rst-docstrings = ">=0.2.5"
-pep8-naming = ">=0.12.1"
-pre-commit-hooks = ">=4.0.1"
-Pygments = ">=2.10.0"
-types-pkg-resources = ">=0.1.3"
-types-requests = ">=2.26.2"
-types-attrs = ">=19.1.0"
-pyenchant = ">=3.2.1"
-pyupgrade = ">=2.30.1"
+[tool.coverage.run]
+source = ["pertpy"]
+omit = [
+    "**/test_*.py",
+    "ehrapy/data/_datasets.py",  # Difficult to test
+]
 
-[tool.poetry.extras]
-en-core-web-md = ["en-core-web-md"]
-scikit-learn-intelex = ["scikit-learn-intelex"]
-medcat = ["medcat"]
-
-[tool.poetry.group.docs]
-optional = true
-
-[tool.poetry.group.docs.dependencies]
-sphinx_gallery = "<0.11"
-sphinx = ">=4.3.2"
-sphinx-autobuild = ">=2021.3.14"
-sphinx-gallery = ">0.6,<0.11"
-sphinx-autodoc-typehints = ">=1.12.0"
-sphinx-last-updated-by-git = ">=0.3.0"
-nbsphinx = ">=0.8.7"
-sphinxcontrib-bibtex = ">=2.4.1"
-sphinx-automodapi = ">=0.14"
-nbsphinx-link = ">=1.3.0"
-sphinx-copybutton = ">=0.4.0"
-myst-parser = ">=1,<3"
-sphinx-remove-toctrees = ">=0.0.3"
-sphinx-design = ">=0.0.13"
-sphinx-click = ">=3.0.0"
-furo = ">=2022.3.4"
-sphinx-autodoc-annotation = "^1.0.post1"
-sphinxcontrib-spelling = ">=7.7,<9.0"
-
-[tool.poetry.scripts]
-ehrapy = "ehrapy.__main__:main"
+[tool.pytest.ini_options]
+testpaths = "pertpy/tests"
+xfail_strict = true
+addopts = [
+    "--import-mode=importlib",  # allow using test files with same name
+]
+markers = [
+    "conda: marks a subset of tests to be ran on the Bioconda CI.",
+    "extra: marks tests that require extra dependencies."
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::anndata._core.anndata.ImplicitModificationWarning"
+]
+minversion = 6.0
+norecursedirs = [ '.*', 'build', 'dist', '*.egg', 'data', '__pycache__']
 
 [tool.black]
 line-length = 120
+
+[tool.ruff]
+src = ["src"]
+line-length = 120
+select = [
+    "F",  # Errors detected by Pyflakes
+    "E",  # Error detected by Pycodestyle
+    "W",  # Warning detected by Pycodestyle
+    "I",  # isort
+    #"D",  # pydocstyle
+    "B",  # flake8-bugbear
+    "TID",  # flake8-tidy-imports
+    "C4",  # flake8-comprehensions
+    "BLE",  # flake8-blind-except
+    "UP",  # pyupgrade
+    "RUF100",  # Report unused noqa directives
+    "TCH",  # Typing imports
+    # "NPY",  # Numpy specific rules
+    "PTH"  # Use pathlib
+]
+ignore = [
+    # line too long -> we accept long comment lines; black gets rid of long code lines
+    "E501",
+    # Do not assign a lambda expression, use a def -> lambda expression assignments are convenient
+    "E731",
+    # allow I, O, l as variable names -> I is the identity matrix
+    "E741",
+    # Missing docstring in public package
+    "D104",
+    # Missing docstring in public module
+    "D100",
+    # Missing docstring in __init__
+    "D107",
+    # Errors from function calls in argument defaults. These are fine when the result is immutable.
+    "B008",
+    # __magic__ methods are are often self-explanatory, allow missing docstrings
+    "D105",
+    # first line should end with a period [Bug: doesn't work with single-line docstrings]
+    "D400",
+    # First line should be in imperative mood; try rephrasing
+    "D401",
+    ## Disable one in each pair of mutually incompatible rules
+    # We don’t want a blank line before a class docstring
+    "D203",
+    # We want docstrings to start immediately after the opening triple quote
+    "D213",
+    # Imports unused
+    "F401",
+    # camcelcase imported as lowercase
+    "N813",
+    # module import not at top level of file
+    "E402",
+]
+
+[tool.ruff.pydocstyle]
+convention = "google"
+
+[tool.ruff.per-file-ignores]
+"docs/*" = ["I"]
+"tests/*" = ["D"]
+"*/__init__.py" = ["F401"]
 
 [tool.mypy]
 strict = false
@@ -110,32 +181,14 @@ show_error_context = true
 ignore_missing_imports = true
 no_strict_optional = true
 
-[tool.isort]
-multi_line_output=3
-include_trailing_comma=true
-balanced_wrapping=true
-line_length=120
-
-[tool.pytest.ini_options]
-filterwarnings = [
-    "ignore::DeprecationWarning",
-    "ignore::anndata._core.anndata.ImplicitModificationWarning"
+[tool.cruft]
+skip = [
+    "tests",
+    "src/**/__init__.py",
+    "src/**/basic.py",
+    "docs/api.md",
+    "docs/changelog.md",
+    "docs/references.bib",
+    "docs/references.md",
+    "docs/notebooks/example.ipynb"
 ]
-
-[tool.coverage.paths]
-source = ["ehrapy", "*/site-packages"]
-
-[tool.coverage.run]
-branch = true
-source = ["ehrapy"]
-omit = [
-    "ehrapy/__main__.py",  # Just providing the interface for all click functions
-    "ehrapy/data/_datasets.py",  # Difficult to test
-]
-
-[tool.coverage.report]
-show_missing = true
-
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
