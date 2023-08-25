@@ -3,7 +3,6 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
-
 from ehrapy.io._read import read_csv, read_fhir, read_h5ad
 
 CURRENT_DIR = Path(__file__).parent
@@ -157,7 +156,7 @@ class TestRead:
 
     def test_move_single_column_misspelled(self):
         with pytest.raises(ValueError):
-            _ = read_csv(dataset_path=f"{_TEST_PATH}/dataset_basic.csv", columns_obs_only=["b11_values"])  # noqa: F841
+            _ = read_csv(dataset_path=f"{_TEST_PATH}/dataset_basic.csv", columns_obs_only=["b11_values"])
 
     def test_move_single_column_to_obs(self):
         adata = read_csv(dataset_path=f"{_TEST_PATH}/dataset_basic.csv", columns_obs_only=["b12_values"])

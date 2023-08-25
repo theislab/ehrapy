@@ -155,7 +155,7 @@ def causal_inference(
         refute_methods = [refute_methods]
 
     if isinstance(refute_methods, list):
-        if not all([isinstance(rm, str) for rm in refute_methods]):
+        if not all(isinstance(rm, str) for rm in refute_methods):
             raise TypeError("When parameter 'refute_methods' is a list, all of them must be strings.")
 
     for method in refute_methods:

@@ -1,10 +1,13 @@
 from __future__ import annotations
 
-from typing import Iterable
-
-from anndata import AnnData
+from typing import TYPE_CHECKING
 
 from ehrapy.anndata import anndata_to_df, df_to_anndata
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from anndata import AnnData
 
 
 def expand_measurements(

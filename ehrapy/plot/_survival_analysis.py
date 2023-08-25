@@ -1,17 +1,21 @@
 from __future__ import annotations
 
-from typing import Sequence
-from xmlrpc.client import Boolean
+from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
 import numpy as np
-from anndata import AnnData
-from lifelines import KaplanMeierFitter
-from matplotlib.axes import Axes
 from numpy import ndarray
-from statsmodels.regression.linear_model import RegressionResults
 
 import ehrapy as ep
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from xmlrpc.client import Boolean
+
+    from anndata import AnnData
+    from lifelines import KaplanMeierFitter
+    from matplotlib.axes import Axes
+    from statsmodels.regression.linear_model import RegressionResults
 
 
 def ols(

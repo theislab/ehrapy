@@ -195,7 +195,7 @@ def _encode(
             encoded_ann_data = AnnData(
                 encoded_x,
                 obs=adata.obs.copy(),
-                var=dict(var_names=encoded_var_names),
+                var={"var_names": encoded_var_names},
                 uns=orig_uns_copy,
                 layers={"original": updated_layer},
                 dtype=np.float32,
@@ -296,7 +296,7 @@ def _encode(
             encoded_ann_data = AnnData(
                 encoded_x,
                 obs=adata.obs.copy(),
-                var=dict(var_names=encoded_var_names),
+                var={"var_names": encoded_var_names},
                 uns=orig_uns_copy,
                 layers={"original": updated_layer},
                 dtype=np.float32,
@@ -306,11 +306,10 @@ def _encode(
 
         # if the user did not pass every non numerical column for encoding, a Anndata object cannot be created
         except ValueError:
-            print(
-                "[bold red]Creation of AnnData object failed. Ensure that you passed all non numerical, "
+            raise AnnDataCreationError(
+                "Creation of AnnData object failed. Ensure that you passed all non numerical, "
                 "categorical values for encoding!"
-            )
-            raise AnnDataCreationError
+            ) from None
         updated_num_uns, updated_non_num_uns, _ = _update_uns(adata, categoricals)
         encoded_ann_data.uns["numerical_columns"] = updated_num_uns
         encoded_ann_data.uns["non_numerical_columns"] = updated_non_num_uns
@@ -441,7 +440,7 @@ def _count_encoding(
     transformed = count_encoder.transform(original_values)
     # X is None if this is the first encoding "round" -> take the former X
     if X is None:
-        X = adata.X  # noqa: N806
+        X = adata.X
 
     progress.advance(task, 1)
     progress.update(task, description="[blue]Updating X and var ...")

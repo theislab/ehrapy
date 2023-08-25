@@ -2,15 +2,19 @@ from __future__ import annotations
 
 import copy
 from pathlib import Path
-from typing import Collection, Literal
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import pandas as pd
-from anndata import AnnData
 from rich import print
 from thefuzz import process
 
 from ehrapy import logging as logg
+
+if TYPE_CHECKING:
+    from collections.abc import Collection
+
+    from anndata import AnnData
 
 
 def qc_metrics(

@@ -411,6 +411,7 @@ An instance of the {class}`~scanpy._settings.ScanpyConfig` is available as `ehra
 
 ```python
 import ehrapy as ep
+
 ep.settings.set_figure_params(dpi=150)
 ```
 
@@ -426,5 +427,6 @@ Call the function via:
 
 ```python
 import ehrapy as ep
+
 ep.print_versions()
 ```

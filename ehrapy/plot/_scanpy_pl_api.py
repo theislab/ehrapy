@@ -1,22 +1,14 @@
 from __future__ import annotations
 
+from collections.abc import Collection, Iterable, Mapping, Sequence
 from enum import Enum
 from functools import partial
-from pathlib import Path
 from types import MappingProxyType
-from typing import Any, Callable, Collection, Iterable, Literal, Mapping, Sequence, Tuple, Union
+from typing import TYPE_CHECKING, Any, Callable, Literal, Union
 
-import numpy as np
-import pandas as pd
 import scanpy as sc
-from anndata import AnnData
-from cycler import Cycler
-from matplotlib.axes import Axes
-from matplotlib.colors import Colormap, ListedColormap, Normalize
-from matplotlib.figure import Figure
 from scanpy.plotting import DotPlot, MatrixPlot, StackedViolin
 from scanpy.plotting._tools.scatterplots import _wraps_plot_scatter
-from scanpy.plotting._utils import _AxesSubplot
 
 from ehrapy.tools.nlp._medcat import EhrapyMedcat, MedCAT
 from ehrapy.util._doc_util import (
@@ -34,9 +26,21 @@ from ehrapy.util._doc_util import (
     doc_vboundnorm,
 )
 
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    import numpy as np
+    import pandas as pd
+    from anndata import AnnData
+    from cycler import Cycler
+    from matplotlib.axes import Axes
+    from matplotlib.colors import Colormap, ListedColormap, Normalize
+    from matplotlib.figure import Figure
+    from scanpy.plotting._utils import _AxesSubplot
+
 _Basis = Literal["pca", "tsne", "umap", "diffmap", "draw_graph_fr"]
 _VarNames = Union[str, Sequence[str]]
-ColorLike = Union[str, Tuple[float, ...]]
+ColorLike = Union[str, tuple[float, ...]]
 _IGraphLayout = Literal["fa", "fr", "rt", "rt_circular", "drl", "eq_tree", ...]  # type: ignore
 _FontWeight = Literal["light", "normal", "medium", "semibold", "bold", "heavy", "black"]
 _FontSize = Literal["xx-small", "x-small", "small", "medium", "large", "x-large", "xx-large"]
@@ -101,7 +105,7 @@ def scatter(
             ep.pp.knn_impute(adata)
             ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
-            ep.pl.scatter(adata, x='age', y='icu_los_day', color='icu_los_day')
+            ep.pl.scatter(adata, x="age", y="icu_los_day", color="icu_los_day")
 
     Preview:
         .. image:: /_static/docstring_previews/scatter.png
@@ -220,10 +224,29 @@ def heatmap(
             ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
             ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
-            ep.pl.heatmap(adata, var_names=['map_1st', 'hr_1st', 'temp_1st', 'spo2_1st',
-                'abg_count', 'wbc_first', 'hgb_first', 'platelet_first', 'sodium_first',
-                'potassium_first', 'tco2_first', 'chloride_first', 'bun_first',
-                'creatinine_first', 'po2_first', 'pco2_first', 'iv_day_1'], groupby="leiden_0_5")
+            ep.pl.heatmap(
+                adata,
+                var_names=[
+                    "map_1st",
+                    "hr_1st",
+                    "temp_1st",
+                    "spo2_1st",
+                    "abg_count",
+                    "wbc_first",
+                    "hgb_first",
+                    "platelet_first",
+                    "sodium_first",
+                    "potassium_first",
+                    "tco2_first",
+                    "chloride_first",
+                    "bun_first",
+                    "creatinine_first",
+                    "po2_first",
+                    "pco2_first",
+                    "iv_day_1",
+                ],
+                groupby="leiden_0_5",
+            )
 
     Preview:
         .. image:: /_static/docstring_previews/heatmap.png
@@ -351,12 +374,27 @@ def dotplot(
             ep.pp.knn_impute(adata)
             ep.pp.neighbors(adata)
             ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
-            ep.pl.dotplot(adata,
-                          var_names=['age', 'gender_num', 'weight_first', 'bmi',
-                          'wbc_first', 'hgb_first', 'platelet_first', 'sodium_first',
-                          'potassium_first', 'tco2_first', 'chloride_first', 'bun_first',
-                          'creatinine_first', 'po2_first', 'pco2_first'],
-                           groupby="leiden_0_5")
+            ep.pl.dotplot(
+                adata,
+                var_names=[
+                    "age",
+                    "gender_num",
+                    "weight_first",
+                    "bmi",
+                    "wbc_first",
+                    "hgb_first",
+                    "platelet_first",
+                    "sodium_first",
+                    "potassium_first",
+                    "tco2_first",
+                    "chloride_first",
+                    "bun_first",
+                    "creatinine_first",
+                    "po2_first",
+                    "pco2_first",
+                ],
+                groupby="leiden_0_5",
+            )
 
     Preview:
         .. image:: /_static/docstring_previews/dotplot.png
@@ -453,9 +491,21 @@ def tracksplot(
             ep.pp.knn_impute(adata)
             ep.pp.neighbors(adata)
             ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
-            ep.pl.tracksplot(adata, var_names=['age', 'gender_num', 'weight_first', 'bmi',
-                'sapsi_first', 'sofa_first', 'service_num', 'day_icu_intime_num',
-                'hour_icu_intime'], groupby="leiden_0_5")
+            ep.pl.tracksplot(
+                adata,
+                var_names=[
+                    "age",
+                    "gender_num",
+                    "weight_first",
+                    "bmi",
+                    "sapsi_first",
+                    "sofa_first",
+                    "service_num",
+                    "day_icu_intime_num",
+                    "hour_icu_intime",
+                ],
+                groupby="leiden_0_5",
+            )
 
     Preview:
         .. image:: /_static/docstring_previews/tracksplot.png
@@ -554,7 +604,7 @@ def violin(
             ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
             ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
-            ep.pl.violin(adata, keys=['age'], groupby="leiden_0_5")
+            ep.pl.violin(adata, keys=["age"], groupby="leiden_0_5")
 
     Preview:
         .. image:: /_static/docstring_previews/violin.png
@@ -684,10 +734,23 @@ def stacked_violin(
             ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
             ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
-            ep.pl.stacked_violin(adata, var_names=['icu_los_day',
-                'hospital_los_day', 'age', 'gender_num', 'weight_first', 'bmi',
-                'sapsi_first', 'sofa_first', 'service_num', 'day_icu_intime_num',
-                'hour_icu_intime'], groupby="leiden_0_5")
+            ep.pl.stacked_violin(
+                adata,
+                var_names=[
+                    "icu_los_day",
+                    "hospital_los_day",
+                    "age",
+                    "gender_num",
+                    "weight_first",
+                    "bmi",
+                    "sapsi_first",
+                    "sofa_first",
+                    "service_num",
+                    "day_icu_intime_num",
+                    "hour_icu_intime",
+                ],
+                groupby="leiden_0_5",
+            )
 
     Preview:
         .. image:: /_static/docstring_previews/stacked_violin.png
@@ -809,10 +872,25 @@ def matrixplot(
             ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
             ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
-            ep.pl.matrixplot(adata, var_names=[
-                'abg_count', 'wbc_first', 'hgb_first', 'platelet_first', 'sodium_first',
-                'potassium_first', 'tco2_first', 'chloride_first', 'bun_first',
-                'creatinine_first', 'po2_first', 'pco2_first', 'iv_day_1'], groupby="leiden_0_5")
+            ep.pl.matrixplot(
+                adata,
+                var_names=[
+                    "abg_count",
+                    "wbc_first",
+                    "hgb_first",
+                    "platelet_first",
+                    "sodium_first",
+                    "potassium_first",
+                    "tco2_first",
+                    "chloride_first",
+                    "bun_first",
+                    "creatinine_first",
+                    "po2_first",
+                    "pco2_first",
+                    "iv_day_1",
+                ],
+                groupby="leiden_0_5",
+            )
 
     Preview:
         .. image:: /_static/docstring_previews/matrixplot.png
@@ -2045,7 +2123,7 @@ def paga_path(
     use_raw: bool = True,
     annotations: Sequence[str] = ("dpt_pseudotime",),
     color_map: str | Colormap | None = None,
-    color_maps_annotations: Mapping[str, str | Colormap] = MappingProxyType(dict(dpt_pseudotime="Greys")),  # noqa: B006
+    color_maps_annotations: Mapping[str, str | Colormap] = MappingProxyType({"dpt_pseudotime": "Greys"}),
     palette_groups: Sequence[str] | None = None,
     n_avg: int = 1,
     groups_key: str | None = None,

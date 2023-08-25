@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 from functools import wraps
-from typing import Iterable, List, Union
+from typing import TYPE_CHECKING, Union
 
 import deepl
 import numpy as np
-from anndata import AnnData
 
 try:
     from deep_translator import (
@@ -21,6 +20,11 @@ from deepl import Formality, GlossaryInfo, TextResult
 from rich import print
 
 from ehrapy.anndata.anndata_ext import _get_column_values, get_column_indices
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from anndata import AnnData
 
 
 class Translator:
@@ -68,7 +72,7 @@ class Translator:
     def translate_obs_column(
         self,
         adata: AnnData,
-        columns=Union[str, List],
+        columns=Union[str, list],
         translate_column_name: bool = False,
         inplace: bool = False,
     ) -> None:
@@ -101,7 +105,7 @@ class Translator:
     def translate_var_column(
         self,
         adata: AnnData,
-        columns=Union[str, List],
+        columns=Union[str, list],
         translate_column_name: bool = False,
         inplace: bool = False,
     ) -> None:
@@ -134,7 +138,7 @@ class Translator:
     def translate_X_column(
         self,
         adata: AnnData,
-        columns=Union[str, List],
+        columns=Union[str, list],
         translate_column_name: bool = False,
     ) -> None:
         """Translates a X column into the target language in place.
@@ -176,7 +180,7 @@ class DeepL:
     def __init__(self, authentication_key: str):  # pragma: no cover
         self.translator = deepl.Translator(authentication_key)
 
-    def _check_usage(function):  # noqa # pragma: no cover
+    def _check_usage(function):  # pragma: no cover
         """Checks the usage limit of the DeepL Account.
 
         Prints a warning if the DeepL usage limit is exceeded.
@@ -253,7 +257,7 @@ class DeepL:
         Returns:
             A :class:`~deepl.TextResult` object
         """
-        if isinstance(text, List) or isinstance(text, np.ndarray):
+        if isinstance(text, list) or isinstance(text, np.ndarray):
             return [
                 self.translator.translate_text(translation, target_lang=target_language).text for translation in text
             ]
@@ -335,7 +339,7 @@ class GoogleTranslate:
         Returns:
             The translated text.
         """
-        if isinstance(text, List) or isinstance(text, np.ndarray):
+        if isinstance(text, list) or isinstance(text, np.ndarray):
             return [self.translator.translate(word, target_lang=target_language) for word in text]
         return self.translator.translate(text, target_lang=target_language)
 
@@ -367,7 +371,7 @@ class LibreTranslate:
         Returns:
             The translated text.
         """
-        if isinstance(text, List) or isinstance(text, np.ndarray):
+        if isinstance(text, list) or isinstance(text, np.ndarray):
             return [self.translator.translate(word, target_lang=target_language) for word in text]
         return self.translator.translate(text, target_lang=target_language)
 
@@ -399,7 +403,7 @@ class MyMemoryTranslate:
         Returns:
             The translated text.
         """
-        if isinstance(text, List) or isinstance(text, np.ndarray):
+        if isinstance(text, list) or isinstance(text, np.ndarray):
             return [self.translator.translate(word, target_lang=target_language) for word in text]
         return self.translator.translate(text, target_lang=target_language)
 
@@ -431,7 +435,7 @@ class MicrosoftTranslate:
         Returns:
             The translated text.
         """
-        if isinstance(text, List) or isinstance(text, np.ndarray):
+        if isinstance(text, list) or isinstance(text, np.ndarray):
             return [self.translator.translate(word, target_lang=target_language) for word in text]
         return self.translator.translate(text, target_lang=target_language)
 
@@ -463,6 +467,6 @@ class YandexTranslate:
         Returns:
             The translated text.
         """
-        if isinstance(text, List) or isinstance(text, np.ndarray):
+        if isinstance(text, list) or isinstance(text, np.ndarray):
             return [self.translator.translate(word, target_lang=target_language) for word in text]
         return self.translator.translate(text, target_lang=target_language)

@@ -1,16 +1,20 @@
 from __future__ import annotations
 
-from typing import Iterable, Literal
+from typing import TYPE_CHECKING, Literal
 
-import numpy as np  # noqa: F401 # This package is implicitly used
+import numpy as np  # This package is implicitly used
 import pandas as pd
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
-from anndata import AnnData
 from lifelines import KaplanMeierFitter
 from lifelines.statistics import StatisticalResult, logrank_test
 from scipy import stats
-from statsmodels.genmod.generalized_linear_model import GLMResultsWrapper
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from anndata import AnnData
+    from statsmodels.genmod.generalized_linear_model import GLMResultsWrapper
 
 
 def ols(

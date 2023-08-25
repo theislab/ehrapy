@@ -2,7 +2,6 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
-
 from ehrapy.io._read import read_csv
 from ehrapy.preprocessing._encode import DuplicateColumnEncodingError, _reorder_encodings, encode
 
@@ -108,7 +107,7 @@ def test_autodetect_custom_mode():
 def test_autodetect_encode_again():
     adata = read_csv(dataset_path=f"{_TEST_PATH}/dataset1.csv")
     encoded_ann_data = encode(adata, autodetect=True)
-    encoded_ann_data_again = encode(encoded_ann_data, autodetect=True)  # noqa: F841
+    encoded_ann_data_again = encode(encoded_ann_data, autodetect=True)
     assert id(encoded_ann_data_again) == id(encoded_ann_data)
 
 

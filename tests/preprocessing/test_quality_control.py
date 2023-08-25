@@ -1,11 +1,10 @@
 from pathlib import Path
 
+import ehrapy as ep
 import numpy as np
 import pandas as pd
 import pytest
 from anndata import AnnData
-
-import ehrapy as ep
 from ehrapy.io._read import read_csv
 from ehrapy.preprocessing._encode import encode
 from ehrapy.preprocessing._quality_control import _obs_qc_metrics, _var_qc_metrics

@@ -3,7 +3,7 @@ from __future__ import annotations
 import random
 from collections import OrderedDict
 from string import ascii_letters
-from typing import Collection, Iterable, NamedTuple, Sequence
+from typing import TYPE_CHECKING, NamedTuple
 
 import numpy as np
 import pandas as pd
@@ -16,6 +16,9 @@ from scipy import sparse
 from scipy.sparse import issparse
 
 from ehrapy import logging as logg
+
+if TYPE_CHECKING:
+    from collections.abc import Collection, Iterable, Sequence
 
 
 class BaseDataframes(NamedTuple):
@@ -334,7 +337,7 @@ def get_column_indices(adata: AnnData, col_names: str | Sequence[str]) -> list[i
     if isinstance(col_names, str):  # pragma: no cover
         col_names = [col_names]
 
-    indices = list()
+    indices = []
     for idx, col in enumerate(adata.var_names):
         if col in col_names:
             indices.append(idx)
@@ -407,12 +410,11 @@ def _adata_type_overview(
                 )
         # sort encoded vars by data type of the original values or the number of unique values in original data (excluding NaNs)
         elif sort_by == "dtype" or sort_by == "num_cats":
-            sorted_by_type = {
-                var: _type
-                for var, _type in sorted(
+            sorted_by_type = dict(
+                sorted(
                     dtype_dict.items(), key=lambda item: item[1][0 if sort_by == "dtype" else 1], reverse=sort_reversed
                 )
-            }
+            )
             for categorical in sorted_by_type:
                 branch.add(
                     f"[blue]{categorical} -> {sorted_by_type[categorical][1]} categories;"
@@ -429,7 +431,7 @@ def _adata_type_overview(
     branch_num = tree.add(Text("🔓 Unencoded variables"), style="b green")
 
     if sort_by == "order":
-        var_names = sorted(list(adata.var_names.values), reverse=sort_reversed)
+        var_names = sorted(adata.var_names.values, reverse=sort_reversed)
         _sort_by_order_or_none(adata, branch_num, var_names)
     elif sort_by == "dtype":
         var_names = list(adata.var_names.values)
@@ -468,9 +470,7 @@ def _sort_by_type(adata: AnnData, branch, var_names: list[str], sort_reversed: b
             data_type = pd.api.types.infer_dtype(unique_categoricals)
             tmp_dict[other_vars] = data_type
 
-    sorted_by_type = {
-        var: _type for var, _type in sorted(tmp_dict.items(), key=lambda item: item[1], reverse=sort_reversed)
-    }
+    sorted_by_type = dict(sorted(tmp_dict.items(), key=lambda item: item[1], reverse=sort_reversed))
     for var in sorted_by_type:
         branch.add(f"[blue]{var} -> [green]data type: [blue]{sorted_by_type[var]}")
 
@@ -521,7 +521,7 @@ def assert_numeric_vars(adata: AnnData, vars: Sequence[str]):
     try:
         assert set(vars) <= set(num_vars)
     except AssertionError:
-        raise ValueError("Some selected vars are not numeric")
+        raise ValueError("Some selected vars are not numeric") from None
 
 
 def set_numeric_vars(
@@ -691,13 +691,13 @@ def generate_anndata(  # pragma: no cover
         if n_values > len(letters):
             letters = letters[: n_values // 2]  # Make sure categories are repeated
         df = pd.DataFrame(
-            dict(
-                cat=pd.Categorical(np.random.choice(letters, n_values)),
-                cat_ordered=pd.Categorical(np.random.choice(letters, n_values), ordered=True),
-                int64=np.random.randint(-50, 50, n_values),
-                float64=np.random.random(n_values),
-                uint8=np.random.randint(255, size=n_values, dtype="uint8"),
-            ),
+            {
+                "cat": pd.Categorical(np.random.choice(letters, n_values)),
+                "cat_ordered": pd.Categorical(np.random.choice(letters, n_values), ordered=True),
+                "int64": np.random.randint(-50, 50, n_values),
+                "float64": np.random.random(n_values),
+                "uint8": np.random.randint(255, size=n_values, dtype="uint8"),
+            },
             index=index,
         )
 
@@ -709,35 +709,35 @@ def generate_anndata(  # pragma: no cover
     obs = _generate_typed_df(M, obs_names, nlp=include_nlp)
     var = _generate_typed_df(N, var_names, nlp=include_nlp)
 
-    obs.rename(columns=dict(cat="obs_cat"), inplace=True)
-    var.rename(columns=dict(cat="var_cat"), inplace=True)
+    obs.rename(columns={"cat": "obs_cat"}, inplace=True)
+    var.rename(columns={"cat": "var_cat"}, inplace=True)
 
     if X_type is None:
         X = None
     else:
         if include_nlp:
             X_np_array = np.random.binomial(100, 0.005, (M, N - 1)).astype(object)
-            X = np.append(X_np_array, list(map(lambda el: [el], random.sample(example_diseases, k=M))), axis=1)
+            X = np.append(X_np_array, [[el] for el in random.sample(example_diseases, k=M)], axis=1)
         else:
             X_np_array = np.random.binomial(100, 0.005, (M, N))
             X = X_type(X_np_array).astype(X_dtype)
 
-    obsm = dict(
-        array=np.random.random((M, 50)),
-        sparse=sparse.random(M, 100, format="csr"),
-        df=_generate_typed_df(M, obs_names),
-    )
+    obsm = {
+        "array": np.random.random((M, 50)),
+        "sparse": sparse.random(M, 100, format="csr"),
+        "df": _generate_typed_df(M, obs_names),
+    }
     obsm = {k: v for k, v in obsm.items() if type(v) in obsm_types}
-    varm = dict(
-        array=np.random.random((N, 50)),
-        sparse=sparse.random(N, 100, format="csr"),
-        df=_generate_typed_df(N, var_names),
-    )
+    varm = {
+        "array": np.random.random((N, 50)),
+        "sparse": sparse.random(N, 100, format="csr"),
+        "df": _generate_typed_df(N, var_names),
+    }
     varm = {k: v for k, v in varm.items() if type(v) in varm_types}
-    layers = dict(array=np.random.random((M, N)), sparse=sparse.random(M, N, format="csr"))
+    layers = {"array": np.random.random((M, N)), "sparse": sparse.random(M, N, format="csr")}
     layers = {k: v for k, v in layers.items() if type(v) in layers_types}
-    obsp = dict(array=np.random.random((M, M)), sparse=sparse.random(M, M, format="csr"))
-    varp = dict(array=np.random.random((N, N)), sparse=sparse.random(N, N, format="csr"))
+    obsp = {"array": np.random.random((M, M)), "sparse": sparse.random(M, M, format="csr")}
+    varp = {"array": np.random.random((N, N)), "sparse": sparse.random(N, N, format="csr")}
 
     def _generate_vstr_recarray(m, n, dtype=None):
         size = m * n
@@ -748,15 +748,15 @@ def generate_anndata(  # pragma: no cover
 
         return pd.DataFrame(arr, columns=[gen_word(5) for _ in range(n)]).to_records(index=False, column_dtypes=dtype)
 
-    uns = dict(
-        O_recarray=_generate_vstr_recarray(N, 5),
-        nested=dict(
-            scalar_str="str",
-            scalar_int=42,
-            scalar_float=3.0,
-            nested_further=dict(array=np.arange(5)),
-        ),
-    )
+    uns = {
+        "O_recarray": _generate_vstr_recarray(N, 5),
+        "nested": {
+            "scalar_str": "str",
+            "scalar_int": 42,
+            "scalar_float": 3.0,
+            "nested_further": {"array": np.arange(5)},
+        },
+    }
 
     if include_nlp:
         X_dtype = np.dtype(object)

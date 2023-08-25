@@ -1,8 +1,12 @@
 from __future__ import annotations
 
-import pandas as pd
+from typing import TYPE_CHECKING
+
 import scanpy as sc
-from anndata import AnnData
+
+if TYPE_CHECKING:
+    import pandas as pd
+    from anndata import AnnData
 
 
 def highly_variable_features(

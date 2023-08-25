@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from typing import Sequence
+from typing import TYPE_CHECKING
 
 import numpy as np
-from anndata import AnnData
 from sklearn.preprocessing import maxabs_scale, minmax_scale, power_transform, quantile_transform, robust_scale, scale
 
 from ehrapy import logging as logg
@@ -14,6 +13,11 @@ from ehrapy.anndata.anndata_ext import (
     get_numeric_vars,
     set_numeric_vars,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from anndata import AnnData
 
 
 def scale_norm(adata: AnnData, vars: str | Sequence[str] | None = None, copy: bool = False, **kwargs) -> AnnData | None:

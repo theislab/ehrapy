@@ -1,14 +1,16 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
-from anndata import AnnData
 
 from ehrapy import settings
 from ehrapy.io._utility_io import _get_file_extension
 from ehrapy.preprocessing._encode import encode
+
+if TYPE_CHECKING:
+    from anndata import AnnData
 
 
 def write(

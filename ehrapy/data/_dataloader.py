@@ -67,7 +67,7 @@ def download(
     with Progress(refresh_per_second=1500) as progress:
         task = progress.add_task("[red]Downloading...", total=total)
         Path(output_path).mkdir(parents=True, exist_ok=True)
-        with open(download_to_path.resolve(), "wb") as file:
+        with Path(download_to_path).open("wb") as file:
             for data in response.iter_content(block_size):
                 file.write(data)
                 progress.update(task, advance=block_size)

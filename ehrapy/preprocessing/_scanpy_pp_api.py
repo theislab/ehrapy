@@ -1,5 +1,6 @@
+from collections.abc import Collection, Mapping, Sequence
 from types import MappingProxyType
-from typing import Any, Callable, Collection, Literal, Mapping, Optional, Sequence, Union
+from typing import Any, Callable, Literal, Optional, Union
 
 import numpy as np
 import scanpy as sc

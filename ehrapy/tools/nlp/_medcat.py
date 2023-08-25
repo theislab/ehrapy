@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import pandas as pd
-from anndata import AnnData
 from thefuzz import process
 
 from ehrapy.core._tool_available import _check_module_importable
@@ -14,9 +13,14 @@ try:
     from medcat.vocab import Vocab
 except ModuleNotFoundError:
     pass
+from typing import TYPE_CHECKING
+
 from rich import box, print
 from rich.console import Console
 from rich.table import Table
+
+if TYPE_CHECKING:
+    from anndata import AnnData
 
 
 class MedCAT:

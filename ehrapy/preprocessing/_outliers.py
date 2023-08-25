@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import numpy as np
 import pandas as pd
 import scipy.stats.mstats
-from anndata import AnnData
+
+if TYPE_CHECKING:
+    from anndata import AnnData
 
 
 def winsorize(
