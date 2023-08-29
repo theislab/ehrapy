@@ -111,7 +111,7 @@ def df_to_anndata(
     )
 
     logg.info(
-        f"Transformed passed dataframe into an AnnData object with n_obs x n_vars = `{adata.n_obs}` x `{adata.n_vars}`."
+        f"Transformed passed DataFrame into an AnnData object with n_obs x n_vars = `{adata.n_obs}` x `{adata.n_vars}`."
     )
 
     return adata
@@ -120,7 +120,7 @@ def df_to_anndata(
 def anndata_to_df(
     adata: AnnData, layer: str = None, obs_cols: list[str] | str | None = None, var_cols: list[str] | str | None = None
 ) -> pd.DataFrame:
-    """Transform an AnnData object to a pandas dataframe.
+    """Transform an AnnData object to a pandas DataFrame.
 
     Args:
         adata: The AnnData object to be transformed into a pandas Dataframe
@@ -172,9 +172,8 @@ def anndata_to_df(
 def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False) -> AnnData:
     """Move inplace or copy features from X to obs.
 
-    Note that columns containing boolean values (either 0/1 or True(
-    true)/False(false)) will be stored as boolean columns whereas the other non numerical columns will be stored as
-    category.
+    Note that columns containing boolean values (either 0/1 or True(true)/False(false))
+    will be stored as boolean columns whereas the other non numerical columns will be stored as categorical.
 
     Args:
         adata: The AnnData object
