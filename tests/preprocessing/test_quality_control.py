@@ -1,10 +1,11 @@
 from pathlib import Path
 
-import ehrapy as ep
 import numpy as np
 import pandas as pd
 import pytest
 from anndata import AnnData
+
+import ehrapy as ep
 from ehrapy.io._read import read_csv
 from ehrapy.preprocessing._encode import encode
 from ehrapy.preprocessing._quality_control import _obs_qc_metrics, _var_qc_metrics
@@ -83,7 +84,7 @@ def test_var_qc_metrics(missing_values_adata):
 def test_obs_nan_qc_metrics():
     adata = read_csv(dataset_path=f"{_TEST_PATH_ENCODE}/dataset1.csv")
     adata.X[0][4] = np.nan
-    adata2 = encode(adata, encodings={"one_hot_encoding": ["clinic_day"]})
+    adata2 = encode(adata, encodings={"one-hot": ["clinic_day"]})
     obs_metrics = _obs_qc_metrics(adata2)
     assert obs_metrics.iloc[0][0] == 1
 
@@ -91,7 +92,7 @@ def test_obs_nan_qc_metrics():
 def test_var_nan_qc_metrics():
     adata = read_csv(dataset_path=f"{_TEST_PATH_ENCODE}/dataset1.csv")
     adata.X[0][4] = np.nan
-    adata2 = encode(adata, encodings={"one_hot_encoding": ["clinic_day"]})
+    adata2 = encode(adata, encodings={"one-hot": ["clinic_day"]})
     var_metrics = _var_qc_metrics(adata2)
     assert var_metrics.iloc[0][0] == 1
     assert var_metrics.iloc[1][0] == 1

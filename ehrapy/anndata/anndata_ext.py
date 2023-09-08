@@ -86,11 +86,9 @@ def df_to_anndata(
             ) from e
     else:
         obs = pd.DataFrame(index=df.index.map(str))
-        logg.info("Added all columns to `obs`.")
     dataframes = BaseDataframes(obs, df)
     numerical_columns = list(dataframes.df.select_dtypes("number").columns)
     # if data is numerical only, short-circuit AnnData creation to have float dtype instead of object
-    all_num = True if len(numerical_columns) == len(list(dataframes.df.columns)) else False
     X = dataframes.df.to_numpy(copy=True)
 
     # initializing an OrderedDict with a non-empty dict might not be intended,
@@ -101,18 +99,19 @@ def df_to_anndata(
     uns["numerical_columns"] = list(set(numerical_columns) | set(binary_columns))
     uns["non_numerical_columns"] = list(set(dataframes.df.columns) ^ set(uns["numerical_columns"]))
 
+    all_num = True if len(numerical_columns) == len(list(dataframes.df.columns)) else False
+    X = X.astype(np.number) if all_num else X.astype(object)
     # cast non numerical obs only columns to category or bool dtype, which is needed for writing to .h5ad files
     adata = AnnData(
         X=X,
         obs=_cast_obs_columns(dataframes.obs),
         var=pd.DataFrame(index=list(dataframes.df.columns)),
-        dtype="float32" if all_num else "object",
         layers={"original": X.copy()},
         uns=uns,
     )
 
     logg.info(
-        f"Transformed passed dataframe into an AnnData object with n_obs x n_vars = `{adata.n_obs}` x `{adata.n_vars}`."
+        f"Transformed passed DataFrame into an AnnData object with n_obs x n_vars = `{adata.n_obs}` x `{adata.n_vars}`."
     )
 
     return adata
@@ -121,7 +120,7 @@ def df_to_anndata(
 def anndata_to_df(
     adata: AnnData, layer: str = None, obs_cols: list[str] | str | None = None, var_cols: list[str] | str | None = None
 ) -> pd.DataFrame:
-    """Transform an AnnData object to a pandas dataframe.
+    """Transform an AnnData object to a pandas DataFrame.
 
     Args:
         adata: The AnnData object to be transformed into a pandas Dataframe
@@ -173,9 +172,8 @@ def anndata_to_df(
 def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False) -> AnnData:
     """Move inplace or copy features from X to obs.
 
-    Note that columns containing boolean values (either 0/1 or True(
-    true)/False(false)) will be stored as boolean columns whereas the other non numerical columns will be stored as
-    category.
+    Note that columns containing boolean values (either 0/1 or True(true)/False(false))
+    will be stored as boolean columns whereas the other non numerical columns will be stored as categorical.
 
     Args:
         adata: The AnnData object
@@ -483,6 +481,7 @@ def _infer_dtype_per_encoded_var(encoded_list: list[str], original_values) -> di
         categorical_type = pd.api.types.infer_dtype(unique_categoricals)
         num_unique_values = pd.DataFrame(unique_categoricals).dropna()[0].nunique()
         dtype_dict[categorical] = (categorical_type, num_unique_values)
+
     return dtype_dict
 
 
@@ -770,7 +769,6 @@ def generate_anndata(  # pragma: no cover
         layers=layers,
         obsp=obsp,
         varp=varp,
-        dtype=X_dtype,
         uns=uns,
     )
 

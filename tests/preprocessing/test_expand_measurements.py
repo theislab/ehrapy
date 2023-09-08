@@ -1,8 +1,9 @@
 import numpy as np
 import pytest
 from anndata import AnnData
-from ehrapy.preprocessing import expand_measurements
 from pandas import DataFrame
+
+from ehrapy.preprocessing import expand_measurements
 
 
 @pytest.fixture
