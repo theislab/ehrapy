@@ -230,7 +230,7 @@ def neighbors(
         copy: Determines whether a copy of `adata` is returned.
 
     Returns:
-         Depending on `copy`, updates or returns `adata` with the following:
+         Depending on `copy`, updates or returns `adata` with the following;
          See `key_added` parameter description for the storage path of connectivities and distances.
 
          **connectivities** : sparse matrix of dtype `float32`.
