@@ -65,7 +65,7 @@ def encode(
         >>> adata = ep.dt.mimic_2()
         >>> # encode all auto-detected (non numerical) columns using one hot encoding
         >>> adata_encoded = ep.pp.encode(adata, autodetect=True, encodings='one_hot_encoding')
-        
+
         >>> # Example using custom encodings per columns:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2()

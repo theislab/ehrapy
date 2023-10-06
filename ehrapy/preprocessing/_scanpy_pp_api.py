@@ -54,11 +54,11 @@ def pca(
 
     Returns:
         :X_pca: :class:`~scipy.sparse.spmatrix`, :class:`~numpy.ndarray`
-        
+
         If `data` is array-like and `return_info=False` was passed, this function only returns `X_pca`...
 
         adata : :class:`~anndata.AnnData`
-        
+
         …otherwise if `copy=True` it returns or else adds fields to `adata`:
 
         `.obsm['X_pca']`
