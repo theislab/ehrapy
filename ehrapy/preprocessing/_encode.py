@@ -60,13 +60,13 @@ def encode(
         >>> # encode all autodetected (non numerical) columns using label encoding
         >>> adata_encoded = ep.pp.encode(adata, autodetect=True)
 
-        # Example using autodetect with non-default encoding mode:
+        >>> # Example using autodetect with non-default encoding mode:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2()
         >>> # encode all auto-detected (non numerical) columns using one hot encoding
         >>> adata_encoded = ep.pp.encode(adata, autodetect=True, encodings='one_hot_encoding')
-
-        # Example using custom encodings per columns:
+        
+        >>> # Example using custom encodings per columns:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2()
         >>> # encode col1 and col2 using label encoding and encode col3 using one hot encoding
