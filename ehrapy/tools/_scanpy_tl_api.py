@@ -472,7 +472,8 @@ def louvain(
         copy: Whether to copy `adata` or modify it inplace.
 
     Returns:
-        By default (``copy=False``), updates ``adata`` with the following fields:
+        By default (``copy=False``), updates ``adata`` with the following fields;
+        
         ``adata.obs['louvain']`` (:class:`pandas.Series`, dtype ``category``)
         Array of dim (number of samples) that stores the subgroup id (``'0'``, ``'1'``, ...) for each observation.
 
