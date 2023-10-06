@@ -155,7 +155,7 @@ def combat(
         inplace: Whether to replace adata.X or to return the corrected data
 
     Returns:
-        Depending on the value of `inplace`, either returns the corrected matrix or or modifies `adata.X`.
+        Depending on the value of `inplace`, either returns the corrected matrix or modifies `adata.X`.
     """
     return sc.pp.combat(adata=adata, key=key, covariates=covariates, inplace=inplace)
 
