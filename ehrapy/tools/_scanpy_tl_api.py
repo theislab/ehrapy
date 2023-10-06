@@ -675,10 +675,10 @@ def paga(
         copy: Copy `adata` before computation and return a copy. Otherwise, perform computation in place and return `None`.
 
     Returns:
-        **connectivities** : :class:`numpy.ndarray` (adata.uns['connectivities'])
+        **connectivities** :class:`numpy.ndarray` (adata.uns['connectivities'])
         The full adjacency matrix of the abstracted graph, weights correspond to confidence in the connectivities of partitions.
 
-       **connectivities_tree** : :class:`scipy.sparse.csr_matrix` (adata.uns['connectivities_tree'])
+       **connectivities_tree** :class:`scipy.sparse.csr_matrix` (adata.uns['connectivities_tree'])
         The adjacency matrix of the tree-like subgraph that best explains the topology.
 
     Notes:
