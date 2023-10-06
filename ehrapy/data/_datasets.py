@@ -116,7 +116,7 @@ def heart_failure(encoded: bool = False, columns_obs_only: dict[str, list[str]] 
         columns_obs_only: Columns to include in obs only and not X.
 
     Returns:
-        :class:`~anndata.AnnData` object of the MIMIC-II dataset
+        :class:`~anndata.AnnData` object of the heart failure dataset
 
     Examples:
         >>> import ehrapy as ep
