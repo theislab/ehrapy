@@ -20,9 +20,10 @@ If you run into "RuntimeError: CMake must be installed to build qdldl" ensure th
 Run `conda install -c anaconda cmake` and `conda install -c conda-forge lightgbm` to do so.
 
 If you intend to run MedCAT you have to install a language model like:
-.. code-block:: console
 
-> \$ python -m spacy download en_core_web_sm
+```console
+$ python -m spacy download en_core_web_sm
+```
 
 ## From sources
 

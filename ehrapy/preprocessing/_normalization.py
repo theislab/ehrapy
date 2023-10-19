@@ -209,7 +209,7 @@ def quantile_norm(
 ) -> AnnData | None:
     """Apply quantile normalization.
 
-    Functionality is provided by ~sklearn.preprocessing.quantile_transform,
+    Functionality is provided by :func:`~sklearn.preprocessing.quantile_transform`,
     see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.quantile_transform.html for details.
 
     Args:

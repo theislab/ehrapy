@@ -53,10 +53,12 @@ def pca(
         chunk_size: Number of observations to include in each chunk. Required if `chunked=True` was passed.
 
     Returns:
-        X_pca: :class:`~scipy.sparse.spmatrix`, :class:`~numpy.ndarray`
-        If `data` is array-like and `return_info=False` was passed, this function only returns `X_pca`.
+        :X_pca: :class:`~scipy.sparse.spmatrix`, :class:`~numpy.ndarray`
 
-        adata : anndata.AnnData
+        If `data` is array-like and `return_info=False` was passed, this function only returns `X_pca`...
+
+        adata : :class:`~anndata.AnnData`
+
         …otherwise if `copy=True` it returns or else adds fields to `adata`:
 
         `.obsm['X_pca']`
@@ -155,7 +157,7 @@ def combat(
         inplace: Whether to replace adata.X or to return the corrected data
 
     Returns:
-        Depending on the value of `inplace`, either returns the corrected matrix or or modifies `adata.X`.
+        Depending on the value of `inplace`, either returns the corrected matrix or modifies `adata.X`.
     """
     return sc.pp.combat(adata=adata, key=key, covariates=covariates, inplace=inplace)
 
@@ -230,7 +232,7 @@ def neighbors(
         copy: Determines whether a copy of `adata` is returned.
 
     Returns:
-         Depending on `copy`, updates or returns `adata` with the following:
+         Depending on `copy`, updates or returns `adata` with the following;
          See `key_added` parameter description for the storage path of connectivities and distances.
 
          **connectivities** : sparse matrix of dtype `float32`.

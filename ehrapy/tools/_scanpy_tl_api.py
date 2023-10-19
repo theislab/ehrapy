@@ -472,7 +472,8 @@ def louvain(
         copy: Whether to copy `adata` or modify it inplace.
 
     Returns:
-        By default (``copy=False``), updates ``adata`` with the following fields:
+        By default (``copy=False``), updates ``adata`` with the following fields;
+
         ``adata.obs['louvain']`` (:class:`pandas.Series`, dtype ``category``)
         Array of dim (number of samples) that stores the subgroup id (``'0'``, ``'1'``, ...) for each observation.
 
@@ -674,10 +675,10 @@ def paga(
         copy: Copy `adata` before computation and return a copy. Otherwise, perform computation in place and return `None`.
 
     Returns:
-        **connectivities** : :class:`numpy.ndarray` (adata.uns['connectivities'])
+        **connectivities** :class:`numpy.ndarray` (adata.uns['connectivities'])
         The full adjacency matrix of the abstracted graph, weights correspond to confidence in the connectivities of partitions.
 
-       **connectivities_tree** : :class:`scipy.sparse.csr_matrix` (adata.uns['connectivities_tree'])
+       **connectivities_tree** :class:`scipy.sparse.csr_matrix` (adata.uns['connectivities_tree'])
         The adjacency matrix of the tree-like subgraph that best explains the topology.
 
     Notes:
