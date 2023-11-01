@@ -75,6 +75,7 @@ doc = [
     "nbsphinx-link",
     "ipykernel",
     "ipython",
+    "ehrapy[medcat]",
 ]
 test = [
     "pytest",
