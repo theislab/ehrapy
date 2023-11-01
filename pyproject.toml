@@ -55,12 +55,12 @@ dev = [
     "pre-commit",
 ]
 doc = [
-    "docutils>=0.8,!=0.18.*,!=0.19.*",
-    "sphinx>=4",
+    "docutils",
+    "sphinx",
     "furo",
     "myst-nb",
     "myst-parser",
-    "sphinxcontrib-bibtex>=1.0.0",
+    "sphinxcontrib-bibtex",
     "sphinx-gallery",
     "sphinx-autodoc-typehints",
     "sphinx-copybutton",
@@ -92,7 +92,7 @@ omit = [
 ]
 
 [tool.pytest.ini_options]
-testpaths = "pertpy/tests"
+testpaths = "ehrapy/tests"
 xfail_strict = true
 addopts = [
     "--import-mode=importlib",  # allow using test files with same name
@@ -108,9 +108,6 @@ filterwarnings = [
 ]
 minversion = 6.0
 norecursedirs = [ '.*', 'build', 'dist', '*.egg', 'data', '__pycache__']
-
-[tool.black]
-line-length = 120
 
 [tool.ruff]
 line-length = 120
