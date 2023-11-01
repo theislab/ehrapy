@@ -79,6 +79,7 @@ Other than tools, preprocessing steps usually don’t return an easily interpret
     preprocessing.highly_variable_features
     preprocessing.winsorize
     preprocessing.clip_quantile
+    preprocessing.summarize_measurements
 ```
 
 ### Quality control

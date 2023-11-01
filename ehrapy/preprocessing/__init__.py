@@ -10,7 +10,6 @@ from ehrapy.preprocessing._data_imputation import (
     soft_impute,
 )
 from ehrapy.preprocessing._encode import encode, undo_encoding
-from ehrapy.preprocessing._expand_measurements import expand_measurements
 from ehrapy.preprocessing._highly_variable_features import highly_variable_features
 from ehrapy.preprocessing._normalization import (
     log_norm,
@@ -26,3 +25,4 @@ from ehrapy.preprocessing._normalization import (
 from ehrapy.preprocessing._outliers import clip_quantile, winsorize
 from ehrapy.preprocessing._quality_control import qc_lab_measurements, qc_metrics
 from ehrapy.preprocessing._scanpy_pp_api import *  # noqa: F403
+from ehrapy.preprocessing._summarize_measurements import summarize_measurements
