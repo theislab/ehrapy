@@ -34,9 +34,11 @@ def encode(
     indicates an encoded column (or part of it).
 
     Autodetect mode:
-        This can be used for convenience and when there are many columns that need to be encoded. Note that missing values do not influence the result.
-        By using this mode, every column that contains non-numerical values is encoded. In addition, every binary
-        column will be encoded too. These are those columns which contain only 1's and 0's (could be either integers or floats).
+        This can be used for convenience and when there are many columns that need to be encoded.
+        Note that missing values do not influence the result.
+        By using this mode, every column that contains non-numerical values is encoded.
+        In addition, every binary column will be encoded too.
+        These are those columns which contain only 1's and 0's (could be either integers or floats).
 
     Available encodings are:
         1. one-hot (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.OneHotEncoder.html)
@@ -273,7 +275,13 @@ def _encode(
                 progress.update(task, description=f"Running {encoding} ...")
                 # perform the actual encoding
                 encoded_x, encoded_var_names = encode_mode_switcher[encoding](
-                    adata, encoded_x, orig_uns_copy, encoded_var_names, encodings[encoding], progress, task  # type: ignore
+                    adata,
+                    encoded_x,
+                    orig_uns_copy,
+                    encoded_var_names,
+                    encodings[encoding],  # type: ignore
+                    progress,
+                    task,  # type: ignore
                 )
                 # update encoding history in uns
                 for categorical in encodings[encoding]:  # type: ignore

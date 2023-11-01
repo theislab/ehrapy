@@ -126,14 +126,16 @@ def test_qc_lab_measurements_simple(lab_measurements_simple_adata):
         unit="SI",
     )
 
-    assert list(lab_measurements_simple_adata.obs["Acetaminophen normal"]) == (
-        expected_obs_data["Acetaminophen normal"]
+    assert (
+        list(lab_measurements_simple_adata.obs["Acetaminophen normal"]) == (expected_obs_data["Acetaminophen normal"])
     )
-    assert list(lab_measurements_simple_adata.obs["Acetoacetic acid normal"]) == (
-        expected_obs_data["Acetoacetic acid normal"]
+    assert (
+        list(lab_measurements_simple_adata.obs["Acetoacetic acid normal"])
+        == (expected_obs_data["Acetoacetic acid normal"])
     )
-    assert list(lab_measurements_simple_adata.obs["Beryllium, toxic normal"]) == (
-        expected_obs_data["Beryllium, toxic normal"]
+    assert (
+        list(lab_measurements_simple_adata.obs["Beryllium, toxic normal"])
+        == (expected_obs_data["Beryllium, toxic normal"])
     )
 
 
@@ -154,11 +156,13 @@ def test_qc_lab_measurements_simple_layer(lab_measurements_layer_adata):
     )
 
     assert list(lab_measurements_layer_adata.obs["Acetaminophen normal"]) == (expected_obs_data["Acetaminophen normal"])
-    assert list(lab_measurements_layer_adata.obs["Acetoacetic acid normal"]) == (
-        expected_obs_data["Acetoacetic acid normal"]
+    assert (
+        list(lab_measurements_layer_adata.obs["Acetoacetic acid normal"])
+        == (expected_obs_data["Acetoacetic acid normal"])
     )
-    assert list(lab_measurements_layer_adata.obs["Beryllium, toxic normal"]) == (
-        expected_obs_data["Beryllium, toxic normal"]
+    assert (
+        list(lab_measurements_layer_adata.obs["Beryllium, toxic normal"])
+        == (expected_obs_data["Beryllium, toxic normal"])
     )
 
 

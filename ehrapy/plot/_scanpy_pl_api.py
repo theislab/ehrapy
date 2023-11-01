@@ -149,7 +149,11 @@ def scatter(
                     and not colored_column.startswith("#")
                 ):  # hex codes are not treated as extracted entities
                     EhrapyMedcat.add_binary_column_to_obs(
-                        adata, adata.anndata, colored_column, color, additional_columns  # type: ignore
+                        adata,
+                        adata.anndata,
+                        colored_column,
+                        color,  # type: ignore
+                        additional_columns,
                     )
 
             scatter = scatter_partial(adata=adata.anndata, color=color[0])
@@ -1760,7 +1764,11 @@ def embedding(
                     adata.anndata.obs.columns
                 ):
                     EhrapyMedcat.add_binary_column_to_obs(
-                        adata, adata.anndata, colored_column, color, additional_columns  # type: ignore
+                        adata,
+                        adata.anndata,
+                        colored_column,
+                        color,  # type: ignore
+                        additional_columns,
                     )
             _embedding = embedding_partial(adata=adata.anndata, color=color)
             if additional_columns:

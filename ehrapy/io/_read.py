@@ -116,7 +116,13 @@ def _read_csv(
         if sep not in {",", "\t"}:
             raise ValueError("Please provide one of the available separators , or tab")
         adata, columns_obs_only = _do_read_csv(
-            file_path, sep, index_column, columns_obs_only, columns_x_only, cache, **kwargs  # type: ignore
+            file_path,
+            sep,
+            index_column,  # type: ignore
+            columns_obs_only,  # type: ignore
+            columns_x_only,  # type: ignore
+            cache,
+            **kwargs,
         )
         # cache results if desired
         if cache:

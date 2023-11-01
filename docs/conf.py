@@ -170,9 +170,7 @@ nbsphinx_prolog = r"""
         Some tutorial content may look better in light mode.
         </p>
     </div>
-""".format(
-    version=version, docname="{{ docname|e }}"
-)
+""".format(version=version, docname="{{ docname|e }}")
 nbsphinx_thumbnails = {
     "tutorials/notebooks/ehrapy_introduction": "_static/ehrapy_logos/ehrapy_pure.png",
     "tutorials/notebooks/mimic_2_introduction": "_static/tutorials/catheter.png",
