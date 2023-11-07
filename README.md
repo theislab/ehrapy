@@ -12,7 +12,7 @@
 
 # ehrapy overview
 
-![fig_1](https://github.com/theislab/ehrapy/assets/99650244/cc0babfa-fff9-49ca-becc-0694997aa897)
+![fig_1](https://github.com/theislab/ehrapy/assets/99650244/257d29ae-79bc-4101-b1ea-612fb9f3ed9a)
 
 ## Features
 
