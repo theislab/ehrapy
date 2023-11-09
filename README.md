@@ -36,15 +36,3 @@ Please have a look at the [Usage documentation][usage] and the [tutorials][tutor
 ```python
 import ehrapy as ep
 ```
-
-## Credits
-
-This package was created with [cookietemple] using [cookiecutter] based on [hypermodern_python_cookiecutter].
-
-[cookiecutter]: https://github.com/audreyr/cookiecutter
-[cookietemple]: https://cookietemple.com
-[hypermodern_python_cookiecutter]: https://github.com/cjolowicz/cookiecutter-hypermodern-python
-[pip]: https://pip.pypa.io/
-[pypi]: https://pypi.org/
-[usage]: https://ehrapy.readthedocs.io/en/latest/usage/usage.html
-[tutorials]: https://ehrapy.readthedocs.io/en/latest/tutorials/index.html
