@@ -12,7 +12,7 @@
 
 # ehrapy overview
 
-![fig_1](https://github.com/theislab/ehrapy/assets/99650244/cc0babfa-fff9-49ca-becc-0694997aa897)
+![fig_1](https://github.com/theislab/ehrapy/assets/99650244/257d29ae-79bc-4101-b1ea-612fb9f3ed9a)
 
 ## Features
 
@@ -36,15 +36,3 @@ Please have a look at the [Usage documentation][usage] and the [tutorials][tutor
 ```python
 import ehrapy as ep
 ```
-
-## Credits
-
-This package was created with [cookietemple] using [cookiecutter] based on [hypermodern_python_cookiecutter].
-
-[cookiecutter]: https://github.com/audreyr/cookiecutter
-[cookietemple]: https://cookietemple.com
-[hypermodern_python_cookiecutter]: https://github.com/cjolowicz/cookiecutter-hypermodern-python
-[pip]: https://pip.pypa.io/
-[pypi]: https://pypi.org/
-[usage]: https://ehrapy.readthedocs.io/en/latest/usage/usage.html
-[tutorials]: https://ehrapy.readthedocs.io/en/latest/tutorials/index.html
