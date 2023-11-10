@@ -324,7 +324,6 @@ Methods that extract and visualize tool-specific annotation in an AnnData object
     plot.umap
     plot.diffmap
     plot.draw_graph
-    plot.spatial
     plot.embedding
     plot.embedding_density
 ```

@@ -101,7 +101,7 @@ def scatter(
 
             import ehrapy as ep
 
-            adata = ep.data.mimic_2(encoded=True)
+            adata = ep.dt.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
@@ -223,7 +223,7 @@ def heatmap(
 
             import ehrapy as ep
 
-            adata = ep.data.mimic_2(encoded=True)
+            adata = ep.dt.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
@@ -374,7 +374,7 @@ def dotplot(
 
             import ehrapy as ep
 
-            adata = ep.data.mimic_2(encoded=True)
+            adata = ep.dt.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.neighbors(adata)
             ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
@@ -491,7 +491,7 @@ def tracksplot(
 
             import ehrapy as ep
 
-            adata = ep.data.mimic_2(encoded=True)
+            adata = ep.dt.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.neighbors(adata)
             ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
@@ -603,7 +603,7 @@ def violin(
 
             import ehrapy as ep
 
-            adata = ep.data.mimic_2(encoded=True)
+            adata = ep.dt.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
@@ -733,7 +733,7 @@ def stacked_violin(
 
             import ehrapy as ep
 
-            adata = ep.data.mimic_2(encoded=True)
+            adata = ep.dt.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
@@ -871,7 +871,7 @@ def matrixplot(
 
             import ehrapy as ep
 
-            adata = ep.data.mimic_2(encoded=True)
+            adata = ep.dt.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
@@ -974,7 +974,7 @@ def clustermap(
 
             import ehrapy as ep
 
-            adata = ep.data.mimic_2(encoded=True)
+            adata = ep.dt.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
@@ -1042,7 +1042,7 @@ def ranking(
 
             import ehrapy as ep
 
-            adata = ep.data.mimic_2(encoded=True)
+            adata = ep.dt.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
@@ -1097,7 +1097,7 @@ def dendrogram(
 
             import ehrapy as ep
 
-            adata = ep.data.mimic_2(encoded=True)
+            adata = ep.dt.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
@@ -1131,7 +1131,7 @@ def dendrogram(
         return dendrogram_partial(adata=adata, groupby=groupby)
 
 
-@_wraps_plot_scatter
+# @_wraps_plot_scatter
 @_doc_params(
     adata_color_etc=doc_adata_color_etc,
     scatter_bulk=doc_scatter_embedding,
@@ -1161,7 +1161,7 @@ def pca(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.knn_impute(adata)
         >>> ep.pp.log_norm(adata, offset=1)
         >>> ep.pp.neighbors(adata)
@@ -1220,7 +1220,7 @@ def pca_loadings(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.knn_impute(adata)
         >>> ep.pp.log_norm(adata, offset=1)
         >>> ep.pp.neighbors(adata)
@@ -1256,7 +1256,7 @@ def pca_variance_ratio(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.knn_impute(adata)
         >>> ep.pp.log_norm(adata, offset=1)
         >>> ep.pp.neighbors(adata)
@@ -1287,7 +1287,7 @@ def pca_overview(adata: AnnData, **params):  # pragma: no cover
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.knn_impute(adata)
         >>> ep.pp.log_norm(adata, offset=1)
         >>> ep.pp.neighbors(adata)
@@ -1304,7 +1304,7 @@ def pca_overview(adata: AnnData, **params):  # pragma: no cover
     return sc.pl.pca_overview(adata=adata, **params)
 
 
-@_wraps_plot_scatter
+# @_wraps_plot_scatter
 @_doc_params(
     adata_color_etc=doc_adata_color_etc,
     edges_arrows=doc_edges_arrows,
@@ -1325,7 +1325,7 @@ def tsne(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.knn_impute(adata)
         >>> ep.pp.log_norm(adata, offset=1)
         >>> ep.pp.neighbors(adata)
@@ -1366,7 +1366,7 @@ def tsne(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover
         return sc.pl.tsne(adata=adata, **kwargs)
 
 
-@_wraps_plot_scatter
+# @_wraps_plot_scatter
 @_doc_params(
     adata_color_etc=doc_adata_color_etc,
     edges_arrows=doc_edges_arrows,
@@ -1387,7 +1387,7 @@ def umap(adata: AnnData | MedCAT, **kwargs) -> Axes | list[Axes] | None:  # prag
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.knn_impute(adata)
         >>> ep.pp.log_norm(adata, offset=1)
         >>> ep.pp.neighbors(adata)
@@ -1428,7 +1428,7 @@ def umap(adata: AnnData | MedCAT, **kwargs) -> Axes | list[Axes] | None:  # prag
         return sc.pl.umap(adata=adata, **kwargs)
 
 
-@_wraps_plot_scatter
+# @_wraps_plot_scatter
 @_doc_params(
     adata_color_etc=doc_adata_color_etc,
     scatter_bulk=doc_scatter_embedding,
@@ -1447,7 +1447,7 @@ def diffmap(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.knn_impute(adata)
         >>> ep.pp.log_norm(adata, offset=1)
         >>> ep.pp.neighbors(adata)
@@ -1481,7 +1481,7 @@ def diffmap(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover
         return sc.pl.diffmap(adata=adata, **kwargs)
 
 
-@_wraps_plot_scatter
+# @_wraps_plot_scatter
 @_doc_params(
     adata_color_etc=doc_adata_color_etc,
     edges_arrows=doc_edges_arrows,
@@ -1505,7 +1505,7 @@ def draw_graph(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.knn_impute(adata)
         >>> ep.pp.log_norm(adata, offset=1)
         >>> ep.pp.neighbors(adata)
@@ -1555,80 +1555,6 @@ class Empty(Enum):
 
 
 _empty = Empty.token
-
-
-@_wraps_plot_scatter
-@_doc_params(
-    adata_color_etc=doc_adata_color_etc,
-    scatter_spatial=doc_scatter_spatial,
-    scatter_bulk=doc_scatter_embedding,
-    show_save_ax=doc_show_save_ax,
-)
-def spatial(
-    adata,
-    *,
-    basis: str = "spatial",
-    img: np.ndarray | None = None,
-    img_key: str | None | Empty = _empty,
-    library_id: str | Empty = _empty,
-    crop_coord: tuple[int, int, int, int] = None,
-    alpha_img: float = 1.0,
-    bw: bool | None = False,
-    size: float = 1.0,
-    scale_factor: float | None = None,
-    spot_size: float | None = None,
-    na_color: ColorLike | None = None,
-    show: bool | None = None,
-    return_fig: bool | None = None,
-    save: bool | str | None = None,
-    **kwargs,
-) -> Axes | list[Axes] | None:  # pragma: no cover
-    """Scatter plot in spatial coordinates.
-
-    This function allows overlaying data on top of images.
-    Use the parameter `img_key` to see the image in the background
-    And the parameter `library_id` to select the image.
-    By default, `'hires'` and `'lowres'` are attempted.
-    Use `crop_coord`, `alpha_img`, and `bw` to control how it is displayed.
-    Use `size` to scale the size of the Visium spots plotted on top.
-    As this function is designed to for imaging data, there are two key assumptions
-    about how coordinates are handled:
-
-    1. The origin (e.g `(0, 0)`) is at the top left – as is common convention
-    with image data.
-    2. Coordinates are in the pixel space of the source image, so an equal
-    aspect ratio is assumed.
-    If your anndata object has a `"spatial"` entry in `.uns`, the `img_key`
-    and `library_id` parameters to find values for `img`, `scale_factor`,
-    and `spot_size` arguments. Alternatively, these values be passed directly.
-
-    Args:
-        {adata_color_etc}
-        {scatter_spatial}
-        {scatter_bulk}
-        {show_save_ax}
-
-    Returns:
-        If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
-    """
-    return sc.pl.spatial(
-        adata=adata,
-        basis=basis,
-        img=img,
-        img_key=img_key,
-        library_id=library_id,
-        crop_coord=crop_coord,
-        alpha_img=alpha_img,
-        bw=bw,
-        size=size,
-        scale_factor=scale_factor,
-        spot_size=spot_size,
-        na_color=na_color,
-        show=show,
-        return_fig=return_fig,
-        save=save,
-        **kwargs,
-    )
 
 
 @_doc_params(
@@ -1698,7 +1624,7 @@ def embedding(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.knn_impute(adata)
         >>> ep.pp.log_norm(adata, offset=1)
         >>> ep.pp.neighbors(adata)
@@ -1847,7 +1773,7 @@ def embedding_density(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.knn_impute(adata)
         >>> ep.pp.log_norm(adata, offset=1)
         >>> ep.pp.neighbors(adata)
@@ -1903,7 +1829,7 @@ def dpt_groups_pseudotime(
     Examples:
         >>> import ehrapy as ep
         >>> import numpy as np
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.knn_impute(adata)
         >>> ep.pp.log_norm(adata, offset=1)
         >>> ep.pp.neighbors(adata, method='gauss')
@@ -1938,7 +1864,7 @@ def dpt_timeseries(
     Examples:
         >>> import ehrapy as ep
         >>> import numpy as np
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.knn_impute(adata)
         >>> ep.pp.log_norm(adata, offset=1)
         >>> ep.pp.neighbors(adata, method='gauss')
@@ -2066,7 +1992,7 @@ def paga(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.knn_impute(adata)
         >>> ep.pp.log_norm(adata, offset=1)
         >>> ep.pp.neighbors(adata)
@@ -2478,7 +2404,7 @@ def rank_features_groups_stacked_violin(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.knn_impute(adata)
         >>> ep.pp.log_norm(adata, offset=1)
         >>> ep.pp.neighbors(adata)
@@ -2535,7 +2461,7 @@ def rank_features_groups_heatmap(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.knn_impute(adata)
         >>> ep.pp.log_norm(adata, offset=1)
         >>> ep.pp.neighbors(adata)
@@ -2611,7 +2537,7 @@ def rank_features_groups_dotplot(
 
     Example:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.knn_impute(adata)
         >>> ep.pp.neighbors(adata)
         >>> ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
@@ -2689,7 +2615,7 @@ def rank_features_groups_matrixplot(
 
     Example:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.knn_impute(adata)
         >>> ep.pp.neighbors(adata)
         >>> ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
@@ -2747,7 +2673,7 @@ def rank_features_groups_tracksplot(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.knn_impute(adata)
         >>> ep.pp.log_norm(adata, offset=1)
         >>> ep.pp.neighbors(adata)

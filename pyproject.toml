@@ -15,6 +15,7 @@ authors = [
     {name = "Altana Namsaraeva"},
     {name = "Vladimir Shitov"},
     {name = "Luke Zappia"},
+    {name = "Xinyue Zhang"},
 ]
 maintainers = [
     {name = "Lukas Heumos", email = "lukas.heumos@posteo.net"},
@@ -85,14 +86,14 @@ test = [
 source = "vcs"
 
 [tool.coverage.run]
-source = ["pertpy"]
+source_pkgs = ["ehrapy"]
 omit = [
     "**/test_*.py",
     "ehrapy/data/_datasets.py",  # Difficult to test
 ]
 
 [tool.pytest.ini_options]
-testpaths = "ehrapy/tests"
+testpaths = "tests"
 xfail_strict = true
 addopts = [
     "--import-mode=importlib",  # allow using test files with same name
