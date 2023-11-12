@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 from rich import print
 from rich.progress import Progress, SpinnerColumn
+from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OrdinalEncoder
 
