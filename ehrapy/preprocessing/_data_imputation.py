@@ -6,7 +6,6 @@ import numpy as np
 import pandas as pd
 from rich import print
 from rich.progress import Progress, SpinnerColumn
-from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OrdinalEncoder
 
@@ -209,25 +208,25 @@ def knn_impute(
     since KNN Imputation can only work on numerical data. The encoding itself is just a utility and will be undone once
     imputation ran successfully.
 
-        Args:
-            adata: An annotated data matrix containing gene expression values.
-            var_names: A list of variable names indicating which columns to impute.
-                       If `None`, all columns are imputed. Default is `None`.
-            n_neighbours: Number of neighbors to use when performing the imputation. Defaults to 5.
-            copy: Whether to perform the imputation on a copy of the original `AnnData` object.
-                  If `True`, the original object remains unmodified. Defaults to `False`.
-            warning_threshold: Percentage of missing values above which a warning is issued. Defaults to 30.
+    Args:
+        adata: An annotated data matrix containing gene expression values.
+        var_names: A list of variable names indicating which columns to impute.
+                   If `None`, all columns are imputed. Default is `None`.
+        n_neighbours: Number of neighbors to use when performing the imputation. Defaults to 5.
+        copy: Whether to perform the imputation on a copy of the original `AnnData` object.
+              If `True`, the original object remains unmodified. Defaults to `False`.
+        warning_threshold: Percentage of missing values above which a warning is issued. Defaults to 30.
 
-        Returns:
-            An updated AnnData object with imputed values.
+    Returns:
+        An updated AnnData object with imputed values.
 
-        Raises:
-            ValueError: If the input data matrix contains only categorical (non-numeric) values.
+    Raises:
+        ValueError: If the input data matrix contains only categorical (non-numeric) values.
 
-        Examples:
-            >>> import ehrapy as ep
-            >>> adata = ep.dt.mimic_2(encoded=True)
-            >>> ep.pp.knn_impute(adata)
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> ep.pp.knn_impute(adata)
     """
     if copy:
         adata = adata.copy()
@@ -743,7 +742,6 @@ def matrix_factorization_impute(
     Train a matrix factorization model to predict empty entries in a matrix.
 
     Args:
-
         adata: The AnnData object to use MatrixFactorization on.
         var_names: A list of var names indicating which columns to impute (if None -> all columns).
         warning_threshold: Threshold of percentage of missing values to display a warning for. Defaults to 30 .
@@ -1126,6 +1124,21 @@ def _warn_imputation_threshold(adata: AnnData, var_names: Iterable[str] | None, 
 
 def _get_non_numerical_column_indices(X: np.ndarray) -> set:
     """Return indices of columns, that contain at least one non numerical value that is not "Nan"."""
+
+    def _is_float_or_nan(val):  # pragma: no cover
+        """Check whether a given item is a float or np.nan"""
+        try:
+            float(val)
+        except ValueError:
+            if val is np.nan:
+                return True
+            return False
+        else:
+            if not isinstance(val, bool):
+                return True
+            else:
+                return False
+
     is_numeric_numpy = np.vectorize(_is_float_or_nan, otypes=[bool])
     mask = np.apply_along_axis(is_numeric_numpy, 0, X)
 
@@ -1133,18 +1146,3 @@ def _get_non_numerical_column_indices(X: np.ndarray) -> set:
     non_num_indices = set(column_indices)
 
     return non_num_indices
-
-
-def _is_float_or_nan(val):  # pragma: no cover
-    """Check whether a given item is a float or np.nan"""
-    try:
-        float(val)
-    except ValueError:
-        if val is np.nan:
-            return True
-        return False
-    else:
-        if not isinstance(val, bool):
-            return True
-        else:
-            return False
