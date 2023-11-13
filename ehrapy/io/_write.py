@@ -20,10 +20,11 @@ def write(
     compression: Literal["gzip", "lzf"] | None = "gzip",
     compression_opts: int | None = None,
 ) -> None:
-    """Write :class:`~anndata.AnnData` objects to file. It is possbile to either write an :class:`~anndata.AnnData` object to
-    a .csv file or a .h5ad file.
-    The .h5ad file can be used as a cache to save the current state of the object and to retrieve it faster once needed. This preserves
-    the object state at the time of writing. It is possible to write both, encoded and unencoded objects.
+    """Write :class:`~anndata.AnnData` objects to file.
+
+    It is possbile to either write an :class:`~anndata.AnnData` object to a .csv file or a .h5ad file.
+    The .h5ad file can be used as a cache to save the current state of the object and to retrieve it faster once needed.
+    This preserves the object state at the time of writing. It is possible to write both, encoded and unencoded objects.
 
     Args:
         filename: File name or path to write the file to

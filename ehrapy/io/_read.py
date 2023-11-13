@@ -219,11 +219,13 @@ def _read_multiple_csv(
         file_path: File path to the directory containing multiple .csv/.tsv files.
         sep: Either , or \t to determine which files to read.
         index_column: Column names of the index columns for obs
-        columns_obs_only: List of columns per file (AnnData object) which should only be stored in .obs, but not in X. Useful for free text annotations.
-        columns_x_only: List of columns per file (AnnData object) which should only be stored in .X, but not in obs. Datetime columns will be added to .obs regardless.
+        columns_obs_only: List of columns per file (AnnData object) which should only be stored in .obs, but not in X.
+                          Useful for free text annotations.
+        columns_x_only: List of columns per file (AnnData object) which should only be stored in .X, but not in obs.
+                        Datetime columns will be added to .obs regardless.
         return_dfs: When set to True, return a dictionary of Pandas DataFrames.
         cache: Whether to cache results or not
-        kwargs: Keyword arguments for Pandas read_csv
+        kwargs: Keyword arguments for Pandas `read_csv`
 
     Returns:
         A Dict mapping the filename (object name) to the corresponding :class:`~anndata.AnnData` object and the columns

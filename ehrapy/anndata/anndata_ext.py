@@ -317,7 +317,7 @@ def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
     return new_adata
 
 
-def get_column_indices(adata: AnnData, col_names: str | Sequence[str]) -> list[int]:
+def get_column_indices(adata: AnnData, col_names: str | Iterable[str]) -> list[int]:
     """Fetches the column indices in X for a given list of column names
 
     Args:

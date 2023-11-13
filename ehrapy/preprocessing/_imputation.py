@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from typing import TYPE_CHECKING, Literal
 
 import numpy as np
@@ -16,8 +17,6 @@ from ehrapy.anndata.anndata_ext import get_column_indices
 from ehrapy.core._tool_available import _check_module_importable
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
-
     from anndata import AnnData
 
 
@@ -187,11 +186,9 @@ def simple_impute(
 
 def _simple_impute(adata: AnnData, var_names: Iterable[str] | None, strategy: str) -> None:
     imputer = SimpleImputer(strategy=strategy)
-    # impute a subset of columns
-    if isinstance(var_names, list):
+    if isinstance(var_names, Iterable):
         column_indices = get_column_indices(adata, var_names)
         adata.X[::, column_indices] = imputer.fit_transform(adata.X[::, column_indices])
-    # impute all columns if None passed
     else:
         adata.X = imputer.fit_transform(adata.X)
 
@@ -289,7 +286,7 @@ def _knn_impute(adata: AnnData, var_names: Iterable[str] | None, n_neighbours: i
 
     imputer = KNNImputer(n_neighbors=n_neighbours)
 
-    if isinstance(var_names, list):
+    if isinstance(var_names, Iterable):
         column_indices = get_column_indices(adata, var_names)
         adata.X[::, column_indices] = imputer.fit_transform(adata.X[::, column_indices])
         # this is required since X dtype has to be numerical in order to correctly round floats
@@ -568,7 +565,7 @@ def _soft_impute(
         verbose,
     )
 
-    if isinstance(var_names, list):
+    if isinstance(var_names, Iterable):
         column_indices = get_column_indices(adata, var_names)
         adata.X[::, column_indices] = imputer.fit_transform(adata.X[::, column_indices])
     else:
@@ -717,7 +714,7 @@ def _iterative_svd_impute(
         verbose,
     )
 
-    if isinstance(var_names, list):
+    if isinstance(var_names, Iterable):
         column_indices = get_column_indices(adata, var_names)
         adata.X[::, column_indices] = imputer.fit_transform(adata.X[::, column_indices])
     else:
@@ -816,7 +813,6 @@ def matrix_factorization_impute(
                 verbose,
             )
             adata.X = adata.X.astype("object")
-            # decode ordinal encoding to obtain imputed original data
             adata.X[::, column_indices] = enc.inverse_transform(adata.X[::, column_indices])
 
     if var_names:
@@ -855,7 +851,7 @@ def _matrix_factorization_impute(
         verbose,
     )
 
-    if isinstance(var_names, list):
+    if isinstance(var_names, Iterable):
         column_indices = get_column_indices(adata, var_names)
         adata.X[::, column_indices] = imputer.fit_transform(adata.X[::, column_indices])
     else:
@@ -1071,7 +1067,7 @@ def _miceforest_impute(
     """Utility function to impute data using miceforest"""
     import miceforest as mf
 
-    if isinstance(var_names, list):
+    if isinstance(var_names, Iterable):
         column_indices = get_column_indices(adata, var_names)
 
         # Create kernel.

@@ -7,7 +7,7 @@ import pytest
 from sklearn.exceptions import ConvergenceWarning
 
 from ehrapy.io._read import read_csv
-from ehrapy.preprocessing._data_imputation import (
+from ehrapy.preprocessing._imputation import (
     _warn_imputation_threshold,
     explicit_impute,
     iterative_svd_impute,
