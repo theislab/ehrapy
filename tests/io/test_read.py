@@ -3,6 +3,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
+from pandas import CategoricalDtype
 
 from ehrapy.io._read import read_csv, read_fhir, read_h5ad
 
@@ -135,7 +136,7 @@ class TestRead:
         assert set(adata.obs.columns) == {"b12_values", "survival", "name"}
         assert pd.api.types.is_bool_dtype(adata.obs["survival"].dtype)
         assert pd.api.types.is_numeric_dtype(adata.obs["b12_values"].dtype)
-        assert pd.api.types.is_categorical_dtype(adata.obs["name"].dtype)
+        assert isinstance(adata.obs["name"].dtype, CategoricalDtype)
 
     def test_set_default_index(self):
         adata = read_csv(dataset_path=f"{_TEST_PATH}/dataset_index.csv")

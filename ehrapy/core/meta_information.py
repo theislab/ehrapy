@@ -76,7 +76,6 @@ def print_header(*, file=None):  # pragma: no cover
         ("sklearn", "scikit-learn"),
         "statsmodels",
         ("igraph", "python-igraph"),
-        "louvain",
         "leidenalg",
         "pynndescent",
     ]

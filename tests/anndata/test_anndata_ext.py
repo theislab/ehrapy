@@ -119,17 +119,17 @@ class TestAnndataExt:
         # case 1:  move some column from obs to X and this col was copied previously from X to obs
         move_to_obs(adata, ["name"], copy_obs=True)
         adata = move_to_x(adata, ["name"])
-        assert {"name"}.issubset(set(adata.var_names))  # check if the copied column is still in X
-        assert adata.X.shape == adata_dim_old  # the shape of X should be the same as previously
-        assert "name" in [item for sublist in adata.uns.values() for item in sublist]  # check if the column in in uns
-        delete_from_obs(adata, ["name"])  # delete the column from obs to restore the original adata state
+        assert {"name"}.issubset(set(adata.var_names))
+        assert adata.X.shape == adata_dim_old
+        assert "name" in [item for sublist in adata.uns.values() for item in sublist]
+        delete_from_obs(adata, ["name"])
 
         # case 2: move some column from obs to X and this col was previously moved inplace from X to obs
         move_to_obs(adata, ["clinic_id"], copy_obs=False)
         adata = move_to_x(adata, ["clinic_id"])
-        assert not {"clinic_id"}.issubset(set(adata.obs.columns))  # check if the copied column was removed from obs
-        assert {"clinic_id"}.issubset(set(adata.var_names))  # check if the copied column is now in X
-        assert adata.X.shape == adata_dim_old  # the shape of X should be the same as previously
+        assert not {"clinic_id"}.issubset(set(adata.obs.columns))
+        assert {"clinic_id"}.issubset(set(adata.var_names))
+        assert adata.X.shape == adata_dim_old
         assert "clinic_id" in [
             item for sublist in adata.uns.values() for item in sublist
         ]  # check if the column in in uns
@@ -142,12 +142,10 @@ class TestAnndataExt:
         assert not {"los_days"}.issubset(
             set(adata.obs.columns)
         )  # check if the copied column was removed from obs by delete_from_obs()
-        assert not {"b12_values"}.issubset(set(adata.obs.columns))  # check if the moved column was removed from obs
-        assert {"los_days", "b12_values"}.issubset(set(adata.var_names))  # check if the copied column is now in X
-        assert adata.X.shape == adata_dim_old  # the shape of X should be the same as previously
-        assert {"los_days", "b12_values"}.issubset(
-            {item for sublist in adata.uns.values() for item in sublist}
-        )  # check if the column in in uns
+        assert not {"b12_values"}.issubset(set(adata.obs.columns))
+        assert {"los_days", "b12_values"}.issubset(set(adata.var_names))
+        assert adata.X.shape == adata_dim_old
+        assert {"los_days", "b12_values"}.issubset({item for sublist in adata.uns.values() for item in sublist})
 
     def test_delete_from_obs(self):
         adata = ep.io.read_csv(CUR_DIR / "../io/test_data_io/dataset_move_obs_mix.csv")

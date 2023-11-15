@@ -86,7 +86,7 @@ def test_obs_nan_qc_metrics():
     adata.X[0][4] = np.nan
     adata2 = encode(adata, encodings={"one-hot": ["clinic_day"]})
     obs_metrics = _obs_qc_metrics(adata2)
-    assert obs_metrics.iloc[0][0] == 1
+    assert obs_metrics.iloc[0].iloc[0] == 1
 
 
 def test_var_nan_qc_metrics():
@@ -94,11 +94,11 @@ def test_var_nan_qc_metrics():
     adata.X[0][4] = np.nan
     adata2 = encode(adata, encodings={"one-hot": ["clinic_day"]})
     var_metrics = _var_qc_metrics(adata2)
-    assert var_metrics.iloc[0][0] == 1
-    assert var_metrics.iloc[1][0] == 1
-    assert var_metrics.iloc[2][0] == 1
-    assert var_metrics.iloc[3][0] == 1
-    assert var_metrics.iloc[4][0] == 1
+    assert var_metrics.iloc[0].iloc[0] == 1
+    assert var_metrics.iloc[1].iloc[0] == 1
+    assert var_metrics.iloc[2].iloc[0] == 1
+    assert var_metrics.iloc[3].iloc[0] == 1
+    assert var_metrics.iloc[4].iloc[0] == 1
 
 
 def test_calculate_qc_metrics(missing_values_adata):

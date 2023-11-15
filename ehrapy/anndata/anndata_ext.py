@@ -303,7 +303,7 @@ def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
         )
 
     if cols_not_in_x:
-        new_adata = concat([adata, AnnData(adata.obs[cols_not_in_x], dtype="object")], axis=1)
+        new_adata = concat([adata, AnnData(adata.obs[cols_not_in_x])], axis=1)
         new_adata.obs = adata.obs[adata.obs.columns[~adata.obs.columns.isin(cols_not_in_x)]]
         # update uns (copy maybe: could be a costly operation but reduces reference cycles)
         # users might save those as separate AnnData object and this could be unexpected behaviour if we dont copy

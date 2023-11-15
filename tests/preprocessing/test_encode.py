@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
+from pandas import CategoricalDtype
 
 from ehrapy.io._read import read_csv
 from ehrapy.preprocessing._encode import DuplicateColumnEncodingError, _reorder_encodings, encode
@@ -70,7 +71,7 @@ def test_autodetect_encode():
         ]
     )
     assert pd.api.types.is_bool_dtype(encoded_ann_data.obs["survival"].dtype)
-    assert pd.api.types.is_categorical_dtype(encoded_ann_data.obs["clinic_day"].dtype)
+    assert isinstance(encoded_ann_data.obs["clinic_day"].dtype, CategoricalDtype)
 
 
 def test_autodetect_num_only(capfd):
@@ -113,7 +114,7 @@ def test_autodetect_custom_mode():
         for column in ["ehrapycat_survival", "ehrapycat_clinic_day"]
     )
     assert pd.api.types.is_bool_dtype(encoded_ann_data.obs["survival"].dtype)
-    assert pd.api.types.is_categorical_dtype(encoded_ann_data.obs["clinic_day"].dtype)
+    assert isinstance(encoded_ann_data.obs["clinic_day"].dtype, CategoricalDtype)
 
 
 def test_autodetect_encode_again():
@@ -169,7 +170,7 @@ def test_custom_encode():
         ]
     )
     assert pd.api.types.is_bool_dtype(encoded_ann_data.obs["survival"].dtype)
-    assert pd.api.types.is_categorical_dtype(encoded_ann_data.obs["clinic_day"].dtype)
+    assert isinstance(encoded_ann_data.obs["clinic_day"].dtype, CategoricalDtype)
 
 
 def test_custom_encode_again_single_columns_encoding():
@@ -199,7 +200,7 @@ def test_custom_encode_again_single_columns_encoding():
     }
     assert id(encoded_ann_data_again.X) != id(encoded_ann_data_again.layers["original"])
     assert pd.api.types.is_bool_dtype(encoded_ann_data.obs["survival"].dtype)
-    assert pd.api.types.is_categorical_dtype(encoded_ann_data.obs["clinic_day"].dtype)
+    assert isinstance(encoded_ann_data.obs["clinic_day"].dtype, CategoricalDtype)
 
 
 def test_custom_encode_again_multiple_columns_encoding():
@@ -233,7 +234,7 @@ def test_custom_encode_again_multiple_columns_encoding():
     }
     assert id(encoded_ann_data_again.X) != id(encoded_ann_data_again.layers["original"])
     assert pd.api.types.is_bool_dtype(encoded_ann_data.obs["survival"].dtype)
-    assert pd.api.types.is_categorical_dtype(encoded_ann_data.obs["clinic_day"].dtype)
+    assert isinstance(encoded_ann_data.obs["clinic_day"].dtype, CategoricalDtype)
 
 
 def test_update_encoding_scheme_1():

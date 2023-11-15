@@ -334,7 +334,9 @@ def _do_read_h5ad(file_path: Path | Iterator[str]) -> AnnData:
     Returns:
         An AnnData object.
     """
-    adata = read_h5(file_path)
+    import anndata as ad
+
+    adata = ad.read_h5ad(file_path)
     if "ehrapy_dummy_encoding" in adata.uns.keys():
         # if dummy encoding was needed, the original dtype of X could not be numerical, so cast it to object
         adata.X = adata.X.astype("object")
