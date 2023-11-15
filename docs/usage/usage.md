@@ -190,7 +190,6 @@ In contrast to a preprocessing function, a tool usually adds an easily interpret
     :nosignatures:
 
     tools.leiden
-    tools.louvain
     tools.dendrogram
     tools.dpt
     tools.paga
@@ -205,7 +204,6 @@ In contrast to a preprocessing function, a tool usually adds an easily interpret
 
     tools.rank_features_groups
     tools.filter_rank_features_groups
-    tools.marker_feature_overlap
 ```
 
 ### Dataset integration

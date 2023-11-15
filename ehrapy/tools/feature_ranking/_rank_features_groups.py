@@ -409,7 +409,6 @@ def rank_features_groups(
             adata.uns[key_added]["pvals"], corr_method=correction_method
         )
 
-    # For some reason, pts should be a DataFrame
     if "pts" in adata.uns[key_added]:
         adata.uns[key_added]["pts"] = pd.DataFrame(adata.uns[key_added]["pts"])
 

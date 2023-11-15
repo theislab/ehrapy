@@ -13,7 +13,7 @@ from sklearn.preprocessing import OrdinalEncoder
 
 from ehrapy import logging as logg
 from ehrapy import settings
-from ehrapy.anndata.anndata_ext import get_column_indices
+from ehrapy.anndata.anndata_ext import _get_column_indices
 from ehrapy.core._tool_available import _check_module_importable
 
 if TYPE_CHECKING:
@@ -187,7 +187,7 @@ def simple_impute(
 def _simple_impute(adata: AnnData, var_names: Iterable[str] | None, strategy: str) -> None:
     imputer = SimpleImputer(strategy=strategy)
     if isinstance(var_names, Iterable):
-        column_indices = get_column_indices(adata, var_names)
+        column_indices = _get_column_indices(adata, var_names)
         adata.X[::, column_indices] = imputer.fit_transform(adata.X[::, column_indices])
     else:
         adata.X = imputer.fit_transform(adata.X)
@@ -252,7 +252,7 @@ def knn_impute(
         else:
             # ordinal encoding is used since non-numerical data can not be imputed using KNN Imputation
             enc = OrdinalEncoder()
-            column_indices = get_column_indices(adata, adata.uns["non_numerical_columns"])
+            column_indices = _get_column_indices(adata, adata.uns["non_numerical_columns"])
             adata.X[::, column_indices] = enc.fit_transform(adata.X[::, column_indices])
             # impute the data using KNN imputation
             _knn_impute(adata, var_names, n_neighbours)
@@ -287,7 +287,7 @@ def _knn_impute(adata: AnnData, var_names: Iterable[str] | None, n_neighbours: i
     imputer = KNNImputer(n_neighbors=n_neighbours)
 
     if isinstance(var_names, Iterable):
-        column_indices = get_column_indices(adata, var_names)
+        column_indices = _get_column_indices(adata, var_names)
         adata.X[::, column_indices] = imputer.fit_transform(adata.X[::, column_indices])
         # this is required since X dtype has to be numerical in order to correctly round floats
         adata.X = adata.X.astype("float64")
@@ -381,7 +381,7 @@ def miss_forest_impute(
         )
 
         if isinstance(var_names, list):
-            var_indices = get_column_indices(adata, var_names)  # type: ignore
+            var_indices = _get_column_indices(adata, var_names)  # type: ignore
             adata.X[::, var_indices] = imp_num.fit_transform(adata.X[::, var_indices])
         elif isinstance(var_names, dict) or var_names is None:
             if var_names:
@@ -393,8 +393,8 @@ def miss_forest_impute(
                         "One or both of your keys provided for var_names are unknown. Only "
                         "numerical and non_numerical are available!"
                     ) from None
-                non_num_indices = get_column_indices(adata, non_num_vars)
-                num_indices = get_column_indices(adata, num_vars)
+                non_num_indices = _get_column_indices(adata, non_num_vars)
+                num_indices = _get_column_indices(adata, num_vars)
 
             # infer non numerical and numerical indices automatically
             else:
@@ -502,7 +502,7 @@ def soft_impute(
         else:
             # ordinal encoding is used since non-numerical data can not be imputed using SoftImpute
             enc = OrdinalEncoder()
-            column_indices = get_column_indices(adata, adata.uns["non_numerical_columns"])
+            column_indices = _get_column_indices(adata, adata.uns["non_numerical_columns"])
             adata.X[::, column_indices] = enc.fit_transform(adata.X[::, column_indices])
             # impute the data using SoftImpute
             _soft_impute(
@@ -566,7 +566,7 @@ def _soft_impute(
     )
 
     if isinstance(var_names, Iterable):
-        column_indices = get_column_indices(adata, var_names)
+        column_indices = _get_column_indices(adata, var_names)
         adata.X[::, column_indices] = imputer.fit_transform(adata.X[::, column_indices])
     else:
         adata.X = imputer.fit_transform(adata.X)
@@ -658,7 +658,7 @@ def iterative_svd_impute(
         else:
             # ordinal encoding is used since non-numerical data can not be imputed using IterativeSVD
             enc = OrdinalEncoder()
-            column_indices = get_column_indices(adata, adata.uns["non_numerical_columns"])
+            column_indices = _get_column_indices(adata, adata.uns["non_numerical_columns"])
             adata.X[::, column_indices] = enc.fit_transform(adata.X[::, column_indices])
             # impute the data using IterativeSVD
             _iterative_svd_impute(
@@ -715,7 +715,7 @@ def _iterative_svd_impute(
     )
 
     if isinstance(var_names, Iterable):
-        column_indices = get_column_indices(adata, var_names)
+        column_indices = _get_column_indices(adata, var_names)
         adata.X[::, column_indices] = imputer.fit_transform(adata.X[::, column_indices])
     else:
         adata.X = imputer.fit_transform(adata.X)
@@ -798,7 +798,7 @@ def matrix_factorization_impute(
         else:
             # ordinal encoding is used since non-numerical data can not be imputed using MatrixFactorization
             enc = OrdinalEncoder()
-            column_indices = get_column_indices(adata, adata.uns["non_numerical_columns"])
+            column_indices = _get_column_indices(adata, adata.uns["non_numerical_columns"])
             adata.X[::, column_indices] = enc.fit_transform(adata.X[::, column_indices])
             # impute the data using MatrixFactorization
             _matrix_factorization_impute(
@@ -852,7 +852,7 @@ def _matrix_factorization_impute(
     )
 
     if isinstance(var_names, Iterable):
-        column_indices = get_column_indices(adata, var_names)
+        column_indices = _get_column_indices(adata, var_names)
         adata.X[::, column_indices] = imputer.fit_transform(adata.X[::, column_indices])
     else:
         adata.X = imputer.fit_transform(adata.X)
@@ -920,7 +920,7 @@ def nuclear_norm_minimization_impute(
         else:
             # ordinal encoding is used since non-numerical data can not be imputed using NuclearNormMinimization
             enc = OrdinalEncoder()
-            column_indices = get_column_indices(adata, adata.uns["non_numerical_columns"])
+            column_indices = _get_column_indices(adata, adata.uns["non_numerical_columns"])
             adata.X[::, column_indices] = enc.fit_transform(adata.X[::, column_indices])
             # impute the data using NuclearNormMinimization
             _nuclear_norm_minimization_impute(
@@ -972,7 +972,7 @@ def _nuclear_norm_minimization_impute(
     )
 
     if isinstance(var_names, list):
-        column_indices = get_column_indices(adata, var_names)
+        column_indices = _get_column_indices(adata, var_names)
         adata.X[::, column_indices] = imputer.fit_transform(adata.X[::, column_indices])
     else:
         adata.X = imputer.fit_transform(adata.X)
@@ -1039,7 +1039,7 @@ def mice_forest_impute(
         else:
             # ordinal encoding is used since non-numerical data can not be imputed using miceforest
             enc = OrdinalEncoder()
-            column_indices = get_column_indices(adata, adata.uns["non_numerical_columns"])
+            column_indices = _get_column_indices(adata, adata.uns["non_numerical_columns"])
             adata.X[::, column_indices] = enc.fit_transform(adata.X[::, column_indices])
             # impute the data using miceforest
             _miceforest_impute(
@@ -1068,7 +1068,7 @@ def _miceforest_impute(
     import miceforest as mf
 
     if isinstance(var_names, Iterable):
-        column_indices = get_column_indices(adata, var_names)
+        column_indices = _get_column_indices(adata, var_names)
 
         # Create kernel.
         kernel = mf.ImputationKernel(

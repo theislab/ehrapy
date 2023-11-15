@@ -317,49 +317,27 @@ def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
     return new_adata
 
 
-def get_column_indices(adata: AnnData, col_names: str | Iterable[str]) -> list[int]:
+def _get_column_indices(adata: AnnData, col_names: str | Iterable[str]) -> list[int]:
     """Fetches the column indices in X for a given list of column names
 
     Args:
-        adata: :class:`~anndata.AnnData` object
-        col_names: Column names to extract the indices for
+        adata: :class:`~anndata.AnnData` object.
+        col_names: Column names to extract the indices for.
 
     Returns:
-        Set of column indices
-
-    Examples:
-        >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.ad.get_column_indices(adata, ['age', 'gender_num', 'bmi'])
+        List of column indices.
     """
-    if isinstance(col_names, str):  # pragma: no cover
-        col_names = [col_names]
-
-    indices = []
-    for idx, col in enumerate(adata.var_names):
-        if col in col_names:
-            indices.append(idx)
+    col_names = [col_names] if isinstance(col_names, str) else col_names
+    mask = np.isin(adata.var_names, col_names)
+    indices = np.where(mask)[0].tolist()
 
     return indices
-
-
-def _get_column_values(adata: AnnData, indices: int | list[int]) -> np.ndarray:
-    """Fetches the column values for a specific index from X
-
-    Args:
-        adata: :class:`~anndata.AnnData` object
-        indices: The index to extract the values for
-
-    Returns:
-        :class:`~numpy.ndarray` object containing the column values
-    """
-    return np.take(adata.X, indices, axis=1)
 
 
 def type_overview(data: AnnData, sort_by: str | None = None, sort_reversed: bool = False) -> None:  # pragma: no cover
     """Prints the current state of an :class:`~anndata.AnnData` object in a tree format.
 
-    Output could be printed in sorted format by using one of `dtype`, `order`, `num_cats` or `None`, which sorts by data type, lexicographical order,
+    Output can be printed in sorted format by using one of `dtype`, `order`, `num_cats` or `None`, which sorts by data type, lexicographical order,
     number of unique values (excluding NaN's) and unsorted respectively. Note that sorting by `num_cats` only affects
     encoded variables currently and will display unencoded vars unsorted.
 
@@ -555,7 +533,7 @@ def set_numeric_vars(
     if copy:
         adata = adata.copy()
 
-    vars_idx = get_column_indices(adata, vars)
+    vars_idx = _get_column_indices(adata, vars)
 
     for i in range(n_values):
         adata.X[:, vars_idx[i]] = values[:, i]

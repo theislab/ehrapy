@@ -36,7 +36,7 @@ def winsorize(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.winsorize(adata, ['bmi'])
     """
     _validate_outlier_input(adata, obs_cols, vars)
@@ -87,7 +87,7 @@ def clip_quantile(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.clip_quantile(adata, ['bmi'])
     """
     obs_cols, vars = _validate_outlier_input(adata, obs_cols, vars)  # type: ignore
