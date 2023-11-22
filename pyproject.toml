@@ -50,10 +50,9 @@ dependencies = [
     "requests",
     "scikit-learn",
     "category_encoders",
-    "deepl",
     "pynndescent",
-    "ipython",
     "deep-translator",
+    "deepl",
     "scikit-learn-intelex",
     "fancyimpute",
     "miceforest",
@@ -62,7 +61,6 @@ dependencies = [
     "lifelines",
     "missingno",
     "thefuzz[speedup]",
-    "tabulate",
     "fhiry",
     "dowhy"
 ]
