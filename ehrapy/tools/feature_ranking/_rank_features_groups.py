@@ -359,7 +359,6 @@ def rank_features_groups(
 
         adata_with_moved_columns = encode(adata_with_moved_columns, autodetect=True, encodings="label")
 
-        # assign numeric and categorical columns
         adata_with_moved_columns.uns[
             "non_numerical_columns"
         ] = []  # this should be empty, as have only numeric and encoded
