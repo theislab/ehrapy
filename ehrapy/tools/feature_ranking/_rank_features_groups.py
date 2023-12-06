@@ -262,7 +262,7 @@ def rank_features_groups(
 ) -> None:  # pragma: no cover
     """Rank features for characterizing groups.
 
-    Expects logarithmized data. # TODO: should this line be removed? log-transform may be a valid transformation for probably many types of data, but not a necessity for this method right?
+    Expects logarithmized data.
 
     Args:
         adata: Annotated data matrix.
@@ -319,7 +319,7 @@ def rank_features_groups(
                     Only if `reference` is set to `'rest'`.
                     Fraction of observations from the union of the rest of each group containing the features.
 
-     Examples: # TODO: there is an inf. value here. I think due to a bug considering the one-hot encoded feature of service_unit.
+     Examples:
          >>> import ehrapy as ep
          >>> adata = ep.dt.mimic_2(encoded=True)
          >>> ep.tl.rank_features_groups(adata, "service_unit")
@@ -331,7 +331,6 @@ def rank_features_groups(
 
     adata = adata.copy() if copy else adata
 
-    # TODO: check if need to remove the "actual" column according which to group
     if rank_obs_columns is not None:
         # keep reference to original adata, needed if copy=False
         adata_orig = adata
@@ -356,7 +355,6 @@ def rank_features_groups(
         #     rank_obs_columns.remove(groupby)
 
         # move obs columns to X
-        # TODO: check if we want to take care of strange stuff (e.g. dates/times) or allow user to only specify columns that make sense
         adata_with_moved_columns = move_to_x(adata, rank_obs_columns)
 
         # remove columns previously in X
@@ -364,7 +362,7 @@ def rank_features_groups(
         adata_with_moved_columns = adata_with_moved_columns[:, columns_to_select]
 
         # encode categoricals
-        adata_with_moved_columns = encode(adata_with_moved_columns, autodetect=True, encodings="label_encoding")
+        adata_with_moved_columns = encode(adata_with_moved_columns, autodetect=True, encodings="label")
 
         # assign numeric and categorical columns
         adata_with_moved_columns.uns[
@@ -379,7 +377,7 @@ def rank_features_groups(
         adata.obs[groupby] = pd.Categorical(adata.obs[groupby])
 
     adata.uns[key_added] = {}
-    adata.uns[key_added]["params"] = {  # TODO: add additional parameters
+    adata.uns[key_added]["params"] = {
         "groupby": groupby,
         "reference": reference,
         "method": num_cols_method,
@@ -468,7 +466,6 @@ def rank_features_groups(
 
     _sort_features(adata, key_added)
 
-    # TODO: return adata_orig with rank features results
     if rank_obs_columns is not None:
         adata_orig.uns[key_added] = adata.uns[key_added]
         adata = adata_orig

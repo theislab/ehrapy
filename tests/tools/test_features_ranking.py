@@ -290,7 +290,7 @@ class TestRankFeaturesGroups:
         adata_features_in_x = read_csv(
             dataset_path=f"{_TEST_PATH}/dataset1.csv", columns_x_only=["station", "sys_bp_entry", "dia_bp_entry"]
         )
-        adata_features_in_x = ep.pp.encode(adata_features_in_x, encodings={"label_encoding": ["station"]})
+        adata_features_in_x = ep.pp.encode(adata_features_in_x, encodings={"label": ["station"]})
 
         # rank_features_groups on .obs
         ep.tl.rank_features_groups(adata_features_in_obs, groupby="disease", rank_obs_columns="all")
