@@ -333,7 +333,6 @@ def rank_features_groups(
     if rank_obs_columns is not None:
         # keep reference to original adata, needed if copy=False
         adata_orig = adata
-        # copy adata to work on
         adata = adata.copy()
 
         if isinstance(rank_obs_columns, str):
