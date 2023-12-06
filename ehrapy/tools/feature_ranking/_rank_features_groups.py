@@ -353,7 +353,6 @@ def rank_features_groups(
         # if groupby in rank_obs_columns:
         #     rank_obs_columns.remove(groupby)
 
-        # move obs columns to X
         adata_with_moved_columns = move_to_x(adata, rank_obs_columns)
 
         # remove columns previously in X
