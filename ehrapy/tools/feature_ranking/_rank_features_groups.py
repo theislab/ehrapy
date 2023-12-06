@@ -327,17 +327,19 @@ def rank_features_groups(
          >>> ep.tl.rank_features_groups(adata, "service_unit")
          >>> ep.pl.rank_features_groups(adata)
     """
-    # if rank_obs_columns is indicated, layer must be None
     if layer is not None and rank_obs_columns is not None:
-        raise ValueError("Only one of layer and rank_obs_columns can be specified.")
+        raise ValueError("Only one of 'layer' and 'rank_obs_columns' can be specified.")
 
     adata = adata.copy() if copy else adata
 
     if rank_obs_columns is not None:
         # keep reference to original adata, needed if copy=False
         adata_orig = adata
-        # copy adata to work on
-        adata = adata.copy()
+        adata = sc.AnnData(
+            X=np.zeros((len(adata), 1)),
+            obs=adata.obs.copy(),
+            uns={"numerical_columns": [], "non_numerical_columns": [], "encoded_non_numerical_columns": []},
+        )
 
         if isinstance(rank_obs_columns, str):
             if rank_obs_columns == "all":
@@ -353,20 +355,15 @@ def rank_features_groups(
                 f"Columns `{[col for col in rank_obs_columns if col not in adata.obs.columns.values]}` are not in obs."
             )
 
-        # if groupby in rank_obs_columns:
-        #     rank_obs_columns.remove(groupby)
-
-        # move obs columns to X
+        # want columns of obs to become variables in X to be able to use rank_features_groups
         adata_with_moved_columns = move_to_x(adata, list(rank_obs_columns))
 
-        # remove columns previously in X
+        # don't want columns that have been in X before, as only consider columns from obs
         columns_to_select = adata_with_moved_columns.var_names.difference(adata.var_names)
         adata_with_moved_columns = adata_with_moved_columns[:, columns_to_select]
 
-        # encode categoricals
         adata_with_moved_columns = encode(adata_with_moved_columns, autodetect=True, encodings="label")
 
-        # assign numeric and categorical columns
         adata_with_moved_columns.uns[
             "non_numerical_columns"
         ] = []  # this should be empty, as have only numeric and encoded
