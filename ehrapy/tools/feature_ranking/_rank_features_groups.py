@@ -357,7 +357,6 @@ def rank_features_groups(
         columns_to_select = adata_with_moved_columns.var_names.difference(adata.var_names)
         adata_with_moved_columns = adata_with_moved_columns[:, columns_to_select]
 
-        # encode categoricals
         adata_with_moved_columns = encode(adata_with_moved_columns, autodetect=True, encodings="label")
 
         # assign numeric and categorical columns
