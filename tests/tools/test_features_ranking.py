@@ -1,9 +1,15 @@
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import pytest
 
 import ehrapy as ep
 import ehrapy.tools.feature_ranking._rank_features_groups as _utils
+from ehrapy.io._read import read_csv
+
+CURRENT_DIR = Path(__file__).parent
+_TEST_PATH = f"{CURRENT_DIR}/test_data_features_ranking"
 
 
 class TestHelperFunctions:
@@ -270,3 +276,60 @@ class TestRankFeaturesGroups:
         assert "scores" in adata.uns["rank_features_groups"]
         assert "logfoldchanges" in adata.uns["rank_features_groups"]
         assert "pvals_adj" in adata.uns["rank_features_groups"]
+
+    def test_rank_obs(
+        self,
+    ):
+        # prepare data with some interesting features in .obs
+        adata_features_in_obs = read_csv(
+            dataset_path=f"{_TEST_PATH}/dataset1.csv",
+            columns_obs_only=["disease", "station", "sys_bp_entry", "dia_bp_entry"],
+        )
+
+        # prepare data with these features in .X
+        adata_features_in_x = read_csv(
+            dataset_path=f"{_TEST_PATH}/dataset1.csv", columns_x_only=["station", "sys_bp_entry", "dia_bp_entry"]
+        )
+        adata_features_in_x = ep.pp.encode(adata_features_in_x, encodings={"label_encoding": ["station"]})
+
+        # rank_features_groups on .obs
+        ep.tl.rank_features_groups(adata_features_in_obs, groupby="disease", rank_obs_columns="all")
+
+        # rank features groups on .X
+        ep.tl.rank_features_groups(adata_features_in_x, groupby="disease")
+
+        # check standard rank_features_groups entries
+        assert "names" in adata_features_in_obs.uns["rank_features_groups"]
+        assert "pvals" in adata_features_in_obs.uns["rank_features_groups"]
+        assert "scores" in adata_features_in_obs.uns["rank_features_groups"]
+        assert "pvals_adj" in adata_features_in_obs.uns["rank_features_groups"]
+        assert "log2foldchanges" not in adata_features_in_obs.uns["rank_features_groups"]
+        assert "pts" not in adata_features_in_obs.uns["rank_features_groups"]
+        assert (
+            len(adata_features_in_obs.uns["rank_features_groups"]["names"]) == 3
+        )  # It only captures the length of each group
+        assert len(adata_features_in_obs.uns["rank_features_groups"]["pvals"]) == 3
+        assert len(adata_features_in_obs.uns["rank_features_groups"]["scores"]) == 3
+
+        # check the obs are used indeed
+        assert "sys_bp_entry" in adata_features_in_obs.uns["rank_features_groups"]["names"][0]
+        assert "sys_bp_entry" in adata_features_in_obs.uns["rank_features_groups"]["names"][1]
+        assert "ehrapycat_station" in adata_features_in_obs.uns["rank_features_groups"]["names"][2]
+
+        # check the X are not used
+        assert "glucose" not in adata_features_in_obs.uns["rank_features_groups"]["names"][0]
+
+        # check the results are the same
+        for record in adata_features_in_obs.uns["rank_features_groups"]["names"].dtype.names:
+            assert np.allclose(
+                adata_features_in_obs.uns["rank_features_groups"]["scores"][record],
+                adata_features_in_x.uns["rank_features_groups"]["scores"][record],
+            )
+            assert np.allclose(
+                np.array(adata_features_in_obs.uns["rank_features_groups"]["pvals"][record]),
+                np.array(adata_features_in_x.uns["rank_features_groups"]["pvals"][record]),
+            )
+            assert np.array_equal(
+                np.array(adata_features_in_obs.uns["rank_features_groups"]["names"][record]),
+                np.array(adata_features_in_x.uns["rank_features_groups"]["names"][record]),
+            )
