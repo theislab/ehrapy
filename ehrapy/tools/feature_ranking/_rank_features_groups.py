@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Iterable
 from typing import Literal, Optional, Union
 
@@ -257,7 +259,7 @@ def rank_features_groups(
     correction_method: _method_options._correction_method = "benjamini-hochberg",
     tie_correct: bool = False,
     layer: Optional[str] = None,
-    rank_obs_columns: Optional[Union[list[str], str]] = None,
+    rank_obs_columns: Optional[Union[Iterable[str], str]] = None,
     **kwds,
 ) -> None:  # pragma: no cover
     """Rank features for characterizing groups.
@@ -355,7 +357,7 @@ def rank_features_groups(
         #     rank_obs_columns.remove(groupby)
 
         # move obs columns to X
-        adata_with_moved_columns = move_to_x(adata, rank_obs_columns)
+        adata_with_moved_columns = move_to_x(adata, list(rank_obs_columns))
 
         # remove columns previously in X
         columns_to_select = adata_with_moved_columns.var_names.difference(adata.var_names)
