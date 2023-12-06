@@ -325,7 +325,6 @@ def rank_features_groups(
          >>> ep.tl.rank_features_groups(adata, "service_unit")
          >>> ep.pl.rank_features_groups(adata)
     """
-    # if rank_obs_columns is indicated, layer must be None
     if layer is not None and rank_obs_columns is not None:
         raise ValueError("Only one of layer and rank_obs_columns can be specified.")
 
