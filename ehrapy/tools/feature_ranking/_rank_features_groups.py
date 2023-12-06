@@ -326,7 +326,7 @@ def rank_features_groups(
          >>> ep.pl.rank_features_groups(adata)
     """
     if layer is not None and rank_obs_columns is not None:
-        raise ValueError("Only one of layer and rank_obs_columns can be specified.")
+        raise ValueError("Only one of 'layer' and 'rank_obs_columns' can be specified.")
 
     adata = adata.copy() if copy else adata
 
