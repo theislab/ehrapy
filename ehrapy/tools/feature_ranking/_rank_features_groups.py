@@ -354,7 +354,6 @@ def rank_features_groups(
 
         adata_with_moved_columns = move_to_x(adata, rank_obs_columns)
 
-        # remove columns previously in X
         columns_to_select = adata_with_moved_columns.var_names.difference(adata.var_names)
         adata_with_moved_columns = adata_with_moved_columns[:, columns_to_select]
 
