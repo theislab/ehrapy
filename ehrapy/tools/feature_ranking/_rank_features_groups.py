@@ -455,7 +455,7 @@ def rank_features_groups(
         )
 
     # Adjust p values
-    if "pvals" in adata.uns[key_added]:  # todo: in what scenarios can they not be there?
+    if "pvals" in adata.uns[key_added]:
         adata.uns[key_added]["pvals_adj"] = _adjust_pvalues(
             adata.uns[key_added]["pvals"], corr_method=correction_method
         )
