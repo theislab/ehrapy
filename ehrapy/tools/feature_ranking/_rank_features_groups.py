@@ -6,6 +6,8 @@ import pandas as pd
 import scanpy as sc
 from anndata import AnnData
 
+from ehrapy.anndata import move_to_x
+from ehrapy.preprocessing import encode
 from ehrapy.tools import _method_options
 
 
@@ -255,11 +257,12 @@ def rank_features_groups(
     correction_method: _method_options._correction_method = "benjamini-hochberg",
     tie_correct: bool = False,
     layer: Optional[str] = None,
+    rank_obs_columns: Optional[Union[list[str], str]] = None,
     **kwds,
 ) -> None:  # pragma: no cover
     """Rank features for characterizing groups.
 
-    Expects logarithmized data.
+    Expects logarithmized data. # TODO: should this line be removed? log-transform may be a valid transformation for probably many types of data, but not a necessity for this method right?
 
     Args:
         adata: Annotated data matrix.
@@ -288,6 +291,8 @@ def rank_features_groups(
                             Used only for statistical tests (e.g. doesn't work for "logreg" `num_cols_method`)
         tie_correct: Use tie correction for `'wilcoxon'` scores. Used only for `'wilcoxon'`.
         layer: Key from `adata.layers` whose value will be used to perform tests on.
+        rank_obs_columns: Whether to rank `adata.obs` columns instead of features in `adata.layer`. If `True`, all observation columns are ranked. If list of column names, only those are ranked.
+                    layer needs to be None if this is used.
         **kwds: Are passed to test methods. Currently this affects only parameters that
                 are passed to :class:`sklearn.linear_model.LogisticRegression`.
                 For instance, you can pass `penalty='l1'` to try to come up with a
@@ -314,19 +319,67 @@ def rank_features_groups(
                     Only if `reference` is set to `'rest'`.
                     Fraction of observations from the union of the rest of each group containing the features.
 
-     Examples:
+     Examples: # TODO: there is an inf. value here. I think due to a bug considering the one-hot encoded feature of service_unit.
          >>> import ehrapy as ep
          >>> adata = ep.dt.mimic_2(encoded=True)
          >>> ep.tl.rank_features_groups(adata, "service_unit")
          >>> ep.pl.rank_features_groups(adata)
     """
+    # if rank_obs_columns is indicated, layer must be None
+    if layer is not None and rank_obs_columns is not None:
+        raise ValueError("Only one of layer and rank_obs_columns can be specified.")
+
     adata = adata.copy() if copy else adata
+
+    # TODO: check if need to remove the "actual" column according which to group
+    if rank_obs_columns is not None:
+        # keep reference to original adata, needed if copy=False
+        adata_orig = adata
+        # copy adata to work on
+        adata = adata.copy()
+
+        if isinstance(rank_obs_columns, str):
+            if rank_obs_columns == "all":
+                rank_obs_columns = adata.obs.keys().to_list()
+            else:
+                raise ValueError(
+                    f"rank_obs_columns should be 'all' or Iterable of column names, not {rank_obs_columns}."
+                )
+
+        # consider adata where all columns from obs become the features, and the other features are dropped
+        if not all(elem in adata.obs.columns.values for elem in rank_obs_columns):
+            raise ValueError(
+                f"Columns `{[col for col in rank_obs_columns if col not in adata.obs.columns.values]}` are not in obs."
+            )
+
+        # if groupby in rank_obs_columns:
+        #     rank_obs_columns.remove(groupby)
+
+        # move obs columns to X
+        # TODO: check if we want to take care of strange stuff (e.g. dates/times) or allow user to only specify columns that make sense
+        adata_with_moved_columns = move_to_x(adata, rank_obs_columns)
+
+        # remove columns previously in X
+        columns_to_select = adata_with_moved_columns.var_names.difference(adata.var_names)
+        adata_with_moved_columns = adata_with_moved_columns[:, columns_to_select]
+
+        # encode categoricals
+        adata_with_moved_columns = encode(adata_with_moved_columns, autodetect=True, encodings="label_encoding")
+
+        # assign numeric and categorical columns
+        adata_with_moved_columns.uns[
+            "non_numerical_columns"
+        ] = []  # this should be empty, as have only numeric and encoded
+        adata_with_moved_columns.uns["numerical_columns"] = adata_with_moved_columns.var_names.difference(
+            adata_with_moved_columns.uns["encoded_non_numerical_columns"]
+        ).to_list()  # this is sensitive to `encode` really detecting what it should
+        adata = adata_with_moved_columns
 
     if not adata.obs[groupby].dtype == "category":
         adata.obs[groupby] = pd.Categorical(adata.obs[groupby])
 
     adata.uns[key_added] = {}
-    adata.uns[key_added]["params"] = {
+    adata.uns[key_added]["params"] = {  # TODO: add additional parameters
         "groupby": groupby,
         "reference": reference,
         "method": num_cols_method,
@@ -404,14 +457,20 @@ def rank_features_groups(
         )
 
     # Adjust p values
-    if "pvals" in adata.uns[key_added]:
+    if "pvals" in adata.uns[key_added]:  # todo: in what scenarios can they not be there?
         adata.uns[key_added]["pvals_adj"] = _adjust_pvalues(
             adata.uns[key_added]["pvals"], corr_method=correction_method
         )
 
+    # For some reason, pts should be a DataFrame
     if "pts" in adata.uns[key_added]:
         adata.uns[key_added]["pts"] = pd.DataFrame(adata.uns[key_added]["pts"])
 
     _sort_features(adata, key_added)
+
+    # TODO: return adata_orig with rank features results
+    if rank_obs_columns is not None:
+        adata_orig.uns[key_added] = adata.uns[key_added]
+        adata = adata_orig
 
     return adata if copy else None
