@@ -244,6 +244,51 @@ def _evaluate_categorical_features(
     )
 
 
+def _check_no_datetime_columns(df):
+    datetime_cols = [col for col in df.columns if df[col].dtype == "datetime64[ns]"]
+    if datetime_cols:
+        raise ValueError(f"Columns with datetime format found: {datetime_cols}")
+
+
+def _get_intersection(adata_uns, key, selection):
+    """Get intersection of adata_uns[key] and selection"""
+    if key in adata_uns:
+        uns_enc_to_keep = list(set(adata_uns["encoded_non_numerical_columns"]) & set(selection))
+    else:
+        uns_enc_to_keep = []
+    return uns_enc_to_keep
+
+
+def _check_columns_to_rank_dict(columns_to_rank):
+    if isinstance(columns_to_rank, str):
+        if columns_to_rank == "all":
+            _var_subset = _obs_subset = False
+        else:
+            raise ValueError("If columns_to_rank is a string, it must be 'all'.")
+
+    elif isinstance(columns_to_rank, dict):
+        allowed_keys = {"var_names", "obs_names"}
+        for key in columns_to_rank.keys():
+            if key not in allowed_keys:
+                raise ValueError(
+                    f"columns_to_rank dictionary must have only keys 'var_names' and/or 'obs_names', not {key}."
+                )
+            if not isinstance(key, str):
+                raise ValueError(f"columns_to_rank dictionary keys must be strings, not {type(key)}.")
+
+        for key, value in columns_to_rank.items():
+            if not isinstance(value, Iterable) or any(not isinstance(item, str) for item in value):
+                raise ValueError(f"The value associated with key '{key}' must be an iterable of strings.")
+
+        _var_subset = "var_names" in columns_to_rank.keys()
+        _obs_subset = "obs_names" in columns_to_rank.keys()
+
+    else:
+        raise ValueError("columns_to_rank must be either 'all' or a dictionary.")
+
+    return _var_subset, _obs_subset
+
+
 def rank_features_groups(
     adata: AnnData,
     groupby: str,
@@ -259,7 +304,8 @@ def rank_features_groups(
     correction_method: _method_options._correction_method = "benjamini-hochberg",
     tie_correct: bool = False,
     layer: Optional[str] = None,
-    rank_obs_columns: Optional[Union[Iterable[str], str]] = None,
+    field_to_rank: Union[Literal["layer"], Literal["obs"], Literal["layer_and_obs"]] = "layer",
+    columns_to_rank: Union[dict[str, Iterable[str]], Literal["all"]] = "all",
     **kwds,
 ) -> None:  # pragma: no cover
     """Rank features for characterizing groups.
@@ -293,8 +339,8 @@ def rank_features_groups(
                             Used only for statistical tests (e.g. doesn't work for "logreg" `num_cols_method`)
         tie_correct: Use tie correction for `'wilcoxon'` scores. Used only for `'wilcoxon'`.
         layer: Key from `adata.layers` whose value will be used to perform tests on.
-        rank_obs_columns: Whether to rank `adata.obs` columns instead of features in `adata.layer`. If `True`, all observation columns are ranked. If list of column names, only those are ranked.
-                    layer needs to be None if this is used.
+        field_to_rank: Set to `layer` to rank variables in `adata.X` or `adata.layers[layer]` (default), `obs` to rank `adata.obs`, or `layer_and_obs` to rank both. Layer needs to be None if this is not 'layer'.
+        columns_to_rank: Subset of columns to rank. If 'all', all columns are used. If a dictionary, it must have keys 'var_names' and/or 'obs_names' and values must be iterables of strings. E.g. {'var_names': ['glucose'], 'obs_names': ['age', 'height']}.
         **kwds: Are passed to test methods. Currently this affects only parameters that
                 are passed to :class:`sklearn.linear_model.LogisticRegression`.
                 For instance, you can pass `penalty='l1'` to try to come up with a
@@ -327,50 +373,87 @@ def rank_features_groups(
          >>> ep.tl.rank_features_groups(adata, "service_unit")
          >>> ep.pl.rank_features_groups(adata)
     """
-    if layer is not None and rank_obs_columns is not None:
-        raise ValueError("Only one of 'layer' and 'rank_obs_columns' can be specified.")
+    if layer is not None and field_to_rank == "obs":
+        raise ValueError("If 'layer' is not None, 'field_to_rank' cannot be 'obs'.")
+
+    if field_to_rank not in ["layer", "obs", "layer_and_obs"]:
+        raise ValueError(f"layer must be one of 'layer', 'obs', 'layer_and_obs', not {field_to_rank}")
+
+    # to give better error messages, check if columns_to_rank have valid keys and values here
+    _var_subset, _obs_subset = _check_columns_to_rank_dict(columns_to_rank)
 
     adata = adata.copy() if copy else adata
 
-    if rank_obs_columns is not None:
-        # keep reference to original adata, needed if copy=False
-        adata_orig = adata
-        adata = sc.AnnData(
-            X=np.zeros((len(adata), 1)),
-            obs=adata.obs.copy(),
-            uns={"numerical_columns": [], "non_numerical_columns": [], "encoded_non_numerical_columns": []},
-        )
-
-        if isinstance(rank_obs_columns, str):
-            if rank_obs_columns == "all":
-                rank_obs_columns = adata.obs.keys().to_list()
-            else:
-                raise ValueError(
-                    f"rank_obs_columns should be 'all' or Iterable of column names, not {rank_obs_columns}."
-                )
-
-        # consider adata where all columns from obs become the features, and the other features are dropped
-        if not all(elem in adata.obs.columns.values for elem in rank_obs_columns):
-            raise ValueError(
-                f"Columns `{[col for col in rank_obs_columns if col not in adata.obs.columns.values]}` are not in obs."
+    # to create a minimal adata object below, grab a reference to X/layer of the original adata,
+    # subsetted to the specified columns
+    if field_to_rank in ["layer", "layer_and_obs"]:
+        # for some reason ruff insists on this type check. columns_to_rank is always a dict with key "var_names" if _var_subset is True
+        if _var_subset and isinstance(columns_to_rank, dict):
+            X_to_keep = (
+                adata[:, columns_to_rank["var_names"]].X
+                if layer is None
+                else adata[:, columns_to_rank["var_names"]].layers[layer]
+            )
+            var_to_keep = adata[:, columns_to_rank["var_names"]].var
+            uns_num_to_keep = _get_intersection(
+                adata_uns=adata.uns, key="numerical_columns", selection=columns_to_rank["var_names"]
+            )
+            uns_non_num_to_keep = _get_intersection(
+                adata_uns=adata.uns, key="non_numerical_columns", selection=columns_to_rank["var_names"]
+            )
+            uns_enc_to_keep = _get_intersection(
+                adata_uns=adata.uns, key="encoded_non_numerical_columns", selection=columns_to_rank["var_names"]
             )
 
+        else:
+            X_to_keep = adata.X if layer is None else adata.layers[layer]
+            var_to_keep = adata.var
+            uns_num_to_keep = adata.uns["numerical_columns"] if "numerical_columns" in adata.uns else []
+            uns_enc_to_keep = (
+                adata.uns["encoded_non_numerical_columns"] if "encoded_non_numerical_columns" in adata.uns else []
+            )
+            uns_non_num_to_keep = adata.uns["non_numerical_columns"] if "non_numerical_columns" in adata.uns else []
+
+    else:
+        X_to_keep = np.zeros((len(adata), 1))
+        var_to_keep = pd.DataFrame({"dummy": [0]})
+        uns_num_to_keep = []
+        uns_enc_to_keep = []
+        uns_non_num_to_keep = []
+
+    adata_minimal = sc.AnnData(
+        X=X_to_keep,
+        obs=adata.obs,
+        var=var_to_keep,
+        uns={
+            "numerical_columns": uns_num_to_keep,
+            "encoded_non_numerical_columns": uns_enc_to_keep,
+            "non_numerical_columns": uns_non_num_to_keep,
+        },
+    )
+
+    if field_to_rank in ["obs", "layer_and_obs"]:
         # want columns of obs to become variables in X to be able to use rank_features_groups
-        adata_with_moved_columns = move_to_x(adata, list(rank_obs_columns))
+        # for some reason ruff insists on this type check. columns_to_rank is always a dict with key "obs_names" if _obs_subset is True
+        if _obs_subset and isinstance(columns_to_rank, dict):
+            obs_to_move = adata.obs[columns_to_rank["obs_names"]].keys()
+        else:
+            obs_to_move = adata.obs.keys()
+        _check_no_datetime_columns(adata.obs[obs_to_move])
+        adata_minimal = move_to_x(adata_minimal, list(obs_to_move))
 
-        # don't want columns that have been in X before, as only consider columns from obs
-        columns_to_select = adata_with_moved_columns.var_names.difference(adata.var_names)
-        adata_with_moved_columns = adata_with_moved_columns[:, columns_to_select]
+        if field_to_rank == "obs":
+            # the 0th column is a dummy of zeros and is meaningless in this case, and needs to be removed
+            adata_minimal = adata_minimal[:, 1:]
 
-        adata_with_moved_columns = encode(adata_with_moved_columns, autodetect=True, encodings="label")
+        adata_minimal = encode(adata_minimal, autodetect=True, encodings="label")
 
-        adata_with_moved_columns.uns[
-            "non_numerical_columns"
-        ] = []  # this should be empty, as have only numeric and encoded
-        adata_with_moved_columns.uns["numerical_columns"] = adata_with_moved_columns.var_names.difference(
-            adata_with_moved_columns.uns["encoded_non_numerical_columns"]
-        ).to_list()  # this is sensitive to `encode` really detecting what it should
-        adata = adata_with_moved_columns
+    if layer is not None:
+        adata_minimal.layers[layer] = adata_minimal.X
+
+    # save the reference to the original adata, because we will need to access it later
+    adata_orig = adata
+    adata = adata_minimal
 
     if not adata.obs[groupby].dtype == "category":
         adata.obs[groupby] = pd.Categorical(adata.obs[groupby])
@@ -453,6 +536,10 @@ def rank_features_groups(
             groups_order=group_names,
         )
 
+    # if field_to_rank was obs or layer_and_obs, the adata object we have been working with is adata_minimal
+    adata_orig.uns[key_added] = adata.uns[key_added]
+    adata = adata_orig
+
     # Adjust p values
     if "pvals" in adata.uns[key_added]:
         adata.uns[key_added]["pvals_adj"] = _adjust_pvalues(
@@ -464,9 +551,5 @@ def rank_features_groups(
         adata.uns[key_added]["pts"] = pd.DataFrame(adata.uns[key_added]["pts"])
 
     _sort_features(adata, key_added)
-
-    if rank_obs_columns is not None:
-        adata_orig.uns[key_added] = adata.uns[key_added]
-        adata = adata_orig
 
     return adata if copy else None

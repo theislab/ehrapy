@@ -277,59 +277,110 @@ class TestRankFeaturesGroups:
         assert "logfoldchanges" in adata.uns["rank_features_groups"]
         assert "pvals_adj" in adata.uns["rank_features_groups"]
 
-    def test_rank_obs(
-        self,
-    ):
-        # prepare data with some interesting features in .obs
-        adata_features_in_obs = read_csv(
+    @pytest.mark.parametrize("field_to_rank", ["layer", "obs", "layer_and_obs"])
+    def test_rank_adata_immutability_property(self, field_to_rank):
+        """
+        Test that rank_features_group does not modify the adata object passed to it,
+        except for the desired .uns field.
+        This test is important because to save memory, copies are made conservatively in rank_features_groups
+        """
+        adata = read_csv(
+            dataset_path=f"{_TEST_PATH}/dataset1.csv", columns_x_only=["station", "sys_bp_entry", "dia_bp_entry"]
+        )
+        adata = ep.pp.encode(adata, encodings={"label": ["station"]})
+        adata_orig = adata.copy()
+
+        ep.tl.rank_features_groups(adata, groupby="disease", field_to_rank=field_to_rank)
+
+        assert adata_orig.shape == adata.shape
+        assert adata_orig.X.shape == adata.X.shape
+        assert adata_orig.obs.shape == adata.obs.shape
+        assert adata_orig.var.shape == adata.var.shape
+
+        assert np.allclose(adata_orig.X, adata.X)
+        assert np.array_equal(adata_orig.obs, adata.obs)
+
+        assert "rank_features_groups" in adata.uns
+
+    @pytest.mark.parametrize("field_to_rank", ["layer", "obs", "layer_and_obs"])
+    def test_rank_features_groups_generates_outputs(self, field_to_rank):
+        """
+        Test that the desired output is generated
+        """
+
+        adata = read_csv(
             dataset_path=f"{_TEST_PATH}/dataset1.csv",
             columns_obs_only=["disease", "station", "sys_bp_entry", "dia_bp_entry"],
         )
 
-        # prepare data with these features in .X
+        ep.tl.rank_features_groups(adata, groupby="disease", field_to_rank=field_to_rank)
+
+        # check standard rank_features_groups entries
+        assert "names" in adata.uns["rank_features_groups"]
+        assert "pvals" in adata.uns["rank_features_groups"]
+        assert "scores" in adata.uns["rank_features_groups"]
+        assert "pvals_adj" in adata.uns["rank_features_groups"]
+        assert "logfoldchanges" in adata.uns["rank_features_groups"]
+        assert "log2foldchanges" not in adata.uns["rank_features_groups"]
+        assert "pts" not in adata.uns["rank_features_groups"]
+
+        if field_to_rank == "layer" or field_to_rank == "obs":
+            assert len(adata.uns["rank_features_groups"]["names"]) == 3  # It only captures the length of each group
+            assert len(adata.uns["rank_features_groups"]["pvals"]) == 3
+            assert len(adata.uns["rank_features_groups"]["scores"]) == 3
+
+        elif field_to_rank == "layer_and_obs":
+            assert len(adata.uns["rank_features_groups"]["names"]) == 6  # It only captures the length of each group
+            assert len(adata.uns["rank_features_groups"]["pvals"]) == 6
+            assert len(adata.uns["rank_features_groups"]["scores"]) == 6
+
+    def test_rank_features_groups_consistent_results(self):
         adata_features_in_x = read_csv(
-            dataset_path=f"{_TEST_PATH}/dataset1.csv", columns_x_only=["station", "sys_bp_entry", "dia_bp_entry"]
+            dataset_path=f"{_TEST_PATH}/dataset1.csv",
+            columns_x_only=["station", "sys_bp_entry", "dia_bp_entry", "glucose"],
         )
         adata_features_in_x = ep.pp.encode(adata_features_in_x, encodings={"label": ["station"]})
 
-        # rank_features_groups on .obs
-        ep.tl.rank_features_groups(adata_features_in_obs, groupby="disease", rank_obs_columns="all")
+        adata_features_in_obs = read_csv(
+            dataset_path=f"{_TEST_PATH}/dataset1.csv",
+            columns_obs_only=["disease", "station", "sys_bp_entry", "dia_bp_entry", "glucose"],
+        )
 
-        # rank features groups on .X
+        adata_features_in_x_and_obs = read_csv(
+            dataset_path=f"{_TEST_PATH}/dataset1.csv",
+            columns_obs_only=["disease", "station"],
+        )
+        # to keep the same variables as in the datsets above, in order to make the comparison of consistency
+        adata_features_in_x_and_obs = adata_features_in_x_and_obs[:, ["sys_bp_entry", "dia_bp_entry", "glucose"]]
+        adata_features_in_x_and_obs.uns["numerical_columns"] = ["sys_bp_entry", "dia_bp_entry", "glucose"]
+
         ep.tl.rank_features_groups(adata_features_in_x, groupby="disease")
+        ep.tl.rank_features_groups(adata_features_in_obs, groupby="disease", field_to_rank="obs")
+        ep.tl.rank_features_groups(adata_features_in_x_and_obs, groupby="disease", field_to_rank="layer_and_obs")
 
-        # check standard rank_features_groups entries
-        assert "names" in adata_features_in_obs.uns["rank_features_groups"]
-        assert "pvals" in adata_features_in_obs.uns["rank_features_groups"]
-        assert "scores" in adata_features_in_obs.uns["rank_features_groups"]
-        assert "pvals_adj" in adata_features_in_obs.uns["rank_features_groups"]
-        assert "log2foldchanges" not in adata_features_in_obs.uns["rank_features_groups"]
-        assert "pts" not in adata_features_in_obs.uns["rank_features_groups"]
-        assert (
-            len(adata_features_in_obs.uns["rank_features_groups"]["names"]) == 3
-        )  # It only captures the length of each group
-        assert len(adata_features_in_obs.uns["rank_features_groups"]["pvals"]) == 3
-        assert len(adata_features_in_obs.uns["rank_features_groups"]["scores"]) == 3
-
-        # check the obs are used indeed
-        assert "sys_bp_entry" in adata_features_in_obs.uns["rank_features_groups"]["names"][0]
-        assert "sys_bp_entry" in adata_features_in_obs.uns["rank_features_groups"]["names"][1]
-        assert "ehrapycat_station" in adata_features_in_obs.uns["rank_features_groups"]["names"][2]
-
-        # check the X are not used
-        assert "glucose" not in adata_features_in_obs.uns["rank_features_groups"]["names"][0]
-
-        # check the results are the same
-        for record in adata_features_in_obs.uns["rank_features_groups"]["names"].dtype.names:
+        for record in adata_features_in_x.uns["rank_features_groups"]["names"].dtype.names:
             assert np.allclose(
-                adata_features_in_obs.uns["rank_features_groups"]["scores"][record],
                 adata_features_in_x.uns["rank_features_groups"]["scores"][record],
+                adata_features_in_obs.uns["rank_features_groups"]["scores"][record],
             )
             assert np.allclose(
-                np.array(adata_features_in_obs.uns["rank_features_groups"]["pvals"][record]),
                 np.array(adata_features_in_x.uns["rank_features_groups"]["pvals"][record]),
+                np.array(adata_features_in_obs.uns["rank_features_groups"]["pvals"][record]),
             )
             assert np.array_equal(
-                np.array(adata_features_in_obs.uns["rank_features_groups"]["names"][record]),
                 np.array(adata_features_in_x.uns["rank_features_groups"]["names"][record]),
+                np.array(adata_features_in_obs.uns["rank_features_groups"]["names"][record]),
+            )
+        for record in adata_features_in_x.uns["rank_features_groups"]["names"].dtype.names:
+            assert np.allclose(
+                adata_features_in_x.uns["rank_features_groups"]["scores"][record],
+                adata_features_in_x_and_obs.uns["rank_features_groups"]["scores"][record],
+            )
+            assert np.allclose(
+                np.array(adata_features_in_x.uns["rank_features_groups"]["pvals"][record]),
+                np.array(adata_features_in_x_and_obs.uns["rank_features_groups"]["pvals"][record]),
+            )
+            assert np.array_equal(
+                np.array(adata_features_in_x.uns["rank_features_groups"]["names"][record]),
+                np.array(adata_features_in_x_and_obs.uns["rank_features_groups"]["names"][record]),
             )
