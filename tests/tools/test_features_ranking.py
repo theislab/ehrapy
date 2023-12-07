@@ -384,3 +384,46 @@ class TestRankFeaturesGroups:
                 np.array(adata_features_in_x.uns["rank_features_groups"]["names"][record]),
                 np.array(adata_features_in_x_and_obs.uns["rank_features_groups"]["names"][record]),
             )
+
+    def test_rank_features_group_column_to_rank(self):
+        adata = read_csv(
+            dataset_path=f"{_TEST_PATH}/dataset1.csv",
+            columns_obs_only=["disease", "station", "sys_bp_entry", "dia_bp_entry"],
+            index_column="idx",
+        )
+
+        # get a fresh adata for every test to not have any side effects
+        adata_copy = adata.copy()
+
+        ep.tl.rank_features_groups(adata, groupby="disease", columns_to_rank="all")
+        assert len(adata.uns["rank_features_groups"]["names"]) == 2
+
+        # want to check a "complete selection" works
+        adata = adata_copy.copy()
+        ep.tl.rank_features_groups(adata, groupby="disease", columns_to_rank={"var_names": ["glucose", "weight"]})
+        assert len(adata.uns["rank_features_groups"]["names"]) == 2
+
+        # want to check a "sub-selection" works
+        adata = adata_copy.copy()
+        ep.tl.rank_features_groups(adata, groupby="disease", columns_to_rank={"var_names": ["glucose"]})
+        assert len(adata.uns["rank_features_groups"]["names"]) == 1
+
+        # want to check a "complete" selection works
+        adata = adata_copy.copy()
+        ep.tl.rank_features_groups(
+            adata,
+            groupby="disease",
+            field_to_rank="obs",
+            columns_to_rank={"obs_names": ["station", "sys_bp_entry", "dia_bp_entry"]},
+        )
+        assert len(adata.uns["rank_features_groups"]["names"]) == 3
+
+        # want to check a "sub-selection" selection works
+        adata = adata_copy.copy()
+        ep.tl.rank_features_groups(
+            adata,
+            groupby="disease",
+            field_to_rank="obs",
+            columns_to_rank={"obs_names": ["sys_bp_entry", "dia_bp_entry"]},
+        )
+        assert len(adata.uns["rank_features_groups"]["names"]) == 2
