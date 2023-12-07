@@ -1,9 +1,15 @@
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import pytest
 
 import ehrapy as ep
 import ehrapy.tools.feature_ranking._rank_features_groups as _utils
+from ehrapy.io._read import read_csv
+
+CURRENT_DIR = Path(__file__).parent
+_TEST_PATH = f"{CURRENT_DIR}/test_data_features_ranking"
 
 
 class TestHelperFunctions:
@@ -270,3 +276,154 @@ class TestRankFeaturesGroups:
         assert "scores" in adata.uns["rank_features_groups"]
         assert "logfoldchanges" in adata.uns["rank_features_groups"]
         assert "pvals_adj" in adata.uns["rank_features_groups"]
+
+    @pytest.mark.parametrize("field_to_rank", ["layer", "obs", "layer_and_obs"])
+    def test_rank_adata_immutability_property(self, field_to_rank):
+        """
+        Test that rank_features_group does not modify the adata object passed to it,
+        except for the desired .uns field.
+        This test is important because to save memory, copies are made conservatively in rank_features_groups
+        """
+        adata = read_csv(
+            dataset_path=f"{_TEST_PATH}/dataset1.csv", columns_x_only=["station", "sys_bp_entry", "dia_bp_entry"]
+        )
+        adata = ep.pp.encode(adata, encodings={"label": ["station"]})
+        adata_orig = adata.copy()
+
+        ep.tl.rank_features_groups(adata, groupby="disease", field_to_rank=field_to_rank)
+
+        assert adata_orig.shape == adata.shape
+        assert adata_orig.X.shape == adata.X.shape
+        assert adata_orig.obs.shape == adata.obs.shape
+        assert adata_orig.var.shape == adata.var.shape
+
+        assert np.allclose(adata_orig.X, adata.X)
+        assert np.array_equal(adata_orig.obs, adata.obs)
+
+        assert "rank_features_groups" in adata.uns
+
+    @pytest.mark.parametrize("field_to_rank", ["layer", "obs", "layer_and_obs"])
+    def test_rank_features_groups_generates_outputs(self, field_to_rank):
+        """
+        Test that the desired output is generated
+        """
+
+        adata = read_csv(
+            dataset_path=f"{_TEST_PATH}/dataset1.csv",
+            columns_obs_only=["disease", "station", "sys_bp_entry", "dia_bp_entry"],
+        )
+
+        ep.tl.rank_features_groups(adata, groupby="disease", field_to_rank=field_to_rank)
+
+        # check standard rank_features_groups entries
+        assert "names" in adata.uns["rank_features_groups"]
+        assert "pvals" in adata.uns["rank_features_groups"]
+        assert "scores" in adata.uns["rank_features_groups"]
+        assert "pvals_adj" in adata.uns["rank_features_groups"]
+        assert "logfoldchanges" in adata.uns["rank_features_groups"]
+        assert "log2foldchanges" not in adata.uns["rank_features_groups"]
+        assert "pts" not in adata.uns["rank_features_groups"]
+
+        if field_to_rank == "layer" or field_to_rank == "obs":
+            assert len(adata.uns["rank_features_groups"]["names"]) == 3  # It only captures the length of each group
+            assert len(adata.uns["rank_features_groups"]["pvals"]) == 3
+            assert len(adata.uns["rank_features_groups"]["scores"]) == 3
+
+        elif field_to_rank == "layer_and_obs":
+            assert len(adata.uns["rank_features_groups"]["names"]) == 6  # It only captures the length of each group
+            assert len(adata.uns["rank_features_groups"]["pvals"]) == 6
+            assert len(adata.uns["rank_features_groups"]["scores"]) == 6
+
+    def test_rank_features_groups_consistent_results(self):
+        adata_features_in_x = read_csv(
+            dataset_path=f"{_TEST_PATH}/dataset1.csv",
+            columns_x_only=["station", "sys_bp_entry", "dia_bp_entry", "glucose"],
+        )
+        adata_features_in_x = ep.pp.encode(adata_features_in_x, encodings={"label": ["station"]})
+
+        adata_features_in_obs = read_csv(
+            dataset_path=f"{_TEST_PATH}/dataset1.csv",
+            columns_obs_only=["disease", "station", "sys_bp_entry", "dia_bp_entry", "glucose"],
+        )
+
+        adata_features_in_x_and_obs = read_csv(
+            dataset_path=f"{_TEST_PATH}/dataset1.csv",
+            columns_obs_only=["disease", "station"],
+        )
+        # to keep the same variables as in the datsets above, in order to make the comparison of consistency
+        adata_features_in_x_and_obs = adata_features_in_x_and_obs[:, ["sys_bp_entry", "dia_bp_entry", "glucose"]]
+        adata_features_in_x_and_obs.uns["numerical_columns"] = ["sys_bp_entry", "dia_bp_entry", "glucose"]
+
+        ep.tl.rank_features_groups(adata_features_in_x, groupby="disease")
+        ep.tl.rank_features_groups(adata_features_in_obs, groupby="disease", field_to_rank="obs")
+        ep.tl.rank_features_groups(adata_features_in_x_and_obs, groupby="disease", field_to_rank="layer_and_obs")
+
+        for record in adata_features_in_x.uns["rank_features_groups"]["names"].dtype.names:
+            assert np.allclose(
+                adata_features_in_x.uns["rank_features_groups"]["scores"][record],
+                adata_features_in_obs.uns["rank_features_groups"]["scores"][record],
+            )
+            assert np.allclose(
+                np.array(adata_features_in_x.uns["rank_features_groups"]["pvals"][record]),
+                np.array(adata_features_in_obs.uns["rank_features_groups"]["pvals"][record]),
+            )
+            assert np.array_equal(
+                np.array(adata_features_in_x.uns["rank_features_groups"]["names"][record]),
+                np.array(adata_features_in_obs.uns["rank_features_groups"]["names"][record]),
+            )
+        for record in adata_features_in_x.uns["rank_features_groups"]["names"].dtype.names:
+            assert np.allclose(
+                adata_features_in_x.uns["rank_features_groups"]["scores"][record],
+                adata_features_in_x_and_obs.uns["rank_features_groups"]["scores"][record],
+            )
+            assert np.allclose(
+                np.array(adata_features_in_x.uns["rank_features_groups"]["pvals"][record]),
+                np.array(adata_features_in_x_and_obs.uns["rank_features_groups"]["pvals"][record]),
+            )
+            assert np.array_equal(
+                np.array(adata_features_in_x.uns["rank_features_groups"]["names"][record]),
+                np.array(adata_features_in_x_and_obs.uns["rank_features_groups"]["names"][record]),
+            )
+
+    def test_rank_features_group_column_to_rank(self):
+        adata = read_csv(
+            dataset_path=f"{_TEST_PATH}/dataset1.csv",
+            columns_obs_only=["disease", "station", "sys_bp_entry", "dia_bp_entry"],
+            index_column="idx",
+        )
+
+        # get a fresh adata for every test to not have any side effects
+        adata_copy = adata.copy()
+
+        ep.tl.rank_features_groups(adata, groupby="disease", columns_to_rank="all")
+        assert len(adata.uns["rank_features_groups"]["names"]) == 2
+
+        # want to check a "complete selection" works
+        adata = adata_copy.copy()
+        ep.tl.rank_features_groups(adata, groupby="disease", columns_to_rank={"var_names": ["glucose", "weight"]})
+        assert len(adata.uns["rank_features_groups"]["names"]) == 2
+
+        # want to check a "sub-selection" works
+        adata = adata_copy.copy()
+        ep.tl.rank_features_groups(adata, groupby="disease", columns_to_rank={"var_names": ["glucose"]})
+        assert len(adata.uns["rank_features_groups"]["names"]) == 1
+
+        # want to check a "complete" selection works
+        adata = adata_copy.copy()
+        ep.tl.rank_features_groups(
+            adata,
+            groupby="disease",
+            field_to_rank="obs",
+            columns_to_rank={"obs_names": ["station", "sys_bp_entry", "dia_bp_entry"]},
+        )
+        assert len(adata.uns["rank_features_groups"]["names"]) == 3
+
+        # want to check a "sub-selection" selection works
+        adata = adata_copy.copy()
+        ep.tl.rank_features_groups(
+            adata,
+            groupby="disease",
+            field_to_rank="obs",
+            columns_to_rank={"obs_names": ["sys_bp_entry", "dia_bp_entry"]},
+        )
+        assert len(adata.uns["rank_features_groups"]["names"]) == 2
