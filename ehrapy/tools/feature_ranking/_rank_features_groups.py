@@ -245,7 +245,7 @@ def _evaluate_categorical_features(
 
 
 def _check_no_datetime_columns(df):
-    datetime_cols = [col for col in df.columns if df[col].dtype == "datetime64[ns]"]
+datetime_cols = [col for col in df.columns if pd.api.types.is_datetime64_any_dtype(df[col]) or pd.api.types.is_timedelta64_dtype(df[col])]
     if datetime_cols:
         raise ValueError(f"Columns with datetime format found: {datetime_cols}")
 
