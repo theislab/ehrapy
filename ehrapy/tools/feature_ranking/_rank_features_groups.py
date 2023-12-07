@@ -245,7 +245,11 @@ def _evaluate_categorical_features(
 
 
 def _check_no_datetime_columns(df):
-datetime_cols = [col for col in df.columns if pd.api.types.is_datetime64_any_dtype(df[col]) or pd.api.types.is_timedelta64_dtype(df[col])]
+    datetime_cols = [
+        col
+        for col in df.columns
+        if pd.api.types.is_datetime64_any_dtype(df[col]) or pd.api.types.is_timedelta64_dtype(df[col])
+    ]
     if datetime_cols:
         raise ValueError(f"Columns with datetime format found: {datetime_cols}")
 
@@ -415,6 +419,7 @@ def rank_features_groups(
             uns_non_num_to_keep = adata.uns["non_numerical_columns"] if "non_numerical_columns" in adata.uns else []
 
     else:
+        # dummy 1-dimensional X to be used by move_to_x, and removed again afterwards
         X_to_keep = np.zeros((len(adata), 1))
         var_to_keep = pd.DataFrame({"dummy": [0]})
         uns_num_to_keep = []
