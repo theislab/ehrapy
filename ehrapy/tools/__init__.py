@@ -5,7 +5,12 @@ from ehrapy.tools.feature_ranking._rank_features_groups import rank_features_gro
 
 try:  # pragma: no cover
     from ehrapy.tools.nlp._medcat import EhrapyMedcat as mc
-    from ehrapy.tools.nlp._medcat import MedCAT
+    from ehrapy.tools.nlp._medcat import (
+        MedCAT,
+        add_medcat_annotation_to_obs,
+        annotate_text,
+        get_medcat_annotation_overview,
+    )
 except ImportError:
     pass
 from ehrapy.tools.nlp._translators import Translator
