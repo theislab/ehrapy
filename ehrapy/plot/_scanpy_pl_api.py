@@ -513,7 +513,7 @@ def violin(
     Args:
         adata: :class:`~anndata.AnnData` object object containing all observations.
         keys: Keys for accessing variables of `.var_names` or fields of `.obs`.
-        groupby: The key of the observation grouping to consider. Could also be an entity extracted by ehrapy's medcat tool.
+        groupby: The key of the observation grouping to consider.
         log: Plot on logarithmic axis.
         use_raw: Whether to use `raw` attribute of `adata`. Defaults to `True` if `.raw` is present.
         stripplot: Add a stripplot on top of the violin plot. See :func:`~seaborn.stripplot`.

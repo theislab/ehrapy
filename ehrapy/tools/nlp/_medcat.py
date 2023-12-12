@@ -1,19 +1,20 @@
 from __future__ import annotations
 
-from collections.abc import Iterable
+from typing import TYPE_CHECKING, Optional, Union
 
 import pandas as pd
 from thefuzz import process
 
-try:
-    from medcat.cat import CAT
-
-except ModuleNotFoundError:
-    pass
-from typing import TYPE_CHECKING, Optional, Union
-
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from anndata import AnnData
+
+    try:
+        from medcat.cat import CAT
+
+    except ModuleNotFoundError:
+        pass
 
 
 def _filter_null_values(df: pd.DataFrame, column: str) -> pd.DataFrame:
@@ -78,7 +79,7 @@ def annotate_text(
     n_proc: int = 2,
     batch_size_chars: int = 500000,
     copy: bool = False,
-) -> Optional[AnnData]:
+) -> AnnData | None:
     """Annotate the original free text data. Note this will only annotate non null rows.
     The result will be a DataFrame. It will be set as the annotated_results attribute for the passed MedCat object.
     This dataframe will be the base for all further analyses, for example coloring umaps by specific diseases.
@@ -179,9 +180,9 @@ def _check_valid_name(df: pd.DataFrame, name: Iterable[str]) -> None:
 
 def add_medcat_annotation_to_obs(
     adata: AnnData,
-    name: Union[Iterable[str], str],
+    name: Iterable[str] | str,
     use_key: str = "medcat_annotations",
-    added_colname: Optional[Union[Iterable[str], str]] = None,
+    added_colname: Iterable[str] | str | None = None,
     copy: bool = False,
 ) -> None:
     """Adds a binary column to obs (temporarily) for plotting infos extracted from freetext.
@@ -197,12 +198,16 @@ def add_medcat_annotation_to_obs(
 
     if isinstance(name, str):
         name = [name]
+    else:
+        name = list(name)
 
     if added_colname is None:
         added_colname = name
     elif isinstance(added_colname, str):
         added_colname = [added_colname]
-    elif len(added_colname) != len(name):
+
+    added_colname = list(added_colname)
+    if len(added_colname) != len(name):
         raise ValueError(f"Length of added_colname ({len(added_colname)}) does not match length of name ({len(name)}).")
 
     _check_valid_name(adata.uns[use_key], name)
@@ -218,7 +223,7 @@ def add_medcat_annotation_to_obs(
 
     for i, nm in enumerate(name):
         adata.obs[added_colname[i]] = (
-            df.groupby("row_nr").agg({"pretty_name": (lambda x: int(any(x.isin([nm]))))}).astype("category")
+            df.groupby("row_nr").agg({"pretty_name": (lambda x, nm=nm: int(any(x.isin([nm]))))}).astype("category")
         )
         adata.obs = adata.obs.replace({added_colname[i]: {1.0: "yes", 0.0: "no"}})
         adata.obs[added_colname[i]] = adata.obs[added_colname[i]].fillna("no").astype("category")
