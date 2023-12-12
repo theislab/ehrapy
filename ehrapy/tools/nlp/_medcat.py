@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING
 
 import pandas as pd
 from thefuzz import process
@@ -15,11 +15,6 @@ if TYPE_CHECKING:
 
     except ModuleNotFoundError:
         pass
-
-
-def _filter_null_values(df: pd.DataFrame, column: str) -> pd.DataFrame:
-    """Filter null values of a given column and return that column without the null values"""
-    return pd.DataFrame(df[column][~df[column].isnull()])
 
 
 def _format_df_column(df: pd.DataFrame, column_name: str) -> list[tuple[int, str]]:
@@ -62,15 +57,6 @@ def _flatten_annotated_results(annotation_results: dict) -> dict:
     return flattened_annotated_dict
 
 
-def _annotated_results_to_df(flattened_results: dict) -> pd.DataFrame:
-    """Turn the flattened annotated results into a pandas DataFrame and remove duplicates."""
-    df = pd.DataFrame.from_dict(flattened_results, orient="index")
-    # remove duplicate entries; for example when a single entity like a disease is mentioned multiple times without any meaningful context changes
-    # Example: The patient suffers from Diabetes. Cause of the Diabetes, he receives drug X.
-    df.drop_duplicates(subset=["cui", "row_nr", "meta_anns"])
-    return df
-
-
 def annotate_text(
     adata: AnnData,
     cat: CAT,
@@ -81,7 +67,8 @@ def annotate_text(
     copy: bool = False,
 ) -> AnnData | None:
     """Annotate the original free text data. Note this will only annotate non null rows.
-    The result will be a DataFrame. It will be set as the annotated_results attribute for the passed MedCat object.
+
+    The result is a DataFrame. It will be set as the 'annotated_results' attribute for the passed MedCat object.
     This dataframe will be the base for all further analyses, for example coloring umaps by specific diseases.
 
     Args:
@@ -102,14 +89,19 @@ def annotate_text(
     """
     if copy:
         adata = adata.copy()
-
-    non_null_text = _filter_null_values(adata.obs, text_column)
+    non_null_text = pd.DataFrame(adata.obs[text_column][~adata.obs[text_column].isnull()])
     formatted_text_column = _format_df_column(non_null_text, text_column)
     results = cat.multiprocessing(formatted_text_column, batch_size_chars=batch_size_chars, nproc=n_proc)
     flattened_res = _flatten_annotated_results(results)
 
+    # flatten annotated results into a Pandas DataFrame and remove duplicate entries; for example when a single entity like a disease is mentioned multiple times without any meaningful context changes
+    # Example: The patient suffers from Diabetes. Cause of the Diabetes, he receives drug X.
+    flattened_res_df = pd.DataFrame.from_dict(flattened_res, orient="index").drop_duplicates(
+        subset=["cui", "row_nr", "meta_anns"]
+    )
+
     # sort for row number in ascending order and reset index to keep index updated
-    adata.uns[key_added] = _annotated_results_to_df(flattened_res).sort_values(by=["row_nr"]).reset_index(drop=True)
+    adata.uns[key_added] = flattened_res_df.sort_values(by=["row_nr"]).reset_index(drop=True)
 
     return adata if copy else None
 
@@ -169,19 +161,22 @@ def _check_valid_name(df: pd.DataFrame, name: Iterable[str]) -> None:
     """
     invalid_names = []
     suggested_names = []
+
     for nm in name:
-        if nm not in df["pretty_name"].values:
+        pretty_names = df["pretty_name"].unique()
+
+        if nm not in pretty_names:
             invalid_names.append(nm)
-            new_name, _ = process.extractOne(query=nm, choices=df["pretty_name"].unique(), score_cutoff=50)
+            try:
+                new_name, _ = process.extractOne(query=nm, choices=pretty_names, score_cutoff=50)
+                suggested_names.append(new_name)
+            except EntitiyNotFoundError:
+                pass
 
-            suggested_names.append(new_name)
     if invalid_names:
-        if suggested_names:
-            msg = f"Did not find '{invalid_names}' in MedCAT's extracted entities. Do you mean {new_name}?"
-        else:
-            msg = f"Did not find '{invalid_names}' in MedCAT's extracted entities."
-
-        raise EntitiyNotFoundError(msg)
+        suggested_str = f" Do you mean {suggested_names}?" if suggested_names else ""
+        msg = f"Did not find {invalid_names} in MedCAT's extracted entities and added them not to .obs.{suggested_str}"
+        print(msg)
 
 
 def add_medcat_annotation_to_obs(
@@ -231,10 +226,6 @@ def add_medcat_annotation_to_obs(
         raise ValueError(f"Length of added_colname ({len(added_colname)}) does not match length of name ({len(name)}).")
 
     _check_valid_name(adata.uns[use_key], name)
-
-    # TODO: activate something this?
-    # if added_colname in adata.obs.columns:
-    #     raise ValueError(f"Column '{added_colname}' already exists in adata.obs. Choose a different name using added_colname.")
 
     # only extract affirmed entities
     df = _filter_df_by_status(adata.uns[use_key], "Affirmed")
