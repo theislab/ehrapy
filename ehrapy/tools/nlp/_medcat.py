@@ -92,6 +92,13 @@ def annotate_text(
         n_proc: Number of processors to use.
         batch_size_chars: batch size to use for CAT's multiprocessing method.
         copy: Whether to copy adata or not.
+
+    Returns:
+        Returns `None` if `copy=False`, else returns an `AnnData` object. Sets the following fields:
+
+        `adata.uns[key_added]` : :class:`pandas.DataFrame`
+            DataFrame with the annotated results.
+
     """
     if copy:
         adata = adata.copy()
@@ -130,8 +137,7 @@ def get_medcat_annotation_overview(
             medcat_obj: The current MedCAT object which holds all infos on NLP analysis with MedCAT and ehrapy.
             n: Basically the parameter for head() of pandas Dataframe. How many of the most common entities should be shown?
             status: One of "Affirmed" (default), "Other" or "Both". Displays stats for either only affirmed entities, negated ones or both.
-            save_to_csv: Whether to save the overview dataframe to a local .csv file in the current working directory or not.
-            save_path: Path to save the overview as .csv file. Defaults to current working directory.
+            use_key: Key to use for the annotated results.
 
         Returns:
             A Pandas DataFrame with the overview stats.
@@ -184,10 +190,24 @@ def add_medcat_annotation_to_obs(
     use_key: str = "medcat_annotations",
     added_colname: Iterable[str] | str | None = None,
     copy: bool = False,
-) -> None:
-    """Adds a binary column to obs (temporarily) for plotting infos extracted from freetext.
+) -> AnnData | None:
+    """Add info extracted from free text as a binary column to obs.
 
     Indicates whether the specific entity to color by has been found in that row or not.
+
+
+    Args:
+        adata: AnnData object that holds the data to annotate.
+        name: Name of the entity to add as a column to obs.
+        use_key: Key to use for the annotated results.
+        added_colname: Name of the column to add to obs. If None, name will be used.
+        copy: Whether to copy adata or not.
+
+    Returns:
+        Returns `None` if `copy=False`, else returns an `AnnData` object. Sets the following fields:
+
+        `adata.obs[name | added_coname]` : :class:`pandas.DataFrame`
+            Added column(s) `to adata.obs`, indicating whether the specific entity to color by has been found in that row or not.
 
     """
     if use_key not in adata.uns.keys():
@@ -218,9 +238,9 @@ def add_medcat_annotation_to_obs(
 
     # only extract affirmed entities
     df = _filter_df_by_status(adata.uns[use_key], "Affirmed")
+
     # check whether the name is in the extracted entities to inform about possible typos
     # currently, only the pretty_name column is supported
-
     for i, nm in enumerate(name):
         adata.obs[added_colname[i]] = (
             df.groupby("row_nr").agg({"pretty_name": (lambda x, nm=nm: int(any(x.isin([nm]))))}).astype("category")
