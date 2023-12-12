@@ -176,7 +176,7 @@ def _check_valid_name(df: pd.DataFrame, name: Iterable[str]) -> None:
     if invalid_names:
         suggested_str = f" Do you mean {suggested_names}?" if suggested_names else ""
         msg = f"Did not find {invalid_names} in MedCAT's extracted entities and added them not to .obs.{suggested_str}"
-        print(msg)
+        raise EntitiyNotFoundError(msg)
 
 
 def add_medcat_annotation_to_obs(
