@@ -68,8 +68,8 @@ def annotate_text(
 ) -> AnnData | None:
     """Annotate the original free text data. Note this will only annotate non null rows.
 
-    The result is a DataFrame. It will be set as the 'annotated_results' attribute for the passed MedCat object.
-    This dataframe will be the base for all further analyses, for example coloring umaps by specific diseases.
+    The result is a DataFrame.
+    This DataFrame serves as the base for all further analyses, for example coloring UMAPs by specific diseases.
 
     Args:
         adata: AnnData object that holds the data to annotate.
@@ -81,7 +81,7 @@ def annotate_text(
         copy: Whether to copy adata or not.
 
     Returns:
-        Returns `None` if `copy=False`, else returns an `AnnData` object. Sets the following fields:
+        Returns `None` if `copy=False`, else returns an `AnnData` object. Sets the following fields;
 
         `adata.uns[key_added]` : :class:`pandas.DataFrame`
             DataFrame with the annotated results.
@@ -125,14 +125,14 @@ def get_medcat_annotation_overview(
     cui (the CUI), nsubjects (from how many rows this one got extracted), type_ids (TUIs), name(name of the entitiy), perc_subjects (how many rows relative
     to absolute number of rows)
 
-        Args:
-            medcat_obj: The current MedCAT object which holds all infos on NLP analysis with MedCAT and ehrapy.
-            n: Basically the parameter for head() of pandas Dataframe. How many of the most common entities should be shown?
-            status: One of "Affirmed" (default), "Other" or "Both". Displays stats for either only affirmed entities, negated ones or both.
-            use_key: Key to use for the annotated results.
+    Args:
+        medcat_obj: The current MedCAT object which holds all infos on NLP analysis with MedCAT and ehrapy.
+        n: Basically the parameter for head() of pandas Dataframe. How many of the most common entities should be shown?
+        status: One of "Affirmed" (default), "Other" or "Both". Displays stats for either only affirmed entities, negated ones or both.
+        use_key: Key to use for the annotated results.
 
-        Returns:
-            A Pandas DataFrame with the overview stats.
+    Returns:
+        A Pandas DataFrame with the overview stats.
     """
     df = _filter_df_by_status(adata.uns[use_key], status)
     # group by CUI as this is a unique identifier per entity
@@ -156,7 +156,7 @@ def get_medcat_annotation_overview(
 
 
 def _check_valid_name(df: pd.DataFrame, name: Iterable[str]) -> None:
-    """Checks whether the name is in the extracted entities to inform about possible typos.
+    """Check whether the name is in the extracted entities to inform about possible typos.
     Currently, only the pretty_name column is supported.
     """
     invalid_names = []
@@ -199,7 +199,7 @@ def add_medcat_annotation_to_obs(
         copy: Whether to copy adata or not.
 
     Returns:
-        Returns `None` if `copy=False`, else returns an `AnnData` object. Sets the following fields:
+        Returns `None` if `copy=False`, else returns an `AnnData` object. Sets the following fields;
 
         `adata.obs[name | added_coname]` : :class:`pandas.DataFrame`
             Added column(s) `to adata.obs`, indicating whether the specific entity to color by has been found in that row or not.
@@ -212,32 +212,39 @@ def add_medcat_annotation_to_obs(
         adata = adata.copy()
 
     if isinstance(name, str):
-        name = [name]
+        annotation_names = [name]
     else:
-        name = list(name)
+        annotation_names = list(name)
 
     if added_colname is None:
-        added_colname = name
+        added_colname = annotation_names
     elif isinstance(added_colname, str):
         added_colname = [added_colname]
 
-    added_colname = list(added_colname)
-    if len(added_colname) != len(name):
-        raise ValueError(f"Length of added_colname ({len(added_colname)}) does not match length of name ({len(name)}).")
+    added_colnames = list(added_colname)
+    if len(added_colnames) != len(annotation_names):
+        raise ValueError(
+            f"Length of added_colname ({len(added_colnames)}) does not match length of name ({len(annotation_names)})."
+        )
 
-    _check_valid_name(adata.uns[use_key], name)
+    _check_valid_name(adata.uns[use_key], annotation_names)
 
     # only extract affirmed entities
     df = _filter_df_by_status(adata.uns[use_key], "Affirmed")
 
     # check whether the name is in the extracted entities to inform about possible typos
     # currently, only the pretty_name column is supported
-    for i, nm in enumerate(name):
-        adata.obs[added_colname[i]] = (
-            df.groupby("row_nr").agg({"pretty_name": (lambda x, nm=nm: int(any(x.isin([nm]))))}).astype("category")
+    for i, annotation_name in enumerate(annotation_names):
+        adata.obs[added_colnames[i]] = df.groupby("row_nr").agg(
+            {
+                "pretty_name": (
+                    lambda row_pretty_names, annotation_name=annotation_name: any(
+                        row_pretty_names.isin([annotation_name])
+                    )
+                )
+            }
         )
-        adata.obs = adata.obs.replace({added_colname[i]: {1.0: "yes", 0.0: "no"}})
-        adata.obs[added_colname[i]] = adata.obs[added_colname[i]].fillna("no").astype("category")
+        adata.obs = adata.obs.replace({added_colnames[i]: {True: "yes", False: "no"}})
 
     return adata if copy else None
 
