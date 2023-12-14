@@ -244,7 +244,6 @@ def add_medcat_annotation_to_obs(
                 )
             }
         )
-        adata.obs = adata.obs.replace({added_colnames[i]: {True: "yes", False: "no"}})
 
     return adata if copy else None
 
