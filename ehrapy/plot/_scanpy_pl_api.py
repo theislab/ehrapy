@@ -10,7 +10,6 @@ import scanpy as sc
 from scanpy.plotting import DotPlot, MatrixPlot, StackedViolin
 from scanpy.plotting._tools.scatterplots import _wraps_plot_scatter
 
-from ehrapy.tools.nlp._medcat import EhrapyMedcat, MedCAT
 from ehrapy.util._doc_util import (
     _doc_params,
     doc_adata_color_etc,
@@ -137,34 +136,8 @@ def scatter(
         save=save,
         ax=ax,
     )
-    if isinstance(adata, MedCAT):
-        if color:
-            if isinstance(color, str):
-                color = [color]  # type: ignore
-            additional_columns: list[str] = []
-            for colored_column in color:
-                if (
-                    colored_column not in set(adata.anndata.var_names)
-                    and colored_column not in set(adata.anndata.obs.columns)
-                    and not colored_column.startswith("#")
-                ):  # hex codes are not treated as extracted entities
-                    EhrapyMedcat.add_binary_column_to_obs(
-                        adata,
-                        adata.anndata,
-                        colored_column,
-                        color,  # type: ignore
-                        additional_columns,
-                    )
 
-            scatter = scatter_partial(adata=adata.anndata, color=color[0])
-            adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
-            return scatter
-
-        else:
-            return scatter_partial(adata=adata.anndata)
-
-    else:
-        return scatter_partial(adata=adata, color=color)
+    return scatter_partial(adata=adata, color=color)
 
 
 @_doc_params(
@@ -279,18 +252,8 @@ def heatmap(
         norm=norm,
         **kwds,
     )
-    if isinstance(adata, MedCAT):
-        if isinstance(groupby, str):
-            groupby = [groupby]
-        additional_columns: list[str] = []
-        for grp_column in groupby:
-            if grp_column not in set(adata.anndata.var_names) and grp_column not in set(adata.anndata.obs.columns):
-                EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, grp_column, groupby, additional_columns)  # type: ignore
-        heatmap = heatmap_partial(adata=adata.anndata, groupby=groupby)
-        adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
-        return heatmap
-    else:
-        return heatmap_partial(adata=adata, groupby=groupby)
+
+    return heatmap_partial(adata=adata, groupby=groupby)
 
 
 @_doc_params(
@@ -438,19 +401,8 @@ def dotplot(
         norm=norm,
         **kwds,
     )
-    if isinstance(adata, MedCAT):
-        # keep loop and lists in case dotplot will accept sequences
-        if isinstance(groupby, str):
-            groupby = [groupby]  # type: ignore
-        additional_columns: list[str] = []
-        for grp_column in groupby:
-            if grp_column not in set(adata.anndata.var_names) and grp_column not in set(adata.anndata.obs.columns):
-                EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, grp_column, groupby, additional_columns)  # type: ignore
-        dotplot = dotplot_partial(adata=adata.anndata, groupby=groupby[0])
-        adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
-        return dotplot
-    else:
-        return dotplot_partial(adata=adata, groupby=groupby)
+
+    return dotplot_partial(adata=adata, groupby=groupby)
 
 
 @_doc_params(show_save_ax=doc_show_save_ax, common_plot_args=doc_common_plot_args)
@@ -529,18 +481,8 @@ def tracksplot(
         figsize=figsize,
         **kwds,
     )
-    if isinstance(adata, MedCAT):
-        # keep the list and loop in case of groupby could be a sequence in future
-        groupby = [groupby]  # type: ignore
-        additional_columns: list[str] = []
-        for grp_col in groupby:
-            if grp_col not in set(adata.anndata.var_names) and grp_col not in set(adata.anndata.obs.columns):
-                EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, grp_col, groupby, additional_columns)  # type: ignore
-        tracksplot = tracksplot_partial(adata=adata.anndata, groupby=groupby[0])
-        adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
-        return tracksplot
-    else:
-        return tracksplot_partial(adata=adata, groupby=groupby)
+
+    return tracksplot_partial(adata=adata, groupby=groupby)
 
 
 def violin(
@@ -571,7 +513,7 @@ def violin(
     Args:
         adata: :class:`~anndata.AnnData` object object containing all observations.
         keys: Keys for accessing variables of `.var_names` or fields of `.obs`.
-        groupby: The key of the observation grouping to consider. Could also be an entity extracted by ehrapy's medcat tool.
+        groupby: The key of the observation grouping to consider.
         log: Plot on logarithmic axis.
         use_raw: Whether to use `raw` attribute of `adata`. Defaults to `True` if `.raw` is present.
         stripplot: Add a stripplot on top of the violin plot. See :func:`~seaborn.stripplot`.
@@ -633,23 +575,8 @@ def violin(
         ax=ax,
         **kwds,
     )
-    if isinstance(adata, MedCAT):
-        if groupby:
-            if isinstance(groupby, str):
-                groupby = [groupby]  # type: ignore
-            additional_columns: list[str] = []
-            for grp_column in groupby:
-                if grp_column not in set(adata.anndata.var_names) and grp_column not in set(adata.anndata.obs.columns):
-                    EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, grp_column, groupby, additional_columns)  # type: ignore
-            violin = violin_partial(adata=adata.anndata, groupby=groupby[0])
-            adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
-            return violin
 
-        else:
-            return violin_partial(adata=adata.anndata, groupby=None)
-
-    else:
-        return violin_partial(adata=adata, groupby=groupby)
+    return violin_partial(adata=adata, groupby=groupby)
 
 
 @_doc_params(
@@ -794,23 +721,8 @@ def stacked_violin(
         norm=norm,
         **kwds,
     )
-    if isinstance(adata, MedCAT):
-        if isinstance(groupby, str):
-            groupby = [groupby]  # type: ignore
-        additional_columns: list[str] = []
-        for colored_column in groupby:
-            if colored_column not in set(adata.anndata.var_names) and colored_column not in set(
-                adata.anndata.obs.columns
-            ):
-                EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, colored_column, groupby, additional_columns)  # type: ignore
-        stacked_violin = stacked_vio_partial(
-            adata=adata.anndata, groupby=groupby if isinstance(groupby, Sequence) else groupby[0]
-        )
-        if additional_columns:
-            adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
-        return stacked_violin
-    else:
-        return stacked_vio_partial(adata=adata, groupby=groupby)
+
+    return stacked_vio_partial(adata=adata, groupby=groupby)
 
 
 @_doc_params(
@@ -928,21 +840,8 @@ def matrixplot(
         norm=norm,
         **kwds,
     )
-    if isinstance(adata, MedCAT):
-        if isinstance(groupby, str):
-            groupby = [groupby]  # type: ignore
-        additional_columns: list[str] = []
-        for colored_column in groupby:
-            if colored_column not in set(adata.anndata.var_names) and colored_column not in set(
-                adata.anndata.obs.columns
-            ):
-                EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, colored_column, groupby, additional_columns)  # type: ignore
-        matrixplot = matrix_partial(adata=adata.anndata, groupby=groupby)
-        if additional_columns:
-            adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
-        return matrixplot
-    else:
-        return matrix_partial(adata=adata, groupby=groupby)
+
+    return matrix_partial(adata=adata, groupby=groupby)
 
 
 @_doc_params(show_save_ax=doc_show_save_ax)
@@ -985,23 +884,8 @@ def clustermap(
         .. image:: /_static/docstring_previews/clustermap.png
     """
     clustermap_partial = partial(sc.pl.clustermap, use_raw=use_raw, show=show, save=save, **kwds)
-    if isinstance(adata, MedCAT):
-        if obs_keys:
-            grp_flag = False
-            obs_keys = [obs_keys]  # type: ignore
-            if obs_keys[0] not in set(adata.anndata.var_names) and obs_keys[0] not in set(adata.anndata.obs.columns):
-                EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, obs_keys[0], obs_keys, None)  # type: ignore
-                grp_flag = True
-            clustermap = clustermap_partial(adata=adata.anndata, obs_keys=obs_keys[0])
-            if grp_flag:
-                adata.anndata.obs.drop(obs_keys[0], inplace=True, axis=1)
-            return clustermap
 
-        else:
-            return clustermap_partial(adata=adata.anndata, obs_keys=None)
-
-    else:
-        return clustermap_partial(adata=adata, obs_keys=obs_keys)
+    return clustermap_partial(adata=adata, obs_keys=obs_keys)
 
 
 def ranking(
@@ -1116,19 +1000,8 @@ def dendrogram(
         save=save,
         ax=ax,
     )
-    if isinstance(adata, MedCAT):
-        grp_flag = False
-        groupby = [groupby]  # type: ignore
-        if groupby[0] not in set(adata.anndata.var_names) and groupby[0] not in set(adata.anndata.obs.columns):
-            EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, groupby[0], groupby, None)  # type: ignore
-            grp_flag = True
-        dendrogram = dendrogram_partial(adata=adata.anndata, groupby=groupby[0])
-        if grp_flag:
-            adata.anndata.obs.drop(groupby[0], inplace=True, axis=1)
-        return dendrogram
 
-    else:
-        return dendrogram_partial(adata=adata, groupby=groupby)
+    return dendrogram_partial(adata=adata, groupby=groupby)
 
 
 # @_wraps_plot_scatter
@@ -1174,28 +1047,8 @@ def pca(
     pca_partial = partial(
         sc.pl.pca, annotate_var_explained=annotate_var_explained, show=show, return_fig=return_fig, save=save
     )
-    if isinstance(adata, MedCAT):
-        if kwargs.get("color"):
-            if isinstance(kwargs["color"], str):
-                kwargs["color"] = [kwargs["color"]]
-            additional_columns: list[str] = []
-            for colored_column in kwargs["color"]:
-                if colored_column not in set(adata.anndata.var_names) and colored_column not in set(
-                    adata.anndata.obs.columns
-                ):
-                    EhrapyMedcat.add_binary_column_to_obs(
-                        adata, adata.anndata, colored_column, kwargs["color"], additional_columns
-                    )
-            pca = pca_partial(adata=adata.anndata, **kwargs)
-            if additional_columns:
-                adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
-            return pca
 
-        else:
-            return pca_partial(adata=adata.anndata, **kwargs)
-
-    else:
-        return pca_partial(adata=adata, **kwargs)
+    return pca_partial(adata=adata, **kwargs)
 
 
 def pca_loadings(
@@ -1343,27 +1196,8 @@ def tsne(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover
 
         .. image:: /_static/docstring_previews/tsne_3.png
     """
-    if isinstance(adata, MedCAT):
-        if kwargs.get("color"):
-            if isinstance(kwargs["color"], str):
-                kwargs["color"] = [kwargs["color"]]
-            additional_columns: list[str] = []
-            for colored_column in kwargs["color"]:
-                if colored_column not in set(adata.anndata.var_names) and colored_column not in set(
-                    adata.anndata.obs.columns
-                ):
-                    EhrapyMedcat.add_binary_column_to_obs(
-                        adata, adata.anndata, colored_column, kwargs["color"], additional_columns
-                    )
-            tsne = sc.pl.tsne(adata=adata.anndata, **kwargs)
-            if additional_columns:
-                adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
-            return tsne
 
-        else:
-            return sc.pl.tsne(adata=adata.anndata, **kwargs)
-    else:
-        return sc.pl.tsne(adata=adata, **kwargs)
+    return sc.pl.tsne(adata=adata, **kwargs)
 
 
 # @_wraps_plot_scatter
@@ -1373,7 +1207,7 @@ def tsne(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover
     scatter_bulk=doc_scatter_embedding,
     show_save_ax=doc_show_save_ax,
 )
-def umap(adata: AnnData | MedCAT, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover
+def umap(adata: AnnData, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover
     """Scatter plot in UMAP basis.
 
     Args:
@@ -1405,27 +1239,8 @@ def umap(adata: AnnData | MedCAT, **kwargs) -> Axes | list[Axes] | None:  # prag
 
         .. image:: /_static/docstring_previews/umap_3.png
     """
-    if isinstance(adata, MedCAT):
-        if kwargs.get("color"):
-            if isinstance(kwargs["color"], str):
-                kwargs["color"] = [kwargs["color"]]
-            additional_columns: list[str] = []
-            for colored_column in kwargs["color"]:
-                if colored_column not in set(adata.anndata.var_names) and colored_column not in set(
-                    adata.anndata.obs.columns
-                ):
-                    EhrapyMedcat.add_binary_column_to_obs(
-                        adata, adata.anndata, colored_column, kwargs["color"], additional_columns
-                    )
-            umap = sc.pl.umap(adata=adata.anndata, **kwargs)
-            adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
-            return umap
 
-        else:
-            return sc.pl.umap(adata=adata.anndata, **kwargs)
-
-    else:
-        return sc.pl.umap(adata=adata, **kwargs)
+    return sc.pl.umap(adata=adata, **kwargs)
 
 
 # @_wraps_plot_scatter
@@ -1457,28 +1272,8 @@ def diffmap(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover
     Preview:
         .. image:: /_static/docstring_previews/diffmap.png
     """
-    if isinstance(adata, MedCAT):
-        if kwargs.get("color"):
-            if isinstance(kwargs["color"], str):
-                kwargs["color"] = [kwargs["color"]]
-            additional_columns: list[str] = []
-            for colored_column in kwargs["color"]:
-                if colored_column not in set(adata.anndata.var_names) and colored_column not in set(
-                    adata.anndata.obs.columns
-                ):
-                    EhrapyMedcat.add_binary_column_to_obs(
-                        adata, adata.anndata, colored_column, kwargs["color"], additional_columns
-                    )
-            diffmap = sc.pl.diffmap(adata=adata.anndata, **kwargs)
-            if additional_columns:
-                adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
-            return diffmap
 
-        else:
-            return sc.pl.diffmap(adata=adata.anndata, **kwargs)
-
-    else:
-        return sc.pl.diffmap(adata=adata, **kwargs)
+    return sc.pl.diffmap(adata=adata, **kwargs)
 
 
 # @_wraps_plot_scatter
@@ -1526,28 +1321,8 @@ def draw_graph(
         .. image:: /_static/docstring_previews/draw_graph_2.png
     """
     draw_graph_part = partial(sc.pl.draw_graph, layout=layout)
-    if isinstance(adata, MedCAT):
-        if kwargs.get("color"):
-            if isinstance(kwargs["color"], str):
-                kwargs["color"] = [kwargs["color"]]
-            additional_columns: list[str] = []
-            for colored_column in kwargs["color"]:
-                if colored_column not in set(adata.anndata.var_names) and colored_column not in set(
-                    adata.anndata.obs.columns
-                ):
-                    EhrapyMedcat.add_binary_column_to_obs(
-                        adata, adata.anndata, colored_column, kwargs["color"], additional_columns
-                    )
-            graph = draw_graph_part(adata=adata.anndata, **kwargs)
-            if additional_columns:
-                adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
-            return graph
 
-        else:
-            return draw_graph_part(adata=adata.anndata, **kwargs)
-
-    else:
-        return draw_graph_part(adata=adata, **kwargs)
+    return draw_graph_part(adata=adata, **kwargs)
 
 
 class Empty(Enum):
@@ -1680,32 +1455,7 @@ def embedding(
         **kwargs,
     )
 
-    if isinstance(adata, MedCAT):
-        if color:
-            if isinstance(color, str):
-                color = [color]  # type: ignore
-            additional_columns: list[str] = []
-            for colored_column in color:
-                if colored_column not in set(adata.anndata.var_names) and colored_column not in set(
-                    adata.anndata.obs.columns
-                ):
-                    EhrapyMedcat.add_binary_column_to_obs(
-                        adata,
-                        adata.anndata,
-                        colored_column,
-                        color,  # type: ignore
-                        additional_columns,
-                    )
-            _embedding = embedding_partial(adata=adata.anndata, color=color)
-            if additional_columns:
-                adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
-            return _embedding
-
-        else:
-            return embedding_partial(adata=adata.anndata, color=None)
-
-    else:
-        return embedding_partial(adata=adata, color=color)
+    return embedding_partial(adata=adata, color=color)
 
 
 @_doc_params(vminmax=doc_vbound_percentile, panels=doc_panels, show_save_ax=doc_show_save_ax)
