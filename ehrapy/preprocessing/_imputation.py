@@ -13,6 +13,7 @@ from sklearn.preprocessing import OrdinalEncoder
 
 from ehrapy import logging as logg
 from ehrapy import settings
+from ehrapy.anndata._constants import EHRAPY_TYPE_KEY, NON_NUMERIC_TAG
 from ehrapy.anndata.anndata_ext import _get_column_indices
 from ehrapy.core._tool_available import _check_module_importable
 
@@ -252,7 +253,7 @@ def knn_impute(
         else:
             # ordinal encoding is used since non-numerical data can not be imputed using KNN Imputation
             enc = OrdinalEncoder()
-            column_indices = _get_column_indices(adata, adata.uns["non_numerical_columns"])
+            column_indices = adata.var[EHRAPY_TYPE_KEY] == NON_NUMERIC_TAG
             adata.X[::, column_indices] = enc.fit_transform(adata.X[::, column_indices])
             # impute the data using KNN imputation
             _knn_impute(adata, var_names, n_neighbours)
@@ -502,7 +503,7 @@ def soft_impute(
         else:
             # ordinal encoding is used since non-numerical data can not be imputed using SoftImpute
             enc = OrdinalEncoder()
-            column_indices = _get_column_indices(adata, adata.uns["non_numerical_columns"])
+            column_indices = adata.var[EHRAPY_TYPE_KEY] == NON_NUMERIC_TAG
             adata.X[::, column_indices] = enc.fit_transform(adata.X[::, column_indices])
             # impute the data using SoftImpute
             _soft_impute(
@@ -658,7 +659,7 @@ def iterative_svd_impute(
         else:
             # ordinal encoding is used since non-numerical data can not be imputed using IterativeSVD
             enc = OrdinalEncoder()
-            column_indices = _get_column_indices(adata, adata.uns["non_numerical_columns"])
+            column_indices = adata.var[EHRAPY_TYPE_KEY] == NON_NUMERIC_TAG
             adata.X[::, column_indices] = enc.fit_transform(adata.X[::, column_indices])
             # impute the data using IterativeSVD
             _iterative_svd_impute(
@@ -798,7 +799,7 @@ def matrix_factorization_impute(
         else:
             # ordinal encoding is used since non-numerical data can not be imputed using MatrixFactorization
             enc = OrdinalEncoder()
-            column_indices = _get_column_indices(adata, adata.uns["non_numerical_columns"])
+            column_indices = adata.var[EHRAPY_TYPE_KEY] == NON_NUMERIC_TAG
             adata.X[::, column_indices] = enc.fit_transform(adata.X[::, column_indices])
             # impute the data using MatrixFactorization
             _matrix_factorization_impute(
@@ -920,7 +921,7 @@ def nuclear_norm_minimization_impute(
         else:
             # ordinal encoding is used since non-numerical data can not be imputed using NuclearNormMinimization
             enc = OrdinalEncoder()
-            column_indices = _get_column_indices(adata, adata.uns["non_numerical_columns"])
+            column_indices = adata.var[EHRAPY_TYPE_KEY] == NON_NUMERIC_TAG
             adata.X[::, column_indices] = enc.fit_transform(adata.X[::, column_indices])
             # impute the data using NuclearNormMinimization
             _nuclear_norm_minimization_impute(
@@ -1039,7 +1040,7 @@ def mice_forest_impute(
         else:
             # ordinal encoding is used since non-numerical data can not be imputed using miceforest
             enc = OrdinalEncoder()
-            column_indices = _get_column_indices(adata, adata.uns["non_numerical_columns"])
+            column_indices = adata.var[EHRAPY_TYPE_KEY] == NON_NUMERIC_TAG
             adata.X[::, column_indices] = enc.fit_transform(adata.X[::, column_indices])
             # impute the data using miceforest
             _miceforest_impute(

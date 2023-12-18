@@ -101,6 +101,8 @@ def df_to_anndata(
     var = pd.DataFrame(index=list(dataframes.df.columns))
     var[EHRAPY_TYPE_KEY] = NON_NUMERIC_TAG
     var.loc[var.index.isin(list(set(numerical_columns) | set(binary_columns))), EHRAPY_TYPE_KEY] = NUMERIC_TAG
+    # in case of encoded columns by ehrapy, want to be able to read it back in
+    var.loc[var.index.str.contains("ehrapycat"), EHRAPY_TYPE_KEY] = NON_NUMERIC_ENCODED_TAG
 
     # -- remove below if no backward compatibility needed
     uns["numerical_columns"] = list(set(numerical_columns) | set(binary_columns))

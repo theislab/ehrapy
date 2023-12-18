@@ -1,16 +1,19 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import Literal, Optional, Union
+from typing import TYPE_CHECKING, Literal, Optional, Union
 
 import numpy as np
 import pandas as pd
 import scanpy as sc
-from anndata import AnnData
 
 from ehrapy.anndata import move_to_x
 from ehrapy.preprocessing import encode
-from ehrapy.tools import _method_options
+
+if TYPE_CHECKING:
+    from anndata import AnnData
+
+    from ehrapy.tools import _method_options
 
 
 def _merge_arrays(arrays: Iterable[Iterable], groups_order) -> np.recarray:
@@ -148,7 +151,7 @@ def _evaluate_categorical_features(
     adata,
     groupby,
     group_names,
-    groups: Union[Literal["all"], Iterable[str]] = "all",
+    groups: Literal["all"] | Iterable[str] = "all",
     reference: str = "rest",
     categorical_method: _method_options._rank_features_groups_cat_method = "g-test",
     pts=False,
@@ -296,20 +299,20 @@ def _check_columns_to_rank_dict(columns_to_rank):
 def rank_features_groups(
     adata: AnnData,
     groupby: str,
-    groups: Union[Literal["all"], Iterable[str]] = "all",
+    groups: Literal["all"] | Iterable[str] = "all",
     reference: str = "rest",
-    n_features: Optional[int] = None,
+    n_features: int | None = None,
     rankby_abs: bool = False,
     pts: bool = False,
-    key_added: Optional[str] = "rank_features_groups",
+    key_added: str | None = "rank_features_groups",
     copy: bool = False,
     num_cols_method: _method_options._rank_features_groups_method = None,
     cat_cols_method: _method_options._rank_features_groups_cat_method = "g-test",
     correction_method: _method_options._correction_method = "benjamini-hochberg",
     tie_correct: bool = False,
-    layer: Optional[str] = None,
-    field_to_rank: Union[Literal["layer"], Literal["obs"], Literal["layer_and_obs"]] = "layer",
-    columns_to_rank: Union[dict[str, Iterable[str]], Literal["all"]] = "all",
+    layer: str | None = None,
+    field_to_rank: Literal["layer"] | Literal["obs"] | Literal["layer_and_obs"] = "layer",
+    columns_to_rank: dict[str, Iterable[str]] | Literal["all"] = "all",
     **kwds,
 ) -> None:  # pragma: no cover
     """Rank features for characterizing groups.
@@ -416,24 +419,26 @@ def rank_features_groups(
                 else adata[:, columns_to_rank["var_names"]].layers[layer]
             )
             var_to_keep = adata[:, columns_to_rank["var_names"]].var
-            uns_num_to_keep = _get_intersection(
-                adata_uns=adata.uns, key="numerical_columns", selection=columns_to_rank["var_names"]
-            )
-            uns_non_num_to_keep = _get_intersection(
-                adata_uns=adata.uns, key="non_numerical_columns", selection=columns_to_rank["var_names"]
-            )
-            uns_enc_to_keep = _get_intersection(
-                adata_uns=adata.uns, key="encoded_non_numerical_columns", selection=columns_to_rank["var_names"]
-            )
+            if "numerical_columns" in adata.uns.keys():
+                uns_num_to_keep = _get_intersection(
+                    adata_uns=adata.uns, key="numerical_columns", selection=columns_to_rank["var_names"]
+                )
+                uns_non_num_to_keep = _get_intersection(
+                    adata_uns=adata.uns, key="non_numerical_columns", selection=columns_to_rank["var_names"]
+                )
+                uns_enc_to_keep = _get_intersection(
+                    adata_uns=adata.uns, key="encoded_non_numerical_columns", selection=columns_to_rank["var_names"]
+                )
 
         else:
             X_to_keep = adata.X if layer is None else adata.layers[layer]
             var_to_keep = adata.var
-            uns_num_to_keep = adata.uns["numerical_columns"] if "numerical_columns" in adata.uns else []
-            uns_enc_to_keep = (
-                adata.uns["encoded_non_numerical_columns"] if "encoded_non_numerical_columns" in adata.uns else []
-            )
-            uns_non_num_to_keep = adata.uns["non_numerical_columns"] if "non_numerical_columns" in adata.uns else []
+            if "numerical_columns" in adata.uns.keys():
+                uns_num_to_keep = adata.uns["numerical_columns"] if "numerical_columns" in adata.uns else []
+                uns_enc_to_keep = (
+                    adata.uns["encoded_non_numerical_columns"] if "encoded_non_numerical_columns" in adata.uns else []
+                )
+                uns_non_num_to_keep = adata.uns["non_numerical_columns"] if "non_numerical_columns" in adata.uns else []
 
     else:
         # dummy 1-dimensional X to be used by move_to_x, and removed again afterwards

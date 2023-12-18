@@ -8,6 +8,7 @@ import pytest
 from anndata import AnnData
 
 import ehrapy as ep
+from ehrapy.anndata._constants import EHRAPY_TYPE_KEY, NON_NUMERIC_TAG, NUMERIC_TAG
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_PATH = f"{CURRENT_DIR}/test_preprocessing"
@@ -25,9 +26,12 @@ def adata_to_norm():
         ],
         dtype=np.dtype(object),
     )
+    # the "ignore" tag is used to make the column being ignored; the original test selecting a few
+    # columns induces a specific ordering which is kept for now
     var_data = {
         "Feature": ["Integer1", "Numeric1", "Numeric2", "Numeric3", "String1", "String2"],
         "Type": ["Integer", "Numeric", "Numeric", "Numeric", "String", "String"],
+        EHRAPY_TYPE_KEY: [NON_NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG, "ignore", NON_NUMERIC_TAG, NON_NUMERIC_TAG],
     }
     adata = AnnData(
         X=X_data,
@@ -35,8 +39,9 @@ def adata_to_norm():
         var=pd.DataFrame(data=var_data, index=var_data["Feature"]),
         uns=OrderedDict(),
     )
-    adata.uns["numerical_columns"] = ["Numeric1", "Numeric2"]
-    adata.uns["non_numerical_columns"] = ["String1", "String2"]
+    # adata.uns["numerical_columns"] = ["Numeric1", "Numeric2"]
+    # adata.uns["non_numerical_columns"] = ["String1", "String2"]
+
     adata = ep.pp.encode(adata, autodetect=True, encodings="label")
 
     return adata
