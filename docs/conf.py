@@ -11,7 +11,7 @@ needs_sphinx = "4.3"
 
 # General information about the project.
 project = "ehrapy"
-copyright = "2021, Lukas Heumos, Theislab"
+copyright = "2021-2024, Lukas Heumos, Theislab"
 author = "Lukas Heumos"
 github_repo = "ehrapy"
 
@@ -181,4 +181,5 @@ nbsphinx_thumbnails = {
     "tutorials/notebooks/medcat": "_static/tutorials/nlp.png",
     "tutorials/notebooks/ml_usecases": "_static/tutorials/machine_learning.png",
     "tutorials/notebooks/ontology_mapping": "_static/tutorials/ontology.png",
+    "tutorials/notebooks/fhir": "_static/tutorials/fhir.png",
 }

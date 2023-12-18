@@ -10,17 +10,11 @@ repos:
       rev: v3.1.0
       hooks:
           - id: prettier
-            # Newer versions of node don't work on systems that have an older version of GLIBC
-            # (in particular Ubuntu 18.04 and Centos 7)
-            # EOL of Centos 7 is in 2024-06, we can probably get rid of this then.
-            # See https://github.com/scverse/cookiecutter-scverse/issues/143 and
-            # https://github.com/jupyterlab/jupyterlab/issues/12675
-            language_version: "17.9.1"
     - repo: https://github.com/astral-sh/ruff-pre-commit
       rev: v0.1.6
       hooks:
           - id: ruff
-            args: [--fix, --exit-non-zero-on-fix]
+            args: [--fix, --exit-non-zero-on-fix, --unsafe-fixes]
           - id: ruff-format
     - repo: https://github.com/pre-commit/pre-commit-hooks
       rev: v4.5.0
@@ -33,7 +27,7 @@ repos:
           - id: trailing-whitespace
           - id: check-case-conflict
     - repo: https://github.com/pre-commit/mirrors-mypy
-      rev: v1.7.0
+      rev: v1.7.1
       hooks:
           - id: mypy
             args: [--no-strict-optional, --ignore-missing-imports]

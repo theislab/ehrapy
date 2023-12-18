@@ -205,10 +205,8 @@ def _var_qc_metrics(adata: AnnData, layer: str = None) -> pd.DataFrame:
         var_metrics.loc[non_categorical_indices, "max"] = np.nanmax(
             np.array(mtx[:, non_categorical_indices], dtype=np.float64), axis=0
         )
-    except TypeError:
+    except (TypeError, ValueError):
         print("[bold yellow]TypeError! Setting quality control metrics to nan. Did you encode your data?")
-    except ValueError:
-        print("[bold yellow]ValueError! Setting quality control metrics to nan. Did you encode your data?")
 
     return var_metrics
 

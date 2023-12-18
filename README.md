@@ -12,7 +12,7 @@
 
 # ehrapy overview
 
-![fig_1](https://github.com/theislab/ehrapy/assets/99650244/257d29ae-79bc-4101-b1ea-612fb9f3ed9a)
+![fig1](https://github.com/theislab/ehrapy/assets/99650244/aad523a3-b4f9-4a7a-bb61-612af9a6874c)
 
 ## Features
 
@@ -36,3 +36,9 @@ Please have a look at the [Usage documentation][usage] and the [tutorials][tutor
 ```python
 import ehrapy as ep
 ```
+
+## Citation
+
+[ Exploratory electronic health record analysis with ehrapy
+Lukas Heumos, Philipp Ehmele, Tim Treis, Julius Upmeier zu Belzen, Altana Namsaraeva, Nastassya Horlava, Vladimir A. Shitov, Xinyue Zhang, Luke Zappia, Rainer Knoll, Niklas J. Lang, Leon Hetzel, Isaac Virshup, Lisa Sikkema, Eljas Roellin, Fabiola Curion, Roland Eils, Herbert B. Schiller, Anne Hilgendorff, Fabian J. Theis
+medRxiv 2023.12.11.23299816; doi: https://doi.org/10.1101/2023.12.11.23299816 ](https://www.medrxiv.org/content/10.1101/2023.12.11.23299816v1).

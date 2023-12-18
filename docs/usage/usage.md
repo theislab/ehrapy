@@ -224,10 +224,9 @@ In contrast to a preprocessing function, a tool usually adds an easily interpret
     :nosignatures:
 
     tools.Translator
-    tools.MedCAT
-    tools.mc.run_unsupervised_training
-    tools.mc.annotate_text
-    tools.mc.get_annotation_overview
+    tools.annotate_text
+    tools.get_medcat_annotation_overview
+    tools.add_medcat_annotation_to_obs
 ```
 
 ### Survival Analysis

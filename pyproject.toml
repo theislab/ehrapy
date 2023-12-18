@@ -53,7 +53,6 @@ dependencies = [
     "pynndescent",
     "deep-translator",
     "deepl",
-    "scikit-learn-intelex",
     "fancyimpute",
     "miceforest",
     "scikit-misc",
@@ -61,7 +60,6 @@ dependencies = [
     "lifelines",
     "missingno",
     "thefuzz[speedup]",
-    "fhiry",
     "dowhy"
 ]
 
