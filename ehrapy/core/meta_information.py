@@ -17,19 +17,23 @@ def print_versions():  # pragma: no cover
         >>> import ehrapy as ep
         >>> ep.print_versions()
     """
-    session_info.show(
-        dependencies=True,
-        html=False,
-        excludes=[
-            "builtins",
-            "stdlib_list",
-            "importlib_metadata",
-            "jupyter_core"
-            # Special module present if test coverage being calculated
-            # https://gitlab.com/joelostblom/session_info/-/issues/10
-            "$coverage",
-        ],
-    )
+    try:
+        session_info.show(
+            dependencies=True,
+            html=False,
+            excludes=[
+                "builtins",
+                "stdlib_list",
+                "importlib_metadata",
+                "jupyter_core"
+                # Special module present if test coverage being calculated
+                # https://gitlab.com/joelostblom/session_info/-/issues/10
+                "$coverage",
+            ],
+        )
+    except AttributeError:
+        print("[bold yellow]Unable to fetch versions for one or more dependencies.")
+        pass
 
 
 def print_version_and_date(*, file=None):  # pragma: no cover
