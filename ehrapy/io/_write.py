@@ -30,8 +30,8 @@ def write(
     Args:
         filename: File name or path to write the file to
         adata: Annotated data matrix.
-        extension: File extension. One of h5ad, csv
-        compression: Optional file compression. One of gzip, lzf
+        extension: File extension. One of 'h5ad', 'csv'. Defaults to None which infers the extension from the filename.
+        compression: Optional file compression. One of 'gzip', 'lzf'. Defaults to 'gzip'
         compression_opts: See http://docs.h5py.org/en/latest/high/dataset.html.
 
     Examples:
