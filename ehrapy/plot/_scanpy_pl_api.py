@@ -8,9 +8,8 @@ from typing import TYPE_CHECKING, Any, Callable, Literal, Union
 
 import scanpy as sc
 from scanpy.plotting import DotPlot, MatrixPlot, StackedViolin
-from scanpy.plotting._tools.scatterplots import _wraps_plot_scatter
 
-from ehrapy.util._doc_util import (
+from ehrapy._doc_util import (
     _doc_params,
     doc_adata_color_etc,
     doc_common_groupby_plot_args,
@@ -19,7 +18,6 @@ from ehrapy.util._doc_util import (
     doc_panels,
     doc_scatter_basic,
     doc_scatter_embedding,
-    doc_scatter_spatial,
     doc_show_save_ax,
     doc_vbound_percentile,
     doc_vboundnorm,
