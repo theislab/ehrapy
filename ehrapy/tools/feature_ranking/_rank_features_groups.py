@@ -419,26 +419,24 @@ def rank_features_groups(
                 else adata[:, columns_to_rank["var_names"]].layers[layer]
             )
             var_to_keep = adata[:, columns_to_rank["var_names"]].var
-            if "numerical_columns" in adata.uns.keys():
-                uns_num_to_keep = _get_intersection(
-                    adata_uns=adata.uns, key="numerical_columns", selection=columns_to_rank["var_names"]
-                )
-                uns_non_num_to_keep = _get_intersection(
-                    adata_uns=adata.uns, key="non_numerical_columns", selection=columns_to_rank["var_names"]
-                )
-                uns_enc_to_keep = _get_intersection(
-                    adata_uns=adata.uns, key="encoded_non_numerical_columns", selection=columns_to_rank["var_names"]
-                )
+            uns_num_to_keep = _get_intersection(
+                adata_uns=adata.uns, key="numerical_columns", selection=columns_to_rank["var_names"]
+            )
+            uns_non_num_to_keep = _get_intersection(
+                adata_uns=adata.uns, key="non_numerical_columns", selection=columns_to_rank["var_names"]
+            )
+            uns_enc_to_keep = _get_intersection(
+                adata_uns=adata.uns, key="encoded_non_numerical_columns", selection=columns_to_rank["var_names"]
+            )
 
         else:
             X_to_keep = adata.X if layer is None else adata.layers[layer]
             var_to_keep = adata.var
-            if "numerical_columns" in adata.uns.keys():
-                uns_num_to_keep = adata.uns["numerical_columns"] if "numerical_columns" in adata.uns else []
-                uns_enc_to_keep = (
-                    adata.uns["encoded_non_numerical_columns"] if "encoded_non_numerical_columns" in adata.uns else []
-                )
-                uns_non_num_to_keep = adata.uns["non_numerical_columns"] if "non_numerical_columns" in adata.uns else []
+            uns_num_to_keep = adata.uns["numerical_columns"] if "numerical_columns" in adata.uns else []
+            uns_enc_to_keep = (
+                adata.uns["encoded_non_numerical_columns"] if "encoded_non_numerical_columns" in adata.uns else []
+            )
+            uns_non_num_to_keep = adata.uns["non_numerical_columns"] if "non_numerical_columns" in adata.uns else []
 
     else:
         # dummy 1-dimensional X to be used by move_to_x, and removed again afterwards
