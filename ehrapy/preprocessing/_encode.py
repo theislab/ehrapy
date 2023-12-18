@@ -114,8 +114,6 @@ def undo_encoding(
     else:
         raise ValueError(f"Cannot decode object of type {type(data)}. Can only decode AnnData objects!")
 
-    return None
-
 
 def _encode(
     adata: AnnData,
@@ -787,8 +785,7 @@ def _reorder_encodings(adata: AnnData, new_encodings: dict[str, list[list[str]] 
                 # if encoding mode is
             if not encoded_categoricals_with_mode:
                 del adata.uns["encoding_to_var"][encode_mode]
-    logg.info("Re-encoded the AnnData object.")
-    # return updated encodings
+
     return _update_new_encode_modes(new_encodings, adata.uns["encoding_to_var"])
 
 
