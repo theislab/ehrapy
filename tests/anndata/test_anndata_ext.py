@@ -11,6 +11,7 @@ from pandas import DataFrame
 from pandas.testing import assert_frame_equal
 
 import ehrapy as ep
+from ehrapy.anndata._constants import EHRAPY_TYPE_KEY, NON_NUMERIC_ENCODED_TAG, NON_NUMERIC_TAG, NUMERIC_TAG
 from ehrapy.anndata.anndata_ext import (
     NotEncodedError,
     _assert_encoded,
@@ -385,7 +386,7 @@ class TestAnnDataUtil:
             var=pd.DataFrame(data=var_numeric, index=var_numeric["Feature"]),
             uns=OrderedDict(),
         )
-
+        self.adata_numeric.var[EHRAPY_TYPE_KEY] = [NUMERIC_TAG, NUMERIC_TAG, NON_NUMERIC_TAG, NON_NUMERIC_TAG]
         self.adata_numeric.uns["numerical_columns"] = ["Numeric1", "Numeric2"]
         self.adata_numeric.uns["non_numerical_columns"] = ["String1", "String2"]
         self.adata_strings = AnnData(
@@ -393,6 +394,7 @@ class TestAnnDataUtil:
             obs=pd.DataFrame(data=obs_data),
             var=pd.DataFrame(data=var_strings, index=var_strings["Feature"]),
         )
+        self.adata_strings.var[EHRAPY_TYPE_KEY] = [NUMERIC_TAG, NUMERIC_TAG, NON_NUMERIC_TAG, NON_NUMERIC_TAG]
         self.adata_strings.uns["numerical_columns"] = ["Numeric1", "Numeric2"]
         self.adata_strings.uns["non_numerical_columns"] = ["String1", "String2"]
         self.adata_encoded = ep.pp.encode(self.adata_strings.copy(), autodetect=True, encodings="label")

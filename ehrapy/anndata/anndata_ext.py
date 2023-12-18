@@ -16,6 +16,7 @@ from scipy import sparse
 from scipy.sparse import issparse
 
 from ehrapy import logging as logg
+from ehrapy.anndata._constants import EHRAPY_TYPE_KEY, NON_NUMERIC_ENCODED_TAG, NON_NUMERIC_TAG, NUMERIC_TAG
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Iterable, Sequence
@@ -96,8 +97,15 @@ def df_to_anndata(
     uns = OrderedDict()
     # store all numerical/non-numerical columns that are not obs only
     binary_columns = _detect_binary_columns(df, numerical_columns)
+
+    var = pd.DataFrame(index=list(dataframes.df.columns))
+    var[EHRAPY_TYPE_KEY] = NON_NUMERIC_TAG
+    var.loc[var.index.isin(list(set(numerical_columns) | set(binary_columns))), EHRAPY_TYPE_KEY] = NUMERIC_TAG
+
+    # -- remove below if no backward compatibility needed
     uns["numerical_columns"] = list(set(numerical_columns) | set(binary_columns))
     uns["non_numerical_columns"] = list(set(dataframes.df.columns) ^ set(uns["numerical_columns"]))
+    # -- remove above if no backward compatibility needed
 
     all_num = True if len(numerical_columns) == len(list(dataframes.df.columns)) else False
     X = X.astype(np.number) if all_num else X.astype(object)
@@ -105,7 +113,7 @@ def df_to_anndata(
     adata = AnnData(
         X=X,
         obs=_cast_obs_columns(dataframes.obs),
-        var=pd.DataFrame(index=list(dataframes.df.columns)),
+        var=var,
         layers={"original": X.copy()},
         uns=uns,
     )
@@ -202,35 +210,69 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False)
             f"Columns `{[col for col in to_obs if col not in adata.var_names.values]}` are not in var_names."
         )
 
+    cols_to_obs_indices = adata.var_names.isin(to_obs)
+
+    num_set = _get_var_indices_for_type(adata, NUMERIC_TAG)
+    var_num = list(set(to_obs) & set(num_set))
+
     if copy_obs:
-        cols_to_obs_indices = adata.var_names.isin(to_obs)
         cols_to_obs = adata[:, cols_to_obs_indices].to_df()
         adata.obs = adata.obs.join(cols_to_obs)
-        num_set = set(adata.uns["numerical_columns"].copy())
-        non_num_set = set(adata.uns["non_numerical_columns"].copy())
-        var_num = []
-        var_non_num = []
-        for var in to_obs:
-            if var in num_set:
-                var_num.append(var)
-            elif var in non_num_set:
-                var_non_num.append(var)
+
+        # -- remove below if no backward warning needed
+        keys_to_check = ["numerical_columns", "non_numerical_columns", "non_numerical_columns_encoded"]
+        if any(key in adata.uns_keys() for key in keys_to_check):
+            print(
+                "detected one of ['numerical_columns', 'non_numerical_columns', 'non_numerical_columns_encoded'] in adata.uns_keys(). deprc"
+            )
+            num_set_ = set(adata.uns["numerical_columns"].copy())
+            non_num_set_ = set(adata.uns["non_numerical_columns"].copy())
+
+            var_num_ = []
+            var_non_num_ = []
+            for var in to_obs:
+                if var in num_set_:
+                    var_num_.append(var)
+                elif var in non_num_set_:
+                    var_non_num_.append(var)
+        # -- remove below if no backward warning needed
         adata.obs[var_num] = adata.obs[var_num].apply(pd.to_numeric, errors="ignore", downcast="float")
         adata.obs = _cast_obs_columns(adata.obs)
     else:
-        cols_to_obs_indices = adata.var_names.isin(to_obs)
         df = adata[:, cols_to_obs_indices].to_df()
         adata._inplace_subset_var(~cols_to_obs_indices)
         adata.obs = adata.obs.join(df)
-        updated_num_uns, updated_non_num_uns, num_var = _update_uns(adata, to_obs)
-        adata.obs[num_var] = adata.obs[num_var].apply(pd.to_numeric, errors="ignore", downcast="float")
+
+        # -- remove below if no backward compatibility needed
+        keys_to_check = ["numerical_columns", "non_numerical_columns", "non_numerical_columns_encoded"]
+        if any(key in adata.uns_keys() for key in keys_to_check):
+            print(
+                "detected one of ['numerical_columns', 'non_numerical_columns', 'non_numerical_columns_encoded'] in adata.uns_keys(). deprc"
+            )
+            updated_num_uns, updated_non_num_uns, _ = _update_uns(adata, to_obs)
+            adata.uns["numerical_columns"] = updated_num_uns
+            adata.uns["non_numerical_columns"] = updated_non_num_uns
+        # -- remove above if no backward compatibility needed
+
+        adata.obs[var_num] = adata.obs[var_num].apply(pd.to_numeric, errors="ignore", downcast="float")
         adata.obs = _cast_obs_columns(adata.obs)
-        adata.uns["numerical_columns"] = updated_num_uns
-        adata.uns["non_numerical_columns"] = updated_non_num_uns
 
     logg.info(f"Added `{to_obs}` to `obs`.")
 
     return adata
+
+
+def _get_var_indices_for_type(adata: AnnData, tag: str) -> list[str]:
+    """Get indices of columns in var for a given tag.
+
+    Args:
+        adata: The AnnData object
+        tag: The tag to search for, should be one of `NUMERIC_TAG`, `NON_NUMERIC_TAG` or `NON_NUMERIC_ENCODED_TAG`
+
+    Returns:
+        List of numeric columns
+    """
+    return adata.var_names[adata.var[EHRAPY_TYPE_KEY] == tag].tolist()
 
 
 def delete_from_obs(adata: AnnData, to_delete: list[str]) -> AnnData:
@@ -305,11 +347,21 @@ def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
     if cols_not_in_x:
         new_adata = concat([adata, AnnData(adata.obs[cols_not_in_x])], axis=1)
         new_adata.obs = adata.obs[adata.obs.columns[~adata.obs.columns.isin(cols_not_in_x)]]
+
+        # AnnData's concat discards var if they dont match in their keys, so we need to create a new var
+        created_var = _create_new_var(adata, cols_not_in_x)
+        new_adata.var = pd.concat([adata.var, created_var], axis=0)
+
+        # -- remove below if no backward compatibility needed
+        # if any(key in adata.uns_keys() for key in ["numerical_columns", "non_numerical_columns"]):
+        # print("detected one of ['numerical_columns', 'non_numerical_columns'] in adata.uns_keys(). deprc")
         # update uns (copy maybe: could be a costly operation but reduces reference cycles)
         # users might save those as separate AnnData object and this could be unexpected behaviour if we dont copy
         num_columns_moved, non_num_columns_moved, _ = _update_uns(adata, cols_not_in_x, True)
         new_adata.uns["numerical_columns"] = adata.uns["numerical_columns"] + num_columns_moved
         new_adata.uns["non_numerical_columns"] = adata.uns["non_numerical_columns"] + non_num_columns_moved
+        # -- remove above if no backward compatibility needed
+
         logg.info(f"Added `{cols_not_in_x}` features to `X`.")
     else:
         new_adata = adata
@@ -486,10 +538,18 @@ def get_numeric_vars(adata: AnnData) -> list[str]:
     """
     _assert_encoded(adata)
 
-    if "numerical_columns" not in adata.uns_keys():
+    # if "numerical_columns" not in adata.uns_keys():
+    #     return list(adata.var_names.values)
+    # else:
+    #     return adata.uns["numerical_columns"]
+    # if "numerical_columns" in adata.uns_keys():
+    #     raise UserWarning("numerical_columns is deprecated. Use EHRAPY_TYPE_KEY instead.")
+
+    # This behaviour is consistent with the previous behaviour, allowing for a simple fully numeric X
+    if EHRAPY_TYPE_KEY not in adata.var.columns:
         return list(adata.var_names.values)
     else:
-        return adata.uns["numerical_columns"]
+        return _get_var_indices_for_type(adata, NUMERIC_TAG)
 
 
 def assert_numeric_vars(adata: AnnData, vars: Sequence[str]):
@@ -577,6 +637,25 @@ def _update_uns(
         all_moved_num_columns = list(moved_columns_set ^ all_moved_non_num_columns)
         logg.info(f"Added `{moved_columns}` columns to `obs`.")
         return all_moved_num_columns, list(all_moved_non_num_columns), None
+
+
+def _create_new_var(adata: AnnData, cols_not_in_x: list[str]) -> pd.DataFrame:
+    """Create a new var DataFrame with the EHRAPY_TYPE_KEY column set for entries from .obs
+
+    Args:
+        adata (AnnData): From where to get the .obs
+        cols_not_in_x (list[str]): .obs columns to move to X
+
+    Returns:
+        pd.DataFrame: New var DataFrame with EHRAPY_TYPE_KEY column set for entries from .obs
+    """
+    all_moved_num_columns = set(cols_not_in_x) & set(adata.obs.select_dtypes(include="number").columns)
+
+    new_var = pd.DataFrame(index=cols_not_in_x)
+    new_var[EHRAPY_TYPE_KEY] = NON_NUMERIC_TAG
+    new_var.loc[list(all_moved_num_columns), EHRAPY_TYPE_KEY] = NUMERIC_TAG
+
+    return new_var
 
 
 def _detect_binary_columns(df: pd.DataFrame, numerical_columns: list[str]) -> list[str]:

@@ -14,6 +14,7 @@ from rich.progress import BarColumn, Progress
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
 from ehrapy import logging as logg
+from ehrapy.anndata._constants import EHRAPY_TYPE_KEY, NON_NUMERIC_ENCODED_TAG, NON_NUMERIC_TAG, NUMERIC_TAG
 from ehrapy.anndata.anndata_ext import _update_uns
 
 multi_encoding_modes = {"hash"}
@@ -196,21 +197,28 @@ def _encode(
             )
             progress.update(task, description=f"[bold blue]Finished {encodings} of autodetected columns.")
 
+            # copy non-encoded columns, and add new tag for encoded columns. This is needed to track encodings
+            new_var = pd.DataFrame(index=encoded_var_names)
+            new_var[EHRAPY_TYPE_KEY] = adata.var[EHRAPY_TYPE_KEY].copy()
+            new_var.loc[new_var.index.str.contains("ehrapycat")] = NON_NUMERIC_ENCODED_TAG
+
             encoded_ann_data = AnnData(
                 encoded_x,
                 obs=adata.obs.copy(),
-                var={"var_names": encoded_var_names},
+                var=new_var,  # TODO: does this discard previous var information?
                 uns=orig_uns_copy,
                 layers={"original": updated_layer},
             )
             encoded_ann_data.uns["var_to_encoding"] = {categorical: encodings for categorical in categoricals_names}
             encoded_ann_data.uns["encoding_to_var"] = {encodings: categoricals_names}
 
+            # -- remove below if no backwards compat needed
             encoded_ann_data.uns["numerical_columns"] = adata.uns["numerical_columns"].copy()
             encoded_ann_data.uns["non_numerical_columns"] = []
             encoded_ann_data.uns["encoded_non_numerical_columns"] = [
                 column for column in encoded_ann_data.var_names if column.startswith("ehrapycat_")
             ]
+            # -- remove below if no backwards compat needed
 
             _add_categoricals_to_obs(adata, encoded_ann_data, categoricals_names)
 
@@ -300,11 +308,17 @@ def _encode(
             adata.var_names.to_list(),
             categoricals,
         )
+
+        # copy non-encoded columns, and add new tag for encoded columns. This is needed to track encodings
+        new_var = pd.DataFrame(index=encoded_var_names)
+        new_var[EHRAPY_TYPE_KEY] = adata.var[EHRAPY_TYPE_KEY].copy()
+        new_var.loc[new_var.index.str.contains("ehrapycat")] = NON_NUMERIC_ENCODED_TAG
+
         try:
             encoded_ann_data = AnnData(
                 X=encoded_x,
                 obs=adata.obs.copy(),
-                var={"var_names": encoded_var_names},
+                var=new_var,
                 uns=orig_uns_copy,
                 layers={"original": updated_layer},
             )
