@@ -24,7 +24,7 @@ def explicit_impute(
     adata: AnnData,
     replacement: (str | int) | (dict[str, str | int]),
     impute_empty_strings: bool = True,
-    warning_threshold: int = 30,
+    warning_threshold: int = 70,
     copy: bool = False,
 ) -> AnnData:
     """Replaces all missing values in all columns or a subset of columns specified by the user with the passed replacement value.
@@ -124,7 +124,7 @@ def simple_impute(
     var_names: Iterable[str] | None = None,
     strategy: Literal["mean", "median", "most_frequent"] = "mean",
     copy: bool = False,
-    warning_threshold: int = 30,
+    warning_threshold: int = 70,
 ) -> AnnData:
     """Impute missing values in numerical data using mean/median/most frequent imputation.
 
@@ -198,7 +198,7 @@ def knn_impute(
     var_names: Iterable[str] | None = None,
     n_neighbours: int = 5,
     copy: bool = False,
-    warning_threshold: int = 30,
+    warning_threshold: int = 70,
 ) -> AnnData:
     """Imputes missing values in the input AnnData object using K-nearest neighbor imputation.
 
@@ -265,7 +265,7 @@ def knn_impute(
                 adata.X[::, column_indices] = enc.inverse_transform(adata.X[::, column_indices])
     except ValueError as e:
         if "Data matrix has wrong shape" in str(e):
-            print("[bold red]Check that your matrix does not contain any NaN values!")
+            print("[bold red]Check that your matrix does not contain any NaN only columns!")
             raise
 
     if _check_module_importable("sklearnex"):  # pragma: no cover
@@ -306,7 +306,7 @@ def miss_forest_impute(
     max_iter: int = 10,
     n_estimators=100,
     random_state: int = 0,
-    warning_threshold: int = 30,
+    warning_threshold: int = 70,
     copy: bool = False,
 ) -> AnnData:
     """Impute data using the MissForest strategy.
@@ -421,7 +421,7 @@ def miss_forest_impute(
                     adata.X[::, non_num_indices] = enc.inverse_transform(adata.X[::, non_num_indices])
     except ValueError as e:
         if "Data matrix has wrong shape" in str(e):
-            print("[bold red]Check that your matrix does not contain any NaN values!")
+            print("[bold red]Check that your matrix does not contain any NaN only columns!")
             raise
 
     if _check_module_importable("sklearnex"):  # pragma: no cover
@@ -442,7 +442,7 @@ def soft_impute(
     adata: AnnData,
     var_names: Iterable[str] | None = None,
     copy: bool = False,
-    warning_threshold: int = 30,
+    warning_threshold: int = 70,
     shrinkage_value: float | None = None,
     convergence_threshold: float = 0.001,
     max_iters: int = 100,
@@ -587,7 +587,7 @@ def iterative_svd_impute(
     adata: AnnData,
     var_names: Iterable[str] | None = None,
     copy: bool = False,
-    warning_threshold: int = 30,
+    warning_threshold: int = 70,
     rank: int = 10,
     convergence_threshold: float = 0.00001,
     max_iters: int = 200,
@@ -735,7 +735,7 @@ def _iterative_svd_impute(
 def matrix_factorization_impute(
     adata: AnnData,
     var_names: Iterable[str] | None = None,
-    warning_threshold: int = 30,
+    warning_threshold: int = 70,
     rank: int = 40,
     learning_rate: float = 0.01,
     max_iters: int = 50,
@@ -872,7 +872,7 @@ def _matrix_factorization_impute(
 def nuclear_norm_minimization_impute(
     adata: AnnData,
     var_names: Iterable[str] | None = None,
-    warning_threshold: int = 30,
+    warning_threshold: int = 70,
     require_symmetric_solution: bool = False,
     min_value: float | None = None,
     max_value: float | None = None,
@@ -992,7 +992,7 @@ def _nuclear_norm_minimization_impute(
 def mice_forest_impute(
     adata: AnnData,
     var_names: Iterable[str] | None = None,
-    warning_threshold: int = 30,
+    warning_threshold: int = 70,
     save_all_iterations: bool = True,
     random_state: int | None = None,
     inplace: bool = False,
@@ -1075,7 +1075,7 @@ def mice_forest_impute(
                 adata.X[::, column_indices] = enc.inverse_transform(adata.X[::, column_indices])
     except ValueError as e:
         if "Data matrix has wrong shape" in str(e):
-            print("[bold red]Check that your matrix does not contain any NaN values!")
+            print("[bold red]Check that your matrix does not contain any NaN only columns!")
             raise
 
     if var_names:
@@ -1119,7 +1119,7 @@ def _miceforest_impute(
         adata.X = kernel.complete_data(dataset=0, inplace=inplace)
 
 
-def _warn_imputation_threshold(adata: AnnData, var_names: Iterable[str] | None, threshold: int = 30) -> dict[str, int]:
+def _warn_imputation_threshold(adata: AnnData, var_names: Iterable[str] | None, threshold: int = 75) -> dict[str, int]:
     """Warns the user if the more than $threshold percent had to be imputed.
 
     Args:

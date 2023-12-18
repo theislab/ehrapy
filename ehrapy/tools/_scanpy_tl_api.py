@@ -1,5 +1,4 @@
-from collections.abc import Iterable, Mapping, Sequence
-from types import MappingProxyType
+from collections.abc import Iterable, Sequence
 from typing import Any, Literal, Optional, Union
 
 import numpy as np

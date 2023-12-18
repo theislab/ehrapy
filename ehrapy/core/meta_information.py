@@ -1,10 +1,7 @@
 from __future__ import annotations
 
 import sys
-from contextlib import closing
 from datetime import datetime
-from io import StringIO
-from typing import IO, Optional
 
 import session_info
 from rich import print
@@ -27,6 +24,7 @@ def print_versions():  # pragma: no cover
             "builtins",
             "stdlib_list",
             "importlib_metadata",
+            "jupyter_core"
             # Special module present if test coverage being calculated
             # https://gitlab.com/joelostblom/session_info/-/issues/10
             "$coverage",
