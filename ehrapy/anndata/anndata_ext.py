@@ -94,7 +94,7 @@ def df_to_anndata(
 
     # initializing an OrderedDict with a non-empty dict might not be intended,
     # see: https://stackoverflow.com/questions/25480089/right-way-to-initialize-an-ordereddict-using-its-constructor-such-that-it-retain/25480206
-    uns = OrderedDict()
+    uns = OrderedDict()  # type: ignore
     # store all numerical/non-numerical columns that are not obs only
     binary_columns = _detect_binary_columns(df, numerical_columns)
 
@@ -103,11 +103,6 @@ def df_to_anndata(
     var.loc[var.index.isin(list(set(numerical_columns) | set(binary_columns))), EHRAPY_TYPE_KEY] = NUMERIC_TAG
     # in case of encoded columns by ehrapy, want to be able to read it back in
     var.loc[var.index.str.contains("ehrapycat"), EHRAPY_TYPE_KEY] = NON_NUMERIC_ENCODED_TAG
-
-    # -- remove below if no backward compatibility needed
-    uns["numerical_columns"] = list(set(numerical_columns) | set(binary_columns))
-    uns["non_numerical_columns"] = list(set(dataframes.df.columns) ^ set(uns["numerical_columns"]))
-    # -- remove above if no backward compatibility needed
 
     all_num = True if len(numerical_columns) == len(list(dataframes.df.columns)) else False
     X = X.astype(np.number) if all_num else X.astype(object)
@@ -220,42 +215,12 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False)
     if copy_obs:
         cols_to_obs = adata[:, cols_to_obs_indices].to_df()
         adata.obs = adata.obs.join(cols_to_obs)
-
-        # -- remove below if no backward warning needed
-        keys_to_check = ["numerical_columns", "non_numerical_columns", "non_numerical_columns_encoded"]
-        if any(key in adata.uns_keys() for key in keys_to_check):
-            print(
-                "detected one of ['numerical_columns', 'non_numerical_columns', 'non_numerical_columns_encoded'] in adata.uns_keys(). deprc"
-            )
-            num_set_ = set(adata.uns["numerical_columns"].copy())
-            non_num_set_ = set(adata.uns["non_numerical_columns"].copy())
-
-            var_num_ = []
-            var_non_num_ = []
-            for var in to_obs:
-                if var in num_set_:
-                    var_num_.append(var)
-                elif var in non_num_set_:
-                    var_non_num_.append(var)
-        # -- remove below if no backward warning needed
         adata.obs[var_num] = adata.obs[var_num].apply(pd.to_numeric, errors="ignore", downcast="float")
         adata.obs = _cast_obs_columns(adata.obs)
     else:
         df = adata[:, cols_to_obs_indices].to_df()
         adata._inplace_subset_var(~cols_to_obs_indices)
         adata.obs = adata.obs.join(df)
-
-        # -- remove below if no backward compatibility needed
-        keys_to_check = ["numerical_columns", "non_numerical_columns", "non_numerical_columns_encoded"]
-        if any(key in adata.uns_keys() for key in keys_to_check):
-            print(
-                "detected one of ['numerical_columns', 'non_numerical_columns', 'non_numerical_columns_encoded'] in adata.uns_keys(). deprc"
-            )
-            updated_num_uns, updated_non_num_uns, _ = _update_uns(adata, to_obs)
-            adata.uns["numerical_columns"] = updated_num_uns
-            adata.uns["non_numerical_columns"] = updated_non_num_uns
-        # -- remove above if no backward compatibility needed
-
         adata.obs[var_num] = adata.obs[var_num].apply(pd.to_numeric, errors="ignore", downcast="float")
         adata.obs = _cast_obs_columns(adata.obs)
 
@@ -353,16 +318,6 @@ def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
         # AnnData's concat discards var if they dont match in their keys, so we need to create a new var
         created_var = _create_new_var(adata, cols_not_in_x)
         new_adata.var = pd.concat([adata.var, created_var], axis=0)
-
-        # -- remove below if no backward compatibility needed
-        # if any(key in adata.uns_keys() for key in ["numerical_columns", "non_numerical_columns"]):
-        # print("detected one of ['numerical_columns', 'non_numerical_columns'] in adata.uns_keys(). deprc")
-        # update uns (copy maybe: could be a costly operation but reduces reference cycles)
-        # users might save those as separate AnnData object and this could be unexpected behaviour if we dont copy
-        num_columns_moved, non_num_columns_moved, _ = _update_uns(adata, cols_not_in_x, True)
-        new_adata.uns["numerical_columns"] = adata.uns["numerical_columns"] + num_columns_moved
-        new_adata.uns["non_numerical_columns"] = adata.uns["non_numerical_columns"] + non_num_columns_moved
-        # -- remove above if no backward compatibility needed
 
         logg.info(f"Added `{cols_not_in_x}` features to `X`.")
     else:

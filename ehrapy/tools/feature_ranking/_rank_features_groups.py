@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, Literal, Optional, Union
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import pandas as pd
 import scanpy as sc
 
 from ehrapy.anndata import move_to_x
+from ehrapy.anndata._constants import EHRAPY_TYPE_KEY, NON_NUMERIC_ENCODED_TAG, NUMERIC_TAG
 from ehrapy.preprocessing import encode
 
 if TYPE_CHECKING:
@@ -201,8 +202,7 @@ def _evaluate_categorical_features(
     groups_order = _get_groups_order(groups_subset=groups, group_names=group_names, reference=reference)
 
     groups_values = adata.obs[groupby].to_numpy()
-
-    for feature in adata.uns["encoded_non_numerical_columns"]:
+    for feature in adata.var_names[adata.var[EHRAPY_TYPE_KEY] == NON_NUMERIC_ENCODED_TAG]:
         if feature == groupby or "ehrapycat_" + feature == groupby or feature == "ehrapycat_" + groupby:
             continue
 
@@ -419,42 +419,20 @@ def rank_features_groups(
                 else adata[:, columns_to_rank["var_names"]].layers[layer]
             )
             var_to_keep = adata[:, columns_to_rank["var_names"]].var
-            uns_num_to_keep = _get_intersection(
-                adata_uns=adata.uns, key="numerical_columns", selection=columns_to_rank["var_names"]
-            )
-            uns_non_num_to_keep = _get_intersection(
-                adata_uns=adata.uns, key="non_numerical_columns", selection=columns_to_rank["var_names"]
-            )
-            uns_enc_to_keep = _get_intersection(
-                adata_uns=adata.uns, key="encoded_non_numerical_columns", selection=columns_to_rank["var_names"]
-            )
 
         else:
             X_to_keep = adata.X if layer is None else adata.layers[layer]
             var_to_keep = adata.var
-            uns_num_to_keep = adata.uns["numerical_columns"] if "numerical_columns" in adata.uns else []
-            uns_enc_to_keep = (
-                adata.uns["encoded_non_numerical_columns"] if "encoded_non_numerical_columns" in adata.uns else []
-            )
-            uns_non_num_to_keep = adata.uns["non_numerical_columns"] if "non_numerical_columns" in adata.uns else []
 
     else:
         # dummy 1-dimensional X to be used by move_to_x, and removed again afterwards
         X_to_keep = np.zeros((len(adata), 1))
         var_to_keep = pd.DataFrame({"dummy": [0]})
-        uns_num_to_keep = []
-        uns_enc_to_keep = []
-        uns_non_num_to_keep = []
 
     adata_minimal = sc.AnnData(
         X=X_to_keep,
         obs=adata.obs,
         var=var_to_keep,
-        uns={
-            "numerical_columns": uns_num_to_keep,
-            "encoded_non_numerical_columns": uns_enc_to_keep,
-            "non_numerical_columns": uns_non_num_to_keep,
-        },
     )
 
     if field_to_rank in ["obs", "layer_and_obs"]:
@@ -498,12 +476,12 @@ def rank_features_groups(
 
     group_names = pd.Categorical(adata.obs[groupby].astype(str)).categories.tolist()
 
-    if adata.uns["numerical_columns"]:
+    if list(adata.var_names[adata.var[EHRAPY_TYPE_KEY] == NUMERIC_TAG]):
         # Rank numerical features
 
         # Without copying `numerical_adata` is a view, and code throws an error
         # because of "object" type of .X
-        numerical_adata = adata[:, adata.uns["numerical_columns"]].copy()
+        numerical_adata = adata[:, adata.var_names[adata.var[EHRAPY_TYPE_KEY] == NUMERIC_TAG]].copy()
         numerical_adata.X = numerical_adata.X.astype(float)
 
         sc.tl.rank_genes_groups(
@@ -536,7 +514,7 @@ def rank_features_groups(
             groups_order=group_names,
         )
 
-    if adata.uns["encoded_non_numerical_columns"]:
+    if list(adata.var_names[adata.var[EHRAPY_TYPE_KEY] == NON_NUMERIC_ENCODED_TAG]):
         (
             categorical_names,
             categorical_scores,

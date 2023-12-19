@@ -2,8 +2,10 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
-from pandas import CategoricalDtype
+from pandas import CategoricalDtype, DataFrame
+from pandas.testing import assert_frame_equal
 
+from ehrapy.anndata._constants import EHRAPY_TYPE_KEY, NON_NUMERIC_ENCODED_TAG, NON_NUMERIC_TAG, NUMERIC_TAG
 from ehrapy.io._read import read_csv
 from ehrapy.preprocessing._encode import DuplicateColumnEncodingError, _reorder_encodings, encode
 
@@ -55,20 +57,41 @@ def test_autodetect_encode():
     assert id(encoded_ann_data.var) != id(adata.var)
     assert all(column in set(encoded_ann_data.obs.columns) for column in ["survival", "clinic_day"])
     assert not any(column in set(adata.obs.columns) for column in ["survival", "clinic_day"])
-    assert all(column in set(adata.uns["non_numerical_columns"]) for column in ["survival", "clinic_day"])
-    assert not any(
-        column in set(encoded_ann_data.uns["non_numerical_columns"]) for column in ["survival", "clinic_day"]
+    assert_frame_equal(
+        adata.var,
+        DataFrame(
+            {EHRAPY_TYPE_KEY: [NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG, NON_NUMERIC_TAG, NON_NUMERIC_TAG]},
+            index=["patient_id", "los_days", "b12_values", "survival", "clinic_day"],
+        ),
     )
-    assert all(
-        column in set(encoded_ann_data.uns["encoded_non_numerical_columns"])
-        for column in [
-            "ehrapycat_clinic_day_Friday",
-            "ehrapycat_clinic_day_Monday",
-            "ehrapycat_survival_False",
-            "ehrapycat_clinic_day_Saturday",
-            "ehrapycat_clinic_day_Sunday",
-            "ehrapycat_survival_True",
-        ]
+    assert_frame_equal(
+        encoded_ann_data.var,
+        DataFrame(
+            {
+                EHRAPY_TYPE_KEY: [
+                    NON_NUMERIC_ENCODED_TAG,
+                    NON_NUMERIC_ENCODED_TAG,
+                    NON_NUMERIC_ENCODED_TAG,
+                    NON_NUMERIC_ENCODED_TAG,
+                    NON_NUMERIC_ENCODED_TAG,
+                    NON_NUMERIC_ENCODED_TAG,
+                    NUMERIC_TAG,
+                    NUMERIC_TAG,
+                    NUMERIC_TAG,
+                ]
+            },
+            index=[
+                "ehrapycat_survival_False",
+                "ehrapycat_survival_True",
+                "ehrapycat_clinic_day_Friday",
+                "ehrapycat_clinic_day_Monday",
+                "ehrapycat_clinic_day_Saturday",
+                "ehrapycat_clinic_day_Sunday",
+                "patient_id",
+                "los_days",
+                "b12_values",
+            ],
+        ),
     )
     assert pd.api.types.is_bool_dtype(encoded_ann_data.obs["survival"].dtype)
     assert isinstance(encoded_ann_data.obs["clinic_day"].dtype, CategoricalDtype)
@@ -105,13 +128,33 @@ def test_autodetect_custom_mode():
     assert id(encoded_ann_data.var) != id(adata.var)
     assert all(column in set(encoded_ann_data.obs.columns) for column in ["survival", "clinic_day"])
     assert not any(column in set(adata.obs.columns) for column in ["survival", "clinic_day"])
-    assert all(column in set(adata.uns["non_numerical_columns"]) for column in ["survival", "clinic_day"])
-    assert not any(
-        column in set(encoded_ann_data.uns["non_numerical_columns"]) for column in ["survival", "clinic_day"]
+    assert_frame_equal(
+        adata.var,
+        DataFrame(
+            {EHRAPY_TYPE_KEY: [NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG, NON_NUMERIC_TAG, NON_NUMERIC_TAG]},
+            index=["patient_id", "los_days", "b12_values", "survival", "clinic_day"],
+        ),
     )
-    assert all(
-        column in set(encoded_ann_data.uns["encoded_non_numerical_columns"])
-        for column in ["ehrapycat_survival", "ehrapycat_clinic_day"]
+    assert_frame_equal(
+        encoded_ann_data.var,
+        DataFrame(
+            {
+                EHRAPY_TYPE_KEY: [
+                    NON_NUMERIC_ENCODED_TAG,
+                    NON_NUMERIC_ENCODED_TAG,
+                    NUMERIC_TAG,
+                    NUMERIC_TAG,
+                    NUMERIC_TAG,
+                ]
+            },
+            index=[
+                "ehrapycat_survival",
+                "ehrapycat_clinic_day",
+                "patient_id",
+                "los_days",
+                "b12_values",
+            ],
+        ),
     )
     assert pd.api.types.is_bool_dtype(encoded_ann_data.obs["survival"].dtype)
     assert isinstance(encoded_ann_data.obs["clinic_day"].dtype, CategoricalDtype)
@@ -155,19 +198,39 @@ def test_custom_encode():
     assert id(encoded_ann_data.var) != id(adata.var)
     assert all(column in set(encoded_ann_data.obs.columns) for column in ["survival", "clinic_day"])
     assert not any(column in set(adata.obs.columns) for column in ["survival", "clinic_day"])
-    assert all(column in set(adata.uns["non_numerical_columns"]) for column in ["survival", "clinic_day"])
-    assert not any(
-        column in set(encoded_ann_data.uns["non_numerical_columns"]) for column in ["survival", "clinic_day"]
+    assert_frame_equal(
+        adata.var,
+        DataFrame(
+            {EHRAPY_TYPE_KEY: [NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG, NON_NUMERIC_TAG, NON_NUMERIC_TAG]},
+            index=["patient_id", "los_days", "b12_values", "survival", "clinic_day"],
+        ),
     )
-    assert all(
-        column in set(encoded_ann_data.uns["encoded_non_numerical_columns"])
-        for column in [
-            "ehrapycat_survival",
-            "ehrapycat_clinic_day_Friday",
-            "ehrapycat_clinic_day_Monday",
-            "ehrapycat_clinic_day_Saturday",
-            "ehrapycat_clinic_day_Sunday",
-        ]
+    assert_frame_equal(
+        encoded_ann_data.var,
+        DataFrame(
+            {
+                EHRAPY_TYPE_KEY: [
+                    NON_NUMERIC_ENCODED_TAG,
+                    NON_NUMERIC_ENCODED_TAG,
+                    NON_NUMERIC_ENCODED_TAG,
+                    NON_NUMERIC_ENCODED_TAG,
+                    NON_NUMERIC_ENCODED_TAG,
+                    NUMERIC_TAG,
+                    NUMERIC_TAG,
+                    NUMERIC_TAG,
+                ]
+            },
+            index=[
+                "ehrapycat_clinic_day_Friday",
+                "ehrapycat_clinic_day_Monday",
+                "ehrapycat_clinic_day_Saturday",
+                "ehrapycat_clinic_day_Sunday",
+                "ehrapycat_survival",
+                "patient_id",
+                "los_days",
+                "b12_values",
+            ],
+        ),
     )
     assert pd.api.types.is_bool_dtype(encoded_ann_data.obs["survival"].dtype)
     assert isinstance(encoded_ann_data.obs["clinic_day"].dtype, CategoricalDtype)

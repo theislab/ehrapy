@@ -352,7 +352,6 @@ class TestRankFeaturesGroups:
         )
         # to keep the same variables as in the datsets above, in order to make the comparison of consistency
         adata_features_in_x_and_obs = adata_features_in_x_and_obs[:, ["sys_bp_entry", "dia_bp_entry", "glucose"]]
-        adata_features_in_x_and_obs.uns["numerical_columns"] = ["sys_bp_entry", "dia_bp_entry", "glucose"]
 
         ep.tl.rank_features_groups(adata_features_in_x, groupby="disease")
         ep.tl.rank_features_groups(adata_features_in_obs, groupby="disease", field_to_rank="obs")
