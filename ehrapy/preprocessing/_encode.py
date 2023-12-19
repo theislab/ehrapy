@@ -14,7 +14,8 @@ from rich.progress import BarColumn, Progress
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
 from ehrapy import logging as logg
-from ehrapy.anndata.anndata_ext import _update_uns
+from ehrapy.anndata._constants import EHRAPY_TYPE_KEY, NON_NUMERIC_ENCODED_TAG, NON_NUMERIC_TAG, NUMERIC_TAG
+from ehrapy.anndata.anndata_ext import _get_var_indices_for_type
 
 multi_encoding_modes = {"hash"}
 available_encodings = {"one-hot", "label", "count", *multi_encoding_modes}
@@ -143,8 +144,8 @@ def _encode(
                 "[bold yellow]The current AnnData object has been already encoded. Returning original AnnData object!"
             )
             return adata
+        categoricals_names = _get_var_indices_for_type(adata, NON_NUMERIC_TAG)
 
-        categoricals_names = adata.uns["non_numerical_columns"]
         # no columns were detected, that would require an encoding (e.g. non numerical columns)
         if not categoricals_names:
             print("[bold yellow]Detected no columns that need to be encoded. Leaving passed AnnData object unchanged.")
@@ -194,33 +195,30 @@ def _encode(
             )
             progress.update(task, description=f"[bold blue]Finished {encodings} of autodetected columns.")
 
+            # copy non-encoded columns, and add new tag for encoded columns. This is needed to track encodings
+            new_var = pd.DataFrame(index=encoded_var_names)
+            new_var[EHRAPY_TYPE_KEY] = adata.var[EHRAPY_TYPE_KEY].copy()
+            new_var.loc[new_var.index.str.contains("ehrapycat")] = NON_NUMERIC_ENCODED_TAG
+
             encoded_ann_data = AnnData(
                 encoded_x,
                 obs=adata.obs.copy(),
-                var={"var_names": encoded_var_names},
+                var=new_var,
                 uns=orig_uns_copy,
                 layers={"original": updated_layer},
             )
             encoded_ann_data.uns["var_to_encoding"] = {categorical: encodings for categorical in categoricals_names}
             encoded_ann_data.uns["encoding_to_var"] = {encodings: categoricals_names}
 
-            encoded_ann_data.uns["numerical_columns"] = adata.uns["numerical_columns"].copy()
-            encoded_ann_data.uns["non_numerical_columns"] = []
-            encoded_ann_data.uns["encoded_non_numerical_columns"] = [
-                column for column in encoded_ann_data.var_names if column.startswith("ehrapycat_")
-            ]
-
             _add_categoricals_to_obs(adata, encoded_ann_data, categoricals_names)
 
     # user passed categorical values with encoding mode for each of them
     else:
-        # Required since this would be deleted through side references
-        non_numericals = adata.uns["non_numerical_columns"].copy()
         # reencode data
         if "var_to_encoding" in adata.uns.keys():
             encodings = _reorder_encodings(adata, encodings)  # type: ignore
             adata = _undo_encoding(adata, "all")
-        adata.uns["non_numerical_columns"] = non_numericals
+
         # are all specified encodings valid?
         for encoding in encodings.keys():  # type: ignore
             if encoding not in available_encodings:
@@ -246,7 +244,7 @@ def _encode(
                 "The categorical column names given contain at least one duplicate column. "
                 "Check the column names to ensure that no column is encoded twice!"
             )
-        elif any(cat in adata.uns["numerical_columns"] for cat in categoricals):
+        elif any(cat in adata.var_names[adata.var[EHRAPY_TYPE_KEY] == NUMERIC_TAG] for cat in categoricals):
             print(
                 "[bold yellow]At least one of passed column names seems to have numerical dtype. In general it is not recommended "
                 "to encode numerical columns!"
@@ -298,11 +296,17 @@ def _encode(
             adata.var_names.to_list(),
             categoricals,
         )
+
+        # copy non-encoded columns, and add new tag for encoded columns. This is needed to track encodings
+        new_var = pd.DataFrame(index=encoded_var_names)
+        new_var[EHRAPY_TYPE_KEY] = adata.var[EHRAPY_TYPE_KEY].copy()
+        new_var.loc[new_var.index.str.contains("ehrapycat")] = NON_NUMERIC_ENCODED_TAG
+
         try:
             encoded_ann_data = AnnData(
                 X=encoded_x,
                 obs=adata.obs.copy(),
-                var={"var_names": encoded_var_names},
+                var=new_var,
                 uns=orig_uns_copy,
                 layers={"original": updated_layer},
             )
@@ -315,12 +319,6 @@ def _encode(
                 "Creation of AnnData object failed. Ensure that you passed all non numerical, "
                 "categorical values for encoding!"
             ) from None
-        updated_num_uns, updated_non_num_uns, _ = _update_uns(adata, categoricals)
-        encoded_ann_data.uns["numerical_columns"] = updated_num_uns
-        encoded_ann_data.uns["non_numerical_columns"] = updated_non_num_uns
-        encoded_ann_data.uns["encoded_non_numerical_columns"] = [
-            column for column in encoded_ann_data.var_names if column.startswith("ehrapycat_")
-        ]
 
         _add_categoricals_to_obs(adata, encoded_ann_data, categoricals)
 
@@ -686,7 +684,8 @@ def _undo_encoding(
     new_obs = adata.obs[columns_obs_only]
     uns = OrderedDict()
     # reset uns and keep numerical/non-numerical columns
-    num_vars, non_num_vars = adata.uns["numerical_columns"], adata.uns["non_numerical_columns"]
+    num_vars = _get_var_indices_for_type(adata, NUMERIC_TAG)
+    non_num_vars = _get_var_indices_for_type(adata, NON_NUMERIC_TAG)
     for cat in categoricals:
         original_values = adata.uns["original_values_categoricals"][cat]
         type_first_nan = original_values[np.where(original_values != np.nan)][0]
@@ -694,6 +693,11 @@ def _undo_encoding(
             num_vars.append(cat)
         else:
             non_num_vars.append(cat)
+
+    var = pd.DataFrame(index=new_var_names)
+    var[EHRAPY_TYPE_KEY] = NON_NUMERIC_TAG
+    # Notice previously encoded columns are now newly added, and will stay tagged as non numeric
+    var.loc[num_vars, EHRAPY_TYPE_KEY] = NUMERIC_TAG
 
     uns["numerical_columns"] = num_vars
     uns["non_numerical_columns"] = non_num_vars
@@ -703,7 +707,7 @@ def _undo_encoding(
     return AnnData(
         new_x,
         obs=new_obs,
-        var=pd.DataFrame(index=new_var_names),
+        var=var,
         uns=uns,
         layers={"original": new_x.copy()},
     )
@@ -877,7 +881,7 @@ def _add_categoricals_to_uns(original: AnnData, new: AnnData, categorical_names:
             continue
         elif var_name in categorical_names:
             # keep numerical dtype when writing original values to uns
-            if var_name in original.uns["numerical_columns"]:
+            if var_name in original.var_names[original.var[EHRAPY_TYPE_KEY] == NUMERIC_TAG]:
                 new["original_values_categoricals"][var_name] = original.X[::, idx : idx + 1].astype("float")
             else:
                 new["original_values_categoricals"][var_name] = original.X[::, idx : idx + 1].astype("str")

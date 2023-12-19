@@ -11,6 +11,7 @@ from pandas import DataFrame
 from pandas.testing import assert_frame_equal
 
 import ehrapy as ep
+from ehrapy.anndata._constants import EHRAPY_TYPE_KEY, NON_NUMERIC_ENCODED_TAG, NON_NUMERIC_TAG, NUMERIC_TAG
 from ehrapy.anndata.anndata_ext import (
     NotEncodedError,
     _assert_encoded,
@@ -87,8 +88,20 @@ class TestAnndataExt:
         assert set(new_adata_num.obs.columns) == {"name"}
         assert {str(col) for col in new_adata_num.obs.dtypes} == {"category"}
         assert {str(col) for col in new_adata_non_num.obs.dtypes} == {"float32", "category"}
-        assert len(sum(list(new_adata_num.uns.values()), [])) == len(list(new_adata_num.var_names))
-        assert len(sum(list(new_adata_non_num.uns.values()), [])) == len(list(new_adata_non_num.var_names))
+        assert_frame_equal(
+            new_adata_non_num.var,
+            DataFrame(
+                {EHRAPY_TYPE_KEY: [NUMERIC_TAG, NUMERIC_TAG, NON_NUMERIC_TAG]},
+                index=["los_days", "b12_values", "name"],
+            ),
+        )
+        assert_frame_equal(
+            new_adata_num.var,
+            DataFrame(
+                {EHRAPY_TYPE_KEY: [NUMERIC_TAG, NUMERIC_TAG, NON_NUMERIC_TAG, NUMERIC_TAG]},
+                index=["los_days", "b12_values", "name", "clinic_id"],
+            ),
+        )
         assert_frame_equal(
             new_adata_num.obs,
             DataFrame(
@@ -121,7 +134,6 @@ class TestAnndataExt:
         adata = move_to_x(adata, ["name"])
         assert {"name"}.issubset(set(adata.var_names))
         assert adata.X.shape == adata_dim_old
-        assert "name" in [item for sublist in adata.uns.values() for item in sublist]
         delete_from_obs(adata, ["name"])
 
         # case 2: move some column from obs to X and this col was previously moved inplace from X to obs
@@ -130,9 +142,6 @@ class TestAnndataExt:
         assert not {"clinic_id"}.issubset(set(adata.obs.columns))
         assert {"clinic_id"}.issubset(set(adata.var_names))
         assert adata.X.shape == adata_dim_old
-        assert "clinic_id" in [
-            item for sublist in adata.uns.values() for item in sublist
-        ]  # check if the column in in uns
 
         # case 3: move multiple columns from obs to X and some of them were copied or moved inplace previously from X to obs
         move_to_obs(adata, ["los_days"], copy_obs=True)
@@ -145,7 +154,6 @@ class TestAnndataExt:
         assert not {"b12_values"}.issubset(set(adata.obs.columns))
         assert {"los_days", "b12_values"}.issubset(set(adata.var_names))
         assert adata.X.shape == adata_dim_old
-        assert {"los_days", "b12_values"}.issubset({item for sublist in adata.uns.values() for item in sublist})
 
     def test_delete_from_obs(self):
         adata = ep.io.read_csv(CUR_DIR / "../io/test_data_io/dataset_move_obs_mix.csv")
@@ -153,7 +161,7 @@ class TestAnndataExt:
         adata = delete_from_obs(adata, ["los_days"])
         assert not {"los_days"}.issubset(set(adata.obs.columns))
         assert {"los_days"}.issubset(set(adata.var_names))
-        assert {"los_days"}.issubset({item for sublist in adata.uns.values() for item in sublist})
+        assert EHRAPY_TYPE_KEY in adata.var.columns
 
     def test_df_to_anndata_simple(self):
         df, col1_val, col2_val, col3_val = TestAnndataExt._setup_df_to_anndata()
@@ -281,27 +289,49 @@ class TestAnndataExt:
     def test_detect_binary_columns(self):
         binary_df = TestAnndataExt._setup_binary_df_to_anndata()
         adata = df_to_anndata(binary_df)
-        assert set(adata.uns["non_numerical_columns"]) == {
-            "col1",
-            "col2",
-        }
-        assert set(adata.uns["numerical_columns"]) == {
-            "col3",
-            "col4",
-            "col5",
-            "col6",
-            "col7_binary_int",
-            "col8_binary_float",
-            "col9_binary_missing_values",
-        }
+
+        assert_frame_equal(
+            adata.var,
+            DataFrame(
+                {
+                    EHRAPY_TYPE_KEY: [
+                        NON_NUMERIC_TAG,
+                        NON_NUMERIC_TAG,
+                        NUMERIC_TAG,
+                        NUMERIC_TAG,
+                        NUMERIC_TAG,
+                        NUMERIC_TAG,
+                        NUMERIC_TAG,
+                        NUMERIC_TAG,
+                        NUMERIC_TAG,
+                    ]
+                },
+                index=[
+                    "col1",
+                    "col2",
+                    "col3",
+                    "col4",
+                    "col5",
+                    "col6",
+                    "col7_binary_int",
+                    "col8_binary_float",
+                    "col9_binary_missing_values",
+                ],
+            ),
+        )
 
     def test_detect_mixed_binary_columns(self):
         df = pd.DataFrame(
             {"Col1": list(range(4)), "Col2": ["str" + str(i) for i in range(4)], "Col3": [1.0, 0.0, np.nan, 1.0]}
         )
         adata = ep.ad.df_to_anndata(df)
-        assert set(adata.uns["non_numerical_columns"]) == {"Col2"}
-        assert set(adata.uns["numerical_columns"]) == {"Col1", "Col3"}
+        assert_frame_equal(
+            adata.var,
+            DataFrame(
+                {EHRAPY_TYPE_KEY: [NUMERIC_TAG, NON_NUMERIC_TAG, NUMERIC_TAG]},
+                index=["Col1", "Col2", "Col3"],
+            ),
+        )
 
     @staticmethod
     def _setup_df_to_anndata() -> tuple[DataFrame, list, list, list]:
@@ -377,7 +407,7 @@ class TestAnnDataUtil:
             var=pd.DataFrame(data=var_numeric, index=var_numeric["Feature"]),
             uns=OrderedDict(),
         )
-
+        self.adata_numeric.var[EHRAPY_TYPE_KEY] = [NUMERIC_TAG, NUMERIC_TAG, NON_NUMERIC_TAG, NON_NUMERIC_TAG]
         self.adata_numeric.uns["numerical_columns"] = ["Numeric1", "Numeric2"]
         self.adata_numeric.uns["non_numerical_columns"] = ["String1", "String2"]
         self.adata_strings = AnnData(
@@ -385,6 +415,7 @@ class TestAnnDataUtil:
             obs=pd.DataFrame(data=obs_data),
             var=pd.DataFrame(data=var_strings, index=var_strings["Feature"]),
         )
+        self.adata_strings.var[EHRAPY_TYPE_KEY] = [NUMERIC_TAG, NUMERIC_TAG, NON_NUMERIC_TAG, NON_NUMERIC_TAG]
         self.adata_strings.uns["numerical_columns"] = ["Numeric1", "Numeric2"]
         self.adata_strings.uns["non_numerical_columns"] = ["String1", "String2"]
         self.adata_encoded = ep.pp.encode(self.adata_strings.copy(), autodetect=True, encodings="label")
