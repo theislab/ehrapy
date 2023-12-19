@@ -642,7 +642,7 @@ def _update_uns(
 
 
 def _create_new_var(adata: AnnData, cols_not_in_x: list[str]) -> pd.DataFrame:
-    """Create a new var DataFrame with the EHRAPY_TYPE_KEY column set for entries from .obs
+    """Create a new var DataFrame with the EHRAPY_TYPE_KEY column set for entries from .obs.
 
     Args:
         adata (AnnData): From where to get the .obs
