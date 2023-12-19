@@ -601,10 +601,10 @@ def _create_new_var(adata: AnnData, cols_not_in_x: list[str]) -> pd.DataFrame:
 
     Args:
         adata: From where to get the .obs
-        cols_not_in_x (list[str]): .obs columns to move to X
+        cols_not_in_x: .obs columns to move to X
 
     Returns:
-        pd.DataFrame: New var DataFrame with EHRAPY_TYPE_KEY column set for entries from .obs
+        New var DataFrame with EHRAPY_TYPE_KEY column set for entries from .obs
     """
     all_moved_num_columns = set(cols_not_in_x) & set(adata.obs.select_dtypes(include="number").columns)
 
