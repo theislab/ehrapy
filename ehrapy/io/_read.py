@@ -362,11 +362,18 @@ def read_fhir(
     Uses https://github.com/dermatologist/fhiry to read the FHIR file into a Pandas DataFrame
     which is subsequently transformed into an AnnData object.
 
+    Be aware that FHIR data can be nested and return lists or dictionaries as values.
+    In such cases, one can either:
+    1. Transform the data into an awkward array and flatten it when needed.
+    2. Extract values from all lists and dictionaries to store single values in the fields.
+    3. Remove all lists and dictionaries. Only do this if the information is not relevant to you.
+
     Args:
         dataset_path: Path to one or multiple FHIR files.
         format: The file format of the FHIR data. One of 'json' or 'ndjson'. Defaults to 'json'.
         columns_obs_only: These columns will be added to obs only and not X.
-        columns_x_only: These columns will be added to X only and all remaining columns to obs. Note that datetime columns will always be added to .obs though.
+        columns_x_only: These columns will be added to X only and all remaining columns to obs.
+                        Note that datetime columns will always be added to .obs though.
         return_df: Whether to return one or several Pandas DataFrames.
         cache: Whether to write to cache when reading or not. Defaults to False.
         download_dataset_name: Name of the file or directory in case the dataset is downloaded
@@ -379,6 +386,12 @@ def read_fhir(
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.io.read_fhir("/path/to/fhir/resources")
+
+        Be aware that most FHIR datasets have nested data that might need to be removed.
+        In such cases consider working with DataFrames.
+        >>> df = ep.io.read_fhir("/path/to/fhir/resources", return_df=True)
+        >>> df.drop(columns=[col for col in df.columns if any(isinstance(x, (list, dict)) for x in df[col].dropna())], inplace=True)
+        >>> df.drop(columns=df.columns[df.isna().all()], inplace=True)
     """
     _check_columns_only_params(columns_obs_only, columns_x_only)
     file_path: Path = Path(dataset_path)

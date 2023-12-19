@@ -377,14 +377,6 @@ class TestAnndataExt:
 
         return col1_val, col2_val, col3_val
 
-    def test_generate_anndata(self):
-        adata = generate_anndata((3, 3), include_nlp=False)
-        assert adata.X.shape == (3, 3)
-
-        adata = generate_anndata((2, 2), include_nlp=True)
-        assert adata.X.shape == (2, 2)
-        assert "nlp" in adata.obs.columns
-
 
 class TestAnnDataUtil:
     def setup_method(self):

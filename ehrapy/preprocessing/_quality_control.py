@@ -9,8 +9,6 @@ import pandas as pd
 from rich import print
 from thefuzz import process
 
-from ehrapy import logging as logg
-
 if TYPE_CHECKING:
     from collections.abc import Collection
 
@@ -36,36 +34,25 @@ def qc_metrics(
 
         Observation level metrics include:
 
-        `missing_values_abs`
-            Absolute amount of missing values.
-        `missing_values_pct`
-            Relative amount of missing values in percent.
+        - `missing_values_abs`: Absolute amount of missing values.
+        - `missing_values_pct`: Relative amount of missing values in percent.
 
         Feature level metrics include:
 
-        `missing_values_abs`
-            Absolute amount of missing values.
-        `missing_values_pct`
-            Relative amount of missing values in percent.
-        `mean`
-            Mean value of the features.
-        `median`
-            Median value of the features.
-        `std`
-            Standard deviation of the features.
-        `min`
-            Minimum value of the features.
-        `max`
-            Maximum value of the features.
+        - `missing_values_abs`: Absolute amount of missing values.
+        - `missing_values_pct`: Relative amount of missing values in percent.
+        - `mean`: Mean value of the features.
+        - `median`: Median value of the features.
+        - `std`: Standard deviation of the features.
+        - `min`: Minimum value of the features.
+        - `max`: Maximum value of the features.
 
         Examples:
             >>> import ehrapy as ep
             >>> import seaborn as sns
-            >>> import matplotlib.pyplot as plt
             >>> adata = ep.dt.mimic_2(encoded=True)
             >>> ep.pp.qc_metrics(adata)
             >>> sns.displot(adata.obs["missing_values_abs"])
-            >>> plt.show()
     """
     obs_metrics = _obs_qc_metrics(adata, layer, qc_vars)
     var_metrics = _var_qc_metrics(adata, layer)
@@ -73,7 +60,6 @@ def qc_metrics(
     if inplace:
         adata.obs[obs_metrics.columns] = obs_metrics
         adata.var[var_metrics.columns] = var_metrics
-        logg.info("Added the calculated metrics to AnnData's `obs` and `var`.")
 
     return obs_metrics, var_metrics
 
@@ -91,10 +77,8 @@ def _missing_values(
     Returns:
         Absolute or relative amount of missing values.
     """
-    # Absolute number of missing values
     if shape is None:
         return pd.isnull(arr).sum()
-    # Relative number of missing values in percent
     else:
         n_rows, n_cols = shape
         if df_type == "obs":
@@ -205,10 +189,8 @@ def _var_qc_metrics(adata: AnnData, layer: str = None) -> pd.DataFrame:
         var_metrics.loc[non_categorical_indices, "max"] = np.nanmax(
             np.array(mtx[:, non_categorical_indices], dtype=np.float64), axis=0
         )
-    except TypeError:
+    except (TypeError, ValueError):
         print("[bold yellow]TypeError! Setting quality control metrics to nan. Did you encode your data?")
-    except ValueError:
-        print("[bold yellow]ValueError! Setting quality control metrics to nan. Did you encode your data?")
 
     return var_metrics
 
@@ -258,7 +240,7 @@ def qc_lab_measurements(
 
     If you want to specify your own table as a Pandas DataFrame please examine the existing default table.
     Ethnicity and age columns can be added.
-    https://github.com/theislab/ehrapy/ehrapy/preprocessing/laboratory_reference_tables/laposata.tsv
+    https://github.com/theislab/ehrapy/blob/main/ehrapy/preprocessing/laboratory_reference_tables/laposata.tsv
 
     Args:
         adata: Annotated data matrix.
@@ -269,13 +251,13 @@ def qc_lab_measurements(
         threshold: Minimum required matching confidence score of the fuzzysearch.
                    0 = no matches, 100 = all must match. Defaults to 20.
         age_col: Column containing age values.
-        age_range: The inclusive age-range to filter for. e.g. 5-99
+        age_range: The inclusive age-range to filter for such as 5-99.
         sex_col: Column containing sex values. Column must contain 'U', 'M' or 'F'.
         sex: Sex to filter the reference values for. Use U for unisex which uses male values when male and female conflict.
-             Defaults to 'U|M'
+             Defaults to 'U|M'.
         ethnicity_col: Column containing ethnicity values.
         ethnicity: Ethnicity to filter for.
-        copy: Whether to return a copy. Defaults to False .
+        copy: Whether to return a copy. Defaults to False.
         verbose: Whether to have verbose stdout. Notifies user of matched columns and value ranges.
 
     Returns:
@@ -325,7 +307,6 @@ def qc_lab_measurements(
                 f"ethnicity columns and their values."
             )
 
-        # Fetch reference values
         try:
             if age_col:
                 min_age, max_age = age_range.split("-")
@@ -346,7 +327,6 @@ def qc_lab_measurements(
         except TypeError:
             print(f"[bold yellow]Unable to find specified reference values for {measurement}.")
 
-        # Check whether the measurements are inside the reference ranges
         check = reference_values[reference_column].values
         check_str: str = np.array2string(check)
         check_str = check_str.replace("[", "").replace("]", "").replace("'", "")

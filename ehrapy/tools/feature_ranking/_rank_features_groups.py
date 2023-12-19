@@ -346,8 +346,11 @@ def rank_features_groups(
                             Used only for statistical tests (e.g. doesn't work for "logreg" `num_cols_method`)
         tie_correct: Use tie correction for `'wilcoxon'` scores. Used only for `'wilcoxon'`.
         layer: Key from `adata.layers` whose value will be used to perform tests on.
-        field_to_rank: Set to `layer` to rank variables in `adata.X` or `adata.layers[layer]` (default), `obs` to rank `adata.obs`, or `layer_and_obs` to rank both. Layer needs to be None if this is not 'layer'.
-        columns_to_rank: Subset of columns to rank. If 'all', all columns are used. If a dictionary, it must have keys 'var_names' and/or 'obs_names' and values must be iterables of strings. E.g. {'var_names': ['glucose'], 'obs_names': ['age', 'height']}.
+        field_to_rank: Set to `layer` to rank variables in `adata.X` or `adata.layers[layer]` (default), `obs` to rank `adata.obs`, or `layer_and_obs` to rank both.
+                       Layer needs to be None if this is not 'layer'.
+        columns_to_rank: Subset of columns to rank. If 'all', all columns are used.
+                         If a dictionary, it must have keys 'var_names' and/or 'obs_names' and values must be iterables of strings
+                         such as {'var_names': ['glucose'], 'obs_names': ['age', 'height']}.
         **kwds: Are passed to test methods. Currently this affects only parameters that
                 are passed to :class:`sklearn.linear_model.LogisticRegression`.
                 For instance, you can pass `penalty='l1'` to try to come up with a
@@ -546,7 +549,6 @@ def rank_features_groups(
     adata_orig.uns[key_added] = adata.uns[key_added]
     adata = adata_orig
 
-    # Adjust p values
     if "pvals" in adata.uns[key_added]:
         adata.uns[key_added]["pvals_adj"] = _adjust_pvalues(
             adata.uns[key_added]["pvals"], corr_method=correction_method
@@ -559,3 +561,52 @@ def rank_features_groups(
     _sort_features(adata, key_added)
 
     return adata if copy else None
+
+
+def filter_rank_features_groups(
+    adata: AnnData,
+    key="rank_features_groups",
+    groupby=None,
+    key_added="rank_features_groups_filtered",
+    min_in_group_fraction=0.25,
+    min_fold_change=1,
+    max_out_group_fraction=0.5,
+) -> None:  # pragma: no cover
+    """Filters out features based on fold change and fraction of features containing the feature within and outside the `groupby` categories.
+
+    See :func:`~ehrapy.tl.rank_features_groups`.
+
+    Results are stored in `adata.uns[key_added]`
+    (default: 'rank_genes_groups_filtered').
+
+    To preserve the original structure of adata.uns['rank_genes_groups'],
+    filtered genes are set to `NaN`.
+
+    Args:
+        adata: Annotated data matrix.
+        key: Key previously added by :func:`~ehrapy.tl.rank_features_groups`
+        groupby: The key of the observations grouping to consider.
+        key_added: The key in `adata.uns` information is saved to.
+        min_in_group_fraction: Minimum in group fraction (default: 0.25).
+        min_fold_change: Miniumum fold change (default: 1).
+        max_out_group_fraction: Maximum out group fraction (default: 0.5).
+
+    Returns:
+        Same output as :func:`ehrapy.tl.rank_features_groups` but with filtered feature names set to `nan`
+
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> ep.tl.rank_features_groups(adata, "service_unit")
+        >>> ep.pl.rank_features_groups(adata)
+    """
+    return sc.tl.filter_rank_genes_groups(
+        adata=adata,
+        key=key,
+        groupby=groupby,
+        use_raw=False,
+        key_added=key_added,
+        min_in_group_fraction=min_in_group_fraction,
+        min_fold_change=min_fold_change,
+        max_out_group_fraction=max_out_group_fraction,
+    )
