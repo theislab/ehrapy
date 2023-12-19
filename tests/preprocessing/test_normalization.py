@@ -39,8 +39,6 @@ def adata_to_norm():
         var=pd.DataFrame(data=var_data, index=var_data["Feature"]),
         uns=OrderedDict(),
     )
-    # adata.uns["numerical_columns"] = ["Numeric1", "Numeric2"]
-    # adata.uns["non_numerical_columns"] = ["String1", "String2"]
 
     adata = ep.pp.encode(adata, autodetect=True, encodings="label")
 

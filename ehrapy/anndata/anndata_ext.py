@@ -495,13 +495,6 @@ def get_numeric_vars(adata: AnnData) -> list[str]:
     """
     _assert_encoded(adata)
 
-    # if "numerical_columns" not in adata.uns_keys():
-    #     return list(adata.var_names.values)
-    # else:
-    #     return adata.uns["numerical_columns"]
-    # if "numerical_columns" in adata.uns_keys():
-    #     raise UserWarning("numerical_columns is deprecated. Use EHRAPY_TYPE_KEY instead.")
-
     # This behaviour is consistent with the previous behaviour, allowing for a simple fully numeric X
     if EHRAPY_TYPE_KEY not in adata.var.columns:
         return list(adata.var_names.values)
