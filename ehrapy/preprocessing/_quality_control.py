@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
@@ -148,7 +149,7 @@ def _var_qc_metrics(adata: AnnData, layer: str = None) -> pd.DataFrame:
     categorical_indices = np.ndarray([0], dtype=int)
     if "original_values_categoricals" in adata.uns:
         for original_values_categorical in list(adata.uns["original_values_categoricals"]):
-            mtx = mtx.astype(object).copy()
+            mtx = copy.deepcopy(mtx.astype(object))
             index = np.where(var_metrics.index.str.startswith("ehrapycat_" + original_values_categorical))[0]
             mtx[:, index] = np.tile(
                 np.where(
