@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 def qc_metrics(
     adata: AnnData, qc_vars: Collection[str] = (), layer: str = None, inplace: bool = True
-) -> pd.DataFrame | None:
+) -> tuple[pd.DataFrame, pd.DataFrame] | None:
     """Calculates various quality control metrics.
 
     Uses the original values to calculate the metrics and not the encoded ones.
@@ -30,7 +30,7 @@ def qc_metrics(
         inplace: Whether to add the metrics to obs/var or to solely return a Pandas DataFrame.
 
     Returns:
-        Pandas DataFrame of all calculated QC metrics.
+        Two Pandas DataFrames of all calculated QC metrics for `obs` and `var` respectively.
 
         Observation level metrics include:
 
@@ -49,10 +49,9 @@ def qc_metrics(
 
         Examples:
             >>> import ehrapy as ep
-            >>> import seaborn as sns
             >>> adata = ep.dt.mimic_2(encoded=True)
-            >>> ep.pp.qc_metrics(adata)
-            >>> sns.displot(adata.obs["missing_values_abs"])
+            >>> obs_qc, var_qc = ep.pp.qc_metrics(adata)
+            >>> obs_qc["missing_values_pct"].plot(kind="hist", bins=20)
     """
     obs_metrics = _obs_qc_metrics(adata, layer, qc_vars)
     var_metrics = _var_qc_metrics(adata, layer)
