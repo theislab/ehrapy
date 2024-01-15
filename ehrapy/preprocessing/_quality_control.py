@@ -65,26 +65,24 @@ def qc_metrics(
 
 
 def _missing_values(
-    arr: np.ndarray, shape: tuple[int, int] = None, df_type: Literal["obs", "var"] = "obs"
+    arr: np.ndarray, mode: Literal["abs", "pct"] = "abs", df_type: Literal["obs", "var"] = "obs"
 ) -> np.ndarray:
     """Calculates the absolute or relative amount of missing values.
 
     Args:
         arr: Numpy array containing a data row which is a subset of X (mtx).
-        shape: Shape of X (mtx).
+        mode: Whether to calculate absolute or percentage of missing values. Defaults to `"abs"`.
         df_type: Whether to calculate the proportions for obs or var. One of 'obs' or 'var'. Defaults to 'obs' .
 
     Returns:
         Absolute or relative amount of missing values.
     """
-    if shape is None:
-        return pd.isnull(arr).sum()
-    else:
-        n_rows, n_cols = shape
-        if df_type == "obs":
-            return (pd.isnull(arr).sum() / n_cols) * 100
-        else:
-            return (pd.isnull(arr).sum() / n_rows) * 100
+    num_missing = pd.isnull(arr).sum()
+    if mode == "abs":
+        return num_missing
+    elif mode == "pct":
+        total_elements = arr.shape[0] if df_type == "obs" else len(arr)
+        return (num_missing / total_elements) * 100
 
 
 def _obs_qc_metrics(
@@ -118,8 +116,8 @@ def _obs_qc_metrics(
                 )
             )
 
-    obs_metrics["missing_values_abs"] = np.apply_along_axis(_missing_values, 1, mtx)
-    obs_metrics["missing_values_pct"] = np.apply_along_axis(_missing_values, 1, mtx, shape=mtx.shape, df_type="obs")
+    obs_metrics["missing_values_abs"] = np.apply_along_axis(_missing_values, 1, mtx, mode="abs")
+    obs_metrics["missing_values_pct"] = np.apply_along_axis(_missing_values, 1, mtx, mode="pct", df_type="obs")
 
     # Specific QC metrics
     for qc_var in qc_vars:
@@ -164,8 +162,8 @@ def _var_qc_metrics(adata: AnnData, layer: str = None) -> pd.DataFrame:
             categorical_indices = np.concatenate([categorical_indices, index])
     non_categorical_indices = np.ones(mtx.shape[1], dtype=bool)
     non_categorical_indices[categorical_indices] = False
-    var_metrics["missing_values_abs"] = np.apply_along_axis(_missing_values, 0, mtx)
-    var_metrics["missing_values_pct"] = np.apply_along_axis(_missing_values, 0, mtx, shape=mtx.shape, df_type="var")
+    var_metrics["missing_values_abs"] = np.apply_along_axis(_missing_values, 0, mtx, mode="abs")
+    var_metrics["missing_values_pct"] = np.apply_along_axis(_missing_values, 0, mtx, mode="pct", df_type="var")
 
     var_metrics["mean"] = np.nan
     var_metrics["median"] = np.nan
