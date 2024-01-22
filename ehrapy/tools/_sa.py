@@ -9,6 +9,7 @@ import statsmodels.formula.api as smf
 from lifelines import CoxPHFitter, KaplanMeierFitter
 from lifelines.statistics import StatisticalResult, logrank_test
 from scipy import stats
+
 from ehrapy.anndata import anndata_to_df
 
 if TYPE_CHECKING:
