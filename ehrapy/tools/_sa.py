@@ -6,7 +6,7 @@ import numpy as np  # This package is implicitly used
 import pandas as pd
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
-from lifelines import KaplanMeierFitter, CoxPHFitter
+from lifelines import CoxPHFitter, KaplanMeierFitter
 from lifelines.statistics import StatisticalResult, logrank_test
 from scipy import stats
 
@@ -272,5 +272,5 @@ def cph(ad: AnnData, duration_col: str, event_col: str, entry_col: str = None) -
     df = ad.to_df()
     df = df[[duration_col, event_col, entry_col]]
     cph = CoxPHFitter()
-    cph.fit(df, duration_col, event_col, entry_col = entry_col) 
+    cph.fit(df, duration_col, event_col, entry_col=entry_col)
     return cph
