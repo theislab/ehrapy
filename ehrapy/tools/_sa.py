@@ -120,8 +120,9 @@ def kmf(
     censoring: Literal["right", "left"] = None,
 ) -> KaplanMeierFitter:
     """Fit the Kaplan-Meier estimate for the survival function.
-
-    See https://lifelines.readthedocs.io/en/latest/fitters/univariate/KaplanMeierFitter.html#module-lifelines.fitters.kaplan_meier_fitter
+    The Kaplan–Meier estimator, also known as the product limit estimator, is a non-parametric statistic used to estimate the survival function from lifetime data. In medical research, it is often used to measure the fraction of patients living for a certain amount of time after treatment.
+    See https://en.wikipedia.org/wiki/Kaplan%E2%80%93Meier_estimator
+        https://lifelines.readthedocs.io/en/latest/fitters/univariate/KaplanMeierFitter.html#module-lifelines.fitters.kaplan_meier_fitter
     Class for fitting the Kaplan-Meier estimate for the survival function.
 
     Args:
@@ -267,12 +268,13 @@ def anova_glm(result_1: GLMResultsWrapper, result_2: GLMResultsWrapper, formula_
 
 def cox_ph(adata: AnnData, duration_col: str, event_col: str, entry_col: str = None) -> KaplanMeierFitter:
     """Fit the Cox’s proportional hazard for the survival function.
-
-    See https://lifelines.readthedocs.io/en/latest/fitters/regression/CoxPHFitter.html
+    The prominent assumption with Cox proportional hazards model is that, not surprisingly, the hazard functions are proportional. David Cox noticed that by enforcing that “simple” constraint on the form of the hazard model, a lot of difficult math and unstable optimization can be avoided.
+    See https://www.graphpad.com/guides/survival-analysis
+        https://lifelines.readthedocs.io/en/latest/fitters/regression/CoxPHFitter.html
 
     Args:
-        adata: anndata object with necessary columns duration_col and event_col (see below)
-        duration_col: the name of the column in anndata that contains the subjects’ lifetimes.
+        adata: adata: AnnData object with necessary columns `duration_col` and `event_col`.
+        duration_col: the name of the column in the AnnData objects that contains the subjects’ lifetimes.
         event_col: the name of the column in anndata that contains the subjects’ death observation. If left as None, assume all individuals are uncensored.
         entry_col: a column denoting when a subject entered the study, i.e. left-truncation.
     Returns:
@@ -286,7 +288,6 @@ def cox_ph(adata: AnnData, duration_col: str, event_col: str, entry_col: str = N
         >>> # So we need to flip `censor_fl` when pass `censor_fl` to KaplanMeierFitter
         >>> adata[:, ['censor_flg']].X = np.where(adata[:, ['censor_flg']].X == 0, 1, 0)
         >>> cph = ep.tl.cox_ph(adata, "mort_day_censored", "censor_flg")
-
     """
     df = ehrapy_ad.anndata_to_df(adata)
     df = df[[duration_col, event_col, entry_col]]
