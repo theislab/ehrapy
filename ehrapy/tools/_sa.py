@@ -6,6 +6,7 @@ import numpy as np  # This package is implicitly used
 import pandas as pd
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
+import anndata as ehrapy_ad
 from lifelines import CoxPHFitter, KaplanMeierFitter
 from lifelines.statistics import StatisticalResult, logrank_test
 from scipy import stats
@@ -264,12 +265,30 @@ def anova_glm(result_1: GLMResultsWrapper, result_2: GLMResultsWrapper, formula_
     return dataframe
 
 
-def cph(ad: AnnData, duration_col: str, event_col: str, entry_col: str = None) -> KaplanMeierFitter:
+def cox_ph(adata: AnnData, duration_col: str, event_col: str, entry_col: str = None) -> KaplanMeierFitter:
     """Fit the Cox’s proportional hazard for the survival function.
 
     See https://lifelines.readthedocs.io/en/latest/fitters/regression/CoxPHFitter.html
+    
+    Args:
+        adata: anndata object with necessary columns duration_col and event_col (see below)
+        duration_col: the name of the column in anndata that contains the subjects’ lifetimes.
+        event_col: the name of the column in anndata that contains the subjects’ death observation. If left as None, assume all individuals are uncensored.
+        entry_col: a column denoting when a subject entered the study, i.e. left-truncation.
+    Returns:
+        Fitted CoxPHFitter
+
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=False)
+        >>> # Because in MIMIC-II database, `censor_fl` is censored or death (binary: 0 = death, 1 = censored).
+        >>> # While in KaplanMeierFitter, `event_observed` is True if the the death was observed, False if the event was lost (right-censored).
+        >>> # So we need to flip `censor_fl` when pass `censor_fl` to KaplanMeierFitter
+        >>> adata[:, ['censor_flg']].X = np.where(adata[:, ['censor_flg']].X == 0, 1, 0)
+        >>> cph = ep.tl.cox_ph(adata, "mort_day_censored", "censor_flg")
+        
     """
-    df = ad.to_df()
+    df = ehrapy_ad.anndata_to_df(adata)
     df = df[[duration_col, event_col, entry_col]]
     cph = CoxPHFitter()
     cph.fit(df, duration_col, event_col, entry_col=entry_col)

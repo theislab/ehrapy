@@ -76,10 +76,10 @@ class TestSA:
         assert dataframe.iloc[1, 4] == 2
         assert pytest.approx(dataframe.iloc[1, 5], 0.1) == 0.103185
 
-    def test_cph(self):
+    def test_cox_ph(self):
         adata = ep.dt.mimic_2(encoded=False)
         adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
-        cph = ep.tl.cph(adata, "mort_day_censored", "censor_flg")
+        cph = ep.tl.cox_ph(adata, "mort_day_censored", "censor_flg")
 
         assert isinstance(cph, CoxPHFitter)
         assert len(cph.durations) == 1776
