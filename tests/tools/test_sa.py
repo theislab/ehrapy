@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 import statsmodels
-from lifelines import KaplanMeierFitter
+from lifelines import KaplanMeierFitter, CoxPHFitter
 
 import ehrapy as ep
 
@@ -75,3 +75,12 @@ class TestSA:
         assert dataframe.shape == (2, 6)
         assert dataframe.iloc[1, 4] == 2
         assert pytest.approx(dataframe.iloc[1, 5], 0.1) == 0.103185
+        
+    def test_cph(self):
+        adata = ep.dt.mimic_2(encoded=False)
+        adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
+        cph = ep.tl.cph(adata, "mort_day_censored", "censor_flg")
+
+        assert isinstance(cph, CoxPHFitter)
+        assert len(cph.durations) == 1776
+        assert sum(cph.event_observed) == 497
