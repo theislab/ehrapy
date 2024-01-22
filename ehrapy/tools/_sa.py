@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
 
+import anndata as ehrapy_ad
 import numpy as np  # This package is implicitly used
 import pandas as pd
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
-import anndata as ehrapy_ad
 from lifelines import CoxPHFitter, KaplanMeierFitter
 from lifelines.statistics import StatisticalResult, logrank_test
 from scipy import stats
@@ -269,7 +269,7 @@ def cox_ph(adata: AnnData, duration_col: str, event_col: str, entry_col: str = N
     """Fit the Cox’s proportional hazard for the survival function.
 
     See https://lifelines.readthedocs.io/en/latest/fitters/regression/CoxPHFitter.html
-    
+
     Args:
         adata: anndata object with necessary columns duration_col and event_col (see below)
         duration_col: the name of the column in anndata that contains the subjects’ lifetimes.
@@ -286,7 +286,7 @@ def cox_ph(adata: AnnData, duration_col: str, event_col: str, entry_col: str = N
         >>> # So we need to flip `censor_fl` when pass `censor_fl` to KaplanMeierFitter
         >>> adata[:, ['censor_flg']].X = np.where(adata[:, ['censor_flg']].X == 0, 1, 0)
         >>> cph = ep.tl.cox_ph(adata, "mort_day_censored", "censor_flg")
-        
+
     """
     df = ehrapy_ad.anndata_to_df(adata)
     df = df[[duration_col, event_col, entry_col]]
