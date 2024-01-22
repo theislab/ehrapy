@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
 
-import anndata as ehrapy_ad
 import numpy as np  # This package is implicitly used
 import pandas as pd
 import statsmodels.api as sm
@@ -10,6 +9,7 @@ import statsmodels.formula.api as smf
 from lifelines import CoxPHFitter, KaplanMeierFitter
 from lifelines.statistics import StatisticalResult, logrank_test
 from scipy import stats
+from ehrapy.anndata import anndata_to_df
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
