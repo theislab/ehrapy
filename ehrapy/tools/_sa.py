@@ -6,7 +6,7 @@ import numpy as np  # This package is implicitly used
 import pandas as pd
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
-from lifelines import KaplanMeierFitter
+from lifelines import KaplanMeierFitter, CoxPHFitter
 from lifelines.statistics import StatisticalResult, logrank_test
 from scipy import stats
 
@@ -262,3 +262,15 @@ def anova_glm(result_1: GLMResultsWrapper, result_2: GLMResultsWrapper, formula_
     }
     dataframe = pd.DataFrame(data=table)
     return dataframe
+
+
+def cph(ad: AnnData, duration_col: str, event_col: str, entry_col: str = None) -> KaplanMeierFitter:
+    """Fit the Cox’s proportional hazard for the survival function.
+
+    See https://lifelines.readthedocs.io/en/latest/fitters/regression/CoxPHFitter.html
+    """
+    df = ad.to_df()
+    df = df[[duration_col, event_col, entry_col]]
+    cph = CoxPHFitter()
+    cph.fit(df, duration_col, event_col, entry_col = entry_col) 
+    return cph
