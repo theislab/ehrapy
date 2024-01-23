@@ -293,7 +293,7 @@ def cox_ph(adata: AnnData, duration_col: str, event_col: str, entry_col: str = N
     df = anndata_to_df(adata)
     keys = [duration_col, event_col]
     if entry_col:
-      keys.append(entry_col)
+        keys.append(entry_col)
     df = df[keys]
     cph = CoxPHFitter()
     cph.fit(df, duration_col, event_col, entry_col=entry_col)
