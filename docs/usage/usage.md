@@ -119,7 +119,6 @@ Other than tools, preprocessing steps usually don’t return an easily interpret
     :nosignatures:
 
     preprocessing.encode
-    preprocessing.undo_encoding
 ```
 
 ### Normalization
