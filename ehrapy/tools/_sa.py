@@ -290,7 +290,7 @@ def cox_ph(adata: AnnData, duration_col: str, event_col: str, entry_col: str = N
         >>> adata[:, ['censor_flg']].X = np.where(adata[:, ['censor_flg']].X == 0, 1, 0)
         >>> cph = ep.tl.cox_ph(adata, "mort_day_censored", "censor_flg")
     """
-    df = ehrapy_ad.anndata_to_df(adata)
+    df = anndata_to_df(adata)
     df = df[[duration_col, event_col, entry_col]]
     cph = CoxPHFitter()
     cph.fit(df, duration_col, event_col, entry_col=entry_col)
