@@ -291,7 +291,10 @@ def cox_ph(adata: AnnData, duration_col: str, event_col: str, entry_col: str = N
         >>> cph = ep.tl.cox_ph(adata, "mort_day_censored", "censor_flg")
     """
     df = anndata_to_df(adata)
-    df = df[[duration_col, event_col, entry_col]]
+    keys = [duration_col, event_col]
+    if entry_col:
+      keys.append(entry_col)
+    df = df[keys]
     cph = CoxPHFitter()
     cph.fit(df, duration_col, event_col, entry_col=entry_col)
     return cph
