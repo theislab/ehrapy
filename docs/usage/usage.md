@@ -241,6 +241,7 @@ In contrast to a preprocessing function, a tool usually adds an easily interpret
     tools.kmf
     tools.test_kmf_logrank
     tools.test_nested_f_statistic
+    tools.cox_ph
 ```
 
 ### Causal Inference
