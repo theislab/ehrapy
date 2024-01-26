@@ -31,7 +31,7 @@ $ pip install ehrapy
 
 ## Usage
 
-Please have a look at the [Usage documentation][usage] and the [tutorials][tutorials].
+Please have a look at the [Usage documentation](https://ehrapy.readthedocs.io/en/latest/usage/usage.html) and the [tutorials](https://ehrapy.readthedocs.io/en/latest/tutorials/index.html).
 
 ```python
 import ehrapy as ep
