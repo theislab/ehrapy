@@ -14,7 +14,7 @@ from rich import print
 from ehrapy import ehrapy_settings, settings
 from ehrapy.anndata.anndata_ext import df_to_anndata
 from ehrapy.data._dataloader import download, remove_archive_extension
-from ehrapy.preprocessing._encode import encode
+from ehrapy.preprocessing._encoding import encode
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -498,7 +498,7 @@ def _read_from_cache_dir(cache_dir: Path) -> dict[str, AnnData]:
 def _read_from_cache(path_cache: Path) -> AnnData:
     """Read AnnData object from cached file."""
     cached_adata = read_h5(path_cache)
-    # type cast required when dealing with non numerical data; otherwise all values in X would be treated as strings
+    # type cast required when dealing with non-numerical data; otherwise all values in X would be treated as strings
     if not np.issubdtype(cached_adata.X.dtype, np.number):
         cached_adata.X = cached_adata.X.astype("object")
     try:
@@ -530,7 +530,7 @@ def _write_cache_dir(
         index_column: The index columns for each object (if any)
 
     Returns:
-        A dict containing an unique identifier and an :class:`~anndata.AnnData` object for each file read
+        A dict containing a unique identifier and an :class:`~anndata.AnnData` object for each file read
     """
     for identifier in adata_objects:
         # for each identifier (for the AnnData object), we need the index column and obs_only cols (if any) for reuse when reading cache
@@ -549,7 +549,7 @@ def _write_cache(
     """Write AnnData object to cache"""
     original_x_dtype = raw_anndata.X.dtype
     if not np.issubdtype(original_x_dtype, np.number):
-        cached_adata = encode(data=raw_anndata, autodetect=True)
+        cached_adata = encode(adata=raw_anndata, autodetect=True)
     else:
         cached_adata = raw_anndata
     # temporary key that stores all column names that are obs only for this AnnData object

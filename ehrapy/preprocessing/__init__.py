@@ -1,4 +1,4 @@
-from ehrapy.preprocessing._encode import encode, undo_encoding
+from ehrapy.preprocessing._encoding import encode, undo_encoding
 from ehrapy.preprocessing._highly_variable_features import highly_variable_features
 from ehrapy.preprocessing._imputation import (
     explicit_impute,

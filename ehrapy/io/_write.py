@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Literal
 import numpy as np
 
 from ehrapy import settings
-from ehrapy.preprocessing._encode import encode
+from ehrapy.preprocessing._encoding import encode
 
 if TYPE_CHECKING:
     from anndata import AnnData
