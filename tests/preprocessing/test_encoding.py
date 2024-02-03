@@ -7,7 +7,7 @@ from pandas.testing import assert_frame_equal
 
 from ehrapy.anndata._constants import EHRAPY_TYPE_KEY, NON_NUMERIC_ENCODED_TAG, NON_NUMERIC_TAG, NUMERIC_TAG
 from ehrapy.io._read import read_csv
-from ehrapy.preprocessing._encode import DuplicateColumnEncodingError, _reorder_encodings, encode
+from ehrapy.preprocessing._encoding import DuplicateColumnEncodingError, _reorder_encodings, encode
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_PATH = f"{CURRENT_DIR}/test_data_encode"

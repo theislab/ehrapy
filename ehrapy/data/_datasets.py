@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from ehrapy import ehrapy_settings
 from ehrapy.io._read import read_csv, read_fhir, read_h5ad
-from ehrapy.preprocessing._encode import encode
+from ehrapy.preprocessing._encoding import encode
 
 if TYPE_CHECKING:
     import pandas as pd
