@@ -389,14 +389,21 @@ def rank_features_groups(
          >>> adata = ep.dt.mimic_2(encoded=False)
          >>> # want to move some metadata to the obs field
          >>> ep.anndata.move_to_obs(adata, to_obs=["service_unit", "service_num", "age", "mort_day_censored"])
-         >>> ep.tl.rank_features_groups(adata, "service_unit", field_to_rank="obs", columns_to_rank={"obs_names": ["age", "mort_day_censored"]})
+         >>> ep.tl.rank_features_groups(
+         ...     adata, "service_unit", field_to_rank="obs", columns_to_rank={"obs_names": ["age", "mort_day_censored"]}
+         ... )
          >>> ep.pl.rank_features_groups(adata)
 
          >>> import ehrapy as ep
          >>> adata = ep.dt.mimic_2(encoded=False)
          >>> # want to move some metadata to the obs field
          >>> ep.anndata.move_to_obs(adata, to_obs=["service_unit", "service_num", "age", "mort_day_censored"])
-         >>> ep.tl.rank_features_groups(adata, "service_unit", field_to_rank="layer_and_obs", columns_to_rank={"var_names": ['copd_flg', 'renal_flg'], "obs_names": ["age", "mort_day_censored"]})
+         >>> ep.tl.rank_features_groups(
+         ...     adata,
+         ...     "service_unit",
+         ...     field_to_rank="layer_and_obs",
+         ...     columns_to_rank={"var_names": ["copd_flg", "renal_flg"], "obs_names": ["age", "mort_day_censored"]},
+         ... )
          >>> ep.pl.rank_features_groups(adata)
 
     """

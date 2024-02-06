@@ -483,7 +483,7 @@ def parkinsons(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.dt.parkinsons(columns_obs_only=['name'], encoded=True)
+        >>> adata = ep.dt.parkinsons(columns_obs_only=["name"], encoded=True)
     """
     adata: AnnData = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/parkinsons.csv",
@@ -582,7 +582,7 @@ def parkinson_dataset_with_replicated_acoustic_features(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.dt.parkinson_dataset_with_replicated_acoustic_features(columns_obs_only=['ID'], encoded=True)
+        >>> adata = ep.dt.parkinson_dataset_with_replicated_acoustic_features(columns_obs_only=["ID"], encoded=True)
     """
     adata: AnnData = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/parkinson_dataset_with_replicated_acoustic_features.csv",

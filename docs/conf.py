@@ -15,8 +15,8 @@ copyright = "2021-2024, Lukas Heumos, Theislab"
 author = "Lukas Heumos"
 github_repo = "ehrapy"
 
-version = "0.6.0"
-release = "0.6.0"
+version = "0.7.0"
+release = "0.7.0"
 
 extensions = [
     "myst_parser",

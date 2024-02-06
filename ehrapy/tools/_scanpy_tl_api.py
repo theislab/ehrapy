@@ -340,8 +340,8 @@ def embedding_density(
         >>> import ehrapy as ep
         >>> adata = ep.data.mimic_2(encoded=True)
         >>> ep.tl.umap(adata)
-        >>> ep.tl.embedding_density(adata, basis='umap', groupby='phase')
-        >>> ep.pl.embedding_density(adata, basis='umap', key='umap_density_phase', group='G1')
+        >>> ep.tl.embedding_density(adata, basis="umap", groupby="phase")
+        >>> ep.pl.embedding_density(adata, basis="umap", key="umap_density_phase", group="G1")
     """
     sc.tl.embedding_density(adata=adata, basis=basis, groupby=groupby, key_added=key_added, components=components)
 
@@ -477,7 +477,7 @@ def dendrogram(
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.data.mimic_2(encoded=True)
-        >>> ep.tl.dendrogram(adata, groupby='service_unit')
+        >>> ep.tl.dendrogram(adata, groupby="service_unit")
         >>> ep.pl.dendrogram(adata)
     """
     return sc.tl.dendrogram(

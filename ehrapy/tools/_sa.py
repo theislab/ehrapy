@@ -43,9 +43,9 @@ def ols(
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=False)
-        >>> formula = 'tco2_first ~ pco2_first'
-        >>> var_names = ['tco2_first', 'pco2_first']
-        >>> ols = ep.tl.ols(adata, var_names, formula, missing = 'drop')
+        >>> formula = "tco2_first ~ pco2_first"
+        >>> var_names = ["tco2_first", "pco2_first"]
+        >>> ols = ep.tl.ols(adata, var_names, formula, missing="drop")
     """
     if isinstance(var_names, list):
         data = pd.DataFrame(adata[:, var_names].X, columns=var_names).astype(float)
@@ -85,10 +85,10 @@ def glm(
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=False)
-        >>> formula = 'day_28_flg ~ age'
-        >>> var_names = ['day_28_flg', 'age']
-        >>> family = 'Binomial'
-        >>> glm = ep.tl.glm(adata, var_names, formula, family, missing = 'drop', ascontinus = ['age'])
+        >>> formula = "day_28_flg ~ age"
+        >>> var_names = ["day_28_flg", "age"]
+        >>> family = "Binomial"
+        >>> glm = ep.tl.glm(adata, var_names, formula, family, missing="drop", ascontinus=["age"])
     """
     family_dict = {
         "Gaussian": sm.families.Gaussian(),
@@ -149,8 +149,8 @@ def kmf(
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=False)
         >>> # Flip 'censor_fl' because 0 = death and 1 = censored
-        >>> adata[:, ['censor_flg']].X = np.where(adata[:, ['censor_flg']].X == 0, 1, 0)
-        >>> kmf = ep.tl.kmf(adata[:, ['mort_day_censored']].X, adata[:, ['censor_flg']].X)
+        >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
+        >>> kmf = ep.tl.kmf(adata[:, ["mort_day_censored"]].X, adata[:, ["censor_flg"]].X)
     """
     kmf = KaplanMeierFitter()
     if censoring == "None" or "right":
@@ -288,7 +288,7 @@ def cox_ph(adata: AnnData, duration_col: str, event_col: str, entry_col: str = N
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=False)
         >>> # Flip 'censor_fl' because 0 = death and 1 = censored
-        >>> adata[:, ['censor_flg']].X = np.where(adata[:, ['censor_flg']].X == 0, 1, 0)
+        >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
         >>> cph = ep.tl.cox_ph(adata, "mort_day_censored", "censor_flg")
     """
     df = anndata_to_df(adata)

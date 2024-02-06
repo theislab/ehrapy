@@ -60,7 +60,7 @@ def encode(
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2()
-        >>> adata_encoded = ep.pp.encode(adata, autodetect=True, encodings='one_hot_encoding')
+        >>> adata_encoded = ep.pp.encode(adata, autodetect=True, encodings="one_hot_encoding")
 
         >>> # Example using custom encodings per columns:
         >>> import ehrapy as ep

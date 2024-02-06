@@ -1076,7 +1076,7 @@ def pca_loadings(
         >>> ep.pp.log_norm(adata, offset=1)
         >>> ep.pp.neighbors(adata)
         >>> ep.pp.pca(adata)
-        >>> ep.pl.pca_loadings(adata, components='1,2,3')
+        >>> ep.pl.pca_loadings(adata, components="1,2,3")
 
     Preview:
         .. image:: /_static/docstring_previews/pca_loadings.png
@@ -1143,7 +1143,7 @@ def pca_overview(adata: AnnData, **params):  # pragma: no cover
         >>> ep.pp.log_norm(adata, offset=1)
         >>> ep.pp.neighbors(adata)
         >>> ep.pp.pca(adata)
-        >>> ep.pl.pca_overview(adata, components='1,2,3', color="service_unit")
+        >>> ep.pl.pca_overview(adata, components="1,2,3", color="service_unit")
 
     Preview:
         .. image:: /_static/docstring_previews/pca_overview_1.png
@@ -1185,7 +1185,9 @@ def tsne(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover
 
         .. image:: /_static/docstring_previews/tsne_1.png
 
-        >>> ep.pl.tsne(adata, color=["day_icu_intime", "service_unit"], wspace=0.5, title=["Day of ICU admission", "Service unit"])
+        >>> ep.pl.tsne(
+        ...     adata, color=["day_icu_intime", "service_unit"], wspace=0.5, title=["Day of ICU admission", "Service unit"]
+        ... )
 
         .. image:: /_static/docstring_previews/tsne_2.png
 
@@ -1228,7 +1230,9 @@ def umap(adata: AnnData, **kwargs) -> Axes | list[Axes] | None:  # pragma: no co
 
         .. image:: /_static/docstring_previews/umap_1.png
 
-        >>> ep.pl.umap(adata, color=["day_icu_intime", "service_unit"], wspace=0.5, title=["Day of ICU admission", "Service unit"])
+        >>> ep.pl.umap(
+        ...     adata, color=["day_icu_intime", "service_unit"], wspace=0.5, title=["Day of ICU admission", "Service unit"]
+        ... )
 
         .. image:: /_static/docstring_previews/umap_2.png
 
@@ -1265,7 +1269,7 @@ def diffmap(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover
         >>> ep.pp.log_norm(adata, offset=1)
         >>> ep.pp.neighbors(adata)
         >>> ep.tl.diffmap(adata)
-        >>> ep.pl.diffmap(adata, color='day_icu_intime')
+        >>> ep.pl.diffmap(adata, color="day_icu_intime")
 
     Preview:
         .. image:: /_static/docstring_previews/diffmap.png
@@ -1402,7 +1406,7 @@ def embedding(
         >>> ep.pp.log_norm(adata, offset=1)
         >>> ep.pp.neighbors(adata)
         >>> ep.tl.umap(adata)
-        >>> ep.pl.embedding(adata, 'X_umap', color='icu_exp_flg')
+        >>> ep.pl.embedding(adata, "X_umap", color="icu_exp_flg")
 
     Preview:
         .. image:: /_static/docstring_previews/embedding.png
@@ -1580,10 +1584,10 @@ def dpt_groups_pseudotime(
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.knn_impute(adata)
         >>> ep.pp.log_norm(adata, offset=1)
-        >>> ep.pp.neighbors(adata, method='gauss')
+        >>> ep.pp.neighbors(adata, method="gauss")
         >>> ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
         >>> ep.tl.diffmap(adata, n_comps=10)
-        >>> adata.uns['iroot'] = np.flatnonzero(adata.obs['leiden_0_5'] == '0')[0]
+        >>> adata.uns["iroot"] = np.flatnonzero(adata.obs["leiden_0_5"] == "0")[0]
         >>> ep.tl.dpt(adata, n_branchings=3)
         >>> ep.pl.dpt_groups_pseudotime(adata)
 
@@ -1615,10 +1619,10 @@ def dpt_timeseries(
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.knn_impute(adata)
         >>> ep.pp.log_norm(adata, offset=1)
-        >>> ep.pp.neighbors(adata, method='gauss')
+        >>> ep.pp.neighbors(adata, method="gauss")
         >>> ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
         >>> ep.tl.diffmap(adata, n_comps=10)
-        >>> adata.uns['iroot'] = np.flatnonzero(adata.obs['leiden_0_5'] == '0')[0]
+        >>> adata.uns["iroot"] = np.flatnonzero(adata.obs["leiden_0_5"] == "0")[0]
         >>> ep.tl.dpt(adata, n_branchings=3)
         >>> ep.pl.dpt_timeseries(adata)
 

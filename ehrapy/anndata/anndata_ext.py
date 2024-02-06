@@ -191,7 +191,7 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False)
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.ad.move_to_obs(adata, ['age'], copy_obs=False)
+        >>> ep.ad.move_to_obs(adata, ["age"], copy_obs=False)
     """
     if isinstance(to_obs, str):  # pragma: no cover
         to_obs = [to_obs]
@@ -255,8 +255,8 @@ def delete_from_obs(adata: AnnData, to_delete: list[str]) -> AnnData:
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.ad.move_to_obs(adata, ['age'], copy_obs=True)
-        >>> ep.ad.delete_from_obs(adata, ['age'])
+        >>> ep.ad.move_to_obs(adata, ["age"], copy_obs=True)
+        >>> ep.ad.delete_from_obs(adata, ["age"])
     """
     if isinstance(to_delete, str):  # pragma: no cover
         to_delete = [to_delete]
@@ -287,8 +287,8 @@ def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.ad.move_to_obs(adata, ['age'], copy_obs=False)
-        >>> new_adata = ep.ad.move_to_x(adata, ['age'])
+        >>> ep.ad.move_to_obs(adata, ["age"], copy_obs=False)
+        >>> new_adata = ep.ad.move_to_x(adata, ["age"])
     """
     if isinstance(to_x, str):  # pragma: no cover
         to_x = [to_x]
@@ -807,7 +807,7 @@ def get_obs_df(  # pragma: no cover
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ages = ep.ad.get_obs_df(adata, keys = ['age'])
+        >>> ages = ep.ad.get_obs_df(adata, keys=["age"])
     """
     return obs_df(adata=adata, keys=keys, obsm_keys=obsm_keys, layer=layer, gene_symbols=features)
 
@@ -833,7 +833,7 @@ def get_var_df(  # pragma: no cover
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> four_patients = ep.ad.get_var_df(adata, keys = ['0', '1', '2', '3'])
+        >>> four_patients = ep.ad.get_var_df(adata, keys=["0", "1", "2", "3"])
     """
     return var_df(adata=adata, keys=keys, varm_keys=varm_keys, layer=layer)
 

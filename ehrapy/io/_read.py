@@ -390,7 +390,10 @@ def read_fhir(
         Be aware that most FHIR datasets have nested data that might need to be removed.
         In such cases consider working with DataFrames.
         >>> df = ep.io.read_fhir("/path/to/fhir/resources", return_df=True)
-        >>> df.drop(columns=[col for col in df.columns if any(isinstance(x, (list, dict)) for x in df[col].dropna())], inplace=True)
+        >>> df.drop(
+        ...     columns=[col for col in df.columns if any(isinstance(x, (list, dict)) for x in df[col].dropna())],
+        ...     inplace=True,
+        ... )
         >>> df.drop(columns=df.columns[df.isna().all()], inplace=True)
     """
     _check_columns_only_params(columns_obs_only, columns_x_only)
