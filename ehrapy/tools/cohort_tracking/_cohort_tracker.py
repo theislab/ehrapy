@@ -18,19 +18,6 @@ def _check_columns_exist(df, columns):
 
 # from tableone: https://github.com/tompollard/tableone/blob/bfd6fbaa4ed3e9f59e1a75191c6296a2a80ccc64/tableone/tableone.py#L555
 def _detect_categorical_columns(data) -> list:
-    """
-    Detect categorical columns if they are not specified.
-
-    Parameters
-    ----------
-        data : pandas DataFrame
-            The input dataset.
-
-    Returns
-    ----------
-        likely_cat : list
-            List of variables that appear to be categorical.
-    """
     # assume all non-numerical and date columns are categorical
     numeric_cols = set(data._get_numeric_data().columns.values)
     date_cols = set(data.select_dtypes(include=[np.datetime64]).columns)
@@ -46,12 +33,22 @@ def _detect_categorical_columns(data) -> list:
     return likely_cat_no_dates
 
 
-class PopulationTracker:
+class CohortTracker:
     def __init__(self, adata: AnnData, columns: list = None, categorical: list = None, *args: Any):
-        """
+        """Track cohort changes over multiple filtering or processing steps.
+
+        This class offers functionality to track and plot cohort changes over multiple filtering or processing steps,
+        enabling the user to monitor the impact of each step on the cohort.
+
+        Tightly interacting with the `tableone` package [1].
 
         categorical : list, optional
         List of columns that contain categorical variables.
+
+        References
+        ----------
+        [1] Tom Pollard, Alistair E.W. Johnson, Jesse D. Raffa, Roger G. Mark; tableone: An open source Python package for producing summary statistics for research papers, Journal of the American Medical Informatics Association, Volume 24, Issue 2, 1 March 2017, Pages 267–271, https://doi.org/10.1093/jamia/ocw117
+
         """
         if columns is not None:
             _check_columns_exist(adata.obs, columns)
@@ -131,7 +128,7 @@ class PopulationTracker:
     def tracked_steps(self):
         return self._tracked_steps
 
-    def plot_population_change(
+    def plot_cohort_change(
         self,
         set_axis_labels=True,
         subfigure_title: bool = False,
@@ -141,9 +138,9 @@ class PopulationTracker:
         subplots_kwargs: dict = None,
         legend_kwargs: dict = None,
     ):
-        """Plot the population change over the tracked steps.
+        """Plot the cohort change over the tracked steps.
 
-        Create stacked bar plots to monitor population changes over the steps tracked with `PopulationTracker`.
+        Create stacked bar plots to monitor cohort changes over the steps tracked with `CohortTracker`.
 
         Args:
             set_axis_labels: If `True`, the y-axis labels will be set to the column names.
@@ -163,11 +160,11 @@ class PopulationTracker:
                 import ehrapy as ep
 
                 adata = ep.dt.diabetes_130(columns_obs_only=["gender", "race", "weight", "age"])
-                pop_track = ep.tl.PopulationTracker(adata)
-                pop_track(adata, label="original")
+                cohort_tracker = ep.tl.CohortTracker(adata)
+                cohort_tracker(adata, label="original")
                 adata = adata[:1000]
-                pop_track(adata, label="filtered cohort", operations_done="filtered to first 1000 entries")
-                pop_track.plot_flowchart()
+                cohort_tracker(adata, label="filtered cohort", operations_done="filtered to first 1000 entries")
+                cohort_tracker.plot_cohort_change()
         Preview:
             .. image:: /_static/docstring_previews/flowchart.png
         """
@@ -269,7 +266,7 @@ class PopulationTracker:
     def plot_flowchart(self, save: str = None, return_plot: bool = True):
         """Flowchart over the tracked steps.
 
-        Create a simple flowchart of data preparation steps tracked with `PopulationTracker`.
+        Create a simple flowchart of data preparation steps tracked with `CohortTracker`.
 
         Args:
             save: If a string is provided, the plot will be saved to the path specified.
@@ -284,11 +281,11 @@ class PopulationTracker:
                 import ehrapy as ep
 
                 adata = ep.dt.diabetes_130(columns_obs_only=["gender", "race", "weight", "age"])
-                pop_track = ep.tl.PopulationTracker(adata)
-                pop_track(adata, label="original")
+                cohort_tracker = ep.tl.CohortTracker(adata)
+                cohort_tracker(adata, label="original")
                 adata = adata[:1000]
-                pop_track(adata, label="filtered cohort", operations_done="filtered to first 1000 entries")
-                pop_track.plot_flowchart()
+                cohort_tracker(adata, label="filtered cohort", operations_done="filtered to first 1000 entries")
+                cohort_tracker.plot_flowchart()
         Preview:
             .. image:: /_static/docstring_previews/flowchart.png
 
