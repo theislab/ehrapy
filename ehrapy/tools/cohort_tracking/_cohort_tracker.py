@@ -34,43 +34,61 @@ def _detect_categorical_columns(data) -> list:
 
 
 class CohortTracker:
-    def __init__(self, adata: AnnData, columns: list = None, categorical: list = None, *args: Any):
+    def __init__(self, adata: AnnData | pd.DataFrame, columns: list = None, categorical: list = None, *args: Any):
         """Track cohort changes over multiple filtering or processing steps.
 
         This class offers functionality to track and plot cohort changes over multiple filtering or processing steps,
         enabling the user to monitor the impact of each step on the cohort.
 
         Tightly interacting with the `tableone` package [1].
-
-        categorical : list, optional
-        List of columns that contain categorical variables.
+        Args:
+            adata: :class:`~anndata.AnnData` or :class:`~pandas.DataFrame` object to track.
+            columns: List of columns to track. If `None`, all columns will be tracked.
+            categorical: List of columns that contain categorical variables, if not given will be inferred from the data.
 
         References
         ----------
         [1] Tom Pollard, Alistair E.W. Johnson, Jesse D. Raffa, Roger G. Mark; tableone: An open source Python package for producing summary statistics for research papers, Journal of the American Medical Informatics Association, Volume 24, Issue 2, 1 March 2017, Pages 267–271, https://doi.org/10.1093/jamia/ocw117
 
         """
+        if isinstance(adata, AnnData):
+            df = adata.obs
+        elif isinstance(adata, pd.DataFrame):
+            df = adata
+        else:
+            raise ValueError("adata must be an AnnData or a DataFrame.")
+
+        self.columns = columns if columns is not None else list(df.columns)
+
         if columns is not None:
-            _check_columns_exist(adata.obs, columns)
-            _check_columns_exist(adata.obs, categorical)
+            _check_columns_exist(df, columns)
+        if categorical is not None:
+            _check_columns_exist(df, categorical)
+            if set(categorical).difference(set(self.columns)):
+                raise ValueError("categorical columns must be in the (selected) columns.")
 
         self._tracked_steps: int = 0
         self._tracked_text: list = []
         self._tracked_operations: list = []
 
-        self.columns = columns if columns is not None else adata.obs.columns
-
         # if categorical columns specified, use them
         # else, follow tableone's logic
-        self.categorical = categorical if categorical is not None else _detect_categorical_columns(adata.obs[columns])
-        self.track = self._get_column_structure(adata.obs)
+        self.categorical = categorical if categorical is not None else _detect_categorical_columns(df[self.columns])
+        self.track = self._get_column_structure(df)
 
         self._track_backup = copy.deepcopy(self.track)
 
     def __call__(
         self, adata: AnnData, label: str = None, operations_done: str = None, *args: Any, **tableone_kwargs: Any
     ) -> Any:
-        _check_columns_exist(adata.obs, self.columns)
+        if isinstance(adata, AnnData):
+            df = adata.obs
+        elif isinstance(adata, pd.DataFrame):
+            df = adata
+        else:
+            raise ValueError("adata must be an AnnData or a DataFrame.")
+
+        _check_columns_exist(df, self.columns)
 
         # track a small text with each tracking step, for the flowchart
         track_text = label if label is not None else f"Cohort {self.tracked_steps}"
@@ -82,7 +100,7 @@ class CohortTracker:
 
         self._tracked_steps += 1
 
-        t1 = TableOne(adata.obs, categorical=self.categorical, **tableone_kwargs)
+        t1 = TableOne(df, columns=self.columns, categorical=self.categorical, **tableone_kwargs)
         # track new stuff
         self._get_column_dicts(t1)
 
@@ -123,6 +141,7 @@ class CohortTracker:
         self.track = self._track_backup
         self._tracked_steps = 0
         self._tracked_text = []
+        self._tracked_operations = []
 
     @property
     def tracked_steps(self):
@@ -245,7 +264,8 @@ class CohortTracker:
 
         # Add legend
         tot_legend_kwargs = {"loc": "best", "bbox_to_anchor": (1, 1)}
-        tot_legend_kwargs.update(legend_kwargs)
+        if legend_kwargs is not None:
+            tot_legend_kwargs.update(legend_kwargs)
 
         plt.legend(legend_labels, **tot_legend_kwargs)
 
