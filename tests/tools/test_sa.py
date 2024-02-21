@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 import statsmodels
-from lifelines import CoxPHFitter, KaplanMeierFitter
+from lifelines import CoxPHFitter, KaplanMeierFitter, NelsonAalenFitter
 
 import ehrapy as ep
 
@@ -29,15 +29,6 @@ class TestSA:
         assert isinstance(glm, statsmodels.genmod.generalized_linear_model.GLM)
         assert 5.778006344870297 == pytest.approx(Intercept)
         assert -0.06523274132877163 == pytest.approx(age)
-
-    def test_kmf(self):
-        adata = ep.dt.mimic_2(encoded=False)
-        adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
-        kmf = ep.tl.kmf(adata[:, ["mort_day_censored"]].X, adata[:, ["censor_flg"]].X)
-
-        assert isinstance(kmf, KaplanMeierFitter)
-        assert len(kmf.durations) == 1776
-        assert sum(kmf.event_observed) == 497
 
     @pytest.mark.parametrize("weightings", ["wilcoxon", "tarone-ware", "peto", "fleming-harrington"])
     def test_calculate_logrank_pvalue(self, weightings):
@@ -75,12 +66,26 @@ class TestSA:
         assert dataframe.shape == (2, 6)
         assert dataframe.iloc[1, 4] == 2
         assert pytest.approx(dataframe.iloc[1, 5], 0.1) == 0.103185
-
-    def test_cox_ph(self):
+        
+    def prepare_mimic2_for_sa_test(self):
         adata = ep.dt.mimic_2(encoded=False)
         adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
-        cph = ep.tl.cox_ph(adata, "mort_day_censored", "censor_flg")
+        duration_col, event_col = "mort_day_censored", "censor_flg"
+        return adata, duration_col, event_col
 
-        assert isinstance(cph, CoxPHFitter)
-        assert len(cph.durations) == 1776
-        assert sum(cph.event_observed) == 497
+    def sa_func_test(self, sa_function, sa_class):
+        adata, duration_col, event_col = self.prepare_mimic2_for_sa_test()
+
+        sa = sa_function(adata, duration_col, event_col)
+        assert isinstance(sa, sa_class)
+        assert len(sa.durations) == 1776
+        assert sum(sa.event_observed) == 497
+    
+    def test_kmf(self):
+        self.sa_func_test(self.ep.tl.kmf, KaplanMeierFitter)
+        
+    def test_cox_ph(self):
+        self.sa_func_test(self.ep.tl.cox_ph, CoxPHFitter)
+    
+    def test_nelson_alen(self):
+        self.sa_func_test(self.ep.tl.nelson_alen, NelsonAalenFitter)
