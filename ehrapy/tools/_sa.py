@@ -6,7 +6,7 @@ import numpy as np  # This package is implicitly used
 import pandas as pd
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
-from lifelines import CoxPHFitter, KaplanMeierFitter
+from lifelines import CoxPHFitter, KaplanMeierFitter, NelsonAalenFitter
 from lifelines.statistics import StatisticalResult, logrank_test
 from scipy import stats
 
@@ -60,7 +60,9 @@ def glm(
     adata: AnnData,
     var_names: Iterable[str] | None = None,
     formula: str | None = None,
-    family: Literal["Gaussian", "Binomial", "Gamma", "Gaussian", "InverseGaussian"] = "Gaussian",
+    family: Literal[
+        "Gaussian", "Binomial", "Gamma", "Gaussian", "InverseGaussian"
+    ] = "Gaussian",
     missing: Literal["none", "drop", "raise"] = "none",
     as_continuous: Iterable[str] | None | None = None,
 ) -> sm.GLM:
@@ -183,7 +185,9 @@ def test_kmf_logrank(
     kmf_A: KaplanMeierFitter,
     kmf_B: KaplanMeierFitter,
     t_0: float | None = -1,
-    weightings: Literal["wilcoxon", "tarone-ware", "peto", "fleming-harrington"] | None = None,
+    weightings: (
+        Literal["wilcoxon", "tarone-ware", "peto", "fleming-harrington"] | None
+    ) = None,
 ) -> StatisticalResult:
     """Calculates the p-value for the logrank test comparing the survival functions of two groups.
 
@@ -220,7 +224,9 @@ def test_kmf_logrank(
     return results_pairwise
 
 
-def test_nested_f_statistic(small_model: GLMResultsWrapper, big_model: GLMResultsWrapper) -> float:
+def test_nested_f_statistic(
+    small_model: GLMResultsWrapper, big_model: GLMResultsWrapper
+) -> float:
     """Given two fitted GLMs, the larger of which contains the parameter space of the smaller, return the P value corresponding to the larger model adding explanatory power.
 
     See https://stackoverflow.com/questions/27328623/anova-test-for-glm-in-python/60769343#60769343
@@ -233,7 +239,9 @@ def test_nested_f_statistic(small_model: GLMResultsWrapper, big_model: GLMResult
         float: p_value
     """
     addtl_params = big_model.df_model - small_model.df_model
-    f_stat = (small_model.deviance - big_model.deviance) / (addtl_params * big_model.scale)
+    f_stat = (small_model.deviance - big_model.deviance) / (
+        addtl_params * big_model.scale
+    )
     df_numerator = addtl_params
     df_denom = big_model.fittedvalues.shape[0] - big_model.df_model
     p_value = stats.f.sf(f_stat, df_numerator, df_denom)
@@ -241,7 +249,12 @@ def test_nested_f_statistic(small_model: GLMResultsWrapper, big_model: GLMResult
     return p_value
 
 
-def anova_glm(result_1: GLMResultsWrapper, result_2: GLMResultsWrapper, formula_1: str, formula_2: str) -> pd.DataFrame:
+def anova_glm(
+    result_1: GLMResultsWrapper,
+    result_2: GLMResultsWrapper,
+    formula_1: str,
+    formula_2: str,
+) -> pd.DataFrame:
     """Anova table for two fitted generalized linear models.
 
     Args:
@@ -267,7 +280,9 @@ def anova_glm(result_1: GLMResultsWrapper, result_2: GLMResultsWrapper, formula_
     return dataframe
 
 
-def cox_ph(adata: AnnData, duration_col: str, event_col: str, entry_col: str = None) -> CoxPHFitter:
+def cox_ph(
+    adata: AnnData, duration_col: str, event_col: str, entry_col: str = None
+) -> CoxPHFitter:
     """Fit the Cox’s proportional hazard for the survival function.
 
     The Cox proportional hazards model (CoxPH) examines the relationship between the survival time of subjects and one or more predictor variables.
@@ -300,3 +315,14 @@ def cox_ph(adata: AnnData, duration_col: str, event_col: str, entry_col: str = N
     cph.fit(df, duration_col, event_col, entry_col=entry_col)
 
     return cph
+
+
+def nelson_alen(adata: AnnData, duration_col: str, event_col: str):
+    df = anndata_to_df(adata)
+    T = df[duration_col]
+    E = df[event_col]
+
+    naf = NelsonAalenFitter()
+
+    naf.fit(T, event_observed=E)
+    return naf
