@@ -253,6 +253,16 @@ In contrast to a preprocessing function, a tool usually adds an easily interpret
     tools.causal_inference
 ```
 
+### Cohort Tracking
+
+```{eval-rst}
+.. autosummary::
+    :toctree: tools
+    :nosignatures:
+
+    tools.CohortTracker
+```
+
 ## Plotting
 
 The plotting module `ehrapy.pl.\*` largely parallels the `tl.\*` and a few of the `pp.\*` functions.

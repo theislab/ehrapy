@@ -35,25 +35,25 @@ def _detect_categorical_columns(data) -> list:
 
 
 class CohortTracker:
+    """Track cohort changes over multiple filtering or processing steps.
+
+    This class offers functionality to track and plot cohort changes over multiple filtering or processing steps,
+    enabling the user to monitor the impact of each step on the cohort.
+
+    Tightly interacting with the `tableone` package [1].
+
+    Args:
+        adata: Object to track.
+        columns: Columns to track. If `None`, all columns will be tracked.
+        categorical: Columns that contain categorical variables, if None will be inferred from the data.
+
+    References:
+        [1] Tom Pollard, Alistair E.W. Johnson, Jesse D. Raffa, Roger G. Mark; tableone: An open source Python package for producing summary statistics for research papers, Journal of the American Medical Informatics Association, Volume 24, Issue 2, 1 March 2017, Pages 267–271, https://doi.org/10.1093/jamia/ocw117
+    """
+
     def __init__(
         self, adata: AnnData | pd.DataFrame, columns: Iterable = None, categorical: Iterable = None, *args: Any
     ):
-        """Track cohort changes over multiple filtering or processing steps.
-
-        This class offers functionality to track and plot cohort changes over multiple filtering or processing steps,
-        enabling the user to monitor the impact of each step on the cohort.
-
-        Tightly interacting with the `tableone` package [1].
-        Args:
-            adata: :class:`~anndata.AnnData` or :class:`~pandas.DataFrame` object to track.
-            columns: Iterable of columns to track. If `None`, all columns will be tracked.
-            categorical: Iterable of columns that contain categorical variables, if not given will be inferred from the data.
-
-        References
-        ----------
-        [1] Tom Pollard, Alistair E.W. Johnson, Jesse D. Raffa, Roger G. Mark; tableone: An open source Python package for producing summary statistics for research papers, Journal of the American Medical Informatics Association, Volume 24, Issue 2, 1 March 2017, Pages 267–271, https://doi.org/10.1093/jamia/ocw117
-
-        """
         if isinstance(adata, AnnData):
             df = adata.obs
         elif isinstance(adata, pd.DataFrame):
@@ -140,7 +140,11 @@ class CohortTracker:
         summary = table_one.cont_table["Overall"].loc[(col, "")]
         self.track[col].append(summary)
 
-    def reset(self):
+    def reset(self) -> None:
+        """Resets the `CohortTracker` object.
+
+        A full reset of the `CohortTracker` object.
+        """
         self.track = self._track_backup
         self._tracked_steps = 0
         self._tracked_text = []
@@ -148,6 +152,7 @@ class CohortTracker:
 
     @property
     def tracked_steps(self):
+        """list: List of tableone objects of each logging step."""
         return self._tracked_steps
 
     def plot_cohort_change(
@@ -177,17 +182,14 @@ class CohortTracker:
             If `return_figure` a :class:`~matplotlib.figure.Figure` and a :class:`~matplotlib.axes.Axes` or a list of it.
 
         Examples:
-            .. code-block:: python
+                >>> import ehrapy as ep
+                >>> adata = ep.dt.diabetes_130(columns_obs_only=["gender", "race", "weight", "age"])
+                >>> cohort_tracker = ep.tl.CohortTracker(adata)
+                >>> cohort_tracker(adata, label="original")
+                >>> adata = adata[:1000]
+                >>> cohort_tracker(adata, label="filtered cohort", operations_done="filtered to first 1000 entries")
+                >>> cohort_tracker.plot_cohort_change()
 
-                import ehrapy as ep
-
-                adata = ep.dt.diabetes_130(columns_obs_only=["gender", "race", "weight", "age"])
-                cohort_tracker = ep.tl.CohortTracker(adata)
-                cohort_tracker(adata, label="original")
-                adata = adata[:1000]
-                cohort_tracker(adata, label="filtered cohort", operations_done="filtered to first 1000 entries")
-                cohort_tracker.plot_cohort_change()
-        Preview:
             .. image:: /_static/docstring_previews/flowchart.png
         """
         # Plotting
@@ -298,18 +300,16 @@ class CohortTracker:
         Returns:
             If `return_figure` a :class:`~graphviz.Digraph`.
 
-        Example:
-            .. code-block:: python
+        Examples:
 
-                import ehrapy as ep
+                >>> import ehrapy as ep
+                >>> adata = ep.dt.diabetes_130(columns_obs_only=["gender", "race", "weight", "age"])
+                >>> cohort_tracker = ep.tl.CohortTracker(adata)
+                >>> cohort_tracker(adata, label="original")
+                >>> adata = adata[:1000]
+                >>> cohort_tracker(adata, label="filtered cohort", operations_done="filtered to first 1000 entries")
+                >>> cohort_tracker.plot_flowchart()
 
-                adata = ep.dt.diabetes_130(columns_obs_only=["gender", "race", "weight", "age"])
-                cohort_tracker = ep.tl.CohortTracker(adata)
-                cohort_tracker(adata, label="original")
-                adata = adata[:1000]
-                cohort_tracker(adata, label="filtered cohort", operations_done="filtered to first 1000 entries")
-                cohort_tracker.plot_flowchart()
-        Preview:
             .. image:: /_static/docstring_previews/flowchart.png
 
         """
