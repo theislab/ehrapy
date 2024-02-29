@@ -5,7 +5,6 @@ import pandas as pd
 import pytest
 
 import ehrapy as ep
-import ehrapy.tools.feature_ranking._rank_features_groups as _utils
 from ehrapy.io._read import read_csv
 
 CURRENT_DIR = Path(__file__).parent
@@ -166,4 +165,4 @@ class TestCohortTracker:
         ct(adata)
         ct(adata)
 
-        ct.plot_cohort_change(return_plot=True)
+        ct.plot_cohort_change(return_figure=True)
