@@ -34,13 +34,14 @@ def _compare_dict_equal(dict1, dict2, tolerance=1e-9):
         return dict1 == dict2
 
 
-@pytest.mark.parametrize("columns", [None, ["glucose", "weight", "disease", "station"]])
-def test_CohortTracker_init_vanilla(columns):
-    adata = ep.io.read_csv(
-        f"{_TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["glucose", "weight", "disease", "station"]
-    )
+@pytest.fixture
+def mini_adata():
+    return read_csv(f"{_TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["glucose", "weight", "disease", "station"])
 
-    ct = ep.tl.CohortTracker(adata, columns)
+
+@pytest.mark.parametrize("columns", [None, ["glucose", "weight", "disease", "station"]])
+def test_CohortTracker_init_vanilla(columns, mini_adata):
+    ct = ep.tl.CohortTracker(mini_adata, columns)
     assert ct._tracked_steps == 0
     assert ct.tracked_steps == 0
     assert ct._tracked_text == []
@@ -55,12 +56,9 @@ def test_CohortTracker_init_vanilla(columns):
     assert _compare_dict_equal(ct.track, target_track)
 
 
-def test_CohortTracker_init_set_columns():
-    adata = ep.io.read_csv(
-        f"{_TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["glucose", "weight", "disease", "station"]
-    )
+def test_CohortTracker_init_set_columns(mini_adata):
     # limit columns
-    ct = ep.tl.CohortTracker(adata, columns=["glucose", "disease"])
+    ct = ep.tl.CohortTracker(mini_adata, columns=["glucose", "disease"])
     target_track = {
         "glucose": [],
         "disease": {"A": [], "B": [], "C": []},
@@ -70,12 +68,12 @@ def test_CohortTracker_init_set_columns():
     # invalid column
     with pytest.raises(ValueError):
         ep.tl.CohortTracker(
-            adata,
+            mini_adata,
             columns=["glucose", "disease", "non_existing_column"],
         )
 
     # force categoricalization
-    ct = ep.tl.CohortTracker(adata, columns=["glucose", "disease"], categorical=["glucose", "disease"])
+    ct = ep.tl.CohortTracker(mini_adata, columns=["glucose", "disease"], categorical=["glucose", "disease"])
     target_track = {
         "glucose": {70: [], 80: [], 85: [], 90: [], 95: [], 120: [], 125: [], 130: [], 135: []},
         "disease": {"A": [], "B": [], "C": []},
@@ -85,20 +83,16 @@ def test_CohortTracker_init_set_columns():
     # invalid category
     with pytest.raises(ValueError):
         ep.tl.CohortTracker(
-            adata,
+            mini_adata,
             columns=["glucose", "disease"],
             categorical=["station"],
         )
 
 
-def test_CohortTracker_call():
-    adata = ep.io.read_csv(
-        f"{_TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["glucose", "weight", "disease", "station"]
-    )
+def test_CohortTracker_call(mini_adata):
+    ct = ep.tl.CohortTracker(mini_adata)
 
-    ct = ep.tl.CohortTracker(adata)
-
-    ct(adata)
+    ct(mini_adata)
     assert ct.tracked_steps == 1
     assert ct._tracked_text == ["Cohort 0\n (n=12)"]
     target_track_1 = {
@@ -109,7 +103,7 @@ def test_CohortTracker_call():
     }
     assert _compare_dict_equal(ct.track, target_track_1)
 
-    ct(adata)
+    ct(mini_adata)
     assert ct.tracked_steps == 2
     assert ct._tracked_text == ["Cohort 0\n (n=12)", "Cohort 1\n (n=12)"]
     target_track_2 = {
@@ -121,15 +115,11 @@ def test_CohortTracker_call():
     assert _compare_dict_equal(ct.track, target_track_2)
 
 
-def test_CohortTracker_reset():
-    adata = ep.io.read_csv(
-        f"{_TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["glucose", "weight", "disease", "station"]
-    )
+def test_CohortTracker_reset(mini_adata):
+    ct = ep.tl.CohortTracker(mini_adata)
 
-    ct = ep.tl.CohortTracker(adata)
-
-    ct(adata)
-    ct(adata)
+    ct(mini_adata)
+    ct(mini_adata)
 
     ct.reset()
     assert ct.tracked_steps == 0
@@ -146,27 +136,19 @@ def test_CohortTracker_reset():
     assert _compare_dict_equal(ct._track_backup, target_track)
 
 
-def test_CohortTracker_flowchart():
-    adata = ep.io.read_csv(
-        f"{_TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["glucose", "weight", "disease", "station"]
-    )
+def test_CohortTracker_flowchart(mini_adata):
+    ct = ep.tl.CohortTracker(mini_adata)
 
-    ct = ep.tl.CohortTracker(adata)
-
-    ct(adata, label="First step", operations_done="Some operations")
-    ct(adata, label="Second step", operations_done="Some other operations")
+    ct(mini_adata, label="First step", operations_done="Some operations")
+    ct(mini_adata, label="Second step", operations_done="Some other operations")
 
     ct.plot_flowchart()
 
 
-def test_CohortTracker_plot_cohort_change():
-    adata = ep.io.read_csv(
-        f"{_TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["glucose", "weight", "disease", "station"]
-    )
+def test_CohortTracker_plot_cohort_change(mini_adata):
+    ct = ep.tl.CohortTracker(mini_adata)
 
-    ct = ep.tl.CohortTracker(adata)
-
-    ct(adata)
-    ct(adata)
+    ct(mini_adata)
+    ct(mini_adata)
 
     ct.plot_cohort_change(return_figure=True)
