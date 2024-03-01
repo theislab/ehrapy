@@ -6,7 +6,7 @@ import numpy as np  # This package is implicitly used
 import pandas as pd
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
-from lifelines import CoxPHFitter, KaplanMeierFitter, NelsonAalenFitter
+from lifelines import CoxPHFitter, KaplanMeierFitter, NelsonAalenFitter, WeibullFitter, WeibullAFTFitter, LogLogisticAFTFitter
 from lifelines.statistics import StatisticalResult, logrank_test
 from scipy import stats
 
@@ -266,6 +266,16 @@ def anova_glm(result_1: GLMResultsWrapper, result_2: GLMResultsWrapper, formula_
     dataframe = pd.DataFrame(data=table)
     return dataframe
 
+def regression_model(model_class, adata: AnnData, duration_col: str, event_col: str, entry_col: str = None):
+    df = anndata_to_df(adata)
+    keys = [duration_col, event_col]
+    if entry_col:
+        keys.append(entry_col)
+    df = df[keys]
+    model = model_class()
+    model.fit(df, duration_col, event_col, entry_col=entry_col)
+
+    return model
 
 def cox_ph(adata: AnnData, duration_col: str, event_col: str, entry_col: str = None) -> CoxPHFitter:
     """Fit the Cox’s proportional hazard for the survival function.
@@ -291,22 +301,26 @@ def cox_ph(adata: AnnData, duration_col: str, event_col: str, entry_col: str = N
         >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
         >>> cph = ep.tl.cox_ph(adata, "mort_day_censored", "censor_flg")
     """
-    df = anndata_to_df(adata)
-    keys = [duration_col, event_col]
-    if entry_col:
-        keys.append(entry_col)
-    df = df[keys]
-    cph = CoxPHFitter()
-    cph.fit(df, duration_col, event_col, entry_col=entry_col)
+    return regression_model(CoxPHFitter, adata, duration_col, event_col, entry_col)
 
-    return cph
+def weibull_aft(adata: AnnData, duration_col: str, event_col: str, entry_col: str = None) -> WeibullAFTFitter:
+    return regression_model(WeibullAFTFitter, adata, duration_col, event_col, entry_col)
 
-def nelson_alen(adata: AnnData, duration_col: str, event_col: str):
+def log_rogistic_aft(adata: AnnData, duration_col: str, event_col: str, entry_col: str = None) -> LogLogisticAFTFitter:
+    return regression_model(LogLogisticAFTFitter, adata, duration_col, event_col, entry_col)
+
+def univariate_model(adata: AnnData, duration_col: str, event_col: str, model_class):
     df = anndata_to_df(adata)
     T = df[duration_col]
     E = df[event_col]
 
-    naf = NelsonAalenFitter()
+    model = model_class()
 
-    naf.fit(T,event_observed=E)
-    return naf
+    model.fit(T,event_observed=E)
+    return model
+
+def nelson_alen(adata: AnnData, duration_col: str, event_col: str):
+    return univariate_model(adata, duration_col, event_col, NelsonAalenFitter)
+
+def weibull(adata: AnnData, duration_col: str, event_col: str):
+    return univariate_model(adata, duration_col, event_col, WeibullFitter)

@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 import statsmodels
-from lifelines import CoxPHFitter, KaplanMeierFitter, NelsonAalenFitter
+from lifelines import CoxPHFitter, KaplanMeierFitter, NelsonAalenFitter, WeibullFitter, WeibullAFTFitter, LogLogisticAFTFitter
 
 import ehrapy as ep
 
@@ -82,10 +82,19 @@ class TestSA:
         assert sum(sa.event_observed) == 497
     
     def test_kmf(self):
-        self.sa_func_test(self.ep.tl.kmf, KaplanMeierFitter)
+        self.sa_func_test(ep.tl.kmf, KaplanMeierFitter)
         
     def test_cox_ph(self):
-        self.sa_func_test(self.ep.tl.cox_ph, CoxPHFitter)
+        self.sa_func_test(ep.tl.cox_ph, CoxPHFitter)
     
     def test_nelson_alen(self):
-        self.sa_func_test(self.ep.tl.nelson_alen, NelsonAalenFitter)
+        self.sa_func_test(ep.tl.nelson_alen, NelsonAalenFitter)
+
+    def test_weibull(self):
+        self.sa_func_test(ep.tl.weibull, WeibullFitter)
+        
+    def test_weibull_aft(self):
+        self.sa_func_test(ep.tl.weibull_aft, WeibullAFTFitter)
+        
+    def test_log_logistic(self):
+        self.sa_func_test(ep.tl.log_rogistic_aft, LogLogisticAFTFitter)
