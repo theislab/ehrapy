@@ -34,135 +34,139 @@ def _compare_dict_equal(dict1, dict2, tolerance=1e-9):
         return dict1 == dict2
 
 
-class TestCohortTracker:
-    @pytest.mark.parametrize("columns", [None, ["glucose", "weight", "disease", "station"]])
-    def test_CohortTracker_init_vanilla(self, columns):
-        adata = ep.io.read_csv(
-            f"{_TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["glucose", "weight", "disease", "station"]
+@pytest.mark.parametrize("columns", [None, ["glucose", "weight", "disease", "station"]])
+def test_CohortTracker_init_vanilla(columns):
+    adata = ep.io.read_csv(
+        f"{_TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["glucose", "weight", "disease", "station"]
+    )
+
+    ct = ep.tl.CohortTracker(adata, columns)
+    assert ct._tracked_steps == 0
+    assert ct.tracked_steps == 0
+    assert ct._tracked_text == []
+    assert ct._tracked_operations == []
+
+    target_track = {
+        "glucose": [],
+        "weight": [],
+        "disease": {"A": [], "B": [], "C": []},
+        "station": {"ICU": [], "MICU": []},
+    }
+    assert _compare_dict_equal(ct.track, target_track)
+
+
+def test_CohortTracker_init_set_columns():
+    adata = ep.io.read_csv(
+        f"{_TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["glucose", "weight", "disease", "station"]
+    )
+    # limit columns
+    ct = ep.tl.CohortTracker(adata, columns=["glucose", "disease"])
+    target_track = {
+        "glucose": [],
+        "disease": {"A": [], "B": [], "C": []},
+    }
+    assert _compare_dict_equal(ct.track, target_track)
+
+    # invalid column
+    with pytest.raises(ValueError):
+        ep.tl.CohortTracker(
+            adata,
+            columns=["glucose", "disease", "non_existing_column"],
         )
 
-        ct = ep.tl.CohortTracker(adata, columns)
-        assert ct._tracked_steps == 0
-        assert ct.tracked_steps == 0
-        assert ct._tracked_text == []
-        assert ct._tracked_operations == []
+    # force categoricalization
+    ct = ep.tl.CohortTracker(adata, columns=["glucose", "disease"], categorical=["glucose", "disease"])
+    target_track = {
+        "glucose": {70: [], 80: [], 85: [], 90: [], 95: [], 120: [], 125: [], 130: [], 135: []},
+        "disease": {"A": [], "B": [], "C": []},
+    }
+    assert _compare_dict_equal(ct.track, target_track)
 
-        target_track = {
-            "glucose": [],
-            "weight": [],
-            "disease": {"A": [], "B": [], "C": []},
-            "station": {"ICU": [], "MICU": []},
-        }
-        assert _compare_dict_equal(ct.track, target_track)
-
-    def test_CohortTracker_init_set_columns(self):
-        adata = ep.io.read_csv(
-            f"{_TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["glucose", "weight", "disease", "station"]
-        )
-        # limit columns
-        ct = ep.tl.CohortTracker(adata, columns=["glucose", "disease"])
-        target_track = {
-            "glucose": [],
-            "disease": {"A": [], "B": [], "C": []},
-        }
-        assert _compare_dict_equal(ct.track, target_track)
-
-        # invalid column
-        with pytest.raises(ValueError):
-            ep.tl.CohortTracker(
-                adata,
-                columns=["glucose", "disease", "non_existing_column"],
-            )
-
-        # force categoricalization
-        ct = ep.tl.CohortTracker(adata, columns=["glucose", "disease"], categorical=["glucose", "disease"])
-        target_track = {
-            "glucose": {70: [], 80: [], 85: [], 90: [], 95: [], 120: [], 125: [], 130: [], 135: []},
-            "disease": {"A": [], "B": [], "C": []},
-        }
-        assert _compare_dict_equal(ct.track, target_track)
-
-        # invalid category
-        with pytest.raises(ValueError):
-            ep.tl.CohortTracker(
-                adata,
-                columns=["glucose", "disease"],
-                categorical=["station"],
-            )
-
-    def test_CohortTracker_call(self):
-        adata = ep.io.read_csv(
-            f"{_TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["glucose", "weight", "disease", "station"]
+    # invalid category
+    with pytest.raises(ValueError):
+        ep.tl.CohortTracker(
+            adata,
+            columns=["glucose", "disease"],
+            categorical=["station"],
         )
 
-        ct = ep.tl.CohortTracker(adata)
 
-        ct(adata)
-        assert ct.tracked_steps == 1
-        assert ct._tracked_text == ["Cohort 0\n (n=12)"]
-        target_track_1 = {
-            "glucose": ["105.0 (23.6)"],
-            "weight": ["76.0 (14.9)"],
-            "disease": {"A": [33.3], "B": [33.3], "C": [33.3]},
-            "station": {"ICU": [50.0], "MICU": [50.0]},
-        }
-        assert _compare_dict_equal(ct.track, target_track_1)
+def test_CohortTracker_call():
+    adata = ep.io.read_csv(
+        f"{_TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["glucose", "weight", "disease", "station"]
+    )
 
-        ct(adata)
-        assert ct.tracked_steps == 2
-        assert ct._tracked_text == ["Cohort 0\n (n=12)", "Cohort 1\n (n=12)"]
-        target_track_2 = {
-            "glucose": ["105.0 (23.6)", "105.0 (23.6)"],
-            "weight": ["76.0 (14.9)", "76.0 (14.9)"],
-            "disease": {"A": [33.3, 33.3], "B": [33.3, 33.3], "C": [33.3, 33.3]},
-            "station": {"ICU": [50.0, 50.0], "MICU": [50.0, 50.0]},
-        }
-        assert _compare_dict_equal(ct.track, target_track_2)
+    ct = ep.tl.CohortTracker(adata)
 
-    def test_CohortTracker_reset(self):
-        adata = ep.io.read_csv(
-            f"{_TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["glucose", "weight", "disease", "station"]
-        )
+    ct(adata)
+    assert ct.tracked_steps == 1
+    assert ct._tracked_text == ["Cohort 0\n (n=12)"]
+    target_track_1 = {
+        "glucose": ["105.0 (23.6)"],
+        "weight": ["76.0 (14.9)"],
+        "disease": {"A": [33.3], "B": [33.3], "C": [33.3]},
+        "station": {"ICU": [50.0], "MICU": [50.0]},
+    }
+    assert _compare_dict_equal(ct.track, target_track_1)
 
-        ct = ep.tl.CohortTracker(adata)
+    ct(adata)
+    assert ct.tracked_steps == 2
+    assert ct._tracked_text == ["Cohort 0\n (n=12)", "Cohort 1\n (n=12)"]
+    target_track_2 = {
+        "glucose": ["105.0 (23.6)", "105.0 (23.6)"],
+        "weight": ["76.0 (14.9)", "76.0 (14.9)"],
+        "disease": {"A": [33.3, 33.3], "B": [33.3, 33.3], "C": [33.3, 33.3]},
+        "station": {"ICU": [50.0, 50.0], "MICU": [50.0, 50.0]},
+    }
+    assert _compare_dict_equal(ct.track, target_track_2)
 
-        ct(adata)
-        ct(adata)
 
-        ct.reset()
-        assert ct.tracked_steps == 0
-        assert ct._tracked_text == []
-        assert ct._tracked_operations == []
+def test_CohortTracker_reset():
+    adata = ep.io.read_csv(
+        f"{_TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["glucose", "weight", "disease", "station"]
+    )
 
-        target_track = {
-            "glucose": [],
-            "weight": [],
-            "disease": {"A": [], "B": [], "C": []},
-            "station": {"ICU": [], "MICU": []},
-        }
-        assert _compare_dict_equal(ct.track, target_track)
-        assert _compare_dict_equal(ct._track_backup, target_track)
+    ct = ep.tl.CohortTracker(adata)
 
-    def test_CohortTracker_flowchart(self):
-        adata = ep.io.read_csv(
-            f"{_TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["glucose", "weight", "disease", "station"]
-        )
+    ct(adata)
+    ct(adata)
 
-        ct = ep.tl.CohortTracker(adata)
+    ct.reset()
+    assert ct.tracked_steps == 0
+    assert ct._tracked_text == []
+    assert ct._tracked_operations == []
 
-        ct(adata, label="First step", operations_done="Some operations")
-        ct(adata, label="Second step", operations_done="Some other operations")
+    target_track = {
+        "glucose": [],
+        "weight": [],
+        "disease": {"A": [], "B": [], "C": []},
+        "station": {"ICU": [], "MICU": []},
+    }
+    assert _compare_dict_equal(ct.track, target_track)
+    assert _compare_dict_equal(ct._track_backup, target_track)
 
-        ct.plot_flowchart()
 
-    def test_CohortTracker_plot_cohort_change(self):
-        adata = ep.io.read_csv(
-            f"{_TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["glucose", "weight", "disease", "station"]
-        )
+def test_CohortTracker_flowchart():
+    adata = ep.io.read_csv(
+        f"{_TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["glucose", "weight", "disease", "station"]
+    )
 
-        ct = ep.tl.CohortTracker(adata)
+    ct = ep.tl.CohortTracker(adata)
 
-        ct(adata)
-        ct(adata)
+    ct(adata, label="First step", operations_done="Some operations")
+    ct(adata, label="Second step", operations_done="Some other operations")
 
-        ct.plot_cohort_change(return_figure=True)
+    ct.plot_flowchart()
+
+
+def test_CohortTracker_plot_cohort_change():
+    adata = ep.io.read_csv(
+        f"{_TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["glucose", "weight", "disease", "station"]
+    )
+
+    ct = ep.tl.CohortTracker(adata)
+
+    ct(adata)
+    ct(adata)
+
+    ct.plot_cohort_change(return_figure=True)
