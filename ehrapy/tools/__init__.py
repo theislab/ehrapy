@@ -1,4 +1,4 @@
-from ehrapy.tools._sa import anova_glm, cox_ph, glm, kmf, ols, test_kmf_logrank, test_nested_f_statistic
+from ehrapy.tools._sa import anova_glm, cox_ph, glm, kmf, ols, test_kmf_logrank, test_nested_f_statistic, nelson_alen, weibull, weibull_aft, log_rogistic_aft
 from ehrapy.tools._scanpy_tl_api import *  # noqa: F403
 from ehrapy.tools.causal._dowhy import causal_inference
 from ehrapy.tools.feature_ranking._rank_features_groups import filter_rank_features_groups, rank_features_groups
