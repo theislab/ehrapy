@@ -319,8 +319,8 @@ def univariate_model(adata: AnnData, duration_col: str, event_col: str, model_cl
     model.fit(T,event_observed=E)
     return model
 
-def nelson_alen(adata: AnnData, duration_col: str, event_col: str):
+def nelson_alen(adata: AnnData, duration_col: str, event_col: str) -> NelsonAalenFitter:
     return univariate_model(adata, duration_col, event_col, NelsonAalenFitter)
 
-def weibull(adata: AnnData, duration_col: str, event_col: str):
+def weibull(adata: AnnData, duration_col: str, event_col: str) -> WeibullAFTFitter:
     return univariate_model(adata, duration_col, event_col, WeibullFitter)

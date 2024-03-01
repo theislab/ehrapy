@@ -73,16 +73,21 @@ class TestSA:
         duration_col, event_col = "mort_day_censored", "censor_flg"
         return adata, duration_col, event_col
 
+    def sa_function_assert(model, model_class):
+        assert isinstance(model, model_class)
+        assert len(model.durations) == 1776
+        assert sum(model.event_observed) == 497
+
     def sa_func_test(self, sa_function, sa_class):
         adata, duration_col, event_col = self.prepare_mimic2_for_sa_test()
 
         sa = sa_function(adata, duration_col, event_col)
-        assert isinstance(sa, sa_class)
-        assert len(sa.durations) == 1776
-        assert sum(sa.event_observed) == 497
+        self.sa_function_assert(sa, sa_class)
     
     def test_kmf(self):
-        self.sa_func_test(ep.tl.kmf, KaplanMeierFitter)
+        adata, _, _ = self.prepare_mimic2_for_sa_test()
+        kmf = ep.tl.kmf(adata[:, ["mort_day_censored"]].X, adata[:, ["censor_flg"]].X)
+        self.sa_function_assert(kmf, KaplanMeierFitter)
         
     def test_cox_ph(self):
         self.sa_func_test(ep.tl.cox_ph, CoxPHFitter)
