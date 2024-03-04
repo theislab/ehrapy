@@ -273,13 +273,19 @@ def delete_from_obs(adata: AnnData, to_delete: list[str]) -> AnnData:
     return adata
 
 
-def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
+def move_to_x(adata: AnnData, 
+              to_x: list[str] | str, 
+              copy_uns: bool = True,
+              copy_obsm: bool= True,
+              copy_varm: bool= True,) -> AnnData:
     """Move features from obs to X inplace.
 
     Args:
         adata: The AnnData object
         to_x: The columns to move to X
-        copy: Whether to return a copy or not
+        copy_uns: Whether to copy .uns from the original AnnData object to the new one
+        copy_obsm: Whether to copy .obsm from the original AnnData object to the new one
+        copy_varm: Whether to copy .varm from the original AnnData object to the new one
 
     Returns:
         A new AnnData object with moved columns from obs to X. This should not be used for datetime columns currently.
@@ -318,6 +324,12 @@ def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
         # AnnData's concat discards var if they dont match in their keys, so we need to create a new var
         created_var = _create_new_var(adata, cols_not_in_x)
         new_adata.var = pd.concat([adata.var, created_var], axis=0)
+        if copy_uns:
+            new_adata.uns = adata.uns
+        if copy_obsm:
+            new_adata.obsm = adata.obsm
+        if copy_varm:
+            new_adata.varm = adata.varm
 
         logg.info(f"Added `{cols_not_in_x}` features to `X`.")
     else:

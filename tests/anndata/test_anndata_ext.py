@@ -171,6 +171,20 @@ def test_move_to_x(adata_move_obs_mix):
         ).astype({"clinic_id": "float32", "name": "category"}),
     )
 
+def test_move_to_x_copy_uns(adata_move_obs_mix):
+    adata_move_obs_mix.uns["test"] = "test"
+    new_adata = move_to_x(adata_move_obs_mix, ["name"], copy_uns=True)
+    assert "test" in new_adata.uns
+    
+def test_move_to_x_copy_obsm(adata_move_obs_mix):
+    adata_move_obs_mix.obsm["test"] = np.random.rand(adata_move_obs_mix.n_obs, 5)
+    new_adata = move_to_x(adata_move_obs_mix, ["name"], copy_obsm=True)
+    assert "test" in new_adata.obsm
+
+def test_move_to_x_copy_varm(adata_move_obs_mix):
+    adata_move_obs_mix.varm["test"] = np.random.rand(adata_move_obs_mix.n_vars, 5)
+    new_adata = move_to_x(adata_move_obs_mix, ["name"], copy_varm=True)
+    assert "test" in new_adata.varm
 
 def test_move_to_x_invalid_column_names(adata_move_obs_mix):
     move_to_obs(adata_move_obs_mix, ["name"], copy_obs=True)
