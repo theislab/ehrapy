@@ -273,11 +273,13 @@ def delete_from_obs(adata: AnnData, to_delete: list[str]) -> AnnData:
     return adata
 
 
-def move_to_x(adata: AnnData, 
-              to_x: list[str] | str, 
-              copy_uns: bool = True,
-              copy_obsm: bool= True,
-              copy_varm: bool= True,) -> AnnData:
+def move_to_x(
+    adata: AnnData,
+    to_x: list[str] | str,
+    copy_uns: bool = True,
+    copy_obsm: bool = True,
+    copy_varm: bool = True,
+) -> AnnData:
     """Move features from obs to X inplace.
 
     Args:
