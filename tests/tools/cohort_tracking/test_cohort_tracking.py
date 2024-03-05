@@ -25,6 +25,11 @@ def test_CohortTracker_init_vanilla(columns, mini_adata):
     assert ct._tracked_operations == []
 
 
+def test_CohortTracker_type_detection(mini_adata):
+    ct = ep.tl.CohortTracker(mini_adata, ["glucose", "weight", "disease", "station"])
+    assert set(ct.categorical) == {"disease", "station"}
+
+
 def test_CohortTracker_init_set_columns(mini_adata):
     # limit columns
     ep.tl.CohortTracker(mini_adata, columns=["glucose", "disease"])

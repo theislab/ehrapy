@@ -25,19 +25,11 @@ def _check_columns_exist(df, columns) -> None:
 
 # from tableone: https://github.com/tompollard/tableone/blob/bfd6fbaa4ed3e9f59e1a75191c6296a2a80ccc64/tableone/tableone.py#L555
 def _detect_categorical_columns(data) -> list:
-    # assume all non-numerical and date columns are categorical
-    numeric_cols = set(data._get_numeric_data().columns.values)
-    date_cols = set(data.select_dtypes(include=[np.datetime64]).columns)
-    likely_cat = set(data.columns) - numeric_cols
-    # mypy absolutely looses it if likely_cat is overwritten to be a list
-    likely_cat_no_dates = list(likely_cat - date_cols)
+    # TODO grab this from ehrapy once https://github.com/theislab/ehrapy/issues/662 addressed
+    numeric_cols = set(data.select_dtypes("number").columns)
+    categorical_cols = set(data.columns) - numeric_cols
 
-    # check proportion of unique values if numerical
-    for var in data._get_numeric_data().columns:
-        likely_flag = 1.0 * data[var].nunique() / data[var].count() < 0.005
-        if likely_flag:
-            likely_cat_no_dates.append(var)
-    return likely_cat_no_dates
+    return list(categorical_cols)
 
 
 class CohortTracker:
