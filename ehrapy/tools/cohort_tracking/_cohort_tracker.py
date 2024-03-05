@@ -2,10 +2,12 @@ from collections.abc import Sequence
 from typing import Any
 
 import graphviz
+import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.patches import Patch
 from scanpy import AnnData
 from tableone import TableOne
 
@@ -186,17 +188,17 @@ class CohortTracker:
                 else:
                     data = [self._get_num_dicts(self.track_t1[idx], col)]
 
+                # Assign a unique color to each level (i.e. column)
+                level_color = sns.color_palette(color_palette, len(self.columns))[pos]
+
                 cumwidth = 0
-
-                # Adjust the hue shift based on the category position such that the colors are more distinguishable
-                hue_shift = (pos + 1) / len(data)
-                colors = sns.color_palette(color_palette, len(data))
-                adjusted_colors = [((color[0] + hue_shift) % 1, color[1], color[2]) for color in colors]
-
                 # for categoricals, plot multiple bars
                 if col in self.categorical:
+                    col_legend_labels = []
                     for i, value in enumerate(data):
-                        ax.barh(pos, value, left=cumwidth, color=adjusted_colors[i], height=0.7)
+                        # Use different shades of the level color for the stacked bars
+                        stacked_bar_color = mcolors.to_rgb(level_color) + (0.5 + 0.5 * (i / len(data)),)
+                        ax.barh(pos, value, left=cumwidth, color=stacked_bar_color, height=0.7)
 
                         if value > 5:
                             # Add proportion numbers to the bars
@@ -214,11 +216,13 @@ class CohortTracker:
                         ax.set_yticks([])
                         ax.set_xticks([])
                         cumwidth += value
-                        legend_labels.append(data.index[i])
+                        if idx == 0:
+                            col_legend_labels.append(Patch(color=stacked_bar_color, label=data.index[i]))
+                    legend_labels.append(col_legend_labels)
 
                 # for numericals, plot a single bar
                 else:
-                    ax.barh(pos, 100, left=cumwidth, color=adjusted_colors[0], height=0.8)
+                    ax.barh(pos, 100, left=cumwidth, color=level_color, height=0.8)
                     ax.text(
                         100 / 2,
                         pos,
@@ -228,7 +232,9 @@ class CohortTracker:
                         color="white",
                         fontweight="bold",
                     )
-                    legend_labels.append(col)
+                    # legend_labels.append(col)
+                    if idx == 0:
+                        legend_labels.append([Patch(color=level_color, label=col)])
 
             # Set y-axis labels
             if set_axis_labels:
@@ -240,11 +246,16 @@ class CohortTracker:
             #     ax.axis('off')
 
         # Add legend
+        # These list of lists is needed to reverse the order of the legend labels,
+        # making the plot much more readable
+        legend_labels.reverse()
+        legend_labels = [item for sublist in legend_labels for item in sublist]
+
         tot_legend_kwargs = {"loc": "best", "bbox_to_anchor": (1, 1)}
         if legend_kwargs is not None:
             tot_legend_kwargs.update(legend_kwargs)
 
-        plt.legend(legend_labels, **tot_legend_kwargs)
+        plt.legend(handles=legend_labels, **tot_legend_kwargs)
 
         if save is not None:
             if not isinstance(save, str):
