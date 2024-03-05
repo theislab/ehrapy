@@ -1,6 +1,5 @@
-import copy
-from collections.abc import Iterable
-from typing import Any, Union
+from collections.abc import Sequence
+from typing import Any
 
 import graphviz
 import matplotlib.pyplot as plt
@@ -52,8 +51,8 @@ class CohortTracker:
     """
 
     def __init__(
-        self, adata: AnnData | pd.DataFrame, columns: Iterable = None, categorical: Iterable = None, *args: Any
-    ):
+        self, adata: AnnData | pd.DataFrame, columns: Sequence = None, categorical: Sequence = None, *args: Any
+    ) -> None:
         if isinstance(adata, AnnData):
             df = adata.obs
         elif isinstance(adata, pd.DataFrame):
@@ -77,9 +76,7 @@ class CohortTracker:
         # if categorical columns specified, use them
         # else, follow tableone's logic
         self.categorical = categorical if categorical is not None else _detect_categorical_columns(df[self.columns])
-        self.track = self._get_column_structure(df)
-
-        self._track_backup = copy.deepcopy(self.track)
+        self.track_t1: list = []
 
     def __call__(
         self, adata: AnnData, label: str = None, operations_done: str = None, *args: Any, **tableone_kwargs: Any
@@ -100,52 +97,32 @@ class CohortTracker:
 
         # track a small text with the operations done
         self._tracked_operations.append(operations_done)
-
         self._tracked_steps += 1
 
-        t1 = TableOne(df, columns=self.columns, categorical=self.categorical, **tableone_kwargs)
         # track new stuff
-        self._get_column_dicts(t1)
-
-    def _get_column_structure(self, df):
-        column_structure = {}
-        for column in self.columns:
-            if column in self.categorical:
-                # if e.g. a column containing integers is deemed categorical, coerce it to categorical
-                df[column] = df[column].astype("category")
-                column_structure[column] = {category: [] for category in df[column].cat.categories}
-            else:
-                column_structure[column] = []
-
-        return column_structure
-
-    def _get_column_dicts(self, table_one):
-        for col, value in self.track.items():
-            if isinstance(value, dict):
-                self._get_cat_dicts(table_one, col)
-            else:
-                self._get_num_dicts(table_one, col)
+        t1 = TableOne(df, columns=self.columns, categorical=self.categorical, **tableone_kwargs)
+        self.track_t1.append(t1)
 
     def _get_cat_dicts(self, table_one, col):
-        for cat in self.track[col].keys():
+        cat_pct = {category: [] for category in table_one.cat_table.loc[col].index}
+        for cat in cat_pct.keys():
             # if tableone does not have the category of this column anymore, set the percentage to 0
             # for categorized columns (e.g. gender 1.0/0.0), str(cat) helps to avoid considering the category as a float
-            if (col, str(cat)) in table_one.cat_table["Overall"].index:
-                pct = float(table_one.cat_table["Overall"].loc[(col, str(cat))].split("(")[1].split(")")[0])
-            else:
-                pct = 0
-            self.track[col][cat].append(pct)
+            # if (col, str(cat)) in table_one.cat_table["Overall"].index:
+            pct = float(table_one.cat_table["Overall"].loc[(col, str(cat))].split("(")[1].split(")")[0])
+            # else:
+            #    pct = 0
+            cat_pct[cat] = [pct]
+        return pd.DataFrame(cat_pct).T[0]
 
     def _get_num_dicts(self, table_one, col):
-        summary = table_one.cont_table["Overall"].loc[(col, "")]
-        self.track[col].append(summary)
+        return table_one.cont_table["Overall"].loc[(col, "")]
 
     def reset(self) -> None:
         """Resets the `CohortTracker` object.
 
         A full reset of the `CohortTracker` object.
         """
-        self.track = self._track_backup
         self._tracked_steps = 0
         self._tracked_text = []
         self._tracked_operations = []
@@ -209,8 +186,12 @@ class CohortTracker:
                 ax.set_title(self._tracked_text[idx])
 
             # iterate over the tracked columns in the dataframe
-            for pos, (_cols, data) in enumerate(self.track.items()):
-                data = pd.DataFrame(data).loc[idx]
+            # TODO: allow for new/disappearing columns during logging?
+            for pos, col in enumerate(self.columns):
+                if col in self.categorical:
+                    data = self._get_cat_dicts(self.track_t1[idx], col)
+                else:
+                    data = [self._get_num_dicts(self.track_t1[idx], col)]
 
                 cumwidth = 0
 
@@ -220,7 +201,7 @@ class CohortTracker:
                 adjusted_colors = [((color[0] + hue_shift) % 1, color[1], color[2]) for color in colors]
 
                 # for categoricals, plot multiple bars
-                if _cols in self.categorical:
+                if col in self.categorical:
                     for i, value in enumerate(data):
                         ax.barh(pos, value, left=cumwidth, color=adjusted_colors[i], height=0.7)
 
@@ -254,14 +235,12 @@ class CohortTracker:
                         color="white",
                         fontweight="bold",
                     )
-                    legend_labels.append(_cols)
+                    legend_labels.append(col)
 
             # Set y-axis labels
             if set_axis_labels:
-                ax.set_yticks(
-                    range(len(self.track.keys()))
-                )  # Set ticks at positions corresponding to the number of columns
-                ax.set_yticklabels(self.track.keys())  # Set y-axis labels to the column names
+                ax.set_yticks(range(len(self.columns)))  # Set ticks at positions corresponding to the number of columns
+                ax.set_yticklabels(self.columns)  # Set y-axis labels to the column names
 
             # makes the frames invisible
             # for ax in axes:
