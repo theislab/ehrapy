@@ -10,6 +10,11 @@ from scanpy import AnnData
 from tableone import TableOne
 
 
+def _check_adata_type(adata) -> None:
+    if not isinstance(adata, AnnData):
+        raise ValueError("adata must be an AnnData.")
+
+
 def _check_columns_exist(df, columns) -> None:
     missing_columns = set(columns) - set(df.columns)
     if missing_columns:
@@ -50,22 +55,15 @@ class CohortTracker:
         [1] Tom Pollard, Alistair E.W. Johnson, Jesse D. Raffa, Roger G. Mark; tableone: An open source Python package for producing summary statistics for research papers, Journal of the American Medical Informatics Association, Volume 24, Issue 2, 1 March 2017, Pages 267–271, https://doi.org/10.1093/jamia/ocw117
     """
 
-    def __init__(
-        self, adata: AnnData | pd.DataFrame, columns: Sequence = None, categorical: Sequence = None, *args: Any
-    ) -> None:
-        if isinstance(adata, AnnData):
-            df = adata.obs
-        elif isinstance(adata, pd.DataFrame):
-            df = adata
-        else:
-            raise ValueError("adata must be an AnnData or a DataFrame.")
+    def __init__(self, adata: AnnData, columns: Sequence = None, categorical: Sequence = None, *args: Any) -> None:
+        _check_adata_type(adata)
 
-        self.columns = columns if columns is not None else list(df.columns)
+        self.columns = columns if columns is not None else list(adata.obs.columns)
 
         if columns is not None:
-            _check_columns_exist(df, columns)
+            _check_columns_exist(adata.obs, columns)
         if categorical is not None:
-            _check_columns_exist(df, categorical)
+            _check_columns_exist(adata.obs, categorical)
             if set(categorical).difference(set(self.columns)):
                 raise ValueError("categorical columns must be in the (selected) columns.")
 
@@ -75,20 +73,16 @@ class CohortTracker:
 
         # if categorical columns specified, use them
         # else, follow tableone's logic
-        self.categorical = categorical if categorical is not None else _detect_categorical_columns(df[self.columns])
+        self.categorical = (
+            categorical if categorical is not None else _detect_categorical_columns(adata.obs[self.columns])
+        )
         self.track_t1: list = []
 
     def __call__(
         self, adata: AnnData, label: str = None, operations_done: str = None, *args: Any, **tableone_kwargs: Any
     ) -> None:
-        if isinstance(adata, AnnData):
-            df = adata.obs
-        elif isinstance(adata, pd.DataFrame):
-            df = adata
-        else:
-            raise ValueError("adata must be an AnnData or a DataFrame.")
-
-        _check_columns_exist(df, self.columns)
+        _check_adata_type(adata)
+        _check_columns_exist(adata.obs, self.columns)
 
         # track a small text with each tracking step, for the flowchart
         track_text = label if label is not None else f"Cohort {self.tracked_steps}"
@@ -100,7 +94,7 @@ class CohortTracker:
         self._tracked_steps += 1
 
         # track new stuff
-        t1 = TableOne(df, columns=self.columns, categorical=self.categorical, **tableone_kwargs)
+        t1 = TableOne(adata.obs, columns=self.columns, categorical=self.categorical, **tableone_kwargs)
         self.track_t1.append(t1)
 
     def _get_cat_dicts(self, table_one, col):
@@ -186,7 +180,6 @@ class CohortTracker:
                 ax.set_title(self._tracked_text[idx])
 
             # iterate over the tracked columns in the dataframe
-            # TODO: allow for new/disappearing columns during logging?
             for pos, col in enumerate(self.columns):
                 if col in self.categorical:
                     data = self._get_cat_dicts(self.track_t1[idx], col)
