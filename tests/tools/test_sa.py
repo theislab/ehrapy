@@ -73,7 +73,7 @@ class TestSA:
         duration_col, event_col = "mort_day_censored", "censor_flg"
         return adata, duration_col, event_col
 
-    def sa_function_assert(model, model_class):
+    def sa_function_assert(self, model, model_class):
         assert isinstance(model, model_class)
         assert len(model.durations) == 1776
         assert sum(model.event_observed) == 497
