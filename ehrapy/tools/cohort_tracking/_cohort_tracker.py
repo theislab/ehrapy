@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.axes import Axes
 from matplotlib.patches import Patch
 from scanpy import AnnData
 from tableone import TableOne
@@ -49,7 +50,7 @@ class CohortTracker:
         [1] Tom Pollard, Alistair E.W. Johnson, Jesse D. Raffa, Roger G. Mark; tableone: An open source Python package for producing summary statistics for research papers, Journal of the American Medical Informatics Association, Volume 24, Issue 2, 1 March 2017, Pages 267–271, https://doi.org/10.1093/jamia/ocw117
     """
 
-    def __init__(self, adata: AnnData, columns: Sequence = None, categorical: Sequence = None, *args: Any) -> None:
+    def __init__(self, adata: AnnData, columns: Sequence = None, categorical: Sequence = None) -> None:
         _check_adata_type(adata)
 
         self.columns = columns if columns is not None else list(adata.obs.columns)
@@ -72,9 +73,7 @@ class CohortTracker:
         )
         self.track_t1: list = []
 
-    def __call__(
-        self, adata: AnnData, label: str = None, operations_done: str = None, *args: Any, **tableone_kwargs: Any
-    ) -> None:
+    def __call__(self, adata: AnnData, label: str = None, operations_done: str = None, **tableone_kwargs: Any) -> None:
         _check_adata_type(adata)
         _check_columns_exist(adata.obs, self.columns)
 
@@ -120,13 +119,19 @@ class CohortTracker:
         """list: List of tableone objects of each logging step."""
         return self._tracked_steps
 
+    # IMMEDIATE NEXT TODO:
+    # I ALLOWED FOR THE AX ARGUMENT, BUT NEED TO CHECK
+    # WHAT IS A GOOD RETURN TYPE WITH AND WITHOUT, AND WHETHER
+    # THE AX RETURN THING IS ENOUGH IN GENERAL
+    # THEN ASK WHAT IS BEST FOR KEYWORD ARGUMENTS, THEN THIS IS DONE?
+    # ONLY TEST FOR PLOT SIMILARITY I THINK AFTERWARDS LEFT
     def plot_cohort_change(
         self,
         set_axis_labels=True,
         subfigure_title: bool = False,
-        color_palette: str = "husl",
-        save: str = None,
+        color_palette: str = "colorblind",
         return_figure: bool = False,
+        ax: Axes | np.ndarray = None,
         subplots_kwargs: dict = None,
         legend_kwargs: dict = None,
     ):
@@ -138,7 +143,6 @@ class CohortTracker:
             set_axis_labels: If `True`, the y-axis labels will be set to the column names.
             subfigure_title: If `True`, each subplot will have a title with the `label` provided during tracking.
             color_palette: The color palette to use for the plot. Default is "husl".
-            save: If a string is provided, the plot will be saved to the path specified.
             return_figure: If `True`, the plot will be returned as a tuple of (fig, ax).
             subplot_kwargs: Additional keyword arguments for the subplots.
             legend_kwargs: Additional keyword arguments for the legend.
@@ -160,7 +164,10 @@ class CohortTracker:
         # Plotting
         subplots_kwargs = {} if subplots_kwargs is None else subplots_kwargs
 
-        fig, axes = plt.subplots(self.tracked_steps, 1, **subplots_kwargs)
+        if ax is None:
+            _, axes = plt.subplots(self.tracked_steps, 1, **subplots_kwargs)
+        else:
+            axes = ax
 
         legend_labels = []
 
@@ -190,7 +197,15 @@ class CohortTracker:
                     for i, value in enumerate(data):
                         # Use different shades of the level color for the stacked bars
                         stacked_bar_color = mcolors.to_rgb(level_color) + (0.5 + 0.5 * (i / len(data)),)
-                        ax.barh(pos, value, left=cumwidth, color=stacked_bar_color, height=0.7)
+                        ax.barh(
+                            pos,
+                            value,
+                            left=cumwidth,
+                            color=stacked_bar_color,
+                            height=0.7,
+                            edgecolor="black",
+                            linewidth=0.6,
+                        )
 
                         if value > 5:
                             # Add proportion numbers to the bars
@@ -214,7 +229,15 @@ class CohortTracker:
 
                 # for numericals, plot a single bar
                 else:
-                    ax.barh(pos, 100, left=cumwidth, color=level_color, height=0.8)
+                    ax.barh(
+                        pos,
+                        100,
+                        left=cumwidth,
+                        color=level_color,
+                        height=0.8,
+                        edgecolor="black",
+                        linewidth=0.6,
+                    )
                     ax.text(
                         100 / 2,
                         pos,
@@ -249,27 +272,19 @@ class CohortTracker:
 
         plt.legend(handles=legend_labels, **tot_legend_kwargs)
 
-        if save is not None:
-            if not isinstance(save, str):
-                raise ValueError("'save' must be a string.")
-            plt.savefig(
-                save,
-            )
-
         if return_figure:
-            return fig, axes
+            return axes
 
-        else:
-            plt.tight_layout()
-            plt.show()
+        # else:
+        #     plt.tight_layout()
+        #     plt.show()
 
-    def plot_flowchart(self, save: str = None, return_figure: bool = True):
+    def plot_flowchart(self, return_figure: bool = True):
         """Flowchart over the tracked steps.
 
         Create a simple flowchart of data preparation steps tracked with `CohortTracker`.
 
         Args:
-            save: If a string is provided, the plot will be saved to the path specified.
             return_figure: If `True`, the plot will be returned as a :class:`~graphviz.Digraph`.
 
         Returns:
@@ -298,12 +313,6 @@ class CohortTracker:
 
         for i, op in enumerate(self._tracked_operations[1:]):
             dot.edge(str(i), str(i + 1), label=op, labeldistance="2.5")
-
-        # Render the graph
-        if save is not None:
-            if not isinstance(save, str):
-                raise ValueError("'save' must be a string.")
-            dot.render(save, format="png", cleanup=True)
 
         # Think that to be shown, the plot can a) be rendered (as above) or be "printed" by the notebook
         if return_figure:
