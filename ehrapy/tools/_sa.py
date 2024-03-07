@@ -6,7 +6,14 @@ import numpy as np  # This package is implicitly used
 import pandas as pd
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
-from lifelines import CoxPHFitter, KaplanMeierFitter, NelsonAalenFitter, WeibullFitter, WeibullAFTFitter, LogLogisticAFTFitter
+from lifelines import (
+    CoxPHFitter,
+    KaplanMeierFitter,
+    LogLogisticAFTFitter,
+    NelsonAalenFitter,
+    WeibullAFTFitter,
+    WeibullFitter,
+)
 from lifelines.statistics import StatisticalResult, logrank_test
 from scipy import stats
 
@@ -266,7 +273,10 @@ def anova_glm(result_1: GLMResultsWrapper, result_2: GLMResultsWrapper, formula_
     dataframe = pd.DataFrame(data=table)
     return dataframe
 
-def regression_model(model_class, adata: AnnData, duration_col: str, event_col: str, entry_col: str = None, accept_zero_duration=True):
+
+def regression_model(
+    model_class, adata: AnnData, duration_col: str, event_col: str, entry_col: str = None, accept_zero_duration=True
+):
     df = anndata_to_df(adata)
     keys = [duration_col, event_col]
     if entry_col:
@@ -278,6 +288,7 @@ def regression_model(model_class, adata: AnnData, duration_col: str, event_col: 
     model.fit(df, duration_col, event_col, entry_col=entry_col)
 
     return model
+
 
 def cox_ph(adata: AnnData, duration_col: str, event_col: str, entry_col: str = None) -> CoxPHFitter:
     """Fit the Cox’s proportional hazard for the survival function.
@@ -305,6 +316,7 @@ def cox_ph(adata: AnnData, duration_col: str, event_col: str, entry_col: str = N
     """
     return regression_model(CoxPHFitter, adata, duration_col, event_col, entry_col)
 
+
 def weibull_aft(adata: AnnData, duration_col: str, event_col: str, entry_col: str = None) -> WeibullAFTFitter:
     """Fit the Weibull accelerated failure time regression for the survival function.
 
@@ -330,10 +342,11 @@ def weibull_aft(adata: AnnData, duration_col: str, event_col: str, entry_col: st
     """
     return regression_model(WeibullAFTFitter, adata, duration_col, event_col, entry_col, accept_zero_duration=False)
 
+
 def log_rogistic_aft(adata: AnnData, duration_col: str, event_col: str, entry_col: str = None) -> LogLogisticAFTFitter:
     """Fit the log logistic accelerated failure time regression for the survival function.
-    The Log-Logistic Accelerated Failure Time (AFT) survival regression model is a powerful statistical tool employed in the analysis of time-to-event data. 
-    This model operates under the assumption that the logarithm of survival time adheres to a log-logistic distribution, offering a flexible framework for understanding the impact of covariates on survival times. 
+    The Log-Logistic Accelerated Failure Time (AFT) survival regression model is a powerful statistical tool employed in the analysis of time-to-event data.
+    This model operates under the assumption that the logarithm of survival time adheres to a log-logistic distribution, offering a flexible framework for understanding the impact of covariates on survival times.
     By modeling survival time as a function of predictors, the Log-Logistic AFT model enables researchers to explore how specific factors influence the acceleration or deceleration of failure times, providing valuable insights into the underlying mechanisms driving event occurrence.
     See https://lifelines.readthedocs.io/en/latest/fitters/regression/LogLogisticAFTFitter.html
 
@@ -355,6 +368,7 @@ def log_rogistic_aft(adata: AnnData, duration_col: str, event_col: str, entry_co
     """
     return regression_model(LogLogisticAFTFitter, adata, duration_col, event_col, entry_col, accept_zero_duration=False)
 
+
 def univariate_model(adata: AnnData, duration_col: str, event_col: str, model_class, accept_zero_duration=True):
     df = anndata_to_df(adata)
     if not accept_zero_duration:
@@ -364,15 +378,16 @@ def univariate_model(adata: AnnData, duration_col: str, event_col: str, model_cl
 
     model = model_class()
 
-    model.fit(T,event_observed=E)
+    model.fit(T, event_observed=E)
     return model
+
 
 def nelson_alen(adata: AnnData, duration_col: str, event_col: str) -> NelsonAalenFitter:
     """Employ the Nelson-Aalen estimator to estimate the cumulative hazard function from censored survival data
-    
-    The Nelson-Aalen estimator is a non-parametric method used in survival analysis to estimate the cumulative hazard function. 
+
+    The Nelson-Aalen estimator is a non-parametric method used in survival analysis to estimate the cumulative hazard function.
     This technique is particularly useful when dealing with censored data, as it accounts for the presence of individuals whose event times are unknown due to censoring.
-    By estimating the cumulative hazard function, the Nelson-Aalen estimator allows researchers to assess the risk of an event occurring over time, providing valuable insights into the underlying dynamics of the survival process. 
+    By estimating the cumulative hazard function, the Nelson-Aalen estimator allows researchers to assess the risk of an event occurring over time, providing valuable insights into the underlying dynamics of the survival process.
     See https://lifelines.readthedocs.io/en/latest/fitters/univariate/NelsonAalenFitter.html
 
     Args:
@@ -393,9 +408,10 @@ def nelson_alen(adata: AnnData, duration_col: str, event_col: str) -> NelsonAale
     """
     return univariate_model(adata, duration_col, event_col, NelsonAalenFitter)
 
+
 def weibull(adata: AnnData, duration_col: str, event_col: str) -> WeibullFitter:
     """Employ the Weibull model in univariate survival analysis to understand event occurrence dynamics.
-    
+
     In contrast to the non-parametric Nelson-Aalen estimator, the Weibull model employs a parametric approach with shape and scale parameters, enabling a more structured analysis of survival data. This technique is particularly useful when dealing with censored data, as it accounts for the presence of individuals whose event times are unknown due to censoring.
     By fitting the Weibull model to censored survival data, researchers can estimate these parameters and gain insights into the hazard rate over time, facilitating comparisons between different groups or treatments.
     This method provides a comprehensive framework for examining survival data and offers valuable insights into the factors influencing event occurrence dynamics.
