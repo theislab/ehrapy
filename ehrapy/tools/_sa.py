@@ -266,12 +266,14 @@ def anova_glm(result_1: GLMResultsWrapper, result_2: GLMResultsWrapper, formula_
     dataframe = pd.DataFrame(data=table)
     return dataframe
 
-def regression_model(model_class, adata: AnnData, duration_col: str, event_col: str, entry_col: str = None):
+def regression_model(model_class, adata: AnnData, duration_col: str, event_col: str, entry_col: str = None, accept_zero_duration=True):
     df = anndata_to_df(adata)
     keys = [duration_col, event_col]
     if entry_col:
         keys.append(entry_col)
     df = df[keys]
+    if not accept_zero_duration:
+        df[duration_col][df[duration_col] == 0] += 1e-5
     model = model_class()
     model.fit(df, duration_col, event_col, entry_col=entry_col)
 
@@ -326,7 +328,7 @@ def weibull_aft(adata: AnnData, duration_col: str, event_col: str, entry_col: st
         >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
         >>> aft = ep.tl.weibull_aft(adata, "mort_day_censored", "censor_flg")
     """
-    return regression_model(WeibullAFTFitter, adata, duration_col, event_col, entry_col)
+    return regression_model(WeibullAFTFitter, adata, duration_col, event_col, entry_col, accept_zero_duration=False)
 
 def log_rogistic_aft(adata: AnnData, duration_col: str, event_col: str, entry_col: str = None) -> LogLogisticAFTFitter:
     """Fit the log logistic accelerated failure time regression for the survival function.
@@ -351,10 +353,12 @@ def log_rogistic_aft(adata: AnnData, duration_col: str, event_col: str, entry_co
         >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
         >>> llf = ep.tl.log_rogistic_aft(adata, "mort_day_censored", "censor_flg")
     """
-    return regression_model(LogLogisticAFTFitter, adata, duration_col, event_col, entry_col)
+    return regression_model(LogLogisticAFTFitter, adata, duration_col, event_col, entry_col, accept_zero_duration=False)
 
-def univariate_model(adata: AnnData, duration_col: str, event_col: str, model_class):
+def univariate_model(adata: AnnData, duration_col: str, event_col: str, model_class, accept_zero_duration=True):
     df = anndata_to_df(adata)
+    if not accept_zero_duration:
+        df[duration_col][df[duration_col] == 0] += 1e-5
     T = df[duration_col]
     E = df[event_col]
 
@@ -413,4 +417,4 @@ def weibull(adata: AnnData, duration_col: str, event_col: str) -> WeibullFitter:
         >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
         >>> wf = ep.tl.weibull(adata, "mort_day_censored", "censor_flg")
     """
-    return univariate_model(adata, duration_col, event_col, WeibullFitter)
+    return univariate_model(adata, duration_col, event_col, WeibullFitter, accept_zero_duration=False)
