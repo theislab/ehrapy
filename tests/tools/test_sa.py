@@ -1,7 +1,14 @@
 import numpy as np
 import pytest
 import statsmodels
-from lifelines import CoxPHFitter, KaplanMeierFitter, NelsonAalenFitter, WeibullFitter, WeibullAFTFitter, LogLogisticAFTFitter
+from lifelines import (
+    CoxPHFitter,
+    KaplanMeierFitter,
+    LogLogisticAFTFitter,
+    NelsonAalenFitter,
+    WeibullAFTFitter,
+    WeibullFitter,
+)
 
 import ehrapy as ep
 
@@ -66,7 +73,7 @@ class TestSA:
         assert dataframe.shape == (2, 6)
         assert dataframe.iloc[1, 4] == 2
         assert pytest.approx(dataframe.iloc[1, 5], 0.1) == 0.103185
-        
+
     def prepare_mimic2_for_sa_test(self):
         adata = ep.dt.mimic_2(encoded=False)
         adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
@@ -83,23 +90,23 @@ class TestSA:
 
         sa = sa_function(adata, duration_col, event_col)
         self.sa_function_assert(sa, sa_class)
-    
+
     def test_kmf(self):
         adata, _, _ = self.prepare_mimic2_for_sa_test()
         kmf = ep.tl.kmf(adata[:, ["mort_day_censored"]].X, adata[:, ["censor_flg"]].X)
         self.sa_function_assert(kmf, KaplanMeierFitter)
-        
+
     def test_cox_ph(self):
         self.sa_func_test(ep.tl.cox_ph, CoxPHFitter)
-    
+
     def test_nelson_alen(self):
         self.sa_func_test(ep.tl.nelson_alen, NelsonAalenFitter)
 
     def test_weibull(self):
         self.sa_func_test(ep.tl.weibull, WeibullFitter)
-        
+
     def test_weibull_aft(self):
         self.sa_func_test(ep.tl.weibull_aft, WeibullAFTFitter)
-        
+
     def test_log_logistic(self):
         self.sa_func_test(ep.tl.log_rogistic_aft, LogLogisticAFTFitter)
