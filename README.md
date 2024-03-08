@@ -12,7 +12,7 @@
 
 # ehrapy overview
 
-![fig_1](https://github.com/theislab/ehrapy/assets/99650244/cc0babfa-fff9-49ca-becc-0694997aa897)
+![fig1](https://github.com/theislab/ehrapy/assets/99650244/aad523a3-b4f9-4a7a-bb61-612af9a6874c)
 
 ## Features
 
@@ -31,20 +31,14 @@ $ pip install ehrapy
 
 ## Usage
 
-Please have a look at the [Usage documentation][usage] and the [tutorials][tutorials].
+Please have a look at the [Usage documentation](https://ehrapy.readthedocs.io/en/latest/usage/usage.html) and the [tutorials](https://ehrapy.readthedocs.io/en/latest/tutorials/index.html).
 
 ```python
 import ehrapy as ep
 ```
 
-## Credits
+## Citation
 
-This package was created with [cookietemple] using [cookiecutter] based on [hypermodern_python_cookiecutter].
-
-[cookiecutter]: https://github.com/audreyr/cookiecutter
-[cookietemple]: https://cookietemple.com
-[hypermodern_python_cookiecutter]: https://github.com/cjolowicz/cookiecutter-hypermodern-python
-[pip]: https://pip.pypa.io/
-[pypi]: https://pypi.org/
-[usage]: https://ehrapy.readthedocs.io/en/latest/usage/usage.html
-[tutorials]: https://ehrapy.readthedocs.io/en/latest/tutorials/index.html
+[ Exploratory electronic health record analysis with ehrapy
+Lukas Heumos, Philipp Ehmele, Tim Treis, Julius Upmeier zu Belzen, Altana Namsaraeva, Nastassya Horlava, Vladimir A. Shitov, Xinyue Zhang, Luke Zappia, Rainer Knoll, Niklas J. Lang, Leon Hetzel, Isaac Virshup, Lisa Sikkema, Eljas Roellin, Fabiola Curion, Roland Eils, Herbert B. Schiller, Anne Hilgendorff, Fabian J. Theis
+medRxiv 2023.12.11.23299816; doi: https://doi.org/10.1101/2023.12.11.23299816 ](https://www.medrxiv.org/content/10.1101/2023.12.11.23299816v1).

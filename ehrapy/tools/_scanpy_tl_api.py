@@ -1,5 +1,4 @@
-from collections.abc import Iterable, Mapping, Sequence
-from types import MappingProxyType
+from collections.abc import Iterable, Sequence
 from typing import Any, Literal, Optional, Union
 
 import numpy as np
@@ -9,9 +8,7 @@ from leidenalg.VertexPartition import MutableVertexPartition
 from scanpy._utils import AnyRandom
 from scipy.sparse import spmatrix
 
-from ehrapy.preprocessing._scanpy_pp_api import pca
 from ehrapy.tools import _method_options
-from ehrapy.tools.feature_ranking._rank_features_groups import rank_features_groups
 
 
 def tsne(
@@ -343,8 +340,8 @@ def embedding_density(
         >>> import ehrapy as ep
         >>> adata = ep.data.mimic_2(encoded=True)
         >>> ep.tl.umap(adata)
-        >>> ep.tl.embedding_density(adata, basis='umap', groupby='phase')
-        >>> ep.pl.embedding_density(adata, basis='umap', key='umap_density_phase', group='G1')
+        >>> ep.tl.embedding_density(adata, basis="umap", groupby="phase")
+        >>> ep.pl.embedding_density(adata, basis="umap", key="umap_density_phase", group="G1")
     """
     sc.tl.embedding_density(adata=adata, basis=basis, groupby=groupby, key_added=key_added, components=components)
 
@@ -425,78 +422,6 @@ def leiden(
     )
 
 
-def louvain(
-    adata: AnnData,
-    resolution: Optional[float] = None,
-    random_state: AnyRandom = 0,
-    restrict_to: Optional[tuple[str, Sequence[str]]] = None,
-    key_added: str = "louvain",
-    adjacency: Optional[spmatrix] = None,
-    flavor: Literal["vtraag", "igraph", "rapids"] = "vtraag",
-    directed: bool = True,
-    use_weights: bool = False,
-    partition_type: Optional[type[MutableVertexPartition]] = None,
-    partition_kwargs: Mapping[str, Any] = MappingProxyType({}),
-    neighbors_key: Optional[str] = None,
-    obsp: Optional[str] = None,
-    copy: bool = False,
-) -> Optional[AnnData]:  # pragma: no cover
-    """Cluster observations into subgroups [Blondel08]_ [Levine15]_ [Traag17]_.
-
-    Cluster observations using the Louvain algorithm [Blondel08]_ in the implementation of [Traag17]_.
-    The Louvain algorithm has been proposed for single-cell analysis by [Levine15]_.
-    This requires having ran :func:`~ehrapy.pp.neighbors` or
-    :func:`~ehrapy.pp.bbknn` first, or explicitly passing a ``adjacency`` matrix.
-
-    Args:
-        adata: :class:`~anndata.AnnData` object object containing all observations.
-        resolution: For the default flavor (``'vtraag'``), you can provide a resolution
-                    (higher resolution means finding more and smaller clusters),
-                    which defaults to 1.0. See “Time as a resolution parameter” in [Lambiotte09]_.
-        random_state: Random seed of the initialization of the optimization.
-        restrict_to: Restrict the clustering to the categories within the key for sample
-                     annotation, tuple needs to contain ``(obs_key, list_of_categories)``.
-        key_added: Key under which to add the cluster labels. (default: ``'louvain'``)
-        adjacency: Sparse adjacency matrix of the graph, defaults to neighbors connectivities.
-        flavor: Choose between to packages for computing the clustering.
-                ``'vtraag'`` is much more powerful, and the default.
-        directed: Interpret the ``adjacency`` matrix as directed graph?
-        use_weights: Use weights from knn graph.
-        partition_type: Type of partition to use. Only a valid argument if ``flavor`` is ``'vtraag'``.
-        partition_kwargs: Key word arguments to pass to partitioning, if ``vtraag`` method is being used.
-        neighbors_key: Use neighbors connectivities as adjacency.
-                       If not specified, louvain looks .obsp['connectivities'] for connectivities
-                       (default storage place for pp.neighbors).
-                       If specified, louvain looks .obsp[.uns[neighbors_key]['connectivities_key']] for connectivities.
-        obsp: Use .obsp[obsp] as adjacency. You can't specify both `obsp` and `neighbors_key` at the same time.
-        copy: Whether to copy `adata` or modify it inplace.
-
-    Returns:
-        By default (``copy=False``), updates ``adata`` with the following fields:
-        ``adata.obs['louvain']`` (:class:`pandas.Series`, dtype ``category``)
-        Array of dim (number of samples) that stores the subgroup id (``'0'``, ``'1'``, ...) for each observation.
-
-        :class:`~anndata.AnnData`
-        When ``copy=True`` is set, a copy of ``adata`` with those fields is returned.
-    """
-    return sc.tl.louvain(
-        adata=adata,
-        resolution=resolution,
-        random_state=random_state,
-        restrict_to=restrict_to,
-        key_added=key_added,
-        adjacency=adjacency,
-        flavor=flavor,
-        directed=directed,
-        use_weights=use_weights,
-        partition_type=partition_type,
-        partition_kwargs=partition_kwargs,
-        neighbors_key=neighbors_key,
-        obsp=obsp,
-        copy=copy,
-    )
-
-
 def dendrogram(
     adata: AnnData,
     groupby: str,
@@ -552,7 +477,7 @@ def dendrogram(
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.data.mimic_2(encoded=True)
-        >>> ep.tl.dendrogram(adata, groupby='service_unit')
+        >>> ep.tl.dendrogram(adata, groupby="service_unit")
         >>> ep.pl.dendrogram(adata)
     """
     return sc.tl.dendrogram(
@@ -674,10 +599,10 @@ def paga(
         copy: Copy `adata` before computation and return a copy. Otherwise, perform computation in place and return `None`.
 
     Returns:
-        **connectivities** : :class:`numpy.ndarray` (adata.uns['connectivities'])
+        **connectivities** :class:`numpy.ndarray` (adata.uns['connectivities'])
         The full adjacency matrix of the abstracted graph, weights correspond to confidence in the connectivities of partitions.
 
-       **connectivities_tree** : :class:`scipy.sparse.csr_matrix` (adata.uns['connectivities_tree'])
+       **connectivities_tree** :class:`scipy.sparse.csr_matrix` (adata.uns['connectivities_tree'])
         The adjacency matrix of the tree-like subgraph that best explains the topology.
 
     Notes:
@@ -753,114 +678,4 @@ def ingest(
         neighbors_key=neighbors_key,
         inplace=inplace,
         **kwargs,
-    )
-
-
-def filter_rank_features_groups(
-    adata: AnnData,
-    key="rank_features_groups",
-    groupby=None,
-    key_added="rank_features_groups_filtered",
-    min_in_group_fraction=0.25,
-    min_fold_change=1,
-    max_out_group_fraction=0.5,
-) -> None:  # pragma: no cover
-    """Filters out features based on fold change and fraction of features containing the feature within and outside the `groupby` categories.
-
-    See :func:`~ehrapy.tl.rank_features_groups`.
-
-    Results are stored in `adata.uns[key_added]`
-    (default: 'rank_genes_groups_filtered').
-
-    To preserve the original structure of adata.uns['rank_genes_groups'],
-    filtered genes are set to `NaN`.
-
-    Args:
-        adata: Annotated data matrix.
-        key: Key previously added by :func:`~ehrapy.tl.rank_features_groups`
-        groupby: The key of the observations grouping to consider.
-        key_added: The key in `adata.uns` information is saved to.
-        min_in_group_fraction: Minimum in group fraction (default: 0.25).
-        min_fold_change: Miniumum fold change (default: 1).
-        max_out_group_fraction: Maximum out group fraction (default: 0.5).
-
-    Returns:
-        Same output as :func:`ehrapy.tl.rank_features_groups` but with filtered feature names set to `nan`
-
-    Examples:
-        >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.tl.rank_features_groups(adata, "service_unit")
-        >>> ep.pl.rank_features_groups(adata)
-    """
-    return sc.tl.filter_rank_genes_groups(
-        adata=adata,
-        key=key,
-        groupby=groupby,
-        use_raw=False,
-        key_added=key_added,
-        min_in_group_fraction=min_in_group_fraction,
-        min_fold_change=min_fold_change,
-        max_out_group_fraction=max_out_group_fraction,
-    )
-
-
-def marker_feature_overlap(
-    adata: AnnData,
-    reference_markers: Union[dict[str, set], dict[str, list]],
-    *,
-    key: str = "rank_features_groups",
-    method: _method_options._marker_feature_overlap_methods = "overlap_count",
-    normalize: Optional[Literal["reference", "data"]] = None,
-    top_n_markers: Optional[int] = None,
-    adj_pval_threshold: Optional[float] = None,
-    key_added: str = "feature_overlap",
-    inplace: bool = False,
-):  # pragma: no cover
-    """Calculate an overlap score between data-deriven features and provided marker features.
-
-    Marker feature overlap scores can be quoted as overlap counts, overlap
-    coefficients, or jaccard indices. The method returns a pandas dataframe
-    which can be used to annotate clusters based on feature overlaps.
-
-    Args:
-        adata: Annotated data matrix.
-        reference_markers: A marker gene dictionary object. Keys should be strings with the
-                           cell identity name and values are sets or lists of strings which match format of `adata.var_name`.
-        key: The key in `adata.uns` where the rank_features_groups output is stored (default: rank_features_groups).
-        method: Method to calculate marker gene overlap. `'overlap_count'` uses the
-                intersection of the feature set, `'overlap_coef'` uses the overlap
-                coefficient, and `'jaccard'` uses the Jaccard index (default: `overlap_count`).
-        normalize: Normalization option for the feature overlap output. This parameter
-                   can only be set when `method` is set to `'overlap_count'`. `'reference'`
-                   normalizes the data by the total number of marker features given in the
-                   reference annotation per group. `'data'` normalizes the data by the
-                   total number of marker genes used for each cluster.
-        top_n_markers: The number of top data-derived marker genes to use. By default the top
-                       100 marker features are used. If `adj_pval_threshold` is set along with
-                       `top_n_markers`, then `adj_pval_threshold` is ignored.
-        adj_pval_threshold: A significance threshold on the adjusted p-values to select marker features.
-                            This can only be used when adjusted p-values are calculated by `ep.tl.rank_features_groups`.
-                            If `adj_pval_threshold` is set along with `top_n_markers`, then `adj_pval_threshold` is ignored.
-        key_added: Name of the `.uns` field that will contain the marker overlap scores.
-        inplace: Return a marker gene dataframe or store it inplace in `adata.uns`.
-
-    Returns:
-        A pandas dataframe with the marker gene overlap scores if `inplace=False`.
-        For `inplace=True` `adata.uns` is updated with an additional field
-        specified by the `key_added` parameter (default = 'marker_gene_overlap').
-
-    Examples:
-        TODO
-    """
-    return sc.tl.marker_gene_overlap(
-        adata=adata,
-        reference_markers=reference_markers,
-        key=key,
-        method=method,
-        normalize=normalize,
-        top_n_markers=top_n_markers,
-        adj_pval_threshold=adj_pval_threshold,
-        key_added=key_added,
-        inplace=inplace,
     )

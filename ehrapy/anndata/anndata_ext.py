@@ -16,6 +16,7 @@ from scipy import sparse
 from scipy.sparse import issparse
 
 from ehrapy import logging as logg
+from ehrapy.anndata._constants import EHRAPY_TYPE_KEY, NON_NUMERIC_ENCODED_TAG, NON_NUMERIC_TAG, NUMERIC_TAG
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Iterable, Sequence
@@ -93,11 +94,15 @@ def df_to_anndata(
 
     # initializing an OrderedDict with a non-empty dict might not be intended,
     # see: https://stackoverflow.com/questions/25480089/right-way-to-initialize-an-ordereddict-using-its-constructor-such-that-it-retain/25480206
-    uns = OrderedDict()
+    uns = OrderedDict()  # type: ignore
     # store all numerical/non-numerical columns that are not obs only
     binary_columns = _detect_binary_columns(df, numerical_columns)
-    uns["numerical_columns"] = list(set(numerical_columns) | set(binary_columns))
-    uns["non_numerical_columns"] = list(set(dataframes.df.columns) ^ set(uns["numerical_columns"]))
+
+    var = pd.DataFrame(index=list(dataframes.df.columns))
+    var[EHRAPY_TYPE_KEY] = NON_NUMERIC_TAG
+    var.loc[var.index.isin(list(set(numerical_columns) | set(binary_columns))), EHRAPY_TYPE_KEY] = NUMERIC_TAG
+    # in case of encoded columns by ehrapy, want to be able to read it back in
+    var.loc[var.index.str.contains("ehrapycat"), EHRAPY_TYPE_KEY] = NON_NUMERIC_ENCODED_TAG
 
     all_num = True if len(numerical_columns) == len(list(dataframes.df.columns)) else False
     X = X.astype(np.number) if all_num else X.astype(object)
@@ -105,7 +110,7 @@ def df_to_anndata(
     adata = AnnData(
         X=X,
         obs=_cast_obs_columns(dataframes.obs),
-        var=pd.DataFrame(index=list(dataframes.df.columns)),
+        var=var,
         layers={"original": X.copy()},
         uns=uns,
     )
@@ -186,7 +191,7 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False)
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.ad.move_to_obs(adata, ['age'], copy_obs=False)
+        >>> ep.ad.move_to_obs(adata, ["age"], copy_obs=False)
     """
     if isinstance(to_obs, str):  # pragma: no cover
         to_obs = [to_obs]
@@ -202,35 +207,39 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False)
             f"Columns `{[col for col in to_obs if col not in adata.var_names.values]}` are not in var_names."
         )
 
+    cols_to_obs_indices = adata.var_names.isin(to_obs)
+
+    num_set = _get_var_indices_for_type(adata, NUMERIC_TAG)
+    var_num = list(set(to_obs) & set(num_set))
+
     if copy_obs:
-        cols_to_obs_indices = adata.var_names.isin(to_obs)
         cols_to_obs = adata[:, cols_to_obs_indices].to_df()
         adata.obs = adata.obs.join(cols_to_obs)
-        num_set = set(adata.uns["numerical_columns"].copy())
-        non_num_set = set(adata.uns["non_numerical_columns"].copy())
-        var_num = []
-        var_non_num = []
-        for var in to_obs:
-            if var in num_set:
-                var_num.append(var)
-            elif var in non_num_set:
-                var_non_num.append(var)
         adata.obs[var_num] = adata.obs[var_num].apply(pd.to_numeric, errors="ignore", downcast="float")
         adata.obs = _cast_obs_columns(adata.obs)
     else:
-        cols_to_obs_indices = adata.var_names.isin(to_obs)
         df = adata[:, cols_to_obs_indices].to_df()
         adata._inplace_subset_var(~cols_to_obs_indices)
         adata.obs = adata.obs.join(df)
-        updated_num_uns, updated_non_num_uns, num_var = _update_uns(adata, to_obs)
-        adata.obs[num_var] = adata.obs[num_var].apply(pd.to_numeric, errors="ignore", downcast="float")
+        adata.obs[var_num] = adata.obs[var_num].apply(pd.to_numeric, errors="ignore", downcast="float")
         adata.obs = _cast_obs_columns(adata.obs)
-        adata.uns["numerical_columns"] = updated_num_uns
-        adata.uns["non_numerical_columns"] = updated_non_num_uns
 
     logg.info(f"Added `{to_obs}` to `obs`.")
 
     return adata
+
+
+def _get_var_indices_for_type(adata: AnnData, tag: str) -> list[str]:
+    """Get indices of columns in var for a given tag.
+
+    Args:
+        adata: The AnnData object
+        tag: The tag to search for, should be one of `NUMERIC_TAG`, `NON_NUMERIC_TAG` or `NON_NUMERIC_ENCODED_TAG`
+
+    Returns:
+        List of numeric columns
+    """
+    return adata.var_names[adata.var[EHRAPY_TYPE_KEY] == tag].tolist()
 
 
 def delete_from_obs(adata: AnnData, to_delete: list[str]) -> AnnData:
@@ -246,8 +255,8 @@ def delete_from_obs(adata: AnnData, to_delete: list[str]) -> AnnData:
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.ad.move_to_obs(adata, ['age'], copy_obs=True)
-        >>> ep.ad.delete_from_obs(adata, ['age'])
+        >>> ep.ad.move_to_obs(adata, ["age"], copy_obs=True)
+        >>> ep.ad.delete_from_obs(adata, ["age"])
     """
     if isinstance(to_delete, str):  # pragma: no cover
         to_delete = [to_delete]
@@ -278,8 +287,8 @@ def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.ad.move_to_obs(adata, ['age'], copy_obs=False)
-        >>> new_adata = ep.ad.move_to_x(adata, ['age'])
+        >>> ep.ad.move_to_obs(adata, ["age"], copy_obs=False)
+        >>> new_adata = ep.ad.move_to_x(adata, ["age"])
     """
     if isinstance(to_x, str):  # pragma: no cover
         to_x = [to_x]
@@ -303,13 +312,13 @@ def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
         )
 
     if cols_not_in_x:
-        new_adata = concat([adata, AnnData(adata.obs[cols_not_in_x], dtype="object")], axis=1)
+        new_adata = concat([adata, AnnData(adata.obs[cols_not_in_x])], axis=1)
         new_adata.obs = adata.obs[adata.obs.columns[~adata.obs.columns.isin(cols_not_in_x)]]
-        # update uns (copy maybe: could be a costly operation but reduces reference cycles)
-        # users might save those as separate AnnData object and this could be unexpected behaviour if we dont copy
-        num_columns_moved, non_num_columns_moved, _ = _update_uns(adata, cols_not_in_x, True)
-        new_adata.uns["numerical_columns"] = adata.uns["numerical_columns"] + num_columns_moved
-        new_adata.uns["non_numerical_columns"] = adata.uns["non_numerical_columns"] + non_num_columns_moved
+
+        # AnnData's concat discards var if they dont match in their keys, so we need to create a new var
+        created_var = _create_new_var(adata, cols_not_in_x)
+        new_adata.var = pd.concat([adata.var, created_var], axis=0)
+
         logg.info(f"Added `{cols_not_in_x}` features to `X`.")
     else:
         new_adata = adata
@@ -317,49 +326,27 @@ def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
     return new_adata
 
 
-def get_column_indices(adata: AnnData, col_names: str | Sequence[str]) -> list[int]:
+def _get_column_indices(adata: AnnData, col_names: str | Iterable[str]) -> list[int]:
     """Fetches the column indices in X for a given list of column names
 
     Args:
-        adata: :class:`~anndata.AnnData` object
-        col_names: Column names to extract the indices for
+        adata: :class:`~anndata.AnnData` object.
+        col_names: Column names to extract the indices for.
 
     Returns:
-        Set of column indices
-
-    Examples:
-        >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.ad.get_column_indices(adata, ['age', 'gender_num', 'bmi'])
+        List of column indices.
     """
-    if isinstance(col_names, str):  # pragma: no cover
-        col_names = [col_names]
-
-    indices = []
-    for idx, col in enumerate(adata.var_names):
-        if col in col_names:
-            indices.append(idx)
+    col_names = [col_names] if isinstance(col_names, str) else col_names
+    mask = np.isin(adata.var_names, col_names)
+    indices = np.where(mask)[0].tolist()
 
     return indices
-
-
-def _get_column_values(adata: AnnData, indices: int | list[int]) -> np.ndarray:
-    """Fetches the column values for a specific index from X
-
-    Args:
-        adata: :class:`~anndata.AnnData` object
-        indices: The index to extract the values for
-
-    Returns:
-        :class:`~numpy.ndarray` object containing the column values
-    """
-    return np.take(adata.X, indices, axis=1)
 
 
 def type_overview(data: AnnData, sort_by: str | None = None, sort_reversed: bool = False) -> None:  # pragma: no cover
     """Prints the current state of an :class:`~anndata.AnnData` object in a tree format.
 
-    Output could be printed in sorted format by using one of `dtype`, `order`, `num_cats` or `None`, which sorts by data type, lexicographical order,
+    Output can be printed in sorted format by using one of `dtype`, `order`, `num_cats` or `None`, which sorts by data type, lexicographical order,
     number of unique values (excluding NaN's) and unsorted respectively. Note that sorting by `num_cats` only affects
     encoded variables currently and will display unencoded vars unsorted.
 
@@ -508,10 +495,11 @@ def get_numeric_vars(adata: AnnData) -> list[str]:
     """
     _assert_encoded(adata)
 
-    if "numerical_columns" not in adata.uns_keys():
+    # This behaviour is consistent with the previous behaviour, allowing for a simple fully numeric X
+    if EHRAPY_TYPE_KEY not in adata.var.columns:
         return list(adata.var_names.values)
     else:
-        return adata.uns["numerical_columns"]
+        return _get_var_indices_for_type(adata, NUMERIC_TAG)
 
 
 def assert_numeric_vars(adata: AnnData, vars: Sequence[str]):
@@ -555,7 +543,7 @@ def set_numeric_vars(
     if copy:
         adata = adata.copy()
 
-    vars_idx = get_column_indices(adata, vars)
+    vars_idx = _get_column_indices(adata, vars)
 
     for i in range(n_values):
         adata.X[:, vars_idx[i]] = values[:, i]
@@ -599,6 +587,25 @@ def _update_uns(
         all_moved_num_columns = list(moved_columns_set ^ all_moved_non_num_columns)
         logg.info(f"Added `{moved_columns}` columns to `obs`.")
         return all_moved_num_columns, list(all_moved_non_num_columns), None
+
+
+def _create_new_var(adata: AnnData, cols_not_in_x: list[str]) -> pd.DataFrame:
+    """Create a new var DataFrame with the EHRAPY_TYPE_KEY column set for entries from .obs.
+
+    Args:
+        adata: From where to get the .obs
+        cols_not_in_x: .obs columns to move to X
+
+    Returns:
+        New var DataFrame with EHRAPY_TYPE_KEY column set for entries from .obs
+    """
+    all_moved_num_columns = set(cols_not_in_x) & set(adata.obs.select_dtypes(include="number").columns)
+
+    new_var = pd.DataFrame(index=cols_not_in_x)
+    new_var[EHRAPY_TYPE_KEY] = NON_NUMERIC_TAG
+    new_var.loc[list(all_moved_num_columns), EHRAPY_TYPE_KEY] = NUMERIC_TAG
+
+    return new_var
 
 
 def _detect_binary_columns(df: pd.DataFrame, numerical_columns: list[str]) -> list[str]:
@@ -800,7 +807,7 @@ def get_obs_df(  # pragma: no cover
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ages = ep.ad.get_obs_df(adata, keys = ['age'])
+        >>> ages = ep.ad.get_obs_df(adata, keys=["age"])
     """
     return obs_df(adata=adata, keys=keys, obsm_keys=obsm_keys, layer=layer, gene_symbols=features)
 
@@ -826,7 +833,7 @@ def get_var_df(  # pragma: no cover
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> four_patients = ep.ad.get_var_df(adata, keys = ['0', '1', '2', '3'])
+        >>> four_patients = ep.ad.get_var_df(adata, keys=["0", "1", "2", "3"])
     """
     return var_df(adata=adata, keys=keys, varm_keys=varm_keys, layer=layer)
 

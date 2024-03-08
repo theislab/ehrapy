@@ -3,7 +3,7 @@ import pytest
 from anndata import AnnData
 from pandas import DataFrame
 
-from ehrapy.preprocessing import expand_measurements
+from ehrapy.preprocessing import summarize_measurements
 
 
 @pytest.fixture
@@ -21,7 +21,7 @@ def adata_to_expand():
 
 
 def test_all_statistics(adata_to_expand):
-    transformed_adata = expand_measurements(
+    transformed_adata = summarize_measurements(
         adata_to_expand,
     )
 
@@ -38,7 +38,7 @@ def test_all_statistics(adata_to_expand):
 
 
 def test_var_names_subset(adata_to_expand):
-    transformed_adata = expand_measurements(
+    transformed_adata = summarize_measurements(
         adata_to_expand,
         var_names=["measurement1", "measurement2"],
     )
@@ -47,6 +47,6 @@ def test_var_names_subset(adata_to_expand):
 
 
 def test_statistics_subset(adata_to_expand):
-    transformed_adata = expand_measurements(adata_to_expand, statistics=["min"])
+    transformed_adata = summarize_measurements(adata_to_expand, statistics=["min"])
 
     assert transformed_adata.shape == (3, 3)  # (3 patients, 3 measurements * 1 statistics)

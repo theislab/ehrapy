@@ -1,5 +1,7 @@
 <img src="https://user-images.githubusercontent.com/21954664/156930990-0d668468-0cd9-496e-995a-96d2c2407cf5.png" alt="ehrapy logo">
 
+ehrapy is a modular open-source Python framework designed for exploratory end-to-end analysis of heterogeneous epidemiology and electronic health record data.
+
 ```{eval-rst}
 .. card:: Installation :octicon:`plug;1em;`
     :link: installation
@@ -64,8 +66,10 @@ authors
 references
 ```
 
--   Consider citing [scanpy Genome Biology (2018)] along with original {doc}`references <references>`.
--   A paper for ehrapy is in the works.
+# Citation
+
+[Exploratory electronic health record analysis with ehrapy Lukas Heumos, Philipp Ehmele, Tim Treis, Julius Upmeier zu Belzen, Altana Namsaraeva, Nastassya Horlava, Vladimir A. Shitov, Xinyue Zhang, Luke Zappia, Rainer Knoll, Niklas J. Lang, Leon Hetzel, Isaac Virshup, Lisa Sikkema, Eljas Roellin, Fabiola Curion, Roland Eils, Herbert B. Schiller, Anne Hilgendorff, Fabian J. Theis
+medRxiv 2023.12.11.23299816; doi: https://doi.org/10.1101/2023.12.11.23299816 ](https://www.medrxiv.org/content/10.1101/2023.12.11.23299816v1).
 
 # Indices and tables
 

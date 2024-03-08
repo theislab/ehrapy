@@ -10,13 +10,13 @@ if TYPE_CHECKING:
     from anndata import AnnData
 
 
-def expand_measurements(
+def summarize_measurements(
     adata: AnnData,
     layer: str = None,
     var_names: Iterable[str] | None = None,
     statistics: Iterable[str] = None,
 ) -> AnnData:
-    """Expands numerical measurements into minimum, maximum and average values.
+    """Summarizes numerical measurements into minimum, maximum and average values.
 
     Args:
         adata: AnnData object containing measurements that

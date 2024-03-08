@@ -7,7 +7,7 @@ from anndata import AnnData
 
 import ehrapy as ep
 from ehrapy.io._read import read_csv
-from ehrapy.preprocessing._encode import encode
+from ehrapy.preprocessing._encoding import encode
 from ehrapy.preprocessing._quality_control import _obs_qc_metrics, _var_qc_metrics
 
 CURRENT_DIR = Path(__file__).parent
@@ -86,7 +86,7 @@ def test_obs_nan_qc_metrics():
     adata.X[0][4] = np.nan
     adata2 = encode(adata, encodings={"one-hot": ["clinic_day"]})
     obs_metrics = _obs_qc_metrics(adata2)
-    assert obs_metrics.iloc[0][0] == 1
+    assert obs_metrics.iloc[0].iloc[0] == 1
 
 
 def test_var_nan_qc_metrics():
@@ -94,11 +94,11 @@ def test_var_nan_qc_metrics():
     adata.X[0][4] = np.nan
     adata2 = encode(adata, encodings={"one-hot": ["clinic_day"]})
     var_metrics = _var_qc_metrics(adata2)
-    assert var_metrics.iloc[0][0] == 1
-    assert var_metrics.iloc[1][0] == 1
-    assert var_metrics.iloc[2][0] == 1
-    assert var_metrics.iloc[3][0] == 1
-    assert var_metrics.iloc[4][0] == 1
+    assert var_metrics.iloc[0].iloc[0] == 1
+    assert var_metrics.iloc[1].iloc[0] == 1
+    assert var_metrics.iloc[2].iloc[0] == 1
+    assert var_metrics.iloc[3].iloc[0] == 1
+    assert var_metrics.iloc[4].iloc[0] == 1
 
 
 def test_calculate_qc_metrics(missing_values_adata):
@@ -126,14 +126,16 @@ def test_qc_lab_measurements_simple(lab_measurements_simple_adata):
         unit="SI",
     )
 
-    assert list(lab_measurements_simple_adata.obs["Acetaminophen normal"]) == (
-        expected_obs_data["Acetaminophen normal"]
+    assert (
+        list(lab_measurements_simple_adata.obs["Acetaminophen normal"]) == (expected_obs_data["Acetaminophen normal"])
     )
-    assert list(lab_measurements_simple_adata.obs["Acetoacetic acid normal"]) == (
-        expected_obs_data["Acetoacetic acid normal"]
+    assert (
+        list(lab_measurements_simple_adata.obs["Acetoacetic acid normal"])
+        == (expected_obs_data["Acetoacetic acid normal"])
     )
-    assert list(lab_measurements_simple_adata.obs["Beryllium, toxic normal"]) == (
-        expected_obs_data["Beryllium, toxic normal"]
+    assert (
+        list(lab_measurements_simple_adata.obs["Beryllium, toxic normal"])
+        == (expected_obs_data["Beryllium, toxic normal"])
     )
 
 
@@ -154,11 +156,13 @@ def test_qc_lab_measurements_simple_layer(lab_measurements_layer_adata):
     )
 
     assert list(lab_measurements_layer_adata.obs["Acetaminophen normal"]) == (expected_obs_data["Acetaminophen normal"])
-    assert list(lab_measurements_layer_adata.obs["Acetoacetic acid normal"]) == (
-        expected_obs_data["Acetoacetic acid normal"]
+    assert (
+        list(lab_measurements_layer_adata.obs["Acetoacetic acid normal"])
+        == (expected_obs_data["Acetoacetic acid normal"])
     )
-    assert list(lab_measurements_layer_adata.obs["Beryllium, toxic normal"]) == (
-        expected_obs_data["Beryllium, toxic normal"]
+    assert (
+        list(lab_measurements_layer_adata.obs["Beryllium, toxic normal"])
+        == (expected_obs_data["Beryllium, toxic normal"])
     )
 
 

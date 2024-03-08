@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from ehrapy import ehrapy_settings
 from ehrapy.io._read import read_csv, read_fhir, read_h5ad
-from ehrapy.preprocessing._encode import encode
+from ehrapy.preprocessing._encoding import encode
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -116,7 +116,7 @@ def heart_failure(encoded: bool = False, columns_obs_only: dict[str, list[str]] 
         columns_obs_only: Columns to include in obs only and not X.
 
     Returns:
-        :class:`~anndata.AnnData` object of the MIMIC-II dataset
+        :class:`~anndata.AnnData` object of the heart failure dataset
 
     Examples:
         >>> import ehrapy as ep
@@ -483,7 +483,7 @@ def parkinsons(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.dt.parkinsons(columns_obs_only=['name'], encoded=True)
+        >>> adata = ep.dt.parkinsons(columns_obs_only=["name"], encoded=True)
     """
     adata: AnnData = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/parkinsons.csv",
@@ -582,7 +582,7 @@ def parkinson_dataset_with_replicated_acoustic_features(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.dt.parkinson_dataset_with_replicated_acoustic_features(columns_obs_only=['ID'], encoded=True)
+        >>> adata = ep.dt.parkinson_dataset_with_replicated_acoustic_features(columns_obs_only=["ID"], encoded=True)
     """
     adata: AnnData = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/parkinson_dataset_with_replicated_acoustic_features.csv",

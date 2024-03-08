@@ -8,10 +8,8 @@ from typing import TYPE_CHECKING, Any, Callable, Literal, Union
 
 import scanpy as sc
 from scanpy.plotting import DotPlot, MatrixPlot, StackedViolin
-from scanpy.plotting._tools.scatterplots import _wraps_plot_scatter
 
-from ehrapy.tools.nlp._medcat import EhrapyMedcat, MedCAT
-from ehrapy.util._doc_util import (
+from ehrapy._doc_util import (
     _doc_params,
     doc_adata_color_etc,
     doc_common_groupby_plot_args,
@@ -20,7 +18,6 @@ from ehrapy.util._doc_util import (
     doc_panels,
     doc_scatter_basic,
     doc_scatter_embedding,
-    doc_scatter_spatial,
     doc_show_save_ax,
     doc_vbound_percentile,
     doc_vboundnorm,
@@ -101,7 +98,7 @@ def scatter(
 
             import ehrapy as ep
 
-            adata = ep.data.mimic_2(encoded=True)
+            adata = ep.dt.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
@@ -137,30 +134,8 @@ def scatter(
         save=save,
         ax=ax,
     )
-    if isinstance(adata, MedCAT):
-        if color:
-            if isinstance(color, str):
-                color = [color]  # type: ignore
-            additional_columns: list[str] = []
-            for colored_column in color:
-                if (
-                    colored_column not in set(adata.anndata.var_names)
-                    and colored_column not in set(adata.anndata.obs.columns)
-                    and not colored_column.startswith("#")
-                ):  # hex codes are not treated as extracted entities
-                    EhrapyMedcat.add_binary_column_to_obs(
-                        adata, adata.anndata, colored_column, color, additional_columns  # type: ignore
-                    )
 
-            scatter = scatter_partial(adata=adata.anndata, color=color[0])
-            adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
-            return scatter
-
-        else:
-            return scatter_partial(adata=adata.anndata)
-
-    else:
-        return scatter_partial(adata=adata, color=color)
+    return scatter_partial(adata=adata, color=color)
 
 
 @_doc_params(
@@ -219,7 +194,7 @@ def heatmap(
 
             import ehrapy as ep
 
-            adata = ep.data.mimic_2(encoded=True)
+            adata = ep.dt.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
@@ -275,18 +250,8 @@ def heatmap(
         norm=norm,
         **kwds,
     )
-    if isinstance(adata, MedCAT):
-        if isinstance(groupby, str):
-            groupby = [groupby]
-        additional_columns: list[str] = []
-        for grp_column in groupby:
-            if grp_column not in set(adata.anndata.var_names) and grp_column not in set(adata.anndata.obs.columns):
-                EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, grp_column, groupby, additional_columns)  # type: ignore
-        heatmap = heatmap_partial(adata=adata.anndata, groupby=groupby)
-        adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
-        return heatmap
-    else:
-        return heatmap_partial(adata=adata, groupby=groupby)
+
+    return heatmap_partial(adata=adata, groupby=groupby)
 
 
 @_doc_params(
@@ -370,7 +335,7 @@ def dotplot(
 
             import ehrapy as ep
 
-            adata = ep.data.mimic_2(encoded=True)
+            adata = ep.dt.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.neighbors(adata)
             ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
@@ -434,19 +399,8 @@ def dotplot(
         norm=norm,
         **kwds,
     )
-    if isinstance(adata, MedCAT):
-        # keep loop and lists in case dotplot will accept sequences
-        if isinstance(groupby, str):
-            groupby = [groupby]  # type: ignore
-        additional_columns: list[str] = []
-        for grp_column in groupby:
-            if grp_column not in set(adata.anndata.var_names) and grp_column not in set(adata.anndata.obs.columns):
-                EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, grp_column, groupby, additional_columns)  # type: ignore
-        dotplot = dotplot_partial(adata=adata.anndata, groupby=groupby[0])
-        adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
-        return dotplot
-    else:
-        return dotplot_partial(adata=adata, groupby=groupby)
+
+    return dotplot_partial(adata=adata, groupby=groupby)
 
 
 @_doc_params(show_save_ax=doc_show_save_ax, common_plot_args=doc_common_plot_args)
@@ -487,7 +441,7 @@ def tracksplot(
 
             import ehrapy as ep
 
-            adata = ep.data.mimic_2(encoded=True)
+            adata = ep.dt.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.neighbors(adata)
             ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
@@ -525,18 +479,8 @@ def tracksplot(
         figsize=figsize,
         **kwds,
     )
-    if isinstance(adata, MedCAT):
-        # keep the list and loop in case of groupby could be a sequence in future
-        groupby = [groupby]  # type: ignore
-        additional_columns: list[str] = []
-        for grp_col in groupby:
-            if grp_col not in set(adata.anndata.var_names) and grp_col not in set(adata.anndata.obs.columns):
-                EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, grp_col, groupby, additional_columns)  # type: ignore
-        tracksplot = tracksplot_partial(adata=adata.anndata, groupby=groupby[0])
-        adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
-        return tracksplot
-    else:
-        return tracksplot_partial(adata=adata, groupby=groupby)
+
+    return tracksplot_partial(adata=adata, groupby=groupby)
 
 
 def violin(
@@ -567,7 +511,7 @@ def violin(
     Args:
         adata: :class:`~anndata.AnnData` object object containing all observations.
         keys: Keys for accessing variables of `.var_names` or fields of `.obs`.
-        groupby: The key of the observation grouping to consider. Could also be an entity extracted by ehrapy's medcat tool.
+        groupby: The key of the observation grouping to consider.
         log: Plot on logarithmic axis.
         use_raw: Whether to use `raw` attribute of `adata`. Defaults to `True` if `.raw` is present.
         stripplot: Add a stripplot on top of the violin plot. See :func:`~seaborn.stripplot`.
@@ -599,7 +543,7 @@ def violin(
 
             import ehrapy as ep
 
-            adata = ep.data.mimic_2(encoded=True)
+            adata = ep.dt.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
@@ -629,23 +573,8 @@ def violin(
         ax=ax,
         **kwds,
     )
-    if isinstance(adata, MedCAT):
-        if groupby:
-            if isinstance(groupby, str):
-                groupby = [groupby]  # type: ignore
-            additional_columns: list[str] = []
-            for grp_column in groupby:
-                if grp_column not in set(adata.anndata.var_names) and grp_column not in set(adata.anndata.obs.columns):
-                    EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, grp_column, groupby, additional_columns)  # type: ignore
-            violin = violin_partial(adata=adata.anndata, groupby=groupby[0])
-            adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
-            return violin
 
-        else:
-            return violin_partial(adata=adata.anndata, groupby=None)
-
-    else:
-        return violin_partial(adata=adata, groupby=groupby)
+    return violin_partial(adata=adata, groupby=groupby)
 
 
 @_doc_params(
@@ -729,7 +658,7 @@ def stacked_violin(
 
             import ehrapy as ep
 
-            adata = ep.data.mimic_2(encoded=True)
+            adata = ep.dt.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
@@ -790,23 +719,8 @@ def stacked_violin(
         norm=norm,
         **kwds,
     )
-    if isinstance(adata, MedCAT):
-        if isinstance(groupby, str):
-            groupby = [groupby]  # type: ignore
-        additional_columns: list[str] = []
-        for colored_column in groupby:
-            if colored_column not in set(adata.anndata.var_names) and colored_column not in set(
-                adata.anndata.obs.columns
-            ):
-                EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, colored_column, groupby, additional_columns)  # type: ignore
-        stacked_violin = stacked_vio_partial(
-            adata=adata.anndata, groupby=groupby if isinstance(groupby, Sequence) else groupby[0]
-        )
-        if additional_columns:
-            adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
-        return stacked_violin
-    else:
-        return stacked_vio_partial(adata=adata, groupby=groupby)
+
+    return stacked_vio_partial(adata=adata, groupby=groupby)
 
 
 @_doc_params(
@@ -867,7 +781,7 @@ def matrixplot(
 
             import ehrapy as ep
 
-            adata = ep.data.mimic_2(encoded=True)
+            adata = ep.dt.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
@@ -924,21 +838,8 @@ def matrixplot(
         norm=norm,
         **kwds,
     )
-    if isinstance(adata, MedCAT):
-        if isinstance(groupby, str):
-            groupby = [groupby]  # type: ignore
-        additional_columns: list[str] = []
-        for colored_column in groupby:
-            if colored_column not in set(adata.anndata.var_names) and colored_column not in set(
-                adata.anndata.obs.columns
-            ):
-                EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, colored_column, groupby, additional_columns)  # type: ignore
-        matrixplot = matrix_partial(adata=adata.anndata, groupby=groupby)
-        if additional_columns:
-            adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
-        return matrixplot
-    else:
-        return matrix_partial(adata=adata, groupby=groupby)
+
+    return matrix_partial(adata=adata, groupby=groupby)
 
 
 @_doc_params(show_save_ax=doc_show_save_ax)
@@ -970,7 +871,7 @@ def clustermap(
 
             import ehrapy as ep
 
-            adata = ep.data.mimic_2(encoded=True)
+            adata = ep.dt.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
@@ -981,23 +882,8 @@ def clustermap(
         .. image:: /_static/docstring_previews/clustermap.png
     """
     clustermap_partial = partial(sc.pl.clustermap, use_raw=use_raw, show=show, save=save, **kwds)
-    if isinstance(adata, MedCAT):
-        if obs_keys:
-            grp_flag = False
-            obs_keys = [obs_keys]  # type: ignore
-            if obs_keys[0] not in set(adata.anndata.var_names) and obs_keys[0] not in set(adata.anndata.obs.columns):
-                EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, obs_keys[0], obs_keys, None)  # type: ignore
-                grp_flag = True
-            clustermap = clustermap_partial(adata=adata.anndata, obs_keys=obs_keys[0])
-            if grp_flag:
-                adata.anndata.obs.drop(obs_keys[0], inplace=True, axis=1)
-            return clustermap
 
-        else:
-            return clustermap_partial(adata=adata.anndata, obs_keys=None)
-
-    else:
-        return clustermap_partial(adata=adata, obs_keys=obs_keys)
+    return clustermap_partial(adata=adata, obs_keys=obs_keys)
 
 
 def ranking(
@@ -1038,7 +924,7 @@ def ranking(
 
             import ehrapy as ep
 
-            adata = ep.data.mimic_2(encoded=True)
+            adata = ep.dt.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
@@ -1093,7 +979,7 @@ def dendrogram(
 
             import ehrapy as ep
 
-            adata = ep.data.mimic_2(encoded=True)
+            adata = ep.dt.mimic_2(encoded=True)
             ep.pp.knn_impute(adata)
             ep.pp.log_norm(adata, offset=1)
             ep.pp.neighbors(adata)
@@ -1112,22 +998,11 @@ def dendrogram(
         save=save,
         ax=ax,
     )
-    if isinstance(adata, MedCAT):
-        grp_flag = False
-        groupby = [groupby]  # type: ignore
-        if groupby[0] not in set(adata.anndata.var_names) and groupby[0] not in set(adata.anndata.obs.columns):
-            EhrapyMedcat.add_binary_column_to_obs(adata, adata.anndata, groupby[0], groupby, None)  # type: ignore
-            grp_flag = True
-        dendrogram = dendrogram_partial(adata=adata.anndata, groupby=groupby[0])
-        if grp_flag:
-            adata.anndata.obs.drop(groupby[0], inplace=True, axis=1)
-        return dendrogram
 
-    else:
-        return dendrogram_partial(adata=adata, groupby=groupby)
+    return dendrogram_partial(adata=adata, groupby=groupby)
 
 
-@_wraps_plot_scatter
+# @_wraps_plot_scatter
 @_doc_params(
     adata_color_etc=doc_adata_color_etc,
     scatter_bulk=doc_scatter_embedding,
@@ -1157,7 +1032,7 @@ def pca(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.knn_impute(adata)
         >>> ep.pp.log_norm(adata, offset=1)
         >>> ep.pp.neighbors(adata)
@@ -1170,28 +1045,8 @@ def pca(
     pca_partial = partial(
         sc.pl.pca, annotate_var_explained=annotate_var_explained, show=show, return_fig=return_fig, save=save
     )
-    if isinstance(adata, MedCAT):
-        if kwargs.get("color"):
-            if isinstance(kwargs["color"], str):
-                kwargs["color"] = [kwargs["color"]]
-            additional_columns: list[str] = []
-            for colored_column in kwargs["color"]:
-                if colored_column not in set(adata.anndata.var_names) and colored_column not in set(
-                    adata.anndata.obs.columns
-                ):
-                    EhrapyMedcat.add_binary_column_to_obs(
-                        adata, adata.anndata, colored_column, kwargs["color"], additional_columns
-                    )
-            pca = pca_partial(adata=adata.anndata, **kwargs)
-            if additional_columns:
-                adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
-            return pca
 
-        else:
-            return pca_partial(adata=adata.anndata, **kwargs)
-
-    else:
-        return pca_partial(adata=adata, **kwargs)
+    return pca_partial(adata=adata, **kwargs)
 
 
 def pca_loadings(
@@ -1216,12 +1071,12 @@ def pca_loadings(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.knn_impute(adata)
         >>> ep.pp.log_norm(adata, offset=1)
         >>> ep.pp.neighbors(adata)
         >>> ep.pp.pca(adata)
-        >>> ep.pl.pca_loadings(adata, components='1,2,3')
+        >>> ep.pl.pca_loadings(adata, components="1,2,3")
 
     Preview:
         .. image:: /_static/docstring_previews/pca_loadings.png
@@ -1252,7 +1107,7 @@ def pca_variance_ratio(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.knn_impute(adata)
         >>> ep.pp.log_norm(adata, offset=1)
         >>> ep.pp.neighbors(adata)
@@ -1283,12 +1138,12 @@ def pca_overview(adata: AnnData, **params):  # pragma: no cover
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.knn_impute(adata)
         >>> ep.pp.log_norm(adata, offset=1)
         >>> ep.pp.neighbors(adata)
         >>> ep.pp.pca(adata)
-        >>> ep.pl.pca_overview(adata, components='1,2,3', color="service_unit")
+        >>> ep.pl.pca_overview(adata, components="1,2,3", color="service_unit")
 
     Preview:
         .. image:: /_static/docstring_previews/pca_overview_1.png
@@ -1300,7 +1155,7 @@ def pca_overview(adata: AnnData, **params):  # pragma: no cover
     return sc.pl.pca_overview(adata=adata, **params)
 
 
-@_wraps_plot_scatter
+# @_wraps_plot_scatter
 @_doc_params(
     adata_color_etc=doc_adata_color_etc,
     edges_arrows=doc_edges_arrows,
@@ -1321,7 +1176,7 @@ def tsne(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.knn_impute(adata)
         >>> ep.pp.log_norm(adata, offset=1)
         >>> ep.pp.neighbors(adata)
@@ -1330,7 +1185,9 @@ def tsne(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover
 
         .. image:: /_static/docstring_previews/tsne_1.png
 
-        >>> ep.pl.tsne(adata, color=["day_icu_intime", "service_unit"], wspace=0.5, title=["Day of ICU admission", "Service unit"])
+        >>> ep.pl.tsne(
+        ...     adata, color=["day_icu_intime", "service_unit"], wspace=0.5, title=["Day of ICU admission", "Service unit"]
+        ... )
 
         .. image:: /_static/docstring_previews/tsne_2.png
 
@@ -1339,37 +1196,18 @@ def tsne(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover
 
         .. image:: /_static/docstring_previews/tsne_3.png
     """
-    if isinstance(adata, MedCAT):
-        if kwargs.get("color"):
-            if isinstance(kwargs["color"], str):
-                kwargs["color"] = [kwargs["color"]]
-            additional_columns: list[str] = []
-            for colored_column in kwargs["color"]:
-                if colored_column not in set(adata.anndata.var_names) and colored_column not in set(
-                    adata.anndata.obs.columns
-                ):
-                    EhrapyMedcat.add_binary_column_to_obs(
-                        adata, adata.anndata, colored_column, kwargs["color"], additional_columns
-                    )
-            tsne = sc.pl.tsne(adata=adata.anndata, **kwargs)
-            if additional_columns:
-                adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
-            return tsne
 
-        else:
-            return sc.pl.tsne(adata=adata.anndata, **kwargs)
-    else:
-        return sc.pl.tsne(adata=adata, **kwargs)
+    return sc.pl.tsne(adata=adata, **kwargs)
 
 
-@_wraps_plot_scatter
+# @_wraps_plot_scatter
 @_doc_params(
     adata_color_etc=doc_adata_color_etc,
     edges_arrows=doc_edges_arrows,
     scatter_bulk=doc_scatter_embedding,
     show_save_ax=doc_show_save_ax,
 )
-def umap(adata: AnnData | MedCAT, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover
+def umap(adata: AnnData, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover
     """Scatter plot in UMAP basis.
 
     Args:
@@ -1383,7 +1221,7 @@ def umap(adata: AnnData | MedCAT, **kwargs) -> Axes | list[Axes] | None:  # prag
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.knn_impute(adata)
         >>> ep.pp.log_norm(adata, offset=1)
         >>> ep.pp.neighbors(adata)
@@ -1392,7 +1230,9 @@ def umap(adata: AnnData | MedCAT, **kwargs) -> Axes | list[Axes] | None:  # prag
 
         .. image:: /_static/docstring_previews/umap_1.png
 
-        >>> ep.pl.umap(adata, color=["day_icu_intime", "service_unit"], wspace=0.5, title=["Day of ICU admission", "Service unit"])
+        >>> ep.pl.umap(
+        ...     adata, color=["day_icu_intime", "service_unit"], wspace=0.5, title=["Day of ICU admission", "Service unit"]
+        ... )
 
         .. image:: /_static/docstring_previews/umap_2.png
 
@@ -1401,30 +1241,11 @@ def umap(adata: AnnData | MedCAT, **kwargs) -> Axes | list[Axes] | None:  # prag
 
         .. image:: /_static/docstring_previews/umap_3.png
     """
-    if isinstance(adata, MedCAT):
-        if kwargs.get("color"):
-            if isinstance(kwargs["color"], str):
-                kwargs["color"] = [kwargs["color"]]
-            additional_columns: list[str] = []
-            for colored_column in kwargs["color"]:
-                if colored_column not in set(adata.anndata.var_names) and colored_column not in set(
-                    adata.anndata.obs.columns
-                ):
-                    EhrapyMedcat.add_binary_column_to_obs(
-                        adata, adata.anndata, colored_column, kwargs["color"], additional_columns
-                    )
-            umap = sc.pl.umap(adata=adata.anndata, **kwargs)
-            adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
-            return umap
 
-        else:
-            return sc.pl.umap(adata=adata.anndata, **kwargs)
-
-    else:
-        return sc.pl.umap(adata=adata, **kwargs)
+    return sc.pl.umap(adata=adata, **kwargs)
 
 
-@_wraps_plot_scatter
+# @_wraps_plot_scatter
 @_doc_params(
     adata_color_etc=doc_adata_color_etc,
     scatter_bulk=doc_scatter_embedding,
@@ -1443,41 +1264,21 @@ def diffmap(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.knn_impute(adata)
         >>> ep.pp.log_norm(adata, offset=1)
         >>> ep.pp.neighbors(adata)
         >>> ep.tl.diffmap(adata)
-        >>> ep.pl.diffmap(adata, color='day_icu_intime')
+        >>> ep.pl.diffmap(adata, color="day_icu_intime")
 
     Preview:
         .. image:: /_static/docstring_previews/diffmap.png
     """
-    if isinstance(adata, MedCAT):
-        if kwargs.get("color"):
-            if isinstance(kwargs["color"], str):
-                kwargs["color"] = [kwargs["color"]]
-            additional_columns: list[str] = []
-            for colored_column in kwargs["color"]:
-                if colored_column not in set(adata.anndata.var_names) and colored_column not in set(
-                    adata.anndata.obs.columns
-                ):
-                    EhrapyMedcat.add_binary_column_to_obs(
-                        adata, adata.anndata, colored_column, kwargs["color"], additional_columns
-                    )
-            diffmap = sc.pl.diffmap(adata=adata.anndata, **kwargs)
-            if additional_columns:
-                adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
-            return diffmap
 
-        else:
-            return sc.pl.diffmap(adata=adata.anndata, **kwargs)
-
-    else:
-        return sc.pl.diffmap(adata=adata, **kwargs)
+    return sc.pl.diffmap(adata=adata, **kwargs)
 
 
-@_wraps_plot_scatter
+# @_wraps_plot_scatter
 @_doc_params(
     adata_color_etc=doc_adata_color_etc,
     edges_arrows=doc_edges_arrows,
@@ -1501,7 +1302,7 @@ def draw_graph(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.knn_impute(adata)
         >>> ep.pp.log_norm(adata, offset=1)
         >>> ep.pp.neighbors(adata)
@@ -1522,28 +1323,8 @@ def draw_graph(
         .. image:: /_static/docstring_previews/draw_graph_2.png
     """
     draw_graph_part = partial(sc.pl.draw_graph, layout=layout)
-    if isinstance(adata, MedCAT):
-        if kwargs.get("color"):
-            if isinstance(kwargs["color"], str):
-                kwargs["color"] = [kwargs["color"]]
-            additional_columns: list[str] = []
-            for colored_column in kwargs["color"]:
-                if colored_column not in set(adata.anndata.var_names) and colored_column not in set(
-                    adata.anndata.obs.columns
-                ):
-                    EhrapyMedcat.add_binary_column_to_obs(
-                        adata, adata.anndata, colored_column, kwargs["color"], additional_columns
-                    )
-            graph = draw_graph_part(adata=adata.anndata, **kwargs)
-            if additional_columns:
-                adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
-            return graph
 
-        else:
-            return draw_graph_part(adata=adata.anndata, **kwargs)
-
-    else:
-        return draw_graph_part(adata=adata, **kwargs)
+    return draw_graph_part(adata=adata, **kwargs)
 
 
 class Empty(Enum):
@@ -1551,80 +1332,6 @@ class Empty(Enum):
 
 
 _empty = Empty.token
-
-
-@_wraps_plot_scatter
-@_doc_params(
-    adata_color_etc=doc_adata_color_etc,
-    scatter_spatial=doc_scatter_spatial,
-    scatter_bulk=doc_scatter_embedding,
-    show_save_ax=doc_show_save_ax,
-)
-def spatial(
-    adata,
-    *,
-    basis: str = "spatial",
-    img: np.ndarray | None = None,
-    img_key: str | None | Empty = _empty,
-    library_id: str | Empty = _empty,
-    crop_coord: tuple[int, int, int, int] = None,
-    alpha_img: float = 1.0,
-    bw: bool | None = False,
-    size: float = 1.0,
-    scale_factor: float | None = None,
-    spot_size: float | None = None,
-    na_color: ColorLike | None = None,
-    show: bool | None = None,
-    return_fig: bool | None = None,
-    save: bool | str | None = None,
-    **kwargs,
-) -> Axes | list[Axes] | None:  # pragma: no cover
-    """Scatter plot in spatial coordinates.
-
-    This function allows overlaying data on top of images.
-    Use the parameter `img_key` to see the image in the background
-    And the parameter `library_id` to select the image.
-    By default, `'hires'` and `'lowres'` are attempted.
-    Use `crop_coord`, `alpha_img`, and `bw` to control how it is displayed.
-    Use `size` to scale the size of the Visium spots plotted on top.
-    As this function is designed to for imaging data, there are two key assumptions
-    about how coordinates are handled:
-
-    1. The origin (e.g `(0, 0)`) is at the top left – as is common convention
-    with image data.
-    2. Coordinates are in the pixel space of the source image, so an equal
-    aspect ratio is assumed.
-    If your anndata object has a `"spatial"` entry in `.uns`, the `img_key`
-    and `library_id` parameters to find values for `img`, `scale_factor`,
-    and `spot_size` arguments. Alternatively, these values be passed directly.
-
-    Args:
-        {adata_color_etc}
-        {scatter_spatial}
-        {scatter_bulk}
-        {show_save_ax}
-
-    Returns:
-        If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
-    """
-    return sc.pl.spatial(
-        adata=adata,
-        basis=basis,
-        img=img,
-        img_key=img_key,
-        library_id=library_id,
-        crop_coord=crop_coord,
-        alpha_img=alpha_img,
-        bw=bw,
-        size=size,
-        scale_factor=scale_factor,
-        spot_size=spot_size,
-        na_color=na_color,
-        show=show,
-        return_fig=return_fig,
-        save=save,
-        **kwargs,
-    )
 
 
 @_doc_params(
@@ -1694,12 +1401,12 @@ def embedding(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.knn_impute(adata)
         >>> ep.pp.log_norm(adata, offset=1)
         >>> ep.pp.neighbors(adata)
         >>> ep.tl.umap(adata)
-        >>> ep.pl.embedding(adata, 'X_umap', color='icu_exp_flg')
+        >>> ep.pl.embedding(adata, "X_umap", color="icu_exp_flg")
 
     Preview:
         .. image:: /_static/docstring_previews/embedding.png
@@ -1750,28 +1457,7 @@ def embedding(
         **kwargs,
     )
 
-    if isinstance(adata, MedCAT):
-        if color:
-            if isinstance(color, str):
-                color = [color]  # type: ignore
-            additional_columns: list[str] = []
-            for colored_column in color:
-                if colored_column not in set(adata.anndata.var_names) and colored_column not in set(
-                    adata.anndata.obs.columns
-                ):
-                    EhrapyMedcat.add_binary_column_to_obs(
-                        adata, adata.anndata, colored_column, color, additional_columns  # type: ignore
-                    )
-            _embedding = embedding_partial(adata=adata.anndata, color=color)
-            if additional_columns:
-                adata.anndata.obs.drop(additional_columns, inplace=True, axis=1)
-            return _embedding
-
-        else:
-            return embedding_partial(adata=adata.anndata, color=None)
-
-    else:
-        return embedding_partial(adata=adata, color=color)
+    return embedding_partial(adata=adata, color=color)
 
 
 @_doc_params(vminmax=doc_vbound_percentile, panels=doc_panels, show_save_ax=doc_show_save_ax)
@@ -1839,7 +1525,7 @@ def embedding_density(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.knn_impute(adata)
         >>> ep.pp.log_norm(adata, offset=1)
         >>> ep.pp.neighbors(adata)
@@ -1895,13 +1581,13 @@ def dpt_groups_pseudotime(
     Examples:
         >>> import ehrapy as ep
         >>> import numpy as np
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.knn_impute(adata)
         >>> ep.pp.log_norm(adata, offset=1)
-        >>> ep.pp.neighbors(adata, method='gauss')
+        >>> ep.pp.neighbors(adata, method="gauss")
         >>> ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
         >>> ep.tl.diffmap(adata, n_comps=10)
-        >>> adata.uns['iroot'] = np.flatnonzero(adata.obs['leiden_0_5'] == '0')[0]
+        >>> adata.uns["iroot"] = np.flatnonzero(adata.obs["leiden_0_5"] == "0")[0]
         >>> ep.tl.dpt(adata, n_branchings=3)
         >>> ep.pl.dpt_groups_pseudotime(adata)
 
@@ -1930,13 +1616,13 @@ def dpt_timeseries(
     Examples:
         >>> import ehrapy as ep
         >>> import numpy as np
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.knn_impute(adata)
         >>> ep.pp.log_norm(adata, offset=1)
-        >>> ep.pp.neighbors(adata, method='gauss')
+        >>> ep.pp.neighbors(adata, method="gauss")
         >>> ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
         >>> ep.tl.diffmap(adata, n_comps=10)
-        >>> adata.uns['iroot'] = np.flatnonzero(adata.obs['leiden_0_5'] == '0')[0]
+        >>> adata.uns["iroot"] = np.flatnonzero(adata.obs["leiden_0_5"] == "0")[0]
         >>> ep.tl.dpt(adata, n_branchings=3)
         >>> ep.pl.dpt_timeseries(adata)
 
@@ -2058,7 +1744,7 @@ def paga(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.knn_impute(adata)
         >>> ep.pp.log_norm(adata, offset=1)
         >>> ep.pp.neighbors(adata)
@@ -2470,7 +2156,7 @@ def rank_features_groups_stacked_violin(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.knn_impute(adata)
         >>> ep.pp.log_norm(adata, offset=1)
         >>> ep.pp.neighbors(adata)
@@ -2527,7 +2213,7 @@ def rank_features_groups_heatmap(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.knn_impute(adata)
         >>> ep.pp.log_norm(adata, offset=1)
         >>> ep.pp.neighbors(adata)
@@ -2603,7 +2289,7 @@ def rank_features_groups_dotplot(
 
     Example:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.knn_impute(adata)
         >>> ep.pp.neighbors(adata)
         >>> ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
@@ -2681,7 +2367,7 @@ def rank_features_groups_matrixplot(
 
     Example:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.knn_impute(adata)
         >>> ep.pp.neighbors(adata)
         >>> ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
@@ -2739,7 +2425,7 @@ def rank_features_groups_tracksplot(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.knn_impute(adata)
         >>> ep.pp.log_norm(adata, offset=1)
         >>> ep.pp.neighbors(adata)

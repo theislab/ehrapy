@@ -11,12 +11,12 @@ needs_sphinx = "4.3"
 
 # General information about the project.
 project = "ehrapy"
-copyright = "2021, Lukas Heumos, Theislab"
+copyright = "2021-2024, Lukas Heumos, Theislab"
 author = "Lukas Heumos"
 github_repo = "ehrapy"
 
-version = "0.6.0"
-release = "0.6.0"
+version = "0.7.0"
+release = "0.7.0"
 
 extensions = [
     "myst_parser",
@@ -170,9 +170,7 @@ nbsphinx_prolog = r"""
         Some tutorial content may look better in light mode.
         </p>
     </div>
-""".format(
-    version=version, docname="{{ docname|e }}"
-)
+""".format(version=version, docname="{{ docname|e }}")
 nbsphinx_thumbnails = {
     "tutorials/notebooks/ehrapy_introduction": "_static/ehrapy_logos/ehrapy_pure.png",
     "tutorials/notebooks/mimic_2_introduction": "_static/tutorials/catheter.png",
@@ -183,4 +181,5 @@ nbsphinx_thumbnails = {
     "tutorials/notebooks/medcat": "_static/tutorials/nlp.png",
     "tutorials/notebooks/ml_usecases": "_static/tutorials/machine_learning.png",
     "tutorials/notebooks/ontology_mapping": "_static/tutorials/ontology.png",
+    "tutorials/notebooks/fhir": "_static/tutorials/fhir.png",
 }

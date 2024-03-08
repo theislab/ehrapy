@@ -1,0 +1,39 @@
+,row_nr,pretty_name,cui,type_ids,types,meta_anns
+0,0,Diabetes,C0011847,['T047'],['Disease or Syndrome'],Affirmed
+1,0,Sepsis,C0243026,['T047'],['Disease or Syndrome'],Other
+2,0,"Respiratory Distress Syndrome, Adult",C0035222,['T047'],['Disease or Syndrome'],Affirmed
+3,0,Myocardial Infarction,C0027051,['T047'],['Disease or Syndrome'],Other
+4,0,Pulmonary Embolism,C0034065,['T047'],['Disease or Syndrome'],Other
+5,0,Respiratory Failure,C1145670,['T047'],['Disease or Syndrome'],Affirmed
+6,0,Cardiac Arrest,C0018790,['T047'],['Disease or Syndrome'],Affirmed
+7,0,Coronary Arteriosclerosis,C0010054,['T047'],['Disease or Syndrome'],Affirmed
+8,0,Diabetic foot ulcer,C1456868,['T047'],['Disease or Syndrome'],Affirmed
+9,0,"Sleep Apnea, Obstructive",C0520679,['T047'],['Disease or Syndrome'],Affirmed
+10,0,Asthma,C0004096,['T047'],['Disease or Syndrome'],Affirmed
+11,0,Hypertensive disease,C0020538,['T047'],['Disease or Syndrome'],Affirmed
+12,0,Atrial Fibrillation,C0004238,['T047'],['Disease or Syndrome'],Affirmed
+13,0,Degenerative polyarthritis,C0029408,['T047'],['Disease or Syndrome'],Affirmed
+14,0,Anemia,C0002871,['T047'],['Disease or Syndrome'],Affirmed
+15,1,Peripheral Vascular Diseases,C0085096,['T047'],['Disease or Syndrome'],Affirmed
+16,1,Psychotic Disorders,C0033975,['T048'],['Mental or Behavioral Dysfunction'],Affirmed
+17,1,Hypertensive disease,C0020538,['T047'],['Disease or Syndrome'],Affirmed
+18,1,Rheumatoid Arthritis,C0003873,['T047'],['Disease or Syndrome'],Affirmed
+19,1,Ulcer,C0041582,['T047'],['Disease or Syndrome'],Affirmed
+20,2,Anemia,C0002871,['T047'],['Disease or Syndrome'],Affirmed
+21,2,Myocardial Infarction,C0027051,['T047'],['Disease or Syndrome'],Other
+22,2,Pulmonary Embolism,C0034065,['T047'],['Disease or Syndrome'],Other
+23,2,Respiratory Failure,C1145670,['T047'],['Disease or Syndrome'],Affirmed
+24,2,Cardiac Arrest,C0018790,['T047'],['Disease or Syndrome'],Affirmed
+25,2,Coronary Arteriosclerosis,C0010054,['T047'],['Disease or Syndrome'],Affirmed
+26,2,Diabetic foot ulcer,C1456868,['T047'],['Disease or Syndrome'],Affirmed
+27,2,"Sleep Apnea, Obstructive",C0520679,['T047'],['Disease or Syndrome'],Affirmed
+28,2,Asthma,C0004096,['T047'],['Disease or Syndrome'],Affirmed
+29,2,Hypertensive disease,C0020538,['T047'],['Disease or Syndrome'],Affirmed
+30,2,Atrial Fibrillation,C0004238,['T047'],['Disease or Syndrome'],Affirmed
+31,2,Degenerative polyarthritis,C0029408,['T047'],['Disease or Syndrome'],Affirmed
+32,2,Diabetes,C0011847,['T047'],['Disease or Syndrome'],Affirmed
+33,2,"Respiratory Distress Syndrome, Adult",C0035222,['T047'],['Disease or Syndrome'],Affirmed
+34,2,Sepsis,C0243026,['T047'],['Disease or Syndrome'],Other
+35,3,Mood swings,C0085633,['T048'],['Mental or Behavioral Dysfunction'],Other
+36,3,Mood swings,C0085633,['T048'],['Mental or Behavioral Dysfunction'],Affirmed
+37,3,Dyspareunia (female),C0013394,['T047'],['Disease or Syndrome'],Affirmed

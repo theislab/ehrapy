@@ -19,7 +19,7 @@ except ConnectionError:  # pragma: no cover
 from deepl import Formality, GlossaryInfo, TextResult
 from rich import print
 
-from ehrapy.anndata.anndata_ext import _get_column_values, get_column_indices
+from ehrapy.anndata.anndata_ext import _get_column_indices
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -33,9 +33,9 @@ class Translator:
     def __init__(
         self, flavour: str = "deepl", source: str = "de", target: str = "en", token: str = None
     ) -> None:  # pragma: no cover
-        self.translator: DeepL | GoogleTranslate | LibreTranslate | MyMemoryTranslate | MicrosoftTranslate | YandexTranslate = (
-            None
-        )
+        self.translator: (
+            DeepL | GoogleTranslate | LibreTranslate | MyMemoryTranslate | MicrosoftTranslate | YandexTranslate
+        ) = None
         if flavour == "deepl":
             self.translator = DeepL(token)
         elif flavour == "googletranslate":
@@ -155,10 +155,10 @@ class Translator:
             columns = [columns]
 
         translate_text = self.translate_text
-        indices = get_column_indices(adata, columns)
+        indices = _get_column_indices(adata, columns)
 
         for column, index in zip(columns, indices):
-            column_values = _get_column_values(adata, index)
+            column_values = np.take(adata.X, index, axis=1)
 
             if column_values.dtype != str and column_values.dtype != object:  # pragma: no cover
                 raise ValueError("Attempted to translate column {column} which does not only contain strings.")

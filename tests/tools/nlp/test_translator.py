@@ -18,7 +18,8 @@ yandex_token: str = os.environ.get("YANDEX_TOKEN")
 
 
 @pytest.mark.parametrize(
-    "flavour", ["deepl", "googletranslate", "microsoft", "yandex"]  # "mymemory" currently unavailable
+    "flavour",
+    ["deepl", "googletranslate", "microsoft", "yandex"],  # "mymemory" currently unavailable
 )  # "libre" temporarily removed
 class TestTranslator:
     def setup_translator(self, flavour):

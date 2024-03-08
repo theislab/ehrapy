@@ -65,8 +65,18 @@ def ols(
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=False)
-        >>> co2_lm_result = ep.tl.ols(adata, var_names=['pco2_first', 'tco2_first'], formula='tco2_first ~ pco2_first', missing="drop").fit()
-        >>> ep.pl.ols(adata, x='pco2_first', y='tco2_first', ols_results=[co2_lm_result], ols_color=['red'], xlabel="PCO2", ylabel="TCO2")
+        >>> co2_lm_result = ep.tl.ols(
+        ...     adata, var_names=["pco2_first", "tco2_first"], formula="tco2_first ~ pco2_first", missing="drop"
+        ... ).fit()
+        >>> ep.pl.ols(
+        ...     adata,
+        ...     x="pco2_first",
+        ...     y="tco2_first",
+        ...     ols_results=[co2_lm_result],
+        ...     ols_color=["red"],
+        ...     xlabel="PCO2",
+        ...     ylabel="TCO2",
+        ... )
 
         .. image:: /_static/docstring_previews/ols_plot_1.png
 
@@ -175,21 +185,23 @@ def kmf(
         # While in KaplanMeierFitter, `event_observed` is True if the the death was observed, False if the event was lost (right-censored).
         # So we need to flip `censor_fl` when pass `censor_fl` to KaplanMeierFitter
 
-        >>> adata[:, ['censor_flg']].X = np.where(adata[:, ['censor_flg']].X == 0, 1, 0)
-        >>> kmf = ep.tl.kmf(adata[:, ['mort_day_censored']].X, adata[:, ['censor_flg']].X)
-        >>> ep.pl.kmf([kmf], color=['r'], xlim=[0, 700], ylim=[0, 1], xlabel="Days", ylabel="Proportion Survived", show=True)
+        >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
+        >>> kmf = ep.tl.kmf(adata[:, ["mort_day_censored"]].X, adata[:, ["censor_flg"]].X)
+        >>> ep.pl.kmf(
+        ...     [kmf], color=["r"], xlim=[0, 700], ylim=[0, 1], xlabel="Days", ylabel="Proportion Survived", show=True
+        ... )
 
         .. image:: /_static/docstring_previews/kmf_plot_1.png
 
-        >>> T = adata[:, ['mort_day_censored']].X
-        >>> E = adata[:, ['censor_flg']].X
-        >>> groups = adata[:, ['service_unit']].X
-        >>> ix1 = (groups == 'FICU')
-        >>> ix2 = (groups == 'MICU')
-        >>> ix3 = (groups == 'SICU')
-        >>> kmf_1 = ep.tl.kmf(T[ix1], E[ix1], label='FICU')
-        >>> kmf_2 = ep.tl.kmf(T[ix2], E[ix2], label='MICU')
-        >>> kmf_3 = ep.tl.kmf(T[ix3], E[ix3], label='SICU')
+        >>> T = adata[:, ["mort_day_censored"]].X
+        >>> E = adata[:, ["censor_flg"]].X
+        >>> groups = adata[:, ["service_unit"]].X
+        >>> ix1 = groups == "FICU"
+        >>> ix2 = groups == "MICU"
+        >>> ix3 = groups == "SICU"
+        >>> kmf_1 = ep.tl.kmf(T[ix1], E[ix1], label="FICU")
+        >>> kmf_2 = ep.tl.kmf(T[ix2], E[ix2], label="MICU")
+        >>> kmf_3 = ep.tl.kmf(T[ix3], E[ix3], label="SICU")
         >>> ep.pl.kmf([kmf_1, kmf_2, kmf_3], ci_show=[False,False,False], color=['k','r', 'g'],
         >>>           xlim=[0, 750], ylim=[0, 1], xlabel="Days", ylabel="Proportion Survived")
 

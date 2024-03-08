@@ -79,6 +79,7 @@ Other than tools, preprocessing steps usually don’t return an easily interpret
     preprocessing.highly_variable_features
     preprocessing.winsorize
     preprocessing.clip_quantile
+    preprocessing.summarize_measurements
 ```
 
 ### Quality control
@@ -118,7 +119,6 @@ Other than tools, preprocessing steps usually don’t return an easily interpret
     :nosignatures:
 
     preprocessing.encode
-    preprocessing.undo_encoding
 ```
 
 ### Normalization
@@ -189,7 +189,6 @@ In contrast to a preprocessing function, a tool usually adds an easily interpret
     :nosignatures:
 
     tools.leiden
-    tools.louvain
     tools.dendrogram
     tools.dpt
     tools.paga
@@ -204,7 +203,6 @@ In contrast to a preprocessing function, a tool usually adds an easily interpret
 
     tools.rank_features_groups
     tools.filter_rank_features_groups
-    tools.marker_feature_overlap
 ```
 
 ### Dataset integration
@@ -225,10 +223,9 @@ In contrast to a preprocessing function, a tool usually adds an easily interpret
     :nosignatures:
 
     tools.Translator
-    tools.MedCAT
-    tools.mc.run_unsupervised_training
-    tools.mc.annotate_text
-    tools.mc.get_annotation_overview
+    tools.annotate_text
+    tools.get_medcat_annotation_overview
+    tools.add_medcat_annotation_to_obs
 ```
 
 ### Survival Analysis
@@ -243,6 +240,7 @@ In contrast to a preprocessing function, a tool usually adds an easily interpret
     tools.kmf
     tools.test_kmf_logrank
     tools.test_nested_f_statistic
+    tools.cox_ph
 ```
 
 ### Causal Inference
@@ -257,7 +255,7 @@ In contrast to a preprocessing function, a tool usually adds an easily interpret
 
 ## Plotting
 
-The plotting module ehrapy.pl.\* largely parallels the tl.\* and a few of the pp.\* functions.
+The plotting module `ehrapy.pl.\*` largely parallels the `tl.\*` and a few of the `pp.\*` functions.
 For most tools and for some preprocessing functions, you will find a plotting function with the same name.
 
 ### Generic
@@ -323,7 +321,6 @@ Methods that extract and visualize tool-specific annotation in an AnnData object
     plot.umap
     plot.diffmap
     plot.draw_graph
-    plot.spatial
     plot.embedding
     plot.embedding_density
 ```

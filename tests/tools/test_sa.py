@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 import statsmodels
-from lifelines import KaplanMeierFitter
+from lifelines import CoxPHFitter, KaplanMeierFitter
 
 import ehrapy as ep
 
@@ -12,8 +12,8 @@ class TestSA:
         formula = "tco2_first ~ pco2_first"
         var_names = ["tco2_first", "pco2_first"]
         ols = ep.tl.ols(adata, var_names, formula, missing="drop")
-        s = ols.fit().params[1]
-        i = ols.fit().params[0]
+        s = ols.fit().params.iloc[1]
+        i = ols.fit().params.iloc[0]
         assert isinstance(ols, statsmodels.regression.linear_model.OLS)
         assert 0.18857179158259973 == pytest.approx(s)
         assert 16.210859352601442 == pytest.approx(i)
@@ -24,8 +24,8 @@ class TestSA:
         var_names = ["day_28_flg", "age"]
         family = "Binomial"
         glm = ep.tl.glm(adata, var_names, formula, family, missing="drop", as_continuous=["age"])
-        Intercept = glm.fit().params[0]
-        age = glm.fit().params[1]
+        Intercept = glm.fit().params.iloc[0]
+        age = glm.fit().params.iloc[1]
         assert isinstance(glm, statsmodels.genmod.generalized_linear_model.GLM)
         assert 5.778006344870297 == pytest.approx(Intercept)
         assert -0.06523274132877163 == pytest.approx(age)
@@ -75,3 +75,12 @@ class TestSA:
         assert dataframe.shape == (2, 6)
         assert dataframe.iloc[1, 4] == 2
         assert pytest.approx(dataframe.iloc[1, 5], 0.1) == 0.103185
+
+    def test_cox_ph(self):
+        adata = ep.dt.mimic_2(encoded=False)
+        adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
+        cph = ep.tl.cox_ph(adata, "mort_day_censored", "censor_flg")
+
+        assert isinstance(cph, CoxPHFitter)
+        assert len(cph.durations) == 1776
+        assert sum(cph.event_observed) == 497

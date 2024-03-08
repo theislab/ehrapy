@@ -4,7 +4,7 @@ requires = ["hatchling"]
 
 [project]
 name = "ehrapy"
-version = "0.6.0"
+version = "0.7.0"
 description = "Electronic Health Record Analysis with Python."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -15,6 +15,8 @@ authors = [
     {name = "Altana Namsaraeva"},
     {name = "Vladimir Shitov"},
     {name = "Luke Zappia"},
+    {name = "Xinyue Zhang"},
+    {name = "Eljas Roellin"},
 ]
 maintainers = [
     {name = "Lukas Heumos", email = "lukas.heumos@posteo.net"},
@@ -23,6 +25,25 @@ urls.Documentation = "https://ehrapy.readthedocs.io"
 urls.Source = "https://github.com/theislab/ehrapy"
 urls.Home-page = "https://github.com/theislab/ehrapy"
 
+classifiers = [
+    "License :: OSI Approved :: Apache Software License",
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Framework :: Jupyter",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Natural Language :: English",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Scientific/Engineering :: Visualization",
+]
+
 dependencies = [
     "rich",
     "scanpy[leiden]",
@@ -30,11 +51,9 @@ dependencies = [
     "requests",
     "scikit-learn",
     "category_encoders",
-    "deepl",
     "pynndescent",
-    "ipython",
     "deep-translator",
-    "scikit-learn-intelex",
+    "deepl",
     "fancyimpute",
     "miceforest",
     "scikit-misc",
@@ -42,9 +61,8 @@ dependencies = [
     "lifelines",
     "missingno",
     "thefuzz[speedup]",
-    "tabulate",
-    "fhiry",
-    "dowhy"
+    "dowhy",
+    "fhiry"
 ]
 
 [project.optional-dependencies]
@@ -55,12 +73,12 @@ dev = [
     "pre-commit",
 ]
 doc = [
-    "docutils>=0.8,!=0.18.*,!=0.19.*",
-    "sphinx>=4",
+    "docutils",
+    "sphinx",
     "furo",
     "myst-nb",
     "myst-parser",
-    "sphinxcontrib-bibtex>=1.0.0",
+    "sphinxcontrib-bibtex",
     "sphinx-gallery",
     "sphinx-autodoc-typehints",
     "sphinx-copybutton",
@@ -86,14 +104,14 @@ test = [
 source = "vcs"
 
 [tool.coverage.run]
-source = ["pertpy"]
+source_pkgs = ["ehrapy"]
 omit = [
     "**/test_*.py",
     "ehrapy/data/_datasets.py",  # Difficult to test
 ]
 
 [tool.pytest.ini_options]
-testpaths = "pertpy/tests"
+testpaths = "tests"
 xfail_strict = true
 addopts = [
     "--import-mode=importlib",  # allow using test files with same name
@@ -110,11 +128,13 @@ filterwarnings = [
 minversion = 6.0
 norecursedirs = [ '.*', 'build', 'dist', '*.egg', 'data', '__pycache__']
 
-[tool.black]
-line-length = 120
-
 [tool.ruff]
 line-length = 120
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.ruff.lint]
 select = [
     "F",  # Errors detected by Pyflakes
     "E",  # Error detected by Pycodestyle
@@ -165,10 +185,10 @@ ignore = [
     "E402",
 ]
 
-[tool.ruff.pydocstyle]
+[tool.ruff.lint.pydocstyle]
 convention = "google"
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "docs/*" = ["I"]
 "tests/*" = ["D"]
 "*/__init__.py" = ["F401"]

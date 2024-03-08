@@ -1,54 +1,39 @@
 from __future__ import annotations
 
 import sys
-from contextlib import closing
 from datetime import datetime
-from io import StringIO
 
 import session_info
-from IPython.utils.io import Tee
 from rich import print
 
 from ehrapy import __version__
 from ehrapy.logging import _versions_dependencies
 
 
-def print_versions(*, output_file=None) -> None:  # pragma: no cover
+def print_versions():  # pragma: no cover
     """Print print versions of imported packages.
-
-    Args:
-        output_file: Path to output file
 
     Examples:
         >>> import ehrapy as ep
         >>> ep.print_versions()
     """
-    stdout = sys.stdout
     try:
-        buf = sys.stdout = StringIO()
         session_info.show(
             dependencies=True,
+            html=False,
             excludes=[
                 "builtins",
                 "stdlib_list",
                 "importlib_metadata",
+                "jupyter_core"
                 # Special module present if test coverage being calculated
                 # https://gitlab.com/joelostblom/session_info/-/issues/10
-                "transformers",
                 "$coverage",
             ],
-            write_req_file=False,
-            html=False,
         )
-    finally:
-        sys.stdout = stdout
-    output = buf.getvalue()
-
-    if output_file:
-        with closing(Tee(output_file, "w", channel="stdout")):
-            print(output)
-    else:
-        print(output)
+    except AttributeError:
+        print("[bold yellow]Unable to fetch versions for one or more dependencies.")
+        pass
 
 
 def print_version_and_date(*, file=None):  # pragma: no cover
@@ -76,7 +61,6 @@ def print_header(*, file=None):  # pragma: no cover
         ("sklearn", "scikit-learn"),
         "statsmodels",
         ("igraph", "python-igraph"),
-        "louvain",
         "leidenalg",
         "pynndescent",
     ]

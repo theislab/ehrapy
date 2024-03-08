@@ -9,8 +9,6 @@ import pandas as pd
 from rich import print
 from thefuzz import process
 
-from ehrapy import logging as logg
-
 if TYPE_CHECKING:
     from collections.abc import Collection
 
@@ -19,7 +17,7 @@ if TYPE_CHECKING:
 
 def qc_metrics(
     adata: AnnData, qc_vars: Collection[str] = (), layer: str = None, inplace: bool = True
-) -> pd.DataFrame | None:
+) -> tuple[pd.DataFrame, pd.DataFrame] | None:
     """Calculates various quality control metrics.
 
     Uses the original values to calculate the metrics and not the encoded ones.
@@ -32,40 +30,28 @@ def qc_metrics(
         inplace: Whether to add the metrics to obs/var or to solely return a Pandas DataFrame.
 
     Returns:
-        Pandas DataFrame of all calculated QC metrics.
+        Two Pandas DataFrames of all calculated QC metrics for `obs` and `var` respectively.
 
         Observation level metrics include:
 
-        `missing_values_abs`
-            Absolute amount of missing values.
-        `missing_values_pct`
-            Relative amount of missing values in percent.
+        - `missing_values_abs`: Absolute amount of missing values.
+        - `missing_values_pct`: Relative amount of missing values in percent.
 
         Feature level metrics include:
 
-        `missing_values_abs`
-            Absolute amount of missing values.
-        `missing_values_pct`
-            Relative amount of missing values in percent.
-        `mean`
-            Mean value of the features.
-        `median`
-            Median value of the features.
-        `std`
-            Standard deviation of the features.
-        `min`
-            Minimum value of the features.
-        `max`
-            Maximum value of the features.
+        - `missing_values_abs`: Absolute amount of missing values.
+        - `missing_values_pct`: Relative amount of missing values in percent.
+        - `mean`: Mean value of the features.
+        - `median`: Median value of the features.
+        - `std`: Standard deviation of the features.
+        - `min`: Minimum value of the features.
+        - `max`: Maximum value of the features.
 
         Examples:
             >>> import ehrapy as ep
-            >>> import seaborn as sns
-            >>> import matplotlib.pyplot as plt
             >>> adata = ep.dt.mimic_2(encoded=True)
-            >>> ep.pp.qc_metrics(adata)
-            >>> sns.displot(adata.obs["missing_values_abs"])
-            >>> plt.show()
+            >>> obs_qc, var_qc = ep.pp.qc_metrics(adata)
+            >>> obs_qc["missing_values_pct"].plot(kind="hist", bins=20)
     """
     obs_metrics = _obs_qc_metrics(adata, layer, qc_vars)
     var_metrics = _var_qc_metrics(adata, layer)
@@ -73,34 +59,29 @@ def qc_metrics(
     if inplace:
         adata.obs[obs_metrics.columns] = obs_metrics
         adata.var[var_metrics.columns] = var_metrics
-        logg.info("Added the calculated metrics to AnnData's `obs` and `var`.")
 
     return obs_metrics, var_metrics
 
 
 def _missing_values(
-    arr: np.ndarray, shape: tuple[int, int] = None, df_type: Literal["obs", "var"] = "obs"
+    arr: np.ndarray, mode: Literal["abs", "pct"] = "abs", df_type: Literal["obs", "var"] = "obs"
 ) -> np.ndarray:
     """Calculates the absolute or relative amount of missing values.
 
     Args:
         arr: Numpy array containing a data row which is a subset of X (mtx).
-        shape: Shape of X (mtx).
+        mode: Whether to calculate absolute or percentage of missing values. Defaults to `"abs"`.
         df_type: Whether to calculate the proportions for obs or var. One of 'obs' or 'var'. Defaults to 'obs' .
 
     Returns:
         Absolute or relative amount of missing values.
     """
-    # Absolute number of missing values
-    if shape is None:
-        return pd.isnull(arr).sum()
-    # Relative number of missing values in percent
-    else:
-        n_rows, n_cols = shape
-        if df_type == "obs":
-            return (pd.isnull(arr).sum() / n_cols) * 100
-        else:
-            return (pd.isnull(arr).sum() / n_rows) * 100
+    num_missing = pd.isnull(arr).sum()
+    if mode == "abs":
+        return num_missing
+    elif mode == "pct":
+        total_elements = arr.shape[0] if df_type == "obs" else len(arr)
+        return (num_missing / total_elements) * 100
 
 
 def _obs_qc_metrics(
@@ -134,8 +115,8 @@ def _obs_qc_metrics(
                 )
             )
 
-    obs_metrics["missing_values_abs"] = np.apply_along_axis(_missing_values, 1, mtx)
-    obs_metrics["missing_values_pct"] = np.apply_along_axis(_missing_values, 1, mtx, shape=mtx.shape, df_type="obs")
+    obs_metrics["missing_values_abs"] = np.apply_along_axis(_missing_values, 1, mtx, mode="abs")
+    obs_metrics["missing_values_pct"] = np.apply_along_axis(_missing_values, 1, mtx, mode="pct", df_type="obs")
 
     # Specific QC metrics
     for qc_var in qc_vars:
@@ -180,8 +161,8 @@ def _var_qc_metrics(adata: AnnData, layer: str = None) -> pd.DataFrame:
             categorical_indices = np.concatenate([categorical_indices, index])
     non_categorical_indices = np.ones(mtx.shape[1], dtype=bool)
     non_categorical_indices[categorical_indices] = False
-    var_metrics["missing_values_abs"] = np.apply_along_axis(_missing_values, 0, mtx)
-    var_metrics["missing_values_pct"] = np.apply_along_axis(_missing_values, 0, mtx, shape=mtx.shape, df_type="var")
+    var_metrics["missing_values_abs"] = np.apply_along_axis(_missing_values, 0, mtx, mode="abs")
+    var_metrics["missing_values_pct"] = np.apply_along_axis(_missing_values, 0, mtx, mode="pct", df_type="var")
 
     var_metrics["mean"] = np.nan
     var_metrics["median"] = np.nan
@@ -205,10 +186,8 @@ def _var_qc_metrics(adata: AnnData, layer: str = None) -> pd.DataFrame:
         var_metrics.loc[non_categorical_indices, "max"] = np.nanmax(
             np.array(mtx[:, non_categorical_indices], dtype=np.float64), axis=0
         )
-    except TypeError:
+    except (TypeError, ValueError):
         print("[bold yellow]TypeError! Setting quality control metrics to nan. Did you encode your data?")
-    except ValueError:
-        print("[bold yellow]ValueError! Setting quality control metrics to nan. Did you encode your data?")
 
     return var_metrics
 
@@ -258,7 +237,7 @@ def qc_lab_measurements(
 
     If you want to specify your own table as a Pandas DataFrame please examine the existing default table.
     Ethnicity and age columns can be added.
-    https://github.com/theislab/ehrapy/ehrapy/preprocessing/laboratory_reference_tables/laposata.tsv
+    https://github.com/theislab/ehrapy/blob/main/ehrapy/preprocessing/laboratory_reference_tables/laposata.tsv
 
     Args:
         adata: Annotated data matrix.
@@ -269,13 +248,13 @@ def qc_lab_measurements(
         threshold: Minimum required matching confidence score of the fuzzysearch.
                    0 = no matches, 100 = all must match. Defaults to 20.
         age_col: Column containing age values.
-        age_range: The inclusive age-range to filter for. e.g. 5-99
+        age_range: The inclusive age-range to filter for such as 5-99.
         sex_col: Column containing sex values. Column must contain 'U', 'M' or 'F'.
         sex: Sex to filter the reference values for. Use U for unisex which uses male values when male and female conflict.
-             Defaults to 'U|M'
+             Defaults to 'U|M'.
         ethnicity_col: Column containing ethnicity values.
         ethnicity: Ethnicity to filter for.
-        copy: Whether to return a copy. Defaults to False .
+        copy: Whether to return a copy. Defaults to False.
         verbose: Whether to have verbose stdout. Notifies user of matched columns and value ranges.
 
     Returns:
@@ -325,7 +304,6 @@ def qc_lab_measurements(
                 f"ethnicity columns and their values."
             )
 
-        # Fetch reference values
         try:
             if age_col:
                 min_age, max_age = age_range.split("-")
@@ -346,7 +324,6 @@ def qc_lab_measurements(
         except TypeError:
             print(f"[bold yellow]Unable to find specified reference values for {measurement}.")
 
-        # Check whether the measurements are inside the reference ranges
         check = reference_values[reference_column].values
         check_str: str = np.array2string(check)
         check_str = check_str.replace("[", "").replace("]", "").replace("'", "")

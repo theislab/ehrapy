@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from typing import TYPE_CHECKING, Literal
 
 import numpy as np
@@ -12,12 +13,11 @@ from sklearn.preprocessing import OrdinalEncoder
 
 from ehrapy import logging as logg
 from ehrapy import settings
-from ehrapy.anndata.anndata_ext import get_column_indices
+from ehrapy.anndata._constants import EHRAPY_TYPE_KEY, NON_NUMERIC_TAG
+from ehrapy.anndata.anndata_ext import _get_column_indices
 from ehrapy.core._tool_available import _check_module_importable
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
-
     from anndata import AnnData
 
 
@@ -25,7 +25,7 @@ def explicit_impute(
     adata: AnnData,
     replacement: (str | int) | (dict[str, str | int]),
     impute_empty_strings: bool = True,
-    warning_threshold: int = 30,
+    warning_threshold: int = 70,
     copy: bool = False,
 ) -> AnnData:
     """Replaces all missing values in all columns or a subset of columns specified by the user with the passed replacement value.
@@ -125,7 +125,7 @@ def simple_impute(
     var_names: Iterable[str] | None = None,
     strategy: Literal["mean", "median", "most_frequent"] = "mean",
     copy: bool = False,
-    warning_threshold: int = 30,
+    warning_threshold: int = 70,
 ) -> AnnData:
     """Impute missing values in numerical data using mean/median/most frequent imputation.
 
@@ -187,11 +187,9 @@ def simple_impute(
 
 def _simple_impute(adata: AnnData, var_names: Iterable[str] | None, strategy: str) -> None:
     imputer = SimpleImputer(strategy=strategy)
-    # impute a subset of columns
-    if isinstance(var_names, list):
-        column_indices = get_column_indices(adata, var_names)
+    if isinstance(var_names, Iterable):
+        column_indices = _get_column_indices(adata, var_names)
         adata.X[::, column_indices] = imputer.fit_transform(adata.X[::, column_indices])
-    # impute all columns if None passed
     else:
         adata.X = imputer.fit_transform(adata.X)
 
@@ -201,7 +199,7 @@ def knn_impute(
     var_names: Iterable[str] | None = None,
     n_neighbours: int = 5,
     copy: bool = False,
-    warning_threshold: int = 30,
+    warning_threshold: int = 70,
 ) -> AnnData:
     """Imputes missing values in the input AnnData object using K-nearest neighbor imputation.
 
@@ -209,25 +207,25 @@ def knn_impute(
     since KNN Imputation can only work on numerical data. The encoding itself is just a utility and will be undone once
     imputation ran successfully.
 
-        Args:
-            adata: An annotated data matrix containing gene expression values.
-            var_names: A list of variable names indicating which columns to impute.
-                       If `None`, all columns are imputed. Default is `None`.
-            n_neighbours: Number of neighbors to use when performing the imputation. Defaults to 5.
-            copy: Whether to perform the imputation on a copy of the original `AnnData` object.
-                  If `True`, the original object remains unmodified. Defaults to `False`.
-            warning_threshold: Percentage of missing values above which a warning is issued. Defaults to 30.
+    Args:
+        adata: An annotated data matrix containing gene expression values.
+        var_names: A list of variable names indicating which columns to impute.
+                   If `None`, all columns are imputed. Default is `None`.
+        n_neighbours: Number of neighbors to use when performing the imputation. Defaults to 5.
+        copy: Whether to perform the imputation on a copy of the original `AnnData` object.
+              If `True`, the original object remains unmodified. Defaults to `False`.
+        warning_threshold: Percentage of missing values above which a warning is issued. Defaults to 30.
 
-        Returns:
-            An updated AnnData object with imputed values.
+    Returns:
+        An updated AnnData object with imputed values.
 
-        Raises:
-            ValueError: If the input data matrix contains only categorical (non-numeric) values.
+    Raises:
+        ValueError: If the input data matrix contains only categorical (non-numeric) values.
 
-        Examples:
-            >>> import ehrapy as ep
-            >>> adata = ep.dt.mimic_2(encoded=True)
-            >>> ep.pp.knn_impute(adata)
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> ep.pp.knn_impute(adata)
     """
     if copy:
         adata = adata.copy()
@@ -242,30 +240,34 @@ def knn_impute(
         print(
             "[bold yellow]scikit-learn-intelex is not available. Install via [blue]pip install scikit-learn-intelex [yellow] for faster imputations."
         )
-
-    with Progress(
-        "[progress.description]{task.description}",
-        SpinnerColumn(),
-        refresh_per_second=1500,
-    ) as progress:
-        progress.add_task("[blue]Running KNN imputation", total=1)
-        # numerical only data needs no encoding since KNN Imputation can be applied directly
-        if np.issubdtype(adata.X.dtype, np.number):
-            _knn_impute(adata, var_names, n_neighbours)
-        else:
-            # ordinal encoding is used since non-numerical data can not be imputed using KNN Imputation
-            enc = OrdinalEncoder()
-            column_indices = get_column_indices(adata, adata.uns["non_numerical_columns"])
-            adata.X[::, column_indices] = enc.fit_transform(adata.X[::, column_indices])
-            # impute the data using KNN imputation
-            _knn_impute(adata, var_names, n_neighbours)
-            # imputing on encoded columns might result in float numbers; those can not be decoded
-            # cast them to int to ensure they can be decoded
-            adata.X[::, column_indices] = np.rint(adata.X[::, column_indices]).astype(int)
-            # knn imputer transforms X dtype to numerical (encoded), but object is needed for decoding
-            adata.X = adata.X.astype("object")
-            # decode ordinal encoding to obtain imputed original data
-            adata.X[::, column_indices] = enc.inverse_transform(adata.X[::, column_indices])
+    try:
+        with Progress(
+            "[progress.description]{task.description}",
+            SpinnerColumn(),
+            refresh_per_second=1500,
+        ) as progress:
+            progress.add_task("[blue]Running KNN imputation", total=1)
+            # numerical only data needs no encoding since KNN Imputation can be applied directly
+            if np.issubdtype(adata.X.dtype, np.number):
+                _knn_impute(adata, var_names, n_neighbours)
+            else:
+                # ordinal encoding is used since non-numerical data can not be imputed using KNN Imputation
+                enc = OrdinalEncoder()
+                column_indices = adata.var[EHRAPY_TYPE_KEY] == NON_NUMERIC_TAG
+                adata.X[::, column_indices] = enc.fit_transform(adata.X[::, column_indices])
+                # impute the data using KNN imputation
+                _knn_impute(adata, var_names, n_neighbours)
+                # imputing on encoded columns might result in float numbers; those can not be decoded
+                # cast them to int to ensure they can be decoded
+                adata.X[::, column_indices] = np.rint(adata.X[::, column_indices]).astype(int)
+                # knn imputer transforms X dtype to numerical (encoded), but object is needed for decoding
+                adata.X = adata.X.astype("object")
+                # decode ordinal encoding to obtain imputed original data
+                adata.X[::, column_indices] = enc.inverse_transform(adata.X[::, column_indices])
+    except ValueError as e:
+        if "Data matrix has wrong shape" in str(e):
+            print("[bold red]Check that your matrix does not contain any NaN only columns!")
+            raise
 
     if _check_module_importable("sklearnex"):  # pragma: no cover
         unpatch_sklearn()
@@ -289,8 +291,8 @@ def _knn_impute(adata: AnnData, var_names: Iterable[str] | None, n_neighbours: i
 
     imputer = KNNImputer(n_neighbors=n_neighbours)
 
-    if isinstance(var_names, list):
-        column_indices = get_column_indices(adata, var_names)
+    if isinstance(var_names, Iterable):
+        column_indices = _get_column_indices(adata, var_names)
         adata.X[::, column_indices] = imputer.fit_transform(adata.X[::, column_indices])
         # this is required since X dtype has to be numerical in order to correctly round floats
         adata.X = adata.X.astype("float64")
@@ -305,7 +307,7 @@ def miss_forest_impute(
     max_iter: int = 10,
     n_estimators=100,
     random_state: int = 0,
-    warning_threshold: int = 30,
+    warning_threshold: int = 70,
     copy: bool = False,
 ) -> AnnData:
     """Impute data using the MissForest strategy.
@@ -359,62 +361,69 @@ def miss_forest_impute(
     from sklearn.ensemble import ExtraTreesRegressor, RandomForestClassifier
     from sklearn.impute import IterativeImputer
 
-    with Progress(
-        "[progress.description]{task.description}",
-        SpinnerColumn(),
-        refresh_per_second=1500,
-    ) as progress:
-        progress.add_task("[blue]Running MissForest imputation", total=1)
+    try:
+        with Progress(
+            "[progress.description]{task.description}",
+            SpinnerColumn(),
+            refresh_per_second=1500,
+        ) as progress:
+            progress.add_task("[blue]Running MissForest imputation", total=1)
 
-        if settings.n_jobs == 1:  # pragma: no cover
-            print("[bold yellow]The number of jobs is only 1. To decrease the runtime set [blue]ep.settings.n_jobs=-1.")
+            if settings.n_jobs == 1:  # pragma: no cover
+                print(
+                    "[bold yellow]The number of jobs is only 1. To decrease the runtime set [blue]ep.settings.n_jobs=-1."
+                )
 
-        imp_num = IterativeImputer(
-            estimator=ExtraTreesRegressor(n_estimators=n_estimators, n_jobs=settings.n_jobs),
-            initial_strategy=num_initial_strategy,
-            max_iter=max_iter,
-            random_state=random_state,
-        )
-        # initial strategy here will not be parametrized since only most_frequent will be applied to non numerical data
-        imp_cat = IterativeImputer(
-            estimator=RandomForestClassifier(n_estimators=n_estimators, n_jobs=settings.n_jobs),
-            initial_strategy="most_frequent",
-            max_iter=max_iter,
-            random_state=random_state,
-        )
+            imp_num = IterativeImputer(
+                estimator=ExtraTreesRegressor(n_estimators=n_estimators, n_jobs=settings.n_jobs),
+                initial_strategy=num_initial_strategy,
+                max_iter=max_iter,
+                random_state=random_state,
+            )
+            # initial strategy here will not be parametrized since only most_frequent will be applied to non numerical data
+            imp_cat = IterativeImputer(
+                estimator=RandomForestClassifier(n_estimators=n_estimators, n_jobs=settings.n_jobs),
+                initial_strategy="most_frequent",
+                max_iter=max_iter,
+                random_state=random_state,
+            )
 
-        if isinstance(var_names, list):
-            var_indices = get_column_indices(adata, var_names)  # type: ignore
-            adata.X[::, var_indices] = imp_num.fit_transform(adata.X[::, var_indices])
-        elif isinstance(var_names, dict) or var_names is None:
-            if var_names:
-                try:
-                    non_num_vars = var_names["non_numerical"]
-                    num_vars = var_names["numerical"]
-                except KeyError:  # pragma: no cover
-                    raise ValueError(
-                        "One or both of your keys provided for var_names are unknown. Only "
-                        "numerical and non_numerical are available!"
-                    ) from None
-                non_num_indices = get_column_indices(adata, non_num_vars)
-                num_indices = get_column_indices(adata, num_vars)
+            if isinstance(var_names, list):
+                var_indices = _get_column_indices(adata, var_names)  # type: ignore
+                adata.X[::, var_indices] = imp_num.fit_transform(adata.X[::, var_indices])
+            elif isinstance(var_names, dict) or var_names is None:
+                if var_names:
+                    try:
+                        non_num_vars = var_names["non_numerical"]
+                        num_vars = var_names["numerical"]
+                    except KeyError:  # pragma: no cover
+                        raise ValueError(
+                            "One or both of your keys provided for var_names are unknown. Only "
+                            "numerical and non_numerical are available!"
+                        ) from None
+                    non_num_indices = _get_column_indices(adata, non_num_vars)
+                    num_indices = _get_column_indices(adata, num_vars)
 
-            # infer non numerical and numerical indices automatically
-            else:
-                non_num_indices_set = _get_non_numerical_column_indices(adata.X)
-                num_indices = [idx for idx in range(adata.X.shape[1]) if idx not in non_num_indices_set]
-                non_num_indices = list(non_num_indices_set)
+                # infer non numerical and numerical indices automatically
+                else:
+                    non_num_indices_set = _get_non_numerical_column_indices(adata.X)
+                    num_indices = [idx for idx in range(adata.X.shape[1]) if idx not in non_num_indices_set]
+                    non_num_indices = list(non_num_indices_set)
 
-            # encode all non numerical columns
-            if non_num_indices:
-                enc = OrdinalEncoder()
-                adata.X[::, non_num_indices] = enc.fit_transform(adata.X[::, non_num_indices])
-            # this step is the most expensive one and might extremely slow down the impute process
-            if num_indices:
-                adata.X[::, num_indices] = imp_num.fit_transform(adata.X[::, num_indices])
-            if non_num_indices:
-                adata.X[::, non_num_indices] = imp_cat.fit_transform(adata.X[::, non_num_indices])
-                adata.X[::, non_num_indices] = enc.inverse_transform(adata.X[::, non_num_indices])
+                # encode all non numerical columns
+                if non_num_indices:
+                    enc = OrdinalEncoder()
+                    adata.X[::, non_num_indices] = enc.fit_transform(adata.X[::, non_num_indices])
+                # this step is the most expensive one and might extremely slow down the impute process
+                if num_indices:
+                    adata.X[::, num_indices] = imp_num.fit_transform(adata.X[::, num_indices])
+                if non_num_indices:
+                    adata.X[::, non_num_indices] = imp_cat.fit_transform(adata.X[::, non_num_indices])
+                    adata.X[::, non_num_indices] = enc.inverse_transform(adata.X[::, non_num_indices])
+    except ValueError as e:
+        if "Data matrix has wrong shape" in str(e):
+            print("[bold red]Check that your matrix does not contain any NaN only columns!")
+            raise
 
     if _check_module_importable("sklearnex"):  # pragma: no cover
         unpatch_sklearn()
@@ -434,7 +443,7 @@ def soft_impute(
     adata: AnnData,
     var_names: Iterable[str] | None = None,
     copy: bool = False,
-    warning_threshold: int = 30,
+    warning_threshold: int = 70,
     shrinkage_value: float | None = None,
     convergence_threshold: float = 0.001,
     max_iters: int = 100,
@@ -505,7 +514,7 @@ def soft_impute(
         else:
             # ordinal encoding is used since non-numerical data can not be imputed using SoftImpute
             enc = OrdinalEncoder()
-            column_indices = get_column_indices(adata, adata.uns["non_numerical_columns"])
+            column_indices = adata.var[EHRAPY_TYPE_KEY] == NON_NUMERIC_TAG
             adata.X[::, column_indices] = enc.fit_transform(adata.X[::, column_indices])
             # impute the data using SoftImpute
             _soft_impute(
@@ -568,8 +577,8 @@ def _soft_impute(
         verbose,
     )
 
-    if isinstance(var_names, list):
-        column_indices = get_column_indices(adata, var_names)
+    if isinstance(var_names, Iterable):
+        column_indices = _get_column_indices(adata, var_names)
         adata.X[::, column_indices] = imputer.fit_transform(adata.X[::, column_indices])
     else:
         adata.X = imputer.fit_transform(adata.X)
@@ -579,7 +588,7 @@ def iterative_svd_impute(
     adata: AnnData,
     var_names: Iterable[str] | None = None,
     copy: bool = False,
-    warning_threshold: int = 30,
+    warning_threshold: int = 70,
     rank: int = 10,
     convergence_threshold: float = 0.00001,
     max_iters: int = 200,
@@ -661,7 +670,7 @@ def iterative_svd_impute(
         else:
             # ordinal encoding is used since non-numerical data can not be imputed using IterativeSVD
             enc = OrdinalEncoder()
-            column_indices = get_column_indices(adata, adata.uns["non_numerical_columns"])
+            column_indices = adata.var[EHRAPY_TYPE_KEY] == NON_NUMERIC_TAG
             adata.X[::, column_indices] = enc.fit_transform(adata.X[::, column_indices])
             # impute the data using IterativeSVD
             _iterative_svd_impute(
@@ -717,8 +726,8 @@ def _iterative_svd_impute(
         verbose,
     )
 
-    if isinstance(var_names, list):
-        column_indices = get_column_indices(adata, var_names)
+    if isinstance(var_names, Iterable):
+        column_indices = _get_column_indices(adata, var_names)
         adata.X[::, column_indices] = imputer.fit_transform(adata.X[::, column_indices])
     else:
         adata.X = imputer.fit_transform(adata.X)
@@ -727,7 +736,7 @@ def _iterative_svd_impute(
 def matrix_factorization_impute(
     adata: AnnData,
     var_names: Iterable[str] | None = None,
-    warning_threshold: int = 30,
+    warning_threshold: int = 70,
     rank: int = 40,
     learning_rate: float = 0.01,
     max_iters: int = 50,
@@ -743,7 +752,6 @@ def matrix_factorization_impute(
     Train a matrix factorization model to predict empty entries in a matrix.
 
     Args:
-
         adata: The AnnData object to use MatrixFactorization on.
         var_names: A list of var names indicating which columns to impute (if None -> all columns).
         warning_threshold: Threshold of percentage of missing values to display a warning for. Defaults to 30 .
@@ -802,7 +810,7 @@ def matrix_factorization_impute(
         else:
             # ordinal encoding is used since non-numerical data can not be imputed using MatrixFactorization
             enc = OrdinalEncoder()
-            column_indices = get_column_indices(adata, adata.uns["non_numerical_columns"])
+            column_indices = adata.var[EHRAPY_TYPE_KEY] == NON_NUMERIC_TAG
             adata.X[::, column_indices] = enc.fit_transform(adata.X[::, column_indices])
             # impute the data using MatrixFactorization
             _matrix_factorization_impute(
@@ -817,7 +825,6 @@ def matrix_factorization_impute(
                 verbose,
             )
             adata.X = adata.X.astype("object")
-            # decode ordinal encoding to obtain imputed original data
             adata.X[::, column_indices] = enc.inverse_transform(adata.X[::, column_indices])
 
     if var_names:
@@ -856,8 +863,8 @@ def _matrix_factorization_impute(
         verbose,
     )
 
-    if isinstance(var_names, list):
-        column_indices = get_column_indices(adata, var_names)
+    if isinstance(var_names, Iterable):
+        column_indices = _get_column_indices(adata, var_names)
         adata.X[::, column_indices] = imputer.fit_transform(adata.X[::, column_indices])
     else:
         adata.X = imputer.fit_transform(adata.X)
@@ -866,7 +873,7 @@ def _matrix_factorization_impute(
 def nuclear_norm_minimization_impute(
     adata: AnnData,
     var_names: Iterable[str] | None = None,
-    warning_threshold: int = 30,
+    warning_threshold: int = 70,
     require_symmetric_solution: bool = False,
     min_value: float | None = None,
     max_value: float | None = None,
@@ -925,7 +932,7 @@ def nuclear_norm_minimization_impute(
         else:
             # ordinal encoding is used since non-numerical data can not be imputed using NuclearNormMinimization
             enc = OrdinalEncoder()
-            column_indices = get_column_indices(adata, adata.uns["non_numerical_columns"])
+            column_indices = adata.var[EHRAPY_TYPE_KEY] == NON_NUMERIC_TAG
             adata.X[::, column_indices] = enc.fit_transform(adata.X[::, column_indices])
             # impute the data using NuclearNormMinimization
             _nuclear_norm_minimization_impute(
@@ -977,7 +984,7 @@ def _nuclear_norm_minimization_impute(
     )
 
     if isinstance(var_names, list):
-        column_indices = get_column_indices(adata, var_names)
+        column_indices = _get_column_indices(adata, var_names)
         adata.X[::, column_indices] = imputer.fit_transform(adata.X[::, column_indices])
     else:
         adata.X = imputer.fit_transform(adata.X)
@@ -986,7 +993,7 @@ def _nuclear_norm_minimization_impute(
 def mice_forest_impute(
     adata: AnnData,
     var_names: Iterable[str] | None = None,
-    warning_threshold: int = 30,
+    warning_threshold: int = 70,
     save_all_iterations: bool = True,
     random_state: int | None = None,
     inplace: bool = False,
@@ -1030,29 +1037,47 @@ def mice_forest_impute(
         adata = adata.copy()
 
     _warn_imputation_threshold(adata, var_names, threshold=warning_threshold)
-
-    with Progress(
-        "[progress.description]{task.description}",
-        SpinnerColumn(),
-        refresh_per_second=1500,
-    ) as progress:
-        progress.add_task("[blue]Running miceforest", total=1)
-        if np.issubdtype(adata.X.dtype, np.number):
-            _miceforest_impute(
-                adata, var_names, save_all_iterations, random_state, inplace, iterations, variable_parameters, verbose
-            )
-        else:
-            # ordinal encoding is used since non-numerical data can not be imputed using miceforest
-            enc = OrdinalEncoder()
-            column_indices = get_column_indices(adata, adata.uns["non_numerical_columns"])
-            adata.X[::, column_indices] = enc.fit_transform(adata.X[::, column_indices])
-            # impute the data using miceforest
-            _miceforest_impute(
-                adata, var_names, save_all_iterations, random_state, inplace, iterations, variable_parameters, verbose
-            )
-            adata.X = adata.X.astype("object")
-            # decode ordinal encoding to obtain imputed original data
-            adata.X[::, column_indices] = enc.inverse_transform(adata.X[::, column_indices])
+    try:
+        with Progress(
+            "[progress.description]{task.description}",
+            SpinnerColumn(),
+            refresh_per_second=1500,
+        ) as progress:
+            progress.add_task("[blue]Running miceforest", total=1)
+            if np.issubdtype(adata.X.dtype, np.number):
+                _miceforest_impute(
+                    adata,
+                    var_names,
+                    save_all_iterations,
+                    random_state,
+                    inplace,
+                    iterations,
+                    variable_parameters,
+                    verbose,
+                )
+            else:
+                # ordinal encoding is used since non-numerical data can not be imputed using miceforest
+                enc = OrdinalEncoder()
+                column_indices = adata.var[EHRAPY_TYPE_KEY] == NON_NUMERIC_TAG
+                adata.X[::, column_indices] = enc.fit_transform(adata.X[::, column_indices])
+                # impute the data using miceforest
+                _miceforest_impute(
+                    adata,
+                    var_names,
+                    save_all_iterations,
+                    random_state,
+                    inplace,
+                    iterations,
+                    variable_parameters,
+                    verbose,
+                )
+                adata.X = adata.X.astype("object")
+                # decode ordinal encoding to obtain imputed original data
+                adata.X[::, column_indices] = enc.inverse_transform(adata.X[::, column_indices])
+    except ValueError as e:
+        if "Data matrix has wrong shape" in str(e):
+            print("[bold red]Check that your matrix does not contain any NaN only columns!")
+            raise
 
     if var_names:
         logg.debug(
@@ -1072,8 +1097,8 @@ def _miceforest_impute(
     """Utility function to impute data using miceforest"""
     import miceforest as mf
 
-    if isinstance(var_names, list):
-        column_indices = get_column_indices(adata, var_names)
+    if isinstance(var_names, Iterable):
+        column_indices = _get_column_indices(adata, var_names)
 
         # Create kernel.
         kernel = mf.ImputationKernel(
@@ -1095,7 +1120,7 @@ def _miceforest_impute(
         adata.X = kernel.complete_data(dataset=0, inplace=inplace)
 
 
-def _warn_imputation_threshold(adata: AnnData, var_names: Iterable[str] | None, threshold: int = 30) -> dict[str, int]:
+def _warn_imputation_threshold(adata: AnnData, var_names: Iterable[str] | None, threshold: int = 75) -> dict[str, int]:
     """Warns the user if the more than $threshold percent had to be imputed.
 
     Args:
@@ -1126,6 +1151,21 @@ def _warn_imputation_threshold(adata: AnnData, var_names: Iterable[str] | None, 
 
 def _get_non_numerical_column_indices(X: np.ndarray) -> set:
     """Return indices of columns, that contain at least one non numerical value that is not "Nan"."""
+
+    def _is_float_or_nan(val):  # pragma: no cover
+        """Check whether a given item is a float or np.nan"""
+        try:
+            float(val)
+        except ValueError:
+            if val is np.nan:
+                return True
+            return False
+        else:
+            if not isinstance(val, bool):
+                return True
+            else:
+                return False
+
     is_numeric_numpy = np.vectorize(_is_float_or_nan, otypes=[bool])
     mask = np.apply_along_axis(is_numeric_numpy, 0, X)
 
@@ -1133,18 +1173,3 @@ def _get_non_numerical_column_indices(X: np.ndarray) -> set:
     non_num_indices = set(column_indices)
 
     return non_num_indices
-
-
-def _is_float_or_nan(val):  # pragma: no cover
-    """Check whether a given item is a float or np.nan"""
-    try:
-        float(val)
-    except ValueError:
-        if val is np.nan:
-            return True
-        return False
-    else:
-        if not isinstance(val, bool):
-            return True
-        else:
-            return False

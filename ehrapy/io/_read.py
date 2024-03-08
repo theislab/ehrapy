@@ -14,7 +14,7 @@ from rich import print
 from ehrapy import ehrapy_settings, settings
 from ehrapy.anndata.anndata_ext import df_to_anndata
 from ehrapy.data._dataloader import download, remove_archive_extension
-from ehrapy.preprocessing._encode import encode
+from ehrapy.preprocessing._encoding import encode
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -116,7 +116,13 @@ def _read_csv(
         if sep not in {",", "\t"}:
             raise ValueError("Please provide one of the available separators , or tab")
         adata, columns_obs_only = _do_read_csv(
-            file_path, sep, index_column, columns_obs_only, columns_x_only, cache, **kwargs  # type: ignore
+            file_path,
+            sep,
+            index_column,  # type: ignore
+            columns_obs_only,  # type: ignore
+            columns_x_only,  # type: ignore
+            cache,
+            **kwargs,
         )
         # cache results if desired
         if cache:
@@ -213,11 +219,13 @@ def _read_multiple_csv(
         file_path: File path to the directory containing multiple .csv/.tsv files.
         sep: Either , or \t to determine which files to read.
         index_column: Column names of the index columns for obs
-        columns_obs_only: List of columns per file (AnnData object) which should only be stored in .obs, but not in X. Useful for free text annotations.
-        columns_x_only: List of columns per file (AnnData object) which should only be stored in .X, but not in obs. Datetime columns will be added to .obs regardless.
+        columns_obs_only: List of columns per file (AnnData object) which should only be stored in .obs, but not in X.
+                          Useful for free text annotations.
+        columns_x_only: List of columns per file (AnnData object) which should only be stored in .X, but not in obs.
+                        Datetime columns will be added to .obs regardless.
         return_dfs: When set to True, return a dictionary of Pandas DataFrames.
         cache: Whether to cache results or not
-        kwargs: Keyword arguments for Pandas read_csv
+        kwargs: Keyword arguments for Pandas `read_csv`
 
     Returns:
         A Dict mapping the filename (object name) to the corresponding :class:`~anndata.AnnData` object and the columns
@@ -326,7 +334,9 @@ def _do_read_h5ad(file_path: Path | Iterator[str]) -> AnnData:
     Returns:
         An AnnData object.
     """
-    adata = read_h5(file_path)
+    import anndata as ad
+
+    adata = ad.read_h5ad(file_path)
     if "ehrapy_dummy_encoding" in adata.uns.keys():
         # if dummy encoding was needed, the original dtype of X could not be numerical, so cast it to object
         adata.X = adata.X.astype("object")
@@ -352,11 +362,18 @@ def read_fhir(
     Uses https://github.com/dermatologist/fhiry to read the FHIR file into a Pandas DataFrame
     which is subsequently transformed into an AnnData object.
 
+    Be aware that FHIR data can be nested and return lists or dictionaries as values.
+    In such cases, one can either:
+    1. Transform the data into an awkward array and flatten it when needed.
+    2. Extract values from all lists and dictionaries to store single values in the fields.
+    3. Remove all lists and dictionaries. Only do this if the information is not relevant to you.
+
     Args:
         dataset_path: Path to one or multiple FHIR files.
         format: The file format of the FHIR data. One of 'json' or 'ndjson'. Defaults to 'json'.
         columns_obs_only: These columns will be added to obs only and not X.
-        columns_x_only: These columns will be added to X only and all remaining columns to obs. Note that datetime columns will always be added to .obs though.
+        columns_x_only: These columns will be added to X only and all remaining columns to obs.
+                        Note that datetime columns will always be added to .obs though.
         return_df: Whether to return one or several Pandas DataFrames.
         cache: Whether to write to cache when reading or not. Defaults to False.
         download_dataset_name: Name of the file or directory in case the dataset is downloaded
@@ -369,6 +386,15 @@ def read_fhir(
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.io.read_fhir("/path/to/fhir/resources")
+
+        Be aware that most FHIR datasets have nested data that might need to be removed.
+        In such cases consider working with DataFrames.
+        >>> df = ep.io.read_fhir("/path/to/fhir/resources", return_df=True)
+        >>> df.drop(
+        ...     columns=[col for col in df.columns if any(isinstance(x, (list, dict)) for x in df[col].dropna())],
+        ...     inplace=True,
+        ... )
+        >>> df.drop(columns=df.columns[df.isna().all()], inplace=True)
     """
     _check_columns_only_params(columns_obs_only, columns_x_only)
     file_path: Path = Path(dataset_path)
@@ -475,7 +501,7 @@ def _read_from_cache_dir(cache_dir: Path) -> dict[str, AnnData]:
 def _read_from_cache(path_cache: Path) -> AnnData:
     """Read AnnData object from cached file."""
     cached_adata = read_h5(path_cache)
-    # type cast required when dealing with non numerical data; otherwise all values in X would be treated as strings
+    # type cast required when dealing with non-numerical data; otherwise all values in X would be treated as strings
     if not np.issubdtype(cached_adata.X.dtype, np.number):
         cached_adata.X = cached_adata.X.astype("object")
     try:
@@ -507,7 +533,7 @@ def _write_cache_dir(
         index_column: The index columns for each object (if any)
 
     Returns:
-        A dict containing an unique identifier and an :class:`~anndata.AnnData` object for each file read
+        A dict containing a unique identifier and an :class:`~anndata.AnnData` object for each file read
     """
     for identifier in adata_objects:
         # for each identifier (for the AnnData object), we need the index column and obs_only cols (if any) for reuse when reading cache
@@ -526,7 +552,7 @@ def _write_cache(
     """Write AnnData object to cache"""
     original_x_dtype = raw_anndata.X.dtype
     if not np.issubdtype(original_x_dtype, np.number):
-        cached_adata = encode(data=raw_anndata, autodetect=True)
+        cached_adata = encode(adata=raw_anndata, autodetect=True)
     else:
         cached_adata = raw_anndata
     # temporary key that stores all column names that are obs only for this AnnData object
