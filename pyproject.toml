@@ -93,6 +93,7 @@ doc = [
     "nbsphinx-link",
     "ipykernel",
     "ipython",
+    "medcat",
 ]
 test = [
     "pytest",
