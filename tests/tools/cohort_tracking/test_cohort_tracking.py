@@ -64,18 +64,6 @@ def test_CohortTracker_call(adata_mini):
     assert ct._tracked_text == ["Cohort 0\n (n=12)", "Cohort 1\n (n=12)"]
 
 
-def test_CohortTracker_reset(adata_mini):
-    ct = ep.tl.CohortTracker(adata_mini)
-
-    ct(adata_mini)
-    ct(adata_mini)
-
-    ct.reset()
-    assert ct.tracked_steps == 0
-    assert ct._tracked_text == []
-    assert ct._tracked_operations == []
-
-
 def test_CohortTracker_plot_cohort_change_test_sensitivity(adata_mini, check_same_image):
     ct = ep.tl.CohortTracker(adata_mini)
 

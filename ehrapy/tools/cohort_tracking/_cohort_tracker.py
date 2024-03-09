@@ -105,16 +105,6 @@ class CohortTracker:
     def _get_num_dicts(self, table_one, col):
         return table_one.cont_table["Overall"].loc[(col, "")]
 
-    def reset(self) -> None:
-        """Resets the `CohortTracker` object.
-
-        A full reset of the `CohortTracker` object.
-        """
-        self._tracked_steps = 0
-        self._track_t1 = []
-        self._tracked_text = []
-        self._tracked_operations = []
-
     @property
     def tracked_steps(self):
         """Number of tracked steps."""
