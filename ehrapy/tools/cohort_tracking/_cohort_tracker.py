@@ -380,7 +380,6 @@ class CohortTracker:
         axes.set_ylim(0, 1.1)
 
         axes.set_axis_off()
-        # Show or return plotting handles
         if show:
             plt.show()
             return None
