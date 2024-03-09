@@ -336,7 +336,6 @@ class CohortTracker:
         max_pos = min(0.3 * self.tracked_steps, 1)
         y_positions = np.linspace(max_pos, 0, self.tracked_steps)
 
-        # Define node labels
         node_labels = self._tracked_text
 
         # Draw nodes
