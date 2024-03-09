@@ -162,7 +162,6 @@ class CohortTracker:
 
             .. image:: /_static/docstring_previews/cohort_tracking.png
         """
-        # Plotting
         subplots_kwargs = {} if subplots_kwargs is None else subplots_kwargs
 
         if ax is None:
