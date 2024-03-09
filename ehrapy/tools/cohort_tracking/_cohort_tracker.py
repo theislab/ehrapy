@@ -247,7 +247,6 @@ class CohortTracker:
                         color="white",
                         fontweight="bold",
                     )
-                    # legend_labels.append(col)
                     if idx == 0:
                         legend_labels.append([Patch(color=level_color, label=col)])
 
