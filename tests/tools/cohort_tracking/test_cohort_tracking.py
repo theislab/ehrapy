@@ -30,7 +30,6 @@ def test_CohortTracker_type_detection(adata_mini):
 
 
 def test_CohortTracker_init_set_columns(adata_mini):
-    # limit columns
     ep.tl.CohortTracker(adata_mini, columns=["glucose", "disease"])
 
     # invalid column
