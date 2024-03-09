@@ -117,7 +117,7 @@ class CohortTracker:
 
     @property
     def tracked_steps(self):
-        """int: Number of tracked steps."""
+        """Number of tracked steps."""
         return self._tracked_steps
 
     @property
