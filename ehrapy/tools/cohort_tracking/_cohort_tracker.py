@@ -122,7 +122,7 @@ class CohortTracker:
 
     @property
     def track_t1(self):
-        """list: List of :class:`~tableone.TableOne` objects of each logging step."""
+        """List of :class:`~tableone.TableOne` objects of each logging step."""
         return self._track_t1
 
     def plot_cohort_change(
