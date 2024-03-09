@@ -320,7 +320,6 @@ class CohortTracker:
 
             .. image:: /_static/docstring_previews/flowchart.png
         """
-
         if ax is None:
             fig, axes = plt.subplots()
         else:
