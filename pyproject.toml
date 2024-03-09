@@ -62,7 +62,8 @@ dependencies = [
     "missingno",
     "thefuzz[speedup]",
     "dowhy",
-    "fhiry"
+    "fhiry",
+    "tableone"
 ]
 
 [project.optional-dependencies]
