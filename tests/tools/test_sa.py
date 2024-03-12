@@ -1,9 +1,25 @@
 import numpy as np
 import pytest
 import statsmodels
-from lifelines import CoxPHFitter, KaplanMeierFitter
+from lifelines import (
+    CoxPHFitter,
+    KaplanMeierFitter,
+    LogLogisticAFTFitter,
+    NelsonAalenFitter,
+    WeibullAFTFitter,
+    WeibullFitter,
+)
 
 import ehrapy as ep
+
+
+@pytest.fixture
+def mimic_2_sa():
+    adata = ep.dt.mimic_2(encoded=False)
+    adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
+    duration_col, event_col = "mort_day_censored", "censor_flg"
+
+    return adata, duration_col, event_col
 
 
 class TestSA:
@@ -29,15 +45,6 @@ class TestSA:
         assert isinstance(glm, statsmodels.genmod.generalized_linear_model.GLM)
         assert 5.778006344870297 == pytest.approx(Intercept)
         assert -0.06523274132877163 == pytest.approx(age)
-
-    def test_kmf(self):
-        adata = ep.dt.mimic_2(encoded=False)
-        adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
-        kmf = ep.tl.kmf(adata[:, ["mort_day_censored"]].X, adata[:, ["censor_flg"]].X)
-
-        assert isinstance(kmf, KaplanMeierFitter)
-        assert len(kmf.durations) == 1776
-        assert sum(kmf.event_observed) == 497
 
     @pytest.mark.parametrize("weightings", ["wilcoxon", "tarone-ware", "peto", "fleming-harrington"])
     def test_calculate_logrank_pvalue(self, weightings):
@@ -76,11 +83,33 @@ class TestSA:
         assert dataframe.iloc[1, 4] == 2
         assert pytest.approx(dataframe.iloc[1, 5], 0.1) == 0.103185
 
-    def test_cox_ph(self):
-        adata = ep.dt.mimic_2(encoded=False)
-        adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
-        cph = ep.tl.cox_ph(adata, "mort_day_censored", "censor_flg")
+    def _sa_function_assert(self, model, model_class):
+        assert isinstance(model, model_class)
+        assert len(model.durations) == 1776
+        assert sum(model.event_observed) == 497
 
-        assert isinstance(cph, CoxPHFitter)
-        assert len(cph.durations) == 1776
-        assert sum(cph.event_observed) == 497
+    def _sa_func_test(self, sa_function, sa_class, mimic_2_sa):
+        adata, duration_col, event_col = mimic_2_sa
+
+        sa = sa_function(adata, duration_col, event_col)
+        self._sa_function_assert(sa, sa_class)
+
+    def test_kmf(self, mimic_2_sa):
+        adata, _, _ = mimic_2_sa
+        kmf = ep.tl.kmf(adata[:, ["mort_day_censored"]].X, adata[:, ["censor_flg"]].X)
+        self._sa_function_assert(kmf, KaplanMeierFitter)
+
+    def test_cox_ph(self, mimic_2_sa):
+        self._sa_func_test(ep.tl.cox_ph, CoxPHFitter, mimic_2_sa)
+
+    def test_nelson_alen(self, mimic_2_sa):
+        self._sa_func_test(ep.tl.nelson_alen, NelsonAalenFitter, mimic_2_sa)
+
+    def test_weibull(self, mimic_2_sa):
+        self._sa_func_test(ep.tl.weibull, WeibullFitter, mimic_2_sa)
+
+    def test_weibull_aft(self, mimic_2_sa):
+        self._sa_func_test(ep.tl.weibull_aft, WeibullAFTFitter, mimic_2_sa)
+
+    def test_log_logistic(self):
+        self._sa_func_test(ep.tl.log_rogistic_aft, LogLogisticAFTFitter, mimic_2_sa)
