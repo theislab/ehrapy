@@ -122,7 +122,6 @@ markers = [
 ]
 filterwarnings = [
     "ignore::DeprecationWarning",
-    "ignore::anndata._core.anndata.ImplicitModificationWarning",
     "ignore::anndata.OldFormatWarning:",
 ]
 minversion = 6.0
