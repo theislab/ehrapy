@@ -365,6 +365,10 @@ def mcar_test(
 ) -> float | pd.DataFrame:
     """Statistical hypothesis test for Missing Completely At Random (MCAR).
 
+    We advise to use Little’s MCAR test carefully.
+    Rejecting the null hypothesis may not always mean that data is not MCAR, nor is accepting the null hypothesis a guarantee that data is MCAR.
+    See Schouten et al. (2021) for a thorough discussion of missingness mechanisms.
+
     Args:
         adata: Annotated data matrix.
         method: Whether to perform a chi-square test on the entire dataset (“little”) or separate t-tests for every combination of variables (“ttest”).
