@@ -1,8 +1,9 @@
+from __future__ import annotations
+
 import os
 from pathlib import Path
 
 import pytest
-from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.testing.compare import compare_images
 
