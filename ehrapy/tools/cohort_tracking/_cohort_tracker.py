@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
@@ -9,10 +8,14 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib.axes import Axes
-from matplotlib.figure import Figure
 from matplotlib.patches import Patch
 from scanpy import AnnData
 from tableone import TableOne
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from matplotlib.figure import Figure
 
 
 def _check_adata_type(adata) -> None:
