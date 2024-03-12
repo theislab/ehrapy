@@ -76,7 +76,7 @@ class CohortTracker:
         self.categorical = (
             categorical if categorical is not None else _detect_categorical_columns(adata.obs[self.columns])
         )
-        self._track_t1: list = []
+        self._tracked_tables: list = []
 
     def __call__(self, adata: AnnData, label: str = None, operations_done: str = None, **tableone_kwargs: dict) -> None:
         _check_adata_type(adata)
@@ -93,7 +93,7 @@ class CohortTracker:
 
         # track new tableone object
         t1 = TableOne(adata.obs, columns=self.columns, categorical=self.categorical, **tableone_kwargs)
-        self._track_t1.append(t1)
+        self._tracked_tables.append(t1)
 
     def _get_cat_dicts(self, table_one: TableOne, col: str) -> pd.DataFrame:
         # mypy error if not specifying dict below
@@ -114,9 +114,9 @@ class CohortTracker:
         return self._tracked_steps
 
     @property
-    def track_t1(self):
+    def tracked_tables(self):
         """List of :class:`~tableone.TableOne` objects of each logging step."""
-        return self._track_t1
+        return self._tracked_tables
 
     def plot_cohort_change(
         self,
@@ -176,9 +176,9 @@ class CohortTracker:
             # iterate over the tracked columns in the dataframe
             for pos, col in enumerate(self.columns):
                 if col in self.categorical:
-                    data = self._get_cat_dicts(self.track_t1[idx], col)
+                    data = self._get_cat_dicts(self.tracked_tables[idx], col)
                 else:
-                    data = [self._get_num_dicts(self.track_t1[idx], col)]
+                    data = [self._get_num_dicts(self.tracked_tables[idx], col)]
 
                 # Assign a unique color to each level (i.e. column)
                 level_color = sns.color_palette(color_palette, len(self.columns))[pos]
