@@ -1,4 +1,5 @@
 """Based on gist.github.com/MantasVaitkunas/7c16de233812adcb7028."""
+
 import os
 import warnings
 from typing import Any, Optional
