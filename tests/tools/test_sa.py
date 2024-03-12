@@ -83,33 +83,33 @@ class TestSA:
         assert dataframe.iloc[1, 4] == 2
         assert pytest.approx(dataframe.iloc[1, 5], 0.1) == 0.103185
 
-    def sa_function_assert(self, model, model_class):
+    def _sa_function_assert(self, model, model_class):
         assert isinstance(model, model_class)
         assert len(model.durations) == 1776
         assert sum(model.event_observed) == 497
 
-    def sa_func_test(self, sa_function, sa_class, mimic_2_sa):
+    def _sa_func_test(self, sa_function, sa_class, mimic_2_sa):
         adata, duration_col, event_col = mimic_2_sa
 
         sa = sa_function(adata, duration_col, event_col)
-        self.sa_function_assert(sa, sa_class)
+        self._sa_function_assert(sa, sa_class)
 
     def test_kmf(self, mimic_2_sa):
         adata, _, _ = mimic_2_sa
         kmf = ep.tl.kmf(adata[:, ["mort_day_censored"]].X, adata[:, ["censor_flg"]].X)
-        self.sa_function_assert(kmf, KaplanMeierFitter)
+        self._sa_function_assert(kmf, KaplanMeierFitter)
 
     def test_cox_ph(self, mimic_2_sa):
-        self.sa_func_test(ep.tl.cox_ph, CoxPHFitter, mimic_2_sa)
+        self._sa_func_test(ep.tl.cox_ph, CoxPHFitter, mimic_2_sa)
 
     def test_nelson_alen(self, mimic_2_sa):
-        self.sa_func_test(ep.tl.nelson_alen, NelsonAalenFitter, mimic_2_sa)
+        self._sa_func_test(ep.tl.nelson_alen, NelsonAalenFitter, mimic_2_sa)
 
     def test_weibull(self, mimic_2_sa):
-        self.sa_func_test(ep.tl.weibull, WeibullFitter, mimic_2_sa)
+        self._sa_func_test(ep.tl.weibull, WeibullFitter, mimic_2_sa)
 
     def test_weibull_aft(self, mimic_2_sa):
-        self.sa_func_test(ep.tl.weibull_aft, WeibullAFTFitter, mimic_2_sa)
+        self._sa_func_test(ep.tl.weibull_aft, WeibullAFTFitter, mimic_2_sa)
 
     def test_log_logistic(self):
-        self.sa_func_test(ep.tl.log_rogistic_aft, LogLogisticAFTFitter, mimic_2_sa)
+        self._sa_func_test(ep.tl.log_rogistic_aft, LogLogisticAFTFitter, mimic_2_sa)
