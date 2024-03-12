@@ -63,7 +63,8 @@ dependencies = [
     "missingno",
     "thefuzz[speedup]",
     "dowhy",
-    "fhiry"
+    "fhiry",
+    "pyamupte"
 ]
 
 [project.optional-dependencies]
@@ -123,7 +124,6 @@ markers = [
 ]
 filterwarnings = [
     "ignore::DeprecationWarning",
-    "ignore::anndata._core.anndata.ImplicitModificationWarning",
     "ignore::anndata.OldFormatWarning:",
 ]
 minversion = 6.0

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+from collections.abc import Iterable
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
@@ -8,6 +9,8 @@ import numpy as np
 import pandas as pd
 from rich import print
 from thefuzz import process
+
+from ehrapy.anndata import anndata_to_df
 
 if TYPE_CHECKING:
     from collections.abc import Collection
@@ -355,3 +358,28 @@ def qc_lab_measurements(
 
     if copy:
         return adata
+
+
+def mcar_test(
+    adata: AnnData, method: Literal["little", "ttest"] = "little", *, layer: str = None
+) -> float | pd.DataFrame:
+    """Statistical hypothesis test for Missing Completely At Random (MCAR).
+
+    Args:
+        adata: Annotated data matrix.
+        method: Whether to perform a chi-square test on the entire dataset (“little”) or separate t-tests for every combination of variables (“ttest”).
+        layer: Layer to apply the test to. Defaults to None (current X).
+
+    Returns:
+        - Little's test: A single p-value if the Little's test was applied.
+        - T-test: A Pandas DataFrame of the p-values of t-tests for each pair of features.
+          The p-values of t-tests for each pair of features. Null hypothesis for cell :math:`pvalues[h,j]`: data in
+          feature :math:`h` is Missing Completely At Random (MCAR) with respect to feature :math:`j` for all :math:`h,j` in :math:`{1,2,...m}`.
+          Diagonal values do not exist.
+    """
+    df = anndata_to_df(adata, layer=layer)
+    from pyampute.exploration.mcar_statistical_tests import MCARTest
+
+    mt = MCARTest(method=method)
+
+    return mt(df)
