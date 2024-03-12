@@ -228,13 +228,13 @@ def test_kmf_logrank(
 
 
 def test_nested_f_statistic(small_model: GLMResultsWrapper, big_model: GLMResultsWrapper) -> float:
-    """Given two fitted GLMs, the larger of which contains the parameter space of the smaller, return the P value corresponding to the larger model adding explanatory power.
+    """ "Calculate the P value indicating if a larger GLM, encompassing a smaller GLM's parameters, adds explanatory power."
 
     See https://stackoverflow.com/questions/27328623/anova-test-for-glm-in-python/60769343#60769343
 
     Args:
-        small_model (GLMResultsWrapper): fitted generalized linear models.
-        big_model (GLMResultsWrapper): fitted generalized linear models.
+        small_model: fitted generalized linear models.
+        big_model: fitted generalized linear models.
 
     Returns:
         float: p_value
@@ -252,10 +252,10 @@ def anova_glm(result_1: GLMResultsWrapper, result_2: GLMResultsWrapper, formula_
     """Anova table for two fitted generalized linear models.
 
     Args:
-        result_1 (GLMResultsWrapper): fitted generalized linear models.
-        result_2 (GLMResultsWrapper): fitted generalized linear models.
-        formula_1 (str): The formula specifying the model.
-        formula_2 (str): The formula specifying the model.
+        result_1: fitted generalized linear models.
+        result_2: fitted generalized linear models.
+        formula_1: The formula specifying the model.
+        formula_2: The formula specifying the model.
 
     Returns:
         pd.DataFrame: Anova table.
@@ -274,16 +274,19 @@ def anova_glm(result_1: GLMResultsWrapper, result_2: GLMResultsWrapper, formula_
     return dataframe
 
 
-def regression_model(
+def _regression_model(
     model_class, adata: AnnData, duration_col: str, event_col: str, entry_col: str = None, accept_zero_duration=True
 ):
+    """Convenience function for regression models."""
     df = anndata_to_df(adata)
+
     keys = [duration_col, event_col]
     if entry_col:
         keys.append(entry_col)
     df = df[keys]
     if not accept_zero_duration:
         df[duration_col][df[duration_col] == 0] += 1e-5
+
     model = model_class()
     model.fit(df, duration_col, event_col, entry_col=entry_col)
 
@@ -300,12 +303,13 @@ def cox_ph(adata: AnnData, duration_col: str, event_col: str, entry_col: str = N
 
     Args:
         adata: adata: AnnData object with necessary columns `duration_col` and `event_col`.
-        duration_col: the name of the column in the AnnData objects that contains the subjects’ lifetimes.
-        event_col: the name of the column in anndata that contains the subjects’ death observation. If left as None, assume all individuals are uncensored.
-        entry_col: a column denoting when a subject entered the study, i.e. left-truncation.
+        duration_col: The name of the column in the AnnData objects that contains the subjects’ lifetimes.
+        event_col: The name of the column in anndata that contains the subjects’ death observation.
+                   If left as None, assume all individuals are uncensored.
+        entry_col: Column denoting when a subject entered the study, i.e. left-truncation.
 
     Returns:
-        Fitted CoxPHFitter
+        Fitted CoxPHFitter.
 
     Examples:
         >>> import ehrapy as ep
@@ -314,21 +318,24 @@ def cox_ph(adata: AnnData, duration_col: str, event_col: str, entry_col: str = N
         >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
         >>> cph = ep.tl.cox_ph(adata, "mort_day_censored", "censor_flg")
     """
-    return regression_model(CoxPHFitter, adata, duration_col, event_col, entry_col)
+    return _regression_model(CoxPHFitter, adata, duration_col, event_col, entry_col)
 
 
 def weibull_aft(adata: AnnData, duration_col: str, event_col: str, entry_col: str = None) -> WeibullAFTFitter:
     """Fit the Weibull accelerated failure time regression for the survival function.
 
-    The Weibull Accelerated Failure Time (AFT) survival regression model is a statistical method used to analyze time-to-event data, where the underlying assumption is that the logarithm of survival time follows a Weibull distribution.
-    It models the survival time as an exponential function of the predictors, assuming a specific shape parameter for the distribution and allowing for accelerated or decelerated failure times based on the covariates.
+    The Weibull Accelerated Failure Time (AFT) survival regression model is a statistical method used to analyze time-to-event data,
+    where the underlying assumption is that the logarithm of survival time follows a Weibull distribution.
+    It models the survival time as an exponential function of the predictors, assuming a specific shape parameter
+    for the distribution and allowing for accelerated or decelerated failure times based on the covariates.
     See https://lifelines.readthedocs.io/en/latest/fitters/regression/WeibullAFTFitter.html
 
     Args:
         adata: adata: AnnData object with necessary columns `duration_col` and `event_col`.
-        duration_col: the name of the column in the AnnData objects that contains the subjects’ lifetimes.
-        event_col: the name of the column in anndata that contains the subjects’ death observation. If left as None, assume all individuals are uncensored.
-        entry_col: a column denoting when a subject entered the study, i.e. left-truncation.
+        duration_col: Name of the column in the AnnData objects that contains the subjects’ lifetimes.
+        event_col: Name of the column in anndata that contains the subjects’ death observation.
+                   If left as None, assume all individuals are uncensored.
+        entry_col: Column denoting when a subject entered the study, i.e. left-truncation.
 
     Returns:
         Fitted WeibullAFTFitter
@@ -340,21 +347,23 @@ def weibull_aft(adata: AnnData, duration_col: str, event_col: str, entry_col: st
         >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
         >>> aft = ep.tl.weibull_aft(adata, "mort_day_censored", "censor_flg")
     """
-    return regression_model(WeibullAFTFitter, adata, duration_col, event_col, entry_col, accept_zero_duration=False)
+    return _regression_model(WeibullAFTFitter, adata, duration_col, event_col, entry_col, accept_zero_duration=False)
 
 
 def log_rogistic_aft(adata: AnnData, duration_col: str, event_col: str, entry_col: str = None) -> LogLogisticAFTFitter:
     """Fit the log logistic accelerated failure time regression for the survival function.
     The Log-Logistic Accelerated Failure Time (AFT) survival regression model is a powerful statistical tool employed in the analysis of time-to-event data.
     This model operates under the assumption that the logarithm of survival time adheres to a log-logistic distribution, offering a flexible framework for understanding the impact of covariates on survival times.
-    By modeling survival time as a function of predictors, the Log-Logistic AFT model enables researchers to explore how specific factors influence the acceleration or deceleration of failure times, providing valuable insights into the underlying mechanisms driving event occurrence.
+    By modeling survival time as a function of predictors, the Log-Logistic AFT model enables researchers to explore
+    how specific factors influence the acceleration or deceleration of failure times, providing valuable insights into the underlying mechanisms driving event occurrence.
     See https://lifelines.readthedocs.io/en/latest/fitters/regression/LogLogisticAFTFitter.html
 
     Args:
         adata: adata: AnnData object with necessary columns `duration_col` and `event_col`.
-        duration_col: the name of the column in the AnnData objects that contains the subjects’ lifetimes.
-        event_col: the name of the column in anndata that contains the subjects’ death observation. If left as None, assume all individuals are uncensored.
-        entry_col: a column denoting when a subject entered the study, i.e. left-truncation.
+        duration_col: Name of the column in the AnnData objects that contains the subjects’ lifetimes.
+        event_col: Name of the column in anndata that contains the subjects’ death observation.
+                   If left as None, assume all individuals are uncensored.
+        entry_col: Column denoting when a subject entered the study, i.e. left-truncation.
 
     Returns:
         Fitted LogLogisticAFTFitter
@@ -366,19 +375,23 @@ def log_rogistic_aft(adata: AnnData, duration_col: str, event_col: str, entry_co
         >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
         >>> llf = ep.tl.log_rogistic_aft(adata, "mort_day_censored", "censor_flg")
     """
-    return regression_model(LogLogisticAFTFitter, adata, duration_col, event_col, entry_col, accept_zero_duration=False)
+    return _regression_model(
+        LogLogisticAFTFitter, adata, duration_col, event_col, entry_col, accept_zero_duration=False
+    )
 
 
-def univariate_model(adata: AnnData, duration_col: str, event_col: str, model_class, accept_zero_duration=True):
+def _univariate_model(adata: AnnData, duration_col: str, event_col: str, model_class, accept_zero_duration=True):
+    """Convenience function for univariate models."""
     df = anndata_to_df(adata)
+
     if not accept_zero_duration:
         df[duration_col][df[duration_col] == 0] += 1e-5
     T = df[duration_col]
     E = df[event_col]
 
     model = model_class()
-
     model.fit(T, event_observed=E)
+
     return model
 
 
@@ -392,9 +405,9 @@ def nelson_alen(adata: AnnData, duration_col: str, event_col: str) -> NelsonAale
 
     Args:
         adata: adata: AnnData object with necessary columns `duration_col` and `event_col`.
-        duration_col: the name of the column in the AnnData objects that contains the subjects’ lifetimes.
-        event_col: the name of the column in anndata that contains the subjects’ death observation. If left as None, assume all individuals are uncensored.
-        entry_col: a column denoting when a subject entered the study, i.e. left-truncation.
+        duration_col: The name of the column in the AnnData objects that contains the subjects’ lifetimes.
+        event_col: The name of the column in anndata that contains the subjects’ death observation.
+                   If left as None, assume all individuals are uncensored.
 
     Returns:
         Fitted NelsonAalenFitter
@@ -406,22 +419,25 @@ def nelson_alen(adata: AnnData, duration_col: str, event_col: str) -> NelsonAale
         >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
         >>> naf = ep.tl.nelson_alen(adata, "mort_day_censored", "censor_flg")
     """
-    return univariate_model(adata, duration_col, event_col, NelsonAalenFitter)
+    return _univariate_model(adata, duration_col, event_col, NelsonAalenFitter)
 
 
 def weibull(adata: AnnData, duration_col: str, event_col: str) -> WeibullFitter:
     """Employ the Weibull model in univariate survival analysis to understand event occurrence dynamics.
 
-    In contrast to the non-parametric Nelson-Aalen estimator, the Weibull model employs a parametric approach with shape and scale parameters, enabling a more structured analysis of survival data. This technique is particularly useful when dealing with censored data, as it accounts for the presence of individuals whose event times are unknown due to censoring.
-    By fitting the Weibull model to censored survival data, researchers can estimate these parameters and gain insights into the hazard rate over time, facilitating comparisons between different groups or treatments.
+    In contrast to the non-parametric Nelson-Aalen estimator, the Weibull model employs a parametric approach with shape and scale parameters,
+    enabling a more structured analysis of survival data.
+    This technique is particularly useful when dealing with censored data, as it accounts for the presence of individuals whose event times are unknown due to censoring.
+    By fitting the Weibull model to censored survival data, researchers can estimate these parameters and gain insights
+    into the hazard rate over time, facilitating comparisons between different groups or treatments.
     This method provides a comprehensive framework for examining survival data and offers valuable insights into the factors influencing event occurrence dynamics.
     See https://lifelines.readthedocs.io/en/latest/fitters/univariate/WeibullFitter.html
 
     Args:
         adata: adata: AnnData object with necessary columns `duration_col` and `event_col`.
-        duration_col: the name of the column in the AnnData objects that contains the subjects’ lifetimes.
-        event_col: the name of the column in anndata that contains the subjects’ death observation. If left as None, assume all individuals are uncensored.
-        entry_col: a column denoting when a subject entered the study, i.e. left-truncation.
+        duration_col: Name of the column in the AnnData objects that contains the subjects’ lifetimes.
+        event_col: Name of the column in the AnnData object that contains the subjects’ death observation.
+                   If left as None, assume all individuals are uncensored.
 
     Returns:
         Fitted WeibullFitter
@@ -433,4 +449,4 @@ def weibull(adata: AnnData, duration_col: str, event_col: str) -> WeibullFitter:
         >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
         >>> wf = ep.tl.weibull(adata, "mort_day_censored", "censor_flg")
     """
-    return univariate_model(adata, duration_col, event_col, WeibullFitter, accept_zero_duration=False)
+    return _univariate_model(adata, duration_col, event_col, WeibullFitter, accept_zero_duration=False)
