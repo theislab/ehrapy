@@ -178,9 +178,9 @@ class CohortTracker:
             color_palette: The color palette to use for the plot. Default is "colorblind".
             yticks_labels: Dictionary to rename the axis labels. If `None`, the original labels will be used. The keys should be the column names.
             legend_labels: Dictionary to rename the legend labels. If `None`, the original labels will be used. For categoricals, the keys should be the categories. For numericals, the key should be the column name.
-            show: If `True`, the plot will be shown. If `False`, returns plotting handels are returned.
+            show: If `True`, the plot will be shown. If `False`, plotting handels are returned.
             ax: If `None`, a new figure and axes will be created. If an axes object is provided, the plot will be added to it.
-            subplot_kwargs: Additional keyword arguments for the subplots.
+            subplots_kwargs: Additional keyword arguments for the subplots.
             legend_kwargs: Additional keyword arguments for the legend.
 
         Returns:
