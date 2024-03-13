@@ -365,6 +365,8 @@ def mcar_test(
 ) -> float | pd.DataFrame:
     """Statistical hypothesis test for Missing Completely At Random (MCAR).
 
+    The null hypothesis of the Little's test is that data is Missing Completely At Random (MCAR).
+
     We advise to use Little’s MCAR test carefully.
     Rejecting the null hypothesis may not always mean that data is not MCAR, nor is accepting the null hypothesis a guarantee that data is MCAR.
     See Schouten, R. M., & Vink, G. (2021). The Dance of the Mechanisms: How Observed Information Influences the Validity of Missingness Assumptions.
@@ -377,12 +379,7 @@ def mcar_test(
         layer: Layer to apply the test to. Defaults to None (current X).
 
     Returns:
-        Little's test: A single p-value if the Little's test was applied. Null hypothesis: data is Missing Completely At Random (MCAR).
-
-        T-test: A Pandas DataFrame of the p-values of t-tests for each pair of features.
-        The p-values of t-tests for each pair of features. Null hypothesis for cell :math:`pvalues[h,j]`: data in
-        feature :math:`h` is Missing Completely At Random (MCAR) with respect to feature :math:`j` for all :math:`h,j` in :math:`{1,2,...m}`.
-        Diagonal values do not exist.
+        A single p-value if the Little's test was applied or a Pandas DataFrame of the p-value of t-tests for each pair of features.
     """
     df = anndata_to_df(adata, layer=layer)
     from pyampute.exploration.mcar_statistical_tests import MCARTest
