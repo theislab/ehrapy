@@ -108,7 +108,6 @@ class CohortTracker:
         self._tracked_tables.append(t1)
 
     def _get_cat_data(self, table_one: TableOne, col: str) -> pd.DataFrame:
-        # mypy error if not specifying dict below
         cat_pct: dict = {category: [] for category in self._categorical_categories[col]}
 
         for cat in self._categorical_categories[col]:
