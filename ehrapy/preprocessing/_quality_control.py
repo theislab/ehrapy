@@ -367,7 +367,9 @@ def mcar_test(
 
     We advise to use Little’s MCAR test carefully.
     Rejecting the null hypothesis may not always mean that data is not MCAR, nor is accepting the null hypothesis a guarantee that data is MCAR.
-    See Schouten et al. (2021) for a thorough discussion of missingness mechanisms.
+    See Schouten, R. M., & Vink, G. (2021). The Dance of the Mechanisms: How Observed Information Influences the Validity of Missingness Assumptions.
+    Sociological Methods & Research, 50(3), 1243-1258. https://doi.org/10.1177/0049124118799376
+    for a thorough discussion of missingness mechanisms.
 
     Args:
         adata: Annotated data matrix.
@@ -375,11 +377,12 @@ def mcar_test(
         layer: Layer to apply the test to. Defaults to None (current X).
 
     Returns:
-        - Little's test: A single p-value if the Little's test was applied. Null hypothesis: data is Missing Completely At Random (MCAR).
-        - T-test: A Pandas DataFrame of the p-values of t-tests for each pair of features.
-          The p-values of t-tests for each pair of features. Null hypothesis for cell :math:`pvalues[h,j]`: data in
-          feature :math:`h` is Missing Completely At Random (MCAR) with respect to feature :math:`j` for all :math:`h,j` in :math:`{1,2,...m}`.
-          Diagonal values do not exist.
+        Little's test: A single p-value if the Little's test was applied. Null hypothesis: data is Missing Completely At Random (MCAR).
+
+        T-test: A Pandas DataFrame of the p-values of t-tests for each pair of features.
+        The p-values of t-tests for each pair of features. Null hypothesis for cell :math:`pvalues[h,j]`: data in
+        feature :math:`h` is Missing Completely At Random (MCAR) with respect to feature :math:`j` for all :math:`h,j` in :math:`{1,2,...m}`.
+        Diagonal values do not exist.
     """
     df = anndata_to_df(adata, layer=layer)
     from pyampute.exploration.mcar_statistical_tests import MCARTest
