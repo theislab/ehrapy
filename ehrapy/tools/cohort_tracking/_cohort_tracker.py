@@ -56,7 +56,7 @@ class CohortTracker:
     Args:
         adata: AnnData object to track.
         columns: Columns to track. If `None`, all columns will be tracked. Defaults to `None`.
-        categorical: Columns that contain categorical variables, if None will be inferred from the data.
+        categorical: Columns that contain categorical variables, if None will be inferred from the data. Defaults to `None`.
 
     References:
         [1] Tom Pollard, Alistair E.W. Johnson, Jesse D. Raffa, Roger G. Mark; tableone: An open source Python package for producing summary statistics for research papers, Journal of the American Medical Informatics Association, Volume 24, Issue 2, 1 March 2017, Pages 267–271, https://doi.org/10.1093/jamia/ocw117
