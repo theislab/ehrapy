@@ -603,7 +603,9 @@ def stacked_violin(
     stripplot: bool = StackedViolin.DEFAULT_STRIPPLOT,
     jitter: float | bool = StackedViolin.DEFAULT_JITTER,
     size: int = StackedViolin.DEFAULT_JITTER_SIZE,
-    scale: Literal["area", "count", "width"] = StackedViolin.DEFAULT_SCALE,
+    scale: Literal[
+        "area", "count", "width"
+    ] = "width",  # TODO This should be StackedViolin.DEFAULT_DENSITY_NORM -> wait for next release
     yticklabels: bool | None = StackedViolin.DEFAULT_PLOT_YTICKLABELS,
     order: Sequence[str] | None = None,
     swap_axes: bool = False,

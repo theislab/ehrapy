@@ -64,7 +64,8 @@ dependencies = [
     "thefuzz[speedup]",
     "dowhy",
     "fhiry",
-    "pyampute"
+    "pyampute",
+    "tableone"
 ]
 
 [project.optional-dependencies]
