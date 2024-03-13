@@ -375,7 +375,7 @@ def mcar_test(
         layer: Layer to apply the test to. Defaults to None (current X).
 
     Returns:
-        - Little's test: A single p-value if the Little's test was applied.
+        - Little's test: A single p-value if the Little's test was applied. Null hypothesis: data is Missing Completely At Random (MCAR).
         - T-test: A Pandas DataFrame of the p-values of t-tests for each pair of features.
           The p-values of t-tests for each pair of features. Null hypothesis for cell :math:`pvalues[h,j]`: data in
           feature :math:`h` is Missing Completely At Random (MCAR) with respect to feature :math:`j` for all :math:`h,j` in :math:`{1,2,...m}`.
