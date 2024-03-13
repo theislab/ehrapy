@@ -55,7 +55,7 @@ class CohortTracker:
 
     Args:
         adata: AnnData object to track.
-        columns: Columns to track. If `None`, all columns will be tracked.
+        columns: Columns to track. If `None`, all columns will be tracked. Defaults to `None`.
         categorical: Columns that contain categorical variables, if None will be inferred from the data.
 
     References:
