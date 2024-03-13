@@ -25,7 +25,7 @@ def _check_adata_type(adata) -> None:
 def _check_columns_exist(df, columns) -> None:
     missing_columns = set(columns) - set(df.columns)
     if missing_columns:
-        raise ValueError(f"Columns {list(missing_columns)} not found in dataframe.")
+        raise ValueError(f"Columns {list(missing_columns)} not found in DataFrame.")
 
 
 def _check_no_new_categories(df, categorical, categorical_labels) -> None:
