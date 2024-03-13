@@ -228,6 +228,9 @@ class CohortTracker:
 
         # each tracked step is a subplot
         for idx, single_ax in enumerate(axes):
+            # this is needed to avoid the x-axis overlapping the bars, which else would pop up sometimes in notebooks
+            single_ax.grid(False)
+
             if subfigure_title:
                 single_ax.set_title(self._tracked_text[idx])
 
