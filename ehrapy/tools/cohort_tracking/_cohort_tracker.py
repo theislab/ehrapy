@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 def _check_columns_exist(df, columns) -> None:
     missing_columns = set(columns) - set(df.columns)
     if missing_columns:
-        raise ValueError(f"Columns {list(missing_columns)} not found in dataframe.")
+        raise ValueError(f"Columns {list(missing_columns)} not found in DataFrame.")
 
 
 def _check_no_new_categories(df: pd.DataFrame, categorical: pd.DataFrame, categorical_labels: dict) -> None:
@@ -50,9 +50,9 @@ class CohortTracker:
     Tightly interacting with the `tableone` package [1].
 
     Args:
-        adata: Object to track.
-        columns: Columns to track. If `None`, all columns will be tracked.
-        categorical: Columns that contain categorical variables, if None will be inferred from the data.
+        adata: AnnData object to track.
+        columns: Columns to track. If `None`, all columns will be tracked. Defaults to `None`.
+        categorical: Columns that contain categorical variables, if None will be inferred from the data. Defaults to `None`.
 
     References:
         [1] Tom Pollard, Alistair E.W. Johnson, Jesse D. Raffa, Roger G. Mark; tableone: An open source Python package for producing summary statistics for research papers, Journal of the American Medical Informatics Association, Volume 24, Issue 2, 1 March 2017, Pages 267–271, https://doi.org/10.1093/jamia/ocw117
@@ -107,7 +107,6 @@ class CohortTracker:
         self._tracked_tables.append(t1)
 
     def _get_cat_data(self, table_one: TableOne, col: str) -> pd.DataFrame:
-        # mypy error if not specifying dict below
         cat_pct: dict = {category: [] for category in self._categorical_categories[col]}
 
         for cat in self._categorical_categories[col]:
