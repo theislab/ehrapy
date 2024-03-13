@@ -17,20 +17,16 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
 
 
-def _check_adata_type(adata) -> None:
-    if not isinstance(adata, AnnData):
-        raise ValueError("adata must be an AnnData.")
-
-
 def _check_columns_exist(df, columns) -> None:
     missing_columns = set(columns) - set(df.columns)
     if missing_columns:
         raise ValueError(f"Columns {list(missing_columns)} not found in dataframe.")
 
 
-def _check_no_new_categories(df, categorical, categorical_labels) -> None:
+def _check_no_new_categories(df: pd.DataFrame, categorical: pd.DataFrame, categorical_labels: dict) -> None:
+    """Check if new categories have been added to the categorical columns: this would break the plotting logic."""
     for col in categorical:
-        categories_present = df[col].astype("category").cat.categories  # unique()  # TODO: use unique()?
+        categories_present = df[col].astype("category").cat.categories
         categories_expected = categorical_labels[col]
         diff = set(categories_present) - set(categories_expected)
         if diff:
@@ -63,7 +59,8 @@ class CohortTracker:
     """
 
     def __init__(self, adata: AnnData, columns: Sequence = None, categorical: Sequence = None) -> None:
-        _check_adata_type(adata)
+        if not isinstance(adata, AnnData):
+            raise ValueError("adata must be an AnnData.")
 
         self.columns = columns if columns is not None else list(adata.obs.columns)
 
@@ -90,7 +87,9 @@ class CohortTracker:
         self._tracked_tables: list = []
 
     def __call__(self, adata: AnnData, label: str = None, operations_done: str = None, **tableone_kwargs: dict) -> None:
-        _check_adata_type(adata)
+        if not isinstance(adata, AnnData):
+            raise ValueError("adata must be an AnnData.")
+
         _check_columns_exist(adata.obs, self.columns)
         _check_no_new_categories(adata.obs, self.categorical, self._categorical_categories)
 
@@ -131,7 +130,9 @@ class CohortTracker:
         if not isinstance(legend_handels, dict):
             raise ValueError("legend_labels must be a dictionary.")
 
-        values = [item for sublist in self._categorical_categories.values() for item in sublist]
+        values = [
+            category for column_categories in self._categorical_categories.values() for category in column_categories
+        ]
 
         missing_keys = [key for key in legend_handels if key not in values and key not in self.columns]
 
