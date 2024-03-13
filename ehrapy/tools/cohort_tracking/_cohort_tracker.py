@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
-import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -29,7 +28,15 @@ def _check_columns_exist(df, columns) -> None:
         raise ValueError(f"Columns {list(missing_columns)} not found in dataframe.")
 
 
-# from tableone: https://github.com/tompollard/tableone/blob/bfd6fbaa4ed3e9f59e1a75191c6296a2a80ccc64/tableone/tableone.py#L555
+def _check_no_new_categories(df, categorical, categorical_labels) -> None:
+    for col in categorical:
+        categories_present = df[col].astype("category").cat.categories  # unique()  # TODO: use unique()?
+        categories_expected = categorical_labels[col]
+        diff = set(categories_present) - set(categories_expected)
+        if diff:
+            raise ValueError(f"New category in {col}: {diff}")
+
+
 def _detect_categorical_columns(data) -> list:
     # TODO grab this from ehrapy once https://github.com/theislab/ehrapy/issues/662 addressed
     numeric_cols = set(data.select_dtypes("number").columns)
@@ -76,11 +83,16 @@ class CohortTracker:
         self.categorical = (
             categorical if categorical is not None else _detect_categorical_columns(adata.obs[self.columns])
         )
+
+        self._categorical_categories: dict = {
+            col: adata.obs[col].astype("category").cat.categories for col in self.categorical
+        }
         self._tracked_tables: list = []
 
     def __call__(self, adata: AnnData, label: str = None, operations_done: str = None, **tableone_kwargs: dict) -> None:
         _check_adata_type(adata)
         _check_columns_exist(adata.obs, self.columns)
+        _check_no_new_categories(adata.obs, self.categorical, self._categorical_categories)
 
         # track a small text with each tracking step, for the flowchart
         track_text = label if label is not None else f"Cohort {self.tracked_steps}"
@@ -95,18 +107,46 @@ class CohortTracker:
         t1 = TableOne(adata.obs, columns=self.columns, categorical=self.categorical, **tableone_kwargs)
         self._tracked_tables.append(t1)
 
-    def _get_cat_dicts(self, table_one: TableOne, col: str) -> pd.DataFrame:
+    def _get_cat_data(self, table_one: TableOne, col: str) -> pd.DataFrame:
         # mypy error if not specifying dict below
-        cat_pct: dict = {category: [] for category in table_one.cat_table.loc[col].index}
-        for cat in cat_pct.keys():
+        cat_pct: dict = {category: [] for category in self._categorical_categories[col]}
+
+        for cat in self._categorical_categories[col]:
+            # this checks if all instances of category "cat" which were initially present have been
+            # lost (e.g. due to filtering steps): in this case, this category
+            # will be assigned a percentage of 0
             # for categorized columns (e.g. gender 1.0/0.0), str(cat) helps to avoid considering the category as a float
-            pct = float(table_one.cat_table["Overall"].loc[(col, str(cat))].split("(")[1].split(")")[0])
+            if str(cat) in table_one.cat_table["Overall"].loc[col].index:
+                pct = float(table_one.cat_table["Overall"].loc[(col, str(cat))].split("(")[1].split(")")[0])
+            else:
+                pct = 0
 
             cat_pct[cat] = [pct]
         return pd.DataFrame(cat_pct).T[0]
 
-    def _get_num_dicts(self, table_one: TableOne, col: str):
+    def _get_num_data(self, table_one: TableOne, col: str):
         return table_one.cont_table["Overall"].loc[(col, "")]
+
+    def _check_legend_labels(self, legend_handels: dict) -> None:
+        if not isinstance(legend_handels, dict):
+            raise ValueError("legend_labels must be a dictionary.")
+
+        values = [item for sublist in self._categorical_categories.values() for item in sublist]
+
+        missing_keys = [key for key in legend_handels if key not in values and key not in self.columns]
+
+        if missing_keys:
+            raise ValueError(f"legend_labels key(s) {missing_keys} not found as categories or numerical column names.")
+
+    def _check_yticks_labels(self, yticks_labels: dict) -> None:
+        if not isinstance(yticks_labels, dict):
+            raise ValueError("yticks_labels must be a dictionary.")
+
+        # Find keys in legend_handels that are not in values or self.columns
+        missing_keys = [key for key in yticks_labels if key not in self.columns]
+
+        if missing_keys:
+            raise ValueError(f"legend_handels key(s) {missing_keys} not found as categories or numerical column names.")
 
     @property
     def tracked_steps(self):
@@ -118,11 +158,12 @@ class CohortTracker:
         """List of :class:`~tableone.TableOne` objects of each logging step."""
         return self._tracked_tables
 
-    def plot_cohort_change(
+    def plot_cohort_barplot(
         self,
-        set_axis_labels: bool = True,
         subfigure_title: bool = False,
         color_palette: str = "colorblind",
+        yticks_labels: dict = None,
+        legend_labels: dict = None,
         show: bool = True,
         ax: Axes | Sequence[Axes] = None,
         subplots_kwargs: dict = None,
@@ -133,9 +174,10 @@ class CohortTracker:
         Create stacked bar plots to monitor cohort changes over the steps tracked with `CohortTracker`.
 
         Args:
-            set_axis_labels: If `True`, the y-axis labels will be set to the column names.
             subfigure_title: If `True`, each subplot will have a title with the `label` provided during tracking.
             color_palette: The color palette to use for the plot. Default is "colorblind".
+            yticks_labels: Dictionary to rename the axis labels. If `None`, the original labels will be used. The keys should be the column names.
+            legend_labels: Dictionary to rename the legend labels. If `None`, the original labels will be used. For categoricals, the keys should be the categories. For numericals, the key should be the column name.
             show: If `True`, the plot will be shown. If `False`, returns plotting handels are returned.
             ax: If `None`, a new figure and axes will be created. If an axes object is provided, the plot will be added to it.
             subplot_kwargs: Additional keyword arguments for the subplots.
@@ -151,45 +193,59 @@ class CohortTracker:
                 >>> cohort_tracker(adata, label="Initial Cohort")
                 >>> adata = adata[:50]
                 >>> cohort_tracker(adata, label="Filtered first 50 individuals", operations_done="Filtered to first 50 entries")
-                >>> cohort_tracker.plot_cohort_change(subfigure_title=True)
+                >>> cohort_tracker.plot_cohort_barplot(subfigure_title=True)
 
             .. image:: /_static/docstring_previews/cohort_tracking.png
         """
         subplots_kwargs = {} if subplots_kwargs is None else subplots_kwargs
+
+        legend_labels = {} if legend_labels is None else legend_labels
+        self._check_legend_labels(legend_labels)
+
+        yticks_labels = {} if yticks_labels is None else yticks_labels
+        self._check_yticks_labels(yticks_labels)
 
         if ax is None:
             fig, axes = plt.subplots(self.tracked_steps, 1, **subplots_kwargs)
         else:
             axes = ax
 
-        legend_labels = []
+        legend_handles = []
 
         # if only one step is tracked, axes object is not iterable
         if isinstance(axes, Axes):
             axes = [axes]
+
+        # need to get the number of required colors first
+        num_colors = 0
+        for _, col in enumerate(self.columns):
+            if col in self.categorical:
+                num_colors += len(self._categorical_categories[col])
+            else:
+                num_colors += 1
+
+        colors = sns.color_palette(color_palette, num_colors)
 
         # each tracked step is a subplot
         for idx, single_ax in enumerate(axes):
             if subfigure_title:
                 single_ax.set_title(self._tracked_text[idx])
 
+            color_count = 0
             # iterate over the tracked columns in the dataframe
             for pos, col in enumerate(self.columns):
                 if col in self.categorical:
-                    data = self._get_cat_dicts(self.tracked_tables[idx], col)
+                    data = self._get_cat_data(self.tracked_tables[idx], col)
                 else:
-                    data = [self._get_num_dicts(self.tracked_tables[idx], col)]
-
-                # Assign a unique color to each level (i.e. column)
-                level_color = sns.color_palette(color_palette, len(self.columns))[pos]
+                    data = [self._get_num_data(self.tracked_tables[idx], col)]
 
                 cumwidth = 0
                 # for categoricals, plot multiple bars
                 if col in self.categorical:
-                    col_legend_labels = []
+                    col_legend_handles = []
                     for i, value in enumerate(data):
-                        # Use different shades of the level color for the stacked bars
-                        stacked_bar_color = mcolors.to_rgb(level_color) + (0.5 + 0.5 * (i / len(data)),)
+                        stacked_bar_color = colors[color_count]
+                        color_count += 1
                         single_ax.barh(
                             pos,
                             value,
@@ -216,17 +272,24 @@ class CohortTracker:
                         single_ax.set_yticks([])
                         single_ax.set_xticks([])
                         cumwidth += value
+
                         if idx == 0:
-                            col_legend_labels.append(Patch(color=stacked_bar_color, label=data.index[i]))
-                    legend_labels.append(col_legend_labels)
+                            name = (
+                                legend_labels[data.index[i]] if data.index[i] in legend_labels.keys() else data.index[i]
+                            )
+
+                            col_legend_handles.append(Patch(color=stacked_bar_color, label=name))
+                    legend_handles.append(col_legend_handles)
 
                 # for numericals, plot a single bar
                 else:
+                    stacked_bar_color = colors[color_count]
+                    color_count += 1
                     single_ax.barh(
                         pos,
                         100,
                         left=cumwidth,
-                        color=level_color,
+                        color=stacked_bar_color,
                         height=0.8,
                         edgecolor="black",
                         linewidth=0.6,
@@ -241,22 +304,27 @@ class CohortTracker:
                         fontweight="bold",
                     )
                     if idx == 0:
-                        legend_labels.append([Patch(color=level_color, label=col)])
+                        name = legend_labels[col] if col in legend_labels.keys() else col
 
-            if set_axis_labels:
-                single_ax.set_yticks(range(len(self.columns)))
-                single_ax.set_yticklabels(self.columns)
+                        legend_handles.append([Patch(color=stacked_bar_color, label=name)])
+
+            single_ax.set_yticks(range(len(self.columns)))
+            names = [
+                yticks_labels[col] if yticks_labels is not None and col in yticks_labels.keys() else col
+                for col in self.columns
+            ]
+            single_ax.set_yticklabels(names)
 
         # These list of lists is needed to reverse the order of the legend labels,
         # making the plot much more readable
-        legend_labels.reverse()
-        legend_labels = [item for sublist in legend_labels for item in sublist]
+        legend_handles.reverse()
+        legend_handels = [item for sublist in legend_handles for item in sublist]
 
         tot_legend_kwargs = {"loc": "best", "bbox_to_anchor": (1, 1)}
         if legend_kwargs is not None:
             tot_legend_kwargs.update(legend_kwargs)
 
-        plt.legend(handles=legend_labels, **tot_legend_kwargs)
+        plt.legend(handles=legend_handels, **tot_legend_kwargs)
 
         if show:
             plt.tight_layout()
@@ -324,7 +392,6 @@ class CohortTracker:
 
         node_labels = self._tracked_text
 
-        # Draw nodes
         tot_bbox_kwargs = {"boxstyle": "round,pad=0.3", "fc": "lightblue", "alpha": 0.5}
         if bbox_kwargs is not None:
             tot_bbox_kwargs.update(bbox_kwargs)
@@ -338,7 +405,6 @@ class CohortTracker:
                 bbox=tot_bbox_kwargs,
             )
 
-        # Draw operation text
         for i in range(len(self._tracked_operations) - 1):
             axes.annotate(
                 self._tracked_operations[i + 1],
@@ -346,7 +412,6 @@ class CohortTracker:
                 xytext=(0.01, (y_positions[i] + y_positions[i + 1]) / 2),
             )
 
-        # Draw arrows
         tot_arrowprops_kwargs = {"arrowstyle": "->", "connectionstyle": "arc3", "color": "gray"}
         if arrowprops_kwargs is not None:
             tot_arrowprops_kwargs.update(arrowprops_kwargs)
