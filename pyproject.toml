@@ -17,6 +17,7 @@ authors = [
     {name = "Luke Zappia"},
     {name = "Xinyue Zhang"},
     {name = "Eljas Roellin"},
+    {name = "Tim Treis"},
 ]
 maintainers = [
     {name = "Lukas Heumos", email = "lukas.heumos@posteo.net"},
@@ -94,6 +95,7 @@ doc = [
     "nbsphinx-link",
     "ipykernel",
     "ipython",
+    "medcat",
 ]
 test = [
     "pytest",
