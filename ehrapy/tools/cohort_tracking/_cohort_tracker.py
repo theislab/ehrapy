@@ -188,12 +188,26 @@ class CohortTracker:
 
         Examples:
                 >>> import ehrapy as ep
-                >>> adata = ep.dt.hepatitis(columns_obs_only=["class", "sex", "steroid", "fatigue"])
-                >>> cohort_tracker = ep.tl.CohortTracker(adata, categorical=["class", "sex", "steroid", "fatigue"])
-                >>> cohort_tracker(adata, label="Initial Cohort")
-                >>> adata = adata[:50]
-                >>> cohort_tracker(adata, label="Filtered first 50 individuals", operations_done="Filtered to first 50 entries")
-                >>> cohort_tracker.plot_cohort_barplot(subfigure_title=True)
+                >>> adata = ep.dt.diabetes_130(columns_obs_only=["gender", "race", "time_in_hospital_days"])
+                >>> cohort_tracker = ep.tl.CohortTracker(adata, categorical=["gender", "race"])
+                >>> cohort_tracker(adata, "Initial Cohort")
+                >>> adata = adata[:1000]
+                >>> cohort_tracker(adata, "Filtered Cohort")
+                >>> cohort_tracker.plot_cohort_barplot(
+                >>>     subfigure_title=True,
+                >>>     color_palette="tab20",
+                >>>     yticks_labels={
+                >>>         "time_in_hospital_days": "Time in hospital (days)",
+                >>>         "race": "Race",
+                >>>         "gender": "Gender",
+                >>>     },
+                >>>     legend_labels={
+                >>>         "time_in_hospital_days": "Time in hospital (days)",
+                >>>         0.0: "Female",
+                >>>         1.0: "Male",
+                >>>     },
+                >>> )
+
 
             .. image:: /_static/docstring_previews/cohort_tracking.png
         """
