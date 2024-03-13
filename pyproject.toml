@@ -64,6 +64,7 @@ dependencies = [
     "thefuzz[speedup]",
     "dowhy",
     "fhiry",
+    "pyampute",
     "tableone"
 ]
 

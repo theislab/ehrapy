@@ -8,7 +8,7 @@ from anndata import AnnData
 import ehrapy as ep
 from ehrapy.io._read import read_csv
 from ehrapy.preprocessing._encoding import encode
-from ehrapy.preprocessing._quality_control import _obs_qc_metrics, _var_qc_metrics
+from ehrapy.preprocessing._quality_control import _obs_qc_metrics, _var_qc_metrics, mcar_test
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_PATH = f"{CURRENT_DIR}/test_preprocessing"
@@ -187,3 +187,30 @@ def test_qc_lab_measurements_multiple_measurements():
     with pytest.raises(ValueError):
         adata = ep.ad.df_to_anndata(data)
         ep.pp.qc_lab_measurements(adata, measurements=["oxygen saturation", "glucose"], unit="SI")
+
+
+@pytest.mark.parametrize(
+    "method,expected_output_type",
+    [
+        ("little", float),
+        ("ttest", pd.DataFrame),
+    ],
+)
+def test_mcar_test_method_output_types(mar_adata, method, expected_output_type):
+    """Tests if mcar_test returns the correct output type for different methods."""
+    output = mcar_test(mar_adata, method=method)
+    assert isinstance(
+        output, expected_output_type
+    ), f"Output type for method '{method}' should be {expected_output_type}, got {type(output)} instead."
+
+
+def test_mar_data_identification(mar_adata):
+    """Test that mcar_test correctly identifies data as not MCAR (i.e., MAR or NMAR)."""
+    p_value = mcar_test(mar_adata, method="little")
+    assert p_value <= 0.05, "The test should significantly reject the MCAR hypothesis for MAR data."
+
+
+def test_mcar_identification(mcar_adata):
+    """Test that mcar_test correctly identifies data as MCAR."""
+    p_value = mcar_test(mcar_adata, method="little")
+    assert p_value > 0.05, "The test should not significantly accept the MCAR hypothesis for MCAR data."
