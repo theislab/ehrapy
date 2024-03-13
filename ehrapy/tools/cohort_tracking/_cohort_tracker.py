@@ -378,7 +378,7 @@ class CohortTracker:
             arrowprops_kwargs: Additional keyword arguments for the arrows.
 
         Returns:
-            If `show=True`, returns `None`. Else, if no ax is passed, returns a tuple  (:class:`~matplotlib.figure.Figure`, :class:`list`(:class:`~matplotlib.axes.Axes`), else a :class:`list`(:class:`~matplotlib.axes.Axes`).
+            If `show=True`, returns `None`. Else, if no ax is passed, returns a tuple  (:class:`~matplotlib.figure.Figure`, :class:`~list`(:class:`~matplotlib.axes.Axes`), else a :class:`~list`(:class:`~matplotlib.axes.Axes`).
 
         Examples:
                 >>> import ehrapy as ep
