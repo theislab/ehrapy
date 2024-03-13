@@ -44,7 +44,7 @@ def mcar_adata(rng) -> AnnData:
 
     return AnnData(data)
 
-  
+
 # simplified from https://github.com/scverse/scanpy/blob/main/scanpy/tests/conftest.py
 @pytest.fixture
 def check_same_image(tmp_path):
