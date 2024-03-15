@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from fairlearn.datasets import fetch_diabetes_hospital
@@ -177,7 +178,8 @@ def diabetes_130_raw(
 
 
 def diabetes_130_fairlearn(
-    columns_obs_only: list[str] | None = None,
+    encoded: bool = False,
+    columns_obs_only: dict[str, list[str]] | list[str] | None = None,
 ) -> AnnData:
     """Loads the preprocessed diabetes-130 dataset by fairlearn
 
@@ -188,6 +190,7 @@ def diabetes_130_fairlearn(
     Preprocessing: https://fairlearn.org/v0.10/api_reference/generated/fairlearn.datasets.fetch_diabetes_hospital.html#fairlearn.datasets.fetch_diabetes_hospital
 
     Args:
+        encoded: Whether to return an already encoded object
         columns_obs_only: Columns to include in obs only and not X.
 
     Returns:
@@ -198,9 +201,17 @@ def diabetes_130_fairlearn(
         >>> adata = ep.dt.diabetes_130_fairlearn()
     """
 
-    df = fetch_diabetes_hospital(data_home=f"{ehrapy_settings.datasetdir}/diabetic_data_fairlearn.csv").data
+    # df = fetch_diabetes_hospital(data_home=f"{ehrapy_settings.datasetdir}/diabetic_data_fairlearn.csv").data
+    if not Path.exists(Path(f"{ehrapy_settings.datasetdir}/diabetes_130_fairlearn.csv")):
+        df = fetch_diabetes_hospital().data
+        df.to_csv(f"{ehrapy_settings.datasetdir}/diabetes_130_fairlearn.csv", index=False)
 
-    adata = df_to_anndata(df, columns_obs_only=columns_obs_only)
+    adata = read_csv(
+        dataset_path=f"{ehrapy_settings.datasetdir}/diabetes_130_fairlearn.csv", columns_obs_only=columns_obs_only
+    )
+
+    if encoded:
+        return encode(adata, autodetect=True)
 
     return adata
 
