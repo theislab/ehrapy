@@ -280,7 +280,7 @@ def _regression_model(
     """Convenience function for regression models."""
     df = anndata_to_df(adata)
     df = df.dropna()
-    
+
     if not accept_zero_duration:
         df[duration_col][df[duration_col] == 0] += 1e-5
 
