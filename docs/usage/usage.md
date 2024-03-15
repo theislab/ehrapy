@@ -43,7 +43,8 @@ ep.pl.cool_fancy_plot()
     data.mimic_2
     data.mimic_2_preprocessed
     data.mimic_3_demo
-    data.diabetes_130
+    data.diabetes_130_raw
+    data.diabetes_130_fairlearn
     data.heart_failure
     data.chronic_kidney_disease
     data.breast_tissue
