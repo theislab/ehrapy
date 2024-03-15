@@ -279,11 +279,8 @@ def _regression_model(
 ):
     """Convenience function for regression models."""
     df = anndata_to_df(adata)
-
-    keys = [duration_col, event_col]
-    if entry_col:
-        keys.append(entry_col)
-    df = df[keys]
+    df = df.dropna()
+    
     if not accept_zero_duration:
         df[duration_col][df[duration_col] == 0] += 1e-5
 
