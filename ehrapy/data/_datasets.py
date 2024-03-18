@@ -148,7 +148,7 @@ def diabetes_130_raw(
 ) -> AnnData:
     """Loads the raw diabetes-130 dataset
 
-    More details: http://archive.ics.uci.edu/ml/datasets/Diabetes+130-US+hospitals+for+years+1999-2008
+    More details: http://archive.ics.uci.edu/ml/datasets/Diabetes+130-US+hospitals+for+years+1999-2008 [1]
 
     Preprocessing: None except for the data preparation outlined on the link above.
 
@@ -162,14 +162,16 @@ def diabetes_130_raw(
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.diabetes_130_raw(encoded=True)
+
+    References:
+        [1] Beata Strack, Jonathan P. DeShazo, Chris Gennings, Juan L. Olmo, Sebastian Ventura, Krzysztof J. Cios, and John N. Clore, “Impact of HbA1c Measurement on Hospital Readmission Rates: Analysis of 70,000 Clinical Database Patient Records,” BioMed Research International, vol. 2014, Article ID 781670, 11 pages, 2014.
     """
 
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/diabetes_130_raw.csv",
         download_dataset_name="diabetes_130_raw.csv",
-        backup_url="https://figshare.com/ndownloader/files/33950546",  # TODO: change link, or download zip and extract?
+        backup_url="https://figshare.com/ndownloader/files/45110029",
         columns_obs_only=columns_obs_only,
-        index_column="encounter_id",
     )
     if encoded:
         return encode(adata, autodetect=True)
@@ -183,11 +185,11 @@ def diabetes_130_fairlearn(
 ) -> AnnData:
     """Loads the preprocessed diabetes-130 dataset by fairlearn
 
-    This is a wrapper around the `fairlearn.datasets.fetch_diabetes_hospital` function.
+    This loads the dataset from the `fairlearn.datasets.fetch_diabetes_hospital` function.
 
-    More details: http://archive.ics.uci.edu/ml/datasets/Diabetes+130-US+hospitals+for+years+1999-2008
+    More details: http://archive.ics.uci.edu/ml/datasets/Diabetes+130-US+hospitals+for+years+1999-2008 [1]
 
-    Preprocessing: https://fairlearn.org/v0.10/api_reference/generated/fairlearn.datasets.fetch_diabetes_hospital.html#fairlearn.datasets.fetch_diabetes_hospital
+    Preprocessing: https://fairlearn.org/v0.10/api_reference/generated/fairlearn.datasets.fetch_diabetes_hospital.html#fairlearn.datasets.fetch_diabetes_hospital [2]
 
     Args:
         encoded: Whether to return an already encoded object
@@ -199,15 +201,18 @@ def diabetes_130_fairlearn(
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.diabetes_130_fairlearn()
+
+    References:
+        [1] Beata Strack, Jonathan P. DeShazo, Chris Gennings, Juan L. Olmo, Sebastian Ventura, Krzysztof J. Cios, and John N. Clore, “Impact of HbA1c Measurement on Hospital Readmission Rates: Analysis of 70,000 Clinical Database Patient Records,” BioMed Research International, vol. 2014, Article ID 781670, 11 pages, 2014.
+
+        [2] Bird, S., Dudík, M., Edgar, R., Horn, B., Lutz, R., Milan, V., ... & Walker, K. (2020). Fairlearn: A toolkit for assessing and improving fairness in AI. Microsoft, Tech. Rep. MSR-TR-2020-32.
     """
 
-    # df = fetch_diabetes_hospital(data_home=f"{ehrapy_settings.datasetdir}/diabetic_data_fairlearn.csv").data
-    if not Path.exists(Path(f"{ehrapy_settings.datasetdir}/diabetes_130_fairlearn.csv")):
-        df = fetch_diabetes_hospital().data
-        df.to_csv(f"{ehrapy_settings.datasetdir}/diabetes_130_fairlearn.csv", index=False)
-
     adata = read_csv(
-        dataset_path=f"{ehrapy_settings.datasetdir}/diabetes_130_fairlearn.csv", columns_obs_only=columns_obs_only
+        dataset_path=f"{ehrapy_settings.datasetdir}/diabetes_130_fairlearn.csv",
+        download_dataset_name="diabetes_130_fairlearn.csv",
+        backup_url="https://figshare.com/ndownloader/files/45110371",
+        columns_obs_only=columns_obs_only,
     )
 
     if encoded:
