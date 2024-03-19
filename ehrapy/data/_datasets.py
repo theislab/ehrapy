@@ -1,12 +1,8 @@
 from __future__ import annotations
 
-from pathlib import Path
 from typing import TYPE_CHECKING
 
-from fairlearn.datasets import fetch_diabetes_hospital
-
 from ehrapy import ehrapy_settings
-from ehrapy.anndata import df_to_anndata
 from ehrapy.io._read import read_csv, read_fhir, read_h5ad
 from ehrapy.preprocessing._encoding import encode
 
@@ -219,6 +215,15 @@ def diabetes_130_fairlearn(
         return encode(adata, autodetect=True)
 
     return adata
+
+
+def diabetes_130(
+    encoded: bool = False,
+    columns_obs_only: dict[str, list[str]] | list[str] | None = None,
+) -> AnnData:
+    raise DeprecationWarning(
+        "This function is deprecated, and will return diabetes_130_raw now. Use `diabetes_130_raw` or `diabetes_130_fairlearn` instead."
+    )
 
 
 def chronic_kidney_disease(
