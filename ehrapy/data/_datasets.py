@@ -203,7 +203,6 @@ def diabetes_130_fairlearn(
 
         [2] Bird, S., Dudík, M., Edgar, R., Horn, B., Lutz, R., Milan, V., ... & Walker, K. (2020). Fairlearn: A toolkit for assessing and improving fairness in AI. Microsoft, Tech. Rep. MSR-TR-2020-32.
     """
-
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/diabetes_130_fairlearn.csv",
         download_dataset_name="diabetes_130_fairlearn.csv",
