@@ -46,6 +46,7 @@ def mimic_2_preprocessed() -> AnnData:
     """Loads the preprocessed MIMIC-II dataset.
 
     More details: https://physionet.org/content/mimic2-iaccd/1.0/
+
     The dataset was preprocessed according to: https://github.com/theislab/ehrapy-datasets/tree/main/mimic_2
 
     Returns:
@@ -108,7 +109,9 @@ def heart_failure(encoded: bool = False, columns_obs_only: dict[str, list[str]] 
     """Loads the heart failure dataset.
 
     More details: http://archive.ics.uci.edu/ml/datasets/Heart+failure+clinical+records
+
     Preprocessing: https://github.com/theislab/ehrapy-datasets/tree/main/heart_failure
+
     This dataset only contains numericals and therefore does not need any encoding.
 
     Args:
@@ -135,14 +138,15 @@ def heart_failure(encoded: bool = False, columns_obs_only: dict[str, list[str]] 
     return adata
 
 
-def diabetes_130(
+def diabetes_130_raw(
     encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
 ) -> AnnData:
-    """Loads the diabetes-130 dataset
+    """Loads the raw diabetes-130 dataset
 
-    More details: http://archive.ics.uci.edu/ml/datasets/Diabetes+130-US+hospitals+for+years+1999-2008
-    Preprocessing: https://github.com/theislab/ehrapy-datasets/tree/main/diabetes_130/diabetes_130.ipynb
+    More details: http://archive.ics.uci.edu/ml/datasets/Diabetes+130-US+hospitals+for+years+1999-2008 [1]
+
+    Preprocessing: None except for the data preparation outlined on the link above.
 
     Args:
         encoded: Whether to return an already encoded object
@@ -153,15 +157,59 @@ def diabetes_130(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.dt.diabetes_130(encoded=True)
+        >>> adata = ep.dt.diabetes_130_raw(encoded=True)
+
+    References:
+        [1] Beata Strack, Jonathan P. DeShazo, Chris Gennings, Juan L. Olmo, Sebastian Ventura, Krzysztof J. Cios, and John N. Clore, “Impact of HbA1c Measurement on Hospital Readmission Rates: Analysis of 70,000 Clinical Database Patient Records,” BioMed Research International, vol. 2014, Article ID 781670, 11 pages, 2014.
+    """
+
+    adata = read_csv(
+        dataset_path=f"{ehrapy_settings.datasetdir}/diabetes_130_raw.csv",
+        download_dataset_name="diabetes_130_raw.csv",
+        backup_url="https://figshare.com/ndownloader/files/45110029",
+        columns_obs_only=columns_obs_only,
+    )
+    if encoded:
+        return encode(adata, autodetect=True)
+
+    return adata
+
+
+def diabetes_130_fairlearn(
+    encoded: bool = False,
+    columns_obs_only: dict[str, list[str]] | list[str] | None = None,
+) -> AnnData:
+    """Loads the preprocessed diabetes-130 dataset by fairlearn
+
+    This loads the dataset from the `fairlearn.datasets.fetch_diabetes_hospital` function.
+
+    More details: http://archive.ics.uci.edu/ml/datasets/Diabetes+130-US+hospitals+for+years+1999-2008 [1]
+
+    Preprocessing: https://fairlearn.org/v0.10/api_reference/generated/fairlearn.datasets.fetch_diabetes_hospital.html#fairlearn.datasets.fetch_diabetes_hospital [2]
+
+    Args:
+        encoded: Whether to return an already encoded object
+        columns_obs_only: Columns to include in obs only and not X.
+
+    Returns:
+        :class:`~anndata.AnnData` object of the diabetes-130 dataset processed by the fairlearn team
+
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.diabetes_130_fairlearn()
+
+    References:
+        [1] Beata Strack, Jonathan P. DeShazo, Chris Gennings, Juan L. Olmo, Sebastian Ventura, Krzysztof J. Cios, and John N. Clore, “Impact of HbA1c Measurement on Hospital Readmission Rates: Analysis of 70,000 Clinical Database Patient Records,” BioMed Research International, vol. 2014, Article ID 781670, 11 pages, 2014.
+
+        [2] Bird, S., Dudík, M., Edgar, R., Horn, B., Lutz, R., Milan, V., ... & Walker, K. (2020). Fairlearn: A toolkit for assessing and improving fairness in AI. Microsoft, Tech. Rep. MSR-TR-2020-32.
     """
     adata = read_csv(
-        dataset_path=f"{ehrapy_settings.datasetdir}/diabetes_130.csv",
-        download_dataset_name="diabetes_130.csv",
-        backup_url="https://figshare.com/ndownloader/files/33950546",
+        dataset_path=f"{ehrapy_settings.datasetdir}/diabetes_130_fairlearn.csv",
+        download_dataset_name="diabetes_130_fairlearn.csv",
+        backup_url="https://figshare.com/ndownloader/files/45110371",
         columns_obs_only=columns_obs_only,
-        index_column="encounter_id",
     )
+
     if encoded:
         return encode(adata, autodetect=True)
 
@@ -175,6 +223,7 @@ def chronic_kidney_disease(
     """Loads the Chronic Kidney Disease dataset
 
     More details: https://archive.ics.uci.edu/ml/datasets/Chronic_Kidney_Disease
+
     Preprocessing: https://github.com/theislab/ehrapy-datasets/tree/main/chronic_kidney_disease/chronic_kidney_disease.ipynb
 
     Args:
@@ -208,6 +257,7 @@ def breast_tissue(
     """Loads the Breast Tissue Data Set
 
     More details: http://archive.ics.uci.edu/ml/datasets/Breast+Tissue
+
     Preprocessing: https://github.com/theislab/ehrapy-datasets/blob/main/breast_tissue/breast_tissue.ipynb
 
     Args:
@@ -274,6 +324,7 @@ def dermatology(
     """Loads the Dermatology Data Set
 
     More details: http://archive.ics.uci.edu/ml/datasets/Dermatology
+
     Preprocessing: https://github.com/theislab/ehrapy-datasets/blob/main/dermatology/dermatology.ipynb
 
     Args:
@@ -307,6 +358,7 @@ def echocardiogram(
     """Loads the Echocardiogram Data Set
 
     More details: http://archive.ics.uci.edu/ml/datasets/Echocardiogram
+
     Preprocessing: https://github.com/theislab/ehrapy-datasets/blob/main/echocardiogram/echocardiogram.ipynb
 
     Args:
@@ -373,6 +425,7 @@ def statlog_heart(
     """Loads the Statlog (Heart) Data Set
 
     More details: http://archive.ics.uci.edu/ml/datasets/Statlog+%28Heart%29
+
     Preprocessing: https://github.com/theislab/ehrapy-datasets/blob/main/statlog_heart/statlog_heart.ipynb
 
     Args:
@@ -439,6 +492,7 @@ def breast_cancer_coimbra(
     """Loads the Breast Cancer Coimbra Data Set
 
     More details: http://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Coimbra
+
     Preprocessing: https://github.com/theislab/ehrapy-datasets/blob/main/breast_cancer_coimbra/breast_cancer_coimbra.ipynb
 
     Args:
@@ -472,6 +526,7 @@ def parkinsons(
     """Loads the Parkinsons Data Set
 
     More details: http://archive.ics.uci.edu/ml/datasets/Parkinsons
+
     Preprocessing: https://github.com/theislab/ehrapy-datasets/blob/main/parkinsons/parkinsons.ipynb
 
     Args:
@@ -538,6 +593,7 @@ def parkinsons_disease_classification(
     """Loads the Parkinson's Disease Classification Data Set
 
     More details: http://archive.ics.uci.edu/ml/datasets/Parkinson%27s+Disease+Classification
+
     Preprocessing: https://github.com/theislab/ehrapy-datasets/blob/main/parkinson's_disease_classification/parkinson's_disease_classification.ipynb
 
     Args:
@@ -571,6 +627,7 @@ def parkinson_dataset_with_replicated_acoustic_features(
     """Loads the Parkinson Dataset with replicated acoustic features Data Set
 
     More details: http://archive.ics.uci.edu/ml/datasets/Parkinson+Dataset+with+replicated+acoustic+features+
+
     Preprocessing: https://github.com/theislab/ehrapy-datasets/blob/main/parkinson_dataset_with_replicated_acoustic_features/parkinson_dataset_with_replicated_acoustic_features.ipynb
 
     Args:
@@ -604,6 +661,7 @@ def heart_disease(
     """Loads the Heart Disease Data Set
 
     More details: http://archive.ics.uci.edu/ml/datasets/Heart+Disease
+
     Preprocessing: https://github.com/theislab/ehrapy-datasets/blob/main/heart_disease/heart_disease.ipynb
 
     Args:
