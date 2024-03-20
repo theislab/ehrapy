@@ -188,7 +188,9 @@ class CohortTracker:
 
         Examples:
                 >>> import ehrapy as ep
-                >>> adata = ep.dt.diabetes_130(columns_obs_only=["gender", "race", "time_in_hospital_days"])
+                >>> adata = ep.dt.diabetes_130_fairlearn(
+                >>>     columns_obs_only=["gender", "race", "num_procedures"]
+                >>> )
                 >>> cohort_tracker = ep.tl.CohortTracker(adata, categorical=["gender", "race"])
                 >>> cohort_tracker(adata, "Initial Cohort")
                 >>> adata = adata[:1000]
@@ -197,17 +199,16 @@ class CohortTracker:
                 >>>     subfigure_title=True,
                 >>>     color_palette="tab20",
                 >>>     yticks_labels={
-                >>>         "time_in_hospital_days": "Time in hospital (days)",
-                >>>         "race": "Race",
-                >>>         "gender": "Gender",
+                >>>         "race": "Race [%]",
+                >>>         "gender": "Gender [%]",
+                >>>         "num_procedures": "#Procedures [mean (stdev)]",
                 >>>     },
                 >>>     legend_labels={
-                >>>         "time_in_hospital_days": "Time in hospital (days)",
-                >>>         0.0: "Female",
-                >>>         1.0: "Male",
+                >>>         "Unknown/Invalid": "Unknown",
+                >>>         "num_procedures": "#Procedures",
                 >>>     },
+                >>>     legend_kwargs={"bbox_to_anchor": (1, 1.4)},
                 >>> )
-
 
             .. image:: /_static/docstring_previews/cohort_tracking.png
         """
@@ -382,15 +383,18 @@ class CohortTracker:
 
         Examples:
                 >>> import ehrapy as ep
-                >>> adata = ep.dt.diabetes_130(columns_obs_only=["gender", "race", "weight", "age"])
+                >>> adata = ep.dt.diabetes_130_fairlearn(columns_obs_only="gender", "race")
                 >>> cohort_tracker = ep.tl.CohortTracker(adata)
                 >>> cohort_tracker(adata, label="Initial Cohort")
                 >>> adata = adata[:1000]
                 >>> cohort_tracker(adata, label="Reduced Cohort", operations_done="filtered to first 1000 entries")
                 >>> adata = adata[:500]
-                >>> cohort_tracker(adata, label="Further reduced Cohort", operations_done="filtered to first 500 entries")
+                >>> cohort_tracker(
+                ...     adata,
+                ...     label="Further reduced Cohort",
+                ...     operations_done="filtered to first 500 entries",
+                ... )
                 >>> cohort_tracker.plot_flowchart(title="Flowchart of Data Processing", show=True)
-
 
             .. image:: /_static/docstring_previews/flowchart.png
         """
