@@ -217,15 +217,6 @@ def diabetes_130_fairlearn(
     return adata
 
 
-def diabetes_130(
-    encoded: bool = False,
-    columns_obs_only: dict[str, list[str]] | list[str] | None = None,
-) -> AnnData:
-    raise DeprecationWarning(
-        "This function is deprecated, and will return diabetes_130_raw now. Use `diabetes_130_raw` or `diabetes_130_fairlearn` instead."
-    )
-
-
 def chronic_kidney_disease(
     encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
