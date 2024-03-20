@@ -192,7 +192,7 @@ def diabetes_130_fairlearn(
         columns_obs_only: Columns to include in obs only and not X.
 
     Returns:
-        :class:`~anndata.AnnData` object of the Diabetes 130 dataset processed by the fairlearn team
+        :class:`~anndata.AnnData` object of the diabetes-130 dataset processed by the fairlearn team
 
     Examples:
         >>> import ehrapy as ep
