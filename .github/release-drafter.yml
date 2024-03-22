@@ -1,5 +1,5 @@
-name-template: "0.6.0 🌈" # <<COOKIETEMPLE_FORCE_BUMP>>
-tag-template: 0.6.0 # <<COOKIETEMPLE_FORCE_BUMP>>
+name-template: "0.7.0 🌈"
+tag-template: 0.7.0
 exclude-labels:
     - "skip-changelog"
 
