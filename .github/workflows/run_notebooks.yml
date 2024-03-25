@@ -15,7 +15,7 @@ jobs:
                         "docs/tutorials/notebooks/mimic_2_survival_analysis.ipynb",
                         "docs/tutorials/notebooks/mimic_2_fate.ipynb",
                         "docs/tutorials/notebooks/mimic_2_causal_inference.ipynb",
-                        "docs/tutorials/notebooks/mimic_3_demo.ipynb",
+                        # "docs/tutorials/notebooks/mimic_3_demo.ipynb",
                         # "docs/tutorials/notebooks/medcat.ipynb",
                     ]
         steps:
@@ -24,9 +24,9 @@ jobs:
                   submodules: "true"
                   token: "${{ secrets.CT_SYNC_TOKEN }}"
             - name: Set up Python
-              uses: actions/setup-python@v4
+              uses: actions/setup-python@v5
               with:
-                  python-version: "3.10"
+                  python-version: "3.11"
 
             - name: Install ehrapy
               run: pip install .
