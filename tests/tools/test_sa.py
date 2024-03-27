@@ -113,4 +113,4 @@ class TestSA:
         self._sa_func_test(ep.tl.weibull_aft, WeibullAFTFitter, mimic_2_sa)
 
     def test_log_logistic(self, mimic_2_sa):
-        self._sa_func_test(ep.tl.log_rogistic_aft, LogLogisticAFTFitter, mimic_2_sa)
+        self._sa_func_test(ep.tl.log_logistic_aft, LogLogisticAFTFitter, mimic_2_sa)
