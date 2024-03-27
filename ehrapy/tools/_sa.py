@@ -347,7 +347,7 @@ def weibull_aft(adata: AnnData, duration_col: str, event_col: str, entry_col: st
     return _regression_model(WeibullAFTFitter, adata, duration_col, event_col, entry_col, accept_zero_duration=False)
 
 
-def log_rogistic_aft(adata: AnnData, duration_col: str, event_col: str, entry_col: str = None) -> LogLogisticAFTFitter:
+def log_logistic_aft(adata: AnnData, duration_col: str, event_col: str, entry_col: str = None) -> LogLogisticAFTFitter:
     """Fit the log logistic accelerated failure time regression for the survival function.
     The Log-Logistic Accelerated Failure Time (AFT) survival regression model is a powerful statistical tool employed in the analysis of time-to-event data.
     This model operates under the assumption that the logarithm of survival time adheres to a log-logistic distribution, offering a flexible framework for understanding the impact of covariates on survival times.
@@ -370,7 +370,7 @@ def log_rogistic_aft(adata: AnnData, duration_col: str, event_col: str, entry_co
         >>> adata = ep.dt.mimic_2(encoded=False)
         >>> # Flip 'censor_fl' because 0 = death and 1 = censored
         >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
-        >>> llf = ep.tl.log_rogistic_aft(adata, "mort_day_censored", "censor_flg")
+        >>> llf = ep.tl.log_logistic_aft(adata, "mort_day_censored", "censor_flg")
     """
     return _regression_model(
         LogLogisticAFTFitter, adata, duration_col, event_col, entry_col, accept_zero_duration=False

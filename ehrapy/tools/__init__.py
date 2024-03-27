@@ -3,7 +3,7 @@ from ehrapy.tools._sa import (
     cox_ph,
     glm,
     kmf,
-    log_rogistic_aft,
+    log_logistic_aft,
     nelson_alen,
     ols,
     test_kmf_logrank,
