@@ -16,17 +16,17 @@ For questions about the usage of ehrapy use [Github Discussions].
 ```{eval-rst}
 .. nbgallery::
 
-   notebooks/ehrapy_introduction
-   notebooks/mimic_2_introduction
-   notebooks/mimic_2_fate
-   notebooks/mimic_2_survival_analysis
-   notebooks/mimic_2_causal_inference
-   notebooks/diabetes_130
-   notebooks/medcat
-   notebooks/ml_usecases
-   notebooks/ontology_mapping
-   notebooks/fhir
-   notebooks/cohort_tracking
+   ehrapy_introduction
+   mimic_2_introduction
+   mimic_2_fate
+   mimic_2_survival_analysis
+   mimic_2_causal_inference
+   diabetes_130
+   medcat
+   ml_usecases
+   ontology_mapping
+   fhir
+   cohort_tracking
 
 ```
 
