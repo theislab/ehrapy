@@ -35,7 +35,7 @@ extensions = [
     "sphinx_design",
 ]
 
-# remove_from_toctrees = ["tutorials/notebooks/*", "api/reference/*"]
+# remove_from_toctrees = ["tutorials/*", "api/reference/*"]
 
 # for sharing urls with nice info
 ogp_site_url = "https://ehrapy.readthedocs.io/en/latest/"
@@ -172,14 +172,14 @@ nbsphinx_prolog = r"""
     </div>
 """.format(version=version, docname="{{ docname|e }}")
 nbsphinx_thumbnails = {
-    "tutorials/notebooks/ehrapy_introduction": "_static/ehrapy_logos/ehrapy_pure.png",
-    "tutorials/notebooks/mimic_2_introduction": "_static/tutorials/catheter.png",
-    "tutorials/notebooks/mimic_2_fate": "_static/tutorials/fate.png",
-    "tutorials/notebooks/mimic_2_survival_analysis": "_static/tutorials/survival.png",
-    "tutorials/notebooks/mimic_2_causal_inference": "_static/tutorials/causal_inference.png",
-    "tutorials/notebooks/medcat": "_static/tutorials/nlp.png",
-    "tutorials/notebooks/ml_usecases": "_static/tutorials/machine_learning.png",
-    "tutorials/notebooks/ontology_mapping": "_static/tutorials/ontology.png",
-    "tutorials/notebooks/fhir": "_static/tutorials/fhir.png",
-    "tutorials/notebooks/cohort_tracking": "_static/tutorials/cohort_tracking.png",
+    "tutorials/ehrapy_introduction": "_static/ehrapy_logos/ehrapy_pure.png",
+    "tutorials/mimic_2_introduction": "_static/tutorials/catheter.png",
+    "tutorials/mimic_2_fate": "_static/tutorials/fate.png",
+    "tutorials/mimic_2_survival_analysis": "_static/tutorials/survival.png",
+    "tutorials/mimic_2_causal_inference": "_static/tutorials/causal_inference.png",
+    "tutorials/medcat": "_static/tutorials/nlp.png",
+    "tutorials/ml_usecases": "_static/tutorials/machine_learning.png",
+    "tutorials/ontology_mapping": "_static/tutorials/ontology.png",
+    "tutorials/fhir": "_static/tutorials/fhir.png",
+    "tutorials/cohort_tracking": "_static/tutorials/cohort_tracking.png",
 }

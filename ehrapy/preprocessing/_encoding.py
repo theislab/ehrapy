@@ -699,7 +699,6 @@ def _delete_all_encodings(adata: AnnData) -> tuple[np.ndarray | None, list | Non
         if idx == len(var_names):
             return None, None
         # don't need to consider case when no encoded columns are there, since undo_encoding would not run anyways in this case
-        logg.info("All encoded columns of the AnnData object were deleted.")
         return adata.X[:, idx:].copy(), var_names[idx:]
     return None, None
 

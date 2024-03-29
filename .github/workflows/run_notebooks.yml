@@ -10,13 +10,14 @@ jobs:
         strategy:
             matrix:
                 notebook: [
-                        "docs/tutorials/notebooks/ehrapy_introduction.ipynb",
-                        "docs/tutorials/notebooks/mimic_2_introduction.ipynb",
-                        "docs/tutorials/notebooks/mimic_2_survival_analysis.ipynb",
-                        "docs/tutorials/notebooks/mimic_2_fate.ipynb",
-                        "docs/tutorials/notebooks/mimic_2_causal_inference.ipynb",
-                        # "docs/tutorials/notebooks/mimic_3_demo.ipynb",
-                        # "docs/tutorials/notebooks/medcat.ipynb",
+                        "docs/tutorials/ehrapy_introduction.ipynb",
+                        "docs/tutorials/mimic_2_introduction.ipynb",
+                        "docs/tutorials/mimic_2_survival_analysis.ipynb",
+                        # "docs/tutorials/mimic_2_fate.ipynb",
+                        "docs/tutorials/mimic_2_causal_inference.ipynb",
+                        "docs/tutorials/cohort_tracking.ipynb",
+                        # "docs/tutorials/mimic_3_demo.ipynb",
+                        # "docs/tutorials/medcat.ipynb",
                     ]
         steps:
             - uses: actions/checkout@v3

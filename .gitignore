@@ -142,11 +142,11 @@ dmypy.json
 .vscode/settings.json
 
 # Notebook files
-notebooks/medcat_data
-notebooks/data
-notebooks/*.dat
-notebooks/*.csv
-notebooks/*-requirements.txt
+medcat_data
+data
+*.dat
+*.csv
+*-requirements.txt
 
 ehrapy_data/
 
