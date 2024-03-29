@@ -27,15 +27,6 @@ ehrapy is a modular open-source Python framework designed for exploratory end-to
 ```
 
 ```{eval-rst}
-.. card:: Use cases :octicon:`info;1em;`
-    :link: user_guide/index
-    :link-type: doc
-
-    ehrapy has been applied to many use-cases. We highlight some of them here.
-    Interested in adding your use-case? Please talk to us.
-```
-
-```{eval-rst}
 .. card:: Discussion :octicon:`megaphone;1em;`
     :link: https://discourse.scverse.org/
 
