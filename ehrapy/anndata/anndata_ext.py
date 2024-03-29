@@ -779,6 +779,8 @@ def generate_anndata(  # pragma: no cover
         uns=uns,
     )
 
+    logg.info(f"Generated an AnnData object with n_obs x n_vars = `{adata.n_obs}` x `{adata.n_vars}`.")
+
     return adata
 
 
