@@ -21,27 +21,31 @@ def feature_importances(
     test_split_size: float = 0.2,
     key_added: str = "feature_importances",
     feature_scaling: Literal["standard", "minmax"] | None = "standard",
+    percent_output: bool = False,
     **kwargs,
 ):
     """
-    Calculate feature importances for a given model and predicted feature.
+    Calculate feature importances for predicting a specified feature in adata.var using a given model.
 
     Args:
         adata: :class:`~anndata.AnnData` object storing the data.
-        predicted_feature: The feature to predict by the model.
+        predicted_feature: The feature to predict by the model. Must be present in adata.var_names.
         prediction_type: Whether the predicted feature is continuous or categorical. If the data type of the predicted feature
             is not correct, conversion will be attempted.
         model: The model to use for prediction. Choose between 'regression', 'svm', or 'rf'. Note that multi-class classification
             is only possible with 'rf'. Defaults to 'regression'.
         input_features: The features in adata.var to use for prediction. Should be a list of feature names. If 'all', all features
-            in adata.var will be used. Note that non-numeric features will be dropped, so make sure to encode them properly before.
-            Defaults to 'all'.
+            in adata.var will be used. Note that non-numeric input features will cause an error, so make sure to encode them properly
+            before. Defaults to 'all'.
         layer: The layer in adata.layers to use for prediction. If None, adata.X will be used. Defaults to None.
-        test_split_size: The size of the test set to used to evaluate the model. Defaults to 0.2.
+        test_split_size: The split of data used for testing the model. Should be a float between 0 and 1, representing the proportion.
+            Defaults to 0.2.
         key_added: The key in adata.var to store the feature importances. Defaults to 'feature_importances'.
-        feature_transformation: The type of feature transformation to use. Choose between 'standard', 'minmax', 'normalize', or None.
-         'standard' uses sklearn's StandardScaler, 'minmax' uses MinMaxScaler, 'normalize' uses Normalizer. Will be fit and transformed
-         for each feature individually. Defaults to 'standard'.
+        feature_scaling: The type of feature scaling to use for the input. Choose between 'standard', 'minmax', or None.
+            'standard' uses sklearn's StandardScaler, 'minmax' uses MinMaxScaler. Scaler will be fit and transformed
+            for each feature individually. Defaults to 'standard'.
+        percent_output: Set to True to output the feature importances as percentages. Note that information about positive or negative
+            coefficients for regression models will be lost. Defaults to False.
         **kwargs: Additional keyword arguments to pass to the model. See the documentation of the respective model in scikit-learn for details.
 
     Returns:
@@ -61,6 +65,11 @@ def feature_importances(
     if prediction_type not in ["continuous", "categorical"]:
         raise ValueError(
             f"Prediction type {prediction_type} not recognized. Please choose either 'continuous' or 'categorical'."
+        )
+
+    if feature_scaling not in ["standard", "minmax", None]:
+        raise ValueError(
+            f"Feature scaling type {feature_scaling} not recognized. Please choose either 'standard', 'minmax', or None."
         )
 
     if layer is not None:
@@ -140,6 +149,9 @@ def feature_importances(
     else:
         feature_importances = pd.Series(predictor.feature_importances_.squeeze(), index=input_data.columns)
 
-    # Reorder feature importances to match adata.var order and save in adata.var
+    if percent_output:
+        feature_importances = feature_importances.abs() / feature_importances.abs().sum() * 100
+
+    # Reorder feature importances to match adata.var order and save importances in adata.var
     feature_importances = feature_importances.reindex(adata.var_names)
     adata.var[key_added] = feature_importances
