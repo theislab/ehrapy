@@ -181,4 +181,5 @@ nbsphinx_thumbnails = {
     "tutorials/notebooks/ml_usecases": "_static/tutorials/machine_learning.png",
     "tutorials/notebooks/ontology_mapping": "_static/tutorials/ontology.png",
     "tutorials/notebooks/fhir": "_static/tutorials/fhir.png",
+    "tutorials/notebooks/cohort_tracking": "_static/tutorials/cohort_tracking.png",
 }
