@@ -129,6 +129,10 @@ def feature_importances(
 
     predictor.fit(x_train, y_train)
 
+    score = predictor.score(x_test, y_test)
+    evaluation_metric = "R2 score" if prediction_type == "continuous" else "accuracy"
+    logg.info(f"Training completed. The model achieved an {evaluation_metric} of {score:.2f} on the test set.")
+
     if model == "regression" or model == "svm":
         feature_importances = pd.Series(predictor.coef_.squeeze(), index=input_data.columns)
     else:
