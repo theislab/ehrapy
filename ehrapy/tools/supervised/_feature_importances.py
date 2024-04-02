@@ -121,9 +121,11 @@ def feature_importances(
             if feature_scaling is not None:
                 scaler = StandardScaler() if feature_scaling == "standard" else MinMaxScaler()
                 input_data[feature] = scaler.fit_transform(input_data[[feature]])
-        except ValueError:
-            logg.warning(f"Feature {feature} could not be converted to float. Feature will be dropped.")
-            input_data.drop(feature, axis=1, inplace=True)
+        except ValueError as e:
+            raise ValueError(
+                f"Feature {feature} is not numeric. Please encode non-numeric features before calculating "
+                f"feature importances or drop them from the input_features list."
+            ) from e
 
     x_train, x_test, y_train, y_test = train_test_split(input_data, labels, test_size=test_split_size)
 
