@@ -42,7 +42,7 @@ def feature_importances(
 
     if ax is None:
         fig, ax = plt.subplots()
-    sns.barplot(x=df["importance"][:n_features], y=df.index[:n_features], orient="h", ax=ax, **kwargs)
+    ax = sns.barplot(x=df["importance"][:n_features], y=df.index[:n_features], orient="h", ax=ax, **kwargs)
     plt.ylabel("Feature")
     plt.xlabel("Importance")
     plt.tight_layout()
