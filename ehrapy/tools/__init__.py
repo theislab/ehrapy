@@ -14,8 +14,8 @@ from ehrapy.tools._sa import (
 from ehrapy.tools._scanpy_tl_api import *  # noqa: F403
 from ehrapy.tools.causal._dowhy import causal_inference
 from ehrapy.tools.cohort_tracking._cohort_tracker import CohortTracker
+from ehrapy.tools.feature_ranking._feature_importances import rank_features_supervised
 from ehrapy.tools.feature_ranking._rank_features_groups import filter_rank_features_groups, rank_features_groups
-from ehrapy.tools.supervised._feature_importances import feature_importances
 
 try:  # pragma: no cover
     from ehrapy.tools.nlp._medcat import (

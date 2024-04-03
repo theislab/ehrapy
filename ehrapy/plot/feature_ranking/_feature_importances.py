@@ -7,7 +7,7 @@ from anndata import AnnData
 from matplotlib.axes import Axes
 
 
-def feature_importances(
+def rank_features_supervised(
     adata: AnnData,
     key: str = "feature_importances",
     n_features: int = 10,

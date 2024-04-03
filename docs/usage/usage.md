@@ -196,7 +196,7 @@ In contrast to a preprocessing function, a tool usually adds an easily interpret
     tools.paga
 ```
 
-### Group comparison
+### Feature Ranking
 
 ```{eval-rst}
 .. autosummary::
@@ -205,6 +205,7 @@ In contrast to a preprocessing function, a tool usually adds an easily interpret
 
     tools.rank_features_groups
     tools.filter_rank_features_groups
+    tools.rank_features_supervised
 ```
 
 ### Dataset integration
@@ -358,7 +359,7 @@ Visualize clusters using one of the embedding methods passing color='leiden'.
     plot.paga_compare
 ```
 
-### Group comparison
+### Feature Ranking
 
 ```{eval-rst}
 .. autosummary::
@@ -372,6 +373,7 @@ Visualize clusters using one of the embedding methods passing color='leiden'.
     plot.rank_features_groups_dotplot
     plot.rank_features_groups_matrixplot
     plot.rank_features_groups_tracksplot
+    plot.rank_features_supervised
 ```
 
 ### Survival Analysis

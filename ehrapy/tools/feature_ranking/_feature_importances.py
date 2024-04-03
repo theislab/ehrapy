@@ -13,7 +13,7 @@ from ehrapy import logging as logg
 from ehrapy.anndata import anndata_to_df
 
 
-def feature_importances(
+def rank_features_supervised(
     adata: AnnData,
     predicted_feature: str,
     prediction_type: Literal["continuous", "categorical"],
@@ -26,7 +26,7 @@ def feature_importances(
     percent_output: bool = False,
     **kwargs,
 ):
-    """Calculate feature importances for predicting a specified feature in adata.var using a given model.
+    """Calculate feature importances for predicting a specified feature in adata.var.
 
     Args:
         adata: :class:`~anndata.AnnData` object storing the data.
