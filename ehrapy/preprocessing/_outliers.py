@@ -46,13 +46,15 @@ def winsorize(
 
     if vars_set:
         for var in vars_set:
-            adata[:, var].X = np.clip(adata[:, var].X, limits[0], limits[1])
+            data_array = np.array(adata[:, var].X, dtype=float)
+            winsorized_data = scipy_winsorize(data_array, limits=limits, nan_policy="omit", **kwargs)
+            adata[:, var].X = winsorized_data
 
     if obs_cols_set:
         for col in obs_cols_set:
-            obs_array = adata.obs[col].to_numpy()
-            clipped_array = np.clip(obs_array, limits[0], limits[1])
-            adata.obs[col] = pd.Series(clipped_array).values
+            obs_array = adata.obs[col].to_numpy(dtype=float)
+            winsorized_obs = scipy_winsorize(obs_array, limits=limits, nan_policy="omit", **kwargs)
+            adata.obs[col] = pd.Series(winsorized_obs).values
 
     return adata if copy else None
 
