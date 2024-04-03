@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 from typing import Literal
 
 import pandas as pd
@@ -9,6 +10,7 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.svm import SVC, SVR
 
 from ehrapy import logging as logg
+from ehrapy.anndata import anndata_to_df
 
 
 def feature_importances(
@@ -16,7 +18,7 @@ def feature_importances(
     predicted_feature: str,
     prediction_type: Literal["continuous", "categorical"],
     model: Literal["regression", "svm", "rf"] = "regression",
-    input_features: list[str] | Literal["all"] = "all",
+    input_features: Iterable[str] | Literal["all"] = "all",
     layer: str | None = None,
     test_split_size: float = 0.2,
     key_added: str = "feature_importances",
@@ -68,10 +70,7 @@ def feature_importances(
             f"Feature scaling type {feature_scaling} not recognized. Please choose either 'standard', 'minmax', or None."
         )
 
-    if layer is not None:
-        data = adata.layers[layer].to_df()
-    else:
-        data = adata.to_df()
+    data = anndata_to_df(adata, layer=layer)
 
     if prediction_type == "continuous":
         if pd.api.types.is_categorical_dtype(data[predicted_feature].dtype):
@@ -138,7 +137,9 @@ def feature_importances(
 
     score = predictor.score(x_test, y_test)
     evaluation_metric = "R2 score" if prediction_type == "continuous" else "accuracy"
-    logg.info(f"Training completed. The model achieved an {evaluation_metric} of {score:.2f} on the test set.")
+    logg.info(
+        f"Training completed. The model achieved an {evaluation_metric} of {score:.2f} on the test set, consisting of {len(y_test)} samples."
+    )
 
     if model == "regression" or model == "svm":
         feature_importances = pd.Series(predictor.coef_.squeeze(), index=input_data.columns)
