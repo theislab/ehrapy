@@ -1,30 +1,56 @@
+from typing import TYPE_CHECKING
+
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 from anndata import AnnData
+from matplotlib.axes import Axes
 
 
-def feature_importances(adata: AnnData, key: str = "feature_importances", n_features: int = 10):
-    """
-    Plot features with greates absolute importances as a barplot.
+def feature_importances(
+    adata: AnnData,
+    key: str = "feature_importances",
+    n_features: int = 10,
+    ax: Axes | None = None,
+    show: bool = True,
+    save: str | None = None,
+    **kwargs,
+) -> Axes | None:
+    """Plot features with greates absolute importances as a barplot.
 
     Args:
         adata: :class:`~anndata.AnnData` object storing the data. A key in adata.var should contain the feature
             importances, calculated beforehand.
         key: The key in adata.var to use for feature importances. Defaults to 'feature_importances'.
         n_features: The number of features to plot. Defaults to 10.
+        ax: A matplotlib axes object to plot on. If `None`, a new figure will be created. Defaults to `None`.
+        show: If `True`, show the figure. If `False`, return the axes object. Defaults to `True`.
+        save: Path to save the figure. If `None`, the figure will not be saved. Defaults to `None`.
+        **kwargs: Additional arguments passed to `seaborn.barplot`.
 
     Returns:
-        None
+        If `show == False` a `matplotlib.axes.Axes` object, else `None`.
     """
     if key not in adata.var.keys():
-        raise ValueError(f"Key {key} not found in adata.var.")
+        raise ValueError(
+            f"Key {key} not found in adata.var. Make sure to calculate feature importances first with ep.tl.feature_importances."
+        )
 
     df = pd.DataFrame({"importance": adata.var[key]}, index=adata.var_names)
     df["absolute_importance"] = df["importance"].abs()
     df = df.sort_values("absolute_importance", ascending=False)
-    sns.barplot(x=df["importance"][:n_features], y=df.index[:n_features], orient="h")
+
+    if ax is None:
+        fig, ax = plt.subplots()
+    sns.barplot(x=df["importance"][:n_features], y=df.index[:n_features], orient="h", ax=ax, **kwargs)
     plt.ylabel("Feature")
     plt.xlabel("Importance")
     plt.tight_layout()
-    plt.show()
+
+    if save:
+        plt.savefig(save, bbox_inches="tight")
+    if show:
+        plt.show()
+        return None
+    else:
+        return ax

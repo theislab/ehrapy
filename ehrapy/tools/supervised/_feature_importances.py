@@ -24,8 +24,7 @@ def feature_importances(
     percent_output: bool = False,
     **kwargs,
 ):
-    """
-    Calculate feature importances for predicting a specified feature in adata.var using a given model.
+    """Calculate feature importances for predicting a specified feature in adata.var using a given model.
 
     Args:
         adata: :class:`~anndata.AnnData` object storing the data.
@@ -47,9 +46,6 @@ def feature_importances(
         percent_output: Set to True to output the feature importances as percentages. Note that information about positive or negative
             coefficients for regression models will be lost. Defaults to False.
         **kwargs: Additional keyword arguments to pass to the model. See the documentation of the respective model in scikit-learn for details.
-
-    Returns:
-        None
     """
     if predicted_feature not in adata.var_names:
         raise ValueError(f"Feature {predicted_feature} not found in adata.var.")
