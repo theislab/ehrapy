@@ -30,6 +30,18 @@ def rank_features_supervised(
 
     Returns:
         If `show == False` a `matplotlib.axes.Axes` object, else `None`.
+
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=False)
+        >>> ep.pp.knn_impute(adata, n_neighbours=5)
+        >>> input_features = [
+        ...     feat for feat in adata.var_names if feat not in {"service_unit", "day_icu_intime", "tco2_first"}
+        ... ]
+        >>> ep.tl.rank_features_supervised(adata, "tco2_first", "continuous", "rf", input_features=input_features)
+        >>> ep.pl.rank_features_supervised(adata)
+
+        .. image:: /_static/docstring_previews/feature_importances.png
     """
     if key not in adata.var.keys():
         raise ValueError(

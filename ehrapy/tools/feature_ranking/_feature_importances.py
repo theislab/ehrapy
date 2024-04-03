@@ -48,6 +48,15 @@ def rank_features_supervised(
         percent_output: Set to True to output the feature importances as percentages. Note that information about positive or negative
             coefficients for regression models will be lost. Defaults to False.
         **kwargs: Additional keyword arguments to pass to the model. See the documentation of the respective model in scikit-learn for details.
+
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=False)
+        >>> ep.pp.knn_impute(adata, n_neighbours=5)
+        >>> input_features = [
+        ...     feat for feat in adata.var_names if feat not in {"service_unit", "day_icu_intime", "tco2_first"}
+        ... ]
+        >>> ep.tl.rank_features_supervised(adata, "tco2_first", "continuous", "rf", input_features=input_features)
     """
     if predicted_feature not in adata.var_names:
         raise ValueError(f"Feature {predicted_feature} not found in adata.var.")
