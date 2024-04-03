@@ -39,27 +39,24 @@ def winsorize(
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.winsorize(adata, ["bmi"])
     """
-    _validate_outlier_input(adata, obs_cols, vars)
-
     if copy:  # pragma: no cover
         adata = adata.copy()
 
-    if limits is None:
-        limits = [0.01, 0.99]
+    obs_cols_set, vars_set = _validate_outlier_input(adata, obs_cols, vars)
 
-    if vars:
-        for var in vars:
-            adata[:, var].X = scipy.stats.mstats.winsorize(
-                np.array(adata[:, var].X), limits=limits, nan_policy="omit", **kwargs
-            )
+    if vars_set:
+        for var in vars_set:
+            data_array = np.array(adata[:, var].X, dtype=float)
+            winsorized_data = scipy.stats.mstats.winsorize(data_array, limits=limits, nan_policy="omit", **kwargs)
+            adata[:, var].X = winsorized_data
 
-    if obs_cols:
-        for col in obs_cols:
-            winsorized_array = scipy.stats.mstats.winsorize(adata.obs[col], limits=limits, nan_policy="omit", **kwargs)
-            adata.obs[col] = pd.Series(winsorized_array).values
+    if obs_cols_set:
+        for col in obs_cols_set:
+            obs_array = adata.obs[col].to_numpy(dtype=float)
+            winsorized_obs = scipy.stats.mstats.winsorize(obs_array, limits=limits, nan_policy="omit", **kwargs)
+            adata.obs[col] = pd.Series(winsorized_obs).values
 
-    if copy:
-        return adata
+    return adata if copy else None
 
 
 def clip_quantile(
