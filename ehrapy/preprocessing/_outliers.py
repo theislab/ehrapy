@@ -47,13 +47,13 @@ def winsorize(
     if vars_set:
         for var in vars_set:
             data_array = np.array(adata[:, var].X, dtype=float)
-            winsorized_data = scipy_winsorize(data_array, limits=limits, nan_policy="omit", **kwargs)
+            winsorized_data = scipy.stats.mstats.winsorize(data_array, limits=limits, nan_policy="omit", **kwargs)
             adata[:, var].X = winsorized_data
 
     if obs_cols_set:
         for col in obs_cols_set:
             obs_array = adata.obs[col].to_numpy(dtype=float)
-            winsorized_obs = scipy_winsorize(obs_array, limits=limits, nan_policy="omit", **kwargs)
+            winsorized_obs = scipy.stats.mstats.winsorize(obs_array, limits=limits, nan_policy="omit", **kwargs)
             adata.obs[col] = pd.Series(winsorized_obs).values
 
     return adata if copy else None
