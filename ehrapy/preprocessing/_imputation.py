@@ -39,7 +39,7 @@ def explicit_impute(
         replacement: The value to replace missing values with. If a dictionary is provided, the keys represent column
                      names and the values represent replacement values for those columns.
         impute_empty_strings: If True, empty strings are also replaced. Defaults to True.
-        warning_threshold: Threshold of percentage of missing values to display a warning for. Defaults to 30.
+        warning_threshold: Threshold of percentage of missing values to display a warning for. Defaults to 70.
         copy: If True, returns a modified copy of the original AnnData object. If False, modifies the object in place.
 
     Returns:
@@ -133,7 +133,7 @@ def simple_impute(
         adata: The annotated data matrix to impute missing values on.
         var_names: A list of column names to apply imputation on (if None, impute all columns).
         strategy: Imputation strategy to use. One of {'mean', 'median', 'most_frequent'}.
-        warning_threshold: Display a warning message if percentage of missing values exceeds this threshold. Defaults to 30.
+        warning_threshold: Display a warning message if percentage of missing values exceeds this threshold. Defaults to 70.
         copy:Whether to return a copy of `adata` or modify it inplace. Defaults to False.
 
     Returns:
@@ -214,7 +214,7 @@ def knn_impute(
         n_neighbours: Number of neighbors to use when performing the imputation. Defaults to 5.
         copy: Whether to perform the imputation on a copy of the original `AnnData` object.
               If `True`, the original object remains unmodified. Defaults to `False`.
-        warning_threshold: Percentage of missing values above which a warning is issued. Defaults to 30.
+        warning_threshold: Percentage of missing values above which a warning is issued. Defaults to 70.
 
     Returns:
         An updated AnnData object with imputed values.
@@ -328,7 +328,7 @@ def miss_forest_impute(
         n_estimators: The number of trees to fit for every missing variable. Has a big effect on the run time.
                       Decrease for faster computations. Defaults to 100.
         random_state: The random seed for the initialization. Defaults to 0.
-        warning_threshold: Threshold of percentage of missing values to display a warning for. Defaults to 30 .
+        warning_threshold: Threshold of percentage of missing values to display a warning for. Defaults to 70 .
         copy: Whether to return a copy or act in place. Defaults to False.
 
     Returns:
@@ -464,7 +464,7 @@ def soft_impute(
         adata: The AnnData object to impute missing values for.
         var_names: A list of var names indicating which columns to impute (if None -> all columns).
         copy: Whether to return a copy or act in place.
-        warning_threshold: Threshold of percentage of missing values to display a warning for. Defaults to 30 .
+        warning_threshold: Threshold of percentage of missing values to display a warning for. Defaults to 70 .
         shrinkage_value : Value by which we shrink singular values on each iteration.
                           If omitted then the default value will be the maximum singular value of the initialized matrix (zeros for missing values) divided by 50.
         convergence_threshold : Minimum ration difference between iterations (as a fraction of the Frobenius norm of the current solution) before stopping.
@@ -609,7 +609,7 @@ def iterative_svd_impute(
         var_names: A list of var names indicating which columns to impute. If `None`, all columns will be imputed.
                    Defaults to None.
         copy: Whether to return a copy of the AnnData object or act in place. Defaults to False.
-        warning_threshold: Threshold of percentage of missing values to display a warning for. Defaults to 30.
+        warning_threshold: Threshold of percentage of missing values to display a warning for. Defaults to 70.
         rank: Rank of the SVD decomposition. Defaults to 10.
         convergence_threshold: Convergence threshold for the iterative algorithm.
                                The algorithm stops when the relative difference in
@@ -754,7 +754,7 @@ def matrix_factorization_impute(
     Args:
         adata: The AnnData object to use MatrixFactorization on.
         var_names: A list of var names indicating which columns to impute (if None -> all columns).
-        warning_threshold: Threshold of percentage of missing values to display a warning for. Defaults to 30 .
+        warning_threshold: Threshold of percentage of missing values to display a warning for. Defaults to 70 .
         rank: Number of latent factors to use in the matrix factorization model.
               It determines the size of the latent feature space that will be used to estimate the missing values.
               A higher rank will allow for more complex relationships between the features, but it can also lead to overfitting.
@@ -890,7 +890,7 @@ def nuclear_norm_minimization_impute(
     Args:
         adata: The AnnData object to apply NuclearNormMinimization on.
         var_names: Var names indicating which columns to impute (if None -> all columns).
-        warning_threshold: Threshold of percentage of missing values to display a warning for. Defaults to 30.
+        warning_threshold: Threshold of percentage of missing values to display a warning for. Defaults to 70.
         require_symmetric_solution: Whether to add a symmetry constraint to the convex problem. Defaults to False.
         min_value: Smallest possible imputed value. Defaults to None (no minimum value constraint).
         max_value: Largest possible imputed value. Defaults to None (no maximum value constraint).
@@ -1011,7 +1011,7 @@ def mice_forest_impute(
         adata: The AnnData object containing the data to impute.
         var_names: A list of variable names to impute. If None, impute all variables.
         warning_threshold: Threshold of percentage of missing values to display a warning for.
-                           Defaults to 30.
+                           Defaults to 70.
         save_all_iterations: Whether to save all imputed values from all iterations or just the latest.
                              Saving all iterations allows for additional plotting, but may take more memory. Defaults to True.
         random_state: The random state ensures script reproducibility.
