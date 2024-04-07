@@ -131,7 +131,7 @@ def rank_features_supervised(
     elif prediction_type == "categorical":
         if data[predicted_feature].nunique() > 2 and model in ["regression", "svm"]:
             raise ValueError(
-                f"Feature {predicted_feature} has more than two categories. Please choose random forest (rf) as model for multi-class classification."
+                f"Feature {predicted_feature} has more than two categories. Please choose 'rf' as model for multi-class classification."
             )
 
         if model == "regression":
