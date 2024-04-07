@@ -11,12 +11,13 @@ from sklearn.svm import SVC, SVR
 
 from ehrapy import logging as logg
 from ehrapy.anndata import anndata_to_df
+from ehrapy.anndata._constants import EHRAPY_TYPE_KEY, NON_NUMERIC_ENCODED_TAG, NON_NUMERIC_TAG, NUMERIC_TAG
 
 
 def rank_features_supervised(
     adata: AnnData,
     predicted_feature: str,
-    prediction_type: Literal["continuous", "categorical"],
+    prediction_type: Literal["continuous", "categorical", "auto"] = "auto",
     model: Literal["regression", "svm", "rf"] = "regression",
     input_features: Iterable[str] | Literal["all"] = "all",
     layer: str | None = None,
@@ -32,7 +33,8 @@ def rank_features_supervised(
         adata: :class:`~anndata.AnnData` object storing the data.
         predicted_feature: The feature to predict by the model. Must be present in adata.var_names.
         prediction_type: Whether the predicted feature is continuous or categorical. If the data type of the predicted feature
-            is not correct, conversion will be attempted.
+            is not correct, conversion will be attempted. If set to 'auto', the function will try to infer the data type from the data.
+            Defaults to 'auto'.
         model: The model to use for prediction. Choose between 'regression', 'svm', or 'rf'. Note that multi-class classification
             is only possible with 'rf'. Defaults to 'regression'.
         input_features: The features in adata.var to use for prediction. Should be a list of feature names. If 'all', all features
@@ -56,7 +58,9 @@ def rank_features_supervised(
         >>> input_features = [
         ...     feat for feat in adata.var_names if feat not in {"service_unit", "day_icu_intime", "tco2_first"}
         ... ]
-        >>> ep.tl.rank_features_supervised(adata, "tco2_first", "continuous", "rf", input_features=input_features)
+        >>> ep.tl.rank_features_supervised(
+        ...     adata, "tco2_first", prediction_type="continuous", model="rf", input_features=input_features
+        ... )
     """
     if predicted_feature not in adata.var_names:
         raise ValueError(f"Feature {predicted_feature} not found in adata.var.")
@@ -69,11 +73,6 @@ def rank_features_supervised(
     if model not in ["regression", "svm", "rf"]:
         raise ValueError(f"Model {model} not recognized. Please choose either 'regression', 'svm', or 'rf'.")
 
-    if prediction_type not in ["continuous", "categorical"]:
-        raise ValueError(
-            f"Prediction type {prediction_type} not recognized. Please choose either 'continuous' or 'categorical'."
-        )
-
     if feature_scaling not in ["standard", "minmax", None]:
         raise ValueError(
             f"Feature scaling type {feature_scaling} not recognized. Please choose either 'standard', 'minmax', or None."
@@ -81,7 +80,23 @@ def rank_features_supervised(
 
     data = anndata_to_df(adata, layer=layer)
 
-    if prediction_type == "continuous":
+    if prediction_type == "auto":
+        if EHRAPY_TYPE_KEY in adata.var:
+            prediction_encoding_type = adata.var[EHRAPY_TYPE_KEY][predicted_feature]
+            if prediction_encoding_type == NON_NUMERIC_TAG or prediction_encoding_type == NON_NUMERIC_ENCODED_TAG:
+                prediction_type = "categorical"
+            else:
+                prediction_type = "continuous"
+        else:
+            if pd.api.types.is_categorical_dtype(data[predicted_feature].dtype):
+                prediction_type = "categorical"
+            else:
+                prediction_type = "continuous"
+        logg.info(
+            f"Predicted feature {predicted_feature} was detected as {prediction_type}. If this is incorrect, please specify in the prediction_type argument."
+        )
+
+    elif prediction_type == "continuous":
         if pd.api.types.is_categorical_dtype(data[predicted_feature].dtype):
             try:
                 data[predicted_feature] = data[predicted_feature].astype(float)
@@ -90,13 +105,6 @@ def rank_features_supervised(
                     f"Feature {predicted_feature} is not continuous and conversion to float failed. Either change the prediction "
                     f"type to 'categorical' or change the feature data type to a continuous type."
                 ) from e
-
-        if model == "regression":
-            predictor = LinearRegression(**kwargs)
-        elif model == "svm":
-            predictor = SVR(kernel="linear", **kwargs)
-        elif model == "rf":
-            predictor = RandomForestRegressor(**kwargs)
 
     elif prediction_type == "categorical":
         if not pd.api.types.is_categorical_dtype(data[predicted_feature].dtype):
@@ -107,7 +115,20 @@ def rank_features_supervised(
                     f"Feature {predicted_feature} is not categorical and conversion to category failed. Either change the prediction "
                     f"type to 'continuous' or change the feature data type to a categorical type."
                 ) from e
+    else:
+        raise ValueError(
+            f"Prediction type {prediction_type} not recognized. Please choose 'continuous', 'categorical', or 'auto'."
+        )
 
+    if prediction_type == "continuous":
+        if model == "regression":
+            predictor = LinearRegression(**kwargs)
+        elif model == "svm":
+            predictor = SVR(kernel="linear", **kwargs)
+        elif model == "rf":
+            predictor = RandomForestRegressor(**kwargs)
+
+    elif prediction_type == "categorical":
         if data[predicted_feature].nunique() > 2 and model in ["regression", "svm"]:
             raise ValueError(
                 f"Feature {predicted_feature} has more than two categories. Please choose random forest (rf) as model for multi-class classification."
