@@ -74,6 +74,7 @@ Other than tools, preprocessing steps usually don’t return an easily interpret
     :toctree: preprocessing
     :nosignatures:
 
+    preprocessing.sample
     preprocessing.pca
     preprocessing.regress_out
     preprocessing.subsample
