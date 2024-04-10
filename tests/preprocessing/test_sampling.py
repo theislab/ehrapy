@@ -31,10 +31,8 @@ def test_sampling_basic(adata_mini):
     adata_sampled = ep.pp.sample(adata_mini, key="clinic_day", method="RandomUnderSampler")
     assert adata_sampled.n_obs == 4
     assert adata_sampled.obs.clinic_day.value_counts().min() == adata_sampled.obs.clinic_day.value_counts().max()
-    print(adata_sampled.obs.clinic_day.value_counts())
 
     # oversampling
     adata_sampled = ep.pp.sample(adata_mini, key="clinic_day", method="RandomOverSampler")
     assert adata_sampled.n_obs == 8
     assert adata_sampled.obs.clinic_day.value_counts().min() == adata_sampled.obs.clinic_day.value_counts().max()
-    print(adata_sampled.obs.clinic_day.value_counts())
