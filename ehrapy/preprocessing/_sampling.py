@@ -32,7 +32,7 @@ def sample(
     Returns:
         A new `AnnData` object, with the balanced groups.
 
-    Example:
+    Examples:
         >>> import ehrapy as ep
         >>> adata = ep.data.diabetes_130_fairlearn(columns_obs_only=["age"])
         >>> print("distribution of age groups:\n", adata.obs.age.value_counts())
