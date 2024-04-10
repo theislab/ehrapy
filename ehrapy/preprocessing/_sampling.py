@@ -52,7 +52,6 @@ def sample(
         >>> '30 years or younger'    2509
         >>> '30-60 years'            2509
         >>> 'Over 60 years'          2509
-
     """
 
     if not isinstance(adata, AnnData):
