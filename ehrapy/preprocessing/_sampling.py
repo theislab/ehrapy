@@ -53,7 +53,6 @@ def sample(
         >>> '30-60 years'            2509
         >>> 'Over 60 years'          2509
     """
-
     if not isinstance(adata, AnnData):
         raise ValueError(f"Input data is not an AnnData object: type of {adata}, is {type(adata)}")
 
