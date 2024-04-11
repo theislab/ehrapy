@@ -7,6 +7,8 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib.axes import Axes
+from matplotlib.font_manager import FontProperties
+from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 from scanpy import AnnData
 from tableone import TableOne
@@ -39,6 +41,20 @@ def _detect_categorical_columns(data) -> list:
     categorical_cols = set(data.columns) - numeric_cols
 
     return list(categorical_cols)
+
+
+import matplotlib.text as mtext
+
+
+class LegendTitle:
+    def __init__(self, text_props=None):
+        self.text_props = text_props or {}
+
+    def legend_artist(self, legend, orig_handle, fontsize, handlebox):
+        x0, y0 = handlebox.xdescent, handlebox.ydescent
+        title = mtext.Text(x0, y0, orig_handle, **self.text_props)
+        handlebox.add_artist(title)
+        return title
 
 
 class CohortTracker:
@@ -148,6 +164,18 @@ class CohortTracker:
         if missing_keys:
             raise ValueError(f"legend_handels key(s) {missing_keys} not found as categories or numerical column names.")
 
+    def _check_legend_subtitle_names(self, legend_subtitles_names: dict) -> None:
+        if not isinstance(legend_subtitles_names, dict):
+            raise ValueError("legend_subtitles_names must be a dictionary.")
+
+        # Find keys in legend_handels that are not in values or self.columns
+        missing_keys = [key for key in legend_subtitles_names if key not in self.columns]
+
+        if missing_keys:
+            raise ValueError(
+                f"legend_subtitles_names key(s) {missing_keys} not found as categories or numerical column names."
+            )
+
     @property
     def tracked_steps(self):
         """Number of tracked steps."""
@@ -164,6 +192,9 @@ class CohortTracker:
         color_palette: str = "colorblind",
         yticks_labels: dict = None,
         legend_labels: dict = None,
+        legend_subtitles: bool = False,
+        legend_subtitles_names: dict = None,
+        legend_subtitles_bold: bool = True,
         show: bool = True,
         ax: Axes | Sequence[Axes] = None,
         subplots_kwargs: dict = None,
@@ -178,6 +209,9 @@ class CohortTracker:
             color_palette: The color palette to use for the plot. Default is "colorblind".
             yticks_labels: Dictionary to rename the axis labels. If `None`, the original labels will be used. The keys should be the column names.
             legend_labels: Dictionary to rename the legend labels. If `None`, the original labels will be used. For categoricals, the keys should be the categories. For numericals, the key should be the column name.
+            legend_subtitles: If `True`, subtitles will be added to the legend. Default is `False`.
+            legend_subtitles_names: Dictionary to rename the legend subtitles. If `None`, the original labels will be used. The keys should be the column names.
+            legend_subtitles_bold: If `True`, the subtitles will be bold. Default is `True`.
             show: If `True`, the plot will be shown. If `False`, plotting handels are returned.
             ax: If `None`, a new figure and axes will be created. If an axes object is provided, the plot will be added to it.
             subplots_kwargs: Additional keyword arguments for the subplots.
@@ -212,10 +246,14 @@ class CohortTracker:
 
             .. image:: /_static/docstring_previews/cohort_tracking.png
         """
-        subplots_kwargs = {} if subplots_kwargs is None else subplots_kwargs
 
         legend_labels = {} if legend_labels is None else legend_labels
         self._check_legend_labels(legend_labels)
+
+        subplots_kwargs = {} if subplots_kwargs is None else subplots_kwargs
+
+        legend_subtitles_names = {} if legend_subtitles_names is None else legend_subtitles_names
+        self._check_legend_subtitle_names(legend_subtitles_names)
 
         yticks_labels = {} if yticks_labels is None else yticks_labels
         self._check_yticks_labels(yticks_labels)
@@ -336,13 +374,49 @@ class CohortTracker:
         # These list of lists is needed to reverse the order of the legend labels,
         # making the plot much more readable
         legend_handles.reverse()
-        legend_handels = [item for sublist in legend_handles for item in sublist]
 
         tot_legend_kwargs = {"loc": "best", "bbox_to_anchor": (1, 1)}
         if legend_kwargs is not None:
             tot_legend_kwargs.update(legend_kwargs)
 
-        plt.legend(handles=legend_handels, **tot_legend_kwargs)
+        def create_legend_with_subtitles(patches_list, subtitles_list, tot_legend_kwargs, legend_subtitles_bold=True):
+            """Create a legend with subtitles."""
+            subtitle_font = FontProperties(weight="bold")
+            handles = []
+            labels = []
+
+            # there can be empty lists which distort the logic of matching patches to subtitles
+            patches_list = [patch for patch in patches_list if patch]
+
+            for patches, subtitle in zip(patches_list, subtitles_list):
+                handles.append(Line2D([], [], linestyle="none", marker="", alpha=0))  # Placeholder for title
+                labels.append(subtitle)
+
+                for patch in patches:
+                    handles.append(patch)
+                    labels.append(patch.get_label())
+
+            legend = plt.legend(handles, labels, **tot_legend_kwargs)
+
+            if legend_subtitles_bold:
+                for text in legend.get_texts():
+                    if text.get_text() in subtitles_list:
+                        text.set_font_properties(subtitle_font)
+
+        if legend_subtitles:
+            subtitles = [
+                legend_subtitles_names[col] if col in legend_subtitles_names.keys() else col
+                for col in self.columns[::-1]
+            ]
+            create_legend_with_subtitles(
+                legend_handles,
+                subtitles,
+                tot_legend_kwargs,
+                legend_subtitles_bold=legend_subtitles_bold,
+            )
+        else:
+            legend_handles = [item for sublist in legend_handles for item in sublist]
+            plt.legend(handles=legend_handles, **tot_legend_kwargs)
 
         if show:
             plt.tight_layout()

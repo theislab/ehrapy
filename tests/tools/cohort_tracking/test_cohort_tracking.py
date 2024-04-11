@@ -128,6 +128,26 @@ def test_CohortTracker_plot_cohort_barplot_use_settings(adata_mini, check_same_i
     )
 
 
+def test_CohortTracker_plot_cohort_barplot_use_settings_big(adata_mini, check_same_image):
+    ct = ep.tl.CohortTracker(adata_mini)
+
+    ct(adata_mini, label="First step", operations_done="Some operations")
+    fig, _ = ct.plot_cohort_barplot(
+        show=False,
+        yticks_labels={"weight": "wgt"},
+        legend_labels={"A": "Dis. A", "weight": "(kg)"},
+        legend_subtitles=True,
+        legend_subtitles_bold=False,
+        legend_subtitles_names={"station": ""},
+    )
+
+    check_same_image(
+        fig=fig,
+        base_path=f"{_TEST_IMAGE_PATH}/cohorttracker_adata_mini_step1_use_settings_big",
+        tol=1e-1,
+    )
+
+
 def test_CohortTracker_plot_cohort_barplot_loosing_category(adata_mini, check_same_image):
     ct = ep.tl.CohortTracker(adata_mini)
 
