@@ -194,7 +194,6 @@ class CohortTracker:
         legend_labels: dict = None,
         legend_subtitles: bool = False,
         legend_subtitles_names: dict = None,
-        legend_subtitles_bold: bool = True,
         show: bool = True,
         ax: Axes | Sequence[Axes] = None,
         subplots_kwargs: dict = None,
@@ -211,7 +210,6 @@ class CohortTracker:
             legend_labels: Dictionary to rename the legend labels. If `None`, the original labels will be used. For categoricals, the keys should be the categories. For numericals, the key should be the column name.
             legend_subtitles: If `True`, subtitles will be added to the legend. Default is `False`.
             legend_subtitles_names: Dictionary to rename the legend subtitles. If `None`, the original labels will be used. The keys should be the column names.
-            legend_subtitles_bold: If `True`, the subtitles will be bold. Default is `True`.
             show: If `True`, the plot will be shown. If `False`, plotting handels are returned.
             ax: If `None`, a new figure and axes will be created. If an axes object is provided, the plot will be added to it.
             subplots_kwargs: Additional keyword arguments for the subplots.
@@ -259,7 +257,7 @@ class CohortTracker:
         self._check_yticks_labels(yticks_labels)
 
         if ax is None:
-            fig, axes = plt.subplots(self.tracked_steps, 1, **subplots_kwargs)
+            fig, axes = plt.subplots(self.tracked_steps, 1, **subplots_kwargs, constrained_layout=False)
         else:
             axes = ax
 
@@ -379,7 +377,7 @@ class CohortTracker:
         if legend_kwargs is not None:
             tot_legend_kwargs.update(legend_kwargs)
 
-        def create_legend_with_subtitles(patches_list, subtitles_list, tot_legend_kwargs, legend_subtitles_bold=True):
+        def create_legend_with_subtitles(patches_list, subtitles_list, tot_legend_kwargs):
             """Create a legend with subtitles."""
             subtitle_font = FontProperties(weight="bold")
             handles = []
@@ -396,12 +394,15 @@ class CohortTracker:
                     handles.append(patch)
                     labels.append(patch.get_label())
 
-            legend = plt.legend(handles, labels, **tot_legend_kwargs)
+                # empty space after block
+                handles.append(Line2D([], [], linestyle="none", marker="", alpha=0))
+                labels.append("")
 
-            if legend_subtitles_bold:
-                for text in legend.get_texts():
-                    if text.get_text() in subtitles_list:
-                        text.set_font_properties(subtitle_font)
+            legend = axes[0].legend(handles, labels, **tot_legend_kwargs)
+
+            for text in legend.get_texts():
+                if text.get_text() in subtitles_list:
+                    text.set_font_properties(subtitle_font)
 
         if legend_subtitles:
             subtitles = [
@@ -412,7 +413,6 @@ class CohortTracker:
                 legend_handles,
                 subtitles,
                 tot_legend_kwargs,
-                legend_subtitles_bold=legend_subtitles_bold,
             )
         else:
             legend_handles = [item for sublist in legend_handles for item in sublist]

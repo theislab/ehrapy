@@ -137,8 +137,7 @@ def test_CohortTracker_plot_cohort_barplot_use_settings_big(adata_mini, check_sa
         yticks_labels={"weight": "wgt"},
         legend_labels={"A": "Dis. A", "weight": "(kg)"},
         legend_subtitles=True,
-        legend_subtitles_bold=False,
-        legend_subtitles_names={"station": ""},
+        legend_subtitles_names={"station": "", "disease": "dis", "weight": "wgt", "glucose": "glc"},
     )
 
     check_same_image(
