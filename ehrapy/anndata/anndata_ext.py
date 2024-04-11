@@ -224,8 +224,6 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False)
         adata.obs[var_num] = adata.obs[var_num].apply(pd.to_numeric, errors="ignore", downcast="float")
         adata.obs = _cast_obs_columns(adata.obs)
 
-    logg.info(f"Added `{to_obs}` to `obs`.")
-
     return adata
 
 
