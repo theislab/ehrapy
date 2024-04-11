@@ -196,6 +196,7 @@ class CohortTracker:
         legend_subtitles_names: dict = None,
         show: bool = True,
         ax: Axes | Sequence[Axes] = None,
+        fontsize: int = 10,
         subplots_kwargs: dict = None,
         legend_kwargs: dict = None,
     ) -> None | list[Axes] | tuple[Figure, list[Axes]]:
@@ -212,6 +213,7 @@ class CohortTracker:
             legend_subtitles_names: Dictionary to rename the legend subtitles. If `None`, the original labels will be used. The keys should be the column names.
             show: If `True`, the plot will be shown. If `False`, plotting handels are returned.
             ax: If `None`, a new figure and axes will be created. If an axes object is provided, the plot will be added to it.
+            fontsize: Fontsize for the text in the plot. Default is 10.
             subplots_kwargs: Additional keyword arguments for the subplots.
             legend_kwargs: Additional keyword arguments for the legend.
 
@@ -257,7 +259,7 @@ class CohortTracker:
         self._check_yticks_labels(yticks_labels)
 
         if ax is None:
-            fig, axes = plt.subplots(self.tracked_steps, 1, **subplots_kwargs, constrained_layout=False)
+            fig, axes = plt.subplots(self.tracked_steps, 1, **subplots_kwargs)
         else:
             axes = ax
 
@@ -283,7 +285,7 @@ class CohortTracker:
             single_ax.grid(False)
 
             if subfigure_title:
-                single_ax.set_title(self._tracked_text[idx])
+                single_ax.set_title(self._tracked_text[idx], size=fontsize)
 
             color_count = 0
             # iterate over the tracked columns in the dataframe
@@ -321,6 +323,7 @@ class CohortTracker:
                                 va="center",
                                 color="white",
                                 fontweight="bold",
+                                size=fontsize,
                             )
 
                         single_ax.set_yticks([])
@@ -356,6 +359,7 @@ class CohortTracker:
                         va="center",
                         color="white",
                         fontweight="bold",
+                        size=fontsize,
                     )
                     if idx == 0:
                         name = legend_labels[col] if col in legend_labels.keys() else col
@@ -367,19 +371,20 @@ class CohortTracker:
                 yticks_labels[col] if yticks_labels is not None and col in yticks_labels.keys() else col
                 for col in self.columns
             ]
-            single_ax.set_yticklabels(names)
+            single_ax.set_yticklabels(names, fontsize=fontsize)
 
         # These list of lists is needed to reverse the order of the legend labels,
         # making the plot much more readable
         legend_handles.reverse()
 
-        tot_legend_kwargs = {"loc": "best", "bbox_to_anchor": (1, 1)}
+        tot_legend_kwargs = {"loc": "best", "bbox_to_anchor": (1, 1), "fontsize": fontsize}
         if legend_kwargs is not None:
             tot_legend_kwargs.update(legend_kwargs)
 
         def create_legend_with_subtitles(patches_list, subtitles_list, tot_legend_kwargs):
             """Create a legend with subtitles."""
-            subtitle_font = FontProperties(weight="bold")
+            size = {"size": tot_legend_kwargs["fontsize"]}
+            subtitle_font = FontProperties(weight="bold", **size)
             handles = []
             labels = []
 
