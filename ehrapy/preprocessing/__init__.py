@@ -1,3 +1,4 @@
+from ehrapy.preprocessing._balanced_sampling import balanced_sample
 from ehrapy.preprocessing._encoding import encode, undo_encoding
 from ehrapy.preprocessing._highly_variable_features import highly_variable_features
 from ehrapy.preprocessing._imputation import (
@@ -24,6 +25,5 @@ from ehrapy.preprocessing._normalization import (
 )
 from ehrapy.preprocessing._outliers import clip_quantile, winsorize
 from ehrapy.preprocessing._quality_control import mcar_test, qc_lab_measurements, qc_metrics
-from ehrapy.preprocessing._sampling import sample
 from ehrapy.preprocessing._scanpy_pp_api import *  # noqa: F403
 from ehrapy.preprocessing._summarize_measurements import summarize_measurements

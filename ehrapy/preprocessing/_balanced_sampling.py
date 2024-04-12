@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
     from anndata import AnnData
@@ -10,17 +10,21 @@ from imblearn.over_sampling import RandomOverSampler
 from imblearn.under_sampling import RandomUnderSampler
 
 
-def sample(
+def balanced_sample(
     adata: AnnData,
     key: str,
     random_state: int = 0,
-    method: str = "RandomUnderSampler",
+    method: Literal["RandomUnderSampler", "RandomOverSampler"] = "RandomUnderSampler",
     sampler_kwargs: dict = None,
+    copy: bool = False,
 ) -> AnnData:
     """Balancing groups in the dataset.
 
     Balancing groups in the dataset based on group members in `.obs[key]` using the [imbalanced-learn](https://imbalanced-learn.org/stable/index.html) package.
     Currently supports `RandomUnderSampler` and `RandomOverSampler`.
+
+    Note that [RandomOverSampler](https://imbalanced-learn.org/stable/references/generated/imblearn.over_sampling.RandomOverSampler.html) only replicates observations of the minority groups, which distorts several downstream analyses, very prominently neighborhood calculations and downstream analyses depending on that.
+    The [RandomUnderSampler](https://imbalanced-learn.org/stable/references/generated/imblearn.under_sampling.RandomUnderSampler.html) by  default undersamples the majority group without replacement, not causing this issues of replicated observations.
 
     Args:
         adata: The annotated data matrix of shape `n_obs` × `n_vars`.
@@ -28,26 +32,23 @@ def sample(
         random_state: Random seed. Defaults to 0.
         method: The method to use for balancing. Defaults to "RandomUnderSampler".
         sampler_kwargs: Keyword arguments for the sample, see the `imbalanced-learn` documentation for options. Defaults to None.
-
+        copy: If True, return a copy of the balanced data. Defaults to False.
     Returns:
         A new `AnnData` object, with the balanced groups.
 
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.data.diabetes_130_fairlearn(columns_obs_only=["age"])
-        >>> print("distribution of age groups:\n", adata.obs.age.value_counts())
-        >>> adata_balanced = ep.pp.sample(adata, key="age")
-        >>> print(
-        ...     "distribution of age groups after undersampling:\n",
-        ...     adata_balanced.obs.age.value_counts(),
-        ... )
+        >>> adata.obs.age.value_counts()
 
-        >>> distribution of groups:
         >>>  age
         >>> 'Over 60 years'          68541
         >>> '30-60 years'            30716
         >>> '30 years or younger'     2509
-        >>> distribution of groups after undersampling:
+
+        >>> adata_balanced = ep.pp.sample(adata, key="age")
+        >>> adata_balanced.obs.age.value_counts()
+
         >>>  age
         >>> '30 years or younger'    2509
         >>> '30-60 years'            2509
@@ -75,13 +76,7 @@ def sample(
 
     sampler.fit_resample(adata.X, use_label)
 
-    adata_sampled = adata[sampler.sample_indices_, :].copy()
-
-    # results computed from data should be recomputed if the data changes
-    del adata_sampled.obsm
-    del adata_sampled.varm
-    del adata_sampled.uns
-    del adata_sampled.obsp
-    del adata_sampled.varp
-
-    return adata_sampled
+    if copy:
+        return adata[sampler.sample_indices_].copy()
+    else:
+        adata._inplace_subset_obs(sampler.sample_indices_)
