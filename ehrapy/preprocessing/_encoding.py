@@ -131,7 +131,6 @@ def encode(
                 progress.update(task, description="Updating layer originals ...")
 
                 # update layer content with the latest categorical encoding and the old other values
-                logg.info("Encoding strings in X to save to .h5ad. Loading the file will reverse the encoding.")
                 updated_layer = _update_layer_after_encoding(
                     adata.layers["original"],
                     encoded_x,
