@@ -18,15 +18,17 @@ def rank_features_supervised(
     adata: AnnData,
     predicted_feature: str,
     prediction_type: Literal["continuous", "categorical", "auto"] = "auto",
-    model: Literal["regression", "svm", "rf"] = "regression",
+    model: Literal["regression", "svm", "rf"] = "rf",
     input_features: Iterable[str] | Literal["all"] = "all",
     layer: str | None = None,
     test_split_size: float = 0.2,
     key_added: str = "feature_importances",
     feature_scaling: Literal["standard", "minmax"] | None = "standard",
     percent_output: bool = False,
+    logging: bool = True,
+    return_score: bool = False,
     **kwargs,
-):
+) -> float | None:
     """Calculate feature importances for predicting a specified feature in adata.var.
 
     Args:
@@ -49,6 +51,8 @@ def rank_features_supervised(
             for each feature individually. Defaults to 'standard'.
         percent_output: Set to True to output the feature importances as percentages. Note that information about positive or negative
             coefficients for regression models will be lost. Defaults to False.
+        logging: Set to False to disable logging. Defaults to True.
+        return_score: Set to True to return the R2 score / the accuracy of the model. Defaults to False.
         **kwargs: Additional keyword arguments to pass to the model. See the documentation of the respective model in scikit-learn for details.
 
     Examples:
@@ -92,9 +96,10 @@ def rank_features_supervised(
                 prediction_type = "categorical"
             else:
                 prediction_type = "continuous"
-        logg.info(
-            f"Predicted feature {predicted_feature} was detected as {prediction_type}. If this is incorrect, please specify in the prediction_type argument."
-        )
+        if logging:
+            logg.info(
+                f"Predicted feature {predicted_feature} was detected as {prediction_type}. If this is incorrect, please specify in the prediction_type argument."
+            )
 
     elif prediction_type == "continuous":
         if pd.api.types.is_categorical_dtype(data[predicted_feature].dtype):
@@ -167,9 +172,10 @@ def rank_features_supervised(
 
     score = predictor.score(x_test, y_test)
     evaluation_metric = "R2 score" if prediction_type == "continuous" else "accuracy"
-    logg.info(
-        f"Training completed. The model achieved an {evaluation_metric} of {score:.2f} on the test set, consisting of {len(y_test)} samples."
-    )
+    if logging:
+        logg.info(
+            f"Training completed. The model achieved an {evaluation_metric} of {score:.2f} on the test set, consisting of {len(y_test)} samples."
+        )
 
     if model == "regression" or model == "svm":
         feature_importances = pd.Series(predictor.coef_.squeeze(), index=input_data.columns)
@@ -182,3 +188,5 @@ def rank_features_supervised(
     # Reorder feature importances to match adata.var order and save importances in adata.var
     feature_importances = feature_importances.reindex(adata.var_names)
     adata.var[key_added] = feature_importances
+
+    return score if return_score else None
