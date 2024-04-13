@@ -16,6 +16,7 @@ def bias_detection(
     smd_threshold: float = 0.5,
     feature_importance_threshold: float = 0.1,
     prediction_confidence_threshold: float = 0.5,
+    corr_method: Literal["pearson", "spearman"] = "spearman",
 ):
     """Detects bias in the data.
 
@@ -28,13 +29,14 @@ def bias_detection(
             of interest. Defaults to 0.1.
         prediction_confidence_threshold: The threshold for the prediction confidence (R2 or accuracy) of a sensitive feature for predicting another
             feature to be considered of interest. Defaults to 0.5.
+        corr_method: The correlation method to use. Choose between "pearson" and "spearman". Defaults to "spearman".
     """
     from ehrapy.tools import rank_features_supervised
 
     if sensitive_features == "all":
         sensitive_features = adata.var_names
 
-    correlations = _feature_correlations(adata)
+    correlations = _feature_correlations(adata, method=corr_method)
     adata.varp["correlation"] = correlations
 
     for feature in sensitive_features:
