@@ -14,7 +14,7 @@ def bias_detection(
     sensitive_features: Iterable[str] | Literal["all"],
     corr_threshold: float = 0.5,
     smd_threshold: float = 0.5,
-    feature_importance_threshold: float = 0.01,
+    feature_importance_threshold: float = 0.1,
     prediction_confidence_threshold: float = 0.5,
 ):
     """Detects bias in the data.
@@ -22,9 +22,12 @@ def bias_detection(
     Args:
         adata: An annotated data matrix containing patient data.
         sensitive_features: A list of sensitive features to check for bias.
-
-    Returns:
-        #TODO
+        corr_threshold: The threshold for the correlation coefficient between two features to be considered of interest. Defaults to 0.5.
+        smd_threshold: The threshold for the standardized mean difference between two features to be considered of interest. Defaults to 0.5.
+        feature_importance_threshold: The threshold for the feature importance of a sensitive feature for predicting another feature to be considered
+            of interest. Defaults to 0.1.
+        prediction_confidence_threshold: The threshold for the prediction confidence (R2 or accuracy) of a sensitive feature for predicting another
+            feature to be considered of interest. Defaults to 0.5.
     """
     from ehrapy.tools import rank_features_supervised
 
@@ -89,10 +92,10 @@ def _standardized_mean_differences(adata: AnnData, features: Iterable[str]) -> d
     Args:
         adata: An annotated data matrix containing patient data.
         features: A list of features to compute the standardized mean differences (SMD) for. For each listed feature, the SMD is computed for each
-            feature for all groups within the respected feature.
+            feature, comparing one group to the rest. Thus, we obtain a n_groups_in_feature x n_features matrix of SMDs for each listed feature.
 
     Returns:
-        A pandas DataFrame containing the standardized mean differences.
+        A dictionary mapping each feature to a pandas DataFrame containing the standardized mean differences.
     """
     df = anndata_to_df(adata)
     smd_results = {}  # type: ignore
