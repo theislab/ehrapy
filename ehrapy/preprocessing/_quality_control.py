@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import copy
-from collections.abc import Iterable
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
@@ -19,7 +18,7 @@ if TYPE_CHECKING:
 
 
 def qc_metrics(
-    adata: AnnData, qc_vars: Collection[str] = (), layer: str = None, inplace: bool = True
+    adata: AnnData, qc_vars: Collection[str] = (), layer: str = None
 ) -> tuple[pd.DataFrame, pd.DataFrame] | None:
     """Calculates various quality control metrics.
 
@@ -59,9 +58,8 @@ def qc_metrics(
     obs_metrics = _obs_qc_metrics(adata, layer, qc_vars)
     var_metrics = _var_qc_metrics(adata, layer)
 
-    if inplace:
-        adata.obs[obs_metrics.columns] = obs_metrics
-        adata.var[var_metrics.columns] = var_metrics
+    adata.obs[obs_metrics.columns] = obs_metrics
+    adata.var[var_metrics.columns] = var_metrics
 
     return obs_metrics, var_metrics
 
@@ -134,18 +132,7 @@ def _obs_qc_metrics(
     return obs_metrics
 
 
-def _var_qc_metrics(adata: AnnData, layer: str = None) -> pd.DataFrame:
-    """Calculates quality control metrics for features.
-
-    See :func:`~ehrapy.preprocessing._quality_control.calculate_qc_metrics` for a list of calculated metrics.
-
-    Args:
-        adata: Annotated data matrix.
-        layer: Layer containing the matrix to calculate the metrics for.
-
-    Returns:
-        Pandas DataFrame with the calculated metrics.
-    """
+def _var_qc_metrics(adata: AnnData, layer: str | None = None) -> pd.DataFrame:
     var_metrics = pd.DataFrame(index=adata.var_names)
     mtx = adata.X if layer is None else adata.layers[layer]
     categorical_indices = np.ndarray([0], dtype=int)
@@ -164,33 +151,31 @@ def _var_qc_metrics(adata: AnnData, layer: str = None) -> pd.DataFrame:
             categorical_indices = np.concatenate([categorical_indices, index])
     non_categorical_indices = np.ones(mtx.shape[1], dtype=bool)
     non_categorical_indices[categorical_indices] = False
-    var_metrics["missing_values_abs"] = np.apply_along_axis(_missing_values, 0, mtx, mode="abs")
-    var_metrics["missing_values_pct"] = np.apply_along_axis(_missing_values, 0, mtx, mode="pct", df_type="var")
 
-    var_metrics["mean"] = np.nan
-    var_metrics["median"] = np.nan
-    var_metrics["standard_deviation"] = np.nan
-    var_metrics["min"] = np.nan
-    var_metrics["max"] = np.nan
+    var_metrics["missing_values_abs"] = np.apply_along_axis(np.sum, 0, np.isnan(mtx))
+    var_metrics["missing_values_pct"] = np.apply_along_axis(lambda x: np.mean(np.isnan(x)) * 100, 0, mtx)
 
     try:
-        var_metrics.loc[non_categorical_indices, "mean"] = np.nanmean(
-            np.array(mtx[:, non_categorical_indices], dtype=np.float64), axis=0
-        )
-        var_metrics.loc[non_categorical_indices, "median"] = np.nanmedian(
-            np.array(mtx[:, non_categorical_indices], dtype=np.float64), axis=0
-        )
+        var_metrics.loc[non_categorical_indices, "mean"] = np.nanmean(mtx[:, non_categorical_indices], axis=0)
+        var_metrics.loc[non_categorical_indices, "median"] = np.nanmedian(mtx[:, non_categorical_indices], axis=0)
         var_metrics.loc[non_categorical_indices, "standard_deviation"] = np.nanstd(
-            np.array(mtx[:, non_categorical_indices], dtype=np.float64), axis=0
+            mtx[:, non_categorical_indices], axis=0
         )
-        var_metrics.loc[non_categorical_indices, "min"] = np.nanmin(
-            np.array(mtx[:, non_categorical_indices], dtype=np.float64), axis=0
-        )
-        var_metrics.loc[non_categorical_indices, "max"] = np.nanmax(
-            np.array(mtx[:, non_categorical_indices], dtype=np.float64), axis=0
-        )
+        var_metrics.loc[non_categorical_indices, "min"] = np.nanmin(mtx[:, non_categorical_indices], axis=0)
+        var_metrics.loc[non_categorical_indices, "max"] = np.nanmax(mtx[:, non_categorical_indices], axis=0)
+
+        # Calculate IQR and define outliers
+        q1 = np.nanpercentile(mtx[:, non_categorical_indices], 25, axis=0)
+        q3 = np.nanpercentile(mtx[:, non_categorical_indices], 75, axis=0)
+        iqr = q3 - q1
+        lower_bound = q1 - 1.5 * iqr
+        upper_bound = q3 + 1.5 * iqr
+        var_metrics.loc[non_categorical_indices, "iqr_outliers"] = (
+            (mtx[:, non_categorical_indices] < lower_bound) | (mtx[:, non_categorical_indices] > upper_bound)
+        ).any(axis=0)
     except (TypeError, ValueError):
-        print("[bold yellow]TypeError! Setting quality control metrics to nan. Did you encode your data?")
+        # We assume that the data just hasn't been encoded yet
+        pass
 
     return var_metrics
 

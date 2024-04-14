@@ -17,7 +17,7 @@ def winsorize(
     vars: Collection[str] = None,
     obs_cols: Collection[str] = None,
     *,
-    limits: list[float] = None,
+    limits: tuple[float, float] = (0.01, 0.99),
     copy: bool = False,
     **kwargs,
 ) -> AnnData:
@@ -67,19 +67,18 @@ def clip_quantile(
     limits: tuple[float, float],
     vars: Collection[str] = None,
     obs_cols: Collection[str] = None,
+    *,
     copy: bool = False,
 ) -> AnnData:
     """Clips (limits) features.
 
     Given an interval, values outside the interval are clipped to the interval edges.
 
-    The implementation is based on https://numpy.org/doc/stable/reference/generated/numpy.clip.html
-
     Args:
-        adata: The AnnData object
-        vars: Columns in var with features to clip
+        adata: The AnnData object to clip.
+        limits: Values outside the interval are clipped to the interval edges.
+        vars: Columns in var with features to clip.
         obs_cols: Columns in obs with features to clip
-        limits: Interval, values outside which are clipped to the interval edges
         copy: Whether to return a copy of AnnData or not
 
     Returns:
