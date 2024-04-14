@@ -160,13 +160,21 @@ def _var_qc_metrics(adata: AnnData, layer: str | None = None) -> pd.DataFrame:
     var_metrics["max"] = np.nan
 
     try:
-        var_metrics.loc[non_categorical_indices, "mean"] = np.nanmean(mtx[:, non_categorical_indices], axis=0)
-        var_metrics.loc[non_categorical_indices, "median"] = np.nanmedian(mtx[:, non_categorical_indices], axis=0)
-        var_metrics.loc[non_categorical_indices, "standard_deviation"] = np.nanstd(
-            mtx[:, non_categorical_indices], axis=0
+        var_metrics.loc[non_categorical_indices, "mean"] = np.nanmean(
+            np.array(mtx[:, non_categorical_indices], dtype=np.float64), axis=0
         )
-        var_metrics.loc[non_categorical_indices, "min"] = np.nanmin(mtx[:, non_categorical_indices], axis=0)
-        var_metrics.loc[non_categorical_indices, "max"] = np.nanmax(mtx[:, non_categorical_indices], axis=0)
+        var_metrics.loc[non_categorical_indices, "median"] = np.nanmedian(
+            np.array(mtx[:, non_categorical_indices], dtype=np.float64), axis=0
+        )
+        var_metrics.loc[non_categorical_indices, "standard_deviation"] = np.nanstd(
+            np.array(mtx[:, non_categorical_indices], dtype=np.float64), axis=0
+        )
+        var_metrics.loc[non_categorical_indices, "min"] = np.nanmin(
+            np.array(mtx[:, non_categorical_indices], dtype=np.float64), axis=0
+        )
+        var_metrics.loc[non_categorical_indices, "max"] = np.nanmax(
+            np.array(mtx[:, non_categorical_indices], dtype=np.float64), axis=0
+        )
 
         # Calculate IQR and define IQR outliers
         q1 = np.nanpercentile(mtx[:, non_categorical_indices], 25, axis=0)
