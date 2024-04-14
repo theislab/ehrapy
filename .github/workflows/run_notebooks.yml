@@ -13,7 +13,7 @@ jobs:
                         "docs/tutorials/notebooks/ehrapy_introduction.ipynb",
                         "docs/tutorials/notebooks/mimic_2_introduction.ipynb",
                         "docs/tutorials/notebooks/mimic_2_survival_analysis.ipynb",
-                        # "docs/tutorials/notebooks/mimic_2_fate.ipynb",
+                        "docs/tutorials/notebooks/mimic_2_fate.ipynb",
                         "docs/tutorials/notebooks/mimic_2_causal_inference.ipynb",
                         # "docs/tutorials/notebooks/mimic_3_demo.ipynb",
                         # "docs/tutorials/notebooks/medcat.ipynb",
@@ -32,7 +32,7 @@ jobs:
               run: pip install .
 
             - name: Install additional dependencies
-              run: pip install medcat cellrank
+              run: pip install cellrank
 
             - name: Install nbconvert ipykernel
               run: pip install nbconvert ipykernel
