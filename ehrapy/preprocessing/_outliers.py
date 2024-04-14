@@ -7,14 +7,17 @@ import pandas as pd
 import scipy.stats.mstats
 
 if TYPE_CHECKING:
+    from collections.abc import Collection
+
     from anndata import AnnData
 
 
 def winsorize(
     adata: AnnData,
-    vars: str | list[str] | set[str] = None,
-    obs_cols: str | list[str] | set[str] = None,
-    limits: list[float] = None,
+    vars: Collection[str] = None,
+    obs_cols: Collection[str] = None,
+    *,
+    limits: tuple[float, float] = (0.01, 0.99),
     copy: bool = False,
     **kwargs,
 ) -> AnnData:
@@ -23,12 +26,12 @@ def winsorize(
     The implementation is based on https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.mstats.winsorize.html
 
     Args:
-        adata: AnnData object to winsorize
-        vars: The features to winsorize.
-        obs_cols: Columns in obs with features to winsorize.
+        adata: AnnData object to winsorize.
+        vars: The features to winsorize. Defaults to None.
+        obs_cols: Columns in obs with features to winsorize. Defaults to None.
         limits: Tuple of the percentages to cut on each side of the array as floats between 0. and 1.
                 Defaults to (0.01, 0.99)
-        copy: Whether to return a copy or not
+        copy: Whether to return a copy.
         **kwargs: Keywords arguments get passed to scipy.stats.mstats.winsorize
 
     Returns:
@@ -37,7 +40,7 @@ def winsorize(
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.pp.winsorize(adata, ["bmi"])
+        >>> ep.pp.winsorize(adata, vars=["bmi"])
     """
     if copy:  # pragma: no cover
         adata = adata.copy()
@@ -61,22 +64,21 @@ def winsorize(
 
 def clip_quantile(
     adata: AnnData,
-    limits: list[float],
-    vars: str | list[str] | set[str] = None,
-    obs_cols: str | list[str] | set[str] = None,
+    limits: tuple[float, float],
+    vars: Collection[str] = None,
+    obs_cols: Collection[str] = None,
+    *,
     copy: bool = False,
 ) -> AnnData:
     """Clips (limits) features.
 
     Given an interval, values outside the interval are clipped to the interval edges.
 
-    The implementation is based on https://numpy.org/doc/stable/reference/generated/numpy.clip.html
-
     Args:
-        adata: The AnnData object
-        vars: Columns in var with features to clip
+        adata: The AnnData object to clip.
+        limits: Values outside the interval are clipped to the interval edges.
+        vars: Columns in var with features to clip.
         obs_cols: Columns in obs with features to clip
-        limits: Interval, values outside of which are clipped to the interval edges
         copy: Whether to return a copy of AnnData or not
 
     Returns:
@@ -85,7 +87,7 @@ def clip_quantile(
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.pp.clip_quantile(adata, ["bmi"])
+        >>> ep.pp.clip_quantile(adata, vars=["bmi"])
     """
     obs_cols, vars = _validate_outlier_input(adata, obs_cols, vars)  # type: ignore
 
@@ -106,23 +108,10 @@ def clip_quantile(
         return adata
 
 
-def _validate_outlier_input(
-    adata, obs_cols: str | list[str] | set[str], vars: str | list[str] | set[str]
-) -> tuple[set[str], set[str]]:
-    """Validates the obs/var columns for outlier preprocessing.
-
-    Args:
-        adata: AnnData object
-        obs_cols: str or list of obs columns
-        vars: str or list of var names
-
-    Returns:
-        A tuple of lists of obs/var columns
-    """
-    if isinstance(vars, str) or isinstance(vars, list):  # pragma: no cover
-        vars = set(vars)
-    if isinstance(obs_cols, str) or isinstance(obs_cols, list):  # pragma: no cover
-        obs_cols = set(obs_cols)
+def _validate_outlier_input(adata, obs_cols: Collection[str], vars: Collection[str]) -> tuple[set[str], set[str]]:
+    """Validates the obs/var columns for outlier preprocessing."""
+    vars = set(vars) if vars else set()
+    obs_cols = set(obs_cols) if obs_cols else set()
 
     if vars is not None:
         diff = vars - set(adata.var_names)

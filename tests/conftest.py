@@ -25,6 +25,15 @@ def rng():
 
 
 @pytest.fixture
+def mimic_2_10():
+    import ehrapy as ep
+
+    mimic_2_10 = ep.dt.mimic_2()[:10]
+
+    return mimic_2_10
+
+
+@pytest.fixture
 def mar_adata(rng) -> AnnData:
     """Generate MAR data using dependent columns."""
     data = rng.random((100, 10))
