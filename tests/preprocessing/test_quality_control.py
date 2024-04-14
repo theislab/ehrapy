@@ -103,7 +103,7 @@ def test_var_nan_qc_metrics():
 
 
 def test_calculate_qc_metrics(missing_values_adata):
-    obs_metrics, var_metrics = ep.pp.qc_metrics(missing_values_adata, inplace=True)
+    obs_metrics, var_metrics = ep.pp.qc_metrics(missing_values_adata)
 
     assert obs_metrics is not None
     assert var_metrics is not None

@@ -29,7 +29,6 @@ def qc_metrics(
         adata: Annotated data matrix.
         qc_vars: Optional List of vars to calculate additional metrics for.
         layer: Layer to use to calculate the metrics.
-        inplace: Whether to add the metrics to obs/var or to solely return a Pandas DataFrame.
 
     Returns:
         Two Pandas DataFrames of all calculated QC metrics for `obs` and `var` respectively.
@@ -151,9 +150,14 @@ def _var_qc_metrics(adata: AnnData, layer: str | None = None) -> pd.DataFrame:
             categorical_indices = np.concatenate([categorical_indices, index])
     non_categorical_indices = np.ones(mtx.shape[1], dtype=bool)
     non_categorical_indices[categorical_indices] = False
+    var_metrics["missing_values_abs"] = np.apply_along_axis(_missing_values, 0, mtx, mode="abs")
+    var_metrics["missing_values_pct"] = np.apply_along_axis(_missing_values, 0, mtx, mode="pct", df_type="var")
 
-    var_metrics["missing_values_abs"] = np.apply_along_axis(np.sum, 0, np.isnan(mtx))
-    var_metrics["missing_values_pct"] = np.apply_along_axis(lambda x: np.mean(np.isnan(x)) * 100, 0, mtx)
+    var_metrics["mean"] = np.nan
+    var_metrics["median"] = np.nan
+    var_metrics["standard_deviation"] = np.nan
+    var_metrics["min"] = np.nan
+    var_metrics["max"] = np.nan
 
     try:
         var_metrics.loc[non_categorical_indices, "mean"] = np.nanmean(mtx[:, non_categorical_indices], axis=0)
@@ -164,7 +168,7 @@ def _var_qc_metrics(adata: AnnData, layer: str | None = None) -> pd.DataFrame:
         var_metrics.loc[non_categorical_indices, "min"] = np.nanmin(mtx[:, non_categorical_indices], axis=0)
         var_metrics.loc[non_categorical_indices, "max"] = np.nanmax(mtx[:, non_categorical_indices], axis=0)
 
-        # Calculate IQR and define outliers
+        # Calculate IQR and define IQR outliers
         q1 = np.nanpercentile(mtx[:, non_categorical_indices], 25, axis=0)
         q3 = np.nanpercentile(mtx[:, non_categorical_indices], 75, axis=0)
         iqr = q3 - q1
