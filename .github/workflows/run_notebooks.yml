@@ -28,11 +28,14 @@ jobs:
               with:
                   python-version: "3.11"
 
+            - name: Install UV
+              run: pip install uv
+
             - name: Install ehrapy
-              run: pip install .
+              run: uv pip install --system .
 
             - name: Install additional dependencies
-              run: pip install cellrank
+              run: uv pip install --system cellrank
 
             - name: Install nbconvert ipykernel
               run: pip install nbconvert ipykernel
