@@ -19,7 +19,7 @@ jobs:
                         # "docs/tutorials/notebooks/medcat.ipynb",
                     ]
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
               with:
                   submodules: "true"
                   token: "${{ secrets.CT_SYNC_TOKEN }}"
