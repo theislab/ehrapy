@@ -106,7 +106,7 @@ def df_to_anndata(
 
     all_num = True if len(numerical_columns) == len(list(dataframes.df.columns)) else False
     X = X.astype(np.number) if all_num else X.astype(object)
-    # cast non numerical obs only columns to category or bool dtype, which is needed for writing to .h5ad files
+    # cast non-numerical obs only columns to category or bool dtype, which is needed for writing to .h5ad files
     adata = AnnData(
         X=X,
         obs=_cast_obs_columns(dataframes.obs),
@@ -215,13 +215,14 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False)
     if copy_obs:
         cols_to_obs = adata[:, cols_to_obs_indices].to_df()
         adata.obs = adata.obs.join(cols_to_obs)
-        adata.obs[var_num] = adata.obs[var_num].apply(pd.to_numeric, errors="ignore", downcast="float")
+        adata.obs[var_num] = adata.obs[var_num].apply(pd.to_numeric, downcast="float")
+
         adata.obs = _cast_obs_columns(adata.obs)
     else:
         df = adata[:, cols_to_obs_indices].to_df()
         adata._inplace_subset_var(~cols_to_obs_indices)
         adata.obs = adata.obs.join(df)
-        adata.obs[var_num] = adata.obs[var_num].apply(pd.to_numeric, errors="ignore", downcast="float")
+        adata.obs[var_num] = adata.obs[var_num].apply(pd.to_numeric, downcast="float")
         adata.obs = _cast_obs_columns(adata.obs)
 
     return adata
