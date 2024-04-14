@@ -19,7 +19,7 @@ jobs:
                         # "docs/tutorials/notebooks/medcat.ipynb",
                     ]
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
               with:
                   submodules: "true"
                   token: "${{ secrets.CT_SYNC_TOKEN }}"
@@ -28,11 +28,14 @@ jobs:
               with:
                   python-version: "3.11"
 
+            - name: Install UV
+              run: pip install uv
+
             - name: Install ehrapy
-              run: pip install .
+              run: uv pip install --system .
 
             - name: Install additional dependencies
-              run: pip install medcat cellrank
+              run: uv pip install --system cellrank
 
             - name: Install nbconvert ipykernel
               run: pip install nbconvert ipykernel

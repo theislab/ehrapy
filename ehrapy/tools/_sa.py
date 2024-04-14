@@ -282,7 +282,7 @@ def _regression_model(
     df = df.dropna()
 
     if not accept_zero_duration:
-        df[duration_col][df[duration_col] == 0] += 1e-5
+        df.loc[df[duration_col] == 0, duration_col] += 1e-5
 
     model = model_class()
     model.fit(df, duration_col, event_col, entry_col=entry_col)
