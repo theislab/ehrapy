@@ -202,7 +202,7 @@ def knn_impute(
     imputation ran successfully.
 
     Args:
-        adata: An annotated data matrix containing patient data.
+        adata: An annotated data matrix containing EHR data.
         var_names: A list of variable names indicating which columns to impute.
                    If `None`, all columns are imputed. Default is `None`.
         n_neighbours: Number of neighbors to use when performing the imputation. Defaults to 5.
