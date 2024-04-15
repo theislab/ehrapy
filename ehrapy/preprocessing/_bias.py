@@ -16,6 +16,7 @@ def detect_bias(
     run_feature_importances: bool | None = None,
     corr_threshold: float = 0.5,
     smd_threshold: float = 0.5,
+    categorical_factor_threshold: float = 2,
     feature_importance_threshold: float = 0.1,
     prediction_confidence_threshold: float = 0.5,
     corr_method: Literal["pearson", "spearman"] = "spearman",
@@ -35,6 +36,8 @@ def detect_bias(
             sensitive_features is not set to "all", as this can be computationally expensive. Defaults to None.
         corr_threshold: The threshold for the correlation coefficient between two features to be considered of interest. Defaults to 0.5.
         smd_threshold: The threshold for the standardized mean difference between two features to be considered of interest. Defaults to 0.5.
+        categorical_factor_threshold: The threshold for the factor between the value counts (as percentages) of a feature compared between two
+            groups of a sensitive feature. Defaults to 2.
         feature_importance_threshold: The threshold for the feature importance of a sensitive feature for predicting another feature to be considered
             of interest. Defaults to 0.1.
         prediction_confidence_threshold: The threshold for the prediction confidence (R2 or accuracy) of a sensitive feature for predicting another
@@ -101,6 +104,32 @@ def detect_bias(
                 smd_results["Group"].append(abs_smd[comp_feature].index.values)
                 smd_results["Standardized Mean Difference"] = adata.varm[f"smd_{sens_feature}"].values
     bias_results["standardized_mean_differences"] = pd.DataFrame(smd_results)
+
+    # Categorical value counts
+    cat_value_count_results = {
+        "Sensitive Feature": [],
+        "Compared Feature": [],
+        "Group 1 Percentage": [],
+        "Group 2 Percentage": [],
+    }  # type: ignore
+    for sens_feature in sensitive_features:  # TODO: Restrict to categorical features (wait for other PR)
+        for comp_feature in adata.var_names:  # TODO: Restrict to categorical features (wait for other PR)
+            if sens_feature == comp_feature:
+                continue
+            value_counts = adata_df.groupby([sens_feature, comp_feature]).size().unstack(fill_value=0)
+            value_counts = value_counts.div(value_counts.sum(axis=1), axis=0)
+
+            for sens_group in value_counts.index:
+                for comp_group1, comp_group2 in itertools.combinations(value_counts.columns, 2):
+                    if (
+                        value_counts.loc[sens_group, comp_group1] / value_counts.loc[sens_group, comp_group2]
+                        > categorical_factor_threshold
+                    ):
+                        cat_value_count_results["Sensitive Feature"].append(sens_feature)
+                        cat_value_count_results["Compared Feature"].append(comp_feature)
+                        cat_value_count_results["Group 1 Percentage"].append(value_counts.loc[sens_group, comp_group1])
+                        cat_value_count_results["Group 2 Percentage"].append(value_counts.loc[sens_group, comp_group2])
+    bias_results["categorical_value_counts"] = pd.DataFrame(cat_value_count_results)
 
     # Feature importances
     if run_feature_importances:
