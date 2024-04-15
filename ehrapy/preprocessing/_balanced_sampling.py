@@ -20,7 +20,7 @@ def balanced_sample(
 ) -> AnnData:
     """Balancing groups in the dataset.
 
-    Balancing groups in the dataset based on group members in `.obs[key]` using the [imbalanced-learn](https://imbalanced-learn.org/stable/index.html) package.
+    Balancing groups in the dataset based on group members in `.obs[key]` using the `imbalanced-learn <https://imbalanced-learn.org/stable/index.html>`_ package.
     Currently supports `RandomUnderSampler` and `RandomOverSampler`.
 
     Note that `RandomOverSampler <https://imbalanced-learn.org/stable/references/generated/imblearn.over_sampling.RandomOverSampler.html>`_ only replicates observations of the minority groups, which distorts several downstream analyses, very prominently neighborhood calculations and downstream analyses depending on that.
@@ -40,19 +40,16 @@ def balanced_sample(
         >>> import ehrapy as ep
         >>> adata = ep.data.diabetes_130_fairlearn(columns_obs_only=["age"])
         >>> adata.obs.age.value_counts()
-
-        >>>  age
-        >>> 'Over 60 years'          68541
-        >>> '30-60 years'            30716
-        >>> '30 years or younger'     2509
-
+        age
+        'Over 60 years'          68541
+        '30-60 years'            30716
+        '30 years or younger'     2509
         >>> adata_balanced = ep.pp.sample(adata, key="age")
         >>> adata_balanced.obs.age.value_counts()
-
-        >>>  age
-        >>> '30 years or younger'    2509
-        >>> '30-60 years'            2509
-        >>> 'Over 60 years'          2509
+        age
+        '30 years or younger'    2509
+        '30-60 years'            2509
+        'Over 60 years'          2509
     """
     if not isinstance(adata, AnnData):
         raise ValueError(f"Input data is not an AnnData object: type of {adata}, is {type(adata)}")
