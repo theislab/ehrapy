@@ -13,19 +13,22 @@ def infer_feature_types(adata, layer: str | None = None):
         adata: :class:`~anndata.AnnData` object storing the EHR data.
         layer: The layer to use from the AnnData object. If None, the X layer is used.
     """
-    feature_types = {}  # TODO: Add date type
+    feature_types = {}
 
     df = anndata_to_df(adata, layer=layer)
     for feature in adata.var_names:
         majority_type = df[feature].dropna().apply(type).value_counts().idxmax()
-        if majority_type == pd.Timestamp:  # TODO: Check
+        if majority_type == pd.Timestamp:
             feature_types[feature] = DATE_TAG
         elif majority_type not in [int, float, complex]:
             feature_types[feature] = CATEGORICAL_TAG
         # Guess categorical if the feature is an integer and the values are 0/1 to n-1 with no gaps
         elif np.all(i.is_integer() for i in df[feature]) and (
-            (df[feature].min() == 0 and df[feature].max() == df[feature].nunique() - 1)
-            or (df[feature].min() == 1 and df[feature].max() == df[feature].nunique())
+            (df[feature].min() == 0 and np.all(np.sort(df[feature].unique()) == np.arange(df[feature].nunique())))
+            or (
+                df[feature].min() == 1
+                and np.all(np.sort(df[feature].unique()) == np.arange(1, df[feature].nunique() + 1))
+            )
         ):
             feature_types[feature] = CATEGORICAL_TAG
         else:
@@ -36,7 +39,7 @@ def infer_feature_types(adata, layer: str | None = None):
 
 def check_feature_types(func):
     def wrapper(adata, *args, **kwargs):
-        if FEATURE_TYPE_KEY not in adata.var.columns:
+        if FEATURE_TYPE_KEY not in adata.var.keys():
             raise ValueError("Feature types are not specified in adata.var. Please run `infer_feature_types` first.")
         np.all(adata.var[FEATURE_TYPE_KEY].isin([CATEGORICAL_TAG, CONTINUOUS_TAG, DATE_TAG]))
         func(adata, *args, **kwargs)
