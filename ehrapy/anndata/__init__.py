@@ -1,3 +1,4 @@
+from ehrapy.anndata._feature_specifications import infer_feature_types
 from ehrapy.anndata.anndata_ext import (
     anndata_to_df,
     delete_from_obs,
