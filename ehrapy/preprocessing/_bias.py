@@ -116,7 +116,7 @@ def detect_bias(
             smd_nparray[group_nr] = smd
 
             abs_smd = smd.abs()
-            for i, comp_feature in enumerate(adata.var_names):  # TODO: Restrict to continuous features???
+            for i, comp_feature in enumerate(adata.var_names):  # TODO: Restrict to continuous features
                 if sens_feature == comp_feature:
                     continue
                 if abs_smd[i] > smd_threshold:
@@ -126,7 +126,6 @@ def detect_bias(
                     smd_results["Standardized Mean Difference"] = smd[i]
 
         adata.varm[f"smd_{sens_feature}"] = smd_nparray.T  # TODO: Double check
-        # pd.DataFrame(smd_results).T[adata.var_names]  # TODO: Sollte ndarray sein
 
     bias_results["standardized_mean_differences"] = pd.DataFrame(smd_results)
 
@@ -150,7 +149,7 @@ def detect_bias(
             for sens_group in value_counts.index:
                 for comp_group1, comp_group2 in itertools.combinations(
                     value_counts.columns, 2
-                ):  # TODO: Comp. more efficient
+                ):  # TODO: Try to find computationally more efficient way
                     value_count_diff = (
                         value_counts.loc[sens_group, comp_group1] - value_counts.loc[sens_group, comp_group2]
                     )
