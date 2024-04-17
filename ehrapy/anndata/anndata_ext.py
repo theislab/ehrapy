@@ -115,23 +115,22 @@ def df_to_anndata(
         uns=uns,
     )
 
-    logg.info(
-        f"Transformed passed DataFrame into an AnnData object with n_obs x n_vars = `{adata.n_obs}` x `{adata.n_vars}`."
-    )
-
     return adata
 
 
 def anndata_to_df(
-    adata: AnnData, layer: str = None, obs_cols: list[str] | str | None = None, var_cols: list[str] | str | None = None
+    adata: AnnData,
+    layer: str = None,
+    obs_cols: Iterable[str] | str | None = None,
+    var_cols: Iterable[str] | str | None = None,
 ) -> pd.DataFrame:
-    """Transform an AnnData object to a pandas DataFrame.
+    """Transform an AnnData object to a Pandas DataFrame.
 
     Args:
         adata: The AnnData object to be transformed into a pandas Dataframe
-        layer: The layer to use for X.
-        obs_cols: List of obs columns to add to X.
-        var_cols: List of var columns to add to X.
+        layer: The layer to access the values of. Defaults to None (X).
+        obs_cols: obs columns to add to the DataFrame. Defaults to None.
+        var_cols: var columns to fetch values of. Defaults to None.
 
     Returns:
         The AnnData object as a pandas Dataframe
@@ -159,7 +158,6 @@ def anndata_to_df(
         # reset index needed since we slice all or at least some columns from obs DataFrame
         obs_slice = obs_slice.reset_index(drop=True)
         df = pd.concat([df, obs_slice], axis=1)
-        logg.info(f"Added `{obs_cols}` columns to `X`.")
     if var_cols:
         if len(adata.var.columns) == 0:
             raise ValueError("Cannot slice columns from empty var!")
