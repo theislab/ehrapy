@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from collections import defaultdict
+from collections import OrderedDict, defaultdict
 from itertools import chain
 from typing import Any
 
 import numpy as np
 import pandas as pd
-from _collections import OrderedDict
 from anndata import AnnData
 from category_encoders import CountEncoder, HashingEncoder
 from rich import print
@@ -35,8 +34,6 @@ def encode(
     indicates an encoded column (or part of it).
 
     Autodetect mode:
-        This can be used for convenience and when there are many columns that need to be encoded.
-        Note that missing values do not influence the result.
         By using this mode, every column that contains non-numerical values is encoded.
         In addition, every binary column will be encoded too.
         These are those columns which contain only 1's and 0's (could be either integers or floats).
@@ -66,9 +63,9 @@ def encode(
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2()
         >>> # encode col1 and col2 using label encoding and encode col3 using one hot encoding
-        >>> adata_encoded = ep.pp.encode(adata,
-        >>>                              autodetect=False,
-        >>>                              encodings={'label': ['col1', 'col2'], 'one-hot': ['col3']})
+        >>> adata_encoded = ep.pp.encode(
+        ...     adata, autodetect=False, encodings={"label": ["col1", "col2"], "one-hot": ["col3"]}
+        ... )
     """
     if isinstance(adata, AnnData):
         if isinstance(encodings, str) and not autodetect:
