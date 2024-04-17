@@ -344,9 +344,7 @@ Methods that extract and visualize tool-specific annotation in an AnnData object
     plot.embedding_density
 ```
 
-### Branching trajectories and pseudotime, clustering
-
-Visualize clusters using one of the embedding methods passing color='leiden'.
+### Branching trajectories and pseudotime
 
 ```{eval-rst}
 .. autosummary::
@@ -399,9 +397,6 @@ Visualize clusters using one of the embedding methods passing color='leiden'.
 ```
 
 ## AnnData utilities
-
-The ehrapy API exposes functions to transform a pandas dataframe into an AnnData object
-and vice versa.
 
 ```{eval-rst}
 .. autosummary::
