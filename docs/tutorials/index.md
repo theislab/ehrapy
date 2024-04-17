@@ -27,6 +27,7 @@ For questions about the usage of ehrapy use [Github Discussions].
    notebooks/ontology_mapping
    notebooks/fhir
    notebooks/cohort_tracking
+   notebooks/bias
 
 ```
 
