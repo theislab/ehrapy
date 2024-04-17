@@ -14,7 +14,16 @@ from rich.progress import BarColumn, Progress
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
 from ehrapy import logging as logg
-from ehrapy.anndata._constants import EHRAPY_TYPE_KEY, NON_NUMERIC_ENCODED_TAG, NON_NUMERIC_TAG, NUMERIC_TAG
+from ehrapy.anndata._constants import (
+    CATEGORICAL_TAG,
+    CONTINUOUS_TAG,
+    DATE_TAG,
+    EHRAPY_TYPE_KEY,
+    FEATURE_TYPE_KEY,
+    NON_NUMERIC_ENCODED_TAG,
+    NON_NUMERIC_TAG,
+    NUMERIC_TAG,
+)
 from ehrapy.anndata.anndata_ext import _get_var_indices_for_type
 
 multi_encoding_modes = {"hash"}
@@ -87,7 +96,11 @@ def encode(
                     "[bold yellow]The current AnnData object has been already encoded. Returning original AnnData object!"
                 )
                 return adata
-            categoricals_names = _get_var_indices_for_type(adata, NON_NUMERIC_TAG)
+
+            if FEATURE_TYPE_KEY in adata.var.keys():
+                categoricals_names = adata.var_names[adata.var[FEATURE_TYPE_KEY] == CATEGORICAL_TAG].to_list()
+            else:
+                categoricals_names = _get_var_indices_for_type(adata, NON_NUMERIC_TAG)
 
             # no columns were detected, that would require an encoding (e.g. non-numerical columns)
             if not categoricals_names:
@@ -144,6 +157,9 @@ def encode(
                 new_var = pd.DataFrame(index=encoded_var_names)
                 new_var[EHRAPY_TYPE_KEY] = adata.var[EHRAPY_TYPE_KEY].copy()
                 new_var.loc[new_var.index.str.contains("ehrapycat")] = NON_NUMERIC_ENCODED_TAG
+                if FEATURE_TYPE_KEY in adata.var.keys():
+                    new_var[FEATURE_TYPE_KEY] = adata.var[FEATURE_TYPE_KEY].copy()
+                    new_var.loc[new_var.index.str.contains("ehrapycat"), FEATURE_TYPE_KEY] = CATEGORICAL_TAG
 
                 encoded_ann_data = AnnData(
                     encoded_x,
@@ -246,6 +262,9 @@ def encode(
             new_var = pd.DataFrame(index=encoded_var_names)
             new_var[EHRAPY_TYPE_KEY] = adata.var[EHRAPY_TYPE_KEY].copy()
             new_var.loc[new_var.index.str.contains("ehrapycat")] = NON_NUMERIC_ENCODED_TAG
+            if FEATURE_TYPE_KEY in adata.var.keys():
+                new_var[FEATURE_TYPE_KEY] = adata.var[FEATURE_TYPE_KEY].copy()
+                new_var.loc[new_var.index.str.contains("ehrapycat"), FEATURE_TYPE_KEY] = CATEGORICAL_TAG
 
             try:
                 encoded_ann_data = AnnData(

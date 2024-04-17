@@ -51,6 +51,7 @@ def rank_features_supervised(
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=False)
+        >>> ep.ad.infer_feature_types(adata)
         >>> ep.pp.knn_impute(adata, n_neighbours=5)
         >>> input_features = [
         ...     feat for feat in adata.var_names if feat not in {"service_unit", "day_icu_intime", "tco2_first"}

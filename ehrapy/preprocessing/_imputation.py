@@ -221,6 +221,7 @@ def knn_impute(
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> ep.ad.infer_feature_types(adata)
         >>> ep.pp.knn_impute(adata)
     """
     if copy:
@@ -463,6 +464,7 @@ def soft_impute(
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> ep.ad.infer_feature_types(adata)
         >>> ep.pp.soft_impute(adata)
     """
     if copy:
@@ -611,6 +613,7 @@ def iterative_svd_impute(
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> ep.ad.infer_feature_types(adata)
         >>> ep.pp.iterative_svd_impute(adata)
     """
     if copy:
@@ -748,6 +751,7 @@ def matrix_factorization_impute(
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> ep.ad.infer_feature_types(adata)
         >>> ep.pp.matrix_factorization_impute(adata)
     """
     if copy:
@@ -862,6 +866,7 @@ def nuclear_norm_minimization_impute(
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> ep.ad.infer_feature_types(adata)
         >>> ep.pp.nuclear_norm_minimization_impute(adata)
     """
     if copy:
@@ -979,6 +984,7 @@ def mice_forest_impute(
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> ep.ad.infer_feature_types(adata)
         >>> ep.pp.mice_forest_impute(adata)
     """
     if copy:
