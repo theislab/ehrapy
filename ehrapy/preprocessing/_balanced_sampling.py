@@ -31,7 +31,7 @@ def balanced_sample(
         key: The key in `adata.obs` that contains the group information.
         random_state: Random seed. Defaults to 0.
         method: The method to use for balancing. Defaults to "RandomUnderSampler".
-        sampler_kwargs: Keyword arguments for the sample, see the `imbalanced-learn` documentation for options. Defaults to None.
+        sampler_kwargs: Keyword arguments for the sampler, see the `imbalanced-learn` documentation for options. Defaults to None.
         copy: If True, return a copy of the balanced data. Defaults to False.
     Returns:
         A new `AnnData` object, with the balanced groups.
