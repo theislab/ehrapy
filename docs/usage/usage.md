@@ -77,6 +77,7 @@ Other than tools, preprocessing steps usually don’t return an easily interpret
     preprocessing.pca
     preprocessing.regress_out
     preprocessing.subsample
+    preprocessing.balanced_sample
     preprocessing.highly_variable_features
     preprocessing.winsorize
     preprocessing.clip_quantile
