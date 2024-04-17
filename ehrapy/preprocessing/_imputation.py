@@ -70,7 +70,6 @@ def explicit_impute(
         # 1: Replace all missing values with the specified value
         if isinstance(replacement, (int, str)):
             _replace_explicit(adata.X, replacement, impute_empty_strings)
-            logg.debug(f"Imputed missing values in the AnnData object by `{replacement}`")
 
         # 2: Replace all missing values in a subset of columns with a specified value per column or a default value, when the column is not explicitly named
         elif isinstance(replacement, dict):
@@ -81,9 +80,6 @@ def explicit_impute(
                     _replace_explicit(adata.X[:, idx : idx + 1], imputation_value, impute_empty_strings)
                 else:
                     print(f"[bold yellow]No replace value passed and found for var [not bold green]{column_name}.")
-            logg.debug(
-                f"Imputed missing values in columns `{replacement.keys()}` by `{replacement.values()}` respectively."
-            )
         else:
             raise ValueError(  # pragma: no cover
                 f"Type {type(replacement)} is not a valid datatype for replacement parameter. Either use int, str or a dict!"
@@ -165,16 +161,14 @@ def simple_impute(
         if strategy in {"median", "mean"}:
             try:
                 _simple_impute(adata, var_names, strategy)
-                logg.debug(f"Imputed the AnnData object using `{strategy}` Imputation.")
             except ValueError:
                 raise ValueError(
                     f"Can only impute numerical data using {strategy} strategy. Try to restrict imputation"
                     "to certain columns using var_names parameter or use a different mode."
                 ) from None
-        # most_frequent imputation works with non numerical data as well
+        # most_frequent imputation works with non-numerical data as well
         elif strategy == "most_frequent":
             _simple_impute(adata, var_names, strategy)
-            logg.debug("Imputed the AnnData object using `most_frequent` Imputation.")
         # unknown simple imputation strategy
         else:
             raise ValueError(  # pragma: no cover
@@ -272,21 +266,11 @@ def knn_impute(
     if _check_module_importable("sklearnex"):  # pragma: no cover
         unpatch_sklearn()
 
-    if var_names:
-        logg.debug(
-            f"Imputed the columns `{var_names}` in the AnnData object using kNN Imputation with {n_neighbours} neighbours considered."
-        )
-    elif not var_names:
-        logg.debug(
-            f"Imputed the data in the AnnData object using kNN Imputation with {n_neighbours} neighbours considered."
-        )
-
     if copy:
         return adata
 
 
 def _knn_impute(adata: AnnData, var_names: Iterable[str] | None, n_neighbours: int) -> None:
-    """Utility function to impute data using KNN-Imputer"""
     from sklearn.impute import KNNImputer
 
     imputer = KNNImputer(n_neighbors=n_neighbours)
@@ -428,13 +412,6 @@ def miss_forest_impute(
     if _check_module_importable("sklearnex"):  # pragma: no cover
         unpatch_sklearn()
 
-    if var_names:
-        logg.debug(
-            f"Imputed the columns `{var_names}` in the AnnData object with MissForest Imputation using {num_initial_strategy} strategy."
-        )
-    elif not var_names:
-        logg.debug("Imputed the data in the AnnData object using MissForest Imputation.")
-
     if copy:
         return adata
 
@@ -535,15 +512,6 @@ def soft_impute(
             # decode ordinal encoding to obtain imputed original data
             adata.X[::, column_indices] = enc.inverse_transform(adata.X[::, column_indices])
 
-    if var_names:
-        logg.debug(
-            f"Imputed the columns `{var_names}` in the AnnData object using Soft Imputation with shrinkage value of `{shrinkage_value}`."
-        )
-    elif not var_names:
-        logg.debug(
-            f"Imputed the data in the AnnData object using Soft Imputation with shrinkage value of `{shrinkage_value}`."
-        )
-
     return adata
 
 
@@ -561,7 +529,6 @@ def _soft_impute(
     normalizer,
     verbose,
 ) -> None:
-    """Utility function to impute data using SoftImpute"""
     from fancyimpute import SoftImpute
 
     imputer = SoftImpute(
@@ -690,11 +657,6 @@ def iterative_svd_impute(
             # decode ordinal encoding to obtain imputed original data
             adata.X[::, column_indices] = enc.inverse_transform(adata.X[::, column_indices])
 
-    if var_names:
-        logg.debug(f"Imputed the columns `{var_names}` in the AnnData object using IterativeSVD Imputation.")
-    elif not var_names:
-        logg.debug("Imputed the data in the AnnData object using IterativeSVD Imputation.")
-
     return adata
 
 
@@ -711,7 +673,6 @@ def _iterative_svd_impute(
     max_value,
     verbose,
 ) -> None:
-    """Utility function to impute data using IterativeSVD"""
     from fancyimpute import IterativeSVD
 
     imputer = IterativeSVD(
@@ -773,7 +734,7 @@ def matrix_factorization_impute(
                    Defaults to None.
         max_value: The maximum value allowed for the imputed data. Any imputed value greater than `max_value` is clipped to `max_value`.
                    Defaults to None.
-        verbose: Whether or not to printout training progress. Defaults to False.
+        verbose: Whether to printout training progress. Defaults to False.
         copy: Whether to return a copy or act in place. Defaults to False.
 
     Returns:
@@ -827,15 +788,6 @@ def matrix_factorization_impute(
             adata.X = adata.X.astype("object")
             adata.X[::, column_indices] = enc.inverse_transform(adata.X[::, column_indices])
 
-    if var_names:
-        logg.debug(
-            f"Imputed the columns `{var_names}` in the AnnData object using MatrixFactorization Imputation with learning rate `{learning_rate}` and shrinkage value `{shrinkage_value}`."
-        )
-    elif not var_names:
-        logg.debug(
-            f"Imputed the data in the AnnData object using MatrixFactorization Imputation with learning rate `{learning_rate}` and shrinkage value `{shrinkage_value}`."
-        )
-
     return adata
 
 
@@ -850,7 +802,6 @@ def _matrix_factorization_impute(
     max_value,
     verbose,
 ) -> None:
-    """Utility function to impute data using MatrixFactorization"""
     from fancyimpute import MatrixFactorization
 
     imputer = MatrixFactorization(
@@ -949,15 +900,6 @@ def nuclear_norm_minimization_impute(
             # decode ordinal encoding to obtain imputed original data
             adata.X[::, column_indices] = enc.inverse_transform(adata.X[::, column_indices])
 
-    if var_names:
-        logg.debug(
-            f"Imputed the columns `{var_names}` in the AnnData object using NuclearNormMinimization Imputation with error tolerance of `{error_tolerance}`."
-        )
-    elif not var_names:
-        logg.debug(
-            f"Imputed the data in the AnnData object using NuclearNormMinimization Imputation with error tolerance of `{error_tolerance}`."
-        )
-
     return adata
 
 
@@ -971,7 +913,6 @@ def _nuclear_norm_minimization_impute(
     max_iters,
     verbose,
 ) -> None:
-    """Utility function to impute data using NuclearNormMinimization"""
     from fancyimpute import NuclearNormMinimization
 
     imputer = NuclearNormMinimization(
@@ -1079,22 +1020,12 @@ def mice_forest_impute(
             print("[bold red]Check that your matrix does not contain any NaN only columns!")
             raise
 
-    if var_names:
-        logg.debug(
-            f"Imputed the columns `{var_names}` in the AnnData object using MiceForest Imputation with `{iterations}` iterations."
-        )
-    elif not var_names:
-        logg.debug(
-            f"Imputed the data in the AnnData object using MiceForest Imputation with `{iterations}` iterations."
-        )
-
     return adata
 
 
 def _miceforest_impute(
     adata, var_names, save_all_iterations, random_state, inplace, iterations, variable_parameters, verbose
 ) -> None:
-    """Utility function to impute data using miceforest"""
     import miceforest as mf
 
     if isinstance(var_names, Iterable):

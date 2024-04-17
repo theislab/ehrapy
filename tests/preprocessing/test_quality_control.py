@@ -79,6 +79,7 @@ def test_var_qc_metrics(missing_values_adata):
     assert np.allclose(var_metrics["median"].values, np.array([0.21, np.nan, 24.327]), equal_nan=True)
     assert np.allclose(var_metrics["min"].values, np.array([0.21, np.nan, 7.234]), equal_nan=True)
     assert np.allclose(var_metrics["max"].values, np.array([0.21, np.nan, 41.419998]), equal_nan=True)
+    assert (~var_metrics["iqr_outliers"]).all()
 
 
 def test_obs_nan_qc_metrics():
@@ -102,7 +103,7 @@ def test_var_nan_qc_metrics():
 
 
 def test_calculate_qc_metrics(missing_values_adata):
-    obs_metrics, var_metrics = ep.pp.qc_metrics(missing_values_adata, inplace=True)
+    obs_metrics, var_metrics = ep.pp.qc_metrics(missing_values_adata)
 
     assert obs_metrics is not None
     assert var_metrics is not None
