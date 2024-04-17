@@ -17,18 +17,16 @@ def infer_feature_types(adata, layer: str | None = None):
 
     df = anndata_to_df(adata, layer=layer)
     for feature in adata.var_names:
-        majority_type = df[feature].dropna().apply(type).value_counts().idxmax()
+        col = df[feature].dropna()
+        majority_type = col.apply(type).value_counts().idxmax()
         if majority_type == pd.Timestamp:
             feature_types[feature] = DATE_TAG
         elif majority_type not in [int, float, complex]:
             feature_types[feature] = CATEGORICAL_TAG
         # Guess categorical if the feature is an integer and the values are 0/1 to n-1 with no gaps
-        elif np.all(i.is_integer() for i in df[feature]) and (
-            (df[feature].min() == 0 and np.all(np.sort(df[feature].unique()) == np.arange(df[feature].nunique())))
-            or (
-                df[feature].min() == 1
-                and np.all(np.sort(df[feature].unique()) == np.arange(1, df[feature].nunique() + 1))
-            )
+        elif np.all(i.is_integer() for i in col) and (
+            (col.min() == 0 and np.all(np.sort(col.unique()) == np.arange(col.nunique())))
+            or (col.min() == 1 and np.all(np.sort(col.unique()) == np.arange(1, col.nunique() + 1)))
         ):
             feature_types[feature] = CATEGORICAL_TAG
         else:
@@ -42,6 +40,6 @@ def check_feature_types(func):
         if FEATURE_TYPE_KEY not in adata.var.keys():
             raise ValueError("Feature types are not specified in adata.var. Please run `infer_feature_types` first.")
         np.all(adata.var[FEATURE_TYPE_KEY].isin([CATEGORICAL_TAG, CONTINUOUS_TAG, DATE_TAG]))
-        func(adata, *args, **kwargs)
+        return func(adata, *args, **kwargs)
 
     return wrapper

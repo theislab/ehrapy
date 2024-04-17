@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -5,6 +7,9 @@ import pytest
 import ehrapy as ep
 from ehrapy.anndata import check_feature_types, df_to_anndata
 from ehrapy.anndata._constants import CATEGORICAL_TAG, CONTINUOUS_TAG, DATE_TAG, FEATURE_TYPE_KEY
+from ehrapy.io._read import read_csv
+
+_TEST_PATH = f"{Path(__file__).parents[1]}/preprocessing/test_data_imputation"
 
 
 @pytest.fixture
@@ -47,3 +52,50 @@ def test_check_feature_types(adata):
     ep.ad.infer_feature_types(adata)
     test_func(adata)
     assert FEATURE_TYPE_KEY in adata.var.keys()
+
+    @check_feature_types
+    def test_func_with_return(adata):
+        return adata
+
+    adata = test_func_with_return(adata)
+    assert FEATURE_TYPE_KEY in adata.var.keys()
+
+
+def test_feature_types_impute_num_adata():
+    adata = read_csv(dataset_path=f"{_TEST_PATH}/test_impute_num.csv")
+    ep.ad.infer_feature_types(adata)
+    assert np.all(adata.var[FEATURE_TYPE_KEY] == [CONTINUOUS_TAG, CONTINUOUS_TAG, CONTINUOUS_TAG])
+    return adata
+
+
+def test_feature_types_impute_adata():
+    adata = read_csv(dataset_path=f"{_TEST_PATH}/test_impute.csv")
+    ep.ad.infer_feature_types(adata)
+    assert np.all(adata.var[FEATURE_TYPE_KEY] == [CATEGORICAL_TAG, CONTINUOUS_TAG, CATEGORICAL_TAG, CATEGORICAL_TAG])
+
+
+def test_feature_types_impute_iris():
+    adata = read_csv(dataset_path=f"{_TEST_PATH}/test_impute_iris.csv")
+    ep.ad.infer_feature_types(adata)
+    assert np.all(
+        adata.var[FEATURE_TYPE_KEY] == [CONTINUOUS_TAG, CONTINUOUS_TAG, CONTINUOUS_TAG, CONTINUOUS_TAG, CATEGORICAL_TAG]
+    )
+
+
+def test_feature_types_impute_feature_types_titanic():
+    adata = read_csv(dataset_path=f"{_TEST_PATH}/test_impute_titanic.csv")
+    ep.ad.infer_feature_types(adata)
+    adata.var[FEATURE_TYPE_KEY] = [
+        CATEGORICAL_TAG,
+        CATEGORICAL_TAG,
+        CATEGORICAL_TAG,
+        CATEGORICAL_TAG,
+        CATEGORICAL_TAG,
+        CONTINUOUS_TAG,
+        CONTINUOUS_TAG,
+        CONTINUOUS_TAG,
+        CONTINUOUS_TAG,
+        CONTINUOUS_TAG,
+        CATEGORICAL_TAG,
+        CATEGORICAL_TAG,
+    ]

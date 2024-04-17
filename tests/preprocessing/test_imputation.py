@@ -6,6 +6,8 @@ import numpy as np
 import pytest
 from sklearn.exceptions import ConvergenceWarning
 
+import ehrapy as ep
+from ehrapy.anndata._constants import CATEGORICAL_TAG, CONTINUOUS_TAG, DATE_TAG, FEATURE_TYPE_KEY
 from ehrapy.io._read import read_csv
 from ehrapy.preprocessing._imputation import (
     _warn_imputation_threshold,
@@ -26,22 +28,30 @@ _TEST_PATH = f"{CURRENT_DIR}/test_data_imputation"
 
 @pytest.fixture
 def impute_num_adata():
-    return read_csv(dataset_path=f"{_TEST_PATH}/test_impute_num.csv")
+    adata = read_csv(dataset_path=f"{_TEST_PATH}/test_impute_num.csv")
+    ep.ad.infer_feature_types(adata)
+    return adata
 
 
 @pytest.fixture
 def impute_adata():
-    return read_csv(dataset_path=f"{_TEST_PATH}/test_impute.csv")
+    adata = read_csv(dataset_path=f"{_TEST_PATH}/test_impute.csv")
+    ep.ad.infer_feature_types(adata)
+    return adata
 
 
 @pytest.fixture
 def impute_iris():
-    return read_csv(dataset_path=f"{_TEST_PATH}/test_impute_iris.csv")
+    adata = read_csv(dataset_path=f"{_TEST_PATH}/test_impute_iris.csv")
+    ep.ad.infer_feature_types(adata)
+    return adata
 
 
 @pytest.fixture
 def impute_titanic():
-    return read_csv(dataset_path=f"{_TEST_PATH}/test_impute_titanic.csv")
+    adata = read_csv(dataset_path=f"{_TEST_PATH}/test_impute_titanic.csv")
+    ep.ad.infer_feature_types(adata)
+    return adata
 
 
 def test_mean_impute_no_copy(impute_num_adata):
@@ -121,6 +131,7 @@ def test_knn_impute_no_copy(impute_num_adata):
 
 def test_knn_impute_copy(impute_num_adata):
     adata_imputed = knn_impute(impute_num_adata, n_neighbours=3, copy=True)
+    print(adata_imputed)
 
     assert id(impute_num_adata) != id(adata_imputed)
     assert not (np.all([item != item for item in adata_imputed.X]))
