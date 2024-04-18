@@ -1,17 +1,23 @@
+from typing import Literal
+
 import numpy as np
 import pandas as pd
 
+from ehrapy import logging as logg
 from ehrapy.anndata._constants import CATEGORICAL_TAG, CONTINUOUS_TAG, DATE_TAG, FEATURE_TYPE_KEY
 from ehrapy.anndata.anndata_ext import anndata_to_df
 
 
-def infer_feature_types(adata, layer: str | None = None):
+def infer_feature_types(adata, layer: str | None = None, output: Literal["print", "dataframe"] | None = "print"):
     """
     Infer feature types from AnnData object.
 
     Args:
         adata: :class:`~anndata.AnnData` object storing the EHR data.
         layer: The layer to use from the AnnData object. If None, the X layer is used.
+        output: The output format. Choose between 'print', 'dataframe', or None. If 'print', the feature types will be printed to the console.
+            If 'dataframe', a pandas DataFrame with the feature types will be returned. If None, nothing will be returned. Independent of the output
+            format, the feature types will be stored in adata.var[FEATURE_TYPE_KEY]. Defaults to 'print'.
     """
     feature_types = {}
 
@@ -33,6 +39,17 @@ def infer_feature_types(adata, layer: str | None = None):
             feature_types[feature] = CONTINUOUS_TAG
 
     adata.var[FEATURE_TYPE_KEY] = pd.Series(feature_types)[adata.var_names]
+
+    logg.info(
+        f"Feature types have been inferred and stored in adata.var[FEATURE_TYPE_KEY]. PLEASE CHECK and adjust if necessary using adata.var[{FEATURE_TYPE_KEY}]['feature1']='corrected_type'."
+    )
+
+    if output == "print":
+        print(adata.var[FEATURE_TYPE_KEY])  # TODO: Use ep.ad.type_overview
+    elif output == "dataframe":
+        return adata.var[FEATURE_TYPE_KEY]
+    elif output is not None:
+        raise ValueError(f"Output format {output} not recognized. Choose between 'print', 'dataframe', or None.")
 
 
 def check_feature_types(func):
