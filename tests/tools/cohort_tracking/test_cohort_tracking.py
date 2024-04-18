@@ -6,7 +6,7 @@ import ehrapy as ep
 from ehrapy.io._read import read_csv
 
 CURRENT_DIR = Path(__file__).parent
-_TEST_DATA_PATH = f"{CURRENT_DIR.parent}/test_data_features_ranking"
+_TEST_DATA_PATH = f"{CURRENT_DIR.parent.parent}/test_data"
 _TEST_IMAGE_PATH = f"{CURRENT_DIR.parent}/_images"
 
 
