@@ -182,4 +182,5 @@ nbsphinx_thumbnails = {
     "tutorials/notebooks/ontology_mapping": "_static/tutorials/ontology.png",
     "tutorials/notebooks/fhir": "_static/tutorials/fhir.png",
     "tutorials/notebooks/cohort_tracking": "_static/tutorials/cohort_tracking.png",
+    "tutorials/notebooks/bias": "_static/tutorials/bias.png",
 }
