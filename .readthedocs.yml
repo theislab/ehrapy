@@ -7,15 +7,15 @@ build:
         pre_build:
             - python -c "import ehrapy"
             - pip freeze
+        post_create_environment:
+            - pip install uv
+        post_install:
+            # VIRTUAL_ENV needs to be set manually for now.
+            # See https://github.com/readthedocs/readthedocs.org/pull/11152/
+            - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH uv pip install .[docs]
 sphinx:
     configuration: docs/conf.py
     fail_on_warning: false
-python:
-    install:
-        - method: pip
-          path: .
-          extra_requirements:
-              - doc
 
 submodules:
     include: all

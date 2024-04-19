@@ -65,7 +65,8 @@ dependencies = [
     "dowhy",
     "fhiry",
     "pyampute",
-    "tableone"
+    "tableone",
+    "imbalanced-learn"
 ]
 
 [project.optional-dependencies]
@@ -75,7 +76,7 @@ medcat = [
 dev = [
     "pre-commit",
 ]
-doc = [
+docs = [
     "docutils",
     "sphinx",
     "furo",
