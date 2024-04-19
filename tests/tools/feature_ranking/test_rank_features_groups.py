@@ -9,7 +9,7 @@ import ehrapy.tools.feature_ranking._rank_features_groups as _utils
 from ehrapy.io._read import read_csv
 
 CURRENT_DIR = Path(__file__).parent
-_TEST_PATH = f"{CURRENT_DIR}/test_data_features_ranking"
+_TEST_PATH = f"{CURRENT_DIR.parent.parent}/test_data"
 
 
 class TestHelperFunctions:
