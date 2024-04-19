@@ -83,7 +83,7 @@ def rank_features_supervised(
             f"Feature {predicted_feature} is of type 'date' and cannot be used for prediction. Please choose a continuous or categorical feature."
         )
 
-    if prediction_type == "continuous":
+    if prediction_type == CONTINUOUS_TAG:
         if model == "regression":
             predictor = LinearRegression(**kwargs)
         elif model == "svm":
@@ -91,7 +91,7 @@ def rank_features_supervised(
         elif model == "rf":
             predictor = RandomForestRegressor(**kwargs)
 
-    elif prediction_type == "categorical":
+    elif prediction_type == CATEGORICAL_TAG:
         if data[predicted_feature].nunique() > 2 and model in ["regression", "svm"]:
             raise ValueError(
                 f"Feature {predicted_feature} has more than two categories. Please choose 'rf' as model for multi-class classification."
