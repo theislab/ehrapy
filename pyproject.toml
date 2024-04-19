@@ -76,7 +76,7 @@ medcat = [
 dev = [
     "pre-commit",
 ]
-doc = [
+docs = [
     "docutils",
     "sphinx",
     "furo",
