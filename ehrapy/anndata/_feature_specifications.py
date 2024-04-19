@@ -2,6 +2,8 @@ from typing import Literal
 
 import numpy as np
 import pandas as pd
+from rich import print
+from rich.tree import Tree
 
 from ehrapy import logging as logg
 from ehrapy.anndata._constants import CATEGORICAL_TAG, CONTINUOUS_TAG, DATE_TAG, FEATURE_TYPE_KEY
@@ -41,11 +43,11 @@ def infer_feature_types(adata, layer: str | None = None, output: Literal["print"
     adata.var[FEATURE_TYPE_KEY] = pd.Series(feature_types)[adata.var_names]
 
     logg.info(
-        f"Feature types have been inferred and stored in adata.var[FEATURE_TYPE_KEY]. PLEASE CHECK and adjust if necessary using adata.var[{FEATURE_TYPE_KEY}]['feature1']='corrected_type'."
+        f"Feature types have been inferred and stored in adata.var[{FEATURE_TYPE_KEY}]. PLEASE CHECK and adjust if necessary using adata.var[{FEATURE_TYPE_KEY}]['feature1']='corrected_type'."
     )
 
     if output == "print":
-        print(adata.var[FEATURE_TYPE_KEY])  # TODO: Use ep.ad.type_overview
+        feature_type_overview(adata)
     elif output == "dataframe":
         return adata.var[FEATURE_TYPE_KEY]
     elif output is not None:
@@ -60,3 +62,33 @@ def check_feature_types(func):
         return func(adata, *args, **kwargs)
 
     return wrapper
+
+
+@check_feature_types
+def feature_type_overview(adata):
+    """
+    Print an overview of the feature types in the AnnData object.
+
+    Args:
+        adata: :class:`~anndata.A
+    """
+    tree = Tree(
+        f"Detected feature types for AnnData object with {len(adata.obs_names)} obs and {len(adata.var_names)} vars",
+        guide_style="underline2 bright_blue",
+    )
+
+    branch = tree.add("📅 Date features", style="b green")
+    for date in sorted(adata.var_names[adata.var[FEATURE_TYPE_KEY] == DATE_TAG]):
+        branch.add(date)
+
+    branch = tree.add("📏 Numerical features", style="b green")
+    for numeric in sorted(adata.var_names[adata.var[FEATURE_TYPE_KEY] == CONTINUOUS_TAG]):
+        branch.add(numeric)
+
+    branch = tree.add("🗂️ Categorical features", style="b green")
+    cat_features = adata.var_names[adata.var[FEATURE_TYPE_KEY] == CATEGORICAL_TAG]
+    df = anndata_to_df(adata[:, cat_features])
+    for categorical in sorted(cat_features):
+        branch.add(f"{categorical} ({df.loc[:, categorical].nunique()} categories)")
+
+    print(tree)
