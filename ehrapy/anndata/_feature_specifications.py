@@ -73,19 +73,19 @@ def feature_type_overview(adata):
         adata: :class:`~anndata.A
     """
     tree = Tree(
-        f"Detected feature types for AnnData object with {len(adata.obs_names)} obs and {len(adata.var_names)} vars",
-        guide_style="underline2 bright_blue",
+        f"[b] Detected feature types for AnnData object with {len(adata.obs_names)} obs and {len(adata.var_names)} vars",
+        guide_style="underline2",
     )
 
-    branch = tree.add("📅 Date features", style="b green")
+    branch = tree.add("📅[b] Date features")
     for date in sorted(adata.var_names[adata.var[FEATURE_TYPE_KEY] == DATE_TAG]):
         branch.add(date)
 
-    branch = tree.add("📏 Numerical features", style="b green")
+    branch = tree.add("📐[b] Numerical features")
     for numeric in sorted(adata.var_names[adata.var[FEATURE_TYPE_KEY] == CONTINUOUS_TAG]):
         branch.add(numeric)
 
-    branch = tree.add("🗂️ Categorical features", style="b green")
+    branch = tree.add("🗂️[b] Categorical features")
     cat_features = adata.var_names[adata.var[FEATURE_TYPE_KEY] == CATEGORICAL_TAG]
     df = anndata_to_df(adata[:, cat_features])
     for categorical in sorted(cat_features):
