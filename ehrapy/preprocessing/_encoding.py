@@ -93,11 +93,7 @@ def encode(
                     "[bold yellow]The current AnnData object has been already encoded. Returning original AnnData object!"
                 )
                 return adata
-
-            if FEATURE_TYPE_KEY in adata.var.keys():
-                categoricals_names = adata.var_names[adata.var[FEATURE_TYPE_KEY] == CATEGORICAL_TAG].to_list()
-            else:
-                categoricals_names = _get_var_indices_for_type(adata, NON_NUMERIC_TAG)
+            categoricals_names = _get_var_indices_for_type(adata, NON_NUMERIC_TAG)
 
             # no columns were detected, that would require an encoding (e.g. non-numerical columns)
             if not categoricals_names:

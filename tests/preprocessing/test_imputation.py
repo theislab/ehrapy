@@ -29,28 +29,28 @@ _TEST_PATH = f"{CURRENT_DIR}/test_data_imputation"
 @pytest.fixture
 def impute_num_adata():
     adata = read_csv(dataset_path=f"{_TEST_PATH}/test_impute_num.csv")
-    ep.ad.infer_feature_types(adata)
+    ep.ad.infer_feature_types(adata, output=None)
     return adata
 
 
 @pytest.fixture
 def impute_adata():
     adata = read_csv(dataset_path=f"{_TEST_PATH}/test_impute.csv")
-    ep.ad.infer_feature_types(adata)
+    ep.ad.infer_feature_types(adata, output=None)
     return adata
 
 
 @pytest.fixture
 def impute_iris():
     adata = read_csv(dataset_path=f"{_TEST_PATH}/test_impute_iris.csv")
-    ep.ad.infer_feature_types(adata)
+    ep.ad.infer_feature_types(adata, output=None)
     return adata
 
 
 @pytest.fixture
 def impute_titanic():
     adata = read_csv(dataset_path=f"{_TEST_PATH}/test_impute_titanic.csv")
-    ep.ad.infer_feature_types(adata)
+    ep.ad.infer_feature_types(adata, output=None)
     return adata
 
 
