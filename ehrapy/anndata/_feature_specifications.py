@@ -43,7 +43,7 @@ def infer_feature_types(adata, layer: str | None = None, output: Literal["print"
     adata.var[FEATURE_TYPE_KEY] = pd.Series(feature_types)[adata.var_names]
 
     logg.info(
-        f"Feature types have been inferred and stored in adata.var['{FEATURE_TYPE_KEY}']. PLEASE CHECK and adjust if necessary using adata.var['{FEATURE_TYPE_KEY}']['feature1']='corrected_type'."
+        f"Stored feature types in adata.var['{FEATURE_TYPE_KEY}']. PLEASE CHECK and adjust if necessary using adata.var['{FEATURE_TYPE_KEY}']['feature1']='corrected_type'."
     )
 
     if output == "print":
