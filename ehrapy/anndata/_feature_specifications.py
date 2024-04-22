@@ -2,9 +2,9 @@ from typing import Literal
 
 import numpy as np
 import pandas as pd
+from anndata import AnnData
 from rich import print
 from rich.tree import Tree
-from anndata import AnnData
 
 from ehrapy import logging as logg
 from ehrapy.anndata._constants import CATEGORICAL_TAG, CONTINUOUS_TAG, DATE_TAG, FEATURE_TYPE_KEY
@@ -69,8 +69,7 @@ def check_feature_types(func):
 
 @check_feature_types
 def feature_type_overview(adata: AnnData):
-    """Print an overview of the feature types in the AnnData object.
-    """
+    """Print an overview of the feature types in the AnnData object."""
     tree = Tree(
         f"[b] Detected feature types for AnnData object with {len(adata.obs_names)} obs and {len(adata.var_names)} vars",
         guide_style="underline2",
