@@ -14,12 +14,15 @@ def infer_feature_types(adata, layer: str | None = None, output: Literal["print"
     """
     Infer feature types from AnnData object.
 
+    For each feature in adata.var_names, the method infers one of the following types: 'date', 'categorical', or 'continuous'.
+    The inferred types are stored in adata.var['feature_type']. Please check the inferred types and adjust if necessary using
+    adata.var['feature_type']['feature1']='corrected_type'.
+
     Args:
         adata: :class:`~anndata.AnnData` object storing the EHR data.
         layer: The layer to use from the AnnData object. If None, the X layer is used.
         output: The output format. Choose between 'print', 'dataframe', or None. If 'print', the feature types will be printed to the console.
-            If 'dataframe', a pandas DataFrame with the feature types will be returned. If None, nothing will be returned. Independent of the output
-            format, the feature types will be stored in adata.var[FEATURE_TYPE_KEY]. Defaults to 'print'.
+            If 'dataframe', a pandas DataFrame with the feature types will be returned. If None, nothing will be returned. Defaults to 'print'.
     """
     feature_types = {}
 
