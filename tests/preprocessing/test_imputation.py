@@ -131,7 +131,6 @@ def test_knn_impute_no_copy(impute_num_adata):
 
 def test_knn_impute_copy(impute_num_adata):
     adata_imputed = knn_impute(impute_num_adata, n_neighbours=3, copy=True)
-    print(adata_imputed)
 
     assert id(impute_num_adata) != id(adata_imputed)
     assert not (np.all([item != item for item in adata_imputed.X]))

@@ -4,15 +4,15 @@ import numpy as np
 import pandas as pd
 from rich import print
 from rich.tree import Tree
+from anndata import AnnData
 
 from ehrapy import logging as logg
 from ehrapy.anndata._constants import CATEGORICAL_TAG, CONTINUOUS_TAG, DATE_TAG, FEATURE_TYPE_KEY
 from ehrapy.anndata.anndata_ext import anndata_to_df
 
 
-def infer_feature_types(adata, layer: str | None = None, output: Literal["print", "dataframe"] | None = "print"):
-    """
-    Infer feature types from AnnData object.
+def infer_feature_types(adata: AnnData, layer: str | None = None, output: Literal["tree", "dataframe"] | None = "tree"):
+    """Infer feature types from AnnData object.
 
     For each feature in adata.var_names, the method infers one of the following types: 'date', 'categorical', or 'continuous'.
     The inferred types are stored in adata.var['feature_type']. Please check the inferred types and adjust if necessary using
@@ -21,8 +21,8 @@ def infer_feature_types(adata, layer: str | None = None, output: Literal["print"
     Args:
         adata: :class:`~anndata.AnnData` object storing the EHR data.
         layer: The layer to use from the AnnData object. If None, the X layer is used.
-        output: The output format. Choose between 'print', 'dataframe', or None. If 'print', the feature types will be printed to the console.
-            If 'dataframe', a pandas DataFrame with the feature types will be returned. If None, nothing will be returned. Defaults to 'print'.
+        output: The output format. Choose between 'tree', 'dataframe', or None. If 'tree', the feature types will be printed to the console in a tree format.
+            If 'dataframe', a pandas DataFrame with the feature types will be returned. If None, nothing will be returned. Defaults to 'tree'.
     """
     feature_types = {}
 
@@ -46,15 +46,15 @@ def infer_feature_types(adata, layer: str | None = None, output: Literal["print"
     adata.var[FEATURE_TYPE_KEY] = pd.Series(feature_types)[adata.var_names]
 
     logg.info(
-        f"Stored feature types in adata.var['{FEATURE_TYPE_KEY}']. PLEASE CHECK and adjust if necessary using adata.var['{FEATURE_TYPE_KEY}']['feature1']='corrected_type'."
+        f"Stored feature types in adata.var['{FEATURE_TYPE_KEY}']. Please verify and adjust if necessary using adata.var['{FEATURE_TYPE_KEY}']['feature1']='corrected_type'."
     )
 
-    if output == "print":
+    if output == "tree":
         feature_type_overview(adata)
     elif output == "dataframe":
         return adata.var[FEATURE_TYPE_KEY]
     elif output is not None:
-        raise ValueError(f"Output format {output} not recognized. Choose between 'print', 'dataframe', or None.")
+        raise ValueError(f"Output format {output} not recognized. Choose between 'tree', 'dataframe', or None.")
 
 
 def check_feature_types(func):
@@ -68,12 +68,8 @@ def check_feature_types(func):
 
 
 @check_feature_types
-def feature_type_overview(adata):
-    """
-    Print an overview of the feature types in the AnnData object.
-
-    Args:
-        adata: :class:`~anndata.A
+def feature_type_overview(adata: AnnData):
+    """Print an overview of the feature types in the AnnData object.
     """
     tree = Tree(
         f"[b] Detected feature types for AnnData object with {len(adata.obs_names)} obs and {len(adata.var_names)} vars",
