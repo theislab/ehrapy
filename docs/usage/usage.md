@@ -403,6 +403,7 @@ Methods that extract and visualize tool-specific annotation in an AnnData object
     :toctree: anndata
     :nosignatures:
 
+    anndata.infer_feature_types
     anndata.df_to_anndata
     anndata.anndata_to_df
     anndata.move_to_obs
