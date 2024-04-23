@@ -14,9 +14,12 @@ from ehrapy.anndata.anndata_ext import anndata_to_df
 def infer_feature_types(adata: AnnData, layer: str | None = None, output: Literal["tree", "dataframe"] | None = "tree"):
     """Infer feature types from AnnData object.
 
-    For each feature in adata.var_names, the method infers one of the following types: 'date', 'categorical', or 'continuous'.
+    For each feature in adata.var_names, the method infers one of the following types: 'date', 'categorical', or 'numeric'.
     The inferred types are stored in adata.var['feature_type']. Please check the inferred types and adjust if necessary using
     adata.var['feature_type']['feature1']='corrected_type'.
+    Be aware that not all features stored numerically are of 'numeric' type, as categorical features might be stored in a numerically encoded format.
+    For example, a feature with values [0, 1, 2] might be a categorical feature with three categories. This is accounted for in the method, but it is
+    recommended to check the inferred types.
 
     Args:
         adata: :class:`~anndata.AnnData` object storing the EHR data.
