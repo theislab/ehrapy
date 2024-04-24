@@ -378,6 +378,7 @@ def _adata_type_overview(
         f"[b green]Variable names for AnnData object with {len(adata.obs_names)} obs and {len(adata.var_names)} vars",
         guide_style="underline2 bright_blue",
     )
+
     if "var_to_encoding" in adata.uns.keys():
         original_values = adata.uns["original_values_categoricals"]
         branch = tree.add("🔐 Encoded variables", style="b green")

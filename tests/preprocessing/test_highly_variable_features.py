@@ -4,6 +4,7 @@ from ehrapy.preprocessing._highly_variable_features import highly_variable_featu
 
 def test_highly_variable_features():
     adata = ep.dt.dermatology(encoded=True)
+    ep.ad.infer_feature_types(adata, output=None)
     ep.pp.knn_impute(adata)
     highly_variable_features(adata)
 
@@ -14,6 +15,7 @@ def test_highly_variable_features():
     assert "variances_norm" in adata.var.columns
 
     adata = ep.dt.dermatology(encoded=True)
+    ep.ad.infer_feature_types(adata, output=None)
     ep.pp.knn_impute(adata)
     highly_variable_features(adata, top_features_percentage=0.5)
     assert adata.var["highly_variable"].sum() == 17
