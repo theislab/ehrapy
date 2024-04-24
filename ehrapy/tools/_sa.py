@@ -382,7 +382,7 @@ def _univariate_model(adata: AnnData, duration_col: str, event_col: str, model_c
     df = anndata_to_df(adata)
 
     if not accept_zero_duration:
-        df[duration_col][df[duration_col] == 0] += 1e-5
+        df.loc[df[duration_col] == 0, duration_col] += 1e-5
     T = df[duration_col]
     E = df[event_col]
 

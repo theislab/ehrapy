@@ -7,13 +7,13 @@ import numpy as np
 import pandas as pd
 from rich import print
 from rich.progress import Progress, SpinnerColumn
-from sklearn.experimental import enable_iterative_imputer
+from sklearn.experimental import enable_iterative_imputer  # required to enable IterativeImputer (experimental feature)
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OrdinalEncoder
 
-from ehrapy import logging as logg
 from ehrapy import settings
-from ehrapy.anndata._constants import EHRAPY_TYPE_KEY, NON_NUMERIC_TAG
+from ehrapy.anndata import check_feature_types
+from ehrapy.anndata._constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY
 from ehrapy.anndata.anndata_ext import _get_column_indices
 from ehrapy.core._tool_available import _check_module_importable
 
@@ -24,6 +24,7 @@ if TYPE_CHECKING:
 def explicit_impute(
     adata: AnnData,
     replacement: (str | int) | (dict[str, str | int]),
+    *,
     impute_empty_strings: bool = True,
     warning_threshold: int = 70,
     copy: bool = False,
@@ -98,7 +99,7 @@ def _replace_explicit(arr: np.ndarray, replacement: str | int, impute_empty_stri
     arr[impute_conditions] = replacement
 
 
-def _extract_impute_value(replacement: dict[str, str | int], column_name: str) -> str | int:
+def _extract_impute_value(replacement: dict[str, str | int], column_name: str) -> str | int | None:
     """Extract the replacement value for a given column in the :class:`~anndata.AnnData` object
 
     Returns:
@@ -119,6 +120,7 @@ def _extract_impute_value(replacement: dict[str, str | int], column_name: str) -
 def simple_impute(
     adata: AnnData,
     var_names: Iterable[str] | None = None,
+    *,
     strategy: Literal["mean", "median", "most_frequent"] = "mean",
     copy: bool = False,
     warning_threshold: int = 70,
@@ -188,12 +190,16 @@ def _simple_impute(adata: AnnData, var_names: Iterable[str] | None, strategy: st
         adata.X = imputer.fit_transform(adata.X)
 
 
+@check_feature_types
 def knn_impute(
     adata: AnnData,
     var_names: Iterable[str] | None = None,
+    *,
     n_neighbours: int = 5,
     copy: bool = False,
+    backend: Literal["scikit-learn", "faiss"] = "faiss",
     warning_threshold: int = 70,
+    **kwargs,
 ) -> AnnData:
     """Imputes missing values in the input AnnData object using K-nearest neighbor imputation.
 
@@ -208,7 +214,12 @@ def knn_impute(
         n_neighbours: Number of neighbors to use when performing the imputation. Defaults to 5.
         copy: Whether to perform the imputation on a copy of the original `AnnData` object.
               If `True`, the original object remains unmodified. Defaults to `False`.
+        backend: The implementation to use for the KNN imputation.
+                 'scikit-learn' is very slow but uses an exact KNN algorithm,
+                  whereas 'faiss' is drastically faster but uses an approximation for the KNN graph.
+                  In practice, 'faiss' is close enough to the 'scikit-learn' results.
         warning_threshold: Percentage of missing values above which a warning is issued. Defaults to 70.
+        **kwargs: Passed to the backend implementation.
 
     Returns:
         An updated AnnData object with imputed values.
@@ -219,6 +230,7 @@ def knn_impute(
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> ep.ad.infer_feature_types(adata)
         >>> ep.pp.knn_impute(adata)
     """
     if copy:
@@ -230,10 +242,6 @@ def knn_impute(
         from sklearnex import patch_sklearn, unpatch_sklearn
 
         patch_sklearn()
-    else:
-        print(
-            "[bold yellow]scikit-learn-intelex is not available. Install via [blue]pip install scikit-learn-intelex [yellow] for faster imputations."
-        )
     try:
         with Progress(
             "[progress.description]{task.description}",
@@ -243,14 +251,14 @@ def knn_impute(
             progress.add_task("[blue]Running KNN imputation", total=1)
             # numerical only data needs no encoding since KNN Imputation can be applied directly
             if np.issubdtype(adata.X.dtype, np.number):
-                _knn_impute(adata, var_names, n_neighbours)
+                _knn_impute(adata, var_names, n_neighbours, backend=backend, **kwargs)
             else:
                 # ordinal encoding is used since non-numerical data can not be imputed using KNN Imputation
                 enc = OrdinalEncoder()
-                column_indices = adata.var[EHRAPY_TYPE_KEY] == NON_NUMERIC_TAG
+                column_indices = adata.var[FEATURE_TYPE_KEY] == CATEGORICAL_TAG
                 adata.X[::, column_indices] = enc.fit_transform(adata.X[::, column_indices])
                 # impute the data using KNN imputation
-                _knn_impute(adata, var_names, n_neighbours)
+                _knn_impute(adata, var_names, n_neighbours, backend=backend, **kwargs)
                 # imputing on encoded columns might result in float numbers; those can not be decoded
                 # cast them to int to ensure they can be decoded
                 adata.X[::, column_indices] = np.rint(adata.X[::, column_indices]).astype(int)
@@ -270,10 +278,21 @@ def knn_impute(
         return adata
 
 
-def _knn_impute(adata: AnnData, var_names: Iterable[str] | None, n_neighbours: int) -> None:
-    from sklearn.impute import KNNImputer
+def _knn_impute(
+    adata: AnnData,
+    var_names: Iterable[str] | None,
+    n_neighbours: int,
+    backend: Literal["scikit-learn", "faiss"],
+    **kwargs,
+) -> None:
+    if backend == "scikit-learn":
+        from sklearn.impute import KNNImputer
 
-    imputer = KNNImputer(n_neighbors=n_neighbours)
+        imputer = KNNImputer(n_neighbors=n_neighbours, **kwargs)
+    else:
+        from fknni import FaissImputer
+
+        imputer = FaissImputer(n_neighbors=n_neighbours, **kwargs)
 
     if isinstance(var_names, Iterable):
         column_indices = _get_column_indices(adata, var_names)
@@ -287,8 +306,9 @@ def _knn_impute(adata: AnnData, var_names: Iterable[str] | None, n_neighbours: i
 def miss_forest_impute(
     adata: AnnData,
     var_names: dict[str, list[str]] | list[str] | None = None,
+    *,
     num_initial_strategy: Literal["mean", "median", "most_frequent", "constant"] = "mean",
-    max_iter: int = 10,
+    max_iter: int = 3,
     n_estimators=100,
     random_state: int = 0,
     warning_threshold: int = 70,
@@ -308,7 +328,7 @@ def miss_forest_impute(
         var_names: List of columns to impute or a dict with two keys ('numerical' and 'non_numerical') indicating which var
                    contain mixed data and which numerical data only.
         num_initial_strategy: The initial strategy to replace all missing numerical values with. Defaults to 'mean'.
-        max_iter: The maximum number of iterations if the stop criterion has not been met yet.
+        max_iter: The maximum number of iterations if the stop criterion has not been met yet. Defaults to 3.
         n_estimators: The number of trees to fit for every missing variable. Has a big effect on the run time.
                       Decrease for faster computations. Defaults to 100.
         random_state: The random seed for the initialization. Defaults to 0.
@@ -337,10 +357,6 @@ def miss_forest_impute(
         from sklearnex import patch_sklearn, unpatch_sklearn
 
         patch_sklearn()
-    else:
-        print(
-            "[bold yellow]scikit-learn-intelex is not available. Install via [blue]pip install scikit-learn-intelex [yellow] for faster imputations."
-        )
 
     from sklearn.ensemble import ExtraTreesRegressor, RandomForestClassifier
     from sklearn.impute import IterativeImputer
@@ -416,9 +432,11 @@ def miss_forest_impute(
         return adata
 
 
+@check_feature_types
 def soft_impute(
     adata: AnnData,
     var_names: Iterable[str] | None = None,
+    *,
     copy: bool = False,
     warning_threshold: int = 70,
     shrinkage_value: float | None = None,
@@ -460,6 +478,7 @@ def soft_impute(
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> ep.ad.infer_feature_types(adata)
         >>> ep.pp.soft_impute(adata)
     """
     if copy:
@@ -491,7 +510,7 @@ def soft_impute(
         else:
             # ordinal encoding is used since non-numerical data can not be imputed using SoftImpute
             enc = OrdinalEncoder()
-            column_indices = adata.var[EHRAPY_TYPE_KEY] == NON_NUMERIC_TAG
+            column_indices = adata.var[FEATURE_TYPE_KEY] == CATEGORICAL_TAG
             adata.X[::, column_indices] = enc.fit_transform(adata.X[::, column_indices])
             # impute the data using SoftImpute
             _soft_impute(
@@ -551,6 +570,7 @@ def _soft_impute(
         adata.X = imputer.fit_transform(adata.X)
 
 
+@check_feature_types
 def iterative_svd_impute(
     adata: AnnData,
     var_names: Iterable[str] | None = None,
@@ -607,6 +627,7 @@ def iterative_svd_impute(
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> ep.ad.infer_feature_types(adata)
         >>> ep.pp.iterative_svd_impute(adata)
     """
     if copy:
@@ -637,7 +658,7 @@ def iterative_svd_impute(
         else:
             # ordinal encoding is used since non-numerical data can not be imputed using IterativeSVD
             enc = OrdinalEncoder()
-            column_indices = adata.var[EHRAPY_TYPE_KEY] == NON_NUMERIC_TAG
+            column_indices = adata.var[FEATURE_TYPE_KEY] == CATEGORICAL_TAG
             adata.X[::, column_indices] = enc.fit_transform(adata.X[::, column_indices])
             # impute the data using IterativeSVD
             _iterative_svd_impute(
@@ -694,6 +715,7 @@ def _iterative_svd_impute(
         adata.X = imputer.fit_transform(adata.X)
 
 
+@check_feature_types
 def matrix_factorization_impute(
     adata: AnnData,
     var_names: Iterable[str] | None = None,
@@ -743,6 +765,7 @@ def matrix_factorization_impute(
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> ep.ad.infer_feature_types(adata)
         >>> ep.pp.matrix_factorization_impute(adata)
     """
     if copy:
@@ -771,7 +794,7 @@ def matrix_factorization_impute(
         else:
             # ordinal encoding is used since non-numerical data can not be imputed using MatrixFactorization
             enc = OrdinalEncoder()
-            column_indices = adata.var[EHRAPY_TYPE_KEY] == NON_NUMERIC_TAG
+            column_indices = adata.var[FEATURE_TYPE_KEY] == CATEGORICAL_TAG
             adata.X[::, column_indices] = enc.fit_transform(adata.X[::, column_indices])
             # impute the data using MatrixFactorization
             _matrix_factorization_impute(
@@ -821,6 +844,7 @@ def _matrix_factorization_impute(
         adata.X = imputer.fit_transform(adata.X)
 
 
+@check_feature_types
 def nuclear_norm_minimization_impute(
     adata: AnnData,
     var_names: Iterable[str] | None = None,
@@ -856,6 +880,7 @@ def nuclear_norm_minimization_impute(
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> ep.ad.infer_feature_types(adata)
         >>> ep.pp.nuclear_norm_minimization_impute(adata)
     """
     if copy:
@@ -883,7 +908,7 @@ def nuclear_norm_minimization_impute(
         else:
             # ordinal encoding is used since non-numerical data can not be imputed using NuclearNormMinimization
             enc = OrdinalEncoder()
-            column_indices = adata.var[EHRAPY_TYPE_KEY] == NON_NUMERIC_TAG
+            column_indices = adata.var[FEATURE_TYPE_KEY] == CATEGORICAL_TAG
             adata.X[::, column_indices] = enc.fit_transform(adata.X[::, column_indices])
             # impute the data using NuclearNormMinimization
             _nuclear_norm_minimization_impute(
@@ -931,9 +956,11 @@ def _nuclear_norm_minimization_impute(
         adata.X = imputer.fit_transform(adata.X)
 
 
+@check_feature_types
 def mice_forest_impute(
     adata: AnnData,
     var_names: Iterable[str] | None = None,
+    *,
     warning_threshold: int = 70,
     save_all_iterations: bool = True,
     random_state: int | None = None,
@@ -972,6 +999,7 @@ def mice_forest_impute(
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> ep.ad.infer_feature_types(adata)
         >>> ep.pp.mice_forest_impute(adata)
     """
     if copy:
@@ -999,7 +1027,7 @@ def mice_forest_impute(
             else:
                 # ordinal encoding is used since non-numerical data can not be imputed using miceforest
                 enc = OrdinalEncoder()
-                column_indices = adata.var[EHRAPY_TYPE_KEY] == NON_NUMERIC_TAG
+                column_indices = adata.var[FEATURE_TYPE_KEY] == CATEGORICAL_TAG
                 adata.X[::, column_indices] = enc.fit_transform(adata.X[::, column_indices])
                 # impute the data using miceforest
                 _miceforest_impute(
@@ -1062,7 +1090,6 @@ def _warn_imputation_threshold(adata: AnnData, var_names: Iterable[str] | None, 
     try:
         adata.var["missing_values_pct"]
     except KeyError:
-        print("[bold yellow]Quality control metrics missing. Calculating...")
         from ehrapy.preprocessing import qc_metrics
 
         qc_metrics(adata)

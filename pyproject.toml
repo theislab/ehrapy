@@ -66,7 +66,8 @@ dependencies = [
     "fhiry",
     "pyampute",
     "tableone",
-    "imbalanced-learn"
+    "imbalanced-learn",
+    "fknni"
 ]
 
 [project.optional-dependencies]
@@ -127,6 +128,7 @@ markers = [
 filterwarnings = [
     "ignore::DeprecationWarning",
     "ignore::anndata.OldFormatWarning:",
+    "ignore:X converted to numpy array with dtype object:UserWarning"
 ]
 minversion = 6.0
 norecursedirs = [ '.*', 'build', 'dist', '*.egg', 'data', '__pycache__']
