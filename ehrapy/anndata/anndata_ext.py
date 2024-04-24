@@ -546,8 +546,6 @@ def set_numeric_vars(
     for i in range(n_values):
         adata.X[:, vars_idx[i]] = values[:, i]
 
-    logg.info(f"Values in columns {vars} were replaced by {values}.")
-
     return adata
 
 
