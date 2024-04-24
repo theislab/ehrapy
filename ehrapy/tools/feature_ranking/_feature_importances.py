@@ -18,7 +18,6 @@ from ehrapy.anndata._constants import CATEGORICAL_TAG, CONTINUOUS_TAG, DATE_TAG,
 def rank_features_supervised(
     adata: AnnData,
     predicted_feature: str,
-    *,
     model: Literal["regression", "svm", "rf"] = "regression",
     input_features: Iterable[str] | Literal["all"] = "all",
     layer: str | None = None,
