@@ -19,8 +19,7 @@ if TYPE_CHECKING:
 
 
 def ols(
-    adata: AnnData,
-    *,
+    adata: AnnData | None = None,
     x: str | None = None,
     y: str | None = None,
     scatter_plot: Boolean | None = True,
@@ -139,7 +138,6 @@ def ols(
 
 def kmf(
     kmfs: Sequence[KaplanMeierFitter],
-    *,
     ci_alpha: list[float] | None = None,
     ci_force_lines: list[Boolean] | None = None,
     ci_show: list[Boolean] | None = None,
