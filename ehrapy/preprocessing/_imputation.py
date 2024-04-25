@@ -240,7 +240,7 @@ def knn_impute(
     _warn_imputation_threshold(adata, var_names, threshold=warning_threshold)
 
     if backend not in {"scikit-learn", "faiss"}:
-        raise ValueError(f"Unknown backend {backend} for KNN imputation. Choose between 'scikit-learn' and 'faiss'.")
+        raise ValueError(f"Unknown backend '{backend}' for KNN imputation. Choose between 'scikit-learn' and 'faiss'.")
 
     if _check_module_importable("sklearnex"):  # pragma: no cover
         from sklearnex import patch_sklearn, unpatch_sklearn
