@@ -41,18 +41,12 @@ Or download the [tarball]:
 curl -OJL https://github.com/theislab/ehrapy/tarball/master
 ```
 
-Once you have a copy of the source, you can install it with:
-
-```console
-make install
-```
-
 ## MedCAT/Spacy language models
 
-If you want to run and use medcat with ehrapy, you first have to install medcat:
+If you want to run and use medcat with ehrapy, you first have to install the medcat extra:
 
 ```console
-pip install medcat
+pip install ehrapy[medcat]
 ```
 
 Available language models are
