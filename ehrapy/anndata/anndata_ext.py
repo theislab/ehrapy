@@ -53,7 +53,7 @@ def df_to_anndata(
         ...         "sex": ["M", "F", "F", "M", "F"],
         ...     }
         ... )
-        >>> adata = ep.df_to_anndata(df, index_column="patient_id")
+        >>> adata = ep.ad.df_to_anndata(df, index_column="patient_id")
     """
     # allow index 0
     if index_column is not None:
