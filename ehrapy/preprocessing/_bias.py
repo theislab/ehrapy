@@ -52,6 +52,12 @@ def detect_bias(
         - "standardized_mean_differences": Standardized mean differences between groups of sensitive features that exceed the SMD threshold.
         - "feature_importances": Feature importances for predicting one feature with another that exceed the feature importance and prediction
             confidence thresholds.
+
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> ep.ad.infer_feature_types(adata, output=None)
+        >>> results_dict = ep.pp.detect_bias(adata, "all")
     """
     from ehrapy.tools import rank_features_supervised
 
@@ -73,7 +79,6 @@ def detect_bias(
         ]
 
     adata_df = anndata_to_df(adata)
-    # categorical_var_names = adata.var_names[adata.var["feature_type"] == "categorical"]
 
     # --------------------
     # Feature correlations
@@ -93,7 +98,9 @@ def detect_bias(
             corr_results["Feature 1"].append(sens_feature)
             corr_results["Feature 2"].append(comp_feature)
             corr_results[f"{corr_method.capitalize()} CC"].append(correlations.loc[sens_feature, comp_feature])
-    bias_results["feature_correlations"] = pd.DataFrame(corr_results)
+    bias_results["feature_correlations"] = pd.DataFrame(corr_results).sort_values(
+        by=f"{corr_method.capitalize()} CC", key=abs
+    )
 
     # -----------------------------
     # Standardized mean differences
@@ -107,9 +114,11 @@ def detect_bias(
     continuous_var_names = adata.var_names[adata.var[FEATURE_TYPE_KEY] == CONTINUOUS_TAG]
     for sens_feature in cat_sens_features:
         sens_feature_groups = sorted(adata_df[sens_feature].unique())
-        smd_nparray = np.zeros((len(sens_feature_groups), len(continuous_var_names)))
+        if len(sens_feature_groups) == 1:
+            continue
+        smd_df = pd.DataFrame(index=continuous_var_names, columns=sens_feature_groups)
 
-        for group_nr, group in enumerate(sens_feature_groups):
+        for _group_nr, group in enumerate(sens_feature_groups):
             # Compute SMD for all continuous features between the sensitive group and all other observations
             group_mean = adata_df[continuous_var_names][adata_df[sens_feature] == group].mean()
             group_std = adata_df[continuous_var_names][adata_df[sens_feature] == group].std()
@@ -118,25 +127,20 @@ def detect_bias(
             comparison_std = adata_df[continuous_var_names][adata_df[sens_feature] != group].std()
 
             smd = (group_mean - comparison_mean) / np.sqrt((group_std**2 + comparison_std**2) / 2)
-            smd_nparray[group_nr] = smd
+            smd_df[group] = smd
 
             abs_smd = smd.abs()
-            for comp_feature_nr, comp_feature in enumerate(
-                continuous_var_names
-            ):  # TODO: Restrict to continuous features
-                # if sens_feature == comp_feature:
-                #   continue
+            for comp_feature_nr, comp_feature in enumerate(continuous_var_names):
                 if abs_smd[comp_feature_nr] > smd_threshold:
                     smd_results["Sensitive Feature"].append(sens_feature)
                     smd_results["Sensitive Group"].append(group)
                     smd_results["Compared Feature"].append(comp_feature)
                     smd_results["Standardized Mean Difference"].append(smd[comp_feature_nr])
+        adata.uns[f"smd_{sens_feature}"] = smd_df
 
-        adata.uns[f"smd_{sens_feature}"] = (
-            smd_nparray.T
-        )  # TODO: Double check; also, this is not very informative without row names...
-
-    bias_results["standardized_mean_differences"] = pd.DataFrame(smd_results)
+    bias_results["standardized_mean_differences"] = pd.DataFrame(smd_results).sort_values(
+        by="Standardized Mean Difference", key=abs
+    )
 
     # ------------------------
     # Categorical value counts
@@ -159,9 +163,7 @@ def detect_bias(
             value_counts = value_counts.div(value_counts.sum(axis=1), axis=0)
 
             for sens_group in value_counts.index:
-                for comp_group1, comp_group2 in itertools.combinations(
-                    value_counts.columns, 2
-                ):  # TODO: Try to find computationally more efficient way
+                for comp_group1, comp_group2 in itertools.combinations(value_counts.columns, 2):
                     value_count_diff = (
                         value_counts.loc[sens_group, comp_group1] - value_counts.loc[sens_group, comp_group2]
                     )
