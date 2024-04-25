@@ -12,12 +12,13 @@ license = {file = "LICENSE"}
 authors = [
     {name = "Lukas Heumos"},
     {name = "Philipp Ehmele"},
+    {name = "Eljas Roellin"},
+    {name = "Lilly May"},
+    {name = "Tim Treis"},
     {name = "Altana Namsaraeva"},
     {name = "Vladimir Shitov"},
     {name = "Luke Zappia"},
     {name = "Xinyue Zhang"},
-    {name = "Eljas Roellin"},
-    {name = "Tim Treis"},
 ]
 maintainers = [
     {name = "Lukas Heumos", email = "lukas.heumos@posteo.net"},

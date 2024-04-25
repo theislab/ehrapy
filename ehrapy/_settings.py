@@ -25,7 +25,7 @@ _VERBOSITY_TO_LOGLEVEL: dict[str, str] = {
     "hint": "HINT",
     "debug": "DEBUG",
 }
-# Python 3.7 ensures iteration order
+
 for index, level in enumerate(list(_VERBOSITY_TO_LOGLEVEL.values())):  # pragma: no cover
     _VERBOSITY_TO_LOGLEVEL[index] = level  # type: ignore
 

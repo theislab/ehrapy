@@ -219,7 +219,8 @@ def knn_impute(
                   whereas 'faiss' is drastically faster but uses an approximation for the KNN graph.
                   In practice, 'faiss' is close enough to the 'scikit-learn' results.
         warning_threshold: Percentage of missing values above which a warning is issued. Defaults to 70.
-        **kwargs: Passed to the backend implementation.
+        **kwargs: Passed to the backend.
+                  Pass "mean", "median", or "weighted" for 'strategy' to set the imputation strategy for faiss.
 
     Returns:
         An updated AnnData object with imputed values.
