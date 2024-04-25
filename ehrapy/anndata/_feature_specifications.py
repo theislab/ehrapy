@@ -1,3 +1,4 @@
+from functools import wraps
 from typing import Literal
 
 import numpy as np
@@ -61,6 +62,7 @@ def infer_feature_types(adata: AnnData, layer: str | None = None, output: Litera
 
 
 def check_feature_types(func):
+    @wraps(func)
     def wrapper(adata, *args, **kwargs):
         if FEATURE_TYPE_KEY not in adata.var.keys():
             raise ValueError("Feature types are not specified in adata.var. Please run `infer_feature_types` first.")
