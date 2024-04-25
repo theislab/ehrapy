@@ -6,9 +6,11 @@ import numpy as np
 import pandas as pd
 from anndata import AnnData
 
-from ehrapy.anndata import anndata_to_df
+from ehrapy.anndata import anndata_to_df, check_feature_types
+from ehrapy.anndata._constants import CATEGORICAL_TAG, CONTINUOUS_TAG, DATE_TAG, FEATURE_TYPE_KEY
 
 
+@check_feature_types
 def detect_bias(
     adata: AnnData,
     sensitive_features: Iterable[str] | np.ndarray | Literal["all"],
@@ -60,27 +62,26 @@ def detect_bias(
 
     if sensitive_features == "all":
         sens_features_list = adata.var_names.values.tolist()
-        categorical_sensitive_features = adata.var_names.values[
-            adata.var["feature_type"] == "categorical"
-        ]  # TODO: Double-check that named correctly
+        cat_sens_features = adata.var_names.values[adata.var[FEATURE_TYPE_KEY] == CATEGORICAL_TAG]
     else:
         for feat in sensitive_features:
             if feat not in adata.var_names:
                 raise ValueError(f"Feature {feat} not found in adata.var.")
         sens_features_list = sensitive_features
-        categorical_sensitive_features = [
-            feat for feat in sensitive_features if adata.var["feature_type"][feat] == "categorical"
+        cat_sens_features = [
+            feat for feat in sensitive_features if adata.var[FEATURE_TYPE_KEY][feat] == CATEGORICAL_TAG
         ]
 
     adata_df = anndata_to_df(adata)
-    categorical_var_names = adata.var_names[adata.var["feature_type"] == "categorical"]
+    # categorical_var_names = adata.var_names[adata.var["feature_type"] == "categorical"]
 
+    # --------------------
     # Feature correlations
+    # --------------------
     correlations = adata_df.corr(method=corr_method)
     adata.varp["feature_correlations"] = correlations
-    print(type(correlations))
 
-    corr_results: dict[str, list] = {"Feature 1": [], "Feature 2": [], "Correlation Coefficient": []}
+    corr_results: dict[str, list] = {"Feature 1": [], "Feature 2": [], f"{corr_method.capitalize()} CC": []}
     if sensitive_features == "all":
         feature_tuples = list(itertools.combinations(sens_features_list, 2))
     else:
@@ -91,45 +92,55 @@ def detect_bias(
         if abs(correlations.loc[sens_feature, comp_feature]) > corr_threshold:
             corr_results["Feature 1"].append(sens_feature)
             corr_results["Feature 2"].append(comp_feature)
-            corr_results["Correlation Coefficient"].append(correlations.loc[sens_feature, comp_feature])
+            corr_results[f"{corr_method.capitalize()} CC"].append(correlations.loc[sens_feature, comp_feature])
     bias_results["feature_correlations"] = pd.DataFrame(corr_results)
 
+    # -----------------------------
     # Standardized mean differences
+    # -----------------------------
     smd_results: dict[str, list] = {
         "Sensitive Feature": [],
         "Compared Feature": [],
         "Group": [],
         "Standardized Mean Difference": [],
-    }  # type: ignore
-    for sens_feature in categorical_sensitive_features:  # TODO: Restrict to categorical features (wait for other PR)
-        alphabetic_groups = sorted(adata_df[sens_feature].unique())
-        smd_nparray = np.zeros((len(alphabetic_groups), len(adata.var_names)))
+    }
+    continuous_var_names = adata.var_names[adata.var[FEATURE_TYPE_KEY] == CONTINUOUS_TAG]
+    for sens_feature in cat_sens_features:
+        sens_feature_groups = sorted(adata_df[sens_feature].unique())
+        smd_nparray = np.zeros((len(sens_feature_groups), len(continuous_var_names)))
 
-        for group_nr, group in enumerate(alphabetic_groups):
-            group_mean = adata_df[adata_df[sens_feature] == group].mean()
-            group_std = adata_df[adata_df[sens_feature] == group].std()
+        for group_nr, group in enumerate(sens_feature_groups):
+            # Compute SMD for all continuous features between the sensitive group and all other observations
+            group_mean = adata_df[continuous_var_names][adata_df[sens_feature] == group].mean()
+            group_std = adata_df[continuous_var_names][adata_df[sens_feature] == group].std()
 
-            comparison_mean = adata_df[adata_df[sens_feature] != group].mean()
-            comparison_std = adata_df[adata_df[sens_feature] != group].std()
+            comparison_mean = adata_df[continuous_var_names][adata_df[sens_feature] != group].mean()
+            comparison_std = adata_df[continuous_var_names][adata_df[sens_feature] != group].std()
 
             smd = (group_mean - comparison_mean) / np.sqrt((group_std**2 + comparison_std**2) / 2)
             smd_nparray[group_nr] = smd
 
             abs_smd = smd.abs()
-            for i, comp_feature in enumerate(adata.var_names):  # TODO: Restrict to continuous features
-                if sens_feature == comp_feature:
-                    continue
-                if abs_smd[i] > smd_threshold:
+            for comp_feature_nr, comp_feature in enumerate(
+                [continuous_var_names]
+            ):  # TODO: Restrict to continuous features
+                # if sens_feature == comp_feature:
+                #   continue
+                if abs_smd[comp_feature_nr] > smd_threshold:
                     smd_results["Sensitive Feature"].append(sens_feature)
                     smd_results["Compared Feature"].append(comp_feature)
                     smd_results["Group"].append(group)
-                    smd_results["Standardized Mean Difference"] = smd[i]
+                    smd_results["Standardized Mean Difference"] = smd[comp_feature_nr]
 
-        adata.varm[f"smd_{sens_feature}"] = smd_nparray.T  # TODO: Double check
+        adata.uns[f"smd_{sens_feature}"] = (
+            smd_nparray.T
+        )  # TODO: Double check; also, this is not very informative without row names...
 
     bias_results["standardized_mean_differences"] = pd.DataFrame(smd_results)
 
+    # ------------------------
     # Categorical value counts
+    # ------------------------
     cat_value_count_results: dict[str, list] = {
         "Sensitive Feature": [],
         "Sensitive Group": [],
@@ -139,8 +150,9 @@ def detect_bias(
         "Group 1 Percentage": [],
         "Group 2 Percentage": [],
     }
-    for sens_feature in categorical_sensitive_features:  # TODO: Restrict to categorical features (wait for other PR)
-        for comp_feature in categorical_var_names:  # TODO: Restrict to categorical features (wait for other PR)
+    cat_var_names = adata.var_names[adata.var[FEATURE_TYPE_KEY] == CATEGORICAL_TAG]
+    for sens_feature in cat_sens_features:
+        for comp_feature in cat_var_names:
             if sens_feature == comp_feature:
                 continue
             value_counts = adata_df.groupby([sens_feature, comp_feature]).size().unstack(fill_value=0)
@@ -166,7 +178,9 @@ def detect_bias(
                         cat_value_count_results["Group 2 Percentage"].append(value_counts.loc[sens_group, comp_group2])
     bias_results["categorical_value_counts"] = pd.DataFrame(cat_value_count_results)
 
+    # -------------------
     # Feature importances
+    # -------------------
     if run_feature_importances:
         feature_importances_results: dict[str, list] = {
             "Sensitive Feature": [],
