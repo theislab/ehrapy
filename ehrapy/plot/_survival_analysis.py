@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from numpy import ndarray
 
-import ehrapy as ep
+from ehrapy.plot import scatter
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -19,7 +19,8 @@ if TYPE_CHECKING:
 
 
 def ols(
-    adata: AnnData | None = None,
+    adata: AnnData,
+    *,
     x: str | None = None,
     y: str | None = None,
     scatter_plot: Boolean | None = True,
@@ -39,10 +40,10 @@ def ols(
     title: str | None = None,
     **kwds,
 ):
-    """Plots a Ordinary Least Squares (OLS) Model result, scatter plot, and line plot.
+    """Plots an Ordinary Least Squares (OLS) Model result, scatter plot, and line plot.
 
     Args:
-        adata: :class:`~anndata.AnnData` object object containing all observations.
+        adata: :class:`~anndata.AnnData` object containing all observations.
         x: x coordinate, for scatter plotting.
         y: y coordinate, for scatter plotting.
         scatter_plot: If True, show scatter plot. Defaults to True.
@@ -111,7 +112,7 @@ def ols(
         x_processed = np.array(adata[:, x].X).astype(float)
         x_processed = x_processed[~np.isnan(x_processed)]
         if scatter_plot is True:
-            ax = ep.pl.scatter(adata, x=x, y=y, show=False, ax=ax, **kwds)
+            ax = scatter(adata, x=x, y=y, show=False, ax=ax, **kwds)
         if ols_results is not None:
             for i, ols_result in enumerate(ols_results):
                 ax.plot(x_processed, ols_result.predict(), color=ols_color[i])
@@ -137,7 +138,8 @@ def ols(
 
 
 def kmf(
-    kmfs: Sequence[KaplanMeierFitter] = None,
+    kmfs: Sequence[KaplanMeierFitter],
+    *,
     ci_alpha: list[float] | None = None,
     ci_force_lines: list[Boolean] | None = None,
     ci_show: list[Boolean] | None = None,

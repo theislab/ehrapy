@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import pandas as pd
+from lamin_utils import logger
 from rich import print
 from rich.progress import Progress, SpinnerColumn
 from sklearn.experimental import enable_iterative_imputer  # required to enable IterativeImputer (experimental feature)
@@ -80,7 +81,7 @@ def explicit_impute(
                 if imputation_value:
                     _replace_explicit(adata.X[:, idx : idx + 1], imputation_value, impute_empty_strings)
                 else:
-                    print(f"[bold yellow]No replace value passed and found for var [not bold green]{column_name}.")
+                    logger.warning(f"No replace value passed and found for var [not bold green]{column_name}.")
         else:
             raise ValueError(  # pragma: no cover
                 f"Type {type(replacement)} is not a valid datatype for replacement parameter. Either use int, str or a dict!"
@@ -269,7 +270,7 @@ def knn_impute(
                 adata.X[::, column_indices] = enc.inverse_transform(adata.X[::, column_indices])
     except ValueError as e:
         if "Data matrix has wrong shape" in str(e):
-            print("[bold red]Check that your matrix does not contain any NaN only columns!")
+            logger.error("Check that your matrix does not contain any NaN only columns!")
             raise
 
     if _check_module_importable("sklearnex"):  # pragma: no cover
@@ -371,9 +372,7 @@ def miss_forest_impute(
             progress.add_task("[blue]Running MissForest imputation", total=1)
 
             if settings.n_jobs == 1:  # pragma: no cover
-                print(
-                    "[bold yellow]The number of jobs is only 1. To decrease the runtime set [blue]ep.settings.n_jobs=-1."
-                )
+                logger.warning("The number of jobs is only 1. To decrease the runtime set ep.settings.n_jobs=-1.")
 
             imp_num = IterativeImputer(
                 estimator=ExtraTreesRegressor(n_estimators=n_estimators, n_jobs=settings.n_jobs),
@@ -423,7 +422,7 @@ def miss_forest_impute(
                     adata.X[::, non_num_indices] = enc.inverse_transform(adata.X[::, non_num_indices])
     except ValueError as e:
         if "Data matrix has wrong shape" in str(e):
-            print("[bold red]Check that your matrix does not contain any NaN only columns!")
+            logger.error("Check that your matrix does not contain any NaN only columns!")
             raise
 
     if _check_module_importable("sklearnex"):  # pragma: no cover
@@ -1046,7 +1045,7 @@ def mice_forest_impute(
                 adata.X[::, column_indices] = enc.inverse_transform(adata.X[::, column_indices])
     except ValueError as e:
         if "Data matrix has wrong shape" in str(e):
-            print("[bold red]Check that your matrix does not contain any NaN only columns!")
+            logger.warning("Check that your matrix does not contain any NaN only columns!")
             raise
 
     return adata
@@ -1101,15 +1100,13 @@ def _warn_imputation_threshold(adata: AnnData, var_names: Iterable[str] | None, 
     var_name_to_pct: dict[str, int] = {}
     for var in thresholded_var_names:
         var_name_to_pct[var] = adata.var["missing_values_pct"].loc[var]
-        print(
-            f"[bold yellow]Feature [blue]{var} [yellow]had more than [blue]{var_name_to_pct[var]:.2f}% [yellow]missing values!"
-        )
+        logger.warning(f"Feature '{var}' had more than {var_name_to_pct[var]:.2f}% missing values!")
 
     return var_name_to_pct
 
 
 def _get_non_numerical_column_indices(X: np.ndarray) -> set:
-    """Return indices of columns, that contain at least one non numerical value that is not "Nan"."""
+    """Return indices of columns, that contain at least one non-numerical value that is not "Nan"."""
 
     def _is_float_or_nan(val):  # pragma: no cover
         """Check whether a given item is a float or np.nan"""

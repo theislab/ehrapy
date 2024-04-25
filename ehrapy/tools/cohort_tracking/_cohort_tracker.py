@@ -71,7 +71,8 @@ class CohortTracker:
         categorical: Columns that contain categorical variables, if None will be inferred from the data. Defaults to `None`.
 
     References:
-        [1] Tom Pollard, Alistair E.W. Johnson, Jesse D. Raffa, Roger G. Mark; tableone: An open source Python package for producing summary statistics for research papers, Journal of the American Medical Informatics Association, Volume 24, Issue 2, 1 March 2017, Pages 267–271, https://doi.org/10.1093/jamia/ocw117
+        [1] Tom Pollard, Alistair E.W. Johnson, Jesse D. Raffa, Roger G. Mark;
+        tableone: An open source Python package for producing summary statistics for research papers, Journal of the American Medical Informatics Association, Volume 24, Issue 2, 1 March 2017, Pages 267–271, https://doi.org/10.1093/jamia/ocw117
     """
 
     def __init__(self, adata: AnnData, columns: Sequence = None, categorical: Sequence = None) -> None:
@@ -222,27 +223,25 @@ class CohortTracker:
 
         Examples:
                 >>> import ehrapy as ep
-                >>> adata = ep.dt.diabetes_130_fairlearn(
-                >>>     columns_obs_only=["gender", "race", "num_procedures"]
-                >>> )
+                >>> adata = ep.dt.diabetes_130_fairlearn(columns_obs_only=["gender", "race", "num_procedures"])
                 >>> cohort_tracker = ep.tl.CohortTracker(adata, categorical=["gender", "race"])
                 >>> cohort_tracker(adata, "Initial Cohort")
                 >>> adata = adata[:1000]
                 >>> cohort_tracker(adata, "Filtered Cohort")
                 >>> cohort_tracker.plot_cohort_barplot(
-                >>>     subfigure_title=True,
-                >>>     color_palette="tab20",
-                >>>     yticks_labels={
-                >>>         "race": "Race [%]",
-                >>>         "gender": "Gender [%]",
-                >>>         "num_procedures": "#Procedures [mean (stdev)]",
-                >>>     },
-                >>>     legend_labels={
-                >>>         "Unknown/Invalid": "Unknown",
-                >>>         "num_procedures": "#Procedures",
-                >>>     },
-                >>>     legend_kwargs={"bbox_to_anchor": (1, 1.4)},
-                >>> )
+                ...     subfigure_title=True,
+                ...     color_palette="tab20",
+                ...     yticks_labels={
+                ...         "race": "Race [%]",
+                ...         "gender": "Gender [%]",
+                ...         "num_procedures": "#Procedures [mean (stdev)]",
+                ...     },
+                ...     legend_labels={
+                ...         "Unknown/Invalid": "Unknown",
+                ...         "num_procedures": "#Procedures",
+                ...     },
+                ...     legend_kwargs={"bbox_to_anchor": (1, 1.4)},
+                ... )
 
             .. image:: /_static/docstring_previews/cohort_tracking.png
         """

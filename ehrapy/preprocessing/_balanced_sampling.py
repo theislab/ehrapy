@@ -12,6 +12,7 @@ from imblearn.under_sampling import RandomUnderSampler
 
 def balanced_sample(
     adata: AnnData,
+    *,
     key: str,
     random_state: int = 0,
     method: Literal["RandomUnderSampler", "RandomOverSampler"] = "RandomUnderSampler",
@@ -21,10 +22,12 @@ def balanced_sample(
     """Balancing groups in the dataset.
 
     Balancing groups in the dataset based on group members in `.obs[key]` using the `imbalanced-learn <https://imbalanced-learn.org/stable/index.html>`_ package.
-    Currently supports `RandomUnderSampler` and `RandomOverSampler`.
+    Currently, supports `RandomUnderSampler` and `RandomOverSampler`.
 
-    Note that `RandomOverSampler <https://imbalanced-learn.org/stable/references/generated/imblearn.over_sampling.RandomOverSampler.html>`_ only replicates observations of the minority groups, which distorts several downstream analyses, very prominently neighborhood calculations and downstream analyses depending on that.
-    The `RandomUnderSampler <https://imbalanced-learn.org/stable/references/generated/imblearn.under_sampling.RandomUnderSampler.html>`_ by  default undersamples the majority group without replacement, not causing this issues of replicated observations.
+    Note that `RandomOverSampler <https://imbalanced-learn.org/stable/references/generated/imblearn.over_sampling.RandomOverSampler.html>`_
+    only replicates observations of the minority groups, which distorts several downstream analyses, very prominently neighborhood calculations and downstream analyses depending on that.
+    The `RandomUnderSampler <https://imbalanced-learn.org/stable/references/generated/imblearn.under_sampling.RandomUnderSampler.html>`_
+    by  default undersamples the majority group without replacement, not causing this issues of replicated observations.
 
     Args:
         adata: The annotated data matrix of shape `n_obs` × `n_vars`.

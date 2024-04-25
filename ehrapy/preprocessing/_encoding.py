@@ -8,11 +8,11 @@ import numpy as np
 import pandas as pd
 from anndata import AnnData
 from category_encoders import CountEncoder, HashingEncoder
+from lamin_utils import logger
 from rich import print
 from rich.progress import BarColumn, Progress
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
-from ehrapy import logging as logg
 from ehrapy.anndata._constants import (
     CATEGORICAL_TAG,
     CONTINUOUS_TAG,
@@ -89,17 +89,15 @@ def encode(
         # autodetect categorical values, which could lead to more categoricals
         if autodetect:
             if "var_to_encoding" in adata.uns.keys():
-                print(
-                    "[bold yellow]The current AnnData object has been already encoded. Returning original AnnData object!"
+                logger.warning(
+                    "The current AnnData object has been already encoded. Returning original AnnData object!"
                 )
                 return adata
             categoricals_names = _get_var_indices_for_type(adata, NON_NUMERIC_TAG)
 
             # no columns were detected, that would require an encoding (e.g. non-numerical columns)
             if not categoricals_names:
-                print(
-                    "[bold yellow]Detected no columns that need to be encoded. Leaving passed AnnData object unchanged."
-                )
+                logger.warning("Detected no columns that need to be encoded. Leaving passed AnnData object unchanged.")
                 return adata
             # copy uns so it can be used in encoding process without mutating the original anndata object
             orig_uns_copy = adata.uns.copy()
@@ -199,8 +197,8 @@ def encode(
                     "Check the column names to ensure that no column is encoded twice!"
                 )
             elif any(cat in adata.var_names[adata.var[EHRAPY_TYPE_KEY] == NUMERIC_TAG] for cat in categoricals):
-                print(
-                    "[bold yellow]At least one of passed column names seems to have numerical dtype. In general it is not recommended "
+                logger.warning(
+                    "At least one of passed column names seems to have numerical dtype. In general it is not recommended "
                     "to encode numerical columns!"
                 )
             orig_uns_copy = adata.uns.copy()
@@ -530,7 +528,7 @@ def _update_layer_after_encoding(
     updated_layer = np.hstack((encoded_categoricals, old_layer_view))
 
     try:
-        logg.info("Updated the original layer after encoding.")
+        logger.info("Updated the original layer after encoding.")
         return updated_layer.astype("float32")
     except ValueError as e:
         raise ValueError("Ensure that all columns which require encoding are being encoded.") from e
@@ -640,7 +638,7 @@ def _undo_encoding(
     """
     if "var_to_encoding" not in adata.uns.keys():
         if not suppress_warning:
-            print("[bold yellow]Calling undo_encoding on unencoded AnnData object.")
+            logger.warning("Calling undo_encoding on unencoded AnnData object.")
         return None
 
     # get all encoded variables
@@ -653,7 +651,7 @@ def _undo_encoding(
     if columns == "all":
         categoricals = list(adata.uns["original_values_categoricals"].keys())
     else:
-        print("[bold yellow]Currently, one can only reset encodings for all columns! [bold red]Aborting...")
+        logger.error("Currently, one can only reset encodings for all columns! Aborting...")
         return None
     transformed = _initial_encoding(adata.uns, categoricals)
     temp_x, temp_var_names = _delete_all_encodings(adata)
@@ -710,7 +708,6 @@ def _delete_all_encodings(adata: AnnData) -> tuple[np.ndarray | None, list | Non
         if idx == len(var_names):
             return None, None
         # don't need to consider case when no encoded columns are there, since undo_encoding would not run anyways in this case
-        logg.info("All encoded columns of the AnnData object were deleted.")
         return adata.X[:, idx:].copy(), var_names[idx:]
     return None, None
 
@@ -729,8 +726,8 @@ def _reorder_encodings(adata: AnnData, new_encodings: dict[str, list[list[str]] 
     latest_encoded_columns = list(chain(*(i if isinstance(i, list) else (i,) for i in flattened_modes)))
     # check for duplicates and raise an error if any
     if len(set(latest_encoded_columns)) != len(latest_encoded_columns):
-        print(
-            "[bold red]Reencoding AnnData object failed. You have at least one duplicate in your encodings. A column "
+        logger.error(
+            "Reencoding AnnData object failed. You have at least one duplicate in your encodings. A column "
             "cannot be encoded at the same time using different encoding modes!"
         )
         raise DuplicateColumnEncodingError
@@ -837,7 +834,7 @@ def _add_categoricals_to_obs(original: AnnData, new: AnnData, categorical_names:
     # get all non bool object columns and cast the to category dtype
     object_columns = list(new.obs.select_dtypes(include="object").columns)
     new.obs[object_columns] = new.obs[object_columns].astype("category")
-    logg.info(f"The original categorical values `{categorical_names}` were added to obs.")
+    logger.info(f"The original categorical values `{categorical_names}` were added to obs.")
 
 
 def _add_categoricals_to_uns(original: AnnData, new: AnnData, categorical_names: list[str]) -> None:
@@ -860,8 +857,6 @@ def _add_categoricals_to_uns(original: AnnData, new: AnnData, categorical_names:
                 new["original_values_categoricals"][var_name] = original.X[::, idx : idx + 1].astype("float")
             else:
                 new["original_values_categoricals"][var_name] = original.X[::, idx : idx + 1].astype("str")
-
-    logg.info(f"The original categorical values `{categorical_names}` were added to uns.")
 
 
 class AlreadyEncodedWarning(UserWarning):
