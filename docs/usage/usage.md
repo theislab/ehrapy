@@ -77,6 +77,7 @@ Other than tools, preprocessing steps usually don’t return an easily interpret
     preprocessing.pca
     preprocessing.regress_out
     preprocessing.subsample
+    preprocessing.balanced_sample
     preprocessing.highly_variable_features
     preprocessing.winsorize
     preprocessing.clip_quantile
@@ -343,9 +344,7 @@ Methods that extract and visualize tool-specific annotation in an AnnData object
     plot.embedding_density
 ```
 
-### Branching trajectories and pseudotime, clustering
-
-Visualize clusters using one of the embedding methods passing color='leiden'.
+### Branching trajectories and pseudotime
 
 ```{eval-rst}
 .. autosummary::
@@ -399,14 +398,12 @@ Visualize clusters using one of the embedding methods passing color='leiden'.
 
 ## AnnData utilities
 
-The ehrapy API exposes functions to transform a pandas dataframe into an AnnData object
-and vice versa.
-
 ```{eval-rst}
 .. autosummary::
     :toctree: anndata
     :nosignatures:
 
+    anndata.infer_feature_types
     anndata.df_to_anndata
     anndata.anndata_to_df
     anndata.move_to_obs

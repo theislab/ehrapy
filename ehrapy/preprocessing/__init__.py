@@ -1,3 +1,4 @@
+from ehrapy.preprocessing._balanced_sampling import balanced_sample
 from ehrapy.preprocessing._bias import detect_bias
 from ehrapy.preprocessing._encoding import encode, undo_encoding
 from ehrapy.preprocessing._highly_variable_features import highly_variable_features

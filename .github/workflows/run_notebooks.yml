@@ -38,7 +38,7 @@ jobs:
               run: uv pip install --system cellrank
 
             - name: Install nbconvert ipykernel
-              run: pip install nbconvert ipykernel
+              run: uv pip install --system nbconvert ipykernel
 
             - name: Run ${{ matrix.notebook }} Notebook
               run: jupyter nbconvert --to notebook --execute ${{ matrix.notebook }}

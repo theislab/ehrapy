@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from collections import defaultdict
+from collections import OrderedDict, defaultdict
 from itertools import chain
 from typing import Any
 
 import numpy as np
 import pandas as pd
-from _collections import OrderedDict
 from anndata import AnnData
 from category_encoders import CountEncoder, HashingEncoder
 from rich import print
@@ -14,7 +13,16 @@ from rich.progress import BarColumn, Progress
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
 from ehrapy import logging as logg
-from ehrapy.anndata._constants import EHRAPY_TYPE_KEY, NON_NUMERIC_ENCODED_TAG, NON_NUMERIC_TAG, NUMERIC_TAG
+from ehrapy.anndata._constants import (
+    CATEGORICAL_TAG,
+    CONTINUOUS_TAG,
+    DATE_TAG,
+    EHRAPY_TYPE_KEY,
+    FEATURE_TYPE_KEY,
+    NON_NUMERIC_ENCODED_TAG,
+    NON_NUMERIC_TAG,
+    NUMERIC_TAG,
+)
 from ehrapy.anndata.anndata_ext import _get_var_indices_for_type
 
 multi_encoding_modes = {"hash"}
@@ -35,8 +43,6 @@ def encode(
     indicates an encoded column (or part of it).
 
     Autodetect mode:
-        This can be used for convenience and when there are many columns that need to be encoded.
-        Note that missing values do not influence the result.
         By using this mode, every column that contains non-numerical values is encoded.
         In addition, every binary column will be encoded too.
         These are those columns which contain only 1's and 0's (could be either integers or floats).
@@ -66,9 +72,9 @@ def encode(
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2()
         >>> # encode col1 and col2 using label encoding and encode col3 using one hot encoding
-        >>> adata_encoded = ep.pp.encode(adata,
-        >>>                              autodetect=False,
-        >>>                              encodings={'label': ['col1', 'col2'], 'one-hot': ['col3']})
+        >>> adata_encoded = ep.pp.encode(
+        ...     adata, autodetect=False, encodings={"label": ["col1", "col2"], "one-hot": ["col3"]}
+        ... )
     """
     if isinstance(adata, AnnData):
         if isinstance(encodings, str) and not autodetect:
@@ -144,6 +150,9 @@ def encode(
                 new_var = pd.DataFrame(index=encoded_var_names)
                 new_var[EHRAPY_TYPE_KEY] = adata.var[EHRAPY_TYPE_KEY].copy()
                 new_var.loc[new_var.index.str.contains("ehrapycat")] = NON_NUMERIC_ENCODED_TAG
+                if FEATURE_TYPE_KEY in adata.var.keys():
+                    new_var[FEATURE_TYPE_KEY] = adata.var[FEATURE_TYPE_KEY].copy()
+                    new_var.loc[new_var.index.str.contains("ehrapycat"), FEATURE_TYPE_KEY] = CATEGORICAL_TAG
 
                 encoded_ann_data = AnnData(
                     encoded_x,
@@ -246,6 +255,9 @@ def encode(
             new_var = pd.DataFrame(index=encoded_var_names)
             new_var[EHRAPY_TYPE_KEY] = adata.var[EHRAPY_TYPE_KEY].copy()
             new_var.loc[new_var.index.str.contains("ehrapycat")] = NON_NUMERIC_ENCODED_TAG
+            if FEATURE_TYPE_KEY in adata.var.keys():
+                new_var[FEATURE_TYPE_KEY] = adata.var[FEATURE_TYPE_KEY].copy()
+                new_var.loc[new_var.index.str.contains("ehrapycat"), FEATURE_TYPE_KEY] = CATEGORICAL_TAG
 
             try:
                 encoded_ann_data = AnnData(

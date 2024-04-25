@@ -228,7 +228,7 @@ def test_kmf_logrank(
 
 
 def test_nested_f_statistic(small_model: GLMResultsWrapper, big_model: GLMResultsWrapper) -> float:
-    """ "Calculate the P value indicating if a larger GLM, encompassing a smaller GLM's parameters, adds explanatory power."
+    """Calculate the P value indicating if a larger GLM, encompassing a smaller GLM's parameters, adds explanatory power.
 
     See https://stackoverflow.com/questions/27328623/anova-test-for-glm-in-python/60769343#60769343
 
@@ -237,7 +237,7 @@ def test_nested_f_statistic(small_model: GLMResultsWrapper, big_model: GLMResult
         big_model: fitted generalized linear models.
 
     Returns:
-        float: p_value
+        float: p_value of Anova test.
     """
     addtl_params = big_model.df_model - small_model.df_model
     f_stat = (small_model.deviance - big_model.deviance) / (addtl_params * big_model.scale)
@@ -382,7 +382,7 @@ def _univariate_model(adata: AnnData, duration_col: str, event_col: str, model_c
     df = anndata_to_df(adata)
 
     if not accept_zero_duration:
-        df[duration_col][df[duration_col] == 0] += 1e-5
+        df.loc[df[duration_col] == 0, duration_col] += 1e-5
     T = df[duration_col]
     E = df[event_col]
 
