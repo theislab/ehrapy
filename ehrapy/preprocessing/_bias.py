@@ -100,8 +100,8 @@ def detect_bias(
     # -----------------------------
     smd_results: dict[str, list] = {
         "Sensitive Feature": [],
+        "Sensitive Group": [],
         "Compared Feature": [],
-        "Group": [],
         "Standardized Mean Difference": [],
     }
     continuous_var_names = adata.var_names[adata.var[FEATURE_TYPE_KEY] == CONTINUOUS_TAG]
@@ -122,15 +122,15 @@ def detect_bias(
 
             abs_smd = smd.abs()
             for comp_feature_nr, comp_feature in enumerate(
-                [continuous_var_names]
+                continuous_var_names
             ):  # TODO: Restrict to continuous features
                 # if sens_feature == comp_feature:
                 #   continue
                 if abs_smd[comp_feature_nr] > smd_threshold:
                     smd_results["Sensitive Feature"].append(sens_feature)
+                    smd_results["Sensitive Group"].append(group)
                     smd_results["Compared Feature"].append(comp_feature)
-                    smd_results["Group"].append(group)
-                    smd_results["Standardized Mean Difference"] = smd[comp_feature_nr]
+                    smd_results["Standardized Mean Difference"].append(smd[comp_feature_nr])
 
         adata.uns[f"smd_{sens_feature}"] = (
             smd_nparray.T

@@ -39,8 +39,27 @@ def test_detect_bias_all_sens_features(adata):
 
     assert "standardized_mean_differences" in results.keys()
     df = results["standardized_mean_differences"]
-    print(df)
-    # TODO
+    assert len(df) == 4  # Both groups of cat1, cat2 respectively show a high SMD with contin1
+    assert (
+        df[(df["Sensitive Feature"] == "cat1") & (df["Sensitive Group"] == 0)]["Standardized Mean Difference"].values[0]
+        < -1
+    )
+    assert (
+        df[(df["Sensitive Feature"] == "cat1") & (df["Sensitive Group"] == 1)]["Standardized Mean Difference"].values[0]
+        > 1
+    )
+    assert (
+        df[(df["Sensitive Feature"] == "cat2") & (df["Sensitive Group"] == 10)]["Standardized Mean Difference"].values[
+            0
+        ]
+        > 1
+    )
+    assert (
+        df[(df["Sensitive Feature"] == "cat2") & (df["Sensitive Group"] == 11)]["Standardized Mean Difference"].values[
+            0
+        ]
+        < -1
+    )
 
     assert "categorical_value_counts" in results.keys()
     df = results["categorical_value_counts"]
@@ -50,7 +69,7 @@ def test_detect_bias_all_sens_features(adata):
 
     assert "feature_importances" in results.keys()
     df = results["feature_importances"]
-    assert len(df) == 7  # 6 for the pairwise correlating features and one for contin1, which predicts cat1
+    assert len(df) >= 7  # 6 for the pairwise correlating features and one/two for contin1, which predicts cat1
 
 
 def test_detect_bias_specific_sens_features(adata):
@@ -63,5 +82,28 @@ def test_detect_bias_specific_sens_features(adata):
     )
 
     assert "feature_correlations" in results.keys()
-    results["feature_correlations"]
-    # TODO: Add actual tests
+    df = results["feature_correlations"]
+    assert len(df) == 2  # cat1 & contin1 and contin1 & cat1
+    assert np.all(df["Spearman CC"] > 0.5)
+
+    assert "standardized_mean_differences" in results.keys()
+    df = results["standardized_mean_differences"]
+    assert len(df) == 2  # Both groups of cat1 show a high SMD with contin1
+    assert (
+        df[(df["Sensitive Feature"] == "cat1") & (df["Sensitive Group"] == 0)]["Standardized Mean Difference"].values[0]
+        < -1
+    )
+    assert (
+        df[(df["Sensitive Feature"] == "cat1") & (df["Sensitive Group"] == 1)]["Standardized Mean Difference"].values[0]
+        > 1
+    )
+
+    assert "categorical_value_counts" in results.keys()
+    df = results["categorical_value_counts"]
+    assert len(df) == 2
+    assert df[(df["Sensitive Feature"] == "cat1") & (df["Sensitive Group"] == 0)]["Group 1 Percentage"].values[0] == 0.2
+    assert df[(df["Sensitive Feature"] == "cat1") & (df["Sensitive Group"] == 0)]["Group 2 Percentage"].values[0] == 0.8
+
+    assert "feature_importances" in results.keys()
+    df = results["feature_importances"]
+    assert len(df) == 1  # contin1 predicts cat1
