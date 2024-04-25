@@ -123,6 +123,13 @@ def test_most_frequent_impute_subset(impute_adata):
     assert not (np.all([item != item for item in adata_imputed.X[::, 1:3]]))
 
 
+def test_knn_impute_check_backend(impute_num_adata):
+    knn_impute(impute_num_adata, backend="faiss")
+    knn_impute(impute_num_adata, backend="scikit-learn")
+    with pytest.raises(ValueError):
+        knn_impute(impute_num_adata, backend="invalid_one")
+
+
 def test_knn_impute_no_copy(impute_num_adata):
     knn_impute(impute_num_adata)
 
