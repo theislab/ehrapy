@@ -26,6 +26,9 @@ _VERBOSITY_TO_LOGLEVEL: dict[str, str] = {
     "debug": "DEBUG",
 }
 
+for index, level in enumerate(list(_VERBOSITY_TO_LOGLEVEL.values())):  # pragma: no cover
+    _VERBOSITY_TO_LOGLEVEL[index] = level  # type: ignore
+
 
 class Verbosity(IntEnum):  # pragma: no cover
     error = 0
