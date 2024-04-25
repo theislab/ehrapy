@@ -199,7 +199,7 @@ def knn_impute(
     copy: bool = False,
     backend: Literal["scikit-learn", "faiss"] = "faiss",
     warning_threshold: int = 70,
-    **kwargs,
+    backend_kwargs: dict | None = None,
 ) -> AnnData:
     """Imputes missing values in the input AnnData object using K-nearest neighbor imputation.
 
@@ -215,12 +215,14 @@ def knn_impute(
         copy: Whether to perform the imputation on a copy of the original `AnnData` object.
               If `True`, the original object remains unmodified. Defaults to `False`.
         backend: The implementation to use for the KNN imputation.
-                 'scikit-learn' is very slow but uses an exact KNN algorithm,
-                  whereas 'faiss' is drastically faster but uses an approximation for the KNN graph.
-                  In practice, 'faiss' is close enough to the 'scikit-learn' results.
+                 'scikit-learn' is very slow but uses an exact KNN algorithm, whereas 'faiss'
+                 is drastically faster but uses an approximation for the KNN graph.
+                 In practice, 'faiss' is close enough to the 'scikit-learn' results.
         warning_threshold: Percentage of missing values above which a warning is issued. Defaults to 70.
-        **kwargs: Passed to the backend.
+        backend_kwargs: Passed to the backend.
                   Pass "mean", "median", or "weighted" for 'strategy' to set the imputation strategy for faiss.
+                  See `sklearn.impute.KNNImputer <https://scikit-learn.org/stable/modules/generated/sklearn.impute.KNNImputer.html>`_ for more information on the 'scikit-learn' backend.
+                  See `fknni.faiss.FaissImputer <https://fknni.readthedocs.io/en/latest/>`_ for more information on the 'faiss' backend.
 
     Returns:
         An updated AnnData object with imputed values.
@@ -239,6 +241,12 @@ def knn_impute(
 
     _warn_imputation_threshold(adata, var_names, threshold=warning_threshold)
 
+    if backend not in {"scikit-learn", "faiss"}:
+        raise ValueError(f"Unknown backend '{backend}' for KNN imputation. Choose between 'scikit-learn' and 'faiss'.")
+
+    if backend_kwargs is None:
+        backend_kwargs = {}
+
     if _check_module_importable("sklearnex"):  # pragma: no cover
         from sklearnex import patch_sklearn, unpatch_sklearn
 
@@ -252,14 +260,14 @@ def knn_impute(
             progress.add_task("[blue]Running KNN imputation", total=1)
             # numerical only data needs no encoding since KNN Imputation can be applied directly
             if np.issubdtype(adata.X.dtype, np.number):
-                _knn_impute(adata, var_names, n_neighbours, backend=backend, **kwargs)
+                _knn_impute(adata, var_names, n_neighbours, backend=backend, **backend_kwargs)
             else:
                 # ordinal encoding is used since non-numerical data can not be imputed using KNN Imputation
                 enc = OrdinalEncoder()
                 column_indices = adata.var[FEATURE_TYPE_KEY] == CATEGORICAL_TAG
                 adata.X[::, column_indices] = enc.fit_transform(adata.X[::, column_indices])
                 # impute the data using KNN imputation
-                _knn_impute(adata, var_names, n_neighbours, backend=backend, **kwargs)
+                _knn_impute(adata, var_names, n_neighbours, backend=backend, **backend_kwargs)
                 # imputing on encoded columns might result in float numbers; those can not be decoded
                 # cast them to int to ensure they can be decoded
                 adata.X[::, column_indices] = np.rint(adata.X[::, column_indices]).astype(int)
