@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import pandas as pd
+from lamin_utils import logger
 from rich import print
 from thefuzz import process
 
@@ -281,12 +282,10 @@ def qc_lab_measurements(
             query=measurement, choices=reference_table.index, score_cutoff=threshold
         )
         if best_column_match is None:
-            print(f"[bold yellow]Unable to find a match for {measurement}")
+            logger.warning(f"Unable to find a match for {measurement}")
             continue
         if verbose:
-            print(
-                f"[bold blue]Detected [green]{best_column_match}[blue] for [green]{measurement}[blue] with score [green]{score}."
-            )
+            logger.info(f"Detected '{best_column_match}' for '{measurement}' with score {score}.")
 
         reference_column = "SI Reference Interval" if unit == "SI" else "Traditional Reference Interval"
 
@@ -324,7 +323,7 @@ def qc_lab_measurements(
             else:
                 actual_measurements = adata[:, measurement].X
         except TypeError:
-            print(f"[bold yellow]Unable to find specified reference values for {measurement}.")
+            logger.warning(f"Unable to find specified reference values for {measurement}.")
 
         check = reference_values[reference_column].values
         check_str: str = np.array2string(check)
@@ -332,7 +331,7 @@ def qc_lab_measurements(
         if "<" in check_str:
             upperbound = float(check_str.replace("<", ""))
             if verbose:
-                print(f"[bold blue]Using upperbound [green]{upperbound}")
+                logger.info(f"Using upperbound {upperbound}")
 
             upperbound_check_results = actual_measurements < upperbound
             upperbound_check_results_array: np.ndarray = upperbound_check_results.copy()
@@ -340,7 +339,7 @@ def qc_lab_measurements(
         elif ">" in check_str:
             lower_bound = float(check_str.replace(">", ""))
             if verbose:
-                print(f"[bold blue]Using lowerbound [green]{lower_bound}")
+                logger.info(f"Using lowerbound {lower_bound}")
 
             lower_bound_check_results = actual_measurements > lower_bound
             lower_bound_check_results_array = lower_bound_check_results.copy()
@@ -349,7 +348,7 @@ def qc_lab_measurements(
             min_value = float(check_str.split("-")[0])
             max_value = float(check_str.split("-")[1])
             if verbose:
-                print(f"[bold blue]Using minimum of [green]{min_value}[blue] and maximum of [green]{max_value}")
+                logger.info(f"Using minimum of {min_value} and maximum of {max_value}")
 
             range_check_results = (actual_measurements >= min_value) & (actual_measurements <= max_value)
             range_check_results_array: np.ndarray = range_check_results.copy()

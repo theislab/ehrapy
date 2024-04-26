@@ -3,14 +3,15 @@ from __future__ import annotations
 import sys
 import warnings
 from io import StringIO
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
-import anndata
 import dowhy
 import networkx as nx
 import numpy as np
+from lamin_utils import logger
 
-from ehrapy import logging as logg
+if TYPE_CHECKING:
+    import anndata
 
 warnings.filterwarnings("ignore")
 
@@ -99,44 +100,35 @@ def causal_inference(
 
     Examples:
         >>> data = dowhy.datasets.linear_dataset(
-        >>>     beta=10,
-        >>>     num_common_causes=5,
-        >>>     num_instruments=2,
-        >>>     num_samples=1000,
-        >>>     treatment_is_binary=True,
-        >>> )
-        >>>
-        >>> ep.tl.causal_inference(
-        >>>     adata=anndata.AnnData(data["df"]),
-        >>>     graph=data["gml_graph"],
-        >>>     treatment="v0",
-        >>>     outcome="y",
-        >>>     estimation_method="backdoor.propensity_score_stratification",
-        >>> )
-        >>>
-        >>> estimate = ep.tl.causal_inference(
-        >>>     adata=self.linear_data,
-        >>>     graph=self.linear_graph,
-        >>>     treatment="treatment",
-        >>>     outcome="outcome",
-        >>>     estimation_method="backdoor.linear_regression",
-        >>>     return_as="estimate",
-        >>>     show_graph=True,
-        >>>     show_refute_plots=True,
-        >>> )
-        >>> ep.tl.plot_causal_effect(estimate)
-    """
-    if not isinstance(adata, anndata.AnnData):
-        raise TypeError("Parameter 'adata' must be an instance of anndata.AnnData.")
+        ...     beta=10,
+        ...     num_common_causes=5,
+        ...     num_instruments=2,
+        ...     num_samples=1000,
+        ...     treatment_is_binary=True,
+        ... )
 
+        >>> ci = ep.tl.causal_inference(
+        ...     adata=anndata.AnnData(data["df"]),
+        ...     graph=data["gml_graph"],
+        ...     treatment="v0",
+        ...     outcome="y",
+        ...     estimation_method="backdoor.propensity_score_stratification",
+        ... )
+
+        >>> estimate = ep.tl.causal_inference(
+        ...     adata=ci.linear_data,
+        ...     graph=ci.linear_graph,
+        ...     treatment="treatment",
+        ...     outcome="outcome",
+        ...     estimation_method="backdoor.linear_regression",
+        ...     return_as="estimate",
+        ...     show_graph=True,
+        ...     show_refute_plots=True,
+        ... )
+        ... ep.tl.plot_causal_effect(estimate)
+    """
     if not isinstance(graph, (nx.DiGraph, str)):
         raise TypeError("Input graph must be a networkx DiGraph or string.")
-
-    if not isinstance(treatment, str):
-        raise TypeError("treatment must be a string")
-
-    if not isinstance(outcome, str):
-        raise TypeError("outcome must be a string")
 
     valid_refute_methods = [
         "placebo_treatment_refuter",
@@ -147,9 +139,6 @@ def causal_inference(
 
     if refute_methods is None:
         refute_methods = valid_refute_methods
-
-    if not isinstance(refute_methods, (list, str)):
-        raise TypeError("Parameter 'refute_methods' must be a list or a string")
 
     if isinstance(refute_methods, str):
         refute_methods = [refute_methods]
@@ -162,17 +151,8 @@ def causal_inference(
         if method not in valid_refute_methods:
             raise ValueError(f"Unknown refute method {method}")
 
-    if not isinstance(estimation_method, str):
-        raise TypeError("estimation_method must be a string")
-
-    if not isinstance(return_as, str):
-        raise TypeError("return_as must be a string")
-
     if return_as not in ["estimate", "refute", "estimate+refute"]:
         raise ValueError(f"Unknown value for return_as '{return_as}': {return_as}")
-
-    if not isinstance(show_graph, bool):
-        raise TypeError("Parameter 'show_graph' must be a boolean.")
 
     identify_kwargs = identify_kwargs or {}
     estimate_kwargs = estimate_kwargs or {}
@@ -231,7 +211,7 @@ def causal_inference(
                 refute_results[method] = str(e)  # type: ignore
 
             if refute_failed:
-                logg.warning(f"[dowhy] Refutation '{method}' failed.")
+                logger.warning(f"Refutation '{method}' failed.")
             else:
                 # only returns dict when pval should be a number
                 if isinstance(refute.refutation_result, dict):
@@ -241,8 +221,8 @@ def causal_inference(
                         failed_attempts += 1
                         if failed_attempts <= attempts:
                             found_problematic_pvalues = True
-                            logg.warning(
-                                f"[dowhy] Refutation '{method}' returned invalid pval '{str(refute.refutation_result['p_value'])}', retrying ({failed_attempts}/{attempts})"
+                            logger.warning(
+                                f"Refutation '{method}' returned invalid pval '{str(refute.refutation_result['p_value'])}', retrying ({failed_attempts}/{attempts})"
                             )
                             break
                         else:

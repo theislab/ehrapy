@@ -1,53 +1,28 @@
 from __future__ import annotations
 
 import inspect
-import logging
-import sys
-from contextlib import contextmanager
-from enum import IntEnum
-from logging import getLevelName
 from pathlib import Path
 from time import time
-from typing import TYPE_CHECKING, Any, Literal, TextIO
+from typing import TYPE_CHECKING, Any, Literal
 
+from lamin_utils._logger import logger
 from matplotlib import pyplot as plt
 from scanpy.plotting import set_rcParams_scanpy
 
-from ehrapy.logging import _RootLogger, _set_log_file, _set_log_level
-
 if TYPE_CHECKING:
-    from collections.abc import Generator, Iterable
+    from collections.abc import Iterable
 
-_VERBOSITY_TO_LOGLEVEL: dict[str, str] = {
-    "error": "ERROR",
-    "warning": "WARNING",
-    "info": "INFO",
-    "hint": "HINT",
-    "debug": "DEBUG",
+VERBOSITY_TO_INT = {
+    "error": 0,  # 40
+    "warning": 1,  # 30
+    "success": 2,  # 25
+    "info": 3,  # 20
+    "hint": 4,  # 15
+    "debug": 5,  # 10
 }
-
-for index, level in enumerate(list(_VERBOSITY_TO_LOGLEVEL.values())):  # pragma: no cover
-    _VERBOSITY_TO_LOGLEVEL[index] = level  # type: ignore
-
-
-class Verbosity(IntEnum):  # pragma: no cover
-    error = 0
-    warn = 1
-    info = 2
-    hint = 3
-    debug = 4
-
-    @property
-    def level(self) -> int:
-        # getLevelName(str) returns the int level…
-        return getLevelName(_VERBOSITY_TO_LOGLEVEL[self])  # type: ignore
-
-    @contextmanager  # type: ignore
-    def override(self, verbosity: Verbosity) -> Generator:
-        """Temporarily override verbosity."""
-        ehrapy_settings.verbosity = verbosity
-        yield self
-        ehrapy_settings.verbosity = self
+VERBOSITY_TO_STR: dict[int, str] = dict(
+    [reversed(i) for i in VERBOSITY_TO_INT.items()]  # type: ignore
+)
 
 
 def _type_check(var: Any, varname: str, types: type | tuple[type, ...]):  # pragma: no cover
@@ -62,15 +37,11 @@ def _type_check(var: Any, varname: str, types: type | tuple[type, ...]):  # prag
 
 
 class EhrapyConfig:  # pragma: no cover
-    """Configuration manager for ehrapy.
-
-    Strongly adapted from Scanpy.
-    """
+    """Configuration manager for ehrapy."""
 
     def __init__(
         self,
         *,
-        verbosity: str = "warning",
         plot_suffix: str = "",
         file_format_data: str = "h5ad",
         file_format_figs: str = "pdf",
@@ -91,9 +62,8 @@ class EhrapyConfig:  # pragma: no cover
         n_pcs=50,
     ):
         # logging
-        self._root_logger = _RootLogger(logging.INFO)  # level will be replaced
-        self.logfile = logfile  # type: ignore
-        self.verbosity = verbosity  # type: ignore
+        self._verbosity_int: int = 1  # warning-level logging
+        logger.set_verbosity(self._verbosity_int)
         # rest
         self.plot_suffix = plot_suffix
         self.file_format_data = file_format_data
@@ -130,36 +100,26 @@ class EhrapyConfig:  # pragma: no cover
         """Default number of principal components to use."""
 
     @property
-    def verbosity(self) -> Verbosity:
-        """
-        Verbosity level (default `warning`)
+    def verbosity(self) -> str:
+        """Logger verbosity (default 'warning').
 
-        Level 0: only show 'error' messages.
-        Level 1: also show 'warning' messages.
-        Level 2: also show 'info' messages.
-        Level 3: also show 'hint' messages.
-        Level 4: also show very detailed progress for 'debug'ging.
+        - 'error': ❌ only show error messages
+        - 'warning': ❗ also show warning messages
+        - 'success': ✅ also show success and save messages
+        - 'info': 💡 also show info messages
+        - 'hint': 💡 also show hint messages
+        - 'debug': 🐛 also show detailed debug messages
         """
-        return self._verbosity
+        return VERBOSITY_TO_STR[self._verbosity_int]
 
     @verbosity.setter
-    def verbosity(self, verbosity: Verbosity | int | str):
-        verbosity_str_options = [v for v in _VERBOSITY_TO_LOGLEVEL if isinstance(v, str)]
-        if isinstance(verbosity, Verbosity):
-            self._verbosity = verbosity
-        elif isinstance(verbosity, int):
-            self._verbosity = Verbosity(verbosity)
-        elif isinstance(verbosity, str):
-            verbosity = verbosity.lower()
-            if verbosity not in verbosity_str_options:
-                raise ValueError(
-                    f"Cannot set verbosity to {verbosity}. " f"Accepted string values are: {verbosity_str_options}"
-                )
-            else:
-                self._verbosity = Verbosity(verbosity_str_options.index(verbosity))
+    def verbosity(self, verbosity: str | int):
+        if isinstance(verbosity, str):
+            verbosity_int = VERBOSITY_TO_INT[verbosity]
         else:
-            _type_check(verbosity, "verbosity", (str, int))
-        _set_log_level(self, _VERBOSITY_TO_LOGLEVEL[self._verbosity])  # type: ignore
+            verbosity_int = verbosity
+        self._verbosity_int = verbosity_int
+        logger.set_verbosity(verbosity_int)
 
     @property
     def plot_suffix(self) -> str:
@@ -304,41 +264,6 @@ class EhrapyConfig:  # pragma: no cover
         self._n_jobs = n_jobs
 
     @property
-    def logpath(self) -> Path | None:
-        """The file path `logfile` was set to."""
-        return self._logpath  # type: ignore
-
-    @logpath.setter
-    def logpath(self, logpath: str | Path | None):
-        _type_check(logpath, "logfile", (str, Path))
-        # set via “file object” branch of logfile.setter
-        self.logfile = Path(logpath).open("a")
-        self._logpath = Path(logpath)
-
-    @property
-    def logfile(self) -> TextIO:
-        """The open file to write logs to.
-
-        Set it to a :class:`~pathlib.Path` or :class:`str` to open a new one.
-        The default `None` corresponds to :obj:`sys.stdout` in jupyter notebooks
-        and to :obj:`sys.stderr` otherwise.
-
-        For backwards compatibility, setting it to `''` behaves like setting it to `None`.
-        """
-        return self._logfile  # type: ignore
-
-    @logfile.setter
-    def logfile(self, logfile: str | Path | TextIO | None):
-        if not hasattr(logfile, "write") and logfile:
-            self.logpath = logfile  # type: ignore
-        else:  # file object
-            if not logfile:  # None or ''
-                logfile = sys.stdout if self._is_run_from_ipython() else sys.stderr
-            self._logfile = logfile
-            self._logpath = None
-            _set_log_file(self)
-
-    @property
     def categories_to_ignore(self) -> list[str]:
         """Categories that are omitted in plotting etc."""
         return self._categories_to_ignore
@@ -439,7 +364,3 @@ class EhrapyConfig:  # pragma: no cover
 
 
 ehrapy_settings = EhrapyConfig()
-
-ehrapy_settings._root_logger = _RootLogger(ehrapy_settings.verbosity)
-_set_log_file(ehrapy_settings)
-_set_log_level(ehrapy_settings, level=20)  # default level info

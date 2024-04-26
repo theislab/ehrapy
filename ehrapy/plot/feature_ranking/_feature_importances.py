@@ -1,5 +1,3 @@
-from typing import TYPE_CHECKING
-
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
@@ -38,7 +36,7 @@ def rank_features_supervised(
         >>> input_features = [
         ...     feat for feat in adata.var_names if feat not in {"service_unit", "day_icu_intime", "tco2_first"}
         ... ]
-        >>> ep.tl.rank_features_supervised(adata, "tco2_first", "continuous", "rf", input_features=input_features)
+        >>> ep.tl.rank_features_supervised(adata, "tco2_first", "rf", input_features=input_features)
         >>> ep.pl.rank_features_supervised(adata)
 
         .. image:: /_static/docstring_previews/feature_importances.png

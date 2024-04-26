@@ -9,6 +9,7 @@ import pandas as pd
 from _collections import OrderedDict
 from anndata import AnnData
 from anndata import read as read_h5
+from lamin_utils import logger
 from rich import print
 
 from ehrapy import ehrapy_settings, settings
@@ -287,9 +288,9 @@ def _do_read_csv(
     """
     try:
         if index_column and columns_obs_only and index_column in columns_obs_only:
-            print(
-                f"[bold yellow]Index column [blue]{index_column} [yellow]is also used as a column "
-                f"for obs only. Using default indices instead and moving [blue]{index_column} [yellow]to column_obs_only."
+            logger.warning(
+                f"Index column '{index_column}' is also used as a column "
+                f"for obs only. Using default indices instead and moving {index_column} to column_obs_only."
             )
             index_column = None
         initial_df = pd.read_csv(file_path, delimiter=delimiter, index_col=index_column, **kwargs)
@@ -464,7 +465,7 @@ def _get_non_existing_files(
     backup_url: str,
     archive_format: Literal["zip", "tar", "tar.gz", "tgz"] = None,
 ) -> Path:
-    """Handle non existing files or directories by trying to download from a backup_url and moving them in the correct directory.
+    """Handle non-existing files or directories by trying to download from a backup_url and moving them in the correct directory.
 
     Returns:
         The file or directory path of the downloaded content.
@@ -474,7 +475,7 @@ def _get_non_existing_files(
             f"File or directory {dataset_path} does not exist and no backup_url was provided.\n"
             f"Please provide a backup_url or check whether path is spelled correctly."
         )
-    print("[bold yellow]Path or dataset does not yet exist. Attempting to download...")
+    logger.info("Path or dataset does not yet exist. Attempting to download...")
     download(
         backup_url,
         output_file_name=download_dataset_name,
@@ -693,9 +694,9 @@ def _extract_index_and_columns_obs_only(identifier: str, index_columns, columns_
     if (_index_column and _columns_obs_only or _index_column and _columns_x_only) and (
         _index_column in _columns_obs_only or _index_column in _columns_x_only
     ):
-        print(
-            f"[bold yellow]Index column [blue]{_index_column} [yellow]for file [blue]{identifier} [yellow]is also used as a column "
-            f"for obs or X only. Using default indices instead and moving [blue]{_index_column} [yellow]to obs/X!."
+        logger.warning(
+            f"Index column '{_index_column}' for file '{identifier}' is also used as a column "
+            f"for obs or X only. Using default indices instead and moving '{_index_column}' to obs/X!."
         )
         _index_column = None
 

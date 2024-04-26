@@ -3,13 +3,13 @@ from typing import Literal
 
 import pandas as pd
 from anndata import AnnData
+from lamin_utils import logger
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.svm import SVC, SVR
 
-from ehrapy import logging as logg
 from ehrapy.anndata import anndata_to_df, check_feature_types
 from ehrapy.anndata._constants import CATEGORICAL_TAG, CONTINUOUS_TAG, DATE_TAG, FEATURE_TYPE_KEY
 
@@ -131,7 +131,7 @@ def rank_features_supervised(
 
     score = predictor.score(x_test, y_test)
     evaluation_metric = "R2 score" if prediction_type == "continuous" else "accuracy"
-    logg.info(
+    logger.info(
         f"Training completed. The model achieved an {evaluation_metric} of {score:.2f} on the test set, consisting of {len(y_test)} samples."
     )
 

@@ -9,11 +9,10 @@ from ehrapy.anndata import anndata_ext as ae
 if TYPE_CHECKING:
     from anndata import AnnData
 
-# Functionality provided by https://github.com/ResidentMario/missingno
-
 
 def missing_values_matrix(
     adata: AnnData,
+    *,
     filter: str | None = None,
     max_cols: int = 0,
     max_percentage: float = 0,
@@ -30,7 +29,7 @@ def missing_values_matrix(
     """A matrix visualization of the nullity of the given AnnData object.
 
     Args:
-        adata: :class:`~anndata.AnnData` object object containing all observations.
+        adata: :class:`~anndata.AnnData` object containing all observations.
         filter: The filter to apply to the matrix. Should be one of "top", "bottom", or None. Defaults to None .
         max_cols: The max number of columns from the AnnData object to include.
         max_percentage: The max percentage fill of the columns from the AnnData object.
@@ -49,7 +48,7 @@ def missing_values_matrix(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pl.missing_values_matrix(adata, filter="bottom", max_cols=15, max_percentage=0.999)
 
     Preview:
@@ -92,6 +91,7 @@ def missing_values_matrix(
 
 def missing_values_barplot(
     adata: AnnData,
+    *,
     log: bool = False,
     filter: str | None = None,
     max_cols: int = 0,
@@ -108,8 +108,8 @@ def missing_values_barplot(
     """A bar chart visualization of the nullity of the given AnnData object.
 
     Args:
-        adata: :class:`~anndata.AnnData` object object containing all observations.
-        log: Whether or not to display a logarithmic plot.
+        adata: :class:`~anndata.AnnData` object containing all observations.
+        log: Whether to display a logarithmic plot. Defaults to False.
         filter: The filter to apply to the barplot. Should be one of "top", "bottom", or None. Defaults to None .
         max_cols: The max number of columns from the AnnData object to include.
         max_percentage: The max percentage fill of the columns from the AnnData object.
@@ -117,7 +117,7 @@ def missing_values_barplot(
         figsize: The size of the figure to display.
         color: The color of the filled columns.
         fontsize: The figure's font size.
-        labels: Whether or not to display the column names.
+        labels: Whether to display the column names.
         label_rotation: What angle to rotate the text labels to.
         orientation: The way the bar plot is oriented.
         categoricals: Whether to include "ehrapycat" columns to the plot.
@@ -127,7 +127,7 @@ def missing_values_barplot(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pl.missing_values_barplot(adata, filter="bottom", max_cols=15, max_percentage=0.999)
 
     Preview:
@@ -170,6 +170,7 @@ def missing_values_barplot(
 
 def missing_values_heatmap(
     adata: AnnData,
+    *,
     filter: str | None = None,
     max_cols: int = 0,
     max_percentage: float = 0,
@@ -209,7 +210,7 @@ def missing_values_heatmap(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pl.missing_values_heatmap(adata, filter="bottom", max_cols=15, max_percentage=0.999)
 
     Preview:
@@ -254,6 +255,7 @@ def missing_values_heatmap(
 
 def missing_values_dendrogram(
     adata: AnnData,
+    *,
     method: str = "average",
     filter: str | None = None,
     max_cols: int = 0,
@@ -287,7 +289,7 @@ def missing_values_dendrogram(
 
     Example:
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pl.missing_values_dendrogram(adata, filter="bottom", max_cols=15, max_percentage=0.999)
 
     Preview:
