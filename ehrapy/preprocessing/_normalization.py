@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
+from lamin_utils import logger as logg
 from sklearn.preprocessing import maxabs_scale, minmax_scale, power_transform, quantile_transform, robust_scale, scale
 
 from ehrapy.anndata.anndata_ext import (
@@ -18,7 +19,21 @@ if TYPE_CHECKING:
     from anndata import AnnData
 
 
-def scale_norm(adata: AnnData, vars: str | Sequence[str] | None = None, copy: bool = False, **kwargs) -> AnnData | None:
+def _scale_func_batch(scale_func, var_values, adata, batch_key, **kwargs):
+    if batch_key is None:
+        var_values = scale_func(var_values, **kwargs)
+
+    if batch_key is not None:
+        for batch in adata.obs[batch_key].unique():
+            batch_idx = adata.obs[batch_key] == batch
+            var_values[batch_idx] = scale_func(var_values[batch_idx], **kwargs)
+
+    return var_values
+
+
+def scale_norm(
+    adata: AnnData, vars: str | Sequence[str] | None = None, batch_key: str | None = None, copy: bool = False, **kwargs
+) -> AnnData | None:
     """Apply scaling normalization.
 
     Functionality is provided by :func:`~sklearn.preprocessing.scale`, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.scale.html for details.
@@ -26,8 +41,9 @@ def scale_norm(adata: AnnData, vars: str | Sequence[str] | None = None, copy: bo
     Args:
         adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
         vars: List of the names of the numeric variables to normalize.
-              If None all numeric variables will be normalized. Defaults to None .
-        copy: Whether to return a copy or act in place . Defaults to False .
+              If None all numeric variables will be normalized. Defaults to None.
+        batch_key: Key in adata.obs that contains batch information. If provided, scaling is applied per batch.
+        copy: Whether to return a copy or act in place. Defaults to False.
         **kwargs: Additional arguments passed to :func:`~sklearn.preprocessing.scale`
 
     Returns:
@@ -38,6 +54,8 @@ def scale_norm(adata: AnnData, vars: str | Sequence[str] | None = None, copy: bo
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.scale_norm(adata, copy=True)
     """
+    if batch_key is not None and batch_key not in adata.obs_keys():
+        raise KeyError(f"Batch key '{batch_key}' not found in adata.obs.")
     if isinstance(vars, str):
         vars = [vars]
     if vars is None:
@@ -50,17 +68,19 @@ def scale_norm(adata: AnnData, vars: str | Sequence[str] | None = None, copy: bo
     var_idx = _get_column_indices(adata, vars)
     var_values = np.take(adata.X, var_idx, axis=1)
 
-    var_values = scale(var_values, **kwargs)
+    var_values = _scale_func_batch(scale, var_values, adata, batch_key, **kwargs)
 
     set_numeric_vars(adata, var_values, vars)
 
     _record_norm(adata, vars, "scale")
 
+    logg.debug("Scaling normalization was applied on `X`.")
+
     return adata
 
 
 def minmax_norm(
-    adata: AnnData, vars: str | Sequence[str] | None = None, copy: bool = False, **kwargs
+    adata: AnnData, vars: str | Sequence[str] | None = None, batch_key: str | None = None, copy: bool = False, **kwargs
 ) -> AnnData | None:
     """Apply min-max normalization.
 
@@ -71,8 +91,9 @@ def minmax_norm(
         adata: :class:`~anndata.AnnData` object containing X to normalize values in.
                Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
         vars: List of the names of the numeric variables to normalize.
-              If None all numeric variables will be normalized. Defaults to False .
-        copy: Whether to return a copy or act in place. Defaults to False .
+              If None all numeric variables will be normalized. Defaults to False.
+        batch_key: Key in adata.obs that contains batch information. If provided, scaling is applied per batch.
+        copy: Whether to return a copy or act in place. Defaults to False.
         **kwargs: Additional arguments passed to :func:`~sklearn.preprocessing.minmax_scale`
 
     Returns:
@@ -84,6 +105,8 @@ def minmax_norm(
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.minmax_norm(adata, copy=True)
     """
+    if batch_key is not None and batch_key not in adata.obs_keys():
+        raise KeyError(f"Batch key '{batch_key}' not found in adata.obs.")
     if isinstance(vars, str):
         vars = [vars]
     if vars is None:
@@ -96,16 +119,20 @@ def minmax_norm(
     var_idx = _get_column_indices(adata, vars)
     var_values = np.take(adata.X, var_idx, axis=1)
 
-    var_values = minmax_scale(var_values, **kwargs)
+    var_values = _scale_func_batch(minmax_scale, var_values, adata, batch_key, **kwargs)
 
     set_numeric_vars(adata, var_values, vars)
 
     _record_norm(adata, vars, "minmax")
 
+    logg.debug("AnnData's `X` was min-max normalized.")
+
     return adata
 
 
-def maxabs_norm(adata: AnnData, vars: str | Sequence[str] | None = None, copy: bool = False) -> AnnData | None:
+def maxabs_norm(
+    adata: AnnData, vars: str | Sequence[str] | None = None, batch_key: str | None = None, copy: bool = False
+) -> AnnData | None:
     """Apply max-abs normalization.
 
     Functionality is provided by :func:`~sklearn.preprocessing.maxabs_scale`,
@@ -115,8 +142,9 @@ def maxabs_norm(adata: AnnData, vars: str | Sequence[str] | None = None, copy: b
         adata: :class:`~anndata.AnnData` object containing X to normalize values in.
                Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
         vars: List of the names of the numeric variables to normalize.
-              If None all numeric variables will be normalized. Defaults to None .
-        copy: Whether to return a copy or act in place. Defaults to False .
+              If None all numeric variables will be normalized. Defaults to None.
+        batch_key: Key in adata.obs that contains batch information. If provided, scaling is applied per batch.
+        copy: Whether to return a copy or act in place. Defaults to False.
 
     Returns:
         :class:`~anndata.AnnData` object with normalized X.
@@ -127,6 +155,8 @@ def maxabs_norm(adata: AnnData, vars: str | Sequence[str] | None = None, copy: b
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.maxabs_norm(adata, copy=True)
     """
+    if batch_key is not None and batch_key not in adata.obs_keys():
+        raise KeyError(f"Batch key '{batch_key}' not found in adata.obs.")
     if isinstance(vars, str):
         vars = [vars]
     if vars is None:
@@ -139,17 +169,19 @@ def maxabs_norm(adata: AnnData, vars: str | Sequence[str] | None = None, copy: b
     var_idx = _get_column_indices(adata, vars)
     var_values = np.take(adata.X, var_idx, axis=1)
 
-    var_values = maxabs_scale(var_values)
+    var_values = _scale_func_batch(maxabs_scale, var_values, adata, batch_key)
 
     set_numeric_vars(adata, var_values, vars)
 
     _record_norm(adata, vars, "maxabs")
 
+    logg.debug("AnnData's `X` was max-abs normalized.")
+
     return adata
 
 
 def robust_scale_norm(
-    adata: AnnData, vars: str | Sequence[str] | None = None, copy: bool = False, **kwargs
+    adata: AnnData, vars: str | Sequence[str] | None = None, batch_key: str | None = None, copy: bool = False, **kwargs
 ) -> AnnData | None:
     """Apply robust scaling normalization.
 
@@ -160,8 +192,9 @@ def robust_scale_norm(
         adata: :class:`~anndata.AnnData` object containing X to normalize values in.
                Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
         vars: List of the names of the numeric variables to normalize.
-              If None all numeric variables will be normalized. Defaults to None .
-        copy: Whether to return a copy or act in place. Defaults to False .
+              If None all numeric variables will be normalized. Defaults to None.
+        batch_key: Key in adata.obs that contains batch information. If provided, scaling is applied per batch.
+        copy: Whether to return a copy or act in place. Defaults to False.
         **kwargs: Additional arguments passed to :func:`~sklearn.preprocessing.robust_scale`
 
     Returns:
@@ -173,6 +206,8 @@ def robust_scale_norm(
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.robust_scale_norm(adata, copy=True)
     """
+    if batch_key is not None and batch_key not in adata.obs_keys():
+        raise KeyError(f"Batch key '{batch_key}' not found in adata.obs.")
     if isinstance(vars, str):
         vars = [vars]
     if vars is None:
@@ -185,17 +220,19 @@ def robust_scale_norm(
     var_idx = _get_column_indices(adata, vars)
     var_values = np.take(adata.X, var_idx, axis=1)
 
-    var_values = robust_scale(var_values, **kwargs)
+    var_values = _scale_func_batch(robust_scale, var_values, adata, batch_key, **kwargs)
 
     set_numeric_vars(adata, var_values, vars)
 
     _record_norm(adata, vars, "robust_scale")
 
+    logg.debug("Robust scaling normalization was applied on AnnData's `X`.")
+
     return adata
 
 
 def quantile_norm(
-    adata: AnnData, vars: str | Sequence[str] | None = None, copy: bool = False, **kwargs
+    adata: AnnData, vars: str | Sequence[str] | None = None, batch_key: str | None = None, copy: bool = False, **kwargs
 ) -> AnnData | None:
     """Apply quantile normalization.
 
@@ -205,8 +242,9 @@ def quantile_norm(
     Args:
         adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encoded using ~ehrapy.preprocessing.encode.encode.
         vars: List of the names of the numeric variables to normalize.
-              If None all numeric variables will be normalized. Defaults to None .
-        copy: Whether to return a copy or act in place. Defaults to False .
+              If None all numeric variables will be normalized. Defaults to None.
+        batch_key: Key in adata.obs that contains batch information. If provided, scaling is applied per batch.
+        copy: Whether to return a copy or act in place. Defaults to False.
         **kwargs: Additional arguments passed to :func:`~sklearn.preprocessing.quantile_transform`
 
     Returns:
@@ -218,6 +256,8 @@ def quantile_norm(
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.quantile_norm(adata, copy=True)
     """
+    if batch_key is not None and batch_key not in adata.obs_keys():
+        raise KeyError(f"Batch key '{batch_key}' not found in adata.obs.")
     if isinstance(vars, str):
         vars = [vars]
     if vars is None:
@@ -230,16 +270,20 @@ def quantile_norm(
     var_idx = _get_column_indices(adata, vars)
     var_values = np.take(adata.X, var_idx, axis=1)
 
-    var_values = quantile_transform(var_values, **kwargs)
+    var_values = _scale_func_batch(quantile_transform, var_values, adata, batch_key, **kwargs)
 
     set_numeric_vars(adata, var_values, vars)
 
     _record_norm(adata, vars, "quantile")
 
+    logg.debug("AnnData's `X` was quantile normalized.")
+
     return adata
 
 
-def power_norm(adata: AnnData, vars: str | Sequence[str] | None = None, copy: bool = False, **kwargs) -> AnnData | None:
+def power_norm(
+    adata: AnnData, vars: str | Sequence[str] | None = None, batch_key: str | None = None, copy: bool = False, **kwargs
+) -> AnnData | None:
     """Apply power transformation normalization.
 
     Functionality is provided by :func:`~sklearn.preprocessing.power_transform`,
@@ -249,8 +293,9 @@ def power_norm(adata: AnnData, vars: str | Sequence[str] | None = None, copy: bo
         adata: :class:`~anndata.AnnData` object containing X to normalize values in.
                Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
         vars: List of the names of the numeric variables to normalize.
-              If None all numeric variables will be normalized. Defaults to None .
-        copy: Whether to return a copy or act in place. Defaults to False .
+              If None all numeric variables will be normalized. Defaults to None.
+        batch_key: Key in adata.obs that contains batch information. If provided, scaling is applied per batch.
+        copy: Whether to return a copy or act in place. Defaults to False.
         **kwargs: Additional arguments passed to :func:`~sklearn.preprocessing.power_transform`
 
     Returns:
@@ -262,6 +307,8 @@ def power_norm(adata: AnnData, vars: str | Sequence[str] | None = None, copy: bo
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.power_norm(adata, copy=True)
     """
+    if batch_key is not None and batch_key not in adata.obs_keys():
+        raise KeyError(f"Batch key '{batch_key}' not found in adata.obs.")
     if isinstance(vars, str):
         vars = [vars]
     if vars is None:
@@ -274,11 +321,13 @@ def power_norm(adata: AnnData, vars: str | Sequence[str] | None = None, copy: bo
     var_idx = _get_column_indices(adata, vars)
     var_values = np.take(adata.X, var_idx, axis=1)
 
-    var_values = power_transform(var_values, **kwargs)
+    var_values = _scale_func_batch(power_transform, var_values, adata, batch_key, **kwargs)
 
     set_numeric_vars(adata, var_values, vars)
 
     _record_norm(adata, vars, "power")
+
+    logg.debug("Power transformation normalization was applied on AnnData's `X`.")
 
     return adata
 
@@ -300,8 +349,8 @@ def log_norm(
         vars: List of the names of the numeric variables to normalize.
               If None all numeric variables will be normalized. Defaults to None.
         base: Numeric base for logarithm. If None the natural logarithm is used.
-        offset: Offset added to values before computing the logarithm. Defaults to 1 .
-        copy: Whether to return a copy or act in place. Defaults to False .
+        offset: Offset added to values before computing the logarithm. Defaults to 1.
+        copy: Whether to return a copy or act in place. Defaults to False.
 
     Returns:
         :class:`~anndata.AnnData` object with normalized X.
@@ -347,6 +396,8 @@ def log_norm(
 
     _record_norm(adata, vars, "log")
 
+    logg.debug("Log normalization was applied on AnnData's `X`.")
+
     return adata
 
 
@@ -359,8 +410,8 @@ def sqrt_norm(adata: AnnData, vars: str | Sequence[str] | None = None, copy: boo
         adata: :class:`~anndata.AnnData` object containing X to normalize values in.
                Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
         vars: List of the names of the numeric variables to normalize.
-              If None all numeric variables will be normalized. Defaults to None .
-        copy: Whether to return a copy or act in place. Defaults to False .
+              If None all numeric variables will be normalized. Defaults to None.
+        copy: Whether to return a copy or act in place. Defaults to False.
 
     Returns:
         :class:`~anndata.AnnData` object with normalized X.
@@ -388,6 +439,8 @@ def sqrt_norm(adata: AnnData, vars: str | Sequence[str] | None = None, copy: boo
     set_numeric_vars(adata, var_values, vars)
 
     _record_norm(adata, vars, "sqrt")
+
+    logg.debug("Square root normalization was applied on AnnData's `X`.")
 
     return adata
 

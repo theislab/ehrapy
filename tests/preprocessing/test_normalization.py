@@ -9,9 +9,15 @@ from anndata import AnnData
 
 import ehrapy as ep
 from ehrapy.anndata._constants import EHRAPY_TYPE_KEY, NON_NUMERIC_TAG, NUMERIC_TAG
+from ehrapy.io._read import read_csv
 
 CURRENT_DIR = Path(__file__).parent
-_TEST_PATH = f"{CURRENT_DIR}/test_preprocessing"
+_TEST_DATA_PATH = f"{CURRENT_DIR.parent}/test_data"
+
+
+@pytest.fixture
+def adata_mini():
+    return read_csv(f"{_TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["glucose", "weight", "disease", "station"])[:8]
 
 
 @pytest.fixture
@@ -51,7 +57,7 @@ def test_vars_checks(adata_to_norm):
         ep.pp.scale_norm(adata_to_norm, vars=["String1"])
 
 
-def test_norm_scale(adata_to_norm):
+def test_norm_scale(adata_to_norm, adata_mini):
     """Test for the scaling normalization method."""
     warnings.filterwarnings("ignore")
 
@@ -76,8 +82,23 @@ def test_norm_scale(adata_to_norm):
     assert np.allclose(adata_norm.X[:, 3], num1_norm)
     assert np.allclose(adata_norm.X[:, 4], num2_norm)
 
+    # Test the batch key works
+    with pytest.raises(KeyError):
+        ep.pp.scale_norm(adata_mini, batch_key="invalid_key", copy=True)
 
-def test_norm_minmax(adata_to_norm):
+    adata_mini_norm = ep.pp.scale_norm(
+        adata_mini, vars=["sys_bp_entry", "dia_bp_entry"], batch_key="disease", copy=True
+    )
+    col1_norm = np.array(
+        [-1.34164079, -0.4472136, 0.4472136, 1.34164079, -1.34164079, -0.4472136, 0.4472136, 1.34164079]
+    )
+    col2_norm = col1_norm
+    assert np.allclose(adata_mini_norm.X[:, 0], adata_mini.X[:, 0])
+    assert np.allclose(adata_mini_norm.X[:, 1], col1_norm)
+    assert np.allclose(adata_mini_norm.X[:, 2], col2_norm)
+
+
+def test_norm_minmax(adata_to_norm, adata_mini):
     """Test for the minmax normalization method."""
     adata_norm = ep.pp.minmax_norm(adata_to_norm, copy=True)
 
@@ -100,8 +121,21 @@ def test_norm_minmax(adata_to_norm):
     assert np.allclose(adata_norm.X[:, 3], num1_norm)
     assert np.allclose(adata_norm.X[:, 4], num2_norm)
 
+    # Test the batch key works
+    with pytest.raises(KeyError):
+        ep.pp.minmax_norm(adata_mini, batch_key="invalid_key", copy=True)
 
-def test_norm_maxabs(adata_to_norm):
+    adata_mini_norm = ep.pp.minmax_norm(
+        adata_mini, vars=["sys_bp_entry", "dia_bp_entry"], batch_key="disease", copy=True
+    )
+    col1_norm = np.array([0.0, 0.33333333, 0.66666667, 1.0, 0.0, 0.33333333, 0.66666667, 1.0])
+    col2_norm = col1_norm
+    assert np.allclose(adata_mini_norm.X[:, 0], adata_mini.X[:, 0])
+    assert np.allclose(adata_mini_norm.X[:, 1], col1_norm)
+    assert np.allclose(adata_mini_norm.X[:, 2], col2_norm)
+
+
+def test_norm_maxabs(adata_to_norm, adata_mini):
     """Test for the maxabs normalization method."""
     adata_norm = ep.pp.maxabs_norm(adata_to_norm, copy=True)
 
@@ -115,8 +149,21 @@ def test_norm_maxabs(adata_to_norm):
     assert np.allclose(adata_norm.X[:, 4], num2_norm)
     assert np.allclose(adata_norm.X[:, 5], adata_to_norm.X[:, 5], equal_nan=True)
 
+    # Test the batch key works
+    with pytest.raises(KeyError):
+        ep.pp.maxabs_norm(adata_mini, batch_key="invalid_key", copy=True)
 
-def test_norm_robust_scale(adata_to_norm):
+    adata_mini_norm = ep.pp.maxabs_norm(
+        adata_mini, vars=["sys_bp_entry", "dia_bp_entry"], batch_key="disease", copy=True
+    )
+    col1_norm = np.array([0.9787234, 0.9858156, 0.9929078, 1.0, 0.98013245, 0.98675497, 0.99337748, 1.0])
+    col2_norm = np.array([0.96296296, 0.97530864, 0.98765432, 1.0, 0.9625, 0.975, 0.9875, 1.0])
+    assert np.allclose(adata_mini_norm.X[:, 0], adata_mini.X[:, 0])
+    assert np.allclose(adata_mini_norm.X[:, 1], col1_norm)
+    assert np.allclose(adata_mini_norm.X[:, 2], col2_norm)
+
+
+def test_norm_robust_scale(adata_to_norm, adata_mini):
     """Test for the robust_scale normalization method."""
     adata_norm = ep.pp.robust_scale_norm(adata_to_norm, copy=True)
 
@@ -139,8 +186,21 @@ def test_norm_robust_scale(adata_to_norm):
     assert np.allclose(adata_norm.X[:, 3], num1_norm)
     assert np.allclose(adata_norm.X[:, 4], num2_norm)
 
+    # Test the batch key works
+    with pytest.raises(KeyError):
+        ep.pp.robust_scale_norm(adata_mini, batch_key="invalid_key", copy=True)
 
-def test_norm_quantile_uniform(adata_to_norm):
+    adata_mini_norm = ep.pp.robust_scale_norm(
+        adata_mini, vars=["sys_bp_entry", "dia_bp_entry"], batch_key="disease", copy=True
+    )
+    col1_norm = np.array([-1.0, -0.33333333, 0.33333333, 1.0, -1.0, -0.33333333, 0.33333333, 1.0], dtype=np.float32)
+    col2_norm = col1_norm
+    assert np.allclose(adata_mini_norm.X[:, 0], adata_mini.X[:, 0])
+    assert np.allclose(adata_mini_norm.X[:, 1], col1_norm)
+    assert np.allclose(adata_mini_norm.X[:, 2], col2_norm)
+
+
+def test_norm_quantile_uniform(adata_to_norm, adata_mini):
     """Test for the quantile normalization method."""
     warnings.filterwarnings("ignore", category=UserWarning)
     adata_norm = ep.pp.quantile_norm(adata_to_norm, copy=True)
@@ -164,8 +224,21 @@ def test_norm_quantile_uniform(adata_to_norm):
     assert np.allclose(adata_norm.X[:, 3], num1_norm)
     assert np.allclose(adata_norm.X[:, 4], num2_norm)
 
+    # Test the batch key works
+    with pytest.raises(KeyError):
+        ep.pp.quantile_norm(adata_mini, batch_key="invalid_key", copy=True)
 
-def test_norm_power(adata_to_norm):
+    adata_mini_norm = ep.pp.quantile_norm(
+        adata_mini, vars=["sys_bp_entry", "dia_bp_entry"], batch_key="disease", copy=True
+    )
+    col1_norm = np.array([0.0, 0.33333333, 0.66666667, 1.0, 0.0, 0.33333333, 0.66666667, 1.0], dtype=np.float32)
+    col2_norm = col1_norm
+    assert np.allclose(adata_mini_norm.X[:, 0], adata_mini.X[:, 0])
+    assert np.allclose(adata_mini_norm.X[:, 1], col1_norm)
+    assert np.allclose(adata_mini_norm.X[:, 2], col2_norm)
+
+
+def test_norm_power(adata_to_norm, adata_mini):
     """Test for the power transformation normalization method."""
     adata_norm = ep.pp.power_norm(adata_to_norm, copy=True)
 
@@ -181,6 +254,24 @@ def test_norm_power(adata_to_norm):
 
     with pytest.raises(ValueError):
         ep.pp.power_norm(adata_to_norm, copy=True, method="box-cox")
+
+    with pytest.raises(KeyError):
+        ep.pp.power_norm(adata_mini, batch_key="invalid_key", copy=True)
+
+    adata_mini_norm = ep.pp.power_norm(
+        adata_mini, vars=["sys_bp_entry", "dia_bp_entry"], batch_key="disease", copy=True
+    )
+    col1_norm = np.array(
+        [-1.34266204, -0.44618949, 0.44823148, 1.34062005, -1.34259417, -0.44625773, 0.44816403, 1.34068786],
+        dtype=np.float32,
+    )
+    col2_norm = np.array(
+        [-1.34342372, -0.44542197, 0.44898626, 1.33985944, -1.34344617, -0.4453993, 0.44900845, 1.33983703],
+        dtype=np.float32,
+    )
+    assert np.allclose(adata_mini_norm.X[:, 0], adata_mini.X[:, 0])
+    assert np.allclose(adata_mini_norm.X[:, 1], col1_norm)
+    assert np.allclose(adata_mini_norm.X[:, 2], col2_norm)
 
 
 def test_norm_log1p(adata_to_norm):
