@@ -119,7 +119,7 @@ def rank_features_supervised(
             if feature_scaling is not None:
                 scaler = StandardScaler() if feature_scaling == "standard" else MinMaxScaler()
                 scaled_data = scaler.fit_transform(input_data[[feature]].values.astype(np.float32))
-                input_data.loc[:, feature] = scaled_data.flatten().astype(np.float32)
+                input_data.loc[:, feature] = scaled_data.flatten()
         except ValueError as e:
             raise ValueError(
                 f"Feature {feature} is not numeric. Please encode non-numeric features before calculating "
