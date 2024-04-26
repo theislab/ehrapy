@@ -25,7 +25,7 @@ def test_continuous_prediction():
 
 def test_categorical_prediction():
     target = np.random.randint(2, size=1000)
-    X = np.stack((target, target, [1] * 1000)).T
+    X = np.stack((target, target, [1] * 1000)).T.astype(np.float32)
 
     adata = AnnData(X)
     adata.var_names = ["target", "feature1", "feature2"]
@@ -41,7 +41,7 @@ def test_categorical_prediction():
 
 def test_multiclass_prediction():
     target = np.random.randint(4, size=1000)
-    X = np.stack((target, target, [1] * 1000)).T
+    X = np.stack((target, target, [1] * 1000)).T.astype(np.float32)
 
     adata = AnnData(X)
     adata.var_names = ["target", "feature1", "feature2"]
