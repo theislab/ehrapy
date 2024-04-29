@@ -319,7 +319,6 @@ def power_norm(
 
     _record_norm(adata, vars, "power")
 
-    logg.debug("Power transformation normalization was applied on AnnData's `X`.")
 
     return adata
 
