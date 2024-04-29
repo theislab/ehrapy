@@ -221,7 +221,6 @@ def robust_scale_norm(
 
     _record_norm(adata, vars, "robust_scale")
 
-    logg.debug("Robust scaling normalization was applied on AnnData's `X`.")
 
     return adata
 
