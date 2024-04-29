@@ -123,7 +123,6 @@ def minmax_norm(
 
     _record_norm(adata, vars, "minmax")
 
-    logg.debug("AnnData's `X` was min-max normalized.")
 
     return adata
 
