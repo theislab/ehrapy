@@ -174,7 +174,6 @@ def maxabs_norm(
 
     _record_norm(adata, vars, "maxabs")
 
-    logg.debug("AnnData's `X` was max-abs normalized.")
 
     return adata
 
