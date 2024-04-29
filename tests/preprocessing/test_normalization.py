@@ -82,12 +82,12 @@ def test_norm_scale(adata_to_norm, adata_mini):
     assert np.allclose(adata_norm.X[:, 3], num1_norm)
     assert np.allclose(adata_norm.X[:, 4], num2_norm)
 
-    # Test the batch key works
+    # Test the group key works
     with pytest.raises(KeyError):
-        ep.pp.scale_norm(adata_mini, batch_key="invalid_key", copy=True)
+        ep.pp.scale_norm(adata_mini, group_key="invalid_key", copy=True)
 
     adata_mini_norm = ep.pp.scale_norm(
-        adata_mini, vars=["sys_bp_entry", "dia_bp_entry"], batch_key="disease", copy=True
+        adata_mini, vars=["sys_bp_entry", "dia_bp_entry"], group_key="disease", copy=True
     )
     col1_norm = np.array(
         [-1.34164079, -0.4472136, 0.4472136, 1.34164079, -1.34164079, -0.4472136, 0.4472136, 1.34164079]
@@ -121,12 +121,12 @@ def test_norm_minmax(adata_to_norm, adata_mini):
     assert np.allclose(adata_norm.X[:, 3], num1_norm)
     assert np.allclose(adata_norm.X[:, 4], num2_norm)
 
-    # Test the batch key works
+    # Test the group key works
     with pytest.raises(KeyError):
-        ep.pp.minmax_norm(adata_mini, batch_key="invalid_key", copy=True)
+        ep.pp.minmax_norm(adata_mini, group_key="invalid_key", copy=True)
 
     adata_mini_norm = ep.pp.minmax_norm(
-        adata_mini, vars=["sys_bp_entry", "dia_bp_entry"], batch_key="disease", copy=True
+        adata_mini, vars=["sys_bp_entry", "dia_bp_entry"], group_key="disease", copy=True
     )
     col1_norm = np.array([0.0, 0.33333333, 0.66666667, 1.0, 0.0, 0.33333333, 0.66666667, 1.0])
     col2_norm = col1_norm
@@ -149,12 +149,12 @@ def test_norm_maxabs(adata_to_norm, adata_mini):
     assert np.allclose(adata_norm.X[:, 4], num2_norm)
     assert np.allclose(adata_norm.X[:, 5], adata_to_norm.X[:, 5], equal_nan=True)
 
-    # Test the batch key works
+    # Test the group key works
     with pytest.raises(KeyError):
-        ep.pp.maxabs_norm(adata_mini, batch_key="invalid_key", copy=True)
+        ep.pp.maxabs_norm(adata_mini, group_key="invalid_key", copy=True)
 
     adata_mini_norm = ep.pp.maxabs_norm(
-        adata_mini, vars=["sys_bp_entry", "dia_bp_entry"], batch_key="disease", copy=True
+        adata_mini, vars=["sys_bp_entry", "dia_bp_entry"], group_key="disease", copy=True
     )
     col1_norm = np.array([0.9787234, 0.9858156, 0.9929078, 1.0, 0.98013245, 0.98675497, 0.99337748, 1.0])
     col2_norm = np.array([0.96296296, 0.97530864, 0.98765432, 1.0, 0.9625, 0.975, 0.9875, 1.0])
@@ -186,12 +186,12 @@ def test_norm_robust_scale(adata_to_norm, adata_mini):
     assert np.allclose(adata_norm.X[:, 3], num1_norm)
     assert np.allclose(adata_norm.X[:, 4], num2_norm)
 
-    # Test the batch key works
+    # Test the group key works
     with pytest.raises(KeyError):
-        ep.pp.robust_scale_norm(adata_mini, batch_key="invalid_key", copy=True)
+        ep.pp.robust_scale_norm(adata_mini, group_key="invalid_key", copy=True)
 
     adata_mini_norm = ep.pp.robust_scale_norm(
-        adata_mini, vars=["sys_bp_entry", "dia_bp_entry"], batch_key="disease", copy=True
+        adata_mini, vars=["sys_bp_entry", "dia_bp_entry"], group_key="disease", copy=True
     )
     col1_norm = np.array([-1.0, -0.33333333, 0.33333333, 1.0, -1.0, -0.33333333, 0.33333333, 1.0], dtype=np.float32)
     col2_norm = col1_norm
@@ -224,12 +224,12 @@ def test_norm_quantile_uniform(adata_to_norm, adata_mini):
     assert np.allclose(adata_norm.X[:, 3], num1_norm)
     assert np.allclose(adata_norm.X[:, 4], num2_norm)
 
-    # Test the batch key works
+    # Test the group key works
     with pytest.raises(KeyError):
-        ep.pp.quantile_norm(adata_mini, batch_key="invalid_key", copy=True)
+        ep.pp.quantile_norm(adata_mini, group_key="invalid_key", copy=True)
 
     adata_mini_norm = ep.pp.quantile_norm(
-        adata_mini, vars=["sys_bp_entry", "dia_bp_entry"], batch_key="disease", copy=True
+        adata_mini, vars=["sys_bp_entry", "dia_bp_entry"], group_key="disease", copy=True
     )
     col1_norm = np.array([0.0, 0.33333333, 0.66666667, 1.0, 0.0, 0.33333333, 0.66666667, 1.0], dtype=np.float32)
     col2_norm = col1_norm
@@ -256,10 +256,10 @@ def test_norm_power(adata_to_norm, adata_mini):
         ep.pp.power_norm(adata_to_norm, copy=True, method="box-cox")
 
     with pytest.raises(KeyError):
-        ep.pp.power_norm(adata_mini, batch_key="invalid_key", copy=True)
+        ep.pp.power_norm(adata_mini, group_key="invalid_key", copy=True)
 
     adata_mini_norm = ep.pp.power_norm(
-        adata_mini, vars=["sys_bp_entry", "dia_bp_entry"], batch_key="disease", copy=True
+        adata_mini, vars=["sys_bp_entry", "dia_bp_entry"], group_key="disease", copy=True
     )
     col1_norm = np.array(
         [-1.34266204, -0.44618949, 0.44823148, 1.34062005, -1.34259417, -0.44625773, 0.44816403, 1.34068786],
