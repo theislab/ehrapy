@@ -388,7 +388,6 @@ def log_norm(
 
     _record_norm(adata, vars, "log")
 
-    logg.debug("Log normalization was applied on AnnData's `X`.")
 
     return adata
 
