@@ -430,7 +430,6 @@ def sqrt_norm(adata: AnnData, vars: str | Sequence[str] | None = None, copy: boo
 
     _record_norm(adata, vars, "sqrt")
 
-    logg.debug("Square root normalization was applied on AnnData's `X`.")
 
     return adata
 
