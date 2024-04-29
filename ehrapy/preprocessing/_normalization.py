@@ -123,7 +123,6 @@ def minmax_norm(
 
     _record_norm(adata, vars, "minmax")
 
-
     return adata
 
 
