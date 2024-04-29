@@ -173,7 +173,6 @@ def maxabs_norm(
 
     _record_norm(adata, vars, "maxabs")
 
-
     return adata
 
 
