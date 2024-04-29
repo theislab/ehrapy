@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
-from lamin_utils import logger as logg
+from lamin_utils import logger
 from sklearn.preprocessing import maxabs_scale, minmax_scale, power_transform, quantile_transform, robust_scale, scale
 
 from ehrapy.anndata.anndata_ext import (
