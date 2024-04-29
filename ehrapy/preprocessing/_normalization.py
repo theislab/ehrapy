@@ -74,7 +74,6 @@ def scale_norm(
 
     _record_norm(adata, vars, "scale")
 
-    logg.debug("Scaling normalization was applied on `X`.")
 
     return adata
 
