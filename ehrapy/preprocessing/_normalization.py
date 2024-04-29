@@ -220,7 +220,6 @@ def robust_scale_norm(
 
     _record_norm(adata, vars, "robust_scale")
 
-
     return adata
 
 
@@ -268,7 +267,6 @@ def quantile_norm(
     set_numeric_vars(adata, var_values, vars)
 
     _record_norm(adata, vars, "quantile")
-
 
     return adata
 
@@ -386,7 +384,6 @@ def log_norm(
     set_numeric_vars(adata, var_values, vars)
 
     _record_norm(adata, vars, "log")
-
 
     return adata
 
