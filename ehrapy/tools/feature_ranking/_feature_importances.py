@@ -1,6 +1,7 @@
 from collections.abc import Iterable
 from typing import Literal
 
+import numpy as np
 import pandas as pd
 from anndata import AnnData
 from lamin_utils import logger
@@ -113,12 +114,12 @@ def rank_features_supervised(
 
     for feature in input_data.columns:
         try:
-            input_data.loc[:, feature] = input_data[feature].astype(float)
+            input_data.loc[:, feature] = input_data[feature].astype(np.float32)
 
             if feature_scaling is not None:
                 scaler = StandardScaler() if feature_scaling == "standard" else MinMaxScaler()
-                input_data.loc[:, feature] = input_data[feature].astype(float)
-                input_data.loc[:, feature] = scaler.fit_transform(input_data[[feature]])
+                scaled_data = scaler.fit_transform(input_data[[feature]].values.astype(np.float32))
+                input_data.loc[:, feature] = scaled_data.flatten()
         except ValueError as e:
             raise ValueError(
                 f"Feature {feature} is not numeric. Please encode non-numeric features before calculating "
