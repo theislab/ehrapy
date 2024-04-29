@@ -270,7 +270,6 @@ def quantile_norm(
 
     _record_norm(adata, vars, "quantile")
 
-    logg.debug("AnnData's `X` was quantile normalized.")
 
     return adata
 
