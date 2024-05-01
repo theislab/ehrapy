@@ -54,6 +54,9 @@ def rank_features_supervised(
         return_score: Set to True to return the R2 score / the accuracy of the model. Defaults to False.
         **kwargs: Additional keyword arguments to pass to the model. See the documentation of the respective model in scikit-learn for details.
 
+    Returns:
+        If return_score is True, the R2 score / accuracy of the model on the test set. Otherwise, None.
+
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=False)
