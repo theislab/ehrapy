@@ -88,6 +88,12 @@ def detect_bias(
 
     adata_df = anndata_to_df(adata)
 
+    for feature in adata.var_names:
+        if not np.all(adata_df[feature].dropna().apply(type).isin([int, float, complex])):
+            raise ValueError(
+                f"Feature {feature} is not encoded numerically. Please encode the data (ep.pp.encode) before running bias detection."
+            )
+
     # --------------------
     # Feature correlations
     # --------------------

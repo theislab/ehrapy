@@ -93,3 +93,13 @@ def test_detect_bias_specified_sensitive_features(adata):
     df = results["feature_importances"]
     print(df)
     assert len(df) == 2  # contin1 predicts cat1 and cat1 predicts contin1
+
+
+def test_unencoded_data():
+    adata = ep.ad.df_to_anndata(
+        pd.DataFrame({"Unencoded": ["A", "B", "C", "D", "E", "F"], "Encoded": [1, 2, 3, 4, 5, 6]})
+    )
+    adata.var[FEATURE_TYPE_KEY] = [CATEGORICAL_TAG] * 2
+
+    with pytest.raises(ValueError):
+        ep.pp.detect_bias(adata, "all")
