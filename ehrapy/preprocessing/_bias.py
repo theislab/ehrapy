@@ -111,6 +111,7 @@ def detect_bias(
         "Compared Feature": [],
         "Standardized Mean Difference": [],
     }
+    adata.uns["smd"] = {}
     continuous_var_names = adata.var_names[adata.var[FEATURE_TYPE_KEY] == CONTINUOUS_TAG]
     for sens_feature in cat_sens_features:
         sens_feature_groups = sorted(adata_df[sens_feature].unique())
@@ -136,7 +137,7 @@ def detect_bias(
                     smd_results["Sensitive Group"].append(group)
                     smd_results["Compared Feature"].append(comp_feature)
                     smd_results["Standardized Mean Difference"].append(smd[comp_feature_nr])
-        adata.uns[f"smd_{sens_feature}"] = smd_df
+        adata.uns["smd"][sens_feature] = smd_df
 
     bias_results["standardized_mean_differences"] = pd.DataFrame(smd_results).sort_values(
         by="Standardized Mean Difference", key=abs
