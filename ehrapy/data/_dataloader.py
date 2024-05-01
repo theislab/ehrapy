@@ -12,8 +12,6 @@ import requests
 from rich import print
 from rich.progress import Progress
 
-from ehrapy import logging as logg
-
 
 def download(
     url: str,
@@ -82,8 +80,6 @@ def download(
         list_of_paths = [path for path in Path(output_path).resolve().glob("*/") if not path.name.startswith(".")]
         latest_path = max(list_of_paths, key=lambda path: path.stat().st_ctime)
         shutil.move(latest_path, latest_path.parent / remove_archive_extension(output_file_name))  # type: ignore
-
-    logg.debug(f"Downloaded `{output_file_name}` to `{output_path}`.")
 
 
 def remove_archive_extension(file_path):

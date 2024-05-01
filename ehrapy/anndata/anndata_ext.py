@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, NamedTuple
 import numpy as np
 import pandas as pd
 from anndata import AnnData, concat
+from lamin_utils import logger
 from rich import print
 from rich.text import Text
 from rich.tree import Tree
@@ -15,7 +16,6 @@ from scanpy.get import obs_df, rank_genes_groups_df, var_df
 from scipy import sparse
 from scipy.sparse import issparse
 
-from ehrapy import logging as logg
 from ehrapy.anndata._constants import EHRAPY_TYPE_KEY, NON_NUMERIC_ENCODED_TAG, NON_NUMERIC_TAG, NUMERIC_TAG
 
 if TYPE_CHECKING:
@@ -53,7 +53,7 @@ def df_to_anndata(
         ...         "sex": ["M", "F", "F", "M", "F"],
         ...     }
         ... )
-        >>> adata = ep.df_to_anndata(df, index_column="patient_id")
+        >>> adata = ep.ad.df_to_anndata(df, index_column="patient_id")
     """
     # allow index 0
     if index_column is not None:
@@ -265,8 +265,6 @@ def delete_from_obs(adata: AnnData, to_delete: list[str]) -> AnnData:
 
     adata.obs = adata.obs[adata.obs.columns[~adata.obs.columns.isin(to_delete)]]
 
-    logg.info(f"Removed `{to_delete}` from `obs`.")
-
     return adata
 
 
@@ -303,7 +301,7 @@ def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
             cols_not_in_x.append(col)
 
     if cols_present_in_x:
-        logg.info(
+        logger.warn(
             f"Columns `{cols_present_in_x}` are already in X. Skipped moving `{cols_present_in_x}` to X. "
             f"If you want to permanently delete these columns from obs, please use the function delete_from_obs()."
         )
@@ -312,11 +310,9 @@ def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
         new_adata = concat([adata, AnnData(adata.obs[cols_not_in_x])], axis=1)
         new_adata.obs = adata.obs[adata.obs.columns[~adata.obs.columns.isin(cols_not_in_x)]]
 
-        # AnnData's concat discards var if they dont match in their keys, so we need to create a new var
+        # AnnData's concat discards var if they don't match in their keys, so we need to create a new var
         created_var = _create_new_var(adata, cols_not_in_x)
         new_adata.var = pd.concat([adata.var, created_var], axis=0)
-
-        logg.info(f"Added `{cols_not_in_x}` features to `X`.")
     else:
         new_adata = adata
 
@@ -424,7 +420,7 @@ def _adata_type_overview(
         _sort_by_order_or_none(adata, branch_num, var_names)
 
     if sort_by:
-        logg.info(
+        logger.info(
             "Displaying AnnData object in sorted mode. Note that this might not be the exact same order of the variables in X or var are stored!"
         )
     print(tree)
@@ -576,12 +572,10 @@ def _update_uns(
                 num_set -= {var}
             elif var in non_num_set:
                 non_num_set -= {var}
-        logg.info(f"Added `{moved_columns}` columns to `X`.")
         return list(num_set), list(non_num_set), var_num
     else:  # moving from `obs` to `X`, add it to the corresponding entry in `uns`.
         all_moved_non_num_columns = moved_columns_set & set(adata.obs.select_dtypes(exclude="number").columns)
         all_moved_num_columns = list(moved_columns_set ^ all_moved_non_num_columns)
-        logg.info(f"Added `{moved_columns}` columns to `obs`.")
         return all_moved_num_columns, list(all_moved_non_num_columns), None
 
 
@@ -774,8 +768,6 @@ def generate_anndata(  # pragma: no cover
         varp=varp,
         uns=uns,
     )
-
-    logg.info(f"Generated an AnnData object with n_obs x n_vars = `{adata.n_obs}` x `{adata.n_vars}`.")
 
     return adata
 

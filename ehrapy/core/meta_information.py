@@ -5,13 +5,13 @@ from datetime import datetime
 
 import session_info
 from rich import print
+from scanpy.logging import _versions_dependencies
 
 from ehrapy import __version__
-from ehrapy.logging import _versions_dependencies
 
 
 def print_versions():  # pragma: no cover
-    """Print print versions of imported packages.
+    """Print versions of imported packages.
 
     Examples:
         >>> import ehrapy as ep

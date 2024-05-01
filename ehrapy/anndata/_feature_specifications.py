@@ -4,10 +4,10 @@ from typing import Literal
 import numpy as np
 import pandas as pd
 from anndata import AnnData
+from lamin_utils import logger
 from rich import print
 from rich.tree import Tree
 
-from ehrapy import logging as logg
 from ehrapy.anndata._constants import CATEGORICAL_TAG, CONTINUOUS_TAG, DATE_TAG, FEATURE_TYPE_KEY
 from ehrapy.anndata.anndata_ext import anndata_to_df
 
@@ -49,8 +49,9 @@ def infer_feature_types(adata: AnnData, layer: str | None = None, output: Litera
 
     adata.var[FEATURE_TYPE_KEY] = pd.Series(feature_types)[adata.var_names]
 
-    logg.info(
-        f"Stored feature types in adata.var['{FEATURE_TYPE_KEY}']. Please verify and adjust if necessary using adata.var['{FEATURE_TYPE_KEY}']['feature1']='corrected_type'."
+    logger.info(
+        f"Stored feature types in adata.var['{FEATURE_TYPE_KEY}']."
+        f" Please verify and adjust if necessary using adata.var['{FEATURE_TYPE_KEY}']['feature1']='corrected_type'."
     )
 
     if output == "tree":

@@ -1,15 +1,16 @@
 from collections.abc import Iterable
 from typing import Literal
 
+import numpy as np
 import pandas as pd
 from anndata import AnnData
+from lamin_utils import logger
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.svm import SVC, SVR
 
-from ehrapy import logging as logg
 from ehrapy.anndata import anndata_to_df, check_feature_types
 from ehrapy.anndata._constants import CATEGORICAL_TAG, CONTINUOUS_TAG, DATE_TAG, FEATURE_TYPE_KEY
 
@@ -117,12 +118,12 @@ def rank_features_supervised(
 
     for feature in input_data.columns:
         try:
-            input_data.loc[:, feature] = input_data[feature].astype(float)
+            input_data.loc[:, feature] = input_data[feature].astype(np.float32)
 
             if feature_scaling is not None:
                 scaler = StandardScaler() if feature_scaling == "standard" else MinMaxScaler()
-                input_data.loc[:, feature] = input_data[feature].astype(float)
-                input_data.loc[:, feature] = scaler.fit_transform(input_data[[feature]])
+                scaled_data = scaler.fit_transform(input_data[[feature]].values.astype(np.float32))
+                input_data.loc[:, feature] = scaled_data.flatten()
         except ValueError as e:
             raise ValueError(
                 f"Feature {feature} is not numeric. Please encode non-numeric features before calculating "
@@ -135,10 +136,11 @@ def rank_features_supervised(
 
     score = predictor.score(x_test, y_test)
     evaluation_metric = "R2 score" if prediction_type == "continuous" else "accuracy"
+
     if logging:
-        logg.info(
-            f"Training completed. The model achieved an {evaluation_metric} of {score:.2f} on the test set, consisting of {len(y_test)} samples."
-        )
+      logger.info(
+          f"Training completed. The model achieved an {evaluation_metric} of {score:.2f} on the test set, consisting of {len(y_test)} samples."
+      )
 
     if model == "regression" or model == "svm":
         feature_importances = pd.Series(predictor.coef_.squeeze(), index=input_data.columns)

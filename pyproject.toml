@@ -68,7 +68,8 @@ dependencies = [
     "pyampute",
     "tableone",
     "imbalanced-learn",
-    "fknni"
+    "fknni",
+    "lamin_utils"
 ]
 
 [project.optional-dependencies]
