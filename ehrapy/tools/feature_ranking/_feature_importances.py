@@ -138,9 +138,9 @@ def rank_features_supervised(
     evaluation_metric = "R2 score" if prediction_type == "continuous" else "accuracy"
 
     if logging:
-      logger.info(
-          f"Training completed. The model achieved an {evaluation_metric} of {score:.2f} on the test set, consisting of {len(y_test)} samples."
-      )
+        logger.info(
+            f"Training completed. The model achieved an {evaluation_metric} of {score:.2f} on the test set, consisting of {len(y_test)} samples."
+        )
 
     if model == "regression" or model == "svm":
         feature_importances = pd.Series(predictor.coef_.squeeze(), index=input_data.columns)
