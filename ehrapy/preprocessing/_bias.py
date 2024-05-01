@@ -131,12 +131,12 @@ def detect_bias(
             smd_df[group] = smd
 
             abs_smd = smd.abs()
-            for comp_feature_nr, comp_feature in enumerate(continuous_var_names):
-                if abs_smd[comp_feature_nr] > smd_threshold:
+            for comp_feature in continuous_var_names:
+                if abs_smd[comp_feature] > smd_threshold:
                     smd_results["Sensitive Feature"].append(sens_feature)
                     smd_results["Sensitive Group"].append(group)
                     smd_results["Compared Feature"].append(comp_feature)
-                    smd_results["Standardized Mean Difference"].append(smd[comp_feature_nr])
+                    smd_results["Standardized Mean Difference"].append(smd[comp_feature])
         adata.uns["smd"][sens_feature] = smd_df
 
     bias_results["standardized_mean_differences"] = pd.DataFrame(smd_results).sort_values(
