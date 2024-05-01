@@ -52,8 +52,6 @@ usage/usage
 tutorials/index
 contributing
 code_of_conduct
-Discussions <https://github.com/theislab/ehrapy/discussions>
-authors
 references
 ```
 
