@@ -94,6 +94,7 @@ Other than tools, preprocessing steps usually don’t return an easily interpret
     preprocessing.qc_metrics
     preprocessing.qc_lab_measurements
     preprocessing.mcar_test
+    preprocessing.detect_bias
 ```
 
 ### Imputation

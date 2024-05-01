@@ -40,26 +40,11 @@ def test_detect_bias_all_sens_features(adata):
     assert "standardized_mean_differences" in results.keys()
     df = results["standardized_mean_differences"]
     assert len(df) == 4  # Both groups of cat1, cat2 respectively show a high SMD with contin1
-    assert (
-        df[(df["Sensitive Feature"] == "cat1") & (df["Sensitive Group"] == 0)]["Standardized Mean Difference"].values[0]
-        < -1
-    )
-    assert (
-        df[(df["Sensitive Feature"] == "cat1") & (df["Sensitive Group"] == 1)]["Standardized Mean Difference"].values[0]
-        > 1
-    )
-    assert (
-        df[(df["Sensitive Feature"] == "cat2") & (df["Sensitive Group"] == 10)]["Standardized Mean Difference"].values[
-            0
-        ]
-        > 1
-    )
-    assert (
-        df[(df["Sensitive Feature"] == "cat2") & (df["Sensitive Group"] == 11)]["Standardized Mean Difference"].values[
-            0
-        ]
-        < -1
-    )
+    smd_key = "Standardized Mean Difference"
+    assert df[(df["Sensitive Feature"] == "cat1") & (df["Sensitive Group"] == 0)][smd_key].values[0] < 0
+    assert df[(df["Sensitive Feature"] == "cat1") & (df["Sensitive Group"] == 1)][smd_key].values[0] > 0
+    assert df[(df["Sensitive Feature"] == "cat2") & (df["Sensitive Group"] == 10)][smd_key].values[0] > 0
+    assert df[(df["Sensitive Feature"] == "cat2") & (df["Sensitive Group"] == 11)][smd_key].values[0] < 0
 
     assert "categorical_value_counts" in results.keys()
     df = results["categorical_value_counts"]
@@ -89,14 +74,9 @@ def test_detect_bias_specific_sens_features(adata):
     assert "standardized_mean_differences" in results.keys()
     df = results["standardized_mean_differences"]
     assert len(df) == 2  # Both groups of cat1 show a high SMD with contin1
-    assert (
-        df[(df["Sensitive Feature"] == "cat1") & (df["Sensitive Group"] == 0)]["Standardized Mean Difference"].values[0]
-        < -1
-    )
-    assert (
-        df[(df["Sensitive Feature"] == "cat1") & (df["Sensitive Group"] == 1)]["Standardized Mean Difference"].values[0]
-        > 1
-    )
+    smd_key = "Standardized Mean Difference"
+    assert df[(df["Sensitive Feature"] == "cat1") & (df["Sensitive Group"] == 0)][smd_key].values[0] < -1
+    assert df[(df["Sensitive Feature"] == "cat1") & (df["Sensitive Group"] == 1)][smd_key].values[0] > 1
 
     assert "categorical_value_counts" in results.keys()
     df = results["categorical_value_counts"]
@@ -106,4 +86,4 @@ def test_detect_bias_specific_sens_features(adata):
 
     assert "feature_importances" in results.keys()
     df = results["feature_importances"]
-    assert len(df) == 1  # contin1 predicts cat1
+    assert len(df) == 2  # contin1 predicts cat1 and cat1 predicts contin1
