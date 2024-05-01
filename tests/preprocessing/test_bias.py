@@ -24,7 +24,7 @@ def adata():
     return adata
 
 
-def test_detect_bias_all_sens_features(adata):
+def test_detect_bias_all_sensitive_features(adata):
     results = ep.pp.detect_bias(
         adata, "all", run_feature_importances=True, corr_method="spearman", feature_importance_threshold=0.4
     )
@@ -57,14 +57,19 @@ def test_detect_bias_all_sens_features(adata):
     assert len(df) >= 7  # 6 for the pairwise correlating features and one/two for contin1, which predicts cat1
 
 
-def test_detect_bias_specific_sens_features(adata):
-    results = ep.pp.detect_bias(
+def test_detect_bias_specified_sensitive_features(adata):
+    results, result_adata = ep.pp.detect_bias(
         adata,
         ["contin1", "cat1"],
         run_feature_importances=True,
         corr_method="spearman",
-        feature_importance_threshold=0.4,
+        feature_importance_threshold=0.5,
+        prediction_confidence_threshold=0.4,
+        copy=True,
     )
+
+    assert "smd" not in adata.uns.keys()
+    assert "smd" in result_adata.uns.keys()
 
     assert "feature_correlations" in results.keys()
     df = results["feature_correlations"]
@@ -86,4 +91,5 @@ def test_detect_bias_specific_sens_features(adata):
 
     assert "feature_importances" in results.keys()
     df = results["feature_importances"]
+    print(df)
     assert len(df) == 2  # contin1 predicts cat1 and cat1 predicts contin1

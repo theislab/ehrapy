@@ -22,7 +22,8 @@ def detect_bias(
     feature_importance_threshold: float = 0.1,
     prediction_confidence_threshold: float = 0.5,
     corr_method: Literal["pearson", "spearman"] = "spearman",
-) -> dict[str, pd.DataFrame]:
+    copy: bool = False,
+) -> dict[str, pd.DataFrame] | tuple[dict[str, pd.DataFrame], AnnData]:
     """Detects biases in the data using feature correlations, standardized mean differences, and feature importances.
 
     Detects biases with respect to sensitive features, which can be either a specified subset of features or all features in adata.var.
@@ -45,6 +46,8 @@ def detect_bias(
         prediction_confidence_threshold: The threshold for the prediction confidence (R2 or accuracy) of a sensitive feature for predicting another
             feature to be considered of interest. Defaults to 0.5.
         corr_method: The correlation method to use. Choose between "pearson" and "spearman". Defaults to "spearman".
+        copy: If set to False, adata is updated in place. If set to True, the adata is copied and the results are stored in the copied adata, which
+            is then returned. Defaults to False.
 
     Returns:
         A dictionary containing the results of the bias detection. The keys are:
@@ -52,6 +55,8 @@ def detect_bias(
         - "standardized_mean_differences": Standardized mean differences between groups of sensitive features that exceed the SMD threshold.
         - "feature_importances": Feature importances for predicting one feature with another that exceed the feature importance and prediction
             confidence thresholds.
+
+        If copy is set to True, the function returns a tuple with the results dictionary and the updated adata.
 
     Examples:
         >>> import ehrapy as ep
@@ -77,6 +82,9 @@ def detect_bias(
         cat_sens_features = [
             feat for feat in sensitive_features if adata.var[FEATURE_TYPE_KEY][feat] == CATEGORICAL_TAG
         ]
+
+    if copy:
+        adata = adata.copy()
 
     adata_df = anndata_to_df(adata)
 
@@ -217,4 +225,6 @@ def detect_bias(
                     feature_importances_results["Prediction Score"].append(prediction_score)
         bias_results["feature_importances"] = pd.DataFrame(feature_importances_results)
 
+    if copy:
+        return bias_results, adata
     return bias_results
