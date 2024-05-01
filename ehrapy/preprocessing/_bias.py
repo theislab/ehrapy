@@ -13,7 +13,7 @@ from ehrapy.anndata._constants import CATEGORICAL_TAG, CONTINUOUS_TAG, DATE_TAG,
 @check_feature_types
 def detect_bias(
     adata: AnnData,
-    sensitive_features: Iterable[str] | np.ndarray | Literal["all"],
+    sensitive_features: Iterable[str] | Literal["all"],
     *,
     run_feature_importances: bool | None = None,
     corr_threshold: float = 0.5,
