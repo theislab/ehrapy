@@ -27,9 +27,13 @@ def detect_bias(
     """Detects biases in the data using feature correlations, standardized mean differences, and feature importances.
 
     Detects biases with respect to sensitive features, which can be either a specified subset of features or all features in adata.var.
-    The method computes pairwise correlations between features, standardized mean differences between groups of sensitive features, and
-    feature importances for predicting one feature with another. The results are stored in adata.varp and adata.varm.
-    Values that exceed the specified thresholds are considered of interest and returned in the results.
+    The method detects biases by computing:
+    - pairwise correlations between features
+    - standardized mean differences for numeric features between groups of sensitive features
+    - value counts of categorical features between groups of sensitive features
+    - feature importances for predicting one feature with another.
+    Results of the computations are stored in var, varp, and uns of the adata object.
+    Values that exceed the specified thresholds are considered of interest and returned in the results dictionary.
 
     Args:
         adata: An annotated data matrix containing EHR data.
@@ -53,6 +57,8 @@ def detect_bias(
         A dictionary containing the results of the bias detection. The keys are:
         - "feature_correlations": Pairwise correlations between features that exceed the correlation threshold.
         - "standardized_mean_differences": Standardized mean differences between groups of sensitive features that exceed the SMD threshold.
+        - "categorical_value_counts": Value counts of categorical features between groups of sensitive features that exceed the categorical factor
+            threshold.
         - "feature_importances": Feature importances for predicting one feature with another that exceed the feature importance and prediction
             confidence thresholds.
 
