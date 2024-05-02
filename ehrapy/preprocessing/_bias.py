@@ -235,7 +235,9 @@ def detect_bias(
                     feature_importances_results["Predicted Feature"].append(prediction_feature)
                     feature_importances_results["Feature Importance"].append(feature_importance)
                     feature_importances_results["Prediction Score"].append(prediction_score)
-        bias_results["feature_importances"] = pd.DataFrame(feature_importances_results)
+        bias_results["feature_importances"] = pd.DataFrame(feature_importances_results).sort_values(
+            by="Feature Importance", key=abs
+        )
 
     if copy:
         return bias_results, adata
