@@ -27,7 +27,7 @@ def rank_features_supervised(
     key_added: str = "feature_importances",
     feature_scaling: Literal["standard", "minmax"] | None = "standard",
     percent_output: bool = False,
-    logging: bool = True,
+    verbose: bool = True,
     return_score: bool = False,
     **kwargs,
 ) -> float | None:
@@ -50,7 +50,7 @@ def rank_features_supervised(
             for each feature individually. Defaults to 'standard'.
         percent_output: Set to True to output the feature importances as percentages. Note that information about positive or negative
             coefficients for regression models will be lost. Defaults to False.
-        logging: Set to False to disable logging. Defaults to True.
+        verbose: Set to False to disable logging. Defaults to True.
         return_score: Set to True to return the R2 score / the accuracy of the model. Defaults to False.
         **kwargs: Additional keyword arguments to pass to the model. See the documentation of the respective model in scikit-learn for details.
 
@@ -141,7 +141,7 @@ def rank_features_supervised(
     score = predictor.score(x_test, y_test)
     evaluation_metric = "R2 score" if prediction_type == "continuous" else "accuracy"
 
-    if logging:
+    if verbose:
         logger.info(
             f"Training completed. The model achieved an {evaluation_metric} of {score:.2f} on the test set, consisting of {len(y_test)} samples."
         )
