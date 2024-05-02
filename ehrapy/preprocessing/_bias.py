@@ -38,7 +38,6 @@ def detect_bias(
     Args:
         adata: An annotated data matrix containing EHR data.
         sensitive_features: Sensitive features to consider for bias detection. If set to "all", all features in adata.var will be considered.
-            If only a subset of features should be considered, provide as an iterable.
         run_feature_importances: Whether to run feature importances for detecting bias. If set to None, the function will run feature importances if
             sensitive_features is not set to "all", as this can be computationally expensive. Defaults to None.
         corr_threshold: The threshold for the correlation coefficient between two features to be considered of interest. Defaults to 0.5.
@@ -49,7 +48,7 @@ def detect_bias(
             of interest. Defaults to 0.1.
         prediction_confidence_threshold: The threshold for the prediction confidence (R2 or accuracy) of a sensitive feature for predicting another
             feature to be considered of interest. Defaults to 0.5.
-        corr_method: The correlation method to use. Choose between "pearson" and "spearman". Defaults to "spearman".
+        corr_method: The correlation method to use. Defaults to "spearman".
         copy: If set to False, adata is updated in place. If set to True, the adata is copied and the results are stored in the copied adata, which
             is then returned. Defaults to False.
 
