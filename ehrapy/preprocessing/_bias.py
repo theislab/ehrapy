@@ -57,13 +57,14 @@ def detect_bias(
             is then returned. Defaults to False.
 
     Returns:
-        A dictionary containing the results of the bias detection. The keys are:
+        A dictionary containing the results of the bias detection. The keys are
+
         - "feature_correlations": Pairwise correlations between features that exceed the correlation threshold.
         - "standardized_mean_differences": Standardized mean differences between groups of sensitive features that exceed the SMD threshold.
         - "categorical_value_counts": Value counts of categorical features between groups of sensitive features that exceed the categorical factor
-            threshold.
+          threshold.
         - "feature_importances": Feature importances for predicting one feature with another that exceed the feature importance and prediction
-            confidence thresholds.
+          confidence thresholds.
 
         If copy is set to True, the function returns a tuple with the results dictionary and the updated adata.
 
