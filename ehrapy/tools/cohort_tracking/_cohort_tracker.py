@@ -13,6 +13,9 @@ from matplotlib.patches import Patch
 from scanpy import AnnData
 from tableone import TableOne
 
+from ehrapy.anndata._constants import CATEGORICAL_TAG, CONTINUOUS_TAG, DATE_TAG, FEATURE_TYPE_KEY
+from ehrapy.anndata._feature_specifications import _detect_feature_type
+
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
@@ -33,14 +36,6 @@ def _check_no_new_categories(df: pd.DataFrame, categorical: pd.DataFrame, catego
         diff = set(categories_present) - set(categories_expected)
         if diff:
             raise ValueError(f"New category in {col}: {diff}")
-
-
-def _detect_categorical_columns(data) -> list:
-    # TODO grab this from ehrapy once https://github.com/theislab/ehrapy/issues/662 addressed
-    numeric_cols = set(data.select_dtypes("number").columns)
-    categorical_cols = set(data.columns) - numeric_cols
-
-    return list(categorical_cols)
 
 
 import matplotlib.text as mtext
@@ -95,7 +90,13 @@ class CohortTracker:
         # if categorical columns specified, use them
         # else, follow tableone's logic
         self.categorical = (
-            categorical if categorical is not None else _detect_categorical_columns(adata.obs[self.columns])
+            categorical
+            if categorical is not None
+            else [
+                col
+                for col in adata.obs[self.columns].columns
+                if _detect_feature_type(adata.obs[col]) == CATEGORICAL_TAG
+            ]
         )
 
         self._categorical_categories: dict = {
@@ -461,7 +462,7 @@ class CohortTracker:
 
         Examples:
                 >>> import ehrapy as ep
-                >>> adata = ep.dt.diabetes_130_fairlearn(columns_obs_only="gender", "race")
+                >>> adata = ep.dt.diabetes_130_fairlearn(columns_obs_only=["gender", "race"])
                 >>> cohort_tracker = ep.tl.CohortTracker(adata)
                 >>> cohort_tracker(adata, label="Initial Cohort")
                 >>> adata = adata[:1000]
