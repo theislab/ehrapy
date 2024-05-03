@@ -4,6 +4,7 @@ from typing import Literal
 import numpy as np
 import pandas as pd
 from anndata import AnnData
+from dateutil.parser import parse  # type: ignore
 from lamin_utils import logger
 from rich import print
 from rich.tree import Tree
@@ -21,19 +22,30 @@ def _detect_feature_type(col: pd.Series) -> str:
     Returns:
         The detected feature type. One of 'date', 'categorical', or 'numeric'.
     """
+    col = col.dropna()
     majority_type = col.apply(type).value_counts().idxmax()
+
     if majority_type == pd.Timestamp:
         return DATE_TAG
+
+    elif majority_type == str:
+        try:
+            col.apply(parse)
+            return DATE_TAG
+        except ValueError:
+            return CATEGORICAL_TAG
+
     elif majority_type not in [int, float, complex]:
         return CATEGORICAL_TAG
+
     # Guess categorical if the feature is an integer and the values are 0/1 to n-1 with no gaps
     elif np.all(i.is_integer() for i in col) and (
         (col.min() == 0 and np.all(np.sort(col.unique()) == np.arange(col.nunique())))
         or (col.min() == 1 and np.all(np.sort(col.unique()) == np.arange(1, col.nunique() + 1)))
     ):
         return CATEGORICAL_TAG
-    else:
-        return CONTINUOUS_TAG
+
+    return CONTINUOUS_TAG
 
 
 def infer_feature_types(adata: AnnData, layer: str | None = None, output: Literal["tree", "dataframe"] | None = "tree"):
@@ -56,8 +68,7 @@ def infer_feature_types(adata: AnnData, layer: str | None = None, output: Litera
 
     df = anndata_to_df(adata, layer=layer)
     for feature in adata.var_names:
-        col = df[feature].dropna()
-        feature_types[feature] = _detect_feature_type(col)
+        feature_types[feature] = _detect_feature_type(df[feature])
 
     adata.var[FEATURE_TYPE_KEY] = pd.Series(feature_types)[adata.var_names]
 

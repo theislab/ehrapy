@@ -99,3 +99,17 @@ def test_feature_types_impute_feature_types_titanic():
         CATEGORICAL_TAG,
         CATEGORICAL_TAG,
     ]
+
+
+def test_date_detection():
+    df = pd.DataFrame(
+        {
+            "date1": pd.to_datetime(["2021-01-01", "2024-04-16", "2021-01-03"]),
+            "date2": ["2021-01-01", "2024-04-16", "2021-01-03"],
+            "date3": ["Jan 27, 2030", "2024-04-16", "2012/3"],
+            "not_date": ["not_a_date", "2024-04-16", "2021-01-03"],
+        }
+    )
+    adata = df_to_anndata(df)
+    ep.ad.infer_feature_types(adata, output=None)
+    assert np.all(adata.var[FEATURE_TYPE_KEY] == [DATE_TAG, DATE_TAG, DATE_TAG, CATEGORICAL_TAG])
