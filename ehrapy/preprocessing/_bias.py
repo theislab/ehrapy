@@ -231,7 +231,7 @@ def detect_bias(
                 if "Input y contains NaN" in str(e):
                     raise ValueError(
                         f"During feature importance computation, input feature y ({prediction_feature}) was found to contain NaNs."
-                    )
+                    ) from e
                 else:
                     raise e
 
