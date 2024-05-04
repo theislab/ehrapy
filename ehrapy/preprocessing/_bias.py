@@ -216,7 +216,8 @@ def detect_bias(
             "Prediction Score": [],
         }
         for prediction_feature in adata.var_names:
-            prediction_score = rank_features_supervised(
+            try:
+                prediction_score = rank_features_supervised(
                 adata,
                 prediction_feature,
                 input_features="all",
@@ -226,7 +227,11 @@ def detect_bias(
                 verbose=False,
                 return_score=True,
             )
-
+            except ValueError as e:
+                if "Input y contains NaN" in str(e):
+                    raise ValueError(f"During feature importance computation, input feature y ({prediction_feature}) was found to contain NaNs.")
+                else: raise e
+                
             for sens_feature in sens_features_list:
                 if prediction_feature == sens_feature:
                     continue
