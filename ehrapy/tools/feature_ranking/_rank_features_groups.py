@@ -7,8 +7,16 @@ import numpy as np
 import pandas as pd
 import scanpy as sc
 
-from ehrapy.anndata import move_to_x
-from ehrapy.anndata._constants import EHRAPY_TYPE_KEY, NON_NUMERIC_ENCODED_TAG, NUMERIC_TAG
+from ehrapy.anndata import check_feature_types, move_to_x
+from ehrapy.anndata._constants import (
+    CATEGORICAL_TAG,
+    CONTINUOUS_TAG,
+    DATE_TAG,
+    EHRAPY_TYPE_KEY,
+    FEATURE_TYPE_KEY,
+    NON_NUMERIC_ENCODED_TAG,
+    NUMERIC_TAG,
+)
 from ehrapy.preprocessing import encode
 
 if TYPE_CHECKING:
@@ -296,6 +304,7 @@ def _check_columns_to_rank_dict(columns_to_rank):
     return _var_subset, _obs_subset
 
 
+@check_feature_types
 def rank_features_groups(
     adata: AnnData,
     groupby: str,
@@ -486,12 +495,12 @@ def rank_features_groups(
 
     group_names = pd.Categorical(adata.obs[groupby].astype(str)).categories.tolist()
 
-    if list(adata.var_names[adata.var[EHRAPY_TYPE_KEY] == NUMERIC_TAG]):
+    if list(adata.var_names[adata.var[FEATURE_TYPE_KEY] == CONTINUOUS_TAG]):
         # Rank numerical features
 
         # Without copying `numerical_adata` is a view, and code throws an error
         # because of "object" type of .X
-        numerical_adata = adata[:, adata.var_names[adata.var[EHRAPY_TYPE_KEY] == NUMERIC_TAG]].copy()
+        numerical_adata = adata[:, adata.var_names[adata.var[FEATURE_TYPE_KEY] == CONTINUOUS_TAG]].copy()
         numerical_adata.X = numerical_adata.X.astype(float)
 
         sc.tl.rank_genes_groups(
