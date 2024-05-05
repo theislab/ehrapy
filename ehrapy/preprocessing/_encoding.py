@@ -277,7 +277,7 @@ def encode(
 
             _add_categoricals_to_obs(adata, encoded_ann_data, categoricals)
 
-        encoded_ann_data.X = encoded_ann_data.X.astype(np.number)
+        encoded_ann_data.X = encoded_ann_data.X.astype(np.float32)
 
         return encoded_ann_data
     else:
