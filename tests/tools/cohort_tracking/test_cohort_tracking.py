@@ -149,7 +149,6 @@ def test_CohortTracker_plot_cohort_barplot_use_settings_big(adata_mini, check_sa
 
 def test_CohortTracker_plot_cohort_barplot_loosing_category(adata_mini, check_same_image):
     ct = ep.tl.CohortTracker(adata_mini)
-
     ct(adata_mini, label="First step", operations_done="Some operations")
 
     adata_mini = adata_mini[adata_mini.obs.disease == "A", :]
@@ -160,7 +159,7 @@ def test_CohortTracker_plot_cohort_barplot_loosing_category(adata_mini, check_sa
     fig.tight_layout()
     check_same_image(
         fig=fig,
-        base_path=f"{_TEST_IMAGE_PATH}//cohorttracker_adata_mini_step2_loose_category",
+        base_path=f"{_TEST_IMAGE_PATH}/cohorttracker_adata_mini_step2_loose_category",
         tol=1e-1,
     )
 
