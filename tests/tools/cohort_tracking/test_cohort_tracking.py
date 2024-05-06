@@ -93,7 +93,7 @@ def test_CohortTracker_plot_cohort_barplot_vanilla(adata_mini, check_same_image)
     ct = ep.tl.CohortTracker(adata_mini)
 
     ct(adata_mini, label="First step", operations_done="Some operations")
-    fig1, _ = ct.plot_cohort_barplot(legend_labels={"weight": "weight(kg)","glucose": "glucose(mg/dL)"}, show=False)
+    fig1, _ = ct.plot_cohort_barplot(legend_labels={"weight": "weight(kg)", "glucose": "glucose(mg/dL)"}, show=False)
 
     check_same_image(
         fig=fig1,
@@ -102,7 +102,7 @@ def test_CohortTracker_plot_cohort_barplot_vanilla(adata_mini, check_same_image)
     )
 
     ct(adata_mini, label="Second step", operations_done="Some other operations")
-    fig2, _ = ct.plot_cohort_barplot(legend_labels={"weight":"weight(kg)","glucose":"glucose(mg/dL)"}, show=False)
+    fig2, _ = ct.plot_cohort_barplot(legend_labels={"weight": "weight(kg)", "glucose": "glucose(mg/dL)"}, show=False)
 
     check_same_image(
         fig=fig2,
@@ -154,7 +154,9 @@ def test_CohortTracker_plot_cohort_barplot_loosing_category(adata_mini, check_sa
     adata_mini = adata_mini[adata_mini.obs.disease == "A", :]
     ct(adata_mini)
 
-    fig, _ = ct.plot_cohort_barplot(color_palette="colorblind", legend_labels={"weight": "weight(kg)","glucose": "glucose(mg/dL)"}, show=False)
+    fig, _ = ct.plot_cohort_barplot(
+        color_palette="colorblind", legend_labels={"weight": "weight(kg)", "glucose": "glucose(mg/dL)"}, show=False
+    )
 
     check_same_image(
         fig=fig,
