@@ -68,7 +68,6 @@ def check_same_image(tmp_path):
             raise OSError(f"No expected output found at {expected}.")
         actual = tmp_path / "actual.png"
 
-        fig.tight_layout()
         fig.savefig(actual, dpi=80)
 
         result = compare_images(expected, actual, tol=tol, in_decorator=True)

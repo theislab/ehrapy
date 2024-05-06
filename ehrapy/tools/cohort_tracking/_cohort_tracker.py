@@ -193,7 +193,7 @@ class CohortTracker:
         color_palette: str = "colorblind",
         yticks_labels: dict = None,
         legend_labels: dict = None,
-        legend_subtitles: bool = False,
+        legend_subtitles: bool = True,
         legend_subtitles_names: dict = None,
         show: bool = True,
         ax: Axes | Sequence[Axes] = None,
@@ -207,14 +207,14 @@ class CohortTracker:
 
         Args:
             subfigure_title: If `True`, each subplot will have a title with the `label` provided during tracking.
-            color_palette: The color palette to use for the plot. Default is "colorblind".
+            color_palette: The color palette to use for the plot. Defaults to "colorblind".
             yticks_labels: Dictionary to rename the axis labels. If `None`, the original labels will be used. The keys should be the column names.
             legend_labels: Dictionary to rename the legend labels. If `None`, the original labels will be used. For categoricals, the keys should be the categories. For numericals, the key should be the column name.
-            legend_subtitles: If `True`, subtitles will be added to the legend. Default is `False`.
+            legend_subtitles: If `True`, subtitles will be added to the legend. Defaults to True.
             legend_subtitles_names: Dictionary to rename the legend subtitles. If `None`, the original labels will be used. The keys should be the column names.
             show: If `True`, the plot will be shown. If `False`, plotting handels are returned.
             ax: If `None`, a new figure and axes will be created. If an axes object is provided, the plot will be added to it.
-            fontsize: Fontsize for the text in the plot. Default is 10.
+            fontsize: Fontsize for the text in the plot. Defaults to 10.
             subplots_kwargs: Additional keyword arguments for the subplots.
             legend_kwargs: Additional keyword arguments for the legend.
 
