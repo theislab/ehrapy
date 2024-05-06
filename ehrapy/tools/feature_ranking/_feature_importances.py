@@ -120,7 +120,8 @@ def rank_features_supervised(
     input_data = data[input_features]
     labels = data[predicted_feature]
 
-    x_train, x_test, y_train, y_test = train_test_split(input_data, labels, test_size=test_split_size)
+    x_train, x_test, y_train, y_test = train_test_split(input_data, labels, test_size=test_split_size, random_state=42)
+    
 
     for feature in input_data.columns:
         try:
