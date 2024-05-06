@@ -187,7 +187,8 @@ def _var_qc_metrics(adata: AnnData, layer: str | None = None) -> pd.DataFrame:
             (mtx[:, non_categorical_indices] < lower_bound) | (mtx[:, non_categorical_indices] > upper_bound)
         ).any(axis=0)
         # Fill all non_categoricals with False because else we have a dtype object Series which h5py cannot save
-        var_metrics["iqr_outliers"] = var_metrics["iqr_outliers"].fillna(False).astype(bool)
+        var_metrics["iqr_outliers"] = var_metrics["iqr_outliers"].fillna(False)
+        var_metrics = var_metrics.infer_objects()
     except (TypeError, ValueError):
         # We assume that the data just hasn't been encoded yet
         pass

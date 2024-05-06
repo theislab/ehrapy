@@ -12,14 +12,10 @@ from ehrapy.io._read import read_csv
 from ehrapy.preprocessing._imputation import (
     _warn_imputation_threshold,
     explicit_impute,
-    iterative_svd_impute,
     knn_impute,
-    matrix_factorization_impute,
     mice_forest_impute,
     miss_forest_impute,
-    nuclear_norm_minimization_impute,
     simple_impute,
-    soft_impute,
 )
 
 CURRENT_DIR = Path(__file__).parent
@@ -197,126 +193,6 @@ def test_missforest_impute_dict(impute_adata):
     adata_imputed = miss_forest_impute(
         impute_adata, var_names={"numerical": ["intcol", "datetime"], "non_numerical": ["strcol", "boolcol"]}, copy=True
     )
-
-    assert not (np.all([item != item for item in adata_imputed.X]))
-
-
-def test_soft_impute_no_copy(impute_num_adata):
-    adata_imputed = soft_impute(impute_num_adata)
-
-    assert id(impute_num_adata) == id(adata_imputed)
-
-
-def test_soft_impute_copy(impute_num_adata):
-    adata_imputed = soft_impute(impute_num_adata, copy=True)
-
-    assert id(impute_num_adata) != id(adata_imputed)
-
-
-def test_soft_impute_non_numerical_data(impute_adata):
-    adata_imputed = soft_impute(impute_adata)
-
-    assert not (np.all([item != item for item in adata_imputed.X]))
-
-
-def test_soft_impute_numerical_data(impute_num_adata):
-    adata_imputed = soft_impute(impute_num_adata)
-
-    assert not (np.all([item != item for item in adata_imputed.X]))
-
-
-def test_soft_impute_list_str(impute_adata):
-    adata_imputed = soft_impute(impute_adata, var_names=["intcol", "strcol", "boolcol"])
-
-    assert not (np.all([item != item for item in adata_imputed.X]))
-
-
-def test_IterativeSVD_impute_no_copy(impute_num_adata):
-    adata_imputed = iterative_svd_impute(impute_num_adata, rank=2)
-
-    assert id(impute_num_adata) == id(adata_imputed)
-
-
-def test_IterativeSVD_impute_copy(impute_num_adata):
-    adata_imputed = iterative_svd_impute(impute_num_adata, rank=2, copy=True)
-
-    assert id(impute_adata) != id(adata_imputed)
-
-
-def test_IterativeSVD_impute_non_numerical_data(impute_adata):
-    adata_imputed = iterative_svd_impute(impute_adata, rank=3)
-
-    assert not (np.all([item != item for item in adata_imputed.X]))
-
-
-def test_IterativeSVD_impute_numerical_data(impute_num_adata):
-    adata_imputed = iterative_svd_impute(impute_num_adata, rank=2)
-
-    assert not (np.all([item != item for item in adata_imputed.X]))
-
-
-def test_IterativeSVD_impute_list_str(impute_adata):
-    adata_imputed = iterative_svd_impute(impute_adata, var_names=["intcol", "strcol", "boolcol"], rank=2)
-
-    assert not (np.all([item != item for item in adata_imputed.X]))
-
-
-def test_matrix_factorization_impute_no_copy(impute_num_adata):
-    adata_imputed = matrix_factorization_impute(impute_num_adata)
-
-    assert id(impute_num_adata) == id(adata_imputed)
-
-
-def test_matrix_factorization_impute_copy(impute_num_adata):
-    adata_imputed = matrix_factorization_impute(impute_num_adata, copy=True)
-
-    assert id(impute_num_adata) != id(adata_imputed)
-
-
-def test_matrix_factorization_impute_non_numerical_data(impute_adata):
-    adata_imputed = matrix_factorization_impute(impute_adata)
-
-    assert not (np.all([item != item for item in adata_imputed.X]))
-
-
-def test_matrix_factorization_impute_numerical_data(impute_adata):
-    adata_imputed = matrix_factorization_impute(impute_adata)
-
-    assert not (np.all([item != item for item in adata_imputed.X]))
-
-
-def test_matrix_factorization_impute_list_str(impute_adata):
-    adata_imputed = matrix_factorization_impute(impute_adata, var_names=["intcol", "strcol", "boolcol"])
-
-    assert not (np.all([item != item for item in adata_imputed.X]))
-
-
-def test_nuclear_norm_minimization_impute_no_copy(impute_num_adata):
-    adata_imputed = nuclear_norm_minimization_impute(impute_num_adata)
-
-    assert id(impute_num_adata) == id(adata_imputed)
-
-
-def test_nuclear_norm_minimization_impute_copy(impute_num_adata):
-    adata_imputed = nuclear_norm_minimization_impute(impute_num_adata, copy=True)
-
-    assert id(impute_num_adata) != id(adata_imputed)
-
-
-def test_nuclear_norm_minimization_impute_non_numerical_data(impute_adata):
-    adata_imputed = nuclear_norm_minimization_impute(impute_adata)
-
-    assert not (np.all([item != item for item in adata_imputed.X]))
-
-
-def test_nuclear_norm_minimization_impute_numerical_data(impute_num_adata):
-    adata_imputed = nuclear_norm_minimization_impute(impute_num_adata)
-
-    assert not (np.all([item != item for item in adata_imputed.X]))
-
-
-def test_nuclear_norm_minimization_impute_list_str(impute_adata):
-    adata_imputed = nuclear_norm_minimization_impute(impute_adata, var_names=["intcol", "strcol", "boolcol"])
 
     assert not (np.all([item != item for item in adata_imputed.X]))
 
