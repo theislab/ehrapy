@@ -6,6 +6,7 @@ import pytest
 
 import ehrapy as ep
 import ehrapy.tools.feature_ranking._rank_features_groups as _utils
+from ehrapy.anndata._constants import CONTINUOUS_TAG, FEATURE_TYPE_KEY
 from ehrapy.io._read import read_csv
 
 CURRENT_DIR = Path(__file__).parent
@@ -205,6 +206,10 @@ class TestHelperFunctions:
 
     def test_evaluate_categorical_features(self):
         adata = ep.dt.mimic_2(encoded=False)
+        ep.ad.infer_feature_types(adata, output=None)
+        adata.var[FEATURE_TYPE_KEY].loc["hour_icu_intime"] = (
+            CONTINUOUS_TAG  # This is detected as categorical, so we need to correct that
+        )
         adata = ep.pp.encode(adata, autodetect=True, encodings="label")
 
         group_names = pd.Categorical(adata.obs["service_unit"].astype(str)).categories.tolist()
@@ -235,6 +240,7 @@ class TestHelperFunctions:
 class TestRankFeaturesGroups:
     def test_real_dataset(self):
         adata = ep.dt.mimic_2(encoded=True)
+        ep.ad.infer_feature_types(adata, output=None)
 
         ep.tl.rank_features_groups(adata, groupby="service_unit")
 
@@ -255,6 +261,7 @@ class TestRankFeaturesGroups:
 
     def test_only_continous_features(self):
         adata = ep.dt.mimic_2(encoded=True)
+        ep.ad.infer_feature_types(adata, output=None)
         adata.uns["non_numerical_columns"] = []
 
         ep.tl.rank_features_groups(adata, groupby="service_unit")
@@ -267,6 +274,7 @@ class TestRankFeaturesGroups:
 
     def test_only_cat_features(self):
         adata = ep.dt.mimic_2(encoded=True)
+        ep.ad.infer_feature_types(adata, output=None)
         adata.uns["numerical_columns"] = []
 
         ep.tl.rank_features_groups(adata, groupby="service_unit")
@@ -287,6 +295,7 @@ class TestRankFeaturesGroups:
         adata = read_csv(
             dataset_path=f"{_TEST_PATH}/dataset1.csv", columns_x_only=["station", "sys_bp_entry", "dia_bp_entry"]
         )
+        ep.ad.infer_feature_types(adata, output=None)
         adata = ep.pp.encode(adata, encodings={"label": ["station"]})
         adata_orig = adata.copy()
 
@@ -312,6 +321,7 @@ class TestRankFeaturesGroups:
             dataset_path=f"{_TEST_PATH}/dataset1.csv",
             columns_obs_only=["disease", "station", "sys_bp_entry", "dia_bp_entry"],
         )
+        ep.ad.infer_feature_types(adata, output=None)
 
         ep.tl.rank_features_groups(adata, groupby="disease", field_to_rank=field_to_rank)
 
@@ -339,17 +349,20 @@ class TestRankFeaturesGroups:
             dataset_path=f"{_TEST_PATH}/dataset1.csv",
             columns_x_only=["station", "sys_bp_entry", "dia_bp_entry", "glucose"],
         )
+        ep.ad.infer_feature_types(adata_features_in_x, output=None)
         adata_features_in_x = ep.pp.encode(adata_features_in_x, encodings={"label": ["station"]})
 
         adata_features_in_obs = read_csv(
             dataset_path=f"{_TEST_PATH}/dataset1.csv",
             columns_obs_only=["disease", "station", "sys_bp_entry", "dia_bp_entry", "glucose"],
         )
+        ep.ad.infer_feature_types(adata_features_in_obs, output=None)
 
         adata_features_in_x_and_obs = read_csv(
             dataset_path=f"{_TEST_PATH}/dataset1.csv",
             columns_obs_only=["disease", "station"],
         )
+        ep.ad.infer_feature_types(adata_features_in_x_and_obs, output=None)
         # to keep the same variables as in the datsets above, in order to make the comparison of consistency
         adata_features_in_x_and_obs = adata_features_in_x_and_obs[:, ["sys_bp_entry", "dia_bp_entry", "glucose"]]
 
@@ -390,6 +403,7 @@ class TestRankFeaturesGroups:
             columns_obs_only=["disease", "station", "sys_bp_entry", "dia_bp_entry"],
             index_column="idx",
         )
+        ep.ad.infer_feature_types(adata, output=None)
 
         # get a fresh adata for every test to not have any side effects
         adata_copy = adata.copy()

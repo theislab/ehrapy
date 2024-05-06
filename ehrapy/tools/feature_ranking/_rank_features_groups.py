@@ -7,15 +7,12 @@ import numpy as np
 import pandas as pd
 import scanpy as sc
 
-from ehrapy.anndata import check_feature_types, move_to_x
+from ehrapy.anndata import check_feature_types, infer_feature_types, move_to_x
 from ehrapy.anndata._constants import (
     CATEGORICAL_TAG,
     CONTINUOUS_TAG,
     DATE_TAG,
-    EHRAPY_TYPE_KEY,
     FEATURE_TYPE_KEY,
-    NON_NUMERIC_ENCODED_TAG,
-    NUMERIC_TAG,
 )
 from ehrapy.preprocessing import encode
 
@@ -156,6 +153,7 @@ def _get_groups_order(groups_subset, group_names, reference):
     return tuple(groups_order)
 
 
+@check_feature_types
 def _evaluate_categorical_features(
     adata,
     groupby,
@@ -210,7 +208,8 @@ def _evaluate_categorical_features(
     groups_order = _get_groups_order(groups_subset=groups, group_names=group_names, reference=reference)
 
     groups_values = adata.obs[groupby].to_numpy()
-    for feature in adata.var_names[adata.var[EHRAPY_TYPE_KEY] == NON_NUMERIC_ENCODED_TAG]:
+    for feature in adata.var_names[adata.var[FEATURE_TYPE_KEY] == CATEGORICAL_TAG]:
+        # TODO: Check that encoded
         if feature == groupby or "ehrapycat_" + feature == groupby or feature == "ehrapycat_" + groupby:
             continue
 
@@ -468,6 +467,7 @@ def rank_features_groups(
             # the 0th column is a dummy of zeros and is meaningless in this case, and needs to be removed
             adata_minimal = adata_minimal[:, 1:]
 
+        infer_feature_types(adata_minimal, output=None)  # TODO: Douple-check
         adata_minimal = encode(adata_minimal, autodetect=True, encodings="label")
         # this is needed because encode() doesn't add this key if there are no categorical columns to encode
         if "encoded_non_numerical_columns" not in adata_minimal.uns:
@@ -533,7 +533,7 @@ def rank_features_groups(
             groups_order=group_names,
         )
 
-    if list(adata.var_names[adata.var[EHRAPY_TYPE_KEY] == NON_NUMERIC_ENCODED_TAG]):
+    if list(adata.var_names[adata.var[FEATURE_TYPE_KEY] == CATEGORICAL_TAG]):
         (
             categorical_names,
             categorical_scores,
