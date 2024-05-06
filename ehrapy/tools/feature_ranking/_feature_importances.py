@@ -120,21 +120,25 @@ def rank_features_supervised(
     input_data = data[input_features]
     labels = data[predicted_feature]
 
+    x_train, x_test, y_train, y_test = train_test_split(input_data, labels, test_size=test_split_size, random_state=42)
+
     for feature in input_data.columns:
         try:
-            input_data.loc[:, feature] = input_data[feature].astype(np.float32)
+            x_train.loc[:, feature] = x_train[feature].astype(np.float32)
+            x_test.loc[:, feature] = x_test[feature].astype(np.float32)
 
             if feature_scaling is not None:
                 scaler = StandardScaler() if feature_scaling == "standard" else MinMaxScaler()
-                scaled_data = scaler.fit_transform(input_data[[feature]].values.astype(np.float32))
-                input_data.loc[:, feature] = scaled_data.flatten()
+                scaled_data = scaler.fit_transform(x_train[[feature]].values.astype(np.float32))
+                x_train.loc[:, feature] = scaled_data.flatten()
+
+                scaled_data = scaler.transform(x_test[[feature]].values.astype(np.float32))
+                x_test.loc[:, feature] = scaled_data.flatten()
         except ValueError as e:
             raise ValueError(
                 f"Feature {feature} is not numeric. Please encode non-numeric features before calculating "
                 f"feature importances or drop them from the input_features list."
             ) from e
-
-    x_train, x_test, y_train, y_test = train_test_split(input_data, labels, test_size=test_split_size)
 
     predictor.fit(x_train, y_train)
 
