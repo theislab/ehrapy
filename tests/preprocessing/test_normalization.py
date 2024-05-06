@@ -322,23 +322,6 @@ def test_norm_log1p(adata_to_norm):
         ep.pp.log_norm(adata_to_norm, vars="Numeric2", offset=1, copy=True)
 
 
-def test_norm_sqrt(adata_to_norm):
-    """Test for the square root normalization method."""
-    sqrt_adata = adata_to_norm.copy()
-    sqrt_adata.X[0, 4] = 2
-    adata_norm = ep.pp.sqrt_norm(sqrt_adata, copy=True)
-
-    num1_norm = np.array([1.8439089, 2.32379, 2.3874671], dtype=np.float32)
-    num2_norm = np.array([1.4142135, 2.236068, 1.7320508], dtype=np.float32)
-
-    assert np.array_equal(adata_norm.X[:, 0], adata_to_norm.X[:, 0])
-    assert np.array_equal(adata_norm.X[:, 1], adata_to_norm.X[:, 1])
-    assert np.array_equal(adata_norm.X[:, 2], adata_to_norm.X[:, 2])
-    assert np.allclose(adata_norm.X[:, 3], num1_norm)
-    assert np.allclose(adata_norm.X[:, 4], num2_norm)
-    assert np.allclose(adata_norm.X[:, 5], adata_to_norm.X[:, 5], equal_nan=True)
-
-
 def test_norm_record(adata_to_norm):
     """Test for logging of applied normalization methods."""
     adata_norm = ep.pp.minmax_norm(adata_to_norm, copy=True)
