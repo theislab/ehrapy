@@ -295,6 +295,7 @@ For most tools and for some preprocessing functions, you will find a plotting fu
     plot.clustermap
     plot.ranking
     plot.dendrogram
+    plot.catplot
 ```
 
 ### Quality Control and missing values

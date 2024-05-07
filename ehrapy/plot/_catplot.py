@@ -1,0 +1,41 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+import seaborn as sns
+
+if TYPE_CHECKING:
+    from scanpy import AnnData
+    from seaborn.axisgrid import FacetGrid
+
+
+def catplot(adata: AnnData, **kwargs) -> FacetGrid:
+    """Plot categorical data.
+
+    Wrapper around seaborn.catplot.
+
+    Args:
+        adata: AnnData object.
+        **kwargs: Keyword arguments for seaborn.catplot.
+
+    Returns:
+        A Seaborn FacetGrid object for further modifications.
+
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.diabetes_130_fairlearn()
+        >>> ep.ad.move_to_obs(adata, ["A1Cresult", "admission_source_id"], copy_obs=True)
+        >>> adata.obs["A1Cresult_measured"] = ~adata.obs["A1Cresult"].isna()
+        >>> ep.pl.catplot(
+        ...     adata=adata,
+        ...     y="A1Cresult_measured",
+        ...     x="admission_source_id",
+        ...     kind="point",
+        ...     ci=95,
+        ...     join=False,
+        ... )
+
+        .. image:: /_static/docstring_previews/catplot.png
+    """
+
+    return sns.catplot(data=adata.obs, **kwargs)
