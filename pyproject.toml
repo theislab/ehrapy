@@ -69,7 +69,8 @@ dependencies = [
     "tableone",
     "imbalanced-learn",
     "fknni",
-    "lamin_utils"
+    "lamin_utils",
+    "filelock"
 ]
 
 [project.optional-dependencies]
