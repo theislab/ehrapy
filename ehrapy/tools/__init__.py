@@ -25,7 +25,6 @@ try:  # pragma: no cover
     )
 except ImportError:
     pass
-from ehrapy.tools.nlp._translators import Translator
 
 __all__ = [
     "anova_glm",
@@ -44,5 +43,4 @@ __all__ = [
     "rank_features_supervised",
     "filter_rank_features_groups",
     "rank_features_groups",
-    "Translator",
 ]
