@@ -13,8 +13,8 @@ if TYPE_CHECKING:
 def catplot(adata: AnnData, x: str = None, y: str = None, hue: str = None, kind: str = "strip", **kwargs) -> FacetGrid:
     """Plot categorical data.
 
-    Wrapper around seaborn.catplot. Typically used to show the behaviour of one numerical with respect to one
-    or several categorical variables.
+    Wrapper around `seaborn.catplot <https://seaborn.pydata.org/generated/seaborn.catplot.html>`_. Typically used to show
+    the behaviour of one numerical with respect to one or several categorical variables.
 
     Considers adata.obs only.
 
