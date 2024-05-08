@@ -83,7 +83,7 @@ def encode(
         if "original" not in adata.layers.keys():
             adata.layers["original"] = adata.X.copy()
 
-        # autodetect categorical values, which could lead to more categoricals
+        # autodetect categorical values based on feature types stored in adata.var[FEATURE_TYPE_KEY]
         if autodetect:
             if "var_to_encoding" in adata.uns.keys():  # TODO: Delete this part
                 logger.warning(
@@ -152,9 +152,6 @@ def encode(
                 new_var = pd.DataFrame(index=encoded_var_names)
                 new_var[FEATURE_TYPE_KEY] = adata.var[FEATURE_TYPE_KEY].copy()
                 new_var.loc[new_var.index.str.contains("ehrapycat")] = CATEGORICAL_TAG
-                # if FEATURE_TYPE_KEY in adata.var.keys(): #TODO: Delete this part
-                #   new_var[FEATURE_TYPE_KEY] = adata.var[FEATURE_TYPE_KEY].copy()
-                #  new_var.loc[new_var.index.str.contains("ehrapycat"), FEATURE_TYPE_KEY] = CATEGORICAL_TAG
 
                 encoded_ann_data = AnnData(
                     encoded_x,
@@ -255,9 +252,6 @@ def encode(
             new_var = pd.DataFrame(index=encoded_var_names)
             new_var[FEATURE_TYPE_KEY] = adata.var[FEATURE_TYPE_KEY].copy()
             new_var.loc[new_var.index.str.contains("ehrapycat")] = CATEGORICAL_TAG
-            # if FEATURE_TYPE_KEY in adata.var.keys(): #TODO: Delete this part
-            #   new_var[FEATURE_TYPE_KEY] = adata.var[FEATURE_TYPE_KEY].copy()
-            #  new_var.loc[new_var.index.str.contains("ehrapycat"), FEATURE_TYPE_KEY] = CATEGORICAL_TAG
 
             try:
                 encoded_ann_data = AnnData(
