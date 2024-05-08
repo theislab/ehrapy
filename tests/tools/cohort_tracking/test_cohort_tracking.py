@@ -93,7 +93,7 @@ def test_CohortTracker_plot_cohort_barplot_vanilla(adata_mini, check_same_image)
     ct = ep.tl.CohortTracker(adata_mini)
 
     ct(adata_mini, label="First step", operations_done="Some operations")
-    fig1, _ = ct.plot_cohort_barplot(show=False)
+    fig1, _ = ct.plot_cohort_barplot(legend_labels={"weight": "weight(kg)", "glucose": "glucose(mg/dL)"}, show=False)
 
     check_same_image(
         fig=fig1,
@@ -102,7 +102,7 @@ def test_CohortTracker_plot_cohort_barplot_vanilla(adata_mini, check_same_image)
     )
 
     ct(adata_mini, label="Second step", operations_done="Some other operations")
-    fig2, _ = ct.plot_cohort_barplot(show=False)
+    fig2, _ = ct.plot_cohort_barplot(legend_labels={"weight": "weight(kg)", "glucose": "glucose(mg/dL)"}, show=False)
 
     check_same_image(
         fig=fig2,
@@ -118,7 +118,7 @@ def test_CohortTracker_plot_cohort_barplot_use_settings(adata_mini, check_same_i
     fig, _ = ct.plot_cohort_barplot(
         show=False,
         yticks_labels={"weight": "wgt"},
-        legend_labels={"A": "Dis. A", "weight": "(kg)"},
+        legend_labels={"A": "Dis. A", "weight": "(kg)", "glucose": "glucose(mg/dL)"},
     )
 
     check_same_image(
@@ -149,18 +149,18 @@ def test_CohortTracker_plot_cohort_barplot_use_settings_big(adata_mini, check_sa
 
 def test_CohortTracker_plot_cohort_barplot_loosing_category(adata_mini, check_same_image):
     ct = ep.tl.CohortTracker(adata_mini)
-
     ct(adata_mini, label="First step", operations_done="Some operations")
 
     adata_mini = adata_mini[adata_mini.obs.disease == "A", :]
     ct(adata_mini)
 
-    fig, _ = ct.plot_cohort_barplot(color_palette="colorblind", show=False)
+    fig, _ = ct.plot_cohort_barplot(
+        color_palette="colorblind", legend_labels={"weight": "weight(kg)", "glucose": "glucose(mg/dL)"}, show=False
+    )
 
-    fig.tight_layout()
     check_same_image(
         fig=fig,
-        base_path=f"{_TEST_IMAGE_PATH}//cohorttracker_adata_mini_step2_loose_category",
+        base_path=f"{_TEST_IMAGE_PATH}/cohorttracker_adata_mini_step2_loose_category",
         tol=1e-1,
     )
 

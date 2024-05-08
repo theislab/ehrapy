@@ -7,7 +7,6 @@ from typing import Any
 import numpy as np
 import pandas as pd
 from anndata import AnnData
-from category_encoders import CountEncoder, HashingEncoder
 from lamin_utils import logger
 from rich import print
 from rich.progress import BarColumn, Progress
@@ -113,7 +112,6 @@ def encode(
             single_encode_mode_switcher = {
                 "one-hot": _one_hot_encoding,
                 "label": _label_encoding,
-                "count": _count_encoding,
             }
             with Progress(
                 "[progress.description]{task.description}",
@@ -217,8 +215,6 @@ def encode(
                     encode_mode_switcher = {
                         "one-hot": _one_hot_encoding,
                         "label": _label_encoding,
-                        "count": _count_encoding,
-                        "hash": _hash_encoding,
                     }
                     progress.update(task, description=f"Running {encoding} ...")
                     # perform the actual encoding
@@ -277,7 +273,7 @@ def encode(
 
             _add_categoricals_to_obs(adata, encoded_ann_data, categoricals)
 
-        encoded_ann_data.X = encoded_ann_data.X.astype(np.number)
+        encoded_ann_data.X = encoded_ann_data.X.astype(np.float32)
 
         return encoded_ann_data
     else:
@@ -393,96 +389,6 @@ def _label_encoding(
     progress.update(task, description="[blue]Updating X and var ...")
     temp_x, temp_var_names = _update_encoded_data(X, original_values, var_names, category_prefixes, categoricals)
     progress.update(task, description="[blue]Finished label encoding.")
-
-    return temp_x, temp_var_names
-
-
-def _count_encoding(
-    adata: AnnData,
-    X: np.ndarray | None,
-    uns: dict[str, Any],
-    var_names: list[str],
-    categoricals: list[str],
-    progress: Progress,
-    task,
-) -> tuple[np.ndarray, list[str]]:
-    """Encode categorical column using count encoding.
-
-    Args:
-        adata: The current AnnData object
-        X: Current (encoded) X
-        uns: A copy of the original uns
-        var_names: Var names of current AnnData object
-        categoricals: The name of the categorical columns, that need to be encoded
-
-    Returns:
-        Encoded new X and the corresponding new var names
-    """
-    original_values = _initial_encoding(uns, categoricals)
-    progress.update(task, description="[blue]Running count encoding encoding on passed columns ...")
-    # returns a pandas dataframe per default, but numpy array is needed
-    count_encoder = CountEncoder(return_df=False)
-    count_encoder.fit(original_values)
-    category_prefix = [f"ehrapycat_{categorical}" for categorical in categoricals]
-    transformed = count_encoder.transform(original_values)
-    # X is None if this is the first encoding "round" -> take the former X
-    if X is None:
-        X = adata.X
-
-    progress.advance(task, 1)
-    progress.update(task, description="[blue]Updating X and var ...")
-    temp_x, temp_var_names = _update_encoded_data(X, transformed, var_names, category_prefix, categoricals)
-    progress.update(task, description="[blue]Finished count encoding.")
-
-    return temp_x, temp_var_names
-
-
-def _hash_encoding(
-    adata: AnnData,
-    X: np.ndarray | None,
-    uns: dict[str, Any],
-    var_names: list[str],
-    categories: list[list[str]],
-    progress: Progress,
-    task,
-) -> tuple[np.ndarray, list[str]]:
-    """Encode categorical columns using hash encoding.
-
-    Args:
-        adata: The current AnnData object
-        X: Current (encoded) X
-        uns: A copy of the original uns
-        var_names: Var names of current AnnData object
-        categories: The name of the categorical columns to be encoded
-
-    Returns:
-        Encoded new X and the corresponding new var names
-    """
-    transformed_all, encoded_var_names = None, []
-    for idx, multi_columns in enumerate(categories):
-        progress.update(task, description=f"Running hash encoding on {idx + 1}. list ...")
-        original_values = _initial_encoding(uns, multi_columns)
-
-        encoder = HashingEncoder(return_df=False, n_components=8).fit(original_values)
-        encoded_var_names += [f"ehrapycat_hash_{multi_columns[0]}" for _ in range(8)]
-        transformed = encoder.transform(original_values)
-        transformed_all = np.hstack((transformed_all, transformed)) if transformed_all is not None else transformed
-        progress.advance(task, 1 / len(categories))
-
-    # X is None if this is the first encoding "round" -> take the former X
-    if X is None:
-        X = adata.X
-    progress.update(task, description="[blue]Updating X and var ...")
-
-    temp_x, temp_var_names = _update_multi_encoded_data(
-        X, transformed_all, var_names, encoded_var_names, sum(categories, [])
-    )
-    if temp_x.shape[1] != len(temp_var_names):
-        raise HashEncodingError(
-            "Hash encoding of input data failed. Note that hash encoding is not "
-            "suitable for datasets with low number of data points and low cardinality!"
-        )
-    progress.update(task, description="[blue]Finished hash encoding.")
 
     return temp_x, temp_var_names
 

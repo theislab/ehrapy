@@ -387,48 +387,6 @@ def log_norm(
     return adata
 
 
-def sqrt_norm(adata: AnnData, vars: str | Sequence[str] | None = None, copy: bool = False) -> AnnData | None:
-    """Apply square root normalization.
-
-    Take the square root of all values.
-
-    Args:
-        adata: :class:`~anndata.AnnData` object containing X to normalize values in.
-               Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
-        vars: List of the names of the numeric variables to normalize.
-              If None all numeric variables will be normalized. Defaults to None.
-        copy: Whether to return a copy or act in place. Defaults to False.
-
-    Returns:
-        :class:`~anndata.AnnData` object with normalized X.
-        Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
-
-    Examples:
-        >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> adata_norm = ep.pp.sqrt_norm(adata, copy=True)
-    """
-    if isinstance(vars, str):
-        vars = [vars]
-    if vars is None:
-        vars = get_numeric_vars(adata)
-    else:
-        assert_numeric_vars(adata, vars)
-
-    adata = _prep_adata_norm(adata, copy)
-
-    var_idx = _get_column_indices(adata, vars)
-    var_values = np.take(adata.X, var_idx, axis=1)
-
-    var_values = np.sqrt(var_values)
-
-    set_numeric_vars(adata, var_values, vars)
-
-    _record_norm(adata, vars, "sqrt")
-
-    return adata
-
-
 def _prep_adata_norm(adata: AnnData, copy: bool = False) -> AnnData | None:  # pragma: no cover
     if copy:
         adata = adata.copy()

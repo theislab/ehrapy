@@ -16,7 +16,7 @@ def test_continuous_prediction():
     adata.var[FEATURE_TYPE_KEY] = [CONTINUOUS_TAG] * 3
 
     for model in ["regression", "svm", "rf"]:
-        rank_features_supervised(adata, "target", model, "all")
+        rank_features_supervised(adata, "target", model=model, input_features="all")
         assert "feature_importances" in adata.var
         assert adata.var["feature_importances"]["feature1"] > 0
         assert adata.var["feature_importances"]["feature2"] == 0
@@ -32,7 +32,7 @@ def test_categorical_prediction():
     adata.var[FEATURE_TYPE_KEY] = [CATEGORICAL_TAG] * 3
 
     for model in ["regression", "svm", "rf"]:
-        rank_features_supervised(adata, "target", model, "all")
+        rank_features_supervised(adata, "target", model=model, input_features="all")
         assert "feature_importances" in adata.var
         assert adata.var["feature_importances"]["feature1"] > 0
         assert adata.var["feature_importances"]["feature2"] == 0
@@ -47,7 +47,7 @@ def test_multiclass_prediction():
     adata.var_names = ["target", "feature1", "feature2"]
     adata.var[FEATURE_TYPE_KEY] = [CATEGORICAL_TAG] * 3
 
-    rank_features_supervised(adata, "target", "rf", "all")
+    rank_features_supervised(adata, "target", model="rf", input_features="all")
     assert "feature_importances" in adata.var
     assert adata.var["feature_importances"]["feature1"] > 0
     assert adata.var["feature_importances"]["feature2"] == 0
@@ -55,5 +55,5 @@ def test_multiclass_prediction():
 
     for invalid_model in ["regression", "svm"]:
         with pytest.raises(ValueError) as excinfo:
-            rank_features_supervised(adata, "target", invalid_model, "all")
+            rank_features_supervised(adata, "target", model=invalid_model, input_features="all")
         assert str(excinfo.value).startswith("Feature target has more than two categories.")

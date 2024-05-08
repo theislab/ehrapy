@@ -47,19 +47,17 @@ classifiers = [
 ]
 
 dependencies = [
+    "session-info",
+    "lamin_utils",
     "rich",
     "scanpy[leiden]",
     "pyyaml",
     "requests",
     "scikit-learn",
-    "category_encoders",
     "pynndescent",
-    "deep-translator",
-    "deepl",
     "fancyimpute",
     "miceforest",
     "scikit-misc",
-    "session-info",
     "lifelines",
     "missingno",
     "thefuzz[speedup]",
@@ -69,7 +67,6 @@ dependencies = [
     "tableone",
     "imbalanced-learn",
     "fknni",
-    "lamin_utils",
     "dateutil",
 ]
 

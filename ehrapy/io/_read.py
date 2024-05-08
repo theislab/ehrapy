@@ -591,7 +591,7 @@ def _prepare_dataframe(initial_df: pd.DataFrame, columns_obs_only, columns_x_onl
     no_datetime_object_col = []
     for col in object_type_columns:
         try:
-            pd.to_datetime(initial_df[col], format="mixed")
+            pd.to_datetime(initial_df[col], format="mixed", utc=True)
             # only add to column_obs_only if not present already to avoid duplicates
             if col not in columns_obs_only:
                 columns_obs_only.append(col)
