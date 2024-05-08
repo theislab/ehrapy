@@ -5,7 +5,7 @@ import pytest
 from pandas import CategoricalDtype, DataFrame
 from pandas.testing import assert_frame_equal
 
-from ehrapy.anndata._constants import CATEGORICAL_TAG, CONTINUOUS_TAG, FEATURE_TYPE_KEY
+from ehrapy.anndata._constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrapy.io._read import read_csv
 from ehrapy.preprocessing._encoding import DuplicateColumnEncodingError, _reorder_encodings, encode
 
@@ -60,7 +60,7 @@ def test_autodetect_encode():
     assert_frame_equal(
         adata.var,
         DataFrame(
-            {FEATURE_TYPE_KEY: [CONTINUOUS_TAG, CONTINUOUS_TAG, CONTINUOUS_TAG, CATEGORICAL_TAG, CATEGORICAL_TAG]},
+            {FEATURE_TYPE_KEY: [NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG, CATEGORICAL_TAG, CATEGORICAL_TAG]},
             index=["patient_id", "los_days", "b12_values", "survival", "clinic_day"],
         ),
     )
@@ -75,9 +75,9 @@ def test_autodetect_encode():
                     CATEGORICAL_TAG,
                     CATEGORICAL_TAG,
                     CATEGORICAL_TAG,
-                    CONTINUOUS_TAG,
-                    CONTINUOUS_TAG,
-                    CONTINUOUS_TAG,
+                    NUMERIC_TAG,
+                    NUMERIC_TAG,
+                    NUMERIC_TAG,
                 ]
             },
             index=[
@@ -131,7 +131,7 @@ def test_autodetect_custom_mode():
     assert_frame_equal(
         adata.var,
         DataFrame(
-            {FEATURE_TYPE_KEY: [CONTINUOUS_TAG, CONTINUOUS_TAG, CONTINUOUS_TAG, CATEGORICAL_TAG, CATEGORICAL_TAG]},
+            {FEATURE_TYPE_KEY: [NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG, CATEGORICAL_TAG, CATEGORICAL_TAG]},
             index=["patient_id", "los_days", "b12_values", "survival", "clinic_day"],
         ),
     )
@@ -142,9 +142,9 @@ def test_autodetect_custom_mode():
                 FEATURE_TYPE_KEY: [
                     CATEGORICAL_TAG,
                     CATEGORICAL_TAG,
-                    CONTINUOUS_TAG,
-                    CONTINUOUS_TAG,
-                    CONTINUOUS_TAG,
+                    NUMERIC_TAG,
+                    NUMERIC_TAG,
+                    NUMERIC_TAG,
                 ]
             },
             index=[
@@ -201,7 +201,7 @@ def test_custom_encode():
     assert_frame_equal(
         adata.var,
         DataFrame(
-            {FEATURE_TYPE_KEY: [CONTINUOUS_TAG, CONTINUOUS_TAG, CONTINUOUS_TAG, CATEGORICAL_TAG, CATEGORICAL_TAG]},
+            {FEATURE_TYPE_KEY: [NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG, CATEGORICAL_TAG, CATEGORICAL_TAG]},
             index=["patient_id", "los_days", "b12_values", "survival", "clinic_day"],
         ),
     )
@@ -215,9 +215,9 @@ def test_custom_encode():
                     CATEGORICAL_TAG,
                     CATEGORICAL_TAG,
                     CATEGORICAL_TAG,
-                    CONTINUOUS_TAG,
-                    CONTINUOUS_TAG,
-                    CONTINUOUS_TAG,
+                    NUMERIC_TAG,
+                    NUMERIC_TAG,
+                    NUMERIC_TAG,
                 ]
             },
             index=[

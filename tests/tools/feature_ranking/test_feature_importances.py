@@ -3,7 +3,7 @@ import pandas as pd
 import pytest
 from anndata import AnnData
 
-from ehrapy.anndata._constants import CATEGORICAL_TAG, CONTINUOUS_TAG, DATE_TAG, FEATURE_TYPE_KEY
+from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrapy.tools import rank_features_supervised
 
 
@@ -13,7 +13,7 @@ def test_continuous_prediction():
 
     adata = AnnData(X)
     adata.var_names = ["target", "feature1", "feature2"]
-    adata.var[FEATURE_TYPE_KEY] = [CONTINUOUS_TAG] * 3
+    adata.var[FEATURE_TYPE_KEY] = [NUMERIC_TAG] * 3
 
     for model in ["regression", "svm", "rf"]:
         rank_features_supervised(adata, "target", model=model, input_features="all")

@@ -7,7 +7,7 @@ import pytest
 from sklearn.exceptions import ConvergenceWarning
 
 import ehrapy as ep
-from ehrapy.anndata._constants import CATEGORICAL_TAG, CONTINUOUS_TAG, DATE_TAG, FEATURE_TYPE_KEY
+from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrapy.io._read import read_csv
 from ehrapy.preprocessing._imputation import (
     _warn_imputation_threshold,

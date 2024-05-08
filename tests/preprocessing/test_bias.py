@@ -3,7 +3,7 @@ import pandas as pd
 import pytest
 
 import ehrapy as ep
-from ehrapy.anndata._constants import CATEGORICAL_TAG, CONTINUOUS_TAG, FEATURE_TYPE_KEY
+from ehrapy.anndata._constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 
 
 @pytest.fixture
@@ -20,7 +20,7 @@ def adata():
         }
     )
     adata = ep.ad.df_to_anndata(df)
-    adata.var[FEATURE_TYPE_KEY] = [CONTINUOUS_TAG] * 4 + [CATEGORICAL_TAG] * 2
+    adata.var[FEATURE_TYPE_KEY] = [NUMERIC_TAG] * 4 + [CATEGORICAL_TAG] * 2
     return adata
 
 

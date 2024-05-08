@@ -17,7 +17,7 @@ from scipy import sparse
 from scipy.sparse import issparse
 
 from ehrapy.anndata import check_feature_types
-from ehrapy.anndata._constants import CATEGORICAL_TAG, CONTINUOUS_TAG, DATE_TAG, FEATURE_TYPE_KEY
+from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Iterable, Sequence
@@ -201,7 +201,7 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False)
 
     cols_to_obs_indices = adata.var_names.isin(to_obs)
 
-    num_set = _get_var_indices_for_type(adata, CONTINUOUS_TAG)
+    num_set = _get_var_indices_for_type(adata, NUMERIC_TAG)
     var_num = list(set(to_obs) & set(num_set))
 
     if copy_obs:
@@ -226,7 +226,7 @@ def _get_var_indices_for_type(adata: AnnData, tag: str) -> list[str]:
 
     Args:
         adata: The AnnData object
-        tag: The tag to search for, should be one of 'CATEGORIGAL_TAG', 'CONTINUOUS_TAG', 'DATE_TAG'
+        tag: The tag to search for, should be one of 'CATEGORIGAL_TAG', 'NUMERIC_TAG', 'DATE_TAG'
 
     Returns:
         List of numeric columns
@@ -491,7 +491,7 @@ def get_numeric_vars(adata: AnnData) -> list[str]:  # TODO: Can we delete this f
     ):  # TODO: This is super unsafe, if we keep the funtion, add @check_feature_type decorator
         return list(adata.var_names.values)
     else:
-        return _get_var_indices_for_type(adata, CONTINUOUS_TAG)
+        return _get_var_indices_for_type(adata, NUMERIC_TAG)
 
 
 def assert_numeric_vars(adata: AnnData, vars: Sequence[str]):

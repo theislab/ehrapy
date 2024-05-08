@@ -11,7 +11,7 @@ from pandas import DataFrame
 from pandas.testing import assert_frame_equal
 
 import ehrapy as ep
-from ehrapy.anndata._constants import CATEGORICAL_TAG, CONTINUOUS_TAG, FEATURE_TYPE_KEY
+from ehrapy.anndata._constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrapy.anndata.anndata_ext import (
     NotEncodedError,
     _assert_encoded,
@@ -146,7 +146,7 @@ def test_move_to_x(adata_move_obs_mix):
     assert_frame_equal(
         new_adata_non_num.var,
         DataFrame(
-            {FEATURE_TYPE_KEY: [CONTINUOUS_TAG, CONTINUOUS_TAG, CATEGORICAL_TAG]},
+            {FEATURE_TYPE_KEY: [NUMERIC_TAG, NUMERIC_TAG, CATEGORICAL_TAG]},
             index=["los_days", "b12_values", "name"],
         ),
     )
@@ -154,14 +154,12 @@ def test_move_to_x(adata_move_obs_mix):
     assert_frame_equal(
         new_adata_num.var,
         DataFrame(
-            {FEATURE_TYPE_KEY: [CONTINUOUS_TAG, CONTINUOUS_TAG, CATEGORICAL_TAG, np.nan]},
+            {FEATURE_TYPE_KEY: [NUMERIC_TAG, NUMERIC_TAG, CATEGORICAL_TAG, np.nan]},
             index=["los_days", "b12_values", "name", "clinic_id"],
         ),
     )
     ep.ad.infer_feature_types(new_adata_num, output=None)
-    assert np.all(
-        new_adata_num.var[FEATURE_TYPE_KEY] == [CONTINUOUS_TAG, CONTINUOUS_TAG, CATEGORICAL_TAG, CONTINUOUS_TAG]
-    )
+    assert np.all(new_adata_num.var[FEATURE_TYPE_KEY] == [NUMERIC_TAG, NUMERIC_TAG, CATEGORICAL_TAG, NUMERIC_TAG])
 
     assert_frame_equal(
         new_adata_num.obs,
@@ -374,7 +372,7 @@ def test_detect_binary_columns(setup_binary_df_to_anndata):
                     CATEGORICAL_TAG,
                     CATEGORICAL_TAG,
                     CATEGORICAL_TAG,
-                    CONTINUOUS_TAG,
+                    NUMERIC_TAG,
                     CATEGORICAL_TAG,
                     CATEGORICAL_TAG,
                     CATEGORICAL_TAG,
@@ -406,7 +404,7 @@ def test_detect_mixed_binary_columns():
     assert_frame_equal(
         adata.var,
         DataFrame(
-            {FEATURE_TYPE_KEY: [CONTINUOUS_TAG, CATEGORICAL_TAG, CATEGORICAL_TAG]},
+            {FEATURE_TYPE_KEY: [NUMERIC_TAG, CATEGORICAL_TAG, CATEGORICAL_TAG]},
             index=["Col1", "Col2", "Col3"],
         ),
     )
@@ -428,7 +426,7 @@ def adata_numeric():  # TODO: Delete: I don't think this is used
         var=pd.DataFrame(data=var_numeric, index=var_numeric["Feature"]),
         uns=OrderedDict(),
     )
-    adata_numeric.var[FEATURE_TYPE_KEY] = [CONTINUOUS_TAG, CONTINUOUS_TAG, CATEGORICAL_TAG, CATEGORICAL_TAG]
+    adata_numeric.var[FEATURE_TYPE_KEY] = [NUMERIC_TAG, NUMERIC_TAG, CATEGORICAL_TAG, CATEGORICAL_TAG]
     adata_numeric.uns["numerical_columns"] = ["Numeric1", "Numeric2"]
     adata_numeric.uns["non_numerical_columns"] = ["String1", "String2"]
 
@@ -456,7 +454,7 @@ def adata_strings_encoded():
         obs=pd.DataFrame(data=obs_data),
         var=pd.DataFrame(data=var_strings, index=var_strings["Feature"]),
     )
-    adata_strings.var[FEATURE_TYPE_KEY] = [CONTINUOUS_TAG, CONTINUOUS_TAG, CATEGORICAL_TAG, CATEGORICAL_TAG]
+    adata_strings.var[FEATURE_TYPE_KEY] = [NUMERIC_TAG, NUMERIC_TAG, CATEGORICAL_TAG, CATEGORICAL_TAG]
     adata_strings.uns["numerical_columns"] = ["Numeric1", "Numeric2"]
     adata_strings.uns["non_numerical_columns"] = ["String1", "String2"]
     adata_encoded = ep.pp.encode(adata_strings.copy(), autodetect=True, encodings="label")

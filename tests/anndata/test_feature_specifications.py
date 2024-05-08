@@ -6,7 +6,7 @@ import pytest
 
 import ehrapy as ep
 from ehrapy.anndata import check_feature_types, df_to_anndata
-from ehrapy.anndata._constants import CATEGORICAL_TAG, CONTINUOUS_TAG, DATE_TAG, FEATURE_TYPE_KEY
+from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrapy.io._read import read_csv
 
 _TEST_PATH = f"{Path(__file__).parents[1]}/preprocessing/test_data_imputation"
@@ -34,9 +34,9 @@ def test_feature_type_inference(adata):
     assert adata.var[FEATURE_TYPE_KEY]["feature1"] == CATEGORICAL_TAG
     assert adata.var[FEATURE_TYPE_KEY]["feature2"] == CATEGORICAL_TAG
     assert adata.var[FEATURE_TYPE_KEY]["feature3"] == CATEGORICAL_TAG
-    assert adata.var[FEATURE_TYPE_KEY]["feature4"] == CONTINUOUS_TAG
+    assert adata.var[FEATURE_TYPE_KEY]["feature4"] == NUMERIC_TAG
     assert adata.var[FEATURE_TYPE_KEY]["feature5"] == CATEGORICAL_TAG
-    assert adata.var[FEATURE_TYPE_KEY]["feature6"] == CONTINUOUS_TAG
+    assert adata.var[FEATURE_TYPE_KEY]["feature6"] == NUMERIC_TAG
     assert adata.var[FEATURE_TYPE_KEY]["feature7"] == DATE_TAG
 
 
@@ -64,22 +64,20 @@ def test_check_feature_types(adata):
 def test_feature_types_impute_num_adata():
     adata = read_csv(dataset_path=f"{_TEST_PATH}/test_impute_num.csv")
     ep.ad.infer_feature_types(adata, output=None)
-    assert np.all(adata.var[FEATURE_TYPE_KEY] == [CONTINUOUS_TAG, CONTINUOUS_TAG, CONTINUOUS_TAG])
+    assert np.all(adata.var[FEATURE_TYPE_KEY] == [NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG])
     return adata
 
 
 def test_feature_types_impute_adata():
     adata = read_csv(dataset_path=f"{_TEST_PATH}/test_impute.csv")
     ep.ad.infer_feature_types(adata, output=None)
-    assert np.all(adata.var[FEATURE_TYPE_KEY] == [CONTINUOUS_TAG, CONTINUOUS_TAG, CATEGORICAL_TAG, CATEGORICAL_TAG])
+    assert np.all(adata.var[FEATURE_TYPE_KEY] == [NUMERIC_TAG, NUMERIC_TAG, CATEGORICAL_TAG, CATEGORICAL_TAG])
 
 
 def test_feature_types_impute_iris():
     adata = read_csv(dataset_path=f"{_TEST_PATH}/test_impute_iris.csv")
     ep.ad.infer_feature_types(adata, output=None)
-    assert np.all(
-        adata.var[FEATURE_TYPE_KEY] == [CONTINUOUS_TAG, CONTINUOUS_TAG, CONTINUOUS_TAG, CONTINUOUS_TAG, CATEGORICAL_TAG]
-    )
+    assert np.all(adata.var[FEATURE_TYPE_KEY] == [NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG, CATEGORICAL_TAG])
 
 
 def test_feature_types_impute_feature_types_titanic():
@@ -91,11 +89,11 @@ def test_feature_types_impute_feature_types_titanic():
         CATEGORICAL_TAG,
         CATEGORICAL_TAG,
         CATEGORICAL_TAG,
-        CONTINUOUS_TAG,
-        CONTINUOUS_TAG,
-        CONTINUOUS_TAG,
-        CONTINUOUS_TAG,
-        CONTINUOUS_TAG,
+        NUMERIC_TAG,
+        NUMERIC_TAG,
+        NUMERIC_TAG,
+        NUMERIC_TAG,
+        NUMERIC_TAG,
         CATEGORICAL_TAG,
         CATEGORICAL_TAG,
     ]
@@ -147,7 +145,7 @@ def test_all_possible_types():
     assert np.all(
         adata.var[FEATURE_TYPE_KEY]
         == [
-            CONTINUOUS_TAG,
+            NUMERIC_TAG,
             CATEGORICAL_TAG,
             CATEGORICAL_TAG,
             CATEGORICAL_TAG,
@@ -156,16 +154,16 @@ def test_all_possible_types():
             CATEGORICAL_TAG,
             CATEGORICAL_TAG,
             CATEGORICAL_TAG,
-            CONTINUOUS_TAG,
+            NUMERIC_TAG,
             CATEGORICAL_TAG,
-            CONTINUOUS_TAG,
-            CONTINUOUS_TAG,
-            CONTINUOUS_TAG,
+            NUMERIC_TAG,
+            NUMERIC_TAG,
+            NUMERIC_TAG,
             CATEGORICAL_TAG,
-            CONTINUOUS_TAG,
-            CONTINUOUS_TAG,
-            CONTINUOUS_TAG,
-            CONTINUOUS_TAG,
-            CONTINUOUS_TAG,
+            NUMERIC_TAG,
+            NUMERIC_TAG,
+            NUMERIC_TAG,
+            NUMERIC_TAG,
+            NUMERIC_TAG,
         ]
     )

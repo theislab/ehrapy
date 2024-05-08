@@ -7,7 +7,7 @@ import pandas as pd
 from anndata import AnnData
 
 from ehrapy.anndata import anndata_to_df, check_feature_types
-from ehrapy.anndata._constants import CATEGORICAL_TAG, CONTINUOUS_TAG, DATE_TAG, FEATURE_TYPE_KEY
+from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 
 
 @check_feature_types
@@ -136,7 +136,7 @@ def detect_bias(
         "Standardized Mean Difference": [],
     }
     adata.uns["smd"] = {}
-    continuous_var_names = adata.var_names[adata.var[FEATURE_TYPE_KEY] == CONTINUOUS_TAG]
+    continuous_var_names = adata.var_names[adata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG]
     for sens_feature in cat_sens_features:
         sens_feature_groups = sorted(adata_df[sens_feature].unique())
         if len(sens_feature_groups) == 1:

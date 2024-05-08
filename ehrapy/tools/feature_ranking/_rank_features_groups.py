@@ -10,9 +10,9 @@ import scanpy as sc
 from ehrapy.anndata import check_feature_types, infer_feature_types, move_to_x
 from ehrapy.anndata._constants import (
     CATEGORICAL_TAG,
-    CONTINUOUS_TAG,
     DATE_TAG,
     FEATURE_TYPE_KEY,
+    NUMERIC_TAG,
 )
 from ehrapy.preprocessing import encode
 
@@ -496,12 +496,12 @@ def rank_features_groups(
 
     group_names = pd.Categorical(adata.obs[groupby].astype(str)).categories.tolist()
 
-    if list(adata.var_names[adata.var[FEATURE_TYPE_KEY] == CONTINUOUS_TAG]):
+    if list(adata.var_names[adata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG]):
         # Rank numerical features
 
         # Without copying `numerical_adata` is a view, and code throws an error
         # because of "object" type of .X
-        numerical_adata = adata[:, adata.var_names[adata.var[FEATURE_TYPE_KEY] == CONTINUOUS_TAG]].copy()
+        numerical_adata = adata[:, adata.var_names[adata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG]].copy()
         numerical_adata.X = numerical_adata.X.astype(float)
 
         sc.tl.rank_genes_groups(

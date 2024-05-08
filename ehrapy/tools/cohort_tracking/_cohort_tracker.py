@@ -13,7 +13,7 @@ from matplotlib.patches import Patch
 from scanpy import AnnData
 from tableone import TableOne
 
-from ehrapy.anndata._constants import CATEGORICAL_TAG, CONTINUOUS_TAG, DATE_TAG, FEATURE_TYPE_KEY
+from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrapy.anndata._feature_specifications import _detect_feature_type
 
 if TYPE_CHECKING:

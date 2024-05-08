@@ -6,7 +6,7 @@ import pytest
 
 import ehrapy as ep
 import ehrapy.tools.feature_ranking._rank_features_groups as _utils
-from ehrapy.anndata._constants import CONTINUOUS_TAG, FEATURE_TYPE_KEY
+from ehrapy.anndata._constants import FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrapy.io._read import read_csv
 
 CURRENT_DIR = Path(__file__).parent
@@ -208,7 +208,7 @@ class TestHelperFunctions:
         adata = ep.dt.mimic_2(encoded=False)
         ep.ad.infer_feature_types(adata, output=None)
         adata.var[FEATURE_TYPE_KEY].loc["hour_icu_intime"] = (
-            CONTINUOUS_TAG  # This is detected as categorical, so we need to correct that
+            NUMERIC_TAG  # This is detected as categorical, so we need to correct that
         )
         adata = ep.pp.encode(adata, autodetect=True, encodings="label")
 

@@ -9,7 +9,7 @@ from lamin_utils import logger
 from rich import print
 from rich.tree import Tree
 
-from ehrapy.anndata._constants import CATEGORICAL_TAG, CONTINUOUS_TAG, DATE_TAG, FEATURE_TYPE_KEY
+from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 
 
 def _detect_feature_type(col: pd.Series) -> str:
@@ -24,8 +24,8 @@ def _detect_feature_type(col: pd.Series) -> str:
     n_elements = len(col)
     col = col.dropna()
     if len(col) == 0:
-        logger.warning(f"Feature {col.name} has only NaN values. Setting feature type to '{CONTINUOUS_TAG}'.")
-        return CONTINUOUS_TAG
+        logger.warning(f"Feature {col.name} has only NaN values. Setting feature type to '{NUMERIC_TAG}'.")
+        return NUMERIC_TAG
     majority_type = col.apply(type).value_counts().idxmax()
 
     if majority_type == pd.Timestamp:
@@ -61,7 +61,7 @@ def _detect_feature_type(col: pd.Series) -> str:
     ):
         return CATEGORICAL_TAG
 
-    return CONTINUOUS_TAG
+    return NUMERIC_TAG
 
 
 def infer_feature_types(adata: AnnData, layer: str | None = None, output: Literal["tree", "dataframe"] | None = "tree"):
@@ -118,7 +118,7 @@ def check_feature_types(func):
             logger.warning(
                 "Feature types were inferred and stored in adata.var. Please verify and adjust if necessary."
             )
-        np.all(adata.var[FEATURE_TYPE_KEY].isin([CATEGORICAL_TAG, CONTINUOUS_TAG, DATE_TAG]))
+        np.all(adata.var[FEATURE_TYPE_KEY].isin([CATEGORICAL_TAG, NUMERIC_TAG, DATE_TAG]))
 
         if _self is not None:
             return func(_self, adata, *args, **kwargs)
@@ -142,7 +142,7 @@ def feature_type_overview(adata: AnnData):
         branch.add(date)
 
     branch = tree.add("📐[b] Numerical features")
-    for numeric in sorted(adata.var_names[adata.var[FEATURE_TYPE_KEY] == CONTINUOUS_TAG]):
+    for numeric in sorted(adata.var_names[adata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG]):
         branch.add(numeric)
 
     branch = tree.add("🗂️[b] Categorical features")

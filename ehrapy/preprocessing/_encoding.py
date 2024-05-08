@@ -15,9 +15,9 @@ from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 from ehrapy.anndata import anndata_to_df, check_feature_types
 from ehrapy.anndata._constants import (
     CATEGORICAL_TAG,
-    CONTINUOUS_TAG,
     DATE_TAG,
     FEATURE_TYPE_KEY,
+    NUMERIC_TAG,
 )
 from ehrapy.anndata.anndata_ext import _get_var_indices_for_type
 
@@ -197,7 +197,7 @@ def encode(
                     "The categorical column names given contain at least one duplicate column. "
                     "Check the column names to ensure that no column is encoded twice!"
                 )
-            elif any(cat in adata.var_names[adata.var[FEATURE_TYPE_KEY] == CONTINUOUS_TAG] for cat in categoricals):
+            elif any(cat in adata.var_names[adata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG] for cat in categoricals):
                 logger.warning(
                     "At least one of passed column names seems to have numerical dtype. In general it is not recommended "
                     "to encode numerical columns!"
@@ -567,7 +567,7 @@ def _undo_encoding(
     new_obs = adata.obs[columns_obs_only]
     uns = OrderedDict()
     # reset uns and keep numerical/non-numerical columns
-    num_vars = _get_var_indices_for_type(adata, CONTINUOUS_TAG)
+    num_vars = _get_var_indices_for_type(adata, NUMERIC_TAG)
     non_num_vars = _get_var_indices_for_type(adata, CATEGORICAL_TAG)
     for cat in categoricals:
         original_values = adata.uns["original_values_categoricals"][cat]
@@ -580,7 +580,7 @@ def _undo_encoding(
     var = pd.DataFrame(index=new_var_names)
     var[FEATURE_TYPE_KEY] = CATEGORICAL_TAG
     # Notice previously encoded columns are now newly added, and will stay tagged as non-numeric
-    var.loc[num_vars, FEATURE_TYPE_KEY] = CONTINUOUS_TAG
+    var.loc[num_vars, FEATURE_TYPE_KEY] = NUMERIC_TAG
 
     uns["numerical_columns"] = num_vars
     uns["non_numerical_columns"] = non_num_vars
@@ -759,7 +759,7 @@ def _add_categoricals_to_uns(original: AnnData, new: AnnData, categorical_names:
             continue
         elif var_name in categorical_names:
             # keep numerical dtype when writing original values to uns
-            if var_name in original.var_names[original.var[FEATURE_TYPE_KEY] == CONTINUOUS_TAG]:
+            if var_name in original.var_names[original.var[FEATURE_TYPE_KEY] == NUMERIC_TAG]:
                 new["original_values_categoricals"][var_name] = original.X[::, idx : idx + 1].astype("float")
             else:
                 new["original_values_categoricals"][var_name] = original.X[::, idx : idx + 1].astype("str")
