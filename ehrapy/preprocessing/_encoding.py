@@ -12,7 +12,7 @@ from rich import print
 from rich.progress import BarColumn, Progress
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
-from ehrapy.anndata import check_feature_types
+from ehrapy.anndata import anndata_to_df, check_feature_types
 from ehrapy.anndata._constants import (
     CATEGORICAL_TAG,
     CONTINUOUS_TAG,
@@ -91,6 +91,14 @@ def encode(
                 )
                 return adata
             categoricals_names = _get_var_indices_for_type(adata, CATEGORICAL_TAG)
+
+            # filter out categorical columns, that are already stored numerically
+            df_adata = anndata_to_df(adata)
+            categoricals_names = [
+                feat
+                for feat in categoricals_names
+                if df_adata[feat].apply(type).value_counts().idxmax() not in [int, float, complex]
+            ]
 
             # no columns were detected, that would require an encoding (e.g. non-numerical columns)
             if not categoricals_names:
