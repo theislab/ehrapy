@@ -359,7 +359,7 @@ def rank_features_groups(
         columns_to_rank: Subset of columns to rank. If 'all', all columns are used.
                          If a dictionary, it must have keys 'var_names' and/or 'obs_names' and values must be iterables of strings
                          such as {'var_names': ['glucose'], 'obs_names': ['age', 'height']}.
-        **kwds: Are passed to test methods. Currently this affects only parameters that
+        **kwds: Are passed to test methods. Currently, this affects only parameters that
                 are passed to :class:`sklearn.linear_model.LogisticRegression`.
                 For instance, you can pass `penalty='l1'` to try to come up with a
                 minimal set of genes that are good predictors (sparse solution meaning few non-zero fitted coefficients).
@@ -467,7 +467,8 @@ def rank_features_groups(
             # the 0th column is a dummy of zeros and is meaningless in this case, and needs to be removed
             adata_minimal = adata_minimal[:, 1:]
 
-        infer_feature_types(adata_minimal, output=None)  # TODO: Douple-check
+        # TODO: Check if present pd datatype in obs, if yes, take that, otherwise infer
+        infer_feature_types(adata_minimal, output=None)  # TODO: Discuss -> how to detect obs?
         adata_minimal = encode(adata_minimal, autodetect=True, encodings="label")
         # this is needed because encode() doesn't add this key if there are no categorical columns to encode
         if "encoded_non_numerical_columns" not in adata_minimal.uns:

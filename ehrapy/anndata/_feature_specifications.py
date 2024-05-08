@@ -4,13 +4,12 @@ from typing import Literal
 import numpy as np
 import pandas as pd
 from anndata import AnnData
-from dateutil.parser import parse  # type: ignore
+from dateutil.parser import isoparse  # type: ignore
 from lamin_utils import logger
 from rich import print
 from rich.tree import Tree
 
 from ehrapy.anndata._constants import CATEGORICAL_TAG, CONTINUOUS_TAG, DATE_TAG, FEATURE_TYPE_KEY
-from ehrapy.anndata.anndata_ext import anndata_to_df
 
 
 def _detect_feature_type(col: pd.Series) -> str:
@@ -22,26 +21,43 @@ def _detect_feature_type(col: pd.Series) -> str:
     Returns:
         The detected feature type. One of 'date', 'categorical', or 'numeric'.
     """
+    n_elements = len(col)
     col = col.dropna()
+    if len(col) == 0:
+        logger.warning(f"Feature {col.name} has only NaN values. Setting feature type to '{CONTINUOUS_TAG}'.")
+        return CONTINUOUS_TAG
     majority_type = col.apply(type).value_counts().idxmax()
 
     if majority_type == pd.Timestamp:
         return DATE_TAG
 
-    elif majority_type == str:
+    if majority_type == str:
         try:
-            col.apply(parse)
+            col.apply(isoparse)
             return DATE_TAG
         except ValueError:
-            return CATEGORICAL_TAG
+            try:
+                col = col.apply(int)  # Could be an encoded categorical or a numeric feature
+                majority_type = int
+            except ValueError:
+                try:
+                    col = col.apply(float)  # Could be an encoded categorical or a numeric feature
+                    majority_type = float
+                except ValueError:
+                    # Features stored as Strings that cannot be converted to float are assumed to be categorical
+                    return CATEGORICAL_TAG
 
-    elif majority_type not in [int, float, complex]:
+    if majority_type not in [int, float, complex]:
         return CATEGORICAL_TAG
 
-    # Guess categorical if the feature is an integer and the values are 0/1 to n-1 with no gaps
-    elif np.all(i.is_integer() for i in col) and (
-        (col.min() == 0 and np.all(np.sort(col.unique()) == np.arange(col.nunique())))
-        or (col.min() == 1 and np.all(np.sort(col.unique()) == np.arange(1, col.nunique() + 1)))
+    # Guess categorical if the feature is an integer and the values are 0/1 to n-1/n with no gaps
+    if (
+        (majority_type == int or (np.all(i.is_integer() for i in col)))
+        and (n_elements != col.nunique())
+        and (
+            (col.min() == 0 and np.all(np.sort(col.unique()) == np.arange(col.nunique())))
+            or (col.min() == 1 and np.all(np.sort(col.unique()) == np.arange(1, col.nunique() + 1)))
+        )
     ):
         return CATEGORICAL_TAG
 
@@ -64,6 +80,8 @@ def infer_feature_types(adata: AnnData, layer: str | None = None, output: Litera
         output: The output format. Choose between 'tree', 'dataframe', or None. If 'tree', the feature types will be printed to the console in a tree format.
             If 'dataframe', a pandas DataFrame with the feature types will be returned. If None, nothing will be returned. Defaults to 'tree'.
     """
+    from ehrapy.anndata.anndata_ext import anndata_to_df
+
     feature_types = {}
 
     df = anndata_to_df(adata, layer=layer)
@@ -96,7 +114,10 @@ def check_feature_types(func):
             args = args[1:]
 
         if FEATURE_TYPE_KEY not in adata.var.keys():
-            raise ValueError("Feature types are not specified in adata.var. Please run `infer_feature_types` first.")
+            infer_feature_types(adata, output=None)
+            logger.warning(
+                "Feature types were inferred and stored in adata.var. Please verify and adjust if necessary."
+            )
         np.all(adata.var[FEATURE_TYPE_KEY].isin([CATEGORICAL_TAG, CONTINUOUS_TAG, DATE_TAG]))
 
         if _self is not None:
@@ -109,6 +130,8 @@ def check_feature_types(func):
 @check_feature_types
 def feature_type_overview(adata: AnnData):
     """Print an overview of the feature types in the AnnData object."""
+    from ehrapy.anndata.anndata_ext import anndata_to_df
+
     tree = Tree(
         f"[b] Detected feature types for AnnData object with {len(adata.obs_names)} obs and {len(adata.var_names)} vars",
         guide_style="underline2",

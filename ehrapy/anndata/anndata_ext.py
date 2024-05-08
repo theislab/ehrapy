@@ -16,7 +16,8 @@ from scanpy.get import obs_df, rank_genes_groups_df, var_df
 from scipy import sparse
 from scipy.sparse import issparse
 
-from ehrapy.anndata._constants import EHRAPY_TYPE_KEY, NON_NUMERIC_ENCODED_TAG, NON_NUMERIC_TAG, NUMERIC_TAG
+from ehrapy.anndata import check_feature_types
+from ehrapy.anndata._constants import CATEGORICAL_TAG, CONTINUOUS_TAG, DATE_TAG, FEATURE_TYPE_KEY
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Iterable, Sequence
@@ -33,7 +34,7 @@ def df_to_anndata(
     """Transform a given pandas dataframe into an AnnData object.
 
     Note that columns containing boolean values (either 0/1 or T(t)rue/F(f)alse)
-    will be stored as boolean columns whereas the other non numerical columns will be stored as categorical values.
+    will be stored as boolean columns whereas the other non-numerical columns will be stored as categorical values.
 
     Args:
         df: The pandas dataframe to be transformed
@@ -95,14 +96,7 @@ def df_to_anndata(
     # initializing an OrderedDict with a non-empty dict might not be intended,
     # see: https://stackoverflow.com/questions/25480089/right-way-to-initialize-an-ordereddict-using-its-constructor-such-that-it-retain/25480206
     uns = OrderedDict()  # type: ignore
-    # store all numerical/non-numerical columns that are not obs only
-    binary_columns = _detect_binary_columns(df, numerical_columns)
-
     var = pd.DataFrame(index=list(dataframes.df.columns))
-    var[EHRAPY_TYPE_KEY] = NON_NUMERIC_TAG
-    var.loc[var.index.isin(list(set(numerical_columns) | set(binary_columns))), EHRAPY_TYPE_KEY] = NUMERIC_TAG
-    # in case of encoded columns by ehrapy, want to be able to read it back in
-    var.loc[var.index.str.contains("ehrapycat"), EHRAPY_TYPE_KEY] = NON_NUMERIC_ENCODED_TAG
 
     all_num = True if len(numerical_columns) == len(list(dataframes.df.columns)) else False
     X = X.astype(np.number) if all_num else X.astype(object)
@@ -176,7 +170,7 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False)
     """Move inplace or copy features from X to obs.
 
     Note that columns containing boolean values (either 0/1 or True(true)/False(false))
-    will be stored as boolean columns whereas the other non numerical columns will be stored as categorical.
+    will be stored as boolean columns whereas the other non-numerical columns will be stored as categorical.
 
     Args:
         adata: The AnnData object
@@ -207,7 +201,7 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False)
 
     cols_to_obs_indices = adata.var_names.isin(to_obs)
 
-    num_set = _get_var_indices_for_type(adata, NUMERIC_TAG)
+    num_set = _get_var_indices_for_type(adata, CONTINUOUS_TAG)
     var_num = list(set(to_obs) & set(num_set))
 
     if copy_obs:
@@ -226,17 +220,18 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False)
     return adata
 
 
+@check_feature_types
 def _get_var_indices_for_type(adata: AnnData, tag: str) -> list[str]:
     """Get indices of columns in var for a given tag.
 
     Args:
         adata: The AnnData object
-        tag: The tag to search for, should be one of `NUMERIC_TAG`, `NON_NUMERIC_TAG` or `NON_NUMERIC_ENCODED_TAG`
+        tag: The tag to search for, should be one of 'CATEGORIGAL_TAG', 'CONTINUOUS_TAG', 'DATE_TAG'
 
     Returns:
         List of numeric columns
     """
-    return adata.var_names[adata.var[EHRAPY_TYPE_KEY] == tag].tolist()
+    return adata.var_names[adata.var[FEATURE_TYPE_KEY] == tag].tolist()
 
 
 def delete_from_obs(adata: AnnData, to_delete: list[str]) -> AnnData:
@@ -311,7 +306,7 @@ def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
         new_adata.obs = adata.obs[adata.obs.columns[~adata.obs.columns.isin(cols_not_in_x)]]
 
         # AnnData's concat discards var if they don't match in their keys, so we need to create a new var
-        created_var = _create_new_var(adata, cols_not_in_x)
+        created_var = pd.DataFrame(index=cols_not_in_x)
         new_adata.var = pd.concat([adata.var, created_var], axis=0)
     else:
         new_adata = adata
@@ -478,7 +473,8 @@ def _assert_encoded(adata: AnnData):
         raise NotEncodedError("The AnnData object has not yet been encoded.") from AssertionError
 
 
-def get_numeric_vars(adata: AnnData) -> list[str]:
+@check_feature_types
+def get_numeric_vars(adata: AnnData) -> list[str]:  # TODO: Can we delete this function?
     """Fetches the column names for numeric variables in X.
 
     Args:
@@ -490,10 +486,12 @@ def get_numeric_vars(adata: AnnData) -> list[str]:
     _assert_encoded(adata)
 
     # This behaviour is consistent with the previous behaviour, allowing for a simple fully numeric X
-    if EHRAPY_TYPE_KEY not in adata.var.columns:
+    if (
+        FEATURE_TYPE_KEY not in adata.var.columns
+    ):  # TODO: This is super unsafe, if we keep the funtion, add @check_feature_type decorator
         return list(adata.var_names.values)
     else:
-        return _get_var_indices_for_type(adata, NUMERIC_TAG)
+        return _get_var_indices_for_type(adata, CONTINUOUS_TAG)
 
 
 def assert_numeric_vars(adata: AnnData, vars: Sequence[str]):
@@ -579,25 +577,6 @@ def _update_uns(
         return all_moved_num_columns, list(all_moved_non_num_columns), None
 
 
-def _create_new_var(adata: AnnData, cols_not_in_x: list[str]) -> pd.DataFrame:
-    """Create a new var DataFrame with the EHRAPY_TYPE_KEY column set for entries from .obs.
-
-    Args:
-        adata: From where to get the .obs
-        cols_not_in_x: .obs columns to move to X
-
-    Returns:
-        New var DataFrame with EHRAPY_TYPE_KEY column set for entries from .obs
-    """
-    all_moved_num_columns = set(cols_not_in_x) & set(adata.obs.select_dtypes(include="number").columns)
-
-    new_var = pd.DataFrame(index=cols_not_in_x)
-    new_var[EHRAPY_TYPE_KEY] = NON_NUMERIC_TAG
-    new_var.loc[list(all_moved_num_columns), EHRAPY_TYPE_KEY] = NUMERIC_TAG
-
-    return new_var
-
-
 def _detect_binary_columns(df: pd.DataFrame, numerical_columns: list[str]) -> list[str]:
     """Detect all columns that contain only 0 and 1 (besides NaNs).
 
@@ -628,7 +607,7 @@ def _cast_obs_columns(obs: pd.DataFrame) -> pd.DataFrame:
     """
     # only cast non numerical columns
     object_columns = list(obs.select_dtypes(exclude=["number", "category", "bool"]).columns)
-    # type cast each non numerical column to either bool (if possible) or category else
+    # type cast each non-numerical column to either bool (if possible) or category else
     obs[object_columns] = obs[object_columns].apply(
         lambda obs_name: obs_name.astype("category")
         if not set(pd.unique(obs_name)).issubset({False, True, np.NaN})
