@@ -86,6 +86,7 @@ def infer_feature_types(adata: AnnData, layer: str | None = None, output: Litera
 
     df = anndata_to_df(adata, layer=layer)
     for feature in adata.var_names:
+        # TODO: Only detect feature type if it is not already stored in adata.var
         feature_types[feature] = _detect_feature_type(df[feature])
 
     adata.var[FEATURE_TYPE_KEY] = pd.Series(feature_types)[adata.var_names]
