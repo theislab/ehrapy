@@ -80,7 +80,7 @@ def detect_bias(
         >>> adata = ep.dt.diabetes_130_fairlearn()
         >>> ep.ad.infer_feature_types(adata)
         >>> adata = ep.pp.encode(adata, autodetect=True, encodings="label")
-        >>> results_dict = ep.pp.detect_bias(adata, sensitive_features=["race", "gender"], run_feature_importances=False)
+        >>> results_dict = ep.pp.detect_bias(adata, sensitive_features=["race", "gender"])
     """
     from ehrapy.tools import rank_features_supervised
 
