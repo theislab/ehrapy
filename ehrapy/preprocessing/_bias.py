@@ -39,7 +39,7 @@ def detect_bias(
     Values that exceed the specified thresholds are considered of interest and returned in the results dictionary.
 
     Args:
-        adata: An annotated data matrix containing EHR data. Encoded features are required for bias detection, and label-encoding is recommended.
+        adata: An annotated data matrix containing EHR data. Encoded features are required for bias detection. Label encoding is recommended.
         sensitive_features: Sensitive features to consider for bias detection. If set to "all", all features in adata.var will be considered.
         run_feature_importances: Whether to run feature importances for detecting bias. If set to None, the function will run feature importances if
             sensitive_features is not set to "all", as this can be computationally expensive. Defaults to None.
@@ -94,7 +94,6 @@ def detect_bias(
         cat_sens_features = adata.var_names.values[adata.var[FEATURE_TYPE_KEY] == CATEGORICAL_TAG]
     else:
         sens_features_list = []
-        cat_sens_features = []
         for feat in sensitive_features:
             if feat not in adata.var_names:
                 # check if feature has been encodeds
