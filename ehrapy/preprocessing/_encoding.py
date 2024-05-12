@@ -63,7 +63,7 @@ def encode(
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2()
-        >>> adata_encoded = ep.pp.encode(adata, autodetect=True, encodings="one_hot_encoding")
+        >>> adata_encoded = ep.pp.encode(adata, autodetect=True, encodings="one-hot")
 
         >>> # Example using custom encodings per columns:
         >>> import ehrapy as ep
@@ -97,7 +97,7 @@ def encode(
             categoricals_names = [
                 feat
                 for feat in categoricals_names
-                if df_adata[feat].apply(type).value_counts().idxmax() not in [int, float, complex]
+                if not np.all(df_adata[feat].apply(type).isin([int, float, complex]))
             ]
 
             # no columns were detected, that would require an encoding (e.g. non-numerical columns)
