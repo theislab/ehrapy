@@ -48,9 +48,15 @@ def test_detect_bias_all_sensitive_features(adata):
 
     assert "categorical_value_counts" in results.keys()
     df = results["categorical_value_counts"]
-    assert len(df) == 4
+    assert len(df) == 2
     assert df[(df["Sensitive Feature"] == "cat1") & (df["Sensitive Group"] == 0)]["Group 1 Percentage"].values[0] == 0.2
     assert df[(df["Sensitive Feature"] == "cat1") & (df["Sensitive Group"] == 0)]["Group 2 Percentage"].values[0] == 0.8
+    assert (
+        df[(df["Sensitive Feature"] == "cat2") & (df["Sensitive Group"] == 10)]["Group 1 Percentage"].values[0] == 0.25
+    )
+    assert (
+        df[(df["Sensitive Feature"] == "cat2") & (df["Sensitive Group"] == 10)]["Group 2 Percentage"].values[0] == 0.75
+    )
 
     assert "feature_importances" in results.keys()
     df = results["feature_importances"]
@@ -85,13 +91,12 @@ def test_detect_bias_specified_sensitive_features(adata):
 
     assert "categorical_value_counts" in results.keys()
     df = results["categorical_value_counts"]
-    assert len(df) == 2
+    assert len(df) == 1
     assert df[(df["Sensitive Feature"] == "cat1") & (df["Sensitive Group"] == 0)]["Group 1 Percentage"].values[0] == 0.2
     assert df[(df["Sensitive Feature"] == "cat1") & (df["Sensitive Group"] == 0)]["Group 2 Percentage"].values[0] == 0.8
 
     assert "feature_importances" in results.keys()
     df = results["feature_importances"]
-    print(df)
     assert len(df) == 2  # contin1 predicts cat1 and cat1 predicts contin1
 
 
