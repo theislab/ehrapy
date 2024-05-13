@@ -59,6 +59,7 @@ def _detect_feature_type(col: pd.Series) -> str:
             or (col.min() == 1 and np.all(np.sort(col.unique()) == np.arange(1, col.nunique() + 1)))
         )
     ):
+        logger.info(f"Feature {col.name} was detected as a categorical feature stored numerically. Please verify.")
         return CATEGORICAL_TAG
 
     return NUMERIC_TAG
