@@ -37,9 +37,12 @@ def detect_bias(
 
     Results of the computations are stored in var, varp, and uns of the adata object.
     Values that exceed the specified thresholds are considered of interest and returned in the results dictionary.
+    Be aware that the results depend on the encoding of the data. E.g. when using one-hot encoding, each group of a categorical feature will
+    be treated as a separate feature, which can lead to an increased number of detected biases. Please take this into consideration when
+    interpreting the results.
 
     Args:
-        adata: An annotated data matrix containing EHR data.
+        adata: An annotated data matrix containing EHR data. Encoded features are required for bias detection.
         sensitive_features: Sensitive features to consider for bias detection. If set to "all", all features in adata.var will be considered.
         run_feature_importances: Whether to run feature importances for detecting bias. If set to None, the function will run feature importances if
             sensitive_features is not set to "all", as this can be computationally expensive. Defaults to None.
@@ -71,8 +74,16 @@ def detect_bias(
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.ad.infer_feature_types(adata, output=None)
+        >>> ep.ad.infer_feature_types(adata)
+        >>> adata = ep.pp.encode(adata, autodetect=True, encodings="label")
         >>> results_dict = ep.pp.detect_bias(adata, "all")
+
+        >>> # Example with specified sensitive features
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.diabetes_130_fairlearn()
+        >>> ep.ad.infer_feature_types(adata)
+        >>> adata = ep.pp.encode(adata, autodetect=True, encodings="label")
+        >>> results_dict = ep.pp.detect_bias(adata, sensitive_features=["race", "gender"])
     """
     from ehrapy.tools import rank_features_supervised
 
@@ -85,12 +96,23 @@ def detect_bias(
         sens_features_list = adata.var_names.values.tolist()
         cat_sens_features = adata.var_names.values[adata.var[FEATURE_TYPE_KEY] == CATEGORICAL_TAG]
     else:
-        for feat in sensitive_features:
-            if feat not in adata.var_names:
-                raise ValueError(f"Feature {feat} not found in adata.var.")
-        sens_features_list = sensitive_features
+        sens_features_list = []
+        for variable in sensitive_features:
+            if variable not in adata.var_names:
+                # check if feature has been encodeds
+                encoded_categorical_features = [
+                    feature for feature in adata.var_names if feature.startswith(f"ehrapycat_{variable}")
+                ]
+
+                if len(encoded_categorical_features) == 0:
+                    raise ValueError(f"Feature {variable} not found in adata.var.")
+
+                sens_features_list.extend(encoded_categorical_features)
+            else:
+                sens_features_list.append(variable)
+
         cat_sens_features = [
-            feat for feat in sensitive_features if adata.var[FEATURE_TYPE_KEY][feat] == CATEGORICAL_TAG
+            variable for variable in sens_features_list if adata.var[FEATURE_TYPE_KEY][variable] == CATEGORICAL_TAG
         ]
 
     if copy:
@@ -103,6 +125,14 @@ def detect_bias(
             raise ValueError(
                 f"Feature {feature} is not encoded numerically. Please encode the data (ep.pp.encode) before running bias detection."
             )
+
+    def _get_group_name(encoded_feature: str, group_val: int) -> str | int:
+        try:
+            feature_name = encoded_feature.split("_")[1]
+            # Get the original group name stored in adata.obs by filtering the data for the encoded group value
+            return adata.obs[feature_name][list(adata[:, encoded_feature].X.squeeze() == group_val)].unique()[0]
+        except KeyError:
+            return group_val
 
     # --------------------
     # Feature correlations
@@ -123,7 +153,7 @@ def detect_bias(
             corr_results["Feature 2"].append(comp_feature)
             corr_results[f"{corr_method.capitalize()} CC"].append(correlations.loc[sens_feature, comp_feature])
     bias_results["feature_correlations"] = pd.DataFrame(corr_results).sort_values(
-        by=f"{corr_method.capitalize()} CC", key=abs
+        by=f"{corr_method.capitalize()} CC", key=abs, ascending=False
     )
 
     # -----------------------------
@@ -158,13 +188,14 @@ def detect_bias(
             for comp_feature in continuous_var_names:
                 if abs_smd[comp_feature] > smd_threshold:
                     smd_results["Sensitive Feature"].append(sens_feature)
+                    _get_group_name(sens_feature, group) if sens_feature.startswith("ehrapycat_") else group
                     smd_results["Sensitive Group"].append(group)
                     smd_results["Compared Feature"].append(comp_feature)
                     smd_results["Standardized Mean Difference"].append(smd[comp_feature])
         adata.uns["smd"][sens_feature] = smd_df
 
     bias_results["standardized_mean_differences"] = pd.DataFrame(smd_results).sort_values(
-        by="Standardized Mean Difference", key=abs
+        by="Standardized Mean Difference", key=abs, ascending=False
     )
 
     # ------------------------
@@ -190,17 +221,35 @@ def detect_bias(
             for sens_group in value_counts.index:
                 for comp_group1, comp_group2 in itertools.combinations(value_counts.columns, 2):
                     value_count_diff = (
-                        value_counts.loc[sens_group, comp_group1] - value_counts.loc[sens_group, comp_group2]
+                        value_counts.loc[sens_group, comp_group1] / value_counts.loc[sens_group, comp_group2]
                     )
                     if (
                         value_count_diff > categorical_factor_threshold
                         or value_count_diff < 1 / categorical_factor_threshold
                     ):
                         cat_value_count_results["Sensitive Feature"].append(sens_feature)
-                        cat_value_count_results["Sensitive Group"].append(sens_group)
+
+                        sens_group_name = (
+                            _get_group_name(sens_feature, sens_group)
+                            if sens_feature.startswith("ehrapycat_")
+                            else sens_group
+                        )
+                        cat_value_count_results["Sensitive Group"].append(sens_group_name)
+
                         cat_value_count_results["Compared Feature"].append(comp_feature)
-                        cat_value_count_results["Group 1"].append(comp_group1)
-                        cat_value_count_results["Group 2"].append(comp_group2)
+                        comp_group1_name = (
+                            _get_group_name(comp_feature, comp_group1)
+                            if comp_feature.startswith("ehrapycat_")
+                            else comp_group1
+                        )
+                        cat_value_count_results["Group 1"].append(comp_group1_name)
+                        comp_group2_name = (
+                            _get_group_name(comp_feature, comp_group2)
+                            if comp_feature.startswith("ehrapycat_")
+                            else comp_group2
+                        )
+                        cat_value_count_results["Group 2"].append(comp_group2_name)
+
                         cat_value_count_results["Group 1 Percentage"].append(value_counts.loc[sens_group, comp_group1])
                         cat_value_count_results["Group 2 Percentage"].append(value_counts.loc[sens_group, comp_group2])
     bias_results["categorical_value_counts"] = pd.DataFrame(cat_value_count_results)
@@ -248,7 +297,7 @@ def detect_bias(
                     feature_importances_results["Feature Importance"].append(feature_importance)
                     feature_importances_results["Prediction Score"].append(prediction_score)
         bias_results["feature_importances"] = pd.DataFrame(feature_importances_results).sort_values(
-            by="Feature Importance", key=abs
+            by="Feature Importance", key=abs, ascending=False
         )
 
     if copy:
