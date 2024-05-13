@@ -474,7 +474,7 @@ def _assert_encoded(adata: AnnData):
 
 
 @check_feature_types
-def get_numeric_vars(adata: AnnData) -> list[str]:  # TODO: Can we delete this function?
+def get_numeric_vars(adata: AnnData) -> list[str]:
     """Fetches the column names for numeric variables in X.
 
     Args:
@@ -485,13 +485,7 @@ def get_numeric_vars(adata: AnnData) -> list[str]:  # TODO: Can we delete this f
     """
     _assert_encoded(adata)
 
-    # This behaviour is consistent with the previous behaviour, allowing for a simple fully numeric X
-    if (
-        FEATURE_TYPE_KEY not in adata.var.columns
-    ):  # TODO: This is super unsafe, if we keep the funtion, add @check_feature_type decorator
-        return list(adata.var_names.values)
-    else:
-        return _get_var_indices_for_type(adata, NUMERIC_TAG)
+    return _get_var_indices_for_type(adata, NUMERIC_TAG)
 
 
 def assert_numeric_vars(adata: AnnData, vars: Sequence[str]):

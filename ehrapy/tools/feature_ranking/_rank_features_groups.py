@@ -209,11 +209,13 @@ def _evaluate_categorical_features(
 
     groups_values = adata.obs[groupby].to_numpy()
     for feature in adata.var_names[adata.var[FEATURE_TYPE_KEY] == CATEGORICAL_TAG]:
-        # TODO: Check that encoded
         if feature == groupby or "ehrapycat_" + feature == groupby or feature == "ehrapycat_" + groupby:
             continue
 
-        feature_values = adata[:, feature].X.flatten().toarray()
+        try:
+            feature_values = adata[:, feature].X.flatten().toarray()
+        except ValueError as e:
+            raise ValueError(f"Feature {feature} is not encoded. Please encode it using `ehrapy.pp.encode`") from e
 
         pvals = []
         scores = []
@@ -467,8 +469,22 @@ def rank_features_groups(
             # the 0th column is a dummy of zeros and is meaningless in this case, and needs to be removed
             adata_minimal = adata_minimal[:, 1:]
 
-        # TODO: Check if present pd datatype in obs, if yes, take that, otherwise infer
-        infer_feature_types(adata_minimal, output=None)  # TODO: Discuss -> how to detect obs?
+        # if the feature type is set in adata.obs, we store the respective feature type in adata_minimal.var
+        adata_minimal.var[FEATURE_TYPE_KEY] = [
+            None
+            if feature not in adata.obs.keys()
+            else CATEGORICAL_TAG
+            if adata.obs[feature].dtype == "category"
+            else DATE_TAG
+            if pd.api.types.is_datetime64_any_dtype(adata.obs[feature])
+            else NUMERIC_TAG
+            if pd.api.types.is_numeric_dtype(adata.obs[feature])
+            else None
+            for feature in adata_minimal.var_names
+        ]
+        # we infer the feature type for all features for which adata.obs did not provide information on the type
+        infer_feature_types(adata_minimal, output=None)
+
         adata_minimal = encode(adata_minimal, autodetect=True, encodings="label")
         # this is needed because encode() doesn't add this key if there are no categorical columns to encode
         if "encoded_non_numerical_columns" not in adata_minimal.uns:

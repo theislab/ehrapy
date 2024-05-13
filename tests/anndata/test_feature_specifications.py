@@ -167,3 +167,12 @@ def test_all_possible_types():
             NUMERIC_TAG,
         ]
     )
+
+
+def test_partial_annotation(adata):
+    adata.var[FEATURE_TYPE_KEY] = ["dummy", np.nan, np.nan, NUMERIC_TAG, None, np.nan, None]
+    ep.ad.infer_feature_types(adata, output=None)
+    assert np.all(
+        adata.var[FEATURE_TYPE_KEY]
+        == ["dummy", CATEGORICAL_TAG, CATEGORICAL_TAG, NUMERIC_TAG, CATEGORICAL_TAG, NUMERIC_TAG, DATE_TAG]
+    )

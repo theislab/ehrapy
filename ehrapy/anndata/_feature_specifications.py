@@ -86,8 +86,15 @@ def infer_feature_types(adata: AnnData, layer: str | None = None, output: Litera
 
     df = anndata_to_df(adata, layer=layer)
     for feature in adata.var_names:
-        # TODO: Only detect feature type if it is not already stored in adata.var
-        feature_types[feature] = _detect_feature_type(df[feature])
+        if (
+            FEATURE_TYPE_KEY in adata.var.keys()
+            and feature in adata.var[FEATURE_TYPE_KEY]
+            and adata.var[FEATURE_TYPE_KEY][feature] is not None
+            and not pd.isna(adata.var[FEATURE_TYPE_KEY][feature])
+        ):
+            feature_types[feature] = adata.var[FEATURE_TYPE_KEY][feature]
+        else:
+            feature_types[feature] = _detect_feature_type(df[feature])
 
     adata.var[FEATURE_TYPE_KEY] = pd.Series(feature_types)[adata.var_names]
 
@@ -117,7 +124,7 @@ def check_feature_types(func):
         if FEATURE_TYPE_KEY not in adata.var.keys():
             infer_feature_types(adata, output=None)
             logger.warning(
-                "Feature types were inferred and stored in adata.var. Please verify and adjust if necessary."
+                f"Feature types were inferred and stored in adata.var[{FEATURE_TYPE_KEY}]. Please verify and adjust if necessary."
             )
         np.all(adata.var[FEATURE_TYPE_KEY].isin([CATEGORICAL_TAG, NUMERIC_TAG, DATE_TAG]))
 
