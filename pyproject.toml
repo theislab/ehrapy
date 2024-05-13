@@ -68,6 +68,7 @@ dependencies = [
     "imbalanced-learn",
     "fknni",
     "python-dateutil",
+    "filelock",
 ]
 
 [project.optional-dependencies]
