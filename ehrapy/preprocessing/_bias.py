@@ -150,7 +150,7 @@ def detect_bias(
             corr_results["Feature 2"].append(comp_feature)
             corr_results[f"{corr_method.capitalize()} CC"].append(correlations.loc[sens_feature, comp_feature])
     bias_results["feature_correlations"] = pd.DataFrame(corr_results).sort_values(
-        by=f"{corr_method.capitalize()} CC", key=abs
+        by=f"{corr_method.capitalize()} CC", key=abs, ascending=False
     )
 
     # -----------------------------
@@ -192,7 +192,7 @@ def detect_bias(
         adata.uns["smd"][sens_feature] = smd_df
 
     bias_results["standardized_mean_differences"] = pd.DataFrame(smd_results).sort_values(
-        by="Standardized Mean Difference", key=abs
+        by="Standardized Mean Difference", key=abs, ascending=False
     )
 
     # ------------------------
@@ -294,7 +294,7 @@ def detect_bias(
                     feature_importances_results["Feature Importance"].append(feature_importance)
                     feature_importances_results["Prediction Score"].append(prediction_score)
         bias_results["feature_importances"] = pd.DataFrame(feature_importances_results).sort_values(
-            by="Feature Importance", key=abs
+            by="Feature Importance", key=abs, ascending=False
         )
 
     if copy:
