@@ -37,9 +37,12 @@ def detect_bias(
 
     Results of the computations are stored in var, varp, and uns of the adata object.
     Values that exceed the specified thresholds are considered of interest and returned in the results dictionary.
+    Be aware that the results depend on the encoding of the data. E.g. when using one-hot encoding, each group of a categorical feature will
+    be treated as a separate feature, which can lead to an increased number of detected biases. Please take this into consideration when
+    interpreting the results.
 
     Args:
-        adata: An annotated data matrix containing EHR data. Encoded features are required for bias detection. Label encoding is recommended.
+        adata: An annotated data matrix containing EHR data. Encoded features are required for bias detection.
         sensitive_features: Sensitive features to consider for bias detection. If set to "all", all features in adata.var will be considered.
         run_feature_importances: Whether to run feature importances for detecting bias. If set to None, the function will run feature importances if
             sensitive_features is not set to "all", as this can be computationally expensive. Defaults to None.
