@@ -94,20 +94,22 @@ def detect_bias(
         cat_sens_features = adata.var_names.values[adata.var[FEATURE_TYPE_KEY] == CATEGORICAL_TAG]
     else:
         sens_features_list = []
-        for feat in sensitive_features:
-            if feat not in adata.var_names:
+        for variable in sensitive_features:
+            if variable not in adata.var_names:
                 # check if feature has been encodeds
-                encoded = [f for f in adata.var_names if f.startswith(f"ehrapycat_{feat}")]
+                encoded_categorical_features = [
+                    feature for feature in adata.var_names if feature.startswith(f"ehrapycat_{variable}")
+                ]
 
-                if len(encoded) == 0:
-                    raise ValueError(f"Feature {feat} not found in adata.var.")
+                if len(encoded_categorical_features) == 0:
+                    raise ValueError(f"Feature {variable} not found in adata.var.")
 
-                sens_features_list.extend(encoded)
+                sens_features_list.extend(encoded_categorical_features)
             else:
-                sens_features_list.append(feat)
+                sens_features_list.append(variable)
 
         cat_sens_features = [
-            feat for feat in sens_features_list if adata.var[FEATURE_TYPE_KEY][feat] == CATEGORICAL_TAG
+            variable for variable in sens_features_list if adata.var[FEATURE_TYPE_KEY][variable] == CATEGORICAL_TAG
         ]
 
     if copy:
@@ -121,10 +123,11 @@ def detect_bias(
                 f"Feature {feature} is not encoded numerically. Please encode the data (ep.pp.encode) before running bias detection."
             )
 
-    def _get_group_name(encoded_feat, group_val):
+    def _get_group_name(encoded_feature: str, group_val: int) -> str | int:
         try:
-            feat_name = encoded_feat.split("_")[1]
-            return adata.obs[feat_name][list(adata[:, encoded_feat].X.squeeze() == group_val)].unique()[0]
+            feature_name = encoded_feature.split("_")[1]
+            # Get the original group name stored in adata.obs by filtering the data for the encoded group value
+            return adata.obs[feature_name][list(adata[:, encoded_feature].X.squeeze() == group_val)].unique()[0]
         except KeyError:
             return group_val
 
