@@ -411,29 +411,6 @@ def test_detect_mixed_binary_columns():
 
 
 @pytest.fixture
-def adata_numeric():  # TODO: Delete: I don't think this is used
-    obs_data = {"ID": ["Patient1", "Patient2", "Patient3"], "Age": [31, 94, 62]}
-
-    X_numeric = np.array([[1, 3.4, 2.1, 4], [2, 6.9, 7.6, 2], [1, 4.5, 1.3, 7]], dtype=np.dtype(float))
-    var_numeric = {
-        "Feature": ["Numeric1", "Numeric2", "Numeric3", "Numeric4"],
-        "Type": ["Numeric", "Numeric", "Numeric", "Numeric"],
-    }
-
-    adata_numeric = AnnData(
-        X=X_numeric,
-        obs=pd.DataFrame(data=obs_data),
-        var=pd.DataFrame(data=var_numeric, index=var_numeric["Feature"]),
-        uns=OrderedDict(),
-    )
-    adata_numeric.var[FEATURE_TYPE_KEY] = [NUMERIC_TAG, NUMERIC_TAG, CATEGORICAL_TAG, CATEGORICAL_TAG]
-    adata_numeric.uns["numerical_columns"] = ["Numeric1", "Numeric2"]
-    adata_numeric.uns["non_numerical_columns"] = ["String1", "String2"]
-
-    return adata_numeric
-
-
-@pytest.fixture
 def adata_strings_encoded():
     obs_data = {"ID": ["Patient1", "Patient2", "Patient3"], "Age": [31, 94, 62]}
     X_strings = np.array(
