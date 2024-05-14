@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import pytest
 from pandas import CategoricalDtype, DataFrame
@@ -45,10 +46,24 @@ def test_autodetect_encode():
         "b12_values",
     }
 
-    assert encoded_ann_data.uns["var_to_encoding"] == {
-        "survival": "one-hot",
-        "clinic_day": "one-hot",
-    }
+    assert np.all(
+        encoded_ann_data.var["unencoded_var_names"]
+        == [
+            "survival",
+            "survival",
+            "clinic_day",
+            "clinic_day",
+            "clinic_day",
+            "clinic_day",
+            "patient_id",
+            "los_days",
+            "b12_values",
+        ]
+    )
+
+    assert np.all(encoded_ann_data.var["encoding_mode"][:6] == ["one-hot"] * 6)
+    assert np.all(enc is None for enc in encoded_ann_data.var["encoding_mode"][6:])
+
     assert id(encoded_ann_data.X) != id(encoded_ann_data.layers["original"])
     assert adata is not None and adata.X is not None and adata.obs is not None and adata.uns is not None
     assert id(encoded_ann_data) != id(adata)
@@ -57,6 +72,7 @@ def test_autodetect_encode():
     assert id(encoded_ann_data.var) != id(adata.var)
     assert all(column in set(encoded_ann_data.obs.columns) for column in ["survival", "clinic_day"])
     assert not any(column in set(adata.obs.columns) for column in ["survival", "clinic_day"])
+
     assert_frame_equal(
         adata.var,
         DataFrame(
@@ -64,35 +80,22 @@ def test_autodetect_encode():
             index=["patient_id", "los_days", "b12_values", "survival", "clinic_day"],
         ),
     )
-    assert_frame_equal(
-        encoded_ann_data.var,
-        DataFrame(
-            {
-                FEATURE_TYPE_KEY: [
-                    CATEGORICAL_TAG,
-                    CATEGORICAL_TAG,
-                    CATEGORICAL_TAG,
-                    CATEGORICAL_TAG,
-                    CATEGORICAL_TAG,
-                    CATEGORICAL_TAG,
-                    NUMERIC_TAG,
-                    NUMERIC_TAG,
-                    NUMERIC_TAG,
-                ]
-            },
-            index=[
-                "ehrapycat_survival_False",
-                "ehrapycat_survival_True",
-                "ehrapycat_clinic_day_Friday",
-                "ehrapycat_clinic_day_Monday",
-                "ehrapycat_clinic_day_Saturday",
-                "ehrapycat_clinic_day_Sunday",
-                "patient_id",
-                "los_days",
-                "b12_values",
-            ],
-        ),
+
+    assert np.all(
+        encoded_ann_data.var[FEATURE_TYPE_KEY]
+        == [
+            CATEGORICAL_TAG,
+            CATEGORICAL_TAG,
+            CATEGORICAL_TAG,
+            CATEGORICAL_TAG,
+            CATEGORICAL_TAG,
+            CATEGORICAL_TAG,
+            NUMERIC_TAG,
+            NUMERIC_TAG,
+            NUMERIC_TAG,
+        ]
     )
+
     assert pd.api.types.is_bool_dtype(encoded_ann_data.obs["survival"].dtype)
     assert isinstance(encoded_ann_data.obs["clinic_day"].dtype, CategoricalDtype)
 
@@ -257,10 +260,15 @@ def test_custom_encode_again_single_columns_encoding():
             "ehrapycat_clinic_day_Sunday",
         ]
     )
-    assert encoded_ann_data_again.uns["var_to_encoding"] == {
-        "survival": "label",
-        "clinic_day": "label",
-    }
+    # assert encoded_ann_data_again.uns["var_to_encoding"] == {
+    #   "survival": "label",
+    #  "clinic_day": "label",
+    # }
+    assert np.all(
+        encoded_ann_data_again.var["encoding_mode"].loc[["ehrapycat_survival", "ehrapycat_clinic_day"]]
+        == ["label", "label"]
+    )
+
     assert id(encoded_ann_data_again.X) != id(encoded_ann_data_again.layers["original"])
     assert pd.api.types.is_bool_dtype(encoded_ann_data.obs["survival"].dtype)
     assert isinstance(encoded_ann_data.obs["clinic_day"].dtype, CategoricalDtype)

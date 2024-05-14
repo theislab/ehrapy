@@ -21,8 +21,7 @@ from ehrapy.anndata._constants import (
 )
 from ehrapy.anndata.anndata_ext import _get_var_indices_for_type
 
-multi_encoding_modes = {"hash"}
-available_encodings = {"one-hot", "label", "count", *multi_encoding_modes}
+available_encodings = {"one-hot", "label"}
 
 
 @check_feature_types
@@ -47,8 +46,6 @@ def encode(
     Available encodings are:
         1. one-hot (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.OneHotEncoder.html)
         2. label (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.LabelEncoder.html)
-        3. count (https://contrib.scikit-learn.org/category_encoders/count.html)
-        4. hash (https://contrib.scikit-learn.org/category_encoders/hashing.html)
 
     Args:
         adata: A :class:`~anndata.AnnData` object.
@@ -85,7 +82,7 @@ def encode(
 
         # autodetect categorical values based on feature types stored in adata.var[FEATURE_TYPE_KEY]
         if autodetect:
-            if "var_to_encoding" in adata.uns.keys():  # TODO: Delete this part
+            if "encoding_mode" in adata.var.keys():
                 logger.warning(
                     "The current AnnData object has been already encoded. Returning original AnnData object!"
                 )
@@ -110,10 +107,10 @@ def encode(
 
             encoded_x = None
             encoded_var_names = adata.var_names.to_list()
-            if encodings not in available_encodings - multi_encoding_modes:
+            if encodings not in available_encodings:
                 raise ValueError(
                     f"Unknown encoding mode {encodings}. Please provide one of the following encoding modes:\n"
-                    f"{available_encodings - multi_encoding_modes}"
+                    f"{available_encodings}"
                 )
             single_encode_mode_switcher = {
                 "one-hot": _one_hot_encoding,
@@ -127,7 +124,7 @@ def encode(
             ) as progress:
                 task = progress.add_task(f"[red]Running {encodings} on detected columns ...", total=1)
                 # encode using the desired mode
-                encoded_x, encoded_var_names = single_encode_mode_switcher[encodings](  # type: ignore
+                encoded_x, encoded_var_names, unencoded_var_names = single_encode_mode_switcher[encodings](  # type: ignore
                     adata,
                     encoded_x,
                     orig_uns_copy,
@@ -151,7 +148,17 @@ def encode(
                 # copy non-encoded columns, and add new tag for encoded columns. This is needed to track encodings
                 new_var = pd.DataFrame(index=encoded_var_names)
                 new_var[FEATURE_TYPE_KEY] = adata.var[FEATURE_TYPE_KEY].copy()
-                new_var.loc[new_var.index.str.contains("ehrapycat")] = CATEGORICAL_TAG
+                new_var[FEATURE_TYPE_KEY].loc[new_var.index.str.contains("ehrapycat")] = CATEGORICAL_TAG
+
+                # store unencoded columns in var
+                new_var["unencoded_var_names"] = unencoded_var_names
+
+                # store encoding mode in var
+                new_var["encoding_mode"] = [
+                    encodings if var in categoricals_names else None for var in unencoded_var_names
+                ]
+                # new_var["encoding_mode"] = [None] * len(new_var)
+                # new_var["encoding_mode"].loc[new_var.index.str.contains("ehrapycat")] = encodings
 
                 encoded_ann_data = AnnData(
                     encoded_x,
@@ -160,15 +167,16 @@ def encode(
                     uns=orig_uns_copy,
                     layers={"original": updated_layer},
                 )
-                encoded_ann_data.uns["var_to_encoding"] = {categorical: encodings for categorical in categoricals_names}
-                encoded_ann_data.uns["encoding_to_var"] = {encodings: categoricals_names}
+
+                # encoded_ann_data.uns["var_to_encoding"] = {categorical: encodings for categorical in categoricals_names} TODO: Delete this line
+                # encoded_ann_data.uns["encoding_to_var"] = {encodings: categoricals_names} TODO: Delete this line
 
                 _add_categoricals_to_obs(adata, encoded_ann_data, categoricals_names)
 
         # user passed categorical values with encoding mode for each of them
         else:
             # re-encode data
-            if "var_to_encoding" in adata.uns.keys():
+            if "encoding_mode" in adata.var.keys():
                 encodings = _reorder_encodings(adata, encodings)  # type: ignore
                 adata = _undo_encoding(adata, "all")
 
@@ -202,9 +210,16 @@ def encode(
                     "At least one of passed column names seems to have numerical dtype. In general it is not recommended "
                     "to encode numerical columns!"
                 )
+
+            # def _get_encoded_var_names(unencoded_var: str, encoded_var_names: list[str]) -> list[str]: TODO: Delete this function
+            #   if "ehrapycat" in unencoded_var:
+            #      return [unencoded_var]
+            # else:
+            #    return [encoded_var for encoded_var in encoded_var_names if encoded_var.startswith(f"ehrapycat_{unencoded_var}")]
+
             orig_uns_copy = adata.uns.copy()
             _add_categoricals_to_uns(adata, orig_uns_copy, categoricals)
-            var_to_encoding = {} if "var_to_encoding" not in adata.uns.keys() else adata.uns["var_to_encoding"]
+            encoding_mode = {}
             encoded_x = None
             encoded_var_names = adata.var_names.to_list()
             with Progress(
@@ -221,7 +236,7 @@ def encode(
                     }
                     progress.update(task, description=f"Running {encoding} ...")
                     # perform the actual encoding
-                    encoded_x, encoded_var_names = encode_mode_switcher[encoding](
+                    encoded_x, encoded_var_names, unencoded_var_names = encode_mode_switcher[encoding](
                         adata,
                         encoded_x,
                         orig_uns_copy,
@@ -230,14 +245,16 @@ def encode(
                         progress,
                         task,  # type: ignore
                     )
-                    # update encoding history in uns
+
                     for categorical in encodings[encoding]:  # type: ignore
-                        # multi column encoding modes -> multiple encoded columns
-                        if isinstance(categorical, list):
-                            for column_name in categorical:
-                                var_to_encoding[column_name] = encoding
-                        else:
-                            var_to_encoding[categorical] = encoding
+                        categorical = [categorical] if isinstance(categorical, str) else categorical  # type: ignore
+                        for column_name in categorical:
+                            # get idx of column in unencoded_var_names
+                            indices = [i for i, var in enumerate(unencoded_var_names) if var == column_name]
+                            encoded_var = [encoded_var_names[idx] for idx in indices]
+                            # s = _get_encoded_var_names(column_name, encoded_var_names) TODO: Delete this line
+                            for var in encoded_var:
+                                encoding_mode[var] = encoding
 
             # update original layer content with the new categorical encoding and the old other values
             updated_layer = _update_layer_after_encoding(
@@ -250,8 +267,21 @@ def encode(
 
             # copy non-encoded columns, and add new tag for encoded columns. This is needed to track encodings
             new_var = pd.DataFrame(index=encoded_var_names)
+
             new_var[FEATURE_TYPE_KEY] = adata.var[FEATURE_TYPE_KEY].copy()
-            new_var.loc[new_var.index.str.contains("ehrapycat")] = CATEGORICAL_TAG
+            new_var[FEATURE_TYPE_KEY].loc[new_var.index.str.contains("ehrapycat")] = CATEGORICAL_TAG
+
+            # store unencoded columns in var
+            new_var["unencoded_var_names"] = unencoded_var_names
+
+            # update encoding mode in var, keeping already annotated columns
+            if "encoding_mode" in adata.var.keys():
+                encoding_mode.update(
+                    {key: value for key, value in adata.var["encoding_mode"].items() if value is not None}
+                )
+            new_var["encoding_mode"] = [None] * len(new_var)
+            for categorical in encoding_mode.keys():
+                new_var["encoding_mode"].loc[categorical] = encoding_mode[categorical]
 
             try:
                 encoded_ann_data = AnnData(
@@ -261,8 +291,6 @@ def encode(
                     uns=orig_uns_copy,
                     layers={"original": updated_layer},
                 )
-                # update current encodings in uns
-                encoded_ann_data.uns["var_to_encoding"] = var_to_encoding
 
             # if the user did not pass every non-numerical column for encoding, an Anndata object cannot be created
             except ValueError:
@@ -314,7 +342,7 @@ def _one_hot_encoding(
     categories: list[str],
     progress: Progress,
     task,
-) -> tuple[np.ndarray, list[str]]:
+) -> tuple[np.ndarray, list[str], list[str]]:
     """Encode categorical columns using one hot encoding.
 
     Args:
@@ -336,6 +364,7 @@ def _one_hot_encoding(
         for idx, category in enumerate(categories)
         for suffix in encoder.categories_[idx]
     ]
+    unencoded_prefixes = [category for idx, category in enumerate(categories) for suffix in encoder.categories_[idx]]
     transformed = encoder.transform(original_values)
     # X is None if this is the first encoding "round" -> take the former X
     if X is None:
@@ -343,10 +372,12 @@ def _one_hot_encoding(
     progress.advance(task, 1)
     progress.update(task, description="[blue]Updating X and var ...")
 
-    temp_x, temp_var_names = _update_encoded_data(X, transformed, var_names, categorical_prefixes, categories)
+    temp_x, temp_var_names, unencoded_var_names = _update_encoded_data(
+        X, transformed, var_names, categorical_prefixes, categories, unencoded_prefixes
+    )
     progress.update(task, description="[blue]Finished one-hot encoding.")
 
-    return temp_x, temp_var_names
+    return temp_x, temp_var_names, unencoded_var_names
 
 
 def _label_encoding(
@@ -357,7 +388,7 @@ def _label_encoding(
     categoricals: list[str],
     progress: Progress,
     task,
-) -> tuple[np.ndarray, list[str]]:
+) -> tuple[np.ndarray, list[str], list[str]]:
     """Encode categorical columns using label encoding.
 
     Args:
@@ -387,10 +418,12 @@ def _label_encoding(
         X = adata.X
 
     progress.update(task, description="[blue]Updating X and var ...")
-    temp_x, temp_var_names = _update_encoded_data(X, original_values, var_names, category_prefixes, categoricals)
+    temp_x, temp_var_names, unencoded_var_names = _update_encoded_data(
+        X, original_values, var_names, category_prefixes, categoricals, categoricals
+    )
     progress.update(task, description="[blue]Finished label encoding.")
 
-    return temp_x, temp_var_names
+    return temp_x, temp_var_names, unencoded_var_names
 
 
 def _update_layer_after_encoding(
@@ -440,47 +473,14 @@ def _update_layer_after_encoding(
         raise ValueError("Ensure that all columns which require encoding are being encoded.") from e
 
 
-def _update_multi_encoded_data(
-    X: np.ndarray,
-    transformed: np.ndarray,
-    var_names: list[str],
-    encoded_var_names: list[str],
-    categoricals: list[str],
-) -> tuple[np.ndarray, list[str]]:
-    """Update X and var_names after applying multi column encoding modes to some columns
-
-    Args:
-        X: Current (former) X
-        transformed: The encoded (transformed) categorical columns
-        var_names: Var names of current AnnData object
-        encoded_var_names: The name(s) of the encoded column(s)
-        categoricals: The categorical values that were encoded recently
-
-    Returns:
-        Encoded new X and the corresponding new var names
-    """
-    idx = []
-    for pos, name in enumerate(var_names):
-        if name in categoricals:
-            idx.append(pos)
-    # delete the original categorical column
-    del_cat_column_x = np.delete(X, list(idx), 1)
-    # create the new, encoded X
-    temp_x = np.hstack((transformed, del_cat_column_x))
-    # delete old categorical name
-    var_names = [col_name for col_idx, col_name in enumerate(var_names) if col_idx not in idx]
-    temp_var_names = encoded_var_names + var_names
-
-    return temp_x, temp_var_names
-
-
 def _update_encoded_data(
     X: np.ndarray,
     transformed: np.ndarray,
     var_names: list[str],
     categorical_prefixes: list[str],
     categoricals: list[str],
-) -> tuple[np.ndarray, list[str]]:
+    unencoded_prefixes: list[str],
+) -> tuple[np.ndarray, list[str], list[str]]:
     """Update X and var_names after each encoding.
 
     Args:
@@ -489,9 +489,10 @@ def _update_encoded_data(
         var_names: Var names of current AnnData object
         categorical_prefixes: The name(s) of the encoded column(s)
         categoricals: The categorical values that were encoded recently
+        unencoded_prefixes: The unencoded names of the categorical columns that were encoded
 
     Returns:
-        Encoded new X and the corresponding new var names
+        Encoded new X, the corresponding new var names, and the unencoded var names
     """
     idx = _get_categoricals_old_indices(var_names, categoricals)
     # delete the original categorical column
@@ -501,8 +502,9 @@ def _update_encoded_data(
     # delete old categorical name
     var_names = [col_name for col_idx, col_name in enumerate(var_names) if col_idx not in idx]
     temp_var_names = categorical_prefixes + var_names
+    unencoded_var_names = unencoded_prefixes + var_names
 
-    return temp_x, temp_var_names
+    return temp_x, temp_var_names, unencoded_var_names
 
 
 def _initial_encoding(
@@ -542,7 +544,7 @@ def _undo_encoding(
     Returns:
         A (partially) encoding reset AnnData object
     """
-    if "var_to_encoding" not in adata.uns.keys():
+    if "encoding_mode" not in adata.uns.keys():
         if not suppress_warning:
             logger.warning("Calling undo_encoding on unencoded AnnData object.")
         return None
@@ -582,7 +584,7 @@ def _undo_encoding(
     # Notice previously encoded columns are now newly added, and will stay tagged as non-numeric
     var.loc[num_vars, FEATURE_TYPE_KEY] = NUMERIC_TAG
 
-    uns["numerical_columns"] = num_vars
+    uns["numerical_columns"] = num_vars  # TODO: Can we delete this?
     uns["non_numerical_columns"] = non_num_vars
 
     return AnnData(
@@ -637,30 +639,19 @@ def _reorder_encodings(adata: AnnData, new_encodings: dict[str, list[list[str]] 
             "cannot be encoded at the same time using different encoding modes!"
         )
         raise DuplicateColumnEncodingError
-    old_encode_mode = adata.uns["var_to_encoding"]
+    # old_encode_mode = adata.uns["var_to_encoding"] TODO: Delete
+    encode_mode = None
     for categorical in latest_encoded_columns:
-        encode_mode = old_encode_mode.get(categorical)
+        for enc_name, enc_mode in adata.var["encoding_mode"].iteritems():
+            if categorical in enc_name:
+                encode_mode = enc_mode
+                break
+
+        # encode_mode = old_encode_mode.get(categorical) TODO: Delete
         # if None, this categorical has not been encoded before but will be encoded now for the first time
-        # multi column encoding mode
-        if encode_mode in multi_encoding_modes:
-            encoded_categoricals_with_mode = adata.uns["encoding_to_var"][encode_mode]
-            _found = False
-            for column_list in encoded_categoricals_with_mode:
-                for column_name in column_list:
-                    if column_name == categorical:
-                        column_list.remove(column_name)
-                        _found = True
-                        break
-                # a categorical can only be encoded once and therefore found once
-                if _found:
-                    break
-            # filter all lists that are now empty since all variables will be reencoded from this list
-            updated_multi_list = filter(None, encoded_categoricals_with_mode)
-            # if no columns remain that will be encoded with this encode mode, delete this mode from modes as well
-            if not list(updated_multi_list):
-                del adata.uns["encoding_to_var"][encode_mode]
+
         # single column encoding mode
-        elif encode_mode in available_encodings:
+        if encode_mode in available_encodings:
             encoded_categoricals_with_mode = adata.uns["encoding_to_var"][encode_mode]
             for ind, column_name in enumerate(encoded_categoricals_with_mode):
                 if column_name == categorical:
@@ -743,7 +734,7 @@ def _add_categoricals_to_obs(original: AnnData, new: AnnData, categorical_names:
     logger.info(f"The original categorical values `{categorical_names}` were added to obs.")
 
 
-def _add_categoricals_to_uns(original: AnnData, new: AnnData, categorical_names: list[str]) -> None:
+def _add_categoricals_to_uns(original: AnnData, new: AnnData, categorical_names: list[str]) -> None:  # TODO: Delete
     """Add the original categorical values to uns.
 
     Args:

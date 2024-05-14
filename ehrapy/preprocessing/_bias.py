@@ -188,8 +188,10 @@ def detect_bias(
             for comp_feature in continuous_var_names:
                 if abs_smd[comp_feature] > smd_threshold:
                     smd_results["Sensitive Feature"].append(sens_feature)
-                    _get_group_name(sens_feature, group) if sens_feature.startswith("ehrapycat_") else group
-                    smd_results["Sensitive Group"].append(group)
+                    group_name = (
+                        _get_group_name(sens_feature, group) if sens_feature.startswith("ehrapycat_") else group
+                    )
+                    smd_results["Sensitive Group"].append(group_name)
                     smd_results["Compared Feature"].append(comp_feature)
                     smd_results["Standardized Mean Difference"].append(smd[comp_feature])
         adata.uns["smd"][sens_feature] = smd_df
