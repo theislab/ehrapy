@@ -12,11 +12,12 @@ from rich.tree import Tree
 from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 
 
-def _detect_feature_type(col: pd.Series) -> str:
+def _detect_feature_type(col: pd.Series, verbose: bool = True) -> str:
     """Detect the feature type of a column in a pandas DataFrame.
 
     Args:
         col: A pandas Series representing a feature.
+        verbose: Whether to print warnings for uncertain feature types. Defaults to True.
 
     Returns:
         The detected feature type. One of 'date', 'categorical', or 'numeric'.
@@ -24,7 +25,8 @@ def _detect_feature_type(col: pd.Series) -> str:
     n_elements = len(col)
     col = col.dropna()
     if len(col) == 0:
-        logger.warning(f"Feature {col.name} has only NaN values. Setting feature type to '{NUMERIC_TAG}'.")
+        if verbose:
+            logger.warning(f"Feature {col.name} has only NaN values. Setting feature type to '{NUMERIC_TAG}'.")
         return NUMERIC_TAG
     majority_type = col.apply(type).value_counts().idxmax()
 
@@ -59,13 +61,18 @@ def _detect_feature_type(col: pd.Series) -> str:
             or (col.min() == 1 and np.all(np.sort(col.unique()) == np.arange(1, col.nunique() + 1)))
         )
     ):
-        logger.warning(f"Feature {col.name} was detected as a categorical feature stored numerically. Please verify.")
+        if verbose:
+            logger.warning(
+                f"Feature {col.name} was detected as a categorical feature stored numerically. Please verify."
+            )
         return CATEGORICAL_TAG
 
     return NUMERIC_TAG
 
 
-def infer_feature_types(adata: AnnData, layer: str | None = None, output: Literal["tree", "dataframe"] | None = "tree"):
+def infer_feature_types(
+    adata: AnnData, layer: str | None = None, output: Literal["tree", "dataframe"] | None = "tree", verbose: bool = True
+):
     """Infer feature types from AnnData object.
 
     For each feature in adata.var_names, the method infers one of the following types: 'date', 'categorical', or 'numeric'.
@@ -80,6 +87,7 @@ def infer_feature_types(adata: AnnData, layer: str | None = None, output: Litera
         layer: The layer to use from the AnnData object. If None, the X layer is used.
         output: The output format. Choose between 'tree', 'dataframe', or None. If 'tree', the feature types will be printed to the console in a tree format.
             If 'dataframe', a pandas DataFrame with the feature types will be returned. If None, nothing will be returned. Defaults to 'tree'.
+        verbose: Whether to print warnings for uncertain feature types. Defaults to True.
     """
     from ehrapy.anndata.anndata_ext import anndata_to_df
 
@@ -95,14 +103,15 @@ def infer_feature_types(adata: AnnData, layer: str | None = None, output: Litera
         ):
             feature_types[feature] = adata.var[FEATURE_TYPE_KEY][feature]
         else:
-            feature_types[feature] = _detect_feature_type(df[feature])
+            feature_types[feature] = _detect_feature_type(df[feature], verbose=verbose)
 
     adata.var[FEATURE_TYPE_KEY] = pd.Series(feature_types)[adata.var_names]
 
-    logger.info(
-        f"Stored feature types in adata.var['{FEATURE_TYPE_KEY}']."
-        f" Please verify and adjust if necessary using adata.var['{FEATURE_TYPE_KEY}']['feature1']='corrected_type'."
-    )
+    if verbose:
+        logger.info(
+            f"Stored feature types in adata.var['{FEATURE_TYPE_KEY}']."
+            f" Please verify and adjust if necessary using adata.var['{FEATURE_TYPE_KEY}']['feature1']='corrected_type'."
+        )
 
     if output == "tree":
         feature_type_overview(adata)
@@ -161,3 +170,27 @@ def feature_type_overview(adata: AnnData):
         branch.add(f"{categorical} ({df.loc[:, categorical].nunique()} categories)")
 
     print(tree)
+
+
+def correct_feature_types(adata, features: list[str] | str, corrected_type: str):
+    """Correct the feature types for a list of features inplace.
+
+    Args:
+        adata: :class:`~anndata.AnnData` object storing the EHR data.
+        features: The features to correct.
+        corrected_type: The corrected feature type. One of 'date', 'categorical', or 'numeric'.
+    """
+    if corrected_type not in [CATEGORICAL_TAG, NUMERIC_TAG, DATE_TAG]:
+        raise ValueError(
+            f"Corrected type {corrected_type} not recognized. Choose between '{DATE_TAG}', '{CATEGORICAL_TAG}', or '{NUMERIC_TAG}'."
+        )
+
+    if FEATURE_TYPE_KEY not in adata.var.keys():
+        raise ValueError(
+            "Feature types were not inferred. Please infer feature types using 'infer_feature_types' before correcting."
+        )
+
+    if isinstance(features, str):
+        features = [features]
+
+    adata.var[FEATURE_TYPE_KEY].loc[features] = corrected_type

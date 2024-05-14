@@ -44,7 +44,7 @@ def read_csv(
         columns_x_only: These columns will be added to X only and all remaining columns to obs.
                         Note that datetime columns will always be added to .obs though.
         return_dfs: Whether to return one or several Pandas DataFrames.
-        cache: Whether to write to cache when reading or not. Defaults to False .
+        cache: Whether to write to cache when reading or not. Defaults to False.
         download_dataset_name: Name of the file or directory after download.
         backup_url: URL to download the data file(s) from, if the dataset is not yet on disk.
         is_archive: Whether the downloaded file is an archive.

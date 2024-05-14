@@ -3,6 +3,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ehrapy import ehrapy_settings
+from ehrapy.anndata import correct_feature_types, infer_feature_types
+from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrapy.io._read import read_csv, read_fhir, read_h5ad
 from ehrapy.preprocessing._encoding import encode
 
@@ -37,6 +39,8 @@ def mimic_2(
         columns_obs_only=columns_obs_only,
     )
     if encoded:
+        infer_feature_types(adata, output=None, verbose=False)
+        correct_feature_types(adata, "hour_icu_intime", NUMERIC_TAG)
         return encode(adata, autodetect=True)
 
     return adata
@@ -170,6 +174,11 @@ def diabetes_130_raw(
         columns_obs_only=columns_obs_only,
     )
     if encoded:
+        infer_feature_types(adata, output=None, verbose=False)
+        correct_feature_types(
+            adata, ["admission_source_id", "discharge_disposition_id", "encounter_id", "patient_nbr"], CATEGORICAL_TAG
+        )
+        correct_feature_types(adata, ["num_procedures", "number_diagnoses", "time_in_hospital"], NUMERIC_TAG)
         return encode(adata, autodetect=True)
 
     return adata
@@ -211,6 +220,8 @@ def diabetes_130_fairlearn(
     )
 
     if encoded:
+        infer_feature_types(adata, output=None, verbose=False)
+        correct_feature_types(adata, ["time_in_hospital", "number_diagnoses", "num_procedures"], NUMERIC_TAG)
         return encode(adata, autodetect=True)
 
     return adata
@@ -238,7 +249,7 @@ def chronic_kidney_disease(
         >>> adata = ep.dt.chronic_kidney_disease(encoded=True)
     """
     adata = read_csv(
-        dataset_path=f"{ehrapy_settings.datasetdir}/chronic_kidney_disease_precessed.csv",
+        dataset_path=f"{ehrapy_settings.datasetdir}/chronic_kidney_disease.csv",
         download_dataset_name="chronic_kidney_disease.csv",
         backup_url="https://figshare.com/ndownloader/files/33989261",
         columns_obs_only=columns_obs_only,
