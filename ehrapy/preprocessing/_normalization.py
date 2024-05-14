@@ -1,9 +1,16 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 import numpy as np
-from sklearn.preprocessing import maxabs_scale, minmax_scale, power_transform, quantile_transform, robust_scale, scale
+from sklearn.preprocessing import (
+    maxabs_scale,
+    minmax_scale,
+    power_transform,
+    quantile_transform,
+    robust_scale,
+    scale,
+)
 
 from ehrapy.anndata.anndata_ext import (
     _get_column_indices,
@@ -15,15 +22,22 @@ from ehrapy.anndata.anndata_ext import (
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+    import pandas as pd
     from anndata import AnnData
 
 
-def _scale_func_group(scale_func, var_values, adata, group_key, **kwargs):
+def _scale_func_group(
+    adata: AnnData,
+    scale_func: Callable[[np.ndarray | pd.DataFrame], np.ndarray],
+    var_values: np.ndarray | pd.DataFrame,
+    group_key: str | None,
+    **kwargs,
+) -> np.ndarray:
     """apply scaling function to var_values, either globally or per group."""
     if group_key is None:
         var_values = scale_func(var_values, **kwargs)
 
-    if group_key is not None:
+    else:
         for group in adata.obs[group_key].unique():
             group_idx = adata.obs[group_key] == group
             var_values[group_idx] = scale_func(var_values[group_idx], **kwargs)
@@ -32,7 +46,11 @@ def _scale_func_group(scale_func, var_values, adata, group_key, **kwargs):
 
 
 def scale_norm(
-    adata: AnnData, vars: str | Sequence[str] | None = None, group_key: str | None = None, copy: bool = False, **kwargs
+    adata: AnnData,
+    vars: str | Sequence[str] | None = None,
+    group_key: str | None = None,
+    copy: bool = False,
+    **kwargs,
 ) -> AnnData | None:
     """Apply scaling normalization.
 
@@ -68,7 +86,7 @@ def scale_norm(
     var_idx = _get_column_indices(adata, vars)
     var_values = np.take(adata.X, var_idx, axis=1)
 
-    var_values = _scale_func_group(scale, var_values, adata, group_key, **kwargs)
+    var_values = _scale_func_group(adata, scale, var_values, group_key, **kwargs)
 
     set_numeric_vars(adata, var_values, vars)
 
@@ -78,7 +96,11 @@ def scale_norm(
 
 
 def minmax_norm(
-    adata: AnnData, vars: str | Sequence[str] | None = None, group_key: str | None = None, copy: bool = False, **kwargs
+    adata: AnnData,
+    vars: str | Sequence[str] | None = None,
+    group_key: str | None = None,
+    copy: bool = False,
+    **kwargs,
 ) -> AnnData | None:
     """Apply min-max normalization.
 
@@ -117,7 +139,7 @@ def minmax_norm(
     var_idx = _get_column_indices(adata, vars)
     var_values = np.take(adata.X, var_idx, axis=1)
 
-    var_values = _scale_func_group(minmax_scale, var_values, adata, group_key, **kwargs)
+    var_values = _scale_func_group(adata, minmax_scale, var_values, group_key, **kwargs)
 
     set_numeric_vars(adata, var_values, vars)
 
@@ -127,7 +149,10 @@ def minmax_norm(
 
 
 def maxabs_norm(
-    adata: AnnData, vars: str | Sequence[str] | None = None, group_key: str | None = None, copy: bool = False
+    adata: AnnData,
+    vars: str | Sequence[str] | None = None,
+    group_key: str | None = None,
+    copy: bool = False,
 ) -> AnnData | None:
     """Apply max-abs normalization.
 
@@ -165,7 +190,7 @@ def maxabs_norm(
     var_idx = _get_column_indices(adata, vars)
     var_values = np.take(adata.X, var_idx, axis=1)
 
-    var_values = _scale_func_group(maxabs_scale, var_values, adata, group_key)
+    var_values = _scale_func_group(adata, maxabs_scale, var_values, group_key)
 
     set_numeric_vars(adata, var_values, vars)
 
@@ -175,7 +200,11 @@ def maxabs_norm(
 
 
 def robust_scale_norm(
-    adata: AnnData, vars: str | Sequence[str] | None = None, group_key: str | None = None, copy: bool = False, **kwargs
+    adata: AnnData,
+    vars: str | Sequence[str] | None = None,
+    group_key: str | None = None,
+    copy: bool = False,
+    **kwargs,
 ) -> AnnData | None:
     """Apply robust scaling normalization.
 
@@ -214,7 +243,7 @@ def robust_scale_norm(
     var_idx = _get_column_indices(adata, vars)
     var_values = np.take(adata.X, var_idx, axis=1)
 
-    var_values = _scale_func_group(robust_scale, var_values, adata, group_key, **kwargs)
+    var_values = _scale_func_group(adata, robust_scale, var_values, group_key, **kwargs)
 
     set_numeric_vars(adata, var_values, vars)
 
@@ -224,7 +253,11 @@ def robust_scale_norm(
 
 
 def quantile_norm(
-    adata: AnnData, vars: str | Sequence[str] | None = None, group_key: str | None = None, copy: bool = False, **kwargs
+    adata: AnnData,
+    vars: str | Sequence[str] | None = None,
+    group_key: str | None = None,
+    copy: bool = False,
+    **kwargs,
 ) -> AnnData | None:
     """Apply quantile normalization.
 
@@ -262,7 +295,7 @@ def quantile_norm(
     var_idx = _get_column_indices(adata, vars)
     var_values = np.take(adata.X, var_idx, axis=1)
 
-    var_values = _scale_func_group(quantile_transform, var_values, adata, group_key, **kwargs)
+    var_values = _scale_func_group(adata, quantile_transform, var_values, group_key, **kwargs)
 
     set_numeric_vars(adata, var_values, vars)
 
@@ -272,7 +305,11 @@ def quantile_norm(
 
 
 def power_norm(
-    adata: AnnData, vars: str | Sequence[str] | None = None, group_key: str | None = None, copy: bool = False, **kwargs
+    adata: AnnData,
+    vars: str | Sequence[str] | None = None,
+    group_key: str | None = None,
+    copy: bool = False,
+    **kwargs,
 ) -> AnnData | None:
     """Apply power transformation normalization.
 
@@ -311,7 +348,7 @@ def power_norm(
     var_idx = _get_column_indices(adata, vars)
     var_values = np.take(adata.X, var_idx, axis=1)
 
-    var_values = _scale_func_group(power_transform, var_values, adata, group_key, **kwargs)
+    var_values = _scale_func_group(adata, power_transform, var_values, group_key, **kwargs)
 
     set_numeric_vars(adata, var_values, vars)
 
