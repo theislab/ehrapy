@@ -1,6 +1,6 @@
 from ehrapy.preprocessing._balanced_sampling import balanced_sample
 from ehrapy.preprocessing._bias import detect_bias
-from ehrapy.preprocessing._encoding import encode, undo_encoding
+from ehrapy.preprocessing._encoding import encode
 from ehrapy.preprocessing._highly_variable_features import highly_variable_features
 from ehrapy.preprocessing._imputation import (
     explicit_impute,
@@ -28,7 +28,6 @@ __all__ = [
     "balanced_sample",
     "detect_bias",
     "encode",
-    "undo_encoding",
     "highly_variable_features",
     "explicit_impute",
     "knn_impute",

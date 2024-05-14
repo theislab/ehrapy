@@ -354,7 +354,7 @@ def type_overview(data: AnnData, sort_by: str | None = None, sort_reversed: bool
         raise ValueError(f"Unable to present object of type {type(data)}. Can only display AnnData objects!")
 
 
-def _adata_type_overview(
+def _adata_type_overview(  # TODO: Delete
     adata: AnnData, sort_by: str | None = None, sort_reversed: bool = False
 ) -> None:  # pragma: no cover
     """Display the :class:`~anndata.AnnData object in its current state (encoded and unencoded variables, obs)

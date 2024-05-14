@@ -248,10 +248,7 @@ def test_custom_encode_again_single_columns_encoding():
             "ehrapycat_clinic_day_Sunday",
         ]
     )
-    # assert encoded_ann_data_again.uns["var_to_encoding"] == {
-    #   "survival": "label",
-    #  "clinic_day": "label",
-    # }
+
     assert np.all(
         encoded_ann_data_again.var["encoding_mode"].loc[["ehrapycat_survival", "ehrapycat_clinic_day"]]
         == ["label", "label"]
@@ -290,21 +287,15 @@ def test_custom_encode_again_multiple_columns_encoding():
 def test_update_encoding_scheme_1():
     # just a dummy adata object that won't be used actually
     adata = read_csv(dataset_path=f"{_TEST_PATH}/dataset1.csv")
-    adata.uns["encoding_to_var"] = {
-        "label": ["col1", "col2", "col3"],
-        "one-hot": ["col4"],
-    }
-    adata.uns["var_to_encoding"] = {
-        "col1": "label",
-        "col2": "label",
-        "col3": "label",
-        "col4": "one-hot",
-    }
+
+    adata.var["unencoded_var_names"] = ["col1", "col2", "col3", "col4", "col5"]
+    adata.var["encoding_mode"] = ["label", "label", "label", "one-hot", "one-hot"]
+
     new_encodings = {"one-hot": ["col1"], "label": ["col2", "col3", "col4"]}
 
     expected_encodings = {
         "label": ["col2", "col3", "col4"],
-        "one-hot": ["col1"],
+        "one-hot": ["col1", "col5"],
     }
     updated_encodings = _reorder_encodings(adata, new_encodings)
 

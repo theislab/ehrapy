@@ -110,7 +110,7 @@ def infer_feature_types(
     if verbose:
         logger.info(
             f"Stored feature types in adata.var['{FEATURE_TYPE_KEY}']."
-            f" Please verify and adjust if necessary using adata.var['{FEATURE_TYPE_KEY}']['feature1']='corrected_type'."
+            f" Please verify and adjust if necessary using `ep.ad.correct_feature_types`."
         )
 
     if output == "tree":
@@ -134,7 +134,7 @@ def check_feature_types(func):
         if FEATURE_TYPE_KEY not in adata.var.keys():
             infer_feature_types(adata, output=None)
             logger.warning(
-                f"Feature types were inferred and stored in adata.var[{FEATURE_TYPE_KEY}]. Please verify and adjust if necessary."
+                f"Feature types were inferred and stored in adata.var[{FEATURE_TYPE_KEY}]. Please verify and adjust if necessary using `ep.ad.correct_feature_types`."
             )
         np.all(adata.var[FEATURE_TYPE_KEY].isin([CATEGORICAL_TAG, NUMERIC_TAG, DATE_TAG]))
 

@@ -70,7 +70,7 @@ def mimic_2_preprocessed() -> AnnData:
 
 
 def mimic_3_demo(
-    encoded: bool = False,
+    encoded: bool = False,  # TODO: Delete
     anndata: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
 ) -> dict[str, AnnData] | dict[str, pd.DataFrame]:
@@ -137,6 +137,7 @@ def heart_failure(encoded: bool = False, columns_obs_only: dict[str, list[str]] 
         index_column="patient_id",
     )
     if encoded:
+        infer_feature_types(adata, output=None, verbose=False)
         return encode(adata, autodetect=True)
 
     return adata
@@ -256,6 +257,7 @@ def chronic_kidney_disease(
         index_column="Patient_id",
     )
     if encoded:
+        infer_feature_types(adata, output=None, verbose=False)
         return encode(adata, autodetect=True)
 
     return adata
@@ -290,6 +292,7 @@ def breast_tissue(
         index_column="patient_id",
     )
     if encoded:
+        infer_feature_types(adata, output=None, verbose=False)
         return encode(adata, autodetect=True)
 
     return adata
@@ -323,6 +326,8 @@ def cervical_cancer_risk_factors(
         index_column="patient_id",
     )
     if encoded:
+        infer_feature_types(adata, output=None, verbose=False)
+        correct_feature_types(adata, ["STDs (number)", "STDs: Number of diagnosis"], NUMERIC_TAG)
         return encode(adata, autodetect=True)
 
     return adata
@@ -357,6 +362,7 @@ def dermatology(
         index_column="patient_id",
     )
     if encoded:
+        infer_feature_types(adata, output=None, verbose=False)
         return encode(adata, autodetect=True)
 
     return adata
@@ -391,6 +397,7 @@ def echocardiogram(
         index_column="patient_id",
     )
     if encoded:
+        infer_feature_types(adata, output=None, verbose=False)
         return encode(adata, autodetect=True)
 
     return adata
@@ -424,6 +431,7 @@ def hepatitis(
         index_column="patient_id",
     )
     if encoded:
+        infer_feature_types(adata, output=None, verbose=False)
         return encode(adata, autodetect=True)
 
     return adata
