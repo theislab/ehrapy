@@ -34,7 +34,7 @@ def encode(
 
     Categorical values could be either passed via parameters or are autodetected on the fly.
     The categorical values are also stored in obs and uns (for keeping the original, unencoded values).
-    The current encoding modes for each variable are also stored in uns (`var_to_encoding` key).
+    The current encoding modes for each variable are also stored in uns (`var_to_encoding` key). #TODO: Adapt
     Variable names in var are updated according to the encoding modes used. A variable name starting with `ehrapycat_`
     indicates an encoded column (or part of it).
 
@@ -107,6 +107,7 @@ def encode(
 
             encoded_x = None
             encoded_var_names = adata.var_names.to_list()
+            unencoded_var_names = adata.var_names.to_list()
             if encodings not in available_encodings:
                 raise ValueError(
                     f"Unknown encoding mode {encodings}. Please provide one of the following encoding modes:\n"
@@ -129,6 +130,7 @@ def encode(
                     encoded_x,
                     orig_uns_copy,
                     encoded_var_names,
+                    unencoded_var_names,
                     categoricals_names,
                     progress,
                     task,
@@ -187,7 +189,7 @@ def encode(
                         f"Unknown encoding mode {encoding}. Please provide one of the following encoding modes:\n"
                         f"{available_encodings}"
                     )
-            adata.uns["encoding_to_var"] = encodings
+            # adata.uns["encoding_to_var"] = encodings TODO: Delete
 
             categoricals_not_flat = list(chain(*encodings.values()))  # type: ignore
             # this is needed since multi-column encoding will get passed a list of list instead of a flat list
@@ -222,6 +224,7 @@ def encode(
             encoding_mode = {}
             encoded_x = None
             encoded_var_names = adata.var_names.to_list()
+            unencoded_var_names = adata.var_names.to_list()
             with Progress(
                 "[progress.description]{task.description}",
                 BarColumn(),
@@ -241,6 +244,7 @@ def encode(
                         encoded_x,
                         orig_uns_copy,
                         encoded_var_names,
+                        unencoded_var_names,
                         encodings[encoding],  # type: ignore
                         progress,
                         task,  # type: ignore
@@ -339,6 +343,7 @@ def _one_hot_encoding(
     X: np.ndarray | None,
     uns: dict[str, Any],
     var_names: list[str],
+    unencoded_var_names: list[str],
     categories: list[str],
     progress: Progress,
     task,
@@ -373,7 +378,7 @@ def _one_hot_encoding(
     progress.update(task, description="[blue]Updating X and var ...")
 
     temp_x, temp_var_names, unencoded_var_names = _update_encoded_data(
-        X, transformed, var_names, categorical_prefixes, categories, unencoded_prefixes
+        X, transformed, var_names, categorical_prefixes, categories, unencoded_prefixes, unencoded_var_names
     )
     progress.update(task, description="[blue]Finished one-hot encoding.")
 
@@ -385,6 +390,7 @@ def _label_encoding(
     X: np.ndarray | None,
     uns: dict[str, Any],
     var_names: list[str],
+    unencoded_var_names: list[str],
     categoricals: list[str],
     progress: Progress,
     task,
@@ -419,7 +425,7 @@ def _label_encoding(
 
     progress.update(task, description="[blue]Updating X and var ...")
     temp_x, temp_var_names, unencoded_var_names = _update_encoded_data(
-        X, original_values, var_names, category_prefixes, categoricals, categoricals
+        X, original_values, var_names, category_prefixes, categoricals, categoricals, unencoded_var_names
     )
     progress.update(task, description="[blue]Finished label encoding.")
 
@@ -480,6 +486,7 @@ def _update_encoded_data(
     categorical_prefixes: list[str],
     categoricals: list[str],
     unencoded_prefixes: list[str],
+    unencoded_var_names: list[str],
 ) -> tuple[np.ndarray, list[str], list[str]]:
     """Update X and var_names after each encoding.
 
@@ -502,7 +509,9 @@ def _update_encoded_data(
     # delete old categorical name
     var_names = [col_name for col_idx, col_name in enumerate(var_names) if col_idx not in idx]
     temp_var_names = categorical_prefixes + var_names
-    unencoded_var_names = unencoded_prefixes + var_names
+
+    unencoded_var_names = [col_name for col_idx, col_name in enumerate(unencoded_var_names) if col_idx not in idx]
+    unencoded_var_names = unencoded_prefixes + unencoded_var_names
 
     return temp_x, temp_var_names, unencoded_var_names
 
@@ -639,29 +648,24 @@ def _reorder_encodings(adata: AnnData, new_encodings: dict[str, list[list[str]] 
             "cannot be encoded at the same time using different encoding modes!"
         )
         raise DuplicateColumnEncodingError
-    # old_encode_mode = adata.uns["var_to_encoding"] TODO: Delete
-    encode_mode = None
+
+    encoding_to_var = {}
     for categorical in latest_encoded_columns:
-        for enc_name, enc_mode in adata.var["encoding_mode"].iteritems():
-            if categorical in enc_name:
-                encode_mode = enc_mode
-                break
+        encode_mode = adata.var.loc[adata.var["unencoded_var_names"] == categorical, "encoding_mode"].unique()[0]
 
-        # encode_mode = old_encode_mode.get(categorical) TODO: Delete
-        # if None, this categorical has not been encoded before but will be encoded now for the first time
-
-        # single column encoding mode
+        # if encode_mode is None, this categorical has not been encoded before but will be encoded now for the first time
         if encode_mode in available_encodings:
-            encoded_categoricals_with_mode = adata.uns["encoding_to_var"][encode_mode]
+            encoded_categoricals_with_mode = adata.var.loc[
+                adata.var["encoding_mode"] == encode_mode, "unencoded_var_names"
+            ].to_list()
+            encoding_to_var[encode_mode] = encoded_categoricals_with_mode
+            # adata.uns)["encoding_to_var"][encode_mode] TODO: Delete
             for ind, column_name in enumerate(encoded_categoricals_with_mode):
                 if column_name == categorical:
                     del encoded_categoricals_with_mode[ind]
                     break
-                # if encoding mode is
-            if not encoded_categoricals_with_mode:
-                del adata.uns["encoding_to_var"][encode_mode]
 
-    return _update_new_encode_modes(new_encodings, adata.uns["encoding_to_var"])
+    return _update_new_encode_modes(new_encodings, encoding_to_var)  # adata.uns["encoding_to_var"] TODO: Delete
 
 
 def _update_new_encode_modes(
