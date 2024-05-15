@@ -471,8 +471,8 @@ def rank_features_groups(
 
         # if the feature type is set in adata.obs, we store the respective feature type in adata_minimal.var
         adata_minimal.var[FEATURE_TYPE_KEY] = [
-            None
-            if feature not in adata.obs.keys()
+            adata.var[FEATURE_TYPE_KEY].loc[feature]
+            if feature not in adata.obs.keys() and FEATURE_TYPE_KEY in adata.var.keys()
             else CATEGORICAL_TAG
             if adata.obs[feature].dtype == "category"
             else DATE_TAG

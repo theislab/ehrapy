@@ -70,7 +70,6 @@ def mimic_2_preprocessed() -> AnnData:
 
 
 def mimic_3_demo(
-    encoded: bool = False,  # TODO: Delete
     anndata: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
 ) -> dict[str, AnnData] | dict[str, pd.DataFrame]:
@@ -82,7 +81,6 @@ def mimic_3_demo(
     The resulting DataFrame can then be transformed into an AnnData object with :func:`~ehrapy.anndata.df_to_anndata`.
 
     Args:
-        encoded: Whether to return an already encoded object.
         anndata: Whether to return one AnnData object per CSV file. Defaults to False
         columns_obs_only: Columns to include in obs only and not X.
 
@@ -101,10 +99,6 @@ def mimic_3_demo(
         columns_obs_only=columns_obs_only,
         archive_format="zip",
     )
-    if encoded:
-        if not anndata:
-            raise ValueError("Can only encode AnnData objects. Set 'anndata=True' to get AnnData objects.")
-        encode(data, autodetect=True)
 
     return data
 

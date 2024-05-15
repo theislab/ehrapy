@@ -262,7 +262,6 @@ class TestRankFeaturesGroups:
     def test_only_continous_features(self):
         adata = ep.dt.mimic_2(encoded=True)
         ep.ad.infer_feature_types(adata, output=None)
-        adata.uns["non_numerical_columns"] = []
 
         ep.tl.rank_features_groups(adata, groupby="service_unit")
         assert "rank_features_groups" in adata.uns
@@ -275,7 +274,6 @@ class TestRankFeaturesGroups:
     def test_only_cat_features(self):
         adata = ep.dt.mimic_2(encoded=True)
         ep.ad.infer_feature_types(adata, output=None)
-        adata.uns["numerical_columns"] = []
 
         ep.tl.rank_features_groups(adata, groupby="service_unit")
         assert "rank_features_groups" in adata.uns

@@ -432,8 +432,7 @@ def adata_strings_encoded():
         var=pd.DataFrame(data=var_strings, index=var_strings["Feature"]),
     )
     adata_strings.var[FEATURE_TYPE_KEY] = [NUMERIC_TAG, NUMERIC_TAG, CATEGORICAL_TAG, CATEGORICAL_TAG]
-    adata_strings.uns["numerical_columns"] = ["Numeric1", "Numeric2"]
-    adata_strings.uns["non_numerical_columns"] = ["String1", "String2"]
+
     adata_encoded = ep.pp.encode(adata_strings.copy(), autodetect=True, encodings="label")
 
     return adata_strings, adata_encoded

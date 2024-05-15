@@ -511,8 +511,6 @@ def _read_from_cache(path_cache: Path) -> AnnData:
     # in case columns_obs_only has not been passed
     except KeyError:
         columns_obs_only = []
-    # required since reading from cache returns a numpy array instead of a list here
-    cached_adata.uns["numerical_columns"] = list(cached_adata.uns["numerical_columns"])
     # recreate the original AnnData object with the index column for obs and obs only columns
     cached_adata = _decode_cached_adata(cached_adata, columns_obs_only)
 
@@ -639,11 +637,8 @@ def _decode_cached_adata(adata: AnnData, column_obs_only: list[str]) -> AnnData:
     # set the new var names (unencoded ones)
     adata.var.index = var_names
     adata.layers["original"] = adata.X.copy()
-    # reset uns but keep numerical columns
-    numerical_columns = adata.uns["numerical_columns"]
+    # reset uns
     adata.uns = OrderedDict()
-    adata.uns["numerical_columns"] = numerical_columns
-    adata.uns["non_numerical_columns"] = list(set(adata.var_names) ^ set(numerical_columns))
 
     return adata
 

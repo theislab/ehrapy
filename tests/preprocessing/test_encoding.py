@@ -275,10 +275,18 @@ def test_custom_encode_again_multiple_columns_encoding():
         survival_outcome not in list(encoded_ann_data_again.var_names)
         for survival_outcome in ["ehrapycat_survival_False", "ehrapycat_survival_True"]
     )
-    assert encoded_ann_data_again.uns["var_to_encoding"] == {
-        "survival": "label",
-        "clinic_day": "one-hot",
-    }
+
+    assert np.all(
+        encoded_ann_data_again.var.loc[encoded_ann_data_again.var["unencoded_var_names"] == "survival", "encoding_mode"]
+        == "label"
+    )
+    assert np.all(
+        encoded_ann_data_again.var.loc[
+            encoded_ann_data_again.var["unencoded_var_names"] == "clinic_day", "encoding_mode"
+        ]
+        == "one-hot"
+    )
+
     assert id(encoded_ann_data_again.X) != id(encoded_ann_data_again.layers["original"])
     assert pd.api.types.is_bool_dtype(encoded_ann_data.obs["survival"].dtype)
     assert isinstance(encoded_ann_data.obs["clinic_day"].dtype, CategoricalDtype)
