@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections import OrderedDict, defaultdict
+from collections import OrderedDict
 from itertools import chain
 from typing import Any
 
@@ -8,14 +8,12 @@ import numpy as np
 import pandas as pd
 from anndata import AnnData
 from lamin_utils import logger
-from rich import print
 from rich.progress import BarColumn, Progress
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
 from ehrapy.anndata import anndata_to_df, check_feature_types
 from ehrapy.anndata._constants import (
     CATEGORICAL_TAG,
-    DATE_TAG,
     FEATURE_TYPE_KEY,
     NUMERIC_TAG,
 )

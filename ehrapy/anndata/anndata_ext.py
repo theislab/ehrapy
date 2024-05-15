@@ -9,15 +9,12 @@ import numpy as np
 import pandas as pd
 from anndata import AnnData, concat
 from lamin_utils import logger
-from rich import print
-from rich.text import Text
-from rich.tree import Tree
 from scanpy.get import obs_df, rank_genes_groups_df, var_df
 from scipy import sparse
 from scipy.sparse import issparse
 
 from ehrapy.anndata import check_feature_types
-from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
+from ehrapy.anndata._constants import FEATURE_TYPE_KEY, NUMERIC_TAG
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Iterable, Sequence

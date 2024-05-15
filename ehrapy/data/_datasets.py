@@ -460,6 +460,8 @@ def statlog_heart(
         index_column="patient_id",
     )
     if encoded:
+        infer_feature_types(adata, output=None, verbose=False)
+        correct_feature_types(adata, "number of major vessels", NUMERIC_TAG)
         return encode(adata, autodetect=True)
 
     return adata
@@ -493,6 +495,7 @@ def thyroid(
         index_column="patient_id",
     )
     if encoded:
+        infer_feature_types(adata, output=None, verbose=False)
         return encode(adata, autodetect=True)
 
     return adata
@@ -527,6 +530,7 @@ def breast_cancer_coimbra(
         index_column="patient_id",
     )
     if encoded:
+        infer_feature_types(adata, output=None, verbose=False)
         return encode(adata, autodetect=True)
 
     return adata
@@ -561,6 +565,7 @@ def parkinsons(
         index_column="measurement_id",
     )
     if encoded:
+        infer_feature_types(adata, output=None, verbose=False)
         return encode(adata, autodetect=True)
 
     return adata
@@ -594,6 +599,7 @@ def parkinsons_telemonitoring(
         index_column="measurement_id",
     )
     if encoded:
+        infer_feature_types(adata, output=None, verbose=False)
         return encode(adata, autodetect=True)
 
     return adata
@@ -628,6 +634,7 @@ def parkinsons_disease_classification(
         index_column="measurement_id",
     )
     if encoded:
+        infer_feature_types(adata, output=None, verbose=False)
         return encode(adata, autodetect=True)
 
     return adata
@@ -662,6 +669,7 @@ def parkinson_dataset_with_replicated_acoustic_features(
         index_column="measurement_id",
     )
     if encoded:
+        infer_feature_types(adata, output=None, verbose=False)
         return encode(adata, autodetect=True)
 
     return adata
@@ -696,6 +704,9 @@ def heart_disease(
         index_column="patient_id",
     )
     if encoded:
+        infer_feature_types(adata, output=None, verbose=False)
+        correct_feature_types(adata, ["num"], NUMERIC_TAG)
+        correct_feature_types(adata, ["thal"], CATEGORICAL_TAG)
         return encode(adata, autodetect=True)
 
     return adata
