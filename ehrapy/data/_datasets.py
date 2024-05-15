@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ehrapy import ehrapy_settings
-from ehrapy.anndata import correct_feature_types, infer_feature_types
+from ehrapy.anndata import anndata_to_df, correct_feature_types, df_to_anndata, infer_feature_types
 from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrapy.io._read import read_csv, read_fhir, read_h5ad
 from ehrapy.preprocessing._encoding import encode
@@ -741,7 +741,16 @@ def synthea_1k_sample(
         archive_format="zip",
     )
 
+    df = anndata_to_df(adata)
+    df.drop(
+        columns=[col for col in df.columns if any(isinstance(x, (list, dict)) for x in df[col].dropna())], inplace=True
+    )
+    df.drop(columns=df.columns[df.isna().all()], inplace=True)
+    adata = df_to_anndata(df, index_column="id")
+
     if encoded:
+        infer_feature_types(adata, output=None, verbose=False)
+        correct_feature_types(adata, ["resource.multipleBirthInteger", "resource.numberOfSeries"], NUMERIC_TAG)
         return encode(adata, autodetect=True)
 
     return adata
