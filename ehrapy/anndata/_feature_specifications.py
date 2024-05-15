@@ -166,8 +166,20 @@ def feature_type_overview(adata: AnnData):
     branch = tree.add("🗂️[b] Categorical features")
     cat_features = adata.var_names[adata.var[FEATURE_TYPE_KEY] == CATEGORICAL_TAG]
     df = anndata_to_df(adata[:, cat_features])
-    for categorical in sorted(cat_features):
-        branch.add(f"{categorical} ({df.loc[:, categorical].nunique()} categories)")
+
+    if "encoding_mode" in adata.var.keys():
+        unencoded_vars = adata.var.loc[cat_features, "unencoded_var_names"].unique().tolist()
+
+        for unencoded in sorted(unencoded_vars):
+            if unencoded in adata.var_names:
+                branch.add(f"{unencoded} ({df.loc[:, unencoded].nunique()} categories)")
+            else:
+                enc_mode = adata.var.loc[adata.var["unencoded_var_names"] == unencoded, "encoding_mode"].values[0]
+                branch.add(f"{unencoded} ({adata.obs[unencoded].nunique()} categories); {enc_mode} encoded")
+
+    else:
+        for categorical in sorted(cat_features):
+            branch.add(f"{categorical} ({df.loc[:, categorical].nunique()} categories)")
 
     print(tree)
 
