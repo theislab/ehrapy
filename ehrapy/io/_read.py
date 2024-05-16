@@ -625,8 +625,10 @@ def _decode_cached_adata(adata: AnnData, column_obs_only: list[str]) -> AnnData:
         if not var_name.startswith("ehrapycat_"):
             break
         value_name = var_name[10:]
-        original_values = adata.uns["original_values_categoricals"][value_name]
-        adata.X[:, idx : idx + 1] = original_values
+        if value_name not in adata.obs.keys():
+            raise ValueError(f"Unencoded values for feature '{value_name}' not found in obs!")
+        original_values = adata.obs[value_name]
+        adata.X[:, idx] = original_values
         # update var name per categorical
         var_names[idx] = value_name
     # drop all columns, that are not obs only in obs
