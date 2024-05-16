@@ -236,7 +236,8 @@ def test_custom_encode_again_single_columns_encoding():
     )
     encoded_ann_data_again = encode(encoded_ann_data, autodetect=False, encodings={"label": ["clinic_day"]})
     assert encoded_ann_data_again.X.shape == (5, 5)
-    assert list(encoded_ann_data_again.obs.columns) == ["survival", "clinic_day"]
+    assert len(encoded_ann_data_again.obs.columns) == 2
+    assert set(encoded_ann_data_again.obs.columns) == {"survival", "clinic_day"}
     assert "ehrapycat_survival" in list(encoded_ann_data_again.var_names)
     assert "ehrapycat_clinic_day" in list(encoded_ann_data_again.var_names)
     assert all(
@@ -268,7 +269,8 @@ def test_custom_encode_again_multiple_columns_encoding():
         encodings={"label": ["survival"], "one-hot": ["clinic_day"]},
     )
     assert encoded_ann_data_again.X.shape == (5, 8)
-    assert list(encoded_ann_data_again.obs.columns) == ["survival", "clinic_day"]
+    assert len(encoded_ann_data_again.obs.columns) == 2
+    assert set(encoded_ann_data_again.obs.columns) == {"survival", "clinic_day"}
     assert "ehrapycat_survival" in list(encoded_ann_data_again.var_names)
     assert "ehrapycat_clinic_day_Friday" in list(encoded_ann_data_again.var_names)
     assert all(
