@@ -88,6 +88,11 @@ def infer_feature_types(
         output: The output format. Choose between 'tree', 'dataframe', or None. If 'tree', the feature types will be printed to the console in a tree format.
             If 'dataframe', a pandas DataFrame with the feature types will be returned. If None, nothing will be returned. Defaults to 'tree'.
         verbose: Whether to print warnings for uncertain feature types. Defaults to True.
+
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=False)
+        >>> ep.ad.infer_feature_types(adata)
     """
     from ehrapy.anndata.anndata_ext import anndata_to_df
 
@@ -147,7 +152,16 @@ def check_feature_types(func):
 
 @check_feature_types
 def feature_type_overview(adata: AnnData):
-    """Print an overview of the feature types in the AnnData object."""
+    """Print an overview of the feature types and encoding modes in the AnnData object.
+
+    Args:
+        adata: The AnnData object storing the EHR data.
+
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> ep.ad.feature_type_overview(adata)
+    """
     from ehrapy.anndata.anndata_ext import anndata_to_df
 
     tree = Tree(
@@ -191,6 +205,12 @@ def correct_feature_types(adata, features: list[str] | str, corrected_type: str)
         adata: :class:`~anndata.AnnData` object storing the EHR data.
         features: The features to correct.
         corrected_type: The corrected feature type. One of 'date', 'categorical', or 'numeric'.
+
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.diabetes_130_fairlearn()
+        >>> ep.ad.infer_feature_types(adata)
+        >>> ep.ad.correct_feature_types(adata, ["time_in_hospital", "number_diagnoses", "num_procedures"], "numeric")
     """
     if corrected_type not in [CATEGORICAL_TAG, NUMERIC_TAG, DATE_TAG]:
         raise ValueError(
