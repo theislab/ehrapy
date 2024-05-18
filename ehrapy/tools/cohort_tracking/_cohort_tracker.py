@@ -87,15 +87,14 @@ class CohortTracker:
         self._tracked_text: list = []
         self._tracked_operations: list = []
 
-        # if categorical columns specified, use them
-        # else, follow tableone's logic
+        # if categorical columns specified, use them, else infer the feature types
         self.categorical = (
             categorical
             if categorical is not None
             else [
                 col
                 for col in adata.obs[self.columns].columns
-                if _detect_feature_type(adata.obs[col]) == CATEGORICAL_TAG
+                if _detect_feature_type(adata.obs[col])[0] == CATEGORICAL_TAG
             ]
         )
 

@@ -1,6 +1,6 @@
 from collections.abc import Iterable
 from functools import wraps
-from typing import Literal, cast
+from typing import Literal
 
 import numpy as np
 import pandas as pd
@@ -13,7 +13,7 @@ from rich.tree import Tree
 from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 
 
-def _detect_feature_type(col: pd.Series, verbose: bool = True) -> Literal["date", "categorical", "numeric"]:
+def _detect_feature_type(col: pd.Series) -> tuple[Literal["date", "categorical", "numeric"], bool]:
     """Detect the feature type of a column in a pandas DataFrame.
 
     Args:
@@ -21,7 +21,7 @@ def _detect_feature_type(col: pd.Series, verbose: bool = True) -> Literal["date"
         verbose: Whether to print warnings for uncertain feature types. Defaults to True.
 
     Returns:
-        The detected feature type. One of 'date', 'categorical', or 'numeric'.
+        The detected feature type (one of 'date', 'categorical', or 'numeric') and a boolean, which is True if the feature type is uncertain.
     """
     n_elements = len(col)
     col = col.dropna()
@@ -32,22 +32,22 @@ def _detect_feature_type(col: pd.Series, verbose: bool = True) -> Literal["date"
     majority_type = col.apply(type).value_counts().idxmax()
 
     if majority_type == pd.Timestamp:
-        return DATE_TAG  # type: ignore
+        return DATE_TAG, False  # type: ignore
 
     if majority_type == str:
         try:
             col.apply(isoparse)
-            return DATE_TAG  # type: ignore
+            return DATE_TAG, False  # type: ignore
         except ValueError:
             try:
                 col = pd.to_numeric(col, errors="raise")  # Could be an encoded categorical or a numeric feature
                 majority_type = float
             except ValueError:
                 # Features stored as Strings that cannot be converted to float are assumed to be categorical
-                return CATEGORICAL_TAG  # type: ignore
+                return CATEGORICAL_TAG, False  # type: ignore
 
     if majority_type not in [int, float]:
-        return CATEGORICAL_TAG  # type: ignore
+        return CATEGORICAL_TAG, False  # type: ignore
 
     # Guess categorical if the feature is an integer and the values are 0/1 to n-1/n with no gaps
     if (
@@ -58,13 +58,9 @@ def _detect_feature_type(col: pd.Series, verbose: bool = True) -> Literal["date"
             or (col.min() == 1 and np.all(np.sort(col.unique()) == np.arange(1, col.nunique() + 1)))
         )
     ):
-        if verbose:
-            logger.warning(
-                f"Feature {col.name} was detected as a categorical feature that was stored numerically. Please verify."
-            )
-        return CATEGORICAL_TAG  # type: ignore
+        return CATEGORICAL_TAG, True  # type: ignore
 
-    return NUMERIC_TAG  # type: ignore
+    return NUMERIC_TAG, False  # type: ignore
 
 
 def infer_feature_types(
@@ -94,6 +90,7 @@ def infer_feature_types(
     from ehrapy.anndata.anndata_ext import anndata_to_df
 
     feature_types = {}
+    uncertain_features = []
 
     df = anndata_to_df(adata, layer=layer)
     for feature in adata.var_names:
@@ -104,11 +101,18 @@ def infer_feature_types(
         ):
             feature_types[feature] = adata.var[FEATURE_TYPE_KEY][feature]
         else:
-            feature_types[feature] = _detect_feature_type(df[feature], verbose=verbose)
+            feature_types[feature], raise_warning = _detect_feature_type(df[feature])
+            if raise_warning:
+                uncertain_features.append(feature)
 
     adata.var[FEATURE_TYPE_KEY] = pd.Series(feature_types)[adata.var_names]
 
     if verbose:
+        logger.warning(
+            f"{'Features' if len(uncertain_features) >1 else 'Feature'} {str(uncertain_features)[1:-1]} {'were' if len(uncertain_features) >1 else 'was'} detected as categorical features stored numerically."
+            f"Please verify and correct using `ep.ad.correct_feature_types` if necessary."
+        )
+
         logger.info(
             f"Stored feature types in adata.var['{FEATURE_TYPE_KEY}']."
             f" Please verify and adjust if necessary using `ep.ad.correct_feature_types`."
