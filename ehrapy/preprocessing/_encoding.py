@@ -100,7 +100,7 @@ def encode(
         # filter out categorical columns, that are already stored numerically
         df_adata = anndata_to_df(adata)
         categoricals_names = [
-            feat for feat in categoricals_names if not np.all(df_adata[feat].apply(type).isin([int, float, complex]))
+            feat for feat in categoricals_names if not np.all(df_adata[feat].apply(type).isin([int, float]))
         ]
 
         # no columns were detected, that would require an encoding (e.g. non-numerical columns)
