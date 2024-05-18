@@ -54,11 +54,10 @@ def setup_binary_df_to_anndata() -> DataFrame:
     col2_val = ["another_str" + str(idx) for idx in range(100)]
     col3_val = [0 for _ in range(100)]
     col4_val = [1.0 for _ in range(100)]
-    col5_val = [np.NaN for _ in range(100)]
-    col6_val = [0.0 if idx % 2 == 0 else np.NaN for idx in range(100)]
-    col7_val = [idx % 2 for idx in range(100)]
-    col8_val = [float(idx % 2) for idx in range(100)]
-    col9_val = [idx % 3 if idx % 3 in {0, 1} else np.NaN for idx in range(100)]
+    col5_val = [0.0 if idx % 2 == 0 else np.NaN for idx in range(100)]
+    col6_val = [idx % 2 for idx in range(100)]
+    col7_val = [float(idx % 2) for idx in range(100)]
+    col8_val = [idx % 3 if idx % 3 in {0, 1} else np.NaN for idx in range(100)]
     df = DataFrame(
         {
             "col1": col1_val,
@@ -66,10 +65,9 @@ def setup_binary_df_to_anndata() -> DataFrame:
             "col3": col3_val,
             "col4": col4_val,
             "col5": col5_val,
-            "col6": col6_val,
-            "col7_binary_int": col7_val,
-            "col8_binary_float": col8_val,
-            "col9_binary_missing_values": col9_val,
+            "col6_binary_int": col6_val,
+            "col7_binary_float": col7_val,
+            "col8_binary_missing_values": col8_val,
         }
     )
 
@@ -372,7 +370,6 @@ def test_detect_binary_columns(setup_binary_df_to_anndata):
                     CATEGORICAL_TAG,
                     CATEGORICAL_TAG,
                     CATEGORICAL_TAG,
-                    NUMERIC_TAG,
                     CATEGORICAL_TAG,
                     CATEGORICAL_TAG,
                     CATEGORICAL_TAG,
@@ -385,10 +382,9 @@ def test_detect_binary_columns(setup_binary_df_to_anndata):
                 "col3",
                 "col4",
                 "col5",
-                "col6",
-                "col7_binary_int",
-                "col8_binary_float",
-                "col9_binary_missing_values",
+                "col6_binary_int",
+                "col7_binary_float",
+                "col8_binary_missing_values",
             ],
         ),
     )

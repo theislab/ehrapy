@@ -1,5 +1,6 @@
+from collections.abc import Iterable
 from functools import wraps
-from typing import Literal
+from typing import Literal, cast
 
 import numpy as np
 import pandas as pd
@@ -12,11 +13,11 @@ from rich.tree import Tree
 from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 
 
-def _detect_feature_type(col: pd.Series, verbose: bool = True) -> str:
+def _detect_feature_type(col: pd.Series, verbose: bool = True) -> Literal["date", "categorical", "numeric"]:
     """Detect the feature type of a column in a pandas DataFrame.
 
     Args:
-        col: A pandas Series representing a feature.
+        col: The column to detect the feature type for.
         verbose: Whether to print warnings for uncertain feature types. Defaults to True.
 
     Returns:
@@ -26,31 +27,29 @@ def _detect_feature_type(col: pd.Series, verbose: bool = True) -> str:
     col = col.dropna()
     if len(col) == 0:
         if verbose:
-            logger.warning(f"Feature {col.name} has only NaN values. Setting feature type to '{NUMERIC_TAG}'.")
-        return NUMERIC_TAG
+            raise ValueError(
+                f"Feature {col.name} has only NaN values. Please drop the feature if you want to infer the feature type."
+            )
+        return NUMERIC_TAG  # type: ignore
     majority_type = col.apply(type).value_counts().idxmax()
 
     if majority_type == pd.Timestamp:
-        return DATE_TAG
+        return DATE_TAG  # type: ignore
 
     if majority_type == str:
         try:
             col.apply(isoparse)
-            return DATE_TAG
+            return DATE_TAG  # type: ignore
         except ValueError:
             try:
-                col = col.apply(int)  # Could be an encoded categorical or a numeric feature
-                majority_type = int
+                col = pd.to_numeric(col, errors="raise")  # Could be an encoded categorical or a numeric feature
+                majority_type = float
             except ValueError:
-                try:
-                    col = col.apply(float)  # Could be an encoded categorical or a numeric feature
-                    majority_type = float
-                except ValueError:
-                    # Features stored as Strings that cannot be converted to float are assumed to be categorical
-                    return CATEGORICAL_TAG
+                # Features stored as Strings that cannot be converted to float are assumed to be categorical
+                return CATEGORICAL_TAG  # type: ignore
 
-    if majority_type not in [int, float, complex]:
-        return CATEGORICAL_TAG
+    if majority_type not in [int, float]:
+        return CATEGORICAL_TAG  # type: ignore
 
     # Guess categorical if the feature is an integer and the values are 0/1 to n-1/n with no gaps
     if (
@@ -63,11 +62,11 @@ def _detect_feature_type(col: pd.Series, verbose: bool = True) -> str:
     ):
         if verbose:
             logger.warning(
-                f"Feature {col.name} was detected as a categorical feature stored numerically. Please verify."
+                f"Feature {col.name} was detected as a categorical feature that was stored numerically. Please verify."
             )
-        return CATEGORICAL_TAG
+        return CATEGORICAL_TAG  # type: ignore
 
-    return NUMERIC_TAG
+    return NUMERIC_TAG  # type: ignore
 
 
 def infer_feature_types(
@@ -102,7 +101,6 @@ def infer_feature_types(
     for feature in adata.var_names:
         if (
             FEATURE_TYPE_KEY in adata.var.keys()
-            and feature in adata.var[FEATURE_TYPE_KEY]
             and adata.var[FEATURE_TYPE_KEY][feature] is not None
             and not pd.isna(adata.var[FEATURE_TYPE_KEY][feature])
         ):
@@ -139,9 +137,19 @@ def check_feature_types(func):
         if FEATURE_TYPE_KEY not in adata.var.keys():
             infer_feature_types(adata, output=None)
             logger.warning(
-                f"Feature types were inferred and stored in adata.var[{FEATURE_TYPE_KEY}]. Please verify and adjust if necessary using `ep.ad.correct_feature_types`."
+                f"Feature types were inferred and stored in adata.var[{FEATURE_TYPE_KEY}]. Please verify using `ep.ad.feature_type_overview` and adjust if necessary using `ep.ad.correct_feature_types`."
             )
-        np.all(adata.var[FEATURE_TYPE_KEY].isin([CATEGORICAL_TAG, NUMERIC_TAG, DATE_TAG]))
+
+        for feature in adata.var_names:
+            feature_type = adata.var[FEATURE_TYPE_KEY][feature]
+            if (
+                feature_type is not None
+                and (not pd.isna(feature_type))
+                and feature_type not in [CATEGORICAL_TAG, NUMERIC_TAG, DATE_TAG]
+            ):
+                logger.warning(
+                    f"Feature '{feature}' has an invalid feature type '{feature_type}'. Please correct using `ep.ad.correct_feature_types`."
+                )
 
         if _self is not None:
             return func(_self, adata, *args, **kwargs)
@@ -198,7 +206,7 @@ def feature_type_overview(adata: AnnData):
     print(tree)
 
 
-def correct_feature_types(adata, features: list[str] | str, corrected_type: str):
+def correct_feature_types(adata, features: Iterable[str], corrected_type: str):
     """Correct the feature types for a list of features inplace.
 
     Args:
