@@ -240,8 +240,6 @@ class TestHelperFunctions:
 class TestRankFeaturesGroups:
     def test_real_dataset(self):
         adata = ep.dt.mimic_2(encoded=True)
-        ep.ad.infer_feature_types(adata, output=None)
-
         ep.tl.rank_features_groups(adata, groupby="service_unit")
 
         assert "rank_features_groups" in adata.uns
@@ -261,9 +259,8 @@ class TestRankFeaturesGroups:
 
     def test_only_continous_features(self):
         adata = ep.dt.mimic_2(encoded=True)
-        ep.ad.infer_feature_types(adata, output=None)
-
         ep.tl.rank_features_groups(adata, groupby="service_unit")
+
         assert "rank_features_groups" in adata.uns
         assert "names" in adata.uns["rank_features_groups"]
         assert "pvals" in adata.uns["rank_features_groups"]
@@ -273,8 +270,6 @@ class TestRankFeaturesGroups:
 
     def test_only_cat_features(self):
         adata = ep.dt.mimic_2(encoded=True)
-        ep.ad.infer_feature_types(adata, output=None)
-
         ep.tl.rank_features_groups(adata, groupby="service_unit")
         assert "rank_features_groups" in adata.uns
         assert "names" in adata.uns["rank_features_groups"]
@@ -293,7 +288,6 @@ class TestRankFeaturesGroups:
         adata = read_csv(
             dataset_path=f"{_TEST_PATH}/dataset1.csv", columns_x_only=["station", "sys_bp_entry", "dia_bp_entry"]
         )
-        ep.ad.infer_feature_types(adata, output=None)
         adata = ep.pp.encode(adata, encodings={"label": ["station"]})
         adata_orig = adata.copy()
 
@@ -319,8 +313,6 @@ class TestRankFeaturesGroups:
             dataset_path=f"{_TEST_PATH}/dataset1.csv",
             columns_obs_only=["disease", "station", "sys_bp_entry", "dia_bp_entry"],
         )
-        ep.ad.infer_feature_types(adata, output=None)
-
         ep.tl.rank_features_groups(adata, groupby="disease", field_to_rank=field_to_rank)
 
         # check standard rank_features_groups entries
@@ -347,20 +339,17 @@ class TestRankFeaturesGroups:
             dataset_path=f"{_TEST_PATH}/dataset1.csv",
             columns_x_only=["station", "sys_bp_entry", "dia_bp_entry", "glucose"],
         )
-        ep.ad.infer_feature_types(adata_features_in_x, output=None)
         adata_features_in_x = ep.pp.encode(adata_features_in_x, encodings={"label": ["station"]})
 
         adata_features_in_obs = read_csv(
             dataset_path=f"{_TEST_PATH}/dataset1.csv",
             columns_obs_only=["disease", "station", "sys_bp_entry", "dia_bp_entry", "glucose"],
         )
-        ep.ad.infer_feature_types(adata_features_in_obs, output=None)
 
         adata_features_in_x_and_obs = read_csv(
             dataset_path=f"{_TEST_PATH}/dataset1.csv",
             columns_obs_only=["disease", "station"],
         )
-        ep.ad.infer_feature_types(adata_features_in_x_and_obs, output=None)
         # to keep the same variables as in the datsets above, in order to make the comparison of consistency
         adata_features_in_x_and_obs = adata_features_in_x_and_obs[:, ["sys_bp_entry", "dia_bp_entry", "glucose"]]
 
@@ -401,7 +390,6 @@ class TestRankFeaturesGroups:
             columns_obs_only=["disease", "station", "sys_bp_entry", "dia_bp_entry"],
             index_column="idx",
         )
-        ep.ad.infer_feature_types(adata, output=None)
 
         # get a fresh adata for every test to not have any side effects
         adata_copy = adata.copy()

@@ -26,11 +26,9 @@ def _detect_feature_type(col: pd.Series, verbose: bool = True) -> Literal["date"
     n_elements = len(col)
     col = col.dropna()
     if len(col) == 0:
-        if verbose:
-            raise ValueError(
-                f"Feature {col.name} has only NaN values. Please drop the feature if you want to infer the feature type."
-            )
-        return NUMERIC_TAG  # type: ignore
+        raise ValueError(
+            f"Feature {col.name} has only NaN values. Please drop the feature if you want to infer the feature type."
+        )
     majority_type = col.apply(type).value_counts().idxmax()
 
     if majority_type == pd.Timestamp:
