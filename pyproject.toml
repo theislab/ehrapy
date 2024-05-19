@@ -51,7 +51,6 @@ dependencies = [
     "lamin_utils",
     "rich",
     "scanpy[leiden]",
-    "pyyaml",
     "requests",
     "scikit-learn",
     "pynndescent",
