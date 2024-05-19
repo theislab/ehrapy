@@ -7,7 +7,7 @@ import pytest
 from sklearn.exceptions import ConvergenceWarning
 
 import ehrapy as ep
-from ehrapy.anndata._constants import CATEGORICAL_TAG, CONTINUOUS_TAG, DATE_TAG, FEATURE_TYPE_KEY
+from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrapy.io._read import read_csv
 from ehrapy.preprocessing._imputation import (
     _warn_imputation_threshold,
@@ -25,28 +25,24 @@ _TEST_PATH = f"{CURRENT_DIR}/test_data_imputation"
 @pytest.fixture
 def impute_num_adata():
     adata = read_csv(dataset_path=f"{_TEST_PATH}/test_impute_num.csv")
-    ep.ad.infer_feature_types(adata, output=None)
     return adata
 
 
 @pytest.fixture
 def impute_adata():
     adata = read_csv(dataset_path=f"{_TEST_PATH}/test_impute.csv")
-    ep.ad.infer_feature_types(adata, output=None)
     return adata
 
 
 @pytest.fixture
 def impute_iris():
     adata = read_csv(dataset_path=f"{_TEST_PATH}/test_impute_iris.csv")
-    ep.ad.infer_feature_types(adata, output=None)
     return adata
 
 
 @pytest.fixture
 def impute_titanic():
     adata = read_csv(dataset_path=f"{_TEST_PATH}/test_impute_titanic.csv")
-    ep.ad.infer_feature_types(adata, output=None)
     return adata
 
 

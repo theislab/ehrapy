@@ -7,10 +7,10 @@ from typing import TYPE_CHECKING, Literal
 import numpy as np
 import pandas as pd
 from lamin_utils import logger
-from rich import print
 from thefuzz import process
 
 from ehrapy.anndata import anndata_to_df
+from ehrapy.preprocessing._encoding import _get_encoded_features
 
 if TYPE_CHECKING:
     from collections.abc import Collection
@@ -104,15 +104,19 @@ def _obs_qc_metrics(
     obs_metrics = pd.DataFrame(index=adata.obs_names)
     var_metrics = pd.DataFrame(index=adata.var_names)
     mtx = adata.X if layer is None else adata.layers[layer]
-    if "original_values_categoricals" in adata.uns:
-        for original_values_categorical in list(adata.uns["original_values_categoricals"]):
+
+    if "encoding_mode" in adata.var:
+        for original_values_categorical in _get_encoded_features(adata):
             mtx = mtx.astype(object)
             index = np.where(var_metrics.index.str.contains(original_values_categorical))[0]
+
+            if original_values_categorical not in adata.obs.keys():
+                raise KeyError(f"Original values for {original_values_categorical} not found in adata.obs.")
             mtx[:, index[0]] = np.squeeze(
                 np.where(
-                    adata.uns["original_values_categoricals"][original_values_categorical].astype(object) == "nan",
+                    adata.obs[original_values_categorical].astype(object) == "nan",
                     np.nan,
-                    adata.uns["original_values_categoricals"][original_values_categorical].astype(object),
+                    adata.obs[original_values_categorical].astype(object),
                 )
             )
 
@@ -136,16 +140,20 @@ def _var_qc_metrics(adata: AnnData, layer: str | None = None) -> pd.DataFrame:
     var_metrics = pd.DataFrame(index=adata.var_names)
     mtx = adata.X if layer is None else adata.layers[layer]
     categorical_indices = np.ndarray([0], dtype=int)
-    if "original_values_categoricals" in adata.uns:
-        for original_values_categorical in list(adata.uns["original_values_categoricals"]):
+
+    if "encoding_mode" in adata.var.keys():
+        for original_values_categorical in _get_encoded_features(adata):
             mtx = copy.deepcopy(mtx.astype(object))
             index = np.where(var_metrics.index.str.startswith("ehrapycat_" + original_values_categorical))[0]
+
+            if original_values_categorical not in adata.obs.keys():
+                raise KeyError(f"Original values for {original_values_categorical} not found in adata.obs.")
             mtx[:, index] = np.tile(
                 np.where(
-                    adata.uns["original_values_categoricals"][original_values_categorical].astype(object) == "nan",
+                    adata.obs[original_values_categorical].astype(object) == "nan",
                     np.nan,
-                    adata.uns["original_values_categoricals"][original_values_categorical].astype(object),
-                ),
+                    adata.obs[original_values_categorical].astype(object),
+                ).reshape(-1, 1),
                 mtx[:, index].shape[1],
             )
             categorical_indices = np.concatenate([categorical_indices, index])

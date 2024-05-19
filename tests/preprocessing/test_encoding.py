@@ -1,11 +1,12 @@
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import pytest
 from pandas import CategoricalDtype, DataFrame
 from pandas.testing import assert_frame_equal
 
-from ehrapy.anndata._constants import EHRAPY_TYPE_KEY, NON_NUMERIC_ENCODED_TAG, NON_NUMERIC_TAG, NUMERIC_TAG
+from ehrapy.anndata._constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrapy.io._read import read_csv
 from ehrapy.preprocessing._encoding import DuplicateColumnEncodingError, _reorder_encodings, encode
 
@@ -45,10 +46,24 @@ def test_autodetect_encode():
         "b12_values",
     }
 
-    assert encoded_ann_data.uns["var_to_encoding"] == {
-        "survival": "one-hot",
-        "clinic_day": "one-hot",
-    }
+    assert np.all(
+        encoded_ann_data.var["unencoded_var_names"]
+        == [
+            "survival",
+            "survival",
+            "clinic_day",
+            "clinic_day",
+            "clinic_day",
+            "clinic_day",
+            "patient_id",
+            "los_days",
+            "b12_values",
+        ]
+    )
+
+    assert np.all(encoded_ann_data.var["encoding_mode"][:6] == ["one-hot"] * 6)
+    assert np.all(enc is None for enc in encoded_ann_data.var["encoding_mode"][6:])
+
     assert id(encoded_ann_data.X) != id(encoded_ann_data.layers["original"])
     assert adata is not None and adata.X is not None and adata.obs is not None and adata.uns is not None
     assert id(encoded_ann_data) != id(adata)
@@ -57,42 +72,30 @@ def test_autodetect_encode():
     assert id(encoded_ann_data.var) != id(adata.var)
     assert all(column in set(encoded_ann_data.obs.columns) for column in ["survival", "clinic_day"])
     assert not any(column in set(adata.obs.columns) for column in ["survival", "clinic_day"])
+
     assert_frame_equal(
         adata.var,
         DataFrame(
-            {EHRAPY_TYPE_KEY: [NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG, NON_NUMERIC_TAG, NON_NUMERIC_TAG]},
+            {FEATURE_TYPE_KEY: [NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG, CATEGORICAL_TAG, CATEGORICAL_TAG]},
             index=["patient_id", "los_days", "b12_values", "survival", "clinic_day"],
         ),
     )
-    assert_frame_equal(
-        encoded_ann_data.var,
-        DataFrame(
-            {
-                EHRAPY_TYPE_KEY: [
-                    NON_NUMERIC_ENCODED_TAG,
-                    NON_NUMERIC_ENCODED_TAG,
-                    NON_NUMERIC_ENCODED_TAG,
-                    NON_NUMERIC_ENCODED_TAG,
-                    NON_NUMERIC_ENCODED_TAG,
-                    NON_NUMERIC_ENCODED_TAG,
-                    NUMERIC_TAG,
-                    NUMERIC_TAG,
-                    NUMERIC_TAG,
-                ]
-            },
-            index=[
-                "ehrapycat_survival_False",
-                "ehrapycat_survival_True",
-                "ehrapycat_clinic_day_Friday",
-                "ehrapycat_clinic_day_Monday",
-                "ehrapycat_clinic_day_Saturday",
-                "ehrapycat_clinic_day_Sunday",
-                "patient_id",
-                "los_days",
-                "b12_values",
-            ],
-        ),
+
+    assert np.all(
+        encoded_ann_data.var[FEATURE_TYPE_KEY]
+        == [
+            CATEGORICAL_TAG,
+            CATEGORICAL_TAG,
+            CATEGORICAL_TAG,
+            CATEGORICAL_TAG,
+            CATEGORICAL_TAG,
+            CATEGORICAL_TAG,
+            NUMERIC_TAG,
+            NUMERIC_TAG,
+            NUMERIC_TAG,
+        ]
     )
+
     assert pd.api.types.is_bool_dtype(encoded_ann_data.obs["survival"].dtype)
     assert isinstance(encoded_ann_data.obs["clinic_day"].dtype, CategoricalDtype)
 
@@ -116,10 +119,13 @@ def test_autodetect_custom_mode():
         "b12_values",
     }
 
-    assert encoded_ann_data.uns["var_to_encoding"] == {
-        "survival": "label",
-        "clinic_day": "label",
-    }
+    assert np.all(
+        encoded_ann_data.var["unencoded_var_names"]
+        == ["survival", "clinic_day", "patient_id", "los_days", "b12_values"]
+    )
+    assert np.all(encoded_ann_data.var["encoding_mode"][:2] == ["label"] * 2)
+    assert np.all(enc is None for enc in encoded_ann_data.var["encoding_mode"][2:])
+
     assert id(encoded_ann_data.X) != id(encoded_ann_data.layers["original"])
     assert adata is not None and adata.X is not None and adata.obs is not None and adata.uns is not None
     assert id(encoded_ann_data) != id(adata)
@@ -128,34 +134,26 @@ def test_autodetect_custom_mode():
     assert id(encoded_ann_data.var) != id(adata.var)
     assert all(column in set(encoded_ann_data.obs.columns) for column in ["survival", "clinic_day"])
     assert not any(column in set(adata.obs.columns) for column in ["survival", "clinic_day"])
+
     assert_frame_equal(
         adata.var,
         DataFrame(
-            {EHRAPY_TYPE_KEY: [NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG, NON_NUMERIC_TAG, NON_NUMERIC_TAG]},
+            {FEATURE_TYPE_KEY: [NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG, CATEGORICAL_TAG, CATEGORICAL_TAG]},
             index=["patient_id", "los_days", "b12_values", "survival", "clinic_day"],
         ),
     )
-    assert_frame_equal(
-        encoded_ann_data.var,
-        DataFrame(
-            {
-                EHRAPY_TYPE_KEY: [
-                    NON_NUMERIC_ENCODED_TAG,
-                    NON_NUMERIC_ENCODED_TAG,
-                    NUMERIC_TAG,
-                    NUMERIC_TAG,
-                    NUMERIC_TAG,
-                ]
-            },
-            index=[
-                "ehrapycat_survival",
-                "ehrapycat_clinic_day",
-                "patient_id",
-                "los_days",
-                "b12_values",
-            ],
-        ),
+
+    assert np.all(
+        encoded_ann_data.var[FEATURE_TYPE_KEY]
+        == [
+            CATEGORICAL_TAG,
+            CATEGORICAL_TAG,
+            NUMERIC_TAG,
+            NUMERIC_TAG,
+            NUMERIC_TAG,
+        ]
     )
+
     assert pd.api.types.is_bool_dtype(encoded_ann_data.obs["survival"].dtype)
     assert isinstance(encoded_ann_data.obs["clinic_day"].dtype, CategoricalDtype)
 
@@ -186,10 +184,14 @@ def test_custom_encode():
             "ehrapycat_clinic_day_Sunday",
         ]
     )
-    assert encoded_ann_data.uns["var_to_encoding"] == {
-        "survival": "label",
-        "clinic_day": "one-hot",
-    }
+
+    assert np.all(
+        encoded_ann_data.var["unencoded_var_names"]
+        == ["clinic_day", "clinic_day", "clinic_day", "clinic_day", "survival", "patient_id", "los_days", "b12_values"]
+    )
+    assert np.all(encoded_ann_data.var["encoding_mode"][:5] == ["one-hot"] * 4 + ["label"])
+    assert np.all(enc is None for enc in encoded_ann_data.var["encoding_mode"][5:])
+
     assert id(encoded_ann_data.X) != id(encoded_ann_data.layers["original"])
     assert adata is not None and adata.X is not None and adata.obs is not None and adata.uns is not None
     assert id(encoded_ann_data) != id(adata)
@@ -198,40 +200,29 @@ def test_custom_encode():
     assert id(encoded_ann_data.var) != id(adata.var)
     assert all(column in set(encoded_ann_data.obs.columns) for column in ["survival", "clinic_day"])
     assert not any(column in set(adata.obs.columns) for column in ["survival", "clinic_day"])
+
     assert_frame_equal(
         adata.var,
         DataFrame(
-            {EHRAPY_TYPE_KEY: [NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG, NON_NUMERIC_TAG, NON_NUMERIC_TAG]},
+            {FEATURE_TYPE_KEY: [NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG, CATEGORICAL_TAG, CATEGORICAL_TAG]},
             index=["patient_id", "los_days", "b12_values", "survival", "clinic_day"],
         ),
     )
-    assert_frame_equal(
-        encoded_ann_data.var,
-        DataFrame(
-            {
-                EHRAPY_TYPE_KEY: [
-                    NON_NUMERIC_ENCODED_TAG,
-                    NON_NUMERIC_ENCODED_TAG,
-                    NON_NUMERIC_ENCODED_TAG,
-                    NON_NUMERIC_ENCODED_TAG,
-                    NON_NUMERIC_ENCODED_TAG,
-                    NUMERIC_TAG,
-                    NUMERIC_TAG,
-                    NUMERIC_TAG,
-                ]
-            },
-            index=[
-                "ehrapycat_clinic_day_Friday",
-                "ehrapycat_clinic_day_Monday",
-                "ehrapycat_clinic_day_Saturday",
-                "ehrapycat_clinic_day_Sunday",
-                "ehrapycat_survival",
-                "patient_id",
-                "los_days",
-                "b12_values",
-            ],
-        ),
+
+    assert np.all(
+        encoded_ann_data.var[FEATURE_TYPE_KEY]
+        == [
+            CATEGORICAL_TAG,
+            CATEGORICAL_TAG,
+            CATEGORICAL_TAG,
+            CATEGORICAL_TAG,
+            CATEGORICAL_TAG,
+            NUMERIC_TAG,
+            NUMERIC_TAG,
+            NUMERIC_TAG,
+        ]
     )
+
     assert pd.api.types.is_bool_dtype(encoded_ann_data.obs["survival"].dtype)
     assert isinstance(encoded_ann_data.obs["clinic_day"].dtype, CategoricalDtype)
 
@@ -245,7 +236,8 @@ def test_custom_encode_again_single_columns_encoding():
     )
     encoded_ann_data_again = encode(encoded_ann_data, autodetect=False, encodings={"label": ["clinic_day"]})
     assert encoded_ann_data_again.X.shape == (5, 5)
-    assert list(encoded_ann_data_again.obs.columns) == ["survival", "clinic_day"]
+    assert len(encoded_ann_data_again.obs.columns) == 2
+    assert set(encoded_ann_data_again.obs.columns) == {"survival", "clinic_day"}
     assert "ehrapycat_survival" in list(encoded_ann_data_again.var_names)
     assert "ehrapycat_clinic_day" in list(encoded_ann_data_again.var_names)
     assert all(
@@ -257,10 +249,12 @@ def test_custom_encode_again_single_columns_encoding():
             "ehrapycat_clinic_day_Sunday",
         ]
     )
-    assert encoded_ann_data_again.uns["var_to_encoding"] == {
-        "survival": "label",
-        "clinic_day": "label",
-    }
+
+    assert np.all(
+        encoded_ann_data_again.var["encoding_mode"].loc[["ehrapycat_survival", "ehrapycat_clinic_day"]]
+        == ["label", "label"]
+    )
+
     assert id(encoded_ann_data_again.X) != id(encoded_ann_data_again.layers["original"])
     assert pd.api.types.is_bool_dtype(encoded_ann_data.obs["survival"].dtype)
     assert isinstance(encoded_ann_data.obs["clinic_day"].dtype, CategoricalDtype)
@@ -275,17 +269,26 @@ def test_custom_encode_again_multiple_columns_encoding():
         encodings={"label": ["survival"], "one-hot": ["clinic_day"]},
     )
     assert encoded_ann_data_again.X.shape == (5, 8)
-    assert list(encoded_ann_data_again.obs.columns) == ["survival", "clinic_day"]
+    assert len(encoded_ann_data_again.obs.columns) == 2
+    assert set(encoded_ann_data_again.obs.columns) == {"survival", "clinic_day"}
     assert "ehrapycat_survival" in list(encoded_ann_data_again.var_names)
     assert "ehrapycat_clinic_day_Friday" in list(encoded_ann_data_again.var_names)
     assert all(
         survival_outcome not in list(encoded_ann_data_again.var_names)
         for survival_outcome in ["ehrapycat_survival_False", "ehrapycat_survival_True"]
     )
-    assert encoded_ann_data_again.uns["var_to_encoding"] == {
-        "survival": "label",
-        "clinic_day": "one-hot",
-    }
+
+    assert np.all(
+        encoded_ann_data_again.var.loc[encoded_ann_data_again.var["unencoded_var_names"] == "survival", "encoding_mode"]
+        == "label"
+    )
+    assert np.all(
+        encoded_ann_data_again.var.loc[
+            encoded_ann_data_again.var["unencoded_var_names"] == "clinic_day", "encoding_mode"
+        ]
+        == "one-hot"
+    )
+
     assert id(encoded_ann_data_again.X) != id(encoded_ann_data_again.layers["original"])
     assert pd.api.types.is_bool_dtype(encoded_ann_data.obs["survival"].dtype)
     assert isinstance(encoded_ann_data.obs["clinic_day"].dtype, CategoricalDtype)
@@ -294,21 +297,15 @@ def test_custom_encode_again_multiple_columns_encoding():
 def test_update_encoding_scheme_1():
     # just a dummy adata object that won't be used actually
     adata = read_csv(dataset_path=f"{_TEST_PATH}/dataset1.csv")
-    adata.uns["encoding_to_var"] = {
-        "label": ["col1", "col2", "col3"],
-        "one-hot": ["col4"],
-    }
-    adata.uns["var_to_encoding"] = {
-        "col1": "label",
-        "col2": "label",
-        "col3": "label",
-        "col4": "one-hot",
-    }
+
+    adata.var["unencoded_var_names"] = ["col1", "col2", "col3", "col4", "col5"]
+    adata.var["encoding_mode"] = ["label", "label", "label", "one-hot", "one-hot"]
+
     new_encodings = {"one-hot": ["col1"], "label": ["col2", "col3", "col4"]}
 
     expected_encodings = {
         "label": ["col2", "col3", "col4"],
-        "one-hot": ["col1"],
+        "one-hot": ["col1", "col5"],
     }
     updated_encodings = _reorder_encodings(adata, new_encodings)
 

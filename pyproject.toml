@@ -67,7 +67,8 @@ dependencies = [
     "tableone",
     "imbalanced-learn",
     "fknni",
-    "filelock"
+    "python-dateutil",
+    "filelock",
 ]
 
 [project.optional-dependencies]

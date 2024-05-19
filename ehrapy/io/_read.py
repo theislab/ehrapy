@@ -44,7 +44,7 @@ def read_csv(
         columns_x_only: These columns will be added to X only and all remaining columns to obs.
                         Note that datetime columns will always be added to .obs though.
         return_dfs: Whether to return one or several Pandas DataFrames.
-        cache: Whether to write to cache when reading or not. Defaults to False .
+        cache: Whether to write to cache when reading or not. Defaults to False.
         download_dataset_name: Name of the file or directory after download.
         backup_url: URL to download the data file(s) from, if the dataset is not yet on disk.
         is_archive: Whether the downloaded file is an archive.
@@ -511,8 +511,6 @@ def _read_from_cache(path_cache: Path) -> AnnData:
     # in case columns_obs_only has not been passed
     except KeyError:
         columns_obs_only = []
-    # required since reading from cache returns a numpy array instead of a list here
-    cached_adata.uns["numerical_columns"] = list(cached_adata.uns["numerical_columns"])
     # recreate the original AnnData object with the index column for obs and obs only columns
     cached_adata = _decode_cached_adata(cached_adata, columns_obs_only)
 
@@ -627,8 +625,10 @@ def _decode_cached_adata(adata: AnnData, column_obs_only: list[str]) -> AnnData:
         if not var_name.startswith("ehrapycat_"):
             break
         value_name = var_name[10:]
-        original_values = adata.uns["original_values_categoricals"][value_name]
-        adata.X[:, idx : idx + 1] = original_values
+        if value_name not in adata.obs.keys():
+            raise ValueError(f"Unencoded values for feature '{value_name}' not found in obs!")
+        original_values = adata.obs[value_name]
+        adata.X[:, idx] = original_values
         # update var name per categorical
         var_names[idx] = value_name
     # drop all columns, that are not obs only in obs
@@ -639,11 +639,8 @@ def _decode_cached_adata(adata: AnnData, column_obs_only: list[str]) -> AnnData:
     # set the new var names (unencoded ones)
     adata.var.index = var_names
     adata.layers["original"] = adata.X.copy()
-    # reset uns but keep numerical columns
-    numerical_columns = adata.uns["numerical_columns"]
+    # reset uns
     adata.uns = OrderedDict()
-    adata.uns["numerical_columns"] = numerical_columns
-    adata.uns["non_numerical_columns"] = list(set(adata.var_names) ^ set(numerical_columns))
 
     return adata
 

@@ -12,7 +12,7 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.svm import SVC, SVR
 
 from ehrapy.anndata import anndata_to_df, check_feature_types
-from ehrapy.anndata._constants import CATEGORICAL_TAG, CONTINUOUS_TAG, DATE_TAG, FEATURE_TYPE_KEY
+from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 
 
 @check_feature_types
@@ -92,7 +92,7 @@ def rank_features_supervised(
             f"Feature {predicted_feature} is of type 'date' and cannot be used for prediction. Please choose a continuous or categorical feature."
         )
 
-    if prediction_type == CONTINUOUS_TAG:
+    if prediction_type == NUMERIC_TAG:
         if model == "regression":
             predictor = LinearRegression(**kwargs)
         elif model == "svm":

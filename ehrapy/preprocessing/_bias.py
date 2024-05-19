@@ -7,7 +7,7 @@ import pandas as pd
 from anndata import AnnData
 
 from ehrapy.anndata import anndata_to_df, check_feature_types
-from ehrapy.anndata._constants import CATEGORICAL_TAG, CONTINUOUS_TAG, DATE_TAG, FEATURE_TYPE_KEY
+from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 
 
 @check_feature_types
@@ -166,7 +166,7 @@ def detect_bias(
         "Standardized Mean Difference": [],
     }
     adata.uns["smd"] = {}
-    continuous_var_names = adata.var_names[adata.var[FEATURE_TYPE_KEY] == CONTINUOUS_TAG]
+    continuous_var_names = adata.var_names[adata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG]
     for sens_feature in cat_sens_features:
         sens_feature_groups = sorted(adata_df[sens_feature].unique())
         if len(sens_feature_groups) == 1:
@@ -188,8 +188,10 @@ def detect_bias(
             for comp_feature in continuous_var_names:
                 if abs_smd[comp_feature] > smd_threshold:
                     smd_results["Sensitive Feature"].append(sens_feature)
-                    _get_group_name(sens_feature, group) if sens_feature.startswith("ehrapycat_") else group
-                    smd_results["Sensitive Group"].append(group)
+                    group_name = (
+                        _get_group_name(sens_feature, group) if sens_feature.startswith("ehrapycat_") else group
+                    )
+                    smd_results["Sensitive Group"].append(group_name)
                     smd_results["Compared Feature"].append(comp_feature)
                     smd_results["Standardized Mean Difference"].append(smd[comp_feature])
         adata.uns["smd"][sens_feature] = smd_df

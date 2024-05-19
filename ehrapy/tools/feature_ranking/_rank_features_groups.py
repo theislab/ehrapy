@@ -7,8 +7,13 @@ import numpy as np
 import pandas as pd
 import scanpy as sc
 
-from ehrapy.anndata import move_to_x
-from ehrapy.anndata._constants import EHRAPY_TYPE_KEY, NON_NUMERIC_ENCODED_TAG, NUMERIC_TAG
+from ehrapy.anndata import check_feature_types, infer_feature_types, move_to_x
+from ehrapy.anndata._constants import (
+    CATEGORICAL_TAG,
+    DATE_TAG,
+    FEATURE_TYPE_KEY,
+    NUMERIC_TAG,
+)
 from ehrapy.preprocessing import encode
 
 if TYPE_CHECKING:
@@ -148,6 +153,7 @@ def _get_groups_order(groups_subset, group_names, reference):
     return tuple(groups_order)
 
 
+@check_feature_types
 def _evaluate_categorical_features(
     adata,
     groupby,
@@ -202,11 +208,14 @@ def _evaluate_categorical_features(
     groups_order = _get_groups_order(groups_subset=groups, group_names=group_names, reference=reference)
 
     groups_values = adata.obs[groupby].to_numpy()
-    for feature in adata.var_names[adata.var[EHRAPY_TYPE_KEY] == NON_NUMERIC_ENCODED_TAG]:
+    for feature in adata.var_names[adata.var[FEATURE_TYPE_KEY] == CATEGORICAL_TAG]:
         if feature == groupby or "ehrapycat_" + feature == groupby or feature == "ehrapycat_" + groupby:
             continue
 
-        feature_values = adata[:, feature].X.flatten().toarray()
+        try:
+            feature_values = adata[:, feature].X.flatten().toarray()
+        except ValueError as e:
+            raise ValueError(f"Feature {feature} is not encoded. Please encode it using `ehrapy.pp.encode`") from e
 
         pvals = []
         scores = []
@@ -296,6 +305,7 @@ def _check_columns_to_rank_dict(columns_to_rank):
     return _var_subset, _obs_subset
 
 
+@check_feature_types
 def rank_features_groups(
     adata: AnnData,
     groupby: str,
@@ -351,7 +361,7 @@ def rank_features_groups(
         columns_to_rank: Subset of columns to rank. If 'all', all columns are used.
                          If a dictionary, it must have keys 'var_names' and/or 'obs_names' and values must be iterables of strings
                          such as {'var_names': ['glucose'], 'obs_names': ['age', 'height']}.
-        **kwds: Are passed to test methods. Currently this affects only parameters that
+        **kwds: Are passed to test methods. Currently, this affects only parameters that
                 are passed to :class:`sklearn.linear_model.LogisticRegression`.
                 For instance, you can pass `penalty='l1'` to try to come up with a
                 minimal set of genes that are good predictors (sparse solution meaning few non-zero fitted coefficients).
@@ -459,6 +469,22 @@ def rank_features_groups(
             # the 0th column is a dummy of zeros and is meaningless in this case, and needs to be removed
             adata_minimal = adata_minimal[:, 1:]
 
+        # if the feature type is set in adata.obs, we store the respective feature type in adata_minimal.var
+        adata_minimal.var[FEATURE_TYPE_KEY] = [
+            adata.var[FEATURE_TYPE_KEY].loc[feature]
+            if feature not in adata.obs.keys() and FEATURE_TYPE_KEY in adata.var.keys()
+            else CATEGORICAL_TAG
+            if adata.obs[feature].dtype == "category"
+            else DATE_TAG
+            if pd.api.types.is_datetime64_any_dtype(adata.obs[feature])
+            else NUMERIC_TAG
+            if pd.api.types.is_numeric_dtype(adata.obs[feature])
+            else None
+            for feature in adata_minimal.var_names
+        ]
+        # we infer the feature type for all features for which adata.obs did not provide information on the type
+        infer_feature_types(adata_minimal, output=None)
+
         adata_minimal = encode(adata_minimal, autodetect=True, encodings="label")
         # this is needed because encode() doesn't add this key if there are no categorical columns to encode
         if "encoded_non_numerical_columns" not in adata_minimal.uns:
@@ -486,12 +512,12 @@ def rank_features_groups(
 
     group_names = pd.Categorical(adata.obs[groupby].astype(str)).categories.tolist()
 
-    if list(adata.var_names[adata.var[EHRAPY_TYPE_KEY] == NUMERIC_TAG]):
+    if list(adata.var_names[adata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG]):
         # Rank numerical features
 
         # Without copying `numerical_adata` is a view, and code throws an error
         # because of "object" type of .X
-        numerical_adata = adata[:, adata.var_names[adata.var[EHRAPY_TYPE_KEY] == NUMERIC_TAG]].copy()
+        numerical_adata = adata[:, adata.var_names[adata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG]].copy()
         numerical_adata.X = numerical_adata.X.astype(float)
 
         sc.tl.rank_genes_groups(
@@ -524,7 +550,7 @@ def rank_features_groups(
             groups_order=group_names,
         )
 
-    if list(adata.var_names[adata.var[EHRAPY_TYPE_KEY] == NON_NUMERIC_ENCODED_TAG]):
+    if list(adata.var_names[adata.var[FEATURE_TYPE_KEY] == CATEGORICAL_TAG]):
         (
             categorical_names,
             categorical_scores,

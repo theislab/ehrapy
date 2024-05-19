@@ -11,7 +11,7 @@ from pandas import DataFrame
 from pandas.testing import assert_frame_equal
 
 import ehrapy as ep
-from ehrapy.anndata._constants import EHRAPY_TYPE_KEY, NON_NUMERIC_TAG, NUMERIC_TAG
+from ehrapy.anndata._constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrapy.anndata.anndata_ext import (
     NotEncodedError,
     _assert_encoded,
@@ -54,11 +54,10 @@ def setup_binary_df_to_anndata() -> DataFrame:
     col2_val = ["another_str" + str(idx) for idx in range(100)]
     col3_val = [0 for _ in range(100)]
     col4_val = [1.0 for _ in range(100)]
-    col5_val = [np.NaN for _ in range(100)]
-    col6_val = [0.0 if idx % 2 == 0 else np.NaN for idx in range(100)]
-    col7_val = [idx % 2 for idx in range(100)]
-    col8_val = [float(idx % 2) for idx in range(100)]
-    col9_val = [idx % 3 if idx % 3 in {0, 1} else np.NaN for idx in range(100)]
+    col5_val = [0.0 if idx % 2 == 0 else np.NaN for idx in range(100)]
+    col6_val = [idx % 2 for idx in range(100)]
+    col7_val = [float(idx % 2) for idx in range(100)]
+    col8_val = [idx % 3 if idx % 3 in {0, 1} else np.NaN for idx in range(100)]
     df = DataFrame(
         {
             "col1": col1_val,
@@ -66,10 +65,9 @@ def setup_binary_df_to_anndata() -> DataFrame:
             "col3": col3_val,
             "col4": col4_val,
             "col5": col5_val,
-            "col6": col6_val,
-            "col7_binary_int": col7_val,
-            "col8_binary_float": col8_val,
-            "col9_binary_missing_values": col9_val,
+            "col6_binary_int": col6_val,
+            "col7_binary_float": col7_val,
+            "col8_binary_missing_values": col8_val,
         }
     )
 
@@ -142,20 +140,25 @@ def test_move_to_x(adata_move_obs_mix):
     assert set(new_adata_num.obs.columns) == {"name"}
     assert {str(col) for col in new_adata_num.obs.dtypes} == {"category"}
     assert {str(col) for col in new_adata_non_num.obs.dtypes} == {"float32", "category"}
+
     assert_frame_equal(
         new_adata_non_num.var,
         DataFrame(
-            {EHRAPY_TYPE_KEY: [NUMERIC_TAG, NUMERIC_TAG, NON_NUMERIC_TAG]},
+            {FEATURE_TYPE_KEY: [NUMERIC_TAG, NUMERIC_TAG, CATEGORICAL_TAG]},
             index=["los_days", "b12_values", "name"],
         ),
     )
+
     assert_frame_equal(
         new_adata_num.var,
         DataFrame(
-            {EHRAPY_TYPE_KEY: [NUMERIC_TAG, NUMERIC_TAG, NON_NUMERIC_TAG, NUMERIC_TAG]},
+            {FEATURE_TYPE_KEY: [NUMERIC_TAG, NUMERIC_TAG, CATEGORICAL_TAG, np.nan]},
             index=["los_days", "b12_values", "name", "clinic_id"],
         ),
     )
+    ep.ad.infer_feature_types(new_adata_num, output=None)
+    assert np.all(new_adata_num.var[FEATURE_TYPE_KEY] == [NUMERIC_TAG, NUMERIC_TAG, CATEGORICAL_TAG, NUMERIC_TAG])
+
     assert_frame_equal(
         new_adata_num.obs,
         DataFrame(
@@ -163,6 +166,7 @@ def test_move_to_x(adata_move_obs_mix):
             index=[str(idx) for idx in range(5)],
         ).astype({"name": "category"}),
     )
+
     assert_frame_equal(
         new_adata_non_num.obs,
         DataFrame(
@@ -215,7 +219,6 @@ def test_delete_from_obs(adata_move_obs_mix):
     adata = delete_from_obs(adata, ["los_days"])
     assert not {"los_days"}.issubset(set(adata.obs.columns))
     assert {"los_days"}.issubset(set(adata.var_names))
-    assert EHRAPY_TYPE_KEY in adata.var.columns
 
 
 def test_df_to_anndata_simple(setup_df_to_anndata):
@@ -356,21 +359,21 @@ def test_anndata_to_df_layers(setup_anndata_to_df):
 
 def test_detect_binary_columns(setup_binary_df_to_anndata):
     adata = df_to_anndata(setup_binary_df_to_anndata)
+    ep.ad.infer_feature_types(adata, output=None)
 
     assert_frame_equal(
         adata.var,
         DataFrame(
             {
-                EHRAPY_TYPE_KEY: [
-                    NON_NUMERIC_TAG,
-                    NON_NUMERIC_TAG,
-                    NUMERIC_TAG,
-                    NUMERIC_TAG,
-                    NUMERIC_TAG,
-                    NUMERIC_TAG,
-                    NUMERIC_TAG,
-                    NUMERIC_TAG,
-                    NUMERIC_TAG,
+                FEATURE_TYPE_KEY: [
+                    CATEGORICAL_TAG,
+                    CATEGORICAL_TAG,
+                    CATEGORICAL_TAG,
+                    CATEGORICAL_TAG,
+                    CATEGORICAL_TAG,
+                    CATEGORICAL_TAG,
+                    CATEGORICAL_TAG,
+                    CATEGORICAL_TAG,
                 ]
             },
             index=[
@@ -379,10 +382,9 @@ def test_detect_binary_columns(setup_binary_df_to_anndata):
                 "col3",
                 "col4",
                 "col5",
-                "col6",
-                "col7_binary_int",
-                "col8_binary_float",
-                "col9_binary_missing_values",
+                "col6_binary_int",
+                "col7_binary_float",
+                "col8_binary_missing_values",
             ],
         ),
     )
@@ -393,36 +395,15 @@ def test_detect_mixed_binary_columns():
         {"Col1": list(range(4)), "Col2": ["str" + str(i) for i in range(4)], "Col3": [1.0, 0.0, np.nan, 1.0]}
     )
     adata = ep.ad.df_to_anndata(df)
+    ep.ad.infer_feature_types(adata, output=None)
+
     assert_frame_equal(
         adata.var,
         DataFrame(
-            {EHRAPY_TYPE_KEY: [NUMERIC_TAG, NON_NUMERIC_TAG, NUMERIC_TAG]},
+            {FEATURE_TYPE_KEY: [NUMERIC_TAG, CATEGORICAL_TAG, CATEGORICAL_TAG]},
             index=["Col1", "Col2", "Col3"],
         ),
     )
-
-
-@pytest.fixture
-def adata_numeric():
-    obs_data = {"ID": ["Patient1", "Patient2", "Patient3"], "Age": [31, 94, 62]}
-
-    X_numeric = np.array([[1, 3.4, 2.1, 4], [2, 6.9, 7.6, 2], [1, 4.5, 1.3, 7]], dtype=np.dtype(float))
-    var_numeric = {
-        "Feature": ["Numeric1", "Numeric2", "Numeric3", "Numeric4"],
-        "Type": ["Numeric", "Numeric", "Numeric", "Numeric"],
-    }
-
-    adata_numeric = AnnData(
-        X=X_numeric,
-        obs=pd.DataFrame(data=obs_data),
-        var=pd.DataFrame(data=var_numeric, index=var_numeric["Feature"]),
-        uns=OrderedDict(),
-    )
-    adata_numeric.var[EHRAPY_TYPE_KEY] = [NUMERIC_TAG, NUMERIC_TAG, NON_NUMERIC_TAG, NON_NUMERIC_TAG]
-    adata_numeric.uns["numerical_columns"] = ["Numeric1", "Numeric2"]
-    adata_numeric.uns["non_numerical_columns"] = ["String1", "String2"]
-
-    return adata_numeric
 
 
 @pytest.fixture
@@ -446,9 +427,8 @@ def adata_strings_encoded():
         obs=pd.DataFrame(data=obs_data),
         var=pd.DataFrame(data=var_strings, index=var_strings["Feature"]),
     )
-    adata_strings.var[EHRAPY_TYPE_KEY] = [NUMERIC_TAG, NUMERIC_TAG, NON_NUMERIC_TAG, NON_NUMERIC_TAG]
-    adata_strings.uns["numerical_columns"] = ["Numeric1", "Numeric2"]
-    adata_strings.uns["non_numerical_columns"] = ["String1", "String2"]
+    adata_strings.var[FEATURE_TYPE_KEY] = [NUMERIC_TAG, NUMERIC_TAG, CATEGORICAL_TAG, CATEGORICAL_TAG]
+
     adata_encoded = ep.pp.encode(adata_strings.copy(), autodetect=True, encodings="label")
 
     return adata_strings, adata_encoded

@@ -9,14 +9,12 @@ import numpy as np
 import pandas as pd
 from anndata import AnnData, concat
 from lamin_utils import logger
-from rich import print
-from rich.text import Text
-from rich.tree import Tree
 from scanpy.get import obs_df, rank_genes_groups_df, var_df
 from scipy import sparse
 from scipy.sparse import issparse
 
-from ehrapy.anndata._constants import EHRAPY_TYPE_KEY, NON_NUMERIC_ENCODED_TAG, NON_NUMERIC_TAG, NUMERIC_TAG
+from ehrapy.anndata import check_feature_types
+from ehrapy.anndata._constants import FEATURE_TYPE_KEY, NUMERIC_TAG
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Iterable, Sequence
@@ -33,7 +31,7 @@ def df_to_anndata(
     """Transform a given pandas dataframe into an AnnData object.
 
     Note that columns containing boolean values (either 0/1 or T(t)rue/F(f)alse)
-    will be stored as boolean columns whereas the other non numerical columns will be stored as categorical values.
+    will be stored as boolean columns whereas the other non-numerical columns will be stored as categorical values.
 
     Args:
         df: The pandas dataframe to be transformed
@@ -95,14 +93,7 @@ def df_to_anndata(
     # initializing an OrderedDict with a non-empty dict might not be intended,
     # see: https://stackoverflow.com/questions/25480089/right-way-to-initialize-an-ordereddict-using-its-constructor-such-that-it-retain/25480206
     uns = OrderedDict()  # type: ignore
-    # store all numerical/non-numerical columns that are not obs only
-    binary_columns = _detect_binary_columns(df, numerical_columns)
-
     var = pd.DataFrame(index=list(dataframes.df.columns))
-    var[EHRAPY_TYPE_KEY] = NON_NUMERIC_TAG
-    var.loc[var.index.isin(list(set(numerical_columns) | set(binary_columns))), EHRAPY_TYPE_KEY] = NUMERIC_TAG
-    # in case of encoded columns by ehrapy, want to be able to read it back in
-    var.loc[var.index.str.contains("ehrapycat"), EHRAPY_TYPE_KEY] = NON_NUMERIC_ENCODED_TAG
 
     all_num = True if len(numerical_columns) == len(list(dataframes.df.columns)) else False
     X = X.astype(np.number) if all_num else X.astype(object)
@@ -176,7 +167,7 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False)
     """Move inplace or copy features from X to obs.
 
     Note that columns containing boolean values (either 0/1 or True(true)/False(false))
-    will be stored as boolean columns whereas the other non numerical columns will be stored as categorical.
+    will be stored as boolean columns whereas the other non-numerical columns will be stored as categorical.
 
     Args:
         adata: The AnnData object
@@ -226,17 +217,18 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False)
     return adata
 
 
+@check_feature_types
 def _get_var_indices_for_type(adata: AnnData, tag: str) -> list[str]:
     """Get indices of columns in var for a given tag.
 
     Args:
         adata: The AnnData object
-        tag: The tag to search for, should be one of `NUMERIC_TAG`, `NON_NUMERIC_TAG` or `NON_NUMERIC_ENCODED_TAG`
+        tag: The tag to search for, should be one of 'CATEGORIGAL_TAG', 'NUMERIC_TAG', 'DATE_TAG'
 
     Returns:
         List of numeric columns
     """
-    return adata.var_names[adata.var[EHRAPY_TYPE_KEY] == tag].tolist()
+    return adata.var_names[adata.var[FEATURE_TYPE_KEY] == tag].tolist()
 
 
 def delete_from_obs(adata: AnnData, to_delete: list[str]) -> AnnData:
@@ -311,7 +303,7 @@ def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
         new_adata.obs = adata.obs[adata.obs.columns[~adata.obs.columns.isin(cols_not_in_x)]]
 
         # AnnData's concat discards var if they don't match in their keys, so we need to create a new var
-        created_var = _create_new_var(adata, cols_not_in_x)
+        created_var = pd.DataFrame(index=cols_not_in_x)
         new_adata.var = pd.concat([adata.var, created_var], axis=0)
     else:
         new_adata = adata
@@ -336,141 +328,6 @@ def _get_column_indices(adata: AnnData, col_names: str | Iterable[str]) -> list[
     return indices
 
 
-def type_overview(data: AnnData, sort_by: str | None = None, sort_reversed: bool = False) -> None:  # pragma: no cover
-    """Prints the current state of an :class:`~anndata.AnnData` object in a tree format.
-
-    Output can be printed in sorted format by using one of `dtype`, `order`, `num_cats` or `None`, which sorts by data type, lexicographical order,
-    number of unique values (excluding NaN's) and unsorted respectively. Note that sorting by `num_cats` only affects
-    encoded variables currently and will display unencoded vars unsorted.
-
-    Args:
-        data: :class:`~anndata.AnnData` object to display
-        sort_by: How the tree output should be sorted. One of `dtype`, `order`, `num_cats` or None (Defaults to None -> unsorted)
-        sort_reversed: Whether to sort in reversed order or not
-
-    Examples:
-        >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.ad.type_overview(adata)
-    """
-    if isinstance(data, AnnData):
-        _adata_type_overview(data, sort_by, sort_reversed)
-    else:
-        raise ValueError(f"Unable to present object of type {type(data)}. Can only display AnnData objects!")
-
-
-def _adata_type_overview(
-    adata: AnnData, sort_by: str | None = None, sort_reversed: bool = False
-) -> None:  # pragma: no cover
-    """Display the :class:`~anndata.AnnData object in its current state (encoded and unencoded variables, obs)
-
-    Args:
-        adata: The :class:`~anndata.AnnData object to display
-        sort_by: Whether to sort output or not
-        sort_reversed: Whether to sort output in reversed order or not
-    """
-
-    tree = Tree(
-        f"[b green]Variable names for AnnData object with {len(adata.obs_names)} obs and {len(adata.var_names)} vars",
-        guide_style="underline2 bright_blue",
-    )
-
-    if "var_to_encoding" in adata.uns.keys():
-        original_values = adata.uns["original_values_categoricals"]
-        branch = tree.add("🔐 Encoded variables", style="b green")
-        dtype_dict = _infer_dtype_per_encoded_var(list(original_values.keys()), original_values)
-        # sort encoded vars by lexicographical order of original values
-        if sort_by == "order":
-            encoded_list = sorted(original_values.keys(), reverse=sort_reversed)
-            for categorical in encoded_list:
-                branch.add(
-                    f"[blue]{categorical} -> {dtype_dict[categorical][1]} categories;"
-                    f" [green]{adata.uns['var_to_encoding'][categorical].replace('encoding', '').replace('_', ' ').strip()} [blue]encoded; [green]original data type: [blue]{dtype_dict[categorical][0]}"
-                )
-        # sort encoded vars by data type of the original values or the number of unique values in original data (excluding NaNs)
-        elif sort_by == "dtype" or sort_by == "num_cats":
-            sorted_by_type = dict(
-                sorted(
-                    dtype_dict.items(), key=lambda item: item[1][0 if sort_by == "dtype" else 1], reverse=sort_reversed
-                )
-            )
-            for categorical in sorted_by_type:
-                branch.add(
-                    f"[blue]{categorical} -> {sorted_by_type[categorical][1]} categories;"
-                    f" [green]{adata.uns['var_to_encoding'][categorical].replace('encoding', '').replace('_', ' ').strip()} [blue]encoded; [green]original data type: [blue]{sorted_by_type[categorical][0]}"
-                )
-        # display in unsorted order
-        else:
-            encoded_list = original_values.keys()
-            for categorical in encoded_list:
-                branch.add(
-                    f"[blue]{categorical} -> {dtype_dict[categorical][1]} categories;"
-                    f" [green]{adata.uns['var_to_encoding'][categorical].replace('encoding', '').replace('_', ' ').strip()} [blue]encoded; [green]original data type: [blue]{dtype_dict[categorical][0]}"
-                )
-    branch_num = tree.add(Text("🔓 Unencoded variables"), style="b green")
-
-    if sort_by == "order":
-        var_names = sorted(adata.var_names.values, reverse=sort_reversed)
-        _sort_by_order_or_none(adata, branch_num, var_names)
-    elif sort_by == "dtype":
-        var_names = list(adata.var_names.values)
-        _sort_by_type(adata, branch_num, var_names, sort_reversed)
-    else:
-        var_names = list(adata.var_names.values)
-        _sort_by_order_or_none(adata, branch_num, var_names)
-
-    if sort_by:
-        logger.info(
-            "Displaying AnnData object in sorted mode. Note that this might not be the exact same order of the variables in X or var are stored!"
-        )
-    print(tree)
-
-
-def _sort_by_order_or_none(adata: AnnData, branch, var_names: list[str]):
-    """Add branches to tree for sorting by order or unsorted."""
-    var_names_val = list(adata.var_names.values)
-    for other_vars in var_names:
-        if not other_vars.startswith("ehrapycat"):
-            idx = var_names_val.index(other_vars)
-            unique_categoricals = pd.unique(adata.X[:, idx : idx + 1].flatten())
-            data_type = pd.api.types.infer_dtype(unique_categoricals)
-            branch.add(f"[blue]{other_vars} -> [green]data type: [blue]{data_type}")
-
-
-def _sort_by_type(adata: AnnData, branch, var_names: list[str], sort_reversed: bool):
-    """Sort tree output by datatype"""
-    tmp_dict = {}
-    var_names_val = list(adata.var_names.values)
-
-    for other_vars in var_names:
-        if not other_vars.startswith("ehrapycat"):
-            idx = var_names_val.index(other_vars)
-            unique_categoricals = pd.unique(adata.X[:, idx : idx + 1].flatten())
-            data_type = pd.api.types.infer_dtype(unique_categoricals)
-            tmp_dict[other_vars] = data_type
-
-    sorted_by_type = dict(sorted(tmp_dict.items(), key=lambda item: item[1], reverse=sort_reversed))
-    for var in sorted_by_type:
-        branch.add(f"[blue]{var} -> [green]data type: [blue]{sorted_by_type[var]}")
-
-
-def _infer_dtype_per_encoded_var(encoded_list: list[str], original_values) -> dict[str, tuple[str, int]]:
-    """Infer dtype of each encoded varibale of an AnnData object."""
-    dtype_dict = {}
-    for categorical in encoded_list:
-        unique_categoricals = pd.unique(original_values[categorical].flatten())
-        categorical_type = pd.api.types.infer_dtype(unique_categoricals)
-        num_unique_values = pd.DataFrame(unique_categoricals).dropna()[0].nunique()
-        dtype_dict[categorical] = (categorical_type, num_unique_values)
-
-    return dtype_dict
-
-
-def _single_quote_string(name: str) -> str:  # pragma: no cover
-    """Single quote a string to inject it into f-strings, since backslashes cannot be in double f-strings."""
-    return f"'{name}'"
-
-
 def _assert_encoded(adata: AnnData):
     try:
         assert np.issubdtype(adata.X.dtype, np.number)
@@ -478,6 +335,7 @@ def _assert_encoded(adata: AnnData):
         raise NotEncodedError("The AnnData object has not yet been encoded.") from AssertionError
 
 
+@check_feature_types
 def get_numeric_vars(adata: AnnData) -> list[str]:
     """Fetches the column names for numeric variables in X.
 
@@ -489,11 +347,7 @@ def get_numeric_vars(adata: AnnData) -> list[str]:
     """
     _assert_encoded(adata)
 
-    # This behaviour is consistent with the previous behaviour, allowing for a simple fully numeric X
-    if EHRAPY_TYPE_KEY not in adata.var.columns:
-        return list(adata.var_names.values)
-    else:
-        return _get_var_indices_for_type(adata, NUMERIC_TAG)
+    return _get_var_indices_for_type(adata, NUMERIC_TAG)
 
 
 def assert_numeric_vars(adata: AnnData, vars: Sequence[str]):
@@ -545,59 +399,6 @@ def set_numeric_vars(
     return adata
 
 
-def _update_uns(
-    adata: AnnData, moved_columns: list[str], to_x: bool = False
-) -> tuple[list[str], list[str], list[str] | None]:
-    """Updates .uns of adata to reflect the changes made on the object by moving columns from X to obs or vice versa.
-
-    1.) Moving `col1` from `X` to `obs`: `col1` is either numerical or non_numerical, so delete it from the corresponding entry in `uns`
-    2.) Moving `col1` from `obs` to `X`: `col1` is either numerical or non_numerical, so add it to the corresponding entry in `uns`
-
-    Args:
-        adata: class:`~anndata.AnnData` object
-        moved_columns: List of column names to be moved
-        to_x: Whether to move from `obs` to `X` or vice versa
-
-    Returns:
-        :class:`~anndata.AnnData` object with updated .uns
-    """
-    moved_columns_set = set(moved_columns)
-    if not to_x:  # moving from `X` to `obs`, delete it from the corresponding entry in `uns`.
-        num_set = set(adata.uns["numerical_columns"].copy())
-        non_num_set = set(adata.uns["non_numerical_columns"].copy())
-        var_num = []
-        for var in moved_columns_set:
-            if var in num_set:
-                var_num.append(var)
-                num_set -= {var}
-            elif var in non_num_set:
-                non_num_set -= {var}
-        return list(num_set), list(non_num_set), var_num
-    else:  # moving from `obs` to `X`, add it to the corresponding entry in `uns`.
-        all_moved_non_num_columns = moved_columns_set & set(adata.obs.select_dtypes(exclude="number").columns)
-        all_moved_num_columns = list(moved_columns_set ^ all_moved_non_num_columns)
-        return all_moved_num_columns, list(all_moved_non_num_columns), None
-
-
-def _create_new_var(adata: AnnData, cols_not_in_x: list[str]) -> pd.DataFrame:
-    """Create a new var DataFrame with the EHRAPY_TYPE_KEY column set for entries from .obs.
-
-    Args:
-        adata: From where to get the .obs
-        cols_not_in_x: .obs columns to move to X
-
-    Returns:
-        New var DataFrame with EHRAPY_TYPE_KEY column set for entries from .obs
-    """
-    all_moved_num_columns = set(cols_not_in_x) & set(adata.obs.select_dtypes(include="number").columns)
-
-    new_var = pd.DataFrame(index=cols_not_in_x)
-    new_var[EHRAPY_TYPE_KEY] = NON_NUMERIC_TAG
-    new_var.loc[list(all_moved_num_columns), EHRAPY_TYPE_KEY] = NUMERIC_TAG
-
-    return new_var
-
-
 def _detect_binary_columns(df: pd.DataFrame, numerical_columns: list[str]) -> list[str]:
     """Detect all columns that contain only 0 and 1 (besides NaNs).
 
@@ -628,7 +429,7 @@ def _cast_obs_columns(obs: pd.DataFrame) -> pd.DataFrame:
     """
     # only cast non numerical columns
     object_columns = list(obs.select_dtypes(exclude=["number", "category", "bool"]).columns)
-    # type cast each non numerical column to either bool (if possible) or category else
+    # type cast each non-numerical column to either bool (if possible) or category else
     obs[object_columns] = obs[object_columns].apply(
         lambda obs_name: obs_name.astype("category")
         if not set(pd.unique(obs_name)).issubset({False, True, np.NaN})

@@ -6,6 +6,7 @@ import pytest
 
 import ehrapy as ep
 import ehrapy.tools.feature_ranking._rank_features_groups as _utils
+from ehrapy.anndata._constants import FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrapy.io._read import read_csv
 
 CURRENT_DIR = Path(__file__).parent
@@ -205,6 +206,10 @@ class TestHelperFunctions:
 
     def test_evaluate_categorical_features(self):
         adata = ep.dt.mimic_2(encoded=False)
+        ep.ad.infer_feature_types(adata, output=None)
+        adata.var[FEATURE_TYPE_KEY].loc["hour_icu_intime"] = (
+            NUMERIC_TAG  # This is detected as categorical, so we need to correct that
+        )
         adata = ep.pp.encode(adata, autodetect=True, encodings="label")
 
         group_names = pd.Categorical(adata.obs["service_unit"].astype(str)).categories.tolist()
@@ -235,7 +240,6 @@ class TestHelperFunctions:
 class TestRankFeaturesGroups:
     def test_real_dataset(self):
         adata = ep.dt.mimic_2(encoded=True)
-
         ep.tl.rank_features_groups(adata, groupby="service_unit")
 
         assert "rank_features_groups" in adata.uns
@@ -255,9 +259,8 @@ class TestRankFeaturesGroups:
 
     def test_only_continous_features(self):
         adata = ep.dt.mimic_2(encoded=True)
-        adata.uns["non_numerical_columns"] = []
-
         ep.tl.rank_features_groups(adata, groupby="service_unit")
+
         assert "rank_features_groups" in adata.uns
         assert "names" in adata.uns["rank_features_groups"]
         assert "pvals" in adata.uns["rank_features_groups"]
@@ -267,8 +270,6 @@ class TestRankFeaturesGroups:
 
     def test_only_cat_features(self):
         adata = ep.dt.mimic_2(encoded=True)
-        adata.uns["numerical_columns"] = []
-
         ep.tl.rank_features_groups(adata, groupby="service_unit")
         assert "rank_features_groups" in adata.uns
         assert "names" in adata.uns["rank_features_groups"]
@@ -312,7 +313,6 @@ class TestRankFeaturesGroups:
             dataset_path=f"{_TEST_PATH}/dataset1.csv",
             columns_obs_only=["disease", "station", "sys_bp_entry", "dia_bp_entry"],
         )
-
         ep.tl.rank_features_groups(adata, groupby="disease", field_to_rank=field_to_rank)
 
         # check standard rank_features_groups entries

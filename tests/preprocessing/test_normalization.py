@@ -8,7 +8,7 @@ import pytest
 from anndata import AnnData
 
 import ehrapy as ep
-from ehrapy.anndata._constants import EHRAPY_TYPE_KEY, NON_NUMERIC_TAG, NUMERIC_TAG
+from ehrapy.anndata._constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrapy.io._read import read_csv
 
 CURRENT_DIR = Path(__file__).parent
@@ -37,7 +37,7 @@ def adata_to_norm():
     var_data = {
         "Feature": ["Integer1", "Numeric1", "Numeric2", "Numeric3", "String1", "String2"],
         "Type": ["Integer", "Numeric", "Numeric", "Numeric", "String", "String"],
-        EHRAPY_TYPE_KEY: [NON_NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG, "ignore", NON_NUMERIC_TAG, NON_NUMERIC_TAG],
+        FEATURE_TYPE_KEY: [CATEGORICAL_TAG, NUMERIC_TAG, NUMERIC_TAG, "ignore", CATEGORICAL_TAG, CATEGORICAL_TAG],
     }
     adata = AnnData(
         X=X_data,

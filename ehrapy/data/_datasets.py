@@ -3,6 +3,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ehrapy import ehrapy_settings
+from ehrapy.anndata import anndata_to_df, df_to_anndata, infer_feature_types, replace_feature_types
+from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrapy.io._read import read_csv, read_fhir, read_h5ad
 from ehrapy.preprocessing._encoding import encode
 
@@ -37,6 +39,8 @@ def mimic_2(
         columns_obs_only=columns_obs_only,
     )
     if encoded:
+        infer_feature_types(adata, output=None, verbose=False)
+        replace_feature_types(adata, "hour_icu_intime", NUMERIC_TAG)
         return encode(adata, autodetect=True)
 
     return adata
@@ -66,7 +70,6 @@ def mimic_2_preprocessed() -> AnnData:
 
 
 def mimic_3_demo(
-    encoded: bool = False,
     anndata: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
 ) -> dict[str, AnnData] | dict[str, pd.DataFrame]:
@@ -78,7 +81,6 @@ def mimic_3_demo(
     The resulting DataFrame can then be transformed into an AnnData object with :func:`~ehrapy.anndata.df_to_anndata`.
 
     Args:
-        encoded: Whether to return an already encoded object.
         anndata: Whether to return one AnnData object per CSV file. Defaults to False
         columns_obs_only: Columns to include in obs only and not X.
 
@@ -97,10 +99,6 @@ def mimic_3_demo(
         columns_obs_only=columns_obs_only,
         archive_format="zip",
     )
-    if encoded:
-        if not anndata:
-            raise ValueError("Can only encode AnnData objects. Set 'anndata=True' to get AnnData objects.")
-        encode(data, autodetect=True)
 
     return data
 
@@ -133,6 +131,7 @@ def heart_failure(encoded: bool = False, columns_obs_only: dict[str, list[str]] 
         index_column="patient_id",
     )
     if encoded:
+        infer_feature_types(adata, output=None, verbose=False)
         return encode(adata, autodetect=True)
 
     return adata
@@ -170,6 +169,11 @@ def diabetes_130_raw(
         columns_obs_only=columns_obs_only,
     )
     if encoded:
+        infer_feature_types(adata, output=None, verbose=False)
+        replace_feature_types(
+            adata, ["admission_source_id", "discharge_disposition_id", "encounter_id", "patient_nbr"], CATEGORICAL_TAG
+        )
+        replace_feature_types(adata, ["num_procedures", "number_diagnoses", "time_in_hospital"], NUMERIC_TAG)
         return encode(adata, autodetect=True)
 
     return adata
@@ -211,6 +215,8 @@ def diabetes_130_fairlearn(
     )
 
     if encoded:
+        infer_feature_types(adata, output=None, verbose=False)
+        replace_feature_types(adata, ["time_in_hospital", "number_diagnoses", "num_procedures"], NUMERIC_TAG)
         return encode(adata, autodetect=True)
 
     return adata
@@ -238,13 +244,14 @@ def chronic_kidney_disease(
         >>> adata = ep.dt.chronic_kidney_disease(encoded=True)
     """
     adata = read_csv(
-        dataset_path=f"{ehrapy_settings.datasetdir}/chronic_kidney_disease_precessed.csv",
+        dataset_path=f"{ehrapy_settings.datasetdir}/chronic_kidney_disease.csv",
         download_dataset_name="chronic_kidney_disease.csv",
         backup_url="https://figshare.com/ndownloader/files/33989261",
         columns_obs_only=columns_obs_only,
         index_column="Patient_id",
     )
     if encoded:
+        infer_feature_types(adata, output=None, verbose=False)
         return encode(adata, autodetect=True)
 
     return adata
@@ -279,6 +286,7 @@ def breast_tissue(
         index_column="patient_id",
     )
     if encoded:
+        infer_feature_types(adata, output=None, verbose=False)
         return encode(adata, autodetect=True)
 
     return adata
@@ -312,6 +320,8 @@ def cervical_cancer_risk_factors(
         index_column="patient_id",
     )
     if encoded:
+        infer_feature_types(adata, output=None, verbose=False)
+        replace_feature_types(adata, ["STDs (number)", "STDs: Number of diagnosis"], NUMERIC_TAG)
         return encode(adata, autodetect=True)
 
     return adata
@@ -346,6 +356,7 @@ def dermatology(
         index_column="patient_id",
     )
     if encoded:
+        infer_feature_types(adata, output=None, verbose=False)
         return encode(adata, autodetect=True)
 
     return adata
@@ -380,6 +391,7 @@ def echocardiogram(
         index_column="patient_id",
     )
     if encoded:
+        infer_feature_types(adata, output=None, verbose=False)
         return encode(adata, autodetect=True)
 
     return adata
@@ -413,6 +425,7 @@ def hepatitis(
         index_column="patient_id",
     )
     if encoded:
+        infer_feature_types(adata, output=None, verbose=False)
         return encode(adata, autodetect=True)
 
     return adata
@@ -447,6 +460,8 @@ def statlog_heart(
         index_column="patient_id",
     )
     if encoded:
+        infer_feature_types(adata, output=None, verbose=False)
+        replace_feature_types(adata, "number of major vessels", NUMERIC_TAG)
         return encode(adata, autodetect=True)
 
     return adata
@@ -480,6 +495,7 @@ def thyroid(
         index_column="patient_id",
     )
     if encoded:
+        infer_feature_types(adata, output=None, verbose=False)
         return encode(adata, autodetect=True)
 
     return adata
@@ -514,6 +530,7 @@ def breast_cancer_coimbra(
         index_column="patient_id",
     )
     if encoded:
+        infer_feature_types(adata, output=None, verbose=False)
         return encode(adata, autodetect=True)
 
     return adata
@@ -548,6 +565,7 @@ def parkinsons(
         index_column="measurement_id",
     )
     if encoded:
+        infer_feature_types(adata, output=None, verbose=False)
         return encode(adata, autodetect=True)
 
     return adata
@@ -581,6 +599,7 @@ def parkinsons_telemonitoring(
         index_column="measurement_id",
     )
     if encoded:
+        infer_feature_types(adata, output=None, verbose=False)
         return encode(adata, autodetect=True)
 
     return adata
@@ -615,6 +634,7 @@ def parkinsons_disease_classification(
         index_column="measurement_id",
     )
     if encoded:
+        infer_feature_types(adata, output=None, verbose=False)
         return encode(adata, autodetect=True)
 
     return adata
@@ -649,6 +669,7 @@ def parkinson_dataset_with_replicated_acoustic_features(
         index_column="measurement_id",
     )
     if encoded:
+        infer_feature_types(adata, output=None, verbose=False)
         return encode(adata, autodetect=True)
 
     return adata
@@ -683,6 +704,9 @@ def heart_disease(
         index_column="patient_id",
     )
     if encoded:
+        infer_feature_types(adata, output=None, verbose=False)
+        replace_feature_types(adata, ["num"], NUMERIC_TAG)
+        replace_feature_types(adata, ["thal"], CATEGORICAL_TAG)
         return encode(adata, autodetect=True)
 
     return adata
@@ -717,7 +741,16 @@ def synthea_1k_sample(
         archive_format="zip",
     )
 
+    df = anndata_to_df(adata)
+    df.drop(
+        columns=[col for col in df.columns if any(isinstance(x, (list, dict)) for x in df[col].dropna())], inplace=True
+    )
+    df.drop(columns=df.columns[df.isna().all()], inplace=True)
+    adata = df_to_anndata(df, index_column="id")
+
     if encoded:
+        infer_feature_types(adata, output=None, verbose=False)
+        replace_feature_types(adata, ["resource.multipleBirthInteger", "resource.numberOfSeries"], NUMERIC_TAG)
         return encode(adata, autodetect=True)
 
     return adata
