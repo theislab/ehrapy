@@ -74,6 +74,7 @@ Other than tools, preprocessing steps usually don’t return an easily interpret
     :toctree: preprocessing
     :nosignatures:
 
+    preprocessing.encode
     preprocessing.pca
     preprocessing.regress_out
     preprocessing.subsample
@@ -113,16 +114,6 @@ Other than tools, preprocessing steps usually don’t return an easily interpret
     preprocessing.matrix_factorization_impute
     preprocessing.nuclear_norm_minimization_impute
     preprocessing.mice_forest_impute
-```
-
-### Encoding
-
-```{eval-rst}
-.. autosummary::
-    :toctree: preprocessing
-    :nosignatures:
-
-    preprocessing.encode
 ```
 
 ### Normalization
@@ -406,6 +397,8 @@ Methods that extract and visualize tool-specific annotation in an AnnData object
     :nosignatures:
 
     anndata.infer_feature_types
+    anndata.feature_type_overview
+    anndata.replace_feature_types
     anndata.df_to_anndata
     anndata.anndata_to_df
     anndata.move_to_obs
@@ -414,7 +407,6 @@ Methods that extract and visualize tool-specific annotation in an AnnData object
     anndata.get_obs_df
     anndata.get_var_df
     anndata.get_rank_features_df
-    anndata.type_overview
 ```
 
 ## Settings
