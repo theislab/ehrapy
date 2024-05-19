@@ -55,7 +55,6 @@ dependencies = [
     "requests",
     "scikit-learn",
     "pynndescent",
-    "fancyimpute",
     "miceforest",
     "scikit-misc",
     "lifelines",
