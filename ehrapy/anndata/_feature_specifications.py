@@ -110,12 +110,12 @@ def infer_feature_types(
     if verbose:
         logger.warning(
             f"{'Features' if len(uncertain_features) >1 else 'Feature'} {str(uncertain_features)[1:-1]} {'were' if len(uncertain_features) >1 else 'was'} detected as categorical features stored numerically."
-            f"Please verify and correct using `ep.ad.correct_feature_types` if necessary."
+            f"Please verify and correct using `ep.ad.replace_feature_types` if necessary."
         )
 
         logger.info(
             f"Stored feature types in adata.var['{FEATURE_TYPE_KEY}']."
-            f" Please verify and adjust if necessary using `ep.ad.correct_feature_types`."
+            f" Please verify and adjust if necessary using `ep.ad.replace_feature_types`."
         )
 
     if output == "tree":
@@ -139,7 +139,7 @@ def check_feature_types(func):
         if FEATURE_TYPE_KEY not in adata.var.keys():
             infer_feature_types(adata, output=None)
             logger.warning(
-                f"Feature types were inferred and stored in adata.var[{FEATURE_TYPE_KEY}]. Please verify using `ep.ad.feature_type_overview` and adjust if necessary using `ep.ad.correct_feature_types`."
+                f"Feature types were inferred and stored in adata.var[{FEATURE_TYPE_KEY}]. Please verify using `ep.ad.feature_type_overview` and adjust if necessary using `ep.ad.replace_feature_types`."
             )
 
         for feature in adata.var_names:
@@ -150,7 +150,7 @@ def check_feature_types(func):
                 and feature_type not in [CATEGORICAL_TAG, NUMERIC_TAG, DATE_TAG]
             ):
                 logger.warning(
-                    f"Feature '{feature}' has an invalid feature type '{feature_type}'. Please correct using `ep.ad.correct_feature_types`."
+                    f"Feature '{feature}' has an invalid feature type '{feature_type}'. Please correct using `ep.ad.replace_feature_types`."
                 )
 
         if _self is not None:
@@ -208,7 +208,7 @@ def feature_type_overview(adata: AnnData):
     print(tree)
 
 
-def correct_feature_types(adata, features: Iterable[str], corrected_type: str):
+def replace_feature_types(adata, features: Iterable[str], corrected_type: str):
     """Correct the feature types for a list of features inplace.
 
     Args:
@@ -220,7 +220,7 @@ def correct_feature_types(adata, features: Iterable[str], corrected_type: str):
         >>> import ehrapy as ep
         >>> adata = ep.dt.diabetes_130_fairlearn()
         >>> ep.ad.infer_feature_types(adata)
-        >>> ep.ad.correct_feature_types(adata, ["time_in_hospital", "number_diagnoses", "num_procedures"], "numeric")
+        >>> ep.ad.replace_feature_types(adata, ["time_in_hospital", "number_diagnoses", "num_procedures"], "numeric")
     """
     if corrected_type not in [CATEGORICAL_TAG, NUMERIC_TAG, DATE_TAG]:
         raise ValueError(

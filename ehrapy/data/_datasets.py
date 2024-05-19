@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ehrapy import ehrapy_settings
-from ehrapy.anndata import anndata_to_df, correct_feature_types, df_to_anndata, infer_feature_types
+from ehrapy.anndata import anndata_to_df, df_to_anndata, infer_feature_types, replace_feature_types
 from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrapy.io._read import read_csv, read_fhir, read_h5ad
 from ehrapy.preprocessing._encoding import encode
@@ -40,7 +40,7 @@ def mimic_2(
     )
     if encoded:
         infer_feature_types(adata, output=None, verbose=False)
-        correct_feature_types(adata, "hour_icu_intime", NUMERIC_TAG)
+        replace_feature_types(adata, "hour_icu_intime", NUMERIC_TAG)
         return encode(adata, autodetect=True)
 
     return adata
@@ -170,10 +170,10 @@ def diabetes_130_raw(
     )
     if encoded:
         infer_feature_types(adata, output=None, verbose=False)
-        correct_feature_types(
+        replace_feature_types(
             adata, ["admission_source_id", "discharge_disposition_id", "encounter_id", "patient_nbr"], CATEGORICAL_TAG
         )
-        correct_feature_types(adata, ["num_procedures", "number_diagnoses", "time_in_hospital"], NUMERIC_TAG)
+        replace_feature_types(adata, ["num_procedures", "number_diagnoses", "time_in_hospital"], NUMERIC_TAG)
         return encode(adata, autodetect=True)
 
     return adata
@@ -216,7 +216,7 @@ def diabetes_130_fairlearn(
 
     if encoded:
         infer_feature_types(adata, output=None, verbose=False)
-        correct_feature_types(adata, ["time_in_hospital", "number_diagnoses", "num_procedures"], NUMERIC_TAG)
+        replace_feature_types(adata, ["time_in_hospital", "number_diagnoses", "num_procedures"], NUMERIC_TAG)
         return encode(adata, autodetect=True)
 
     return adata
@@ -321,7 +321,7 @@ def cervical_cancer_risk_factors(
     )
     if encoded:
         infer_feature_types(adata, output=None, verbose=False)
-        correct_feature_types(adata, ["STDs (number)", "STDs: Number of diagnosis"], NUMERIC_TAG)
+        replace_feature_types(adata, ["STDs (number)", "STDs: Number of diagnosis"], NUMERIC_TAG)
         return encode(adata, autodetect=True)
 
     return adata
@@ -461,7 +461,7 @@ def statlog_heart(
     )
     if encoded:
         infer_feature_types(adata, output=None, verbose=False)
-        correct_feature_types(adata, "number of major vessels", NUMERIC_TAG)
+        replace_feature_types(adata, "number of major vessels", NUMERIC_TAG)
         return encode(adata, autodetect=True)
 
     return adata
@@ -705,8 +705,8 @@ def heart_disease(
     )
     if encoded:
         infer_feature_types(adata, output=None, verbose=False)
-        correct_feature_types(adata, ["num"], NUMERIC_TAG)
-        correct_feature_types(adata, ["thal"], CATEGORICAL_TAG)
+        replace_feature_types(adata, ["num"], NUMERIC_TAG)
+        replace_feature_types(adata, ["thal"], CATEGORICAL_TAG)
         return encode(adata, autodetect=True)
 
     return adata
@@ -750,7 +750,7 @@ def synthea_1k_sample(
 
     if encoded:
         infer_feature_types(adata, output=None, verbose=False)
-        correct_feature_types(adata, ["resource.multipleBirthInteger", "resource.numberOfSeries"], NUMERIC_TAG)
+        replace_feature_types(adata, ["resource.multipleBirthInteger", "resource.numberOfSeries"], NUMERIC_TAG)
         return encode(adata, autodetect=True)
 
     return adata
