@@ -52,7 +52,6 @@ dependencies = [
     "rich",
     "scanpy[leiden]",
     "requests",
-    "scikit-learn",
     "pynndescent",
     "miceforest",
     "scikit-misc",
