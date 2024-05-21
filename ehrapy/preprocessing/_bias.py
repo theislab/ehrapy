@@ -1,13 +1,18 @@
+from __future__ import annotations
+
 import itertools
-from collections.abc import Iterable
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import pandas as pd
-from anndata import AnnData
 
 from ehrapy.anndata import anndata_to_df, check_feature_types
 from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from anndata import AnnData
 
 
 @check_feature_types

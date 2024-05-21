@@ -1,9 +1,9 @@
-from collections.abc import Iterable
-from typing import Literal
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import pandas as pd
-from anndata import AnnData
 from lamin_utils import logger
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.linear_model import LinearRegression, LogisticRegression
@@ -13,6 +13,11 @@ from sklearn.svm import SVC, SVR
 
 from ehrapy.anndata import anndata_to_df, check_feature_types
 from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from anndata import AnnData
 
 
 @check_feature_types
