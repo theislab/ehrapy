@@ -1,6 +1,7 @@
-from collections.abc import Iterable
+from __future__ import annotations
+
 from functools import wraps
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import pandas as pd
@@ -11,6 +12,9 @@ from rich import print
 from rich.tree import Tree
 
 from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 
 def _detect_feature_type(col: pd.Series) -> tuple[Literal["date", "categorical", "numeric"], bool]:

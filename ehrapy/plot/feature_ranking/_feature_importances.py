@@ -1,8 +1,14 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
-from anndata import AnnData
-from matplotlib.axes import Axes
+
+if TYPE_CHECKING:
+    from anndata import AnnData
+    from matplotlib.axes import Axes
 
 
 def rank_features_supervised(
