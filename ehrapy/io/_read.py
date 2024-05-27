@@ -1,12 +1,12 @@
 from __future__ import annotations
 
+from _collections import OrderedDict
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
 import fhiry.parallel as fp
 import numpy as np
 import pandas as pd
-from _collections import OrderedDict
 from anndata import AnnData
 from anndata import read as read_h5
 from lamin_utils import logger
