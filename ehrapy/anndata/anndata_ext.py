@@ -28,18 +28,18 @@ class BaseDataframes(NamedTuple):
 def df_to_anndata(
     df: pd.DataFrame, columns_obs_only: list[str] | None = None, index_column: str | None = None
 ) -> AnnData:
-    """Transform a given pandas dataframe into an AnnData object.
+    """Transform a given Pandas DataFrame into an AnnData object.
 
     Note that columns containing boolean values (either 0/1 or T(t)rue/F(f)alse)
     will be stored as boolean columns whereas the other non-numerical columns will be stored as categorical values.
 
     Args:
-        df: The pandas dataframe to be transformed
-        columns_obs_only: An optional list of column names that should belong to obs only and not X
-        index_column: The index column of obs. This can be either a column name (or its numerical index in the dataframe) or the index of the dataframe
+        df: The pandas dataframe to be transformed.
+        columns_obs_only: An optional list of column names that should belong to obs only and not X.
+        index_column: The index column of obs. This can be either a column name (or its numerical index in the DataFrame) or the index of the dataframe.
 
     Returns:
-        An AnnData object created from the given pandas dataframe
+        An AnnData object created from the given Pandas DataFrame.
 
     Examples:
         >>> import ehrapy as ep
@@ -53,58 +53,46 @@ def df_to_anndata(
         ... )
         >>> adata = ep.ad.df_to_anndata(df, index_column="patient_id")
     """
-    # allow index 0
+    # Check and handle the overlap of index_column in columns_obs_only
     if index_column is not None:
-        df_columns = list(df.columns)
-        # if the index of the dataframe is the index_column leave it as it is
-        if index_column == df.index.name:
-            pass
-        # if index column is either numerical or not the actual index name, search for index_column in the columns
-        elif isinstance(index_column, int) or index_column != df.index.name:
-            if isinstance(index_column, str) and index_column in df_columns:
-                df = df.set_index(index_column)
-            # also ensure that the index is in range
-            elif isinstance(index_column, int) and index_column < len(df_columns):
-                df = df.set_index(df_columns[index_column])
+        if isinstance(index_column, int):
+            if index_column >= len(df.columns):
+                raise IndexError("index_column integer index is out of bounds.")
+            index_column = df.columns[index_column]
+        if not df.index.name or df.index.name != index_column:
+            if index_column in df.columns:
+                df.set_index(index_column, inplace=True)
             else:
-                raise ValueError(f"Did not find column {index_column} in neither index or columns!")
-        # index_column is neither in the index or in the columns or passed as some value that could not be understood
-        else:  # pragma: no cover
-            raise ValueError(f"Did not find column {index_column} in neither index or columns!")
+                raise ValueError(f"Column {index_column} not found in DataFrame.")
 
-    # move columns from the input dataframe to obs
+    # Now handle columns_obs_only with consideration of the new index
     if columns_obs_only:
-        try:
-            obs = df[columns_obs_only].copy()
-            obs = obs.set_index(df.index.map(str))
-            df = df.drop(columns_obs_only, axis=1)
-        except KeyError as e:
-            raise ValueError(
-                "One or more column names passed to column_obs_only were not found in the input data. "
-                "Are the column names spelled correctly?"
-            ) from e
+        if index_column in columns_obs_only:
+            columns_obs_only.remove(index_column)
+        missing_cols = [col for col in columns_obs_only if col not in df.columns]
+        if missing_cols:
+            raise ValueError(f"Columns {missing_cols} specified in columns_obs_only are not in the DataFrame.")
+        obs = df.loc[:, columns_obs_only].copy()
+        df.drop(columns=columns_obs_only, inplace=True, errors="ignore")
     else:
-        obs = pd.DataFrame(index=df.index.map(str))
-    dataframes = BaseDataframes(obs, df)
-    numerical_columns = list(dataframes.df.select_dtypes("number").columns)
-    # if data is numerical only, short-circuit AnnData creation to have float dtype instead of object
-    X = dataframes.df.to_numpy(copy=True)
+        obs = pd.DataFrame(index=df.index)
 
-    # initializing an OrderedDict with a non-empty dict might not be intended,
-    # see: https://stackoverflow.com/questions/25480089/right-way-to-initialize-an-ordereddict-using-its-constructor-such-that-it-retain/25480206
+    for col in obs.columns:
+        if obs[col].dtype == "bool":
+            obs[col] = obs[col].astype(bool)
+        elif obs[col].dtype == "object":
+            obs[col] = obs[col].astype("category")
+
+    # Prepare the AnnData object
+    X = df.to_numpy(copy=True)
+    var = pd.DataFrame(index=df.columns)
     uns = OrderedDict()  # type: ignore
-    var = pd.DataFrame(index=list(dataframes.df.columns))
 
-    all_num = True if len(numerical_columns) == len(list(dataframes.df.columns)) else False
-    X = X.astype(np.number) if all_num else X.astype(object)
-    # cast non-numerical obs only columns to category or bool dtype, which is needed for writing to .h5ad files
-    adata = AnnData(
-        X=X,
-        obs=_cast_obs_columns(dataframes.obs),
-        var=var,
-        layers={"original": X.copy()},
-        uns=uns,
-    )
+    # Handle dtype of X based on presence of numerical columns only
+    all_numeric = df.select_dtypes(include=[np.number]).shape[1] == df.shape[1]
+    X = X.astype(np.float32 if all_numeric else object)
+
+    adata = AnnData(X=X, obs=obs, var=var, uns=uns, layers={"original": X.copy()})
 
     return adata
 

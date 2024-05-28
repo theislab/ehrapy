@@ -207,7 +207,7 @@ class TestHelperFunctions:
     def test_evaluate_categorical_features(self):
         adata = ep.dt.mimic_2(encoded=False)
         ep.ad.infer_feature_types(adata, output=None)
-        adata.var[FEATURE_TYPE_KEY].loc["hour_icu_intime"] = (
+        adata.var.loc["hour_icu_intime", FEATURE_TYPE_KEY] = (
             NUMERIC_TAG  # This is detected as categorical, so we need to correct that
         )
         adata = ep.pp.encode(adata, autodetect=True, encodings="label")

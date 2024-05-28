@@ -273,7 +273,7 @@ def test_df_to_anndata_invalid_index_throws_error(setup_df_to_anndata):
 def test_df_to_anndata_cols_obs_only(setup_df_to_anndata):
     df, col1_val, col2_val, col3_val = setup_df_to_anndata
     adata = df_to_anndata(df, columns_obs_only=["col1", "col2"])
-    assert adata.X.dtype == "float64"
+    assert adata.X.dtype == "float32"
     assert adata.X.shape == (100, 1)
     assert_frame_equal(
         adata.obs,
@@ -286,8 +286,15 @@ def test_df_to_anndata_all_num():
     df = DataFrame(test_array, columns=["col" + str(idx) for idx in range(5)])
     adata = df_to_anndata(df)
 
-    assert adata.X.dtype == "float64"
+    assert adata.X.dtype == "float32"
     np.testing.assert_array_equal(test_array, adata.X)
+
+
+def test_df_to_anndata_index_col_obs_only(setup_df_to_anndata):
+    """Passing index_column and columns_obs_only at the same time."""
+    df, col1_val, col2_val, col3_val = setup_df_to_anndata
+    adata = df_to_anndata(df, index_column="col1", columns_obs_only=["col1", "col2"])
+    assert list(adata.obs.index) == col1_val
 
 
 def test_anndata_to_df_simple(setup_anndata_to_df):
