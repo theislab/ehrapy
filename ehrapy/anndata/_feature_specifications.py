@@ -235,4 +235,4 @@ def replace_feature_types(adata, features: Iterable[str], corrected_type: str):
     if isinstance(features, str):
         features = [features]
 
-    adata.var[FEATURE_TYPE_KEY].loc[features] = corrected_type
+    adata.var.loc[features, FEATURE_TYPE_KEY] = corrected_type

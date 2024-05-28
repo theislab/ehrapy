@@ -155,7 +155,7 @@ def encode(
             # copy non-encoded columns, and add new tag for encoded columns. This is needed to track encodings
             new_var = pd.DataFrame(index=encoded_var_names)
             new_var[FEATURE_TYPE_KEY] = adata.var[FEATURE_TYPE_KEY].copy()
-            new_var[FEATURE_TYPE_KEY].loc[new_var.index.str.contains("ehrapycat")] = CATEGORICAL_TAG
+            new_var.loc[new_var.index.str.contains("ehrapycat"), FEATURE_TYPE_KEY] = CATEGORICAL_TAG
 
             new_var["unencoded_var_names"] = unencoded_var_names
 
@@ -253,7 +253,7 @@ def encode(
         new_var = pd.DataFrame(index=encoded_var_names)
 
         new_var[FEATURE_TYPE_KEY] = adata.var[FEATURE_TYPE_KEY].copy()
-        new_var[FEATURE_TYPE_KEY].loc[new_var.index.str.contains("ehrapycat")] = CATEGORICAL_TAG
+        new_var.loc[new_var.index.str.contains("ehrapycat"), FEATURE_TYPE_KEY] = CATEGORICAL_TAG
 
         new_var["unencoded_var_names"] = unencoded_var_names
 
@@ -262,7 +262,7 @@ def encode(
             encoding_mode.update({key: value for key, value in adata.var["encoding_mode"].items() if value is not None})
         new_var["encoding_mode"] = [None] * len(new_var)
         for _categorical in encoding_mode.keys():
-            new_var["encoding_mode"].loc[_categorical] = encoding_mode[_categorical]
+            new_var.loc[_categorical, "encoding_mode"] = encoding_mode[_categorical]
 
         try:
             encoded_ann_data = AnnData(
@@ -477,7 +477,7 @@ def _initial_encoding(
         Numpy array of all original categorial values
     """
     # create numpy array from all original categorical values, that will be encoded (again)
-    array = np.array([obs[categoricals[i]].ravel() for i in range(len(categoricals))]).transpose()
+    array = np.array([obs[categoricals[i]].to_numpy() for i in range(len(categoricals))]).transpose()
 
     return array
 

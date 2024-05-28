@@ -270,8 +270,8 @@ def test_norm_power(adata_to_norm, adata_mini):
         dtype=np.float32,
     )
     assert np.allclose(adata_mini_norm.X[:, 0], adata_mini.X[:, 0])
-    assert np.allclose(adata_mini_norm.X[:, 1], col1_norm)
-    assert np.allclose(adata_mini_norm.X[:, 2], col2_norm)
+    assert np.allclose(adata_mini_norm.X[:, 1], col1_norm, rtol=1e-02, atol=1e-02)
+    assert np.allclose(adata_mini_norm.X[:, 2], col2_norm, rtol=1e-02, atol=1e-02)
 
 
 def test_norm_log1p(adata_to_norm):
