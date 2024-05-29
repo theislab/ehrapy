@@ -323,11 +323,11 @@ class EhrapyConfig:  # pragma: no cover
             dark: Whether to enable Matplotlibs dark styled. Inverts all colors.
         """
         if self._is_run_from_ipython():
-            import IPython
-
             if isinstance(ipython_format, str):
                 ipython_format = [ipython_format]  # type: ignore
-            IPython.display.set_matplotlib_formats(*ipython_format)
+            from matplotlib_inline.backend_inline import set_matplotlib_formats
+
+            set_matplotlib_formats(*ipython_format)
 
         from matplotlib import rcParams
 
