@@ -148,6 +148,6 @@ notebooks/*.dat
 notebooks/*.csv
 notebooks/*-requirements.txt
 
-*/ehrapy_data/
+**/ehrapy_data/
 
 *.DS_Store
