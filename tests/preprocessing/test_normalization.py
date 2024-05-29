@@ -10,14 +10,14 @@ from anndata import AnnData
 import ehrapy as ep
 from ehrapy.anndata._constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrapy.io._read import read_csv
+from tests.conftest import TEST_DATA_PATH
 
 CURRENT_DIR = Path(__file__).parent
-_TEST_DATA_PATH = f"{CURRENT_DIR.parent}/test_data"
 
 
 @pytest.fixture
 def adata_mini():
-    return read_csv(f"{_TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["glucose", "weight", "disease", "station"])[:8]
+    return read_csv(f"{TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["glucose", "weight", "disease", "station"])[:8]
 
 
 @pytest.fixture

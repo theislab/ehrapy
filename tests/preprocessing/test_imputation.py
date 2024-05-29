@@ -6,9 +6,6 @@ import numpy as np
 import pytest
 from sklearn.exceptions import ConvergenceWarning
 
-import ehrapy as ep
-from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
-from ehrapy.io._read import read_csv
 from ehrapy.preprocessing._imputation import (
     _warn_imputation_threshold,
     explicit_impute,
@@ -17,33 +14,10 @@ from ehrapy.preprocessing._imputation import (
     miss_forest_impute,
     simple_impute,
 )
+from tests.conftest import TEST_DATA_PATH
 
 CURRENT_DIR = Path(__file__).parent
-_TEST_PATH = f"{CURRENT_DIR}/test_data_imputation"
-
-
-@pytest.fixture
-def impute_num_adata():
-    adata = read_csv(dataset_path=f"{_TEST_PATH}/test_impute_num.csv")
-    return adata
-
-
-@pytest.fixture
-def impute_adata():
-    adata = read_csv(dataset_path=f"{_TEST_PATH}/test_impute.csv")
-    return adata
-
-
-@pytest.fixture
-def impute_iris():
-    adata = read_csv(dataset_path=f"{_TEST_PATH}/test_impute_iris.csv")
-    return adata
-
-
-@pytest.fixture
-def impute_titanic():
-    adata = read_csv(dataset_path=f"{_TEST_PATH}/test_impute_titanic.csv")
-    return adata
+_TEST_PATH = f"{TEST_DATA_PATH}/imputation"
 
 
 def test_mean_impute_no_copy(impute_num_adata):
@@ -77,7 +51,7 @@ def test_median_impute_no_copy(impute_num_adata):
     assert not np.isnan(impute_num_adata.X).any()
 
 
-def test_median_impute_copy(impute_num_adata):
+def test_median_impute_copy(impute_num_adata, impute_adata):
     adata_imputed = simple_impute(impute_num_adata, strategy="median", copy=True)
 
     assert id(impute_adata) != id(adata_imputed)
@@ -194,36 +168,36 @@ def test_missforest_impute_dict(impute_adata):
 
 
 @pytest.mark.skipif(os.name == "posix", reason="miceforest Imputation not supported by MacOS.")
-def test_miceforest_impute_no_copy(impute_iris):
-    adata_imputed = mice_forest_impute(impute_iris)
+def test_miceforest_impute_no_copy(impute_iris_adata_adata):
+    adata_imputed = mice_forest_impute(impute_iris_adata_adata)
 
-    assert id(impute_iris) == id(adata_imputed)
-
-
-@pytest.mark.skipif(os.name == "posix", reason="miceforest Imputation not supported by MacOS.")
-def test_miceforest_impute_copy(impute_iris):
-    adata_imputed = mice_forest_impute(impute_iris, copy=True)
-
-    assert id(impute_iris) != id(adata_imputed)
+    assert id(impute_iris_adata_adata) == id(adata_imputed)
 
 
 @pytest.mark.skipif(os.name == "posix", reason="miceforest Imputation not supported by MacOS.")
-def test_miceforest_impute_non_numerical_data(impute_titanic):
-    adata_imputed = mice_forest_impute(impute_titanic)
+def test_miceforest_impute_copy(impute_iris_adata):
+    adata_imputed = mice_forest_impute(impute_iris_adata, copy=True)
+
+    assert id(impute_iris_adata) != id(adata_imputed)
+
+
+@pytest.mark.skipif(os.name == "posix", reason="miceforest Imputation not supported by MacOS.")
+def test_miceforest_impute_non_numerical_data(impute_titanic_adata):
+    adata_imputed = mice_forest_impute(impute_titanic_adata)
 
     assert not (np.all([item != item for item in adata_imputed.X]))
 
 
 @pytest.mark.skipif(os.name == "posix", reason="miceforest Imputation not supported by MacOS.")
-def test_miceforest_impute_numerical_data(impute_iris):
-    adata_imputed = mice_forest_impute(impute_iris)
+def test_miceforest_impute_numerical_data(impute_iris_adata):
+    adata_imputed = mice_forest_impute(impute_iris_adata)
 
     assert not (np.all([item != item for item in adata_imputed.X]))
 
 
 @pytest.mark.skipif(os.name == "posix", reason="miceforest Imputation not supported by MacOS.")
-def test_miceforest_impute_list_str(impute_titanic):
-    adata_imputed = mice_forest_impute(impute_titanic, var_names=["Cabin", "Age"])
+def test_miceforest_impute_list_str(impute_titanic_adata):
+    adata_imputed = mice_forest_impute(impute_titanic_adata, var_names=["Cabin", "Age"])
 
     assert not (np.all([item != item for item in adata_imputed.X]))
 

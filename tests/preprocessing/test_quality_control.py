@@ -9,10 +9,10 @@ import ehrapy as ep
 from ehrapy.io._read import read_csv
 from ehrapy.preprocessing._encoding import encode
 from ehrapy.preprocessing._quality_control import _obs_qc_metrics, _var_qc_metrics, mcar_test
+from tests.conftest import TEST_DATA_PATH
 
 CURRENT_DIR = Path(__file__).parent
-_TEST_PATH = f"{CURRENT_DIR}/test_preprocessing"
-_TEST_PATH_ENCODE = f"{CURRENT_DIR}/test_data_encode"
+_TEST_PATH_ENCODE = f"{TEST_DATA_PATH}/encode"
 
 
 @pytest.fixture

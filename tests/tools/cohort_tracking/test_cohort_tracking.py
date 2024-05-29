@@ -3,16 +3,9 @@ from pathlib import Path
 import pytest
 
 import ehrapy as ep
-from ehrapy.io._read import read_csv
 
 CURRENT_DIR = Path(__file__).parent
-_TEST_DATA_PATH = f"{CURRENT_DIR.parent.parent}/test_data"
 _TEST_IMAGE_PATH = f"{CURRENT_DIR.parent}/_images"
-
-
-@pytest.fixture
-def adata_mini():
-    return read_csv(f"{_TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["glucose", "weight", "disease", "station"])
 
 
 @pytest.mark.parametrize("columns", [None, ["glucose", "weight", "disease", "station"]])

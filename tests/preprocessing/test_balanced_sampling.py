@@ -1,18 +1,17 @@
 from pathlib import Path
 
 import pytest
-import scanpy as sc
 
 import ehrapy as ep
 from ehrapy.io._read import read_csv
+from tests.conftest import TEST_DATA_PATH
 
 CURRENT_DIR = Path(__file__).parent
-_TEST_DATA_PATH = f"{CURRENT_DIR}/test_data_encode"
 
 
 @pytest.fixture
 def adata_mini():
-    return read_csv(f"{_TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["clinic_day"])
+    return read_csv(f"{TEST_DATA_PATH}/encode/dataset1.csv", columns_obs_only=["clinic_day"])
 
 
 def test_balanced_sampling_basic(adata_mini):
