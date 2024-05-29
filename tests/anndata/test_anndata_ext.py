@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-from collections import OrderedDict
-from pathlib import Path
-
 import numpy as np
 import pandas as pd
 import pytest
@@ -24,18 +21,17 @@ from ehrapy.anndata.anndata_ext import (
     move_to_x,
     set_numeric_vars,
 )
-
-CUR_DIR = Path(__file__).parent.resolve()
+from tests.conftest import TEST_DATA_PATH
 
 
 @pytest.fixture
 def adata_move_obs_num() -> AnnData:
-    return ep.io.read_csv(CUR_DIR / "../io/test_data_io/dataset_move_obs_num.csv")
+    return ep.io.read_csv(TEST_DATA_PATH / "io/dataset_move_obs_num.csv")
 
 
 @pytest.fixture
 def adata_move_obs_mix() -> AnnData:
-    return ep.io.read_csv(CUR_DIR / "../io/test_data_io/dataset_move_obs_mix.csv")
+    return ep.io.read_csv(TEST_DATA_PATH / "io/dataset_move_obs_mix.csv")
 
 
 @pytest.fixture

@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import numpy as np
 import pandas as pd
 import pytest
@@ -8,8 +6,9 @@ import ehrapy as ep
 from ehrapy.anndata import check_feature_types, df_to_anndata
 from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrapy.io._read import read_csv
+from tests.conftest import TEST_DATA_PATH
 
-_TEST_PATH = f"{Path(__file__).parents[1]}/preprocessing/test_data_imputation"
+IMPUTATION_DATA_PATH = TEST_DATA_PATH / "imputation"
 
 
 @pytest.fixture
@@ -26,6 +25,7 @@ def adata():
         }
     )
     adata = df_to_anndata(df)
+
     return adata
 
 
@@ -62,26 +62,26 @@ def test_check_feature_types(adata):
 
 
 def test_feature_types_impute_num_adata():
-    adata = read_csv(dataset_path=f"{_TEST_PATH}/test_impute_num.csv")
+    adata = read_csv(dataset_path=f"{IMPUTATION_DATA_PATH}/test_impute_num.csv")
     ep.ad.infer_feature_types(adata, output=None)
     assert np.all(adata.var[FEATURE_TYPE_KEY] == [NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG])
     return adata
 
 
 def test_feature_types_impute_adata():
-    adata = read_csv(dataset_path=f"{_TEST_PATH}/test_impute.csv")
+    adata = read_csv(dataset_path=f"{IMPUTATION_DATA_PATH}/test_impute.csv")
     ep.ad.infer_feature_types(adata, output=None)
     assert np.all(adata.var[FEATURE_TYPE_KEY] == [NUMERIC_TAG, NUMERIC_TAG, CATEGORICAL_TAG, CATEGORICAL_TAG])
 
 
 def test_feature_types_impute_iris():
-    adata = read_csv(dataset_path=f"{_TEST_PATH}/test_impute_iris.csv")
+    adata = read_csv(dataset_path=f"{IMPUTATION_DATA_PATH}/test_impute_iris.csv")
     ep.ad.infer_feature_types(adata, output=None)
     assert np.all(adata.var[FEATURE_TYPE_KEY] == [NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG, CATEGORICAL_TAG])
 
 
 def test_feature_types_impute_feature_types_titanic():
-    adata = read_csv(dataset_path=f"{_TEST_PATH}/test_impute_titanic.csv")
+    adata = read_csv(dataset_path=f"{IMPUTATION_DATA_PATH}/test_impute_titanic.csv")
     ep.ad.infer_feature_types(adata, output=None)
     adata.var[FEATURE_TYPE_KEY] = [
         CATEGORICAL_TAG,

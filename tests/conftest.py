@@ -14,6 +14,9 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
 
 
+TEST_DATA_PATH = Path(__file__).parent / "data"
+
+
 @pytest.fixture
 def root_dir():
     return Path(__file__).resolve().parent

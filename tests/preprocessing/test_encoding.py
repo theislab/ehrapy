@@ -8,10 +8,11 @@ from pandas.testing import assert_frame_equal
 
 from ehrapy.anndata._constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrapy.io._read import read_csv
-from ehrapy.preprocessing._encoding import DuplicateColumnEncodingError, _reorder_encodings, encode
+from ehrapy.preprocessing._encoding import _reorder_encodings, encode
+from tests.conftest import TEST_DATA_PATH
 
 CURRENT_DIR = Path(__file__).parent
-_TEST_PATH = f"{CURRENT_DIR}/test_data_encode"
+_TEST_PATH = f"{TEST_DATA_PATH}/encode"
 
 
 def test_unknown_encode_mode():

@@ -101,6 +101,7 @@ docs = [
 test = [
     "pytest",
     "pytest-cov",
+    "pytest-mock"
 ]
 
 [tool.hatch.version]

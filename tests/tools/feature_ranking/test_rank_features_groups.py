@@ -8,9 +8,9 @@ import ehrapy as ep
 import ehrapy.tools.feature_ranking._rank_features_groups as _utils
 from ehrapy.anndata._constants import FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrapy.io._read import read_csv
+from tests.conftest import TEST_DATA_PATH
 
 CURRENT_DIR = Path(__file__).parent
-_TEST_PATH = f"{CURRENT_DIR.parent.parent}/test_data"
 
 
 class TestHelperFunctions:
@@ -286,7 +286,7 @@ class TestRankFeaturesGroups:
         This test is important because to save memory, copies are made conservatively in rank_features_groups
         """
         adata = read_csv(
-            dataset_path=f"{_TEST_PATH}/dataset1.csv", columns_x_only=["station", "sys_bp_entry", "dia_bp_entry"]
+            dataset_path=f"{TEST_DATA_PATH}/dataset1.csv", columns_x_only=["station", "sys_bp_entry", "dia_bp_entry"]
         )
         adata = ep.pp.encode(adata, encodings={"label": ["station"]})
         adata_orig = adata.copy()
@@ -310,7 +310,7 @@ class TestRankFeaturesGroups:
         """
 
         adata = read_csv(
-            dataset_path=f"{_TEST_PATH}/dataset1.csv",
+            dataset_path=f"{TEST_DATA_PATH}/dataset1.csv",
             columns_obs_only=["disease", "station", "sys_bp_entry", "dia_bp_entry"],
         )
         ep.tl.rank_features_groups(adata, groupby="disease", field_to_rank=field_to_rank)
@@ -336,18 +336,18 @@ class TestRankFeaturesGroups:
 
     def test_rank_features_groups_consistent_results(self):
         adata_features_in_x = read_csv(
-            dataset_path=f"{_TEST_PATH}/dataset1.csv",
+            dataset_path=f"{TEST_DATA_PATH}/dataset1.csv",
             columns_x_only=["station", "sys_bp_entry", "dia_bp_entry", "glucose"],
         )
         adata_features_in_x = ep.pp.encode(adata_features_in_x, encodings={"label": ["station"]})
 
         adata_features_in_obs = read_csv(
-            dataset_path=f"{_TEST_PATH}/dataset1.csv",
+            dataset_path=f"{TEST_DATA_PATH}/dataset1.csv",
             columns_obs_only=["disease", "station", "sys_bp_entry", "dia_bp_entry", "glucose"],
         )
 
         adata_features_in_x_and_obs = read_csv(
-            dataset_path=f"{_TEST_PATH}/dataset1.csv",
+            dataset_path=f"{TEST_DATA_PATH}/dataset1.csv",
             columns_obs_only=["disease", "station"],
         )
         # to keep the same variables as in the datsets above, in order to make the comparison of consistency
@@ -386,7 +386,7 @@ class TestRankFeaturesGroups:
 
     def test_rank_features_group_column_to_rank(self):
         adata = read_csv(
-            dataset_path=f"{_TEST_PATH}/dataset1.csv",
+            dataset_path=f"{TEST_DATA_PATH}/dataset1.csv",
             columns_obs_only=["disease", "station", "sys_bp_entry", "dia_bp_entry"],
             index_column="idx",
         )

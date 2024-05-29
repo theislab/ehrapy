@@ -1,17 +1,14 @@
-from pathlib import Path
-
 import numpy as np
 import pandas as pd
 import pytest
 from pandas import CategoricalDtype
 
 from ehrapy.io._read import read_csv, read_fhir, read_h5ad
+from tests.conftest import TEST_DATA_PATH
 
-CURRENT_DIR = Path(__file__).parent
-_TEST_PATH = f"{CURRENT_DIR}/test_data_io"
-_TEST_PATH_H5AD = f"{CURRENT_DIR}/test_data_io/h5ad"
-_TEST_PATH_MULTIPLE = f"{CURRENT_DIR}/test_data_io_multiple"
-_TEST_PATH_FHIR = f"{CURRENT_DIR}/test_data_io/fhir/json"
+_TEST_PATH = f"{TEST_DATA_PATH}/io"
+_TEST_PATH_H5AD = f"{_TEST_PATH}/h5ad"
+_TEST_PATH_FHIR = f"{_TEST_PATH}/fhir/json"
 
 
 class TestRead:
@@ -44,7 +41,7 @@ class TestRead:
         assert id(adata.layers["original"]) != id(adata.X)
 
     def test_read_multiple_csv_to_anndatas(self):
-        adatas = read_csv(dataset_path=f"{_TEST_PATH_MULTIPLE}")
+        adatas = read_csv(dataset_path=f"{_TEST_PATH}")
         adata_ids = set(adatas.keys())
         assert all(adata_id in adata_ids for adata_id in {"dataset_non_num_with_missing", "dataset_num_with_missing"})
         assert set(adatas["dataset_non_num_with_missing"].var_names) == {
@@ -57,7 +54,7 @@ class TestRead:
         assert set(adatas["dataset_num_with_missing"].var_names) == {"col" + str(i) for i in range(1, 4)}
 
     def test_read_multiple_csvs_to_dfs(self):
-        dfs = read_csv(dataset_path=f"{_TEST_PATH_MULTIPLE}", return_dfs=True)
+        dfs = read_csv(dataset_path=f"{_TEST_PATH}", return_dfs=True)
         dfs_ids = set(dfs.keys())
         assert all(id in dfs_ids for id in {"dataset_non_num_with_missing", "dataset_num_with_missing"})
         assert set(dfs["dataset_non_num_with_missing"].columns) == {
@@ -71,7 +68,7 @@ class TestRead:
 
     def test_read_multiple_csv_with_obs_only(self):
         adatas = read_csv(
-            dataset_path=f"{_TEST_PATH_MULTIPLE}",
+            dataset_path=f"{_TEST_PATH}",
             columns_obs_only={"dataset_non_num_with_missing": ["strcol"], "dataset_num_with_missing": ["col1"]},
         )
         adata_ids = set(adatas.keys())
@@ -191,7 +188,7 @@ class TestRead:
     def test_read_raises_error_with_duplicates_columns_only_multiple_1(self):
         with pytest.raises(ValueError):
             _ = read_csv(
-                dataset_path=f"{_TEST_PATH_MULTIPLE}",
+                dataset_path=f"{_TEST_PATH}",
                 columns_obs_only={
                     "dataset_non_num_with_missing": ["intcol"],
                     "dataset_num_with_missing": ["col1", "col2"],
@@ -202,7 +199,7 @@ class TestRead:
     def test_read_raises_error_with_duplicates_columns_only_multiple_2(self):
         with pytest.raises(ValueError):
             _ = read_csv(
-                dataset_path=f"{_TEST_PATH_MULTIPLE}",
+                dataset_path=f"{_TEST_PATH}",
                 columns_obs_only={
                     "dataset_non_num_with_missing": ["intcol"],
                     "dataset_num_with_missing": ["col1", "col2"],
@@ -226,7 +223,7 @@ class TestRead:
 
     def test_read_multiple_csv_with_x_only(self):
         adatas = read_csv(
-            dataset_path=f"{_TEST_PATH_MULTIPLE}",
+            dataset_path=f"{_TEST_PATH}",
             columns_x_only={"dataset_non_num_with_missing": ["strcol"], "dataset_num_with_missing": ["col1"]},
         )
         adata_ids = set(adatas.keys())
@@ -244,7 +241,7 @@ class TestRead:
 
     def test_read_multiple_csv_with_x_only_2(self):
         adatas = read_csv(
-            dataset_path=f"{_TEST_PATH_MULTIPLE}",
+            dataset_path=f"{_TEST_PATH}",
             columns_x_only={
                 "dataset_non_num_with_missing": ["strcol", "intcol", "boolcol"],
                 "dataset_num_with_missing": ["col1", "col3"],
