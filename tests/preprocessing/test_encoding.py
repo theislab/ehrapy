@@ -15,25 +15,22 @@ CURRENT_DIR = Path(__file__).parent
 _TEST_PATH = f"{TEST_DATA_PATH}/encode"
 
 
-def test_unknown_encode_mode():
-    adata = read_csv(dataset_path=f"{_TEST_PATH}/dataset1.csv")
+def test_unknown_encode_mode(encode_ds_1_adata):
     with pytest.raises(ValueError):
-        encoded_ann_data = encode(adata, autodetect=False, encodings={"unknown_mode": ["survival"]})  # noqa: F841
+        encoded_ann_data = encode(encode_ds_1_adata, autodetect=False, encodings={"unknown_mode": ["survival"]})  # noqa: F841
 
 
-def test_duplicate_column_encoding():
-    adata = read_csv(dataset_path=f"{_TEST_PATH}/dataset1.csv")
+def test_duplicate_column_encoding(encode_ds_1_adata):
     with pytest.raises(ValueError):
         encoded_ann_data = encode(  # noqa: F841
-            adata,
+            encode_ds_1_adata,
             autodetect=False,
             encodings={"label": ["survival"], "one-hot": ["survival"]},
         )
 
 
-def test_autodetect_encode():
-    adata = read_csv(dataset_path=f"{_TEST_PATH}/dataset1.csv")
-    encoded_ann_data = encode(adata, autodetect=True)
+def test_autodetect_encode(encode_ds_1_adata):
+    encoded_ann_data = encode(encode_ds_1_adata, autodetect=True)
     assert list(encoded_ann_data.obs.columns) == ["survival", "clinic_day"]
     assert set(encoded_ann_data.var_names) == {
         "ehrapycat_survival_False",
@@ -66,16 +63,21 @@ def test_autodetect_encode():
     assert np.all(enc is None for enc in encoded_ann_data.var["encoding_mode"][6:])
 
     assert id(encoded_ann_data.X) != id(encoded_ann_data.layers["original"])
-    assert adata is not None and adata.X is not None and adata.obs is not None and adata.uns is not None
-    assert id(encoded_ann_data) != id(adata)
-    assert id(encoded_ann_data.obs) != id(adata.obs)
-    assert id(encoded_ann_data.uns) != id(adata.uns)
-    assert id(encoded_ann_data.var) != id(adata.var)
+    assert (
+        encode_ds_1_adata is not None
+        and encode_ds_1_adata.X is not None
+        and encode_ds_1_adata.obs is not None
+        and encode_ds_1_adata.uns is not None
+    )
+    assert id(encoded_ann_data) != id(encode_ds_1_adata)
+    assert id(encoded_ann_data.obs) != id(encode_ds_1_adata.obs)
+    assert id(encoded_ann_data.uns) != id(encode_ds_1_adata.uns)
+    assert id(encoded_ann_data.var) != id(encode_ds_1_adata.var)
     assert all(column in set(encoded_ann_data.obs.columns) for column in ["survival", "clinic_day"])
-    assert not any(column in set(adata.obs.columns) for column in ["survival", "clinic_day"])
+    assert not any(column in set(encode_ds_1_adata.obs.columns) for column in ["survival", "clinic_day"])
 
     assert_frame_equal(
-        adata.var,
+        encode_ds_1_adata.var,
         DataFrame(
             {FEATURE_TYPE_KEY: [NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG, CATEGORICAL_TAG, CATEGORICAL_TAG]},
             index=["patient_id", "los_days", "b12_values", "survival", "clinic_day"],
@@ -101,16 +103,14 @@ def test_autodetect_encode():
     assert isinstance(encoded_ann_data.obs["clinic_day"].dtype, CategoricalDtype)
 
 
-def test_autodetect_num_only(capfd):
-    adata = read_csv(dataset_path=f"{_TEST_PATH}/dataset2.csv")
-    encoded_ann_data = encode(adata, autodetect=True)
+def test_autodetect_num_only(capfd, encode_ds_2_adata):
+    encoded_ann_data = encode(encode_ds_2_adata, autodetect=True)
     out, err = capfd.readouterr()
-    assert id(encoded_ann_data) == id(adata)
+    assert id(encoded_ann_data) == id(encode_ds_2_adata)
 
 
-def test_autodetect_custom_mode():
-    adata = read_csv(dataset_path=f"{_TEST_PATH}/dataset1.csv")
-    encoded_ann_data = encode(adata, autodetect=True, encodings="label")
+def test_autodetect_custom_mode(encode_ds_1_adata):
+    encoded_ann_data = encode(encode_ds_1_adata, autodetect=True, encodings="label")
     assert list(encoded_ann_data.obs.columns) == ["survival", "clinic_day"]
     assert set(encoded_ann_data.var_names) == {
         "ehrapycat_survival",
@@ -128,16 +128,21 @@ def test_autodetect_custom_mode():
     assert np.all(enc is None for enc in encoded_ann_data.var["encoding_mode"][2:])
 
     assert id(encoded_ann_data.X) != id(encoded_ann_data.layers["original"])
-    assert adata is not None and adata.X is not None and adata.obs is not None and adata.uns is not None
-    assert id(encoded_ann_data) != id(adata)
-    assert id(encoded_ann_data.obs) != id(adata.obs)
-    assert id(encoded_ann_data.uns) != id(adata.uns)
-    assert id(encoded_ann_data.var) != id(adata.var)
+    assert (
+        encode_ds_1_adata is not None
+        and encode_ds_1_adata.X is not None
+        and encode_ds_1_adata.obs is not None
+        and encode_ds_1_adata.uns is not None
+    )
+    assert id(encoded_ann_data) != id(encode_ds_1_adata)
+    assert id(encoded_ann_data.obs) != id(encode_ds_1_adata.obs)
+    assert id(encoded_ann_data.uns) != id(encode_ds_1_adata.uns)
+    assert id(encoded_ann_data.var) != id(encode_ds_1_adata.var)
     assert all(column in set(encoded_ann_data.obs.columns) for column in ["survival", "clinic_day"])
-    assert not any(column in set(adata.obs.columns) for column in ["survival", "clinic_day"])
+    assert not any(column in set(encode_ds_1_adata.obs.columns) for column in ["survival", "clinic_day"])
 
     assert_frame_equal(
-        adata.var,
+        encode_ds_1_adata.var,
         DataFrame(
             {FEATURE_TYPE_KEY: [NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG, CATEGORICAL_TAG, CATEGORICAL_TAG]},
             index=["patient_id", "los_days", "b12_values", "survival", "clinic_day"],
@@ -159,17 +164,15 @@ def test_autodetect_custom_mode():
     assert isinstance(encoded_ann_data.obs["clinic_day"].dtype, CategoricalDtype)
 
 
-def test_autodetect_encode_again():
-    adata = read_csv(dataset_path=f"{_TEST_PATH}/dataset1.csv")
-    encoded_ann_data = encode(adata, autodetect=True)
+def test_autodetect_encode_again(encode_ds_1_adata):
+    encoded_ann_data = encode(encode_ds_1_adata, autodetect=True)
     encoded_ann_data_again = encode(encoded_ann_data, autodetect=True)
     assert id(encoded_ann_data_again) == id(encoded_ann_data)
 
 
-def test_custom_encode():
-    adata = read_csv(dataset_path=f"{_TEST_PATH}/dataset1.csv")
+def test_custom_encode(encode_ds_1_adata):
     encoded_ann_data = encode(
-        adata,
+        encode_ds_1_adata,
         autodetect=False,
         encodings={"label": ["survival"], "one-hot": ["clinic_day"]},
     )
@@ -194,16 +197,21 @@ def test_custom_encode():
     assert np.all(enc is None for enc in encoded_ann_data.var["encoding_mode"][5:])
 
     assert id(encoded_ann_data.X) != id(encoded_ann_data.layers["original"])
-    assert adata is not None and adata.X is not None and adata.obs is not None and adata.uns is not None
-    assert id(encoded_ann_data) != id(adata)
-    assert id(encoded_ann_data.obs) != id(adata.obs)
-    assert id(encoded_ann_data.uns) != id(adata.uns)
-    assert id(encoded_ann_data.var) != id(adata.var)
+    assert (
+        encode_ds_1_adata is not None
+        and encode_ds_1_adata.X is not None
+        and encode_ds_1_adata.obs is not None
+        and encode_ds_1_adata.uns is not None
+    )
+    assert id(encoded_ann_data) != id(encode_ds_1_adata)
+    assert id(encoded_ann_data.obs) != id(encode_ds_1_adata.obs)
+    assert id(encoded_ann_data.uns) != id(encode_ds_1_adata.uns)
+    assert id(encoded_ann_data.var) != id(encode_ds_1_adata.var)
     assert all(column in set(encoded_ann_data.obs.columns) for column in ["survival", "clinic_day"])
-    assert not any(column in set(adata.obs.columns) for column in ["survival", "clinic_day"])
+    assert not any(column in set(encode_ds_1_adata.obs.columns) for column in ["survival", "clinic_day"])
 
     assert_frame_equal(
-        adata.var,
+        encode_ds_1_adata.var,
         DataFrame(
             {FEATURE_TYPE_KEY: [NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG, CATEGORICAL_TAG, CATEGORICAL_TAG]},
             index=["patient_id", "los_days", "b12_values", "survival", "clinic_day"],
@@ -228,10 +236,9 @@ def test_custom_encode():
     assert isinstance(encoded_ann_data.obs["clinic_day"].dtype, CategoricalDtype)
 
 
-def test_custom_encode_again_single_columns_encoding():
-    adata = read_csv(dataset_path=f"{_TEST_PATH}/dataset1.csv")
+def test_custom_encode_again_single_columns_encoding(encode_ds_1_adata):
     encoded_ann_data = encode(
-        adata,
+        encode_ds_1_adata,
         autodetect=False,
         encodings={"label": ["survival"], "one-hot": ["clinic_day"]},
     )
@@ -261,9 +268,8 @@ def test_custom_encode_again_single_columns_encoding():
     assert isinstance(encoded_ann_data.obs["clinic_day"].dtype, CategoricalDtype)
 
 
-def test_custom_encode_again_multiple_columns_encoding():
-    adata = read_csv(dataset_path=f"{_TEST_PATH}/dataset1.csv")
-    encoded_ann_data = encode(adata, autodetect=False, encodings={"one-hot": ["clinic_day", "survival"]})
+def test_custom_encode_again_multiple_columns_encoding(encode_ds_1_adata):
+    encoded_ann_data = encode(encode_ds_1_adata, autodetect=False, encodings={"one-hot": ["clinic_day", "survival"]})
     encoded_ann_data_again = encode(
         encoded_ann_data,
         autodetect=False,
@@ -295,12 +301,9 @@ def test_custom_encode_again_multiple_columns_encoding():
     assert isinstance(encoded_ann_data.obs["clinic_day"].dtype, CategoricalDtype)
 
 
-def test_update_encoding_scheme_1():
-    # just a dummy adata object that won't be used actually
-    adata = read_csv(dataset_path=f"{_TEST_PATH}/dataset1.csv")
-
-    adata.var["unencoded_var_names"] = ["col1", "col2", "col3", "col4", "col5"]
-    adata.var["encoding_mode"] = ["label", "label", "label", "one-hot", "one-hot"]
+def test_update_encoding_scheme_1(encode_ds_1_adata):
+    encode_ds_1_adata.var["unencoded_var_names"] = ["col1", "col2", "col3", "col4", "col5"]
+    encode_ds_1_adata.var["encoding_mode"] = ["label", "label", "label", "one-hot", "one-hot"]
 
     new_encodings = {"one-hot": ["col1"], "label": ["col2", "col3", "col4"]}
 
@@ -308,6 +311,6 @@ def test_update_encoding_scheme_1():
         "label": ["col2", "col3", "col4"],
         "one-hot": ["col1", "col5"],
     }
-    updated_encodings = _reorder_encodings(adata, new_encodings)
+    updated_encodings = _reorder_encodings(encode_ds_1_adata, new_encodings)
 
     assert expected_encodings == updated_encodings

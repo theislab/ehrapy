@@ -25,16 +25,6 @@ from tests.conftest import TEST_DATA_PATH
 
 
 @pytest.fixture
-def adata_move_obs_num() -> AnnData:
-    return ep.io.read_csv(TEST_DATA_PATH / "io/dataset_move_obs_num.csv")
-
-
-@pytest.fixture
-def adata_move_obs_mix() -> AnnData:
-    return ep.io.read_csv(TEST_DATA_PATH / "io/dataset_move_obs_mix.csv")
-
-
-@pytest.fixture
 def setup_df_to_anndata() -> tuple[DataFrame, list, list, list]:
     col1_val = ["str" + str(idx) for idx in range(100)]
     col2_val = ["another_str" + str(idx) for idx in range(100)]

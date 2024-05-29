@@ -8,11 +8,13 @@ import pytest
 from anndata import AnnData
 from matplotlib.testing.compare import compare_images
 
+import ehrapy as ep
+from ehrapy.io import read_csv
+
 if TYPE_CHECKING:
     import os
 
     from matplotlib.figure import Figure
-
 
 TEST_DATA_PATH = Path(__file__).parent / "data"
 
@@ -28,9 +30,13 @@ def rng():
 
 
 @pytest.fixture
-def mimic_2_10():
-    import ehrapy as ep
+def mimic_2_encoded():
+    adata = ep.dt.mimic_2(encoded=True)
+    return adata
 
+
+@pytest.fixture
+def mimic_2_10():
     mimic_2_10 = ep.dt.mimic_2()[:10]
 
     return mimic_2_10
@@ -55,6 +61,57 @@ def mcar_adata(rng) -> AnnData:
     data[missing_indices] = np.nan
 
     return AnnData(data)
+
+
+@pytest.fixture
+def adata_mini():
+    return read_csv(f"{TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["glucose", "weight", "disease", "station"])
+
+
+@pytest.fixture
+def adata_move_obs_num() -> AnnData:
+    return read_csv(TEST_DATA_PATH / "io/dataset_move_obs_num.csv")
+
+
+@pytest.fixture
+def adata_move_obs_mix() -> AnnData:
+    return read_csv(TEST_DATA_PATH / "io/dataset_move_obs_mix.csv")
+
+
+@pytest.fixture
+def impute_num_adata() -> AnnData:
+    adata = read_csv(dataset_path=f"{TEST_DATA_PATH}/imputation/test_impute_num.csv")
+    return adata
+
+
+@pytest.fixture
+def impute_adata() -> AnnData:
+    adata = read_csv(dataset_path=f"{TEST_DATA_PATH}/imputation/test_impute.csv")
+    return adata
+
+
+@pytest.fixture
+def impute_iris_adata() -> AnnData:
+    adata = read_csv(dataset_path=f"{TEST_DATA_PATH}/imputation/test_impute_iris.csv")
+    return adata
+
+
+@pytest.fixture
+def impute_titanic_adata():
+    adata = read_csv(dataset_path=f"{TEST_DATA_PATH}/imputation/test_impute_titanic.csv")
+    return adata
+
+
+@pytest.fixture
+def encode_ds_1_adata() -> AnnData:
+    adata = read_csv(dataset_path=f"{TEST_DATA_PATH}/encode/dataset1.csv")
+    return adata
+
+
+@pytest.fixture
+def encode_ds_2_adata() -> AnnData:
+    adata = read_csv(dataset_path=f"{TEST_DATA_PATH}/encode/dataset2.csv")
+    return adata
 
 
 # simplified from https://github.com/scverse/scanpy/blob/main/scanpy/tests/conftest.py

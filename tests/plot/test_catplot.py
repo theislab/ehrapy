@@ -1,22 +1,13 @@
 from pathlib import Path
 
-import pytest
-
-import ehrapy as ep
-from ehrapy.io._read import read_csv
-from tests.conftest import TEST_DATA_PATH
+from ehrapy.plot import catplot
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_IMAGE_PATH = f"{CURRENT_DIR}/_images"
 
 
-@pytest.fixture
-def adata_mini():
-    return read_csv(f"{TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["glucose", "weight", "disease", "station"])
-
-
 def test_catplot_vanilla(adata_mini, check_same_image):
-    fig = ep.pl.catplot(adata_mini, jitter=False)
+    fig = catplot(adata_mini, jitter=False)
 
     check_same_image(
         fig=fig,

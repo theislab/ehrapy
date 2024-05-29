@@ -5,7 +5,6 @@ import pytest
 import ehrapy as ep
 from ehrapy.anndata import check_feature_types, df_to_anndata
 from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
-from ehrapy.io._read import read_csv
 from tests.conftest import TEST_DATA_PATH
 
 IMPUTATION_DATA_PATH = TEST_DATA_PATH / "imputation"
@@ -61,29 +60,26 @@ def test_check_feature_types(adata):
     assert FEATURE_TYPE_KEY in adata.var.keys()
 
 
-def test_feature_types_impute_num_adata():
-    adata = read_csv(dataset_path=f"{IMPUTATION_DATA_PATH}/test_impute_num.csv")
-    ep.ad.infer_feature_types(adata, output=None)
-    assert np.all(adata.var[FEATURE_TYPE_KEY] == [NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG])
-    return adata
+def test_feature_types_impute_num_adata(impute_num_adata):
+    ep.ad.infer_feature_types(impute_num_adata, output=None)
+    assert np.all(impute_num_adata.var[FEATURE_TYPE_KEY] == [NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG])
 
 
-def test_feature_types_impute_adata():
-    adata = read_csv(dataset_path=f"{IMPUTATION_DATA_PATH}/test_impute.csv")
-    ep.ad.infer_feature_types(adata, output=None)
-    assert np.all(adata.var[FEATURE_TYPE_KEY] == [NUMERIC_TAG, NUMERIC_TAG, CATEGORICAL_TAG, CATEGORICAL_TAG])
+def test_feature_types_impute_adata(impute_adata):
+    ep.ad.infer_feature_types(impute_adata, output=None)
+    assert np.all(impute_adata.var[FEATURE_TYPE_KEY] == [NUMERIC_TAG, NUMERIC_TAG, CATEGORICAL_TAG, CATEGORICAL_TAG])
 
 
-def test_feature_types_impute_iris():
-    adata = read_csv(dataset_path=f"{IMPUTATION_DATA_PATH}/test_impute_iris.csv")
-    ep.ad.infer_feature_types(adata, output=None)
-    assert np.all(adata.var[FEATURE_TYPE_KEY] == [NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG, CATEGORICAL_TAG])
+def test_feature_types_impute_iris(impute_iris_adata):
+    ep.ad.infer_feature_types(impute_iris_adata, output=None)
+    assert np.all(
+        impute_iris_adata.var[FEATURE_TYPE_KEY] == [NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG, CATEGORICAL_TAG]
+    )
 
 
-def test_feature_types_impute_feature_types_titanic():
-    adata = read_csv(dataset_path=f"{IMPUTATION_DATA_PATH}/test_impute_titanic.csv")
-    ep.ad.infer_feature_types(adata, output=None)
-    adata.var[FEATURE_TYPE_KEY] = [
+def test_feature_types_impute_feature_types_titanic(impute_titanic_adata):
+    ep.ad.infer_feature_types(impute_titanic_adata, output=None)
+    impute_titanic_adata.var[FEATURE_TYPE_KEY] = [
         CATEGORICAL_TAG,
         CATEGORICAL_TAG,
         CATEGORICAL_TAG,
