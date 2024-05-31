@@ -31,7 +31,7 @@ def _detect_feature_type(col: pd.Series) -> tuple[Literal["date", "categorical",
     col = col.dropna()
     if len(col) == 0:
         raise ValueError(
-            f"Feature {col.name} has only NaN values. Please drop the feature if you want to infer the feature type."
+            f"Feature '{col.name}' contains only NaN values. Please drop this feature to infer the feature type."
         )
     majority_type = col.apply(type).value_counts().idxmax()
 
