@@ -38,13 +38,13 @@ def read_csv(
 
     Args:
         dataset_path: Path to the file or directory to read.
-        sep: Separator in the file. One of either , (comma) or \t (tab). Defaults to , (comma)
+        sep: Separator in the file. One of either , (comma) or \t (tab).
         index_column: The index column of obs. Usually the patient visit ID or the patient ID.
         columns_obs_only: These columns will be added to obs only and not X.
         columns_x_only: These columns will be added to X only and all remaining columns to obs.
                         Note that datetime columns will always be added to .obs though.
         return_dfs: Whether to return one or several Pandas DataFrames.
-        cache: Whether to write to cache when reading or not. Defaults to False.
+        cache: Whether to write to cache when reading or not.
         download_dataset_name: Name of the file or directory after download.
         backup_url: URL to download the data file(s) from, if the dataset is not yet on disk.
         is_archive: Whether the downloaded file is an archive.
@@ -371,12 +371,12 @@ def read_fhir(
 
     Args:
         dataset_path: Path to one or multiple FHIR files.
-        format: The file format of the FHIR data. One of 'json' or 'ndjson'. Defaults to 'json'.
+        format: The file format of the FHIR data. One of 'json' or 'ndjson'.
         columns_obs_only: These columns will be added to obs only and not X.
         columns_x_only: These columns will be added to X only and all remaining columns to obs.
                         Note that datetime columns will always be added to .obs though.
         return_df: Whether to return one or several Pandas DataFrames.
-        cache: Whether to write to cache when reading or not. Defaults to False.
+        cache: Whether to write to cache when reading or not.
         download_dataset_name: Name of the file or directory in case the dataset is downloaded
         index_column: The index column for the generated object. Usually the patient or visit ID.
         backup_url: URL to download the data file(s) from if not yet existing.

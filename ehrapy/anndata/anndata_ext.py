@@ -107,9 +107,9 @@ def anndata_to_df(
 
     Args:
         adata: The AnnData object to be transformed into a pandas Dataframe
-        layer: The layer to access the values of. Defaults to None (X).
-        obs_cols: obs columns to add to the DataFrame. Defaults to None.
-        var_cols: var columns to fetch values of. Defaults to None.
+        layer: The layer to access the values of. If not specified, it uses the `X` matrix.
+        obs_cols: obs columns to add to the DataFrame.
+        var_cols: var columns to fetch values of.
 
     Returns:
         The AnnData object as a pandas Dataframe

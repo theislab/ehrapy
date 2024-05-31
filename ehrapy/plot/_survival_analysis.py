@@ -45,12 +45,12 @@ def ols(
         adata: :class:`~anndata.AnnData` object containing all observations.
         x: x coordinate, for scatter plotting.
         y: y coordinate, for scatter plotting.
-        scatter_plot: If True, show scatter plot. Defaults to True.
+        scatter_plot: Whether to show a scatter plot.
         ols_results: List of RegressionResults from ehrapy.tl.ols. Example: [result_1, result_2]
         ols_color: List of colors for each ols_results. Example: ['red', 'blue'].
         xlabel: The x-axis label text.
         ylabel: The y-axis label text.
-        figsize: Width, height in inches. Defaults to None.
+        figsize: Width, height in inches.
         lines: List of Tuples of (slope, intercept) or (x, y). Plot lines by slope and intercept or data points.
                Example: plot two lines (y = x + 2 and y = 2*x + 1): [(1, 2), (2, 1)]
         lines_color: List of colors for each line. Example: ['red', 'blue']
@@ -159,20 +159,20 @@ def kmf(
 
     Args:
         kmfs: Iterables of fitted KaplanMeierFitter objects.
-        ci_alpha: The transparency level of the confidence interval. If more than one kmfs, this should be a list. Defaults to 0.3.
+        ci_alpha: The transparency level of the confidence interval. If more than one kmfs, this should be a list.
         ci_force_lines: Force the confidence intervals to be line plots (versus default shaded areas).
-                        If more than one kmfs, this should be a list. Defaults to False .
-        ci_show: Show confidence intervals. If more than one kmfs, this should be a list. Defaults to True .
+                        If more than one kmfs, this should be a list.
+        ci_show: Show confidence intervals. If more than one kmfs, this should be a list.
         ci_legend: If ci_force_lines is True, this is a boolean flag to add the lines' labels to the legend.
-                   If more than one kmfs, this should be a list. Defaults to False .
-        at_risk_counts: Show group sizes at time points. If more than one kmfs, this should be a list. Defaults to False.
+                   If more than one kmfs, this should be a list.
+        at_risk_counts: Show group sizes at time points. If more than one kmfs, this should be a list.
         color: List of colors for each kmf. If more than one kmfs, this should be a list.
         grid: If True, plot grid lines.
         xlim: Set the x-axis view limits.
         ylim: Set the y-axis view limits.
         xlabel: The x-axis label text.
         ylabel: The y-axis label text.
-        figsize: Width, height in inches. Defaults to None .
+        figsize: Width, height in inches.
         show: Show the plot, do not return axis.
         title: Set the title of the plot.
 

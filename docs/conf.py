@@ -11,7 +11,6 @@ sys.path[:0] = [str(HERE.parent), str(HERE / "extensions")]
 
 needs_sphinx = "4.3"
 
-# General information about the project.
 info = metadata("ehrapy")
 project_name = info["Name"]
 author = info["Author"]
@@ -60,7 +59,6 @@ nbsphinx_execute = "never"
 templates_path = ["_templates"]
 # source_suffix = ".md"
 
-# Generate the API documentation when building
 autosummary_generate = True
 autodoc_member_order = "bysource"
 napoleon_google_docstring = True  # for pytorch lightning
@@ -78,7 +76,6 @@ myst_enable_extensions = [
     "amsmath",
 ]
 
-# The master toctree document.
 master_doc = "index"
 
 intersphinx_mapping = {
@@ -102,17 +99,15 @@ intersphinx_mapping = {
 
 language = "en"
 
-# The name of the Pygments (syntax highlighting) style to use.
+typehints_defaults = "comma"
+
 pygments_style = "default"
 pygments_dark_style = "native"
 
 
-# -- Options for HTML output -------------------------------------------
-
 # html_show_sourcelink = True
 html_theme = "furo"
 
-# Set link name generated in the top bar.
 html_title = "ehrapy"
 html_logo = "_static/ehrapy_logos/ehrapy_pure.png"
 
@@ -127,9 +122,6 @@ html_theme_options = {
     },
     "top_of_page_button": None,
 }
-# Add any paths that contain custom static files (such as style sheets) here,
-# relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
 html_css_files = ["css/override.css", "css/sphinx_gallery.css"]
 html_show_sphinx = False

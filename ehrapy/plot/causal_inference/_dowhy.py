@@ -17,7 +17,6 @@ def causal_effect(estimate: dowhy.causal_estimator.CausalEstimate, precision: in
     Args:
         estimate: The causal effect estimate to plot.
         precision: The number of decimal places to round the estimate to in the plot title.
-                   Defaults to 3.
 
     Returns:
         matplotlib.axes.Axes: The matplotlib Axes object containing the plot.

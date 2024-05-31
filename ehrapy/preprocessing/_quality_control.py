@@ -71,8 +71,8 @@ def _missing_values(
 
     Args:
         arr: Numpy array containing a data row which is a subset of X (mtx).
-        mode: Whether to calculate absolute or percentage of missing values. Defaults to `"abs"`.
-        df_type: Whether to calculate the proportions for obs or var. One of 'obs' or 'var'. Defaults to 'obs' .
+        mode: Whether to calculate absolute or percentage of missing values.
+        df_type: Whether to calculate the proportions for obs or var. One of 'obs' or 'var'.
 
     Returns:
         Absolute or relative amount of missing values.
@@ -255,18 +255,17 @@ def qc_lab_measurements(
         adata: Annotated data matrix.
         reference_table: A custom DataFrame with reference values. Defaults to the laposata table if not specified.
         measurements: A list of measurements to check.
-        unit: The unit of the measurements. Defaults to 'traditional'.
+        unit: The unit of the measurements.
         layer: Layer containing the matrix to calculate the metrics for.
         threshold: Minimum required matching confidence score of the fuzzysearch.
-                   0 = no matches, 100 = all must match. Defaults to 20.
+                   0 = no matches, 100 = all must match.
         age_col: Column containing age values.
         age_range: The inclusive age-range to filter for such as 5-99.
         sex_col: Column containing sex values. Column must contain 'U', 'M' or 'F'.
         sex: Sex to filter the reference values for. Use U for unisex which uses male values when male and female conflict.
-             Defaults to 'U|M'.
         ethnicity_col: Column containing ethnicity values.
         ethnicity: Ethnicity to filter for.
-        copy: Whether to return a copy. Defaults to False.
+        copy: Whether to return a copy.
         verbose: Whether to have verbose stdout. Notifies user of matched columns and value ranges.
 
     Returns:
@@ -383,7 +382,7 @@ def mcar_test(
     Args:
         adata: Annotated data matrix.
         method: Whether to perform a chi-square test on the entire dataset (“little”) or separate t-tests for every combination of variables (“ttest”).
-        layer: Layer to apply the test to. Defaults to None (current X).
+        layer: Layer to apply the test to. Uses X matrix if set to `None`.
 
     Returns:
         A single p-value if the Little's test was applied or a Pandas DataFrame of the p-value of t-tests for each pair of features.

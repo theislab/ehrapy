@@ -28,17 +28,15 @@ def highly_variable_features(
 
     Args:
         adata: The annotated data matrix of shape `n_obs` × `n_vars`.
-        layer: If provided, use `adata.layers[layer]` for expression values instead of `adata.X`. Defaults to None .
-        top_features_percentage: Percentage of highly-variable features to keep. Defaults to 0.2 .
-        span: The fraction of the data used when estimating the variance in the loess model fit. Defaults to 0.3 .
+        layer: If provided, use `adata.layers[layer]` for expression values instead of `adata.X`.
+        top_features_percentage: Percentage of highly-variable features to keep.
+        span: The fraction of the data used when estimating the variance in the loess model fit.
         n_bins: Number of bins for binning. Normalization is done with respect to each bin.
                 If just a single observation falls into a bin, the normalized dispersion is artificially set to 1.
-                You'll be informed about this if you set `settings.verbosity = 4`. Defaults to 20 .
+                You'll be informed about this if you set `settings.verbosity = 4`.
         subset: Inplace subset to highly-variable features if `True` otherwise merely indicate highly variable features.
-                Defaults to False .
-        inplace: Whether to place calculated metrics in `.var` or return them. Defaults to True .
+        inplace: Whether to place calculated metrics in `.var` or return them.
         check_values: Check if counts in selected layer are integers. A Warning is returned if set to True.
-                      Defaults to True .
 
     Returns:
         Depending on `inplace` returns calculated metrics (:class:`~pandas.DataFrame`) or

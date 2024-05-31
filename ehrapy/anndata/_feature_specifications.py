@@ -22,7 +22,7 @@ def _detect_feature_type(col: pd.Series) -> tuple[Literal["date", "categorical",
 
     Args:
         col: The column to detect the feature type for.
-        verbose: Whether to print warnings for uncertain feature types. Defaults to True.
+        verbose: Whether to print warnings for uncertain feature types.
 
     Returns:
         The detected feature type (one of 'date', 'categorical', or 'numeric') and a boolean, which is True if the feature type is uncertain.
@@ -83,8 +83,8 @@ def infer_feature_types(
         adata: :class:`~anndata.AnnData` object storing the EHR data.
         layer: The layer to use from the AnnData object. If None, the X layer is used.
         output: The output format. Choose between 'tree', 'dataframe', or None. If 'tree', the feature types will be printed to the console in a tree format.
-            If 'dataframe', a pandas DataFrame with the feature types will be returned. If None, nothing will be returned. Defaults to 'tree'.
-        verbose: Whether to print warnings for uncertain feature types. Defaults to True.
+            If 'dataframe', a pandas DataFrame with the feature types will be returned. If None, nothing will be returned.
+        verbose: Whether to print warnings for uncertain feature types.
 
     Examples:
         >>> import ehrapy as ep

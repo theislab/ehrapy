@@ -43,9 +43,9 @@ def pca(
                     * `'lobpcg'` An alternative SciPy solver.
 
                     Efficient computation of the principal components of a sparse matrix currently only works with the `'arpack`' or `'lobpcg'` solvers.
-        random_state: Change to use different initial states for the optimization. Defaults to 0 .
+        random_state: Change to use different initial states for the optimization.
         return_info: Only relevant when not passing an :class:`~anndata.AnnData`: see “**Returns**”.
-        dtype: Numpy data type string to which to convert the result. Defaults to float32 .
+        dtype: Numpy data type string to which to convert the result.
         copy: If an :class:`~anndata.AnnData` is passed, determines whether a copy is returned. Is ignored otherwise.
         chunked: If `True`, perform an incremental PCA on segments of `chunk_size`.
                   The incremental PCA automatically zero centers and ignores settings of

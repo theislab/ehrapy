@@ -40,8 +40,8 @@ def explicit_impute(
         adata: :class:`~anndata.AnnData` object containing X to impute values in.
         replacement: The value to replace missing values with. If a dictionary is provided, the keys represent column
                      names and the values represent replacement values for those columns.
-        impute_empty_strings: If True, empty strings are also replaced. Defaults to True.
-        warning_threshold: Threshold of percentage of missing values to display a warning for. Defaults to 70.
+        impute_empty_strings: If True, empty strings are also replaced.
+        warning_threshold: Threshold of percentage of missing values to display a warning for.
         copy: If True, returns a modified copy of the original AnnData object. If False, modifies the object in place.
 
     Returns:
@@ -132,8 +132,8 @@ def simple_impute(
         adata: The annotated data matrix to impute missing values on.
         var_names: A list of column names to apply imputation on (if None, impute all columns).
         strategy: Imputation strategy to use. One of {'mean', 'median', 'most_frequent'}.
-        warning_threshold: Display a warning message if percentage of missing values exceeds this threshold. Defaults to 70.
-        copy:Whether to return a copy of `adata` or modify it inplace. Defaults to False.
+        warning_threshold: Display a warning message if percentage of missing values exceeds this threshold.
+        copy:Whether to return a copy of `adata` or modify it inplace.
 
     Returns:
         An updated AnnData object with imputed values.
@@ -212,14 +212,14 @@ def knn_impute(
         adata: An annotated data matrix containing EHR data.
         var_names: A list of variable names indicating which columns to impute.
                    If `None`, all columns are imputed. Default is `None`.
-        n_neighbours: Number of neighbors to use when performing the imputation. Defaults to 5.
+        n_neighbours: Number of neighbors to use when performing the imputation.
         copy: Whether to perform the imputation on a copy of the original `AnnData` object.
-              If `True`, the original object remains unmodified. Defaults to `False`.
+              If `True`, the original object remains unmodified.
         backend: The implementation to use for the KNN imputation.
                  'scikit-learn' is very slow but uses an exact KNN algorithm, whereas 'faiss'
                  is drastically faster but uses an approximation for the KNN graph.
                  In practice, 'faiss' is close enough to the 'scikit-learn' results.
-        warning_threshold: Percentage of missing values above which a warning is issued. Defaults to 70.
+        warning_threshold: Percentage of missing values above which a warning is issued.
         backend_kwargs: Passed to the backend.
                   Pass "mean", "median", or "weighted" for 'strategy' to set the imputation strategy for faiss.
                   See `sklearn.impute.KNNImputer <https://scikit-learn.org/stable/modules/generated/sklearn.impute.KNNImputer.html>`_ for more information on the 'scikit-learn' backend.
@@ -337,13 +337,13 @@ def miss_forest_impute(
         adata: The AnnData object to use MissForest Imputation on.
         var_names: List of columns to impute or a dict with two keys ('numerical' and 'non_numerical') indicating which var
                    contain mixed data and which numerical data only.
-        num_initial_strategy: The initial strategy to replace all missing numerical values with. Defaults to 'mean'.
-        max_iter: The maximum number of iterations if the stop criterion has not been met yet. Defaults to 3.
+        num_initial_strategy: The initial strategy to replace all missing numerical values with.
+        max_iter: The maximum number of iterations if the stop criterion has not been met yet.
         n_estimators: The number of trees to fit for every missing variable. Has a big effect on the run time.
-                      Decrease for faster computations. Defaults to 100.
-        random_state: The random seed for the initialization. Defaults to 0.
-        warning_threshold: Threshold of percentage of missing values to display a warning for. Defaults to 70 .
-        copy: Whether to return a copy or act in place. Defaults to False.
+                      Decrease for faster computations.
+        random_state: The random seed for the initialization.
+        warning_threshold: Threshold of percentage of missing values to display a warning for.
+        copy: Whether to return a copy or act in place.
 
     Returns:
         The imputed (but unencoded) AnnData object.
@@ -463,19 +463,16 @@ def mice_forest_impute(
         adata: The AnnData object containing the data to impute.
         var_names: A list of variable names to impute. If None, impute all variables.
         warning_threshold: Threshold of percentage of missing values to display a warning for.
-                           Defaults to 70.
         save_all_iterations: Whether to save all imputed values from all iterations or just the latest.
-                             Saving all iterations allows for additional plotting, but may take more memory. Defaults to True.
+                             Saving all iterations allows for additional plotting, but may take more memory.
         random_state: The random state ensures script reproducibility.
-                      Defaults to None.
         inplace: If True, modify the input AnnData object in-place and return None.
                  If False, return a copy of the modified AnnData object. Default is False.
-        iterations: The number of iterations to run. Defaults to 5.
+        iterations: The number of iterations to run.
         variable_parameters: Model parameters can be specified by variable here.
                              Keys should be variable names or indices, and values should be a dict of parameter which should apply to that variable only.
-                             Defaults to None.
-        verbose: Whether to print information about the imputation process. Defaults to False.
-        copy: Whether to return a copy of the AnnData object or modify it in-place. Defaults to False.
+        verbose: Whether to print information about the imputation process.
+        copy: Whether to return a copy of the AnnData object or modify it in-place.
 
     Returns:
         The imputed AnnData object.

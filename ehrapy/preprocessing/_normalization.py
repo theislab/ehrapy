@@ -59,9 +59,9 @@ def scale_norm(
     Args:
         adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
         vars: List of the names of the numeric variables to normalize.
-              If None all numeric variables will be normalized. Defaults to None.
+              If None all numeric variables will be normalized.
         group_key: Key in adata.obs that contains group information. If provided, scaling is applied per group.
-        copy: Whether to return a copy or act in place. Defaults to False.
+        copy: Whether to return a copy or act in place.
         **kwargs: Additional arguments passed to :func:`~sklearn.preprocessing.scale`
 
     Returns:
@@ -111,9 +111,9 @@ def minmax_norm(
         adata: :class:`~anndata.AnnData` object containing X to normalize values in.
                Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
         vars: List of the names of the numeric variables to normalize.
-              If None all numeric variables will be normalized. Defaults to False.
+              If None all numeric variables will be normalized.
         group_key: Key in adata.obs that contains group information. If provided, scaling is applied per group.
-        copy: Whether to return a copy or act in place. Defaults to False.
+        copy: Whether to return a copy or act in place.
         **kwargs: Additional arguments passed to :func:`~sklearn.preprocessing.minmax_scale`
 
     Returns:
@@ -163,9 +163,9 @@ def maxabs_norm(
         adata: :class:`~anndata.AnnData` object containing X to normalize values in.
                Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
         vars: List of the names of the numeric variables to normalize.
-              If None all numeric variables will be normalized. Defaults to None.
+              If None all numeric variables will be normalized.
         group_key: Key in adata.obs that contains group information. If provided, scaling is applied per group.
-        copy: Whether to return a copy or act in place. Defaults to False.
+        copy: Whether to return a copy or act in place.
 
     Returns:
         :class:`~anndata.AnnData` object with normalized X.
@@ -215,9 +215,9 @@ def robust_scale_norm(
         adata: :class:`~anndata.AnnData` object containing X to normalize values in.
                Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
         vars: List of the names of the numeric variables to normalize.
-              If None all numeric variables will be normalized. Defaults to None.
+              If None all numeric variables will be normalized.
         group_key: Key in adata.obs that contains group information. If provided, scaling is applied per group.
-        copy: Whether to return a copy or act in place. Defaults to False.
+        copy: Whether to return a copy or act in place.
         **kwargs: Additional arguments passed to :func:`~sklearn.preprocessing.robust_scale`
 
     Returns:
@@ -267,9 +267,9 @@ def quantile_norm(
     Args:
         adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encoded using ~ehrapy.preprocessing.encode.encode.
         vars: List of the names of the numeric variables to normalize.
-              If None all numeric variables will be normalized. Defaults to None.
+              If None all numeric variables will be normalized.
         group_key: Key in adata.obs that contains group information. If provided, scaling is applied per group.
-        copy: Whether to return a copy or act in place. Defaults to False.
+        copy: Whether to return a copy or act in place.
         **kwargs: Additional arguments passed to :func:`~sklearn.preprocessing.quantile_transform`
 
     Returns:
@@ -320,9 +320,9 @@ def power_norm(
         adata: :class:`~anndata.AnnData` object containing X to normalize values in.
                Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
         vars: List of the names of the numeric variables to normalize.
-              If None all numeric variables will be normalized. Defaults to None.
+              If None all numeric variables will be normalized.
         group_key: Key in adata.obs that contains group information. If provided, scaling is applied per group.
-        copy: Whether to return a copy or act in place. Defaults to False.
+        copy: Whether to return a copy or act in place.
         **kwargs: Additional arguments passed to :func:`~sklearn.preprocessing.power_transform`
 
     Returns:
@@ -372,10 +372,10 @@ def log_norm(
     Args:
         adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
         vars: List of the names of the numeric variables to normalize.
-              If None all numeric variables will be normalized. Defaults to None.
+              If None all numeric variables will be normalized.
         base: Numeric base for logarithm. If None the natural logarithm is used.
-        offset: Offset added to values before computing the logarithm. Defaults to 1.
-        copy: Whether to return a copy or act in place. Defaults to False.
+        offset: Offset added to values before computing the logarithm.
+        copy: Whether to return a copy or act in place.
 
     Returns:
         :class:`~anndata.AnnData` object with normalized X.

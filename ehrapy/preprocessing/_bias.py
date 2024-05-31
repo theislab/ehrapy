@@ -50,19 +50,19 @@ def detect_bias(
         adata: An annotated data matrix containing EHR data. Encoded features are required for bias detection.
         sensitive_features: Sensitive features to consider for bias detection. If set to "all", all features in adata.var will be considered.
         run_feature_importances: Whether to run feature importances for detecting bias. If set to None, the function will run feature importances if
-            sensitive_features is not set to "all", as this can be computationally expensive. Defaults to None.
-        corr_threshold: The threshold for the correlation coefficient between two features to be considered of interest. Defaults to 0.5.
-        smd_threshold: The threshold for the standardized mean difference between two features to be considered of interest. Defaults to 0.5.
+            sensitive_features is not set to "all", as this can be computationally expensive.
+        corr_threshold: The threshold for the correlation coefficient between two features to be considered of interest.
+        smd_threshold: The threshold for the standardized mean difference between two features to be considered of interest.
         categorical_factor_threshold: The threshold for the factor between the value counts (as percentages) of a feature compared between two
-            groups of a sensitive feature. Defaults to 2.
+            groups of a sensitive feature.
         feature_importance_threshold: The threshold for the feature importance of a sensitive feature for predicting another feature to be considered
-            of interest. Defaults to 0.1.
+            of interest.
         prediction_confidence_threshold: The threshold for the prediction confidence (R2 or accuracy) of a sensitive feature for predicting another
-            feature to be considered of interest. Defaults to 0.5.
-        corr_method: The correlation method to use. Defaults to "spearman".
-        layer: The layer in adata.layers to use for computation. If None, adata.X will be used. Defaults to None.
+            feature to be considered of interest.
+        corr_method: The correlation method to use.
+        layer: The layer in adata.layers to use for computation. If None, adata.X will be used.
         copy: If set to False, adata is updated in place. If set to True, the adata is copied and the results are stored in the copied adata, which
-            is then returned. Defaults to False.
+            is then returned.
 
     Returns:
         A dictionary containing the results of the bias detection. The keys are

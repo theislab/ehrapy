@@ -81,7 +81,7 @@ def mimic_3_demo(
     The resulting DataFrame can then be transformed into an AnnData object with :func:`~ehrapy.anndata.df_to_anndata`.
 
     Args:
-        anndata: Whether to return one AnnData object per CSV file. Defaults to False
+        anndata: Whether to return one AnnData object per CSV file.
         columns_obs_only: Columns to include in obs only and not X.
 
     Returns:

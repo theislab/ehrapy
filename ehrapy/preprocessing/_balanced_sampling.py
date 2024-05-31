@@ -32,10 +32,10 @@ def balanced_sample(
     Args:
         adata: The annotated data matrix of shape `n_obs` × `n_vars`.
         key: The key in `adata.obs` that contains the group information.
-        random_state: Random seed. Defaults to 0.
-        method: The method to use for balancing. Defaults to "RandomUnderSampler".
-        sampler_kwargs: Keyword arguments for the sampler, see the `imbalanced-learn` documentation for options. Defaults to None.
-        copy: If True, return a copy of the balanced data. Defaults to False.
+        random_state: Random seed.
+        method: The method to use for balancing.
+        sampler_kwargs: Keyword arguments for the sampler, see the `imbalanced-learn` documentation for options.
+        copy: If True, return a copy of the balanced data.
     Returns:
         A new `AnnData` object, with the balanced groups.
 

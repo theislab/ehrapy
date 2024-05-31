@@ -42,7 +42,7 @@ def ols(
         formula: The formula specifying the model.
         missing: Available options are 'none', 'drop', and 'raise'.
                  If 'none', no nan checking is done. If 'drop', any observations with nans are dropped.
-                 If 'raise', an error is raised. Defaults to 'none'.
+                 If 'raise', an error is raised.
 
     Returns:
         The OLS model instance.
@@ -80,9 +80,8 @@ def glm(
         var_names: A list of var names indicating which columns are for the GLM model.
         formula: The formula specifying the model.
         family: The distribution families. Available options are 'Gaussian', 'Binomial', 'Gamma', and 'InverseGaussian'.
-                Defaults to 'Gaussian'.
         missing: Available options are 'none', 'drop', and 'raise'. If 'none', no nan checking is done.
-                 If 'drop', any observations with nans are dropped. If 'raise', an error is raised (default: 'none').
+                 If 'drop', any observations with nans are dropped. If 'raise', an error is raised.
         as_continuous: A list of var names indicating which columns are continuous rather than categorical.
                     The corresponding columns will be set as type float.
 
@@ -137,7 +136,7 @@ def kmf(
 
     Args:
         durations: length n -- duration (relative to subject's birth) the subject was alive for.
-        event_observed: True if the death was observed, False if the event was lost (right-censored). Defaults to all True if event_observed==None.
+        event_observed: True if the death was observed, False if the event was lost (right-censored). Defaults to all True if event_observed is equal to `None`.
         timeline: return the best estimate at the values in timelines (positively increasing)
         entry: Relative time when a subject entered the study. This is useful for left-truncated (not left-censored) observations.
                If None, all members of the population entered study when they were "born".
@@ -204,7 +203,7 @@ def test_kmf_logrank(
         kmf_A: The first KaplanMeierFitter object containing the durations and events.
         kmf_B: The second KaplanMeierFitter object containing the durations and events.
         t_0: The final time period under observation, and subjects who experience the event after this time are set to be censored.
-             Specify -1 to use all time. Defaults to -1.
+             Specify -1 to use all time.
         weightings: Apply a weighted logrank test: options are "wilcoxon" for Wilcoxon (also known as Breslow), "tarone-ware"
                     for Tarone-Ware, "peto" for Peto test and "fleming-harrington" for Fleming-Harrington test.
                     These are useful for testing for early or late differences in the survival curve. For the Fleming-Harrington

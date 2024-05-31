@@ -42,21 +42,20 @@ def rank_features_supervised(
         adata: :class:`~anndata.AnnData` object storing the data.
         predicted_feature: The feature to predict by the model. Must be present in adata.var_names.
         model: The model to use for prediction. Choose between 'regression', 'svm', or 'rf'. Note that multi-class classification
-            is only possible with 'rf'. Defaults to 'regression'.
+            is only possible with 'rf'.
         input_features: The features in adata.var to use for prediction. Should be a list of feature names. If 'all', all features
             in adata.var will be used. Note that non-numeric input features will cause an error, so make sure to encode them properly
-            before. Defaults to 'all'.
-        layer: The layer in adata.layers to use for prediction. If None, adata.X will be used. Defaults to None.
+            before.
+        layer: The layer in adata.layers to use for prediction. If None, adata.X will be used.
         test_split_size: The split of data used for testing the model. Should be a float between 0 and 1, representing the proportion.
-            Defaults to 0.2.
-        key_added: The key in adata.var to store the feature importances. Defaults to 'feature_importances'.
+        key_added: The key in adata.var to store the feature importances.
         feature_scaling: The type of feature scaling to use for the input. Choose between 'standard', 'minmax', or None.
             'standard' uses sklearn's StandardScaler, 'minmax' uses MinMaxScaler. Scaler will be fit and transformed
-            for each feature individually. Defaults to 'standard'.
+            for each feature individually.
         percent_output: Set to True to output the feature importances as percentages. Note that information about positive or negative
-            coefficients for regression models will be lost. Defaults to False.
-        verbose: Set to False to disable logging. Defaults to True.
-        return_score: Set to True to return the R2 score / the accuracy of the model. Defaults to False.
+            coefficients for regression models will be lost.
+        verbose: Set to False to disable logging.
+        return_score: Set to True to return the R2 score / the accuracy of the model.
         **kwargs: Additional keyword arguments to pass to the model. See the documentation of the respective model in scikit-learn for details.
 
     Returns:

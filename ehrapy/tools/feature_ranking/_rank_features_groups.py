@@ -336,7 +336,7 @@ def rank_features_groups(
                 shall be restricted, or `'all'` (default), for all groups.
         reference: If `'rest'`, compare each group to the union of the rest of the group.
                    If a group identifier, compare with respect to this group.
-        n_features: The number of features that appear in the returned tables. Defaults to all features.
+        n_features: The number of features that appear in the returned tables. Defaults to all features if `None`.
         rankby_abs: Rank genes by the absolute value of the score, not by the score.
                     The returned scores are never the absolute values.
         pts: Compute the fraction of observations containing the features.
