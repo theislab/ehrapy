@@ -25,11 +25,11 @@ def rank_features_supervised(
     Args:
         adata: :class:`~anndata.AnnData` object storing the data. A key in adata.var should contain the feature
             importances, calculated beforehand.
-        key: The key in adata.var to use for feature importances. Defaults to 'feature_importances'.
-        n_features: The number of features to plot. Defaults to 10.
-        ax: A matplotlib axes object to plot on. If `None`, a new figure will be created. Defaults to `None`.
-        show: If `True`, show the figure. If `False`, return the axes object. Defaults to `True`.
-        save: Path to save the figure. If `None`, the figure will not be saved. Defaults to `None`.
+        key: The key in adata.var to use for feature importances.
+        n_features: The number of features to plot.
+        ax: A matplotlib axes object to plot on. If `None`, a new figure will be created.
+        show: If `True`, show the figure. If `False`, return the axes object.
+        save: Path to save the figure. If `None`, the figure will not be saved.
         **kwargs: Additional arguments passed to `seaborn.barplot`.
 
     Returns:

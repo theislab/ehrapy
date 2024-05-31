@@ -490,7 +490,7 @@ def _undo_encoding(
 
     Args:
         adata: The AnnData object
-        verbose: Set to False to suppress warnings. Defaults to True.
+        verbose: Set to False to suppress warnings.
 
     Returns:
         A (partially) encoding reset AnnData object

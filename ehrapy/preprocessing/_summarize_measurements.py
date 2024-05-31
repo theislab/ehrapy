@@ -20,11 +20,11 @@ def summarize_measurements(
 
     Args:
         adata: AnnData object containing measurements that
-        layer: Layer to calculate the expanded measurements for. Defaults to None (use X).
+        layer: Layer to calculate the expanded measurements for.
         var_names: For which measurements to determine the expanded measurements for. Defaults to None (all numerical measurements).
         statistics: Which expanded measurements to calculate.
                     Possible values are 'min', 'max', 'mean'
-                    Defaults to None (calculate minimum, maximum and mean).
+                    If None, it calculates minimum, maximum and mean.
 
     Returns:
         A new AnnData object with expanded X containing the specified statistics as additional columns replacing the original values.

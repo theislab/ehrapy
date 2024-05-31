@@ -6,12 +6,12 @@ from io import StringIO
 from typing import TYPE_CHECKING, Any, Literal
 
 import dowhy
-import networkx as nx
 import numpy as np
 from lamin_utils import logger
 
 if TYPE_CHECKING:
     import anndata
+    import networkx as nx
 
 warnings.filterwarnings("ignore")
 
@@ -79,14 +79,14 @@ def causal_inference(
         graph: A str representing the causal graph to use.
         treatment: A str representing the treatment variable in the causal graph.
         outcome: A str representing the outcome variable in the causal graph.
-        estimation_method: An optional Literal specifying the estimation method to use. Defaults to "backdoor.propensity_score_stratification".
-        refute_methods: An optional List of Literal specifying the methods to use for refutation tests. Defaults to ["placebo_treatment_refuter", "random_common_cause", "data_subset_refuter"].
-        print_causal_estimate: Whether to print the causal estimate or not, default is False.
-        print_summary: Whether to print the causal model summary or not, default is True.
-        return_as: An optional Literal specifying the type of output to return. Defaults to "summary".
-        show_graph: Whether to display the graph or not, default is False.
-        show_refute_plots: Whether to display the refutation plots or not, default is False.
-        attempts: Number of attempts to try to generate a valid causal estimate, default is 10.
+        estimation_method: An optional Literal specifying the estimation method to use.
+        refute_methods: An optional List of Literal specifying the methods to use for refutation tests.
+        print_causal_estimate: Whether to print the causal estimate or not.
+        print_summary: Whether to print the causal model summary or not.
+        return_as: An optional Literal specifying the type of output to return.
+        show_graph: Whether to display the graph or not.
+        show_refute_plots: Whether to display the refutation plots or not.
+        attempts: Number of attempts to try to generate a valid causal estimate.
         identify_kwargs: Optional keyword arguments for dowhy.CausalModel.identify_effect().
         estimate_kwargs: Optional keyword arguments for dowhy.CausalModel.estimate_effect().
         refute_kwargs: Optional keyword arguments for dowhy.CausalModel.refute_estimate().
@@ -127,9 +127,6 @@ def causal_inference(
         ... )
         ... ep.tl.plot_causal_effect(estimate)
     """
-    if not isinstance(graph, (nx.DiGraph, str)):
-        raise TypeError("Input graph must be a networkx DiGraph or string.")
-
     valid_refute_methods = [
         "placebo_treatment_refuter",
         "random_common_cause",
@@ -142,10 +139,6 @@ def causal_inference(
 
     if isinstance(refute_methods, str):
         refute_methods = [refute_methods]
-
-    if isinstance(refute_methods, list):
-        if not all(isinstance(rm, str) for rm in refute_methods):
-            raise TypeError("When parameter 'refute_methods' is a list, all of them must be strings.")
 
     for method in refute_methods:
         if method not in valid_refute_methods:
