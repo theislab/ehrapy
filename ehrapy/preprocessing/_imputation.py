@@ -201,7 +201,7 @@ def knn_impute(
     backend: Literal["scikit-learn", "faiss"] = "faiss",
     warning_threshold: int = 70,
     backend_kwargs: dict | None = None,
-    **kwargs
+    **kwargs,
 ) -> AnnData:
     """Imputes missing values in the input AnnData object using K-nearest neighbor imputation.
 
@@ -230,7 +230,7 @@ def knn_impute(
                   Pass "mean", "median", or "weighted" for 'strategy' to set the imputation strategy for faiss.
                   See `sklearn.impute.KNNImputer <https://scikit-learn.org/stable/modules/generated/sklearn.impute.KNNImputer.html>`_ for more information on the 'scikit-learn' backend.
                   See `fknni.faiss.FaissImputer <https://fknni.readthedocs.io/en/latest/>`_ for more information on the 'faiss' backend.
-        kwargs: Gathering keyword arguments of earlier ehrapy versions for backwards compatibility. It is encouraged to use the here listed, current arguments. 
+        kwargs: Gathering keyword arguments of earlier ehrapy versions for backwards compatibility. It is encouraged to use the here listed, current arguments.
 
     Returns:
         An updated AnnData object with imputed values.
@@ -261,11 +261,11 @@ def knn_impute(
     if unexpected_kwargs:
         raise ValueError(f"Unexpected keyword arguments: {unexpected_kwargs}.")
 
-
     if "n_neighbours" in kwargs.keys():
         n_neighbors = kwargs["n_neighbours"]
-        logger.warning("ehrapy will use 'n_neighbors' instead of 'n_neighbours' in the future. Please update your code.")
-
+        logger.warning(
+            "ehrapy will use 'n_neighbors' instead of 'n_neighbours' in the future. Please update your code."
+        )
 
     if _check_module_importable("sklearnex"):  # pragma: no cover
         from sklearnex import patch_sklearn, unpatch_sklearn
