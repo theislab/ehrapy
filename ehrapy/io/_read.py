@@ -29,8 +29,8 @@ def read_csv(
     columns_x_only: dict[str, list[str]] | list[str] | None = None,
     return_dfs: bool = False,
     cache: bool = False,
-    backup_url: str | None = None,
     download_dataset_name: str | None = None,
+    backup_url: str | None = None,
     archive_format: Literal["zip", "tar", "tar.gz", "tgz"] = None,
     **kwargs,
 ) -> AnnData | dict[str, AnnData]:
@@ -47,7 +47,7 @@ def read_csv(
         cache: Whether to write to cache when reading or not.
         download_dataset_name: Name of the file or directory after download.
         backup_url: URL to download the data file(s) from, if the dataset is not yet on disk.
-        is_archive: Whether the downloaded file is an archive.
+        archive_format: Whether the downloaded file is an archive.
 
     Returns:
         An :class:`~anndata.AnnData` object or a dict with an identifier (the filename, without extension)
@@ -148,7 +148,7 @@ def read_h5ad(
 
     Returns:
         An :class:`~anndata.AnnData` object or a dict with an identifier (the filename, without extension)
-        for each :class:`~anndata.AnnData` object in the dict
+        for each :class:`~anndata.AnnData` object in the dict.
 
     Examples:
         >>> import ehrapy as ep
@@ -219,18 +219,18 @@ def _read_multiple_csv(
     Args:
         file_path: File path to the directory containing multiple .csv/.tsv files.
         sep: Either , or \t to determine which files to read.
-        index_column: Column names of the index columns for obs
+        index_column: Column names of the index columns for obs.
         columns_obs_only: List of columns per file (AnnData object) which should only be stored in .obs, but not in X.
                           Useful for free text annotations.
         columns_x_only: List of columns per file (AnnData object) which should only be stored in .X, but not in obs.
                         Datetime columns will be added to .obs regardless.
         return_dfs: When set to True, return a dictionary of Pandas DataFrames.
-        cache: Whether to cache results or not
-        kwargs: Keyword arguments for Pandas `read_csv`
+        cache: Whether to cache results or not.
+        kwargs: Keyword arguments for Pandas `read_csv`.
 
     Returns:
         A Dict mapping the filename (object name) to the corresponding :class:`~anndata.AnnData` object and the columns
-        that are obs only for each object
+        that are obs only for each object.
     """
     obs_only_all = {}
     if return_dfs:
@@ -277,14 +277,14 @@ def _do_read_csv(
     Args:
         file_path: File path to the csv file.
         delimiter: Delimiter separating the csv data within the file.
-        index_column: Index or column name of the index column (obs)
+        index_column: Index or column name of the index column (obs).
         columns_obs_only: List of columns which only be stored in .obs, but not in X. Useful for free text annotations.
         columns_x_only: List of columns which only be stored in X, but not in .obs.
 
-        cache: Whether the data should be written to cache or not
+        cache: Whether the data should be written to cache or not.
 
     Returns:
-        An :class:`~anndata.AnnData` object and the column obs only for the object
+        An :class:`~anndata.AnnData` object and the column obs only for the object.
     """
     try:
         if index_column and columns_obs_only and index_column in columns_obs_only:
@@ -330,7 +330,7 @@ def _read_multiple_h5ad(
 def _do_read_h5ad(file_path: Path | Iterator[str]) -> AnnData:
     """Read from a h5ad file.
     Args:
-        file_path: Path to the h5ad file
+        file_path: Path to the h5ad file.
 
     Returns:
         An AnnData object.
@@ -377,7 +377,7 @@ def read_fhir(
                         Note that datetime columns will always be added to .obs though.
         return_df: Whether to return one or several Pandas DataFrames.
         cache: Whether to write to cache when reading or not.
-        download_dataset_name: Name of the file or directory in case the dataset is downloaded
+        download_dataset_name: Name of the file or directory in case the dataset is downloaded.
         index_column: The index column for the generated object. Usually the patient or visit ID.
         backup_url: URL to download the data file(s) from if not yet existing.
 
@@ -526,13 +526,13 @@ def _write_cache_dir(
     """Write multiple AnnData objects into a common cache directory keeping index column and columns_obs_only.
 
     Args:
-        adata_objects: A dictionary with an identifier as key for each of the AnnData objects
-        path_cache: Path to the cache directory
-        columns_obs_only: Columns for obs only
-        index_column: The index columns for each object (if any)
+        adata_objects: A dictionary with an identifier as key for each of the AnnData objects.
+        path_cache: Path to the cache directory.
+        columns_obs_only: Columns for obs only.
+        index_column: The index columns for each object (if any).
 
     Returns:
-        A dict containing a unique identifier and an :class:`~anndata.AnnData` object for each file read
+        A dict containing a unique identifier and an :class:`~anndata.AnnData` object for each file read.
     """
     for identifier in adata_objects:
         # for each identifier (for the AnnData object), we need the index column and obs_only cols (if any) for reuse when reading cache
@@ -613,11 +613,11 @@ def _decode_cached_adata(adata: AnnData, column_obs_only: list[str]) -> AnnData:
     """Decode the label encoding of initial AnnData object
 
     Args:
-        adata: The label encoded AnnData object
-        column_obs_only: The columns, that should be kept in obs
+        adata: The label encoded AnnData object.
+        column_obs_only: The columns, that should be kept in obs.
 
     Returns:
-        The decoded, initial AnnData object
+        The decoded, initial AnnData object.
     """
     var_names = list(adata.var_names)
     # for each encoded categorical, replace its encoded values with its original values in X
@@ -664,7 +664,7 @@ def _extract_index_and_columns_obs_only(identifier: str, index_columns, columns_
         columns_obs_only: Columns for obs only
 
     Returns:
-        Index column (if any) and columns obs only (if any) for this specific AnnData object
+        Index column (if any) and columns obs only (if any) for this specific AnnData object.
     """
     _index_column = None
     _columns_obs_only = None

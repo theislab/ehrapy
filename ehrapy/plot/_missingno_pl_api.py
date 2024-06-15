@@ -190,7 +190,7 @@ def missing_values_heatmap(
     Note that this visualization has no special support for large datasets. For those, try the dendrogram instead.
 
     Args:
-        adata: :class:`~anndata.AnnData` object object containing all observations.
+        adata: :class:`~anndata.AnnData` object containing all observations.
         filter: The filter to apply to the heatmap. Should be one of "top", "bottom", or None.
         max_cols: The max number of columns from the AnnData object to include.
         max_percentage: The max percentage fill of the columns from the AnnData object.
@@ -273,7 +273,7 @@ def missing_values_dendrogram(
     left unspecified the dendrogram will automatically swap to a horizontal display to fit the additional variables.
 
     Args:
-        adata: :class:`~anndata.AnnData` object object containing all observations.
+        adata: :class:`~anndata.AnnData` object containing all observations.
         method: The distance measure being used for clustering. This parameter is passed to `scipy.hierarchy`.
         filter: The filter to apply to the dendrogram. Should be one of "top", "bottom", or None.
         max_cols: The max number of columns from the AnnData object to include.

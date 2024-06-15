@@ -19,7 +19,7 @@ def summarize_measurements(
     """Summarizes numerical measurements into minimum, maximum and average values.
 
     Args:
-        adata: AnnData object containing measurements that
+        adata: AnnData object containing measurements.
         layer: Layer to calculate the expanded measurements for.
         var_names: For which measurements to determine the expanded measurements for. Defaults to None (all numerical measurements).
         statistics: Which expanded measurements to calculate.

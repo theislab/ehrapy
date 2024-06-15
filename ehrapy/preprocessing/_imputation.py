@@ -196,7 +196,7 @@ def knn_impute(
     adata: AnnData,
     var_names: Iterable[str] | None = None,
     *,
-    n_neighbours: int = 5,
+    n_neighbors: int = 5,
     copy: bool = False,
     backend: Literal["scikit-learn", "faiss"] = "faiss",
     warning_threshold: int = 70,
@@ -212,7 +212,7 @@ def knn_impute(
         adata: An annotated data matrix containing EHR data.
         var_names: A list of variable names indicating which columns to impute.
                    If `None`, all columns are imputed. Default is `None`.
-        n_neighbours: Number of neighbors to use when performing the imputation.
+        n_neighbors: Number of neighbors to use when performing the imputation.
         copy: Whether to perform the imputation on a copy of the original `AnnData` object.
               If `True`, the original object remains unmodified.
         backend: The implementation to use for the KNN imputation.
@@ -261,14 +261,14 @@ def knn_impute(
             progress.add_task("[blue]Running KNN imputation", total=1)
             # numerical only data needs no encoding since KNN Imputation can be applied directly
             if np.issubdtype(adata.X.dtype, np.number):
-                _knn_impute(adata, var_names, n_neighbours, backend=backend, **backend_kwargs)
+                _knn_impute(adata, var_names, n_neighbors, backend=backend, **backend_kwargs)
             else:
                 # ordinal encoding is used since non-numerical data can not be imputed using KNN Imputation
                 enc = OrdinalEncoder()
                 column_indices = adata.var[FEATURE_TYPE_KEY] == CATEGORICAL_TAG
                 adata.X[::, column_indices] = enc.fit_transform(adata.X[::, column_indices])
                 # impute the data using KNN imputation
-                _knn_impute(adata, var_names, n_neighbours, backend=backend, **backend_kwargs)
+                _knn_impute(adata, var_names, n_neighbors, backend=backend, **backend_kwargs)
                 # imputing on encoded columns might result in float numbers; those can not be decoded
                 # cast them to int to ensure they can be decoded
                 adata.X[::, column_indices] = np.rint(adata.X[::, column_indices]).astype(int)
@@ -291,18 +291,18 @@ def knn_impute(
 def _knn_impute(
     adata: AnnData,
     var_names: Iterable[str] | None,
-    n_neighbours: int,
+    n_neighbors: int,
     backend: Literal["scikit-learn", "faiss"],
     **kwargs,
 ) -> None:
     if backend == "scikit-learn":
         from sklearn.impute import KNNImputer
 
-        imputer = KNNImputer(n_neighbors=n_neighbours, **kwargs)
+        imputer = KNNImputer(n_neighbors=n_neighbors, **kwargs)
     else:
         from fknni import FaissImputer
 
-        imputer = FaissImputer(n_neighbors=n_neighbours, **kwargs)
+        imputer = FaissImputer(n_neighbors=n_neighbors, **kwargs)
 
     if isinstance(var_names, Iterable):
         column_indices = _get_column_indices(adata, var_names)

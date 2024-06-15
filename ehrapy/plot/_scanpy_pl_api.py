@@ -913,7 +913,7 @@ def ranking(
         indices: Optional dictionary indices.
         labels: Optional labels.
         color: Optional primary color (default: black).
-        n_points: Number of points (default: 30)..
+        n_points: Number of points (default: 30).
         log: Whether logarithmic scale should be used.
         include_lowest: Whether to include the lowest points.
         show: Whether to show the plot.
@@ -2275,8 +2275,8 @@ def rank_features_groups_dotplot(
         groupby: Which key to group the features by.
         feature_symbols: Key for field in `.var` that stores feature symbols if you do not want to
                          use `.var_names` displayed in the plot.
-        values_to_plot: Key to plot. One of 'scores', 'logfoldchanges', 'pvals', 'pvalds_adj',
-                        'log10_pvals', 'log10_pvalds_adj'.
+        values_to_plot: Key to plot. One of 'scores', 'logfoldchanges', 'pvals', 'pvals_adj',
+                        'log10_pvals', 'log10_pvals_adj'.
         var_names: Feature names.
         min_logfoldchange: Minimum log fold change to consider.
         key: The key of the calculated feature group rankings (default: 'rank_features_groups').

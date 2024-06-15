@@ -106,13 +106,13 @@ def anndata_to_df(
     """Transform an AnnData object to a Pandas DataFrame.
 
     Args:
-        adata: The AnnData object to be transformed into a pandas Dataframe
+        adata: The AnnData object to be transformed into a pandas DataFrame
         layer: The layer to access the values of. If not specified, it uses the `X` matrix.
-        obs_cols: obs columns to add to the DataFrame.
-        var_cols: var columns to fetch values of.
+        obs_cols: The columns of `obs` to add to the DataFrame.
+        var_cols: The columns of `var` to fetch values from.
 
     Returns:
-        The AnnData object as a pandas Dataframe
+        The AnnData object as a pandas DataFrame
 
     Examples:
         >>> import ehrapy as ep
