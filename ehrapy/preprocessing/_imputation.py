@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, Literal
 
@@ -263,8 +264,10 @@ def knn_impute(
 
     if "n_neighbours" in kwargs.keys():
         n_neighbors = kwargs["n_neighbours"]
-        logger.warning(
-            "ehrapy will use 'n_neighbors' instead of 'n_neighbours' in the future. Please update your code."
+        warnings.warn(
+            "ehrapy will use 'n_neighbors' instead of 'n_neighbours'. Please update your code.",
+            DeprecationWarning,
+            stacklevel=1,
         )
 
     if _check_module_importable("sklearnex"):  # pragma: no cover

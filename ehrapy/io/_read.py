@@ -394,6 +394,7 @@ def read_fhir(
         ...     inplace=True,
         ... )
         >>> df.drop(columns=df.columns[df.isna().all()], inplace=True)
+
     """
     _check_columns_only_params(columns_obs_only, columns_x_only)
     file_path: Path = Path(dataset_path)
