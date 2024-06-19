@@ -103,8 +103,8 @@ class TestSA:
     def test_cox_ph(self, mimic_2_sa):
         self._sa_func_test(ep.tl.cox_ph, CoxPHFitter, mimic_2_sa)
 
-    def test_nelson_alen(self, mimic_2_sa):
-        self._sa_func_test(ep.tl.nelson_alen, NelsonAalenFitter, mimic_2_sa)
+    def test_nelson_aalen(self, mimic_2_sa):
+        self._sa_func_test(ep.tl.nelson_aalen, NelsonAalenFitter, mimic_2_sa)
 
     def test_weibull(self, mimic_2_sa):
         self._sa_func_test(ep.tl.weibull, WeibullFitter, mimic_2_sa)

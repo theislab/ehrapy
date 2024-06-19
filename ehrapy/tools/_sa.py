@@ -391,7 +391,7 @@ def _univariate_model(adata: AnnData, duration_col: str, event_col: str, model_c
     return model
 
 
-def nelson_alen(adata: AnnData, duration_col: str, event_col: str) -> NelsonAalenFitter:
+def nelson_aalen(adata: AnnData, duration_col: str, event_col: str) -> NelsonAalenFitter:
     """Employ the Nelson-Aalen estimator to estimate the cumulative hazard function from censored survival data
 
     The Nelson-Aalen estimator is a non-parametric method used in survival analysis to estimate the cumulative hazard function.
@@ -413,7 +413,7 @@ def nelson_alen(adata: AnnData, duration_col: str, event_col: str) -> NelsonAale
         >>> adata = ep.dt.mimic_2(encoded=False)
         >>> # Flip 'censor_fl' because 0 = death and 1 = censored
         >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
-        >>> naf = ep.tl.nelson_alen(adata, "mort_day_censored", "censor_flg")
+        >>> naf = ep.tl.nelson_aalen(adata, "mort_day_censored", "censor_flg")
     """
     return _univariate_model(adata, duration_col, event_col, NelsonAalenFitter)
 
