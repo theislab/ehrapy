@@ -38,7 +38,7 @@ def read_csv(
 
     Args:
         dataset_path: Path to the file or directory to read.
-        sep: Separator in the file. One of either , (comma) or \t (tab).
+        sep: Separator in the file. Delegates to pandas.read_csv().
         index_column: The index column of obs. Usually the patient visit ID or the patient ID.
         columns_obs_only: These columns will be added to obs only and not X.
         columns_x_only: These columns will be added to X only and all remaining columns to obs.
@@ -114,8 +114,6 @@ def _read_csv(
         )
     # input is a single file
     else:
-        if sep not in {",", "\t"}:
-            raise ValueError("Please provide one of the available separators , or tab")
         adata, columns_obs_only = _do_read_csv(
             file_path,
             sep,
@@ -218,8 +216,8 @@ def _read_multiple_csv(
 
     Args:
         file_path: File path to the directory containing multiple .csv/.tsv files.
-        sep: Either , or \t to determine which files to read.
-        index_column: Column names of the index columns for obs.
+        sep: Separator in the file. Delegates to pandas.read_csv().
+        index_column: Column names of the index columns for obs
         columns_obs_only: List of columns per file (AnnData object) which should only be stored in .obs, but not in X.
                           Useful for free text annotations.
         columns_x_only: List of columns per file (AnnData object) which should only be stored in .X, but not in obs.
@@ -265,7 +263,7 @@ def _read_multiple_csv(
 
 def _do_read_csv(
     file_path: Path | Iterator[str],
-    delimiter: str | None = ",",
+    sep: str | None = ",",
     index_column: str | int | None = None,
     columns_obs_only: list[str] | None = None,
     columns_x_only: list[str] | None = None,
@@ -276,8 +274,8 @@ def _do_read_csv(
 
     Args:
         file_path: File path to the csv file.
-        delimiter: Delimiter separating the csv data within the file.
-        index_column: Index or column name of the index column (obs).
+        sep: Separator in the file. Delegates to pandas.read_csv().
+        index_column: Index or column name of the index column (obs)
         columns_obs_only: List of columns which only be stored in .obs, but not in X. Useful for free text annotations.
         columns_x_only: List of columns which only be stored in X, but not in .obs.
 
@@ -293,7 +291,7 @@ def _do_read_csv(
                 f"for obs only. Using default indices instead and moving {index_column} to column_obs_only."
             )
             index_column = None
-        initial_df = pd.read_csv(file_path, delimiter=delimiter, index_col=index_column, **kwargs)
+        initial_df = pd.read_csv(file_path, sep=sep, index_col=index_column, **kwargs)
     # in case the index column is misspelled or does not exist
     except ValueError:
         raise IndexNotFoundError(
