@@ -38,7 +38,7 @@ For questions about the usage of ehrapy use [Github Discussions].
     .. tab-item:: AnnData
 
         `AnnData <https://github.com/theislab/anndata>`_ is short for Annotated Data and is the primary datastructure that ehrapy uses.
-        It is based on the principle of a single Numpy matrix X embraced by two Pandas Dataframes.
+        It is based on the principle of a single Numpy matrix X embraced by two Pandas DataFrames.
         All rows are called observations (in our case patients/patient visits or similar) and the columns
         are known as variables (any feature such as e.g. age, B12 level or similar).
         For a more in depth introduction please read the `AnnData paper <https://doi.org/10.1101/2021.12.16.473007>`_.

@@ -29,7 +29,7 @@ def tsne(
     proposed for visualizing complex by [Amir13]_. Here, by default, we use the implementation of *scikit-learn* [Pedregosa11]_.
 
     Args:
-        adata: :class:`~anndata.AnnData` object object containing all observations.
+        adata: :class:`~anndata.AnnData` object containing all observations.
         n_pcs: Use this many PCs. If `n_pcs==0` use `.X` if `use_rep is None`.
         use_rep: Use the indicated representation. `'X'` or any key for `.obsm` is valid.
                  If `None`, the representation is chosen automatically:
@@ -56,7 +56,7 @@ def tsne(
         n_jobs: Number of jobs for parallel computation.
                 `None` means using :attr:`scanpy._settings.ScanpyConfig.n_jobs`.
         copy: Return a copy instead of writing to `adata`.
-        metric: Distance metric calculate neighbors on.
+        metric: Distance metric to calculate neighbors on.
 
     Returns:
         Depending on `copy`, returns or updates `adata` with the following fields.
@@ -108,7 +108,7 @@ def umap(
     <https://doi.org/10.1101/298430>`__.
 
     Args:
-        adata: :class:`~anndata.AnnData` object object containing all observations.
+        adata: :class:`~anndata.AnnData` object containing all observations.
         min_dist: The effective minimum distance between embedded points. Smaller values
                   will result in a more clustered/clumped embedding where nearby points on
                   the manifold are drawn closer together, while larger values will result
@@ -211,7 +211,7 @@ def draw_graph(
     Similar approaches have been used by [Zunder15]_ or [Weinreb17]_.
 
     Args:
-        adata: :class:`~anndata.AnnData` object object containing all observations.
+        adata: :class:`~anndata.AnnData` object containing all observations.
         layout: 'fa' (`ForceAtlas2`) or any valid `igraph layout
                 <http://igraph.org/c/doc/igraph-Layout.html>`__. Of particular interest
                 are 'fr' (Fruchterman Reingold), 'grid_fr' (Grid Fruchterman Reingold,
@@ -278,7 +278,7 @@ def diffmap(
     `method=='umap'`. Differences between these options shouldn't usually be dramatic.
 
     Args:
-        adata: :class:`~anndata.AnnData` object object containing all observations.
+        adata: :class:`~anndata.AnnData` object containing all observations.
         n_comps: The number of dimensions of the representation.
                  neighbors_key: If not specified, diffmap looks .uns['neighbors'] for neighbors settings
                  and .obsp['connectivities'], .obsp['distances'] for connectivities and
@@ -311,6 +311,7 @@ def embedding_density(
     components: Union[str, Sequence[str]] = None,
 ) -> None:  # pragma: no cover
     """Calculate the density of observation in an embedding (per condition).
+
     Gaussian kernel density estimation is used to calculate the density of
     observations in an embedded space. This can be performed per category over a
     categorical observation annotation. The cell density can be plotted using the
@@ -320,9 +321,9 @@ def embedding_density(
     the same condition category.
 
     Args:
-        adata: :class:`~anndata.AnnData` object object containing all observations.
+        adata: :class:`~anndata.AnnData` object containing all observations.
         basis: The embedding over which the density will be calculated. This embedded
-               representation should be found in `adata.obsm['X_[basis]']``.
+               representation should be found in `adata.obsm['X_[basis]']`.
         groupby: Keys for categorical observation/cell annotation for which densities
                  are calculated per category. Columns with up to ten categories are accepted.
         key_added: Name of the `.obs` covariate that will be added with the density estimates.
@@ -331,7 +332,7 @@ def embedding_density(
 
     Returns:
         Updates `adata.obs` with an additional field specified by the `key_added`
-        parameter. This parameter defaults to `[basis]_density_[groupby]`, where
+        parameter. This parameter defaults to `[basis]_density_[groupby]`,
         where `[basis]` is one of `umap`, `diffmap`, `pca`, `tsne`, or `draw_graph_fa`
         and `[groupby]` denotes the parameter input.
         Updates `adata.uns` with an additional field `[key_added]_params`.
@@ -367,10 +368,10 @@ def leiden(
     Cluster observations using the Leiden algorithm [Traag18]_,
     an improved version of the Louvain algorithm [Blondel08]_.
     It has been proposed for single-cell analysis by [Levine15]_.
-    This requires having ran :func:`~ehrapy.pp.neighbors` or :func:`~ehrapy.pp.bbknn` first.
+    This requires having run :func:`~ehrapy.pp.neighbors` or :func:`~ehrapy.pp.bbknn` first.
 
     Args:
-        adata: :class:`~anndata.AnnData` object object containing all observations.
+        adata: :class:`~anndata.AnnData` object containing all observations.
         resolution: A parameter value controlling the coarseness of the clustering. Higher values lead to more clusters.
                     Set to `None` if overriding `partition_type` to one that doesn’t accept a `resolution_parameter`.
         restrict_to: Restrict the clustering to the categories within the key for sample
@@ -452,7 +453,7 @@ def dendrogram(
         default pearson but other methods are available.
 
     Args:
-        adata: :class:`~anndata.AnnData` object object containing all observations.
+        adata: :class:`~anndata.AnnData` object containing all observations.
         groupby: Key to group by
         n_pcs: Use this many PCs. If `n_pcs==0` use `.X` if `use_rep is None`.
         use_rep: Use the indicated representation. `'X'` or any key for `.obsm` is valid.
@@ -519,7 +520,7 @@ def dpt(
     this. Using the default `method=='umap'` only leads to minor quantitative differences, though.
 
     Args:
-        adata: :class:`~anndata.AnnData` object object containing all observations.
+        adata: :class:`~anndata.AnnData` object containing all observations.
         n_dcs: The number of diffusion components to use.
         n_branchings: Number of branchings to detect.
         min_group_size: During recursive splitting of branches ('dpt groups') for `n_branchings`
@@ -585,7 +586,7 @@ def paga(
         `init_pos='paga'` to get embeddings that are typically more faithful to the global topology.
 
     Args:
-        adata: :class:`~anndata.AnnData` object object containing all observations.
+        adata: :class:`~anndata.AnnData` object containing all observations.
         groups: Key for categorical in `adata.obs`. You can pass your predefined groups
                 by choosing any categorical annotation of observations. Default:
                 The first present key of `'leiden'` or `'louvain'`.
@@ -645,7 +646,7 @@ def ingest(
     You need to run :func:`~ehrapy.pp.neighbors` on `adata_ref` before passing it.
 
     Args:
-        adata: :class:`~anndata.AnnData` object object containing all observations.
+        adata: :class:`~anndata.AnnData` object containing all observations.
         adata_ref: The annotated data matrix of shape `n_obs` × `n_vars`. Rows correspond to observations and columns to features.
                    Variables (`n_vars` and `var_names`) of `adata_ref` should be the same as in `adata`.
                    This is the dataset with labels and embeddings which need to be mapped to `adata`.

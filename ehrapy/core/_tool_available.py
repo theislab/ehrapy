@@ -11,7 +11,7 @@ def _check_module_importable(package: str) -> bool:  # pragma: no cover
         package: The package to check.
 
     Returns:
-        True if the package is installed, False otherweise
+        True if the package is installed, False otherwise.
     """
     module_information = importlib.util.find_spec(package)
     module_available = module_information is not None

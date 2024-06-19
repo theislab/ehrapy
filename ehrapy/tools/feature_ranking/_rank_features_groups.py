@@ -327,8 +327,6 @@ def rank_features_groups(
 ) -> None:  # pragma: no cover
     """Rank features for characterizing groups.
 
-    Expects logarithmized data.
-
     Args:
         adata: Annotated data matrix.
         groupby: The key of the observations grouping to consider.

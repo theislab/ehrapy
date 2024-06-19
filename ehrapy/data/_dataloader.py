@@ -28,7 +28,7 @@ def download(
         url: URL to download.
         archive_format: The format if an archive file.
         output_file_name: Name of the downloaded file.
-        output_path: Path to download/extract the files to. Defaults to 'OS tmpdir' is not specified.
+        output_path: Path to download/extract the files to. Defaults to 'OS tmpdir' if not specified.
         block_size: Block size for downloads in bytes.
         overwrite: Whether to overwrite existing files.
     """

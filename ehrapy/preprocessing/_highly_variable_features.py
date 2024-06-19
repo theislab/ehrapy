@@ -42,7 +42,7 @@ def highly_variable_features(
         Depending on `inplace` returns calculated metrics (:class:`~pandas.DataFrame`) or
         updates `.var` with the following fields
 
-    highly_variable : bool
+    **highly_variable**
         boolean indicator of highly-variable features
     **means**
         means per feature
@@ -50,7 +50,7 @@ def highly_variable_features(
         variance per feature
     **variances_norm**
         normalized variance per feature, averaged in the case of multiple batches
-    highly_variable_rank : float
+    **highly_variable_rank**
         rank of the feature according to normalized variance, median rank in the case of multiple batches
     """
     n_top_features = int(top_features_percentage * len(adata.var))

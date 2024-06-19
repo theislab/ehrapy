@@ -345,14 +345,14 @@ def _label_encoding(
     """Encode categorical columns using label encoding.
 
     Args:
-        adata: The current AnnData object
-        X: Current (encoded) X
-        updated_obs: A copy of the original obs where the original categorical values are stored that will be encoded
-        var_names: Var names of current AnnData object
-        categoricals: The name of the categorical columns, that need to be encoded
+        adata: The current AnnData object.
+        X: Current (encoded) X.
+        updated_obs: A copy of the original obs where the original categorical values are stored that will be encoded.
+        var_names: Var names of current AnnData object.
+        categoricals: The name of the categorical columns, that need to be encoded.
 
     Returns:
-        Encoded new X and the corresponding new var names
+        Encoded new X and the corresponding new var names.
     """
     original_values = _initial_encoding(updated_obs, categoricals)
     # label encoding expects input array to be 1D, so iterate over all columns and encode them one by one
