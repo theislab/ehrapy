@@ -141,8 +141,9 @@ def read_h5ad(
 
     Args:
         dataset_path: Path to the file or directory to read.
-        download_dataset_name: Name of the file or directory in case the dataset is downloaded
         backup_url: URL to download the data file(s) from if not yet existing.
+        download_dataset_name: Name of the file or directory in case the dataset is downloaded.
+        archive_format: Whether the downloaded file is an archive.
 
     Returns:
         An :class:`~anndata.AnnData` object or a dict with an identifier (the filename, without extension)
@@ -375,9 +376,10 @@ def read_fhir(
                         Note that datetime columns will always be added to .obs though.
         return_df: Whether to return one or several Pandas DataFrames.
         cache: Whether to write to cache when reading or not.
-        download_dataset_name: Name of the file or directory in case the dataset is downloaded.
-        index_column: The index column for the generated object. Usually the patient or visit ID.
         backup_url: URL to download the data file(s) from if not yet existing.
+        index_column: The index column for the generated object. Usually the patient or visit ID.
+        download_dataset_name: Name of the file or directory in case the dataset is downloaded.
+        archive_format: Whether the downloaded file is an archive.
 
     Returns:
         A Pandas DataFrame or AnnData object of the read in FHIR file(s).
@@ -388,6 +390,7 @@ def read_fhir(
 
         Be aware that most FHIR datasets have nested data that might need to be removed.
         In such cases consider working with DataFrames.
+
         >>> df = ep.io.read_fhir("/path/to/fhir/resources", return_df=True)
         >>> df.drop(
         ...     columns=[col for col in df.columns if any(isinstance(x, (list, dict)) for x in df[col].dropna())],
