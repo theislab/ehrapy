@@ -63,8 +63,8 @@ def test_norm_scale(adata_to_norm, adata_mini):
 
     adata_norm = ep.pp.scale_norm(adata_to_norm, copy=True)
 
-    num1_norm = np.array([-1.4039999, 0.55506986, 0.84893], dtype=np.float32)
-    num2_norm = np.array([-1.3587323, 1.0190493, 0.3396831], dtype=np.float32)
+    num1_norm = np.array([-1.1463611, 0.45321247, 0.6931483], dtype=np.float32)
+    num2_norm = np.array([-1.10940039, 0.83205029, 0.2773501], dtype=np.float32)
 
     assert np.array_equal(adata_norm.X[:, 0], adata_to_norm.X[:, 0])
     assert np.array_equal(adata_norm.X[:, 1], adata_to_norm.X[:, 1])

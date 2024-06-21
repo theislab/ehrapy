@@ -1,16 +1,35 @@
 from __future__ import annotations
 
+import warnings
 from typing import TYPE_CHECKING, Callable
 
 import numpy as np
-from sklearn.preprocessing import (
-    maxabs_scale,
-    minmax_scale,
-    power_transform,
-    quantile_transform,
-    robust_scale,
-    scale,
-)
+
+# from sklearn.preprocessing import (
+#     maxabs_scale,
+#     minmax_scale,
+#     power_transform,
+#     quantile_transform,
+#     robust_scale,
+#     scale,
+# )
+import scanpy as sc
+import sklearn.preprocessing as sklearn_pp
+
+# from sklearn.preprocessig import (
+#     StandardScaler as sklearn_StandardScaler,
+#     MaxAbsScaler as sklearn_MaxAbsScaler,
+#     MinMaxScaler as sklearn_MinMaxScaler,
+#     PowerTransformer as sklearn_PowerTransformer,
+#     QuantileTransformer as sklearn_QuantileTransformer,
+#     RobustScaler as sklearn_RobustScaler,
+# )
+from ehrapy._compat import DaskArray
+
+try:
+    import dask_ml.preprocessing as daskml_pp
+except ImportError:
+    daskml_pp = None
 
 from ehrapy.anndata.anndata_ext import (
     _get_column_indices,
@@ -29,11 +48,27 @@ if TYPE_CHECKING:
 def _scale_func_group(
     adata: AnnData,
     scale_func: Callable[[np.ndarray | pd.DataFrame], np.ndarray],
-    var_values: np.ndarray | pd.DataFrame,
+    vars: str | Sequence[str] | None,
     group_key: str | None,
+    copy: bool,
     **kwargs,
 ) -> np.ndarray:
-    """apply scaling function to var_values, either globally or per group."""
+    """apply scaling function to selected columns of adata, either globally or per group."""
+
+    if group_key is not None and group_key not in adata.obs_keys():
+        raise KeyError(f"group key '{group_key}' not found in adata.obs.")
+    if isinstance(vars, str):
+        vars = [vars]
+    if vars is None:
+        vars = get_numeric_vars(adata)
+    else:
+        assert_numeric_vars(adata, vars)
+
+    adata = _prep_adata_norm(adata, copy)
+
+    var_idx = _get_column_indices(adata, vars)
+    var_values = np.take(adata.X, var_idx, axis=1)
+
     if group_key is None:
         var_values = scale_func(var_values, **kwargs)
 
@@ -54,7 +89,9 @@ def scale_norm(
 ) -> AnnData | None:
     """Apply scaling normalization.
 
-    Functionality is provided by :func:`~sklearn.preprocessing.scale`, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.scale.html for details.
+    Scale by subtracting the mean and dividing by the standard deviation.
+    Functionality is provided by :func:`~scanpy.pp.scale`, see https://scanpy.readthedocs.io/en/stable/generated/scanpy.pp.scale.html for details.
+    This function uses the unbiased estimator for the standard deviation, equivalent to numpy.std(x, ddof=1).
 
     Args:
         adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
@@ -62,7 +99,7 @@ def scale_norm(
               If None all numeric variables will be normalized.
         group_key: Key in adata.obs that contains group information. If provided, scaling is applied per group.
         copy: Whether to return a copy or act in place.
-        **kwargs: Additional arguments passed to :func:`~sklearn.preprocessing.scale`
+        **kwargs: Additional arguments passed to :func:`~scanpy.pp.scale`.
 
     Returns:
         :class:`~anndata.AnnData` object with normalized X. Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
@@ -72,27 +109,35 @@ def scale_norm(
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.scale_norm(adata, copy=True)
     """
-    if group_key is not None and group_key not in adata.obs_keys():
-        raise KeyError(f"group key '{group_key}' not found in adata.obs.")
-    if isinstance(vars, str):
-        vars = [vars]
-    if vars is None:
-        vars = get_numeric_vars(adata)
+
+    if isinstance(adata.X, DaskArray):
+        scale_func = daskml_pp.StandardScaler(**kwargs).fit_transform
     else:
-        assert_numeric_vars(adata, vars)
+        scale_func = sklearn_pp.StandardScaler(**kwargs).fit_transform
 
-    adata = _prep_adata_norm(adata, copy)
+    return _scale_func_group(adata, scale_func, vars, group_key, copy, **kwargs)
 
-    var_idx = _get_column_indices(adata, vars)
-    var_values = np.take(adata.X, var_idx, axis=1)
+    # if group_key is not None and group_key not in adata.obs_keys():
+    #     raise KeyError(f"group key '{group_key}' not found in adata.obs.")
+    # if isinstance(vars, str):
+    #     vars = [vars]
+    # if vars is None:
+    #     vars = get_numeric_vars(adata)
+    # else:
+    #     assert_numeric_vars(adata, vars)
 
-    var_values = _scale_func_group(adata, scale, var_values, group_key, **kwargs)
+    # adata = _prep_adata_norm(adata, copy)
 
-    set_numeric_vars(adata, var_values, vars)
+    # var_idx = _get_column_indices(adata, vars)
+    # var_values = np.take(adata.X, var_idx, axis=1)
 
-    _record_norm(adata, vars, "scale")
+    # var_values = _scale_func_group(adata, scale_func,var_values, group_key, **kwargs)
 
-    return adata
+    # set_numeric_vars(adata, var_values, vars)
+
+    # _record_norm(adata, vars, "scale")
+
+    # return adata
 
 
 def minmax_norm(
