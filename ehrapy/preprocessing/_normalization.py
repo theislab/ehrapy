@@ -1,29 +1,11 @@
 from __future__ import annotations
 
-import warnings
 from typing import TYPE_CHECKING, Callable
-
+from ..anndata._constants import NORM_NAMES
 import numpy as np
 
-# from sklearn.preprocessing import (
-#     maxabs_scale,
-#     minmax_scale,
-#     power_transform,
-#     quantile_transform,
-#     robust_scale,
-#     scale,
-# )
-import scanpy as sc
 import sklearn.preprocessing as sklearn_pp
 
-# from sklearn.preprocessig import (
-#     StandardScaler as sklearn_StandardScaler,
-#     MaxAbsScaler as sklearn_MaxAbsScaler,
-#     MinMaxScaler as sklearn_MinMaxScaler,
-#     PowerTransformer as sklearn_PowerTransformer,
-#     QuantileTransformer as sklearn_QuantileTransformer,
-#     RobustScaler as sklearn_RobustScaler,
-# )
 from ehrapy._compat import DaskArray
 
 try:
@@ -44,6 +26,7 @@ if TYPE_CHECKING:
     import pandas as pd
     from anndata import AnnData
 
+_dask_not_installed_error = ImportError(f"Dask Array detected, please install Dask with `pip install dask`.")
 
 def _scale_func_group(
     adata: AnnData,
@@ -51,12 +34,13 @@ def _scale_func_group(
     vars: str | Sequence[str] | None,
     group_key: str | None,
     copy: bool,
-    **kwargs,
-) -> np.ndarray:
+    norm_name: str,
+) -> AnnData | None:
     """apply scaling function to selected columns of adata, either globally or per group."""
 
     if group_key is not None and group_key not in adata.obs_keys():
         raise KeyError(f"group key '{group_key}' not found in adata.obs.")
+    
     if isinstance(vars, str):
         vars = [vars]
     if vars is None:
@@ -70,14 +54,18 @@ def _scale_func_group(
     var_values = np.take(adata.X, var_idx, axis=1)
 
     if group_key is None:
-        var_values = scale_func(var_values, **kwargs)
+        var_values = scale_func(var_values)
 
     else:
         for group in adata.obs[group_key].unique():
             group_idx = adata.obs[group_key] == group
-            var_values[group_idx] = scale_func(var_values[group_idx], **kwargs)
+            var_values[group_idx] = scale_func(var_values[group_idx])
 
-    return var_values
+    set_numeric_vars(adata, var_values, vars)
+
+    _record_norm(adata, vars, norm_name)
+
+    return adata
 
 
 def scale_norm(
@@ -111,33 +99,20 @@ def scale_norm(
     """
 
     if isinstance(adata.X, DaskArray):
+        if not daskml_pp:
+            raise _dask_not_installed_error
         scale_func = daskml_pp.StandardScaler(**kwargs).fit_transform
     else:
         scale_func = sklearn_pp.StandardScaler(**kwargs).fit_transform
 
-    return _scale_func_group(adata, scale_func, vars, group_key, copy, **kwargs)
 
-    # if group_key is not None and group_key not in adata.obs_keys():
-    #     raise KeyError(f"group key '{group_key}' not found in adata.obs.")
-    # if isinstance(vars, str):
-    #     vars = [vars]
-    # if vars is None:
-    #     vars = get_numeric_vars(adata)
-    # else:
-    #     assert_numeric_vars(adata, vars)
-
-    # adata = _prep_adata_norm(adata, copy)
-
-    # var_idx = _get_column_indices(adata, vars)
-    # var_values = np.take(adata.X, var_idx, axis=1)
-
-    # var_values = _scale_func_group(adata, scale_func,var_values, group_key, **kwargs)
-
-    # set_numeric_vars(adata, var_values, vars)
-
-    # _record_norm(adata, vars, "scale")
-
-    # return adata
+    return _scale_func_group(adata=adata,
+                             scale_func=scale_func,
+                             vars=vars,
+                             group_key=group_key,
+                             copy=copy,
+                             norm_name=NORM_NAMES["StandardScaler"],
+                             )
 
 
 def minmax_norm(
@@ -170,27 +145,23 @@ def minmax_norm(
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.minmax_norm(adata, copy=True)
     """
-    if group_key is not None and group_key not in adata.obs_keys():
-        raise KeyError(f"group key '{group_key}' not found in adata.obs.")
-    if isinstance(vars, str):
-        vars = [vars]
-    if vars is None:
-        vars = get_numeric_vars(adata)
+
+    if isinstance(adata.X, DaskArray):
+        if not daskml_pp:
+            raise _dask_not_installed_error
+        scale_func = daskml_pp.MinMaxScaler(**kwargs).fit_transform
     else:
-        assert_numeric_vars(adata, vars)
+        scale_func = sklearn_pp.MinMaxScaler(**kwargs).fit_transform
 
-    adata = _prep_adata_norm(adata, copy)
 
-    var_idx = _get_column_indices(adata, vars)
-    var_values = np.take(adata.X, var_idx, axis=1)
+    return _scale_func_group(adata=adata,
+                             scale_func=scale_func,
+                             vars=vars,
+                             group_key=group_key,
+                             copy=copy,
+                             norm_name=NORM_NAMES["MinMaxScaler"],
+                             )
 
-    var_values = _scale_func_group(adata, minmax_scale, var_values, group_key, **kwargs)
-
-    set_numeric_vars(adata, var_values, vars)
-
-    _record_norm(adata, vars, "minmax")
-
-    return adata
 
 
 def maxabs_norm(
@@ -221,27 +192,21 @@ def maxabs_norm(
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.maxabs_norm(adata, copy=True)
     """
-    if group_key is not None and group_key not in adata.obs_keys():
-        raise KeyError(f"group key '{group_key}' not found in adata.obs.")
-    if isinstance(vars, str):
-        vars = [vars]
-    if vars is None:
-        vars = get_numeric_vars(adata)
+    if isinstance(adata.X, DaskArray):
+        if not daskml_pp:
+            raise _dask_not_installed_error
+        scale_func = daskml_pp.MaxAbsScaler().fit_transform
     else:
-        assert_numeric_vars(adata, vars)
+        scale_func = sklearn_pp.MaxAbsScaler().fit_transform
 
-    adata = _prep_adata_norm(adata, copy)
 
-    var_idx = _get_column_indices(adata, vars)
-    var_values = np.take(adata.X, var_idx, axis=1)
-
-    var_values = _scale_func_group(adata, maxabs_scale, var_values, group_key)
-
-    set_numeric_vars(adata, var_values, vars)
-
-    _record_norm(adata, vars, "maxabs")
-
-    return adata
+    return _scale_func_group(adata=adata,
+                             scale_func=scale_func,
+                             vars=vars,
+                             group_key=group_key,
+                             copy=copy,
+                             norm_name=NORM_NAMES["MaxAbsScaler"],
+                             )
 
 
 def robust_scale_norm(
@@ -274,27 +239,21 @@ def robust_scale_norm(
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.robust_scale_norm(adata, copy=True)
     """
-    if group_key is not None and group_key not in adata.obs_keys():
-        raise KeyError(f"group key '{group_key}' not found in adata.obs.")
-    if isinstance(vars, str):
-        vars = [vars]
-    if vars is None:
-        vars = get_numeric_vars(adata)
+    if isinstance(adata.X, DaskArray):
+        if not daskml_pp:
+            raise _dask_not_installed_error
+        scale_func = daskml_pp.RobustScaler(**kwargs).fit_transform
     else:
-        assert_numeric_vars(adata, vars)
+        scale_func = sklearn_pp.RobustScaler(**kwargs).fit_transform
 
-    adata = _prep_adata_norm(adata, copy)
 
-    var_idx = _get_column_indices(adata, vars)
-    var_values = np.take(adata.X, var_idx, axis=1)
-
-    var_values = _scale_func_group(adata, robust_scale, var_values, group_key, **kwargs)
-
-    set_numeric_vars(adata, var_values, vars)
-
-    _record_norm(adata, vars, "robust_scale")
-
-    return adata
+    return _scale_func_group(adata=adata,
+                             scale_func=scale_func,
+                             vars=vars,
+                             group_key=group_key,
+                             copy=copy,
+                             norm_name=NORM_NAMES["RobustScaler"],
+                             )
 
 
 def quantile_norm(
@@ -326,27 +285,21 @@ def quantile_norm(
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.quantile_norm(adata, copy=True)
     """
-    if group_key is not None and group_key not in adata.obs_keys():
-        raise KeyError(f"group key '{group_key}' not found in adata.obs.")
-    if isinstance(vars, str):
-        vars = [vars]
-    if vars is None:
-        vars = get_numeric_vars(adata)
+    if isinstance(adata.X, DaskArray):
+        if not daskml_pp:
+            raise _dask_not_installed_error
+        scale_func = daskml_pp.QuantileTransformer(**kwargs).fit_transform
     else:
-        assert_numeric_vars(adata, vars)
+        scale_func = sklearn_pp.QuantileTransformer(**kwargs).fit_transform
 
-    adata = _prep_adata_norm(adata, copy)
 
-    var_idx = _get_column_indices(adata, vars)
-    var_values = np.take(adata.X, var_idx, axis=1)
-
-    var_values = _scale_func_group(adata, quantile_transform, var_values, group_key, **kwargs)
-
-    set_numeric_vars(adata, var_values, vars)
-
-    _record_norm(adata, vars, "quantile")
-
-    return adata
+    return _scale_func_group(adata=adata,
+                             scale_func=scale_func,
+                             vars=vars,
+                             group_key=group_key,
+                             copy=copy,
+                             norm_name=NORM_NAMES["QuantileTransformer"],
+                             )
 
 
 def power_norm(
@@ -379,27 +332,21 @@ def power_norm(
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.power_norm(adata, copy=True)
     """
-    if group_key is not None and group_key not in adata.obs_keys():
-        raise KeyError(f"group key '{group_key}' not found in adata.obs.")
-    if isinstance(vars, str):
-        vars = [vars]
-    if vars is None:
-        vars = get_numeric_vars(adata)
+    if isinstance(adata.X, DaskArray):
+        if not daskml_pp:
+            raise _dask_not_installed_error
+        scale_func = daskml_pp.PowerTransformer(**kwargs).fit_transform
     else:
-        assert_numeric_vars(adata, vars)
+        scale_func = sklearn_pp.PowerTransformer(**kwargs).fit_transform
 
-    adata = _prep_adata_norm(adata, copy)
 
-    var_idx = _get_column_indices(adata, vars)
-    var_values = np.take(adata.X, var_idx, axis=1)
-
-    var_values = _scale_func_group(adata, power_transform, var_values, group_key, **kwargs)
-
-    set_numeric_vars(adata, var_values, vars)
-
-    _record_norm(adata, vars, "power")
-
-    return adata
+    return _scale_func_group(adata=adata,
+                             scale_func=scale_func,
+                             vars=vars,
+                             group_key=group_key,
+                             copy=copy,
+                             norm_name=NORM_NAMES["PowerTransformer"],
+                             )
 
 
 def log_norm(
