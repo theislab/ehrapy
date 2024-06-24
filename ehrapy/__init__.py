@@ -10,7 +10,7 @@ settings: EhrapyConfig = ehrapy_settings
 
 from ehrapy import anndata as ad
 from ehrapy import data as dt
-from ehrapy import io
+from ehrapy import io, testing
 from ehrapy import plot as pl
 from ehrapy import preprocessing as pp
 from ehrapy import tools as tl

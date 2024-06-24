@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Callable
-from ..anndata._constants import NORM_NAMES
-import numpy as np
 
+import numpy as np
 import sklearn.preprocessing as sklearn_pp
 
 from ehrapy._compat import DaskArray
+from ehrapy.anndata._constants import NORM_NAMES
 
 try:
     import dask_ml.preprocessing as daskml_pp
@@ -26,7 +26,8 @@ if TYPE_CHECKING:
     import pandas as pd
     from anndata import AnnData
 
-_dask_not_installed_error = ImportError(f"Dask Array detected, please install Dask with `pip install dask`.")
+_dask_not_installed_error = ImportError("Dask Array detected, please install Dask with `pip install dask`.")
+
 
 def _scale_func_group(
     adata: AnnData,
@@ -40,7 +41,7 @@ def _scale_func_group(
 
     if group_key is not None and group_key not in adata.obs_keys():
         raise KeyError(f"group key '{group_key}' not found in adata.obs.")
-    
+
     if isinstance(vars, str):
         vars = [vars]
     if vars is None:
@@ -77,9 +78,8 @@ def scale_norm(
 ) -> AnnData | None:
     """Apply scaling normalization.
 
-    Scale by subtracting the mean and dividing by the standard deviation.
-    Functionality is provided by :func:`~scanpy.pp.scale`, see https://scanpy.readthedocs.io/en/stable/generated/scanpy.pp.scale.html for details.
-    This function uses the unbiased estimator for the standard deviation, equivalent to numpy.std(x, ddof=1).
+    Functionality is provided by :class:`~sklearn.preprocessing.MaxAbsScaler`, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html for details.
+    If `adata.X` is a Dask Array, functionality is provided by :func:`~dask_ml.preprocessing.StandardScaler`, see https://ml.dask.org/modules/generated/dask_ml.preprocessing.StandardScaler.html for details.
 
     Args:
         adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
@@ -87,7 +87,7 @@ def scale_norm(
               If None all numeric variables will be normalized.
         group_key: Key in adata.obs that contains group information. If provided, scaling is applied per group.
         copy: Whether to return a copy or act in place.
-        **kwargs: Additional arguments passed to :func:`~scanpy.pp.scale`.
+        **kwargs: Additional arguments passed to the StandardScaler.
 
     Returns:
         :class:`~anndata.AnnData` object with normalized X. Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
@@ -105,14 +105,14 @@ def scale_norm(
     else:
         scale_func = sklearn_pp.StandardScaler(**kwargs).fit_transform
 
-
-    return _scale_func_group(adata=adata,
-                             scale_func=scale_func,
-                             vars=vars,
-                             group_key=group_key,
-                             copy=copy,
-                             norm_name=NORM_NAMES["StandardScaler"],
-                             )
+    return _scale_func_group(
+        adata=adata,
+        scale_func=scale_func,
+        vars=vars,
+        group_key=group_key,
+        copy=copy,
+        norm_name=NORM_NAMES["StandardScaler"],
+    )
 
 
 def minmax_norm(
@@ -124,8 +124,8 @@ def minmax_norm(
 ) -> AnnData | None:
     """Apply min-max normalization.
 
-    Functionality is provided by :func:`~sklearn.preprocessing.minmax_scale`,
-    see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.minmax_scale.html for details.
+    Functionality is provided by :class:`~sklearn.preprocessing.MinMaxScaler`, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MinMaxScaler.html for details.
+    If `adata.X` is a Dask Array, functionality is provided by :func:`~dask_ml.preprocessing.MinMaxScaler`, see https://ml.dask.org/modules/generated/dask_ml.preprocessing.MinMaxScaler.html for details.
 
     Args:
         adata: :class:`~anndata.AnnData` object containing X to normalize values in.
@@ -134,7 +134,7 @@ def minmax_norm(
               If None all numeric variables will be normalized.
         group_key: Key in adata.obs that contains group information. If provided, scaling is applied per group.
         copy: Whether to return a copy or act in place.
-        **kwargs: Additional arguments passed to :func:`~sklearn.preprocessing.minmax_scale`
+        **kwargs: Additional arguments passed to the MinMaxScaler.
 
     Returns:
         :class:`~anndata.AnnData` object with normalized X.
@@ -149,19 +149,18 @@ def minmax_norm(
     if isinstance(adata.X, DaskArray):
         if not daskml_pp:
             raise _dask_not_installed_error
-        scale_func = daskml_pp.MinMaxScaler(**kwargs).fit_transform
+        raise NotImplementedError("MinMaxScaler is not implemented in dask_ml.")
     else:
         scale_func = sklearn_pp.MinMaxScaler(**kwargs).fit_transform
 
-
-    return _scale_func_group(adata=adata,
-                             scale_func=scale_func,
-                             vars=vars,
-                             group_key=group_key,
-                             copy=copy,
-                             norm_name=NORM_NAMES["MinMaxScaler"],
-                             )
-
+    return _scale_func_group(
+        adata=adata,
+        scale_func=scale_func,
+        vars=vars,
+        group_key=group_key,
+        copy=copy,
+        norm_name=NORM_NAMES["MinMaxScaler"],
+    )
 
 
 def maxabs_norm(
@@ -172,8 +171,7 @@ def maxabs_norm(
 ) -> AnnData | None:
     """Apply max-abs normalization.
 
-    Functionality is provided by :func:`~sklearn.preprocessing.maxabs_scale`,
-    see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.maxabs_scale.html for details.
+    Functionality is provided by :class:`~sklearn.preprocessing.MaxAbsScaler`, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MaxAbsScaler.html for details.
 
     Args:
         adata: :class:`~anndata.AnnData` object containing X to normalize values in.
@@ -195,18 +193,18 @@ def maxabs_norm(
     if isinstance(adata.X, DaskArray):
         if not daskml_pp:
             raise _dask_not_installed_error
-        scale_func = daskml_pp.MaxAbsScaler().fit_transform
+        raise NotImplementedError("MaxAbsScaler is not implemented in dask_ml.")
     else:
         scale_func = sklearn_pp.MaxAbsScaler().fit_transform
 
-
-    return _scale_func_group(adata=adata,
-                             scale_func=scale_func,
-                             vars=vars,
-                             group_key=group_key,
-                             copy=copy,
-                             norm_name=NORM_NAMES["MaxAbsScaler"],
-                             )
+    return _scale_func_group(
+        adata=adata,
+        scale_func=scale_func,
+        vars=vars,
+        group_key=group_key,
+        copy=copy,
+        norm_name=NORM_NAMES["MaxAbsScaler"],
+    )
 
 
 def robust_scale_norm(
@@ -218,8 +216,9 @@ def robust_scale_norm(
 ) -> AnnData | None:
     """Apply robust scaling normalization.
 
-    Functionality is provided by :func:`~sklearn.preprocessing.robust_scale`,
-    see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.robust_scale.html for details.
+    Functionality is provided by :func:`~sklearn.preprocessing.RobustScaler`,
+    see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.RobustScaler.html for details.
+    If `adata.X` is a Dask Array, functionality is provided by :func:`~dask_ml.preprocessing.RobustScaler`, see https://ml.dask.org/modules/generated/dask_ml.preprocessing.RobustScaler.html for details.
 
     Args:
         adata: :class:`~anndata.AnnData` object containing X to normalize values in.
@@ -228,7 +227,7 @@ def robust_scale_norm(
               If None all numeric variables will be normalized.
         group_key: Key in adata.obs that contains group information. If provided, scaling is applied per group.
         copy: Whether to return a copy or act in place.
-        **kwargs: Additional arguments passed to :func:`~sklearn.preprocessing.robust_scale`
+        **kwargs: Additional arguments passed to the RobustScaler.
 
     Returns:
         :class:`~anndata.AnnData` object with normalized X.
@@ -246,14 +245,14 @@ def robust_scale_norm(
     else:
         scale_func = sklearn_pp.RobustScaler(**kwargs).fit_transform
 
-
-    return _scale_func_group(adata=adata,
-                             scale_func=scale_func,
-                             vars=vars,
-                             group_key=group_key,
-                             copy=copy,
-                             norm_name=NORM_NAMES["RobustScaler"],
-                             )
+    return _scale_func_group(
+        adata=adata,
+        scale_func=scale_func,
+        vars=vars,
+        group_key=group_key,
+        copy=copy,
+        norm_name=NORM_NAMES["RobustScaler"],
+    )
 
 
 def quantile_norm(
@@ -265,16 +264,17 @@ def quantile_norm(
 ) -> AnnData | None:
     """Apply quantile normalization.
 
-    Functionality is provided by :func:`~sklearn.preprocessing.quantile_transform`,
-    see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.quantile_transform.html for details.
+    Functionality is provided by :func:`~sklearn.preprocessing.QuantileTransformer`,
+    see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.QuantileTransformer.html for details.
+    If `adata.X` is a Dask Array, functionality is provided by :func:`~dask_ml.preprocessing.QuantileTransformer`, see https://ml.dask.org/modules/generated/dask_ml.preprocessing.QuantileTransformer.html for details.
 
     Args:
-        adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encoded using ~ehrapy.preprocessing.encode.encode.
+        adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encoded using ~ehrapy.preprocessing.encode.
         vars: List of the names of the numeric variables to normalize.
               If None all numeric variables will be normalized.
         group_key: Key in adata.obs that contains group information. If provided, scaling is applied per group.
         copy: Whether to return a copy or act in place.
-        **kwargs: Additional arguments passed to :func:`~sklearn.preprocessing.quantile_transform`
+        **kwargs: Additional arguments passed to the QuantileTransformer.
 
     Returns:
         :class:`~anndata.AnnData` object with normalized X.
@@ -292,14 +292,14 @@ def quantile_norm(
     else:
         scale_func = sklearn_pp.QuantileTransformer(**kwargs).fit_transform
 
-
-    return _scale_func_group(adata=adata,
-                             scale_func=scale_func,
-                             vars=vars,
-                             group_key=group_key,
-                             copy=copy,
-                             norm_name=NORM_NAMES["QuantileTransformer"],
-                             )
+    return _scale_func_group(
+        adata=adata,
+        scale_func=scale_func,
+        vars=vars,
+        group_key=group_key,
+        copy=copy,
+        norm_name=NORM_NAMES["QuantileTransformer"],
+    )
 
 
 def power_norm(
@@ -311,8 +311,9 @@ def power_norm(
 ) -> AnnData | None:
     """Apply power transformation normalization.
 
-    Functionality is provided by :func:`~sklearn.preprocessing.power_transform`,
-    see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.power_transform.html for details.
+    Functionality is provided by :func:`~sklearn.preprocessing.PowerTransformer`,
+    see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.PowerTransformer.html for details.
+    If `adata.X` is a Dask Array, functionality is provided by :func:`~dask_ml.preprocessing.PowerTransformer`, see https://ml.dask.org/modules/generated/dask_ml.preprocessing.PowerTransformer.html for details.
 
     Args:
         adata: :class:`~anndata.AnnData` object containing X to normalize values in.
@@ -321,7 +322,7 @@ def power_norm(
               If None all numeric variables will be normalized.
         group_key: Key in adata.obs that contains group information. If provided, scaling is applied per group.
         copy: Whether to return a copy or act in place.
-        **kwargs: Additional arguments passed to :func:`~sklearn.preprocessing.power_transform`
+        **kwargs: Additional arguments passed to the PowerTransformer.
 
     Returns:
         :class:`~anndata.AnnData` object with normalized X.
@@ -339,14 +340,14 @@ def power_norm(
     else:
         scale_func = sklearn_pp.PowerTransformer(**kwargs).fit_transform
 
-
-    return _scale_func_group(adata=adata,
-                             scale_func=scale_func,
-                             vars=vars,
-                             group_key=group_key,
-                             copy=copy,
-                             norm_name=NORM_NAMES["PowerTransformer"],
-                             )
+    return _scale_func_group(
+        adata=adata,
+        scale_func=scale_func,
+        vars=vars,
+        group_key=group_key,
+        copy=copy,
+        norm_name=NORM_NAMES["PowerTransformer"],
+    )
 
 
 def log_norm(
@@ -359,7 +360,7 @@ def log_norm(
     """Apply log normalization.
 
     Computes :math:`x = \\log(x + offset)`, where :math:`log` denotes the natural logarithm
-    unless a different base is given and the default :math:`offset` is :math:`1`
+    unless a different base is given and the default :math:`offset` is :math:`1`.
 
     Args:
         adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
