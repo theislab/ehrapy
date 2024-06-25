@@ -382,8 +382,6 @@ def set_numeric_vars(
     vars_idx = _get_column_indices(adata, vars)
 
     adata.X[:, vars_idx] = values
-    # for i in range(n_values):
-    #     adata.X[:, vars_idx[i]] = values[:, i]
 
     return adata
 

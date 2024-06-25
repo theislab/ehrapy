@@ -26,8 +26,6 @@ if TYPE_CHECKING:
     import pandas as pd
     from anndata import AnnData
 
-_dask_not_installed_error = ImportError("Dask Array detected, please install Dask with `pip install dask`.")
-
 
 def _scale_func_group(
     adata: AnnData,
