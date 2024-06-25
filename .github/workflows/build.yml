@@ -24,7 +24,7 @@ jobs:
                   cache-dependency-path: "**/pyproject.toml"
 
             - name: Install build dependencies
-              run: python -m pip install --upgrade pip wheel twine build
+              run: python -m pip install --upgrade pip wheel twine!=5.1.0 build
 
             - name: Build package
               run: python -m build
