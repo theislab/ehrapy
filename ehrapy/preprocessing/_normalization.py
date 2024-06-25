@@ -299,7 +299,6 @@ def power_norm(
 
     Functionality is provided by :func:`~sklearn.preprocessing.PowerTransformer`,
     see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.PowerTransformer.html for details.
-    If `adata.X` is a Dask Array, functionality is provided by :func:`~dask_ml.preprocessing.PowerTransformer`, see https://ml.dask.org/modules/generated/dask_ml.preprocessing.PowerTransformer.html for details.
 
     Args:
         adata: :class:`~anndata.AnnData` object containing X to normalize values in.
