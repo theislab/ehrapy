@@ -47,6 +47,7 @@ classifiers = [
 ]
 
 dependencies = [
+    "scipy<1.14",
     "session-info",
     "lamin_utils",
     "rich",
