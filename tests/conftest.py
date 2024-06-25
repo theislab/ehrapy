@@ -138,3 +138,18 @@ def check_same_image(tmp_path):
         raise AssertionError(result)
 
     return check_same_image
+
+
+def asarray(a):
+    import numpy as np
+
+    return np.asarray(a)
+
+
+def as_dense_dask_array(a):
+    import dask.array as da
+
+    return da.asarray(a)
+
+
+ARRAY_TYPES = (asarray, as_dense_dask_array)

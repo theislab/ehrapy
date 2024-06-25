@@ -10,8 +10,7 @@ from anndata import AnnData
 import ehrapy as ep
 from ehrapy.anndata._constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrapy.io._read import read_csv
-from ehrapy.testing._pytest.params import ARRAY_TYPES
-from tests.conftest import TEST_DATA_PATH
+from tests.conftest import ARRAY_TYPES, TEST_DATA_PATH
 
 CURRENT_DIR = Path(__file__).parent
 
