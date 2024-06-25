@@ -28,7 +28,7 @@ def write(
     This preserves the object state at the time of writing. It is possible to write both, encoded and unencoded objects.
 
     Args:
-        filename: File name or path to write the file to
+        filename: File name or path to write the file to.
         adata: Annotated data matrix.
         extension: File extension. One of 'h5ad', 'csv'. Defaults to `None` which infers the extension from the filename.
         compression: Optional file compression. One of 'gzip', 'lzf'.
@@ -77,7 +77,7 @@ def _get_file_extension(file_path: Path) -> str:
         file_path: Path to the file.
 
     Returns:
-        File extension of the specified file
+        File extension of the specified file.
     """
     ext = file_path.suffixes
 
@@ -99,11 +99,11 @@ def _get_filename_from_key(key, extension=None) -> Path:
     """Gets full file name from a key.
 
     Args:
-        key: Key to get file name for
-        extension: file extension
+        key: Key to get file name for.
+        extension: file extension.
 
     Returns:
-        Path to the full file
+        Path to the full file.
     """
     extension = settings.file_format_data if extension is None else extension
     extension = "csv" if extension is None else extension

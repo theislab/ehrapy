@@ -239,7 +239,7 @@ In contrast to a preprocessing function, a tool usually adds an easily interpret
     tools.cox_ph
     tools.weibull_aft
     tools.log_logistic_aft
-    tools.nelson_alen
+    tools.nelson_aalen
     tools.weibull
 
 ```

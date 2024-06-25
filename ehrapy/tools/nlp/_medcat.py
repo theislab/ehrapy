@@ -122,12 +122,12 @@ def get_medcat_annotation_overview(
 ) -> pd.DataFrame:
     """Provide an overview for the annotation results. An overview will look like the following:
 
-    cui (the CUI), nsubjects (from how many rows this one got extracted), type_ids (TUIs), name(name of the entitiy), perc_subjects (how many rows relative
+    cui (the CUI), nsubjects (from how many rows this one got extracted), type_ids (TUIs), name (name of the entity), perc_subjects (how many rows relative
     to absolute number of rows)
 
     Args:
         medcat_obj: The current MedCAT object which holds all infos on NLP analysis with MedCAT and ehrapy.
-        n: Basically the parameter for head() of pandas Dataframe. How many of the most common entities should be shown?
+        n: Basically the parameter for head() of pandas DataFrame. How many of the most common entities should be shown?
         status: One of "Affirmed" (default), "Other" or "Both". Displays stats for either only affirmed entities, negated ones or both.
         use_key: Key to use for the annotated results.
 

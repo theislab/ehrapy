@@ -32,7 +32,7 @@ def ols(
     formula: str | None = None,
     missing: Literal["none", "drop", "raise"] | None = "none",
 ) -> sm.OLS:
-    """Create a Ordinary Least Squares (OLS) Model from a formula and AnnData.
+    """Create an Ordinary Least Squares (OLS) Model from a formula and AnnData.
 
     See https://www.statsmodels.org/stable/generated/statsmodels.formula.api.ols.html#statsmodels.formula.api.ols
 
@@ -94,7 +94,7 @@ def glm(
         >>> formula = "day_28_flg ~ age"
         >>> var_names = ["day_28_flg", "age"]
         >>> family = "Binomial"
-        >>> glm = ep.tl.glm(adata, var_names, formula, family, missing="drop", ascontinus=["age"])
+        >>> glm = ep.tl.glm(adata, var_names, formula, family, missing="drop", as_continuous=["age"])
     """
     family_dict = {
         "Gaussian": sm.families.Gaussian(),
@@ -149,7 +149,7 @@ def kmf(
                    'left' for fitting the model to a left-censored dataset (default: fit the model to a right-censored dataset).
 
     Returns:
-        Fitted KaplanMeierFitter
+        Fitted KaplanMeierFitter.
 
     Examples:
         >>> import ehrapy as ep
@@ -298,7 +298,7 @@ def cox_ph(adata: AnnData, duration_col: str, event_col: str, entry_col: str = N
     See https://lifelines.readthedocs.io/en/latest/fitters/regression/CoxPHFitter.html
 
     Args:
-        adata: adata: AnnData object with necessary columns `duration_col` and `event_col`.
+        adata: AnnData object with necessary columns `duration_col` and `event_col`.
         duration_col: The name of the column in the AnnData objects that contains the subjects’ lifetimes.
         event_col: The name of the column in anndata that contains the subjects’ death observation.
                    If left as None, assume all individuals are uncensored.
@@ -327,14 +327,14 @@ def weibull_aft(adata: AnnData, duration_col: str, event_col: str, entry_col: st
     See https://lifelines.readthedocs.io/en/latest/fitters/regression/WeibullAFTFitter.html
 
     Args:
-        adata: adata: AnnData object with necessary columns `duration_col` and `event_col`.
+        adata: AnnData object with necessary columns `duration_col` and `event_col`.
         duration_col: Name of the column in the AnnData objects that contains the subjects’ lifetimes.
         event_col: Name of the column in anndata that contains the subjects’ death observation.
                    If left as None, assume all individuals are uncensored.
         entry_col: Column denoting when a subject entered the study, i.e. left-truncation.
 
     Returns:
-        Fitted WeibullAFTFitter
+        Fitted WeibullAFTFitter.
 
     Examples:
         >>> import ehrapy as ep
@@ -355,14 +355,14 @@ def log_logistic_aft(adata: AnnData, duration_col: str, event_col: str, entry_co
     See https://lifelines.readthedocs.io/en/latest/fitters/regression/LogLogisticAFTFitter.html
 
     Args:
-        adata: adata: AnnData object with necessary columns `duration_col` and `event_col`.
+        adata: AnnData object with necessary columns `duration_col` and `event_col`.
         duration_col: Name of the column in the AnnData objects that contains the subjects’ lifetimes.
         event_col: Name of the column in anndata that contains the subjects’ death observation.
                    If left as None, assume all individuals are uncensored.
         entry_col: Column denoting when a subject entered the study, i.e. left-truncation.
 
     Returns:
-        Fitted LogLogisticAFTFitter
+        Fitted LogLogisticAFTFitter.
 
     Examples:
         >>> import ehrapy as ep
@@ -391,7 +391,7 @@ def _univariate_model(adata: AnnData, duration_col: str, event_col: str, model_c
     return model
 
 
-def nelson_alen(adata: AnnData, duration_col: str, event_col: str) -> NelsonAalenFitter:
+def nelson_aalen(adata: AnnData, duration_col: str, event_col: str) -> NelsonAalenFitter:
     """Employ the Nelson-Aalen estimator to estimate the cumulative hazard function from censored survival data
 
     The Nelson-Aalen estimator is a non-parametric method used in survival analysis to estimate the cumulative hazard function.
@@ -400,20 +400,20 @@ def nelson_alen(adata: AnnData, duration_col: str, event_col: str) -> NelsonAale
     See https://lifelines.readthedocs.io/en/latest/fitters/univariate/NelsonAalenFitter.html
 
     Args:
-        adata: adata: AnnData object with necessary columns `duration_col` and `event_col`.
+        adata: AnnData object with necessary columns `duration_col` and `event_col`.
         duration_col: The name of the column in the AnnData objects that contains the subjects’ lifetimes.
         event_col: The name of the column in anndata that contains the subjects’ death observation.
                    If left as None, assume all individuals are uncensored.
 
     Returns:
-        Fitted NelsonAalenFitter
+        Fitted NelsonAalenFitter.
 
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=False)
         >>> # Flip 'censor_fl' because 0 = death and 1 = censored
         >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
-        >>> naf = ep.tl.nelson_alen(adata, "mort_day_censored", "censor_flg")
+        >>> naf = ep.tl.nelson_aalen(adata, "mort_day_censored", "censor_flg")
     """
     return _univariate_model(adata, duration_col, event_col, NelsonAalenFitter)
 
@@ -430,13 +430,13 @@ def weibull(adata: AnnData, duration_col: str, event_col: str) -> WeibullFitter:
     See https://lifelines.readthedocs.io/en/latest/fitters/univariate/WeibullFitter.html
 
     Args:
-        adata: adata: AnnData object with necessary columns `duration_col` and `event_col`.
+        adata: AnnData object with necessary columns `duration_col` and `event_col`.
         duration_col: Name of the column in the AnnData objects that contains the subjects’ lifetimes.
         event_col: Name of the column in the AnnData object that contains the subjects’ death observation.
                    If left as None, assume all individuals are uncensored.
 
     Returns:
-        Fitted WeibullFitter
+        Fitted WeibullFitter.
 
     Examples:
         >>> import ehrapy as ep

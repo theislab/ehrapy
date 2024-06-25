@@ -14,7 +14,7 @@ the documentation_. It's easy to install them using `pip`:
 
 ```bash
 cd ehrapy
-pip install -e ".[dev,test,doc]"
+pip install -e ".[dev,test,docs]"
 ```
 
 ## Code-style

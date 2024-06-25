@@ -31,7 +31,7 @@ def winsorize(
         obs_cols: Columns in obs with features to winsorize.
         limits: Tuple of the percentages to cut on each side of the array as floats between 0. and 1.
         copy: Whether to return a copy.
-        **kwargs: Keywords arguments get passed to scipy.stats.mstats.winsorize
+        **kwargs: Keywords arguments get passed to scipy.stats.mstats.winsorize.
 
     Returns:
         Winsorized AnnData object if copy is True.

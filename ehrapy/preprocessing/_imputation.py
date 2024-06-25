@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, Literal
 
@@ -196,11 +197,12 @@ def knn_impute(
     adata: AnnData,
     var_names: Iterable[str] | None = None,
     *,
-    n_neighbours: int = 5,
+    n_neighbors: int = 5,
     copy: bool = False,
     backend: Literal["scikit-learn", "faiss"] = "faiss",
     warning_threshold: int = 70,
     backend_kwargs: dict | None = None,
+    **kwargs,
 ) -> AnnData:
     """Imputes missing values in the input AnnData object using K-nearest neighbor imputation.
 
@@ -208,11 +210,16 @@ def knn_impute(
     since KNN Imputation can only work on numerical data. The encoding itself is just a utility and will be undone once
     imputation ran successfully.
 
+    .. warning::
+        Currently, both `n_neighbours` and `n_neighbors` are accepted as parameters for the number of neighbors.
+        However, in future versions, only `n_neighbors` will be supported. Please update your code accordingly.
+
+
     Args:
         adata: An annotated data matrix containing EHR data.
         var_names: A list of variable names indicating which columns to impute.
                    If `None`, all columns are imputed. Default is `None`.
-        n_neighbours: Number of neighbors to use when performing the imputation.
+        n_neighbors: Number of neighbors to use when performing the imputation.
         copy: Whether to perform the imputation on a copy of the original `AnnData` object.
               If `True`, the original object remains unmodified.
         backend: The implementation to use for the KNN imputation.
@@ -224,6 +231,7 @@ def knn_impute(
                   Pass "mean", "median", or "weighted" for 'strategy' to set the imputation strategy for faiss.
                   See `sklearn.impute.KNNImputer <https://scikit-learn.org/stable/modules/generated/sklearn.impute.KNNImputer.html>`_ for more information on the 'scikit-learn' backend.
                   See `fknni.faiss.FaissImputer <https://fknni.readthedocs.io/en/latest/>`_ for more information on the 'faiss' backend.
+        kwargs: Gathering keyword arguments of earlier ehrapy versions for backwards compatibility. It is encouraged to use the here listed, current arguments.
 
     Returns:
         An updated AnnData object with imputed values.
@@ -248,6 +256,20 @@ def knn_impute(
     if backend_kwargs is None:
         backend_kwargs = {}
 
+    valid_kwargs = {"n_neighbours"}
+    unexpected_kwargs = set(kwargs.keys()) - valid_kwargs
+
+    if unexpected_kwargs:
+        raise ValueError(f"Unexpected keyword arguments: {unexpected_kwargs}.")
+
+    if "n_neighbours" in kwargs.keys():
+        n_neighbors = kwargs["n_neighbours"]
+        warnings.warn(
+            "ehrapy will use 'n_neighbors' instead of 'n_neighbours'. Please update your code.",
+            DeprecationWarning,
+            stacklevel=1,
+        )
+
     if _check_module_importable("sklearnex"):  # pragma: no cover
         from sklearnex import patch_sklearn, unpatch_sklearn
 
@@ -261,14 +283,14 @@ def knn_impute(
             progress.add_task("[blue]Running KNN imputation", total=1)
             # numerical only data needs no encoding since KNN Imputation can be applied directly
             if np.issubdtype(adata.X.dtype, np.number):
-                _knn_impute(adata, var_names, n_neighbours, backend=backend, **backend_kwargs)
+                _knn_impute(adata, var_names, n_neighbors, backend=backend, **backend_kwargs)
             else:
                 # ordinal encoding is used since non-numerical data can not be imputed using KNN Imputation
                 enc = OrdinalEncoder()
                 column_indices = adata.var[FEATURE_TYPE_KEY] == CATEGORICAL_TAG
                 adata.X[::, column_indices] = enc.fit_transform(adata.X[::, column_indices])
                 # impute the data using KNN imputation
-                _knn_impute(adata, var_names, n_neighbours, backend=backend, **backend_kwargs)
+                _knn_impute(adata, var_names, n_neighbors, backend=backend, **backend_kwargs)
                 # imputing on encoded columns might result in float numbers; those can not be decoded
                 # cast them to int to ensure they can be decoded
                 adata.X[::, column_indices] = np.rint(adata.X[::, column_indices]).astype(int)
@@ -291,18 +313,18 @@ def knn_impute(
 def _knn_impute(
     adata: AnnData,
     var_names: Iterable[str] | None,
-    n_neighbours: int,
+    n_neighbors: int,
     backend: Literal["scikit-learn", "faiss"],
     **kwargs,
 ) -> None:
     if backend == "scikit-learn":
         from sklearn.impute import KNNImputer
 
-        imputer = KNNImputer(n_neighbors=n_neighbours, **kwargs)
+        imputer = KNNImputer(n_neighbors=n_neighbors, **kwargs)
     else:
         from fknni import FaissImputer
 
-        imputer = FaissImputer(n_neighbors=n_neighbours, **kwargs)
+        imputer = FaissImputer(n_neighbors=n_neighbors, **kwargs)
 
     if isinstance(var_names, Iterable):
         column_indices = _get_column_indices(adata, var_names)

@@ -14,7 +14,7 @@ def catplot(adata: AnnData, x: str = None, y: str = None, hue: str = None, kind:
     """Plot categorical data.
 
     Wrapper around `seaborn.catplot <https://seaborn.pydata.org/generated/seaborn.catplot.html>`_. Typically used to show
-    the behaviour of one numerical with respect to one or several categorical variables.
+    the behaviour of one numerical variable with respect to one or several categorical variables.
 
     Considers adata.obs only.
 

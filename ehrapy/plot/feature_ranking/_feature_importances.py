@@ -20,7 +20,7 @@ def rank_features_supervised(
     save: str | None = None,
     **kwargs,
 ) -> Axes | None:
-    """Plot features with greates absolute importances as a barplot.
+    """Plot features with greatest absolute importances as a barplot.
 
     Args:
         adata: :class:`~anndata.AnnData` object storing the data. A key in adata.var should contain the feature
@@ -38,7 +38,7 @@ def rank_features_supervised(
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=False)
-        >>> ep.pp.knn_impute(adata, n_neighbours=5)
+        >>> ep.pp.knn_impute(adata, n_neighbors=5)
         >>> input_features = [
         ...     feat for feat in adata.var_names if feat not in {"service_unit", "day_icu_intime", "tco2_first"}
         ... ]
