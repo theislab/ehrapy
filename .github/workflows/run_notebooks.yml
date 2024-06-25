@@ -32,7 +32,7 @@ jobs:
               run: pip install uv
 
             - name: Install ehrapy
-              run: uv pip install --system .
+              run: pip install --system .
 
             - name: Install additional dependencies
               run: uv pip install --system cellrank
