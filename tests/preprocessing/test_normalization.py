@@ -225,7 +225,7 @@ def test_norm_maxabs_group(array_type, adata_mini):
     adata_mini_casted.X = array_type(adata_mini_casted.X)
 
     if "dask" in array_type.__name__:
-        with pytest.raises(AttributeError):
+        with pytest.raises(NotImplementedError):
             ep.pp.maxabs_norm(adata_mini_casted, copy=True)
     else:
         with pytest.raises(KeyError):

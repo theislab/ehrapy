@@ -72,6 +72,10 @@ dependencies = [
 medcat = [
     "medcat",
 ]
+dask = [
+    "dask",
+    "dask-ml",
+]
 dev = [
     "pre-commit",
 ]
@@ -99,10 +103,12 @@ docs = [
     "medcat",
 ]
 test = [
+    "ehrapy[dask]",
     "pytest",
     "pytest-cov",
     "pytest-mock"
 ]
+
 
 [tool.hatch.version]
 source = "vcs"

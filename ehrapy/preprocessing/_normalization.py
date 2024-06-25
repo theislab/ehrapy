@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Callable
 import numpy as np
 import sklearn.preprocessing as sklearn_pp
 
-from ehrapy._compat import DaskArray
+from ehrapy._compat import is_dask_array
 from ehrapy.anndata._constants import NORM_NAMES
 
 try:
@@ -98,9 +98,7 @@ def scale_norm(
         >>> adata_norm = ep.pp.scale_norm(adata, copy=True)
     """
 
-    if isinstance(adata.X, DaskArray):
-        if not daskml_pp:
-            raise _dask_not_installed_error
+    if is_dask_array(adata.X):
         scale_func = daskml_pp.StandardScaler(**kwargs).fit_transform
     else:
         scale_func = sklearn_pp.StandardScaler(**kwargs).fit_transform
@@ -146,10 +144,8 @@ def minmax_norm(
         >>> adata_norm = ep.pp.minmax_norm(adata, copy=True)
     """
 
-    if isinstance(adata.X, DaskArray):
-        if not daskml_pp:
-            raise _dask_not_installed_error
-        raise NotImplementedError("MinMaxScaler is not implemented in dask_ml.")
+    if is_dask_array(adata.X):
+        scale_func = daskml_pp.MinMaxScaler(**kwargs).fit_transform
     else:
         scale_func = sklearn_pp.MinMaxScaler(**kwargs).fit_transform
 
@@ -190,9 +186,7 @@ def maxabs_norm(
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.maxabs_norm(adata, copy=True)
     """
-    if isinstance(adata.X, DaskArray):
-        if not daskml_pp:
-            raise _dask_not_installed_error
+    if is_dask_array(adata.X):
         raise NotImplementedError("MaxAbsScaler is not implemented in dask_ml.")
     else:
         scale_func = sklearn_pp.MaxAbsScaler().fit_transform
@@ -238,9 +232,7 @@ def robust_scale_norm(
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.robust_scale_norm(adata, copy=True)
     """
-    if isinstance(adata.X, DaskArray):
-        if not daskml_pp:
-            raise _dask_not_installed_error
+    if is_dask_array(adata.X):
         scale_func = daskml_pp.RobustScaler(**kwargs).fit_transform
     else:
         scale_func = sklearn_pp.RobustScaler(**kwargs).fit_transform
@@ -285,9 +277,7 @@ def quantile_norm(
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.quantile_norm(adata, copy=True)
     """
-    if isinstance(adata.X, DaskArray):
-        if not daskml_pp:
-            raise _dask_not_installed_error
+    if is_dask_array(adata.X):
         scale_func = daskml_pp.QuantileTransformer(**kwargs).fit_transform
     else:
         scale_func = sklearn_pp.QuantileTransformer(**kwargs).fit_transform
@@ -333,10 +323,8 @@ def power_norm(
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.power_norm(adata, copy=True)
     """
-    if isinstance(adata.X, DaskArray):
-        if not daskml_pp:
-            raise _dask_not_installed_error
-        scale_func = daskml_pp.PowerTransformer(**kwargs).fit_transform
+    if is_dask_array(adata.X):
+        raise NotImplementedError("dask-ml has no PowerTransformer, this is only available in scikit-learn")
     else:
         scale_func = sklearn_pp.PowerTransformer(**kwargs).fit_transform
 
