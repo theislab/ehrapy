@@ -6,7 +6,6 @@ import numpy as np
 import sklearn.preprocessing as sklearn_pp
 
 from ehrapy._compat import is_dask_array
-from ehrapy.anndata._constants import NORM_NAMES
 
 try:
     import dask_ml.preprocessing as daskml_pp
@@ -110,7 +109,7 @@ def scale_norm(
         vars=vars,
         group_key=group_key,
         copy=copy,
-        norm_name=NORM_NAMES["StandardScaler"],
+        norm_name="scale",
     )
 
 
@@ -155,7 +154,7 @@ def minmax_norm(
         vars=vars,
         group_key=group_key,
         copy=copy,
-        norm_name=NORM_NAMES["MinMaxScaler"],
+        norm_name="minmax",
     )
 
 
@@ -196,7 +195,7 @@ def maxabs_norm(
         vars=vars,
         group_key=group_key,
         copy=copy,
-        norm_name=NORM_NAMES["MaxAbsScaler"],
+        norm_name="maxabs",
     )
 
 
@@ -241,7 +240,7 @@ def robust_scale_norm(
         vars=vars,
         group_key=group_key,
         copy=copy,
-        norm_name=NORM_NAMES["RobustScaler"],
+        norm_name="robust_scale",
     )
 
 
@@ -285,7 +284,7 @@ def quantile_norm(
         vars=vars,
         group_key=group_key,
         copy=copy,
-        norm_name=NORM_NAMES["QuantileTransformer"],
+        norm_name="quantile",
     )
 
 
@@ -330,7 +329,7 @@ def power_norm(
         vars=vars,
         group_key=group_key,
         copy=copy,
-        norm_name=NORM_NAMES["PowerTransformer"],
+        norm_name="power",
     )
 
 
