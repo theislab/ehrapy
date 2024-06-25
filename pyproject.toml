@@ -102,6 +102,7 @@ docs = [
     "ipykernel",
     "ipython",
     "medcat",
+    "ehrapy[dask]",
 ]
 test = [
     "ehrapy[dask]",
