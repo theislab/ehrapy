@@ -27,7 +27,7 @@ For questions about the usage of ehrapy use [Github Discussions].
    notebooks/fhir
    notebooks/cohort_tracking
    notebooks/bias
-   notebooks/larger_than_memory
+   notebooks/out_of_core
 
 ```
 
