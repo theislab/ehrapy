@@ -32,7 +32,7 @@ jobs:
               run: pip install uv
 
             - name: Install ehrapy and additional dependencies
-              run: pip install . cellrank nbconvert ipykernel
+              run: uv pip install . cellrank nbconvert ipykernel
 
             - name: Run ${{ matrix.notebook }} Notebook
               run: jupyter nbconvert --to notebook --execute ${{ matrix.notebook }}
