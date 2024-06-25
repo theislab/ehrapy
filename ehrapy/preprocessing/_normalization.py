@@ -64,7 +64,10 @@ def _scale_func_group(
 
     _record_norm(adata, vars, norm_name)
 
-    return adata
+    if copy:
+        return adata
+    else:
+        return None
 
 
 def scale_norm(
@@ -88,7 +91,7 @@ def scale_norm(
         **kwargs: Additional arguments passed to the StandardScaler.
 
     Returns:
-        :class:`~anndata.AnnData` object with normalized X. Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
+        `None` if `copy=False` and modifies the passed adata, else returns an updated AnnData object. Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
 
     Examples:
         >>> import ehrapy as ep
@@ -133,8 +136,7 @@ def minmax_norm(
         **kwargs: Additional arguments passed to the MinMaxScaler.
 
     Returns:
-        :class:`~anndata.AnnData` object with normalized X.
-        Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
+        `None` if `copy=False` and modifies the passed adata, else returns an updated AnnData object. Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
 
     Examples:
         >>> import ehrapy as ep
@@ -176,8 +178,7 @@ def maxabs_norm(
         copy: Whether to return a copy or act in place.
 
     Returns:
-        :class:`~anndata.AnnData` object with normalized X.
-        Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
+        `None` if `copy=False` and modifies the passed adata, else returns an updated AnnData object. Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
 
     Examples:
         >>> import ehrapy as ep
@@ -222,8 +223,7 @@ def robust_scale_norm(
         **kwargs: Additional arguments passed to the RobustScaler.
 
     Returns:
-        :class:`~anndata.AnnData` object with normalized X.
-        Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
+        `None` if `copy=False` and modifies the passed adata, else returns an updated AnnData object. Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
 
     Examples:
         >>> import ehrapy as ep
@@ -267,8 +267,7 @@ def quantile_norm(
         **kwargs: Additional arguments passed to the QuantileTransformer.
 
     Returns:
-        :class:`~anndata.AnnData` object with normalized X.
-        Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
+        `None` if `copy=False` and modifies the passed adata, else returns an updated AnnData object. Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
 
     Examples:
         >>> import ehrapy as ep
@@ -313,8 +312,7 @@ def power_norm(
         **kwargs: Additional arguments passed to the PowerTransformer.
 
     Returns:
-        :class:`~anndata.AnnData` object with normalized X.
-        Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
+        `None` if `copy=False` and modifies the passed adata, else returns an updated AnnData object. Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
 
     Examples:
         >>> import ehrapy as ep
@@ -357,8 +355,7 @@ def log_norm(
         copy: Whether to return a copy or act in place.
 
     Returns:
-        :class:`~anndata.AnnData` object with normalized X.
-        Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
+        `None` if `copy=False` and modifies the passed adata, else returns an updated AnnData object. Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
 
     Examples:
         >>> import ehrapy as ep
