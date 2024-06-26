@@ -94,6 +94,7 @@ docs = [
     "sphinx-design",
     "sphinx-last-updated-by-git",
     "sphinx-automodapi",
+    "sphinx-togglebutton",
     "sphinxext-opengraph",
     "pygments",
     "pyenchant",
