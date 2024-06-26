@@ -36,6 +36,7 @@ extensions = [
     "sphinx_gallery.load_style",
     "sphinx_remove_toctrees",
     "sphinx_design",
+    "sphinx-togglebutton",
 ]
 
 # remove_from_toctrees = ["tutorials/notebooks/*", "api/reference/*"]
