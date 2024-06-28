@@ -56,7 +56,12 @@ def causal_inference(
     | (
         list[
             Literal[
-                "placebo_treatment_refuter", "random_common_cause", "data_subset_refuter", "add_unobserved_common_cause"
+                "placebo_treatment_refuter",
+                "random_common_cause",
+                "data_subset_refuter",
+                "add_unobserved_common_cause",
+                "bootstrap_refuter",
+                "dummy_outcome_refuter",
             ]
         ]
     ) = None,
@@ -132,6 +137,8 @@ def causal_inference(
         "random_common_cause",
         "data_subset_refuter",
         "add_unobserved_common_cause",
+        "bootstrap_refuter",
+        "dummy_outcome_refuter",
     ]
 
     if refute_methods is None:
@@ -184,9 +191,10 @@ def causal_inference(
             if "." not in estimation_method:
                 raise ValueError(f"Estimation method '{estimation_method}' not supported.")
             else:
-                if len(estimation_method.split(".")) > 2:
-                    if not any(["dowhy" in estimation_method, "_estimator" in estimation_method]):
-                        raise ValueError(f"Estimation method '{estimation_method}' not supported.")
+                if len(estimation_method.split(".")) > 2 and not any(
+                    ["dowhy" in estimation_method, "_estimator" in estimation_method]
+                ):
+                    raise ValueError(f"Estimation method '{estimation_method}' not supported.")
 
             estimate = model.estimate_effect(identified_estimand, method_name=estimation_method, **estimate_kwargs)
 
@@ -206,6 +214,9 @@ def causal_inference(
             if refute_failed:
                 logger.warning(f"Refutation '{method}' failed.")
             else:
+                # the dummy refuter returns a list with 1 element
+                if isinstance(refute, list):
+                    refute = refute[0]
                 # only returns dict when pval should be a number
                 if isinstance(refute.refutation_result, dict):
                     if 0 <= refute.refutation_result["p_value"] <= 1:
