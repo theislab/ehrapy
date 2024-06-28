@@ -214,9 +214,10 @@ def causal_inference(
             if refute_failed:
                 logger.warning(f"Refutation '{method}' failed.")
             else:
-                # only returns dict when pval should be a number
+                # the dummy refuter returns a list with 1 element
                 if isinstance(refute, list):
                     refute = refute[0]
+                # only returns dict when pval should be a number
                 if isinstance(refute.refutation_result, dict):
                     if 0 <= refute.refutation_result["p_value"] <= 1:
                         found_problematic_pvalues = False
