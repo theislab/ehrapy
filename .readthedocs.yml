@@ -5,13 +5,11 @@ build:
         python: "3.11"
     jobs:
         pre_build:
-            - apt-get update && apt-get install -y curl
-            - curl https://sh.rustup.rs -sSf | sh -s -- -y
-            - source $HOME/.cargo/env
             - python -c "import ehrapy"
             - pip freeze
         post_create_environment:
             - pip install uv
+            - apt update && apt install -y rustc cargo
         post_install:
             # VIRTUAL_ENV needs to be set manually for now.
             # See https://github.com/readthedocs/readthedocs.org/pull/11152/
