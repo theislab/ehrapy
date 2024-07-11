@@ -40,7 +40,7 @@ class TestCausal:
         )
 
         assert isinstance(refute_results, dict)
-        assert len(refute_results) == 4
+        assert len(refute_results) == 6
         assert isinstance(estimate, dowhy.causal_estimator.CausalEstimate)
         assert np.round(refute_results["Refute: Add a random common cause"]["test_significance"], 3) == 10.002
         assert np.round(refute_results["Refute: Use a subset of data"]["test_significance"], 3) == 10.002
