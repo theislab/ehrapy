@@ -2,7 +2,7 @@ name: Run Notebooks
 
 on:
     - push
-    - pull_request_target
+    - pull_request
 
 jobs:
     run:
@@ -31,14 +31,8 @@ jobs:
             - name: Install UV
               run: pip install uv
 
-            - name: Install ehrapy
-              run: uv pip install --system .
-
-            - name: Install additional dependencies
-              run: uv pip install --system cellrank
-
-            - name: Install nbconvert ipykernel
-              run: uv pip install --system nbconvert ipykernel
+            - name: Install ehrapy and additional dependencies
+              run: uv pip install --system . cellrank nbconvert ipykernel
 
             - name: Run ${{ matrix.notebook }} Notebook
               run: jupyter nbconvert --to notebook --execute ${{ matrix.notebook }}

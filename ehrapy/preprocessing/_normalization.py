@@ -3,14 +3,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Callable
 
 import numpy as np
-from sklearn.preprocessing import (
-    maxabs_scale,
-    minmax_scale,
-    power_transform,
-    quantile_transform,
-    robust_scale,
-    scale,
-)
+import sklearn.preprocessing as sklearn_pp
+
+from ehrapy._compat import is_dask_array
+
+try:
+    import dask_ml.preprocessing as daskml_pp
+except ImportError:
+    daskml_pp = None
 
 from ehrapy.anndata.anndata_ext import (
     _get_column_indices,
@@ -29,20 +29,44 @@ if TYPE_CHECKING:
 def _scale_func_group(
     adata: AnnData,
     scale_func: Callable[[np.ndarray | pd.DataFrame], np.ndarray],
-    var_values: np.ndarray | pd.DataFrame,
+    vars: str | Sequence[str] | None,
     group_key: str | None,
-    **kwargs,
-) -> np.ndarray:
-    """apply scaling function to var_values, either globally or per group."""
+    copy: bool,
+    norm_name: str,
+) -> AnnData | None:
+    """apply scaling function to selected columns of adata, either globally or per group."""
+
+    if group_key is not None and group_key not in adata.obs_keys():
+        raise KeyError(f"group key '{group_key}' not found in adata.obs.")
+
+    if isinstance(vars, str):
+        vars = [vars]
+    if vars is None:
+        vars = get_numeric_vars(adata)
+    else:
+        assert_numeric_vars(adata, vars)
+
+    adata = _prep_adata_norm(adata, copy)
+
+    var_idx = _get_column_indices(adata, vars)
+    var_values = np.take(adata.X, var_idx, axis=1)
+
     if group_key is None:
-        var_values = scale_func(var_values, **kwargs)
+        var_values = scale_func(var_values)
 
     else:
         for group in adata.obs[group_key].unique():
             group_idx = adata.obs[group_key] == group
-            var_values[group_idx] = scale_func(var_values[group_idx], **kwargs)
+            var_values[group_idx] = scale_func(var_values[group_idx])
 
-    return var_values
+    set_numeric_vars(adata, var_values, vars)
+
+    _record_norm(adata, vars, norm_name)
+
+    if copy:
+        return adata
+    else:
+        return None
 
 
 def scale_norm(
@@ -54,7 +78,8 @@ def scale_norm(
 ) -> AnnData | None:
     """Apply scaling normalization.
 
-    Functionality is provided by :func:`~sklearn.preprocessing.scale`, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.scale.html for details.
+    Functionality is provided by :class:`~sklearn.preprocessing.StandardScaler`, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html for details.
+    If `adata.X` is a Dask Array, functionality is provided by :func:`~dask_ml.preprocessing.StandardScaler`, see https://ml.dask.org/modules/generated/dask_ml.preprocessing.StandardScaler.html for details.
 
     Args:
         adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
@@ -62,37 +87,30 @@ def scale_norm(
               If None all numeric variables will be normalized.
         group_key: Key in adata.obs that contains group information. If provided, scaling is applied per group.
         copy: Whether to return a copy or act in place.
-        **kwargs: Additional arguments passed to :func:`~sklearn.preprocessing.scale`
+        **kwargs: Additional arguments passed to the StandardScaler.
 
     Returns:
-        :class:`~anndata.AnnData` object with normalized X. Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
+        `None` if `copy=False` and modifies the passed adata, else returns an updated AnnData object. Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
 
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.scale_norm(adata, copy=True)
     """
-    if group_key is not None and group_key not in adata.obs_keys():
-        raise KeyError(f"group key '{group_key}' not found in adata.obs.")
-    if isinstance(vars, str):
-        vars = [vars]
-    if vars is None:
-        vars = get_numeric_vars(adata)
+
+    if is_dask_array(adata.X):
+        scale_func = daskml_pp.StandardScaler(**kwargs).fit_transform
     else:
-        assert_numeric_vars(adata, vars)
+        scale_func = sklearn_pp.StandardScaler(**kwargs).fit_transform
 
-    adata = _prep_adata_norm(adata, copy)
-
-    var_idx = _get_column_indices(adata, vars)
-    var_values = np.take(adata.X, var_idx, axis=1)
-
-    var_values = _scale_func_group(adata, scale, var_values, group_key, **kwargs)
-
-    set_numeric_vars(adata, var_values, vars)
-
-    _record_norm(adata, vars, "scale")
-
-    return adata
+    return _scale_func_group(
+        adata=adata,
+        scale_func=scale_func,
+        vars=vars,
+        group_key=group_key,
+        copy=copy,
+        norm_name="scale",
+    )
 
 
 def minmax_norm(
@@ -104,8 +122,8 @@ def minmax_norm(
 ) -> AnnData | None:
     """Apply min-max normalization.
 
-    Functionality is provided by :func:`~sklearn.preprocessing.minmax_scale`,
-    see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.minmax_scale.html for details.
+    Functionality is provided by :class:`~sklearn.preprocessing.MinMaxScaler`, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MinMaxScaler.html for details.
+    If `adata.X` is a Dask Array, functionality is provided by :func:`~dask_ml.preprocessing.MinMaxScaler`, see https://ml.dask.org/modules/generated/dask_ml.preprocessing.MinMaxScaler.html for details.
 
     Args:
         adata: :class:`~anndata.AnnData` object containing X to normalize values in.
@@ -114,38 +132,30 @@ def minmax_norm(
               If None all numeric variables will be normalized.
         group_key: Key in adata.obs that contains group information. If provided, scaling is applied per group.
         copy: Whether to return a copy or act in place.
-        **kwargs: Additional arguments passed to :func:`~sklearn.preprocessing.minmax_scale`
+        **kwargs: Additional arguments passed to the MinMaxScaler.
 
     Returns:
-        :class:`~anndata.AnnData` object with normalized X.
-        Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
+        `None` if `copy=False` and modifies the passed adata, else returns an updated AnnData object. Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
 
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.minmax_norm(adata, copy=True)
     """
-    if group_key is not None and group_key not in adata.obs_keys():
-        raise KeyError(f"group key '{group_key}' not found in adata.obs.")
-    if isinstance(vars, str):
-        vars = [vars]
-    if vars is None:
-        vars = get_numeric_vars(adata)
+
+    if is_dask_array(adata.X):
+        scale_func = daskml_pp.MinMaxScaler(**kwargs).fit_transform
     else:
-        assert_numeric_vars(adata, vars)
+        scale_func = sklearn_pp.MinMaxScaler(**kwargs).fit_transform
 
-    adata = _prep_adata_norm(adata, copy)
-
-    var_idx = _get_column_indices(adata, vars)
-    var_values = np.take(adata.X, var_idx, axis=1)
-
-    var_values = _scale_func_group(adata, minmax_scale, var_values, group_key, **kwargs)
-
-    set_numeric_vars(adata, var_values, vars)
-
-    _record_norm(adata, vars, "minmax")
-
-    return adata
+    return _scale_func_group(
+        adata=adata,
+        scale_func=scale_func,
+        vars=vars,
+        group_key=group_key,
+        copy=copy,
+        norm_name="minmax",
+    )
 
 
 def maxabs_norm(
@@ -156,8 +166,7 @@ def maxabs_norm(
 ) -> AnnData | None:
     """Apply max-abs normalization.
 
-    Functionality is provided by :func:`~sklearn.preprocessing.maxabs_scale`,
-    see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.maxabs_scale.html for details.
+    Functionality is provided by :class:`~sklearn.preprocessing.MaxAbsScaler`, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MaxAbsScaler.html for details.
 
     Args:
         adata: :class:`~anndata.AnnData` object containing X to normalize values in.
@@ -168,35 +177,26 @@ def maxabs_norm(
         copy: Whether to return a copy or act in place.
 
     Returns:
-        :class:`~anndata.AnnData` object with normalized X.
-        Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
+        `None` if `copy=False` and modifies the passed adata, else returns an updated AnnData object. Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
 
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.maxabs_norm(adata, copy=True)
     """
-    if group_key is not None and group_key not in adata.obs_keys():
-        raise KeyError(f"group key '{group_key}' not found in adata.obs.")
-    if isinstance(vars, str):
-        vars = [vars]
-    if vars is None:
-        vars = get_numeric_vars(adata)
+    if is_dask_array(adata.X):
+        raise NotImplementedError("MaxAbsScaler is not implemented in dask_ml.")
     else:
-        assert_numeric_vars(adata, vars)
+        scale_func = sklearn_pp.MaxAbsScaler().fit_transform
 
-    adata = _prep_adata_norm(adata, copy)
-
-    var_idx = _get_column_indices(adata, vars)
-    var_values = np.take(adata.X, var_idx, axis=1)
-
-    var_values = _scale_func_group(adata, maxabs_scale, var_values, group_key)
-
-    set_numeric_vars(adata, var_values, vars)
-
-    _record_norm(adata, vars, "maxabs")
-
-    return adata
+    return _scale_func_group(
+        adata=adata,
+        scale_func=scale_func,
+        vars=vars,
+        group_key=group_key,
+        copy=copy,
+        norm_name="maxabs",
+    )
 
 
 def robust_scale_norm(
@@ -208,8 +208,9 @@ def robust_scale_norm(
 ) -> AnnData | None:
     """Apply robust scaling normalization.
 
-    Functionality is provided by :func:`~sklearn.preprocessing.robust_scale`,
-    see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.robust_scale.html for details.
+    Functionality is provided by :func:`~sklearn.preprocessing.RobustScaler`,
+    see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.RobustScaler.html for details.
+    If `adata.X` is a Dask Array, functionality is provided by :func:`~dask_ml.preprocessing.RobustScaler`, see https://ml.dask.org/modules/generated/dask_ml.preprocessing.RobustScaler.html for details.
 
     Args:
         adata: :class:`~anndata.AnnData` object containing X to normalize values in.
@@ -218,38 +219,29 @@ def robust_scale_norm(
               If None all numeric variables will be normalized.
         group_key: Key in adata.obs that contains group information. If provided, scaling is applied per group.
         copy: Whether to return a copy or act in place.
-        **kwargs: Additional arguments passed to :func:`~sklearn.preprocessing.robust_scale`
+        **kwargs: Additional arguments passed to the RobustScaler.
 
     Returns:
-        :class:`~anndata.AnnData` object with normalized X.
-        Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
+        `None` if `copy=False` and modifies the passed adata, else returns an updated AnnData object. Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
 
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.robust_scale_norm(adata, copy=True)
     """
-    if group_key is not None and group_key not in adata.obs_keys():
-        raise KeyError(f"group key '{group_key}' not found in adata.obs.")
-    if isinstance(vars, str):
-        vars = [vars]
-    if vars is None:
-        vars = get_numeric_vars(adata)
+    if is_dask_array(adata.X):
+        scale_func = daskml_pp.RobustScaler(**kwargs).fit_transform
     else:
-        assert_numeric_vars(adata, vars)
+        scale_func = sklearn_pp.RobustScaler(**kwargs).fit_transform
 
-    adata = _prep_adata_norm(adata, copy)
-
-    var_idx = _get_column_indices(adata, vars)
-    var_values = np.take(adata.X, var_idx, axis=1)
-
-    var_values = _scale_func_group(adata, robust_scale, var_values, group_key, **kwargs)
-
-    set_numeric_vars(adata, var_values, vars)
-
-    _record_norm(adata, vars, "robust_scale")
-
-    return adata
+    return _scale_func_group(
+        adata=adata,
+        scale_func=scale_func,
+        vars=vars,
+        group_key=group_key,
+        copy=copy,
+        norm_name="robust_scale",
+    )
 
 
 def quantile_norm(
@@ -261,47 +253,39 @@ def quantile_norm(
 ) -> AnnData | None:
     """Apply quantile normalization.
 
-    Functionality is provided by :func:`~sklearn.preprocessing.quantile_transform`,
-    see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.quantile_transform.html for details.
+    Functionality is provided by :func:`~sklearn.preprocessing.QuantileTransformer`,
+    see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.QuantileTransformer.html for details.
+    If `adata.X` is a Dask Array, functionality is provided by :func:`~dask_ml.preprocessing.QuantileTransformer`, see https://ml.dask.org/modules/generated/dask_ml.preprocessing.QuantileTransformer.html for details.
 
     Args:
-        adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encoded using ~ehrapy.preprocessing.encode.encode.
+        adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
         vars: List of the names of the numeric variables to normalize.
               If None all numeric variables will be normalized.
         group_key: Key in adata.obs that contains group information. If provided, scaling is applied per group.
         copy: Whether to return a copy or act in place.
-        **kwargs: Additional arguments passed to :func:`~sklearn.preprocessing.quantile_transform`
+        **kwargs: Additional arguments passed to the QuantileTransformer.
 
     Returns:
-        :class:`~anndata.AnnData` object with normalized X.
-        Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
+        `None` if `copy=False` and modifies the passed adata, else returns an updated AnnData object. Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
 
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.quantile_norm(adata, copy=True)
     """
-    if group_key is not None and group_key not in adata.obs_keys():
-        raise KeyError(f"group key '{group_key}' not found in adata.obs.")
-    if isinstance(vars, str):
-        vars = [vars]
-    if vars is None:
-        vars = get_numeric_vars(adata)
+    if is_dask_array(adata.X):
+        scale_func = daskml_pp.QuantileTransformer(**kwargs).fit_transform
     else:
-        assert_numeric_vars(adata, vars)
+        scale_func = sklearn_pp.QuantileTransformer(**kwargs).fit_transform
 
-    adata = _prep_adata_norm(adata, copy)
-
-    var_idx = _get_column_indices(adata, vars)
-    var_values = np.take(adata.X, var_idx, axis=1)
-
-    var_values = _scale_func_group(adata, quantile_transform, var_values, group_key, **kwargs)
-
-    set_numeric_vars(adata, var_values, vars)
-
-    _record_norm(adata, vars, "quantile")
-
-    return adata
+    return _scale_func_group(
+        adata=adata,
+        scale_func=scale_func,
+        vars=vars,
+        group_key=group_key,
+        copy=copy,
+        norm_name="quantile",
+    )
 
 
 def power_norm(
@@ -313,8 +297,8 @@ def power_norm(
 ) -> AnnData | None:
     """Apply power transformation normalization.
 
-    Functionality is provided by :func:`~sklearn.preprocessing.power_transform`,
-    see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.power_transform.html for details.
+    Functionality is provided by :func:`~sklearn.preprocessing.PowerTransformer`,
+    see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.PowerTransformer.html for details.
 
     Args:
         adata: :class:`~anndata.AnnData` object containing X to normalize values in.
@@ -323,38 +307,29 @@ def power_norm(
               If None all numeric variables will be normalized.
         group_key: Key in adata.obs that contains group information. If provided, scaling is applied per group.
         copy: Whether to return a copy or act in place.
-        **kwargs: Additional arguments passed to :func:`~sklearn.preprocessing.power_transform`
+        **kwargs: Additional arguments passed to the PowerTransformer.
 
     Returns:
-        :class:`~anndata.AnnData` object with normalized X.
-        Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
+        `None` if `copy=False` and modifies the passed adata, else returns an updated AnnData object. Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
 
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.power_norm(adata, copy=True)
     """
-    if group_key is not None and group_key not in adata.obs_keys():
-        raise KeyError(f"group key '{group_key}' not found in adata.obs.")
-    if isinstance(vars, str):
-        vars = [vars]
-    if vars is None:
-        vars = get_numeric_vars(adata)
+    if is_dask_array(adata.X):
+        raise NotImplementedError("dask-ml has no PowerTransformer, this is only available in scikit-learn")
     else:
-        assert_numeric_vars(adata, vars)
+        scale_func = sklearn_pp.PowerTransformer(**kwargs).fit_transform
 
-    adata = _prep_adata_norm(adata, copy)
-
-    var_idx = _get_column_indices(adata, vars)
-    var_values = np.take(adata.X, var_idx, axis=1)
-
-    var_values = _scale_func_group(adata, power_transform, var_values, group_key, **kwargs)
-
-    set_numeric_vars(adata, var_values, vars)
-
-    _record_norm(adata, vars, "power")
-
-    return adata
+    return _scale_func_group(
+        adata=adata,
+        scale_func=scale_func,
+        vars=vars,
+        group_key=group_key,
+        copy=copy,
+        norm_name="power",
+    )
 
 
 def log_norm(
@@ -367,7 +342,7 @@ def log_norm(
     """Apply log normalization.
 
     Computes :math:`x = \\log(x + offset)`, where :math:`log` denotes the natural logarithm
-    unless a different base is given and the default :math:`offset` is :math:`1`
+    unless a different base is given and the default :math:`offset` is :math:`1`.
 
     Args:
         adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
@@ -378,8 +353,7 @@ def log_norm(
         copy: Whether to return a copy or act in place.
 
     Returns:
-        :class:`~anndata.AnnData` object with normalized X.
-        Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
+        `None` if `copy=False` and modifies the passed adata, else returns an updated AnnData object. Also stores a record of applied normalizations as a dictionary in adata.uns["normalization"].
 
     Examples:
         >>> import ehrapy as ep
