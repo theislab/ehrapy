@@ -62,7 +62,7 @@ dependencies = [
     "dowhy",
     "fhiry",
     "pyampute",
-    "tableone==0.8.0",
+    "tableone>=0.9.1",
     "imbalanced-learn",
     "fknni",
     "python-dateutil",
