@@ -9,7 +9,6 @@ build:
             - pip freeze
         post_create_environment:
             - pip install uv
-            - apt update && apt install -y rustc cargo
         post_install:
             # VIRTUAL_ENV needs to be set manually for now.
             # See https://github.com/readthedocs/readthedocs.org/pull/11152/
