@@ -12,7 +12,7 @@ build:
         post_install:
             # VIRTUAL_ENV needs to be set manually for now.
             # See https://github.com/readthedocs/readthedocs.org/pull/11152/
-            - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH uv pip install ".[docs]"
+            - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH pip install ".[docs]"
 sphinx:
     configuration: docs/conf.py
     fail_on_warning: false
