@@ -38,7 +38,7 @@ def _detect_feature_type(col: pd.Series) -> tuple[Literal["date", "categorical",
     if majority_type == pd.Timestamp:
         return DATE_TAG, False  # type: ignore
 
-    if majority_type == str:
+    if majority_type is str:
         try:
             col.apply(isoparse)
             return DATE_TAG, False  # type: ignore
@@ -55,7 +55,7 @@ def _detect_feature_type(col: pd.Series) -> tuple[Literal["date", "categorical",
 
     # Guess categorical if the feature is an integer and the values are 0/1 to n-1/n with no gaps
     if (
-        (majority_type == int or (np.all(i.is_integer() for i in col)))
+        (majority_type is int or (np.all(i.is_integer() for i in col)))
         and (n_elements != col.nunique())
         and (
             (col.min() == 0 and np.all(np.sort(col.unique()) == np.arange(col.nunique())))

@@ -67,7 +67,7 @@ dependencies = [
     "fknni",
     "python-dateutil",
     "filelock",
-    "numpy<2.0.0"
+    "numpy<2.0.0"  # for compatiblity with lifelines
 ]
 
 [project.optional-dependencies]
