@@ -47,11 +47,10 @@ classifiers = [
 ]
 
 dependencies = [
-    "scipy",
     "session-info",
     "lamin_utils",
     "rich",
-    "scanpy[leiden]<=1.10.1",
+    "scanpy[leiden]",
     "requests",
     "pynndescent",
     "miceforest",
