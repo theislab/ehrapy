@@ -5,8 +5,9 @@ from typing import Any, Callable, Literal, Optional, Union
 import numpy as np
 import scanpy as sc
 from anndata import AnnData
-from scanpy._utils import AnyRandom
 from scipy.sparse import spmatrix
+
+AnyRandom = Union[int, np.random.RandomState, None]
 
 
 def pca(

@@ -5,10 +5,11 @@ import numpy as np
 import scanpy as sc
 from anndata import AnnData
 from leidenalg.VertexPartition import MutableVertexPartition
-from scanpy._utils import AnyRandom
 from scipy.sparse import spmatrix
 
 from ehrapy.tools import _method_options
+
+AnyRandom = Union[int, np.random.RandomState, None]
 
 
 def tsne(
