@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Collection, Mapping, Sequence
 from types import MappingProxyType
 from typing import Any, Callable, Literal, Optional, Union
@@ -6,7 +8,7 @@ import numpy as np
 import scanpy as sc
 from anndata import AnnData
 from scipy.sparse import spmatrix
-
+from scanpy.neighbors._types import KnnTransformerLike, _KnownTransformer # _types is protected...
 AnyRandom = Union[int, np.random.RandomState, None]
 
 
@@ -196,6 +198,7 @@ def neighbors(
     knn: bool = True,
     random_state: AnyRandom = 0,
     method: Optional[_Method] = "umap",
+    transformer: KnnTransformerLike | _KnownTransformer | None = None,
     metric: Union[_Metric, _MetricFn] = "euclidean",
     metric_kwds: Mapping[str, Any] = MappingProxyType({}),
     key_added: Optional[str] = None,
@@ -225,6 +228,23 @@ def neighbors(
         method: Use 'umap' [McInnes18]_ or 'gauss' (Gauss kernel following [Coifman05]_ with adaptive width [Haghverdi16]_) for computing connectivities.
                 Use 'rapids' for the RAPIDS implementation of UMAP (experimental, GPU only).
         metric: A known metric’s name or a callable that returns a distance.
+        transformer
+            Approximate kNN search implementation following the API of
+            :class:`~sklearn.neighbors.KNeighborsTransformer`.
+            See :doc:`/how-to/knn-transformers` for more details.
+            Also accepts the following known options:
+
+            `None` (the default)
+                Behavior depends on data size.
+                For small data, we will calculate exact kNN, otherwise we use
+                :class:`~pynndescent.pynndescent_.PyNNDescentTransformer`
+            `'pynndescent'`
+                :class:`~pynndescent.pynndescent_.PyNNDescentTransformer`
+            `'rapids'`
+                A transformer based on :class:`cuml.neighbors.NearestNeighbors`.
+
+                .. deprecated:: 1.10.0
+                   Use :func:`rapids_singlecell.pp.neighbors` instead.
         metric_kwds: Options for the metric.
         key_added: If not specified, the neighbors data is stored in .uns['neighbors'],
                    distances and connectivities are stored in .obsp['distances'] and .obsp['connectivities'] respectively.
@@ -250,6 +270,7 @@ def neighbors(
         knn=knn,
         random_state=random_state,
         method=method,
+        transformer=transformer,
         metric=metric,
         metric_kwds=metric_kwds,
         key_added=key_added,
