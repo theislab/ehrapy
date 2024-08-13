@@ -11,7 +11,7 @@ repos:
       hooks:
           - id: prettier
     - repo: https://github.com/astral-sh/ruff-pre-commit
-      rev: v0.5.7
+      rev: v0.5.5
       hooks:
           - id: ruff
             args: [--fix, --exit-non-zero-on-fix, --unsafe-fixes]
@@ -27,12 +27,12 @@ repos:
           - id: trailing-whitespace
           - id: check-case-conflict
     - repo: https://github.com/pre-commit/mirrors-mypy
-      rev: v1.11.1
+      rev: v1.11.0
       hooks:
           - id: mypy
             args: [--no-strict-optional, --ignore-missing-imports]
             additional_dependencies:
-                ["types-setuptools", "types-requests", "types-attrs"]
+                ["types-pkg-resources", "types-requests", "types-attrs"]
     - repo: local
       hooks:
           - id: forbid-to-commit
