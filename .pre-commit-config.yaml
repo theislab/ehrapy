@@ -32,7 +32,7 @@ repos:
           - id: mypy
             args: [--no-strict-optional, --ignore-missing-imports]
             additional_dependencies:
-                ["types-pkg-resources", "types-requests", "types-attrs"]
+                ["types-setuptools", "types-requests", "types-attrs"]
     - repo: local
       hooks:
           - id: forbid-to-commit
