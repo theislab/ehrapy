@@ -285,20 +285,20 @@ def _do_read_csv(
     Returns:
         An :class:`~anndata.AnnData` object and the column obs only for the object.
     """
-    try:
-        if index_column and columns_obs_only and index_column in columns_obs_only:
-            logger.warning(
-                f"Index column '{index_column}' is also used as a column "
-                f"for obs only. Using default indices instead and moving {index_column} to column_obs_only."
-            )
-            index_column = None
-        initial_df = pd.read_csv(file_path, sep=sep, index_col=index_column, **kwargs)
+    # try:
+    if index_column and columns_obs_only and index_column in columns_obs_only:
+        logger.warning(
+            f"Index column '{index_column}' is also used as a column "
+            f"for obs only. Using default indices instead and moving {index_column} to column_obs_only."
+        )
+        index_column = None
+    initial_df = pd.read_csv(file_path, sep=sep, index_col=index_column, **kwargs)
     # in case the index column is misspelled or does not exist
-    except ValueError:
-        raise IndexNotFoundError(
-            f"Could not create AnnData object while reading file {file_path} . Does index_column named {index_column} "
-            f"exist in {file_path}?"
-        ) from None
+    # except ValueError:
+    #     raise IndexNotFoundError(
+    #         f"Could not create AnnData object while reading file {file_path} . Does index_column named {index_column} "
+    #         f"exist in {file_path}?"
+    #     ) from None
 
     initial_df, columns_obs_only = _prepare_dataframe(initial_df, columns_obs_only, columns_x_only, cache)
 
