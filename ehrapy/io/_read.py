@@ -292,7 +292,7 @@ def _do_read_csv(
             f"for obs only. Using default indices instead and moving {index_column} to column_obs_only."
         )
         index_column = None
-    logger.warning(pd.read_csv(file_path, sep=sep, **kwargs).columns)
+    print(pd.read_csv(file_path, sep=sep, **kwargs).columns)
     initial_df = pd.read_csv(file_path, sep=sep, index_col=index_column, **kwargs)
     # in case the index column is misspelled or does not exist
     # except ValueError:
