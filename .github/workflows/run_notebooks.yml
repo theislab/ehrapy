@@ -31,6 +31,9 @@ jobs:
             - name: Install UV
               run: pip install uv
 
+            - name: Install graphviz
+              run: pip install graphviz
+
             - name: Install ehrapy and additional dependencies
               run: uv pip install --system . cellrank nbconvert ipykernel
 
