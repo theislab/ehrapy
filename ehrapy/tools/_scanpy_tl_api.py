@@ -162,7 +162,7 @@ def umap(
 
     key_to_check = neighbors_key if neighbors_key is not None else "neighbors"
     if key_to_check not in adata.uns:
-        raise ValueError(f"Did not find .uns[{key_to_check!r}]. Ensure you run `ep.pp.neighbors` first.")
+        raise ValueError(f"Did not find .uns[{key_to_check!r}]. Please run `ep.pp.neighbors` first.")
 
     return sc.tl.umap(
         adata=adata,
