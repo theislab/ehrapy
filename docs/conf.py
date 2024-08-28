@@ -120,7 +120,6 @@ html_theme_options = {
         "admonition-title-font-size": "var(--font-size-normal)",
         "code-font-size": "var(--font-size--small)",
     },
-    "top_of_page_button": None,
 }
 html_static_path = ["_static"]
 html_css_files = ["css/override.css", "css/sphinx_gallery.css"]

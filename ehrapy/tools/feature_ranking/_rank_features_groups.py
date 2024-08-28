@@ -413,7 +413,6 @@ def rank_features_groups(
          ...     columns_to_rank={"var_names": ["copd_flg", "renal_flg"], "obs_names": ["age", "mort_day_censored"]},
          ... )
          >>> ep.pl.rank_features_groups(adata)
-
     """
     if layer is not None and field_to_rank == "obs":
         raise ValueError("If 'layer' is not None, 'field_to_rank' cannot be 'obs'.")
