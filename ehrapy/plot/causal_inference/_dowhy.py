@@ -33,12 +33,7 @@ def causal_effect(estimate: dowhy.causal_estimator.CausalEstimate, precision: in
 
     treatment_name = estimate.estimator._target_estimand.treatment_variable[0]
     outcome_name = estimate.estimator._target_estimand.outcome_variable[0]
-
-    if dowhy.__version__ == "0.8":  # TODO: Remove this once dowhy supports Python 3.12
-        data = estimate.estimator._data
-    else:
-        data = estimate._data
-
+    data = estimate._data
     treatment = data[treatment_name].values
     outcome = data[outcome_name]
 
