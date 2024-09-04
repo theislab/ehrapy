@@ -20,7 +20,7 @@ from ehrapy.preprocessing._normalization import (
     scale_norm,
 )
 from ehrapy.preprocessing._outliers import clip_quantile, winsorize
-from ehrapy.preprocessing._quality_control import mcar_test, qc_lab_measurements, qc_metrics
+from ehrapy.preprocessing._quality_control import mcar_test, ks_test, qc_lab_measurements, qc_metrics
 from ehrapy.preprocessing._scanpy_pp_api import *  # noqa: F403
 from ehrapy.preprocessing._summarize_measurements import summarize_measurements
 
@@ -48,4 +48,5 @@ __all__ = [
     "qc_lab_measurements",
     "qc_metrics",
     "summarize_measurements",
+    "ks_test",
 ]

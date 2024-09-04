@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import copy
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, List
 
 import numpy as np
 import pandas as pd
@@ -319,7 +319,7 @@ def qc_lab_measurements(
                 reference_values = reference_values[
                     (reference_values[age_col].str.split("-").str[0].astype(int) >= int(min_age))
                     and (reference_values[age_col].str.split("-").str[1].astype(int) <= int(max_age))
-                ]
+                    ]
             if sex_col:
                 sexes = "U|M" if sex is None else sex
                 reference_values = reference_values[reference_values[sex_col].str.contains(sexes)]
@@ -393,3 +393,40 @@ def mcar_test(
     mt = MCARTest(method=method)
 
     return mt(df)
+
+
+def ks_test(adata: AnnData,
+            adata_imputed: AnnData,
+            layer: str | None = None,
+            method: Literal["auto", "exact", "asymp"] = "auto",
+            p_threshold: float = 0.05
+            ) -> list[str]:
+    """
+    Two-sample Kolmogorov-Smirnov test to check the impact of imputation on distributions. The null hypothesis
+    is that the two distributions are identical.
+
+    Args:
+        adata: Encoded annotated data matrix, before imputation.
+        adata_imputed: Encoded annotated data matrix, after imputation.
+        layer: Layer to apply the test to. Uses X matrix if set to `None`.
+        method: Defines the method used for calculating the p-value.
+        The following options are available (default is 'auto'):
+          * 'auto' : use 'exact' for small size arrays, 'asymp' for large
+          * 'exact' : use exact distribution of test statistic
+          * 'asymp' : use asymptotic distribution of test statistic
+        p_threshold: P-value threshold to consider a feature as significantly impacted
+
+    Returns:
+        The list of features which calculated p-value is less than specified p_threshold, potientially indicating a
+        non-negligible impact of the imputation on the data.
+    """
+    from scipy.stats import ks_2samp
+
+    if not adata.var_names.equals(adata_imputed.var_names) or not adata.obs_names.equals(adata_imputed.obs_names):
+        raise ValueError("The AnnData objects must have the same shape!")
+
+    return [
+        adata.var_names[i]
+        for i, pvalue in enumerate(ks_2samp(adata.to_df(layer), adata_imputed.to_df(layer), method=method, nan_policy="omit").pvalue)
+        if pvalue < p_threshold
+    ]
