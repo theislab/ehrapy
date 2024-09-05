@@ -8,7 +8,7 @@ from anndata import AnnData
 import ehrapy as ep
 from ehrapy.io._read import read_csv
 from ehrapy.preprocessing._encoding import encode
-from ehrapy.preprocessing._quality_control import _obs_qc_metrics, _var_qc_metrics, mcar_test
+from ehrapy.preprocessing._quality_control import _obs_qc_metrics, _var_qc_metrics, mcar_test, ks_test
 from tests.conftest import TEST_DATA_PATH
 
 CURRENT_DIR = Path(__file__).parent
@@ -214,4 +214,76 @@ def test_mar_data_identification(mar_adata):
 def test_mcar_identification(mcar_adata):
     """Test that mcar_test correctly identifies data as MCAR."""
     p_value = mcar_test(mcar_adata, method="little")
-    assert p_value > 0.05, "The test should not significantly accept the MCAR hypothesis for MCAR data."
+    assert p_value > 0.05, "The test should significantly accept the MCAR hypothesis for MCAR data."
+
+
+def test_ks_same_datasets():
+    """Test that ks_test correctly considers as statistically equivalent dataset if one is the other minus some removed values."""
+    rng = np.random.default_rng()
+    n_obs = rng.integers(1000, 10000)
+    n_vars = rng.integers(3, 10)
+    proba_missing = rng.uniform(0.01, 0.2)
+
+    # Create a randomly generated AnnData
+    full_adata = AnnData(pd.DataFrame(
+        np.random.uniform(0.0, 100.0, size=(n_obs, n_vars)),
+        columns=[f'Var{i + 1}' for i in range(n_vars)]))
+    hollowed_adata = full_adata.copy() # Save it so we can compare against it later
+
+    # Randomly remove value in some cells in one of the two datasets
+    for i in range(hollowed_adata.shape[0]):
+        for j in range(hollowed_adata.shape[1]):
+            if rng.uniform() < proba_missing:
+                hollowed_adata.X[i, j] = np.nan
+
+    assert not ks_test(full_adata, hollowed_adata), "The KS test shouldn't conclude the datasets are statistically different"
+
+
+def test_ks_different_datasets():
+    """Test that ks_test correctly considers as statistically equivalent dataset if one is NOT the other minus some removed values."""
+    rng = np.random.default_rng()
+    n_obs = rng.integers(1000, 10000)
+    n_vars = rng.integers(3, 10)
+    proba_missing = rng.uniform(0.01, 0.2)
+
+    # Create two different randomly generated AnnDatas
+    full_adata = AnnData(pd.DataFrame(
+        np.random.uniform(0.0, 100.0, size=(n_obs, n_vars)),
+        columns=[f'Var{i + 1}' for i in range(n_vars)]))
+    hollowed_adata = AnnData(pd.DataFrame(
+        np.random.uniform(0.0, 100.0, size=(n_obs, n_vars)),
+        columns=[f'Var{i + 1}' for i in range(n_vars)]))
+
+    # Randomly remove value in some cells in one of the two datasets
+    for i in range(hollowed_adata.shape[0]):
+        for j in range(hollowed_adata.shape[1]):
+            if rng.uniform() < proba_missing:
+                hollowed_adata.X[i, j] = np.nan
+
+    assert ks_test(full_adata, hollowed_adata), "The KS test shouldn't conclude the datasets are statistically equivalent"
+
+
+def test_ks_differently_shaped_datasets():
+    """Test that ks_test rejects two differently-shaped datasets."""
+    rng = np.random.default_rng()
+    n_obs = rng.integers(1000, 10000)
+    n_vars = rng.integers(3, 10)
+
+    # Create an AnnData with a given shape...
+    adata1 = AnnData(pd.DataFrame(
+        np.random.uniform(0.0, 100.0, size=(n_obs, n_vars)),
+        columns=[f'Var{i + 1}' for i in range(n_vars)]))
+
+    # ... And create another AnnData with a different shape
+    n_vars += 1
+    adata2 = AnnData(pd.DataFrame(
+        np.random.uniform(0.0, 100.0, size=(n_obs, n_vars)),
+        columns=[f'Var{i + 1}' for i in range(n_vars)]))
+
+    # It should fail!
+    try:
+        ks_test(adata1, adata2)
+        thrown = False
+    except ValueError:
+        thrown = True
+    assert thrown, "The KS test should have rejected the datasets"

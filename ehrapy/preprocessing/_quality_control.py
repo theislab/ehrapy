@@ -399,7 +399,7 @@ def ks_test(adata: AnnData,
             adata_imputed: AnnData,
             layer: str | None = None,
             method: Literal["auto", "exact", "asymp"] = "auto",
-            p_threshold: float = 0.05
+            p_threshold: float = 0.95
             ) -> list[str]:
     """
     Two-sample Kolmogorov-Smirnov test to check the impact of imputation on distributions. The null hypothesis
@@ -423,7 +423,7 @@ def ks_test(adata: AnnData,
     from scipy.stats import ks_2samp
 
     if not adata.var_names.equals(adata_imputed.var_names) or not adata.obs_names.equals(adata_imputed.obs_names):
-        raise ValueError("The AnnData objects must have the same shape!")
+        raise ValueError("The AnnData datasets must have the same shape!")
 
     return [
         adata.var_names[i]
