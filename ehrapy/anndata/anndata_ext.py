@@ -85,7 +85,9 @@ def df_to_anndata(
 
     # Prepare the AnnData object
     X = df.to_numpy(copy=True)
+    obs.index = obs.index.astype(str)
     var = pd.DataFrame(index=df.columns)
+    var.index = var.index.astype(str)
     uns = OrderedDict()  # type: ignore
 
     # Handle dtype of X based on presence of numerical columns only
@@ -93,6 +95,8 @@ def df_to_anndata(
     X = X.astype(np.float32 if all_numeric else object)
 
     adata = AnnData(X=X, obs=obs, var=var, uns=uns, layers={"original": X.copy()})
+    adata.obs_names = adata.obs_names.astype(str)
+    adata.var_names = adata.var_names.astype(str)
 
     return adata
 

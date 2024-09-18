@@ -468,7 +468,7 @@ def mice_forest_impute(
     var_names: Iterable[str] | None = None,
     *,
     warning_threshold: int = 70,
-    save_all_iterations: bool = True,
+    save_all_iterations_data: bool = True,
     random_state: int | None = None,
     inplace: bool = False,
     iterations: int = 5,
@@ -485,7 +485,7 @@ def mice_forest_impute(
         adata: The AnnData object containing the data to impute.
         var_names: A list of variable names to impute. If None, impute all variables.
         warning_threshold: Threshold of percentage of missing values to display a warning for.
-        save_all_iterations: Whether to save all imputed values from all iterations or just the latest.
+        save_all_iterations_data: Whether to save all imputed values from all iterations or just the latest.
                              Saving all iterations allows for additional plotting, but may take more memory.
         random_state: The random state ensures script reproducibility.
         inplace: If True, modify the input AnnData object in-place and return None.
@@ -520,7 +520,7 @@ def mice_forest_impute(
                 _miceforest_impute(
                     adata,
                     var_names,
-                    save_all_iterations,
+                    save_all_iterations_data,
                     random_state,
                     inplace,
                     iterations,
@@ -536,7 +536,7 @@ def mice_forest_impute(
                 _miceforest_impute(
                     adata,
                     var_names,
-                    save_all_iterations,
+                    save_all_iterations_data,
                     random_state,
                     inplace,
                     iterations,
@@ -555,31 +555,39 @@ def mice_forest_impute(
 
 
 def _miceforest_impute(
-    adata, var_names, save_all_iterations, random_state, inplace, iterations, variable_parameters, verbose
+    adata, var_names, save_all_iterations_data, random_state, inplace, iterations, variable_parameters, verbose
 ) -> None:
     import miceforest as mf
 
+    data_df = pd.DataFrame(adata.X, columns=adata.var_names, index=adata.obs_names)
+    data_df = data_df.apply(pd.to_numeric, errors="coerce")
+
     if isinstance(var_names, Iterable):
         column_indices = _get_column_indices(adata, var_names)
+        selected_columns = data_df.iloc[:, column_indices]
+        selected_columns = selected_columns.reset_index(drop=True)
 
-        # Create kernel.
         kernel = mf.ImputationKernel(
-            adata.X[::, column_indices], datasets=1, save_all_iterations=save_all_iterations, random_state=random_state
+            selected_columns,
+            num_datasets=1,
+            save_all_iterations_data=save_all_iterations_data,
+            random_state=random_state,
         )
 
-        kernel.mice(iterations=iterations, variable_parameters=variable_parameters, verbose=verbose)
-
-        adata.X[::, column_indices] = kernel.complete_data(dataset=0, inplace=inplace)
+        kernel.mice(iterations=iterations, variable_parameters=variable_parameters or {}, verbose=verbose)
+        data_df.iloc[:, column_indices] = kernel.complete_data(dataset=0, inplace=inplace)
 
     else:
-        # Create kernel.
+        data_df = data_df.reset_index(drop=True)
+
         kernel = mf.ImputationKernel(
-            adata.X, datasets=1, save_all_iterations=save_all_iterations, random_state=random_state
+            data_df, num_datasets=1, save_all_iterations_data=save_all_iterations_data, random_state=random_state
         )
 
-        kernel.mice(iterations=iterations, variable_parameters=variable_parameters, verbose=verbose)
+        kernel.mice(iterations=iterations, variable_parameters=variable_parameters or {}, verbose=verbose)
+        data_df = kernel.complete_data(dataset=0, inplace=inplace)
 
-        adata.X = kernel.complete_data(dataset=0, inplace=inplace)
+    adata.X = data_df.values
 
 
 def _warn_imputation_threshold(adata: AnnData, var_names: Iterable[str] | None, threshold: int = 75) -> dict[str, int]:
