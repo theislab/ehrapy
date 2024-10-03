@@ -1,27 +1,33 @@
-from collections.abc import Collection, Mapping, Sequence
+from __future__ import annotations
+
 from types import MappingProxyType
-from typing import Any, Callable, Literal, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, Literal, Optional, Union
 
 import numpy as np
 import scanpy as sc
-from anndata import AnnData
-from scipy.sparse import spmatrix
+
+if TYPE_CHECKING:
+    from collections.abc import Collection, Mapping, Sequence
+
+    from anndata import AnnData
+    from scanpy.neighbors._types import KnnTransformerLike, _KnownTransformer
+    from scipy.sparse import spmatrix
 
 AnyRandom = Union[int, np.random.RandomState, None]
 
 
 def pca(
-    data: Union[AnnData, np.ndarray, spmatrix],
-    n_comps: Optional[int] = None,
-    zero_center: Optional[bool] = True,
+    data: AnnData | np.ndarray | spmatrix,
+    n_comps: int | None = None,
+    zero_center: bool | None = True,
     svd_solver: str = "arpack",
     random_state: AnyRandom = 0,
     return_info: bool = False,
     dtype: str = "float32",
     copy: bool = False,
     chunked: bool = False,
-    chunk_size: Optional[int] = None,
-) -> Union[AnnData, np.ndarray, spmatrix]:  # pragma: no cover
+    chunk_size: int | None = None,
+) -> AnnData | np.ndarray | spmatrix:  # pragma: no cover
     """Computes a principal component analysis.
 
     Computes PCA coordinates, loadings and variance decomposition. Uses the implementation of *scikit-learn*.
@@ -91,10 +97,10 @@ def pca(
 
 def regress_out(
     adata: AnnData,
-    keys: Union[str, Sequence[str]],
-    n_jobs: Optional[int] = None,
+    keys: str | Sequence[str],
+    n_jobs: int | None = None,
     copy: bool = False,
-) -> Optional[AnnData]:  # pragma: no cover
+) -> AnnData | None:  # pragma: no cover
     """Regress out (mostly) unwanted sources of variation.
 
     Uses simple linear regression. This is inspired by Seurat's `regressOut` function in R [Satija15].
@@ -113,12 +119,12 @@ def regress_out(
 
 
 def subsample(
-    data: Union[AnnData, np.ndarray, spmatrix],
-    fraction: Optional[float] = None,
-    n_obs: Optional[int] = None,
+    data: AnnData | np.ndarray | spmatrix,
+    fraction: float | None = None,
+    n_obs: int | None = None,
     random_state: AnyRandom = 0,
     copy: bool = False,
-) -> Optional[AnnData]:  # pragma: no cover
+) -> AnnData | None:  # pragma: no cover
     """Subsample to a fraction of the number of observations.
 
     Args:
@@ -138,9 +144,9 @@ def subsample(
 def combat(
     adata: AnnData,
     key: str = "batch",
-    covariates: Optional[Collection[str]] = None,
+    covariates: Collection[str] | None = None,
     inplace: bool = True,
-) -> Union[AnnData, np.ndarray, None]:  # pragma: no cover
+) -> AnnData | np.ndarray | None:  # pragma: no cover
     """ComBat function for batch effect correction [Johnson07]_ [Leek12]_ [Pedersen12]_.
 
     Corrects for batch effects by fitting linear models, gains statistical power via an EB framework where information is borrowed across features.
@@ -191,16 +197,17 @@ _Metric = Union[_MetricSparseCapable, _MetricScipySpatial]
 def neighbors(
     adata: AnnData,
     n_neighbors: int = 15,
-    n_pcs: Optional[int] = None,
-    use_rep: Optional[str] = None,
+    n_pcs: int | None = None,
+    use_rep: str | None = None,
     knn: bool = True,
     random_state: AnyRandom = 0,
-    method: Optional[_Method] = "umap",
-    metric: Union[_Metric, _MetricFn] = "euclidean",
+    method: _Method | None = "umap",
+    transformer: KnnTransformerLike | _KnownTransformer | None = None,
+    metric: _Metric | _MetricFn = "euclidean",
     metric_kwds: Mapping[str, Any] = MappingProxyType({}),
-    key_added: Optional[str] = None,
+    key_added: str | None = None,
     copy: bool = False,
-) -> Optional[AnnData]:  # pragma: no cover
+) -> AnnData | None:  # pragma: no cover
     """Compute a neighborhood graph of observations [McInnes18]_.
 
     The neighbor search efficiency of this heavily relies on UMAP [McInnes18]_,
@@ -225,6 +232,23 @@ def neighbors(
         method: Use 'umap' [McInnes18]_ or 'gauss' (Gauss kernel following [Coifman05]_ with adaptive width [Haghverdi16]_) for computing connectivities.
                 Use 'rapids' for the RAPIDS implementation of UMAP (experimental, GPU only).
         metric: A known metric’s name or a callable that returns a distance.
+        transformer
+            Approximate kNN search implementation following the API of
+            :class:`~sklearn.neighbors.KNeighborsTransformer`.
+            See :doc:`/how-to/knn-transformers` for more details.
+            Also accepts the following known options:
+
+            `None` (the default)
+                Behavior depends on data size.
+                For small data, we will calculate exact kNN, otherwise we use
+                :class:`~pynndescent.pynndescent_.PyNNDescentTransformer`
+            `'pynndescent'`
+                :class:`~pynndescent.pynndescent_.PyNNDescentTransformer`
+            `'rapids'`
+                A transformer based on :class:`cuml.neighbors.NearestNeighbors`.
+
+                .. deprecated:: 1.10.0
+                   Use :func:`rapids_singlecell.pp.neighbors` instead.
         metric_kwds: Options for the metric.
         key_added: If not specified, the neighbors data is stored in .uns['neighbors'],
                    distances and connectivities are stored in .obsp['distances'] and .obsp['connectivities'] respectively.
@@ -250,6 +274,7 @@ def neighbors(
         knn=knn,
         random_state=random_state,
         method=method,
+        transformer=transformer,
         metric=metric,
         metric_kwds=metric_kwds,
         key_added=key_added,
