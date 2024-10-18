@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Callable, Literal, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, Literal, Union
 
 import numpy as np
 import scanpy as sc
@@ -27,7 +27,7 @@ def pca(
     copy: bool = False,
     chunked: bool = False,
     chunk_size: int | None = None,
-) -> AnnData | np.ndarray | spmatrix:  # pragma: no cover
+) -> AnnData | np.ndarray | spmatrix | None:  # pragma: no cover
     """Computes a principal component analysis.
 
     Computes PCA coordinates, loadings and variance decomposition. Uses the implementation of *scikit-learn*.
@@ -232,8 +232,8 @@ def neighbors(
         method: Use 'umap' [McInnes18]_ or 'gauss' (Gauss kernel following [Coifman05]_ with adaptive width [Haghverdi16]_) for computing connectivities.
                 Use 'rapids' for the RAPIDS implementation of UMAP (experimental, GPU only).
         metric: A known metric’s name or a callable that returns a distance.
-        transformer
-            Approximate kNN search implementation following the API of
+        transformer: Approximate kNN search implementation.
+            Follows the API of
             :class:`~sklearn.neighbors.KNeighborsTransformer`.
             See :doc:`/how-to/knn-transformers` for more details.
             Also accepts the following known options:
