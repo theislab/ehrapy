@@ -26,7 +26,7 @@ def root_dir():
 
 @pytest.fixture
 def rng():
-    return np.random.default_rng()
+    return np.random.default_rng(seed=42)
 
 
 @pytest.fixture

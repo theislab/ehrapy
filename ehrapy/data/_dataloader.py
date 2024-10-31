@@ -88,7 +88,7 @@ def download(
             latest_path = max(list_of_paths, key=lambda path: path.stat().st_ctime)
             shutil.move(latest_path, latest_path.parent / remove_archive_extension(output_file_name))  # type: ignore
 
-    Path(lock_path).unlink()
+    Path(lock_path).unlink(missing_ok=True)
 
 
 def remove_archive_extension(file_path):

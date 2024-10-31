@@ -12,7 +12,7 @@
 
 # ehrapy overview
 
-![fig1](https://github.com/theislab/ehrapy/assets/99650244/aad523a3-b4f9-4a7a-bb61-612af9a6874c)
+![fig1](https://github.com/user-attachments/assets/7927aa20-751c-4e73-8939-1e4b1c465570)
 
 ## Features
 
@@ -39,6 +39,4 @@ import ehrapy as ep
 
 ## Citation
 
-[ Exploratory electronic health record analysis with ehrapy
-Lukas Heumos, Philipp Ehmele, Tim Treis, Julius Upmeier zu Belzen, Altana Namsaraeva, Nastassya Horlava, Vladimir A. Shitov, Xinyue Zhang, Luke Zappia, Rainer Knoll, Niklas J. Lang, Leon Hetzel, Isaac Virshup, Lisa Sikkema, Eljas Roellin, Fabiola Curion, Roland Eils, Herbert B. Schiller, Anne Hilgendorff, Fabian J. Theis
-medRxiv 2023.12.11.23299816; doi: https://doi.org/10.1101/2023.12.11.23299816 ](https://www.medrxiv.org/content/10.1101/2023.12.11.23299816v1).
+[Heumos, L., Ehmele, P., Treis, T. et al. An open-source framework for end-to-end analysis of electronic health record data. Nat Med (2024). https://doi.org/10.1038/s41591-024-03214-0](https://www.nature.com/articles/s41591-024-03214-0).

@@ -109,10 +109,6 @@ Other than tools, preprocessing steps usually don’t return an easily interpret
     preprocessing.simple_impute
     preprocessing.knn_impute
     preprocessing.miss_forest_impute
-    preprocessing.soft_impute
-    preprocessing.iterative_svd_impute
-    preprocessing.matrix_factorization_impute
-    preprocessing.nuclear_norm_minimization_impute
     preprocessing.mice_forest_impute
 ```
 
@@ -130,7 +126,6 @@ Other than tools, preprocessing steps usually don’t return an easily interpret
     preprocessing.quantile_norm
     preprocessing.robust_scale_norm
     preprocessing.scale_norm
-    preprocessing.sqrt_norm
     preprocessing.offset_negative_values
 ```
 
@@ -168,7 +163,6 @@ In contrast to a preprocessing function, a tool usually adds an easily interpret
     :toctree: tools
     :nosignatures:
 
-    tools.pca
     tools.tsne
     tools.umap
     tools.draw_graph
@@ -218,7 +212,6 @@ In contrast to a preprocessing function, a tool usually adds an easily interpret
     :toctree: tools
     :nosignatures:
 
-    tools.Translator
     tools.annotate_text
     tools.get_medcat_annotation_overview
     tools.add_medcat_annotation_to_obs
@@ -296,7 +289,6 @@ For most tools and for some preprocessing functions, you will find a plotting fu
     :toctree: plot
     :nosignatures:
 
-    plot.qc_metrics
     plot.missing_values_matrix
     plot.missing_values_barplot
     plot.missing_values_heatmap

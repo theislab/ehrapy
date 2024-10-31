@@ -47,11 +47,10 @@ classifiers = [
 ]
 
 dependencies = [
-    "scipy<1.14",
     "session-info",
     "lamin_utils",
     "rich",
-    "scanpy[leiden]<=1.10.1",
+    "scanpy[leiden]",
     "requests",
     "pynndescent",
     "miceforest",
@@ -62,7 +61,7 @@ dependencies = [
     "dowhy",
     "fhiry",
     "pyampute",
-    "tableone<=0.8.0",
+    "tableone",
     "imbalanced-learn",
     "fknni",
     "python-dateutil",
