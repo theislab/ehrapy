@@ -8,7 +8,7 @@ The easiest way to get familiar with ehrapy is to follow along with our tutorial
 Many are also designed to work seamlessly in Binder, a free cloud computing platform.
 
 :::{note}
-For questions about the usage of ehrapy use [Github Discussions].
+For questions about the usage of ehrapy use the [zulip forum](https://scverse.zulipchat.com/#narrow/channel/465075-ehrapy).
 :::
 
 ## Quick start
@@ -28,6 +28,7 @@ For questions about the usage of ehrapy use [Github Discussions].
    notebooks/cohort_tracking
    notebooks/bias
    notebooks/out_of_core
+   notebooks/patient_trajectory
 
 ```
 
@@ -52,4 +53,4 @@ For questions about the usage of ehrapy use [Github Discussions].
         For a more in depth introduction please read the `Scanpy paper <https://genomebiology.biomedcentral.com/articles/10.1186/s13059-017-1382-0>`_.
 ```
 
-[github discussions]: https://github.com/theislab/ehrapy/discussions
+[zulip forum]: https://scverse.zulipchat.com/#narrow/channel/465075-ehrapy

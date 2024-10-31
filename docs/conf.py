@@ -179,4 +179,5 @@ nbsphinx_thumbnails = {
     "tutorials/notebooks/cohort_tracking": "_static/tutorials/cohort_tracking.png",
     "tutorials/notebooks/bias": "_static/tutorials/bias.png",
     "tutorials/notebooks/out_of_core": "_static/tutorials/out_of_core.png",
+    "tutorials/notebooks/patient_trajectory": "_static/tutorials/patient_trajectory.png",
 }
