@@ -11,6 +11,6 @@ def test_catplot_vanilla(adata_mini, check_same_image):
 
     check_same_image(
         fig=fig,
-        base_path=f"{_TEST_IMAGE_PATH}/catplot_vanilla",;
+        base_path=f"{_TEST_IMAGE_PATH}/catplot_vanilla",
         tol=2e-1,
     )
