@@ -10,8 +10,9 @@ if TYPE_CHECKING:
     from collections.abc import Collection, Mapping, Sequence
 
     from anndata import AnnData
-    from scanpy.neighbors._types import KnnTransformerLike, _KnownTransformer
+    from scanpy.neighbors import KnnTransformerLike
     from scipy.sparse import spmatrix
+    from ehrapy.preprocessing._types import KnownTransformer
 
 AnyRandom = Union[int, np.random.RandomState, None]
 
@@ -107,7 +108,7 @@ def regress_out(
     Note that this function tends to overcorrect in certain circumstances.
 
     Args:
-        adata: :class:`~anndata.AnnData` object object containing all observations.
+        adata: :class:`~anndata.AnnData` object containing all observations.
         keys: Keys for observation annotation on which to regress on.
         n_jobs: Number of jobs for parallel computation. `None` means using :attr:`scanpy._settings.ScanpyConfig.n_jobs`.
         copy: Determines whether a copy of `adata` is returned.
@@ -155,7 +156,7 @@ def combat(
     .. _combat.py: https://github.com/brentp/combat.py
 
     Args:
-        adata: :class:`~anndata.AnnData` object object containing all observations.
+        adata: :class:`~anndata.AnnData` object containing all observations.
         key: Key to a categorical annotation from :attr:`~anndata.AnnData.obs` that will be used for batch effect removal.
         covariates: Additional covariates besides the batch variable such as adjustment variables or biological condition.
                     This parameter refers to the design matrix `X` in Equation 2.1 in [Johnson07]_ and to the `mod` argument in
@@ -169,7 +170,7 @@ def combat(
     return sc.pp.combat(adata=adata, key=key, covariates=covariates, inplace=inplace)
 
 
-_Method = Literal["umap", "gauss", "rapids"]
+_Method = Literal["umap", "gauss"]
 _MetricFn = Callable[[np.ndarray, np.ndarray], float]
 _MetricSparseCapable = Literal["cityblock", "cosine", "euclidean", "l1", "l2", "manhattan"]
 _MetricScipySpatial = Literal[
@@ -201,8 +202,8 @@ def neighbors(
     use_rep: str | None = None,
     knn: bool = True,
     random_state: AnyRandom = 0,
-    method: _Method | None = "umap",
-    transformer: KnnTransformerLike | _KnownTransformer | None = None,
+    method: _Method = "umap",
+    transformer: KnnTransformerLike | KnownTransformer | None = None,
     metric: _Metric | _MetricFn = "euclidean",
     metric_kwds: Mapping[str, Any] = MappingProxyType({}),
     key_added: str | None = None,
@@ -216,7 +217,7 @@ def neighbors(
     connectivities are computed according to [Coifman05]_, in the adaption of [Haghverdi16]_.
 
     Args:
-        adata: :class:`~anndata.AnnData` object object containing all observations.
+        adata: :class:`~anndata.AnnData` object containing all observations.
         n_neighbors: The size of local neighborhood (in terms of number of neighboring data points) used for manifold approximation.
                      Larger values result in more global views of the manifold, while smaller values result in more local data being preserved.
                      In general values should be in the range 2 to 100. If `knn` is `True`, number of nearest neighbors to be searched.
@@ -235,7 +236,7 @@ def neighbors(
         transformer: Approximate kNN search implementation.
             Follows the API of
             :class:`~sklearn.neighbors.KNeighborsTransformer`.
-            See :doc:`/how-to/knn-transformers` for more details.
+            See :doc:`https://scanpy.readthedocs.io/en/latest/how-to/knn-transformers.html` for more details. This scanpy documentation is also valid for ehrapy.
             Also accepts the following known options:
 
             `None` (the default)
@@ -244,11 +245,6 @@ def neighbors(
                 :class:`~pynndescent.pynndescent_.PyNNDescentTransformer`
             `'pynndescent'`
                 :class:`~pynndescent.pynndescent_.PyNNDescentTransformer`
-            `'rapids'`
-                A transformer based on :class:`cuml.neighbors.NearestNeighbors`.
-
-                .. deprecated:: 1.10.0
-                   Use :func:`rapids_singlecell.pp.neighbors` instead.
         metric_kwds: Options for the metric.
         key_added: If not specified, the neighbors data is stored in .uns['neighbors'],
                    distances and connectivities are stored in .obsp['distances'] and .obsp['connectivities'] respectively.
