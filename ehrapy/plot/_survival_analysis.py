@@ -186,22 +186,20 @@ def kmf(
         # So we need to flip `censor_fl` when pass `censor_fl` to KaplanMeierFitter
 
         >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
-        >>> kmf = ep.tl.kmf(adata[:, ["mort_day_censored"]].X, adata[:, ["censor_flg"]].X)
+        >>> kmf = ep.tl.kmf(adata, "mort_day_censored", "censor_flg")
         >>> ep.pl.kmf(
         ...     [kmf], color=["r"], xlim=[0, 700], ylim=[0, 1], xlabel="Days", ylabel="Proportion Survived", show=True
         ... )
 
         .. image:: /_static/docstring_previews/kmf_plot_1.png
 
-        >>> T = adata[:, ["mort_day_censored"]].X
-        >>> E = adata[:, ["censor_flg"]].X
         >>> groups = adata[:, ["service_unit"]].X
-        >>> ix1 = groups == "FICU"
-        >>> ix2 = groups == "MICU"
-        >>> ix3 = groups == "SICU"
-        >>> kmf_1 = ep.tl.kmf(T[ix1], E[ix1], label="FICU")
-        >>> kmf_2 = ep.tl.kmf(T[ix2], E[ix2], label="MICU")
-        >>> kmf_3 = ep.tl.kmf(T[ix3], E[ix3], label="SICU")
+        >>> adata_ficu = adata[groups == "FICU"]
+        >>> adata_micu = adata[groups == "MICU"]
+        >>> adata_sicu = adata[groups == "SICU"]
+        >>> kmf_1 = ep.tl.kmf(adata_ficu, "mort_day_censored", "censor_flg", label="FICU")
+        >>> kmf_2 = ep.tl.kmf(adata_micu, "mort_day_censored", "censor_flg", label="MICU")
+        >>> kmf_3 = ep.tl.kmf(adata_sicu, "mort_day_censored", "censor_flg", label="SICU")
         >>> ep.pl.kmf([kmf_1, kmf_2, kmf_3], ci_show=[False,False,False], color=['k','r', 'g'],
         >>>           xlim=[0, 750], ylim=[0, 1], xlabel="Days", ylabel="Proportion Survived")
 
