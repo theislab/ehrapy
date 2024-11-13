@@ -97,7 +97,7 @@ class TestSA:
 
     def test_kmf(self, mimic_2_sa):
         adata, _, _ = mimic_2_sa
-        kmf = ep.tl.kmf(adata[:, ["mort_day_censored"]].X, adata[:, ["censor_flg"]].X)
+        kmf = ep.tl.kmf(adata, "mort_day_censored", "censor_flg")
         self._sa_function_assert(kmf, KaplanMeierFitter)
 
     def test_cox_ph(self, mimic_2_sa):

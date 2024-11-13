@@ -116,15 +116,10 @@ def glm(
 
 
 def kmf(
-    durations: Iterable,
-    event_observed: Iterable | None = None,
-    timeline: Iterable = None,
-    entry: Iterable | None = None,
-    label: str | None = None,
-    alpha: float | None = None,
-    ci_labels: tuple[str, str] = None,
-    weights: Iterable | None = None,
-    censoring: Literal["right", "left"] = None,
+    adata: AnnData,
+    duration_col: str,
+    event_col: str | None = None,
+    **kwargs,
 ) -> KaplanMeierFitter:
     """Fit the Kaplan-Meier estimate for the survival function.
 
@@ -156,13 +151,27 @@ def kmf(
         >>> adata = ep.dt.mimic_2(encoded=False)
         >>> # Flip 'censor_fl' because 0 = death and 1 = censored
         >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
-        >>> kmf = ep.tl.kmf(adata[:, ["mort_day_censored"]].X, adata[:, ["censor_flg"]].X)
+        >>> kmf = ep.tl.kmf(adata, "mort_day_censored", "censor_flg", label="Mortality")
     """
+
     kmf = KaplanMeierFitter()
-    if censoring == "None" or "right":
-        kmf.fit(
-            durations=durations,
-            event_observed=event_observed,
+    df = anndata_to_df(adata)
+    T = df[duration_col]
+    E = df[event_col]
+
+    # unpack kwargs
+    timeline = kwargs.get("timeline", None)
+    entry = kwargs.get("entry", None)
+    label = kwargs.get("label", None)
+    alpha = kwargs.get("alpha", None)
+    ci_labels = kwargs.get("ci_labels", None)
+    weights = kwargs.get("weights", None)
+    censoring = kwargs.get("censoring", "right")
+
+    if censoring == "left":
+        kmf.fit_left_censoring(
+            durations=T,
+            event_observed=E,
             timeline=timeline,
             entry=entry,
             label=label,
@@ -170,10 +179,10 @@ def kmf(
             ci_labels=ci_labels,
             weights=weights,
         )
-    elif censoring == "left":
-        kmf.fit_left_censoring(
-            durations=durations,
-            event_observed=event_observed,
+    else:
+        kmf.fit(
+            durations=T,
+            event_observed=E,
             timeline=timeline,
             entry=entry,
             label=label,
@@ -376,7 +385,9 @@ def log_logistic_aft(adata: AnnData, duration_col: str, event_col: str, entry_co
     )
 
 
-def _univariate_model(adata: AnnData, duration_col: str, event_col: str, model_class, accept_zero_duration=True):
+def _univariate_model(
+    adata: AnnData, duration_col: str, event_col: str, model_class, accept_zero_duration=True, **kwargs
+):
     """Convenience function for univariate models."""
     df = anndata_to_df(adata)
 
@@ -385,13 +396,32 @@ def _univariate_model(adata: AnnData, duration_col: str, event_col: str, model_c
     T = df[duration_col]
     E = df[event_col]
 
+    # unpack kwargs
+    timeline = kwargs.get("timeline", None)
+    entry = kwargs.get("entry", None)
+    label = kwargs.get("label", None)
+    alpha = kwargs.get("alpha", None)
+    ci_labels = kwargs.get("ci_labels", None)
+    weights = kwargs.get("weights", None)
+    fit_options = kwargs.get("fit_options", None)
+
     model = model_class()
-    model.fit(T, event_observed=E)
+    model.fit(
+        T,
+        event_observed=E,
+        timeline=timeline,
+        entry=entry,
+        label=label,
+        alpha=alpha,
+        ci_labels=ci_labels,
+        weights=weights,
+        **fit_options,
+    )
 
     return model
 
 
-def nelson_aalen(adata: AnnData, duration_col: str, event_col: str) -> NelsonAalenFitter:
+def nelson_aalen(adata: AnnData, duration_col: str, event_col: str, **kwargs) -> NelsonAalenFitter:
     """Employ the Nelson-Aalen estimator to estimate the cumulative hazard function from censored survival data
 
     The Nelson-Aalen estimator is a non-parametric method used in survival analysis to estimate the cumulative hazard function.
@@ -415,10 +445,10 @@ def nelson_aalen(adata: AnnData, duration_col: str, event_col: str) -> NelsonAal
         >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
         >>> naf = ep.tl.nelson_aalen(adata, "mort_day_censored", "censor_flg")
     """
-    return _univariate_model(adata, duration_col, event_col, NelsonAalenFitter)
+    return _univariate_model(adata, duration_col, event_col, NelsonAalenFitter, True, **kwargs)
 
 
-def weibull(adata: AnnData, duration_col: str, event_col: str) -> WeibullFitter:
+def weibull(adata: AnnData, duration_col: str, event_col: str, **kwargs) -> WeibullFitter:
     """Employ the Weibull model in univariate survival analysis to understand event occurrence dynamics.
 
     In contrast to the non-parametric Nelson-Aalen estimator, the Weibull model employs a parametric approach with shape and scale parameters,
@@ -445,4 +475,4 @@ def weibull(adata: AnnData, duration_col: str, event_col: str) -> WeibullFitter:
         >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
         >>> wf = ep.tl.weibull(adata, "mort_day_censored", "censor_flg")
     """
-    return _univariate_model(adata, duration_col, event_col, WeibullFitter, accept_zero_duration=False)
+    return _univariate_model(adata, duration_col, event_col, WeibullFitter, accept_zero_duration=False, **kwargs)
