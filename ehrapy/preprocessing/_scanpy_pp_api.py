@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from anndata import AnnData
     from scanpy.neighbors import KnnTransformerLike
     from scipy.sparse import spmatrix
+
     from ehrapy.preprocessing._types import KnownTransformer
 
 AnyRandom = Union[int, np.random.RandomState, None]
