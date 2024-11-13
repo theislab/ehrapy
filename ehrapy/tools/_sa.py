@@ -415,7 +415,7 @@ def _univariate_model(
         alpha=alpha,
         ci_labels=ci_labels,
         weights=weights,
-        **fit_options,
+        fit_options=fit_options,
     )
 
     return model
