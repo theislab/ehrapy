@@ -248,7 +248,6 @@ def neighbors(
                 `'sklearn'`
                     Uses :class:`~sklearn.neighbors.KNeighborsTransformer` with algorithm="brute" for exact kNN.
         metric_kwds: Options for the metric.
-
         key_added: If not specified, the neighbors data is stored in .uns['neighbors'],
                    distances and connectivities are stored in .obsp['distances'] and .obsp['connectivities'] respectively.
                    If specified, the neighbors data is added to .uns[key_added], distances are stored in .obsp[key_added+'_distances']
