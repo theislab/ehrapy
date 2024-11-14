@@ -234,19 +234,21 @@ def neighbors(
         method: Use 'umap' [McInnes18]_ or 'gauss' (Gauss kernel following [Coifman05]_ with adaptive width [Haghverdi16]_) for computing connectivities.
                 Use 'rapids' for the RAPIDS implementation of UMAP (experimental, GPU only).
         metric: A known metric’s name or a callable that returns a distance.
-        transformer: Approximate kNN search implementation.
-            Follows the API of
-            :class:`~sklearn.neighbors.KNeighborsTransformer`.
-            See :doc:`https://scanpy.readthedocs.io/en/latest/how-to/knn-transformers.html` for more details. This scanpy documentation is also valid for ehrapy.
-            Also accepts the following known options:
+        transformer: Approximate kNN search implementation. Follows the API of
+                :class:`~sklearn.neighbors.KNeighborsTransformer`.
+                See scanpy's `knn-transformers tutorial <https://scanpy.readthedocs.io/en/latest/how-to/knn-transformers.html>`_ for more details. This tutorial is also valid for ehrapy's `neighbors` function.
+                Next to the advanced options from the knn-transformers tutorial, this argument accepts the following basic options:
 
-            `None` (the default)
-                Behavior depends on data size.
-                For small data, we will calculate exact kNN, otherwise we use
-                :class:`~pynndescent.pynndescent_.PyNNDescentTransformer`
-            `'pynndescent'`
-                :class:`~pynndescent.pynndescent_.PyNNDescentTransformer`
+                `None` (the default)
+                    Behavior depends on data size.
+                    For small data, uses :class:`~sklearn.neighbors.KNeighborsTransformer` with algorithm="brute" for exact kNN, otherwise uses
+                    :class:`~pynndescent.pynndescent_.PyNNDescentTransformer` for approximate kNN.
+                `'pynndescent'`
+                    Uses :class:`~pynndescent.pynndescent_.PyNNDescentTransformer` for approximate kNN.
+                `'sklearn'`
+                    Uses :class:`~sklearn.neighbors.KNeighborsTransformer` with algorithm="brute" for exact kNN.
         metric_kwds: Options for the metric.
+
         key_added: If not specified, the neighbors data is stored in .uns['neighbors'],
                    distances and connectivities are stored in .obsp['distances'] and .obsp['connectivities'] respectively.
                    If specified, the neighbors data is added to .uns[key_added], distances are stored in .obsp[key_added+'_distances']
