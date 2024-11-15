@@ -167,35 +167,35 @@ def test_missforest_impute_dict(impute_adata):
     assert not (np.all([item != item for item in adata_imputed.X]))
 
 
-@pytest.mark.skipif(os.name == "posix", reason="miceforest Imputation not supported by MacOS.")
-def test_miceforest_impute_no_copy(impute_iris_adata_adata):
-    adata_imputed = mice_forest_impute(impute_iris_adata_adata)
+@pytest.mark.skipif(os.name == "Darwin", reason="miceforest Imputation not supported by MacOS.")
+def test_miceforest_impute_no_copy(impute_iris_adata):
+    adata_imputed = mice_forest_impute(impute_iris_adata)
 
-    assert id(impute_iris_adata_adata) == id(adata_imputed)
+    assert id(impute_iris_adata) == id(adata_imputed)
 
 
-@pytest.mark.skipif(os.name == "posix", reason="miceforest Imputation not supported by MacOS.")
+@pytest.mark.skipif(os.name == "Darwin", reason="miceforest Imputation not supported by MacOS.")
 def test_miceforest_impute_copy(impute_iris_adata):
     adata_imputed = mice_forest_impute(impute_iris_adata, copy=True)
 
     assert id(impute_iris_adata) != id(adata_imputed)
 
 
-@pytest.mark.skipif(os.name == "posix", reason="miceforest Imputation not supported by MacOS.")
+@pytest.mark.skipif(os.name == "Darwin", reason="miceforest Imputation not supported by MacOS.")
 def test_miceforest_impute_non_numerical_data(impute_titanic_adata):
     adata_imputed = mice_forest_impute(impute_titanic_adata)
 
     assert not (np.all([item != item for item in adata_imputed.X]))
 
 
-@pytest.mark.skipif(os.name == "posix", reason="miceforest Imputation not supported by MacOS.")
+@pytest.mark.skipif(os.name == "Darwin", reason="miceforest Imputation not supported by MacOS.")
 def test_miceforest_impute_numerical_data(impute_iris_adata):
     adata_imputed = mice_forest_impute(impute_iris_adata)
 
     assert not (np.all([item != item for item in adata_imputed.X]))
 
 
-@pytest.mark.skipif(os.name == "posix", reason="miceforest Imputation not supported by MacOS.")
+@pytest.mark.skipif(os.name == "Darwin", reason="miceforest Imputation not supported by MacOS.")
 def test_miceforest_impute_list_str(impute_titanic_adata):
     adata_imputed = mice_forest_impute(impute_titanic_adata, var_names=["Cabin", "Age"])
 

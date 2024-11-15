@@ -1,4 +1,4 @@
-# Usage
+# API
 
 Import the ehrapy API as follows:
 
