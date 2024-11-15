@@ -303,7 +303,7 @@ def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
     return new_adata
 
 
-def _get_column_indices(adata: AnnData, col_names: str | Iterable[str]) -> list[int]:
+def get_column_indices(adata: AnnData, col_names: str | Iterable[str]) -> list[int]:
     """Fetches the column indices in X for a given list of column names
 
     Args:
@@ -383,7 +383,7 @@ def set_numeric_vars(
     if copy:
         adata = adata.copy()
 
-    vars_idx = _get_column_indices(adata, vars)
+    vars_idx = get_column_indices(adata, vars)
 
     adata.X[:, vars_idx] = values
 

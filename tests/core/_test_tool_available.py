@@ -1,14 +1,12 @@
-import pytest
-
-from ehrapy.core._tool_available import _check_module_importable, _shell_command_accessible
+from ehrapy._utils_available import check_module_importable, shell_command_accessible
 
 
 def test_check_module_importable_true():
-    assert _check_module_importable("math") is True
+    assert check_module_importable("math") is True
 
 
 def test_check_module_importable_false():
-    assert _check_module_importable("nonexistentmodule12345") is False
+    assert check_module_importable("nonexistentmodule12345") is False
 
 
 def test_shell_command_accessible_true(monkeypatch):
@@ -23,7 +21,7 @@ def test_shell_command_accessible_true(monkeypatch):
         return MockProcess()
 
     monkeypatch.setattr("subprocess.Popen", mock_popen)
-    assert _shell_command_accessible(["echo", "hello"]) is True
+    assert shell_command_accessible(["echo", "hello"]) is True
 
 
 def test_shell_command_accessible_false(monkeypatch):
@@ -38,4 +36,4 @@ def test_shell_command_accessible_false(monkeypatch):
         return MockProcess()
 
     monkeypatch.setattr("subprocess.Popen", mock_popen)
-    assert _shell_command_accessible(["nonexistentcommand"]) is False
+    assert shell_command_accessible(["nonexistentcommand"]) is False

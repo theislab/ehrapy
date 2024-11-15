@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any, Callable, Literal, Union
 import scanpy as sc
 from scanpy.plotting import DotPlot, MatrixPlot, StackedViolin
 
-from ehrapy._doc_util import (
+from ehrapy._utils_doc import (
     _doc_params,
     doc_adata_color_etc,
     doc_common_groupby_plot_args,
