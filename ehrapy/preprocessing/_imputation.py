@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import warnings
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, List
 
 import numpy as np
 import pandas as pd
 from lamin_utils import logger
 from sklearn.impute import SimpleImputer
+from sklearn.experimental import enable_iterative_imputer # noinspection PyUnresolvedReference
 
 from ehrapy import settings
 from ehrapy.anndata import check_feature_types
@@ -162,7 +163,7 @@ def simple_impute(
 
 def _simple_impute(adata: AnnData, var_names: Iterable[str] | None, strategy: str) -> None:
     imputer = SimpleImputer(strategy=strategy)
-    if isinstance(var_names, Iterable):
+    if isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):
         column_indices = get_column_indices(adata, var_names)
         adata.X[::, column_indices] = imputer.fit_transform(adata.X[::, column_indices])
     else:
@@ -259,7 +260,7 @@ def knn_impute(
     except ValueError as e:
         if "Data matrix has wrong shape" in str(e):
             logger.error("Check that your matrix does not contain any NaN only columns!")
-            raise
+        raise
 
     if check_module_importable("sklearnex"):  # pragma: no cover
         unpatch_sklearn()
@@ -283,7 +284,7 @@ def _knn_impute(
 
         imputer = FaissImputer(n_neighbors=n_neighbors, **kwargs)
 
-    if isinstance(var_names, Iterable):
+    if isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):
         column_indices = get_column_indices(adata, var_names)
         adata.X[::, column_indices] = imputer.fit_transform(adata.X[::, column_indices])
         # this is required since X dtype has to be numerical in order to correctly round floats
@@ -294,7 +295,7 @@ def _knn_impute(
 
 def miss_forest_impute(
     adata: AnnData,
-    var_names: dict[str, Iterable[str]] | Iterable[str] | None = None,
+    var_names: Iterable[str] | None = None,
     *,
     num_initial_strategy: Literal["mean", "median", "most_frequent", "constant"] = "mean",
     max_iter: int = 3,
@@ -315,8 +316,7 @@ def miss_forest_impute(
 
     Args:
         adata: The AnnData object to use MissForest Imputation on.
-        var_names: List of columns to impute or a dict with two keys ('numerical' and 'non_numerical') indicating which var
-                   contain mixed data and which numerical data only.
+        var_names: List of columns to impute
         num_initial_strategy: The initial strategy to replace all missing numerical values with.
         max_iter: The maximum number of iterations if the stop criterion has not been met yet.
         n_estimators: The number of trees to fit for every missing variable. Has a big effect on the run time.
@@ -340,7 +340,7 @@ def miss_forest_impute(
         _warn_imputation_threshold(adata, list(adata.var_names), threshold=warning_threshold)
     elif isinstance(var_names, dict):
         _warn_imputation_threshold(adata, var_names.keys(), threshold=warning_threshold)  # type: ignore
-    elif isinstance(var_names, list):
+    elif isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):
         _warn_imputation_threshold(adata, var_names, threshold=warning_threshold)
 
     if check_module_importable("sklearnex"):  # pragma: no cover
@@ -370,7 +370,7 @@ def miss_forest_impute(
             random_state=random_state,
         )
 
-        if isinstance(var_names, list):
+        if isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):
 
             var_indices = get_column_indices(adata, var_names)  # type: ignore
             adata.X[::, var_indices] = imp_num.fit_transform(adata.X[::, var_indices])
@@ -406,7 +406,7 @@ def miss_forest_impute(
     except ValueError as e:
         if "Data matrix has wrong shape" in str(e):
             logger.error("Check that your matrix does not contain any NaN only columns!")
-            raise
+        raise
 
     if check_module_importable("sklearnex"):  # pragma: no cover
         unpatch_sklearn()
@@ -485,7 +485,7 @@ def mice_forest_impute(
     except ValueError as e:
         if "Data matrix has wrong shape" in str(e):
             logger.warning("Check that your matrix does not contain any NaN only columns!")
-            raise
+        raise
 
     return adata
 
@@ -498,7 +498,7 @@ def _miceforest_impute(
     data_df = pd.DataFrame(adata.X, columns=adata.var_names, index=adata.obs_names)
     data_df = data_df.apply(pd.to_numeric, errors="coerce")
 
-    if isinstance(var_names, Iterable):
+    if isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):
         column_indices = get_column_indices(adata, var_names)
         selected_columns = data_df.iloc[:, column_indices]
         selected_columns = selected_columns.reset_index(drop=True)
@@ -555,19 +555,19 @@ def _warn_imputation_threshold(adata: AnnData, var_names: Iterable[str] | None, 
 def _get_non_numerical_column_indices(x: np.ndarray) -> set:
     """Return indices of columns, that contain at least one non-numerical value that is not "Nan"."""
 
-    def _is_float_or_nan(val):  # pragma: no cover
+    def _is_float_or_nan(val) -> bool:  # pragma: no cover
         """Check whether a given item is a float or np.nan"""
         try:
-            return isinstance(val, bool) is False and (float(val) or val is np.nan)
+           _ = float(val)
+           return not isinstance(val, bool)
         except (ValueError, TypeError):
             return False
 
-    def _is_float_or_nan_row(row): # pragma: no cover
+    def _is_float_or_nan_row(row) -> List[bool]: # pragma: no cover
         return [_is_float_or_nan(val) for val in row]
 
     mask = np.apply_along_axis(_is_float_or_nan_row, 0, x)
-
     _, column_indices = np.where(~mask)
-    non_num_indices = set(column_indices)
 
-    return non_num_indices
+    return set(column_indices)
+
