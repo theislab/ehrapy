@@ -1,9 +1,12 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from anndata import AnnData
+
+if TYPE_CHECKING:
+    from anndata import AnnData
+
 
 def are_dataset_equal(arr1: np.ndarray, arr2: np.ndarray) -> np.bool_:
     """Check if two arrays are equal member-wise.
@@ -18,6 +21,7 @@ def are_dataset_equal(arr1: np.ndarray, arr2: np.ndarray) -> np.bool_:
         True if the two arrays are equal member-wise
     """
     return np.all(np.equal(arr1, arr2, dtype=object) | ((arr1 != arr1) & (arr2 != arr2)))
+
 
 def to_missing_data_matrix(data: np.ndarray) -> np.ndarray[Any, np.dtype[np.bool_]]:  # pragma: no cover
     """Check if a AnnData value is missing.
@@ -42,6 +46,7 @@ def to_dense_matrix(adata: AnnData, layer: str | None = None) -> np.ndarray:  # 
         The layer as a dense matrix.
     """
     from scipy.sparse import issparse
+
     if layer is None:
         return adata.X.toarray() if issparse(adata.X) else adata.X
     else:

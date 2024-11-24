@@ -13,8 +13,8 @@ except ImportError:
     daskml_pp = None
 
 from ehrapy.anndata.anndata_ext import (
-    get_column_indices,
     assert_numeric_vars,
+    get_column_indices,
     get_numeric_vars,
     set_numeric_vars,
 )

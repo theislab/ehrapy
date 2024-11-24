@@ -2,18 +2,18 @@ from __future__ import annotations
 
 import warnings
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, Literal, List
+from typing import TYPE_CHECKING, List, Literal
 
 import numpy as np
 import pandas as pd
 from lamin_utils import logger
+from sklearn.experimental import enable_iterative_imputer  # noinspection PyUnresolvedReference
 from sklearn.impute import SimpleImputer
-from sklearn.experimental import enable_iterative_imputer # noinspection PyUnresolvedReference
 
 from ehrapy import settings
+from ehrapy._utils_available import check_module_importable
 from ehrapy.anndata import check_feature_types
 from ehrapy.anndata.anndata_ext import get_column_indices
-from ehrapy._utils_available import check_module_importable
 
 if TYPE_CHECKING:
     from anndata import AnnData
@@ -249,13 +249,14 @@ def knn_impute(
         patch_sklearn()
 
     try:
-
         if np.issubdtype(adata.X.dtype, np.number):
             _knn_impute(adata, var_names, n_neighbors, backend=backend, **backend_kwargs)
         else:
             # Raise exception since non-numerical data can not be imputed using KNN Imputation
-            raise ValueError("Can only impute numerical data. Try to restrict imputation to certain columns using "
-                             "var_names parameter or.")
+            raise ValueError(
+                "Can only impute numerical data. Try to restrict imputation to certain columns using "
+                "var_names parameter or."
+            )
 
     except ValueError as e:
         if "Data matrix has wrong shape" in str(e):
@@ -352,7 +353,6 @@ def miss_forest_impute(
     from sklearn.impute import IterativeImputer
 
     try:
-
         if settings.n_jobs == 1:  # pragma: no cover
             logger.warning("The number of jobs is only 1. To decrease the runtime set ep.settings.n_jobs=-1.")
 
@@ -363,7 +363,7 @@ def miss_forest_impute(
             random_state=random_state,
         )
         # initial strategy here will not be parametrized since only most_frequent will be applied to non numerical data
-        imp_cat = IterativeImputer(
+        IterativeImputer(
             estimator=RandomForestClassifier(n_estimators=n_estimators, n_jobs=settings.n_jobs),
             initial_strategy="most_frequent",
             max_iter=max_iter,
@@ -371,12 +371,10 @@ def miss_forest_impute(
         )
 
         if isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):
-
             var_indices = get_column_indices(adata, var_names)  # type: ignore
             adata.X[::, var_indices] = imp_num.fit_transform(adata.X[::, var_indices])
 
         elif isinstance(var_names, dict) or var_names is None:
-
             if var_names:
                 try:
                     non_num_vars = var_names["non_numerical"]
@@ -396,8 +394,10 @@ def miss_forest_impute(
 
             # Raise exception if we have some non-numerical data
             if non_num_indices:
-                raise ValueError("Can only impute numerical data. Try to restrict imputation to certain columns using "
-                                 "var_names parameter.")
+                raise ValueError(
+                    "Can only impute numerical data. Try to restrict imputation to certain columns using "
+                    "var_names parameter."
+                )
 
             # this step is the most expensive one and might extremely slow down the impute process
             if num_indices:
@@ -465,7 +465,6 @@ def mice_forest_impute(
     _warn_imputation_threshold(adata, var_names, threshold=warning_threshold)
 
     try:
-
         if np.issubdtype(adata.X.dtype, np.number):
             _miceforest_impute(
                 adata,
@@ -479,8 +478,10 @@ def mice_forest_impute(
             )
         else:
             # Raise exception if we have some non-numerical data
-            raise ValueError("Can only impute numerical data. Try to restrict imputation to certain columns using "
-                             "var_names parameter.")
+            raise ValueError(
+                "Can only impute numerical data. Try to restrict imputation to certain columns using "
+                "var_names parameter."
+            )
 
     except ValueError as e:
         if "Data matrix has wrong shape" in str(e):
@@ -558,16 +559,15 @@ def _get_non_numerical_column_indices(x: np.ndarray) -> set:
     def _is_float_or_nan(val) -> bool:  # pragma: no cover
         """Check whether a given item is a float or np.nan"""
         try:
-           _ = float(val)
-           return not isinstance(val, bool)
+            _ = float(val)
+            return not isinstance(val, bool)
         except (ValueError, TypeError):
             return False
 
-    def _is_float_or_nan_row(row) -> List[bool]: # pragma: no cover
+    def _is_float_or_nan_row(row) -> list[bool]:  # pragma: no cover
         return [_is_float_or_nan(val) for val in row]
 
     mask = np.apply_along_axis(_is_float_or_nan_row, 0, x)
     _, column_indices = np.where(~mask)
 
     return set(column_indices)
-

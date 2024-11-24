@@ -1,12 +1,13 @@
 import os
 import warnings
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 import numpy as np
 import pytest
 from anndata import AnnData
 from sklearn.exceptions import ConvergenceWarning
+
 from ehrapy.preprocessing._imputation import (
     _warn_imputation_threshold,
     explicit_impute,
@@ -105,7 +106,7 @@ def test_knn_impute_check_backend(impute_num_adata):
         ValueError,
         match="Unknown backend 'invalid_backend' for KNN imputation. Choose between 'scikit-learn' and 'faiss'.",
     ):
-        knn_impute(impute_num_adata, backend="invalid_backend") # type: ignore
+        knn_impute(impute_num_adata, backend="invalid_backend")  # type: ignore
 
 
 def test_knn_impute_no_copy(impute_num_adata):
@@ -204,13 +205,15 @@ def test_warning(impute_num_adata):
     warning_results = _warn_imputation_threshold(impute_num_adata, threshold=20, var_names=None)
     assert warning_results == {"col1": 25, "col3": 50}
 
+
 # ----------------------------------------------------------------------------------------------------------------------
 # Below: tests to check if _base_check_imputation works as intended (test-inception)
 # ----------------------------------------------------------------------------------------------------------------------
 def test_base_check_imputation_incompatible_shapes(impute_num_adata):
     adata_imputed = knn_impute(impute_num_adata, copy=True)
-    assert (not _base_check_imputation(impute_num_adata, adata_imputed[1:, :])
-            and not _base_check_imputation(impute_num_adata, adata_imputed[:, 1:]))
+    assert not _base_check_imputation(impute_num_adata, adata_imputed[1:, :]) and not _base_check_imputation(
+        impute_num_adata, adata_imputed[:, 1:]
+    )
 
 
 def test_base_check_imputation_nan_detected_after_complete_imputation(impute_num_adata):
@@ -246,17 +249,21 @@ def test_base_check_imputation_change_detected_in_imputed_column(impute_num_adat
     # col3 didn't have a NaN at row 1, let's simulate it has been modified by mistake
     adata_imputed.X[1, 2] = 42.0
     assert not _base_check_imputation(impute_num_adata, adata_imputed)
+
+
 # ----------------------------------------------------------------------------------------------------------------------
+
 
 # Base check for imputation (imputation doesn't leave NaN behind, it doesn't affect non-imputated columns, it doesn't
 # affect data in imputated columns that wasn't NaN)
-def _base_check_imputation(adata_before_imputation: AnnData,
-                           adata_after_imputation: AnnData,
-                           before_imputation_layer: str | None = None,
-                           after_imputation_layer: str | None = None,
-                           imputed_var_names:Iterable[str] | None = None) -> bool:
-
-    from ehrapy._utils_data import to_dense_matrix, to_missing_data_matrix, are_dataset_equal
+def _base_check_imputation(
+    adata_before_imputation: AnnData,
+    adata_after_imputation: AnnData,
+    before_imputation_layer: str | None = None,
+    after_imputation_layer: str | None = None,
+    imputed_var_names: Iterable[str] | None = None,
+) -> bool:
+    from ehrapy._utils_data import are_dataset_equal, to_dense_matrix, to_missing_data_matrix
 
     layer_before = to_dense_matrix(adata_before_imputation, before_imputation_layer)
     layer_after = to_dense_matrix(adata_after_imputation, after_imputation_layer)
@@ -265,9 +272,15 @@ def _base_check_imputation(adata_before_imputation: AnnData,
         print("Error: The shapes of the two layers do not match.")
         return False
 
-    var_indices = np.arange(layer_before.shape[1]) if imputed_var_names is None \
-        else [adata_before_imputation.var_names.get_loc(var_name) for var_name in imputed_var_names
-              if var_name in imputed_var_names]
+    var_indices = (
+        np.arange(layer_before.shape[1])
+        if imputed_var_names is None
+        else [
+            adata_before_imputation.var_names.get_loc(var_name)
+            for var_name in imputed_var_names
+            if var_name in imputed_var_names
+        ]
+    )
 
     before_nan_mask = to_missing_data_matrix(layer_before)
     imputed_mask = np.zeros(layer_before.shape[1], dtype=bool)
@@ -292,4 +305,3 @@ def _base_check_imputation(adata_before_imputation: AnnData,
 
     # All checks passed
     return True
-
