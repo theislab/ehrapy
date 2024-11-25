@@ -1,5 +1,7 @@
 import functools
+
 from rich.progress import Progress, SpinnerColumn
+
 
 def spinner(message: str = "Running task"):
     def wrap(func):
@@ -13,5 +15,7 @@ def spinner(message: str = "Running task"):
                 progress.add_task(f"[blue]{message}", total=1)
                 result = func(*args, **kwargs)
             return result
+
         return wrapped_f
+
     return wrap
