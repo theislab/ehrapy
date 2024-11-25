@@ -134,10 +134,9 @@ def test_base_check_imputation_change_detected_in_imputed_column(impute_num_adat
 
 def test_mean_impute_no_copy(impute_num_adata):
     adata_not_imputed = impute_num_adata.copy()
-    adata_imputed_no_copy = simple_impute(impute_num_adata)
+    simple_impute(impute_num_adata)
 
-    _base_check_imputation(adata_not_imputed, adata_imputed_no_copy)
-    assert id(adata_imputed_no_copy) == id(impute_num_adata)
+    _base_check_imputation(adata_not_imputed, impute_num_adata)
 
 
 def test_mean_impute_copy(impute_num_adata):
@@ -162,10 +161,9 @@ def test_mean_impute_subset(impute_adata):
 
 def test_median_impute_no_copy(impute_num_adata):
     adata_not_imputed = impute_num_adata.copy()
-    adata_imputed_no_copy = simple_impute(impute_num_adata, strategy="median")
+    simple_impute(impute_num_adata, strategy="median")
 
-    _base_check_imputation(adata_not_imputed, adata_imputed_no_copy)
-    assert id(adata_imputed_no_copy) == id(impute_num_adata)
+    _base_check_imputation(adata_not_imputed, impute_num_adata)
 
 
 def test_median_impute_copy(impute_num_adata):
@@ -189,10 +187,9 @@ def test_median_impute_subset(impute_adata):
 
 def test_most_frequent_impute_no_copy(impute_adata):
     adata_not_imputed = impute_adata.copy()
-    adata_imputed_no_copy = simple_impute(impute_adata, strategy="most_frequent")
+    simple_impute(impute_adata, strategy="most_frequent")
 
-    _base_check_imputation(adata_not_imputed, adata_imputed_no_copy)
-    assert id(adata_imputed_no_copy) == id(impute_adata)
+    _base_check_imputation(adata_not_imputed, impute_adata)
 
 
 def test_most_frequent_impute_copy(impute_adata):
@@ -226,10 +223,9 @@ def test_knn_impute_check_backend(impute_num_adata):
 
 def test_knn_impute_no_copy(impute_num_adata):
     adata_not_imputed = impute_num_adata.copy()
-    adata_imputed_no_copy = knn_impute(impute_num_adata)
+    knn_impute(impute_num_adata)
 
-    _base_check_imputation(adata_not_imputed, adata_imputed_no_copy)
-    assert id(adata_imputed_no_copy) == id(impute_num_adata)
+    _base_check_imputation(adata_not_imputed, impute_num_adata)
 
 
 def test_knn_impute_copy(impute_num_adata):
@@ -273,10 +269,9 @@ def test_missforest_impute_subset(impute_num_adata):
 @pytest.mark.skipif(os.name == "Darwin", reason="miceforest Imputation not supported by MacOS.")
 def test_miceforest_impute_no_copy(impute_iris_adata):
     adata_not_imputed = impute_iris_adata.copy()
-    adata_imputed_no_copy = mice_forest_impute(impute_iris_adata)
+    mice_forest_impute(impute_iris_adata)
 
-    _base_check_imputation(adata_not_imputed, adata_imputed_no_copy)
-    assert id(impute_iris_adata) == id(adata_imputed_no_copy)
+    _base_check_imputation(adata_not_imputed, impute_iris_adata)
 
 
 @pytest.mark.skipif(os.name == "Darwin", reason="miceforest Imputation not supported by MacOS.")
@@ -295,9 +290,10 @@ def test_miceforest_impute_non_numerical_data(impute_titanic_adata):
 
 @pytest.mark.skipif(os.name == "Darwin", reason="miceforest Imputation not supported by MacOS.")
 def test_miceforest_impute_numerical_data(impute_iris_adata):
-    adata_imputed = mice_forest_impute(impute_iris_adata)
+    adata_not_imputed = impute_iris_adata.copy()
+    mice_forest_impute(impute_iris_adata)
 
-    _base_check_imputation(impute_iris_adata, adata_imputed)
+    _base_check_imputation(adata_not_imputed, impute_iris_adata)
 
 
 def test_explicit_impute_all(impute_num_adata):

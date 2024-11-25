@@ -28,7 +28,7 @@ def explicit_impute(
     impute_empty_strings: bool = True,
     warning_threshold: int = 70,
     copy: bool = False,
-) -> AnnData:
+) -> AnnData | None:
     """Replaces all missing values in all columns or a subset of columns specified by the user with the passed replacement value.
 
     There are two scenarios to cover:
@@ -45,7 +45,7 @@ def explicit_impute(
 
     Returns:
         If copy is True, a modified copy of the original AnnData object with imputed X.
-        If copy is False, the original AnnData object is modified in place.
+        If copy is False, the original AnnData object is modified in place, and None is returned.
 
     Examples:
         Replace all missing values in adata with the value 0:
@@ -54,7 +54,7 @@ def explicit_impute(
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.explicit_impute(adata, replacement=0)
     """
-    if copy:  # pragma: no cover
+    if copy:
         adata = adata.copy()
 
     if isinstance(replacement, int) or isinstance(replacement, str):
@@ -80,7 +80,8 @@ def explicit_impute(
             f"Type {type(replacement)} is not a valid datatype for replacement parameter. Either use int, str or a dict!"
         )
 
-    return adata
+    if copy:
+        return adata
 
 
 def _replace_explicit(arr: np.ndarray, replacement: str | int, impute_empty_strings: bool) -> None:
@@ -118,7 +119,7 @@ def simple_impute(
     strategy: Literal["mean", "median", "most_frequent"] = "mean",
     copy: bool = False,
     warning_threshold: int = 70,
-) -> AnnData:
+) -> AnnData | None:
     """Impute missing values in numerical data using mean/median/most frequent imputation.
 
     If required and using mean or median strategy, the data needs to be properly encoded as this imputation requires
@@ -132,7 +133,8 @@ def simple_impute(
         copy:Whether to return a copy of `adata` or modify it inplace.
 
     Returns:
-        An updated AnnData object with imputed values.
+        If copy is True, a modified copy of the original AnnData object with imputed X.
+        If copy is False, the original AnnData object is modified in place, and None is returned.
 
     Examples:
         >>> import ehrapy as ep
@@ -160,7 +162,8 @@ def simple_impute(
             f"Unknown impute strategy {strategy} for simple Imputation. Choose any of mean, median or most_frequent."
         ) from None
 
-    return adata
+    if copy:
+        return adata
 
 
 def _simple_impute(adata: AnnData, var_names: Iterable[str] | None, strategy: str) -> None:
@@ -184,7 +187,7 @@ def knn_impute(
     warning_threshold: int = 70,
     backend_kwargs: dict | None = None,
     **kwargs,
-) -> AnnData:
+) -> AnnData :
     """Imputes missing values in the input AnnData object using K-nearest neighbor imputation.
 
     If required, the data needs to be properly encoded as this imputation requires numerical data only.
@@ -213,7 +216,8 @@ def knn_impute(
         kwargs: Gathering keyword arguments of earlier ehrapy versions for backwards compatibility. It is encouraged to use the here listed, current arguments.
 
     Returns:
-        An updated AnnData object with imputed values.
+        If copy is True, a modified copy of the original AnnData object with imputed X.
+        If copy is False, the original AnnData object is modified in place, and None is returned.
 
     Examples:
         >>> import ehrapy as ep
@@ -269,7 +273,8 @@ def knn_impute(
     if _check_module_importable("sklearnex"):  # pragma: no cover
         unpatch_sklearn()
 
-    return adata
+    if copy:
+        return adata
 
 
 def _knn_impute(
@@ -308,7 +313,7 @@ def miss_forest_impute(
     random_state: int = 0,
     warning_threshold: int = 70,
     copy: bool = False,
-) -> AnnData:
+) -> AnnData | None:
     """Impute data using the MissForest strategy.
 
     This function uses the MissForest strategy to impute missing values in the data matrix of an AnnData object.
@@ -331,14 +336,15 @@ def miss_forest_impute(
         copy: Whether to return a copy or act in place.
 
     Returns:
-        The imputed AnnData object.
+        If copy is True, a modified copy of the original AnnData object with imputed X.
+        If copy is False, the original AnnData object is modified in place, and None is returned.
 
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.miss_forest_impute(adata)
     """
-    if copy:  # pragma: no cover
+    if copy:
         adata = adata.copy()
 
     if var_names is None:
@@ -369,38 +375,22 @@ def miss_forest_impute(
             random_state=random_state,
         )
 
-        if isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):
-            var_indices = get_column_indices(adata, var_names)  # type: ignore
-            adata.X[::, var_indices] = imp_num.fit_transform(adata.X[::, var_indices])
+        if isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names): # type: ignore
+            num_indices = get_column_indices(adata, var_names)
+        else:
+            num_indices = get_column_indices(adata, adata.var_names)
 
-        elif isinstance(var_names, dict) or var_names is None:
-            if var_names:
-                try:
-                    non_num_vars = var_names["non_numerical"]
-                    num_vars = var_names["numerical"]
-                except KeyError:  # pragma: no cover
-                    raise ValueError(
-                        "One or both of your keys provided for var_names are unknown. Only "
-                        "numerical and non_numerical are available!"
-                    ) from None
-                non_num_indices = get_column_indices(adata, non_num_vars)
-                num_indices = get_column_indices(adata, num_vars)
-            # infer non numerical and numerical indices automatically
-            else:
-                non_num_indices_set = _get_non_numerical_column_indices(adata.X)
-                num_indices = [idx for idx in range(adata.X.shape[1]) if idx not in non_num_indices_set]
-                non_num_indices = list(non_num_indices_set)
+        if set(num_indices).issubset(_get_non_numerical_column_indices(adata.X)):
+            raise ValueError(
+                "Can only impute numerical data. Try to restrict imputation to certain columns using "
+                "var_names parameter."
+            )
 
-            # Raise exception if we have some non-numerical data
-            if non_num_indices:
-                raise ValueError(
-                    "Can only impute numerical data. Try to restrict imputation to certain columns using "
-                    "var_names parameter."
-                )
-
-            # this step is the most expensive one and might extremely slow down the impute process
-            if num_indices:
-                adata.X[::, num_indices] = imp_num.fit_transform(adata.X[::, num_indices])
+        # this step is the most expensive one and might extremely slow down the impute process
+        if num_indices:
+            adata.X[::, num_indices] = imp_num.fit_transform(adata.X[::, num_indices])
+        else:
+            raise ValueError("Cannot find any feature to perform imputation")
 
     except ValueError as e:
         if "Data matrix has wrong shape" in str(e):
@@ -410,7 +400,8 @@ def miss_forest_impute(
     if _check_module_importable("sklearnex"):  # pragma: no cover
         unpatch_sklearn()
 
-    return adata
+    if copy:
+        return adata
 
 
 @spinner("Performing mice-forest impute")
@@ -427,7 +418,7 @@ def mice_forest_impute(
     variable_parameters: dict | None = None,
     verbose: bool = False,
     copy: bool = False,
-) -> AnnData:
+) -> AnnData | None:
     """Impute data using the miceforest.
 
     See https://github.com/AnotherSamWilson/miceforest
@@ -451,7 +442,8 @@ def mice_forest_impute(
         copy: Whether to return a copy of the AnnData object or modify it in-place.
 
     Returns:
-        The imputed AnnData object.
+        If copy is True, a modified copy of the original AnnData object with imputed X.
+        If copy is False, the original AnnData object is modified in place, and None is returned.
 
     Examples:
         >>> import ehrapy as ep
@@ -487,7 +479,8 @@ def mice_forest_impute(
             logger.warning("Check that your matrix does not contain any NaN only columns!")
         raise
 
-    return adata
+    if copy:
+        return adata
 
 
 def _miceforest_impute(
