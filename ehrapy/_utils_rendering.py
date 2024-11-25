@@ -1,5 +1,7 @@
-from yaspin import yaspin
 import functools
+
+from yaspin import yaspin
+
 
 def spinner(message: str = "Running task"):
     def wrap(func):
@@ -10,6 +12,7 @@ def spinner(message: str = "Running task"):
                 result = func(*args, **kwargs)
                 sp.ok("✔")
             return result
-        return wrapped_f
-    return wrap
 
+        return wrapped_f
+
+    return wrap
