@@ -28,8 +28,8 @@ def _base_check_imputation(
     adata_after_imputation: AnnData,
     before_imputation_layer: str | None = None,
     after_imputation_layer: str | None = None,
-    imputed_var_names: Iterable[str] | None = None,
-) -> bool:
+    imputed_var_names: Iterable[str] | None = None
+):
     """Provides a base check for all imputations:
 
     - Imputation doesn't leave any NaN behind
@@ -43,16 +43,15 @@ def _base_check_imputation(
         after_imputation_layer: Layer to consider in the imputated ``AnnData``, ``X`` if not specified
         imputed_var_names: Names of the features that were imputated, will consider all of them if not specified
 
-    Returns:
-        True if all the tests mentioned above passed
+    Raises:
+        AssertionError: If any of the checks fail.
     """
 
     layer_before = _to_dense_matrix(adata_before_imputation, before_imputation_layer)
     layer_after = _to_dense_matrix(adata_after_imputation, after_imputation_layer)
 
     if layer_before.shape != layer_after.shape:
-        print("Error: The shapes of the two layers do not match.")
-        return False
+        raise AssertionError("The shapes of the two layers do not match")
 
     var_indices = (
         np.arange(layer_before.shape[1])
@@ -70,50 +69,49 @@ def _base_check_imputation(
 
     # Ensure no NaN remains in the imputed columns of layer_after
     if np.any(before_nan_mask[:, imputed_mask] & _is_val_missing(layer_after[:, imputed_mask])):
-        print("Imputation base check failed: NaN found in imputed columns of layer_after.")
-        return False
+        raise AssertionError("NaN found in imputed columns of layer_after.")
 
     # Ensure unchanged values outside imputed columns
     unchanged_mask = ~imputed_mask
     if not _are_ndarrays_equal(layer_before[:, unchanged_mask], layer_after[:, unchanged_mask]):
-        print("Imputation base check failed: Values outside imputed columns were modified.")
-        return False
+        raise AssertionError("Values outside imputed columns were modified.")
 
     # Ensure imputation does not alter non-NaN values in the imputed columns
     imputed_non_nan_mask = (~before_nan_mask) & imputed_mask
     if not _are_ndarrays_equal(layer_before[imputed_non_nan_mask], layer_after[imputed_non_nan_mask]):
-        print("Imputation base check failed: Non-NaN values in imputed columns were modified.")
-        return False
+        raise AssertionError("Non-NaN values in imputed columns were modified.")
 
     # All checks passed
-    return True
 
 
 def test_base_check_imputation_incompatible_shapes(impute_num_adata):
     adata_imputed = knn_impute(impute_num_adata, copy=True)
-    assert not _base_check_imputation(impute_num_adata, adata_imputed[1:, :]) and not _base_check_imputation(
-        impute_num_adata, adata_imputed[:, 1:]
-    )
+    with pytest.raises(AssertionError):
+        _base_check_imputation(impute_num_adata, adata_imputed[1:, :])
+    with pytest.raises(AssertionError):
+        _base_check_imputation(impute_num_adata, adata_imputed[:, 1:])
 
 
 def test_base_check_imputation_nan_detected_after_complete_imputation(impute_num_adata):
     adata_imputed = knn_impute(impute_num_adata, copy=True)
     adata_imputed.X[0, 2] = np.nan
-    assert not _base_check_imputation(impute_num_adata, adata_imputed)
+    with pytest.raises(AssertionError):
+        _base_check_imputation(impute_num_adata, adata_imputed)
 
 
 def test_base_check_imputation_nan_detected_after_partial_imputation(impute_num_adata):
     var_names = ("col2", "col3")
     adata_imputed = knn_impute(impute_num_adata, var_names=var_names, copy=True)
     adata_imputed.X[0, 2] = np.nan
-    assert not _base_check_imputation(impute_num_adata, adata_imputed, imputed_var_names=var_names)
+    with pytest.raises(AssertionError):
+        _base_check_imputation(impute_num_adata, adata_imputed, imputed_var_names=var_names)
 
 
 def test_base_check_imputation_nan_ignored_if_not_in_imputed_column(impute_num_adata):
     var_names = ("col2", "col3")
     adata_imputed = knn_impute(impute_num_adata, var_names=var_names, copy=True)
     # col1 has a NaN at row 2, should get ignored
-    assert _base_check_imputation(impute_num_adata, adata_imputed, imputed_var_names=var_names)
+    _base_check_imputation(impute_num_adata, adata_imputed, imputed_var_names=var_names)
 
 
 def test_base_check_imputation_change_detected_in_non_imputed_column(impute_num_adata):
@@ -121,21 +119,23 @@ def test_base_check_imputation_change_detected_in_non_imputed_column(impute_num_
     adata_imputed = knn_impute(impute_num_adata, var_names=var_names, copy=True)
     # col1 has a NaN at row 2, let's simulate it has been imputed by mistake
     adata_imputed.X[2, 0] = 42.0
-    assert not _base_check_imputation(impute_num_adata, adata_imputed, imputed_var_names=var_names)
+    with pytest.raises(AssertionError):
+        _base_check_imputation(impute_num_adata, adata_imputed, imputed_var_names=var_names)
 
 
 def test_base_check_imputation_change_detected_in_imputed_column(impute_num_adata):
     adata_imputed = knn_impute(impute_num_adata, copy=True)
     # col3 didn't have a NaN at row 1, let's simulate it has been modified by mistake
     adata_imputed.X[1, 2] = 42.0
-    assert not _base_check_imputation(impute_num_adata, adata_imputed)
+    with pytest.raises(AssertionError):
+        _base_check_imputation(impute_num_adata, adata_imputed)
 
 
 def test_mean_impute_no_copy(impute_num_adata):
     adata_not_imputed = impute_num_adata.copy()
     adata_imputed_no_copy = simple_impute(impute_num_adata)
 
-    assert _base_check_imputation(adata_not_imputed, adata_imputed_no_copy)
+    _base_check_imputation(adata_not_imputed, adata_imputed_no_copy)
     assert id(adata_imputed_no_copy) == id(impute_num_adata)
 
 
@@ -143,7 +143,7 @@ def test_mean_impute_copy(impute_num_adata):
     adata_imputed = simple_impute(impute_num_adata, copy=True)
 
     assert id(impute_num_adata) != id(adata_imputed)
-    assert _base_check_imputation(impute_num_adata, adata_imputed)
+    _base_check_imputation(impute_num_adata, adata_imputed)
 
 
 def test_mean_impute_throws_error_non_numerical(impute_adata):
@@ -155,7 +155,7 @@ def test_mean_impute_subset(impute_adata):
     var_names = ("intcol", "indexcol")
     adata_imputed = simple_impute(impute_adata, var_names=var_names, copy=True)
 
-    assert _base_check_imputation(impute_adata, adata_imputed, imputed_var_names=var_names)
+    _base_check_imputation(impute_adata, adata_imputed, imputed_var_names=var_names)
     assert np.any([item != item for item in adata_imputed.X[::, 3:4]])
 
 
@@ -163,14 +163,14 @@ def test_median_impute_no_copy(impute_num_adata):
     adata_not_imputed = impute_num_adata.copy()
     adata_imputed_no_copy = simple_impute(impute_num_adata, strategy="median")
 
-    assert _base_check_imputation(adata_not_imputed, adata_imputed_no_copy)
+    _base_check_imputation(adata_not_imputed, adata_imputed_no_copy)
     assert id(adata_imputed_no_copy) == id(impute_num_adata)
 
 
 def test_median_impute_copy(impute_num_adata):
     adata_imputed = simple_impute(impute_num_adata, strategy="median", copy=True)
 
-    assert _base_check_imputation(impute_num_adata, adata_imputed)
+    _base_check_imputation(impute_num_adata, adata_imputed)
     assert id(impute_num_adata) != id(adata_imputed)
 
 
@@ -183,21 +183,21 @@ def test_median_impute_subset(impute_adata):
     var_names = ("intcol", "indexcol")
     adata_imputed = simple_impute(impute_adata, var_names=var_names, strategy="median", copy=True)
 
-    assert _base_check_imputation(impute_adata, adata_imputed, imputed_var_names=var_names)
+    _base_check_imputation(impute_adata, adata_imputed, imputed_var_names=var_names)
 
 
 def test_most_frequent_impute_no_copy(impute_adata):
     adata_not_imputed = impute_adata.copy()
     adata_imputed_no_copy = simple_impute(impute_adata, strategy="most_frequent")
 
-    assert _base_check_imputation(adata_not_imputed, adata_imputed_no_copy)
+    _base_check_imputation(adata_not_imputed, adata_imputed_no_copy)
     assert id(adata_imputed_no_copy) == id(impute_adata)
 
 
 def test_most_frequent_impute_copy(impute_adata):
     adata_imputed = simple_impute(impute_adata, strategy="most_frequent", copy=True)
 
-    assert _base_check_imputation(impute_adata, adata_imputed)
+    _base_check_imputation(impute_adata, adata_imputed)
     assert id(impute_adata) != id(adata_imputed)
 
 
@@ -205,11 +205,12 @@ def test_unknown_simple_imputation_strategy(impute_adata):
     with pytest.raises(ValueError):
         simple_impute(impute_adata, strategy="invalid_strategy", copy=True)  # type: ignore
 
-    def test_most_frequent_impute_subset(impute_adata):
-        var_names = ("intcol", "strcol")
-        adata_imputed = simple_impute(impute_adata, var_names=var_names, strategy="most_frequent", copy=True)
 
-        assert _base_check_imputation(impute_adata, adata_imputed, imputed_var_names=var_names)
+def test_most_frequent_impute_subset(impute_adata):
+    var_names = ("intcol", "strcol")
+    adata_imputed = simple_impute(impute_adata, var_names=var_names, strategy="most_frequent", copy=True)
+
+    _base_check_imputation(impute_adata, adata_imputed, imputed_var_names=var_names)
 
 
 def test_knn_impute_check_backend(impute_num_adata):
@@ -226,14 +227,14 @@ def test_knn_impute_no_copy(impute_num_adata):
     adata_not_imputed = impute_num_adata.copy()
     adata_imputed_no_copy = knn_impute(impute_num_adata)
 
-    assert _base_check_imputation(adata_not_imputed, adata_imputed_no_copy)
+    _base_check_imputation(adata_not_imputed, adata_imputed_no_copy)
     assert id(adata_imputed_no_copy) == id(impute_num_adata)
 
 
 def test_knn_impute_copy(impute_num_adata):
     adata_imputed = knn_impute(impute_num_adata, n_neighbors=3, copy=True)
 
-    assert _base_check_imputation(impute_num_adata, adata_imputed)
+    _base_check_imputation(impute_num_adata, adata_imputed)
     assert id(impute_num_adata) != id(adata_imputed)
 
 
@@ -245,7 +246,7 @@ def test_knn_impute_non_numerical_data(impute_adata):
 def test_knn_impute_numerical_data(impute_num_adata):
     adata_imputed = knn_impute(impute_num_adata, copy=True)
 
-    assert _base_check_imputation(impute_num_adata, adata_imputed)
+    _base_check_imputation(impute_num_adata, adata_imputed)
 
 
 def test_missforest_impute_non_numerical_data(impute_adata):
@@ -257,7 +258,7 @@ def test_missforest_impute_numerical_data(impute_num_adata):
     warnings.filterwarnings("ignore", category=ConvergenceWarning)
     adata_imputed = miss_forest_impute(impute_num_adata, copy=True)
 
-    assert _base_check_imputation(impute_num_adata, adata_imputed)
+    _base_check_imputation(impute_num_adata, adata_imputed)
 
 
 def test_missforest_impute_subset(impute_num_adata):
@@ -265,7 +266,7 @@ def test_missforest_impute_subset(impute_num_adata):
     var_names = ("col2", "col3")
     adata_imputed = miss_forest_impute(impute_num_adata, var_names=var_names, copy=True)
 
-    assert _base_check_imputation(impute_num_adata, adata_imputed, imputed_var_names=var_names)
+    _base_check_imputation(impute_num_adata, adata_imputed, imputed_var_names=var_names)
 
 
 @pytest.mark.skipif(os.name == "Darwin", reason="miceforest Imputation not supported by MacOS.")
@@ -273,7 +274,7 @@ def test_miceforest_impute_no_copy(impute_iris_adata):
     adata_not_imputed = impute_iris_adata.copy()
     adata_imputed_no_copy = mice_forest_impute(impute_iris_adata)
 
-    assert _base_check_imputation(adata_not_imputed, adata_imputed_no_copy)
+    _base_check_imputation(adata_not_imputed, adata_imputed_no_copy)
     assert id(impute_iris_adata) == id(adata_imputed_no_copy)
 
 
@@ -281,7 +282,7 @@ def test_miceforest_impute_no_copy(impute_iris_adata):
 def test_miceforest_impute_copy(impute_iris_adata):
     adata_imputed = mice_forest_impute(impute_iris_adata, copy=True)
 
-    assert _base_check_imputation(impute_iris_adata, adata_imputed)
+    _base_check_imputation(impute_iris_adata, adata_imputed)
     assert id(impute_iris_adata) != id(adata_imputed)
 
 
@@ -295,21 +296,21 @@ def test_miceforest_impute_non_numerical_data(impute_titanic_adata):
 def test_miceforest_impute_numerical_data(impute_iris_adata):
     adata_imputed = mice_forest_impute(impute_iris_adata)
 
-    assert _base_check_imputation(impute_iris_adata, adata_imputed)
+    _base_check_imputation(impute_iris_adata, adata_imputed)
 
 
 def test_explicit_impute_all(impute_num_adata):
     warnings.filterwarnings("ignore", category=FutureWarning)
     adata_imputed = explicit_impute(impute_num_adata, replacement=1011, copy=True)
 
-    assert _base_check_imputation(impute_num_adata, adata_imputed)
+    _base_check_imputation(impute_num_adata, adata_imputed)
     assert np.sum([adata_imputed.X == 1011]) == 3
 
 
 def test_explicit_impute_subset(impute_adata):
     adata_imputed = explicit_impute(impute_adata, replacement={"strcol": "REPLACED", "intcol": 1011}, copy=True)
 
-    assert _base_check_imputation(impute_adata, adata_imputed, imputed_var_names=("strcol", "intcol"))
+    _base_check_imputation(impute_adata, adata_imputed, imputed_var_names=("strcol", "intcol"))
     assert np.sum([adata_imputed.X == 1011]) == 1
     assert np.sum([adata_imputed.X == "REPLACED"]) == 1
 
