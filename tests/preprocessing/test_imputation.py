@@ -28,7 +28,7 @@ def _base_check_imputation(
     adata_after_imputation: AnnData,
     before_imputation_layer: str | None = None,
     after_imputation_layer: str | None = None,
-    imputed_var_names: Iterable[str] | None = None
+    imputed_var_names: Iterable[str] | None = None,
 ):
     """Provides a base check for all imputations:
 
