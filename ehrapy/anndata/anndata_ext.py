@@ -3,7 +3,7 @@ from __future__ import annotations
 import random
 from collections import OrderedDict
 from string import ascii_letters
-from typing import TYPE_CHECKING, NamedTuple, Any
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 import numpy as np
 import pandas as pd
