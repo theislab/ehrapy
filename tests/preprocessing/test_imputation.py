@@ -8,7 +8,7 @@ import pytest
 from anndata import AnnData
 from sklearn.exceptions import ConvergenceWarning
 
-from ehrapy._utils_data import _are_ndarrays_equal, _is_val_missing, _to_dense_matrix
+from ehrapy.anndata.anndata_ext import _are_ndarrays_equal, _is_val_missing, _to_dense_matrix
 from ehrapy.preprocessing._imputation import (
     _warn_imputation_threshold,
     explicit_impute,
@@ -81,7 +81,8 @@ def _base_check_imputation(
     if not _are_ndarrays_equal(layer_before[imputed_non_nan_mask], layer_after[imputed_non_nan_mask]):
         raise AssertionError("Non-NaN values in imputed columns were modified.")
 
-    # All checks passed
+    # If reaching here: all checks passed
+    return
 
 
 def test_base_check_imputation_incompatible_shapes(impute_num_adata):

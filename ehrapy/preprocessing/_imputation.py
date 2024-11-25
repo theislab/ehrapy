@@ -258,7 +258,7 @@ def knn_impute(
             # Raise exception since non-numerical data can not be imputed using KNN Imputation
             raise ValueError(
                 "Can only impute numerical data. Try to restrict imputation to certain columns using "
-                "var_names parameter or."
+                "var_names parameter or perform an encoding of your data."
             )
 
     except ValueError as e:
@@ -304,7 +304,7 @@ def miss_forest_impute(
     *,
     num_initial_strategy: Literal["mean", "median", "most_frequent", "constant"] = "mean",
     max_iter: int = 3,
-    n_estimators=100,
+    n_estimators: int = 100,
     random_state: int = 0,
     warning_threshold: int = 70,
     copy: bool = False,
@@ -343,8 +343,6 @@ def miss_forest_impute(
 
     if var_names is None:
         _warn_imputation_threshold(adata, list(adata.var_names), threshold=warning_threshold)
-    elif isinstance(var_names, dict):
-        _warn_imputation_threshold(adata, var_names.keys(), threshold=warning_threshold)  # type: ignore
     elif isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):
         _warn_imputation_threshold(adata, var_names, threshold=warning_threshold)
 
