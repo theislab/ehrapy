@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, List, Literal
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import pandas as pd
@@ -152,7 +152,6 @@ def simple_impute(
     # most_frequent imputation works with non-numerical data as well
     elif strategy == "most_frequent":
         _simple_impute(adata, var_names, strategy)
-    # unknown simple imputation strategy
     else:
         raise ValueError(  # pragma: no cover
             f"Unknown impute strategy {strategy} for simple Imputation. Choose any of mean, median or most_frequent."
@@ -317,7 +316,7 @@ def miss_forest_impute(
 
     Args:
         adata: The AnnData object to use MissForest Imputation on.
-        var_names: List of columns to impute
+        var_names: Iterable of columns to impute
         num_initial_strategy: The initial strategy to replace all missing numerical values with.
         max_iter: The maximum number of iterations if the stop criterion has not been met yet.
         n_estimators: The number of trees to fit for every missing variable. Has a big effect on the run time.
@@ -477,7 +476,6 @@ def mice_forest_impute(
                 verbose,
             )
         else:
-            # Raise exception if we have some non-numerical data
             raise ValueError(
                 "Can only impute numerical data. Try to restrict imputation to certain columns using "
                 "var_names parameter."
@@ -553,7 +551,7 @@ def _warn_imputation_threshold(adata: AnnData, var_names: Iterable[str] | None, 
     return var_name_to_pct
 
 
-def _get_non_numerical_column_indices(x: np.ndarray) -> set:
+def _get_non_numerical_column_indices(arr: np.ndarray) -> set:
     """Return indices of columns, that contain at least one non-numerical value that is not "Nan"."""
 
     def _is_float_or_nan(val) -> bool:  # pragma: no cover

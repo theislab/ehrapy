@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from anndata import AnnData
 
 
-def are_dataset_equal(arr1: np.ndarray, arr2: np.ndarray) -> np.bool_:
+def are_ndarrays_equal(arr1: np.ndarray, arr2: np.ndarray) -> np.bool_:
     """Check if two arrays are equal member-wise.
 
     Note: Two NaN are considered equal.
