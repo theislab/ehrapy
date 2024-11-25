@@ -80,8 +80,7 @@ def explicit_impute(
             f"Type {type(replacement)} is not a valid datatype for replacement parameter. Either use int, str or a dict!"
         )
 
-    if copy:
-        return adata
+    return adata if copy else None
 
 
 def _replace_explicit(arr: np.ndarray, replacement: str | int, impute_empty_strings: bool) -> None:
@@ -162,8 +161,7 @@ def simple_impute(
             f"Unknown impute strategy {strategy} for simple Imputation. Choose any of mean, median or most_frequent."
         ) from None
 
-    if copy:
-        return adata
+    return adata if copy else None
 
 
 def _simple_impute(adata: AnnData, var_names: Iterable[str] | None, strategy: str) -> None:
@@ -273,8 +271,7 @@ def knn_impute(
     if _check_module_importable("sklearnex"):  # pragma: no cover
         unpatch_sklearn()
 
-    if copy:
-        return adata
+    return adata if copy else None
 
 
 def _knn_impute(
@@ -400,8 +397,7 @@ def miss_forest_impute(
     if _check_module_importable("sklearnex"):  # pragma: no cover
         unpatch_sklearn()
 
-    if copy:
-        return adata
+    return adata if copy else None
 
 
 @spinner("Performing mice-forest impute")
@@ -479,8 +475,7 @@ def mice_forest_impute(
             logger.warning("Check that your matrix does not contain any NaN only columns!")
         raise
 
-    if copy:
-        return adata
+    return adata if copy else None
 
 
 def _miceforest_impute(
