@@ -1,18 +1,17 @@
 import functools
-
-from yaspin import yaspin
-
+from rich.progress import Progress, SpinnerColumn
 
 def spinner(message: str = "Running task"):
     def wrap(func):
         @functools.wraps(func)
         def wrapped_f(*args, **kwargs):
-            with yaspin() as sp:
-                sp.text = f"{message}..."
+            with Progress(
+                "[progress.description]{task.description}",
+                SpinnerColumn(),
+                refresh_per_second=1500,
+            ) as progress:
+                progress.add_task(f"[blue]{message}", total=1)
                 result = func(*args, **kwargs)
-                sp.ok("✔")
             return result
-
         return wrapped_f
-
     return wrap
