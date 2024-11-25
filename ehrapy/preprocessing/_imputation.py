@@ -149,7 +149,7 @@ def simple_impute(
             _simple_impute(adata, var_names, strategy)
         except ValueError:
             raise ValueError(
-                f"Can only impute numerical data using {strategy} strategy. Try to restrict imputation"
+                f"Can only impute numerical data using {strategy} strategy. Try to restrict imputation "
                 "to certain columns using var_names parameter or use a different mode."
             ) from None
     # most_frequent imputation works with non-numerical data as well

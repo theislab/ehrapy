@@ -689,7 +689,7 @@ def _is_val_missing(data: np.ndarray) -> np.ndarray[Any, np.dtype[np.bool_]]:
     Returns:
         An array of bool representing the missingness of the original data, with the same shape
     """
-    return np.isin(data, [None, "", np.nan]) | (data != data)
+    return np.isin(data, [None, ""]) | (data != data)
 
 
 def _to_dense_matrix(adata: AnnData, layer: str | None = None) -> np.ndarray:  # pragma: no cover
