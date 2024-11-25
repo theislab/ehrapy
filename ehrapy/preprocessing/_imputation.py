@@ -12,6 +12,7 @@ from sklearn.impute import SimpleImputer
 
 from ehrapy import settings
 from ehrapy._utils_available import _check_module_importable
+from ehrapy._utils_rendering import spinner
 from ehrapy.anndata import check_feature_types
 from ehrapy.anndata.anndata_ext import get_column_indices
 
@@ -19,6 +20,7 @@ if TYPE_CHECKING:
     from anndata import AnnData
 
 
+@spinner("Performing explicit impute")
 def explicit_impute(
     adata: AnnData,
     replacement: (str | int) | (dict[str, str | int]),
@@ -108,6 +110,7 @@ def _extract_impute_value(replacement: dict[str, str | int], column_name: str) -
         return None
 
 
+@spinner("Performing simple impute")
 def simple_impute(
     adata: AnnData,
     var_names: Iterable[str] | None = None,
@@ -169,6 +172,7 @@ def _simple_impute(adata: AnnData, var_names: Iterable[str] | None, strategy: st
         adata.X = imputer.fit_transform(adata.X)
 
 
+@spinner("Performing KNN impute")
 @check_feature_types
 def knn_impute(
     adata: AnnData,
@@ -293,6 +297,7 @@ def _knn_impute(
         adata.X = imputer.fit_transform(adata.X)
 
 
+@spinner("Performing miss-forest impute")
 def miss_forest_impute(
     adata: AnnData,
     var_names: Iterable[str] | None = None,
@@ -410,6 +415,7 @@ def miss_forest_impute(
     return adata
 
 
+@spinner("Performing mice-forest impute")
 @check_feature_types
 def mice_forest_impute(
     adata: AnnData,
