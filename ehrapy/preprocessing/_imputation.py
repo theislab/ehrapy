@@ -187,7 +187,7 @@ def knn_impute(
     warning_threshold: int = 70,
     backend_kwargs: dict | None = None,
     **kwargs,
-) -> AnnData :
+) -> AnnData:
     """Imputes missing values in the input AnnData object using K-nearest neighbor imputation.
 
     If required, the data needs to be properly encoded as this imputation requires numerical data only.
@@ -375,7 +375,7 @@ def miss_forest_impute(
             random_state=random_state,
         )
 
-        if isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names): # type: ignore
+        if isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):  # type: ignore
             num_indices = get_column_indices(adata, var_names)
         else:
             num_indices = get_column_indices(adata, adata.var_names)
