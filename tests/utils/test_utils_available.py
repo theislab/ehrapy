@@ -37,5 +37,3 @@ def test_shell_command_accessible_false(monkeypatch):
 
     monkeypatch.setattr("subprocess.Popen", mock_popen)
     assert _shell_command_accessible(["nonexistentcommand"]) is False
-
-

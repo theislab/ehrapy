@@ -8,7 +8,7 @@ import pytest
 from anndata import AnnData
 from sklearn.exceptions import ConvergenceWarning
 
-from ehrapy._utils_data import _are_ndarrays_equal, _to_dense_matrix, _is_val_missing
+from ehrapy._utils_data import _are_ndarrays_equal, _is_val_missing, _to_dense_matrix
 from ehrapy.preprocessing._imputation import (
     _warn_imputation_threshold,
     explicit_impute,
@@ -94,6 +94,7 @@ def test_base_check_imputation_incompatible_shapes(impute_num_adata):
     assert not _base_check_imputation(impute_num_adata, adata_imputed[1:, :]) and not _base_check_imputation(
         impute_num_adata, adata_imputed[:, 1:]
     )
+
 
 def test_base_check_imputation_nan_detected_after_complete_imputation(impute_num_adata):
     adata_imputed = knn_impute(impute_num_adata, copy=True)
@@ -202,8 +203,7 @@ def test_most_frequent_impute_copy(impute_adata):
 
 def test_unknown_simple_imputation_strategy(impute_adata):
     with pytest.raises(ValueError):
-        simple_impute(impute_adata, strategy="invalid_strategy", copy=True) # type: ignore
-
+        simple_impute(impute_adata, strategy="invalid_strategy", copy=True)  # type: ignore
 
     def test_most_frequent_impute_subset(impute_adata):
         var_names = ("intcol", "strcol")
@@ -317,7 +317,3 @@ def test_explicit_impute_subset(impute_adata):
 def test_warning(impute_num_adata):
     warning_results = _warn_imputation_threshold(impute_num_adata, threshold=20, var_names=None)
     assert warning_results == {"col1": 25, "col3": 50}
-
-
-
-
