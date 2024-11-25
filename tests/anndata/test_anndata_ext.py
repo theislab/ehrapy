@@ -11,7 +11,9 @@ import ehrapy as ep
 from ehrapy.anndata._constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrapy.anndata.anndata_ext import (
     NotEncodedError,
+    _are_ndarrays_equal,
     _assert_encoded,
+    _is_val_missing,
     anndata_to_df,
     assert_numeric_vars,
     delete_from_obs,
@@ -20,8 +22,6 @@ from ehrapy.anndata.anndata_ext import (
     move_to_obs,
     move_to_x,
     set_numeric_vars,
-    _are_ndarrays_equal,
-    _is_val_missing
 )
 from tests.conftest import TEST_DATA_PATH
 
