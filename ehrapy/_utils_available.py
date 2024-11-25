@@ -4,7 +4,7 @@ import importlib.util
 from subprocess import PIPE, Popen
 
 
-def check_module_importable(package: str) -> bool:  # pragma: no cover
+def _check_module_importable(package: str) -> bool:
     """Checks whether a module is installed and can be loaded.
 
     Args:
@@ -19,7 +19,7 @@ def check_module_importable(package: str) -> bool:  # pragma: no cover
     return module_available
 
 
-def shell_command_accessible(command: list[str]) -> bool:  # pragma: no cover
+def _shell_command_accessible(command: list[str]) -> bool:
     """Checks whether the provided command is accessible in the current shell.
 
     Args:

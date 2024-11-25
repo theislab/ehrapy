@@ -11,7 +11,7 @@ from sklearn.experimental import enable_iterative_imputer  # noinspection PyUnre
 from sklearn.impute import SimpleImputer
 
 from ehrapy import settings
-from ehrapy._utils_available import check_module_importable
+from ehrapy._utils_available import _check_module_importable
 from ehrapy.anndata import check_feature_types
 from ehrapy.anndata.anndata_ext import get_column_indices
 
@@ -153,7 +153,7 @@ def simple_impute(
     elif strategy == "most_frequent":
         _simple_impute(adata, var_names, strategy)
     else:
-        raise ValueError(  # pragma: no cover
+        raise ValueError(
             f"Unknown impute strategy {strategy} for simple Imputation. Choose any of mean, median or most_frequent."
         ) from None
 
@@ -242,7 +242,7 @@ def knn_impute(
             stacklevel=1,
         )
 
-    if check_module_importable("sklearnex"):  # pragma: no cover
+    if _check_module_importable("sklearnex"):  # pragma: no cover
         from sklearnex import patch_sklearn, unpatch_sklearn
 
         patch_sklearn()
@@ -262,7 +262,7 @@ def knn_impute(
             logger.error("Check that your matrix does not contain any NaN only columns!")
         raise
 
-    if check_module_importable("sklearnex"):  # pragma: no cover
+    if _check_module_importable("sklearnex"):  # pragma: no cover
         unpatch_sklearn()
 
     return adata
@@ -343,7 +343,7 @@ def miss_forest_impute(
     elif isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):
         _warn_imputation_threshold(adata, var_names, threshold=warning_threshold)
 
-    if check_module_importable("sklearnex"):  # pragma: no cover
+    if _check_module_importable("sklearnex"):  # pragma: no cover
         from sklearnex import patch_sklearn, unpatch_sklearn
 
         patch_sklearn()
@@ -352,9 +352,6 @@ def miss_forest_impute(
     from sklearn.impute import IterativeImputer
 
     try:
-        if settings.n_jobs == 1:  # pragma: no cover
-            logger.warning("The number of jobs is only 1. To decrease the runtime set ep.settings.n_jobs=-1.")
-
         imp_num = IterativeImputer(
             estimator=ExtraTreesRegressor(n_estimators=n_estimators, n_jobs=settings.n_jobs),
             initial_strategy=num_initial_strategy,
@@ -407,7 +404,7 @@ def miss_forest_impute(
             logger.error("Check that your matrix does not contain any NaN only columns!")
         raise
 
-    if check_module_importable("sklearnex"):  # pragma: no cover
+    if _check_module_importable("sklearnex"):  # pragma: no cover
         unpatch_sklearn()
 
     return adata
@@ -565,7 +562,7 @@ def _get_non_numerical_column_indices(arr: np.ndarray) -> set:
     def _is_float_or_nan_row(row) -> list[bool]:  # pragma: no cover
         return [_is_float_or_nan(val) for val in row]
 
-    mask = np.apply_along_axis(_is_float_or_nan_row, 0, x)
+    mask = np.apply_along_axis(_is_float_or_nan_row, 0, arr)
     _, column_indices = np.where(~mask)
 
     return set(column_indices)
