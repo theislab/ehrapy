@@ -127,7 +127,10 @@ def kmf(
     weights: Iterable | None = None,
     censoring: Literal["right", "left"] = None,
 ) -> KaplanMeierFitter:
-    """Fit the Kaplan-Meier estimate for the survival function.
+    """
+    DEPRECATION WARNING: This function is deprecated and will be removed in the next release. Use `kaplan_meier` instead.
+
+    Fit the Kaplan-Meier estimate for the survival function.
 
     The Kaplan–Meier estimator, also known as the product limit estimator, is a non-parametric statistic used to estimate the survival function from lifetime data.
     In medical research, it is often used to measure the fraction of patients living for a certain amount of time after treatment.
