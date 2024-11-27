@@ -96,9 +96,14 @@ class TestSA:
         self._sa_function_assert(sa, sa_class)
 
     def test_kmf(self, mimic_2_sa):
-        adata, _, _ = mimic_2_sa
-        kmf = ep.tl.kmf(adata, "mort_day_censored", "censor_flg")
-        self._sa_function_assert(kmf, KaplanMeierFitter)
+        # check for deprecation warning
+        with pytest.warns(DeprecationWarning):
+            adata, _, _ = mimic_2_sa
+            kmf = ep.tl.kmf(adata[:, ["mort_day_censored"]].X, adata[:, ["censor_flg"]].X)
+            self._sa_function_assert(kmf, KaplanMeierFitter)
+
+    def test_kaplan_meyer(self, mimic_2_sa):
+        self._sa_func_test(ep.tl.kaplan_meier, KaplanMeierFitter, mimic_2_sa)
 
     def test_cox_ph(self, mimic_2_sa):
         self._sa_func_test(ep.tl.cox_ph, CoxPHFitter, mimic_2_sa)
