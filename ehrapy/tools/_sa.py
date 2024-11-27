@@ -163,6 +163,7 @@ def kmf(
     warnings.warn(
         "This function is deprecated and will be removed in the next release. Use `kaplan_meier` instead.",
         DeprecationWarning,
+        stacklevel=2
     )
     kmf = KaplanMeierFitter()
     if censoring == "None" or "right":
