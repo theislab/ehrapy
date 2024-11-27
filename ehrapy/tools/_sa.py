@@ -190,6 +190,7 @@ def kmf(
 
     return kmf
 
+
 def kaplan_meier(
     adata: AnnData,
     duration_col: str,
