@@ -7,22 +7,20 @@ from typing import TYPE_CHECKING, Literal
 import numpy as np
 import pandas as pd
 from lamin_utils import logger
-from rich import print
-from rich.progress import Progress, SpinnerColumn
-from sklearn.experimental import enable_iterative_imputer  # required to enable IterativeImputer (experimental feature)
+from sklearn.experimental import enable_iterative_imputer  # noinspection PyUnresolvedReference
 from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import OrdinalEncoder
 
 from ehrapy import settings
+from ehrapy._utils_available import _check_module_importable
+from ehrapy._utils_rendering import spinner
 from ehrapy.anndata import check_feature_types
-from ehrapy.anndata._constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY
-from ehrapy.anndata.anndata_ext import _get_column_indices
-from ehrapy.core._tool_available import _check_module_importable
+from ehrapy.anndata.anndata_ext import get_column_indices
 
 if TYPE_CHECKING:
     from anndata import AnnData
 
 
+@spinner("Performing explicit impute")
 def explicit_impute(
     adata: AnnData,
     replacement: (str | int) | (dict[str, str | int]),
@@ -30,7 +28,7 @@ def explicit_impute(
     impute_empty_strings: bool = True,
     warning_threshold: int = 70,
     copy: bool = False,
-) -> AnnData:
+) -> AnnData | None:
     """Replaces all missing values in all columns or a subset of columns specified by the user with the passed replacement value.
 
     There are two scenarios to cover:
@@ -47,7 +45,7 @@ def explicit_impute(
 
     Returns:
         If copy is True, a modified copy of the original AnnData object with imputed X.
-        If copy is False, the original AnnData object is modified in place.
+        If copy is False, the original AnnData object is modified in place, and None is returned.
 
     Examples:
         Replace all missing values in adata with the value 0:
@@ -56,7 +54,7 @@ def explicit_impute(
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.explicit_impute(adata, replacement=0)
     """
-    if copy:  # pragma: no cover
+    if copy:
         adata = adata.copy()
 
     if isinstance(replacement, int) or isinstance(replacement, str):
@@ -64,32 +62,25 @@ def explicit_impute(
     else:
         _warn_imputation_threshold(adata, var_names=replacement.keys(), threshold=warning_threshold)  # type: ignore
 
-    with Progress(
-        "[progress.description]{task.description}",
-        SpinnerColumn(),
-        refresh_per_second=1500,
-    ) as progress:
-        progress.add_task("[blue]Running explicit imputation", total=1)
-        # 1: Replace all missing values with the specified value
-        if isinstance(replacement, (int, str)):
-            _replace_explicit(adata.X, replacement, impute_empty_strings)
+    # 1: Replace all missing values with the specified value
+    if isinstance(replacement, int | str):
+        _replace_explicit(adata.X, replacement, impute_empty_strings)
 
-        # 2: Replace all missing values in a subset of columns with a specified value per column or a default value, when the column is not explicitly named
-        elif isinstance(replacement, dict):
-            for idx, column_name in enumerate(adata.var_names):
-                imputation_value = _extract_impute_value(replacement, column_name)
-                # only replace if an explicit value got passed or could be extracted from replacement
-                if imputation_value:
-                    _replace_explicit(adata.X[:, idx : idx + 1], imputation_value, impute_empty_strings)
-                else:
-                    logger.warning(f"No replace value passed and found for var [not bold green]{column_name}.")
-        else:
-            raise ValueError(  # pragma: no cover
-                f"Type {type(replacement)} is not a valid datatype for replacement parameter. Either use int, str or a dict!"
-            )
+    # 2: Replace all missing values in a subset of columns with a specified value per column or a default value, when the column is not explicitly named
+    elif isinstance(replacement, dict):
+        for idx, column_name in enumerate(adata.var_names):
+            imputation_value = _extract_impute_value(replacement, column_name)
+            # only replace if an explicit value got passed or could be extracted from replacement
+            if imputation_value:
+                _replace_explicit(adata.X[:, idx : idx + 1], imputation_value, impute_empty_strings)
+            else:
+                logger.warning(f"No replace value passed and found for var [not bold green]{column_name}.")
+    else:
+        raise ValueError(  # pragma: no cover
+            f"Type {type(replacement)} is not a valid datatype for replacement parameter. Either use int, str or a dict!"
+        )
 
-    if copy:
-        return adata
+    return adata if copy else None
 
 
 def _replace_explicit(arr: np.ndarray, replacement: str | int, impute_empty_strings: bool) -> None:
@@ -119,6 +110,7 @@ def _extract_impute_value(replacement: dict[str, str | int], column_name: str) -
         return None
 
 
+@spinner("Performing simple impute")
 def simple_impute(
     adata: AnnData,
     var_names: Iterable[str] | None = None,
@@ -126,8 +118,11 @@ def simple_impute(
     strategy: Literal["mean", "median", "most_frequent"] = "mean",
     copy: bool = False,
     warning_threshold: int = 70,
-) -> AnnData:
+) -> AnnData | None:
     """Impute missing values in numerical data using mean/median/most frequent imputation.
+
+    If required and using mean or median strategy, the data needs to be properly encoded as this imputation requires
+    numerical data only.
 
     Args:
         adata: The annotated data matrix to impute missing values on.
@@ -137,13 +132,8 @@ def simple_impute(
         copy:Whether to return a copy of `adata` or modify it inplace.
 
     Returns:
-        An updated AnnData object with imputed values.
-
-    Raises:
-        ValueError:
-            If the selected imputation strategy is not applicable to the data.
-        ValueError:
-            If an unknown imputation strategy is provided.
+        If copy is True, a modified copy of the original AnnData object with imputed X.
+        If copy is False, the original AnnData object is modified in place, and None is returned.
 
     Examples:
         >>> import ehrapy as ep
@@ -155,43 +145,35 @@ def simple_impute(
 
     _warn_imputation_threshold(adata, var_names, threshold=warning_threshold)
 
-    with Progress(
-        "[progress.description]{task.description}",
-        SpinnerColumn(),
-        refresh_per_second=1500,
-    ) as progress:
-        progress.add_task(f"[blue]Running simple imputation with {strategy}", total=1)
-        # Imputation using median and mean strategy works with numerical data only
-        if strategy in {"median", "mean"}:
-            try:
-                _simple_impute(adata, var_names, strategy)
-            except ValueError:
-                raise ValueError(
-                    f"Can only impute numerical data using {strategy} strategy. Try to restrict imputation"
-                    "to certain columns using var_names parameter or use a different mode."
-                ) from None
-        # most_frequent imputation works with non-numerical data as well
-        elif strategy == "most_frequent":
+    if strategy in {"median", "mean"}:
+        try:
             _simple_impute(adata, var_names, strategy)
-        # unknown simple imputation strategy
-        else:
-            raise ValueError(  # pragma: no cover
-                f"Unknown impute strategy {strategy} for simple Imputation. Choose any of mean, median or most_frequent."
+        except ValueError:
+            raise ValueError(
+                f"Can only impute numerical data using {strategy} strategy. Try to restrict imputation "
+                "to certain columns using var_names parameter or use a different mode."
             ) from None
+    # most_frequent imputation works with non-numerical data as well
+    elif strategy == "most_frequent":
+        _simple_impute(adata, var_names, strategy)
+    else:
+        raise ValueError(
+            f"Unknown impute strategy {strategy} for simple Imputation. Choose any of mean, median or most_frequent."
+        ) from None
 
-    if copy:
-        return adata
+    return adata if copy else None
 
 
 def _simple_impute(adata: AnnData, var_names: Iterable[str] | None, strategy: str) -> None:
     imputer = SimpleImputer(strategy=strategy)
-    if isinstance(var_names, Iterable):
-        column_indices = _get_column_indices(adata, var_names)
+    if isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):
+        column_indices = get_column_indices(adata, var_names)
         adata.X[::, column_indices] = imputer.fit_transform(adata.X[::, column_indices])
     else:
         adata.X = imputer.fit_transform(adata.X)
 
 
+@spinner("Performing KNN impute")
 @check_feature_types
 def knn_impute(
     adata: AnnData,
@@ -206,9 +188,7 @@ def knn_impute(
 ) -> AnnData:
     """Imputes missing values in the input AnnData object using K-nearest neighbor imputation.
 
-    When using KNN Imputation with mixed data (non-numerical and numerical), encoding using ordinal encoding is required
-    since KNN Imputation can only work on numerical data. The encoding itself is just a utility and will be undone once
-    imputation ran successfully.
+    If required, the data needs to be properly encoded as this imputation requires numerical data only.
 
     .. warning::
         Currently, both `n_neighbours` and `n_neighbors` are accepted as parameters for the number of neighbors.
@@ -234,10 +214,8 @@ def knn_impute(
         kwargs: Gathering keyword arguments of earlier ehrapy versions for backwards compatibility. It is encouraged to use the here listed, current arguments.
 
     Returns:
-        An updated AnnData object with imputed values.
-
-    Raises:
-        ValueError: If the input data matrix contains only categorical (non-numeric) values.
+        If copy is True, a modified copy of the original AnnData object with imputed X.
+        If copy is False, the original AnnData object is modified in place, and None is returned.
 
     Examples:
         >>> import ehrapy as ep
@@ -274,40 +252,26 @@ def knn_impute(
         from sklearnex import patch_sklearn, unpatch_sklearn
 
         patch_sklearn()
+
     try:
-        with Progress(
-            "[progress.description]{task.description}",
-            SpinnerColumn(),
-            refresh_per_second=1500,
-        ) as progress:
-            progress.add_task("[blue]Running KNN imputation", total=1)
-            # numerical only data needs no encoding since KNN Imputation can be applied directly
-            if np.issubdtype(adata.X.dtype, np.number):
-                _knn_impute(adata, var_names, n_neighbors, backend=backend, **backend_kwargs)
-            else:
-                # ordinal encoding is used since non-numerical data can not be imputed using KNN Imputation
-                enc = OrdinalEncoder()
-                column_indices = adata.var[FEATURE_TYPE_KEY] == CATEGORICAL_TAG
-                adata.X[::, column_indices] = enc.fit_transform(adata.X[::, column_indices])
-                # impute the data using KNN imputation
-                _knn_impute(adata, var_names, n_neighbors, backend=backend, **backend_kwargs)
-                # imputing on encoded columns might result in float numbers; those can not be decoded
-                # cast them to int to ensure they can be decoded
-                adata.X[::, column_indices] = np.rint(adata.X[::, column_indices]).astype(int)
-                # knn imputer transforms X dtype to numerical (encoded), but object is needed for decoding
-                adata.X = adata.X.astype("object")
-                # decode ordinal encoding to obtain imputed original data
-                adata.X[::, column_indices] = enc.inverse_transform(adata.X[::, column_indices])
+        if np.issubdtype(adata.X.dtype, np.number):
+            _knn_impute(adata, var_names, n_neighbors, backend=backend, **backend_kwargs)
+        else:
+            # Raise exception since non-numerical data can not be imputed using KNN Imputation
+            raise ValueError(
+                "Can only impute numerical data. Try to restrict imputation to certain columns using "
+                "var_names parameter or perform an encoding of your data."
+            )
+
     except ValueError as e:
         if "Data matrix has wrong shape" in str(e):
             logger.error("Check that your matrix does not contain any NaN only columns!")
-            raise
+        raise
 
     if _check_module_importable("sklearnex"):  # pragma: no cover
         unpatch_sklearn()
 
-    if copy:
-        return adata
+    return adata if copy else None
 
 
 def _knn_impute(
@@ -326,8 +290,8 @@ def _knn_impute(
 
         imputer = FaissImputer(n_neighbors=n_neighbors, **kwargs)
 
-    if isinstance(var_names, Iterable):
-        column_indices = _get_column_indices(adata, var_names)
+    if isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):
+        column_indices = get_column_indices(adata, var_names)
         adata.X[::, column_indices] = imputer.fit_transform(adata.X[::, column_indices])
         # this is required since X dtype has to be numerical in order to correctly round floats
         adata.X = adata.X.astype("float64")
@@ -335,17 +299,18 @@ def _knn_impute(
         adata.X = imputer.fit_transform(adata.X)
 
 
+@spinner("Performing miss-forest impute")
 def miss_forest_impute(
     adata: AnnData,
-    var_names: dict[str, list[str]] | list[str] | None = None,
+    var_names: Iterable[str] | None = None,
     *,
     num_initial_strategy: Literal["mean", "median", "most_frequent", "constant"] = "mean",
     max_iter: int = 3,
-    n_estimators=100,
+    n_estimators: int = 100,
     random_state: int = 0,
     warning_threshold: int = 70,
     copy: bool = False,
-) -> AnnData:
+) -> AnnData | None:
     """Impute data using the MissForest strategy.
 
     This function uses the MissForest strategy to impute missing values in the data matrix of an AnnData object.
@@ -353,12 +318,12 @@ def miss_forest_impute(
     and using the trained model to predict the missing values.
 
     See https://academic.oup.com/bioinformatics/article/28/1/112/219101.
-    This requires the computation of which columns in X contain numerical only (including NaNs) and which contain non-numerical data.
+
+    If required, the data needs to be properly encoded as this imputation requires numerical data only.
 
     Args:
         adata: The AnnData object to use MissForest Imputation on.
-        var_names: List of columns to impute or a dict with two keys ('numerical' and 'non_numerical') indicating which var
-                   contain mixed data and which numerical data only.
+        var_names: Iterable of columns to impute
         num_initial_strategy: The initial strategy to replace all missing numerical values with.
         max_iter: The maximum number of iterations if the stop criterion has not been met yet.
         n_estimators: The number of trees to fit for every missing variable. Has a big effect on the run time.
@@ -368,21 +333,20 @@ def miss_forest_impute(
         copy: Whether to return a copy or act in place.
 
     Returns:
-        The imputed (but unencoded) AnnData object.
+        If copy is True, a modified copy of the original AnnData object with imputed X.
+        If copy is False, the original AnnData object is modified in place, and None is returned.
 
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> ep.pp.miss_forest_impute(adata)
     """
-    if copy:  # pragma: no cover
+    if copy:
         adata = adata.copy()
 
     if var_names is None:
         _warn_imputation_threshold(adata, list(adata.var_names), threshold=warning_threshold)
-    elif isinstance(var_names, dict):
-        _warn_imputation_threshold(adata, var_names.keys(), threshold=warning_threshold)  # type: ignore
-    elif isinstance(var_names, list):
+    elif isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):
         _warn_imputation_threshold(adata, var_names, threshold=warning_threshold)
 
     if _check_module_importable("sklearnex"):  # pragma: no cover
@@ -394,74 +358,49 @@ def miss_forest_impute(
     from sklearn.impute import IterativeImputer
 
     try:
-        with Progress(
-            "[progress.description]{task.description}",
-            SpinnerColumn(),
-            refresh_per_second=1500,
-        ) as progress:
-            progress.add_task("[blue]Running MissForest imputation", total=1)
+        imp_num = IterativeImputer(
+            estimator=ExtraTreesRegressor(n_estimators=n_estimators, n_jobs=settings.n_jobs),
+            initial_strategy=num_initial_strategy,
+            max_iter=max_iter,
+            random_state=random_state,
+        )
+        # initial strategy here will not be parametrized since only most_frequent will be applied to non numerical data
+        IterativeImputer(
+            estimator=RandomForestClassifier(n_estimators=n_estimators, n_jobs=settings.n_jobs),
+            initial_strategy="most_frequent",
+            max_iter=max_iter,
+            random_state=random_state,
+        )
 
-            if settings.n_jobs == 1:  # pragma: no cover
-                logger.warning("The number of jobs is only 1. To decrease the runtime set ep.settings.n_jobs=-1.")
+        if isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):  # type: ignore
+            num_indices = get_column_indices(adata, var_names)
+        else:
+            num_indices = get_column_indices(adata, adata.var_names)
 
-            imp_num = IterativeImputer(
-                estimator=ExtraTreesRegressor(n_estimators=n_estimators, n_jobs=settings.n_jobs),
-                initial_strategy=num_initial_strategy,
-                max_iter=max_iter,
-                random_state=random_state,
+        if set(num_indices).issubset(_get_non_numerical_column_indices(adata.X)):
+            raise ValueError(
+                "Can only impute numerical data. Try to restrict imputation to certain columns using "
+                "var_names parameter."
             )
-            # initial strategy here will not be parametrized since only most_frequent will be applied to non numerical data
-            imp_cat = IterativeImputer(
-                estimator=RandomForestClassifier(n_estimators=n_estimators, n_jobs=settings.n_jobs),
-                initial_strategy="most_frequent",
-                max_iter=max_iter,
-                random_state=random_state,
-            )
 
-            if isinstance(var_names, list):
-                var_indices = _get_column_indices(adata, var_names)  # type: ignore
-                adata.X[::, var_indices] = imp_num.fit_transform(adata.X[::, var_indices])
-            elif isinstance(var_names, dict) or var_names is None:
-                if var_names:
-                    try:
-                        non_num_vars = var_names["non_numerical"]
-                        num_vars = var_names["numerical"]
-                    except KeyError:  # pragma: no cover
-                        raise ValueError(
-                            "One or both of your keys provided for var_names are unknown. Only "
-                            "numerical and non_numerical are available!"
-                        ) from None
-                    non_num_indices = _get_column_indices(adata, non_num_vars)
-                    num_indices = _get_column_indices(adata, num_vars)
+        # this step is the most expensive one and might extremely slow down the impute process
+        if num_indices:
+            adata.X[::, num_indices] = imp_num.fit_transform(adata.X[::, num_indices])
+        else:
+            raise ValueError("Cannot find any feature to perform imputation")
 
-                # infer non numerical and numerical indices automatically
-                else:
-                    non_num_indices_set = _get_non_numerical_column_indices(adata.X)
-                    num_indices = [idx for idx in range(adata.X.shape[1]) if idx not in non_num_indices_set]
-                    non_num_indices = list(non_num_indices_set)
-
-                # encode all non numerical columns
-                if non_num_indices:
-                    enc = OrdinalEncoder()
-                    adata.X[::, non_num_indices] = enc.fit_transform(adata.X[::, non_num_indices])
-                # this step is the most expensive one and might extremely slow down the impute process
-                if num_indices:
-                    adata.X[::, num_indices] = imp_num.fit_transform(adata.X[::, num_indices])
-                if non_num_indices:
-                    adata.X[::, non_num_indices] = imp_cat.fit_transform(adata.X[::, non_num_indices])
-                    adata.X[::, non_num_indices] = enc.inverse_transform(adata.X[::, non_num_indices])
     except ValueError as e:
         if "Data matrix has wrong shape" in str(e):
             logger.error("Check that your matrix does not contain any NaN only columns!")
-            raise
+        raise
 
     if _check_module_importable("sklearnex"):  # pragma: no cover
         unpatch_sklearn()
 
-    if copy:
-        return adata
+    return adata if copy else None
 
 
+@spinner("Performing mice-forest impute")
 @check_feature_types
 def mice_forest_impute(
     adata: AnnData,
@@ -475,11 +414,13 @@ def mice_forest_impute(
     variable_parameters: dict | None = None,
     verbose: bool = False,
     copy: bool = False,
-) -> AnnData:
+) -> AnnData | None:
     """Impute data using the miceforest.
 
     See https://github.com/AnotherSamWilson/miceforest
     Fast, memory efficient Multiple Imputation by Chained Equations (MICE) with lightgbm.
+
+    If required, the data needs to be properly encoded as this imputation requires numerical data only.
 
     Args:
         adata: The AnnData object containing the data to impute.
@@ -497,7 +438,8 @@ def mice_forest_impute(
         copy: Whether to return a copy of the AnnData object or modify it in-place.
 
     Returns:
-        The imputed AnnData object.
+        If copy is True, a modified copy of the original AnnData object with imputed X.
+        If copy is False, the original AnnData object is modified in place, and None is returned.
 
     Examples:
         >>> import ehrapy as ep
@@ -509,49 +451,31 @@ def mice_forest_impute(
         adata = adata.copy()
 
     _warn_imputation_threshold(adata, var_names, threshold=warning_threshold)
+
     try:
-        with Progress(
-            "[progress.description]{task.description}",
-            SpinnerColumn(),
-            refresh_per_second=1500,
-        ) as progress:
-            progress.add_task("[blue]Running miceforest", total=1)
-            if np.issubdtype(adata.X.dtype, np.number):
-                _miceforest_impute(
-                    adata,
-                    var_names,
-                    save_all_iterations_data,
-                    random_state,
-                    inplace,
-                    iterations,
-                    variable_parameters,
-                    verbose,
-                )
-            else:
-                # ordinal encoding is used since non-numerical data can not be imputed using miceforest
-                enc = OrdinalEncoder()
-                column_indices = adata.var[FEATURE_TYPE_KEY] == CATEGORICAL_TAG
-                adata.X[::, column_indices] = enc.fit_transform(adata.X[::, column_indices])
-                # impute the data using miceforest
-                _miceforest_impute(
-                    adata,
-                    var_names,
-                    save_all_iterations_data,
-                    random_state,
-                    inplace,
-                    iterations,
-                    variable_parameters,
-                    verbose,
-                )
-                adata.X = adata.X.astype("object")
-                # decode ordinal encoding to obtain imputed original data
-                adata.X[::, column_indices] = enc.inverse_transform(adata.X[::, column_indices])
+        if np.issubdtype(adata.X.dtype, np.number):
+            _miceforest_impute(
+                adata,
+                var_names,
+                save_all_iterations_data,
+                random_state,
+                inplace,
+                iterations,
+                variable_parameters,
+                verbose,
+            )
+        else:
+            raise ValueError(
+                "Can only impute numerical data. Try to restrict imputation to certain columns using "
+                "var_names parameter."
+            )
+
     except ValueError as e:
         if "Data matrix has wrong shape" in str(e):
             logger.warning("Check that your matrix does not contain any NaN only columns!")
-            raise
+        raise
 
-    return adata
+    return adata if copy else None
 
 
 def _miceforest_impute(
@@ -562,8 +486,8 @@ def _miceforest_impute(
     data_df = pd.DataFrame(adata.X, columns=adata.var_names, index=adata.obs_names)
     data_df = data_df.apply(pd.to_numeric, errors="coerce")
 
-    if isinstance(var_names, Iterable):
-        column_indices = _get_column_indices(adata, var_names)
+    if isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):
+        column_indices = get_column_indices(adata, var_names)
         selected_columns = data_df.iloc[:, column_indices]
         selected_columns = selected_columns.reset_index(drop=True)
 
@@ -616,27 +540,21 @@ def _warn_imputation_threshold(adata: AnnData, var_names: Iterable[str] | None, 
     return var_name_to_pct
 
 
-def _get_non_numerical_column_indices(X: np.ndarray) -> set:
+def _get_non_numerical_column_indices(arr: np.ndarray) -> set:
     """Return indices of columns, that contain at least one non-numerical value that is not "Nan"."""
 
-    def _is_float_or_nan(val):  # pragma: no cover
+    def _is_float_or_nan(val) -> bool:  # pragma: no cover
         """Check whether a given item is a float or np.nan"""
         try:
-            float(val)
-        except ValueError:
-            if val is np.nan:
-                return True
+            _ = float(val)
+            return not isinstance(val, bool)
+        except (ValueError, TypeError):
             return False
-        else:
-            if not isinstance(val, bool):
-                return True
-            else:
-                return False
 
-    is_numeric_numpy = np.vectorize(_is_float_or_nan, otypes=[bool])
-    mask = np.apply_along_axis(is_numeric_numpy, 0, X)
+    def _is_float_or_nan_row(row) -> list[bool]:  # pragma: no cover
+        return [_is_float_or_nan(val) for val in row]
 
+    mask = np.apply_along_axis(_is_float_or_nan_row, 0, arr)
     _, column_indices = np.where(~mask)
-    non_num_indices = set(column_indices)
 
-    return non_num_indices
+    return set(column_indices)

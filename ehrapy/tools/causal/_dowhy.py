@@ -244,7 +244,7 @@ def causal_inference(
                     pval = "Not applicable"
 
                 # Format effect, can be list when refuter is "add_unobserved_common_cause"
-                if isinstance(refute.new_effect, (list, tuple)):
+                if isinstance(refute.new_effect, list | tuple):
                     new_effect = ", ".join([str(np.round(x, 2)) for x in refute.new_effect])
                 else:
                     new_effect = f"{refute.new_effect:.3f}"
