@@ -1,9 +1,9 @@
 import inspect
+from collections.abc import Callable
 from textwrap import dedent
-from typing import Callable, Optional, Union
 
 
-def getdoc(c_or_f: Union[Callable, type]) -> Optional[str]:  # pragma: no cover
+def getdoc(c_or_f: Callable | type) -> str | None:  # pragma: no cover
     if getattr(c_or_f, "__doc__", None) is None:
         return None
     doc = inspect.getdoc(c_or_f)

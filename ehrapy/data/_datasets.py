@@ -743,7 +743,7 @@ def synthea_1k_sample(
 
     df = anndata_to_df(adata)
     df.drop(
-        columns=[col for col in df.columns if any(isinstance(x, (list, dict)) for x in df[col].dropna())], inplace=True
+        columns=[col for col in df.columns if any(isinstance(x, list | dict) for x in df[col].dropna())], inplace=True
     )
     df.drop(columns=df.columns[df.isna().all()], inplace=True)
     adata = df_to_anndata(df, index_column="id")

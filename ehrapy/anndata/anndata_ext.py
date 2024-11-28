@@ -404,7 +404,7 @@ def _detect_binary_columns(df: pd.DataFrame, numerical_columns: list[str]) -> li
     for column in numerical_columns:
         # checking for float and int as well as NaNs (this is safe since checked columns are numericals only)
         # only columns that contain at least one 0 and one 1 are counted as binary (or 0.0/1.0)
-        if df[column].isin([0.0, 1.0, np.NaN, 0, 1]).all() and df[column].nunique() == 2:
+        if df[column].isin([0.0, 1.0, np.nan, 0, 1]).all() and df[column].nunique() == 2:
             binary_columns.append(column)
 
     return binary_columns
@@ -423,7 +423,7 @@ def _cast_obs_columns(obs: pd.DataFrame) -> pd.DataFrame:
     # type cast each non-numerical column to either bool (if possible) or category else
     obs[object_columns] = obs[object_columns].apply(
         lambda obs_name: obs_name.astype("category")
-        if not set(pd.unique(obs_name)).issubset({False, True, np.NaN})
+        if not set(pd.unique(obs_name)).issubset({False, True, np.nan})
         else obs_name.astype("bool"),
         axis=0,
     )

@@ -73,7 +73,7 @@ def encode(
 
     if isinstance(encodings, str) and not autodetect:
         raise ValueError("Passing a string for parameter encodings is only possible when using autodetect=True!")
-    elif autodetect and not isinstance(encodings, (str, type(None))):
+    elif autodetect and not isinstance(encodings, str | type(None)):
         raise ValueError(
             f"Setting encode mode with autodetect=True only works by passing a string (encode mode name) or None not {type(encodings)}!"
         )
@@ -630,7 +630,7 @@ def _update_obs(adata: AnnData, categorical_names: list[str]) -> pd.DataFrame:
             updated_obs[var_name] = adata.X[::, idx : idx + 1].flatten()
             # note: this will count binary columns (0 and 1 only) as well
             # needed for writing to .h5ad files
-            if set(pd.unique(updated_obs[var_name])).issubset({False, True, np.NaN}):
+            if set(pd.unique(updated_obs[var_name])).issubset({False, True, np.nan}):
                 updated_obs[var_name] = updated_obs[var_name].astype("bool")
     # get all non bool object columns and cast them to category dtype
     object_columns = list(updated_obs.select_dtypes(include="object").columns)
