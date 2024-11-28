@@ -32,10 +32,10 @@ jobs:
               run: pip install uv
 
             - name: Install ehrapy and additional dependencies
-              run: uv pip install --system . nbconvert ipykernel
+              run: uv pip install --system . cellrank nbconvert ipykernel
 
             - name: Install scvelo from Github
-              run: uv pip install --system git+https://github.com/theislab/scvelo.git git+https://github.com/theislab/cellrank.git
+              run: uv pip install --system git+https://github.com/theislab/scvelo.git
 
             - name: Run ${{ matrix.notebook }} Notebook
               run: jupyter nbconvert --to notebook --execute ${{ matrix.notebook }}
