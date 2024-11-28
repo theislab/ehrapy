@@ -26,13 +26,13 @@ jobs:
             - name: Set up Python
               uses: actions/setup-python@v5
               with:
-                  python-version: "3.11"
+                  python-version: "3.12"
 
             - name: Install UV
               run: pip install uv
 
             - name: Install ehrapy and additional dependencies
-              run: uv pip install --system . cellrank nbconvert ipykernel
+              run: uv pip install --system . cellrank nbconvert ipykernel graphviz
 
             - name: Install scvelo from Github
               run: uv pip install --system git+https://github.com/theislab/scvelo.git
