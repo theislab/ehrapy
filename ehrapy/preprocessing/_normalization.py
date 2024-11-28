@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 import numpy as np
 import sklearn.preprocessing as sklearn_pp
@@ -20,7 +20,7 @@ from ehrapy.anndata.anndata_ext import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Callable, Sequence
 
     import pandas as pd
     from anndata import AnnData

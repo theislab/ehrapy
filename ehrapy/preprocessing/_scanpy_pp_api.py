@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Callable, Literal, Union
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 
 import numpy as np
 import scanpy as sc
@@ -15,7 +16,7 @@ if TYPE_CHECKING:
 
     from ehrapy.preprocessing._types import KnownTransformer
 
-AnyRandom = Union[int, np.random.RandomState, None]
+AnyRandom: TypeAlias = int | np.random.RandomState | None
 
 
 def pca(
@@ -193,7 +194,7 @@ _MetricScipySpatial = Literal[
     "sqeuclidean",
     "yule",
 ]
-_Metric = Union[_MetricSparseCapable, _MetricScipySpatial]
+_Metric = _MetricSparseCapable | _MetricScipySpatial
 
 
 def neighbors(

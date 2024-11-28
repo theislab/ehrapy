@@ -390,7 +390,7 @@ class CohortTracker:
             # there can be empty lists which distort the logic of matching patches to subtitles
             patches_list = [patch for patch in patches_list if patch]
 
-            for patches, subtitle in zip(patches_list, subtitles_list):
+            for patches, subtitle in zip(patches_list, subtitles_list, strict=False):
                 handles.append(Line2D([], [], linestyle="none", marker="", alpha=0))  # Placeholder for title
                 labels.append(subtitle)
 
@@ -494,7 +494,7 @@ class CohortTracker:
         tot_bbox_kwargs = {"boxstyle": "round,pad=0.3", "fc": "lightblue", "alpha": 0.5}
         if bbox_kwargs is not None:
             tot_bbox_kwargs.update(bbox_kwargs)
-        for _, (y, label) in enumerate(zip(y_positions, node_labels)):
+        for _, (y, label) in enumerate(zip(y_positions, node_labels, strict=False)):
             axes.annotate(
                 label,
                 xy=(0, y),

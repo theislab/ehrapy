@@ -20,7 +20,7 @@ def get_github_repo(app: Sphinx, path: str) -> str:
 
 
 def _html_page_context(
-    app: Sphinx, _pagename: str, templatename: str, context: dict[str, Any], doctree: Optional[Any]
+    app: Sphinx, _pagename: str, templatename: str, context: dict[str, Any], doctree: Any | None
 ) -> None:
     # doctree is None - otherwise viewcode fails
     if templatename != "page.html" or doctree is None:

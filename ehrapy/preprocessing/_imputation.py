@@ -63,7 +63,7 @@ def explicit_impute(
         _warn_imputation_threshold(adata, var_names=replacement.keys(), threshold=warning_threshold)  # type: ignore
 
     # 1: Replace all missing values with the specified value
-    if isinstance(replacement, (int, str)):
+    if isinstance(replacement, int | str):
         _replace_explicit(adata.X, replacement, impute_empty_strings)
 
     # 2: Replace all missing values in a subset of columns with a specified value per column or a default value, when the column is not explicitly named
