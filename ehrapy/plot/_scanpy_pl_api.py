@@ -1,15 +1,15 @@
 from __future__ import annotations
 
-from collections.abc import Collection, Iterable, Mapping, Sequence
+from collections.abc import Callable, Collection, Iterable, Mapping, Sequence
 from enum import Enum
 from functools import partial
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Callable, Literal, Union
+from typing import TYPE_CHECKING, Any, Literal
 
 import scanpy as sc
 from scanpy.plotting import DotPlot, MatrixPlot, StackedViolin
 
-from ehrapy._doc_util import (
+from ehrapy._utils_doc import (
     _doc_params,
     doc_adata_color_etc,
     doc_common_groupby_plot_args,
@@ -36,12 +36,12 @@ if TYPE_CHECKING:
     from scanpy.plotting._utils import _AxesSubplot
 
 _Basis = Literal["pca", "tsne", "umap", "diffmap", "draw_graph_fr"]
-_VarNames = Union[str, Sequence[str]]
-ColorLike = Union[str, tuple[float, ...]]
+_VarNames = str | Sequence[str]
+ColorLike = str | tuple[float, ...]
 _IGraphLayout = Literal["fa", "fr", "rt", "rt_circular", "drl", "eq_tree", ...]  # type: ignore
 _FontWeight = Literal["light", "normal", "medium", "semibold", "bold", "heavy", "black"]
 _FontSize = Literal["xx-small", "x-small", "small", "medium", "large", "x-large", "xx-large"]
-VBound = Union[str, float, Callable[[Sequence[float]], float]]
+VBound = str | float | Callable[[Sequence[float]], float]
 
 
 @_doc_params(scatter_temp=doc_scatter_basic, show_save_ax=doc_show_save_ax)

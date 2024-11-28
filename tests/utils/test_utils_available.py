@@ -1,6 +1,4 @@
-import pytest
-
-from ehrapy.core._tool_available import _check_module_importable, _shell_command_accessible
+from ehrapy._utils_available import _check_module_importable, _shell_command_accessible
 
 
 def test_check_module_importable_true():
