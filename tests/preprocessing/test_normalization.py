@@ -2,6 +2,7 @@ import warnings
 from collections import OrderedDict
 from pathlib import Path
 
+import dask.array as da
 import numpy as np
 import pandas as pd
 import pytest
@@ -13,6 +14,7 @@ from ehrapy.io._read import read_csv
 from tests.conftest import ARRAY_TYPES, TEST_DATA_PATH
 
 CURRENT_DIR = Path(__file__).parent
+from scipy import sparse
 
 
 @pytest.fixture
@@ -74,7 +76,14 @@ def test_vars_checks(adata_to_norm):
         ep.pp.scale_norm(adata_to_norm, vars=["String1"])
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES)
+# TODO: where to list the supported types?
+norm_scale_supported_types = [np.asarray, da.asarray]
+norm_scale_unsupported_types = [sparse.csc_matrix]
+
+
+# TODO: find consens for "minimal" test of ehrapy functions when make this casting test. vanilla settings, all defaults?
+# even test for value matchings?
+@pytest.mark.parametrize("array_type", norm_scale_supported_types)
 def test_norm_scale(array_type, adata_to_norm):
     """Test for the scaling normalization method."""
     warnings.filterwarnings("ignore")
@@ -92,6 +101,14 @@ def test_norm_scale(array_type, adata_to_norm):
     assert np.allclose(adata_norm.X[:, 3], num1_norm)
     assert np.allclose(adata_norm.X[:, 4], num2_norm)
     assert np.allclose(adata_norm.X[:, 5], adata_to_norm_casted.X[:, 5], equal_nan=True)
+
+
+@pytest.mark.parametrize("array_type", norm_scale_unsupported_types)
+def test_norm_scale_notimplemented(array_type, adata_to_norm):
+    adata_to_norm_casted = adata_to_norm.copy()
+    adata_to_norm_casted.X = array_type(adata_to_norm_casted.X)
+    with pytest.raises(NotImplementedError):
+        ep.pp.scale_norm(adata_to_norm_casted)
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES)

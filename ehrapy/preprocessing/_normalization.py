@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from functools import singledispatch
 from typing import TYPE_CHECKING
 
+import dask.array as da
 import numpy as np
 import sklearn.preprocessing as sklearn_pp
 
@@ -69,6 +71,21 @@ def _scale_func_group(
         return None
 
 
+@singledispatch
+def _scale_norm_function(arr):
+    raise NotImplementedError(f"scale_norm does not support data to be of type {type(arr)}")
+
+
+@_scale_norm_function.register
+def _(arr: np.ndarray, **kwargs):
+    return sklearn_pp.StandardScaler(**kwargs).fit_transform
+
+
+@_scale_norm_function.register
+def _(arr: da.Array, **kwargs):
+    return sklearn_pp.StandardScaler(**kwargs).fit_transform
+
+
 def scale_norm(
     adata: AnnData,
     vars: str | Sequence[str] | None = None,
@@ -98,10 +115,7 @@ def scale_norm(
         >>> adata_norm = ep.pp.scale_norm(adata, copy=True)
     """
 
-    if is_dask_array(adata.X):
-        scale_func = daskml_pp.StandardScaler(**kwargs).fit_transform
-    else:
-        scale_func = sklearn_pp.StandardScaler(**kwargs).fit_transform
+    scale_func = _scale_norm_function(adata.X, **kwargs)
 
     return _scale_func_group(
         adata=adata,
