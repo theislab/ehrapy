@@ -257,8 +257,8 @@ def move_to_x(adata: AnnData, to_x: list[str] | str, copy_x: bool = False) -> An
 
     Args:
         adata: The AnnData object
-        to_x: The values are copied to X (and therefore kept in obs) instead of moved completely.
-        copy_x: Whether to return a copy or not
+        to_x: The columns to move to X
+        copy_x: The values are copied to X (and therefore kept in obs) instead of moved completely
 
     Returns:
         A new AnnData object with moved columns from obs to X. This should not be used for datetime columns currently.
