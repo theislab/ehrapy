@@ -231,7 +231,7 @@ def kaplan_meier(
 
         >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
         >>> kmf = ep.tl.kaplan_meier(adata, "mort_day_censored", "censor_flg")
-        >>> ep.pl.kmf(
+        >>> ep.pl.kaplan_meier(
         ...     [kmf], color=["r"], xlim=[0, 700], ylim=[0, 1], xlabel="Days", ylabel="Proportion Survived", show=True
         ... )
 
@@ -244,7 +244,7 @@ def kaplan_meier(
         >>> kmf_1 = ep.tl.kaplan_meier(adata_ficu, "mort_day_censored", "censor_flg", label="FICU")
         >>> kmf_2 = ep.tl.kaplan_meier(adata_micu, "mort_day_censored", "censor_flg", label="MICU")
         >>> kmf_3 = ep.tl.kaplan_meier(adata_sicu, "mort_day_censored", "censor_flg", label="SICU")
-        >>> ep.pl.kmf([kmf_1, kmf_2, kmf_3], ci_show=[False,False,False], color=['k','r', 'g'],
+        >>> ep.pl.kaplan_meier([kmf_1, kmf_2, kmf_3], ci_show=[False,False,False], color=['k','r', 'g'],
         >>>           xlim=[0, 750], ylim=[0, 1], xlabel="Days", ylabel="Proportion Survived")
 
         .. image:: /_static/docstring_previews/kmf_plot_2.png
