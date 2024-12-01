@@ -32,6 +32,7 @@ __all__ = [
     "cox_ph",
     "glm",
     "kmf",
+    "kaplan_meier",
     "log_logistic_aft",
     "nelson_aalen",
     "ols",

@@ -368,7 +368,7 @@ Methods that extract and visualize tool-specific annotation in an AnnData object
     :nosignatures:
 
     plot.ols
-    plot.kmf
+    plot.kaplan_meier
 ```
 
 ### Causal Inference

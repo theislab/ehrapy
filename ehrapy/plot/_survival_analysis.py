@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
@@ -38,7 +39,7 @@ def ols(
     ax: Axes | None = None,
     title: str | None = None,
     **kwds,
-):
+) -> Axes | None:
     """Plots an Ordinary Least Squares (OLS) Model result, scatter plot, and line plot.
 
     Args:
@@ -134,6 +135,8 @@ def ols(
 
     if not show:
         return ax
+    else:
+        return None
 
 
 def kmf(
@@ -152,7 +155,48 @@ def kmf(
     figsize: tuple[float, float] | None = None,
     show: bool | None = None,
     title: str | None = None,
-):
+) -> Axes | None:
+    warnings.warn(
+        "This function is deprecated and will be removed in the next release. Use `ep.pl.kaplan_meier` instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return kaplan_meier(
+        kmfs=kmfs,
+        ci_alpha=ci_alpha,
+        ci_force_lines=ci_force_lines,
+        ci_show=ci_show,
+        ci_legend=ci_legend,
+        at_risk_counts=at_risk_counts,
+        color=color,
+        grid=grid,
+        xlim=xlim,
+        ylim=ylim,
+        xlabel=xlabel,
+        ylabel=ylabel,
+        figsize=figsize,
+        show=show,
+        title=title,
+    )
+
+
+def kaplan_meier(
+    kmfs: Sequence[KaplanMeierFitter],
+    ci_alpha: list[float] | None = None,
+    ci_force_lines: list[Boolean] | None = None,
+    ci_show: list[Boolean] | None = None,
+    ci_legend: list[Boolean] | None = None,
+    at_risk_counts: list[Boolean] | None = None,
+    color: list[str] | None | None = None,
+    grid: Boolean | None = False,
+    xlim: tuple[float, float] | None = None,
+    ylim: tuple[float, float] | None = None,
+    xlabel: str | None = None,
+    ylabel: str | None = None,
+    figsize: tuple[float, float] | None = None,
+    show: bool | None = None,
+    title: str | None = None,
+) -> Axes | None:
     """Plots a pretty figure of the Fitted KaplanMeierFitter model
 
     See https://lifelines.readthedocs.io/en/latest/fitters/univariate/KaplanMeierFitter.html
@@ -249,3 +293,5 @@ def kmf(
 
     if not show:
         return ax
+    else:
+        return None

@@ -127,8 +127,7 @@ def kmf(
     weights: Iterable | None = None,
     censoring: Literal["right", "left"] = None,
 ) -> KaplanMeierFitter:
-    """
-    DEPRECATION WARNING: This function is deprecated and will be removed in the next release. Use `kaplan_meier` instead.
+    """DEPRECATION WARNING: This function is deprecated and will be removed in the next release. Use `kaplan_meier` instead.
 
     Fit the Kaplan-Meier estimate for the survival function.
 
@@ -162,9 +161,9 @@ def kmf(
         >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
         >>> kmf = ep.tl.kmf(adata[:, ["mort_day_censored"]].X, adata[:, ["censor_flg"]].X)
     """
-    # deprecated
+
     warnings.warn(
-        "This function is deprecated and will be removed in the next release. Use `kaplan_meier` instead.",
+        "This function is deprecated and will be removed in the next release. Use `ep.tl.kaplan_meier` instead.",
         DeprecationWarning,
         stacklevel=2,
     )
