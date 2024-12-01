@@ -197,7 +197,7 @@ def kmf(
         >>> adata_ficu = adata[groups == "FICU"]
         >>> adata_micu = adata[groups == "MICU"]
         >>> adata_sicu = adata[groups == "SICU"]
-        >>> kmf_1 = ep.tl.kmf(adata_ficu, "mort_day_censored", "censor_flg", label="FICU")
+        >>> kmf_1 = ep.tl.kaplan_meier(adata_ficu, "mort_day_censored", "censor_flg", label="FICU")
         >>> kmf_2 = ep.tl.kmf(adata_micu, "mort_day_censored", "censor_flg", label="MICU")
         >>> kmf_3 = ep.tl.kmf(adata_sicu, "mort_day_censored", "censor_flg", label="SICU")
         >>> ep.pl.kmf([kmf_1, kmf_2, kmf_3], ci_show=[False,False,False], color=['k','r', 'g'],
