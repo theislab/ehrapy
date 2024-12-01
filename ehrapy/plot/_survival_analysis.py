@@ -186,7 +186,7 @@ def kmf(
         # So we need to flip `censor_fl` when pass `censor_fl` to KaplanMeierFitter
 
         >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
-        >>> kmf = ep.tl.kmf(adata, "mort_day_censored", "censor_flg")
+        >>> kmf = ep.tl.kaplan_meier(adata, "mort_day_censored", "censor_flg")
         >>> ep.pl.kmf(
         ...     [kmf], color=["r"], xlim=[0, 700], ylim=[0, 1], xlabel="Days", ylabel="Proportion Survived", show=True
         ... )
