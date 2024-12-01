@@ -164,6 +164,13 @@ def test_move_to_x(adata_move_obs_mix):
     )
 
 
+def test_move_to_x_copy_x(adata_move_obs_mix):
+    move_to_obs(adata_move_obs_mix, ["name"], copy_obs=False)
+    obs_df = adata_move_obs_mix.obs.copy()
+    new_adata = move_to_x(adata_move_obs_mix, ["name"], copy_x=True)
+    assert_frame_equal(new_adata.obs, obs_df)
+
+
 def test_move_to_x_invalid_column_names(adata_move_obs_mix):
     move_to_obs(adata_move_obs_mix, ["name"], copy_obs=True)
     move_to_obs(adata_move_obs_mix, ["clinic_id"], copy_obs=False)
