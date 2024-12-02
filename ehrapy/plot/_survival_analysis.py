@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
@@ -38,7 +39,7 @@ def ols(
     ax: Axes | None = None,
     title: str | None = None,
     **kwds,
-):
+) -> Axes | None:
     """Plots an Ordinary Least Squares (OLS) Model result, scatter plot, and line plot.
 
     Args:
@@ -134,6 +135,8 @@ def ols(
 
     if not show:
         return ax
+    else:
+        return None
 
 
 def kmf(
@@ -152,7 +155,48 @@ def kmf(
     figsize: tuple[float, float] | None = None,
     show: bool | None = None,
     title: str | None = None,
-):
+) -> Axes | None:
+    warnings.warn(
+        "This function is deprecated and will be removed in the next release. Use `ep.pl.kaplan_meier` instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return kaplan_meier(
+        kmfs=kmfs,
+        ci_alpha=ci_alpha,
+        ci_force_lines=ci_force_lines,
+        ci_show=ci_show,
+        ci_legend=ci_legend,
+        at_risk_counts=at_risk_counts,
+        color=color,
+        grid=grid,
+        xlim=xlim,
+        ylim=ylim,
+        xlabel=xlabel,
+        ylabel=ylabel,
+        figsize=figsize,
+        show=show,
+        title=title,
+    )
+
+
+def kaplan_meier(
+    kmfs: Sequence[KaplanMeierFitter],
+    ci_alpha: list[float] | None = None,
+    ci_force_lines: list[Boolean] | None = None,
+    ci_show: list[Boolean] | None = None,
+    ci_legend: list[Boolean] | None = None,
+    at_risk_counts: list[Boolean] | None = None,
+    color: list[str] | None | None = None,
+    grid: Boolean | None = False,
+    xlim: tuple[float, float] | None = None,
+    ylim: tuple[float, float] | None = None,
+    xlabel: str | None = None,
+    ylabel: str | None = None,
+    figsize: tuple[float, float] | None = None,
+    show: bool | None = None,
+    title: str | None = None,
+) -> Axes | None:
     """Plots a pretty figure of the Fitted KaplanMeierFitter model
 
     See https://lifelines.readthedocs.io/en/latest/fitters/univariate/KaplanMeierFitter.html
@@ -186,23 +230,21 @@ def kmf(
         # So we need to flip `censor_fl` when pass `censor_fl` to KaplanMeierFitter
 
         >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
-        >>> kmf = ep.tl.kmf(adata[:, ["mort_day_censored"]].X, adata[:, ["censor_flg"]].X)
-        >>> ep.pl.kmf(
+        >>> kmf = ep.tl.kaplan_meier(adata, "mort_day_censored", "censor_flg")
+        >>> ep.pl.kaplan_meier(
         ...     [kmf], color=["r"], xlim=[0, 700], ylim=[0, 1], xlabel="Days", ylabel="Proportion Survived", show=True
         ... )
 
         .. image:: /_static/docstring_previews/kmf_plot_1.png
 
-        >>> T = adata[:, ["mort_day_censored"]].X
-        >>> E = adata[:, ["censor_flg"]].X
         >>> groups = adata[:, ["service_unit"]].X
-        >>> ix1 = groups == "FICU"
-        >>> ix2 = groups == "MICU"
-        >>> ix3 = groups == "SICU"
-        >>> kmf_1 = ep.tl.kmf(T[ix1], E[ix1], label="FICU")
-        >>> kmf_2 = ep.tl.kmf(T[ix2], E[ix2], label="MICU")
-        >>> kmf_3 = ep.tl.kmf(T[ix3], E[ix3], label="SICU")
-        >>> ep.pl.kmf([kmf_1, kmf_2, kmf_3], ci_show=[False,False,False], color=['k','r', 'g'],
+        >>> adata_ficu = adata[groups == "FICU"]
+        >>> adata_micu = adata[groups == "MICU"]
+        >>> adata_sicu = adata[groups == "SICU"]
+        >>> kmf_1 = ep.tl.kaplan_meier(adata_ficu, "mort_day_censored", "censor_flg", label="FICU")
+        >>> kmf_2 = ep.tl.kaplan_meier(adata_micu, "mort_day_censored", "censor_flg", label="MICU")
+        >>> kmf_3 = ep.tl.kaplan_meier(adata_sicu, "mort_day_censored", "censor_flg", label="SICU")
+        >>> ep.pl.kaplan_meier([kmf_1, kmf_2, kmf_3], ci_show=[False,False,False], color=['k','r', 'g'],
         >>>           xlim=[0, 750], ylim=[0, 1], xlabel="Days", ylabel="Proportion Survived")
 
         .. image:: /_static/docstring_previews/kmf_plot_2.png
@@ -251,3 +293,5 @@ def kmf(
 
     if not show:
         return ax
+    else:
+        return None

@@ -96,6 +96,7 @@ intersphinx_mapping = {
     "flax": ("https://flax.readthedocs.io/en/latest/", None),
     "jax": ("https://jax.readthedocs.io/en/latest/", None),
     "lamin": ("https://lamin.ai/docs", None),
+    "lifelines": ("https://lifelines.readthedocs.io/en/latest/", None),
 }
 
 language = "en"
