@@ -519,7 +519,7 @@ def nelson_aalen(
         duration_col: The name of the column in the AnnData objects that contains the subjects’ lifetimes.
         event_col: The name of the column in anndata that contains the subjects’ death observation.
                    If left as None, assume all individuals are uncensored.
-        timeline: return the best estimate at the values in timelines (positively increasing)
+        timeline: Return the best estimate at the values in timelines (positively increasing)
         entry: Relative time when a subject entered the study. This is useful for left-truncated (not left-censored) observations.
                If None, all members of the population entered study when they were "born".
         label: A string to name the column of the estimate.
