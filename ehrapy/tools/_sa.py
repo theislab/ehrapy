@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from typing import TYPE_CHECKING, Literal
 
 import numpy as np  # This package is implicitly used
@@ -126,7 +127,9 @@ def kmf(
     weights: Iterable | None = None,
     censoring: Literal["right", "left"] = None,
 ) -> KaplanMeierFitter:
-    """Fit the Kaplan-Meier estimate for the survival function.
+    """DEPRECATION WARNING: This function is deprecated and will be removed in the next release. Use `kaplan_meier` instead.
+
+    Fit the Kaplan-Meier estimate for the survival function.
 
     The Kaplan–Meier estimator, also known as the product limit estimator, is a non-parametric statistic used to estimate the survival function from lifetime data.
     In medical research, it is often used to measure the fraction of patients living for a certain amount of time after treatment.
@@ -158,6 +161,12 @@ def kmf(
         >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
         >>> kmf = ep.tl.kmf(adata[:, ["mort_day_censored"]].X, adata[:, ["censor_flg"]].X)
     """
+
+    warnings.warn(
+        "This function is deprecated and will be removed in the next release. Use `ep.tl.kaplan_meier` instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     kmf = KaplanMeierFitter()
     if censoring == "None" or "right":
         kmf.fit(
@@ -183,6 +192,71 @@ def kmf(
         )
 
     return kmf
+
+
+def kaplan_meier(
+    adata: AnnData,
+    duration_col: str,
+    event_col: str | None = None,
+    *,
+    timeline: list[float] | None = None,
+    entry: str | None = None,
+    label: str | None = None,
+    alpha: float | None = None,
+    ci_labels: list[str] | None = None,
+    weights: list[float] | None = None,
+    fit_options: dict | None = None,
+    censoring: Literal["right", "left"] = "right",
+) -> KaplanMeierFitter:
+    """Fit the Kaplan-Meier estimate for the survival function.
+
+    The Kaplan–Meier estimator, also known as the product limit estimator, is a non-parametric statistic used to estimate the survival function from lifetime data.
+    In medical research, it is often used to measure the fraction of patients living for a certain amount of time after treatment.
+
+    See https://en.wikipedia.org/wiki/Kaplan%E2%80%93Meier_estimator
+        https://lifelines.readthedocs.io/en/latest/fitters/univariate/KaplanMeierFitter.html#module-lifelines.fitters.kaplan_meier_fitter
+
+    Args:
+        adata: AnnData object with necessary columns `duration_col` and `event_col`.
+        duration_col: The name of the column in the AnnData objects that contains the subjects’ lifetimes.
+        event_col: The name of the column in anndata that contains the subjects’ death observation.
+        timeline: Return the best estimate at the values in timelines (positively increasing)
+        entry: Relative time when a subject entered the study. This is useful for left-truncated (not left-censored) observations.
+               If None, all members of the population entered study when they were "born".
+        label: A string to name the column of the estimate.
+        alpha: The alpha value in the confidence intervals. Overrides the initializing alpha for this call to fit only.
+        ci_labels: Add custom column names to the generated confidence intervals as a length-2 list: [<lower-bound name>, <upper-bound name>] (default: <label>_lower_<1-alpha/2>).
+        weights: If providing a weighted dataset. For example, instead of providing every subject
+                 as a single element of `durations` and `event_observed`, one could weigh subject differently.
+        fit_options: Additional keyword arguments to pass into the estimator.
+        censoring: 'right' for fitting the model to a right-censored dataset. (default, calls fit).
+                   'left' for fitting the model to a left-censored dataset (calls fit_left_censoring).
+
+    Returns:
+        Fitted KaplanMeierFitter.
+
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=False)
+        >>> # Flip 'censor_fl' because 0 = death and 1 = censored
+        >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
+        >>> kmf = ep.tl.kaplan_meier(adata, "mort_day_censored", "censor_flg", label="Mortality")
+    """
+    return _univariate_model(
+        adata,
+        duration_col,
+        event_col,
+        KaplanMeierFitter,
+        True,
+        timeline,
+        entry,
+        label,
+        alpha,
+        ci_labels,
+        weights,
+        fit_options,
+        censoring,
+    )
 
 
 def test_kmf_logrank(
@@ -376,7 +450,21 @@ def log_logistic_aft(adata: AnnData, duration_col: str, event_col: str, entry_co
     )
 
 
-def _univariate_model(adata: AnnData, duration_col: str, event_col: str, model_class, accept_zero_duration=True):
+def _univariate_model(
+    adata: AnnData,
+    duration_col: str,
+    event_col: str,
+    model_class,
+    accept_zero_duration=True,
+    timeline: list[float] | None = None,
+    entry: str | None = None,
+    label: str | None = None,
+    alpha: float | None = None,
+    ci_labels: list[str] | None = None,
+    weights: list[float] | None = None,
+    fit_options: dict | None = None,
+    censoring: Literal["right", "left"] = "right",
+):
     """Convenience function for univariate models."""
     df = anndata_to_df(adata)
 
@@ -386,12 +474,39 @@ def _univariate_model(adata: AnnData, duration_col: str, event_col: str, model_c
     E = df[event_col]
 
     model = model_class()
-    model.fit(T, event_observed=E)
+    function_name = "fit" if censoring == "right" else "fit_left_censoring"
+    # get fit function, default to fit if not found
+    fit_function = getattr(model, function_name, model.fit)
+
+    fit_function(
+        T,
+        event_observed=E,
+        timeline=timeline,
+        entry=entry,
+        label=label,
+        alpha=alpha,
+        ci_labels=ci_labels,
+        weights=weights,
+        fit_options=fit_options,
+    )
 
     return model
 
 
-def nelson_aalen(adata: AnnData, duration_col: str, event_col: str) -> NelsonAalenFitter:
+def nelson_aalen(
+    adata: AnnData,
+    duration_col: str,
+    event_col: str | None = None,
+    *,
+    timeline: list[float] | None = None,
+    entry: str | None = None,
+    label: str | None = None,
+    alpha: float | None = None,
+    ci_labels: list[str] | None = None,
+    weights: list[float] | None = None,
+    fit_options: dict | None = None,
+    censoring: Literal["right", "left"] = "right",
+) -> NelsonAalenFitter:
     """Employ the Nelson-Aalen estimator to estimate the cumulative hazard function from censored survival data
 
     The Nelson-Aalen estimator is a non-parametric method used in survival analysis to estimate the cumulative hazard function.
@@ -404,6 +519,17 @@ def nelson_aalen(adata: AnnData, duration_col: str, event_col: str) -> NelsonAal
         duration_col: The name of the column in the AnnData objects that contains the subjects’ lifetimes.
         event_col: The name of the column in anndata that contains the subjects’ death observation.
                    If left as None, assume all individuals are uncensored.
+        timeline: Return the best estimate at the values in timelines (positively increasing)
+        entry: Relative time when a subject entered the study. This is useful for left-truncated (not left-censored) observations.
+               If None, all members of the population entered study when they were "born".
+        label: A string to name the column of the estimate.
+        alpha: The alpha value in the confidence intervals. Overrides the initializing alpha for this call to fit only.
+        ci_labels: Add custom column names to the generated confidence intervals as a length-2 list: [<lower-bound name>, <upper-bound name>] (default: <label>_lower_<1-alpha/2>).
+        weights: If providing a weighted dataset. For example, instead of providing every subject
+                 as a single element of `durations` and `event_observed`, one could weigh subject differently.
+        fit_options: Additional keyword arguments to pass into the estimator.
+        censoring: 'right' for fitting the model to a right-censored dataset. (default, calls fit).
+                   'left' for fitting the model to a left-censored dataset (calls fit_left_censoring).
 
     Returns:
         Fitted NelsonAalenFitter.
@@ -415,10 +541,37 @@ def nelson_aalen(adata: AnnData, duration_col: str, event_col: str) -> NelsonAal
         >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
         >>> naf = ep.tl.nelson_aalen(adata, "mort_day_censored", "censor_flg")
     """
-    return _univariate_model(adata, duration_col, event_col, NelsonAalenFitter)
+
+    return _univariate_model(
+        adata,
+        duration_col,
+        event_col,
+        NelsonAalenFitter,
+        True,
+        timeline=timeline,
+        entry=entry,
+        label=label,
+        alpha=alpha,
+        ci_labels=ci_labels,
+        weights=weights,
+        fit_options=fit_options,
+        censoring=censoring,
+    )
 
 
-def weibull(adata: AnnData, duration_col: str, event_col: str) -> WeibullFitter:
+def weibull(
+    adata: AnnData,
+    duration_col: str,
+    event_col: str,
+    *,
+    timeline: list[float] | None = None,
+    entry: str | None = None,
+    label: str | None = None,
+    alpha: float | None = None,
+    ci_labels: list[str] | None = None,
+    weights: list[float] | None = None,
+    fit_options: dict | None = None,
+) -> WeibullFitter:
     """Employ the Weibull model in univariate survival analysis to understand event occurrence dynamics.
 
     In contrast to the non-parametric Nelson-Aalen estimator, the Weibull model employs a parametric approach with shape and scale parameters,
@@ -434,6 +587,16 @@ def weibull(adata: AnnData, duration_col: str, event_col: str) -> WeibullFitter:
         duration_col: Name of the column in the AnnData objects that contains the subjects’ lifetimes.
         event_col: Name of the column in the AnnData object that contains the subjects’ death observation.
                    If left as None, assume all individuals are uncensored.
+                   adata: AnnData object with necessary columns `duration_col` and `event_col`.
+        timeline: Return the best estimate at the values in timelines (positively increasing)
+        entry: Relative time when a subject entered the study. This is useful for left-truncated (not left-censored) observations.
+               If None, all members of the population entered study when they were "born".
+        label: A string to name the column of the estimate.
+        alpha: The alpha value in the confidence intervals. Overrides the initializing alpha for this call to fit only.
+        ci_labels: Add custom column names to the generated confidence intervals as a length-2 list: [<lower-bound name>, <upper-bound name>] (default: <label>_lower_<1-alpha/2>).
+        weights: If providing a weighted dataset. For example, instead of providing every subject
+                 as a single element of `durations` and `event_observed`, one could weigh subject differently.
+        fit_options: Additional keyword arguments to pass into the estimator.
 
     Returns:
         Fitted WeibullFitter.
@@ -445,4 +608,17 @@ def weibull(adata: AnnData, duration_col: str, event_col: str) -> WeibullFitter:
         >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
         >>> wf = ep.tl.weibull(adata, "mort_day_censored", "censor_flg")
     """
-    return _univariate_model(adata, duration_col, event_col, WeibullFitter, accept_zero_duration=False)
+    return _univariate_model(
+        adata,
+        duration_col,
+        event_col,
+        WeibullFitter,
+        accept_zero_duration=False,
+        timeline=timeline,
+        entry=entry,
+        label=label,
+        alpha=alpha,
+        ci_labels=ci_labels,
+        weights=weights,
+        fit_options=fit_options,
+    )
