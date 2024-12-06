@@ -3,16 +3,20 @@ from __future__ import annotations
 from functools import singledispatch
 from typing import TYPE_CHECKING
 
-import dask.array as da
 import numpy as np
 import sklearn.preprocessing as sklearn_pp
 
 from ehrapy._compat import is_dask_array
 
 try:
+    import dask.array as da
     import dask_ml.preprocessing as daskml_pp
+
+    DASK_AVAILABLE = True
 except ImportError:
     daskml_pp = None
+    DASK_AVAILABLE = False
+
 
 from ehrapy.anndata.anndata_ext import (
     assert_numeric_vars,
@@ -81,9 +85,11 @@ def _(arr: np.ndarray, **kwargs):
     return sklearn_pp.StandardScaler(**kwargs).fit_transform
 
 
-@_scale_norm_function.register
-def _(arr: da.Array, **kwargs):
-    return daskml_pp.StandardScaler(**kwargs).fit_transform
+if DASK_AVAILABLE:
+
+    @_scale_norm_function.register
+    def _(arr: da.Array, **kwargs):
+        return daskml_pp.StandardScaler(**kwargs).fit_transform
 
 
 def scale_norm(
@@ -137,9 +143,11 @@ def _(arr: np.ndarray, **kwargs):
     return sklearn_pp.MinMaxScaler(**kwargs).fit_transform
 
 
-@_minmax_norm_function.register
-def _(arr: da.Array, **kwargs):
-    return daskml_pp.MinMaxScaler(**kwargs).fit_transform
+if DASK_AVAILABLE:
+
+    @_minmax_norm_function.register
+    def _(arr: da.Array, **kwargs):
+        return daskml_pp.MinMaxScaler(**kwargs).fit_transform
 
 
 def minmax_norm(
@@ -243,9 +251,11 @@ def _(arr: np.ndarray, **kwargs):
     return sklearn_pp.RobustScaler(**kwargs).fit_transform
 
 
-@_robust_scale_norm_function.register
-def _(arr: da.Array, **kwargs):
-    return daskml_pp.RobustScaler(**kwargs).fit_transform
+if DASK_AVAILABLE:
+
+    @_robust_scale_norm_function.register
+    def _(arr: da.Array, **kwargs):
+        return daskml_pp.RobustScaler(**kwargs).fit_transform
 
 
 def robust_scale_norm(
@@ -301,9 +311,11 @@ def _(arr: np.ndarray, **kwargs):
     return sklearn_pp.QuantileTransformer(**kwargs).fit_transform
 
 
-@_quantile_norm_function.register
-def _(arr: da.Array, **kwargs):
-    return daskml_pp.QuantileTransformer(**kwargs).fit_transform
+if DASK_AVAILABLE:
+
+    @_quantile_norm_function.register
+    def _(arr: da.Array, **kwargs):
+        return daskml_pp.QuantileTransformer(**kwargs).fit_transform
 
 
 def quantile_norm(
