@@ -26,6 +26,19 @@ def adata_mini():
 
 
 @pytest.fixture
+def adata_mini_integers_in_X():
+    adata = read_csv(
+        f"{TEST_DATA_PATH}/dataset1.csv",
+        columns_obs_only=["idx", "sys_bp_entry", "dia_bp_entry", "glucose", "weight", "disease", "station"],
+    )
+    # cast data in X to integers; pd.read generates floats generously, but want to test integer normalization
+    adata.X = adata.X.astype(np.int32)
+    ep.ad.infer_feature_types(adata)
+    ep.ad.replace_feature_types(adata, ["in_days"], "numeric")
+    return adata
+
+
+@pytest.fixture
 def adata_to_norm():
     obs_data = {"ID": ["Patient1", "Patient2", "Patient3"], "Age": [31, 94, 62]}
 
@@ -103,6 +116,27 @@ def test_norm_scale(array_type, adata_to_norm):
     assert np.allclose(adata_norm.X[:, 5], adata_to_norm_casted.X[:, 5], equal_nan=True)
 
 
+def test_norm_scale_integers(adata_mini_integers_in_X):
+    adata_norm = ep.pp.scale_norm(adata_mini_integers_in_X, copy=True)
+    in_days_norm = np.array(
+        [
+            [-0.4472136],
+            [0.4472136],
+            [-1.34164079],
+            [-0.4472136],
+            [-1.34164079],
+            [-0.4472136],
+            [0.4472136],
+            [1.34164079],
+            [2.23606798],
+            [-0.4472136],
+            [0.4472136],
+            [-0.4472136],
+        ]
+    )
+    assert np.allclose(adata_norm.X, in_days_norm)
+
+
 @pytest.mark.parametrize("array_type", norm_scale_unsupported_types)
 def test_norm_scale_notimplemented(array_type, adata_to_norm):
     adata_to_norm_casted = adata_to_norm.copy()
@@ -176,6 +210,12 @@ def test_norm_minmax(array_type, adata_to_norm):
     assert np.allclose(adata_norm.X[:, 5], adata_to_norm_casted.X[:, 5], equal_nan=True)
 
 
+def test_norm_minmax_integers(adata_mini_integers_in_X):
+    adata_norm = ep.pp.minmax_norm(adata_mini_integers_in_X, copy=True)
+    in_days_norm = np.array([[0.25], [0.5], [0.0], [0.25], [0.0], [0.25], [0.5], [0.75], [1.0], [0.25], [0.5], [0.25]])
+    assert np.allclose(adata_norm.X, in_days_norm)
+
+
 @pytest.mark.parametrize("array_type", ARRAY_TYPES)
 def test_norm_minmax_kwargs(array_type, adata_to_norm):
     adata_to_norm_casted = adata_to_norm.copy()
@@ -235,6 +275,12 @@ def test_norm_maxabs(array_type, adata_to_norm):
         assert np.allclose(adata_norm.X[:, 5], adata_to_norm_casted.X[:, 5], equal_nan=True)
 
 
+def test_norm_maxabs_integers(adata_mini_integers_in_X):
+    adata_norm = ep.pp.maxabs_norm(adata_mini_integers_in_X, copy=True)
+    in_days_norm = np.array([[0.25], [0.5], [0.0], [0.25], [0.0], [0.25], [0.5], [0.75], [1.0], [0.25], [0.5], [0.25]])
+    assert np.allclose(adata_norm.X, in_days_norm)
+
+
 @pytest.mark.parametrize("array_type", ARRAY_TYPES)
 def test_norm_maxabs_group(array_type, adata_mini):
     adata_mini_casted = adata_mini.copy()
@@ -288,6 +334,12 @@ def test_norm_robust_scale(array_type, adata_to_norm):
     assert np.allclose(adata_norm.X[:, 3], num1_norm)
     assert np.allclose(adata_norm.X[:, 4], num2_norm)
     assert np.allclose(adata_norm.X[:, 5], adata_to_norm_casted.X[:, 5], equal_nan=True)
+
+
+def test_norm_robust_scale_integers(adata_mini_integers_in_X):
+    adata_norm = ep.pp.robust_scale_norm(adata_mini_integers_in_X, copy=True)
+    in_days_norm = np.array([[0.0], [1.0], [-1.0], [0.0], [-1.0], [0.0], [1.0], [2.0], [3.0], [0.0], [1.0], [0.0]])
+    assert np.allclose(adata_norm.X, in_days_norm)
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES)
@@ -346,6 +398,27 @@ def test_norm_quantile_uniform(array_type, adata_to_norm):
     assert np.allclose(adata_norm.X[:, 3], num1_norm)
     assert np.allclose(adata_norm.X[:, 4], num2_norm)
     assert np.allclose(adata_norm.X[:, 5], adata_to_norm_casted.X[:, 5], equal_nan=True)
+
+
+def test_norm_quantile_integers(adata_mini_integers_in_X):
+    adata_norm = ep.pp.quantile_norm(adata_mini_integers_in_X, copy=True)
+    in_days_norm = np.array(
+        [
+            [0.36363636],
+            [0.72727273],
+            [0.0],
+            [0.36363636],
+            [0.0],
+            [0.36363636],
+            [0.72727273],
+            [0.90909091],
+            [1.0],
+            [0.36363636],
+            [0.72727273],
+            [0.36363636],
+        ]
+    )
+    assert np.allclose(adata_norm.X, in_days_norm)
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES)
@@ -407,6 +480,27 @@ def test_norm_power(array_type, adata_to_norm):
         assert np.allclose(adata_norm.X[:, 3], num1_norm, rtol=1.1)
         assert np.allclose(adata_norm.X[:, 4], num2_norm, rtol=1.1)
         assert np.allclose(adata_norm.X[:, 5], adata_to_norm_casted.X[:, 5], equal_nan=True)
+
+
+def test_norm_power_integers(adata_mini_integers_in_X):
+    adata_norm = ep.pp.power_norm(adata_mini_integers_in_X, copy=True)
+    in_days_norm = np.array(
+        [
+            [-0.31234142],
+            [0.58319338],
+            [-1.65324303],
+            [-0.31234142],
+            [-1.65324303],
+            [-0.31234142],
+            [0.58319338],
+            [1.27419965],
+            [1.8444134],
+            [-0.31234142],
+            [0.58319338],
+            [-0.31234142],
+        ]
+    )
+    assert np.allclose(adata_norm.X, in_days_norm)
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES)

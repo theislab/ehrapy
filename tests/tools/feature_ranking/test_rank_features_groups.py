@@ -323,15 +323,20 @@ def test_rank_features_groups_generates_outputs(field_to_rank):
     assert "log2foldchanges" not in adata.uns["rank_features_groups"]
     assert "pts" not in adata.uns["rank_features_groups"]
 
-    if field_to_rank == "layer" or field_to_rank == "obs":
+    if field_to_rank == "layer":
+        assert len(adata.uns["rank_features_groups"]["names"]) == 4
+        assert len(adata.uns["rank_features_groups"]["pvals"]) == 4
+        assert len(adata.uns["rank_features_groups"]["scores"]) == 4
+
+    elif field_to_rank == "obs":
         assert len(adata.uns["rank_features_groups"]["names"]) == 3  # It only captures the length of each group
         assert len(adata.uns["rank_features_groups"]["pvals"]) == 3
         assert len(adata.uns["rank_features_groups"]["scores"]) == 3
 
     elif field_to_rank == "layer_and_obs":
-        assert len(adata.uns["rank_features_groups"]["names"]) == 6  # It only captures the length of each group
-        assert len(adata.uns["rank_features_groups"]["pvals"]) == 6
-        assert len(adata.uns["rank_features_groups"]["scores"]) == 6
+        assert len(adata.uns["rank_features_groups"]["names"]) == 7  # It only captures the length of each group
+        assert len(adata.uns["rank_features_groups"]["pvals"]) == 7
+        assert len(adata.uns["rank_features_groups"]["scores"]) == 7
 
 
 def test_rank_features_groups_consistent_results():
@@ -396,7 +401,7 @@ def test_rank_features_group_column_to_rank():
     adata_copy = adata.copy()
 
     ep.tl.rank_features_groups(adata, groupby="disease", columns_to_rank="all")
-    assert len(adata.uns["rank_features_groups"]["names"]) == 2
+    assert len(adata.uns["rank_features_groups"]["names"]) == 3
 
     # want to check a "complete selection" works
     adata = adata_copy.copy()
