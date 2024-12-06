@@ -388,6 +388,9 @@ def set_numeric_vars(
 
     vars_idx = get_column_indices(adata, vars)
 
+    # if e.g. adata.X is of type int64, and values of dtype float64, the floats will be casted to int
+    adata.X = adata.X.astype(values.dtype)
+
     adata.X[:, vars_idx] = values
 
     return adata
