@@ -83,7 +83,7 @@ def _(arr: np.ndarray, **kwargs):
 
 @_scale_norm_function.register
 def _(arr: da.Array, **kwargs):
-    return sklearn_pp.StandardScaler(**kwargs).fit_transform
+    return daskml_pp.StandardScaler(**kwargs).fit_transform
 
 
 def scale_norm(
@@ -127,6 +127,21 @@ def scale_norm(
     )
 
 
+@singledispatch
+def _minmax_norm_function(arr):
+    raise NotImplementedError(f"minmax_norm does not support data to be of type {type(arr)}")
+
+
+@_minmax_norm_function.register
+def _(arr: np.ndarray, **kwargs):
+    return sklearn_pp.MinMaxScaler(**kwargs).fit_transform
+
+
+@_minmax_norm_function.register
+def _(arr: da.Array, **kwargs):
+    return daskml_pp.MinMaxScaler(**kwargs).fit_transform
+
+
 def minmax_norm(
     adata: AnnData,
     vars: str | Sequence[str] | None = None,
@@ -157,10 +172,7 @@ def minmax_norm(
         >>> adata_norm = ep.pp.minmax_norm(adata, copy=True)
     """
 
-    if is_dask_array(adata.X):
-        scale_func = daskml_pp.MinMaxScaler(**kwargs).fit_transform
-    else:
-        scale_func = sklearn_pp.MinMaxScaler(**kwargs).fit_transform
+    scale_func = _minmax_norm_function(adata.X, **kwargs)
 
     return _scale_func_group(
         adata=adata,
@@ -170,6 +182,16 @@ def minmax_norm(
         copy=copy,
         norm_name="minmax",
     )
+
+
+@singledispatch
+def _maxabs_norm_function(arr):
+    raise NotImplementedError(f"maxabs_norm does not support data to be of type {type(arr)}")
+
+
+@_maxabs_norm_function.register
+def _(arr: np.ndarray):
+    return sklearn_pp.MaxAbsScaler().fit_transform
 
 
 def maxabs_norm(
@@ -198,10 +220,8 @@ def maxabs_norm(
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.maxabs_norm(adata, copy=True)
     """
-    if is_dask_array(adata.X):
-        raise NotImplementedError("MaxAbsScaler is not implemented in dask_ml.")
-    else:
-        scale_func = sklearn_pp.MaxAbsScaler().fit_transform
+
+    scale_func = _maxabs_norm_function(adata.X)
 
     return _scale_func_group(
         adata=adata,
@@ -211,6 +231,21 @@ def maxabs_norm(
         copy=copy,
         norm_name="maxabs",
     )
+
+
+@singledispatch
+def _robust_scale_norm_function(arr, **kwargs):
+    raise NotImplementedError(f"robust_scale_norm does not support data to be of type {type(arr)}")
+
+
+@_robust_scale_norm_function.register
+def _(arr: np.ndarray, **kwargs):
+    return sklearn_pp.RobustScaler(**kwargs).fit_transform
+
+
+@_robust_scale_norm_function.register
+def _(arr: da.Array, **kwargs):
+    return daskml_pp.RobustScaler(**kwargs).fit_transform
 
 
 def robust_scale_norm(
@@ -243,10 +278,8 @@ def robust_scale_norm(
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.robust_scale_norm(adata, copy=True)
     """
-    if is_dask_array(adata.X):
-        scale_func = daskml_pp.RobustScaler(**kwargs).fit_transform
-    else:
-        scale_func = sklearn_pp.RobustScaler(**kwargs).fit_transform
+
+    scale_func = _robust_scale_norm_function(adata.X, **kwargs)
 
     return _scale_func_group(
         adata=adata,
@@ -256,6 +289,21 @@ def robust_scale_norm(
         copy=copy,
         norm_name="robust_scale",
     )
+
+
+@singledispatch
+def _quantile_norm_function(arr):
+    raise NotImplementedError(f"robust_scale_norm does not support data to be of type {type(arr)}")
+
+
+@_quantile_norm_function.register
+def _(arr: np.ndarray, **kwargs):
+    return sklearn_pp.QuantileTransformer(**kwargs).fit_transform
+
+
+@_quantile_norm_function.register
+def _(arr: da.Array, **kwargs):
+    return daskml_pp.QuantileTransformer(**kwargs).fit_transform
 
 
 def quantile_norm(
@@ -287,10 +335,8 @@ def quantile_norm(
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.quantile_norm(adata, copy=True)
     """
-    if is_dask_array(adata.X):
-        scale_func = daskml_pp.QuantileTransformer(**kwargs).fit_transform
-    else:
-        scale_func = sklearn_pp.QuantileTransformer(**kwargs).fit_transform
+
+    scale_func = _quantile_norm_function(adata.X, **kwargs)
 
     return _scale_func_group(
         adata=adata,
@@ -300,6 +346,16 @@ def quantile_norm(
         copy=copy,
         norm_name="quantile",
     )
+
+
+@singledispatch
+def _power_norm_function(arr, **kwargs):
+    raise NotImplementedError(f"power_norm does not support data to be of type {type(arr)}")
+
+
+@_power_norm_function.register
+def _(arr: np.ndarray, **kwargs):
+    return sklearn_pp.PowerTransformer(**kwargs).fit_transform
 
 
 def power_norm(
@@ -331,10 +387,8 @@ def power_norm(
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.power_norm(adata, copy=True)
     """
-    if is_dask_array(adata.X):
-        raise NotImplementedError("dask-ml has no PowerTransformer, this is only available in scikit-learn")
-    else:
-        scale_func = sklearn_pp.PowerTransformer(**kwargs).fit_transform
+
+    scale_func = _power_norm_function(adata.X, **kwargs)
 
     return _scale_func_group(
         adata=adata,

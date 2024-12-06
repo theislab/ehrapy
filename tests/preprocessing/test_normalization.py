@@ -89,19 +89,35 @@ def test_vars_checks(adata_to_norm):
         ep.pp.scale_norm(adata_to_norm, vars=["String1"])
 
 
-# TODO: where to list the supported types?
+# TODO: list the supported array types centrally?
 norm_scale_supported_types = [np.asarray, da.asarray]
 norm_scale_unsupported_types = [sparse.csc_matrix]
 
 
-# TODO: find consens for "minimal" test of ehrapy functions when make this casting test. vanilla settings, all defaults?
-# even test for value matchings?
-@pytest.mark.parametrize("array_type", norm_scale_supported_types)
-def test_norm_scale(array_type, adata_to_norm):
+# TODO: check this for each function, with just default settings?
+@pytest.mark.parametrize(
+    "array_type,expected_error",
+    [
+        (np.array, None),
+        (da.array, None),
+        (sparse.csr_matrix, NotImplementedError),
+    ],
+)
+def test_norm_scale_array_types(adata_to_norm, array_type, expected_error):
+    adata_to_norm_casted = adata_to_norm.copy()
+    adata_to_norm_casted.X = array_type(adata_to_norm_casted.X)
+    if expected_error:
+        with pytest.raises(expected_error):
+            ep.pp.scale_norm(adata_to_norm_casted)
+
+
+@pytest.mark.parametrize("array_type", [np.array, da.array])
+def test_norm_scale(adata_to_norm, array_type):
     """Test for the scaling normalization method."""
     warnings.filterwarnings("ignore")
     adata_to_norm_casted = adata_to_norm.copy()
     adata_to_norm_casted.X = array_type(adata_to_norm_casted.X)
+    ep.pp.scale_norm(adata_to_norm_casted)
 
     adata_norm = ep.pp.scale_norm(adata_to_norm, copy=True)
 
@@ -135,14 +151,6 @@ def test_norm_scale_integers(adata_mini_integers_in_X):
         ]
     )
     assert np.allclose(adata_norm.X, in_days_norm)
-
-
-@pytest.mark.parametrize("array_type", norm_scale_unsupported_types)
-def test_norm_scale_notimplemented(array_type, adata_to_norm):
-    adata_to_norm_casted = adata_to_norm.copy()
-    adata_to_norm_casted.X = array_type(adata_to_norm_casted.X)
-    with pytest.raises(NotImplementedError):
-        ep.pp.scale_norm(adata_to_norm_casted)
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES)
@@ -189,6 +197,23 @@ def test_norm_scale_group(array_type, adata_mini):
     assert np.allclose(adata_mini_norm.X[:, 0], adata_mini_casted.X[:, 0])
     assert np.allclose(adata_mini_norm.X[:, 1], col1_norm)
     assert np.allclose(adata_mini_norm.X[:, 2], col2_norm)
+
+
+@pytest.mark.parametrize(
+    "array_type,expected_error",
+    [
+        (np.array, None),
+        (da.array, None),
+        (sparse.csr_matrix, NotImplementedError),
+    ],
+)
+def test_norm_minmax_array_types(adata_to_norm, array_type, expected_error):
+    adata_to_norm_casted = adata_to_norm.copy()
+    print(adata_to_norm_casted.X)
+    adata_to_norm_casted.X = array_type(adata_to_norm_casted.X)
+    if expected_error:
+        with pytest.raises(expected_error):
+            ep.pp.minmax_norm(adata_to_norm_casted)
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES)
@@ -249,6 +274,24 @@ def test_norm_minmax_group(array_type, adata_mini):
     assert np.allclose(adata_mini_norm.X[:, 0], adata_mini_casted.X[:, 0])
     assert np.allclose(adata_mini_norm.X[:, 1], col1_norm)
     assert np.allclose(adata_mini_norm.X[:, 2], col2_norm)
+
+
+@pytest.mark.parametrize(
+    "array_type,expected_error",
+    [
+        (np.array, None),
+        (da.array, NotImplementedError),
+        (sparse.csr_matrix, NotImplementedError),
+    ],
+)
+def test_norm_maxabs_array_types(adata_to_norm, array_type, expected_error):
+    adata_to_norm_casted = adata_to_norm.copy()
+    adata_to_norm_casted.X = array_type(adata_to_norm_casted.X)
+    if expected_error:
+        with pytest.raises(expected_error):
+            ep.pp.maxabs_norm(adata_to_norm_casted)
+    else:
+        ep.pp.maxabs_norm(adata_to_norm_casted)
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES)
@@ -317,6 +360,22 @@ def test_norm_maxabs_group(array_type, adata_mini):
         assert np.allclose(adata_mini_norm.X[:, 2], col2_norm)
 
 
+@pytest.mark.parametrize(
+    "array_type,expected_error",
+    [
+        (np.array, None),
+        (da.array, None),
+        (sparse.csr_matrix, NotImplementedError),
+    ],
+)
+def test_norm_robust_scale_array_types(adata_to_norm, array_type, expected_error):
+    adata_to_norm_casted = adata_to_norm.copy()
+    adata_to_norm_casted.X = array_type(adata_to_norm_casted.X)
+    if expected_error:
+        with pytest.raises(expected_error):
+            ep.pp.robust_scale_norm(adata_to_norm_casted)
+
+
 @pytest.mark.parametrize("array_type", ARRAY_TYPES)
 def test_norm_robust_scale(array_type, adata_to_norm):
     """Test for the robust_scale normalization method."""
@@ -343,7 +402,7 @@ def test_norm_robust_scale_integers(adata_mini_integers_in_X):
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES)
-def test_norm_robust_scale_kwargs(array_type, adata_to_norm):
+def test_norm_robust_scale_kwargs(adata_to_norm, array_type):
     adata_to_norm_casted = adata_to_norm.copy()
     adata_to_norm_casted.X = array_type(adata_to_norm_casted.X)
 
@@ -378,6 +437,22 @@ def test_norm_robust_scale_group(array_type, adata_mini):
     assert np.allclose(adata_mini_norm.X[:, 0], adata_mini_casted.X[:, 0])
     assert np.allclose(adata_mini_norm.X[:, 1], col1_norm)
     assert np.allclose(adata_mini_norm.X[:, 2], col2_norm)
+
+
+@pytest.mark.parametrize(
+    "array_type,expected_error",
+    [
+        (np.array, None),
+        (da.array, None),
+        (sparse.csr_matrix, NotImplementedError),
+    ],
+)
+def test_norm_quantile_array_types(adata_to_norm, array_type, expected_error):
+    adata_to_norm_casted = adata_to_norm.copy()
+    adata_to_norm_casted.X = array_type(adata_to_norm_casted.X)
+    if expected_error:
+        with pytest.raises(expected_error):
+            ep.pp.quantile_norm(adata_to_norm_casted)
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES)
@@ -457,6 +532,22 @@ def test_norm_quantile_uniform_group(array_type, adata_mini):
     assert np.allclose(adata_mini_norm.X[:, 0], adata_mini_casted.X[:, 0])
     assert np.allclose(adata_mini_norm.X[:, 1], col1_norm)
     assert np.allclose(adata_mini_norm.X[:, 2], col2_norm)
+
+
+@pytest.mark.parametrize(
+    "array_type,expected_error",
+    [
+        (np.array, None),
+        (da.array, None),
+        (sparse.csr_matrix, NotImplementedError),
+    ],
+)
+def test_norm_power_array_types(adata_to_norm, array_type, expected_error):
+    adata_to_norm_casted = adata_to_norm.copy()
+    adata_to_norm_casted.X = array_type(adata_to_norm_casted.X)
+    if expected_error:
+        with pytest.raises(expected_error):
+            ep.pp.power_norm(adata_to_norm_casted)
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES)
@@ -571,6 +662,22 @@ def test_norm_power_group(array_type, adata_mini):
         assert np.allclose(adata_mini_norm.X[:, 0], adata_mini_casted.X[:, 0])
         assert np.allclose(adata_mini_norm.X[:, 1], col1_norm, rtol=1e-02, atol=1e-02)
         assert np.allclose(adata_mini_norm.X[:, 2], col2_norm, rtol=1e-02, atol=1e-02)
+
+
+@pytest.mark.parametrize(
+    "array_type,expected_error",
+    [
+        (np.array, None),
+        (da.array, None),
+        (sparse.csr_matrix, None),
+    ],
+)
+def test_norm_log_norm_array_types(adata_to_norm, array_type, expected_error):
+    adata_to_norm_casted = adata_to_norm.copy()
+    adata_to_norm_casted.X = array_type(adata_to_norm_casted.X)
+    if expected_error:
+        with pytest.raises(expected_error):
+            ep.pp.log_norm(adata_to_norm_casted)
 
 
 def test_norm_log1p(adata_to_norm):
