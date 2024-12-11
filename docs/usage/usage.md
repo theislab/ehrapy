@@ -226,7 +226,7 @@ In contrast to a preprocessing function, a tool usually adds an easily interpret
 
     tools.ols
     tools.glm
-    tools.kmf
+    tools.kaplan_meier
     tools.test_kmf_logrank
     tools.test_nested_f_statistic
     tools.cox_ph
@@ -368,7 +368,7 @@ Methods that extract and visualize tool-specific annotation in an AnnData object
     :nosignatures:
 
     plot.ols
-    plot.kmf
+    plot.kaplan_meier
 ```
 
 ### Causal Inference

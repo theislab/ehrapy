@@ -11,7 +11,9 @@ import ehrapy as ep
 from ehrapy.anndata._constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrapy.anndata.anndata_ext import (
     NotEncodedError,
+    _are_ndarrays_equal,
     _assert_encoded,
+    _is_val_missing,
     anndata_to_df,
     assert_numeric_vars,
     delete_from_obs,
@@ -160,6 +162,13 @@ def test_move_to_x(adata_move_obs_mix):
             index=[str(idx) for idx in range(5)],
         ).astype({"clinic_id": "float32", "name": "category"}),
     )
+
+
+def test_move_to_x_copy_x(adata_move_obs_mix):
+    move_to_obs(adata_move_obs_mix, ["name"], copy_obs=False)
+    obs_df = adata_move_obs_mix.obs.copy()
+    new_adata = move_to_x(adata_move_obs_mix, ["name"], copy_x=True)
+    assert_frame_equal(new_adata.obs, obs_df)
 
 
 def test_move_to_x_invalid_column_names(adata_move_obs_mix):
@@ -500,3 +509,17 @@ def test_set_numeric_vars(adata_strings_encoded):
 
     with pytest.raises(NotEncodedError, match=r"not yet been encoded"):
         set_numeric_vars(adata_strings, values)
+
+
+def test_are_ndarrays_equal(impute_num_adata):
+    impute_num_adata_copy = impute_num_adata.copy()
+    assert _are_ndarrays_equal(impute_num_adata.X, impute_num_adata_copy.X)
+    impute_num_adata_copy.X[0, 0] = 42.0
+    assert not _are_ndarrays_equal(impute_num_adata.X, impute_num_adata_copy.X)
+
+
+def test_is_val_missing(impute_num_adata):
+    assert np.array_equal(
+        _is_val_missing(impute_num_adata.X),
+        np.array([[False, False, True], [False, False, False], [True, False, False], [False, False, True]]),
+    )

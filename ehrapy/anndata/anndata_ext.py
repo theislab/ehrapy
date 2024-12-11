@@ -3,7 +3,7 @@ from __future__ import annotations
 import random
 from collections import OrderedDict
 from string import ascii_letters
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 import numpy as np
 import pandas as pd
@@ -252,13 +252,13 @@ def delete_from_obs(adata: AnnData, to_delete: list[str]) -> AnnData:
     return adata
 
 
-def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
+def move_to_x(adata: AnnData, to_x: list[str] | str, copy_x: bool = False) -> AnnData:
     """Move features from obs to X inplace.
 
     Args:
         adata: The AnnData object
         to_x: The columns to move to X
-        copy: Whether to return a copy or not
+        copy_x: The values are copied to X (and therefore kept in obs) instead of moved completely
 
     Returns:
         A new AnnData object with moved columns from obs to X. This should not be used for datetime columns currently.
@@ -292,7 +292,10 @@ def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
 
     if cols_not_in_x:
         new_adata = concat([adata, AnnData(adata.obs[cols_not_in_x])], axis=1)
-        new_adata.obs = adata.obs[adata.obs.columns[~adata.obs.columns.isin(cols_not_in_x)]]
+        if copy_x:
+            new_adata.obs = adata.obs
+        else:
+            new_adata.obs = adata.obs[adata.obs.columns[~adata.obs.columns.isin(cols_not_in_x)]]
 
         # AnnData's concat discards var if they don't match in their keys, so we need to create a new var
         created_var = pd.DataFrame(index=cols_not_in_x)
@@ -303,7 +306,7 @@ def move_to_x(adata: AnnData, to_x: list[str] | str) -> AnnData:
     return new_adata
 
 
-def _get_column_indices(adata: AnnData, col_names: str | Iterable[str]) -> list[int]:
+def get_column_indices(adata: AnnData, col_names: str | Iterable[str]) -> list[int]:
     """Fetches the column indices in X for a given list of column names
 
     Args:
@@ -383,7 +386,10 @@ def set_numeric_vars(
     if copy:
         adata = adata.copy()
 
-    vars_idx = _get_column_indices(adata, vars)
+    vars_idx = get_column_indices(adata, vars)
+
+    # if e.g. adata.X is of type int64, and values of dtype float64, the floats will be casted to int
+    adata.X = adata.X.astype(values.dtype)
 
     adata.X[:, vars_idx] = values
 
@@ -404,7 +410,7 @@ def _detect_binary_columns(df: pd.DataFrame, numerical_columns: list[str]) -> li
     for column in numerical_columns:
         # checking for float and int as well as NaNs (this is safe since checked columns are numericals only)
         # only columns that contain at least one 0 and one 1 are counted as binary (or 0.0/1.0)
-        if df[column].isin([0.0, 1.0, np.NaN, 0, 1]).all() and df[column].nunique() == 2:
+        if df[column].isin([0.0, 1.0, np.nan, 0, 1]).all() and df[column].nunique() == 2:
             binary_columns.append(column)
 
     return binary_columns
@@ -423,7 +429,7 @@ def _cast_obs_columns(obs: pd.DataFrame) -> pd.DataFrame:
     # type cast each non-numerical column to either bool (if possible) or category else
     obs[object_columns] = obs[object_columns].apply(
         lambda obs_name: obs_name.astype("category")
-        if not set(pd.unique(obs_name)).issubset({False, True, np.NaN})
+        if not set(pd.unique(obs_name)).issubset({False, True, np.nan})
         else obs_name.astype("bool"),
         axis=0,
     )
@@ -663,3 +669,49 @@ def get_rank_features_df(
 
 class NotEncodedError(AssertionError):
     pass
+
+
+def _are_ndarrays_equal(arr1: np.ndarray, arr2: np.ndarray) -> np.bool_:
+    """Check if two arrays are equal member-wise.
+
+    Note: Two NaN are considered equal.
+
+    Args:
+        arr1: First array to compare
+        arr2: Second array to compare
+
+    Returns:
+        True if the two arrays are equal member-wise
+    """
+    return np.all(np.equal(arr1, arr2, dtype=object) | ((arr1 != arr1) & (arr2 != arr2)))
+
+
+def _is_val_missing(data: np.ndarray) -> np.ndarray[Any, np.dtype[np.bool_]]:
+    """Check if values in a AnnData matrix are missing.
+
+    Args:
+        data: The AnnData matrix to check
+
+    Returns:
+        An array of bool representing the missingness of the original data, with the same shape
+    """
+    return np.isin(data, [None, ""]) | (data != data)
+
+
+def _to_dense_matrix(adata: AnnData, layer: str | None = None) -> np.ndarray:  # pragma: no cover
+    """Extract a layer from an AnnData object and convert it to a dense matrix if required.
+
+    Args:
+        adata: The AnnData where to extract the layer from.
+        layer: Name of the layer to extract. If omitted, X is considered.
+
+    Returns:
+        The layer as a dense matrix. If a conversion was required, this function returns a copy of the original layer,
+        othersize this function returns a reference.
+    """
+    from scipy.sparse import issparse
+
+    if layer is None:
+        return adata.X.toarray() if issparse(adata.X) else adata.X
+    else:
+        return adata.layers[layer].toarray() if issparse(adata.layers[layer]) else adata.layers[layer]

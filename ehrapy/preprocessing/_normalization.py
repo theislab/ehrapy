@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 import numpy as np
 import sklearn.preprocessing as sklearn_pp
@@ -13,14 +13,14 @@ except ImportError:
     daskml_pp = None
 
 from ehrapy.anndata.anndata_ext import (
-    _get_column_indices,
     assert_numeric_vars,
+    get_column_indices,
     get_numeric_vars,
     set_numeric_vars,
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Callable, Sequence
 
     import pandas as pd
     from anndata import AnnData
@@ -48,7 +48,7 @@ def _scale_func_group(
 
     adata = _prep_adata_norm(adata, copy)
 
-    var_idx = _get_column_indices(adata, vars)
+    var_idx = get_column_indices(adata, vars)
     var_values = np.take(adata.X, var_idx, axis=1)
 
     if group_key is None:
@@ -379,7 +379,7 @@ def log_norm(
             "or offset negative values with ep.pp.offset_negative_values()."
         )
 
-    var_idx = _get_column_indices(adata, vars)
+    var_idx = get_column_indices(adata, vars)
     var_values = np.take(adata.X, var_idx, axis=1)
 
     if offset == 1:

@@ -1,29 +1,34 @@
-from collections.abc import Iterable, Sequence
-from typing import Any, Literal, Optional, Union
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 
 import numpy as np
 import scanpy as sc
-from anndata import AnnData
-from leidenalg.VertexPartition import MutableVertexPartition
-from scipy.sparse import spmatrix
 
-from ehrapy.tools import _method_options
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Sequence
 
-AnyRandom = Union[int, np.random.RandomState, None]
+    from anndata import AnnData
+    from leidenalg.VertexPartition import MutableVertexPartition
+    from scipy.sparse import spmatrix
+
+    from ehrapy.tools import _method_options
+
+AnyRandom: TypeAlias = int | np.random.RandomState | None
 
 
 def tsne(
     adata: AnnData,
-    n_pcs: Optional[int] = None,
-    use_rep: Optional[str] = None,
-    perplexity: Union[float, int] = 30,
-    early_exaggeration: Union[float, int] = 12,
-    learning_rate: Union[float, int] = 1000,
+    n_pcs: int | None = None,
+    use_rep: str | None = None,
+    perplexity: float | int = 30,
+    early_exaggeration: float | int = 12,
+    learning_rate: float | int = 1000,
     random_state: AnyRandom = 0,
-    n_jobs: Optional[int] = None,
+    n_jobs: int | None = None,
     copy: bool = False,
     metric: str = "euclidean",
-) -> Optional[AnnData]:  # pragma: no cover
+) -> AnnData | None:  # pragma: no cover
     """Calculates t-SNE [Maaten08]_ [Amir13]_ [Pedregosa11]_.
 
     t-distributed stochastic neighborhood embedding (tSNE) [Maaten08]_ has been
@@ -83,18 +88,18 @@ def umap(
     min_dist: float = 0.5,
     spread: float = 1.0,
     n_components: int = 2,
-    maxiter: Optional[int] = None,
+    maxiter: int | None = None,
     alpha: float = 1.0,
     gamma: float = 1.0,
     negative_sample_rate: int = 5,
-    init_pos: Union[_method_options._InitPos, np.ndarray, None] = "spectral",
+    init_pos: _method_options._InitPos | np.ndarray | None = "spectral",
     random_state: AnyRandom = 0,
-    a: Optional[float] = None,
-    b: Optional[float] = None,
+    a: float | None = None,
+    b: float | None = None,
     copy: bool = False,
     method: Literal["umap", "rapids"] = "umap",
-    neighbors_key: Optional[str] = None,
-) -> Optional[AnnData]:  # pragma: no cover
+    neighbors_key: str | None = None,
+) -> AnnData | None:  # pragma: no cover
     """Embed the neighborhood graph using UMAP [McInnes18]_.
 
     UMAP (Uniform Manifold Approximation and Projection) is a manifold learning
@@ -186,17 +191,17 @@ def umap(
 def draw_graph(
     adata: AnnData,
     layout: _method_options._Layout = "fa",
-    init_pos: Union[str, bool, None] = None,
-    root: Optional[int] = None,
+    init_pos: str | bool | None = None,
+    root: int | None = None,
     random_state: AnyRandom = 0,
-    n_jobs: Optional[int] = None,
-    adjacency: Optional[spmatrix] = None,
-    key_added_ext: Optional[str] = None,
-    neighbors_key: Optional[str] = None,
-    obsp: Optional[str] = None,
+    n_jobs: int | None = None,
+    adjacency: spmatrix | None = None,
+    key_added_ext: str | None = None,
+    neighbors_key: str | None = None,
+    obsp: str | None = None,
     copy: bool = False,
     **kwds,
-) -> Optional[AnnData]:  # pragma: no cover
+) -> AnnData | None:  # pragma: no cover
     """Force-directed graph drawing [Islam11]_ [Jacomy14]_ [Chippada18]_.
 
     .. _fa2: https://github.com/bhargavchippada/forceatlas2
@@ -264,10 +269,10 @@ def draw_graph(
 def diffmap(
     adata: AnnData,
     n_comps: int = 15,
-    neighbors_key: Optional[str] = None,
+    neighbors_key: str | None = None,
     random_state: AnyRandom = 0,
     copy: bool = False,
-) -> Optional[AnnData]:  # pragma: no cover
+) -> AnnData | None:  # pragma: no cover
     """Diffusion Maps [Coifman05]_ [Haghverdi15]_ [Wolf18]_.
 
     Diffusion maps [Coifman05]_ has been proposed for visualizing single-cell
@@ -309,9 +314,9 @@ def diffmap(
 def embedding_density(
     adata: AnnData,
     basis: str = "umap",  # was positional before 1.4.5
-    groupby: Optional[str] = None,
-    key_added: Optional[str] = None,
-    components: Union[str, Sequence[str]] = None,
+    groupby: str | None = None,
+    key_added: str | None = None,
+    components: str | Sequence[str] = None,
 ) -> None:  # pragma: no cover
     """Calculate the density of observation in an embedding (per condition).
 
@@ -353,19 +358,19 @@ def embedding_density(
 def leiden(
     adata: AnnData,
     resolution: float = 1,
-    restrict_to: Optional[tuple[str, Sequence[str]]] = None,
+    restrict_to: tuple[str, Sequence[str]] | None = None,
     random_state: AnyRandom = 0,
     key_added: str = "leiden",
-    adjacency: Optional[spmatrix] = None,
+    adjacency: spmatrix | None = None,
     directed: bool = True,
     use_weights: bool = True,
     n_iterations: int = -1,
-    partition_type: Optional[type[MutableVertexPartition]] = None,
-    neighbors_key: Optional[str] = None,
-    obsp: Optional[str] = None,
+    partition_type: type[MutableVertexPartition] | None = None,
+    neighbors_key: str | None = None,
+    obsp: str | None = None,
     copy: bool = False,
     **partition_kwargs,
-) -> Optional[AnnData]:  # pragma: no cover
+) -> AnnData | None:  # pragma: no cover
     """Cluster observations into subgroups [Traag18]_.
 
     Cluster observations using the Leiden algorithm [Traag18]_,
@@ -429,15 +434,15 @@ def leiden(
 def dendrogram(
     adata: AnnData,
     groupby: str,
-    n_pcs: Optional[int] = None,
-    use_rep: Optional[str] = None,
-    var_names: Optional[Sequence[str]] = None,
+    n_pcs: int | None = None,
+    use_rep: str | None = None,
+    var_names: Sequence[str] | None = None,
     cor_method: str = "pearson",
     linkage_method: str = "complete",
     optimal_ordering: bool = False,
-    key_added: Optional[str] = None,
+    key_added: str | None = None,
     inplace: bool = True,
-) -> Optional[dict[str, Any]]:  # pragma: no cover
+) -> dict[str, Any] | None:  # pragma: no cover
     """Computes a hierarchical clustering for the given `groupby` categories.
 
     By default, the PCA representation is used unless `.X` has less than 50 variables.
@@ -505,9 +510,9 @@ def dpt(
     n_branchings: int = 0,
     min_group_size: float = 0.01,
     allow_kendall_tau_shift: bool = True,
-    neighbors_key: Optional[str] = None,
+    neighbors_key: str | None = None,
     copy: bool = False,
-) -> Optional[AnnData]:  # pragma: no cover
+) -> AnnData | None:  # pragma: no cover
     """Infer progression of observations through geodesic distance along the graph [Haghverdi16]_ [Wolf19]_.
 
     Reconstruct the progression of a biological process from snapshot
@@ -562,12 +567,12 @@ def dpt(
 
 def paga(
     adata: AnnData,
-    groups: Optional[str] = None,
+    groups: str | None = None,
     use_rna_velocity: bool = False,
     model: Literal["v1.2", "v1.0"] = "v1.2",
-    neighbors_key: Optional[str] = None,
+    neighbors_key: str | None = None,
     copy: bool = False,
-) -> Optional[AnnData]:  # pragma: no cover
+) -> AnnData | None:  # pragma: no cover
     """Mapping out the coarse-grained connectivity structures of complex manifolds [Wolf19]_.
 
     By quantifying the connectivity of partitions (groups, clusters),
@@ -626,13 +631,13 @@ def paga(
 def ingest(
     adata: AnnData,
     adata_ref: AnnData,
-    obs: Optional[Union[str, Iterable[str]]] = None,
-    embedding_method: Union[str, Iterable[str]] = ("umap", "pca"),
+    obs: str | Iterable[str] | None = None,
+    embedding_method: str | Iterable[str] = ("umap", "pca"),
     labeling_method: str = "knn",
-    neighbors_key: Optional[str] = None,
+    neighbors_key: str | None = None,
     inplace: bool = True,
     **kwargs,
-) -> Optional[AnnData]:  # pragma: no cover
+) -> AnnData | None:  # pragma: no cover
     """Map labels and embeddings from reference data to new data.
 
     Integrates embeddings and annotations of an `adata` with a reference dataset

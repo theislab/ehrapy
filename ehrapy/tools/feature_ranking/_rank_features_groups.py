@@ -107,7 +107,7 @@ def _save_rank_features_result(
     fields = (names, scores, pvals, pvals_adj, logfoldchanges, pts)
     field_names = ("names", "scores", "pvals", "pvals_adj", "logfoldchanges", "pts")
 
-    for values, key in zip(fields, field_names):
+    for values, key in zip(fields, field_names, strict=False):
         if values is None or not len(values):
             continue
 
@@ -139,7 +139,7 @@ def _get_groups_order(groups_subset, group_names, reference):
     """
     if groups_subset == "all":
         groups_order = group_names
-    elif isinstance(groups_subset, (str, int)):
+    elif isinstance(groups_subset, str | int):
         raise ValueError("Specify a sequence of groups")
     else:
         groups_order = list(groups_subset)

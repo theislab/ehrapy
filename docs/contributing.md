@@ -51,7 +51,7 @@ and [prettier][prettier-editors].
 ## Writing tests
 
 ```{note}
-Remember to first install the package with `pip install -e "[dev,test,docs]"`
+Remember to first install the package with `pip install -e ".[dev,test,docs]"`
 ```
 
 This package uses the [pytest][] for automated testing. Please [write tests][scanpy-test-docs] for every function added
