@@ -314,7 +314,7 @@ def coxph_forestplot(
     color: str = "k",
 ):
     """Plots a forest plot of the Cox Proportional Hazard model.
-    Inspired by the forest plot in the zEpid package in Python.
+    Inspired by `zepid.graphics.EffectMeasurePlot <https://readthedocs.org>`_ (zEpid Package, https://pypi.org/project/zepid/).
     Link: https://zepid.readthedocs.io/en/latest/Graphics.html#effect-measure-plots
 
     Args:
