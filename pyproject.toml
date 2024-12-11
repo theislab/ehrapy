@@ -99,7 +99,7 @@ docs = [
     "nbsphinx-link",
     "ipykernel",
     "ipython",
-    "ehrapy[dask,medcat]",
+    "ehrapy[dask]",
 ]
 test = [
     "ehrapy[dask]",
