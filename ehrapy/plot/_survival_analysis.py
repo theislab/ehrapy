@@ -381,7 +381,7 @@ def coxph_forestplot(
     mini = round(((pd.to_numeric(data["coef lower 95%"])).min() - 0.1), 1)  # setting x-axis minimum
 
     fig = plt.figure(figsize=fig_size)
-    gspec = gridspec.GridSpec(1, 6)  # sets up grid
+    gspec = gridspec.GridSpec(1, 6)
     plot = plt.subplot(gspec[0, 0:4])  # plot of data
     tabl = plt.subplot(gspec[0, 4:])  # table
     plot.set_ylim(-1, (len(data)))  # spacing out y-axis properly
