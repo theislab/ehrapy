@@ -28,10 +28,12 @@ def root_dir():
 def rng():
     return np.random.default_rng(seed=42)
 
+
 @pytest.fixture
 def mimic_2():
     adata = ep.dt.mimic_2()
     return adata
+
 
 @pytest.fixture
 def mimic_2_encoded():

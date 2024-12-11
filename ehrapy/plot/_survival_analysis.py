@@ -3,13 +3,12 @@ from __future__ import annotations
 import warnings
 from typing import TYPE_CHECKING
 
-from lifelines import CoxPHFitter
-from matplotlib import gridspec
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import numpy as np
-from numpy import ndarray
 import pandas as pd
+from matplotlib import gridspec
+from numpy import ndarray
 
 from ehrapy.plot import scatter
 
@@ -18,7 +17,7 @@ if TYPE_CHECKING:
     from xmlrpc.client import Boolean
 
     from anndata import AnnData
-    from lifelines import KaplanMeierFitter
+    from lifelines import CoxPHFitter, KaplanMeierFitter
     from matplotlib.axes import Axes
     from statsmodels.regression.linear_model import RegressionResults
 
@@ -297,29 +296,32 @@ def kaplan_meier(
 
     if not show:
         return ax
-      
+
     else:
         return None
 
-def coxph_forestplot(coxph: CoxPHFitter, 
-                    labels: list[str] | None = None,
-                    fig_size: tuple = (10, 10),
-                    t_adjuster: float = 0.1,
-                    ecolor: str = 'dimgray',
-                    size: int = 3,
-                    marker: str = 'o',
-                    decimal: int = 2,
-                    text_size: int = 12,
-                    color: str = 'k'):
+
+def coxph_forestplot(
+    coxph: CoxPHFitter,
+    labels: list[str] | None = None,
+    fig_size: tuple = (10, 10),
+    t_adjuster: float = 0.1,
+    ecolor: str = "dimgray",
+    size: int = 3,
+    marker: str = "o",
+    decimal: int = 2,
+    text_size: int = 12,
+    color: str = "k",
+):
     """Plots a forest plot of the Cox Proportional Hazard model.
-    Inspired by the forest plot in the zEpid package in Python. 
+    Inspired by the forest plot in the zEpid package in Python.
     Link: https://zepid.readthedocs.io/en/latest/Graphics.html#effect-measure-plots
 
     Args:
         coxph: Fitted CoxPHFitter object.
         labels: List of labels for each coefficient, default uses the index of the coxph.summary.
         fig_size: Width, height in inches.
-        t_adjuster: Adjust the table to the right. 
+        t_adjuster: Adjust the table to the right.
         ecolor: Color of the error bars.
         size: Size of the markers.
         marker: Marker style.
@@ -339,7 +341,7 @@ def coxph_forestplot(coxph: CoxPHFitter,
     """
 
     data = coxph.summary
-    auc_col = 'coef'
+    auc_col = "coef"
 
     if labels is None:
         labels = data.index
@@ -347,52 +349,80 @@ def coxph_forestplot(coxph: CoxPHFitter,
     ytick = []
     for i in range(len(data)):
         if not np.isnan(data[auc_col][i]):
-            if ((isinstance(data[auc_col][i], float)) & (isinstance(data['coef lower 95%'][i], float)) &
-                    (isinstance(data['coef upper 95%'][i], float))):
-                tval.append([round(data[auc_col][i], decimal), (
-                            '(' + str(round(data['coef lower 95%'][i], decimal)) + ', ' +
-                            str(round(data['coef upper 95%'][i], decimal)) + ')')])
+            if (
+                (isinstance(data[auc_col][i], float))
+                & (isinstance(data["coef lower 95%"][i], float))
+                & (isinstance(data["coef upper 95%"][i], float))
+            ):
+                tval.append(
+                    [
+                        round(data[auc_col][i], decimal),
+                        (
+                            "("
+                            + str(round(data["coef lower 95%"][i], decimal))
+                            + ", "
+                            + str(round(data["coef upper 95%"][i], decimal))
+                            + ")"
+                        ),
+                    ]
+                )
             else:
-                tval.append([data[auc_col][i], ('(' + str(data['coef lower 95%'][i]) + ', ' + str(data['coef upper 95%'][i]) + ')')])
+                tval.append(
+                    [
+                        data[auc_col][i],
+                        ("(" + str(data["coef lower 95%"][i]) + ", " + str(data["coef upper 95%"][i]) + ")"),
+                    ]
+                )
             ytick.append(i)
         else:
-            tval.append([' ', ' '])
+            tval.append([" ", " "])
             ytick.append(i)
 
-    maxi = round(((pd.to_numeric(data['coef upper 95%'])).max() + 0.1),2)  # setting x-axis maximum 
+    maxi = round(((pd.to_numeric(data["coef upper 95%"])).max() + 0.1), 2)  # setting x-axis maximum
 
-    mini = round(((pd.to_numeric(data['coef lower 95%'])).min() - 0.1), 1)  # setting x-axis minimum
-    
+    mini = round(((pd.to_numeric(data["coef lower 95%"])).min() - 0.1), 1)  # setting x-axis minimum
+
     fig = plt.figure(figsize=fig_size)
     gspec = gridspec.GridSpec(1, 6)  # sets up grid
     plot = plt.subplot(gspec[0, 0:4])  # plot of data
     tabl = plt.subplot(gspec[0, 4:])  # table
     plot.set_ylim(-1, (len(data)))  # spacing out y-axis properly
-    
-    plot.axvline(1, color='gray', zorder=1)
-    lower_diff = data[auc_col] - data['coef lower 95%']
-    upper_diff = data['coef upper 95%'] - data[auc_col]
-    plot.errorbar(data[auc_col], data.index, xerr=[lower_diff, upper_diff], marker='None', zorder=2, ecolor=ecolor, linewidth=0, elinewidth=1)
-    plot.scatter(data[auc_col], data.index, c=color, s=(size * 25), marker=marker, zorder=3, edgecolors='None')
-    plot.xaxis.set_ticks_position('bottom')
-    plot.yaxis.set_ticks_position('left')
+
+    plot.axvline(1, color="gray", zorder=1)
+    lower_diff = data[auc_col] - data["coef lower 95%"]
+    upper_diff = data["coef upper 95%"] - data[auc_col]
+    plot.errorbar(
+        data[auc_col],
+        data.index,
+        xerr=[lower_diff, upper_diff],
+        marker="None",
+        zorder=2,
+        ecolor=ecolor,
+        linewidth=0,
+        elinewidth=1,
+    )
+    plot.scatter(data[auc_col], data.index, c=color, s=(size * 25), marker=marker, zorder=3, edgecolors="None")
+    plot.xaxis.set_ticks_position("bottom")
+    plot.yaxis.set_ticks_position("left")
     plot.get_xaxis().set_major_formatter(ticker.ScalarFormatter())
     plot.get_xaxis().set_minor_formatter(ticker.NullFormatter())
     plot.set_yticks(ytick)
     plot.set_xlim([mini, maxi])
     plot.set_xticks([mini, 1, maxi])
     plot.set_xticklabels([mini, 1, maxi])
-    plot.set_yticklabels(labels) 
-    plot.tick_params(axis='y', labelsize=text_size)
-    plot.yaxis.set_ticks_position('none')
+    plot.set_yticklabels(labels)
+    plot.tick_params(axis="y", labelsize=text_size)
+    plot.yaxis.set_ticks_position("none")
     plot.invert_yaxis()  # invert y-axis to align values properly with table
-    tb = tabl.table(cellText=tval, cellLoc='center', loc='right', colLabels=[auc_col, '95% CI'], bbox=[0, t_adjuster, 1, 1])
-    tabl.axis('off')
+    tb = tabl.table(
+        cellText=tval, cellLoc="center", loc="right", colLabels=[auc_col, "95% CI"], bbox=[0, t_adjuster, 1, 1]
+    )
+    tabl.axis("off")
     tb.auto_set_font_size(False)
     tb.set_fontsize(text_size)
-    for _ , cell in tb.get_celld().items():
+    for _, cell in tb.get_celld().items():
         cell.set_linewidth(0)
     plot.spines["top"].set_visible(False)
     plot.spines["right"].set_visible(False)
     plot.spines["left"].set_visible(False)
-    return fig,  plot
+    return fig, plot
