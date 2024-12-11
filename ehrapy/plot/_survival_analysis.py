@@ -338,7 +338,6 @@ def coxph_forestplot(
         .. image:: /_static/docstring_previews/coxph_forestplot.png
 
     """
-
     data = coxph.summary
     auc_col = "coef"
 
