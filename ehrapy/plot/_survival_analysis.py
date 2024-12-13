@@ -13,7 +13,7 @@ from numpy import ndarray
 from ehrapy.plot import scatter
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Iterable, Sequence
     from xmlrpc.client import Boolean
 
     from anndata import AnnData
@@ -304,7 +304,7 @@ def kaplan_meier(
 def cox_ph_forestplot(
     cox_ph: CoxPHFitter,
     *,
-    labels: list[str] | None = None,
+    labels: Iterable[str] | None = None,
     fig_size: tuple = (10, 10),
     t_adjuster: float = 0.1,
     ecolor: str = "dimgray",
