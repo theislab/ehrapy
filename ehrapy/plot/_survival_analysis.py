@@ -352,21 +352,21 @@ def cox_ph_forestplot(
         labels = coxph_summary.index
     tval = []
     ytick = []
-    for i in range(len(coxph_summary)):
-        if not np.isnan(coxph_summary[auc_col][i]):
+    for row_index in range(len(coxph_summary)):
+        if not np.isnan(coxph_summary[auc_col][row_index]):
             if (
-                (isinstance(coxph_summary[auc_col][i], float))
-                & (isinstance(coxph_summary["coef lower 95%"][i], float))
-                & (isinstance(coxph_summary["coef upper 95%"][i], float))
+                (isinstance(coxph_summary[auc_col][row_index], float))
+                & (isinstance(coxph_summary["coef lower 95%"][row_index], float))
+                & (isinstance(coxph_summary["coef upper 95%"][row_index], float))
             ):
                 tval.append(
                     [
-                        round(coxph_summary[auc_col][i], decimal),
+                        round(coxph_summary[auc_col][row_index], decimal),
                         (
                             "("
-                            + str(round(coxph_summary["coef lower 95%"][i], decimal))
+                            + str(round(coxph_summary["coef lower 95%"][row_index], decimal))
                             + ", "
-                            + str(round(coxph_summary["coef upper 95%"][i], decimal))
+                            + str(round(coxph_summary["coef upper 95%"][row_index], decimal))
                             + ")"
                         ),
                     ]
@@ -374,20 +374,20 @@ def cox_ph_forestplot(
             else:
                 tval.append(
                     [
-                        coxph_summary[auc_col][i],
+                        coxph_summary[auc_col][row_index],
                         (
                             "("
-                            + str(coxph_summary["coef lower 95%"][i])
+                            + str(coxph_summary["coef lower 95%"][row_index])
                             + ", "
-                            + str(coxph_summary["coef upper 95%"][i])
+                            + str(coxph_summary["coef upper 95%"][row_index])
                             + ")"
                         ),
                     ]
                 )
-            ytick.append(i)
+            ytick.append(row_index)
         else:
             tval.append([" ", " "])
-            ytick.append(i)
+            ytick.append(row_index)
 
     x_axis_upper_bound = round(((pd.to_numeric(coxph_summary["coef upper 95%"])).max() + 0.1), 2)
 
