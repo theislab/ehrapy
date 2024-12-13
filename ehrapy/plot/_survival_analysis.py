@@ -313,6 +313,8 @@ def cox_ph_forestplot(
     decimal: int = 2,
     text_size: int = 12,
     color: str = "k",
+    show: bool = True,
+    title: str | None = None,
 ):
     """Generates a forest plot to visualize the coefficients and confidence intervals of a Cox Proportional Hazards model.
     The method requires a fitted CoxPHFitter object from the lifelines library.
@@ -330,6 +332,8 @@ def cox_ph_forestplot(
         decimal: Number of decimal places to display.
         text_size: Font size of the text.
         color: Color of the markers.
+        show: Show the plot, do not return axis.
+        title: Set the title of the plot.
 
     Examples:
         >>> import ehrapy as ep
@@ -389,7 +393,7 @@ def cox_ph_forestplot(
 
     x_axis_lower_bound = round(((pd.to_numeric(coxph_summary["coef lower 95%"])).min() - 0.1), 1)
 
-    fig = plt.figure(figsize=fig_size)
+    plt.figure(figsize=fig_size)
     gspec = gridspec.GridSpec(1, 6)
     plot = plt.subplot(gspec[0, 0:4])  # plot of data
     tabl = plt.subplot(gspec[0, 4:])  # table
@@ -434,4 +438,12 @@ def cox_ph_forestplot(
     plot.spines["top"].set_visible(False)
     plot.spines["right"].set_visible(False)
     plot.spines["left"].set_visible(False)
-    return fig, plot
+
+    if title:
+        plt.title(title)
+
+    if not show:
+        return plot
+
+    else:
+        return None
