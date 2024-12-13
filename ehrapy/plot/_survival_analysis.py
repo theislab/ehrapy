@@ -313,7 +313,7 @@ def cox_ph_forestplot(
     decimal: int = 2,
     text_size: int = 12,
     color: str = "k",
-    show: bool = True,
+    show: bool = None,
     title: str | None = None,
 ):
     """Generates a forest plot to visualize the coefficients and confidence intervals of a Cox Proportional Hazards model.
@@ -332,7 +332,7 @@ def cox_ph_forestplot(
         decimal: Number of decimal places to display.
         text_size: Font size of the text.
         color: Color of the markers.
-        show: Show the plot, do not return axis.
+        show: Show the plot, do not return figure and axis.
         title: Set the title of the plot.
 
     Examples:
@@ -393,7 +393,7 @@ def cox_ph_forestplot(
 
     x_axis_lower_bound = round(((pd.to_numeric(coxph_summary["coef lower 95%"])).min() - 0.1), 1)
 
-    plt.figure(figsize=fig_size)
+    fig = plt.figure(figsize=fig_size)
     gspec = gridspec.GridSpec(1, 6)
     plot = plt.subplot(gspec[0, 0:4])  # plot of data
     tabl = plt.subplot(gspec[0, 4:])  # table
@@ -443,7 +443,7 @@ def cox_ph_forestplot(
         plt.title(title)
 
     if not show:
-        return plot
+        return fig, plot
 
     else:
         return None
