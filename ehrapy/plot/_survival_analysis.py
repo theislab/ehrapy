@@ -370,7 +370,13 @@ def cox_ph_forestplot(
                 tval.append(
                     [
                         coxph_summary[auc_col][i],
-                        ("(" + str(coxph_summary["coef lower 95%"][i]) + ", " + str(coxph_summary["coef upper 95%"][i]) + ")"),
+                        (
+                            "("
+                            + str(coxph_summary["coef lower 95%"][i])
+                            + ", "
+                            + str(coxph_summary["coef upper 95%"][i])
+                            + ")"
+                        ),
                     ]
                 )
             ytick.append(i)
@@ -401,7 +407,9 @@ def cox_ph_forestplot(
         linewidth=0,
         elinewidth=1,
     )
-    plot.scatter(coxph_summary[auc_col], coxph_summary.index, c=color, s=(size * 25), marker=marker, zorder=3, edgecolors="None")
+    plot.scatter(
+        coxph_summary[auc_col], coxph_summary.index, c=color, s=(size * 25), marker=marker, zorder=3, edgecolors="None"
+    )
     plot.xaxis.set_ticks_position("bottom")
     plot.yaxis.set_ticks_position("left")
     plot.get_xaxis().set_major_formatter(ticker.ScalarFormatter())
