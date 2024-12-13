@@ -303,6 +303,7 @@ def kaplan_meier(
 
 def cox_ph_forestplot(
     cox_ph: CoxPHFitter,
+    *,
     labels: list[str] | None = None,
     fig_size: tuple = (10, 10),
     t_adjuster: float = 0.1,
