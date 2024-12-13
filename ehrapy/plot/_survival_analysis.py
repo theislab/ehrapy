@@ -313,7 +313,7 @@ def cox_ph_forestplot(
     text_size: int = 12,
     color: str = "k",
 ):
-    """Generates a forest plot to visualize the coefficients and confidence intervals of a Cox Proportional Hazards model. 
+    """Generates a forest plot to visualize the coefficients and confidence intervals of a Cox Proportional Hazards model.
     The method requires a fitted CoxPHFitter object from the lifelines library.
     Inspired by `zepid.graphics.EffectMeasurePlot <https://readthedocs.org>`_ (zEpid Package, https://pypi.org/project/zepid/).
 
@@ -342,7 +342,7 @@ def cox_ph_forestplot(
     # check that the coxph object is fitted
     if not cox_ph._fitted:
         raise ValueError("The CoxPHFitter object must be fitted")
-    
+
     data = cox_ph.summary
     auc_col = "coef"
 
