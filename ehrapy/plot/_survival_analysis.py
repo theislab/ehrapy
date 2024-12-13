@@ -301,8 +301,8 @@ def kaplan_meier(
         return None
 
 
-def coxph_forestplot(
-    coxph: CoxPHFitter,
+def cox_ph_forestplot(
+    cox_ph: CoxPHFitter,
     labels: list[str] | None = None,
     fig_size: tuple = (10, 10),
     t_adjuster: float = 0.1,
@@ -313,11 +313,12 @@ def coxph_forestplot(
     text_size: int = 12,
     color: str = "k",
 ):
-    """Plots a forest plot of the Cox Proportional Hazard model.
+    """Generates a forest plot to visualize the coefficients and confidence intervals of a Cox Proportional Hazards model. 
+    The method requires a fitted CoxPHFitter object from the lifelines library.
     Inspired by `zepid.graphics.EffectMeasurePlot <https://readthedocs.org>`_ (zEpid Package, https://pypi.org/project/zepid/).
 
     Args:
-        coxph: Fitted CoxPHFitter object.
+        coxph: Fitted CoxPHFitter object from the lifelines library.
         labels: List of labels for each coefficient, default uses the index of the coxph.summary.
         fig_size: Width, height in inches.
         t_adjuster: Adjust the table to the right.
@@ -332,13 +333,17 @@ def coxph_forestplot(
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=False)
         >>> adata_subset = adata[:, ["mort_day_censored", "censor_flg", "gender_num", "afib_flg", "day_icu_intime_num"]]
-        >>> coxph = ep.tl.coxph(adata_subset, event_col="censor_flg", duration_col="mort_day_censored")
-        >>> ep.pl.coxph_forestplot(coxph)
+        >>> coxph = ep.tl.cox_ph(adata_subset, event_col="censor_flg", duration_col="mort_day_censored")
+        >>> ep.pl.cox_ph_forestplot(coxph)
 
         .. image:: /_static/docstring_previews/coxph_forestplot.png
 
     """
-    data = coxph.summary
+    # check that the coxph object is fitted
+    if not cox_ph._fitted:
+        raise ValueError("The CoxPHFitter object must be fitted")
+    
+    data = cox_ph.summary
     auc_col = "coef"
 
     if labels is None:
