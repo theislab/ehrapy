@@ -339,10 +339,6 @@ def cox_ph_forestplot(
         .. image:: /_static/docstring_previews/coxph_forestplot.png
 
     """
-    # check that the coxph object is fitted
-    if not cox_ph._fitted:
-        raise ValueError("The CoxPHFitter object must be fitted")
-
     data = cox_ph.summary
     auc_col = "coef"
 
