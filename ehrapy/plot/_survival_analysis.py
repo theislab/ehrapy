@@ -315,6 +315,7 @@ def cox_ph_forestplot(
 ):
     """Generates a forest plot to visualize the coefficients and confidence intervals of a Cox Proportional Hazards model.
     The method requires a fitted CoxPHFitter object from the lifelines library.
+
     Inspired by `zepid.graphics.EffectMeasurePlot <https://readthedocs.org>`_ (zEpid Package, https://pypi.org/project/zepid/).
 
     Args:
