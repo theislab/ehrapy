@@ -1,13 +1,13 @@
 from pathlib import Path
 
-from ehrapy.plot import catplot
+import ehrapy as ep
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_IMAGE_PATH = f"{CURRENT_DIR}/_images"
 
 
 def test_catplot_vanilla(adata_mini, check_same_image):
-    fig = catplot(adata_mini, jitter=False)
+    fig = ep.pl.catplot(adata_mini, jitter=False)
 
     check_same_image(
         fig=fig,

@@ -4,17 +4,20 @@ import warnings
 from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import numpy as np
+import pandas as pd
+from matplotlib import gridspec
 from numpy import ndarray
 
 from ehrapy.plot import scatter
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Iterable, Sequence
     from xmlrpc.client import Boolean
 
     from anndata import AnnData
-    from lifelines import KaplanMeierFitter
+    from lifelines import CoxPHFitter, KaplanMeierFitter
     from matplotlib.axes import Axes
     from statsmodels.regression.linear_model import RegressionResults
 
@@ -293,5 +296,154 @@ def kaplan_meier(
 
     if not show:
         return ax
+
+    else:
+        return None
+
+
+def cox_ph_forestplot(
+    cox_ph: CoxPHFitter,
+    *,
+    labels: Iterable[str] | None = None,
+    fig_size: tuple = (10, 10),
+    t_adjuster: float = 0.1,
+    ecolor: str = "dimgray",
+    size: int = 3,
+    marker: str = "o",
+    decimal: int = 2,
+    text_size: int = 12,
+    color: str = "k",
+    show: bool = None,
+    title: str | None = None,
+):
+    """Generates a forest plot to visualize the coefficients and confidence intervals of a Cox Proportional Hazards model.
+    The method requires a fitted CoxPHFitter object from the lifelines library.
+
+    Inspired by `zepid.graphics.EffectMeasurePlot <https://readthedocs.org>`_ (zEpid Package, https://pypi.org/project/zepid/).
+
+    Args:
+        coxph: Fitted CoxPHFitter object from the lifelines library.
+        labels: List of labels for each coefficient, default uses the index of the coxph.summary.
+        fig_size: Width, height in inches.
+        t_adjuster: Adjust the table to the right.
+        ecolor: Color of the error bars.
+        size: Size of the markers.
+        marker: Marker style.
+        decimal: Number of decimal places to display.
+        text_size: Font size of the text.
+        color: Color of the markers.
+        show: Show the plot, do not return figure and axis.
+        title: Set the title of the plot.
+
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=False)
+        >>> adata_subset = adata[:, ["mort_day_censored", "censor_flg", "gender_num", "afib_flg", "day_icu_intime_num"]]
+        >>> coxph = ep.tl.cox_ph(adata_subset, event_col="censor_flg", duration_col="mort_day_censored")
+        >>> ep.pl.cox_ph_forestplot(coxph)
+
+        .. image:: /_static/docstring_previews/coxph_forestplot.png
+
+    """
+    coxph_summary = cox_ph.summary
+    auc_col = "coef"
+
+    if labels is None:
+        labels = coxph_summary.index
+    tval = []
+    ytick = []
+    for row_index in range(len(coxph_summary)):
+        if not np.isnan(coxph_summary[auc_col][row_index]):
+            if (
+                (isinstance(coxph_summary[auc_col][row_index], float))
+                & (isinstance(coxph_summary["coef lower 95%"][row_index], float))
+                & (isinstance(coxph_summary["coef upper 95%"][row_index], float))
+            ):
+                tval.append(
+                    [
+                        round(coxph_summary[auc_col][row_index], decimal),
+                        (
+                            "("
+                            + str(round(coxph_summary["coef lower 95%"][row_index], decimal))
+                            + ", "
+                            + str(round(coxph_summary["coef upper 95%"][row_index], decimal))
+                            + ")"
+                        ),
+                    ]
+                )
+            else:
+                tval.append(
+                    [
+                        coxph_summary[auc_col][row_index],
+                        (
+                            "("
+                            + str(coxph_summary["coef lower 95%"][row_index])
+                            + ", "
+                            + str(coxph_summary["coef upper 95%"][row_index])
+                            + ")"
+                        ),
+                    ]
+                )
+            ytick.append(row_index)
+        else:
+            tval.append([" ", " "])
+            ytick.append(row_index)
+
+    x_axis_upper_bound = round(((pd.to_numeric(coxph_summary["coef upper 95%"])).max() + 0.1), 2)
+
+    x_axis_lower_bound = round(((pd.to_numeric(coxph_summary["coef lower 95%"])).min() - 0.1), 1)
+
+    fig = plt.figure(figsize=fig_size)
+    gspec = gridspec.GridSpec(1, 6)
+    plot = plt.subplot(gspec[0, 0:4])  # plot of data
+    tabl = plt.subplot(gspec[0, 4:])  # table
+    plot.set_ylim(-1, (len(coxph_summary)))  # spacing out y-axis properly
+
+    plot.axvline(1, color="gray", zorder=1)
+    lower_diff = coxph_summary[auc_col] - coxph_summary["coef lower 95%"]
+    upper_diff = coxph_summary["coef upper 95%"] - coxph_summary[auc_col]
+    plot.errorbar(
+        coxph_summary[auc_col],
+        coxph_summary.index,
+        xerr=[lower_diff, upper_diff],
+        marker="None",
+        zorder=2,
+        ecolor=ecolor,
+        linewidth=0,
+        elinewidth=1,
+    )
+    plot.scatter(
+        coxph_summary[auc_col], coxph_summary.index, c=color, s=(size * 25), marker=marker, zorder=3, edgecolors="None"
+    )
+    plot.xaxis.set_ticks_position("bottom")
+    plot.yaxis.set_ticks_position("left")
+    plot.get_xaxis().set_major_formatter(ticker.ScalarFormatter())
+    plot.get_xaxis().set_minor_formatter(ticker.NullFormatter())
+    plot.set_yticks(ytick)
+    plot.set_xlim([x_axis_lower_bound, x_axis_upper_bound])
+    plot.set_xticks([x_axis_lower_bound, 1, x_axis_upper_bound])
+    plot.set_xticklabels([x_axis_lower_bound, 1, x_axis_upper_bound])
+    plot.set_yticklabels(labels)
+    plot.tick_params(axis="y", labelsize=text_size)
+    plot.yaxis.set_ticks_position("none")
+    plot.invert_yaxis()  # invert y-axis to align values properly with table
+    tb = tabl.table(
+        cellText=tval, cellLoc="center", loc="right", colLabels=[auc_col, "95% CI"], bbox=[0, t_adjuster, 1, 1]
+    )
+    tabl.axis("off")
+    tb.auto_set_font_size(False)
+    tb.set_fontsize(text_size)
+    for _, cell in tb.get_celld().items():
+        cell.set_linewidth(0)
+    plot.spines["top"].set_visible(False)
+    plot.spines["right"].set_visible(False)
+    plot.spines["left"].set_visible(False)
+
+    if title:
+        plt.title(title)
+
+    if not show:
+        return fig, plot
+
     else:
         return None
