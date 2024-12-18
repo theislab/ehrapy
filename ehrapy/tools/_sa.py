@@ -644,7 +644,8 @@ def log_logistic_aft(
         >>> adata = ep.dt.mimic_2(encoded=False)
         >>> # Flip 'censor_fl' because 0 = death and 1 = censored
         >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
-        >>> llf = ep.tl.log_logistic_aft(adata, "mort_day_censored", "censor_flg")
+        >>> adata = adata[:, ["mort_day_censored", "censor_flg"]]
+        >>> llf = ep.tl.log_logistic_aft(adata, duration_col="mort_day_censored", event_col="censor_flg")
     """
     df = _regression_model_data_frame_preparation(adata, duration_col, accept_zero_duration=False)
 
