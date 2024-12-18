@@ -92,7 +92,7 @@ class TestSA:
     def _sa_func_test(self, sa_function, sa_class, mimic_2_sa):
         adata, duration_col, event_col = mimic_2_sa
 
-        sa = sa_function(adata, duration_col, event_col)
+        sa = sa_function(adata, duration_col=duration_col, event_col=event_col)
         self._sa_function_assert(sa, sa_class)
 
     def test_kmf(self, mimic_2_sa):
