@@ -11,7 +11,7 @@ except ImportError:
 
 
 def _raise_array_type_not_implemented(func: Callable, type_: type) -> NotImplementedError:
-    return NotImplementedError(
+    raise NotImplementedError(
         f"{func.__name__} does not support array type {type_}. Must be of type {func.registry.keys()}."  # type: ignore
     )
 

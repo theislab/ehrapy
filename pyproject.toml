@@ -72,7 +72,7 @@ medcat = [
     "medcat",
 ]
 dask = [
-    "anndata[dask]",
+    "c[dask]",
     "dask-ml",
 ]
 dev = [
@@ -136,7 +136,8 @@ filterwarnings = [
     "ignore:`flavor='seurat_v3'` expects raw count data, but non-integers were found:UserWarning",
     "ignore:All-NaN slice encountered:RuntimeWarning",
     "ignore:Observation names are not unique. To make them unique, call `.obs_names_make_unique`.:UserWarning",
-    "ignore:Trying to modify attribute .var of view"
+    "ignore:Trying to modify attribute `.var` of view, initializing view as actual.:anndata.ImplicitModificationWarning",
+    "ignore:Transforming to str index.:anndata.ImplicitModificationWarning:"
 ]
 minversion = 6.0
 norecursedirs = [ '.*', 'build', 'dist', '*.egg', 'data', '__pycache__']
