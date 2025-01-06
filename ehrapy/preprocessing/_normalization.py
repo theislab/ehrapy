@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 import sklearn.preprocessing as sklearn_pp
 
-from ehrapy._compat import is_dask_array
+from ehrapy._compat import _raise_array_type_not_implemented
 
 try:
     import dask.array as da
@@ -77,7 +77,7 @@ def _scale_func_group(
 
 @singledispatch
 def _scale_norm_function(arr):
-    raise NotImplementedError(f"scale_norm does not support data to be of type {type(arr)}")
+    _raise_array_type_not_implemented(_scale_norm_function, type(arr))
 
 
 @_scale_norm_function.register
@@ -135,7 +135,7 @@ def scale_norm(
 
 @singledispatch
 def _minmax_norm_function(arr):
-    raise NotImplementedError(f"minmax_norm does not support data to be of type {type(arr)}")
+    _raise_array_type_not_implemented(_minmax_norm_function, type(arr))
 
 
 @_minmax_norm_function.register
@@ -194,7 +194,7 @@ def minmax_norm(
 
 @singledispatch
 def _maxabs_norm_function(arr):
-    raise NotImplementedError(f"maxabs_norm does not support data to be of type {type(arr)}")
+    _raise_array_type_not_implemented(_scale_norm_function, type(arr))
 
 
 @_maxabs_norm_function.register
@@ -243,7 +243,7 @@ def maxabs_norm(
 
 @singledispatch
 def _robust_scale_norm_function(arr, **kwargs):
-    raise NotImplementedError(f"robust_scale_norm does not support data to be of type {type(arr)}")
+    _raise_array_type_not_implemented(_robust_scale_norm_function, type(arr))
 
 
 @_robust_scale_norm_function.register
@@ -303,7 +303,7 @@ def robust_scale_norm(
 
 @singledispatch
 def _quantile_norm_function(arr):
-    raise NotImplementedError(f"robust_scale_norm does not support data to be of type {type(arr)}")
+    _raise_array_type_not_implemented(_quantile_norm_function, type(arr))
 
 
 @_quantile_norm_function.register
@@ -362,7 +362,7 @@ def quantile_norm(
 
 @singledispatch
 def _power_norm_function(arr, **kwargs):
-    raise NotImplementedError(f"power_norm does not support data to be of type {type(arr)}")
+    _raise_array_type_not_implemented(_power_norm_function, type(arr))
 
 
 @_power_norm_function.register

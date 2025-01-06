@@ -89,11 +89,6 @@ def test_vars_checks(adata_to_norm):
         ep.pp.scale_norm(adata_to_norm, vars=["String1"])
 
 
-# TODO: list the supported array types centrally?
-norm_scale_supported_types = [np.asarray, da.asarray]
-norm_scale_unsupported_types = [sparse.csc_matrix]
-
-
 # TODO: check this for each function, with just default settings?
 @pytest.mark.parametrize(
     "array_type,expected_error",
