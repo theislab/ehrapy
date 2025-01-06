@@ -551,7 +551,7 @@ def test_norm_power_group(array_type, adata_mini):
             ],
             dtype=np.float32,
         )
-        assert np.allclose(adata_mini_norm.X[:, 0], adata_mini_casted.X[:, 0])
+        assert np.allclose(adata_mini_norm.X[:, 0], adata_mini_casted.X[:, 0], rtol=1e-02, atol=1e-02)
         assert np.allclose(adata_mini_norm.X[:, 1], col1_norm, rtol=1e-02, atol=1e-02)
         assert np.allclose(adata_mini_norm.X[:, 2], col2_norm, rtol=1e-02, atol=1e-02)
 

@@ -4,7 +4,6 @@ import sys
 from datetime import datetime
 
 from rich import print
-from scanpy.logging import _versions_dependencies
 
 from ehrapy import __version__
 
