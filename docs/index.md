@@ -61,8 +61,8 @@ medRxiv 2023.12.11.23299816; doi: https://doi.org/10.1101/2023.12.11.23299816 ](
 
 # Indices and tables
 
-- {ref}`genindex`
-- {ref}`modindex`
-- {ref}`search`
+-   {ref}`genindex`
+-   {ref}`modindex`
+-   {ref}`search`
 
 [scanpy genome biology (2018)]: https://doi.org/10.1186/s13059-017-1382-0

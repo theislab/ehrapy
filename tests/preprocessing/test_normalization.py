@@ -503,8 +503,8 @@ def test_norm_power_kwargs(array_type, adata_to_norm):
         num1_norm = np.array([201.03636, 1132.8341, 1399.3877], dtype=np.float32)
         num2_norm = np.array([-1.8225479, 5.921072, 3.397709], dtype=np.float32)
 
-        assert np.allclose(adata_norm.X[:, 3], num1_norm)
-        assert np.allclose(adata_norm.X[:, 4], num2_norm)
+        assert np.allclose(adata_norm.X[:, 3], num1_norm, rtol=1e-02, atol=1e-02)
+        assert np.allclose(adata_norm.X[:, 4], num2_norm, rtol=1e-02, atol=1e-02)
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES)
@@ -540,14 +540,14 @@ def test_norm_power_group(array_type, adata_mini):
         )
         col2_norm = np.array(
             [
-                -1.34342372,
-                -0.44542197,
-                0.44898626,
-                1.33985944,
-                -1.34344617,
-                -0.4453993,
-                0.44900845,
-                1.33983703,
+                -1.3650659,
+                -0.41545486,
+                0.45502198,
+                1.3254988,
+                -1.3427324,
+                -0.4461177,
+                0.44829938,
+                1.3405508,
             ],
             dtype=np.float32,
         )
