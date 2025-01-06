@@ -42,10 +42,10 @@ def setup_binary_df_to_anndata() -> DataFrame:
     col2_val = ["another_str" + str(idx) for idx in range(100)]
     col3_val = [0 for _ in range(100)]
     col4_val = [1.0 for _ in range(100)]
-    col5_val = [0.0 if idx % 2 == 0 else np.NaN for idx in range(100)]
+    col5_val = [0.0 if idx % 2 == 0 else np.nan for idx in range(100)]
     col6_val = [idx % 2 for idx in range(100)]
     col7_val = [float(idx % 2) for idx in range(100)]
-    col8_val = [idx % 3 if idx % 3 in {0, 1} else np.NaN for idx in range(100)]
+    col8_val = [idx % 3 if idx % 3 in {0, 1} else np.nan for idx in range(100)]
     df = DataFrame(
         {
             "col1": col1_val,

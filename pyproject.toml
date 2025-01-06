@@ -46,7 +46,7 @@ classifiers = [
 ]
 
 dependencies = [
-    "session-info",
+    "session-info2",
     "lamin_utils",
     "rich",
     "scanpy[leiden]",
@@ -135,7 +135,8 @@ filterwarnings = [
     "ignore:X converted to numpy array with dtype object:UserWarning",
     "ignore:`flavor='seurat_v3'` expects raw count data, but non-integers were found:UserWarning",
     "ignore:All-NaN slice encountered:RuntimeWarning",
-    "ignore:Observation names are not unique. To make them unique, call `.obs_names_make_unique`.:UserWarning"
+    "ignore:Observation names are not unique. To make them unique, call `.obs_names_make_unique`.:UserWarning",
+    "ignore:Trying to modify attribute .var of view"
 ]
 minversion = 6.0
 norecursedirs = [ '.*', 'build', 'dist', '*.egg', 'data', '__pycache__']
