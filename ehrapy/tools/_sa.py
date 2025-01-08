@@ -358,32 +358,12 @@ def _regression_model_data_frame_preparation(adata: AnnData, duration_col: str, 
     return df
 
 
-def _regression_model_populate_adata(adata: AnnData, model_summary: pd.DataFrame, key_added_prefix: str = None):
-    if key_added_prefix is None:
-        key_added_prefix = ""
-    else:
-        key_added_prefix = key_added_prefix + "_"
-
-    full_results = pd.DataFrame(index=adata.var.index)
-
-    # Populate with CoxPH summary data
-    for key in model_summary.columns:
-        full_results[key_added_prefix + key] = model_summary[key]
-
-    # Add a boolean column indicating rows populated by this function
-    full_results[key_added_prefix + "cox_ph_populated"] = full_results.notna().any(axis=1)
-
-    # Assign results back to adata.var
-    for col in full_results.columns:
-        adata.var[col] = full_results[col]
-
-
 def cox_ph(
     adata: AnnData,
     duration_col: str,
     *,
     inplace: bool = True,
-    key_added_prefix: str | None = None,
+    uns_key: str = "cox_ph",
     alpha: float = 0.05,
     label: str | None = None,
     baseline_estimation_method: Literal["breslow", "spline", "piecewise"] = "breslow",
@@ -417,7 +397,7 @@ def cox_ph(
         event_col: The name of the column in anndata that contains the subjects’ death observation.
                    If left as None, assume all individuals are uncensored.
         inplace: Whether to modify the AnnData object in place.
-        key_added_prefix: Prefix to add to the column names in the AnnData object. An underscore will be added between the prefix and the column
+        uns_key: The key to use for the uns slot in the AnnData object.
         alpha: The alpha value in the confidence intervals.
         label: A string to name the column of the estimate.
         baseline_estimation_method: The method used to estimate the baseline hazard. Options are 'breslow', 'spline', and 'piecewise'.
@@ -477,7 +457,8 @@ def cox_ph(
 
     # Add the results to the AnnData object
     if inplace:
-        _regression_model_populate_adata(adata, cox_ph.summary, key_added_prefix)
+        summary = cox_ph.summary
+        adata.uns[uns_key] = summary
 
     return cox_ph
 
@@ -487,7 +468,7 @@ def weibull_aft(
     duration_col: str,
     *,
     inplace: bool = True,
-    key_added_prefix: str | None = None,
+    uns_key: str = "weibull_aft",
     alpha: float = 0.05,
     fit_intercept: bool = True,
     penalizer: float | np.ndarray = 0.0,
@@ -515,7 +496,7 @@ def weibull_aft(
         adata: AnnData object with necessary columns `duration_col` and `event_col`.
         duration_col: Name of the column in the AnnData objects that contains the subjects’ lifetimes.
         inplace: Whether to modify the AnnData object in place.
-        key_added_prefix: Prefix to add to the column names in the AnnData object. An underscore will be added between the prefix and the column name.
+        uns_key: The key to use for the uns slot in the AnnData object.
         alpha: The alpha value in the confidence intervals.
         fit_intercept: Whether to fit an intercept term in the model.
         penalizer: Attach a penalty to the size of the coefficients during regression. This improves stability of the estimates and controls for high correlation between covariates.
@@ -576,7 +557,8 @@ def weibull_aft(
 
     # Add the results to the AnnData object
     if inplace:
-        _regression_model_populate_adata(adata, weibull_aft.summary, key_added_prefix)
+        summary = weibull_aft.summary
+        adata.uns[uns_key] = summary
 
     return weibull_aft
 
@@ -586,7 +568,7 @@ def log_logistic_aft(
     duration_col: str,
     *,
     inplace: bool = True,
-    key_added_prefix: str | None = None,
+    uns_key: str = "log_logistic_aft",
     alpha: float = 0.05,
     fit_intercept: bool = True,
     penalizer: float | np.ndarray = 0.0,
@@ -613,7 +595,7 @@ def log_logistic_aft(
         adata: AnnData object with necessary columns `duration_col` and `event_col`.
         duration_col: Name of the column in the AnnData objects that contains the subjects’ lifetimes.
         inplace: Whether to modify the AnnData object in place.
-        key_added_prefix: Prefix to add to the column names in the AnnData object. An underscore will be added between the prefix and the column
+        uns_key: The key to use for the uns slot in the AnnData object.
         alpha: The alpha value in the confidence intervals.
          alpha: The alpha value in the confidence intervals.
         fit_intercept: Whether to fit an intercept term in the model.
@@ -673,7 +655,8 @@ def log_logistic_aft(
 
     # Add the results to the AnnData object
     if inplace:
-        _regression_model_populate_adata(adata, log_logistic_aft.summary, key_added_prefix)
+        summary = log_logistic_aft.summary
+        adata.uns[uns_key] = summary
 
     return log_logistic_aft
 
