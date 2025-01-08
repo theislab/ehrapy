@@ -217,9 +217,11 @@ def kaplan_meier(
         https://lifelines.readthedocs.io/en/latest/fitters/univariate/KaplanMeierFitter.html#module-lifelines.fitters.kaplan_meier_fitter
 
     Args:
-        adata: AnnData object with necessary columns `duration_col` and `event_col`.
-        duration_col: The name of the column in the AnnData objects that contains the subjects’ lifetimes.
-        event_col: The name of the column in anndata that contains the subjects’ death observation.
+        adata: AnnData object.
+        duration_col: The name of the column in the AnnData object that contains the subjects’ lifetimes.
+        event_col: The name of the column in the AnnData object that specifies whether the event has been observed, or the individual has been censored.
+            Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
+            If left `None`, all individuals are assumed to be uncensored.
         timeline: Return the best estimate at the values in timelines (positively increasing)
         entry: Relative time when a subject entered the study. This is useful for left-truncated (not left-censored) observations.
                If None, all members of the population entered study when they were "born".
@@ -361,6 +363,7 @@ def _regression_model_data_frame_preparation(adata: AnnData, duration_col: str, 
 def cox_ph(
     adata: AnnData,
     duration_col: str,
+    event_col: str = None,
     *,
     uns_key: str = "cox_ph",
     alpha: float = 0.05,
@@ -372,7 +375,6 @@ def cox_ph(
     n_baseline_knots: int = 4,
     knots: list[float] | None = None,
     breakpoints: list[float] | None = None,
-    event_col: str = None,
     weights_col: str | None = None,
     cluster_col: str | None = None,
     entry_col: str = None,
@@ -392,10 +394,11 @@ def cox_ph(
     See https://lifelines.readthedocs.io/en/latest/fitters/regression/CoxPHFitter.html
 
     Args:
-        adata: AnnData object with necessary columns `duration_col` and `event_col`.
+        adata: AnnData object.
         duration_col: The name of the column in the AnnData objects that contains the subjects’ lifetimes.
-        event_col: The name of the column in anndata that contains the subjects’ death observation.
-                   If left as None, assume all individuals are uncensored.
+        event_col: The name of the column in the AnnData object that specifies whether the event has been observed, or the individual has been censored.
+            Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
+            If left `None`, all individuals are assumed to be uncensored.
         uns_key: The key to use for the uns slot in the AnnData object.
         alpha: The alpha value in the confidence intervals.
         label: A string to name the column of the estimate.
@@ -406,7 +409,6 @@ def cox_ph(
         n_baseline_knots: Used when baseline_estimation_method="spline". Set the number of knots (interior & exterior) in the baseline hazard, which will be placed evenly along the time axis. Should be at least 2. Royston et. al, the authors of this model, suggest 4 to start, but any values between 2 and 8 are reasonable. If you need to customize the timestamps used to calculate the curve, use the knots parameter instead.
         knots: When baseline_estimation_method="spline", this allows customizing the points in the time axis for the baseline hazard curve. To use evenly-spaced points in time, the n_baseline_knots parameter can be employed instead.
         breakpoints: Used when baseline_estimation_method="piecewise". Set the positions of the baseline hazard breakpoints.
-        event_col: he name of the column in DataFrame that contains the subjects’ death observation. If left as None, assume all individuals are uncensored.
         weights_col: The name of the column in DataFrame that contains the weights for each subject.
         cluster_col: The name of the column in DataFrame that contains the cluster variable. Using this forces the sandwich estimator (robust variance estimator) to be used.
         entry_col: Column denoting when a subject entered the study, i.e. left-truncation.
@@ -454,7 +456,6 @@ def cox_ph(
         show_progress=show_progress,
     )
 
-    # Save the summary to the uns slot
     summary = cox_ph.summary
     adata.uns[uns_key] = summary
 
@@ -464,6 +465,7 @@ def cox_ph(
 def weibull_aft(
     adata: AnnData,
     duration_col: str,
+    event_col: str,
     *,
     uns_key: str = "weibull_aft",
     alpha: float = 0.05,
@@ -471,7 +473,6 @@ def weibull_aft(
     penalizer: float | np.ndarray = 0.0,
     l1_ratio: float = 0.0,
     model_ancillary: bool = True,
-    event_col: str | None = None,
     ancillary: bool | pd.DataFrame | str | None = None,
     show_progress: bool = False,
     weights_col: str | None = None,
@@ -492,16 +493,17 @@ def weibull_aft(
     See https://lifelines.readthedocs.io/en/latest/fitters/regression/WeibullAFTFitter.html
 
     Args:
-        adata: AnnData object with necessary columns `duration_col` and `event_col`.
+        adata: AnnData object.
         duration_col: Name of the column in the AnnData objects that contains the subjects’ lifetimes.
+        event_col: The name of the column in the AnnData object that specifies whether the event has been observed, or the individual has been censored.
+            Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
+            If left `None`, all individuals are assumed to be uncensored.
         uns_key: The key to use for the uns slot in the AnnData object.
         alpha: The alpha value in the confidence intervals.
         fit_intercept: Whether to fit an intercept term in the model.
         penalizer: Attach a penalty to the size of the coefficients during regression. This improves stability of the estimates and controls for high correlation between covariates.
         l1_ratio: Specify what ratio to assign to a L1 vs L2 penalty. Same as scikit-learn. See penalizer above.
         model_ancillary: set the model instance to always model the ancillary parameter with the supplied Dataframe. This is useful for grid-search optimization.
-        event_col: Name of the column in anndata that contains the subjects’ death observation.  1 if observed, 0 else (censored).
-                   If left as None, assume all individuals are uncensored.
         ancillary: Choose to model the ancillary parameters.
             If None or False, explicitly do not fit the ancillary parameters using any covariates.
             If True, model the ancillary parameters with the same covariates as ``df``.
@@ -553,7 +555,6 @@ def weibull_aft(
         fit_options=fit_options,
     )
 
-    # Save the summary to the uns slot
     summary = weibull_aft.summary
     adata.uns[uns_key] = summary
 
@@ -563,6 +564,7 @@ def weibull_aft(
 def log_logistic_aft(
     adata: AnnData,
     duration_col: str,
+    event_col: str | None = None,
     *,
     uns_key: str = "log_logistic_aft",
     alpha: float = 0.05,
@@ -570,7 +572,6 @@ def log_logistic_aft(
     penalizer: float | np.ndarray = 0.0,
     l1_ratio: float = 0.0,
     model_ancillary: bool = False,
-    event_col: str | None = None,
     ancillary: bool | pd.DataFrame | str | None = None,
     show_progress: bool = False,
     weights_col: str | None = None,
@@ -590,17 +591,17 @@ def log_logistic_aft(
     See https://lifelines.readthedocs.io/en/latest/fitters/regression/LogLogisticAFTFitter.html
 
     Args:
-        adata: AnnData object with necessary columns `duration_col` and `event_col`.
+        adata: AnnData object.
         duration_col: Name of the column in the AnnData objects that contains the subjects’ lifetimes.
+        event_col: The name of the column in the AnnData object that specifies whether the event has been observed, or the individual has been censored.
+            Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
+            If left `None`, all individuals are assumed to be uncensored.
         uns_key: The key to use for the uns slot in the AnnData object.
         alpha: The alpha value in the confidence intervals.
-         alpha: The alpha value in the confidence intervals.
         fit_intercept: Whether to fit an intercept term in the model.
         penalizer: Attach a penalty to the size of the coefficients during regression. This improves stability of the estimates and controls for high correlation between covariates.
         l1_ratio: Specify what ratio to assign to a L1 vs L2 penalty. Same as scikit-learn. See penalizer above.
         model_ancillary: set the model instance to always model the ancillary parameter with the supplied Dataframe. This is useful for grid-search optimization.
-        event_col: Name of the column in anndata that contains the subjects’ death observation.  1 if observed, 0 else (censored).
-                   If left as None, assume all individuals are uncensored.
         ancillary: Choose to model the ancillary parameters.
             If None or False, explicitly do not fit the ancillary parameters using any covariates.
             If True, model the ancillary parameters with the same covariates as ``df``.
@@ -650,7 +651,6 @@ def log_logistic_aft(
         fit_options=fit_options,
     )
 
-    # Save the summary to the uns slot
     summary = log_logistic_aft.summary
     adata.uns[uns_key] = summary
 
@@ -722,10 +722,11 @@ def nelson_aalen(
     See https://lifelines.readthedocs.io/en/latest/fitters/univariate/NelsonAalenFitter.html
 
     Args:
-        adata: AnnData object with necessary columns `duration_col` and `event_col`.
+        adata: AnnData object.
         duration_col: The name of the column in the AnnData objects that contains the subjects’ lifetimes.
-        event_col: The name of the column in anndata that contains the subjects’ death observation.
-                   If left as None, assume all individuals are uncensored.
+        event_col: The name of the column in the AnnData object that specifies whether the event has been observed, or the individual has been censored.
+            Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
+            If left `None`, all individuals are assumed to be uncensored.
         timeline: Return the best estimate at the values in timelines (positively increasing)
         entry: Relative time when a subject entered the study. This is useful for left-truncated (not left-censored) observations.
                If None, all members of the population entered study when they were "born".
@@ -790,11 +791,11 @@ def weibull(
     See https://lifelines.readthedocs.io/en/latest/fitters/univariate/WeibullFitter.html
 
     Args:
-        adata: AnnData object with necessary columns `duration_col` and `event_col`.
+        adata: AnnData object.
         duration_col: Name of the column in the AnnData objects that contains the subjects’ lifetimes.
-        event_col: Name of the column in the AnnData object that contains the subjects’ death observation.
-                   If left as None, assume all individuals are uncensored.
-                   adata: AnnData object with necessary columns `duration_col` and `event_col`.
+        event_col: The name of the column in the AnnData object that specifies whether the event has been observed, or the individual has been censored.
+            Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
+            If left `None`, all individuals are assumed to be uncensored.
         timeline: Return the best estimate at the values in timelines (positively increasing)
         entry: Relative time when a subject entered the study. This is useful for left-truncated (not left-censored) observations.
                If None, all members of the population entered study when they were "born".
