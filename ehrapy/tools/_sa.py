@@ -362,7 +362,6 @@ def cox_ph(
     adata: AnnData,
     duration_col: str,
     *,
-    inplace: bool = True,
     uns_key: str = "cox_ph",
     alpha: float = 0.05,
     label: str | None = None,
@@ -396,7 +395,6 @@ def cox_ph(
         duration_col: The name of the column in the AnnData objects that contains the subjects’ lifetimes.
         event_col: The name of the column in anndata that contains the subjects’ death observation.
                    If left as None, assume all individuals are uncensored.
-        inplace: Whether to modify the AnnData object in place.
         uns_key: The key to use for the uns slot in the AnnData object.
         alpha: The alpha value in the confidence intervals.
         label: A string to name the column of the estimate.
@@ -455,10 +453,9 @@ def cox_ph(
         show_progress=show_progress,
     )
 
-    # Add the results to the AnnData object
-    if inplace:
-        summary = cox_ph.summary
-        adata.uns[uns_key] = summary
+    # Save the summary to the uns slot
+    summary = cox_ph.summary
+    adata.uns[uns_key] = summary
 
     return cox_ph
 
@@ -467,7 +464,6 @@ def weibull_aft(
     adata: AnnData,
     duration_col: str,
     *,
-    inplace: bool = True,
     uns_key: str = "weibull_aft",
     alpha: float = 0.05,
     fit_intercept: bool = True,
@@ -495,7 +491,6 @@ def weibull_aft(
     Args:
         adata: AnnData object with necessary columns `duration_col` and `event_col`.
         duration_col: Name of the column in the AnnData objects that contains the subjects’ lifetimes.
-        inplace: Whether to modify the AnnData object in place.
         uns_key: The key to use for the uns slot in the AnnData object.
         alpha: The alpha value in the confidence intervals.
         fit_intercept: Whether to fit an intercept term in the model.
@@ -555,10 +550,9 @@ def weibull_aft(
         fit_options=fit_options,
     )
 
-    # Add the results to the AnnData object
-    if inplace:
-        summary = weibull_aft.summary
-        adata.uns[uns_key] = summary
+    # Save the summary to the uns slot
+    summary = weibull_aft.summary
+    adata.uns[uns_key] = summary
 
     return weibull_aft
 
@@ -567,7 +561,6 @@ def log_logistic_aft(
     adata: AnnData,
     duration_col: str,
     *,
-    inplace: bool = True,
     uns_key: str = "log_logistic_aft",
     alpha: float = 0.05,
     fit_intercept: bool = True,
@@ -594,7 +587,6 @@ def log_logistic_aft(
     Args:
         adata: AnnData object with necessary columns `duration_col` and `event_col`.
         duration_col: Name of the column in the AnnData objects that contains the subjects’ lifetimes.
-        inplace: Whether to modify the AnnData object in place.
         uns_key: The key to use for the uns slot in the AnnData object.
         alpha: The alpha value in the confidence intervals.
          alpha: The alpha value in the confidence intervals.
@@ -653,10 +645,9 @@ def log_logistic_aft(
         fit_options=fit_options,
     )
 
-    # Add the results to the AnnData object
-    if inplace:
-        summary = log_logistic_aft.summary
-        adata.uns[uns_key] = summary
+    # Save the summary to the uns slot
+    summary = log_logistic_aft.summary
+    adata.uns[uns_key] = summary
 
     return log_logistic_aft
 
