@@ -3,6 +3,7 @@ from __future__ import annotations
 import warnings
 from typing import TYPE_CHECKING, Literal
 
+import numpy as np  # noqa: TC002
 import pandas as pd
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
@@ -22,7 +23,6 @@ from ehrapy.anndata import anndata_to_df
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-    import numpy as np
     from anndata import AnnData
     from statsmodels.genmod.generalized_linear_model import GLMResultsWrapper
 
