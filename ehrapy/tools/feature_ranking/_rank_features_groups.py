@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, Literal
 
+import anndata as ad
 import numpy as np
 import pandas as pd
 import scanpy as sc
@@ -446,7 +447,7 @@ def rank_features_groups(
         X_to_keep = np.zeros((len(adata), 1))
         var_to_keep = pd.DataFrame({"dummy": [0]})
 
-    adata_minimal = sc.AnnData(
+    adata_minimal = ad.AnnData(
         X=X_to_keep,
         obs=adata.obs,
         var=var_to_keep,
