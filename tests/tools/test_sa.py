@@ -84,15 +84,23 @@ class TestSA:
         assert dataframe.iloc[1, 4] == 2
         assert pytest.approx(dataframe.iloc[1, 5], 0.1) == 0.103185
 
-    def _sa_function_assert(self, model, model_class):
+    def _sa_function_assert(self, model, model_class, adata=None):
         assert isinstance(model, model_class)
         assert len(model.durations) == 1776
         assert sum(model.event_observed) == 497
 
-    def _sa_func_test(self, sa_function, sa_class, mimic_2_sa):
-        adata, duration_col, event_col = mimic_2_sa
+        if adata is not None:
+            model_summary = adata.uns.get("test")
+            assert model_summary is not None
+            assert model_summary.equals(model.summary)
 
-        sa = sa_function(adata, duration_col=duration_col, event_col=event_col)
+    def _sa_func_test(self, sa_function, sa_class, mimic_2_sa, regression=False):
+        adata, duration_col, event_col = mimic_2_sa
+        if regression:
+            sa = sa_function(adata, duration_col=duration_col, event_col=event_col, uns_key="test")
+        else:
+            sa = sa_function(adata, duration_col=duration_col, event_col=event_col)
+
         self._sa_function_assert(sa, sa_class)
 
     def test_kmf(self, mimic_2_sa):
