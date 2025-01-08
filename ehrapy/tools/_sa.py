@@ -219,7 +219,7 @@ def kaplan_meier(
     Args:
         adata: AnnData object.
         duration_col: The name of the column in the AnnData object that contains the subjects’ lifetimes.
-        event_col: The name of the column in the AnnData object that specifies whether the event has been observed, or the individual has been censored.
+        event_col: The name of the column in the AnnData object that specifies whether the event has been observed, or censored.
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
             If left `None`, all individuals are assumed to be uncensored.
         timeline: Return the best estimate at the values in timelines (positively increasing)
@@ -396,7 +396,7 @@ def cox_ph(
     Args:
         adata: AnnData object.
         duration_col: The name of the column in the AnnData objects that contains the subjects’ lifetimes.
-        event_col: The name of the column in the AnnData object that specifies whether the event has been observed, or the individual has been censored.
+        event_col: The name of the column in the AnnData object that specifies whether the event has been observed, or censored.
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
             If left `None`, all individuals are assumed to be uncensored.
         uns_key: The key to use for the uns slot in the AnnData object.
@@ -495,7 +495,7 @@ def weibull_aft(
     Args:
         adata: AnnData object.
         duration_col: Name of the column in the AnnData objects that contains the subjects’ lifetimes.
-        event_col: The name of the column in the AnnData object that specifies whether the event has been observed, or the individual has been censored.
+        event_col: The name of the column in the AnnData object that specifies whether the event has been observed, or censored.
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
             If left `None`, all individuals are assumed to be uncensored.
         uns_key: The key to use for the uns slot in the AnnData object.
@@ -593,7 +593,7 @@ def log_logistic_aft(
     Args:
         adata: AnnData object.
         duration_col: Name of the column in the AnnData objects that contains the subjects’ lifetimes.
-        event_col: The name of the column in the AnnData object that specifies whether the event has been observed, or the individual has been censored.
+        event_col: The name of the column in the AnnData object that specifies whether the event has been observed, or censored.
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
             If left `None`, all individuals are assumed to be uncensored.
         uns_key: The key to use for the uns slot in the AnnData object.
@@ -724,7 +724,7 @@ def nelson_aalen(
     Args:
         adata: AnnData object.
         duration_col: The name of the column in the AnnData objects that contains the subjects’ lifetimes.
-        event_col: The name of the column in the AnnData object that specifies whether the event has been observed, or the individual has been censored.
+        event_col: The name of the column in the AnnData object that specifies whether the event has been observed, or censored.
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
             If left `None`, all individuals are assumed to be uncensored.
         timeline: Return the best estimate at the values in timelines (positively increasing)
@@ -793,7 +793,7 @@ def weibull(
     Args:
         adata: AnnData object.
         duration_col: Name of the column in the AnnData objects that contains the subjects’ lifetimes.
-        event_col: The name of the column in the AnnData object that specifies whether the event has been observed, or the individual has been censored.
+        event_col: The name of the column in the AnnData object that specifies whether the event has been observed, or censored.
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
             If left `None`, all individuals are assumed to be uncensored.
         timeline: Return the best estimate at the values in timelines (positively increasing)
