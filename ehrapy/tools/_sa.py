@@ -488,7 +488,7 @@ def weibull_aft(
     where the underlying assumption is that the logarithm of survival time follows a Weibull distribution.
     It models the survival time as an exponential function of the predictors, assuming a specific shape parameter
     for the distribution and allowing for accelerated or decelerated failure times based on the covariates.
-    The results will be stored in the uns slot of the AnnData object under the key 'weibull_aft' unless specified otherwise in the uns_key parameter.
+    The results will be stored in the `.uns` slot of the :class:`AnnData` object under the key 'weibull_aft' unless specified otherwise in the `uns_key` parameter.
 
     See https://lifelines.readthedocs.io/en/latest/fitters/regression/WeibullAFTFitter.html
 
