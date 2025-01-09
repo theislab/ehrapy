@@ -586,7 +586,7 @@ def log_logistic_aft(
     This model operates under the assumption that the logarithm of survival time adheres to a log-logistic distribution, offering a flexible framework for understanding the impact of covariates on survival times.
     By modeling survival time as a function of predictors, the Log-Logistic AFT model enables researchers to explore
     how specific factors influence the acceleration or deceleration of failure times, providing valuable insights into the underlying mechanisms driving event occurrence.
-    The results will be stored in the uns slot of the AnnData object under the key 'log_logistic_aft' unless specified otherwise in the uns_key parameter.
+    The results will be stored in the `.uns` slot of the :class:`AnnData` object under the key 'log_logistic_aft' unless specified otherwise in the `uns_key` parameter.
 
     See https://lifelines.readthedocs.io/en/latest/fitters/regression/LogLogisticAFTFitter.html
 
