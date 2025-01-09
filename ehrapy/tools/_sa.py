@@ -607,7 +607,7 @@ def log_logistic_aft(
             If True, model the ancillary parameters with the same covariates as ``df``.
             If DataFrame, provide covariates to model the ancillary parameters. Must be the same row count as ``df``.
             If str, should be a formula
-        show_progress: since the fitter is iterative, show convergence diagnostics. Useful if convergence is failing.
+        show_progress: Since the fitter is iterative, show convergence diagnostics. Useful if convergence is failing.
         weights_col: The name of the column in DataFrame that contains the weights for each subject.
         robust: Compute the robust errors using the Huber sandwich estimator, aka Wei-Lin estimate. This does not handle ties, so if there are high number of ties, results may significantly differ.
         initial_point: set the starting point for the iterative solver.
