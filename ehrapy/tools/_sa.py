@@ -601,7 +601,7 @@ def log_logistic_aft(
         fit_intercept: Whether to fit an intercept term in the model.
         penalizer: Attach a penalty to the size of the coefficients during regression. This improves stability of the estimates and controls for high correlation between covariates.
         l1_ratio: Specify what ratio to assign to a L1 vs L2 penalty. Same as scikit-learn. See penalizer above.
-        model_ancillary: set the model instance to always model the ancillary parameter with the supplied Dataframe. This is useful for grid-search optimization.
+        model_ancillary: Set the model instance to always model the ancillary parameter with the supplied Dataframe. This is useful for grid-search optimization.
         ancillary: Choose to model the ancillary parameters.
             If None or False, explicitly do not fit the ancillary parameters using any covariates.
             If True, model the ancillary parameters with the same covariates as ``df``.
