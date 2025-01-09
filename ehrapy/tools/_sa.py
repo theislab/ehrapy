@@ -389,7 +389,7 @@ def cox_ph(
 
     The Cox proportional hazards model (CoxPH) examines the relationship between the survival time of subjects and one or more predictor variables.
     It models the hazard rate as a product of a baseline hazard function and an exponential function of the predictors, assuming proportional hazards over time.
-    The results will be stored in the uns slot of the AnnData object under the key 'cox_ph' unless specified otherwise in the uns_key parameter.
+    The results will be stored in the `.uns` slot of the :class:`AnnData` object under the key 'cox_ph' unless specified otherwise in the `uns_key` parameter.
 
     See https://lifelines.readthedocs.io/en/latest/fitters/regression/CoxPHFitter.html
 
