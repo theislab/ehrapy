@@ -401,7 +401,7 @@ def cox_ph(
             If left `None`, all individuals are assumed to be uncensored.
         uns_key: The key to use for the uns slot in the AnnData object.
         alpha: The alpha value in the confidence intervals.
-        label: A string to name the column of the estimate.
+        label: The name of the column of the estimate.
         baseline_estimation_method: The method used to estimate the baseline hazard. Options are 'breslow', 'spline', and 'piecewise'.
         penalizer: Attach a penalty to the size of the coefficients during regression. This improves stability of the estimates and controls for high correlation between covariates.
         l1_ratio: Specify what ratio to assign to a L1 vs L2 penalty. Same as scikit-learn. See penalizer above.
