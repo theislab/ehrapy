@@ -414,7 +414,7 @@ def cox_ph(
         entry_col: Column denoting when a subject entered the study, i.e. left-truncation.
         robust: Compute the robust errors using the Huber sandwich estimator, aka Wei-Lin estimate. This does not handle ties, so if there are high number of ties, results may significantly differ.
         formula: an Wilkinson formula, like in R and statsmodels, for the right-hand-side. If left as None, all columns not assigned as durations, weights, etc. are used. Uses the library Formulaic for parsing.
-        batch_mode:  enabling batch_mode can be faster for datasets with a large number of ties. If left as None, lifelines will choose the best option.
+        batch_mode:  Enabling batch_mode can be faster for datasets with a large number of ties. If left as `None`, lifelines will choose the best option.
         show_progress: since the fitter is iterative, show convergence diagnostics. Useful if convergence is failing.
         initial_point: set the starting point for the iterative solver.
         fit_options: Additional keyword arguments to pass into the estimator.
