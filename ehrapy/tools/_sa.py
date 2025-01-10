@@ -224,7 +224,7 @@ def kaplan_meier(
         event_col: The name of the column in the AnnData object that specifies whether the event has been observed, or censored.
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
             If left `None`, all individuals are assumed to be uncensored.
-        uns_key: The key to use for the uns slot in the AnnData object.
+        uns_key: The key to use for the `.uns` slot in the AnnData object.
         timeline: Return the best estimate at the values in timelines (positively increasing)
         entry: Relative time when a subject entered the study. This is useful for left-truncated (not left-censored) observations.
                If None, all members of the population entered study when they were "born".
@@ -403,7 +403,7 @@ def cox_ph(
         event_col: The name of the column in the AnnData object that specifies whether the event has been observed, or censored.
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
             If left `None`, all individuals are assumed to be uncensored.
-        uns_key: The key to use for the uns slot in the AnnData object.
+        uns_key: The key to use for the `.uns` slot in the AnnData object.
         alpha: The alpha value in the confidence intervals.
         label: The name of the column of the estimate.
         baseline_estimation_method: The method used to estimate the baseline hazard. Options are 'breslow', 'spline', and 'piecewise'.
@@ -502,7 +502,7 @@ def weibull_aft(
         event_col: The name of the column in the AnnData object that specifies whether the event has been observed, or censored.
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
             If left `None`, all individuals are assumed to be uncensored.
-        uns_key: The key to use for the uns slot in the AnnData object.
+        uns_key: The key to use for the `.uns` slot in the AnnData object.
         alpha: The alpha value in the confidence intervals.
         fit_intercept: Whether to fit an intercept term in the model.
         penalizer: Attach a penalty to the size of the coefficients during regression. This improves stability of the estimates and controls for high correlation between covariates.
@@ -600,7 +600,7 @@ def log_logistic_aft(
         event_col: The name of the column in the AnnData object that specifies whether the event has been observed, or censored.
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
             If left `None`, all individuals are assumed to be uncensored.
-        uns_key: The key to use for the uns slot in the AnnData object.
+        uns_key: The key to use for the `.uns` slot in the AnnData object.
         alpha: The alpha value in the confidence intervals.
         fit_intercept: Whether to fit an intercept term in the model.
         penalizer: Attach a penalty to the size of the coefficients during regression. This improves stability of the estimates and controls for high correlation between covariates.
@@ -739,7 +739,7 @@ def nelson_aalen(
         event_col: The name of the column in the AnnData object that specifies whether the event has been observed, or censored.
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
             If left `None`, all individuals are assumed to be uncensored.
-        uns_key: The key to use for the uns slot in the AnnData object.
+        uns_key: The key to use for the `.uns` slot in the AnnData object.
         timeline: Return the best estimate at the values in timelines (positively increasing)
         entry: Relative time when a subject entered the study. This is useful for left-truncated (not left-censored) observations.
                If None, all members of the population entered study when they were "born".
@@ -812,7 +812,7 @@ def weibull(
         event_col: The name of the column in the AnnData object that specifies whether the event has been observed, or censored.
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
             If left `None`, all individuals are assumed to be uncensored.
-        uns_key: The key to use for the uns slot in the AnnData object.
+        uns_key: The key to use for the `.uns` slot in the AnnData object.
         timeline: Return the best estimate at the values in timelines (positively increasing)
         entry: Relative time when a subject entered the study. This is useful for left-truncated (not left-censored) observations.
                If None, all members of the population entered study when they were "born".
