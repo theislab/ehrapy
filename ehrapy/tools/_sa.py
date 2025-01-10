@@ -199,6 +199,7 @@ def kaplan_meier(
     duration_col: str,
     event_col: str | None = None,
     *,
+    uns_key: str = "kaplan_meier",
     timeline: list[float] | None = None,
     entry: str | None = None,
     label: str | None = None,
@@ -212,6 +213,7 @@ def kaplan_meier(
 
     The Kaplan–Meier estimator, also known as the product limit estimator, is a non-parametric statistic used to estimate the survival function from lifetime data.
     In medical research, it is often used to measure the fraction of patients living for a certain amount of time after treatment.
+    The results will be stored in the `.uns` slot of the :class:`AnnData` object under the key 'kaplan_meier' unless specified otherwise in the `uns_key` parameter.
 
     See https://en.wikipedia.org/wiki/Kaplan%E2%80%93Meier_estimator
         https://lifelines.readthedocs.io/en/latest/fitters/univariate/KaplanMeierFitter.html#module-lifelines.fitters.kaplan_meier_fitter
@@ -222,6 +224,7 @@ def kaplan_meier(
         event_col: The name of the column in the AnnData object that specifies whether the event has been observed, or censored.
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
             If left `None`, all individuals are assumed to be uncensored.
+        uns_key: The key to use for the uns slot in the AnnData object.
         timeline: Return the best estimate at the values in timelines (positively increasing)
         entry: Relative time when a subject entered the study. This is useful for left-truncated (not left-censored) observations.
                If None, all members of the population entered study when they were "born".
@@ -249,6 +252,7 @@ def kaplan_meier(
         duration_col,
         event_col,
         KaplanMeierFitter,
+        uns_key,
         True,
         timeline,
         entry,
@@ -662,6 +666,7 @@ def _univariate_model(
     duration_col: str,
     event_col: str,
     model_class,
+    uns_key: str,
     accept_zero_duration=True,
     timeline: list[float] | None = None,
     entry: str | None = None,
@@ -694,6 +699,14 @@ def _univariate_model(
         fit_options=fit_options,
     )
 
+    if isinstance(model, NelsonAalenFitter) or isinstance(
+        model, KaplanMeierFitter
+    ):  # NelsonAalenFitter and KaplanMeierFitter have no summary attribute
+        summary = model.event_table
+    else:
+        summary = model.summary
+    adata.uns[uns_key] = summary
+
     return model
 
 
@@ -702,6 +715,7 @@ def nelson_aalen(
     duration_col: str,
     event_col: str | None = None,
     *,
+    uns_key: str = "nelson_aalen",
     timeline: list[float] | None = None,
     entry: str | None = None,
     label: str | None = None,
@@ -716,6 +730,7 @@ def nelson_aalen(
     The Nelson-Aalen estimator is a non-parametric method used in survival analysis to estimate the cumulative hazard function.
     This technique is particularly useful when dealing with censored data, as it accounts for the presence of individuals whose event times are unknown due to censoring.
     By estimating the cumulative hazard function, the Nelson-Aalen estimator allows researchers to assess the risk of an event occurring over time, providing valuable insights into the underlying dynamics of the survival process.
+    The results will be stored in the `.uns` slot of the :class:`AnnData` object under the key 'nelson_aalen' unless specified otherwise in the `uns_key` parameter.
     See https://lifelines.readthedocs.io/en/latest/fitters/univariate/NelsonAalenFitter.html
 
     Args:
@@ -724,6 +739,7 @@ def nelson_aalen(
         event_col: The name of the column in the AnnData object that specifies whether the event has been observed, or censored.
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
             If left `None`, all individuals are assumed to be uncensored.
+        uns_key: The key to use for the uns slot in the AnnData object.
         timeline: Return the best estimate at the values in timelines (positively increasing)
         entry: Relative time when a subject entered the study. This is useful for left-truncated (not left-censored) observations.
                If None, all members of the population entered study when they were "born".
@@ -752,7 +768,8 @@ def nelson_aalen(
         duration_col,
         event_col,
         NelsonAalenFitter,
-        True,
+        uns_key=uns_key,
+        accept_zero_duration=True,
         timeline=timeline,
         entry=entry,
         label=label,
@@ -769,6 +786,7 @@ def weibull(
     duration_col: str,
     event_col: str,
     *,
+    uns_key: str = "weibull",
     timeline: list[float] | None = None,
     entry: str | None = None,
     label: str | None = None,
@@ -785,6 +803,7 @@ def weibull(
     By fitting the Weibull model to censored survival data, researchers can estimate these parameters and gain insights
     into the hazard rate over time, facilitating comparisons between different groups or treatments.
     This method provides a comprehensive framework for examining survival data and offers valuable insights into the factors influencing event occurrence dynamics.
+    The results will be stored in the `.uns` slot of the :class:`AnnData` object under the key 'weibull' unless specified otherwise in the `uns_key` parameter.
     See https://lifelines.readthedocs.io/en/latest/fitters/univariate/WeibullFitter.html
 
     Args:
@@ -793,6 +812,7 @@ def weibull(
         event_col: The name of the column in the AnnData object that specifies whether the event has been observed, or censored.
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
             If left `None`, all individuals are assumed to be uncensored.
+        uns_key: The key to use for the uns slot in the AnnData object.
         timeline: Return the best estimate at the values in timelines (positively increasing)
         entry: Relative time when a subject entered the study. This is useful for left-truncated (not left-censored) observations.
                If None, all members of the population entered study when they were "born".
@@ -818,6 +838,7 @@ def weibull(
         duration_col,
         event_col,
         WeibullFitter,
+        uns_key=uns_key,
         accept_zero_duration=False,
         timeline=timeline,
         entry=entry,

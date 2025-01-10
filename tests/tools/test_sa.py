@@ -89,17 +89,14 @@ class TestSA:
         assert len(model.durations) == 1776
         assert sum(model.event_observed) == 497
 
-        if adata is not None:
+        if adata is not None:  # doing it disway, due to legacy kmf function
             model_summary = adata.uns.get("test")
             assert model_summary is not None
             assert model_summary.equals(model.summary)
 
-    def _sa_func_test(self, sa_function, sa_class, mimic_2_sa, regression=False):
+    def _sa_func_test(self, sa_function, sa_class, mimic_2_sa):
         adata, duration_col, event_col = mimic_2_sa
-        if regression:
-            sa = sa_function(adata, duration_col=duration_col, event_col=event_col, uns_key="test")
-        else:
-            sa = sa_function(adata, duration_col=duration_col, event_col=event_col)
+        sa = sa_function(adata, duration_col=duration_col, event_col=event_col, uns_key="test")
 
         self._sa_function_assert(sa, sa_class)
 
