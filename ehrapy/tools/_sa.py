@@ -349,7 +349,7 @@ def anova_glm(result_1: GLMResultsWrapper, result_2: GLMResultsWrapper, formula_
     return dataframe
 
 
-def _regression_model_data_frame_preparation(adata: AnnData, duration_col: str, accept_zero_duration=True):
+def _build_model_input_dataframe(adata: AnnData, duration_col: str, accept_zero_duration=True):
     """Convenience function for regression models."""
     df = anndata_to_df(adata)
     df = df.dropna()
@@ -429,7 +429,7 @@ def cox_ph(
         >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
         >>> cph = ep.tl.cox_ph(adata, "mort_day_censored", "censor_flg")
     """
-    df = _regression_model_data_frame_preparation(adata, duration_col)
+    df = _build_model_input_dataframe(adata, duration_col)
     cox_ph = CoxPHFitter(
         alpha=alpha,
         label=label,
@@ -531,7 +531,7 @@ def weibull_aft(
         >>> aft.print_summary()
     """
 
-    df = _regression_model_data_frame_preparation(adata, duration_col, accept_zero_duration=False)
+    df = _build_model_input_dataframe(adata, duration_col, accept_zero_duration=False)
 
     weibull_aft = WeibullAFTFitter(
         alpha=alpha,
@@ -627,7 +627,7 @@ def log_logistic_aft(
         >>> adata = adata[:, ["mort_day_censored", "censor_flg"]]
         >>> llf = ep.tl.log_logistic_aft(adata, duration_col="mort_day_censored", event_col="censor_flg")
     """
-    df = _regression_model_data_frame_preparation(adata, duration_col, accept_zero_duration=False)
+    df = _build_model_input_dataframe(adata, duration_col, accept_zero_duration=False)
 
     log_logistic_aft = LogLogisticAFTFitter(
         alpha=alpha,
@@ -673,10 +673,7 @@ def _univariate_model(
     censoring: Literal["right", "left"] = "right",
 ):
     """Convenience function for univariate models."""
-    df = anndata_to_df(adata)
-
-    if not accept_zero_duration:
-        df.loc[df[duration_col] == 0, duration_col] += 1e-5
+    df = _build_model_input_dataframe(adata, duration_col, accept_zero_duration)
     T = df[duration_col]
     E = df[event_col]
 
