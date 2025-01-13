@@ -200,9 +200,9 @@ def test_qc_lab_measurements_multiple_measurements():
 def test_mcar_test_method_output_types(mar_adata, method, expected_output_type):
     """Tests if mcar_test returns the correct output type for different methods."""
     output = mcar_test(mar_adata, method=method)
-    assert isinstance(
-        output, expected_output_type
-    ), f"Output type for method '{method}' should be {expected_output_type}, got {type(output)} instead."
+    assert isinstance(output, expected_output_type), (
+        f"Output type for method '{method}' should be {expected_output_type}, got {type(output)} instead."
+    )
 
 
 def test_mar_data_identification(mar_adata):
