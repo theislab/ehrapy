@@ -113,7 +113,7 @@ def infer_feature_types(
 
     if verbose:
         logger.warning(
-            f"{'Features' if len(uncertain_features) >1 else 'Feature'} {str(uncertain_features)[1:-1]} {'were' if len(uncertain_features) >1 else 'was'} detected as categorical features stored numerically."
+            f"{'Features' if len(uncertain_features) > 1 else 'Feature'} {str(uncertain_features)[1:-1]} {'were' if len(uncertain_features) > 1 else 'was'} detected as categorical features stored numerically."
             f"Please verify and correct using `ep.ad.replace_feature_types` if necessary."
         )
 

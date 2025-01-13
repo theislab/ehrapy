@@ -144,7 +144,7 @@ class EhrapyConfig:  # pragma: no cover
         _type_check(file_format, "file_format_data", str)
         file_format_options = {"csv", "h5ad"}
         if file_format not in file_format_options:
-            raise ValueError(f"Cannot set file_format_data to {file_format}. " f"Must be one of {file_format_options}")
+            raise ValueError(f"Cannot set file_format_data to {file_format}. Must be one of {file_format_options}")
         self._file_format_data = file_format
 
     @property
@@ -237,7 +237,7 @@ class EhrapyConfig:  # pragma: no cover
     @cache_compression.setter
     def cache_compression(self, cache_compression: str | None):
         if cache_compression not in {"lzf", "gzip", None}:
-            raise ValueError(f"`cache_compression` ({cache_compression}) " "must be in {'lzf', 'gzip', None}")
+            raise ValueError(f"`cache_compression` ({cache_compression}) must be in {{'lzf', 'gzip', None}}")
         self._cache_compression = cache_compression
 
     @property
