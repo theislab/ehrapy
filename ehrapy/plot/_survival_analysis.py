@@ -327,7 +327,7 @@ def cox_ph_forestplot(
 
     Args:
         adata: :class:`~anndata.AnnData` object containing the summary table from the CoxPHFitter. This is stored in the `.uns` attribute, after fitting the model using :func:`~ehrapy.tl.cox_ph`.
-        uns_key: Key in `.uns` where :func:`~ehrapy.tools.cox_ph` function stores the summary table.
+        uns_key: Key in `.uns` where :func:`~ehrapy.tools.cox_ph` function stored the summary table. See argument `uns_key` in :func:`~ehrapy.tools.cox_ph`.
         labels: List of labels for each coefficient, default uses the index of the summary ta
         fig_size: Width, height in inches.
         t_adjuster: Adjust the table to the right.
