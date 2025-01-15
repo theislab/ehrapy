@@ -342,7 +342,7 @@ def cox_ph_forestplot(
         >>> adata = ep.dt.mimic_2(encoded=False)
         >>> adata_subset = adata[:, ["mort_day_censored", "censor_flg", "gender_num", "afib_flg", "day_icu_intime_num"]]
         >>> coxph = ep.tl.cox_ph(adata_subset, event_col="censor_flg", duration_col="mort_day_censored")
-        >>> ep.pl.cox_ph_forestplot(coxph)
+        >>> ep.pl.cox_ph_forestplot(adata_subset)
 
         .. image:: /_static/docstring_previews/coxph_forestplot.png
 
