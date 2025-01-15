@@ -346,7 +346,6 @@ def cox_ph_forestplot(
         .. image:: /_static/docstring_previews/coxph_forestplot.png
 
     """
-    # check if the key exists in the uns
     if uns_key not in adata.uns:
         raise ValueError(f"Key {uns_key} not found in adata.uns. Please provide a valid key.")
 
