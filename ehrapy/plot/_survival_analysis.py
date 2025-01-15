@@ -405,8 +405,8 @@ def cox_ph_forestplot(
 
     fig = plt.figure(figsize=fig_size)
     gspec = gridspec.GridSpec(1, 6)
-    plot = plt.subplot(gspec[0, 0:4])  # plot of data
-    tabl = plt.subplot(gspec[0, 4:])  # table
+    plot = plt.subplot(gspec[0, 0:4])
+    table = plt.subplot(gspec[0, 4:])
     plot.set_ylim(-1, (len(coxph_fitting_summary)))  # spacing out y-axis properly
 
     plot.axvline(1, color="gray", zorder=1)
@@ -422,6 +422,7 @@ def cox_ph_forestplot(
         linewidth=0,
         elinewidth=1,
     )
+    # plot markers
     plot.scatter(
         coxph_fitting_summary[auc_col],
         coxph_fitting_summary.index,
@@ -431,6 +432,7 @@ def cox_ph_forestplot(
         zorder=3,
         edgecolors="None",
     )
+    # plot settings
     plot.xaxis.set_ticks_position("bottom")
     plot.yaxis.set_ticks_position("left")
     plot.get_xaxis().set_major_formatter(ticker.ScalarFormatter())
@@ -443,14 +445,16 @@ def cox_ph_forestplot(
     plot.tick_params(axis="y", labelsize=text_size)
     plot.yaxis.set_ticks_position("none")
     plot.invert_yaxis()  # invert y-axis to align values properly with table
-    tb = tabl.table(
+    tb = table.table(
         cellText=tval, cellLoc="center", loc="right", colLabels=[auc_col, "95% CI"], bbox=[0, t_adjuster, 1, 1]
     )
-    tabl.axis("off")
+    table.axis("off")
     tb.auto_set_font_size(False)
     tb.set_fontsize(text_size)
     for _, cell in tb.get_celld().items():
         cell.set_linewidth(0)
+
+    # remove spines
     plot.spines["top"].set_visible(False)
     plot.spines["right"].set_visible(False)
     plot.spines["left"].set_visible(False)
