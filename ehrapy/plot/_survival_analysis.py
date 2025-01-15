@@ -302,8 +302,9 @@ def kaplan_meier(
 
 
 def cox_ph_forestplot(
-    cox_ph: CoxPHFitter,
+    adata: AnnData,
     *,
+    uns_key: str = "cox_ph",
     labels: Iterable[str] | None = None,
     fig_size: tuple = (10, 10),
     t_adjuster: float = 0.1,
@@ -322,7 +323,8 @@ def cox_ph_forestplot(
     Inspired by `zepid.graphics.EffectMeasurePlot <https://readthedocs.org>`_ (zEpid Package, https://pypi.org/project/zepid/).
 
     Args:
-        coxph: Fitted CoxPHFitter object from the lifelines library.
+        adata: :class:`~anndata.AnnData` object containing all observations in `.uns`.
+        uns_key: Key in `.uns` where the CoxPHFitter object is stored.
         labels: List of labels for each coefficient, default uses the index of the coxph.summary.
         fig_size: Width, height in inches.
         t_adjuster: Adjust the table to the right.
@@ -345,7 +347,11 @@ def cox_ph_forestplot(
         .. image:: /_static/docstring_previews/coxph_forestplot.png
 
     """
-    coxph_summary = cox_ph.summary
+    # check if the key exists in the uns
+    if uns_key not in adata.uns:
+        raise ValueError(f"Key {uns_key} not found in adata.uns. Please provide a valid key.")
+
+    coxph_summary = adata.uns[uns_key]
     auc_col = "coef"
 
     if labels is None:
