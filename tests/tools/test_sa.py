@@ -84,16 +84,26 @@ class TestSA:
         assert dataframe.iloc[1, 4] == 2
         assert pytest.approx(dataframe.iloc[1, 5], 0.1) == 0.103185
 
-    def _sa_function_assert(self, model, model_class):
+    def _sa_function_assert(self, model, model_class, adata=None):
         assert isinstance(model, model_class)
         assert len(model.durations) == 1776
         assert sum(model.event_observed) == 497
 
+        if adata is not None:  # doing it disway, due to legacy kmf function
+            model_summary = adata.uns.get("test")
+            assert model_summary is not None
+            if isinstance(model, KaplanMeierFitter) or isinstance(
+                model, NelsonAalenFitter
+            ):  # kmf and nelson_aalen have event_table
+                assert model_summary.equals(model.event_table)
+            else:
+                assert model_summary.equals(model.summary)
+
     def _sa_func_test(self, sa_function, sa_class, mimic_2_sa):
         adata, duration_col, event_col = mimic_2_sa
+        sa = sa_function(adata, duration_col=duration_col, event_col=event_col, uns_key="test")
 
-        sa = sa_function(adata, duration_col, event_col)
-        self._sa_function_assert(sa, sa_class)
+        self._sa_function_assert(sa, sa_class, adata)
 
     def test_kmf(self, mimic_2_sa):
         # check for deprecation warning

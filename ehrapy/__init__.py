@@ -2,7 +2,12 @@
 
 __author__ = "Lukas Heumos"
 __email__ = "lukas.heumos@posteo.net"
-__version__ = "0.9.0"
+__version__ = "0.12.0"
+
+import os
+
+# https://docs.scipy.org/doc/scipy/dev/api-dev/array_api.html
+os.environ["SCIPY_ARRAY_API"] = "1"
 
 from ehrapy._settings import EhrapyConfig, ehrapy_settings
 

@@ -51,10 +51,10 @@ pip install ehrapy[medcat]
 
 Available language models are
 
--   en_core_web_md (python -m spacy download en_core_web_md)
--   en-core-sci-sm (pip install <https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_core_sci_sm-0.4.0.tar.gz>)
--   en-core-sci-md (pip install <https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_core_sci_md-0.4.0.tar.gz>)
--   en-core-sci-lg (pip install <https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_core_sci_lg-0.4.0.tar.gz>)
+- en_core_web_md (python -m spacy download en_core_web_md)
+- en-core-sci-sm (pip install <https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_core_sci_sm-0.4.0.tar.gz>)
+- en-core-sci-md (pip install <https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_core_sci_md-0.4.0.tar.gz>)
+- en-core-sci-lg (pip install <https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_core_sci_lg-0.4.0.tar.gz>)
 
 [github repo]: https://github.com/theislab/ehrapy
 [pip]: https://pip.pypa.io

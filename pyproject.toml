@@ -4,7 +4,7 @@ requires = ["hatchling"]
 
 [project]
 name = "ehrapy"
-version = "0.11.0"
+version = "0.12.0"
 description = "Electronic Health Record Analysis with Python."
 readme = "README.md"
 requires-python = ">=3.10,<3.13"
@@ -46,7 +46,7 @@ classifiers = [
 ]
 
 dependencies = [
-    "session-info",
+    "session-info2",
     "lamin_utils",
     "rich",
     "scanpy[leiden]",
@@ -72,7 +72,7 @@ medcat = [
     "medcat",
 ]
 dask = [
-    "dask",
+    "anndata[dask]",
     "dask-ml",
 ]
 dev = [
@@ -99,7 +99,7 @@ docs = [
     "nbsphinx-link",
     "ipykernel",
     "ipython",
-    "ehrapy[dask,medcat]",
+    "ehrapy[dask]",
 ]
 test = [
     "ehrapy[dask]",
@@ -135,7 +135,9 @@ filterwarnings = [
     "ignore:X converted to numpy array with dtype object:UserWarning",
     "ignore:`flavor='seurat_v3'` expects raw count data, but non-integers were found:UserWarning",
     "ignore:All-NaN slice encountered:RuntimeWarning",
-    "ignore:Observation names are not unique. To make them unique, call `.obs_names_make_unique`.:UserWarning"
+    "ignore:Observation names are not unique. To make them unique, call `.obs_names_make_unique`.:UserWarning",
+    "ignore:Trying to modify attribute `.var` of view, initializing view as actual.:anndata.ImplicitModificationWarning",
+    "ignore:Transforming to str index.:anndata.ImplicitModificationWarning:"
 ]
 minversion = 6.0
 norecursedirs = [ '.*', 'build', 'dist', '*.egg', 'data', '__pycache__']
