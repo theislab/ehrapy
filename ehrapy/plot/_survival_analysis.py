@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from xmlrpc.client import Boolean
 
     from anndata import AnnData
-    from lifelines import CoxPHFitter, KaplanMeierFitter
+    from lifelines import KaplanMeierFitter
     from matplotlib.axes import Axes
     from statsmodels.regression.linear_model import RegressionResults
 
@@ -318,11 +318,12 @@ def cox_ph_forestplot(
     title: str | None = None,
 ):
     """Generates a forest plot to visualize the coefficients and confidence intervals of a Cox Proportional Hazards model.
+    The adata object must be populated  via the :func:`~ehrapy.tools._sa.cox_ph` function beforehand.
 
     Inspired by `zepid.graphics.EffectMeasurePlot <https://readthedocs.org>`_ (zEpid Package, https://pypi.org/project/zepid/).
 
     Args:
-        adata: :class:`~anndata.AnnData` object containing all observations in `.uns`.
+        adata: :class:`~anndata.AnnData` object containing the summary table from the CoxPHFitter. This object is populated using the :func:`~ehrapy.tools._sa.cox_ph` function.
         uns_key: Key in `.uns` where the CoxPHFitter object is stored.
         labels: List of labels for each coefficient, default uses the index of the coxph.summary.
         fig_size: Width, height in inches.
@@ -349,28 +350,30 @@ def cox_ph_forestplot(
     if uns_key not in adata.uns:
         raise ValueError(f"Key {uns_key} not found in adata.uns. Please provide a valid key.")
 
-    coxph_summary = adata.uns[uns_key]
+    coxph_fitting_summary = adata.uns[
+        uns_key
+    ]  # pd.Dataframe with columns: coef, exp(coef), se(coef), z, p, lower 0.95, upper 0.95
     auc_col = "coef"
 
     if labels is None:
-        labels = coxph_summary.index
+        labels = coxph_fitting_summary.index
     tval = []
     ytick = []
-    for row_index in range(len(coxph_summary)):
-        if not np.isnan(coxph_summary[auc_col][row_index]):
+    for row_index in range(len(coxph_fitting_summary)):
+        if not np.isnan(coxph_fitting_summary[auc_col][row_index]):
             if (
-                (isinstance(coxph_summary[auc_col][row_index], float))
-                & (isinstance(coxph_summary["coef lower 95%"][row_index], float))
-                & (isinstance(coxph_summary["coef upper 95%"][row_index], float))
+                (isinstance(coxph_fitting_summary[auc_col][row_index], float))
+                & (isinstance(coxph_fitting_summary["coef lower 95%"][row_index], float))
+                & (isinstance(coxph_fitting_summary["coef upper 95%"][row_index], float))
             ):
                 tval.append(
                     [
-                        round(coxph_summary[auc_col][row_index], decimal),
+                        round(coxph_fitting_summary[auc_col][row_index], decimal),
                         (
                             "("
-                            + str(round(coxph_summary["coef lower 95%"][row_index], decimal))
+                            + str(round(coxph_fitting_summary["coef lower 95%"][row_index], decimal))
                             + ", "
-                            + str(round(coxph_summary["coef upper 95%"][row_index], decimal))
+                            + str(round(coxph_fitting_summary["coef upper 95%"][row_index], decimal))
                             + ")"
                         ),
                     ]
@@ -378,12 +381,12 @@ def cox_ph_forestplot(
             else:
                 tval.append(
                     [
-                        coxph_summary[auc_col][row_index],
+                        coxph_fitting_summary[auc_col][row_index],
                         (
                             "("
-                            + str(coxph_summary["coef lower 95%"][row_index])
+                            + str(coxph_fitting_summary["coef lower 95%"][row_index])
                             + ", "
-                            + str(coxph_summary["coef upper 95%"][row_index])
+                            + str(coxph_fitting_summary["coef upper 95%"][row_index])
                             + ")"
                         ),
                     ]
@@ -393,22 +396,22 @@ def cox_ph_forestplot(
             tval.append([" ", " "])
             ytick.append(row_index)
 
-    x_axis_upper_bound = round(((pd.to_numeric(coxph_summary["coef upper 95%"])).max() + 0.1), 2)
+    x_axis_upper_bound = round(((pd.to_numeric(coxph_fitting_summary["coef upper 95%"])).max() + 0.1), 2)
 
-    x_axis_lower_bound = round(((pd.to_numeric(coxph_summary["coef lower 95%"])).min() - 0.1), 1)
+    x_axis_lower_bound = round(((pd.to_numeric(coxph_fitting_summary["coef lower 95%"])).min() - 0.1), 1)
 
     fig = plt.figure(figsize=fig_size)
     gspec = gridspec.GridSpec(1, 6)
     plot = plt.subplot(gspec[0, 0:4])  # plot of data
     tabl = plt.subplot(gspec[0, 4:])  # table
-    plot.set_ylim(-1, (len(coxph_summary)))  # spacing out y-axis properly
+    plot.set_ylim(-1, (len(coxph_fitting_summary)))  # spacing out y-axis properly
 
     plot.axvline(1, color="gray", zorder=1)
-    lower_diff = coxph_summary[auc_col] - coxph_summary["coef lower 95%"]
-    upper_diff = coxph_summary["coef upper 95%"] - coxph_summary[auc_col]
+    lower_diff = coxph_fitting_summary[auc_col] - coxph_fitting_summary["coef lower 95%"]
+    upper_diff = coxph_fitting_summary["coef upper 95%"] - coxph_fitting_summary[auc_col]
     plot.errorbar(
-        coxph_summary[auc_col],
-        coxph_summary.index,
+        coxph_fitting_summary[auc_col],
+        coxph_fitting_summary.index,
         xerr=[lower_diff, upper_diff],
         marker="None",
         zorder=2,
@@ -417,7 +420,13 @@ def cox_ph_forestplot(
         elinewidth=1,
     )
     plot.scatter(
-        coxph_summary[auc_col], coxph_summary.index, c=color, s=(size * 25), marker=marker, zorder=3, edgecolors="None"
+        coxph_fitting_summary[auc_col],
+        coxph_fitting_summary.index,
+        c=color,
+        s=(size * 25),
+        marker=marker,
+        zorder=3,
+        edgecolors="None",
     )
     plot.xaxis.set_ticks_position("bottom")
     plot.yaxis.set_ticks_position("left")
