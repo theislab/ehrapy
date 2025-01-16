@@ -336,7 +336,7 @@ def kaplan_meier(
         ax_table.spines["left"].set_visible(False)
 
     if not show:
-        return ax
+        return fig, ax
 
     else:
         return None
@@ -361,13 +361,13 @@ def cox_ph_forestplot(
     """Generates a forest plot to visualize the coefficients and confidence intervals of a Cox Proportional Hazards model.
 
     The `adata` object must first be populated using the :func:`~ehrapy.tools.cox_ph` function. This function stores the summary table of the `CoxPHFitter` in the `.uns` attribute of `adata`.
-    The summary table is created when the model is fitted using the :func:`ehrapy.tl.cox_ph` function.
+    The summary table is created when the model is fitted using the :func:`~ehrapy.tl.cox_ph` function.
     For more information on the `CoxPHFitter`, see the `Lifelines documentation <https://lifelines.readthedocs.io/en/latest/fitters/regression/CoxPHFitter.html>`_.
 
     Inspired by `zepid.graphics.EffectMeasurePlot <https://readthedocs.org>`_ (zEpid Package, https://pypi.org/project/zepid/).
 
     Args:
-        adata: :class:`~anndata.AnnData` object containing the summary table from the CoxPHFitter. This is stored in the `.uns` attribute, after fitting the model using :func:`~ehrapy.tl.cox_ph`.
+        adata: :class:`~anndata.AnnData` object containing the summary table from the CoxPHFitter. This is stored in the `.uns` attribute, after fitting the model using :func:`~ehrapy.tools.cox_ph`.
         uns_key: Key in `.uns` where :func:`~ehrapy.tools.cox_ph` function stored the summary table. See argument `uns_key` in :func:`~ehrapy.tools.cox_ph`.
         labels: List of labels for each coefficient, default uses the index of the summary ta
         fig_size: Width, height in inches.
