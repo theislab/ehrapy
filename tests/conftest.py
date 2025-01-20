@@ -30,6 +30,12 @@ def rng():
 
 
 @pytest.fixture
+def mimic_2():
+    adata = ep.dt.mimic_2()
+    return adata
+
+
+@pytest.fixture
 def mimic_2_encoded():
     adata = ep.dt.mimic_2(encoded=True)
     return adata
