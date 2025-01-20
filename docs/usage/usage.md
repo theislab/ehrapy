@@ -217,6 +217,19 @@ In contrast to a preprocessing function, a tool usually adds an easily interpret
     tools.add_medcat_annotation_to_obs
 ```
 
+### Time Series Analysis
+
+```{eval-rst}
+.. autosummary::
+    :toctree: time_series
+    :nosignatures:
+
+    time_series.scale_norm_3d
+    time_series.StandardScaler3D
+    time_series.LOCFImputer
+    time_series.locf_impute
+```
+
 ### Survival Analysis
 
 ```{eval-rst}

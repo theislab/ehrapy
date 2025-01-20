@@ -65,6 +65,7 @@ dependencies = [
     "fknni",
     "python-dateutil",
     "filelock",
+    "ehrdata",
 ]
 
 [project.optional-dependencies]
@@ -105,7 +106,7 @@ test = [
     "ehrapy[dask]",
     "pytest",
     "pytest-cov",
-    "pytest-mock"
+    "pytest-mock",
 ]
 
 

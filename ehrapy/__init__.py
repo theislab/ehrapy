@@ -18,5 +18,6 @@ from ehrapy import data as dt
 from ehrapy import io
 from ehrapy import plot as pl
 from ehrapy import preprocessing as pp
+from ehrapy import time_series as ts
 from ehrapy import tools as tl
 from ehrapy.core.meta_information import print_versions
