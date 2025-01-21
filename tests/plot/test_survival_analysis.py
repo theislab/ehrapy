@@ -40,7 +40,7 @@ def test_kaplan_meier(mimic_2, check_same_image):
         xlabel="Days",
         ylabel="Proportion Survived",
         grid=True,
-        display_table=True,
+        display_survival_statistics=True,
     )
 
     check_same_image(
