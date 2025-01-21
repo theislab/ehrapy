@@ -208,7 +208,7 @@ def kaplan_meier(
 
     Args:
         kmfs: Iterables of fitted KaplanMeierFitter objects.
-        display_survival_statistics: Display survival statistics in a table below the plot.
+        display_survival_statistics: Whether to show survival statistics in a table below the plot.
         ci_alpha: The transparency level of the confidence interval. If more than one kmfs, this should be a list.
         ci_force_lines: Force the confidence intervals to be line plots (versus default shaded areas).
                         If more than one kmfs, this should be a list.
