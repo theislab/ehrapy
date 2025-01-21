@@ -186,7 +186,7 @@ def kmf(
 def kaplan_meier(
     kmfs: Sequence[KaplanMeierFitter],
     *,
-    diplay_table: bool = False,
+    display_table: bool = False,
     ci_alpha: list[float] | None = None,
     ci_force_lines: list[Boolean] | None = None,
     ci_show: list[Boolean] | None = None,
@@ -208,7 +208,7 @@ def kaplan_meier(
 
     Args:
         kmfs: Iterables of fitted KaplanMeierFitter objects.
-        diplay_table: Display the survival probabilities in a table, below the plot.
+        display_table: Display the survival probabilities in a table, below the plot.
         ci_alpha: The transparency level of the confidence interval. If more than one kmfs, this should be a list.
         ci_force_lines: Force the confidence intervals to be line plots (versus default shaded areas).
                         If more than one kmfs, this should be a list.
@@ -302,7 +302,7 @@ def kaplan_meier(
         ax.set_title(title)
 
     # Prepare data for the table
-    if diplay_table:
+    if display_table:
         xticks = [x for x in ax.get_xticks() if x >= 0]
         xticks_space = xticks[1] - xticks[0]
         if xlabel is None:
