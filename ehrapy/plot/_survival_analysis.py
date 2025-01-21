@@ -361,7 +361,7 @@ def cox_ph_forestplot(
     """Generates a forest plot to visualize the coefficients and confidence intervals of a Cox Proportional Hazards model.
 
     The `adata` object must first be populated using the :func:`~ehrapy.tools.cox_ph` function. This function stores the summary table of the `CoxPHFitter` in the `.uns` attribute of `adata`.
-    The summary table is created when the model is fitted using the :func:`~ehrapy.tl.cox_ph` function.
+    The summary table is created when the model is fitted using the :func:`~ehrapy.tools.cox_ph` function.
     For more information on the `CoxPHFitter`, see the `Lifelines documentation <https://lifelines.readthedocs.io/en/latest/fitters/regression/CoxPHFitter.html>`_.
 
     Inspired by `zepid.graphics.EffectMeasurePlot <https://readthedocs.org>`_ (zEpid Package, https://pypi.org/project/zepid/).
