@@ -269,7 +269,7 @@ def kaplan_meier(
         color = [None] * len(kmfs)
 
     fig = plt.figure(constrained_layout=True, figsize=figsize)
-    spec = fig.add_gridspec(2, 1)
+    spec = fig.add_gridspec(2, 1) if display_survival_statistics else fig.add_gridspec(1, 1)
     ax = plt.subplot(spec[0, 0])
 
     for i, kmf in enumerate(kmfs):
@@ -301,7 +301,6 @@ def kaplan_meier(
     if title:
         ax.set_title(title)
 
-    # Prepare data for the table
     if display_survival_statistics:
         xticks = [x for x in ax.get_xticks() if x >= 0]
         xticks_space = xticks[1] - xticks[0]
