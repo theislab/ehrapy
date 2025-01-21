@@ -1,11 +1,22 @@
 # Contributing guide
 
 Scanpy provides extensive [developer documentation][scanpy developer guide], most of which applies to this repo, too.
-This document will not reproduce the entire content from there. Instead, it aims at summarizing the most important
-information to get you started on contributing.
+This document will not reproduce the entire content from there.
+Instead, it aims at summarizing the most important information to get you started on contributing.
 
-We assume that you are already familiar with git and with making pull requests on GitHub. If not, please refer
-to the [scanpy developer guide][].
+We assume that you are already familiar with git and with making pull requests on GitHub.
+If not, please refer to the [scanpy developer guide][].
+
+## Cloning the repository
+
+ehrapy consists of this main repository and a git submodule [ehrapy-tutorials](https://github.com/theislab/ehrapy-tutorials) which hosts tutorial notebooks.
+Clone both using:
+
+```bash
+git clone --recurse-submodules https://github.com/theislab/ehrapy
+```
+
+More details on the tutorials submodule are described in 
 
 ## Installing dev dependencies
 
@@ -140,16 +151,24 @@ on how to write documentation.
 The documentation is set-up to render jupyter notebooks stored in the `docs/tutorials` directory using [myst-nb][].
 Currently, only notebooks in `.ipynb` format are supported that will be included with both their input and output cells.
 
-These notebooks come from [pert-tutorials](https://github.com/theislab/ehrapy-tutorials) which is a git submodule of ehrapy.
+These notebooks come from [ehrapy-tutorials](https://github.com/theislab/ehrapy-tutorials) which is a git submodule of ehrapy.
 
-#### Hints
+#### Working with the git submodule
+
+Whenever the tutorials are updated in the submodule, two pull requests need to be made.
+Submit a pull request to [ehrapy-tutorials](https://github.com/theislab/ehrapy-tutorials) and ensure that the CI passes.
+Further, submit a pull request on the ehrapy repository where the submodule also contains the commit and ensure that
+the documentation as build by ReadTheDocs properly shows the updated notebooks.
+Both pull requests need to be merged to ensure that no repository gets out of sync.
+
+### Hints
 
 - If you refer to objects from other packages, please add an entry to `intersphinx_mapping` in `docs/conf.py`. Only
   if you do so can sphinx automatically create a link to the external documentation.
 - If building the documentation fails because of a missing link that is outside your control, you can add an entry to
   the `nitpick_ignore` list in `docs/conf.py`
 
-#### Building the docs locally
+### Building the docs locally
 
 ```bash
 cd docs
