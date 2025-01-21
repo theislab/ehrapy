@@ -16,7 +16,7 @@ Clone both using:
 git clone --recurse-submodules https://github.com/theislab/ehrapy
 ```
 
-More details on the tutorials submodule are described in 
+More details on the tutorials submodule are described in
 
 ## Installing dev dependencies
 
