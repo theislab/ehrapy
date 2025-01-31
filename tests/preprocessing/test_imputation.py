@@ -3,9 +3,11 @@ import warnings
 from collections.abc import Iterable
 from pathlib import Path
 
+import dask.array as da
 import numpy as np
 import pytest
 from anndata import AnnData
+from scipy import sparse
 from sklearn.exceptions import ConvergenceWarning
 
 from ehrapy.anndata.anndata_ext import _are_ndarrays_equal, _is_val_missing, _to_dense_matrix
@@ -17,7 +19,7 @@ from ehrapy.preprocessing._imputation import (
     miss_forest_impute,
     simple_impute,
 )
-from tests.conftest import TEST_DATA_PATH
+from tests.conftest import ARRAY_TYPES, TEST_DATA_PATH
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_PATH = f"{TEST_DATA_PATH}/imputation"
@@ -46,6 +48,12 @@ def _base_check_imputation(
     Raises:
         AssertionError: If any of the checks fail.
     """
+    # if .x of the AnnData is a dask array, convert it to a numpy array
+    # TODO: look into a better way to handle this
+    if isinstance(adata_before_imputation.X, da.Array):
+        adata_before_imputation.X = adata_before_imputation.X.compute()
+    if isinstance(adata_after_imputation.X, da.Array):
+        adata_after_imputation.X = adata_after_imputation.X.compute()
 
     layer_before = _to_dense_matrix(adata_before_imputation, before_imputation_layer)
     layer_after = _to_dense_matrix(adata_after_imputation, after_imputation_layer)
@@ -296,7 +304,24 @@ def test_miceforest_impute_numerical_data(impute_iris_adata):
     _base_check_imputation(adata_not_imputed, impute_iris_adata)
 
 
-def test_explicit_impute_all(impute_num_adata):
+@pytest.mark.parametrize(
+    "array_type,expected_error",
+    [
+        (np.array, None),
+        (da.array, NotImplementedError),
+        (sparse.csr_matrix, NotImplementedError),
+    ],
+)
+def test_explicit_impute_types(impute_num_adata, array_type, expected_error):
+    impute_num_adata.X = array_type(impute_num_adata.X)
+    if expected_error:
+        with pytest.raises(expected_error):
+            explicit_impute(impute_num_adata, replacement=1011, copy=True)
+
+
+@pytest.mark.parametrize("array_type", ARRAY_TYPES)
+def test_explicit_impute_all(array_type, impute_num_adata):
+    impute_num_adata.X = array_type(impute_num_adata.X)
     warnings.filterwarnings("ignore", category=FutureWarning)
     adata_imputed = explicit_impute(impute_num_adata, replacement=1011, copy=True)
 
