@@ -59,17 +59,12 @@ def qc_metrics(
             >>> obs_qc["missing_values_pct"].plot(kind="hist", bins=20)
     """
 
-    # obs_metrics = _obs_qc_metrics(adata, layer, qc_vars)
-    # var_metrics = _var_qc_metrics(adata, layer)
-    obs_metrics = pd.DataFrame(index=adata.obs_names)
-    var_metrics = pd.DataFrame(index=adata.var_names)
-
     mtx = adata.X if layer is None else adata.layers[layer]
-    _compute_var_metrics(mtx, var_metrics, adata)
-    _compute_obs_metrics(mtx, obs_metrics, var_metrics, adata, qc_vars, log1p=True)
+    var_metrics = _compute_var_metrics(mtx, adata)
+    obs_metrics = _compute_obs_metrics(mtx, adata, qc_vars=qc_vars, log1p=True)
 
-    adata.obs[obs_metrics.columns] = obs_metrics
     adata.var[var_metrics.columns] = var_metrics
+    adata.obs[obs_metrics.columns] = obs_metrics
 
     return obs_metrics, var_metrics
 
@@ -98,9 +93,8 @@ def _missing_values(
 @singledispatch
 def _compute_obs_metrics(
     arr,
-    obs_metrics: pd.DataFrame,
-    var_metrics: pd.DataFrame,
     adata: AnnData,
+    *,
     qc_vars: Collection[str],
     log1p: bool,
 ):
@@ -120,19 +114,15 @@ def _compute_obs_metrics(
         A Pandas DataFrame with the calculated metrics.
     """
     _raise_array_type_not_implemented(_compute_obs_metrics, type(arr))
+    # TODO: add tests for this function
 
 
 @_compute_obs_metrics.register(np.ndarray)
-def _(
-    arr: np.array,
-    obs_metrics: pd.DataFrame,
-    var_metrics: pd.DataFrame,
-    adata: AnnData,
-    qc_vars: Collection[str],
-    log1p: bool,
-):
-    # has no return, modifies obs_metrics and var_metrics in place
+def _(arr: np.array, adata: AnnData, *, qc_vars: Collection[str] = (), log1p: bool = True):
+    obs_metrics = pd.DataFrame(index=adata.obs_names)
+    var_metrics = pd.DataFrame(index=adata.var_names)
     mtx = copy.deepcopy(arr.astype(object))
+
     if "encoding_mode" in adata.var:
         for original_values_categorical in _get_encoded_features(adata):
             index = np.where(var_metrics.index.str.contains(original_values_categorical))[0]
@@ -160,25 +150,12 @@ def _(
             obs_metrics[f"total_features_{qc_var}"] / obs_metrics["total_features"] * 100
         )
 
-
-@_compute_obs_metrics.register(da.Array)
-def _(
-    arr: da.Array,
-    obs_metrics: pd.DataFrame,
-    var_metrics: pd.DataFrame,
-    adata: AnnData,
-    qc_vars: Collection[str],
-    log1p: bool,
-):
-    return _compute_obs_metrics(
-        arr.compute(), obs_metrics, var_metrics, adata, qc_vars, log1p
-    )  # TODO: is it okay to compute here?
+    return obs_metrics
 
 
 @singledispatch
 def _compute_var_metrics(
     arr,
-    var_metrics: pd.DataFrame,
     adata: AnnData,
 ):
     """Compute variable metrics for quality control.
@@ -189,16 +166,17 @@ def _compute_var_metrics(
         adata: Annotated data matrix.
     """
     _raise_array_type_not_implemented(_compute_var_metrics, type(arr))
+    # TODO: add tests for this function
 
 
 @_compute_var_metrics.register(np.ndarray)
 def _(
     arr: np.array,
-    var_metrics: pd.DataFrame,
     adata: AnnData,
 ):
     categorical_indices = np.ndarray([0], dtype=int)
     mtx = copy.deepcopy(arr.astype(object))
+    var_metrics = pd.DataFrame(index=adata.var_names)
 
     if "encoding_mode" in adata.var.keys():
         for original_values_categorical in _get_encoded_features(adata):
@@ -215,8 +193,10 @@ def _(
                 mtx[:, index].shape[1],
             )
             categorical_indices = np.concatenate([categorical_indices, index])
+
     non_categorical_indices = np.ones(mtx.shape[1], dtype=bool)
     non_categorical_indices[categorical_indices] = False
+
     var_metrics["missing_values_abs"] = np.apply_along_axis(_missing_values, 0, mtx, mode="abs")
     var_metrics["missing_values_pct"] = np.apply_along_axis(_missing_values, 0, mtx, mode="pct", df_type="var")
 
@@ -259,14 +239,7 @@ def _(
         # We assume that the data just hasn't been encoded yet
         pass
 
-
-@_compute_var_metrics.register(da.Array)
-def _(
-    arr: da.Array,
-    var_metrics: pd.DataFrame,
-    adata: AnnData,
-):
-    return _compute_var_metrics(arr.compute(), var_metrics, adata)  # TODO: is it okay to compute here?
+    return var_metrics
 
 
 def qc_lab_measurements(
