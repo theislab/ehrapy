@@ -1,14 +1,16 @@
 from pathlib import Path
 
+import dask.array as da
 import numpy as np
 import pandas as pd
 import pytest
 from anndata import AnnData
+from scipy import sparse
 
 import ehrapy as ep
 from ehrapy.io._read import read_csv
 from ehrapy.preprocessing._encoding import encode
-from ehrapy.preprocessing._quality_control import _obs_qc_metrics, _var_qc_metrics, mcar_test
+from ehrapy.preprocessing._quality_control import _compute_obs_metrics, _compute_var_metrics, mcar_test
 from tests.conftest import TEST_DATA_PATH
 
 CURRENT_DIR = Path(__file__).parent
@@ -64,14 +66,16 @@ def lab_measurements_layer_adata(obs_data, var_data):
 
 
 def test_obs_qc_metrics(missing_values_adata):
-    obs_metrics = _obs_qc_metrics(missing_values_adata)
+    mtx = missing_values_adata.X
+    obs_metrics = _compute_obs_metrics(mtx, missing_values_adata)
 
     assert np.array_equal(obs_metrics["missing_values_abs"].values, np.array([1, 2]))
     assert np.allclose(obs_metrics["missing_values_pct"].values, np.array([33.3333, 66.6667]))
 
 
 def test_var_qc_metrics(missing_values_adata):
-    var_metrics = _var_qc_metrics(missing_values_adata)
+    mtx = missing_values_adata.X
+    var_metrics = _compute_var_metrics(mtx, missing_values_adata)
 
     assert np.array_equal(var_metrics["missing_values_abs"].values, np.array([1, 2, 0]))
     assert np.allclose(var_metrics["missing_values_pct"].values, np.array([50.0, 100.0, 0.0]))
@@ -82,19 +86,57 @@ def test_var_qc_metrics(missing_values_adata):
     assert (~var_metrics["iqr_outliers"]).all()
 
 
+@pytest.mark.parametrize(
+    "array_type, expected_error",
+    [
+        (np.array, None),
+        # (da.array, NotImplementedError),
+        # (sparse.csr_matrix, NotImplementedError),
+        # TODO: currently disabled, due to sparse matrix not supporting datat type conversion
+    ],
+)
+def test_obs_array_types(array_type, expected_error):
+    adata = read_csv(dataset_path=f"{_TEST_PATH_ENCODE}/dataset1.csv")
+    adata.X = array_type(adata.X)
+    mtx = adata.X
+    if expected_error:
+        with pytest.raises(expected_error):
+            _compute_obs_metrics(mtx, adata)
+
+
 def test_obs_nan_qc_metrics():
     adata = read_csv(dataset_path=f"{_TEST_PATH_ENCODE}/dataset1.csv")
     adata.X[0][4] = np.nan
     adata2 = encode(adata, encodings={"one-hot": ["clinic_day"]})
-    obs_metrics = _obs_qc_metrics(adata2)
+    mtx = adata2.X
+    obs_metrics = _compute_obs_metrics(mtx, adata2)
     assert obs_metrics.iloc[0].iloc[0] == 1
+
+
+@pytest.mark.parametrize(
+    "array_type, expected_error",
+    [
+        (np.array, None),
+        # (da.array, NotImplementedError),
+        # (sparse.csr_matrix, NotImplementedError),
+        # TODO: currently disabled, due to sparse matrix not supporting datat type conversion
+    ],
+)
+def test_var_array_types(array_type, expected_error):
+    adata = read_csv(dataset_path=f"{_TEST_PATH_ENCODE}/dataset1.csv")
+    adata.X = array_type(adata.X)
+    mtx = adata.X
+    if expected_error:
+        with pytest.raises(expected_error):
+            _compute_var_metrics(mtx, adata)
 
 
 def test_var_nan_qc_metrics():
     adata = read_csv(dataset_path=f"{_TEST_PATH_ENCODE}/dataset1.csv")
     adata.X[0][4] = np.nan
     adata2 = encode(adata, encodings={"one-hot": ["clinic_day"]})
-    var_metrics = _var_qc_metrics(adata2)
+    mtx = adata2.X
+    var_metrics = _compute_var_metrics(mtx, adata2)
     assert var_metrics.iloc[0].iloc[0] == 1
     assert var_metrics.iloc[1].iloc[0] == 1
     assert var_metrics.iloc[2].iloc[0] == 1

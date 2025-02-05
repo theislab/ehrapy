@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+from functools import singledispatch
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
@@ -9,6 +10,7 @@ import pandas as pd
 from lamin_utils import logger
 from thefuzz import process
 
+from ehrapy._compat import _raise_array_type_not_implemented
 from ehrapy.anndata import anndata_to_df
 from ehrapy.preprocessing._encoding import _get_encoded_features
 
@@ -55,11 +57,13 @@ def qc_metrics(
             >>> obs_qc, var_qc = ep.pp.qc_metrics(adata)
             >>> obs_qc["missing_values_pct"].plot(kind="hist", bins=20)
     """
-    obs_metrics = _obs_qc_metrics(adata, layer, qc_vars)
-    var_metrics = _var_qc_metrics(adata, layer)
 
-    adata.obs[obs_metrics.columns] = obs_metrics
+    mtx = adata.X if layer is None else adata.layers[layer]
+    var_metrics = _compute_var_metrics(mtx, adata)
+    obs_metrics = _compute_obs_metrics(mtx, adata, qc_vars=qc_vars, log1p=True)
+
     adata.var[var_metrics.columns] = var_metrics
+    adata.obs[obs_metrics.columns] = obs_metrics
 
     return obs_metrics, var_metrics
 
@@ -85,29 +89,41 @@ def _missing_values(
         return (num_missing / total_elements) * 100
 
 
-def _obs_qc_metrics(
-    adata: AnnData, layer: str = None, qc_vars: Collection[str] = (), log1p: bool = True
-) -> pd.DataFrame:
+@singledispatch
+def _compute_obs_metrics(
+    arr,
+    adata: AnnData,
+    *,
+    qc_vars: Collection[str],
+    log1p: bool,
+):
     """Calculates quality control metrics for observations.
 
     See :func:`~ehrapy.preprocessing._quality_control.calculate_qc_metrics` for a list of calculated metrics.
 
     Args:
+        arr: Data array.
+        obs_metrics: DataFrame to store observation metrics.
+        var_metrics: DataFrame to store variable metrics.
         adata: Annotated data matrix.
-        layer: Layer containing the actual data matrix.
         qc_vars: A list of previously calculated QC metrics to calculate summary statistics for.
         log1p: Whether to apply log1p normalization for the QC metrics. Only used with parameter 'qc_vars'.
 
     Returns:
         A Pandas DataFrame with the calculated metrics.
     """
+    _raise_array_type_not_implemented(_compute_obs_metrics, type(arr))
+    # TODO: add tests for this function
+
+
+@_compute_obs_metrics.register(np.ndarray)
+def _(arr: np.array, adata: AnnData, *, qc_vars: Collection[str] = (), log1p: bool = True):
     obs_metrics = pd.DataFrame(index=adata.obs_names)
     var_metrics = pd.DataFrame(index=adata.var_names)
-    mtx = adata.X if layer is None else adata.layers[layer]
+    mtx = copy.deepcopy(arr.astype(object))
 
     if "encoding_mode" in adata.var:
         for original_values_categorical in _get_encoded_features(adata):
-            mtx = mtx.astype(object)
             index = np.where(var_metrics.index.str.contains(original_values_categorical))[0]
 
             if original_values_categorical not in adata.obs.keys():
@@ -136,14 +152,33 @@ def _obs_qc_metrics(
     return obs_metrics
 
 
-def _var_qc_metrics(adata: AnnData, layer: str | None = None) -> pd.DataFrame:
-    var_metrics = pd.DataFrame(index=adata.var_names)
-    mtx = adata.X if layer is None else adata.layers[layer]
+@singledispatch
+def _compute_var_metrics(
+    arr,
+    adata: AnnData,
+):
+    """Compute variable metrics for quality control.
+
+    Args:
+        arr: Data array.
+        var_metrics: DataFrame to store variable metrics.
+        adata: Annotated data matrix.
+    """
+    _raise_array_type_not_implemented(_compute_var_metrics, type(arr))
+    # TODO: add tests for this function
+
+
+@_compute_var_metrics.register(np.ndarray)
+def _(
+    arr: np.array,
+    adata: AnnData,
+):
     categorical_indices = np.ndarray([0], dtype=int)
+    mtx = copy.deepcopy(arr.astype(object))
+    var_metrics = pd.DataFrame(index=adata.var_names)
 
     if "encoding_mode" in adata.var.keys():
         for original_values_categorical in _get_encoded_features(adata):
-            mtx = copy.deepcopy(mtx.astype(object))
             index = np.where(var_metrics.index.str.startswith("ehrapycat_" + original_values_categorical))[0]
 
             if original_values_categorical not in adata.obs.keys():
@@ -157,8 +192,10 @@ def _var_qc_metrics(adata: AnnData, layer: str | None = None) -> pd.DataFrame:
                 mtx[:, index].shape[1],
             )
             categorical_indices = np.concatenate([categorical_indices, index])
+
     non_categorical_indices = np.ones(mtx.shape[1], dtype=bool)
     non_categorical_indices[categorical_indices] = False
+
     var_metrics["missing_values_abs"] = np.apply_along_axis(_missing_values, 0, mtx, mode="abs")
     var_metrics["missing_values_pct"] = np.apply_along_axis(_missing_values, 0, mtx, mode="pct", df_type="var")
 
