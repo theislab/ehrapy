@@ -5,7 +5,6 @@ from functools import singledispatch
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
-import dask.array as da
 import numpy as np
 import pandas as pd
 from lamin_utils import logger
