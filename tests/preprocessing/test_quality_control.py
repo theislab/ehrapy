@@ -95,7 +95,7 @@ def test_var_qc_metrics(missing_values_adata):
         # TODO: currently disabled, due to sparse matrix not supporting datat type conversion
     ],
 )
-def test_obs_array_types(array_type, expected_error):
+def test_obs_qc_metrics_array_types(array_type, expected_error):
     adata = read_csv(dataset_path=f"{_TEST_PATH_ENCODE}/dataset1.csv")
     adata.X = array_type(adata.X)
     mtx = adata.X
@@ -122,7 +122,7 @@ def test_obs_nan_qc_metrics():
         # TODO: currently disabled, due to sparse matrix not supporting datat type conversion
     ],
 )
-def test_var_array_types(array_type, expected_error):
+def test_var_qc_metrics_array_types(array_type, expected_error):
     adata = read_csv(dataset_path=f"{_TEST_PATH_ENCODE}/dataset1.csv")
     adata.X = array_type(adata.X)
     mtx = adata.X
