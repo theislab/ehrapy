@@ -70,7 +70,7 @@ def qc_metrics(
 
 @singledispatch
 def _compute_obs_metrics(
-    arr,
+    mtx,
     adata: AnnData,
     *,
     qc_vars: Collection[str],
@@ -81,7 +81,7 @@ def _compute_obs_metrics(
     See :func:`~ehrapy.preprocessing._quality_control.calculate_qc_metrics` for a list of calculated metrics.
 
     Args:
-        arr: Data array.
+        mtx: Data array.
         obs_metrics: DataFrame to store observation metrics.
         var_metrics: DataFrame to store variable metrics.
         adata: Annotated data matrix.
@@ -91,18 +91,18 @@ def _compute_obs_metrics(
     Returns:
         A Pandas DataFrame with the calculated metrics.
     """
-    _raise_array_type_not_implemented(_compute_obs_metrics, type(arr))
+    _raise_array_type_not_implemented(_compute_obs_metrics, type(mtx))
     # TODO: add tests for this function
 
 
 @_compute_obs_metrics.register(np.ndarray)
-def _(arr: np.array, adata: AnnData, *, qc_vars: Collection[str] = (), log1p: bool = True):
+def _(mtx: np.array, adata: AnnData, *, qc_vars: Collection[str] = (), log1p: bool = True):
     obs_metrics = pd.DataFrame(index=adata.obs_names)
     var_metrics = pd.DataFrame(index=adata.var_names)
-    mtx = copy.deepcopy(arr.astype(object))
 
     if "encoding_mode" in adata.var:
         for original_values_categorical in _get_encoded_features(adata):
+            mtx = mtx.astype(object)
             index = np.where(var_metrics.index.str.contains(original_values_categorical))[0]
 
             if original_values_categorical not in adata.obs.keys():
