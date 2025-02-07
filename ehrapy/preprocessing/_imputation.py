@@ -23,11 +23,9 @@ if TYPE_CHECKING:
 
 try:
     import dask.array as da
-    import dask_ml.preprocessing as daskml_pp
 
     DASK_AVAILABLE = True
 except ImportError:
-    daskml_pp = None
     DASK_AVAILABLE = False
 
 

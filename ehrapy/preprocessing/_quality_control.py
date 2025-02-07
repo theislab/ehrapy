@@ -19,6 +19,13 @@ if TYPE_CHECKING:
 
     from anndata import AnnData
 
+try:
+    import dask.array as da
+
+    DASK_AVAILABLE = True
+except ImportError:
+    DASK_AVAILABLE = False
+
 
 def qc_metrics(
     adata: AnnData, qc_vars: Collection[str] = (), layer: str = None
@@ -69,12 +76,28 @@ def qc_metrics(
 
 
 @singledispatch
+def _compute_missing_values(mtx, axis):
+    _raise_array_type_not_implemented(mtx)
+
+
+@_compute_missing_values.register
+def _(mtx: np.ndarray, axis) -> np.ndarray:
+    return pd.isnull(mtx).sum(axis)
+
+
+if DASK_AVAILABLE:
+
+    @_compute_missing_values.register
+    def _(mtx: da.Array, axis) -> np.ndarray:
+        return da.isnull(mtx).sum(axis).compute()
+
+
 def _compute_obs_metrics(
     mtx,
     adata: AnnData,
     *,
-    qc_vars: Collection[str],
-    log1p: bool,
+    qc_vars: Collection[str] = (),
+    log1p: bool = True,
 ):
     """Calculates quality control metrics for observations.
 
@@ -91,12 +114,7 @@ def _compute_obs_metrics(
     Returns:
         A Pandas DataFrame with the calculated metrics.
     """
-    _raise_array_type_not_implemented(_compute_obs_metrics, type(mtx))
-    # TODO: add tests for this function
 
-
-@_compute_obs_metrics.register(np.ndarray)
-def _(mtx: np.array, adata: AnnData, *, qc_vars: Collection[str] = (), log1p: bool = True):
     obs_metrics = pd.DataFrame(index=adata.obs_names)
     var_metrics = pd.DataFrame(index=adata.var_names)
 
@@ -115,7 +133,7 @@ def _(mtx: np.array, adata: AnnData, *, qc_vars: Collection[str] = (), log1p: bo
                 )
             )
 
-    obs_metrics["missing_values_abs"] = pd.isnull(mtx).sum(1)
+    obs_metrics["missing_values_abs"] = _compute_missing_values(mtx, axis=1)
     obs_metrics["missing_values_pct"] = (obs_metrics["missing_values_abs"] / mtx.shape[1]) * 100
 
     # Specific QC metrics
@@ -131,7 +149,6 @@ def _(mtx: np.array, adata: AnnData, *, qc_vars: Collection[str] = (), log1p: bo
     return obs_metrics
 
 
-@singledispatch
 def _compute_var_metrics(
     arr,
     adata: AnnData,
@@ -143,15 +160,7 @@ def _compute_var_metrics(
         var_metrics: DataFrame to store variable metrics.
         adata: Annotated data matrix.
     """
-    _raise_array_type_not_implemented(_compute_var_metrics, type(arr))
-    # TODO: add tests for this function
 
-
-@_compute_var_metrics.register(np.ndarray)
-def _(
-    arr: np.array,
-    adata: AnnData,
-):
     categorical_indices = np.ndarray([0], dtype=int)
     mtx = copy.deepcopy(arr.astype(object))
     var_metrics = pd.DataFrame(index=adata.var_names)
@@ -175,7 +184,7 @@ def _(
     non_categorical_indices = np.ones(mtx.shape[1], dtype=bool)
     non_categorical_indices[categorical_indices] = False
 
-    var_metrics["missing_values_abs"] = pd.isnull(mtx).sum(0)
+    var_metrics["missing_values_abs"] = _compute_missing_values(mtx, axis=0)
     var_metrics["missing_values_pct"] = (var_metrics["missing_values_abs"] / mtx.shape[0]) * 100
 
     var_metrics["mean"] = np.nan
@@ -183,22 +192,23 @@ def _(
     var_metrics["standard_deviation"] = np.nan
     var_metrics["min"] = np.nan
     var_metrics["max"] = np.nan
+    var_metrics["iqr_outliers"] = np.nan
 
     try:
         var_metrics.loc[non_categorical_indices, "mean"] = np.nanmean(
-            np.array(mtx[:, non_categorical_indices], dtype=np.float64), axis=0
+            mtx[:, non_categorical_indices].astype(np.float64), axis=0
         )
         var_metrics.loc[non_categorical_indices, "median"] = np.nanmedian(
-            np.array(mtx[:, non_categorical_indices], dtype=np.float64), axis=0
+            mtx[:, non_categorical_indices].astype(np.float64), axis=0
         )
         var_metrics.loc[non_categorical_indices, "standard_deviation"] = np.nanstd(
-            np.array(mtx[:, non_categorical_indices], dtype=np.float64), axis=0
+            mtx[:, non_categorical_indices].astype(np.float64), axis=0
         )
         var_metrics.loc[non_categorical_indices, "min"] = np.nanmin(
-            np.array(mtx[:, non_categorical_indices], dtype=np.float64), axis=0
+            mtx[:, non_categorical_indices].astype(np.float64), axis=0
         )
         var_metrics.loc[non_categorical_indices, "max"] = np.nanmax(
-            np.array(mtx[:, non_categorical_indices], dtype=np.float64), axis=0
+            mtx[:, non_categorical_indices].astype(np.float64), axis=0
         )
 
         # Calculate IQR and define IQR outliers

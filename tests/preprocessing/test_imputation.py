@@ -307,18 +307,20 @@ def test_miceforest_impute_numerical_data(impute_iris_adata):
     "array_type,expected_error",
     [
         (np.array, None),
-        (da.array, NotImplementedError),
-        (sparse.csr_matrix, NotImplementedError),
+        (da.from_array, None),
+        # (sparse.csr_matrix, NotImplementedError),
     ],
 )
-def test_explicit_impute_types(impute_num_adata, array_type, expected_error):
+def test_explicit_impute_array_types(impute_num_adata, array_type, expected_error):
     impute_num_adata.X = array_type(impute_num_adata.X)
     if expected_error:
         with pytest.raises(expected_error):
             explicit_impute(impute_num_adata, replacement=1011, copy=True)
 
 
-@pytest.mark.parametrize("array_type", [np.array])  # TODO: discuss, should we add a new fixture with supported types?
+@pytest.mark.parametrize(
+    "array_type", [np.array, da.from_array]
+)  # TODO: discuss, should we add a new fixture with supported types?
 def test_explicit_impute_all(array_type, impute_num_adata):
     impute_num_adata.X = array_type(impute_num_adata.X)
     warnings.filterwarnings("ignore", category=FutureWarning)
