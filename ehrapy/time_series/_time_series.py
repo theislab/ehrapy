@@ -82,8 +82,7 @@ class StandardScaler3D:
 
 
 def scale_norm_3d(edata: ed.EHRData, copy: bool = False) -> ed.EHRData | None:
-    """
-    Normalize the input data by scaling each feature across all samples and timesteps.
+    """Normalize the input data by scaling each feature across all samples and timesteps.
 
     Args:
         edata: Anndata object with shape (n_samples, n_features, n_timesteps).
@@ -140,8 +139,7 @@ class LOCFImputer:
 
 
 def locf_impute(edata: ed.EHRData, copy: bool = False) -> ed.EHRData | None:
-    """
-    Impute missing values by carrying forward the last observed value.
+    """Impute missing values by carrying forward the last observed value.
 
     Args:
         edata: Anndata object with shape (n_samples, n_features, n_timesteps).

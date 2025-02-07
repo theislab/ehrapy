@@ -221,13 +221,13 @@ In contrast to a preprocessing function, a tool usually adds an easily interpret
 
 ```{eval-rst}
 .. autosummary::
-    :toctree: time_series
+    :toctree: ts
     :nosignatures:
 
-    time_series.scale_norm_3d
-    time_series.StandardScaler3D
-    time_series.LOCFImputer
-    time_series.locf_impute
+    ts.scale_norm_3d
+    ts.StandardScaler3D
+    ts.LOCFImputer
+    ts.locf_impute
 ```
 
 ### Survival Analysis
