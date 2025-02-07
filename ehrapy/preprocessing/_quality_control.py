@@ -68,27 +68,6 @@ def qc_metrics(
     return obs_metrics, var_metrics
 
 
-def _missing_values(
-    arr: np.ndarray, mode: Literal["abs", "pct"] = "abs", df_type: Literal["obs", "var"] = "obs"
-) -> np.ndarray:
-    """Calculates the absolute or relative amount of missing values.
-
-    Args:
-        arr: Numpy array containing a data row which is a subset of X (mtx).
-        mode: Whether to calculate absolute or percentage of missing values.
-        df_type: Whether to calculate the proportions for obs or var. One of 'obs' or 'var'.
-
-    Returns:
-        Absolute or relative amount of missing values.
-    """
-    num_missing = pd.isnull(arr).sum()
-    if mode == "abs":
-        return num_missing
-    elif mode == "pct":
-        total_elements = arr.shape[0] if df_type == "obs" else len(arr)
-        return (num_missing / total_elements) * 100
-
-
 @singledispatch
 def _compute_obs_metrics(
     arr,
@@ -136,8 +115,8 @@ def _(arr: np.array, adata: AnnData, *, qc_vars: Collection[str] = (), log1p: bo
                 )
             )
 
-    obs_metrics["missing_values_abs"] = np.apply_along_axis(_missing_values, 1, mtx, mode="abs")
-    obs_metrics["missing_values_pct"] = np.apply_along_axis(_missing_values, 1, mtx, mode="pct", df_type="obs")
+    obs_metrics["missing_values_abs"] = pd.isnull(mtx).sum(1)
+    obs_metrics["missing_values_pct"] = (obs_metrics["missing_values_abs"] / mtx.shape[1]) * 100
 
     # Specific QC metrics
     for qc_var in qc_vars:
@@ -196,8 +175,8 @@ def _(
     non_categorical_indices = np.ones(mtx.shape[1], dtype=bool)
     non_categorical_indices[categorical_indices] = False
 
-    var_metrics["missing_values_abs"] = np.apply_along_axis(_missing_values, 0, mtx, mode="abs")
-    var_metrics["missing_values_pct"] = np.apply_along_axis(_missing_values, 0, mtx, mode="pct", df_type="var")
+    var_metrics["missing_values_abs"] = pd.isnull(mtx).sum(0)
+    var_metrics["missing_values_pct"] = (var_metrics["missing_values_abs"] / mtx.shape[0]) * 100
 
     var_metrics["mean"] = np.nan
     var_metrics["median"] = np.nan
