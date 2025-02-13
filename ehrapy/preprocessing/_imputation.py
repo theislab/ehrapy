@@ -254,14 +254,7 @@ def knn_impute(
         patch_sklearn()
 
     try:
-        if np.issubdtype(adata.X.dtype, np.number):
-            _knn_impute(adata, var_names, n_neighbors, backend=backend, **backend_kwargs)
-        else:
-            # Raise exception since non-numerical data can not be imputed using KNN Imputation
-            raise ValueError(
-                "Can only impute numerical data. Try to restrict imputation to certain columns using "
-                "var_names parameter or perform an encoding of your data."
-            )
+        _knn_impute(adata, var_names, n_neighbors, backend=backend, **backend_kwargs)
 
     except ValueError as e:
         if "Data matrix has wrong shape" in str(e):
@@ -290,13 +283,15 @@ def _knn_impute(
 
         imputer = FaissImputer(n_neighbors=n_neighbors, **kwargs)
 
-    if isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):
-        column_indices = get_column_indices(adata, var_names)
-        adata.X[::, column_indices] = imputer.fit_transform(adata.X[::, column_indices])
-        # this is required since X dtype has to be numerical in order to correctly round floats
-        adata.X = adata.X.astype("float64")
-    else:
-        adata.X = imputer.fit_transform(adata.X)
+    column_indices = get_column_indices(adata, adata.var_names if var_names is None else var_names)
+    try:
+        converted_X = adata.X[::, column_indices].astype("float64")
+    except ValueError:
+        raise ValueError(
+            "Can only impute numerical data. Try to restrict imputation to certain columns using "
+            "var_names parameter or perform an encoding of your data."
+        )
+    adata.X[::, column_indices] = imputer.fit_transform(converted_X)
 
 
 @spinner("Performing miss-forest impute")
