@@ -14,7 +14,7 @@ from ehrapy import settings
 from ehrapy._utils_available import _check_module_importable
 from ehrapy._utils_rendering import spinner
 from ehrapy.anndata import check_feature_types
-from ehrapy.anndata.anndata_ext import get_column_indices
+from ehrapy.anndata.anndata_ext import get_column_indices, get_numerical_column_indices, get_fully_imputed_column_indices
 
 if TYPE_CHECKING:
     from anndata import AnnData
@@ -253,13 +253,7 @@ def knn_impute(
 
         patch_sklearn()
 
-    try:
-        _knn_impute(adata, var_names, n_neighbors, backend=backend, **backend_kwargs)
-
-    except ValueError as e:
-        if "Data matrix has wrong shape" in str(e):
-            logger.error("Check that your matrix does not contain any NaN only columns!")
-        raise
+    _knn_impute(adata, var_names, n_neighbors, backend=backend, **backend_kwargs)
 
     if _check_module_importable("sklearnex"):  # pragma: no cover
         unpatch_sklearn()
@@ -284,6 +278,7 @@ def _knn_impute(
         imputer = FaissImputer(n_neighbors=n_neighbors, **kwargs)
 
     column_indices = get_column_indices(adata, adata.var_names if var_names is None else var_names)
+    test = get_numerical_column_indices(adata)
     try:
         converted_X = adata.X[::, column_indices].astype("float64")
     except ValueError:

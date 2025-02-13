@@ -305,6 +305,19 @@ def move_to_x(adata: AnnData, to_x: list[str] | str, copy_x: bool = False) -> An
 
     return new_adata
 
+def get_numerical_column_indices(adata: AnnData, layer: str | None = None, column_indices: Iterable[int] | None = None) -> list[int]:
+    adata_layer = adata.X if layer is None else adata[layer]
+    indices = [i for i in range(adata_layer.shape[1])] if column_indices is None else [i for i in column_indices if i < adata_layer.shape[1] - 1]
+    for i in indices:
+        # Todo: There is probably a better way to do this!
+        try:
+            adata.X[::, i].astype("float64")
+        except ValueError:
+            indices.remove(i)
+    return indices
+
+def get_fully_imputed_column_indices(adata: AnnData, layer: str | None = None, col_indices: Iterable[int] | None = None) -> list[int]:
+    pass
 
 def get_column_indices(adata: AnnData, col_names: str | Iterable[str]) -> list[int]:
     """Fetches the column indices in X for a given list of column names
