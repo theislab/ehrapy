@@ -279,6 +279,7 @@ def _knn_impute(
 
     column_indices = get_column_indices(adata, adata.var_names if var_names is None else var_names)
     test = get_numerical_column_indices(adata)
+    test2 = _get_var_indices_for_type
     try:
         converted_X = adata.X[::, column_indices].astype("float64")
     except ValueError:
