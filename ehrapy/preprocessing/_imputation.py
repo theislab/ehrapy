@@ -278,16 +278,16 @@ def _knn_impute(
         imputer = FaissImputer(n_neighbors=n_neighbors, **kwargs)
 
     column_indices = get_column_indices(adata, adata.var_names if var_names is None else var_names)
-    test = get_numerical_column_indices(adata)
-    test2 = _get_var_indices_for_type
-    try:
-        converted_X = adata.X[::, column_indices].astype("float64")
-    except ValueError:
+    numerical_indices = get_numerical_column_indices(adata)
+    if any(idx not in numerical_indices for idx in column_indices):
         raise ValueError(
             "Can only impute numerical data. Try to restrict imputation to certain columns using "
             "var_names parameter or perform an encoding of your data."
         )
-    adata.X[::, column_indices] = imputer.fit_transform(converted_X)
+    fully_imputed_indices = get_fully_imputed_column_indices(adata, column_indices=numerical_indices)
+    imputer_data_indices = column_indices + [i for i in fully_imputed_indices if i not in column_indices]
+    imputer_x = adata.X[::, imputer_data_indices].astype("float64")
+    adata.X[::, imputer_data_indices] = imputer.fit_transform(imputer_x) #Todo: will cast all involved features to float64, is that desired? we *could* restrict the copy to only the imputed columns...
 
 
 @spinner("Performing miss-forest impute")
