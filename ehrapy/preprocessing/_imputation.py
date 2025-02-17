@@ -14,7 +14,11 @@ from ehrapy import settings
 from ehrapy._utils_available import _check_module_importable
 from ehrapy._utils_rendering import spinner
 from ehrapy.anndata import check_feature_types
-from ehrapy.anndata.anndata_ext import get_column_indices, get_numerical_column_indices, get_fully_imputed_column_indices
+from ehrapy.anndata.anndata_ext import (
+    get_column_indices,
+    get_fully_imputed_column_indices,
+    get_numerical_column_indices,
+)
 
 if TYPE_CHECKING:
     from anndata import AnnData
@@ -287,7 +291,9 @@ def _knn_impute(
     fully_imputed_indices = get_fully_imputed_column_indices(adata, column_indices=numerical_indices)
     imputer_data_indices = column_indices + [i for i in fully_imputed_indices if i not in column_indices]
     imputer_x = adata.X[::, imputer_data_indices].astype("float64")
-    adata.X[::, imputer_data_indices] = imputer.fit_transform(imputer_x) #Todo: will cast all involved features to float64, is that desired? we *could* restrict the copy to only the imputed columns...
+    adata.X[::, imputer_data_indices] = imputer.fit_transform(
+        imputer_x
+    )  # Todo: will cast all involved features to float64, is that desired? we *could* restrict the copy to only the imputed columns...
 
 
 @spinner("Performing miss-forest impute")

@@ -305,11 +305,16 @@ def move_to_x(adata: AnnData, to_x: list[str] | str, copy_x: bool = False) -> An
 
     return new_adata
 
-def get_numerical_column_indices(adata: AnnData, layer: str | None = None,
-                                     column_indices: Iterable[int] | None = None) -> list[int]:
+
+def get_numerical_column_indices(
+    adata: AnnData, layer: str | None = None, column_indices: Iterable[int] | None = None
+) -> list[int]:
     adata_layer = adata.X if layer is None else adata[layer]
-    indices = [i for i in range(adata_layer.shape[1])] if column_indices is None else [i for i in column_indices if
-                                                                                       i < adata_layer.shape[1] - 1]
+    indices = (
+        list(range(adata_layer.shape[1]))
+        if column_indices is None
+        else [i for i in column_indices if i < adata_layer.shape[1] - 1]
+    )
     non_numerical_indices = []
     for i in indices:
         # Todo: There is probably a better way to do this!
@@ -320,17 +325,23 @@ def get_numerical_column_indices(adata: AnnData, layer: str | None = None,
 
     return [idx for idx in indices if idx not in non_numerical_indices]
 
-def get_fully_imputed_column_indices(adata: AnnData, layer: str | None = None,
-                                         column_indices: Iterable[int] | None = None) -> list[int]:
+
+def get_fully_imputed_column_indices(
+    adata: AnnData, layer: str | None = None, column_indices: Iterable[int] | None = None
+) -> list[int]:
     adata_layer = adata.X if layer is None else adata[layer]
-    indices = [i for i in range(adata_layer.shape[1])] if column_indices is None else [i for i in column_indices if
-                                                                                       i < adata_layer.shape[1] - 1]
+    indices = (
+        list(range(adata_layer.shape[1]))
+        if column_indices is None
+        else [i for i in column_indices if i < adata_layer.shape[1] - 1]
+    )
     missing_values_indices = []
     for i in indices:
         if np.isnan(adata_layer[::, i].astype("float64")).any():
             missing_values_indices.append(i)
 
     return [idx for idx in indices if idx not in missing_values_indices]
+
 
 def get_column_indices(adata: AnnData, col_names: str | Iterable[str]) -> list[int]:
     """Fetches the column indices in X for a given list of column names
