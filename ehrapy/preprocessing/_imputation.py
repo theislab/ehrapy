@@ -443,31 +443,24 @@ def mice_forest_impute(
 
     _warn_imputation_threshold(adata, var_names, threshold=warning_threshold)
 
-    try:
-        if np.issubdtype(adata.X.dtype, np.number):
-            _miceforest_impute(
-                adata,
-                var_names,
-                save_all_iterations_data,
-                random_state,
-                inplace,
-                iterations,
-                variable_parameters,
-                verbose,
-            )
-        else:
-            raise ValueError(
-                "Can only impute numerical data. Try to restrict imputation to certain columns using "
-                "var_names parameter."
-            )
-
-    except ValueError as e:
-        if "Data matrix has wrong shape" in str(e):
-            logger.warning("Check that your matrix does not contain any NaN only columns!")
-        raise
+    if any(idx not in get_numerical_column_indices(adata)
+           for idx in get_column_indices(adata, adata.var_names if var_names is None else var_names)):
+        raise ValueError(
+            "Can only impute numerical data. Try to restrict imputation to certain columns using "
+            "var_names parameter or perform an encoding of your data."
+        )
+    _miceforest_impute(
+        adata,
+        var_names,
+        save_all_iterations_data,
+        random_state,
+        inplace,
+        iterations,
+        variable_parameters,
+        verbose,
+    )
 
     return adata if copy else None
-
 
 def _miceforest_impute(
     adata, var_names, save_all_iterations_data, random_state, inplace, iterations, variable_parameters, verbose
