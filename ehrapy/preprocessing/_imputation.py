@@ -449,8 +449,10 @@ def mice_forest_impute(
 
     _warn_imputation_threshold(adata, var_names, threshold=warning_threshold)
 
-    if any(idx not in get_numerical_column_indices(adata)
-           for idx in get_column_indices(adata, adata.var_names if var_names is None else var_names)):
+    if any(
+        idx not in get_numerical_column_indices(adata)
+        for idx in get_column_indices(adata, adata.var_names if var_names is None else var_names)
+    ):
         raise ValueError(
             "Can only impute numerical data. Try to restrict imputation to certain columns using "
             "var_names parameter or perform an encoding of your data."
@@ -467,6 +469,7 @@ def mice_forest_impute(
     )
 
     return adata if copy else None
+
 
 def _miceforest_impute(
     adata, var_names, save_all_iterations_data, random_state, inplace, iterations, variable_parameters, verbose
