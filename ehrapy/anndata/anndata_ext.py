@@ -325,15 +325,21 @@ def get_numerical_column_indices(
 
     return [idx for idx in indices if idx not in non_numerical_indices]
 
+
 def get_fully_imputed_column_indices(
     adata: AnnData, layer: str | None = None, column_indices: Iterable[int] | None = None
 ) -> list[int]:
     adata_layer = adata.X if layer is None else adata.layers[layer]
 
-    indices = range(adata_layer.shape[1]) if column_indices is None else [i for i in column_indices if i < adata_layer.shape[1]]
+    indices = (
+        range(adata_layer.shape[1])
+        if column_indices is None
+        else [i for i in column_indices if i < adata_layer.shape[1]]
+    )
     mask = ~np.isnan(adata_layer[:, indices]).any(axis=0)
 
     return np.array(indices)[mask].tolist()
+
 
 def get_column_indices(adata: AnnData, col_names: str | Iterable[str]) -> list[int]:
     """Fetches the column indices in X for a given list of column names
