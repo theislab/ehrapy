@@ -12,9 +12,8 @@ from sklearn.experimental import enable_iterative_imputer  # noinspection PyUnre
 from sklearn.impute import SimpleImputer
 
 from ehrapy import settings
-from ehrapy._compat import _raise_array_type_not_implemented
-from ehrapy._utils_available import _check_module_importable
-from ehrapy._utils_rendering import spinner
+from ehrapy._compat import _check_module_importable, _raise_array_type_not_implemented
+from ehrapy._progress import spinner
 from ehrapy.anndata import check_feature_types
 from ehrapy.anndata.anndata_ext import get_column_indices
 
