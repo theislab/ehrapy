@@ -9,6 +9,10 @@ import os
 # https://docs.scipy.org/doc/scipy/dev/api-dev/array_api.html
 os.environ["SCIPY_ARRAY_API"] = "1"
 
+import warnings
+
+warnings.filterwarnings("ignore", category=SyntaxWarning, message="invalid escape sequence")
+
 from ehrapy._settings import EhrapyConfig, ehrapy_settings
 
 settings: EhrapyConfig = ehrapy_settings
