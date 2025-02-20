@@ -291,9 +291,7 @@ def _knn_impute(
     fully_imputed_indices = get_fully_imputed_column_indices(adata, column_indices=numerical_indices)
     imputer_data_indices = column_indices + [i for i in fully_imputed_indices if i not in column_indices]
     imputer_x = adata.X[::, imputer_data_indices].astype("float64")
-    adata.X[::, imputer_data_indices] = imputer.fit_transform(
-        imputer_x
-    )
+    adata.X[::, imputer_data_indices] = imputer.fit_transform(imputer_x)
 
 
 @spinner("Performing miss-forest impute")
