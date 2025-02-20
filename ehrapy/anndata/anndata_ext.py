@@ -309,17 +309,19 @@ def move_to_x(adata: AnnData, to_x: list[str] | str, copy_x: bool = False) -> An
 def get_numerical_column_indices(
     adata: AnnData, layer: str | None = None, column_indices: Iterable[int] | None = None
 ) -> list[int]:
-    adata_layer = adata.X if layer is None else adata[layer]
+    mtx = adata.X if layer is None else adata[layer]
     indices = (
-        list(range(adata_layer.shape[1]))
+        list(range(mtx.shape[1]))
         if column_indices is None
-        else [i for i in column_indices if i < adata_layer.shape[1] - 1]
+        else [i for i in column_indices if i < mtx.shape[1] - 1]
     )
     non_numerical_indices = []
     for i in indices:
-        # Todo: There is probably a better way to do this!
+        # The astype("float64") call will throw only if the feature’s data type cannot be cast to float64, meaning in
+        # practice it contains non-numeric values. Consequently, it won’t throw if the values are numeric but stored
+        # as an "object" dtype, as astype("float64") can successfully convert them to floats.
         try:
-            adata_layer[::, i].astype("float64")
+            mtx[::, i].astype("float64")
         except ValueError:
             non_numerical_indices.append(i)
 
@@ -329,14 +331,14 @@ def get_numerical_column_indices(
 def get_fully_imputed_column_indices(
     adata: AnnData, layer: str | None = None, column_indices: Iterable[int] | None = None
 ) -> list[int]:
-    adata_layer = adata.X if layer is None else adata.layers[layer]
+    mtx = adata.X if layer is None else adata.layers[layer]
 
     indices = (
-        range(adata_layer.shape[1])
+        range(mtx.shape[1])
         if column_indices is None
-        else [i for i in column_indices if i < adata_layer.shape[1]]
+        else [i for i in column_indices if i < mtx.shape[1]]
     )
-    mask = ~np.isnan(adata_layer[:, indices]).any(axis=0)
+    mask = ~np.isnan(mtx[:, indices]).any(axis=0)
 
     return np.array(indices)[mask].tolist()
 
