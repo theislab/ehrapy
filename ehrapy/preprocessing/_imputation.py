@@ -293,7 +293,7 @@ def _knn_impute(
     imputer_x = adata.X[::, imputer_data_indices].astype("float64")
     adata.X[::, imputer_data_indices] = imputer.fit_transform(
         imputer_x
-    )  # Todo: will cast all involved features to float64, is that desired? we *could* restrict the copy to only the imputed columns...
+    )
 
 
 @spinner("Performing miss-forest impute")
