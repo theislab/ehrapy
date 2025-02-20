@@ -311,9 +311,7 @@ def get_numerical_column_indices(
 ) -> list[int]:
     mtx = adata.X if layer is None else adata[layer]
     indices = (
-        list(range(mtx.shape[1]))
-        if column_indices is None
-        else [i for i in column_indices if i < mtx.shape[1] - 1]
+        list(range(mtx.shape[1])) if column_indices is None else [i for i in column_indices if i < mtx.shape[1] - 1]
     )
     non_numerical_indices = []
     for i in indices:
@@ -333,11 +331,7 @@ def get_fully_imputed_column_indices(
 ) -> list[int]:
     mtx = adata.X if layer is None else adata.layers[layer]
 
-    indices = (
-        range(mtx.shape[1])
-        if column_indices is None
-        else [i for i in column_indices if i < mtx.shape[1]]
-    )
+    indices = range(mtx.shape[1]) if column_indices is None else [i for i in column_indices if i < mtx.shape[1]]
     mask = ~np.isnan(mtx[:, indices]).any(axis=0)
 
     return np.array(indices)[mask].tolist()
