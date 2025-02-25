@@ -68,7 +68,7 @@ def download(
 
         temp_file_name = f"{download_to_path}.part"
 
-        with Progress(refresh_per_second=1500) as progress:
+        with Progress(refresh_per_second=5) as progress:
             task = progress.add_task("[red]Downloading...", total=total)
             with Path(temp_file_name).open("wb") as file:
                 for data in response.iter_content(block_size):
