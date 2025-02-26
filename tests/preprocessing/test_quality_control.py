@@ -11,7 +11,7 @@ import ehrapy as ep
 from ehrapy.io._read import read_csv
 from ehrapy.preprocessing._encoding import encode
 from ehrapy.preprocessing._quality_control import _compute_obs_metrics, _compute_var_metrics, mcar_test
-from tests.conftest import TEST_DATA_PATH
+from tests.conftest import TEST_DATA_PATH, as_dense_dask_array
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_PATH_ENCODE = f"{TEST_DATA_PATH}/encode"
@@ -90,9 +90,8 @@ def test_var_qc_metrics(missing_values_adata):
     "array_type, expected_error",
     [
         (np.array, None),
-        # (da.array, NotImplementedError),
-        # (sparse.csr_matrix, NotImplementedError),
-        # TODO: currently disabled, due to sparse matrix not supporting datat type conversion
+        (as_dense_dask_array, None),
+        # (sparse.csr_matrix, NotImplementedError), TODO: Dataset contains string values. Sparse matrices not supported.
     ],
 )
 def test_obs_qc_metrics_array_types(array_type, expected_error):
@@ -117,9 +116,8 @@ def test_obs_nan_qc_metrics():
     "array_type, expected_error",
     [
         (np.array, None),
-        # (da.array, NotImplementedError),
-        # (sparse.csr_matrix, NotImplementedError),
-        # TODO: currently disabled, due to sparse matrix not supporting datat type conversion
+        (as_dense_dask_array, None),
+        # can't test sparse matrices because they don't support string values
     ],
 )
 def test_var_qc_metrics_array_types(array_type, expected_error):

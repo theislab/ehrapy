@@ -48,7 +48,7 @@ def _base_check_imputation(
     Raises:
         AssertionError: If any of the checks fail.
     """
-    # if .x of the AnnData is a dask array, convert it to a numpy array
+    # Convert dask arrays to numpy arrays
     if isinstance(adata_before_imputation.X, da.Array):
         adata_before_imputation.X = adata_before_imputation.X.compute()
     if isinstance(adata_after_imputation.X, da.Array):
@@ -318,9 +318,7 @@ def test_explicit_impute_array_types(impute_num_adata, array_type, expected_erro
             explicit_impute(impute_num_adata, replacement=1011, copy=True)
 
 
-@pytest.mark.parametrize(
-    "array_type", [np.array, da.from_array]
-)  # TODO: discuss, should we add a new fixture with supported types?
+@pytest.mark.parametrize("array_type", ARRAY_TYPES)
 def test_explicit_impute_all(array_type, impute_num_adata):
     impute_num_adata.X = array_type(impute_num_adata.X)
     warnings.filterwarnings("ignore", category=FutureWarning)
