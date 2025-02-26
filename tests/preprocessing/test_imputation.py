@@ -277,7 +277,7 @@ def test_missforest_impute_subset(impute_num_adata):
     "array_type,expected_error",
     [
         (np.array, None),
-        (da.from_array, None),
+        (da.from_array, NotImplementedError),
         (sparse.csr_matrix, NotImplementedError),
     ],
 )

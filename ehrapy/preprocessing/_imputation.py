@@ -495,12 +495,22 @@ def mice_forest_impute(
     return adata if copy else None
 
 
+@singledispatch
+def load_dataframe(arr, columns, index):
+    _raise_array_type_not_implemented(load_dataframe, type(arr))
+
+
+@load_dataframe.register
+def _(arr: np.ndarray, columns, index):
+    return pd.DataFrame(arr, columns=columns, index=index)
+
+
 def _miceforest_impute(
     adata, var_names, save_all_iterations_data, random_state, inplace, iterations, variable_parameters, verbose
 ) -> None:
     import miceforest as mf
 
-    data_df = pd.DataFrame(adata.X, columns=adata.var_names, index=adata.obs_names)
+    data_df = load_dataframe(adata.X, columns=adata.var_names, index=adata.obs_names)
     data_df = data_df.apply(pd.to_numeric, errors="coerce")
 
     if isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):
