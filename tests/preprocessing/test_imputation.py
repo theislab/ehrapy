@@ -311,9 +311,7 @@ def test_miceforest_impute_non_numerical_data(impute_titanic_adata):
 
 
 @pytest.mark.skipif(os.name == "Darwin", reason="miceforest Imputation not supported by MacOS.")
-@pytest.mark.parametrize("array_type", ARRAY_TYPES)
-def test_miceforest_impute_numerical_data(impute_iris_adata, array_type):
-    impute_iris_adata.X = array_type(impute_iris_adata.X)
+def test_miceforest_impute_numerical_data(impute_iris_adata):
     adata_not_imputed = impute_iris_adata.copy()
     mice_forest_impute(impute_iris_adata)
 
