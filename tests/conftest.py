@@ -152,10 +152,10 @@ def asarray(a):
     return np.asarray(a)
 
 
-def as_dense_dask_array(a):
+def as_dense_dask_array(a, chunk_size=1000):
     import dask.array as da
 
-    return da.asarray(a)
+    return da.from_array(a, chunks=chunk_size)
 
 
 ARRAY_TYPES = (asarray, as_dense_dask_array)
