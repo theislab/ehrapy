@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import copy
 from functools import singledispatch
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
@@ -150,19 +149,18 @@ def _compute_obs_metrics(
 
 
 def _compute_var_metrics(
-    arr,
+    mtx,
     adata: AnnData,
 ):
     """Compute variable metrics for quality control.
 
     Args:
-        arr: Data array.
+        mtx: Data array.
         var_metrics: DataFrame to store variable metrics.
         adata: Annotated data matrix.
     """
 
     categorical_indices = np.ndarray([0], dtype=int)
-    mtx = copy.deepcopy(arr.astype(object))
     var_metrics = pd.DataFrame(index=adata.var_names)
 
     if "encoding_mode" in adata.var.keys():
@@ -171,7 +169,8 @@ def _compute_var_metrics(
 
             if original_values_categorical not in adata.obs.keys():
                 raise KeyError(f"Original values for {original_values_categorical} not found in adata.obs.")
-            mtx[:, index] = np.tile(
+
+            modified_slice = np.tile(
                 np.where(
                     adata.obs[original_values_categorical].astype(object) == "nan",
                     np.nan,
@@ -179,6 +178,10 @@ def _compute_var_metrics(
                 ).reshape(-1, 1),
                 mtx[:, index].shape[1],
             )
+
+            # Concatenate the modified slice with the unchanged part of mtx
+            mtx = np.concatenate([mtx[:, : index[0]], modified_slice, mtx[:, index[-1] + 1 :]], axis=1)
+
             categorical_indices = np.concatenate([categorical_indices, index])
 
     non_categorical_indices = np.ones(mtx.shape[1], dtype=bool)
