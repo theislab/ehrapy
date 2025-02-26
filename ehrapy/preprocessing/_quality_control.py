@@ -76,7 +76,7 @@ def qc_metrics(
 
 @singledispatch
 def _compute_missing_values(mtx, axis):
-    _raise_array_type_not_implemented(mtx, type(mtx))
+    _raise_array_type_not_implemented(_compute_missing_values, type(mtx))
 
 
 @_compute_missing_values.register
