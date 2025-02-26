@@ -273,6 +273,21 @@ def test_missforest_impute_subset(impute_num_adata):
     _base_check_imputation(impute_num_adata, adata_imputed, imputed_var_names=var_names)
 
 
+@pytest.mark.parametrize(
+    "array_type,expected_error",
+    [
+        (np.array, None),
+        (da.from_array, None),
+        # (sparse.csr_matrix, NotImplementedError),
+    ],
+)
+def test_miceforest_array_types(impute_num_adata, array_type, expected_error):
+    impute_num_adata.X = array_type(impute_num_adata.X)
+    if expected_error:
+        with pytest.raises(expected_error):
+            mice_forest_impute(impute_num_adata, copy=True)
+
+
 @pytest.mark.skipif(os.name == "Darwin", reason="miceforest Imputation not supported by MacOS.")
 def test_miceforest_impute_no_copy(impute_iris_adata):
     adata_not_imputed = impute_iris_adata.copy()
@@ -296,7 +311,9 @@ def test_miceforest_impute_non_numerical_data(impute_titanic_adata):
 
 
 @pytest.mark.skipif(os.name == "Darwin", reason="miceforest Imputation not supported by MacOS.")
-def test_miceforest_impute_numerical_data(impute_iris_adata):
+@pytest.mark.parametrize("array_type", ARRAY_TYPES)
+def test_miceforest_impute_numerical_data(impute_iris_adata, array_type):
+    impute_iris_adata.X = array_type(impute_iris_adata.X)
     adata_not_imputed = impute_iris_adata.copy()
     mice_forest_impute(impute_iris_adata)
 
