@@ -132,9 +132,9 @@ def test_var_qc_metrics_array_types(array_type, expected_error):
 def test_var_encoding_mode_does_not_modify_original_matrix():
     adata = read_csv(dataset_path=f"{_TEST_PATH_ENCODE}/dataset1.csv")
     adata2 = encode(adata, encodings={"one-hot": ["clinic_day"]})
-    mtx_copy = adata.X.copy()
+    mtx_copy = adata2.X.copy()
     _compute_var_metrics(adata2.X, adata2)
-    assert np.array_equal(mtx_copy, adata.X)
+    assert np.array_equal(mtx_copy, adata2.X)
 
 
 def test_var_nan_qc_metrics():
