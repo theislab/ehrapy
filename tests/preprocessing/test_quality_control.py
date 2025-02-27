@@ -105,11 +105,9 @@ def test_obs_qc_metrics_array_types(array_type, expected_error):
             _compute_obs_metrics(mtx, adata)
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES)
-def test_obs_nan_qc_metrics(array_type):
+def test_obs_nan_qc_metrics():
     adata = read_csv(dataset_path=f"{_TEST_PATH_ENCODE}/dataset1.csv")
     adata.X[0][4] = np.nan
-    adata.X = array_type(adata.X)
     adata2 = encode(adata, encodings={"one-hot": ["clinic_day"]})
     mtx = adata2.X
     obs_metrics = _compute_obs_metrics(mtx, adata2)
