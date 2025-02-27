@@ -22,7 +22,6 @@ def test_qc_metrics_full(array_type, missing_values_adata):
     modification_copy = adata.copy()
     obs_metrics, var_metrics = ep.pp.qc_metrics(adata)
 
-    # obs_metrics tests
     assert np.array_equal(obs_metrics["missing_values_abs"].values, np.array([1, 2]))
     assert np.allclose(obs_metrics["missing_values_pct"].values, np.array([33.3333, 66.6667]))
 
