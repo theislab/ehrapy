@@ -15,52 +15,31 @@ CURRENT_DIR = Path(__file__).parent
 _TEST_PATH_ENCODE = f"{TEST_DATA_PATH}/encode"
 
 
-@pytest.fixture
-def obs_data():
-    return {
-        "disease": ["cancer", "tumor"],
-        "country": ["Germany", "switzerland"],
-        "sex": ["male", "female"],
-    }
+@pytest.mark.parametrize("array_type", ARRAY_TYPES)
+def test_qc_metrics_full(array_type, missing_values_adata):
+    adata = missing_values_adata
+    adata.X = array_type(adata.X)
+    modification_copy = adata.copy()
+    obs_metrics, var_metrics = ep.pp.qc_metrics(adata)
 
+    # obs_metrics tests
+    assert np.array_equal(obs_metrics["missing_values_abs"].values, np.array([1, 2]))
+    assert np.allclose(obs_metrics["missing_values_pct"].values, np.array([33.3333, 66.6667]))
 
-@pytest.fixture
-def var_data():
-    return {
-        "alive": ["yes", "no", "maybe"],
-        "hospital": ["hospital 1", "hospital 2", "hospital 1"],
-        "crazy": ["yes", "yes", "yes"],
-    }
+    # var_metrics tests
+    assert np.array_equal(var_metrics["missing_values_abs"].values, np.array([1, 2, 0]))
+    assert np.allclose(var_metrics["missing_values_pct"].values, np.array([50.0, 100.0, 0.0]))
+    assert np.allclose(var_metrics["mean"].values, np.array([0.21, np.nan, 24.327]), equal_nan=True)
+    assert np.allclose(var_metrics["median"].values, np.array([0.21, np.nan, 24.327]), equal_nan=True)
+    assert np.allclose(var_metrics["min"].values, np.array([0.21, np.nan, 7.234]), equal_nan=True)
+    assert np.allclose(var_metrics["max"].values, np.array([0.21, np.nan, 41.419998]), equal_nan=True)
+    assert (~var_metrics["iqr_outliers"]).all()
 
-
-@pytest.fixture
-def missing_values_adata(obs_data, var_data):
-    return AnnData(
-        X=np.array([[0.21, np.nan, 41.42], [np.nan, np.nan, 7.234]], dtype=np.float32),
-        obs=pd.DataFrame(data=obs_data),
-        var=pd.DataFrame(data=var_data, index=["Acetaminophen", "hospital", "crazy"]),
-    )
-
-
-@pytest.fixture
-def lab_measurements_simple_adata(obs_data, var_data):
-    X = np.array([[73, 0.02, 1.00], [148, 0.25, 3.55]], dtype=np.float32)
-    return AnnData(
-        X=X,
-        obs=pd.DataFrame(data=obs_data),
-        var=pd.DataFrame(data=var_data, index=["Acetaminophen", "Acetoacetic acid", "Beryllium, toxic"]),
-    )
-
-
-@pytest.fixture
-def lab_measurements_layer_adata(obs_data, var_data):
-    X = np.array([[73, 0.02, 1.00], [148, 0.25, 3.55]], dtype=np.float32)
-    return AnnData(
-        X=X,
-        obs=pd.DataFrame(data=obs_data),
-        var=pd.DataFrame(data=var_data, index=["Acetaminophen", "Acetoacetic acid", "Beryllium, toxic"]),
-        layers={"layer_copy": X},
-    )
+    # check that none of the columns were modified
+    for key in modification_copy.obs.keys():
+        assert np.array_equal(modification_copy.obs[key], adata.obs[key])
+    for key in modification_copy.var.keys():
+        assert np.array_equal(modification_copy.var[key], adata.var[key])
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES)
