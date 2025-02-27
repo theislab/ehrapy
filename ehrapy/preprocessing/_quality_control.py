@@ -105,8 +105,6 @@ def _compute_obs_metrics(
 
     Args:
         mtx: Data array.
-        obs_metrics: DataFrame to store observation metrics.
-        var_metrics: DataFrame to store variable metrics.
         adata: Annotated data matrix.
         qc_vars: A list of previously calculated QC metrics to calculate summary statistics for.
         log1p: Whether to apply log1p normalization for the QC metrics. Only used with parameter 'qc_vars'.
@@ -157,7 +155,6 @@ def _compute_var_metrics(
 
     Args:
         mtx: Data array.
-        var_metrics: DataFrame to store variable metrics.
         adata: Annotated data matrix.
     """
 
