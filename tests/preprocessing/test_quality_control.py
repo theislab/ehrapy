@@ -91,7 +91,7 @@ def test_var_qc_metrics(missing_values_adata):
     [
         (np.array, None),
         (as_dense_dask_array, None),
-        # (sparse.csr_matrix, NotImplementedError), TODO: Dataset contains string values. Sparse matrices not supported.
+        # can't test sparse matrices because they don't support string values
     ],
 )
 def test_obs_qc_metrics_array_types(array_type, expected_error):
