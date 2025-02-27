@@ -25,7 +25,6 @@ def test_qc_metrics_full(array_type, missing_values_adata):
     assert np.array_equal(obs_metrics["missing_values_abs"].values, np.array([1, 2]))
     assert np.allclose(obs_metrics["missing_values_pct"].values, np.array([33.3333, 66.6667]))
 
-    # var_metrics tests
     assert np.array_equal(var_metrics["missing_values_abs"].values, np.array([1, 2, 0]))
     assert np.allclose(var_metrics["missing_values_pct"].values, np.array([50.0, 100.0, 0.0]))
     assert np.allclose(var_metrics["mean"].values, np.array([0.21, np.nan, 24.327]), equal_nan=True)
