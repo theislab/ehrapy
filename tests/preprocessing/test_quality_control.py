@@ -11,7 +11,7 @@ import ehrapy as ep
 from ehrapy.io._read import read_csv
 from ehrapy.preprocessing._encoding import encode
 from ehrapy.preprocessing._quality_control import _compute_obs_metrics, _compute_var_metrics, mcar_test
-from tests.conftest import TEST_DATA_PATH, as_dense_dask_array
+from tests.conftest import ARRAY_TYPES, TEST_DATA_PATH, as_dense_dask_array
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_PATH_ENCODE = f"{TEST_DATA_PATH}/encode"
@@ -65,7 +65,9 @@ def lab_measurements_layer_adata(obs_data, var_data):
     )
 
 
-def test_obs_qc_metrics(missing_values_adata):
+@pytest.mark.parametrize("array_type", ARRAY_TYPES)
+def test_obs_qc_metrics(array_type, missing_values_adata):
+    missing_values_adata.X = array_type(missing_values_adata.X)
     mtx = missing_values_adata.X
     obs_metrics = _compute_obs_metrics(mtx, missing_values_adata)
 
@@ -73,7 +75,9 @@ def test_obs_qc_metrics(missing_values_adata):
     assert np.allclose(obs_metrics["missing_values_pct"].values, np.array([33.3333, 66.6667]))
 
 
-def test_var_qc_metrics(missing_values_adata):
+@pytest.mark.parametrize("array_type", ARRAY_TYPES)
+def test_var_qc_metrics(array_type, missing_values_adata):
+    missing_values_adata.X = array_type(missing_values_adata.X)
     mtx = missing_values_adata.X
     var_metrics = _compute_var_metrics(mtx, missing_values_adata)
 
@@ -103,9 +107,11 @@ def test_obs_qc_metrics_array_types(array_type, expected_error):
             _compute_obs_metrics(mtx, adata)
 
 
-def test_obs_nan_qc_metrics():
+@pytest.mark.parametrize("array_type", ARRAY_TYPES)
+def test_obs_nan_qc_metrics(array_type):
     adata = read_csv(dataset_path=f"{_TEST_PATH_ENCODE}/dataset1.csv")
     adata.X[0][4] = np.nan
+    adata.X = array_type(adata.X)
     adata2 = encode(adata, encodings={"one-hot": ["clinic_day"]})
     mtx = adata2.X
     obs_metrics = _compute_obs_metrics(mtx, adata2)
