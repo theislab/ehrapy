@@ -134,7 +134,7 @@ def test_var_encoding_mode_does_not_modify_original_matrix():
     adata2 = encode(adata, encodings={"one-hot": ["clinic_day"]})
     mtx_copy = adata.X.copy()
     _compute_var_metrics(adata2.X, adata2)
-    assert np.array_equal(mtx_copy, adata.X)  # check that the original matrix is not modified
+    assert np.array_equal(mtx_copy, adata.X)
 
 
 def test_var_nan_qc_metrics():
