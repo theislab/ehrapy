@@ -323,7 +323,7 @@ def test_miceforest_impute_numerical_data(impute_iris_adata):
     [
         (np.array, None),
         (da.from_array, None),
-        # (sparse.csr_matrix, NotImplementedError),
+        (sparse.csr_matrix, NotImplementedError),
     ],
 )
 def test_explicit_impute_array_types(impute_num_adata, array_type, expected_error):
