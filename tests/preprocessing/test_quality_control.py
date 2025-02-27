@@ -1,11 +1,9 @@
 from pathlib import Path
 
-import dask.array as da
 import numpy as np
 import pandas as pd
 import pytest
 from anndata import AnnData
-from scipy import sparse
 
 import ehrapy as ep
 from ehrapy.io._read import read_csv
