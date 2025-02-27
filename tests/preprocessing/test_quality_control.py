@@ -16,7 +16,7 @@ _TEST_PATH_ENCODE = f"{TEST_DATA_PATH}/encode"
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES)
-def test_qc_metrics_full(array_type, missing_values_adata):
+def test_qc_metrics_vanilla(array_type, missing_values_adata):
     adata = missing_values_adata
     adata.X = array_type(adata.X)
     modification_copy = adata.copy()

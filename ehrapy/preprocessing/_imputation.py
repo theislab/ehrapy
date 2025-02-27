@@ -84,7 +84,9 @@ def explicit_impute(
             imputation_value = _extract_impute_value(replacement, column_name)
             # only replace if an explicit value got passed or could be extracted from replacement
             if imputation_value:
-                _replace_explicit(adata.X[:, idx : idx + 1], imputation_value, impute_empty_strings)
+                adata.X[:, idx : idx + 1] = _replace_explicit(
+                    adata.X[:, idx : idx + 1], imputation_value, impute_empty_strings
+                )
             else:
                 logger.warning(f"No replace value passed and found for var [not bold green]{column_name}.")
     else:
@@ -101,25 +103,27 @@ def _replace_explicit(arr, replacement: str | int, impute_empty_strings: bool) -
 
 
 @_replace_explicit.register
-def _(arr: np.ndarray, replacement: str | int, impute_empty_strings: bool):
+def _(arr: np.ndarray, replacement: str | int, impute_empty_strings: bool) -> np.ndarray:
     """Replace one column or whole X with a value where missing values are stored."""
     if not impute_empty_strings:  # pragma: no cover
         impute_conditions = pd.isnull(arr)
     else:
         impute_conditions = np.logical_or(pd.isnull(arr), arr == "")
     arr[impute_conditions] = replacement
+    return arr
 
 
 if DASK_AVAILABLE:
 
     @_replace_explicit.register(da.Array)
-    def _(arr: da.Array, replacement: str | int, impute_empty_strings: bool):
+    def _(arr: da.Array, replacement: str | int, impute_empty_strings: bool) -> da.Array:
         """Replace one column or whole X with a value where missing values are stored."""
         if not impute_empty_strings:  # pragma: no cover
-            impute_conditions = da.isnan(arr)
+            impute_conditions = da.isnull(arr)
         else:
-            impute_conditions = da.logical_or(da.isnan(arr), arr == "")
+            impute_conditions = da.logical_or(da.isnull(arr), arr == "")
         arr[impute_conditions] = replacement
+        return arr
 
 
 def _extract_impute_value(replacement: dict[str, str | int], column_name: str) -> str | int | None:

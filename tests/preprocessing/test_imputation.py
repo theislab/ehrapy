@@ -343,7 +343,9 @@ def test_explicit_impute_all(array_type, impute_num_adata):
     assert np.sum([adata_imputed.X == 1011]) == 3
 
 
-def test_explicit_impute_subset(impute_adata):
+@pytest.mark.parametrize("array_type", ARRAY_TYPES)
+def test_explicit_impute_subset(impute_adata, array_type):
+    impute_adata.X = array_type(impute_adata.X)
     adata_imputed = explicit_impute(impute_adata, replacement={"strcol": "REPLACED", "intcol": 1011}, copy=True)
 
     _base_check_imputation(impute_adata, adata_imputed, imputed_var_names=("strcol", "intcol"))
