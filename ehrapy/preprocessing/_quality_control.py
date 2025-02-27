@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+from functools import singledispatch
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
@@ -9,6 +10,7 @@ import pandas as pd
 from lamin_utils import logger
 from thefuzz import process
 
+from ehrapy._compat import _raise_array_type_not_implemented
 from ehrapy.anndata import anndata_to_df
 from ehrapy.preprocessing._encoding import _get_encoded_features
 
@@ -16,6 +18,13 @@ if TYPE_CHECKING:
     from collections.abc import Collection
 
     from anndata import AnnData
+
+try:
+    import dask.array as da
+
+    DASK_AVAILABLE = True
+except ImportError:
+    DASK_AVAILABLE = False
 
 
 def qc_metrics(
@@ -55,55 +64,57 @@ def qc_metrics(
             >>> obs_qc, var_qc = ep.pp.qc_metrics(adata)
             >>> obs_qc["missing_values_pct"].plot(kind="hist", bins=20)
     """
-    obs_metrics = _obs_qc_metrics(adata, layer, qc_vars)
-    var_metrics = _var_qc_metrics(adata, layer)
 
-    adata.obs[obs_metrics.columns] = obs_metrics
+    mtx = adata.X if layer is None else adata.layers[layer]
+    var_metrics = _compute_var_metrics(mtx, adata)
+    obs_metrics = _compute_obs_metrics(mtx, adata, qc_vars=qc_vars, log1p=True)
+
     adata.var[var_metrics.columns] = var_metrics
+    adata.obs[obs_metrics.columns] = obs_metrics
 
     return obs_metrics, var_metrics
 
 
-def _missing_values(
-    arr: np.ndarray, mode: Literal["abs", "pct"] = "abs", df_type: Literal["obs", "var"] = "obs"
-) -> np.ndarray:
-    """Calculates the absolute or relative amount of missing values.
-
-    Args:
-        arr: Numpy array containing a data row which is a subset of X (mtx).
-        mode: Whether to calculate absolute or percentage of missing values.
-        df_type: Whether to calculate the proportions for obs or var. One of 'obs' or 'var'.
-
-    Returns:
-        Absolute or relative amount of missing values.
-    """
-    num_missing = pd.isnull(arr).sum()
-    if mode == "abs":
-        return num_missing
-    elif mode == "pct":
-        total_elements = arr.shape[0] if df_type == "obs" else len(arr)
-        return (num_missing / total_elements) * 100
+@singledispatch
+def _compute_missing_values(mtx, axis):
+    _raise_array_type_not_implemented(_compute_missing_values, type(mtx))
 
 
-def _obs_qc_metrics(
-    adata: AnnData, layer: str = None, qc_vars: Collection[str] = (), log1p: bool = True
-) -> pd.DataFrame:
+@_compute_missing_values.register
+def _(mtx: np.ndarray, axis) -> np.ndarray:
+    return pd.isnull(mtx).sum(axis)
+
+
+if DASK_AVAILABLE:
+
+    @_compute_missing_values.register
+    def _(mtx: da.Array, axis) -> np.ndarray:
+        return da.isnull(mtx).sum(axis).compute()
+
+
+def _compute_obs_metrics(
+    mtx,
+    adata: AnnData,
+    *,
+    qc_vars: Collection[str] = (),
+    log1p: bool = True,
+):
     """Calculates quality control metrics for observations.
 
     See :func:`~ehrapy.preprocessing._quality_control.calculate_qc_metrics` for a list of calculated metrics.
 
     Args:
+        mtx: Data array.
         adata: Annotated data matrix.
-        layer: Layer containing the actual data matrix.
         qc_vars: A list of previously calculated QC metrics to calculate summary statistics for.
         log1p: Whether to apply log1p normalization for the QC metrics. Only used with parameter 'qc_vars'.
 
     Returns:
         A Pandas DataFrame with the calculated metrics.
     """
+
     obs_metrics = pd.DataFrame(index=adata.obs_names)
     var_metrics = pd.DataFrame(index=adata.var_names)
-    mtx = adata.X if layer is None else adata.layers[layer]
 
     if "encoding_mode" in adata.var:
         for original_values_categorical in _get_encoded_features(adata):
@@ -120,8 +131,8 @@ def _obs_qc_metrics(
                 )
             )
 
-    obs_metrics["missing_values_abs"] = np.apply_along_axis(_missing_values, 1, mtx, mode="abs")
-    obs_metrics["missing_values_pct"] = np.apply_along_axis(_missing_values, 1, mtx, mode="pct", df_type="obs")
+    obs_metrics["missing_values_abs"] = _compute_missing_values(mtx, axis=1)
+    obs_metrics["missing_values_pct"] = (obs_metrics["missing_values_abs"] / mtx.shape[1]) * 100
 
     # Specific QC metrics
     for qc_var in qc_vars:
@@ -136,10 +147,19 @@ def _obs_qc_metrics(
     return obs_metrics
 
 
-def _var_qc_metrics(adata: AnnData, layer: str | None = None) -> pd.DataFrame:
-    var_metrics = pd.DataFrame(index=adata.var_names)
-    mtx = adata.X if layer is None else adata.layers[layer]
+def _compute_var_metrics(
+    mtx,
+    adata: AnnData,
+):
+    """Compute variable metrics for quality control.
+
+    Args:
+        mtx: Data array.
+        adata: Annotated data matrix.
+    """
+
     categorical_indices = np.ndarray([0], dtype=int)
+    var_metrics = pd.DataFrame(index=adata.var_names)
 
     if "encoding_mode" in adata.var.keys():
         for original_values_categorical in _get_encoded_features(adata):
@@ -157,32 +177,35 @@ def _var_qc_metrics(adata: AnnData, layer: str | None = None) -> pd.DataFrame:
                 mtx[:, index].shape[1],
             )
             categorical_indices = np.concatenate([categorical_indices, index])
+
     non_categorical_indices = np.ones(mtx.shape[1], dtype=bool)
     non_categorical_indices[categorical_indices] = False
-    var_metrics["missing_values_abs"] = np.apply_along_axis(_missing_values, 0, mtx, mode="abs")
-    var_metrics["missing_values_pct"] = np.apply_along_axis(_missing_values, 0, mtx, mode="pct", df_type="var")
+
+    var_metrics["missing_values_abs"] = _compute_missing_values(mtx, axis=0)
+    var_metrics["missing_values_pct"] = (var_metrics["missing_values_abs"] / mtx.shape[0]) * 100
 
     var_metrics["mean"] = np.nan
     var_metrics["median"] = np.nan
     var_metrics["standard_deviation"] = np.nan
     var_metrics["min"] = np.nan
     var_metrics["max"] = np.nan
+    var_metrics["iqr_outliers"] = np.nan
 
     try:
         var_metrics.loc[non_categorical_indices, "mean"] = np.nanmean(
-            np.array(mtx[:, non_categorical_indices], dtype=np.float64), axis=0
+            mtx[:, non_categorical_indices].astype(np.float64), axis=0
         )
         var_metrics.loc[non_categorical_indices, "median"] = np.nanmedian(
-            np.array(mtx[:, non_categorical_indices], dtype=np.float64), axis=0
+            mtx[:, non_categorical_indices].astype(np.float64), axis=0
         )
         var_metrics.loc[non_categorical_indices, "standard_deviation"] = np.nanstd(
-            np.array(mtx[:, non_categorical_indices], dtype=np.float64), axis=0
+            mtx[:, non_categorical_indices].astype(np.float64), axis=0
         )
         var_metrics.loc[non_categorical_indices, "min"] = np.nanmin(
-            np.array(mtx[:, non_categorical_indices], dtype=np.float64), axis=0
+            mtx[:, non_categorical_indices].astype(np.float64), axis=0
         )
         var_metrics.loc[non_categorical_indices, "max"] = np.nanmax(
-            np.array(mtx[:, non_categorical_indices], dtype=np.float64), axis=0
+            mtx[:, non_categorical_indices].astype(np.float64), axis=0
         )
 
         # Calculate IQR and define IQR outliers

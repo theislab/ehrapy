@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import warnings
 from collections.abc import Iterable
+from functools import singledispatch
 from typing import TYPE_CHECKING, Literal
 
 import numpy as np
@@ -11,7 +12,7 @@ from sklearn.experimental import enable_iterative_imputer  # noinspection PyUnre
 from sklearn.impute import SimpleImputer
 
 from ehrapy import settings
-from ehrapy._compat import _check_module_importable
+from ehrapy._compat import _check_module_importable, _raise_array_type_not_implemented
 from ehrapy._progress import spinner
 from ehrapy.anndata import check_feature_types
 from ehrapy.anndata.anndata_ext import (
@@ -22,6 +23,13 @@ from ehrapy.anndata.anndata_ext import (
 
 if TYPE_CHECKING:
     from anndata import AnnData
+
+try:
+    import dask.array as da
+
+    DASK_AVAILABLE = True
+except ImportError:
+    DASK_AVAILABLE = False
 
 
 @spinner("Performing explicit impute")
@@ -76,7 +84,9 @@ def explicit_impute(
             imputation_value = _extract_impute_value(replacement, column_name)
             # only replace if an explicit value got passed or could be extracted from replacement
             if imputation_value:
-                _replace_explicit(adata.X[:, idx : idx + 1], imputation_value, impute_empty_strings)
+                adata.X[:, idx : idx + 1] = _replace_explicit(
+                    adata.X[:, idx : idx + 1], imputation_value, impute_empty_strings
+                )
             else:
                 logger.warning(f"No replace value passed and found for var [not bold green]{column_name}.")
     else:
@@ -87,13 +97,33 @@ def explicit_impute(
     return adata if copy else None
 
 
-def _replace_explicit(arr: np.ndarray, replacement: str | int, impute_empty_strings: bool) -> None:
+@singledispatch
+def _replace_explicit(arr, replacement: str | int, impute_empty_strings: bool) -> None:
+    _raise_array_type_not_implemented(_replace_explicit, type(arr))
+
+
+@_replace_explicit.register
+def _(arr: np.ndarray, replacement: str | int, impute_empty_strings: bool) -> np.ndarray:
     """Replace one column or whole X with a value where missing values are stored."""
     if not impute_empty_strings:  # pragma: no cover
         impute_conditions = pd.isnull(arr)
     else:
         impute_conditions = np.logical_or(pd.isnull(arr), arr == "")
     arr[impute_conditions] = replacement
+    return arr
+
+
+if DASK_AVAILABLE:
+
+    @_replace_explicit.register(da.Array)
+    def _(arr: da.Array, replacement: str | int, impute_empty_strings: bool) -> da.Array:
+        """Replace one column or whole X with a value where missing values are stored."""
+        if not impute_empty_strings:  # pragma: no cover
+            impute_conditions = da.isnull(arr)
+        else:
+            impute_conditions = da.logical_or(da.isnull(arr), arr == "")
+        arr[impute_conditions] = replacement
+        return arr
 
 
 def _extract_impute_value(replacement: dict[str, str | int], column_name: str) -> str | int | None:
@@ -469,12 +499,22 @@ def mice_forest_impute(
     return adata if copy else None
 
 
+@singledispatch
+def load_dataframe(arr, columns, index):
+    _raise_array_type_not_implemented(load_dataframe, type(arr))
+
+
+@load_dataframe.register
+def _(arr: np.ndarray, columns, index):
+    return pd.DataFrame(arr, columns=columns, index=index)
+
+
 def _miceforest_impute(
     adata, var_names, save_all_iterations_data, random_state, inplace, iterations, variable_parameters, verbose
 ) -> None:
     import miceforest as mf
 
-    data_df = pd.DataFrame(adata.X, columns=adata.var_names, index=adata.obs_names)
+    data_df = load_dataframe(adata.X, columns=adata.var_names, index=adata.obs_names)
     data_df = data_df.apply(pd.to_numeric, errors="coerce")
 
     if isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):
