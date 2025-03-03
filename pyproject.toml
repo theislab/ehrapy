@@ -54,7 +54,6 @@ dependencies = [
     "requests",
     "pynndescent",
     "miceforest",
-    "scikit-misc",
     "lifelines",
     "missingno",
     "thefuzz[speedup]",
