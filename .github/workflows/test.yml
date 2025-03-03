@@ -24,9 +24,9 @@ jobs:
                     - os: ubuntu-latest
                       python: "3.10"
                     - os: ubuntu-latest
-                      python: "3.12"
+                      python: "3.13"
                     - os: ubuntu-latest
-                      python: "3.12"
+                      python: "3.13"
                       pip-flags: "--pre"
 
         env:
