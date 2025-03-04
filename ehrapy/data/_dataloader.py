@@ -49,13 +49,13 @@ def download(
     if output_path is None:
         output_path = tempfile.gettempdir()
 
-    def sanitize_file_name(file_name):
+    def _sanitize_file_name(file_name):
         if os.name == "nt":
             file_name = file_name.replace("?", "_").replace("*", "_")
         return file_name
 
     download_to_path = Path(
-        sanitize_file_name(
+        _sanitize_file_name(
             f"{output_path}{output_file_name}"
             if str(output_path).endswith("/")
             else f"{output_path}/{output_file_name}"
