@@ -215,12 +215,15 @@ def knn_impute(
     *,
     n_neighbors: int = 5,
     copy: bool = False,
-    backend: Literal["scikit-learn", "faiss"] = "faiss",
     warning_threshold: int = 70,
     backend_kwargs: dict | None = None,
     **kwargs,
 ) -> AnnData:
     """Imputes missing values in the input AnnData object using K-nearest neighbor imputation.
+
+    Supports the following datatype for X:
+    - Numpy array: will use faiss
+    - Dask: will use xxx
 
     If required, the data needs to be properly encoded as this imputation requires numerical data only.
 
@@ -236,10 +239,6 @@ def knn_impute(
         n_neighbors: Number of neighbors to use when performing the imputation.
         copy: Whether to perform the imputation on a copy of the original `AnnData` object.
               If `True`, the original object remains unmodified.
-        backend: The implementation to use for the KNN imputation.
-                 'scikit-learn' is very slow but uses an exact KNN algorithm, whereas 'faiss'
-                 is drastically faster but uses an approximation for the KNN graph.
-                 In practice, 'faiss' is close enough to the 'scikit-learn' results.
         warning_threshold: Percentage of missing values above which a warning is issued.
         backend_kwargs: Passed to the backend.
                   Pass "mean", "median", or "weighted" for 'strategy' to set the imputation strategy for faiss.
@@ -262,9 +261,6 @@ def knn_impute(
 
     _warn_imputation_threshold(adata, var_names, threshold=warning_threshold)
 
-    if backend not in {"scikit-learn", "faiss"}:
-        raise ValueError(f"Unknown backend '{backend}' for KNN imputation. Choose between 'scikit-learn' and 'faiss'.")
-
     if backend_kwargs is None:
         backend_kwargs = {}
 
@@ -274,43 +270,18 @@ def knn_impute(
     if unexpected_kwargs:
         raise ValueError(f"Unexpected keyword arguments: {unexpected_kwargs}.")
 
-    if "n_neighbours" in kwargs.keys():
-        n_neighbors = kwargs["n_neighbours"]
-        warnings.warn(
-            "ehrapy will use 'n_neighbors' instead of 'n_neighbours'. Please update your code.",
-            DeprecationWarning,
-            stacklevel=1,
-        )
-
-    if _check_module_importable("sklearnex"):  # pragma: no cover
-        from sklearnex import patch_sklearn, unpatch_sklearn
-
-        patch_sklearn()
-
-    _knn_impute(adata, var_names, n_neighbors, backend=backend, **backend_kwargs)
-
-    if _check_module_importable("sklearnex"):  # pragma: no cover
-        unpatch_sklearn()
+    _knn_impute(adata, var_names, n_neighbors, **backend_kwargs)
 
     return adata if copy else None
 
+@singledispatch
+def _knn_impute(X: Any, n_neighbors: int, **kwargs) -> None:
+    raise NotImplementedError(f"Unsupported X type: {type(X)}")
 
-def _knn_impute(
-    adata: AnnData,
-    var_names: Iterable[str] | None,
-    n_neighbors: int,
-    backend: Literal["scikit-learn", "faiss"],
-    **kwargs,
-) -> None:
-    if backend == "scikit-learn":
-        from sklearn.impute import KNNImputer
-
-        imputer = KNNImputer(n_neighbors=n_neighbors, **kwargs)
-    else:
-        from fknni import FaissImputer
-
-        imputer = FaissImputer(n_neighbors=n_neighbors, **kwargs)
-
+@_knn_impute.register(np.ndarray)
+def _knn_impute(X: np.ndarray, n_neighbors: int, **kwargs) -> None:
+    import fknni as fk
+    imputer = fk.FaissImputer(n_neighbors=n_neighbors, **kwargs)
     column_indices = get_column_indices(adata, adata.var_names if var_names is None else var_names)
     numerical_indices = get_numerical_column_indices(adata)
     if any(idx not in numerical_indices for idx in column_indices):
