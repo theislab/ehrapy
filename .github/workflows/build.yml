@@ -1,12 +1,12 @@
 name: Check Build
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    types:
-      - opened
-      - synchronize
+    push:
+        branches: [main]
+    pull_request:
+        types:
+            - opened
+            - synchronize
 
 concurrency:
     group: ${{ github.workflow }}-${{ github.ref }}
