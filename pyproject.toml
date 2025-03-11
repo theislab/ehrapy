@@ -54,7 +54,7 @@ dependencies = [
     "requests",
     "pynndescent",
     "miceforest",
-    "scikit-misc",  # require for seuratv3 highly variable features
+    "scikit-misc",  # required for seuratv3 highly variable features
     "lifelines",
     "missingno",
     "thefuzz[speedup]",
