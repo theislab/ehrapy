@@ -8,70 +8,53 @@ from anndata import AnnData
 import ehrapy as ep
 from ehrapy.io._read import read_csv
 from ehrapy.preprocessing._encoding import encode
-from ehrapy.preprocessing._quality_control import _obs_qc_metrics, _var_qc_metrics, mcar_test
-from tests.conftest import TEST_DATA_PATH
+from ehrapy.preprocessing._quality_control import _compute_obs_metrics, _compute_var_metrics, mcar_test
+from tests.conftest import ARRAY_TYPES, TEST_DATA_PATH, as_dense_dask_array
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_PATH_ENCODE = f"{TEST_DATA_PATH}/encode"
 
 
-@pytest.fixture
-def obs_data():
-    return {
-        "disease": ["cancer", "tumor"],
-        "country": ["Germany", "switzerland"],
-        "sex": ["male", "female"],
-    }
+@pytest.mark.parametrize("array_type", ARRAY_TYPES)
+def test_qc_metrics_vanilla(array_type, missing_values_adata):
+    adata = missing_values_adata
+    adata.X = array_type(adata.X)
+    modification_copy = adata.copy()
+    obs_metrics, var_metrics = ep.pp.qc_metrics(adata)
+
+    assert np.array_equal(obs_metrics["missing_values_abs"].values, np.array([1, 2]))
+    assert np.allclose(obs_metrics["missing_values_pct"].values, np.array([33.3333, 66.6667]))
+
+    assert np.array_equal(var_metrics["missing_values_abs"].values, np.array([1, 2, 0]))
+    assert np.allclose(var_metrics["missing_values_pct"].values, np.array([50.0, 100.0, 0.0]))
+    assert np.allclose(var_metrics["mean"].values, np.array([0.21, np.nan, 24.327]), equal_nan=True)
+    assert np.allclose(var_metrics["median"].values, np.array([0.21, np.nan, 24.327]), equal_nan=True)
+    assert np.allclose(var_metrics["min"].values, np.array([0.21, np.nan, 7.234]), equal_nan=True)
+    assert np.allclose(var_metrics["max"].values, np.array([0.21, np.nan, 41.419998]), equal_nan=True)
+    assert (~var_metrics["iqr_outliers"]).all()
+
+    # check that none of the columns were modified
+    for key in modification_copy.obs.keys():
+        assert np.array_equal(modification_copy.obs[key], adata.obs[key])
+    for key in modification_copy.var.keys():
+        assert np.array_equal(modification_copy.var[key], adata.var[key])
 
 
-@pytest.fixture
-def var_data():
-    return {
-        "alive": ["yes", "no", "maybe"],
-        "hospital": ["hospital 1", "hospital 2", "hospital 1"],
-        "crazy": ["yes", "yes", "yes"],
-    }
-
-
-@pytest.fixture
-def missing_values_adata(obs_data, var_data):
-    return AnnData(
-        X=np.array([[0.21, np.nan, 41.42], [np.nan, np.nan, 7.234]], dtype=np.float32),
-        obs=pd.DataFrame(data=obs_data),
-        var=pd.DataFrame(data=var_data, index=["Acetaminophen", "hospital", "crazy"]),
-    )
-
-
-@pytest.fixture
-def lab_measurements_simple_adata(obs_data, var_data):
-    X = np.array([[73, 0.02, 1.00], [148, 0.25, 3.55]], dtype=np.float32)
-    return AnnData(
-        X=X,
-        obs=pd.DataFrame(data=obs_data),
-        var=pd.DataFrame(data=var_data, index=["Acetaminophen", "Acetoacetic acid", "Beryllium, toxic"]),
-    )
-
-
-@pytest.fixture
-def lab_measurements_layer_adata(obs_data, var_data):
-    X = np.array([[73, 0.02, 1.00], [148, 0.25, 3.55]], dtype=np.float32)
-    return AnnData(
-        X=X,
-        obs=pd.DataFrame(data=obs_data),
-        var=pd.DataFrame(data=var_data, index=["Acetaminophen", "Acetoacetic acid", "Beryllium, toxic"]),
-        layers={"layer_copy": X},
-    )
-
-
-def test_obs_qc_metrics(missing_values_adata):
-    obs_metrics = _obs_qc_metrics(missing_values_adata)
+@pytest.mark.parametrize("array_type", ARRAY_TYPES)
+def test_obs_qc_metrics(array_type, missing_values_adata):
+    missing_values_adata.X = array_type(missing_values_adata.X)
+    mtx = missing_values_adata.X
+    obs_metrics = _compute_obs_metrics(mtx, missing_values_adata)
 
     assert np.array_equal(obs_metrics["missing_values_abs"].values, np.array([1, 2]))
     assert np.allclose(obs_metrics["missing_values_pct"].values, np.array([33.3333, 66.6667]))
 
 
-def test_var_qc_metrics(missing_values_adata):
-    var_metrics = _var_qc_metrics(missing_values_adata)
+@pytest.mark.parametrize("array_type", ARRAY_TYPES)
+def test_var_qc_metrics(array_type, missing_values_adata):
+    missing_values_adata.X = array_type(missing_values_adata.X)
+    mtx = missing_values_adata.X
+    var_metrics = _compute_var_metrics(mtx, missing_values_adata)
 
     assert np.array_equal(var_metrics["missing_values_abs"].values, np.array([1, 2, 0]))
     assert np.allclose(var_metrics["missing_values_pct"].values, np.array([50.0, 100.0, 0.0]))
@@ -82,19 +65,63 @@ def test_var_qc_metrics(missing_values_adata):
     assert (~var_metrics["iqr_outliers"]).all()
 
 
+@pytest.mark.parametrize(
+    "array_type, expected_error",
+    [
+        (np.array, None),
+        (as_dense_dask_array, None),
+        # can't test sparse matrices because they don't support string values
+    ],
+)
+def test_obs_qc_metrics_array_types(array_type, expected_error):
+    adata = read_csv(dataset_path=f"{_TEST_PATH_ENCODE}/dataset1.csv")
+    adata.X = array_type(adata.X)
+    mtx = adata.X
+    if expected_error:
+        with pytest.raises(expected_error):
+            _compute_obs_metrics(mtx, adata)
+
+
 def test_obs_nan_qc_metrics():
     adata = read_csv(dataset_path=f"{_TEST_PATH_ENCODE}/dataset1.csv")
     adata.X[0][4] = np.nan
     adata2 = encode(adata, encodings={"one-hot": ["clinic_day"]})
-    obs_metrics = _obs_qc_metrics(adata2)
+    mtx = adata2.X
+    obs_metrics = _compute_obs_metrics(mtx, adata2)
     assert obs_metrics.iloc[0].iloc[0] == 1
+
+
+@pytest.mark.parametrize(
+    "array_type, expected_error",
+    [
+        (np.array, None),
+        (as_dense_dask_array, None),
+        # can't test sparse matrices because they don't support string values
+    ],
+)
+def test_var_qc_metrics_array_types(array_type, expected_error):
+    adata = read_csv(dataset_path=f"{_TEST_PATH_ENCODE}/dataset1.csv")
+    adata.X = array_type(adata.X)
+    mtx = adata.X
+    if expected_error:
+        with pytest.raises(expected_error):
+            _compute_var_metrics(mtx, adata)
+
+
+def test_var_encoding_mode_does_not_modify_original_matrix():
+    adata = read_csv(dataset_path=f"{_TEST_PATH_ENCODE}/dataset1.csv")
+    adata2 = encode(adata, encodings={"one-hot": ["clinic_day"]})
+    mtx_copy = adata2.X.copy()
+    _compute_var_metrics(adata2.X, adata2)
+    assert np.array_equal(mtx_copy, adata2.X)
 
 
 def test_var_nan_qc_metrics():
     adata = read_csv(dataset_path=f"{_TEST_PATH_ENCODE}/dataset1.csv")
     adata.X[0][4] = np.nan
     adata2 = encode(adata, encodings={"one-hot": ["clinic_day"]})
-    var_metrics = _var_qc_metrics(adata2)
+    mtx = adata2.X
+    var_metrics = _compute_var_metrics(mtx, adata2)
     assert var_metrics.iloc[0].iloc[0] == 1
     assert var_metrics.iloc[1].iloc[0] == 1
     assert var_metrics.iloc[2].iloc[0] == 1
