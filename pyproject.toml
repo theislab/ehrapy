@@ -7,7 +7,7 @@ name = "ehrapy"
 version = "0.12.0"
 description = "Electronic Health Record Analysis with Python."
 readme = "README.md"
-requires-python = ">=3.10,<3.13"
+requires-python = ">=3.10,<3.14"
 license = {file = "LICENSE"}
 authors = [
     {name = "Lukas Heumos"},
@@ -41,6 +41,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Bio-Informatics",
     "Topic :: Scientific/Engineering :: Visualization",
 ]
@@ -53,8 +54,8 @@ dependencies = [
     "requests",
     "pynndescent",
     "miceforest",
-    "scikit-misc",
-    "lifelines",
+    "scikit-misc",  # required for seuratv3 highly variable features
+    "lifelines>=0.30.0",
     "missingno",
     "thefuzz[speedup]",
     "dowhy",
@@ -65,6 +66,7 @@ dependencies = [
     "fknni>=1.2.0",
     "python-dateutil",
     "filelock",
+    "numpy>=2.0.0"
 ]
 
 [project.optional-dependencies]
@@ -73,7 +75,7 @@ medcat = [
 ]
 dask = [
     "anndata[dask]",
-    "dask-ml",
+    "dask-ml>=2025.1.0",
 ]
 dev = [
     "pre-commit",
