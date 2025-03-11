@@ -74,7 +74,7 @@ medcat = [
 ]
 dask = [
     "anndata[dask]",
-    "dask-ml",
+    "dask-ml>=2025.1.0",
 ]
 dev = [
     "pre-commit",
