@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import random
 from collections import OrderedDict
+from functools import singledispatch
 from string import ascii_letters
 from typing import TYPE_CHECKING, Any, NamedTuple
 
@@ -13,6 +14,7 @@ from scanpy.get import obs_df, rank_genes_groups_df, var_df
 from scipy import sparse
 from scipy.sparse import issparse
 
+from ehrapy._compat import _raise_array_type_not_implemented
 from ehrapy.anndata import check_feature_types
 from ehrapy.anndata._constants import FEATURE_TYPE_KEY, NUMERIC_TAG
 
@@ -25,34 +27,46 @@ class BaseDataframes(NamedTuple):
     df: pd.DataFrame
 
 
-def df_to_anndata(
+@singledispatch
+def to_anndata(data: Any, columns_obs_only: list[str] | None = None, index_column: str | None = None) -> None:
+    """Transform a given object into an AnnData object.
+
+       Note that columns containing boolean values (either 0/1 or T(t)rue/F(f)alse)
+       will be stored as boolean columns whereas the other non-numerical columns will be stored as categorical values.
+
+       Supports the following datatype:
+       - Pandas frame
+       - Numpy array
+       - Dask array
+
+       Args:
+           data: The object to be transformed.
+           columns_obs_only: An optional list of column names that should belong to obs only and not X.
+           index_column: The index column of obs. This can be either a column name (or its numerical index in the DataFrame) or the index of the dataframe.
+
+       Returns:
+           An AnnData object created from the given object.
+
+       Examples:
+           >>> import ehrapy as ep
+           >>> import pandas as pd
+           >>> df = pd.DataFrame(
+           ...     {
+           ...         "patient_id": ["0", "1", "2", "3", "4"],
+           ...         "age": [65, 72, 58, 78, 82],
+           ...         "sex": ["M", "F", "F", "M", "F"],
+           ...     }
+           ... )
+           >>> adata = ep.ad.to_anndata(df, index_column="patient_id")
+       """
+    _raise_array_type_not_implemented(to_anndata, type(data))
+
+
+@to_anndata.register(pd.DataFrame)
+def _(
     df: pd.DataFrame, columns_obs_only: list[str] | None = None, index_column: str | None = None
 ) -> AnnData:
-    """Transform a given Pandas DataFrame into an AnnData object.
 
-    Note that columns containing boolean values (either 0/1 or T(t)rue/F(f)alse)
-    will be stored as boolean columns whereas the other non-numerical columns will be stored as categorical values.
-
-    Args:
-        df: The pandas dataframe to be transformed.
-        columns_obs_only: An optional list of column names that should belong to obs only and not X.
-        index_column: The index column of obs. This can be either a column name (or its numerical index in the DataFrame) or the index of the dataframe.
-
-    Returns:
-        An AnnData object created from the given Pandas DataFrame.
-
-    Examples:
-        >>> import ehrapy as ep
-        >>> import pandas as pd
-        >>> df = pd.DataFrame(
-        ...     {
-        ...         "patient_id": ["0", "1", "2", "3", "4"],
-        ...         "age": [65, 72, 58, 78, 82],
-        ...         "sex": ["M", "F", "F", "M", "F"],
-        ...     }
-        ... )
-        >>> adata = ep.ad.df_to_anndata(df, index_column="patient_id")
-    """
     # Check and handle the overlap of index_column in columns_obs_only
     if index_column is not None:
         if isinstance(index_column, int):

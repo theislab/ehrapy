@@ -17,11 +17,10 @@ except ImportError:
     DASK_AVAILABLE = False
 
 
-def _raise_array_type_not_implemented(func: Callable, type_: type) -> NotImplementedError:
+def _raise_array_type_not_implemented(func: Callable, type_: type) -> None:
     raise NotImplementedError(
         f"{func.__name__} does not support array type {type_}. Must be of type {func.registry.keys()}."  # type: ignore
     )
-
 
 def is_dask_array(array):
     if DASK_AVAILABLE:

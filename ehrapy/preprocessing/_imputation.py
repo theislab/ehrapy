@@ -3,7 +3,7 @@ from __future__ import annotations
 import warnings
 from collections.abc import Iterable
 from functools import singledispatch
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, Any
 
 import numpy as np
 import pandas as pd
@@ -275,8 +275,8 @@ def knn_impute(
     return adata if copy else None
 
 @singledispatch
-def _knn_impute(X: Any, n_neighbors: int, **kwargs) -> None:
-    raise NotImplementedError(f"Unsupported X type: {type(X)}")
+def _knn_impute(mtx: Any) -> None:
+    _raise_array_type_not_implemented(_knn_impute, type(mtx))
 
 @_knn_impute.register(np.ndarray)
 def _knn_impute(X: np.ndarray, n_neighbors: int, **kwargs) -> None:
