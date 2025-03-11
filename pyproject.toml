@@ -55,7 +55,7 @@ dependencies = [
     "pynndescent",
     "miceforest",
     "scikit-misc",  # required for seuratv3 highly variable features
-    "lifelines",
+    "lifelines>=0.30.0",
     "missingno",
     "thefuzz[speedup]",
     "dowhy",
