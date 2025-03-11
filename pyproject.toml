@@ -63,7 +63,7 @@ dependencies = [
     "pyampute",
     "tableone",
     "imbalanced-learn",
-    "fknni",
+    "fknni>=1.2.0",
     "python-dateutil",
     "filelock",
 ]

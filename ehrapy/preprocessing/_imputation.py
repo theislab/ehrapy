@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import warnings
 from collections.abc import Iterable
+from functools import singledispatch
 from typing import TYPE_CHECKING, Literal
 
 import numpy as np
@@ -11,13 +12,24 @@ from sklearn.experimental import enable_iterative_imputer  # noinspection PyUnre
 from sklearn.impute import SimpleImputer
 
 from ehrapy import settings
-from ehrapy._utils_available import _check_module_importable
-from ehrapy._utils_rendering import spinner
+from ehrapy._compat import _check_module_importable, _raise_array_type_not_implemented
+from ehrapy._progress import spinner
 from ehrapy.anndata import check_feature_types
-from ehrapy.anndata.anndata_ext import get_column_indices
+from ehrapy.anndata.anndata_ext import (
+    get_column_indices,
+    get_fully_imputed_column_indices,
+    get_numerical_column_indices,
+)
 
 if TYPE_CHECKING:
     from anndata import AnnData
+
+try:
+    import dask.array as da
+
+    DASK_AVAILABLE = True
+except ImportError:
+    DASK_AVAILABLE = False
 
 
 @spinner("Performing explicit impute")
@@ -72,7 +84,9 @@ def explicit_impute(
             imputation_value = _extract_impute_value(replacement, column_name)
             # only replace if an explicit value got passed or could be extracted from replacement
             if imputation_value:
-                _replace_explicit(adata.X[:, idx : idx + 1], imputation_value, impute_empty_strings)
+                adata.X[:, idx : idx + 1] = _replace_explicit(
+                    adata.X[:, idx : idx + 1], imputation_value, impute_empty_strings
+                )
             else:
                 logger.warning(f"No replace value passed and found for var [not bold green]{column_name}.")
     else:
@@ -83,13 +97,33 @@ def explicit_impute(
     return adata if copy else None
 
 
-def _replace_explicit(arr: np.ndarray, replacement: str | int, impute_empty_strings: bool) -> None:
+@singledispatch
+def _replace_explicit(arr, replacement: str | int, impute_empty_strings: bool) -> None:
+    _raise_array_type_not_implemented(_replace_explicit, type(arr))
+
+
+@_replace_explicit.register
+def _(arr: np.ndarray, replacement: str | int, impute_empty_strings: bool) -> np.ndarray:
     """Replace one column or whole X with a value where missing values are stored."""
     if not impute_empty_strings:  # pragma: no cover
         impute_conditions = pd.isnull(arr)
     else:
         impute_conditions = np.logical_or(pd.isnull(arr), arr == "")
     arr[impute_conditions] = replacement
+    return arr
+
+
+if DASK_AVAILABLE:
+
+    @_replace_explicit.register(da.Array)
+    def _(arr: da.Array, replacement: str | int, impute_empty_strings: bool) -> da.Array:
+        """Replace one column or whole X with a value where missing values are stored."""
+        if not impute_empty_strings:  # pragma: no cover
+            impute_conditions = da.isnull(arr)
+        else:
+            impute_conditions = da.logical_or(da.isnull(arr), arr == "")
+        arr[impute_conditions] = replacement
+        return arr
 
 
 def _extract_impute_value(replacement: dict[str, str | int], column_name: str) -> str | int | None:
@@ -253,20 +287,7 @@ def knn_impute(
 
         patch_sklearn()
 
-    try:
-        if np.issubdtype(adata.X.dtype, np.number):
-            _knn_impute(adata, var_names, n_neighbors, backend=backend, **backend_kwargs)
-        else:
-            # Raise exception since non-numerical data can not be imputed using KNN Imputation
-            raise ValueError(
-                "Can only impute numerical data. Try to restrict imputation to certain columns using "
-                "var_names parameter or perform an encoding of your data."
-            )
-
-    except ValueError as e:
-        if "Data matrix has wrong shape" in str(e):
-            logger.error("Check that your matrix does not contain any NaN only columns!")
-        raise
+    _knn_impute(adata, var_names, n_neighbors, backend=backend, **backend_kwargs)
 
     if _check_module_importable("sklearnex"):  # pragma: no cover
         unpatch_sklearn()
@@ -290,13 +311,17 @@ def _knn_impute(
 
         imputer = FaissImputer(n_neighbors=n_neighbors, **kwargs)
 
-    if isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):
-        column_indices = get_column_indices(adata, var_names)
-        adata.X[::, column_indices] = imputer.fit_transform(adata.X[::, column_indices])
-        # this is required since X dtype has to be numerical in order to correctly round floats
-        adata.X = adata.X.astype("float64")
-    else:
-        adata.X = imputer.fit_transform(adata.X)
+    column_indices = get_column_indices(adata, adata.var_names if var_names is None else var_names)
+    numerical_indices = get_numerical_column_indices(adata)
+    if any(idx not in numerical_indices for idx in column_indices):
+        raise ValueError(
+            "Can only impute numerical data. Try to restrict imputation to certain columns using "
+            "var_names parameter or perform an encoding of your data."
+        )
+    fully_imputed_indices = get_fully_imputed_column_indices(adata, column_indices=numerical_indices)
+    imputer_data_indices = column_indices + [i for i in fully_imputed_indices if i not in column_indices]
+    imputer_x = adata.X[::, imputer_data_indices].astype("float64")
+    adata.X[::, imputer_data_indices] = imputer.fit_transform(imputer_x)
 
 
 @spinner("Performing miss-forest impute")
@@ -452,30 +477,36 @@ def mice_forest_impute(
 
     _warn_imputation_threshold(adata, var_names, threshold=warning_threshold)
 
-    try:
-        if np.issubdtype(adata.X.dtype, np.number):
-            _miceforest_impute(
-                adata,
-                var_names,
-                save_all_iterations_data,
-                random_state,
-                inplace,
-                iterations,
-                variable_parameters,
-                verbose,
-            )
-        else:
-            raise ValueError(
-                "Can only impute numerical data. Try to restrict imputation to certain columns using "
-                "var_names parameter."
-            )
-
-    except ValueError as e:
-        if "Data matrix has wrong shape" in str(e):
-            logger.warning("Check that your matrix does not contain any NaN only columns!")
-        raise
+    if any(
+        idx not in get_numerical_column_indices(adata)
+        for idx in get_column_indices(adata, adata.var_names if var_names is None else var_names)
+    ):
+        raise ValueError(
+            "Can only impute numerical data. Try to restrict imputation to certain columns using "
+            "var_names parameter or perform an encoding of your data."
+        )
+    _miceforest_impute(
+        adata,
+        var_names,
+        save_all_iterations_data,
+        random_state,
+        inplace,
+        iterations,
+        variable_parameters,
+        verbose,
+    )
 
     return adata if copy else None
+
+
+@singledispatch
+def load_dataframe(arr, columns, index):
+    _raise_array_type_not_implemented(load_dataframe, type(arr))
+
+
+@load_dataframe.register
+def _(arr: np.ndarray, columns, index):
+    return pd.DataFrame(arr, columns=columns, index=index)
 
 
 def _miceforest_impute(
@@ -483,7 +514,7 @@ def _miceforest_impute(
 ) -> None:
     import miceforest as mf
 
-    data_df = pd.DataFrame(adata.X, columns=adata.var_names, index=adata.obs_names)
+    data_df = load_dataframe(adata.X, columns=adata.var_names, index=adata.obs_names)
     data_df = data_df.apply(pd.to_numeric, errors="coerce")
 
     if isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):
