@@ -11,7 +11,6 @@ import ehrapy as ep
 from ehrapy.anndata._constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrapy.anndata.anndata_ext import (
     NotEncodedError,
-    _assert_encoded,
     anndata_to_df,
     assert_numeric_vars,
     df_to_anndata,
@@ -392,19 +391,10 @@ def adata_encoded(adata_strings):
     return ep.pp.encode(adata_strings.copy(), autodetect=True, encodings="label")
 
 
-def test_assert_encoded(adata_strings_encoded):
-    adata_strings, adata_encoded = adata_strings_encoded
-    _assert_encoded(adata_encoded)
-    with pytest.raises(NotEncodedError, match=r"not yet been encoded"):
-        _assert_encoded(adata_strings)
-
-
 def test_get_numeric_vars(adata_strings_encoded):
     adata_strings, adata_encoded = adata_strings_encoded
     vars = get_numeric_vars(adata_encoded)
     assert vars == ["Numeric1", "Numeric2"]
-    with pytest.raises(NotEncodedError, match=r"not yet been encoded"):
-        get_numeric_vars(adata_strings)
 
 
 def test_get_numeric_vars_numeric_only():

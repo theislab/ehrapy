@@ -321,13 +321,6 @@ def get_column_indices(adata: AnnData, col_names: str | Iterable[str]) -> list[i
     return indices
 
 
-def _assert_encoded(adata: AnnData):
-    try:
-        assert np.issubdtype(adata.X.dtype, np.number)
-    except AssertionError:
-        raise NotEncodedError("The AnnData object has not yet been encoded.") from AssertionError
-
-
 @check_feature_types
 def get_numeric_vars(adata: AnnData) -> list[str]:
     """Fetches the column names for numeric variables in X.
@@ -338,7 +331,6 @@ def get_numeric_vars(adata: AnnData) -> list[str]:
     Returns:
         List of column numeric column names
     """
-    _assert_encoded(adata)
 
     return _get_var_indices_for_type(adata, NUMERIC_TAG)
 
