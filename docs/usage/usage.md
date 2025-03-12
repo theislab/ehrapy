@@ -395,7 +395,6 @@ Methods that extract and visualize tool-specific annotation in an AnnData object
     anndata.df_to_anndata
     anndata.anndata_to_df
     anndata.move_to_obs
-    anndata.delete_from_obs
     anndata.move_to_x
     anndata.get_obs_df
     anndata.get_var_df

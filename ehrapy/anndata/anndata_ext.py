@@ -223,35 +223,6 @@ def _get_var_indices_for_type(adata: AnnData, tag: str) -> list[str]:
     return adata.var_names[adata.var[FEATURE_TYPE_KEY] == tag].tolist()
 
 
-def delete_from_obs(adata: AnnData, to_delete: list[str]) -> AnnData:
-    """Delete features from obs.
-
-    Args:
-        adata: The AnnData object
-        to_delete: The columns to delete from obs
-
-    Returns:
-        The original AnnData object with deleted columns from obs.
-
-    Examples:
-        >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.ad.move_to_obs(adata, ["age"], copy_obs=True)
-        >>> ep.ad.delete_from_obs(adata, ["age"])
-    """
-    if isinstance(to_delete, str):  # pragma: no cover
-        to_delete = [to_delete]
-
-    if not all(elem in adata.obs.columns.values for elem in to_delete):
-        raise ValueError(
-            f"Columns `{[col for col in to_delete if col not in adata.obs.columns.values]}` are not in obs."
-        )
-
-    adata.obs = adata.obs[adata.obs.columns[~adata.obs.columns.isin(to_delete)]]
-
-    return adata
-
-
 def move_to_x(adata: AnnData, to_x: list[str] | str, copy_x: bool = False) -> AnnData:
     """Move features from obs to X inplace.
 
@@ -285,10 +256,7 @@ def move_to_x(adata: AnnData, to_x: list[str] | str, copy_x: bool = False) -> An
             cols_not_in_x.append(col)
 
     if cols_present_in_x:
-        logger.warn(
-            f"Columns `{cols_present_in_x}` are already in X. Skipped moving `{cols_present_in_x}` to X. "
-            f"If you want to permanently delete these columns from obs, please use the function delete_from_obs()."
-        )
+        logger.warn(f"Columns `{cols_present_in_x}` are already in X. Skipped moving `{cols_present_in_x}` to X. ")
 
     if cols_not_in_x:
         new_adata = concat([adata, AnnData(adata.obs[cols_not_in_x])], axis=1)

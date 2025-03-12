@@ -6,7 +6,6 @@ from ehrapy.anndata._feature_specifications import (
 )
 from ehrapy.anndata.anndata_ext import (
     anndata_to_df,
-    delete_from_obs,
     df_to_anndata,
     generate_anndata,
     get_obs_df,
@@ -23,7 +22,6 @@ __all__ = [
     "feature_type_overview",
     "infer_feature_types",
     "anndata_to_df",
-    "delete_from_obs",
     "df_to_anndata",
     "generate_anndata",
     "get_obs_df",

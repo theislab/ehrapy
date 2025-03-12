@@ -16,7 +16,6 @@ from ehrapy.anndata.anndata_ext import (
     _is_val_missing,
     anndata_to_df,
     assert_numeric_vars,
-    delete_from_obs,
     df_to_anndata,
     get_numeric_vars,
     move_to_obs,
@@ -187,7 +186,6 @@ def test_move_to_x_move_to_obs(adata_move_obs_mix):
     adata = move_to_x(adata_move_obs_mix, ["name"])
     assert {"name"}.issubset(set(adata.var_names))
     assert adata.X.shape == adata_dim_old
-    delete_from_obs(adata, ["name"])
 
     # case 2: move some column from obs to X and this col was previously moved inplace from X to obs
     move_to_obs(adata, ["clinic_id"], copy_obs=False)
@@ -200,20 +198,9 @@ def test_move_to_x_move_to_obs(adata_move_obs_mix):
     move_to_obs(adata, ["los_days"], copy_obs=True)
     move_to_obs(adata, ["b12_values"], copy_obs=False)
     adata = move_to_x(adata, ["los_days", "b12_values"])
-    delete_from_obs(adata, ["los_days"])
-    assert not {"los_days"}.issubset(
-        set(adata.obs.columns)
-    )  # check if the copied column was removed from obs by delete_from_obs()
     assert not {"b12_values"}.issubset(set(adata.obs.columns))
     assert {"los_days", "b12_values"}.issubset(set(adata.var_names))
     assert adata.X.shape == adata_dim_old
-
-
-def test_delete_from_obs(adata_move_obs_mix):
-    adata = move_to_obs(adata_move_obs_mix, ["los_days"], copy_obs=True)
-    adata = delete_from_obs(adata, ["los_days"])
-    assert not {"los_days"}.issubset(set(adata.obs.columns))
-    assert {"los_days"}.issubset(set(adata.var_names))
 
 
 def test_df_to_anndata_simple(setup_df_to_anndata):
