@@ -56,7 +56,7 @@ def ols(
         >>> ols = ep.tl.ols(adata, var_names, formula, missing="drop")
     """
     if isinstance(var_names, list):
-        data = pd.DataFrame(adata[:, var_names].X, columns=var_names).astype(float)
+        data = pd.DataFrame(adata[:, var_names].X, columns=var_names).infer_objects()
     else:
         data = pd.DataFrame(adata.X, columns=adata.var_names)
     ols = smf.ols(formula, data=data, missing=missing)
