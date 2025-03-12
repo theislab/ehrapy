@@ -352,48 +352,6 @@ def assert_numeric_vars(adata: AnnData, vars: Sequence[str]):
         raise ValueError("Some selected vars are not numeric") from None
 
 
-def set_numeric_vars(
-    adata: AnnData, values: np.ndarray, vars: Sequence[str] | None = None, copy: bool = False
-) -> AnnData | None:
-    """Sets the numeric values in given column names in X.
-
-    Args:
-        adata: :class:`~anndata.AnnData` object
-        values: Matrix containing the replacement values
-        vars: List of names of the numeric variables to replace. If `None` they will be detected using :func:`~ehrapy.preprocessing.get_numeric_vars`.
-        copy: Whether to return a copy with the normalized data.
-
-    Returns:
-        :class:`~anndata.AnnData` object with updated X
-    """
-    _assert_encoded(adata)
-
-    if vars is None:
-        vars = get_numeric_vars(adata)
-    else:
-        assert_numeric_vars(adata, vars)
-
-    if not np.issubdtype(values.dtype, np.number):
-        raise TypeError(f"Values must be numeric (current dtype is {values.dtype})")
-
-    n_values = values.shape[1]
-
-    if n_values != len(vars):
-        raise ValueError(f"Number of values ({n_values}) does not match number of vars ({len(vars)})")
-
-    if copy:
-        adata = adata.copy()
-
-    vars_idx = get_column_indices(adata, vars)
-
-    # if e.g. adata.X is of type int64, and values of dtype float64, the floats will be casted to int
-    adata.X = adata.X.astype(values.dtype)
-
-    adata.X[:, vars_idx] = values
-
-    return adata
-
-
 def _cast_obs_columns(obs: pd.DataFrame) -> pd.DataFrame:
     """Cast non numerical obs columns to either category or bool.
     Args:

@@ -18,7 +18,6 @@ from ehrapy.anndata.anndata_ext import (
     get_numeric_vars,
     move_to_obs,
     move_to_x,
-    set_numeric_vars,
 )
 from tests.conftest import TEST_DATA_PATH
 
@@ -419,45 +418,3 @@ def test_assert_numeric_vars(adata_strings_encoded):
     assert_numeric_vars(adata_encoded, ["Numeric1", "Numeric2"])
     with pytest.raises(ValueError, match=r"Some selected vars are not numeric"):
         assert_numeric_vars(adata_encoded, ["Numeric2", "String1"])
-
-
-def test_set_numeric_vars(adata_strings_encoded):
-    """Test for the numeric vars setter."""
-    adata_strings, adata_encoded = adata_strings_encoded
-    values = np.array(
-        [[1.2, 2.2], [3.2, 4.2], [5.2, 6.2]],
-        dtype=np.dtype(np.float32),
-    )
-    adata_set = set_numeric_vars(adata_encoded, values, copy=True)
-    np.testing.assert_array_equal(adata_set.X[:, 2], values[:, 0]) and np.testing.assert_array_equal(
-        adata_set.X[:, 3], values[:, 1]
-    )
-
-    with pytest.raises(ValueError, match=r"Some selected vars are not numeric"):
-        set_numeric_vars(adata_encoded, values, vars=["ehrapycat_String1"])
-
-    string_values = np.array(
-        [
-            ["A"],
-            ["B"],
-            ["A"],
-        ]
-    )
-
-    with pytest.raises(TypeError, match=r"Values must be numeric"):
-        set_numeric_vars(adata_encoded, string_values)
-
-    extra_values = np.array(
-        [
-            [1.2, 1.3, 1.4],
-            [2.2, 2.3, 2.4],
-            [2.2, 2.3, 2.4],
-        ],
-        dtype=np.dtype(np.float32),
-    )
-
-    with pytest.raises(ValueError, match=r"does not match number of vars"):
-        set_numeric_vars(adata_encoded, extra_values)
-
-    with pytest.raises(NotEncodedError, match=r"not yet been encoded"):
-        set_numeric_vars(adata_strings, values)
