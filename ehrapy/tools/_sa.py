@@ -56,9 +56,18 @@ def ols(
         >>> ols = ep.tl.ols(adata, var_names, formula, missing="drop")
     """
     if isinstance(var_names, list):
-        data = pd.DataFrame(adata[:, var_names].X, columns=var_names).infer_objects()
+        data = pd.DataFrame(adata[:, var_names].X, columns=var_names)
     else:
         data = pd.DataFrame(adata.X, columns=adata.var_names)
+
+    for col in data.columns:
+        if col in adata.var.index:
+            feature_type = adata.var["feature_type"][col]
+            if feature_type == "categorical":
+                data[col] = data[col].astype("category")
+            elif feature_type == "numeric":
+                data[col] = data[col].astype(float)
+
     ols = smf.ols(formula, data=data, missing=missing)
 
     return ols
@@ -111,6 +120,15 @@ def glm(
         data = pd.DataFrame(adata.X, columns=adata.var_names)
     if as_continuous is not None:
         data[as_continuous] = data[as_continuous].astype(float)
+
+    for col in data.columns:
+        if col in adata.var.index:
+            feature_type = adata.var["feature_type"][col]
+            if feature_type == "categorical":
+                data[col] = data[col].astype("category")
+            elif feature_type == "numeric":
+                data[col] = data[col].astype(float)
+
     glm = smf.glm(formula, data=data, family=family, missing=missing)
 
     return glm
