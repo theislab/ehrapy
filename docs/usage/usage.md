@@ -396,9 +396,18 @@ Methods that extract and visualize tool-specific annotation in an AnnData object
     anndata.anndata_to_df
     anndata.move_to_obs
     anndata.move_to_x
-    anndata.get_obs_df
-    anndata.get_var_df
-    anndata.get_rank_features_df
+```
+
+## Get
+
+```{eval-rst}
+.. autosummary::
+    :toctree: get
+    :nosignatures:
+
+    get.obs_df
+    get.var_df
+    get.rank_features_groups_df
 ```
 
 ## Settings
