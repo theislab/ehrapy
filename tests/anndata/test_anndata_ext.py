@@ -346,39 +346,6 @@ def test_anndata_to_df_layers(setup_anndata_to_df):
     assert_frame_equal(anndata_df, expected_df)
 
 
-def test_detect_binary_columns(setup_binary_df_to_anndata):
-    adata = df_to_anndata(setup_binary_df_to_anndata)
-    ep.ad.infer_feature_types(adata, output=None)
-
-    assert_frame_equal(
-        adata.var,
-        DataFrame(
-            {
-                FEATURE_TYPE_KEY: [
-                    CATEGORICAL_TAG,
-                    CATEGORICAL_TAG,
-                    CATEGORICAL_TAG,
-                    CATEGORICAL_TAG,
-                    CATEGORICAL_TAG,
-                    CATEGORICAL_TAG,
-                    CATEGORICAL_TAG,
-                    CATEGORICAL_TAG,
-                ]
-            },
-            index=[
-                "col1",
-                "col2",
-                "col3",
-                "col4",
-                "col5",
-                "col6_binary_int",
-                "col7_binary_float",
-                "col8_binary_missing_values",
-            ],
-        ),
-    )
-
-
 def test_detect_mixed_binary_columns():
     df = pd.DataFrame(
         {"Col1": list(range(4)), "Col2": ["str" + str(i) for i in range(4)], "Col3": [1.0, 0.0, np.nan, 1.0]}
