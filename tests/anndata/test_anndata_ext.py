@@ -11,9 +11,7 @@ import ehrapy as ep
 from ehrapy.anndata._constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrapy.anndata.anndata_ext import (
     NotEncodedError,
-    _are_ndarrays_equal,
     _assert_encoded,
-    _is_val_missing,
     anndata_to_df,
     assert_numeric_vars,
     df_to_anndata,
@@ -463,17 +461,3 @@ def test_set_numeric_vars(adata_strings_encoded):
 
     with pytest.raises(NotEncodedError, match=r"not yet been encoded"):
         set_numeric_vars(adata_strings, values)
-
-
-def test_are_ndarrays_equal(impute_num_adata):
-    impute_num_adata_copy = impute_num_adata.copy()
-    assert _are_ndarrays_equal(impute_num_adata.X, impute_num_adata_copy.X)
-    impute_num_adata_copy.X[0, 0] = 42.0
-    assert not _are_ndarrays_equal(impute_num_adata.X, impute_num_adata_copy.X)
-
-
-def test_is_val_missing(impute_num_adata):
-    assert np.array_equal(
-        _is_val_missing(impute_num_adata.X),
-        np.array([[False, False, True], [False, False, False], [True, False, False], [False, False, True]]),
-    )

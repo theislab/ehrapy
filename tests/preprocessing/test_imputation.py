@@ -2,6 +2,7 @@ import os
 import warnings
 from collections.abc import Iterable
 from pathlib import Path
+from typing import Any
 
 import dask.array as da
 import numpy as np
@@ -10,7 +11,6 @@ from anndata import AnnData
 from scipy import sparse
 from sklearn.exceptions import ConvergenceWarning
 
-from ehrapy.anndata.anndata_ext import _are_ndarrays_equal, _is_val_missing, _to_dense_matrix
 from ehrapy.preprocessing._imputation import (
     _warn_imputation_threshold,
     explicit_impute,
@@ -48,6 +48,19 @@ def _base_check_imputation(
     Raises:
         AssertionError: If any of the checks fail.
     """
+
+    def _are_ndarrays_equal(arr1: np.ndarray, arr2: np.ndarray) -> np.bool_:
+        return np.all(np.equal(arr1, arr2, dtype=object) | ((arr1 != arr1) & (arr2 != arr2)))
+
+    def _is_val_missing(data: np.ndarray) -> np.ndarray[Any, np.dtype[np.bool_]]:
+        return np.isin(data, [None, ""]) | (data != data)
+
+    def _to_dense_matrix(adata: AnnData, layer: str | None = None) -> np.ndarray:  # pragma: no cover
+        if layer is None:
+            return adata.X.toarray() if sparse.issparse(adata.X) else adata.X
+        else:
+            return adata.layers[layer].toarray() if sparse.issparse(adata.layers[layer]) else adata.layers[layer]
+
     # Convert dask arrays to numpy arrays
     if isinstance(adata_before_imputation.X, da.Array):
         adata_before_imputation.X = adata_before_imputation.X.compute()
