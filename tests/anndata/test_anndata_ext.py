@@ -10,7 +10,6 @@ from pandas.testing import assert_frame_equal
 import ehrapy as ep
 from ehrapy.anndata._constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrapy.anndata.anndata_ext import (
-    NotEncodedError,
     anndata_to_df,
     assert_numeric_vars,
     df_to_anndata,

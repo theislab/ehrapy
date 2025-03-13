@@ -362,7 +362,3 @@ def _cast_obs_columns(obs: pd.DataFrame) -> pd.DataFrame:
         axis=0,
     )
     return obs
-
-
-class NotEncodedError(AssertionError):
-    pass
