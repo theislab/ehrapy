@@ -19,6 +19,7 @@ from lifelines.statistics import StatisticalResult, logrank_test
 from scipy import stats
 
 from ehrapy.anndata import anndata_to_df
+from ehrapy.anndata._constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -65,10 +66,10 @@ def ols(
     if use_feature_types:
         for col in data.columns:
             if col in adata.var.index:
-                feature_type = adata.var["feature_type"][col]
-                if feature_type == "categorical":
+                feature_type = adata.var[FEATURE_TYPE_KEY][col]
+                if feature_type == CATEGORICAL_TAG:
                     data[col] = data[col].astype("category")
-                elif feature_type == "numeric":
+                elif feature_type == NUMERIC_TAG:
                     data[col] = data[col].astype(float)
     else:
         data = data.astype(float)
@@ -130,10 +131,10 @@ def glm(
     if use_feature_types:
         for col in data.columns:
             if col in adata.var.index:
-                feature_type = adata.var["feature_type"][col]
-                if feature_type == "categorical":
+                feature_type = adata.var[FEATURE_TYPE_KEY][col]
+                if feature_type == CATEGORICAL_TAG:
                     data[col] = data[col].astype("category")
-                elif feature_type == "numeric":
+                elif feature_type == NUMERIC_TAG:
                     data[col] = data[col].astype(float)
 
     glm = smf.glm(formula, data=data, family=family, missing=missing)
