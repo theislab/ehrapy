@@ -321,22 +321,8 @@ def get_column_indices(adata: AnnData, col_names: str | Iterable[str]) -> list[i
     return indices
 
 
-@check_feature_types
-def get_numeric_vars(adata: AnnData) -> list[str]:
-    """Fetches the column names for numeric variables in X.
-
-    Args:
-        adata: :class:`~anndata.AnnData` object
-
-    Returns:
-        List of column numeric column names
-    """
-
-    return _get_var_indices_for_type(adata, NUMERIC_TAG)
-
-
 def assert_numeric_vars(adata: AnnData, vars: Sequence[str]):
-    num_vars = get_numeric_vars(adata)
+    num_vars = _get_var_indices_for_type(adata, NUMERIC_TAG)
 
     try:
         assert set(vars) <= set(num_vars)

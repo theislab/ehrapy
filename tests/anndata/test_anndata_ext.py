@@ -10,10 +10,10 @@ from pandas.testing import assert_frame_equal
 import ehrapy as ep
 from ehrapy.anndata._constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrapy.anndata.anndata_ext import (
+    _get_var_indices_for_type,
     anndata_to_df,
     assert_numeric_vars,
     df_to_anndata,
-    get_numeric_vars,
     move_to_obs,
     move_to_x,
 )
@@ -390,15 +390,15 @@ def adata_encoded(adata_strings):
     return ep.pp.encode(adata_strings.copy(), autodetect=True, encodings="label")
 
 
-def test_get_numeric_vars(adata_strings_encoded):
+def test_get_var_indices_for_type(adata_strings_encoded):
     adata_strings, adata_encoded = adata_strings_encoded
-    vars = get_numeric_vars(adata_encoded)
+    vars = _get_var_indices_for_type(adata_encoded, NUMERIC_TAG)
     assert vars == ["Numeric1", "Numeric2"]
 
 
-def test_get_numeric_vars_numeric_only():
+def test__get_var_indices_for_type():
     adata = AnnData(X=np.array([[1, 2, 3], [4, 0, 6]], dtype=np.float32))
-    vars = get_numeric_vars(adata)
+    vars = _get_var_indices_for_type(adata, NUMERIC_TAG)
     assert vars == ["0", "1", "2"]
 
 
