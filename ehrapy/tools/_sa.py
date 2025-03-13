@@ -70,6 +70,8 @@ def ols(
                     data[col] = data[col].astype("category")
                 elif feature_type == "numeric":
                     data[col] = data[col].astype(float)
+    else:
+        data = data.astype(float)
 
     ols = smf.ols(formula, data=data, missing=missing)
 
