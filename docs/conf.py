@@ -8,7 +8,6 @@ from pathlib import Path
 
 HERE = Path(__file__).parent
 sys.path[:0] = [str(HERE.parent), str(HERE / "extensions")]
-sys.path.append(str(HERE / "tutorials" / "notebooks"))
 
 needs_sphinx = "4.3"
 
