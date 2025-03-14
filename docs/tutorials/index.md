@@ -20,6 +20,7 @@ For questions about the usage of ehrapy use the [zulip forum](https://scverse.zu
    notebooks/mimic_2_introduction
    notebooks/mimic_2_fate
    notebooks/mimic_2_survival_analysis
+   notebooks/mimic_2_case_study
    notebooks/mimic_2_causal_inference
    notebooks/medcat
    notebooks/ml_usecases
