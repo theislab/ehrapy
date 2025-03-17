@@ -35,7 +35,7 @@ def summarize_measurements(
     if statistics is None:
         statistics = ["min", "max", "mean"]
 
-    aggregation_functions = {measurement: statistics for measurement in var_names}
+    aggregation_functions = dict.fromkeys(var_names, statistics)
 
     grouped = anndata_to_df(adata, layer=layer).groupby(adata.obs.index).agg(aggregation_functions)
     grouped.columns = [f"{col}_{stat}" for col, stat in grouped.columns]
