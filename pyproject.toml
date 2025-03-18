@@ -52,7 +52,6 @@ dependencies = [
     "rich",
     "scanpy",
     "requests",
-    "pynndescent",
     "miceforest",
     "scikit-misc",  # required for seuratv3 highly variable features
     "lifelines>=0.30.0",
