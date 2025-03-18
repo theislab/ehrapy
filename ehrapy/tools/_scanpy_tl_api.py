@@ -583,8 +583,7 @@ def paga(
     simpler abstracted graph (*PAGA graph*) of partitions, in which edge weights
     represent confidence in the presence of connections. By tresholding this
     confidence in :func:`~ehrapy.pl.paga`, a much simpler representation of the
-    manifold data is obtained, which is nonetheless faithful to the topology of
-    the manifold.
+    manifold data is obtained, which is nonetheless faithful to the topology of the manifold.
     The confidence should be interpreted as the ratio of the actual versus the
     expected value of connections under the null model of randomly connecting
     partitions. We do not provide a p-value as this null model does not
