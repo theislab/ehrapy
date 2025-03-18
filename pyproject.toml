@@ -50,7 +50,7 @@ dependencies = [
     "session-info2",
     "lamin_utils",
     "rich",
-    "scanpy[leiden]",
+    "scanpy",
     "requests",
     "pynndescent",
     "miceforest",
