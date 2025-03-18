@@ -65,7 +65,8 @@ dependencies = [
     "fknni>=1.2.0",
     "python-dateutil",
     "filelock",
-    "numpy>=2.0.0"
+    "numpy>=2.0.0",
+    "numba>=0.60.0"
 ]
 
 [project.optional-dependencies]
