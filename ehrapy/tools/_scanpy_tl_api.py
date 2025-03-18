@@ -430,6 +430,7 @@ def leiden(
         neighbors_key=neighbors_key,
         obsp=obsp,
         copy=copy,
+        flavor=flavor,
         **partition_kwargs,
     )
 
