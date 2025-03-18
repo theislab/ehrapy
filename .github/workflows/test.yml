@@ -21,11 +21,11 @@ jobs:
             fail-fast: false
             matrix:
                 include:
-                    - os: ubuntu-latest
+                    - os: ubuntu-22.04
                       python: "3.10"
-                    - os: ubuntu-latest
+                    - os: ubuntu-22.04
                       python: "3.13"
-                    - os: ubuntu-latest
+                    - os: ubuntu-22.04
                       python: "3.13"
                       pip-flags: "--pre"
 
