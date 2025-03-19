@@ -69,6 +69,7 @@ dependencies = [
     "numba>=0.60.0",
     "igraph",
     "ehrdata",
+    "bottleneck",
 ]
 
 [project.optional-dependencies]
