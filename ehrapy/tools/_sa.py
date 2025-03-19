@@ -43,7 +43,7 @@ def ols(
         adata: The AnnData object for the OLS model.
         var_names: A list of var names indicating which columns are for the OLS model.
         formula: The formula specifying the model.
-        use_feature_types: If True, the feature types in the AnnData objects .var are used to cast the columns to the correct data types.
+        use_feature_types: If True, the feature types in the AnnData objects .var are used.
         missing: Available options are 'none', 'drop', and 'raise'.
                  If 'none', no nan checking is done. If 'drop', any observations with nans are dropped.
                  If 'raise', an error is raised.
@@ -97,7 +97,7 @@ def glm(
         var_names: A list of var names indicating which columns are for the GLM model.
         formula: The formula specifying the model.
         family: The distribution families. Available options are 'Gaussian', 'Binomial', 'Gamma', and 'InverseGaussian'.
-        use_feature_types: If True, the feature types in the AnnData objects .var are used to cast the columns to the correct data types.
+        use_feature_types: If True, the feature types in the AnnData objects .var are used.
         missing: Available options are 'none', 'drop', and 'raise'. If 'none', no nan checking is done.
                  If 'drop', any observations with nans are dropped. If 'raise', an error is raised.
         as_continuous: A list of var names indicating which columns are continuous rather than categorical.
