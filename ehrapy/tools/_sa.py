@@ -19,6 +19,7 @@ from lifelines.statistics import StatisticalResult, logrank_test
 from scipy import stats
 
 from ehrapy.anndata import anndata_to_df
+from ehrapy.anndata._constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -32,6 +33,7 @@ def ols(
     var_names: list[str] | None | None = None,
     formula: str | None = None,
     missing: Literal["none", "drop", "raise"] | None = "none",
+    use_feature_types: bool = False,
 ) -> sm.OLS:
     """Create an Ordinary Least Squares (OLS) Model from a formula and AnnData.
 
@@ -41,6 +43,7 @@ def ols(
         adata: The AnnData object for the OLS model.
         var_names: A list of var names indicating which columns are for the OLS model.
         formula: The formula specifying the model.
+        use_feature_types: If True, the feature types in the AnnData objects .var are used.
         missing: Available options are 'none', 'drop', and 'raise'.
                  If 'none', no nan checking is done. If 'drop', any observations with nans are dropped.
                  If 'raise', an error is raised.
@@ -56,9 +59,21 @@ def ols(
         >>> ols = ep.tl.ols(adata, var_names, formula, missing="drop")
     """
     if isinstance(var_names, list):
-        data = pd.DataFrame(adata[:, var_names].X, columns=var_names).astype(float)
+        data = pd.DataFrame(adata[:, var_names].X, columns=var_names)
     else:
         data = pd.DataFrame(adata.X, columns=adata.var_names)
+
+    if use_feature_types:
+        for col in data.columns:
+            if col in adata.var.index:
+                feature_type = adata.var[FEATURE_TYPE_KEY][col]
+                if feature_type == CATEGORICAL_TAG:
+                    data[col] = data[col].astype("category")
+                elif feature_type == NUMERIC_TAG:
+                    data[col] = data[col].astype(float)
+    else:
+        data = data.astype(float)
+
     ols = smf.ols(formula, data=data, missing=missing)
 
     return ols
@@ -69,6 +84,7 @@ def glm(
     var_names: Iterable[str] | None = None,
     formula: str | None = None,
     family: Literal["Gaussian", "Binomial", "Gamma", "Gaussian", "InverseGaussian"] = "Gaussian",
+    use_feature_types: bool = False,
     missing: Literal["none", "drop", "raise"] = "none",
     as_continuous: Iterable[str] | None | None = None,
 ) -> sm.GLM:
@@ -81,6 +97,7 @@ def glm(
         var_names: A list of var names indicating which columns are for the GLM model.
         formula: The formula specifying the model.
         family: The distribution families. Available options are 'Gaussian', 'Binomial', 'Gamma', and 'InverseGaussian'.
+        use_feature_types: If True, the feature types in the AnnData objects .var are used.
         missing: Available options are 'none', 'drop', and 'raise'. If 'none', no nan checking is done.
                  If 'drop', any observations with nans are dropped. If 'raise', an error is raised.
         as_continuous: A list of var names indicating which columns are continuous rather than categorical.
@@ -111,6 +128,15 @@ def glm(
         data = pd.DataFrame(adata.X, columns=adata.var_names)
     if as_continuous is not None:
         data[as_continuous] = data[as_continuous].astype(float)
+    if use_feature_types:
+        for col in data.columns:
+            if col in adata.var.index:
+                feature_type = adata.var[FEATURE_TYPE_KEY][col]
+                if feature_type == CATEGORICAL_TAG:
+                    data[col] = data[col].astype("category")
+                elif feature_type == NUMERIC_TAG:
+                    data[col] = data[col].astype(float)
+
     glm = smf.glm(formula, data=data, family=family, missing=missing)
 
     return glm
