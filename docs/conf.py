@@ -124,7 +124,7 @@ html_theme_options = {
     },
 }
 html_static_path = ["_static"]
-html_css_files = ["css/override.css", "css/sphinx_gallery.css"]
+html_css_files = ["css/overwrite.css", "css/sphinx_gallery.css"]
 html_show_sphinx = False
 
 
