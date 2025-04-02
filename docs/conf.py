@@ -124,7 +124,7 @@ html_theme_options = {
     },
 }
 html_static_path = ["_static"]
-html_css_files = ["css/override.css", "css/sphinx_gallery.css"]
+html_css_files = ["css/overwrite.css", "css/sphinx_gallery.css"]
 html_show_sphinx = False
 
 
@@ -173,6 +173,7 @@ nbsphinx_thumbnails = {
     "tutorials/notebooks/mimic_2_introduction": "_static/tutorials/catheter.png",
     "tutorials/notebooks/mimic_2_fate": "_static/tutorials/fate.png",
     "tutorials/notebooks/mimic_2_survival_analysis": "_static/tutorials/survival.png",
+    "tutorials/notebooks/mimic_2_effect_estimation": "_static/tutorials/effect_estimation.png",
     "tutorials/notebooks/mimic_2_causal_inference": "_static/tutorials/causal_inference.png",
     "tutorials/notebooks/medcat": "_static/tutorials/nlp.png",
     "tutorials/notebooks/ml_usecases": "_static/tutorials/machine_learning.png",
