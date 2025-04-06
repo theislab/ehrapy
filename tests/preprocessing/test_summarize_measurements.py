@@ -9,9 +9,9 @@ from ehrapy.preprocessing import summarize_measurements
 @pytest.fixture
 def adata_to_expand(rng):
     row_ids = ["pat1", "pat1", "pat1", "pat2", "pat2", "pat3"]
-    measurement1 = rng.random.choice([0, 1], size=6)
-    measurement2 = rng.random.uniform(0, 20, size=6)
-    measurement3 = rng.random.uniform(0, 20, size=6)
+    measurement1 = rng.choice([0, 1], size=6)
+    measurement2 = rng.uniform(0, 20, size=6)
+    measurement3 = rng.uniform(0, 20, size=6)
     data_dict = {"measurement1": measurement1, "measurement2": measurement2, "measurement3": measurement3}
     data_df = DataFrame(data_dict, index=row_ids)
     adata = AnnData(X=data_df)

@@ -14,7 +14,7 @@ def adata(rng):
             "corr1": corr,
             "corr2": corr * 2,
             "corr3": corr * -1,
-            "contin1": rng.random.randint(0, 20, 50).tolist() + rng.random.randint(20, 40, 50).tolist(),
+            "contin1": rng.random.integers(0, 20, 50).tolist() + rng.random.integers(20, 40, 50).tolist(),
             "cat1": [0] * 50 + [1] * 50,
             "cat2": [10] * 10 + [11] * 40 + [10] * 30 + [11] * 20,
         }

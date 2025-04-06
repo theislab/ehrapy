@@ -522,9 +522,9 @@ def generate_anndata(  # pragma: no cover
             {
                 "cat": pd.Categorical(np.random.default_rng().choice(letters, n_values)),
                 "cat_ordered": pd.Categorical(np.random.default_rng().choice(letters, n_values), ordered=True),
-                "int64": np.random.default_rng().randint(-50, 50, n_values),
+                "int64": np.random.default_rng().integers(-50, 50, n_values),
                 "float64": np.random.default_rng().random(n_values),
-                "uint8": np.random.default_rng().randint(255, size=n_values, dtype="uint8"),
+                "uint8": np.random.default_rng().integers(255, size=n_values, dtype="uint8"),
             },
             index=index,
         )
@@ -569,7 +569,7 @@ def generate_anndata(  # pragma: no cover
 
     def _generate_vstr_recarray(m, n, dtype=None):
         size = m * n
-        lengths = np.default_rng().random.default_rng().randint(3, 5, size)
+        lengths = np.default_rng().random.default_rng().integers(3, 5, size)
         letters = np.array(list(ascii_letters))
         gen_word = lambda w: "".join(np.default_rng().random.choice(letters, w))
         arr = np.array([gen_word(length) for length in lengths]).reshape(m, n)
