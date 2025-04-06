@@ -8,7 +8,7 @@ from ehrapy.anndata._constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC
 
 @pytest.fixture
 def adata(rng):
-    corr = rng.random.randint(0, 100, 100)
+    corr = rng.random.integers(0, 100, 100)
     df = pd.DataFrame(
         {
             "corr1": corr,
