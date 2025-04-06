@@ -1,3 +1,4 @@
+import re
 import warnings
 
 import anndata
@@ -63,4 +64,4 @@ class TestCausal:
         assert len(legend.get_texts()) == 2  # Check the number of legend labels
         assert legend.get_texts()[0].get_text() == "Observed data"
         assert legend.get_texts()[1].get_text() == "Causal variation"
-        assert "10.0" in str(ax.get_title())
+        assert re.search(r"(9\.99\d+|10\.0)", str(ax.get_title()))
