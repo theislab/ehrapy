@@ -187,7 +187,6 @@ def kmf(
         >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
         >>> kmf = ep.tl.kmf(adata[:, ["mort_day_censored"]].X, adata[:, ["censor_flg"]].X)
     """
-
     warnings.warn(
         "This function is deprecated and will be removed in the next release. Use `ep.tl.kaplan_meier` instead.",
         DeprecationWarning,
@@ -560,7 +559,6 @@ def weibull_aft(
         >>> aft = ep.tl.weibull_aft(adata, duration_col="mort_day_censored", event_col="censor_flg")
         >>> aft.print_summary()
     """
-
     df = _build_model_input_dataframe(adata, duration_col, accept_zero_duration=False)
 
     weibull_aft = WeibullAFTFitter(
@@ -612,6 +610,7 @@ def log_logistic_aft(
     fit_options: dict | None = None,
 ) -> LogLogisticAFTFitter:
     """Fit the log logistic accelerated failure time regression for the survival function.
+
     The Log-Logistic Accelerated Failure Time (AFT) survival regression model is a powerful statistical tool employed in the analysis of time-to-event data.
     This model operates under the assumption that the logarithm of survival time adheres to a log-logistic distribution, offering a flexible framework for understanding the impact of covariates on survival times.
     By modeling survival time as a function of predictors, the Log-Logistic AFT model enables researchers to explore
@@ -751,7 +750,7 @@ def nelson_aalen(
     fit_options: dict | None = None,
     censoring: Literal["right", "left"] = "right",
 ) -> NelsonAalenFitter:
-    """Employ the Nelson-Aalen estimator to estimate the cumulative hazard function from censored survival data
+    """Employ the Nelson-Aalen estimator to estimate the cumulative hazard function from censored survival data.
 
     The Nelson-Aalen estimator is a non-parametric method used in survival analysis to estimate the cumulative hazard function.
     This technique is particularly useful when dealing with censored data, as it accounts for the presence of individuals whose event times are unknown due to censoring.
@@ -788,7 +787,6 @@ def nelson_aalen(
         >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
         >>> naf = ep.tl.nelson_aalen(adata, "mort_day_censored", "censor_flg")
     """
-
     return _univariate_model(
         adata,
         duration_col,

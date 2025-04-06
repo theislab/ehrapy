@@ -13,9 +13,6 @@ warnings.filterwarnings("ignore")
 
 class TestCausal:
     def setup_method(self):
-        self.seed = 8
-        np.random.seed(8)
-
         linear_data = dowhy.datasets.linear_dataset(
             beta=10,
             num_common_causes=5,
@@ -29,7 +26,6 @@ class TestCausal:
         self.treatment_name = "v0"
 
     def test_dowhy_linear_dataset(self):
-        np.random.seed(self.seed)
         estimate, refute_results = ep.tl.causal_inference(
             adata=self.linear_data,
             graph=self.linear_graph,

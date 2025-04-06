@@ -18,9 +18,9 @@ if TYPE_CHECKING:
 
 
 def _format_df_column(df: pd.DataFrame, column_name: str) -> list[tuple[int, str]]:
-    """Format the df to match: formatted_data = [(row_id, row_text), (row_id, row_text), ...]
-    as this is required by MedCAT's multiprocessing annotation step
+    """Format the df to match: formatted_data = [(row_id, row_text), (row_id, row_text), ...].
 
+    Required by MedCAT's multiprocessing annotation step.
     """
     formatted_data = []
     for id, row in df.iterrows():
@@ -120,13 +120,15 @@ def _filter_df_by_status(df: pd.DataFrame, status: str) -> pd.DataFrame:
 def get_medcat_annotation_overview(
     adata: AnnData, status: str = "Affirmed", use_key: str = "medcat_annotations"
 ) -> pd.DataFrame:
-    """Provide an overview for the annotation results. An overview will look like the following:
+    """Provide an overview for the annotation results.
 
-    cui (the CUI), nsubjects (from how many rows this one got extracted), type_ids (TUIs), name (name of the entity), perc_subjects (how many rows relative
-    to absolute number of rows)
+    An overview will look like the following:
+
+    cui (the CUI), nsubjects (from how many rows this one got extracted), type_ids (TUIs), name (name of the entity),
+    perc_subjects (how many rows relative to absolute number of rows)
 
     Args:
-        medcat_obj: The current MedCAT object which holds all infos on NLP analysis with MedCAT and ehrapy.
+        adata: Annotated data matrix.
         n: Basically the parameter for head() of pandas DataFrame. How many of the most common entities should be shown?
         status: One of "Affirmed" (default), "Other" or "Both". Displays stats for either only affirmed entities, negated ones or both.
         use_key: Key to use for the annotated results.
@@ -157,6 +159,7 @@ def get_medcat_annotation_overview(
 
 def _check_valid_name(df: pd.DataFrame, name: Iterable[str]) -> None:
     """Check whether the name is in the extracted entities to inform about possible typos.
+
     Currently, only the pretty_name column is supported.
     """
     invalid_names = []

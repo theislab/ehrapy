@@ -76,8 +76,7 @@ def causal_inference(
     estimate_kwargs: dict[str, Any] | None = None,
     refute_kwargs: dict[str, Any] | None = None,
 ) -> tuple[dowhy.CausalEstimate, dict[str, str | dict[str, float]]]:
-    """
-    Performs causal inference on an AnnData object using the specified causal model and returns a tuple containing the causal estimate and the results of any refutation tests.
+    """Performs causal inference on an AnnData object using the specified causal model and returns a tuple containing the causal estimate and the results of any refutation tests.
 
     Args:
         adata: An AnnData object containing the input data.
@@ -179,9 +178,9 @@ def causal_inference(
     failed_attempts = 0
     while found_problematic_pvalues:
         if not user_gave_num_simulations:
-            refute_kwargs["num_simulations"] = np.random.randint(70, 90)
+            refute_kwargs["num_simulations"] = np.random.default_rng().randint(70, 90)
         if not user_gave_random_seed:
-            refute_kwargs["random_seed"] = np.random.randint(0, 100)
+            refute_kwargs["random_seed"] = np.random.default_rng().randint(0, 100)
 
         identified_estimand = model.identify_effect(**identify_kwargs)
 

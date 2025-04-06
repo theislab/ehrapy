@@ -112,7 +112,7 @@ def mar_adata(rng) -> AnnData:
 def mcar_adata(rng) -> AnnData:
     """Generate MCAR data by randomly sampling."""
     data = rng.random((100, 10))
-    missing_indices = np.random.choice(a=[False, True], size=data.shape, p=[1 - 0.1, 0.1])
+    missing_indices = rng.random.choice(a=[False, True], size=data.shape, p=[1 - 0.1, 0.1])
     data[missing_indices] = np.nan
 
     return AnnData(data)

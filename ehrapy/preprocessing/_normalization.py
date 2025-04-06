@@ -40,8 +40,7 @@ def _scale_func_group(
     copy: bool,
     norm_name: str,
 ) -> AnnData | None:
-    """apply scaling function to selected columns of adata, either globally or per group."""
-
+    """Apply scaling function to selected columns of adata, either globally or per group."""
     if group_key is not None and group_key not in adata.obs_keys():
         raise KeyError(f"group key '{group_key}' not found in adata.obs.")
 
@@ -120,7 +119,6 @@ def scale_norm(
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.scale_norm(adata, copy=True)
     """
-
     scale_func = _scale_norm_function(adata.X, **kwargs)
 
     return _scale_func_group(
@@ -179,7 +177,6 @@ def minmax_norm(
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.minmax_norm(adata, copy=True)
     """
-
     scale_func = _minmax_norm_function(adata.X, **kwargs)
 
     return _scale_func_group(
@@ -228,7 +225,6 @@ def maxabs_norm(
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.maxabs_norm(adata, copy=True)
     """
-
     scale_func = _maxabs_norm_function(adata.X)
 
     return _scale_func_group(
@@ -288,7 +284,6 @@ def robust_scale_norm(
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.robust_scale_norm(adata, copy=True)
     """
-
     scale_func = _robust_scale_norm_function(adata.X, **kwargs)
 
     return _scale_func_group(
@@ -347,7 +342,6 @@ def quantile_norm(
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.quantile_norm(adata, copy=True)
     """
-
     scale_func = _quantile_norm_function(adata.X, **kwargs)
 
     return _scale_func_group(
@@ -399,7 +393,6 @@ def power_norm(
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.power_norm(adata, copy=True)
     """
-
     scale_func = _power_norm_function(adata.X, **kwargs)
 
     return _scale_func_group(
@@ -419,7 +412,7 @@ def log_norm(
     offset: int | float = 1,
     copy: bool = False,
 ) -> AnnData | None:
-    """Apply log normalization.
+    r"""Apply log normalization.
 
     Computes :math:`x = \\log(x + offset)`, where :math:`log` denotes the natural logarithm
     unless a different base is given and the default :math:`offset` is :math:`1`.

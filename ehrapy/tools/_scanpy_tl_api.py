@@ -164,7 +164,6 @@ def umap(
 
         **X_umap** : `adata.obsm` field UMAP coordinates of data.
     """
-
     key_to_check = neighbors_key if neighbors_key is not None else "neighbors"
     if key_to_check not in adata.uns:
         raise ValueError(f"Did not find .uns[{key_to_check!r}]. Please run `ep.pp.neighbors` first.")
@@ -294,6 +293,7 @@ def diffmap(
                  If specified, diffmap looks .uns[neighbors_key] for neighbors settings and
                  .obsp[.uns[neighbors_key]['connectivities_key']],
                  .obsp[.uns[neighbors_key]['distances_key']] for connectivities and distances respectively.
+        neighbors_key: Key to stored neighbors.
         random_state: Random seed for the initialization.
         copy: Whether to return a copy of the :class:`~anndata.AnnData` object.
 
@@ -484,6 +484,7 @@ def dendrogram(
                    Notice that the `groupby` information is added to the dendrogram.
         inplace: If `True`, adds dendrogram information to `adata.uns[key_added]`,
                  else this function returns the information.
+
     Returns:
         If `inplace=False`, returns dendrogram information, else `adata.uns[key_added]` is updated with it.
 
@@ -572,7 +573,6 @@ def dpt(
 def paga(
     adata: AnnData,
     groups: str | None = None,
-    use_rna_velocity: bool = False,
     model: Literal["v1.2", "v1.0"] = "v1.2",
     neighbors_key: str | None = None,
     copy: bool = False,
@@ -624,7 +624,7 @@ def paga(
     return sc.tl.paga(
         adata=adata,
         groups=groups,
-        use_rna_velocity=use_rna_velocity,
+        use_rna_velocity=False,
         model=model,
         neighbors_key=neighbors_key,
         copy=copy,
