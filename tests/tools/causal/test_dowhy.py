@@ -63,4 +63,4 @@ class TestCausal:
         assert len(legend.get_texts()) == 2  # Check the number of legend labels
         assert legend.get_texts()[0].get_text() == "Observed data"
         assert legend.get_texts()[1].get_text() == "Causal variation"
-        assert "9.999" in str(ax.get_title())
+        assert "10.0" in str(ax.get_title())
