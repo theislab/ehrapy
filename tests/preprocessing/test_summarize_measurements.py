@@ -26,14 +26,12 @@ def test_all_statistics(adata_to_expand):
 
     assert transformed_adata.shape == (3, 9)  # (3 patients, 3 measurements * 3 statistics)
     assert np.allclose(
-        transformed_adata[:, "measurement2_min"].X.reshape(-1), np.array([[3.1198905, 1.1616722, 12.0223]])
+        transformed_adata[:, "measurement2_min"].X.reshape(-1), np.array([3.1198905, 1.1616722, 12.0223])
     )
     assert np.allclose(
-        transformed_adata[:, "measurement2_max"].X.reshape(-1), np.array([[11.973169, 17.323523, 12.0223]])
+        transformed_adata[:, "measurement2_max"].X.reshape(-1), np.array([11.973169, 17.323523, 12.0223])
     )
-    assert np.allclose(
-        transformed_adata[:, "measurement2_mean"].X.reshape(-1), np.array([[6.071144, 9.242598, 12.0223]])
-    )
+    assert np.allclose(transformed_adata[:, "measurement2_mean"].X.reshape(-1), np.array([6.071144, 9.242598, 12.0223]))
 
 
 def test_var_names_subset(adata_to_expand):
