@@ -48,6 +48,7 @@ def read_csv(
         download_dataset_name: Name of the file or directory after download.
         backup_url: URL to download the data file(s) from, if the dataset is not yet on disk.
         archive_format: Whether the downloaded file is an archive.
+        kwargs: Passed to Pandas read_csv.
 
     Returns:
         An :class:`~anndata.AnnData` object or a dict with an identifier (the filename, without extension)
@@ -177,7 +178,7 @@ def _read_from_directory(
     columns_x_only: dict[str, list[str]] | list[str] | None = None,
     return_dfs: bool = False,
 ) -> dict[str, AnnData] | dict[str, pd.DataFrame]:
-    """Parse AnnData objects or Pandas DataFrames from a directory containing the data files"""
+    """Parse AnnData objects or Pandas DataFrames from a directory containing the data files."""
     if return_dfs:
         dfs = _read_multiple_csv(file_path, sep=extension, return_dfs=True)
         return dfs  # type: ignore
@@ -279,6 +280,7 @@ def _do_read_csv(
         index_column: Index or column name of the index column (obs)
         columns_obs_only: List of columns which only be stored in .obs, but not in X. Useful for free text annotations.
         columns_x_only: List of columns which only be stored in X, but not in .obs.
+        kwargs: Passed to Pandas read_csv.
 
         cache: Whether the data should be written to cache or not.
 
@@ -328,6 +330,7 @@ def _read_multiple_h5ad(
 
 def _do_read_h5ad(file_path: Path | Iterator[str]) -> AnnData:
     """Read from a h5ad file.
+
     Args:
         file_path: Path to the h5ad file.
 
@@ -550,7 +553,7 @@ def _write_cache(
     path_cache: Path,
     columns_obs_only: list[str] | None,
 ) -> AnnData:
-    """Write AnnData object to cache"""
+    """Write AnnData object to cache."""
     original_x_dtype = raw_anndata.X.dtype
     if not np.issubdtype(original_x_dtype, np.number):
         cached_adata = encode(adata=raw_anndata, autodetect=True)
@@ -612,7 +615,7 @@ def _prepare_dataframe(initial_df: pd.DataFrame, columns_obs_only, columns_x_onl
 
 
 def _decode_cached_adata(adata: AnnData, column_obs_only: list[str]) -> AnnData:
-    """Decode the label encoding of initial AnnData object
+    """Decode the label encoding of initial AnnData object.
 
     Args:
         adata: The label encoded AnnData object.
@@ -664,6 +667,7 @@ def _extract_index_and_columns_obs_only(identifier: str, index_columns, columns_
         identifier: The name of the
         index_columns: Index columns
         columns_obs_only: Columns for obs only
+        columns_x_only: Columns which are only in X.
 
     Returns:
         Index column (if any) and columns obs only (if any) for this specific AnnData object.

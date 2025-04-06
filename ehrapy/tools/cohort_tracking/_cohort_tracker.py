@@ -245,7 +245,6 @@ class CohortTracker:
 
             .. image:: /_static/docstring_previews/cohort_tracking.png
         """
-
         legend_labels = {} if legend_labels is None else legend_labels
         self._check_legend_labels(legend_labels)
 
@@ -450,6 +449,7 @@ class CohortTracker:
         Create a simple flowchart of data preparation steps tracked with `CohortTracker`.
 
         Args:
+            title: Plot title.
             arrow_size: The size of the arrows in the plot. Default is 0.7.
             show: If `True`, the plot will be displayed. If `False`, plotting handels are returned.
             ax: If `None`, a new figure and axes will be created. If an axes object is provided, the plot will be added to it.

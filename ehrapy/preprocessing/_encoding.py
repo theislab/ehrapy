@@ -302,7 +302,10 @@ def _one_hot_encoding(
         X: Current (encoded) X
         updated_obs: A copy of the original obs where the original categorical values are stored that will be encoded
         var_names: Var names of current AnnData object
+        unencoded_var_names: Unencoded var na.es
         categories: The name of the categorical columns to be encoded
+        progress: Rich Progress object.
+        task: Rich Task object.
 
     Returns:
         Encoded new X and the corresponding new var names
@@ -349,7 +352,10 @@ def _label_encoding(
         X: Current (encoded) X.
         updated_obs: A copy of the original obs where the original categorical values are stored that will be encoded.
         var_names: Var names of current AnnData object.
+        unencoded_var_names: Unencoded var names.
         categoricals: The name of the categorical columns, that need to be encoded.
+        progress: Rich Progress object.
+        task: Rich Task.
 
     Returns:
         Encoded new X and the corresponding new var names.
@@ -395,7 +401,7 @@ def _update_layer_after_encoding(
         old_var_names: The previous var names
         categories: All previous categorical names
 
-    Returns
+    Returns:
         A Numpy array containing all numericals together with all encoded categoricals.
     """
     try:
@@ -444,6 +450,7 @@ def _update_encoded_data(
         categorical_prefixes: The name(s) of the encoded column(s)
         categoricals: The categorical values that were encoded recently
         unencoded_prefixes: The unencoded names of the categorical columns that were encoded
+        unencoded_var_names: The unencoded names of the var columns that were encoded.
 
     Returns:
         Encoded new X, the corresponding new var names, and the unencoded var names

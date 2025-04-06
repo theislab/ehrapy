@@ -23,5 +23,5 @@ def _parse_returns_section(self: NumpyDocstring, section: str) -> list[str]:
     return lines
 
 
-def setup(app: Sphinx) -> None:
+def setup(app: Sphinx) -> None:  # noqa: D103
     NumpyDocstring._parse_returns_section = _parse_returns_section

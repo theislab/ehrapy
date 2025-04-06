@@ -21,6 +21,8 @@ if TYPE_CHECKING:
 
 
 class BaseDataframes(NamedTuple):
+    """BaseDataFrames."""
+
     obs: pd.DataFrame
     df: pd.DataFrame
 
@@ -306,7 +308,7 @@ def move_to_x(adata: AnnData, to_x: list[str] | str, copy_x: bool = False) -> An
     return new_adata
 
 
-def get_numerical_column_indices(
+def get_numerical_column_indices(  # noqa: D103
     adata: AnnData, layer: str | None = None, column_indices: Iterable[int] | None = None
 ) -> list[int]:
     mtx = adata.X if layer is None else adata[layer]
@@ -326,7 +328,7 @@ def get_numerical_column_indices(
     return [idx for idx in indices if idx not in non_numerical_indices]
 
 
-def get_fully_imputed_column_indices(
+def get_fully_imputed_column_indices(  # noqa: D103
     adata: AnnData, layer: str | None = None, column_indices: Iterable[int] | None = None
 ) -> list[int]:
     mtx = adata.X if layer is None else adata.layers[layer]
@@ -338,7 +340,7 @@ def get_fully_imputed_column_indices(
 
 
 def get_column_indices(adata: AnnData, col_names: str | Iterable[str]) -> list[int]:
-    """Fetches the column indices in X for a given list of column names
+    """Fetches the column indices in X for a given list of column names.
 
     Args:
         adata: :class:`~anndata.AnnData` object.
@@ -376,7 +378,7 @@ def get_numeric_vars(adata: AnnData) -> list[str]:
     return _get_var_indices_for_type(adata, NUMERIC_TAG)
 
 
-def assert_numeric_vars(adata: AnnData, vars: Sequence[str]):
+def assert_numeric_vars(adata: AnnData, vars: Sequence[str]):  # noqa: D103
     num_vars = get_numeric_vars(adata)
 
     try:
@@ -449,8 +451,9 @@ def _detect_binary_columns(df: pd.DataFrame, numerical_columns: list[str]) -> li
 
 def _cast_obs_columns(obs: pd.DataFrame) -> pd.DataFrame:
     """Cast non numerical obs columns to either category or bool.
+
     Args:
-        obs: Obs of an AnnData object
+        obs: Obs of an AnnData object.
 
     Returns:
         The type casted obs.
@@ -517,11 +520,11 @@ def generate_anndata(  # pragma: no cover
             letters = letters[: n_values // 2]  # Make sure categories are repeated
         df = pd.DataFrame(
             {
-                "cat": pd.Categorical(np.random.choice(letters, n_values)),
-                "cat_ordered": pd.Categorical(np.random.choice(letters, n_values), ordered=True),
-                "int64": np.random.randint(-50, 50, n_values),
-                "float64": np.random.random(n_values),
-                "uint8": np.random.randint(255, size=n_values, dtype="uint8"),
+                "cat": pd.Categorical(np.random.default_rng().choice(letters, n_values)),
+                "cat_ordered": pd.Categorical(np.random.default_rng().choice(letters, n_values), ordered=True),
+                "int64": np.random.default_rng().integers(-50, 50, n_values),
+                "float64": np.random.default_rng().random(n_values),
+                "uint8": np.random.default_rng().integers(255, size=n_values, dtype="uint8"),
             },
             index=index,
         )
@@ -541,34 +544,34 @@ def generate_anndata(  # pragma: no cover
         X = None
     else:
         if include_nlp:
-            X_np_array = np.random.binomial(100, 0.005, (M, N - 1)).astype(object)
+            X_np_array = np.default_rng().random.binomial(100, 0.005, (M, N - 1)).astype(object)
             X = np.append(X_np_array, [[el] for el in random.sample(example_diseases, k=M)], axis=1)
         else:
-            X_np_array = np.random.binomial(100, 0.005, (M, N))
+            X_np_array = np.default_rng().random.binomial(100, 0.005, (M, N))
             X = X_type(X_np_array).astype(X_dtype)
 
     obsm = {
-        "array": np.random.random((M, 50)),
+        "array": np.default_rng().random.random((M, 50)),
         "sparse": sparse.random(M, 100, format="csr"),
         "df": _generate_typed_df(M, obs_names),
     }
     obsm = {k: v for k, v in obsm.items() if type(v) in obsm_types}
     varm = {
-        "array": np.random.random((N, 50)),
+        "array": np.default_rng().random.random((N, 50)),
         "sparse": sparse.random(N, 100, format="csr"),
         "df": _generate_typed_df(N, var_names),
     }
     varm = {k: v for k, v in varm.items() if type(v) in varm_types}
-    layers = {"array": np.random.random((M, N)), "sparse": sparse.random(M, N, format="csr")}
+    layers = {"array": np.default_rng().random.random((M, N)), "sparse": sparse.random(M, N, format="csr")}
     layers = {k: v for k, v in layers.items() if type(v) in layers_types}
-    obsp = {"array": np.random.random((M, M)), "sparse": sparse.random(M, M, format="csr")}
-    varp = {"array": np.random.random((N, N)), "sparse": sparse.random(N, N, format="csr")}
+    obsp = {"array": np.default_rng().random.random((M, M)), "sparse": sparse.random(M, M, format="csr")}
+    varp = {"array": np.default_rng().random.random((N, N)), "sparse": sparse.random(N, N, format="csr")}
 
     def _generate_vstr_recarray(m, n, dtype=None):
         size = m * n
-        lengths = np.random.randint(3, 5, size)
+        lengths = np.default_rng().random.default_rng().integers(3, 5, size)
         letters = np.array(list(ascii_letters))
-        gen_word = lambda w: "".join(np.random.choice(letters, w))
+        gen_word = lambda w: "".join(np.default_rng().random.choice(letters, w))
         arr = np.array([gen_word(length) for length in lengths]).reshape(m, n)
 
         return pd.DataFrame(arr, columns=[gen_word(5) for _ in range(n)]).to_records(index=False, column_dtypes=dtype)
@@ -699,6 +702,8 @@ def get_rank_features_df(
 
 
 class NotEncodedError(AssertionError):
+    """Raised when the specified matrix is not yet encoded."""
+
     pass
 
 

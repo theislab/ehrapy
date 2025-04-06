@@ -58,13 +58,12 @@ def qc_metrics(
         - `min`: Minimum value of the features.
         - `max`: Maximum value of the features.
 
-        Examples:
+    Examples:
             >>> import ehrapy as ep
             >>> adata = ep.dt.mimic_2(encoded=True)
             >>> obs_qc, var_qc = ep.pp.qc_metrics(adata)
             >>> obs_qc["missing_values_pct"].plot(kind="hist", bins=20)
     """
-
     mtx = adata.X if layer is None else adata.layers[layer]
     var_metrics = _compute_var_metrics(mtx, adata)
     obs_metrics = _compute_obs_metrics(mtx, adata, qc_vars=qc_vars, log1p=True)
@@ -112,7 +111,6 @@ def _compute_obs_metrics(
     Returns:
         A Pandas DataFrame with the calculated metrics.
     """
-
     obs_metrics = pd.DataFrame(index=adata.obs_names)
     var_metrics = pd.DataFrame(index=adata.var_names)
 
@@ -157,7 +155,6 @@ def _compute_var_metrics(
         mtx: Data array.
         adata: Annotated data matrix.
     """
-
     categorical_indices = np.ndarray([0], dtype=int)
     var_metrics = pd.DataFrame(index=adata.var_names)
 

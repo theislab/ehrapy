@@ -45,5 +45,4 @@ def catplot(adata: AnnData, x: str = None, y: str = None, hue: str = None, kind:
 
         .. image:: /_static/docstring_previews/catplot.png
     """
-
     return sns.catplot(data=adata.obs, x=x, y=y, hue=hue, kind=kind, **kwargs)
