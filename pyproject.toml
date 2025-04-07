@@ -156,7 +156,7 @@ select = [
     "E",  # Error detected by Pycodestyle
     "W",  # Warning detected by Pycodestyle
     "I",  # isort
-    #"D",  # pydocstyle
+    "D",  # pydocstyle
     "B",  # flake8-bugbear
     "TID",  # flake8-tidy-imports
     "C4",  # flake8-comprehensions
@@ -164,7 +164,7 @@ select = [
     "UP",  # pyupgrade
     "RUF100",  # Report unused noqa directives
     "TCH",  # Typing imports
-    # "NPY",  # Numpy specific rules
+    "NPY",  # Numpy specific rules
     "PTH"  # Use pathlib
 ]
 ignore = [

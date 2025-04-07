@@ -9,7 +9,7 @@ from sphinx.application import Sphinx
 __licence__ = "BSD (3 clause)"
 
 
-def get_github_repo(app: Sphinx, path: str) -> str:
+def get_github_repo(app: Sphinx, path: str) -> str:  # noqa: D103
     if path.endswith(".ipynb"):
         return str(app.config.github_nb_repo)
     if "auto_examples" in path:
@@ -44,7 +44,7 @@ def _html_page_context(
     context["conf_py_path"] = "/docs/source/"
 
 
-def setup(app: Sphinx) -> None:
+def setup(app: Sphinx) -> None:  # noqa: D103
     app.add_config_value("github_nb_repo", "", True)
     app.add_config_value("github_repo", "", True)
     app.connect("html-page-context", _html_page_context)

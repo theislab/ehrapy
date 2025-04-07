@@ -141,7 +141,7 @@ def diabetes_130_raw(
     encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
 ) -> AnnData:
-    """Loads the raw diabetes-130 dataset
+    """Loads the raw diabetes-130 dataset.
 
     More details: http://archive.ics.uci.edu/ml/datasets/Diabetes+130-US+hospitals+for+years+1999-2008 [1]
 
@@ -161,7 +161,6 @@ def diabetes_130_raw(
     References:
         [1] Beata Strack, Jonathan P. DeShazo, Chris Gennings, Juan L. Olmo, Sebastian Ventura, Krzysztof J. Cios, and John N. Clore, “Impact of HbA1c Measurement on Hospital Readmission Rates: Analysis of 70,000 Clinical Database Patient Records,” BioMed Research International, vol. 2014, Article ID 781670, 11 pages, 2014.
     """
-
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/diabetes_130_raw.csv",
         download_dataset_name="diabetes_130_raw.csv",
@@ -183,7 +182,7 @@ def diabetes_130_fairlearn(
     encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
 ) -> AnnData:
-    """Loads the preprocessed diabetes-130 dataset by fairlearn
+    """Loads the preprocessed diabetes-130 dataset by fairlearn.
 
     This loads the dataset from the `fairlearn.datasets.fetch_diabetes_hospital` function.
 
@@ -226,7 +225,7 @@ def chronic_kidney_disease(
     encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
 ) -> AnnData:  # pragma: no cover
-    """Loads the Chronic Kidney Disease dataset
+    """Loads the Chronic Kidney Disease dataset.
 
     More details: https://archive.ics.uci.edu/ml/datasets/Chronic_Kidney_Disease
 
@@ -261,7 +260,7 @@ def breast_tissue(
     encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
 ) -> AnnData:
-    """Loads the Breast Tissue Data Set
+    """Loads the Breast Tissue Data Set.
 
     More details: http://archive.ics.uci.edu/ml/datasets/Breast+Tissue
 
@@ -296,7 +295,7 @@ def cervical_cancer_risk_factors(
     encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
 ) -> AnnData:
-    """Loads the Cervical cancer (Risk Factors) Data Set
+    """Loads the Cervical cancer (Risk Factors) Data Set.
 
     More details: http://archive.ics.uci.edu/ml/datasets/Cervical+cancer+%28Risk+Factors%29
     Preprocessing: https://github.com/theislab/ehrapy-datasets/blob/main/cervical_cancer_risk_factors/cervical_cancer_risk_factors.ipynb
@@ -331,7 +330,7 @@ def dermatology(
     encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
 ) -> AnnData:
-    """Loads the Dermatology Data Set
+    """Loads the Dermatology Data Set.
 
     More details: http://archive.ics.uci.edu/ml/datasets/Dermatology
 
@@ -366,7 +365,7 @@ def echocardiogram(
     encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
 ) -> AnnData:
-    """Loads the Echocardiogram Data Set
+    """Loads the Echocardiogram Data Set.
 
     More details: http://archive.ics.uci.edu/ml/datasets/Echocardiogram
 
@@ -401,7 +400,7 @@ def hepatitis(
     encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
 ) -> AnnData:
-    """Loads the Hepatitis Data Set
+    """Loads the Hepatitis Data Set.
 
     More details: http://archive.ics.uci.edu/ml/datasets/Hepatitis
     Preprocessing: https://github.com/theislab/ehrapy-datasets/blob/main/hepatitis/hepatitis.ipynb
@@ -435,7 +434,7 @@ def statlog_heart(
     encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
 ) -> AnnData:
-    """Loads the Statlog (Heart) Data Set
+    """Loads the Statlog (Heart) Data Set.
 
     More details: http://archive.ics.uci.edu/ml/datasets/Statlog+%28Heart%29
 
@@ -471,7 +470,7 @@ def thyroid(
     encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
 ) -> AnnData:
-    """Loads the Thyroid Data Set
+    """Loads the Thyroid Data Set.
 
     More details: http://archive.ics.uci.edu/ml/datasets/Thyroid+Disease
     Preprocessing: https://github.com/theislab/ehrapy-datasets/blob/main/thyroid/thyroid.ipynb
@@ -505,7 +504,7 @@ def breast_cancer_coimbra(
     encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
 ) -> AnnData:
-    """Loads the Breast Cancer Coimbra Data Set
+    """Loads the Breast Cancer Coimbra Data Set.
 
     More details: http://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Coimbra
 
@@ -540,7 +539,7 @@ def parkinsons(
     encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
 ) -> AnnData:
-    """Loads the Parkinsons Data Set
+    """Loads the Parkinsons Data Set.
 
     More details: http://archive.ics.uci.edu/ml/datasets/Parkinsons
 
@@ -575,7 +574,7 @@ def parkinsons_telemonitoring(
     encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
 ) -> AnnData:
-    """Loads the Parkinsons Telemonitoring Data Set
+    """Loads the Parkinsons Telemonitoring Data Set.
 
     More details: http://archive.ics.uci.edu/ml/datasets/Parkinsons+Telemonitoring
     Preprocessing: https://github.com/theislab/ehrapy-datasets/blob/main/parkinsons_telemonitoring/parkinsons_telemonitoring.ipynb
@@ -609,7 +608,7 @@ def parkinsons_disease_classification(
     encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
 ) -> AnnData:
-    """Loads the Parkinson's Disease Classification Data Set
+    """Loads the Parkinson's Disease Classification Data Set.
 
     More details: http://archive.ics.uci.edu/ml/datasets/Parkinson%27s+Disease+Classification
 
@@ -644,7 +643,7 @@ def parkinson_dataset_with_replicated_acoustic_features(
     encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
 ) -> AnnData:
-    """Loads the Parkinson Dataset with replicated acoustic features Data Set
+    """Loads the Parkinson Dataset with replicated acoustic features Data Set.
 
     More details: http://archive.ics.uci.edu/ml/datasets/Parkinson+Dataset+with+replicated+acoustic+features+
 
@@ -679,7 +678,7 @@ def heart_disease(
     encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
 ) -> AnnData:
-    """Loads the Heart Disease Data Set
+    """Loads the Heart Disease Data Set.
 
     More details: http://archive.ics.uci.edu/ml/datasets/Heart+Disease
 

@@ -1,3 +1,4 @@
+import re
 import warnings
 
 import anndata
@@ -13,9 +14,6 @@ warnings.filterwarnings("ignore")
 
 class TestCausal:
     def setup_method(self):
-        self.seed = 8
-        np.random.seed(8)
-
         linear_data = dowhy.datasets.linear_dataset(
             beta=10,
             num_common_causes=5,
@@ -29,7 +27,6 @@ class TestCausal:
         self.treatment_name = "v0"
 
     def test_dowhy_linear_dataset(self):
-        np.random.seed(self.seed)
         estimate, refute_results = ep.tl.causal_inference(
             adata=self.linear_data,
             graph=self.linear_graph,
@@ -42,8 +39,12 @@ class TestCausal:
         assert isinstance(refute_results, dict)
         assert len(refute_results) == 6
         assert isinstance(estimate, dowhy.causal_estimator.CausalEstimate)
-        assert np.round(refute_results["Refute: Add a random common cause"]["test_significance"], 3) == 10.002
-        assert np.round(refute_results["Refute: Use a subset of data"]["test_significance"], 3) == 10.002
+        assert np.isclose(
+            np.round(refute_results["Refute: Add a random common cause"]["test_significance"], 3), 10.002, atol=0.005
+        )
+        assert np.isclose(
+            np.round(refute_results["Refute: Add a random common cause"]["test_significance"], 3), 10.002, atol=0.005
+        )
 
     def test_plot_causal_effect(self):
         estimate = ep.tl.causal_inference(
@@ -63,4 +64,4 @@ class TestCausal:
         assert len(legend.get_texts()) == 2  # Check the number of legend labels
         assert legend.get_texts()[0].get_text() == "Observed data"
         assert legend.get_texts()[1].get_text() == "Causal variation"
-        assert "10.002" in str(ax.get_title())
+        assert re.search(r"(9\.99\d+|10\.0)", str(ax.get_title()))

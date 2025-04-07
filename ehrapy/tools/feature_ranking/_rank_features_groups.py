@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
 
 def _merge_arrays(arrays: Iterable[Iterable], groups_order) -> np.recarray:
-    """Merge `recarray` obtained from scanpy with manually created numpy `array`"""
+    """Merge `recarray` obtained from scanpy with manually created numpy `array`."""
     groups_order = list(groups_order)
 
     # The easiest way to merge recarrays is through dataframe conversion
@@ -41,7 +41,7 @@ def _merge_arrays(arrays: Iterable[Iterable], groups_order) -> np.recarray:
 
 
 def _adjust_pvalues(pvals: np.recarray, corr_method: _method_options._correction_method) -> np.array:
-    """Perform per group p-values correction with a given `corr_method`
+    """Perform per group p-values correction with a given `corr_method`.
 
     Args:
         pvals: numpy records array with p-values. The resulting p-values are corrected per group (i.e. column)
@@ -66,7 +66,7 @@ def _adjust_pvalues(pvals: np.recarray, corr_method: _method_options._correction
 
 
 def _sort_features(adata, key_added="rank_features_groups") -> None:
-    """Sort results of :func:`~ehrapy.tl.rank_features_groups` by adjusted p-value
+    """Sort results of :func:`~ehrapy.tl.rank_features_groups` by adjusted p-value.
 
     Args:
         adata: Annotated data matrix after running :func:`~ehrapy.tl.rank_features_groups`
@@ -93,7 +93,7 @@ def _sort_features(adata, key_added="rank_features_groups") -> None:
 def _save_rank_features_result(
     adata, key_added, names, scores, pvals, pvals_adj=None, logfoldchanges=None, pts=None, groups_order=None
 ) -> None:
-    """Write keys with statistical test results to adata.uns
+    """Write keys with statistical test results to adata.uns.
 
     Args:
         adata: Annotated data matrix after running :func:`~ehrapy.tl.rank_features_groups`
@@ -102,6 +102,7 @@ def _save_rank_features_result(
         scores: Array with the statistics
         logfoldchanges: logarithm of fold changes or other info to store under logfoldchanges key
         pvals: p-values of a statistical test
+        pvals_adj: Adjusted p-values
         pts: Percentages of cells containing features
         groups_order: order of groups in structured arrays
     """
@@ -119,7 +120,7 @@ def _save_rank_features_result(
 
 
 def _get_groups_order(groups_subset, group_names, reference):
-    """Convert `groups` parameter of :func:`~ehrapy.tl.rank_features_groups` to a list of groups
+    """Convert `groups` parameter of :func:`~ehrapy.tl.rank_features_groups` to a list of groups.
 
     Args:
         groups_subset: Subset of groups, e.g. [`'g1'`, `'g2'`, `'g3'`], to which comparison
@@ -169,6 +170,7 @@ def _evaluate_categorical_features(
     Args:
         adata: Annotated data matrix.
         groupby: The key of the observations grouping to consider.
+        group_names: All available groups names.
         groups: Subset of groups, e.g. [`'g1'`, `'g2'`, `'g3'`], to which comparison
                 shall be restricted, or `'all'` (default), for all groups.
         reference: If `'rest'`, compare each group to the union of the rest of the group.
@@ -268,7 +270,7 @@ def _check_no_datetime_columns(df):
 
 
 def _get_intersection(adata_uns, key, selection):
-    """Get intersection of adata_uns[key] and selection"""
+    """Get intersection of adata_uns[key] and selection."""
     if key in adata_uns:
         uns_enc_to_keep = list(set(adata_uns[key]) & set(selection))
     else:
@@ -386,7 +388,7 @@ def rank_features_groups(
                     Only if `reference` is set to `'rest'`.
                     Fraction of observations from the union of the rest of each group containing the features.
 
-     Examples:
+    Examples:
          >>> import ehrapy as ep
          >>> adata = ep.dt.mimic_2(encoded=False)
          >>> # want to move some metadata to the obs field
