@@ -7,8 +7,6 @@ from typing import TYPE_CHECKING, Literal
 import fhiry.parallel as fp
 import numpy as np
 import pandas as pd
-from anndata import AnnData
-from anndata import read as read_h5
 from lamin_utils import logger
 from rich import print
 
@@ -19,6 +17,8 @@ from ehrapy.preprocessing._encoding import encode
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
+
+    from anndata import AnnData
 
 
 def read_csv(
@@ -505,7 +505,9 @@ def _read_from_cache_dir(cache_dir: Path) -> dict[str, AnnData]:
 
 def _read_from_cache(path_cache: Path) -> AnnData:
     """Read AnnData object from cached file."""
-    cached_adata = read_h5(path_cache)
+    from anndata.io import read_h5ad
+
+    cached_adata = read_h5ad(path_cache)
     # type cast required when dealing with non-numerical data; otherwise all values in X would be treated as strings
     if not np.issubdtype(cached_adata.X.dtype, np.number):
         cached_adata.X = cached_adata.X.astype("object")
