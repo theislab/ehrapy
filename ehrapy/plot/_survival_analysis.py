@@ -65,11 +65,7 @@ def ols(
         show: Show the plot, do not return axis.
         ax: A matplotlib axes object. Only works if plotting a single component.
         title: Set the title of the plot.
-    <<<<<<< HEAD
         **kwds: Passed to Matplotlib Scatterplot.
-    =======
-        kwds: Passed to matplotblib scatterplot.
-    >>>>>>> 316256ce614adcf3d5eac4fa1f44843194dc7a18
 
     Examples:
         >>> import ehrapy as ep
