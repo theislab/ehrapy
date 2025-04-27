@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from collections.abc import Collection, Iterable, Sequence
 
 
-class BaseDataframes(NamedTuple):
+class BaseDataframes(NamedTuple):  # noqa D101
     obs: pd.DataFrame
     df: pd.DataFrame
 
@@ -307,7 +307,7 @@ def move_to_x(adata: AnnData, to_x: list[str] | str, copy_x: bool = False) -> An
 
 
 def get_column_indices(adata: AnnData, col_names: str | Iterable[str]) -> list[int]:
-    """Fetches the column indices in X for a given list of column names
+    """Fetches the column indices in X for a given list of column names.
 
     Args:
         adata: :class:`~anndata.AnnData` object.
@@ -346,6 +346,7 @@ def get_numeric_vars(adata: AnnData) -> list[str]:
 
 
 def assert_numeric_vars(adata: AnnData, vars: Sequence[str]):
+    """Ensures that variables are numerics and raises an error if not."""
     num_vars = get_numeric_vars(adata)
 
     try:
@@ -418,8 +419,9 @@ def _detect_binary_columns(df: pd.DataFrame, numerical_columns: list[str]) -> li
 
 def _cast_obs_columns(obs: pd.DataFrame) -> pd.DataFrame:
     """Cast non numerical obs columns to either category or bool.
+
     Args:
-        obs: Obs of an AnnData object
+        obs: Obs of an AnnData object.
 
     Returns:
         The type casted obs.
@@ -667,7 +669,7 @@ def get_rank_features_df(
     )
 
 
-class NotEncodedError(AssertionError):
+class NotEncodedError(AssertionError):  # noqa: D101
     pass
 
 

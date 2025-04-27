@@ -7,7 +7,7 @@ name = "ehrapy"
 version = "0.12.0"
 description = "Electronic Health Record Analysis with Python."
 readme = "README.md"
-requires-python = ">=3.10,<3.13"
+requires-python = ">=3.11,<3.14"
 license = {file = "LICENSE"}
 authors = [
     {name = "Lukas Heumos"},
@@ -41,6 +41,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Bio-Informatics",
     "Topic :: Scientific/Engineering :: Visualization",
 ]
@@ -154,7 +155,7 @@ select = [
     "E",  # Error detected by Pycodestyle
     "W",  # Warning detected by Pycodestyle
     "I",  # isort
-    #"D",  # pydocstyle
+    "D",  # pydocstyle
     "B",  # flake8-bugbear
     "TID",  # flake8-tidy-imports
     "C4",  # flake8-comprehensions

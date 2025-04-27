@@ -45,10 +45,11 @@ VBound = str | float | Callable[[Sequence[float]], float]
 
 
 @_doc_params(scatter_temp=doc_scatter_basic, show_save_ax=doc_show_save_ax)
-def scatter(
+def scatter(  # noqa: D417
     adata: AnnData,
     x: str | None = None,
     y: str | None = None,
+    *,
     color: str = None,
     use_raw: bool | None = None,
     layers: str | Collection[str] = None,
@@ -143,10 +144,11 @@ def scatter(
     show_save_ax=doc_show_save_ax,
     common_plot_args=doc_common_plot_args,
 )
-def heatmap(
+def heatmap(  # noqa: D417
     adata: AnnData,
     var_names: _VarNames | Mapping[str, _VarNames],
     groupby: str | Sequence[str],
+    *,
     use_raw: bool | None = None,
     log: bool = False,
     num_categories: int = 7,
@@ -260,10 +262,11 @@ def heatmap(
     groupby_plots_args=doc_common_groupby_plot_args,
     vminmax=doc_vboundnorm,
 )
-def dotplot(
+def dotplot(  # noqa: D417
     adata: AnnData,
     var_names: _VarNames | Mapping[str, _VarNames],
     groupby: str,
+    *,
     use_raw: bool | None = None,
     log: bool = False,
     num_categories: int = 7,
@@ -296,7 +299,7 @@ def dotplot(
     norm: Normalize | None = None,
     **kwds,
 ) -> DotPlot | dict | None:  # pragma: no cover
-    """Makes a *dot plot* of the count values of `var_names`.
+    r"""Makes a *dot plot* of the count values of `var_names`.
 
     For each var_name and each `groupby` category a dot is plotted.
     Each dot represents two values: mean expression within each category
@@ -404,10 +407,11 @@ def dotplot(
 
 
 @_doc_params(show_save_ax=doc_show_save_ax, common_plot_args=doc_common_plot_args)
-def tracksplot(
+def tracksplot(  # noqa: D417
     adata: AnnData,
     var_names: _VarNames | Mapping[str, _VarNames],
     groupby: str,
+    *,
     use_raw: bool | None = None,
     log: bool = False,
     dendrogram: bool | str = False,
@@ -483,10 +487,11 @@ def tracksplot(
     return tracksplot_partial(adata=adata, groupby=groupby)
 
 
-def violin(
+def violin(  # noqa: D417
     adata: AnnData,
     keys: str | Sequence[str],
     groupby: str | None = None,
+    *,
     log: bool = False,
     use_raw: bool | None = None,
     stripplot: bool = True,
@@ -583,10 +588,11 @@ def violin(
     groupby_plots_args=doc_common_groupby_plot_args,
     vminmax=doc_vboundnorm,
 )
-def stacked_violin(
+def stacked_violin(  # noqa: D417
     adata: AnnData,
     var_names: _VarNames | Mapping[str, _VarNames],
     groupby: str | Sequence[str],
+    *,
     log: bool = False,
     use_raw: bool | None = None,
     num_categories: int = 7,
@@ -731,10 +737,11 @@ def stacked_violin(
     groupby_plots_args=doc_common_groupby_plot_args,
     vminmax=doc_vboundnorm,
 )
-def matrixplot(
+def matrixplot(  # noqa: D417
     adata: AnnData,
     var_names: _VarNames | Mapping[str, _VarNames],
     groupby: str | Sequence[str],
+    *,
     use_raw: bool | None = None,
     log: bool = False,
     num_categories: int = 7,
@@ -845,7 +852,7 @@ def matrixplot(
 
 
 @_doc_params(show_save_ax=doc_show_save_ax)
-def clustermap(
+def clustermap(  # noqa: D417
     adata: AnnData,
     obs_keys: str | None = None,
     use_raw: bool | None = None,
@@ -949,7 +956,7 @@ def ranking(
 
 
 @_doc_params(show_save_ax=doc_show_save_ax)
-def dendrogram(
+def dendrogram(  # noqa: D417
     adata: AnnData,
     groupby: str,
     *,
@@ -1010,7 +1017,7 @@ def dendrogram(
     scatter_bulk=doc_scatter_embedding,
     show_save_ax=doc_show_save_ax,
 )
-def pca(
+def pca(  # noqa: D417
     adata,
     *,
     annotate_var_explained: bool = False,
@@ -1164,7 +1171,7 @@ def pca_overview(adata: AnnData, **params):  # pragma: no cover
     scatter_bulk=doc_scatter_embedding,
     show_save_ax=doc_show_save_ax,
 )
-def tsne(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover
+def tsne(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover # noqa: D417
     """Scatter plot in tSNE basis.
 
     Args:
@@ -1198,7 +1205,6 @@ def tsne(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover
 
         .. image:: /_static/docstring_previews/tsne_3.png
     """
-
     return sc.pl.tsne(adata=adata, **kwargs)
 
 
@@ -1209,7 +1215,7 @@ def tsne(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover
     scatter_bulk=doc_scatter_embedding,
     show_save_ax=doc_show_save_ax,
 )
-def umap(adata: AnnData, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover
+def umap(adata: AnnData, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover # noqa: D417
     """Scatter plot in UMAP basis.
 
     Args:
@@ -1243,7 +1249,6 @@ def umap(adata: AnnData, **kwargs) -> Axes | list[Axes] | None:  # pragma: no co
 
         .. image:: /_static/docstring_previews/umap_3.png
     """
-
     return sc.pl.umap(adata=adata, **kwargs)
 
 
@@ -1253,7 +1258,7 @@ def umap(adata: AnnData, **kwargs) -> Axes | list[Axes] | None:  # pragma: no co
     scatter_bulk=doc_scatter_embedding,
     show_save_ax=doc_show_save_ax,
 )
-def diffmap(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover
+def diffmap(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover # noqa: D417
     """Scatter plot in Diffusion Map basis.
 
     Args:
@@ -1276,7 +1281,6 @@ def diffmap(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover
     Preview:
         .. image:: /_static/docstring_previews/diffmap.png
     """
-
     return sc.pl.diffmap(adata=adata, **kwargs)
 
 
@@ -1287,7 +1291,7 @@ def diffmap(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover
     scatter_bulk=doc_scatter_embedding,
     show_save_ax=doc_show_save_ax,
 )
-def draw_graph(
+def draw_graph(  # noqa: D417
     adata: AnnData, *, layout: _IGraphLayout | None = None, **kwargs
 ) -> Axes | list[Axes] | None:  # pragma: no cover
     """Scatter plot in graph-drawing basis.
@@ -1342,7 +1346,7 @@ _empty = Empty.token
     scatter_bulk=doc_scatter_embedding,
     show_save_ax=doc_show_save_ax,
 )
-def embedding(
+def embedding(  # noqa: D417
     adata: AnnData,
     basis: str,
     *,
@@ -1392,7 +1396,7 @@ def embedding(
     """Scatter plot for user specified embedding basis (e.g. umap, pca, etc).
 
     Args:
-        basis:
+        basis: Name of the `obsm` basis to use.
         {adata_color_etc}
         {edges_arrows}
         {scatter_bulk}
@@ -1463,7 +1467,7 @@ def embedding(
 
 
 @_doc_params(vminmax=doc_vbound_percentile, panels=doc_panels, show_save_ax=doc_show_save_ax)
-def embedding_density(
+def embedding_density(  # noqa: D417
     adata: AnnData,
     basis: str = "umap",  # was positional before 1.4.5
     key: str | None = None,  # was positional before 1.4.5
@@ -1989,7 +1993,7 @@ def paga_compare(
 
 
 @_doc_params(show_save_ax=doc_show_save_ax)
-def rank_features_groups(
+def rank_features_groups(  # noqa: D417
     adata: AnnData,
     groups: str | Sequence[str] = None,
     n_features: int = 20,
@@ -2047,7 +2051,7 @@ def rank_features_groups(
 
 
 @_doc_params(show_save_ax=doc_show_save_ax)
-def rank_features_groups_violin(
+def rank_features_groups_violin(  # noqa: D417
     adata: AnnData,
     groups: Sequence[str] | None = None,
     n_features: int = 20,
@@ -2151,6 +2155,7 @@ def rank_features_groups_stacked_violin(
         save: Where to save the plot.
         return_fig: Returns :class:`StackedViolin` object. Useful for fine-tuning the plot.
                     Takes precedence over `show=False`.
+        **kwds: Passed to :func:`~scanpy.pl.stacked_violin`.
 
     Returns:
         If `return_fig` is `True`, returns a :class:`StackedViolin` object,
@@ -2198,7 +2203,7 @@ def rank_features_groups_heatmap(
     save: bool | None = None,
     **kwds,
 ):  # pragma: no cover
-    """Plot ranking of genes using heatmap plot (see :func:`~ehrapy.pl.heatmap`)
+    """Plot ranking of genes using heatmap plot (see :func:`~ehrapy.pl.heatmap`).
 
     Args:
         adata: Annotated data matrix.
@@ -2212,6 +2217,7 @@ def rank_features_groups_heatmap(
         key: The key of the calculated feature group rankings (default: 'rank_features_groups').
         show: Whether to show the plot.
         save: Where to save the plot.
+        **kwds: Passed to :func:`~scanpy.pl.heatmap`.
 
     Examples:
         >>> import ehrapy as ep
@@ -2266,7 +2272,7 @@ def rank_features_groups_dotplot(
     return_fig: bool | None = False,
     **kwds,
 ):  # pragma: no cover
-    """Plot ranking of genes using dotplot plot (see :func:`~ehrapy.pl.dotplot`)
+    """Plot ranking of genes using dotplot plot (see :func:`~ehrapy.pl.dotplot`).
 
     Args:
         adata: Annotated data matrix.
@@ -2284,6 +2290,7 @@ def rank_features_groups_dotplot(
         save: Where to save the plot.
         return_fig: Returns :class:`StackedViolin` object. Useful for fine-tuning the plot.
                     Takes precedence over `show=False`.
+        **kwds: Passed to :func:`~scanpy.pl.dotplot`.
 
     Returns:
         If `return_fig` is `True`, returns a :class:`StackedViolin` object,
@@ -2344,7 +2351,7 @@ def rank_features_groups_matrixplot(
     return_fig: bool | None = False,
     **kwds,
 ):  # pragma: no cover
-    """Plot ranking of genes using matrixplot plot (see :func:`~ehrapy.pl.matrixplot`)
+    """Plot ranking of genes using matrixplot plot (see :func:`~ehrapy.pl.matrixplot`).
 
     Args:
         adata: Annotated data matrix.
@@ -2362,6 +2369,7 @@ def rank_features_groups_matrixplot(
         save: Where to save the plot.
         return_fig: Returns :class:`StackedViolin` object. Useful for fine-tuning the plot.
                     Takes precedence over `show=False`.
+        **kwds: Passed to scanpy's matrixplot.
 
     Returns:
         If `return_fig` is `True`, returns a :class:`MatrixPlot` object,
@@ -2410,7 +2418,7 @@ def rank_features_groups_tracksplot(
     save: bool | None = None,
     **kwds,
 ):  # pragma: no cover
-    """Plot ranking of genes using tracksplot plot (see :func:`~ehrapy.pl.tracksplot`)
+    """Plot ranking of genes using tracksplot plot (see :func:`~ehrapy.pl.tracksplot`).
 
     Args:
         adata: Annotated data matrix.
@@ -2424,6 +2432,7 @@ def rank_features_groups_tracksplot(
         key: The key of the calculated feature group rankings (default: 'rank_features_groups').
         show: Whether to show the plot.
         save: Where to save the plot.
+        **kwds: Passed to scanpy's tracksplot.
 
     Examples:
         >>> import ehrapy as ep

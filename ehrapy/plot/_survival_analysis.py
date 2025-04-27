@@ -62,6 +62,7 @@ def ols(
         show: Show the plot, do not return axis.
         ax: A matplotlib axes object. Only works if plotting a single component.
         title: Set the title of the plot.
+        **kwds: Passed to Matplotlib Scatterplot.
 
     Examples:
         >>> import ehrapy as ep
@@ -197,7 +198,7 @@ def kaplan_meier(
     show: bool | None = None,
     title: str | None = None,
 ) -> Axes | None:
-    """Plots a pretty figure of the Fitted KaplanMeierFitter model
+    """Plots a pretty figure of the Fitted KaplanMeierFitter model.
 
     See https://lifelines.readthedocs.io/en/latest/fitters/univariate/KaplanMeierFitter.html
 

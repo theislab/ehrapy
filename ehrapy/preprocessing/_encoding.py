@@ -285,7 +285,7 @@ def encode(
     return encoded_ann_data
 
 
-def _one_hot_encoding(
+def _one_hot_encoding(  # noqa: D417
     adata: AnnData,
     X: np.ndarray | None,
     updated_obs: pd.DataFrame,
@@ -332,7 +332,7 @@ def _one_hot_encoding(
     return temp_x, temp_var_names, unencoded_var_names
 
 
-def _label_encoding(
+def _label_encoding(  # noqa: D417
     adata: AnnData,
     X: np.ndarray | None,
     updated_obs: pd.DataFrame,
@@ -395,7 +395,7 @@ def _update_layer_after_encoding(
         old_var_names: The previous var names
         categories: All previous categorical names
 
-    Returns
+    Returns:
         A Numpy array containing all numericals together with all encoded categoricals.
     """
     try:
@@ -426,7 +426,7 @@ def _update_layer_after_encoding(
         raise ValueError("Ensure that all columns which require encoding are being encoded.") from e
 
 
-def _update_encoded_data(
+def _update_encoded_data(  # noqa: D417
     X: np.ndarray,
     transformed: np.ndarray,
     var_names: list[str],

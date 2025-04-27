@@ -76,8 +76,7 @@ def causal_inference(
     estimate_kwargs: dict[str, Any] | None = None,
     refute_kwargs: dict[str, Any] | None = None,
 ) -> tuple[dowhy.CausalEstimate, dict[str, str | dict[str, float]]]:
-    """
-    Performs causal inference on an AnnData object using the specified causal model and returns a tuple containing the causal estimate and the results of any refutation tests.
+    """Performs causal inference on an AnnData object using the specified causal model and returns a tuple containing the causal estimate and the results of any refutation tests.
 
     Args:
         adata: An AnnData object containing the input data.

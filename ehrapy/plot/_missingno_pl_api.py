@@ -266,8 +266,7 @@ def missing_values_dendrogram(
     label_rotation: float = 45,
     categoricals: bool = False,
 ):
-    """Fits a `scipy` hierarchical clustering algorithm to the given AnnData object's var and visualizes the results as
-    a `scipy` dendrogram.
+    """Fits a `scipy` hierarchical clustering algorithm and visualizes the results as a `scipy` dendrogram.
 
     The default vertical display will fit up to 50 columns. If more than 50 columns are specified and orientation is
     left unspecified the dendrogram will automatically swap to a horizontal display to fit the additional variables.

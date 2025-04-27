@@ -49,7 +49,7 @@ def qc_metrics(
         - `min`: Minimum value of the features.
         - `max`: Maximum value of the features.
 
-        Examples:
+    Examples:
             >>> import ehrapy as ep
             >>> adata = ep.dt.mimic_2(encoded=True)
             >>> obs_qc, var_qc = ep.pp.qc_metrics(adata)

@@ -36,6 +36,7 @@ def balanced_sample(
         method: The method to use for balancing.
         sampler_kwargs: Keyword arguments for the sampler, see the `imbalanced-learn` documentation for options.
         copy: If True, return a copy of the balanced data.
+
     Returns:
         A new `AnnData` object, with the balanced groups.
 
