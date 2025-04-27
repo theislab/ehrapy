@@ -32,7 +32,7 @@ def _format_df_column(df: pd.DataFrame, column_name: str) -> list[tuple[int, str
 def _flatten_annotated_results(annotation_results: dict) -> dict:
     """Flattens the nested set (usually 5 level nested) of annotation results.
 
-    annotation_results is just a simple flattened dict with infos on all entities found
+    Annotation_results is just a simple flattened dict with infos on all entities found
     """
     flattened_annotated_dict = {}
     entry_nr = 0
@@ -68,9 +68,6 @@ def annotate_text(
 ) -> AnnData | None:
     """Annotate the original free text data. Note this will only annotate non null rows.
 
-    The result is a DataFrame.
-    This DataFrame serves as the base for all further analyses, for example coloring UMAPs by specific diseases.
-
     Args:
         adata: AnnData object that holds the data to annotate.
         cat: MedCAT object.
@@ -85,7 +82,6 @@ def annotate_text(
 
         `adata.uns[key_added]` : :class:`pandas.DataFrame`
             DataFrame with the annotated results.
-
     """
     if copy:
         adata = adata.copy()

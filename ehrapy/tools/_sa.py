@@ -611,13 +611,12 @@ def log_logistic_aft(
 ) -> LogLogisticAFTFitter:
     """Fit the log logistic accelerated failure time regression for the survival function.
 
-    The Log-Logistic Accelerated Failure Time (AFT) survival regression model is a powerful statistical tool employed in the analysis of time-to-event data.
-    This model operates under the assumption that the logarithm of survival time adheres to a log-logistic distribution, offering a flexible framework for understanding the impact of covariates on survival times.
-    By modeling survival time as a function of predictors, the Log-Logistic AFT model enables researchers to explore
-    how specific factors influence the acceleration or deceleration of failure times, providing valuable insights into the underlying mechanisms driving event occurrence.
-    The results will be stored in the `.uns` slot of the :class:`AnnData` object under the key 'log_logistic_aft' unless specified otherwise in the `uns_key` parameter.
+    The Log-Logistic Accelerated Failure Time (AFT) survival regression model is employed in the analysis of time-to-event data.
+    This model operates under the assumption that the logarithm of survival time adheres to a log-logistic distribution.
+    By modeling survival time as a function of predictors, the Log-Logistic AFT model enables to explore
+    how specific factors influence the acceleration or deceleration of failure times.
 
-    See https://lifelines.readthedocs.io/en/latest/fitters/regression/LogLogisticAFTFitter.html
+    See https://lifelines.readthedocs.io/en/latest/fitters/regression/LogLogisticAFTFitter.html.
 
     Args:
         adata: AnnData object.
