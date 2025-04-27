@@ -449,7 +449,7 @@ class CohortTracker:
         Create a simple flowchart of data preparation steps tracked with `CohortTracker`.
 
         Args:
-            title: Title of the flow chart.c
+            title: Title of the flow chart.
             arrow_size: The size of the arrows in the plot.
             show: If `True`, the plot will be displayed. If `False`, plotting handels are returned.
             ax: If `None`, a new figure and axes will be created. If an axes object is provided, the plot will be added to it.

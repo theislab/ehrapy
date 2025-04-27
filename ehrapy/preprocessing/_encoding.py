@@ -285,7 +285,7 @@ def encode(
     return encoded_ann_data
 
 
-def _one_hot_encoding(  # noqa: D417
+def _one_hot_encoding(
     adata: AnnData,
     X: np.ndarray | None,
     updated_obs: pd.DataFrame,
@@ -302,7 +302,10 @@ def _one_hot_encoding(  # noqa: D417
         X: Current (encoded) X
         updated_obs: A copy of the original obs where the original categorical values are stored that will be encoded
         var_names: Var names of current AnnData object
+        unencoded_var_names: Unencoded var na.es
         categories: The name of the categorical columns to be encoded
+        progress: Rich Progress object.
+        task: Rich Task object.
 
     Returns:
         Encoded new X and the corresponding new var names
@@ -332,7 +335,7 @@ def _one_hot_encoding(  # noqa: D417
     return temp_x, temp_var_names, unencoded_var_names
 
 
-def _label_encoding(  # noqa: D417
+def _label_encoding(
     adata: AnnData,
     X: np.ndarray | None,
     updated_obs: pd.DataFrame,
@@ -349,7 +352,10 @@ def _label_encoding(  # noqa: D417
         X: Current (encoded) X.
         updated_obs: A copy of the original obs where the original categorical values are stored that will be encoded.
         var_names: Var names of current AnnData object.
+        unencoded_var_names: Unencoded var names.
         categoricals: The name of the categorical columns, that need to be encoded.
+        progress: Rich Progress object.
+        task: Rich Task.
 
     Returns:
         Encoded new X and the corresponding new var names.
@@ -426,7 +432,7 @@ def _update_layer_after_encoding(
         raise ValueError("Ensure that all columns which require encoding are being encoded.") from e
 
 
-def _update_encoded_data(  # noqa: D417
+def _update_encoded_data(
     X: np.ndarray,
     transformed: np.ndarray,
     var_names: list[str],
@@ -444,6 +450,7 @@ def _update_encoded_data(  # noqa: D417
         categorical_prefixes: The name(s) of the encoded column(s)
         categoricals: The categorical values that were encoded recently
         unencoded_prefixes: The unencoded names of the categorical columns that were encoded
+        unencoded_var_names: The unencoded names of the var columns that were encoded.
 
     Returns:
         Encoded new X, the corresponding new var names, and the unencoded var names

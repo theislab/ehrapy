@@ -649,7 +649,7 @@ def _decode_cached_adata(adata: AnnData, column_obs_only: list[str]) -> AnnData:
     return adata
 
 
-def _extract_index_and_columns_obs_only(identifier: str, index_columns, columns_obs_only, columns_x_only=None):  # noqa: D417
+def _extract_index_and_columns_obs_only(identifier: str, index_columns, columns_obs_only, columns_x_only=None):
     """Extract the index column (if any) and the columns, for obs only (if any) from the given user input.
 
     For each file, `index_columns` and `columns_obs_only` can provide three cases:
@@ -666,6 +666,7 @@ def _extract_index_and_columns_obs_only(identifier: str, index_columns, columns_
         identifier: The name of the
         index_columns: Index columns
         columns_obs_only: Columns for obs only
+        columns_x_only: Columns which are only in X.
 
     Returns:
         Index column (if any) and columns obs only (if any) for this specific AnnData object.

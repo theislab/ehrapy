@@ -23,7 +23,7 @@ def print_version_and_date(*, file=None):  # pragma: no cover
     if file is None:
         file = sys.stdout
     print(
-        f"Running ehrapy {__version__}, " f"on {datetime.now():%Y-%m-%d %H:%M}.",
+        f"Running ehrapy {__version__}, on {datetime.now():%Y-%m-%d %H:%M}.",
         file=file,
     )
 

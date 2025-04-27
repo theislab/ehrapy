@@ -277,7 +277,7 @@ def test_df_to_anndata_cols_obs_only(setup_df_to_anndata):
 
 
 def test_df_to_anndata_all_num():
-    test_array = np.random.randint(0, 100, (4, 5))
+    test_array = np.random.default_rng().integers(0, 100, (4, 5))
     df = DataFrame(test_array, columns=["col" + str(idx) for idx in range(5)])
     adata = df_to_anndata(df)
 

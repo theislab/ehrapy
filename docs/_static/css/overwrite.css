@@ -72,3 +72,13 @@ li.toctree-l3 {
 li.toctree-l4 {
     font-size: 75% !important;
 }
+
+.sidebar-logo {
+    max-width: 80px;
+    height: auto;
+}
+
+#furo-main-content img[alt="ehrapy logo"] {
+    max-width: 300px;
+    height: auto;
+}

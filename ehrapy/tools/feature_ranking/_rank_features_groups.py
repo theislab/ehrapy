@@ -109,7 +109,7 @@ def _save_rank_features_result(
         names: Structured array storing the feature names
         scores: Array with the statistics
         pvals: p-values of a statistical test
-        pvals_adj: adjusted p-values of a statistical test
+        pvals_adj: Adjusted p-values of a statistical test
         logfoldchanges: logarithm of fold changes or other info to store under logfoldchanges key
         pts: Percentages of cells containing features
         groups_order: order of groups in structured arrays
@@ -178,7 +178,7 @@ def _evaluate_categorical_features(
     Args:
         adata: Annotated data matrix.
         groupby: The key of the observations grouping to consider.
-        group_names: Group names.
+        group_names: All available groups names.
         groups: Subset of groups, e.g. [`'g1'`, `'g2'`, `'g3'`], to which comparison
                 shall be restricted, or `'all'` (default), for all groups.
         reference: If `'rest'`, compare each group to the union of the rest of the group.

@@ -3,14 +3,17 @@ from __future__ import annotations
 import warnings
 from typing import TYPE_CHECKING
 
+import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import numpy as np
+import pandas as pd
 from numpy import ndarray
 
 from ehrapy.plot import scatter
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Iterable, Sequence
     from xmlrpc.client import Boolean
 
     from anndata import AnnData
@@ -62,7 +65,11 @@ def ols(
         show: Show the plot, do not return axis.
         ax: A matplotlib axes object. Only works if plotting a single component.
         title: Set the title of the plot.
+    <<<<<<< HEAD
         **kwds: Passed to Matplotlib Scatterplot.
+    =======
+        kwds: Passed to matplotblib scatterplot.
+    >>>>>>> 316256ce614adcf3d5eac4fa1f44843194dc7a18
 
     Examples:
         >>> import ehrapy as ep
@@ -183,6 +190,8 @@ def kmf(
 
 def kaplan_meier(
     kmfs: Sequence[KaplanMeierFitter],
+    *,
+    display_survival_statistics: bool = False,
     ci_alpha: list[float] | None = None,
     ci_force_lines: list[Boolean] | None = None,
     ci_show: list[Boolean] | None = None,
@@ -204,6 +213,7 @@ def kaplan_meier(
 
     Args:
         kmfs: Iterables of fitted KaplanMeierFitter objects.
+        display_survival_statistics: Whether to show survival statistics in a table below the plot.
         ci_alpha: The transparency level of the confidence interval. If more than one kmfs, this should be a list.
         ci_force_lines: Force the confidence intervals to be line plots (versus default shaded areas).
                         If more than one kmfs, this should be a list.
@@ -262,7 +272,10 @@ def kaplan_meier(
         at_risk_counts = [False] * len(kmfs)
     if color is None:
         color = [None] * len(kmfs)
-    plt.figure(figsize=figsize)
+
+    fig = plt.figure(constrained_layout=True, figsize=figsize)
+    spec = fig.add_gridspec(2, 1) if display_survival_statistics else fig.add_gridspec(1, 1)
+    ax = plt.subplot(spec[0, 0])
 
     for i, kmf in enumerate(kmfs):
         if i == 0:
@@ -284,15 +297,218 @@ def kaplan_meier(
                 at_risk_counts=at_risk_counts[i],
                 color=color[i],
             )
+    # Configure plot appearance
     ax.grid(grid)
-    plt.xlim(xlim)
-    plt.ylim(ylim)
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
+    ax.set_xlim(xlim)
+    ax.set_ylim(ylim)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    if title:
+        ax.set_title(title)
+
+    if display_survival_statistics:
+        xticks = [x for x in ax.get_xticks() if x >= 0]
+        xticks_space = xticks[1] - xticks[0]
+        if xlabel is None:
+            xlabel = "Time"
+
+        yticks = np.arange(len(kmfs))
+
+        ax_table = plt.subplot(spec[1, 0])
+        ax_table.set_xticks(xticks)
+        ax_table.set_xlim(-xticks_space / 2, xticks[-1] + xticks_space / 2)
+        ax_table.set_ylim(-1, len(kmfs))
+        ax_table.set_yticks(yticks)
+        ax_table.set_yticklabels([kmf.label if kmf.label else f"Group {i + 1}" for i, kmf in enumerate(kmfs[::-1])])
+
+        for i, kmf in enumerate(kmfs[::-1]):
+            survival_probs = kmf.survival_function_at_times(xticks).values
+            for j, prob in enumerate(survival_probs):
+                ax_table.text(
+                    xticks[j],  # x position
+                    yticks[i],  # y position
+                    f"{prob:.2f}",  # formatted survival probability
+                    ha="center",
+                    va="center",
+                    bbox={"boxstyle": "round,pad=0.2", "edgecolor": "none", "facecolor": "lightgrey"},
+                )
+
+        ax_table.grid(grid)
+        ax_table.spines["top"].set_visible(False)
+        ax_table.spines["right"].set_visible(False)
+        ax_table.spines["bottom"].set_visible(False)
+        ax_table.spines["left"].set_visible(False)
+
+    if not show:
+        return fig, ax
+
+    else:
+        return None
+
+
+def cox_ph_forestplot(
+    adata: AnnData,
+    *,
+    uns_key: str = "cox_ph",
+    labels: Iterable[str] | None = None,
+    fig_size: tuple = (10, 10),
+    t_adjuster: float = 0.1,
+    ecolor: str = "dimgray",
+    size: int = 3,
+    marker: str = "o",
+    decimal: int = 2,
+    text_size: int = 12,
+    color: str = "k",
+    show: bool = None,
+    title: str | None = None,
+):
+    """Generates a forest plot to visualize the coefficients and confidence intervals of a Cox Proportional Hazards model.
+
+    The `adata` object must first be populated using the :func:`~ehrapy.tools.cox_ph` function. This function stores the summary table of the `CoxPHFitter` in the `.uns` attribute of `adata`.
+    The summary table is created when the model is fitted using the :func:`~ehrapy.tools.cox_ph` function.
+    For more information on the `CoxPHFitter`, see the `Lifelines documentation <https://lifelines.readthedocs.io/en/latest/fitters/regression/CoxPHFitter.html>`_.
+
+    Inspired by `zepid.graphics.EffectMeasurePlot <https://readthedocs.org>`_ (zEpid Package, https://pypi.org/project/zepid/).
+
+    Args:
+        adata: :class:`~anndata.AnnData` object containing the summary table from the CoxPHFitter. This is stored in the `.uns` attribute, after fitting the model using :func:`~ehrapy.tools.cox_ph`.
+        uns_key: Key in `.uns` where :func:`~ehrapy.tools.cox_ph` function stored the summary table. See argument `uns_key` in :func:`~ehrapy.tools.cox_ph`.
+        labels: List of labels for each coefficient, default uses the index of the summary ta
+        fig_size: Width, height in inches.
+        t_adjuster: Adjust the table to the right.
+        ecolor: Color of the error bars.
+        size: Size of the markers.
+        marker: Marker style.
+        decimal: Number of decimal places to display.
+        text_size: Font size of the text.
+        color: Color of the markers.
+        show: Show the plot, do not return figure and axis.
+        title: Set the title of the plot.
+
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=False)
+        >>> adata_subset = adata[:, ["mort_day_censored", "censor_flg", "gender_num", "afib_flg", "day_icu_intime_num"]]
+        >>> coxph = ep.tl.cox_ph(adata_subset, event_col="censor_flg", duration_col="mort_day_censored")
+        >>> ep.pl.cox_ph_forestplot(adata_subset)
+
+        .. image:: /_static/docstring_previews/coxph_forestplot.png
+
+    """
+    if uns_key not in adata.uns:
+        raise ValueError(f"Key {uns_key} not found in adata.uns. Please provide a valid key.")
+
+    coxph_fitting_summary = adata.uns[
+        uns_key
+    ]  # pd.Dataframe with columns: coef, exp(coef), se(coef), z, p, lower 0.95, upper 0.95
+    auc_col = "coef"
+
+    if labels is None:
+        labels = coxph_fitting_summary.index
+    tval = []
+    ytick = []
+    for row_index in range(len(coxph_fitting_summary)):
+        if not np.isnan(coxph_fitting_summary[auc_col][row_index]):
+            if (
+                (isinstance(coxph_fitting_summary[auc_col][row_index], float))
+                & (isinstance(coxph_fitting_summary["coef lower 95%"][row_index], float))
+                & (isinstance(coxph_fitting_summary["coef upper 95%"][row_index], float))
+            ):
+                tval.append(
+                    [
+                        round(coxph_fitting_summary[auc_col][row_index], decimal),
+                        (
+                            "("
+                            + str(round(coxph_fitting_summary["coef lower 95%"][row_index], decimal))
+                            + ", "
+                            + str(round(coxph_fitting_summary["coef upper 95%"][row_index], decimal))
+                            + ")"
+                        ),
+                    ]
+                )
+            else:
+                tval.append(
+                    [
+                        coxph_fitting_summary[auc_col][row_index],
+                        (
+                            "("
+                            + str(coxph_fitting_summary["coef lower 95%"][row_index])
+                            + ", "
+                            + str(coxph_fitting_summary["coef upper 95%"][row_index])
+                            + ")"
+                        ),
+                    ]
+                )
+            ytick.append(row_index)
+        else:
+            tval.append([" ", " "])
+            ytick.append(row_index)
+
+    x_axis_upper_bound = round(((pd.to_numeric(coxph_fitting_summary["coef upper 95%"])).max() + 0.1), 2)
+
+    x_axis_lower_bound = round(((pd.to_numeric(coxph_fitting_summary["coef lower 95%"])).min() - 0.1), 1)
+
+    fig = plt.figure(figsize=fig_size)
+    gspec = gridspec.GridSpec(1, 6)
+    plot = plt.subplot(gspec[0, 0:4])
+    table = plt.subplot(gspec[0, 4:])
+    plot.set_ylim(-1, (len(coxph_fitting_summary)))  # spacing out y-axis properly
+
+    plot.axvline(1, color="gray", zorder=1)
+    lower_diff = coxph_fitting_summary[auc_col] - coxph_fitting_summary["coef lower 95%"]
+    upper_diff = coxph_fitting_summary["coef upper 95%"] - coxph_fitting_summary[auc_col]
+    plot.errorbar(
+        coxph_fitting_summary[auc_col],
+        coxph_fitting_summary.index,
+        xerr=[lower_diff, upper_diff],
+        marker="None",
+        zorder=2,
+        ecolor=ecolor,
+        linewidth=0,
+        elinewidth=1,
+    )
+    # plot markers
+    plot.scatter(
+        coxph_fitting_summary[auc_col],
+        coxph_fitting_summary.index,
+        c=color,
+        s=(size * 25),
+        marker=marker,
+        zorder=3,
+        edgecolors="None",
+    )
+    # plot settings
+    plot.xaxis.set_ticks_position("bottom")
+    plot.yaxis.set_ticks_position("left")
+    plot.get_xaxis().set_major_formatter(ticker.ScalarFormatter())
+    plot.get_xaxis().set_minor_formatter(ticker.NullFormatter())
+    plot.set_yticks(ytick)
+    plot.set_xlim([x_axis_lower_bound, x_axis_upper_bound])
+    plot.set_xticks([x_axis_lower_bound, 1, x_axis_upper_bound])
+    plot.set_xticklabels([x_axis_lower_bound, 1, x_axis_upper_bound])
+    plot.set_yticklabels(labels)
+    plot.tick_params(axis="y", labelsize=text_size)
+    plot.yaxis.set_ticks_position("none")
+    plot.invert_yaxis()  # invert y-axis to align values properly with table
+    tb = table.table(
+        cellText=tval, cellLoc="center", loc="right", colLabels=[auc_col, "95% CI"], bbox=[0, t_adjuster, 1, 1]
+    )
+    table.axis("off")
+    tb.auto_set_font_size(False)
+    tb.set_fontsize(text_size)
+    for _, cell in tb.get_celld().items():
+        cell.set_linewidth(0)
+
+    # remove spines
+    plot.spines["top"].set_visible(False)
+    plot.spines["right"].set_visible(False)
+    plot.spines["left"].set_visible(False)
+
     if title:
         plt.title(title)
 
     if not show:
-        return ax
+        return fig, plot
+
     else:
         return None

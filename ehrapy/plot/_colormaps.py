@@ -4,14 +4,7 @@ from matplotlib.colors import LinearSegmentedColormap
 
 
 class Colormaps(Enum):
-    """Available colormaps.
-
-    | grey_red
-    | grey_blue
-    | grey_green
-    | gray_yellow
-    | grey_violet.
-    """
+    """Available colormaps."""
 
     grey_red = LinearSegmentedColormap.from_list("grouping", ["lightgray", "red", "darkred"], N=128)
     grey_green = LinearSegmentedColormap.from_list("grouping", ["lightgray", "limegreen", "forestgreen"], N=128)

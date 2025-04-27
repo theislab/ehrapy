@@ -120,8 +120,8 @@ def get_medcat_annotation_overview(
 
     An overview will look like the following:
 
-    cui (the CUI), nsubjects (from how many rows this one got extracted), type_ids (TUIs), name (name of the entity), perc_subjects (how many rows relative
-    to absolute number of rows)
+    cui (the CUI), nsubjects (from how many rows this one got extracted), type_ids (TUIs), name (name of the entity),
+    perc_subjects (how many rows relative to absolute number of rows)
 
     Args:
         adata: Annotated data matrix.

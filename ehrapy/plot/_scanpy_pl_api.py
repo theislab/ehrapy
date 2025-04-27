@@ -1195,7 +1195,10 @@ def tsne(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover # noq
         .. image:: /_static/docstring_previews/tsne_1.png
 
         >>> ep.pl.tsne(
-        ...     adata, color=["day_icu_intime", "service_unit"], wspace=0.5, title=["Day of ICU admission", "Service unit"]
+        ...     adata,
+        ...     color=["day_icu_intime", "service_unit"],
+        ...     wspace=0.5,
+        ...     title=["Day of ICU admission", "Service unit"],
         ... )
 
         .. image:: /_static/docstring_previews/tsne_2.png
@@ -1239,7 +1242,10 @@ def umap(adata: AnnData, **kwargs) -> Axes | list[Axes] | None:  # pragma: no co
         .. image:: /_static/docstring_previews/umap_1.png
 
         >>> ep.pl.umap(
-        ...     adata, color=["day_icu_intime", "service_unit"], wspace=0.5, title=["Day of ICU admission", "Service unit"]
+        ...     adata,
+        ...     color=["day_icu_intime", "service_unit"],
+        ...     wspace=0.5,
+        ...     title=["Day of ICU admission", "Service unit"],
         ... )
 
         .. image:: /_static/docstring_previews/umap_2.png
@@ -1988,7 +1994,8 @@ def paga_compare(
         save=save,
         title_graph=title_graph,
         groups_graph=groups_graph,
-        pos=pos**paga_graph_params,
+        pos=pos,
+        **paga_graph_params,
     )
 
 

@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import numpy as np
+import pandas as pd
 import pytest
 from anndata import AnnData
 from matplotlib.testing.compare import compare_images
@@ -27,6 +28,60 @@ def root_dir():
 @pytest.fixture
 def rng():
     return np.random.default_rng(seed=42)
+
+
+@pytest.fixture
+def obs_data():
+    return {
+        "disease": ["cancer", "tumor"],
+        "country": ["Germany", "switzerland"],
+        "sex": ["male", "female"],
+    }
+
+
+@pytest.fixture
+def var_data():
+    return {
+        "alive": ["yes", "no", "maybe"],
+        "hospital": ["hospital 1", "hospital 2", "hospital 1"],
+        "crazy": ["yes", "yes", "yes"],
+    }
+
+
+@pytest.fixture
+def missing_values_adata(obs_data, var_data):
+    return AnnData(
+        X=np.array([[0.21, np.nan, 41.42], [np.nan, np.nan, 7.234]], dtype=np.float32),
+        obs=pd.DataFrame(data=obs_data),
+        var=pd.DataFrame(data=var_data, index=["Acetaminophen", "hospital", "crazy"]),
+    )
+
+
+@pytest.fixture
+def lab_measurements_simple_adata(obs_data, var_data):
+    X = np.array([[73, 0.02, 1.00], [148, 0.25, 3.55]], dtype=np.float32)
+    return AnnData(
+        X=X,
+        obs=pd.DataFrame(data=obs_data),
+        var=pd.DataFrame(data=var_data, index=["Acetaminophen", "Acetoacetic acid", "Beryllium, toxic"]),
+    )
+
+
+@pytest.fixture
+def lab_measurements_layer_adata(obs_data, var_data):
+    X = np.array([[73, 0.02, 1.00], [148, 0.25, 3.55]], dtype=np.float32)
+    return AnnData(
+        X=X,
+        obs=pd.DataFrame(data=obs_data),
+        var=pd.DataFrame(data=var_data, index=["Acetaminophen", "Acetoacetic acid", "Beryllium, toxic"]),
+        layers={"layer_copy": X},
+    )
+
+
+@pytest.fixture
+def mimic_2():
+    adata = ep.dt.mimic_2()
+    return adata
 
 
 @pytest.fixture
@@ -57,7 +112,7 @@ def mar_adata(rng) -> AnnData:
 def mcar_adata(rng) -> AnnData:
     """Generate MCAR data by randomly sampling."""
     data = rng.random((100, 10))
-    missing_indices = np.random.choice(a=[False, True], size=data.shape, p=[1 - 0.1, 0.1])
+    missing_indices = rng.choice(a=[False, True], size=data.shape, p=[1 - 0.1, 0.1])
     data[missing_indices] = np.nan
 
     return AnnData(data)
@@ -146,10 +201,10 @@ def asarray(a):
     return np.asarray(a)
 
 
-def as_dense_dask_array(a):
+def as_dense_dask_array(a, chunk_size=1000):
     import dask.array as da
 
-    return da.asarray(a)
+    return da.from_array(a, chunks=chunk_size)
 
 
 ARRAY_TYPES = (asarray, as_dense_dask_array)
