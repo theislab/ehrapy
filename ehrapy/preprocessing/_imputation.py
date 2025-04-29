@@ -127,7 +127,7 @@ if DASK_AVAILABLE:
 
 
 def _extract_impute_value(replacement: dict[str, str | int], column_name: str) -> str | int | None:
-    """Extract the replacement value for a given column in the :class:`~anndata.AnnData` object
+    """Extract the replacement value for a given column in the :class:`~anndata.AnnData` object.
 
     Returns:
         The value to replace missing values
@@ -574,7 +574,7 @@ def _get_non_numerical_column_indices(arr: np.ndarray) -> set:
     """Return indices of columns, that contain at least one non-numerical value that is not "Nan"."""
 
     def _is_float_or_nan(val) -> bool:  # pragma: no cover
-        """Check whether a given item is a float or np.nan"""
+        """Check whether a given item is a float or np.nan."""
         try:
             _ = float(val)
             return not isinstance(val, bool)

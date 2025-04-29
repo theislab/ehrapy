@@ -19,6 +19,7 @@ from lifelines.statistics import StatisticalResult, logrank_test
 from scipy import stats
 
 from ehrapy.anndata import anndata_to_df
+from ehrapy.anndata._constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -32,6 +33,7 @@ def ols(
     var_names: list[str] | None | None = None,
     formula: str | None = None,
     missing: Literal["none", "drop", "raise"] | None = "none",
+    use_feature_types: bool = False,
 ) -> sm.OLS:
     """Create an Ordinary Least Squares (OLS) Model from a formula and AnnData.
 
@@ -41,6 +43,7 @@ def ols(
         adata: The AnnData object for the OLS model.
         var_names: A list of var names indicating which columns are for the OLS model.
         formula: The formula specifying the model.
+        use_feature_types: If True, the feature types in the AnnData objects .var are used.
         missing: Available options are 'none', 'drop', and 'raise'.
                  If 'none', no nan checking is done. If 'drop', any observations with nans are dropped.
                  If 'raise', an error is raised.
@@ -56,9 +59,21 @@ def ols(
         >>> ols = ep.tl.ols(adata, var_names, formula, missing="drop")
     """
     if isinstance(var_names, list):
-        data = pd.DataFrame(adata[:, var_names].X, columns=var_names).astype(float)
+        data = pd.DataFrame(adata[:, var_names].X, columns=var_names)
     else:
         data = pd.DataFrame(adata.X, columns=adata.var_names)
+
+    if use_feature_types:
+        for col in data.columns:
+            if col in adata.var.index:
+                feature_type = adata.var[FEATURE_TYPE_KEY][col]
+                if feature_type == CATEGORICAL_TAG:
+                    data[col] = data[col].astype("category")
+                elif feature_type == NUMERIC_TAG:
+                    data[col] = data[col].astype(float)
+    else:
+        data = data.astype(float)
+
     ols = smf.ols(formula, data=data, missing=missing)
 
     return ols
@@ -69,6 +84,7 @@ def glm(
     var_names: Iterable[str] | None = None,
     formula: str | None = None,
     family: Literal["Gaussian", "Binomial", "Gamma", "Gaussian", "InverseGaussian"] = "Gaussian",
+    use_feature_types: bool = False,
     missing: Literal["none", "drop", "raise"] = "none",
     as_continuous: Iterable[str] | None | None = None,
 ) -> sm.GLM:
@@ -81,6 +97,7 @@ def glm(
         var_names: A list of var names indicating which columns are for the GLM model.
         formula: The formula specifying the model.
         family: The distribution families. Available options are 'Gaussian', 'Binomial', 'Gamma', and 'InverseGaussian'.
+        use_feature_types: If True, the feature types in the AnnData objects .var are used.
         missing: Available options are 'none', 'drop', and 'raise'. If 'none', no nan checking is done.
                  If 'drop', any observations with nans are dropped. If 'raise', an error is raised.
         as_continuous: A list of var names indicating which columns are continuous rather than categorical.
@@ -111,6 +128,15 @@ def glm(
         data = pd.DataFrame(adata.X, columns=adata.var_names)
     if as_continuous is not None:
         data[as_continuous] = data[as_continuous].astype(float)
+    if use_feature_types:
+        for col in data.columns:
+            if col in adata.var.index:
+                feature_type = adata.var[FEATURE_TYPE_KEY][col]
+                if feature_type == CATEGORICAL_TAG:
+                    data[col] = data[col].astype("category")
+                elif feature_type == NUMERIC_TAG:
+                    data[col] = data[col].astype(float)
+
     glm = smf.glm(formula, data=data, family=family, missing=missing)
 
     return glm
@@ -161,7 +187,6 @@ def kmf(
         >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
         >>> kmf = ep.tl.kmf(adata[:, ["mort_day_censored"]].X, adata[:, ["censor_flg"]].X)
     """
-
     warnings.warn(
         "This function is deprecated and will be removed in the next release. Use `ep.tl.kaplan_meier` instead.",
         DeprecationWarning,
@@ -534,7 +559,6 @@ def weibull_aft(
         >>> aft = ep.tl.weibull_aft(adata, duration_col="mort_day_censored", event_col="censor_flg")
         >>> aft.print_summary()
     """
-
     df = _build_model_input_dataframe(adata, duration_col, accept_zero_duration=False)
 
     weibull_aft = WeibullAFTFitter(
@@ -586,13 +610,13 @@ def log_logistic_aft(
     fit_options: dict | None = None,
 ) -> LogLogisticAFTFitter:
     """Fit the log logistic accelerated failure time regression for the survival function.
-    The Log-Logistic Accelerated Failure Time (AFT) survival regression model is a powerful statistical tool employed in the analysis of time-to-event data.
-    This model operates under the assumption that the logarithm of survival time adheres to a log-logistic distribution, offering a flexible framework for understanding the impact of covariates on survival times.
-    By modeling survival time as a function of predictors, the Log-Logistic AFT model enables researchers to explore
-    how specific factors influence the acceleration or deceleration of failure times, providing valuable insights into the underlying mechanisms driving event occurrence.
-    The results will be stored in the `.uns` slot of the :class:`AnnData` object under the key 'log_logistic_aft' unless specified otherwise in the `uns_key` parameter.
 
-    See https://lifelines.readthedocs.io/en/latest/fitters/regression/LogLogisticAFTFitter.html
+    The Log-Logistic Accelerated Failure Time (AFT) survival regression model is employed in the analysis of time-to-event data.
+    This model operates under the assumption that the logarithm of survival time adheres to a log-logistic distribution.
+    By modeling survival time as a function of predictors, the Log-Logistic AFT model enables to explore
+    how specific factors influence the acceleration or deceleration of failure times.
+
+    See https://lifelines.readthedocs.io/en/latest/fitters/regression/LogLogisticAFTFitter.html.
 
     Args:
         adata: AnnData object.
@@ -725,7 +749,7 @@ def nelson_aalen(
     fit_options: dict | None = None,
     censoring: Literal["right", "left"] = "right",
 ) -> NelsonAalenFitter:
-    """Employ the Nelson-Aalen estimator to estimate the cumulative hazard function from censored survival data
+    """Employ the Nelson-Aalen estimator to estimate the cumulative hazard function from censored survival data.
 
     The Nelson-Aalen estimator is a non-parametric method used in survival analysis to estimate the cumulative hazard function.
     This technique is particularly useful when dealing with censored data, as it accounts for the presence of individuals whose event times are unknown due to censoring.
@@ -762,7 +786,6 @@ def nelson_aalen(
         >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
         >>> naf = ep.tl.nelson_aalen(adata, "mort_day_censored", "censor_flg")
     """
-
     return _univariate_model(
         adata,
         duration_col,

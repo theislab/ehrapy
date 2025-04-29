@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from collections.abc import Collection, Iterable, Sequence
 
 
-class BaseDataframes(NamedTuple):
+class BaseDataframes(NamedTuple):  # noqa D101
     obs: pd.DataFrame
     df: pd.DataFrame
 
@@ -273,7 +273,7 @@ def move_to_x(adata: AnnData, to_x: list[str] | str, copy_x: bool = False) -> An
     return new_adata
 
 
-def get_numerical_column_indices(
+def get_numerical_column_indices(  # noqa: D103
     adata: AnnData, layer: str | None = None, column_indices: Iterable[int] | None = None
 ) -> list[int]:
     mtx = adata.X if layer is None else adata[layer]
@@ -293,7 +293,7 @@ def get_numerical_column_indices(
     return [idx for idx in indices if idx not in non_numerical_indices]
 
 
-def get_fully_imputed_column_indices(
+def get_fully_imputed_column_indices(  # noqa: D103
     adata: AnnData, layer: str | None = None, column_indices: Iterable[int] | None = None
 ) -> list[int]:
     mtx = adata.X if layer is None else adata.layers[layer]
@@ -305,7 +305,7 @@ def get_fully_imputed_column_indices(
 
 
 def get_column_indices(adata: AnnData, col_names: str | Iterable[str]) -> list[int]:
-    """Fetches the column indices in X for a given list of column names
+    """Fetches the column indices in X for a given list of column names.
 
     Args:
         adata: :class:`~anndata.AnnData` object.
@@ -322,6 +322,7 @@ def get_column_indices(adata: AnnData, col_names: str | Iterable[str]) -> list[i
 
 
 def assert_numeric_vars(adata: AnnData, vars: Sequence[str]):
+    """Ensures that variables are numerics and raises an error if not."""
     num_vars = _get_var_indices_for_type(adata, NUMERIC_TAG)
 
     try:
@@ -332,8 +333,9 @@ def assert_numeric_vars(adata: AnnData, vars: Sequence[str]):
 
 def _cast_obs_columns(obs: pd.DataFrame) -> pd.DataFrame:
     """Cast non numerical obs columns to either category or bool.
+
     Args:
-        obs: Obs of an AnnData object
+        obs: Obs of an AnnData object.
 
     Returns:
         The type casted obs.

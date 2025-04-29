@@ -69,7 +69,7 @@ def _detect_feature_type(col: pd.Series) -> tuple[Literal["date", "categorical",
 
 def infer_feature_types(
     adata: AnnData, layer: str | None = None, output: Literal["tree", "dataframe"] | None = "tree", verbose: bool = True
-):
+) -> None:
     """Infer feature types from AnnData object.
 
     For each feature in adata.var_names, the method infers one of the following types: 'date', 'categorical', or 'numeric'.
@@ -165,7 +165,7 @@ def check_feature_types(func):
 
 
 @check_feature_types
-def feature_type_overview(adata: AnnData):
+def feature_type_overview(adata: AnnData) -> None:
     """Print an overview of the feature types and encoding modes in the AnnData object.
 
     Args:
@@ -212,7 +212,7 @@ def feature_type_overview(adata: AnnData):
     print(tree)
 
 
-def replace_feature_types(adata, features: Iterable[str], corrected_type: str):
+def replace_feature_types(adata, features: Iterable[str], corrected_type: str) -> None:
     """Correct the feature types for a list of features inplace.
 
     Args:

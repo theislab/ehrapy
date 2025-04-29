@@ -7,7 +7,7 @@ name = "ehrapy"
 version = "0.12.0"
 description = "Electronic Health Record Analysis with Python."
 readme = "README.md"
-requires-python = ">=3.10,<3.14"
+requires-python = ">=3.11,<3.14"
 license = {file = "LICENSE"}
 authors = [
     {name = "Lukas Heumos"},
@@ -38,7 +38,6 @@ classifiers = [
     "Operating System :: MacOS :: MacOS X",
     "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -50,9 +49,8 @@ dependencies = [
     "session-info2",
     "lamin_utils",
     "rich",
-    "scanpy[leiden]",
+    "scanpy",
     "requests",
-    "pynndescent",
     "miceforest",
     "scikit-misc",  # required for seuratv3 highly variable features
     "lifelines>=0.30.0",
@@ -66,7 +64,10 @@ dependencies = [
     "fknni>=1.2.0",
     "python-dateutil",
     "filelock",
-    "numpy>=2.0.0"
+    "numpy>=2.0.0",
+    "numba>=0.60.0",
+    "igraph",
+    "fast-array-utils"
 ]
 
 [project.optional-dependencies]
@@ -96,7 +97,6 @@ docs = [
     "sphinx-automodapi",
     "sphinxext-opengraph",
     "pygments",
-    "pyenchant",
     "nbsphinx",
     "nbsphinx-link",
     "ipykernel",
@@ -156,7 +156,7 @@ select = [
     "E",  # Error detected by Pycodestyle
     "W",  # Warning detected by Pycodestyle
     "I",  # isort
-    #"D",  # pydocstyle
+    "D",  # pydocstyle
     "B",  # flake8-bugbear
     "TID",  # flake8-tidy-imports
     "C4",  # flake8-comprehensions
@@ -164,7 +164,7 @@ select = [
     "UP",  # pyupgrade
     "RUF100",  # Report unused noqa directives
     "TCH",  # Typing imports
-    # "NPY",  # Numpy specific rules
+    "NPY",  # Numpy specific rules
     "PTH"  # Use pathlib
 ]
 ignore = [

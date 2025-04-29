@@ -8,7 +8,7 @@ from ehrapy.tools import rank_features_supervised
 
 
 def test_continuous_prediction():
-    target = np.random.rand(1000)
+    target = np.random.default_rng().random(1000)
     X = np.stack((target, target * 2, [1] * 1000)).T
 
     adata = AnnData(X)
@@ -24,7 +24,7 @@ def test_continuous_prediction():
 
 
 def test_categorical_prediction():
-    target = np.random.randint(2, size=1000)
+    target = np.random.default_rng().integers(2, size=1000)
     X = np.stack((target, target, [1] * 1000)).T.astype(np.float32)
 
     adata = AnnData(X)
@@ -40,7 +40,7 @@ def test_categorical_prediction():
 
 
 def test_multiclass_prediction():
-    target = np.random.randint(4, size=1000)
+    target = np.random.default_rng().integers(4, size=1000)
     X = np.stack((target, target, [1] * 1000)).T.astype(np.float32)
 
     adata = AnnData(X)

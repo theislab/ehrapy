@@ -164,7 +164,6 @@ def umap(
 
         **X_umap** : `adata.obsm` field UMAP coordinates of data.
     """
-
     key_to_check = neighbors_key if neighbors_key is not None else "neighbors"
     if key_to_check not in adata.uns:
         raise ValueError(f"Did not find .uns[{key_to_check!r}]. Please run `ep.pp.neighbors` first.")
@@ -294,6 +293,7 @@ def diffmap(
                  If specified, diffmap looks .uns[neighbors_key] for neighbors settings and
                  .obsp[.uns[neighbors_key]['connectivities_key']],
                  .obsp[.uns[neighbors_key]['distances_key']] for connectivities and distances respectively.
+        neighbors_key: Key to stored neighbors.
         random_state: Random seed for the initialization.
         copy: Whether to return a copy of the :class:`~anndata.AnnData` object.
 
@@ -358,16 +358,18 @@ def embedding_density(
 def leiden(
     adata: AnnData,
     resolution: float = 1,
+    *,
     restrict_to: tuple[str, Sequence[str]] | None = None,
     random_state: AnyRandom = 0,
     key_added: str = "leiden",
     adjacency: spmatrix | None = None,
-    directed: bool = True,
+    directed: bool | None = False,
     use_weights: bool = True,
     n_iterations: int = -1,
     partition_type: type[MutableVertexPartition] | None = None,
     neighbors_key: str | None = None,
     obsp: str | None = None,
+    flavor: Literal["leidenalg", "igraph"] = "igraph",
     copy: bool = False,
     **partition_kwargs,
 ) -> AnnData | None:  # pragma: no cover
@@ -401,7 +403,8 @@ def leiden(
                        If not specified, leiden looks .obsp['connectivities'] for connectivities
                        (default storage place for pp.neighbors).
                        If specified, leiden looks .obsp[.uns[neighbors_key]['connectivities_key']] for connectivities.
-        obsp: Use .obsp[obsp] as adjacency. You can't specify both `obsp` and `neighbors_key` at the same time.
+        obsp: Use `.obsp[obsp]` as adjacency. You can't specify both `obsp` and `neighbors_key` at the same time.
+        flavor: Which package's implementation to use.
         copy: Whether to copy `adata` or modify it inplace.
         **partition_kwargs: Any further arguments to pass to `~leidenalg.find_partition`
                             (which in turn passes arguments to the `partition_type`).
@@ -427,6 +430,7 @@ def leiden(
         neighbors_key=neighbors_key,
         obsp=obsp,
         copy=copy,
+        flavor=flavor,
         **partition_kwargs,
     )
 
@@ -480,6 +484,7 @@ def dendrogram(
                    Notice that the `groupby` information is added to the dendrogram.
         inplace: If `True`, adds dendrogram information to `adata.uns[key_added]`,
                  else this function returns the information.
+
     Returns:
         If `inplace=False`, returns dendrogram information, else `adata.uns[key_added]` is updated with it.
 
@@ -568,7 +573,6 @@ def dpt(
 def paga(
     adata: AnnData,
     groups: str | None = None,
-    use_rna_velocity: bool = False,
     model: Literal["v1.2", "v1.0"] = "v1.2",
     neighbors_key: str | None = None,
     copy: bool = False,
@@ -580,8 +584,7 @@ def paga(
     simpler abstracted graph (*PAGA graph*) of partitions, in which edge weights
     represent confidence in the presence of connections. By tresholding this
     confidence in :func:`~ehrapy.pl.paga`, a much simpler representation of the
-    manifold data is obtained, which is nonetheless faithful to the topology of
-    the manifold.
+    manifold data is obtained, which is nonetheless faithful to the topology of the manifold.
     The confidence should be interpreted as the ratio of the actual versus the
     expected value of connections under the null model of randomly connecting
     partitions. We do not provide a p-value as this null model does not
@@ -621,7 +624,7 @@ def paga(
     return sc.tl.paga(
         adata=adata,
         groups=groups,
-        use_rna_velocity=use_rna_velocity,
+        use_rna_velocity=False,
         model=model,
         neighbors_key=neighbors_key,
         copy=copy,
