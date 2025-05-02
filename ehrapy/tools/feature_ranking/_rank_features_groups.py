@@ -65,7 +65,7 @@ def _adjust_pvalues(pvals: np.recarray, corr_method: _method_options._correction
     return pvals_adj
 
 
-def _sort_features(adata, key_added="rank_features_groups") -> None:
+def _sort_features(adata: AnnData, key_added: str = "rank_features_groups") -> None:
     """Sort results of :func:`~ehrapy.tl.rank_features_groups` by adjusted p-value.
 
     Args:
@@ -91,7 +91,15 @@ def _sort_features(adata, key_added="rank_features_groups") -> None:
 
 
 def _save_rank_features_result(
-    adata, key_added, names, scores, pvals, pvals_adj=None, logfoldchanges=None, pts=None, groups_order=None
+    adata: AnnData,
+    key_added: str,
+    names,
+    scores,
+    pvals,
+    pvals_adj=None,
+    logfoldchanges=None,
+    pts=None,
+    groups_order=None,
 ) -> None:
     """Write keys with statistical test results to adata.uns.
 
@@ -100,9 +108,9 @@ def _save_rank_features_result(
         key_added: The key in `adata.uns` information is saved to.
         names: Structured array storing the feature names
         scores: Array with the statistics
-        logfoldchanges: logarithm of fold changes or other info to store under logfoldchanges key
         pvals: p-values of a statistical test
-        pvals_adj: Adjusted p-values
+        pvals_adj: Adjusted p-values of a statistical test
+        logfoldchanges: logarithm of fold changes or other info to store under logfoldchanges key
         pts: Percentages of cells containing features
         groups_order: order of groups in structured arrays
     """
@@ -119,7 +127,7 @@ def _save_rank_features_result(
             adata.uns[key_added][key] = _merge_arrays([adata.uns[key_added][key], values], groups_order=groups_order)
 
 
-def _get_groups_order(groups_subset, group_names, reference):
+def _get_groups_order(groups_subset: Literal["all"] | Iterable[str], group_names: list[str], reference: str):
     """Convert `groups` parameter of :func:`~ehrapy.tl.rank_features_groups` to a list of groups.
 
     Args:
@@ -157,9 +165,9 @@ def _get_groups_order(groups_subset, group_names, reference):
 
 @check_feature_types
 def _evaluate_categorical_features(
-    adata,
-    groupby,
-    group_names,
+    adata: AnnData,
+    groupby: str,
+    group_names: list[str],
     groups: Literal["all"] | Iterable[str] = "all",
     reference: str = "rest",
     categorical_method: _method_options._rank_features_groups_cat_method = "g-test",
@@ -598,12 +606,12 @@ def rank_features_groups(
 
 def filter_rank_features_groups(
     adata: AnnData,
-    key="rank_features_groups",
-    groupby=None,
-    key_added="rank_features_groups_filtered",
-    min_in_group_fraction=0.25,
-    min_fold_change=1,
-    max_out_group_fraction=0.5,
+    key: str = "rank_features_groups",
+    groupby: str | None = None,
+    key_added: str = "rank_features_groups_filtered",
+    min_in_group_fraction: float = 0.25,
+    min_fold_change: int = 1,
+    max_out_group_fraction: float = 0.5,
 ) -> None:  # pragma: no cover
     """Filters out features based on fold change and fraction of features containing the feature within and outside the `groupby` categories.
 

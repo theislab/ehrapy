@@ -20,9 +20,7 @@ if TYPE_CHECKING:
     from collections.abc import Collection, Iterable, Sequence
 
 
-class BaseDataframes(NamedTuple):
-    """BaseDataFrames."""
-
+class BaseDataframes(NamedTuple):  # noqa D101
     obs: pd.DataFrame
     df: pd.DataFrame
 
@@ -378,7 +376,8 @@ def get_numeric_vars(adata: AnnData) -> list[str]:
     return _get_var_indices_for_type(adata, NUMERIC_TAG)
 
 
-def assert_numeric_vars(adata: AnnData, vars: Sequence[str]):  # noqa: D103
+def assert_numeric_vars(adata: AnnData, vars: Sequence[str]):
+    """Ensures that variables are numerics and raises an error if not."""
     num_vars = get_numeric_vars(adata)
 
     try:
@@ -701,9 +700,7 @@ def get_rank_features_df(
     )
 
 
-class NotEncodedError(AssertionError):
-    """Raised when the specified matrix is not yet encoded."""
-
+class NotEncodedError(AssertionError):  # noqa: D101
     pass
 
 

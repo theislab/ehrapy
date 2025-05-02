@@ -49,6 +49,7 @@ def scatter(  # noqa: D417
     adata: AnnData,
     x: str | None = None,
     y: str | None = None,
+    *,
     color: str = None,
     use_raw: bool | None = None,
     layers: str | Collection[str] = None,
@@ -147,6 +148,7 @@ def heatmap(  # noqa: D417
     adata: AnnData,
     var_names: _VarNames | Mapping[str, _VarNames],
     groupby: str | Sequence[str],
+    *,
     use_raw: bool | None = None,
     log: bool = False,
     num_categories: int = 7,
@@ -264,6 +266,7 @@ def dotplot(  # noqa: D417
     adata: AnnData,
     var_names: _VarNames | Mapping[str, _VarNames],
     groupby: str,
+    *,
     use_raw: bool | None = None,
     log: bool = False,
     num_categories: int = 7,
@@ -408,6 +411,7 @@ def tracksplot(  # noqa: D417
     adata: AnnData,
     var_names: _VarNames | Mapping[str, _VarNames],
     groupby: str,
+    *,
     use_raw: bool | None = None,
     log: bool = False,
     dendrogram: bool | str = False,
@@ -487,6 +491,7 @@ def violin(  # noqa: D417
     adata: AnnData,
     keys: str | Sequence[str],
     groupby: str | None = None,
+    *,
     log: bool = False,
     use_raw: bool | None = None,
     stripplot: bool = True,
@@ -587,6 +592,7 @@ def stacked_violin(  # noqa: D417
     adata: AnnData,
     var_names: _VarNames | Mapping[str, _VarNames],
     groupby: str | Sequence[str],
+    *,
     log: bool = False,
     use_raw: bool | None = None,
     num_categories: int = 7,
@@ -735,6 +741,7 @@ def matrixplot(  # noqa: D417
     adata: AnnData,
     var_names: _VarNames | Mapping[str, _VarNames],
     groupby: str | Sequence[str],
+    *,
     use_raw: bool | None = None,
     log: bool = False,
     num_categories: int = 7,
@@ -1395,7 +1402,7 @@ def embedding(  # noqa: D417
     """Scatter plot for user specified embedding basis (e.g. umap, pca, etc).
 
     Args:
-        basis:
+        basis: Name of the `obsm` basis to use.
         {adata_color_etc}
         {edges_arrows}
         {scatter_bulk}
@@ -2124,7 +2131,7 @@ def rank_features_groups_violin(  # noqa: D417
 
 
 @_doc_params(show_save_ax=doc_show_save_ax)
-def rank_features_groups_stacked_violin(  # noqa: D417
+def rank_features_groups_stacked_violin(
     adata: AnnData,
     groups: str | Sequence[str] = None,
     n_features: int | None = None,
@@ -2155,6 +2162,7 @@ def rank_features_groups_stacked_violin(  # noqa: D417
         save: Where to save the plot.
         return_fig: Returns :class:`StackedViolin` object. Useful for fine-tuning the plot.
                     Takes precedence over `show=False`.
+        **kwds: Passed to :func:`~scanpy.pl.stacked_violin`.
 
     Returns:
         If `return_fig` is `True`, returns a :class:`StackedViolin` object,
@@ -2189,7 +2197,7 @@ def rank_features_groups_stacked_violin(  # noqa: D417
     )
 
 
-def rank_features_groups_heatmap(  # noqa: D417
+def rank_features_groups_heatmap(
     adata: AnnData,
     groups: str | Sequence[str] = None,
     n_features: int | None = None,
@@ -2216,6 +2224,7 @@ def rank_features_groups_heatmap(  # noqa: D417
         key: The key of the calculated feature group rankings (default: 'rank_features_groups').
         show: Whether to show the plot.
         save: Where to save the plot.
+        **kwds: Passed to :func:`~scanpy.pl.heatmap`.
 
     Examples:
         >>> import ehrapy as ep
@@ -2245,7 +2254,7 @@ def rank_features_groups_heatmap(  # noqa: D417
     )
 
 
-def rank_features_groups_dotplot(  # noqa: D417
+def rank_features_groups_dotplot(
     adata: AnnData,
     groups: str | Sequence[str] = None,
     n_features: int | None = None,
@@ -2288,6 +2297,7 @@ def rank_features_groups_dotplot(  # noqa: D417
         save: Where to save the plot.
         return_fig: Returns :class:`StackedViolin` object. Useful for fine-tuning the plot.
                     Takes precedence over `show=False`.
+        **kwds: Passed to :func:`~scanpy.pl.dotplot`.
 
     Returns:
         If `return_fig` is `True`, returns a :class:`StackedViolin` object,
@@ -2323,7 +2333,7 @@ def rank_features_groups_dotplot(  # noqa: D417
     )
 
 
-def rank_features_groups_matrixplot(  # noqa: D417
+def rank_features_groups_matrixplot(
     adata: AnnData,
     groups: str | Sequence[str] = None,
     n_features: int | None = None,
@@ -2366,6 +2376,7 @@ def rank_features_groups_matrixplot(  # noqa: D417
         save: Where to save the plot.
         return_fig: Returns :class:`StackedViolin` object. Useful for fine-tuning the plot.
                     Takes precedence over `show=False`.
+        **kwds: Passed to scanpy's matrixplot.
 
     Returns:
         If `return_fig` is `True`, returns a :class:`MatrixPlot` object,
@@ -2401,7 +2412,7 @@ def rank_features_groups_matrixplot(  # noqa: D417
     )
 
 
-def rank_features_groups_tracksplot(  # noqa: D417
+def rank_features_groups_tracksplot(
     adata: AnnData,
     groups: str | Sequence[str] = None,
     n_features: int | None = None,
@@ -2428,6 +2439,7 @@ def rank_features_groups_tracksplot(  # noqa: D417
         key: The key of the calculated feature group rankings (default: 'rank_features_groups').
         show: Whether to show the plot.
         save: Where to save the plot.
+        **kwds: Passed to scanpy's tracksplot.
 
     Examples:
         >>> import ehrapy as ep

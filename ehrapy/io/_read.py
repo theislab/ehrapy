@@ -7,8 +7,6 @@ from typing import TYPE_CHECKING, Literal
 import fhiry.parallel as fp
 import numpy as np
 import pandas as pd
-from anndata import AnnData
-from anndata import read as read_h5
 from lamin_utils import logger
 from rich import print
 
@@ -19,6 +17,8 @@ from ehrapy.preprocessing._encoding import encode
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
+
+    from anndata import AnnData
 
 
 def read_csv(
@@ -48,7 +48,7 @@ def read_csv(
         download_dataset_name: Name of the file or directory after download.
         backup_url: URL to download the data file(s) from, if the dataset is not yet on disk.
         archive_format: Whether the downloaded file is an archive.
-        kwargs: Passed to Pandas read_csv.
+        **kwargs: Passed to :func:`pandas.read_csv`
 
     Returns:
         An :class:`~anndata.AnnData` object or a dict with an identifier (the filename, without extension)
@@ -280,9 +280,8 @@ def _do_read_csv(
         index_column: Index or column name of the index column (obs)
         columns_obs_only: List of columns which only be stored in .obs, but not in X. Useful for free text annotations.
         columns_x_only: List of columns which only be stored in X, but not in .obs.
-        kwargs: Passed to Pandas read_csv.
-
         cache: Whether the data should be written to cache or not.
+        **kwargs: Passed to :func:`pandas.read_csv`
 
     Returns:
         An :class:`~anndata.AnnData` object and the column obs only for the object.
@@ -506,7 +505,9 @@ def _read_from_cache_dir(cache_dir: Path) -> dict[str, AnnData]:
 
 def _read_from_cache(path_cache: Path) -> AnnData:
     """Read AnnData object from cached file."""
-    cached_adata = read_h5(path_cache)
+    from anndata.io import read_h5ad
+
+    cached_adata = read_h5ad(path_cache)
     # type cast required when dealing with non-numerical data; otherwise all values in X would be treated as strings
     if not np.issubdtype(cached_adata.X.dtype, np.number):
         cached_adata.X = cached_adata.X.astype("object")
