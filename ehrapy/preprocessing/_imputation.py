@@ -201,8 +201,7 @@ def simple_impute(
 def _simple_impute(adata: AnnData, var_names: Iterable[str] | None, strategy: str) -> None:
     imputer = SimpleImputer(strategy=strategy)
     if isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):
-        column_indices = get_column_indices(adata, var_names)
-        adata.X[::, column_indices] = imputer.fit_transform(adata.X[::, column_indices])
+        adata[:, var_names].X = imputer.fit_transform(adata[:, var_names].X)
     else:
         adata.X = imputer.fit_transform(adata.X)
 
