@@ -404,19 +404,22 @@ Methods that extract and visualize tool-specific annotation in an AnnData object
 
 ## Settings
 
-A convenience object for setting some default {obj}`matplotlib.rcParams` and a
-high-resolution jupyter display backend useful for use in notebooks.
+```{eval-rst}
 
-An instance of the {class}`~scanpy._settings.ScanpyConfig` is available as `ehrapy.settings` and allows configuring ehrapy.
+.. currentmodule:: ehrapy._settings
+
+.. autosummary::
+    :toctree: settings
+    :nosignatures:
+
+    EhrapyConfig
+```
 
 ```python
 import ehrapy as ep
 
 ep.settings.set_figure_params(dpi=150)
 ```
-
-Please refer to the [Scanpy settings documentation](https://scanpy.readthedocs.io/en/stable/api.html#settings)
-for configuration options. ehrapy will adapt these in the future and update the documentation.
 
 ## Dependency Versions
 

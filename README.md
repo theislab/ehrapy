@@ -29,9 +29,9 @@ You can install _ehrapy_ via [pip] from [PyPI]:
 $ pip install ehrapy
 ```
 
-## Usage
+## API
 
-Please have a look at the [Usage documentation](https://ehrapy.readthedocs.io/en/latest/usage/usage.html) and the [tutorials](https://ehrapy.readthedocs.io/en/latest/tutorials/index.html).
+Please have a look at the [API documentation](https://ehrapy.readthedocs.io/en/latest/api/api.html) and the [tutorials](https://ehrapy.readthedocs.io/en/latest/tutorials/index.html).
 
 ```python
 import ehrapy as ep

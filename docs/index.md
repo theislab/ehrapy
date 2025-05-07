@@ -12,7 +12,7 @@ ehrapy is a modular open-source Python framework designed for exploratory end-to
 
 ```{eval-rst}
 .. card:: API reference :octicon:`book;1em;`
-    :link: usage/usage
+    :link: api/api
     :link-type: doc
 
     The API reference contains a detailed description of the ehrapy API.
@@ -48,7 +48,7 @@ ehrapy is a modular open-source Python framework designed for exploratory end-to
 :maxdepth: 3
 
 installation
-usage/usage
+api/api
 tutorials/index
 contributing
 references
