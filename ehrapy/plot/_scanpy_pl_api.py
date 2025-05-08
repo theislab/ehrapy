@@ -91,9 +91,6 @@ def scatter(  # noqa: D417
         {scatter_temp}
         {show_save_ax}
 
-    Returns:
-        If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
-
     Example:
         .. code-block:: python
 
@@ -187,9 +184,6 @@ def heatmap(  # noqa: D417
         {vminmax}
         **kwds:
             Are passed to :func:`matplotlib.pyplot.imshow`.
-
-    Returns:
-        List of :class:`~matplotlib.axes.Axes`
 
     Example:
         .. code-block:: python
@@ -331,7 +325,7 @@ def dotplot(  # noqa: D417
             Are passed to :func:`matplotlib.pyplot.scatter`.
 
     Returns:
-        If `return_fig` is `True`, returns a :class:`~scanpy.pl.DotPlot` object, else if `show` is false, return axes dict
+        If `return_fig` is `True`, returns a :class:`~ehrapy.plot.DotPlot` object, else if `show` is false, return axes dict
 
     Example:
         .. code-block:: python
@@ -437,9 +431,6 @@ def tracksplot(  # noqa: D417
         **kwds:
             Are passed to :func:`~seaborn.heatmap`.
 
-    Returns:
-        A list of :class:`~matplotlib.axes.Axes`.
-
     Example:
         .. code-block:: python
 
@@ -508,7 +499,7 @@ def violin(  # noqa: D417
     save: bool | str | None = None,
     ax: Axes | None = None,
     **kwds,
-):  # pragma: no cover
+) -> Axes | None:  # pragma: no cover
     """Violin plot.
 
     Wraps :func:`seaborn.violinplot` for :class:`~anndata.AnnData`.
@@ -529,7 +520,7 @@ def violin(  # noqa: D417
         scale: The method used to scale the width of each violin.
                If 'width' (the default), each violin will have the same width.
                If 'area', each violin will have the same area.
-               If 'count', a violin’s width corresponds to the number of observations.
+               If 'count', a violin's width corresponds to the number of observations.
         order: Order in which to show the categories.
         multi_panel: Display keys in multiple panels also when `groupby is not None`.
         xlabel: Label of the x axis. Defaults to `groupby` if `rotation` is `None`, otherwise, no label is shown.
@@ -539,9 +530,6 @@ def violin(  # noqa: D417
         {show_save_ax}
         **kwds:
             Are passed to :func:`~seaborn.violinplot`.
-
-    Returns:
-        A :class:`~matplotlib.axes.Axes` object if `ax` is `None` else `None`.
 
     Example:
         .. code-block:: python
@@ -631,8 +619,8 @@ def stacked_violin(  # noqa: D417
 
     Makes a compact image composed of individual violin plots (from :func:`~seaborn.violinplot`) stacked on top of each other.
 
-    This function provides a convenient interface to the :class:`~scanpy.pl.StackedViolin` class.
-    If you need more flexibility, you should use :class:`~scanpy.pl.StackedViolin` directly.
+    This function provides a convenient interface to the :class:`~ehrapy.plot.StackedViolin` class.
+    If you need more flexibility, you should use :class:`~ehrapy.plot.StackedViolin` directly.
 
 
     Args:
@@ -659,7 +647,7 @@ def stacked_violin(  # noqa: D417
             Are passed to :func:`~seaborn.violinplot`.
 
     Returns:
-        If `return_fig` is `True`, returns a :class:`~scanpy.pl.StackedViolin` object, else if `show` is false, return axes dict
+        If `return_fig` is `True`, returns a :class:`~ehrapy.plot.StackedViolin` object, else if `show` is false, return axes dict
 
     Example:
         .. code-block:: python
@@ -873,7 +861,7 @@ def clustermap(  # noqa: D417
             Keyword arguments passed to :func:`~seaborn.clustermap`.
 
     Returns:
-        If `show` is `False`, a :class:`~seaborn.ClusterGrid` object (see :func:`~seaborn.clustermap`).
+        If `show` is `False`, a `seaborn.ClusterGrid` object (see :func:`~seaborn.clustermap`).
 
     Example:
         .. code-block:: python
@@ -966,10 +954,10 @@ def dendrogram(  # noqa: D417
     show: bool | None = None,
     save: str | bool | None = None,
     ax: Axes | None = None,
-):  # pragma: no cover
+) -> Axes:  # pragma: no cover
     """Plots a dendrogram of the categories defined in `groupby`.
 
-    See :func:`~ehrapy.tl.dendrogram`.
+    See :func:`~ehrapy.tools.dendrogram`.
 
     Args:
         adata: :class:`~anndata.AnnData` object object containing all observations.
@@ -979,9 +967,6 @@ def dendrogram(  # noqa: D417
         orientation: Origin of the tree. Will grow into the opposite direction.
         remove_labels: Don’t draw labels. Used e.g. by :func:`scanpy.pl.matrixplot` to annotate matrix columns/rows.
         {show_save_ax}
-
-    Returns:
-        :class:`matplotlib.axes.Axes`
 
     Example:
         .. code-block:: python
@@ -1036,9 +1021,6 @@ def pca(  # noqa: D417
         {scatter_bulk}
         {show_save_ax}
 
-    Returns:
-        If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
-
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
@@ -1064,7 +1046,7 @@ def pca_loadings(
     include_lowest: bool = True,
     show: bool | None = None,
     save: str | bool | None = None,
-):  # pragma: no cover
+) -> Axes | list[Axes] | None:  # pragma: no cover
     """Rank features according to contributions to PCs.
 
     Args:
@@ -1074,9 +1056,6 @@ def pca_loadings(
         show: Show the plot, do not return axis.
         save: If `True` or a `str`, save the figure. A string is appended to the default filename.
               Infer the filetype if ending on {`'.pdf'`, `'.png'`, `'.svg'`}.
-
-    Returns:
-        If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
 
     Examples:
         >>> import ehrapy as ep
@@ -1099,7 +1078,7 @@ def pca_variance_ratio(
     log: bool = False,
     show: bool | None = None,
     save: bool | str | None = None,
-):  # pragma: no cover
+) -> Axes | list[Axes] | None:  # pragma: no cover
     """Plot the variance ratio.
 
     Args:
@@ -1110,9 +1089,6 @@ def pca_variance_ratio(
         save: If `True` or a `str`, save the figure.
               A string is appended to the default filename.
               Infer the filetype if ending on {`'.pdf'`, `'.png'`, `'.svg'`}.
-
-    Returns:
-        If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
 
     Examples:
         >>> import ehrapy as ep
@@ -1130,7 +1106,7 @@ def pca_variance_ratio(
 
 
 @_doc_params(scatter_bulk=doc_scatter_embedding, show_save_ax=doc_show_save_ax)
-def pca_overview(adata: AnnData, **params):  # pragma: no cover
+def pca_overview(adata: AnnData, **params) -> Axes | list[Axes] | None:  # pragma: no cover
     """Plot PCA results.
 
     The parameters are the ones of the scatter plot. Call pca_ranking separately
@@ -1141,9 +1117,6 @@ def pca_overview(adata: AnnData, **params):  # pragma: no cover
         {scatter_bulk}
         {show_save_ax}
         **params: Scatterplot parameters
-
-    Returns:
-        If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
 
     Examples:
         >>> import ehrapy as ep
@@ -1179,9 +1152,6 @@ def tsne(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover # noq
         {edges_arrows}
         {scatter_bulk}
         {show_save_ax}
-
-    Returns:
-        If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
 
     Examples:
         >>> import ehrapy as ep
@@ -1227,9 +1197,6 @@ def umap(adata: AnnData, **kwargs) -> Axes | list[Axes] | None:  # pragma: no co
         {scatter_bulk}
         {show_save_ax}
 
-    Returns:
-        If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
-
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
@@ -1272,9 +1239,6 @@ def diffmap(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover # 
         {scatter_bulk}
         {show_save_ax}
 
-    Returns:
-        If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
-
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
@@ -1308,9 +1272,6 @@ def draw_graph(  # noqa: D417
         {edges_arrows}
         {scatter_bulk}
         {show_save_ax}
-
-    Returns:
-        If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
 
     Examples:
         >>> import ehrapy as ep
@@ -1407,9 +1368,6 @@ def embedding(  # noqa: D417
         {edges_arrows}
         {scatter_bulk}
         {show_save_ax}
-
-    Returns:
-        If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
 
     Examples:
         >>> import ehrapy as ep
@@ -1531,9 +1489,6 @@ def embedding_density(  # noqa: D417
         hspace: Adjust the height of the space between multiple panels.
         return_fig: Return the matplotlib figure.\
         {show_save_ax}
-
-    Returns:
-        If `show==False` a :class:`~matplotlib.axes.Axes` or a list of it.
 
     Examples:
         >>> import ehrapy as ep
@@ -1689,8 +1644,8 @@ def paga(
     Compute a coarse-grained layout of the data. Reuse this by passing
     `init_pos='paga'` to :func:`~scanpy.tl.umap` or
     :func:`~scanpy.tl.draw_graph` and obtain embeddings with more meaningful
-    global topology [Wolf19]_.
-    This uses ForceAtlas2 or igraph's layout algorithms for most layouts [Csardi06]_.
+    global topology :cite:p:`Wolf2019`.
+    This uses ForceAtlas2 or igraph's layout algorithms for most layouts :cite:p:`Csardi2006`.
 
     Args:
         adata: :class:`~anndata.AnnData` object object containing all observations.
@@ -1749,10 +1704,6 @@ def paga(
         ax: Matplotlib Axis object.
         show: Whether to show the plot.
         save: Whether or where to save the plot.
-
-    Returns:
-        A :class:`~matplotlib.axes.Axes` object, if `ax` is `None`, else `None`.
-        If `return_data`, return the timeseries data in addition to an axes.
 
     Examples:
         >>> import ehrapy as ep
@@ -1872,10 +1823,6 @@ def paga_path(
         ax: Matplotlib Axis object.
         show: Whether to show the plot.
         save: Whether or where to save the plot.
-
-    Returns:
-        A :class:`~matplotlib.axes.Axes` object, if `ax` is `None`, else `None`.
-        If `return_data`, return the timeseries data in addition to an axes.
     """
     return sc.pl.paga_path(
         adata=adata,
@@ -1937,7 +1884,7 @@ def paga_compare(
 ) -> Axes | None:  # pragma: no cover
     """Scatter and PAGA graph side-by-side.
 
-    Consists in a scatter plot and the abstracted graph. See :func:`~ehrapy.pl.paga` for all related parameters.
+    Consists in a scatter plot and the abstracted graph. See :func:`~ehrapy.plot.paga` for all related parameters.
 
     Args:
         adata: :class:`~anndata.AnnData` object object containing all observations.
@@ -1965,7 +1912,7 @@ def paga_compare(
         title_graph: The title of the graph.
         groups_graph: Graph labels.
         pos: Position of the plot.
-        **paga_graph_params: Keywords for :func:`~ehrapy.pl.paga` and keywords for :func:`~ehrapy.pl.scatter`.
+        **paga_graph_params: Keywords for :func:`~ehrapy.plot.paga` and keywords for :func:`~ehrapy.plot.scatter`.
 
     Returns:
         Matplotlib axes.
@@ -2081,7 +2028,7 @@ def rank_features_groups_violin(  # noqa: D417
         groups: List of group names.
         n_features: Number of features to show. Is ignored if `feature_names` is passed.
         feature_names: List of features to plot. Is only useful if interested in a custom feature list,
-                       which is not the result of :func:`ehrapy.tl.rank_features_groups`.
+                       which is not the result of :func:`~ehrapy.tools.rank_features_groups`.
         feature_symbols: Key for field in `.var` that stores feature symbols if you do not want to
                          use `.var_names` displayed in the plot.
         key: The key of the calculated feature group rankings (default: 'rank_features_groups').
@@ -2160,12 +2107,12 @@ def rank_features_groups_stacked_violin(
         key: The key of the calculated feature group rankings (default: 'rank_features_groups').
         show: Whether to show the plot.
         save: Where to save the plot.
-        return_fig: Returns :class:`StackedViolin` object. Useful for fine-tuning the plot.
+        return_fig: Returns :class:`~ehrapy.plot.StackedViolin` object. Useful for fine-tuning the plot.
                     Takes precedence over `show=False`.
         **kwds: Passed to :func:`~scanpy.pl.stacked_violin`.
 
     Returns:
-        If `return_fig` is `True`, returns a :class:`StackedViolin` object,
+        If `return_fig` is `True`, returns a :class:`~ehrapy.plot.StackedViolin` object,
         else if `show` is false, return axes dict
 
     Examples:
@@ -2210,7 +2157,7 @@ def rank_features_groups_heatmap(
     save: bool | None = None,
     **kwds,
 ):  # pragma: no cover
-    """Plot ranking of genes using heatmap plot (see :func:`~ehrapy.pl.heatmap`).
+    """Plot ranking of genes using heatmap plot (see :func:`~ehrapy.plot.heatmap`).
 
     Args:
         adata: Annotated data matrix.
@@ -2224,7 +2171,7 @@ def rank_features_groups_heatmap(
         key: The key of the calculated feature group rankings (default: 'rank_features_groups').
         show: Whether to show the plot.
         save: Where to save the plot.
-        **kwds: Passed to :func:`~scanpy.pl.heatmap`.
+        **kwds: Passed to :func:`~ehrapy.plot.heatmap`.
 
     Examples:
         >>> import ehrapy as ep
@@ -2279,7 +2226,7 @@ def rank_features_groups_dotplot(
     return_fig: bool | None = False,
     **kwds,
 ):  # pragma: no cover
-    """Plot ranking of genes using dotplot plot (see :func:`~ehrapy.pl.dotplot`).
+    """Plot ranking of genes using dotplot plot (see :func:`~ehrapy.plot.dotplot`).
 
     Args:
         adata: Annotated data matrix.
@@ -2295,12 +2242,12 @@ def rank_features_groups_dotplot(
         key: The key of the calculated feature group rankings (default: 'rank_features_groups').
         show: Whether to show the plot.
         save: Where to save the plot.
-        return_fig: Returns :class:`StackedViolin` object. Useful for fine-tuning the plot.
+        return_fig: Returns :class:`ehrapy.plot.StackedViolin` object. Useful for fine-tuning the plot.
                     Takes precedence over `show=False`.
-        **kwds: Passed to :func:`~scanpy.pl.dotplot`.
+        **kwds: Passed to :func:`~ehrapy.plot.dotplot`.
 
     Returns:
-        If `return_fig` is `True`, returns a :class:`StackedViolin` object,
+        If `return_fig` is `True`, returns a :class:`ehrapy.plot.StackedViolin` object,
         else if `show` is false, return axes dict
 
     Example:
@@ -2358,7 +2305,7 @@ def rank_features_groups_matrixplot(
     return_fig: bool | None = False,
     **kwds,
 ):  # pragma: no cover
-    """Plot ranking of genes using matrixplot plot (see :func:`~ehrapy.pl.matrixplot`).
+    """Plot ranking of genes using matrixplot plot (see :func:`~ehrapy.plot.matrixplot`).
 
     Args:
         adata: Annotated data matrix.
@@ -2425,7 +2372,7 @@ def rank_features_groups_tracksplot(
     save: bool | None = None,
     **kwds,
 ):  # pragma: no cover
-    """Plot ranking of genes using tracksplot plot (see :func:`~ehrapy.pl.tracksplot`).
+    """Plot ranking of genes using tracksplot plot (see :func:`~ehrapy.plot.tracksplot`).
 
     Args:
         adata: Annotated data matrix.

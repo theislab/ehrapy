@@ -24,6 +24,15 @@ VERBOSITY_TO_STR: dict[int, str] = dict(
     [reversed(i) for i in VERBOSITY_TO_INT.items()]  # type: ignore
 )
 
+# Collected from the print_* functions in matplotlib.backends
+# fmt: off
+_Format = Literal[
+    'png', 'jpg', 'tif', 'tiff',
+    'pdf', 'ps', 'eps', 'svg', 'svgz', 'pgf',
+    'raw', 'rgba',
+]
+# fmt: on
+
 
 def _type_check(var: Any, varname: str, types: type | tuple[type, ...]):  # pragma: no cover
     if isinstance(var, types):
@@ -277,16 +286,6 @@ class EhrapyConfig:  # pragma: no cover
     # --------------------------------------------------------------------------------
     # Functions
     # --------------------------------------------------------------------------------
-
-    # Collected from the print_* functions in matplotlib.backends
-    # fmt: off
-    _Format = Literal[
-        'png', 'jpg', 'tif', 'tiff',
-        'pdf', 'ps', 'eps', 'svg', 'svgz', 'pgf',
-        'raw', 'rgba',
-    ]
-
-    # fmt: on
 
     def set_figure_params(
         self,

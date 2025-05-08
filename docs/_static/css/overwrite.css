@@ -1,10 +1,3 @@
-/*
-  Furo CSS variables
-  https://github.com/pradyunsg/furo/blob/main/src/furo/assets/styles/variables/_index.scss
-  https://github.com/pradyunsg/furo/blob/main/src/furo/theme/partials/_head_css_variables.html
-https://github.com/streamlink/streamlink/blob/17a4088c38709123c0bcab4a150549bd16d19e07/docs/_static/styles/custom.css
-*/
-
 /* for the sphinx design cards */
 body {
     --sd-color-shadow: dimgrey;
@@ -78,7 +71,8 @@ li.toctree-l4 {
     height: auto;
 }
 
-#furo-main-content img[alt="ehrapy logo"] {
-    max-width: 300px;
-    height: auto;
+.bd-sidebar .caption-text {
+    color: #54c285;
+    font-weight: 600;
+    text-transform: uppercase;
 }

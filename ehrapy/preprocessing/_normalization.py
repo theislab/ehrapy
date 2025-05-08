@@ -101,7 +101,7 @@ def scale_norm(
     """Apply scaling normalization.
 
     Functionality is provided by :class:`~sklearn.preprocessing.StandardScaler`, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html for details.
-    If `adata.X` is a Dask Array, functionality is provided by :func:`~dask_ml.preprocessing.StandardScaler`, see https://ml.dask.org/modules/generated/dask_ml.preprocessing.StandardScaler.html for details.
+    If `adata.X` is a Dask Array, functionality is provided by :class:`~dask_ml.preprocessing.StandardScaler`, see https://ml.dask.org/modules/generated/dask_ml.preprocessing.StandardScaler.html for details.
 
     Args:
         adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
@@ -158,7 +158,7 @@ def minmax_norm(
     """Apply min-max normalization.
 
     Functionality is provided by :class:`~sklearn.preprocessing.MinMaxScaler`, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MinMaxScaler.html for details.
-    If `adata.X` is a Dask Array, functionality is provided by :func:`~dask_ml.preprocessing.MinMaxScaler`, see https://ml.dask.org/modules/generated/dask_ml.preprocessing.MinMaxScaler.html for details.
+    If `adata.X` is a Dask Array, functionality is provided by :class:`~dask_ml.preprocessing.MinMaxScaler`, see https://ml.dask.org/modules/generated/dask_ml.preprocessing.MinMaxScaler.html for details.
 
     Args:
         adata: :class:`~anndata.AnnData` object containing X to normalize values in.
@@ -263,9 +263,9 @@ def robust_scale_norm(
 ) -> AnnData | None:
     """Apply robust scaling normalization.
 
-    Functionality is provided by :func:`~sklearn.preprocessing.RobustScaler`,
+    Functionality is provided by :class:`~sklearn.preprocessing.RobustScaler`,
     see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.RobustScaler.html for details.
-    If `adata.X` is a Dask Array, functionality is provided by :func:`~dask_ml.preprocessing.RobustScaler`, see https://ml.dask.org/modules/generated/dask_ml.preprocessing.RobustScaler.html for details.
+    If `adata.X` is a Dask Array, functionality is provided by :class:`~dask_ml.preprocessing.RobustScaler`, see https://ml.dask.org/modules/generated/dask_ml.preprocessing.RobustScaler.html for details.
 
     Args:
         adata: :class:`~anndata.AnnData` object containing X to normalize values in.
@@ -322,9 +322,9 @@ def quantile_norm(
 ) -> AnnData | None:
     """Apply quantile normalization.
 
-    Functionality is provided by :func:`~sklearn.preprocessing.QuantileTransformer`,
+    Functionality is provided by :class:`~sklearn.preprocessing.QuantileTransformer`,
     see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.QuantileTransformer.html for details.
-    If `adata.X` is a Dask Array, functionality is provided by :func:`~dask_ml.preprocessing.QuantileTransformer`, see https://ml.dask.org/modules/generated/dask_ml.preprocessing.QuantileTransformer.html for details.
+    If `adata.X` is a Dask Array, functionality is provided by :class:`~dask_ml.preprocessing.QuantileTransformer`, see https://ml.dask.org/modules/generated/dask_ml.preprocessing.QuantileTransformer.html for details.
 
     Args:
         adata: :class:`~anndata.AnnData` object containing X to normalize values in. Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
@@ -373,7 +373,7 @@ def power_norm(
 ) -> AnnData | None:
     """Apply power transformation normalization.
 
-    Functionality is provided by :func:`~sklearn.preprocessing.PowerTransformer`,
+    Functionality is provided by :class:`~sklearn.preprocessing.PowerTransformer`,
     see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.PowerTransformer.html for details.
 
     Args:

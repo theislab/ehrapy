@@ -66,10 +66,10 @@ def _adjust_pvalues(pvals: np.recarray, corr_method: _method_options._correction
 
 
 def _sort_features(adata: AnnData, key_added: str = "rank_features_groups") -> None:
-    """Sort results of :func:`~ehrapy.tl.rank_features_groups` by adjusted p-value.
+    """Sort results of :func:`~ehrapy.tools.rank_features_groups` by adjusted p-value.
 
     Args:
-        adata: Annotated data matrix after running :func:`~ehrapy.tl.rank_features_groups`
+        adata: Annotated data matrix after running :func:`~ehrapy.tools.rank_features_groups`
         key_added: The key in `adata.uns` information is saved to.
     """
     if key_added not in adata.uns:
@@ -104,7 +104,7 @@ def _save_rank_features_result(
     """Write keys with statistical test results to adata.uns.
 
     Args:
-        adata: Annotated data matrix after running :func:`~ehrapy.tl.rank_features_groups`
+        adata: Annotated data matrix after running :func:`~ehrapy.tools.rank_features_groups`
         key_added: The key in `adata.uns` information is saved to.
         names: Structured array storing the feature names
         scores: Array with the statistics
@@ -128,7 +128,7 @@ def _save_rank_features_result(
 
 
 def _get_groups_order(groups_subset: Literal["all"] | Iterable[str], group_names: list[str], reference: str):
-    """Convert `groups` parameter of :func:`~ehrapy.tl.rank_features_groups` to a list of groups.
+    """Convert `groups` parameter of :func:`~ehrapy.tools.rank_features_groups` to a list of groups.
 
     Args:
         groups_subset: Subset of groups, e.g. [`'g1'`, `'g2'`, `'g3'`], to which comparison
@@ -356,11 +356,11 @@ def rank_features_groups(
                           `'wilcoxon'` uses Wilcoxon rank-sum,
                           `'logreg'` uses logistic regression.
         cat_cols_method: Statistical method to calculate differences between categorical features. The default method is `'g-test'`,
-                             `'Chi-square'` tests goodness-of-fit test for categorical data,
-                             `'Freeman-Tukey'` tests comparing frequency distributions,
-                             `'Mod-log-likelihood'` maximum likelihood estimation,
-                             `'Neyman'` tests hypotheses using asymptotic theory,
-                             `'Cressie-Read'` is a generalized likelihood test,
+                            `'Chi-square'` tests goodness-of-fit test for categorical data,
+                            `'Freeman-Tukey'` tests comparing frequency distributions,
+                            `'Mod-log-likelihood'` maximum likelihood estimation,
+                            `'Neyman'` tests hypotheses using asymptotic theory,
+                            `'Cressie-Read'` is a generalized likelihood test,
         correction_method:  p-value correction method.
                             Used only for statistical tests (e.g. doesn't work for "logreg" `num_cols_method`)
         tie_correct: Use tie correction for `'wilcoxon'` scores. Used only for `'wilcoxon'`.
@@ -376,22 +376,28 @@ def rank_features_groups(
                 minimal set of genes that are good predictors (sparse solution meaning few non-zero fitted coefficients).
 
     Returns:
-        *names* structured `np.ndarray` (`.uns['rank_features_groups']`)
+        *names* structured :class:`numpy.ndarray` (`.uns['rank_features_groups']`)
                   Structured array to be indexed by group id storing the gene
                   names. Ordered according to scores.
-        *scores* structured `np.ndarray` (`.uns['rank_features_groups']`)
+
+        *scores* structured :class:`numpy.ndarray` (`.uns['rank_features_groups']`)
                   Structured array to be indexed by group id storing the z-score
                   underlying the computation of a p-value for each gene for each group.
                   Ordered according to scores.
-        *logfoldchanges* structured `np.ndarray` (`.uns['rank_features_groups']`)
+
+        *logfoldchanges* structured :class:`numpy.ndarray` (`.uns['rank_features_groups']`)
                           Structured array to be indexed by group id storing the log2
                           fold change for each gene for each group. Ordered according to scores.
                           Only provided if method is 't-test' like.
                           Note: this is an approximation calculated from mean-log values.
-        *pvals* structured `np.ndarray` (`.uns['rank_features_groups']`) p-values.
-        *pvals_adj* structured `np.ndarray` (`.uns['rank_features_groups']`) Corrected p-values.
+
+        *pvals* structured :class:`numpy.ndarray` (`.uns['rank_features_groups']`) p-values.
+
+        *pvals_adj* structured :class:`numpy.ndarray` (`.uns['rank_features_groups']`) Corrected p-values.
+
         *pts*: `pandas.DataFrame` (`.uns['rank_features_groups']`)
                Fraction of cells expressing the genes for each group.
+
         *pts_rest* `pandas.DataFrame` (`.uns['rank_features_groups']`)
                     Only if `reference` is set to `'rest'`.
                     Fraction of observations from the union of the rest of each group containing the features.
@@ -615,7 +621,7 @@ def filter_rank_features_groups(
 ) -> None:  # pragma: no cover
     """Filters out features based on fold change and fraction of features containing the feature within and outside the `groupby` categories.
 
-    See :func:`~ehrapy.tl.rank_features_groups`.
+    See :func:`~ehrapy.tools.rank_features_groups`.
 
     Results are stored in `adata.uns[key_added]`
     (default: 'rank_genes_groups_filtered').
@@ -625,7 +631,7 @@ def filter_rank_features_groups(
 
     Args:
         adata: Annotated data matrix.
-        key: Key previously added by :func:`~ehrapy.tl.rank_features_groups`
+        key: Key previously added by :func:`~ehrapy.tools.rank_features_groups`
         groupby: The key of the observations grouping to consider.
         key_added: The key in `adata.uns` information is saved to.
         min_in_group_fraction: Minimum in group fraction (default: 0.25).
@@ -633,7 +639,7 @@ def filter_rank_features_groups(
         max_out_group_fraction: Maximum out group fraction (default: 0.5).
 
     Returns:
-        Same output as :func:`ehrapy.tl.rank_features_groups` but with filtered feature names set to `nan`
+        Same output as :func:`ehrapy.tools.rank_features_groups` but with filtered feature names set to `nan`
 
     Examples:
         >>> import ehrapy as ep
