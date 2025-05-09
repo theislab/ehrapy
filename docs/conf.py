@@ -133,8 +133,6 @@ nitpick_ignore = [
     ("py:class", "dask_ml.preprocessing.QuantileTransformer"),
     ("py:class", "dask_ml.preprocessing.RobustScaler"),
     ("py:class", "dask_ml.preprocessing.StandardScaler"),
-    ("py:class", "spmatrix"),
-    ("py:class", "_method_options"),
     ("py:class", "pathlib._local.Path"),
 ]
 autodoc_type_aliases = {"CAT": "Any"}

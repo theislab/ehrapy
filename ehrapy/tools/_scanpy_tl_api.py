@@ -5,14 +5,14 @@ from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 import numpy as np
 import scanpy as sc
 
+from ehrapy.tools import _method_options  # noqa
+
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
 
     from anndata import AnnData
     from leidenalg.VertexPartition import MutableVertexPartition
     from scipy.sparse import spmatrix
-
-    from ehrapy.tools import _method_options
 
 AnyRandom: TypeAlias = int | np.random.RandomState | None
 

@@ -1105,14 +1105,14 @@ def pca_variance_ratio(
 def pca_overview(adata: AnnData, **params) -> Axes | list[Axes] | None:  # pragma: no cover
     """Plot PCA results.
 
-    The parameters are the ones of the scatter plot. Call pca_ranking separately
-    if you want to change the default settings.
+    The parameters are the ones of the scatter plot.
+    Call pca_ranking separately if you want to change the default settings.
 
     Args:
         adata: :class:`~anndata.AnnData` object object containing all observations.
         {scatter_bulk}
         {show_save_ax}
-        **params: Scatterplot parameters
+        params: Scatterplot parameters
 
     Examples:
         >>> import ehrapy as ep
