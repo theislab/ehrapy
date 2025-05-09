@@ -44,13 +44,9 @@ Shared docstrings for plotting function parameters.
 doc_adata_color_etc = """\
 adata: :class:`~anndata.AnnData` object object containing all observations.
         color: Keys for annotations of observations/patients or features, e.g., `'ann1'` or `['ann1', 'ann2']`.
-        feature_symbols: Column name in `.var` DataFrame that stores feature symbols. By default `var_names`
-                         refer to the index column of the `.var` DataFrame. Setting this option allows alternative names to be used.
-        use_raw: Use `.raw` attribute of `adata` for coloring with feature values. If `None`,
-                 defaults to `True` if `layer` isn't provided and `adata.raw` is present.
-        layer: Name of the AnnData object layer that wants to be plotted. By default
-               adata.raw.X is plotted. If `use_raw=False` is set, then `adata.X` is plotted.
-               If `layer` is set to a valid layer name, then the layer is plotted. `layer` takes precedence over `use_raw`.\
+        feature_symbols: Column name in `.var` DataFrame that stores feature symbols. By default `var_names` refer to the index column of the `.var` DataFrame. Setting this option allows alternative names to be used.
+        use_raw: Use `.raw` attribute of `adata` for coloring with feature values. If `None`, defaults to `True` if `layer` isn't provided and `adata.raw` is present.
+        layer: Name of the AnnData object layer that wants to be plotted. By default adata.raw.X is plotted. If `use_raw=False` is set, then `adata.X` is plotted. If `layer` is set to a valid layer name, then the layer is plotted. `layer` takes precedence over `use_raw`.\
 """
 
 doc_edges_arrows = """\

@@ -51,9 +51,17 @@ ehrapy is a modular open-source Python framework designed for exploratory end-to
 
 installation
 api
-tutorials/index
 contributing
+changelog
 references
+```
+
+```{toctree}
+:caption: 'Gallery:'
+:hidden: true
+:maxdepth: 3
+
+tutorials/index
 ```
 
 # Citation

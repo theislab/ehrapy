@@ -1,3 +1,8 @@
+.navbar-brand img {
+    max-height: 150px;
+    width: auto;
+}
+
 /* for the sphinx design cards */
 body {
     --sd-color-shadow: dimgrey;
