@@ -65,13 +65,7 @@ templates_path = ["_templates"]
 bibtex_bibfiles = ["references.bib"]
 nitpicky = True  # Warn about broken links
 
-suppress_warnings = [
-    "toc.not_included",
-    "toc.excluded",
-    "mystnb.unknown_mime_type",
-    "docutils.nodes.block_quote",
-    "docutils.nodes.unexpected_indentation",
-]
+suppress_warnings = ["toc.not_included", "toc.excluded", "mystnb.unknown_mime_type"]
 # source_suffix = ".md"
 
 autosummary_generate = True
