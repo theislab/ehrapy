@@ -109,7 +109,7 @@ doc_scatter_embedding = f"""\
 {doc_vbound_percentile}
 {doc_outline}
 {doc_panels}
-        kwargs: Arguments to pass to :func:`matplotlib.pyplot.scatter`, for instance: the maximum and minimum values (e.g. `vmin=-2, vmax=5`).\
+    kwargs: Arguments to pass to :func:`matplotlib.pyplot.scatter`, for instance: the maximum and minimum values (e.g. `vmin=-2, vmax=5`).\
 """
 
 
