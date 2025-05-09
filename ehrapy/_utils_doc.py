@@ -78,19 +78,9 @@ sort_order: For continuous annotations used as color parameter, plot data points
 """
 
 doc_vbound_percentile = """\
-        vmin: The value representing the lower limit of the color scale. Values smaller than vmin are plotted
-              with the same color as vmin. vmin can be a number, a string, a function or `None`. If
-              vmin is a string and has the format `pN`, this is interpreted as a vmin=percentile(N).
-              For example vmin='p1.5' is interpreted as the 1.5 percentile. If vmin is function, then
-              vmin is interpreted as the return value of the function over the list of values to plot.
-              For example to set vmin tp the mean of the values to plot, `def my_vmin(values): return
-              np.mean(values)` and then set `vmin=my_vmin`. If vmin is None (default) an automatic
-              minimum value is used as defined by matplotlib `scatter` function. When making multiple
-              plots, vmin can be a list of values, one for each plot. For example `vmin=[0.1, 'p1', None, my_vmin]`
+        vmin: The value representing the lower limit of the color scale. Values smaller than vmin are plotted with the same color as vmin. vmin can be a number, a string, a function or `None`. If vmin is a string and has the format `pN`, this is interpreted as a vmin=percentile(N). For example vmin='p1.5' is interpreted as the 1.5 percentile. If vmin is function, then vmin is interpreted as the return value of the function over the list of values to plot. For example to set vmin tp the mean of the values to plot, `def my_vmin(values): return np.mean(values)` and then set `vmin=my_vmin`. If vmin is None (default) an automatic minimum value is used as defined by matplotlib `scatter` function. When making multiple plots, vmin can be a list of values, one for each plot. For example `vmin=[0.1, 'p1', None, my_vmin]`
         vmax: The value representing the upper limit of the color scale. The format is the same as for `vmin`.
-        vcenter: The value representing the center of the color scale. Useful for diverging colormaps.
-                 The format is the same as for `vmin`.
-                 Example: sc.pl.umap(adata, color='TREM2', vcenter='p50', cmap='RdBu_r')\
+        vcenter: The value representing the center of the color scale. Useful for diverging colormaps. The format is the same as for `vmin`. Example: sc.pl.umap(adata, color='TREM2', vcenter='p50', cmap='RdBu_r')\
 """
 
 doc_vboundnorm = """\
@@ -101,14 +91,9 @@ doc_vboundnorm = """\
 """
 
 doc_outline = """\
-        add_outline: If set to True, this will add a thin border around groups of dots. In some situations
-                     this can enhance the aesthetics of the resulting image
-        outline_color: Tuple with two valid color names used to adjust the add_outline. The first color is the
-                       border color (default: black), while the second color is a gap color between the
-                       border color and the scatter dot (default: white).
-        outline_width: Tuple with two width numbers used to adjust the outline. The first value is the width
-                       of the border color as a fraction of the scatter dot size (default: 0.3). The second value is
-                       width of the gap color (default: 0.05).\
+        add_outline: If set to True, this will add a thin border around groups of dots. In some situations this can enhance the aesthetics of the resulting image
+        outline_color: Tuple with two valid color names used to adjust the add_outline. The first color is the border color (default: black), while the second color is a gap color between the border color and the scatter dot (default: white).
+        outline_width: Tuple with two width numbers used to adjust the outline. The first value is the width of the border color as a fraction of the scatter dot size (default: 0.3). The second value is width of the gap color (default: 0.05).\
 """
 
 doc_panels = """\
@@ -124,71 +109,40 @@ doc_scatter_embedding = f"""\
 {doc_vbound_percentile}
 {doc_outline}
 {doc_panels}
-        kwargs: Arguments to pass to :func:`matplotlib.pyplot.scatter`,
-                for instance: the maximum and minimum values (e.g. `vmin=-2, vmax=5`).\
+        kwargs: Arguments to pass to :func:`matplotlib.pyplot.scatter`, for instance: the maximum and minimum values (e.g. `vmin=-2, vmax=5`).\
 """
 
 
 doc_show_save_ax = """\
 show: Whether to display the figure or return axis.
-        save: If `True` or a `str`, save the figure.
-              A string is appended to the default filename.
-              Infer the filetype if ending on {`'.pdf'`, `'.png'`, `'.svg'`}.
+        save: If `True` or a `str`, save the figure. A string is appended to the default filename. Infer the filetype if ending on {`'.pdf'`, `'.png'`, `'.svg'`}.
         ax: A matplotlib axes object. Only works if plotting a single component.\
 """
 
 doc_common_plot_args = """\
 adata: Annotated data matrix.
-        var_names: `var_names` should be a valid subset of `adata.var_names`.
-                   If `var_names` is a mapping, then the key is used as label
-                   to group the values (see `var_group_labels`). The mapping values
-                   should be sequences of valid `adata.var_names`. In this
-                   case either coloring or 'brackets' are used for the grouping
-                   of var names depending on the plot. When `var_names` is a mapping,
-                   then the `var_group_labels` and `var_group_positions` are set.
+        var_names: `var_names` should be a valid subset of `adata.var_names`. If `var_names` is a mapping, then the key is used as label to group the values (see `var_group_labels`). The mapping values should be sequences of valid `adata.var_names`. In this case either coloring or 'brackets' are used for the grouping of var names depending on the plot. When `var_names` is a mapping, then the `var_group_labels` and `var_group_positions` are set.
         groupby: The key of the observation grouping to consider.
         use_raw: Use `raw` attribute of `adata` if present.
         log: Plot on logarithmic axis.
-        num_categories: Only used if groupby observation is not categorical. This value
-                        determines the number of groups into which the groupby observation should be subdivided.
-        categories_order: Order in which to show the categories. Note: add_dendrogram or add_totals
-                          can change the categories order.
-        figsize: Figure size when `multi_panel=True`. Otherwise the `rcParam['figure.figsize]` value is used.
-                 Format is (width, height)
-        dendrogram: If True or a valid dendrogram key, a dendrogram based on the hierarchical
-                    clustering between the `groupby` categories is added.
-                    The dendrogram information is computed using :func:`scanpy.tl.dendrogram`.
-                    If `tl.dendrogram` has not been called previously the function is called with default parameters.
-        feature_symbols: Column name in `.var` DataFrame that stores feature symbols.
-                         By default `var_names` refer to the index column of the `.var` DataFrame.
-                         Setting this option allows alternative names to be used.
-        var_group_positions: Use this parameter to highlight groups of `var_names`.
-                             This will draw a 'bracket' or a color block between the given start and end
-                             positions. If the parameter `var_group_labels` is set, the corresponding
-                             labels are added on top/left. E.g. `var_group_positions=[(4,10)]`
-                             will add a bracket between the fourth `var_name` and the tenth `var_name`.
-                             By giving more positions, more brackets/color blocks are drawn.
+        num_categories: Only used if groupby observation is not categorical. This value determines the number of groups into which the groupby observation should be subdivided.
+        categories_order: Order in which to show the categories. Note: add_dendrogram or add_totals can change the categories order.
+        figsize: Figure size when `multi_panel=True`. Otherwise the `rcParam['figure.figsize]` value is used. Format is (width, height)
+        dendrogram: If True or a valid dendrogram key, a dendrogram based on the hierarchical clustering between the `groupby` categories is added. The dendrogram information is computed using :func:`scanpy.tl.dendrogram`. If `tl.dendrogram` has not been called previously the function is called with default parameters.
+        feature_symbols: Column name in `.var` DataFrame that stores feature symbols. By default `var_names` refer to the index column of the `.var` DataFrame. Setting this option allows alternative names to be used.
+        var_group_positions: Use this parameter to highlight groups of `var_names`. This will draw a 'bracket' or a color block between the given start and end positions. If the parameter `var_group_labels` is set, the corresponding labels are added on top/left. E.g. `var_group_positions=[(4,10)]` will add a bracket between the fourth `var_name` and the tenth `var_name`. By giving more positions, more brackets/color blocks are drawn.
         var_group_labels: Labels for each of the `var_group_positions` that want to be highlighted.
         var_group_rotation: Label rotation degrees. By default, labels larger than 4 characters are rotated 90 degrees.
-        layer: Name of the AnnData object layer that wants to be plotted. By default adata.raw.X is plotted.
-               If `use_raw=False` is set, then `adata.X` is plotted. If `layer` is set to a valid layer name,
-               then the layer is plotted. `layer` takes precedence over `use_raw`.\
+        layer: Name of the AnnData object layer that wants to be plotted. By default adata.raw.X is plotted. If `use_raw=False` is set, then `adata.X` is plotted. If `layer` is set to a valid layer name, then the layer is plotted. `layer` takes precedence over `use_raw`.\
 """
 
 doc_scatter_spatial = """\
 library_id: library_id for Visium data, e.g. key in `adata.uns["spatial"]`.
-        img_key: Key for image data, used to get `img` and `scale_factor` from `"images"`
-                 and `"scalefactors"` entires for this library. To use spatial coordinates,
-                 but not plot an image, pass `img_key=None`.
+        img_key: Key for image data, used to get `img` and `scale_factor` from `"images"` and `"scalefactors"` entires for this library. To use spatial coordinates, but not plot an image, pass `img_key=None`.
         img: image data to plot, overrides `img_key`.
-        scale_factor: Scaling factor used to map from coordinate space to pixel space.
-                      Found by default if `library_id` and `img_key` can be resolved. Otherwise defaults to `1.`.
-        spot_size: Diameter of spot (in coordinate space) for each point. Diameter
-                   in pixels of the spots will be `size * spot_size * scale_factor`.
-                   This argument is required if it cannot be resolved from library info.
-        crop_coord: Coordinates to use for cropping the image (left, right, top, bottom).
-                    These coordinates are expected to be in pixel space (same as `basis`) and will be transformed by `scale_factor`.
-                    If not provided, image is automatically cropped to bounds of `basis`, plus a border.
+        scale_factor: Scaling factor used to map from coordinate space to pixel space. Found by default if `library_id` and `img_key` can be resolved. Otherwise defaults to `1.`.
+        spot_size: Diameter of spot (in coordinate space) for each point. Diameter in pixels of the spots will be `size * spot_size * scale_factor`. This argument is required if it cannot be resolved from library info.
+        crop_coord: Coordinates to use for cropping the image (left, right, top, bottom). These coordinates are expected to be in pixel space (same as `basis`) and will be transformed by `scale_factor`. If not provided, image is automatically cropped to bounds of `basis`, plus a border.
         alpha_img: Alpha value for image.
         bw: Plot image data in gray scale.\
 """
@@ -197,9 +151,7 @@ doc_common_groupby_plot_args = """\
 title: Title for the figure
         colorbar_title: Title for the color bar. New line character (\\n) can be used.
         cmap: String denoting matplotlib color map.
-        standard_scale: Whether or not to standardize the given dimension between 0 and 1, meaning for
-                        each variable or group, subtract the minimum and divide each by its maximum.
-        swap_axes: By default, the x axis contains `var_names` (e.g. genes) and the y axis
-             the `groupby` categories. By setting `swap_axes` then x are the `groupby` categories and y the `var_names`.
+        standard_scale: Whether or not to standardize the given dimension between 0 and 1, meaning for each variable or group, subtract the minimum and divide each by its maximum.
+        swap_axes: By default, the x axis contains `var_names` (e.g. genes) and the y axis the `groupby` categories. By setting `swap_axes` then x are the `groupby` categories and y the `var_names`.
         return_fig: Returns :class:`DotPlot` object. Useful for fine-tuning the plot. Takes precedence over `show=False`.\
 """
