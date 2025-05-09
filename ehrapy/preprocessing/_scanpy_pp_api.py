@@ -150,10 +150,10 @@ def combat(
     covariates: Collection[str] | None = None,
     inplace: bool = True,
 ) -> AnnData | np.ndarray | None:  # pragma: no cover
-    """ComBat function for batch effect correction [Johnson07]_ [Leek12]_ [Pedersen12]_.
+    """ComBat function for batch effect correction :cite:p:`Johnson2006`, :cite:p:`Leek2012`, :cite:p:`Pedersen2012`.
 
     Corrects for batch effects by fitting linear models, gains statistical power via an EB framework where information is borrowed across features.
-    This uses the implementation `combat.py`_ [Pedersen12]_.
+    This uses the implementation `combat.py`:cite:p:`Pedersen2012`.
 
     .. _combat.py: https://github.com/brentp/combat.py
 
@@ -161,7 +161,7 @@ def combat(
         adata: :class:`~anndata.AnnData` object containing all observations.
         key: Key to a categorical annotation from :attr:`~anndata.AnnData.obs` that will be used for batch effect removal.
         covariates: Additional covariates besides the batch variable such as adjustment variables or biological condition.
-                    This parameter refers to the design matrix `X` in Equation 2.1 in [Johnson07]_ and to the `mod` argument in
+                    This parameter refers to the design matrix `X` in Equation 2.1 in :cite:p:`Johnson2006` and to the `mod` argument in
                     the original combat function in the sva R package.
                     Note that not including covariates may introduce bias or lead to the removal of signal in unbalanced designs.
         inplace: Whether to replace adata.X or to return the corrected data
@@ -211,12 +211,12 @@ def neighbors(
     key_added: str | None = None,
     copy: bool = False,
 ) -> AnnData | None:  # pragma: no cover
-    """Compute a neighborhood graph of observations [McInnes18]_.
+    """Compute a neighborhood graph of observations :cite:p:`McInnes2018`.
 
-    The neighbor search efficiency of this heavily relies on UMAP [McInnes18]_,
+    The neighbor search efficiency of this heavily relies on UMAP :cite:p:`McInnes2018`,
     which also provides a method for estimating connectivities of data points -
     the connectivity of the manifold (`method=='umap'`). If `method=='gauss'`,
-    connectivities are computed according to [Coifman05]_, in the adaption of [Haghverdi16]_.
+    connectivities are computed according to :cite:p:`Coifman2005`, in the adaption of :cite:p:`Haghverdi2016`.
 
     Args:
         adata: :class:`~anndata.AnnData` object containing all observations.
@@ -228,13 +228,13 @@ def neighbors(
         use_rep: Use the indicated representation. `'X'` or any key for `.obsm` is valid.
                  If `None`, the representation is chosen automatically:
                  For `.n_vars` < 50, `.X` is used, otherwise 'X_pca' is used.
-                 If 'X_pca' is not present, it’s computed with default parameters.
+                 If 'X_pca' is not present, it's computed with default parameters.
         knn: If `True`, use a hard threshold to restrict the number of neighbors to `n_neighbors`, that is, consider a knn graph.
              Otherwise, use a Gaussian Kernel to assign low weights to neighbors more distant than the `n_neighbors` nearest neighbor.
         random_state: A numpy random seed.
-        method: Use 'umap' [McInnes18]_ or 'gauss' (Gauss kernel following [Coifman05]_ with adaptive width [Haghverdi16]_) for computing connectivities.
+        method: Use 'umap' :cite:p:`McInnes2018` or 'gauss' (Gauss kernel following :cite:p:`Coifman2005` with adaptive width :cite:p:`Haghverdi2016` for computing connectivities.
                 Use 'rapids' for the RAPIDS implementation of UMAP (experimental, GPU only).
-        metric: A known metric’s name or a callable that returns a distance.
+        metric: A known metric's name or a callable that returns a distance.
         transformer: Approximate kNN search implementation. Follows the API of
                 :class:`~sklearn.neighbors.KNeighborsTransformer`.
                 See scanpy's `knn-transformers tutorial <https://scanpy.readthedocs.io/en/latest/how-to/knn-transformers.html>`_ for more details. This tutorial is also valid for ehrapy's `neighbors` function.

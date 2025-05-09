@@ -1,6 +1,8 @@
-<img src="https://user-images.githubusercontent.com/21954664/156930990-0d668468-0cd9-496e-995a-96d2c2407cf5.png" alt="ehrapy logo">
+# ehrapy
 
 ehrapy is a modular open-source Python framework designed for exploratory end-to-end analysis of heterogeneous epidemiology and electronic health record data.
+
+![overview](https://github.com/user-attachments/assets/7927aa20-751c-4e73-8939-1e4b1c465570)
 
 ```{eval-rst}
 .. card:: Installation :octicon:`plug;1em;`
@@ -12,7 +14,7 @@ ehrapy is a modular open-source Python framework designed for exploratory end-to
 
 ```{eval-rst}
 .. card:: API reference :octicon:`book;1em;`
-    :link: usage/usage
+    :link: api
     :link-type: doc
 
     The API reference contains a detailed description of the ehrapy API.
@@ -48,10 +50,18 @@ ehrapy is a modular open-source Python framework designed for exploratory end-to
 :maxdepth: 3
 
 installation
-usage/usage
-tutorials/index
+api
 contributing
+changelog
 references
+```
+
+```{toctree}
+:caption: 'Gallery:'
+:hidden: true
+:maxdepth: 3
+
+tutorials/index
 ```
 
 # Citation

@@ -81,13 +81,15 @@ dask = [
 dev = [
     "pre-commit",
 ]
-docs = [
+doc = [
     "docutils",
     "sphinx",
-    "furo",
+    "scanpydoc",
+    "sphinx-book-theme",
     "myst-nb",
     "myst-parser",
     "sphinxcontrib-bibtex",
+    "sphinx-issues",
     "sphinx-gallery",
     "sphinx-autodoc-typehints",
     "sphinx-copybutton",

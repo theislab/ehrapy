@@ -667,11 +667,11 @@ def get_rank_features_df(
     log2fc_max: float | None = None,
     features: str | None = None,
 ):
-    """:func:`ehrapy.tl.rank_features_groups` results in the form of a :class:`~pandas.DataFrame`.
+    """:func:`~ehrapy.tools.rank_features_groups` results in the form of a :class:`~pandas.DataFrame`.
 
     Args:
         adata: AnnData object to get values from.
-        group: Which group (as in :func:`ehrapy.tl.rank_genes_groups`'s `groupby` argument)
+        group: Which group (as in :func:`ehrapy.tools.rank_features_groups`'s `groupby` argument)
                to return results from. Can be a list. All groups are returned if groups is `None`.
         key: Key differential groups were stored under.
         pval_cutoff: Return only adjusted p-values below the  cutoff.

@@ -71,8 +71,15 @@ instance/
 
 # Sphinx documentation
 docs/_build/
-docs/usage/*
-!docs/usage/usage.md
+docs/api/data
+docs/api/metadata
+docs/api/tools
+docs/api/preprocessing
+docs/api/anndata
+docs/api/io
+docs/api/settings
+docs/api/plot
+!docs/api/api.md
 
 # PyBuilder
 target/

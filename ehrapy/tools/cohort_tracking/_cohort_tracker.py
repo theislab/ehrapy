@@ -218,9 +218,6 @@ class CohortTracker:
             subplots_kwargs: Additional keyword arguments for the subplots.
             legend_kwargs: Additional keyword arguments for the legend.
 
-        Returns:
-            If `show=True`, returns `None`. Else, if no ax is passed, returns a tuple  (:class:`~matplotlib.figure.Figure`, :class:`~list`(:class:`~matplotlib.axes.Axes`), else a :class:`~list`(:class:`~matplotlib.axes.Axes`).
-
         Examples:
                 >>> import ehrapy as ep
                 >>> adata = ep.dt.diabetes_130_fairlearn(columns_obs_only=["gender", "race", "num_procedures"])
@@ -455,9 +452,6 @@ class CohortTracker:
             ax: If `None`, a new figure and axes will be created. If an axes object is provided, the plot will be added to it.
             bbox_kwargs: Additional keyword arguments for the node boxes.
             arrowprops_kwargs: Additional keyword arguments for the arrows.
-
-        Returns:
-            If `show=True`, returns `None`. Else, if no ax is passed, returns a tuple  (:class:`~matplotlib.figure.Figure`, :class:`~list`(:class:`~matplotlib.axes.Axes`), else a :class:`~list`(:class:`~matplotlib.axes.Axes`).
 
         Examples:
                 >>> import ehrapy as ep
