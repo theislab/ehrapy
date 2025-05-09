@@ -428,33 +428,30 @@ def tracksplot(  # noqa: D417
     Args:
         {common_plot_args}
         {show_save_ax}
-        **kwds:
-            Are passed to :func:`~seaborn.heatmap`.
+        **kwds: Are passed to :func:`~seaborn.heatmap`.
 
-    Example:
-        .. code-block:: python
+    Examples:
+        >>> import ehrapy as ep
 
-            import ehrapy as ep
-
-            adata = ep.dt.mimic_2(encoded=True)
-            ep.pp.knn_impute(adata)
-            ep.pp.neighbors(adata)
-            ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
-            ep.pl.tracksplot(
-                adata,
-                var_names=[
-                    "age",
-                    "gender_num",
-                    "weight_first",
-                    "bmi",
-                    "sapsi_first",
-                    "sofa_first",
-                    "service_num",
-                    "day_icu_intime_num",
-                    "hour_icu_intime",
-                ],
-                groupby="leiden_0_5",
-            )
+        >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> ep.pp.knn_impute(adata)
+        >>> ep.pp.neighbors(adata)
+        >>> ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
+        >>> ep.pl.tracksplot(
+        ...     adata,
+        ...     var_names=[
+        ...         "age",
+        ...         "gender_num",
+        ...         "weight_first",
+        ...         "bmi",
+        ...         "sapsi_first",
+        ...         "sofa_first",
+        ...         "service_num",
+        ...         "day_icu_intime_num",
+        ...         "hour_icu_intime",
+        ...     ],
+        ...     groupby="leiden_0_5",
+        ... )
 
     Preview:
         .. image:: /_static/docstring_previews/tracksplot.png
@@ -857,8 +854,7 @@ def clustermap(  # noqa: D417
         obs_keys: Categorical annotation to plot with a different color map. Currently, only a single key is supported.
         use_raw: Whether to use `raw` attribute of `adata`. Defaults to `True` if `.raw` is present.
         {show_save_ax}
-        **kwds:
-            Keyword arguments passed to :func:`~seaborn.clustermap`.
+        **kwds: Keyword arguments passed to :func:`~seaborn.clustermap`.
 
     Returns:
         If `show` is `False`, a `seaborn.ClusterGrid` object (see :func:`~seaborn.clustermap`).
@@ -965,7 +961,7 @@ def dendrogram(  # noqa: D417
         dendrogram_key: Key under with the dendrogram information was stored.
                         By default the dendrogram information is stored under `.uns[f'dendrogram_{{groupby}}']`.
         orientation: Origin of the tree. Will grow into the opposite direction.
-        remove_labels: Don’t draw labels. Used e.g. by :func:`scanpy.pl.matrixplot` to annotate matrix columns/rows.
+        remove_labels: Don't draw labels. Used e.g. by :func:`scanpy.pl.matrixplot` to annotate matrix columns/rows.
         {show_save_ax}
 
     Example:
@@ -1487,7 +1483,7 @@ def embedding_density(  # noqa: D417
         ncols: Number of panels per row.
         wspace: Adjust the width of the space between multiple panels.
         hspace: Adjust the height of the space between multiple panels.
-        return_fig: Return the matplotlib figure.\
+        return_fig: Return the matplotlib figure.
         {show_save_ax}
 
     Examples:
@@ -1498,8 +1494,8 @@ def embedding_density(  # noqa: D417
         >>> ep.pp.neighbors(adata)
         >>> ep.tl.umap(adata)
         >>> ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
-        >>> ep.tl.embedding_density(adata, groupby='leiden_0_5', key_added='icu_exp_flg')
-        >>> ep.pl.embedding_density(adata, key='icu_exp_flg')
+        >>> ep.tl.embedding_density(adata, groupby="leiden_0_5", key_added="icu_exp_flg")
+        >>> ep.pl.embedding_density(adata, key="icu_exp_flg")
 
     Preview:
         .. image:: /_static/docstring_previews/embedding_density.png

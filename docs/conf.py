@@ -102,7 +102,7 @@ intersphinx_mapping = {
     "scanpy": ("https://scanpy.readthedocs.io/en/stable/", None),
     "pytorch_lightning": ("https://lightning.ai/docs/pytorch/stable/", None),
     "pymde": ("https://pymde.org/", None),
-    "lamin": ("https://lamin.ai/docs", None),
+    "lamin": ("https://docs.lamin.ai", None),
     "lifelines": ("https://lifelines.readthedocs.io/en/latest/", None),
     "statsmodels": ("https://www.statsmodels.org/stable", None),
     "networkx": ("https://networkx.org/documentation/stable", None),
@@ -133,6 +133,8 @@ nitpick_ignore = [
     ("py:class", "dask_ml.preprocessing.QuantileTransformer"),
     ("py:class", "dask_ml.preprocessing.RobustScaler"),
     ("py:class", "dask_ml.preprocessing.StandardScaler"),
+    ("py:class", "spmatrix"),
+    ("py:class", "_method_options"),
 ]
 autodoc_type_aliases = {"CAT": "Any"}
 
