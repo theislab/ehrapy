@@ -68,11 +68,3 @@ tutorials/index
 
 [Exploratory electronic health record analysis with ehrapy Lukas Heumos, Philipp Ehmele, Tim Treis, Julius Upmeier zu Belzen, Altana Namsaraeva, Nastassya Horlava, Vladimir A. Shitov, Xinyue Zhang, Luke Zappia, Rainer Knoll, Niklas J. Lang, Leon Hetzel, Isaac Virshup, Lisa Sikkema, Eljas Roellin, Fabiola Curion, Roland Eils, Herbert B. Schiller, Anne Hilgendorff, Fabian J. Theis
 medRxiv 2023.12.11.23299816; doi: https://doi.org/10.1101/2023.12.11.23299816 ](https://www.medrxiv.org/content/10.1101/2023.12.11.23299816v1).
-
-# Indices and tables
-
-- {ref}`genindex`
-- {ref}`modindex`
-- {ref}`search`
-
-[scanpy genome biology (2018)]: https://doi.org/10.1186/s13059-017-1382-0
