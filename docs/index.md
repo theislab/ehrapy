@@ -45,7 +45,7 @@ ehrapy is a modular open-source Python framework designed for exploratory end-to
 ```
 
 ```{toctree}
-:caption: 'Contents:'
+:caption: 'General'
 :hidden: true
 :maxdepth: 3
 
@@ -57,7 +57,7 @@ references
 ```
 
 ```{toctree}
-:caption: 'Gallery:'
+:caption: 'Gallery'
 :hidden: true
 :maxdepth: 3
 
