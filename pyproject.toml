@@ -104,6 +104,7 @@ doc = [
     "ipykernel",
     "ipython",
     "ehrapy[dask]",
+    "ehrdata"
 ]
 test = [
     "ehrapy[dask]",
