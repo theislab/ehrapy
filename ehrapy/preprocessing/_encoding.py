@@ -161,7 +161,7 @@ def encode(
 
             new_var["encoding_mode"] = [encodings if var in categoricals_names else None for var in unencoded_var_names]
 
-            encoded_ann_data = AnnData(
+            encoded_adata = AnnData(
                 encoded_x,
                 obs=updated_obs,
                 var=new_var,
@@ -265,7 +265,7 @@ def encode(
             new_var.loc[_categorical, "encoding_mode"] = encoding_mode[_categorical]
 
         try:
-            encoded_ann_data = AnnData(
+            encoded_adata = AnnData(
                 X=encoded_x,
                 obs=updated_obs,
                 var=new_var,
@@ -280,9 +280,9 @@ def encode(
                 "categorical values for encoding!"
             ) from None
 
-    encoded_ann_data.X = encoded_ann_data.X.astype(np.float32)
+    encoded_adata.X = encoded_adata.X.astype(np.float32)
 
-    return encoded_ann_data
+    return encoded_adata
 
 
 def _one_hot_encoding(
