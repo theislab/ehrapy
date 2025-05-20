@@ -53,7 +53,9 @@ def test_kaplan_meier(mimic_2, check_same_image):
 
 
 def test_coxph_forestplot(mimic_2, check_same_image):
-    adata_subset = mimic_2[:, ["mort_day_censored", "censor_flg", "gender_num", "afib_flg", "day_icu_intime_num"]].cop()
+    adata_subset = mimic_2[
+        :, ["mort_day_censored", "censor_flg", "gender_num", "afib_flg", "day_icu_intime_num"]
+    ].copy()
     ep.tl.cox_ph(adata_subset, duration_col="mort_day_censored", event_col="censor_flg")
     fig, ax = ep.pl.cox_ph_forestplot(adata_subset, fig_size=(12, 3), t_adjuster=0.15, marker="o", size=2, text_size=14)
 
