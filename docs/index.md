@@ -70,8 +70,7 @@ tutorials/index
 :maxdepth: 1
 about/background
 about/cite
-GitHub <https://github.com/scverse/pertpy>
-Discourse <https://discourse.scverse.org/c/ecosystem/pertpy/46>
+GitHub <https://github.com/theislab/ehrapy>
 ```
 
 # Citation
