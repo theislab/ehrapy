@@ -73,9 +73,6 @@ dependencies = [
 causal = [
     "dowhy"
 ]
-medcat = [
-    "medcat",
-]
 dask = [
     "anndata[dask]",
     "dask-ml>=2025.1.0",

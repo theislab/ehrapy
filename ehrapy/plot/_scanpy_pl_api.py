@@ -80,10 +80,10 @@ def scatter(  # noqa: D417
 
     Args:
         adata: :class:`~anndata.AnnData` object object containing all observations.
-        x: x coordinate (MedCat entities currently not supported)
-        y: y coordinate (MedCat entities currently not supported)
+        x: x coordinate
+        y: y coordinate
         color: Keys for annotations of observations/patients or features, or a hex color specification, e.g.,
-               `'ann1'`, `'#fe57a1'`, or `['ann1', 'ann2']` or extracted entities from ehrapy's MedCat tool.
+               `'ann1'`, `'#fe57a1'`, or `['ann1', 'ann2']`.
         use_raw: Whether to use `raw` attribute of `adata`. Defaults to `True` if `.raw` is present.
         layers: Use the `layers` attribute of `adata` if present: specify the layer for `x`, `y` and `color`.
                 If `layers` is a string, then it is expanded to `(layers, layers, layers)`.
@@ -1452,8 +1452,7 @@ def embedding_density(  # noqa: D417
 ) -> Figure | Axes | None:  # pragma: no cover
     """Plot the density of observations in an embedding (per condition).
 
-    Plots the gaussian kernel density estimates (over condition) from the `sc.tl.embedding_density()` output. This currently
-    does not support extracted medcat entities.
+    Plots the gaussian kernel density estimates (over condition) from the `sc.tl.embedding_density()` output.
 
     Args:
         adata: :class:`~anndata.AnnData` object object containing all observations.
