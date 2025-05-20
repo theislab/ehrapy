@@ -1,18 +1,16 @@
-from __future__ import annotations
-
 import importlib
 import sys
 import warnings
 from io import StringIO
 from typing import TYPE_CHECKING, Any, Literal
 
+import anndata as ad
+import networkx as nx
 import numpy as np
 from lamin_utils import logger
 
 if TYPE_CHECKING:
-    import anndata as ad
     import dowhy
-    import networkx as nx
 
 warnings.filterwarnings("ignore")
 
@@ -76,7 +74,7 @@ def causal_inference(
     identify_kwargs: dict[str, Any] | None = None,
     estimate_kwargs: dict[str, Any] | None = None,
     refute_kwargs: dict[str, Any] | None = None,
-) -> tuple[dowhy.CausalEstimate, dict[str, str | dict[str, float]]]:
+) -> tuple["dowhy.CausalEstimate", dict[str, str | dict[str, float]]]:
     """Performs causal inference on an AnnData object using the specified causal model and returns a tuple containing the causal estimate and the results of any refutation tests.
 
     Args:
