@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib
 import sys
 import warnings
 from io import StringIO
@@ -167,6 +168,9 @@ def causal_inference(
     user_gave_num_simulations = "num_simulations" in refute_kwargs
     user_gave_random_seed = "random_state" in refute_kwargs
     found_problematic_pvalues = True
+
+    if importlib.util.find_spec("dowhy") is None:
+        raise ImportError("Required package 'dowhy' is not installed. Install with: pip install dowhy")
 
     import dowhy
 
