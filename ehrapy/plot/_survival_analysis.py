@@ -404,20 +404,20 @@ def cox_ph_forestplot(
     tval = []
     ytick = []
     for row_index in range(len(coxph_fitting_summary)):
-        if not np.isnan(coxph_fitting_summary[auc_col][row_index]):
+        if not np.isnan(coxph_fitting_summary[auc_col].iloc[row_index]):
             if (
-                (isinstance(coxph_fitting_summary[auc_col][row_index], float))
-                & (isinstance(coxph_fitting_summary["coef lower 95%"][row_index], float))
-                & (isinstance(coxph_fitting_summary["coef upper 95%"][row_index], float))
+                (isinstance(coxph_fitting_summary[auc_col].iloc[row_index], float))
+                & (isinstance(coxph_fitting_summary["coef lower 95%"].iloc[row_index], float))
+                & (isinstance(coxph_fitting_summary["coef upper 95%"].iloc[row_index], float))
             ):
                 tval.append(
                     [
-                        round(coxph_fitting_summary[auc_col][row_index], decimal),
+                        round(coxph_fitting_summary[auc_col].iloc[row_index], decimal),
                         (
                             "("
-                            + str(round(coxph_fitting_summary["coef lower 95%"][row_index], decimal))
+                            + str(round(coxph_fitting_summary["coef lower 95%"].iloc[row_index], decimal))
                             + ", "
-                            + str(round(coxph_fitting_summary["coef upper 95%"][row_index], decimal))
+                            + str(round(coxph_fitting_summary["coef upper 95%"].iloc[row_index], decimal))
                             + ")"
                         ),
                     ]
@@ -425,12 +425,12 @@ def cox_ph_forestplot(
             else:
                 tval.append(
                     [
-                        coxph_fitting_summary[auc_col][row_index],
+                        coxph_fitting_summary[auc_col].iloc[row_index],
                         (
                             "("
-                            + str(coxph_fitting_summary["coef lower 95%"][row_index])
+                            + str(coxph_fitting_summary["coef lower 95%"].iloc[row_index])
                             + ", "
-                            + str(coxph_fitting_summary["coef upper 95%"][row_index])
+                            + str(coxph_fitting_summary["coef upper 95%"].iloc[row_index])
                             + ")"
                         ),
                     ]
