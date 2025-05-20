@@ -9,7 +9,7 @@ build:
       - asdf install uv latest
       - asdf global uv latest
       - uv venv
-      - uv pip install .[doc] leidenalg
+      - uv pip install .[doc,causal] leidenalg
     build:
       html:
         - uv run sphinx-build -T -W -b html docs $READTHEDOCS_OUTPUT/html

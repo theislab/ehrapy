@@ -19,10 +19,14 @@ If you don't have [pip] installed, this [Python installation guide] can guide yo
 If you run into "RuntimeError: CMake must be installed to build qdldl" ensure that you have CMake installed to build lightgbm.
 Run `conda install -c anaconda cmake` and `conda install -c conda-forge lightgbm` to do so.
 
-If you intend to run MedCAT you have to install a language model like:
+### Optional dependencies
+
+#### causal & dowhy
+
+To run causal inference with ehrapy, install the `causal` extra:
 
 ```console
-python -m spacy download en_core_web_sm
+pip install ehrapy[causal]
 ```
 
 ## From sources
@@ -40,21 +44,6 @@ Or download the [tarball]:
 ```console
 curl -OJL https://github.com/theislab/ehrapy/tarball/master
 ```
-
-## MedCAT/Spacy language models
-
-If you want to run and use medcat with ehrapy, you first have to install the medcat extra:
-
-```console
-pip install ehrapy[medcat]
-```
-
-Available language models are
-
-- en_core_web_md (python -m spacy download en_core_web_md)
-- en-core-sci-sm (pip install <https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_core_sci_sm-0.4.0.tar.gz>)
-- en-core-sci-md (pip install <https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_core_sci_md-0.4.0.tar.gz>)
-- en-core-sci-lg (pip install <https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_core_sci_lg-0.4.0.tar.gz>)
 
 [github repo]: https://github.com/theislab/ehrapy
 [pip]: https://pip.pypa.io

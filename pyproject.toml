@@ -56,7 +56,6 @@ dependencies = [
     "lifelines>=0.30.0",
     "missingno",
     "thefuzz[speedup]",
-    "dowhy",
     "fhiry",
     "pyampute",
     "tableone",
@@ -71,8 +70,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-medcat = [
-    "medcat",
+causal = [
+    "dowhy"
 ]
 dask = [
     "anndata[dask]",
@@ -106,7 +105,7 @@ doc = [
     "ehrapy[dask]",
 ]
 test = [
-    "ehrapy[dask]",
+    "ehrapy[dask,causal]",
     "pytest",
     "pytest-cov",
     "pytest-mock"

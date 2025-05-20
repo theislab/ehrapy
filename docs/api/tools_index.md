@@ -57,18 +57,6 @@ In contrast to a preprocessing function, a tool usually adds an easily interpret
     tools.ingest
 ```
 
-## Natural language processing
-
-```{eval-rst}
-.. autosummary::
-    :toctree: tools
-    :nosignatures:
-
-    tools.annotate_text
-    tools.get_medcat_annotation_overview
-    tools.add_medcat_annotation_to_obs
-```
-
 ## Survival Analysis
 
 ```{eval-rst}
