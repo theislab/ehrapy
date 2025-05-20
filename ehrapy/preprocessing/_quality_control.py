@@ -212,8 +212,10 @@ def _compute_var_metrics(
         lower_bound = q1 - 1.5 * iqr
         upper_bound = q3 + 1.5 * iqr
         var_metrics.loc[non_categorical_indices, "iqr_outliers"] = (
-            (mtx[:, non_categorical_indices] < lower_bound) | (mtx[:, non_categorical_indices] > upper_bound)
-        ).any(axis=0)
+            ((mtx[:, non_categorical_indices] < lower_bound) | (mtx[:, non_categorical_indices] > upper_bound))
+            .any(axis=0)
+            .astype(float)
+        )
         # Fill all non_categoricals with False because else we have a dtype object Series which h5py cannot save
         var_metrics["iqr_outliers"] = var_metrics["iqr_outliers"].astype(bool).fillna(False)
         var_metrics = var_metrics.infer_objects()

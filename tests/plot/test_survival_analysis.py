@@ -9,10 +9,12 @@ _TEST_IMAGE_PATH = f"{CURRENT_DIR}/_images"
 
 
 def test_kaplan_meier(mimic_2, check_same_image):
-    mimic_2[:, ["censor_flg"]].X = np.where(mimic_2[:, ["censor_flg"]].X == 0, 1, 0)
+    censor_idx = mimic_2.var_names.get_indexer(["censor_flg"])
+    mimic_2.X[:, censor_idx] = np.where(mimic_2.X[:, censor_idx] == 0, 1, 0)
+
     groups = mimic_2[:, ["service_unit"]].X
-    adata_ficu = mimic_2[groups == "FICU"]
-    adata_micu = mimic_2[groups == "MICU"]
+    adata_ficu = mimic_2[groups == "FICU"].copy()
+    adata_micu = mimic_2[groups == "MICU"].copy()
     kmf_1 = ep.tl.kaplan_meier(adata_ficu, duration_col="mort_day_censored", event_col="censor_flg", label="FICU")
     kmf_2 = ep.tl.kaplan_meier(adata_micu, duration_col="mort_day_censored", event_col="censor_flg", label="MICU")
     fig, ax = ep.pl.kaplan_meier(
@@ -51,7 +53,9 @@ def test_kaplan_meier(mimic_2, check_same_image):
 
 
 def test_coxph_forestplot(mimic_2, check_same_image):
-    adata_subset = mimic_2[:, ["mort_day_censored", "censor_flg", "gender_num", "afib_flg", "day_icu_intime_num"]]
+    adata_subset = mimic_2[
+        :, ["mort_day_censored", "censor_flg", "gender_num", "afib_flg", "day_icu_intime_num"]
+    ].copy()
     ep.tl.cox_ph(adata_subset, duration_col="mort_day_censored", event_col="censor_flg")
     fig, ax = ep.pl.cox_ph_forestplot(adata_subset, fig_size=(12, 3), t_adjuster=0.15, marker="o", size=2, text_size=14)
 

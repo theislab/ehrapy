@@ -1,16 +1,17 @@
 from __future__ import annotations
 
+import importlib
 import sys
 import warnings
 from io import StringIO
 from typing import TYPE_CHECKING, Any, Literal
 
-import dowhy
 import numpy as np
 from lamin_utils import logger
 
 if TYPE_CHECKING:
-    import anndata
+    import anndata as ad
+    import dowhy
     import networkx as nx
 
 warnings.filterwarnings("ignore")
@@ -29,7 +30,7 @@ class capture_output(list):
 
 
 def causal_inference(
-    adata: anndata.AnnData,
+    adata: ad.AnnData,
     graph: nx.DiGraph | str,
     treatment: str,
     outcome: str,
@@ -76,7 +77,7 @@ def causal_inference(
     estimate_kwargs: dict[str, Any] | None = None,
     refute_kwargs: dict[str, Any] | None = None,
 ) -> tuple[dowhy.CausalEstimate, dict[str, str | dict[str, float]]]:
-    """Performs causal inference on an AnnData object using the specified causal model and returns a tuple containing the causal estimate and the results of any refutation tests.
+    """Performs causal inference using the specified causal model and returns a tuple containing the causal estimate and the results of any refutation tests.
 
     Args:
         adata: An AnnData object containing the input data.
@@ -167,6 +168,11 @@ def causal_inference(
     user_gave_num_simulations = "num_simulations" in refute_kwargs
     user_gave_random_seed = "random_state" in refute_kwargs
     found_problematic_pvalues = True
+
+    if importlib.util.find_spec("dowhy") is None:
+        raise ImportError("Required package 'dowhy' is not installed. Install with: pip install dowhy")
+
+    import dowhy
 
     model = dowhy.CausalModel(data=adata.to_df(), graph=graph, treatment=treatment, outcome=outcome)
 

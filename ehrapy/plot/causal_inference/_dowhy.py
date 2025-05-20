@@ -1,7 +1,13 @@
-import dowhy
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+
+if TYPE_CHECKING:
+    import dowhy
 
 
 def causal_effect(estimate: dowhy.causal_estimator.CausalEstimate, precision: int = 3) -> matplotlib.axes:
@@ -25,9 +31,6 @@ def causal_effect(estimate: dowhy.causal_estimator.CausalEstimate, precision: in
         TypeError: If the `estimate` parameter is not an instance of `dowhy.causal_estimator.CausalEstimate`.
         ValueError: If the estimation method in `estimate` is not supported for this plot type.
     """
-    if not isinstance(estimate, dowhy.causal_estimator.CausalEstimate):
-        raise TypeError("Parameter 'estimate' must be a dowhy.causal_estimator.CausalEstimate object")
-
     if "LinearRegressionEstimator" not in str(estimate.params["estimator_class"]):
         raise ValueError(f"Estimation method {estimate.params['estimator_class']} is not supported for this plot type.")
 

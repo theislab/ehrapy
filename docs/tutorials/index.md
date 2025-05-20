@@ -22,7 +22,6 @@ For questions about the usage of ehrapy use the [zulip forum](https://scverse.zu
    notebooks/mimic_2_survival_analysis
    notebooks/mimic_2_effect_estimation
    notebooks/mimic_2_causal_inference
-   notebooks/medcat
    notebooks/ml_usecases
    notebooks/ontology_mapping
    notebooks/fhir
