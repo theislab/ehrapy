@@ -1,9 +1,11 @@
 from typing import TYPE_CHECKING
 
-import dowhy
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+
+if TYPE_CHECKING:
+    import dowhy  # noqa
 
 
 def causal_effect(estimate: dowhy.causal_estimator.CausalEstimate, precision: int = 3) -> matplotlib.axes:
