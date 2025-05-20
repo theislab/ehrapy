@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 import matplotlib
@@ -5,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 if TYPE_CHECKING:
-    import dowhy  # noqa
+    import dowhy
 
 
 def causal_effect(estimate: dowhy.causal_estimator.CausalEstimate, precision: int = 3) -> matplotlib.axes:
