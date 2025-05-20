@@ -5,12 +5,12 @@ import warnings
 from io import StringIO
 from typing import TYPE_CHECKING, Any, Literal
 
-import dowhy
 import numpy as np
 from lamin_utils import logger
 
 if TYPE_CHECKING:
-    import anndata
+    import anndata as ad
+    import dowhy
     import networkx as nx
 
 warnings.filterwarnings("ignore")
@@ -29,7 +29,7 @@ class capture_output(list):
 
 
 def causal_inference(
-    adata: anndata.AnnData,
+    adata: ad.AnnData,
     graph: nx.DiGraph | str,
     treatment: str,
     outcome: str,
@@ -167,6 +167,8 @@ def causal_inference(
     user_gave_num_simulations = "num_simulations" in refute_kwargs
     user_gave_random_seed = "random_state" in refute_kwargs
     found_problematic_pvalues = True
+
+    import dowhy
 
     model = dowhy.CausalModel(data=adata.to_df(), graph=graph, treatment=treatment, outcome=outcome)
 
