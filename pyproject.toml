@@ -108,7 +108,7 @@ doc = [
     "ehrapy[dask]",
 ]
 test = [
-    "ehrapy[dask,dowhy]",
+    "ehrapy[dask,causal]",
     "pytest",
     "pytest-cov",
     "pytest-mock"
