@@ -1,9 +1,10 @@
 import functools
+from collections.abc import Callable
 
 from rich.progress import Progress, SpinnerColumn
 
 
-def spinner(message: str = "Running task"):
+def spinner(message: str = "Running task") -> Callable:
     def wrap(func):
         @functools.wraps(func)
         def wrapped_f(*args, **kwargs):
