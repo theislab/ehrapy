@@ -11,7 +11,7 @@ os.environ["SCIPY_ARRAY_API"] = "1"
 
 import warnings
 
-warnings.filterwarnings("ignore", category=SyntaxWarning, message="invalid escape sequence")
+warnings.filterwarnings("ignore", category=SyntaxWarning, message=r"invalid escape sequence '\\")
 
 from ehrapy._settings import EhrapyConfig, ehrapy_settings
 
