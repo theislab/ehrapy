@@ -7,14 +7,15 @@
 [![Test](https://github.com/theislab/ehrapy/actions/workflows/test.yml/badge.svg)](https://github.com/theislab/ehrapy/actions/workflows/test.yml)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/21954664/156930990-0d668468-0cd9-496e-995a-96d2c2407cf5.png" alt="ehrapy logo" width="25%">
+</p>
+
+
 # ehrapy overview
 
 **ehrapy** is a modular open-source Python framework for exploratory analysis of heterogeneous epidemiological and EHR data.
 It supports a full pipeline from data ingestion and quality control to advanced analyses such as clustering, survival, trajectory, causal inference, deep learning, and more.
-
-<p align="center">
-  <img src="https://user-images.githubusercontent.com/21954664/156930990-0d668468-0cd9-496e-995a-96d2c2407cf5.png" alt="ehrapy logo" width="20%">
-</p>
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/7927aa20-751c-4e73-8939-1e4b1c465570" alt="fig1" width="100%">
