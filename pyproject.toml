@@ -47,6 +47,7 @@ classifiers = [
 
 dependencies = [
     "session-info2",
+    "ehrdata",
     "lamin_utils",
     "rich",
     "scanpy",
@@ -66,7 +67,7 @@ dependencies = [
     "numpy>=2.0.0",
     "numba>=0.60.0",
     "igraph",
-    "fast-array-utils"
+    "fast-array-utils",
 ]
 
 [project.optional-dependencies]
@@ -102,7 +103,7 @@ doc = [
     "nbsphinx-link",
     "ipykernel",
     "ipython",
-    "ehrapy[dask]",
+    "ehrapy[dask]"
 ]
 test = [
     "ehrapy[dask,causal]",
