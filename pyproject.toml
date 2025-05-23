@@ -56,7 +56,6 @@ dependencies = [
     "lifelines>=0.30.0",
     "missingno",
     "thefuzz[speedup]",
-    "dowhy",
     "fhiry",
     "pyampute",
     "tableone",
@@ -71,8 +70,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-medcat = [
-    "medcat",
+causal = [
+    "dowhy"
 ]
 dask = [
     "anndata[dask]",
@@ -81,13 +80,15 @@ dask = [
 dev = [
     "pre-commit",
 ]
-docs = [
+doc = [
     "docutils",
     "sphinx",
-    "furo",
+    "scanpydoc",
+    "sphinx-book-theme",
     "myst-nb",
     "myst-parser",
     "sphinxcontrib-bibtex",
+    "sphinx-issues",
     "sphinx-gallery",
     "sphinx-autodoc-typehints",
     "sphinx-copybutton",
@@ -104,7 +105,7 @@ docs = [
     "ehrapy[dask]",
 ]
 test = [
-    "ehrapy[dask]",
+    "ehrapy[dask,causal]",
     "pytest",
     "pytest-cov",
     "pytest-mock"

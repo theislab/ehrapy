@@ -1,6 +1,8 @@
-<img src="https://user-images.githubusercontent.com/21954664/156930990-0d668468-0cd9-496e-995a-96d2c2407cf5.png" alt="ehrapy logo">
+# ehrapy
 
 ehrapy is a modular open-source Python framework designed for exploratory end-to-end analysis of heterogeneous epidemiology and electronic health record data.
+
+![overview](https://github.com/user-attachments/assets/7927aa20-751c-4e73-8939-1e4b1c465570)
 
 ```{eval-rst}
 .. card:: Installation :octicon:`plug;1em;`
@@ -12,7 +14,7 @@ ehrapy is a modular open-source Python framework designed for exploratory end-to
 
 ```{eval-rst}
 .. card:: API reference :octicon:`book;1em;`
-    :link: usage/usage
+    :link: api
     :link-type: doc
 
     The API reference contains a detailed description of the ehrapy API.
@@ -43,26 +45,49 @@ ehrapy is a modular open-source Python framework designed for exploratory end-to
 ```
 
 ```{toctree}
-:caption: 'Contents:'
+:caption: 'General'
 :hidden: true
 :maxdepth: 3
 
 installation
-usage/usage
-tutorials/index
+api
 contributing
+changelog
 references
+```
+
+```{toctree}
+:caption: 'Gallery'
+:hidden: true
+:maxdepth: 3
+
+tutorials/index
+```
+
+```{toctree}
+:caption: 'About'
+:hidden: true
+:maxdepth: 1
+about/background
+about/cite
+GitHub <https://github.com/theislab/ehrapy>
 ```
 
 # Citation
 
-[Exploratory electronic health record analysis with ehrapy Lukas Heumos, Philipp Ehmele, Tim Treis, Julius Upmeier zu Belzen, Altana Namsaraeva, Nastassya Horlava, Vladimir A. Shitov, Xinyue Zhang, Luke Zappia, Rainer Knoll, Niklas J. Lang, Leon Hetzel, Isaac Virshup, Lisa Sikkema, Eljas Roellin, Fabiola Curion, Roland Eils, Herbert B. Schiller, Anne Hilgendorff, Fabian J. Theis
-medRxiv 2023.12.11.23299816; doi: https://doi.org/10.1101/2023.12.11.23299816 ](https://www.medrxiv.org/content/10.1101/2023.12.11.23299816v1).
-
-# Indices and tables
-
-- {ref}`genindex`
-- {ref}`modindex`
-- {ref}`search`
-
-[scanpy genome biology (2018)]: https://doi.org/10.1186/s13059-017-1382-0
+```bibtex
+@article{Heumos2024,
+  author = {Heumos, Lukas and Ehmele, Philipp and Treis, Tim and Upmeier zu Belzen, Julius and Roellin, Eljas and May, Lilly and Namsaraeva, Altana and Horlava, Nastassya and Shitov, Vladimir A. and Zhang, Xinyue and Zappia, Luke and Knoll, Rainer and Lang, Niklas J. and Hetzel, Leon and Virshup, Isaac and Sikkema, Lisa and Curion, Fabiola and Eils, Roland and Schiller, Herbert B. and Hilgendorff, Anne and Theis, Fabian J.},
+  year = {2024},
+  month = {11},
+  day = {01},
+  title = {An open-source framework for end-to-end analysis of electronic health record data},
+  journal = {Nature Medicine},
+  volume = {30},
+  number = {11},
+  pages = {3369--3380},
+  issn = {1546-170X},
+  doi = {10.1038/s41591-024-03214-0},
+  url = {https://doi.org/10.1038/s41591-024-03214-0}
+}
+```

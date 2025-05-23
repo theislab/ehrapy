@@ -9,7 +9,7 @@ from pathlib import Path
 HERE = Path(__file__).parent
 sys.path[:0] = [str(HERE.parent), str(HERE / "extensions")]
 
-needs_sphinx = "4.3"
+needs_sphinx = "8.0"
 
 info = metadata("ehrapy")
 project_name = info["Name"]
@@ -20,9 +20,11 @@ urls = dict(pu.split(", ") for pu in info.get_all("Project-URL"))
 repository_url = urls["Source"]
 release = info["Version"]
 github_repo = "ehrapy"
+language = "en"
+master_doc = "index"
 
 extensions = [
-    "myst_parser",
+    "myst_nb",
     "sphinx.ext.autodoc",
     "sphinx.ext.intersphinx",
     "sphinx.ext.viewcode",
@@ -36,11 +38,11 @@ extensions = [
     "sphinx_gallery.load_style",
     "sphinx_remove_toctrees",
     "sphinx_design",
+    "sphinx_issues",
+    "sphinxcontrib.bibtex",
+    "IPython.sphinxext.ipython_console_highlighting",
 ]
 
-# remove_from_toctrees = ["tutorials/notebooks/*", "api/reference/*"]
-
-# for sharing urls with nice info
 ogp_site_url = "https://ehrapy.readthedocs.io/en/latest/"
 ogp_image = "https://ehrapy.readthedocs.io/en/latest//_static/logo.png"
 
@@ -53,121 +55,101 @@ exclude_patterns = [
     "auto_*/**.md5",
     "auto_*/**.py",
     "**.ipynb_checkpoints",
+    "tutorials/notebooks/README.md",
+    "tutorials/notebooks/diabetic_retinopathy_fate_mapping.ipynb",
 ]
 nbsphinx_execute = "never"
+nb_execution_mode = "off"
 
 templates_path = ["_templates"]
+bibtex_bibfiles = ["references.bib"]
+nitpicky = True  # Warn about broken links
+
+suppress_warnings = ["toc.not_included", "toc.excluded", "mystnb.unknown_mime_type"]
 # source_suffix = ".md"
 
 autosummary_generate = True
+autosummary_imported_members = True
 autodoc_member_order = "bysource"
-napoleon_google_docstring = True  # for pytorch lightning
-napoleon_numpy_docstring = True
+napoleon_google_docstring = True
 napoleon_include_init_with_doc = False
-napoleon_use_rtype = True  # having a separate entry generally helps readability
+napoleon_use_rtype = True
 napoleon_use_param = True
 napoleon_custom_sections = [("Params", "Parameters")]
 todo_include_todos = False
 numpydoc_show_class_members = False
-annotate_defaults = True  # scanpydoc option, look into why we need this
+annotate_defaults = True
 myst_enable_extensions = [
     "colon_fence",
     "dollarmath",
     "amsmath",
 ]
 
-master_doc = "index"
+autodoc_mock_imports = ["scipy.linalg.triu"]
 
 intersphinx_mapping = {
+    "python": ("https://docs.python.org/3", None),
     "anndata": ("https://anndata.readthedocs.io/en/stable/", None),
     "ipython": ("https://ipython.readthedocs.io/en/stable/", None),
-    "matplotlib": ("https://matplotlib.org/", None),
+    "matplotlib": ("https://matplotlib.org/stable/", None),
+    "seaborn": ("https://seaborn.pydata.org/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
-    "pandas": ("https://pandas.pydata.org/docs/", None),
-    "python": ("https://docs.python.org/3", None),
-    "scipy": ("https://docs.scipy.org/doc/scipy/reference/", None),
+    "pandas": ("https://pandas.pydata.org/pandas-docs/stable/", None),
+    "scipy": ("https://docs.scipy.org/doc/scipy/", None),
     "pynndescent": ("https://pynndescent.readthedocs.io/en/latest/", None),
-    "sklearn": ("https://scikit-learn.org/stable/", None),
-    "torch": ("https://pytorch.org/docs/master/", None),
+    "sklearn": ("https://scikit-learn.org/stable", None),
+    "torch": ("https://docs.pytorch.org/docs/main", None),
     "scanpy": ("https://scanpy.readthedocs.io/en/stable/", None),
-    "pytorch_lightning": ("https://pytorch-lightning.readthedocs.io/en/stable/", None),
-    "pyro": ("http://docs.pyro.ai/en/stable/", None),
+    "pytorch_lightning": ("https://lightning.ai/docs/pytorch/stable/", None),
     "pymde": ("https://pymde.org/", None),
-    "flax": ("https://flax.readthedocs.io/en/latest/", None),
-    "jax": ("https://jax.readthedocs.io/en/latest/", None),
-    "lamin": ("https://lamin.ai/docs", None),
+    "lamin": ("https://docs.lamin.ai", None),
     "lifelines": ("https://lifelines.readthedocs.io/en/latest/", None),
+    "statsmodels": ("https://www.statsmodels.org/stable", None),
+    "networkx": ("https://networkx.org/documentation/stable", None),
 }
-
-language = "en"
+nitpick_ignore = [
+    ("py:class", "matplotlib.axes.Axes"),
+    ("py:class", "leidenalg.RBConfigurationVertexPartition"),
+    ("py:class", "leidenalg.VertexPartition.MutableVertexPartition"),
+    ("py:class", "cycler.Cycler"),
+    ("py:func", "leidenalg.find_partition"),
+    ("py:class", "CAT"),
+    ("py:class", "ehrapy.tools.annotate_text.CAT"),
+    ("py:class", "tableone.TableOne"),
+    ("py:class", "dowhy.causal_estimator.CausalEstimate"),
+    ("py:class", "DotPlot"),
+    ("py:class", "MatrixPlot"),
+    ("py:class", "StackedViolin"),
+    ("py:class", "ehrapy.plot.DotPlot"),
+    ("py:class", "ehrapy.plot.StackedViolin"),
+    ("py:func", "ehrapy.pl.matrixplot"),
+    ("py:func", "ehrapy.pl.tracksplot"),
+    ("py:class", "scanpy.plotting._utils._AxesSubplot"),
+    ("py:func", "IPython.display.set_matplotlib_formats"),
+    ("py:class", "matplotlib.colorbar.ColorbarBase"),
+    ("py:class", "scanpy.neighbors._types.KnnTransformerLike"),
+    ("py:class", "statsmodels.genmod.generalized_linear_model.GLMResultsWrapper"),
+    ("py:class", "dask_ml.preprocessing.MinMaxScaler"),
+    ("py:class", "dask_ml.preprocessing.QuantileTransformer"),
+    ("py:class", "dask_ml.preprocessing.RobustScaler"),
+    ("py:class", "dask_ml.preprocessing.StandardScaler"),
+    ("py:class", "pathlib._local.Path"),
+]
+autodoc_type_aliases = {"CAT": "Any"}
 
 typehints_defaults = "comma"
 
-pygments_style = "default"
+pygments_style = "sphinx"
 pygments_dark_style = "native"
 
-
-# html_show_sourcelink = True
-html_theme = "furo"
-
+html_theme = "scanpydoc"
 html_title = "ehrapy"
 html_logo = "_static/ehrapy_logos/ehrapy_pure.png"
-
-html_theme_options = {
-    "sidebar_hide_name": True,
-    "light_css_variables": {
-        "color-brand-primary": "#003262",
-        "color-brand-content": "#003262",
-        "admonition-font-size": "var(--font-size-normal)",
-        "admonition-title-font-size": "var(--font-size-normal)",
-        "code-font-size": "var(--font-size--small)",
-    },
-}
+html_theme_options = {}
 html_static_path = ["_static"]
 html_css_files = ["css/overwrite.css", "css/sphinx_gallery.css"]
 html_show_sphinx = False
 
-
-nbsphinx_prolog = r"""
-.. raw:: html
-
-{{% set docname = env.doc2path(env.docname, base=None).split("/")[-1] %}}
-
-.. raw:: html
-
-    <style>
-        p {{
-            margin-bottom: 0.5rem;
-        }}
-        /* Main index page overview cards */
-        /* https://github.com/spatialaudio/nbsphinx/pull/635/files */
-        .jp-RenderedHTMLCommon table,
-        div.rendered_html table {{
-        border: none;
-        border-collapse: collapse;
-        border-spacing: 0;
-        font-size: 12px;
-        table-layout: fixed;
-        color: inherit;
-        }}
-
-        body:not([data-theme=light]) .jp-RenderedHTMLCommon tbody tr:nth-child(odd),
-        body:not([data-theme=light]) div.rendered_html tbody tr:nth-child(odd) {{
-        background: rgba(255, 255, 255, .1);
-        }}
-    </style>
-
-.. raw:: html
-
-    <div class="admonition note">
-        <p class="admonition-title">Note</p>
-        <p>
-        This page was generated from
-        <a class="reference external" href="https://github.com/theislab/ehrapy/tree/{version}/">{docname}</a>.
-        Some tutorial content may look better in light mode.
-        </p>
-    </div>
-""".format(version=version, docname="{{ docname|e }}")
 nbsphinx_thumbnails = {
     "tutorials/notebooks/ehrapy_introduction": "_static/ehrapy_logos/ehrapy_pure.png",
     "tutorials/notebooks/mimic_2_introduction": "_static/tutorials/catheter.png",
@@ -175,7 +157,6 @@ nbsphinx_thumbnails = {
     "tutorials/notebooks/mimic_2_survival_analysis": "_static/tutorials/survival.png",
     "tutorials/notebooks/mimic_2_effect_estimation": "_static/tutorials/effect_estimation.png",
     "tutorials/notebooks/mimic_2_causal_inference": "_static/tutorials/causal_inference.png",
-    "tutorials/notebooks/medcat": "_static/tutorials/nlp.png",
     "tutorials/notebooks/ml_usecases": "_static/tutorials/machine_learning.png",
     "tutorials/notebooks/ontology_mapping": "_static/tutorials/ontology.png",
     "tutorials/notebooks/fhir": "_static/tutorials/fhir.png",

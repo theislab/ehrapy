@@ -18,15 +18,6 @@ from ehrapy.tools.cohort_tracking._cohort_tracker import CohortTracker
 from ehrapy.tools.feature_ranking._feature_importances import rank_features_supervised
 from ehrapy.tools.feature_ranking._rank_features_groups import filter_rank_features_groups, rank_features_groups
 
-try:  # pragma: no cover
-    from ehrapy.tools.nlp._medcat import (
-        add_medcat_annotation_to_obs,
-        annotate_text,
-        get_medcat_annotation_overview,
-    )
-except ImportError:
-    pass
-
 __all__ = [
     "anova_glm",
     "cox_ph",

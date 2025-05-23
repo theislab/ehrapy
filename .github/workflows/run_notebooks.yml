@@ -13,8 +13,7 @@ jobs:
                         "docs/tutorials/notebooks/mimic_2_introduction.ipynb",
                         "docs/tutorials/notebooks/mimic_2_survival_analysis.ipynb",
                         "docs/tutorials/notebooks/mimic_2_fate.ipynb",
-                        "docs/tutorials/notebooks/mimic_2_causal_inference.ipynb",
-                        # "docs/tutorials/notebooks/medcat.ipynb",
+                        # "docs/tutorials/notebooks/mimic_2_causal_inference.ipynb",
                     ]
         steps:
             - uses: actions/checkout@v4

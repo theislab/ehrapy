@@ -4,15 +4,15 @@ from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 
 import numpy as np
 import scanpy as sc
+from scipy.sparse import spmatrix  # noqa
+
+from ehrapy.tools import _method_options  # noqa
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
 
     from anndata import AnnData
     from leidenalg.VertexPartition import MutableVertexPartition
-    from scipy.sparse import spmatrix
-
-    from ehrapy.tools import _method_options
 
 AnyRandom: TypeAlias = int | np.random.RandomState | None
 
@@ -29,10 +29,10 @@ def tsne(
     copy: bool = False,
     metric: str = "euclidean",
 ) -> AnnData | None:  # pragma: no cover
-    """Calculates t-SNE [Maaten08]_ [Amir13]_ [Pedregosa11]_.
+    """Calculates t-SNE :cite:p:`vanDerMaaten2008`, :cite:p:`Amir2013`, and :cite:p:`Pedregosa2011`.
 
-    t-distributed stochastic neighborhood embedding (tSNE) [Maaten08]_ has been
-    proposed for visualizing complex by [Amir13]_. Here, by default, we use the implementation of *scikit-learn* [Pedregosa11]_.
+    t-distributed stochastic neighborhood embedding (tSNE) :cite:p:`vanDerMaaten2008` has been
+    proposed for visualizing complex by :cite:p:`Amir2013`. Here, by default, we use the implementation of *scikit-learn* :cite:p:`Pedregosa2011`.
 
     Args:
         adata: :class:`~anndata.AnnData` object containing all observations.
@@ -40,7 +40,7 @@ def tsne(
         use_rep: Use the indicated representation. `'X'` or any key for `.obsm` is valid.
                  If `None`, the representation is chosen automatically:
                  For `.n_vars` < 50, `.X` is used, otherwise 'X_pca' is used.
-                 If 'X_pca' is not present, it’s computed with default parameters.
+                 If 'X_pca' is not present, it's computed with default parameters.
         perplexity: The perplexity is related to the number of nearest neighbors that
                     is used in other manifold learning algorithms. Larger datasets usually require a larger perplexity.
                     Consider selecting a value between 5 and 50. The choice is not extremely critical since t-SNE
@@ -100,7 +100,7 @@ def umap(
     method: Literal["umap", "rapids"] = "umap",
     neighbors_key: str | None = None,
 ) -> AnnData | None:  # pragma: no cover
-    """Embed the neighborhood graph using UMAP [McInnes18]_.
+    """Embed the neighborhood graph using UMAP :cite:p:`McInnes2018`.
 
     UMAP (Uniform Manifold Approximation and Projection) is a manifold learning
     technique suitable for visualizing high-dimensional data. Besides tending to
@@ -110,7 +110,7 @@ def umap(
     nearest-neighbor distances in the embedding such that these best match the
     distribution of distances in the high-dimensional space. We use the
     implementation of `umap-learn <https://github.com/lmcinnes/umap>`__
-    [McInnes18]_. For a few comparisons of UMAP with tSNE, see this `preprint
+    :cite:p:`McInnes2018`. For a few comparisons of UMAP with tSNE, see this `preprint
     <https://doi.org/10.1101/298430>`__.
 
     Args:
@@ -201,21 +201,21 @@ def draw_graph(
     copy: bool = False,
     **kwds,
 ) -> AnnData | None:  # pragma: no cover
-    """Force-directed graph drawing [Islam11]_ [Jacomy14]_ [Chippada18]_.
+    """Force-directed graph drawing :cite:p:`Islam2011`, :cite:p:`Jacomy2014`, and :cite:p:`Chippada2018`.
 
     .. _fa2: https://github.com/bhargavchippada/forceatlas2
     .. _Force-directed graph drawing: https://en.wikipedia.org/wiki/Force-directed_graph_drawing
     .. _fruchterman-reingold: http://igraph.org/python/doc/igraph.Graph-class.html#layout_fruchterman_reingold
 
     An alternative to tSNE that often preserves the topology of the data
-    better. This requires to run :func:`~ehrapy.pp.neighbors`, first.
-    The default layout ('fa', `ForceAtlas2`) [Jacomy14]_ uses the package `fa2`_
-    [Chippada18]_, which can be installed via `pip install fa2`.
+    better. This requires to run :func:`~ehrapy.preprocessing.neighbors`, first.
+    The default layout ('fa', `ForceAtlas2`) :cite:p:`Jacomy2014` uses the package `fa2`_
+    :cite:p:`Chippada2018`, which can be installed via `pip install fa2`.
     `Force-directed graph drawing`_ describes a class of long-established
     algorithms for visualizing graphs.
-    It has been suggested for visualizing single-cell data by [Islam11]_.
-    Many other layouts as implemented in igraph [Csardi06]_ are available.
-    Similar approaches have been used by [Zunder15]_ or [Weinreb17]_.
+    It has been suggested for visualizing single-cell data by :cite:p:`Islam2011`.
+    Many other layouts as implemented in igraph :cite:p:`Csardi2006` are available.
+    Similar approaches have been used by :cite:p:`Zunder2015` or :cite:p:`Weinreb2017`.
 
     Args:
         adata: :class:`~anndata.AnnData` object containing all observations.
@@ -241,7 +241,7 @@ def draw_graph(
         obsp:  Use .obsp[obsp] as adjacency. You can't specify both `obsp` and `neighbors_key` at the same time.
         copy: Whether to return a copy instead of writing to adata.
         **kwds: Parameters of chosen igraph layout. See e.g. `fruchterman-reingold`_
-                [Fruchterman91]_. One of the most important ones is `maxiter`.
+                :cite:p:`Fruchterman1991`. One of the most important ones is `maxiter`.
 
     Returns:
           Depending on `copy`, returns or updates `adata` with the following field.
@@ -272,16 +272,16 @@ def diffmap(
     random_state: AnyRandom = 0,
     copy: bool = False,
 ) -> AnnData | None:  # pragma: no cover
-    """Diffusion Maps [Coifman05]_ [Haghverdi15]_ [Wolf18]_.
+    """Diffusion Maps :cite:p:`Coifman2005`, :cite:p:`Haghverdi2015`, :cite:p:`Wolf2019`.
 
-    Diffusion maps [Coifman05]_ has been proposed for visualizing single-cell
-    data by [Haghverdi15]_. The tool uses the adapted Gaussian kernel suggested
-    by [Haghverdi16]_ in the implementation of [Wolf18]_.
+    Diffusion maps :cite:p:`Coifman2005` has been proposed for visualizing single-cell
+    data by :cite:p:`Haghverdi2015`. The tool uses the adapted Gaussian kernel suggested
+    by :cite:p:`Haghverdi2016` in the implementation of :cite:p:`Wolf2018`.
     The width ("sigma") of the connectivity kernel is implicitly determined by
     the number of neighbors used to compute the single-cell graph in
-    :func:`~ehrapy.pp.neighbors`. To reproduce the original implementation
+    :func:`~ehrapy.preprocessing.neighbors`. To reproduce the original implementation
     using a Gaussian kernel, use `method=='gauss'` in
-    :func:`~ehrapy.pp.neighbors`. To use an exponential kernel, use the default
+    :func:`~ehrapy.preprocessing.neighbors`. To use an exponential kernel, use the default
     `method=='umap'`. Differences between these options shouldn't usually be dramatic.
 
     Args:
@@ -373,17 +373,17 @@ def leiden(
     copy: bool = False,
     **partition_kwargs,
 ) -> AnnData | None:  # pragma: no cover
-    """Cluster observations into subgroups [Traag18]_.
+    """Cluster observations into subgroups :cite:p:`Traag2019`.
 
-    Cluster observations using the Leiden algorithm [Traag18]_,
-    an improved version of the Louvain algorithm [Blondel08]_.
-    It has been proposed for single-cell analysis by [Levine15]_.
-    This requires having run :func:`~ehrapy.pp.neighbors` or :func:`~ehrapy.pp.bbknn` first.
+    Cluster observations using the Leiden algorithm :cite:p:`Traag2019`,
+    an improved version of the Louvain algorithm :cite:p:`Blondel2008`.
+    It has been proposed for single-cell analysis by :cite:p:`Levine2015`.
+    This requires having run :func:`~ehrapy.preprocessing.neighbors`.
 
     Args:
         adata: :class:`~anndata.AnnData` object containing all observations.
         resolution: A parameter value controlling the coarseness of the clustering. Higher values lead to more clusters.
-                    Set to `None` if overriding `partition_type` to one that doesn’t accept a `resolution_parameter`.
+                    Set to `None` if overriding `partition_type` to one that doesn't accept a `resolution_parameter`.
         restrict_to: Restrict the clustering to the categories within the key for sample
                      annotation, tuple needs to contain `(obs_key, list_of_categories)`.
         random_state: Random seed of the initialization of the optimization.
@@ -454,10 +454,10 @@ def dendrogram(
     Average values of either `var_names` or components are used to compute a correlation matrix.
 
     The hierarchical clustering can be visualized using
-    :func:`ehrapy.pl.dendrogram` or multiple other visualizations that can
-    include a dendrogram: :func:`~ehrapy.pl.matrixplot`,
-    :func:`~ehrapy.pl.heatmap`, :func:`~ehrapy.pl.dotplot`,
-    and :func:`~ehrapy.pl.stacked_violin`.
+    :func:`ehrapy.plot.dendrogram` or multiple other visualizations that can
+    include a dendrogram: :func:`~ehrapy.plot.matrixplot`,
+    :func:`~ehrapy.plot.heatmap`, :func:`~ehrapy.plot.dotplot`,
+    and :func:`~ehrapy.plot.stacked_violin`.
 
     .. note::
         The computation of the hierarchical clustering is based on predefined
@@ -471,7 +471,7 @@ def dendrogram(
         use_rep: Use the indicated representation. `'X'` or any key for `.obsm` is valid.
                  If `None`, the representation is chosen automatically:
                  For `.n_vars` < 50, `.X` is used, otherwise 'X_pca' is used.
-                 If 'X_pca' is not present, it’s computed with default parameters.
+                 If 'X_pca' is not present, it's computed with default parameters.
         var_names: List of var_names to use for computing the hierarchical clustering.
                    If `var_names` is given, then `use_rep` and `n_pcs` is ignored.
         cor_method: correlation method to use.
@@ -518,17 +518,17 @@ def dpt(
     neighbors_key: str | None = None,
     copy: bool = False,
 ) -> AnnData | None:  # pragma: no cover
-    """Infer progression of observations through geodesic distance along the graph [Haghverdi16]_ [Wolf19]_.
+    """Infer progression of observations through geodesic distance along the graph :cite:p:`Haghverdi2016`, :cite:p:`Wolf2019`.
 
     Reconstruct the progression of a biological process from snapshot
-    data. `Diffusion Pseudotime` has been introduced by [Haghverdi16]_ and
-    implemented within Scanpy [Wolf18]_. Here, we use a further developed
-    version, which is able to deal with disconnected graphs [Wolf19]_ and can
+    data. `Diffusion Pseudotime` has been introduced by :cite:p:`Haghverdi2016` and
+    implemented within Scanpy :cite:p:`Wolf2018`. Here, we use a further developed
+    version, which is able to deal with disconnected graphs :cite:p:`Wolf2019` and can
     be run in a `hierarchical` mode by setting the parameter `n_branchings>1`.
-    We recommend, however, to only use :func:`~ehrapy.tl.dpt` for computing pseudotime (`n_branchings=0`) and
+    We recommend, however, to only use :func:`~ehrapy.tools.dpt` for computing pseudotime (`n_branchings=0`) and
     to detect branchings via :func:`~scanpy.tl.paga`. For pseudotime, you need
     to annotate your data with a root cell. For instance `adata.uns['iroot'] = np.flatnonzero(adata.obs['cell_types'] == 'Stem')[0]`
-    This requires to run :func:`~ehrapy.pp.neighbors`, first. In order to
+    This requires to run :func:`~ehrapy.preprocessing.neighbors`, first. In order to
     reproduce the original implementation of DPT, use `method=='gauss'` in
     this. Using the default `method=='umap'` only leads to minor quantitative differences, though.
 
@@ -540,7 +540,7 @@ def dpt(
                         > 1, do not consider groups that contain less than `min_group_size` data
                         points. If a float, `min_group_size` refers to a fraction of the total number of data points.
         allow_kendall_tau_shift: If a very small branch is detected upon splitting, shift away from
-                                 maximum correlation in Kendall tau criterion of [Haghverdi16]_ to stabilize the splitting.
+                                 maximum correlation in Kendall tau criterion of :cite:p:`Haghverdi2016` to stabilize the splitting.
         neighbors_key: If not specified, dpt looks `.uns['neighbors']` for neighbors settings
                        and `.obsp['connectivities']`, `.obsp['distances']` for connectivities and
                        distances respectively (default storage places for pp.neighbors).
@@ -577,23 +577,23 @@ def paga(
     neighbors_key: str | None = None,
     copy: bool = False,
 ) -> AnnData | None:  # pragma: no cover
-    """Mapping out the coarse-grained connectivity structures of complex manifolds [Wolf19]_.
+    """Mapping out the coarse-grained connectivity structures of complex manifolds :cite:p:`Wolf2019`.
 
     By quantifying the connectivity of partitions (groups, clusters),
     partition-based graph abstraction (PAGA) generates a much
     simpler abstracted graph (*PAGA graph*) of partitions, in which edge weights
     represent confidence in the presence of connections. By tresholding this
-    confidence in :func:`~ehrapy.pl.paga`, a much simpler representation of the
+    confidence in :func:`~ehrapy.plot.paga`, a much simpler representation of the
     manifold data is obtained, which is nonetheless faithful to the topology of the manifold.
     The confidence should be interpreted as the ratio of the actual versus the
     expected value of connections under the null model of randomly connecting
     partitions. We do not provide a p-value as this null model does not
     precisely capture what one would consider "connected" in real data, hence it
-    strongly overestimates the expected value. See an extensive discussion of this in [Wolf19]_.
+    strongly overestimates the expected value. See an extensive discussion of this in :cite:p:`Wolf2019`.
 
     .. note::
-        Note that you can use the result of :func:`~ehrapy.pl.paga` in
-        :func:`~ehrapy.tl.umap` and :func:`~ehrapy.tl.draw_graph` via
+        Note that you can use the result of :func:`~ehrapy.plot.paga` in
+        :func:`~ehrapy.tools.umap` and :func:`~ehrapy.tools.draw_graph` via
         `init_pos='paga'` to get embeddings that are typically more faithful to the global topology.
 
     Args:
@@ -618,7 +618,7 @@ def paga(
         The adjacency matrix of the tree-like subgraph that best explains the topology.
 
     Notes:
-    Together with a random walk-based distance measure (e.g. :func:`ehrapy.tl.dpt`)
+    Together with a random walk-based distance measure (e.g. :func:`ehrapy.tools.dpt`)
     this generates a partial coordinatization of data useful for exploring and explaining its variation.
     """
     return sc.tl.paga(
@@ -645,7 +645,7 @@ def ingest(
 
     Integrates embeddings and annotations of an `adata` with a reference dataset
     `adata_ref` through projecting on a PCA (or alternate model) that has been fitted on the reference data.
-    The function uses a knn classifier for mapping labels and the UMAP package [McInnes18]_ for mapping the embeddings.
+    The function uses a knn classifier for mapping labels and the UMAP package :cite:p:`McInnes2018` for mapping the embeddings.
 
     .. note::
         We refer to this *asymmetric* dataset integration as *ingesting*
@@ -654,7 +654,7 @@ def ingest(
         unbiased way, as CCA (e.g. in Seurat) or a conditional VAE (e.g. in
         scVI) would do.
 
-    You need to run :func:`~ehrapy.pp.neighbors` on `adata_ref` before passing it.
+    You need to run :func:`~ehrapy.preprocessing.neighbors` on `adata_ref` before passing it.
 
     Args:
         adata: :class:`~anndata.AnnData` object containing all observations.

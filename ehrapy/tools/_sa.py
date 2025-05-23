@@ -17,6 +17,7 @@ from lifelines import (
 )
 from lifelines.statistics import StatisticalResult, logrank_test
 from scipy import stats
+from statsmodels.genmod.generalized_linear_model import GLMResultsWrapper  # noqa
 
 from ehrapy.anndata import anndata_to_df
 from ehrapy.anndata._constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
@@ -25,7 +26,6 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from anndata import AnnData
-    from statsmodels.genmod.generalized_linear_model import GLMResultsWrapper
 
 
 def ols(
@@ -153,11 +153,11 @@ def kmf(
     weights: Iterable | None = None,
     censoring: Literal["right", "left"] = None,
 ) -> KaplanMeierFitter:
-    """DEPRECATION WARNING: This function is deprecated and will be removed in the next release. Use `kaplan_meier` instead.
+    """DEPRECATION WARNING: This function is deprecated and will be removed in the next release -use `kaplan_meier` instead.
 
     Fit the Kaplan-Meier estimate for the survival function.
 
-    The Kaplan–Meier estimator, also known as the product limit estimator, is a non-parametric statistic used to estimate the survival function from lifetime data.
+    The Kaplan-Meier estimator, also known as the product limit estimator, is a non-parametric statistic used to estimate the survival function from lifetime data.
     In medical research, it is often used to measure the fraction of patients living for a certain amount of time after treatment.
 
     See https://en.wikipedia.org/wiki/Kaplan%E2%80%93Meier_estimator
@@ -238,14 +238,14 @@ def kaplan_meier(
 
     The Kaplan–Meier estimator, also known as the product limit estimator, is a non-parametric statistic used to estimate the survival function from lifetime data.
     In medical research, it is often used to measure the fraction of patients living for a certain amount of time after treatment.
-    The results will be stored in the `.uns` slot of the :class:`AnnData` object under the key 'kaplan_meier' unless specified otherwise in the `uns_key` parameter.
+    The results will be stored in the `.uns` slot of the :class:`~anndata.AnnData` object under the key 'kaplan_meier' unless specified otherwise in the `uns_key` parameter.
 
     See https://en.wikipedia.org/wiki/Kaplan%E2%80%93Meier_estimator
         https://lifelines.readthedocs.io/en/latest/fitters/univariate/KaplanMeierFitter.html#module-lifelines.fitters.kaplan_meier_fitter
 
     Args:
         adata: AnnData object.
-        duration_col: The name of the column in the AnnData object that contains the subjects’ lifetimes.
+        duration_col: The name of the column in the AnnData object that contains the subjects' lifetimes.
         event_col: The name of the column in the AnnData object that specifies whether the event has been observed, or censored.
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
             If left `None`, all individuals are assumed to be uncensored.
@@ -418,7 +418,7 @@ def cox_ph(
 
     The Cox proportional hazards model (CoxPH) examines the relationship between the survival time of subjects and one or more predictor variables.
     It models the hazard rate as a product of a baseline hazard function and an exponential function of the predictors, assuming proportional hazards over time.
-    The results will be stored in the `.uns` slot of the :class:`AnnData` object under the key 'cox_ph' unless specified otherwise in the `uns_key` parameter.
+    The results will be stored in the `.uns` slot of the :class:`~anndata.AnnData` object under the key 'cox_ph' unless specified otherwise in the `uns_key` parameter.
 
     See https://lifelines.readthedocs.io/en/latest/fitters/regression/CoxPHFitter.html
 
@@ -517,7 +517,7 @@ def weibull_aft(
     where the underlying assumption is that the logarithm of survival time follows a Weibull distribution.
     It models the survival time as an exponential function of the predictors, assuming a specific shape parameter
     for the distribution and allowing for accelerated or decelerated failure times based on the covariates.
-    The results will be stored in the `.uns` slot of the :class:`AnnData` object under the key 'weibull_aft' unless specified otherwise in the `uns_key` parameter.
+    The results will be stored in the `.uns` slot of the :class:`~anndata.AnnData` object under the key 'weibull_aft' unless specified otherwise in the `uns_key` parameter.
 
     See https://lifelines.readthedocs.io/en/latest/fitters/regression/WeibullAFTFitter.html
 
@@ -620,7 +620,7 @@ def log_logistic_aft(
 
     Args:
         adata: AnnData object.
-        duration_col: Name of the column in the AnnData objects that contains the subjects’ lifetimes.
+        duration_col: Name of the column in the AnnData objects that contains the subjects' lifetimes.
         event_col: The name of the column in the AnnData object that specifies whether the event has been observed, or censored.
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
             If left `None`, all individuals are assumed to be uncensored.
@@ -752,14 +752,14 @@ def nelson_aalen(
     """Employ the Nelson-Aalen estimator to estimate the cumulative hazard function from censored survival data.
 
     The Nelson-Aalen estimator is a non-parametric method used in survival analysis to estimate the cumulative hazard function.
-    This technique is particularly useful when dealing with censored data, as it accounts for the presence of individuals whose event times are unknown due to censoring.
-    By estimating the cumulative hazard function, the Nelson-Aalen estimator allows researchers to assess the risk of an event occurring over time, providing valuable insights into the underlying dynamics of the survival process.
-    The results will be stored in the `.uns` slot of the :class:`AnnData` object under the key 'nelson_aalen' unless specified otherwise in the `uns_key` parameter.
+    It accounts for the presence of individuals whose event times are unknown due to censoring.
+    By estimating the cumulative hazard function, the Nelson-Aalen estimator assessing the risk of an event occurring over time.
+    The results will be stored in the `.uns` slot of the :class:`~anndata.AnnData` object under the key 'nelson_aalen' unless specified otherwise in the `uns_key` parameter.
     See https://lifelines.readthedocs.io/en/latest/fitters/univariate/NelsonAalenFitter.html
 
     Args:
         adata: AnnData object.
-        duration_col: The name of the column in the AnnData objects that contains the subjects’ lifetimes.
+        duration_col: The name of the column in the AnnData objects that contains the subjects' lifetimes.
         event_col: The name of the column in the AnnData object that specifies whether the event has been observed, or censored.
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
             If left `None`, all individuals are assumed to be uncensored.
@@ -826,7 +826,7 @@ def weibull(
     By fitting the Weibull model to censored survival data, researchers can estimate these parameters and gain insights
     into the hazard rate over time, facilitating comparisons between different groups or treatments.
     This method provides a comprehensive framework for examining survival data and offers valuable insights into the factors influencing event occurrence dynamics.
-    The results will be stored in the `.uns` slot of the :class:`AnnData` object under the key 'weibull' unless specified otherwise in the `uns_key` parameter.
+    The results will be stored in the `.uns` slot of the :class:`~anndata.AnnData` object under the key 'weibull' unless specified otherwise in the `uns_key` parameter.
     See https://lifelines.readthedocs.io/en/latest/fitters/univariate/WeibullFitter.html
 
     Args:

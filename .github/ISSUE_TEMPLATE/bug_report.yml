@@ -2,8 +2,8 @@ name: Bug report
 description: ehrapy doesn’t do what it should? Please help us fix it!
 #title: ...
 labels:
-  - Bug 🐛
-  - Triage 🩺
+  - bug
+  - triage
 #assignees: []
 body:
   - type: checkboxes
@@ -64,6 +64,6 @@ body:
         Alternatively, run this in a console:
 
         ```python
-        >>> import session_info2; print(session_info2.session_info(dependencies=True)._repr_mimebundle_()["text/markdown"])
+        >>> import ehrapy, session_info2; print(session_info2.session_info(dependencies=True)._repr_mimebundle_()["text/markdown"])
         ```
       render: python
