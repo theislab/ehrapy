@@ -19,8 +19,8 @@ except ImportError:
 
 from ehrapy.anndata._constants import NUMERIC_TAG
 from ehrapy.anndata.anndata_ext import (
+    _assert_numeric_vars,
     _get_var_indices_for_type,
-    assert_numeric_vars,
 )
 
 if TYPE_CHECKING:
@@ -47,7 +47,7 @@ def _scale_func_group(
     if vars is None:
         vars = _get_var_indices_for_type(adata, NUMERIC_TAG)
     else:
-        assert_numeric_vars(adata, vars)
+        _assert_numeric_vars(adata, vars)
 
     adata = _prep_adata_norm(adata, copy)
 
@@ -436,7 +436,7 @@ def log_norm(
     if vars is None:
         vars = _get_var_indices_for_type(adata, NUMERIC_TAG)
     else:
-        assert_numeric_vars(adata, vars)
+        _assert_numeric_vars(adata, vars)
 
     adata = _prep_adata_norm(adata, copy)
 

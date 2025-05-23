@@ -10,9 +10,9 @@ from pandas.testing import assert_frame_equal
 import ehrapy as ep
 from ehrapy.anndata._constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrapy.anndata.anndata_ext import (
+    _assert_numeric_vars,
     _get_var_indices_for_type,
     anndata_to_df,
-    assert_numeric_vars,
     df_to_anndata,
     move_to_obs,
     move_to_x,
@@ -404,6 +404,6 @@ def test__get_var_indices_for_type():
 
 def test_assert_numeric_vars(adata_strings_encoded):
     adata_strings, adata_encoded = adata_strings_encoded
-    assert_numeric_vars(adata_encoded, ["Numeric1", "Numeric2"])
+    _assert_numeric_vars(adata_encoded, ["Numeric1", "Numeric2"])
     with pytest.raises(ValueError, match=r"Some selected vars are not numeric"):
-        assert_numeric_vars(adata_encoded, ["Numeric2", "String1"])
+        _assert_numeric_vars(adata_encoded, ["Numeric2", "String1"])

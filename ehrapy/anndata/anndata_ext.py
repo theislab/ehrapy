@@ -291,7 +291,7 @@ def _get_var_indices(adata: AnnData, col_names: str | Iterable[str]) -> list[int
     return indices
 
 
-def assert_numeric_vars(adata: AnnData, vars: Sequence[str]):
+def _assert_numeric_vars(adata: AnnData, vars: Sequence[str]):
     """Ensures that variables are numerics and raises an error if not."""
     num_vars = _get_var_indices_for_type(adata, NUMERIC_TAG)
 
