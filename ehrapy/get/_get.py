@@ -70,7 +70,7 @@ def rank_features_groups_df(
     log2fc_max: float | None = None,
     features: str | None = None,
 ):
-    """:func:`ehrapy.tl.rank_features_groups` results in the form of a :class:`~pandas.DataFrame`.
+    """:func:`ehrapy.tools.rank_features_groups` results in the form of a :class:`~pandas.DataFrame`.
 
     Args:
         adata: AnnData object to get values from.

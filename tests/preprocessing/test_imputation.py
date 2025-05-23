@@ -62,8 +62,8 @@ def _base_check_imputation(
     if isinstance(adata_after_imputation.X, da.Array):
         adata_after_imputation.X = adata_after_imputation.X.compute()
 
-    layer_before = to_dense(adata_before_imputation.layers[before_imputation_layer])
-    layer_after = to_dense(adata_after_imputation.layers[after_imputation_layer])
+    layer_before = to_dense(adata_before_imputation.layers.get(before_imputation_layer, adata_before_imputation.X))
+    layer_after = to_dense(adata_after_imputation.layers.get(after_imputation_layer, adata_after_imputation.X))
 
     if layer_before.shape != layer_after.shape:
         raise AssertionError("The shapes of the two layers do not match")
