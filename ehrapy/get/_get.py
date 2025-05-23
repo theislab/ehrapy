@@ -74,7 +74,7 @@ def rank_features_groups_df(
 
     Args:
         adata: AnnData object to get values from.
-        group: Which group (as in :func:`ehrapy.tools.rank_feature_groups`'s `groupby` argument)
+        group: Which group (as in :func:`ehrapy.tools.rank_features_groups`'s `groupby` argument)
                to return results from. Can be a list. All groups are returned if groups is `None`.
         key: Key differential groups were stored under.
         pval_cutoff: Return only adjusted p-values below the  cutoff.
