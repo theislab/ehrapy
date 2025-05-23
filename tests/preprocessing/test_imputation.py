@@ -8,6 +8,7 @@ import dask.array as da
 import numpy as np
 import pytest
 from anndata import AnnData
+from fast_array_utils.conv import to_dense
 from scipy import sparse
 from sklearn.exceptions import ConvergenceWarning
 
@@ -55,20 +56,14 @@ def _base_check_imputation(
     def _is_val_missing(data: np.ndarray) -> np.ndarray[Any, np.dtype[np.bool_]]:
         return np.isin(data, [None, ""]) | (data != data)
 
-    def _to_dense_matrix(adata: AnnData, layer: str | None = None) -> np.ndarray:  # pragma: no cover
-        if layer is None:
-            return adata.X.toarray() if sparse.issparse(adata.X) else adata.X
-        else:
-            return adata.layers[layer].toarray() if sparse.issparse(adata.layers[layer]) else adata.layers[layer]
-
     # Convert dask arrays to numpy arrays
     if isinstance(adata_before_imputation.X, da.Array):
         adata_before_imputation.X = adata_before_imputation.X.compute()
     if isinstance(adata_after_imputation.X, da.Array):
         adata_after_imputation.X = adata_after_imputation.X.compute()
 
-    layer_before = _to_dense_matrix(adata_before_imputation, before_imputation_layer)
-    layer_after = _to_dense_matrix(adata_after_imputation, after_imputation_layer)
+    layer_before = to_dense(adata_before_imputation.layers[before_imputation_layer])
+    layer_after = to_dense(adata_after_imputation.layers[after_imputation_layer])
 
     if layer_before.shape != layer_after.shape:
         raise AssertionError("The shapes of the two layers do not match")

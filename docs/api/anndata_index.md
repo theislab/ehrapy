@@ -18,3 +18,13 @@
     anndata.move_to_obs
     anndata.move_to_x
 ```
+
+```{eval-rst}
+.. autosummary::
+    :toctree: get
+    :nosignatures:
+
+    get.obs_df
+    get.var_df
+    get.rank_features_groups_df
+```
