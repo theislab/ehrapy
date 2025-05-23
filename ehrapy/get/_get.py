@@ -50,7 +50,7 @@ def var_df(  # pragma: no cover
         layer: Layer of `adata`.
 
     Returns:
-        A dataframe with `adata.var_names` as index, and values specified by `keys` and `varm_keys`.
+        A DataFrame with `adata.var_names` as index, and values specified by `keys` and `varm_keys`.
 
     Examples:
         >>> import ehrapy as ep
