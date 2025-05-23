@@ -1,27 +1,19 @@
 from __future__ import annotations
 
-import random
 from collections import OrderedDict
-from string import ascii_letters
-from typing import TYPE_CHECKING, Any, NamedTuple
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import pandas as pd
 from anndata import AnnData, concat
 from lamin_utils import logger
-from scipy import sparse
 from scipy.sparse import issparse
 
 from ehrapy.anndata import check_feature_types
 from ehrapy.anndata._constants import FEATURE_TYPE_KEY, NUMERIC_TAG
 
 if TYPE_CHECKING:
-    from collections.abc import Collection, Iterable, Sequence
-
-
-class BaseDataframes(NamedTuple):  # noqa D101
-    obs: pd.DataFrame
-    df: pd.DataFrame
+    from collections.abc import Iterable, Sequence
 
 
 def df_to_anndata(
@@ -273,38 +265,47 @@ def move_to_x(adata: AnnData, to_x: list[str] | str, copy_x: bool = False) -> An
     return new_adata
 
 
-def get_numerical_column_indices(  # noqa: D103
-    adata: AnnData, layer: str | None = None, column_indices: Iterable[int] | None = None
+# def get_numerical_column_indices(
+#     adata: AnnData, layer: str | None = None, column_indices: Iterable[int] | None = None
+# ) -> list[int]:
+#     mtx = adata.X if layer is None else adata[layer]
+#     indices = (
+#         list(range(mtx.shape[1])) if column_indices is None else [i for i in column_indices if i < mtx.shape[1] - 1]
+#     )
+#     non_numerical_indices = []
+#     for i in indices:
+#         # The astype("float64") call will throw only if the feature’s data type cannot be cast to float64, meaning in
+#         # practice it contains non-numeric values. Consequently, it won’t throw if the values are numeric but stored
+#         # as an "object" dtype, as astype("float64") can successfully convert them to floats.
+#         try:
+#             mtx[::, i].astype("float64")
+#         except ValueError:
+#             non_numerical_indices.append(i)
+
+#     return [idx for idx in indices if idx not in non_numerical_indices]
+
+
+# def get_fully_imputed_column_indices(
+#     adata: AnnData, layer: str | None = None, column_indices: Iterable[int] | None = None
+# ) -> list[int]:
+#     mtx = adata.X if layer is None else adata.layers[layer]
+
+#     indices = range(mtx.shape[1]) if column_indices is None else [i for i in column_indices if i < mtx.shape[1]]
+#     mask = ~np.isnan(mtx[:, indices]).any(axis=0)
+
+#     return np.array(indices)[mask].tolist()
+
+
+def _get_var_indices_numeric_or_encoded(
+    adata: AnnData,
+    # layer: str | None = None,  # column_indices: Iterable[int] | None = None
 ) -> list[int]:
-    mtx = adata.X if layer is None else adata[layer]
-    indices = (
-        list(range(mtx.shape[1])) if column_indices is None else [i for i in column_indices if i < mtx.shape[1] - 1]
-    )
-    non_numerical_indices = []
-    for i in indices:
-        # The astype("float64") call will throw only if the feature’s data type cannot be cast to float64, meaning in
-        # practice it contains non-numeric values. Consequently, it won’t throw if the values are numeric but stored
-        # as an "object" dtype, as astype("float64") can successfully convert them to floats.
-        try:
-            mtx[::, i].astype("float64")
-        except ValueError:
-            non_numerical_indices.append(i)
-
-    return [idx for idx in indices if idx not in non_numerical_indices]
+    return np.arange(0, adata.n_vars)[
+        adata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG | adata.var["feature_type"].isin(["one-hot", "multi-hot"])
+    ]
 
 
-def get_fully_imputed_column_indices(  # noqa: D103
-    adata: AnnData, layer: str | None = None, column_indices: Iterable[int] | None = None
-) -> list[int]:
-    mtx = adata.X if layer is None else adata.layers[layer]
-
-    indices = range(mtx.shape[1]) if column_indices is None else [i for i in column_indices if i < mtx.shape[1]]
-    mask = ~np.isnan(mtx[:, indices]).any(axis=0)
-
-    return np.array(indices)[mask].tolist()
-
-
-def get_column_indices(adata: AnnData, col_names: str | Iterable[str]) -> list[int]:
+def _get_var_indices(adata: AnnData, col_names: str | Iterable[str]) -> list[int]:
     """Fetches the column indices in X for a given list of column names.
 
     Args:

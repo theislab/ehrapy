@@ -8,17 +8,17 @@ from typing import TYPE_CHECKING, Literal
 import numpy as np
 import pandas as pd
 from lamin_utils import logger
-from sklearn.experimental import enable_iterative_imputer  # noinspection PyUnresolvedReference
 from sklearn.impute import SimpleImputer
 
 from ehrapy import settings
 from ehrapy._compat import _check_module_importable, _raise_array_type_not_implemented
 from ehrapy._progress import spinner
 from ehrapy.anndata import check_feature_types
+from ehrapy.anndata._constants import NUMERIC_TAG
 from ehrapy.anndata.anndata_ext import (
-    get_column_indices,
-    get_fully_imputed_column_indices,
-    get_numerical_column_indices,
+    _get_var_indices,
+    _get_var_indices_for_type,
+    _get_var_indices_numeric_or_encoded,
 )
 
 if TYPE_CHECKING:
@@ -310,15 +310,19 @@ def _knn_impute(
 
         imputer = FaissImputer(n_neighbors=n_neighbors, **kwargs)
 
-    column_indices = get_column_indices(adata, adata.var_names if var_names is None else var_names)
-    numerical_indices = get_numerical_column_indices(adata)
-    if any(idx not in numerical_indices for idx in column_indices):
+    column_indices = _get_var_indices(adata, adata.var_names if var_names is None else var_names)
+    # numerical_indices = _get_var_indices_for_type(adata, NUMERIC_TAG)
+    numeric_or_encoded_indices = _get_var_indices_numeric_or_encoded(
+        adata,
+    )
+    if any(idx not in numeric_or_encoded_indices for idx in column_indices):
         raise ValueError(
             "Can only impute numerical data. Try to restrict imputation to certain columns using "
             "var_names parameter or perform an encoding of your data."
         )
-    fully_imputed_indices = get_fully_imputed_column_indices(adata, column_indices=numerical_indices)
-    imputer_data_indices = column_indices + [i for i in fully_imputed_indices if i not in column_indices]
+
+    complete_columns = ~np.isnan(adata.X[:, column_indices]).any(axis=0)
+    imputer_data_indices = column_indices + [i for i in complete_columns if i not in column_indices]
     imputer_x = adata.X[::, imputer_data_indices].astype("float64")
     adata.X[::, imputer_data_indices] = imputer.fit_transform(imputer_x)
 
@@ -397,9 +401,9 @@ def miss_forest_impute(
         )
 
         if isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):  # type: ignore
-            num_indices = get_column_indices(adata, var_names)
+            num_indices = _get_var_indices_numeric_or_encoded(adata)
         else:
-            num_indices = get_column_indices(adata, adata.var_names)
+            num_indices = _get_var_indices_numeric_or_encoded(adata)
 
         if set(num_indices).issubset(_get_non_numerical_column_indices(adata.X)):
             raise ValueError(
@@ -477,8 +481,8 @@ def mice_forest_impute(
     _warn_imputation_threshold(adata, var_names, threshold=warning_threshold)
 
     if any(
-        idx not in get_numerical_column_indices(adata)
-        for idx in get_column_indices(adata, adata.var_names if var_names is None else var_names)
+        idx not in _get_var_indices_numeric_or_encoded(adata)
+        for idx in _get_var_indices(adata, adata.var_names if var_names is None else var_names)
     ):
         raise ValueError(
             "Can only impute numerical data. Try to restrict imputation to certain columns using "
@@ -517,7 +521,7 @@ def _miceforest_impute(
     data_df = data_df.apply(pd.to_numeric, errors="coerce")
 
     if isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):
-        column_indices = get_column_indices(adata, var_names)
+        column_indices = _get_var_indices(adata, var_names)
         selected_columns = data_df.iloc[:, column_indices]
         selected_columns = selected_columns.reset_index(drop=True)
 
