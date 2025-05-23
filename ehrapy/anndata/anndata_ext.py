@@ -265,43 +265,12 @@ def move_to_x(adata: AnnData, to_x: list[str] | str, copy_x: bool = False) -> An
     return new_adata
 
 
-# def get_numerical_column_indices(
-#     adata: AnnData, layer: str | None = None, column_indices: Iterable[int] | None = None
-# ) -> list[int]:
-#     mtx = adata.X if layer is None else adata[layer]
-#     indices = (
-#         list(range(mtx.shape[1])) if column_indices is None else [i for i in column_indices if i < mtx.shape[1] - 1]
-#     )
-#     non_numerical_indices = []
-#     for i in indices:
-#         # The astype("float64") call will throw only if the feature’s data type cannot be cast to float64, meaning in
-#         # practice it contains non-numeric values. Consequently, it won’t throw if the values are numeric but stored
-#         # as an "object" dtype, as astype("float64") can successfully convert them to floats.
-#         try:
-#             mtx[::, i].astype("float64")
-#         except ValueError:
-#             non_numerical_indices.append(i)
-
-#     return [idx for idx in indices if idx not in non_numerical_indices]
-
-
-# def get_fully_imputed_column_indices(
-#     adata: AnnData, layer: str | None = None, column_indices: Iterable[int] | None = None
-# ) -> list[int]:
-#     mtx = adata.X if layer is None else adata.layers[layer]
-
-#     indices = range(mtx.shape[1]) if column_indices is None else [i for i in column_indices if i < mtx.shape[1]]
-#     mask = ~np.isnan(mtx[:, indices]).any(axis=0)
-
-#     return np.array(indices)[mask].tolist()
-
-
 def _get_var_indices_numeric_or_encoded(
     adata: AnnData,
     # layer: str | None = None,  # column_indices: Iterable[int] | None = None
 ) -> list[int]:
     return np.arange(0, adata.n_vars)[
-        adata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG | adata.var["feature_type"].isin(["one-hot", "multi-hot"])
+        (adata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG) | (adata.var["feature_type"].isin(["one-hot", "multi-hot"]))
     ]
 
 
