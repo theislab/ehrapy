@@ -130,6 +130,27 @@ def infer_feature_types(
         raise ValueError(f"Output format {output} not recognized. Choose between 'tree', 'dataframe', or None.")
 
 
+# TODO: this function is a different flavor of inferring feature types. We should decide on a single implementation in the future.
+def _infer_numerical_column_indices(
+    adata: AnnData, layer: str | None = None, column_indices: Iterable[int] | None = None
+) -> list[int]:
+    mtx = adata.X if layer is None else adata[layer]
+    indices = (
+        list(range(mtx.shape[1])) if column_indices is None else [i for i in column_indices if i < mtx.shape[1] - 1]
+    )
+    non_numerical_indices = []
+    for i in indices:
+        # The astype("float64") call will throw only if the feature’s data type cannot be cast to float64, meaning in
+        # practice it contains non-numeric values. Consequently, it won’t throw if the values are numeric but stored
+        # as an "object" dtype, as astype("float64") can successfully convert them to floats.
+        try:
+            mtx[::, i].astype("float64")
+        except ValueError:
+            non_numerical_indices.append(i)
+
+    return [idx for idx in indices if idx not in non_numerical_indices]
+
+
 def check_feature_types(func):
     @wraps(func)
     def wrapper(adata, *args, **kwargs):

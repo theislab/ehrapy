@@ -1,28 +1,19 @@
 from __future__ import annotations
 
-import random
 from collections import OrderedDict
-from string import ascii_letters
-from typing import TYPE_CHECKING, Any, NamedTuple
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import pandas as pd
 from anndata import AnnData, concat
 from lamin_utils import logger
-from scanpy.get import obs_df, rank_genes_groups_df, var_df
-from scipy import sparse
 from scipy.sparse import issparse
 
 from ehrapy.anndata import check_feature_types
 from ehrapy.anndata._constants import FEATURE_TYPE_KEY, NUMERIC_TAG
 
 if TYPE_CHECKING:
-    from collections.abc import Collection, Iterable, Sequence
-
-
-class BaseDataframes(NamedTuple):  # noqa D101
-    obs: pd.DataFrame
-    df: pd.DataFrame
+    from collections.abc import Iterable, Sequence
 
 
 def df_to_anndata(
@@ -223,35 +214,6 @@ def _get_var_indices_for_type(adata: AnnData, tag: str) -> list[str]:
     return adata.var_names[adata.var[FEATURE_TYPE_KEY] == tag].tolist()
 
 
-def delete_from_obs(adata: AnnData, to_delete: list[str]) -> AnnData:
-    """Delete features from obs.
-
-    Args:
-        adata: The AnnData object
-        to_delete: The columns to delete from obs
-
-    Returns:
-        The original AnnData object with deleted columns from obs.
-
-    Examples:
-        >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.ad.move_to_obs(adata, ["age"], copy_obs=True)
-        >>> ep.ad.delete_from_obs(adata, ["age"])
-    """
-    if isinstance(to_delete, str):  # pragma: no cover
-        to_delete = [to_delete]
-
-    if not all(elem in adata.obs.columns.values for elem in to_delete):
-        raise ValueError(
-            f"Columns `{[col for col in to_delete if col not in adata.obs.columns.values]}` are not in obs."
-        )
-
-    adata.obs = adata.obs[adata.obs.columns[~adata.obs.columns.isin(to_delete)]]
-
-    return adata
-
-
 def move_to_x(adata: AnnData, to_x: list[str] | str, copy_x: bool = False) -> AnnData:
     """Move features from obs to X inplace.
 
@@ -285,10 +247,7 @@ def move_to_x(adata: AnnData, to_x: list[str] | str, copy_x: bool = False) -> An
             cols_not_in_x.append(col)
 
     if cols_present_in_x:
-        logger.warn(
-            f"Columns `{cols_present_in_x}` are already in X. Skipped moving `{cols_present_in_x}` to X. "
-            f"If you want to permanently delete these columns from obs, please use the function delete_from_obs()."
-        )
+        logger.warn(f"Columns `{cols_present_in_x}` are already in X. Skipped moving `{cols_present_in_x}` to X. ")
 
     if cols_not_in_x:
         new_adata = concat([adata, AnnData(adata.obs[cols_not_in_x])], axis=1)
@@ -306,38 +265,16 @@ def move_to_x(adata: AnnData, to_x: list[str] | str, copy_x: bool = False) -> An
     return new_adata
 
 
-def get_numerical_column_indices(  # noqa: D103
-    adata: AnnData, layer: str | None = None, column_indices: Iterable[int] | None = None
+def _get_var_indices_numeric_or_encoded(
+    adata: AnnData,
+    # layer: str | None = None,  # column_indices: Iterable[int] | None = None
 ) -> list[int]:
-    mtx = adata.X if layer is None else adata[layer]
-    indices = (
-        list(range(mtx.shape[1])) if column_indices is None else [i for i in column_indices if i < mtx.shape[1] - 1]
-    )
-    non_numerical_indices = []
-    for i in indices:
-        # The astype("float64") call will throw only if the feature’s data type cannot be cast to float64, meaning in
-        # practice it contains non-numeric values. Consequently, it won’t throw if the values are numeric but stored
-        # as an "object" dtype, as astype("float64") can successfully convert them to floats.
-        try:
-            mtx[::, i].astype("float64")
-        except ValueError:
-            non_numerical_indices.append(i)
-
-    return [idx for idx in indices if idx not in non_numerical_indices]
+    return np.arange(0, adata.n_vars)[
+        (adata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG) | (adata.var["feature_type"].isin(["one-hot", "multi-hot"]))
+    ]
 
 
-def get_fully_imputed_column_indices(  # noqa: D103
-    adata: AnnData, layer: str | None = None, column_indices: Iterable[int] | None = None
-) -> list[int]:
-    mtx = adata.X if layer is None else adata.layers[layer]
-
-    indices = range(mtx.shape[1]) if column_indices is None else [i for i in column_indices if i < mtx.shape[1]]
-    mask = ~np.isnan(mtx[:, indices]).any(axis=0)
-
-    return np.array(indices)[mask].tolist()
-
-
-def get_column_indices(adata: AnnData, col_names: str | Iterable[str]) -> list[int]:
+def _get_var_indices(adata: AnnData, col_names: str | Iterable[str]) -> list[int]:
     """Fetches the column indices in X for a given list of column names.
 
     Args:
@@ -354,98 +291,14 @@ def get_column_indices(adata: AnnData, col_names: str | Iterable[str]) -> list[i
     return indices
 
 
-def _assert_encoded(adata: AnnData):
-    try:
-        assert np.issubdtype(adata.X.dtype, np.number)
-    except AssertionError:
-        raise NotEncodedError("The AnnData object has not yet been encoded.") from AssertionError
-
-
-@check_feature_types
-def get_numeric_vars(adata: AnnData) -> list[str]:
-    """Fetches the column names for numeric variables in X.
-
-    Args:
-        adata: :class:`~anndata.AnnData` object
-
-    Returns:
-        List of column numeric column names
-    """
-    _assert_encoded(adata)
-
-    return _get_var_indices_for_type(adata, NUMERIC_TAG)
-
-
-def assert_numeric_vars(adata: AnnData, vars: Sequence[str]):
+def _assert_numeric_vars(adata: AnnData, vars: Sequence[str]):
     """Ensures that variables are numerics and raises an error if not."""
-    num_vars = get_numeric_vars(adata)
+    num_vars = _get_var_indices_for_type(adata, NUMERIC_TAG)
 
     try:
         assert set(vars) <= set(num_vars)
     except AssertionError:
         raise ValueError("Some selected vars are not numeric") from None
-
-
-def set_numeric_vars(
-    adata: AnnData, values: np.ndarray, vars: Sequence[str] | None = None, copy: bool = False
-) -> AnnData | None:
-    """Sets the numeric values in given column names in X.
-
-    Args:
-        adata: :class:`~anndata.AnnData` object
-        values: Matrix containing the replacement values
-        vars: List of names of the numeric variables to replace. If `None` they will be detected using :func:`~ehrapy.preprocessing.get_numeric_vars`.
-        copy: Whether to return a copy with the normalized data.
-
-    Returns:
-        :class:`~anndata.AnnData` object with updated X
-    """
-    _assert_encoded(adata)
-
-    if vars is None:
-        vars = get_numeric_vars(adata)
-    else:
-        assert_numeric_vars(adata, vars)
-
-    if not np.issubdtype(values.dtype, np.number):
-        raise TypeError(f"Values must be numeric (current dtype is {values.dtype})")
-
-    n_values = values.shape[1]
-
-    if n_values != len(vars):
-        raise ValueError(f"Number of values ({n_values}) does not match number of vars ({len(vars)})")
-
-    if copy:
-        adata = adata.copy()
-
-    vars_idx = get_column_indices(adata, vars)
-
-    # if e.g. adata.X is of type int64, and values of dtype float64, the floats will be casted to int
-    adata.X = adata.X.astype(values.dtype)
-
-    adata.X[:, vars_idx] = values
-
-    return adata
-
-
-def _detect_binary_columns(df: pd.DataFrame, numerical_columns: list[str]) -> list[str]:
-    """Detect all columns that contain only 0 and 1 (besides NaNs).
-
-    Args:
-        df: The dataframe to check.
-        numerical_columns: All numerical columns of the dataframe.
-
-    Returns:
-            List of column names that are binary (containing only 0 and 1 (+NaNs))
-    """
-    binary_columns = []
-    for column in numerical_columns:
-        # checking for float and int as well as NaNs (this is safe since checked columns are numericals only)
-        # only columns that contain at least one 0 and one 1 are counted as binary (or 0.0/1.0)
-        if df[column].isin([0.0, 1.0, np.nan, 0, 1]).all() and df[column].nunique() == 2:
-            binary_columns.append(column)
-
-    return binary_columns
 
 
 def _cast_obs_columns(obs: pd.DataFrame) -> pd.DataFrame:
@@ -467,284 +320,3 @@ def _cast_obs_columns(obs: pd.DataFrame) -> pd.DataFrame:
         axis=0,
     )
     return obs
-
-
-def generate_anndata(  # pragma: no cover
-    shape: tuple[int, int],
-    X_type=sparse.csr_matrix,
-    X_dtype=np.float32,
-    obsm_types: Collection = (sparse.csr_matrix, np.ndarray, pd.DataFrame),
-    varm_types: Collection = (sparse.csr_matrix, np.ndarray, pd.DataFrame),
-    layers_types: Collection = (sparse.csr_matrix, np.ndarray, pd.DataFrame),
-    include_nlp: bool = False,
-) -> AnnData:
-    """Generates a predefined AnnData with random values.
-
-    Args:
-        shape: Shape of the X matrix.
-        X_type: Type of the X matrix.
-        X_dtype: Data type of the X matrix.
-        obsm_types: Types of the obsm matrices.
-        varm_types: Types of the varm matrices.
-        layers_types: Types of additional layers.
-        include_nlp: Whether to include diseases for NLP in all of X, obs and var.
-                     Sets the X_dtype to object by default and overwrites the passed X_dtype.
-
-    Returns:
-        A specified AnnData object.
-
-    Examples:
-        >>> import ehrapy as ep
-        >>> adata = ep.ad.generate_anndata((2, 2), include_nlp=True)
-    """
-    example_diseases: list[str] = ["diabetes melitus", "breast cancer", "dementia", "pneumonia"]
-
-    M, N = shape
-    obs_names = pd.Index(f"patient{i}" for i in range(shape[0]))
-    var_names = pd.Index(f"feature{i}" for i in range(shape[1]))
-
-    def _generate_typed_df(n_values, index=None, nlp: bool = False) -> pd.DataFrame:
-        """Generates a typed DataFrame with categoricals and numericals.
-
-        Args:
-            n_values: Number of values to generate per type.
-            index: Name of the index column.
-            nlp: Whether to include disease names.
-
-        Returns:
-            Pandas DataFrame with the specified number of values.
-        """
-        letters = np.fromiter(iter(ascii_letters), "U1")
-        if n_values > len(letters):
-            letters = letters[: n_values // 2]  # Make sure categories are repeated
-        df = pd.DataFrame(
-            {
-                "cat": pd.Categorical(np.random.default_rng().choice(letters, n_values)),
-                "cat_ordered": pd.Categorical(np.random.default_rng().choice(letters, n_values), ordered=True),
-                "int64": np.random.default_rng().integers(-50, 50, n_values),
-                "float64": np.random.default_rng().random(n_values),
-                "uint8": np.random.default_rng().integers(255, size=n_values, dtype="uint8"),
-            },
-            index=index,
-        )
-
-        if nlp:
-            df["nlp"] = random.sample(example_diseases, k=n_values)
-
-        return df
-
-    obs = _generate_typed_df(M, obs_names, nlp=include_nlp)
-    var = _generate_typed_df(N, var_names, nlp=include_nlp)
-
-    obs.rename(columns={"cat": "obs_cat"}, inplace=True)
-    var.rename(columns={"cat": "var_cat"}, inplace=True)
-
-    if X_type is None:
-        X = None
-    else:
-        if include_nlp:
-            X_np_array = np.default_rng().random.binomial(100, 0.005, (M, N - 1)).astype(object)
-            X = np.append(X_np_array, [[el] for el in random.sample(example_diseases, k=M)], axis=1)
-        else:
-            X_np_array = np.default_rng().random.binomial(100, 0.005, (M, N))
-            X = X_type(X_np_array).astype(X_dtype)
-
-    obsm = {
-        "array": np.default_rng().random.random((M, 50)),
-        "sparse": sparse.random(M, 100, format="csr"),
-        "df": _generate_typed_df(M, obs_names),
-    }
-    obsm = {k: v for k, v in obsm.items() if type(v) in obsm_types}
-    varm = {
-        "array": np.default_rng().random.random((N, 50)),
-        "sparse": sparse.random(N, 100, format="csr"),
-        "df": _generate_typed_df(N, var_names),
-    }
-    varm = {k: v for k, v in varm.items() if type(v) in varm_types}
-    layers = {"array": np.default_rng().random.random((M, N)), "sparse": sparse.random(M, N, format="csr")}
-    layers = {k: v for k, v in layers.items() if type(v) in layers_types}
-    obsp = {"array": np.default_rng().random.random((M, M)), "sparse": sparse.random(M, M, format="csr")}
-    varp = {"array": np.default_rng().random.random((N, N)), "sparse": sparse.random(N, N, format="csr")}
-
-    def _generate_vstr_recarray(m, n, dtype=None):
-        size = m * n
-        lengths = np.default_rng().random.default_rng().integers(3, 5, size)
-        letters = np.array(list(ascii_letters))
-        gen_word = lambda w: "".join(np.default_rng().random.choice(letters, w))
-        arr = np.array([gen_word(length) for length in lengths]).reshape(m, n)
-
-        return pd.DataFrame(arr, columns=[gen_word(5) for _ in range(n)]).to_records(index=False, column_dtypes=dtype)
-
-    uns = {
-        "O_recarray": _generate_vstr_recarray(N, 5),
-        "nested": {
-            "scalar_str": "str",
-            "scalar_int": 42,
-            "scalar_float": 3.0,
-            "nested_further": {"array": np.arange(5)},
-        },
-    }
-
-    if include_nlp:
-        X_dtype = np.dtype(object)
-
-    adata = AnnData(
-        X=X,
-        obs=obs,
-        var=var,
-        obsm=obsm,
-        varm=varm,
-        layers=layers,
-        obsp=obsp,
-        varp=varp,
-        uns=uns,
-    )
-
-    return adata
-
-
-def get_obs_df(  # pragma: no cover
-    adata: AnnData,
-    keys: Iterable[str] = (),
-    obsm_keys: Iterable[tuple[str, int]] = (),
-    *,
-    layer: str = None,
-    features: str = None,
-):
-    """Return values for observations in adata.
-
-    Args:
-        adata: AnnData object to get values from.
-        keys: Keys from either `.var_names`, `.var[gene_symbols]`, or `.obs.columns`.
-        obsm_keys: Tuple of `(key from obsm, column index of obsm[key])`.
-        layer: Layer of `adata`.
-        features: Column of `adata.var` to search for `keys` in.
-
-    Returns:
-        A dataframe with `adata.obs_names` as index, and values specified by `keys` and `obsm_keys`.
-
-    Examples:
-        >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ages = ep.ad.get_obs_df(adata, keys=["age"])
-    """
-    return obs_df(adata=adata, keys=keys, obsm_keys=obsm_keys, layer=layer, gene_symbols=features)
-
-
-def get_var_df(  # pragma: no cover
-    adata: AnnData,
-    keys: Iterable[str] = (),
-    varm_keys: Iterable[tuple[str, int]] = (),
-    *,
-    layer: str = None,
-):
-    """Return values for observations in adata.
-
-    Args:
-        adata: AnnData object to get values from.
-        keys: Keys from either `.obs_names`, or `.var.columns`.
-        varm_keys: Tuple of `(key from varm, column index of varm[key])`.
-        layer: Layer of `adata`.
-
-    Returns:
-        A dataframe with `adata.var_names` as index, and values specified by `keys` and `varm_keys`.
-
-    Examples:
-        >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> four_patients = ep.ad.get_var_df(adata, keys=["0", "1", "2", "3"])
-    """
-    return var_df(adata=adata, keys=keys, varm_keys=varm_keys, layer=layer)
-
-
-def get_rank_features_df(
-    adata: AnnData,
-    group: str | Iterable[str],
-    *,
-    key: str = "rank_features_groups",
-    pval_cutoff: float | None = None,
-    log2fc_min: float | None = None,
-    log2fc_max: float | None = None,
-    features: str | None = None,
-):
-    """:func:`~ehrapy.tools.rank_features_groups` results in the form of a :class:`~pandas.DataFrame`.
-
-    Args:
-        adata: AnnData object to get values from.
-        group: Which group (as in :func:`ehrapy.tools.rank_features_groups`'s `groupby` argument)
-               to return results from. Can be a list. All groups are returned if groups is `None`.
-        key: Key differential groups were stored under.
-        pval_cutoff: Return only adjusted p-values below the  cutoff.
-        log2fc_min: Minimum logfc to return.
-        log2fc_max: Maximum logfc to return.
-        features: Column name in `.var` DataFrame that stores gene symbols.
-                  Specifying this will add that column to the returned DataFrame.
-
-    Returns:
-        A Pandas DataFrame of all rank genes groups results.
-
-    Examples:
-        >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.tl.rank_features_groups(adata, "service_unit")
-        >>> df = ep.ad.get_rank_features_df(adata, group="FICU")
-    """
-    return rank_genes_groups_df(
-        adata=adata,
-        group=group,
-        key=key,
-        pval_cutoff=pval_cutoff,
-        log2fc_min=log2fc_min,
-        log2fc_max=log2fc_max,
-        gene_symbols=features,
-    )
-
-
-class NotEncodedError(AssertionError):  # noqa: D101
-    pass
-
-
-def _are_ndarrays_equal(arr1: np.ndarray, arr2: np.ndarray) -> np.bool_:
-    """Check if two arrays are equal member-wise.
-
-    Note: Two NaN are considered equal.
-
-    Args:
-        arr1: First array to compare
-        arr2: Second array to compare
-
-    Returns:
-        True if the two arrays are equal member-wise
-    """
-    return np.all(np.equal(arr1, arr2, dtype=object) | ((arr1 != arr1) & (arr2 != arr2)))
-
-
-def _is_val_missing(data: np.ndarray) -> np.ndarray[Any, np.dtype[np.bool_]]:
-    """Check if values in a AnnData matrix are missing.
-
-    Args:
-        data: The AnnData matrix to check
-
-    Returns:
-        An array of bool representing the missingness of the original data, with the same shape
-    """
-    return np.isin(data, [None, ""]) | (data != data)
-
-
-def _to_dense_matrix(adata: AnnData, layer: str | None = None) -> np.ndarray:  # pragma: no cover
-    """Extract a layer from an AnnData object and convert it to a dense matrix if required.
-
-    Args:
-        adata: The AnnData where to extract the layer from.
-        layer: Name of the layer to extract. If omitted, X is considered.
-
-    Returns:
-        The layer as a dense matrix. If a conversion was required, this function returns a copy of the original layer,
-        othersize this function returns a reference.
-    """
-    from scipy.sparse import issparse
-
-    if layer is None:
-        return adata.X.toarray() if issparse(adata.X) else adata.X
-    else:
-        return adata.layers[layer].toarray() if issparse(adata.layers[layer]) else adata.layers[layer]

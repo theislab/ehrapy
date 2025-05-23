@@ -10,18 +10,12 @@ from pandas.testing import assert_frame_equal
 import ehrapy as ep
 from ehrapy.anndata._constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrapy.anndata.anndata_ext import (
-    NotEncodedError,
-    _are_ndarrays_equal,
-    _assert_encoded,
-    _is_val_missing,
+    _assert_numeric_vars,
+    _get_var_indices_for_type,
     anndata_to_df,
-    assert_numeric_vars,
-    delete_from_obs,
     df_to_anndata,
-    get_numeric_vars,
     move_to_obs,
     move_to_x,
-    set_numeric_vars,
 )
 from tests.conftest import TEST_DATA_PATH
 
@@ -187,7 +181,6 @@ def test_move_to_x_move_to_obs(adata_move_obs_mix):
     adata = move_to_x(adata_move_obs_mix, ["name"])
     assert {"name"}.issubset(set(adata.var_names))
     assert adata.X.shape == adata_dim_old
-    delete_from_obs(adata, ["name"])
 
     # case 2: move some column from obs to X and this col was previously moved inplace from X to obs
     move_to_obs(adata, ["clinic_id"], copy_obs=False)
@@ -200,20 +193,9 @@ def test_move_to_x_move_to_obs(adata_move_obs_mix):
     move_to_obs(adata, ["los_days"], copy_obs=True)
     move_to_obs(adata, ["b12_values"], copy_obs=False)
     adata = move_to_x(adata, ["los_days", "b12_values"])
-    delete_from_obs(adata, ["los_days"])
-    assert not {"los_days"}.issubset(
-        set(adata.obs.columns)
-    )  # check if the copied column was removed from obs by delete_from_obs()
     assert not {"b12_values"}.issubset(set(adata.obs.columns))
     assert {"los_days", "b12_values"}.issubset(set(adata.var_names))
     assert adata.X.shape == adata_dim_old
-
-
-def test_delete_from_obs(adata_move_obs_mix):
-    adata = move_to_obs(adata_move_obs_mix, ["los_days"], copy_obs=True)
-    adata = delete_from_obs(adata, ["los_days"])
-    assert not {"los_days"}.issubset(set(adata.obs.columns))
-    assert {"los_days"}.issubset(set(adata.var_names))
 
 
 def test_df_to_anndata_simple(setup_df_to_anndata):
@@ -359,39 +341,6 @@ def test_anndata_to_df_layers(setup_anndata_to_df):
     assert_frame_equal(anndata_df, expected_df)
 
 
-def test_detect_binary_columns(setup_binary_df_to_anndata):
-    adata = df_to_anndata(setup_binary_df_to_anndata)
-    ep.ad.infer_feature_types(adata, output=None)
-
-    assert_frame_equal(
-        adata.var,
-        DataFrame(
-            {
-                FEATURE_TYPE_KEY: [
-                    CATEGORICAL_TAG,
-                    CATEGORICAL_TAG,
-                    CATEGORICAL_TAG,
-                    CATEGORICAL_TAG,
-                    CATEGORICAL_TAG,
-                    CATEGORICAL_TAG,
-                    CATEGORICAL_TAG,
-                    CATEGORICAL_TAG,
-                ]
-            },
-            index=[
-                "col1",
-                "col2",
-                "col3",
-                "col4",
-                "col5",
-                "col6_binary_int",
-                "col7_binary_float",
-                "col8_binary_missing_values",
-            ],
-        ),
-    )
-
-
 def test_detect_mixed_binary_columns():
     df = pd.DataFrame(
         {"Col1": list(range(4)), "Col2": ["str" + str(i) for i in range(4)], "Col3": [1.0, 0.0, np.nan, 1.0]}
@@ -441,85 +390,20 @@ def adata_encoded(adata_strings):
     return ep.pp.encode(adata_strings.copy(), autodetect=True, encodings="label")
 
 
-def test_assert_encoded(adata_strings_encoded):
+def test_get_var_indices_for_type(adata_strings_encoded):
     adata_strings, adata_encoded = adata_strings_encoded
-    _assert_encoded(adata_encoded)
-    with pytest.raises(NotEncodedError, match=r"not yet been encoded"):
-        _assert_encoded(adata_strings)
-
-
-def test_get_numeric_vars(adata_strings_encoded):
-    adata_strings, adata_encoded = adata_strings_encoded
-    vars = get_numeric_vars(adata_encoded)
+    vars = _get_var_indices_for_type(adata_encoded, NUMERIC_TAG)
     assert vars == ["Numeric1", "Numeric2"]
-    with pytest.raises(NotEncodedError, match=r"not yet been encoded"):
-        get_numeric_vars(adata_strings)
 
 
-def test_get_numeric_vars_numeric_only():
+def test__get_var_indices_for_type():
     adata = AnnData(X=np.array([[1, 2, 3], [4, 0, 6]], dtype=np.float32))
-    vars = get_numeric_vars(adata)
+    vars = _get_var_indices_for_type(adata, NUMERIC_TAG)
     assert vars == ["0", "1", "2"]
 
 
 def test_assert_numeric_vars(adata_strings_encoded):
     adata_strings, adata_encoded = adata_strings_encoded
-    assert_numeric_vars(adata_encoded, ["Numeric1", "Numeric2"])
+    _assert_numeric_vars(adata_encoded, ["Numeric1", "Numeric2"])
     with pytest.raises(ValueError, match=r"Some selected vars are not numeric"):
-        assert_numeric_vars(adata_encoded, ["Numeric2", "String1"])
-
-
-def test_set_numeric_vars(adata_strings_encoded):
-    """Test for the numeric vars setter."""
-    adata_strings, adata_encoded = adata_strings_encoded
-    values = np.array(
-        [[1.2, 2.2], [3.2, 4.2], [5.2, 6.2]],
-        dtype=np.dtype(np.float32),
-    )
-    adata_set = set_numeric_vars(adata_encoded, values, copy=True)
-    np.testing.assert_array_equal(adata_set.X[:, 2], values[:, 0]) and np.testing.assert_array_equal(
-        adata_set.X[:, 3], values[:, 1]
-    )
-
-    with pytest.raises(ValueError, match=r"Some selected vars are not numeric"):
-        set_numeric_vars(adata_encoded, values, vars=["ehrapycat_String1"])
-
-    string_values = np.array(
-        [
-            ["A"],
-            ["B"],
-            ["A"],
-        ]
-    )
-
-    with pytest.raises(TypeError, match=r"Values must be numeric"):
-        set_numeric_vars(adata_encoded, string_values)
-
-    extra_values = np.array(
-        [
-            [1.2, 1.3, 1.4],
-            [2.2, 2.3, 2.4],
-            [2.2, 2.3, 2.4],
-        ],
-        dtype=np.dtype(np.float32),
-    )
-
-    with pytest.raises(ValueError, match=r"does not match number of vars"):
-        set_numeric_vars(adata_encoded, extra_values)
-
-    with pytest.raises(NotEncodedError, match=r"not yet been encoded"):
-        set_numeric_vars(adata_strings, values)
-
-
-def test_are_ndarrays_equal(impute_num_adata):
-    impute_num_adata_copy = impute_num_adata.copy()
-    assert _are_ndarrays_equal(impute_num_adata.X, impute_num_adata_copy.X)
-    impute_num_adata_copy.X[0, 0] = 42.0
-    assert not _are_ndarrays_equal(impute_num_adata.X, impute_num_adata_copy.X)
-
-
-def test_is_val_missing(impute_num_adata):
-    assert np.array_equal(
-        _is_val_missing(impute_num_adata.X),
-        np.array([[False, False, True], [False, False, False], [True, False, False], [False, False, True]]),
-    )
+        _assert_numeric_vars(adata_encoded, ["Numeric2", "String1"])
