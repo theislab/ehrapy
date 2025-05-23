@@ -2,6 +2,16 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v0.12.1
+
+### 🚀 Features
+
+* Make dowhy optional & remove medcat [#903](https://github.com/theislab/ehrapy/pull/903) @Zethson
+* Add about page & improve citations [#902](https://github.com/theislab/ehrapy/pull/902) @Zethson
+* Overhaul doc structure [#895](https://github.com/theislab/ehrapy/pull/895) @Zethson
+* Move to biome & improve CI & reenable CR [#890](https://github.com/theislab/ehrapy/pull/890) @Zethson
+* Clean up Round - cut down anndata extension functionality [#880](https://github.com/theislab/ehrapy/pull/880) @eroell
+
 ## v0.12.0
 
 ### 🚀 Features
