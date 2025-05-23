@@ -24,7 +24,7 @@ def obs_df(  # pragma: no cover
         features: Column of `adata.var` to search for `keys` in.
 
     Returns:
-        A dataframe with `adata.obs_names` as index, and values specified by `keys` and `obsm_keys`.
+        A DataFrame with `adata.obs_names` as index, and values specified by `keys` and `obsm_keys`.
 
     Examples:
         >>> import ehrapy as ep
