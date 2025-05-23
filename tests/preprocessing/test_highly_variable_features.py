@@ -1,9 +1,18 @@
+import pytest
+import requests
+
 import ehrapy as ep
 from ehrapy.preprocessing._highly_variable_features import highly_variable_features
 
 
 def test_highly_variable_features():
-    adata = ep.dt.dermatology(encoded=True)
+    try:
+        adata = ep.dt.dermatology(encoded=True)
+    except requests.exceptions.HTTPError as e:
+        if "403" in str(e):
+            pytest.skip("Dataset download failed with 403 Forbidden")
+        raise
+
     ep.pp.knn_impute(adata)
     highly_variable_features(adata)
 
