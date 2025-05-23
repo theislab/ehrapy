@@ -17,12 +17,10 @@ except ImportError:
     daskml_pp = None
     DASK_AVAILABLE = False
 
-
+from ehrapy.anndata._constants import NUMERIC_TAG
 from ehrapy.anndata.anndata_ext import (
-    assert_numeric_vars,
-    get_column_indices,
-    get_numeric_vars,
-    set_numeric_vars,
+    _assert_numeric_vars,
+    _get_var_indices_for_type,
 )
 
 if TYPE_CHECKING:
@@ -47,14 +45,13 @@ def _scale_func_group(
     if isinstance(vars, str):
         vars = [vars]
     if vars is None:
-        vars = get_numeric_vars(adata)
+        vars = _get_var_indices_for_type(adata, NUMERIC_TAG)
     else:
-        assert_numeric_vars(adata, vars)
+        _assert_numeric_vars(adata, vars)
 
     adata = _prep_adata_norm(adata, copy)
 
-    var_idx = get_column_indices(adata, vars)
-    var_values = np.take(adata.X, var_idx, axis=1)
+    var_values = adata[:, vars].X.copy()
 
     if group_key is None:
         var_values = scale_func(var_values)
@@ -64,7 +61,8 @@ def _scale_func_group(
             group_idx = adata.obs[group_key] == group
             var_values[group_idx] = scale_func(var_values[group_idx])
 
-    set_numeric_vars(adata, var_values, vars)
+    adata.X = adata.X.astype(var_values.dtype)
+    adata[:, vars].X = var_values
 
     _record_norm(adata, vars, norm_name)
 
@@ -436,9 +434,9 @@ def log_norm(
     if isinstance(vars, str):
         vars = [vars]
     if vars is None:
-        vars = get_numeric_vars(adata)
+        vars = _get_var_indices_for_type(adata, NUMERIC_TAG)
     else:
-        assert_numeric_vars(adata, vars)
+        _assert_numeric_vars(adata, vars)
 
     adata = _prep_adata_norm(adata, copy)
 
@@ -452,8 +450,7 @@ def log_norm(
             "or offset negative values with ep.pp.offset_negative_values()."
         )
 
-    var_idx = get_column_indices(adata, vars)
-    var_values = np.take(adata.X, var_idx, axis=1)
+    var_values = adata[:, vars].X.copy()
 
     if offset == 1:
         np.log1p(var_values, out=var_values)
@@ -464,7 +461,8 @@ def log_norm(
     if base is not None:
         np.divide(var_values, np.log(base), out=var_values)
 
-    set_numeric_vars(adata, var_values, vars)
+    adata.X = adata.X.astype(var_values.dtype)
+    adata[:, vars].X = var_values
 
     _record_norm(adata, vars, "log")
 

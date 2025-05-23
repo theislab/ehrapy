@@ -2,15 +2,16 @@ import os
 import warnings
 from collections.abc import Iterable
 from pathlib import Path
+from typing import Any
 
 import dask.array as da
 import numpy as np
 import pytest
 from anndata import AnnData
+from fast_array_utils.conv import to_dense
 from scipy import sparse
 from sklearn.exceptions import ConvergenceWarning
 
-from ehrapy.anndata.anndata_ext import _are_ndarrays_equal, _is_val_missing, _to_dense_matrix
 from ehrapy.preprocessing._imputation import (
     _warn_imputation_threshold,
     explicit_impute,
@@ -48,14 +49,21 @@ def _base_check_imputation(
     Raises:
         AssertionError: If any of the checks fail.
     """
+
+    def _are_ndarrays_equal(arr1: np.ndarray, arr2: np.ndarray) -> np.bool_:
+        return np.all(np.equal(arr1, arr2, dtype=object) | ((arr1 != arr1) & (arr2 != arr2)))
+
+    def _is_val_missing(data: np.ndarray) -> np.ndarray[Any, np.dtype[np.bool_]]:
+        return np.isin(data, [None, ""]) | (data != data)
+
     # Convert dask arrays to numpy arrays
     if isinstance(adata_before_imputation.X, da.Array):
         adata_before_imputation.X = adata_before_imputation.X.compute()
     if isinstance(adata_after_imputation.X, da.Array):
         adata_after_imputation.X = adata_after_imputation.X.compute()
 
-    layer_before = _to_dense_matrix(adata_before_imputation, before_imputation_layer)
-    layer_after = _to_dense_matrix(adata_after_imputation, after_imputation_layer)
+    layer_before = to_dense(adata_before_imputation.layers.get(before_imputation_layer, adata_before_imputation.X))
+    layer_after = to_dense(adata_after_imputation.layers.get(after_imputation_layer, adata_after_imputation.X))
 
     if layer_before.shape != layer_after.shape:
         raise AssertionError("The shapes of the two layers do not match")
