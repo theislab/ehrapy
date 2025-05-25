@@ -100,7 +100,7 @@ def use_ehrdata(
                     warnings.warn(
                         f"Using AnnData with {func.__name__} is deprecated"
                         + (f" and will be removed after version {deprecated_after}" if deprecated_after else "")
-                        + ". Please use EHRData instead.",
+                        + ". Please use EHRData instead. Please review the 0.13.0 changelog for more information.",
                         DeprecationWarning,
                         stacklevel=2,
                     )
@@ -117,7 +117,7 @@ def use_ehrdata(
                     warnings.warn(
                         f"Using AnnData with {func.__name__} is deprecated"
                         + (f" and will be removed after version {deprecated_after}" if deprecated_after else "")
-                        + ". Please use EHRData instead.",
+                        + ". Please use EHRData instead. Please review the 0.13.0 changelog for more information.",
                         DeprecationWarning,
                         stacklevel=2,
                     )
@@ -142,7 +142,7 @@ def use_ehrdata(
                     warnings.warn(
                         f"Using AnnData with {func.__name__} is deprecated"
                         + (f" and will be removed after version {deprecated_after}" if deprecated_after else "")
-                        + ". Please use EHRData instead.",
+                        + ". Please use EHRData instead. Please review the 0.13.0 changelog for more information.",
                         DeprecationWarning,
                         stacklevel=2,
                     )
@@ -156,7 +156,7 @@ def use_ehrdata(
                     warnings.warn(
                         f"Using AnnData with {func.__name__} is deprecated"
                         + (f" and will be removed after version {deprecated_after}" if deprecated_after else "")
-                        + ". Please use EHRData instead.",
+                        + ". Please use EHRData instead. Please review the 0.13.0 changelog for more information.",
                         DeprecationWarning,
                         stacklevel=2,
                     )
@@ -168,7 +168,7 @@ def use_ehrdata(
                     warnings.warn(
                         f"Using AnnData with {func.__name__} is deprecated"
                         + (f" and will be removed after version {deprecated_after}" if deprecated_after else "")
-                        + ". Please use EHRData instead.",
+                        + ". Please use EHRData instead. Please review the 0.13.0 changelog for more information.",
                         DeprecationWarning,
                         stacklevel=2,
                     )
