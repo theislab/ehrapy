@@ -572,7 +572,7 @@ def rank_features_groups(
             categorical_logfoldchanges,
             categorical_pts,
         ) = _evaluate_categorical_features(
-            adata=adata,
+            adata,
             groupby=groupby,
             group_names=group_names,
             groups=groups,

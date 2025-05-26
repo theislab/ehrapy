@@ -5,18 +5,19 @@ from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import pandas as pd
-from anndata import AnnData
 from dateutil.parser import isoparse  # type: ignore
+from ehrdata import EHRData
 from lamin_utils import logger
 from rich import print
 from rich.tree import Tree
 
+from ehrapy._compat import use_ehrdata
 from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-    from ehrdata import EHRData
+    from anndata import AnnData
 
 
 def _detect_feature_type(col: pd.Series) -> tuple[Literal["date", "categorical", "numeric"], bool]:
@@ -158,7 +159,7 @@ def check_feature_types(func):
     def wrapper(edata, *args, **kwargs):
         # Account for class methods that pass self as first argument
         _self = None
-        if not isinstance(edata, AnnData) and len(args) > 0 and isinstance(args[0], AnnData):
+        if not isinstance(edata, EHRData) and len(args) > 0 and isinstance(args[0], EHRData):
             _self = edata
             edata = args[0]
             args = args[1:]
@@ -235,11 +236,12 @@ def feature_type_overview(edata: EHRData) -> None:
     print(tree)
 
 
-def replace_feature_types(edata, features: Iterable[str], corrected_type: str) -> None:
+@use_ehrdata()
+def replace_feature_types(edata: EHRData, features: Iterable[str], corrected_type: str) -> None:
     """Correct the feature types for a list of features inplace.
 
     Args:
-        edata: :class:`~anndata.AnnData` object storing the EHR data.
+        edata: :class:`~ehrdata.EHRData` object storing the EHR data.
         features: The features to correct.
         corrected_type: The corrected feature type. One of 'date', 'categorical', or 'numeric'.
 

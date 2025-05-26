@@ -189,13 +189,13 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False)
         adata.obs = adata.obs.join(cols_to_obs)
         adata.obs[var_num] = adata.obs[var_num].apply(pd.to_numeric, downcast="float")
 
-        adata.obs = _cast_obs_columns(adata.obs)
+        adata.obs = _cast_to_cat_or_bool(adata.obs)
     else:
         df = adata[:, cols_to_obs_indices].to_df()
         adata._inplace_subset_var(~cols_to_obs_indices)
         adata.obs = adata.obs.join(df)
         adata.obs[var_num] = adata.obs[var_num].apply(pd.to_numeric, downcast="float")
-        adata.obs = _cast_obs_columns(adata.obs)
+        adata.obs = _cast_to_cat_or_bool(adata.obs)
 
     return adata
 
@@ -301,14 +301,14 @@ def _assert_numeric_vars(adata: AnnData, vars: Sequence[str]):
         raise ValueError("Some selected vars are not numeric") from None
 
 
-def _cast_obs_columns(obs: pd.DataFrame) -> pd.DataFrame:
+def _cast_to_cat_or_bool(obs: pd.DataFrame) -> pd.DataFrame:
     """Cast non numerical obs columns to either category or bool.
 
     Args:
-        obs: Obs of an AnnData object.
+        obs: obs DataFrame
 
     Returns:
-        The type casted obs.
+        The type casted DataFrame.
     """
     # only cast non numerical columns
     object_columns = list(obs.select_dtypes(exclude=["number", "category", "bool"]).columns)
