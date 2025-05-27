@@ -34,6 +34,7 @@ if TYPE_CHECKING:
     from matplotlib.colors import Colormap, ListedColormap, Normalize
     from matplotlib.figure import Figure
     from scanpy.plotting._utils import _AxesSubplot
+    from seaborn import FacetGrid
 
 _Basis = Literal["pca", "tsne", "umap", "diffmap", "draw_graph_fr"]
 _VarNames = str | Sequence[str]
@@ -50,21 +51,21 @@ def scatter(  # noqa: D417
     x: str | None = None,
     y: str | None = None,
     *,
-    color: str = None,
+    color: str | None = None,
     use_raw: bool | None = None,
-    layers: str | Collection[str] = None,
+    layers: str | Collection[str] | None = None,
     sort_order: bool = True,
     alpha: float | None = None,
     basis: _Basis | None = None,
-    groups: str | Iterable[str] = None,
-    components: str | Collection[str] = None,
+    groups: str | Iterable[str] | None = None,
+    components: str | Collection[str] | None = None,
     projection: Literal["2d", "3d"] = "2d",
     legend_loc: str = "right margin",
     legend_fontsize: int | float | _FontSize | None = None,
     legend_fontweight: int | _FontWeight | None = None,
-    legend_fontoutline: float = None,
-    color_map: str | Colormap = None,
-    palette: Cycler | ListedColormap | ColorLike | Sequence[ColorLike] = None,
+    legend_fontoutline: float | None = None,
+    color_map: str | Colormap | None = None,
+    palette: Cycler | ListedColormap | ColorLike | Sequence[ColorLike] | None = None,
     frameon: bool | None = None,
     right_margin: float | None = None,
     left_margin: float | None = None,
@@ -417,7 +418,7 @@ def tracksplot(  # noqa: D417
     save: str | bool | None = None,
     figsize: tuple[float, float] | None = None,
     **kwds,
-) -> dict[str, list] | None:  # pragma: no cover
+) -> dict[str, Axes] | None:  # pragma: no cover
     """Plots a filled line plot.
 
     In this type of plot each var_name is plotted as a filled line plot where the
@@ -496,7 +497,7 @@ def violin(  # noqa: D417
     save: bool | str | None = None,
     ax: Axes | None = None,
     **kwds,
-) -> Axes | None:  # pragma: no cover
+) -> Axes | FacetGrid | None:  # pragma: no cover
     """Violin plot.
 
     Wraps :func:`seaborn.violinplot` for :class:`~anndata.AnnData`.
@@ -740,7 +741,7 @@ def matrixplot(  # noqa: D417
     var_group_labels: Sequence[str] | None = None,
     var_group_rotation: float | None = None,
     layer: str | None = None,
-    standard_scale: Literal["var", "group"] = None,
+    standard_scale: Literal["var", "group"] | None = None,
     values_df: pd.DataFrame | None = None,
     swap_axes: bool = False,
     show: bool | None = None,
@@ -1006,7 +1007,7 @@ def pca(  # noqa: D417
     return_fig: bool | None = None,
     save: bool | str | None = None,
     **kwargs,
-) -> Axes | list[Axes] | None:  # pragma: no cover
+) -> Figure | Axes | list[Axes] | None:  # pragma: no cover
     """Scatter plot in PCA coordinates.
 
     Use the parameter `annotate_var_explained` to annotate the explained variance.
@@ -1140,7 +1141,7 @@ def pca_overview(adata: AnnData, **params) -> Axes | list[Axes] | None:  # pragm
     scatter_bulk=doc_scatter_embedding,
     show_save_ax=doc_show_save_ax,
 )
-def tsne(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover # noqa: D417
+def tsne(adata, **kwargs) -> Figure | Axes | list[Axes] | None:  # pragma: no cover # noqa: D417
     """Scatter plot in tSNE basis.
 
     Args:
@@ -1173,6 +1174,7 @@ def tsne(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover # noq
         >>> ep.pl.tsne(adata, color=["leiden_0_5"], title="Leiden 0.5")
 
         .. image:: /_static/docstring_previews/tsne_3.png
+
     """
     return sc.pl.tsne(adata=adata, **kwargs)
 
@@ -1184,7 +1186,7 @@ def tsne(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover # noq
     scatter_bulk=doc_scatter_embedding,
     show_save_ax=doc_show_save_ax,
 )
-def umap(adata: AnnData, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover # noqa: D417
+def umap(adata: AnnData, **kwargs) -> Figure | Axes | list[Axes] | None:  # pragma: no cover # noqa: D417
     """Scatter plot in UMAP basis.
 
     Args:
@@ -1259,7 +1261,7 @@ def diffmap(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover # 
 )
 def draw_graph(  # noqa: D417
     adata: AnnData, *, layout: _IGraphLayout | None = None, **kwargs
-) -> Axes | list[Axes] | None:  # pragma: no cover
+) -> Figure | Axes | list[Axes] | None:  # pragma: no cover
     """Scatter plot in graph-drawing basis.
 
     Args:
@@ -1324,7 +1326,7 @@ def embedding(  # noqa: D417
     arrows: bool = False,
     arrows_kwds: Mapping[str, Any] | None = None,
     groups: str | None = None,
-    components: str | Sequence[str] = None,
+    components: str | Sequence[str] | None = None,
     layer: str | None = None,
     projection: Literal["2d", "3d"] = "2d",
     scale_factor: float | None = None,
@@ -1355,7 +1357,7 @@ def embedding(  # noqa: D417
     ax: Axes | None = None,
     return_fig: bool | None = None,
     **kwargs,
-) -> Figure | Axes | None:  # pragma: no cover
+) -> Figure | Axes | list[Axes] | None:  # pragma: no cover
     """Scatter plot for user specified embedding basis (e.g. umap, pca, etc).
 
     Args:
@@ -1561,7 +1563,7 @@ def dpt_groups_pseudotime(
 
 def dpt_timeseries(
     adata: AnnData,
-    color_map: str | Colormap = None,
+    color_map: str | Colormap | None = None,
     as_heatmap: bool = True,
     show: bool | None = None,
     save: bool | None = None,
@@ -1622,7 +1624,7 @@ def paga(
     random_state: int | None = 0,
     pos: np.ndarray | str | Path | None = None,
     normalize_to_color: bool = False,
-    cmap: str | Colormap = None,
+    cmap: str | Colormap | None = None,
     cax: Axes | None = None,
     cb_kwds: Mapping[str, Any] = MappingProxyType({}),
     frameon: bool | None = None,
@@ -1787,7 +1789,7 @@ def paga_path(
     show: bool | None = None,
     save: bool | str | None = None,
     ax: Axes | None = None,
-) -> Axes | None:  # pragma: no cover
+) -> tuple[Axes, pd.DataFrame] | Axes | pd.DataFrame | None:  # pragma: no cover
     """Feature changes along paths in the abstracted graph.
 
     Args:
@@ -1876,7 +1878,7 @@ def paga_compare(
     *,
     pos=None,
     **paga_graph_params,
-) -> Axes | None:  # pragma: no cover
+) -> Sequence[Axes] | list[Axes] | None:  # pragma: no cover
     """Scatter and PAGA graph side-by-side.
 
     Consists in a scatter plot and the abstracted graph. See :func:`~ehrapy.plot.paga` for all related parameters.
@@ -1944,7 +1946,7 @@ def paga_compare(
 @_doc_params(show_save_ax=doc_show_save_ax)
 def rank_features_groups(  # noqa: D417
     adata: AnnData,
-    groups: str | Sequence[str] = None,
+    groups: str | Sequence[str] | None = None,
     n_features: int = 20,
     feature_symbols: str | None = None,
     key: str | None = "rank_features_groups",
@@ -2075,7 +2077,7 @@ def rank_features_groups_violin(  # noqa: D417
 @_doc_params(show_save_ax=doc_show_save_ax)
 def rank_features_groups_stacked_violin(
     adata: AnnData,
-    groups: str | Sequence[str] = None,
+    groups: str | Sequence[str] | None = None,
     n_features: int | None = None,
     groupby: str | None = None,
     feature_symbols: str | None = None,
@@ -2085,7 +2087,7 @@ def rank_features_groups_stacked_violin(
     key: str | None = None,
     show: bool | None = None,
     save: bool | None = None,
-    return_fig: bool | None = False,
+    return_fig: bool = False,
     **kwds,
 ):  # pragma: no cover
     """Plot ranking of genes using stacked_violin plot.
@@ -2141,13 +2143,13 @@ def rank_features_groups_stacked_violin(
 
 def rank_features_groups_heatmap(
     adata: AnnData,
-    groups: str | Sequence[str] = None,
+    groups: str | Sequence[str] | None = None,
     n_features: int | None = None,
     groupby: str | None = None,
     feature_symbols: str | None = None,
     var_names: Sequence[str] | Mapping[str, Sequence[str]] | None = None,
     min_logfoldchange: float | None = None,
-    key: str = None,
+    key: str | None = None,
     show: bool | None = None,
     save: bool | None = None,
     **kwds,
@@ -2198,7 +2200,7 @@ def rank_features_groups_heatmap(
 
 def rank_features_groups_dotplot(
     adata: AnnData,
-    groups: str | Sequence[str] = None,
+    groups: str | Sequence[str] | None = None,
     n_features: int | None = None,
     groupby: str | None = None,
     values_to_plot: None
@@ -2218,7 +2220,7 @@ def rank_features_groups_dotplot(
     key: str | None = None,
     show: bool | None = None,
     save: bool | None = None,
-    return_fig: bool | None = False,
+    return_fig: bool = False,
     **kwds,
 ):  # pragma: no cover
     """Plot ranking of genes using dotplot plot (see :func:`~ehrapy.plot.dotplot`).
@@ -2277,7 +2279,7 @@ def rank_features_groups_dotplot(
 
 def rank_features_groups_matrixplot(
     adata: AnnData,
-    groups: str | Sequence[str] = None,
+    groups: str | Sequence[str] | None = None,
     n_features: int | None = None,
     groupby: str | None = None,
     values_to_plot: None
@@ -2297,7 +2299,7 @@ def rank_features_groups_matrixplot(
     key: str | None = "rank_features_groups",
     show: bool | None = None,
     save: bool | None = None,
-    return_fig: bool | None = False,
+    return_fig: bool = False,
     **kwds,
 ):  # pragma: no cover
     """Plot ranking of genes using matrixplot plot (see :func:`~ehrapy.plot.matrixplot`).
@@ -2356,7 +2358,7 @@ def rank_features_groups_matrixplot(
 
 def rank_features_groups_tracksplot(
     adata: AnnData,
-    groups: str | Sequence[str] = None,
+    groups: str | Sequence[str] | None = None,
     n_features: int | None = None,
     groupby: str | None = None,
     var_names: Sequence[str] | Mapping[str, Sequence[str]] | None = None,
