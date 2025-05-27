@@ -106,6 +106,7 @@ intersphinx_mapping = {
     "lifelines": ("https://lifelines.readthedocs.io/en/latest/", None),
     "statsmodels": ("https://www.statsmodels.org/stable", None),
     "networkx": ("https://networkx.org/documentation/stable", None),
+    "ehrdata": ("https://ehrdata.readthedocs.io/en/latest/", None),
 }
 nitpick_ignore = [
     ("py:class", "matplotlib.axes.Axes"),
