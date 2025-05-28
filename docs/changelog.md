@@ -8,9 +8,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 * Transitioning from AnnData to EHRData
 
-EHRData replaces AnnData as ehrdata's core data structure to better support time-series electronic health record data.
+EHRData replaces AnnData as ehrapy's core data structure to better support time-series electronic health record data.
 The key enhancement is native support for 3D tensors through the `.R` attribute (observations × variables × timesteps) alongside the existing 2D `.X` matrix, enabling efficient storage of longitudinal patient data.
-A new `.t` DataFrame provides time-point annotations, complementing the existing .obs and .var annotations for comprehensive temporal data description.
+A new `.tem` DataFrame provides time-point annotations, complementing the existing `.obs` and `.var` annotations for comprehensive temporal data description.
 While EHRData maintains full backward compatibility with AnnData's API, users can now seamlessly work with irregular time-series data and leverage specialized methods for temporal analysis.
 Existing code using AnnData objects will continue to work, but migration to EHRData is strongly recommended to access enhanced time-series functionality.
 

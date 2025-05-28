@@ -14,7 +14,7 @@ from sklearn.impute import SimpleImputer
 from ehrapy import settings
 from ehrapy._compat import _check_module_importable, _raise_array_type_not_implemented
 from ehrapy._progress import spinner
-from ehrapy.anndata import check_feature_types
+from ehrapy.anndata import _check_feature_types
 from ehrapy.anndata._constants import NUMERIC_TAG
 from ehrapy.anndata._feature_specifications import _infer_numerical_column_indices
 from ehrapy.anndata.anndata_ext import (
@@ -209,7 +209,7 @@ def _simple_impute(adata: AnnData, var_names: Iterable[str] | None, strategy: st
 
 
 @spinner("Performing KNN impute")
-@check_feature_types
+@_check_feature_types
 def knn_impute(
     adata: AnnData,
     var_names: Iterable[str] | None = None,
@@ -432,7 +432,7 @@ def miss_forest_impute(
 
 
 @spinner("Performing mice-forest impute")
-@check_feature_types
+@_check_feature_types
 def mice_forest_impute(
     adata: AnnData,
     var_names: Iterable[str] | None = None,

@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import scanpy as sc
 
-from ehrapy.anndata import check_feature_types, infer_feature_types, move_to_x
+from ehrapy.anndata import _check_feature_types, infer_feature_types, move_to_x
 from ehrapy.anndata._constants import (
     CATEGORICAL_TAG,
     DATE_TAG,
@@ -163,7 +163,7 @@ def _get_groups_order(groups_subset: Literal["all"] | Iterable[str], group_names
     return tuple(groups_order)
 
 
-@check_feature_types
+@_check_feature_types
 def _evaluate_categorical_features(
     adata: AnnData,
     groupby: str,
@@ -316,7 +316,7 @@ def _check_columns_to_rank_dict(columns_to_rank):
     return _var_subset, _obs_subset
 
 
-@check_feature_types
+@_check_feature_types
 def rank_features_groups(
     adata: AnnData,
     groupby: str,

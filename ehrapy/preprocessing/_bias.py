@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Literal
 import numpy as np
 import pandas as pd
 
-from ehrapy.anndata import anndata_to_df, check_feature_types
+from ehrapy.anndata import _check_feature_types, anndata_to_df
 from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 
 if TYPE_CHECKING:
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from anndata import AnnData
 
 
-@check_feature_types
+@_check_feature_types
 def detect_bias(
     adata: AnnData,
     sensitive_features: Iterable[str] | Literal["all"],

@@ -1,5 +1,5 @@
 from ehrapy.anndata._feature_specifications import (
-    check_feature_types,
+    _check_feature_types,
     feature_type_overview,
     infer_feature_types,
     replace_feature_types,
@@ -12,7 +12,7 @@ from ehrapy.anndata.anndata_ext import (
 )
 
 __all__ = [
-    "check_feature_types",
+    "_check_feature_types",
     "replace_feature_types",
     "feature_type_overview",
     "infer_feature_types",

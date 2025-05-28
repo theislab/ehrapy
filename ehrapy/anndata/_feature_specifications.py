@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import pandas as pd
+from anndata import AnnData
 from dateutil.parser import isoparse  # type: ignore
 from ehrdata import EHRData
 from lamin_utils import logger
@@ -16,8 +17,6 @@ from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KE
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
-
-    from anndata import AnnData
 
 
 def _detect_feature_type(col: pd.Series) -> tuple[Literal["date", "categorical", "numeric"], bool]:
@@ -70,10 +69,14 @@ def _detect_feature_type(col: pd.Series) -> tuple[Literal["date", "categorical",
     return NUMERIC_TAG, False  # type: ignore
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 def infer_feature_types(
-    edata: EHRData, layer: str | None = None, output: Literal["tree", "dataframe"] | None = "tree", verbose: bool = True
-) -> None:
-    """Infer feature types from AnnData object.
+    edata: EHRData | AnnData,
+    layer: str | None = None,
+    output: Literal["tree", "dataframe"] | None = "tree",
+    verbose: bool = True,
+) -> pd.Series | None:
+    """Infer feature types from EHRData object.
 
     For each feature in edata.var_names, the method infers one of the following types: 'date', 'categorical', or 'numeric'.
     The inferred types are stored in edata.var['feature_type']. Please check the inferred types and adjust if necessary using
@@ -83,8 +86,8 @@ def infer_feature_types(
     recommended to check the inferred types.
 
     Args:
-        edata: :class:`~ehrdata.EHRData` object storing the EHR data.
-        layer: The layer to use from the AnnData object. If None, the X layer is used.
+        edata: Object storing the EHR data.
+        layer: The layer to use from the EHRData object. If None, the X layer is used.
         output: The output format. Choose between 'tree', 'dataframe', or None. If 'tree', the feature types will be printed to the console in a tree format.
             If 'dataframe', a pandas DataFrame with the feature types will be returned. If None, nothing will be returned.
         verbose: Whether to print warnings for uncertain feature types.
@@ -154,12 +157,16 @@ def _infer_numerical_column_indices(
     return [idx for idx in indices if idx not in non_numerical_indices]
 
 
-def check_feature_types(func):
+def _check_feature_types(func):
     @wraps(func)
     def wrapper(edata, *args, **kwargs):
         # Account for class methods that pass self as first argument
         _self = None
-        if not isinstance(edata, EHRData) and len(args) > 0 and isinstance(args[0], EHRData):
+        if (
+            not (isinstance(edata, EHRData) or isinstance(edata, AnnData))
+            and len(args) > 0
+            and (isinstance(args[0], EHRData) or isinstance(args[0], AnnData))
+        ):
             _self = edata
             edata = args[0]
             args = args[1:]
@@ -188,12 +195,13 @@ def check_feature_types(func):
     return wrapper
 
 
-@check_feature_types
-def feature_type_overview(edata: EHRData) -> None:
-    """Print an overview of the feature types and encoding modes in the AnnData object.
+@_check_feature_types
+@use_ehrdata(deprecated_after="1.0.0")
+def feature_type_overview(edata: EHRData | AnnData) -> None:
+    """Print an overview of the feature types and encoding modes in the EHRData object.
 
     Args:
-        edata: The AnnData object storing the EHR data.
+        edata: The EHRData object storing the EHR data.
 
     Examples:
         >>> import ehrapy as ep
@@ -236,8 +244,8 @@ def feature_type_overview(edata: EHRData) -> None:
     print(tree)
 
 
-@use_ehrdata()
-def replace_feature_types(edata: EHRData, features: Iterable[str], corrected_type: str) -> None:
+@use_ehrdata(deprecated_after="1.0.0")
+def replace_feature_types(edata: EHRData | AnnData, features: Iterable[str], corrected_type: str) -> None:
     """Correct the feature types for a list of features inplace.
 
     Args:
