@@ -71,7 +71,7 @@ def _detect_feature_type(col: pd.Series) -> tuple[Literal["date", "categorical",
 
 @use_ehrdata(deprecated_after="1.0.0")
 def infer_feature_types(
-    edata: EHRData,
+    edata: EHRData | AnnData,
     layer: str | None = None,
     output: Literal["tree", "dataframe"] | None = "tree",
     verbose: bool = True,
@@ -199,7 +199,7 @@ def _check_feature_types(func):
 
 @_check_feature_types
 @use_ehrdata(deprecated_after="1.0.0")
-def feature_type_overview(edata: EHRData) -> None:
+def feature_type_overview(edata: EHRData | AnnData) -> None:
     """Print an overview of the feature types and encoding modes in the EHRData object.
 
     Args:
@@ -247,7 +247,7 @@ def feature_type_overview(edata: EHRData) -> None:
 
 
 @use_ehrdata(deprecated_after="1.0.0")
-def replace_feature_types(edata: EHRData, features: Iterable[str], corrected_type: str) -> None:
+def replace_feature_types(edata: EHRData | AnnData, features: Iterable[str], corrected_type: str) -> None:
     """Correct the feature types for a list of features inplace.
 
     Args:

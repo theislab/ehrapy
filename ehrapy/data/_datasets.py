@@ -13,6 +13,12 @@ if TYPE_CHECKING:
     from anndata import AnnData
 
 
+def dataset_future_warning(dataset_name: str):
+    raise FutureWarning(
+        f"{dataset_name} is deprecated, and will be removed in v1.0.0. Use ehrdata.dt.{dataset_name} instead."
+    )
+
+
 def mimic_2(
     encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
@@ -32,6 +38,7 @@ def mimic_2(
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
     """
+    dataset_future_warning("mimic_2")
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/ehrapy_mimic2.csv",
         download_dataset_name="ehrapy_mimic2.csv",
@@ -60,6 +67,7 @@ def mimic_2_preprocessed() -> AnnData:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2_preprocessed()
     """
+    dataset_future_warning("mimic_2_preprocessed")
     adata = read_h5ad(
         dataset_path=f"{ehrapy_settings.datasetdir}/ehrapy_mimic2.csv",
         download_dataset_name="ehrapy_mimic_2_preprocessed.h5ad",
@@ -91,6 +99,7 @@ def mimic_3_demo(
         >>> import ehrapy as ep
         >>> dfs = ep.dt.mimic_3_demo()
     """
+    dataset_future_warning("mimic_3_demo")
     data = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/ehrapy_mimic_3",
         download_dataset_name="ehrapy_mimic_3",
@@ -123,6 +132,7 @@ def heart_failure(encoded: bool = False, columns_obs_only: dict[str, list[str]] 
         >>> import ehrapy as ep
         >>> adata = ep.dt.heart_failure(encoded=True)
     """
+    dataset_future_warning("heart_failure")
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/heart_failure.csv",
         download_dataset_name="heart_failure.csv",
@@ -161,6 +171,7 @@ def diabetes_130_raw(
     References:
         [1] Beata Strack, Jonathan P. DeShazo, Chris Gennings, Juan L. Olmo, Sebastian Ventura, Krzysztof J. Cios, and John N. Clore, “Impact of HbA1c Measurement on Hospital Readmission Rates: Analysis of 70,000 Clinical Database Patient Records,” BioMed Research International, vol. 2014, Article ID 781670, 11 pages, 2014.
     """
+    dataset_future_warning("diabetes_130_raw")
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/diabetes_130_raw.csv",
         download_dataset_name="diabetes_130_raw.csv",
@@ -210,6 +221,7 @@ def diabetes_130_fairlearn(
 
         [2] Bird, S., Dudík, M., Edgar, R., Horn, B., Lutz, R., Milan, V., ... & Walker, K. (2020). Fairlearn: A toolkit for assessing and improving fairness in AI. Microsoft, Tech. Rep. MSR-TR-2020-32.
     """
+    dataset_future_warning("diabetes_130_fairlearn")
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/diabetes_130_fairlearn.csv",
         download_dataset_name="diabetes_130_fairlearn.csv",
@@ -248,6 +260,7 @@ def chronic_kidney_disease(
         >>> import ehrapy as ep
         >>> adata = ep.dt.chronic_kidney_disease(encoded=True)
     """
+    dataset_future_warning("chronic_kidney_disease")
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/chronic_kidney_disease.csv",
         download_dataset_name="chronic_kidney_disease.csv",
@@ -283,6 +296,7 @@ def breast_tissue(
         >>> import ehrapy as ep
         >>> adata = ep.dt.breast_tissue(encoded=True)
     """
+    dataset_future_warning("breast_tissue")
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/breast_tissue.csv",
         download_dataset_name="breast_tissue.csv",
@@ -317,6 +331,7 @@ def cervical_cancer_risk_factors(
         >>> import ehrapy as ep
         >>> adata = ep.dt.cervical_cancer_risk_factors(encoded=True)
     """
+    dataset_future_warning("cervical_cancer_risk_factors")
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/cervical_cancer_risk_factors.csv",
         download_dataset_name="cervical_cancer_risk_factors.csv",
@@ -355,6 +370,7 @@ def dermatology(
         >>> import ehrapy as ep
         >>> adata = ep.dt.dermatology(encoded=True)
     """
+    dataset_future_warning("dermatology")
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/dermatology.csv",
         download_dataset_name="dermatology.csv",
@@ -390,6 +406,7 @@ def echocardiogram(
         >>> import ehrapy as ep
         >>> adata = ep.dt.echocardiogram(encoded=True)
     """
+    dataset_future_warning("echocardiogram")
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/echocardiogram.csv",
         download_dataset_name="echocardiogram.csv",
@@ -424,6 +441,7 @@ def hepatitis(
         >>> import ehrapy as ep
         >>> adata = ep.dt.hepatitis(encoded=True)
     """
+    dataset_future_warning("hepatitis")
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/hepatitis.csv",
         download_dataset_name="hepatitis.csv",
@@ -459,6 +477,7 @@ def statlog_heart(
         >>> import ehrapy as ep
         >>> adata = ep.dt.statlog_heart(encoded=True)
     """
+    dataset_future_warning("statlog_heart")
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/statlog_heart.csv",
         download_dataset_name="statlog_heart.csv",
@@ -494,6 +513,7 @@ def thyroid(
         >>> import ehrapy as ep
         >>> adata = ep.dt.thyroid(encoded=True)
     """
+    dataset_future_warning("thyroid")
     adata: AnnData = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/thyroid.csv",
         download_dataset_name="thyroid.csv",
@@ -529,6 +549,7 @@ def breast_cancer_coimbra(
         >>> import ehrapy as ep
         >>> adata = ep.dt.breast_cancer_coimbra(encoded=True)
     """
+    dataset_future_warning("breast_cancer_coimbra")
     adata: AnnData = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/breast_cancer_coimbra.csv",
         download_dataset_name="breast_cancer_coimbra.csv",
@@ -564,6 +585,7 @@ def parkinsons(
         >>> import ehrapy as ep
         >>> adata = ep.dt.parkinsons(columns_obs_only=["name"], encoded=True)
     """
+    dataset_future_warning("parkinsons")
     adata: AnnData = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/parkinsons.csv",
         download_dataset_name="parkinsons.csv",
@@ -598,6 +620,7 @@ def parkinsons_telemonitoring(
         >>> import ehrapy as ep
         >>> adata = ep.dt.parkinsons_telemonitoring(encoded=True)
     """
+    dataset_future_warning("parkinsons_telemonitoring")
     adata: AnnData = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/parkinsons_telemonitoring.csv",
         download_dataset_name="parkinsons_telemonitoring.csv",
@@ -633,6 +656,7 @@ def parkinsons_disease_classification(
         >>> import ehrapy as ep
         >>> adata = ep.dt.parkinsons_disease_classification(encoded=True)
     """
+    dataset_future_warning("parkinsons_disease_classification")
     adata: AnnData = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/parkinson's_disease_classification_prepared.csv",
         download_dataset_name="parkinson's_disease_classification_prepared.csv",
@@ -668,6 +692,7 @@ def parkinson_dataset_with_replicated_acoustic_features(
         >>> import ehrapy as ep
         >>> adata = ep.dt.parkinson_dataset_with_replicated_acoustic_features(columns_obs_only=["ID"], encoded=True)
     """
+    dataset_future_warning("parkinson_dataset_with_replicated_acoustic_features")
     adata: AnnData = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/parkinson_dataset_with_replicated_acoustic_features.csv",
         download_dataset_name="parkinson_dataset_with_replicated_acoustic_features.csv",
@@ -703,6 +728,7 @@ def heart_disease(
         >>> import ehrapy as ep
         >>> adata = ep.dt.heart_disease(encoded=True)
     """
+    dataset_future_warning("heart_disease")
     adata: AnnData = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/processed_heart_disease.csv",
         download_dataset_name="processed_heart_disease.csv",
@@ -739,6 +765,7 @@ def synthea_1k_sample(
         >>> import ehrapy as ep
         >>> adata = ep.dt.synthea_1k_sample(encoded=True)
     """
+    dataset_future_warning("synthea_1k_sample")
     adata: AnnData = read_fhir(
         dataset_path=f"{ehrapy_settings.datasetdir}/synthea_sample",
         download_dataset_name="synthea_sample",
