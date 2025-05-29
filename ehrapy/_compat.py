@@ -186,7 +186,7 @@ def use_ehrdata(
 
 def _cast_adata_to_match_data_type(input_data: AnnData, target_type_reference: EHRData | AnnData) -> EHRData | AnnData:
     """Cast the data object to the type used by the function."""
-    if isinstance(target_type_reference, AnnData):
+    if isinstance(target_type_reference, AnnData) and not isinstance(target_type_reference, EHRData):
         return input_data
 
     if isinstance(target_type_reference, EHRData):

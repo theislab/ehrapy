@@ -12,7 +12,7 @@ from lamin_utils import logger
 from rich.progress import BarColumn, Progress
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
-from ehrapy._compat import use_ehrdata
+from ehrapy._compat import _cast_adata_to_match_data_type, use_ehrdata
 from ehrapy.anndata import _check_feature_types, anndata_to_df
 from ehrapy.anndata._constants import (
     CATEGORICAL_TAG,
@@ -167,11 +167,14 @@ def encode(
             new_var["encoding_mode"] = [encodings if var in categoricals_names else None for var in unencoded_var_names]
 
             # TODO: ehrdata v0.0.5 and newer allow to pass layers and X to constructor
-            encoded_edata = EHRData(
-                X=encoded_x,
-                obs=updated_obs,
-                var=new_var,
-                uns=edata.uns.copy(),
+            encoded_edata = _cast_adata_to_match_data_type(
+                AnnData(
+                    X=encoded_x,
+                    obs=updated_obs,
+                    var=new_var,
+                    uns=edata.uns.copy(),
+                ),
+                edata,
             )
             encoded_edata.layers["original"] = updated_layer
 
@@ -272,11 +275,14 @@ def encode(
 
         try:
             # TODO: ehrdata v0.0.5 and newer allow to pass layers and X to constructor
-            encoded_edata = EHRData(
-                X=encoded_x,
-                obs=updated_obs,
-                var=new_var,
-                uns=edata.uns.copy(),
+            encoded_edata = _cast_adata_to_match_data_type(
+                AnnData(
+                    X=encoded_x,
+                    obs=updated_obs,
+                    var=new_var,
+                    uns=edata.uns.copy(),
+                ),
+                edata,
             )
             encoded_edata.layers["original"] = updated_layer
 
@@ -527,11 +533,14 @@ def _undo_encoding(
         for unenc_var_name in new_var_names
     ]
     # TODO: ehrdata v0.0.5 and newer allow to pass layers and X to constructor
-    edata = EHRData(
-        new_x,
-        obs=new_obs,
-        var=var,
-        uns=OrderedDict(),
+    edata = _cast_adata_to_match_data_type(
+        AnnData(
+            new_x,
+            obs=new_obs,
+            var=var,
+            uns=OrderedDict(),
+        ),
+        edata,
     )
     edata.layers["original"] = new_x.copy()
 
