@@ -199,7 +199,7 @@ def _check_feature_types(func):
 
 @_check_feature_types
 @use_ehrdata(deprecated_after="1.0.0")
-def feature_type_overview(edata: EHRData | AnnData) -> None:
+def feature_type_overview(edata: EHRData) -> None:
     """Print an overview of the feature types and encoding modes in the EHRData object.
 
     Args:
@@ -251,7 +251,7 @@ def replace_feature_types(edata: EHRData, features: Iterable[str], corrected_typ
     """Correct the feature types for a list of features inplace.
 
     Args:
-        edata: :class:`~ehrdata.EHRData` object storing the EHR data.
+        edata: Data object storing the EHR data.
         features: The features to correct.
         corrected_type: The corrected feature type. One of 'date', 'categorical', or 'numeric'.
 

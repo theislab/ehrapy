@@ -166,13 +166,14 @@ def encode(
 
             new_var["encoding_mode"] = [encodings if var in categoricals_names else None for var in unencoded_var_names]
 
+            # TODO: ehrdata v0.0.5 and newer allow to pass layers and X to constructor
             encoded_edata = EHRData(
-                encoded_x,
+                X=encoded_x,
                 obs=updated_obs,
                 var=new_var,
                 uns=edata.uns.copy(),
-                layers={"original": updated_layer},
             )
+            encoded_edata.layers["original"] = updated_layer
 
     # user passed categorical values with encoding mode for each of them
     else:
@@ -270,13 +271,14 @@ def encode(
             new_var.loc[_categorical, "encoding_mode"] = encoding_mode[_categorical]
 
         try:
+            # TODO: ehrdata v0.0.5 and newer allow to pass layers and X to constructor
             encoded_edata = EHRData(
                 X=encoded_x,
                 obs=updated_obs,
                 var=new_var,
                 uns=edata.uns.copy(),
-                layers={"original": updated_layer},
             )
+            encoded_edata.layers["original"] = updated_layer
 
         # if the user did not pass every non-numerical column for encoding, an Anndata object cannot be created
         except ValueError:
@@ -524,14 +526,16 @@ def _undo_encoding(
         edata.var.loc[edata.var["unencoded_var_names"] == unenc_var_name, FEATURE_TYPE_KEY].unique()[0]
         for unenc_var_name in new_var_names
     ]
-
-    return EHRData(
+    # TODO: ehrdata v0.0.5 and newer allow to pass layers and X to constructor
+    edata = EHRData(
         new_x,
         obs=new_obs,
         var=var,
         uns=OrderedDict(),
-        layers={"original": new_x.copy()},
     )
+    edata.layers["original"] = new_x.copy()
+
+    return edata
 
 
 def _delete_all_encodings(edata: EHRData | AnnData) -> tuple[np.ndarray | None, list | None]:
