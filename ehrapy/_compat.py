@@ -76,10 +76,10 @@ def use_ehrdata(
     deprecated_after: str | None = None,
     old_param: str = "adata",
     new_param: str = "edata",
-) -> Callable[[Callable[Concatenate[EHRData | AnnData, P], R]], Callable[P, R]]:
+) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """Decorator to migrate functions from AnnData to EHRData."""
 
-    def decorator(func: Callable[Concatenate[EHRData | AnnData, P], R]) -> Callable[P, R]:
+    def decorator(func: Callable[P, R]) -> Callable[P, R]:
         sig = signature(func)
 
         has_new_param = new_param in sig.parameters

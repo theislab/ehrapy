@@ -71,7 +71,7 @@ def _detect_feature_type(col: pd.Series) -> tuple[Literal["date", "categorical",
 
 @use_ehrdata(deprecated_after="1.0.0")
 def infer_feature_types(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     layer: str | None = None,
     output: Literal["tree", "dataframe"] | None = "tree",
     verbose: bool = True,
@@ -134,6 +134,8 @@ def infer_feature_types(
         return edata.var[FEATURE_TYPE_KEY]
     elif output is not None:
         raise ValueError(f"Output format {output} not recognized. Choose between 'tree', 'dataframe', or None.")
+
+    return None
 
 
 # TODO: this function is a different flavor of inferring feature types. We should decide on a single implementation in the future.
@@ -245,7 +247,7 @@ def feature_type_overview(edata: EHRData | AnnData) -> None:
 
 
 @use_ehrdata(deprecated_after="1.0.0")
-def replace_feature_types(edata: EHRData | AnnData, features: Iterable[str], corrected_type: str) -> None:
+def replace_feature_types(edata: EHRData, features: Iterable[str], corrected_type: str) -> None:
     """Correct the feature types for a list of features inplace.
 
     Args:

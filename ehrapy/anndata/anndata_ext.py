@@ -257,7 +257,7 @@ def move_to_x(edata: EHRData | AnnData, to_x: list[str] | str, copy_x: bool = Fa
     if cols_not_in_x:
         data_from_df = _cast_adata_to_match_data_type(AnnData(edata.obs[cols_not_in_x]), edata)
         new_edata = concat([edata, data_from_df], axis=1)
-        new_edata = edata
+
         if copy_x:
             new_edata.obs = edata.obs
         else:
