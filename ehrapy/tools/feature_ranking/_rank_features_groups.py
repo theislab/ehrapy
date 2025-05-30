@@ -375,61 +375,66 @@ def rank_features_groups(
                 For instance, you can pass `penalty='l1'` to try to come up with a
                 minimal set of genes that are good predictors (sparse solution meaning few non-zero fitted coefficients).
 
-    Returns:
-        *names* structured :class:`numpy.ndarray` (`.uns['rank_features_groups']`)
-                  Structured array to be indexed by group id storing the gene
-                  names. Ordered according to scores.
+    Returns
+    --------
+    names: structured :class:`numpy.ndarray` (`adata.uns['rank_features_groups']`)
+        Structured array to be indexed by group id storing the gene
+        names. Ordered according to scores.
 
-        *scores* structured :class:`numpy.ndarray` (`.uns['rank_features_groups']`)
-                  Structured array to be indexed by group id storing the z-score
-                  underlying the computation of a p-value for each gene for each group.
-                  Ordered according to scores.
+    scores: structured :class:`numpy.ndarray` (`adata.uns['rank_features_groups']`)
+        Structured array to be indexed by group id storing the z-score
+        underlying the computation of a p-value for each gene for each group.
+        Ordered according to scores.
+    
+    logfoldchanges: structured :class:`numpy.ndarray` (`adata.uns['rank_features_groups']`)
+        Structured array to be indexed by group id storing the log2
+        fold change for each gene for each group. Ordered according to scores.
+        Only provided if method is 't-test' like.
+        Note: this is an approximation calculated from mean-log values.
 
-        *logfoldchanges* structured :class:`numpy.ndarray` (`.uns['rank_features_groups']`)
-                          Structured array to be indexed by group id storing the log2
-                          fold change for each gene for each group. Ordered according to scores.
-                          Only provided if method is 't-test' like.
-                          Note: this is an approximation calculated from mean-log values.
+    pvals: structured :class:`numpy.ndarray` (`adata.uns['rank_features_groups']`) 
+        p-values.
 
-        *pvals* structured :class:`numpy.ndarray` (`.uns['rank_features_groups']`) p-values.
+    pvals_adj: structured :class:`numpy.ndarray` (`adata.uns['rank_features_groups']`)
+        Corrected p-values.
 
-        *pvals_adj* structured :class:`numpy.ndarray` (`.uns['rank_features_groups']`) Corrected p-values.
+    pts: :class:`pandas.DataFrame` (`adata.uns['rank_features_groups']`)
+        Fraction of cells expressing the genes for each group.
 
-        *pts*: `pandas.DataFrame` (`.uns['rank_features_groups']`)
-               Fraction of cells expressing the genes for each group.
+    pts_rest: :class:`pandas.DataFrame` (`adata.uns['rank_features_groups']`)
+        Only if `reference` is set to `'rest'`.
+        Fraction of observations from the union of the rest of each group containing the features.
 
-        *pts_rest* `pandas.DataFrame` (`.uns['rank_features_groups']`)
-                    Only if `reference` is set to `'rest'`.
-                    Fraction of observations from the union of the rest of each group containing the features.
+    Examples
+    --------
 
-    Examples:
-         >>> import ehrapy as ep
-         >>> adata = ep.dt.mimic_2(encoded=False)
-         >>> # want to move some metadata to the obs field
-         >>> ep.anndata.move_to_obs(adata, to_obs=["service_unit", "service_num", "age", "mort_day_censored"])
-         >>> ep.tl.rank_features_groups(adata, "service_unit")
-         >>> ep.pl.rank_features_groups(adata)
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=False)
+        >>> # want to move some metadata to the obs field
+        >>> ep.anndata.move_to_obs(adata, to_obs=["service_unit", "service_num", "age", "mort_day_censored"])
+        >>> ep.tl.rank_features_groups(adata, "service_unit")
+        >>> ep.pl.rank_features_groups(adata)
 
-         >>> import ehrapy as ep
-         >>> adata = ep.dt.mimic_2(encoded=False)
-         >>> # want to move some metadata to the obs field
-         >>> ep.anndata.move_to_obs(adata, to_obs=["service_unit", "service_num", "age", "mort_day_censored"])
-         >>> ep.tl.rank_features_groups(
-         ...     adata, "service_unit", field_to_rank="obs", columns_to_rank={"obs_names": ["age", "mort_day_censored"]}
-         ... )
-         >>> ep.pl.rank_features_groups(adata)
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=False)
+        >>> # want to move some metadata to the obs field
+        >>> ep.anndata.move_to_obs(adata, to_obs=["service_unit", "service_num", "age", "mort_day_censored"])
+        >>> ep.tl.rank_features_groups(
+        ...     adata, "service_unit", field_to_rank="obs", columns_to_rank={"obs_names": ["age", "mort_day_censored"]}
+        ... )
+        >>> ep.pl.rank_features_groups(adata)
 
-         >>> import ehrapy as ep
-         >>> adata = ep.dt.mimic_2(encoded=False)
-         >>> # want to move some metadata to the obs field
-         >>> ep.anndata.move_to_obs(adata, to_obs=["service_unit", "service_num", "age", "mort_day_censored"])
-         >>> ep.tl.rank_features_groups(
-         ...     adata,
-         ...     "service_unit",
-         ...     field_to_rank="layer_and_obs",
-         ...     columns_to_rank={"var_names": ["copd_flg", "renal_flg"], "obs_names": ["age", "mort_day_censored"]},
-         ... )
-         >>> ep.pl.rank_features_groups(adata)
+        >>> import ehrapy as ep
+        >>> adata = ep.dt.mimic_2(encoded=False)
+        >>> # want to move some metadata to the obs field
+        >>> ep.anndata.move_to_obs(adata, to_obs=["service_unit", "service_num", "age", "mort_day_censored"])
+        >>> ep.tl.rank_features_groups(
+        ...     adata,
+        ...     "service_unit",
+        ...     field_to_rank="layer_and_obs",
+        ...     columns_to_rank={"var_names": ["copd_flg", "renal_flg"], "obs_names": ["age", "mort_day_censored"]},
+        ... )
+        >>> ep.pl.rank_features_groups(adata)
     """
     if layer is not None and field_to_rank == "obs":
         raise ValueError("If 'layer' is not None, 'field_to_rank' cannot be 'obs'.")
