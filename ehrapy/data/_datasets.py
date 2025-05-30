@@ -12,10 +12,14 @@ if TYPE_CHECKING:
     import pandas as pd
     from anndata import AnnData
 
+import warnings
+
 
 def dataset_future_warning(dataset_name: str):
-    raise FutureWarning(
-        f"{dataset_name} is deprecated, and will be removed in v1.0.0. Use ehrdata.dt.{dataset_name} instead."
+    warnings.warn(
+        f"{dataset_name} is deprecated, and will be removed in v1.0.0. Use ehrdata.dt.{dataset_name} instead.",
+        FutureWarning,
+        stacklevel=2,
     )
 
 
