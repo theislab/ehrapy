@@ -193,3 +193,11 @@ def _cast_adata_to_match_data_type(input_data: AnnData, target_type_reference: E
         return EHRData.from_adata(input_data)
 
     raise ValueError(f"Used data object must be an AnnData or EHRData, got {type(target_type_reference)}")
+
+
+def dataset_future_warning(dataset_name: str):
+    warnings.warn(
+        f"{dataset_name} is deprecated, and will be removed in v1.0.0. Use ehrdata.dt.{dataset_name} instead.",
+        FutureWarning,
+        stacklevel=2,
+    )

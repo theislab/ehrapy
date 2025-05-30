@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ehrapy import ehrapy_settings
+from ehrapy._compat import dataset_future_warning
 from ehrapy.anndata import anndata_to_df, df_to_anndata, infer_feature_types, replace_feature_types
 from ehrapy.anndata._constants import CATEGORICAL_TAG, NUMERIC_TAG
 from ehrapy.io._read import read_csv, read_fhir, read_h5ad
@@ -13,14 +14,6 @@ if TYPE_CHECKING:
     from anndata import AnnData
 
 import warnings
-
-
-def dataset_future_warning(dataset_name: str):
-    warnings.warn(
-        f"{dataset_name} is deprecated, and will be removed in v1.0.0. Use ehrdata.dt.{dataset_name} instead.",
-        FutureWarning,
-        stacklevel=2,
-    )
 
 
 def mimic_2(

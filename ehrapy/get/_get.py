@@ -6,7 +6,10 @@ from scanpy.get import obs_df as scanpy_obs_df
 from scanpy.get import rank_genes_groups_df
 from scanpy.get import var_df as scanpy_var_df
 
+from ehrapy._compat import use_ehrdata
 
+
+@use_ehrdata(deprecated_after="1.0.0")
 def obs_df(  # pragma: no cover
     edata: EHRData | AnnData,
     keys: Iterable[str] = (),
@@ -35,6 +38,7 @@ def obs_df(  # pragma: no cover
     return scanpy_obs_df(adata=edata, keys=keys, obsm_keys=obsm_keys, layer=layer, gene_symbols=features)
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 def var_df(  # pragma: no cover
     edata: EHRData | AnnData,
     keys: Iterable[str] = (),
@@ -61,6 +65,7 @@ def var_df(  # pragma: no cover
     return scanpy_var_df(adata=edata, keys=keys, varm_keys=varm_keys, layer=layer)
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 def rank_features_groups_df(
     edata: EHRData | AnnData,
     group: str | Iterable[str],
