@@ -11,6 +11,7 @@ from lamin_utils import logger
 from rich import print
 
 from ehrapy import ehrapy_settings, settings
+from ehrapy._compat import function_future_warning
 from ehrapy.anndata.anndata_ext import df_to_anndata
 from ehrapy.data._dataloader import download, remove_archive_extension
 from ehrapy.preprocessing._encoding import encode
@@ -58,6 +59,7 @@ def read_csv(
         >>> import ehrapy as ep
         >>> adata = ep.io.read_csv("myfile.csv")
     """
+    function_future_warning("ehrapy.io.read_csv", "ehrdata.io.read_csv")
     _check_columns_only_params(columns_obs_only, columns_x_only)
     dataset_path = Path(dataset_path)
     if not dataset_path.exists():
@@ -156,6 +158,7 @@ def read_h5ad(
         >>> ep.io.write("mimic_2.h5ad", adata)
         >>> adata_2 = ep.io.read_h5ad("mimic_2.h5ad")
     """
+    function_future_warning("ehrapy.io.read_h5ad", "ehrdata.io.read_h5ad")
     file_path: Path = Path(dataset_path)
     if not file_path.exists():
         file_path = _get_non_existing_files(file_path, download_dataset_name, backup_url, archive_format=archive_format)
@@ -401,6 +404,7 @@ def read_fhir(
         >>> df.drop(columns=df.columns[df.isna().all()], inplace=True)
 
     """
+    function_future_warning("ehrapy.io.read_fhir")
     _check_columns_only_params(columns_obs_only, columns_x_only)
     file_path: Path = Path(dataset_path)
     if not file_path.exists():

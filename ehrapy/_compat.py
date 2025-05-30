@@ -195,9 +195,8 @@ def _cast_adata_to_match_data_type(input_data: AnnData, target_type_reference: E
     raise ValueError(f"Used data object must be an AnnData or EHRData, got {type(target_type_reference)}")
 
 
-def dataset_future_warning(dataset_name: str):
-    warnings.warn(
-        f"{dataset_name} is deprecated, and will be removed in v1.0.0. Use ehrdata.dt.{dataset_name} instead.",
-        FutureWarning,
-        stacklevel=2,
-    )
+def function_future_warning(old_function_name: str, new_function_name: str | None = None):
+    warn_msg = f"{old_function_name} is deprecated, and will be removed in v1.0.0."
+    if new_function_name:
+        warn_msg += f" Use {new_function_name} instead."
+    warnings.warn(warn_msg, FutureWarning, stacklevel=2)
