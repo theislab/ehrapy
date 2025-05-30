@@ -375,7 +375,7 @@ def rank_features_groups(
                 For instance, you can pass `penalty='l1'` to try to come up with a
                 minimal set of genes that are good predictors (sparse solution meaning few non-zero fitted coefficients).
 
-    Returns
+    Returns:
     --------
     names: structured :class:`numpy.ndarray` (`adata.uns['rank_features_groups']`)
         Structured array to be indexed by group id storing the gene
@@ -385,14 +385,14 @@ def rank_features_groups(
         Structured array to be indexed by group id storing the z-score
         underlying the computation of a p-value for each gene for each group.
         Ordered according to scores.
-    
+
     logfoldchanges: structured :class:`numpy.ndarray` (`adata.uns['rank_features_groups']`)
         Structured array to be indexed by group id storing the log2
         fold change for each gene for each group. Ordered according to scores.
         Only provided if method is 't-test' like.
         Note: this is an approximation calculated from mean-log values.
 
-    pvals: structured :class:`numpy.ndarray` (`adata.uns['rank_features_groups']`) 
+    pvals: structured :class:`numpy.ndarray` (`adata.uns['rank_features_groups']`)
         p-values.
 
     pvals_adj: structured :class:`numpy.ndarray` (`adata.uns['rank_features_groups']`)
@@ -405,9 +405,8 @@ def rank_features_groups(
         Only if `reference` is set to `'rest'`.
         Fraction of observations from the union of the rest of each group containing the features.
 
-    Examples
+    Examples:
     --------
-
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=False)
         >>> # want to move some metadata to the obs field
