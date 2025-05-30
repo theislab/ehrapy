@@ -377,7 +377,7 @@ def rank_features_groups(
 
     Returns:
         None
-        
+
         The results are stored in `adata.uns['rank_features_groups']` and include:
 
         - names (:class:`numpy.ndarray`): Structured array to be indexed by group id storing the gene names. Ordered according to scores.
@@ -389,8 +389,6 @@ def rank_features_groups(
         - pts_rest (:class:`pandas.DataFrame`): Only if reference is set to ‘rest’. Fraction of observations from the union of the rest of each group containing the features.
 
     Examples:
-    
-
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=False)
         >>> # want to move some metadata to the obs field
