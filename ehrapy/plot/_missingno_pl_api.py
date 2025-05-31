@@ -4,14 +4,17 @@ from typing import TYPE_CHECKING
 
 import missingno as msno
 
+from ehrapy._compat import use_ehrdata
 from ehrapy.anndata import anndata_ext as ae
 
 if TYPE_CHECKING:
     from anndata import AnnData
+    from ehrdata import EHRData
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 def missing_values_matrix(
-    adata: AnnData,
+    edata: EHRData | AnnData,
     *,
     filter: str | None = None,
     max_cols: int = 0,
@@ -26,13 +29,13 @@ def missing_values_matrix(
     sparkline: bool = True,
     categoricals: bool = False,
 ):  # pragma: no cover
-    """A matrix visualization of the nullity of the given AnnData object.
+    """A matrix visualization of the nullity of the given Data object.
 
     Args:
-        adata: :class:`~anndata.AnnData` object containing all observations.
+        edata: Data object containing all observations.
         filter: The filter to apply to the matrix. Should be one of "top", "bottom", or None.
-        max_cols: The max number of columns from the AnnData object to include.
-        max_percentage: The max percentage fill of the columns from the AnnData object.
+        max_cols: The max number of columns from the Data object to include.
+        max_percentage: The max percentage fill of the columns from the Data object.
         sort: The row sort order to apply. Can be "ascending", "descending", or None.
         figsize: The size of the figure to display.
         width_ratios: The ratio of the width of the matrix to the width of the sparkline.
@@ -48,13 +51,13 @@ def missing_values_matrix(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.pl.missing_values_matrix(adata, filter="bottom", max_cols=15, max_percentage=0.999)
+        >>> edata = ep.dt.mimic_2(encoded=True)
+        >>> ep.pl.missing_values_matrix(edata, filter="bottom", max_cols=15, max_percentage=0.999)
 
     Preview:
         .. image:: /_static/docstring_previews/missingno_matrix.png
     """
-    df = ae.anndata_to_df(adata)
+    df = ae.anndata_to_df(edata)
 
     if not categoricals:
         non_categorical_columns = [col for col in df if not col.startswith("ehrapycat")]
@@ -89,8 +92,9 @@ def missing_values_matrix(
         )
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 def missing_values_barplot(
-    adata: AnnData,
+    edata: EHRData | AnnData,
     *,
     log: bool = False,
     filter: str | None = None,
@@ -105,14 +109,14 @@ def missing_values_barplot(
     orientation: str | None = None,
     categoricals: bool = False,
 ):  # pragma: no cover
-    """A bar chart visualization of the nullity of the given AnnData object.
+    """A bar chart visualization of the nullity of the given Data object.
 
     Args:
-        adata: :class:`~anndata.AnnData` object containing all observations.
+        edata: Data object containing all observations.
         log: Whether to display a logarithmic plot.
         filter: The filter to apply to the barplot. Should be one of "top", "bottom", or None.
-        max_cols: The max number of columns from the AnnData object to include.
-        max_percentage: The max percentage fill of the columns from the AnnData object.
+        max_cols: The max number of columns from the Data object to include.
+        max_percentage: The max percentage fill of the columns from the Data object.
         sort: The row sort order to apply. Can be "ascending", "descending", or None.
         figsize: The size of the figure to display.
         color: The color of the filled columns.
@@ -127,13 +131,13 @@ def missing_values_barplot(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.pl.missing_values_barplot(adata, filter="bottom", max_cols=15, max_percentage=0.999)
+        >>> edata = ep.dt.mimic_2(encoded=True)
+        >>> ep.pl.missing_values_barplot(edata, filter="bottom", max_cols=15, max_percentage=0.999)
 
     Preview:
         .. image:: /_static/docstring_previews/missingno_barplot.png
     """
-    df = ae.anndata_to_df(adata)
+    df = ae.anndata_to_df(edata)
 
     if not categoricals:
         non_categorical_columns = [col for col in df if not col.startswith("ehrapycat")]
@@ -168,8 +172,9 @@ def missing_values_barplot(
         )
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 def missing_values_heatmap(
-    adata: AnnData,
+    edata: EHRData | AnnData,
     *,
     filter: str | None = None,
     max_cols: int = 0,
@@ -185,15 +190,15 @@ def missing_values_heatmap(
     cbar: bool = True,
     categoricals: bool = False,
 ):  # pragma: no cover
-    """Presents a `seaborn` heatmap visualization of nullity correlation in the given AnnData object.
+    """Presents a `seaborn` heatmap visualization of nullity correlation in the given Data object.
 
     Note that this visualization has no special support for large datasets. For those, try the dendrogram instead.
 
     Args:
-        adata: :class:`~anndata.AnnData` object containing all observations.
+        edata: Data object containing all observations.
         filter: The filter to apply to the heatmap. Should be one of "top", "bottom", or None.
-        max_cols: The max number of columns from the AnnData object to include.
-        max_percentage: The max percentage fill of the columns from the AnnData object.
+        max_cols: The max number of columns from the Data object to include.
+        max_percentage: The max percentage fill of the columns from the Data object.
         sort: The row sort order to apply. Can be "ascending", "descending", or None.
         figsize: The size of the figure to display.
         fontsize: The figure's font size.
@@ -210,13 +215,13 @@ def missing_values_heatmap(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.pl.missing_values_heatmap(adata, filter="bottom", max_cols=15, max_percentage=0.999)
+        >>> edata = ep.dt.mimic_2(encoded=True)
+        >>> ep.pl.missing_values_heatmap(edata, filter="bottom", max_cols=15, max_percentage=0.999)
 
     Preview:
         .. image:: /_static/docstring_previews/missingno_heatmap.png
     """
-    df = ae.anndata_to_df(adata)
+    df = ae.anndata_to_df(edata)
 
     if not categoricals:
         non_categorical_columns = [col for col in df if not col.startswith("ehrapycat")]
@@ -253,8 +258,9 @@ def missing_values_heatmap(
         )
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 def missing_values_dendrogram(
-    adata: AnnData,
+    edata: EHRData | AnnData,
     *,
     method: str = "average",
     filter: str | None = None,
@@ -272,11 +278,11 @@ def missing_values_dendrogram(
     left unspecified the dendrogram will automatically swap to a horizontal display to fit the additional variables.
 
     Args:
-        adata: :class:`~anndata.AnnData` object containing all observations.
+        edata: Data object containing all observations.
         method: The distance measure being used for clustering. This parameter is passed to `scipy.hierarchy`.
         filter: The filter to apply to the dendrogram. Should be one of "top", "bottom", or None.
-        max_cols: The max number of columns from the AnnData object to include.
-        max_percentage: The max percentage fill of the columns from the AnnData object.
+        max_cols: The max number of columns from the Data object to include.
+        max_percentage: The max percentage fill of the columns from the Data object.
         figsize: The size of the figure to display.
         fontsize: The figure's font size.
         orientation: The way the dendrogram is oriented.
@@ -288,13 +294,13 @@ def missing_values_dendrogram(
 
     Example:
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.pl.missing_values_dendrogram(adata, filter="bottom", max_cols=15, max_percentage=0.999)
+        >>> edata = ep.dt.mimic_2(encoded=True)
+        >>> ep.pl.missing_values_dendrogram(edata, filter="bottom", max_cols=15, max_percentage=0.999)
 
     Preview:
         .. image:: /_static/docstring_previews/missingno_dendrogram.png
     """
-    df = ae.anndata_to_df(adata)
+    df = ae.anndata_to_df(edata)
 
     if not categoricals:
         non_categorical_columns = [col for col in df if not col.startswith("ehrapycat")]

@@ -11,7 +11,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.svm import SVC, SVR
 
-from ehrapy.anndata import anndata_to_df, check_feature_types
+from ehrapy.anndata import _check_feature_types, anndata_to_df
 from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 
 if TYPE_CHECKING:
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from anndata import AnnData
 
 
-@check_feature_types
+@_check_feature_types
 def rank_features_supervised(
     adata: AnnData,
     predicted_feature: str,
