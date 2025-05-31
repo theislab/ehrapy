@@ -12,19 +12,18 @@ from sklearn.experimental import enable_iterative_imputer  # noinspection PyUnre
 from sklearn.impute import SimpleImputer
 
 from ehrapy import settings
-from ehrapy._compat import _check_module_importable, _raise_array_type_not_implemented
+from ehrapy._compat import _check_module_importable, _raise_array_type_not_implemented, use_ehrdata
 from ehrapy._progress import spinner
 from ehrapy.anndata import _check_feature_types
 from ehrapy.anndata._constants import NUMERIC_TAG
 from ehrapy.anndata._feature_specifications import _infer_numerical_column_indices
 from ehrapy.anndata.anndata_ext import (
     _get_var_indices,
-    # _get_var_indices_for_type,
-    _get_var_indices_numeric_or_encoded,
 )
 
 if TYPE_CHECKING:
     from anndata import AnnData
+    from ehrdata import EHRData
 
 try:
     import dask.array as da
@@ -35,14 +34,15 @@ except ImportError:
 
 
 @spinner("Performing explicit impute")
+@use_ehrdata(deprecated_after="1.0.0")
 def explicit_impute(
-    adata: AnnData,
+    edata: EHRData | AnnData,
     replacement: (str | int) | (dict[str, str | int]),
     *,
     impute_empty_strings: bool = True,
     warning_threshold: int = 70,
     copy: bool = False,
-) -> AnnData | None:
+) -> EHRData | AnnData | None:
     """Replaces all missing values in all columns or a subset of columns specified by the user with the passed replacement value.
 
     There are two scenarios to cover:
@@ -50,44 +50,44 @@ def explicit_impute(
     2. Replace all missing values in a subset of columns with a specified value per column.
 
     Args:
-        adata: :class:`~anndata.AnnData` object containing X to impute values in.
+        edata: The data object.
         replacement: The value to replace missing values with. If a dictionary is provided, the keys represent column
                      names and the values represent replacement values for those columns.
         impute_empty_strings: If True, empty strings are also replaced.
         warning_threshold: Threshold of percentage of missing values to display a warning for.
-        copy: If True, returns a modified copy of the original AnnData object. If False, modifies the object in place.
+        copy: If True, returns a modified copy of the original data object. If False, modifies the object in place.
 
     Returns:
-        If copy is True, a modified copy of the original AnnData object with imputed X.
-        If copy is False, the original AnnData object is modified in place, and None is returned.
+        If copy is True, a modified copy of the original data object with imputed X.
+        If copy is False, the original data object is modified in place, and None is returned.
 
     Examples:
-        Replace all missing values in adata with the value 0:
+        Replace all missing values in edata with the value 0:
 
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.pp.explicit_impute(adata, replacement=0)
+        >>> edata = ep.dt.mimic_2(encoded=True)
+        >>> ep.pp.explicit_impute(edata, replacement=0)
     """
     if copy:
-        adata = adata.copy()
+        edata = edata.copy()
 
     if isinstance(replacement, int) or isinstance(replacement, str):
-        _warn_imputation_threshold(adata, var_names=list(adata.var_names), threshold=warning_threshold)
+        _warn_imputation_threshold(edata, var_names=list(edata.var_names), threshold=warning_threshold)
     else:
-        _warn_imputation_threshold(adata, var_names=replacement.keys(), threshold=warning_threshold)  # type: ignore
+        _warn_imputation_threshold(edata, var_names=replacement.keys(), threshold=warning_threshold)  # type: ignore
 
     # 1: Replace all missing values with the specified value
     if isinstance(replacement, int | str):
-        _replace_explicit(adata.X, replacement, impute_empty_strings)
+        _replace_explicit(edata.X, replacement, impute_empty_strings)
 
     # 2: Replace all missing values in a subset of columns with a specified value per column or a default value, when the column is not explicitly named
     elif isinstance(replacement, dict):
-        for idx, column_name in enumerate(adata.var_names):
+        for idx, column_name in enumerate(edata.var_names):
             imputation_value = _extract_impute_value(replacement, column_name)
             # only replace if an explicit value got passed or could be extracted from replacement
             if imputation_value:
-                adata.X[:, idx : idx + 1] = _replace_explicit(
-                    adata.X[:, idx : idx + 1], imputation_value, impute_empty_strings
+                edata.X[:, idx : idx + 1] = _replace_explicit(
+                    edata.X[:, idx : idx + 1], imputation_value, impute_empty_strings
                 )
             else:
                 logger.warning(f"No replace value passed and found for var [not bold green]{column_name}.")
@@ -96,7 +96,7 @@ def explicit_impute(
             f"Type {type(replacement)} is not a valid datatype for replacement parameter. Either use int, str or a dict!"
         )
 
-    return adata if copy else None
+    return edata if copy else None
 
 
 @singledispatch
@@ -129,7 +129,7 @@ if DASK_AVAILABLE:
 
 
 def _extract_impute_value(replacement: dict[str, str | int], column_name: str) -> str | int | None:
-    """Extract the replacement value for a given column in the :class:`~anndata.AnnData` object.
+    """Extract the replacement value for a given column in the data object.
 
     Returns:
         The value to replace missing values
@@ -147,43 +147,44 @@ def _extract_impute_value(replacement: dict[str, str | int], column_name: str) -
 
 
 @spinner("Performing simple impute")
+@use_ehrdata(deprecated_after="1.0.0")
 def simple_impute(
-    adata: AnnData,
+    edata: EHRData | AnnData,
     var_names: Iterable[str] | None = None,
     *,
     strategy: Literal["mean", "median", "most_frequent"] = "mean",
     copy: bool = False,
     warning_threshold: int = 70,
-) -> AnnData | None:
+) -> EHRData | AnnData | None:
     """Impute missing values in numerical data using mean/median/most frequent imputation.
 
     If required and using mean or median strategy, the data needs to be properly encoded as this imputation requires
     numerical data only.
 
     Args:
-        adata: The annotated data matrix to impute missing values on.
+        edata: The annotated data matrix to impute missing values on.
         var_names: A list of column names to apply imputation on (if None, impute all columns).
         strategy: Imputation strategy to use. One of {'mean', 'median', 'most_frequent'}.
         warning_threshold: Display a warning message if percentage of missing values exceeds this threshold.
-        copy:Whether to return a copy of `adata` or modify it inplace.
+        copy:Whether to return a copy of `edata` or modify it inplace.
 
     Returns:
-        If copy is True, a modified copy of the original AnnData object with imputed X.
-        If copy is False, the original AnnData object is modified in place, and None is returned.
+        If copy is True, a modified copy of the original data object with imputed X.
+        If copy is False, the original data object is modified in place, and None is returned.
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.pp.simple_impute(adata, strategy="median")
+        >>> edata = ep.dt.mimic_2(encoded=True)
+        >>> ep.pp.simple_impute(edata, strategy="median")
     """
     if copy:
-        adata = adata.copy()
+        edata = edata.copy()
 
-    _warn_imputation_threshold(adata, var_names, threshold=warning_threshold)
+    _warn_imputation_threshold(edata, var_names, threshold=warning_threshold)
 
     if strategy in {"median", "mean"}:
         try:
-            _simple_impute(adata, var_names, strategy)
+            _simple_impute(edata, var_names, strategy)
         except ValueError:
             raise ValueError(
                 f"Can only impute numerical data using {strategy} strategy. Try to restrict imputation "
@@ -191,27 +192,28 @@ def simple_impute(
             ) from None
     # most_frequent imputation works with non-numerical data as well
     elif strategy == "most_frequent":
-        _simple_impute(adata, var_names, strategy)
+        _simple_impute(edata, var_names, strategy)
     else:
         raise ValueError(
             f"Unknown impute strategy {strategy} for simple Imputation. Choose any of mean, median or most_frequent."
         ) from None
 
-    return adata if copy else None
+    return edata if copy else None
 
 
-def _simple_impute(adata: AnnData, var_names: Iterable[str] | None, strategy: str) -> None:
+def _simple_impute(edata: EHRData | AnnData, var_names: Iterable[str] | None, strategy: str) -> None:
     imputer = SimpleImputer(strategy=strategy)
     if isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):
-        adata[:, var_names].X = imputer.fit_transform(adata[:, var_names].X)
+        edata[:, var_names].X = imputer.fit_transform(edata[:, var_names].X)
     else:
-        adata.X = imputer.fit_transform(adata.X)
+        edata.X = imputer.fit_transform(edata.X)
 
 
 @spinner("Performing KNN impute")
 @_check_feature_types
+@use_ehrdata(deprecated_after="1.0.0")
 def knn_impute(
-    adata: AnnData,
+    edata: EHRData | AnnData,
     var_names: Iterable[str] | None = None,
     *,
     n_neighbors: int = 5,
@@ -220,8 +222,8 @@ def knn_impute(
     warning_threshold: int = 70,
     backend_kwargs: dict | None = None,
     **kwargs,
-) -> AnnData:
-    """Imputes missing values in the input AnnData object using K-nearest neighbor imputation.
+) -> EHRData | AnnData | None:
+    """Imputes missing values in the input data object using K-nearest neighbor imputation.
 
     If required, the data needs to be properly encoded as this imputation requires numerical data only.
 
@@ -231,11 +233,11 @@ def knn_impute(
 
 
     Args:
-        adata: An annotated data matrix containing EHR data.
+        edata: An annotated data matrix containing EHR data.
         var_names: A list of variable names indicating which columns to impute.
                    If `None`, all columns are imputed. Default is `None`.
         n_neighbors: Number of neighbors to use when performing the imputation.
-        copy: Whether to perform the imputation on a copy of the original `AnnData` object.
+        copy: Whether to perform the imputation on a copy of the original data object.
               If `True`, the original object remains unmodified.
         backend: The implementation to use for the KNN imputation.
                  'scikit-learn' is very slow but uses an exact KNN algorithm, whereas 'faiss'
@@ -249,19 +251,19 @@ def knn_impute(
         kwargs: Gathering keyword arguments of earlier ehrapy versions for backwards compatibility. It is encouraged to use the here listed, current arguments.
 
     Returns:
-        If copy is True, a modified copy of the original AnnData object with imputed X.
-        If copy is False, the original AnnData object is modified in place, and None is returned.
+        If copy is True, a modified copy of the original data object with imputed X.
+        If copy is False, the original data object is modified in place, and None is returned.
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.ad.infer_feature_types(adata)
-        >>> ep.pp.knn_impute(adata)
+        >>> edata = ep.dt.mimic_2(encoded=True)
+        >>> ep.ad.infer_feature_types(edata)
+        >>> ep.pp.knn_impute(edata)
     """
     if copy:
-        adata = adata.copy()
+        edata = edata.copy()
 
-    _warn_imputation_threshold(adata, var_names, threshold=warning_threshold)
+    _warn_imputation_threshold(edata, var_names, threshold=warning_threshold)
 
     if backend not in {"scikit-learn", "faiss"}:
         raise ValueError(f"Unknown backend '{backend}' for KNN imputation. Choose between 'scikit-learn' and 'faiss'.")
@@ -288,16 +290,16 @@ def knn_impute(
 
         patch_sklearn()
 
-    _knn_impute(adata, var_names, n_neighbors, backend=backend, **backend_kwargs)
+    _knn_impute(edata, var_names, n_neighbors, backend=backend, **backend_kwargs)
 
     if _check_module_importable("sklearnex"):  # pragma: no cover
         unpatch_sklearn()
 
-    return adata if copy else None
+    return edata if copy else None
 
 
 def _knn_impute(
-    adata: AnnData,
+    edata: EHRData | AnnData,
     var_names: Iterable[str] | None,
     n_neighbors: int,
     backend: Literal["scikit-learn", "faiss"],
@@ -312,9 +314,9 @@ def _knn_impute(
 
         imputer = FaissImputer(n_neighbors=n_neighbors, **kwargs)
 
-    column_indices = _get_var_indices(adata, adata.var_names if var_names is None else var_names)
+    column_indices = _get_var_indices(edata, edata.var_names if var_names is None else var_names)
     numerical_indices = _infer_numerical_column_indices(
-        adata,
+        edata,
     )
     if any(idx not in numerical_indices for idx in column_indices):
         raise ValueError(
@@ -323,16 +325,17 @@ def _knn_impute(
         )
 
     complete_numerical_columns = np.array(numerical_indices)[
-        ~np.isnan(adata.X[:, numerical_indices]).any(axis=0)
+        ~np.isnan(edata.X[:, numerical_indices]).any(axis=0)
     ].tolist()
     imputer_data_indices = column_indices + [i for i in complete_numerical_columns if i not in column_indices]
-    imputer_x = adata.X[::, imputer_data_indices].astype("float64")
-    adata.X[::, imputer_data_indices] = imputer.fit_transform(imputer_x)
+    imputer_x = edata.X[::, imputer_data_indices].astype("float64")
+    edata.X[::, imputer_data_indices] = imputer.fit_transform(imputer_x)
 
 
 @spinner("Performing miss-forest impute")
+@use_ehrdata(deprecated_after="1.0.0")
 def miss_forest_impute(
-    adata: AnnData,
+    edata: EHRData | AnnData,
     var_names: Iterable[str] | None = None,
     *,
     num_initial_strategy: Literal["mean", "median", "most_frequent", "constant"] = "mean",
@@ -341,10 +344,10 @@ def miss_forest_impute(
     random_state: int = 0,
     warning_threshold: int = 70,
     copy: bool = False,
-) -> AnnData | None:
+) -> EHRData | AnnData | None:
     """Impute data using the MissForest strategy.
 
-    This function uses the MissForest strategy to impute missing values in the data matrix of an AnnData object.
+    This function uses the MissForest strategy to impute missing values in the data matrix of an data object.
     The strategy works by fitting a random forest model on each feature containing missing values,
     and using the trained model to predict the missing values.
 
@@ -353,7 +356,7 @@ def miss_forest_impute(
     If required, the data needs to be properly encoded as this imputation requires numerical data only.
 
     Args:
-        adata: The AnnData object to use MissForest Imputation on.
+        edata: The data object to use MissForest Imputation on.
         var_names: Iterable of columns to impute
         num_initial_strategy: The initial strategy to replace all missing numerical values with.
         max_iter: The maximum number of iterations if the stop criterion has not been met yet.
@@ -364,21 +367,21 @@ def miss_forest_impute(
         copy: Whether to return a copy or act in place.
 
     Returns:
-        If copy is True, a modified copy of the original AnnData object with imputed X.
-        If copy is False, the original AnnData object is modified in place, and None is returned.
+        If copy is True, a modified copy of the original data object with imputed X.
+        If copy is False, the original data object is modified in place, and None is returned.
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.pp.miss_forest_impute(adata)
+        >>> edata = ep.dt.mimic_2(encoded=True)
+        >>> ep.pp.miss_forest_impute(edata)
     """
     if copy:
-        adata = adata.copy()
+        edata = edata.copy()
 
     if var_names is None:
-        _warn_imputation_threshold(adata, list(adata.var_names), threshold=warning_threshold)
+        _warn_imputation_threshold(edata, list(edata.var_names), threshold=warning_threshold)
     elif isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):
-        _warn_imputation_threshold(adata, var_names, threshold=warning_threshold)
+        _warn_imputation_threshold(edata, var_names, threshold=warning_threshold)
 
     if _check_module_importable("sklearnex"):  # pragma: no cover
         from sklearnex import patch_sklearn, unpatch_sklearn
@@ -404,11 +407,11 @@ def miss_forest_impute(
         )
 
         if isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):  # type: ignore
-            num_indices = _get_var_indices(adata, var_names)
+            num_indices = _get_var_indices(edata, var_names)
         else:
-            num_indices = _get_var_indices(adata, adata.var_names)
+            num_indices = _get_var_indices(edata, edata.var_names)
 
-        if set(num_indices).issubset(_get_non_numerical_column_indices(adata.X)):
+        if set(num_indices).issubset(_get_non_numerical_column_indices(edata.X)):
             raise ValueError(
                 "Can only impute numerical data. Try to restrict imputation to certain columns using "
                 "var_names parameter."
@@ -416,7 +419,7 @@ def miss_forest_impute(
 
         # this step is the most expensive one and might extremely slow down the impute process
         if num_indices:
-            adata.X[::, num_indices] = imp_num.fit_transform(adata.X[::, num_indices])
+            edata.X[::, num_indices] = imp_num.fit_transform(edata.X[::, num_indices])
         else:
             raise ValueError("Cannot find any feature to perform imputation")
 
@@ -428,13 +431,14 @@ def miss_forest_impute(
     if _check_module_importable("sklearnex"):  # pragma: no cover
         unpatch_sklearn()
 
-    return adata if copy else None
+    return edata if copy else None
 
 
 @spinner("Performing mice-forest impute")
 @_check_feature_types
+@use_ehrdata(deprecated_after="1.0.0")
 def mice_forest_impute(
-    adata: AnnData,
+    edata: EHRData | AnnData,
     var_names: Iterable[str] | None = None,
     *,
     warning_threshold: int = 70,
@@ -445,7 +449,7 @@ def mice_forest_impute(
     variable_parameters: dict | None = None,
     verbose: bool = False,
     copy: bool = False,
-) -> AnnData | None:
+) -> EHRData | AnnData | None:
     """Impute data using the miceforest.
 
     See https://github.com/AnotherSamWilson/miceforest
@@ -454,45 +458,45 @@ def mice_forest_impute(
     If required, the data needs to be properly encoded as this imputation requires numerical data only.
 
     Args:
-        adata: The AnnData object containing the data to impute.
+        edata: The data object containing the data to impute.
         var_names: A list of variable names to impute. If None, impute all variables.
         warning_threshold: Threshold of percentage of missing values to display a warning for.
         save_all_iterations_data: Whether to save all imputed values from all iterations or just the latest.
                              Saving all iterations allows for additional plotting, but may take more memory.
         random_state: The random state ensures script reproducibility.
-        inplace: If True, modify the input AnnData object in-place and return None.
-                 If False, return a copy of the modified AnnData object. Default is False.
+        inplace: If True, modify the input data object in-place and return None.
+                 If False, return a copy of the modified data object. Default is False.
         iterations: The number of iterations to run.
         variable_parameters: Model parameters can be specified by variable here.
                              Keys should be variable names or indices, and values should be a dict of parameter which should apply to that variable only.
         verbose: Whether to print information about the imputation process.
-        copy: Whether to return a copy of the AnnData object or modify it in-place.
+        copy: Whether to return a copy of the data object or modify it in-place.
 
     Returns:
-        If copy is True, a modified copy of the original AnnData object with imputed X.
-        If copy is False, the original AnnData object is modified in place, and None is returned.
+        If copy is True, a modified copy of the original data object with imputed X.
+        If copy is False, the original data object is modified in place, and None is returned.
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.ad.infer_feature_types(adata)
-        >>> ep.pp.mice_forest_impute(adata)
+        >>> edata = ep.dt.mimic_2(encoded=True)
+        >>> ep.ad.infer_feature_types(edata)
+        >>> ep.pp.mice_forest_impute(edata)
     """
     if copy:
-        adata = adata.copy()
+        edata = edata.copy()
 
-    _warn_imputation_threshold(adata, var_names, threshold=warning_threshold)
+    _warn_imputation_threshold(edata, var_names, threshold=warning_threshold)
 
     if any(
-        idx not in _infer_numerical_column_indices(adata)
-        for idx in _get_var_indices(adata, adata.var_names if var_names is None else var_names)
+        idx not in _infer_numerical_column_indices(edata)
+        for idx in _get_var_indices(edata, edata.var_names if var_names is None else var_names)
     ):
         raise ValueError(
             "Can only impute numerical data. Try to restrict imputation to certain columns using "
             "var_names parameter or perform an encoding of your data."
         )
     _miceforest_impute(
-        adata,
+        edata,
         var_names,
         save_all_iterations_data,
         random_state,
@@ -502,7 +506,7 @@ def mice_forest_impute(
         verbose,
     )
 
-    return adata if copy else None
+    return edata if copy else None
 
 
 @singledispatch
@@ -516,15 +520,15 @@ def _(arr: np.ndarray, columns, index):
 
 
 def _miceforest_impute(
-    adata, var_names, save_all_iterations_data, random_state, inplace, iterations, variable_parameters, verbose
+    edata, var_names, save_all_iterations_data, random_state, inplace, iterations, variable_parameters, verbose
 ) -> None:
     import miceforest as mf
 
-    data_df = load_dataframe(adata.X, columns=adata.var_names, index=adata.obs_names)
+    data_df = load_dataframe(edata.X, columns=edata.var_names, index=edata.obs_names)
     data_df = data_df.apply(pd.to_numeric, errors="coerce")
 
     if isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):
-        column_indices = _get_var_indices(adata, var_names)
+        column_indices = _get_var_indices(edata, var_names)
         selected_columns = data_df.iloc[:, column_indices]
         selected_columns = selected_columns.reset_index(drop=True)
 
@@ -548,30 +552,32 @@ def _miceforest_impute(
         kernel.mice(iterations=iterations, variable_parameters=variable_parameters or {}, verbose=verbose)
         data_df = kernel.complete_data(dataset=0, inplace=inplace)
 
-    adata.X = data_df.values
+    edata.X = data_df.values
 
 
-def _warn_imputation_threshold(adata: AnnData, var_names: Iterable[str] | None, threshold: int = 75) -> dict[str, int]:
+def _warn_imputation_threshold(
+    edata: EHRData | AnnData, var_names: Iterable[str] | None, threshold: int = 75
+) -> dict[str, int]:
     """Warns the user if the more than $threshold percent had to be imputed.
 
     Args:
-        adata: The AnnData object to check
+        edata: The data object to check
         var_names: The var names which were imputed.
         threshold: A percentage value from 0 to 100 used as minimum.
     """
     try:
-        adata.var["missing_values_pct"]
+        edata.var["missing_values_pct"]
     except KeyError:
         from ehrapy.preprocessing import qc_metrics
 
-        qc_metrics(adata)
-    used_var_names = set(adata.var_names) if var_names is None else set(var_names)
+        qc_metrics(edata)
+    used_var_names = set(edata.var_names) if var_names is None else set(var_names)
 
-    thresholded_var_names = set(adata.var[adata.var["missing_values_pct"] > threshold].index) & set(used_var_names)
+    thresholded_var_names = set(edata.var[edata.var["missing_values_pct"] > threshold].index) & set(used_var_names)
 
     var_name_to_pct: dict[str, int] = {}
     for var in thresholded_var_names:
-        var_name_to_pct[var] = adata.var["missing_values_pct"].loc[var]
+        var_name_to_pct[var] = edata.var["missing_values_pct"].loc[var]
         logger.warning(f"Feature '{var}' had more than {var_name_to_pct[var]:.2f}% missing values!")
 
     return var_name_to_pct

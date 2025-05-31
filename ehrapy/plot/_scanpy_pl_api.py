@@ -1047,7 +1047,7 @@ def pca(  # noqa: D417
         sc.pl.pca, annotate_var_explained=annotate_var_explained, show=show, return_fig=return_fig, save=save
     )
 
-    return pca_partial(edata=edata, **kwargs)
+    return pca_partial(adata=edata, **kwargs)
 
 
 @use_ehrdata(deprecated_after="1.0.0")
