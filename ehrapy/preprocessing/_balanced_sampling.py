@@ -1,24 +1,25 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal
-
-if TYPE_CHECKING:
-    from anndata import AnnData
+from typing import Literal
 
 from anndata import AnnData
+from ehrdata import EHRData
 from imblearn.over_sampling import RandomOverSampler
 from imblearn.under_sampling import RandomUnderSampler
 
+from ehrapy._compat import use_ehrdata
 
+
+@use_ehrdata(deprecated_after="1.0.0")
 def balanced_sample(
-    adata: AnnData,
+    edata: EHRData | AnnData,
     *,
     key: str,
     random_state: int = 0,
     method: Literal["RandomUnderSampler", "RandomOverSampler"] = "RandomUnderSampler",
     sampler_kwargs: dict = None,
     copy: bool = False,
-) -> AnnData:
+) -> EHRData | AnnData | None:
     """Balancing groups in the dataset.
 
     Balancing groups in the dataset based on group members in `.obs[key]` using the `imbalanced-learn <https://imbalanced-learn.org/stable/index.html>`_ package.
@@ -30,8 +31,8 @@ def balanced_sample(
     by  default undersamples the majority group without replacement, not causing this issues of replicated observations.
 
     Args:
-        adata: The annotated data matrix of shape `n_obs` × `n_vars`.
-        key: The key in `adata.obs` that contains the group information.
+        edata: The annotated data matrix of shape `n_obs` × `n_vars`.
+        key: The key in `edata.obs` that contains the group information.
         random_state: Random seed.
         method: The method to use for balancing.
         sampler_kwargs: Keyword arguments for the sampler, see the `imbalanced-learn` documentation for options.
@@ -42,21 +43,21 @@ def balanced_sample(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.data.diabetes_130_fairlearn(columns_obs_only=["age"])
-        >>> adata.obs.age.value_counts()
+        >>> edata = ep.data.diabetes_130_fairlearn(columns_obs_only=["age"])
+        >>> edata.obs.age.value_counts()
         age
         'Over 60 years'          68541
         '30-60 years'            30716
         '30 years or younger'     2509
-        >>> adata_balanced = ep.pp.sample(adata, key="age")
-        >>> adata_balanced.obs.age.value_counts()
+        >>> edata_balanced = ep.pp.sample(edata, key="age")
+        >>> edata_balanced.obs.age.value_counts()
         age
         '30 years or younger'    2509
         '30-60 years'            2509
         'Over 60 years'          2509
     """
-    if not isinstance(adata, AnnData):
-        raise ValueError(f"Input data is not an AnnData object: type of {adata}, is {type(adata)}")
+    if not isinstance(edata, EHRData | AnnData):
+        raise ValueError(f"Input data is not an EHRData orAnnData object: type of {edata}, is {type(edata)}")
 
     if sampler_kwargs is None:
         sampler_kwargs = {"random_state": random_state}
@@ -70,14 +71,15 @@ def balanced_sample(
     else:
         raise ValueError(f"Unknown sampling method: {method}")
 
-    if key in adata.obs.keys():
-        use_label = adata.obs[key]
+    if key in edata.obs.keys():
+        use_label = edata.obs[key]
     else:
-        raise ValueError(f"key not in adata.obs: {key}")
+        raise ValueError(f"key not in edata.obs: {key}")
 
-    sampler.fit_resample(adata.X, use_label)
+    sampler.fit_resample(edata.X, use_label)
 
     if copy:
-        return adata[sampler.sample_indices_].copy()
+        return edata[sampler.sample_indices_].copy()
     else:
-        adata._inplace_subset_obs(sampler.sample_indices_)
+        edata._inplace_subset_obs(sampler.sample_indices_)
+        return None
