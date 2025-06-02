@@ -7,10 +7,13 @@ from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 import numpy as np
 import scanpy as sc
 
+from ehrapy._compat import use_ehrdata
+
 if TYPE_CHECKING:
     from collections.abc import Collection, Mapping, Sequence
 
     from anndata import AnnData
+    from ehrdata import EHRData
     from scanpy.neighbors import KnnTransformerLike
     from scipy.sparse import spmatrix
 
@@ -20,7 +23,7 @@ AnyRandom: TypeAlias = int | np.random.RandomState | None
 
 
 def pca(
-    data: AnnData | np.ndarray | spmatrix,
+    data: EHRData | AnnData | np.ndarray | spmatrix,
     n_comps: int | None = None,
     zero_center: bool | None = True,
     svd_solver: str = "arpack",
@@ -30,7 +33,7 @@ def pca(
     copy: bool = False,
     chunked: bool = False,
     chunk_size: int | None = None,
-) -> AnnData | np.ndarray | spmatrix | None:  # pragma: no cover
+) -> EHRData | AnnData | np.ndarray | spmatrix | None:  # pragma: no cover
     """Computes a principal component analysis.
 
     Computes PCA coordinates, loadings and variance decomposition. Uses the implementation of *scikit-learn*.
@@ -54,9 +57,9 @@ def pca(
 
                     Efficient computation of the principal components of a sparse matrix currently only works with the `'arpack`' or `'lobpcg'` solvers.
         random_state: Change to use different initial states for the optimization.
-        return_info: Only relevant when not passing an :class:`~anndata.AnnData`: see “**Returns**”.
+        return_info: Only relevant when not passing an :class:`~ehrdata.EHRData`: or :class:`~anndata.AnnData`: see “**Returns**”.
         dtype: Numpy data type string to which to convert the result.
-        copy: If an :class:`~anndata.AnnData` is passed, determines whether a copy is returned. Is ignored otherwise.
+        copy: If an :class:`~ehrdata.EHRData`: or :class:`~anndata.AnnData`: is passed, determines whether a copy is returned. Is ignored otherwise.
         chunked: If `True`, perform an incremental PCA on segments of `chunk_size`.
                   The incremental PCA automatically zero centers and ignores settings of
                   `random_seed` and `svd_solver`. If `False`, perform a full PCA.
@@ -67,9 +70,9 @@ def pca(
 
         If `data` is array-like and `return_info=False` was passed, this function only returns `X_pca`...
 
-        adata : :class:`~anndata.AnnData`
+        edata : :class:`~ehrdata.EHRData` or :class:`~anndata.AnnData`
 
-        …otherwise if `copy=True` it returns or else adds fields to `adata`:
+        …otherwise if `copy=True` it returns or else adds fields to `edata`:
 
         `.obsm['X_pca']`
         PCA representation of data.
@@ -98,36 +101,37 @@ def pca(
     )
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 def regress_out(
-    adata: AnnData,
+    edata: EHRData | AnnData,
     keys: str | Sequence[str],
     n_jobs: int | None = None,
     copy: bool = False,
-) -> AnnData | None:  # pragma: no cover
+) -> EHRData | AnnData | None:  # pragma: no cover
     """Regress out (mostly) unwanted sources of variation.
 
     Uses simple linear regression. This is inspired by Seurat's `regressOut` function in R [Satija15].
     Note that this function tends to overcorrect in certain circumstances.
 
     Args:
-        adata: :class:`~anndata.AnnData` object containing all observations.
+        edata: Data object containing all observations.
         keys: Keys for observation annotation on which to regress on.
         n_jobs: Number of jobs for parallel computation. `None` means using :attr:`scanpy._settings.ScanpyConfig.n_jobs`.
-        copy: Determines whether a copy of `adata` is returned.
+        copy: Determines whether a copy of `edata` is returned.
 
     Returns:
-        Depending on `copy` returns or updates an :class:`~anndata.AnnData` object with the corrected data matrix.
+        Depending on `copy` returns or updates the data object with the corrected data matrix.
     """
-    return sc.pp.regress_out(adata=adata, keys=keys, n_jobs=n_jobs, copy=copy)
+    return sc.pp.regress_out(adata=edata, keys=keys, n_jobs=n_jobs, copy=copy)
 
 
 def subsample(
-    data: AnnData | np.ndarray | spmatrix,
+    data: EHRData | AnnData | np.ndarray | spmatrix,
     fraction: float | None = None,
     n_obs: int | None = None,
     random_state: AnyRandom = 0,
     copy: bool = False,
-) -> AnnData | None:  # pragma: no cover
+) -> EHRData | AnnData | np.ndarray | spmatrix | None:  # pragma: no cover
     """Subsample to a fraction of the number of observations.
 
     Args:
@@ -135,21 +139,21 @@ def subsample(
         fraction: Subsample to this `fraction` of the number of observations.
         n_obs: Subsample to this number of observations.
         random_state: Random seed to change subsampling.
-        copy: If an :class:`~anndata.AnnData` is passed, determines whether a copy is returned.
+        copy: If an :class:`~ehrdata.EHRData`: or :class:`~anndata.AnnData`: is passed, determines whether a copy is returned.
 
     Returns:
         Returns `X[obs_indices], obs_indices` if data is array-like, otherwise subsamples the passed
-        :class:`~anndata.AnnData` (`copy == False`) or returns a subsampled copy of it (`copy == True`).
+        :class:`~ehrdata.EHRData`: or :class:`~anndata.AnnData` (`copy == False`) or returns a subsampled copy of it (`copy == True`).
     """
     return sc.pp.subsample(data=data, fraction=fraction, n_obs=n_obs, random_state=random_state, copy=copy)
 
 
 def combat(
-    adata: AnnData,
+    edata: EHRData | AnnData,
     key: str = "batch",
     covariates: Collection[str] | None = None,
     inplace: bool = True,
-) -> AnnData | np.ndarray | None:  # pragma: no cover
+) -> EHRData | AnnData | np.ndarray | None:  # pragma: no cover
     """ComBat function for batch effect correction :cite:p:`Johnson2006`, :cite:p:`Leek2012`, :cite:p:`Pedersen2012`.
 
     Corrects for batch effects by fitting linear models, gains statistical power via an EB framework where information is borrowed across features.
@@ -158,18 +162,18 @@ def combat(
     .. _combat.py: https://github.com/brentp/combat.py
 
     Args:
-        adata: :class:`~anndata.AnnData` object containing all observations.
-        key: Key to a categorical annotation from :attr:`~anndata.AnnData.obs` that will be used for batch effect removal.
+        edata: Data object containing all observations.
+        key: Key to a categorical annotation from `.obs` that will be used for batch effect removal.
         covariates: Additional covariates besides the batch variable such as adjustment variables or biological condition.
                     This parameter refers to the design matrix `X` in Equation 2.1 in :cite:p:`Johnson2006` and to the `mod` argument in
                     the original combat function in the sva R package.
                     Note that not including covariates may introduce bias or lead to the removal of signal in unbalanced designs.
-        inplace: Whether to replace adata.X or to return the corrected data
+        inplace: Whether to replace edata.X or to return the corrected data
 
     Returns:
-        Depending on the value of `inplace`, either returns the corrected matrix or modifies `adata.X`.
+        Depending on the value of `inplace`, either returns the corrected matrix or modifies `edata.X`.
     """
-    return sc.pp.combat(adata=adata, key=key, covariates=covariates, inplace=inplace)
+    return sc.pp.combat(adata=edata, key=key, covariates=covariates, inplace=inplace)
 
 
 _Method = Literal["umap", "gauss"]
@@ -197,8 +201,9 @@ _MetricScipySpatial = Literal[
 _Metric = _MetricSparseCapable | _MetricScipySpatial
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 def neighbors(
-    adata: AnnData,
+    edata: EHRData | AnnData,
     n_neighbors: int = 15,
     n_pcs: int | None = None,
     use_rep: str | None = None,
@@ -210,7 +215,7 @@ def neighbors(
     metric_kwds: Mapping[str, Any] = MappingProxyType({}),
     key_added: str | None = None,
     copy: bool = False,
-) -> AnnData | None:  # pragma: no cover
+) -> EHRData | AnnData | None:  # pragma: no cover
     """Compute a neighborhood graph of observations :cite:p:`McInnes2018`.
 
     The neighbor search efficiency of this heavily relies on UMAP :cite:p:`McInnes2018`,
@@ -219,7 +224,7 @@ def neighbors(
     connectivities are computed according to :cite:p:`Coifman2005`, in the adaption of :cite:p:`Haghverdi2016`.
 
     Args:
-        adata: :class:`~anndata.AnnData` object containing all observations.
+        edata: Data object containing all observations.
         n_neighbors: The size of local neighborhood (in terms of number of neighboring data points) used for manifold approximation.
                      Larger values result in more global views of the manifold, while smaller values result in more local data being preserved.
                      In general values should be in the range 2 to 100. If `knn` is `True`, number of nearest neighbors to be searched.
@@ -253,10 +258,10 @@ def neighbors(
                    distances and connectivities are stored in .obsp['distances'] and .obsp['connectivities'] respectively.
                    If specified, the neighbors data is added to .uns[key_added], distances are stored in .obsp[key_added+'_distances']
                    and connectivities in .obsp[key_added+'_connectivities'].
-        copy: Determines whether a copy of `adata` is returned.
+        copy: Determines whether a copy of `edata` is returned.
 
     Returns:
-         Depending on `copy`, updates or returns `adata` with the following;
+         Depending on `copy`, updates or returns `edata` with the following;
          See `key_added` parameter description for the storage path of connectivities and distances.
 
          **connectivities** : sparse matrix of dtype `float32`.
@@ -266,7 +271,7 @@ def neighbors(
          Instead of decaying weights, this stores distances for each pair of neighbors.
     """
     return sc.pp.neighbors(
-        adata=adata,
+        adata=edata,
         n_neighbors=n_neighbors,
         n_pcs=n_pcs,
         use_rep=use_rep,

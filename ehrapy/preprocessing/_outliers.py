@@ -65,6 +65,7 @@ def winsorize(
     return edata if copy else None
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 def clip_quantile(
     edata: EHRData | AnnData,
     limits: tuple[float, float],

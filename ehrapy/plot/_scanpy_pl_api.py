@@ -1080,7 +1080,7 @@ def pca_loadings(
     Preview:
         .. image:: /_static/docstring_previews/pca_loadings.png
     """
-    return sc.pl.pca_loadings(edata=edata, components=components, include_lowest=include_lowest, show=show, save=save)
+    return sc.pl.pca_loadings(adata=edata, components=components, include_lowest=include_lowest, show=show, save=save)
 
 
 @use_ehrdata(deprecated_after="1.0.0")
@@ -1114,7 +1114,7 @@ def pca_variance_ratio(
     Preview:
         .. image:: /_static/docstring_previews/pca_variance_ratio.png
     """
-    return sc.pl.pca_variance_ratio(edata=edata, n_pcs=n_pcs, log=log, show=show, save=save)
+    return sc.pl.pca_variance_ratio(adata=edata, n_pcs=n_pcs, log=log, show=show, save=save)
 
 
 @_doc_params(scatter_bulk=doc_scatter_embedding, show_save_ax=doc_show_save_ax)
@@ -1146,7 +1146,7 @@ def pca_overview(edata: EHRData | AnnData, **params) -> Axes | list[Axes] | None
 
         .. image:: /_static/docstring_previews/pca_overview_3.png
     """
-    return sc.pl.pca_overview(edata=edata, **params)
+    return sc.pl.pca_overview(adata=edata, **params)
 
 
 # @_wraps_plot_scatter
@@ -1192,7 +1192,7 @@ def tsne(edata, **kwargs) -> Figure | Axes | list[Axes] | None:  # pragma: no co
         .. image:: /_static/docstring_previews/tsne_3.png
 
     """
-    return sc.pl.tsne(edata=edata, **kwargs)
+    return sc.pl.tsne(adata=edata, **kwargs)
 
 
 # @_wraps_plot_scatter
@@ -1237,7 +1237,7 @@ def umap(edata: EHRData | AnnData, **kwargs) -> Figure | Axes | list[Axes] | Non
 
         .. image:: /_static/docstring_previews/umap_3.png
     """
-    return sc.pl.umap(edata=edata, **kwargs)
+    return sc.pl.umap(adata=edata, **kwargs)
 
 
 # @_wraps_plot_scatter
@@ -1267,7 +1267,7 @@ def diffmap(edata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover # 
     Preview:
         .. image:: /_static/docstring_previews/diffmap.png
     """
-    return sc.pl.diffmap(edata=edata, **kwargs)
+    return sc.pl.diffmap(adata=edata, **kwargs)
 
 
 # @_wraps_plot_scatter
@@ -1523,7 +1523,7 @@ def embedding_density(  # noqa: D417
         .. image:: /_static/docstring_previews/embedding_density.png
     """
     return sc.pl.embedding_density(
-        edata=edata,
+        adata=edata,
         basis=basis,
         key=key,
         groupby=groupby,
@@ -1616,7 +1616,7 @@ def dpt_timeseries(
     Preview:
         .. image:: /_static/docstring_previews/dpt_timeseries.png
     """
-    sc.pl.dpt_timeseries(edata=edata, color_map=color_map, show=show, save=save, as_heatmap=as_heatmap)
+    sc.pl.dpt_timeseries(anddata=edata, color_map=color_map, show=show, save=save, as_heatmap=as_heatmap)
 
 
 @use_ehrdata(deprecated_after="1.0.0")
@@ -1745,7 +1745,7 @@ def paga(
         .. image:: /_static/docstring_previews/paga.png
     """
     return sc.pl.paga(
-        edata=edata,
+        adata=edata,
         threshold=threshold,
         color=color,
         layout=layout,
@@ -1847,7 +1847,7 @@ def paga_path(
         save: Whether or where to save the plot.
     """
     return sc.pl.paga_path(
-        edata=edata,
+        adata=edata,
         nodes=nodes,
         keys=keys,
         use_raw=use_raw,
@@ -2013,7 +2013,7 @@ def rank_features_groups(  # noqa: D417
         .. image:: /_static/docstring_previews/rank_features_groups.png
     """
     return sc.pl.rank_genes_groups(
-        edata=edata,
+        adata=edata,
         groups=groups,
         n_genes=n_features,
         gene_symbols=feature_symbols,
@@ -2084,7 +2084,7 @@ def rank_features_groups_violin(  # noqa: D417
         .. image:: /_static/docstring_previews/rank_features_groups_violin_4.png
     """
     return sc.pl.rank_genes_groups_violin(
-        edata=edata,
+        adata=edata,
         groups=groups,
         n_genes=n_features,
         gene_names=feature_names,
@@ -2155,7 +2155,7 @@ def rank_features_groups_stacked_violin(
         .. image:: /_static/docstring_previews/rank_features_groups_stacked_violin.png
     """
     return sc.pl.rank_genes_groups_stacked_violin(
-        edata=edata,
+        adata=edata,
         groups=groups,
         n_genes=n_features,
         groupby=groupby,
@@ -2214,7 +2214,7 @@ def rank_features_groups_heatmap(
         .. image:: /_static/docstring_previews/rank_features_groups_heatmap.png
     """
     return sc.pl.rank_genes_groups_heatmap(
-        edata=edata,
+        adata=edata,
         groups=groups,
         n_genes=n_features,
         groupby=groupby,
@@ -2291,7 +2291,7 @@ def rank_features_groups_dotplot(
         .. image:: /_static/docstring_previews/rank_features_groups_dotplot.png
     """
     return sc.pl.rank_genes_groups_dotplot(
-        edata=edata,
+        adata=edata,
         groups=groups,
         n_genes=n_features,
         groupby=groupby,
@@ -2372,7 +2372,7 @@ def rank_features_groups_matrixplot(
 
     """
     return sc.pl.rank_genes_groups_matrixplot(
-        edata=edata,
+        adata=edata,
         groups=groups,
         n_genes=n_features,
         groupby=groupby,
@@ -2432,7 +2432,7 @@ def rank_features_groups_tracksplot(
         .. image:: /_static/docstring_previews/rank_features_groups_tracksplot.png
     """
     return sc.pl.rank_genes_groups_tracksplot(
-        edata=edata,
+        adata=edata,
         groups=groups,
         n_genes=n_features,
         groupby=groupby,

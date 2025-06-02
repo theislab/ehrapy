@@ -11,6 +11,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.svm import SVC, SVR
 
+from ehrapy._compat import use_ehrdata
 from ehrapy.anndata import _check_feature_types, anndata_to_df
 from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 
@@ -18,11 +19,13 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from anndata import AnnData
+    from ehrdata import EHRData
 
 
 @_check_feature_types
+@use_ehrdata(deprecated_after="1.0.0")
 def rank_features_supervised(
-    adata: AnnData,
+    edata: EHRData | AnnData,
     predicted_feature: str,
     *,
     model: Literal["regression", "svm", "rf"] = "rf",
@@ -39,16 +42,16 @@ def rank_features_supervised(
     """Calculate feature importances for predicting a specified feature in adata.var.
 
     Args:
-        adata: :class:`~anndata.AnnData` object storing the data.
-        predicted_feature: The feature to predict by the model. Must be present in adata.var_names.
+        edata: Data object storing the data.
+        predicted_feature: The feature to predict by the model. Must be present in edata.var_names.
         model: The model to use for prediction. Choose between 'regression', 'svm', or 'rf'. Note that multi-class classification
             is only possible with 'rf'.
-        input_features: The features in adata.var to use for prediction. Should be a list of feature names. If 'all', all features
-            in adata.var will be used. Note that non-numeric input features will cause an error, so make sure to encode them properly
+        input_features: The features in edata.var to use for prediction. Should be a list of feature names. If 'all', all features
+            in edata.var will be used. Note that non-numeric input features will cause an error, so make sure to encode them properly
             before.
-        layer: The layer in adata.layers to use for prediction. If None, adata.X will be used.
+        layer: The layer in edata.layers to use for prediction. If None, edata.X will be used.
         test_split_size: The split of data used for testing the model. Should be a float between 0 and 1, representing the proportion.
-        key_added: The key in adata.var to store the feature importances.
+        key_added: The key in edata.var to store the feature importances.
         feature_scaling: The type of feature scaling to use for the input. Choose between 'standard', 'minmax', or None.
             'standard' uses sklearn's StandardScaler, 'minmax' uses MinMaxScaler. Scaler will be fit and transformed
             for each feature individually.
@@ -63,21 +66,21 @@ def rank_features_supervised(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=False)
-        >>> ep.ad.infer_feature_types(adata)
-        >>> ep.pp.knn_impute(adata, n_neighbors=5)
+        >>> edata = ep.dt.mimic_2(encoded=False)
+        >>> ep.ad.infer_feature_types(edata)
+        >>> ep.pp.knn_impute(edata, n_neighbors=5)
         >>> input_features = [
-        ...     feat for feat in adata.var_names if feat not in {"service_unit", "day_icu_intime", "tco2_first"}
+        ...     feat for feat in edata.var_names if feat not in {"service_unit", "day_icu_intime", "tco2_first"}
         ... ]
-        >>> ep.tl.rank_features_supervised(adata, "tco2_first", model="rf", input_features=input_features)
+        >>> ep.tl.rank_features_supervised(edata, "tco2_first", model="rf", input_features=input_features)
     """
-    if predicted_feature not in adata.var_names:
-        raise ValueError(f"Feature {predicted_feature} not found in adata.var.")
+    if predicted_feature not in edata.var_names:
+        raise ValueError(f"Feature {predicted_feature} not found in edata.var.")
 
     if input_features != "all":
         for feature in input_features:
-            if feature not in adata.var_names:
-                raise ValueError(f"Feature {feature} not found in adata.var.")
+            if feature not in edata.var_names:
+                raise ValueError(f"Feature {feature} not found in edata.var.")
 
     if model not in ["regression", "svm", "rf"]:
         raise ValueError(f"Model {model} not recognized. Please choose either 'regression', 'svm', or 'rf'.")
@@ -87,9 +90,9 @@ def rank_features_supervised(
             f"Feature scaling type {feature_scaling} not recognized. Please choose either 'standard', 'minmax', or None."
         )
 
-    data = anndata_to_df(adata, layer=layer)
+    data = anndata_to_df(edata, layer=layer)
 
-    prediction_type = adata.var[FEATURE_TYPE_KEY].loc[predicted_feature]
+    prediction_type = edata.var[FEATURE_TYPE_KEY].loc[predicted_feature]
 
     if prediction_type == DATE_TAG:
         raise ValueError(
@@ -118,7 +121,7 @@ def rank_features_supervised(
             predictor = RandomForestClassifier(**kwargs)
 
     if input_features == "all":
-        input_features = list(adata.var_names)
+        input_features = list(edata.var_names)
         input_features.remove(predicted_feature)
 
     input_data = data[input_features]
@@ -162,8 +165,8 @@ def rank_features_supervised(
     if percent_output:
         feature_importances = feature_importances.abs() / feature_importances.abs().sum() * 100
 
-    # Reorder feature importances to match adata.var order and save importances in adata.var
-    feature_importances = feature_importances.reindex(adata.var_names)
-    adata.var[key_added] = feature_importances
+    # Reorder feature importances to match edata.var order and save importances in edata.var
+    feature_importances = feature_importances.reindex(edata.var_names)
+    edata.var[key_added] = feature_importances
 
     return score if return_score else None

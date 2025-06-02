@@ -339,7 +339,7 @@ def quantile_norm(
         **kwargs: Additional arguments passed to the QuantileTransformer.
 
     Returns:
-        `None` if `copy=False` and modifies the passed edata, else returns an updated AnnData object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
+        `None` if `copy=False` and modifies the passed edata, else returns an updated data object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
 
     Examples:
         >>> import ehrapy as ep
@@ -391,7 +391,7 @@ def power_norm(
         **kwargs: Additional arguments passed to the PowerTransformer.
 
     Returns:
-        `None` if `copy=False` and modifies the passed edata, else returns an updated AnnData object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
+        `None` if `copy=False` and modifies the passed edata, else returns an updated data object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
 
     Examples:
         >>> import ehrapy as ep
@@ -432,7 +432,7 @@ def log_norm(
         copy: Whether to return a copy or act in place.
 
     Returns:
-        `None` if `copy=False` and modifies the passed edata, else returns an updated AnnData object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
+        `None` if `copy=False` and modifies the passed edata, else returns an updated data object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
 
     Examples:
         >>> import ehrapy as ep
@@ -514,10 +514,10 @@ def offset_negative_values(edata: EHRData | AnnData, layer: str = None, copy: bo
     Args:
         edata: Data object containing X to normalize values in.
         layer: The layer to offset.
-        copy: Whether to return a modified copy of the AnnData object.
+        copy: Whether to return a modified copy of the data object.
 
     Returns:
-        Copy of AnnData object if copy is True.
+        `None` if `copy=False` and modifies the passed edata, else returns an updated data object.
     """
     if copy:
         edata = edata.copy()
