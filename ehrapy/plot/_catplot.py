@@ -35,7 +35,7 @@ def catplot(
         A Seaborn FacetGrid object for further modifications.
 
     Examples:
-        >>> import ehrapy as ep
+        >>> import ehrdata as ed
         >>> edata = ep.dt.diabetes_130_fairlearn()
         >>> ep.ad.move_to_obs(edata, ["A1Cresult", "admission_source_id"], copy_obs=True)
         >>> edata.obs["A1Cresult_measured"] = ~edata.obs["A1Cresult"].isna()

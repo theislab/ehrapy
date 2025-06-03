@@ -7,7 +7,6 @@ import numpy as np
 import pandas as pd
 from anndata import AnnData
 from dateutil.parser import isoparse  # type: ignore
-from ehrdata import EHRData
 from lamin_utils import logger
 from rich import print
 from rich.tree import Tree
@@ -17,6 +16,8 @@ from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KE
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
+
+    from ehrdata import EHRData
 
 
 def _detect_feature_type(col: pd.Series) -> tuple[Literal["date", "categorical", "numeric"], bool]:
@@ -93,8 +94,8 @@ def infer_feature_types(
         verbose: Whether to print warnings for uncertain feature types.
 
     Examples:
-        >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=False)
+        >>> import ehrdata as ed
+        >>> edata = ep.dt.mimic_2()
         >>> ep.ad.infer_feature_types(edata)
     """
     from ehrapy.anndata.anndata_ext import anndata_to_df
@@ -163,6 +164,8 @@ def _check_feature_types(func):
     @wraps(func)
     def wrapper(edata, *args, **kwargs):
         # Account for class methods that pass self as first argument
+        from ehrdata import EHRData
+
         _self = None
         if (
             not (isinstance(edata, EHRData) or isinstance(edata, AnnData))
@@ -206,8 +209,8 @@ def feature_type_overview(edata: EHRData | AnnData) -> None:
         edata: The EHRData object storing the EHR data.
 
     Examples:
-        >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=True)
+        >>> import ehrdata as ed
+        >>> edata = ed.dt.mimic_2()
         >>> ep.ad.feature_type_overview(edata)
     """
     from ehrapy.anndata.anndata_ext import anndata_to_df
@@ -256,7 +259,7 @@ def replace_feature_types(edata: EHRData | AnnData, features: Iterable[str], cor
         corrected_type: The corrected feature type. One of 'date', 'categorical', or 'numeric'.
 
     Examples:
-        >>> import ehrapy as ep
+        >>> import ehrdata as ed
         >>> edata = ep.dt.diabetes_130_fairlearn()
         >>> ep.ad.infer_feature_types(edata)
         >>> ep.ad.replace_feature_types(edata, ["time_in_hospital", "number_diagnoses", "num_procedures"], "numeric")

@@ -114,7 +114,7 @@ def anndata_to_df(
 
     Examples:
         >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=True)
+        >>> edata = ed.dt.mimic_2()
         >>> df = ep.ad.anndata_to_df(edata)
     """
     if layer is not None:
@@ -166,7 +166,7 @@ def move_to_obs(edata: EHRData | AnnData, to_obs: list[str] | str, copy_obs: boo
 
     Examples:
         >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=True)
+        >>> edata = ed.dt.mimic_2()
         >>> ep.ad.move_to_obs(edata, ["age"], copy_obs=False)
     """
     if isinstance(to_obs, str):  # pragma: no cover
@@ -232,7 +232,7 @@ def move_to_x(edata: EHRData | AnnData, to_x: list[str] | str, copy_x: bool = Fa
 
     Examples:
         >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=True)
+        >>> edata = ed.dt.mimic_2()
         >>> ep.ad.move_to_obs(edata, ["age"], copy_obs=False)
         >>> new_edata = ep.ad.move_to_x(edata, ["age"])
     """

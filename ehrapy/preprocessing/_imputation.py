@@ -65,7 +65,7 @@ def explicit_impute(
         Replace all missing values in edata with the value 0:
 
         >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=True)
+        >>> edata = ed.dt.mimic_2()
         >>> ep.pp.explicit_impute(edata, replacement=0)
     """
     if copy:
@@ -174,7 +174,7 @@ def simple_impute(
 
     Examples:
         >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=True)
+        >>> edata = ed.dt.mimic_2()
         >>> ep.pp.simple_impute(edata, strategy="median")
     """
     if copy:
@@ -256,7 +256,7 @@ def knn_impute(
 
     Examples:
         >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=True)
+        >>> edata = ed.dt.mimic_2()
         >>> ep.ad.infer_feature_types(edata)
         >>> ep.pp.knn_impute(edata)
     """
@@ -372,7 +372,7 @@ def miss_forest_impute(
 
     Examples:
         >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=True)
+        >>> edata = ed.dt.mimic_2()
         >>> ep.pp.miss_forest_impute(edata)
     """
     if copy:
@@ -478,7 +478,7 @@ def mice_forest_impute(
 
     Examples:
         >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=True)
+        >>> edata = ed.dt.mimic_2()
         >>> ep.ad.infer_feature_types(edata)
         >>> ep.pp.mice_forest_impute(edata)
     """

@@ -32,7 +32,7 @@ def obs_df(  # pragma: no cover
 
     Examples:
         >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=True)
+        >>> edata = ed.dt.mimic_2()
         >>> ages = ep.get.obs_df(edata, keys=["age"])
     """
     return scanpy_obs_df(adata=edata, keys=keys, obsm_keys=obsm_keys, layer=layer, gene_symbols=features)
@@ -59,7 +59,7 @@ def var_df(  # pragma: no cover
 
     Examples:
         >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=True)
+        >>> edata = ed.dt.mimic_2()
         >>> four_patients = ep.get.var_df(edata, keys=["0", "1", "2", "3"])
     """
     return scanpy_var_df(adata=edata, keys=keys, varm_keys=varm_keys, layer=layer)
@@ -94,7 +94,7 @@ def rank_features_groups_df(
 
     Examples:
         >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=True)
+        >>> edata = ed.dt.mimic_2()
         >>> ep.tl.rank_features_groups(edata, "service_unit")
         >>> df = ep.get.rank_features_groups_df(edata, group="FICU")
     """

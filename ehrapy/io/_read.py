@@ -154,7 +154,7 @@ def read_h5ad(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> adata = ed.dt.mimic_2()
         >>> ep.io.write("mimic_2.h5ad", adata)
         >>> adata_2 = ep.io.read_h5ad("mimic_2.h5ad")
     """

@@ -635,7 +635,7 @@ def filter_rank_features_groups(
 
     Examples:
         >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=True)
+        >>> edata = ed.dt.mimic_2()
         >>> ep.tl.rank_features_groups(edata, "service_unit")
         >>> ep.pl.rank_features_groups(edata)
     """

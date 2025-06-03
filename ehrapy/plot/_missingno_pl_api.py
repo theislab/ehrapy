@@ -50,8 +50,8 @@ def missing_values_matrix(
         The plot axis.
 
     Examples:
-        >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=True)
+        >>> import ehrdata as ed
+        >>> edata = ed.dt.mimic_2()
         >>> ep.pl.missing_values_matrix(edata, filter="bottom", max_cols=15, max_percentage=0.999)
 
     Preview:
@@ -130,8 +130,8 @@ def missing_values_barplot(
         The plot axis.
 
     Examples:
-        >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=True)
+        >>> import ehrdata as ed
+        >>> edata = ed.dt.mimic_2()
         >>> ep.pl.missing_values_barplot(edata, filter="bottom", max_cols=15, max_percentage=0.999)
 
     Preview:
@@ -214,8 +214,8 @@ def missing_values_heatmap(
         The plot axis.
 
     Examples:
-        >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=True)
+        >>> import ehrdata as ed
+        >>> edata = ed.dt.mimic_2()
         >>> ep.pl.missing_values_heatmap(edata, filter="bottom", max_cols=15, max_percentage=0.999)
 
     Preview:
@@ -293,8 +293,8 @@ def missing_values_dendrogram(
         The plot axis.
 
     Example:
-        >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=True)
+        >>> import ehrdata as ed
+        >>> edata = ed.dt.mimic_2()
         >>> ep.pl.missing_values_dendrogram(edata, filter="bottom", max_cols=15, max_percentage=0.999)
 
     Preview:

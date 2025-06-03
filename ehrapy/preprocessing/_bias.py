@@ -81,7 +81,7 @@ def detect_bias(
 
     Examples:
         >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=True)
+        >>> edata = ed.dt.mimic_2()
         >>> ep.ad.infer_feature_types(edata)
         >>> edata = ep.pp.encode(edata, autodetect=True, encodings="label")
         >>> results_dict = ep.pp.detect_bias(edata, "all")

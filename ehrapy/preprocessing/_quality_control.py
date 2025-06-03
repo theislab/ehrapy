@@ -61,7 +61,7 @@ def qc_metrics(
 
     Examples:
             >>> import ehrapy as ep
-            >>> edata = ep.dt.mimic_2(encoded=True)
+            >>> edata = ed.dt.mimic_2()
             >>> obs_qc, var_qc = ep.pp.qc_metrics(edata)
             >>> obs_qc["missing_values_pct"].plot(kind="hist", bins=20)
     """
@@ -297,7 +297,7 @@ def qc_lab_measurements(
 
     Examples:
         >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=True)
+        >>> edata = ed.dt.mimic_2()
         >>> ep.pp.qc_lab_measurements(edata, measurements=["potassium_first"], verbose=True)
     """
     if copy:

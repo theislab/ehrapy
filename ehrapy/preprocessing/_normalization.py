@@ -116,7 +116,7 @@ def scale_norm(
 
     Examples:
         >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=True)
+        >>> edata = ed.dt.mimic_2()
         >>> edata_norm = ep.pp.scale_norm(edata, copy=True)
     """
     scale_func = _scale_norm_function(edata.X, **kwargs)
@@ -175,7 +175,7 @@ def minmax_norm(
 
     Examples:
         >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=True)
+        >>> edata = ed.dt.mimic_2()
         >>> edata_norm = ep.pp.minmax_norm(edata, copy=True)
     """
     scale_func = _minmax_norm_function(edata.X, **kwargs)
@@ -224,7 +224,7 @@ def maxabs_norm(
 
     Examples:
         >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=True)
+        >>> edata = ed.dt.mimic_2()
         >>> edata_norm = ep.pp.maxabs_norm(edata, copy=True)
     """
     scale_func = _maxabs_norm_function(edata.X)
@@ -284,7 +284,7 @@ def robust_scale_norm(
 
     Examples:
         >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=True)
+        >>> edata = ed.dt.mimic_2()
         >>> edata_norm = ep.pp.robust_scale_norm(edata, copy=True)
     """
     scale_func = _robust_scale_norm_function(edata.X, **kwargs)
@@ -343,7 +343,7 @@ def quantile_norm(
 
     Examples:
         >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=True)
+        >>> edata = ed.dt.mimic_2()
         >>> edata_norm = ep.pp.quantile_norm(edata, copy=True)
     """
     scale_func = _quantile_norm_function(edata.X, **kwargs)
@@ -395,7 +395,7 @@ def power_norm(
 
     Examples:
         >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=True)
+        >>> edata = ed.dt.mimic_2()
         >>> edata_norm = ep.pp.power_norm(edata, copy=True)
     """
     scale_func = _power_norm_function(edata.X, **kwargs)
@@ -436,7 +436,7 @@ def log_norm(
 
     Examples:
         >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=True)
+        >>> edata = ed.dt.mimic_2()
         >>> edata_norm = ep.pp.log_norm(edata, copy=True)
     """
     if isinstance(vars, str):

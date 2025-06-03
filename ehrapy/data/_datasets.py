@@ -33,7 +33,7 @@ def mimic_2(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> adata = ed.dt.mimic_2()
     """
     function_future_warning("ehrapy.dt.mimic_2", "ehrdata.dt.mimic_2")
     adata = read_csv(
@@ -96,7 +96,7 @@ def mimic_3_demo(
         >>> import ehrapy as ep
         >>> dfs = ep.dt.mimic_3_demo()
     """
-    function_future_warning("ehrapy.dt.mimic_3_demo", "ehrdata.dt.mimic_3_demo")
+    function_future_warning("ehrapy.dt.mimic_3_demo")
     data = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/ehrapy_mimic_3",
         download_dataset_name="ehrapy_mimic_3",
@@ -129,7 +129,7 @@ def heart_failure(encoded: bool = False, columns_obs_only: dict[str, list[str]] 
         >>> import ehrapy as ep
         >>> adata = ep.dt.heart_failure(encoded=True)
     """
-    function_future_warning("ehrapy.dt.heart_failure", "ehrdata.dt.heart_failure")
+    function_future_warning("ehrapy.dt.heart_failure")
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/heart_failure.csv",
         download_dataset_name="heart_failure.csv",
@@ -257,7 +257,7 @@ def chronic_kidney_disease(
         >>> import ehrapy as ep
         >>> adata = ep.dt.chronic_kidney_disease(encoded=True)
     """
-    function_future_warning("ehrapy.dt.chronic_kidney_disease", "ehrdata.dt.chronic_kidney_disease")
+    function_future_warning("ehrapy.dt.chronic_kidney_disease")
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/chronic_kidney_disease.csv",
         download_dataset_name="chronic_kidney_disease.csv",
@@ -293,7 +293,7 @@ def breast_tissue(
         >>> import ehrapy as ep
         >>> adata = ep.dt.breast_tissue(encoded=True)
     """
-    function_future_warning("ehrapy.dt.breast_tissue", "ehrdata.dt.breast_tissue")
+    function_future_warning("ehrapy.dt.breast_tissue")
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/breast_tissue.csv",
         download_dataset_name="breast_tissue.csv",
@@ -328,7 +328,7 @@ def cervical_cancer_risk_factors(
         >>> import ehrapy as ep
         >>> adata = ep.dt.cervical_cancer_risk_factors(encoded=True)
     """
-    function_future_warning("ehrapy.dt.cervical_cancer_risk_factors", "ehrdata.dt.cervical_cancer_risk_factors")
+    function_future_warning("ehrapy.dt.cervical_cancer_risk_factors")
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/cervical_cancer_risk_factors.csv",
         download_dataset_name="cervical_cancer_risk_factors.csv",
@@ -403,7 +403,7 @@ def echocardiogram(
         >>> import ehrapy as ep
         >>> adata = ep.dt.echocardiogram(encoded=True)
     """
-    function_future_warning("ehrapy.dt.echocardiogram", "ehrdata.dt.echocardiogram")
+    function_future_warning("ehrapy.dt.echocardiogram")
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/echocardiogram.csv",
         download_dataset_name="echocardiogram.csv",
@@ -438,7 +438,7 @@ def hepatitis(
         >>> import ehrapy as ep
         >>> adata = ep.dt.hepatitis(encoded=True)
     """
-    function_future_warning("ehrapy.dt.hepatitis", "ehrdata.dt.hepatitis")
+    function_future_warning("ehrapy.dt.hepatitis")
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/hepatitis.csv",
         download_dataset_name="hepatitis.csv",
@@ -474,7 +474,7 @@ def statlog_heart(
         >>> import ehrapy as ep
         >>> adata = ep.dt.statlog_heart(encoded=True)
     """
-    function_future_warning("ehrapy.dt.statlog_heart", "ehrdata.dt.statlog_heart")
+    function_future_warning("ehrapy.dt.statlog_heart")
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/statlog_heart.csv",
         download_dataset_name="statlog_heart.csv",
@@ -510,7 +510,7 @@ def thyroid(
         >>> import ehrapy as ep
         >>> adata = ep.dt.thyroid(encoded=True)
     """
-    function_future_warning("ehrapy.dt.thyroid", "ehrdata.dt.thyroid")
+    function_future_warning("ehrapy.dt.thyroid")
     adata: AnnData = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/thyroid.csv",
         download_dataset_name="thyroid.csv",
@@ -546,7 +546,7 @@ def breast_cancer_coimbra(
         >>> import ehrapy as ep
         >>> adata = ep.dt.breast_cancer_coimbra(encoded=True)
     """
-    function_future_warning("ehrapy.dt.breast_cancer_coimbra", "ehrdata.dt.breast_cancer_coimbra")
+    function_future_warning("ehrapy.dt.breast_cancer_coimbra")
     adata: AnnData = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/breast_cancer_coimbra.csv",
         download_dataset_name="breast_cancer_coimbra.csv",
@@ -582,7 +582,7 @@ def parkinsons(
         >>> import ehrapy as ep
         >>> adata = ep.dt.parkinsons(columns_obs_only=["name"], encoded=True)
     """
-    function_future_warning("ehrapy.dt.parkinsons", "ehrdata.dt.parkinsons")
+    function_future_warning("ehrapy.dt.parkinsons")
     adata: AnnData = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/parkinsons.csv",
         download_dataset_name="parkinsons.csv",
@@ -617,7 +617,7 @@ def parkinsons_telemonitoring(
         >>> import ehrapy as ep
         >>> adata = ep.dt.parkinsons_telemonitoring(encoded=True)
     """
-    function_future_warning("ehrapy.dt.parkinsons_telemonitoring", "ehrdata.dt.parkinsons_telemonitoring")
+    function_future_warning("ehrapy.dt.parkinsons_telemonitoring")
     adata: AnnData = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/parkinsons_telemonitoring.csv",
         download_dataset_name="parkinsons_telemonitoring.csv",
@@ -653,9 +653,7 @@ def parkinsons_disease_classification(
         >>> import ehrapy as ep
         >>> adata = ep.dt.parkinsons_disease_classification(encoded=True)
     """
-    function_future_warning(
-        "ehrapy.dt.parkinsons_disease_classification", "ehrdata.dt.parkinsons_disease_classification"
-    )
+    function_future_warning("ehrapy.dt.parkinsons_disease_classification")
     adata: AnnData = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/parkinson's_disease_classification_prepared.csv",
         download_dataset_name="parkinson's_disease_classification_prepared.csv",
@@ -693,7 +691,6 @@ def parkinson_dataset_with_replicated_acoustic_features(
     """
     function_future_warning(
         "ehrapy.dt.parkinson_dataset_with_replicated_acoustic_features",
-        "ehrdata.dt.parkinson_dataset_with_replicated_acoustic_features",
     )
     adata: AnnData = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/parkinson_dataset_with_replicated_acoustic_features.csv",
@@ -730,7 +727,7 @@ def heart_disease(
         >>> import ehrapy as ep
         >>> adata = ep.dt.heart_disease(encoded=True)
     """
-    function_future_warning("ehrapy.dt.heart_disease", "ehrdata.dt.heart_disease")
+    function_future_warning("ehrapy.dt.heart_disease")
     adata: AnnData = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/processed_heart_disease.csv",
         download_dataset_name="processed_heart_disease.csv",
