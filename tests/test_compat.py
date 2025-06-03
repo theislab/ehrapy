@@ -45,7 +45,7 @@ def test_new_style_with_old_param_and_ehrdata(edata: EHRData) -> None:
         warnings.simplefilter("always")
         new_style_func(adata=edata)
         assert len(w) == 1, "One warning should be raised"
-        assert issubclass(w[0].category, DeprecationWarning)
+        assert issubclass(w[0].category, FutureWarning)
         assert "Parameter 'adata' is deprecated" in str(w[0].message)
 
 
@@ -54,7 +54,7 @@ def test_new_style_with_correct_param_and_anndata(adata: AnnData) -> None:
         warnings.simplefilter("always")
         new_style_func(edata=adata)
         assert len(w) == 1, "One warning should be raised"
-        assert issubclass(w[0].category, DeprecationWarning)
+        assert issubclass(w[0].category, FutureWarning)
         assert "Using AnnData with new_style_func is deprecated" in str(w[0].message)
 
 
@@ -63,8 +63,8 @@ def test_new_style_with_old_param_and_anndata(adata: AnnData) -> None:
         warnings.simplefilter("always")
         new_style_func(adata=adata)
         assert len(w) == 2, "Two warnings should be raised"
-        assert issubclass(w[0].category, DeprecationWarning)
-        assert issubclass(w[1].category, DeprecationWarning)
+        assert issubclass(w[0].category, FutureWarning)
+        assert issubclass(w[1].category, FutureWarning)
         assert any("Parameter 'adata' is deprecated" in str(msg.message) for msg in w)
         assert any("Using AnnData with new_style_func is deprecated" in str(msg.message) for msg in w)
 
@@ -89,7 +89,7 @@ def test_old_style_with_correct_param_and_anndata(adata: AnnData) -> None:
         warnings.simplefilter("always")
         old_style_func(adata=adata)
         assert len(w) == 1, "One warning should be raised"
-        assert issubclass(w[0].category, DeprecationWarning)
+        assert issubclass(w[0].category, FutureWarning)
         assert "Using AnnData with old_style_func is deprecated" in str(w[0].message)
 
 
@@ -98,7 +98,7 @@ def test_old_style_with_new_param_and_anndata(adata: AnnData) -> None:
         warnings.simplefilter("always")
         old_style_func(edata=adata)
         assert len(w) == 1, "One warning should be raised"
-        assert issubclass(w[0].category, DeprecationWarning)
+        assert issubclass(w[0].category, FutureWarning)
         assert "Using AnnData with old_style_func is deprecated" in str(w[0].message)
 
 
@@ -115,7 +115,7 @@ def test_positional_argument_with_anndata(adata: AnnData) -> None:
         warnings.simplefilter("always")
         new_style_func(adata)
         assert len(w) == 1, "One warning should be raised"
-        assert issubclass(w[0].category, DeprecationWarning)
+        assert issubclass(w[0].category, FutureWarning)
         assert "Using AnnData with new_style_func is deprecated" in str(w[0].message)
 
 
@@ -131,7 +131,7 @@ def test_custom_param_with_old_param(edata: EHRData) -> None:
         warnings.simplefilter("always")
         custom_param_func(old_data=edata)
         assert len(w) == 1, "One warning should be raised"
-        assert issubclass(w[0].category, DeprecationWarning)
+        assert issubclass(w[0].category, FutureWarning)
         assert "Parameter 'old_data' is deprecated" in str(w[0].message)
 
 
