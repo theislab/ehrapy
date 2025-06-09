@@ -7,11 +7,11 @@ default_stages:
 minimum_pre_commit_version: 2.16.0
 repos:
     - repo: https://github.com/biomejs/pre-commit
-      rev: v1.9.4
+      rev: v2.0.0-beta.5
       hooks:
           - id: biome-format
     - repo: https://github.com/astral-sh/ruff-pre-commit
-      rev: v0.11.5
+      rev: v0.11.13
       hooks:
           - id: ruff
             args: [--fix, --exit-non-zero-on-fix, --unsafe-fixes]
@@ -33,7 +33,7 @@ repos:
           - id: no-commit-to-branch
             args: ["--branch=main"]
     - repo: https://github.com/pre-commit/mirrors-mypy
-      rev: v1.15.0
+      rev: v1.16.0
       hooks:
           - id: mypy
             args: [--no-strict-optional, --ignore-missing-imports]
