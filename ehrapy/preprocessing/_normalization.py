@@ -35,6 +35,7 @@ def _scale_func_group(
     scale_func: Callable[[np.ndarray | pd.DataFrame], np.ndarray],
     vars: str | Sequence[str] | None,
     group_key: str | None,
+    axis: int | None,
     copy: bool,
     norm_name: str,
 ) -> AnnData | None:
@@ -51,18 +52,58 @@ def _scale_func_group(
 
     adata = _prep_adata_norm(adata, copy)
 
+    # Handle 3D R tensor normalization (axis=2)
+    if axis == 2:
+        if group_key is not None:
+            raise ValueError("group_key not supported with axis=2 (time normalization)")
+
+        R_data = adata.R.copy()
+        var_indices = [adata.var.index.get_loc(v) for v in vars]
+
+        for i in range(R_data.shape[0]):  # each patient
+            for j in var_indices:  # selected variables
+                time_series = R_data[i, j, :]
+                valid_mask = ~np.isnan(time_series)
+
+                if valid_mask.sum() > 1:  # Need at least 2 values
+                    valid_values = time_series[valid_mask].reshape(-1, 1)
+                    normalized_values = scale_func(valid_values).flatten()
+                    time_series[valid_mask] = normalized_values
+                    R_data[i, j, :] = time_series
+
+        adata.R = R_data
+        _record_norm(adata, vars, norm_name)
+
+        if copy:
+            return adata
+        else:
+            return None
+
+    # Original X matrix normalization (axis=0 or axis=1 or None)
     var_values = adata[:, vars].X.copy()
 
-    if group_key is None:
+    if axis == 0:  # Normalize across observations
+        if group_key is not None:
+            raise ValueError("group_key not supported with axis=0")
+        var_values = scale_func(var_values.T).T
+    elif axis == 1:  # Normalize across variables
+        if group_key is not None:
+            raise ValueError("group_key not supported with axis=1")
         var_values = scale_func(var_values)
+    else:  # Original behavior (axis=None)
+        if group_key is None:
+            var_values = scale_func(var_values)
+        else:
+            for group in adata.obs[group_key].unique():
+                group_idx = adata.obs[group_key] == group
+                var_values[group_idx] = scale_func(var_values[group_idx])
 
+    if len(vars) == adata.n_vars:
+        adata.X = var_values
     else:
-        for group in adata.obs[group_key].unique():
-            group_idx = adata.obs[group_key] == group
-            var_values[group_idx] = scale_func(var_values[group_idx])
-
-    adata.X = adata.X.astype(var_values.dtype)
-    adata[:, vars].X = var_values
+        var_indices = [adata.var.index.get_loc(v) for v in vars]
+        adata.X = adata.X.astype(var_values.dtype)
+        adata.X[:, var_indices] = var_values
 
     _record_norm(adata, vars, norm_name)
 
@@ -93,6 +134,7 @@ def scale_norm(
     adata: AnnData,
     vars: str | Sequence[str] | None = None,
     group_key: str | None = None,
+    axis: int | None = None,
     copy: bool = False,
     **kwargs,
 ) -> AnnData | None:
@@ -106,6 +148,7 @@ def scale_norm(
         vars: List of the names of the numeric variables to normalize.
               If None all numeric variables will be normalized.
         group_key: Key in adata.obs that contains group information. If provided, scaling is applied per group.
+        axis: Axis along which to normalize. 0=observations, 1=variables, 2=time (R tensor), None=original behavior.
         copy: Whether to return a copy or act in place.
         **kwargs: Additional arguments passed to the StandardScaler.
 
@@ -116,6 +159,8 @@ def scale_norm(
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2(encoded=True)
         >>> adata_norm = ep.pp.scale_norm(adata, copy=True)
+        >>> # Normalize across time for EHRData
+        >>> adata_time_norm = ep.pp.scale_norm(adata, axis=2, copy=True)
     """
     scale_func = _scale_norm_function(adata.X, **kwargs)
 
@@ -124,6 +169,7 @@ def scale_norm(
         scale_func=scale_func,
         vars=vars,
         group_key=group_key,
+        axis=axis,
         copy=copy,
         norm_name="scale",
     )
@@ -150,6 +196,7 @@ def minmax_norm(
     adata: AnnData,
     vars: str | Sequence[str] | None = None,
     group_key: str | None = None,
+    axis: int | None = None,
     copy: bool = False,
     **kwargs,
 ) -> AnnData | None:
@@ -164,6 +211,7 @@ def minmax_norm(
         vars: List of the names of the numeric variables to normalize.
               If None all numeric variables will be normalized.
         group_key: Key in adata.obs that contains group information. If provided, scaling is applied per group.
+        axis: Axis along which to normalize. 0=observations, 1=variables, 2=time (R tensor), None=original behavior.
         copy: Whether to return a copy or act in place.
         **kwargs: Additional arguments passed to the MinMaxScaler.
 
@@ -182,6 +230,7 @@ def minmax_norm(
         scale_func=scale_func,
         vars=vars,
         group_key=group_key,
+        axis=axis,
         copy=copy,
         norm_name="minmax",
     )
@@ -201,6 +250,7 @@ def maxabs_norm(
     adata: AnnData,
     vars: str | Sequence[str] | None = None,
     group_key: str | None = None,
+    axis: int | None = None,
     copy: bool = False,
 ) -> AnnData | None:
     """Apply max-abs normalization.
@@ -213,6 +263,7 @@ def maxabs_norm(
         vars: List of the names of the numeric variables to normalize.
               If None all numeric variables will be normalized.
         group_key: Key in adata.obs that contains group information. If provided, scaling is applied per group.
+        axis: Axis along which to normalize. 0=observations, 1=variables, 2=time (R tensor), None=original behavior.
         copy: Whether to return a copy or act in place.
 
     Returns:
@@ -230,6 +281,7 @@ def maxabs_norm(
         scale_func=scale_func,
         vars=vars,
         group_key=group_key,
+        axis=axis,
         copy=copy,
         norm_name="maxabs",
     )
@@ -256,6 +308,7 @@ def robust_scale_norm(
     adata: AnnData,
     vars: str | Sequence[str] | None = None,
     group_key: str | None = None,
+    axis: int | None = None,
     copy: bool = False,
     **kwargs,
 ) -> AnnData | None:
@@ -271,6 +324,7 @@ def robust_scale_norm(
         vars: List of the names of the numeric variables to normalize.
               If None all numeric variables will be normalized.
         group_key: Key in adata.obs that contains group information. If provided, scaling is applied per group.
+        axis: Axis along which to normalize. 0=observations, 1=variables, 2=time (R tensor), None=original behavior.
         copy: Whether to return a copy or act in place.
         **kwargs: Additional arguments passed to the RobustScaler.
 
@@ -289,6 +343,7 @@ def robust_scale_norm(
         scale_func=scale_func,
         vars=vars,
         group_key=group_key,
+        axis=axis,
         copy=copy,
         norm_name="robust_scale",
     )
@@ -315,6 +370,7 @@ def quantile_norm(
     adata: AnnData,
     vars: str | Sequence[str] | None = None,
     group_key: str | None = None,
+    axis: int | None = None,
     copy: bool = False,
     **kwargs,
 ) -> AnnData | None:
@@ -329,6 +385,7 @@ def quantile_norm(
         vars: List of the names of the numeric variables to normalize.
               If None all numeric variables will be normalized.
         group_key: Key in adata.obs that contains group information. If provided, scaling is applied per group.
+        axis: Axis along which to normalize. 0=observations, 1=variables, 2=time (R tensor), None=original behavior.
         copy: Whether to return a copy or act in place.
         **kwargs: Additional arguments passed to the QuantileTransformer.
 
@@ -347,6 +404,7 @@ def quantile_norm(
         scale_func=scale_func,
         vars=vars,
         group_key=group_key,
+        axis=axis,
         copy=copy,
         norm_name="quantile",
     )
@@ -366,6 +424,7 @@ def power_norm(
     adata: AnnData,
     vars: str | Sequence[str] | None = None,
     group_key: str | None = None,
+    axis: int | None = None,
     copy: bool = False,
     **kwargs,
 ) -> AnnData | None:
@@ -380,6 +439,7 @@ def power_norm(
         vars: List of the names of the numeric variables to normalize.
               If None all numeric variables will be normalized.
         group_key: Key in adata.obs that contains group information. If provided, scaling is applied per group.
+        axis: Axis along which to normalize. 0=observations, 1=variables, 2=time (R tensor), None=original behavior.
         copy: Whether to return a copy or act in place.
         **kwargs: Additional arguments passed to the PowerTransformer.
 
@@ -398,6 +458,7 @@ def power_norm(
         scale_func=scale_func,
         vars=vars,
         group_key=group_key,
+        axis=axis,
         copy=copy,
         norm_name="power",
     )
@@ -408,6 +469,7 @@ def log_norm(
     vars: str | Sequence[str] | None = None,
     base: int | float | None = None,
     offset: int | float = 1,
+    axis: int | None = None,
     copy: bool = False,
 ) -> AnnData | None:
     r"""Apply log normalization.
@@ -421,6 +483,7 @@ def log_norm(
               If None all numeric variables will be normalized.
         base: Numeric base for logarithm. If None the natural logarithm is used.
         offset: Offset added to values before computing the logarithm.
+        axis: Axis along which to normalize. 0=observations, 1=variables, 2=time (R tensor), None=original behavior.
         copy: Whether to return a copy or act in place.
 
     Returns:
@@ -440,17 +503,65 @@ def log_norm(
 
     adata = _prep_adata_norm(adata, copy)
 
-    adata_to_check_for_negatives = adata[:, vars] if vars else adata
-    offset_tmp_applied = adata_to_check_for_negatives.X + offset
+    # Handle 3D R tensor normalization (axis=2)
+    if axis == 2 and hasattr(adata, "R") and adata.R is not None:
+        R_data = adata.R.copy()
+        var_indices = [adata.var.index.get_loc(v) for v in vars]
+
+        for i in range(R_data.shape[0]):  # each patient
+            for j in var_indices:  # selected variables
+                time_series = R_data[i, j, :]
+                valid_mask = ~np.isnan(time_series)
+
+                if valid_mask.sum() > 0:
+                    valid_values = time_series[valid_mask]
+                    offset_applied = valid_values + offset
+
+                    if np.any(offset_applied < 0):
+                        raise ValueError(
+                            f"R tensor contains negative values for patient {i}, variable {j}. "
+                            "Undefined behavior for log normalization. "
+                            "Please specify a higher offset."
+                        )
+
+                    if offset == 1:
+                        normalized_values = np.log1p(valid_values)
+                    else:
+                        normalized_values = np.log(valid_values + offset)
+
+                    if base is not None:
+                        normalized_values = normalized_values / np.log(base)
+
+                    time_series[valid_mask] = normalized_values
+                    R_data[i, j, :] = time_series
+
+        adata.R = R_data
+        _record_norm(adata, vars, "log")
+
+        if copy:
+            return adata
+        else:
+            return None
+
+    # Original X matrix normalization
+    if axis == 0:  # Across observations
+        data_to_check = adata[:, vars].X.T if vars else adata.X.T
+        var_values = adata[:, vars].X.copy().T
+    elif axis == 1:  # Across variables
+        data_to_check = adata[:, vars].X if vars else adata.X
+        var_values = adata[:, vars].X.copy()
+    else:  # Original behavior (axis=None)
+        data_to_check = adata[:, vars].X if vars else adata.X
+        var_values = adata[:, vars].X.copy()
+
+    offset_tmp_applied = data_to_check + offset
     if np.any(offset_tmp_applied < 0):
         raise ValueError(
             "Matrix X contains negative values. "
             "Undefined behavior for log normalization. "
-            "Please specifiy a higher offset to this function "
+            "Please specify a higher offset to this function "
             "or offset negative values with ep.pp.offset_negative_values()."
         )
-
-    var_values = adata[:, vars].X.copy()
 
     if offset == 1:
         np.log1p(var_values, out=var_values)
@@ -460,6 +571,9 @@ def log_norm(
 
     if base is not None:
         np.divide(var_values, np.log(base), out=var_values)
+
+    if axis == 0:  # Transpose back
+        var_values = var_values.T
 
     adata.X = adata.X.astype(var_values.dtype)
     adata[:, vars].X = var_values
