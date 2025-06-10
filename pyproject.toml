@@ -68,7 +68,7 @@ dependencies = [
     "numba>=0.60.0",
     "igraph",
     "fast-array-utils",
-    "networkx<3.5", # dowhy breaks, release again once dowhy fixed
+    "networkx",
 ]
 
 [project.optional-dependencies]
