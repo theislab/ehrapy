@@ -3,14 +3,17 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ehrapy import ehrapy_settings
+from ehrapy._compat import function_future_warning
 from ehrapy.anndata import anndata_to_df, df_to_anndata, infer_feature_types, replace_feature_types
-from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
+from ehrapy.anndata._constants import CATEGORICAL_TAG, NUMERIC_TAG
 from ehrapy.io._read import read_csv, read_fhir, read_h5ad
 from ehrapy.preprocessing._encoding import encode
 
 if TYPE_CHECKING:
     import pandas as pd
     from anndata import AnnData
+
+import warnings
 
 
 def mimic_2(
@@ -30,8 +33,9 @@ def mimic_2(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> adata = ed.dt.mimic_2()
     """
+    function_future_warning("ehrapy.dt.mimic_2", "ehrdata.dt.mimic_2")
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/ehrapy_mimic2.csv",
         download_dataset_name="ehrapy_mimic2.csv",
@@ -40,7 +44,7 @@ def mimic_2(
     )
     if encoded:
         infer_feature_types(adata, output=None, verbose=False)
-        replace_feature_types(adata, "hour_icu_intime", NUMERIC_TAG)
+        replace_feature_types(edata=adata, features="hour_icu_intime", corrected_type=NUMERIC_TAG)  # type: ignore
         return encode(adata, autodetect=True)
 
     return adata
@@ -54,12 +58,13 @@ def mimic_2_preprocessed() -> AnnData:
     The dataset was preprocessed according to: https://github.com/theislab/ehrapy-datasets/tree/main/mimic_2
 
     Returns:
-        :class:`~anndata.AnnData` object of the prprocessed MIMIC-II dataset
+        :class:`~anndata.AnnData` object of the preprocessed MIMIC-II dataset
 
     Examples:
         >>> import ehrapy as ep
         >>> adata = ep.dt.mimic_2_preprocessed()
     """
+    function_future_warning("ehrapy.dt.mimic_2_preprocessed", "ehrdata.dt.mimic_2_preprocessed")
     adata = read_h5ad(
         dataset_path=f"{ehrapy_settings.datasetdir}/ehrapy_mimic2.csv",
         download_dataset_name="ehrapy_mimic_2_preprocessed.h5ad",
@@ -91,6 +96,7 @@ def mimic_3_demo(
         >>> import ehrapy as ep
         >>> dfs = ep.dt.mimic_3_demo()
     """
+    function_future_warning("ehrapy.dt.mimic_3_demo")
     data = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/ehrapy_mimic_3",
         download_dataset_name="ehrapy_mimic_3",
@@ -123,6 +129,7 @@ def heart_failure(encoded: bool = False, columns_obs_only: dict[str, list[str]] 
         >>> import ehrapy as ep
         >>> adata = ep.dt.heart_failure(encoded=True)
     """
+    function_future_warning("ehrapy.dt.heart_failure")
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/heart_failure.csv",
         download_dataset_name="heart_failure.csv",
@@ -161,6 +168,7 @@ def diabetes_130_raw(
     References:
         [1] Beata Strack, Jonathan P. DeShazo, Chris Gennings, Juan L. Olmo, Sebastian Ventura, Krzysztof J. Cios, and John N. Clore, “Impact of HbA1c Measurement on Hospital Readmission Rates: Analysis of 70,000 Clinical Database Patient Records,” BioMed Research International, vol. 2014, Article ID 781670, 11 pages, 2014.
     """
+    function_future_warning("ehrapy.dt.diabetes_130_raw", "ehrdata.dt.diabetes_130_raw")
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/diabetes_130_raw.csv",
         download_dataset_name="diabetes_130_raw.csv",
@@ -170,9 +178,13 @@ def diabetes_130_raw(
     if encoded:
         infer_feature_types(adata, output=None, verbose=False)
         replace_feature_types(
-            adata, ["admission_source_id", "discharge_disposition_id", "encounter_id", "patient_nbr"], CATEGORICAL_TAG
+            adata,
+            features=["admission_source_id", "discharge_disposition_id", "encounter_id", "patient_nbr"],
+            corrected_type=CATEGORICAL_TAG,  # type: ignore
         )
-        replace_feature_types(adata, ["num_procedures", "number_diagnoses", "time_in_hospital"], NUMERIC_TAG)
+        replace_feature_types(
+            adata, features=["num_procedures", "number_diagnoses", "time_in_hospital"], corrected_type=NUMERIC_TAG
+        )  # type: ignore
         return encode(adata, autodetect=True)
 
     return adata
@@ -206,6 +218,7 @@ def diabetes_130_fairlearn(
 
         [2] Bird, S., Dudík, M., Edgar, R., Horn, B., Lutz, R., Milan, V., ... & Walker, K. (2020). Fairlearn: A toolkit for assessing and improving fairness in AI. Microsoft, Tech. Rep. MSR-TR-2020-32.
     """
+    function_future_warning("ehrapy.dt.diabetes_130_fairlearn", "ehrdata.dt.diabetes_130_fairlearn")
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/diabetes_130_fairlearn.csv",
         download_dataset_name="diabetes_130_fairlearn.csv",
@@ -215,7 +228,9 @@ def diabetes_130_fairlearn(
 
     if encoded:
         infer_feature_types(adata, output=None, verbose=False)
-        replace_feature_types(adata, ["time_in_hospital", "number_diagnoses", "num_procedures"], NUMERIC_TAG)
+        replace_feature_types(
+            adata, features=["time_in_hospital", "number_diagnoses", "num_procedures"], corrected_type=NUMERIC_TAG
+        )  # type: ignore
         return encode(adata, autodetect=True)
 
     return adata
@@ -242,6 +257,7 @@ def chronic_kidney_disease(
         >>> import ehrapy as ep
         >>> adata = ep.dt.chronic_kidney_disease(encoded=True)
     """
+    function_future_warning("ehrapy.dt.chronic_kidney_disease")
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/chronic_kidney_disease.csv",
         download_dataset_name="chronic_kidney_disease.csv",
@@ -277,6 +293,7 @@ def breast_tissue(
         >>> import ehrapy as ep
         >>> adata = ep.dt.breast_tissue(encoded=True)
     """
+    function_future_warning("ehrapy.dt.breast_tissue")
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/breast_tissue.csv",
         download_dataset_name="breast_tissue.csv",
@@ -311,6 +328,7 @@ def cervical_cancer_risk_factors(
         >>> import ehrapy as ep
         >>> adata = ep.dt.cervical_cancer_risk_factors(encoded=True)
     """
+    function_future_warning("ehrapy.dt.cervical_cancer_risk_factors")
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/cervical_cancer_risk_factors.csv",
         download_dataset_name="cervical_cancer_risk_factors.csv",
@@ -320,7 +338,9 @@ def cervical_cancer_risk_factors(
     )
     if encoded:
         infer_feature_types(adata, output=None, verbose=False)
-        replace_feature_types(adata, ["STDs (number)", "STDs: Number of diagnosis"], NUMERIC_TAG)
+        replace_feature_types(  # type: ignore
+            adata, features=["STDs (number)", "STDs: Number of diagnosis"], corrected_type=NUMERIC_TAG
+        )
         return encode(adata, autodetect=True)
 
     return adata
@@ -347,6 +367,7 @@ def dermatology(
         >>> import ehrapy as ep
         >>> adata = ep.dt.dermatology(encoded=True)
     """
+    function_future_warning("dermatology")
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/dermatology.csv",
         download_dataset_name="dermatology.csv",
@@ -382,6 +403,7 @@ def echocardiogram(
         >>> import ehrapy as ep
         >>> adata = ep.dt.echocardiogram(encoded=True)
     """
+    function_future_warning("ehrapy.dt.echocardiogram")
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/echocardiogram.csv",
         download_dataset_name="echocardiogram.csv",
@@ -416,6 +438,7 @@ def hepatitis(
         >>> import ehrapy as ep
         >>> adata = ep.dt.hepatitis(encoded=True)
     """
+    function_future_warning("ehrapy.dt.hepatitis")
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/hepatitis.csv",
         download_dataset_name="hepatitis.csv",
@@ -451,6 +474,7 @@ def statlog_heart(
         >>> import ehrapy as ep
         >>> adata = ep.dt.statlog_heart(encoded=True)
     """
+    function_future_warning("ehrapy.dt.statlog_heart")
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/statlog_heart.csv",
         download_dataset_name="statlog_heart.csv",
@@ -460,7 +484,7 @@ def statlog_heart(
     )
     if encoded:
         infer_feature_types(adata, output=None, verbose=False)
-        replace_feature_types(adata, "number of major vessels", NUMERIC_TAG)
+        replace_feature_types(adata, features="number of major vessels", corrected_type=NUMERIC_TAG)  # type: ignore
         return encode(adata, autodetect=True)
 
     return adata
@@ -486,6 +510,7 @@ def thyroid(
         >>> import ehrapy as ep
         >>> adata = ep.dt.thyroid(encoded=True)
     """
+    function_future_warning("ehrapy.dt.thyroid")
     adata: AnnData = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/thyroid.csv",
         download_dataset_name="thyroid.csv",
@@ -521,6 +546,7 @@ def breast_cancer_coimbra(
         >>> import ehrapy as ep
         >>> adata = ep.dt.breast_cancer_coimbra(encoded=True)
     """
+    function_future_warning("ehrapy.dt.breast_cancer_coimbra")
     adata: AnnData = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/breast_cancer_coimbra.csv",
         download_dataset_name="breast_cancer_coimbra.csv",
@@ -556,6 +582,7 @@ def parkinsons(
         >>> import ehrapy as ep
         >>> adata = ep.dt.parkinsons(columns_obs_only=["name"], encoded=True)
     """
+    function_future_warning("ehrapy.dt.parkinsons")
     adata: AnnData = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/parkinsons.csv",
         download_dataset_name="parkinsons.csv",
@@ -590,6 +617,7 @@ def parkinsons_telemonitoring(
         >>> import ehrapy as ep
         >>> adata = ep.dt.parkinsons_telemonitoring(encoded=True)
     """
+    function_future_warning("ehrapy.dt.parkinsons_telemonitoring")
     adata: AnnData = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/parkinsons_telemonitoring.csv",
         download_dataset_name="parkinsons_telemonitoring.csv",
@@ -625,6 +653,7 @@ def parkinsons_disease_classification(
         >>> import ehrapy as ep
         >>> adata = ep.dt.parkinsons_disease_classification(encoded=True)
     """
+    function_future_warning("ehrapy.dt.parkinsons_disease_classification")
     adata: AnnData = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/parkinson's_disease_classification_prepared.csv",
         download_dataset_name="parkinson's_disease_classification_prepared.csv",
@@ -660,6 +689,9 @@ def parkinson_dataset_with_replicated_acoustic_features(
         >>> import ehrapy as ep
         >>> adata = ep.dt.parkinson_dataset_with_replicated_acoustic_features(columns_obs_only=["ID"], encoded=True)
     """
+    function_future_warning(
+        "ehrapy.dt.parkinson_dataset_with_replicated_acoustic_features",
+    )
     adata: AnnData = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/parkinson_dataset_with_replicated_acoustic_features.csv",
         download_dataset_name="parkinson_dataset_with_replicated_acoustic_features.csv",
@@ -695,6 +727,7 @@ def heart_disease(
         >>> import ehrapy as ep
         >>> adata = ep.dt.heart_disease(encoded=True)
     """
+    function_future_warning("ehrapy.dt.heart_disease")
     adata: AnnData = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/processed_heart_disease.csv",
         download_dataset_name="processed_heart_disease.csv",
@@ -704,8 +737,8 @@ def heart_disease(
     )
     if encoded:
         infer_feature_types(adata, output=None, verbose=False)
-        replace_feature_types(adata, ["num"], NUMERIC_TAG)
-        replace_feature_types(adata, ["thal"], CATEGORICAL_TAG)
+        replace_feature_types(adata, features=["num"], corrected_type=NUMERIC_TAG)  # type: ignore
+        replace_feature_types(adata, features=["thal"], corrected_type=CATEGORICAL_TAG)  # type: ignore
         return encode(adata, autodetect=True)
 
     return adata
@@ -731,6 +764,7 @@ def synthea_1k_sample(
         >>> import ehrapy as ep
         >>> adata = ep.dt.synthea_1k_sample(encoded=True)
     """
+    function_future_warning("ehrapy.dt.synthea_1k_sample")
     adata: AnnData = read_fhir(
         dataset_path=f"{ehrapy_settings.datasetdir}/synthea_sample",
         download_dataset_name="synthea_sample",
@@ -749,7 +783,9 @@ def synthea_1k_sample(
 
     if encoded:
         infer_feature_types(adata, output=None, verbose=False)
-        replace_feature_types(adata, ["resource.multipleBirthInteger", "resource.numberOfSeries"], NUMERIC_TAG)
+        replace_feature_types(
+            adata, features=["resource.multipleBirthInteger", "resource.numberOfSeries"], corrected_type=NUMERIC_TAG
+        )  # type: ignore
         return encode(adata, autodetect=True)
 
     return adata
