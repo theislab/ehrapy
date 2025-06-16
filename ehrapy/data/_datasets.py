@@ -54,7 +54,7 @@ def mimic_2_preprocessed() -> AnnData:
     The dataset was preprocessed according to: https://github.com/theislab/ehrapy-datasets/tree/main/mimic_2
 
     Returns:
-        :class:`~anndata.AnnData` object of the prprocessed MIMIC-II dataset
+        :class:`~anndata.AnnData` object of the preprocessed MIMIC-II dataset
 
     Examples:
         >>> import ehrapy as ep
