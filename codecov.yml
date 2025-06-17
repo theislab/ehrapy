@@ -8,6 +8,6 @@ coverage:
             default:
                 enabled: no
     ignore:
-        - "test/"
+        - "tests/"
 github_checks:
     annotations: false

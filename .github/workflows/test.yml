@@ -50,7 +50,10 @@ jobs:
                   MPLBACKEND: agg
                   PLATFORM: ${{ matrix.os }}
                   DISPLAY: :42
-              run: pytest -v --cov --color=yes
+              run: pytest -v --cov=ehrapy --cov-report=xml --color=yes
 
             - name: Upload coverage
-              uses: codecov/codecov-action@v3
+              if: matrix.python == '3.11'
+              uses: codecov/codecov-action@v5
+              with:
+                token: ${{ secrets.CODECOV_TOKEN }}
