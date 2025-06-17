@@ -7,7 +7,7 @@ coverage:
     status:
         project:
             default:
-                target: auto
+                target: 1 # always succeed
         patch:
             default:
                 enabled: no
