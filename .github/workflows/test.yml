@@ -53,7 +53,7 @@ jobs:
               run: pytest -v --cov=ehrapy --cov-report=xml --color=yes
 
             - name: Upload coverage
-              if: matrix.python == '3.11'
+              if: matrix.python == '3.13'
               uses: codecov/codecov-action@v5
               with:
                 token: ${{ secrets.CODECOV_TOKEN }}
