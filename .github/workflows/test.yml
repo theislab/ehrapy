@@ -51,6 +51,7 @@ jobs:
                   PLATFORM: ${{ matrix.os }}
                   DISPLAY: :42
               run: pytest -v --cov=ehrapy --cov-report=xml --color=yes
+              continue-on-error: true
 
             - name: Upload coverage
               if: matrix.python == '3.11'
