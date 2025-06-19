@@ -6,19 +6,20 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from anndata import AnnData
 from matplotlib.axes import Axes
 from matplotlib.font_manager import FontProperties
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
-from scanpy import AnnData
 from tableone import TableOne
 
-from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
+from ehrapy.anndata._constants import CATEGORICAL_TAG
 from ehrapy.anndata._feature_specifications import _detect_feature_type
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+    from ehrdata import EHRData
     from matplotlib.figure import Figure
 
 
@@ -61,7 +62,7 @@ class CohortTracker:
     Tightly interacting with the `tableone` package [1].
 
     Args:
-        adata: AnnData object to track.
+        edata: Data object to track.
         columns: Columns to track. If `None`, all columns will be tracked.
         categorical: Columns that contain categorical variables, if None will be inferred from the data.
 
@@ -70,16 +71,16 @@ class CohortTracker:
         tableone: An open source Python package for producing summary statistics for research papers, Journal of the American Medical Informatics Association, Volume 24, Issue 2, 1 March 2017, Pages 267–271, https://doi.org/10.1093/jamia/ocw117
     """
 
-    def __init__(self, adata: AnnData, columns: Sequence = None, categorical: Sequence = None) -> None:
-        if not isinstance(adata, AnnData):
-            raise ValueError("adata must be an AnnData.")
+    def __init__(self, edata: AnnData | EHRData, columns: Sequence = None, categorical: Sequence = None) -> None:
+        if not isinstance(edata, AnnData):
+            raise ValueError("edata must be an AnnData or EHRData.")
 
-        self.columns = columns if columns is not None else list(adata.obs.columns)
+        self.columns = columns if columns is not None else list(edata.obs.columns)
 
         if columns is not None:
-            _check_columns_exist(adata.obs, columns)
+            _check_columns_exist(edata.obs, columns)
         if categorical is not None:
-            _check_columns_exist(adata.obs, categorical)
+            _check_columns_exist(edata.obs, categorical)
             if set(categorical).difference(set(self.columns)):
                 raise ValueError("categorical columns must be in the (selected) columns.")
 
@@ -93,26 +94,28 @@ class CohortTracker:
             if categorical is not None
             else [
                 col
-                for col in adata.obs[self.columns].columns
-                if _detect_feature_type(adata.obs[col])[0] == CATEGORICAL_TAG
+                for col in edata.obs[self.columns].columns
+                if _detect_feature_type(edata.obs[col])[0] == CATEGORICAL_TAG
             ]
         )
 
         self._categorical_categories: dict = {
-            col: adata.obs[col].astype("category").cat.categories for col in self.categorical
+            col: edata.obs[col].astype("category").cat.categories for col in self.categorical
         }
         self._tracked_tables: list = []
 
-    def __call__(self, adata: AnnData, label: str = None, operations_done: str = None, **tableone_kwargs: dict) -> None:
-        if not isinstance(adata, AnnData):
-            raise ValueError("adata must be an AnnData.")
+    def __call__(
+        self, edata: AnnData | EHRData, label: str = None, operations_done: str = None, **tableone_kwargs: dict
+    ) -> None:
+        if not isinstance(edata, AnnData):
+            raise ValueError("edata must be an AnnData or EHRData.")
 
-        _check_columns_exist(adata.obs, self.columns)
-        _check_no_new_categories(adata.obs, self.categorical, self._categorical_categories)
+        _check_columns_exist(edata.obs, self.columns)
+        _check_no_new_categories(edata.obs, self.categorical, self._categorical_categories)
 
         # track a small text with each tracking step, for the flowchart
         track_text = label if label is not None else f"Cohort {self.tracked_steps}"
-        track_text += "\n (n=" + str(adata.n_obs) + ")"
+        track_text += "\n (n=" + str(edata.n_obs) + ")"
         self._tracked_text.append(track_text)
 
         # track a small text with the operations done
@@ -120,7 +123,7 @@ class CohortTracker:
         self._tracked_steps += 1
 
         # track new tableone object
-        t1 = TableOne(adata.obs, columns=self.columns, categorical=self.categorical, **tableone_kwargs)
+        t1 = TableOne(edata.obs, columns=self.columns, categorical=self.categorical, **tableone_kwargs)
         self._tracked_tables.append(t1)
 
     def _get_cat_data(self, table_one: TableOne, col: str) -> pd.DataFrame:
@@ -220,11 +223,11 @@ class CohortTracker:
 
         Examples:
                 >>> import ehrapy as ep
-                >>> adata = ep.dt.diabetes_130_fairlearn(columns_obs_only=["gender", "race", "num_procedures"])
-                >>> cohort_tracker = ep.tl.CohortTracker(adata, categorical=["gender", "race"])
-                >>> cohort_tracker(adata, "Initial Cohort")
-                >>> adata = adata[:1000]
-                >>> cohort_tracker(adata, "Filtered Cohort")
+                >>> edata = ep.dt.diabetes_130_fairlearn(columns_obs_only=["gender", "race", "num_procedures"])
+                >>> cohort_tracker = ep.tl.CohortTracker(edata, categorical=["gender", "race"])
+                >>> cohort_tracker(edata, "Initial Cohort")
+                >>> edata = edata[:1000]
+                >>> cohort_tracker(edata, "Filtered Cohort")
                 >>> cohort_tracker.plot_cohort_barplot(
                 ...     subfigure_title=True,
                 ...     color_palette="tab20",
@@ -455,14 +458,14 @@ class CohortTracker:
 
         Examples:
                 >>> import ehrapy as ep
-                >>> adata = ep.dt.diabetes_130_fairlearn(columns_obs_only=["gender", "race"])
-                >>> cohort_tracker = ep.tl.CohortTracker(adata)
-                >>> cohort_tracker(adata, label="Initial Cohort")
-                >>> adata = adata[:1000]
-                >>> cohort_tracker(adata, label="Reduced Cohort", operations_done="filtered to first 1000 entries")
-                >>> adata = adata[:500]
+                >>> edata = ep.dt.diabetes_130_fairlearn(columns_obs_only=["gender", "race"])
+                >>> cohort_tracker = ep.tl.CohortTracker(edata)
+                >>> cohort_tracker(edata, label="Initial Cohort")
+                >>> edata = edata[:1000]
+                >>> cohort_tracker(edata, label="Reduced Cohort", operations_done="filtered to first 1000 entries")
+                >>> edata = edata[:500]
                 >>> cohort_tracker(
-                ...     adata,
+                ...     edata,
                 ...     label="Further reduced Cohort",
                 ...     operations_done="filtered to first 500 entries",
                 ... )
