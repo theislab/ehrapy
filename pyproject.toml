@@ -70,6 +70,8 @@ dependencies = [
     "networkx<3.5", # dowhy breaks, release again once dowhy fixed
     "scipy<=1.15.3", # statsmodel breaks, release once statsmodels fixed
     "fast-array-utils",
+    "networkx<3.5", # dowhy breaks - see https://github.com/py-why/dowhy/issues/680#issuecomment-2957189390
+    "scipy<=1.15.3", # statsmodel breaks - see https://github.com/statsmodels/statsmodels/issues/9584
 ]
 
 [project.optional-dependencies]
