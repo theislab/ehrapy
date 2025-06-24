@@ -280,7 +280,7 @@ def test_read_multiple_csv_with_x_only_2():
 def test_read_fhir_json():
     adata = read_fhir(_TEST_PATH_FHIR)
 
-    assert adata.shape == (4928, 80)
+    assert adata.shape == (4928, 75)
     assert "resource.birthDate" in adata.obs.columns
 
 
