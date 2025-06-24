@@ -281,7 +281,7 @@ def test_read_fhir_json():
     adata = read_fhir(_TEST_PATH_FHIR)
 
     assert adata.shape == (4928, 75)
-    assert "resource.birthDate" in adata.obs.columns
+    assert "birthDate" in adata.obs.columns
 
 
 def test_read_fhir_json_obs_only():
