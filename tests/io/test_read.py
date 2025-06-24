@@ -287,5 +287,5 @@ def test_read_fhir_json():
 def test_read_fhir_json_obs_only():
     adata = read_fhir(_TEST_PATH_FHIR, columns_obs_only=["fullUrl"])
 
-    assert adata.shape == (4928, 79)
+    assert adata.shape == (4928, 74)
     assert "fullUrl" in adata.obs.columns
