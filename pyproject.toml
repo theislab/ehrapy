@@ -68,6 +68,8 @@ dependencies = [
     "numba>=0.60.0",
     "igraph",
     "fast-array-utils",
+    "networkx<3.5", # dowhy breaks, release again once dowhy fixed
+    "scipy<=1.15.3", # statsmodel breaks, release once statsmodels fixed
 ]
 
 [project.optional-dependencies]
