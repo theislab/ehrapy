@@ -44,7 +44,7 @@ import ehrapy as ep
 ## Citation
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/c3e650d2-db23-4eeb-8842-7a8f47547b34" alt="fig2" height="50%">
+  <img src="https://github.com/user-attachments/assets/2100e54b-bb3a-4073-bba5-4e3d180c717b" alt="fig2" height="50%">
 </p>
 
 Read more about ehrapy in the [associated publication](https://doi.org/10.1038/s41591-024-03214-0).
