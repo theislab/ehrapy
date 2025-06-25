@@ -40,7 +40,7 @@ ehrapy is a modular open-source Python framework designed for exploratory end-to
 .. card:: GitHub :octicon:`mark-github;1em;`
     :link: https://github.com/theislab/ehrapy
 
-    Find a bug? Interested in improving ehrapy? Checkout our GitHub for the latest developments.
+    Found a bug? Interested in improving ehrapy? Checkout our GitHub for the latest developments.
 
 ```
 
@@ -74,6 +74,14 @@ GitHub <https://github.com/theislab/ehrapy>
 ```
 
 # Citation
+
+ <p align="center">
+  <a href="https://www.nature.com/articles/s41591-024-03214-0">
+    <img src="_static/ehrapy_logos/nat_med_cover_upscaled_compressed.png" alt="fig2" width="50%">
+  </a>
+</p>
+
+Read more about ehrapy in the [associated publication](https://doi.org/10.1038/s41591-024-03214-0).
 
 ```bibtex
 @article{Heumos2024,

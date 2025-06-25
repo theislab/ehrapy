@@ -49,7 +49,6 @@ dependencies = [
     "session-info2",
     "ehrdata",
     "lamin_utils",
-    "rich",
     "scanpy",
     "requests",
     "miceforest",
