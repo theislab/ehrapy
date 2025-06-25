@@ -75,6 +75,8 @@ GitHub <https://github.com/theislab/ehrapy>
 
 # Citation
 
+Read more about ehrapy in the [associated publication](https://doi.org/10.1038/s41591-024-03214-0).
+
 ```bibtex
 @article{Heumos2024,
   author = {Heumos, Lukas and Ehmele, Philipp and Treis, Tim and Upmeier zu Belzen, Julius and Roellin, Eljas and May, Lilly and Namsaraeva, Altana and Horlava, Nastassya and Shitov, Vladimir A. and Zhang, Xinyue and Zappia, Luke and Knoll, Rainer and Lang, Niklas J. and Hetzel, Leon and Virshup, Isaac and Sikkema, Lisa and Curion, Fabiola and Eils, Roland and Schiller, Herbert B. and Hilgendorff, Anne and Theis, Fabian J.},
