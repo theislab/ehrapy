@@ -75,7 +75,7 @@ GitHub <https://github.com/theislab/ehrapy>
 
 # Citation
 
-![cover](docs/_static/ehrapy_logos/nat_med_cover_upscaled_compressed.png)
+![cover](_static/ehrapy_logos/nat_med_cover_upscaled_compressed.png)
 
 Read more about ehrapy in the [associated publication](https://doi.org/10.1038/s41591-024-03214-0).
 
