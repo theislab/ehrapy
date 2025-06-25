@@ -75,6 +75,12 @@ GitHub <https://github.com/theislab/ehrapy>
 
 # Citation
 
+ <p align="center">
+  <a href="https://www.nature.com/articles/s41591-024-03214-0">
+    <img src="https://github.com/user-attachments/assets/c3f7e79d-1633-4767-9dda-e94262279685" alt="fig2" width="50%">
+  </a>
+</p>
+
 Read more about ehrapy in the [associated publication](https://doi.org/10.1038/s41591-024-03214-0).
 
 ```bibtex
