@@ -43,6 +43,14 @@ import ehrapy as ep
 
 ## Citation
 
+ <p align="center">
+  <a href="https://www.nature.com/articles/s41591-024-03214-0">
+    <img src="https://github.com/user-attachments/assets/c3f7e79d-1633-4767-9dda-e94262279685" alt="fig2" width="50%">
+  </a>
+</p>
+
+Read more about ehrapy in the [associated publication](https://doi.org/10.1038/s41591-024-03214-0).
+
 ```bibtex
 @article{Heumos2024,
   author = {Heumos, Lukas and Ehmele, Philipp and Treis, Tim and Upmeier zu Belzen, Julius and Roellin, Eljas and May, Lilly and Namsaraeva, Altana and Horlava, Nastassya and Shitov, Vladimir A. and Zhang, Xinyue and Zappia, Luke and Knoll, Rainer and Lang, Niklas J. and Hetzel, Leon and Virshup, Isaac and Sikkema, Lisa and Curion, Fabiola and Eils, Roland and Schiller, Herbert B. and Hilgendorff, Anne and Theis, Fabian J.},

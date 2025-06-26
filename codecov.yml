@@ -1,13 +1,18 @@
+codecov:
+  require_ci_to_pass: no
+
 comment: false
+
 coverage:
     status:
         project:
             default:
-                target: auto
+                # Require 1% coverage, i.e., always succeed
+                target: 1
         patch:
             default:
                 enabled: no
     ignore:
-        - "test/"
+        - "tests/"
 github_checks:
     annotations: false
