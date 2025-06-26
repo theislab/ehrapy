@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Literal
 import numpy as np
 
 from ehrapy import settings
+from ehrapy._compat import function_future_warning
 from ehrapy.preprocessing._encoding import encode
 
 if TYPE_CHECKING:
@@ -36,9 +37,10 @@ def write(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> adata = ed.dt.mimic_2()
         >>> ep.io.write("mimic_2.h5ad", adata)
     """
+    function_future_warning("ehrapy.io.write", "ehrdata.io.write")
     filename = Path(filename)  # allow passing strings
     if _get_file_extension(filename):
         filename = filename
