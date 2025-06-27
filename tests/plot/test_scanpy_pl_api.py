@@ -228,7 +228,7 @@ def test_rank_features_groups(mimic_2_encoded, check_same_image):
     ].copy()
 
     ep.tl.rank_features_groups(adata_sample, groupby="service_unit")
-    ax = ep.pl.rank_features_groups(adata_sample, key="rank_features_groups",groups=["SICU"], show=False)
+    ax = ep.pl.rank_features_groups(adata_sample, key="rank_features_groups", groups=["SICU"], show=False)
 
     image = 0
     fig = ax[image].figure
@@ -321,6 +321,7 @@ def test_rank_features_groups_heatmap(mimic_2_encoded, check_same_image):
     )
     plt.close("all")
 
+
 def test_rank_features_groups_dotplot(mimic_2_encoded, check_same_image):
     adata_sample = mimic_2_encoded[
         :200, ["wbc_first", "hgb_first", "potassium_first", "tco2_first", "bun_first"]
@@ -337,6 +338,7 @@ def test_rank_features_groups_dotplot(mimic_2_encoded, check_same_image):
         tol=2e-1,
     )
     plt.close("all")
+
 
 def test_rank_features_groups_matrixplot(mimic_2_encoded, check_same_image):
     adata_sample = mimic_2_encoded[
