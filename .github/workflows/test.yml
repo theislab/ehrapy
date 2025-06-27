@@ -63,4 +63,4 @@ jobs:
               uses: actions/upload-artifact@v4
               with:
                 name: failed-test-images
-                path: /home/runner/work/ehrapy/ehrapy/pytest_temp/**/diff*.png
+                path: /home/runner/work/ehrapy/ehrapy/pytest_temp/**/*diff*.png
