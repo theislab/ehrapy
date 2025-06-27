@@ -253,7 +253,6 @@ def test_rank_features_groups_violin(mimic_2_encoded, check_same_image):
 
     image = 0
     fig = ax[image].figure
-    fig.set_dpi(80)
 
     check_same_image(
         fig=fig,
