@@ -118,7 +118,7 @@ def test_violin_plot(mimic_2, check_same_image):
     adata_sample.obs["service_unit"] = mimic_2[:200, "service_unit"].X.toarray().ravel().astype(str)
     adata_sample.obs["service_unit"] = adata_sample.obs["service_unit"].astype("category")
 
-    ax = ep.pl.violin(adata_sample, keys="age", groupby="service_unit", show=False)
+    ax = ep.pl.violin(adata_sample, keys="age", groupby="service_unit", show=False, jitter=False)
     fig = ax.get_figure()
 
     check_same_image(
@@ -237,34 +237,33 @@ def test_rank_features_groups(mimic_2_encoded, check_same_image):
         tol=2e-1,
     )
 
-
 def test_rank_features_groups_violin(mimic_2_encoded, check_same_image):
+    import numpy as np
+    np.random.seed(42)
+
     adata_sample = mimic_2_encoded[
-        :200,
-        [
-            "abg_count",
-            "wbc_first",
-            "hgb_first",
-            "potassium_first",
-            "tco2_first",
-            "bun_first",
-            "creatinine_first",
-            "pco2_first",
-        ],
-    ].copy()
+                   :200,
+                   ["abg_count",
+                    "wbc_first",
+                    "hgb_first",
+                    "potassium_first",
+                    "tco2_first",
+                    "bun_first",
+                    "creatinine_first",
+                    "pco2_first"],
+                   ].copy()
 
     ep.tl.rank_features_groups(adata_sample, groupby="service_unit")
     ax = ep.pl.rank_features_groups_violin(adata_sample, key="rank_features_groups", show=False, jitter=False)
 
-    image = 0
-    fig = ax[image].figure
+    fig = ax[0].figure
 
+    fig.savefig(f"{_TEST_IMAGE_PATH}/rank_features_groups_violin_scanpy_test_output.png", dpi=80)
     check_same_image(
         fig=fig,
-        base_path=f"{_TEST_IMAGE_PATH}/rank_features_groups_violin_scanpy",
+        base_path=f"{_TEST_IMAGE_PATH}/rank_features_groups_violin",
         tol=2e-1,
     )
-
 
 def test_rank_features_groups_stacked_violin(mimic_2_encoded, check_same_image):
     adata_sample = mimic_2_encoded[
@@ -345,8 +344,7 @@ def test_rank_features_groups_matrixplot(mimic_2_encoded, check_same_image):
 
     ep.tl.rank_features_groups(adata_sample, groupby="service_unit")
     ax = ep.pl.rank_features_groups_matrixplot(
-        adata_sample, key="rank_features_groups", groupby="service_unit", show=False
-    )
+        adata_sample, key="rank_features_groups", groupby="service_unit", show=False)
 
     fig = ax["mainplot_ax"].figure
 
