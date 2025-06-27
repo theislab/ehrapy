@@ -2,6 +2,14 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## The future
+
+### 🚀 Features
+
+### 🧰 Maintenance
+
+* Update expected behaviour of `io.read_fhir` ([#922](https://github.com/theislab/ehrapy/pull/922)) @eroell
+
 ## v0.12.1
 
 ### 🚀 Features
