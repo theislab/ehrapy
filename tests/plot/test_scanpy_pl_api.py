@@ -259,7 +259,9 @@ def test_rank_features_groups_violin(mimic_2_encoded, check_same_image):
     ].copy()
 
     ep.tl.rank_features_groups(adata_sample, groupby="service_unit")
-    ax = ep.pl.rank_features_groups_violin(adata_sample, groups=["SICU"], key="rank_features_groups", jitter=False, show=False)
+    ax = ep.pl.rank_features_groups_violin(
+        adata_sample, groups=["SICU"], key="rank_features_groups", jitter=False, show=False
+    )
     fig = ax[0].figure
 
     fig.savefig(f"{_TEST_IMAGE_PATH}/rank_features_groups_violin_scanpy_test_output.png", dpi=80)
