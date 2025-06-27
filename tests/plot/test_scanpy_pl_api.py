@@ -236,6 +236,7 @@ def test_rank_features_groups(mimic_2_encoded, check_same_image):
         base_path=f"{_TEST_IMAGE_PATH}/rank_features_groups_scanpy_plt",
         tol=2e-1,
     )
+    plt.close("all")
 
 def test_rank_features_groups_violin(mimic_2_encoded, check_same_image):
     import numpy as np
@@ -254,8 +255,7 @@ def test_rank_features_groups_violin(mimic_2_encoded, check_same_image):
                    ].copy()
 
     ep.tl.rank_features_groups(adata_sample, groupby="service_unit")
-    ax = ep.pl.rank_features_groups_violin(adata_sample, key="rank_features_groups", show=False, jitter=False)
-
+    ax = ep.pl.rank_features_groups_violin(adata_sample, groups=["SICU"], key="rank_features_groups", jitter=False, show=False)
     fig = ax[0].figure
 
     fig.savefig(f"{_TEST_IMAGE_PATH}/rank_features_groups_violin_scanpy_test_output.png", dpi=80)
@@ -264,6 +264,7 @@ def test_rank_features_groups_violin(mimic_2_encoded, check_same_image):
         base_path=f"{_TEST_IMAGE_PATH}/rank_features_groups_violin",
         tol=2e-1,
     )
+    plt.close("all")
 
 def test_rank_features_groups_stacked_violin(mimic_2_encoded, check_same_image):
     adata_sample = mimic_2_encoded[
@@ -291,6 +292,7 @@ def test_rank_features_groups_stacked_violin(mimic_2_encoded, check_same_image):
         base_path=f"{_TEST_IMAGE_PATH}/rank_features_groups_stacked_violin_scanpy",
         tol=2e-1,
     )
+    plt.close("all")
 
 
 def test_rank_features_groups_heatmap(mimic_2_encoded, check_same_image):
@@ -309,6 +311,7 @@ def test_rank_features_groups_heatmap(mimic_2_encoded, check_same_image):
         base_path=f"{_TEST_IMAGE_PATH}/rank_features_groups_heatmap_scanpy",
         tol=2e-1,
     )
+    plt.close("all")
 
 
 def test_rank_features_groups_dotplot(mimic_2_encoded, check_same_image):
@@ -326,6 +329,7 @@ def test_rank_features_groups_dotplot(mimic_2_encoded, check_same_image):
         base_path=f"{_TEST_IMAGE_PATH}/rank_features_groups_dotplot_scanpy",
         tol=2e-1,
     )
+    plt.close("all")
 
 
 def test_rank_features_groups_matrixplot(mimic_2_encoded, check_same_image):
@@ -353,6 +357,7 @@ def test_rank_features_groups_matrixplot(mimic_2_encoded, check_same_image):
         base_path=f"{_TEST_IMAGE_PATH}/rank_features_groups_matrixplot_scanpy",
         tol=2e-1,
     )
+    plt.close("all")
 
 
 def test_rank_features_groups_tracksplot(mimic_2_encoded, check_same_image):
@@ -369,3 +374,4 @@ def test_rank_features_groups_tracksplot(mimic_2_encoded, check_same_image):
         base_path=f"{_TEST_IMAGE_PATH}/rank_features_groups_tracksplot_scanpy",
         tol=2e-1,
     )
+    plt.close("all")
