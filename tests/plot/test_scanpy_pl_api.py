@@ -9,11 +9,13 @@ import matplotlib.pyplot as plt
 plt.style.use("default")
 
 import numpy as np
+np.random.seed(42)
 
 import ehrapy as ep
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_IMAGE_PATH = f"{CURRENT_DIR}/_images"
+
 
 
 def test_scatter_plot(mimic_2, check_same_image):
@@ -231,6 +233,8 @@ def test_rank_features_groups(mimic_2_encoded, check_same_image):
     image = 0
     fig = ax[image].figure
 
+    #fig.savefig(f"{_TEST_IMAGE_PATH}/rank_features_groups_scanpy_test_output.png", dpi=80)
+
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/rank_features_groups_scanpy_plt",
@@ -240,9 +244,6 @@ def test_rank_features_groups(mimic_2_encoded, check_same_image):
 
 
 def test_rank_features_groups_violin(mimic_2_encoded, check_same_image):
-    import numpy as np
-
-    np.random.seed(42)
 
     adata_sample = mimic_2_encoded[
         :200,
@@ -264,7 +265,7 @@ def test_rank_features_groups_violin(mimic_2_encoded, check_same_image):
     )
     fig = ax[0].figure
 
-    fig.savefig(f"{_TEST_IMAGE_PATH}/rank_features_groups_violin_scanpy_test_output.png", dpi=80)
+    #fig.savefig(f"{_TEST_IMAGE_PATH}/rank_features_groups_violin_scanpy_test_output.png", dpi=80)
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/rank_features_groups_violin",
