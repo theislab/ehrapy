@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 from numpy import ndarray
 
+from ehrapy._compat import use_ehrdata
 from ehrapy.plot import scatter
 
 if TYPE_CHECKING:
@@ -17,13 +18,16 @@ if TYPE_CHECKING:
     from xmlrpc.client import Boolean
 
     from anndata import AnnData
+    from ehrdata import EHRData
     from lifelines import KaplanMeierFitter
     from matplotlib.axes import Axes
     from statsmodels.regression.linear_model import RegressionResults
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 def ols(
-    adata: AnnData | None = None,
+    edata: EHRData | AnnData | None = None,
+    *,
     x: str | None = None,
     y: str | None = None,
     scatter_plot: Boolean | None = True,
@@ -46,7 +50,7 @@ def ols(
     """Plots an Ordinary Least Squares (OLS) Model result, scatter plot, and line plot.
 
     Args:
-        adata: :class:`~anndata.AnnData` object containing all observations.
+        edata: Data object containing all observations.
         x: x coordinate, for scatter plotting.
         y: y coordinate, for scatter plotting.
         scatter_plot: Whether to show a scatter plot.
@@ -69,12 +73,12 @@ def ols(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=False)
+        >>> edata = ep.dt.mimic_2(encoded=False)
         >>> co2_lm_result = ep.tl.ols(
-        ...     adata, var_names=["pco2_first", "tco2_first"], formula="tco2_first ~ pco2_first", missing="drop"
+        ...     edata, var_names=["pco2_first", "tco2_first"], formula="tco2_first ~ pco2_first", missing="drop"
         ... ).fit()
         >>> ep.pl.ols(
-        ...     adata,
+        ...     edata,
         ...     x="pco2_first",
         ...     y="tco2_first",
         ...     ols_results=[co2_lm_result],
@@ -86,8 +90,8 @@ def ols(
         .. image:: /_static/docstring_previews/ols_plot_1.png
 
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=False)
-        >>> ep.pl.ols(adata, x='pco2_first', y='tco2_first', lines=[(0.25, 10), (0.3, 20)],
+        >>> edata = ep.dt.mimic_2(encoded=False)
+        >>> ep.pl.ols(edata, x='pco2_first', y='tco2_first', lines=[(0.25, 10), (0.3, 20)],
         >>>           lines_color=['red', 'blue'], lines_style=['-', ':'], lines_label=['Line1', 'Line2'])
 
         .. image:: /_static/docstring_previews/ols_plot_2.png
@@ -112,11 +116,11 @@ def ols(
         lines_style = [None] * len(lines)
     if lines_label is None and lines is not None:
         lines_label = [None] * len(lines)
-    if adata is not None and x is not None and y is not None:
-        x_processed = np.array(adata[:, x].X).astype(float)
+    if edata is not None and x is not None and y is not None:
+        x_processed = np.array(edata[:, x].X).astype(float)
         x_processed = x_processed[~np.isnan(x_processed)]
         if scatter_plot is True:
-            ax = scatter(adata, x=x, y=y, show=False, ax=ax, **kwds)
+            ax = scatter(edata, x=x, y=y, show=False, ax=ax, **kwds)
         if ols_results is not None:
             for i, ols_result in enumerate(ols_results):
                 ax.plot(x_processed, ols_result.predict(), color=ols_color[i])
@@ -145,6 +149,7 @@ def ols(
 
 def kmf(
     kmfs: Sequence[KaplanMeierFitter],
+    *,
     ci_alpha: list[float] | None = None,
     ci_force_lines: list[Boolean] | None = None,
     ci_show: list[Boolean] | None = None,
@@ -230,27 +235,27 @@ def kaplan_meier(
     Examples:
         >>> import ehrapy as ep
         >>> import numpy as np
-        >>> adata = ep.dt.mimic_2(encoded=False)
+        >>> edata = ep.dt.mimic_2(encoded=False)
 
         # Because in MIMIC-II database, `censor_fl` is censored or death (binary: 0 = death, 1 = censored).
         # While in KaplanMeierFitter, `event_observed` is True if the the death was observed, False if the event was lost (right-censored).
         # So we need to flip `censor_fl` when pass `censor_fl` to KaplanMeierFitter
 
-        >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
-        >>> kmf = ep.tl.kaplan_meier(adata, "mort_day_censored", "censor_flg")
+        >>> edata[:, ["censor_flg"]].X = np.where(edata[:, ["censor_flg"]].X == 0, 1, 0)
+        >>> kmf = ep.tl.kaplan_meier(edata, "mort_day_censored", "censor_flg")
         >>> ep.pl.kaplan_meier(
         ...     [kmf], color=["r"], xlim=[0, 700], ylim=[0, 1], xlabel="Days", ylabel="Proportion Survived", show=True
         ... )
 
         .. image:: /_static/docstring_previews/kmf_plot_1.png
 
-        >>> groups = adata[:, ["service_unit"]].X
-        >>> adata_ficu = adata[groups == "FICU"]
-        >>> adata_micu = adata[groups == "MICU"]
-        >>> adata_sicu = adata[groups == "SICU"]
-        >>> kmf_1 = ep.tl.kaplan_meier(adata_ficu, "mort_day_censored", "censor_flg", label="FICU")
-        >>> kmf_2 = ep.tl.kaplan_meier(adata_micu, "mort_day_censored", "censor_flg", label="MICU")
-        >>> kmf_3 = ep.tl.kaplan_meier(adata_sicu, "mort_day_censored", "censor_flg", label="SICU")
+        >>> groups = edata[:, ["service_unit"]].X
+        >>> edata_ficu = edata[groups == "FICU"]
+        >>> edata_micu = edata[groups == "MICU"]
+        >>> edata_sicu = edata[groups == "SICU"]
+        >>> kmf_1 = ep.tl.kaplan_meier(edata_ficu, "mort_day_censored", "censor_flg", label="FICU")
+        >>> kmf_2 = ep.tl.kaplan_meier(edata_micu, "mort_day_censored", "censor_flg", label="MICU")
+        >>> kmf_3 = ep.tl.kaplan_meier(edata_sicu, "mort_day_censored", "censor_flg", label="SICU")
         >>> ep.pl.kaplan_meier([kmf_1, kmf_2, kmf_3], ci_show=[False,False,False], color=['k','r', 'g'],
         >>>           xlim=[0, 750], ylim=[0, 1], xlabel="Days", ylabel="Proportion Survived")
 
@@ -342,8 +347,9 @@ def kaplan_meier(
         return None
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 def cox_ph_forestplot(
-    adata: AnnData,
+    edata: EHRData | AnnData,
     *,
     uns_key: str = "cox_ph",
     labels: Iterable[str] | None = None,
@@ -360,14 +366,14 @@ def cox_ph_forestplot(
 ):
     """Generates a forest plot to visualize the coefficients and confidence intervals of a Cox Proportional Hazards model.
 
-    The `adata` object must first be populated using the :func:`~ehrapy.tools.cox_ph` function. This function stores the summary table of the `CoxPHFitter` in the `.uns` attribute of `adata`.
+    The `edata` object must first be populated using the :func:`~ehrapy.tools.cox_ph` function. This function stores the summary table of the `CoxPHFitter` in the `.uns` attribute of `edata`.
     The summary table is created when the model is fitted using the :func:`~ehrapy.tools.cox_ph` function.
     For more information on the `CoxPHFitter`, see the `Lifelines documentation <https://lifelines.readthedocs.io/en/latest/fitters/regression/CoxPHFitter.html>`_.
 
     Inspired by `zepid.graphics.EffectMeasurePlot <https://readthedocs.org>`_ (zEpid Package, https://pypi.org/project/zepid/).
 
     Args:
-        adata: :class:`~anndata.AnnData` object containing the summary table from the CoxPHFitter. This is stored in the `.uns` attribute, after fitting the model using :func:`~ehrapy.tools.cox_ph`.
+        edata: Data object containing the summary table from the CoxPHFitter. This is stored in the `.uns` attribute, after fitting the model using :func:`~ehrapy.tools.cox_ph`.
         uns_key: Key in `.uns` where :func:`~ehrapy.tools.cox_ph` function stored the summary table. See argument `uns_key` in :func:`~ehrapy.tools.cox_ph`.
         labels: List of labels for each coefficient, default uses the index of the summary ta
         fig_size: Width, height in inches.
@@ -383,18 +389,18 @@ def cox_ph_forestplot(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=False)
-        >>> adata_subset = adata[:, ["mort_day_censored", "censor_flg", "gender_num", "afib_flg", "day_icu_intime_num"]]
-        >>> coxph = ep.tl.cox_ph(adata_subset, event_col="censor_flg", duration_col="mort_day_censored")
-        >>> ep.pl.cox_ph_forestplot(adata_subset)
+        >>> edata = ep.dt.mimic_2(encoded=False)
+        >>> edata_subset = edata[:, ["mort_day_censored", "censor_flg", "gender_num", "afib_flg", "day_icu_intime_num"]]
+        >>> coxph = ep.tl.cox_ph(edata_subset, event_col="censor_flg", duration_col="mort_day_censored")
+        >>> ep.pl.cox_ph_forestplot(edata_subset)
 
         .. image:: /_static/docstring_previews/coxph_forestplot.png
 
     """
-    if uns_key not in adata.uns:
-        raise ValueError(f"Key {uns_key} not found in adata.uns. Please provide a valid key.")
+    if uns_key not in edata.uns:
+        raise ValueError(f"Key {uns_key} not found in edata.uns. Please provide a valid key.")
 
-    coxph_fitting_summary = adata.uns[
+    coxph_fitting_summary = edata.uns[
         uns_key
     ]  # pd.Dataframe with columns: coef, exp(coef), se(coef), z, p, lower 0.95, upper 0.95
     auc_col = "coef"

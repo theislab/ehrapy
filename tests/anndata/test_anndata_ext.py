@@ -4,10 +4,12 @@ import numpy as np
 import pandas as pd
 import pytest
 from anndata import AnnData
+from ehrdata import EHRData
 from pandas import DataFrame
 from pandas.testing import assert_frame_equal
 
 import ehrapy as ep
+from ehrapy._compat import _cast_adata_to_match_data_type
 from ehrapy.anndata._constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrapy.anndata.anndata_ext import (
     _assert_numeric_vars,
@@ -158,14 +160,18 @@ def test_move_to_x(adata_move_obs_mix):
     )
 
 
-def test_move_to_x_copy_x(adata_move_obs_mix):
+@pytest.mark.parametrize("data_type", [AnnData(), EHRData()])
+def test_move_to_x_copy_x(adata_move_obs_mix, data_type):
+    adata_move_obs_mix = _cast_adata_to_match_data_type(adata_move_obs_mix, data_type)
     move_to_obs(adata_move_obs_mix, ["name"], copy_obs=False)
     obs_df = adata_move_obs_mix.obs.copy()
     new_adata = move_to_x(adata_move_obs_mix, ["name"], copy_x=True)
     assert_frame_equal(new_adata.obs, obs_df)
 
 
-def test_move_to_x_invalid_column_names(adata_move_obs_mix):
+@pytest.mark.parametrize("data_type", [AnnData(), EHRData()])
+def test_move_to_x_invalid_column_names(adata_move_obs_mix, data_type):
+    adata_move_obs_mix = _cast_adata_to_match_data_type(adata_move_obs_mix, data_type)
     move_to_obs(adata_move_obs_mix, ["name"], copy_obs=True)
     move_to_obs(adata_move_obs_mix, ["clinic_id"], copy_obs=False)
     with pytest.raises(ValueError):
@@ -173,7 +179,9 @@ def test_move_to_x_invalid_column_names(adata_move_obs_mix):
         _ = move_to_x(adata_move_obs_mix, ["blabla1", "blabla2"])
 
 
-def test_move_to_x_move_to_obs(adata_move_obs_mix):
+@pytest.mark.parametrize("data_type", [AnnData(), EHRData()])
+def test_move_to_x_move_to_obs(adata_move_obs_mix, data_type):
+    adata_move_obs_mix = _cast_adata_to_match_data_type(adata_move_obs_mix, data_type)
     adata_dim_old = adata_move_obs_mix.X.shape
     # moving columns from X to obs and back
     # case 1:  move some column from obs to X and this col was copied previously from X to obs
@@ -390,20 +398,27 @@ def adata_encoded(adata_strings):
     return ep.pp.encode(adata_strings.copy(), autodetect=True, encodings="label")
 
 
-def test_get_var_indices_for_type(adata_strings_encoded):
-    adata_strings, adata_encoded = adata_strings_encoded
+@pytest.mark.parametrize("data_type", [AnnData(), EHRData()])
+def test_get_var_indices_for_type(adata_strings_encoded, data_type):
+    _, adata_encoded = adata_strings_encoded
+    adata_encoded = _cast_adata_to_match_data_type(adata_encoded, data_type)
+
     vars = _get_var_indices_for_type(adata_encoded, NUMERIC_TAG)
     assert vars == ["Numeric1", "Numeric2"]
 
 
-def test__get_var_indices_for_type():
+@pytest.mark.parametrize("data_type", [AnnData(), EHRData()])
+def test__get_var_indices_for_type(data_type):
     adata = AnnData(X=np.array([[1, 2, 3], [4, 0, 6]], dtype=np.float32))
+    adata = _cast_adata_to_match_data_type(adata, data_type)
     vars = _get_var_indices_for_type(adata, NUMERIC_TAG)
     assert vars == ["0", "1", "2"]
 
 
-def test_assert_numeric_vars(adata_strings_encoded):
-    adata_strings, adata_encoded = adata_strings_encoded
+@pytest.mark.parametrize("data_type", [AnnData(), EHRData()])
+def test_assert_numeric_vars(adata_strings_encoded, data_type):
+    _, adata_encoded = adata_strings_encoded
+    adata_encoded = _cast_adata_to_match_data_type(adata_encoded, data_type)
     _assert_numeric_vars(adata_encoded, ["Numeric1", "Numeric2"])
     with pytest.raises(ValueError, match=r"Some selected vars are not numeric"):
         _assert_numeric_vars(adata_encoded, ["Numeric2", "String1"])
