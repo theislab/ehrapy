@@ -170,7 +170,7 @@ class EhrapyConfig:  # pragma: no cover
 
     @property
     def autosave(self) -> bool:
-        """Automatically save figures in :attr:`~scanpy._settings.ScanpyConfig.figdir` (default `False`).
+        """Automatically save figures to the default fig dir.
 
         Do not show plots/figures interactively.
         """

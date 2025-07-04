@@ -1,12 +1,4 @@
-from ehrapy._compat import _check_module_importable, _shell_command_accessible
-
-
-def test_check_module_importable_true():
-    assert _check_module_importable("math") is True
-
-
-def test_check_module_importable_false():
-    assert _check_module_importable("nonexistentmodule12345") is False
+from ehrapy._compat import _shell_command_accessible
 
 
 def test_shell_command_accessible_true(monkeypatch):
