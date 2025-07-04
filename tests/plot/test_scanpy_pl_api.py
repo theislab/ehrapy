@@ -6,6 +6,8 @@ matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
 
+plt.style.use("default")
+
 import numpy as np
 
 import ehrapy as ep
@@ -260,7 +262,7 @@ def test_rank_features_groups_violin(mimic_2_encoded, check_same_image):
     )
     fig = ax[0].figure
 
-    fig.savefig(f"{_TEST_IMAGE_PATH}/rank_features_groups_violin_scanpy_test_output.png", dpi=80)
+    #fig.savefig(f"{_TEST_IMAGE_PATH}/rank_features_groups_violin_scanpy_test_output.png", dpi=80)
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/rank_features_groups_violin",
@@ -289,7 +291,6 @@ def test_rank_features_groups_stacked_violin(mimic_2_encoded, check_same_image):
 
     fig = ax["mainplot_ax"].figure
     fig.set_dpi(80)
-    fig.ti
 
     check_same_image(
         fig=fig,
