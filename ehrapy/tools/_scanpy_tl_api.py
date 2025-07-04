@@ -60,7 +60,6 @@ def tsne(
         random_state: Change this to use different intial states for the optimization.
                       If `None`, the initial state is not reproducible.
         n_jobs: Number of jobs for parallel computation.
-                `None` means using :attr:`scanpy._settings.ScanpyConfig.n_jobs`.
         copy: Return a copy instead of writing to `adata`.
         metric: Distance metric to calculate neighbors on.
 
@@ -232,7 +231,6 @@ def draw_graph(
         random_state: For layouts with random initialization like 'fr', change this to use
                       different intial states for the optimization. If `None`, no seed is set.
         n_jobs: Number of jobs for parallel computation.
-                `None` means using :attr:`scanpy._settings.ScanpyConfig.n_jobs`.
         adjacency: Sparse adjacency matrix of the graph, defaults to neighbors connectivities.
         key_added_ext: By default, append `layout`.
         neighbors_key: If not specified, draw_graph looks .obsp['connectivities'] for connectivities

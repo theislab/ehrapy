@@ -112,7 +112,7 @@ def regress_out(
     Args:
         adata: :class:`~anndata.AnnData` object containing all observations.
         keys: Keys for observation annotation on which to regress on.
-        n_jobs: Number of jobs for parallel computation. `None` means using :attr:`scanpy._settings.ScanpyConfig.n_jobs`.
+        n_jobs: Number of jobs for parallel computation.
         copy: Determines whether a copy of `adata` is returned.
 
     Returns:
