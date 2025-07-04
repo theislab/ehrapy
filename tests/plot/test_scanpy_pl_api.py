@@ -6,8 +6,6 @@ matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
 
-plt.style.use("default")
-
 import numpy as np
 
 import ehrapy as ep
@@ -264,7 +262,7 @@ def test_rank_features_groups_violin(mimic_2_encoded, check_same_image):
     )
     fig = ax[0].figure
 
-    # fig.savefig(f"{_TEST_IMAGE_PATH}/rank_features_groups_violin_scanpy_test_output.png", dpi=80)
+    fig.savefig(f"{_TEST_IMAGE_PATH}/rank_features_groups_violin_scanpy_test_output.png", dpi=80)
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/rank_features_groups_violin",
@@ -293,6 +291,7 @@ def test_rank_features_groups_stacked_violin(mimic_2_encoded, check_same_image):
 
     fig = ax["mainplot_ax"].figure
     fig.set_dpi(80)
+    fig.ti
 
     check_same_image(
         fig=fig,
@@ -383,3 +382,24 @@ def test_rank_features_groups_tracksplot(mimic_2_encoded, check_same_image):
         tol=2e-1,
     )
     plt.close("all")
+
+def test_pca(diabetes_130_fairlearn_sample, check_same_image):
+    adata = diabetes_130_fairlearn_sample[:200, :].copy()   
+    adata = ep.pp.encode(
+    adata,
+    autodetect=True,
+    )
+
+    ep.pp.pca(adata)
+    ep.pp.neighbors(adata)
+    ep.tl.leiden(adata)
+    ep.tl.umap(adata)
+
+    ax = ep.pl.pca(adata, color="leiden", show=False)
+    fig = ax.figure
+
+    check_same_image(
+        fig=fig,
+        base_path=f"{_TEST_IMAGE_PATH}/pca",
+        tol=2e-1,
+    )
