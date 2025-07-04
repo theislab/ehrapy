@@ -124,6 +124,21 @@ def adata_mini():
 
 
 @pytest.fixture
+def diabetes_130_fairlearn_sample():
+    adata = ep.dt.diabetes_130_fairlearn(
+        columns_obs_only=[
+            "race",
+            "gender",
+            "age",
+            "readmitted",
+            "readmit_binary",
+            "discharge_disposition_id",
+        ]
+    )[:200]
+    return adata
+
+
+@pytest.fixture
 def adata_move_obs_num() -> AnnData:
     return read_csv(TEST_DATA_PATH / "io/dataset_move_obs_num.csv")
 
