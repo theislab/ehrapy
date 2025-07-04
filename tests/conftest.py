@@ -123,7 +123,7 @@ def adata_mini():
     return read_csv(f"{TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["glucose", "weight", "disease", "station"])
 
 @pytest.fixture
-def default_plot_dataset():
+def diabetes_130_fairlearn_sample():
     adata = ep.dt.diabetes_130_fairlearn(
         columns_obs_only=[
             "race",
