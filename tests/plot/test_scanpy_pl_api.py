@@ -228,8 +228,6 @@ def test_rank_features_groups(mimic_2_encoded, check_same_image):
     ep.tl.rank_features_groups(adata_sample, groupby="service_unit")
     ax = ep.pl.rank_features_groups(adata_sample, key="rank_features_groups", groups=["SICU"], show=False)
 
-
-
     image = 0
     fig = ax[image].figure
 
