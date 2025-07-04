@@ -10,7 +10,7 @@ import pandas as pd
 from lamin_utils import logger
 from thefuzz import process
 
-from ehrapy._compat import _raise_array_type_not_implemented
+from ehrapy._compat import DaskArray, _raise_array_type_not_implemented
 from ehrapy.anndata import anndata_to_df
 from ehrapy.preprocessing._encoding import _get_encoded_features
 
@@ -18,13 +18,6 @@ if TYPE_CHECKING:
     from collections.abc import Collection
 
     from anndata import AnnData
-
-try:
-    import dask.array as da
-
-    DASK_AVAILABLE = True
-except ImportError:
-    DASK_AVAILABLE = False
 
 
 def qc_metrics(
@@ -84,11 +77,11 @@ def _(mtx: np.ndarray, axis) -> np.ndarray:
     return pd.isnull(mtx).sum(axis)
 
 
-if DASK_AVAILABLE:
+@_compute_missing_values.register
+def _(mtx: DaskArray, axis) -> np.ndarray:
+    import dask.array as da
 
-    @_compute_missing_values.register
-    def _(mtx: da.Array, axis) -> np.ndarray:
-        return da.isnull(mtx).sum(axis).compute()
+    return da.isnull(mtx).sum(axis).compute()
 
 
 def _compute_obs_metrics(
