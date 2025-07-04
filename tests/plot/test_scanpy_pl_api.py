@@ -9,13 +9,11 @@ import matplotlib.pyplot as plt
 plt.style.use("default")
 
 import numpy as np
-np.random.seed(42)
 
 import ehrapy as ep
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_IMAGE_PATH = f"{CURRENT_DIR}/_images"
-
 
 
 def test_scatter_plot(mimic_2, check_same_image):
@@ -229,6 +227,8 @@ def test_rank_features_groups(mimic_2_encoded, check_same_image):
 
     ep.tl.rank_features_groups(adata_sample, groupby="service_unit")
     ax = ep.pl.rank_features_groups(adata_sample, key="rank_features_groups", groups=["SICU"], show=False)
+
+
 
     image = 0
     fig = ax[image].figure

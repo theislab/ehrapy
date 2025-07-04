@@ -122,6 +122,19 @@ def mcar_adata(rng) -> AnnData:
 def adata_mini():
     return read_csv(f"{TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["glucose", "weight", "disease", "station"])
 
+@pytest.fixture
+def default_plot_dataset():
+    adata = ep.dt.diabetes_130_fairlearn(
+        columns_obs_only=[
+            "race",
+            "gender",
+            "age",
+            "readmitted",
+            "readmit_binary",
+            "discharge_disposition_id",
+        ]
+    )[:200]
+    return adata
 
 @pytest.fixture
 def adata_move_obs_num() -> AnnData:
