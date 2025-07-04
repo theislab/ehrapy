@@ -262,7 +262,7 @@ def test_rank_features_groups_violin(mimic_2_encoded, check_same_image):
     )
     fig = ax[0].figure
 
-    #fig.savefig(f"{_TEST_IMAGE_PATH}/rank_features_groups_violin_scanpy_test_output.png", dpi=80)
+    # fig.savefig(f"{_TEST_IMAGE_PATH}/rank_features_groups_violin_scanpy_test_output.png", dpi=80)
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/rank_features_groups_violin",
