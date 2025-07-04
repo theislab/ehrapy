@@ -382,11 +382,12 @@ def test_rank_features_groups_tracksplot(mimic_2_encoded, check_same_image):
     )
     plt.close("all")
 
+
 def test_pca(diabetes_130_fairlearn_sample, check_same_image):
-    adata = diabetes_130_fairlearn_sample[:200, :].copy()   
+    adata = diabetes_130_fairlearn_sample[:200, :].copy()
     adata = ep.pp.encode(
-    adata,
-    autodetect=True,
+        adata,
+        autodetect=True,
     )
 
     ep.pp.pca(adata)
