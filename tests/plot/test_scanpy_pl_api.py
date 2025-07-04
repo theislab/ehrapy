@@ -4,20 +4,6 @@ import matplotlib
 
 matplotlib.use("Agg")
 
-matplotlib.rcParams.update(
-    {
-        "figure.dpi": 80,
-        "savefig.dpi": 80,
-        "figure.figsize": (6, 4),
-        "font.family": "DejaVu Sans",
-        "font.size": 10,
-        "axes.titlesize": 10,
-        "axes.labelsize": 10,
-        "savefig.bbox": "tight",
-        "savefig.pad_inches": 0.02,
-    }
-)
-
 import matplotlib.pyplot as plt
 
 plt.style.use("default")
