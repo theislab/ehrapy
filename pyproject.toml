@@ -66,9 +66,7 @@ dependencies = [
     "numpy>=2.0.0",
     "numba>=0.60.0",
     "igraph",
-    "networkx<3.5", # dowhy breaks, release again once dowhy fixed
-    "scipy<=1.15.3", # statsmodel breaks, release once statsmodels fixed
-    "fast-array-utils",
+    "fast-array-utils[sparse,accel]",
     "networkx<3.5", # dowhy breaks - see https://github.com/py-why/dowhy/issues/680#issuecomment-2957189390
     "scipy<=1.15.3", # statsmodel breaks - see https://github.com/statsmodels/statsmodels/issues/9584
 ]
@@ -144,7 +142,8 @@ filterwarnings = [
     "ignore:All-NaN slice encountered:RuntimeWarning",
     "ignore:Observation names are not unique. To make them unique, call `.obs_names_make_unique`.:UserWarning",
     "ignore:Trying to modify attribute `.var` of view, initializing view as actual.:anndata.ImplicitModificationWarning",
-    "ignore:Transforming to str index.:anndata.ImplicitModificationWarning:"
+    "ignore:Transforming to str index.:anndata.ImplicitModificationWarning:",
+    "ignore:Modifying `X` on a view results in data being overridden:anndata.ImplicitModificationWarning"
 ]
 minversion = 6.0
 norecursedirs = [ '.*', 'build', 'dist', '*.egg', 'data', '__pycache__']

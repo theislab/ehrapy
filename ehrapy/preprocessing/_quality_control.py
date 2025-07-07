@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import copy
 from functools import singledispatch
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
@@ -10,7 +9,7 @@ import pandas as pd
 from lamin_utils import logger
 from thefuzz import process
 
-from ehrapy._compat import _raise_array_type_not_implemented
+from ehrapy._compat import DaskArray, _raise_array_type_not_implemented
 from ehrapy.anndata import anndata_to_df
 from ehrapy.preprocessing._encoding import _get_encoded_features
 
@@ -18,13 +17,6 @@ if TYPE_CHECKING:
     from collections.abc import Collection
 
     from anndata import AnnData
-
-try:
-    import dask.array as da
-
-    DASK_AVAILABLE = True
-except ImportError:
-    DASK_AVAILABLE = False
 
 
 def qc_metrics(
@@ -84,11 +76,11 @@ def _(mtx: np.ndarray, axis) -> np.ndarray:
     return pd.isnull(mtx).sum(axis)
 
 
-if DASK_AVAILABLE:
+@_compute_missing_values.register
+def _(mtx: DaskArray, axis) -> np.ndarray:
+    import dask.array as da
 
-    @_compute_missing_values.register
-    def _(mtx: da.Array, axis) -> np.ndarray:
-        return da.isnull(mtx).sum(axis).compute()
+    return da.isnull(mtx).sum(axis).compute()
 
 
 def _compute_obs_metrics(
@@ -159,21 +151,32 @@ def _compute_var_metrics(
     var_metrics = pd.DataFrame(index=adata.var_names)
 
     if "encoding_mode" in adata.var.keys():
-        for original_values_categorical in _get_encoded_features(adata):
-            mtx = copy.deepcopy(mtx.astype(object))
-            index = np.where(var_metrics.index.str.startswith("ehrapycat_" + original_values_categorical))[0]
+        encoded_features = _get_encoded_features(adata)
+        if encoded_features:
+            mtx = mtx.astype(object)
 
-            if original_values_categorical not in adata.obs.keys():
-                raise KeyError(f"Original values for {original_values_categorical} not found in adata.obs.")
-            mtx[:, index] = np.tile(
-                np.where(
+            all_indices = []
+            replacement_values = []
+
+            for original_values_categorical in encoded_features:
+                index = np.where(var_metrics.index.str.startswith("ehrapycat_" + original_values_categorical))[0]
+
+                if original_values_categorical not in adata.obs.keys():
+                    raise KeyError(f"Original values for {original_values_categorical} not found in adata.obs.")
+
+                values = np.where(
                     adata.obs[original_values_categorical].astype(object) == "nan",
                     np.nan,
                     adata.obs[original_values_categorical].astype(object),
-                ).reshape(-1, 1),
-                mtx[:, index].shape[1],
-            )
-            categorical_indices = np.concatenate([categorical_indices, index])
+                )
+
+                all_indices.append(index)
+                replacement_values.append(values)
+
+            for indices, values in zip(all_indices, replacement_values, strict=False):
+                mtx[:, indices] = values.reshape(-1, 1)
+
+            categorical_indices = np.concatenate(all_indices)
 
     non_categorical_indices = np.ones(mtx.shape[1], dtype=bool)
     non_categorical_indices[categorical_indices] = False
