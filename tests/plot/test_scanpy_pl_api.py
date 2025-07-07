@@ -230,7 +230,7 @@ def test_rank_features_groups(mimic_2_encoded, check_same_image):
 
     image = 0
     fig = ax[image].figure
-    fig.set_size_inches(8, 6) 
+    fig.set_size_inches(8, 6)
 
     fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
 
