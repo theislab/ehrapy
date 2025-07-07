@@ -265,7 +265,7 @@ def test_rank_features_groups_violin(mimic_2_encoded, check_same_image):
     )
     fig = ax[0].figure
 
-    fig.set_size_inches(8, 6) 
+    fig.set_size_inches(8, 6)
     fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
 
     # fig.savefig(f"{_TEST_IMAGE_PATH}/rank_features_groups_violin_scanpy_test_output.png", dpi=80)
@@ -296,7 +296,7 @@ def test_rank_features_groups_stacked_violin(mimic_2_encoded, check_same_image):
     ax = ep.pl.rank_features_groups_stacked_violin(adata_sample, key="rank_features_groups", show=False, jitter=False)
 
     fig = ax["mainplot_ax"].figure
-    fig.set_size_inches(8, 6) 
+    fig.set_size_inches(8, 6)
     fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
 
     check_same_image(
@@ -316,7 +316,7 @@ def test_rank_features_groups_heatmap(mimic_2_encoded, check_same_image):
     ax = ep.pl.rank_features_groups_heatmap(adata_sample, key="rank_features_groups", show=False)
 
     fig = ax["heatmap_ax"].figure
-    fig.set_size_inches(8, 6) 
+    fig.set_size_inches(8, 6)
     fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
 
     check_same_image(
@@ -366,7 +366,7 @@ def test_rank_features_groups_matrixplot(mimic_2_encoded, check_same_image):
 
     fig = ax["mainplot_ax"].figure
 
-    fig.set_size_inches(8, 6) 
+    fig.set_size_inches(8, 6)
     fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
 
     check_same_image(
@@ -386,8 +386,8 @@ def test_rank_features_groups_tracksplot(mimic_2_encoded, check_same_image):
     ax = ep.pl.rank_features_groups_tracksplot(adata_sample, key="rank_features_groups", show=False)
 
     fig = ax["groupby_ax"].figure
-    
-    fig.set_size_inches(8, 6) 
+
+    fig.set_size_inches(8, 6)
     fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
 
     check_same_image(
