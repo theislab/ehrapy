@@ -500,3 +500,96 @@ def test_pca_overview(mimic_2_sample, check_same_image):
             base_path=f"{_TEST_IMAGE_PATH}/pca_overview_{id}",
             tol=2e-1,
         )
+
+def test_tsne(mimic_2_sample, check_same_image):
+    adata = mimic_2_sample.copy()
+    adata = adata[~np.isnan(adata.X).any(axis=1)].copy()
+    adata = adata[:200, :].copy()
+    adata = ep.pp.encode(adata, autodetect=True)
+
+    ep.pp.simple_impute(adata)
+    ep.pp.log_norm(adata, offset=1)
+    ep.pp.neighbors(adata)
+    ep.tl.tsne(adata)
+
+    ep.pl.tsne(adata, color=["day_icu_intime", "service_unit"], wspace=0.5, title=["Day of ICU admission", "Service unit"], show=False)
+    fig =plt.gcf()
+
+    fig.set_size_inches(16, 6)
+    fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
+
+    check_same_image(
+            fig=fig,
+            base_path=f"{_TEST_IMAGE_PATH}/tsne",
+            tol=2e-1,
+        )
+    
+def test_umap(mimic_2_sample, check_same_image):
+    adata = mimic_2_sample.copy()
+    adata = adata[~np.isnan(adata.X).any(axis=1)].copy()
+    adata = adata[:200, :].copy()
+    adata = ep.pp.encode(adata, autodetect=True)
+
+    ep.pp.simple_impute(adata)
+    ep.pp.log_norm(adata, offset=1)
+    ep.pp.neighbors(adata)
+    ep.tl.umap(adata)
+
+    ep.pl.umap(adata, color=["day_icu_intime", "service_unit"], wspace=0.5, title=["Day of ICU admission", "Service unit"], show=False)
+    fig =plt.gcf()
+
+    fig.set_size_inches(16, 6)
+    fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
+
+    check_same_image(
+            fig=fig,
+            base_path=f"{_TEST_IMAGE_PATH}/umap",
+            tol=2e-1,
+        )    
+
+def test_diffmap(mimic_2_sample, check_same_image):
+    adata = mimic_2_sample.copy()
+    adata = adata[~np.isnan(adata.X).any(axis=1)].copy()
+    adata = adata[:200, :].copy()
+    adata = ep.pp.encode(adata, autodetect=True)
+
+    ep.pp.simple_impute(adata)
+    ep.pp.log_norm(adata, offset=1)
+    ep.pp.neighbors(adata)
+    ep.tl.diffmap(adata)
+
+    ep.pl.diffmap(adata, color="service_unit", show=False)
+    fig =plt.gcf()
+
+    fig.set_size_inches(16, 6)
+    fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
+
+    check_same_image(
+            fig=fig,
+            base_path=f"{_TEST_IMAGE_PATH}/diffmap",
+            tol=2e-1,
+        )    
+
+def test_paga(mimic_2_sample, check_same_image):
+    adata = mimic_2_sample.copy()
+    adata = adata[~np.isnan(adata.X).any(axis=1)].copy()
+    adata = adata[:200, :].copy()
+    adata = ep.pp.encode(adata, autodetect=True)
+
+    ep.pp.simple_impute(adata)
+    ep.pp.log_norm(adata, offset=1)
+    ep.pp.neighbors(adata)
+    ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
+    ep.tl.paga(adata, groups="leiden_0_5")
+
+    ep.pl.paga(adata,color=["leiden_0_5", "day_28_flg"],cmap=ep.pl.Colormaps.grey_red.value, title=["Leiden 0.5", "Died in less than 28 days"],show=False)
+    fig =plt.gcf()
+
+    fig.set_size_inches(16, 6)
+    fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
+
+    check_same_image(
+            fig=fig,
+            base_path=f"{_TEST_IMAGE_PATH}/paga",
+            tol=2e-1,
+        )    
