@@ -26,6 +26,7 @@ def test_scatter_plot(mimic_2, check_same_image):
         base_path=f"{_TEST_IMAGE_PATH}/scatter_scanpy_plt",
         tol=2e-1,
     )
+    plt.close("all")
 
 
 def test_heatmap_plot(adata_mini, check_same_image):
@@ -44,23 +45,22 @@ def test_heatmap_plot(adata_mini, check_same_image):
         base_path=f"{_TEST_IMAGE_PATH}/heatmap_scanpy_plt",
         tol=2e-1,
     )
+    plt.close("all")
 
 
 def test_dotplot_plot(mimic_2, check_same_image):
     adata = mimic_2[
         :,
-        [
-            "abg_count",
-            "wbc_first",
-            "hgb_first",
-            "potassium_first",
-            "tco2_first",
-            "bun_first",
-            "creatinine_first",
-            "pco2_first",
-            "service_unit",
-        ],
-    ].copy()
+        ["abg_count",
+         "wbc_first",
+         "hgb_first",
+         "potassium_first",
+         "tco2_first",
+         "bun_first",
+         "creatinine_first",
+         "pco2_first",
+         "service_unit"]].copy()
+    
     adata.obs["service_unit"] = mimic_2[:, "service_unit"].X.toarray().ravel().astype(str)
     adata._inplace_subset_var([var for var in adata.var_names if var != "service_unit"])
     adata.X = adata.X.astype(float)
@@ -75,8 +75,7 @@ def test_dotplot_plot(mimic_2, check_same_image):
             "tco2_first",
             "bun_first",
             "creatinine_first",
-            "pco2_first",
-        ],
+            "pco2_first"],
         groupby="service_unit",
         show=False,
         figsize=(5, 6),
@@ -88,6 +87,7 @@ def test_dotplot_plot(mimic_2, check_same_image):
         base_path=f"{_TEST_IMAGE_PATH}/dotplot_scanpy_plt",
         tol=2e-1,
     )
+    plt.close("all")
 
 
 def test_tracks_plot(mimic_2, check_same_image):
@@ -111,6 +111,7 @@ def test_tracks_plot(mimic_2, check_same_image):
         base_path=f"{_TEST_IMAGE_PATH}/tracksplot_scanpy_plt",
         tol=2e-1,
     )
+    plt.close("all")
 
 
 def test_violin_plot(mimic_2, check_same_image):
@@ -126,21 +127,20 @@ def test_violin_plot(mimic_2, check_same_image):
         base_path=f"{_TEST_IMAGE_PATH}/violin_scanpy_plt",
         tol=2e-1,
     )
+    plt.close("all")
 
 
 def test_matrix_plot(mimic_2, check_same_image):
     adata_sample = mimic_2[
         :200,
-        [
-            "abg_count",
-            "wbc_first",
-            "hgb_first",
-            "potassium_first",
-            "tco2_first",
-            "bun_first",
-            "creatinine_first",
-            "pco2_first",
-        ],
+        ["abg_count",
+         "wbc_first",
+         "hgb_first",
+         "potassium_first",
+         "tco2_first",
+         "bun_first",
+         "creatinine_first",
+         "pco2_first"],
     ].copy()
     adata_sample.obs["service_unit"] = mimic_2[:200, "service_unit"].X.toarray().ravel().astype(str)
     adata_sample.obs["service_unit"] = adata_sample.obs["service_unit"].astype("category")
@@ -148,16 +148,14 @@ def test_matrix_plot(mimic_2, check_same_image):
 
     ax = ep.pl.matrixplot(
         adata_sample,
-        var_names=[
-            "abg_count",
-            "wbc_first",
-            "hgb_first",
-            "potassium_first",
-            "tco2_first",
-            "bun_first",
-            "creatinine_first",
-            "pco2_first",
-        ],
+        var_names=["abg_count",
+                   "wbc_first",
+                   "hgb_first",
+                   "potassium_first",
+                   "tco2_first",
+                   "bun_first",
+                   "creatinine_first",
+                   "pco2_first"],
         groupby="service_unit",
         show=False,
     )
@@ -168,6 +166,7 @@ def test_matrix_plot(mimic_2, check_same_image):
         base_path=f"{_TEST_IMAGE_PATH}/matrix_scanpy_plot",
         tol=2e-1,
     )
+    plt.close("all")
 
 
 def test_stacked_violin_plot(mimic_2, check_same_image):
@@ -191,6 +190,7 @@ def test_stacked_violin_plot(mimic_2, check_same_image):
         base_path=f"{_TEST_IMAGE_PATH}/stacked_violin_scanpy_plt",
         tol=2e-1,
     )
+    plt.close("all")
 
 
 def test_clustermap(mimic_2_encoded, check_same_image):
@@ -208,6 +208,7 @@ def test_clustermap(mimic_2_encoded, check_same_image):
         base_path=f"{_TEST_IMAGE_PATH}/clustermap_scanpy",
         tol=2e-1,
     )
+    plt.close("all")
 
 
 def test_rank_features_groups(mimic_2_encoded, check_same_image):
@@ -412,12 +413,13 @@ def test_pca(mimic_2_sample, check_same_image):
 
     fig.set_size_inches(8, 6) 
     fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
-    
+
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/pca",
         tol=2e-1,
     )
+    plt.close("all")
 
 def test_pca_loadings(mimic_2_sample, check_same_image):
     adata = mimic_2_sample.copy()
@@ -440,7 +442,7 @@ def test_pca_loadings(mimic_2_sample, check_same_image):
         tol=2e-1,
     )
 
-    plt.close()                    
+    plt.close("all")                    
 
 def test_pca_variance_ration(mimic_2_sample, check_same_image):
     adata = mimic_2_sample.copy()
@@ -462,7 +464,7 @@ def test_pca_variance_ration(mimic_2_sample, check_same_image):
         tol=2e-1,
     )
 
-    plt.close()
+    plt.close("all")
 
 def test_pca_overview(mimic_2_sample, check_same_image):
     adata = mimic_2_sample.copy()
