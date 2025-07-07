@@ -533,7 +533,6 @@ def test_tsne(mimic_2_sample, check_same_image):
 
 
 def test_umap(mimic_2_sample, check_same_image):
-    np.random.seed(0)
     adata = mimic_2_sample.copy()
     adata = adata[~np.isnan(adata.X).any(axis=1)].copy()
     adata = adata[:200, :].copy()
@@ -541,8 +540,8 @@ def test_umap(mimic_2_sample, check_same_image):
 
     ep.pp.simple_impute(adata)
     ep.pp.log_norm(adata, offset=1)
-    ep.pp.neighbors(adata, random_state=0)
-    ep.tl.umap(adata, random_state=0)
+    ep.pp.neighbors(adata)
+    ep.tl.umap(adata)
 
     ep.pl.umap(
         adata,
