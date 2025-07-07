@@ -543,7 +543,7 @@ def test_umap(mimic_2_sample, check_same_image):
     ep.pp.neighbors(adata)
     ep.tl.umap(adata)
 
-    ep.pl.umap(adata,show=False)
+    ep.pl.umap(adata, show=False)
     fig = plt.gcf()
 
     fig.set_size_inches(16, 6)
