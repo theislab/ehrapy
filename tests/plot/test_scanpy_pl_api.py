@@ -360,9 +360,7 @@ def test_rank_features_groups_matrixplot(mimic_2_encoded, check_same_image):
     ].copy()
 
     ep.tl.rank_features_groups(adata_sample, groupby="service_unit")
-    ax = ep.pl.rank_features_groups_matrixplot(
-        adata_sample, key="rank_features_groups", groupby="service_unit", show=False
-    )
+    ax = ep.pl.rank_features_groups_matrixplot(adata_sample, key="rank_features_groups", groupby="service_unit", show=False)
 
     fig = ax["mainplot_ax"].figure
 
@@ -389,6 +387,7 @@ def test_rank_features_groups_tracksplot(mimic_2_encoded, check_same_image):
     
     fig.set_size_inches(8, 6) 
     fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
+    
 
     check_same_image(
         fig=fig,
@@ -398,23 +397,96 @@ def test_rank_features_groups_tracksplot(mimic_2_encoded, check_same_image):
     plt.close("all")
 
 
-def test_pca(diabetes_130_fairlearn_sample, check_same_image):
-    adata = diabetes_130_fairlearn_sample[:200, :].copy()
-    adata = ep.pp.encode(
-        adata,
-        autodetect=True,
-    )
+def test_pca(mimic_2_sample, check_same_image):
+    adata = mimic_2_sample.copy()
+    adata = adata[~np.isnan(adata.X).any(axis=1)].copy()
+    adata = adata[:200, :].copy()
+    adata = ep.pp.encode(adata, autodetect=True)
 
     ep.pp.pca(adata)
     ep.pp.neighbors(adata)
-    ep.tl.leiden(adata)
-    ep.tl.umap(adata)
 
-    ax = ep.pl.pca(adata, color="leiden", show=False)
+
+    ax = ep.pl.pca(adata, color="service_unit", show=False)
     fig = ax.figure
 
+    fig.set_size_inches(8, 6) 
+    fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
+    
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/pca",
         tol=2e-1,
     )
+
+def test_pca_loadings(mimic_2_sample, check_same_image):
+    adata = mimic_2_sample.copy()
+    adata = adata[~np.isnan(adata.X).any(axis=1)].copy()
+    adata = adata[:200, :].copy()
+    adata = ep.pp.encode(adata, autodetect=True)
+
+    ep.pp.pca(adata)
+    ep.pp.neighbors(adata)
+
+    ep.pl.pca_loadings(adata, components="1,2,3", show=False)
+    fig = plt.gcf()
+    fig.set_size_inches(12, 6) 
+    fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
+
+
+    check_same_image(
+        fig=fig,
+        base_path=f"{_TEST_IMAGE_PATH}/pca_loadings",
+        tol=2e-1,
+    )
+
+    plt.close()                    
+
+def test_pca_variance_ration(mimic_2_sample, check_same_image):
+    adata = mimic_2_sample.copy()
+    adata = adata[~np.isnan(adata.X).any(axis=1)].copy()
+    adata = adata[:200, :].copy()
+    adata = ep.pp.encode(adata, autodetect=True)
+
+    ep.pp.pca(adata)
+    ep.pp.neighbors(adata)
+
+    ep.pl.pca_variance_ratio(adata, show=False)
+    fig = plt.gcf()
+    fig.set_size_inches(8, 6) 
+    fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
+
+    check_same_image(
+        fig=fig,
+        base_path=f"{_TEST_IMAGE_PATH}/pca_variance_ratio",
+        tol=2e-1,
+    )
+
+    plt.close()
+
+def test_pca_overview(mimic_2_sample, check_same_image):
+    adata = mimic_2_sample.copy()
+    adata = adata[~np.isnan(adata.X).any(axis=1)].copy()
+    adata = adata[:200, :].copy()
+    adata = ep.pp.encode(adata, autodetect=True)
+
+    ep.pp.pca(adata)
+    ep.pp.neighbors(adata)
+
+    ep.pl.pca_overview(adata, components="1,2", color="service_unit", show=False)
+
+    for id, fignum in enumerate(plt.get_fignums(), start=1):
+        fig = plt.figure(fignum)
+        if fignum == 2:
+            fig.set_size_inches(12,6)
+        else:
+            fig.set_size_inches(8,6)
+        fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
+
+        check_same_image(
+        fig=fig,
+        base_path=f"{_TEST_IMAGE_PATH}/pca_overview_{id}",
+        tol=2e-1,
+        )
+
+
