@@ -361,7 +361,9 @@ def test_rank_features_groups_matrixplot(mimic_2_encoded, check_same_image):
     ].copy()
 
     ep.tl.rank_features_groups(adata_sample, groupby="service_unit")
-    ax = ep.pl.rank_features_groups_matrixplot(adata_sample, key="rank_features_groups", groupby="service_unit", show=False)
+    ax = ep.pl.rank_features_groups_matrixplot(
+        adata_sample, key="rank_features_groups", groupby="service_unit", show=False
+    )
 
     fig = ax["mainplot_ax"].figure
 
@@ -388,7 +390,6 @@ def test_rank_features_groups_tracksplot(mimic_2_encoded, check_same_image):
 
     fig.set_size_inches(8, 6)
     fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
-    
 
     check_same_image(
         fig=fig,
@@ -407,12 +408,12 @@ def test_pca(mimic_2_sample, check_same_image):
     ep.pp.pca(adata)
     ep.pp.neighbors(adata)
 
-
     ax = ep.pl.pca(adata, color="service_unit", show=False)
     fig = ax.figure
 
-    fig.set_size_inches(8, 6) 
+    fig.set_size_inches(8, 6)
     fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
+
 
     check_same_image(
         fig=fig,
@@ -432,9 +433,8 @@ def test_pca_loadings(mimic_2_sample, check_same_image):
 
     ep.pl.pca_loadings(adata, components="1,2,3", show=False)
     fig = plt.gcf()
-    fig.set_size_inches(12, 6) 
+    fig.set_size_inches(12, 6)
     fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
-
 
     check_same_image(
         fig=fig,
@@ -443,6 +443,7 @@ def test_pca_loadings(mimic_2_sample, check_same_image):
     )
 
     plt.close("all")                    
+
 
 def test_pca_variance_ration(mimic_2_sample, check_same_image):
     adata = mimic_2_sample.copy()
@@ -455,7 +456,7 @@ def test_pca_variance_ration(mimic_2_sample, check_same_image):
 
     ep.pl.pca_variance_ratio(adata, show=False)
     fig = plt.gcf()
-    fig.set_size_inches(8, 6) 
+    fig.set_size_inches(8, 6)
     fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
 
     check_same_image(
@@ -480,15 +481,13 @@ def test_pca_overview(mimic_2_sample, check_same_image):
     for id, fignum in enumerate(plt.get_fignums(), start=1):
         fig = plt.figure(fignum)
         if fignum == 2:
-            fig.set_size_inches(12,6)
+            fig.set_size_inches(12, 6)
         else:
-            fig.set_size_inches(8,6)
+            fig.set_size_inches(8, 6)
         fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
 
         check_same_image(
-        fig=fig,
-        base_path=f"{_TEST_IMAGE_PATH}/pca_overview_{id}",
-        tol=2e-1,
+            fig=fig,
+            base_path=f"{_TEST_IMAGE_PATH}/pca_overview_{id}",
+            tol=2e-1,
         )
-
-
