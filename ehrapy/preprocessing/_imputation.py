@@ -3,6 +3,7 @@ from __future__ import annotations
 import warnings
 from collections.abc import Iterable
 from functools import singledispatch
+from importlib.util import find_spec
 from typing import TYPE_CHECKING, Literal
 
 import numpy as np
@@ -12,7 +13,7 @@ from sklearn.experimental import enable_iterative_imputer  # noinspection PyUnre
 from sklearn.impute import SimpleImputer
 
 from ehrapy import settings
-from ehrapy._compat import _check_module_importable, _raise_array_type_not_implemented, use_ehrdata
+from ehrapy._compat import DaskArray, _raise_array_type_not_implemented
 from ehrapy._progress import spinner
 from ehrapy.anndata import _check_feature_types
 from ehrapy.anndata._constants import NUMERIC_TAG
@@ -24,13 +25,6 @@ from ehrapy.anndata.anndata_ext import (
 if TYPE_CHECKING:
     from anndata import AnnData
     from ehrdata import EHRData
-
-try:
-    import dask.array as da
-
-    DASK_AVAILABLE = True
-except ImportError:
-    DASK_AVAILABLE = False
 
 
 @spinner("Performing explicit impute")
@@ -115,17 +109,17 @@ def _(arr: np.ndarray, replacement: str | int, impute_empty_strings: bool) -> np
     return arr
 
 
-if DASK_AVAILABLE:
+@_replace_explicit.register(DaskArray)
+def _(arr: DaskArray, replacement: str | int, impute_empty_strings: bool) -> DaskArray:
+    """Replace one column or whole X with a value where missing values are stored."""
+    import dask.array as da
 
-    @_replace_explicit.register(da.Array)
-    def _(arr: da.Array, replacement: str | int, impute_empty_strings: bool) -> da.Array:
-        """Replace one column or whole X with a value where missing values are stored."""
-        if not impute_empty_strings:  # pragma: no cover
-            impute_conditions = da.isnull(arr)
-        else:
-            impute_conditions = da.logical_or(da.isnull(arr), arr == "")
-        arr[impute_conditions] = replacement
-        return arr
+    if not impute_empty_strings:  # pragma: no cover
+        impute_conditions = da.isnull(arr)
+    else:
+        impute_conditions = da.logical_or(da.isnull(arr), arr == "")
+    arr[impute_conditions] = replacement
+    return arr
 
 
 def _extract_impute_value(replacement: dict[str, str | int], column_name: str) -> str | int | None:
@@ -285,14 +279,14 @@ def knn_impute(
             stacklevel=1,
         )
 
-    if _check_module_importable("sklearnex"):  # pragma: no cover
+    if find_spec("sklearnex") is not None:  # pragma: no cover
         from sklearnex import patch_sklearn, unpatch_sklearn
 
         patch_sklearn()
 
     _knn_impute(edata, var_names, n_neighbors, backend=backend, **backend_kwargs)
 
-    if _check_module_importable("sklearnex"):  # pragma: no cover
+    if find_spec("sklearnex") is not None:  # pragma: no cover
         unpatch_sklearn()
 
     return edata if copy else None
@@ -383,7 +377,7 @@ def miss_forest_impute(
     elif isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):
         _warn_imputation_threshold(edata, var_names, threshold=warning_threshold)
 
-    if _check_module_importable("sklearnex"):  # pragma: no cover
+    if find_spec("sklearnex") is not None:  # pragma: no cover
         from sklearnex import patch_sklearn, unpatch_sklearn
 
         patch_sklearn()
@@ -428,7 +422,7 @@ def miss_forest_impute(
             logger.error("Check that your matrix does not contain any NaN only columns!")
         raise
 
-    if _check_module_importable("sklearnex"):  # pragma: no cover
+    if find_spec("sklearnex") is not None:  # pragma: no cover
         unpatch_sklearn()
 
     return edata if copy else None

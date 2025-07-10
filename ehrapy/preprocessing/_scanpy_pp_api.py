@@ -116,8 +116,8 @@ def regress_out(
     Args:
         edata: Data object containing all observations.
         keys: Keys for observation annotation on which to regress on.
-        n_jobs: Number of jobs for parallel computation. `None` means using :attr:`scanpy._settings.ScanpyConfig.n_jobs`.
-        copy: Determines whether a copy of `edata` is returned.
+        n_jobs: Number of jobs for parallel computation.
+        copy: Determines whether a copy of `adata` is returned.
 
     Returns:
         Depending on `copy` returns or updates the data object with the corrected data matrix.

@@ -2,9 +2,9 @@
 # without requiring dask installed in the environment.
 from __future__ import annotations
 
-import importlib.util
 import warnings
 from functools import wraps
+from importlib.util import find_spec
 from inspect import signature
 from subprocess import PIPE, Popen
 from typing import TYPE_CHECKING, Concatenate, ParamSpec, TypeVar, cast
@@ -17,42 +17,22 @@ from anndata import AnnData
 from ehrdata import EHRData
 
 if TYPE_CHECKING:
+    # type checkers are confused and can only see …core.Array
+    from dask.array.core import Array as DaskArray
+elif find_spec("dask"):
+    from dask.array import Array as DaskArray
+else:
+    DaskArray = type("Array", (), {})
+    DaskArray.__module__ = "dask.array"
+
+if TYPE_CHECKING:
     from collections.abc import Callable
-
-try:
-    import dask.array as da
-
-    DASK_AVAILABLE = True
-except ImportError:
-    DASK_AVAILABLE = False
 
 
 def _raise_array_type_not_implemented(func: Callable, type_: type) -> NotImplementedError:
     raise NotImplementedError(
         f"{func.__name__} does not support array type {type_}. Must be of type {func.registry.keys()}."  # type: ignore
     )
-
-
-def is_dask_array(array):
-    if DASK_AVAILABLE:
-        return isinstance(array, da.Array)
-    else:
-        return False
-
-
-def _check_module_importable(package: str) -> bool:
-    """Checks whether a module is installed and can be loaded.
-
-    Args:
-        package: The package to check.
-
-    Returns:
-        True if the package is installed, False otherwise.
-    """
-    module_information = importlib.util.find_spec(package)
-    module_available = module_information is not None
-
-    return module_available
 
 
 def _shell_command_accessible(command: list[str]) -> bool:

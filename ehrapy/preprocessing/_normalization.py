@@ -6,17 +6,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 import sklearn.preprocessing as sklearn_pp
 
-from ehrapy._compat import _raise_array_type_not_implemented, use_ehrdata
-
-try:
-    import dask.array as da
-    import dask_ml.preprocessing as daskml_pp
-
-    DASK_AVAILABLE = True
-except ImportError:
-    daskml_pp = None
-    DASK_AVAILABLE = False
-
+from ehrapy._compat import DaskArray, _raise_array_type_not_implemented
 from ehrapy.anndata._constants import NUMERIC_TAG
 from ehrapy.anndata.anndata_ext import (
     _assert_numeric_vars,
@@ -83,11 +73,11 @@ def _(arr: np.ndarray, **kwargs):
     return sklearn_pp.StandardScaler(**kwargs).fit_transform
 
 
-if DASK_AVAILABLE:
+@_scale_norm_function.register
+def _(arr: DaskArray, **kwargs):
+    import dask_ml.preprocessing as daskml_pp
 
-    @_scale_norm_function.register
-    def _(arr: da.Array, **kwargs):
-        return daskml_pp.StandardScaler(**kwargs).fit_transform
+    return daskml_pp.StandardScaler(**kwargs).fit_transform
 
 
 @use_ehrdata(deprecated_after="1.0.0")
@@ -141,11 +131,11 @@ def _(arr: np.ndarray, **kwargs):
     return sklearn_pp.MinMaxScaler(**kwargs).fit_transform
 
 
-if DASK_AVAILABLE:
+@_minmax_norm_function.register
+def _(arr: DaskArray, **kwargs):
+    import dask_ml.preprocessing as daskml_pp
 
-    @_minmax_norm_function.register
-    def _(arr: da.Array, **kwargs):
-        return daskml_pp.MinMaxScaler(**kwargs).fit_transform
+    return daskml_pp.MinMaxScaler(**kwargs).fit_transform
 
 
 @use_ehrdata(deprecated_after="1.0.0")
@@ -249,11 +239,11 @@ def _(arr: np.ndarray, **kwargs):
     return sklearn_pp.RobustScaler(**kwargs).fit_transform
 
 
-if DASK_AVAILABLE:
+@_robust_scale_norm_function.register
+def _(arr: DaskArray, **kwargs):
+    import dask_ml.preprocessing as daskml_pp
 
-    @_robust_scale_norm_function.register
-    def _(arr: da.Array, **kwargs):
-        return daskml_pp.RobustScaler(**kwargs).fit_transform
+    return daskml_pp.RobustScaler(**kwargs).fit_transform
 
 
 @use_ehrdata(deprecated_after="1.0.0")
@@ -309,11 +299,11 @@ def _(arr: np.ndarray, **kwargs):
     return sklearn_pp.QuantileTransformer(**kwargs).fit_transform
 
 
-if DASK_AVAILABLE:
+@_quantile_norm_function.register
+def _(arr: DaskArray, **kwargs):
+    import dask_ml.preprocessing as daskml_pp
 
-    @_quantile_norm_function.register
-    def _(arr: da.Array, **kwargs):
-        return daskml_pp.QuantileTransformer(**kwargs).fit_transform
+    return daskml_pp.QuantileTransformer(**kwargs).fit_transform
 
 
 @use_ehrdata(deprecated_after="1.0.0")
