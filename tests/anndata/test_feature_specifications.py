@@ -3,7 +3,7 @@ import pandas as pd
 import pytest
 
 import ehrapy as ep
-from ehrapy.anndata import check_feature_types, df_to_anndata
+from ehrapy.anndata import _check_feature_types, df_to_anndata
 from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from tests.conftest import TEST_DATA_PATH
 
@@ -40,7 +40,7 @@ def test_feature_type_inference(adata):
 
 
 def test_check_feature_types(adata):
-    @check_feature_types
+    @_check_feature_types
     def test_func(adata):
         pass
 
@@ -52,7 +52,7 @@ def test_check_feature_types(adata):
     test_func(adata)
     assert FEATURE_TYPE_KEY in adata.var.keys()
 
-    @check_feature_types
+    @_check_feature_types
     def test_func_with_return(adata):
         return adata
 

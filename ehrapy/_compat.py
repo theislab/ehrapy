@@ -56,10 +56,10 @@ def use_ehrdata(
     deprecated_after: str | None = None,
     old_param: str = "adata",
     new_param: str = "edata",
-) -> Callable[[Callable[Concatenate[EHRData | AnnData, P], R]], Callable[P, R]]:
+) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """Decorator to migrate functions from AnnData to EHRData."""
 
-    def decorator(func: Callable[Concatenate[EHRData | AnnData, P], R]) -> Callable[P, R]:
+    def decorator(func: Callable[P, R]) -> Callable[P, R]:
         sig = signature(func)
 
         has_new_param = new_param in sig.parameters
@@ -80,8 +80,8 @@ def use_ehrdata(
                     warnings.warn(
                         f"Using AnnData with {func.__name__} is deprecated"
                         + (f" and will be removed after version {deprecated_after}" if deprecated_after else "")
-                        + ". Please use EHRData instead.",
-                        DeprecationWarning,
+                        + ". Please use EHRData instead. Please review the 0.13.0 changelog for more information.",
+                        FutureWarning,
                         stacklevel=2,
                     )
 
@@ -97,8 +97,8 @@ def use_ehrdata(
                     warnings.warn(
                         f"Using AnnData with {func.__name__} is deprecated"
                         + (f" and will be removed after version {deprecated_after}" if deprecated_after else "")
-                        + ". Please use EHRData instead.",
-                        DeprecationWarning,
+                        + ". Please use EHRData instead. Please review the 0.13.0 changelog for more information.",
+                        FutureWarning,
                         stacklevel=2,
                     )
 
@@ -113,7 +113,7 @@ def use_ehrdata(
                     f"Parameter '{old_param}' is deprecated"
                     + (f" and will be removed after version {deprecated_after}" if deprecated_after else "")
                     + f". Please use '{new_param}' instead.",
-                    DeprecationWarning,
+                    FutureWarning,
                     stacklevel=2,
                 )
 
@@ -122,8 +122,8 @@ def use_ehrdata(
                     warnings.warn(
                         f"Using AnnData with {func.__name__} is deprecated"
                         + (f" and will be removed after version {deprecated_after}" if deprecated_after else "")
-                        + ". Please use EHRData instead.",
-                        DeprecationWarning,
+                        + ". Please use EHRData instead. Please review the 0.13.0 changelog for more information.",
+                        FutureWarning,
                         stacklevel=2,
                     )
 
@@ -136,8 +136,8 @@ def use_ehrdata(
                     warnings.warn(
                         f"Using AnnData with {func.__name__} is deprecated"
                         + (f" and will be removed after version {deprecated_after}" if deprecated_after else "")
-                        + ". Please use EHRData instead.",
-                        DeprecationWarning,
+                        + ". Please use EHRData instead. Please review the 0.13.0 changelog for more information.",
+                        FutureWarning,
                         stacklevel=2,
                     )
                 return func(**kwargs)  # type: ignore
@@ -148,8 +148,8 @@ def use_ehrdata(
                     warnings.warn(
                         f"Using AnnData with {func.__name__} is deprecated"
                         + (f" and will be removed after version {deprecated_after}" if deprecated_after else "")
-                        + ". Please use EHRData instead.",
-                        DeprecationWarning,
+                        + ". Please use EHRData instead. Please review the 0.13.0 changelog for more information.",
+                        FutureWarning,
                         stacklevel=2,
                     )
                 return func(**kwargs)  # type: ignore
@@ -162,3 +162,21 @@ def use_ehrdata(
         return cast("Callable[P, R]", wrapper)
 
     return decorator
+
+
+def _cast_adata_to_match_data_type(input_data: AnnData, target_type_reference: EHRData | AnnData) -> EHRData | AnnData:
+    """Cast the data object to the type used by the function."""
+    if isinstance(target_type_reference, AnnData) and not isinstance(target_type_reference, EHRData):
+        return input_data
+
+    if isinstance(target_type_reference, EHRData):
+        return EHRData.from_adata(input_data)
+
+    raise ValueError(f"Used data object must be an AnnData or EHRData, got {type(target_type_reference)}")
+
+
+def function_future_warning(old_function_name: str, new_function_name: str | None = None):
+    warn_msg = f"{old_function_name} is deprecated, and will be removed in v1.0.0."
+    if new_function_name:
+        warn_msg += f" Use {new_function_name} instead."
+    warnings.warn(warn_msg, FutureWarning, stacklevel=2)

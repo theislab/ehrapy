@@ -4,13 +4,17 @@ from typing import TYPE_CHECKING
 
 import scanpy as sc
 
+from ehrapy._compat import use_ehrdata
+
 if TYPE_CHECKING:
     import pandas as pd
     from anndata import AnnData
+    from ehrdata import EHRData
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 def highly_variable_features(
-    adata: AnnData,
+    edata: EHRData | AnnData,
     layer: str | None = None,
     top_features_percentage: float = 0.2,
     span: float | None = 0.3,
@@ -27,8 +31,8 @@ def highly_variable_features(
     of each feature after the transformation. Features are ranked by the normalized variance.
 
     Args:
-        adata: The annotated data matrix of shape `n_obs` × `n_vars`.
-        layer: If provided, use `adata.layers[layer]` for expression values instead of `adata.X`.
+        edata: The data object.
+        layer: If provided, use `edata.layers[layer]` for expression values instead of `edata.X`.
         top_features_percentage: Percentage of highly-variable features to keep.
         span: The fraction of the data used when estimating the variance in the loess model fit.
         n_bins: Number of bins for binning. Normalization is done with respect to each bin.
@@ -53,10 +57,10 @@ def highly_variable_features(
     **highly_variable_rank**
         rank of the feature according to normalized variance, median rank in the case of multiple batches
     """
-    n_top_features = int(top_features_percentage * len(adata.var))
+    n_top_features = int(top_features_percentage * len(edata.var))
 
     return sc.pp.highly_variable_genes(
-        adata=adata,
+        adata=edata,
         layer=layer,
         n_top_genes=n_top_features,
         span=span,
