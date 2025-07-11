@@ -687,3 +687,101 @@ def test_paga(mimic_2_sample, check_same_image):
         base_path=f"{_TEST_IMAGE_PATH}/paga",
         tol=2e-1,
     )
+
+
+def test_draw_graph(mimic_2_sample, check_same_image):
+    adata = mimic_2_sample.copy()
+    adata = adata[~np.isnan(adata.X).any(axis=1)].copy()
+    adata = adata[:200, :].copy()
+    adata = ep.pp.encode(adata, autodetect=True)
+
+    ep.pp.simple_impute(adata)
+    ep.pp.log_norm(adata, offset=1)
+    ep.pp.neighbors(adata)
+    ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
+    ep.tl.paga(adata, groups="leiden_0_5")
+    ep.pl.paga(
+        adata,
+        color=["leiden_0_5", "day_28_flg"],
+        cmap=ep.pl.Colormaps.grey_red.value,
+        title=["Leiden 0.5", "Died in less than 28 days"],
+        show=False,
+    )
+
+    fig_paga = plt.gcf()
+    fig_paga.set_size_inches(16, 6)
+    fig_paga.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
+
+    check_same_image(
+        fig=fig_paga,
+        base_path=f"{_TEST_IMAGE_PATH}/draw_graph1",
+        tol=2e-1,
+    )
+
+    plt.close("all")
+
+    ep.tl.draw_graph(adata, init_pos="paga")
+    ep.pl.draw_graph(adata, color=["leiden_0_5", "icu_exp_flg"], legend_loc="on data", show=False)
+
+    fig_graph = plt.gcf()
+    fig_graph.set_size_inches(16, 6)
+    fig_graph.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
+
+    check_same_image(
+        fig=fig_graph,
+        base_path=f"{_TEST_IMAGE_PATH}/draw_graph2",
+        tol=2e-1,
+    )
+
+
+def test_embedding(mimic_2_sample, check_same_image):
+    adata = mimic_2_sample.copy()
+    adata = adata[~np.isnan(adata.X).any(axis=1)].copy()
+    adata = adata[:200, :].copy()
+    adata = ep.pp.encode(adata, autodetect=True)
+
+    ep.pp.simple_impute(adata)
+    ep.pp.log_norm(adata, offset=1)
+    ep.pp.neighbors(adata)
+    ep.tl.umap(adata)
+
+    ep.pl.embedding(adata, "X_umap", color="icu_exp_flg", show=False)
+
+    fig = plt.gcf()
+
+    fig.set_size_inches(16, 6)
+    fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
+
+    check_same_image(
+        fig=fig,
+        base_path=f"{_TEST_IMAGE_PATH}/embedding",
+        tol=2e-1,
+    )
+
+
+def test_embedding_density(mimic_2_sample, check_same_image):
+    adata = mimic_2_sample.copy()
+    adata = adata[~np.isnan(adata.X).any(axis=1)].copy()
+    adata = adata[:200, :].copy()
+    adata = ep.pp.encode(adata, autodetect=True)
+
+    ep.pp.simple_impute(adata)
+    ep.pp.log_norm(adata, offset=1)
+    ep.pp.neighbors(adata)
+
+    ep.tl.umap(adata)
+    ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
+    ep.tl.embedding_density(adata, groupby="leiden_0_5", key_added="icu_exp_flg")
+
+    ep.pl.embedding_density(adata, key="icu_exp_flg", show=False)
+
+    fig = plt.gcf()
+
+    fig.set_size_inches(16, 6)
+    fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
+
+    check_same_image(
+        fig=fig,
+        base_path=f"{_TEST_IMAGE_PATH}/embedding_density",
+        tol=2e-1,
+    )
