@@ -12,6 +12,7 @@ _TEST_IMAGE_PATH = f"{CURRENT_DIR}/_images"
 def test_missing_values_barplot(mimic_2, check_same_image):
     plot = ep.pl.missing_values_barplot(mimic_2, filter="bottom", max_cols=15, max_percentage=0.999)
     fig = plot.figure
+    fig.subplots_adjust(left=0.1, right=0.95, top=0.9, bottom=0.15)
 
     check_same_image(
         fig=fig,

@@ -8,12 +8,17 @@ import matplotlib.pyplot as plt
 
 plt.style.use("default")
 
+import os
+
 import numpy as np
 
 import ehrapy as ep
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_IMAGE_PATH = f"{CURRENT_DIR}/_images"
+
+# Set NUMBA_CPU_NAME to "generic" before importing or using numba
+os.environ["NUMBA_CPU_NAME"] = "generic"
 
 
 def test_scatter_plot(mimic_2, check_same_image):
@@ -248,7 +253,7 @@ def test_rank_features_groups(mimic_2_encoded, check_same_image):
         for name, score, pval in zip(names, scores, pvals, strict=False):
             print(f"  {name}: score={score:.4f}, pval={pval:.4e}")
 
-    ax = ep.pl.rank_features_groups(adata_sample, key="rank_features_groups", groups=["SICU"], show=False)
+    ax = ep.pl.rank_features_groups(adata_sample, key="rank_features_groups", groups=["MICU"], show=False)
 
     image = 0
     fig = ax[image].figure
