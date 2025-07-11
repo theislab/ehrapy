@@ -290,25 +290,33 @@ def test_rank_features_groups_violin(mimic_2_encoded, check_same_image):
 
     # To see the numerical results
 
-    groups = adata_sample.uns["rank_features_groups"]["names"].dtype.names
-    for group in groups:
-        print(f"\nGroup: {group}")
-        names = adata_sample.uns["rank_features_groups"]["names"][group]
-        scores = adata_sample.uns["rank_features_groups"]["scores"][group]
-        pvals = adata_sample.uns["rank_features_groups"]["pvals"][group]
-        print("Top features:")
-        for name, score, pval in zip(names, scores, pvals, strict=False):
-            print(f"  {name}: score={score:.4f}, pval={pval:.4e}")
+    # groups = adata_sample.uns["rank_features_groups"]["names"].dtype.names
+    # for group in groups:
+    #     print(f"\nGroup: {group}")
+    #     names = adata_sample.uns["rank_features_groups"]["names"][group]
+    #     scores = adata_sample.uns["rank_features_groups"]["scores"][group]
+    #     pvals = adata_sample.uns["rank_features_groups"]["pvals"][group]
+    #     print("Top features:")
+    #     for name, score, pval in zip(names, scores, pvals, strict=False):
+    #         print(f"  {name}: score={score:.4f}, pval={pval:.4e}")
 
     ax = ep.pl.rank_features_groups_violin(
-        adata_sample, groups=["SICU"], key="rank_features_groups", jitter=False, show=False
+        adata_sample, groups=["SICU"], key="rank_features_groups", jitter=False, show=False, strip=False
     )
+
+    # for some reason, scanpy's violinplot in the test run adds text labels to the plots;
+    # can't reproduce in notebook or scripts.
+    # because of this, remove text labels from the test-generated plot.
+    for a in ax:
+        for txt in a.texts:
+            txt.remove()
+
+    ax[0].set_ylim(-20, 140)
+
     fig = ax[0].figure
 
-    fig.set_size_inches(8, 6)
     fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
 
-    # fig.savefig(f"{_TEST_IMAGE_PATH}/rank_features_groups_violin_scanpy_test_output.png", dpi=80)
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/rank_features_groups_violin",
