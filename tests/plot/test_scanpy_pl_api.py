@@ -236,7 +236,7 @@ def test_rank_features_groups(mimic_2_encoded, check_same_image):
 
     ep.tl.rank_features_groups(adata_sample, groupby="service_unit")
 
-    #To see the numerical results
+    # To see the numerical results
 
     groups = adata_sample.uns["rank_features_groups"]["names"].dtype.names
     for group in groups:
@@ -245,7 +245,7 @@ def test_rank_features_groups(mimic_2_encoded, check_same_image):
         scores = adata_sample.uns["rank_features_groups"]["scores"][group]
         pvals = adata_sample.uns["rank_features_groups"]["pvals"][group]
         print("Top features:")
-        for name, score, pval in zip(names, scores, pvals):
+        for name, score, pval in zip(names, scores, pvals, strict=False):
             print(f"  {name}: score={score:.4f}, pval={pval:.4e}")
 
     ax = ep.pl.rank_features_groups(adata_sample, key="rank_features_groups", groups=["SICU"], show=False)
@@ -283,7 +283,7 @@ def test_rank_features_groups_violin(mimic_2_encoded, check_same_image):
 
     ep.tl.rank_features_groups(adata_sample, groupby="service_unit")
 
-    #To see the numerical results
+    # To see the numerical results
 
     groups = adata_sample.uns["rank_features_groups"]["names"].dtype.names
     for group in groups:
@@ -292,7 +292,7 @@ def test_rank_features_groups_violin(mimic_2_encoded, check_same_image):
         scores = adata_sample.uns["rank_features_groups"]["scores"][group]
         pvals = adata_sample.uns["rank_features_groups"]["pvals"][group]
         print("Top features:")
-        for name, score, pval in zip(names, scores, pvals):
+        for name, score, pval in zip(names, scores, pvals, strict=False):
             print(f"  {name}: score={score:.4f}, pval={pval:.4e}")
 
     ax = ep.pl.rank_features_groups_violin(
@@ -329,7 +329,7 @@ def test_rank_features_groups_stacked_violin(mimic_2_encoded, check_same_image):
 
     ep.tl.rank_features_groups(adata_sample, groupby="service_unit")
 
-    #To see the numerical results
+    # To see the numerical results
 
     groups = adata_sample.uns["rank_features_groups"]["names"].dtype.names
     for group in groups:
@@ -338,7 +338,7 @@ def test_rank_features_groups_stacked_violin(mimic_2_encoded, check_same_image):
         scores = adata_sample.uns["rank_features_groups"]["scores"][group]
         pvals = adata_sample.uns["rank_features_groups"]["pvals"][group]
         print("Top features:")
-        for name, score, pval in zip(names, scores, pvals):
+        for name, score, pval in zip(names, scores, pvals, strict=False):
             print(f"  {name}: score={score:.4f}, pval={pval:.4e}")
 
     ax = ep.pl.rank_features_groups_stacked_violin(adata_sample, key="rank_features_groups", show=False, jitter=False)
@@ -362,7 +362,7 @@ def test_rank_features_groups_heatmap(mimic_2_encoded, check_same_image):
 
     ep.tl.rank_features_groups(adata_sample, groupby="service_unit")
 
-    #To see the numerical results
+    # To see the numerical results
 
     groups = adata_sample.uns["rank_features_groups"]["names"].dtype.names
     for group in groups:
@@ -371,7 +371,7 @@ def test_rank_features_groups_heatmap(mimic_2_encoded, check_same_image):
         scores = adata_sample.uns["rank_features_groups"]["scores"][group]
         pvals = adata_sample.uns["rank_features_groups"]["pvals"][group]
         print("Top features:")
-        for name, score, pval in zip(names, scores, pvals):
+        for name, score, pval in zip(names, scores, pvals, strict=False):
             print(f"  {name}: score={score:.4f}, pval={pval:.4e}")
 
     ax = ep.pl.rank_features_groups_heatmap(adata_sample, key="rank_features_groups", show=False)
@@ -394,7 +394,7 @@ def test_rank_features_groups_dotplot(mimic_2_encoded, check_same_image):
     ].copy()
     ep.tl.rank_features_groups(adata_sample, groupby="service_unit")
 
-    #To see the numerical results
+    # To see the numerical results
 
     groups = adata_sample.uns["rank_features_groups"]["names"].dtype.names
     for group in groups:
@@ -403,7 +403,7 @@ def test_rank_features_groups_dotplot(mimic_2_encoded, check_same_image):
         scores = adata_sample.uns["rank_features_groups"]["scores"][group]
         pvals = adata_sample.uns["rank_features_groups"]["pvals"][group]
         print("Top features:")
-        for name, score, pval in zip(names, scores, pvals):
+        for name, score, pval in zip(names, scores, pvals, strict=False):
             print(f"  {name}: score={score:.4f}, pval={pval:.4e}")
 
     ax = ep.pl.rank_features_groups_dotplot(
@@ -435,7 +435,7 @@ def test_rank_features_groups_matrixplot(mimic_2_encoded, check_same_image):
 
     ep.tl.rank_features_groups(adata_sample, groupby="service_unit")
 
-    #To see the numerical results
+    # To see the numerical results
 
     groups = adata_sample.uns["rank_features_groups"]["names"].dtype.names
     for group in groups:
@@ -444,9 +444,9 @@ def test_rank_features_groups_matrixplot(mimic_2_encoded, check_same_image):
         scores = adata_sample.uns["rank_features_groups"]["scores"][group]
         pvals = adata_sample.uns["rank_features_groups"]["pvals"][group]
         print("Top features:")
-        for name, score, pval in zip(names, scores, pvals):
+        for name, score, pval in zip(names, scores, pvals, strict=False):
             print(f"  {name}: score={score:.4f}, pval={pval:.4e}")
-            
+
     ax = ep.pl.rank_features_groups_matrixplot(
         adata_sample, key="rank_features_groups", groupby="service_unit", show=False
     )
