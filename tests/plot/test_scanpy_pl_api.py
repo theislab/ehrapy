@@ -314,7 +314,7 @@ def test_rank_features_groups_violin(mimic_2_encoded, check_same_image):
     ax[0].set_ylim(-20, 140)
 
     fig = ax[0].figure
-
+    fig.set_size_inches(8, 6)
     fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
 
     check_same_image(
