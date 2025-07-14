@@ -634,7 +634,14 @@ def test_umap(mimic_2_sample, check_same_image):
     ep.pp.neighbors(adata, random_state=0)
     ep.tl.umap(adata, random_state=0)
 
-    ep.pl.umap(adata, show=False)
+    ep.pl.umap(
+        adata,
+        color="day_icu_intime",
+        frameon=False,
+        vmax=["p99.0", None, None],
+        vcenter=[0.015, None, None],
+        show=False,
+    )
     fig = plt.gcf()
 
     fig.set_size_inches(16, 6)
