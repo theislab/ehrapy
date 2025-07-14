@@ -623,7 +623,7 @@ def test_tsne(mimic_2_sample, check_same_image):
     )
 
 
-def test_umap(mimic_2_sample, check_same_image):
+def test_umap_figure(mimic_2_sample, check_same_image):
     adata = mimic_2_sample.copy()
     adata = adata[~np.isnan(adata.X).any(axis=1)].copy()
     adata = adata[:200, :].copy()
@@ -650,8 +650,49 @@ def test_umap(mimic_2_sample, check_same_image):
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/umap",
-        tol=1,
+        tol=2e-1,
     )
+
+
+def test_umap_functionality(mimic_2_sample):
+    adata = mimic_2_sample.copy()
+    adata = adata[~np.isnan(adata.X).any(axis=1)].copy()
+    adata = adata[:200, :].copy()
+    adata = ep.pp.encode(adata, autodetect=True)
+
+    ep.pp.simple_impute(adata)
+    ep.pp.log_norm(adata, offset=1)
+    ep.pp.neighbors(adata, random_state=0)
+    ep.tl.umap(adata, random_state=0)
+
+    fig1 = ep.pl.umap(
+        adata,
+        color="day_icu_intime",
+        frameon=False,
+        vmax=["p99.0", None, None],
+        vcenter=[0.015, None, None],
+        show=False,
+    )
+    assert fig1 is not None
+
+    fig2 = ep.pl.umap(
+        adata,
+        color=["day_icu_intime", "service_unit"],
+        frameon=True,
+        show=False,
+    )
+    assert fig2 is not None
+
+    fig3 = ep.pl.umap(
+        adata,
+        color="day_icu_intime",
+        frameon=False,
+        cmap="viridis",
+        show=False,
+    )
+    assert fig3 is not None
+
+    plt.close("all")
 
 
 def test_diffmap(mimic_2_sample, check_same_image):
