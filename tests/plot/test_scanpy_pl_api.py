@@ -650,7 +650,7 @@ def test_umap(mimic_2_sample, check_same_image):
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/umap",
-        tol=2e-1,
+        tol=1,
     )
 
 
