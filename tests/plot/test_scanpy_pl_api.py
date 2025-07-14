@@ -631,8 +631,8 @@ def test_umap(mimic_2_sample, check_same_image):
 
     ep.pp.simple_impute(adata)
     ep.pp.log_norm(adata, offset=1)
-    ep.pp.neighbors(adata)
-    ep.tl.umap(adata)
+    ep.pp.neighbors(adata, random_state=0)
+    ep.tl.umap(adata, random_state=0)
 
     ep.pl.umap(adata, show=False)
     fig = plt.gcf()
