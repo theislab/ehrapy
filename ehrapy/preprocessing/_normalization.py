@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 import sklearn.preprocessing as sklearn_pp
 
-from ehrapy._compat import DaskArray, _raise_array_type_not_implemented
+from ehrapy._compat import DaskArray, _raise_array_type_not_implemented, use_ehrdata
 from ehrapy.anndata._constants import NUMERIC_TAG
 from ehrapy.anndata.anndata_ext import (
     _assert_numeric_vars,

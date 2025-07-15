@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 from functools import singledispatch
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
@@ -9,7 +10,7 @@ import pandas as pd
 from lamin_utils import logger
 from thefuzz import process
 
-from ehrapy._compat import DaskArray, _raise_array_type_not_implemented
+from ehrapy._compat import DaskArray, _raise_array_type_not_implemented, use_ehrdata
 from ehrapy.anndata import anndata_to_df
 from ehrapy.preprocessing._encoding import _get_encoded_features
 
@@ -17,6 +18,7 @@ if TYPE_CHECKING:
     from collections.abc import Collection
 
     from anndata import AnnData
+    from ehrdata import EHRData
 
 
 @use_ehrdata(deprecated_after="1.0.0")

@@ -13,7 +13,7 @@ from sklearn.experimental import enable_iterative_imputer  # noinspection PyUnre
 from sklearn.impute import SimpleImputer
 
 from ehrapy import settings
-from ehrapy._compat import DaskArray, _raise_array_type_not_implemented
+from ehrapy._compat import DaskArray, _raise_array_type_not_implemented, use_ehrdata
 from ehrapy._progress import spinner
 from ehrapy.anndata import _check_feature_types
 from ehrapy.anndata._constants import NUMERIC_TAG
