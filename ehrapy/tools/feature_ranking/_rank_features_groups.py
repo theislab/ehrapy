@@ -172,7 +172,7 @@ def _evaluate_categorical_features(
     groups: Literal["all"] | Iterable[str] = "all",
     reference: str = "rest",
     categorical_method: _method_options._rank_features_groups_cat_method = "g-test",
-    pts=False,
+    pts: bool = False,
 ):
     """Run statistical test for categorical features.
 
@@ -321,6 +321,7 @@ def _check_columns_to_rank_dict(columns_to_rank):
 @use_ehrdata(deprecated_after="1.0.0")
 def rank_features_groups(
     edata: EHRData | AnnData,
+    *,
     groupby: str,
     groups: Literal["all"] | Iterable[str] = "all",
     reference: str = "rest",
@@ -604,6 +605,7 @@ def rank_features_groups(
 @use_ehrdata(deprecated_after="1.0.0")
 def filter_rank_features_groups(
     edata: EHRData | AnnData,
+    *,
     key: str = "rank_features_groups",
     groupby: str | None = None,
     key_added: str = "rank_features_groups_filtered",

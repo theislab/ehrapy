@@ -176,7 +176,21 @@ def _cast_adata_to_match_data_type(input_data: AnnData, target_type_reference: E
 
 
 def function_future_warning(old_function_name: str, new_function_name: str | None = None):
-    warn_msg = f"{old_function_name} is deprecated, and will be removed in v1.0.0."
-    if new_function_name:
-        warn_msg += f" Use {new_function_name} instead."
-    warnings.warn(warn_msg, FutureWarning, stacklevel=2)
+    def decorator(func: Callable[P, R]) -> Callable[P, R]:
+        @wraps(func)
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+            warn_msg = f"{old_function_name} is deprecated, and will be removed in v1.0.0."
+            if new_function_name:
+                warn_msg += f" Use {new_function_name} instead."
+            warnings.warn(warn_msg, FutureWarning, stacklevel=2)
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
+#    warn_msg = f"{old_function_name} is deprecated, and will be removed in v1.0.0."
+#     if new_function_name:
+#         warn_msg += f" Use {new_function_name} instead."
+#     warnings.warn(warn_msg, FutureWarning, stacklevel=2)

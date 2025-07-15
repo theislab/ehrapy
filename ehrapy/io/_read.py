@@ -22,6 +22,7 @@ if TYPE_CHECKING:
     from anndata import AnnData
 
 
+@function_future_warning("ep.io.read_csv", "ehrdata.io.read_csv")
 def read_csv(
     dataset_path: Path | str,
     sep: str = ",",
@@ -134,6 +135,7 @@ def _read_csv(
         return adata
 
 
+@function_future_warning("ep.io.read_h5ad", "ehrdata.io.read_h5ad")
 def read_h5ad(
     dataset_path: Path | str,
     backup_url: str | None = None,
@@ -350,6 +352,7 @@ def _do_read_h5ad(file_path: Path | Iterator[str]) -> AnnData:
     return adata
 
 
+@function_future_warning("ep.io.read_fhir")
 def read_fhir(
     dataset_path: str,
     format: Literal["json", "ndjson"] = "json",

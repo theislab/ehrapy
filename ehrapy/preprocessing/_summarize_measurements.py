@@ -15,9 +15,10 @@ if TYPE_CHECKING:
 @use_ehrdata(deprecated_after="1.0.0")
 def summarize_measurements(
     edata: EHRData | AnnData,
-    layer: str = None,
+    *,
+    layer: str | None = None,
     var_names: Iterable[str] | None = None,
-    statistics: Iterable[Literal["min", "max", "mean"]] | None = None,
+    statistics: Iterable[Literal["min", "max", "mean"]] | None = ["min", "max", "mean"],
 ) -> EHRData | AnnData:
     """Summarizes numerical measurements into minimum, maximum and average values.
 
@@ -26,16 +27,13 @@ def summarize_measurements(
         layer: Layer to calculate the expanded measurements for.
         var_names: For which measurements to determine the expanded measurements for. Defaults to None (all numerical measurements).
         statistics: Which expanded measurements to calculate.
-                    If None, it calculates minimum, maximum and mean.
+                    If `None`, it calculates minimum, maximum and mean.
 
     Returns:
         A new data object with expanded `.X` containing the specified statistics as additional columns replacing the original values.
     """
     if var_names is None:
         var_names = edata.var_names
-
-    if statistics is None:
-        statistics = ["min", "max", "mean"]
 
     aggregation_functions = dict.fromkeys(var_names, statistics)
 

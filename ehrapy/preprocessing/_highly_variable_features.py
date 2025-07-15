@@ -15,6 +15,7 @@ if TYPE_CHECKING:
 @use_ehrdata(deprecated_after="1.0.0")
 def highly_variable_features(
     edata: EHRData | AnnData,
+    *,
     layer: str | None = None,
     top_features_percentage: float = 0.2,
     span: float | None = 0.3,

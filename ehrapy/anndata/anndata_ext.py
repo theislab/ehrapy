@@ -9,7 +9,7 @@ from anndata import AnnData, concat
 from lamin_utils import logger
 from scipy.sparse import issparse
 
-from ehrapy._compat import _cast_adata_to_match_data_type, use_ehrdata
+from ehrapy._compat import _cast_adata_to_match_data_type, function_future_warning, use_ehrdata
 from ehrapy.anndata import _check_feature_types
 from ehrapy.anndata._constants import FEATURE_TYPE_KEY, NUMERIC_TAG
 
@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from ehrdata import EHRData
 
 
+@function_future_warning("ep.ad.df_to_anndata", "ehrdata.from_pandas")
 def df_to_anndata(
     df: pd.DataFrame, columns_obs_only: list[str] | None = None, index_column: str | None = None
 ) -> AnnData:
@@ -95,6 +96,8 @@ def df_to_anndata(
     return edata
 
 
+@function_future_warning("ep.ad.anndata_to_df", "ehrdata.to_pandas")
+@use_ehrdata(deprecated_after="1.0.0")
 def anndata_to_df(
     edata: AnnData,
     layer: str | None = None,
@@ -149,6 +152,7 @@ def anndata_to_df(
     return df
 
 
+@function_future_warning("ep.ad.move_to_obs")
 @use_ehrdata(deprecated_after="1.0.0")
 def move_to_obs(edata: EHRData | AnnData, to_obs: list[str] | str, copy_obs: bool = False) -> EHRData | AnnData:
     """Move inplace or copy features from X to obs.
@@ -218,6 +222,7 @@ def _get_var_indices_for_type(edata: EHRData | AnnData, tag: str) -> list[str]:
     return edata.var_names[edata.var[FEATURE_TYPE_KEY] == tag].tolist()
 
 
+@function_future_warning("ep.ad.move_to_x")
 @use_ehrdata(deprecated_after="1.0.0")
 def move_to_x(edata: EHRData | AnnData, to_x: list[str] | str, copy_x: bool = False) -> EHRData | AnnData:
     """Move features from obs to X inplace.

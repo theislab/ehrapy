@@ -39,17 +39,18 @@ def balanced_sample(
         copy: If True, return a copy of the balanced data.
 
     Returns:
-        A new `AnnData` object, with the balanced groups.
+        A new data object, with the balanced groups.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ep.data.diabetes_130_fairlearn(columns_obs_only=["age"])
+        >>> edata = ed.dt.diabetes_130_fairlearn(columns_obs_only=["age"])
         >>> edata.obs.age.value_counts()
         age
         'Over 60 years'          68541
         '30-60 years'            30716
         '30 years or younger'     2509
-        >>> edata_balanced = ep.pp.sample(edata, key="age")
+        >>> edata_balanced = ep.pp.balanced_sample(edata, key="age")
         >>> edata_balanced.obs.age.value_counts()
         age
         '30 years or younger'    2509

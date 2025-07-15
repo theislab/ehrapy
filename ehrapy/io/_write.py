@@ -15,6 +15,7 @@ if TYPE_CHECKING:
 supported_extensions = {"csv", "tsv", "h5ad"}
 
 
+@function_future_warning("ep.io.write", "ehrdata.io.write_<format>")
 def write(
     filename: str | Path,
     adata: AnnData,

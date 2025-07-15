@@ -24,6 +24,7 @@ AnyRandom: TypeAlias = int | np.random.RandomState | None
 
 def pca(
     data: EHRData | AnnData | np.ndarray | spmatrix,
+    *,
     n_comps: int | None = None,
     zero_center: bool | None = True,
     svd_solver: str = "arpack",
@@ -104,6 +105,7 @@ def pca(
 @use_ehrdata(deprecated_after="1.0.0")
 def regress_out(
     edata: EHRData | AnnData,
+    *,
     keys: str | Sequence[str],
     n_jobs: int | None = None,
     copy: bool = False,
@@ -127,6 +129,7 @@ def regress_out(
 
 def subsample(
     data: EHRData | AnnData | np.ndarray | spmatrix,
+    *,
     fraction: float | None = None,
     n_obs: int | None = None,
     random_state: AnyRandom = 0,
@@ -148,8 +151,10 @@ def subsample(
     return sc.pp.subsample(data=data, fraction=fraction, n_obs=n_obs, random_state=random_state, copy=copy)
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 def combat(
     edata: EHRData | AnnData,
+    *,
     key: str = "batch",
     covariates: Collection[str] | None = None,
     inplace: bool = True,
@@ -204,6 +209,7 @@ _Metric = _MetricSparseCapable | _MetricScipySpatial
 @use_ehrdata(deprecated_after="1.0.0")
 def neighbors(
     edata: EHRData | AnnData,
+    *,
     n_neighbors: int = 15,
     n_pcs: int | None = None,
     use_rep: str | None = None,

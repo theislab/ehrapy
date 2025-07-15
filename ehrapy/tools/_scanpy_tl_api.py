@@ -23,6 +23,7 @@ AnyRandom: TypeAlias = int | np.random.RandomState | None
 @use_ehrdata(deprecated_after="1.0.0")
 def tsne(
     edata: EHRData | AnnData,
+    *,
     n_pcs: int | None = None,
     use_rep: str | None = None,
     perplexity: float | int = 30,
@@ -89,6 +90,7 @@ def tsne(
 @use_ehrdata(deprecated_after="1.0.0")
 def umap(
     edata: EHRData | AnnData,
+    *,
     min_dist: float = 0.5,
     spread: float = 1.0,
     n_components: int = 2,
@@ -193,6 +195,7 @@ def umap(
 
 def draw_graph(
     edata: EHRData | AnnData,
+    *,
     layout: _method_options._Layout = "fa",
     init_pos: str | bool | None = None,
     root: int | None = None,
@@ -271,6 +274,7 @@ def draw_graph(
 @use_ehrdata(deprecated_after="1.0.0")
 def diffmap(
     edata: EHRData | AnnData,
+    *,
     n_comps: int = 15,
     neighbors_key: str | None = None,
     random_state: AnyRandom = 0,
@@ -318,6 +322,7 @@ def diffmap(
 @use_ehrdata(deprecated_after="1.0.0")
 def embedding_density(
     edata: EHRData | AnnData,
+    *,
     basis: str = "umap",  # was positional before 1.4.5
     groupby: str | None = None,
     key_added: str | None = None,
@@ -444,6 +449,7 @@ def leiden(
 @use_ehrdata(deprecated_after="1.0.0")
 def dendrogram(
     edata: EHRData | AnnData,
+    *,
     groupby: str,
     n_pcs: int | None = None,
     use_rep: str | None = None,
@@ -519,6 +525,7 @@ def dendrogram(
 @use_ehrdata(deprecated_after="1.0.0")
 def dpt(
     edata: EHRData | AnnData,
+    *,
     n_dcs: int = 10,
     n_branchings: int = 0,
     min_group_size: float = 0.01,
@@ -581,6 +588,7 @@ def dpt(
 @use_ehrdata(deprecated_after="1.0.0")
 def paga(
     edata: EHRData | AnnData,
+    *,
     groups: str | None = None,
     model: Literal["v1.2", "v1.0"] = "v1.2",
     neighbors_key: str | None = None,
@@ -643,7 +651,8 @@ def paga(
 @use_ehrdata(deprecated_after="1.0.0")
 def ingest(
     edata: EHRData | AnnData,
-    edata_ref: AnnData,
+    edata_ref: EHRData | AnnData,
+    *,
     obs: str | Iterable[str] | None = None,
     embedding_method: str | Iterable[str] = ("umap", "pca"),
     labeling_method: str = "knn",

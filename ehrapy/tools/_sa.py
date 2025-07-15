@@ -34,6 +34,7 @@ if TYPE_CHECKING:
 def ols(
     edata: EHRData | AnnData,
     var_names: list[str] | None | None = None,
+    *,
     formula: str | None = None,
     missing: Literal["none", "drop", "raise"] | None = "none",
     use_feature_types: bool = False,
@@ -86,6 +87,7 @@ def ols(
 def glm(
     edata: EHRData | AnnData,
     var_names: Iterable[str] | None = None,
+    *,
     formula: str | None = None,
     family: Literal["Gaussian", "Binomial", "Gamma", "Gaussian", "InverseGaussian"] = "Gaussian",
     use_feature_types: bool = False,
@@ -357,7 +359,12 @@ def test_nested_f_statistic(small_model: GLMResultsWrapper, big_model: GLMResult
     return p_value
 
 
-def anova_glm(result_1: GLMResultsWrapper, result_2: GLMResultsWrapper, formula_1: str, formula_2: str) -> pd.DataFrame:
+def anova_glm(
+    result_1: GLMResultsWrapper,
+    result_2: GLMResultsWrapper,
+    formula_1: str,
+    formula_2: str,
+) -> pd.DataFrame:
     """Anova table for two fitted generalized linear models.
 
     Args:

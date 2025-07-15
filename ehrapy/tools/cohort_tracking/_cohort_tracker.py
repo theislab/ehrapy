@@ -13,6 +13,7 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 from tableone import TableOne
 
+from ehrapy._compat import use_ehrdata
 from ehrapy.anndata._constants import CATEGORICAL_TAG
 from ehrapy.anndata._feature_specifications import _detect_feature_type
 
@@ -71,7 +72,13 @@ class CohortTracker:
         tableone: An open source Python package for producing summary statistics for research papers, Journal of the American Medical Informatics Association, Volume 24, Issue 2, 1 March 2017, Pages 267–271, https://doi.org/10.1093/jamia/ocw117
     """
 
-    def __init__(self, edata: AnnData | EHRData, columns: Sequence = None, categorical: Sequence = None) -> None:
+    @use_ehrdata(deprecated_after="1.0.0")
+    def __init__(
+        self,
+        edata: AnnData | EHRData,
+        columns: Sequence | None = None,
+        categorical: Sequence | None = None,
+    ) -> None:
         if not isinstance(edata, AnnData):
             raise ValueError("edata must be an AnnData or EHRData.")
 
@@ -192,6 +199,7 @@ class CohortTracker:
 
     def plot_cohort_barplot(
         self,
+        *,
         subfigure_title: bool = False,
         color_palette: str = "colorblind",
         yticks_labels: dict = None,
@@ -437,12 +445,13 @@ class CohortTracker:
 
     def plot_flowchart(
         self,
-        title: str = None,
+        *,
+        title: str | None = None,
         arrow_size: float = 0.7,
         show: bool = True,
-        ax: Axes = None,
-        bbox_kwargs: dict = None,
-        arrowprops_kwargs: dict = None,
+        ax: Axes | None = None,
+        bbox_kwargs: dict | None = None,
+        arrowprops_kwargs: dict | None = None,
     ) -> None | list[Axes] | tuple[Figure, list[Axes]]:
         """Flowchart over the tracked steps.
 

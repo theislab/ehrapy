@@ -23,7 +23,10 @@ if TYPE_CHECKING:
 
 @use_ehrdata(deprecated_after="1.0.0")
 def qc_metrics(
-    edata: EHRData | AnnData, qc_vars: Collection[str] = (), layer: str = None
+    edata: EHRData | AnnData,
+    qc_vars: Collection[str] = (),
+    *,
+    layer: str | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame] | None:
     """Calculates various quality control metrics.
 
@@ -224,17 +227,18 @@ def _compute_var_metrics(
 @use_ehrdata(deprecated_after="1.0.0")
 def qc_lab_measurements(
     edata: EHRData | AnnData,
-    reference_table: pd.DataFrame = None,
-    measurements: list[str] = None,
-    unit: Literal["traditional", "SI"] = None,
-    layer: str = None,
+    *,
+    reference_table: pd.DataFrame | None = None,
+    measurements: list[str] | None = None,
+    unit: Literal["traditional", "SI"] | None = None,
+    layer: str | None = None,
     threshold: int = 20,
-    age_col: str = None,
-    age_range: str = None,
-    sex_col: str = None,
-    sex: str = None,
-    ethnicity_col: str = None,
-    ethnicity: str = None,
+    age_col: str | None = None,
+    age_range: str | None = None,
+    sex_col: str | None = None,
+    sex: str | None = None,
+    ethnicity_col: str | None = None,
+    ethnicity: str | None = None,
     copy: bool = False,
     verbose: bool = False,
 ) -> EHRData | AnnData | None:
@@ -385,7 +389,10 @@ def qc_lab_measurements(
 
 @use_ehrdata(deprecated_after="1.0.0")
 def mcar_test(
-    edata: EHRData | AnnData, method: Literal["little", "ttest"] = "little", *, layer: str = None
+    edata: EHRData | AnnData,
+    method: Literal["little", "ttest"] = "little",
+    *,
+    layer: str | None = None,
 ) -> float | pd.DataFrame:
     """Statistical hypothesis test for Missing Completely At Random (MCAR).
 
