@@ -193,7 +193,27 @@ def function_future_warning(old_function_name: str, new_function_name: str | Non
     return decorator
 
 
-#    warn_msg = f"{old_function_name} is deprecated, and will be removed in v1.0.0."
-#     if new_function_name:
-#         warn_msg += f" Use {new_function_name} instead."
-#     warnings.warn(warn_msg, FutureWarning, stacklevel=2)
+def function_2D_only():
+    def decorator(func: Callable[P, R]) -> Callable[P, R]:
+        @wraps(func)
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+            data: AnnData | EHRData
+            if args and len(args) >= 1:
+                data = args[0]
+            elif kwargs:
+                data = kwargs.get("edata")
+
+            layer = kwargs.get("layer")
+
+            array = data.X if layer is None else data.layers[layer]
+
+            if array.ndim != 2 and array.shape[2] != 1:
+                raise ValueError(
+                    f"{func.__name__}() only supports 2D data, got {'data.X' if layer is None else f'data.layers[{layer}]'} with shape {array.shape}"
+                )
+
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator

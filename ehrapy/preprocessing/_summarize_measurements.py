@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
 
-from ehrapy._compat import use_ehrdata
+from ehrapy._compat import function_2D_only, use_ehrdata
 from ehrapy.anndata import anndata_to_df, df_to_anndata
 
 if TYPE_CHECKING:
@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from ehrdata import EHRData
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def summarize_measurements(
     edata: EHRData | AnnData,

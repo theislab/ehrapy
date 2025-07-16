@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Literal
 import numpy as np
 import pandas as pd
 
-from ehrapy._compat import use_ehrdata
+from ehrapy._compat import function_2D_only, use_ehrdata
 from ehrapy.anndata import _check_feature_types, anndata_to_df
 from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 
@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from ehrdata import EHRData
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 @_check_feature_types
 def detect_bias(

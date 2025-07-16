@@ -11,7 +11,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.svm import SVC, SVR
 
-from ehrapy._compat import use_ehrdata
+from ehrapy._compat import function_2D_only, use_ehrdata
 from ehrapy.anndata import _check_feature_types, anndata_to_df
 from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 
@@ -23,6 +23,7 @@ if TYPE_CHECKING:
 
 
 @_check_feature_types
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def rank_features_supervised(
     edata: EHRData | AnnData,

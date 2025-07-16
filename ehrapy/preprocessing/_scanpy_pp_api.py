@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 import numpy as np
 import scanpy as sc
 
-from ehrapy._compat import use_ehrdata
+from ehrapy._compat import function_2D_only, use_ehrdata
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Mapping, Sequence
@@ -22,6 +22,7 @@ if TYPE_CHECKING:
 AnyRandom: TypeAlias = int | np.random.RandomState | None
 
 
+@function_2D_only()
 def pca(
     data: EHRData | AnnData | np.ndarray | spmatrix,
     *,
@@ -102,6 +103,7 @@ def pca(
     )
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def regress_out(
     edata: EHRData | AnnData,
@@ -151,6 +153,7 @@ def subsample(
     return sc.pp.subsample(data=data, fraction=fraction, n_obs=n_obs, random_state=random_state, copy=copy)
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def combat(
     edata: EHRData | AnnData,
@@ -206,6 +209,7 @@ _MetricScipySpatial = Literal[
 _Metric = _MetricSparseCapable | _MetricScipySpatial
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def neighbors(
     edata: EHRData | AnnData,

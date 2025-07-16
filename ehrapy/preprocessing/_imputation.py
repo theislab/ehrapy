@@ -13,7 +13,7 @@ from sklearn.experimental import enable_iterative_imputer  # noinspection PyUnre
 from sklearn.impute import SimpleImputer
 
 from ehrapy import settings
-from ehrapy._compat import DaskArray, _raise_array_type_not_implemented, use_ehrdata
+from ehrapy._compat import DaskArray, _raise_array_type_not_implemented, function_2D_only, use_ehrdata
 from ehrapy._progress import spinner
 from ehrapy.anndata import _check_feature_types
 from ehrapy.anndata._constants import NUMERIC_TAG
@@ -28,6 +28,7 @@ if TYPE_CHECKING:
 
 
 @spinner("Performing explicit impute")
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def explicit_impute(
     edata: EHRData | AnnData,
@@ -141,6 +142,7 @@ def _extract_impute_value(replacement: dict[str, str | int], column_name: str) -
 
 
 @spinner("Performing simple impute")
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def simple_impute(
     edata: EHRData | AnnData,
@@ -205,6 +207,7 @@ def _simple_impute(edata: EHRData | AnnData, var_names: Iterable[str] | None, st
 
 @spinner("Performing KNN impute")
 @_check_feature_types
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def knn_impute(
     edata: EHRData | AnnData,
@@ -327,6 +330,7 @@ def _knn_impute(
 
 
 @spinner("Performing miss-forest impute")
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def miss_forest_impute(
     edata: EHRData | AnnData,
@@ -430,6 +434,7 @@ def miss_forest_impute(
 
 @spinner("Performing mice-forest impute")
 @_check_feature_types
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def mice_forest_impute(
     edata: EHRData | AnnData,

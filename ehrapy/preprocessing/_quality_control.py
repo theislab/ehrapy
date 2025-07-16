@@ -10,7 +10,7 @@ import pandas as pd
 from lamin_utils import logger
 from thefuzz import process
 
-from ehrapy._compat import DaskArray, _raise_array_type_not_implemented, use_ehrdata
+from ehrapy._compat import DaskArray, _raise_array_type_not_implemented, function_2D_only, use_ehrdata
 from ehrapy.anndata import anndata_to_df
 from ehrapy.preprocessing._encoding import _get_encoded_features
 
@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     from ehrdata import EHRData
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def qc_metrics(
     edata: EHRData | AnnData,
@@ -224,6 +225,7 @@ def _compute_var_metrics(
     return var_metrics
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def qc_lab_measurements(
     edata: EHRData | AnnData,
@@ -387,6 +389,7 @@ def qc_lab_measurements(
     return edata if copy else None
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def mcar_test(
     edata: EHRData | AnnData,

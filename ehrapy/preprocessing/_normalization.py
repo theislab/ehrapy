@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 import sklearn.preprocessing as sklearn_pp
 
-from ehrapy._compat import DaskArray, _raise_array_type_not_implemented, use_ehrdata
+from ehrapy._compat import DaskArray, _raise_array_type_not_implemented, function_2D_only, use_ehrdata
 from ehrapy.anndata._constants import NUMERIC_TAG
 from ehrapy.anndata.anndata_ext import (
     _assert_numeric_vars,
@@ -26,6 +26,7 @@ def _scale_func_group(
     scale_func: Callable[[np.ndarray | pd.DataFrame], np.ndarray],
     vars: str | Sequence[str] | None,
     group_key: str | None,
+    layer: str | None,
     copy: bool,
     norm_name: str,
 ) -> EHRData | AnnData | None:
@@ -42,7 +43,10 @@ def _scale_func_group(
 
     edata = _prep_edata_norm(edata, copy)
 
-    var_values = edata[:, vars].X.copy()
+    if layer is None:
+        var_values = edata[:, vars].X.copy()
+    else:
+        var_values = edata[:, vars].layers[layer].copy()
 
     if group_key is None:
         var_values = scale_func(var_values)
@@ -52,8 +56,12 @@ def _scale_func_group(
             group_idx = edata.obs[group_key] == group
             var_values[group_idx] = scale_func(var_values[group_idx])
 
-    edata.X = edata.X.astype(var_values.dtype)
-    edata[:, vars].X = var_values
+    if layer is None:
+        edata.X = edata.X.astype(var_values.dtype)
+        edata[:, vars].X = var_values
+    else:
+        edata.layers[layer] = edata.layers[layer].astype(var_values.dtype)
+        edata[:, vars].layers[layer] = var_values
 
     _record_norm(edata, vars, norm_name)
 
@@ -80,11 +88,13 @@ def _(arr: DaskArray, **kwargs):
     return daskml_pp.StandardScaler(**kwargs).fit_transform
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def scale_norm(
     edata: EHRData | AnnData,
     vars: str | Sequence[str] | None = None,
     group_key: str | None = None,
+    layer: str | None = None,
     copy: bool = False,
     **kwargs,
 ) -> EHRData | AnnData | None:
@@ -98,6 +108,7 @@ def scale_norm(
         vars: List of the names of the numeric variables to normalize.
               If None all numeric variables will be normalized.
         group_key: Key in edata.obs that contains group information. If provided, scaling is applied per group.
+        layer: The layer to normalize.
         copy: Whether to return a copy or act in place.
         **kwargs: Additional arguments passed to the StandardScaler.
 
@@ -109,13 +120,14 @@ def scale_norm(
         >>> edata = ed.dt.mimic_2()
         >>> edata_norm = ep.pp.scale_norm(edata, copy=True)
     """
-    scale_func = _scale_norm_function(edata.X, **kwargs)
+    scale_func = _scale_norm_function(edata.X if layer is None else edata.layers[layer], **kwargs)
 
     return _scale_func_group(
         edata=edata,
         scale_func=scale_func,
         vars=vars,
         group_key=group_key,
+        layer=layer,
         copy=copy,
         norm_name="scale",
     )
@@ -143,6 +155,7 @@ def minmax_norm(
     edata: EHRData | AnnData,
     vars: str | Sequence[str] | None = None,
     group_key: str | None = None,
+    layer: str | None = None,
     copy: bool = False,
     **kwargs,
 ) -> EHRData | AnnData | None:
@@ -157,6 +170,7 @@ def minmax_norm(
         vars: List of the names of the numeric variables to normalize.
               If None all numeric variables will be normalized.
         group_key: Key in edata.obs that contains group information. If provided, scaling is applied per group.
+        layer: The layer to normalize.
         copy: Whether to return a copy or act in place.
         **kwargs: Additional arguments passed to the MinMaxScaler.
 
@@ -168,13 +182,14 @@ def minmax_norm(
         >>> edata = ed.dt.mimic_2()
         >>> edata_norm = ep.pp.minmax_norm(edata, copy=True)
     """
-    scale_func = _minmax_norm_function(edata.X, **kwargs)
+    scale_func = _minmax_norm_function(edata.X if layer is None else edata.layers[layer], **kwargs)
 
     return _scale_func_group(
         edata=edata,
         scale_func=scale_func,
         vars=vars,
         group_key=group_key,
+        layer=layer,
         copy=copy,
         norm_name="minmax",
     )
@@ -195,6 +210,7 @@ def maxabs_norm(
     edata: EHRData | AnnData,
     vars: str | Sequence[str] | None = None,
     group_key: str | None = None,
+    layer: str | None = None,
     copy: bool = False,
 ) -> EHRData | AnnData | None:
     """Apply max-abs normalization.
@@ -207,6 +223,7 @@ def maxabs_norm(
         vars: List of the names of the numeric variables to normalize.
               If None all numeric variables will be normalized.
         group_key: Key in edata.obs that contains group information. If provided, scaling is applied per group.
+        layer: The layer to normalize.
         copy: Whether to return a copy or act in place.
 
     Returns:
@@ -217,13 +234,14 @@ def maxabs_norm(
         >>> edata = ed.dt.mimic_2()
         >>> edata_norm = ep.pp.maxabs_norm(edata, copy=True)
     """
-    scale_func = _maxabs_norm_function(edata.X)
+    scale_func = _maxabs_norm_function(edata.X if layer is None else edata.layers[layer])
 
     return _scale_func_group(
         edata=edata,
         scale_func=scale_func,
         vars=vars,
         group_key=group_key,
+        layer=layer,
         copy=copy,
         norm_name="maxabs",
     )
@@ -251,6 +269,7 @@ def robust_scale_norm(
     edata: EHRData | AnnData,
     vars: str | Sequence[str] | None = None,
     group_key: str | None = None,
+    layer: str | None = None,
     copy: bool = False,
     **kwargs,
 ) -> EHRData | AnnData | None:
@@ -266,6 +285,7 @@ def robust_scale_norm(
         vars: List of the names of the numeric variables to normalize.
               If None all numeric variables will be normalized.
         group_key: Key in edata.obs that contains group information. If provided, scaling is applied per group.
+        layer: The layer to normalize.
         copy: Whether to return a copy or act in place.
         **kwargs: Additional arguments passed to the RobustScaler.
 
@@ -277,13 +297,14 @@ def robust_scale_norm(
         >>> edata = ed.dt.mimic_2()
         >>> edata_norm = ep.pp.robust_scale_norm(edata, copy=True)
     """
-    scale_func = _robust_scale_norm_function(edata.X, **kwargs)
+    scale_func = _robust_scale_norm_function(edata.X if layer is None else edata.layers[layer], **kwargs)
 
     return _scale_func_group(
         edata=edata,
         scale_func=scale_func,
         vars=vars,
         group_key=group_key,
+        layer=layer,
         copy=copy,
         norm_name="robust_scale",
     )
@@ -311,6 +332,7 @@ def quantile_norm(
     edata: EHRData | AnnData,
     vars: str | Sequence[str] | None = None,
     group_key: str | None = None,
+    layer: str | None = None,
     copy: bool = False,
     **kwargs,
 ) -> EHRData | AnnData | None:
@@ -325,6 +347,7 @@ def quantile_norm(
         vars: List of the names of the numeric variables to normalize.
               If None all numeric variables will be normalized.
         group_key: Key in edata.obs that contains group information. If provided, scaling is applied per group.
+        layer: The layer to normalize.
         copy: Whether to return a copy or act in place.
         **kwargs: Additional arguments passed to the QuantileTransformer.
 
@@ -336,13 +359,14 @@ def quantile_norm(
         >>> edata = ed.dt.mimic_2()
         >>> edata_norm = ep.pp.quantile_norm(edata, copy=True)
     """
-    scale_func = _quantile_norm_function(edata.X, **kwargs)
+    scale_func = _quantile_norm_function(edata.X if layer is None else edata.layers[layer], **kwargs)
 
     return _scale_func_group(
         edata=edata,
         scale_func=scale_func,
         vars=vars,
         group_key=group_key,
+        layer=layer,
         copy=copy,
         norm_name="quantile",
     )
@@ -363,6 +387,7 @@ def power_norm(
     edata: EHRData | AnnData,
     vars: str | Sequence[str] | None = None,
     group_key: str | None = None,
+    layer: str | None = None,
     copy: bool = False,
     **kwargs,
 ) -> EHRData | AnnData | None:
@@ -377,6 +402,7 @@ def power_norm(
         vars: List of the names of the numeric variables to normalize.
               If None all numeric variables will be normalized.
         group_key: Key in edata.obs that contains group information. If provided, scaling is applied per group.
+        layer: The layer to normalize.
         copy: Whether to return a copy or act in place.
         **kwargs: Additional arguments passed to the PowerTransformer.
 
@@ -388,13 +414,14 @@ def power_norm(
         >>> edata = ed.dt.mimic_2()
         >>> edata_norm = ep.pp.power_norm(edata, copy=True)
     """
-    scale_func = _power_norm_function(edata.X, **kwargs)
+    scale_func = _power_norm_function(edata.X if layer is None else edata.layers[layer], **kwargs)
 
     return _scale_func_group(
         edata=edata,
         scale_func=scale_func,
         vars=vars,
         group_key=group_key,
+        layer=layer,
         copy=copy,
         norm_name="power",
     )
@@ -406,6 +433,7 @@ def log_norm(
     vars: str | Sequence[str] | None = None,
     base: int | float | None = None,
     offset: int | float = 1,
+    layer: str | None = None,
     copy: bool = False,
 ) -> EHRData | AnnData | None:
     r"""Apply log normalization.
@@ -419,6 +447,7 @@ def log_norm(
               If None all numeric variables will be normalized.
         base: Numeric base for logarithm. If None the natural logarithm is used.
         offset: Offset added to values before computing the logarithm.
+        layer: The layer to normalize.
         copy: Whether to return a copy or act in place.
 
     Returns:

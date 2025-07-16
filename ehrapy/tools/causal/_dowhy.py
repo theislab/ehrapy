@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any, Literal
 import numpy as np
 from lamin_utils import logger
 
-from ehrapy._compat import use_ehrdata
+from ehrapy._compat import function_2D_only, use_ehrdata
 
 if TYPE_CHECKING:
     import dowhy
@@ -32,6 +32,7 @@ class capture_output(list):
         sys.stdout = self._stdout
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def causal_inference(
     edata: EHRData | AnnData,

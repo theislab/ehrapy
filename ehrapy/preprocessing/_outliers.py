@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import scipy.stats.mstats
 
-from ehrapy._compat import use_ehrdata
+from ehrapy._compat import function_2D_only, use_ehrdata
 
 if TYPE_CHECKING:
     from collections.abc import Collection
@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from ehrdata import EHRData
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def winsorize(
     edata: EHRData | AnnData,
@@ -65,6 +66,7 @@ def winsorize(
     return edata if copy else None
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def clip_quantile(
     edata: EHRData | AnnData,

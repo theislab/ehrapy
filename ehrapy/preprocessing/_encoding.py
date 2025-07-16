@@ -12,7 +12,7 @@ from lamin_utils import logger
 from rich.progress import BarColumn, Progress
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
-from ehrapy._compat import _cast_adata_to_match_data_type, use_ehrdata
+from ehrapy._compat import _cast_adata_to_match_data_type, function_2D_only, use_ehrdata
 from ehrapy.anndata import _check_feature_types, anndata_to_df
 from ehrapy.anndata._constants import (
     CATEGORICAL_TAG,
@@ -24,6 +24,7 @@ from ehrapy.anndata.anndata_ext import _get_var_indices_for_type
 available_encodings = {"one-hot", "label"}
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 @_check_feature_types
 def encode(

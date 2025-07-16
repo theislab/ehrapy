@@ -19,7 +19,7 @@ from lifelines.statistics import StatisticalResult, logrank_test
 from scipy import stats
 from statsmodels.genmod.generalized_linear_model import GLMResultsWrapper  # noqa
 
-from ehrapy._compat import use_ehrdata
+from ehrapy._compat import function_2D_only, use_ehrdata
 from ehrapy.anndata import anndata_to_df
 from ehrapy.anndata._constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 
@@ -30,6 +30,7 @@ if TYPE_CHECKING:
     from ehrdata import EHRData
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def ols(
     edata: EHRData | AnnData,
@@ -83,6 +84,7 @@ def ols(
     return ols
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def glm(
     edata: EHRData | AnnData,
@@ -225,6 +227,7 @@ def kmf(
     return kmf
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def kaplan_meier(
     edata: EHRData | AnnData,
@@ -401,6 +404,7 @@ def _build_model_input_dataframe(edata: EHRData | AnnData, duration_col: str, ac
     return df
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def cox_ph(
     edata: EHRData | AnnData,
@@ -504,6 +508,7 @@ def cox_ph(
     return cox_ph
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def weibull_aft(
     edata: EHRData | AnnData,
@@ -603,6 +608,7 @@ def weibull_aft(
     return weibull_aft
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def log_logistic_aft(
     edata: EHRData | AnnData,
@@ -700,6 +706,7 @@ def log_logistic_aft(
     return log_logistic_aft
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def _univariate_model(
     edata: EHRData | AnnData,
@@ -750,6 +757,7 @@ def _univariate_model(
     return model
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def nelson_aalen(
     edata: EHRData | AnnData,
@@ -821,6 +829,7 @@ def nelson_aalen(
     )
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def weibull(
     edata: EHRData | AnnData,

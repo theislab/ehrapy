@@ -11,7 +11,7 @@ from lamin_utils import logger
 from rich import print
 from rich.tree import Tree
 
-from ehrapy._compat import function_future_warning, use_ehrdata
+from ehrapy._compat import function_2D_only, function_future_warning, use_ehrdata
 from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 
 if TYPE_CHECKING:
@@ -71,6 +71,7 @@ def _detect_feature_type(col: pd.Series) -> tuple[Literal["date", "categorical",
 
 
 @function_future_warning("ep.ad.infer_feature_types", "ehrdata.infer_feature_types_from_dataframe")
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def infer_feature_types(
     edata: EHRData | AnnData,

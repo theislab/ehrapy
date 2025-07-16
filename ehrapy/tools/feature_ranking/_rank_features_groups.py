@@ -8,7 +8,7 @@ import pandas as pd
 import scanpy as sc
 from anndata import AnnData
 
-from ehrapy._compat import _cast_adata_to_match_data_type, use_ehrdata
+from ehrapy._compat import _cast_adata_to_match_data_type, function_2D_only, use_ehrdata
 from ehrapy.anndata import _check_feature_types, infer_feature_types, move_to_x
 from ehrapy.anndata._constants import (
     CATEGORICAL_TAG,
@@ -318,6 +318,7 @@ def _check_columns_to_rank_dict(columns_to_rank):
 
 
 @_check_feature_types
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def rank_features_groups(
     edata: EHRData | AnnData,
