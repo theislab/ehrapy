@@ -197,7 +197,7 @@ def function_2D_only():
     def decorator(func: Callable[P, R]) -> Callable[P, R]:
         @wraps(func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
-            data: AnnData | EHRData
+            data: AnnData | EHRData | None
             if args and len(args) >= 1:
                 data = args[0]
             elif kwargs:
@@ -205,12 +205,13 @@ def function_2D_only():
 
             layer = kwargs.get("layer")
 
-            array = data.X if layer is None else data.layers[layer]
+            if data is not None:
+                array = data.X if layer is None else data.layers[layer]
 
-            if array.ndim != 2 and array.shape[2] != 1:
-                raise ValueError(
-                    f"{func.__name__}() only supports 2D data, got {'data.X' if layer is None else f'data.layers[{layer}]'} with shape {array.shape}"
-                )
+                if array.ndim != 2 and array.shape[2] != 1:
+                    raise ValueError(
+                        f"{func.__name__}() only supports 2D data, got {'data.X' if layer is None else f'data.layers[{layer}]'} with shape {array.shape}"
+                    )
 
             return func(*args, **kwargs)
 
