@@ -40,8 +40,9 @@ def rank_features_supervised(
         If `show == False` a `matplotlib.axes.Axes` object, else `None`.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=False)
+        >>> edata = ed.dt.mimic_2()
         >>> ep.pp.knn_impute(edata, n_neighbors=5)
         >>> input_features = [
         ...     feat for feat in edata.var_names if feat not in {"service_unit", "day_icu_intime", "tco2_first"}

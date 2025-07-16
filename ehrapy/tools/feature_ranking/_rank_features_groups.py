@@ -321,8 +321,8 @@ def _check_columns_to_rank_dict(columns_to_rank):
 @use_ehrdata(deprecated_after="1.0.0")
 def rank_features_groups(
     edata: EHRData | AnnData,
-    *,
     groupby: str,
+    *,
     groups: Literal["all"] | Iterable[str] = "all",
     reference: str = "rest",
     n_features: int | None = None,

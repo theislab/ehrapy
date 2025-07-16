@@ -58,6 +58,7 @@ def var_df(  # pragma: no cover
         A DataFrame with `edata.var_names` as index, and values specified by `keys` and `varm_keys`.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> four_patients = ep.get.var_df(edata, keys=["0", "1", "2", "3"])
@@ -93,6 +94,7 @@ def rank_features_groups_df(
         A Pandas DataFrame of all rank genes groups results.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> ep.tl.rank_features_groups(edata, "service_unit")
