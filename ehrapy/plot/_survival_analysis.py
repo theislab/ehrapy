@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from statsmodels.regression.linear_model import RegressionResults
 
 
-@use_ehrdata(deprecated_after="1.0.0")
+@use_ehrdata(deprecated_after="1.0.0", edata_None_allowed=True)
 def ols(
     edata: EHRData | AnnData | None = None,
     *,

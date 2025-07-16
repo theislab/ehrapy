@@ -56,6 +56,7 @@ def use_ehrdata(
     deprecated_after: str | None = None,
     old_param: str = "adata",
     new_param: str = "edata",
+    edata_None_allowed: bool = False,
 ) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """Decorator to migrate functions from AnnData to EHRData."""
 
@@ -155,9 +156,11 @@ def use_ehrdata(
                 return func(**kwargs)  # type: ignore
 
             # If neither parameter is provided
-            param_name = new_param if has_new_param else old_param
-            alt_name = old_param if has_new_param else new_param
-            raise TypeError(f"{func.__name__}() missing required argument: '{param_name}' (or '{alt_name}')")
+            if not edata_None_allowed:
+                param_name = new_param if has_new_param else old_param
+                alt_name = old_param if has_new_param else new_param
+                raise TypeError(f"{func.__name__}() missing required argument: '{param_name}' (or '{alt_name}')")
+            return func(**kwargs)  # type: ignore
 
         return cast("Callable[P, R]", wrapper)
 
