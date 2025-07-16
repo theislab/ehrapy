@@ -1315,7 +1315,7 @@ def draw_graph(  # noqa: D417
     """
     draw_graph_part = partial(sc.pl.draw_graph, layout=layout)
 
-    return draw_graph_part(edata, **kwargs)
+    return draw_graph_part(adata=edata, **kwargs)
 
 
 class Empty(Enum):
@@ -1446,7 +1446,7 @@ def embedding(  # noqa: D417
         **kwargs,
     )
 
-    return embedding_partial(edata, color=color)
+    return embedding_partial(adata=edata, color=color)
 
 
 @use_ehrdata(deprecated_after="1.0.0")
@@ -1583,7 +1583,7 @@ def dpt_groups_pseudotime(
     Preview:
         .. image:: /_static/docstring_previews/dpt_groups_pseudotime.png
     """
-    sc.pl.dpt_groups_pseudotime(edata, color_map=color_map, palette=palette, show=show, save=save)
+    sc.pl.dpt_groups_pseudotime(adata=edata, color_map=color_map, palette=palette, show=show, save=save)
 
 
 @use_ehrdata(deprecated_after="1.0.0")
@@ -1620,7 +1620,7 @@ def dpt_timeseries(
     Preview:
         .. image:: /_static/docstring_previews/dpt_timeseries.png
     """
-    sc.pl.dpt_timeseries(anddata=edata, color_map=color_map, show=show, save=save, as_heatmap=as_heatmap)
+    sc.pl.dpt_timeseries(adata=edata, color_map=color_map, show=show, save=save, as_heatmap=as_heatmap)
 
 
 @use_ehrdata(deprecated_after="1.0.0")
@@ -1750,7 +1750,7 @@ def paga(
         .. image:: /_static/docstring_previews/paga.png
     """
     return sc.pl.paga(
-        edata,
+        adata=edata,
         threshold=threshold,
         color=color,
         layout=layout,
@@ -1852,7 +1852,7 @@ def paga_path(
         save: Whether or where to save the plot.
     """
     return sc.pl.paga_path(
-        edata,
+        adata=edata,
         nodes=nodes,
         keys=keys,
         use_raw=use_raw,
@@ -1946,7 +1946,7 @@ def paga_compare(
         Matplotlib axes.
     """
     return sc.pl.paga_compare(
-        edata,
+        adata=edata,
         basis=basis,
         edges=edges,
         color=color,
@@ -2019,7 +2019,7 @@ def rank_features_groups(  # noqa: D417
         .. image:: /_static/docstring_previews/rank_features_groups.png
     """
     return sc.pl.rank_genes_groups(
-        edata,
+        adata=edata,
         groups=groups,
         n_genes=n_features,
         gene_symbols=feature_symbols,
@@ -2091,7 +2091,7 @@ def rank_features_groups_violin(  # noqa: D417
         .. image:: /_static/docstring_previews/rank_features_groups_violin_4.png
     """
     return sc.pl.rank_genes_groups_violin(
-        edata,
+        adata=edata,
         groups=groups,
         n_genes=n_features,
         gene_names=feature_names,
@@ -2163,7 +2163,7 @@ def rank_features_groups_stacked_violin(
         .. image:: /_static/docstring_previews/rank_features_groups_stacked_violin.png
     """
     return sc.pl.rank_genes_groups_stacked_violin(
-        edata,
+        adata=edata,
         groups=groups,
         n_genes=n_features,
         groupby=groupby,
@@ -2223,7 +2223,7 @@ def rank_features_groups_heatmap(
         .. image:: /_static/docstring_previews/rank_features_groups_heatmap.png
     """
     return sc.pl.rank_genes_groups_heatmap(
-        edata,
+        adata=edata,
         groups=groups,
         n_genes=n_features,
         groupby=groupby,
@@ -2301,7 +2301,7 @@ def rank_features_groups_dotplot(
         .. image:: /_static/docstring_previews/rank_features_groups_dotplot.png
     """
     return sc.pl.rank_genes_groups_dotplot(
-        edata,
+        adata=edata,
         groups=groups,
         n_genes=n_features,
         groupby=groupby,
@@ -2383,7 +2383,7 @@ def rank_features_groups_matrixplot(
 
     """
     return sc.pl.rank_genes_groups_matrixplot(
-        edata,
+        adata=edata,
         groups=groups,
         n_genes=n_features,
         groupby=groupby,
@@ -2444,7 +2444,7 @@ def rank_features_groups_tracksplot(
         .. image:: /_static/docstring_previews/rank_features_groups_tracksplot.png
     """
     return sc.pl.rank_genes_groups_tracksplot(
-        edata,
+        adata=edata,
         groups=groups,
         n_genes=n_features,
         groupby=groupby,
