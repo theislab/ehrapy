@@ -34,8 +34,8 @@ if TYPE_CHECKING:
 def ols(
     edata: EHRData | AnnData,
     var_names: list[str] | None | None = None,
-    *,
     formula: str | None = None,
+    *,
     missing: Literal["none", "drop", "raise"] | None = "none",
     use_feature_types: bool = False,
 ) -> sm.OLS:
@@ -87,8 +87,8 @@ def ols(
 def glm(
     edata: EHRData | AnnData,
     var_names: Iterable[str] | None = None,
-    *,
     formula: str | None = None,
+    *,
     family: Literal["Gaussian", "Binomial", "Gamma", "Gaussian", "InverseGaussian"] = "Gaussian",
     use_feature_types: bool = False,
     missing: Literal["none", "drop", "raise"] = "none",
