@@ -733,7 +733,7 @@ def test_paga(mimic_2_sample, check_same_image):
 
     ep.pl.paga(
         adata,
-        layout="fr",
+        layout="kk",
         color=["leiden_0_5", "day_28_flg"],
         cmap=ep.pl.Colormaps.grey_red.value,
         title=["Leiden 0.5", "Died in less than 28 days"],
@@ -743,6 +743,8 @@ def test_paga(mimic_2_sample, check_same_image):
 
     fig.set_size_inches(16, 6)
     fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
+
+    # fig.savefig(f"{_TEST_IMAGE_PATH}/pagamirror_test_output.png", dpi=80)
 
     check_same_image(
         fig=fig,
