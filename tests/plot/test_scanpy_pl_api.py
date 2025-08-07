@@ -813,6 +813,8 @@ def test_embedding(mimic_2_sample, check_same_image):
     fig.set_size_inches(16, 6)
     fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
 
+    # fig.savefig(f"{_TEST_IMAGE_PATH}/embedding_test_output.png", dpi=80)
+
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/embedding",
