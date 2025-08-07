@@ -733,7 +733,6 @@ def test_paga(mimic_2_sample, check_same_image):
 
     ep.pl.paga(
         adata,
-        layout="kk",
         color=["leiden_0_5", "day_28_flg"],
         cmap=ep.pl.Colormaps.grey_red.value,
         title=["Leiden 0.5", "Died in less than 28 days"],
@@ -849,5 +848,26 @@ def test_embedding_density(mimic_2_sample, check_same_image):
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/embedding_density",
+        tol=2e-1,
+    )
+
+
+def test_dpt_timeseries(mimic_2_encoded, check_same_image):
+    adata = mimic_2_encoded.copy()
+    ep.pp.knn_impute(adata)
+    ep.pp.log_norm(adata, offset=1)
+    ep.pp.neighbors(adata, method="gauss")
+    ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
+    ep.tl.diffmap(adata, n_comps=10)
+
+    adata.uns["iroot"] = np.flatnonzero(adata.obs["leiden_0_5"] == "0")[0]
+
+    ep.tl.dpt(adata, n_branchings=3)
+    ep.pl.dpt_timeseries(adata, show=False)
+
+    fig = plt.gcf()
+    check_same_image(
+        fig=fig,
+        base_path=f"{_TEST_IMAGE_PATH}/dpt_timeseries",
         tol=2e-1,
     )
