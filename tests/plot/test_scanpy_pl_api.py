@@ -733,6 +733,7 @@ def test_paga(mimic_2_sample, check_same_image):
 
     ep.pl.paga(
         adata,
+        layout="fr",
         color=["leiden_0_5", "day_28_flg"],
         cmap=ep.pl.Colormaps.grey_red.value,
         title=["Leiden 0.5", "Died in less than 28 days"],
