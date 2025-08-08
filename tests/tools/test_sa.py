@@ -27,7 +27,7 @@ def test_ols():
     adata = ep.dt.mimic_2(encoded=False)
     formula = "tco2_first ~ pco2_first"
     var_names = ["tco2_first", "pco2_first"]
-    ols = ep.tl.ols(adata, var_names, formula, missing="drop")
+    ols = ep.tl.ols(adata, var_names, formula=formula, missing="drop")
     s = ols.fit().params.iloc[1]
     i = ols.fit().params.iloc[0]
     assert isinstance(ols, statsmodels.regression.linear_model.OLS)
@@ -40,7 +40,7 @@ def test_glm():
     formula = "day_28_flg ~ age"
     var_names = ["day_28_flg", "age"]
     family = "Binomial"
-    glm = ep.tl.glm(adata, var_names, formula, family, missing="drop", as_continuous=["age"])
+    glm = ep.tl.glm(adata, var_names, formula=formula, family=family, missing="drop", as_continuous=["age"])
     Intercept = glm.fit().params.iloc[0]
     age = glm.fit().params.iloc[1]
     assert isinstance(glm, statsmodels.genmod.generalized_linear_model.GLM)
@@ -78,11 +78,11 @@ def test_anova_glm():
     formula = "day_28_flg ~ age"
     var_names = ["day_28_flg", "age"]
     family = "Binomial"
-    age_glm = ep.tl.glm(adata, var_names, formula, family, missing="drop", as_continuous=["age"])
+    age_glm = ep.tl.glm(adata, var_names, formula=formula, family=family, missing="drop", as_continuous=["age"])
     age_glm_result = age_glm.fit()
     formula = "day_28_flg ~ age + service_unit"
     var_names = ["day_28_flg", "age", "service_unit"]
-    ageunit_glm = ep.tl.glm(adata, var_names, formula, family="Binomial", missing="drop", as_continuous=["age"])
+    ageunit_glm = ep.tl.glm(adata, var_names, formula=formula, family=family, missing="drop", as_continuous=["age"])
     ageunit_glm_result = ageunit_glm.fit()
     dataframe = ep.tl.anova_glm(
         age_glm_result, ageunit_glm_result, "day_28_flg ~ age", "day_28_flg ~ age + service_unit"
