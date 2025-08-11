@@ -727,18 +727,19 @@ def test_paga(mimic_2_sample, check_same_image):
 
     ep.pp.simple_impute(adata)
     ep.pp.log_norm(adata, offset=1)
-    ep.pp.neighbors(adata)
-    ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
+    ep.pp.neighbors(adata, random_state=0)
+    ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5", random_state=0)
     ep.tl.paga(adata, groups="leiden_0_5")
 
-    ep.pl.paga(
+    ax = ep.pl.paga(
         adata,
         color=["leiden_0_5", "day_28_flg"],
         cmap=ep.pl.Colormaps.grey_red.value,
         title=["Leiden 0.5", "Died in less than 28 days"],
         show=False,
     )
-    fig = plt.gcf()
+    ax0 = ax[0]
+    fig = ax0.figure
 
     fig.set_size_inches(16, 6)
     fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
@@ -750,6 +751,8 @@ def test_paga(mimic_2_sample, check_same_image):
         base_path=f"{_TEST_IMAGE_PATH}/paga",
         tol=2e-1,
     )
+
+    plt.close("all")
 
 
 def test_draw_graph(mimic_2_sample, check_same_image):
