@@ -719,24 +719,16 @@ def test_diffmap(mimic_2_sample, check_same_image):
     )
 
 
-def test_paga_alternative(mimic_2_sample, check_same_image):
-    adata = mimic_2_sample.copy()
-    adata = adata[~np.isnan(adata.X).any(axis=1)].copy()
-    adata = adata[:200, :].copy()
-    ep.pp.encode(adata, autodetect=True)
-    ep.pp.simple_impute(adata)
+def test_paga_alternative(mimic_2_encoded, check_same_image):
+    adata = mimic_2_encoded.copy()
+    ep.pp.knn_impute(adata)
     ep.pp.log_norm(adata, offset=1)
-    ep.pp.neighbors(adata, random_state=0)
-    ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5", random_state=0)
+    ep.pp.neighbors(adata)
+    ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
     ep.tl.paga(adata, groups="leiden_0_5")
-
-    plt.figure()
     ep.pl.paga(
         adata,
         color=["leiden_0_5", "day_28_flg"],
-        threshold=0.5,
-        max_edge_width=1.0,
-        random_state=0,
         cmap=ep.pl.Colormaps.grey_red.value,
         title=["Leiden 0.5", "Died in less than 28 days"],
         show=False,
@@ -744,10 +736,8 @@ def test_paga_alternative(mimic_2_sample, check_same_image):
 
     fig = plt.gcf()
 
-    fig.savefig(f"{_TEST_IMAGE_PATH}/paga_production.png", dpi=100)
-
     check_same_image(
-        fig=plt.gcf(),
+        fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/paga",
         tol=2e-1,
     )
