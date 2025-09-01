@@ -738,7 +738,7 @@ def test_paga_alternative(mimic_2_encoded, check_same_image):
 
     check_same_image(
         fig=fig,
-        base_path=f"{_TEST_IMAGE_PATH}/paga",
+        base_path=f"{_TEST_IMAGE_PATH}/paga_control",
         tol=2e-1,
     )
     plt.close("all")
