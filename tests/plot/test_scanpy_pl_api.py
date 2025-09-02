@@ -1,8 +1,8 @@
 from pathlib import Path
 
-import matplotlib
+import matplotlib as mpl
 
-matplotlib.use("Agg")
+mpl.use("Agg")
 
 import matplotlib.pyplot as plt
 
@@ -225,50 +225,49 @@ def test_clustermap(mimic_2_encoded, check_same_image):
 
 
 def test_rank_features_groups(mimic_2_encoded, check_same_image):
-    adata_sample = mimic_2_encoded[
-        :200,
-        [
-            "abg_count",
-            "wbc_first",
-            "hgb_first",
-            "potassium_first",
-            "tco2_first",
-            "bun_first",
-            "creatinine_first",
-            "pco2_first",
-        ],
-    ].copy()
+    with mpl.rc_context(
+        {
+            "figure.figsize": (8, 6),
+            "figure.dpi": 80,
+            "savefig.dpi": 80,
+            "savefig.facecolor": "white",
+            "font.family": "DejaVu Sans",
+            "font.sans-serif": ["DejaVu Sans"],
+            "text.antialiased": False,
+            "mathtext.fontset": "dejavusans",
+        }
+    ):
+        adata_sample = mimic_2_encoded[
+            :200,
+            [
+                "abg_count",
+                "wbc_first",
+                "hgb_first",
+                "potassium_first",
+                "tco2_first",
+                "bun_first",
+                "creatinine_first",
+                "pco2_first",
+            ],
+        ].copy()
 
-    ep.tl.rank_features_groups(adata_sample, groupby="service_unit")
+        ep.tl.rank_features_groups(adata_sample, groupby="service_unit")
 
-    # To see the numerical results
+        ax = ep.pl.rank_features_groups(adata_sample, key="rank_features_groups", groups=["MICU"], show=False)
 
-    groups = adata_sample.uns["rank_features_groups"]["names"].dtype.names
-    for group in groups:
-        print(f"\nGroup: {group}")
-        names = adata_sample.uns["rank_features_groups"]["names"][group]
-        scores = adata_sample.uns["rank_features_groups"]["scores"][group]
-        pvals = adata_sample.uns["rank_features_groups"]["pvals"][group]
-        print("Top features:")
-        for name, score, pval in zip(names, scores, pvals, strict=False):
-            print(f"  {name}: score={score:.4f}, pval={pval:.4e}")
+        fig = ax[0].figure
+        fig.set_size_inches(8, 6)
 
-    ax = ep.pl.rank_features_groups(adata_sample, key="rank_features_groups", groups=["MICU"], show=False)
+        fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
 
-    image = 0
-    fig = ax[image].figure
-    fig.set_size_inches(8, 6)
+        fig.savefig(f"{_TEST_IMAGE_PATH}/rank_features_groups_scanpy_test_output.png", dpi=80)
 
-    fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
-
-    # fig.savefig(f"{_TEST_IMAGE_PATH}/rank_features_groups_scanpy_test_output.png", dpi=80)
-
-    check_same_image(
-        fig=fig,
-        base_path=f"{_TEST_IMAGE_PATH}/rank_features_groups_scanpy_plt",
-        tol=2e-1,
-    )
-    plt.close("all")
+        check_same_image(
+            fig=fig,
+            base_path=f"{_TEST_IMAGE_PATH}/rank_features_groups_scanpy_plt",
+            tol=2e-1,
+        )
+        plt.close("all")
 
 
 def test_rank_features_groups_violin(mimic_2_encoded, check_same_image):
