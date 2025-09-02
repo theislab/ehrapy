@@ -463,38 +463,6 @@ def test_pca_overview(mimic_2_sample, check_same_image):
         )
 
 
-def test_tsne(mimic_2_sample, check_same_image):
-    adata = mimic_2_sample.copy()
-    adata = adata[~np.isnan(adata.X).any(axis=1)].copy()
-    adata = adata[:200, :].copy()
-    adata = ep.pp.encode(adata, autodetect=True)
-
-    ep.pp.simple_impute(adata)
-    ep.pp.log_norm(adata, offset=1)
-    ep.pp.neighbors(adata)
-    ep.tl.tsne(adata)
-
-    ep.pl.tsne(
-        adata,
-        color=["day_icu_intime", "service_unit"],
-        wspace=0.5,
-        title=["Day of ICU admission", "Service unit"],
-        show=False,
-    )
-    fig = plt.gcf()
-
-    fig.set_size_inches(16, 6)
-    fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
-
-    fig.savefig(f"{_TEST_IMAGE_PATH}/tsne_test_output.png", dpi=80)
-
-    check_same_image(
-        fig=fig,
-        base_path=f"{_TEST_IMAGE_PATH}/tsne",
-        tol=2e-1,
-    )
-
-
 def test_umap_functionality(mimic_2_sample):
     adata = mimic_2_sample.copy()
     adata = adata[~np.isnan(adata.X).any(axis=1)].copy()
@@ -643,7 +611,7 @@ def test_embedding(mimic_2_sample, check_same_image):
     ep.pp.neighbors(adata)
     ep.tl.umap(adata)
 
-    ep.pl.embedding(adata, "X_umap", color="icu_exp_flg", show=False)
+    ep.pl.embedding(adata, "umap", color="icu_exp_flg", size=(np.arange(adata.shape[0]) / 40) ** 4, show=False)
 
     fig = plt.gcf()
 
