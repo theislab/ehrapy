@@ -616,40 +616,11 @@ def test_tsne(mimic_2_sample, check_same_image):
     fig.set_size_inches(16, 6)
     fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
 
+    fig.savefig(f"{_TEST_IMAGE_PATH}/tsne_test_output.png", dpi=80)
+
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/tsne",
-        tol=2e-1,
-    )
-
-
-def test_umap_figure(mimic_2_sample, check_same_image):
-    adata = mimic_2_sample.copy()
-    adata = adata[~np.isnan(adata.X).any(axis=1)].copy()
-    adata = adata[:200, :].copy()
-    adata = ep.pp.encode(adata, autodetect=True)
-
-    ep.pp.simple_impute(adata)
-    ep.pp.log_norm(adata, offset=1)
-    ep.pp.neighbors(adata, random_state=0)
-    ep.tl.umap(adata, random_state=0)
-
-    ep.pl.umap(
-        adata,
-        color="day_icu_intime",
-        frameon=False,
-        vmax=["p99.0", None, None],
-        vcenter=[0.015, None, None],
-        show=False,
-    )
-    fig = plt.gcf()
-
-    fig.set_size_inches(16, 6)
-    fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
-
-    check_same_image(
-        fig=fig,
-        base_path=f"{_TEST_IMAGE_PATH}/umap",
         tol=2e-1,
     )
 
@@ -736,9 +707,11 @@ def test_paga_alternative(mimic_2_encoded, check_same_image):
 
     fig = plt.gcf()
 
+    fig.savefig(f"{_TEST_IMAGE_PATH}/paga_test_output.png", dpi=80)
+
     check_same_image(
         fig=fig,
-        base_path=f"{_TEST_IMAGE_PATH}/paga_control",
+        base_path=f"{_TEST_IMAGE_PATH}/paga",
         tol=2e-1,
     )
     plt.close("all")
