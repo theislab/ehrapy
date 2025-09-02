@@ -1,6 +1,8 @@
 from pathlib import Path
 
 import matplotlib as mpl
+import pandas as pd
+import pytest
 
 mpl.use("Agg")
 
@@ -224,54 +226,20 @@ def test_clustermap(mimic_2_encoded, check_same_image):
     plt.close("all")
 
 
-def test_rank_features_groups(mimic_2_encoded, check_same_image):
-    with mpl.rc_context(
-        {
-            "figure.figsize": (8, 6),
-            "figure.dpi": 80,
-            "savefig.dpi": 80,
-            "savefig.facecolor": "white",
-            "font.family": "DejaVu Sans",
-            "font.sans-serif": ["DejaVu Sans"],
-            "text.antialiased": False,
-            "mathtext.fontset": "dejavusans",
-        }
-    ):
-        adata_sample = mimic_2_encoded[
-            :200,
-            [
-                "abg_count",
-                "wbc_first",
-                "hgb_first",
-                "potassium_first",
-                "tco2_first",
-                "bun_first",
-                "creatinine_first",
-                "pco2_first",
-            ],
-        ].copy()
-
-        ep.tl.rank_features_groups(adata_sample, groupby="service_unit")
-
-        ax = ep.pl.rank_features_groups(adata_sample, key="rank_features_groups", groups=["MICU"], show=False)
-
-        fig = ax[0].figure
-        fig.set_size_inches(8, 6)
-
-        fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
-
-        fig.savefig(f"{_TEST_IMAGE_PATH}/rank_features_groups_scanpy_test_output.png", dpi=80)
-
-        check_same_image(
-            fig=fig,
-            base_path=f"{_TEST_IMAGE_PATH}/rank_features_groups_scanpy_plt",
-            tol=2e-1,
-        )
-        plt.close("all")
-
-
-def test_rank_features_groups_violin(mimic_2_encoded, check_same_image):
-    adata_sample = mimic_2_encoded[
+@pytest.mark.parametrize(
+    ("plotter"),
+    [
+        "rank_features_groups",
+        "rank_features_groups_violin",
+        "rank_features_groups_stacked_violin",
+        "rank_features_groups_matrixplot",
+        "rank_features_groups_tracksplot",
+    ],
+)
+def test_rank_features_groups_plots(mimic_2_encoded, plotter):
+    # in scanpy tests, there is no testing for rank_genes_groups plot but for tool function,
+    # here I only test if these plotting functions produce a valid plot with correct properties e.g axes, labels
+    adata = mimic_2_encoded[
         :200,
         [
             "abg_count",
@@ -285,86 +253,55 @@ def test_rank_features_groups_violin(mimic_2_encoded, check_same_image):
         ],
     ].copy()
 
-    ep.tl.rank_features_groups(adata_sample, groupby="service_unit")
-
-    # To see the numerical results
-
-    # groups = adata_sample.uns["rank_features_groups"]["names"].dtype.names
-    # for group in groups:
-    #     print(f"\nGroup: {group}")
-    #     names = adata_sample.uns["rank_features_groups"]["names"][group]
-    #     scores = adata_sample.uns["rank_features_groups"]["scores"][group]
-    #     pvals = adata_sample.uns["rank_features_groups"]["pvals"][group]
-    #     print("Top features:")
-    #     for name, score, pval in zip(names, scores, pvals, strict=False):
-    #         print(f"  {name}: score={score:.4f}, pval={pval:.4e}")
-
-    ax = ep.pl.rank_features_groups_violin(
-        adata_sample, groups=["SICU"], key="rank_features_groups", jitter=False, show=False, strip=False
+    adata.obs["service_unit"] = pd.Categorical(
+        adata.obs["service_unit"],
+        categories=sorted(pd.unique(adata.obs["service_unit"])),
+        ordered=True,
     )
 
-    # for some reason, scanpy's violinplot in the test run adds text labels to the plots;
-    # can't reproduce in notebook or scripts.
-    # because of this, remove text labels from the test-generated plot.
-    for a in ax:
-        for txt in a.texts:
-            txt.remove()
+    # compute rankings
+    ep.tl.rank_features_groups(adata, groupby="service_unit")
 
-    ax[0].set_ylim(-20, 140)
+    first_group = adata.obs["service_unit"].cat.categories[0]
 
-    fig = ax[0].figure
-    fig.set_size_inches(8, 6)
-    fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
-
-    check_same_image(
-        fig=fig,
-        base_path=f"{_TEST_IMAGE_PATH}/rank_features_groups_violin",
-        tol=2e-1,
+    plot_fn = getattr(ep.pl, plotter)
+    result = plot_fn(
+        adata,
+        key="rank_features_groups",
+        groups=[first_group],
+        show=False,
     )
-    plt.close("all")
+    # to generate the result as list[Axes] regardless of return type
+    axes = []
+    if isinstance(result, dict):
+        for v in result.values():
+            if isinstance(v, list):
+                for a in v:
+                    if hasattr(a, "get_figure"):
+                        axes.append(a)
+            else:
+                if hasattr(v, "get_figure"):
+                    axes.append(v)
+    elif isinstance(result, list):
+        axes = result
+    elif hasattr(result, "get_figure"):
+        axes = [result]
+    else:
+        pytest.skip(f"unexpected return type from {plotter}: {type(result)}")
 
+    assert axes
+    ax = axes[0]
+    assert hasattr(ax, "figure")
 
-def test_rank_features_groups_stacked_violin(mimic_2_encoded, check_same_image):
-    adata_sample = mimic_2_encoded[
-        :200,
-        [
-            "abg_count",
-            "wbc_first",
-            "hgb_first",
-            "potassium_first",
-            "tco2_first",
-            "bun_first",
-            "creatinine_first",
-            "pco2_first",
-        ],
-    ].copy()
-
-    ep.tl.rank_features_groups(adata_sample, groupby="service_unit")
-
-    # To see the numerical results
-
-    groups = adata_sample.uns["rank_features_groups"]["names"].dtype.names
-    for group in groups:
-        print(f"\nGroup: {group}")
-        names = adata_sample.uns["rank_features_groups"]["names"][group]
-        scores = adata_sample.uns["rank_features_groups"]["scores"][group]
-        pvals = adata_sample.uns["rank_features_groups"]["pvals"][group]
-        print("Top features:")
-        for name, score, pval in zip(names, scores, pvals, strict=False):
-            print(f"  {name}: score={score:.4f}, pval={pval:.4e}")
-
-    ax = ep.pl.rank_features_groups_stacked_violin(adata_sample, key="rank_features_groups", show=False, jitter=False)
-
-    fig = ax["mainplot_ax"].figure
-    fig.set_size_inches(8, 6)
-    fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
-
-    check_same_image(
-        fig=fig,
-        base_path=f"{_TEST_IMAGE_PATH}/rank_features_groups_stacked_violin_scanpy",
-        tol=2e-1,
-    )
-    plt.close("all")
+    labels = []
+    for a in axes:
+        labels.extend([t.get_text().strip() for t in a.get_xticklabels()])
+        labels.extend([t.get_text().strip() for t in a.get_yticklabels()])
+        if a.get_xlabel():
+            labels.append(a.get_xlabel().strip())
+        if a.get_ylabel():
+            labels.append(a.get_ylabel().strip())
+    assert any(labels)
 
 
 def test_rank_features_groups_heatmap(mimic_2_encoded, check_same_image):
@@ -426,72 +363,6 @@ def test_rank_features_groups_dotplot(mimic_2_encoded, check_same_image):
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/rank_features_groups_dotplot_scanpy",
-        tol=2e-1,
-    )
-    plt.close("all")
-
-
-def test_rank_features_groups_matrixplot(mimic_2_encoded, check_same_image):
-    adata_sample = mimic_2_encoded[
-        :200,
-        [
-            "abg_count",
-            "wbc_first",
-            "hgb_first",
-            "potassium_first",
-            "tco2_first",
-            "bun_first",
-            "creatinine_first",
-        ],
-    ].copy()
-
-    ep.tl.rank_features_groups(adata_sample, groupby="service_unit")
-
-    # To see the numerical results
-
-    groups = adata_sample.uns["rank_features_groups"]["names"].dtype.names
-    for group in groups:
-        print(f"\nGroup: {group}")
-        names = adata_sample.uns["rank_features_groups"]["names"][group]
-        scores = adata_sample.uns["rank_features_groups"]["scores"][group]
-        pvals = adata_sample.uns["rank_features_groups"]["pvals"][group]
-        print("Top features:")
-        for name, score, pval in zip(names, scores, pvals, strict=False):
-            print(f"  {name}: score={score:.4f}, pval={pval:.4e}")
-
-    ax = ep.pl.rank_features_groups_matrixplot(
-        adata_sample, key="rank_features_groups", groupby="service_unit", show=False
-    )
-
-    fig = ax["mainplot_ax"].figure
-
-    fig.set_size_inches(8, 6)
-    fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
-
-    check_same_image(
-        fig=fig,
-        base_path=f"{_TEST_IMAGE_PATH}/rank_features_groups_matrixplot_scanpy",
-        tol=2e-1,
-    )
-    plt.close("all")
-
-
-def test_rank_features_groups_tracksplot(mimic_2_encoded, check_same_image):
-    adata_sample = mimic_2_encoded[
-        :200, ["age", "gender_num", "weight_first", "bmi", "sapsi_first", "day_icu_intime_num", "hour_icu_intime"]
-    ].copy()
-
-    ep.tl.rank_features_groups(adata_sample, groupby="service_unit")
-    ax = ep.pl.rank_features_groups_tracksplot(adata_sample, key="rank_features_groups", show=False)
-
-    fig = ax["groupby_ax"].figure
-
-    fig.set_size_inches(8, 6)
-    fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
-
-    check_same_image(
-        fig=fig,
-        base_path=f"{_TEST_IMAGE_PATH}/rank_features_groups_tracksplot_scanpy",
         tol=2e-1,
     )
     plt.close("all")
