@@ -368,8 +368,8 @@ def test_rank_features_groups_dotplot(mimic_2_encoded, check_same_image):
     plt.close("all")
 
 
-def test_pca(mimic_2_sample, check_same_image):
-    adata = mimic_2_sample.copy()
+def test_pca(mimic_2_sample_serv_unit_day_icu, check_same_image):
+    adata = mimic_2_sample_serv_unit_day_icu.copy()
     adata = adata[~np.isnan(adata.X).any(axis=1)].copy()
     adata = adata[:200, :].copy()
     adata = ep.pp.encode(adata, autodetect=True)
@@ -391,8 +391,8 @@ def test_pca(mimic_2_sample, check_same_image):
     plt.close("all")
 
 
-def test_pca_loadings(mimic_2_sample, check_same_image):
-    adata = mimic_2_sample.copy()
+def test_pca_loadings(mimic_2_sample_serv_unit_day_icu, check_same_image):
+    adata = mimic_2_sample_serv_unit_day_icu.copy()
     adata = adata[~np.isnan(adata.X).any(axis=1)].copy()
     adata = adata[:200, :].copy()
     adata = ep.pp.encode(adata, autodetect=True)
@@ -414,8 +414,8 @@ def test_pca_loadings(mimic_2_sample, check_same_image):
     plt.close("all")
 
 
-def test_pca_variance_ration(mimic_2_sample, check_same_image):
-    adata = mimic_2_sample.copy()
+def test_pca_variance_ration(mimic_2_sample_serv_unit_day_icu, check_same_image):
+    adata = mimic_2_sample_serv_unit_day_icu.copy()
     adata = adata[~np.isnan(adata.X).any(axis=1)].copy()
     adata = adata[:200, :].copy()
     adata = ep.pp.encode(adata, autodetect=True)
@@ -437,8 +437,8 @@ def test_pca_variance_ration(mimic_2_sample, check_same_image):
     plt.close("all")
 
 
-def test_pca_overview(mimic_2_sample, check_same_image):
-    adata = mimic_2_sample.copy()
+def test_pca_overview(mimic_2_sample_serv_unit_day_icu, check_same_image):
+    adata = mimic_2_sample_serv_unit_day_icu.copy()
     adata = adata[~np.isnan(adata.X).any(axis=1)].copy()
     adata = adata[:200, :].copy()
     adata = ep.pp.encode(adata, autodetect=True)
@@ -463,8 +463,8 @@ def test_pca_overview(mimic_2_sample, check_same_image):
         )
 
 
-def test_umap_functionality(mimic_2_sample):
-    adata = mimic_2_sample.copy()
+def test_umap_functionality(mimic_2_sample_serv_unit_day_icu):
+    adata = mimic_2_sample_serv_unit_day_icu.copy()
     adata = adata[~np.isnan(adata.X).any(axis=1)].copy()
     adata = adata[:200, :].copy()
     adata = ep.pp.encode(adata, autodetect=True)
@@ -504,8 +504,8 @@ def test_umap_functionality(mimic_2_sample):
     plt.close("all")
 
 
-def test_diffmap(mimic_2_sample, check_same_image):
-    adata = mimic_2_sample.copy()
+def test_diffmap(mimic_2_sample_serv_unit_day_icu, check_same_image):
+    adata = mimic_2_sample_serv_unit_day_icu.copy()
     adata = adata[~np.isnan(adata.X).any(axis=1)].copy()
     adata = adata[:200, :].copy()
     adata = ep.pp.encode(adata, autodetect=True)
@@ -576,8 +576,8 @@ def test_paga_alternative(mimic_2_encoded, check_same_image):
     )
     plt.close("all")
 
-def test_embedding(mimic_2_sample, check_same_image):
-    adata = mimic_2_sample.copy()
+def test_embedding(mimic_2_sample_serv_unit_day_icu, check_same_image):
+    adata = mimic_2_sample_serv_unit_day_icu.copy()
     adata = adata[~np.isnan(adata.X).any(axis=1)].copy()
     adata = adata[:200, :].copy()
     adata = ep.pp.encode(adata, autodetect=True)
@@ -603,8 +603,8 @@ def test_embedding(mimic_2_sample, check_same_image):
     )
 
 
-def test_embedding_density(mimic_2_sample, check_same_image):
-    adata = mimic_2_sample.copy()
+def test_embedding_density(mimic_2_sample_serv_unit_day_icu, check_same_image):
+    adata = mimic_2_sample_serv_unit_day_icu.copy()
     adata = adata[~np.isnan(adata.X).any(axis=1)].copy()
     adata = adata[:200, :].copy()
     adata = ep.pp.encode(adata, autodetect=True)
