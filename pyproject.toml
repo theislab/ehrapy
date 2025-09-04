@@ -71,7 +71,9 @@ dependencies = [
 
 [project.optional-dependencies]
 causal = [
-    "dowhy"
+    "dowhy",
+    # manual lower bound necessary or else dowhy installs something old and incompatible
+    "cvxpy>=1.7.2"
 ]
 dask = [
     "anndata[dask]",
