@@ -59,7 +59,7 @@ jobs:
                 token: ${{ secrets.CODECOV_TOKEN }}
 
             - name: Upload test failure images
-              if: failure()matrix.python-version == '3.13'
+              if: failure() && matrix.python == '3.13'
               uses: actions/upload-artifact@v4
               with:
                 name: failed-test-images
