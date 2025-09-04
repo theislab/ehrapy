@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import ehrdata as ed
 import numpy as np
 import pandas as pd
 import pytest
@@ -167,6 +168,11 @@ def encode_ds_1_adata() -> AnnData:
 def encode_ds_2_adata() -> AnnData:
     adata = read_csv(dataset_path=f"{TEST_DATA_PATH}/encode/dataset2.csv")
     return adata
+
+
+@pytest.fixture
+def edata_blob_small() -> ed.EHRData:
+    return ed.dt.ehrdata_blobs(n_variables=10, n_centers=1, n_observations=50, base_timepoints=10)
 
 
 # simplified from https://github.com/scverse/scanpy/blob/main/scanpy/tests/conftest.py

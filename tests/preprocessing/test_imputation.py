@@ -154,6 +154,11 @@ def test_mean_impute_no_copy(impute_num_adata):
     _base_check_imputation(adata_not_imputed, impute_num_adata)
 
 
+def test_simple_impute_3D_edata(edata_blob_small):
+    with pytest.raises(ValueError, match=r"only supports 2D data"):
+        simple_impute(edata_blob_small, layer="R_layer", copy=True)
+
+
 def test_mean_impute_copy(impute_num_adata):
     adata_imputed = simple_impute(impute_num_adata, copy=True)
 
@@ -226,6 +231,11 @@ def test_most_frequent_impute_subset(impute_adata):
     _base_check_imputation(impute_adata, adata_imputed, imputed_var_names=var_names)
 
 
+def test_knn_impute_3D_edata(edata_blob_small):
+    with pytest.raises(ValueError, match=r"only supports 2D data"):
+        knn_impute(edata_blob_small, layer="R_layer", copy=True)
+
+
 def test_knn_impute_check_backend(impute_num_adata):
     knn_impute(impute_num_adata, backend="faiss", copy=True)
     knn_impute(impute_num_adata, backend="scikit-learn", copy=True)
@@ -261,6 +271,11 @@ def test_knn_impute_numerical_data(impute_num_adata):
     _base_check_imputation(impute_num_adata, adata_imputed)
 
 
+def test_missforest_impute_3D_edata(edata_blob_small):
+    with pytest.raises(ValueError, match=r"only supports 2D data"):
+        miss_forest_impute(edata_blob_small, layer="R_layer", copy=True)
+
+
 def test_missforest_impute_non_numerical_data(impute_adata):
     with pytest.raises(ValueError):
         miss_forest_impute(impute_adata, copy=True)
@@ -294,6 +309,12 @@ def test_miceforest_array_types(impute_num_adata, array_type, expected_error):
     if expected_error:
         with pytest.raises(expected_error):
             mice_forest_impute(impute_num_adata, copy=True)
+
+
+@pytest.mark.skipif(os.name == "Darwin", reason="miceforest Imputation not supported by MacOS.")
+def test_miceforest_impute_3D_edata(edata_blob_small):
+    with pytest.raises(ValueError, match=r"only supports 2D data"):
+        mice_forest_impute(edata_blob_small, layer="R_layer", copy=True)
 
 
 @pytest.mark.skipif(os.name == "Darwin", reason="miceforest Imputation not supported by MacOS.")
@@ -339,6 +360,11 @@ def test_explicit_impute_array_types(impute_num_adata, array_type, expected_erro
     if expected_error:
         with pytest.raises(expected_error):
             explicit_impute(impute_num_adata, replacement=1011, copy=True)
+
+
+def test_explicit_impute_3D_edata(edata_blob_small):
+    with pytest.raises(ValueError, match=r"only supports 2D data"):
+        explicit_impute(edata_blob_small, replacement=1011, layer="R_layer", copy=True)
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES)

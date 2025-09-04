@@ -150,6 +150,7 @@ def _(arr: DaskArray, **kwargs):
     return daskml_pp.MinMaxScaler(**kwargs).fit_transform
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def minmax_norm(
     edata: EHRData | AnnData,
@@ -205,6 +206,7 @@ def _(arr: np.ndarray):
     return sklearn_pp.MaxAbsScaler().fit_transform
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def maxabs_norm(
     edata: EHRData | AnnData,
@@ -264,6 +266,7 @@ def _(arr: DaskArray, **kwargs):
     return daskml_pp.RobustScaler(**kwargs).fit_transform
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def robust_scale_norm(
     edata: EHRData | AnnData,
@@ -327,6 +330,7 @@ def _(arr: DaskArray, **kwargs):
     return daskml_pp.QuantileTransformer(**kwargs).fit_transform
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def quantile_norm(
     edata: EHRData | AnnData,
@@ -382,6 +386,7 @@ def _(arr: np.ndarray, **kwargs):
     return sklearn_pp.PowerTransformer(**kwargs).fit_transform
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def power_norm(
     edata: EHRData | AnnData,
@@ -427,6 +432,7 @@ def power_norm(
     )
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def log_norm(
     edata: EHRData | AnnData,
@@ -523,6 +529,7 @@ def _record_norm(edata: EHRData | AnnData, vars: Sequence[str], method: str) -> 
     return None
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def offset_negative_values(edata: EHRData | AnnData, layer: str = None, copy: bool = False) -> EHRData | AnnData | None:
     """Offsets negative values into positive ones with the lowest negative value becoming 0.
