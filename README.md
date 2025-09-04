@@ -15,7 +15,7 @@
 # ehrapy overview
 
 **ehrapy** is a modular open-source Python framework for exploratory analysis of heterogeneous epidemiological and EHR data.
-It supports a full pipeline from data ingestion and quality control to advanced analyses such as clustering, survival, trajectory, causal inference, deep learning, and more.
+It supports a full pipeline from data ingestion and quality control to advanced analyses such as clustering, survival, trajectory, causal inference, deep learning, and more..
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/7927aa20-751c-4e73-8939-1e4b1c465570" alt="fig1" width="100%">
