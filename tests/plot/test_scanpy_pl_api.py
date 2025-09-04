@@ -19,7 +19,7 @@ import ehrapy as ep
 CURRENT_DIR = Path(__file__).parent
 _TEST_IMAGE_PATH = f"{CURRENT_DIR}/_images"
 
-# Set NUMBA_CPU_NAME to "generic" before importing or using numba
+# to avoid differences in outputs that occur because of CPU differences
 os.environ["NUMBA_CPU_NAME"] = "generic"
 
 

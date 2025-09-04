@@ -139,7 +139,7 @@ def diabetes_130_fairlearn_sample():
 
 
 @pytest.fixture
-def mimic_2_sample():
+def mimic_2_sample_serv_unit_day_icu():
     adata = ep.dt.mimic_2(columns_obs_only=["service_unit", "day_icu_intime"])
     return adata
 
