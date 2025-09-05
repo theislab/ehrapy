@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any, Literal
 import scanpy as sc
 from scanpy.plotting import DotPlot, MatrixPlot, StackedViolin
 
-from ehrapy._compat import use_ehrdata
+from ehrapy._compat import function_2D_only, use_ehrdata
 from ehrapy._utils_doc import (
     _doc_params,
     doc_adata_color_etc,
@@ -47,6 +47,7 @@ _FontSize = Literal["xx-small", "x-small", "small", "medium", "large", "x-large"
 VBound = str | float | Callable[[Sequence[float]], float]
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 @_doc_params(scatter_temp=doc_scatter_basic, show_save_ax=doc_show_save_ax)
 def scatter(  # noqa: D417
@@ -97,6 +98,7 @@ def scatter(  # noqa: D417
 
     Example:
         .. code-block:: python
+
             import ehrdata as ed
             import ehrapy as ep
 
@@ -140,6 +142,7 @@ def scatter(  # noqa: D417
     return scatter_partial(edata, color=color)
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 @_doc_params(
     vminmax=doc_vboundnorm,
@@ -255,6 +258,7 @@ def heatmap(  # noqa: D417
     return heatmap_partial(edata, groupby=groupby)
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 @_doc_params(
     show_save_ax=doc_show_save_ax,
@@ -406,6 +410,7 @@ def dotplot(  # noqa: D417
     return dotplot_partial(edata, groupby=groupby)
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 @_doc_params(show_save_ax=doc_show_save_ax, common_plot_args=doc_common_plot_args)
 def tracksplot(  # noqa: D417
@@ -482,6 +487,7 @@ def tracksplot(  # noqa: D417
     return tracksplot_partial(edata, groupby=groupby)
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def violin(  # noqa: D417
     edata: EHRData | AnnData,
@@ -575,6 +581,7 @@ def violin(  # noqa: D417
     return violin_partial(edata, groupby=groupby)
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 @_doc_params(
     show_save_ax=doc_show_save_ax,
@@ -725,6 +732,7 @@ def stacked_violin(  # noqa: D417
     return stacked_vio_partial(edata, groupby=groupby)
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 @_doc_params(
     show_save_ax=doc_show_save_ax,
@@ -846,6 +854,7 @@ def matrixplot(  # noqa: D417
     return matrix_partial(edata, groupby=groupby)
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 @_doc_params(show_save_ax=doc_show_save_ax)
 def clustermap(  # noqa: D417
@@ -951,6 +960,7 @@ def ranking(
     )
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 @_doc_params(show_save_ax=doc_show_save_ax)
 def dendrogram(  # noqa: D417
@@ -1005,6 +1015,7 @@ def dendrogram(  # noqa: D417
     return dendrogram_partial(edata, groupby=groupby)
 
 
+@function_2D_only()
 # @_wraps_plot_scatter
 @_doc_params(
     adata_color_etc=doc_adata_color_etc,
@@ -1241,6 +1252,7 @@ def umap(edata: EHRData | AnnData, **kwargs) -> Figure | Axes | list[Axes] | Non
     return sc.pl.umap(edata, **kwargs)
 
 
+@function_2D_only()
 # @_wraps_plot_scatter
 @use_ehrdata(deprecated_after="1.0.0")
 @_doc_params(
@@ -1325,6 +1337,7 @@ class Empty(Enum):
 _empty = Empty.token
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 @_doc_params(
     adata_color_etc=doc_adata_color_etc,
