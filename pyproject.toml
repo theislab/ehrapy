@@ -67,13 +67,14 @@ dependencies = [
     "numba>=0.60.0",
     "igraph",
     "fast-array-utils[sparse,accel]",
+    "networkx<3.5", # dowhy breaks - see https://github.com/py-why/dowhy/issues/680#issuecomment-2957189390
 ]
 
 [project.optional-dependencies]
 causal = [
     "dowhy",
     # manual lower bound necessary or else dowhy installs something old and incompatible
-    # "cvxpy>=1.7.2"
+    "cvxpy>=1.7.2"
 ]
 dask = [
     "anndata[dask]",
