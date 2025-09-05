@@ -3,12 +3,13 @@ from __future__ import annotations
 import itertools
 from typing import TYPE_CHECKING, Literal
 
+import ehrdata as ed
 import numpy as np
 import pandas as pd
+from ehrdata.core.constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 
 from ehrapy._compat import function_2D_only, use_ehrdata
-from ehrapy.anndata import _check_feature_types, anndata_to_df
-from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
+from ehrapy.anndata import _check_feature_types
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -127,7 +128,7 @@ def detect_bias(
     if copy:
         edata = edata.copy()
 
-    edata_df = anndata_to_df(edata, layer=layer)
+    edata_df = ed.io.to_pandas(edata, layer=layer)
 
     for feature in edata.var_names:
         if not np.all(edata_df[feature].dropna().apply(type).isin([int, float, complex])):

@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 import scanpy as sc
 
-from ehrapy._compat import use_ehrdata
+from ehrapy._compat import function_2D_only, use_ehrdata
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from ehrdata import EHRData
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def highly_variable_features(
     edata: EHRData | AnnData,

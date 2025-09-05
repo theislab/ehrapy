@@ -1,3 +1,4 @@
+import ehrdata as ed
 import pytest
 import requests
 
@@ -5,9 +6,15 @@ import ehrapy as ep
 from ehrapy.preprocessing._highly_variable_features import highly_variable_features
 
 
+def test_highly_variable_features_3D_edata(edata_blob_small):
+    with pytest.raises(ValueError, match=r"only supports 2D data"):
+        highly_variable_features(edata_blob_small, layer="R_layer", copy=True)
+
+
 def test_highly_variable_features():
     try:
-        adata = ep.dt.dermatology(encoded=True)
+        adata = ed.dt.diabetes_130_fairlearn()
+        adata = ep.pp.encode(adata, autodetect=True)
     except requests.exceptions.HTTPError as e:
         if "403" in str(e):
             pytest.skip("Dataset download failed with 403 Forbidden")

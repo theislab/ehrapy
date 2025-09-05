@@ -23,6 +23,7 @@ def winsorize(
     obs_cols: Collection[str] = None,
     *,
     limits: tuple[float, float] = (0.01, 0.99),
+    layer: str | None = None,
     copy: bool = False,
     **kwargs,
 ) -> EHRData | AnnData | None:
@@ -35,6 +36,7 @@ def winsorize(
         vars: The features to winsorize.
         obs_cols: Columns in obs with features to winsorize.
         limits: Tuple of the percentages to cut on each side of the array as floats between 0. and 1.
+        layer: The layer to operate on.
         copy: Whether to return a copy.
         **kwargs: Keywords arguments get passed to scipy.stats.mstats.winsorize.
 
@@ -53,9 +55,14 @@ def winsorize(
 
     if vars_set:
         for var in vars_set:
-            data_array = np.array(edata[:, var].X, dtype=float)
+            edata_view = edata[:, var]
+            X = edata_view.X if layer is None else edata_view.layers[layer]
+            data_array = np.array(X, dtype=float)
             winsorized_data = scipy.stats.mstats.winsorize(data_array, limits=limits, nan_policy="omit", **kwargs)
-            edata[:, var].X = winsorized_data
+            if layer is None:
+                edata[:, var].X = winsorized_data
+            else:
+                edata[:, var].layers[layer] = winsorized_data
 
     if obs_cols_set:
         for col in obs_cols_set:
@@ -74,6 +81,7 @@ def clip_quantile(
     vars: Collection[str] = None,
     obs_cols: Collection[str] = None,
     *,
+    layer: str | None = None,
     copy: bool = False,
 ) -> EHRData | AnnData | None:
     """Clips (limits) features.
@@ -85,6 +93,7 @@ def clip_quantile(
         limits: Values outside the interval are clipped to the interval edges.
         vars: Columns in var with features to clip.
         obs_cols: Columns in obs with features to clip
+        layer: The layer to operate on.
         copy: Whether to return a copy of data or not
 
     Returns:
@@ -99,7 +108,13 @@ def clip_quantile(
 
     if vars:
         for var in vars:
-            edata[:, var].X = np.clip(edata[:, var].X, limits[0], limits[1])
+            edata_view = edata[:, var]
+            X = edata_view.X if layer is None else edata_view.layers[layer]
+            X = np.clip(X, limits[0], limits[1])
+            if layer is None:
+                edata[:, var].X = X
+            else:
+                edata[:, var].layers[layer] = X
 
     if obs_cols:
         for col in obs_cols:

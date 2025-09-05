@@ -31,6 +31,7 @@ def encode(
     edata: EHRData | AnnData,
     autodetect: bool | dict = False,
     encodings: dict[str, dict[str, list[str]]] | dict[str, list[str]] | str | None = "one-hot",
+    layer: str | None = None,
 ) -> EHRData | AnnData:
     """Encode categoricals of a data object.
 
@@ -55,6 +56,7 @@ def encode(
         encodings: Only needed if autodetect set to False.
                    A dict containing the encoding mode and categorical name for the respective column
                    or the specified encoding that will be applied to all columns.
+        layer: The layer to encode.
 
     Returns:
         A data object with the encoded values in X.
@@ -72,6 +74,8 @@ def encode(
         ...     edata, autodetect=False, encodings={"label": ["col1", "col2"], "one-hot": ["col3"]}
         ... )
     """
+    X = edata.X if layer is None else edata.layers[layer]
+
     if not isinstance(edata, AnnData) and not isinstance(edata, EHRData):
         raise ValueError(f"Cannot encode object of type {type(edata)}. Can only encode AnnData or EHRData objects!")
 
@@ -83,7 +87,7 @@ def encode(
         )
 
     if "original" not in edata.layers.keys():
-        edata.layers["original"] = edata.X.copy()
+        edata.layers["original"] = X.copy()
 
     # autodetect categorical values based on feature types stored in edata.var[FEATURE_TYPE_KEY]
     if autodetect:
@@ -114,7 +118,7 @@ def encode(
             )
             return edata
         # update obs with the original categorical values
-        updated_obs = _update_obs(edata, categoricals_names)
+        updated_obs = _update_obs(edata, categoricals_names, layer=layer)
 
         encoded_x = None
         encoded_var_names = edata.var_names.to_list()
@@ -137,14 +141,15 @@ def encode(
             task = progress.add_task(f"[red]Running {encodings} on detected columns ...", total=1)
             # encode using the desired mode
             encoded_x, encoded_var_names, unencoded_var_names = single_encode_mode_switcher[encodings](  # type: ignore
-                edata,
-                encoded_x,
-                updated_obs,
-                encoded_var_names,
-                unencoded_var_names,
-                categoricals_names,
-                progress,
-                task,
+                edata=edata,
+                X=encoded_x,
+                layer=layer,
+                updated_obs=updated_obs,
+                var_names=encoded_var_names,
+                unencoded_var_names=unencoded_var_names,
+                categoricals=categoricals_names,
+                progress=progress,
+                task=task,
             )
             progress.update(task, description="Updating layer originals ...")
 
@@ -184,7 +189,7 @@ def encode(
         # re-encode data
         if "encoding_mode" in edata.var.keys():
             encodings = _reorder_encodings(edata, encodings)  # type: ignore
-            edata = _undo_encoding(edata)
+            edata = _undo_encoding(edata, layer=layer)
 
         # are all specified encodings valid?
         for encoding in encodings.keys():  # type: ignore
@@ -231,14 +236,15 @@ def encode(
                 progress.update(task, description=f"Running {encoding} ...")
                 # perform the actual encoding
                 encoded_x, encoded_var_names, unencoded_var_names = encode_mode_switcher[encoding](
-                    edata,
-                    encoded_x,
-                    updated_obs,
-                    encoded_var_names,
-                    unencoded_var_names,
-                    encodings[encoding],  # type: ignore
-                    progress,
-                    task,  # type: ignore
+                    edata=edata,
+                    X=encoded_x,
+                    layer=layer,
+                    updated_obs=updated_obs,
+                    var_names=encoded_var_names,
+                    unencoded_var_names=unencoded_var_names,
+                    categoricals=categoricals_names,
+                    progress=progress,
+                    task=task,
                 )
 
                 for _categorical in encodings[encoding]:  # type: ignore
@@ -294,18 +300,23 @@ def encode(
                 "categorical values for encoding!"
             ) from None
 
-    encoded_edata.X = encoded_edata.X.astype(np.float32)
+    if layer is None:
+        encoded_edata.X = encoded_edata.X.astype(np.float32)
+    else:
+        encoded_edata.layers[layer] = encoded_edata.layers[layer].astype(np.float32)
 
     return encoded_edata
 
 
 def _one_hot_encoding(
     edata: EHRData | AnnData,
+    *,
     X: np.ndarray | None,
+    layer: str | None,
     updated_obs: pd.DataFrame,
     var_names: list[str],
     unencoded_var_names: list[str],
-    categories: list[str],
+    categoricals: list[str],
     progress: Progress,
     task,
 ) -> tuple[np.ndarray, list[str], list[str]]:
@@ -314,35 +325,36 @@ def _one_hot_encoding(
     Args:
         edata: The current data object.
         X: Current (encoded) X
+        layer: The layer to encode.
         updated_obs: A copy of the original obs where the original categorical values are stored that will be encoded
         var_names: Var names of current data object
         unencoded_var_names: Unencoded var na.es
-        categories: The name of the categorical columns to be encoded
+        categoricals: The name of the categorical columns to be encoded
         progress: Rich Progress object.
         task: Rich Task object.
 
     Returns:
         Encoded new X and the corresponding new var names
     """
-    original_values = _initial_encoding(updated_obs, categories)
+    original_values = _initial_encoding(updated_obs, categoricals)
     progress.update(task, description="[bold blue]Running one-hot encoding on passed columns ...")
 
     encoder = OneHotEncoder(handle_unknown="ignore", sparse_output=False).fit(original_values)
     categorical_prefixes = [
         f"ehrapycat_{category}_{str(suffix).strip()}"
-        for idx, category in enumerate(categories)
+        for idx, category in enumerate(categoricals)
         for suffix in encoder.categories_[idx]
     ]
-    unencoded_prefixes = [category for idx, category in enumerate(categories) for suffix in encoder.categories_[idx]]
+    unencoded_prefixes = [category for idx, category in enumerate(categoricals) for suffix in encoder.categories_[idx]]
     transformed = encoder.transform(original_values)
     # X is None if this is the first encoding "round" -> take the former X
     if X is None:
-        X = edata.X
+        X = edata.X if layer is None else edata.layers[layer]
     progress.advance(task, 1)
     progress.update(task, description="[blue]Updating X and var ...")
 
     temp_x, temp_var_names, unencoded_var_names = _update_encoded_data(
-        X, transformed, var_names, categorical_prefixes, categories, unencoded_prefixes, unencoded_var_names
+        X, transformed, var_names, categorical_prefixes, categoricals, unencoded_prefixes, unencoded_var_names
     )
     progress.update(task, description="[blue]Finished one-hot encoding.")
 
@@ -351,7 +363,9 @@ def _one_hot_encoding(
 
 def _label_encoding(
     edata: EHRData | AnnData,
+    *,
     X: np.ndarray | None,
+    layer: str | None,
     updated_obs: pd.DataFrame,
     var_names: list[str],
     unencoded_var_names: list[str],
@@ -364,6 +378,7 @@ def _label_encoding(
     Args:
         edata: The current data object.
         X: Current (encoded) X.
+        layer: The layer to encode.
         updated_obs: A copy of the original obs where the original categorical values are stored that will be encoded.
         var_names: Var names of current data object.
         unencoded_var_names: Unencoded var names.
@@ -388,7 +403,7 @@ def _label_encoding(
     category_prefixes = [f"ehrapycat_{_categorical}" for _categorical in categoricals]
     # X is None if this is the first encoding "round" -> take the former X
     if X is None:
-        X = edata.X
+        X = edata.X if layer is None else edata.layers[layer]
 
     progress.update(task, description="[blue]Updating X and var ...")
     temp_x, temp_var_names, unencoded_var_names = _update_encoded_data(
@@ -505,11 +520,13 @@ def _initial_encoding(
 
 def _undo_encoding(
     edata: EHRData | AnnData,
+    layer: str | None = None,
 ) -> EHRData | None:
     """Undo the current encodings applied to all columns in X. This currently resets the AnnData object to its initial state.
 
     Args:
         edata: The data object.
+        layer: The layer to operate on.
 
     Returns:
         A (partially) encoding reset data object
@@ -521,7 +538,7 @@ def _undo_encoding(
     columns_obs_only = [column_name for column_name in list(edata.obs.columns) if column_name not in categoricals]
 
     transformed = _initial_encoding(edata.obs, categoricals)
-    temp_x, temp_var_names = _delete_all_encodings(edata)
+    temp_x, temp_var_names = _delete_all_encodings(edata, layer=layer)
     new_x = np.hstack((transformed, temp_x)) if temp_x is not None else transformed
     new_var_names = categoricals + temp_var_names if temp_var_names is not None else categoricals
 
@@ -548,17 +565,19 @@ def _undo_encoding(
     return edata
 
 
-def _delete_all_encodings(edata: EHRData | AnnData) -> tuple[np.ndarray | None, list | None]:
+def _delete_all_encodings(edata: EHRData | AnnData, layer: str | None) -> tuple[np.ndarray | None, list | None]:
     """Delete all encoded columns and keep track of their indices.
 
     Args:
         edata: The AnnData object to operate on
+        layer: The layer to operate on.
 
     Returns:
         A temporary X were all encoded columns are deleted and all var_names of unencoded columns.
     """
+    X = edata.X if layer is None else edata.layers[layer]
     var_names = list(edata.var_names)
-    if edata.X is not None and var_names is not None:
+    if X is not None and var_names is not None:
         idx = 0
         for var in var_names:
             if not var.startswith("ehrapycat"):
@@ -568,7 +587,8 @@ def _delete_all_encodings(edata: EHRData | AnnData) -> tuple[np.ndarray | None, 
         if idx == len(var_names):
             return None, None
         # don't need to consider case when no encoded columns are there, since undo_encoding would not run anyways in this case
-        return edata.X[:, idx:].copy(), var_names[idx:]
+
+        return X[:, idx:].copy(), var_names[idx:]
     return None, None
 
 
@@ -636,22 +656,24 @@ def _get_categoricals_old_indices(old_var_names: list[str], encoded_categories: 
     return idx_list
 
 
-def _update_obs(edata: EHRData | AnnData, categorical_names: list[str]) -> pd.DataFrame:
+def _update_obs(edata: EHRData | AnnData, categorical_names: list[str], layer: str | None = None) -> pd.DataFrame:
     """Add the original categorical values to obs.
 
     Args:
         edata: The original data object.
         categorical_names: Name of each categorical column
+        layer: The layer to operate on.
 
     Returns:
         Updated obs with the original categorical values added
     """
+    X = edata.X if layer is None else edata.layers[layer]
     updated_obs = edata.obs.copy()
     for idx, var_name in enumerate(edata.var_names):
         if var_name in updated_obs.columns:
             continue
         elif var_name in categorical_names:
-            updated_obs[var_name] = edata.X[::, idx : idx + 1].flatten()
+            updated_obs[var_name] = X[::, idx : idx + 1].flatten()
             # note: this will count binary columns (0 and 1 only) as well
             # needed for writing to .h5ad files
             if set(pd.unique(updated_obs[var_name])).issubset({False, True, np.nan}):

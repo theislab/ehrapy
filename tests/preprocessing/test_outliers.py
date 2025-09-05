@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 import ehrapy as ep
 
@@ -22,6 +23,11 @@ def test_winsorized_obs(mimic_2_10):
     np.testing.assert_allclose(np.array(winsorized_adata.obs["age"]), expected)
 
 
+def test_winsorize_3D_edata(edata_blob_small):
+    with pytest.raises(ValueError, match=r"only supports 2D data"):
+        ep.pp.winsorize(edata_blob_small, layer="R_layer")
+
+
 def test_clip_var(mimic_2_10):
     clipped_adata = ep.pp.clip_quantile(mimic_2_10, vars=["age"], limits=(25, 50), copy=True)
     expected = np.array([50, 50, 36.5, 44.49191, 25, 36.54657, 25, 50, 50, 25.41667]).reshape((10, 1))
@@ -35,3 +41,8 @@ def test_clip_obs(mimic_2_10):
     expected = np.array([50, 50, 36.5, 44.49191, 25, 36.54657, 25, 50, 50, 25.41667])
 
     np.testing.assert_allclose(np.array(clipped_adata.obs["age"]), expected)
+
+
+def test_clip_3D_edata(edata_blob_small):
+    with pytest.raises(ValueError, match=r"only supports 2D data"):
+        ep.pp.clip_quantile(edata_blob_small, layer="R_layer")

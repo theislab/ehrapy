@@ -15,6 +15,11 @@ CURRENT_DIR = Path(__file__).parent
 _TEST_PATH = f"{TEST_DATA_PATH}/encode"
 
 
+def test_encode_3D_edata(edata_blob_small):
+    with pytest.raises(ValueError, match=r"only supports 2D data"):
+        encode(edata_blob_small, layer="R_layer", copy=True)
+
+
 def test_unknown_encode_mode(encode_ds_1_adata):
     with pytest.raises(ValueError):
         encoded_adata = encode(encode_ds_1_adata, autodetect=False, encodings={"unknown_mode": ["survival"]})  # noqa: F841

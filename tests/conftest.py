@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from anndata import AnnData
+from ehrdata.core.constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from matplotlib.testing.compare import compare_images
 
 import ehrapy as ep
@@ -167,6 +168,25 @@ def encode_ds_1_adata() -> AnnData:
 @pytest.fixture
 def encode_ds_2_adata() -> AnnData:
     adata = read_csv(dataset_path=f"{TEST_DATA_PATH}/encode/dataset2.csv")
+    return adata
+
+
+@pytest.fixture
+def adata_small_bias() -> AnnData:
+    rng = np.random.default_rng(seed=42)
+    corr = rng.integers(0, 100, 100)
+    df = pd.DataFrame(
+        {
+            "corr1": corr,
+            "corr2": corr * 2,
+            "corr3": corr * -1,
+            "contin1": rng.integers(0, 20, 50).tolist() + rng.integers(20, 40, 50).tolist(),
+            "cat1": [0] * 50 + [1] * 50,
+            "cat2": [10] * 10 + [11] * 40 + [10] * 30 + [11] * 20,
+        }
+    )
+    adata = ed.io.from_pandas(df)
+    adata.var[FEATURE_TYPE_KEY] = [NUMERIC_TAG] * 4 + [CATEGORICAL_TAG] * 2
     return adata
 
 
