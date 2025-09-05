@@ -50,10 +50,17 @@ jobs:
                   MPLBACKEND: agg
                   PLATFORM: ${{ matrix.os }}
                   DISPLAY: :42
-              run: pytest -v --cov=ehrapy --cov-report=xml --color=yes
+              run: pytest -v --basetemp=pytest_temp --cov=ehrapy --cov-report=xml --color=yes
 
             - name: Upload coverage
               if: matrix.python == '3.13'
               uses: codecov/codecov-action@v5
               with:
                 token: ${{ secrets.CODECOV_TOKEN }}
+
+            - name: Upload test failure images
+              if: failure() && matrix.python == '3.13'
+              uses: actions/upload-artifact@v4
+              with:
+                name: failed-test-images
+                path: /home/runner/work/ehrapy/ehrapy/pytest_temp/**/*diff*.png
