@@ -3,10 +3,12 @@ from __future__ import annotations
 import warnings
 from typing import TYPE_CHECKING, Literal
 
+import ehrdata as ed
 import numpy as np  # noqa: TC002
 import pandas as pd
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
+from ehrdata.core.constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from lifelines import (
     CoxPHFitter,
     KaplanMeierFitter,
@@ -21,7 +23,6 @@ from statsmodels.genmod.generalized_linear_model import GLMResultsWrapper  # noq
 
 from ehrapy._compat import function_2D_only, use_ehrdata
 from ehrapy.anndata import anndata_to_df
-from ehrapy.anndata._constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -39,6 +40,7 @@ def ols(
     *,
     missing: Literal["none", "drop", "raise"] | None = "none",
     use_feature_types: bool = False,
+    layer: str | None = None,
 ) -> sm.OLS:
     """Create an Ordinary Least Squares (OLS) Model from a formula and the data object.
 
@@ -52,6 +54,7 @@ def ols(
         missing: Available options are 'none', 'drop', and 'raise'.
                  If 'none', no nan checking is done. If 'drop', any observations with nans are dropped.
                  If 'raise', an error is raised.
+        layer: The layer to use.
 
     Returns:
         The OLS model instance.
@@ -64,9 +67,9 @@ def ols(
         >>> ols = ep.tl.ols(edata, var_names, formula, missing="drop")
     """
     if isinstance(var_names, list):
-        data = pd.DataFrame(edata[:, var_names].X, columns=var_names)
+        data = ed.io.to_pandas(edata[:, var_names], layer=layer)
     else:
-        data = pd.DataFrame(edata.X, columns=edata.var_names)
+        data = ed.io.to_pandas(edata, layer=layer)
 
     if use_feature_types:
         for col in data.columns:
@@ -95,6 +98,7 @@ def glm(
     use_feature_types: bool = False,
     missing: Literal["none", "drop", "raise"] = "none",
     as_continuous: Iterable[str] | None | None = None,
+    layer: str | None = None,
 ) -> sm.GLM:
     """Create a Generalized Linear Model (GLM) from a formula, a distribution, and the data object.
 
@@ -110,6 +114,7 @@ def glm(
                  If 'drop', any observations with nans are dropped. If 'raise', an error is raised.
         as_continuous: A list of var names indicating which columns are continuous rather than categorical.
                     The corresponding columns will be set as type float.
+        layer: The layer to use.
 
     Returns:
         The GLM model instance.
@@ -131,9 +136,9 @@ def glm(
     if family in ["Gaussian", "Binomial", "Gamma", "Gaussian", "InverseGaussian"]:
         family = family_dict[family]
     if isinstance(var_names, list):
-        data = pd.DataFrame(edata[:, var_names].X, columns=var_names)
+        data = ed.io.to_pandas(edata[:, var_names], layer=layer)
     else:
-        data = pd.DataFrame(edata.X, columns=edata.var_names)
+        data = ed.io.to_pandas(edata, layer=layer)
     if as_continuous is not None:
         data[as_continuous] = data[as_continuous].astype(float)
     if use_feature_types:
@@ -243,6 +248,7 @@ def kaplan_meier(
     weights: list[float] | None = None,
     fit_options: dict | None = None,
     censoring: Literal["right", "left"] = "right",
+    layer: str | None = None,
 ) -> KaplanMeierFitter:
     """Fit the Kaplan-Meier estimate for the survival function.
 
@@ -271,6 +277,7 @@ def kaplan_meier(
         fit_options: Additional keyword arguments to pass into the estimator.
         censoring: 'right' for fitting the model to a right-censored dataset. (default, calls fit).
                    'left' for fitting the model to a left-censored dataset (calls fit_left_censoring).
+        layer: The layer to use.
 
     Returns:
         Fitted KaplanMeierFitter.
@@ -297,6 +304,7 @@ def kaplan_meier(
         weights,
         fit_options,
         censoring,
+        layer,
     )
 
 
@@ -393,9 +401,11 @@ def anova_glm(
     return dataframe
 
 
-def _build_model_input_dataframe(edata: EHRData | AnnData, duration_col: str, accept_zero_duration=True):
+def _build_model_input_dataframe(
+    edata: EHRData | AnnData, duration_col: str, accept_zero_duration=True, layer: str | None = None
+):
     """Convenience function for regression models."""
-    df = anndata_to_df(edata)
+    df = ed.io.to_pandas(edata, layer=layer)
     df = df.dropna()
 
     if not accept_zero_duration:
@@ -430,6 +440,7 @@ def cox_ph(
     show_progress: bool = False,
     initial_point: np.ndarray | None = None,
     fit_options: dict | None = None,
+    layer: str | None = None,
 ) -> CoxPHFitter:
     """Fit the Cox’s proportional hazard for the survival function.
 
@@ -464,6 +475,7 @@ def cox_ph(
         show_progress: Since the fitter is iterative, show convergence diagnostics. Useful if convergence is failing.
         initial_point: set the starting point for the iterative solver.
         fit_options: Additional keyword arguments to pass into the estimator.
+        layer: The layer to use.
 
     Returns:
         Fitted CoxPHFitter.
@@ -475,7 +487,7 @@ def cox_ph(
         >>> edata[:, ["censor_flg"]].X = np.where(edata[:, ["censor_flg"]].X == 0, 1, 0)
         >>> cph = ep.tl.cox_ph(edata, "mort_day_censored", "censor_flg")
     """
-    df = _build_model_input_dataframe(edata, duration_col)
+    df = _build_model_input_dataframe(edata, duration_col, layer=layer)
     cox_ph = CoxPHFitter(
         alpha=alpha,
         label=label,
@@ -529,6 +541,7 @@ def weibull_aft(
     entry_col: str | None = None,
     formula: str | None = None,
     fit_options: dict | None = None,
+    layer: str | None = None,
 ) -> WeibullAFTFitter:
     """Fit the Weibull accelerated failure time regression for the survival function.
 
@@ -565,6 +578,7 @@ def weibull_aft(
         formula: Use an R-style formula for modeling the dataset. See formula syntax: https://matthewwardrop.github.io/formulaic/basic/grammar/
             If a formula is not provided, all variables in the dataframe are used (minus those used for other purposes like event_col, etc.)
         fit_options: Additional keyword arguments to pass into the estimator.
+        layer: The layer to use.
 
 
     Returns:
@@ -578,7 +592,7 @@ def weibull_aft(
         >>> aft = ep.tl.weibull_aft(edata, duration_col="mort_day_censored", event_col="censor_flg")
         >>> aft.print_summary()
     """
-    df = _build_model_input_dataframe(edata, duration_col, accept_zero_duration=False)
+    df = _build_model_input_dataframe(edata, duration_col, accept_zero_duration=False, layer=layer)
 
     weibull_aft = WeibullAFTFitter(
         alpha=alpha,
@@ -629,6 +643,7 @@ def log_logistic_aft(
     entry_col: str | None = None,
     formula: str | None = None,
     fit_options: dict | None = None,
+    layer: str | None = None,
 ) -> LogLogisticAFTFitter:
     """Fit the log logistic accelerated failure time regression for the survival function.
 
@@ -664,6 +679,7 @@ def log_logistic_aft(
         formula: Use an R-style formula for modeling the dataset. See formula syntax: https://matthewwardrop.github.io/formulaic/basic/grammar/
             If a formula is not provided, all variables in the dataframe are used (minus those used for other purposes like event_col, etc.)
         fit_options: Additional keyword arguments to pass into the estimator.
+        layer: The layer to use.
 
     Returns:
         Fitted LogLogisticAFTFitter.
@@ -676,7 +692,7 @@ def log_logistic_aft(
         >>> edata = edata[:, ["mort_day_censored", "censor_flg"]]
         >>> llf = ep.tl.log_logistic_aft(edata, duration_col="mort_day_censored", event_col="censor_flg")
     """
-    df = _build_model_input_dataframe(edata, duration_col, accept_zero_duration=False)
+    df = _build_model_input_dataframe(edata, duration_col, accept_zero_duration=False, layer=layer)
 
     log_logistic_aft = LogLogisticAFTFitter(
         alpha=alpha,
@@ -706,8 +722,6 @@ def log_logistic_aft(
     return log_logistic_aft
 
 
-@function_2D_only()
-@use_ehrdata(deprecated_after="1.0.0")
 def _univariate_model(
     edata: EHRData | AnnData,
     duration_col: str,
@@ -723,9 +737,10 @@ def _univariate_model(
     weights: list[float] | None = None,
     fit_options: dict | None = None,
     censoring: Literal["right", "left"] = "right",
+    layer: str | None = None,
 ):
     """Convenience function for univariate models."""
-    df = _build_model_input_dataframe(edata, duration_col, accept_zero_duration)
+    df = _build_model_input_dataframe(edata, duration_col, accept_zero_duration, layer)
     T = df[duration_col]
     E = df[event_col]
 
@@ -773,6 +788,7 @@ def nelson_aalen(
     weights: list[float] | None = None,
     fit_options: dict | None = None,
     censoring: Literal["right", "left"] = "right",
+    layer: str | None = None,
 ) -> NelsonAalenFitter:
     """Employ the Nelson-Aalen estimator to estimate the cumulative hazard function from censored survival data.
 
@@ -800,6 +816,7 @@ def nelson_aalen(
         fit_options: Additional keyword arguments to pass into the estimator.
         censoring: 'right' for fitting the model to a right-censored dataset. (default, calls fit).
                    'left' for fitting the model to a left-censored dataset (calls fit_left_censoring).
+        layer: The layer to use.
 
     Returns:
         Fitted NelsonAalenFitter.
@@ -826,6 +843,7 @@ def nelson_aalen(
         weights=weights,
         fit_options=fit_options,
         censoring=censoring,
+        layer=layer,
     )
 
 
@@ -844,6 +862,7 @@ def weibull(
     ci_labels: list[str] | None = None,
     weights: list[float] | None = None,
     fit_options: dict | None = None,
+    layer: str | None = None,
 ) -> WeibullFitter:
     """Employ the Weibull model in univariate survival analysis to understand event occurrence dynamics.
 
@@ -872,6 +891,7 @@ def weibull(
         weights: If providing a weighted dataset. For example, instead of providing every subject
                  as a single element of `durations` and `event_observed`, one could weigh subject differently.
         fit_options: Additional keyword arguments to pass into the estimator.
+        layer: The layer to use.
 
     Returns:
         Fitted WeibullFitter.
@@ -897,4 +917,5 @@ def weibull(
         ci_labels=ci_labels,
         weights=weights,
         fit_options=fit_options,
+        layer=layer,
     )

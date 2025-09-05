@@ -82,7 +82,8 @@ def lab_measurements_layer_adata(obs_data, var_data):
 
 @pytest.fixture
 def mimic_2():
-    adata = ep.dt.mimic_2()
+    adata = ed.dt.mimic_2()
+    adata.layers["layer_2"] = adata.X.copy()
     return adata
 
 
@@ -144,6 +145,18 @@ def diabetes_130_fairlearn_sample():
 def mimic_2_sample_serv_unit_day_icu():
     adata = ep.dt.mimic_2(columns_obs_only=["service_unit", "day_icu_intime"])
     return adata
+
+
+@pytest.fixture
+def mimic_2_sa():
+    adata = ep.dt.mimic_2(encoded=False)
+    adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
+    adata = adata[:, ["mort_day_censored", "censor_flg"]].copy()
+    duration_col, event_col = "mort_day_censored", "censor_flg"
+
+    adata.layers["layer_2"] = adata.X.copy()
+
+    return adata, duration_col, event_col
 
 
 @pytest.fixture

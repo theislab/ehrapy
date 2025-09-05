@@ -13,21 +13,16 @@ from lifelines import (
 import ehrapy as ep
 
 
-@pytest.fixture
-def mimic_2_sa():
-    adata = ep.dt.mimic_2(encoded=False)
-    adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
-    adata = adata[:, ["mort_day_censored", "censor_flg"]].copy()
-    duration_col, event_col = "mort_day_censored", "censor_flg"
+@pytest.mark.parametrize("layer", [None, "layer_2"])
+def test_ols(mimic_2, layer):
+    adata = mimic_2
+    # If use layer argument, set X to None to avoid it being used
+    if layer is not None:
+        adata.X = None
 
-    return adata, duration_col, event_col
-
-
-def test_ols():
-    adata = ep.dt.mimic_2(encoded=False)
     formula = "tco2_first ~ pco2_first"
     var_names = ["tco2_first", "pco2_first"]
-    ols = ep.tl.ols(adata, var_names, formula=formula, missing="drop")
+    ols = ep.tl.ols(adata, var_names, formula=formula, missing="drop", layer=layer)
     s = ols.fit().params.iloc[1]
     i = ols.fit().params.iloc[0]
     assert isinstance(ols, statsmodels.regression.linear_model.OLS)
@@ -35,17 +30,38 @@ def test_ols():
     assert 16.210859352601442 == pytest.approx(i)
 
 
-def test_glm():
-    adata = ep.dt.mimic_2(encoded=False)
+def test_ols_3D(edata_blob_small):
+    with pytest.raises(ValueError, match=r"only supports 2D data"):
+        formula = "feature_1 ~ feature_2"
+        var_names = ["feature_1", "feature_2"]
+        ep.tl.ols(edata_blob_small, var_names, formula=formula, missing="drop", layer="R_layer")
+
+
+@pytest.mark.parametrize("layer", [None, "layer_2"])
+def test_glm(mimic_2, layer):
+    adata = mimic_2
+    # If use layer argument, set X to None to avoid it being used
+    if layer is not None:
+        adata.X = None
+
     formula = "day_28_flg ~ age"
     var_names = ["day_28_flg", "age"]
     family = "Binomial"
-    glm = ep.tl.glm(adata, var_names, formula=formula, family=family, missing="drop", as_continuous=["age"])
+    glm = ep.tl.glm(
+        adata, var_names, formula=formula, family=family, missing="drop", as_continuous=["age"], layer=layer
+    )
     Intercept = glm.fit().params.iloc[0]
     age = glm.fit().params.iloc[1]
     assert isinstance(glm, statsmodels.genmod.generalized_linear_model.GLM)
     assert 5.778006344870297 == pytest.approx(Intercept)
     assert -0.06523274132877163 == pytest.approx(age)
+
+
+def test_glm_3D(edata_blob_small):
+    with pytest.raises(ValueError, match=r"only supports 2D data"):
+        formula = "feature_1 ~ feature_2"
+        var_names = ["feature_1", "feature_2"]
+        ep.tl.glm(edata_blob_small, var_names, formula=formula, missing="drop", layer="R_layer")
 
 
 @pytest.mark.parametrize(
@@ -73,8 +89,8 @@ def test_calculate_logrank_pvalue(weightings):
     assert 0 < p_value_pairwise < 1
 
 
-def test_anova_glm():
-    adata = ep.dt.mimic_2(encoded=False)
+def test_anova_glm(mimic_2):
+    adata = mimic_2
     formula = "day_28_flg ~ age"
     var_names = ["day_28_flg", "age"]
     family = "Binomial"
@@ -105,9 +121,14 @@ def test_anova_glm():
         (ep.tl.log_logistic_aft, LogLogisticAFTFitter),
     ],
 )
-def test_survival_models(sa_function, sa_class, mimic_2_sa) -> None:
+@pytest.mark.parametrize("layer", [None, "layer_2"])
+def test_survival_models(sa_function, sa_class, mimic_2_sa, layer):
     adata, duration_col, event_col = mimic_2_sa
-    sa = sa_function(adata, duration_col=duration_col, event_col=event_col, uns_key="test")
+    # If use layer argument, set X to None to avoid it being used
+    if layer is not None:
+        adata.X = None
+
+    sa = sa_function(adata, duration_col=duration_col, event_col=event_col, uns_key="test", layer=layer)
 
     assert isinstance(sa, sa_class)
     assert len(sa.durations) == 1776
@@ -120,7 +141,29 @@ def test_survival_models(sa_function, sa_class, mimic_2_sa) -> None:
     assert model_summary.equals(getattr(sa, expected_attr))
 
 
-def test_kmf(mimic_2_sa) -> None:
+@pytest.mark.parametrize(
+    "sa_function,sa_class",
+    [
+        (ep.tl.kaplan_meier, KaplanMeierFitter),
+        (ep.tl.cox_ph, CoxPHFitter),
+        (ep.tl.nelson_aalen, NelsonAalenFitter),
+        (ep.tl.weibull, WeibullFitter),
+        (ep.tl.weibull_aft, WeibullAFTFitter),
+        (ep.tl.log_logistic_aft, LogLogisticAFTFitter),
+    ],
+)
+def test_survival_models_3D(sa_function, sa_class, edata_blob_small):
+    duration_col = "feature_1"
+    event_col = "feature_0"
+    edata_blob_small[:, [duration_col]].X = np.arange(len(edata_blob_small), dtype=np.int32)
+    edata_blob_small[:, [event_col]].X = 1
+
+    sa_function(edata_blob_small, duration_col=duration_col, event_col=event_col)
+    with pytest.raises(ValueError, match=r"only supports 2D data"):
+        sa_function(edata_blob_small, duration_col=duration_col, event_col=event_col, layer="R_layer")
+
+
+def test_kmf(mimic_2_sa):
     with pytest.warns(DeprecationWarning):
         adata, _, _ = mimic_2_sa
         kmf = ep.tl.kmf(adata[:, ["mort_day_censored"]].X, adata[:, ["censor_flg"]].X)

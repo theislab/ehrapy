@@ -18,7 +18,7 @@
 It supports a full pipeline from data ingestion and quality control to advanced analyses such as clustering, survival, trajectory, causal inference, deep learning, and more.
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/483382ac-d329-4979-a766-efe8fbea9ea9" alt="fig1" width="100%">
+  <img src="https://github.com/user-attachments/assets/bf20359d-363f-4ee9-a71c-82310f57a3ad" alt="fig1" width="100%">
 </p>
 
 ## Documentation

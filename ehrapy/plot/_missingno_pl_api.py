@@ -2,16 +2,17 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import ehrdata as ed
 import missingno as msno
 
-from ehrapy._compat import use_ehrdata
-from ehrapy.anndata import anndata_ext as ae
+from ehrapy._compat import function_2D_only, use_ehrdata
 
 if TYPE_CHECKING:
     from anndata import AnnData
     from ehrdata import EHRData
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def missing_values_matrix(
     edata: EHRData | AnnData,
@@ -28,6 +29,7 @@ def missing_values_matrix(
     label_rotation: float = 45,
     sparkline: bool = True,
     categoricals: bool = False,
+    layer: str | None = None,
 ):  # pragma: no cover
     """A matrix visualization of the nullity of the given Data object.
 
@@ -45,6 +47,7 @@ def missing_values_matrix(
         label_rotation: What angle to rotate the text labels to.
         sparkline: Whether or not to display the sparkline.
         categoricals: Whether to include "ehrapycat" columns to the plot.
+        layer: The layer to use.
 
     Returns:
         The plot axis.
@@ -57,7 +60,7 @@ def missing_values_matrix(
     Preview:
         .. image:: /_static/docstring_previews/missingno_matrix.png
     """
-    df = ae.anndata_to_df(edata)
+    df = ed.io.to_pandas(edata, layer=layer)
 
     if not categoricals:
         non_categorical_columns = [col for col in df if not col.startswith("ehrapycat")]
@@ -92,6 +95,7 @@ def missing_values_matrix(
         )
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def missing_values_barplot(
     edata: EHRData | AnnData,
@@ -108,6 +112,7 @@ def missing_values_barplot(
     label_rotation: float = 45,
     orientation: str | None = None,
     categoricals: bool = False,
+    layer: str | None = None,
 ):  # pragma: no cover
     """A bar chart visualization of the nullity of the given Data object.
 
@@ -125,6 +130,7 @@ def missing_values_barplot(
         label_rotation: What angle to rotate the text labels to.
         orientation: The way the bar plot is oriented.
         categoricals: Whether to include "ehrapycat" columns to the plot.
+        layer: The layer to use.
 
     Returns:
         The plot axis.
@@ -137,7 +143,7 @@ def missing_values_barplot(
     Preview:
         .. image:: /_static/docstring_previews/missingno_barplot.png
     """
-    df = ae.anndata_to_df(edata)
+    df = ed.io.to_pandas(edata, layer=layer)
 
     if not categoricals:
         non_categorical_columns = [col for col in df if not col.startswith("ehrapycat")]
@@ -172,6 +178,7 @@ def missing_values_barplot(
         )
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def missing_values_heatmap(
     edata: EHRData | AnnData,
@@ -189,6 +196,7 @@ def missing_values_heatmap(
     vmax: int = 1,
     cbar: bool = True,
     categoricals: bool = False,
+    layer: str | None = None,
 ):  # pragma: no cover
     """Presents a `seaborn` heatmap visualization of nullity correlation in the given Data object.
 
@@ -209,6 +217,7 @@ def missing_values_heatmap(
         vmax: The normalized colormap threshold.
         cbar: Whether to draw a colorbar.
         categoricals: Whether to include "ehrapycat" columns to the plot.
+        layer: The layer to use.
 
     Returns:
         The plot axis.
@@ -221,7 +230,7 @@ def missing_values_heatmap(
     Preview:
         .. image:: /_static/docstring_previews/missingno_heatmap.png
     """
-    df = ae.anndata_to_df(edata)
+    df = ed.io.to_pandas(edata, layer=layer)
 
     if not categoricals:
         non_categorical_columns = [col for col in df if not col.startswith("ehrapycat")]
@@ -271,6 +280,7 @@ def missing_values_dendrogram(
     fontsize: float = 16,
     label_rotation: float = 45,
     categoricals: bool = False,
+    layer: str | None = None,
 ):
     """Fits a `scipy` hierarchical clustering algorithm and visualizes the results as a `scipy` dendrogram.
 
@@ -288,6 +298,7 @@ def missing_values_dendrogram(
         orientation: The way the dendrogram is oriented.
         label_rotation: What angle to rotate the text labels to. .
         categoricals: Whether to include "ehrapycat" columns to the plot.
+        layer: The layer to use.
 
     Returns:
         The plot axis.
@@ -300,7 +311,7 @@ def missing_values_dendrogram(
     Preview:
         .. image:: /_static/docstring_previews/missingno_dendrogram.png
     """
-    df = ae.anndata_to_df(edata)
+    df = ed.io.to_pandas(edata, layer=layer)
 
     if not categoricals:
         non_categorical_columns = [col for col in df if not col.startswith("ehrapycat")]
