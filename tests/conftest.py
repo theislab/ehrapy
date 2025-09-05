@@ -162,12 +162,14 @@ def impute_titanic_adata():
 @pytest.fixture
 def encode_ds_1_adata() -> AnnData:
     adata = read_csv(dataset_path=f"{TEST_DATA_PATH}/encode/dataset1.csv")
+    adata.layers["layer_2"] = adata.X.copy()
     return adata
 
 
 @pytest.fixture
 def encode_ds_2_adata() -> AnnData:
     adata = read_csv(dataset_path=f"{TEST_DATA_PATH}/encode/dataset2.csv")
+    adata.layers["layer_2"] = adata.X.copy()
     return adata
 
 

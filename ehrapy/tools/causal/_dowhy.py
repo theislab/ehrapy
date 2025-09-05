@@ -6,6 +6,7 @@ import warnings
 from io import StringIO
 from typing import TYPE_CHECKING, Any, Literal
 
+import ehrdata as ed
 import numpy as np
 from lamin_utils import logger
 
@@ -78,6 +79,7 @@ def causal_inference(
     show_refute_plots: bool | Literal["colormesh", "contour", "line"] | None = None,
     attempts: int = 10,
     *,
+    layer: str | None = None,
     identify_kwargs: dict[str, Any] | None = None,
     estimate_kwargs: dict[str, Any] | None = None,
     refute_kwargs: dict[str, Any] | None = None,
@@ -97,6 +99,7 @@ def causal_inference(
         show_graph: Whether to display the graph or not.
         show_refute_plots: Whether to display the refutation plots or not.
         attempts: Number of attempts to try to generate a valid causal estimate.
+        layer: The layer to use.
         identify_kwargs: Optional keyword arguments for dowhy.CausalModel.identify_effect().
         estimate_kwargs: Optional keyword arguments for dowhy.CausalModel.estimate_effect().
         refute_kwargs: Optional keyword arguments for dowhy.CausalModel.refute_estimate().
@@ -179,7 +182,9 @@ def causal_inference(
 
     import dowhy
 
-    model = dowhy.CausalModel(data=edata.to_df(), graph=graph, treatment=treatment, outcome=outcome)
+    model = dowhy.CausalModel(
+        data=ed.io.to_pandas(edata, layer=layer), graph=graph, treatment=treatment, outcome=outcome
+    )
 
     if show_graph:
         model.view_model()

@@ -7,15 +7,10 @@ import numpy as np
 import pandas as pd
 import scanpy as sc
 from anndata import AnnData
+from ehrdata.core.constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 
 from ehrapy._compat import _cast_adata_to_match_data_type, function_2D_only, use_ehrdata
 from ehrapy.anndata import _check_feature_types, infer_feature_types, move_to_x
-from ehrapy.anndata._constants import (
-    CATEGORICAL_TAG,
-    DATE_TAG,
-    FEATURE_TYPE_KEY,
-    NUMERIC_TAG,
-)
 from ehrapy.preprocessing import encode
 
 if TYPE_CHECKING:
@@ -603,6 +598,7 @@ def rank_features_groups(
     return edata if copy else None
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def filter_rank_features_groups(
     edata: EHRData | AnnData,

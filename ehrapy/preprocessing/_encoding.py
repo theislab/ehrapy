@@ -4,6 +4,7 @@ from collections import OrderedDict
 from itertools import chain
 from typing import TYPE_CHECKING, Any
 
+import ehrdata as ed
 import numpy as np
 import pandas as pd
 from anndata import AnnData
@@ -13,7 +14,7 @@ from rich.progress import BarColumn, Progress
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
 from ehrapy._compat import _cast_adata_to_match_data_type, function_2D_only, use_ehrdata
-from ehrapy.anndata import _check_feature_types, anndata_to_df
+from ehrapy.anndata import _check_feature_types
 from ehrapy.anndata._constants import (
     CATEGORICAL_TAG,
     FEATURE_TYPE_KEY,
@@ -59,7 +60,7 @@ def encode(
         layer: The layer to encode.
 
     Returns:
-        A data object with the encoded values in X.
+        A data object with the encoded values in `.X` if `layer` is `None`, otherwise a data object with the encoded values in a layer named as the `layer` parameter.
 
     Examples:
         >>> import ehrapy as ep
@@ -106,7 +107,7 @@ def encode(
                 return edata
 
         # filter out categorical columns, that are already stored numerically
-        df_edata = anndata_to_df(edata)
+        df_edata = ed.io.to_pandas(edata, layer=layer)
         categoricals_names = [
             feat for feat in categoricals_names if not np.all(df_edata[feat].apply(type).isin([int, float]))
         ]
@@ -182,6 +183,7 @@ def encode(
                 ),
                 edata,
             )
+
             encoded_edata.layers["original"] = updated_layer
 
     # user passed categorical values with encoding mode for each of them
@@ -215,7 +217,7 @@ def encode(
                 "to encode numerical columns!"
             )
 
-        updated_obs = _update_obs(edata, categoricals)
+        updated_obs = _update_obs(edata, categoricals, layer)
 
         encoding_mode = {}
         encoded_x = None
@@ -291,6 +293,7 @@ def encode(
                 ),
                 edata,
             )
+
             encoded_edata.layers["original"] = updated_layer
 
         # if the user did not pass every non-numerical column for encoding, an Anndata object cannot be created
@@ -303,7 +306,8 @@ def encode(
     if layer is None:
         encoded_edata.X = encoded_edata.X.astype(np.float32)
     else:
-        encoded_edata.layers[layer] = encoded_edata.layers[layer].astype(np.float32)
+        encoded_edata.layers[layer] = encoded_edata.X.astype(np.float32)
+        encoded_edata.X = None
 
     return encoded_edata
 
@@ -560,6 +564,9 @@ def _undo_encoding(
         ),
         edata,
     )
+    if layer is not None:
+        edata.layers[layer] = new_x.copy()
+        edata.X = None
     edata.layers["original"] = new_x.copy()
 
     return edata

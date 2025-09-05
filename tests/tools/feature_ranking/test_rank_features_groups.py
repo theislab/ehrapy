@@ -432,3 +432,8 @@ def test_rank_features_group_column_to_rank():
         columns_to_rank={"obs_names": ["sys_bp_entry", "dia_bp_entry"]},
     )
     assert len(adata.uns["rank_features_groups"]["names"]) == 2
+
+
+def test_rank_features_groups_3D_edata(edata_blob_small):
+    with pytest.raises(ValueError, match=r"only supports 2D data"):
+        ep.tl.rank_features_groups(edata_blob_small, groupby="cluster", layer="R_layer")

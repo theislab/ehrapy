@@ -129,6 +129,7 @@ def regress_out(
     return sc.pp.regress_out(adata=edata, keys=keys, n_jobs=n_jobs, copy=copy)
 
 
+@function_2D_only()
 def subsample(
     data: EHRData | AnnData | np.ndarray | spmatrix,
     *,

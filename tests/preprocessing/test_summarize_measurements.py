@@ -49,3 +49,8 @@ def test_statistics_subset(adata_to_expand):
     transformed_adata = summarize_measurements(adata_to_expand, statistics=["min"])
 
     assert transformed_adata.shape == (3, 3)  # (3 patients, 3 measurements * 1 statistics)
+
+
+def test_summarize_measurements_3D_edata(edata_blob_small):
+    with pytest.raises(ValueError, match=r"only supports 2D data"):
+        summarize_measurements(edata_blob_small, layer="R_layer")

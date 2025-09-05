@@ -139,6 +139,11 @@ def test_calculate_qc_metrics(missing_values_adata):
     assert missing_values_adata.var.missing_values_abs is not None
 
 
+def test_encode_3D_edata(edata_blob_small):
+    with pytest.raises(ValueError, match=r"only supports 2D data"):
+        ep.pp.qc_metrics(edata_blob_small, layer="R_layer")
+
+
 def test_qc_lab_measurements_simple(lab_measurements_simple_adata):
     expected_obs_data = pd.Series(
         data={
@@ -194,6 +199,11 @@ def test_qc_lab_measurements_simple_layer(lab_measurements_layer_adata):
     )
 
 
+def test_qc_lab_measurements_3D_edata(edata_blob_small):
+    with pytest.raises(ValueError, match=r"only supports 2D data"):
+        ep.pp.qc_lab_measurements(edata_blob_small, layer="R_layer")
+
+
 def test_qc_lab_measurements_age():
     # TODO
     pass
@@ -230,6 +240,11 @@ def test_mcar_test_method_output_types(mar_adata, method, expected_output_type):
     assert isinstance(output, expected_output_type), (
         f"Output type for method '{method}' should be {expected_output_type}, got {type(output)} instead."
     )
+
+
+def test_mcar_test_3D_edata(edata_blob_small):
+    with pytest.raises(ValueError, match=r"only supports 2D data"):
+        mcar_test(edata_blob_small, layer="R_layer")
 
 
 def test_mar_data_identification(mar_adata):

@@ -3,16 +3,17 @@ from __future__ import annotations
 from functools import wraps
 from typing import TYPE_CHECKING, Literal
 
+import ehrdata as ed
 import numpy as np
 import pandas as pd
 from anndata import AnnData
 from dateutil.parser import isoparse  # type: ignore
+from ehrdata.core.constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from lamin_utils import logger
 from rich import print
 from rich.tree import Tree
 
 from ehrapy._compat import function_2D_only, function_future_warning, use_ehrdata
-from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -178,8 +179,10 @@ def _check_feature_types(func):
             edata = args[0]
             args = args[1:]
 
+        layer = kwargs.get("layer", None)
+
         if FEATURE_TYPE_KEY not in edata.var.keys():
-            infer_feature_types(edata, output=None)
+            ed.infer_feature_types(edata, layer=layer, output=None)
             logger.warning(
                 f"Feature types were inferred and stored in edata.var[{FEATURE_TYPE_KEY}]. Please verify using `ep.ad.feature_type_overview` and adjust if necessary using `ep.ad.replace_feature_types`."
             )
