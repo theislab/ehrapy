@@ -30,7 +30,7 @@ available_encodings = {"one-hot", "label"}
 def encode(
     edata: EHRData | AnnData,
     autodetect: bool | dict = False,
-    encodings: dict[str, dict[str, list[str]]] | dict[str, list[str]] | str | None = "one-hot",
+    encodings: dict[str, list[str]] | str | None = "one-hot",
     layer: str | None = None,
 ) -> EHRData | AnnData:
     """Encode categoricals of a data object.
@@ -242,7 +242,7 @@ def encode(
                     updated_obs=updated_obs,
                     var_names=encoded_var_names,
                     unencoded_var_names=unencoded_var_names,
-                    categoricals=categoricals_names,
+                    categoricals=encodings[encoding],  # type: ignore
                     progress=progress,
                     task=task,
                 )
