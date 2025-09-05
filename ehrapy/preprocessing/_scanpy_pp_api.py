@@ -118,7 +118,7 @@ def regress_out(
     Note that this function tends to overcorrect in certain circumstances.
 
     Args:
-        edata: Data object containing all observations.
+        edata: Central data object.
         keys: Keys for observation annotation on which to regress on.
         n_jobs: Number of jobs for parallel computation.
         copy: Determines whether a copy of `adata` is returned.
@@ -171,7 +171,7 @@ def combat(
     .. _combat.py: https://github.com/brentp/combat.py
 
     Args:
-        edata: Data object containing all observations.
+        edata: Central data object.
         key: Key to a categorical annotation from `.obs` that will be used for batch effect removal.
         covariates: Additional covariates besides the batch variable such as adjustment variables or biological condition.
                     This parameter refers to the design matrix `X` in Equation 2.1 in :cite:p:`Johnson2006` and to the `mod` argument in
@@ -235,7 +235,7 @@ def neighbors(
     connectivities are computed according to :cite:p:`Coifman2005`, in the adaption of :cite:p:`Haghverdi2016`.
 
     Args:
-        edata: Data object containing all observations.
+        edata: Central data object.
         n_neighbors: The size of local neighborhood (in terms of number of neighboring data points) used for manifold approximation.
                      Larger values result in more global views of the manifold, while smaller values result in more local data being preserved.
                      In general values should be in the range 2 to 100. If `knn` is `True`, number of nearest neighbors to be searched.

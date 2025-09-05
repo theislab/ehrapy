@@ -71,7 +71,7 @@ def _detect_feature_type(col: pd.Series) -> tuple[Literal["date", "categorical",
     return NUMERIC_TAG, False  # type: ignore
 
 
-@function_future_warning("ep.ad.infer_feature_types", "ehrdata.infer_feature_types_from_dataframe")
+@function_future_warning("ep.ad.infer_feature_types", "ehrdata.infer_feature_types")
 @function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def infer_feature_types(
@@ -90,7 +90,7 @@ def infer_feature_types(
     recommended to check the inferred types.
 
     Args:
-        edata: Object storing the EHR data.
+        edata: Central data object.
         layer: The layer to use from the EHRData object. If None, the X layer is used.
         output: The output format. Choose between 'tree', 'dataframe', or None. If 'tree', the feature types will be printed to the console in a tree format.
             If 'dataframe', a pandas DataFrame with the feature types will be returned. If None, nothing will be returned.
@@ -144,7 +144,7 @@ def infer_feature_types(
 
 # TODO: this function is a different flavor of inferring feature types. We should decide on a single implementation in the future.
 def _infer_numerical_column_indices(
-    edata: AnnData, layer: str | None = None, column_indices: Iterable[int] | None = None
+    edata: EHRData | AnnData, layer: str | None = None, column_indices: Iterable[int] | None = None
 ) -> list[int]:
     mtx = edata.X if layer is None else edata[layer]
     indices = (
@@ -184,7 +184,7 @@ def _check_feature_types(func):
         if FEATURE_TYPE_KEY not in edata.var.keys():
             ed.infer_feature_types(edata, layer=layer, output=None)
             logger.warning(
-                f"Feature types were inferred and stored in edata.var[{FEATURE_TYPE_KEY}]. Please verify using `ep.ad.feature_type_overview` and adjust if necessary using `ep.ad.replace_feature_types`."
+                f"Feature types were inferred and stored in edata.var[{FEATURE_TYPE_KEY}]. Please verify using `ehrdata.feature_type_overview` and adjust if necessary using `ehrdata.replace_feature_types`."
             )
 
         for feature in edata.var_names:
@@ -212,7 +212,7 @@ def feature_type_overview(edata: EHRData | AnnData) -> None:
     """Print an overview of the feature types and encoding modes in the EHRData object.
 
     Args:
-        edata: The EHRData object storing the EHR data.
+        edata: Central data object.
 
     Examples:
         >>> import ehrdata as ed
@@ -261,7 +261,7 @@ def replace_feature_types(edata: EHRData | AnnData, features: Iterable[str], cor
     """Correct the feature types for a list of features inplace.
 
     Args:
-        edata: Data object storing the EHR data.
+        edata: Central data object.
         features: The features to correct.
         corrected_type: The corrected feature type. One of 'date', 'categorical', or 'numeric'.
 

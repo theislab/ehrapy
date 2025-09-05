@@ -9,17 +9,13 @@ import numpy as np
 import pandas as pd
 from anndata import AnnData
 from ehrdata import EHRData
+from ehrdata.core.constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from lamin_utils import logger
 from rich.progress import BarColumn, Progress
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
 from ehrapy._compat import _cast_adata_to_match_data_type, function_2D_only, use_ehrdata
 from ehrapy.anndata import _check_feature_types
-from ehrapy.anndata._constants import (
-    CATEGORICAL_TAG,
-    FEATURE_TYPE_KEY,
-    NUMERIC_TAG,
-)
 from ehrapy.anndata.anndata_ext import _get_var_indices_for_type
 
 available_encodings = {"one-hot", "label"}
@@ -52,7 +48,7 @@ def encode(
         2. label (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.LabelEncoder.html)
 
     Args:
-        edata: The data object to encode.
+        edata: Central data object.
         autodetect: Whether to autodetect categorical values that will be encoded.
         encodings: Only needed if autodetect set to False.
                    A dict containing the encoding mode and categorical name for the respective column
@@ -529,7 +525,7 @@ def _undo_encoding(
     """Undo the current encodings applied to all columns in X. This currently resets the AnnData object to its initial state.
 
     Args:
-        edata: The data object.
+        edata: Central data object.
         layer: The layer to operate on.
 
     Returns:
@@ -603,7 +599,7 @@ def _reorder_encodings(edata: EHRData | AnnData, new_encodings: dict[str, list[l
     """Reorder the encodings and update which column will be encoded using which mode.
 
     Args:
-        edata: The data object to be reencoded
+        edata: Central data object.
         new_encodings: The new encodings passed by the user (might affect encoded as well as previously non encoded columns)
 
     Returns:
@@ -697,7 +693,7 @@ def _get_encoded_features(edata: EHRData | AnnData) -> list[str]:
     """Get all encoded features in an data object.
 
     Args:
-        edata: The data object.
+        edata: Central data object.
 
     Returns:
         List of all unencoded names of features that were encoded

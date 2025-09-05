@@ -34,7 +34,7 @@ def missing_values_matrix(
     """A matrix visualization of the nullity of the given Data object.
 
     Args:
-        edata: Data object containing all observations.
+        edata: Central data object.
         filter: The filter to apply to the matrix. Should be one of "top", "bottom", or None.
         max_cols: The max number of columns from the Data object to include.
         max_percentage: The max percentage fill of the columns from the Data object.
@@ -117,7 +117,7 @@ def missing_values_barplot(
     """A bar chart visualization of the nullity of the given Data object.
 
     Args:
-        edata: Data object containing all observations.
+        edata: Central data object.
         log: Whether to display a logarithmic plot.
         filter: The filter to apply to the barplot. Should be one of "top", "bottom", or None.
         max_cols: The max number of columns from the Data object to include.
@@ -203,7 +203,7 @@ def missing_values_heatmap(
     Note that this visualization has no special support for large datasets. For those, try the dendrogram instead.
 
     Args:
-        edata: Data object containing all observations.
+        edata: Central data object.
         filter: The filter to apply to the heatmap. Should be one of "top", "bottom", or None.
         max_cols: The max number of columns from the Data object to include.
         max_percentage: The max percentage fill of the columns from the Data object.
@@ -267,6 +267,7 @@ def missing_values_heatmap(
         )
 
 
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def missing_values_dendrogram(
     edata: EHRData | AnnData,
@@ -288,7 +289,7 @@ def missing_values_dendrogram(
     left unspecified the dendrogram will automatically swap to a horizontal display to fit the additional variables.
 
     Args:
-        edata: Data object containing all observations.
+        edata: Central data object.
         method: The distance measure being used for clustering. This parameter is passed to `scipy.hierarchy`.
         filter: The filter to apply to the dendrogram. Should be one of "top", "bottom", or None.
         max_cols: The max number of columns from the Data object to include.

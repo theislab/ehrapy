@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import pandas as pd
+from ehrdata.core.constants import NUMERIC_TAG
 from lamin_utils import logger
 from sklearn.experimental import enable_iterative_imputer  # noinspection PyUnresolvedReference
 from sklearn.impute import SimpleImputer
@@ -16,7 +17,6 @@ from ehrapy import settings
 from ehrapy._compat import DaskArray, _raise_array_type_not_implemented, function_2D_only, use_ehrdata
 from ehrapy._progress import spinner
 from ehrapy.anndata import _check_feature_types
-from ehrapy.anndata._constants import NUMERIC_TAG
 from ehrapy.anndata._feature_specifications import _infer_numerical_column_indices
 from ehrapy.anndata.anndata_ext import (
     _get_var_indices,
@@ -45,7 +45,7 @@ def explicit_impute(
     2. Replace all missing values in a subset of columns with a specified value per column.
 
     Args:
-        edata: The data object.
+        edata: Central data object.
         replacement: The value to replace missing values with. If a dictionary is provided, the keys represent column
                      names and the values represent replacement values for those columns.
         impute_empty_strings: If True, empty strings are also replaced.
@@ -354,7 +354,7 @@ def miss_forest_impute(
     If required, the data needs to be properly encoded as this imputation requires numerical data only.
 
     Args:
-        edata: The data object to use MissForest Imputation on.
+        edata: Central data object.
         var_names: Iterable of columns to impute
         num_initial_strategy: The initial strategy to replace all missing numerical values with.
         max_iter: The maximum number of iterations if the stop criterion has not been met yet.
@@ -457,7 +457,7 @@ def mice_forest_impute(
     If required, the data needs to be properly encoded as this imputation requires numerical data only.
 
     Args:
-        edata: The data object containing the data to impute.
+        edata: Central data object.
         var_names: A list of variable names to impute. If None, impute all variables.
         warning_threshold: Threshold of percentage of missing values to display a warning for.
         save_all_iterations_data: Whether to save all imputed values from all iterations or just the latest.

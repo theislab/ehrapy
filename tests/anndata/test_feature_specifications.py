@@ -1,10 +1,10 @@
 import numpy as np
 import pandas as pd
 import pytest
+from ehrdata.core.constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 
 import ehrapy as ep
 from ehrapy.anndata import _check_feature_types, df_to_anndata
-from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from tests.conftest import TEST_DATA_PATH
 
 IMPUTATION_DATA_PATH = TEST_DATA_PATH / "imputation"

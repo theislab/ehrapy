@@ -40,7 +40,7 @@ def tsne(
     proposed for visualizing complex by :cite:p:`Amir2013`. Here, by default, we use the implementation of *scikit-learn* :cite:p:`Pedregosa2011`.
 
     Args:
-        edata: Data object containing all observations.
+        edata: Central data object.
         n_pcs: Use this many PCs. If `n_pcs==0` use `.X` if `use_rep is None`.
         use_rep: Use the indicated representation. `'X'` or any key for `.obsm` is valid.
                  If `None`, the representation is chosen automatically:
@@ -120,7 +120,7 @@ def umap(
     <https://doi.org/10.1101/298430>`__.
 
     Args:
-        edata: Data object containing all observations.
+        edata: Central data object.
         min_dist: The effective minimum distance between embedded points. Smaller values
                   will result in a more clustered/clumped embedding where nearby points on
                   the manifold are drawn closer together, while larger values will result
@@ -225,7 +225,7 @@ def draw_graph(
     Similar approaches have been used by :cite:p:`Zunder2015` or :cite:p:`Weinreb2017`.
 
     Args:
-        edata: Data object containing all observations.
+        edata: Central data object.
         layout: 'fa' (`ForceAtlas2`) or any valid `igraph layout
                 <http://igraph.org/c/doc/igraph-Layout.html>`__. Of particular interest
                 are 'fr' (Fruchterman Reingold), 'grid_fr' (Grid Fruchterman Reingold,
@@ -293,7 +293,7 @@ def diffmap(
     `method=='umap'`. Differences between these options shouldn't usually be dramatic.
 
     Args:
-        edata: Data object containing all observations.
+        edata: Central data object.
         n_comps: The number of dimensions of the representation.
                  neighbors_key: If not specified, diffmap looks .uns['neighbors'] for neighbors settings
                  and .obsp['connectivities'], .obsp['distances'] for connectivities and
@@ -339,7 +339,7 @@ def embedding_density(
     the same condition category.
 
     Args:
-        edata: Data object containing all observations.
+        edata: Central data object.
         basis: The embedding over which the density will be calculated. This embedded
                representation should be found in `edata.obsm['X_[basis]']`.
         groupby: Keys for categorical observation/cell annotation for which densities
@@ -392,7 +392,7 @@ def leiden(
     This requires having run :func:`~ehrapy.preprocessing.neighbors`.
 
     Args:
-        edata: Data object containing all observations.
+        edata: Central data object.
         resolution: A parameter value controlling the coarseness of the clustering. Higher values lead to more clusters.
                     Set to `None` if overriding `partition_type` to one that doesn't accept a `resolution_parameter`.
         restrict_to: Restrict the clustering to the categories within the key for sample
@@ -478,7 +478,7 @@ def dendrogram(
         default pearson but other methods are available.
 
     Args:
-        edata: Data object containing all observations.
+        edata: Central data object.
         groupby: Key to group by
         n_pcs: Use this many PCs. If `n_pcs==0` use `.X` if `use_rep is None`.
         use_rep: Use the indicated representation. `'X'` or any key for `.obsm` is valid.
@@ -548,7 +548,7 @@ def dpt(
     this. Using the default `method=='umap'` only leads to minor quantitative differences, though.
 
     Args:
-        edata: Data object containing all observations.
+        edata: Central data object.
         n_dcs: The number of diffusion components to use.
         n_branchings: Number of branchings to detect.
         min_group_size: During recursive splitting of branches ('dpt groups') for `n_branchings`
@@ -614,7 +614,7 @@ def paga(
         `init_pos='paga'` to get embeddings that are typically more faithful to the global topology.
 
     Args:
-        edata: Data object containing all observations.
+        edata: Central data object.
         groups: Key for categorical in `edata.obs`. You can pass your predefined groups
                 by choosing any categorical annotation of observations. Default:
                 The first present key of `'leiden'` or `'louvain'`.
@@ -676,7 +676,7 @@ def ingest(
     You need to run :func:`~ehrapy.preprocessing.neighbors` on `edata_ref` before passing it.
 
     Args:
-        edata: Data object containing all observations.
+        edata: Central data object.
         edata_ref: The annotated data matrix of shape `n_obs` × `n_vars`. Rows correspond to observations and columns to features.
                    Variables (`n_vars` and `var_names`) of `edata_ref` should be the same as in `edata`.
                    This is the dataset with labels and embeddings which need to be mapped to `edata`.

@@ -5,12 +5,12 @@ import pandas as pd
 import pytest
 from anndata import AnnData
 from ehrdata import EHRData
+from ehrdata.core.constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from pandas import DataFrame
 from pandas.testing import assert_frame_equal
 
 import ehrapy as ep
 from ehrapy._compat import _cast_adata_to_match_data_type
-from ehrapy.anndata._constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrapy.anndata.anndata_ext import (
     _assert_numeric_vars,
     _get_var_indices_for_type,

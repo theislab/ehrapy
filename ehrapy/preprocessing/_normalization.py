@@ -5,9 +5,9 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import sklearn.preprocessing as sklearn_pp
+from ehrdata.core.constants import NUMERIC_TAG
 
 from ehrapy._compat import DaskArray, _raise_array_type_not_implemented, function_2D_only, use_ehrdata
-from ehrapy.anndata._constants import NUMERIC_TAG
 from ehrapy.anndata.anndata_ext import (
     _assert_numeric_vars,
     _get_var_indices_for_type,

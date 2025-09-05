@@ -7,9 +7,9 @@ import numpy as np
 import pandas as pd
 import pytest
 from anndata import AnnData
+from ehrdata.core.constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 
 import ehrapy as ep
-from ehrapy.anndata._constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrapy.io._read import read_csv
 from tests.conftest import ARRAY_TYPES, TEST_DATA_PATH
 

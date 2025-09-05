@@ -2,10 +2,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ehrdata.core.constants import CATEGORICAL_TAG, NUMERIC_TAG
+
 from ehrapy import ehrapy_settings
 from ehrapy._compat import function_future_warning
 from ehrapy.anndata import anndata_to_df, df_to_anndata, infer_feature_types, replace_feature_types
-from ehrapy.anndata._constants import CATEGORICAL_TAG, NUMERIC_TAG
 from ehrapy.io._read import read_csv, read_fhir, read_h5ad
 from ehrapy.preprocessing._encoding import encode
 

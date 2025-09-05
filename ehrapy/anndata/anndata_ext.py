@@ -6,12 +6,12 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pandas as pd
 from anndata import AnnData, concat
+from ehrdata.core.constants import FEATURE_TYPE_KEY, NUMERIC_TAG
 from lamin_utils import logger
 from scipy.sparse import issparse
 
 from ehrapy._compat import _cast_adata_to_match_data_type, function_2D_only, function_future_warning, use_ehrdata
 from ehrapy.anndata import _check_feature_types
-from ehrapy.anndata._constants import FEATURE_TYPE_KEY, NUMERIC_TAG
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
@@ -108,7 +108,7 @@ def anndata_to_df(
     """Transform an AnnData object to a Pandas DataFrame.
 
     Args:
-        edata: The AnnData object to be transformed into a pandas DataFrame
+        edata: Central data object.
         layer: The layer to access the values of. If not specified, it uses the `X` matrix.
         obs_cols: The columns of `obs` to add to the DataFrame.
         var_cols: The columns of `var` to fetch values from.
@@ -163,9 +163,9 @@ def move_to_obs(edata: EHRData | AnnData, to_obs: list[str] | str, copy_obs: boo
     will be stored as boolean columns whereas the other non-numerical columns will be stored as categorical.
 
     Args:
-        edata: The data object
-        to_obs: The columns to move to obs
-        copy_obs: The values are copied to obs (and therefore kept in X) instead of moved completely
+        edata: Central data object.
+        to_obs: The columns to move to obs.
+        copy_obs: The values are copied to obs (and therefore kept in X) instead of moved completely.
 
     Returns:
         The original data object with moved or copied columns from X to obs
@@ -215,7 +215,7 @@ def _get_var_indices_for_type(edata: EHRData | AnnData, tag: str) -> list[str]:
     """Get indices of columns in var for a given tag.
 
     Args:
-        edata: The data object
+        edata: Central data object.
         tag: The tag to search for, should be one of 'CATEGORIGAL_TAG', 'NUMERIC_TAG', 'DATE_TAG'
 
     Returns:
@@ -231,7 +231,7 @@ def move_to_x(edata: EHRData | AnnData, to_x: list[str] | str, copy_x: bool = Fa
     """Move features from obs to X inplace.
 
     Args:
-        edata: The data object
+        edata: Central data object
         to_x: The columns to move to X
         copy_x: The values are copied to X (and therefore kept in obs) instead of moved completely
 
@@ -293,7 +293,7 @@ def _get_var_indices(edata: EHRData | AnnData, col_names: str | Iterable[str]) -
     """Fetches the column indices in X for a given list of column names.
 
     Args:
-        edata: The data object
+        edata: Central data object.
         col_names: Column names to extract the indices for.
 
     Returns:

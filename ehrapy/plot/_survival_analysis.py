@@ -50,7 +50,7 @@ def ols(
     """Plots an Ordinary Least Squares (OLS) Model result, scatter plot, and line plot.
 
     Args:
-        edata: Data object containing all observations.
+        edata: Central data object.
         x: x coordinate, for scatter plotting.
         y: y coordinate, for scatter plotting.
         scatter_plot: Whether to show a scatter plot.

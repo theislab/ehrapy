@@ -42,11 +42,11 @@ Shared docstrings for plotting function parameters.
 
 
 doc_adata_color_etc = """\
-edata: Data object object containing all observations.
+edata: Central data object.
     color: Keys for annotations of observations/patients or features, e.g., `'ann1'` or `['ann1', 'ann2']`.
     feature_symbols: Column name in `.var` DataFrame that stores feature symbols. By default `var_names` refer to the index column of the `.var` DataFrame. Setting this option allows alternative names to be used.
     use_raw: Use `.raw` attribute of `adata` for coloring with feature values. If `None`, defaults to `True` if `layer` isn't provided and `adata.raw` is present.
-    layer: Name of the data object layer that wants to be plotted. By default adata.raw.X is plotted. If `use_raw=False` is set, then `adata.X` is plotted. If `layer` is set to a valid layer name, then the layer is plotted. `layer` takes precedence over `use_raw`.\
+    layer: Name of the layer to be plotted. By default adata.raw.X is plotted. If `use_raw=False` is set, then `adata.X` is plotted. If `layer` is set to a valid layer name, then the layer is plotted. `layer` takes precedence over `use_raw`.\
 """
 
 doc_edges_arrows = """\
@@ -133,7 +133,7 @@ adata: Annotated data matrix.
     var_group_positions: Use this parameter to highlight groups of `var_names`. This will draw a 'bracket' or a color block between the given start and end positions. If the parameter `var_group_labels` is set, the corresponding labels are added on top/left. E.g. `var_group_positions=[(4,10)]` will add a bracket between the fourth `var_name` and the tenth `var_name`. By giving more positions, more brackets/color blocks are drawn.
     var_group_labels: Labels for each of the `var_group_positions` that want to be highlighted.
     var_group_rotation: Label rotation degrees. By default, labels larger than 4 characters are rotated 90 degrees.
-    layer: Name of the data object layer that wants to be plotted. By default adata.raw.X is plotted. If `use_raw=False` is set, then `adata.X` is plotted. If `layer` is set to a valid layer name, then the layer is plotted. `layer` takes precedence over `use_raw`.\
+    layer: Name of the layer to be plotted. By default adata.raw.X is plotted. If `use_raw=False` is set, then `adata.X` is plotted. If `layer` is set to a valid layer name, then the layer is plotted. `layer` takes precedence over `use_raw`.\
 """
 
 doc_scatter_spatial = """\

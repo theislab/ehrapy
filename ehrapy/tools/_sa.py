@@ -47,7 +47,7 @@ def ols(
     See https://www.statsmodels.org/stable/generated/statsmodels.formula.api.ols.html#statsmodels.formula.api.ols
 
     Args:
-        edata: The data object for the OLS model.
+        edata: Central data object.
         var_names: A list of var names indicating which columns are for the OLS model.
         formula: The formula specifying the model.
         use_feature_types: If True, the feature types in the data objects .var are used.
@@ -105,7 +105,7 @@ def glm(
     See https://www.statsmodels.org/stable/generated/statsmodels.formula.api.glm.html#statsmodels.formula.api.glm
 
     Args:
-        edata: The data object for the GLM model.
+        edata: Central data object.
         var_names: A list of var names indicating which columns are for the GLM model.
         formula: The formula specifying the model.
         family: The distribution families. Available options are 'Gaussian', 'Binomial', 'Gamma', and 'InverseGaussian'.
@@ -260,7 +260,7 @@ def kaplan_meier(
         https://lifelines.readthedocs.io/en/latest/fitters/univariate/KaplanMeierFitter.html#module-lifelines.fitters.kaplan_meier_fitter
 
     Args:
-        edata: Data object.
+        edata: Central data object.
         duration_col: The name of the column in the data object that contains the subjects' lifetimes.
         event_col: The name of the column in the data object that specifies whether the event has been observed, or censored.
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
@@ -451,7 +451,7 @@ def cox_ph(
     See https://lifelines.readthedocs.io/en/latest/fitters/regression/CoxPHFitter.html
 
     Args:
-        edata: Data object.
+        edata: Central data object.
         duration_col: The name of the column in the data objects that contains the subjects’ lifetimes.
         event_col: The name of the column in the data object that specifies whether the event has been observed, or censored.
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
@@ -554,7 +554,7 @@ def weibull_aft(
     See https://lifelines.readthedocs.io/en/latest/fitters/regression/WeibullAFTFitter.html
 
     Args:
-        edata: Data object.
+        edata: Central data object.
         duration_col: Name of the column in the data objects that contains the subjects’ lifetimes.
         event_col: The name of the column in the data object that specifies whether the event has been observed, or censored.
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
@@ -655,7 +655,7 @@ def log_logistic_aft(
     See https://lifelines.readthedocs.io/en/latest/fitters/regression/LogLogisticAFTFitter.html.
 
     Args:
-        edata: Data object.
+        edata: Central data object.
         duration_col: Name of the column in the data objects that contains the subjects' lifetimes.
         event_col: The name of the column in the data object that specifies whether the event has been observed, or censored.
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
@@ -799,7 +799,7 @@ def nelson_aalen(
     See https://lifelines.readthedocs.io/en/latest/fitters/univariate/NelsonAalenFitter.html
 
     Args:
-        edata: Data object.
+        edata: Central data object.
         duration_col: The name of the column in the data objects that contains the subjects' lifetimes.
         event_col: The name of the column in the data object that specifies whether the event has been observed, or censored.
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
@@ -876,7 +876,7 @@ def weibull(
     See https://lifelines.readthedocs.io/en/latest/fitters/univariate/WeibullFitter.html
 
     Args:
-        edata: Data object.
+        edata: Central data object.
         duration_col: Name of the column in the data objects that contains the subjects’ lifetimes.
         event_col: The name of the column in the data object that specifies whether the event has been observed, or censored.
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).

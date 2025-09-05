@@ -33,7 +33,7 @@ def highly_variable_features(
     of each feature after the transformation. Features are ranked by the normalized variance.
 
     Args:
-        edata: The data object.
+        edata: Central data object.
         layer: If provided, use `edata.layers[layer]` for expression values instead of `edata.X`.
         top_features_percentage: Percentage of highly-variable features to keep.
         span: The fraction of the data used when estimating the variance in the loess model fit.

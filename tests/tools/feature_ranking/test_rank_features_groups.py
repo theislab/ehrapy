@@ -3,10 +3,10 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
+from ehrdata.core.constants import FEATURE_TYPE_KEY, NUMERIC_TAG
 
 import ehrapy as ep
 import ehrapy.tools.feature_ranking._rank_features_groups as _utils
-from ehrapy.anndata._constants import FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrapy.io._read import read_csv
 from tests.conftest import TEST_DATA_PATH
 

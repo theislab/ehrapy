@@ -32,7 +32,7 @@ def winsorize(
     The implementation is based on https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.mstats.winsorize.html
 
     Args:
-        edata: Data object to winsorize.
+        edata: Central data object.
         vars: The features to winsorize.
         obs_cols: Columns in obs with features to winsorize.
         limits: Tuple of the percentages to cut on each side of the array as floats between 0. and 1.
@@ -89,7 +89,7 @@ def clip_quantile(
     Given an interval, values outside the interval are clipped to the interval edges.
 
     Args:
-        edata: The data object to clip.
+        edata: Central data object.
         limits: Values outside the interval are clipped to the interval edges.
         vars: Columns in var with features to clip.
         obs_cols: Columns in obs with features to clip
