@@ -3,10 +3,12 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import ehrdata as ed
 import numpy as np
 import pandas as pd
 import pytest
 from anndata import AnnData
+from ehrdata.core.constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from matplotlib.testing.compare import compare_images
 
 import ehrapy as ep
@@ -80,7 +82,8 @@ def lab_measurements_layer_adata(obs_data, var_data):
 
 @pytest.fixture
 def mimic_2():
-    adata = ep.dt.mimic_2()
+    adata = ed.dt.mimic_2()
+    adata.layers["layer_2"] = adata.X.copy()
     return adata
 
 
@@ -145,6 +148,18 @@ def mimic_2_sample_serv_unit_day_icu():
 
 
 @pytest.fixture
+def mimic_2_sa():
+    adata = ep.dt.mimic_2(encoded=False)
+    adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
+    adata = adata[:, ["mort_day_censored", "censor_flg"]].copy()
+    duration_col, event_col = "mort_day_censored", "censor_flg"
+
+    adata.layers["layer_2"] = adata.X.copy()
+
+    return adata, duration_col, event_col
+
+
+@pytest.fixture
 def adata_move_obs_num() -> AnnData:
     return read_csv(TEST_DATA_PATH / "io/dataset_move_obs_num.csv")
 
@@ -181,13 +196,39 @@ def impute_titanic_adata():
 @pytest.fixture
 def encode_ds_1_adata() -> AnnData:
     adata = read_csv(dataset_path=f"{TEST_DATA_PATH}/encode/dataset1.csv")
+    adata.layers["layer_2"] = adata.X.copy()
     return adata
 
 
 @pytest.fixture
 def encode_ds_2_adata() -> AnnData:
     adata = read_csv(dataset_path=f"{TEST_DATA_PATH}/encode/dataset2.csv")
+    adata.layers["layer_2"] = adata.X.copy()
     return adata
+
+
+@pytest.fixture
+def adata_small_bias() -> AnnData:
+    rng = np.random.default_rng(seed=42)
+    corr = rng.integers(0, 100, 100)
+    df = pd.DataFrame(
+        {
+            "corr1": corr,
+            "corr2": corr * 2,
+            "corr3": corr * -1,
+            "contin1": rng.integers(0, 20, 50).tolist() + rng.integers(20, 40, 50).tolist(),
+            "cat1": [0] * 50 + [1] * 50,
+            "cat2": [10] * 10 + [11] * 40 + [10] * 30 + [11] * 20,
+        }
+    )
+    adata = ed.io.from_pandas(df)
+    adata.var[FEATURE_TYPE_KEY] = [NUMERIC_TAG] * 4 + [CATEGORICAL_TAG] * 2
+    return adata
+
+
+@pytest.fixture
+def edata_blob_small() -> ed.EHRData:
+    return ed.dt.ehrdata_blobs(n_variables=10, n_centers=1, n_observations=50, base_timepoints=10)
 
 
 # simplified from https://github.com/scverse/scanpy/blob/main/scanpy/tests/conftest.py

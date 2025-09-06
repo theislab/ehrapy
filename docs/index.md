@@ -2,7 +2,7 @@
 
 ehrapy is a modular open-source Python framework designed for exploratory end-to-end analysis of heterogeneous epidemiology and electronic health record data.
 
-![overview](https://github.com/user-attachments/assets/7927aa20-751c-4e73-8939-1e4b1c465570)
+![overview](https://github.com/user-attachments/assets/483382ac-d329-4979-a766-efe8fbea9ea9)
 
 ```{eval-rst}
 .. card:: Installation :octicon:`plug;1em;`

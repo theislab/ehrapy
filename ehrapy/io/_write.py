@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Literal
 import numpy as np
 
 from ehrapy import settings
+from ehrapy._compat import function_future_warning
 from ehrapy.preprocessing._encoding import encode
 
 if TYPE_CHECKING:
@@ -14,6 +15,7 @@ if TYPE_CHECKING:
 supported_extensions = {"csv", "tsv", "h5ad"}
 
 
+@function_future_warning("ep.io.write", "ehrdata.io.write_<format>")
 def write(
     filename: str | Path,
     adata: AnnData,
@@ -29,16 +31,17 @@ def write(
 
     Args:
         filename: File name or path to write the file to.
-        adata: Annotated data matrix.
+        adata: Central data object.
         extension: File extension. One of 'h5ad', 'csv'. Defaults to `None` which infers the extension from the filename.
         compression: Optional file compression. One of 'gzip', 'lzf'.
         compression_opts: See http://docs.h5py.org/en/latest/high/dataset.html.
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> adata = ed.dt.mimic_2()
         >>> ep.io.write("mimic_2.h5ad", adata)
     """
+    function_future_warning("ehrapy.io.write", "ehrdata.io.write")
     filename = Path(filename)  # allow passing strings
     if _get_file_extension(filename):
         filename = filename
