@@ -24,6 +24,7 @@ def test_winsorized_obs(mimic_2_10):
 
 
 def test_winsorize_3D_edata(edata_blob_small):
+    ep.pp.winsorize(edata_blob_small)
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         ep.pp.winsorize(edata_blob_small, layer="R_layer")
 
@@ -44,5 +45,6 @@ def test_clip_obs(mimic_2_10):
 
 
 def test_clip_3D_edata(edata_blob_small):
+    ep.pp.clip_quantile(edata_blob_small, limits=(0, 1))
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.clip_quantile(edata_blob_small, layer="R_layer")
+        ep.pp.clip_quantile(edata_blob_small, limits=(0, 1), layer="R_layer")

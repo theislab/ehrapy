@@ -87,7 +87,7 @@ def causal_inference(
     """Performs causal inference using the specified causal model and returns a tuple containing the causal estimate and the results of any refutation tests.
 
     Args:
-        edata: The data object containing the input data.
+        edata: Central data object.
         graph: A str representing the causal graph to use.
         treatment: A str representing the treatment variable in the causal graph.
         outcome: A str representing the outcome variable in the causal graph.

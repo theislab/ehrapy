@@ -1,4 +1,5 @@
 import ehrdata as ed
+import numpy as np
 import pytest
 import requests
 
@@ -7,8 +8,11 @@ from ehrapy.preprocessing._highly_variable_features import highly_variable_featu
 
 
 def test_highly_variable_features_3D_edata(edata_blob_small):
+    edata_blob_small.X = np.abs(edata_blob_small.X)
+    edata_blob_small.layers["R_layer"] = np.abs(edata_blob_small.layers["R_layer"])
+    highly_variable_features(edata_blob_small, span=1)
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        highly_variable_features(edata_blob_small, layer="R_layer", copy=True)
+        highly_variable_features(edata_blob_small, span=1, layer="R_layer")
 
 
 def test_highly_variable_features():

@@ -7,7 +7,6 @@ from ehrdata.core.constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TA
 from pandas import CategoricalDtype, DataFrame
 from pandas.testing import assert_frame_equal
 
-from ehrapy.io._read import read_csv
 from ehrapy.preprocessing._encoding import _reorder_encodings, encode
 from tests.conftest import TEST_DATA_PATH
 
@@ -16,8 +15,9 @@ _TEST_PATH = f"{TEST_DATA_PATH}/encode"
 
 
 def test_encode_3D_edata(edata_blob_small):
+    encode(edata_blob_small, autodetect=True)
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        encode(edata_blob_small, layer="R_layer", copy=True)
+        encode(edata_blob_small, autodetect=True, layer="R_layer")
 
 
 def test_unknown_encode_mode(encode_ds_1_adata):

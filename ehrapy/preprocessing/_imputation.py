@@ -158,7 +158,7 @@ def simple_impute(
     numerical data only.
 
     Args:
-        edata: The annotated data matrix to impute missing values on.
+        edata: Central data object.
         var_names: A list of column names to apply imputation on (if None, impute all columns).
         strategy: Imputation strategy to use. One of {'mean', 'median', 'most_frequent'}.
         warning_threshold: Display a warning message if percentage of missing values exceeds this threshold.
@@ -230,7 +230,7 @@ def knn_impute(
 
 
     Args:
-        edata: An annotated data matrix containing EHR data.
+        edata: Central data object.
         var_names: A list of variable names indicating which columns to impute.
                    If `None`, all columns are imputed. Default is `None`.
         n_neighbors: Number of neighbors to use when performing the imputation.

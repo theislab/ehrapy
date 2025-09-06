@@ -27,6 +27,7 @@ def test_missing_values_barplot(mimic_2, check_same_image, layer):
 
 
 def test_missing_values_barplot_3D(edata_blob_small):
+    ep.pl.missing_values_barplot(edata_blob_small)
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         ep.pl.missing_values_barplot(edata_blob_small, layer="R_layer")
 
@@ -46,6 +47,7 @@ def test_missing_values_matrixplot(mimic_2, check_same_image, layer):
 
 
 def test_missing_values_matrixplot_3D(edata_blob_small):
+    ep.pl.missing_values_matrix(edata_blob_small)
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         ep.pl.missing_values_matrix(edata_blob_small, layer="R_layer")
 
@@ -65,6 +67,7 @@ def test_missing_values_heatmap(mimic_2, check_same_image, layer):
 
 
 def test_missing_values_heatmap_3D(edata_blob_small):
+    ep.pl.missing_values_heatmap(edata_blob_small)
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         ep.pl.missing_values_heatmap(edata_blob_small, layer="R_layer")
 
@@ -84,5 +87,6 @@ def test_missing_values_dendogram(mimic_2, check_same_image, layer):
 
 
 def test_missing_values_dendogram_3D(edata_blob_small):
+    ep.pl.missing_values_dendrogram(edata_blob_small)
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         ep.pl.missing_values_dendrogram(edata_blob_small, layer="R_layer")

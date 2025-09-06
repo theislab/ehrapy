@@ -65,7 +65,7 @@ def _sort_features(edata: EHRData | AnnData, key_added: str = "rank_features_gro
     """Sort results of :func:`~ehrapy.tools.rank_features_groups` by adjusted p-value.
 
     Args:
-        edata: Annotated data matrix after running :func:`~ehrapy.tools.rank_features_groups`
+        edata: Central data object after running :func:`~ehrapy.tools.rank_features_groups`
         key_added: The key in `edata.uns` information is saved to.
     """
     if key_added not in edata.uns:
@@ -100,7 +100,7 @@ def _save_rank_features_result(
     """Write keys with statistical test results to edata.uns.
 
     Args:
-        edata: Annotated data matrix after running :func:`~ehrapy.tools.rank_features_groups`
+        edata: Central data object after running :func:`~ehrapy.tools.rank_features_groups`
         key_added: The key in `edata.uns` information is saved to.
         names: Structured array storing the feature names
         scores: Array with the statistics
@@ -172,7 +172,7 @@ def _evaluate_categorical_features(
     """Run statistical test for categorical features.
 
     Args:
-        edata: Annotated data matrix.
+        edata: Central data object.
         groupby: The key of the observations grouping to consider.
         group_names: All available groups names.
         groups: Subset of groups, e.g. [`'g1'`, `'g2'`, `'g3'`], to which comparison
@@ -338,7 +338,7 @@ def rank_features_groups(
     """Rank features for characterizing groups.
 
     Args:
-        edata: Annotated data matrix.
+        edata: Central data object.
         groupby: The key of the observations grouping to consider.
         groups: Subset of groups, e.g. [`'g1'`, `'g2'`, `'g3'`], to which comparison
                 shall be restricted, or `'all'` (default), for all groups.
@@ -621,7 +621,7 @@ def filter_rank_features_groups(
     filtered genes are set to `NaN`.
 
     Args:
-        edata: Annotated data matrix.
+        edata: Central data object.
         key: Key previously added by :func:`~ehrapy.tools.rank_features_groups`
         groupby: The key of the observations grouping to consider.
         key_added: The key in `edata.uns` information is saved to.

@@ -155,8 +155,9 @@ def test_mean_impute_no_copy(impute_num_adata):
 
 
 def test_simple_impute_3D_edata(edata_blob_small):
+    simple_impute(edata_blob_small)
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        simple_impute(edata_blob_small, layer="R_layer", copy=True)
+        simple_impute(edata_blob_small, layer="R_layer")
 
 
 def test_mean_impute_copy(impute_num_adata):
@@ -232,8 +233,9 @@ def test_most_frequent_impute_subset(impute_adata):
 
 
 def test_knn_impute_3D_edata(edata_blob_small):
+    knn_impute(edata_blob_small)
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        knn_impute(edata_blob_small, layer="R_layer", copy=True)
+        knn_impute(edata_blob_small, layer="R_layer")
 
 
 def test_knn_impute_check_backend(impute_num_adata):
@@ -272,8 +274,9 @@ def test_knn_impute_numerical_data(impute_num_adata):
 
 
 def test_missforest_impute_3D_edata(edata_blob_small):
+    miss_forest_impute(edata_blob_small)
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        miss_forest_impute(edata_blob_small, layer="R_layer", copy=True)
+        miss_forest_impute(edata_blob_small, layer="R_layer")
 
 
 def test_missforest_impute_non_numerical_data(impute_adata):
@@ -313,8 +316,11 @@ def test_miceforest_array_types(impute_num_adata, array_type, expected_error):
 
 @pytest.mark.skipif(os.name == "Darwin", reason="miceforest Imputation not supported by MacOS.")
 def test_miceforest_impute_3D_edata(edata_blob_small):
+    edata_blob_small.X[3:5, 4:6] = np.nan
+    edata_blob_small.layers["R_layer"][3:5, 4:6] = np.nan
+    mice_forest_impute(edata_blob_small)
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        mice_forest_impute(edata_blob_small, layer="R_layer", copy=True)
+        mice_forest_impute(edata_blob_small, layer="R_layer")
 
 
 @pytest.mark.skipif(os.name == "Darwin", reason="miceforest Imputation not supported by MacOS.")
@@ -363,8 +369,9 @@ def test_explicit_impute_array_types(impute_num_adata, array_type, expected_erro
 
 
 def test_explicit_impute_3D_edata(edata_blob_small):
+    explicit_impute(edata_blob_small, replacement=1011)
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        explicit_impute(edata_blob_small, replacement=1011, layer="R_layer", copy=True)
+        explicit_impute(edata_blob_small, replacement=1011, layer="R_layer")
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES)

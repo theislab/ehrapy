@@ -63,7 +63,7 @@ class CohortTracker:
     Tightly interacting with the `tableone` package [1].
 
     Args:
-        edata: Data object to track.
+        edata: Central data object.
         columns: Columns to track. If `None`, all columns will be tracked.
         categorical: Columns that contain categorical variables, if None will be inferred from the data.
 

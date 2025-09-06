@@ -103,7 +103,7 @@ def _compute_obs_metrics(
 
     Args:
         mtx: Data array.
-        edata: Annotated data matrix.
+        edata: Central data object.
         qc_vars: A list of previously calculated QC metrics to calculate summary statistics for.
         log1p: Whether to apply log1p normalization for the QC metrics. Only used with parameter 'qc_vars'.
 
@@ -152,7 +152,7 @@ def _compute_var_metrics(
 
     Args:
         mtx: Data array.
-        edata: Annotated data matrix.
+        edata: Central data object.
     """
     categorical_indices = np.ndarray([0], dtype=int)
     var_metrics = pd.DataFrame(index=edata.var_names)
@@ -408,7 +408,7 @@ def mcar_test(
     for a thorough discussion of missingness mechanisms.
 
     Args:
-        edata: Annotated data matrix.
+        edata: Central data object.
         method: Whether to perform a chi-square test on the entire dataset (“little”) or separate t-tests for every combination of variables (“ttest”).
         layer: Layer to apply the test to. Uses X matrix if set to `None`.
 

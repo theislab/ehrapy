@@ -448,7 +448,7 @@ def log_norm(
     unless a different base is given and the default :math:`offset` is :math:`1`.
 
     Args:
-        edata: Data object containing X to normalize values in. Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
+        edata: Central data object.
         vars: List of the names of the numeric variables to normalize.
               If None all numeric variables will be normalized.
         base: Numeric base for logarithm. If None the natural logarithm is used.
@@ -538,7 +538,7 @@ def offset_negative_values(edata: EHRData | AnnData, layer: str = None, copy: bo
     do not allow negative values for mathematical or technical reasons.
 
     Args:
-        edata: Data object containing X to normalize values in.
+        edata: Central data object.
         layer: The layer to offset.
         copy: Whether to return a modified copy of the data object.
 

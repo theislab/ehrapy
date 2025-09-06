@@ -21,7 +21,7 @@ def obs_df(  # pragma: no cover
     """Return values for observations in edata.
 
     Args:
-        edata: Data object to get values from.
+        edata: Central data object.
         keys: Keys from either `.var_names`, `.var[gene_symbols]`, or `.obs.columns`.
         obsm_keys: Tuple of `(key from obsm, column index of obsm[key])`.
         layer: Layer of `edata`.
@@ -49,7 +49,7 @@ def var_df(  # pragma: no cover
     """Return values for observations in edata.
 
     Args:
-        edata: Data object to get values from.
+        edata: Central data object.
         keys: Keys from either `.obs_names`, or `.var.columns`.
         varm_keys: Tuple of `(key from varm, column index of varm[key])`.
         layer: Layer of `edata`.
@@ -80,7 +80,7 @@ def rank_features_groups_df(
     """:func:`ehrapy.tools.rank_features_groups` results in the form of a :class:`~pandas.DataFrame`.
 
     Args:
-        edata: Data object to get values from.
+        edata: Central data object.
         group: Which group (as in :func:`ehrapy.tools.rank_features_groups`'s `groupby` argument)
                to return results from. Can be a list. All groups are returned if groups is `None`.
         key: Key differential groups were stored under.

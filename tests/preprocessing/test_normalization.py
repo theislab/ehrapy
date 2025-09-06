@@ -106,6 +106,7 @@ def test_norm_scale_array_types(adata_to_norm, array_type, expected_error):
 
 
 def test_norm_scale_3D_edata(edata_blob_small):
+    ep.pp.scale_norm(edata_blob_small)
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         ep.pp.scale_norm(edata_blob_small, layer="R_layer")
 
@@ -212,6 +213,7 @@ def test_norm_minmax_array_types(adata_to_norm, array_type, expected_error):
 
 
 def test_norm_minmax_3D_edata(edata_blob_small):
+    ep.pp.minmax_norm(edata_blob_small)
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         ep.pp.minmax_norm(edata_blob_small, layer="R_layer")
 
@@ -292,6 +294,7 @@ def test_norm_maxabs_array_types(adata_to_norm, array_type, expected_error):
 
 
 def test_norm_maxabs_3D_edata(edata_blob_small):
+    ep.pp.maxabs_norm(edata_blob_small)
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         ep.pp.maxabs_norm(edata_blob_small, layer="R_layer")
 
@@ -458,6 +461,7 @@ def test_norm_quantile_array_types(adata_to_norm, array_type, expected_error):
 
 
 def test_norm_quantile_3D_edata(edata_blob_small):
+    ep.pp.quantile_norm(edata_blob_small)
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         ep.pp.quantile_norm(edata_blob_small, layer="R_layer")
 
@@ -555,6 +559,7 @@ def test_norm_power_array_types(adata_to_norm, array_type, expected_error):
 
 
 def test_norm_power_3D_edata(edata_blob_small):
+    ep.pp.power_norm(edata_blob_small)
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         ep.pp.power_norm(edata_blob_small, layer="R_layer")
 
@@ -691,6 +696,9 @@ def test_norm_log_norm_array_types(adata_to_norm, array_type, expected_error):
 
 
 def test_norm_log_3D_edata(edata_blob_small):
+    edata_blob_small.X = np.abs(edata_blob_small.X)
+    edata_blob_small.layers["R_layer"] = np.abs(edata_blob_small.layers["R_layer"])
+    ep.pp.log_norm(edata_blob_small)
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         ep.pp.log_norm(edata_blob_small, layer="R_layer")
 
@@ -769,6 +777,7 @@ def test_offset_negative_values():
 
 
 def test_offset_negative_values_3D_edata(edata_blob_small):
+    ep.pp.offset_negative_values(edata_blob_small)
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         ep.pp.offset_negative_values(edata_blob_small, layer="R_layer")
 

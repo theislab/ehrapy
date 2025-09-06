@@ -31,9 +31,10 @@ def test_ols(mimic_2, layer):
 
 
 def test_ols_3D(edata_blob_small):
+    formula = "feature_1 ~ feature_2"
+    var_names = ["feature_1", "feature_2"]
+    ep.tl.ols(edata_blob_small, var_names, formula=formula, missing="drop")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        formula = "feature_1 ~ feature_2"
-        var_names = ["feature_1", "feature_2"]
         ep.tl.ols(edata_blob_small, var_names, formula=formula, missing="drop", layer="R_layer")
 
 
@@ -58,9 +59,10 @@ def test_glm(mimic_2, layer):
 
 
 def test_glm_3D(edata_blob_small):
+    formula = "feature_1 ~ feature_2"
+    var_names = ["feature_1", "feature_2"]
+    ep.tl.glm(edata_blob_small, var_names, formula=formula, missing="drop")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        formula = "feature_1 ~ feature_2"
-        var_names = ["feature_1", "feature_2"]
         ep.tl.glm(edata_blob_small, var_names, formula=formula, missing="drop", layer="R_layer")
 
 

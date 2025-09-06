@@ -120,7 +120,7 @@ show: Whether to display the figure or return axis.
 """
 
 doc_common_plot_args = """\
-adata: Annotated data matrix.
+adata: Central data object.
     var_names: `var_names` should be a valid subset of `adata.var_names`. If `var_names` is a mapping, then the key is used as label to group the values (see `var_group_labels`). The mapping values should be sequences of valid `adata.var_names`. In this case either coloring or 'brackets' are used for the grouping of var names depending on the plot. When `var_names` is a mapping, then the `var_group_labels` and `var_group_positions` are set.
     groupby: The key of the observation grouping to consider.
     use_raw: Use `raw` attribute of `adata` if present.
