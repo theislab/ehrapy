@@ -37,6 +37,7 @@ def test_scatter_plot(mimic_2, check_same_image):
 
 
 def test_scatter_plot_3D(edata_blob_small):
+    ep.pl.scatter(edata_blob_small, x="feature_1", y="feature_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         ep.pl.scatter(edata_blob_small, layer="R_layer", x="feature_1", y="feature_2")
 
@@ -61,6 +62,7 @@ def test_heatmap_plot(adata_mini, check_same_image):
 
 
 def test_heatmap_plot_3D(edata_blob_small):
+    ep.pl.heatmap(edata_blob_small, var_names=["feature_1", "feature_2"], groupby="cluster")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         ep.pl.heatmap(edata_blob_small, layer="R_layer", var_names=["feature_1", "feature_2"], groupby="cluster")
 
@@ -112,6 +114,7 @@ def test_dotplot_plot(mimic_2, check_same_image):
 
 
 def test_dotplot_plot_3D(edata_blob_small):
+    ep.pl.dotplot(edata_blob_small, var_names=["feature_1", "feature_2"], groupby="cluster")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         ep.pl.dotplot(edata_blob_small, layer="R_layer", var_names=["feature_1", "feature_2"], groupby="cluster")
 
@@ -142,6 +145,7 @@ def test_tracks_plot(mimic_2, check_same_image):
 
 def test_tracksplot_3D(edata_blob_small):
     edata_blob_small.obs["cluster"] = edata_blob_small.obs["cluster"].astype("category")
+    ep.pl.tracksplot(edata_blob_small, var_names=["feature_1", "feature_2"], groupby="cluster")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         ep.pl.tracksplot(edata_blob_small, var_names=["feature_1", "feature_2"], groupby="cluster", layer="R_layer")
 
@@ -163,6 +167,7 @@ def test_violin_plot(mimic_2, check_same_image):
 
 
 def test_violin_plot_3D(edata_blob_small):
+    ep.pl.violin(edata_blob_small, keys=["feature_1", "feature_2"], groupby="cluster")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         ep.pl.violin(edata_blob_small, keys=["feature_1", "feature_2"], groupby="cluster", layer="R_layer")
 
@@ -211,6 +216,7 @@ def test_matrix_plot(mimic_2, check_same_image):
 
 
 def test_matrix_plot_3D(edata_blob_small):
+    ep.pl.matrixplot(edata_blob_small, var_names=["feature_1", "feature_2"], groupby="cluster")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         ep.pl.matrixplot(edata_blob_small, var_names=["feature_1", "feature_2"], groupby="cluster", layer="R_layer")
 
@@ -240,6 +246,7 @@ def test_stacked_violin_plot(mimic_2, check_same_image):
 
 
 def test_stacked_violin_plot_3D(edata_blob_small):
+    ep.pl.stacked_violin(edata_blob_small, var_names=["feature_1", "feature_2"], groupby="cluster")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         ep.pl.stacked_violin(edata_blob_small, var_names=["feature_1", "feature_2"], groupby="cluster", layer="R_layer")
 

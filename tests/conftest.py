@@ -228,7 +228,10 @@ def adata_small_bias() -> AnnData:
 
 @pytest.fixture
 def edata_blob_small() -> ed.EHRData:
-    return ed.dt.ehrdata_blobs(n_variables=10, n_centers=1, n_observations=50, base_timepoints=10)
+    edata = ed.dt.ehrdata_blobs(n_variables=10, n_centers=2, n_observations=50, base_timepoints=10)
+    edata.obs["cluster"] = edata.obs["cluster"].astype("category")
+    ep.pp.neighbors(edata)
+    return edata
 
 
 # simplified from https://github.com/scverse/scanpy/blob/main/scanpy/tests/conftest.py

@@ -20,6 +20,8 @@ if TYPE_CHECKING:
 AnyRandom: TypeAlias = int | np.random.RandomState | None
 
 
+# No need for testing 3D; tSNE does not not support layers, and
+# and X can only be 2D currently, until this PR is merged: https://github.com/scverse/anndata/pull/1707
 @use_ehrdata(deprecated_after="1.0.0")
 def tsne(
     edata: EHRData | AnnData,
@@ -446,6 +448,8 @@ def leiden(
     )
 
 
+# No need for testing 3D; tSNE does not not support layers, and
+# and X can only be 2D currently, until this PR is merged: https://github.com/scverse/anndata/pull/1707
 @use_ehrdata(deprecated_after="1.0.0")
 def dendrogram(
     edata: EHRData | AnnData,
@@ -702,7 +706,7 @@ def ingest(
     """
     return sc.tl.ingest(
         adata=edata,
-        edata_ref=edata_ref,
+        adata_ref=edata_ref,
         obs=obs,
         embedding_method=embedding_method,
         labeling_method=labeling_method,

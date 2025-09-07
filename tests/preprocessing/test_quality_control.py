@@ -140,6 +140,7 @@ def test_calculate_qc_metrics(missing_values_adata):
 
 
 def test_encode_3D_edata(edata_blob_small):
+    ep.pp.qc_metrics(edata_blob_small)
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         ep.pp.qc_metrics(edata_blob_small, layer="R_layer")
 
@@ -200,8 +201,9 @@ def test_qc_lab_measurements_simple_layer(lab_measurements_layer_adata):
 
 
 def test_qc_lab_measurements_3D_edata(edata_blob_small):
+    ep.pp.qc_lab_measurements(edata_blob_small, measurements=list(edata_blob_small.var_names))
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.qc_lab_measurements(edata_blob_small, layer="R_layer")
+        ep.pp.qc_lab_measurements(edata_blob_small, measurements=list(edata_blob_small.var_names), layer="R_layer")
 
 
 def test_qc_lab_measurements_age():
@@ -243,6 +245,7 @@ def test_mcar_test_method_output_types(mar_adata, method, expected_output_type):
 
 
 def test_mcar_test_3D_edata(edata_blob_small):
+    mcar_test(edata_blob_small)
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         mcar_test(edata_blob_small, layer="R_layer")
 

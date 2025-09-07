@@ -84,7 +84,7 @@ def scatter(  # noqa: D417
     Color the plot using annotations of observations (`.obs`), variables (`.var`) or features (`.var_names`).
 
     Args:
-        edata: Data object object containing all observations.
+        edata: Central data object.
         x: x coordinate
         y: y coordinate
         color: Keys for annotations of observations/patients or features, or a hex color specification, e.g.,
@@ -516,7 +516,7 @@ def violin(  # noqa: D417
     Wraps :func:`seaborn.violinplot` for Data.
 
     Args:
-        edata: Data object object containing all observations.
+        edata: Central data object.
         keys: Keys for accessing variables of `.var_names` or fields of `.obs`.
         groupby: The key of the observation grouping to consider.
         log: Plot on logarithmic axis.
@@ -870,7 +870,7 @@ def clustermap(  # noqa: D417
     Wraps :func:`seaborn.clustermap` for Data.
 
     Args:
-        edata: Data object object containing all observations.
+        edata: Central data object.
         obs_keys: Categorical annotation to plot with a different color map. Currently, only a single key is supported.
         use_raw: Whether to use `raw` attribute of `edata`. Defaults to `True` if `.raw` is present.
         {show_save_ax}
@@ -918,7 +918,7 @@ def ranking(
     See, for example, how this is used in pl.pca_loadings.
 
     Args:
-        edata: Data object object containing all observations.
+        edata: Central data object.
         attr: The attribute of AnnData that contains the score.
         keys: The scores to look up an array from the attribute of edata.
         dictionary: Optional key dictionary.
@@ -979,7 +979,7 @@ def dendrogram(  # noqa: D417
     See :func:`~ehrapy.tools.dendrogram`.
 
     Args:
-        edata: Data object object containing all observations.
+        edata: Central data object.
         groupby: Categorical data column used to create the dendrogram.
         dendrogram_key: Key under with the dendrogram information was stored.
                         By default the dendrogram information is stored under `.uns[f'dendrogram_{{groupby}}']`.
@@ -1072,7 +1072,7 @@ def pca_loadings(
     """Rank features according to contributions to PCs.
 
     Args:
-        edata: Data object object containing all observations.
+        edata: Central data object.
         components: For example, ``'1,2,3'`` means ``[1, 2, 3]``, first, second, third principal component.
         include_lowest: Whether to show the features with both highest and lowest loadings.
         show: Show the plot, do not return axis.
@@ -1105,7 +1105,7 @@ def pca_variance_ratio(
     """Plot the variance ratio.
 
     Args:
-        edata: Data object object containing all observations.
+        edata: Central data object.
         n_pcs: Number of PCs to show.
         log: Plot on logarithmic scale..
         show: Show the plot, do not return axis.
@@ -1136,7 +1136,7 @@ def pca_overview(edata: EHRData | AnnData, **params) -> Axes | list[Axes] | None
     Call pca_ranking separately if you want to change the default settings.
 
     Args:
-        edata: Data object object containing all observations.
+        edata: Central data object.
         {scatter_bulk}
         {show_save_ax}
         params: Scatterplot parameters
@@ -1492,7 +1492,7 @@ def embedding_density(  # noqa: D417
     Plots the gaussian kernel density estimates (over condition) from the `sc.tl.embedding_density()` output.
 
     Args:
-        edata: Data object object containing all observations.
+        edata: Central data object.
         basis: The embedding over which the density was calculated.
                This embedded representation should be found in `edata.obsm['X_[basis]']``.
         key: Name of the `.obs` covariate that contains the density estimates. Alternatively, pass `groupby`.
@@ -1573,7 +1573,7 @@ def dpt_groups_pseudotime(
     """Plot groups and pseudotime.
 
     Args:
-        edata: Data object object containing all observations.
+        edata: Central data object.
         color_map: Matplotlib Colormap
         palette: Matplotlib color Palette
         show: Whether to show the plot.
@@ -1610,7 +1610,7 @@ def dpt_timeseries(
     """Heatmap of pseudotime series.
 
     Args:
-        edata: Data object object containing all observations.
+        edata: Central data object.
         color_map: Matplotlib Colormap
         as_heatmap: Whether to render the plot a heatmap
         show: Whether to show the plot.
@@ -1686,7 +1686,7 @@ def paga(
     This uses ForceAtlas2 or igraph's layout algorithms for most layouts :cite:p:`Csardi2006`.
 
     Args:
-        edata: Data object object containing all observations.
+        edata: Central data object.
         threshold: Do not draw edges for weights below this threshold. Set to 0 if you want
                    all edges. Discarding low-connectivity edges helps in getting a much clearer picture of the graph.
         color: Feature name or `obs` annotation defining the node colors.
@@ -1836,7 +1836,7 @@ def paga_path(
     """Feature changes along paths in the abstracted graph.
 
     Args:
-        edata: Data object object containing all observations.
+        edata: Central data object.
         nodes: A path through nodes of the abstracted graph, that is, names or indices
                (within `.categories`) of groups that have been used to run PAGA.
         keys: Either variables in `edata.var_names` or annotations in `edata.obs`. They are plotted using `color_map`.
@@ -1928,7 +1928,7 @@ def paga_compare(
     Consists in a scatter plot and the abstracted graph. See :func:`~ehrapy.plot.paga` for all related parameters.
 
     Args:
-        edata: Data object object containing all observations.
+        edata: Central data object.
         basis: String that denotes a plotting tool that computed coordinates.
         edges: Whether to display edges.
         color: Keys for annotations of observations/patients or features, or a hex color specification, e.g.,
@@ -2006,7 +2006,7 @@ def rank_features_groups(  # noqa: D417
     """Plot ranking of features.
 
     Args:
-        edata: Annotated data matrix.
+        edata: Central data object.
         groups: The groups for which to show the feature ranking.
         n_features: The number of features to plot.
         feature_symbols: Key for field in `.var` that stores feature symbols if you do not want to use `.var_names`.
@@ -2068,7 +2068,7 @@ def rank_features_groups_violin(  # noqa: D417
     """Plot ranking of features for all tested comparisons as violin plots.
 
     Args:
-        edata: Annotated data matrix.
+        edata: Central data object.
         groups: List of group names.
         n_features: Number of features to show. Is ignored if `feature_names` is passed.
         feature_names: List of features to plot. Is only useful if interested in a custom feature list,
@@ -2142,7 +2142,7 @@ def rank_features_groups_stacked_violin(
     """Plot ranking of genes using stacked_violin plot.
 
     Args:
-        edata: Annotated data matrix.
+        edata: Central data object.
         groups: List of group names.
         n_features: Number of features to show. Is ignored if `feature_names` is passed.
         groupby: Which key to group the features by.
@@ -2208,7 +2208,7 @@ def rank_features_groups_heatmap(
     """Plot ranking of genes using heatmap plot (see :func:`~ehrapy.plot.heatmap`).
 
     Args:
-        edata: Annotated data matrix.
+        edata: Central data object.
         groups: List of group names.
         n_features: Number of features to show. Is ignored if `feature_names` is passed.
         groupby: Which key to group the features by.
@@ -2279,7 +2279,7 @@ def rank_features_groups_dotplot(
     """Plot ranking of genes using dotplot plot (see :func:`~ehrapy.plot.dotplot`).
 
     Args:
-        edata: Annotated data matrix.
+        edata: Central data object.
         groups: List of group names.
         n_features: Number of features to show. Is ignored if `feature_names` is passed.
         groupby: Which key to group the features by.
@@ -2360,7 +2360,7 @@ def rank_features_groups_matrixplot(
     """Plot ranking of genes using matrixplot plot (see :func:`~ehrapy.plot.matrixplot`).
 
     Args:
-        edata: Annotated data matrix.
+        edata: Central data object.
         groups: List of group names.
         n_features: Number of features to show. Is ignored if `feature_names` is passed.
         groupby: Which key to group the features by.
@@ -2429,7 +2429,7 @@ def rank_features_groups_tracksplot(
     """Plot ranking of genes using tracksplot plot (see :func:`~ehrapy.plot.tracksplot`).
 
     Args:
-        edata: Annotated data matrix.
+        edata: Central data object.
         groups: List of group names.
         n_features: Number of features to show. Is ignored if `feature_names` is passed.
         groupby: Which key to group the features by.
