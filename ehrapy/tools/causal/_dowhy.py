@@ -6,13 +6,17 @@ import warnings
 from io import StringIO
 from typing import TYPE_CHECKING, Any, Literal
 
+import ehrdata as ed
 import numpy as np
 from lamin_utils import logger
 
+from ehrapy._compat import function_2D_only, use_ehrdata
+
 if TYPE_CHECKING:
-    import anndata as ad
     import dowhy
     import networkx as nx
+    from anndata import AnnData
+    from ehrdata import EHRData
 
 warnings.filterwarnings("ignore")
 
@@ -29,8 +33,10 @@ class capture_output(list):
         sys.stdout = self._stdout
 
 
+@function_2D_only()
+@use_ehrdata(deprecated_after="1.0.0")
 def causal_inference(
-    adata: ad.AnnData,
+    edata: EHRData | AnnData,
     graph: nx.DiGraph | str,
     treatment: str,
     outcome: str,
@@ -73,6 +79,7 @@ def causal_inference(
     show_refute_plots: bool | Literal["colormesh", "contour", "line"] | None = None,
     attempts: int = 10,
     *,
+    layer: str | None = None,
     identify_kwargs: dict[str, Any] | None = None,
     estimate_kwargs: dict[str, Any] | None = None,
     refute_kwargs: dict[str, Any] | None = None,
@@ -80,7 +87,7 @@ def causal_inference(
     """Performs causal inference using the specified causal model and returns a tuple containing the causal estimate and the results of any refutation tests.
 
     Args:
-        adata: An AnnData object containing the input data.
+        edata: Central data object.
         graph: A str representing the causal graph to use.
         treatment: A str representing the treatment variable in the causal graph.
         outcome: A str representing the outcome variable in the causal graph.
@@ -92,6 +99,7 @@ def causal_inference(
         show_graph: Whether to display the graph or not.
         show_refute_plots: Whether to display the refutation plots or not.
         attempts: Number of attempts to try to generate a valid causal estimate.
+        layer: The layer to use.
         identify_kwargs: Optional keyword arguments for dowhy.CausalModel.identify_effect().
         estimate_kwargs: Optional keyword arguments for dowhy.CausalModel.estimate_effect().
         refute_kwargs: Optional keyword arguments for dowhy.CausalModel.refute_estimate().
@@ -100,7 +108,7 @@ def causal_inference(
         A tuple containing the causal estimate and a dictionary of the results of any refutation tests.
 
     Raises:
-        TypeError: If adata, graph, treatment, outcome, refute_methods, estimation_method, or return_as is not of the expected type.
+        TypeError: If edata, graph, treatment, outcome, refute_methods, estimation_method, or return_as is not of the expected type.
         ValueError: If refute_methods or estimation_method contains an unknown value, or if return_as is an unknown value.
 
     Examples:
@@ -113,7 +121,7 @@ def causal_inference(
         ... )
 
         >>> ci = ep.tl.causal_inference(
-        ...     adata=anndata.AnnData(data["df"]),
+        ...     edata=ehrdata.EHRData(data["df"]),
         ...     graph=data["gml_graph"],
         ...     treatment="v0",
         ...     outcome="y",
@@ -121,7 +129,7 @@ def causal_inference(
         ... )
 
         >>> estimate = ep.tl.causal_inference(
-        ...     adata=ci.linear_data,
+        ...     edata=ci.linear_data,
         ...     graph=ci.linear_graph,
         ...     treatment="treatment",
         ...     outcome="outcome",
@@ -174,7 +182,9 @@ def causal_inference(
 
     import dowhy
 
-    model = dowhy.CausalModel(data=adata.to_df(), graph=graph, treatment=treatment, outcome=outcome)
+    model = dowhy.CausalModel(
+        data=ed.io.to_pandas(edata, layer=layer), graph=graph, treatment=treatment, outcome=outcome
+    )
 
     if show_graph:
         model.view_model()
