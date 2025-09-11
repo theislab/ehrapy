@@ -151,7 +151,7 @@ def sample(
     replace: bool = False,
     axis: Literal["obs", 0, "var", 1] = "obs",
     p: str | NDArray[np.bool_] | NDArray[np.floating] | None = None,
-) -> AnnData | None | tuple[np.ndarray, NDArray[np.int64]]:  # pragma: no cover
+) -> AnnData | None | tuple[np.ndarray, np.ndarray ]:  # pragma: no cover
     """Sample a fraction or a number of observations / variables with or without replacement.
 
     Args:
