@@ -1,16 +1,18 @@
 from __future__ import annotations
 
+import warnings
 from collections.abc import Callable
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 
 import numpy as np
 import scanpy as sc
+from anndata import AnnData
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Mapping, Sequence
 
-    from anndata import AnnData
+    from numpy.typing import NDArray
     from scanpy.neighbors import KnnTransformerLike
     from scipy.sparse import spmatrix
 
@@ -128,20 +130,74 @@ def subsample(
     random_state: AnyRandom = 0,
     copy: bool = False,
 ) -> AnnData | None:  # pragma: no cover
-    """Subsample to a fraction of the number of observations.
+    warnings.warn(
+        "This function is deprecated and will be removed in the next release. Use ep.pp.sample instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return sample(data=data, fraction=fraction, n_obs=n_obs, rng=random_state, copy=copy)
+
+
+def sample(
+    data: AnnData | np.ndarray,
+    fraction: float | None = None,
+    *,
+    n_obs: int | None = None,
+    rng: int | None = None,
+    balanced: bool = False,
+    method: Literal["under", "over"] = "under",
+    key: str | None = None,
+    copy: bool = False,
+    replace: bool = False,
+    axis: Literal["obs", 0, "var", 1] = "obs",
+    p: str | NDArray[np.bool_] | NDArray[np.floating] | None = None,
+) -> AnnData | None | tuple[np.ndarray, NDArray[np.int64]]:  # pragma: no cover
+    """Sample a fraction or a number of observations / variables with or without replacement.
 
     Args:
         data: The (annotated) data matrix of shape `n_obs` × `n_vars`. Rows correspond to observations (patients) and columns to features.
-        fraction: Subsample to this `fraction` of the number of observations.
-        n_obs: Subsample to this number of observations.
-        random_state: Random seed to change subsampling.
+        fraction: Sample to this `fraction` of the number of observations.
+        n_obs: Sample to this number of observations.
+        rng: Random seed to change subsampling.
         copy: If an :class:`~anndata.AnnData` is passed, determines whether a copy is returned.
+        balanced: If `True`, balance the groups in `adata.obs[key]` by under- or over-sampling.
+                  Requires `key` to be set. If `False`, simple random sampling is performed.
+        method: The sampling method, either "under" for under-sampling or "over" for over-sampling. Only relevant if `balanced=True`.
+        key: Key in `adata.obs` to use for balancing the groups. Only relevant if `balanced=True`.
+        replace: If `True`, samples are drawn with replacement. Only relevant if `balanced=False`.
+        axis: Axis to sample on. Either `obs` / `0` (observations, default) or `var` / `1` (variables).
+        p: Drawing probabilities (floats) or mask (bools).
+            Either an `axis`-sized array, or the name of a column
+            If p is an array of probabilities, it must sum to 1.
 
     Returns:
         Returns `X[obs_indices], obs_indices` if data is array-like, otherwise subsamples the passed
         :class:`~anndata.AnnData` (`copy == False`) or returns a subsampled copy of it (`copy == True`).
     """
-    return sc.pp.subsample(data=data, fraction=fraction, n_obs=n_obs, random_state=random_state, copy=copy)
+    if balanced:
+        if not isinstance(data, AnnData):
+            raise TypeError(f"Input data is not an AnnData object: type of {data}, is {type(data)}")
+
+        if key is None:
+            raise TypeError("Key must be provided when balanced=True")
+
+        if key not in data.obs.columns:
+            raise ValueError(f"Key '{key}' not found in adata.obs. Available keys are: {data.obs.columns.tolist()}")
+
+        labels = data.obs[key].values
+
+        if method == "under" or method == "over":
+            sampled_indices, sampled_labels = _random_resample(labels, method=method, random_state=rng)
+        else:
+            raise ValueError(f"Unknown sampling method: {method}")
+
+        if copy:
+            return data[sampled_indices].copy()
+        else:
+            data._inplace_subset_obs(sampled_indices)
+            return None
+    else:
+        return sc.pp.sample(data=data, fraction=fraction, n=n_obs, rng=rng, copy=copy, replace=replace, axis=axis, p=p)
 
 
 def combat(
@@ -279,3 +335,51 @@ def neighbors(
         key_added=key_added,
         copy=copy,
     )
+
+
+def _random_resample(
+    label: str, target: str = "balanced", method: Literal["under", "over"] = "under", random_state: int = 0
+) -> tuple[np.ndarray, np.ndarray]:
+    """Helper function to under- or over-sample the data to achieve a balanced dataset.
+
+    Args:
+        label: The labels of the data.
+        target: The target number of samples for each class. If "balanced", it will balance the classes to the minimum class size.
+        method: The sampling method, either "under" for under-sampling or "over" for over-sampling.
+        random_state: Random seed.
+
+    Returns:
+        A tuple of (sampled_indices, sampled_labels).
+    """
+    label = np.asarray(label)
+    rnd = np.random.default_rng(random_state)
+    classes, counts = np.unique(label, return_counts=True)
+
+    if target == "balanced":
+        if method == "under":
+            target_count = counts.min()
+        elif method == "over":
+            target_count = counts.max()
+        else:
+            raise ValueError(f"Unknown sampling method: {method}")
+
+    indices = []
+
+    for c in classes:
+        class_idx = np.where(label == c)[0]
+        n = len(class_idx)
+        if method == "under":
+            if n > target_count:
+                sampled_idx = rnd.choice(class_idx, size=target_count, replace=False)
+                indices.extend(sampled_idx)
+            else:
+                indices.extend(class_idx)
+        elif method == "over":
+            if n < target_count:
+                sampled_idx = rnd.choice(class_idx, size=target_count, replace=True)
+                indices.extend(sampled_idx)
+            else:
+                indices.extend(class_idx)
+
+    sample_indices = np.array(indices)
+    return sample_indices, label[sample_indices]

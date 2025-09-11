@@ -17,31 +17,29 @@ def adata_mini():
 def test_balanced_sampling_basic(adata_mini):
     # no key
     with pytest.raises(TypeError):
-        ep.pp.balanced_sample(adata_mini)
+        ep.pp.sample(adata_mini, balanced=True)
 
     # invalid key
     with pytest.raises(ValueError):
-        ep.pp.balanced_sample(adata_mini, key="non_existing_column")
+        ep.pp.sample(adata_mini, balanced=True, key="non_existing_column")
 
     # invalid method
     with pytest.raises(ValueError):
-        ep.pp.balanced_sample(adata_mini, key="clinic_day", method="non_existing_method")
+        ep.pp.sample(adata_mini, balanced=True, key="clinic_day", method="non_existing_method")
 
     # undersampling
-    adata_sampled = ep.pp.balanced_sample(adata_mini, key="clinic_day", method="RandomUnderSampler", copy=True)
+    adata_sampled = ep.pp.sample(adata_mini, balanced=True, key="clinic_day", method="under", copy=True)
     assert adata_sampled.n_obs == 4
     assert adata_sampled.obs.clinic_day.value_counts().min() == adata_sampled.obs.clinic_day.value_counts().max()
 
     # oversampling
-    adata_sampled = ep.pp.balanced_sample(adata_mini, key="clinic_day", method="RandomOverSampler", copy=True)
+    adata_sampled = ep.pp.sample(adata_mini, balanced=True, key="clinic_day", method="over", copy=True)
     assert adata_sampled.n_obs == 8
     assert adata_sampled.obs.clinic_day.value_counts().min() == adata_sampled.obs.clinic_day.value_counts().max()
 
     # undersampling, no copy
     adata_mini_for_undersampling = adata_mini.copy()
-    output = ep.pp.balanced_sample(
-        adata_mini_for_undersampling, key="clinic_day", method="RandomUnderSampler", copy=False
-    )
+    output = ep.pp.sample(adata_mini_for_undersampling, balanced=True, key="clinic_day", method="under", copy=False)
     assert output is None
     assert adata_mini_for_undersampling.n_obs == 4
     assert (
@@ -51,9 +49,7 @@ def test_balanced_sampling_basic(adata_mini):
 
     # oversampling, no copy
     adata_mini_for_oversampling = adata_mini.copy()
-    output = ep.pp.balanced_sample(
-        adata_mini_for_oversampling, key="clinic_day", method="RandomOverSampler", copy=False
-    )
+    output = ep.pp.sample(adata_mini_for_oversampling, balanced=True, key="clinic_day", method="over", copy=False)
     assert output is None
     assert adata_mini_for_oversampling.n_obs == 8
     assert (
