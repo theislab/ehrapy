@@ -12,6 +12,7 @@ from anndata import AnnData
 if TYPE_CHECKING:
     from collections.abc import Collection, Mapping, Sequence
 
+    from ehrdata import EHRData
     from numpy.typing import NDArray
     from scanpy.neighbors import KnnTransformerLike
     from scipy.sparse import spmatrix
@@ -139,7 +140,7 @@ def subsample(
 
 
 def sample(
-    data: AnnData | np.ndarray,
+    data: AnnData | np.ndarray | EHRData,
     fraction: float | None = None,
     *,
     n_obs: int | None = None,
@@ -151,7 +152,7 @@ def sample(
     replace: bool = False,
     axis: Literal["obs", 0, "var", 1] = "obs",
     p: str | NDArray[np.bool_] | NDArray[np.floating] | None = None,
-) -> AnnData | None | tuple[np.ndarray, np.ndarray ]:  # pragma: no cover
+) -> AnnData | None | tuple[np.ndarray, np.ndarray]:  # pragma: no cover
     """Sample a fraction or a number of observations / variables with or without replacement.
 
     Args:
