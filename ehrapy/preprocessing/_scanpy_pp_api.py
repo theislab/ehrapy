@@ -146,8 +146,8 @@ def sample(
     n_obs: int | None = None,
     rng: int | None = None,
     balanced: bool = False,
-    method: Literal["under", "over"] = "under",
-    key: str | None = None,
+    balanced_method: Literal["under", "over"] = "under",
+    balanced_key: str | None = None,
     copy: bool = False,
     replace: bool = False,
     axis: Literal["obs", 0, "var", 1] = "obs",
@@ -159,12 +159,12 @@ def sample(
         data: The (annotated) data matrix of shape `n_obs` × `n_vars`. Rows correspond to observations (patients) and columns to features.
         fraction: Sample to this `fraction` of the number of observations.
         n_obs: Sample to this number of observations.
-        rng: Random seed to change subsampling.
+        rng: Random seed.
         copy: If an :class:`~anndata.AnnData` is passed, determines whether a copy is returned.
         balanced: If `True`, balance the groups in `adata.obs[key]` by under- or over-sampling.
                   Requires `key` to be set. If `False`, simple random sampling is performed.
-        method: The sampling method, either "under" for under-sampling or "over" for over-sampling. Only relevant if `balanced=True`.
-        key: Key in `adata.obs` to use for balancing the groups. Only relevant if `balanced=True`.
+        balanced_method: The sampling method, either "under" for under-sampling or "over" for over-sampling. Only relevant if `balanced=True`.
+        balanced_key: Key in `adata.obs` to use for balancing the groups. Only relevant if `balanced=True`.
         replace: If `True`, samples are drawn with replacement. Only relevant if `balanced=False`.
         axis: Axis to sample on. Either `obs` / `0` (observations, default) or `var` / `1` (variables).
         p: Drawing probabilities (floats) or mask (bools).
@@ -174,23 +174,40 @@ def sample(
     Returns:
         Returns `X[obs_indices], obs_indices` if data is array-like, otherwise subsamples the passed
         :class:`~anndata.AnnData` (`copy == False`) or returns a subsampled copy of it (`copy == True`).
+
+    Examples:
+        >>> import ehrapy as ep
+        >>> adata = ep.data.diabetes_130_fairlearn(columns_obs_only=["age"])
+        >>> adata.obs.age.value_counts()
+        age
+        'Over 60 years'          68541
+        '30-60 years'            30716
+        '30 years or younger'     2509
+        >>> adata_balanced = ep.pp.sample(adata, balanced=True, balanced_method="under", balanced_key="age", copy=True)
+        >>> adata_balanced.obs.age.value_counts()
+         age
+        '30 years or younger'    2509
+        '30-60 years'            2509
+        'Over 60 years'          2509
     """
     if balanced:
         if not isinstance(data, AnnData):
             raise TypeError(f"Input data is not an AnnData object: type of {data}, is {type(data)}")
 
-        if key is None:
+        if balanced_key is None:
             raise TypeError("Key must be provided when balanced=True")
 
-        if key not in data.obs.columns:
-            raise ValueError(f"Key '{key}' not found in adata.obs. Available keys are: {data.obs.columns.tolist()}")
+        if balanced_key not in data.obs.columns:
+            raise ValueError(
+                f"Key '{balanced_key}' not found in adata.obs. Available keys are: {data.obs.columns.tolist()}"
+            )
 
-        labels = data.obs[key].values
+        labels = data.obs[balanced_key].values
 
-        if method == "under" or method == "over":
-            sampled_indices, sampled_labels = _random_resample(labels, method=method, random_state=rng)
+        if balanced_method == "under" or balanced_method == "over":
+            sampled_indices, sampled_labels = _random_resample(labels, method=balanced_method, random_state=rng)
         else:
-            raise ValueError(f"Unknown sampling method: {method}")
+            raise ValueError(f"Unknown sampling method: {balanced_method}")
 
         if copy:
             return data[sampled_indices].copy()
