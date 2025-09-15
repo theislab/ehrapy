@@ -140,7 +140,7 @@ def subsample(
 
 
 def sample(
-    data: AnnData | np.ndarray | EHRData,
+    data: AnnData | np.ndarray,
     fraction: float | None = None,
     *,
     n_obs: int | None = None,
