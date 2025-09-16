@@ -64,3 +64,31 @@ def test_coxph_forestplot(mimic_2, check_same_image):
         base_path=f"{_TEST_IMAGE_PATH}/coxph_forestplot",
         tol=2e-1,
     )
+
+
+def test_ols(mimic_2, check_same_image):
+    adata_sample = mimic_2[:200].copy()
+    co2_lm_result = ep.tl.ols(
+        adata_sample, var_names=["pco2_first", "tco2_first"], formula="tco2_first ~ pco2_first", missing="drop"
+    ).fit()
+    ax = ep.pl.ols(
+        adata_sample,
+        x="pco2_first",
+        y="tco2_first",
+        ols_results=[co2_lm_result],
+        ols_color=["red"],
+        xlabel="PCO2",
+        ylabel="TCO2",
+        show=False,
+    )
+
+    fig = ax.figure
+
+    fig.set_size_inches(8, 6)
+    fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
+
+    check_same_image(
+        fig=fig,
+        base_path=f"{_TEST_IMAGE_PATH}/ols",
+        tol=2e-1,
+    )
