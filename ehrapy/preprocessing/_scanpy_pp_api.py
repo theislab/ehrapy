@@ -19,12 +19,7 @@ if TYPE_CHECKING:
     from scanpy.neighbors import KnnTransformerLike
     from scipy.sparse import spmatrix
 
-    from ehrapy.preprocessing._types import KnownTransformer
-
-AnyRandom: TypeAlias = int | np.random.RandomState | None
-CSBase: TypeAlias = sp.csr_matrix | sp.csc_matrix
-RNGLike: TypeAlias = np.random.Generator | np.random.BitGenerator
-SeedLike: TypeAlias = int | np.integer | Sequence[int] | np.random.SeedSequence
+    from ehrapy.preprocessing._types import AnyRandom, CSBase, KnownTransformer, RNGLike, SeedLike
 
 
 def pca(

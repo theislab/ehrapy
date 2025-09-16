@@ -1,6 +1,8 @@
 from pathlib import Path
 
+import numpy as np
 import pytest
+import scipy.sparse as sp
 
 import ehrapy as ep
 from ehrapy.io._read import read_csv
@@ -14,7 +16,13 @@ def adata_mini():
     return read_csv(f"{TEST_DATA_PATH}/encode/dataset1.csv", columns_obs_only=["clinic_day"])
 
 
-def test_balanced_sampling_basic(adata_mini):
+@pytest.mark.parametrize("sparse_input", [False, True])
+def test_balanced_sampling_basic(adata_mini, sparse_input):
+    if sparse_input:
+        adata_sparse = adata_mini.copy()
+        adata_sparse.X = sp.csr_matrix(np.asarray(adata_sparse.X, dtype=np.float64))
+        adata_mini = adata_sparse
+
     # no key
     with pytest.raises(TypeError):
         ep.pp.sample(adata_mini, balanced=True)
