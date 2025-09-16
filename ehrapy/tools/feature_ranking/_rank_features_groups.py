@@ -388,15 +388,17 @@ def rank_features_groups(
         - pts_rest (:class:`pandas.DataFrame`): Only if reference is set to ‘rest’. Fraction of observations from the union of the rest of each group containing the features.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=False)
+        >>> edata = ed.dt.mimic_2()
         >>> # want to move some metedata to the obs field
         >>> ep.anndata.move_to_obs(edata, to_obs=["service_unit", "service_num", "age", "mort_day_censored"])
         >>> ep.tl.rank_features_groups(edata, "service_unit")
         >>> ep.pl.rank_features_groups(edata)
 
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=False)
+        >>> edata = ed.dt.mimic_2()
         >>> # want to move some metedata to the obs field
         >>> ep.anndata.move_to_obs(edata, to_obs=["service_unit", "service_num", "age", "mort_day_censored"])
         >>> ep.tl.rank_features_groups(
@@ -404,8 +406,9 @@ def rank_features_groups(
         ... )
         >>> ep.pl.rank_features_groups(edata)
 
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=False)
+        >>> edata = ed.dt.mimic_2()
         >>> # want to move some metedata to the obs field
         >>> ep.anndata.move_to_obs(edata, to_obs=["service_unit", "service_num", "age", "mort_day_censored"])
         >>> ep.tl.rank_features_groups(

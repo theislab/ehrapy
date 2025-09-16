@@ -60,8 +60,9 @@ def ols(
         The OLS model instance.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=False)
+        >>> edata = ed.dt.mimic_2()
         >>> formula = "tco2_first ~ pco2_first"
         >>> var_names = ["tco2_first", "pco2_first"]
         >>> ols = ep.tl.ols(edata, var_names, formula, missing="drop")
@@ -120,8 +121,9 @@ def glm(
         The GLM model instance.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=False)
+        >>> edata = ed.dt.mimic_2()
         >>> formula = "day_28_flg ~ age"
         >>> var_names = ["day_28_flg", "age"]
         >>> family = "Binomial"
@@ -194,8 +196,9 @@ def kmf(
         Fitted KaplanMeierFitter.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=False)
+        >>> edata = ed.dt.mimic_2()
         >>> # Flip 'censor_fl' because 0 = death and 1 = censored
         >>> edata[:, ["censor_flg"]].X = np.where(edata[:, ["censor_flg"]].X == 0, 1, 0)
         >>> kmf = ep.tl.kmf(edata[:, ["mort_day_censored"]].X, edata[:, ["censor_flg"]].X)
@@ -283,8 +286,9 @@ def kaplan_meier(
         Fitted KaplanMeierFitter.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=False)
+        >>> edata = ed.dt.mimic_2()
         >>> # Flip 'censor_fl' because 0 = death and 1 = censored
         >>> edata[:, ["censor_flg"]].X = np.where(edata[:, ["censor_flg"]].X == 0, 1, 0)
         >>> kmf = ep.tl.kaplan_meier(edata, "mort_day_censored", "censor_flg", label="Mortality")
@@ -481,8 +485,9 @@ def cox_ph(
         Fitted CoxPHFitter.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=False)
+        >>> edata = ed.dt.mimic_2()
         >>> # Flip 'censor_fl' because 0 = death and 1 = censored
         >>> edata[:, ["censor_flg"]].X = np.where(edata[:, ["censor_flg"]].X == 0, 1, 0)
         >>> cph = ep.tl.cox_ph(edata, "mort_day_censored", "censor_flg")
@@ -585,8 +590,9 @@ def weibull_aft(
         Fitted WeibullAFTFitter.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=False)
+        >>> edata = ed.dt.mimic_2()
         >>> edata[:, ["censor_flg"]].X = np.where(edata[:, ["censor_flg"]].X == 0, 1, 0)
         >>> edata = edata[:, ["mort_day_censored", "censor_flg"]]
         >>> aft = ep.tl.weibull_aft(edata, duration_col="mort_day_censored", event_col="censor_flg")
@@ -685,8 +691,9 @@ def log_logistic_aft(
         Fitted LogLogisticAFTFitter.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=False)
+        >>> edata = ed.dt.mimic_2()
         >>> # Flip 'censor_fl' because 0 = death and 1 = censored
         >>> edata[:, ["censor_flg"]].X = np.where(edata[:, ["censor_flg"]].X == 0, 1, 0)
         >>> edata = edata[:, ["mort_day_censored", "censor_flg"]]
@@ -822,8 +829,9 @@ def nelson_aalen(
         Fitted NelsonAalenFitter.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=False)
+        >>> edata = ed.dt.mimic_2()
         >>> # Flip 'censor_fl' because 0 = death and 1 = censored
         >>> edata[:, ["censor_flg"]].X = np.where(edata[:, ["censor_flg"]].X == 0, 1, 0)
         >>> naf = ep.tl.nelson_aalen(edata, "mort_day_censored", "censor_flg")
@@ -897,8 +905,9 @@ def weibull(
         Fitted WeibullFitter.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=False)
+        >>> edata = ed.dt.mimic_2()
         >>> # Flip 'censor_fl' because 0 = death and 1 = censored
         >>> edata[:, ["censor_flg"]].X = np.where(edata[:, ["censor_flg"]].X == 0, 1, 0)
         >>> wf = ep.tl.weibull(edata, "mort_day_censored", "censor_flg")

@@ -98,7 +98,8 @@ def infer_feature_types(
 
     Examples:
         >>> import ehrdata as ed
-        >>> edata = ep.dt.mimic_2()
+        >>> import ehrapy as ep
+        >>> edata = ed.dt.mimic_2()
         >>> ep.ad.infer_feature_types(edata)
     """
     from ehrapy.anndata.anndata_ext import anndata_to_df
@@ -216,6 +217,7 @@ def feature_type_overview(edata: EHRData | AnnData) -> None:
 
     Examples:
         >>> import ehrdata as ed
+        >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> ep.ad.feature_type_overview(edata)
     """
@@ -267,7 +269,8 @@ def replace_feature_types(edata: EHRData | AnnData, features: Iterable[str], cor
 
     Examples:
         >>> import ehrdata as ed
-        >>> edata = ep.dt.diabetes_130_fairlearn()
+        >>> import ehrapy as ep
+        >>> edata = ed.dt.diabetes_130_fairlearn()
         >>> ep.ad.infer_feature_types(edata)
         >>> ep.ad.replace_feature_types(edata, ["time_in_hospital", "number_diagnoses", "num_procedures"], "numeric")
     """

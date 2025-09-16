@@ -44,6 +44,7 @@ def winsorize(
         Winsorized data object if copy is True.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> ep.pp.winsorize(edata, vars=["bmi"])
@@ -100,6 +101,7 @@ def clip_quantile(
         A copy of original data object with clipped features.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> ep.pp.clip_quantile(edata, vars=["bmi"])

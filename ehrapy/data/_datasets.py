@@ -35,7 +35,7 @@ def mimic_2(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ed.dt.mimic_2()
+        >>> adata = ep.dt.mimic_2()
     """
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/ehrapy_mimic2.csv",
@@ -513,7 +513,7 @@ def thyroid(
         >>> import ehrapy as ep
         >>> adata = ep.dt.thyroid(encoded=True)
     """
-    function_future_warning("ehrapy.dt.thyroid")
+    function_future_warning("ep.dt.thyroid")
     adata: AnnData = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/thyroid.csv",
         download_dataset_name="thyroid.csv",

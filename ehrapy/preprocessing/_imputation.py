@@ -59,6 +59,7 @@ def explicit_impute(
     Examples:
         Replace all missing values in edata with the value 0:
 
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> ep.pp.explicit_impute(edata, replacement=0)
@@ -169,6 +170,7 @@ def simple_impute(
         If copy is False, the original data object is modified in place, and None is returned.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> ep.pp.simple_impute(edata, strategy="median")
@@ -252,6 +254,7 @@ def knn_impute(
         If copy is False, the original data object is modified in place, and None is returned.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> ep.ad.infer_feature_types(edata)
@@ -369,6 +372,7 @@ def miss_forest_impute(
         If copy is False, the original data object is modified in place, and None is returned.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> ep.pp.miss_forest_impute(edata)
@@ -476,6 +480,7 @@ def mice_forest_impute(
         If copy is False, the original data object is modified in place, and None is returned.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> ep.ad.infer_feature_types(edata)

@@ -59,13 +59,15 @@ def encode(
         A data object with the encoded values in `.X` if `layer` is `None`, otherwise a data object with the encoded values in a layer named as the `layer` parameter.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2()
+        >>> edata = ed.dt.mimic_2()
         >>> edata_encoded = ep.pp.encode(edata, autodetect=True, encodings="one-hot")
 
         >>> # Example using custom encodings per columns:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2()
+        >>> edata = ed.dt.mimic_2()
         >>> # encode col1 and col2 using label encoding and encode col3 using one hot encoding
         >>> edata_encoded = ep.pp.encode(
         ...     edata, autodetect=False, encodings={"label": ["col1", "col2"], "one-hot": ["col3"]}
@@ -323,12 +325,12 @@ def _one_hot_encoding(
     """Encode categorical columns using one hot encoding.
 
     Args:
-        edata: The current data object.
+        edata: Central data object.
         X: Current (encoded) X
         layer: The layer to encode.
         updated_obs: A copy of the original obs where the original categorical values are stored that will be encoded
-        var_names: Var names of current data object
-        unencoded_var_names: Unencoded var na.es
+        var_names: Names of variables to consider.
+        unencoded_var_names: Unencoded var names.
         categoricals: The name of the categorical columns to be encoded
         progress: Rich Progress object.
         task: Rich Task object.
@@ -376,7 +378,7 @@ def _label_encoding(
     """Encode categorical columns using label encoding.
 
     Args:
-        edata: The current data object.
+        edata: Central data object.
         X: Current (encoded) X.
         layer: The layer to encode.
         updated_obs: A copy of the original obs where the original categorical values are stored that will be encoded.
@@ -572,7 +574,7 @@ def _delete_all_encodings(edata: EHRData | AnnData, layer: str | None) -> tuple[
     """Delete all encoded columns and keep track of their indices.
 
     Args:
-        edata: The AnnData object to operate on
+        edata: Central data object.
         layer: The layer to operate on.
 
     Returns:
@@ -663,7 +665,7 @@ def _update_obs(edata: EHRData | AnnData, categorical_names: list[str], layer: s
     """Add the original categorical values to obs.
 
     Args:
-        edata: The original data object.
+        edata: Central data object.
         categorical_names: Name of each categorical column
         layer: The layer to operate on.
 

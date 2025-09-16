@@ -31,13 +31,13 @@ def missing_values_matrix(
     categoricals: bool = False,
     layer: str | None = None,
 ):  # pragma: no cover
-    """A matrix visualization of the nullity of the given Data object.
+    """A matrix visualization of the nullity of the given data object.
 
     Args:
         edata: Central data object.
         filter: The filter to apply to the matrix. Should be one of "top", "bottom", or None.
-        max_cols: The max number of columns from the Data object to include.
-        max_percentage: The max percentage fill of the columns from the Data object.
+        max_cols: The max number of columns from the data object to include.
+        max_percentage: The max percentage fill of the columns from the data object.
         sort: The row sort order to apply. Can be "ascending", "descending", or None.
         figsize: The size of the figure to display.
         width_ratios: The ratio of the width of the matrix to the width of the sparkline.
@@ -54,6 +54,7 @@ def missing_values_matrix(
 
     Examples:
         >>> import ehrdata as ed
+        >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> ep.pl.missing_values_matrix(edata, filter="bottom", max_cols=15, max_percentage=0.999)
 
@@ -114,14 +115,14 @@ def missing_values_barplot(
     categoricals: bool = False,
     layer: str | None = None,
 ):  # pragma: no cover
-    """A bar chart visualization of the nullity of the given Data object.
+    """A bar chart visualization of the nullity of the given data object.
 
     Args:
         edata: Central data object.
         log: Whether to display a logarithmic plot.
         filter: The filter to apply to the barplot. Should be one of "top", "bottom", or None.
-        max_cols: The max number of columns from the Data object to include.
-        max_percentage: The max percentage fill of the columns from the Data object.
+        max_cols: The max number of columns from the data object to include.
+        max_percentage: The max percentage fill of the columns from the data object.
         sort: The row sort order to apply. Can be "ascending", "descending", or None.
         figsize: The size of the figure to display.
         color: The color of the filled columns.
@@ -137,6 +138,7 @@ def missing_values_barplot(
 
     Examples:
         >>> import ehrdata as ed
+        >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> ep.pl.missing_values_barplot(edata, filter="bottom", max_cols=15, max_percentage=0.999)
 
@@ -198,15 +200,15 @@ def missing_values_heatmap(
     categoricals: bool = False,
     layer: str | None = None,
 ):  # pragma: no cover
-    """Presents a `seaborn` heatmap visualization of nullity correlation in the given Data object.
+    """Presents a `seaborn` heatmap visualization of nullity correlation in the given data object.
 
     Note that this visualization has no special support for large datasets. For those, try the dendrogram instead.
 
     Args:
         edata: Central data object.
         filter: The filter to apply to the heatmap. Should be one of "top", "bottom", or None.
-        max_cols: The max number of columns from the Data object to include.
-        max_percentage: The max percentage fill of the columns from the Data object.
+        max_cols: The max number of columns from the data object to include.
+        max_percentage: The max percentage fill of the columns from the data object.
         sort: The row sort order to apply. Can be "ascending", "descending", or None.
         figsize: The size of the figure to display.
         fontsize: The figure's font size.
@@ -224,6 +226,7 @@ def missing_values_heatmap(
 
     Examples:
         >>> import ehrdata as ed
+        >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> ep.pl.missing_values_heatmap(edata, filter="bottom", max_cols=15, max_percentage=0.999)
 
@@ -292,8 +295,8 @@ def missing_values_dendrogram(
         edata: Central data object.
         method: The distance measure being used for clustering. This parameter is passed to `scipy.hierarchy`.
         filter: The filter to apply to the dendrogram. Should be one of "top", "bottom", or None.
-        max_cols: The max number of columns from the Data object to include.
-        max_percentage: The max percentage fill of the columns from the Data object.
+        max_cols: The max number of columns from the data object to include.
+        max_percentage: The max percentage fill of the columns from the data object.
         figsize: The size of the figure to display.
         fontsize: The figure's font size.
         orientation: The way the dendrogram is oriented.
@@ -306,6 +309,7 @@ def missing_values_dendrogram(
 
     Example:
         >>> import ehrdata as ed
+        >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> ep.pl.missing_values_dendrogram(edata, filter="bottom", max_cols=15, max_percentage=0.999)
 

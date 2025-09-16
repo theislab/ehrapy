@@ -66,8 +66,9 @@ def rank_features_supervised(
         If return_score is True, the R2 score / accuracy of the model on the test set. Otherwise, None.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=False)
+        >>> edata = ed.dt.mimic_2()
         >>> ep.ad.infer_feature_types(edata)
         >>> ep.pp.knn_impute(edata, n_neighbors=5)
         >>> input_features = [

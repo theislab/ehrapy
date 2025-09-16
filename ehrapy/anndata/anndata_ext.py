@@ -117,6 +117,7 @@ def anndata_to_df(
         The AnnData object as a pandas DataFrame
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> df = ep.ad.anndata_to_df(edata)
@@ -171,6 +172,7 @@ def move_to_obs(edata: EHRData | AnnData, to_obs: list[str] | str, copy_obs: boo
         The original data object with moved or copied columns from X to obs
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> ep.ad.move_to_obs(edata, ["age"], copy_obs=False)
@@ -239,6 +241,7 @@ def move_to_x(edata: EHRData | AnnData, to_x: list[str] | str, copy_x: bool = Fa
         A new data object with moved columns from obs to X. This should not be used for datetime columns currently.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> ep.ad.move_to_obs(edata, ["age"], copy_obs=False)

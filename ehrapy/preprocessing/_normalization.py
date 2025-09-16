@@ -104,7 +104,7 @@ def scale_norm(
     If `edata.X` is a Dask Array, functionality is provided by :class:`~dask_ml.preprocessing.StandardScaler`, see https://ml.dask.org/modules/generated/dask_ml.preprocessing.StandardScaler.html for details.
 
     Args:
-        edata: Data object containing X to normalize values in. Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
+        edata: Central data object. Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
         vars: List of the names of the numeric variables to normalize.
               If None all numeric variables will be normalized.
         group_key: Key in edata.obs that contains group information. If provided, scaling is applied per group.
@@ -116,6 +116,7 @@ def scale_norm(
         `None` if `copy=False` and modifies the passed edata, else returns an updated AnnData object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> edata_norm = ep.pp.scale_norm(edata, copy=True)
@@ -166,7 +167,7 @@ def minmax_norm(
     If `edata.X` is a Dask Array, functionality is provided by :class:`~dask_ml.preprocessing.MinMaxScaler`, see https://ml.dask.org/modules/generated/dask_ml.preprocessing.MinMaxScaler.html for details.
 
     Args:
-        edata: Data object containing X to normalize values in.
+        edata: Central data object.
                Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
         vars: List of the names of the numeric variables to normalize.
               If None all numeric variables will be normalized.
@@ -179,6 +180,7 @@ def minmax_norm(
         `None` if `copy=False` and modifies the passed edata, else returns an updated AnnData object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> edata_norm = ep.pp.minmax_norm(edata, copy=True)
@@ -220,7 +222,7 @@ def maxabs_norm(
     Functionality is provided by :class:`~sklearn.preprocessing.MaxAbsScaler`, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MaxAbsScaler.html for details.
 
     Args:
-        edata: Data object containing X to normalize values in.
+        edata: Central data object.
                Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
         vars: List of the names of the numeric variables to normalize.
               If None all numeric variables will be normalized.
@@ -232,6 +234,7 @@ def maxabs_norm(
         `None` if `copy=False` and modifies the passed edata, else returns an updated AnnData object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> edata_norm = ep.pp.maxabs_norm(edata, copy=True)
@@ -283,7 +286,7 @@ def robust_scale_norm(
     If `edata.X` is a Dask Array, functionality is provided by :class:`~dask_ml.preprocessing.RobustScaler`, see https://ml.dask.org/modules/generated/dask_ml.preprocessing.RobustScaler.html for details.
 
     Args:
-        edata: Data object containing X to normalize values in.
+        edata: Central data object.
                Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
         vars: List of the names of the numeric variables to normalize.
               If None all numeric variables will be normalized.
@@ -296,6 +299,7 @@ def robust_scale_norm(
         `None` if `copy=False` and modifies the passed edata, else returns an updated AnnData object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> edata_norm = ep.pp.robust_scale_norm(edata, copy=True)
@@ -347,7 +351,7 @@ def quantile_norm(
     If `edata.X` is a Dask Array, functionality is provided by :class:`~dask_ml.preprocessing.QuantileTransformer`, see https://ml.dask.org/modules/generated/dask_ml.preprocessing.QuantileTransformer.html for details.
 
     Args:
-        edata: Data object containing X to normalize values in. Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
+        edata: Central data object. Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
         vars: List of the names of the numeric variables to normalize.
               If None all numeric variables will be normalized.
         group_key: Key in edata.obs that contains group information. If provided, scaling is applied per group.
@@ -359,6 +363,7 @@ def quantile_norm(
         `None` if `copy=False` and modifies the passed edata, else returns an updated data object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> edata_norm = ep.pp.quantile_norm(edata, copy=True)
@@ -402,7 +407,7 @@ def power_norm(
     see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.PowerTransformer.html for details.
 
     Args:
-        edata: Data object containing X to normalize values in.
+        edata: Central data object.
                Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
         vars: List of the names of the numeric variables to normalize.
               If None all numeric variables will be normalized.
@@ -415,6 +420,7 @@ def power_norm(
         `None` if `copy=False` and modifies the passed edata, else returns an updated data object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> edata_norm = ep.pp.power_norm(edata, copy=True)
@@ -460,6 +466,7 @@ def log_norm(
         `None` if `copy=False` and modifies the passed edata, else returns an updated data object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> edata_norm = ep.pp.log_norm(edata, copy=True)

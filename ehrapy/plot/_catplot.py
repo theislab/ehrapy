@@ -24,7 +24,7 @@ def catplot(
     Considers edata.obs only.
 
     Args:
-        edata: AnnData object.
+        edata: Central data object.
         x: Variable to plot on the x-axis.
         y: Variable to plot on the y-axis.
         hue: Variable to plot as different colors.
@@ -36,7 +36,8 @@ def catplot(
 
     Examples:
         >>> import ehrdata as ed
-        >>> edata = ep.dt.diabetes_130_fairlearn()
+        >>> import ehrapy as ep
+        >>> edata = ed.dt.diabetes_130_fairlearn()
         >>> ep.ad.move_to_obs(edata, ["A1Cresult", "admission_source_id"], copy_obs=True)
         >>> edata.obs["A1Cresult_measured"] = ~edata.obs["A1Cresult"].isna()
         >>> ep.pl.catplot(

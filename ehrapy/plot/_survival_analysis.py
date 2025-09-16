@@ -72,8 +72,9 @@ def ols(
         **kwds: Passed to Matplotlib Scatterplot.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=False)
+        >>> edata = ed.dt.mimic_2()
         >>> co2_lm_result = ep.tl.ols(
         ...     edata, var_names=["pco2_first", "tco2_first"], formula="tco2_first ~ pco2_first", missing="drop"
         ... ).fit()
@@ -89,8 +90,9 @@ def ols(
 
         .. image:: /_static/docstring_previews/ols_plot_1.png
 
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=False)
+        >>> edata = ed.dt.mimic_2()
         >>> ep.pl.ols(edata, x='pco2_first', y='tco2_first', lines=[(0.25, 10), (0.3, 20)],
         >>>           lines_color=['red', 'blue'], lines_style=['-', ':'], lines_label=['Line1', 'Line2'])
 
@@ -233,9 +235,10 @@ def kaplan_meier(
         title: Set the title of the plot.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> import numpy as np
-        >>> edata = ep.dt.mimic_2(encoded=False)
+        >>> edata = ed.dt.mimic_2()
 
         # Because in MIMIC-II database, `censor_fl` is censored or death (binary: 0 = death, 1 = censored).
         # While in KaplanMeierFitter, `event_observed` is True if the the death was observed, False if the event was lost (right-censored).
@@ -388,8 +391,9 @@ def cox_ph_forestplot(
         title: Set the title of the plot.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ep.dt.mimic_2(encoded=False)
+        >>> edata = ed.dt.mimic_2()
         >>> edata_subset = edata[:, ["mort_day_censored", "censor_flg", "gender_num", "afib_flg", "day_icu_intime_num"]]
         >>> coxph = ep.tl.cox_ph(edata_subset, event_col="censor_flg", duration_col="mort_day_censored")
         >>> ep.pl.cox_ph_forestplot(edata_subset)

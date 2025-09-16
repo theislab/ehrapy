@@ -276,7 +276,7 @@ def qc_lab_measurements(
     https://github.com/theislab/ehrapy/blob/main/ehrapy/preprocessing/laboratory_reference_tables/laposata.tsv
 
     Args:
-        edata: Annotated data array.
+        edata: Central data object.
         reference_table: A custom DataFrame with reference values. Defaults to the laposata table if not specified.
         measurements: A list of measurements to check.
         unit: The unit of the measurements.

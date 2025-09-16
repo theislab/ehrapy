@@ -443,6 +443,7 @@ def tracksplot(  # noqa: D417
         **kwds: Are passed to :func:`~seaborn.heatmap`.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
 
         >>> edata = ed.dt.mimic_2()
@@ -1178,6 +1179,7 @@ def tsne(edata, **kwargs) -> Figure | Axes | list[Axes] | None:  # pragma: no co
         {show_save_ax}
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> ep.pp.knn_impute(edata)
@@ -1269,6 +1271,7 @@ def diffmap(edata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover # 
         {show_save_ax}
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> ep.pp.knn_impute(edata)
@@ -1304,6 +1307,7 @@ def draw_graph(  # noqa: D417
         {show_save_ax}
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> ep.pp.knn_impute(edata)
@@ -1402,6 +1406,7 @@ def embedding(  # noqa: D417
         {show_save_ax}
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> ep.pp.knn_impute(edata)

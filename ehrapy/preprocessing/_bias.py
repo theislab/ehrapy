@@ -52,7 +52,7 @@ def detect_bias(
     interpreting the results.
 
     Args:
-        edata: An annotated data array containing EHR data. Encoded features are required for bias detection.
+        edata: Central data object. Encoded features are required for bias detection.
         sensitive_features: Sensitive features to consider for bias detection. If set to "all", all features in edata.var will be considered.
         run_feature_importances: Whether to run feature importances for detecting bias. If set to None, the function will run feature importances if
             sensitive_features is not set to "all", as this can be computationally expensive.
@@ -82,16 +82,18 @@ def detect_bias(
         If copy is set to True, the function returns a tuple with the results dictionary and the updated edata.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
-        >>> ep.ad.infer_feature_types(edata)
+        >>> ed.infer_feature_types(edata)
         >>> edata = ep.pp.encode(edata, autodetect=True, encodings="label")
         >>> results_dict = ep.pp.detect_bias(edata, "all")
 
         >>> # Example with specified sensitive features
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ep.dt.diabetes_130_fairlearn()
-        >>> ep.ad.infer_feature_types(edata)
+        >>> edata = ed.dt.diabetes_130_fairlearn()
+        >>> ed.infer_feature_types(edata)
         >>> edata = ep.pp.encode(edata, autodetect=True, encodings="label")
         >>> results_dict = ep.pp.detect_bias(edata, sensitive_features=["race", "gender"])
     """
