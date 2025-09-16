@@ -1,16 +1,18 @@
 from __future__ import annotations
 
 import warnings
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
+from functools import singledispatch
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 
 import numpy as np
 import scanpy as sc
+import scipy.sparse as sp
 from anndata import AnnData
 
 if TYPE_CHECKING:
-    from collections.abc import Collection, Mapping, Sequence
+    from collections.abc import Collection, Mapping
 
     from ehrdata import EHRData
     from numpy.typing import NDArray
@@ -20,6 +22,9 @@ if TYPE_CHECKING:
     from ehrapy.preprocessing._types import KnownTransformer
 
 AnyRandom: TypeAlias = int | np.random.RandomState | None
+CSBase: TypeAlias = sp.csr_matrix | sp.csc_matrix
+RNGLike: TypeAlias = np.random.Generator | np.random.BitGenerator
+SeedLike: TypeAlias = int | np.integer | Sequence[int] | np.random.SeedSequence
 
 
 def pca(
@@ -140,11 +145,11 @@ def subsample(
 
 
 def sample(
-    data: AnnData | np.ndarray,
+    data: AnnData | np.ndarray | CSBase,
     fraction: float | None = None,
     *,
     n_obs: int | None = None,
-    rng: int | None = None,
+    rng: RNGLike | SeedLike | None = None,
     balanced: bool = False,
     balanced_method: Literal["under", "over"] = "under",
     balanced_key: str | None = None,
@@ -152,7 +157,7 @@ def sample(
     replace: bool = False,
     axis: Literal["obs", 0, "var", 1] = "obs",
     p: str | NDArray[np.bool_] | NDArray[np.floating] | None = None,
-) -> AnnData | None | tuple[np.ndarray, np.ndarray]:  # pragma: no cover
+) -> AnnData | None | tuple[np.ndarray | CSBase, np.ndarray]:  # pragma: no cover
     """Sample a fraction or a number of observations / variables with or without replacement.
 
     Args:
@@ -191,29 +196,40 @@ def sample(
         'Over 60 years'          2509
     """
     if balanced:
-        if not isinstance(data, AnnData):
-            raise TypeError(f"Input data is not an AnnData object: type of {data}, is {type(data)}")
-
         if balanced_key is None:
             raise TypeError("Key must be provided when balanced=True")
 
-        if balanced_key not in data.obs.columns:
-            raise ValueError(
-                f"Key '{balanced_key}' not found in adata.obs. Available keys are: {data.obs.columns.tolist()}"
-            )
+        if isinstance(data, AnnData):
+            if balanced_key not in data.obs.columns:
+                raise ValueError(
+                    f"Key '{balanced_key}' not found in adata.obs. Available keys are: {data.obs.columns.tolist()}"
+                )
 
-        labels = data.obs[balanced_key].values
+            labels = data.obs[balanced_key].values
+
+        elif isinstance(data, sp.csr_matrix | sp.csc_matrix) or isinstance(data, np.ndarray):
+            labels = np.asarray(balanced_key)
+            if labels.shape[0] != data.shape[0]:
+                raise ValueError(
+                    f"Length of labels ({labels.shape[0]}) does not match number of observations ({data.shape[0]})"
+                )
+
+        else:
+            raise TypeError("data must be an AnnData, numpy array or scipy sparse matrix when balanced=True")
 
         if balanced_method == "under" or balanced_method == "over":
             sampled_indices, sampled_labels = _random_resample(labels, method=balanced_method, random_state=rng)
         else:
             raise ValueError(f"Unknown sampling method: {balanced_method}")
 
-        if copy:
-            return data[sampled_indices].copy()
+        if isinstance(data, AnnData):
+            if copy:
+                return data[sampled_indices].copy()
+            else:
+                data._inplace_subset_obs(sampled_indices)
+                return None
         else:
-            data._inplace_subset_obs(sampled_indices)
-            return None
+            return data[sampled_indices], sampled_indices
     else:
         return sc.pp.sample(data=data, fraction=fraction, n=n_obs, rng=rng, copy=copy, replace=replace, axis=axis, p=p)
 
@@ -356,7 +372,10 @@ def neighbors(
 
 
 def _random_resample(
-    label: str, target: str = "balanced", method: Literal["under", "over"] = "under", random_state: int = 0
+    label: str | np.ndarray,
+    target: str = "balanced",
+    method: Literal["under", "over"] = "under",
+    random_state: RNGLike | SeedLike | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Helper function to under- or over-sample the data to achieve a balanced dataset.
 
@@ -370,7 +389,10 @@ def _random_resample(
         A tuple of (sampled_indices, sampled_labels).
     """
     label = np.asarray(label)
-    rnd = np.random.default_rng(random_state)
+    if isinstance(random_state, np.random.Generator):
+        rnd = random_state
+    else:
+        rnd = np.random.default_rng(random_state)
     classes, counts = np.unique(label, return_counts=True)
 
     if target == "balanced":
