@@ -7,9 +7,9 @@ from ehrdata.core.constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TA
 import ehrapy as ep
 
 
-def test_detect_bias_all_sensitive_features(adata_small_bias):
+def test_detect_bias_all_sensitive_features(edata_small_bias):
     results = ep.pp.detect_bias(
-        adata_small_bias, "all", run_feature_importances=True, corr_method="spearman", feature_importance_threshold=0.4
+        edata_small_bias, "all", run_feature_importances=True, corr_method="spearman", feature_importance_threshold=0.4
     )
 
     assert "feature_correlations" in results.keys()
@@ -52,9 +52,9 @@ def test_explicit_impute_3D_edata(edata_blob_small):
         ep.pp.detect_bias(edata_blob_small, sensitive_features=["feature_1"], layer="R_layer")
 
 
-def test_detect_bias_specified_sensitive_features(adata_small_bias):
+def test_detect_bias_specified_sensitive_features(edata_small_bias):
     results, result_adata = ep.pp.detect_bias(
-        adata_small_bias,
+        edata_small_bias,
         ["contin1", "cat1"],
         run_feature_importances=True,
         corr_method="spearman",
@@ -63,7 +63,7 @@ def test_detect_bias_specified_sensitive_features(adata_small_bias):
         copy=True,
     )
 
-    assert "smd" not in adata_small_bias.uns.keys()
+    assert "smd" not in edata_small_bias.uns.keys()
     assert "smd" in result_adata.uns.keys()
 
     assert "feature_correlations" in results.keys()

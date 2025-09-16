@@ -42,9 +42,9 @@ def test_scatter_plot_3D(edata_blob_small):
         ep.pl.scatter(edata_blob_small, layer="R_layer", x="feature_1", y="feature_2")
 
 
-def test_heatmap_plot(adata_mini, check_same_image):
+def test_heatmap_plot(edata_mini, check_same_image):
     ax_dict = ep.pl.heatmap(
-        adata_mini,
+        edata_mini,
         var_names=["idx", "sys_bp_entry", "dia_bp_entry", "glucose", "weight", "in_days"],
         groupby="station",
         show=False,
@@ -576,6 +576,7 @@ def test_diffmap(mimic_2_sample_serv_unit_day_icu, check_same_image):
 
 def test_dpt_timeseries(mimic_2_encoded, check_same_image):
     adata = mimic_2_encoded.copy()
+
     ep.pp.knn_impute(adata)
     ep.pp.log_norm(adata, offset=1)
     ep.pp.neighbors(adata, method="gauss")
@@ -584,7 +585,7 @@ def test_dpt_timeseries(mimic_2_encoded, check_same_image):
 
     adata.uns["iroot"] = np.flatnonzero(adata.obs["leiden_0_5"] == "0")[0]
 
-    ep.tl.dpt(adata, n_branchings=3)
+    ep.tl.dpt(adata, n_branchings=2)
     ep.pl.dpt_timeseries(adata, show=False)
 
     fig = plt.gcf()

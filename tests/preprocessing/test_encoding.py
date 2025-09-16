@@ -20,16 +20,16 @@ def test_encode_3D_edata(edata_blob_small):
         encode(edata_blob_small, autodetect=True, layer="R_layer")
 
 
-def test_unknown_encode_mode(encode_ds_1_adata):
+def test_unknown_encode_mode(encode_ds_1_edata):
     with pytest.raises(ValueError):
-        encoded_adata = encode(encode_ds_1_adata, autodetect=False, encodings={"unknown_mode": ["survival"]})  # noqa: F841
+        encoded_adata = encode(encode_ds_1_edata, autodetect=False, encodings={"unknown_mode": ["survival"]})  # noqa: F841
 
 
 @pytest.mark.parametrize("layer", [None, "layer_2"])
-def test_duplicate_column_encoding(encode_ds_1_adata, layer):
+def test_duplicate_column_encoding(encode_ds_1_edata, layer):
     with pytest.raises(ValueError):
         encoded_adata = encode(  # noqa: F841
-            encode_ds_1_adata,
+            encode_ds_1_edata,
             autodetect=False,
             encodings={"label": ["survival"], "one-hot": ["survival"]},
             layer=layer,
@@ -37,11 +37,11 @@ def test_duplicate_column_encoding(encode_ds_1_adata, layer):
 
 
 @pytest.mark.parametrize("layer", [None, "layer_2"])
-def test_autodetect_encode(encode_ds_1_adata, layer):
+def test_autodetect_encode(encode_ds_1_edata, layer):
     # break .X to ensure its not used
     if layer is not None:
-        encode_ds_1_adata.X = None
-    encoded_adata = encode(encode_ds_1_adata, autodetect=True, layer=layer)
+        encode_ds_1_edata.X = None
+    encoded_adata = encode(encode_ds_1_edata, autodetect=True, layer=layer)
     assert list(encoded_adata.obs.columns) == ["survival", "clinic_day"]
     assert set(encoded_adata.var_names) == {
         "ehrapycat_survival_False",
@@ -76,20 +76,20 @@ def test_autodetect_encode(encode_ds_1_adata, layer):
     X = encoded_adata.X if layer is None else encoded_adata.layers[layer]
     assert id(X) != id(encoded_adata.layers["original"])
     assert (
-        encode_ds_1_adata is not None
+        encode_ds_1_edata is not None
         and X is not None
-        and encode_ds_1_adata.obs is not None
-        and encode_ds_1_adata.uns is not None
+        and encode_ds_1_edata.obs is not None
+        and encode_ds_1_edata.uns is not None
     )
-    assert id(encoded_adata) != id(encode_ds_1_adata)
-    assert id(encoded_adata.obs) != id(encode_ds_1_adata.obs)
-    assert id(encoded_adata.uns) != id(encode_ds_1_adata.uns)
-    assert id(encoded_adata.var) != id(encode_ds_1_adata.var)
+    assert id(encoded_adata) != id(encode_ds_1_edata)
+    assert id(encoded_adata.obs) != id(encode_ds_1_edata.obs)
+    assert id(encoded_adata.uns) != id(encode_ds_1_edata.uns)
+    assert id(encoded_adata.var) != id(encode_ds_1_edata.var)
     assert all(column in set(encoded_adata.obs.columns) for column in ["survival", "clinic_day"])
-    assert not any(column in set(encode_ds_1_adata.obs.columns) for column in ["survival", "clinic_day"])
+    assert not any(column in set(encode_ds_1_edata.obs.columns) for column in ["survival", "clinic_day"])
 
     assert_frame_equal(
-        encode_ds_1_adata.var,
+        encode_ds_1_edata.var,
         DataFrame(
             {FEATURE_TYPE_KEY: [NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG, CATEGORICAL_TAG, CATEGORICAL_TAG]},
             index=["patient_id", "los_days", "b12_values", "survival", "clinic_day"],
@@ -116,19 +116,19 @@ def test_autodetect_encode(encode_ds_1_adata, layer):
 
 
 @pytest.mark.parametrize("layer", [None, "layer_2"])
-def test_autodetect_num_only(capfd, encode_ds_2_adata, layer):
+def test_autodetect_num_only(capfd, encode_ds_2_edata, layer):
     if layer is not None:
-        encode_ds_2_adata.X = None
-    encoded_adata = encode(encode_ds_2_adata, autodetect=True, layer=layer)
+        encode_ds_2_edata.X = None
+    encoded_adata = encode(encode_ds_2_edata, autodetect=True, layer=layer)
     out, err = capfd.readouterr()
-    assert id(encoded_adata) == id(encode_ds_2_adata)
+    assert id(encoded_adata) == id(encode_ds_2_edata)
 
 
 @pytest.mark.parametrize("layer", [None, "layer_2"])
-def test_autodetect_custom_mode(encode_ds_1_adata, layer):
+def test_autodetect_custom_mode(encode_ds_1_edata, layer):
     if layer is not None:
-        encode_ds_1_adata.X = None
-    encoded_adata = encode(encode_ds_1_adata, autodetect=True, encodings="label", layer=layer)
+        encode_ds_1_edata.X = None
+    encoded_adata = encode(encode_ds_1_edata, autodetect=True, encodings="label", layer=layer)
     assert list(encoded_adata.obs.columns) == ["survival", "clinic_day"]
     assert set(encoded_adata.var_names) == {
         "ehrapycat_survival",
@@ -147,20 +147,20 @@ def test_autodetect_custom_mode(encode_ds_1_adata, layer):
     X = encoded_adata.X if layer is None else encoded_adata.layers[layer]
     assert id(X) != id(encoded_adata.layers["original"])
     assert (
-        encode_ds_1_adata is not None
+        encode_ds_1_edata is not None
         and X is not None
-        and encode_ds_1_adata.obs is not None
-        and encode_ds_1_adata.uns is not None
+        and encode_ds_1_edata.obs is not None
+        and encode_ds_1_edata.uns is not None
     )
-    assert id(encoded_adata) != id(encode_ds_1_adata)
-    assert id(encoded_adata.obs) != id(encode_ds_1_adata.obs)
-    assert id(encoded_adata.uns) != id(encode_ds_1_adata.uns)
-    assert id(encoded_adata.var) != id(encode_ds_1_adata.var)
+    assert id(encoded_adata) != id(encode_ds_1_edata)
+    assert id(encoded_adata.obs) != id(encode_ds_1_edata.obs)
+    assert id(encoded_adata.uns) != id(encode_ds_1_edata.uns)
+    assert id(encoded_adata.var) != id(encode_ds_1_edata.var)
     assert all(column in set(encoded_adata.obs.columns) for column in ["survival", "clinic_day"])
-    assert not any(column in set(encode_ds_1_adata.obs.columns) for column in ["survival", "clinic_day"])
+    assert not any(column in set(encode_ds_1_edata.obs.columns) for column in ["survival", "clinic_day"])
 
     assert_frame_equal(
-        encode_ds_1_adata.var,
+        encode_ds_1_edata.var,
         DataFrame(
             {FEATURE_TYPE_KEY: [NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG, CATEGORICAL_TAG, CATEGORICAL_TAG]},
             index=["patient_id", "los_days", "b12_values", "survival", "clinic_day"],
@@ -183,20 +183,20 @@ def test_autodetect_custom_mode(encode_ds_1_adata, layer):
 
 
 @pytest.mark.parametrize("layer", [None, "layer_2"])
-def test_autodetect_encode_again(encode_ds_1_adata, layer):
+def test_autodetect_encode_again(encode_ds_1_edata, layer):
     if layer is not None:
-        encode_ds_1_adata.X = None
-    encoded_adata = encode(encode_ds_1_adata, autodetect=True, layer=layer)
+        encode_ds_1_edata.X = None
+    encoded_adata = encode(encode_ds_1_edata, autodetect=True, layer=layer)
     encoded_adata_again = encode(encoded_adata, autodetect=True, layer=layer)
     assert id(encoded_adata_again) == id(encoded_adata)
 
 
 @pytest.mark.parametrize("layer", [None, "layer_2"])
-def test_custom_encode(encode_ds_1_adata, layer):
+def test_custom_encode(encode_ds_1_edata, layer):
     if layer is not None:
-        encode_ds_1_adata.X = None
+        encode_ds_1_edata.X = None
     encoded_adata = encode(
-        encode_ds_1_adata,
+        encode_ds_1_edata,
         autodetect=False,
         encodings={"label": ["survival"], "one-hot": ["clinic_day"]},
         layer=layer,
@@ -224,20 +224,20 @@ def test_custom_encode(encode_ds_1_adata, layer):
 
     assert id(X) != id(encoded_adata.layers["original"])
     assert (
-        encode_ds_1_adata is not None
+        encode_ds_1_edata is not None
         and X is not None
-        and encode_ds_1_adata.obs is not None
-        and encode_ds_1_adata.uns is not None
+        and encode_ds_1_edata.obs is not None
+        and encode_ds_1_edata.uns is not None
     )
-    assert id(encoded_adata) != id(encode_ds_1_adata)
-    assert id(encoded_adata.obs) != id(encode_ds_1_adata.obs)
-    assert id(encoded_adata.uns) != id(encode_ds_1_adata.uns)
-    assert id(encoded_adata.var) != id(encode_ds_1_adata.var)
+    assert id(encoded_adata) != id(encode_ds_1_edata)
+    assert id(encoded_adata.obs) != id(encode_ds_1_edata.obs)
+    assert id(encoded_adata.uns) != id(encode_ds_1_edata.uns)
+    assert id(encoded_adata.var) != id(encode_ds_1_edata.var)
     assert all(column in set(encoded_adata.obs.columns) for column in ["survival", "clinic_day"])
-    assert not any(column in set(encode_ds_1_adata.obs.columns) for column in ["survival", "clinic_day"])
+    assert not any(column in set(encode_ds_1_edata.obs.columns) for column in ["survival", "clinic_day"])
 
     assert_frame_equal(
-        encode_ds_1_adata.var,
+        encode_ds_1_edata.var,
         DataFrame(
             {FEATURE_TYPE_KEY: [NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG, CATEGORICAL_TAG, CATEGORICAL_TAG]},
             index=["patient_id", "los_days", "b12_values", "survival", "clinic_day"],
@@ -263,11 +263,11 @@ def test_custom_encode(encode_ds_1_adata, layer):
 
 
 @pytest.mark.parametrize("layer", [None, "layer_2"])
-def test_custom_encode_again_single_columns_encoding(encode_ds_1_adata, layer):
+def test_custom_encode_again_single_columns_encoding(encode_ds_1_edata, layer):
     if layer is not None:
-        encode_ds_1_adata.X = None
+        encode_ds_1_edata.X = None
     encoded_adata = encode(
-        encode_ds_1_adata,
+        encode_ds_1_edata,
         autodetect=False,
         encodings={"label": ["survival"], "one-hot": ["clinic_day"]},
         layer=layer,
@@ -300,11 +300,11 @@ def test_custom_encode_again_single_columns_encoding(encode_ds_1_adata, layer):
 
 
 @pytest.mark.parametrize("layer", [None, "layer_2"])
-def test_custom_encode_again_multiple_columns_encoding(encode_ds_1_adata, layer):
+def test_custom_encode_again_multiple_columns_encoding(encode_ds_1_edata, layer):
     if layer is not None:
-        encode_ds_1_adata.X = None
+        encode_ds_1_edata.X = None
     encoded_adata = encode(
-        encode_ds_1_adata, autodetect=False, encodings={"one-hot": ["clinic_day", "survival"]}, layer=layer
+        encode_ds_1_edata, autodetect=False, encodings={"one-hot": ["clinic_day", "survival"]}, layer=layer
     )
     encoded_adata_again = encode(
         encoded_adata,
@@ -338,9 +338,9 @@ def test_custom_encode_again_multiple_columns_encoding(encode_ds_1_adata, layer)
     assert isinstance(encoded_adata.obs["clinic_day"].dtype, CategoricalDtype)
 
 
-def test_update_encoding_scheme_1(encode_ds_1_adata):
-    encode_ds_1_adata.var["unencoded_var_names"] = ["col1", "col2", "col3", "col4", "col5"]
-    encode_ds_1_adata.var["encoding_mode"] = ["label", "label", "label", "one-hot", "one-hot"]
+def test_update_encoding_scheme_1(encode_ds_1_edata):
+    encode_ds_1_edata.var["unencoded_var_names"] = ["col1", "col2", "col3", "col4", "col5"]
+    encode_ds_1_edata.var["encoding_mode"] = ["label", "label", "label", "one-hot", "one-hot"]
 
     new_encodings = {"one-hot": ["col1"], "label": ["col2", "col3", "col4"]}
 
@@ -348,6 +348,6 @@ def test_update_encoding_scheme_1(encode_ds_1_adata):
         "label": ["col2", "col3", "col4"],
         "one-hot": ["col1", "col5"],
     }
-    updated_encodings = _reorder_encodings(encode_ds_1_adata, new_encodings)
+    updated_encodings = _reorder_encodings(encode_ds_1_edata, new_encodings)
 
     assert expected_encodings == updated_encodings

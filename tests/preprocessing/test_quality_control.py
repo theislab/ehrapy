@@ -16,8 +16,8 @@ _TEST_PATH_ENCODE = f"{TEST_DATA_PATH}/encode"
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES)
-def test_qc_metrics_vanilla(array_type, missing_values_adata):
-    adata = missing_values_adata
+def test_qc_metrics_vanilla(array_type, missing_values_edata):
+    adata = missing_values_edata
     adata.X = array_type(adata.X)
     modification_copy = adata.copy()
     obs_metrics, var_metrics = ep.pp.qc_metrics(adata)
@@ -41,20 +41,20 @@ def test_qc_metrics_vanilla(array_type, missing_values_adata):
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES)
-def test_obs_qc_metrics(array_type, missing_values_adata):
-    missing_values_adata.X = array_type(missing_values_adata.X)
-    mtx = missing_values_adata.X
-    obs_metrics = _compute_obs_metrics(mtx, missing_values_adata)
+def test_obs_qc_metrics(array_type, missing_values_edata):
+    missing_values_edata.X = array_type(missing_values_edata.X)
+    mtx = missing_values_edata.X
+    obs_metrics = _compute_obs_metrics(mtx, missing_values_edata)
 
     assert np.array_equal(obs_metrics["missing_values_abs"].values, np.array([1, 2]))
     assert np.allclose(obs_metrics["missing_values_pct"].values, np.array([33.3333, 66.6667]))
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES)
-def test_var_qc_metrics(array_type, missing_values_adata):
-    missing_values_adata.X = array_type(missing_values_adata.X)
-    mtx = missing_values_adata.X
-    var_metrics = _compute_var_metrics(mtx, missing_values_adata)
+def test_var_qc_metrics(array_type, missing_values_edata):
+    missing_values_edata.X = array_type(missing_values_edata.X)
+    mtx = missing_values_edata.X
+    var_metrics = _compute_var_metrics(mtx, missing_values_edata)
 
     assert np.array_equal(var_metrics["missing_values_abs"].values, np.array([1, 2, 0]))
     assert np.allclose(var_metrics["missing_values_pct"].values, np.array([50.0, 100.0, 0.0]))
@@ -129,14 +129,14 @@ def test_var_nan_qc_metrics():
     assert var_metrics.iloc[4].iloc[0] == 1
 
 
-def test_calculate_qc_metrics(missing_values_adata):
-    obs_metrics, var_metrics = ep.pp.qc_metrics(missing_values_adata)
+def test_calculate_qc_metrics(missing_values_edata):
+    obs_metrics, var_metrics = ep.pp.qc_metrics(missing_values_edata)
 
     assert obs_metrics is not None
     assert var_metrics is not None
 
-    assert missing_values_adata.obs.missing_values_abs is not None
-    assert missing_values_adata.var.missing_values_abs is not None
+    assert missing_values_edata.obs.missing_values_abs is not None
+    assert missing_values_edata.var.missing_values_abs is not None
 
 
 def test_encode_3D_edata(edata_blob_small):
@@ -145,7 +145,7 @@ def test_encode_3D_edata(edata_blob_small):
         ep.pp.qc_metrics(edata_blob_small, layer="R_layer")
 
 
-def test_qc_lab_measurements_simple(lab_measurements_simple_adata):
+def test_qc_lab_measurements_simple(lab_measurements_simple_edata):
     expected_obs_data = pd.Series(
         data={
             "Acetaminophen normal": [True, True],
@@ -155,25 +155,25 @@ def test_qc_lab_measurements_simple(lab_measurements_simple_adata):
     )
 
     ep.pp.qc_lab_measurements(
-        lab_measurements_simple_adata,
-        measurements=list(lab_measurements_simple_adata.var_names),
+        lab_measurements_simple_edata,
+        measurements=list(lab_measurements_simple_edata.var_names),
         unit="SI",
     )
 
     assert (
-        list(lab_measurements_simple_adata.obs["Acetaminophen normal"]) == (expected_obs_data["Acetaminophen normal"])
+        list(lab_measurements_simple_edata.obs["Acetaminophen normal"]) == (expected_obs_data["Acetaminophen normal"])
     )
     assert (
-        list(lab_measurements_simple_adata.obs["Acetoacetic acid normal"])
+        list(lab_measurements_simple_edata.obs["Acetoacetic acid normal"])
         == (expected_obs_data["Acetoacetic acid normal"])
     )
     assert (
-        list(lab_measurements_simple_adata.obs["Beryllium, toxic normal"])
+        list(lab_measurements_simple_edata.obs["Beryllium, toxic normal"])
         == (expected_obs_data["Beryllium, toxic normal"])
     )
 
 
-def test_qc_lab_measurements_simple_layer(lab_measurements_layer_adata):
+def test_qc_lab_measurements_simple_layer(lab_measurements_layer_edata):
     expected_obs_data = pd.Series(
         data={
             "Acetaminophen normal": [True, True],
@@ -183,19 +183,19 @@ def test_qc_lab_measurements_simple_layer(lab_measurements_layer_adata):
     )
 
     ep.pp.qc_lab_measurements(
-        lab_measurements_layer_adata,
-        measurements=list(lab_measurements_layer_adata.var_names),
+        lab_measurements_layer_edata,
+        measurements=list(lab_measurements_layer_edata.var_names),
         unit="SI",
         layer="layer_copy",
     )
 
-    assert list(lab_measurements_layer_adata.obs["Acetaminophen normal"]) == (expected_obs_data["Acetaminophen normal"])
+    assert list(lab_measurements_layer_edata.obs["Acetaminophen normal"]) == (expected_obs_data["Acetaminophen normal"])
     assert (
-        list(lab_measurements_layer_adata.obs["Acetoacetic acid normal"])
+        list(lab_measurements_layer_edata.obs["Acetoacetic acid normal"])
         == (expected_obs_data["Acetoacetic acid normal"])
     )
     assert (
-        list(lab_measurements_layer_adata.obs["Beryllium, toxic normal"])
+        list(lab_measurements_layer_edata.obs["Beryllium, toxic normal"])
         == (expected_obs_data["Beryllium, toxic normal"])
     )
 
@@ -236,9 +236,9 @@ def test_qc_lab_measurements_multiple_measurements():
         ("ttest", pd.DataFrame),
     ],
 )
-def test_mcar_test_method_output_types(mar_adata, method, expected_output_type):
+def test_mcar_test_method_output_types(mar_edata, method, expected_output_type):
     """Tests if mcar_test returns the correct output type for different methods."""
-    output = mcar_test(mar_adata, method=method)
+    output = mcar_test(mar_edata, method=method)
     assert isinstance(output, expected_output_type), (
         f"Output type for method '{method}' should be {expected_output_type}, got {type(output)} instead."
     )
@@ -250,13 +250,13 @@ def test_mcar_test_3D_edata(edata_blob_small):
         mcar_test(edata_blob_small, layer="R_layer")
 
 
-def test_mar_data_identification(mar_adata):
+def test_mar_data_identification(mar_edata):
     """Test that mcar_test correctly identifies data as not MCAR (i.e., MAR or NMAR)."""
-    p_value = mcar_test(mar_adata, method="little")
+    p_value = mcar_test(mar_edata, method="little")
     assert p_value <= 0.05, "The test should significantly reject the MCAR hypothesis for MAR data."
 
 
-def test_mcar_identification(mcar_adata):
+def test_mcar_identification(mcar_edata):
     """Test that mcar_test correctly identifies data as MCAR."""
-    p_value = mcar_test(mcar_adata, method="little")
+    p_value = mcar_test(mcar_edata, method="little")
     assert p_value > 0.05, "The test should not significantly accept the MCAR hypothesis for MCAR data."

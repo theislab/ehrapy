@@ -9,105 +9,105 @@ _TEST_IMAGE_PATH = f"{CURRENT_DIR.parent}/_images"
 
 
 @pytest.mark.parametrize("columns", [None, ["glucose", "weight", "disease", "station"]])
-def test_CohortTracker_init_vanilla(columns, adata_mini):
-    ct = ep.tl.CohortTracker(adata_mini, columns)
+def test_CohortTracker_init_vanilla(columns, edata_mini):
+    ct = ep.tl.CohortTracker(edata_mini, columns)
     assert ct._tracked_steps == 0
     assert ct.tracked_steps == 0
     assert ct._tracked_text == []
     assert ct._tracked_operations == []
 
 
-def test_CohortTracker_type_detection(adata_mini):
-    ct = ep.tl.CohortTracker(adata_mini, ["glucose", "weight", "disease", "station"])
+def test_CohortTracker_type_detection(edata_mini):
+    ct = ep.tl.CohortTracker(edata_mini, ["glucose", "weight", "disease", "station"])
     assert set(ct.categorical) == {"disease", "station"}
 
 
-def test_CohortTracker_init_set_columns(adata_mini):
-    ep.tl.CohortTracker(adata_mini, columns=["glucose", "disease"])
+def test_CohortTracker_init_set_columns(edata_mini):
+    ep.tl.CohortTracker(edata_mini, columns=["glucose", "disease"])
 
     # invalid column
     with pytest.raises(ValueError):
         ep.tl.CohortTracker(
-            adata_mini,
+            edata_mini,
             columns=["glucose", "disease", "non_existing_column"],
         )
 
     # force categoricalization
-    ep.tl.CohortTracker(adata_mini, columns=["glucose", "disease"], categorical=["glucose", "disease"])
+    ep.tl.CohortTracker(edata_mini, columns=["glucose", "disease"], categorical=["glucose", "disease"])
 
     # invalid category
     with pytest.raises(ValueError):
         ep.tl.CohortTracker(
-            adata_mini,
+            edata_mini,
             columns=["glucose", "disease"],
             categorical=["station"],
         )
 
 
-def test_CohortTracker_call(adata_mini):
-    ct = ep.tl.CohortTracker(adata_mini)
+def test_CohortTracker_call(edata_mini):
+    ct = ep.tl.CohortTracker(edata_mini)
 
-    ct(adata_mini)
+    ct(edata_mini)
     assert ct.tracked_steps == 1
     assert ct._tracked_text == ["Cohort 0\n (n=12)"]
 
-    ct(adata_mini)
+    ct(edata_mini)
     assert ct.tracked_steps == 2
     assert ct._tracked_text == ["Cohort 0\n (n=12)", "Cohort 1\n (n=12)"]
 
-    adata_mini_col_name_gone = adata_mini.copy()
-    adata_mini_col_name_gone.obs.rename(columns={"disease": "new_disease"}, inplace=True)
+    edata_mini_col_name_gone = edata_mini.copy()
+    edata_mini_col_name_gone.obs.rename(columns={"disease": "new_disease"}, inplace=True)
     with pytest.raises(ValueError):
-        ct(adata_mini_col_name_gone)
+        ct(edata_mini_col_name_gone)
 
-    adata_mini_new_category = adata_mini.copy()
-    adata_mini_new_category.obs["disease"] = adata_mini_new_category.obs["disease"].astype(str)
-    adata_mini_new_category.obs.loc[adata_mini_new_category.obs["disease"] == "A", "disease"] = "new_disease"
+    edata_mini_new_category = edata_mini.copy()
+    edata_mini_new_category.obs["disease"] = edata_mini_new_category.obs["disease"].astype(str)
+    edata_mini_new_category.obs.loc[edata_mini_new_category.obs["disease"] == "A", "disease"] = "new_disease"
     with pytest.raises(ValueError):
-        ct(adata_mini_new_category)
+        ct(edata_mini_new_category)
 
 
-def test_CohortTracker_plot_cohort_barplot_test_sensitivity(adata_mini, check_same_image):
-    ct = ep.tl.CohortTracker(adata_mini)
+def test_CohortTracker_plot_cohort_barplot_test_sensitivity(edata_mini, check_same_image):
+    ct = ep.tl.CohortTracker(edata_mini)
 
     # e.g. different color should trigger error
-    ct(adata_mini, label="First step", operations_done="Some operations")
+    ct(edata_mini, label="First step", operations_done="Some operations")
     fig1, _ = ct.plot_cohort_barplot(show=False, color_palette="husl")
 
     with pytest.raises(AssertionError):
         check_same_image(
             fig=fig1,
-            base_path=f"{_TEST_IMAGE_PATH}/cohorttracker_adata_mini_step1_vanilla",
+            base_path=f"{_TEST_IMAGE_PATH}/cohorttracker_edata_mini_step1_vanilla",
             tol=1e-1,
         )
 
 
-def test_CohortTracker_plot_cohort_barplot_vanilla(adata_mini, check_same_image):
-    ct = ep.tl.CohortTracker(adata_mini)
+def test_CohortTracker_plot_cohort_barplot_vanilla(edata_mini, check_same_image):
+    ct = ep.tl.CohortTracker(edata_mini)
 
-    ct(adata_mini, label="First step", operations_done="Some operations")
+    ct(edata_mini, label="First step", operations_done="Some operations")
     fig1, _ = ct.plot_cohort_barplot(legend_labels={"weight": "weight(kg)", "glucose": "glucose(mg/dL)"}, show=False)
 
     check_same_image(
         fig=fig1,
-        base_path=f"{_TEST_IMAGE_PATH}/cohorttracker_adata_mini_step1_vanilla",
+        base_path=f"{_TEST_IMAGE_PATH}/cohorttracker_edata_mini_step1_vanilla",
         tol=1e-1,
     )
 
-    ct(adata_mini, label="Second step", operations_done="Some other operations")
+    ct(edata_mini, label="Second step", operations_done="Some other operations")
     fig2, _ = ct.plot_cohort_barplot(legend_labels={"weight": "weight(kg)", "glucose": "glucose(mg/dL)"}, show=False)
 
     check_same_image(
         fig=fig2,
-        base_path=f"{_TEST_IMAGE_PATH}/cohorttracker_adata_mini_step2_vanilla",
+        base_path=f"{_TEST_IMAGE_PATH}/cohorttracker_edata_mini_step2_vanilla",
         tol=1e-1,
     )
 
 
-def test_CohortTracker_plot_cohort_barplot_use_settings(adata_mini, check_same_image):
-    ct = ep.tl.CohortTracker(adata_mini)
+def test_CohortTracker_plot_cohort_barplot_use_settings(edata_mini, check_same_image):
+    ct = ep.tl.CohortTracker(edata_mini)
 
-    ct(adata_mini, label="First step", operations_done="Some operations")
+    ct(edata_mini, label="First step", operations_done="Some operations")
     fig, _ = ct.plot_cohort_barplot(
         show=False,
         yticks_labels={"weight": "wgt"},
@@ -116,15 +116,15 @@ def test_CohortTracker_plot_cohort_barplot_use_settings(adata_mini, check_same_i
 
     check_same_image(
         fig=fig,
-        base_path=f"{_TEST_IMAGE_PATH}/cohorttracker_adata_mini_step1_use_settings",
+        base_path=f"{_TEST_IMAGE_PATH}/cohorttracker_edata_mini_step1_use_settings",
         tol=1e-1,
     )
 
 
-def test_CohortTracker_plot_cohort_barplot_use_settings_big(adata_mini, check_same_image):
-    ct = ep.tl.CohortTracker(adata_mini)
+def test_CohortTracker_plot_cohort_barplot_use_settings_big(edata_mini, check_same_image):
+    ct = ep.tl.CohortTracker(edata_mini)
 
-    ct(adata_mini, label="First step", operations_done="Some operations")
+    ct(edata_mini, label="First step", operations_done="Some operations")
     fig, _ = ct.plot_cohort_barplot(
         show=False,
         yticks_labels={"weight": "wgt"},
@@ -135,17 +135,17 @@ def test_CohortTracker_plot_cohort_barplot_use_settings_big(adata_mini, check_sa
 
     check_same_image(
         fig=fig,
-        base_path=f"{_TEST_IMAGE_PATH}/cohorttracker_adata_mini_step1_use_settings_big",
+        base_path=f"{_TEST_IMAGE_PATH}/cohorttracker_edata_mini_step1_use_settings_big",
         tol=1e-1,
     )
 
 
-def test_CohortTracker_plot_cohort_barplot_loosing_category(adata_mini, check_same_image):
-    ct = ep.tl.CohortTracker(adata_mini)
-    ct(adata_mini, label="First step", operations_done="Some operations")
+def test_CohortTracker_plot_cohort_barplot_loosing_category(edata_mini, check_same_image):
+    ct = ep.tl.CohortTracker(edata_mini)
+    ct(edata_mini, label="First step", operations_done="Some operations")
 
-    adata_mini = adata_mini[adata_mini.obs.disease == "A", :]
-    ct(adata_mini)
+    edata_mini = edata_mini[edata_mini.obs.disease == "A", :]
+    ct(edata_mini)
 
     fig, _ = ct.plot_cohort_barplot(
         color_palette="colorblind", legend_labels={"weight": "weight(kg)", "glucose": "glucose(mg/dL)"}, show=False
@@ -153,16 +153,16 @@ def test_CohortTracker_plot_cohort_barplot_loosing_category(adata_mini, check_sa
 
     check_same_image(
         fig=fig,
-        base_path=f"{_TEST_IMAGE_PATH}/cohorttracker_adata_mini_step2_loose_category",
+        base_path=f"{_TEST_IMAGE_PATH}/cohorttracker_edata_mini_step2_loose_category",
         tol=1e-1,
     )
 
 
-def test_CohortTracker_flowchart_sensitivity(adata_mini, check_same_image):
-    ct = ep.tl.CohortTracker(adata_mini)
+def test_CohortTracker_flowchart_sensitivity(edata_mini, check_same_image):
+    ct = ep.tl.CohortTracker(edata_mini)
 
-    ct(adata_mini, label="Base Cohort")
-    ct(adata_mini, operations_done="Some processing")
+    ct(edata_mini, label="Base Cohort")
+    ct(edata_mini, operations_done="Some processing")
 
     # check that e.g. different arrow size triggers error
     fig, _ = ct.plot_flowchart(show=False, arrow_size=0.5)
@@ -170,21 +170,21 @@ def test_CohortTracker_flowchart_sensitivity(adata_mini, check_same_image):
     with pytest.raises(AssertionError):
         check_same_image(
             fig=fig,
-            base_path=f"{_TEST_IMAGE_PATH}/cohorttracker_adata_mini_flowchart",
+            base_path=f"{_TEST_IMAGE_PATH}/cohorttracker_edata_mini_flowchart",
             tol=1e-1,
         )
 
 
-def test_CohortTracker_flowchart(adata_mini, check_same_image):
-    ct = ep.tl.CohortTracker(adata_mini)
+def test_CohortTracker_flowchart(edata_mini, check_same_image):
+    ct = ep.tl.CohortTracker(edata_mini)
 
-    ct(adata_mini, label="Base Cohort")
-    ct(adata_mini, operations_done="Some processing")
+    ct(edata_mini, label="Base Cohort")
+    ct(edata_mini, operations_done="Some processing")
 
     fig, _ = ct.plot_flowchart(show=False)
 
     check_same_image(
         fig=fig,
-        base_path=f"{_TEST_IMAGE_PATH}/cohorttracker_adata_mini_flowchart",
+        base_path=f"{_TEST_IMAGE_PATH}/cohorttracker_edata_mini_flowchart",
         tol=1e-1,
     )

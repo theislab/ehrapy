@@ -18,7 +18,7 @@ from scipy import sparse
 
 
 @pytest.fixture
-def adata_mini():
+def edata_mini():
     return read_csv(
         f"{TEST_DATA_PATH}/dataset1.csv",
         columns_obs_only=["glucose", "weight", "disease", "station"],
@@ -26,7 +26,7 @@ def adata_mini():
 
 
 @pytest.fixture
-def adata_mini_integers_in_X():
+def edata_mini_integers_in_X():
     adata = read_csv(
         f"{TEST_DATA_PATH}/dataset1.csv",
         columns_obs_only=["idx", "sys_bp_entry", "dia_bp_entry", "glucose", "weight", "disease", "station"],
@@ -131,8 +131,8 @@ def test_norm_scale(adata_to_norm, array_type):
     assert np.allclose(adata_norm.X[:, 5], adata_to_norm.X[:, 5], equal_nan=True)
 
 
-def test_norm_scale_integers(adata_mini_integers_in_X):
-    adata_norm = ep.pp.scale_norm(adata_mini_integers_in_X, copy=True)
+def test_norm_scale_integers(edata_mini_integers_in_X):
+    adata_norm = ep.pp.scale_norm(edata_mini_integers_in_X, copy=True)
     in_days_norm = np.array(
         [
             [-0.4472136],
@@ -166,15 +166,15 @@ def test_norm_scale_kwargs(array_type, adata_to_norm):
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES)
-def test_norm_scale_group(array_type, adata_mini):
-    adata_mini_casted = adata_mini.copy()
-    adata_mini_casted.X = array_type(adata_mini_casted.X)
+def test_norm_scale_group(array_type, edata_mini):
+    edata_mini_casted = edata_mini.copy()
+    edata_mini_casted.X = array_type(edata_mini_casted.X)
 
     with pytest.raises(KeyError):
-        ep.pp.scale_norm(adata_mini_casted, group_key="invalid_key", copy=True)
+        ep.pp.scale_norm(edata_mini_casted, group_key="invalid_key", copy=True)
 
-    adata_mini_norm = ep.pp.scale_norm(
-        adata_mini_casted,
+    edata_mini_norm = ep.pp.scale_norm(
+        edata_mini_casted,
         vars=["sys_bp_entry", "dia_bp_entry"],
         group_key="disease",
         copy=True,
@@ -192,9 +192,9 @@ def test_norm_scale_group(array_type, adata_mini):
         ]
     )
     col2_norm = col1_norm
-    assert np.allclose(adata_mini_norm.X[:, 0], adata_mini_casted.X[:, 0])
-    assert np.allclose(adata_mini_norm.X[:, 1], col1_norm)
-    assert np.allclose(adata_mini_norm.X[:, 2], col2_norm)
+    assert np.allclose(edata_mini_norm.X[:, 0], edata_mini_casted.X[:, 0])
+    assert np.allclose(edata_mini_norm.X[:, 1], col1_norm)
+    assert np.allclose(edata_mini_norm.X[:, 2], col2_norm)
 
 
 @pytest.mark.parametrize(
@@ -236,8 +236,8 @@ def test_norm_minmax(array_type, adata_to_norm):
     assert np.allclose(adata_norm.X[:, 5], adata_to_norm.X[:, 5], equal_nan=True)
 
 
-def test_norm_minmax_integers(adata_mini_integers_in_X):
-    adata_norm = ep.pp.minmax_norm(adata_mini_integers_in_X, copy=True)
+def test_norm_minmax_integers(edata_mini_integers_in_X):
+    adata_norm = ep.pp.minmax_norm(edata_mini_integers_in_X, copy=True)
     in_days_norm = np.array([[0.25], [0.5], [0.0], [0.25], [0.0], [0.25], [0.5], [0.75], [1.0], [0.25], [0.5], [0.25]])
     assert np.allclose(adata_norm.X, in_days_norm)
 
@@ -256,24 +256,24 @@ def test_norm_minmax_kwargs(array_type, adata_to_norm):
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES)
-def test_norm_minmax_group(array_type, adata_mini):
-    adata_mini_casted = adata_mini.copy()
-    adata_mini_casted.X = array_type(adata_mini_casted.X)
+def test_norm_minmax_group(array_type, edata_mini):
+    edata_mini_casted = edata_mini.copy()
+    edata_mini_casted.X = array_type(edata_mini_casted.X)
 
     with pytest.raises(KeyError):
-        ep.pp.minmax_norm(adata_mini_casted, group_key="invalid_key", copy=True)
+        ep.pp.minmax_norm(edata_mini_casted, group_key="invalid_key", copy=True)
 
-    adata_mini_norm = ep.pp.minmax_norm(
-        adata_mini_casted,
+    edata_mini_norm = ep.pp.minmax_norm(
+        edata_mini_casted,
         vars=["sys_bp_entry", "dia_bp_entry"],
         group_key="disease",
         copy=True,
     )
     col1_norm = np.array([0.0, 0.33333333, 0.66666667, 1.0, 0.0, 0.33333333, 0.66666667, 1.0])
     col2_norm = col1_norm
-    assert np.allclose(adata_mini_norm.X[:, 0], adata_mini_casted.X[:, 0])
-    assert np.allclose(adata_mini_norm.X[:, 1], col1_norm)
-    assert np.allclose(adata_mini_norm.X[:, 2], col2_norm)
+    assert np.allclose(edata_mini_norm.X[:, 0], edata_mini_casted.X[:, 0])
+    assert np.allclose(edata_mini_norm.X[:, 1], col1_norm)
+    assert np.allclose(edata_mini_norm.X[:, 2], col2_norm)
 
 
 @pytest.mark.parametrize(
@@ -322,26 +322,26 @@ def test_norm_maxabs(array_type, adata_to_norm):
         assert np.allclose(adata_norm.X[:, 5], adata_to_norm.X[:, 5], equal_nan=True)
 
 
-def test_norm_maxabs_integers(adata_mini_integers_in_X):
-    adata_norm = ep.pp.maxabs_norm(adata_mini_integers_in_X, copy=True)
+def test_norm_maxabs_integers(edata_mini_integers_in_X):
+    adata_norm = ep.pp.maxabs_norm(edata_mini_integers_in_X, copy=True)
     in_days_norm = np.array([[0.25], [0.5], [0.0], [0.25], [0.0], [0.25], [0.5], [0.75], [1.0], [0.25], [0.5], [0.25]])
     assert np.allclose(adata_norm.X, in_days_norm)
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES)
-def test_norm_maxabs_group(array_type, adata_mini):
-    adata_mini_casted = adata_mini.copy()
-    adata_mini_casted.X = array_type(adata_mini_casted.X)
+def test_norm_maxabs_group(array_type, edata_mini):
+    edata_mini_casted = edata_mini.copy()
+    edata_mini_casted.X = array_type(edata_mini_casted.X)
 
     if "dask" in array_type.__name__:
         with pytest.raises(NotImplementedError):
-            ep.pp.maxabs_norm(adata_mini_casted, copy=True)
+            ep.pp.maxabs_norm(edata_mini_casted, copy=True)
     else:
         with pytest.raises(KeyError):
-            ep.pp.maxabs_norm(adata_mini_casted, group_key="invalid_key", copy=True)
+            ep.pp.maxabs_norm(edata_mini_casted, group_key="invalid_key", copy=True)
 
-        adata_mini_norm = ep.pp.maxabs_norm(
-            adata_mini_casted,
+        edata_mini_norm = ep.pp.maxabs_norm(
+            edata_mini_casted,
             vars=["sys_bp_entry", "dia_bp_entry"],
             group_key="disease",
             copy=True,
@@ -359,9 +359,9 @@ def test_norm_maxabs_group(array_type, adata_mini):
             ]
         )
         col2_norm = np.array([0.96296296, 0.97530864, 0.98765432, 1.0, 0.9625, 0.975, 0.9875, 1.0])
-        assert np.allclose(adata_mini_norm.X[:, 0], adata_mini_casted.X[:, 0])
-        assert np.allclose(adata_mini_norm.X[:, 1], col1_norm)
-        assert np.allclose(adata_mini_norm.X[:, 2], col2_norm)
+        assert np.allclose(edata_mini_norm.X[:, 0], edata_mini_casted.X[:, 0])
+        assert np.allclose(edata_mini_norm.X[:, 1], col1_norm)
+        assert np.allclose(edata_mini_norm.X[:, 2], col2_norm)
 
 
 @pytest.mark.parametrize(
@@ -402,8 +402,8 @@ def test_norm_robust_scale(array_type, adata_to_norm):
     assert np.allclose(adata_norm.X[:, 5], adata_to_norm.X[:, 5], equal_nan=True)
 
 
-def test_norm_robust_scale_integers(adata_mini_integers_in_X):
-    adata_norm = ep.pp.robust_scale_norm(adata_mini_integers_in_X, copy=True)
+def test_norm_robust_scale_integers(edata_mini_integers_in_X):
+    adata_norm = ep.pp.robust_scale_norm(edata_mini_integers_in_X, copy=True)
     in_days_norm = np.array([[0.0], [1.0], [-1.0], [0.0], [-1.0], [0.0], [1.0], [2.0], [3.0], [0.0], [1.0], [0.0]])
     assert np.allclose(adata_norm.X, in_days_norm)
 
@@ -422,15 +422,15 @@ def test_norm_robust_scale_kwargs(adata_to_norm, array_type):
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES)
-def test_norm_robust_scale_group(array_type, adata_mini):
-    adata_mini_casted = adata_mini.copy()
-    adata_mini_casted.X = array_type(adata_mini_casted.X)
+def test_norm_robust_scale_group(array_type, edata_mini):
+    edata_mini_casted = edata_mini.copy()
+    edata_mini_casted.X = array_type(edata_mini_casted.X)
 
     with pytest.raises(KeyError):
-        ep.pp.robust_scale_norm(adata_mini_casted, group_key="invalid_key", copy=True)
+        ep.pp.robust_scale_norm(edata_mini_casted, group_key="invalid_key", copy=True)
 
-    adata_mini_norm = ep.pp.robust_scale_norm(
-        adata_mini_casted,
+    edata_mini_norm = ep.pp.robust_scale_norm(
+        edata_mini_casted,
         vars=["sys_bp_entry", "dia_bp_entry"],
         group_key="disease",
         copy=True,
@@ -440,9 +440,9 @@ def test_norm_robust_scale_group(array_type, adata_mini):
         dtype=np.float32,
     )
     col2_norm = col1_norm
-    assert np.allclose(adata_mini_norm.X[:, 0], adata_mini_casted.X[:, 0])
-    assert np.allclose(adata_mini_norm.X[:, 1], col1_norm)
-    assert np.allclose(adata_mini_norm.X[:, 2], col2_norm)
+    assert np.allclose(edata_mini_norm.X[:, 0], edata_mini_casted.X[:, 0])
+    assert np.allclose(edata_mini_norm.X[:, 1], col1_norm)
+    assert np.allclose(edata_mini_norm.X[:, 2], col2_norm)
 
 
 @pytest.mark.parametrize(
@@ -485,8 +485,8 @@ def test_norm_quantile_uniform(array_type, adata_to_norm):
     assert np.allclose(adata_norm.X[:, 5], adata_to_norm.X[:, 5], equal_nan=True)
 
 
-def test_norm_quantile_integers(adata_mini_integers_in_X):
-    adata_norm = ep.pp.quantile_norm(adata_mini_integers_in_X, copy=True)
+def test_norm_quantile_integers(edata_mini_integers_in_X):
+    adata_norm = ep.pp.quantile_norm(edata_mini_integers_in_X, copy=True)
     in_days_norm = np.array(
         [
             [0.36363636],
@@ -520,15 +520,15 @@ def test_norm_quantile_uniform_kwargs(array_type, adata_to_norm):
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES)
-def test_norm_quantile_uniform_group(array_type, adata_mini):
-    adata_mini_casted = adata_mini.copy()
-    adata_mini_casted.X = array_type(adata_mini_casted.X)
+def test_norm_quantile_uniform_group(array_type, edata_mini):
+    edata_mini_casted = edata_mini.copy()
+    edata_mini_casted.X = array_type(edata_mini_casted.X)
 
     with pytest.raises(KeyError):
-        ep.pp.quantile_norm(adata_mini_casted, group_key="invalid_key", copy=True)
+        ep.pp.quantile_norm(edata_mini_casted, group_key="invalid_key", copy=True)
 
-    adata_mini_norm = ep.pp.quantile_norm(
-        adata_mini_casted,
+    edata_mini_norm = ep.pp.quantile_norm(
+        edata_mini_casted,
         vars=["sys_bp_entry", "dia_bp_entry"],
         group_key="disease",
         copy=True,
@@ -538,9 +538,9 @@ def test_norm_quantile_uniform_group(array_type, adata_mini):
         dtype=np.float32,
     )
     col2_norm = col1_norm
-    assert np.allclose(adata_mini_norm.X[:, 0], adata_mini_casted.X[:, 0])
-    assert np.allclose(adata_mini_norm.X[:, 1], col1_norm)
-    assert np.allclose(adata_mini_norm.X[:, 2], col2_norm)
+    assert np.allclose(edata_mini_norm.X[:, 0], edata_mini_casted.X[:, 0])
+    assert np.allclose(edata_mini_norm.X[:, 1], col1_norm)
+    assert np.allclose(edata_mini_norm.X[:, 2], col2_norm)
 
 
 @pytest.mark.parametrize(
@@ -586,8 +586,8 @@ def test_norm_power(array_type, adata_to_norm):
         assert np.allclose(adata_norm.X[:, 5], adata_to_norm.X[:, 5], equal_nan=True)
 
 
-def test_norm_power_integers(adata_mini_integers_in_X):
-    adata_norm = ep.pp.power_norm(adata_mini_integers_in_X, copy=True)
+def test_norm_power_integers(edata_mini_integers_in_X):
+    adata_norm = ep.pp.power_norm(edata_mini_integers_in_X, copy=True)
     in_days_norm = np.array(
         [
             [-0.31234142],
@@ -628,19 +628,19 @@ def test_norm_power_kwargs(array_type, adata_to_norm):
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES)
-def test_norm_power_group(array_type, adata_mini):
-    adata_mini_casted = adata_mini.copy()
-    adata_mini_casted.X = array_type(adata_mini_casted.X)
+def test_norm_power_group(array_type, edata_mini):
+    edata_mini_casted = edata_mini.copy()
+    edata_mini_casted.X = array_type(edata_mini_casted.X)
 
     if "dask" in array_type.__name__:
         with pytest.raises(NotImplementedError):
-            ep.pp.power_norm(adata_mini_casted, copy=True)
+            ep.pp.power_norm(edata_mini_casted, copy=True)
     else:
         with pytest.raises(KeyError):
-            ep.pp.power_norm(adata_mini_casted, group_key="invalid_key", copy=True)
+            ep.pp.power_norm(edata_mini_casted, group_key="invalid_key", copy=True)
 
-        adata_mini_norm = ep.pp.power_norm(
-            adata_mini_casted,
+        edata_mini_norm = ep.pp.power_norm(
+            edata_mini_casted,
             vars=["sys_bp_entry", "dia_bp_entry"],
             group_key="disease",
             copy=True,
@@ -675,9 +675,9 @@ def test_norm_power_group(array_type, adata_mini):
         )
         # The tests are disabled (= tolerance set to 1)
         # because depending on weird dependency versions they currently give different results
-        assert np.allclose(adata_mini_norm.X[:, 0], adata_mini_casted.X[:, 0], rtol=1, atol=1)
-        assert np.allclose(adata_mini_norm.X[:, 1], col1_norm, rtol=1, atol=1)
-        assert np.allclose(adata_mini_norm.X[:, 2], col2_norm, rtol=1, atol=1)
+        assert np.allclose(edata_mini_norm.X[:, 0], edata_mini_casted.X[:, 0], rtol=1, atol=1)
+        assert np.allclose(edata_mini_norm.X[:, 1], col1_norm, rtol=1, atol=1)
+        assert np.allclose(edata_mini_norm.X[:, 2], col2_norm, rtol=1, atol=1)
 
 
 @pytest.mark.parametrize(
