@@ -14,6 +14,13 @@ A new `.tem` DataFrame provides time-point annotations, complementing the existi
 While `EHRData` maintains full backward compatibility with AnnData's API, users can now seamlessly work with time-series data and leverage specialized methods for temporal analysis.
 Existing code using `AnnData` objects will continue to work, but migration to `EHRData` is strongly recommended to access enhanced time-series functionality.
 
+### 🚀 Features
+
+* The preferred central data object is now `EHRData` ([#908](https://github.com/theislab/ehrapy/pull/908)) @eroell
+
+* The `layers` argument is now available for all functions operating on X or layers ([#908](https://github.com/theislab/ehrapy/pull/908)) @eroell
+
+
 ### 🧰 Maintenance
 
 * Update expected behaviour of `io.read_fhir` ([#922](https://github.com/theislab/ehrapy/pull/922)) @eroell
