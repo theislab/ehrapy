@@ -14,8 +14,6 @@ if TYPE_CHECKING:
     import pandas as pd
     from anndata import AnnData
 
-import warnings
-
 
 @function_future_warning("ep.dt.mimic_2", "ehrdata.dt.mimic_2")
 def mimic_2(

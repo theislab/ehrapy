@@ -12,8 +12,8 @@ if TYPE_CHECKING:
     from ehrdata import EHRData
 
 
-@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 def summarize_measurements(
     edata: EHRData | AnnData,
     *,

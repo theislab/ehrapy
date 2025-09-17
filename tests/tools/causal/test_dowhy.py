@@ -50,12 +50,22 @@ class TestCausal:
         )
 
     def test_dowhy_linear_dataset_3D_edata(self):
+        self.linear_data.layers["layer_2"] = self.linear_data.X.copy()
+        ep.tl.causal_inference(
+            edata=self.linear_data,
+            graph=self.linear_graph,
+            treatment=self.treatment_name,
+            outcome=self.outcome_name,
+            estimation_method="backdoor.linear_regression",
+            layer="layer_2",
+        )
         with pytest.raises(ValueError, match=r"only supports 2D data"):
             ep.tl.causal_inference(
                 edata=self.linear_data,
                 graph=self.linear_graph,
                 treatment=self.treatment_name,
                 outcome=self.outcome_name,
+                estimation_method="backdoor.linear_regression",
                 layer="R_layer",
             )
 

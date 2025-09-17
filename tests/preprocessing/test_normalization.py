@@ -1,5 +1,4 @@
 import warnings
-from collections import OrderedDict
 from pathlib import Path
 
 import dask.array as da
@@ -7,80 +6,12 @@ import numpy as np
 import pandas as pd
 import pytest
 from anndata import AnnData
-from ehrdata.core.constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 
 import ehrapy as ep
-from ehrapy.io._read import read_csv
-from tests.conftest import ARRAY_TYPES, TEST_DATA_PATH
+from tests.conftest import ARRAY_TYPES
 
 CURRENT_DIR = Path(__file__).parent
 from scipy import sparse
-
-
-@pytest.fixture
-def edata_mini():
-    return read_csv(
-        f"{TEST_DATA_PATH}/dataset1.csv",
-        columns_obs_only=["glucose", "weight", "disease", "station"],
-    )[:8]
-
-
-@pytest.fixture
-def edata_mini_integers_in_X():
-    adata = read_csv(
-        f"{TEST_DATA_PATH}/dataset1.csv",
-        columns_obs_only=["idx", "sys_bp_entry", "dia_bp_entry", "glucose", "weight", "disease", "station"],
-    )
-    # cast data in X to integers; pd.read generates floats generously, but want to test integer normalization
-    adata.X = adata.X.astype(np.int32)
-    ep.ad.infer_feature_types(adata)
-    ep.ad.replace_feature_types(adata, ["in_days"], "numeric")
-    return adata
-
-
-@pytest.fixture
-def adata_to_norm():
-    obs_data = {"ID": ["Patient1", "Patient2", "Patient3"], "Age": [31, 94, 62]}
-
-    X_data = np.array(
-        [
-            [1, 3.4, -2.0, 1.0, "A string", "A different string"],
-            [2, 5.4, 5.0, 2.0, "Silly string", "A different string"],
-            [2, 5.7, 3.0, np.nan, "A string", "What string?"],
-        ],
-        dtype=np.dtype(object),
-    )
-    # the "ignore" tag is used to make the column being ignored; the original test selecting a few
-    # columns induces a specific ordering which is kept for now
-    var_data = {
-        "Feature": [
-            "Integer1",
-            "Numeric1",
-            "Numeric2",
-            "Numeric3",
-            "String1",
-            "String2",
-        ],
-        "Type": ["Integer", "Numeric", "Numeric", "Numeric", "String", "String"],
-        FEATURE_TYPE_KEY: [
-            CATEGORICAL_TAG,
-            NUMERIC_TAG,
-            NUMERIC_TAG,
-            "ignore",
-            CATEGORICAL_TAG,
-            CATEGORICAL_TAG,
-        ],
-    }
-    adata = AnnData(
-        X=X_data,
-        obs=pd.DataFrame(data=obs_data),
-        var=pd.DataFrame(data=var_data, index=var_data["Feature"]),
-        uns=OrderedDict(),
-    )
-
-    adata = ep.pp.encode(adata, autodetect=True, encodings="label")
-
-    return adata
 
 
 def test_vars_checks(adata_to_norm):
@@ -106,7 +37,7 @@ def test_norm_scale_array_types(adata_to_norm, array_type, expected_error):
 
 
 def test_norm_scale_3D_edata(edata_blob_small):
-    ep.pp.scale_norm(edata_blob_small)
+    ep.pp.scale_norm(edata_blob_small, layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         ep.pp.scale_norm(edata_blob_small, layer="R_layer")
 
@@ -166,8 +97,8 @@ def test_norm_scale_kwargs(array_type, adata_to_norm):
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES)
-def test_norm_scale_group(array_type, edata_mini):
-    edata_mini_casted = edata_mini.copy()
+def test_norm_scale_group(array_type, edata_mini_normalization):
+    edata_mini_casted = edata_mini_normalization.copy()
     edata_mini_casted.X = array_type(edata_mini_casted.X)
 
     with pytest.raises(KeyError):
@@ -213,7 +144,7 @@ def test_norm_minmax_array_types(adata_to_norm, array_type, expected_error):
 
 
 def test_norm_minmax_3D_edata(edata_blob_small):
-    ep.pp.minmax_norm(edata_blob_small)
+    ep.pp.minmax_norm(edata_blob_small, layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         ep.pp.minmax_norm(edata_blob_small, layer="R_layer")
 
@@ -256,8 +187,8 @@ def test_norm_minmax_kwargs(array_type, adata_to_norm):
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES)
-def test_norm_minmax_group(array_type, edata_mini):
-    edata_mini_casted = edata_mini.copy()
+def test_norm_minmax_group(array_type, edata_mini_normalization):
+    edata_mini_casted = edata_mini_normalization.copy()
     edata_mini_casted.X = array_type(edata_mini_casted.X)
 
     with pytest.raises(KeyError):
@@ -294,7 +225,7 @@ def test_norm_maxabs_array_types(adata_to_norm, array_type, expected_error):
 
 
 def test_norm_maxabs_3D_edata(edata_blob_small):
-    ep.pp.maxabs_norm(edata_blob_small)
+    ep.pp.maxabs_norm(edata_blob_small, layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         ep.pp.maxabs_norm(edata_blob_small, layer="R_layer")
 
@@ -329,8 +260,8 @@ def test_norm_maxabs_integers(edata_mini_integers_in_X):
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES)
-def test_norm_maxabs_group(array_type, edata_mini):
-    edata_mini_casted = edata_mini.copy()
+def test_norm_maxabs_group(array_type, edata_mini_normalization):
+    edata_mini_casted = edata_mini_normalization.copy()
     edata_mini_casted.X = array_type(edata_mini_casted.X)
 
     if "dask" in array_type.__name__:
@@ -380,6 +311,7 @@ def test_norm_robust_scale_array_types(adata_to_norm, array_type, expected_error
 
 
 def test_norm_robust_scale_3D_edata(edata_blob_small):
+    ep.pp.robust_scale_norm(edata_blob_small, layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         ep.pp.robust_scale_norm(edata_blob_small, layer="R_layer")
 
@@ -422,8 +354,8 @@ def test_norm_robust_scale_kwargs(adata_to_norm, array_type):
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES)
-def test_norm_robust_scale_group(array_type, edata_mini):
-    edata_mini_casted = edata_mini.copy()
+def test_norm_robust_scale_group(array_type, edata_mini_normalization):
+    edata_mini_casted = edata_mini_normalization.copy()
     edata_mini_casted.X = array_type(edata_mini_casted.X)
 
     with pytest.raises(KeyError):
@@ -461,7 +393,7 @@ def test_norm_quantile_array_types(adata_to_norm, array_type, expected_error):
 
 
 def test_norm_quantile_3D_edata(edata_blob_small):
-    ep.pp.quantile_norm(edata_blob_small)
+    ep.pp.quantile_norm(edata_blob_small, layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         ep.pp.quantile_norm(edata_blob_small, layer="R_layer")
 
@@ -520,8 +452,8 @@ def test_norm_quantile_uniform_kwargs(array_type, adata_to_norm):
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES)
-def test_norm_quantile_uniform_group(array_type, edata_mini):
-    edata_mini_casted = edata_mini.copy()
+def test_norm_quantile_uniform_group(array_type, edata_mini_normalization):
+    edata_mini_casted = edata_mini_normalization.copy()
     edata_mini_casted.X = array_type(edata_mini_casted.X)
 
     with pytest.raises(KeyError):
@@ -559,7 +491,7 @@ def test_norm_power_array_types(adata_to_norm, array_type, expected_error):
 
 
 def test_norm_power_3D_edata(edata_blob_small):
-    ep.pp.power_norm(edata_blob_small)
+    ep.pp.power_norm(edata_blob_small, layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         ep.pp.power_norm(edata_blob_small, layer="R_layer")
 
@@ -628,8 +560,8 @@ def test_norm_power_kwargs(array_type, adata_to_norm):
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES)
-def test_norm_power_group(array_type, edata_mini):
-    edata_mini_casted = edata_mini.copy()
+def test_norm_power_group(array_type, edata_mini_normalization):
+    edata_mini_casted = edata_mini_normalization.copy()
     edata_mini_casted.X = array_type(edata_mini_casted.X)
 
     if "dask" in array_type.__name__:
@@ -698,7 +630,7 @@ def test_norm_log_norm_array_types(adata_to_norm, array_type, expected_error):
 def test_norm_log_3D_edata(edata_blob_small):
     edata_blob_small.X = np.abs(edata_blob_small.X)
     edata_blob_small.layers["R_layer"] = np.abs(edata_blob_small.layers["R_layer"])
-    ep.pp.log_norm(edata_blob_small)
+    ep.pp.log_norm(edata_blob_small, layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         ep.pp.log_norm(edata_blob_small, layer="R_layer")
 
@@ -777,7 +709,7 @@ def test_offset_negative_values():
 
 
 def test_offset_negative_values_3D_edata(edata_blob_small):
-    ep.pp.offset_negative_values(edata_blob_small)
+    ep.pp.offset_negative_values(edata_blob_small, layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         ep.pp.offset_negative_values(edata_blob_small, layer="R_layer")
 

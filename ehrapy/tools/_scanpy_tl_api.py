@@ -195,6 +195,7 @@ def umap(
     )
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 def draw_graph(
     edata: EHRData | AnnData,
     *,

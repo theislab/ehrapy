@@ -18,8 +18,8 @@ if TYPE_CHECKING:
     from ehrdata import EHRData
 
 
-@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 @_check_feature_types
 def detect_bias(
     edata: EHRData | AnnData,

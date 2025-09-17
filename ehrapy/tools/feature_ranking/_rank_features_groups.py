@@ -601,8 +601,8 @@ def rank_features_groups(
     return edata if copy else None
 
 
-@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 def filter_rank_features_groups(
     edata: EHRData | AnnData,
     *,
@@ -637,7 +637,9 @@ def filter_rank_features_groups(
 
     Examples:
         >>> import ehrapy as ep
+        >>> import ehrdata as ed
         >>> edata = ed.dt.mimic_2()
+        >>> edata = ep.ad.move_to_obs(edata, to_obs=["service_unit"])
         >>> ep.tl.rank_features_groups(edata, "service_unit")
         >>> ep.pl.rank_features_groups(edata)
     """

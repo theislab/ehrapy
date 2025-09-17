@@ -47,7 +47,7 @@ def test_detect_bias_all_sensitive_features(edata_small_bias):
 
 
 def test_explicit_impute_3D_edata(edata_blob_small):
-    ep.pp.detect_bias(edata_blob_small, sensitive_features=["feature_1"])
+    ep.pp.detect_bias(edata_blob_small, sensitive_features=["feature_1"], layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         ep.pp.detect_bias(edata_blob_small, sensitive_features=["feature_1"], layer="R_layer")
 

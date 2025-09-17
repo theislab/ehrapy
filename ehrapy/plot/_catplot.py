@@ -14,7 +14,12 @@ if TYPE_CHECKING:
 
 @use_ehrdata(deprecated_after="1.0.0")
 def catplot(
-    edata: EHRData | AnnData, x: str = None, y: str = None, hue: str = None, kind: str = "strip", **kwargs
+    edata: EHRData | AnnData,
+    x: str = None,
+    y: str = None,
+    hue: str = None,
+    kind: str = "strip",
+    **kwargs,
 ) -> FacetGrid:
     """Plot categorical data.
 

@@ -88,8 +88,8 @@ def _(arr: DaskArray, **kwargs):
     return daskml_pp.StandardScaler(**kwargs).fit_transform
 
 
-@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 def scale_norm(
     edata: EHRData | AnnData,
     vars: str | Sequence[str] | None = None,
@@ -151,8 +151,8 @@ def _(arr: DaskArray, **kwargs):
     return daskml_pp.MinMaxScaler(**kwargs).fit_transform
 
 
-@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 def minmax_norm(
     edata: EHRData | AnnData,
     vars: str | Sequence[str] | None = None,
@@ -269,8 +269,8 @@ def _(arr: DaskArray, **kwargs):
     return daskml_pp.RobustScaler(**kwargs).fit_transform
 
 
-@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 def robust_scale_norm(
     edata: EHRData | AnnData,
     vars: str | Sequence[str] | None = None,
@@ -334,8 +334,8 @@ def _(arr: DaskArray, **kwargs):
     return daskml_pp.QuantileTransformer(**kwargs).fit_transform
 
 
-@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 def quantile_norm(
     edata: EHRData | AnnData,
     vars: str | Sequence[str] | None = None,
@@ -391,8 +391,8 @@ def _(arr: np.ndarray, **kwargs):
     return sklearn_pp.PowerTransformer(**kwargs).fit_transform
 
 
-@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 def power_norm(
     edata: EHRData | AnnData,
     vars: str | Sequence[str] | None = None,
@@ -438,8 +438,8 @@ def power_norm(
     )
 
 
-@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 def log_norm(
     edata: EHRData | AnnData,
     vars: str | Sequence[str] | None = None,
@@ -536,8 +536,8 @@ def _record_norm(edata: EHRData | AnnData, vars: Sequence[str], method: str) -> 
     return None
 
 
-@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 def offset_negative_values(edata: EHRData | AnnData, layer: str = None, copy: bool = False) -> EHRData | AnnData | None:
     """Offsets negative values into positive ones with the lowest negative value becoming 0.
 
@@ -556,9 +556,9 @@ def offset_negative_values(edata: EHRData | AnnData, layer: str = None, copy: bo
         edata = edata.copy()
 
     if layer:
-        minimum = np.min(edata[layer])
+        minimum = np.min(edata.layers[layer])
         if minimum < 0:
-            edata[layer] = edata[layer] + np.abs(minimum)
+            edata.layers[layer] = edata.layers[layer] + np.abs(minimum)
     else:
         minimum = np.min(edata.X)
         if minimum < 0:

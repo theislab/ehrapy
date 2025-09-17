@@ -21,8 +21,8 @@ if TYPE_CHECKING:
     from ehrdata import EHRData
 
 
-@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 def qc_metrics(
     edata: EHRData | AnnData,
     qc_vars: Collection[str] = (),
@@ -233,7 +233,6 @@ def qc_lab_measurements(
     reference_table: pd.DataFrame | None = None,
     measurements: list[str] | None = None,
     unit: Literal["traditional", "SI"] | None = None,
-    layer: str | None = None,
     threshold: int = 20,
     age_col: str | None = None,
     age_range: str | None = None,
@@ -241,6 +240,7 @@ def qc_lab_measurements(
     sex: str | None = None,
     ethnicity_col: str | None = None,
     ethnicity: str | None = None,
+    layer: str | None = None,
     copy: bool = False,
     verbose: bool = False,
 ) -> EHRData | AnnData | None:
@@ -280,7 +280,6 @@ def qc_lab_measurements(
         reference_table: A custom DataFrame with reference values. Defaults to the laposata table if not specified.
         measurements: A list of measurements to check.
         unit: The unit of the measurements.
-        layer: Layer containing the matrix to calculate the metrics for.
         threshold: Minimum required matching confidence score of the fuzzysearch.
                    0 = no matches, 100 = all must match.
         age_col: Column containing age values.
@@ -289,6 +288,7 @@ def qc_lab_measurements(
         sex: Sex to filter the reference values for. Use U for unisex which uses male values when male and female conflict.
         ethnicity_col: Column containing ethnicity values.
         ethnicity: Ethnicity to filter for.
+        layer: Layer containing the matrix to calculate the metrics for.
         copy: Whether to return a copy.
         verbose: Whether to have verbose stdout. Notifies user of matched columns and value ranges.
 

@@ -15,8 +15,8 @@ if TYPE_CHECKING:
     from ehrdata import EHRData
 
 
-@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 def winsorize(
     edata: EHRData | AnnData,
     vars: Collection[str] = None,
@@ -74,8 +74,8 @@ def winsorize(
     return edata if copy else None
 
 
-@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 def clip_quantile(
     edata: EHRData | AnnData,
     limits: tuple[float, float],

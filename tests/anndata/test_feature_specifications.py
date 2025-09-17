@@ -159,3 +159,9 @@ def test_partial_annotation(edata_feature_type_specifications):
         edata_feature_type_specifications.var[FEATURE_TYPE_KEY]
         == ["dummy", CATEGORICAL_TAG, CATEGORICAL_TAG, NUMERIC_TAG, CATEGORICAL_TAG, NUMERIC_TAG, DATE_TAG]
     )
+
+
+def test_infer_feature_types_3D(edata_blob_small):
+    ep.ad.infer_feature_types(edata_blob_small, layer="layer_2")
+    with pytest.raises(ValueError, match=r"only supports 2D data"):
+        ep.ad.infer_feature_types(edata_blob_small, layer="R_layer")

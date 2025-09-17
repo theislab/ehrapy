@@ -47,8 +47,8 @@ _FontSize = Literal["xx-small", "x-small", "small", "medium", "large", "x-large"
 VBound = str | float | Callable[[Sequence[float]], float]
 
 
-@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 @_doc_params(scatter_temp=doc_scatter_basic, show_save_ax=doc_show_save_ax)
 def scatter(  # noqa: D417
     edata: EHRData | AnnData,
@@ -142,8 +142,8 @@ def scatter(  # noqa: D417
     return scatter_partial(edata, color=color)
 
 
-@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 @_doc_params(
     vminmax=doc_vboundnorm,
     show_save_ax=doc_show_save_ax,
@@ -258,8 +258,8 @@ def heatmap(  # noqa: D417
     return heatmap_partial(edata, groupby=groupby)
 
 
-@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 @_doc_params(
     show_save_ax=doc_show_save_ax,
     common_plot_args=doc_common_plot_args,
@@ -410,8 +410,8 @@ def dotplot(  # noqa: D417
     return dotplot_partial(edata, groupby=groupby)
 
 
-@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 @_doc_params(show_save_ax=doc_show_save_ax, common_plot_args=doc_common_plot_args)
 def tracksplot(  # noqa: D417
     edata: EHRData | AnnData,
@@ -488,8 +488,8 @@ def tracksplot(  # noqa: D417
     return tracksplot_partial(edata, groupby=groupby)
 
 
-@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 def violin(  # noqa: D417
     edata: EHRData | AnnData,
     keys: str | Sequence[str],
@@ -582,8 +582,8 @@ def violin(  # noqa: D417
     return violin_partial(edata, groupby=groupby)
 
 
-@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 @_doc_params(
     show_save_ax=doc_show_save_ax,
     common_plot_args=doc_common_plot_args,
@@ -733,8 +733,8 @@ def stacked_violin(  # noqa: D417
     return stacked_vio_partial(edata, groupby=groupby)
 
 
-@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 @_doc_params(
     show_save_ax=doc_show_save_ax,
     common_plot_args=doc_common_plot_args,
@@ -855,8 +855,8 @@ def matrixplot(  # noqa: D417
     return matrix_partial(edata, groupby=groupby)
 
 
-@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 @_doc_params(show_save_ax=doc_show_save_ax)
 def clustermap(  # noqa: D417
     edata: EHRData | AnnData,
@@ -920,7 +920,7 @@ def ranking(
 
     Args:
         edata: Central data object.
-        attr: The attribute of AnnData that contains the score.
+        attr: The attribute of the object that contains the score.
         keys: The scores to look up an array from the attribute of edata.
         dictionary: Optional key dictionary.
         indices: Optional dictionary indices.
@@ -961,8 +961,8 @@ def ranking(
     )
 
 
-@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 @_doc_params(show_save_ax=doc_show_save_ax)
 def dendrogram(  # noqa: D417
     edata: EHRData | AnnData,
@@ -1129,6 +1129,7 @@ def pca_variance_ratio(
     return sc.pl.pca_variance_ratio(edata, n_pcs=n_pcs, log=log, show=show, save=save)
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 @_doc_params(scatter_bulk=doc_scatter_embedding, show_save_ax=doc_show_save_ax)
 def pca_overview(edata: EHRData | AnnData, **params) -> Axes | list[Axes] | None:  # pragma: no cover
     """Plot PCA results.
@@ -1254,9 +1255,9 @@ def umap(edata: EHRData | AnnData, **kwargs) -> Figure | Axes | list[Axes] | Non
     return sc.pl.umap(edata, **kwargs)
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 @function_2D_only()
 # @_wraps_plot_scatter
-@use_ehrdata(deprecated_after="1.0.0")
 @_doc_params(
     adata_color_etc=doc_adata_color_etc,
     scatter_bulk=doc_scatter_embedding,
@@ -1341,8 +1342,8 @@ class Empty(Enum):
 _empty = Empty.token
 
 
-@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 @_doc_params(
     adata_color_etc=doc_adata_color_etc,
     edges_arrows=doc_edges_arrows,
@@ -2052,8 +2053,8 @@ def rank_features_groups(  # noqa: D417
     )
 
 
-@_doc_params(show_save_ax=doc_show_save_ax)
 @use_ehrdata(deprecated_after="1.0.0")
+@_doc_params(show_save_ax=doc_show_save_ax)
 def rank_features_groups_violin(  # noqa: D417
     edata: EHRData | AnnData,
     groups: Sequence[str] | None = None,

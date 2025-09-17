@@ -60,5 +60,6 @@ def test_multiclass_prediction():
 
 
 def test_continuous_prediction_3D_edata(edata_blob_small):
+    rank_features_supervised(edata_blob_small, "feature_9", model="regression", layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         rank_features_supervised(edata_blob_small, "feature_9", model="regression", layer="R_layer")

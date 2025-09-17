@@ -21,13 +21,14 @@ from ehrapy.anndata.anndata_ext import _get_var_indices_for_type
 available_encodings = {"one-hot", "label"}
 
 
-@function_2D_only()
-@use_ehrdata(deprecated_after="1.0.0")
 @_check_feature_types
+@use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 def encode(
     edata: EHRData | AnnData,
     autodetect: bool | dict = False,
     encodings: dict[str, list[str]] | str | None = "one-hot",
+    *,
     layer: str | None = None,
 ) -> EHRData | AnnData:
     """Encode categoricals of a data object.

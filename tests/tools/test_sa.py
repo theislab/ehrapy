@@ -33,7 +33,7 @@ def test_ols(mimic_2, layer):
 def test_ols_3D(edata_blob_small):
     formula = "feature_1 ~ feature_2"
     var_names = ["feature_1", "feature_2"]
-    ep.tl.ols(edata_blob_small, var_names, formula=formula, missing="drop")
+    ep.tl.ols(edata_blob_small, var_names, formula=formula, missing="drop", layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         ep.tl.ols(edata_blob_small, var_names, formula=formula, missing="drop", layer="R_layer")
 
@@ -61,7 +61,7 @@ def test_glm(mimic_2, layer):
 def test_glm_3D(edata_blob_small):
     formula = "feature_1 ~ feature_2"
     var_names = ["feature_1", "feature_2"]
-    ep.tl.glm(edata_blob_small, var_names, formula=formula, missing="drop")
+    ep.tl.glm(edata_blob_small, var_names, formula=formula, missing="drop", layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         ep.tl.glm(edata_blob_small, var_names, formula=formula, missing="drop", layer="R_layer")
 
@@ -160,7 +160,9 @@ def test_survival_models_3D(sa_function, sa_class, edata_blob_small):
     edata_blob_small[:, [duration_col]].X = np.arange(len(edata_blob_small), dtype=np.int32)
     edata_blob_small[:, [event_col]].X = 1
 
-    sa_function(edata_blob_small, duration_col=duration_col, event_col=event_col)
+    edata_blob_small.layers["layer_2"] = edata_blob_small.X.copy()
+
+    sa_function(edata_blob_small, duration_col=duration_col, event_col=event_col, layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         sa_function(edata_blob_small, duration_col=duration_col, event_col=event_col, layer="R_layer")
 

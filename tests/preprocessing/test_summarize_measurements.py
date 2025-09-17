@@ -52,6 +52,6 @@ def test_statistics_subset(adata_to_expand):
 
 
 def test_summarize_measurements_3D_edata(edata_blob_small):
-    summarize_measurements(edata_blob_small)
+    summarize_measurements(edata_blob_small, layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         summarize_measurements(edata_blob_small, layer="R_layer")

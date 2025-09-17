@@ -71,9 +71,9 @@ def _detect_feature_type(col: pd.Series) -> tuple[Literal["date", "categorical",
     return NUMERIC_TAG, False  # type: ignore
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 @function_future_warning("ep.ad.infer_feature_types", "ehrdata.infer_feature_types")
 @function_2D_only()
-@use_ehrdata(deprecated_after="1.0.0")
 def infer_feature_types(
     edata: EHRData | AnnData,
     layer: str | None = None,
@@ -207,8 +207,8 @@ def _check_feature_types(func):
 
 
 @_check_feature_types
-@function_future_warning("ep.ad.feature_type_overview", "ehrdata.feature_type_overview")
 @use_ehrdata(deprecated_after="1.0.0")
+@function_future_warning("ep.ad.feature_type_overview", "ehrdata.feature_type_overview")
 def feature_type_overview(edata: EHRData | AnnData) -> None:
     """Print an overview of the feature types and encoding modes in the EHRData object.
 
@@ -257,8 +257,8 @@ def feature_type_overview(edata: EHRData | AnnData) -> None:
     print(tree)
 
 
-@function_future_warning("ep.ad.replace_feature_types", "ehrdata.replace_feature_types")
 @use_ehrdata(deprecated_after="1.0.0")
+@function_future_warning("ep.ad.replace_feature_types", "ehrdata.replace_feature_types")
 def replace_feature_types(edata: EHRData | AnnData, features: Iterable[str], corrected_type: str) -> None:
     """Correct the feature types for a list of features inplace.
 

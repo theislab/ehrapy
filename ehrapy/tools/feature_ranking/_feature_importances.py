@@ -22,9 +22,9 @@ if TYPE_CHECKING:
     from ehrdata import EHRData
 
 
-@_check_feature_types
-@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
+@_check_feature_types
 def rank_features_supervised(
     edata: EHRData | AnnData,
     predicted_feature: str,

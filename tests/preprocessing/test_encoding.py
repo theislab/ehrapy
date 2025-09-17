@@ -15,7 +15,7 @@ _TEST_PATH = f"{TEST_DATA_PATH}/encode"
 
 
 def test_encode_3D_edata(edata_blob_small):
-    encode(edata_blob_small, autodetect=True)
+    encode(edata_blob_small, autodetect=True, layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         encode(edata_blob_small, autodetect=True, layer="R_layer")
 

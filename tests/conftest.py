@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import OrderedDict
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -7,6 +8,7 @@ import ehrdata as ed
 import numpy as np
 import pandas as pd
 import pytest
+from anndata import AnnData
 from ehrdata.core.constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrdata.io import read_csv
 from matplotlib.testing.compare import compare_images
@@ -148,6 +150,27 @@ def edata_mini():
 
 
 @pytest.fixture
+def edata_mini_normalization():
+    return read_csv(
+        f"{TEST_DATA_PATH}/dataset1.csv",
+        columns_obs_only=["glucose", "weight", "disease", "station"],
+    )[:8]
+
+
+@pytest.fixture
+def edata_mini_integers_in_X():
+    adata = read_csv(
+        f"{TEST_DATA_PATH}/dataset1.csv",
+        columns_obs_only=["idx", "sys_bp_entry", "dia_bp_entry", "glucose", "weight", "disease", "station"],
+    )
+    # cast data in X to integers; pd.read generates floats generously, but want to test integer normalization
+    adata.X = adata.X.astype(np.int32)
+    ep.ad.infer_feature_types(adata)
+    ep.ad.replace_feature_types(adata, ["in_days"], "numeric")
+    return adata
+
+
+@pytest.fixture
 def diabetes_130_fairlearn_sample():
     edata = ed.dt.diabetes_130_fairlearn(
         columns_obs_only=[
@@ -253,9 +276,55 @@ def edata_small_bias() -> ed.EHRData:
 @pytest.fixture
 def edata_blob_small() -> ed.EHRData:
     edata = ed.dt.ehrdata_blobs(n_variables=10, n_centers=2, n_observations=50, base_timepoints=10)
+    edata.layers["layer_2"] = edata.X.copy()
     edata.obs["cluster"] = edata.obs["cluster"].astype("category")
     ep.pp.neighbors(edata)
     return edata
+
+
+@pytest.fixture
+def adata_to_norm():
+    obs_data = {"ID": ["Patient1", "Patient2", "Patient3"], "Age": [31, 94, 62]}
+
+    X_data = np.array(
+        [
+            [1, 3.4, -2.0, 1.0, "A string", "A different string"],
+            [2, 5.4, 5.0, 2.0, "Silly string", "A different string"],
+            [2, 5.7, 3.0, np.nan, "A string", "What string?"],
+        ],
+        dtype=np.dtype(object),
+    )
+    # the "ignore" tag is used to make the column being ignored; the original test selecting a few
+    # columns induces a specific ordering which is kept for now
+    var_data = {
+        "Feature": [
+            "Integer1",
+            "Numeric1",
+            "Numeric2",
+            "Numeric3",
+            "String1",
+            "String2",
+        ],
+        "Type": ["Integer", "Numeric", "Numeric", "Numeric", "String", "String"],
+        FEATURE_TYPE_KEY: [
+            CATEGORICAL_TAG,
+            NUMERIC_TAG,
+            NUMERIC_TAG,
+            "ignore",
+            CATEGORICAL_TAG,
+            CATEGORICAL_TAG,
+        ],
+    }
+    adata = AnnData(
+        X=X_data,
+        obs=pd.DataFrame(data=obs_data),
+        var=pd.DataFrame(data=var_data, index=var_data["Feature"]),
+        uns=OrderedDict(),
+    )
+
+    adata = ep.pp.encode(adata, autodetect=True, encodings="label")
+
+    return adata
 
 
 # simplified from https://github.com/scverse/scanpy/blob/main/scanpy/tests/conftest.py

@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import pandas as pd
-from ehrdata.core.constants import NUMERIC_TAG
 from lamin_utils import logger
 from sklearn.experimental import enable_iterative_imputer  # noinspection PyUnresolvedReference
 from sklearn.impute import SimpleImputer
@@ -27,13 +26,14 @@ if TYPE_CHECKING:
     from ehrdata import EHRData
 
 
-@spinner("Performing explicit impute")
-@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
+@spinner("Performing explicit impute")
 def explicit_impute(
     edata: EHRData | AnnData,
     replacement: (str | int) | (dict[str, str | int]),
     *,
+    layer: str | None = None,
     impute_empty_strings: bool = True,
     warning_threshold: int = 70,
     copy: bool = False,
@@ -48,6 +48,7 @@ def explicit_impute(
         edata: Central data object.
         replacement: The value to replace missing values with. If a dictionary is provided, the keys represent column
                      names and the values represent replacement values for those columns.
+        layer: The layer to impute.
         impute_empty_strings: If True, empty strings are also replaced.
         warning_threshold: Threshold of percentage of missing values to display a warning for.
         copy: If True, returns a modified copy of the original data object. If False, modifies the object in place.
@@ -67,6 +68,8 @@ def explicit_impute(
     if copy:
         edata = edata.copy()
 
+    X = edata.X if layer is None else edata.layers[layer]
+
     if isinstance(replacement, int) or isinstance(replacement, str):
         _warn_imputation_threshold(edata, var_names=list(edata.var_names), threshold=warning_threshold)
     else:
@@ -74,7 +77,7 @@ def explicit_impute(
 
     # 1: Replace all missing values with the specified value
     if isinstance(replacement, int | str):
-        _replace_explicit(edata.X, replacement, impute_empty_strings)
+        _replace_explicit(X, replacement, impute_empty_strings)
 
     # 2: Replace all missing values in a subset of columns with a specified value per column or a default value, when the column is not explicitly named
     elif isinstance(replacement, dict):
@@ -82,15 +85,18 @@ def explicit_impute(
             imputation_value = _extract_impute_value(replacement, column_name)
             # only replace if an explicit value got passed or could be extracted from replacement
             if imputation_value:
-                edata.X[:, idx : idx + 1] = _replace_explicit(
-                    edata.X[:, idx : idx + 1], imputation_value, impute_empty_strings
-                )
+                X[:, idx : idx + 1] = _replace_explicit(X[:, idx : idx + 1], imputation_value, impute_empty_strings)
             else:
                 logger.warning(f"No replace value passed and found for var [not bold green]{column_name}.")
     else:
         raise ValueError(  # pragma: no cover
             f"Type {type(replacement)} is not a valid datatype for replacement parameter. Either use int, str or a dict!"
         )
+
+    if layer is None:
+        edata.X = X
+    else:
+        edata.layers[layer] = X
 
     return edata if copy else None
 
@@ -142,16 +148,17 @@ def _extract_impute_value(replacement: dict[str, str | int], column_name: str) -
         return None
 
 
-@spinner("Performing simple impute")
-@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
+@spinner("Performing simple impute")
 def simple_impute(
     edata: EHRData | AnnData,
     var_names: Iterable[str] | None = None,
     *,
     strategy: Literal["mean", "median", "most_frequent"] = "mean",
-    copy: bool = False,
     warning_threshold: int = 70,
+    layer: str | None = None,
+    copy: bool = False,
 ) -> EHRData | AnnData | None:
     """Impute missing values in numerical data using mean/median/most frequent imputation.
 
@@ -163,7 +170,8 @@ def simple_impute(
         var_names: A list of column names to apply imputation on (if None, impute all columns).
         strategy: Imputation strategy to use. One of {'mean', 'median', 'most_frequent'}.
         warning_threshold: Display a warning message if percentage of missing values exceeds this threshold.
-        copy:Whether to return a copy of `edata` or modify it inplace.
+        layer: The layer to impute.
+        copy: Whether to return a copy of `edata` or modify it inplace.
 
     Returns:
         If copy is True, a modified copy of the original data object with imputed X.
@@ -178,11 +186,11 @@ def simple_impute(
     if copy:
         edata = edata.copy()
 
-    _warn_imputation_threshold(edata, var_names, threshold=warning_threshold)
+    _warn_imputation_threshold(edata, var_names, threshold=warning_threshold, layer=layer)
 
     if strategy in {"median", "mean"}:
         try:
-            _simple_impute(edata, var_names, strategy)
+            _simple_impute(edata, var_names, strategy, layer)
         except ValueError:
             raise ValueError(
                 f"Can only impute numerical data using {strategy} strategy. Try to restrict imputation "
@@ -190,7 +198,7 @@ def simple_impute(
             ) from None
     # most_frequent imputation works with non-numerical data as well
     elif strategy == "most_frequent":
-        _simple_impute(edata, var_names, strategy)
+        _simple_impute(edata, var_names, strategy, layer)
     else:
         raise ValueError(
             f"Unknown impute strategy {strategy} for simple Imputation. Choose any of mean, median or most_frequent."
@@ -199,23 +207,30 @@ def simple_impute(
     return edata if copy else None
 
 
-def _simple_impute(edata: EHRData | AnnData, var_names: Iterable[str] | None, strategy: str) -> None:
+def _simple_impute(edata: EHRData | AnnData, var_names: Iterable[str] | None, strategy: str, layer: str | None) -> None:
     imputer = SimpleImputer(strategy=strategy)
-    if isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):
-        edata[:, var_names].X = imputer.fit_transform(edata[:, var_names].X)
+    if layer is None:
+        if isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):
+            edata[:, var_names].X = imputer.fit_transform(edata[:, var_names].X)
+        else:
+            edata.X = imputer.fit_transform(edata.X)
     else:
-        edata.X = imputer.fit_transform(edata.X)
+        if isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):
+            edata[:, var_names].layers[layer] = imputer.fit_transform(edata[:, var_names].layers[layer])
+        else:
+            edata.layers[layer] = imputer.fit_transform(edata.layers[layer])
 
 
-@spinner("Performing KNN impute")
 @_check_feature_types
-@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
+@spinner("Performing KNN impute")
 def knn_impute(
     edata: EHRData | AnnData,
     var_names: Iterable[str] | None = None,
     *,
     n_neighbors: int = 5,
+    layer: str | None = None,
     copy: bool = False,
     backend: Literal["scikit-learn", "faiss"] = "faiss",
     warning_threshold: int = 70,
@@ -236,6 +251,7 @@ def knn_impute(
         var_names: A list of variable names indicating which columns to impute.
                    If `None`, all columns are imputed. Default is `None`.
         n_neighbors: Number of neighbors to use when performing the imputation.
+        layer: The layer to impute.
         copy: Whether to perform the imputation on a copy of the original data object.
               If `True`, the original object remains unmodified.
         backend: The implementation to use for the KNN imputation.
@@ -263,7 +279,7 @@ def knn_impute(
     if copy:
         edata = edata.copy()
 
-    _warn_imputation_threshold(edata, var_names, threshold=warning_threshold)
+    _warn_imputation_threshold(edata, var_names, threshold=warning_threshold, layer=layer)
 
     if backend not in {"scikit-learn", "faiss"}:
         raise ValueError(f"Unknown backend '{backend}' for KNN imputation. Choose between 'scikit-learn' and 'faiss'.")
@@ -290,7 +306,7 @@ def knn_impute(
 
         patch_sklearn()
 
-    _knn_impute(edata, var_names, n_neighbors, backend=backend, **backend_kwargs)
+    _knn_impute(edata, var_names, n_neighbors, backend=backend, layer=layer, **backend_kwargs)
 
     if find_spec("sklearnex") is not None:  # pragma: no cover
         unpatch_sklearn()
@@ -302,6 +318,7 @@ def _knn_impute(
     edata: EHRData | AnnData,
     var_names: Iterable[str] | None,
     n_neighbors: int,
+    layer: str | None,
     backend: Literal["scikit-learn", "faiss"],
     **kwargs,
 ) -> None:
@@ -323,18 +340,20 @@ def _knn_impute(
             "Can only impute numerical data. Try to restrict imputation to certain columns using "
             "var_names parameter or perform an encoding of your data."
         )
-
-    complete_numerical_columns = np.array(numerical_indices)[
-        ~np.isnan(edata.X[:, numerical_indices]).any(axis=0)
-    ].tolist()
+    X = edata.X if layer is None else edata.layers[layer]
+    complete_numerical_columns = np.array(numerical_indices)[~np.isnan(X[:, numerical_indices]).any(axis=0)].tolist()
     imputer_data_indices = column_indices + [i for i in complete_numerical_columns if i not in column_indices]
-    imputer_x = edata.X[::, imputer_data_indices].astype("float64")
-    edata.X[::, imputer_data_indices] = imputer.fit_transform(imputer_x)
+    imputer_x = X[::, imputer_data_indices].astype("float64")
+
+    if layer is None:
+        edata.X[::, imputer_data_indices] = imputer.fit_transform(imputer_x)
+    else:
+        edata.layers[layer][::, imputer_data_indices] = imputer.fit_transform(imputer_x)
 
 
-@spinner("Performing miss-forest impute")
-@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
+@spinner("Performing miss-forest impute")
 def miss_forest_impute(
     edata: EHRData | AnnData,
     var_names: Iterable[str] | None = None,
@@ -344,6 +363,7 @@ def miss_forest_impute(
     n_estimators: int = 100,
     random_state: int = 0,
     warning_threshold: int = 70,
+    layer: str | None = None,
     copy: bool = False,
 ) -> EHRData | AnnData | None:
     """Impute data using the MissForest strategy.
@@ -365,6 +385,7 @@ def miss_forest_impute(
                       Decrease for faster computations.
         random_state: The random seed for the initialization.
         warning_threshold: Threshold of percentage of missing values to display a warning for.
+        layer: The layer to impute.
         copy: Whether to return a copy or act in place.
 
     Returns:
@@ -375,15 +396,16 @@ def miss_forest_impute(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
+        >>> edata = ep.pp.encode(edata, autodetect=True)
         >>> ep.pp.miss_forest_impute(edata)
     """
     if copy:
         edata = edata.copy()
 
     if var_names is None:
-        _warn_imputation_threshold(edata, list(edata.var_names), threshold=warning_threshold)
+        _warn_imputation_threshold(edata, list(edata.var_names), threshold=warning_threshold, layer=layer)
     elif isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):
-        _warn_imputation_threshold(edata, var_names, threshold=warning_threshold)
+        _warn_imputation_threshold(edata, var_names, threshold=warning_threshold, layer=layer)
 
     if find_spec("sklearnex") is not None:  # pragma: no cover
         from sklearnex import patch_sklearn, unpatch_sklearn
@@ -421,7 +443,10 @@ def miss_forest_impute(
 
         # this step is the most expensive one and might extremely slow down the impute process
         if num_indices:
-            edata.X[::, num_indices] = imp_num.fit_transform(edata.X[::, num_indices])
+            if layer is None:
+                edata.X[::, num_indices] = imp_num.fit_transform(edata.X[::, num_indices])
+            else:
+                edata.layers[layer][::, num_indices] = imp_num.fit_transform(edata.layers[layer][::, num_indices])
         else:
             raise ValueError("Cannot find any feature to perform imputation")
 
@@ -436,10 +461,10 @@ def miss_forest_impute(
     return edata if copy else None
 
 
-@spinner("Performing mice-forest impute")
 @_check_feature_types
-@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
+@spinner("Performing mice-forest impute")
 def mice_forest_impute(
     edata: EHRData | AnnData,
     var_names: Iterable[str] | None = None,
@@ -451,6 +476,7 @@ def mice_forest_impute(
     iterations: int = 5,
     variable_parameters: dict | None = None,
     verbose: bool = False,
+    layer: str | None = None,
     copy: bool = False,
 ) -> EHRData | AnnData | None:
     """Impute data using the miceforest.
@@ -473,6 +499,7 @@ def mice_forest_impute(
         variable_parameters: Model parameters can be specified by variable here.
                              Keys should be variable names or indices, and values should be a dict of parameter which should apply to that variable only.
         verbose: Whether to print information about the imputation process.
+        layer: The layer to impute.
         copy: Whether to return a copy of the data object or modify it in-place.
 
     Returns:
@@ -483,13 +510,13 @@ def mice_forest_impute(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
-        >>> ep.ad.infer_feature_types(edata)
+        >>> edata = ep.pp.encode(edata, autodetect=True)
         >>> ep.pp.mice_forest_impute(edata)
     """
     if copy:
         edata = edata.copy()
 
-    _warn_imputation_threshold(edata, var_names, threshold=warning_threshold)
+    _warn_imputation_threshold(edata, var_names, threshold=warning_threshold, layer=layer)
 
     if any(
         idx not in _infer_numerical_column_indices(edata)
@@ -508,6 +535,7 @@ def mice_forest_impute(
         iterations,
         variable_parameters,
         verbose,
+        layer,
     )
 
     return edata if copy else None
@@ -524,11 +552,13 @@ def _(arr: np.ndarray, columns, index):
 
 
 def _miceforest_impute(
-    edata, var_names, save_all_iterations_data, random_state, inplace, iterations, variable_parameters, verbose
+    edata, var_names, save_all_iterations_data, random_state, inplace, iterations, variable_parameters, verbose, layer
 ) -> None:
     import miceforest as mf
 
-    data_df = load_dataframe(edata.X, columns=edata.var_names, index=edata.obs_names)
+    data_df = load_dataframe(
+        edata.X if layer is None else edata.layers[layer], columns=edata.var_names, index=edata.obs_names
+    )
     data_df = data_df.apply(pd.to_numeric, errors="coerce")
 
     if isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):
@@ -556,11 +586,14 @@ def _miceforest_impute(
         kernel.mice(iterations=iterations, variable_parameters=variable_parameters or {}, verbose=verbose)
         data_df = kernel.complete_data(dataset=0, inplace=inplace)
 
-    edata.X = data_df.values
+    if layer is None:
+        edata.X = data_df.values
+    else:
+        edata.layers[layer] = data_df.values
 
 
 def _warn_imputation_threshold(
-    edata: EHRData | AnnData, var_names: Iterable[str] | None, threshold: int = 75
+    edata: EHRData | AnnData, var_names: Iterable[str] | None, threshold: int = 75, layer: str | None = None
 ) -> dict[str, int]:
     """Warns the user if the more than $threshold percent had to be imputed.
 
@@ -568,13 +601,14 @@ def _warn_imputation_threshold(
         edata: The data object to check
         var_names: The var names which were imputed.
         threshold: A percentage value from 0 to 100 used as minimum.
+        layer: The layer to check.
     """
     try:
         edata.var["missing_values_pct"]
     except KeyError:
         from ehrapy.preprocessing import qc_metrics
 
-        qc_metrics(edata)
+        qc_metrics(edata, layer=layer)
     used_var_names = set(edata.var_names) if var_names is None else set(var_names)
 
     thresholded_var_names = set(edata.var[edata.var["missing_values_pct"] > threshold].index) & set(used_var_names)

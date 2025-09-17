@@ -32,6 +32,7 @@ def pca(
     random_state: AnyRandom = 0,
     return_info: bool = False,
     dtype: str = "float32",
+    layer: str | None = None,
     copy: bool = False,
     chunked: bool = False,
     chunk_size: int | None = None,
@@ -61,6 +62,7 @@ def pca(
         random_state: Change to use different initial states for the optimization.
         return_info: Only relevant when not passing an :class:`~ehrdata.EHRData`: or :class:`~anndata.AnnData`: see “**Returns**”.
         dtype: Numpy data type string to which to convert the result.
+        layer: The layer to operate on.
         copy: If an :class:`~ehrdata.EHRData`: or :class:`~anndata.AnnData`: is passed, determines whether a copy is returned. Is ignored otherwise.
         chunked: If `True`, perform an incremental PCA on segments of `chunk_size`.
                   The incremental PCA automatically zero centers and ignores settings of
@@ -90,6 +92,7 @@ def pca(
     """
     return sc.pp.pca(
         data=data,
+        layer=layer,
         n_comps=n_comps,
         zero_center=zero_center,
         svd_solver=svd_solver,
@@ -103,13 +106,14 @@ def pca(
     )
 
 
-@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 def regress_out(
     edata: EHRData | AnnData,
     *,
     keys: str | Sequence[str],
     n_jobs: int | None = None,
+    layer: str | None = None,
     copy: bool = False,
 ) -> EHRData | AnnData | None:  # pragma: no cover
     """Regress out (mostly) unwanted sources of variation.
@@ -121,15 +125,15 @@ def regress_out(
         edata: Central data object.
         keys: Keys for observation annotation on which to regress on.
         n_jobs: Number of jobs for parallel computation.
+        layer: The layer to operate on.
         copy: Determines whether a copy of `adata` is returned.
 
     Returns:
         Depending on `copy` returns or updates the data object with the corrected data matrix.
     """
-    return sc.pp.regress_out(adata=edata, keys=keys, n_jobs=n_jobs, copy=copy)
+    return sc.pp.regress_out(adata=edata, keys=keys, n_jobs=n_jobs, layer=layer, copy=copy)
 
 
-@function_2D_only()
 def subsample(
     data: EHRData | AnnData | np.ndarray | spmatrix,
     *,
@@ -141,7 +145,7 @@ def subsample(
     """Subsample to a fraction of the number of observations.
 
     Args:
-        data: The (annotated) data matrix of shape `n_obs` × `n_vars`. Rows correspond to observations (patients) and columns to features.
+        data: Central data object.
         fraction: Subsample to this `fraction` of the number of observations.
         n_obs: Subsample to this number of observations.
         random_state: Random seed to change subsampling.
@@ -154,13 +158,14 @@ def subsample(
     return sc.pp.subsample(data=data, fraction=fraction, n_obs=n_obs, random_state=random_state, copy=copy)
 
 
-@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 def combat(
     edata: EHRData | AnnData,
     *,
     key: str = "batch",
     covariates: Collection[str] | None = None,
+    layer: str | None = None,
     inplace: bool = True,
 ) -> EHRData | AnnData | np.ndarray | None:  # pragma: no cover
     """ComBat function for batch effect correction :cite:p:`Johnson2006`, :cite:p:`Leek2012`, :cite:p:`Pedersen2012`.
@@ -177,12 +182,25 @@ def combat(
                     This parameter refers to the design matrix `X` in Equation 2.1 in :cite:p:`Johnson2006` and to the `mod` argument in
                     the original combat function in the sva R package.
                     Note that not including covariates may introduce bias or lead to the removal of signal in unbalanced designs.
+        layer: The layer to operate on.
         inplace: Whether to replace edata.X or to return the corrected data
 
     Returns:
         Depending on the value of `inplace`, either returns the corrected matrix or modifies `edata.X`.
     """
-    return sc.pp.combat(adata=edata, key=key, covariates=covariates, inplace=inplace)
+    # Since scanpy's combat does not support layers, we need to copy the data to the X matrix and then copy the result back to the layer
+    if layer is None:
+        return sc.pp.combat(adata=edata, key=key, covariates=covariates, inplace=inplace)
+    else:
+        X = edata.X.copy()
+        edata.X = edata.layers[layer].copy()
+        if not inplace:
+            return sc.pp.combat(adata=edata, key=key, covariates=covariates, inplace=False)
+        else:
+            sc.pp.combat(adata=edata, key=key, covariates=covariates, inplace=True)
+            edata.layers[layer] = edata.X
+            edata.X = X
+            return None
 
 
 _Method = Literal["umap", "gauss"]

@@ -31,8 +31,8 @@ if TYPE_CHECKING:
     from ehrdata import EHRData
 
 
-@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 def ols(
     edata: EHRData | AnnData,
     var_names: list[str] | None | None = None,
@@ -88,8 +88,8 @@ def ols(
     return ols
 
 
-@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 def glm(
     edata: EHRData | AnnData,
     var_names: Iterable[str] | None = None,
@@ -418,8 +418,8 @@ def _build_model_input_dataframe(
     return df
 
 
-@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 def cox_ph(
     edata: EHRData | AnnData,
     duration_col: str,
@@ -779,8 +779,8 @@ def _univariate_model(
     return model
 
 
-@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 def nelson_aalen(
     edata: EHRData | AnnData,
     duration_col: str,

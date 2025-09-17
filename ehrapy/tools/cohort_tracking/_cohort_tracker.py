@@ -111,6 +111,7 @@ class CohortTracker:
         }
         self._tracked_tables: list = []
 
+    @use_ehrdata(deprecated_after="1.0.0")
     def __call__(
         self, edata: AnnData | EHRData, label: str = None, operations_done: str = None, **tableone_kwargs: dict
     ) -> None:
