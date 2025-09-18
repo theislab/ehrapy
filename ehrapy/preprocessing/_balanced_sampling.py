@@ -14,7 +14,7 @@ def balanced_sample(
     *,
     key: str,
     random_state: int = 0,
-    method: Literal["under", "over"] = "under",
+    method: Literal["RandomUnderSampler", "RandomOverSampler"] = "RandomUnderSampler",
     sampler_kwargs: dict = None,
     copy: bool = False,
 ) -> AnnData:
