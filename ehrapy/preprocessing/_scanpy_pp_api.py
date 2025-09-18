@@ -146,7 +146,7 @@ def sample(
     n_obs: int | None = None,
     rng: RNGLike | SeedLike | None = None,
     balanced: bool = False,
-    balanced_method: Literal["under", "over"] = "under",
+    balanced_method: Literal["RandomUnderSampler", "RandomOverSampler"] = "RandomUnderSampler",
     balanced_key: str | None = None,
     copy: bool = False,
     replace: bool = False,
@@ -163,7 +163,7 @@ def sample(
         copy: If an :class:`~anndata.AnnData` is passed, determines whether a copy is returned.
         balanced: If `True`, balance the groups in `adata.obs[key]` by under- or over-sampling.
                   Requires `key` to be set. If `False`, simple random sampling is performed.
-        balanced_method: The sampling method, either "under" for under-sampling or "over" for over-sampling. Only relevant if `balanced=True`.
+        balanced_method: The sampling method, either "RandomUnderSampler" for under-sampling or "RandomOverSampler" for over-sampling. Only relevant if `balanced=True`.
         balanced_key: Key in `adata.obs` to use for balancing the groups. Only relevant if `balanced=True`.
         replace: If `True`, samples are drawn with replacement. Only relevant if `balanced=False`.
         axis: Axis to sample on. Either `obs` / `0` (observations, default) or `var` / `1` (variables).
@@ -183,7 +183,9 @@ def sample(
         'Over 60 years'          68541
         '30-60 years'            30716
         '30 years or younger'     2509
-        >>> adata_balanced = ep.pp.sample(adata, balanced=True, balanced_method="under", balanced_key="age", copy=True)
+        >>> adata_balanced = ep.pp.sample(
+        ...     adata, balanced=True, balanced_method="RandomUnderSampler", balanced_key="age", copy=True
+        ... )
         >>> adata_balanced.obs.age.value_counts()
          age
         '30 years or younger'    2509
@@ -212,7 +214,7 @@ def sample(
         else:
             raise TypeError("data must be an AnnData, numpy array or scipy sparse matrix when balanced=True")
 
-        if balanced_method == "under" or balanced_method == "over":
+        if balanced_method == "RandomUnderSampler" or balanced_method == "RandomOverSampler":
             sampled_indices, sampled_labels = _random_resample(labels, method=balanced_method, random_state=rng)
         else:
             raise ValueError(f"Unknown sampling method: {balanced_method}")
@@ -369,7 +371,7 @@ def neighbors(
 def _random_resample(
     label: str | np.ndarray,
     target: str = "balanced",
-    method: Literal["under", "over"] = "under",
+    method: Literal["RandomUnderSampler", "RandomOverSampler"] = "RandomUnderSampler",
     random_state: RNGLike | SeedLike | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Helper function to under- or over-sample the data to achieve a balanced dataset.
@@ -377,7 +379,7 @@ def _random_resample(
     Args:
         label: The labels of the data.
         target: The target number of samples for each class. If "balanced", it will balance the classes to the minimum class size.
-        method: The sampling method, either "under" for under-sampling or "over" for over-sampling.
+        method: The sampling method, either "RandomUnderSampler" for under-sampling or "RandomOverSampler" for over-sampling.
         random_state: Random seed.
 
     Returns:
@@ -391,9 +393,9 @@ def _random_resample(
     classes, counts = np.unique(label, return_counts=True)
 
     if target == "balanced":
-        if method == "under":
+        if method == "RandomUnderSampler":
             target_count = counts.min()
-        elif method == "over":
+        elif method == "RandomOverSampler":
             target_count = counts.max()
         else:
             raise ValueError(f"Unknown sampling method: {method}")
@@ -403,13 +405,13 @@ def _random_resample(
     for c in classes:
         class_idx = np.where(label == c)[0]
         n = len(class_idx)
-        if method == "under":
+        if method == "RandomUnderSampler":
             if n > target_count:
                 sampled_idx = rnd.choice(class_idx, size=target_count, replace=False)
                 indices.extend(sampled_idx)
             else:
                 indices.extend(class_idx)
-        elif method == "over":
+        elif method == "RandomOverSampler":
             if n < target_count:
                 sampled_idx = rnd.choice(class_idx, size=target_count, replace=True)
                 indices.extend(sampled_idx)
