@@ -52,7 +52,11 @@ def test_balanced_sampling_basic(adata_mini, sparse_input):
     # undersampling, no copy
     adata_mini_for_undersampling = adata_mini.copy()
     output = ep.pp.sample(
-        adata_mini_for_undersampling, balanced=True, balanced_key="clinic_day", balanced_method="RandomUnderSampler", copy=False
+        adata_mini_for_undersampling,
+        balanced=True,
+        balanced_key="clinic_day",
+        balanced_method="RandomUnderSampler",
+        copy=False,
     )
     assert output is None
     assert adata_mini_for_undersampling.n_obs == 4
@@ -64,7 +68,11 @@ def test_balanced_sampling_basic(adata_mini, sparse_input):
     # oversampling, no copy
     adata_mini_for_oversampling = adata_mini.copy()
     output = ep.pp.sample(
-        adata_mini_for_oversampling, balanced=True, balanced_key="clinic_day", balanced_method="RandomOverSampler", copy=False
+        adata_mini_for_oversampling,
+        balanced=True,
+        balanced_key="clinic_day",
+        balanced_method="RandomOverSampler",
+        copy=False,
     )
     assert output is None
     assert adata_mini_for_oversampling.n_obs == 8
