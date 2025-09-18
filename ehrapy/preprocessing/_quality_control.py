@@ -28,14 +28,14 @@ def qc_metrics(
     qc_vars: Collection[str] = (),
     *,
     layer: str | None = None,
-) -> tuple[pd.DataFrame, pd.DataFrame] | None:
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Calculates various quality control metrics.
 
     Uses the original values to calculate the metrics and not the encoded ones.
     Look at the return type for a more in depth description of the calculated metrics.
 
     Args:
-        edata: Annotated data array.
+        edata: Central data object.
         qc_vars: Optional List of vars to calculate additional metrics for.
         layer: Layer to use to calculate the metrics.
 

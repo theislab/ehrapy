@@ -359,11 +359,15 @@ def embedding_density(
         Updates `edata.uns` with an additional field `[key_added]_params`.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ep.data.mimic_2(encoded=True)
+        >>> edata = ed.dt.mimic_2()
+        >>> edata = ep.pp.encode(edata, autodetect=True)
+        >>> ep.pp.simple_impute(edata, strategy="median")
+        >>> ep.pp.neighbors(edata)
         >>> ep.tl.umap(edata)
-        >>> ep.tl.embedding_density(edata, basis="umap", groupby="phase")
-        >>> ep.pl.embedding_density(edata, basis="umap", key="umap_density_phase", group="G1")
+        >>> ep.tl.embedding_density(edata, basis="umap")
+        >>> ep.pl.embedding_density(edata, basis="umap")
     """
     sc.tl.embedding_density(adata=edata, basis=basis, groupby=groupby, key_added=key_added, components=components)
 
@@ -507,10 +511,13 @@ def dendrogram(
         If `inplace=False`, returns dendrogram information, else `edata.uns[key_added]` is updated with it.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ep.data.mimic_2(encoded=True)
+        >>> edata = ed.dt.mimic_2(columns_obs_only=["service_unit"])
+        >>> edata = ep.pp.encode(edata, autodetect=True)
+        >>> ep.pp.simple_impute(edata, strategy="median")
         >>> ep.tl.dendrogram(edata, groupby="service_unit")
-        >>> ep.pl.dendrogram(edata)
+        >>> ep.pl.dendrogram(edata, groupby="service_unit")
     """
     return sc.tl.dendrogram(
         adata=edata,

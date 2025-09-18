@@ -259,8 +259,7 @@ def kaplan_meier(
     In medical research, it is often used to measure the fraction of patients living for a certain amount of time after treatment.
     The results will be stored in the `.uns` slot of the data object under the key 'kaplan_meier' unless specified otherwise in the `uns_key` parameter.
 
-    See https://en.wikipedia.org/wiki/Kaplan%E2%80%93Meier_estimator
-        https://lifelines.readthedocs.io/en/latest/fitters/univariate/KaplanMeierFitter.html#module-lifelines.fitters.kaplan_meier_fitter
+    See `Kaplan Meier on Wikipedia <https://en.wikipedia.org/wiki/Kaplan%E2%80%93Meier_estimator>`_ and `Kaplan Meier on Lifelines <https://lifelines.readthedocs.io/en/latest/fitters/univariate/KaplanMeierFitter.html#module-lifelines.fitters.kaplan_meier_fitter>`_.
 
     Args:
         edata: Central data object.

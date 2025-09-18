@@ -1016,13 +1016,13 @@ def dendrogram(  # noqa: D417
     return dendrogram_partial(edata, groupby=groupby)
 
 
-@function_2D_only()
 # @_wraps_plot_scatter
 @_doc_params(
     adata_color_etc=doc_adata_color_etc,
     scatter_bulk=doc_scatter_embedding,
     show_save_ax=doc_show_save_ax,
 )
+@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def pca(  # noqa: D417
     edata,
@@ -1044,6 +1044,7 @@ def pca(  # noqa: D417
         {show_save_ax}
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> ep.pp.knn_impute(edata)
@@ -1081,6 +1082,7 @@ def pca_loadings(
               Infer the filetype if ending on {`'.pdf'`, `'.png'`, `'.svg'`}.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> ep.pp.knn_impute(edata)
@@ -1115,6 +1117,7 @@ def pca_variance_ratio(
               Infer the filetype if ending on {`'.pdf'`, `'.png'`, `'.svg'`}.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> ep.pp.knn_impute(edata)
@@ -1129,8 +1132,8 @@ def pca_variance_ratio(
     return sc.pl.pca_variance_ratio(edata, n_pcs=n_pcs, log=log, show=show, save=save)
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 @_doc_params(scatter_bulk=doc_scatter_embedding, show_save_ax=doc_show_save_ax)
+@use_ehrdata(deprecated_after="1.0.0")
 def pca_overview(edata: EHRData | AnnData, **params) -> Axes | list[Axes] | None:  # pragma: no cover
     """Plot PCA results.
 
@@ -1144,6 +1147,7 @@ def pca_overview(edata: EHRData | AnnData, **params) -> Axes | list[Axes] | None
         params: Scatterplot parameters
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> ep.pp.knn_impute(edata)

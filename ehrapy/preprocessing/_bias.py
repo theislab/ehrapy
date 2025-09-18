@@ -37,7 +37,7 @@ def detect_bias(
 ) -> dict[str, pd.DataFrame] | tuple[dict[str, pd.DataFrame], EHRData | AnnData]:
     """Detects biases in the data using feature correlations, standardized mean differences, and feature importances.
 
-    Detects biases with respect to sensitive features, which can be either a specified subset of features or all features in edata.var.
+    Detects biases with respect to sensitive features, which can be either a specified subset of features or all features in `.var`.
     The method detects biases by computing:
 
     - pairwise correlations between features
@@ -45,7 +45,7 @@ def detect_bias(
     - value counts of categorical features between groups of sensitive features
     - feature importances for predicting one feature with another
 
-    Results of the computations are stored in var, varp, and uns of the edata object.
+    Results of the computations are stored in `.var`, `.varp`, and `.uns` of the edata object.
     Values that exceed the specified thresholds are considered of interest and returned in the results dictionary.
     Be aware that the results depend on the encoding of the data. E.g. when using one-hot encoding, each group of a categorical feature will
     be treated as a separate feature, which can lead to an increased number of detected biases. Please take this into consideration when
@@ -53,7 +53,7 @@ def detect_bias(
 
     Args:
         edata: Central data object. Encoded features are required for bias detection.
-        sensitive_features: Sensitive features to consider for bias detection. If set to "all", all features in edata.var will be considered.
+        sensitive_features: Sensitive features to consider for bias detection. If set to "all", all features in `.var` will be considered.
         run_feature_importances: Whether to run feature importances for detecting bias. If set to None, the function will run feature importances if
             sensitive_features is not set to "all", as this can be computationally expensive.
         corr_threshold: The threshold for the correlation coefficient between two features to be considered of interest.
@@ -65,8 +65,8 @@ def detect_bias(
         prediction_confidence_threshold: The threshold for the prediction confidence (R2 or accuracy) of a sensitive feature for predicting another
             feature to be considered of interest.
         corr_method: The correlation method to use.
-        layer: The layer in edata.layers to use for computation. If None, edata.X will be used.
-        copy: If set to False, edata is updated in place. If set to True, the edata is copied and the results are stored in the copied edata, which
+        layer: The layer in `.layers` to use for computation. If None, `.X` will be used.
+        copy: If set to `False`, `edata` is updated in place. If set to `True`, the `edata` is copied and the results are stored in the copied `edata`, which
             is then returned.
 
     Returns:
@@ -79,7 +79,7 @@ def detect_bias(
         - "feature_importances": Feature importances for predicting one feature with another that exceed the feature importance and prediction
           confidence thresholds.
 
-        If copy is set to True, the function returns a tuple with the results dictionary and the updated edata.
+        If `copy` is set to `True`, the function returns a tuple with the results dictionary and the updated `edata`.
 
     Examples:
         >>> import ehrdata as ed

@@ -44,7 +44,7 @@ def pca(
     Computes PCA coordinates, loadings and variance decomposition. Uses the implementation of *scikit-learn*.
 
     Args:
-        data: The (annotated) data matrix of shape `n_obs` × `n_vars`. Rows correspond to observations and columns to features.
+        data: Central data object.
         n_comps: Number of principal components to compute.
                  Defaults to 50, or 1 - minimum dimension size of selected representation.
         zero_center: If `True`, compute standard PCA from covariance matrix.
@@ -190,8 +190,7 @@ def sample(
 
     Examples:
         >>> import ehrapy as ep
-        >>> edata = ed.diabetes_130_fairlearn(columns_obs_only=["age"])
-        >>> ep.ad.move_to_obs(edata, ["age"])
+        >>> edata = ed.dt.diabetes_130_fairlearn(columns_obs_only=["age"])
         >>> edata.obs.age.value_counts()
         age
         'Over 60 years'          68541

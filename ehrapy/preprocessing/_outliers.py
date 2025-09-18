@@ -104,7 +104,7 @@ def clip_quantile(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
-        >>> ep.pp.clip_quantile(edata, vars=["bmi"])
+        >>> ep.pp.clip_quantile(edata, limits=(0, 75), vars=["bmi"])
     """
     obs_cols, vars = _validate_outlier_input(edata, obs_cols, vars)  # type: ignore
 

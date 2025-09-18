@@ -27,7 +27,7 @@ def rank_features_supervised(
     """Plot features with greatest absolute importances as a barplot.
 
     Args:
-        edata: Data object storing the data. A key in edata.var should contain the feature
+        edata: Central data object. A key in edata.var should contain the feature
             importances, calculated beforehand.
         key: The key in edata.var to use for feature importances.
         n_features: The number of features to plot.

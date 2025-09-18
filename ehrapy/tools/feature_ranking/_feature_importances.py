@@ -43,7 +43,7 @@ def rank_features_supervised(
     """Calculate feature importances for predicting a specified feature in adata.var.
 
     Args:
-        edata: Data object storing the data.
+        edata: Central data object.
         predicted_feature: The feature to predict by the model. Must be present in edata.var_names.
         model: The model to use for prediction. Choose between 'regression', 'svm', or 'rf'. Note that multi-class classification
             is only possible with 'rf'.

@@ -231,8 +231,9 @@ class CohortTracker:
             legend_kwargs: Additional keyword arguments for the legend.
 
         Examples:
+                >>> import ehrdata as ed
                 >>> import ehrapy as ep
-                >>> edata = ep.dt.diabetes_130_fairlearn(columns_obs_only=["gender", "race", "num_procedures"])
+                >>> edata = ed.dt.diabetes_130_fairlearn(columns_obs_only=["gender", "race", "num_procedures"])
                 >>> cohort_tracker = ep.tl.CohortTracker(edata, categorical=["gender", "race"])
                 >>> cohort_tracker(edata, "Initial Cohort")
                 >>> edata = edata[:1000]
@@ -467,8 +468,9 @@ class CohortTracker:
             arrowprops_kwargs: Additional keyword arguments for the arrows.
 
         Examples:
+                >>> import ehrdata as ed
                 >>> import ehrapy as ep
-                >>> edata = ep.dt.diabetes_130_fairlearn(columns_obs_only=["gender", "race"])
+                >>> edata = ed.dt.diabetes_130_fairlearn(columns_obs_only=["gender", "race"])
                 >>> cohort_tracker = ep.tl.CohortTracker(edata)
                 >>> cohort_tracker(edata, label="Initial Cohort")
                 >>> edata = edata[:1000]
