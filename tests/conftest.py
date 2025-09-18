@@ -150,6 +150,11 @@ def edata_mini():
 
 
 @pytest.fixture
+def edata_mini_sample():
+    return read_csv(f"{TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["clinic_day"])
+
+
+@pytest.fixture
 def edata_mini_normalization():
     return read_csv(
         f"{TEST_DATA_PATH}/dataset1.csv",

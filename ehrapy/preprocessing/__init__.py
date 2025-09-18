@@ -1,4 +1,3 @@
-from ehrapy.preprocessing._balanced_sampling import balanced_sample
 from ehrapy.preprocessing._bias import detect_bias
 from ehrapy.preprocessing._encoding import encode
 from ehrapy.preprocessing._highly_variable_features import highly_variable_features
@@ -25,7 +24,6 @@ from ehrapy.preprocessing._scanpy_pp_api import *  # noqa: F403
 from ehrapy.preprocessing._summarize_measurements import summarize_measurements
 
 __all__ = [
-    "balanced_sample",
     "detect_bias",
     "encode",
     "highly_variable_features",

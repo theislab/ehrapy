@@ -1,25 +1,27 @@
 from __future__ import annotations
 
-from collections.abc import Callable
+import warnings
+from collections.abc import Callable, Sequence
+from functools import singledispatch
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 
 import numpy as np
 import scanpy as sc
+import scipy.sparse as sp
+from anndata import AnnData
 
 from ehrapy._compat import function_2D_only, use_ehrdata
 
 if TYPE_CHECKING:
-    from collections.abc import Collection, Mapping, Sequence
+    from collections.abc import Collection, Mapping
 
-    from anndata import AnnData
     from ehrdata import EHRData
+    from numpy.typing import NDArray
     from scanpy.neighbors import KnnTransformerLike
     from scipy.sparse import spmatrix
 
-    from ehrapy.preprocessing._types import KnownTransformer
-
-AnyRandom: TypeAlias = int | np.random.RandomState | None
+    from ehrapy.preprocessing._types import AnyRandom, CSBase, KnownTransformer, RNGLike, SeedLike
 
 
 @function_2D_only()
@@ -141,21 +143,106 @@ def subsample(
     n_obs: int | None = None,
     random_state: AnyRandom = 0,
     copy: bool = False,
-) -> EHRData | AnnData | np.ndarray | spmatrix | None:  # pragma: no cover
-    """Subsample to a fraction of the number of observations.
+) -> EHRData | AnnData | None:  # pragma: no cover
+    warnings.warn(
+        "This function is deprecated and will be removed in the next release. Use ep.pp.sample instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return sample(data=data, fraction=fraction, n_obs=n_obs, rng=random_state, copy=copy)
+
+
+def sample(
+    data: EHRData | AnnData | np.ndarray | CSBase,
+    fraction: float | None = None,
+    *,
+    n_obs: int | None = None,
+    rng: RNGLike | SeedLike | None = None,
+    balanced: bool = False,
+    balanced_method: Literal["RandomUnderSampler", "RandomOverSampler"] = "RandomUnderSampler",
+    balanced_key: str | None = None,
+    copy: bool = False,
+    replace: bool = False,
+    axis: Literal["obs", 0, "var", 1] = "obs",
+    p: str | NDArray[np.bool_] | NDArray[np.floating] | None = None,
+) -> EHRData | AnnData | None | tuple[np.ndarray | CSBase, np.ndarray]:  # pragma: no cover
+    """Sample a fraction or a number of observations / variables with or without replacement.
 
     Args:
         data: Central data object.
-        fraction: Subsample to this `fraction` of the number of observations.
-        n_obs: Subsample to this number of observations.
-        random_state: Random seed to change subsampling.
-        copy: If an :class:`~ehrdata.EHRData`: or :class:`~anndata.AnnData`: is passed, determines whether a copy is returned.
+        fraction: Sample to this `fraction` of the number of observations.
+        n_obs: Sample to this number of observations.
+        rng: Random seed.
+        copy: If an :class:`~anndata.AnnData` is passed, determines whether a copy is returned.
+        balanced: If `True`, balance the groups in `adata.obs[key]` by under- or over-sampling.
+                  Requires `key` to be set. If `False`, simple random sampling is performed.
+        balanced_method: The sampling method, either "RandomUnderSampler" for under-sampling or "RandomOverSampler" for over-sampling. Only relevant if `balanced=True`.
+        balanced_key: Key in `adata.obs` to use for balancing the groups. Only relevant if `balanced=True`.
+        replace: If `True`, samples are drawn with replacement. Only relevant if `balanced=False`.
+        axis: Axis to sample on. Either `obs` / `0` (observations, default) or `var` / `1` (variables).
+        p: Drawing probabilities (floats) or mask (bools).
+            Either an `axis`-sized array, or the name of a column
+            If p is an array of probabilities, it must sum to 1.
 
     Returns:
         Returns `X[obs_indices], obs_indices` if data is array-like, otherwise subsamples the passed
-        :class:`~ehrdata.EHRData`: or :class:`~anndata.AnnData` (`copy == False`) or returns a subsampled copy of it (`copy == True`).
+        Central data object (`copy == False`) or returns a subsampled copy of it (`copy == True`).
+
+    Examples:
+        >>> import ehrapy as ep
+        >>> edata = ed.diabetes_130_fairlearn(columns_obs_only=["age"])
+        >>> ep.ad.move_to_obs(edata, ["age"])
+        >>> edata.obs.age.value_counts()
+        age
+        'Over 60 years'          68541
+        '30-60 years'            30716
+        '30 years or younger'     2509
+        >>> edata_balanced = ep.pp.sample(
+        ...     edata, balanced=True, balanced_method="RandomUnderSampler", balanced_key="age", copy=True
+        ... )
+        >>> edata_balanced.obs.age.value_counts()
+         age
+        '30 years or younger'    2509
+        '30-60 years'            2509
+        'Over 60 years'          2509
     """
-    return sc.pp.subsample(data=data, fraction=fraction, n_obs=n_obs, random_state=random_state, copy=copy)
+    if balanced:
+        if balanced_key is None:
+            raise TypeError("Key must be provided when balanced=True")
+
+        if isinstance(data, AnnData):
+            if balanced_key not in data.obs.columns:
+                raise ValueError(
+                    f"Key '{balanced_key}' not found in edata.obs. Available keys are: {data.obs.columns.tolist()}"
+                )
+
+            labels = data.obs[balanced_key].values
+
+        elif isinstance(data, sp.csr_matrix | sp.csc_matrix) or isinstance(data, np.ndarray):
+            labels = np.asarray(balanced_key)
+            if labels.shape[0] != data.shape[0]:
+                raise ValueError(
+                    f"Length of labels ({labels.shape[0]}) does not match number of observations ({data.shape[0]})"
+                )
+
+        else:
+            raise TypeError("data must be an EHRData, AnnData, numpy array or scipy sparse matrix when balanced=True")
+
+        if balanced_method == "RandomUnderSampler" or balanced_method == "RandomOverSampler":
+            sampled_indices, sampled_labels = _random_resample(labels, method=balanced_method, random_state=rng)
+        else:
+            raise ValueError(f"Unknown sampling method: {balanced_method}")
+
+        if isinstance(data, AnnData):
+            if copy:
+                return data[sampled_indices].copy()
+            else:
+                data._inplace_subset_obs(sampled_indices)
+                return None
+        else:
+            return data[sampled_indices], sampled_indices
+    else:
+        return sc.pp.sample(data=data, fraction=fraction, n=n_obs, rng=rng, copy=copy, replace=replace, axis=axis, p=p)
 
 
 @use_ehrdata(deprecated_after="1.0.0")
@@ -313,3 +400,57 @@ def neighbors(
         key_added=key_added,
         copy=copy,
     )
+
+
+def _random_resample(
+    label: str | np.ndarray,
+    target: str = "balanced",
+    method: Literal["RandomUnderSampler", "RandomOverSampler"] = "RandomUnderSampler",
+    random_state: RNGLike | SeedLike | None = None,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Helper function to under- or over-sample the data to achieve a balanced dataset.
+
+    Args:
+        label: The labels of the data.
+        target: The target number of samples for each class. If "balanced", it will balance the classes to the minimum class size.
+        method: The sampling method, either "RandomUnderSampler" for under-sampling or "RandomOverSampler" for over-sampling.
+        random_state: Random seed.
+
+    Returns:
+        A tuple of (sampled_indices, sampled_labels).
+    """
+    label = np.asarray(label)
+    if isinstance(random_state, np.random.Generator):
+        rnd = random_state
+    else:
+        rnd = np.random.default_rng(random_state)
+    classes, counts = np.unique(label, return_counts=True)
+
+    if target == "balanced":
+        if method == "RandomUnderSampler":
+            target_count = counts.min()
+        elif method == "RandomOverSampler":
+            target_count = counts.max()
+        else:
+            raise ValueError(f"Unknown sampling method: {method}")
+
+    indices = []
+
+    for c in classes:
+        class_idx = np.where(label == c)[0]
+        n = len(class_idx)
+        if method == "RandomUnderSampler":
+            if n > target_count:
+                sampled_idx = rnd.choice(class_idx, size=target_count, replace=False)
+                indices.extend(sampled_idx)
+            else:
+                indices.extend(class_idx)
+        elif method == "RandomOverSampler":
+            if n < target_count:
+                sampled_idx = rnd.choice(class_idx, size=target_count, replace=True)
+                indices.extend(sampled_idx)
+            else:
+                indices.extend(class_idx)
+
+    sample_indices = np.array(indices)
+    return sample_indices, label[sample_indices]
