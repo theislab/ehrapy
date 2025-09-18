@@ -1,6 +1,8 @@
 from pathlib import Path
 
+import numpy as np
 import pytest
+import scipy.sparse as sp
 
 import ehrapy as ep
 from ehrapy.io._read import read_csv
@@ -14,33 +16,47 @@ def adata_mini():
     return read_csv(f"{TEST_DATA_PATH}/encode/dataset1.csv", columns_obs_only=["clinic_day"])
 
 
-def test_balanced_sampling_basic(adata_mini):
+@pytest.mark.parametrize("sparse_input", [False, True])
+def test_balanced_sampling_basic(adata_mini, sparse_input):
+    if sparse_input:
+        adata_sparse = adata_mini.copy()
+        adata_sparse.X = sp.csr_matrix(np.asarray(adata_sparse.X, dtype=np.float64))
+        adata_mini = adata_sparse
+
     # no key
     with pytest.raises(TypeError):
-        ep.pp.balanced_sample(adata_mini)
+        ep.pp.sample(adata_mini, balanced=True)
 
     # invalid key
     with pytest.raises(ValueError):
-        ep.pp.balanced_sample(adata_mini, key="non_existing_column")
+        ep.pp.sample(adata_mini, balanced=True, balanced_key="non_existing_column")
 
     # invalid method
     with pytest.raises(ValueError):
-        ep.pp.balanced_sample(adata_mini, key="clinic_day", method="non_existing_method")
+        ep.pp.sample(adata_mini, balanced=True, balanced_key="clinic_day", balanced_method="non_existing_method")
 
     # undersampling
-    adata_sampled = ep.pp.balanced_sample(adata_mini, key="clinic_day", method="RandomUnderSampler", copy=True)
+    adata_sampled = ep.pp.sample(
+        adata_mini, balanced=True, balanced_key="clinic_day", balanced_method="RandomUnderSampler", copy=True
+    )
     assert adata_sampled.n_obs == 4
     assert adata_sampled.obs.clinic_day.value_counts().min() == adata_sampled.obs.clinic_day.value_counts().max()
 
     # oversampling
-    adata_sampled = ep.pp.balanced_sample(adata_mini, key="clinic_day", method="RandomOverSampler", copy=True)
+    adata_sampled = ep.pp.sample(
+        adata_mini, balanced=True, balanced_key="clinic_day", balanced_method="RandomOverSampler", copy=True
+    )
     assert adata_sampled.n_obs == 8
     assert adata_sampled.obs.clinic_day.value_counts().min() == adata_sampled.obs.clinic_day.value_counts().max()
 
     # undersampling, no copy
     adata_mini_for_undersampling = adata_mini.copy()
-    output = ep.pp.balanced_sample(
-        adata_mini_for_undersampling, key="clinic_day", method="RandomUnderSampler", copy=False
+    output = ep.pp.sample(
+        adata_mini_for_undersampling,
+        balanced=True,
+        balanced_key="clinic_day",
+        balanced_method="RandomUnderSampler",
+        copy=False,
     )
     assert output is None
     assert adata_mini_for_undersampling.n_obs == 4
@@ -51,8 +67,12 @@ def test_balanced_sampling_basic(adata_mini):
 
     # oversampling, no copy
     adata_mini_for_oversampling = adata_mini.copy()
-    output = ep.pp.balanced_sample(
-        adata_mini_for_oversampling, key="clinic_day", method="RandomOverSampler", copy=False
+    output = ep.pp.sample(
+        adata_mini_for_oversampling,
+        balanced=True,
+        balanced_key="clinic_day",
+        balanced_method="RandomOverSampler",
+        copy=False,
     )
     assert output is None
     assert adata_mini_for_oversampling.n_obs == 8
