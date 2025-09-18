@@ -1,3 +1,3 @@
 # Datasets
 
-See [EHRData](https://ehrdata.readthedocs.io/en/latest/api/datasets_index.html) for sample datasets available for ehrapy.
+See `EHRData`'s {doc}`ehrdata:api/datasets_index` for sample datasets available for ehrapy.
