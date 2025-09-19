@@ -35,7 +35,8 @@ def test_dpt(edata_blob_small):
 
 
 def test_paga(edata_blob_small):
-    ep.tl.leiden(edata_blob_small)
+    # ep.pp.neighbors(adata)
+    ep.tl.leiden(edata_blob_small, resolution=2)
     ep.tl.paga(edata_blob_small)
 
 

@@ -1,4 +1,5 @@
 import os
+import platform
 import warnings
 from collections.abc import Iterable
 from pathlib import Path
@@ -307,6 +308,7 @@ def test_missforest_impute_subset(impute_num_edata):
         (sparse.csr_matrix, NotImplementedError),
     ],
 )
+@pytest.mark.skipif(platform.system() == "Darwin", reason="miceforest Imputation not supported by MacOS.")
 def test_miceforest_array_types(impute_num_edata, array_type, expected_error):
     impute_num_edata.X = array_type(impute_num_edata.X)
     if expected_error:
@@ -314,7 +316,7 @@ def test_miceforest_array_types(impute_num_edata, array_type, expected_error):
             mice_forest_impute(impute_num_edata, copy=True)
 
 
-@pytest.mark.skipif(os.name == "Darwin", reason="miceforest Imputation not supported by MacOS.")
+@pytest.mark.skipif(platform.system() == "Darwin", reason="miceforest Imputation not supported by MacOS.")
 def test_miceforest_impute_3D_edata(edata_blob_small):
     edata_blob_small.X[3:5, 4:6] = np.nan
     edata_blob_small.layers["R_layer"][3:5, 4:6] = np.nan
@@ -323,7 +325,7 @@ def test_miceforest_impute_3D_edata(edata_blob_small):
         mice_forest_impute(edata_blob_small, layer="R_layer")
 
 
-@pytest.mark.skipif(os.name == "Darwin", reason="miceforest Imputation not supported by MacOS.")
+@pytest.mark.skipif(platform.system() == "Darwin", reason="miceforest Imputation not supported by MacOS.")
 def test_miceforest_impute_no_copy(impute_iris_edata):
     adata_not_imputed = impute_iris_edata.copy()
     mice_forest_impute(impute_iris_edata)
@@ -331,7 +333,7 @@ def test_miceforest_impute_no_copy(impute_iris_edata):
     _base_check_imputation(adata_not_imputed, impute_iris_edata)
 
 
-@pytest.mark.skipif(os.name == "Darwin", reason="miceforest Imputation not supported by MacOS.")
+@pytest.mark.skipif(platform.system() == "Darwin", reason="miceforest Imputation not supported by MacOS.")
 def test_miceforest_impute_copy(impute_iris_edata):
     adata_imputed = mice_forest_impute(impute_iris_edata, copy=True)
 
@@ -339,13 +341,13 @@ def test_miceforest_impute_copy(impute_iris_edata):
     assert id(impute_iris_edata) != id(adata_imputed)
 
 
-@pytest.mark.skipif(os.name == "Darwin", reason="miceforest Imputation not supported by MacOS.")
+@pytest.mark.skipif(platform.system() == "Darwin", reason="miceforest Imputation not supported by MacOS.")
 def test_miceforest_impute_non_numerical_data(impute_titanic_edata):
     with pytest.raises(ValueError):
         mice_forest_impute(impute_titanic_edata)
 
 
-@pytest.mark.skipif(os.name == "Darwin", reason="miceforest Imputation not supported by MacOS.")
+@pytest.mark.skipif(platform.system() == "Darwin", reason="miceforest Imputation not supported by MacOS.")
 def test_miceforest_impute_numerical_data(impute_iris_edata):
     adata_not_imputed = impute_iris_edata.copy()
     mice_forest_impute(impute_iris_edata)

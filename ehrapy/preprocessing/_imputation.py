@@ -479,12 +479,15 @@ def mice_forest_impute(
     layer: str | None = None,
     copy: bool = False,
 ) -> EHRData | AnnData | None:
-    """Impute data using the miceforest.
+    """Impute data using the miceforest method.
 
     See https://github.com/AnotherSamWilson/miceforest
     Fast, memory efficient Multiple Imputation by Chained Equations (MICE) with lightgbm.
 
     If required, the data needs to be properly encoded as this imputation requires numerical data only.
+
+    .. warning::
+        This function is not supported on MacOS.
 
     Args:
         edata: Central data object.

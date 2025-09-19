@@ -1016,7 +1016,6 @@ def dendrogram(  # noqa: D417
     return dendrogram_partial(edata, groupby=groupby)
 
 
-# @_wraps_plot_scatter
 @_doc_params(
     adata_color_etc=doc_adata_color_etc,
     scatter_bulk=doc_scatter_embedding,
@@ -1132,8 +1131,8 @@ def pca_variance_ratio(
     return sc.pl.pca_variance_ratio(edata, n_pcs=n_pcs, log=log, show=show, save=save)
 
 
-@_doc_params(scatter_bulk=doc_scatter_embedding, show_save_ax=doc_show_save_ax)
 @use_ehrdata(deprecated_after="1.0.0")
+@_doc_params(scatter_bulk=doc_scatter_embedding, show_save_ax=doc_show_save_ax)
 def pca_overview(edata: EHRData | AnnData, **params) -> Axes | list[Axes] | None:  # pragma: no cover
     """Plot PCA results.
 

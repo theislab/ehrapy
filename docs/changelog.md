@@ -24,6 +24,8 @@ Existing code using `AnnData` objects will continue to work, but migration to `E
 ### 🧰 Maintenance
 
 * Update expected behaviour of `io.read_fhir` ([#922](https://github.com/theislab/ehrapy/pull/922)) @eroell
+* Move `mimic_2`, `mimic_2_preprocessed`, `diabetes_130_raw`, `diabetes_130_fairlearn` to `ehrdata.dt` ([#908](https://github.com/theislab/ehrapy/pull/908)) @eroell
+* Deprecate all `ep.dt.*`, refer to datasets in `ehrdata` ([#908](https://github.com/theislab/ehrapy/pull/908)) @eroell
 
 
 ## v0.12.1
