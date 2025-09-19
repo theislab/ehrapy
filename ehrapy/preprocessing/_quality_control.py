@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 from functools import singledispatch
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
@@ -9,7 +10,7 @@ import pandas as pd
 from lamin_utils import logger
 from thefuzz import process
 
-from ehrapy._compat import DaskArray, _raise_array_type_not_implemented
+from ehrapy._compat import DaskArray, _raise_array_type_not_implemented, function_2D_only, use_ehrdata
 from ehrapy.anndata import anndata_to_df
 from ehrapy.preprocessing._encoding import _get_encoded_features
 
@@ -17,18 +18,24 @@ if TYPE_CHECKING:
     from collections.abc import Collection
 
     from anndata import AnnData
+    from ehrdata import EHRData
 
 
+@use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 def qc_metrics(
-    adata: AnnData, qc_vars: Collection[str] = (), layer: str = None
-) -> tuple[pd.DataFrame, pd.DataFrame] | None:
+    edata: EHRData | AnnData,
+    qc_vars: Collection[str] = (),
+    *,
+    layer: str | None = None,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Calculates various quality control metrics.
 
     Uses the original values to calculate the metrics and not the encoded ones.
     Look at the return type for a more in depth description of the calculated metrics.
 
     Args:
-        adata: Annotated data matrix.
+        edata: Central data object.
         qc_vars: Optional List of vars to calculate additional metrics for.
         layer: Layer to use to calculate the metrics.
 
@@ -52,16 +59,16 @@ def qc_metrics(
 
     Examples:
             >>> import ehrapy as ep
-            >>> adata = ep.dt.mimic_2(encoded=True)
-            >>> obs_qc, var_qc = ep.pp.qc_metrics(adata)
+            >>> edata = ed.dt.mimic_2()
+            >>> obs_qc, var_qc = ep.pp.qc_metrics(edata)
             >>> obs_qc["missing_values_pct"].plot(kind="hist", bins=20)
     """
-    mtx = adata.X if layer is None else adata.layers[layer]
-    var_metrics = _compute_var_metrics(mtx, adata)
-    obs_metrics = _compute_obs_metrics(mtx, adata, qc_vars=qc_vars, log1p=True)
+    mtx = edata.X if layer is None else edata.layers[layer]
+    var_metrics = _compute_var_metrics(mtx, edata)
+    obs_metrics = _compute_obs_metrics(mtx, edata, qc_vars=qc_vars, log1p=True)
 
-    adata.var[var_metrics.columns] = var_metrics
-    adata.obs[obs_metrics.columns] = obs_metrics
+    edata.var[var_metrics.columns] = var_metrics
+    edata.obs[obs_metrics.columns] = obs_metrics
 
     return obs_metrics, var_metrics
 
@@ -85,7 +92,7 @@ def _(mtx: DaskArray, axis) -> np.ndarray:
 
 def _compute_obs_metrics(
     mtx,
-    adata: AnnData,
+    edata: EHRData | AnnData,
     *,
     qc_vars: Collection[str] = (),
     log1p: bool = True,
@@ -96,28 +103,28 @@ def _compute_obs_metrics(
 
     Args:
         mtx: Data array.
-        adata: Annotated data matrix.
+        edata: Central data object.
         qc_vars: A list of previously calculated QC metrics to calculate summary statistics for.
         log1p: Whether to apply log1p normalization for the QC metrics. Only used with parameter 'qc_vars'.
 
     Returns:
         A Pandas DataFrame with the calculated metrics.
     """
-    obs_metrics = pd.DataFrame(index=adata.obs_names)
-    var_metrics = pd.DataFrame(index=adata.var_names)
+    obs_metrics = pd.DataFrame(index=edata.obs_names)
+    var_metrics = pd.DataFrame(index=edata.var_names)
 
-    if "encoding_mode" in adata.var:
-        for original_values_categorical in _get_encoded_features(adata):
+    if "encoding_mode" in edata.var:
+        for original_values_categorical in _get_encoded_features(edata):
             mtx = mtx.astype(object)
             index = np.where(var_metrics.index.str.contains(original_values_categorical))[0]
 
-            if original_values_categorical not in adata.obs.keys():
-                raise KeyError(f"Original values for {original_values_categorical} not found in adata.obs.")
+            if original_values_categorical not in edata.obs.keys():
+                raise KeyError(f"Original values for {original_values_categorical} not found in edata.obs.")
             mtx[:, index[0]] = np.squeeze(
                 np.where(
-                    adata.obs[original_values_categorical].astype(object) == "nan",
+                    edata.obs[original_values_categorical].astype(object) == "nan",
                     np.nan,
-                    adata.obs[original_values_categorical].astype(object),
+                    edata.obs[original_values_categorical].astype(object),
                 )
             )
 
@@ -126,7 +133,7 @@ def _compute_obs_metrics(
 
     # Specific QC metrics
     for qc_var in qc_vars:
-        obs_metrics[f"total_features_{qc_var}"] = np.ravel(mtx[:, adata.var[qc_var].values].sum(axis=1))
+        obs_metrics[f"total_features_{qc_var}"] = np.ravel(mtx[:, edata.var[qc_var].values].sum(axis=1))
         if log1p:
             obs_metrics[f"log1p_total_features_{qc_var}"] = np.log1p(obs_metrics[f"total_features_{qc_var}"])
         obs_metrics["total_features"] = np.ravel(mtx.sum(axis=1))
@@ -139,44 +146,33 @@ def _compute_obs_metrics(
 
 def _compute_var_metrics(
     mtx,
-    adata: AnnData,
+    edata: EHRData | AnnData,
 ):
     """Compute variable metrics for quality control.
 
     Args:
         mtx: Data array.
-        adata: Annotated data matrix.
+        edata: Central data object.
     """
     categorical_indices = np.ndarray([0], dtype=int)
-    var_metrics = pd.DataFrame(index=adata.var_names)
+    var_metrics = pd.DataFrame(index=edata.var_names)
 
-    if "encoding_mode" in adata.var.keys():
-        encoded_features = _get_encoded_features(adata)
-        if encoded_features:
-            mtx = mtx.astype(object)
+    if "encoding_mode" in edata.var.keys():
+        for original_values_categorical in _get_encoded_features(edata):
+            mtx = copy.deepcopy(mtx.astype(object))
+            index = np.where(var_metrics.index.str.startswith("ehrapycat_" + original_values_categorical))[0]
 
-            all_indices = []
-            replacement_values = []
-
-            for original_values_categorical in encoded_features:
-                index = np.where(var_metrics.index.str.startswith("ehrapycat_" + original_values_categorical))[0]
-
-                if original_values_categorical not in adata.obs.keys():
-                    raise KeyError(f"Original values for {original_values_categorical} not found in adata.obs.")
-
-                values = np.where(
-                    adata.obs[original_values_categorical].astype(object) == "nan",
+            if original_values_categorical not in edata.obs.keys():
+                raise KeyError(f"Original values for {original_values_categorical} not found in edata.obs.")
+            mtx[:, index] = np.tile(
+                np.where(
+                    edata.obs[original_values_categorical].astype(object) == "nan",
                     np.nan,
-                    adata.obs[original_values_categorical].astype(object),
-                )
-
-                all_indices.append(index)
-                replacement_values.append(values)
-
-            for indices, values in zip(all_indices, replacement_values, strict=False):
-                mtx[:, indices] = values.reshape(-1, 1)
-
-            categorical_indices = np.concatenate(all_indices)
+                    edata.obs[original_values_categorical].astype(object),
+                ).reshape(-1, 1),
+                mtx[:, index].shape[1],
+            )
+            categorical_indices = np.concatenate([categorical_indices, index])
 
     non_categorical_indices = np.ones(mtx.shape[1], dtype=bool)
     non_categorical_indices[categorical_indices] = False
@@ -229,22 +225,25 @@ def _compute_var_metrics(
     return var_metrics
 
 
+@function_2D_only()
+@use_ehrdata(deprecated_after="1.0.0")
 def qc_lab_measurements(
-    adata: AnnData,
-    reference_table: pd.DataFrame = None,
-    measurements: list[str] = None,
-    unit: Literal["traditional", "SI"] = None,
-    layer: str = None,
+    edata: EHRData | AnnData,
+    *,
+    reference_table: pd.DataFrame | None = None,
+    measurements: list[str] | None = None,
+    unit: Literal["traditional", "SI"] | None = None,
     threshold: int = 20,
-    age_col: str = None,
-    age_range: str = None,
-    sex_col: str = None,
-    sex: str = None,
-    ethnicity_col: str = None,
-    ethnicity: str = None,
+    age_col: str | None = None,
+    age_range: str | None = None,
+    sex_col: str | None = None,
+    sex: str | None = None,
+    ethnicity_col: str | None = None,
+    ethnicity: str | None = None,
+    layer: str | None = None,
     copy: bool = False,
     verbose: bool = False,
-) -> AnnData:
+) -> EHRData | AnnData | None:
     """Examines lab measurements for reference ranges and outliers.
 
     Source:
@@ -277,11 +276,10 @@ def qc_lab_measurements(
     https://github.com/theislab/ehrapy/blob/main/ehrapy/preprocessing/laboratory_reference_tables/laposata.tsv
 
     Args:
-        adata: Annotated data matrix.
+        edata: Central data object.
         reference_table: A custom DataFrame with reference values. Defaults to the laposata table if not specified.
         measurements: A list of measurements to check.
         unit: The unit of the measurements.
-        layer: Layer containing the matrix to calculate the metrics for.
         threshold: Minimum required matching confidence score of the fuzzysearch.
                    0 = no matches, 100 = all must match.
         age_col: Column containing age values.
@@ -290,19 +288,20 @@ def qc_lab_measurements(
         sex: Sex to filter the reference values for. Use U for unisex which uses male values when male and female conflict.
         ethnicity_col: Column containing ethnicity values.
         ethnicity: Ethnicity to filter for.
+        layer: Layer containing the matrix to calculate the metrics for.
         copy: Whether to return a copy.
         verbose: Whether to have verbose stdout. Notifies user of matched columns and value ranges.
 
     Returns:
-        A modified AnnData object (copy if specified).
+        `None` if `copy=False` and modifies the passed edata, else returns an updated data object.
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.pp.qc_lab_measurements(adata, measurements=["potassium_first"], verbose=True)
+        >>> edata = ed.dt.mimic_2()
+        >>> ep.pp.qc_lab_measurements(edata, measurements=["potassium_first"], verbose=True)
     """
     if copy:
-        adata = adata.copy()
+        edata = edata.copy()
 
     preprocessing_dir = Path(__file__).parent.resolve()
     if reference_table is None:
@@ -352,9 +351,9 @@ def qc_lab_measurements(
                 reference_values = reference_values[reference_values[ethnicity_col].isin([ethnicity])]
 
             if layer is not None:
-                actual_measurements = adata[:, measurement].layers[layer]
+                actual_measurements = edata[:, measurement].layers[layer]
             else:
-                actual_measurements = adata[:, measurement].X
+                actual_measurements = edata[:, measurement].X
         except TypeError:
             logger.warning(f"Unable to find specified reference values for {measurement}.")
 
@@ -368,7 +367,7 @@ def qc_lab_measurements(
 
             upperbound_check_results = actual_measurements < upperbound
             upperbound_check_results_array: np.ndarray = upperbound_check_results.copy()
-            adata.obs[f"{measurement} normal"] = upperbound_check_results_array
+            edata.obs[f"{measurement} normal"] = upperbound_check_results_array
         elif ">" in check_str:
             lower_bound = float(check_str.replace(">", ""))
             if verbose:
@@ -376,7 +375,7 @@ def qc_lab_measurements(
 
             lower_bound_check_results = actual_measurements > lower_bound
             lower_bound_check_results_array = lower_bound_check_results.copy()
-            adata.obs[f"{measurement} normal"] = lower_bound_check_results_array
+            edata.obs[f"{measurement} normal"] = lower_bound_check_results_array
         else:  # "-" range case
             min_value = float(check_str.split("-")[0])
             max_value = float(check_str.split("-")[1])
@@ -385,14 +384,18 @@ def qc_lab_measurements(
 
             range_check_results = (actual_measurements >= min_value) & (actual_measurements <= max_value)
             range_check_results_array: np.ndarray = range_check_results.copy()
-            adata.obs[f"{measurement} normal"] = range_check_results_array
+            edata.obs[f"{measurement} normal"] = range_check_results_array
 
-    if copy:
-        return adata
+    return edata if copy else None
 
 
+@function_2D_only()
+@use_ehrdata(deprecated_after="1.0.0")
 def mcar_test(
-    adata: AnnData, method: Literal["little", "ttest"] = "little", *, layer: str = None
+    edata: EHRData | AnnData,
+    method: Literal["little", "ttest"] = "little",
+    *,
+    layer: str | None = None,
 ) -> float | pd.DataFrame:
     """Statistical hypothesis test for Missing Completely At Random (MCAR).
 
@@ -405,14 +408,14 @@ def mcar_test(
     for a thorough discussion of missingness mechanisms.
 
     Args:
-        adata: Annotated data matrix.
+        edata: Central data object.
         method: Whether to perform a chi-square test on the entire dataset (“little”) or separate t-tests for every combination of variables (“ttest”).
         layer: Layer to apply the test to. Uses X matrix if set to `None`.
 
     Returns:
         A single p-value if the Little's test was applied or a Pandas DataFrame of the p-value of t-tests for each pair of features.
     """
-    df = anndata_to_df(adata, layer=layer)
+    df = anndata_to_df(edata, layer=layer)
     from pyampute.exploration.mcar_statistical_tests import MCARTest
 
     mt = MCARTest(method=method)

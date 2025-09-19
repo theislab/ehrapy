@@ -6,6 +6,7 @@ import dowhy
 import dowhy.datasets
 import matplotlib.pyplot as plt
 import numpy as np
+import pytest
 
 import ehrapy as ep
 
@@ -21,7 +22,9 @@ class TestCausal:
             num_samples=1000,
             treatment_is_binary=True,
         )
-        self.linear_data = anndata.AnnData(linear_data["df"].astype(np.float32))
+        X = linear_data["df"].astype(np.float32)
+        R_layer = np.stack([X, X], axis=2)
+        self.linear_data = anndata.AnnData(X, layers={"R_layer": R_layer})
         self.linear_graph = linear_data["gml_graph"]
         self.outcome_name = "y"
         self.treatment_name = "v0"
@@ -45,6 +48,26 @@ class TestCausal:
         assert np.isclose(
             np.round(refute_results["Refute: Add a random common cause"]["test_significance"], 3), 10.002, atol=0.005
         )
+
+    def test_dowhy_linear_dataset_3D_edata(self):
+        self.linear_data.layers["layer_2"] = self.linear_data.X.copy()
+        ep.tl.causal_inference(
+            edata=self.linear_data,
+            graph=self.linear_graph,
+            treatment=self.treatment_name,
+            outcome=self.outcome_name,
+            estimation_method="backdoor.linear_regression",
+            layer="layer_2",
+        )
+        with pytest.raises(ValueError, match=r"only supports 2D data"):
+            ep.tl.causal_inference(
+                edata=self.linear_data,
+                graph=self.linear_graph,
+                treatment=self.treatment_name,
+                outcome=self.outcome_name,
+                estimation_method="backdoor.linear_regression",
+                layer="R_layer",
+            )
 
     def test_plot_causal_effect(self):
         estimate = ep.tl.causal_inference(

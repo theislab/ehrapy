@@ -1,85 +1,72 @@
 import numpy as np
 import pandas as pd
 import pytest
+from ehrdata.core.constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 
 import ehrapy as ep
-from ehrapy.anndata import check_feature_types, df_to_anndata
-from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
+from ehrapy.anndata import _check_feature_types, df_to_anndata
 from tests.conftest import TEST_DATA_PATH
 
 IMPUTATION_DATA_PATH = TEST_DATA_PATH / "imputation"
 
 
-@pytest.fixture
-def adata():
-    df = pd.DataFrame(
-        {
-            "feature1": [1, 2, 2, 0],
-            "feature2": ["a", "b", "c", "d"],
-            "feature3": [1.0, 2.0, 3.0, 2.0],
-            "feature4": [0.0, 0.3, 0.5, 4.6],
-            "feature5": ["a", "b", np.nan, "d"],
-            "feature6": [1.4, 0.2, np.nan, np.nan],
-            "feature7": pd.to_datetime(["2021-01-01", "2024-04-16", "2021-01-03", "2067-07-02"]),
-        }
-    )
-    adata = df_to_anndata(df)
-
-    return adata
+def test_feature_type_inference(edata_feature_type_specifications):
+    edata = edata_feature_type_specifications
+    ep.ad.infer_feature_types(edata, output=None)
+    assert edata.var[FEATURE_TYPE_KEY]["feature1"] == CATEGORICAL_TAG
+    assert edata.var[FEATURE_TYPE_KEY]["feature2"] == CATEGORICAL_TAG
+    assert edata.var[FEATURE_TYPE_KEY]["feature3"] == CATEGORICAL_TAG
+    assert edata.var[FEATURE_TYPE_KEY]["feature4"] == NUMERIC_TAG
+    assert edata.var[FEATURE_TYPE_KEY]["feature5"] == CATEGORICAL_TAG
+    assert edata.var[FEATURE_TYPE_KEY]["feature6"] == NUMERIC_TAG
+    assert edata.var[FEATURE_TYPE_KEY]["feature7"] == DATE_TAG
 
 
-def test_feature_type_inference(adata):
-    ep.ad.infer_feature_types(adata, output=None)
-    assert adata.var[FEATURE_TYPE_KEY]["feature1"] == CATEGORICAL_TAG
-    assert adata.var[FEATURE_TYPE_KEY]["feature2"] == CATEGORICAL_TAG
-    assert adata.var[FEATURE_TYPE_KEY]["feature3"] == CATEGORICAL_TAG
-    assert adata.var[FEATURE_TYPE_KEY]["feature4"] == NUMERIC_TAG
-    assert adata.var[FEATURE_TYPE_KEY]["feature5"] == CATEGORICAL_TAG
-    assert adata.var[FEATURE_TYPE_KEY]["feature6"] == NUMERIC_TAG
-    assert adata.var[FEATURE_TYPE_KEY]["feature7"] == DATE_TAG
+def test_check_feature_types(edata_feature_type_specifications):
+    edata = edata_feature_type_specifications
 
-
-def test_check_feature_types(adata):
-    @check_feature_types
-    def test_func(adata):
+    @_check_feature_types
+    def test_func(edata):
         pass
 
-    assert FEATURE_TYPE_KEY not in adata.var.keys()
-    test_func(adata)
-    assert FEATURE_TYPE_KEY in adata.var.keys()
+    assert FEATURE_TYPE_KEY not in edata.var.keys()
+    test_func(edata)
+    assert FEATURE_TYPE_KEY in edata.var.keys()
 
-    ep.ad.infer_feature_types(adata, output=None)
-    test_func(adata)
-    assert FEATURE_TYPE_KEY in adata.var.keys()
+    ep.ad.infer_feature_types(edata, output=None)
+    test_func(edata)
+    assert FEATURE_TYPE_KEY in edata.var.keys()
 
-    @check_feature_types
-    def test_func_with_return(adata):
-        return adata
+    @_check_feature_types
+    def test_func_with_return(edata):
+        return edata
 
-    adata = test_func_with_return(adata)
-    assert FEATURE_TYPE_KEY in adata.var.keys()
-
-
-def test_feature_types_impute_num_adata(impute_num_adata):
-    ep.ad.infer_feature_types(impute_num_adata, output=None)
-    assert np.all(impute_num_adata.var[FEATURE_TYPE_KEY] == [NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG])
+    edata = test_func_with_return(edata)
+    assert FEATURE_TYPE_KEY in edata.var.keys()
 
 
-def test_feature_types_impute_adata(impute_adata):
-    ep.ad.infer_feature_types(impute_adata, output=None)
-    assert np.all(impute_adata.var[FEATURE_TYPE_KEY] == [NUMERIC_TAG, NUMERIC_TAG, CATEGORICAL_TAG, CATEGORICAL_TAG])
+def test_feature_types_impute_num_edata(impute_num_edata):
+    ep.ad.infer_feature_types(impute_num_edata, output=None)
+    assert np.all(impute_num_edata.var[FEATURE_TYPE_KEY] == [NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG])
 
 
-def test_feature_types_impute_iris(impute_iris_adata):
-    ep.ad.infer_feature_types(impute_iris_adata, output=None)
+def test_feature_types_impute_edata(impute_edata):
+    ep.ad.infer_feature_types(impute_edata, output=None)
     assert np.all(
-        impute_iris_adata.var[FEATURE_TYPE_KEY] == [NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG, CATEGORICAL_TAG]
+        impute_edata.var[FEATURE_TYPE_KEY] == [NUMERIC_TAG, NUMERIC_TAG, CATEGORICAL_TAG, DATE_TAG, CATEGORICAL_TAG]
     )
 
 
-def test_feature_types_impute_feature_types_titanic(impute_titanic_adata):
-    ep.ad.infer_feature_types(impute_titanic_adata, output=None)
-    impute_titanic_adata.var[FEATURE_TYPE_KEY] = [
+def test_feature_types_impute_iris(impute_iris_edata):
+    ep.ad.infer_feature_types(impute_iris_edata, output=None)
+    assert np.all(
+        impute_iris_edata.var[FEATURE_TYPE_KEY] == [NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG, CATEGORICAL_TAG]
+    )
+
+
+def test_feature_types_impute_feature_types_titanic(impute_titanic_edata):
+    ep.ad.infer_feature_types(impute_titanic_edata, output=None)
+    impute_titanic_edata.var[FEATURE_TYPE_KEY] = [
         CATEGORICAL_TAG,
         CATEGORICAL_TAG,
         CATEGORICAL_TAG,
@@ -165,10 +152,16 @@ def test_all_possible_types():
     )
 
 
-def test_partial_annotation(adata):
-    adata.var[FEATURE_TYPE_KEY] = ["dummy", np.nan, np.nan, NUMERIC_TAG, None, np.nan, None]
-    ep.ad.infer_feature_types(adata, output=None)
+def test_partial_annotation(edata_feature_type_specifications):
+    edata_feature_type_specifications.var[FEATURE_TYPE_KEY] = ["dummy", np.nan, np.nan, NUMERIC_TAG, None, np.nan, None]
+    ep.ad.infer_feature_types(edata_feature_type_specifications, output=None)
     assert np.all(
-        adata.var[FEATURE_TYPE_KEY]
+        edata_feature_type_specifications.var[FEATURE_TYPE_KEY]
         == ["dummy", CATEGORICAL_TAG, CATEGORICAL_TAG, NUMERIC_TAG, CATEGORICAL_TAG, NUMERIC_TAG, DATE_TAG]
     )
+
+
+def test_infer_feature_types_3D(edata_blob_small):
+    ep.ad.infer_feature_types(edata_blob_small, layer="layer_2")
+    with pytest.raises(ValueError, match=r"only supports 2D data"):
+        ep.ad.infer_feature_types(edata_blob_small, layer="R_layer")

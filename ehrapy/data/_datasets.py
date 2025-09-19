@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ehrdata.core.constants import CATEGORICAL_TAG, NUMERIC_TAG
+
 from ehrapy import ehrapy_settings
+from ehrapy._compat import function_future_warning
 from ehrapy.anndata import anndata_to_df, df_to_anndata, infer_feature_types, replace_feature_types
-from ehrapy.anndata._constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrapy.io._read import read_csv, read_fhir, read_h5ad
 from ehrapy.preprocessing._encoding import encode
 
@@ -13,6 +15,7 @@ if TYPE_CHECKING:
     from anndata import AnnData
 
 
+@function_future_warning("ep.dt.mimic_2", "ehrdata.dt.mimic_2")
 def mimic_2(
     encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
@@ -30,7 +33,7 @@ def mimic_2(
 
     Examples:
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
+        >>> adata = ep.dt.mimic_2()
     """
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/ehrapy_mimic2.csv",
@@ -40,12 +43,13 @@ def mimic_2(
     )
     if encoded:
         infer_feature_types(adata, output=None, verbose=False)
-        replace_feature_types(adata, "hour_icu_intime", NUMERIC_TAG)
+        replace_feature_types(edata=adata, features="hour_icu_intime", corrected_type=NUMERIC_TAG)  # type: ignore
         return encode(adata, autodetect=True)
 
     return adata
 
 
+@function_future_warning("ep.dt.mimic_2_preprocessed", "ehrdata.dt.mimic_2_preprocessed")
 def mimic_2_preprocessed() -> AnnData:
     """Loads the preprocessed MIMIC-II dataset.
 
@@ -69,6 +73,7 @@ def mimic_2_preprocessed() -> AnnData:
     return adata
 
 
+@function_future_warning("ep.dt.mimic_3_demo")
 def mimic_3_demo(
     anndata: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
@@ -103,6 +108,7 @@ def mimic_3_demo(
     return data
 
 
+@function_future_warning("ep.dt.heart_failure")
 def heart_failure(encoded: bool = False, columns_obs_only: dict[str, list[str]] | list[str] | None = None) -> AnnData:
     """Loads the heart failure dataset.
 
@@ -137,6 +143,7 @@ def heart_failure(encoded: bool = False, columns_obs_only: dict[str, list[str]] 
     return adata
 
 
+@function_future_warning("ep.dt.diabetes_130_raw", "ehrdata.dt.diabetes_130_raw")
 def diabetes_130_raw(
     encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
@@ -170,14 +177,19 @@ def diabetes_130_raw(
     if encoded:
         infer_feature_types(adata, output=None, verbose=False)
         replace_feature_types(
-            adata, ["admission_source_id", "discharge_disposition_id", "encounter_id", "patient_nbr"], CATEGORICAL_TAG
+            adata,
+            features=["admission_source_id", "discharge_disposition_id", "encounter_id", "patient_nbr"],
+            corrected_type=CATEGORICAL_TAG,  # type: ignore
         )
-        replace_feature_types(adata, ["num_procedures", "number_diagnoses", "time_in_hospital"], NUMERIC_TAG)
+        replace_feature_types(
+            adata, features=["num_procedures", "number_diagnoses", "time_in_hospital"], corrected_type=NUMERIC_TAG
+        )  # type: ignore
         return encode(adata, autodetect=True)
 
     return adata
 
 
+@function_future_warning("ep.dt.diabetes_130_fairlearn", "ehrdata.dt.diabetes_130_fairlearn")
 def diabetes_130_fairlearn(
     encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
@@ -215,12 +227,15 @@ def diabetes_130_fairlearn(
 
     if encoded:
         infer_feature_types(adata, output=None, verbose=False)
-        replace_feature_types(adata, ["time_in_hospital", "number_diagnoses", "num_procedures"], NUMERIC_TAG)
+        replace_feature_types(
+            adata, features=["time_in_hospital", "number_diagnoses", "num_procedures"], corrected_type=NUMERIC_TAG
+        )  # type: ignore
         return encode(adata, autodetect=True)
 
     return adata
 
 
+@function_future_warning("ep.dt.chronic_kidney_disease")
 def chronic_kidney_disease(
     encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
@@ -256,6 +271,7 @@ def chronic_kidney_disease(
     return adata
 
 
+@function_future_warning("ep.dt.breast_tissue")
 def breast_tissue(
     encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
@@ -291,6 +307,7 @@ def breast_tissue(
     return adata
 
 
+@function_future_warning("ep.dt.cervical_cancer_risk_factors")
 def cervical_cancer_risk_factors(
     encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
@@ -320,12 +337,15 @@ def cervical_cancer_risk_factors(
     )
     if encoded:
         infer_feature_types(adata, output=None, verbose=False)
-        replace_feature_types(adata, ["STDs (number)", "STDs: Number of diagnosis"], NUMERIC_TAG)
+        replace_feature_types(  # type: ignore
+            adata, features=["STDs (number)", "STDs: Number of diagnosis"], corrected_type=NUMERIC_TAG
+        )
         return encode(adata, autodetect=True)
 
     return adata
 
 
+@function_future_warning("ep.dt.dermatology")
 def dermatology(
     encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
@@ -361,6 +381,7 @@ def dermatology(
     return adata
 
 
+@function_future_warning("ep.dt.echocardiogram")
 def echocardiogram(
     encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
@@ -396,6 +417,7 @@ def echocardiogram(
     return adata
 
 
+@function_future_warning("ep.dt.hepatitis")
 def hepatitis(
     encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
@@ -430,6 +452,7 @@ def hepatitis(
     return adata
 
 
+@function_future_warning("ep.dt.statlog_heart")
 def statlog_heart(
     encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
@@ -451,6 +474,7 @@ def statlog_heart(
         >>> import ehrapy as ep
         >>> adata = ep.dt.statlog_heart(encoded=True)
     """
+    function_future_warning("ehrapy.dt.statlog_heart")
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/statlog_heart.csv",
         download_dataset_name="statlog_heart.csv",
@@ -460,12 +484,13 @@ def statlog_heart(
     )
     if encoded:
         infer_feature_types(adata, output=None, verbose=False)
-        replace_feature_types(adata, "number of major vessels", NUMERIC_TAG)
+        replace_feature_types(adata, features="number of major vessels", corrected_type=NUMERIC_TAG)  # type: ignore
         return encode(adata, autodetect=True)
 
     return adata
 
 
+@function_future_warning("ep.dt.thyroid")
 def thyroid(
     encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
@@ -486,6 +511,7 @@ def thyroid(
         >>> import ehrapy as ep
         >>> adata = ep.dt.thyroid(encoded=True)
     """
+    function_future_warning("ep.dt.thyroid")
     adata: AnnData = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/thyroid.csv",
         download_dataset_name="thyroid.csv",
@@ -500,6 +526,7 @@ def thyroid(
     return adata
 
 
+@function_future_warning("ep.dt.breast_cancer_coimbra")
 def breast_cancer_coimbra(
     encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
@@ -535,6 +562,7 @@ def breast_cancer_coimbra(
     return adata
 
 
+@function_future_warning("ep.dt.parkinsons")
 def parkinsons(
     encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
@@ -570,6 +598,7 @@ def parkinsons(
     return adata
 
 
+@function_future_warning("ep.dt.parkinsons_telemonitoring")
 def parkinsons_telemonitoring(
     encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
@@ -604,6 +633,7 @@ def parkinsons_telemonitoring(
     return adata
 
 
+@function_future_warning("ep.dt.parkinsons_disease_classification")
 def parkinsons_disease_classification(
     encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
@@ -639,6 +669,7 @@ def parkinsons_disease_classification(
     return adata
 
 
+@function_future_warning("ep.dt.parkinson_dataset_with_replicated_acoustic_features")
 def parkinson_dataset_with_replicated_acoustic_features(
     encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
@@ -674,6 +705,7 @@ def parkinson_dataset_with_replicated_acoustic_features(
     return adata
 
 
+@function_future_warning("ep.dt.heart_disease")
 def heart_disease(
     encoded: bool = False,
     columns_obs_only: dict[str, list[str]] | list[str] | None = None,
@@ -704,13 +736,14 @@ def heart_disease(
     )
     if encoded:
         infer_feature_types(adata, output=None, verbose=False)
-        replace_feature_types(adata, ["num"], NUMERIC_TAG)
-        replace_feature_types(adata, ["thal"], CATEGORICAL_TAG)
+        replace_feature_types(adata, features=["num"], corrected_type=NUMERIC_TAG)  # type: ignore
+        replace_feature_types(adata, features=["thal"], corrected_type=CATEGORICAL_TAG)  # type: ignore
         return encode(adata, autodetect=True)
 
     return adata
 
 
+@function_future_warning("ep.dt.synthea_1k_sample")
 def synthea_1k_sample(
     encoded: bool = False,
     columns_obs_only: list[str] | None = None,
@@ -749,7 +782,9 @@ def synthea_1k_sample(
 
     if encoded:
         infer_feature_types(adata, output=None, verbose=False)
-        replace_feature_types(adata, ["resource.multipleBirthInteger", "resource.numberOfSeries"], NUMERIC_TAG)
+        replace_feature_types(
+            adata, features=["resource.multipleBirthInteger", "resource.numberOfSeries"], corrected_type=NUMERIC_TAG
+        )  # type: ignore
         return encode(adata, autodetect=True)
 
     return adata

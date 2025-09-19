@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any, Literal
 import scanpy as sc
 from scanpy.plotting import DotPlot, MatrixPlot, StackedViolin
 
+from ehrapy._compat import function_2D_only, use_ehrdata
 from ehrapy._utils_doc import (
     _doc_params,
     doc_adata_color_etc,
@@ -30,10 +31,12 @@ if TYPE_CHECKING:
     import pandas as pd
     from anndata import AnnData
     from cycler import Cycler
+    from ehrdata import EHRData
     from matplotlib.axes import Axes
     from matplotlib.colors import Colormap, ListedColormap, Normalize
     from matplotlib.figure import Figure
     from scanpy.plotting._utils import _AxesSubplot
+    from seaborn import FacetGrid
 
 _Basis = Literal["pca", "tsne", "umap", "diffmap", "draw_graph_fr"]
 _VarNames = str | Sequence[str]
@@ -44,27 +47,29 @@ _FontSize = Literal["xx-small", "x-small", "small", "medium", "large", "x-large"
 VBound = str | float | Callable[[Sequence[float]], float]
 
 
+@use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 @_doc_params(scatter_temp=doc_scatter_basic, show_save_ax=doc_show_save_ax)
 def scatter(  # noqa: D417
-    adata: AnnData,
+    edata: EHRData | AnnData,
     x: str | None = None,
     y: str | None = None,
     *,
-    color: str = None,
+    color: str | None = None,
     use_raw: bool | None = None,
-    layers: str | Collection[str] = None,
+    layers: str | Collection[str] | None = None,
     sort_order: bool = True,
     alpha: float | None = None,
     basis: _Basis | None = None,
-    groups: str | Iterable[str] = None,
-    components: str | Collection[str] = None,
+    groups: str | Iterable[str] | None = None,
+    components: str | Collection[str] | None = None,
     projection: Literal["2d", "3d"] = "2d",
     legend_loc: str = "right margin",
     legend_fontsize: int | float | _FontSize | None = None,
     legend_fontweight: int | _FontWeight | None = None,
-    legend_fontoutline: float = None,
-    color_map: str | Colormap = None,
-    palette: Cycler | ListedColormap | ColorLike | Sequence[ColorLike] = None,
+    legend_fontoutline: float | None = None,
+    color_map: str | Colormap | None = None,
+    palette: Cycler | ListedColormap | ColorLike | Sequence[ColorLike] | None = None,
     frameon: bool | None = None,
     right_margin: float | None = None,
     left_margin: float | None = None,
@@ -79,13 +84,13 @@ def scatter(  # noqa: D417
     Color the plot using annotations of observations (`.obs`), variables (`.var`) or features (`.var_names`).
 
     Args:
-        adata: :class:`~anndata.AnnData` object object containing all observations.
+        edata: Central data object.
         x: x coordinate
         y: y coordinate
         color: Keys for annotations of observations/patients or features, or a hex color specification, e.g.,
                `'ann1'`, `'#fe57a1'`, or `['ann1', 'ann2']`.
-        use_raw: Whether to use `raw` attribute of `adata`. Defaults to `True` if `.raw` is present.
-        layers: Use the `layers` attribute of `adata` if present: specify the layer for `x`, `y` and `color`.
+        use_raw: Whether to use `raw` attribute of `edata`. Defaults to `True` if `.raw` is present.
+        layers: Use the `layers` attribute of `edata` if present: specify the layer for `x`, `y` and `color`.
                 If `layers` is a string, then it is expanded to `(layers, layers, layers)`.
         basis: String that denotes a plotting tool that computed coordinates.
         {scatter_temp}
@@ -94,13 +99,14 @@ def scatter(  # noqa: D417
     Example:
         .. code-block:: python
 
+            import ehrdata as ed
             import ehrapy as ep
 
-            adata = ep.dt.mimic_2(encoded=True)
-            ep.pp.knn_impute(adata)
-            ep.pp.log_norm(adata, offset=1)
-            ep.pp.neighbors(adata)
-            ep.pl.scatter(adata, x="age", y="icu_los_day", color="icu_los_day")
+            edata = ed.dt.mimic_2()
+            ep.pp.knn_impute(edata)
+            ep.pp.log_norm(edata, offset=1)
+            ep.pp.neighbors(edata)
+            ep.pl.scatter(edata, x="age", y="icu_los_day", color="icu_los_day")
 
     Preview:
         .. image:: /_static/docstring_previews/scatter.png
@@ -133,16 +139,18 @@ def scatter(  # noqa: D417
         ax=ax,
     )
 
-    return scatter_partial(adata=adata, color=color)
+    return scatter_partial(edata, color=color)
 
 
+@use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 @_doc_params(
     vminmax=doc_vboundnorm,
     show_save_ax=doc_show_save_ax,
     common_plot_args=doc_common_plot_args,
 )
 def heatmap(  # noqa: D417
-    adata: AnnData,
+    edata: EHRData | AnnData,
     var_names: _VarNames | Mapping[str, _VarNames],
     groupby: str | Sequence[str],
     *,
@@ -190,13 +198,13 @@ def heatmap(  # noqa: D417
 
             import ehrapy as ep
 
-            adata = ep.dt.mimic_2(encoded=True)
-            ep.pp.knn_impute(adata)
-            ep.pp.log_norm(adata, offset=1)
-            ep.pp.neighbors(adata)
-            ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
+            edata = ed.dt.mimic_2()
+            ep.pp.knn_impute(edata)
+            ep.pp.log_norm(edata, offset=1)
+            ep.pp.neighbors(edata)
+            ep.tl.leiden(edata, resolution=0.5, key_added="leiden_0_5")
             ep.pl.heatmap(
-                adata,
+                edata,
                 var_names=[
                     "map_1st",
                     "hr_1st",
@@ -247,9 +255,11 @@ def heatmap(  # noqa: D417
         **kwds,
     )
 
-    return heatmap_partial(adata=adata, groupby=groupby)
+    return heatmap_partial(edata, groupby=groupby)
 
 
+@use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 @_doc_params(
     show_save_ax=doc_show_save_ax,
     common_plot_args=doc_common_plot_args,
@@ -257,7 +267,7 @@ def heatmap(  # noqa: D417
     vminmax=doc_vboundnorm,
 )
 def dotplot(  # noqa: D417
-    adata: AnnData,
+    edata: EHRData | AnnData,
     var_names: _VarNames | Mapping[str, _VarNames],
     groupby: str,
     *,
@@ -332,12 +342,12 @@ def dotplot(  # noqa: D417
 
             import ehrapy as ep
 
-            adata = ep.dt.mimic_2(encoded=True)
-            ep.pp.knn_impute(adata)
-            ep.pp.neighbors(adata)
-            ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
+            edata = ed.dt.mimic_2()
+            ep.pp.knn_impute(edata)
+            ep.pp.neighbors(edata)
+            ep.tl.leiden(edata, resolution=0.5, key_added="leiden_0_5")
             ep.pl.dotplot(
-                adata,
+                edata,
                 var_names=[
                     "age",
                     "gender_num",
@@ -397,12 +407,14 @@ def dotplot(  # noqa: D417
         **kwds,
     )
 
-    return dotplot_partial(adata=adata, groupby=groupby)
+    return dotplot_partial(edata, groupby=groupby)
 
 
+@use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 @_doc_params(show_save_ax=doc_show_save_ax, common_plot_args=doc_common_plot_args)
 def tracksplot(  # noqa: D417
-    adata: AnnData,
+    edata: EHRData | AnnData,
     var_names: _VarNames | Mapping[str, _VarNames],
     groupby: str,
     *,
@@ -417,7 +429,7 @@ def tracksplot(  # noqa: D417
     save: str | bool | None = None,
     figsize: tuple[float, float] | None = None,
     **kwds,
-) -> dict[str, list] | None:  # pragma: no cover
+) -> dict[str, Axes] | None:  # pragma: no cover
     """Plots a filled line plot.
 
     In this type of plot each var_name is plotted as a filled line plot where the
@@ -431,14 +443,15 @@ def tracksplot(  # noqa: D417
         **kwds: Are passed to :func:`~seaborn.heatmap`.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
 
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.pp.knn_impute(adata)
-        >>> ep.pp.neighbors(adata)
-        >>> ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
+        >>> edata = ed.dt.mimic_2()
+        >>> ep.pp.knn_impute(edata)
+        >>> ep.pp.neighbors(edata)
+        >>> ep.tl.leiden(edata, resolution=0.5, key_added="leiden_0_5")
         >>> ep.pl.tracksplot(
-        ...     adata,
+        ...     edata,
         ...     var_names=[
         ...         "age",
         ...         "gender_num",
@@ -472,11 +485,13 @@ def tracksplot(  # noqa: D417
         **kwds,
     )
 
-    return tracksplot_partial(adata=adata, groupby=groupby)
+    return tracksplot_partial(edata, groupby=groupby)
 
 
+@use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 def violin(  # noqa: D417
-    adata: AnnData,
+    edata: EHRData | AnnData,
     keys: str | Sequence[str],
     groupby: str | None = None,
     *,
@@ -496,23 +511,23 @@ def violin(  # noqa: D417
     save: bool | str | None = None,
     ax: Axes | None = None,
     **kwds,
-) -> Axes | None:  # pragma: no cover
+) -> Axes | FacetGrid | None:  # pragma: no cover
     """Violin plot.
 
-    Wraps :func:`seaborn.violinplot` for :class:`~anndata.AnnData`.
+    Wraps :func:`seaborn.violinplot` for Data.
 
     Args:
-        adata: :class:`~anndata.AnnData` object object containing all observations.
+        edata: Central data object.
         keys: Keys for accessing variables of `.var_names` or fields of `.obs`.
         groupby: The key of the observation grouping to consider.
         log: Plot on logarithmic axis.
-        use_raw: Whether to use `raw` attribute of `adata`. Defaults to `True` if `.raw` is present.
+        use_raw: Whether to use `raw` attribute of `edata`. Defaults to `True` if `.raw` is present.
         stripplot: Add a stripplot on top of the violin plot. See :func:`~seaborn.stripplot`.
         jitter: Add jitter to the stripplot (only when stripplot is True) See :func:`~seaborn.stripplot`.
         size: Size of the jitter points.
         layer: Name of the AnnData object layer that wants to be plotted. By
-               default adata.raw.X is plotted. If `use_raw=False` is set,
-               then `adata.X` is plotted. If `layer` is set to a valid layer name,
+               default edata.raw.X is plotted. If `use_raw=False` is set,
+               then `edata.X` is plotted. If `layer` is set to a valid layer name,
                then the layer is plotted. `layer` takes precedence over `use_raw`.
         scale: The method used to scale the width of each violin.
                If 'width' (the default), each violin will have the same width.
@@ -533,12 +548,12 @@ def violin(  # noqa: D417
 
             import ehrapy as ep
 
-            adata = ep.dt.mimic_2(encoded=True)
-            ep.pp.knn_impute(adata)
-            ep.pp.log_norm(adata, offset=1)
-            ep.pp.neighbors(adata)
-            ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
-            ep.pl.violin(adata, keys=["age"], groupby="leiden_0_5")
+            edata = ed.dt.mimic_2()
+            ep.pp.knn_impute(edata)
+            ep.pp.log_norm(edata, offset=1)
+            ep.pp.neighbors(edata)
+            ep.tl.leiden(edata, resolution=0.5, key_added="leiden_0_5")
+            ep.pl.violin(edata, keys=["age"], groupby="leiden_0_5")
 
     Preview:
         .. image:: /_static/docstring_previews/violin.png
@@ -564,9 +579,11 @@ def violin(  # noqa: D417
         **kwds,
     )
 
-    return violin_partial(adata=adata, groupby=groupby)
+    return violin_partial(edata, groupby=groupby)
 
 
+@use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 @_doc_params(
     show_save_ax=doc_show_save_ax,
     common_plot_args=doc_common_plot_args,
@@ -574,7 +591,7 @@ def violin(  # noqa: D417
     vminmax=doc_vboundnorm,
 )
 def stacked_violin(  # noqa: D417
-    adata: AnnData,
+    edata: EHRData | AnnData,
     var_names: _VarNames | Mapping[str, _VarNames],
     groupby: str | Sequence[str],
     *,
@@ -651,13 +668,13 @@ def stacked_violin(  # noqa: D417
 
             import ehrapy as ep
 
-            adata = ep.dt.mimic_2(encoded=True)
-            ep.pp.knn_impute(adata)
-            ep.pp.log_norm(adata, offset=1)
-            ep.pp.neighbors(adata)
-            ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
+            edata = ed.dt.mimic_2()
+            ep.pp.knn_impute(edata)
+            ep.pp.log_norm(edata, offset=1)
+            ep.pp.neighbors(edata)
+            ep.tl.leiden(edata, resolution=0.5, key_added="leiden_0_5")
             ep.pl.stacked_violin(
-                adata,
+                edata,
                 var_names=[
                     "icu_los_day",
                     "hospital_los_day",
@@ -713,9 +730,11 @@ def stacked_violin(  # noqa: D417
         **kwds,
     )
 
-    return stacked_vio_partial(adata=adata, groupby=groupby)
+    return stacked_vio_partial(edata, groupby=groupby)
 
 
+@use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 @_doc_params(
     show_save_ax=doc_show_save_ax,
     common_plot_args=doc_common_plot_args,
@@ -723,7 +742,7 @@ def stacked_violin(  # noqa: D417
     vminmax=doc_vboundnorm,
 )
 def matrixplot(  # noqa: D417
-    adata: AnnData,
+    edata: EHRData | AnnData,
     var_names: _VarNames | Mapping[str, _VarNames],
     groupby: str | Sequence[str],
     *,
@@ -740,7 +759,7 @@ def matrixplot(  # noqa: D417
     var_group_labels: Sequence[str] | None = None,
     var_group_rotation: float | None = None,
     layer: str | None = None,
-    standard_scale: Literal["var", "group"] = None,
+    standard_scale: Literal["var", "group"] | None = None,
     values_df: pd.DataFrame | None = None,
     swap_axes: bool = False,
     show: bool | None = None,
@@ -775,13 +794,13 @@ def matrixplot(  # noqa: D417
 
             import ehrapy as ep
 
-            adata = ep.dt.mimic_2(encoded=True)
-            ep.pp.knn_impute(adata)
-            ep.pp.log_norm(adata, offset=1)
-            ep.pp.neighbors(adata)
-            ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
+            edata = ed.dt.mimic_2()
+            ep.pp.knn_impute(edata)
+            ep.pp.log_norm(edata, offset=1)
+            ep.pp.neighbors(edata)
+            ep.tl.leiden(edata, resolution=0.5, key_added="leiden_0_5")
             ep.pl.matrixplot(
-                adata,
+                edata,
                 var_names=[
                     "abg_count",
                     "wbc_first",
@@ -833,12 +852,14 @@ def matrixplot(  # noqa: D417
         **kwds,
     )
 
-    return matrix_partial(adata=adata, groupby=groupby)
+    return matrix_partial(edata, groupby=groupby)
 
 
+@use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 @_doc_params(show_save_ax=doc_show_save_ax)
 def clustermap(  # noqa: D417
-    adata: AnnData,
+    edata: EHRData | AnnData,
     obs_keys: str | None = None,
     use_raw: bool | None = None,
     show: bool | None = None,
@@ -847,12 +868,12 @@ def clustermap(  # noqa: D417
 ):  # pragma: no cover
     """Hierarchically-clustered heatmap.
 
-    Wraps :func:`seaborn.clustermap` for :class:`~anndata.AnnData`.
+    Wraps :func:`seaborn.clustermap` for Data.
 
     Args:
-        adata: :class:`~anndata.AnnData` object object containing all observations.
+        edata: Central data object.
         obs_keys: Categorical annotation to plot with a different color map. Currently, only a single key is supported.
-        use_raw: Whether to use `raw` attribute of `adata`. Defaults to `True` if `.raw` is present.
+        use_raw: Whether to use `raw` attribute of `edata`. Defaults to `True` if `.raw` is present.
         {show_save_ax}
         **kwds: Keyword arguments passed to :func:`~seaborn.clustermap`.
 
@@ -864,23 +885,24 @@ def clustermap(  # noqa: D417
 
             import ehrapy as ep
 
-            adata = ep.dt.mimic_2(encoded=True)
-            ep.pp.knn_impute(adata)
-            ep.pp.log_norm(adata, offset=1)
-            ep.pp.neighbors(adata)
-            ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
-            ep.pl.clustermap(adata)
+            edata = ed.dt.mimic_2()
+            ep.pp.knn_impute(edata)
+            ep.pp.log_norm(edata, offset=1)
+            ep.pp.neighbors(edata)
+            ep.tl.leiden(edata, resolution=0.5, key_added="leiden_0_5")
+            ep.pl.clustermap(edata)
 
     Preview:
         .. image:: /_static/docstring_previews/clustermap.png
     """
     clustermap_partial = partial(sc.pl.clustermap, use_raw=use_raw, show=show, save=save, **kwds)
 
-    return clustermap_partial(adata=adata, obs_keys=obs_keys)
+    return clustermap_partial(edata, obs_keys=obs_keys)
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 def ranking(
-    adata: AnnData,
+    edata: EHRData | AnnData,
     attr: Literal["var", "obs", "uns", "varm", "obsm"],
     keys: str | Sequence[str],
     dictionary=None,
@@ -897,9 +919,9 @@ def ranking(
     See, for example, how this is used in pl.pca_loadings.
 
     Args:
-        adata: :class:`~anndata.AnnData` object object containing all observations.
-        attr: The attribute of AnnData that contains the score.
-        keys: The scores to look up an array from the attribute of adata.
+        edata: Central data object.
+        attr: The attribute of the object that contains the score.
+        keys: The scores to look up an array from the attribute of edata.
         dictionary: Optional key dictionary.
         indices: Optional dictionary indices.
         labels: Optional labels.
@@ -917,15 +939,15 @@ def ranking(
 
             import ehrapy as ep
 
-            adata = ep.dt.mimic_2(encoded=True)
-            ep.pp.knn_impute(adata)
-            ep.pp.log_norm(adata, offset=1)
-            ep.pp.neighbors(adata)
-            ep.pp.pca(adata)
-            TODO: ep.pl.ranking(adata)
+            edata = ed.dt.mimic_2()
+            ep.pp.knn_impute(edata)
+            ep.pp.log_norm(edata, offset=1)
+            ep.pp.neighbors(edata)
+            ep.pp.pca(edata)
+            TODO: ep.pl.ranking(edata)
     """
     return sc.pl.ranking(
-        adata=adata,
+        edata,
         attr=attr,
         keys=keys,
         dictionary=dictionary,
@@ -939,9 +961,11 @@ def ranking(
     )
 
 
+@use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 @_doc_params(show_save_ax=doc_show_save_ax)
 def dendrogram(  # noqa: D417
-    adata: AnnData,
+    edata: EHRData | AnnData,
     groupby: str,
     *,
     dendrogram_key: str | None = None,
@@ -956,7 +980,7 @@ def dendrogram(  # noqa: D417
     See :func:`~ehrapy.tools.dendrogram`.
 
     Args:
-        adata: :class:`~anndata.AnnData` object object containing all observations.
+        edata: Central data object.
         groupby: Categorical data column used to create the dendrogram.
         dendrogram_key: Key under with the dendrogram information was stored.
                         By default the dendrogram information is stored under `.uns[f'dendrogram_{{groupby}}']`.
@@ -969,12 +993,12 @@ def dendrogram(  # noqa: D417
 
             import ehrapy as ep
 
-            adata = ep.dt.mimic_2(encoded=True)
-            ep.pp.knn_impute(adata)
-            ep.pp.log_norm(adata, offset=1)
-            ep.pp.neighbors(adata)
-            ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
-            ep.pl.dendrogram(adata, groupby="leiden_0_5")
+            edata = ed.dt.mimic_2()
+            ep.pp.knn_impute(edata)
+            ep.pp.log_norm(edata, offset=1)
+            ep.pp.neighbors(edata)
+            ep.tl.leiden(edata, resolution=0.5, key_added="leiden_0_5")
+            ep.pl.dendrogram(edata, groupby="leiden_0_5")
 
     Preview:
         .. image:: /_static/docstring_previews/dendrogram.png
@@ -989,24 +1013,25 @@ def dendrogram(  # noqa: D417
         ax=ax,
     )
 
-    return dendrogram_partial(adata=adata, groupby=groupby)
+    return dendrogram_partial(edata, groupby=groupby)
 
 
-# @_wraps_plot_scatter
 @_doc_params(
     adata_color_etc=doc_adata_color_etc,
     scatter_bulk=doc_scatter_embedding,
     show_save_ax=doc_show_save_ax,
 )
+@function_2D_only()
+@use_ehrdata(deprecated_after="1.0.0")
 def pca(  # noqa: D417
-    adata,
+    edata,
     *,
     annotate_var_explained: bool = False,
     show: bool | None = None,
     return_fig: bool | None = None,
     save: bool | str | None = None,
     **kwargs,
-) -> Axes | list[Axes] | None:  # pragma: no cover
+) -> Figure | Axes | list[Axes] | None:  # pragma: no cover
     """Scatter plot in PCA coordinates.
 
     Use the parameter `annotate_var_explained` to annotate the explained variance.
@@ -1018,13 +1043,14 @@ def pca(  # noqa: D417
         {show_save_ax}
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.pp.knn_impute(adata)
-        >>> ep.pp.log_norm(adata, offset=1)
-        >>> ep.pp.neighbors(adata)
-        >>> ep.tl.pca(adata)
-        >>> ep.pl.pca(adata, color="service_unit")
+        >>> edata = ed.dt.mimic_2()
+        >>> ep.pp.knn_impute(edata)
+        >>> ep.pp.log_norm(edata, offset=1)
+        >>> ep.pp.neighbors(edata)
+        >>> ep.tl.pca(edata)
+        >>> ep.pl.pca(edata, color="service_unit")
 
     Preview:
         .. image:: /_static/docstring_previews/pca.png
@@ -1033,11 +1059,12 @@ def pca(  # noqa: D417
         sc.pl.pca, annotate_var_explained=annotate_var_explained, show=show, return_fig=return_fig, save=save
     )
 
-    return pca_partial(adata=adata, **kwargs)
+    return pca_partial(edata, **kwargs)
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 def pca_loadings(
-    adata: AnnData,
+    edata: EHRData | AnnData,
     components: str | Sequence[int] | None = None,
     include_lowest: bool = True,
     show: bool | None = None,
@@ -1046,7 +1073,7 @@ def pca_loadings(
     """Rank features according to contributions to PCs.
 
     Args:
-        adata: :class:`~anndata.AnnData` object object containing all observations.
+        edata: Central data object.
         components: For example, ``'1,2,3'`` means ``[1, 2, 3]``, first, second, third principal component.
         include_lowest: Whether to show the features with both highest and lowest loadings.
         show: Show the plot, do not return axis.
@@ -1054,22 +1081,24 @@ def pca_loadings(
               Infer the filetype if ending on {`'.pdf'`, `'.png'`, `'.svg'`}.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.pp.knn_impute(adata)
-        >>> ep.pp.log_norm(adata, offset=1)
-        >>> ep.pp.neighbors(adata)
-        >>> ep.pp.pca(adata)
-        >>> ep.pl.pca_loadings(adata, components="1,2,3")
+        >>> edata = ed.dt.mimic_2()
+        >>> ep.pp.knn_impute(edata)
+        >>> ep.pp.log_norm(edata, offset=1)
+        >>> ep.pp.neighbors(edata)
+        >>> ep.pp.pca(edata)
+        >>> ep.pl.pca_loadings(edata, components="1,2,3")
 
     Preview:
         .. image:: /_static/docstring_previews/pca_loadings.png
     """
-    return sc.pl.pca_loadings(adata=adata, components=components, include_lowest=include_lowest, show=show, save=save)
+    return sc.pl.pca_loadings(edata, components=components, include_lowest=include_lowest, show=show, save=save)
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 def pca_variance_ratio(
-    adata: AnnData,
+    edata: EHRData | AnnData,
     n_pcs: int = 30,
     log: bool = False,
     show: bool | None = None,
@@ -1078,7 +1107,7 @@ def pca_variance_ratio(
     """Plot the variance ratio.
 
     Args:
-        adata: :class:`~anndata.AnnData` object object containing all observations.
+        edata: Central data object.
         n_pcs: Number of PCs to show.
         log: Plot on logarithmic scale..
         show: Show the plot, do not return axis.
@@ -1087,41 +1116,44 @@ def pca_variance_ratio(
               Infer the filetype if ending on {`'.pdf'`, `'.png'`, `'.svg'`}.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.pp.knn_impute(adata)
-        >>> ep.pp.log_norm(adata, offset=1)
-        >>> ep.pp.neighbors(adata)
-        >>> ep.pp.pca(adata)
-        >>> ep.pl.pca_variance_ratio(adata, n_pcs=8)
+        >>> edata = ed.dt.mimic_2()
+        >>> ep.pp.knn_impute(edata)
+        >>> ep.pp.log_norm(edata, offset=1)
+        >>> ep.pp.neighbors(edata)
+        >>> ep.pp.pca(edata)
+        >>> ep.pl.pca_variance_ratio(edata, n_pcs=8)
 
     Preview:
         .. image:: /_static/docstring_previews/pca_variance_ratio.png
     """
-    return sc.pl.pca_variance_ratio(adata=adata, n_pcs=n_pcs, log=log, show=show, save=save)
+    return sc.pl.pca_variance_ratio(edata, n_pcs=n_pcs, log=log, show=show, save=save)
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 @_doc_params(scatter_bulk=doc_scatter_embedding, show_save_ax=doc_show_save_ax)
-def pca_overview(adata: AnnData, **params) -> Axes | list[Axes] | None:  # pragma: no cover
+def pca_overview(edata: EHRData | AnnData, **params) -> Axes | list[Axes] | None:  # pragma: no cover
     """Plot PCA results.
 
     The parameters are the ones of the scatter plot.
     Call pca_ranking separately if you want to change the default settings.
 
     Args:
-        adata: :class:`~anndata.AnnData` object object containing all observations.
+        edata: Central data object.
         {scatter_bulk}
         {show_save_ax}
         params: Scatterplot parameters
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.pp.knn_impute(adata)
-        >>> ep.pp.log_norm(adata, offset=1)
-        >>> ep.pp.neighbors(adata)
-        >>> ep.pp.pca(adata)
-        >>> ep.pl.pca_overview(adata, components="1,2,3", color="service_unit")
+        >>> edata = ed.dt.mimic_2()
+        >>> ep.pp.knn_impute(edata)
+        >>> ep.pp.log_norm(edata, offset=1)
+        >>> ep.pp.neighbors(edata)
+        >>> ep.pp.pca(edata)
+        >>> ep.pl.pca_overview(edata, components="1,2,3", color="service_unit")
 
     Preview:
         .. image:: /_static/docstring_previews/pca_overview_1.png
@@ -1130,17 +1162,18 @@ def pca_overview(adata: AnnData, **params) -> Axes | list[Axes] | None:  # pragm
 
         .. image:: /_static/docstring_previews/pca_overview_3.png
     """
-    return sc.pl.pca_overview(adata=adata, **params)
+    return sc.pl.pca_overview(edata, **params)
 
 
 # @_wraps_plot_scatter
+@use_ehrdata(deprecated_after="1.0.0")
 @_doc_params(
     adata_color_etc=doc_adata_color_etc,
     edges_arrows=doc_edges_arrows,
     scatter_bulk=doc_scatter_embedding,
     show_save_ax=doc_show_save_ax,
 )
-def tsne(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover # noqa: D417
+def tsne(edata, **kwargs) -> Figure | Axes | list[Axes] | None:  # pragma: no cover # noqa: D417
     """Scatter plot in tSNE basis.
 
     Args:
@@ -1150,18 +1183,19 @@ def tsne(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover # noq
         {show_save_ax}
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.pp.knn_impute(adata)
-        >>> ep.pp.log_norm(adata, offset=1)
-        >>> ep.pp.neighbors(adata)
-        >>> ep.tl.tsne(adata)
-        >>> ep.pl.tsne(adata)
+        >>> edata = ed.dt.mimic_2()
+        >>> ep.pp.knn_impute(edata)
+        >>> ep.pp.log_norm(edata, offset=1)
+        >>> ep.pp.neighbors(edata)
+        >>> ep.tl.tsne(edata)
+        >>> ep.pl.tsne(edata)
 
         .. image:: /_static/docstring_previews/tsne_1.png
 
         >>> ep.pl.tsne(
-        ...     adata,
+        ...     edata,
         ...     color=["day_icu_intime", "service_unit"],
         ...     wspace=0.5,
         ...     title=["Day of ICU admission", "Service unit"],
@@ -1169,22 +1203,24 @@ def tsne(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover # noq
 
         .. image:: /_static/docstring_previews/tsne_2.png
 
-        >>> ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
-        >>> ep.pl.tsne(adata, color=["leiden_0_5"], title="Leiden 0.5")
+        >>> ep.tl.leiden(edata, resolution=0.5, key_added="leiden_0_5")
+        >>> ep.pl.tsne(edata, color=["leiden_0_5"], title="Leiden 0.5")
 
         .. image:: /_static/docstring_previews/tsne_3.png
+
     """
-    return sc.pl.tsne(adata=adata, **kwargs)
+    return sc.pl.tsne(edata, **kwargs)
 
 
 # @_wraps_plot_scatter
+@use_ehrdata(deprecated_after="1.0.0")
 @_doc_params(
     adata_color_etc=doc_adata_color_etc,
     edges_arrows=doc_edges_arrows,
     scatter_bulk=doc_scatter_embedding,
     show_save_ax=doc_show_save_ax,
 )
-def umap(adata: AnnData, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover # noqa: D417
+def umap(edata: EHRData | AnnData, **kwargs) -> Figure | Axes | list[Axes] | None:  # pragma: no cover # noqa: D417
     """Scatter plot in UMAP basis.
 
     Args:
@@ -1194,18 +1230,19 @@ def umap(adata: AnnData, **kwargs) -> Axes | list[Axes] | None:  # pragma: no co
         {show_save_ax}
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.pp.knn_impute(adata)
-        >>> ep.pp.log_norm(adata, offset=1)
-        >>> ep.pp.neighbors(adata)
-        >>> ep.tl.umap(adata)
-        >>> ep.pl.umap(adata)
+        >>> edata = ed.dt.mimic_2()
+        >>> ep.pp.knn_impute(edata)
+        >>> ep.pp.log_norm(edata, offset=1)
+        >>> ep.pp.neighbors(edata)
+        >>> ep.tl.umap(edata)
+        >>> ep.pl.umap(edata)
 
         .. image:: /_static/docstring_previews/umap_1.png
 
         >>> ep.pl.umap(
-        ...     adata,
+        ...     edata,
         ...     color=["day_icu_intime", "service_unit"],
         ...     wspace=0.5,
         ...     title=["Day of ICU admission", "Service unit"],
@@ -1213,21 +1250,23 @@ def umap(adata: AnnData, **kwargs) -> Axes | list[Axes] | None:  # pragma: no co
 
         .. image:: /_static/docstring_previews/umap_2.png
 
-        >>> ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
-        >>> ep.pl.umap(adata, color=["leiden_0_5"], title="Leiden 0.5")
+        >>> ep.tl.leiden(edata, resolution=0.5, key_added="leiden_0_5")
+        >>> ep.pl.umap(edata, color=["leiden_0_5"], title="Leiden 0.5")
 
         .. image:: /_static/docstring_previews/umap_3.png
     """
-    return sc.pl.umap(adata=adata, **kwargs)
+    return sc.pl.umap(edata, **kwargs)
 
 
+@use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 # @_wraps_plot_scatter
 @_doc_params(
     adata_color_etc=doc_adata_color_etc,
     scatter_bulk=doc_scatter_embedding,
     show_save_ax=doc_show_save_ax,
 )
-def diffmap(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover # noqa: D417
+def diffmap(edata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover # noqa: D417
     """Scatter plot in Diffusion Map basis.
 
     Args:
@@ -1236,21 +1275,23 @@ def diffmap(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover # 
         {show_save_ax}
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.pp.knn_impute(adata)
-        >>> ep.pp.log_norm(adata, offset=1)
-        >>> ep.pp.neighbors(adata)
-        >>> ep.tl.diffmap(adata)
-        >>> ep.pl.diffmap(adata, color="day_icu_intime")
+        >>> edata = ed.dt.mimic_2()
+        >>> ep.pp.knn_impute(edata)
+        >>> ep.pp.log_norm(edata, offset=1)
+        >>> ep.pp.neighbors(edata)
+        >>> ep.tl.diffmap(edata)
+        >>> ep.pl.diffmap(edata, color="day_icu_intime")
 
     Preview:
         .. image:: /_static/docstring_previews/diffmap.png
     """
-    return sc.pl.diffmap(adata=adata, **kwargs)
+    return sc.pl.diffmap(edata, **kwargs)
 
 
 # @_wraps_plot_scatter
+@use_ehrdata(deprecated_after="1.0.0")
 @_doc_params(
     adata_color_etc=doc_adata_color_etc,
     edges_arrows=doc_edges_arrows,
@@ -1258,8 +1299,8 @@ def diffmap(adata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover # 
     show_save_ax=doc_show_save_ax,
 )
 def draw_graph(  # noqa: D417
-    adata: AnnData, *, layout: _IGraphLayout | None = None, **kwargs
-) -> Axes | list[Axes] | None:  # pragma: no cover
+    edata: EHRData | AnnData, *, layout: _IGraphLayout | None = None, **kwargs
+) -> Figure | Axes | list[Axes] | None:  # pragma: no cover
     """Scatter plot in graph-drawing basis.
 
     Args:
@@ -1270,21 +1311,22 @@ def draw_graph(  # noqa: D417
         {show_save_ax}
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.pp.knn_impute(adata)
-        >>> ep.pp.log_norm(adata, offset=1)
-        >>> ep.pp.neighbors(adata)
-        >>> ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
-        >>> ep.tl.paga(adata, groups="leiden_0_5")
+        >>> edata = ed.dt.mimic_2()
+        >>> ep.pp.knn_impute(edata)
+        >>> ep.pp.log_norm(edata, offset=1)
+        >>> ep.pp.neighbors(edata)
+        >>> ep.tl.leiden(edata, resolution=0.5, key_added="leiden_0_5")
+        >>> ep.tl.paga(edata, groups="leiden_0_5")
         >>> ep.pl.paga(
-        ...     adata,
+        ...     edata,
         ...     color=["leiden_0_5", "day_28_flg"],
         ...     cmap=ep.pl.Colormaps.grey_red.value,
         ...     title=["Leiden 0.5", "Died in less than 28 days"],
         ... )
-        >>> ep.tl.draw_graph(adata, init_pos="paga")
-        >>> ep.pl.draw_graph(adata, color=["leiden_0_5", "icu_exp_flg"], legend_loc="on data")
+        >>> ep.tl.draw_graph(edata, init_pos="paga")
+        >>> ep.pl.draw_graph(edata, color=["leiden_0_5", "icu_exp_flg"], legend_loc="on data")
 
     Preview:
         .. image:: /_static/docstring_previews/draw_graph_1.png
@@ -1293,7 +1335,7 @@ def draw_graph(  # noqa: D417
     """
     draw_graph_part = partial(sc.pl.draw_graph, layout=layout)
 
-    return draw_graph_part(adata=adata, **kwargs)
+    return draw_graph_part(adata=edata, **kwargs)
 
 
 class Empty(Enum):
@@ -1303,6 +1345,8 @@ class Empty(Enum):
 _empty = Empty.token
 
 
+@use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 @_doc_params(
     adata_color_etc=doc_adata_color_etc,
     edges_arrows=doc_edges_arrows,
@@ -1310,7 +1354,7 @@ _empty = Empty.token
     show_save_ax=doc_show_save_ax,
 )
 def embedding(  # noqa: D417
-    adata: AnnData,
+    edata: EHRData | AnnData,
     basis: str,
     *,
     color: str | Sequence[str] | None = None,
@@ -1324,7 +1368,7 @@ def embedding(  # noqa: D417
     arrows: bool = False,
     arrows_kwds: Mapping[str, Any] | None = None,
     groups: str | None = None,
-    components: str | Sequence[str] = None,
+    components: str | Sequence[str] | None = None,
     layer: str | None = None,
     projection: Literal["2d", "3d"] = "2d",
     scale_factor: float | None = None,
@@ -1355,7 +1399,7 @@ def embedding(  # noqa: D417
     ax: Axes | None = None,
     return_fig: bool | None = None,
     **kwargs,
-) -> Figure | Axes | None:  # pragma: no cover
+) -> Figure | Axes | list[Axes] | None:  # pragma: no cover
     """Scatter plot for user specified embedding basis (e.g. umap, pca, etc).
 
     Args:
@@ -1366,13 +1410,14 @@ def embedding(  # noqa: D417
         {show_save_ax}
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.pp.knn_impute(adata)
-        >>> ep.pp.log_norm(adata, offset=1)
-        >>> ep.pp.neighbors(adata)
-        >>> ep.tl.umap(adata)
-        >>> ep.pl.embedding(adata, "X_umap", color="icu_exp_flg")
+        >>> edata = ed.dt.mimic_2()
+        >>> ep.pp.knn_impute(edata)
+        >>> ep.pp.log_norm(edata, offset=1)
+        >>> ep.pp.neighbors(edata)
+        >>> ep.tl.umap(edata)
+        >>> ep.pl.embedding(edata, "X_umap", color="icu_exp_flg")
 
     Preview:
         .. image:: /_static/docstring_previews/embedding.png
@@ -1423,12 +1468,13 @@ def embedding(  # noqa: D417
         **kwargs,
     )
 
-    return embedding_partial(adata=adata, color=color)
+    return embedding_partial(adata=edata, color=color)
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 @_doc_params(vminmax=doc_vbound_percentile, panels=doc_panels, show_save_ax=doc_show_save_ax)
 def embedding_density(  # noqa: D417
-    adata: AnnData,
+    edata: EHRData | AnnData,
     basis: str = "umap",  # was positional before 1.4.5
     key: str | None = None,  # was positional before 1.4.5
     groupby: str | None = None,
@@ -1455,9 +1501,9 @@ def embedding_density(  # noqa: D417
     Plots the gaussian kernel density estimates (over condition) from the `sc.tl.embedding_density()` output.
 
     Args:
-        adata: :class:`~anndata.AnnData` object object containing all observations.
+        edata: Central data object.
         basis: The embedding over which the density was calculated.
-               This embedded representation should be found in `adata.obsm['X_[basis]']``.
+               This embedded representation should be found in `edata.obsm['X_[basis]']``.
         key: Name of the `.obs` covariate that contains the density estimates. Alternatively, pass `groupby`.
         groupby: Name of the condition used in `tl.embedding_density`. Alternatively, pass `key`.
         group: The category in the categorical observation annotation to be plotted.
@@ -1478,7 +1524,7 @@ def embedding_density(  # noqa: D417
         vmax: The value representing the upper limit of the color scale. The format is the same as for `vmin`.
         vcenter: The value representing the center of the color scale. Useful for diverging colormaps.
                  The format is the same as for `vmin`.
-                 Example: sc.pl.umap(adata, color='TREM2', vcenter='p50', cmap='RdBu_r')
+                 Example: sc.pl.umap(edata, color='TREM2', vcenter='p50', cmap='RdBu_r')
         ncols: Number of panels per row.
         wspace: Adjust the width of the space between multiple panels.
         hspace: Adjust the height of the space between multiple panels.
@@ -1486,21 +1532,22 @@ def embedding_density(  # noqa: D417
         {show_save_ax}
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.pp.knn_impute(adata)
-        >>> ep.pp.log_norm(adata, offset=1)
-        >>> ep.pp.neighbors(adata)
-        >>> ep.tl.umap(adata)
-        >>> ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
-        >>> ep.tl.embedding_density(adata, groupby="leiden_0_5", key_added="icu_exp_flg")
-        >>> ep.pl.embedding_density(adata, key="icu_exp_flg")
+        >>> edata = ed.dt.mimic_2()
+        >>> ep.pp.knn_impute(edata)
+        >>> ep.pp.log_norm(edata, offset=1)
+        >>> ep.pp.neighbors(edata)
+        >>> ep.tl.umap(edata)
+        >>> ep.tl.leiden(edata, resolution=0.5, key_added="leiden_0_5")
+        >>> ep.tl.embedding_density(edata, groupby="leiden_0_5", key_added="icu_exp_flg")
+        >>> ep.pl.embedding_density(edata, key="icu_exp_flg")
 
     Preview:
         .. image:: /_static/docstring_previews/embedding_density.png
     """
     return sc.pl.embedding_density(
-        adata=adata,
+        edata,
         basis=basis,
         key=key,
         groupby=groupby,
@@ -1524,8 +1571,9 @@ def embedding_density(  # noqa: D417
     )
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 def dpt_groups_pseudotime(
-    adata: AnnData,
+    edata: EHRData | AnnData,
     color_map: str | Colormap | None = None,
     palette: Sequence[str] | Cycler | None = None,
     show: bool | None = None,
@@ -1534,34 +1582,36 @@ def dpt_groups_pseudotime(
     """Plot groups and pseudotime.
 
     Args:
-        adata: :class:`~anndata.AnnData` object object containing all observations.
+        edata: Central data object.
         color_map: Matplotlib Colormap
         palette: Matplotlib color Palette
         show: Whether to show the plot.
         save: Whether to save the plot or a path to save the plot.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> import numpy as np
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.pp.knn_impute(adata)
-        >>> ep.pp.log_norm(adata, offset=1)
-        >>> ep.pp.neighbors(adata, method="gauss")
-        >>> ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
-        >>> ep.tl.diffmap(adata, n_comps=10)
-        >>> adata.uns["iroot"] = np.flatnonzero(adata.obs["leiden_0_5"] == "0")[0]
-        >>> ep.tl.dpt(adata, n_branchings=3)
-        >>> ep.pl.dpt_groups_pseudotime(adata)
+        >>> edata = ed.dt.mimic_2()
+        >>> ep.pp.knn_impute(edata)
+        >>> ep.pp.log_norm(edata, offset=1)
+        >>> ep.pp.neighbors(edata, method="gauss")
+        >>> ep.tl.leiden(edata, resolution=0.5, key_added="leiden_0_5")
+        >>> ep.tl.diffmap(edata, n_comps=10)
+        >>> edata.uns["iroot"] = np.flatnonzero(edata.obs["leiden_0_5"] == "0")[0]
+        >>> ep.tl.dpt(edata, n_branchings=3)
+        >>> ep.pl.dpt_groups_pseudotime(edata)
 
     Preview:
         .. image:: /_static/docstring_previews/dpt_groups_pseudotime.png
     """
-    sc.pl.dpt_groups_pseudotime(adata=adata, color_map=color_map, palette=palette, show=show, save=save)
+    sc.pl.dpt_groups_pseudotime(adata=edata, color_map=color_map, palette=palette, show=show, save=save)
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 def dpt_timeseries(
-    adata: AnnData,
-    color_map: str | Colormap = None,
+    edata: EHRData | AnnData,
+    color_map: str | Colormap | None = None,
     as_heatmap: bool = True,
     show: bool | None = None,
     save: bool | None = None,
@@ -1569,33 +1619,35 @@ def dpt_timeseries(
     """Heatmap of pseudotime series.
 
     Args:
-        adata: :class:`~anndata.AnnData` object object containing all observations.
+        edata: Central data object.
         color_map: Matplotlib Colormap
         as_heatmap: Whether to render the plot a heatmap
         show: Whether to show the plot.
         save: Whether to save the plot or a path to save the plot.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> import numpy as np
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.pp.knn_impute(adata)
-        >>> ep.pp.log_norm(adata, offset=1)
-        >>> ep.pp.neighbors(adata, method="gauss")
-        >>> ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
-        >>> ep.tl.diffmap(adata, n_comps=10)
-        >>> adata.uns["iroot"] = np.flatnonzero(adata.obs["leiden_0_5"] == "0")[0]
-        >>> ep.tl.dpt(adata, n_branchings=3)
-        >>> ep.pl.dpt_timeseries(adata)
+        >>> edata = ed.dt.mimic_2()
+        >>> ep.pp.knn_impute(edata)
+        >>> ep.pp.log_norm(edata, offset=1)
+        >>> ep.pp.neighbors(edata, method="gauss")
+        >>> ep.tl.leiden(edata, resolution=0.5, key_added="leiden_0_5")
+        >>> ep.tl.diffmap(edata, n_comps=10)
+        >>> edata.uns["iroot"] = np.flatnonzero(edata.obs["leiden_0_5"] == "0")[0]
+        >>> ep.tl.dpt(edata, n_branchings=3)
+        >>> ep.pl.dpt_timeseries(edata)
 
     Preview:
         .. image:: /_static/docstring_previews/dpt_timeseries.png
     """
-    sc.pl.dpt_timeseries(adata=adata, color_map=color_map, show=show, save=save, as_heatmap=as_heatmap)
+    sc.pl.dpt_timeseries(adata=edata, color_map=color_map, show=show, save=save, as_heatmap=as_heatmap)
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 def paga(
-    adata: AnnData,
+    edata: EHRData | AnnData,
     threshold: float | None = None,
     color: str | Mapping[str | int, Mapping[Any, float]] | None = None,
     layout: _IGraphLayout | None = None,
@@ -1622,7 +1674,7 @@ def paga(
     random_state: int | None = 0,
     pos: np.ndarray | str | Path | None = None,
     normalize_to_color: bool = False,
-    cmap: str | Colormap = None,
+    cmap: str | Colormap | None = None,
     cax: Axes | None = None,
     cb_kwds: Mapping[str, Any] = MappingProxyType({}),
     frameon: bool | None = None,
@@ -1643,7 +1695,7 @@ def paga(
     This uses ForceAtlas2 or igraph's layout algorithms for most layouts :cite:p:`Csardi2006`.
 
     Args:
-        adata: :class:`~anndata.AnnData` object object containing all observations.
+        edata: Central data object.
         threshold: Do not draw edges for weights below this threshold. Set to 0 if you want
                    all edges. Discarding low-connectivity edges helps in getting a much clearer picture of the graph.
         color: Feature name or `obs` annotation defining the node colors.
@@ -1692,24 +1744,25 @@ def paga(
         cax: A matplotlib axes object for a potential colorbar.
         cb_kwds: Keyword arguments for :class:`~matplotlib.colorbar.ColorbarBase`, for instance, `ticks`.
         frameon: Draw a frame around the PAGA graph.
-        add_pos: Add the positions to `adata.uns['paga']`.
+        add_pos: Add the positions to `edata.uns['paga']`.
         export_to_gexf: Export to gexf format to be read by graph visualization programs such as Gephi.
-        use_raw: Whether to use `raw` attribute of `adata`. Defaults to `True` if `.raw` is present.
+        use_raw: Whether to use `raw` attribute of `edata`. Defaults to `True` if `.raw` is present.
         plot: If `False`, do not create the figure, simply compute the layout.
         ax: Matplotlib Axis object.
         show: Whether to show the plot.
         save: Whether or where to save the plot.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.pp.knn_impute(adata)
-        >>> ep.pp.log_norm(adata, offset=1)
-        >>> ep.pp.neighbors(adata)
-        >>> ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
-        >>> ep.tl.paga(adata, groups="leiden_0_5")
+        >>> edata = ed.dt.mimic_2()
+        >>> ep.pp.knn_impute(edata)
+        >>> ep.pp.log_norm(edata, offset=1)
+        >>> ep.pp.neighbors(edata)
+        >>> ep.tl.leiden(edata, resolution=0.5, key_added="leiden_0_5")
+        >>> ep.tl.paga(edata, groups="leiden_0_5")
         >>> ep.pl.paga(
-        ...     adata,
+        ...     edata,
         ...     color=["leiden_0_5", "day_28_flg"],
         ...     cmap=ep.pl.Colormaps.grey_red.value,
         ...     title=["Leiden 0.5", "Died in less than 28 days"],
@@ -1719,7 +1772,7 @@ def paga(
         .. image:: /_static/docstring_previews/paga.png
     """
     return sc.pl.paga(
-        adata=adata,
+        adata=edata,
         threshold=threshold,
         color=color,
         layout=layout,
@@ -1760,8 +1813,9 @@ def paga(
     )
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 def paga_path(
-    adata: AnnData,
+    edata: EHRData | AnnData,
     nodes: Sequence[str | int],
     keys: Sequence[str],
     use_raw: bool = True,
@@ -1787,21 +1841,21 @@ def paga_path(
     show: bool | None = None,
     save: bool | str | None = None,
     ax: Axes | None = None,
-) -> Axes | None:  # pragma: no cover
+) -> tuple[Axes, pd.DataFrame] | Axes | pd.DataFrame | None:  # pragma: no cover
     """Feature changes along paths in the abstracted graph.
 
     Args:
-        adata: :class:`~anndata.AnnData` object object containing all observations.
+        edata: Central data object.
         nodes: A path through nodes of the abstracted graph, that is, names or indices
                (within `.categories`) of groups that have been used to run PAGA.
-        keys: Either variables in `adata.var_names` or annotations in `adata.obs`. They are plotted using `color_map`.
-        use_raw: Use `adata.raw` for retrieving feature values if it has been set.
-        annotations: Plot these keys with `color_maps_annotations`. Need to be keys for `adata.obs`.
+        keys: Either variables in `edata.var_names` or annotations in `edata.obs`. They are plotted using `color_map`.
+        use_raw: Use `edata.raw` for retrieving feature values if it has been set.
+        annotations: Plot these keys with `color_maps_annotations`. Need to be keys for `edata.obs`.
         color_map: Matplotlib colormap.
         color_maps_annotations: Color maps for plotting the annotations. Keys of the dictionary must appear in `annotations`.
         palette_groups: Usually, use the same `sc.pl.palettes...` as used for coloring the abstracted graph.
         n_avg: Number of data points to include in computation of running average.
-        groups_key: Key of the grouping used to run PAGA. If `None`, defaults to `adata.uns['paga']['groups']`.
+        groups_key: Key of the grouping used to run PAGA. If `None`, defaults to `edata.uns['paga']['groups']`.
         xlim: Matplotlib x limit.
         title: Plot title.
         left_margin: Margin to the left of the plot.
@@ -1820,7 +1874,7 @@ def paga_path(
         save: Whether or where to save the plot.
     """
     return sc.pl.paga_path(
-        adata=adata,
+        adata=edata,
         nodes=nodes,
         keys=keys,
         use_raw=use_raw,
@@ -1849,8 +1903,9 @@ def paga_path(
     )
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 def paga_compare(
-    adata: AnnData,
+    edata: EHRData | AnnData,
     basis=None,
     edges=False,
     color=None,
@@ -1876,19 +1931,19 @@ def paga_compare(
     *,
     pos=None,
     **paga_graph_params,
-) -> Axes | None:  # pragma: no cover
+) -> Sequence[Axes] | list[Axes] | None:  # pragma: no cover
     """Scatter and PAGA graph side-by-side.
 
     Consists in a scatter plot and the abstracted graph. See :func:`~ehrapy.plot.paga` for all related parameters.
 
     Args:
-        adata: :class:`~anndata.AnnData` object object containing all observations.
+        edata: Central data object.
         basis: String that denotes a plotting tool that computed coordinates.
         edges: Whether to display edges.
         color: Keys for annotations of observations/patients or features, or a hex color specification, e.g.,
                `'ann1'`, `'#fe57a1'`, or `['ann1', 'ann2']`.
         alpha: Alpha value for the image
-        groups: Key of the grouping used to run PAGA. If `None`, defaults to `adata.uns['paga']['groups']`.
+        groups: Key of the grouping used to run PAGA. If `None`, defaults to `edata.uns['paga']['groups']`.
         components: For example, ``'1,2,3'`` means ``[1, 2, 3]``, first, second, third principal component.
         projection: One of '2d' or '3d'
         legend_loc: Location of the legend.
@@ -1913,7 +1968,7 @@ def paga_compare(
         Matplotlib axes.
     """
     return sc.pl.paga_compare(
-        adata=adata,
+        adata=edata,
         basis=basis,
         edges=edges,
         color=color,
@@ -1941,10 +1996,11 @@ def paga_compare(
     )
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 @_doc_params(show_save_ax=doc_show_save_ax)
 def rank_features_groups(  # noqa: D417
-    adata: AnnData,
-    groups: str | Sequence[str] = None,
+    edata: EHRData | AnnData,
+    groups: str | Sequence[str] | None = None,
     n_features: int = 20,
     feature_symbols: str | None = None,
     key: str | None = "rank_features_groups",
@@ -1959,7 +2015,7 @@ def rank_features_groups(  # noqa: D417
     """Plot ranking of features.
 
     Args:
-        adata: Annotated data matrix.
+        edata: Central data object.
         groups: The groups for which to show the feature ranking.
         n_features: The number of features to plot.
         feature_symbols: Key for field in `.var` that stores feature symbols if you do not want to use `.var_names`.
@@ -1971,20 +2027,21 @@ def rank_features_groups(  # noqa: D417
         {show_save_ax}
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.pp.knn_impute(adata)
-        >>> ep.pp.log_norm(adata, offset=1)
-        >>> ep.pp.neighbors(adata)
-        >>> ep.tl.leiden(adata, resolution=0.15, key_added="leiden_0_5")
-        >>> ep.tl.rank_features_groups(adata, groupby="leiden_0_5")
-        >>> ep.pl.rank_features_groups(adata, key="rank_features_groups")
+        >>> edata = ed.dt.mimic_2()
+        >>> ep.pp.knn_impute(edata)
+        >>> ep.pp.log_norm(edata, offset=1)
+        >>> ep.pp.neighbors(edata)
+        >>> ep.tl.leiden(edata, resolution=0.15, key_added="leiden_0_5")
+        >>> ep.tl.rank_features_groups(edata, groupby="leiden_0_5")
+        >>> ep.pl.rank_features_groups(edata, key="rank_features_groups")
 
     Preview:
         .. image:: /_static/docstring_previews/rank_features_groups.png
     """
     return sc.pl.rank_genes_groups(
-        adata=adata,
+        adata=edata,
         groups=groups,
         n_genes=n_features,
         gene_symbols=feature_symbols,
@@ -1999,9 +2056,10 @@ def rank_features_groups(  # noqa: D417
     )
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 @_doc_params(show_save_ax=doc_show_save_ax)
 def rank_features_groups_violin(  # noqa: D417
-    adata: AnnData,
+    edata: EHRData | AnnData,
     groups: Sequence[str] | None = None,
     n_features: int = 20,
     feature_names: Iterable[str] | None = None,
@@ -2019,7 +2077,7 @@ def rank_features_groups_violin(  # noqa: D417
     """Plot ranking of features for all tested comparisons as violin plots.
 
     Args:
-        adata: Annotated data matrix.
+        edata: Central data object.
         groups: List of group names.
         n_features: Number of features to show. Is ignored if `feature_names` is passed.
         feature_names: List of features to plot. Is only useful if interested in a custom feature list,
@@ -2035,14 +2093,15 @@ def rank_features_groups_violin(  # noqa: D417
         {show_save_ax}
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.pp.knn_impute(adata)
-        >>> ep.pp.log_norm(adata, offset=1)
-        >>> ep.pp.neighbors(adata)
-        >>> ep.tl.leiden(adata, resolution=0.15, key_added="leiden_0_5")
-        >>> ep.tl.rank_features_groups(adata, groupby="leiden_0_5")
-        >>> ep.pl.rank_features_groups_violin(adata, key="rank_features_groups", n_features=5)
+        >>> edata = ed.dt.mimic_2()
+        >>> ep.pp.knn_impute(edata)
+        >>> ep.pp.log_norm(edata, offset=1)
+        >>> ep.pp.neighbors(edata)
+        >>> ep.tl.leiden(edata, resolution=0.15, key_added="leiden_0_5")
+        >>> ep.tl.rank_features_groups(edata, groupby="leiden_0_5")
+        >>> ep.pl.rank_features_groups_violin(edata, key="rank_features_groups", n_features=5)
 
     Preview:
         .. image:: /_static/docstring_previews/rank_features_groups_violin_1.png
@@ -2054,7 +2113,7 @@ def rank_features_groups_violin(  # noqa: D417
         .. image:: /_static/docstring_previews/rank_features_groups_violin_4.png
     """
     return sc.pl.rank_genes_groups_violin(
-        adata=adata,
+        adata=edata,
         groups=groups,
         n_genes=n_features,
         gene_names=feature_names,
@@ -2072,10 +2131,11 @@ def rank_features_groups_violin(  # noqa: D417
     )
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 @_doc_params(show_save_ax=doc_show_save_ax)
 def rank_features_groups_stacked_violin(
-    adata: AnnData,
-    groups: str | Sequence[str] = None,
+    edata: EHRData | AnnData,
+    groups: str | Sequence[str] | None = None,
     n_features: int | None = None,
     groupby: str | None = None,
     feature_symbols: str | None = None,
@@ -2085,13 +2145,13 @@ def rank_features_groups_stacked_violin(
     key: str | None = None,
     show: bool | None = None,
     save: bool | None = None,
-    return_fig: bool | None = False,
+    return_fig: bool = False,
     **kwds,
 ):  # pragma: no cover
     """Plot ranking of genes using stacked_violin plot.
 
     Args:
-        adata: Annotated data matrix.
+        edata: Central data object.
         groups: List of group names.
         n_features: Number of features to show. Is ignored if `feature_names` is passed.
         groupby: Which key to group the features by.
@@ -2111,20 +2171,21 @@ def rank_features_groups_stacked_violin(
         else if `show` is false, return axes dict
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.pp.knn_impute(adata)
-        >>> ep.pp.log_norm(adata, offset=1)
-        >>> ep.pp.neighbors(adata)
-        >>> ep.tl.leiden(adata, resolution=0.15, key_added="leiden_0_5")
-        >>> ep.tl.rank_features_groups(adata, groupby="leiden_0_5")
-        >>> ep.pl.rank_features_groups_stacked_violin(adata, key="rank_features_groups", n_features=5)
+        >>> edata = ed.dt.mimic_2()
+        >>> ep.pp.knn_impute(edata)
+        >>> ep.pp.log_norm(edata, offset=1)
+        >>> ep.pp.neighbors(edata)
+        >>> ep.tl.leiden(edata, resolution=0.15, key_added="leiden_0_5")
+        >>> ep.tl.rank_features_groups(edata, groupby="leiden_0_5")
+        >>> ep.pl.rank_features_groups_stacked_violin(edata, key="rank_features_groups", n_features=5)
 
     Preview:
         .. image:: /_static/docstring_previews/rank_features_groups_stacked_violin.png
     """
     return sc.pl.rank_genes_groups_stacked_violin(
-        adata=adata,
+        adata=edata,
         groups=groups,
         n_genes=n_features,
         groupby=groupby,
@@ -2139,15 +2200,16 @@ def rank_features_groups_stacked_violin(
     )
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 def rank_features_groups_heatmap(
-    adata: AnnData,
-    groups: str | Sequence[str] = None,
+    edata: EHRData | AnnData,
+    groups: str | Sequence[str] | None = None,
     n_features: int | None = None,
     groupby: str | None = None,
     feature_symbols: str | None = None,
     var_names: Sequence[str] | Mapping[str, Sequence[str]] | None = None,
     min_logfoldchange: float | None = None,
-    key: str = None,
+    key: str | None = None,
     show: bool | None = None,
     save: bool | None = None,
     **kwds,
@@ -2155,7 +2217,7 @@ def rank_features_groups_heatmap(
     """Plot ranking of genes using heatmap plot (see :func:`~ehrapy.plot.heatmap`).
 
     Args:
-        adata: Annotated data matrix.
+        edata: Central data object.
         groups: List of group names.
         n_features: Number of features to show. Is ignored if `feature_names` is passed.
         groupby: Which key to group the features by.
@@ -2169,20 +2231,21 @@ def rank_features_groups_heatmap(
         **kwds: Passed to :func:`~ehrapy.plot.heatmap`.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.pp.knn_impute(adata)
-        >>> ep.pp.log_norm(adata, offset=1)
-        >>> ep.pp.neighbors(adata)
-        >>> ep.tl.leiden(adata, resolution=0.15, key_added="leiden_0_5")
-        >>> ep.tl.rank_features_groups(adata, groupby="leiden_0_5")
-        >>> ep.pl.rank_features_groups_heatmap(adata, key="rank_features_groups")
+        >>> edata = ed.dt.mimic_2()
+        >>> ep.pp.knn_impute(edata)
+        >>> ep.pp.log_norm(edata, offset=1)
+        >>> ep.pp.neighbors(edata)
+        >>> ep.tl.leiden(edata, resolution=0.15, key_added="leiden_0_5")
+        >>> ep.tl.rank_features_groups(edata, groupby="leiden_0_5")
+        >>> ep.pl.rank_features_groups_heatmap(edata, key="rank_features_groups")
 
     Preview:
         .. image:: /_static/docstring_previews/rank_features_groups_heatmap.png
     """
     return sc.pl.rank_genes_groups_heatmap(
-        adata=adata,
+        adata=edata,
         groups=groups,
         n_genes=n_features,
         groupby=groupby,
@@ -2196,9 +2259,10 @@ def rank_features_groups_heatmap(
     )
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 def rank_features_groups_dotplot(
-    adata: AnnData,
-    groups: str | Sequence[str] = None,
+    edata: EHRData | AnnData,
+    groups: str | Sequence[str] | None = None,
     n_features: int | None = None,
     groupby: str | None = None,
     values_to_plot: None
@@ -2218,13 +2282,13 @@ def rank_features_groups_dotplot(
     key: str | None = None,
     show: bool | None = None,
     save: bool | None = None,
-    return_fig: bool | None = False,
+    return_fig: bool = False,
     **kwds,
 ):  # pragma: no cover
     """Plot ranking of genes using dotplot plot (see :func:`~ehrapy.plot.dotplot`).
 
     Args:
-        adata: Annotated data matrix.
+        edata: Central data object.
         groups: List of group names.
         n_features: Number of features to show. Is ignored if `feature_names` is passed.
         groupby: Which key to group the features by.
@@ -2246,19 +2310,20 @@ def rank_features_groups_dotplot(
         else if `show` is false, return axes dict
 
     Example:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.pp.knn_impute(adata)
-        >>> ep.pp.neighbors(adata)
-        >>> ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
-        >>> ep.tl.rank_features_groups(adata, groupby="leiden_0_5")
-        >>> ep.pl.rank_features_groups_dotplot(adata, key="rank_features_groups", groupby="leiden_0_5")
+        >>> edata = ed.dt.mimic_2()
+        >>> ep.pp.knn_impute(edata)
+        >>> ep.pp.neighbors(edata)
+        >>> ep.tl.leiden(edata, resolution=0.5, key_added="leiden_0_5")
+        >>> ep.tl.rank_features_groups(edata, groupby="leiden_0_5")
+        >>> ep.pl.rank_features_groups_dotplot(edata, key="rank_features_groups", groupby="leiden_0_5")
 
     Preview:
         .. image:: /_static/docstring_previews/rank_features_groups_dotplot.png
     """
     return sc.pl.rank_genes_groups_dotplot(
-        adata=adata,
+        adata=edata,
         groups=groups,
         n_genes=n_features,
         groupby=groupby,
@@ -2275,9 +2340,10 @@ def rank_features_groups_dotplot(
     )
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 def rank_features_groups_matrixplot(
-    adata: AnnData,
-    groups: str | Sequence[str] = None,
+    edata: EHRData | AnnData,
+    groups: str | Sequence[str] | None = None,
     n_features: int | None = None,
     groupby: str | None = None,
     values_to_plot: None
@@ -2297,13 +2363,13 @@ def rank_features_groups_matrixplot(
     key: str | None = "rank_features_groups",
     show: bool | None = None,
     save: bool | None = None,
-    return_fig: bool | None = False,
+    return_fig: bool = False,
     **kwds,
 ):  # pragma: no cover
     """Plot ranking of genes using matrixplot plot (see :func:`~ehrapy.plot.matrixplot`).
 
     Args:
-        adata: Annotated data matrix.
+        edata: Central data object.
         groups: List of group names.
         n_features: Number of features to show. Is ignored if `feature_names` is passed.
         groupby: Which key to group the features by.
@@ -2325,20 +2391,21 @@ def rank_features_groups_matrixplot(
         else if `show` is false, return axes dict
 
     Example:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.pp.knn_impute(adata)
-        >>> ep.pp.neighbors(adata)
-        >>> ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
-        >>> ep.tl.rank_features_groups(adata, groupby="leiden_0_5")
-        >>> ep.pl.rank_features_groups_matrixplot(adata, key="rank_features_groups", groupby="leiden_0_5")
+        >>> edata = ed.dt.mimic_2()
+        >>> ep.pp.knn_impute(edata)
+        >>> ep.pp.neighbors(edata)
+        >>> ep.tl.leiden(edata, resolution=0.5, key_added="leiden_0_5")
+        >>> ep.tl.rank_features_groups(edata, groupby="leiden_0_5")
+        >>> ep.pl.rank_features_groups_matrixplot(edata, key="rank_features_groups", groupby="leiden_0_5")
 
     Preview:
         .. image:: /_static/docstring_previews/rank_features_groups_matrixplot.png
 
     """
     return sc.pl.rank_genes_groups_matrixplot(
-        adata=adata,
+        adata=edata,
         groups=groups,
         n_genes=n_features,
         groupby=groupby,
@@ -2354,9 +2421,10 @@ def rank_features_groups_matrixplot(
     )
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 def rank_features_groups_tracksplot(
-    adata: AnnData,
-    groups: str | Sequence[str] = None,
+    edata: EHRData | AnnData,
+    groups: str | Sequence[str] | None = None,
     n_features: int | None = None,
     groupby: str | None = None,
     var_names: Sequence[str] | Mapping[str, Sequence[str]] | None = None,
@@ -2370,7 +2438,7 @@ def rank_features_groups_tracksplot(
     """Plot ranking of genes using tracksplot plot (see :func:`~ehrapy.plot.tracksplot`).
 
     Args:
-        adata: Annotated data matrix.
+        edata: Central data object.
         groups: List of group names.
         n_features: Number of features to show. Is ignored if `feature_names` is passed.
         groupby: Which key to group the features by.
@@ -2384,20 +2452,21 @@ def rank_features_groups_tracksplot(
         **kwds: Passed to scanpy's tracksplot.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.pp.knn_impute(adata)
-        >>> ep.pp.log_norm(adata, offset=1)
-        >>> ep.pp.neighbors(adata)
-        >>> ep.tl.leiden(adata, resolution=0.15, key_added="leiden_0_5")
-        >>> ep.tl.rank_features_groups(adata, groupby="leiden_0_5")
-        >>> ep.pl.rank_features_groups_tracksplot(adata, key="rank_features_groups")
+        >>> edata = ed.dt.mimic_2()
+        >>> ep.pp.knn_impute(edata)
+        >>> ep.pp.log_norm(edata, offset=1)
+        >>> ep.pp.neighbors(edata)
+        >>> ep.tl.leiden(edata, resolution=0.15, key_added="leiden_0_5")
+        >>> ep.tl.rank_features_groups(edata, groupby="leiden_0_5")
+        >>> ep.pl.rank_features_groups_tracksplot(edata, key="rank_features_groups")
 
     Preview:
         .. image:: /_static/docstring_previews/rank_features_groups_tracksplot.png
     """
     return sc.pl.rank_genes_groups_tracksplot(
-        adata=adata,
+        adata=edata,
         groups=groups,
         n_genes=n_features,
         groupby=groupby,

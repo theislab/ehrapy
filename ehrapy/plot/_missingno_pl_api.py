@@ -2,16 +2,20 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import ehrdata as ed
 import missingno as msno
 
-from ehrapy.anndata import anndata_ext as ae
+from ehrapy._compat import function_2D_only, use_ehrdata
 
 if TYPE_CHECKING:
     from anndata import AnnData
+    from ehrdata import EHRData
 
 
+@function_2D_only()
+@use_ehrdata(deprecated_after="1.0.0")
 def missing_values_matrix(
-    adata: AnnData,
+    edata: EHRData | AnnData,
     *,
     filter: str | None = None,
     max_cols: int = 0,
@@ -25,14 +29,15 @@ def missing_values_matrix(
     label_rotation: float = 45,
     sparkline: bool = True,
     categoricals: bool = False,
+    layer: str | None = None,
 ):  # pragma: no cover
-    """A matrix visualization of the nullity of the given AnnData object.
+    """A matrix visualization of the nullity of the given data object.
 
     Args:
-        adata: :class:`~anndata.AnnData` object containing all observations.
+        edata: Central data object.
         filter: The filter to apply to the matrix. Should be one of "top", "bottom", or None.
-        max_cols: The max number of columns from the AnnData object to include.
-        max_percentage: The max percentage fill of the columns from the AnnData object.
+        max_cols: The max number of columns from the data object to include.
+        max_percentage: The max percentage fill of the columns from the data object.
         sort: The row sort order to apply. Can be "ascending", "descending", or None.
         figsize: The size of the figure to display.
         width_ratios: The ratio of the width of the matrix to the width of the sparkline.
@@ -42,19 +47,21 @@ def missing_values_matrix(
         label_rotation: What angle to rotate the text labels to.
         sparkline: Whether or not to display the sparkline.
         categoricals: Whether to include "ehrapycat" columns to the plot.
+        layer: The layer to use.
 
     Returns:
         The plot axis.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.pl.missing_values_matrix(adata, filter="bottom", max_cols=15, max_percentage=0.999)
+        >>> edata = ed.dt.mimic_2()
+        >>> ep.pl.missing_values_matrix(edata, filter="bottom", max_cols=15, max_percentage=0.999)
 
     Preview:
         .. image:: /_static/docstring_previews/missingno_matrix.png
     """
-    df = ae.anndata_to_df(adata)
+    df = ed.io.to_pandas(edata, layer=layer)
 
     if not categoricals:
         non_categorical_columns = [col for col in df if not col.startswith("ehrapycat")]
@@ -89,8 +96,10 @@ def missing_values_matrix(
         )
 
 
+@function_2D_only()
+@use_ehrdata(deprecated_after="1.0.0")
 def missing_values_barplot(
-    adata: AnnData,
+    edata: EHRData | AnnData,
     *,
     log: bool = False,
     filter: str | None = None,
@@ -104,15 +113,16 @@ def missing_values_barplot(
     label_rotation: float = 45,
     orientation: str | None = None,
     categoricals: bool = False,
+    layer: str | None = None,
 ):  # pragma: no cover
-    """A bar chart visualization of the nullity of the given AnnData object.
+    """A bar chart visualization of the nullity of the given data object.
 
     Args:
-        adata: :class:`~anndata.AnnData` object containing all observations.
+        edata: Central data object.
         log: Whether to display a logarithmic plot.
         filter: The filter to apply to the barplot. Should be one of "top", "bottom", or None.
-        max_cols: The max number of columns from the AnnData object to include.
-        max_percentage: The max percentage fill of the columns from the AnnData object.
+        max_cols: The max number of columns from the data object to include.
+        max_percentage: The max percentage fill of the columns from the data object.
         sort: The row sort order to apply. Can be "ascending", "descending", or None.
         figsize: The size of the figure to display.
         color: The color of the filled columns.
@@ -121,19 +131,21 @@ def missing_values_barplot(
         label_rotation: What angle to rotate the text labels to.
         orientation: The way the bar plot is oriented.
         categoricals: Whether to include "ehrapycat" columns to the plot.
+        layer: The layer to use.
 
     Returns:
         The plot axis.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.pl.missing_values_barplot(adata, filter="bottom", max_cols=15, max_percentage=0.999)
+        >>> edata = ed.dt.mimic_2()
+        >>> ep.pl.missing_values_barplot(edata, filter="bottom", max_cols=15, max_percentage=0.999)
 
     Preview:
         .. image:: /_static/docstring_previews/missingno_barplot.png
     """
-    df = ae.anndata_to_df(adata)
+    df = ed.io.to_pandas(edata, layer=layer)
 
     if not categoricals:
         non_categorical_columns = [col for col in df if not col.startswith("ehrapycat")]
@@ -168,8 +180,10 @@ def missing_values_barplot(
         )
 
 
+@function_2D_only()
+@use_ehrdata(deprecated_after="1.0.0")
 def missing_values_heatmap(
-    adata: AnnData,
+    edata: EHRData | AnnData,
     *,
     filter: str | None = None,
     max_cols: int = 0,
@@ -184,16 +198,17 @@ def missing_values_heatmap(
     vmax: int = 1,
     cbar: bool = True,
     categoricals: bool = False,
+    layer: str | None = None,
 ):  # pragma: no cover
-    """Presents a `seaborn` heatmap visualization of nullity correlation in the given AnnData object.
+    """Presents a `seaborn` heatmap visualization of nullity correlation in the given data object.
 
     Note that this visualization has no special support for large datasets. For those, try the dendrogram instead.
 
     Args:
-        adata: :class:`~anndata.AnnData` object containing all observations.
+        edata: Central data object.
         filter: The filter to apply to the heatmap. Should be one of "top", "bottom", or None.
-        max_cols: The max number of columns from the AnnData object to include.
-        max_percentage: The max percentage fill of the columns from the AnnData object.
+        max_cols: The max number of columns from the data object to include.
+        max_percentage: The max percentage fill of the columns from the data object.
         sort: The row sort order to apply. Can be "ascending", "descending", or None.
         figsize: The size of the figure to display.
         fontsize: The figure's font size.
@@ -204,19 +219,21 @@ def missing_values_heatmap(
         vmax: The normalized colormap threshold.
         cbar: Whether to draw a colorbar.
         categoricals: Whether to include "ehrapycat" columns to the plot.
+        layer: The layer to use.
 
     Returns:
         The plot axis.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.pl.missing_values_heatmap(adata, filter="bottom", max_cols=15, max_percentage=0.999)
+        >>> edata = ed.dt.mimic_2()
+        >>> ep.pl.missing_values_heatmap(edata, filter="bottom", max_cols=15, max_percentage=0.999)
 
     Preview:
         .. image:: /_static/docstring_previews/missingno_heatmap.png
     """
-    df = ae.anndata_to_df(adata)
+    df = ed.io.to_pandas(edata, layer=layer)
 
     if not categoricals:
         non_categorical_columns = [col for col in df if not col.startswith("ehrapycat")]
@@ -253,8 +270,10 @@ def missing_values_heatmap(
         )
 
 
+@function_2D_only()
+@use_ehrdata(deprecated_after="1.0.0")
 def missing_values_dendrogram(
-    adata: AnnData,
+    edata: EHRData | AnnData,
     *,
     method: str = "average",
     filter: str | None = None,
@@ -265,6 +284,7 @@ def missing_values_dendrogram(
     fontsize: float = 16,
     label_rotation: float = 45,
     categoricals: bool = False,
+    layer: str | None = None,
 ):
     """Fits a `scipy` hierarchical clustering algorithm and visualizes the results as a `scipy` dendrogram.
 
@@ -272,29 +292,31 @@ def missing_values_dendrogram(
     left unspecified the dendrogram will automatically swap to a horizontal display to fit the additional variables.
 
     Args:
-        adata: :class:`~anndata.AnnData` object containing all observations.
+        edata: Central data object.
         method: The distance measure being used for clustering. This parameter is passed to `scipy.hierarchy`.
         filter: The filter to apply to the dendrogram. Should be one of "top", "bottom", or None.
-        max_cols: The max number of columns from the AnnData object to include.
-        max_percentage: The max percentage fill of the columns from the AnnData object.
+        max_cols: The max number of columns from the data object to include.
+        max_percentage: The max percentage fill of the columns from the data object.
         figsize: The size of the figure to display.
         fontsize: The figure's font size.
         orientation: The way the dendrogram is oriented.
         label_rotation: What angle to rotate the text labels to. .
         categoricals: Whether to include "ehrapycat" columns to the plot.
+        layer: The layer to use.
 
     Returns:
         The plot axis.
 
     Example:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.pl.missing_values_dendrogram(adata, filter="bottom", max_cols=15, max_percentage=0.999)
+        >>> edata = ed.dt.mimic_2()
+        >>> ep.pl.missing_values_dendrogram(edata, filter="bottom", max_cols=15, max_percentage=0.999)
 
     Preview:
         .. image:: /_static/docstring_previews/missingno_dendrogram.png
     """
-    df = ae.anndata_to_df(adata)
+    df = ed.io.to_pandas(edata, layer=layer)
 
     if not categoricals:
         non_categorical_columns = [col for col in df if not col.startswith("ehrapycat")]

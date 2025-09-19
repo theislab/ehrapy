@@ -2,24 +2,34 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import pandas as pd
 import seaborn as sns
 
+from ehrapy._compat import use_ehrdata
+
 if TYPE_CHECKING:
-    from scanpy import AnnData
+    from anndata import AnnData
+    from ehrdata import EHRData
     from seaborn.axisgrid import FacetGrid
 
 
-def catplot(adata: AnnData, x: str = None, y: str = None, hue: str = None, kind: str = "strip", **kwargs) -> FacetGrid:
+@use_ehrdata(deprecated_after="1.0.0")
+def catplot(
+    edata: EHRData | AnnData,
+    x: str = None,
+    y: str = None,
+    hue: str = None,
+    kind: str = "strip",
+    **kwargs,
+) -> FacetGrid:
     """Plot categorical data.
 
     Wrapper around `seaborn.catplot <https://seaborn.pydata.org/generated/seaborn.catplot.html>`_. Typically used to show
     the behaviour of one numerical variable with respect to one or several categorical variables.
 
-    Considers adata.obs only.
+    Considers edata.obs only.
 
     Args:
-        adata: AnnData object.
+        edata: Central data object.
         x: Variable to plot on the x-axis.
         y: Variable to plot on the y-axis.
         hue: Variable to plot as different colors.
@@ -30,12 +40,13 @@ def catplot(adata: AnnData, x: str = None, y: str = None, hue: str = None, kind:
         A Seaborn FacetGrid object for further modifications.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> adata = ep.dt.diabetes_130_fairlearn()
-        >>> ep.ad.move_to_obs(adata, ["A1Cresult", "admission_source_id"], copy_obs=True)
-        >>> adata.obs["A1Cresult_measured"] = ~adata.obs["A1Cresult"].isna()
+        >>> edata = ed.dt.diabetes_130_fairlearn()
+        >>> ep.ad.move_to_obs(edata, ["A1Cresult", "admission_source_id"], copy_obs=True)
+        >>> edata.obs["A1Cresult_measured"] = ~edata.obs["A1Cresult"].isna()
         >>> ep.pl.catplot(
-        ...     adata=adata,
+        ...     edata=edata,
         ...     y="A1Cresult_measured",
         ...     x="admission_source_id",
         ...     kind="point",
@@ -45,4 +56,4 @@ def catplot(adata: AnnData, x: str = None, y: str = None, hue: str = None, kind:
 
         .. image:: /_static/docstring_previews/catplot.png
     """
-    return sns.catplot(data=adata.obs, x=x, y=y, hue=hue, kind=kind, **kwargs)
+    return sns.catplot(data=edata.obs, x=x, y=y, hue=hue, kind=kind, **kwargs)

@@ -1,16 +1,19 @@
 from __future__ import annotations
 
+from collections import OrderedDict
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import ehrdata as ed
 import numpy as np
 import pandas as pd
 import pytest
 from anndata import AnnData
+from ehrdata.core.constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
+from ehrdata.io import read_csv
 from matplotlib.testing.compare import compare_images
 
 import ehrapy as ep
-from ehrapy.io import read_csv
 
 if TYPE_CHECKING:
     import os
@@ -49,8 +52,26 @@ def var_data():
 
 
 @pytest.fixture
-def missing_values_adata(obs_data, var_data):
-    return AnnData(
+def edata_feature_type_specifications():
+    df = pd.DataFrame(
+        {
+            "feature1": [1, 2, 2, 0],
+            "feature2": ["a", "b", "c", "d"],
+            "feature3": [1.0, 2.0, 3.0, 2.0],
+            "feature4": [0.0, 0.3, 0.5, 4.6],
+            "feature5": ["a", "b", np.nan, "d"],
+            "feature6": [1.4, 0.2, np.nan, np.nan],
+            "feature7": pd.to_datetime(["2021-01-01", "2024-04-16", "2021-01-03", "2067-07-02"]),
+        }
+    )
+    edata = ed.io.from_pandas(df)
+
+    return edata
+
+
+@pytest.fixture
+def missing_values_edata(obs_data, var_data):
+    return ed.EHRData(
         X=np.array([[0.21, np.nan, 41.42], [np.nan, np.nan, 7.234]], dtype=np.float32),
         obs=pd.DataFrame(data=obs_data),
         var=pd.DataFrame(data=var_data, index=["Acetaminophen", "hospital", "crazy"]),
@@ -58,9 +79,9 @@ def missing_values_adata(obs_data, var_data):
 
 
 @pytest.fixture
-def lab_measurements_simple_adata(obs_data, var_data):
+def lab_measurements_simple_edata(obs_data, var_data):
     X = np.array([[73, 0.02, 1.00], [148, 0.25, 3.55]], dtype=np.float32)
-    return AnnData(
+    return ed.EHRData(
         X=X,
         obs=pd.DataFrame(data=obs_data),
         var=pd.DataFrame(data=var_data, index=["Acetaminophen", "Acetoacetic acid", "Beryllium, toxic"]),
@@ -68,9 +89,9 @@ def lab_measurements_simple_adata(obs_data, var_data):
 
 
 @pytest.fixture
-def lab_measurements_layer_adata(obs_data, var_data):
+def lab_measurements_layer_edata(obs_data, var_data):
     X = np.array([[73, 0.02, 1.00], [148, 0.25, 3.55]], dtype=np.float32)
-    return AnnData(
+    return ed.EHRData(
         X=X,
         obs=pd.DataFrame(data=obs_data),
         var=pd.DataFrame(data=var_data, index=["Acetaminophen", "Acetoacetic acid", "Beryllium, toxic"]),
@@ -80,52 +101,83 @@ def lab_measurements_layer_adata(obs_data, var_data):
 
 @pytest.fixture
 def mimic_2():
-    adata = ep.dt.mimic_2()
-    return adata
+    edata = ed.dt.mimic_2()
+    ed.infer_feature_types(edata)
+    edata.layers["layer_2"] = edata.X.copy()
+    return edata
 
 
 @pytest.fixture
 def mimic_2_encoded():
-    adata = ep.dt.mimic_2(encoded=True)
-    return adata
+    edata = ed.dt.mimic_2()
+    ed.infer_feature_types(edata)
+    edata = ep.pp.encode(edata, autodetect=True)
+
+    return edata
 
 
 @pytest.fixture
 def mimic_2_10():
-    mimic_2_10 = ep.dt.mimic_2()[:10]
-
+    mimic_2_10 = ed.dt.mimic_2()[:10].copy()
+    ed.infer_feature_types(mimic_2_10)
     return mimic_2_10
 
 
 @pytest.fixture
-def mar_adata(rng) -> AnnData:
+def mar_edata(rng) -> ed.EHRData:
     """Generate MAR data using dependent columns."""
     data = rng.random((100, 10))
     # Assume missingness in the last column depends on the values of the first column
     missing_indicator = data[:, 0] < np.percentile(data[:, 0], 0.1 * 100)
     data[missing_indicator, -1] = np.nan  # Only last column has missing values dependent on the first column
 
-    return AnnData(data)
+    return ed.EHRData(data)
 
 
 @pytest.fixture
-def mcar_adata(rng) -> AnnData:
+def mcar_edata(rng) -> ed.EHRData:
     """Generate MCAR data by randomly sampling."""
     data = rng.random((100, 10))
     missing_indices = rng.choice(a=[False, True], size=data.shape, p=[1 - 0.1, 0.1])
     data[missing_indices] = np.nan
 
-    return AnnData(data)
+    return ed.EHRData(data)
 
 
 @pytest.fixture
-def adata_mini():
+def edata_mini():
     return read_csv(f"{TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["glucose", "weight", "disease", "station"])
 
 
 @pytest.fixture
+def edata_mini_sample():
+    return read_csv(f"{TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["clinic_day"])
+
+
+@pytest.fixture
+def edata_mini_normalization():
+    return read_csv(
+        f"{TEST_DATA_PATH}/dataset1.csv",
+        columns_obs_only=["glucose", "weight", "disease", "station"],
+    )[:8]
+
+
+@pytest.fixture
+def edata_mini_integers_in_X():
+    adata = read_csv(
+        f"{TEST_DATA_PATH}/dataset1.csv",
+        columns_obs_only=["idx", "sys_bp_entry", "dia_bp_entry", "glucose", "weight", "disease", "station"],
+    )
+    # cast data in X to integers; pd.read generates floats generously, but want to test integer normalization
+    adata.X = adata.X.astype(np.int32)
+    ep.ad.infer_feature_types(adata)
+    ep.ad.replace_feature_types(adata, ["in_days"], "numeric")
+    return adata
+
+
+@pytest.fixture
 def diabetes_130_fairlearn_sample():
-    adata = ep.dt.diabetes_130_fairlearn(
+    edata = ed.dt.diabetes_130_fairlearn(
         columns_obs_only=[
             "race",
             "gender",
@@ -135,58 +187,148 @@ def diabetes_130_fairlearn_sample():
             "discharge_disposition_id",
         ]
     )[:200]
-    return adata
+    ed.infer_feature_types(edata)
+    return edata
 
 
 @pytest.fixture
 def mimic_2_sample_serv_unit_day_icu():
-    adata = ep.dt.mimic_2(columns_obs_only=["service_unit", "day_icu_intime"])
-    return adata
+    edata = ed.dt.mimic_2(columns_obs_only=["service_unit", "day_icu_intime"])
+    ed.infer_feature_types(edata)
+    return edata
 
 
 @pytest.fixture
-def adata_move_obs_num() -> AnnData:
+def mimic_2_sa():
+    edata = ed.dt.mimic_2()
+    ed.infer_feature_types(edata)
+    edata[:, ["censor_flg"]].X = np.where(edata[:, ["censor_flg"]].X == 0, 1, 0)
+    edata = edata[:, ["mort_day_censored", "censor_flg"]].copy()
+    duration_col, event_col = "mort_day_censored", "censor_flg"
+
+    edata.layers["layer_2"] = edata.X.copy()
+
+    return edata, duration_col, event_col
+
+
+@pytest.fixture
+def edata_move_obs_num() -> ed.EHRData:
     return read_csv(TEST_DATA_PATH / "io/dataset_move_obs_num.csv")
 
 
 @pytest.fixture
-def adata_move_obs_mix() -> AnnData:
+def edata_move_obs_mix() -> ed.EHRData:
     return read_csv(TEST_DATA_PATH / "io/dataset_move_obs_mix.csv")
 
 
 @pytest.fixture
-def impute_num_adata() -> AnnData:
-    adata = read_csv(dataset_path=f"{TEST_DATA_PATH}/imputation/test_impute_num.csv")
-    return adata
+def impute_num_edata() -> ed.EHRData:
+    edata = read_csv(f"{TEST_DATA_PATH}/imputation/test_impute_num.csv")
+    return edata
 
 
 @pytest.fixture
-def impute_adata() -> AnnData:
-    adata = read_csv(dataset_path=f"{TEST_DATA_PATH}/imputation/test_impute.csv")
-    return adata
+def impute_edata() -> ed.EHRData:
+    edata = read_csv(f"{TEST_DATA_PATH}/imputation/test_impute.csv")
+    return edata
 
 
 @pytest.fixture
-def impute_iris_adata() -> AnnData:
-    adata = read_csv(dataset_path=f"{TEST_DATA_PATH}/imputation/test_impute_iris.csv")
-    return adata
+def impute_iris_edata() -> ed.EHRData:
+    edata = read_csv(f"{TEST_DATA_PATH}/imputation/test_impute_iris.csv")
+    return edata
 
 
 @pytest.fixture
-def impute_titanic_adata():
-    adata = read_csv(dataset_path=f"{TEST_DATA_PATH}/imputation/test_impute_titanic.csv")
-    return adata
+def impute_titanic_edata():
+    edata = read_csv(f"{TEST_DATA_PATH}/imputation/test_impute_titanic.csv")
+    return edata
 
 
 @pytest.fixture
-def encode_ds_1_adata() -> AnnData:
-    adata = read_csv(dataset_path=f"{TEST_DATA_PATH}/encode/dataset1.csv")
-    return adata
+def encode_ds_1_edata() -> ed.EHRData:
+    edata = read_csv(f"{TEST_DATA_PATH}/encode/dataset1.csv")
+    edata.layers["layer_2"] = edata.X.copy()
+    return edata
 
 
 @pytest.fixture
-def encode_ds_2_adata() -> AnnData:
-    adata = read_csv(dataset_path=f"{TEST_DATA_PATH}/encode/dataset2.csv")
+def encode_ds_2_edata() -> ed.EHRData:
+    edata = read_csv(f"{TEST_DATA_PATH}/encode/dataset2.csv")
+    edata.layers["layer_2"] = edata.X.copy()
+    return edata
+
+
+@pytest.fixture
+def edata_small_bias() -> ed.EHRData:
+    rng = np.random.default_rng(seed=42)
+    corr = rng.integers(0, 100, 100)
+    df = pd.DataFrame(
+        {
+            "corr1": corr,
+            "corr2": corr * 2,
+            "corr3": corr * -1,
+            "contin1": rng.integers(0, 20, 50).tolist() + rng.integers(20, 40, 50).tolist(),
+            "cat1": [0] * 50 + [1] * 50,
+            "cat2": [10] * 10 + [11] * 40 + [10] * 30 + [11] * 20,
+        }
+    )
+    edata = ed.io.from_pandas(df)
+    edata.var[FEATURE_TYPE_KEY] = [NUMERIC_TAG] * 4 + [CATEGORICAL_TAG] * 2
+    return edata
+
+
+@pytest.fixture
+def edata_blob_small() -> ed.EHRData:
+    edata = ed.dt.ehrdata_blobs(n_variables=10, n_centers=2, n_observations=50, base_timepoints=10)
+    edata.layers["layer_2"] = edata.X.copy()
+    edata.obs["cluster"] = edata.obs["cluster"].astype("category")
+    ep.pp.neighbors(edata)
+    return edata
+
+
+@pytest.fixture
+def adata_to_norm():
+    obs_data = {"ID": ["Patient1", "Patient2", "Patient3"], "Age": [31, 94, 62]}
+
+    X_data = np.array(
+        [
+            [1, 3.4, -2.0, 1.0, "A string", "A different string"],
+            [2, 5.4, 5.0, 2.0, "Silly string", "A different string"],
+            [2, 5.7, 3.0, np.nan, "A string", "What string?"],
+        ],
+        dtype=np.dtype(object),
+    )
+    # the "ignore" tag is used to make the column being ignored; the original test selecting a few
+    # columns induces a specific ordering which is kept for now
+    var_data = {
+        "Feature": [
+            "Integer1",
+            "Numeric1",
+            "Numeric2",
+            "Numeric3",
+            "String1",
+            "String2",
+        ],
+        "Type": ["Integer", "Numeric", "Numeric", "Numeric", "String", "String"],
+        FEATURE_TYPE_KEY: [
+            CATEGORICAL_TAG,
+            NUMERIC_TAG,
+            NUMERIC_TAG,
+            "ignore",
+            CATEGORICAL_TAG,
+            CATEGORICAL_TAG,
+        ],
+    }
+    adata = AnnData(
+        X=X_data,
+        obs=pd.DataFrame(data=obs_data),
+        var=pd.DataFrame(data=var_data, index=var_data["Feature"]),
+        uns=OrderedDict(),
+    )
+
+    adata = ep.pp.encode(adata, autodetect=True, encodings="label")
+
     return adata
 
 

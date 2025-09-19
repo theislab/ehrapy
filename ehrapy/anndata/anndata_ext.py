@@ -1,21 +1,25 @@
 from __future__ import annotations
 
 from collections import OrderedDict
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
 from anndata import AnnData, concat
+from ehrdata.core.constants import FEATURE_TYPE_KEY, NUMERIC_TAG
 from lamin_utils import logger
 from scipy.sparse import issparse
 
-from ehrapy.anndata import check_feature_types
-from ehrapy.anndata._constants import FEATURE_TYPE_KEY, NUMERIC_TAG
+from ehrapy._compat import _cast_adata_to_match_data_type, function_2D_only, function_future_warning, use_ehrdata
+from ehrapy.anndata import _check_feature_types
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
 
+    from ehrdata import EHRData
 
+
+@function_future_warning("ep.ad.df_to_anndata", "ehrdata.from_pandas")
 def df_to_anndata(
     df: pd.DataFrame, columns_obs_only: list[str] | None = None, index_column: str | None = None
 ) -> AnnData:
@@ -42,7 +46,7 @@ def df_to_anndata(
         ...         "sex": ["M", "F", "F", "M", "F"],
         ...     }
         ... )
-        >>> adata = ep.ad.df_to_anndata(df, index_column="patient_id")
+        >>> edata = ep.ad.df_to_anndata(df, index_column="patient_id")
     """
     # Check and handle the overlap of index_column in columns_obs_only
     if index_column is not None:
@@ -85,23 +89,26 @@ def df_to_anndata(
     all_numeric = df.select_dtypes(include=[np.number]).shape[1] == df.shape[1]
     X = X.astype(np.float32 if all_numeric else object)
 
-    adata = AnnData(X=X, obs=obs, var=var, uns=uns, layers={"original": X.copy()})
-    adata.obs_names = adata.obs_names.astype(str)
-    adata.var_names = adata.var_names.astype(str)
+    edata = AnnData(X=X, obs=obs, var=var, uns=uns, layers={"original": X.copy()})
+    edata.obs_names = edata.obs_names.astype(str)
+    edata.var_names = edata.var_names.astype(str)
 
-    return adata
+    return edata
 
 
+@use_ehrdata(deprecated_after="1.0.0")
+@function_future_warning("ep.ad.anndata_to_df", "ehrdata.to_pandas")
+@function_2D_only()
 def anndata_to_df(
-    adata: AnnData,
-    layer: str = None,
+    edata: AnnData,
+    layer: str | None = None,
     obs_cols: Iterable[str] | str | None = None,
     var_cols: Iterable[str] | str | None = None,
 ) -> pd.DataFrame:
     """Transform an AnnData object to a Pandas DataFrame.
 
     Args:
-        adata: The AnnData object to be transformed into a pandas DataFrame
+        edata: Central data object.
         layer: The layer to access the values of. If not specified, it uses the `X` matrix.
         obs_cols: The columns of `obs` to add to the DataFrame.
         var_cols: The columns of `var` to fetch values from.
@@ -110,35 +117,36 @@ def anndata_to_df(
         The AnnData object as a pandas DataFrame
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> df = ep.ad.anndata_to_df(adata)
+        >>> edata = ed.dt.mimic_2()
+        >>> df = ep.ad.anndata_to_df(edata)
     """
     if layer is not None:
-        X = adata.layers[layer]
+        X = edata.layers[layer]
     else:
-        X = adata.X
+        X = edata.X
     if issparse(X):  # pragma: no cover
         X = X.toarray()
 
-    df = pd.DataFrame(X, columns=list(adata.var_names))
+    df = pd.DataFrame(X, columns=list(edata.var_names))
     if obs_cols:
-        if len(adata.obs.columns) == 0:
+        if len(edata.obs.columns) == 0:
             raise ValueError("Cannot slice columns from empty obs!")
         if isinstance(obs_cols, str):
             obs_cols = list(obs_cols)
         if isinstance(obs_cols, list):  # pragma: no cover
-            obs_slice = adata.obs[obs_cols]
+            obs_slice = edata.obs[obs_cols]
         # reset index needed since we slice all or at least some columns from obs DataFrame
         obs_slice = obs_slice.reset_index(drop=True)
         df = pd.concat([df, obs_slice], axis=1)
     if var_cols:
-        if len(adata.var.columns) == 0:
+        if len(edata.var.columns) == 0:
             raise ValueError("Cannot slice columns from empty var!")
         if isinstance(var_cols, str):
             var_cols = list(var_cols)
         if isinstance(var_cols, list):
-            var_slice = adata.var[var_cols]
+            var_slice = edata.var[var_cols]
         # reset index needed since we slice all or at least some columns from var DataFrame
         var_slice = var_slice.reset_index(drop=True)
         df = pd.concat([df, var_slice], axis=1)
@@ -146,24 +154,28 @@ def anndata_to_df(
     return df
 
 
-def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False) -> AnnData:
+@use_ehrdata(deprecated_after="1.0.0")
+@function_future_warning("ep.ad.move_to_obs")
+@function_2D_only()
+def move_to_obs(edata: EHRData | AnnData, to_obs: list[str] | str, copy_obs: bool = False) -> EHRData | AnnData:
     """Move inplace or copy features from X to obs.
 
     Note that columns containing boolean values (either 0/1 or True(true)/False(false))
     will be stored as boolean columns whereas the other non-numerical columns will be stored as categorical.
 
     Args:
-        adata: The AnnData object
-        to_obs: The columns to move to obs
-        copy_obs: The values are copied to obs (and therefore kept in X) instead of moved completely
+        edata: Central data object.
+        to_obs: The columns to move to obs.
+        copy_obs: The values are copied to obs (and therefore kept in X) instead of moved completely.
 
     Returns:
-        The original AnnData object with moved or copied columns from X to obs
+        The original data object with moved or copied columns from X to obs
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.ad.move_to_obs(adata, ["age"], copy_obs=False)
+        >>> edata = ed.dt.mimic_2()
+        >>> ep.ad.move_to_obs(edata, ["age"], copy_obs=False)
     """
     if isinstance(to_obs, str):  # pragma: no cover
         to_obs = [to_obs]
@@ -174,74 +186,78 @@ def move_to_obs(adata: AnnData, to_obs: list[str] | str, copy_obs: bool = False)
             "Cannot move encoded columns from X to obs. Either undo encoding or remove them from the list!"
         )
 
-    if not all(elem in adata.var_names.values for elem in to_obs):
+    if not all(elem in edata.var_names.values for elem in to_obs):
         raise ValueError(
-            f"Columns `{[col for col in to_obs if col not in adata.var_names.values]}` are not in var_names."
+            f"Columns `{[col for col in to_obs if col not in edata.var_names.values]}` are not in var_names."
         )
 
-    cols_to_obs_indices = adata.var_names.isin(to_obs)
+    cols_to_obs_indices = edata.var_names.isin(to_obs)
 
-    num_set = _get_var_indices_for_type(adata, NUMERIC_TAG)
+    num_set = _get_var_indices_for_type(edata, NUMERIC_TAG)
     var_num = list(set(to_obs) & set(num_set))
 
     if copy_obs:
-        cols_to_obs = adata[:, cols_to_obs_indices].to_df()
-        adata.obs = adata.obs.join(cols_to_obs)
-        adata.obs[var_num] = adata.obs[var_num].apply(pd.to_numeric, downcast="float")
+        cols_to_obs = edata[:, cols_to_obs_indices].to_df()
+        edata.obs = edata.obs.join(cols_to_obs)
+        edata.obs[var_num] = edata.obs[var_num].apply(pd.to_numeric, downcast="float")
 
-        adata.obs = _cast_obs_columns(adata.obs)
+        edata.obs = _cast_to_cat_or_bool(edata.obs)
     else:
-        df = adata[:, cols_to_obs_indices].to_df()
-        adata._inplace_subset_var(~cols_to_obs_indices)
-        adata.obs = adata.obs.join(df)
-        adata.obs[var_num] = adata.obs[var_num].apply(pd.to_numeric, downcast="float")
-        adata.obs = _cast_obs_columns(adata.obs)
+        df = edata[:, cols_to_obs_indices].to_df()
+        edata._inplace_subset_var(~cols_to_obs_indices)
+        edata.obs = edata.obs.join(df)
+        edata.obs[var_num] = edata.obs[var_num].apply(pd.to_numeric, downcast="float")
+        edata.obs = _cast_to_cat_or_bool(edata.obs)
 
-    return adata
+    return edata
 
 
-@check_feature_types
-def _get_var_indices_for_type(adata: AnnData, tag: str) -> list[str]:
+@_check_feature_types
+def _get_var_indices_for_type(edata: EHRData | AnnData, tag: str) -> list[str]:
     """Get indices of columns in var for a given tag.
 
     Args:
-        adata: The AnnData object
+        edata: Central data object.
         tag: The tag to search for, should be one of 'CATEGORIGAL_TAG', 'NUMERIC_TAG', 'DATE_TAG'
 
     Returns:
         List of numeric columns
     """
-    return adata.var_names[adata.var[FEATURE_TYPE_KEY] == tag].tolist()
+    return edata.var_names[edata.var[FEATURE_TYPE_KEY] == tag].tolist()
 
 
-def move_to_x(adata: AnnData, to_x: list[str] | str, copy_x: bool = False) -> AnnData:
+@use_ehrdata(deprecated_after="1.0.0")
+@function_future_warning("ep.ad.move_to_x")
+@function_2D_only()
+def move_to_x(edata: EHRData | AnnData, to_x: list[str] | str, copy_x: bool = False) -> EHRData | AnnData:
     """Move features from obs to X inplace.
 
     Args:
-        adata: The AnnData object
+        edata: Central data object
         to_x: The columns to move to X
         copy_x: The values are copied to X (and therefore kept in obs) instead of moved completely
 
     Returns:
-        A new AnnData object with moved columns from obs to X. This should not be used for datetime columns currently.
+        A new data object with moved columns from obs to X. This should not be used for datetime columns currently.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=True)
-        >>> ep.ad.move_to_obs(adata, ["age"], copy_obs=False)
-        >>> new_adata = ep.ad.move_to_x(adata, ["age"])
+        >>> edata = ed.dt.mimic_2()
+        >>> ep.ad.move_to_obs(edata, ["age"], copy_obs=False)
+        >>> new_edata = ep.ad.move_to_x(edata, ["age"])
     """
     if isinstance(to_x, str):  # pragma: no cover
         to_x = [to_x]
 
-    if not all(elem in adata.obs.columns.values for elem in to_x):
-        raise ValueError(f"Columns `{[col for col in to_x if col not in adata.obs.columns.values]}` are not in obs.")
+    if not all(elem in edata.obs.columns.values for elem in to_x):
+        raise ValueError(f"Columns `{[col for col in to_x if col not in edata.obs.columns.values]}` are not in obs.")
 
     cols_present_in_x = []
     cols_not_in_x = []
 
     for col in to_x:
-        if col in set(adata.var_names):
+        if col in set(edata.var_names):
             cols_present_in_x.append(col)
         else:
             cols_not_in_x.append(col)
@@ -250,50 +266,52 @@ def move_to_x(adata: AnnData, to_x: list[str] | str, copy_x: bool = False) -> An
         logger.warn(f"Columns `{cols_present_in_x}` are already in X. Skipped moving `{cols_present_in_x}` to X. ")
 
     if cols_not_in_x:
-        new_adata = concat([adata, AnnData(adata.obs[cols_not_in_x])], axis=1)
+        data_from_df = _cast_adata_to_match_data_type(AnnData(edata.obs[cols_not_in_x]), edata)
+        new_edata = concat([edata, data_from_df], axis=1)
+
         if copy_x:
-            new_adata.obs = adata.obs
+            new_edata.obs = edata.obs
         else:
-            new_adata.obs = adata.obs[adata.obs.columns[~adata.obs.columns.isin(cols_not_in_x)]]
+            new_edata.obs = edata.obs[edata.obs.columns[~edata.obs.columns.isin(cols_not_in_x)]]
 
         # AnnData's concat discards var if they don't match in their keys, so we need to create a new var
         created_var = pd.DataFrame(index=cols_not_in_x)
-        new_adata.var = pd.concat([adata.var, created_var], axis=0)
+        new_edata.var = pd.concat([edata.var, created_var], axis=0)
     else:
-        new_adata = adata
+        new_edata = edata
 
-    return new_adata
+    return new_edata
 
 
 def _get_var_indices_numeric_or_encoded(
-    adata: AnnData,
+    edata: EHRData | AnnData,
     # layer: str | None = None,  # column_indices: Iterable[int] | None = None
-) -> list[int]:
-    return np.arange(0, adata.n_vars)[
-        (adata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG) | (adata.var["feature_type"].isin(["one-hot", "multi-hot"]))
+) -> np.ndarray:
+    return np.arange(0, edata.n_vars)[
+        (edata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG) | (edata.var["feature_type"].isin(["one-hot", "multi-hot"]))
     ]
 
 
-def _get_var_indices(adata: AnnData, col_names: str | Iterable[str]) -> list[int]:
+def _get_var_indices(edata: EHRData | AnnData, col_names: str | Iterable[str]) -> list[int]:
     """Fetches the column indices in X for a given list of column names.
 
     Args:
-        adata: :class:`~anndata.AnnData` object.
+        edata: Central data object.
         col_names: Column names to extract the indices for.
 
     Returns:
         List of column indices.
     """
     col_names = [col_names] if isinstance(col_names, str) else col_names
-    mask = np.isin(adata.var_names, col_names)
+    mask = np.isin(edata.var_names, col_names)
     indices = np.where(mask)[0].tolist()
 
     return indices
 
 
-def _assert_numeric_vars(adata: AnnData, vars: Sequence[str]):
+def _assert_numeric_vars(edata: EHRData | AnnData, vars: Sequence[str]):
     """Ensures that variables are numerics and raises an error if not."""
-    num_vars = _get_var_indices_for_type(adata, NUMERIC_TAG)
+    num_vars = _get_var_indices_for_type(edata, NUMERIC_TAG)
 
     try:
         assert set(vars) <= set(num_vars)
@@ -301,14 +319,14 @@ def _assert_numeric_vars(adata: AnnData, vars: Sequence[str]):
         raise ValueError("Some selected vars are not numeric") from None
 
 
-def _cast_obs_columns(obs: pd.DataFrame) -> pd.DataFrame:
+def _cast_to_cat_or_bool(obs: pd.DataFrame) -> pd.DataFrame:
     """Cast non numerical obs columns to either category or bool.
 
     Args:
-        obs: Obs of an AnnData object.
+        obs: obs DataFrame
 
     Returns:
-        The type casted obs.
+        The type casted DataFrame.
     """
     # only cast non numerical columns
     object_columns = list(obs.select_dtypes(exclude=["number", "category", "bool"]).columns)

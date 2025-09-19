@@ -1,32 +1,15 @@
+import ehrdata as ed
 import numpy as np
 import pandas as pd
 import pytest
+from ehrdata.core.constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 
 import ehrapy as ep
-from ehrapy.anndata._constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 
 
-@pytest.fixture
-def adata(rng):
-    corr = rng.integers(0, 100, 100)
-    df = pd.DataFrame(
-        {
-            "corr1": corr,
-            "corr2": corr * 2,
-            "corr3": corr * -1,
-            "contin1": rng.integers(0, 20, 50).tolist() + rng.integers(20, 40, 50).tolist(),
-            "cat1": [0] * 50 + [1] * 50,
-            "cat2": [10] * 10 + [11] * 40 + [10] * 30 + [11] * 20,
-        }
-    )
-    adata = ep.ad.df_to_anndata(df)
-    adata.var[FEATURE_TYPE_KEY] = [NUMERIC_TAG] * 4 + [CATEGORICAL_TAG] * 2
-    return adata
-
-
-def test_detect_bias_all_sensitive_features(adata):
+def test_detect_bias_all_sensitive_features(edata_small_bias):
     results = ep.pp.detect_bias(
-        adata, "all", run_feature_importances=True, corr_method="spearman", feature_importance_threshold=0.4
+        edata_small_bias, "all", run_feature_importances=True, corr_method="spearman", feature_importance_threshold=0.4
     )
 
     assert "feature_correlations" in results.keys()
@@ -63,9 +46,15 @@ def test_detect_bias_all_sensitive_features(adata):
     assert len(df) >= 7  # 6 for the pairwise correlating features and one/two for contin1, which predicts cat1
 
 
-def test_detect_bias_specified_sensitive_features(adata):
+def test_explicit_impute_3D_edata(edata_blob_small):
+    ep.pp.detect_bias(edata_blob_small, sensitive_features=["feature_1"], layer="layer_2")
+    with pytest.raises(ValueError, match=r"only supports 2D data"):
+        ep.pp.detect_bias(edata_blob_small, sensitive_features=["feature_1"], layer="R_layer")
+
+
+def test_detect_bias_specified_sensitive_features(edata_small_bias):
     results, result_adata = ep.pp.detect_bias(
-        adata,
+        edata_small_bias,
         ["contin1", "cat1"],
         run_feature_importances=True,
         corr_method="spearman",
@@ -74,7 +63,7 @@ def test_detect_bias_specified_sensitive_features(adata):
         copy=True,
     )
 
-    assert "smd" not in adata.uns.keys()
+    assert "smd" not in edata_small_bias.uns.keys()
     assert "smd" in result_adata.uns.keys()
 
     assert "feature_correlations" in results.keys()
@@ -101,10 +90,10 @@ def test_detect_bias_specified_sensitive_features(adata):
 
 
 def test_unencoded_data():
-    adata = ep.ad.df_to_anndata(
+    edata = ed.io.from_pandas(
         pd.DataFrame({"Unencoded": ["A", "B", "C", "D", "E", "F"], "Encoded": [1, 2, 3, 4, 5, 6]})
     )
-    adata.var[FEATURE_TYPE_KEY] = [CATEGORICAL_TAG] * 2
+    edata.var[FEATURE_TYPE_KEY] = [CATEGORICAL_TAG] * 2
 
     with pytest.raises(ValueError):
-        ep.pp.detect_bias(adata, "all")
+        ep.pp.detect_bias(edata, "all")

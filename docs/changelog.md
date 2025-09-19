@@ -2,13 +2,31 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## The future
+## v0.13.0
 
 ### 🚀 Features
+
+* Transitioning from AnnData to EHRData
+
+`EHRData` replaces `AnnData` as ehrapy's core data structure to better support time-series electronic health record data.
+The key enhancement is native support for 3D tensors (observations × variables × timesteps) alongside the existing 2D matrices, enabling efficient storage of longitudinal patient data.
+A new `.tem` DataFrame provides time-point annotations, complementing the existing `.obs` and `.var` annotations for comprehensive temporal data description.
+While `EHRData` maintains full backward compatibility with AnnData's API, users can now seamlessly work with time-series data and leverage specialized methods for temporal analysis.
+Existing code using `AnnData` objects will continue to work, but migration to `EHRData` is strongly recommended to access enhanced time-series functionality.
+
+### 🚀 Features
+
+* The preferred central data object is now `EHRData` ([#908](https://github.com/theislab/ehrapy/pull/908)) @eroell
+
+* The `layers` argument is now available for all functions operating on X or layers ([#908](https://github.com/theislab/ehrapy/pull/908)) @eroell
+
 
 ### 🧰 Maintenance
 
 * Update expected behaviour of `io.read_fhir` ([#922](https://github.com/theislab/ehrapy/pull/922)) @eroell
+* Move `mimic_2`, `mimic_2_preprocessed`, `diabetes_130_raw`, `diabetes_130_fairlearn` to `ehrdata.dt` ([#908](https://github.com/theislab/ehrapy/pull/908)) @eroell
+* Deprecate all `ep.dt.*`, refer to datasets in `ehrdata` ([#908](https://github.com/theislab/ehrapy/pull/908)) @eroell
+
 
 ## v0.12.1
 

@@ -6,19 +6,26 @@ import numpy as np
 import scanpy as sc
 from scipy.sparse import spmatrix  # noqa
 
+from ehrapy._compat import use_ehrdata
 from ehrapy.tools import _method_options  # noqa
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
 
     from anndata import AnnData
+    from ehrdata import EHRData
     from leidenalg.VertexPartition import MutableVertexPartition
+
 
 AnyRandom: TypeAlias = int | np.random.RandomState | None
 
 
+# No need for testing 3D; tSNE does not not support layers, and
+# and X can only be 2D currently, until this PR is merged: https://github.com/scverse/anndata/pull/1707
+@use_ehrdata(deprecated_after="1.0.0")
 def tsne(
-    adata: AnnData,
+    edata: EHRData | AnnData,
+    *,
     n_pcs: int | None = None,
     use_rep: str | None = None,
     perplexity: float | int = 30,
@@ -28,14 +35,14 @@ def tsne(
     n_jobs: int | None = None,
     copy: bool = False,
     metric: str = "euclidean",
-) -> AnnData | None:  # pragma: no cover
+) -> EHRData | EHRData | AnnData | None:  # pragma: no cover
     """Calculates t-SNE :cite:p:`vanDerMaaten2008`, :cite:p:`Amir2013`, and :cite:p:`Pedregosa2011`.
 
     t-distributed stochastic neighborhood embedding (tSNE) :cite:p:`vanDerMaaten2008` has been
     proposed for visualizing complex by :cite:p:`Amir2013`. Here, by default, we use the implementation of *scikit-learn* :cite:p:`Pedregosa2011`.
 
     Args:
-        adata: :class:`~anndata.AnnData` object containing all observations.
+        edata: Central data object.
         n_pcs: Use this many PCs. If `n_pcs==0` use `.X` if `use_rep is None`.
         use_rep: Use the indicated representation. `'X'` or any key for `.obsm` is valid.
                  If `None`, the representation is chosen automatically:
@@ -64,12 +71,12 @@ def tsne(
         metric: Distance metric to calculate neighbors on.
 
     Returns:
-        Depending on `copy`, returns or updates `adata` with the following fields.
+        Depending on `copy`, returns or updates `edata` with the following fields.
 
-        **X_tsne** : `np.ndarray` (`adata.obs`, dtype `float`) tSNE coordinates of data.
+        **X_tsne** : `np.ndarray` (`edata.obs`, dtype `float`) tSNE coordinates of data.
     """
     return sc.tl.tsne(
-        adata=adata,
+        adata=edata,
         n_pcs=n_pcs,
         use_rep=use_rep,
         perplexity=perplexity,
@@ -82,8 +89,10 @@ def tsne(
     )
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 def umap(
-    adata: AnnData,
+    edata: EHRData | AnnData,
+    *,
     min_dist: float = 0.5,
     spread: float = 1.0,
     n_components: int = 2,
@@ -98,7 +107,7 @@ def umap(
     copy: bool = False,
     method: Literal["umap", "rapids"] = "umap",
     neighbors_key: str | None = None,
-) -> AnnData | None:  # pragma: no cover
+) -> EHRData | AnnData | None:  # pragma: no cover
     """Embed the neighborhood graph using UMAP :cite:p:`McInnes2018`.
 
     UMAP (Uniform Manifold Approximation and Projection) is a manifold learning
@@ -113,7 +122,7 @@ def umap(
     <https://doi.org/10.1101/298430>`__.
 
     Args:
-        adata: :class:`~anndata.AnnData` object containing all observations.
+        edata: Central data object.
         min_dist: The effective minimum distance between embedded points. Smaller values
                   will result in a more clustered/clumped embedding where nearby points on
                   the manifold are drawn closer together, while larger values will result
@@ -131,7 +140,7 @@ def umap(
                               edge/1-simplex sample in optimizing the low dimensional embedding.
         init_pos: How to initialize the low dimensional embedding. Called `init` in the original UMAP. Options are:
 
-                  * Any key for `adata.obsm`.
+                  * Any key for `edata.obsm`.
 
                   * 'paga': positions from :func:`~scanpy.pl.paga`.
 
@@ -151,7 +160,7 @@ def umap(
            If `None` these values are set automatically as determined by `min_dist` and `spread`.
         b: More specific parameters controlling the embedding.
            If `None` these values are set automatically as determined by `min_dist` and `spread`.
-        copy: Return a copy instead of writing to adata.
+        copy: Return a copy instead of writing to edata.
         method: Use the original 'umap' implementation, or 'rapids' (experimental, GPU only)
         neighbors_key: If not specified, umap looks .uns['neighbors'] for neighbors settings
                        and .obsp['connectivities'] for connectivities (default storage places for pp.neighbors).
@@ -159,16 +168,16 @@ def umap(
                        .obsp[.uns[neighbors_key]['connectivities_key']] for connectivities.
 
     Returns:
-        Depending on `copy`, returns or updates `adata` with the following fields.
+        Depending on `copy`, returns or updates `edata` with the following fields.
 
-        **X_umap** : `adata.obsm` field UMAP coordinates of data.
+        **X_umap** : `edata.obsm` field UMAP coordinates of data.
     """
     key_to_check = neighbors_key if neighbors_key is not None else "neighbors"
-    if key_to_check not in adata.uns:
+    if key_to_check not in edata.uns:
         raise ValueError(f"Did not find .uns[{key_to_check!r}]. Please run `ep.pp.neighbors` first.")
 
     return sc.tl.umap(
-        adata=adata,
+        adata=edata,
         min_dist=min_dist,
         spread=spread,
         n_components=n_components,
@@ -186,8 +195,10 @@ def umap(
     )
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 def draw_graph(
-    adata: AnnData,
+    edata: EHRData | AnnData,
+    *,
     layout: _method_options._Layout = "fa",
     init_pos: str | bool | None = None,
     root: int | None = None,
@@ -199,7 +210,7 @@ def draw_graph(
     obsp: str | None = None,
     copy: bool = False,
     **kwds,
-) -> AnnData | None:  # pragma: no cover
+) -> EHRData | AnnData | None:  # pragma: no cover
     """Force-directed graph drawing :cite:p:`Islam2011`, :cite:p:`Jacomy2014`, and :cite:p:`Chippada2018`.
 
     .. _fa2: https://github.com/bhargavchippada/forceatlas2
@@ -217,7 +228,7 @@ def draw_graph(
     Similar approaches have been used by :cite:p:`Zunder2015` or :cite:p:`Weinreb2017`.
 
     Args:
-        adata: :class:`~anndata.AnnData` object containing all observations.
+        edata: Central data object.
         layout: 'fa' (`ForceAtlas2`) or any valid `igraph layout
                 <http://igraph.org/c/doc/igraph-Layout.html>`__. Of particular interest
                 are 'fr' (Fruchterman Reingold), 'grid_fr' (Grid Fruchterman Reingold,
@@ -237,18 +248,18 @@ def draw_graph(
                        (default storage place for pp.neighbors).
                        If specified, draw_graph looks .obsp[.uns[neighbors_key]['connectivities_key']] for connectivities.
         obsp:  Use .obsp[obsp] as adjacency. You can't specify both `obsp` and `neighbors_key` at the same time.
-        copy: Whether to return a copy instead of writing to adata.
+        copy: Whether to return a copy instead of writing to edata.
         **kwds: Parameters of chosen igraph layout. See e.g. `fruchterman-reingold`_
                 :cite:p:`Fruchterman1991`. One of the most important ones is `maxiter`.
 
     Returns:
-          Depending on `copy`, returns or updates `adata` with the following field.
+          Depending on `copy`, returns or updates `edata` with the following field.
 
-          **X_draw_graph_layout** : `adata.obsm`
+          **X_draw_graph_layout** : `edata.obsm`
           Coordinates of graph layout. E.g. for layout='fa' (the default), the field is called 'X_draw_graph_fa'
     """
     return sc.tl.draw_graph(
-        adata=adata,
+        adata=edata,
         layout=layout,
         init_pos=init_pos,
         root=root,
@@ -263,13 +274,15 @@ def draw_graph(
     )
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 def diffmap(
-    adata: AnnData,
+    edata: EHRData | AnnData,
+    *,
     n_comps: int = 15,
     neighbors_key: str | None = None,
     random_state: AnyRandom = 0,
     copy: bool = False,
-) -> AnnData | None:  # pragma: no cover
+) -> EHRData | AnnData | None:  # pragma: no cover
     """Diffusion Maps :cite:p:`Coifman2005`, :cite:p:`Haghverdi2015`, :cite:p:`Wolf2019`.
 
     Diffusion maps :cite:p:`Coifman2005` has been proposed for visualizing single-cell
@@ -283,7 +296,7 @@ def diffmap(
     `method=='umap'`. Differences between these options shouldn't usually be dramatic.
 
     Args:
-        adata: :class:`~anndata.AnnData` object containing all observations.
+        edata: Central data object.
         n_comps: The number of dimensions of the representation.
                  neighbors_key: If not specified, diffmap looks .uns['neighbors'] for neighbors settings
                  and .obsp['connectivities'], .obsp['distances'] for connectivities and
@@ -293,24 +306,26 @@ def diffmap(
                  .obsp[.uns[neighbors_key]['distances_key']] for connectivities and distances respectively.
         neighbors_key: Key to stored neighbors.
         random_state: Random seed for the initialization.
-        copy: Whether to return a copy of the :class:`~anndata.AnnData` object.
+        copy: Whether to return a copy of the Data object.
 
     Returns:
-        Depending on `copy`, returns or updates `adata` with the following fields.
+        Depending on `copy`, returns or updates `edata` with the following fields.
 
-        `X_diffmap` : :class:`numpy.ndarray` (`adata.obsm`)
+        `X_diffmap` : :class:`numpy.ndarray` (`edata.obsm`)
         Diffusion map representation of data, which is the right eigen basis of the transition matrix with eigenvectors as columns.
 
-        `diffmap_evals` : :class:`numpy.ndarray` (`adata.uns`)
+        `diffmap_evals` : :class:`numpy.ndarray` (`edata.uns`)
         Array of size (number of eigen vectors). Eigenvalues of transition matrix.
     """
     return sc.tl.diffmap(
-        adata=adata, n_comps=n_comps, neighbors_key=neighbors_key, random_state=random_state, copy=copy
+        adata=edata, n_comps=n_comps, neighbors_key=neighbors_key, random_state=random_state, copy=copy
     )
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 def embedding_density(
-    adata: AnnData,
+    edata: EHRData | AnnData,
+    *,
     basis: str = "umap",  # was positional before 1.4.5
     groupby: str | None = None,
     key_added: str | None = None,
@@ -327,9 +342,9 @@ def embedding_density(
     the same condition category.
 
     Args:
-        adata: :class:`~anndata.AnnData` object containing all observations.
+        edata: Central data object.
         basis: The embedding over which the density will be calculated. This embedded
-               representation should be found in `adata.obsm['X_[basis]']`.
+               representation should be found in `edata.obsm['X_[basis]']`.
         groupby: Keys for categorical observation/cell annotation for which densities
                  are calculated per category. Columns with up to ten categories are accepted.
         key_added: Name of the `.obs` covariate that will be added with the density estimates.
@@ -337,24 +352,29 @@ def embedding_density(
                     This is limited to two components.
 
     Returns:
-        Updates `adata.obs` with an additional field specified by the `key_added`
+        Updates `edata.obs` with an additional field specified by the `key_added`
         parameter. This parameter defaults to `[basis]_density_[groupby]`,
         where `[basis]` is one of `umap`, `diffmap`, `pca`, `tsne`, or `draw_graph_fa`
         and `[groupby]` denotes the parameter input.
-        Updates `adata.uns` with an additional field `[key_added]_params`.
+        Updates `edata.uns` with an additional field `[key_added]_params`.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
-        >>> ep.tl.umap(adata)
-        >>> ep.tl.embedding_density(adata, basis="umap", groupby="phase")
-        >>> ep.pl.embedding_density(adata, basis="umap", key="umap_density_phase", group="G1")
+        >>> edata = ed.dt.mimic_2()
+        >>> edata = ep.pp.encode(edata, autodetect=True)
+        >>> ep.pp.simple_impute(edata, strategy="median")
+        >>> ep.pp.neighbors(edata)
+        >>> ep.tl.umap(edata)
+        >>> ep.tl.embedding_density(edata, basis="umap")
+        >>> ep.pl.embedding_density(edata, basis="umap")
     """
-    sc.tl.embedding_density(adata=adata, basis=basis, groupby=groupby, key_added=key_added, components=components)
+    sc.tl.embedding_density(adata=edata, basis=basis, groupby=groupby, key_added=key_added, components=components)
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 def leiden(
-    adata: AnnData,
+    edata: EHRData | AnnData,
     resolution: float = 1,
     *,
     restrict_to: tuple[str, Sequence[str]] | None = None,
@@ -370,7 +390,7 @@ def leiden(
     flavor: Literal["leidenalg", "igraph"] = "igraph",
     copy: bool = False,
     **partition_kwargs,
-) -> AnnData | None:  # pragma: no cover
+) -> EHRData | AnnData | None:  # pragma: no cover
     """Cluster observations into subgroups :cite:p:`Traag2019`.
 
     Cluster observations using the Leiden algorithm :cite:p:`Traag2019`,
@@ -379,13 +399,13 @@ def leiden(
     This requires having run :func:`~ehrapy.preprocessing.neighbors`.
 
     Args:
-        adata: :class:`~anndata.AnnData` object containing all observations.
+        edata: Central data object.
         resolution: A parameter value controlling the coarseness of the clustering. Higher values lead to more clusters.
                     Set to `None` if overriding `partition_type` to one that doesn't accept a `resolution_parameter`.
         restrict_to: Restrict the clustering to the categories within the key for sample
                      annotation, tuple needs to contain `(obs_key, list_of_categories)`.
         random_state: Random seed of the initialization of the optimization.
-        key_added: `adata.obs` key under which to add the cluster labels.
+        key_added: `edata.obs` key under which to add the cluster labels.
         adjacency: Sparse adjacency matrix of the graph, defaults to neighbors connectivities.
         directed: Whether to treat the graph as directed or undirected.
         use_weights: If `True`, edge weights from the graph are used in the computation
@@ -403,19 +423,19 @@ def leiden(
                        If specified, leiden looks .obsp[.uns[neighbors_key]['connectivities_key']] for connectivities.
         obsp: Use `.obsp[obsp]` as adjacency. You can't specify both `obsp` and `neighbors_key` at the same time.
         flavor: Which package's implementation to use.
-        copy: Whether to copy `adata` or modify it inplace.
+        copy: Whether to copy `edata` or modify it inplace.
         **partition_kwargs: Any further arguments to pass to `~leidenalg.find_partition`
                             (which in turn passes arguments to the `partition_type`).
 
     Returns:
-        `adata.obs[key_added]`
+        `edata.obs[key_added]`
         Array of dim (number of samples) that stores the subgroup id (`'0'`, `'1'`, ...) for each cell.
 
-        `adata.uns['leiden']['params']`
+        `edata.uns['leiden']['params']`
         A dict with the values for the parameters `resolution`, `random_state`, and `n_iterations`.
     """
     return sc.tl.leiden(
-        adata=adata,
+        adata=edata,
         resolution=resolution,
         restrict_to=restrict_to,
         random_state=random_state,
@@ -433,8 +453,12 @@ def leiden(
     )
 
 
+# No need for testing 3D; tSNE does not not support layers, and
+# and X can only be 2D currently, until this PR is merged: https://github.com/scverse/anndata/pull/1707
+@use_ehrdata(deprecated_after="1.0.0")
 def dendrogram(
-    adata: AnnData,
+    edata: EHRData | AnnData,
+    *,
     groupby: str,
     n_pcs: int | None = None,
     use_rep: str | None = None,
@@ -463,7 +487,7 @@ def dendrogram(
         default pearson but other methods are available.
 
     Args:
-        adata: :class:`~anndata.AnnData` object containing all observations.
+        edata: Central data object.
         groupby: Key to group by
         n_pcs: Use this many PCs. If `n_pcs==0` use `.X` if `use_rep is None`.
         use_rep: Use the indicated representation. `'X'` or any key for `.obsm` is valid.
@@ -480,20 +504,23 @@ def dendrogram(
         key_added: By default, the dendrogram information is added to
                    `.uns[f'dendrogram_{{groupby}}']`.
                    Notice that the `groupby` information is added to the dendrogram.
-        inplace: If `True`, adds dendrogram information to `adata.uns[key_added]`,
+        inplace: If `True`, adds dendrogram information to `edata.uns[key_added]`,
                  else this function returns the information.
 
     Returns:
-        If `inplace=False`, returns dendrogram information, else `adata.uns[key_added]` is updated with it.
+        If `inplace=False`, returns dendrogram information, else `edata.uns[key_added]` is updated with it.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> adata = ep.data.mimic_2(encoded=True)
-        >>> ep.tl.dendrogram(adata, groupby="service_unit")
-        >>> ep.pl.dendrogram(adata)
+        >>> edata = ed.dt.mimic_2(columns_obs_only=["service_unit"])
+        >>> edata = ep.pp.encode(edata, autodetect=True)
+        >>> ep.pp.simple_impute(edata, strategy="median")
+        >>> ep.tl.dendrogram(edata, groupby="service_unit")
+        >>> ep.pl.dendrogram(edata, groupby="service_unit")
     """
     return sc.tl.dendrogram(
-        adata=adata,
+        adata=edata,
         groupby=groupby,
         n_pcs=n_pcs,
         use_rep=use_rep,
@@ -507,15 +534,17 @@ def dendrogram(
     )
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 def dpt(
-    adata: AnnData,
+    edata: EHRData | AnnData,
+    *,
     n_dcs: int = 10,
     n_branchings: int = 0,
     min_group_size: float = 0.01,
     allow_kendall_tau_shift: bool = True,
     neighbors_key: str | None = None,
     copy: bool = False,
-) -> AnnData | None:  # pragma: no cover
+) -> EHRData | AnnData | None:  # pragma: no cover
     """Infer progression of observations through geodesic distance along the graph :cite:p:`Haghverdi2016`, :cite:p:`Wolf2019`.
 
     Reconstruct the progression of a biological process from snapshot
@@ -525,13 +554,13 @@ def dpt(
     be run in a `hierarchical` mode by setting the parameter `n_branchings>1`.
     We recommend, however, to only use :func:`~ehrapy.tools.dpt` for computing pseudotime (`n_branchings=0`) and
     to detect branchings via :func:`~scanpy.tl.paga`. For pseudotime, you need
-    to annotate your data with a root cell. For instance `adata.uns['iroot'] = np.flatnonzero(adata.obs['cell_types'] == 'Stem')[0]`
+    to annotate your data with a root cell. For instance `edata.uns['iroot'] = np.flatnonzero(edata.obs['cell_types'] == 'Stem')[0]`
     This requires to run :func:`~ehrapy.preprocessing.neighbors`, first. In order to
     reproduce the original implementation of DPT, use `method=='gauss'` in
     this. Using the default `method=='umap'` only leads to minor quantitative differences, though.
 
     Args:
-        adata: :class:`~anndata.AnnData` object containing all observations.
+        edata: Central data object.
         n_dcs: The number of diffusion components to use.
         n_branchings: Number of branchings to detect.
         min_group_size: During recursive splitting of branches ('dpt groups') for `n_branchings`
@@ -548,17 +577,17 @@ def dpt(
         copy: Copy instance before computation and return a copy. Otherwise, perform computation in place and return `None`.
 
     Returns:
-        Depending on `copy`, returns or updates `adata` with the following fields.
+        Depending on `copy`, returns or updates `edata` with the following fields.
         If `n_branchings==0`, no field `dpt_groups` will be written.
 
-        * `dpt_pseudotime` : :class:`pandas.Series` (`adata.obs`, dtype `float`)
+        * `dpt_pseudotime` : :class:`pandas.Series` (`edata.obs`, dtype `float`)
           Array of dim (number of samples) that stores the pseudotime of each
           observation, that is, the DPT distance with respect to the root observation.
-        * `dpt_groups` : :class:`pandas.Series` (`adata.obs`, dtype `category`)
+        * `dpt_groups` : :class:`pandas.Series` (`edata.obs`, dtype `category`)
           Array of dim (number of samples) that stores the subgroup id ('0', '1', ...) for each observation.
     """
     return sc.tl.dpt(
-        adata=adata,
+        adata=edata,
         n_dcs=n_dcs,
         n_branchings=n_branchings,
         min_group_size=min_group_size,
@@ -568,13 +597,15 @@ def dpt(
     )
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 def paga(
-    adata: AnnData,
+    edata: EHRData | AnnData,
+    *,
     groups: str | None = None,
     model: Literal["v1.2", "v1.0"] = "v1.2",
     neighbors_key: str | None = None,
     copy: bool = False,
-) -> AnnData | None:  # pragma: no cover
+) -> EHRData | AnnData | None:  # pragma: no cover
     """Mapping out the coarse-grained connectivity structures of complex manifolds :cite:p:`Wolf2019`.
 
     By quantifying the connectivity of partitions (groups, clusters),
@@ -595,8 +626,8 @@ def paga(
         `init_pos='paga'` to get embeddings that are typically more faithful to the global topology.
 
     Args:
-        adata: :class:`~anndata.AnnData` object containing all observations.
-        groups: Key for categorical in `adata.obs`. You can pass your predefined groups
+        edata: Central data object.
+        groups: Key for categorical in `edata.obs`. You can pass your predefined groups
                 by choosing any categorical annotation of observations. Default:
                 The first present key of `'leiden'` or `'louvain'`.
         model: The PAGA connectivity model.
@@ -606,13 +637,13 @@ def paga(
                        If specified, paga looks `.uns[neighbors_key]` for neighbors settings and
                        `.obsp[.uns[neighbors_key]['connectivities_key']]`,
                        `.obsp[.uns[neighbors_key]['distances_key']]` for connectivities and distances respectively.
-        copy: Copy `adata` before computation and return a copy. Otherwise, perform computation in place and return `None`.
+        copy: Copy `edata` before computation and return a copy. Otherwise, perform computation in place and return `None`.
 
     Returns:
-        **connectivities** :class:`numpy.ndarray` (adata.uns['connectivities'])
+        **connectivities** :class:`numpy.ndarray` (edata.uns['connectivities'])
         The full adjacency matrix of the abstracted graph, weights correspond to confidence in the connectivities of partitions.
 
-       **connectivities_tree** :class:`scipy.sparse.csr_matrix` (adata.uns['connectivities_tree'])
+       **connectivities_tree** :class:`scipy.sparse.csr_matrix` (edata.uns['connectivities_tree'])
         The adjacency matrix of the tree-like subgraph that best explains the topology.
 
     Notes:
@@ -620,7 +651,7 @@ def paga(
     this generates a partial coordinatization of data useful for exploring and explaining its variation.
     """
     return sc.tl.paga(
-        adata=adata,
+        adata=edata,
         groups=groups,
         use_rna_velocity=False,
         model=model,
@@ -629,20 +660,22 @@ def paga(
     )
 
 
+@use_ehrdata(deprecated_after="1.0.0")
 def ingest(
-    adata: AnnData,
-    adata_ref: AnnData,
+    edata: EHRData | AnnData,
+    edata_ref: EHRData | AnnData,
+    *,
     obs: str | Iterable[str] | None = None,
     embedding_method: str | Iterable[str] = ("umap", "pca"),
     labeling_method: str = "knn",
     neighbors_key: str | None = None,
     inplace: bool = True,
     **kwargs,
-) -> AnnData | None:  # pragma: no cover
+) -> EHRData | AnnData | None:  # pragma: no cover
     """Map labels and embeddings from reference data to new data.
 
-    Integrates embeddings and annotations of an `adata` with a reference dataset
-    `adata_ref` through projecting on a PCA (or alternate model) that has been fitted on the reference data.
+    Integrates embeddings and annotations of an `edata` with a reference dataset
+    `edata_ref` through projecting on a PCA (or alternate model) that has been fitted on the reference data.
     The function uses a knn classifier for mapping labels and the UMAP package :cite:p:`McInnes2018` for mapping the embeddings.
 
     .. note::
@@ -652,36 +685,36 @@ def ingest(
         unbiased way, as CCA (e.g. in Seurat) or a conditional VAE (e.g. in
         scVI) would do.
 
-    You need to run :func:`~ehrapy.preprocessing.neighbors` on `adata_ref` before passing it.
+    You need to run :func:`~ehrapy.preprocessing.neighbors` on `edata_ref` before passing it.
 
     Args:
-        adata: :class:`~anndata.AnnData` object containing all observations.
-        adata_ref: The annotated data matrix of shape `n_obs` × `n_vars`. Rows correspond to observations and columns to features.
-                   Variables (`n_vars` and `var_names`) of `adata_ref` should be the same as in `adata`.
-                   This is the dataset with labels and embeddings which need to be mapped to `adata`.
-        obs: Labels' keys in `adata_ref.obs` which need to be mapped to `adata.obs` (inferred for observation of `adata`).
-        embedding_method: Embeddings in `adata_ref` which need to be mapped to `adata`. The only supported values are 'umap' and 'pca'.
-        labeling_method: The method to map labels in `adata_ref.obs` to `adata.obs`. The only supported value is 'knn'.
-        neighbors_key: If not specified, ingest looks adata_ref.uns['neighbors'] for neighbors settings and adata_ref.obsp['distances'] for
-                       distances (default storage places for pp.neighbors). If specified, ingest looks adata_ref.uns[neighbors_key] for
-                       neighbors settings and adata_ref.obsp[adata_ref.uns[neighbors_key]['distances_key']] for distances.
+        edata: Central data object.
+        edata_ref: The annotated data matrix of shape `n_obs` × `n_vars`. Rows correspond to observations and columns to features.
+                   Variables (`n_vars` and `var_names`) of `edata_ref` should be the same as in `edata`.
+                   This is the dataset with labels and embeddings which need to be mapped to `edata`.
+        obs: Labels' keys in `edata_ref.obs` which need to be mapped to `edata.obs` (inferred for observation of `edata`).
+        embedding_method: Embeddings in `edata_ref` which need to be mapped to `edata`. The only supported values are 'umap' and 'pca'.
+        labeling_method: The method to map labels in `edata_ref.obs` to `edata.obs`. The only supported value is 'knn'.
+        neighbors_key: If not specified, ingest looks edata_ref.uns['neighbors'] for neighbors settings and edata_ref.obsp['distances'] for
+                       distances (default storage places for pp.neighbors). If specified, ingest looks edata_ref.uns[neighbors_key] for
+                       neighbors settings and edata_ref.obsp[edata_ref.uns[neighbors_key]['distances_key']] for distances.
         inplace: Only works if `return_joint=False`.
-                 Add labels and embeddings to the passed `adata` (if `True`) or return a copy of `adata` with mapped embeddings and labels.
+                 Add labels and embeddings to the passed `edata` (if `True`) or return a copy of `edata` with mapped embeddings and labels.
         **kwargs: Further keyword arguments for the Neighbor calculation
 
     Returns:
-        * if `inplace=False` returns a copy of `adata` with mapped embeddings and labels in `obsm` and `obs` correspondingly
-        * if `inplace=True` returns `None` and updates `adata.obsm` and `adata.obs` with mapped embeddings and labels
+        * if `inplace=False` returns a copy of `edata` with mapped embeddings and labels in `obsm` and `obs` correspondingly
+        * if `inplace=True` returns `None` and updates `edata.obsm` and `edata.obs` with mapped embeddings and labels
 
     Examples:
         >>> import ehrapy as ep
-        >>> ep.pp.neighbors(adata_ref)
-        >>> ep.tl.umap(adata_ref)
-        >>> ep.tl.ingest(adata, adata_ref, obs="service_unit")
+        >>> ep.pp.neighbors(edata_ref)
+        >>> ep.tl.umap(edata_ref)
+        >>> ep.tl.ingest(edata, edata_ref, obs="service_unit")
     """
     return sc.tl.ingest(
-        adata=adata,
-        adata_ref=adata_ref,
+        adata=edata,
+        adata_ref=edata_ref,
         obs=obs,
         embedding_method=embedding_method,
         labeling_method=labeling_method,

@@ -3,10 +3,10 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
+from ehrdata.core.constants import FEATURE_TYPE_KEY, NUMERIC_TAG
 
 import ehrapy as ep
 import ehrapy.tools.feature_ranking._rank_features_groups as _utils
-from ehrapy.anndata._constants import FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrapy.io._read import read_csv
 from tests.conftest import TEST_DATA_PATH
 
@@ -432,3 +432,15 @@ def test_rank_features_group_column_to_rank():
         columns_to_rank={"obs_names": ["sys_bp_entry", "dia_bp_entry"]},
     )
     assert len(adata.uns["rank_features_groups"]["names"]) == 2
+
+
+def test_rank_features_groups_3D_edata(edata_blob_small):
+    ep.tl.rank_features_groups(edata_blob_small, groupby="cluster", layer="layer_2")
+    with pytest.raises(ValueError, match=r"only supports 2D data"):
+        ep.tl.rank_features_groups(edata_blob_small, groupby="cluster", layer="R_layer")
+
+
+def test_filter_rank_features_groups_edata(mimic_2):
+    mimic_2 = ep.ad.move_to_obs(mimic_2, to_obs=["service_unit"])
+    ep.tl.rank_features_groups(mimic_2, "service_unit")
+    ep.tl.rank_features_groups(mimic_2, "service_unit")

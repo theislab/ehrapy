@@ -3,10 +3,12 @@ from __future__ import annotations
 import warnings
 from typing import TYPE_CHECKING, Literal
 
+import ehrdata as ed
 import numpy as np  # noqa: TC002
 import pandas as pd
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
+from ehrdata.core.constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from lifelines import (
     CoxPHFitter,
     KaplanMeierFitter,
@@ -19,54 +21,61 @@ from lifelines.statistics import StatisticalResult, logrank_test
 from scipy import stats
 from statsmodels.genmod.generalized_linear_model import GLMResultsWrapper  # noqa
 
+from ehrapy._compat import function_2D_only, use_ehrdata
 from ehrapy.anndata import anndata_to_df
-from ehrapy.anndata._constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from anndata import AnnData
+    from ehrdata import EHRData
 
 
+@use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 def ols(
-    adata: AnnData,
+    edata: EHRData | AnnData,
     var_names: list[str] | None | None = None,
     formula: str | None = None,
+    *,
     missing: Literal["none", "drop", "raise"] | None = "none",
     use_feature_types: bool = False,
+    layer: str | None = None,
 ) -> sm.OLS:
-    """Create an Ordinary Least Squares (OLS) Model from a formula and AnnData.
+    """Create an Ordinary Least Squares (OLS) Model from a formula and the data object.
 
     See https://www.statsmodels.org/stable/generated/statsmodels.formula.api.ols.html#statsmodels.formula.api.ols
 
     Args:
-        adata: The AnnData object for the OLS model.
+        edata: Central data object.
         var_names: A list of var names indicating which columns are for the OLS model.
         formula: The formula specifying the model.
-        use_feature_types: If True, the feature types in the AnnData objects .var are used.
+        use_feature_types: If True, the feature types in the data objects .var are used.
         missing: Available options are 'none', 'drop', and 'raise'.
                  If 'none', no nan checking is done. If 'drop', any observations with nans are dropped.
                  If 'raise', an error is raised.
+        layer: The layer to use.
 
     Returns:
         The OLS model instance.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=False)
+        >>> edata = ed.dt.mimic_2()
         >>> formula = "tco2_first ~ pco2_first"
         >>> var_names = ["tco2_first", "pco2_first"]
-        >>> ols = ep.tl.ols(adata, var_names, formula, missing="drop")
+        >>> ols = ep.tl.ols(edata, var_names, formula, missing="drop")
     """
     if isinstance(var_names, list):
-        data = pd.DataFrame(adata[:, var_names].X, columns=var_names)
+        data = ed.io.to_pandas(edata[:, var_names], layer=layer)
     else:
-        data = pd.DataFrame(adata.X, columns=adata.var_names)
+        data = ed.io.to_pandas(edata, layer=layer)
 
     if use_feature_types:
         for col in data.columns:
-            if col in adata.var.index:
-                feature_type = adata.var[FEATURE_TYPE_KEY][col]
+            if col in edata.var.index:
+                feature_type = edata.var[FEATURE_TYPE_KEY][col]
                 if feature_type == CATEGORICAL_TAG:
                     data[col] = data[col].astype("category")
                 elif feature_type == NUMERIC_TAG:
@@ -79,40 +88,46 @@ def ols(
     return ols
 
 
+@use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 def glm(
-    adata: AnnData,
+    edata: EHRData | AnnData,
     var_names: Iterable[str] | None = None,
     formula: str | None = None,
+    *,
     family: Literal["Gaussian", "Binomial", "Gamma", "Gaussian", "InverseGaussian"] = "Gaussian",
     use_feature_types: bool = False,
     missing: Literal["none", "drop", "raise"] = "none",
     as_continuous: Iterable[str] | None | None = None,
+    layer: str | None = None,
 ) -> sm.GLM:
-    """Create a Generalized Linear Model (GLM) from a formula, a distribution, and AnnData.
+    """Create a Generalized Linear Model (GLM) from a formula, a distribution, and the data object.
 
     See https://www.statsmodels.org/stable/generated/statsmodels.formula.api.glm.html#statsmodels.formula.api.glm
 
     Args:
-        adata: The AnnData object for the GLM model.
+        edata: Central data object.
         var_names: A list of var names indicating which columns are for the GLM model.
         formula: The formula specifying the model.
         family: The distribution families. Available options are 'Gaussian', 'Binomial', 'Gamma', and 'InverseGaussian'.
-        use_feature_types: If True, the feature types in the AnnData objects .var are used.
+        use_feature_types: If True, the feature types in the data objects .var are used.
         missing: Available options are 'none', 'drop', and 'raise'. If 'none', no nan checking is done.
                  If 'drop', any observations with nans are dropped. If 'raise', an error is raised.
         as_continuous: A list of var names indicating which columns are continuous rather than categorical.
                     The corresponding columns will be set as type float.
+        layer: The layer to use.
 
     Returns:
         The GLM model instance.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=False)
+        >>> edata = ed.dt.mimic_2()
         >>> formula = "day_28_flg ~ age"
         >>> var_names = ["day_28_flg", "age"]
         >>> family = "Binomial"
-        >>> glm = ep.tl.glm(adata, var_names, formula, family, missing="drop", as_continuous=["age"])
+        >>> glm = ep.tl.glm(edata, var_names, formula, family, missing="drop", as_continuous=["age"])
     """
     family_dict = {
         "Gaussian": sm.families.Gaussian(),
@@ -123,15 +138,15 @@ def glm(
     if family in ["Gaussian", "Binomial", "Gamma", "Gaussian", "InverseGaussian"]:
         family = family_dict[family]
     if isinstance(var_names, list):
-        data = pd.DataFrame(adata[:, var_names].X, columns=var_names)
+        data = ed.io.to_pandas(edata[:, var_names], layer=layer)
     else:
-        data = pd.DataFrame(adata.X, columns=adata.var_names)
+        data = ed.io.to_pandas(edata, layer=layer)
     if as_continuous is not None:
         data[as_continuous] = data[as_continuous].astype(float)
     if use_feature_types:
         for col in data.columns:
-            if col in adata.var.index:
-                feature_type = adata.var[FEATURE_TYPE_KEY][col]
+            if col in edata.var.index:
+                feature_type = edata.var[FEATURE_TYPE_KEY][col]
                 if feature_type == CATEGORICAL_TAG:
                     data[col] = data[col].astype("category")
                 elif feature_type == NUMERIC_TAG:
@@ -181,11 +196,12 @@ def kmf(
         Fitted KaplanMeierFitter.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=False)
+        >>> edata = ed.dt.mimic_2()
         >>> # Flip 'censor_fl' because 0 = death and 1 = censored
-        >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
-        >>> kmf = ep.tl.kmf(adata[:, ["mort_day_censored"]].X, adata[:, ["censor_flg"]].X)
+        >>> edata[:, ["censor_flg"]].X = np.where(edata[:, ["censor_flg"]].X == 0, 1, 0)
+        >>> kmf = ep.tl.kmf(edata[:, ["mort_day_censored"]].X, edata[:, ["censor_flg"]].X)
     """
     warnings.warn(
         "This function is deprecated and will be removed in the next release. Use `ep.tl.kaplan_meier` instead.",
@@ -219,8 +235,10 @@ def kmf(
     return kmf
 
 
+@function_2D_only()
+@use_ehrdata(deprecated_after="1.0.0")
 def kaplan_meier(
-    adata: AnnData,
+    edata: EHRData | AnnData,
     duration_col: str,
     event_col: str | None = None,
     *,
@@ -233,23 +251,23 @@ def kaplan_meier(
     weights: list[float] | None = None,
     fit_options: dict | None = None,
     censoring: Literal["right", "left"] = "right",
+    layer: str | None = None,
 ) -> KaplanMeierFitter:
     """Fit the Kaplan-Meier estimate for the survival function.
 
     The Kaplan–Meier estimator, also known as the product limit estimator, is a non-parametric statistic used to estimate the survival function from lifetime data.
     In medical research, it is often used to measure the fraction of patients living for a certain amount of time after treatment.
-    The results will be stored in the `.uns` slot of the :class:`~anndata.AnnData` object under the key 'kaplan_meier' unless specified otherwise in the `uns_key` parameter.
+    The results will be stored in the `.uns` slot of the data object under the key 'kaplan_meier' unless specified otherwise in the `uns_key` parameter.
 
-    See https://en.wikipedia.org/wiki/Kaplan%E2%80%93Meier_estimator
-        https://lifelines.readthedocs.io/en/latest/fitters/univariate/KaplanMeierFitter.html#module-lifelines.fitters.kaplan_meier_fitter
+    See `Kaplan Meier on Wikipedia <https://en.wikipedia.org/wiki/Kaplan%E2%80%93Meier_estimator>`_ and `Kaplan Meier on Lifelines <https://lifelines.readthedocs.io/en/latest/fitters/univariate/KaplanMeierFitter.html#module-lifelines.fitters.kaplan_meier_fitter>`_.
 
     Args:
-        adata: AnnData object.
-        duration_col: The name of the column in the AnnData object that contains the subjects' lifetimes.
-        event_col: The name of the column in the AnnData object that specifies whether the event has been observed, or censored.
+        edata: Central data object.
+        duration_col: The name of the column in the data object that contains the subjects' lifetimes.
+        event_col: The name of the column in the data object that specifies whether the event has been observed, or censored.
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
             If left `None`, all individuals are assumed to be uncensored.
-        uns_key: The key to use for the `.uns` slot in the AnnData object.
+        uns_key: The key to use for the `.uns` slot in the data object.
         timeline: Return the best estimate at the values in timelines (positively increasing)
         entry: Relative time when a subject entered the study. This is useful for left-truncated (not left-censored) observations.
                If None, all members of the population entered study when they were "born".
@@ -261,19 +279,21 @@ def kaplan_meier(
         fit_options: Additional keyword arguments to pass into the estimator.
         censoring: 'right' for fitting the model to a right-censored dataset. (default, calls fit).
                    'left' for fitting the model to a left-censored dataset (calls fit_left_censoring).
+        layer: The layer to use.
 
     Returns:
         Fitted KaplanMeierFitter.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=False)
+        >>> edata = ed.dt.mimic_2()
         >>> # Flip 'censor_fl' because 0 = death and 1 = censored
-        >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
-        >>> kmf = ep.tl.kaplan_meier(adata, "mort_day_censored", "censor_flg", label="Mortality")
+        >>> edata[:, ["censor_flg"]].X = np.where(edata[:, ["censor_flg"]].X == 0, 1, 0)
+        >>> kmf = ep.tl.kaplan_meier(edata, "mort_day_censored", "censor_flg", label="Mortality")
     """
     return _univariate_model(
-        adata,
+        edata,
         duration_col,
         event_col,
         KaplanMeierFitter,
@@ -287,6 +307,7 @@ def kaplan_meier(
         weights,
         fit_options,
         censoring,
+        layer,
     )
 
 
@@ -352,7 +373,12 @@ def test_nested_f_statistic(small_model: GLMResultsWrapper, big_model: GLMResult
     return p_value
 
 
-def anova_glm(result_1: GLMResultsWrapper, result_2: GLMResultsWrapper, formula_1: str, formula_2: str) -> pd.DataFrame:
+def anova_glm(
+    result_1: GLMResultsWrapper,
+    result_2: GLMResultsWrapper,
+    formula_1: str,
+    formula_2: str,
+) -> pd.DataFrame:
     """Anova table for two fitted generalized linear models.
 
     Args:
@@ -378,9 +404,11 @@ def anova_glm(result_1: GLMResultsWrapper, result_2: GLMResultsWrapper, formula_
     return dataframe
 
 
-def _build_model_input_dataframe(adata: AnnData, duration_col: str, accept_zero_duration=True):
+def _build_model_input_dataframe(
+    edata: EHRData | AnnData, duration_col: str, accept_zero_duration=True, layer: str | None = None
+):
     """Convenience function for regression models."""
-    df = anndata_to_df(adata)
+    df = ed.io.to_pandas(edata, layer=layer)
     df = df.dropna()
 
     if not accept_zero_duration:
@@ -389,8 +417,10 @@ def _build_model_input_dataframe(adata: AnnData, duration_col: str, accept_zero_
     return df
 
 
+@use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 def cox_ph(
-    adata: AnnData,
+    edata: EHRData | AnnData,
     duration_col: str,
     event_col: str = None,
     *,
@@ -413,22 +443,23 @@ def cox_ph(
     show_progress: bool = False,
     initial_point: np.ndarray | None = None,
     fit_options: dict | None = None,
+    layer: str | None = None,
 ) -> CoxPHFitter:
     """Fit the Cox’s proportional hazard for the survival function.
 
     The Cox proportional hazards model (CoxPH) examines the relationship between the survival time of subjects and one or more predictor variables.
     It models the hazard rate as a product of a baseline hazard function and an exponential function of the predictors, assuming proportional hazards over time.
-    The results will be stored in the `.uns` slot of the :class:`~anndata.AnnData` object under the key 'cox_ph' unless specified otherwise in the `uns_key` parameter.
+    The results will be stored in the `.uns` slot of the data object under the key 'cox_ph' unless specified otherwise in the `uns_key` parameter.
 
     See https://lifelines.readthedocs.io/en/latest/fitters/regression/CoxPHFitter.html
 
     Args:
-        adata: AnnData object.
-        duration_col: The name of the column in the AnnData objects that contains the subjects’ lifetimes.
-        event_col: The name of the column in the AnnData object that specifies whether the event has been observed, or censored.
+        edata: Central data object.
+        duration_col: The name of the column in the data objects that contains the subjects’ lifetimes.
+        event_col: The name of the column in the data object that specifies whether the event has been observed, or censored.
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
             If left `None`, all individuals are assumed to be uncensored.
-        uns_key: The key to use for the `.uns` slot in the AnnData object.
+        uns_key: The key to use for the `.uns` slot in the data object.
         alpha: The alpha value in the confidence intervals.
         label: The name of the column of the estimate.
         baseline_estimation_method: The method used to estimate the baseline hazard. Options are 'breslow', 'spline', and 'piecewise'.
@@ -447,18 +478,20 @@ def cox_ph(
         show_progress: Since the fitter is iterative, show convergence diagnostics. Useful if convergence is failing.
         initial_point: set the starting point for the iterative solver.
         fit_options: Additional keyword arguments to pass into the estimator.
+        layer: The layer to use.
 
     Returns:
         Fitted CoxPHFitter.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=False)
+        >>> edata = ed.dt.mimic_2()
         >>> # Flip 'censor_fl' because 0 = death and 1 = censored
-        >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
-        >>> cph = ep.tl.cox_ph(adata, "mort_day_censored", "censor_flg")
+        >>> edata[:, ["censor_flg"]].X = np.where(edata[:, ["censor_flg"]].X == 0, 1, 0)
+        >>> cph = ep.tl.cox_ph(edata, "mort_day_censored", "censor_flg")
     """
-    df = _build_model_input_dataframe(adata, duration_col)
+    df = _build_model_input_dataframe(edata, duration_col, layer=layer)
     cox_ph = CoxPHFitter(
         alpha=alpha,
         label=label,
@@ -486,13 +519,15 @@ def cox_ph(
     )
 
     summary = cox_ph.summary
-    adata.uns[uns_key] = summary
+    edata.uns[uns_key] = summary
 
     return cox_ph
 
 
+@function_2D_only()
+@use_ehrdata(deprecated_after="1.0.0")
 def weibull_aft(
-    adata: AnnData,
+    edata: EHRData | AnnData,
     duration_col: str,
     event_col: str,
     *,
@@ -510,6 +545,7 @@ def weibull_aft(
     entry_col: str | None = None,
     formula: str | None = None,
     fit_options: dict | None = None,
+    layer: str | None = None,
 ) -> WeibullAFTFitter:
     """Fit the Weibull accelerated failure time regression for the survival function.
 
@@ -517,17 +553,17 @@ def weibull_aft(
     where the underlying assumption is that the logarithm of survival time follows a Weibull distribution.
     It models the survival time as an exponential function of the predictors, assuming a specific shape parameter
     for the distribution and allowing for accelerated or decelerated failure times based on the covariates.
-    The results will be stored in the `.uns` slot of the :class:`~anndata.AnnData` object under the key 'weibull_aft' unless specified otherwise in the `uns_key` parameter.
+    The results will be stored in the `.uns` slot of the data object under the key 'weibull_aft' unless specified otherwise in the `uns_key` parameter.
 
     See https://lifelines.readthedocs.io/en/latest/fitters/regression/WeibullAFTFitter.html
 
     Args:
-        adata: AnnData object.
-        duration_col: Name of the column in the AnnData objects that contains the subjects’ lifetimes.
-        event_col: The name of the column in the AnnData object that specifies whether the event has been observed, or censored.
+        edata: Central data object.
+        duration_col: Name of the column in the data objects that contains the subjects’ lifetimes.
+        event_col: The name of the column in the data object that specifies whether the event has been observed, or censored.
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
             If left `None`, all individuals are assumed to be uncensored.
-        uns_key: The key to use for the `.uns` slot in the AnnData object.
+        uns_key: The key to use for the `.uns` slot in the data object.
         alpha: The alpha value in the confidence intervals.
         fit_intercept: Whether to fit an intercept term in the model.
         penalizer: Attach a penalty to the size of the coefficients during regression. This improves stability of the estimates and controls for high correlation between covariates.
@@ -546,20 +582,22 @@ def weibull_aft(
         formula: Use an R-style formula for modeling the dataset. See formula syntax: https://matthewwardrop.github.io/formulaic/basic/grammar/
             If a formula is not provided, all variables in the dataframe are used (minus those used for other purposes like event_col, etc.)
         fit_options: Additional keyword arguments to pass into the estimator.
+        layer: The layer to use.
 
 
     Returns:
         Fitted WeibullAFTFitter.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=False)
-        >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
-        >>> adata = adata[:, ["mort_day_censored", "censor_flg"]]
-        >>> aft = ep.tl.weibull_aft(adata, duration_col="mort_day_censored", event_col="censor_flg")
+        >>> edata = ed.dt.mimic_2()
+        >>> edata[:, ["censor_flg"]].X = np.where(edata[:, ["censor_flg"]].X == 0, 1, 0)
+        >>> edata = edata[:, ["mort_day_censored", "censor_flg"]]
+        >>> aft = ep.tl.weibull_aft(edata, duration_col="mort_day_censored", event_col="censor_flg")
         >>> aft.print_summary()
     """
-    df = _build_model_input_dataframe(adata, duration_col, accept_zero_duration=False)
+    df = _build_model_input_dataframe(edata, duration_col, accept_zero_duration=False, layer=layer)
 
     weibull_aft = WeibullAFTFitter(
         alpha=alpha,
@@ -584,13 +622,15 @@ def weibull_aft(
     )
 
     summary = weibull_aft.summary
-    adata.uns[uns_key] = summary
+    edata.uns[uns_key] = summary
 
     return weibull_aft
 
 
+@function_2D_only()
+@use_ehrdata(deprecated_after="1.0.0")
 def log_logistic_aft(
-    adata: AnnData,
+    edata: EHRData | AnnData,
     duration_col: str,
     event_col: str | None = None,
     *,
@@ -608,6 +648,7 @@ def log_logistic_aft(
     entry_col: str | None = None,
     formula: str | None = None,
     fit_options: dict | None = None,
+    layer: str | None = None,
 ) -> LogLogisticAFTFitter:
     """Fit the log logistic accelerated failure time regression for the survival function.
 
@@ -619,12 +660,12 @@ def log_logistic_aft(
     See https://lifelines.readthedocs.io/en/latest/fitters/regression/LogLogisticAFTFitter.html.
 
     Args:
-        adata: AnnData object.
-        duration_col: Name of the column in the AnnData objects that contains the subjects' lifetimes.
-        event_col: The name of the column in the AnnData object that specifies whether the event has been observed, or censored.
+        edata: Central data object.
+        duration_col: Name of the column in the data objects that contains the subjects' lifetimes.
+        event_col: The name of the column in the data object that specifies whether the event has been observed, or censored.
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
             If left `None`, all individuals are assumed to be uncensored.
-        uns_key: The key to use for the `.uns` slot in the AnnData object.
+        uns_key: The key to use for the `.uns` slot in the data object.
         alpha: The alpha value in the confidence intervals.
         fit_intercept: Whether to fit an intercept term in the model.
         penalizer: Attach a penalty to the size of the coefficients during regression. This improves stability of the estimates and controls for high correlation between covariates.
@@ -643,19 +684,21 @@ def log_logistic_aft(
         formula: Use an R-style formula for modeling the dataset. See formula syntax: https://matthewwardrop.github.io/formulaic/basic/grammar/
             If a formula is not provided, all variables in the dataframe are used (minus those used for other purposes like event_col, etc.)
         fit_options: Additional keyword arguments to pass into the estimator.
+        layer: The layer to use.
 
     Returns:
         Fitted LogLogisticAFTFitter.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=False)
+        >>> edata = ed.dt.mimic_2()
         >>> # Flip 'censor_fl' because 0 = death and 1 = censored
-        >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
-        >>> adata = adata[:, ["mort_day_censored", "censor_flg"]]
-        >>> llf = ep.tl.log_logistic_aft(adata, duration_col="mort_day_censored", event_col="censor_flg")
+        >>> edata[:, ["censor_flg"]].X = np.where(edata[:, ["censor_flg"]].X == 0, 1, 0)
+        >>> edata = edata[:, ["mort_day_censored", "censor_flg"]]
+        >>> llf = ep.tl.log_logistic_aft(edata, duration_col="mort_day_censored", event_col="censor_flg")
     """
-    df = _build_model_input_dataframe(adata, duration_col, accept_zero_duration=False)
+    df = _build_model_input_dataframe(edata, duration_col, accept_zero_duration=False, layer=layer)
 
     log_logistic_aft = LogLogisticAFTFitter(
         alpha=alpha,
@@ -680,13 +723,13 @@ def log_logistic_aft(
     )
 
     summary = log_logistic_aft.summary
-    adata.uns[uns_key] = summary
+    edata.uns[uns_key] = summary
 
     return log_logistic_aft
 
 
 def _univariate_model(
-    adata: AnnData,
+    edata: EHRData | AnnData,
     duration_col: str,
     event_col: str,
     model_class,
@@ -700,9 +743,10 @@ def _univariate_model(
     weights: list[float] | None = None,
     fit_options: dict | None = None,
     censoring: Literal["right", "left"] = "right",
+    layer: str | None = None,
 ):
     """Convenience function for univariate models."""
-    df = _build_model_input_dataframe(adata, duration_col, accept_zero_duration)
+    df = _build_model_input_dataframe(edata, duration_col, accept_zero_duration, layer)
     T = df[duration_col]
     E = df[event_col]
 
@@ -729,13 +773,15 @@ def _univariate_model(
         summary = model.event_table
     else:
         summary = model.summary
-    adata.uns[uns_key] = summary
+    edata.uns[uns_key] = summary
 
     return model
 
 
+@use_ehrdata(deprecated_after="1.0.0")
+@function_2D_only()
 def nelson_aalen(
-    adata: AnnData,
+    edata: EHRData | AnnData,
     duration_col: str,
     event_col: str | None = None,
     *,
@@ -748,22 +794,23 @@ def nelson_aalen(
     weights: list[float] | None = None,
     fit_options: dict | None = None,
     censoring: Literal["right", "left"] = "right",
+    layer: str | None = None,
 ) -> NelsonAalenFitter:
     """Employ the Nelson-Aalen estimator to estimate the cumulative hazard function from censored survival data.
 
     The Nelson-Aalen estimator is a non-parametric method used in survival analysis to estimate the cumulative hazard function.
     It accounts for the presence of individuals whose event times are unknown due to censoring.
     By estimating the cumulative hazard function, the Nelson-Aalen estimator assessing the risk of an event occurring over time.
-    The results will be stored in the `.uns` slot of the :class:`~anndata.AnnData` object under the key 'nelson_aalen' unless specified otherwise in the `uns_key` parameter.
+    The results will be stored in the `.uns` slot of the data object under the key 'nelson_aalen' unless specified otherwise in the `uns_key` parameter.
     See https://lifelines.readthedocs.io/en/latest/fitters/univariate/NelsonAalenFitter.html
 
     Args:
-        adata: AnnData object.
-        duration_col: The name of the column in the AnnData objects that contains the subjects' lifetimes.
-        event_col: The name of the column in the AnnData object that specifies whether the event has been observed, or censored.
+        edata: Central data object.
+        duration_col: The name of the column in the data objects that contains the subjects' lifetimes.
+        event_col: The name of the column in the data object that specifies whether the event has been observed, or censored.
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
             If left `None`, all individuals are assumed to be uncensored.
-        uns_key: The key to use for the `.uns` slot in the AnnData object.
+        uns_key: The key to use for the `.uns` slot in the data object.
         timeline: Return the best estimate at the values in timelines (positively increasing)
         entry: Relative time when a subject entered the study. This is useful for left-truncated (not left-censored) observations.
                If None, all members of the population entered study when they were "born".
@@ -775,19 +822,21 @@ def nelson_aalen(
         fit_options: Additional keyword arguments to pass into the estimator.
         censoring: 'right' for fitting the model to a right-censored dataset. (default, calls fit).
                    'left' for fitting the model to a left-censored dataset (calls fit_left_censoring).
+        layer: The layer to use.
 
     Returns:
         Fitted NelsonAalenFitter.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=False)
+        >>> edata = ed.dt.mimic_2()
         >>> # Flip 'censor_fl' because 0 = death and 1 = censored
-        >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
-        >>> naf = ep.tl.nelson_aalen(adata, "mort_day_censored", "censor_flg")
+        >>> edata[:, ["censor_flg"]].X = np.where(edata[:, ["censor_flg"]].X == 0, 1, 0)
+        >>> naf = ep.tl.nelson_aalen(edata, "mort_day_censored", "censor_flg")
     """
     return _univariate_model(
-        adata,
+        edata,
         duration_col,
         event_col,
         NelsonAalenFitter,
@@ -801,11 +850,14 @@ def nelson_aalen(
         weights=weights,
         fit_options=fit_options,
         censoring=censoring,
+        layer=layer,
     )
 
 
+@function_2D_only()
+@use_ehrdata(deprecated_after="1.0.0")
 def weibull(
-    adata: AnnData,
+    edata: EHRData | AnnData,
     duration_col: str,
     event_col: str,
     *,
@@ -817,6 +869,7 @@ def weibull(
     ci_labels: list[str] | None = None,
     weights: list[float] | None = None,
     fit_options: dict | None = None,
+    layer: str | None = None,
 ) -> WeibullFitter:
     """Employ the Weibull model in univariate survival analysis to understand event occurrence dynamics.
 
@@ -826,16 +879,16 @@ def weibull(
     By fitting the Weibull model to censored survival data, researchers can estimate these parameters and gain insights
     into the hazard rate over time, facilitating comparisons between different groups or treatments.
     This method provides a comprehensive framework for examining survival data and offers valuable insights into the factors influencing event occurrence dynamics.
-    The results will be stored in the `.uns` slot of the :class:`~anndata.AnnData` object under the key 'weibull' unless specified otherwise in the `uns_key` parameter.
+    The results will be stored in the `.uns` slot of the data object under the key 'weibull' unless specified otherwise in the `uns_key` parameter.
     See https://lifelines.readthedocs.io/en/latest/fitters/univariate/WeibullFitter.html
 
     Args:
-        adata: AnnData object.
-        duration_col: Name of the column in the AnnData objects that contains the subjects’ lifetimes.
-        event_col: The name of the column in the AnnData object that specifies whether the event has been observed, or censored.
+        edata: Central data object.
+        duration_col: Name of the column in the data objects that contains the subjects’ lifetimes.
+        event_col: The name of the column in the data object that specifies whether the event has been observed, or censored.
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
             If left `None`, all individuals are assumed to be uncensored.
-        uns_key: The key to use for the `.uns` slot in the AnnData object.
+        uns_key: The key to use for the `.uns` slot in the data object.
         timeline: Return the best estimate at the values in timelines (positively increasing)
         entry: Relative time when a subject entered the study. This is useful for left-truncated (not left-censored) observations.
                If None, all members of the population entered study when they were "born".
@@ -845,19 +898,21 @@ def weibull(
         weights: If providing a weighted dataset. For example, instead of providing every subject
                  as a single element of `durations` and `event_observed`, one could weigh subject differently.
         fit_options: Additional keyword arguments to pass into the estimator.
+        layer: The layer to use.
 
     Returns:
         Fitted WeibullFitter.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> adata = ep.dt.mimic_2(encoded=False)
+        >>> edata = ed.dt.mimic_2()
         >>> # Flip 'censor_fl' because 0 = death and 1 = censored
-        >>> adata[:, ["censor_flg"]].X = np.where(adata[:, ["censor_flg"]].X == 0, 1, 0)
-        >>> wf = ep.tl.weibull(adata, "mort_day_censored", "censor_flg")
+        >>> edata[:, ["censor_flg"]].X = np.where(edata[:, ["censor_flg"]].X == 0, 1, 0)
+        >>> wf = ep.tl.weibull(edata, "mort_day_censored", "censor_flg")
     """
     return _univariate_model(
-        adata,
+        edata,
         duration_col,
         event_col,
         WeibullFitter,
@@ -870,4 +925,5 @@ def weibull(
         ci_labels=ci_labels,
         weights=weights,
         fit_options=fit_options,
+        layer=layer,
     )

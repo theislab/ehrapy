@@ -36,9 +36,15 @@ def test_scatter_plot(mimic_2, check_same_image):
     plt.close("all")
 
 
-def test_heatmap_plot(adata_mini, check_same_image):
+def test_scatter_plot_3D(edata_blob_small):
+    ep.pl.scatter(edata_blob_small, x="feature_1", y="feature_2")
+    with pytest.raises(ValueError, match=r"only supports 2D data"):
+        ep.pl.scatter(edata_blob_small, layer="R_layer", x="feature_1", y="feature_2")
+
+
+def test_heatmap_plot(edata_mini, check_same_image):
     ax_dict = ep.pl.heatmap(
-        adata_mini,
+        edata_mini,
         var_names=["idx", "sys_bp_entry", "dia_bp_entry", "glucose", "weight", "in_days"],
         groupby="station",
         show=False,
@@ -53,6 +59,12 @@ def test_heatmap_plot(adata_mini, check_same_image):
         tol=2e-1,
     )
     plt.close("all")
+
+
+def test_heatmap_plot_3D(edata_blob_small):
+    ep.pl.heatmap(edata_blob_small, var_names=["feature_1", "feature_2"], groupby="cluster")
+    with pytest.raises(ValueError, match=r"only supports 2D data"):
+        ep.pl.heatmap(edata_blob_small, layer="R_layer", var_names=["feature_1", "feature_2"], groupby="cluster")
 
 
 def test_dotplot_plot(mimic_2, check_same_image):
@@ -101,6 +113,12 @@ def test_dotplot_plot(mimic_2, check_same_image):
     plt.close("all")
 
 
+def test_dotplot_plot_3D(edata_blob_small):
+    ep.pl.dotplot(edata_blob_small, var_names=["feature_1", "feature_2"], groupby="cluster")
+    with pytest.raises(ValueError, match=r"only supports 2D data"):
+        ep.pl.dotplot(edata_blob_small, layer="R_layer", var_names=["feature_1", "feature_2"], groupby="cluster")
+
+
 def test_tracks_plot(mimic_2, check_same_image):
     adata_sample = mimic_2[
         :200, ["age", "gender_num", "weight_first", "bmi", "sapsi_first", "day_icu_intime_num", "hour_icu_intime"]
@@ -125,6 +143,13 @@ def test_tracks_plot(mimic_2, check_same_image):
     plt.close("all")
 
 
+def test_tracksplot_3D(edata_blob_small):
+    edata_blob_small.obs["cluster"] = edata_blob_small.obs["cluster"].astype("category")
+    ep.pl.tracksplot(edata_blob_small, var_names=["feature_1", "feature_2"], groupby="cluster")
+    with pytest.raises(ValueError, match=r"only supports 2D data"):
+        ep.pl.tracksplot(edata_blob_small, var_names=["feature_1", "feature_2"], groupby="cluster", layer="R_layer")
+
+
 def test_violin_plot(mimic_2, check_same_image):
     adata_sample = mimic_2[:200, ["age"]].copy()
     adata_sample.obs["service_unit"] = mimic_2[:200, "service_unit"].X.toarray().ravel().astype(str)
@@ -139,6 +164,12 @@ def test_violin_plot(mimic_2, check_same_image):
         tol=2e-1,
     )
     plt.close("all")
+
+
+def test_violin_plot_3D(edata_blob_small):
+    ep.pl.violin(edata_blob_small, keys=["feature_1", "feature_2"], groupby="cluster")
+    with pytest.raises(ValueError, match=r"only supports 2D data"):
+        ep.pl.violin(edata_blob_small, keys=["feature_1", "feature_2"], groupby="cluster", layer="R_layer")
 
 
 def test_matrix_plot(mimic_2, check_same_image):
@@ -184,6 +215,12 @@ def test_matrix_plot(mimic_2, check_same_image):
     plt.close("all")
 
 
+def test_matrix_plot_3D(edata_blob_small):
+    ep.pl.matrixplot(edata_blob_small, var_names=["feature_1", "feature_2"], groupby="cluster")
+    with pytest.raises(ValueError, match=r"only supports 2D data"):
+        ep.pl.matrixplot(edata_blob_small, var_names=["feature_1", "feature_2"], groupby="cluster", layer="R_layer")
+
+
 def test_stacked_violin_plot(mimic_2, check_same_image):
     var_names = ["icu_los_day", "hospital_los_day", "age", "gender_num", "weight_first", "bmi"]
 
@@ -206,6 +243,12 @@ def test_stacked_violin_plot(mimic_2, check_same_image):
         tol=2e-1,
     )
     plt.close("all")
+
+
+def test_stacked_violin_plot_3D(edata_blob_small):
+    ep.pl.stacked_violin(edata_blob_small, var_names=["feature_1", "feature_2"], groupby="cluster")
+    with pytest.raises(ValueError, match=r"only supports 2D data"):
+        ep.pl.stacked_violin(edata_blob_small, var_names=["feature_1", "feature_2"], groupby="cluster", layer="R_layer")
 
 
 def test_clustermap(mimic_2_encoded, check_same_image):
@@ -533,6 +576,7 @@ def test_diffmap(mimic_2_sample_serv_unit_day_icu, check_same_image):
 
 def test_dpt_timeseries(mimic_2_encoded, check_same_image):
     adata = mimic_2_encoded.copy()
+
     ep.pp.knn_impute(adata)
     ep.pp.log_norm(adata, offset=1)
     ep.pp.neighbors(adata, method="gauss")
@@ -541,7 +585,7 @@ def test_dpt_timeseries(mimic_2_encoded, check_same_image):
 
     adata.uns["iroot"] = np.flatnonzero(adata.obs["leiden_0_5"] == "0")[0]
 
-    ep.tl.dpt(adata, n_branchings=3)
+    ep.tl.dpt(adata, n_branchings=2)
     ep.pl.dpt_timeseries(adata, show=False)
 
     fig = plt.gcf()
