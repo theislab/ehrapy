@@ -21,7 +21,7 @@ from ehrapy.preprocessing._normalization import (
 )
 from ehrapy.preprocessing._outliers import clip_quantile, winsorize
 from ehrapy.preprocessing._quality_control import mcar_test, qc_lab_measurements, qc_metrics
-from ehrapy.preprocessing._scanpy_pp_api import combat, pca, regress_out, sample
+from ehrapy.preprocessing._scanpy_pp_api import combat, pca, regress_out, sample, subsample
 from ehrapy.preprocessing._summarize_measurements import summarize_measurements
 
 __all__ = [
