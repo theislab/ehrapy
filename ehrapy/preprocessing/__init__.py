@@ -8,7 +8,7 @@ from ehrapy.preprocessing._imputation import (
     miss_forest_impute,
     simple_impute,
 )
-from ehrapy.preprocessing._neighbors import neighbors
+from ehrapy.preprocessing._neighbors_core import neighbors
 from ehrapy.preprocessing._normalization import (
     log_norm,
     maxabs_norm,

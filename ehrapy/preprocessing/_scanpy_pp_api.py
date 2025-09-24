@@ -1,10 +1,7 @@
 from __future__ import annotations
 
 import warnings
-from collections.abc import Callable
-from functools import singledispatch
-from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Literal, TypeAlias
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import scanpy as sc
