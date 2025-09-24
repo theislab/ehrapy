@@ -1,5 +1,4 @@
 import numpy as np
-from tslearn.metrics import dtw
 
 
 def dtw_distance(patient_indices_x: np.ndarray, patient_indices_y: np.ndarray, R: np.ndarray) -> float:
@@ -17,6 +16,9 @@ def dtw_distance(patient_indices_x: np.ndarray, patient_indices_y: np.ndarray, R
         Average DTW distance across valid variable pairs.
         Returns 0 if no valid variable pairs exist.
     """
+    # moving this out can break the RTD build for unknown reasons
+    from tslearn.metrics import dtw
+
     patient_i, patient_j = int(patient_indices_x[0]), int(patient_indices_y[0])
     total_distance = 0
     valid_variable_count = 0
