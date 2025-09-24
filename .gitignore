@@ -26,6 +26,7 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+.ruff_cache
 
 
 # PyInstaller
@@ -66,9 +67,6 @@ db.sqlite3-journal
 instance/
 .webassets-cache
 
-# Scrapy stuff:
-.scrapy
-
 # Sphinx documentation
 docs/_build/
 docs/api/data
@@ -94,7 +92,6 @@ ipython_config.py
 
 # pyenv
 .python-version
-
 
 # pipenv
 #   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
@@ -143,9 +140,6 @@ dmypy.json
 
 # Jetbrains IDE
 .idea/
-
-# Coala
-*.orig
 
 .vscode/settings.json
 
