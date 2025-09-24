@@ -26,6 +26,7 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+.ruff_cache
 
 
 # PyInstaller
@@ -65,9 +66,6 @@ db.sqlite3-journal
 # Flask stuff:
 instance/
 .webassets-cache
-
-# Scrapy stuff:
-.scrapy
 
 # Sphinx documentation
 docs/_build/
@@ -143,9 +141,6 @@ dmypy.json
 
 # Jetbrains IDE
 .idea/
-
-# Coala
-*.orig
 
 .vscode/settings.json
 
