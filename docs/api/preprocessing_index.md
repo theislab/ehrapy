@@ -80,3 +80,13 @@ Partially overlaps with dataset integration. Note that a simple batch correction
 
     preprocessing.combat
 ```
+
+## Neighbors
+
+```{eval-rst}
+.. autosummary::
+    :toctree: preprocessing
+    :nosignatures:
+
+    preprocessing.neighbors
+```
