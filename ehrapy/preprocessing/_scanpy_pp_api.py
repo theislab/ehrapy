@@ -414,6 +414,7 @@ def filter_features(
     copy: bool = False,
 ) -> AnnData | EHRData | tuple[CSBase, np.ndarray] | None:  # pragma: no cover
     """Filter features based on counts or number of observations.
+
     Keep only features which have at least `min_counts` counts or `min_obs` observations
     or have at most `max_counts` counts or `max_obs` observations.
     When an `EHRData` is passed, filtering can be done across time points.
@@ -524,6 +525,126 @@ def filter_features(
             min_cells=min_obs,
             max_counts=max_counts,
             max_cells=max_obs,
+            inplace=inplace,
+            copy=copy,
+        )
+
+
+def filter_observations(
+    data: AnnData | EHRData | CSBase,
+    *,
+    min_counts: int | None = None,
+    min_vars: int | None = None,
+    max_counts: int | None = None,
+    max_vars: int | None = None,
+    time_mode: Literal["all", "any", "proportion"] = "all",
+    prop: float | None = None,
+    inplace: bool = True,
+    copy: bool = False,
+) -> AnnData | EHRData | tuple[np.ndarray, np.ndarray] | None:
+    """Filter observations based on counts and numbers of variables (features/measurements).
+
+    Keep only observations which have at least  `min_counts` counts or `min_vars` variables or at most  `max_counts` counts or `max_vars` variables.
+    When an `EHRData` is passed, filtering can be done across time points.
+
+    Only provide either `min_counts` or `min_vars` and either `max_counts` or `max_vars` per call.
+
+    Args:
+        data: Central data object.
+        min_counts: Minimum number of counts required for an observation to pass filtering.
+        min_vars: Minimum number of variables required for an observation to pass filtering.
+        max_counts: Maximum number of counts allowed for an observation to pass filtering.
+        max_vars: Maximum number of variables allowed for an observation to pass filtering.
+        time_mode: How to combine filtering criteria across the time axis. Only relevant if an `EHRData` is passed. Options are:
+                    * `'all'` (default): The observation must pass the filtering criteria in all time points.
+                    * `'any'`: The observation must pass the filtering criteria in at least one time point.
+                    * `'proportion'`: The observation must pass the filtering criteria in at least a proportion `prop` of time points. For example, with `prop=0.3`,
+                      the observation must pass the filtering criteria in at least 30% of the time points.
+        prop: Proportion of time points in which the observation must pass the filtering criteria. Only relevant if `time_mode='proportion'`.
+        inplace: Performs the operation inplace or returns a copy.
+        copy: If an `EHRData` or `AnnData` is passed, determines whether a copy is returned. Is ignored otherwise.
+
+    Returns:
+        Depending on `inplace`, subsets and annotates the passed data object and returns `None` or returns the following arrays:
+            * obs_mask: A boolean array indicating which observations are kept after filtering.
+            * number_per_obs: An array with the number of counts or variables per observation across time points.
+
+    """
+    if isinstance(data, EHRData):
+        n_opts = sum(x is not None for x in (min_counts, min_vars, max_counts, max_vars))
+        if n_opts != 1:
+            raise ValueError("Exactly one of min_counts, min_vars, max_counts, max_vars must be provided")
+        if time_mode not in {"all", "any", "proportion"}:
+            raise ValueError(f"time_mode must be one of 'all', 'any', 'proportion', got {time_mode}")
+        if time_mode == "proportion" and (prop is None or not (0 < prop <= 1)):
+            raise ValueError("prop must be set to a value between 0 and 1 when time_mode is 'proportion'")
+
+        by_counts = (min_counts is not None) or (max_counts is not None)
+        threshold_min = min_counts if by_counts else min_vars
+        threshold_max = max_counts if by_counts else max_vars
+
+        edata = data.copy() if copy else data
+
+        _obs_ax, var_ax, _time_ax = 0, 1, 2
+        n_obs, n_vars, n_time = edata.R.shape
+        per_time_vals = np.empty((n_obs, n_time), dtype=float)
+
+        for t in range(n_time):
+            sliced = edata.R[:, :, t]
+
+            if by_counts:
+                vals = np.nansum(sliced, axis=var_ax)
+            else:
+                present = (~np.isnan(sliced)) & (sliced != 0)
+                vals = present.sum(axis=var_ax)
+
+            per_time_vals[:, t] = vals
+
+        masks_t = np.ones((n_obs, n_time), dtype=bool)
+        if threshold_min is not None:
+            masks_t &= per_time_vals >= float(threshold_min)
+        if threshold_max is not None:
+            masks_t &= per_time_vals <= float(threshold_max)
+
+        if time_mode == "all":
+            obs_mask = masks_t.all(axis=1)
+        elif time_mode == "any":
+            obs_mask = masks_t.any(axis=1)
+        else:
+            obs_mask = masks_t.mean(axis=1) >= float(prop)
+
+        number_per_obs = per_time_vals.sum(axis=1).astype(np.float64)
+
+        n_filtered = int((~obs_mask).sum())
+        if n_filtered > 0:
+            msg = f"filtered out {n_filtered} observations that have"
+            if threshold_min is not None:
+                msg += f"less than {threshold_min} " + ("counts" if by_counts else "features")
+            else:
+                msg += f"more than {threshold_max} " + ("counts" if by_counts else "features")
+            if time_mode == "proportion":
+                msg += f" in < {prop * 100:.1f}% of time points"
+            else:
+                msg += f" in {time_mode} time points"
+
+            print(msg)
+
+        if not inplace:
+            return obs_mask, number_per_obs
+
+        else:
+            label = "n_counts_over_time" if by_counts else "n_vars_over_time"
+            edata.obs[label] = number_per_obs
+            edata._inplace_subset_obs(obs_mask)
+            return edata if copy else None
+
+    else:
+        return sc.pp.filter_cells(
+            data=data,
+            min_counts=min_counts,
+            min_cells=min_vars,
+            max_counts=max_counts,
+            max_cells=max_vars,
             inplace=inplace,
             copy=copy,
         )
