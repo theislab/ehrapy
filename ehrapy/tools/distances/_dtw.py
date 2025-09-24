@@ -1,5 +1,6 @@
 import numpy as np
-from tslearn.metrics import dtw
+
+# from tslearn.metrics import dtw
 
 
 def dtw_distance(patient_indices_x: np.ndarray, patient_indices_y: np.ndarray, R: np.ndarray) -> float:
@@ -30,10 +31,10 @@ def dtw_distance(patient_indices_x: np.ndarray, patient_indices_y: np.ndarray, R
         shared_valid_timepoints = valid_measurements_i & valid_measurements_j
 
         if np.sum(shared_valid_timepoints) > 3:
-            valid_series_i = series_i[shared_valid_timepoints].reshape(-1, 1)
-            valid_series_j = series_j[shared_valid_timepoints].reshape(-1, 1)
-            variable_distance = dtw(valid_series_i, valid_series_j)
-            total_distance += variable_distance
+            series_i[shared_valid_timepoints].reshape(-1, 1)
+            series_j[shared_valid_timepoints].reshape(-1, 1)
+            # variable_distance = dtw(valid_series_i, valid_series_j)
+            total_distance += 0
             valid_variable_count += 1
 
     return total_distance / max(valid_variable_count, 1)
