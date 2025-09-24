@@ -10,13 +10,13 @@ import numpy as np
 import scanpy as sc
 import scipy.sparse as sp
 from anndata import AnnData
+from ehrdata import EHRData
 
 from ehrapy._compat import function_2D_only, use_ehrdata
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Mapping
 
-    from ehrdata import EHRData
     from numpy.typing import NDArray
     from scanpy.neighbors import KnnTransformerLike
     from scipy.sparse import spmatrix
@@ -399,6 +399,134 @@ def neighbors(
         key_added=key_added,
         copy=copy,
     )
+
+
+def filter_features(
+    data: AnnData | EHRData | CSBase,
+    *,
+    min_counts: int | None = None,
+    min_obs: int | None = None,
+    max_counts: int | None = None,
+    max_obs: int | None = None,
+    time_mode: Literal["all", "any", "proportion"] = "all",
+    prop: float | None = None,
+    inplace: bool = True,
+    copy: bool = False,
+) -> AnnData | EHRData | tuple[CSBase, np.ndarray] | None:  # pragma: no cover
+    """Filter features based on counts or number of observations.
+    Keep only features which have at least `min_counts` counts or `min_obs` observations
+    or have at most `max_counts` counts or `max_obs` observations.
+    When an `EHRData` is passed, filtering can be done across time points.
+
+    Only provide either `min_counts` or `min_obs` and either `max_counts` or `max_obs` per call.
+
+    Args:
+        data: Central data object.
+        min_counts: Minimum number of counts required for a feature to pass filtering.
+        min_obs: Minimum number of observations required for a feature to pass filtering.
+        max_counts: Maximum number of counts allowed for a feature to pass filtering.
+        max_obs: Maximum number of observations allowed for a feature to pass filtering.
+        time_mode: How to combine filtering criteria across the time axis. Only relevant if an `EHRData` is passed. Options are:
+                    * `'all'` (default): The feature must pass the filtering criteria in all time points.
+                    * `'any'`: The feature must pass the filtering criteria in at least one time point.
+                    * `'proportion'`: The feature must pass the filtering criteria in at least a proportion `prop` of time points. For example, with `prop=0.3`,
+                    the feature must pass the filtering criteria in at least 30% of the time points.
+        prop: Proportion of time points in which the feature must pass the filtering criteria. Only relevant if `time_mode='proportion'`.
+        inplace: Performs the operation inplace or returns a copy.
+        copy: If an `EHRData` or `AnnData` is passed, determines whether a copy is returned. Is ignored otherwise.
+
+    Returns:
+        Depending on `inplace`, subsets and annotates the passed data object and returns `None` or returns the following arrays:
+            * feature_mask: A boolean array indicating which features are kept after filtering.
+            * number_per_feature: An array with the number of counts or observations per feature across time points.
+
+    """
+    if isinstance(data, EHRData):
+        if (data.R is None) or (data.R.ndim <= 2):
+            return sc.pp.filter_genes(
+                data=data,
+                min_counts=min_counts,
+                min_cells=min_obs,
+                max_counts=max_counts,
+                max_cells=max_obs,
+                inplace=inplace,
+                copy=copy,
+            )
+        else:
+            edata = data.copy() if copy else data
+
+            n_opts = sum(x is not None for x in [min_counts, min_obs, max_counts, max_obs])
+            if n_opts != 1:
+                raise ValueError("Exactly one of min_counts, min_obs, max_counts, max_obs must be provided")
+
+            if time_mode not in {"all", "any", "proportion"}:
+                raise ValueError(f"time_mode must be one of 'all', 'any', 'proportion', got {time_mode}")
+
+            if time_mode == "proportion" and (prop is None or not (0 < prop <= 1)):
+                raise ValueError("prop must be set to a value between 0 and 1 when time_mode is 'proportion'")
+
+            obs_ax, _var_ax, _time_ax = 0, 1, 2
+
+            by_counts = (min_counts is not None) or (max_counts is not None)
+            threshold_min = min_counts if by_counts else min_obs
+            threshold_max = max_counts if by_counts else max_obs
+
+            if by_counts:
+                counts = np.nansum(edata.R, axis=obs_ax)
+            else:
+                present = (~np.isnan(edata.R)) & (edata.R != 0)
+                counts = present.sum(axis=obs_ax)
+
+            if threshold_min is not None:
+                pass_threshold = counts >= threshold_min
+            else:
+                pass_threshold = counts <= threshold_max
+
+            if time_mode == "all":
+                feature_mask = pass_threshold.all(axis=1)
+            elif time_mode == "any":
+                feature_mask = pass_threshold.any(axis=1)
+            elif time_mode == "proportion":
+                if prop is None:
+                    raise ValueError("prop must be set when time_mode is 'proportion'")
+                feature_mask = (pass_threshold.sum(axis=1) / pass_threshold.shape[0]) >= prop
+            else:
+                raise ValueError(f"Unknown time_mode: {time_mode}")
+
+            number_per_feature = counts.sum(axis=1).astype(np.float64)
+
+            n_filtered = int((~feature_mask).sum())
+            if n_filtered > 0:
+                msg = f"filtered out {n_filtered} features that are measured "
+                if threshold_min is not None:
+                    msg += f"less than {threshold_min} counts"
+                else:
+                    msg += f"more than {threshold_max} counts"
+
+                if time_mode == "proportion":
+                    msg += f" in less than {prop * 100:.1f}% of time points"
+                else:
+                    msg += f" in {time_mode} time points"
+                print(msg)
+
+            if not inplace:
+                return feature_mask, number_per_feature
+            else:
+                label = "n_counts_over_time" if by_counts else "n_obs_over_time"
+                edata.var[label] = number_per_feature
+                edata._inplace_subset_var(feature_mask)
+                return edata if copy else None
+
+    else:
+        return sc.pp.filter_genes(
+            data=data,
+            min_counts=min_counts,
+            min_cells=min_obs,
+            max_counts=max_counts,
+            max_cells=max_obs,
+            inplace=inplace,
+            copy=copy,
+        )
 
 
 def _random_resample(

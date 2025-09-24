@@ -145,6 +145,19 @@ def mcar_edata(rng) -> ed.EHRData:
 
 
 @pytest.fixture
+def mcar_edata_3d(rng) -> ed.EHRData:
+    """Generate MCAR 3D data by randomly sampling."""
+    n_pat, n_vars, n_time = 100, 30, 10
+    R = rng.random((n_pat, n_vars, n_time))
+    miss_rate = 0.1
+    missing_indices = rng.choice(a=[False, True], size=R.shape, p=[1 - miss_rate, miss_rate])
+    R = R.astype(float)
+    R[missing_indices] = np.nan
+
+    return ed.EHRData(R=R)
+
+
+@pytest.fixture
 def edata_mini():
     return read_csv(f"{TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["glucose", "weight", "disease", "station"])
 
