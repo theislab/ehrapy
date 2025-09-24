@@ -68,8 +68,8 @@ def neighbors(
 
     The neighbor search efficiency of this heavily relies on UMAP :cite:p:`McInnes2018`,
     which also provides a method for estimating connectivities of data points -
-    the connectivity of the manifold (`method=='umap'`). If `method=='gauss'`,
-    connectivities are computed according to :cite:p:`Coifman2005`, in the adaption of :cite:p:`Haghverdi2016`.
+    the connectivity of the manifold (`method=='umap'`).
+    If `method=='gauss'`, connectivities are computed according to :cite:p:`Coifman2005`, in the adaption of :cite:p:`Haghverdi2016`.
 
     Args:
         edata: Central data object.
