@@ -404,7 +404,7 @@ def neighbors(
 
 
 def filter_features(
-    data: EHRData,
+    edata: EHRData,
     *,
     min_obs: int | None = None,
     max_obs: int | None = None,
@@ -421,7 +421,7 @@ def filter_features(
     Only provide `min_obs` and/or `max_obs` per call.
 
     Args:
-        data: Central data object.
+        edata: Central data object.
         min_obs: Minimum number of observations required for a feature to pass filtering.
         max_obs: Maximum number of observations allowed for a feature to pass filtering.
         time_mode: How to combine filtering criteria across the time axis. Options are:
@@ -445,10 +445,10 @@ def filter_features(
     (500, 18, 15)
 
     """
-    if not isinstance(data, EHRData):
+    if not isinstance(edata, EHRData):
         raise TypeError("Data object must be an EHRData object")
 
-    edata = data.copy() if copy else data
+    data = edata.copy() if copy else edata
 
     lower_set = min_obs is not None
     upper_set = max_obs is not None
@@ -467,7 +467,7 @@ def filter_features(
     threshold_min = min_obs
     threshold_max = max_obs
 
-    missing_mask = np.isin(edata.R, MISSING_VALUES) | np.isnan(edata.R)
+    missing_mask = np.isin(data.R, MISSING_VALUES) | np.isnan(data.R)
 
     present = ~missing_mask
     counts = present.sum(axis=obs_ax)
@@ -508,13 +508,13 @@ def filter_features(
         logger.info(msg)
 
         label = "n_obs_over_time"
-        edata.var[label] = number_per_feature
-        edata._inplace_subset_var(feature_mask)
-    return edata if copy else None
+        data.var[label] = number_per_feature
+        data._inplace_subset_var(feature_mask)
+    return data if copy else None
 
 
 def filter_observations(
-    data: EHRData,
+    edata: EHRData,
     *,
     min_vars: int | None = None,
     max_vars: int | None = None,
@@ -530,7 +530,7 @@ def filter_observations(
     Only provide `min_vars` and/or `max_vars` per call.
 
     Args:
-        data: Central data object.
+        edata: Central data object.
         min_vars: Minimum number of variables required for an observation to pass filtering.
         max_vars: Maximum number of variables allowed for an observation to pass filtering.
         time_mode: How to combine filtering criteria across the time axis. Only relevant if an `EHRData` is passed. Options are:
@@ -539,7 +539,6 @@ def filter_observations(
                     * `'proportion'`: The observation must pass the filtering criteria in at least a proportion `prop` of time points. For example, with `prop=0.3`,
                       the observation must pass the filtering criteria in at least 30% of the time points.
         prop: Proportion of time points in which the observation must pass the filtering criteria. Only relevant if `time_mode='proportion'`.
-        inplace: Performs the operation inplace or returns a copy.
         copy: Determines whether a copy is returned.
 
     Returns:
@@ -555,10 +554,10 @@ def filter_observations(
     (477, 45, 15)
 
     """
-    if not isinstance(data, EHRData):
+    if not isinstance(edata, EHRData):
         raise TypeError("Data object must be an EHRData object")
 
-    edata = data.copy() if copy else data
+    data = edata.copy() if copy else edata
 
     lower_set = min_vars is not None
     upper_set = max_vars is not None
@@ -578,7 +577,7 @@ def filter_observations(
     per_time_vals = np.empty((n_obs, n_time), dtype=float)
 
     for t in range(n_time):
-        sliced = edata.R[:, :, t]
+        sliced = data.R[:, :, t]
 
         missing_mask = np.isin(sliced, MISSING_VALUES) | np.isnan(sliced)
 
@@ -618,9 +617,9 @@ def filter_observations(
         logger.info(msg)
 
     label = "n_vars_over_time"
-    edata.obs[label] = number_per_obs
-    edata._inplace_subset_obs(obs_mask)
-    return edata if copy else None
+    data.obs[label] = number_per_obs
+    data._inplace_subset_obs(obs_mask)
+    return data if copy else None
 
 
 def _random_resample(
