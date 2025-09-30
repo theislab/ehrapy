@@ -1,5 +1,3 @@
-# Since we might check whether an object is an instance of dask.array.Array
-# without requiring dask installed in the environment.
 from __future__ import annotations
 
 import warnings
@@ -7,7 +5,7 @@ from functools import wraps
 from importlib.util import find_spec
 from inspect import signature
 from subprocess import PIPE, Popen
-from typing import TYPE_CHECKING, Concatenate, ParamSpec, TypeVar, cast
+from typing import TYPE_CHECKING, ParamSpec, TypeVar, cast
 
 P = ParamSpec("P")
 R = TypeVar("R")
