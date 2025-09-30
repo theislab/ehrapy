@@ -8,11 +8,11 @@ from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 
 import numpy as np
 import scanpy as sc
-import scanpy.logging as logger
 import scipy.sparse as sp
 from anndata import AnnData
 from ehrdata import EHRData
 from ehrdata.core.constants import MISSING_VALUES
+from lamin_utils import logger
 
 from ehrapy._compat import function_2D_only, use_ehrdata
 
@@ -406,6 +406,7 @@ def neighbors(
 def filter_features(
     edata: EHRData,
     *,
+    layers: str | Sequence[str] | None = None,
     min_obs: int | None = None,
     max_obs: int | None = None,
     time_mode: Literal["all", "any", "proportion"] = "all",
@@ -422,6 +423,8 @@ def filter_features(
 
     Args:
         edata: Central data object.
+        layers: layers(s) to use for filtering. If `None` (default), filtering is performed on `.R` for 3D EHRData objects and on `.X` for 2D EHRData objects.
+        When multiple layers are provided, a feature passes the filtering only if it satisifies the criteria in every layer.
         min_obs: Minimum number of observations required for a feature to pass filtering.
         max_obs: Maximum number of observations allowed for a feature to pass filtering.
         time_mode: How to combine filtering criteria across the time axis. Options are:
@@ -467,32 +470,60 @@ def filter_features(
     threshold_min = min_obs
     threshold_max = max_obs
 
-    missing_mask = np.isin(data.R, MISSING_VALUES) | np.isnan(data.R)
+    if layers is None:
+        arr = data.R if data.R is not None else data.X
+        if arr is None:
+            raise ValueError("Both X and R are None, no data to filter")
+        arrs = [arr]
+    elif isinstance(layers, str):
+        arrs = [data.layers[layers]]
+    else:  # when filtering is done across multiple layers
+        arrs = [data.layers[layer] for layer in layers]
 
-    present = ~missing_mask
-    counts = present.sum(axis=obs_ax)
+    layer_masks = []
+    first_counts = None
+    is_2d_ref = False
+    for arr in arrs:
+        if arr.ndim == 2:
+            arr = arr[:, :, None]
+            if first_counts is None:
+                is_2d_ref = True
+        elif arr.ndim != 3:
+            raise ValueError(f"expected a 2D or 3D array, got {arr.shape}")
 
-    if threshold_max is not None and threshold_min is not None:
-        pass_threshold = (threshold_min <= counts) & (counts <= threshold_max)
-    elif threshold_min is not None:
-        pass_threshold = counts >= threshold_min
-    else:
-        pass_threshold = counts <= threshold_max
+        missing_mask = np.isin(arr, MISSING_VALUES) | np.isnan(arr)
 
-    if time_mode == "all":
-        feature_mask = pass_threshold.all(axis=1)
-    elif time_mode == "any":
-        feature_mask = pass_threshold.any(axis=1)
-    elif time_mode == "proportion":
-        if prop is None:
-            raise ValueError("prop must be set when time_mode is 'proportion'")
-        feature_mask = (pass_threshold.sum(axis=1) / pass_threshold.shape[0]) >= prop
-    else:
-        raise ValueError(f"Unknown time_mode: {time_mode}")
+        present = ~missing_mask
+        counts = present.sum(axis=obs_ax)
 
-    number_per_feature = counts.sum(axis=1).astype(np.float64)
+        if first_counts is None:
+            first_counts = counts
 
-    n_filtered = int((~feature_mask).sum())
+        if threshold_max is not None and threshold_min is not None:
+            pass_threshold = (threshold_min <= counts) & (counts <= threshold_max)
+        elif threshold_min is not None:
+            pass_threshold = counts >= threshold_min
+        else:
+            pass_threshold = counts <= threshold_max
+
+        if time_mode == "all":
+            feature_mask = pass_threshold.all(axis=1)
+        elif time_mode == "any":
+            feature_mask = pass_threshold.any(axis=1)
+        elif time_mode == "proportion":
+            if prop is None:
+                raise ValueError("prop must be set when time_mode is 'proportion'")
+            feature_mask = (pass_threshold.sum(axis=1) / pass_threshold.shape[1]) >= prop
+        else:
+            raise ValueError(f"Unknown time_mode: {time_mode}")
+
+        layer_masks.append(feature_mask)
+
+    final_feature_mask = np.logical_and.reduce(layer_masks)
+
+    number_per_feature = first_counts.sum(axis=1).astype(np.float64)
+
+    n_filtered = int((~final_feature_mask).sum())
 
     if n_filtered > 0:
         msg = f"filtered out {n_filtered} features that are measured "
@@ -501,21 +532,24 @@ def filter_features(
         else:
             msg += f"more than {threshold_max} counts"
 
-        if time_mode == "proportion":
-            msg += f" in less than {prop * 100:.1f}% of time points"
-        else:
-            msg += f" in {time_mode} time points"
+        if not is_2d_ref:
+            if time_mode == "proportion":
+                msg += f" in less than {prop * 100:.1f}% of time points"
+            else:
+                msg += f" in {time_mode} time points"
         logger.info(msg)
 
-        label = "n_obs_over_time"
-        data.var[label] = number_per_feature
-        data._inplace_subset_var(feature_mask)
+    label = "n_obs" if is_2d_ref else "n_obs_over_time"
+    data.var[label] = number_per_feature
+    data._inplace_subset_var(final_feature_mask)
+
     return data if copy else None
 
 
 def filter_observations(
     edata: EHRData,
     *,
+    layers: str | Sequence[str] | None = None,
     min_vars: int | None = None,
     max_vars: int | None = None,
     time_mode: Literal["all", "any", "proportion"] = "all",
@@ -531,6 +565,8 @@ def filter_observations(
 
     Args:
         edata: Central data object.
+        layers: layers(s) to use for filtering. If `None` (default), filtering is performed on `.R` for 3D EHRData objects and on `.X` for 2D EHRData objects.
+        When multiple layers are provided, a feature passes the filtering only if it satisifies the criteria in every layer.
         min_vars: Minimum number of variables required for an observation to pass filtering.
         max_vars: Maximum number of variables allowed for an observation to pass filtering.
         time_mode: How to combine filtering criteria across the time axis. Only relevant if an `EHRData` is passed. Options are:
@@ -572,35 +608,55 @@ def filter_observations(
     threshold_min = min_vars
     threshold_max = max_vars
 
-    _obs_ax, var_ax, _time_ax = 0, 1, 2
-    n_obs, n_vars, n_time = edata.R.shape
-    per_time_vals = np.empty((n_obs, n_time), dtype=float)
-
-    for t in range(n_time):
-        sliced = data.R[:, :, t]
-
-        missing_mask = np.isin(sliced, MISSING_VALUES) | np.isnan(sliced)
-
-        present = ~missing_mask
-        vals = present.sum(axis=var_ax)
-
-        per_time_vals[:, t] = vals
-
-    if threshold_min is not None and threshold_max is not None:
-        masks_t = (per_time_vals >= float(threshold_min)) & (per_time_vals <= float(threshold_max))
-    elif threshold_min is not None:
-        masks_t = per_time_vals >= float(threshold_min)
-    elif threshold_max is not None:
-        masks_t = per_time_vals <= float(threshold_max)
-
-    if time_mode == "all":
-        obs_mask = masks_t.all(axis=1)
-    elif time_mode == "any":
-        obs_mask = masks_t.any(axis=1)
+    if layers is None:
+        arr = data.R if data.R is not None else data.X
+        if arr is None:
+            raise ValueError("Both R and X are None, no data to filter")
+        arrs = [arr]
+    elif isinstance(layers, str):
+        arrs = [data.layers[layers]]
     else:
-        obs_mask = masks_t.mean(axis=1) >= float(prop)
+        arrs = [data.layers[layer] for layer in layers]
 
-    number_per_obs = per_time_vals.sum(axis=1).astype(np.float64)
+    layers_obs_masks: list[np.ndarray] = []
+    first_number_per_obs: np.ndarray | None = None
+    is_2d_ref = False
+
+    for arr in arrs:
+        if arr.ndim == 2:
+            arr = arr[:, :, None]
+            is_2d = True
+        elif arr.ndim == 3:
+            is_2d = False
+        else:
+            raise ValueError(f"expected 2D or 3D array, got {arr.shape}")
+
+        missing_mask = np.isin(arr, MISSING_VALUES) | np.isnan(arr)
+        present = ~missing_mask
+
+        per_time_vals = present.sum(axis=1).astype(float)
+
+        if first_number_per_obs is None:
+            first_number_per_obs = per_time_vals.sum(axis=1).astype(np.float64)
+            is_2d_ref = is_2d
+
+        if threshold_min is not None and threshold_max is not None:
+            masks_t = (per_time_vals >= float(threshold_min)) & (per_time_vals <= float(threshold_max))
+        elif threshold_min is not None:
+            masks_t = per_time_vals >= float(threshold_min)
+        elif threshold_max is not None:
+            masks_t = per_time_vals <= float(threshold_max)
+
+        if time_mode == "all":
+            obs_mask = masks_t.all(axis=1)
+        elif time_mode == "any":
+            obs_mask = masks_t.any(axis=1)
+        else:
+            obs_mask = masks_t.mean(axis=1) >= float(prop)
+
+        layers_obs_masks.append(obs_mask)
+
+    final_obs_mask = np.logical_and.reduce(layers_obs_masks)
 
     n_filtered = int((~obs_mask).sum())
     if n_filtered > 0:
@@ -609,16 +665,18 @@ def filter_observations(
             msg += f"less than {threshold_min} " + "features"
         else:
             msg += f"more than {threshold_max} " + "features"
-        if time_mode == "proportion":
-            msg += f" in < {prop * 100:.1f}% of time points"
-        else:
-            msg += f" in {time_mode} time points"
+
+        if not is_2d_ref and (arrs[0].ndim == 3 and arrs[0].shape[2] > 1):
+            if time_mode == "proportion":
+                msg += f" in < {prop * 100:.1f}% of time points"
+            else:
+                msg += f" in {time_mode} time points"
 
         logger.info(msg)
 
-    label = "n_vars_over_time"
-    data.obs[label] = number_per_obs
-    data._inplace_subset_obs(obs_mask)
+    label = "n_vars" if is_2d_ref else "n_vars_over_time"
+    data.obs[label] = first_number_per_obs
+    data._inplace_subset_obs(final_obs_mask)
     return data if copy else None
 
 
