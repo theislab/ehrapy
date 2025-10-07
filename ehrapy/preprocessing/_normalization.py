@@ -48,27 +48,18 @@ def _scale_func_group(
 
     edata = _prep_edata_norm(edata, copy)
 
-    if layer is None:
-        var_values = edata[:, vars].X.copy()
-    else:
-        var_values = edata[:, vars].layers[layer].copy()
 
-    if var_values.ndim == 2:
-        # 2D case: standard normalization
-        if group_key is None:
-            var_values = scale_func(var_values)
+
+    if hasattr(edata, "R") and getattr(edata, "R") is not None and edata.R.ndim == 3:
+        if layer is None:
+            var_values = edata.R[:, :, :].copy()
         else:
-            for group in edata.obs[group_key].unique():
-                group_idx = edata.obs[group_key] == group
-                var_values[group_idx] = scale_func(var_values[group_idx])
-                
-    elif var_values.ndim == 3:
-        # 3D case: normalize each variable across samples and timestamps
+            var_values = edata.layers[layer][:, :, :].copy()
+
         n_obs, n_var, n_timestamps = var_values.shape
-        
         if group_key is None:
             for var_idx in range(n_var):
-                var_data = var_values[:, var_idx, :].reshape(-1, 1)  # (n_obs * n_timestamps, 1)
+                var_data = var_values[:, var_idx, :].reshape(-1, 1)
                 var_data = scale_func(var_data)
                 var_values[:, var_idx, :] = var_data.reshape(n_obs, n_timestamps)
         else:
@@ -76,20 +67,41 @@ def _scale_func_group(
                 group_idx = edata.obs[group_key] == group
                 group_data = var_values[group_idx]
                 n_obs_group = group_data.shape[0]
-                
                 for var_idx in range(n_var):
                     var_data = group_data[:, var_idx, :].reshape(-1, 1)
                     var_data = scale_func(var_data)
                     var_values[group_idx, var_idx, :] = var_data.reshape(n_obs_group, n_timestamps)
-    else:
-        raise ValueError(f"Unsupported data dimensionality: {var_values.ndim}D. Expected 2D or 3D data.")
 
-    if layer is None:
-        edata.X = edata.X.astype(var_values.dtype)
-        edata[:, vars].X = var_values
+        # Write back to edata.R or edata.layers[layer]
+        if layer is None:
+            edata.R = edata.R.astype(var_values.dtype)
+            edata.R[:, :, :] = var_values
+        else:
+            edata.layers[layer] = edata.layers[layer].astype(var_values.dtype)
+            edata.layers[layer][:, :, :] = var_values
     else:
-        edata.layers[layer] = edata.layers[layer].astype(var_values.dtype)
-        edata[:, vars].layers[layer] = var_values
+        # 2D normalization (AnnData or 2D EHRData)
+        if layer is None:
+            var_values = edata[:, vars].X.copy()
+        else:
+            var_values = edata[:, vars].layers[layer].copy()
+
+        if var_values.ndim == 2:
+            if group_key is None:
+                var_values = scale_func(var_values)
+            else:
+                for group in edata.obs[group_key].unique():
+                    group_idx = edata.obs[group_key] == group
+                    var_values[group_idx] = scale_func(var_values[group_idx])
+        else:
+            raise ValueError(f"Unsupported data dimensionality: {var_values.ndim}D. Expected 2D or 3D data.")
+
+        if layer is None:
+            edata.X = edata.X.astype(var_values.dtype)
+            edata[:, vars].X = var_values
+        else:
+            edata.layers[layer] = edata.layers[layer].astype(var_values.dtype)
+            edata[:, vars].layers[layer] = var_values
 
     _record_norm(edata, vars, norm_name)
 
@@ -153,7 +165,12 @@ def scale_norm(
         >>> # Works automatically with both 2D and 3D data
         >>> edata_3d_norm = ep.pp.scale_norm(edata_3d, copy=True)
     """
-    scale_func = _scale_norm_function(edata.X if layer is None else edata.layers[layer], **kwargs)
+
+    if hasattr(edata, "R") and getattr(edata, "R") is not None and edata.R.ndim == 3:
+        arr = edata.R if layer is None else edata.layers[layer]
+    else:
+        arr = edata.X if layer is None else edata.layers[layer]
+    scale_func = _scale_norm_function(arr, **kwargs)
 
     return _scale_func_group(
         edata=edata,
