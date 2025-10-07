@@ -1,3 +1,4 @@
+
 import warnings
 from pathlib import Path
 
@@ -720,3 +721,31 @@ def test_norm_numerical_only():
     expected_adata = AnnData(X=np.array([[0.6931472, 0, 0], [0, 0, 0.6931472]], dtype=np.float32))
 
     assert np.array_equal(expected_adata.X, ep.pp.log_norm(to_normalize_adata, copy=True).X)
+
+
+def test_scale_norm_3d(edata_blob_small_3d):
+    """Test scale_norm normalization on 3D EHRData (edata.R)."""
+    edata = edata_blob_small_3d
+    # Save original shape and dtype
+    orig_shape = edata.R.shape
+    print("Original shape:", orig_shape)
+    orig_dtype = edata.R.dtype
+    print("Original dtype:", orig_dtype)
+    print("mean:", np.mean(edata.R), "std:", np.std(edata.R))
+    # Run normalization
+    print("type:", type(edata))
+    # print("attr:", getattr(edata, 'R', None))
+    ep.pp.scale_norm(edata)
+    print("mean:", np.mean(edata.R), "std:", np.std(edata.R))
+
+    # After normalization, R should still be 3D and same shape
+    assert edata.R.shape == orig_shape
+    assert edata.R.dtype == orig_dtype or np.issubdtype(edata.R.dtype, np.floating)
+
+    # Check that each variable (axis=1) is zero mean and unit variance across all samples and timestamps
+    n_obs, n_var, n_timestamps = edata.R.shape
+    for var_idx in range(n_var):
+        flat = edata.R[:, var_idx, :].reshape(-1)
+        # Allow small numerical error
+        assert np.allclose(np.mean(flat), 0, atol=1e-6)
+        assert np.allclose(np.std(flat), 1, atol=1e-6)
