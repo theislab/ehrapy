@@ -91,6 +91,7 @@ Partially overlaps with dataset integration. Note that a simple batch correction
     preprocessing.neighbors
 ```
 ## Filtering
+
 ```{eval-rst}
 .. autosummary::
     :toctree: preprocessing

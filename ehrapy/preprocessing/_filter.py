@@ -15,7 +15,7 @@ from ehrapy._compat import DaskArray, _raise_array_type_not_implemented, use_ehr
 
 
 @singledispatch
-def _filtering_function(arr, *, function: Callable[..., Any]):
+def _filtering_function(arr, *, function: Callable[..., Any]) -> None:
     _raise_array_type_not_implemented(function, type(arr))
 
 
@@ -25,12 +25,12 @@ def _(arr: np.ndarray, *, function: Callable[..., Any]) -> None:
 
 
 @_filtering_function.register
-def _(arr: DaskArray, *, function: Callable[..., Any]):
+def _(arr: DaskArray, *, function: Callable[..., Any]) -> None:
     _raise_array_type_not_implemented(function, type(arr))
 
 
 @_filtering_function.register
-def _(arr: sparray, *, function: Callable[..., Any]):
+def _(arr: sparray, *, function: Callable[..., Any]) -> None:
     _raise_array_type_not_implemented(function, type(arr))
 
 
