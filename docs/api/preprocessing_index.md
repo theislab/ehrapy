@@ -90,3 +90,12 @@ Partially overlaps with dataset integration. Note that a simple batch correction
 
     preprocessing.neighbors
 ```
+## Filtering
+```{eval-rst}
+.. autosummary::
+    :toctree: preprocessing
+    :nosignatures:
+
+    preprocessing.filter_features
+    preprocessing-filter_observations
+```
