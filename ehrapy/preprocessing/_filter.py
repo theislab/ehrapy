@@ -68,7 +68,8 @@ def filter_features(
                     * `'all'` (default): The feature must pass the filtering criteria in all time points.
                     * `'any'`: The feature must pass the filtering criteria in at least one time point.
                     * `'proportion'`: The feature must pass the filtering criteria in at least a proportion `prop` of time points. For example, with `prop=0.3`,
-                    the feature must pass the filtering criteria in at least 30% of the time points.
+                        the feature must pass the filtering criteria in at least 30% of the time points.
+
         prop: Proportion of time points in which the feature must pass the filtering criteria. Only relevant if `time_mode='proportion'`.
         copy: Determines whether a copy is returned.
 
@@ -211,7 +212,8 @@ def filter_observations(
                     * `'all'` (default): The observation must pass the filtering criteria in all time points.
                     * `'any'`: The observation must pass the filtering criteria in at least one time point.
                     * `'proportion'`: The observation must pass the filtering criteria in at least a proportion `prop` of time points. For example, with `prop=0.3`,
-                      the observation must pass the filtering criteria in at least 30% of the time points.
+                        the observation must pass the filtering criteria in at least 30% of the time points.
+
         prop: Proportion of time points in which the observation must pass the filtering criteria. Only relevant if `time_mode='proportion'`.
         copy: Determines whether a copy is returned.
 
