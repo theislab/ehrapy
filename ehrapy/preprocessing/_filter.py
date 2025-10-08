@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from functools import singledispatch
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -12,9 +12,6 @@ from lamin_utils import logger
 from scipy.sparse import sparray
 
 from ehrapy._compat import DaskArray, _raise_array_type_not_implemented, use_ehrdata
-
-if TYPE_CHECKING:
-    from collections.abc import Sequence
 
 
 @singledispatch
