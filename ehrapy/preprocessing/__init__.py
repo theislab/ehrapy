@@ -1,6 +1,5 @@
 from ehrapy.preprocessing._bias import detect_bias
 from ehrapy.preprocessing._encoding import encode
-from ehrapy.preprocessing._filter import filter_features, filter_observations
 from ehrapy.preprocessing._highly_variable_features import highly_variable_features
 from ehrapy.preprocessing._imputation import (
     explicit_impute,
@@ -23,6 +22,7 @@ from ehrapy.preprocessing._outliers import clip_quantile, winsorize
 from ehrapy.preprocessing._quality_control import mcar_test, qc_lab_measurements, qc_metrics
 from ehrapy.preprocessing._scanpy_pp_api import *  # noqa: F403
 from ehrapy.preprocessing._summarize_measurements import summarize_measurements
+from ehrapy.preprocessing._filter import filter_features, filter_observations
 
 __all__ = [
     "detect_bias",

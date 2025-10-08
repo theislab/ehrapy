@@ -97,5 +97,5 @@ Partially overlaps with dataset integration. Note that a simple batch correction
     :nosignatures:
 
     preprocessing.filter_features
-    preprocessing-filter_observations
+    preprocessing.filter_observations
 ```

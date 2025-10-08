@@ -60,7 +60,7 @@ def filter_features(
     Args:
         edata: Central data object.
         layers: layer(s) to use for filtering. If `None` (default), filtering is performed on `.R` for 3D EHRData objects and on `.X` for 2D EHRData objects.
-        When multiple layers are provided, a feature passes the filtering only if it satisifies the criteria in every layer.
+            When multiple layers are provided, a feature passes the filtering only if it satisifies the criteria in every layer.
         min_obs: Minimum number of observations required for a feature to pass filtering.
         max_obs: Maximum number of observations allowed for a feature to pass filtering.
         time_mode: How to combine filtering criteria across the time axis. Use it only with 3 dimensional EHRData obejcts. Options are:
@@ -108,7 +108,7 @@ def filter_features(
         arrs = [arr]
     elif isinstance(layers, str):
         if layers not in edata.layers:
-            raise ValueError("Invalid layer provided. Available layers are: {list(edata.layers.keys())}")
+            raise ValueError(f"Invalid layer provided. Available layers are: {list(edata.layers.keys())}")
         arrs = [data.layers[layers]]
     else:  # when filtering is done across multiple layers
         arrs = [data.layers[layer] for layer in layers]
@@ -202,7 +202,7 @@ def filter_observations(
     Args:
         edata: Central data object.
         layers: layer(s) to use for filtering. If `None` (default), filtering is performed on `.R` for 3D EHRData objects and on `.X` for 2D EHRData objects.
-        When multiple layers are provided, a feature passes the filtering only if it satisifies the criteria in every layer.
+            When multiple layers are provided, a feature passes the filtering only if it satisifies the criteria in every layer.
         min_vars: Minimum number of variables required for an observation to pass filtering.
         max_vars: Maximum number of variables allowed for an observation to pass filtering.
         time_mode: How to combine filtering criteria across the time axis. Only relevant if an `EHRData` is passed. Options are:
@@ -248,7 +248,7 @@ def filter_observations(
         arrs = [arr]
     elif isinstance(layers, str):
         if layers not in edata.layers:
-            raise ValueError("Invalid layer provided. Available layers are: {list(edata.layers.keys())}")
+            raise ValueError(f"Invalid layer provided. Available layers are: {list(edata.layers.keys())}")
         arrs = [data.layers[layers]]
     else:
         arrs = [data.layers[layer] for layer in layers]
