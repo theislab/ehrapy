@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 from collections import OrderedDict
@@ -305,6 +304,7 @@ def edata_blob_small_3d() -> ed.EHRData:
     # Create EHRData
     edata = ed.EHRData(X=X, obs=obs, var=var, R=R)
     return edata
+
 
 @pytest.fixture
 def adata_to_norm():

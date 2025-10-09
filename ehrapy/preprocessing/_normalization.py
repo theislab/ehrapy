@@ -31,7 +31,7 @@ def _scale_func_group(
     norm_name: str,
 ) -> EHRData | AnnData | None:
     """Apply scaling function to selected columns of edata, either globally or per group.
-    
+
     Supports both 2D and 3D data:
     - 2D data (n_obs × n_var): Standard normalization across observations
     - 3D data (n_obs × n_var × n_timestamps): Per-variable normalization across samples and timestamps
@@ -48,9 +48,7 @@ def _scale_func_group(
 
     edata = _prep_edata_norm(edata, copy)
 
-
-
-    if hasattr(edata, "R") and getattr(edata, "R") is not None and edata.R.ndim == 3:
+    if hasattr(edata, "R") and edata.R is not None and edata.R.ndim == 3:
         if layer is None:
             var_values = edata.R[:, :, :].copy()
         else:
@@ -110,6 +108,7 @@ def _scale_func_group(
     else:
         return None
 
+
 @singledispatch
 def _scale_norm_function(arr):
     _raise_array_type_not_implemented(_scale_norm_function, type(arr))
@@ -140,7 +139,7 @@ def scale_norm(
 
     Functionality is provided by :class:`~sklearn.preprocessing.StandardScaler`, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html for details.
     If `edata.X` is a Dask Array, functionality is provided by :class:`~dask_ml.preprocessing.StandardScaler`, see https://ml.dask.org/modules/generated/dask_ml.preprocessing.StandardScaler.html for details.
-    
+
     Supports both 2D and 3D data:
     - 2D data: Standard normalization across observations
     - 3D data: Per-variable normalization across samples and timestamps
@@ -165,8 +164,7 @@ def scale_norm(
         >>> # Works automatically with both 2D and 3D data
         >>> edata_3d_norm = ep.pp.scale_norm(edata_3d, copy=True)
     """
-
-    if hasattr(edata, "R") and getattr(edata, "R") is not None and edata.R.ndim == 3:
+    if hasattr(edata, "R") and edata.R is not None and edata.R.ndim == 3:
         arr = edata.R if layer is None else edata.layers[layer]
     else:
         arr = edata.X if layer is None else edata.layers[layer]
@@ -213,7 +211,7 @@ def minmax_norm(
 
     Functionality is provided by :class:`~sklearn.preprocessing.MinMaxScaler`, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MinMaxScaler.html for details.
     If `edata.X` is a Dask Array, functionality is provided by :class:`~dask_ml.preprocessing.MinMaxScaler`, see https://ml.dask.org/modules/generated/dask_ml.preprocessing.MinMaxScaler.html for details.
-    
+
     Supports both 2D and 3D data:
     - 2D data: Standard normalization across observations
     - 3D data: Per-variable normalization across samples and timestamps
@@ -277,7 +275,7 @@ def maxabs_norm(
     """Apply max-abs normalization.
 
     Functionality is provided by :class:`~sklearn.preprocessing.MaxAbsScaler`, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MaxAbsScaler.html for details.
-    
+
     Supports both 2D and 3D data:
     - 2D data: Standard normalization across observations
     - 3D data: Per-variable normalization across samples and timestamps
@@ -350,7 +348,7 @@ def robust_scale_norm(
     Functionality is provided by :class:`~sklearn.preprocessing.RobustScaler`,
     see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.RobustScaler.html for details.
     If `edata.X` is a Dask Array, functionality is provided by :class:`~dask_ml.preprocessing.RobustScaler`, see https://ml.dask.org/modules/generated/dask_ml.preprocessing.RobustScaler.html for details.
-    
+
     Supports both 2D and 3D data:
     - 2D data: Standard normalization across observations
     - 3D data: Per-variable normalization across samples and timestamps
@@ -424,7 +422,7 @@ def quantile_norm(
     Functionality is provided by :class:`~sklearn.preprocessing.QuantileTransformer`,
     see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.QuantileTransformer.html for details.
     If `edata.X` is a Dask Array, functionality is provided by :class:`~dask_ml.preprocessing.QuantileTransformer`, see https://ml.dask.org/modules/generated/dask_ml.preprocessing.QuantileTransformer.html for details.
-    
+
     Supports both 2D and 3D data:
     - 2D data: Standard normalization across observations
     - 3D data: Per-variable normalization across samples and timestamps
@@ -485,7 +483,7 @@ def power_norm(
 
     Functionality is provided by :class:`~sklearn.preprocessing.PowerTransformer`,
     see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.PowerTransformer.html for details.
-    
+
     Supports both 2D and 3D data:
     - 2D data: Standard normalization across observations
     - 3D data: Per-variable normalization across samples and timestamps
@@ -537,7 +535,7 @@ def log_norm(
 
     Computes :math:`x = \\log(x + offset)`, where :math:`log` denotes the natural logarithm
     unless a different base is given and the default :math:`offset` is :math:`1`.
-    
+
     Supports both 2D and 3D data:
     - 2D data: Standard normalization across observations
     - 3D data: Applied to all elements across samples and timestamps
@@ -633,7 +631,7 @@ def offset_negative_values(edata: EHRData | AnnData, layer: str = None, copy: bo
 
     This is primarily used to enable the usage of functions such as log_norm that
     do not allow negative values for mathematical or technical reasons.
-    
+
     Supports both 2D and 3D data:
     - 2D data: Standard offset across observations
     - 3D data: Applied to all elements across samples and timestamps
@@ -645,7 +643,7 @@ def offset_negative_values(edata: EHRData | AnnData, layer: str = None, copy: bo
 
     Returns:
         `None` if `copy=False` and modifies the passed edata, else returns an updated edata object.
-        
+
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
