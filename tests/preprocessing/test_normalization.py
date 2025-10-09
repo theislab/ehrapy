@@ -759,7 +759,7 @@ def test_minmax_norm_3d(edata_blob_small_3d):
     orig_dtype = edata.R.dtype
     print("Original dtype:", orig_dtype)
     print("min:", np.min(edata.R), "max:", np.max(edata.R))
-    
+
     # Run normalization
     print("type:", type(edata))
     ep.pp.minmax_norm(edata)
@@ -788,7 +788,7 @@ def test_maxabs_norm_3d(edata_blob_small_3d):
     print("Original dtype:", orig_dtype)
     print("min:", np.min(edata.R), "max:", np.max(edata.R))
     print("max abs:", np.max(np.abs(edata.R)))
-    
+
     # Run normalization
     print("type:", type(edata))
     ep.pp.maxabs_norm(edata)
@@ -816,7 +816,7 @@ def test_robust_scale_norm_3d(edata_blob_small_3d):
     orig_dtype = edata.R.dtype
     print("Original dtype:", orig_dtype)
     print("median:", np.median(edata.R), "mad:", np.median(np.abs(edata.R - np.median(edata.R))))
-    
+
     # Run normalization
     print("type:", type(edata))
     ep.pp.robust_scale_norm(edata)
