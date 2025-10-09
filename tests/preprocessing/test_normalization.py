@@ -749,3 +749,92 @@ def test_scale_norm_3d(edata_blob_small_3d):
         # Allow small numerical error
         assert np.allclose(np.mean(flat), 0, atol=1e-6)
         assert np.allclose(np.std(flat), 1, atol=1e-6)
+
+
+def test_minmax_norm_3d(edata_blob_small_3d):
+    """Test minmax_norm normalization on 3D EHRData (edata.R)."""
+    edata = edata_blob_small_3d
+    # Save original shape and dtype
+    orig_shape = edata.R.shape
+    print("Original shape:", orig_shape)
+    orig_dtype = edata.R.dtype
+    print("Original dtype:", orig_dtype)
+    print("min:", np.min(edata.R), "max:", np.max(edata.R))
+    
+    # Run normalization
+    print("type:", type(edata))
+    ep.pp.minmax_norm(edata)
+    print("min:", np.min(edata.R), "max:", np.max(edata.R))
+
+    # After normalization, R should still be 3D and same shape
+    assert edata.R.shape == orig_shape
+    assert edata.R.dtype == orig_dtype or np.issubdtype(edata.R.dtype, np.floating)
+
+    # Check that each variable (axis=1) is scaled to [0, 1] range across all samples and timestamps
+    n_obs, n_var, n_timestamps = edata.R.shape
+    for var_idx in range(n_var):
+        flat = edata.R[:, var_idx, :].reshape(-1)
+        # Allow small numerical error
+        assert np.allclose(np.min(flat), 0, atol=1e-6)
+        assert np.allclose(np.max(flat), 1, atol=1e-6)
+
+
+def test_maxabs_norm_3d(edata_blob_small_3d):
+    """Test maxabs_norm normalization on 3D EHRData (edata.R)."""
+    edata = edata_blob_small_3d
+    # Save original shape and dtype
+    orig_shape = edata.R.shape
+    print("Original shape:", orig_shape)
+    orig_dtype = edata.R.dtype
+    print("Original dtype:", orig_dtype)
+    print("min:", np.min(edata.R), "max:", np.max(edata.R))
+    print("max abs:", np.max(np.abs(edata.R)))
+    
+    # Run normalization
+    print("type:", type(edata))
+    ep.pp.maxabs_norm(edata)
+    print("min:", np.min(edata.R), "max:", np.max(edata.R))
+    print("max abs:", np.max(np.abs(edata.R)))
+
+    # After normalization, R should still be 3D and same shape
+    assert edata.R.shape == orig_shape
+    assert edata.R.dtype == orig_dtype or np.issubdtype(edata.R.dtype, np.floating)
+
+    # Check that each variable (axis=1) is scaled by max absolute value across all samples and timestamps
+    n_obs, n_var, n_timestamps = edata.R.shape
+    for var_idx in range(n_var):
+        flat = edata.R[:, var_idx, :].reshape(-1)
+        # Max absolute value should be 1 (or close to it)
+        assert np.allclose(np.max(np.abs(flat)), 1, atol=1e-6)
+
+
+def test_robust_scale_norm_3d(edata_blob_small_3d):
+    """Test robust_scale_norm normalization on 3D EHRData (edata.R)."""
+    edata = edata_blob_small_3d
+    # Save original shape and dtype
+    orig_shape = edata.R.shape
+    print("Original shape:", orig_shape)
+    orig_dtype = edata.R.dtype
+    print("Original dtype:", orig_dtype)
+    print("median:", np.median(edata.R), "mad:", np.median(np.abs(edata.R - np.median(edata.R))))
+    
+    # Run normalization
+    print("type:", type(edata))
+    ep.pp.robust_scale_norm(edata)
+    print("median:", np.median(edata.R), "mad:", np.median(np.abs(edata.R - np.median(edata.R))))
+
+    # After normalization, R should still be 3D and same shape
+    assert edata.R.shape == orig_shape
+    assert edata.R.dtype == orig_dtype or np.issubdtype(edata.R.dtype, np.floating)
+
+    # Check that each variable (axis=1) is robust scaled across all samples and timestamps
+    # RobustScaler centers by median and scales by IQR, so median should be ~0 and IQR should be ~1
+    n_obs, n_var, n_timestamps = edata.R.shape
+    for var_idx in range(n_var):
+        flat = edata.R[:, var_idx, :].reshape(-1)
+        # Median should be close to 0 after centering
+        assert np.allclose(np.median(flat), 0, atol=1e-6)
+        # IQR (75th percentile - 25th percentile) should be close to 1 after scaling
+        q75, q25 = np.percentile(flat, [75, 25])
+        iqr = q75 - q25
+        assert np.allclose(iqr, 1, atol=1e-6)

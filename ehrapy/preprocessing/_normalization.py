@@ -239,7 +239,11 @@ def minmax_norm(
         >>> # Works automatically with both 2D and 3D data
         >>> edata_3d_norm = ep.pp.minmax_norm(edata_3d, copy=True)
     """
-    scale_func = _minmax_norm_function(edata.X if layer is None else edata.layers[layer], **kwargs)
+    if hasattr(edata, "R") and getattr(edata, "R") is not None and edata.R.ndim == 3:
+        arr = edata.R if layer is None else edata.layers[layer]
+    else:
+        arr = edata.X if layer is None else edata.layers[layer]
+    scale_func = _minmax_norm_function(arr, **kwargs)
     
     return _scale_func_group(
         edata=edata,
@@ -298,7 +302,11 @@ def maxabs_norm(
         >>> # Works automatically with both 2D and 3D data
         >>> edata_3d_norm = ep.pp.maxabs_norm(edata_3d, copy=True)
     """
-    scale_func = _maxabs_norm_function(edata.X if layer is None else edata.layers[layer])
+    if hasattr(edata, "R") and getattr(edata, "R") is not None and edata.R.ndim == 3:
+        arr = edata.R if layer is None else edata.layers[layer]
+    else:
+        arr = edata.X if layer is None else edata.layers[layer]
+    scale_func = _maxabs_norm_function(arr)
 
     return _scale_func_group(
         edata=edata,
@@ -368,7 +376,11 @@ def robust_scale_norm(
         >>> # Works automatically with both 2D and 3D data
         >>> edata_3d_norm = ep.pp.robust_scale_norm(edata_3d, copy=True)
     """
-    scale_func = _robust_scale_norm_function(edata.X if layer is None else edata.layers[layer], **kwargs)
+    if hasattr(edata, "R") and getattr(edata, "R") is not None and edata.R.ndim == 3:
+        arr = edata.R if layer is None else edata.layers[layer]
+    else:
+        arr = edata.X if layer is None else edata.layers[layer]
+    scale_func = _robust_scale_norm_function(arr, **kwargs)
 
     return _scale_func_group(
         edata=edata,
