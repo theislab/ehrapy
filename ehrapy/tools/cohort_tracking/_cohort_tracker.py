@@ -220,10 +220,13 @@ class CohortTracker:
         Args:
             subfigure_title: If `True`, each subplot will have a title with the `label` provided during tracking.
             color_palette: The color palette to use for the plot.
-            yticks_labels: Dictionary to rename the axis labels. If `None`, the original labels will be used. The keys should be the column names.
-            legend_labels: Dictionary to rename the legend labels. If `None`, the original labels will be used. For categoricals, the keys should be the categories. For numericals, the key should be the column name.
+            yticks_labels: Dictionary to rename the axis labels. If `None`, the original labels will be used.
+                The keys should be the column names.
+            legend_labels: Dictionary to rename the legend labels. If `None`, the original labels will be used.
+                For categoricals, the keys should be the categories. For numericals, the key should be the column name.
             legend_subtitles: If `True`, subtitles will be added to the legend.
-            legend_subtitles_names: Dictionary to rename the legend subtitles. If `None`, the original labels will be used. The keys should be the column names.
+            legend_subtitles_names: Dictionary to rename the legend subtitles. If `None`, the original labels will be used.
+                The keys should be the column names.
             show: If `True`, the plot will be shown. If `False`, plotting handels are returned.
             ax: If `None`, a new figure and axes will be created. If an axes object is provided, the plot will be added to it.
             fontsize: Fontsize for the text in the plot.
