@@ -135,6 +135,7 @@ nitpick_ignore = [
     ("py:class", "dask_ml.preprocessing.RobustScaler"),
     ("py:class", "dask_ml.preprocessing.StandardScaler"),
     ("py:class", "pathlib._local.Path"),
+    ("py:data", "typing.Union"),
 ]
 autodoc_type_aliases = {"CAT": "Any"}
 

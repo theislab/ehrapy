@@ -83,7 +83,6 @@ def mimic_3_demo(
     The MIMIC-III dataset comes in the form of 26 CSV tables. Although, it is possible to return one AnnData object per
     csv table, it might be easier to start with Pandas DataFrames to aggregate the desired measurements with Pandas SQL.
     https://github.com/yhat/pandasql/ might be useful.
-    The resulting DataFrame can then be transformed into an AnnData object with :func:`~ehrapy.anndata.df_to_anndata`.
 
     Args:
         anndata: Whether to return one AnnData object per CSV file.
