@@ -30,7 +30,12 @@ def _scale_func_group(
     copy: bool,
     norm_name: str,
 ) -> EHRData | AnnData | None:
-    """Apply scaling function to selected columns of edata, either globally or per group."""
+    """Apply scaling function to selected columns of edata, either globally or per group.
+
+    Supports both 2D and 3D data:
+    - 2D data (n_obs × n_var): Standard normalization across observations
+    - 3D data (n_obs × n_var × n_timestamps): Per-variable normalization across samples and timestamps
+    """
     if group_key is not None and group_key not in edata.obs_keys():
         raise KeyError(f"group key '{group_key}' not found in edata.obs.")
 
@@ -43,25 +48,58 @@ def _scale_func_group(
 
     edata = _prep_edata_norm(edata, copy)
 
-    if layer is None:
-        var_values = edata[:, vars].X.copy()
-    else:
-        var_values = edata[:, vars].layers[layer].copy()
+    if hasattr(edata, "R") and edata.R is not None and edata.R.ndim == 3:
+        if layer is None:
+            var_values = edata.R[:, :, :].copy()
+        else:
+            var_values = edata.layers[layer][:, :, :].copy()
 
-    if group_key is None:
-        var_values = scale_func(var_values)
+        n_obs, n_var, n_timestamps = var_values.shape
+        if group_key is None:
+            for var_idx in range(n_var):
+                var_data = var_values[:, var_idx, :].reshape(-1, 1)
+                var_data = scale_func(var_data)
+                var_values[:, var_idx, :] = var_data.reshape(n_obs, n_timestamps)
+        else:
+            for group in edata.obs[group_key].unique():
+                group_idx = edata.obs[group_key] == group
+                group_data = var_values[group_idx]
+                n_obs_group = group_data.shape[0]
+                for var_idx in range(n_var):
+                    var_data = group_data[:, var_idx, :].reshape(-1, 1)
+                    var_data = scale_func(var_data)
+                    var_values[group_idx, var_idx, :] = var_data.reshape(n_obs_group, n_timestamps)
 
+        # Write back to edata.R or edata.layers[layer]
+        if layer is None:
+            edata.R = edata.R.astype(var_values.dtype)
+            edata.R[:, :, :] = var_values
+        else:
+            edata.layers[layer] = edata.layers[layer].astype(var_values.dtype)
+            edata.layers[layer][:, :, :] = var_values
     else:
-        for group in edata.obs[group_key].unique():
-            group_idx = edata.obs[group_key] == group
-            var_values[group_idx] = scale_func(var_values[group_idx])
+        # 2D normalization (AnnData or 2D EHRData)
+        if layer is None:
+            var_values = edata[:, vars].X.copy()
+        else:
+            var_values = edata[:, vars].layers[layer].copy()
 
-    if layer is None:
-        edata.X = edata.X.astype(var_values.dtype)
-        edata[:, vars].X = var_values
-    else:
-        edata.layers[layer] = edata.layers[layer].astype(var_values.dtype)
-        edata[:, vars].layers[layer] = var_values
+        if var_values.ndim == 2:
+            if group_key is None:
+                var_values = scale_func(var_values)
+            else:
+                for group in edata.obs[group_key].unique():
+                    group_idx = edata.obs[group_key] == group
+                    var_values[group_idx] = scale_func(var_values[group_idx])
+        else:
+            raise ValueError(f"Unsupported data dimensionality: {var_values.ndim}D. Expected 2D or 3D data.")
+
+        if layer is None:
+            edata.X = edata.X.astype(var_values.dtype)
+            edata[:, vars].X = var_values
+        else:
+            edata.layers[layer] = edata.layers[layer].astype(var_values.dtype)
+            edata[:, vars].layers[layer] = var_values
 
     _record_norm(edata, vars, norm_name)
 
@@ -89,7 +127,6 @@ def _(arr: DaskArray, **kwargs):
 
 
 @use_ehrdata(deprecated_after="1.0.0")
-@function_2D_only()
 def scale_norm(
     edata: EHRData | AnnData,
     vars: str | Sequence[str] | None = None,
@@ -103,6 +140,10 @@ def scale_norm(
     Functionality is provided by :class:`~sklearn.preprocessing.StandardScaler`, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html for details.
     If `edata.X` is a Dask Array, functionality is provided by :class:`~dask_ml.preprocessing.StandardScaler`, see https://ml.dask.org/modules/generated/dask_ml.preprocessing.StandardScaler.html for details.
 
+    Supports both 2D and 3D data:
+    - 2D data: Standard normalization across observations
+    - 3D data: Per-variable normalization across samples and timestamps
+
     Args:
         edata: Central data object. Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
         vars: List of the names of the numeric variables to normalize.
@@ -113,15 +154,21 @@ def scale_norm(
         **kwargs: Additional arguments passed to the StandardScaler.
 
     Returns:
-        `None` if `copy=False` and modifies the passed edata, else returns an updated AnnData object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
+        `None` if `copy=False` and modifies the passed edata, else returns an updated edata object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
 
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> edata_norm = ep.pp.scale_norm(edata, copy=True)
+        >>> # Works automatically with both 2D and 3D data
+        >>> edata_3d_norm = ep.pp.scale_norm(edata_3d, copy=True)
     """
-    scale_func = _scale_norm_function(edata.X if layer is None else edata.layers[layer], **kwargs)
+    if hasattr(edata, "R") and edata.R is not None and edata.R.ndim == 3:
+        arr = edata.R if layer is None else edata.layers[layer]
+    else:
+        arr = edata.X if layer is None else edata.layers[layer]
+    scale_func = _scale_norm_function(arr, **kwargs)
 
     return _scale_func_group(
         edata=edata,
@@ -152,7 +199,6 @@ def _(arr: DaskArray, **kwargs):
 
 
 @use_ehrdata(deprecated_after="1.0.0")
-@function_2D_only()
 def minmax_norm(
     edata: EHRData | AnnData,
     vars: str | Sequence[str] | None = None,
@@ -166,6 +212,10 @@ def minmax_norm(
     Functionality is provided by :class:`~sklearn.preprocessing.MinMaxScaler`, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MinMaxScaler.html for details.
     If `edata.X` is a Dask Array, functionality is provided by :class:`~dask_ml.preprocessing.MinMaxScaler`, see https://ml.dask.org/modules/generated/dask_ml.preprocessing.MinMaxScaler.html for details.
 
+    Supports both 2D and 3D data:
+    - 2D data: Standard normalization across observations
+    - 3D data: Per-variable normalization across samples and timestamps
+
     Args:
         edata: Central data object.
                Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
@@ -177,15 +227,21 @@ def minmax_norm(
         **kwargs: Additional arguments passed to the MinMaxScaler.
 
     Returns:
-        `None` if `copy=False` and modifies the passed edata, else returns an updated AnnData object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
+        `None` if `copy=False` and modifies the passed edata, else returns an updated data object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
 
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> edata_norm = ep.pp.minmax_norm(edata, copy=True)
+        >>> # Works automatically with both 2D and 3D data
+        >>> edata_3d_norm = ep.pp.minmax_norm(edata_3d, copy=True)
     """
-    scale_func = _minmax_norm_function(edata.X if layer is None else edata.layers[layer], **kwargs)
+    if hasattr(edata, "R") and edata.R is not None and edata.R.ndim == 3:
+        arr = edata.R if layer is None else edata.layers[layer]
+    else:
+        arr = edata.X if layer is None else edata.layers[layer]
+    scale_func = _minmax_norm_function(arr, **kwargs)
 
     return _scale_func_group(
         edata=edata,
@@ -208,7 +264,6 @@ def _(arr: np.ndarray):
     return sklearn_pp.MaxAbsScaler().fit_transform
 
 
-@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def maxabs_norm(
     edata: EHRData | AnnData,
@@ -221,6 +276,10 @@ def maxabs_norm(
 
     Functionality is provided by :class:`~sklearn.preprocessing.MaxAbsScaler`, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MaxAbsScaler.html for details.
 
+    Supports both 2D and 3D data:
+    - 2D data: Standard normalization across observations
+    - 3D data: Per-variable normalization across samples and timestamps
+
     Args:
         edata: Central data object.
                Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
@@ -231,15 +290,21 @@ def maxabs_norm(
         copy: Whether to return a copy or act in place.
 
     Returns:
-        `None` if `copy=False` and modifies the passed edata, else returns an updated AnnData object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
+        `None` if `copy=False` and modifies the passed edata, else returns an updated edata object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
 
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> edata_norm = ep.pp.maxabs_norm(edata, copy=True)
+        >>> # Works automatically with both 2D and 3D data
+        >>> edata_3d_norm = ep.pp.maxabs_norm(edata_3d, copy=True)
     """
-    scale_func = _maxabs_norm_function(edata.X if layer is None else edata.layers[layer])
+    if hasattr(edata, "R") and edata.R is not None and edata.R.ndim == 3:
+        arr = edata.R if layer is None else edata.layers[layer]
+    else:
+        arr = edata.X if layer is None else edata.layers[layer]
+    scale_func = _maxabs_norm_function(arr)
 
     return _scale_func_group(
         edata=edata,
@@ -270,7 +335,6 @@ def _(arr: DaskArray, **kwargs):
 
 
 @use_ehrdata(deprecated_after="1.0.0")
-@function_2D_only()
 def robust_scale_norm(
     edata: EHRData | AnnData,
     vars: str | Sequence[str] | None = None,
@@ -285,6 +349,10 @@ def robust_scale_norm(
     see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.RobustScaler.html for details.
     If `edata.X` is a Dask Array, functionality is provided by :class:`~dask_ml.preprocessing.RobustScaler`, see https://ml.dask.org/modules/generated/dask_ml.preprocessing.RobustScaler.html for details.
 
+    Supports both 2D and 3D data:
+    - 2D data: Standard normalization across observations
+    - 3D data: Per-variable normalization across samples and timestamps
+
     Args:
         edata: Central data object.
                Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
@@ -296,15 +364,21 @@ def robust_scale_norm(
         **kwargs: Additional arguments passed to the RobustScaler.
 
     Returns:
-        `None` if `copy=False` and modifies the passed edata, else returns an updated AnnData object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
+        `None` if `copy=False` and modifies the passed edata, else returns an updated edata object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
 
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> edata_norm = ep.pp.robust_scale_norm(edata, copy=True)
+        >>> # Works automatically with both 2D and 3D data
+        >>> edata_3d_norm = ep.pp.robust_scale_norm(edata_3d, copy=True)
     """
-    scale_func = _robust_scale_norm_function(edata.X if layer is None else edata.layers[layer], **kwargs)
+    if hasattr(edata, "R") and edata.R is not None and edata.R.ndim == 3:
+        arr = edata.R if layer is None else edata.layers[layer]
+    else:
+        arr = edata.X if layer is None else edata.layers[layer]
+    scale_func = _robust_scale_norm_function(arr, **kwargs)
 
     return _scale_func_group(
         edata=edata,
@@ -335,7 +409,6 @@ def _(arr: DaskArray, **kwargs):
 
 
 @use_ehrdata(deprecated_after="1.0.0")
-@function_2D_only()
 def quantile_norm(
     edata: EHRData | AnnData,
     vars: str | Sequence[str] | None = None,
@@ -350,6 +423,10 @@ def quantile_norm(
     see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.QuantileTransformer.html for details.
     If `edata.X` is a Dask Array, functionality is provided by :class:`~dask_ml.preprocessing.QuantileTransformer`, see https://ml.dask.org/modules/generated/dask_ml.preprocessing.QuantileTransformer.html for details.
 
+    Supports both 2D and 3D data:
+    - 2D data: Standard normalization across observations
+    - 3D data: Per-variable normalization across samples and timestamps
+
     Args:
         edata: Central data object. Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
         vars: List of the names of the numeric variables to normalize.
@@ -360,13 +437,15 @@ def quantile_norm(
         **kwargs: Additional arguments passed to the QuantileTransformer.
 
     Returns:
-        `None` if `copy=False` and modifies the passed edata, else returns an updated data object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
+        `None` if `copy=False` and modifies the passed edata, else returns an updated edata object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
 
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> edata_norm = ep.pp.quantile_norm(edata, copy=True)
+        >>> # Works automatically with both 2D and 3D data
+        >>> edata_3d_norm = ep.pp.quantile_norm(edata_3d, copy=True)
     """
     scale_func = _quantile_norm_function(edata.X if layer is None else edata.layers[layer], **kwargs)
 
@@ -392,7 +471,6 @@ def _(arr: np.ndarray, **kwargs):
 
 
 @use_ehrdata(deprecated_after="1.0.0")
-@function_2D_only()
 def power_norm(
     edata: EHRData | AnnData,
     vars: str | Sequence[str] | None = None,
@@ -406,6 +484,10 @@ def power_norm(
     Functionality is provided by :class:`~sklearn.preprocessing.PowerTransformer`,
     see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.PowerTransformer.html for details.
 
+    Supports both 2D and 3D data:
+    - 2D data: Standard normalization across observations
+    - 3D data: Per-variable normalization across samples and timestamps
+
     Args:
         edata: Central data object.
                Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
@@ -417,13 +499,15 @@ def power_norm(
         **kwargs: Additional arguments passed to the PowerTransformer.
 
     Returns:
-        `None` if `copy=False` and modifies the passed edata, else returns an updated data object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
+        `None` if `copy=False` and modifies the passed edata, else returns an updated edata object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
 
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> edata_norm = ep.pp.power_norm(edata, copy=True)
+        >>> # Works automatically with both 2D and 3D data
+        >>> edata_3d_norm = ep.pp.power_norm(edata_3d, copy=True)
     """
     scale_func = _power_norm_function(edata.X if layer is None else edata.layers[layer], **kwargs)
 
@@ -439,7 +523,6 @@ def power_norm(
 
 
 @use_ehrdata(deprecated_after="1.0.0")
-@function_2D_only()
 def log_norm(
     edata: EHRData | AnnData,
     vars: str | Sequence[str] | None = None,
@@ -453,6 +536,10 @@ def log_norm(
     Computes :math:`x = \\log(x + offset)`, where :math:`log` denotes the natural logarithm
     unless a different base is given and the default :math:`offset` is :math:`1`.
 
+    Supports both 2D and 3D data:
+    - 2D data: Standard normalization across observations
+    - 3D data: Applied to all elements across samples and timestamps
+
     Args:
         edata: Central data object.
         vars: List of the names of the numeric variables to normalize.
@@ -463,13 +550,15 @@ def log_norm(
         copy: Whether to return a copy or act in place.
 
     Returns:
-        `None` if `copy=False` and modifies the passed edata, else returns an updated data object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
+        `None` if `copy=False` and modifies the passed edata, else returns an updated edata object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
 
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> edata_norm = ep.pp.log_norm(edata, copy=True)
+        >>> # Works automatically with both 2D and 3D data
+        >>> edata_3d_norm = ep.pp.log_norm(edata_3d, copy=True)
     """
     if isinstance(vars, str):
         vars = [vars]
@@ -537,12 +626,15 @@ def _record_norm(edata: EHRData | AnnData, vars: Sequence[str], method: str) -> 
 
 
 @use_ehrdata(deprecated_after="1.0.0")
-@function_2D_only()
 def offset_negative_values(edata: EHRData | AnnData, layer: str = None, copy: bool = False) -> EHRData | AnnData | None:
     """Offsets negative values into positive ones with the lowest negative value becoming 0.
 
     This is primarily used to enable the usage of functions such as log_norm that
     do not allow negative values for mathematical or technical reasons.
+
+    Supports both 2D and 3D data:
+    - 2D data: Standard offset across observations
+    - 3D data: Applied to all elements across samples and timestamps
 
     Args:
         edata: Central data object.
@@ -550,7 +642,15 @@ def offset_negative_values(edata: EHRData | AnnData, layer: str = None, copy: bo
         copy: Whether to return a modified copy of the data object.
 
     Returns:
-        `None` if `copy=False` and modifies the passed edata, else returns an updated data object.
+        `None` if `copy=False` and modifies the passed edata, else returns an updated edata object.
+
+    Examples:
+        >>> import ehrdata as ed
+        >>> import ehrapy as ep
+        >>> edata = ed.dt.mimic_2()
+        >>> edata_offset = ep.pp.offset_negative_values(edata, copy=True)
+        >>> # Works automatically with both 2D and 3D data
+        >>> edata_3d_offset = ep.pp.offset_negative_values(edata_3d, copy=True)
     """
     if copy:
         edata = edata.copy()
