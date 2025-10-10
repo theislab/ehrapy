@@ -1,5 +1,6 @@
 from ehrapy.preprocessing._bias import detect_bias
 from ehrapy.preprocessing._encoding import encode
+from ehrapy.preprocessing._filter import filter_features, filter_observations
 from ehrapy.preprocessing._highly_variable_features import highly_variable_features
 from ehrapy.preprocessing._imputation import (
     explicit_impute,
@@ -46,4 +47,6 @@ __all__ = [
     "qc_lab_measurements",
     "qc_metrics",
     "summarize_measurements",
+    "filter_features",
+    "filter_observations",
 ]
