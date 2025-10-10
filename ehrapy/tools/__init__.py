@@ -15,7 +15,6 @@ from ehrapy.tools._sa import (
 from ehrapy.tools._scanpy_tl_api import *  # noqa: F403
 from ehrapy.tools.causal._dowhy import causal_inference
 from ehrapy.tools.cohort_tracking._cohort_tracker import CohortTracker
-from ehrapy.tools.distances.dtw import dtw_distance
 from ehrapy.tools.feature_ranking._feature_importances import rank_features_supervised
 from ehrapy.tools.feature_ranking._rank_features_groups import filter_rank_features_groups, rank_features_groups
 
@@ -37,5 +36,4 @@ __all__ = [
     "rank_features_supervised",
     "filter_rank_features_groups",
     "rank_features_groups",
-    "dtw_distance",
 ]
