@@ -28,24 +28,23 @@ def timeseries_distance(
         Average temporal distance across valid variable pairs.
         Returns 0 if no valid variable pairs exist.
     """
-    # moving this out can break the RTD build for unknown reasons
     match metric:
         case "dtw":
             from tslearn.metrics import dtw
 
-            dtw_func = dtw
+            metric_func = dtw
         case "soft_dtw":
             from tslearn.metrics import soft_dtw
 
             # Normalize soft-DTW by subtracting average self-distance to create proper metric.
             # soft_dtw(x,x) and soft_dtw(y,y) are non-zero due to smoothing parameter γ.
             # Subtracting their average ensures: (1) identical sequences yield 0, (2) symmetry preserved.
-            dtw_func = lambda x, y: abs(soft_dtw(x, y) - 0.5 * (soft_dtw(x, x) + soft_dtw(y, y)))
+            metric_func = lambda x, y: abs(soft_dtw(x, y) - 0.5 * (soft_dtw(x, x) + soft_dtw(y, y)))
         case "gak":
             from tslearn.metrics import gak
 
             # GAK returns similarity in [0,1] where 1=identical. Convert to distance by taking 1-similarity.
-            dtw_func = lambda x, y: 1.0 - gak(x, y)
+            metric_func = lambda x, y: 1.0 - gak(x, y)
         case _:
             raise ValueError(f"Unknown time series metric {metric}. Must be one of 'dtw', 'soft_dtw', or 'gak'.")
 
@@ -56,15 +55,12 @@ def timeseries_distance(
     for variable_idx in range(R.shape[1]):
         series_i = R[obs_i, variable_idx, :]
         series_j = R[obs_j, variable_idx, :]
-
         valid_measurements_i = ~np.isnan(series_i)
         valid_measurements_j = ~np.isnan(series_j)
-        shared_valid_timepoints = valid_measurements_i & valid_measurements_j
-
-        if np.sum(shared_valid_timepoints) > 3:
-            valid_series_i = series_i[shared_valid_timepoints].reshape(-1, 1)
-            valid_series_j = series_j[shared_valid_timepoints].reshape(-1, 1)
-            variable_distance = dtw_func(valid_series_i, valid_series_j)
+        if np.sum(valid_measurements_i) > 3 and np.sum(valid_measurements_j) > 3:
+            valid_series_i = series_i[valid_measurements_i].reshape(-1, 1)
+            valid_series_j = series_j[valid_measurements_j].reshape(-1, 1)
+            variable_distance = metric_func(valid_series_i, valid_series_j)
             total_distance += variable_distance
             valid_variable_count += 1
 
