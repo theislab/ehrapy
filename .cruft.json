@@ -1,0 +1,43 @@
+{
+    "template": "https://github.com/scverse/cookiecutter-scverse",
+    "commit": "d383d94fadff9e4e6fdb59d77c68cb900d7cedec",
+    "checkout": "v0.6.0",
+    "context": {
+        "cookiecutter": {
+            "project_name": "ehrapy",
+            "package_name": "ehrapy",
+            "project_description": "Electronic Health Record Analysis with Python.",
+            "author_full_name": "Lukas Heumos",
+            "author_email": "lukas.heumos@posteo.net",
+            "github_user": "theislab",
+            "github_repo": "ehrapy",
+            "license": "Apache License Version 2.0",
+            "ide_integration": true,
+            "_copy_without_render": [
+                ".github/workflows/build.yaml",
+                ".github/workflows/test.yaml",
+                "docs/_templates/autosummary/**.rst"
+            ],
+            "_exclude_on_template_update": [
+                "CHANGELOG.md",
+                "LICENSE",
+                "README.md",
+                "docs/api.md",
+                "docs/index.md",
+                "docs/notebooks/example.ipynb",
+                "docs/references.bib",
+                "docs/references.md",
+                "src/**",
+                "tests/**"
+            ],
+            "_render_devdocs": false,
+            "_jinja2_env_vars": {
+                "lstrip_blocks": true,
+                "trim_blocks": true
+            },
+            "_template": "https://github.com/scverse/cookiecutter-scverse",
+            "_commit": "d383d94fadff9e4e6fdb59d77c68cb900d7cedec"
+        }
+    },
+    "directory": null
+}
