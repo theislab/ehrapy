@@ -93,6 +93,7 @@ doc = [
     "sphinx-autodoc-typehints",
     "sphinx-copybutton",
     "sphinx-remove-toctrees",
+    "sphinx-design",
     "sphinx-tabs",
     "sphinx-last-updated-by-git",
     "sphinx-automodapi",
