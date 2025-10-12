@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal, TypeAlias
+from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
 import scanpy as sc
@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from leidenalg.VertexPartition import MutableVertexPartition
 
 
-AnyRandom: TypeAlias = int | np.random.RandomState | None
+type AnyRandom = int | np.random.RandomState | None
 
 
 # No need for testing 3D; tSNE does not not support layers, and
@@ -39,7 +39,7 @@ def tsne(
     """Calculates t-SNE :cite:p:`vanDerMaaten2008`, :cite:p:`Amir2013`, and :cite:p:`Pedregosa2011`.
 
     t-distributed stochastic neighborhood embedding (tSNE) :cite:p:`vanDerMaaten2008` has been
-    proposed for visualizing complex by :cite:p:`Amir2013`. Here, by default, we use the implementation of *scikit-learn* :cite:p:`Pedregosa2011`.
+    proposed for visualizing complex by :cite:p:`Amir2013`.
 
     Args:
         edata: Central data object.
@@ -110,16 +110,13 @@ def umap(
 ) -> EHRData | AnnData | None:  # pragma: no cover
     """Embed the neighborhood graph using UMAP :cite:p:`McInnes2018`.
 
-    UMAP (Uniform Manifold Approximation and Projection) is a manifold learning
-    technique suitable for visualizing high-dimensional data. Besides tending to
-    be faster than tSNE, it optimizes the embedding such that it best reflects
+    UMAP (Uniform Manifold Approximation and Projection) is a manifold learning technique suitable for visualizing high-dimensional data.
+    Besides tending to be faster than tSNE, it optimizes the embedding such that it best reflects
     the topology of the data, which we represent throughout ehrapy using a
     neighborhood graph. tSNE, by contrast, optimizes the distribution of
     nearest-neighbor distances in the embedding such that these best match the
-    distribution of distances in the high-dimensional space. We use the
-    implementation of `umap-learn <https://github.com/lmcinnes/umap>`__
-    :cite:p:`McInnes2018`. For a few comparisons of UMAP with tSNE, see this `preprint
-    <https://doi.org/10.1101/298430>`__.
+    distribution of distances in the high-dimensional space.
+    For a few comparisons of UMAP with tSNE, see this `preprint <https://doi.org/10.1101/298430>`__.
 
     Args:
         edata: Central data object.
