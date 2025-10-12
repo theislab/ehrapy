@@ -61,6 +61,7 @@ dependencies = [
     "filelock",
     "numpy>=2.0.0",
     "numba>=0.60.0",
+    "leidenalg",  # careful - GPL
     "igraph",  # careful - GPL
     "fast-array-utils[sparse,accel]",
     "networkx<3.5", # dowhy breaks - see https://github.com/py-why/dowhy/issues/680#issuecomment-2957189390
@@ -92,7 +93,6 @@ doc = [
     "sphinx-autodoc-typehints",
     "sphinx-copybutton",
     "sphinx-remove-toctrees",
-    "sphinx-design",
     "sphinx-tabs",
     "sphinx-last-updated-by-git",
     "sphinx-automodapi",

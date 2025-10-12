@@ -123,6 +123,7 @@ nitpick_ignore = [
     ("py:class", "StackedViolin"),
     ("py:class", "ehrapy.plot.DotPlot"),
     ("py:class", "ehrapy.plot.StackedViolin"),
+    ("py:class", "ehrapy.tools._scanpy_tl_api.TypeAliasType"),
     ("py:func", "ehrapy.pl.matrixplot"),
     ("py:func", "ehrapy.pl.tracksplot"),
     ("py:class", "scanpy.plotting._utils._AxesSubplot"),
