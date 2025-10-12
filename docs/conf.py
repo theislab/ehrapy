@@ -38,7 +38,8 @@ extensions = [
     "sphinx_gallery.load_style",
     "sphinx_remove_toctrees",
     "sphinx_design",
-    "sphinx_tabs.tabssphinx_issues",
+    "sphinx_tabs.tabs",
+    "sphinx_issues",
     "sphinxcontrib.bibtex",
     "IPython.sphinxext.ipython_console_highlighting",
 ]
