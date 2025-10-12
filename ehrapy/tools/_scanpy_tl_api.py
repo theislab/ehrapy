@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from leidenalg.VertexPartition import MutableVertexPartition
 
 
-AnyRandom: TypeAlias = int | np.random.RandomState | None
+type AnyRandom = int | np.random.RandomState | None
 
 
 # No need for testing 3D; tSNE does not not support layers, and
