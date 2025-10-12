@@ -31,7 +31,7 @@ it is still possible to use different tools to manage dependencies, such as `uv`
 ## Installing dev dependencies
 
 In addition to the packages needed to _use_ this package,
-you need additional python packages to [run tests](#writing-tests) and [build the documentation](#docs-building).
+you need additional python packages to [run tests](writing-tests) and [build the documentation](docs-building).
 
 :::::{tabs}
 ::::{group-tab} Hatch
