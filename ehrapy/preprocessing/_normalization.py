@@ -447,7 +447,11 @@ def quantile_norm(
         >>> # Works automatically with both 2D and 3D data
         >>> edata_3d_norm = ep.pp.quantile_norm(edata_3d, copy=True)
     """
-    scale_func = _quantile_norm_function(edata.X if layer is None else edata.layers[layer], **kwargs)
+    if hasattr(edata, "R") and getattr(edata, "R") is not None and edata.R.ndim == 3:
+        arr = edata.R if layer is None else edata.layers[layer]
+    else:
+        arr = edata.X if layer is None else edata.layers[layer]
+    scale_func = _quantile_norm_function(arr, **kwargs)
 
     return _scale_func_group(
         edata=edata,
@@ -509,7 +513,11 @@ def power_norm(
         >>> # Works automatically with both 2D and 3D data
         >>> edata_3d_norm = ep.pp.power_norm(edata_3d, copy=True)
     """
-    scale_func = _power_norm_function(edata.X if layer is None else edata.layers[layer], **kwargs)
+    if hasattr(edata, "R") and getattr(edata, "R") is not None and edata.R.ndim == 3:
+        arr = edata.R if layer is None else edata.layers[layer]
+    else:
+        arr = edata.X if layer is None else edata.layers[layer]
+    scale_func = _power_norm_function(arr, **kwargs)
 
     return _scale_func_group(
         edata=edata,
@@ -569,29 +577,88 @@ def log_norm(
 
     edata = _prep_edata_norm(edata, copy)
 
-    edata_to_check_for_negatives = edata[:, vars] if vars else edata
-    offset_tmp_applied = edata_to_check_for_negatives.X + offset
-    if np.any(offset_tmp_applied < 0):
-        raise ValueError(
-            "Matrix X contains negative values. "
-            "Undefined behavior for log normalization. "
-            "Please specifiy a higher offset to this function "
-            "or offset negative values with ep.pp.offset_negative_values()."
-        )
+    # Handle 3D data
+    if hasattr(edata, "R") and getattr(edata, "R") is not None and edata.R.ndim == 3:
+        if layer is None:
+            # Check for negatives in 3D R data
+            if vars:
+                var_indices = [edata.var_names.get_loc(v) for v in vars]
+                check_data = edata.R[:, var_indices, :]
+            else:
+                check_data = edata.R
+            
+            offset_tmp_applied = check_data + offset
+            if np.any(offset_tmp_applied < 0):
+                raise ValueError(
+                    "Matrix R contains negative values. "
+                    "Undefined behavior for log normalization. "
+                    "Please specify a higher offset to this function "
+                    "or offset negative values with ep.pp.offset_negative_values()."
+                )
 
-    var_values = edata[:, vars].X.copy()
+            var_values = edata.R.copy()
+            
+            if offset == 1:
+                np.log1p(var_values, out=var_values)
+            else:
+                var_values = var_values + offset
+                np.log(var_values, out=var_values)
 
-    if offset == 1:
-        np.log1p(var_values, out=var_values)
+            if base is not None:
+                np.divide(var_values, np.log(base), out=var_values)
+
+            edata.R = edata.R.astype(var_values.dtype)
+            edata.R[:, :, :] = var_values
+        else:
+            # Handle layer case for 3D
+            check_data = edata.layers[layer]
+            offset_tmp_applied = check_data + offset
+            if np.any(offset_tmp_applied < 0):
+                raise ValueError(
+                    "Layer contains negative values. "
+                    "Undefined behavior for log normalization. "
+                    "Please specify a higher offset to this function "
+                    "or offset negative values with ep.pp.offset_negative_values()."
+                )
+
+            var_values = edata.layers[layer].copy()
+            
+            if offset == 1:
+                np.log1p(var_values, out=var_values)
+            else:
+                var_values = var_values + offset
+                np.log(var_values, out=var_values)
+
+            if base is not None:
+                np.divide(var_values, np.log(base), out=var_values)
+
+            edata.layers[layer] = edata.layers[layer].astype(var_values.dtype)
+            edata.layers[layer][:, :, :] = var_values
     else:
-        var_values = var_values + offset
-        np.log(var_values, out=var_values)
+        # Original 2D logic
+        edata_to_check_for_negatives = edata[:, vars] if vars else edata
+        offset_tmp_applied = edata_to_check_for_negatives.X + offset
+        if np.any(offset_tmp_applied < 0):
+            raise ValueError(
+                "Matrix X contains negative values. "
+                "Undefined behavior for log normalization. "
+                "Please specifiy a higher offset to this function "
+                "or offset negative values with ep.pp.offset_negative_values()."
+            )
 
-    if base is not None:
-        np.divide(var_values, np.log(base), out=var_values)
+        var_values = edata[:, vars].X.copy()
 
-    edata.X = edata.X.astype(var_values.dtype)
-    edata[:, vars].X = var_values
+        if offset == 1:
+            np.log1p(var_values, out=var_values)
+        else:
+            var_values = var_values + offset
+            np.log(var_values, out=var_values)
+
+        if base is not None:
+            np.divide(var_values, np.log(base), out=var_values)
+
+        edata.X = edata.X.astype(var_values.dtype)
+        edata[:, vars].X = var_values
 
     _record_norm(edata, vars, "log")
 
@@ -660,8 +727,14 @@ def offset_negative_values(edata: EHRData | AnnData, layer: str = None, copy: bo
         if minimum < 0:
             edata.layers[layer] = edata.layers[layer] + np.abs(minimum)
     else:
-        minimum = np.min(edata.X)
-        if minimum < 0:
-            edata.X = edata.X + np.abs(minimum)
+        # Handle 3D data
+        if hasattr(edata, "R") and getattr(edata, "R") is not None and edata.R.ndim == 3:
+            minimum = np.min(edata.R)
+            if minimum < 0:
+                edata.R = edata.R + np.abs(minimum)
+        else:
+            minimum = np.min(edata.X)
+            if minimum < 0:
+                edata.X = edata.X + np.abs(minimum)
 
     return edata if copy else None

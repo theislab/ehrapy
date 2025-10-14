@@ -36,12 +36,6 @@ def test_norm_scale_array_types(adata_to_norm, array_type, expected_error):
             ep.pp.scale_norm(adata_to_norm)
 
 
-def test_norm_scale_3D_edata(edata_blob_small):
-    ep.pp.scale_norm(edata_blob_small, layer="layer_2")
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.scale_norm(edata_blob_small, layer="R_layer")
-
-
 @pytest.mark.parametrize("array_type", [np.array, da.array])
 def test_norm_scale(adata_to_norm, array_type):
     """Test for the scaling normalization method."""
@@ -143,12 +137,6 @@ def test_norm_minmax_array_types(adata_to_norm, array_type, expected_error):
             ep.pp.minmax_norm(adata_to_norm)
 
 
-def test_norm_minmax_3D_edata(edata_blob_small):
-    ep.pp.minmax_norm(edata_blob_small, layer="layer_2")
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.minmax_norm(edata_blob_small, layer="R_layer")
-
-
 @pytest.mark.parametrize("array_type", ARRAY_TYPES)
 def test_norm_minmax(array_type, adata_to_norm):
     """Test for the minmax normalization method."""
@@ -222,12 +210,6 @@ def test_norm_maxabs_array_types(adata_to_norm, array_type, expected_error):
             ep.pp.maxabs_norm(adata_to_norm)
     else:
         ep.pp.maxabs_norm(adata_to_norm)
-
-
-def test_norm_maxabs_3D_edata(edata_blob_small):
-    ep.pp.maxabs_norm(edata_blob_small, layer="layer_2")
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.maxabs_norm(edata_blob_small, layer="R_layer")
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES)
@@ -310,12 +292,6 @@ def test_norm_robust_scale_array_types(adata_to_norm, array_type, expected_error
             ep.pp.robust_scale_norm(adata_to_norm)
 
 
-def test_norm_robust_scale_3D_edata(edata_blob_small):
-    ep.pp.robust_scale_norm(edata_blob_small, layer="layer_2")
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.robust_scale_norm(edata_blob_small, layer="R_layer")
-
-
 @pytest.mark.parametrize("array_type", ARRAY_TYPES)
 def test_norm_robust_scale(array_type, adata_to_norm):
     """Test for the robust_scale normalization method."""
@@ -391,11 +367,6 @@ def test_norm_quantile_array_types(adata_to_norm, array_type, expected_error):
         with pytest.raises(expected_error):
             ep.pp.quantile_norm(adata_to_norm)
 
-
-def test_norm_quantile_3D_edata(edata_blob_small):
-    ep.pp.quantile_norm(edata_blob_small, layer="layer_2")
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.quantile_norm(edata_blob_small, layer="R_layer")
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES)
@@ -488,12 +459,6 @@ def test_norm_power_array_types(adata_to_norm, array_type, expected_error):
     if expected_error:
         with pytest.raises(expected_error):
             ep.pp.power_norm(adata_to_norm)
-
-
-def test_norm_power_3D_edata(edata_blob_small):
-    ep.pp.power_norm(edata_blob_small, layer="layer_2")
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.power_norm(edata_blob_small, layer="R_layer")
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES)
@@ -627,14 +592,6 @@ def test_norm_log_norm_array_types(adata_to_norm, array_type, expected_error):
             ep.pp.log_norm(adata_to_norm)
 
 
-def test_norm_log_3D_edata(edata_blob_small):
-    edata_blob_small.X = np.abs(edata_blob_small.X)
-    edata_blob_small.layers["R_layer"] = np.abs(edata_blob_small.layers["R_layer"])
-    ep.pp.log_norm(edata_blob_small, layer="layer_2")
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.log_norm(edata_blob_small, layer="R_layer")
-
-
 def test_norm_log1p(adata_to_norm):
     """Test for the log normalization method."""
     # Ensure that some test data is strictly positive
@@ -708,12 +665,6 @@ def test_offset_negative_values():
     assert np.array_equal(expected_adata.X, ep.pp.offset_negative_values(to_offset_adata, copy=True).X)
 
 
-def test_offset_negative_values_3D_edata(edata_blob_small):
-    ep.pp.offset_negative_values(edata_blob_small, layer="layer_2")
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.offset_negative_values(edata_blob_small, layer="R_layer")
-
-
 def test_norm_numerical_only():
     """Test for the log_norm method."""
     to_normalize_adata = AnnData(X=np.array([[1, 0, 0], [0, 0, 1]], dtype=np.float32))
@@ -727,15 +678,9 @@ def test_scale_norm_3d(edata_blob_small_3d):
     edata = edata_blob_small_3d
     # Save original shape and dtype
     orig_shape = edata.R.shape
-    print("Original shape:", orig_shape)
     orig_dtype = edata.R.dtype
-    print("Original dtype:", orig_dtype)
-    print("mean:", np.mean(edata.R), "std:", np.std(edata.R))
     # Run normalization
-    print("type:", type(edata))
-    # print("attr:", getattr(edata, 'R', None))
     ep.pp.scale_norm(edata)
-    print("mean:", np.mean(edata.R), "std:", np.std(edata.R))
 
     # After normalization, R should still be 3D and same shape
     assert edata.R.shape == orig_shape
@@ -755,17 +700,10 @@ def test_minmax_norm_3d(edata_blob_small_3d):
     edata = edata_blob_small_3d
     # Save original shape and dtype
     orig_shape = edata.R.shape
-    print("Original shape:", orig_shape)
     orig_dtype = edata.R.dtype
-    print("Original dtype:", orig_dtype)
-    print("min:", np.min(edata.R), "max:", np.max(edata.R))
-
+    
     # Run normalization
-    print("type:", type(edata))
-    ep.pp.minmax_norm(edata)
-    print("min:", np.min(edata.R), "max:", np.max(edata.R))
-
-    # After normalization, R should still be 3D and same shape
+    ep.pp.minmax_norm(edata)    # After normalization, R should still be 3D and same shape
     assert edata.R.shape == orig_shape
     assert edata.R.dtype == orig_dtype or np.issubdtype(edata.R.dtype, np.floating)
 
@@ -783,19 +721,10 @@ def test_maxabs_norm_3d(edata_blob_small_3d):
     edata = edata_blob_small_3d
     # Save original shape and dtype
     orig_shape = edata.R.shape
-    print("Original shape:", orig_shape)
     orig_dtype = edata.R.dtype
-    print("Original dtype:", orig_dtype)
-    print("min:", np.min(edata.R), "max:", np.max(edata.R))
-    print("max abs:", np.max(np.abs(edata.R)))
-
+    
     # Run normalization
-    print("type:", type(edata))
-    ep.pp.maxabs_norm(edata)
-    print("min:", np.min(edata.R), "max:", np.max(edata.R))
-    print("max abs:", np.max(np.abs(edata.R)))
-
-    # After normalization, R should still be 3D and same shape
+    ep.pp.maxabs_norm(edata)    # After normalization, R should still be 3D and same shape
     assert edata.R.shape == orig_shape
     assert edata.R.dtype == orig_dtype or np.issubdtype(edata.R.dtype, np.floating)
 
@@ -812,17 +741,10 @@ def test_robust_scale_norm_3d(edata_blob_small_3d):
     edata = edata_blob_small_3d
     # Save original shape and dtype
     orig_shape = edata.R.shape
-    print("Original shape:", orig_shape)
     orig_dtype = edata.R.dtype
-    print("Original dtype:", orig_dtype)
-    print("median:", np.median(edata.R), "mad:", np.median(np.abs(edata.R - np.median(edata.R))))
-
+    
     # Run normalization
-    print("type:", type(edata))
-    ep.pp.robust_scale_norm(edata)
-    print("median:", np.median(edata.R), "mad:", np.median(np.abs(edata.R - np.median(edata.R))))
-
-    # After normalization, R should still be 3D and same shape
+    ep.pp.robust_scale_norm(edata)    # After normalization, R should still be 3D and same shape
     assert edata.R.shape == orig_shape
     assert edata.R.dtype == orig_dtype or np.issubdtype(edata.R.dtype, np.floating)
 
@@ -837,3 +759,110 @@ def test_robust_scale_norm_3d(edata_blob_small_3d):
         q75, q25 = np.percentile(flat, [75, 25])
         iqr = q75 - q25
         assert np.allclose(iqr, 1, atol=1e-6)
+
+
+def test_quantile_norm_3d(edata_blob_small_3d):
+    """Test quantile_norm normalization on 3D EHRData (edata.R)."""
+    edata = edata_blob_small_3d
+    # Save original shape and dtype
+    orig_shape = edata.R.shape
+    orig_dtype = edata.R.dtype
+    
+    # Run normalization
+    ep.pp.quantile_norm(edata)
+
+    # After normalization, R should still be 3D and same shape
+    assert edata.R.shape == orig_shape
+    assert edata.R.dtype == orig_dtype or np.issubdtype(edata.R.dtype, np.floating)
+
+    # Check that each variable (axis=1) follows uniform distribution [0,1] after quantile transformation
+    n_obs, n_var, n_timestamps = edata.R.shape
+    for var_idx in range(n_var):
+        flat = edata.R[:, var_idx, :].reshape(-1)
+        # Values should be approximately uniformly distributed in [0, 1]
+        assert np.allclose(np.min(flat), 0, atol=1e-6)
+        assert np.allclose(np.max(flat), 1, atol=1e-6)
+        # Check approximate uniform distribution by checking quartiles
+        q25, q50, q75 = np.percentile(flat, [25, 50, 75])
+        assert np.allclose(q25, 0.25, atol=0.05)  # More tolerance for uniform distribution
+        assert np.allclose(q50, 0.5, atol=0.05)
+        assert np.allclose(q75, 0.75, atol=0.05)
+
+
+def test_power_norm_3d(edata_blob_small_3d):
+    """Test power_norm normalization on 3D EHRData (edata.R)."""
+    edata = edata_blob_small_3d
+    # Make sure data is positive for power transform
+    edata.R = np.abs(edata.R) + 0.1  # Add small offset to avoid zeros
+    
+    # Save original shape and dtype
+    orig_shape = edata.R.shape
+    orig_dtype = edata.R.dtype
+    
+    # Run normalization
+    ep.pp.power_norm(edata)
+
+    # After normalization, R should still be 3D and same shape
+    assert edata.R.shape == orig_shape
+    assert edata.R.dtype == orig_dtype or np.issubdtype(edata.R.dtype, np.floating)
+
+    # Power transform should reduce skewness and make data more normal
+    n_obs, n_var, n_timestamps = edata.R.shape
+    for var_idx in range(n_var):
+        flat = edata.R[:, var_idx, :].reshape(-1)
+        # After power transform, data should have approximately zero mean and unit variance
+        assert np.allclose(np.mean(flat), 0, atol=1e-5)
+        assert np.allclose(np.std(flat), 1, atol=1e-5)
+
+
+def test_log_norm_3d(edata_blob_small_3d):
+    """Test log_norm normalization on 3D EHRData (edata.R)."""
+    edata = edata_blob_small_3d
+    # Make sure data is positive for log transform
+    edata.R = np.abs(edata.R) + 1  # Offset to make positive
+    
+    # Save original shape and dtype
+    orig_shape = edata.R.shape
+    orig_dtype = edata.R.dtype
+    
+    # Save original for comparison
+    R_original = edata.R.copy()
+    
+    # Run normalization
+    ep.pp.log_norm(edata)
+
+    # After normalization, R should still be 3D and same shape
+    assert edata.R.shape == orig_shape
+    assert edata.R.dtype == orig_dtype or np.issubdtype(edata.R.dtype, np.floating)
+
+    # Verify log transformation: log(original + 1) should equal result
+    expected = np.log1p(R_original)
+    assert np.allclose(edata.R, expected, rtol=1e-6)
+    
+    # Data should have changed significantly
+    assert not np.array_equal(R_original, edata.R)
+
+
+def test_offset_negative_values_3d(edata_blob_small_3d):
+    """Test offset_negative_values on 3D EHRData (edata.R)."""
+    edata = edata_blob_small_3d
+    # Ensure we have some negative values
+    edata.R = edata.R - 2  # Shift to create negative values
+    
+    # Save original shape and dtype
+    orig_shape = edata.R.shape
+    orig_dtype = edata.R.dtype
+    assert np.min(edata.R) < 0, "Test data should have negative values"
+    
+    # Run offset
+    ep.pp.offset_negative_values(edata)
+
+    # After offset, R should still be 3D and same shape
+    assert edata.R.shape == orig_shape
+    assert edata.R.dtype == orig_dtype or np.issubdtype(edata.R.dtype, np.floating)
+
+    # Minimum value should now be 0 (or very close)
+    assert np.allclose(np.min(edata.R), 0, atol=1e-10)
+    
+    # All values should be non-negative
+    assert np.all(edata.R >= 0)
