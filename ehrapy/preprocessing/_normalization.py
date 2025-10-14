@@ -447,7 +447,7 @@ def quantile_norm(
         >>> # Works automatically with both 2D and 3D data
         >>> edata_3d_norm = ep.pp.quantile_norm(edata_3d, copy=True)
     """
-    if hasattr(edata, "R") and getattr(edata, "R") is not None and edata.R.ndim == 3:
+    if hasattr(edata, "R") and edata.R is not None and edata.R.ndim == 3:
         arr = edata.R if layer is None else edata.layers[layer]
     else:
         arr = edata.X if layer is None else edata.layers[layer]
@@ -513,7 +513,7 @@ def power_norm(
         >>> # Works automatically with both 2D and 3D data
         >>> edata_3d_norm = ep.pp.power_norm(edata_3d, copy=True)
     """
-    if hasattr(edata, "R") and getattr(edata, "R") is not None and edata.R.ndim == 3:
+    if hasattr(edata, "R") and edata.R is not None and edata.R.ndim == 3:
         arr = edata.R if layer is None else edata.layers[layer]
     else:
         arr = edata.X if layer is None else edata.layers[layer]
@@ -578,7 +578,7 @@ def log_norm(
     edata = _prep_edata_norm(edata, copy)
 
     # Handle 3D data
-    if hasattr(edata, "R") and getattr(edata, "R") is not None and edata.R.ndim == 3:
+    if hasattr(edata, "R") and edata.R is not None and edata.R.ndim == 3:
         if layer is None:
             # Check for negatives in 3D R data
             if vars:
@@ -586,7 +586,7 @@ def log_norm(
                 check_data = edata.R[:, var_indices, :]
             else:
                 check_data = edata.R
-            
+
             offset_tmp_applied = check_data + offset
             if np.any(offset_tmp_applied < 0):
                 raise ValueError(
@@ -597,7 +597,7 @@ def log_norm(
                 )
 
             var_values = edata.R.copy()
-            
+
             if offset == 1:
                 np.log1p(var_values, out=var_values)
             else:
@@ -622,7 +622,7 @@ def log_norm(
                 )
 
             var_values = edata.layers[layer].copy()
-            
+
             if offset == 1:
                 np.log1p(var_values, out=var_values)
             else:
@@ -728,7 +728,7 @@ def offset_negative_values(edata: EHRData | AnnData, layer: str = None, copy: bo
             edata.layers[layer] = edata.layers[layer] + np.abs(minimum)
     else:
         # Handle 3D data
-        if hasattr(edata, "R") and getattr(edata, "R") is not None and edata.R.ndim == 3:
+        if hasattr(edata, "R") and edata.R is not None and edata.R.ndim == 3:
             minimum = np.min(edata.R)
             if minimum < 0:
                 edata.R = edata.R + np.abs(minimum)
