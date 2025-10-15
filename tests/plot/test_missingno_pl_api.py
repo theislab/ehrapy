@@ -3,6 +3,7 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 import pytest
 
 import ehrapy as ep
@@ -13,7 +14,7 @@ _TEST_IMAGE_PATH = f"{CURRENT_DIR}/_images"
 
 @pytest.mark.parametrize("layer", [None, "layer_2"])
 def test_missing_values_barplot(mimic_2, check_same_image, layer):
-    mimic_2 = mimic_2.copy()
+    # mimic_2 = mimic_2.copy()
     if layer is not None:
         mimic_2.X = None
     plot = ep.pl.missing_values_barplot(mimic_2, filter="bottom", max_cols=15, max_percentage=0.999, layer=layer)
@@ -30,6 +31,7 @@ def test_missing_values_barplot_3D(edata_blob_small):
     ep.pl.missing_values_barplot(edata_blob_small)
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         ep.pl.missing_values_barplot(edata_blob_small, layer="R_layer")
+    plt.close("all")
 
 
 @pytest.mark.parametrize("layer", [None, "layer_2"])
