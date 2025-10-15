@@ -24,6 +24,7 @@ def test_missing_values_barplot(mimic_2, check_same_image, layer):
         base_path=f"{_TEST_IMAGE_PATH}/missing_values_barplot",
         tol=6,
     )
+    plt.close("all")
 
 
 def test_missing_values_barplot_3D(edata_blob_small):

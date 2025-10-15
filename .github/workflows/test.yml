@@ -72,6 +72,15 @@ jobs:
           PLATFORM: ${{ matrix.os }}
           DISPLAY: :42
         run: uvx hatch run ${{ matrix.env.name }}:run-cov -v --color=yes -n auto
+      - name: Upload failed image diffs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failed-image-diffs-${{ matrix.env.name }}
+          path: |
+            /tmp/pytest-of-runner/**/actual*.png
+            /tmp/pytest-of-runner/**/diff*.png
+          if-no-files-found: ignore
       - name: generate coverage report
         run: |
           # See https://coverage.readthedocs.io/en/latest/config.html#run-patch
