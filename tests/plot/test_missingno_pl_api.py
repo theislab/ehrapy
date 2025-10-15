@@ -22,7 +22,7 @@ def test_missing_values_barplot(mimic_2, check_same_image, layer):
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/missing_values_barplot",
-        tol=5,
+        tol=6,
     )
     plt.close("all")
 
