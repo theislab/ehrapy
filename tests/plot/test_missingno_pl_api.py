@@ -14,7 +14,6 @@ _TEST_IMAGE_PATH = f"{CURRENT_DIR}/_images"
 
 @pytest.mark.parametrize("layer", [None, "layer_2"])
 def test_missing_values_barplot(mimic_2, check_same_image, layer):
-    # mimic_2 = mimic_2.copy()
     if layer is not None:
         mimic_2.X = None
     plot = ep.pl.missing_values_barplot(mimic_2, filter="bottom", max_cols=15, max_percentage=0.999, layer=layer)
