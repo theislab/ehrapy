@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from ehrdata import EHRData
     from scanpy.neighbors import KnnTransformerLike
 
-    from ehrapy.preprocessing._types import AnyRandom, KnownTransformer
+    from ehrapy._types import AnyRandom, KnownTransformer
 
 
 _Method = Literal["umap", "gauss"]

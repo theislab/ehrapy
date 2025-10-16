@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
     from scipy.sparse import spmatrix
 
-    from ehrapy.preprocessing._types import AnyRandom, CSBase, RNGLike, SeedLike
+    from ehrapy._types import AnyRandom, CSBase, RNGLike, SeedLike
 
 
 @function_2D_only()
