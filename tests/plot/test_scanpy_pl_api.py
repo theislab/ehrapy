@@ -481,7 +481,6 @@ def test_pca_variance_ration(mimic_2_sample_serv_unit_day_icu, check_same_image)
 
 
 def test_pca_overview(mimic_2_sample_serv_unit_day_icu, check_same_image, clean_up_plots):
-    plt.close("all")
     adata = mimic_2_sample_serv_unit_day_icu.copy()
     adata = adata[~np.isnan(adata.X).any(axis=1)].copy()
     adata = adata[:200, :].copy()
