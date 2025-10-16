@@ -1,12 +1,19 @@
-from typing import Literal
+from collections.abc import Callable
+from functools import singledispatch
+from typing import Any, Literal
 
 import numpy as np
+from scipy.sparse import coo_matrix
+
+
+def _raise_array_type_not_implemented(function: Callable[..., Any], array_type: type) -> None:
+    raise NotImplementedError(f"{function.__name__} not implemented for type {array_type}")
 
 
 def timeseries_distance(
     obs_indices_x: np.ndarray,
     obs_indices_y: np.ndarray,
-    R: np.ndarray,
+    R: np.ndarray | coo_matrix,
     metric: Literal["dtw", "soft_dtw", "gak"] = "dtw",
 ) -> float:
     """Calculate temporal distance between two patients across all variables.
@@ -28,6 +35,28 @@ def timeseries_distance(
         Average temporal distance across valid variable pairs.
         Returns 0 if no valid variable pairs exist.
     """
+    return _timeseries_distance_impl(R, obs_indices_x, obs_indices_y, metric)
+
+
+@singledispatch
+def _timeseries_distance_impl(
+    R: np.ndarray | coo_matrix,
+    obs_indices_x: np.ndarray,
+    obs_indices_y: np.ndarray,
+    metric: Literal["dtw", "soft_dtw", "gak"],
+) -> float:
+    _raise_array_type_not_implemented(timeseries_distance, type(R))
+
+    return None
+
+
+@_timeseries_distance_impl.register
+def _(
+    R: np.ndarray,
+    obs_indices_x: np.ndarray,
+    obs_indices_y: np.ndarray,
+    metric: Literal["dtw", "soft_dtw", "gak"],
+) -> float:
     match metric:
         case "dtw":
             from tslearn.metrics import dtw
@@ -36,19 +65,16 @@ def timeseries_distance(
         case "soft_dtw":
             from tslearn.metrics import soft_dtw
 
-            # Normalize soft-DTW by subtracting average self-distance to create proper metric.
-            # soft_dtw(x,x) and soft_dtw(y,y) are non-zero due to smoothing parameter γ.
-            # Subtracting their average ensures: (1) identical sequences yield 0, (2) symmetry preserved.
             metric_func = lambda x, y: abs(soft_dtw(x, y) - 0.5 * (soft_dtw(x, x) + soft_dtw(y, y)))
         case "gak":
             from tslearn.metrics import gak
 
-            # GAK returns similarity in [0,1] where 1=identical. Convert to distance by taking 1-similarity.
             metric_func = lambda x, y: 1.0 - gak(x, y)
         case _:
             raise ValueError(f"Unknown time series metric {metric}. Must be one of 'dtw', 'soft_dtw', or 'gak'.")
 
-    obs_i, obs_j = int(obs_indices_x[0]), int(obs_indices_y[0])
+    obs_i = int(np.asarray(obs_indices_x).flat[0])
+    obs_j = int(np.asarray(obs_indices_y).flat[0])
     total_distance = 0
     valid_variable_count = 0
 
@@ -57,6 +83,7 @@ def timeseries_distance(
         series_j = R[obs_j, variable_idx, :]
         valid_measurements_i = ~np.isnan(series_i)
         valid_measurements_j = ~np.isnan(series_j)
+
         if np.sum(valid_measurements_i) > 3 and np.sum(valid_measurements_j) > 3:
             valid_series_i = series_i[valid_measurements_i].reshape(-1, 1)
             valid_series_j = series_j[valid_measurements_j].reshape(-1, 1)
@@ -65,3 +92,15 @@ def timeseries_distance(
             valid_variable_count += 1
 
     return total_distance / max(valid_variable_count, 1)
+
+
+@_timeseries_distance_impl.register
+def _(
+    R: coo_matrix,
+    obs_indices_x: np.ndarray,
+    obs_indices_y: np.ndarray,
+    metric: Literal["dtw", "soft_dtw", "gak"],
+) -> float:
+    _raise_array_type_not_implemented(timeseries_distance, type(R))
+
+    return None
