@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import ehrdata as ed
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pytest
@@ -356,6 +357,15 @@ def check_same_image(tmp_path):
         raise AssertionError(result)
 
     return check_same_image
+
+
+@pytest.fixture
+def clean_up_plots():
+    plt.close("all")
+    yield
+    plt.clf()
+    plt.cla()
+    plt.close("all")
 
 
 def asarray(a):
