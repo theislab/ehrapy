@@ -505,7 +505,6 @@ def test_pca_overview(mimic_2_sample_serv_unit_day_icu, check_same_image, clean_
             base_path=f"{_TEST_IMAGE_PATH}/pca_overview_{id}",
             tol=2e-1,
         )
-    plt.close("all")
 
 
 def test_umap_functionality(mimic_2_sample_serv_unit_day_icu):
