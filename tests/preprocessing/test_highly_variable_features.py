@@ -16,7 +16,6 @@ def test_highly_variable_features_3D_edata(edata_blob_small):
         highly_variable_features(edata_blob_small, span=1, layer="R_layer")
 
 
-
 def test_highly_variable_features(clean_up_plots):
     try:
         adata = ed.dt.diabetes_130_fairlearn()
