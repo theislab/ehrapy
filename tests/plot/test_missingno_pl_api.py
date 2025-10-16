@@ -73,7 +73,7 @@ def test_missing_values_heatmap_3D(edata_blob_small, clean_up_plots):
 
 
 @pytest.mark.parametrize("layer", [None, "layer_2"])
-def test_missing_values_dendogram(mimic_2, check_same_image, layer, clean_up_plots):
+def test_missing_values_dendogram(mimic_2, check_same_image, layer):
     if layer is not None:
         mimic_2.X = None
     plot = ep.pl.missing_values_dendrogram(mimic_2, filter="bottom", max_cols=15, max_percentage=0.999, layer=layer)
