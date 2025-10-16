@@ -21,20 +21,18 @@ def invalid_data(scope="module"):
 
 
 def test_filter_features_invalid_args(ehr_3d_blobs, invalid_data):
-    edata = ehr_3d_blobs.copy()
-
     # passing a non AnnData / EHRData object
     with pytest.raises(TypeError):
         ep.pp.filter_features(invalid_data, min_obs=10, time_mode="all", copy=False)
     # no threshold
     with pytest.raises(ValueError):
-        ep.pp.filter_features(edata, time_mode="all", copy=False)
+        ep.pp.filter_features(ehr_3d_blobs, time_mode="all", copy=False)
     # invalid time_mode
     with pytest.raises(ValueError):
-        ep.pp.filter_features(edata, min_obs=185, time_mode="invalid_mode", copy=False)
+        ep.pp.filter_features(ehr_3d_blobs, min_obs=185, time_mode="invalid_mode", copy=False)
     # invalid prop
     with pytest.raises(ValueError):
-        ep.pp.filter_features(edata, min_obs=185, time_mode="proportion", prop=3, copy=False)
+        ep.pp.filter_features(ehr_3d_blobs, min_obs=185, time_mode="proportion", prop=3, copy=False)
 
 
 @pytest.mark.parametrize(
@@ -48,7 +46,7 @@ def test_filter_features_invalid_args(ehr_3d_blobs, invalid_data):
 )
 def test_filter_features_min_max(request, fixture, shape, kwargs):
     # generic test for min_obs and max_obs filtering on 2d and 3d data
-    edata = request.getfixturevalue(fixture).copy()
+    edata = request.getfixturevalue(fixture)
 
     layer = getattr(edata, shape)
     n_vars_before = layer.shape[1]
@@ -62,7 +60,7 @@ def test_filter_features_min_max(request, fixture, shape, kwargs):
 
 
 def test_filter_features_layers(ehr_3d_blobs):
-    edata = ehr_3d_blobs.copy()
+    edata = ehr_3d_blobs
     with pytest.raises(ValueError):
         ep.pp.filter_features(edata, layers="invalid_layer", min_obs=185, time_mode="all", copy=False)
 
@@ -78,20 +76,18 @@ def test_filter_features_layers(ehr_3d_blobs):
 
 
 def test_filter_obs_invalid_args(ehr_3d_blobs, invalid_data):
-    edata = ehr_3d_blobs.copy()
-
     # passing a non AnnData / EHRData object
     with pytest.raises(TypeError):
         ep.pp.filter_observations(invalid_data, min_vars=10, time_mode="all", copy=False)
     # no threshold
     with pytest.raises(ValueError):
-        ep.pp.filter_observations(edata, time_mode="all", copy=False)
+        ep.pp.filter_observations(ehr_3d_blobs, time_mode="all", copy=False)
     # invalid time_mode
     with pytest.raises(ValueError):
-        ep.pp.filter_observations(edata, min_vars=10, time_mode="invalid_mode", copy=False)
+        ep.pp.filter_observations(ehr_3d_blobs, min_vars=10, time_mode="invalid_mode", copy=False)
     # invalid prop
     with pytest.raises(ValueError):
-        ep.pp.filter_observations(edata, min_vars=10, time_mode="proportion", prop=2, copy=False)
+        ep.pp.filter_observations(ehr_3d_blobs, min_vars=10, time_mode="proportion", prop=2, copy=False)
 
 
 @pytest.mark.parametrize(
@@ -105,7 +101,7 @@ def test_filter_obs_invalid_args(ehr_3d_blobs, invalid_data):
 )
 def test_filter_obs_min_max(request, fixture, shape, kwargs):
     # generic test for min_obs and max_obs filtering on 2d and 3d data
-    edata = request.getfixturevalue(fixture).copy()
+    edata = request.getfixturevalue(fixture)
 
     layer = getattr(edata, shape)
     n_obs_before = layer.shape[0]

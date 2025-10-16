@@ -9,7 +9,7 @@ from anndata import AnnData
 from ehrdata import EHRData
 from ehrdata.core.constants import MISSING_VALUES
 from lamin_utils import logger
-from scipy.sparse import sparray
+from scipy import sparse
 
 from ehrapy._compat import DaskArray, _raise_array_type_not_implemented, use_ehrdata
 
@@ -30,7 +30,7 @@ def _(arr: DaskArray, *, function: Callable[..., Any]) -> None:
 
 
 @_filtering_function.register
-def _(arr: sparray, *, function: Callable[..., Any]) -> None:
+def _(arr: sparse.coo_array, *, function: Callable[..., Any]) -> None:
     _raise_array_type_not_implemented(function, type(arr))
 
 
