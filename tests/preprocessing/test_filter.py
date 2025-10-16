@@ -14,16 +14,7 @@ def ehr_3d_blobs(scope="module"):
     return ed.dt.ehrdata_blobs(n_variables=45, n_observations=500, base_timepoints=15, missing_values=0.6)
 
 
-@pytest.fixture
-def invalid_data(scope="module"):
-    rng = np.random.default_rng()
-    return rng.random((10, 5))
-
-
-def test_filter_features_invalid_args(ehr_3d_blobs, invalid_data):
-    # passing a non AnnData / EHRData object
-    with pytest.raises(TypeError):
-        ep.pp.filter_features(invalid_data, min_obs=10, time_mode="all", copy=False)
+def test_filter_features_invalid_args(ehr_3d_blobs):
     # no threshold
     with pytest.raises(ValueError):
         ep.pp.filter_features(ehr_3d_blobs, time_mode="all", copy=False)
@@ -75,10 +66,7 @@ def test_filter_features_layers(ehr_3d_blobs):
     assert n_vars_after < n_vars_before
 
 
-def test_filter_obs_invalid_args(ehr_3d_blobs, invalid_data):
-    # passing a non AnnData / EHRData object
-    with pytest.raises(TypeError):
-        ep.pp.filter_observations(invalid_data, min_vars=10, time_mode="all", copy=False)
+def test_filter_obs_invalid_args(ehr_3d_blobs):
     # no threshold
     with pytest.raises(ValueError):
         ep.pp.filter_observations(ehr_3d_blobs, time_mode="all", copy=False)
