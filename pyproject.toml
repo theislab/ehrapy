@@ -7,7 +7,7 @@ name = "ehrapy"
 version = "0.13.0"
 description = "Electronic Health Record Analysis with Python."
 readme = "README.md"
-requires-python = ">=3.11,<3.14"
+requires-python = ">=3.12,<3.14"
 license = {file = "LICENSE"}
 authors = [
     {name = "Lukas Heumos"},
@@ -38,7 +38,6 @@ classifiers = [
     "Operating System :: MacOS :: MacOS X",
     "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Bio-Informatics",
@@ -46,7 +45,6 @@ classifiers = [
 ]
 
 dependencies = [
-    "session-info2",
     "ehrdata",
     "lamin_utils",
     "scanpy",
@@ -60,11 +58,11 @@ dependencies = [
     "pyampute",
     "tableone",
     "fknni>=1.2.0",
-    "python-dateutil",
     "filelock",
     "numpy>=2.0.0",
     "numba>=0.60.0",
-    "igraph",
+    "leidenalg",  # careful - GPL
+    "igraph",  # careful - GPL
     "fast-array-utils[sparse,accel]",
     "networkx<3.5", # dowhy breaks - see https://github.com/py-why/dowhy/issues/680#issuecomment-2957189390
     "tslearn"
@@ -97,6 +95,7 @@ doc = [
     "sphinx-copybutton",
     "sphinx-remove-toctrees",
     "sphinx-design",
+    "sphinx-tabs",
     "sphinx-last-updated-by-git",
     "sphinx-automodapi",
     "sphinxext-opengraph",
@@ -114,9 +113,27 @@ test = [
     "pytest-mock"
 ]
 
-
 [tool.hatch.version]
 source = "vcs"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.envs.default]
+installer = "uv"
+features = [ "dev" ]
+
+[tool.hatch.envs.docs]
+features = [ "doc", "dask", "causal" ]
+scripts.build = "sphinx-build -M html docs docs/_build -W {args}"
+scripts.open = "python -m webbrowser -t docs/_build/html/index.html"
+scripts.clean = "git clean -fdX -- {args:docs}"
+
+[tool.hatch.envs.hatch-test]
+features = [ "dask", "causal" ]
+
+[[tool.hatch.envs.hatch-test.matrix]]
+python = [ "3.12", "3.13" ]
 
 [tool.coverage.run]
 source_pkgs = ["ehrapy"]
@@ -213,15 +230,6 @@ convention = "google"
 "docs/*" = ["I"]
 "tests/*" = ["D"]
 "*/__init__.py" = ["F401"]
-
-[tool.mypy]
-strict = false
-pretty = true
-show_column_numbers = true
-show_error_codes = true
-show_error_context = true
-ignore_missing_imports = true
-no_strict_optional = true
 
 [tool.cruft]
 skip = [
