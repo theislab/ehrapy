@@ -361,6 +361,7 @@ def check_same_image(tmp_path):
 
 @pytest.fixture
 def clean_up_plots():
+    plt.close("all")
     yield
     plt.clf()
     plt.cla()
