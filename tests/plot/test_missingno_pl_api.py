@@ -13,7 +13,7 @@ _TEST_IMAGE_PATH = f"{CURRENT_DIR}/_images"
 
 
 @pytest.mark.parametrize("layer", [None, "layer_2"])
-def test_missing_values_barplot(mimic_2, check_same_image, layer):
+def test_missing_values_barplot(mimic_2, check_same_image, layer, clean_up_plots):
     plt.close("all")
     if layer is not None:
         mimic_2.X = None
@@ -25,18 +25,12 @@ def test_missing_values_barplot(mimic_2, check_same_image, layer):
         base_path=f"{_TEST_IMAGE_PATH}/missing_values_barplot",
         tol=5,
     )
-    plt.clf()
-    plt.cla()
-    plt.close("all")
 
 
-def test_missing_values_barplot_3D(edata_blob_small):
+def test_missing_values_barplot_3D(edata_blob_small, clean_up_plots):
     ep.pl.missing_values_barplot(edata_blob_small)
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         ep.pl.missing_values_barplot(edata_blob_small, layer="R_layer")
-    plt.clf()
-    plt.cla()
-    plt.close("all")
 
 
 @pytest.mark.parametrize("layer", [None, "layer_2"])
