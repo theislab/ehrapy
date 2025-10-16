@@ -34,7 +34,7 @@ def test_filter_features_invalid_args(ehr_3d_blobs, invalid_data):
         ep.pp.filter_features(edata, min_obs=185, time_mode="invalid_mode", copy=False)
     # invalid prop
     with pytest.raises(ValueError):
-        ep.pp.filter_features(edata, min_obs=185, time_mode="proportion", prop=2, copy=False)
+        ep.pp.filter_features(edata, min_obs=185, time_mode="proportion", prop=3, copy=False)
 
 
 @pytest.mark.parametrize(
