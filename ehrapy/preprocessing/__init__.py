@@ -9,6 +9,7 @@ from ehrapy.preprocessing._imputation import (
     miss_forest_impute,
     simple_impute,
 )
+from ehrapy.preprocessing._neighbors import neighbors
 from ehrapy.preprocessing._normalization import (
     log_norm,
     maxabs_norm,
@@ -21,12 +22,13 @@ from ehrapy.preprocessing._normalization import (
 )
 from ehrapy.preprocessing._outliers import clip_quantile, winsorize
 from ehrapy.preprocessing._quality_control import mcar_test, qc_lab_measurements, qc_metrics
-from ehrapy.preprocessing._scanpy_pp_api import *  # noqa: F403
+from ehrapy.preprocessing._scanpy_pp_api import combat, pca, regress_out, sample, subsample
 from ehrapy.preprocessing._summarize_measurements import summarize_measurements
 
 __all__ = [
     "detect_bias",
     "encode",
+    "neighbors",
     "highly_variable_features",
     "explicit_impute",
     "knn_impute",
@@ -49,4 +51,8 @@ __all__ = [
     "summarize_measurements",
     "filter_features",
     "filter_observations",
+    "pca",
+    "regress_out",
+    "sample",
+    "combat",
 ]
