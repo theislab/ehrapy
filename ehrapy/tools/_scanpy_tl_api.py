@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Literal
 
-import numpy as np
 import scanpy as sc
 from scipy.sparse import spmatrix  # noqa
 
@@ -12,12 +11,12 @@ from ehrapy.tools import _method_options  # noqa
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
 
+    import numpy as np
     from anndata import AnnData
     from ehrdata import EHRData
     from leidenalg.VertexPartition import MutableVertexPartition
 
-
-type AnyRandom = int | np.random.RandomState | None
+    from ehrapy._types import AnyRandom
 
 
 # No need for testing 3D; tSNE does not not support layers, and
