@@ -239,6 +239,7 @@ def filter_observations(
 
 
 def _arrays_for_filtering(data: EHRData | AnnData, layer: str | None) -> list[np.ndarray]:
+    """Get arrays to be used for filtering based on the provided layer."""
     if layer is None:
         arr = data.R if data.R is not None else data.X
         if arr is None:
@@ -254,7 +255,14 @@ def _arrays_for_filtering(data: EHRData | AnnData, layer: str | None) -> list[np
     return arrs
 
 
-def _compute_mask(arr, *, min_count, max_count, time_mode, prop, axis, caller):
+def _compute_mask(arr: np.ndarray, *, min_count: int, max_count: int, time_mode: str, prop: float, axis: int, caller):
+    """Compute mask for filtering based on missing data thresholds.
+
+    Returns:
+        mask: boolean array indicating which features/observations pass the filtering criteria
+        totals: total counts per feature/observation
+        is_2d: whether the input array was 2D.
+    """
     _filtering_function(arr, function=caller)
     if arr.ndim == 2:
         arr3 = arr[:, :, None]
