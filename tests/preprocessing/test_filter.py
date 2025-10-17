@@ -53,12 +53,12 @@ def test_filter_features_min_max(request, fixture, shape, kwargs):
 def test_filter_features_layers(ehr_3d_blobs):
     edata = ehr_3d_blobs
     with pytest.raises(ValueError):
-        ep.pp.filter_features(edata, layers="invalid_layer", min_obs=185, time_mode="all", copy=False)
+        ep.pp.filter_features(edata, layer="invalid_layer", min_obs=185, time_mode="all", copy=False)
 
     layer_before = edata.layers["R_layer"].copy()
     n_vars_before = layer_before.shape[1]
 
-    ep.pp.filter_features(edata, layers="R_layer", min_obs=185, time_mode="all", copy=False)
+    ep.pp.filter_features(edata, layer="R_layer", min_obs=185, time_mode="all", copy=False)
 
     layer_after = edata.layers["R_layer"]
     n_vars_after = layer_after.shape[1]
@@ -103,14 +103,14 @@ def test_filter_obs_min_max(request, fixture, shape, kwargs):
 
 
 def test_filter_obs_layers(ehr_3d_blobs):
-    edata = ehr_3d_blobs.copy()
+    edata = ehr_3d_blobs
     with pytest.raises(ValueError):
-        ep.pp.filter_features(edata, layers="invalid_layer", min_obs=185, time_mode="all", copy=False)
+        ep.pp.filter_features(edata, layer="invalid_layer", min_obs=185, time_mode="all", copy=False)
 
     layer_before = edata.layers["R_layer"].copy()
     n_obs_before = layer_before.shape[0]
 
-    ep.pp.filter_observations(edata, layers="R_layer", min_vars=10, time_mode="all", copy=False)
+    ep.pp.filter_observations(edata, layer="R_layer", min_vars=10, time_mode="all", copy=False)
 
     layer_after = edata.layers["R_layer"]
     n_obs_after = layer_after.shape[0]
