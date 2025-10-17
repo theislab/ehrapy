@@ -24,6 +24,17 @@ Preprocessing steps usually perform a basic transformation on the data array in 
     preprocessing.clip_quantile
     preprocessing.summarize_measurements
 ```
+## Filtering
+
+```{eval-rst}
+.. autosummary::
+    :toctree: preprocessing
+    :nosignatures:
+
+    preprocessing.filter_features
+    preprocessing.filter_observations
+```
+
 
 ## Quality control
 
