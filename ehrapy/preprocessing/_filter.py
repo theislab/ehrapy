@@ -73,7 +73,7 @@ def filter_features(
         copy: Determines whether a copy is returned.
 
     Returns:
-        Depending on `copy`, subsets and annotates the passed data object and returns `None`
+        Depending on `copy`, subsets and annotates the passed data object and returns a filtered copy of the data object or acts in place
 
     Examples:
         >>> import ehrapy as ep
@@ -173,7 +173,7 @@ def filter_observations(
         copy: Determines whether a copy is returned.
 
     Returns:
-        Depending on `copy`, subsets and annotates the passed data object and returns `None`
+        Depending on `copy`, subsets and annotates the passed data object and returns a filtered copy of the data object or acts in place
 
     Examples:
         >>> import ehrapy as ep
@@ -255,7 +255,9 @@ def _arrays_for_filtering(data: EHRData | AnnData, layer: str | None) -> list[np
     return arrs
 
 
-def _compute_mask(arr: np.ndarray, *, min_count: int, max_count: int, time_mode: str, prop: float, axis: int, caller):
+def _compute_mask(
+    arr: np.ndarray, *, min_count: int, max_count: int, time_mode: str, prop: float, axis: int, caller
+) -> tuple[np.ndarray, np.ndarray, bool]:
     """Compute mask for filtering based on missing data thresholds.
 
     Returns:

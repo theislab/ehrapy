@@ -16,13 +16,13 @@ def ehr_3d_blobs(scope="module"):
 
 def test_filter_features_invalid_args(ehr_3d_blobs):
     # no threshold
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="at least one of 'min_obs' and 'max_obs"):
         ep.pp.filter_features(ehr_3d_blobs, time_mode="all", copy=False)
     # invalid time_mode
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="must be one of 'all', 'any', 'proportion'"):
         ep.pp.filter_features(ehr_3d_blobs, min_obs=185, time_mode="invalid_mode", copy=False)
     # invalid prop
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="prop must be set to a value between 0 and 1"):
         ep.pp.filter_features(ehr_3d_blobs, min_obs=185, time_mode="proportion", prop=3, copy=False)
 
 
@@ -36,7 +36,7 @@ def test_filter_features_invalid_args(ehr_3d_blobs):
     ],
 )
 def test_filter_features_min_max(request, fixture, shape, kwargs):
-    # generic test for min_obs and max_obs filtering on 2d and 3d data
+    """Generic test for min_obs and max_obs filtering on 2D and 3D data"""
     edata = request.getfixturevalue(fixture)
 
     layer = getattr(edata, shape)
@@ -52,7 +52,7 @@ def test_filter_features_min_max(request, fixture, shape, kwargs):
 
 def test_filter_features_layers(ehr_3d_blobs):
     edata = ehr_3d_blobs
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Invalid layer provided"):
         ep.pp.filter_features(edata, layer="invalid_layer", min_obs=185, time_mode="all", copy=False)
 
     layer_before = edata.layers["R_layer"].copy()
@@ -68,13 +68,13 @@ def test_filter_features_layers(ehr_3d_blobs):
 
 def test_filter_obs_invalid_args(ehr_3d_blobs):
     # no threshold
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="at least one of 'min_vars' and 'max_vars"):
         ep.pp.filter_observations(ehr_3d_blobs, time_mode="all", copy=False)
     # invalid time_mode
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="must be one of 'all', 'any', 'proportion'"):
         ep.pp.filter_observations(ehr_3d_blobs, min_vars=10, time_mode="invalid_mode", copy=False)
     # invalid prop
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="prop must be set to a value between 0 and 1"):
         ep.pp.filter_observations(ehr_3d_blobs, min_vars=10, time_mode="proportion", prop=2, copy=False)
 
 
@@ -88,7 +88,7 @@ def test_filter_obs_invalid_args(ehr_3d_blobs):
     ],
 )
 def test_filter_obs_min_max(request, fixture, shape, kwargs):
-    # generic test for min_obs and max_obs filtering on 2d and 3d data
+    """Generic test for min_vars and max_vars filtering on 2D and 3D data"""
     edata = request.getfixturevalue(fixture)
 
     layer = getattr(edata, shape)
@@ -104,7 +104,7 @@ def test_filter_obs_min_max(request, fixture, shape, kwargs):
 
 def test_filter_obs_layers(ehr_3d_blobs):
     edata = ehr_3d_blobs
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Invalid layer provided"):
         ep.pp.filter_features(edata, layer="invalid_layer", min_obs=185, time_mode="all", copy=False)
 
     layer_before = edata.layers["R_layer"].copy()
