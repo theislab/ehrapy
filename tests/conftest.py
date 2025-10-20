@@ -294,15 +294,14 @@ def edata_blob_small_3d() -> ed.EHRData:
     n_var = 10
     n_timestamps = 10
     rng = np.random.default_rng(seed=42)
-    # Generate random numeric data for R
     R = rng.normal(loc=0, scale=1, size=(n_obs, n_var, n_timestamps)).astype(np.float32)
     # X is the mean over time for each obs/var
     X = R.mean(axis=2)
     # obs and var DataFrames
     obs = pd.DataFrame({"obs_id": [f"obs_{i}" for i in range(n_obs)]})
     var = pd.DataFrame({"feature_type": [NUMERIC_TAG] * n_var}, index=[f"var_{i}" for i in range(n_var)])
-    # Create EHRData
-    ed.EHRData(X=X, obs=obs, var=var, R=R)
+
+    return ed.EHRData(X=X, obs=obs, var=var, R=R)
 
 
 @pytest.fixture
