@@ -699,7 +699,7 @@ def offset_negative_values(edata: EHRData | AnnData, layer: str = None, copy: bo
 
     arr, layer_name = _get_target_layer(edata, layer)
     is_3d = arr.ndim == 3
-    minimum = np.min(arr)
+    minimum = np.nanmin(arr)
     if minimum < 0:
         offset_arr = arr + np.abs(minimum)
         if layer_name == "R":
