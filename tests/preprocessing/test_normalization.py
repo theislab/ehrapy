@@ -122,6 +122,76 @@ def test_norm_scale_group(array_type, edata_mini_normalization):
     assert np.allclose(edata_mini_norm.X[:, 2], col2_norm)
 
 
+@pytest.mark.parametrize("copy", [True, False])
+def test_3d_norm_copy_behavior(edata_blob_small_3d, copy):
+    """Test copy behavior for all 3D normalization functions."""
+    edata = edata_blob_small_3d.copy()
+    R_original = edata.R.copy()
+    
+    result = ep.pp.scale_norm(edata, copy=copy)
+    
+    if copy:
+        assert result is not None
+        assert np.array_equal(edata.R, R_original)  # Original unchanged
+        assert not np.array_equal(result.R, R_original)  # Copy changed
+    else:
+        assert result is None
+        assert not np.array_equal(edata.R, R_original)  # Original changed
+
+
+@pytest.mark.parametrize("norm_func", [
+    ep.pp.scale_norm,
+    ep.pp.minmax_norm,
+    ep.pp.maxabs_norm,
+    ep.pp.robust_scale_norm,
+    ep.pp.quantile_norm,
+    ep.pp.power_norm
+])
+def test_3d_norm_shape_preservation(edata_blob_small_3d, norm_func):
+    """Test that all 3D normalization functions preserve shape and dtype."""
+    edata = edata_blob_small_3d.copy()
+    orig_shape = edata.R.shape
+    orig_dtype = edata.R.dtype
+    
+    # Make data positive for power_norm
+    if norm_func == ep.pp.power_norm:
+        edata.R = np.abs(edata.R) + 0.1
+    
+    norm_func(edata)
+    
+    # All functions should preserve shape and use floating point
+    assert edata.R.shape == orig_shape
+    assert edata.R.dtype == orig_dtype or np.issubdtype(edata.R.dtype, np.floating)
+
+
+@pytest.mark.parametrize("norm_func", [
+    ep.pp.scale_norm,
+    ep.pp.minmax_norm, 
+    ep.pp.maxabs_norm,
+    ep.pp.robust_scale_norm,
+    ep.pp.quantile_norm,
+    ep.pp.power_norm
+])
+def test_3d_norm_group_functionality(edata_blob_small_3d, norm_func):
+    """Test group-wise normalization for all 3D normalization functions."""
+    edata = edata_blob_small_3d.copy()
+    
+    # Add grouping variable
+    edata.obs["group"] = ["A"] * 25 + ["B"] * 25
+    
+    # Make data positive for power_norm
+    if norm_func == ep.pp.power_norm:
+        edata.R = np.abs(edata.R) + 0.1
+    
+    # Test group-wise normalization
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        norm_func(edata, group_key="group")
+    
+    # Basic shape preservation
+    assert edata.R.shape == edata_blob_small_3d.R.shape
+
+
 @pytest.mark.parametrize(
     "array_type,expected_error",
     [
@@ -865,3 +935,85 @@ def test_offset_negative_values_3d(edata_blob_small_3d):
 
     # All values should be non-negative
     assert np.all(edata.R >= 0)
+
+
+def test_3d_norm_metadata_and_layers(edata_blob_small_3d):
+    """Test that 3D normalization preserves metadata and works with layers."""
+    edata = edata_blob_small_3d.copy()
+    
+    # Create a 3D layer
+    edata.layers["test_3d_layer"] = edata.R.copy() * 2 + 5
+    
+    # Test layer normalization
+    ep.pp.scale_norm(edata, layer="test_3d_layer")
+    
+    # Original R should be unchanged
+    assert not np.allclose(edata.R, edata.layers["test_3d_layer"])
+    
+    # Test main R normalization and metadata preservation
+    ep.pp.scale_norm(edata)
+    
+    # Should create normalization record
+    assert "normalization" in edata.uns
+    assert len(edata.uns["normalization"]) > 0
+    
+    # Metadata should be preserved
+    assert edata.obs.shape[0] == edata_blob_small_3d.obs.shape[0]
+    assert edata.var.shape[0] == edata_blob_small_3d.var.shape[0]
+
+
+def test_3d_norm_edge_cases(edata_blob_small_3d):
+    """Test edge cases for 3D normalization functions."""
+    # Test with NaN values
+    edata_nan = edata_blob_small_3d.copy()
+    edata_nan.R[0, 0, 0] = np.nan
+    
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        try:
+            ep.pp.scale_norm(edata_nan.copy())
+        except (ValueError, RuntimeWarning):
+            pass  # Expected for some scalers with NaNs
+
+
+@pytest.mark.parametrize("norm_func", [
+    ep.pp.scale_norm,
+    ep.pp.minmax_norm, 
+    ep.pp.maxabs_norm,
+    ep.pp.robust_scale_norm,
+    ep.pp.quantile_norm,
+    ep.pp.power_norm
+])
+def test_3d_norm_invalid_vars(edata_blob_small_3d, norm_func):
+    """Test that all 3D normalization functions handle invalid variable names."""
+    edata = edata_blob_small_3d.copy()
+    
+    # Make data positive for power_norm
+    if norm_func == ep.pp.power_norm:
+        edata.R = np.abs(edata.R) + 0.1
+    
+    with pytest.raises(ValueError):
+        norm_func(edata, vars=["nonexistent_var"])
+
+
+def test_3d_norm_variable_selection(edata_blob_small_3d):
+    """Test variable selection with 3D normalization."""
+    edata = edata_blob_small_3d.copy()
+    R_original = edata.R.copy()
+    
+    # Test with specific variables
+    selected_vars = [edata.var_names[0], edata.var_names[1]]
+    ep.pp.scale_norm(edata, vars=selected_vars)
+    
+    # Selected variables should be different from original
+    assert not np.allclose(edata.R[:, 0, :], R_original[:, 0, :])
+    assert not np.allclose(edata.R[:, 1, :], R_original[:, 1, :])
+    
+    # Non-selected variables should be unchanged
+    if edata.R.shape[1] > 2:
+        assert np.allclose(edata.R[:, 2, :], R_original[:, 2, :])
+    
+    # Test invalid variable names
+    with pytest.raises(ValueError):
+        ep.pp.scale_norm(edata_blob_small_3d.copy(), vars=["nonexistent_var"])
+

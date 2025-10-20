@@ -49,14 +49,18 @@ def _scale_func_group(
     edata = _prep_edata_norm(edata, copy)
 
     if hasattr(edata, "R") and edata.R is not None and edata.R.ndim == 3:
+        # Convert variable names to indices
+        from ehrapy.anndata.anndata_ext import _get_var_indices
+        var_indices = _get_var_indices(edata, vars)
+        
         if layer is None:
-            var_values = edata.R[:, :, :].copy()
+            var_values = edata.R[:, var_indices, :].copy()
         else:
-            var_values = edata.layers[layer][:, :, :].copy()
+            var_values = edata.layers[layer][:, var_indices, :].copy()
 
-        n_obs, n_var, n_timestamps = var_values.shape
+        n_obs, n_var_selected, n_timestamps = var_values.shape
         if group_key is None:
-            for var_idx in range(n_var):
+            for var_idx in range(n_var_selected):
                 var_data = var_values[:, var_idx, :].reshape(-1, 1)
                 var_data = scale_func(var_data)
                 var_values[:, var_idx, :] = var_data.reshape(n_obs, n_timestamps)
@@ -65,18 +69,16 @@ def _scale_func_group(
                 group_idx = edata.obs[group_key] == group
                 group_data = var_values[group_idx]
                 n_obs_group = group_data.shape[0]
-                for var_idx in range(n_var):
+                for var_idx in range(n_var_selected):
                     var_data = group_data[:, var_idx, :].reshape(-1, 1)
                     var_data = scale_func(var_data)
                     var_values[group_idx, var_idx, :] = var_data.reshape(n_obs_group, n_timestamps)
 
-        # Write back to edata.R or edata.layers[layer]
+        # Write back to edata.R or edata.layers[layer] - only for selected variables
         if layer is None:
-            edata.R = edata.R.astype(var_values.dtype)
-            edata.R[:, :, :] = var_values
+            edata.R[:, var_indices, :] = var_values.astype(edata.R.dtype)
         else:
-            edata.layers[layer] = edata.layers[layer].astype(var_values.dtype)
-            edata.layers[layer][:, :, :] = var_values
+            edata.layers[layer][:, var_indices, :] = var_values.astype(edata.layers[layer].dtype)
     else:
         # 2D normalization (AnnData or 2D EHRData)
         if layer is None:
