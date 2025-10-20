@@ -946,8 +946,6 @@ def test_offset_negative_values_3d(edata_blob_small_3d):
 def test_3d_norm_metadata_and_layers(edata_blob_small_3d):
     """Test that 3D normalization preserves metadata and works with layers."""
     edata = edata_blob_small_3d.copy()
-
-    # Create a 3D layer
     edata.layers["test_3d_layer"] = edata.R.copy() * 2 + 5
 
     # Test layer normalization

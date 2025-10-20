@@ -580,7 +580,6 @@ def log_norm(
 
     edata = _prep_edata_norm(edata, copy)
 
-    # Handle 3D data
     if hasattr(edata, "R") and edata.R is not None and edata.R.ndim == 3:
         if layer is None:
             # Check for negatives in 3D R data
@@ -613,7 +612,7 @@ def log_norm(
             edata.R = edata.R.astype(var_values.dtype)
             edata.R[:, :, :] = var_values
         else:
-            # Handle layer case for 3D
+            # Handle layer case
             check_data = edata.layers[layer]
             offset_tmp_applied = check_data + offset
             if np.any(offset_tmp_applied < 0):
@@ -638,7 +637,7 @@ def log_norm(
             edata.layers[layer] = edata.layers[layer].astype(var_values.dtype)
             edata.layers[layer][:, :, :] = var_values
     else:
-        # Original 2D logic
+
         edata_to_check_for_negatives = edata[:, vars] if vars else edata
         offset_tmp_applied = edata_to_check_for_negatives.X + offset
         if np.any(offset_tmp_applied < 0):

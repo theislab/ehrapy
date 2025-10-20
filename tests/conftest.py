@@ -289,7 +289,7 @@ def edata_blob_small() -> ed.EHRData:
 
 @pytest.fixture
 def edata_blob_small_3d() -> ed.EHRData:
-    """EHRData with 3D R array, all numeric features."""
+    """EHRData with R array, all numeric features."""
     n_obs = 50
     n_var = 10
     n_timestamps = 10
@@ -297,7 +297,6 @@ def edata_blob_small_3d() -> ed.EHRData:
     R = rng.normal(loc=0, scale=1, size=(n_obs, n_var, n_timestamps)).astype(np.float32)
     # X is the mean over time for each obs/var
     X = R.mean(axis=2)
-    # obs and var DataFrames
     obs = pd.DataFrame({"obs_id": [f"obs_{i}" for i in range(n_obs)]})
     var = pd.DataFrame({"feature_type": [NUMERIC_TAG] * n_var}, index=[f"var_{i}" for i in range(n_var)])
 
