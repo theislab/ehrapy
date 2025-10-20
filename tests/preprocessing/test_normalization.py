@@ -138,6 +138,7 @@ def test_3d_norm_copy_behavior(edata_blobs_timeseries_small, copy):
         assert result is None
         assert not np.allclose(edata.R, R_original, equal_nan=True)
 
+
 @pytest.mark.parametrize(
     "norm_func",
     [

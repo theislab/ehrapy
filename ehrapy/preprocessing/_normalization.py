@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
 def _get_target_layer(edata: EHRData | AnnData, layer: str | None) -> tuple[np.ndarray, str]:
     """Get the target data layer and its effective name.
-    
+
     Returns:
         tuple: (data_array, effective_layer_name)
     """
@@ -55,7 +55,7 @@ def _normalize_3d_data(data: np.ndarray, var_indices: list, scale_func, group_ke
     """Apply normalization to 3D data (n_obs x n_var x n_timestamps)."""
     var_values = data[:, var_indices, :]
     n_obs, n_var_selected, n_timestamps = var_values.shape
-    
+
     if group_key is None:
         for var_idx in range(n_var_selected):
             var_data = var_values[:, var_idx, :].reshape(-1, 1)
@@ -70,21 +70,21 @@ def _normalize_3d_data(data: np.ndarray, var_indices: list, scale_func, group_ke
                 var_data = group_data[:, var_idx, :].reshape(-1, 1)
                 var_data = scale_func(var_data)
                 var_values[group_idx, var_idx, :] = var_data.reshape(n_obs_group, n_timestamps)
-    
+
     return var_values
 
 
 def _normalize_2d_data(edata, vars, scale_func, group_key: str | None):
     """Apply normalization to 2D data (n_obs × n_var)."""
     var_values = edata[:, vars].X.copy()
-    
+
     if group_key is None:
         var_values = scale_func(var_values)
     else:
         for group in edata.obs[group_key].unique():
             group_idx = edata.obs[group_key] == group
             var_values[group_idx] = scale_func(var_values[group_idx])
-    
+
     return var_values
 
 
@@ -114,17 +114,18 @@ def _scale_func_group(
     edata = _prep_edata_norm(edata, copy)
 
     target_data, layer_name = _get_target_layer(edata, layer)
-    
+
     if target_data.ndim == 3:
         from ehrapy.anndata.anndata_ext import _get_var_indices
+
         var_indices = _get_var_indices(edata, vars)
         normalized_data = _normalize_3d_data(target_data, var_indices, scale_func, group_key, edata)
         _set_target_layer(edata, normalized_data, layer_name, var_indices)
-        
+
     elif target_data.ndim == 2:
         normalized_data = _normalize_2d_data(edata, vars, scale_func, group_key)
         _set_target_layer(edata, normalized_data, layer_name, vars)
-        
+
     else:
         raise ValueError(f"Unsupported data dimensionality: {target_data.ndim}D. Expected 2D or 3D data.")
 
@@ -579,7 +580,7 @@ def log_norm(
 
     arr, layer_name = _get_target_layer(edata, layer)
     is_3d = arr.ndim == 3
-    
+
     if vars:
         if is_3d:
             var_indices = [edata.var_names.get_loc(v) for v in vars]
@@ -706,7 +707,6 @@ def offset_negative_values(edata: EHRData | AnnData, layer: str = None, copy: bo
         edata = edata.copy()
 
     arr, layer_name = _get_target_layer(edata, layer)
-    is_3d = arr.ndim == 3
     minimum = np.nanmin(arr)
     if minimum < 0:
         offset_arr = arr + np.abs(minimum)
