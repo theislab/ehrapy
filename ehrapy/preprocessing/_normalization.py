@@ -53,7 +53,7 @@ def _set_target_layer(edata: EHRData | AnnData, data: np.ndarray, layer_name: st
 
 def _normalize_3d_data(data: np.ndarray, var_indices: list, scale_func, group_key: str | None, edata):
     """Apply normalization to 3D data (n_obs x n_var x n_timestamps)."""
-    var_values = data[:, var_indices, :].copy()
+    var_values = data[:, var_indices, :]
     n_obs, n_var_selected, n_timestamps = var_values.shape
     
     if group_key is None:
@@ -164,9 +164,10 @@ def scale_norm(
     Functionality is provided by :class:`~sklearn.preprocessing.StandardScaler`, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html for details.
     If `edata.X` is a Dask Array, functionality is provided by :class:`~dask_ml.preprocessing.StandardScaler`, see https://ml.dask.org/modules/generated/dask_ml.preprocessing.StandardScaler.html for details.
 
-    Supports both 2D and 3D data.
-    For 2D data: Standard normalization across observations.
-    For 3D data: Per-variable normalization across samples and timestamps.
+    Supports both 2D and 3D data:
+
+    - 2D data: Standard normalization across observations
+    - 3D data: Per-variable normalization across samples and timestamps
 
     Args:
         edata: Central data object. Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
@@ -178,7 +179,7 @@ def scale_norm(
         **kwargs: Additional arguments passed to the StandardScaler.
 
     Returns:
-        `None` if `copy=False` and modifies the passed edata, else returns an updated edata object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
+        `None` if `copy=False` and modifies the passed edata, else returns an updated object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
 
     Examples:
         >>> import ehrdata as ed
@@ -232,9 +233,10 @@ def minmax_norm(
     Functionality is provided by :class:`~sklearn.preprocessing.MinMaxScaler`, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MinMaxScaler.html for details.
     If `edata.X` is a Dask Array, functionality is provided by :class:`~dask_ml.preprocessing.MinMaxScaler`, see https://ml.dask.org/modules/generated/dask_ml.preprocessing.MinMaxScaler.html for details.
 
-    Supports both 2D and 3D data.
-    For 2D data: Standard normalization across observations.
-    For 3D data: Per-variable normalization across samples and timestamps.
+    Supports both 2D and 3D data:
+
+    - 2D data: Standard normalization across observations
+    - 3D data: Per-variable normalization across samples and timestamps
 
     Args:
         edata: Central data object.
@@ -247,7 +249,7 @@ def minmax_norm(
         **kwargs: Additional arguments passed to the MinMaxScaler.
 
     Returns:
-        `None` if `copy=False` and modifies the passed edata, else returns an updated data object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
+        `None` if `copy=False` and modifies the passed edata, else returns an updated object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
 
     Examples:
         >>> import ehrdata as ed
@@ -292,6 +294,7 @@ def maxabs_norm(
     Functionality is provided by :class:`~sklearn.preprocessing.MaxAbsScaler`, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MaxAbsScaler.html for details.
 
     Supports both 2D and 3D data:
+
     - 2D data: Standard normalization across observations
     - 3D data: Per-variable normalization across samples and timestamps
 
@@ -305,7 +308,7 @@ def maxabs_norm(
         copy: Whether to return a copy or act in place.
 
     Returns:
-        `None` if `copy=False` and modifies the passed edata, else returns an updated edata object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
+        `None` if `copy=False` and modifies the passed edata, else returns an updated object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
 
     Examples:
         >>> import ehrdata as ed
@@ -360,6 +363,7 @@ def robust_scale_norm(
     If `edata.X` is a Dask Array, functionality is provided by :class:`~dask_ml.preprocessing.RobustScaler`, see https://ml.dask.org/modules/generated/dask_ml.preprocessing.RobustScaler.html for details.
 
     Supports both 2D and 3D data:
+
     - 2D data: Standard normalization across observations
     - 3D data: Per-variable normalization across samples and timestamps
 
@@ -374,7 +378,7 @@ def robust_scale_norm(
         **kwargs: Additional arguments passed to the RobustScaler.
 
     Returns:
-        `None` if `copy=False` and modifies the passed edata, else returns an updated edata object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
+        `None` if `copy=False` and modifies the passed edata, else returns an updated object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
 
     Examples:
         >>> import ehrdata as ed
@@ -429,6 +433,7 @@ def quantile_norm(
     If `edata.X` is a Dask Array, functionality is provided by :class:`~dask_ml.preprocessing.QuantileTransformer`, see https://ml.dask.org/modules/generated/dask_ml.preprocessing.QuantileTransformer.html for details.
 
     Supports both 2D and 3D data:
+
     - 2D data: Standard normalization across observations
     - 3D data: Per-variable normalization across samples and timestamps
 
@@ -442,7 +447,7 @@ def quantile_norm(
         **kwargs: Additional arguments passed to the QuantileTransformer.
 
     Returns:
-        `None` if `copy=False` and modifies the passed edata, else returns an updated edata object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
+        `None` if `copy=False` and modifies the passed edata, else returns an updated object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
 
     Examples:
         >>> import ehrdata as ed
@@ -489,6 +494,7 @@ def power_norm(
     see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.PowerTransformer.html for details.
 
     Supports both 2D and 3D data:
+
     - 2D data: Standard normalization across observations
     - 3D data: Per-variable normalization across samples and timestamps
 
@@ -503,7 +509,7 @@ def power_norm(
         **kwargs: Additional arguments passed to the PowerTransformer.
 
     Returns:
-        `None` if `copy=False` and modifies the passed edata, else returns an updated edata object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
+        `None` if `copy=False` and modifies the passed edata, else returns an updated object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
 
     Examples:
         >>> import ehrdata as ed
@@ -540,6 +546,7 @@ def log_norm(
     unless a different base is given and the default :math:`offset` is :math:`1`.
 
     Supports both 2D and 3D data:
+
     - 2D data: Standard normalization across observations
     - 3D data: Applied to all elements across samples and timestamps
 
@@ -553,7 +560,7 @@ def log_norm(
         copy: Whether to return a copy or act in place.
 
     Returns:
-        `None` if `copy=False` and modifies the passed edata, else returns an updated edata object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
+        `None` if `copy=False` and modifies the passed edata, else returns an updated object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
 
     Examples:
         >>> import ehrdata as ed
@@ -677,6 +684,7 @@ def offset_negative_values(edata: EHRData | AnnData, layer: str = None, copy: bo
     do not allow negative values for mathematical or technical reasons.
 
     Supports both 2D and 3D data:
+
     - 2D data: Standard offset across observations
     - 3D data: Applied to all elements across samples and timestamps
 
@@ -686,7 +694,7 @@ def offset_negative_values(edata: EHRData | AnnData, layer: str = None, copy: bo
         copy: Whether to return a modified copy of the data object.
 
     Returns:
-        `None` if `copy=False` and modifies the passed edata, else returns an updated edata object.
+        `None` if `copy=False` and modifies the passed edata, else returns an updated object.
 
     Examples:
         >>> import ehrdata as ed
