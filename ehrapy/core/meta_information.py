@@ -24,13 +24,3 @@ def print_versions(*, file=None):  # pragma: no cover
         return
 
     print(sinfo)
-
-
-def print_version_and_date(*, file=None):  # pragma: no cover
-    """Useful for starting a notebook so you see when you started working."""
-    if file is None:
-        file = sys.stdout
-    print(
-        f"Running ehrapy {__version__}, on {datetime.now():%Y-%m-%d %H:%M}.",
-        file=file,
-    )

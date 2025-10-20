@@ -1,18 +1,12 @@
 {
-    "$schema": "https://biomejs.dev/schemas/2.0.5/schema.json",
-    "files": {
-        "includes": ["!tests/data/io/fhir/json/*.json"],
-    },
-    "formatter": {
-        "useEditorconfig": true,
-    },
+    "$schema": "https://biomejs.dev/schemas/2.2.0/schema.json",
+    "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+    "formatter": { "useEditorconfig": true },
     "overrides": [
         {
-            "includes": ["./.vscode/*.json", "**/*.jsonc", "**/asv.conf.json"],
+            "includes": ["./.vscode/*.json", "**/*.jsonc"],
             "json": {
-                "formatter": {
-                    "trailingCommas": "all",
-                },
+                "formatter": { "trailingCommas": "all" },
                 "parser": {
                     "allowComments": true,
                     "allowTrailingCommas": true,
@@ -20,20 +14,4 @@
             },
         },
     ],
-    "linter": {
-        "rules": {
-            "style": {
-                "noParameterAssign": "error",
-                "useAsConstAssertion": "error",
-                "useDefaultParameterLast": "error",
-                "useEnumInitializers": "error",
-                "useSelfClosingElements": "error",
-                "useSingleVarDeclarator": "error",
-                "noUnusedTemplateLiteral": "error",
-                "useNumberNamespace": "error",
-                "noInferrableTypes": "error",
-                "noUselessElse": "error",
-            },
-        },
-    },
 }

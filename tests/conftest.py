@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import ehrdata as ed
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pytest
@@ -282,7 +283,6 @@ def edata_small_bias() -> ed.EHRData:
 def edata_blob_small() -> ed.EHRData:
     edata = ed.dt.ehrdata_blobs(n_variables=10, n_centers=2, n_observations=50, base_timepoints=10)
     edata.layers["layer_2"] = edata.X.copy()
-    edata.obs["cluster"] = edata.obs["cluster"].astype("category")
     ep.pp.neighbors(edata)
     return edata
 
@@ -303,6 +303,20 @@ def edata_blob_small_3d() -> ed.EHRData:
     var = pd.DataFrame({"feature_type": [NUMERIC_TAG] * n_var}, index=[f"var_{i}" for i in range(n_var)])
     # Create EHRData
     edata = ed.EHRData(X=X, obs=obs, var=var, R=R)
+    
+@pytest.fixture    
+def edata_blobs_timeseries_small() -> ed.EHRData:
+    edata = ed.dt.ehrdata_blobs(
+        n_observations=20,
+        base_timepoints=15,
+        cluster_std=0.5,
+        n_centers=3,
+        seasonality=True,
+        time_shifts=True,
+        variable_length=False,
+    )
+    edata.layers["layer_2"] = edata.X.copy()
+
     return edata
 
 
@@ -375,6 +389,15 @@ def check_same_image(tmp_path):
         raise AssertionError(result)
 
     return check_same_image
+
+
+@pytest.fixture
+def clean_up_plots():
+    plt.close("all")
+    yield
+    plt.clf()
+    plt.cla()
+    plt.close("all")
 
 
 def asarray(a):

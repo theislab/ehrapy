@@ -38,6 +38,7 @@ extensions = [
     "sphinx_gallery.load_style",
     "sphinx_remove_toctrees",
     "sphinx_design",
+    "sphinx_tabs.tabs",
     "sphinx_issues",
     "sphinxcontrib.bibtex",
     "IPython.sphinxext.ipython_console_highlighting",
@@ -123,6 +124,7 @@ nitpick_ignore = [
     ("py:class", "StackedViolin"),
     ("py:class", "ehrapy.plot.DotPlot"),
     ("py:class", "ehrapy.plot.StackedViolin"),
+    ("py:class", "ehrapy.tools._scanpy_tl_api.TypeAliasType"),
     ("py:func", "ehrapy.pl.matrixplot"),
     ("py:func", "ehrapy.pl.tracksplot"),
     ("py:class", "scanpy.plotting._utils._AxesSubplot"),
@@ -135,6 +137,7 @@ nitpick_ignore = [
     ("py:class", "dask_ml.preprocessing.RobustScaler"),
     ("py:class", "dask_ml.preprocessing.StandardScaler"),
     ("py:class", "pathlib._local.Path"),
+    ("py:data", "typing.Union"),
 ]
 autodoc_type_aliases = {"CAT": "Any"}
 

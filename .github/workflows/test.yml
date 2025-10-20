@@ -1,66 +1,94 @@
 name: Test
 
 on:
-    push:
-        branches: [main]
-    pull_request:
-        branches: [main]
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 5 1,15 * *"
 
 concurrency:
-    group: ${{ github.workflow }}-${{ github.ref }}
-    cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash -euo pipefail {0}
 
 jobs:
-    test:
-        runs-on: ${{ matrix.os }}
-        defaults:
-            run:
-                shell: bash -e {0} # -e to fail on error
+  get-environments:
+    runs-on: ubuntu-latest
+    outputs:
+      envs: ${{ steps.get-envs.outputs.envs }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          fetch-depth: 0
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+      - name: Get test environments
+        id: get-envs
+        run: |
+          ENVS_JSON=$(uvx hatch env show --json | jq -c 'to_entries
+            | map(
+                select(.key | startswith("hatch-test"))
+                | {
+                    name: .key,
+                    label: (if (.key | contains("pre")) then .key + " (PRE-RELEASE DEPENDENCIES)" else .key end),
+                    python: .value.python
+                  }
+              )')
+          echo "envs=${ENVS_JSON}" | tee $GITHUB_OUTPUT
 
-        strategy:
-            fail-fast: false
-            matrix:
-                include:
-                    - os: ubuntu-latest
-                      python: "3.11"
-                    - os: ubuntu-latest
-                      python: "3.13"
-                    - os: ubuntu-latest
-                      python: "3.13"
-                      pip-flags: "--pre"
+  test:
+    needs: get-environments
 
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        env: ${{ fromJSON(needs.get-environments.outputs.envs) }}
+
+    name: ${{ matrix.env.label }}
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          fetch-depth: 0
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: ${{ matrix.env.python }}
+          cache-dependency-glob: pyproject.toml
+      - name: create hatch environment
+        run: uvx hatch env create ${{ matrix.env.name }}
+      - name: run tests using hatch
         env:
-            OS: ${{ matrix.os }}
-            PYTHON: ${{ matrix.python }}
+          MPLBACKEND: agg
+          PLATFORM: ${{ matrix.os }}
+          DISPLAY: :42
+        run: uvx hatch run ${{ matrix.env.name }}:run-cov -v --color=yes -n auto
+      - name: generate coverage report
+        run: |
+          # See https://coverage.readthedocs.io/en/latest/config.html#run-patch
+          test -f .coverage || uvx hatch run ${{ matrix.env.name }}:cov-combine
+          uvx hatch run ${{ matrix.env.name }}:cov-report   # report visibly
+          uvx hatch run ${{ matrix.env.name }}:coverage xml # create report for upload
+      - name: Upload coverage
+        uses: codecov/codecov-action@v5
 
-        steps:
-            - uses: actions/checkout@v4
-            - name: Set up Python ${{ matrix.python }}
-              uses: actions/setup-python@v5
-              with:
-                  python-version: ${{ matrix.python }}
-
-            - name: Install test dependencies
-              run: python -m pip install --upgrade uv wheel
-            - name: Install dependencies
-              run: uv pip install --system ${{ matrix.pip-flags }} .[dev,test]
-
-            - name: Test
-              env:
-                  MPLBACKEND: agg
-                  PLATFORM: ${{ matrix.os }}
-                  DISPLAY: :42
-              run: pytest -v --basetemp=pytest_temp --cov=ehrapy --cov-report=xml --color=yes
-
-            - name: Upload coverage
-              if: matrix.python == '3.13'
-              uses: codecov/codecov-action@v5
-              with:
-                token: ${{ secrets.CODECOV_TOKEN }}
-
-            - name: Upload test failure images
-              if: failure() && matrix.python == '3.13'
-              uses: actions/upload-artifact@v4
-              with:
-                name: failed-test-images
-                path: /home/runner/work/ehrapy/ehrapy/pytest_temp/**/*diff*.png
+  check:
+    name: Tests pass in all hatch environments
+    if: always()
+    needs:
+      - get-environments
+      - test
+    runs-on: ubuntu-latest
+    steps:
+        - uses: re-actors/alls-green@release/v1
+          with:
+            jobs: ${{ toJSON(needs) }}
