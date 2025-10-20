@@ -51,8 +51,9 @@ def _scale_func_group(
     if hasattr(edata, "R") and edata.R is not None and edata.R.ndim == 3:
         # Convert variable names to indices
         from ehrapy.anndata.anndata_ext import _get_var_indices
+
         var_indices = _get_var_indices(edata, vars)
-        
+
         if layer is None:
             var_values = edata.R[:, var_indices, :].copy()
         else:

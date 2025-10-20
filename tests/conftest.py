@@ -302,9 +302,10 @@ def edata_blob_small_3d() -> ed.EHRData:
     obs = pd.DataFrame({"obs_id": [f"obs_{i}" for i in range(n_obs)]})
     var = pd.DataFrame({"feature_type": [NUMERIC_TAG] * n_var}, index=[f"var_{i}" for i in range(n_var)])
     # Create EHRData
-    edata = ed.EHRData(X=X, obs=obs, var=var, R=R)
-    
-@pytest.fixture    
+    ed.EHRData(X=X, obs=obs, var=var, R=R)
+
+
+@pytest.fixture
 def edata_blobs_timeseries_small() -> ed.EHRData:
     edata = ed.dt.ehrdata_blobs(
         n_observations=20,
