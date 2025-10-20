@@ -637,7 +637,6 @@ def log_norm(
             edata.layers[layer] = edata.layers[layer].astype(var_values.dtype)
             edata.layers[layer][:, :, :] = var_values
     else:
-
         edata_to_check_for_negatives = edata[:, vars] if vars else edata
         offset_tmp_applied = edata_to_check_for_negatives.X + offset
         if np.any(offset_tmp_applied < 0):
