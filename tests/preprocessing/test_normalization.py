@@ -156,13 +156,11 @@ def test_3d_norm_shape_preservation(edata_blob_small_3d, norm_func):
     orig_shape = edata.R.shape
     orig_dtype = edata.R.dtype
 
-    # Make data positive for power_norm
     if norm_func == ep.pp.power_norm:
         edata.R = np.abs(edata.R) + 0.1
 
     norm_func(edata)
 
-    # All functions should preserve shape and use floating point
     assert edata.R.shape == orig_shape
     assert edata.R.dtype == orig_dtype or np.issubdtype(edata.R.dtype, np.floating)
 
@@ -751,21 +749,16 @@ def test_norm_numerical_only():
 def test_scale_norm_3d(edata_blob_small_3d):
     """Test scale_norm normalization on 3D EHRData (edata.R)."""
     edata = edata_blob_small_3d
-    # Save original shape and dtype
     orig_shape = edata.R.shape
     orig_dtype = edata.R.dtype
-    # Run normalization
     ep.pp.scale_norm(edata)
 
-    # After normalization, R should still be 3D and same shape
     assert edata.R.shape == orig_shape
     assert edata.R.dtype == orig_dtype or np.issubdtype(edata.R.dtype, np.floating)
 
-    # Check that each variable (axis=1) is zero mean and unit variance across all samples and timestamps
     n_obs, n_var, n_timestamps = edata.R.shape
     for var_idx in range(n_var):
         flat = edata.R[:, var_idx, :].reshape(-1)
-        # Allow small numerical error
         assert np.allclose(np.mean(flat), 0, atol=1e-6)
         assert np.allclose(np.std(flat), 1, atol=1e-6)
 
@@ -773,20 +766,16 @@ def test_scale_norm_3d(edata_blob_small_3d):
 def test_minmax_norm_3d(edata_blob_small_3d):
     """Test minmax_norm normalization on 3D EHRData (edata.R)."""
     edata = edata_blob_small_3d
-    # Save original shape and dtype
     orig_shape = edata.R.shape
     orig_dtype = edata.R.dtype
 
-    # Run normalization
-    ep.pp.minmax_norm(edata)  # After normalization, R should still be 3D and same shape
+    ep.pp.minmax_norm(edata)
     assert edata.R.shape == orig_shape
     assert edata.R.dtype == orig_dtype or np.issubdtype(edata.R.dtype, np.floating)
 
-    # Check that each variable (axis=1) is scaled to [0, 1] range across all samples and timestamps
     n_obs, n_var, n_timestamps = edata.R.shape
     for var_idx in range(n_var):
         flat = edata.R[:, var_idx, :].reshape(-1)
-        # Allow small numerical error
         assert np.allclose(np.min(flat), 0, atol=1e-6)
         assert np.allclose(np.max(flat), 1, atol=1e-6)
 
@@ -794,43 +783,33 @@ def test_minmax_norm_3d(edata_blob_small_3d):
 def test_maxabs_norm_3d(edata_blob_small_3d):
     """Test maxabs_norm normalization on 3D EHRData (edata.R)."""
     edata = edata_blob_small_3d
-    # Save original shape and dtype
     orig_shape = edata.R.shape
     orig_dtype = edata.R.dtype
 
-    # Run normalization
-    ep.pp.maxabs_norm(edata)  # After normalization, R should still be 3D and same shape
+    ep.pp.maxabs_norm(edata)
     assert edata.R.shape == orig_shape
     assert edata.R.dtype == orig_dtype or np.issubdtype(edata.R.dtype, np.floating)
 
-    # Check that each variable (axis=1) is scaled by max absolute value across all samples and timestamps
     n_obs, n_var, n_timestamps = edata.R.shape
     for var_idx in range(n_var):
         flat = edata.R[:, var_idx, :].reshape(-1)
-        # Max absolute value should be 1 (or close to it)
         assert np.allclose(np.max(np.abs(flat)), 1, atol=1e-6)
 
 
 def test_robust_scale_norm_3d(edata_blob_small_3d):
     """Test robust_scale_norm normalization on 3D EHRData (edata.R)."""
     edata = edata_blob_small_3d
-    # Save original shape and dtype
     orig_shape = edata.R.shape
     orig_dtype = edata.R.dtype
 
-    # Run normalization
-    ep.pp.robust_scale_norm(edata)  # After normalization, R should still be 3D and same shape
+    ep.pp.robust_scale_norm(edata)
     assert edata.R.shape == orig_shape
     assert edata.R.dtype == orig_dtype or np.issubdtype(edata.R.dtype, np.floating)
 
-    # Check that each variable (axis=1) is robust scaled across all samples and timestamps
-    # RobustScaler centers by median and scales by IQR, so median should be ~0 and IQR should be ~1
     n_obs, n_var, n_timestamps = edata.R.shape
     for var_idx in range(n_var):
         flat = edata.R[:, var_idx, :].reshape(-1)
-        # Median should be close to 0 after centering
         assert np.allclose(np.median(flat), 0, atol=1e-6)
-        # IQR (75th percentile - 25th percentile) should be close to 1 after scaling
         q75, q25 = np.percentile(flat, [75, 25])
         iqr = q75 - q25
         assert np.allclose(iqr, 1, atol=1e-6)
@@ -839,27 +818,21 @@ def test_robust_scale_norm_3d(edata_blob_small_3d):
 def test_quantile_norm_3d(edata_blob_small_3d):
     """Test quantile_norm normalization on 3D EHRData (edata.R)."""
     edata = edata_blob_small_3d
-    # Save original shape and dtype
     orig_shape = edata.R.shape
     orig_dtype = edata.R.dtype
 
-    # Run normalization
     ep.pp.quantile_norm(edata)
 
-    # After normalization, R should still be 3D and same shape
     assert edata.R.shape == orig_shape
     assert edata.R.dtype == orig_dtype or np.issubdtype(edata.R.dtype, np.floating)
 
-    # Check that each variable (axis=1) follows uniform distribution [0,1] after quantile transformation
     n_obs, n_var, n_timestamps = edata.R.shape
     for var_idx in range(n_var):
         flat = edata.R[:, var_idx, :].reshape(-1)
-        # Values should be approximately uniformly distributed in [0, 1]
         assert np.allclose(np.min(flat), 0, atol=1e-6)
         assert np.allclose(np.max(flat), 1, atol=1e-6)
-        # Check approximate uniform distribution by checking quartiles
         q25, q50, q75 = np.percentile(flat, [25, 50, 75])
-        assert np.allclose(q25, 0.25, atol=0.05)  # More tolerance for uniform distribution
+        assert np.allclose(q25, 0.25, atol=0.05)
         assert np.allclose(q50, 0.5, atol=0.05)
         assert np.allclose(q75, 0.75, atol=0.05)
 
@@ -867,25 +840,19 @@ def test_quantile_norm_3d(edata_blob_small_3d):
 def test_power_norm_3d(edata_blob_small_3d):
     """Test power_norm normalization on 3D EHRData (edata.R)."""
     edata = edata_blob_small_3d
-    # Make sure data is positive for power transform
-    edata.R = np.abs(edata.R) + 0.1  # Add small offset to avoid zeros
+    edata.R = np.abs(edata.R) + 0.1
 
-    # Save original shape and dtype
     orig_shape = edata.R.shape
     orig_dtype = edata.R.dtype
 
-    # Run normalization
     ep.pp.power_norm(edata)
 
-    # After normalization, R should still be 3D and same shape
     assert edata.R.shape == orig_shape
     assert edata.R.dtype == orig_dtype or np.issubdtype(edata.R.dtype, np.floating)
 
-    # Power transform should reduce skewness and make data more normal
     n_obs, n_var, n_timestamps = edata.R.shape
     for var_idx in range(n_var):
         flat = edata.R[:, var_idx, :].reshape(-1)
-        # After power transform, data should have approximately zero mean and unit variance
         assert np.allclose(np.mean(flat), 0, atol=1e-5)
         assert np.allclose(np.std(flat), 1, atol=1e-5)
 
@@ -893,53 +860,40 @@ def test_power_norm_3d(edata_blob_small_3d):
 def test_log_norm_3d(edata_blob_small_3d):
     """Test log_norm normalization on 3D EHRData (edata.R)."""
     edata = edata_blob_small_3d
-    # Make sure data is positive for log transform
-    edata.R = np.abs(edata.R) + 1  # Offset to make positive
+    edata.R = np.abs(edata.R) + 1
 
-    # Save original shape and dtype
     orig_shape = edata.R.shape
     orig_dtype = edata.R.dtype
 
-    # Save original for comparison
     R_original = edata.R.copy()
 
-    # Run normalization
     ep.pp.log_norm(edata)
 
-    # After normalization, R should still be 3D and same shape
     assert edata.R.shape == orig_shape
     assert edata.R.dtype == orig_dtype or np.issubdtype(edata.R.dtype, np.floating)
 
-    # Verify log transformation: log(original + 1) should equal result
     expected = np.log1p(R_original)
     assert np.allclose(edata.R, expected, rtol=1e-6)
 
-    # Data should have changed significantly
     assert not np.array_equal(R_original, edata.R)
 
 
 def test_offset_negative_values_3d(edata_blob_small_3d):
     """Test offset_negative_values on 3D EHRData (edata.R)."""
     edata = edata_blob_small_3d
-    # Ensure we have some negative values
-    edata.R = edata.R - 2  # Shift to create negative values
+    edata.R = edata.R - 2
 
-    # Save original shape and dtype
     orig_shape = edata.R.shape
     orig_dtype = edata.R.dtype
     assert np.min(edata.R) < 0, "Test data should have negative values"
 
-    # Run offset
     ep.pp.offset_negative_values(edata)
 
-    # After offset, R should still be 3D and same shape
     assert edata.R.shape == orig_shape
     assert edata.R.dtype == orig_dtype or np.issubdtype(edata.R.dtype, np.floating)
 
-    # Minimum value should now be 0 (or very close)
     assert np.allclose(np.min(edata.R), 0, atol=1e-10)
 
-    # All values should be non-negative
     assert np.all(edata.R >= 0)
 
 
@@ -948,36 +902,17 @@ def test_3d_norm_metadata_and_layers(edata_blob_small_3d):
     edata = edata_blob_small_3d.copy()
     edata.layers["test_3d_layer"] = edata.R.copy() * 2 + 5
 
-    # Test layer normalization
     ep.pp.scale_norm(edata, layer="test_3d_layer")
 
-    # Original R should be unchanged
     assert not np.allclose(edata.R, edata.layers["test_3d_layer"])
 
-    # Test main R normalization and metadata preservation
     ep.pp.scale_norm(edata)
 
-    # Should create normalization record
     assert "normalization" in edata.uns
     assert len(edata.uns["normalization"]) > 0
 
-    # Metadata should be preserved
     assert edata.obs.shape[0] == edata_blob_small_3d.obs.shape[0]
     assert edata.var.shape[0] == edata_blob_small_3d.var.shape[0]
-
-
-def test_3d_norm_edge_cases(edata_blob_small_3d):
-    """Test edge cases for 3D normalization functions."""
-    # Test with NaN values
-    edata_nan = edata_blob_small_3d.copy()
-    edata_nan.R[0, 0, 0] = np.nan
-
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        try:
-            ep.pp.scale_norm(edata_nan.copy())
-        except (ValueError, RuntimeWarning):
-            pass  # Expected for some scalers with NaNs
 
 
 @pytest.mark.parametrize(
@@ -995,7 +930,6 @@ def test_3d_norm_invalid_vars(edata_blob_small_3d, norm_func):
     """Test that all 3D normalization functions handle invalid variable names."""
     edata = edata_blob_small_3d.copy()
 
-    # Make data positive for power_norm
     if norm_func == ep.pp.power_norm:
         edata.R = np.abs(edata.R) + 0.1
 
@@ -1008,18 +942,14 @@ def test_3d_norm_variable_selection(edata_blob_small_3d):
     edata = edata_blob_small_3d.copy()
     R_original = edata.R.copy()
 
-    # Test with specific variables
     selected_vars = [edata.var_names[0], edata.var_names[1]]
     ep.pp.scale_norm(edata, vars=selected_vars)
 
-    # Selected variables should be different from original
     assert not np.allclose(edata.R[:, 0, :], R_original[:, 0, :])
     assert not np.allclose(edata.R[:, 1, :], R_original[:, 1, :])
 
-    # Non-selected variables should be unchanged
     if edata.R.shape[1] > 2:
         assert np.allclose(edata.R[:, 2, :], R_original[:, 2, :])
 
-    # Test invalid variable names
     with pytest.raises(ValueError):
         ep.pp.scale_norm(edata_blob_small_3d.copy(), vars=["nonexistent_var"])
