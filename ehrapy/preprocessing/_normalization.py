@@ -21,6 +21,73 @@ if TYPE_CHECKING:
     from ehrdata import EHRData
 
 
+def _get_target_layer(edata: EHRData | AnnData, layer: str | None) -> tuple[np.ndarray, str]:
+    """Get the target data layer and its effective name.
+    
+    Returns:
+        tuple: (data_array, effective_layer_name)
+    """
+    if layer is None:
+        if hasattr(edata, "R") and edata.R is not None:
+            return edata.R, "R"
+        else:
+            return edata.X, "X"
+    else:
+        return edata.layers[layer], layer
+
+
+def _set_target_layer(edata: EHRData | AnnData, data: np.ndarray, layer_name: str, var_indices: list):
+    """Write normalized data back to the target layer."""
+    if layer_name == "R":
+        edata.R[:, var_indices, :] = data.astype(edata.R.dtype)
+    elif layer_name == "X":
+        edata.X = edata.X.astype(data.dtype)
+        edata[:, var_indices].X = data
+    else:
+        if data.ndim == 3:
+            edata.layers[layer_name][:, var_indices, :] = data.astype(edata.layers[layer_name].dtype)
+        else:
+            edata.layers[layer_name] = edata.layers[layer_name].astype(data.dtype)
+            edata[:, var_indices].layers[layer_name] = data
+
+
+def _normalize_3d_data(data: np.ndarray, var_indices: list, scale_func, group_key: str | None, edata):
+    """Apply normalization to 3D data (n_obs x n_var x n_timestamps)."""
+    var_values = data[:, var_indices, :].copy()
+    n_obs, n_var_selected, n_timestamps = var_values.shape
+    
+    if group_key is None:
+        for var_idx in range(n_var_selected):
+            var_data = var_values[:, var_idx, :].reshape(-1, 1)
+            var_data = scale_func(var_data)
+            var_values[:, var_idx, :] = var_data.reshape(n_obs, n_timestamps)
+    else:
+        for group in edata.obs[group_key].unique():
+            group_idx = edata.obs[group_key] == group
+            group_data = var_values[group_idx]
+            n_obs_group = group_data.shape[0]
+            for var_idx in range(n_var_selected):
+                var_data = group_data[:, var_idx, :].reshape(-1, 1)
+                var_data = scale_func(var_data)
+                var_values[group_idx, var_idx, :] = var_data.reshape(n_obs_group, n_timestamps)
+    
+    return var_values
+
+
+def _normalize_2d_data(edata, vars, scale_func, group_key: str | None):
+    """Apply normalization to 2D data (n_obs × n_var)."""
+    var_values = edata[:, vars].X.copy()
+    
+    if group_key is None:
+        var_values = scale_func(var_values)
+    else:
+        for group in edata.obs[group_key].unique():
+            group_idx = edata.obs[group_key] == group
+            var_values[group_idx] = scale_func(var_values[group_idx])
+    
+    return var_values
+
+
 def _scale_func_group(
     edata: EHRData | AnnData,
     scale_func: Callable[[np.ndarray | pd.DataFrame], np.ndarray],
@@ -32,9 +99,7 @@ def _scale_func_group(
 ) -> EHRData | AnnData | None:
     """Apply scaling function to selected columns of edata, either globally or per group.
 
-    Supports both 2D and 3D data:
-    - 2D data (n_obs × n_var): Standard normalization across observations
-    - 3D data (n_obs × n_var × n_timestamps): Per-variable normalization across samples and timestamps
+    Supports both 2D and 3D data with unified layer handling.
     """
     if group_key is not None and group_key not in edata.obs_keys():
         raise KeyError(f"group key '{group_key}' not found in edata.obs.")
@@ -48,68 +113,24 @@ def _scale_func_group(
 
     edata = _prep_edata_norm(edata, copy)
 
-    if hasattr(edata, "R") and edata.R is not None and edata.R.ndim == 3:
-        # Convert variable names to indices
+    target_data, layer_name = _get_target_layer(edata, layer)
+    
+    if target_data.ndim == 3:
         from ehrapy.anndata.anndata_ext import _get_var_indices
-
         var_indices = _get_var_indices(edata, vars)
-
-        if layer is None:
-            var_values = edata.R[:, var_indices, :].copy()
-        else:
-            var_values = edata.layers[layer][:, var_indices, :].copy()
-
-        n_obs, n_var_selected, n_timestamps = var_values.shape
-        if group_key is None:
-            for var_idx in range(n_var_selected):
-                var_data = var_values[:, var_idx, :].reshape(-1, 1)
-                var_data = scale_func(var_data)
-                var_values[:, var_idx, :] = var_data.reshape(n_obs, n_timestamps)
-        else:
-            for group in edata.obs[group_key].unique():
-                group_idx = edata.obs[group_key] == group
-                group_data = var_values[group_idx]
-                n_obs_group = group_data.shape[0]
-                for var_idx in range(n_var_selected):
-                    var_data = group_data[:, var_idx, :].reshape(-1, 1)
-                    var_data = scale_func(var_data)
-                    var_values[group_idx, var_idx, :] = var_data.reshape(n_obs_group, n_timestamps)
-
-        # Write back to edata.R or edata.layers[layer] - only for selected variables
-        if layer is None:
-            edata.R[:, var_indices, :] = var_values.astype(edata.R.dtype)
-        else:
-            edata.layers[layer][:, var_indices, :] = var_values.astype(edata.layers[layer].dtype)
+        normalized_data = _normalize_3d_data(target_data, var_indices, scale_func, group_key, edata)
+        _set_target_layer(edata, normalized_data, layer_name, var_indices)
+        
+    elif target_data.ndim == 2:
+        normalized_data = _normalize_2d_data(edata, vars, scale_func, group_key)
+        _set_target_layer(edata, normalized_data, layer_name, vars)
+        
     else:
-        # 2D normalization (AnnData or 2D EHRData)
-        if layer is None:
-            var_values = edata[:, vars].X.copy()
-        else:
-            var_values = edata[:, vars].layers[layer].copy()
-
-        if var_values.ndim == 2:
-            if group_key is None:
-                var_values = scale_func(var_values)
-            else:
-                for group in edata.obs[group_key].unique():
-                    group_idx = edata.obs[group_key] == group
-                    var_values[group_idx] = scale_func(var_values[group_idx])
-        else:
-            raise ValueError(f"Unsupported data dimensionality: {var_values.ndim}D. Expected 2D or 3D data.")
-
-        if layer is None:
-            edata.X = edata.X.astype(var_values.dtype)
-            edata[:, vars].X = var_values
-        else:
-            edata.layers[layer] = edata.layers[layer].astype(var_values.dtype)
-            edata[:, vars].layers[layer] = var_values
+        raise ValueError(f"Unsupported data dimensionality: {target_data.ndim}D. Expected 2D or 3D data.")
 
     _record_norm(edata, vars, norm_name)
 
-    if copy:
-        return edata
-    else:
-        return None
+    return edata if copy else None
 
 
 @singledispatch
@@ -143,9 +164,9 @@ def scale_norm(
     Functionality is provided by :class:`~sklearn.preprocessing.StandardScaler`, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html for details.
     If `edata.X` is a Dask Array, functionality is provided by :class:`~dask_ml.preprocessing.StandardScaler`, see https://ml.dask.org/modules/generated/dask_ml.preprocessing.StandardScaler.html for details.
 
-    Supports both 2D and 3D data:
-    - 2D data: Standard normalization across observations
-    - 3D data: Per-variable normalization across samples and timestamps
+    Supports both 2D and 3D data.
+    For 2D data: Standard normalization across observations.
+    For 3D data: Per-variable normalization across samples and timestamps.
 
     Args:
         edata: Central data object. Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
@@ -164,13 +185,9 @@ def scale_norm(
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> edata_norm = ep.pp.scale_norm(edata, copy=True)
-        >>> # Works automatically with both 2D and 3D data
-        >>> edata_3d_norm = ep.pp.scale_norm(edata_3d, copy=True)
+
     """
-    if hasattr(edata, "R") and edata.R is not None and edata.R.ndim == 3:
-        arr = edata.R if layer is None else edata.layers[layer]
-    else:
-        arr = edata.X if layer is None else edata.layers[layer]
+    arr, _ = _get_target_layer(edata, layer)
     scale_func = _scale_norm_function(arr, **kwargs)
 
     return _scale_func_group(
@@ -215,9 +232,9 @@ def minmax_norm(
     Functionality is provided by :class:`~sklearn.preprocessing.MinMaxScaler`, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MinMaxScaler.html for details.
     If `edata.X` is a Dask Array, functionality is provided by :class:`~dask_ml.preprocessing.MinMaxScaler`, see https://ml.dask.org/modules/generated/dask_ml.preprocessing.MinMaxScaler.html for details.
 
-    Supports both 2D and 3D data:
-    - 2D data: Standard normalization across observations
-    - 3D data: Per-variable normalization across samples and timestamps
+    Supports both 2D and 3D data.
+    For 2D data: Standard normalization across observations.
+    For 3D data: Per-variable normalization across samples and timestamps.
 
     Args:
         edata: Central data object.
@@ -237,13 +254,8 @@ def minmax_norm(
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> edata_norm = ep.pp.minmax_norm(edata, copy=True)
-        >>> # Works automatically with both 2D and 3D data
-        >>> edata_3d_norm = ep.pp.minmax_norm(edata_3d, copy=True)
     """
-    if hasattr(edata, "R") and edata.R is not None and edata.R.ndim == 3:
-        arr = edata.R if layer is None else edata.layers[layer]
-    else:
-        arr = edata.X if layer is None else edata.layers[layer]
+    arr, _ = _get_target_layer(edata, layer)
     scale_func = _minmax_norm_function(arr, **kwargs)
 
     return _scale_func_group(
@@ -300,13 +312,8 @@ def maxabs_norm(
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> edata_norm = ep.pp.maxabs_norm(edata, copy=True)
-        >>> # Works automatically with both 2D and 3D data
-        >>> edata_3d_norm = ep.pp.maxabs_norm(edata_3d, copy=True)
     """
-    if hasattr(edata, "R") and edata.R is not None and edata.R.ndim == 3:
-        arr = edata.R if layer is None else edata.layers[layer]
-    else:
-        arr = edata.X if layer is None else edata.layers[layer]
+    arr, _ = _get_target_layer(edata, layer)
     scale_func = _maxabs_norm_function(arr)
 
     return _scale_func_group(
@@ -374,13 +381,8 @@ def robust_scale_norm(
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> edata_norm = ep.pp.robust_scale_norm(edata, copy=True)
-        >>> # Works automatically with both 2D and 3D data
-        >>> edata_3d_norm = ep.pp.robust_scale_norm(edata_3d, copy=True)
     """
-    if hasattr(edata, "R") and edata.R is not None and edata.R.ndim == 3:
-        arr = edata.R if layer is None else edata.layers[layer]
-    else:
-        arr = edata.X if layer is None else edata.layers[layer]
+    arr, _ = _get_target_layer(edata, layer)
     scale_func = _robust_scale_norm_function(arr, **kwargs)
 
     return _scale_func_group(
@@ -447,13 +449,8 @@ def quantile_norm(
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> edata_norm = ep.pp.quantile_norm(edata, copy=True)
-        >>> # Works automatically with both 2D and 3D data
-        >>> edata_3d_norm = ep.pp.quantile_norm(edata_3d, copy=True)
     """
-    if hasattr(edata, "R") and edata.R is not None and edata.R.ndim == 3:
-        arr = edata.R if layer is None else edata.layers[layer]
-    else:
-        arr = edata.X if layer is None else edata.layers[layer]
+    arr, _ = _get_target_layer(edata, layer)
     scale_func = _quantile_norm_function(arr, **kwargs)
 
     return _scale_func_group(
@@ -513,13 +510,8 @@ def power_norm(
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> edata_norm = ep.pp.power_norm(edata, copy=True)
-        >>> # Works automatically with both 2D and 3D data
-        >>> edata_3d_norm = ep.pp.power_norm(edata_3d, copy=True)
     """
-    if hasattr(edata, "R") and edata.R is not None and edata.R.ndim == 3:
-        arr = edata.R if layer is None else edata.layers[layer]
-    else:
-        arr = edata.X if layer is None else edata.layers[layer]
+    arr, _ = _get_target_layer(edata, layer)
     scale_func = _power_norm_function(arr, **kwargs)
 
     return _scale_func_group(
@@ -568,8 +560,6 @@ def log_norm(
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> edata_norm = ep.pp.log_norm(edata, copy=True)
-        >>> # Works automatically with both 2D and 3D data
-        >>> edata_3d_norm = ep.pp.log_norm(edata_3d, copy=True)
     """
     if isinstance(vars, str):
         vars = [vars]
@@ -580,86 +570,72 @@ def log_norm(
 
     edata = _prep_edata_norm(edata, copy)
 
-    if hasattr(edata, "R") and edata.R is not None and edata.R.ndim == 3:
-        if layer is None:
-            # Check for negatives in 3D R data
+    arr, layer_name = _get_target_layer(edata, layer)
+    is_3d = arr.ndim == 3
+    
+    if vars:
+        if is_3d:
+            var_indices = [edata.var_names.get_loc(v) for v in vars]
+            check_data = arr[:, var_indices, :]
+        else:
+            edata_to_check_for_negatives = edata[:, vars]
+            check_data = edata_to_check_for_negatives.X
+    else:
+        check_data = arr
+
+    offset_tmp_applied = check_data + offset
+    if np.any(offset_tmp_applied < 0):
+        data_type = "Matrix R" if layer_name == "R" else "Layer" if layer else "Matrix X"
+        raise ValueError(
+            f"{data_type} contains negative values. "
+            "Undefined behavior for log normalization. "
+            "Please specify a higher offset to this function "
+            "or offset negative values with ep.pp.offset_negative_values()."
+        )
+
+    if is_3d or layer:
+        var_values = arr.copy()
+    else:
+        if vars:
+            var_values = edata[:, vars].X.copy()
+        else:
+            var_values = arr.copy()
+
+    if offset == 1:
+        np.log1p(var_values, out=var_values)
+    else:
+        var_values = var_values + offset
+        np.log(var_values, out=var_values)
+
+    if base is not None:
+        np.divide(var_values, np.log(base), out=var_values)
+
+    if layer_name == "R":
+        edata.R = edata.R.astype(var_values.dtype)
+        if vars:
+            var_indices = [edata.var_names.get_loc(v) for v in vars]
+            edata.R[:, var_indices, :] = var_values
+        else:
+            edata.R[:, :, :] = var_values
+    elif layer:
+        edata.layers[layer] = edata.layers[layer].astype(var_values.dtype)
+        if is_3d:
             if vars:
                 var_indices = [edata.var_names.get_loc(v) for v in vars]
-                check_data = edata.R[:, var_indices, :]
+                edata.layers[layer][:, var_indices, :] = var_values
             else:
-                check_data = edata.R
-
-            offset_tmp_applied = check_data + offset
-            if np.any(offset_tmp_applied < 0):
-                raise ValueError(
-                    "Matrix R contains negative values. "
-                    "Undefined behavior for log normalization. "
-                    "Please specify a higher offset to this function "
-                    "or offset negative values with ep.pp.offset_negative_values()."
-                )
-
-            var_values = edata.R.copy()
-
-            if offset == 1:
-                np.log1p(var_values, out=var_values)
-            else:
-                var_values = var_values + offset
-                np.log(var_values, out=var_values)
-
-            if base is not None:
-                np.divide(var_values, np.log(base), out=var_values)
-
-            edata.R = edata.R.astype(var_values.dtype)
-            edata.R[:, :, :] = var_values
+                edata.layers[layer][:, :, :] = var_values
         else:
-            # Handle layer case
-            check_data = edata.layers[layer]
-            offset_tmp_applied = check_data + offset
-            if np.any(offset_tmp_applied < 0):
-                raise ValueError(
-                    "Layer contains negative values. "
-                    "Undefined behavior for log normalization. "
-                    "Please specify a higher offset to this function "
-                    "or offset negative values with ep.pp.offset_negative_values()."
-                )
-
-            var_values = edata.layers[layer].copy()
-
-            if offset == 1:
-                np.log1p(var_values, out=var_values)
+            if vars:
+                edata[:, vars].layers[layer] = var_values
             else:
-                var_values = var_values + offset
-                np.log(var_values, out=var_values)
-
-            if base is not None:
-                np.divide(var_values, np.log(base), out=var_values)
-
-            edata.layers[layer] = edata.layers[layer].astype(var_values.dtype)
-            edata.layers[layer][:, :, :] = var_values
+                edata.layers[layer] = var_values
     else:
-        edata_to_check_for_negatives = edata[:, vars] if vars else edata
-        offset_tmp_applied = edata_to_check_for_negatives.X + offset
-        if np.any(offset_tmp_applied < 0):
-            raise ValueError(
-                "Matrix X contains negative values. "
-                "Undefined behavior for log normalization. "
-                "Please specifiy a higher offset to this function "
-                "or offset negative values with ep.pp.offset_negative_values()."
-            )
-
-        var_values = edata[:, vars].X.copy()
-
-        if offset == 1:
-            np.log1p(var_values, out=var_values)
-        else:
-            var_values = var_values + offset
-            np.log(var_values, out=var_values)
-
-        if base is not None:
-            np.divide(var_values, np.log(base), out=var_values)
-
         edata.X = edata.X.astype(var_values.dtype)
-        edata[:, vars].X = var_values
+        if vars:
+            edata[:, vars].X = var_values
+        else:
+            edata.X = var_values
 
     _record_norm(edata, vars, "log")
 
@@ -717,25 +693,20 @@ def offset_negative_values(edata: EHRData | AnnData, layer: str = None, copy: bo
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> edata_offset = ep.pp.offset_negative_values(edata, copy=True)
-        >>> # Works automatically with both 2D and 3D data
-        >>> edata_3d_offset = ep.pp.offset_negative_values(edata_3d, copy=True)
     """
     if copy:
         edata = edata.copy()
 
-    if layer:
-        minimum = np.min(edata.layers[layer])
-        if minimum < 0:
-            edata.layers[layer] = edata.layers[layer] + np.abs(minimum)
-    else:
-        # Handle 3D data
-        if hasattr(edata, "R") and edata.R is not None and edata.R.ndim == 3:
-            minimum = np.min(edata.R)
-            if minimum < 0:
-                edata.R = edata.R + np.abs(minimum)
+    arr, layer_name = _get_target_layer(edata, layer)
+    is_3d = arr.ndim == 3
+    minimum = np.min(arr)
+    if minimum < 0:
+        offset_arr = arr + np.abs(minimum)
+        if layer_name == "R":
+            edata.R = offset_arr
+        elif layer:
+            edata.layers[layer] = offset_arr
         else:
-            minimum = np.min(edata.X)
-            if minimum < 0:
-                edata.X = edata.X + np.abs(minimum)
+            edata.X = offset_arr
 
     return edata if copy else None
