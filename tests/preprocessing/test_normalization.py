@@ -184,16 +184,13 @@ def test_3d_norm_group_functionality(edata_blobs_timeseries_small, norm_func):
     group_size = n_obs // 2
     edata.obs["group"] = ["A"] * group_size + ["B"] * (n_obs - group_size)
 
-    # Make data positive for power_norm
     if norm_func == ep.pp.power_norm:
         edata.R = np.abs(edata.R) + 0.1
 
-    # Test group-wise normalization
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         norm_func(edata, group_key="group")
 
-    # Basic shape preservation
     assert edata.R.shape == edata_blobs_timeseries_small.R.shape
 
 

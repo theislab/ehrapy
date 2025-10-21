@@ -36,7 +36,9 @@ def _get_target_layer(edata: EHRData | AnnData, layer: str | None) -> tuple[np.n
         return edata.layers[layer], layer
 
 
-def _set_target_layer(edata: EHRData | AnnData, data: np.ndarray, layer_name: str, var_indices: list):
+def _set_target_layer(
+    edata: EHRData | AnnData, data: np.ndarray, layer_name: str, var_indices: Sequence[int] | Sequence[str]
+) -> None:
     """Write normalized data back to the target layer."""
     if layer_name == "R":
         edata.R[:, var_indices, :] = data.astype(edata.R.dtype)
@@ -51,7 +53,13 @@ def _set_target_layer(edata: EHRData | AnnData, data: np.ndarray, layer_name: st
             edata[:, var_indices].layers[layer_name] = data
 
 
-def _normalize_3d_data(data: np.ndarray, var_indices: list, scale_func, group_key: str | None, edata):
+def _normalize_3d_data(
+    data: np.ndarray,
+    var_indices: list[int],
+    scale_func: Callable[[np.ndarray], np.ndarray],
+    group_key: str | None,
+    edata: EHRData | AnnData,
+) -> np.ndarray:
     """Apply normalization to 3D data (n_obs x n_var x n_timestamps)."""
     var_values = data[:, var_indices, :]
     n_obs, n_var_selected, n_timestamps = var_values.shape
@@ -74,7 +82,9 @@ def _normalize_3d_data(data: np.ndarray, var_indices: list, scale_func, group_ke
     return var_values
 
 
-def _normalize_2d_data(edata, vars, scale_func, group_key: str | None):
+def _normalize_2d_data(
+    edata: EHRData | AnnData, vars: Sequence[str], scale_func: Callable[[np.ndarray], np.ndarray], group_key: str | None
+) -> np.ndarray:
     """Apply normalization to 2D data (n_obs × n_var)."""
     var_values = edata[:, vars].X.copy()
 
@@ -185,8 +195,12 @@ def scale_norm(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ed.dt.mimic_2()
-        >>> edata_norm = ep.pp.scale_norm(edata, copy=True)
+        >>> edata = ed.dt.physionet2012()
+        >>> edata.R.mean()
+        0.245
+        >>> ep.pp.scale_norm(edata)
+        >>> edata.R.mean()
+        0.000
 
     """
     arr, _ = _get_target_layer(edata, layer)
@@ -255,8 +269,12 @@ def minmax_norm(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ed.dt.mimic_2()
-        >>> edata_norm = ep.pp.minmax_norm(edata, copy=True)
+        >>> edata = ed.dt.physionet2012()
+        >>> edata.R.min(), edata.R.max()
+        (-3.2, 4.1)
+        >>> ep.pp.minmax_norm(edata)
+        >>> edata.R.min(), edata.R.max()
+        (0.0, 1.0)
     """
     arr, _ = _get_target_layer(edata, layer)
     scale_func = _minmax_norm_function(arr, **kwargs)
@@ -314,8 +332,12 @@ def maxabs_norm(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ed.dt.mimic_2()
-        >>> edata_norm = ep.pp.maxabs_norm(edata, copy=True)
+        >>> edata = ed.dt.physionet2012()
+        >>> abs(edata.R).max()
+        4.1
+        >>> ep.pp.maxabs_norm(edata)
+        >>> abs(edata.R).max()
+        1.0
     """
     arr, _ = _get_target_layer(edata, layer)
     scale_func = _maxabs_norm_function(arr)
@@ -384,8 +406,13 @@ def robust_scale_norm(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ed.dt.mimic_2()
-        >>> edata_norm = ep.pp.robust_scale_norm(edata, copy=True)
+        >>> import numpy as np
+        >>> edata = ed.dt.physionet2012()
+        >>> np.median(edata.R)
+        0.0
+        >>> ep.pp.robust_scale_norm(edata)
+        >>> np.median(edata.R)
+        0.0
     """
     arr, _ = _get_target_layer(edata, layer)
     scale_func = _robust_scale_norm_function(arr, **kwargs)
@@ -453,8 +480,13 @@ def quantile_norm(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ed.dt.mimic_2()
-        >>> edata_norm = ep.pp.quantile_norm(edata, copy=True)
+        >>> import numpy as np
+        >>> edata = ed.dt.physionet2012()
+        >>> np.percentile(edata.R, [25, 75])
+        array([-0.6,  0.6])
+        >>> ep.pp.quantile_norm(edata)
+        >>> np.percentile(edata.R, [25, 75])
+        array([0.25, 0.75])
     """
     arr, _ = _get_target_layer(edata, layer)
     scale_func = _quantile_norm_function(arr, **kwargs)
@@ -515,8 +547,13 @@ def power_norm(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ed.dt.mimic_2()
-        >>> edata_norm = ep.pp.power_norm(edata, copy=True)
+        >>> from scipy import stats
+        >>> edata = ed.dt.physionet2012()
+        >>> stats.skew(edata.R.flatten())
+        1.23
+        >>> ep.pp.power_norm(edata)
+        >>> stats.skew(edata.R.flatten())
+        0.05
     """
     arr, _ = _get_target_layer(edata, layer)
     scale_func = _power_norm_function(arr, **kwargs)
@@ -566,8 +603,13 @@ def log_norm(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ed.dt.mimic_2()
-        >>> edata_norm = ep.pp.log_norm(edata, copy=True)
+        >>> edata = ed.dt.physionet2012()
+        >>> ep.pp.offset_negative_values(edata)
+        >>> edata.R.max()
+        8.2
+        >>> ep.pp.log_norm(edata)
+        >>> edata.R.max()
+        2.1
     """
     if isinstance(vars, str):
         vars = [vars]
@@ -700,8 +742,12 @@ def offset_negative_values(edata: EHRData | AnnData, layer: str = None, copy: bo
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ed.dt.mimic_2()
-        >>> edata_offset = ep.pp.offset_negative_values(edata, copy=True)
+        >>> edata = ed.dt.physionet2012()
+        >>> edata.R.min()
+        -3.2
+        >>> ep.pp.offset_negative_values(edata)
+        >>> edata.R.min()
+        0.0
     """
     if copy:
         edata = edata.copy()
