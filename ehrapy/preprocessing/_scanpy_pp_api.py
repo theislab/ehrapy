@@ -70,25 +70,22 @@ def pca(
         chunk_size: Number of observations to include in each chunk. Required if `chunked=True` was passed.
 
     Returns:
-        :X_pca: :class:`~scipy.sparse.spmatrix`, :class:`~numpy.ndarray`
+        If `data` is array-like and `return_info=False` was passed,
+        this function returns the PCA representation of `data` as an
+        array of the same type as the input array.
 
-        If `data` is array-like and `return_info=False` was passed, this function only returns `X_pca`...
+        Otherwise, it returns `None` if `copy=False`, else an updated `AnnData` object.
+        Sets the following fields:
 
-        edata : :class:`~ehrdata.EHRData` or :class:`~anndata.AnnData`
-
-        …otherwise if `copy=True` it returns or else adds fields to `edata`:
-
-        `.obsm['X_pca']`
-        PCA representation of data.
-
-        `.varm['PCs']`
-        The principal components containing the loadings.
-
-        `.uns['pca']['variance_ratio']`
-        Ratio of explained variance.
-
-        `.uns['pca']['variance']`
-        Explained variance, equivalent to the eigenvalues of the covariance matrix.
+        `.obsm['X_pca' | key_added]` : :class:`~scipy.sparse.csr_matrix` | :class:`~scipy.sparse.csc_matrix` | :class:`~numpy.ndarray` (shape `(adata.n_obs, n_comps)`)
+            PCA representation of data.
+        `.varm['PCs' | key_added]` : :class:`~numpy.ndarray` (shape `(adata.n_vars, n_comps)`)
+            The principal components containing the loadings.
+        `.uns['pca' | key_added]['variance_ratio']` : :class:`~numpy.ndarray` (shape `(n_comps,)`)
+            Ratio of explained variance.
+        `.uns['pca' | key_added]['variance']` : :class:`~numpy.ndarray` (shape `(n_comps,)`)
+            Explained variance, equivalent to the eigenvalues of the
+            covariance matrix.
     """
     return sc.pp.pca(
         data=data,
