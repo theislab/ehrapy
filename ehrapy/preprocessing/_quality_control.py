@@ -141,7 +141,7 @@ def _(mtx: np.ndarray, axis) -> np.ndarray:
 def _(mtx: DaskArray, axis) -> np.ndarray:
     import dask.array as da
 
-    missing_mask = da.isnan(mtx)
+    missing_mask = da.isnull(mtx)
     p_miss = missing_mask.mean(axis=axis)
     p = da.clip(p_miss, 1e-10, 1 - 1e-10)  # avoid log(0)
     return -(p * da.log2(p) + (1 - p) * da.log2(1 - p)).compute()
