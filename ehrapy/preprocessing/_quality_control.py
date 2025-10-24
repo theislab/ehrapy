@@ -67,8 +67,6 @@ def qc_metrics(
         - `is_constant`: Whether the feature is constant (with near zero variance).
         - `constant_variable_ratio`: Relative amount of constant features in percent.
         - `range_ratio`: Relative dispersion of features values respective to their mean.
-        - `skewness`: Skewness of the feature distribution.
-        - `kurtosis`: Kurtosis of the feature distribution.
         - `iqr_outliers`: Whether the feature contains outliers based on the interquartile range (IQR) method.
 
 
@@ -273,8 +271,8 @@ def _compute_var_metrics(
     var_metrics["is_constant"] = np.nan
     var_metrics["constant_variable_ratio"] = np.nan
     var_metrics["range_ratio"] = np.nan
-    var_metrics["skewness"] = np.nan
-    var_metrics["kurtosis"] = np.nan
+    # var_metrics["skewness"] = np.nan
+    # var_metrics["kurtosis"] = np.nan
     var_metrics["iqr_outliers"] = np.nan
 
     try:
@@ -314,12 +312,13 @@ def _compute_var_metrics(
         ).replace([np.inf, -np.inf], np.nan) * 100
 
         # Calculate skewness and kurtosis
-        var_metrics.loc[non_categorical_indices, "skewness"] = skew(
+        """var_metrics.loc[non_categorical_indices, "skewness"] = skew(
             mtx[:, non_categorical_indices].astype(np.float64), axis=0, bias=False, nan_policy="omit"
         )
         var_metrics.loc[non_categorical_indices, "kurtosis"] = kurtosis(
             mtx[:, non_categorical_indices].astype(np.float64), axis=0, bias=False, nan_policy="omit"
         )
+        """
         # Calculate IQR and define IQR outliers
         q1 = np.nanpercentile(mtx[:, non_categorical_indices], 25, axis=0)
         q3 = np.nanpercentile(mtx[:, non_categorical_indices], 75, axis=0)
