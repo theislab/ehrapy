@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Literal
 import numpy as np
 import pandas as pd
 from lamin_utils import logger
+from scipy.stats import kurtosis, skew
 from thefuzz import process
 
 from ehrapy._compat import DaskArray, _raise_array_type_not_implemented, function_2D_only, use_ehrdata
@@ -46,16 +47,31 @@ def qc_metrics(
 
         - `missing_values_abs`: Absolute amount of missing values.
         - `missing_values_pct`: Relative amount of missing values in percent.
+        - `unique_values_abs`: Absolute amount of unique values.
+        - `unique_values_ratio`: Relative amount of unique values in percent.
+        - `entropy_of_missingness`: Entropy of the missingness pattern for each observation. Higher values indicate a more heterogeneous (less structured) missingness pattern.
 
         Feature level metrics include:
 
         - `missing_values_abs`: Absolute amount of missing values.
         - `missing_values_pct`: Relative amount of missing values in percent.
+        - `unique_values_abs`: Absolute amount of unique values.
+        - `unique_values_ratio`: Relative amount of unique values in percent.
+        - `entropy_of_missingness`: Entropy of the missingness pattern for each feature. Higher values indicate a more heterogeneous (less structured) missingness pattern.
+
         - `mean`: Mean value of the features.
         - `median`: Median value of the features.
         - `std`: Standard deviation of the features.
         - `min`: Minimum value of the features.
         - `max`: Maximum value of the features.
+        - `coefficient_of_variation`: Coefficient of variation of the features.
+        - `is_constant`: Whether the feature is constant (with near zero variance).
+        - `constant_variable_ratio`: Relative amount of constant features in percent.
+        - `range_ratio`: Relative dispersion of features values respective to their mean.
+        - `skewness`: Skewness of the feature distribution.
+        - `kurtosis`: Kurtosis of the feature distribution.
+        - `iqr_outliers`: Whether the feature contains outliers based on the interquartile range (IQR) method.
+
 
     Examples:
             >>> import ehrapy as ep
@@ -88,6 +104,49 @@ def _(mtx: DaskArray, axis) -> np.ndarray:
     import dask.array as da
 
     return da.isnull(mtx).sum(axis).compute()
+
+
+@singledispatch
+def _compute_unique_values(mtx, axis):
+    _raise_array_type_not_implemented(_compute_unique_values, type(mtx))
+
+
+@_compute_unique_values.register
+def _(mtx: np.ndarray, axis) -> np.ndarray:
+    return pd.DataFrame(mtx).nunique(axis=axis, dropna=True).to_numpy()
+
+
+@_compute_unique_values.register
+def _(mtx: DaskArray, axis) -> np.ndarray:
+    import dask.array as da
+
+    def nunique_block(block, axis):
+        return pd.DataFrame(block).nunique(axis=axis, dropna=True).to_numpy()
+
+    return da.map_blocks(nunique_block, mtx, axis=axis, dtype=int).compute()
+
+
+@singledispatch
+def _compute_entropy_of_missingness(mtx, axis):
+    _raise_array_type_not_implemented(_compute_entropy_of_missingness, type(mtx))
+
+
+@_compute_entropy_of_missingness.register
+def _(mtx: np.ndarray, axis) -> np.ndarray:
+    missing_mask = pd.isnull(mtx)
+    p_miss = missing_mask.mean(axis=axis)
+    p = np.clip(p_miss, 1e-10, 1 - 1e-10)  # avoid log(0)
+    return -(p * np.log2(p) + (1 - p) * np.log2(1 - p))
+
+
+@_compute_entropy_of_missingness.register
+def _(mtx: DaskArray, axis) -> np.ndarray:
+    import dask.array as da
+
+    missing_mask = da.isnan(mtx)
+    p_miss = missing_mask.mean(axis=axis)
+    p = da.clip(p_miss, 1e-10, 1 - 1e-10)  # avoid log(0)
+    return -(p * da.log2(p) + (1 - p) * da.log2(1 - p)).compute()
 
 
 def _compute_obs_metrics(
@@ -130,6 +189,19 @@ def _compute_obs_metrics(
 
     obs_metrics["missing_values_abs"] = _compute_missing_values(mtx, axis=1)
     obs_metrics["missing_values_pct"] = (obs_metrics["missing_values_abs"] / mtx.shape[1]) * 100
+
+    obs_metrics["unique_values_abs"] = _compute_unique_values(mtx, axis=1)
+    valid_counts = mtx.shape[1] - obs_metrics["missing_values_abs"]
+    obs_metrics["unique_values_ratio"] = (
+        np.where(
+            valid_counts > 0,
+            obs_metrics["unique_values_abs"] / valid_counts,
+            np.nan,
+        )
+        * 100
+    )
+
+    obs_metrics["entropy_of_missingness"] = _compute_entropy_of_missingness(mtx, axis=1)
 
     # Specific QC metrics
     for qc_var in qc_vars:
@@ -180,14 +252,34 @@ def _compute_var_metrics(
     var_metrics["missing_values_abs"] = _compute_missing_values(mtx, axis=0)
     var_metrics["missing_values_pct"] = (var_metrics["missing_values_abs"] / mtx.shape[0]) * 100
 
+    var_metrics["unique_values_abs"] = _compute_unique_values(mtx, axis=0)
+    valid_counts = mtx.shape[0] - var_metrics["missing_values_abs"]
+    var_metrics["unique_values_ratio"] = (
+        np.where(
+            valid_counts > 0,
+            var_metrics["unique_values_abs"] / valid_counts,
+            np.nan,
+        )
+        * 100
+    )
+
+    var_metrics["entropy_of_missingness"] = _compute_entropy_of_missingness(mtx, axis=0)
+
     var_metrics["mean"] = np.nan
     var_metrics["median"] = np.nan
     var_metrics["standard_deviation"] = np.nan
     var_metrics["min"] = np.nan
     var_metrics["max"] = np.nan
+    var_metrics["coefficient_of_variation"] = np.nan
+    var_metrics["is_constant"] = np.nan
+    var_metrics["constant_variable_ratio"] = np.nan
+    var_metrics["range_ratio"] = np.nan
+    var_metrics["skewness"] = np.nan
+    var_metrics["kurtosis"] = np.nan
     var_metrics["iqr_outliers"] = np.nan
 
     try:
+        # Calculate statistics for non-categorical variables
         var_metrics.loc[non_categorical_indices, "mean"] = np.nanmean(
             mtx[:, non_categorical_indices].astype(np.float64), axis=0
         )
@@ -203,7 +295,32 @@ def _compute_var_metrics(
         var_metrics.loc[non_categorical_indices, "max"] = np.nanmax(
             mtx[:, non_categorical_indices].astype(np.float64), axis=0
         )
+        var_metrics.loc[non_categorical_indices, "coefficient_of_variation"] = (
+            var_metrics.loc[non_categorical_indices, "standard_deviation"]
+            / var_metrics.loc[non_categorical_indices, "mean"]
+        ).replace([np.inf, -np.inf], np.nan)
 
+        # Constant column detection
+        constant_mask = (var_metrics.loc[non_categorical_indices, "standard_deviation"] == 0) | (
+            var_metrics.loc[non_categorical_indices, "max"] == var_metrics.loc[non_categorical_indices, "min"]
+        )
+
+        var_metrics.loc[non_categorical_indices, "is_constant"] = constant_mask
+        var_metrics["constant_variable_ratio"] = constant_mask.mean() * 100
+
+        # Calculate range ratio
+        var_metrics.loc[non_categorical_indices, "range_ratio"] = (
+            (var_metrics.loc[non_categorical_indices, "max"] - var_metrics.loc[non_categorical_indices, "min"])
+            / var_metrics.loc[non_categorical_indices, "mean"]
+        ).replace([np.inf, -np.inf], np.nan) * 100
+
+        # Calculate skewness and kurtosis
+        var_metrics.loc[non_categorical_indices, "skewness"] = skew(
+            mtx[:, non_categorical_indices].astype(np.float64), axis=0, bias=False, nan_policy="omit"
+        )
+        var_metrics.loc[non_categorical_indices, "kurtosis"] = kurtosis(
+            mtx[:, non_categorical_indices].astype(np.float64), axis=0, bias=False, nan_policy="omit"
+        )
         # Calculate IQR and define IQR outliers
         q1 = np.nanpercentile(mtx[:, non_categorical_indices], 25, axis=0)
         q3 = np.nanpercentile(mtx[:, non_categorical_indices], 75, axis=0)

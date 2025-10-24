@@ -24,13 +24,27 @@ def test_qc_metrics_vanilla(array_type, missing_values_edata):
 
     assert np.array_equal(obs_metrics["missing_values_abs"].values, np.array([1, 2]))
     assert np.allclose(obs_metrics["missing_values_pct"].values, np.array([33.3333, 66.6667]))
+    assert np.array_equal(obs_metrics["unique_values_abs"].values, np.array([2, 1]))
+    assert np.allclose(obs_metrics["unique_values_ratio"].values, np.array([100.0, 100.0]))
+    assert np.allclose(obs_metrics["entropy_of_missingness"].values, np.array([0.9183, 0.9183]))
 
     assert np.array_equal(var_metrics["missing_values_abs"].values, np.array([1, 2, 0]))
     assert np.allclose(var_metrics["missing_values_pct"].values, np.array([50.0, 100.0, 0.0]))
+    assert np.array_equal(var_metrics["unique_values_abs"].values, np.array([1, 0, 2]))
+    assert np.allclose(var_metrics["unique_values_ratio"].values, np.array([100.0, np.nan, 100.0]), equal_nan=True)
+    assert np.allclose(var_metrics["entropy_of_missingness"].values, np.array([1.0, 0.0, 0.0]))
     assert np.allclose(var_metrics["mean"].values, np.array([0.21, np.nan, 24.327]), equal_nan=True)
     assert np.allclose(var_metrics["median"].values, np.array([0.21, np.nan, 24.327]), equal_nan=True)
     assert np.allclose(var_metrics["min"].values, np.array([0.21, np.nan, 7.234]), equal_nan=True)
     assert np.allclose(var_metrics["max"].values, np.array([0.21, np.nan, 41.419998]), equal_nan=True)
+    assert np.allclose(var_metrics["coefficient_of_variation"].values, np.array([0.0, np.nan, 0.70263]), equal_nan=True)
+    assert np.array_equal(var_metrics["is_constant"].values, np.array([True, False, False]))
+    assert np.allclose(
+        var_metrics["constant_variable_ratio"].values, np.array([33.3333, 33.3333, 33.3333]), equal_nan=True
+    )
+    assert np.allclose(var_metrics["range_ratio"].values, np.array([0.0, np.nan, 140.52698]), equal_nan=True)
+    assert np.allclose(var_metrics["skewness"].values, np.array([np.nan, np.nan, 0.0]), equal_nan=True)
+    assert np.allclose(var_metrics["kurtosis"].values, np.array([np.nan, np.nan, -2.0]), equal_nan=True)
     assert (~var_metrics["iqr_outliers"]).all()
 
     # check that none of the columns were modified
@@ -48,6 +62,9 @@ def test_obs_qc_metrics(array_type, missing_values_edata):
 
     assert np.array_equal(obs_metrics["missing_values_abs"].values, np.array([1, 2]))
     assert np.allclose(obs_metrics["missing_values_pct"].values, np.array([33.3333, 66.6667]))
+    assert np.array_equal(obs_metrics["unique_values_abs"].values, np.array([2, 1]))
+    assert np.allclose(obs_metrics["unique_values_ratio"].values, np.array([100.0, 100.0]))
+    assert np.allclose(obs_metrics["entropy_of_missingness"].values, np.array([0.9183, 0.9183]))
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES)
@@ -58,10 +75,21 @@ def test_var_qc_metrics(array_type, missing_values_edata):
 
     assert np.array_equal(var_metrics["missing_values_abs"].values, np.array([1, 2, 0]))
     assert np.allclose(var_metrics["missing_values_pct"].values, np.array([50.0, 100.0, 0.0]))
+    assert np.array_equal(var_metrics["unique_values_abs"].values, np.array([1, 0, 2]))
+    assert np.allclose(var_metrics["unique_values_ratio"].values, np.array([100.0, np.nan, 100.0]), equal_nan=True)
+    assert np.allclose(var_metrics["entropy_of_missingness"].values, np.array([1.0, 0.0, 0.0]))
     assert np.allclose(var_metrics["mean"].values, np.array([0.21, np.nan, 24.327]), equal_nan=True)
     assert np.allclose(var_metrics["median"].values, np.array([0.21, np.nan, 24.327]), equal_nan=True)
     assert np.allclose(var_metrics["min"].values, np.array([0.21, np.nan, 7.234]), equal_nan=True)
     assert np.allclose(var_metrics["max"].values, np.array([0.21, np.nan, 41.419998]), equal_nan=True)
+    assert np.allclose(var_metrics["coefficient_of_variation"].values, np.array([0.0, np.nan, 0.70263]), equal_nan=True)
+    assert np.array_equal(var_metrics["is_constant"].values, np.array([True, False, False]))
+    assert np.allclose(
+        var_metrics["constant_variable_ratio"].values, np.array([33.3333, 33.3333, 33.3333]), equal_nan=True
+    )
+    assert np.allclose(var_metrics["range_ratio"].values, np.array([0.0, np.nan, 140.52698]), equal_nan=True)
+    assert np.allclose(var_metrics["skewness"].values, np.array([np.nan, np.nan, 0.0]), equal_nan=True)
+    assert np.allclose(var_metrics["kurtosis"].values, np.array([np.nan, np.nan, -2.0]), equal_nan=True)
     assert (~var_metrics["iqr_outliers"]).all()
 
 
