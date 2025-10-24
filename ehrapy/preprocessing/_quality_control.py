@@ -303,6 +303,8 @@ def _compute_var_metrics(
         )
 
         var_metrics.loc[non_categorical_indices, "is_constant"] = constant_mask
+        var_metrics["is_constant"] = var_metrics["is_constant"].astype("boolean")
+
         var_metrics["constant_variable_ratio"] = constant_mask.mean() * 100
 
         # Calculate range ratio
