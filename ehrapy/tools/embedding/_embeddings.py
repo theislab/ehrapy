@@ -4,7 +4,10 @@ from functools import singledispatch
 from typing import TYPE_CHECKING, Literal
 
 import numpy as np
+import pandas as pd
 import scanpy as sc
+from ehrdata import EHRData
+from scipy.linalg import svd
 from scipy.sparse import spmatrix  # noqa
 
 from ehrapy._compat import _raise_array_type_not_implemented, use_ehrdata
@@ -14,7 +17,6 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from anndata import AnnData
-    from ehrdata import EHRData
 
     from ehrapy._types import AnyRandom
 
@@ -137,20 +139,14 @@ def umap(
         init_pos: How to initialize the low dimensional embedding. Called `init` in the original UMAP. Options are:
 
                   * Any key for `edata.obsm`.
-
                   * 'paga': positions from :func:`~scanpy.pl.paga`.
-
                   * 'spectral': use a spectral embedding of the graph.
-
                   * 'random': assign initial embedding positions at random.
-
                   * A numpy array of initial embedding positions.
         random_state: Random state for the initialization.
 
                       * If `int`, `random_state` is the seed used by the random number generator;
-
                       * If `RandomState` or `Generator`, `random_state` is the random number generator;
-
                       * If `None`, the random number generator is the `RandomState` instance used by `np.random`.
         a: More specific parameters controlling the embedding.
            If `None` these values are set automatically as determined by `min_dist` and `spread`.
@@ -360,7 +356,7 @@ def embedding_density(
 
 
 @singledispatch
-def famd(edata: EHRData, *, n_components=2, n_iter=3) -> None:
+def famd(edata: EHRData | np.ndarray, *, n_components=2, n_iter=3) -> tuple[np.ndarray, np.ndarray, dict] | None:
     """Calculates factors of mixed data.
 
     FAMD (Factor Analysis of Mixed Data) is a dimensionality reduction technique that for datasets containing both quantitative and qualitative variables.
@@ -368,9 +364,83 @@ def famd(edata: EHRData, *, n_components=2, n_iter=3) -> None:
     It maximizes the sum of squared correlations with quantitative variables and squared correlation ratios with qualitative variables, treating both types equally with each variable's contribution bounded by 1.
     The method produces factor scores for individuals, correlation circles for quantitative variables, and category centroids for qualitative variables.
     """
+    # TODO add missing parameters n stuff
     _raise_array_type_not_implemented(famd, type(edata.R))
+    return None
 
 
-@famd.register
-def _(arr: np.ndarray, **kwargs):
-    pass
+@famd.register(EHRData)
+def _(edata: EHRData, /, *, n_components=3, n_iter=2):
+    factor_scores, loadings, metadata = famd(edata.R, n_components=n_components, n_iter=n_iter)
+
+    edata.obsm["X_famd"] = factor_scores
+    edata.varm["famd_loadings"] = loadings
+    edata.uns["famd"] = metadata
+
+
+@famd.register(EHRData)
+def _(edata: EHRData, /, *, n_components: int = 2, n_iter: int = 3) -> None:
+    if edata.R is None:
+        raise ValueError("R must be present for FAMD")
+
+    factor_scores, loadings, metadata = famd(edata.R, n_components=n_components, n_iter=n_iter)
+
+    edata.obsm["X_famd"] = factor_scores
+    edata.uns["famd"] = metadata
+    edata.uns["famd"]["loadings"] = loadings
+
+
+@famd.register(np.ndarray)
+def _(arr: np.ndarray, /, *, n_components: int = 2, n_iter: int = 3) -> tuple[np.ndarray, np.ndarray, dict]:
+    if arr.shape[2] != 1:
+        raise ValueError(f"FAMD requires single timepoint, got {arr.shape[2]}")
+
+    data = arr[:, :, 0]
+
+    quant_mask = np.array(
+        [pd.api.types.is_numeric_dtype(data[:, i]) and len(np.unique(data[:, i])) > 10 for i in range(data.shape[1])]
+    )
+    qual_mask = ~quant_mask
+
+    n_obs = data.shape[0]
+    transformed_cols = []
+    feature_names = []
+
+    if quant_mask.any():
+        X_quant = data[:, quant_mask].astype(float)
+        X_quant_centered = X_quant - np.nanmean(X_quant, axis=0)
+        X_quant_std = np.nanstd(X_quant, axis=0)
+        X_quant_std[X_quant_std == 0] = 1
+        X_quant_scaled = X_quant_centered / X_quant_std
+        transformed_cols.append(X_quant_scaled)
+        feature_names.extend([f"quant_{i}" for i in range(X_quant_scaled.shape[1])])
+
+    if qual_mask.any():
+        qual_idx = np.where(qual_mask)[0]
+        for idx in qual_idx:
+            categories = pd.Categorical(data[:, idx])
+            indicator = pd.get_dummies(categories, drop_first=False).values
+            freq = indicator.mean(axis=0)
+            freq[freq == 0] = 1
+            indicator_scaled = (indicator - freq) / np.sqrt(freq)
+            transformed_cols.append(indicator_scaled)
+            feature_names.extend([f"qual_{idx}_{cat}" for cat in categories.categories])
+
+    X_transformed = np.hstack(transformed_cols)
+    X_transformed = np.nan_to_num(X_transformed)
+
+    U, S, Vt = svd(X_transformed, full_matrices=False)
+
+    n_components = min(n_components, min(X_transformed.shape))
+    factor_scores = U[:, :n_components] * S[:n_components]
+    loadings = Vt[:n_components, :].T
+
+    metadata = {
+        "variance": S[:n_components] ** 2 / n_obs,
+        "variance_ratio": (S[:n_components] ** 2) / (S**2).sum(),
+        "quant_mask": quant_mask,
+        "n_components": n_components,
+        "feature_names": feature_names,
+    }
+
+    return factor_scores, loadings, metadata
