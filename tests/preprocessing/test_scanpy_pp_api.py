@@ -41,7 +41,7 @@ def test_combat_3D_edata(edata_blob_small):
 def test_neighbors(edata_blob_small):
     ep.pp.neighbors(edata_blob_small, n_neighbors=5)
 
-    # since use_rep="..." is possible, check edgecase where X is None and layers invalid
+    # since use_rep="..." is possible, check edge case where X is None and layers invalid
     rng = np.random.default_rng(42)
     edata_blob_small.obsm["X_pca"] = rng.random((edata_blob_small.n_obs, 5))
     edata_blob_small.X = None
