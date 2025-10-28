@@ -1,3 +1,5 @@
+# Since we might check whether an object is an instance of dask.array.Array
+# without requiring dask installed in the environment.
 from __future__ import annotations
 
 import warnings
@@ -5,7 +7,7 @@ from functools import wraps
 from importlib.util import find_spec
 from inspect import signature
 from subprocess import PIPE, Popen
-from typing import TYPE_CHECKING, ParamSpec, TypeVar, cast
+from typing import TYPE_CHECKING, Concatenate, ParamSpec, TypeVar, cast
 
 P = ParamSpec("P")
 R = TypeVar("R")
@@ -205,9 +207,12 @@ def function_2D_only():
                 data = kwargs.get("edata")
 
             layer = kwargs.get("layer")
+            use_rep = kwargs.get("use_rep")
 
             if data is not None:
                 array = data.X if layer is None else data.layers[layer]
+                if use_rep is not None:
+                    array = data.obsm[use_rep]
 
                 if array.ndim != 2 and array.shape[2] != 1:
                     raise ValueError(
