@@ -745,7 +745,11 @@ def test_norm_numerical_only():
 
 
 def test_scale_norm_3d(edata_blobs_timeseries_small):
-    """Test scale_norm normalization on 3D EHRData (edata.R)."""
+    """Test that scale_norm centers each 3D variable to mean ~0 and std ~1.
+
+    The function should operate per-variable across samples and timestamps and
+    be robust to all-NaN slices (these are skipped by checks).
+    """
     edata = edata_blobs_timeseries_small
     orig_shape = edata.R.shape
     orig_dtype = edata.R.dtype
@@ -763,7 +767,11 @@ def test_scale_norm_3d(edata_blobs_timeseries_small):
 
 
 def test_minmax_norm_3d(edata_blobs_timeseries_small):
-    """Test minmax_norm normalization on 3D EHRData (edata.R)."""
+    """Test that minmax_norm rescales each variable to [0, 1].
+
+    For 3D data this means each variable's flattened values (samples × timestamps)
+    should have a min of 0 and a max of 1 (NaNs ignored).
+    """
     edata = edata_blobs_timeseries_small
     orig_shape = edata.R.shape
     orig_dtype = edata.R.dtype
@@ -781,7 +789,11 @@ def test_minmax_norm_3d(edata_blobs_timeseries_small):
 
 
 def test_maxabs_norm_3d(edata_blobs_timeseries_small):
-    """Test maxabs_norm normalization on 3D EHRData (edata.R)."""
+    """Test that maxabs_norm scales each variable so the maximum absolute value is 1.
+
+    This should hold per-variable across the flattened samples × timestamps axis,
+    ignoring NaN entries.
+    """
     edata = edata_blobs_timeseries_small
     orig_shape = edata.R.shape
     orig_dtype = edata.R.dtype
@@ -798,7 +810,11 @@ def test_maxabs_norm_3d(edata_blobs_timeseries_small):
 
 
 def test_robust_scale_norm_3d(edata_blobs_timeseries_small):
-    """Test robust_scale_norm normalization on 3D EHRData (edata.R)."""
+    """Test that robust_scale_norm centers variables by median and scales by IQR.
+
+    For each variable (flattened across samples and timestamps) the median should
+    be ~0 and the interquartile range should be scaled to 1.
+    """
     edata = edata_blobs_timeseries_small
     orig_shape = edata.R.shape
     orig_dtype = edata.R.dtype
@@ -818,7 +834,11 @@ def test_robust_scale_norm_3d(edata_blobs_timeseries_small):
 
 
 def test_quantile_norm_3d(edata_blobs_timeseries_small):
-    """Test quantile_norm normalization on 3D EHRData (edata.R)."""
+    """Test that quantile_norm maps each variable's empirical distribution to [0,1].
+
+    We check that per-variable flattened values have min≈0, max≈1 and sensible
+    quartiles (approx. 0.25, 0.5, 0.75) after transformation.
+    """
     edata = edata_blobs_timeseries_small
     orig_shape = edata.R.shape
     orig_dtype = edata.R.dtype
@@ -841,7 +861,12 @@ def test_quantile_norm_3d(edata_blobs_timeseries_small):
 
 
 def test_power_norm_3d(edata_blobs_timeseries_small):
-    """Test power_norm normalization on 3D EHRData (edata.R)."""
+    """Test that power_norm (PowerTransformer) approximately standardizes skewed data.
+
+    The test prepares strictly positive input (abs + offset) and expects the
+    flattened per-variable distributions to have mean ~0 and std ~1 after
+    transformation.
+    """
     edata = edata_blobs_timeseries_small
     edata.R = np.abs(edata.R) + 0.1
 
@@ -862,7 +887,11 @@ def test_power_norm_3d(edata_blobs_timeseries_small):
 
 
 def test_log_norm_3d(edata_blobs_timeseries_small):
-    """Test log_norm normalization on 3D EHRData (edata.R)."""
+    """Test that log_norm applies elementwise log1p (or log with offset) to 3D data.
+
+    The test uses strictly positive input (abs + 1) and verifies the result is
+    equal to np.log1p(original) elementwise (NaN-preserving).
+    """
     edata = edata_blobs_timeseries_small
     edata.R = np.abs(edata.R) + 1
 
@@ -883,7 +912,11 @@ def test_log_norm_3d(edata_blobs_timeseries_small):
 
 
 def test_offset_negative_values_3d(edata_blobs_timeseries_small):
-    """Test offset_negative_values on 3D EHRData (edata.R)."""
+    """Test that offset_negative_values shifts the array so its minimum becomes 0.
+
+    The function should preserve shape and dtype and ensure all non-NaN values
+    are >= 0 after the operation.
+    """
     edata = edata_blobs_timeseries_small
     edata.R = edata.R - 2
 
