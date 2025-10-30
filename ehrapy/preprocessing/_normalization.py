@@ -195,12 +195,13 @@ def scale_norm(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
+        >>> import numpy as np
         >>> edata = ed.dt.physionet2012()
-        >>> edata.R.mean()
-        0.245
+        >>> np.nanmean(edata.R)
+        120.142281
         >>> ep.pp.scale_norm(edata)
-        >>> edata.R.mean()
-        0.000
+        >>> np.nanmean(edata.R)
+        0
 
     """
     arr, _ = _get_target_layer(edata, layer)
@@ -269,12 +270,13 @@ def minmax_norm(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
+        >>> import numpy as np
         >>> edata = ed.dt.physionet2012()
-        >>> edata.R.min(), edata.R.max()
-        (-3.2, 4.1)
+        >>> np.nanmin(edata.R), np.nanmax(edata.R)
+        (8, 4695)
         >>> ep.pp.minmax_norm(edata)
-        >>> edata.R.min(), edata.R.max()
-        (0.0, 1.0)
+        >>> np.nanmin(edata.R), np.nanmax(edata.R)
+        (0, 1)
     """
     arr, _ = _get_target_layer(edata, layer)
     scale_func = _minmax_norm_function(arr, **kwargs)
@@ -332,12 +334,13 @@ def maxabs_norm(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
+        >>> import numpy as np
         >>> edata = ed.dt.physionet2012()
-        >>> abs(edata.R).max()
-        4.1
+        >>> np.nanmax(np.abs(edata.R))
+        4695
         >>> ep.pp.maxabs_norm(edata)
-        >>> abs(edata.R).max()
-        1.0
+        >>> np.nanmax(np.abs(edata.R))
+        1
     """
     arr, _ = _get_target_layer(edata, layer)
     scale_func = _maxabs_norm_function(arr)
@@ -408,11 +411,11 @@ def robust_scale_norm(
         >>> import ehrapy as ep
         >>> import numpy as np
         >>> edata = ed.dt.physionet2012()
-        >>> np.median(edata.R)
-        0.0
+        >>> np.nanmedian(edata.R)
+        82
         >>> ep.pp.robust_scale_norm(edata)
-        >>> np.median(edata.R)
-        0.0
+        >>> np.nanmedian(edata.R)
+        0
     """
     arr, _ = _get_target_layer(edata, layer)
     scale_func = _robust_scale_norm_function(arr, **kwargs)
@@ -482,11 +485,11 @@ def quantile_norm(
         >>> import ehrapy as ep
         >>> import numpy as np
         >>> edata = ed.dt.physionet2012()
-        >>> np.percentile(edata.R, [25, 75])
-        array([-0.6,  0.6])
+        >>> np.nanmin(edata.R), np.nanmax(edata.R)
+        (8, 4695)
         >>> ep.pp.quantile_norm(edata)
-        >>> np.percentile(edata.R, [25, 75])
-        array([0.25, 0.75])
+        >>> np.nanmin(edata.R), np.nanmax(edata.R)
+        (0, 1)
     """
     arr, _ = _get_target_layer(edata, layer)
     scale_func = _quantile_norm_function(arr, **kwargs)
@@ -550,10 +553,10 @@ def power_norm(
         >>> from scipy import stats
         >>> edata = ed.dt.physionet2012()
         >>> stats.skew(edata.R.flatten())
-        1.23
+        13.528100
         >>> ep.pp.power_norm(edata)
         >>> stats.skew(edata.R.flatten())
-        0.05
+        -0.041263
     """
     arr, _ = _get_target_layer(edata, layer)
     scale_func = _power_norm_function(arr, **kwargs)
@@ -603,13 +606,13 @@ def log_norm(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
+        >>> import numpy as np
         >>> edata = ed.dt.physionet2012()
-        >>> ep.pp.offset_negative_values(edata)
-        >>> edata.R.max()
-        8.2
+        >>> np.nanmax(edata.R)
+        4695
         >>> ep.pp.log_norm(edata)
-        >>> edata.R.max()
-        2.1
+        >>> np.nanmax(edata.R)
+        8.454679
     """
     if isinstance(vars, str):
         vars = [vars]
@@ -742,12 +745,15 @@ def offset_negative_values(edata: EHRData | AnnData, layer: str = None, copy: bo
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
+        >>> import numpy as np
         >>> edata = ed.dt.physionet2012()
-        >>> edata.R.min()
-        -3.2
-        >>> ep.pp.offset_negative_values(edata)
-        >>> edata.R.min()
-        0.0
+        >>> edata_shifted = edata.copy()
+        >>> edata_shifted.R = edata_shifted.R - 2.0
+        >>> np.nanmean(edata_shifted.R)
+        118.142281
+        >>> ep.pp.offset_negative_values(edata_shifted)
+        >>> np.nanmean(edata_shifted.R)
+        137.942281
     """
     if copy:
         edata = edata.copy()
