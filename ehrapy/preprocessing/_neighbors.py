@@ -105,25 +105,26 @@ def neighbors(
     import ehrapy as ep
 
     if metric in {"dtw", "soft_dtw", "gak"}:
-        # if use_rep is None:
-        #     raise ValueError(f"use_rep must be specified if metric is {metric}")
-        # else:
-        # hardcode for now:
         if use_rep is None:
-            if edata.shape[1] < 50:
-                arr = edata.X
-            else:
-                if "X_pca" not in edata.obsm:
-                    ep.pp.pca(edata)
-                arr = edata.obsm["X_pca"]
-        else:
+            raise ValueError(f"use_rep must be specified if metric is {metric}")
+        if use_rep in edata.layers:
+            arr = edata.layers[use_rep]
+        elif use_rep in edata.obsm:
             arr = edata.obsm[use_rep]
+        else:
+            raise ValueError(f"use_rep {use_rep} not found in edata.layers or edata.obsm")
 
         if arr.ndim != 3:
             raise ValueError(
                 f"If metric is {metric}, use_rep must be a 3D array with shape (n_obs, n_vars, n_timepoints), but {arr} is ndim={arr.ndim}."
             )
+
         metric = partial(timeseries_distance, arr=arr, metric=metric)  # type: ignore
+
+        # the metric will use arr, but we need to hide this fact from scanpy;
+        # this is a hack to do so. It tricks scanpy's checks for the use_rep shap, while the metric brings along its array       use_rep = None
+
+        use_rep = None
 
     return sc.pp.neighbors(
         adata=edata,

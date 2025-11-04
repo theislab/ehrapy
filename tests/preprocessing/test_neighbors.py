@@ -14,8 +14,7 @@ def test_neighbors_with_timeseries_metrics(edata_blobs_timeseries_small, metric)
     """Test neighbors computation with timeseries metrics."""
     edata = edata_blobs_timeseries_small
 
-    # TODO: what did this do before???
-    ep.pp.neighbors(edata, n_neighbors=5, metric=metric)
+    ep.pp.neighbors(edata, n_neighbors=5, metric=metric, use_rep=DEFAULT_TEM_LAYER_NAME)
 
     assert "neighbors" in edata.uns
     assert "distances" in edata.obsp
