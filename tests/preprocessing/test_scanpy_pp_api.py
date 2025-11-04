@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
 
 import ehrapy as ep
 
@@ -11,7 +12,7 @@ def test_pca(edata_blob_small):
 def test_pca_3D_edata(edata_blob_small):
     ep.pp.pca(edata_blob_small, layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.pca(edata_blob_small, layer="R_layer")
+        ep.pp.pca(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
 
 
 def test_regress_out(edata_blob_small):
@@ -21,7 +22,7 @@ def test_regress_out(edata_blob_small):
 def test_regress_out_3D_edata(edata_blob_small):
     ep.pp.regress_out(edata_blob_small, keys=["cluster"], layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.regress_out(edata_blob_small, layer="R_layer")
+        ep.pp.regress_out(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
 
 
 def test_subsample(edata_blob_small):
@@ -35,7 +36,7 @@ def test_combat(edata_blob_small):
 def test_combat_3D_edata(edata_blob_small):
     ep.pp.combat(edata_blob_small, key="cluster", layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.combat(edata_blob_small, key="cluster", layer="R_layer")
+        ep.pp.combat(edata_blob_small, key="cluster", layer=DEFAULT_TEM_LAYER_NAME)
 
 
 def test_neighbors(edata_blob_small):

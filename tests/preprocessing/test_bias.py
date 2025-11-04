@@ -2,7 +2,7 @@ import ehrdata as ed
 import numpy as np
 import pandas as pd
 import pytest
-from ehrdata.core.constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
+from ehrdata.core.constants import CATEGORICAL_TAG, DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY
 
 import ehrapy as ep
 
@@ -49,7 +49,7 @@ def test_detect_bias_all_sensitive_features(edata_small_bias):
 def test_explicit_impute_3D_edata(edata_blob_small):
     ep.pp.detect_bias(edata_blob_small, sensitive_features=["feature_1"], layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.detect_bias(edata_blob_small, sensitive_features=["feature_1"], layer="R_layer")
+        ep.pp.detect_bias(edata_blob_small, sensitive_features=["feature_1"], layer=DEFAULT_TEM_LAYER_NAME)
 
 
 def test_detect_bias_specified_sensitive_features(edata_small_bias):

@@ -1,4 +1,3 @@
-import os
 import platform
 import warnings
 from collections.abc import Iterable
@@ -9,6 +8,7 @@ import dask.array as da
 import numpy as np
 import pytest
 from anndata import AnnData
+from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
 from fast_array_utils.conv import to_dense
 from scipy import sparse
 from sklearn.exceptions import ConvergenceWarning
@@ -158,7 +158,7 @@ def test_mean_impute_no_copy(impute_num_edata):
 def test_simple_impute_3D_edata(edata_blob_small):
     simple_impute(edata_blob_small, layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        simple_impute(edata_blob_small, layer="R_layer")
+        simple_impute(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
 
 
 def test_mean_impute_copy(impute_num_edata):
@@ -236,7 +236,7 @@ def test_most_frequent_impute_subset(impute_edata):
 def test_knn_impute_3D_edata(edata_blob_small):
     knn_impute(edata_blob_small, layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        knn_impute(edata_blob_small, layer="R_layer")
+        knn_impute(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
 
 
 def test_knn_impute_check_backend(impute_num_edata):
@@ -277,7 +277,7 @@ def test_knn_impute_numerical_data(impute_num_edata):
 def test_missforest_impute_3D_edata(edata_blob_small):
     miss_forest_impute(edata_blob_small, layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        miss_forest_impute(edata_blob_small, layer="R_layer")
+        miss_forest_impute(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
 
 
 def test_missforest_impute_non_numerical_data(impute_edata):
@@ -319,10 +319,10 @@ def test_miceforest_array_types(impute_num_edata, array_type, expected_error):
 @pytest.mark.skipif(platform.system() == "Darwin", reason="miceforest Imputation not supported by MacOS.")
 def test_miceforest_impute_3D_edata(edata_blob_small):
     edata_blob_small.X[3:5, 4:6] = np.nan
-    edata_blob_small.layers["R_layer"][3:5, 4:6] = np.nan
+    edata_blob_small.layers[DEFAULT_TEM_LAYER_NAME][3:5, 4:6] = np.nan
     mice_forest_impute(edata_blob_small)
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        mice_forest_impute(edata_blob_small, layer="R_layer")
+        mice_forest_impute(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
 
 
 @pytest.mark.skipif(platform.system() == "Darwin", reason="miceforest Imputation not supported by MacOS.")
@@ -373,7 +373,7 @@ def test_explicit_impute_array_types(impute_num_edata, array_type, expected_erro
 def test_explicit_impute_3D_edata(edata_blob_small):
     explicit_impute(edata_blob_small, replacement=1011, layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        explicit_impute(edata_blob_small, replacement=1011, layer="R_layer")
+        explicit_impute(edata_blob_small, replacement=1011, layer=DEFAULT_TEM_LAYER_NAME)
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES)

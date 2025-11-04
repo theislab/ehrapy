@@ -2,7 +2,7 @@ import ehrdata as ed
 import numpy as np
 import pandas as pd
 import pytest
-from ehrdata.core.constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
+from ehrdata.core.constants import CATEGORICAL_TAG, DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY, NUMERIC_TAG
 
 from ehrapy.tools import rank_features_supervised
 
@@ -62,4 +62,4 @@ def test_multiclass_prediction():
 def test_continuous_prediction_3D_edata(edata_blob_small):
     rank_features_supervised(edata_blob_small, "feature_9", model="regression", layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        rank_features_supervised(edata_blob_small, "feature_9", model="regression", layer="R_layer")
+        rank_features_supervised(edata_blob_small, "feature_9", model="regression", layer=DEFAULT_TEM_LAYER_NAME)

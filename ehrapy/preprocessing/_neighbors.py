@@ -65,7 +65,7 @@ def neighbors(
                      In general values should be in the range 2 to 100. If `knn` is `True`, number of nearest neighbors to be searched.
                      If `knn` is `False`, a Gaussian kernel width is set to the distance of the `n_neighbors` neighbor.
         n_pcs: Use this many PCs. If `n_pcs==0` use `.X` if `use_rep is None`.
-        use_rep: Use the indicated representation. `'X'` or any key for `.obsm` is valid.
+        use_rep: Use the indicated representation. `'X'` or `.obsm` is valid.
                  If `None`, the representation is chosen automatically:
                  For `.n_vars` < 50, `.X` is used, otherwise 'X_pca' is used.
                  If 'X_pca' is not present, it's computed with default parameters.
@@ -102,10 +102,28 @@ def neighbors(
          **distances** : sparse matrix of dtype `float32`.
          Instead of decaying weights, this stores distances for each pair of neighbors.
     """
+    import ehrapy as ep
+
     if metric in {"dtw", "soft_dtw", "gak"}:
-        if edata.R is None:
-            raise ValueError(f"metric {metric} requires edata.R to be set.")
-        metric = partial(timeseries_distance, R=edata.R, metric=metric)  # type: ignore
+        # if use_rep is None:
+        #     raise ValueError(f"use_rep must be specified if metric is {metric}")
+        # else:
+        # hardcode for now:
+        if use_rep is None:
+            if edata.shape[1] < 50:
+                arr = edata.X
+            else:
+                if "X_pca" not in edata.obsm:
+                    ep.pp.pca(edata)
+                arr = edata.obsm["X_pca"]
+        else:
+            arr = edata.obsm[use_rep]
+
+        if arr.ndim != 3:
+            raise ValueError(
+                f"If metric is {metric}, use_rep must be a 3D array with shape (n_obs, n_vars, n_timepoints), but {arr} is ndim={arr.ndim}."
+            )
+        metric = partial(timeseries_distance, arr=arr, metric=metric)  # type: ignore
 
     return sc.pp.neighbors(
         adata=edata,

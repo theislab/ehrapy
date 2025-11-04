@@ -1,5 +1,6 @@
 import ehrdata as ed
 import pytest
+from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
 
 import ehrapy as ep
 
@@ -13,6 +14,7 @@ def test_neighbors_with_timeseries_metrics(edata_blobs_timeseries_small, metric)
     """Test neighbors computation with timeseries metrics."""
     edata = edata_blobs_timeseries_small
 
+    # TODO: what did this do before???
     ep.pp.neighbors(edata, n_neighbors=5, metric=metric)
 
     assert "neighbors" in edata.uns
