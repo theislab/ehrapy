@@ -6,8 +6,8 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
-
 import scanpy as sc
+
 from ehrapy._compat import use_ehrdata
 from ehrapy.tools.distances.timeseries import timeseries_distance
 
