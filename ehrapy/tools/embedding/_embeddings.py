@@ -356,34 +356,26 @@ def embedding_density(
 
 
 @singledispatch
-def famd(edata: EHRData | np.ndarray, *, n_components=2, n_iter=3) -> tuple[np.ndarray, np.ndarray, dict] | None:
+def famd(edata: EHRData | np.ndarray, *, n_components=2) -> tuple[np.ndarray, np.ndarray, dict] | None:
     """Calculates factors of mixed data.
 
     FAMD (Factor Analysis of Mixed Data) is a dimensionality reduction technique that for datasets containing both quantitative and qualitative variables.
     Roughly, FAMD works as a PCA for quantitative variables and as a multiple correspondence analysis (MCA) for qualitative variables.
     It maximizes the sum of squared correlations with quantitative variables and squared correlation ratios with qualitative variables, treating both types equally with each variable's contribution bounded by 1.
     The method produces factor scores for individuals, correlation circles for quantitative variables, and category centroids for qualitative variables.
+
+    Args:
+        edata: The EHRData object (n_obs × n_vars × n_timesteps) containing mixed data types.
+        n_components: Number of dimensions to retain in the reduced space. Must be less than min(n_obs, n_vars).
     """
-    # TODO add missing parameters n stuff
+    # TODO add key_added and copy
     _raise_array_type_not_implemented(famd, type(edata.R))
     return None
 
 
 @famd.register(EHRData)
-def _(edata: EHRData, /, *, n_components=3, n_iter=2):
-    factor_scores, loadings, metadata = famd(edata.R, n_components=n_components, n_iter=n_iter)
-
-    edata.obsm["X_famd"] = factor_scores
-    edata.varm["famd_loadings"] = loadings
-    edata.uns["famd"] = metadata
-
-
-@famd.register(EHRData)
-def _(edata: EHRData, /, *, n_components: int = 2, n_iter: int = 3) -> None:
-    if edata.R is None:
-        raise ValueError("R must be present for FAMD")
-
-    factor_scores, loadings, metadata = famd(edata.R, n_components=n_components, n_iter=n_iter)
+def _(edata: EHRData, /, *, n_components: int = 2) -> None:
+    factor_scores, loadings, metadata = famd(edata.R, n_components=n_components)
 
     edata.obsm["X_famd"] = factor_scores
     edata.uns["famd"] = metadata
@@ -391,7 +383,7 @@ def _(edata: EHRData, /, *, n_components: int = 2, n_iter: int = 3) -> None:
 
 
 @famd.register(np.ndarray)
-def _(arr: np.ndarray, /, *, n_components: int = 2, n_iter: int = 3) -> tuple[np.ndarray, np.ndarray, dict]:
+def _(arr: np.ndarray, /, *, n_components: int = 2) -> tuple[np.ndarray, np.ndarray, dict]:
     if arr.shape[2] != 1:
         raise ValueError(f"FAMD requires single timepoint, got {arr.shape[2]}")
 
