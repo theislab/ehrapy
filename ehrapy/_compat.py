@@ -205,9 +205,12 @@ def function_2D_only():
                 data = kwargs.get("edata")
 
             layer = kwargs.get("layer")
+            use_rep = kwargs.get("use_rep")
 
             if data is not None:
                 array = data.X if layer is None else data.layers[layer]
+                if use_rep is not None:
+                    array = data.obsm[use_rep]
 
                 if array.ndim != 2 and array.shape[2] != 1:
                     raise ValueError(
