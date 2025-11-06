@@ -177,6 +177,25 @@ def edata_mini_integers_in_X():
 
 
 @pytest.fixture
+def edata_and_distances_dtw():
+    """See tests/_scripts/dtw_test_reference.ipynb."""
+    data = np.random.default_rng(42).integers(0, 5, (5, 2, 4))
+    edata = ed.EHRData(X=None, R=data)
+
+    distances = np.array(
+        [
+            [0.0, 2.98118805, 2.44948974, 3.30277564, 2.34277886],
+            [2.98118805, 0.0, 3.43649167, 3.05492646, 3.28629768],
+            [2.44948974, 3.43649167, 0.0, 3.16227766, 3.31318964],
+            [3.30277564, 3.05492646, 3.16227766, 0.0, 4.35228539],
+            [2.34277886, 3.28629768, 3.31318964, 4.35228539, 0.0],
+        ]
+    )
+
+    return edata, distances
+
+
+@pytest.fixture
 def diabetes_130_fairlearn_sample():
     edata = ed.dt.diabetes_130_fairlearn(
         columns_obs_only=[

@@ -6,8 +6,8 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
-import scanpy as sc
 
+import scanpy as sc
 from ehrapy._compat import use_ehrdata
 from ehrapy.tools.distances.timeseries import timeseries_distance
 
@@ -107,7 +107,18 @@ def neighbors(
             raise ValueError(f"metric {metric} requires edata.R to be set.")
         metric = partial(timeseries_distance, R=edata.R, metric=metric)  # type: ignore
 
-    return sc.pp.neighbors(
+        # for longitudinal data, we pass a mock array np.arange with indices as use_rep
+        # to scanpy.pp.neighbors;
+        # it will call the metric with the indices as the first two arguments.
+        # scanpy thinks that timeseries_distance computes distance on use_rep, but
+        # actually timeseries_distance just takes the indices from use_rep and uses them
+        # to index edata.R.
+        if use_rep is not None:
+            raise ValueError(f"use_rep must be None when metric is {metric}")
+        edata.obsm["_indices_neighbors"] = np.arange(edata.X.shape[0])
+        use_rep = "_indices_neighbors"
+
+    edata_returned = sc.pp.neighbors(
         adata=edata,
         n_neighbors=n_neighbors,
         n_pcs=n_pcs,
@@ -121,3 +132,9 @@ def neighbors(
         key_added=key_added,
         copy=copy,
     )
+
+    if edata_returned is not None:
+        edata_returned.obsm.pop("_indices_neighbors", None)
+
+    edata.obsm.pop("_indices_neighbors", None)
+    return edata
