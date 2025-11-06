@@ -2,16 +2,17 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Literal
 
-import scanpy as sc
+import numpy as np
 from scipy.sparse import spmatrix  # noqa
 
+import scanpy as sc
 from ehrapy._compat import use_ehrdata
+from ehrapy.core._constants import TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY
 from ehrapy.tools import _method_options  # noqa
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
 
-    import numpy as np
     from anndata import AnnData
     from ehrdata import EHRData
     from leidenalg.VertexPartition import MutableVertexPartition
@@ -172,7 +173,14 @@ def umap(
     if key_to_check not in edata.uns:
         raise ValueError(f"Did not find .uns[{key_to_check!r}]. Please run `ep.pp.neighbors` first.")
 
-    return sc.tl.umap(
+    # for longitudinal data, we pass a mock array as use_rep
+    if (
+        "use_rep" in edata.uns[key_to_check]["params"]
+        and edata.uns[key_to_check]["params"]["use_rep"] == TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY
+    ):
+        edata.obsm[TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY] = np.zeros(edata.X.shape[0])
+
+    edata_returned = sc.tl.umap(
         adata=edata,
         min_dist=min_dist,
         spread=spread,
@@ -189,6 +197,11 @@ def umap(
         method=method,
         neighbors_key=neighbors_key,
     )
+
+    if edata_returned is not None:
+        edata_returned.obsm.pop(TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY, None)
+    edata.obsm.pop(TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY, None)
+    return edata_returned
 
 
 @use_ehrdata(deprecated_after="1.0.0")

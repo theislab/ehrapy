@@ -6,9 +6,10 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
-import scanpy as sc
 
+import scanpy as sc
 from ehrapy._compat import use_ehrdata
+from ehrapy.core._constants import TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY
 from ehrapy.tools.distances.timeseries import timeseries_distance
 
 if TYPE_CHECKING:
@@ -113,10 +114,10 @@ def neighbors(
         # but actually timeseries_distance just takes the indices from use_rep and uses them to index edata.R.
         if use_rep is not None:
             raise ValueError(f"use_rep must be None when metric is {metric}")
-        edata.obsm["indices_timeseries_neighbors"] = np.arange(edata.X.shape[0])
-        use_rep = "indices_timeseries_neighbors"
+        edata.obsm[TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY] = np.arange(edata.X.shape[0])
+        use_rep = TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY
 
-    return sc.pp.neighbors(
+    edata_returned = sc.pp.neighbors(
         adata=edata,
         n_neighbors=n_neighbors,
         n_pcs=n_pcs,
@@ -130,3 +131,8 @@ def neighbors(
         key_added=key_added,
         copy=copy,
     )
+    if edata_returned is not None:
+        edata_returned.obsm.pop(TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY, None)
+
+    edata.obsm.pop(TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY, None)
+    return edata_returned
