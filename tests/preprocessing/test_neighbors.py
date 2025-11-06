@@ -21,7 +21,6 @@ def test_neighbors_with_timeseries_metrics(edata_and_distances_dtw, metric):
     assert "connectivities" in edata.obsp
     assert edata.obsp["distances"].shape == (5, 5)
     assert edata.obsp["connectivities"].shape == (5, 5)
-    assert "_indices_neighbors" not in edata.obsm
 
 
 def test_neighbors_with_timeseries_metric_dtw_tight_test(edata_and_distances_dtw):
@@ -29,7 +28,6 @@ def test_neighbors_with_timeseries_metric_dtw_tight_test(edata_and_distances_dtw
     ep.pp.neighbors(edata, n_neighbors=5, metric="dtw")
 
     assert np.allclose(edata.obsp["distances"].toarray(), distances)
-    assert "_indices_neighbors" not in edata.obsm
 
 
 # def test_neighbors_with_timeseric

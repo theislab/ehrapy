@@ -115,10 +115,10 @@ def neighbors(
         # to index edata.R.
         if use_rep is not None:
             raise ValueError(f"use_rep must be None when metric is {metric}")
-        edata.obsm["_indices_neighbors"] = np.arange(edata.X.shape[0])
-        use_rep = "_indices_neighbors"
+        edata.obsm["indices_timeseries_neighbors"] = np.arange(edata.X.shape[0])
+        use_rep = "indices_timeseries_neighbors"
 
-    edata_returned = sc.pp.neighbors(
+    return sc.pp.neighbors(
         adata=edata,
         n_neighbors=n_neighbors,
         n_pcs=n_pcs,
@@ -132,9 +132,3 @@ def neighbors(
         key_added=key_added,
         copy=copy,
     )
-
-    if edata_returned is not None:
-        edata_returned.obsm.pop("_indices_neighbors", None)
-
-    edata.obsm.pop("_indices_neighbors", None)
-    return edata
