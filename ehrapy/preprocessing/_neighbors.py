@@ -107,12 +107,10 @@ def neighbors(
             raise ValueError(f"metric {metric} requires edata.R to be set.")
         metric = partial(timeseries_distance, R=edata.R, metric=metric)  # type: ignore
 
-        # for longitudinal data, we pass a mock array np.arange with indices as use_rep
-        # to scanpy.pp.neighbors;
-        # it will call the metric with the indices as the first two arguments.
-        # scanpy thinks that timeseries_distance computes distance on use_rep, but
-        # actually timeseries_distance just takes the indices from use_rep and uses them
-        # to index edata.R.
+        # For longitudinal data, we pass a mock array `np.arange` with indices as `use_rep` to `scanpy.pp.neighbors`.
+        # It will call the metric with the indices as the first two arguments.
+        # Scanpy thinks that timeseries_distance computes distance on use_rep,
+        # but actually timeseries_distance just takes the indices from use_rep and uses them to index edata.R.
         if use_rep is not None:
             raise ValueError(f"use_rep must be None when metric is {metric}")
         edata.obsm["indices_timeseries_neighbors"] = np.arange(edata.X.shape[0])
