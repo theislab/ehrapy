@@ -3,9 +3,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
+import scanpy as sc
 from scipy.sparse import spmatrix  # noqa
 
-import scanpy as sc
 from ehrapy._compat import use_ehrdata
 from ehrapy.core._constants import TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY
 from ehrapy.tools import _method_options  # noqa
