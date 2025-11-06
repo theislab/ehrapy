@@ -9,6 +9,7 @@ import numpy as np
 import scanpy as sc
 
 from ehrapy._compat import use_ehrdata
+from ehrapy.core._constants import TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY
 from ehrapy.tools.distances.timeseries import timeseries_distance
 
 if TYPE_CHECKING:
@@ -126,7 +127,16 @@ def neighbors(
 
         use_rep = None
 
-    return sc.pp.neighbors(
+        # For longitudinal data, we pass a mock array `np.arange` with indices as `use_rep` to `scanpy.pp.neighbors`.
+        # It will call the metric with the indices as the first two arguments.
+        # Scanpy thinks that timeseries_distance computes distance on use_rep,
+        # but actually timeseries_distance just takes the indices from use_rep and uses them to index edata.R.
+        if use_rep is not None:
+            raise ValueError(f"use_rep must be None when metric is {metric}")
+        edata.obsm[TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY] = np.arange(edata.X.shape[0])
+        use_rep = TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY
+
+    edata_returned = sc.pp.neighbors(
         adata=edata,
         n_neighbors=n_neighbors,
         n_pcs=n_pcs,
@@ -140,3 +150,8 @@ def neighbors(
         key_added=key_added,
         copy=copy,
     )
+    if edata_returned is not None:
+        edata_returned.obsm.pop(TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY, None)
+
+    edata.obsm.pop(TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY, None)
+    return edata_returned

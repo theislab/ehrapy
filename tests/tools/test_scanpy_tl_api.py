@@ -9,12 +9,30 @@ def test_umap(edata_blob_small):
     ep.tl.umap(edata_blob_small)
 
 
+def test_umap_with_timeseries_metric_dtw(edata_and_distances_dtw):
+    edata, _ = edata_and_distances_dtw
+    ep.pp.neighbors(edata, n_neighbors=4, metric="dtw")
+    ep.tl.umap(edata)
+
+
 def test_draw_graph(edata_blob_small):
     ep.tl.draw_graph(edata_blob_small)
 
 
+def test_draw_graph_with_timeseries_metric_dtw(edata_and_distances_dtw):
+    edata, _ = edata_and_distances_dtw
+    ep.pp.neighbors(edata, n_neighbors=4, metric="dtw")
+    ep.tl.draw_graph(edata)
+
+
 def test_diffmap(edata_blob_small):
     ep.tl.diffmap(edata_blob_small)
+
+
+def test_diffmap_with_timeseries_metric_dtw(edata_and_distances_dtw):
+    edata, _ = edata_and_distances_dtw
+    ep.pp.neighbors(edata, n_neighbors=4, metric="dtw")
+    ep.tl.diffmap(edata)
 
 
 def test_embedding_density(edata_blob_small):
@@ -24,6 +42,12 @@ def test_embedding_density(edata_blob_small):
 
 def test_leiden(edata_blob_small):
     ep.tl.leiden(edata_blob_small)
+
+
+def test_leiden_with_timeseries_metric_dtw(edata_and_distances_dtw):
+    edata, _ = edata_and_distances_dtw
+    ep.pp.neighbors(edata, n_neighbors=4, metric="dtw")
+    ep.tl.leiden(edata)
 
 
 def test_dendrogram(edata_blob_small):
@@ -38,6 +62,13 @@ def test_paga(edata_blob_small):
     # ep.pp.neighbors(adata)
     ep.tl.leiden(edata_blob_small, resolution=2)
     ep.tl.paga(edata_blob_small)
+
+
+def test_paga_with_timeseries_metric_dtw(edata_and_distances_dtw):
+    edata, _ = edata_and_distances_dtw
+    ep.pp.neighbors(edata, n_neighbors=4, metric="dtw")
+    ep.tl.leiden(edata, resolution=2)
+    ep.tl.paga(edata)
 
 
 def test_ingest(edata_blob_small):
