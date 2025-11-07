@@ -28,14 +28,16 @@ jobs:
               with:
                   submodules: "true"
 
-            - name: Install uv
-              uses: astral-sh/setup-uv@v6
+            - name: Set up Python
+              uses: actions/setup-python@v6
               with:
-                python-version: ${{ matrix.env.python }}
-                cache-dependency-glob: pyproject.toml
+                  python-version: "3.13"
+
+            - name: Install UV
+              run: pip install uv
 
             - name: Install ehrapy and additional dependencies
-              run: uv pip install . cellrank nbconvert ipykernel graphviz
+              run: uv pip install --system . cellrank nbconvert ipykernel graphviz
 
             - name: Run ${{ matrix.notebook }} Notebook
               run: jupyter nbconvert --to notebook --execute ${{ matrix.notebook }}
