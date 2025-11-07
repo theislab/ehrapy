@@ -2,10 +2,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Literal
 
+import numpy as np
 import scanpy as sc
 from scipy.sparse import spmatrix  # noqa
 
 from ehrapy._compat import use_ehrdata
+from ehrapy.core._constants import TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence

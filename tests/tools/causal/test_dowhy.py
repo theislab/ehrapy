@@ -7,6 +7,7 @@ import dowhy.datasets
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
+from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
 
 import ehrapy as ep
 
@@ -24,7 +25,7 @@ class TestCausal:
         )
         X = linear_data["df"].astype(np.float32)
         R_layer = np.stack([X, X], axis=2)
-        self.linear_data = anndata.AnnData(X, layers={"R_layer": R_layer})
+        self.linear_data = anndata.AnnData(X, layers={DEFAULT_TEM_LAYER_NAME: R_layer})
         self.linear_graph = linear_data["gml_graph"]
         self.outcome_name = "y"
         self.treatment_name = "v0"
@@ -66,7 +67,7 @@ class TestCausal:
                 treatment=self.treatment_name,
                 outcome=self.outcome_name,
                 estimation_method="backdoor.linear_regression",
-                layer="R_layer",
+                layer=DEFAULT_TEM_LAYER_NAME,
             )
 
     def test_plot_causal_effect(self):
