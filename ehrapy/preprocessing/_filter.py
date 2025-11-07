@@ -10,6 +10,7 @@ from lamin_utils import logger
 from scipy import sparse
 
 from ehrapy._compat import DaskArray, _raise_array_type_not_implemented, use_ehrdata
+from ehrapy.core._constants import MISSING_VALUE_COUNT_KEY_2D, MISSING_VALUE_COUNT_KEY_3D
 
 if TYPE_CHECKING:
     from anndata import AnnData
@@ -98,7 +99,7 @@ def filter_features(
         raise ValueError("prop must be set to a value between 0 and 1 when time_mode is 'proportion'")
 
     arr = edata.X if layer is None else edata.layers[layer]
-    is_2d = arr.ndim == 3 and arr.shape[2] > 1
+    is_3d = arr.ndim == 3 and arr.shape[2] > 1
 
     features_passing_filtering_mask, nonmissing_counts_per_feature = _compute_mask(
         arr, axis=0, min_count=min_obs, max_count=max_obs, time_mode=time_mode, prop=prop, caller=filter_features
@@ -112,14 +113,14 @@ def filter_features(
         if max_obs is not None:
             msg += f"more than {max_obs} counts"
 
-        if not is_2d:
+        if is_3d:
             if time_mode == "proportion":
                 msg += f" in less than {prop * 100:.1f}% of time points"
             else:
                 msg += f" in {time_mode} time points"
         logger.info(msg)
 
-    label = "n_observations_of_feature" if is_2d else "n_obs_over_time"
+    label = MISSING_VALUE_COUNT_KEY_2D if not is_3d else MISSING_VALUE_COUNT_KEY_3D
     data.var[label] = nonmissing_counts_per_feature.astype(np.float64)
     data._inplace_subset_var(features_passing_filtering_mask)
 
@@ -186,7 +187,7 @@ def filter_observations(
 
     arr = edata.X if layer is None else edata.layers[layer]
 
-    is_2d = arr.ndim == 3 and arr.shape[2] > 1
+    is_3d = arr.ndim == 3 and arr.shape[2] > 1
 
     observations_passing_filtering_mask, nonmissing_counts_per_observation = _compute_mask(
         arr, axis=1, min_count=min_vars, max_count=max_vars, time_mode=time_mode, prop=prop, caller=filter_observations
@@ -200,7 +201,7 @@ def filter_observations(
         else:
             msg += f"more than {max_vars} " + "features"
 
-        if not is_2d:
+        if is_3d:
             if time_mode == "proportion":
                 msg += f" in < {prop * 100:.1f}% of time points"
             else:
@@ -208,7 +209,7 @@ def filter_observations(
 
         logger.info(msg)
 
-    label = "n_observations" if is_2d else "n_observations_over_time"
+    label = MISSING_VALUE_COUNT_KEY_2D if not is_3d else MISSING_VALUE_COUNT_KEY_3D
     data.obs[label] = nonmissing_counts_per_observation.astype(np.float64)
     data._inplace_subset_obs(observations_passing_filtering_mask)
 

@@ -5,6 +5,7 @@ import pytest
 from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
 
 import ehrapy as ep
+from ehrapy.core._constants import MISSING_VALUE_COUNT_KEY_2D, MISSING_VALUE_COUNT_KEY_3D
 
 CURRENT_DIR = Path(__file__).parent
 
@@ -46,9 +47,10 @@ def test_filter_features_min_max(request, fixture, layer, kwargs):
 
     if layer == "X":
         ep.pp.filter_features(edata, time_mode="all", copy=False, **kwargs)
+        assert MISSING_VALUE_COUNT_KEY_2D in edata.var.keys()
     else:
         ep.pp.filter_features(edata, layer=layer, time_mode="all", copy=False, **kwargs)
-
+        assert MISSING_VALUE_COUNT_KEY_3D in edata.var.keys()
     arr_after = edata.X if layer == "X" else edata.layers[layer]
     n_vars_after = arr_after.shape[1]
 
@@ -99,7 +101,12 @@ def test_filter_obs_min_max(request, fixture, layer, kwargs):
     layer_before = edata.X if layer == "X" else edata.layers[layer]
     n_obs_before = layer_before.shape[0]
 
-    ep.pp.filter_observations(edata, time_mode="all", copy=False, **kwargs)
+    if layer == "X":
+        ep.pp.filter_observations(edata, time_mode="all", copy=False, **kwargs)
+        assert MISSING_VALUE_COUNT_KEY_2D in edata.obs.keys()
+    else:
+        ep.pp.filter_observations(edata, layer=layer, time_mode="all", copy=False, **kwargs)
+        assert MISSING_VALUE_COUNT_KEY_3D in edata.obs.keys()
 
     layer_after = edata.X if layer == "X" else edata.layers[layer]
     n_obs_after = layer_after.shape[0]
