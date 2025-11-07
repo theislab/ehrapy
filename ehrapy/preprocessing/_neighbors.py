@@ -66,7 +66,7 @@ def neighbors(
                      In general values should be in the range 2 to 100. If `knn` is `True`, number of nearest neighbors to be searched.
                      If `knn` is `False`, a Gaussian kernel width is set to the distance of the `n_neighbors` neighbor.
         n_pcs: Use this many PCs. If `n_pcs==0` use `.X` if `use_rep is None`.
-        use_rep: Use the indicated representation. `'X'` or `.obsm` is valid.
+        use_rep: Use the indicated representation. `'X'` or any key for `.obsm` is valid. For time series data (`metric='dtw'`, `'soft_dtw'`, `'gak'`), the key must be a 3D array with shape (n_obs, n_vars, n_timepoints).
                  If `None`, the representation is chosen automatically:
                  For `.n_vars` < 50, `.X` is used, otherwise 'X_pca' is used.
                  If 'X_pca' is not present, it's computed with default parameters.
