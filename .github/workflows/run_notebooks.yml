@@ -24,17 +24,15 @@ jobs:
                         # "docs/tutorials/notebooks/mimic_2_causal_inference.ipynb",
                     ]
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v5
               with:
                   submodules: "true"
 
-            - name: Set up Python
-              uses: actions/setup-python@v6
+            - name: Install uv
+              uses: astral-sh/setup-uv@v6
               with:
-                  python-version: "3.13"
-
-            - name: Install UV
-              run: pip install uv
+                python-version: ${{ matrix.env.python }}
+                cache-dependency-glob: pyproject.toml
 
             - name: Install ehrapy and additional dependencies
               run: uv pip install --system . cellrank nbconvert ipykernel graphviz
