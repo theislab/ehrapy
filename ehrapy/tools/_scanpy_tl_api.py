@@ -178,7 +178,7 @@ def umap(
         "use_rep" in edata.uns[key_to_check]["params"]
         and edata.uns[key_to_check]["params"]["use_rep"] == TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY
     ):
-        edata.obsm[TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY] = np.zeros(edata.X.shape[0])
+        edata.obsm[TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY] = np.zeros(edata.shape[0])
 
     edata_returned = sc.tl.umap(
         adata=edata,
