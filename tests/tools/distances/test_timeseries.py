@@ -3,6 +3,7 @@ from functools import partial
 import ehrdata as ed
 import numpy as np
 import pytest
+from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
 
 from ehrapy.tools.distances.timeseries import timeseries_distance
 
@@ -64,8 +65,9 @@ def test_patient_timeseries_distance_with_ehrdata(metric):
         seasonality=True,
         time_shifts=True,
         variable_length=False,
+        layer=DEFAULT_TEM_LAYER_NAME,
     )
-    ts_metric = partial(timeseries_distance, R=edata.R, metric=metric)
+    ts_metric = partial(timeseries_distance, arr=edata.layers[DEFAULT_TEM_LAYER_NAME], metric=metric)
 
     patient_0 = np.array([0])
     distance_same = ts_metric(patient_0, patient_0)
