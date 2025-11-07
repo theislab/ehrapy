@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from anndata import AnnData
-from ehrdata.core.constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
+from ehrdata.core.constants import CATEGORICAL_TAG, DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrdata.io import read_csv
 from matplotlib.testing.compare import compare_images
 
@@ -180,7 +180,7 @@ def edata_mini_integers_in_X():
 def edata_and_distances_dtw():
     """See tests/_scripts/dtw_test_reference.ipynb."""
     data = np.random.default_rng(42).integers(0, 5, (5, 2, 4))
-    edata = ed.EHRData(X=None, R=data)
+    edata = ed.EHRData(X=None, layers={DEFAULT_TEM_LAYER_NAME: data})
 
     distances = np.array(
         [

@@ -130,10 +130,10 @@ def neighbors(
         # For longitudinal data, we pass a mock array `np.arange` with indices as `use_rep` to `scanpy.pp.neighbors`.
         # It will call the metric with the indices as the first two arguments.
         # Scanpy thinks that timeseries_distance computes distance on use_rep,
-        # but actually timeseries_distance just takes the indices from use_rep and uses them to index edata.R.
+        # but actually timeseries_distance just takes the indices from use_rep and uses them to index the timeseries data along the obs axis.
         if use_rep is not None:
             raise ValueError(f"use_rep must be None when metric is {metric}")
-        edata.obsm[TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY] = np.arange(edata.X.shape[0])
+        edata.obsm[TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY] = np.arange(edata.shape[0])
         use_rep = TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY
 
     edata_returned = sc.pp.neighbors(
