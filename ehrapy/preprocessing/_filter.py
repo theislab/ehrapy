@@ -5,8 +5,8 @@ from functools import singledispatch
 from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
+from ehrdata._logger import logger
 from ehrdata.core.constants import MISSING_VALUES
-from lamin_utils import logger
 from scipy import sparse
 
 from ehrapy._compat import DaskArray, _raise_array_type_not_implemented, use_ehrdata

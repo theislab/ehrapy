@@ -2,15 +2,14 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from itertools import chain
-from typing import TYPE_CHECKING, Any
 
 import ehrdata as ed
 import numpy as np
 import pandas as pd
 from anndata import AnnData
 from ehrdata import EHRData
+from ehrdata._logger import logger
 from ehrdata.core.constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
-from lamin_utils import logger
 from rich.progress import BarColumn, Progress
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
@@ -36,8 +35,8 @@ def encode(
     Categorical values could be either passed via parameters or are autodetected on the fly.
     The categorical values are also stored in obs and uns (for keeping the original, unencoded values).
     The current encoding modes for each variable are also stored in edata.var['encoding_mode'].
-    Variable names in var are updated according to the encoding modes used. A variable name starting with `ehrapycat_`
-    indicates an encoded column (or part of it).
+    Variable names in var are updated according to the encoding modes used.
+    A variable name starting with `ehrapycat_` indicates an encoded column (or part of it).
 
     Autodetect mode:
         By using this mode, every column that contains non-numerical values is encoded.
@@ -57,7 +56,7 @@ def encode(
         layer: The layer to encode.
 
     Returns:
-        A data object with the encoded values in `.X` if `layer` is `None`, otherwise a data object with the encoded values in a layer named as the `layer` parameter.
+        A data object with the encoded values in `.X` if `layer` is `None`, otherwise a data object with the encoded values in `layer`.
 
     Examples:
         >>> import ehrdata as ed
