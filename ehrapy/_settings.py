@@ -5,7 +5,7 @@ from pathlib import Path
 from time import time
 from typing import TYPE_CHECKING, Any, Literal
 
-from lamin_utils._logger import logger
+from ehrdata._logger import logger
 from matplotlib import pyplot as plt
 from scanpy.plotting import set_rcParams_scanpy
 

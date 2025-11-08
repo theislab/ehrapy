@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, Literal
 
 import ehrdata as ed
 import numpy as np
-from lamin_utils import logger
+from ehrdata._logger import logger
 
 from ehrapy._compat import function_2D_only, use_ehrdata
 

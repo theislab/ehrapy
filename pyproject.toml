@@ -46,7 +46,6 @@ classifiers = [
 
 dependencies = [
     "ehrdata",
-    "lamin_utils",
     "scanpy",
     "requests",
     "miceforest",
