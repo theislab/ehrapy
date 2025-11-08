@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import pandas as pd
+from ehrdata._logger import logger
 from ehrdata.core.constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
-from lamin_utils import logger
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.model_selection import train_test_split
@@ -45,19 +45,22 @@ def rank_features_supervised(
     Args:
         edata: Central data object.
         predicted_feature: The feature to predict by the model. Must be present in edata.var_names.
-        model: The model to use for prediction. Choose between 'regression', 'svm', or 'rf'. Note that multi-class classification
-            is only possible with 'rf'.
-        input_features: The features in edata.var to use for prediction. Should be a list of feature names. If 'all', all features
-            in edata.var will be used. Note that non-numeric input features will cause an error, so make sure to encode them properly
-            before.
+        model: The model to use for prediction.
+            Choose between 'regression', 'svm', or 'rf'.
+            Multi-class classification is only possible with 'rf'.
+        input_features: The features in edata.var to use for prediction.
+            Should be a list of feature names.
+            If 'all', all features in edata.var will be used.
+            Non-numeric input features will error.
         layer: The layer in edata.layers to use for prediction. If None, edata.X will be used.
         test_split_size: The split of data used for testing the model. Should be a float between 0 and 1, representing the proportion.
         key_added: The key in edata.var to store the feature importances.
-        feature_scaling: The type of feature scaling to use for the input. Choose between 'standard', 'minmax', or None.
-            'standard' uses sklearn's StandardScaler, 'minmax' uses MinMaxScaler. Scaler will be fit and transformed
-            for each feature individually.
-        percent_output: Set to True to output the feature importances as percentages. Note that information about positive or negative
-            coefficients for regression models will be lost.
+        feature_scaling: The type of feature scaling to use for the input.
+            Choose between 'standard', 'minmax', or None.
+            'standard' uses sklearn's StandardScaler, 'minmax' uses MinMaxScaler.
+            Scaler will be fit and transformed for each feature individually.
+        percent_output: Set to True to output the feature importances as percentages.
+            Note that information about positive or negative coefficients for regression models will be lost.
         verbose: Set to False to disable logging.
         return_score: Set to True to return the R2 score / the accuracy of the model.
         **kwargs: Additional keyword arguments to pass to the model. See the documentation of the respective model in scikit-learn for details.

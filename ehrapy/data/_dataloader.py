@@ -11,8 +11,8 @@ from typing import Literal
 from zipfile import ZipFile
 
 import requests
+from ehrdata._logger import logger
 from filelock import FileLock
-from lamin_utils import logger
 from requests.exceptions import RequestException
 from rich import print
 from rich.progress import Progress
