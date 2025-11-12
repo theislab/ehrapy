@@ -2,16 +2,17 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Literal
 
+import numpy as np
 import scanpy as sc
 from scipy.sparse import spmatrix  # noqa
 
 from ehrapy._compat import use_ehrdata
+from ehrapy.core._constants import TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY
 from ehrapy.tools import _method_options  # noqa
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
 
-    import numpy as np
     from anndata import AnnData
     from ehrdata import EHRData
     from leidenalg.VertexPartition import MutableVertexPartition
@@ -172,7 +173,14 @@ def umap(
     if key_to_check not in edata.uns:
         raise ValueError(f"Did not find .uns[{key_to_check!r}]. Please run `ep.pp.neighbors` first.")
 
-    return sc.tl.umap(
+    # for longitudinal data, we pass a mock array as use_rep
+    if (
+        "use_rep" in edata.uns[key_to_check]["params"]
+        and edata.uns[key_to_check]["params"]["use_rep"] == TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY
+    ):
+        edata.obsm[TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY] = np.zeros(edata.shape[0])
+
+    edata_returned = sc.tl.umap(
         adata=edata,
         min_dist=min_dist,
         spread=spread,
@@ -189,6 +197,11 @@ def umap(
         method=method,
         neighbors_key=neighbors_key,
     )
+
+    if edata_returned is not None:
+        edata_returned.obsm.pop(TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY, None)
+    edata.obsm.pop(TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY, None)
+    return edata_returned
 
 
 @use_ehrdata(deprecated_after="1.0.0")
@@ -604,17 +617,15 @@ def paga(
 ) -> EHRData | AnnData | None:  # pragma: no cover
     """Mapping out the coarse-grained connectivity structures of complex manifolds :cite:p:`Wolf2019`.
 
-    By quantifying the connectivity of partitions (groups, clusters),
-    partition-based graph abstraction (PAGA) generates a much
+    By quantifying the connectivity of partitions (groups, clusters), partition-based graph abstraction (PAGA) generates a much
     simpler abstracted graph (*PAGA graph*) of partitions, in which edge weights
     represent confidence in the presence of connections. By tresholding this
     confidence in :func:`~ehrapy.plot.paga`, a much simpler representation of the
     manifold data is obtained, which is nonetheless faithful to the topology of the manifold.
     The confidence should be interpreted as the ratio of the actual versus the
-    expected value of connections under the null model of randomly connecting
-    partitions. We do not provide a p-value as this null model does not
-    precisely capture what one would consider "connected" in real data, hence it
-    strongly overestimates the expected value. See an extensive discussion of this in :cite:p:`Wolf2019`.
+    expected value of connections under the null model of randomly connecting partitions.
+    We do not provide a p-value as this null model does not precisely capture what one would consider "connected" in real data, hence it strongly overestimates the expected value.
+    See an extensive discussion of this in :cite:p:`Wolf2019`.
 
     .. note::
         Note that you can use the result of :func:`~ehrapy.plot.paga` in
@@ -675,11 +686,9 @@ def ingest(
     The function uses a knn classifier for mapping labels and the UMAP package :cite:p:`McInnes2018` for mapping the embeddings.
 
     .. note::
-        We refer to this *asymmetric* dataset integration as *ingesting*
-        annotations from reference data to new data. This is different from
-        learning a joint representation that integrates both datasets in an
-        unbiased way, as CCA (e.g. in Seurat) or a conditional VAE (e.g. in
-        scVI) would do.
+        We refer to this *asymmetric* dataset integration as *ingesting* annotations from reference data to new data.
+        This is different from learning a joint representation that integrates both datasets in an
+        unbiased way, as CCA (e.g. in Seurat) or a conditional VAE (e.g. in scVI) would do.
 
     You need to run :func:`~ehrapy.preprocessing.neighbors` on `edata_ref` before passing it.
 

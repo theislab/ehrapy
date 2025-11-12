@@ -24,7 +24,7 @@ jobs:
                         # "docs/tutorials/notebooks/mimic_2_causal_inference.ipynb",
                     ]
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v5
               with:
                   submodules: "true"
 

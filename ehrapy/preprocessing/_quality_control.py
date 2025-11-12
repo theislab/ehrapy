@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import pandas as pd
-from lamin_utils import logger
+from ehrdata._logger import logger
 from thefuzz import process
 
 from ehrapy._compat import DaskArray, _raise_array_type_not_implemented, function_2D_only, use_ehrdata

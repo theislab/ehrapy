@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 import statsmodels
+from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
 from lifelines import (
     CoxPHFitter,
     KaplanMeierFitter,
@@ -35,7 +36,7 @@ def test_ols_3D(edata_blob_small):
     var_names = ["feature_1", "feature_2"]
     ep.tl.ols(edata_blob_small, var_names, formula=formula, missing="drop", layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.tl.ols(edata_blob_small, var_names, formula=formula, missing="drop", layer="R_layer")
+        ep.tl.ols(edata_blob_small, var_names, formula=formula, missing="drop", layer=DEFAULT_TEM_LAYER_NAME)
 
 
 @pytest.mark.parametrize("layer", [None, "layer_2"])
@@ -63,7 +64,7 @@ def test_glm_3D(edata_blob_small):
     var_names = ["feature_1", "feature_2"]
     ep.tl.glm(edata_blob_small, var_names, formula=formula, missing="drop", layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.tl.glm(edata_blob_small, var_names, formula=formula, missing="drop", layer="R_layer")
+        ep.tl.glm(edata_blob_small, var_names, formula=formula, missing="drop", layer=DEFAULT_TEM_LAYER_NAME)
 
 
 @pytest.mark.parametrize(
@@ -164,7 +165,7 @@ def test_survival_models_3D(sa_function, sa_class, edata_blob_small):
 
     sa_function(edata_blob_small, duration_col=duration_col, event_col=event_col, layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        sa_function(edata_blob_small, duration_col=duration_col, event_col=event_col, layer="R_layer")
+        sa_function(edata_blob_small, duration_col=duration_col, event_col=event_col, layer=DEFAULT_TEM_LAYER_NAME)
 
 
 def test_kmf(mimic_2_sa):
