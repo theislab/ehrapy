@@ -142,7 +142,11 @@ def mcar_edata(rng) -> ed.EHRData:
     missing_indices = rng.choice(a=[False, True], size=data.shape, p=[1 - 0.1, 0.1])
     data[missing_indices] = np.nan
 
-    return ed.EHRData(data)
+    data_3d = rng.random((100, 10, 3))
+    missing_indices = rng.choice(a=[False, True], size=data_3d.shape, p=[1 - 0.1, 0.1])
+    data_3d[missing_indices] = np.nan
+
+    return ed.EHRData(data, layers={DEFAULT_TEM_LAYER_NAME: data_3d})
 
 
 @pytest.fixture

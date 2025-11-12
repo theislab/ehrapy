@@ -165,6 +165,31 @@ def use_ehrdata(
     return decorator
 
 
+def _support_3d(f: Callable) -> Callable:
+    """Decorator to allow functions to handle both 2D and 3D arrays.
+
+    - If the input is 2D: pass it through unchanged.
+    - If the input is 3D: reshape to 2D before calling the function,
+      then reshape the result back to 3D.
+    """
+
+    @wraps(f)
+    def wrapper(arr, *args, **kwargs):
+        if arr.ndim == 2:
+            return f(arr, *args, **kwargs)
+
+        elif arr.ndim == 3:
+            n_obs, n_vars, n_time = arr.shape
+            arr_2d = arr.transpose(0, 2, 1).reshape(-1, n_vars)
+            arr_modified_2d = f(arr_2d, *args, **kwargs)
+            return arr_modified_2d.reshape(n_obs, n_time, n_vars).transpose(0, 2, 1)
+
+        else:
+            raise ValueError(f"Unsupported array dimensionality: {arr.ndim}")
+
+    return wrapper
+
+
 def _cast_adata_to_match_data_type(input_data: AnnData, target_type_reference: EHRData | AnnData) -> EHRData | AnnData:
     """Cast the data object to the type used by the function."""
     if isinstance(input_data, type(target_type_reference)):
