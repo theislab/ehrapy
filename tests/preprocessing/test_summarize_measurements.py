@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 from anndata import AnnData
+from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
 from pandas import DataFrame
 
 from ehrapy.preprocessing import summarize_measurements
@@ -54,4 +55,4 @@ def test_statistics_subset(adata_to_expand):
 def test_summarize_measurements_3D_edata(edata_blob_small):
     summarize_measurements(edata_blob_small, layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        summarize_measurements(edata_blob_small, layer="R_layer")
+        summarize_measurements(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)

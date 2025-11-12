@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
 
 import ehrapy as ep
 
@@ -26,7 +27,7 @@ def test_winsorized_obs(mimic_2_10):
 def test_winsorize_3D_edata(edata_blob_small):
     ep.pp.winsorize(edata_blob_small, layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.winsorize(edata_blob_small, layer="R_layer")
+        ep.pp.winsorize(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
 
 
 def test_clip_var(mimic_2_10):
@@ -47,4 +48,4 @@ def test_clip_obs(mimic_2_10):
 def test_clip_3D_edata(edata_blob_small):
     ep.pp.clip_quantile(edata_blob_small, limits=(0, 1), layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.clip_quantile(edata_blob_small, limits=(0, 1), layer="R_layer")
+        ep.pp.clip_quantile(edata_blob_small, limits=(0, 1), layer=DEFAULT_TEM_LAYER_NAME)

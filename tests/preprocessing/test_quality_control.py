@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
-from anndata import AnnData
+from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
 
 import ehrapy as ep
 from ehrapy.io._read import read_csv
@@ -142,7 +142,7 @@ def test_calculate_qc_metrics(missing_values_edata):
 def test_encode_3D_edata(edata_blob_small):
     ep.pp.qc_metrics(edata_blob_small, layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.qc_metrics(edata_blob_small, layer="R_layer")
+        ep.pp.qc_metrics(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
 
 
 def test_qc_lab_measurements_simple(lab_measurements_simple_edata):
@@ -203,7 +203,9 @@ def test_qc_lab_measurements_simple_layer(lab_measurements_layer_edata):
 def test_qc_lab_measurements_3D_edata(edata_blob_small):
     ep.pp.qc_lab_measurements(edata_blob_small, measurements=list(edata_blob_small.var_names), layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.qc_lab_measurements(edata_blob_small, measurements=list(edata_blob_small.var_names), layer="R_layer")
+        ep.pp.qc_lab_measurements(
+            edata_blob_small, measurements=list(edata_blob_small.var_names), layer=DEFAULT_TEM_LAYER_NAME
+        )
 
 
 def test_qc_lab_measurements_age():
@@ -247,7 +249,7 @@ def test_mcar_test_method_output_types(mar_edata, method, expected_output_type):
 def test_mcar_test_3D_edata(edata_blob_small):
     mcar_test(edata_blob_small, layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        mcar_test(edata_blob_small, layer="R_layer")
+        mcar_test(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
 
 
 def test_mar_data_identification(mar_edata):

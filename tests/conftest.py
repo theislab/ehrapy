@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from anndata import AnnData
-from ehrdata.core.constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
+from ehrdata.core.constants import CATEGORICAL_TAG, DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrdata.io import read_csv
 from matplotlib.testing.compare import compare_images
 
@@ -174,6 +174,25 @@ def edata_mini_integers_in_X():
     ep.ad.infer_feature_types(adata)
     ep.ad.replace_feature_types(adata, ["in_days"], "numeric")
     return adata
+
+
+@pytest.fixture
+def edata_and_distances_dtw():
+    """See tests/_scripts/dtw_test_reference.ipynb."""
+    data = np.random.default_rng(42).integers(0, 5, (5, 2, 4))
+    edata = ed.EHRData(X=None, layers={DEFAULT_TEM_LAYER_NAME: data})
+
+    distances = np.array(
+        [
+            [0.0, 2.98118805, 2.44948974, 3.30277564, 2.34277886],
+            [2.98118805, 0.0, 3.43649167, 3.05492646, 3.28629768],
+            [2.44948974, 3.43649167, 0.0, 3.16227766, 3.31318964],
+            [3.30277564, 3.05492646, 3.16227766, 0.0, 4.35228539],
+            [2.34277886, 3.28629768, 3.31318964, 4.35228539, 0.0],
+        ]
+    )
+
+    return edata, distances
 
 
 @pytest.fixture

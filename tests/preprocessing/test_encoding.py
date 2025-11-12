@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
-from ehrdata.core.constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
+from ehrdata.core.constants import CATEGORICAL_TAG, DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY, NUMERIC_TAG
 from pandas import CategoricalDtype, DataFrame
 from pandas.testing import assert_frame_equal
 
@@ -17,7 +17,7 @@ _TEST_PATH = f"{TEST_DATA_PATH}/encode"
 def test_encode_3D_edata(edata_blob_small):
     encode(edata_blob_small, autodetect=True, layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        encode(edata_blob_small, autodetect=True, layer="R_layer")
+        encode(edata_blob_small, autodetect=True, layer=DEFAULT_TEM_LAYER_NAME)
 
 
 def test_unknown_encode_mode(encode_ds_1_edata):
