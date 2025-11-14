@@ -11,6 +11,7 @@ from scipy.linalg import svd
 from scipy.sparse import spmatrix  # noqa
 
 from ehrapy._compat import _raise_array_type_not_implemented, use_ehrdata
+from ehrapy.core._constants import TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY
 from ehrapy.tools import _method_options  # noqa
 
 if TYPE_CHECKING:
@@ -168,7 +169,13 @@ def umap(
     if key_to_check not in edata.uns:
         raise ValueError(f"Did not find .uns[{key_to_check!r}]. Please run `ep.pp.neighbors` first.")
 
-    return sc.tl.umap(
+    if (
+        "use_rep" in edata.uns[key_to_check]["params"]
+        and edata.uns[key_to_check]["params"]["use_rep"] == TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY
+    ):
+        edata.obsm[TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY] = np.zeros(edata.X.shape[0])
+
+    edata_returned = sc.tl.umap(
         adata=edata,
         min_dist=min_dist,
         spread=spread,
@@ -185,6 +192,12 @@ def umap(
         method=method,
         neighbors_key=neighbors_key,
     )
+
+    if edata_returned is not None:
+        edata_returned.obsm.pop(TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY, None)
+    edata.obsm.pop(TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY, None)
+
+    return edata_returned
 
 
 @use_ehrdata(deprecated_after="1.0.0")

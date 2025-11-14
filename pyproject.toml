@@ -68,7 +68,7 @@ dependencies = [
 
 [project.optional-dependencies]
 causal = [
-    "dowhy>=0.13",
+    "dowhy>=0.14",
     # manual lower bound necessary or else dowhy installs something old and incompatible
     "cvxpy>=1.7.3"
 ]
