@@ -406,6 +406,8 @@ def famd(
     Returns:
         If edata is EHRData and copy=True, returns modified copy. If edata is ndarray, returns (factor_scores, loadings, metadata).
     """
+    # TODO add layer and fix layer handling
+    # https://github.com/theislab/ehrapy/pull/971/files#diff-74581a2d40a1d3f9d7de0d55f27fb778e5262a7b5bd16ce5e14f738c9516d348
     _raise_array_type_not_implemented(famd, type(edata.R))
     return None
 

@@ -1,6 +1,7 @@
 import ehrdata as ed
 import numpy as np
 import pytest
+from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
 
 import ehrapy as ep
 
