@@ -10,7 +10,8 @@ from ehrdata import EHRData
 from scipy.linalg import svd
 from scipy.sparse import spmatrix  # noqa
 
-from ehrapy._compat import _raise_array_type_not_implemented, use_ehrdata
+from ehrapy._compat import _raise_array_type_not_implemented, function_2D_only, use_ehrdata
+from ehrapy.anndata._feature_specifications import _detect_feature_type
 from ehrapy.core._constants import TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY
 from ehrapy.tools import _method_options  # noqa
 
@@ -248,7 +249,7 @@ def draw_graph(
         neighbors_key: If not specified, draw_graph looks .obsp['connectivities'] for connectivities
                        (default storage place for pp.neighbors).
                        If specified, draw_graph looks .obsp[.uns[neighbors_key]['connectivities_key']] for connectivities.
-        obsp:  Use .obsp[obsp] as adjacency. You can't specify both `obsp` and `neighbors_key` at the same time.
+        obsp:  Use `.obsp[obsp]` as adjacency. You can't specify both `obsp` and `neighbors_key` at the same time.
         copy: Whether to return a copy instead of writing to edata.
         **kwds: Parameters of chosen igraph layout. See e.g. `fruchterman-reingold`_
                 :cite:p:`Fruchterman1991`. One of the most important ones is `maxiter`.
@@ -369,74 +370,135 @@ def embedding_density(
 
 
 @singledispatch
-def famd(edata: EHRData | np.ndarray, *, n_components=2) -> tuple[np.ndarray, np.ndarray, dict] | None:
+def famd(
+    edata: EHRData | np.ndarray,
+    *,
+    n_components: int = 2,
+    key_added: str | None = None,
+    var_names: Sequence[str] | None = None,
+    copy: bool = False,
+) -> tuple[np.ndarray, np.ndarray, dict] | EHRData | None:
     """Calculates factors of mixed data.
 
-    FAMD (Factor Analysis of Mixed Data) is a dimensionality reduction technique that for datasets containing both quantitative and qualitative variables.
+    FAMD (Factor Analysis of Mixed Data) is a dimensionality reduction technique for datasets containing both quantitative and qualitative variables.
     Roughly, FAMD works as a PCA for quantitative variables and as a multiple correspondence analysis (MCA) for qualitative variables.
-    It maximizes the sum of squared correlations with quantitative variables and squared correlation ratios with qualitative variables, treating both types equally with each variable's contribution bounded by 1.
+    It maximizes the sum of squared correlations with quantitative variables and squared correlation ratios with qualitative variables,
+    treating both types equally with each variable's contribution bounded by 1.
     The method produces factor scores for individuals, correlation circles for quantitative variables, and category centroids for qualitative variables.
 
     Args:
         edata: The EHRData object (n_obs × n_vars × n_timesteps) containing mixed data types.
         n_components: Number of dimensions to retain in the reduced space. Must be less than min(n_obs, n_vars).
+        key_added: Key under which to store the results in `.obsm` and `.uns`. Defaults to 'famd'.
+        var_names: Names of the input variables (features).
+            Used to generate interpretable feature names in the output (e.g., 'age' vs 'var_0', 'sex_M' vs 'var_1_M').
+            If None, defaults to 'var_0', 'var_1', etc. Automatically extracted from `.var_names`.
+        copy: Whether to return a copy or modify the object inplace.
+
+    Returns:
+        If edata is EHRData and copy=True, returns modified copy. If edata is ndarray, returns (factor_scores, loadings, metadata).
     """
-    # TODO add key_added and copy
     _raise_array_type_not_implemented(famd, type(edata.R))
     return None
 
 
+@function_2D_only()
 @famd.register(EHRData)
-def _(edata: EHRData, /, *, n_components: int = 2) -> None:
-    factor_scores, loadings, metadata = famd(edata.R, n_components=n_components)
+def _(
+    edata: EHRData,
+    /,
+    *,
+    n_components: int = 2,
+    key_added: str | None = None,
+    var_names: Sequence[str] | None = None,
+    copy: bool = False,
+) -> EHRData | None:
+    if key_added is None:
+        key_added = "famd"
 
-    edata.obsm["X_famd"] = factor_scores
-    edata.uns["famd"] = metadata
-    edata.uns["famd"]["loadings"] = loadings
+    edata = edata.copy() if copy else edata
+
+    factor_scores, loadings, metadata = famd(edata.R, n_components=n_components, var_names=edata.var_names)
+
+    edata.obsm[f"X_{key_added}"] = factor_scores
+    edata.varm[f"{key_added}_loadings"] = loadings
+    edata.uns[key_added] = {
+        "params": {
+            "n_components": n_components,
+        },
+        "variance": metadata["variance"],
+        "variance_ratio": metadata["variance_ratio"],
+        "quant_mask": metadata["quant_mask"],
+        "feature_names": metadata["feature_names"],
+        "feature_to_original": metadata["feature_to_original"],
+    }
+
+    return edata if copy else None
 
 
 @famd.register(np.ndarray)
-def _(arr: np.ndarray, /, *, n_components: int = 2) -> tuple[np.ndarray, np.ndarray, dict]:
-    if arr.shape[2] != 1:
-        raise ValueError(f"FAMD requires single timepoint, got {arr.shape[2]}")
+def _(
+    arr: np.ndarray, /, *, n_components: int = 2, var_names: Sequence[str] | None = None, **kwargs
+) -> tuple[np.ndarray, np.ndarray, dict]:
+    if arr.ndim != 3 or arr.shape[2] != 1:
+        raise ValueError(f"FAMD requires 3D array with single timepoint (shape[2]=1), got shape {arr.shape}")
 
     data = arr[:, :, 0]
+    n_vars = data.shape[1]
 
-    quant_mask = np.array(
-        [pd.api.types.is_numeric_dtype(data[:, i]) and len(np.unique(data[:, i])) > 10 for i in range(data.shape[1])]
-    )
+    if var_names is None:
+        var_names = [f"var_{i}" for i in range(n_vars)]
+
+    quant_mask = np.zeros(n_vars, dtype=bool)
+    for i in range(n_vars):
+        col = pd.Series(data[:, i], name=var_names[i])
+        feature_type, _ = _detect_feature_type(col)
+        quant_mask[i] = feature_type == "numeric"
+
     qual_mask = ~quant_mask
-
     n_obs = data.shape[0]
     transformed_cols = []
     feature_names = []
+    feature_to_original = []
 
     if quant_mask.any():
+        quant_indices = np.where(quant_mask)[0]
         X_quant = data[:, quant_mask].astype(float)
         X_quant_centered = X_quant - np.nanmean(X_quant, axis=0)
         X_quant_std = np.nanstd(X_quant, axis=0)
         X_quant_std[X_quant_std == 0] = 1
         X_quant_scaled = X_quant_centered / X_quant_std
         transformed_cols.append(X_quant_scaled)
-        feature_names.extend([f"quant_{i}" for i in range(X_quant_scaled.shape[1])])
+
+        for idx in quant_indices:
+            feature_names.append(f"{var_names[idx]}")
+            feature_to_original.append(idx)
 
     if qual_mask.any():
-        qual_idx = np.where(qual_mask)[0]
-        for idx in qual_idx:
-            categories = pd.Categorical(data[:, idx])
-            indicator = pd.get_dummies(categories, drop_first=False).values
+        qual_indices = np.where(qual_mask)[0]
+        for idx in qual_indices:
+            col_data = data[:, idx]
+            valid_mask = ~pd.isna(col_data)
+            categories = pd.Categorical(col_data[valid_mask])
+
+            indicator = np.zeros((n_obs, len(categories.categories)))
+            indicator[valid_mask] = pd.get_dummies(categories, drop_first=False).values
+
             freq = indicator.mean(axis=0)
             freq[freq == 0] = 1
             indicator_scaled = (indicator - freq) / np.sqrt(freq)
             transformed_cols.append(indicator_scaled)
-            feature_names.extend([f"qual_{idx}_{cat}" for cat in categories.categories])
+
+            for cat in categories.categories:
+                feature_names.append(f"{var_names[idx]}_{cat}")
+                feature_to_original.append(idx)
 
     X_transformed = np.hstack(transformed_cols)
     X_transformed = np.nan_to_num(X_transformed)
 
     U, S, Vt = svd(X_transformed, full_matrices=False)
-
     n_components = min(n_components, min(X_transformed.shape))
+
     factor_scores = U[:, :n_components] * S[:n_components]
     loadings = Vt[:n_components, :].T
 
@@ -446,6 +508,7 @@ def _(arr: np.ndarray, /, *, n_components: int = 2) -> tuple[np.ndarray, np.ndar
         "quant_mask": quant_mask,
         "n_components": n_components,
         "feature_names": feature_names,
+        "feature_to_original": feature_to_original,
     }
 
     return factor_scores, loadings, metadata
