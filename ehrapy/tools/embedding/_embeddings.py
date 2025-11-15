@@ -395,6 +395,14 @@ def famd(
             If None, defaults to 'var_0', 'var_1', etc. Automatically extracted from `.var_names`.
         copy: Whether to return a copy or modify the object inplace.
 
+    Examples:
+        >>> import ehrapy as ep
+        >>> import ehrdata as ed
+        >>> edata = ed.dt.ehrdata_blobs(n_observations=100, n_centers=3, base_timepoints=1)
+        >>> ep.tl.famd(edata, n_components=10)
+        >>> edata.obsm["X_famd"]  # Factor scores for plotting
+        >>> edata.uns["famd"]["variance_ratio"]  # Explained variance
+
     Returns:
         If edata is EHRData and copy=True, returns modified copy. If edata is ndarray, returns (factor_scores, loadings, metadata).
     """
