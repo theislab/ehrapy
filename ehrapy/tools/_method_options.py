@@ -1,7 +1,5 @@
 from typing import Literal
 
-_InitPos = Literal["paga", "spectral", "random"]
-
 _LAYOUTS = ("fr", "drl", "kk", "grid_fr", "lgl", "rt", "rt_circular", "fa")
 _Layout = Literal[_LAYOUTS]  # type: ignore
 

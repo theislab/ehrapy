@@ -9,7 +9,7 @@ import ehrapy as ep
 You can then access the respective modules like:
 
 ```python
-ep.pl.cool_fancy_plot()
+ep.tl.tool()
 ```
 
 ```{toctree}

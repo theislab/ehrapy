@@ -11,7 +11,6 @@ import pandas as pd
 import pytest
 from anndata import AnnData
 from ehrdata.core.constants import CATEGORICAL_TAG, DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY, NUMERIC_TAG
-from ehrdata.io import read_csv
 from matplotlib.testing.compare import compare_images
 
 import ehrapy as ep
@@ -147,17 +146,19 @@ def mcar_edata(rng) -> ed.EHRData:
 
 @pytest.fixture
 def edata_mini():
-    return read_csv(f"{TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["glucose", "weight", "disease", "station"])
+    return ed.io.read_csv(
+        f"{TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["glucose", "weight", "disease", "station"]
+    )
 
 
 @pytest.fixture
 def edata_mini_sample():
-    return read_csv(f"{TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["clinic_day"])
+    return ed.io.read_csv(f"{TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["clinic_day"])
 
 
 @pytest.fixture
 def edata_mini_normalization():
-    return read_csv(
+    return ed.io.read_csv(
         f"{TEST_DATA_PATH}/dataset1.csv",
         columns_obs_only=["glucose", "weight", "disease", "station"],
     )[:8]
@@ -165,7 +166,7 @@ def edata_mini_normalization():
 
 @pytest.fixture
 def edata_mini_integers_in_X():
-    adata = read_csv(
+    adata = ed.io.read_csv(
         f"{TEST_DATA_PATH}/dataset1.csv",
         columns_obs_only=["idx", "sys_bp_entry", "dia_bp_entry", "glucose", "weight", "disease", "station"],
     )
@@ -233,48 +234,48 @@ def mimic_2_sa():
 
 @pytest.fixture
 def edata_move_obs_num() -> ed.EHRData:
-    return read_csv(TEST_DATA_PATH / "io/dataset_move_obs_num.csv")
+    return ed.io.read_csv(TEST_DATA_PATH / "io/dataset_move_obs_num.csv")
 
 
 @pytest.fixture
 def edata_move_obs_mix() -> ed.EHRData:
-    return read_csv(TEST_DATA_PATH / "io/dataset_move_obs_mix.csv")
+    return ed.io.read_csv(TEST_DATA_PATH / "io/dataset_move_obs_mix.csv")
 
 
 @pytest.fixture
 def impute_num_edata() -> ed.EHRData:
-    edata = read_csv(f"{TEST_DATA_PATH}/imputation/test_impute_num.csv")
+    edata = ed.io.read_csv(f"{TEST_DATA_PATH}/imputation/test_impute_num.csv")
     return edata
 
 
 @pytest.fixture
 def impute_edata() -> ed.EHRData:
-    edata = read_csv(f"{TEST_DATA_PATH}/imputation/test_impute.csv")
+    edata = ed.io.read_csv(f"{TEST_DATA_PATH}/imputation/test_impute.csv")
     return edata
 
 
 @pytest.fixture
 def impute_iris_edata() -> ed.EHRData:
-    edata = read_csv(f"{TEST_DATA_PATH}/imputation/test_impute_iris.csv")
+    edata = ed.io.read_csv(f"{TEST_DATA_PATH}/imputation/test_impute_iris.csv")
     return edata
 
 
 @pytest.fixture
 def impute_titanic_edata():
-    edata = read_csv(f"{TEST_DATA_PATH}/imputation/test_impute_titanic.csv")
+    edata = ed.io.read_csv(f"{TEST_DATA_PATH}/imputation/test_impute_titanic.csv")
     return edata
 
 
 @pytest.fixture
 def encode_ds_1_edata() -> ed.EHRData:
-    edata = read_csv(f"{TEST_DATA_PATH}/encode/dataset1.csv")
+    edata = ed.io.read_csv(f"{TEST_DATA_PATH}/encode/dataset1.csv")
     edata.layers["layer_2"] = edata.X.copy()
     return edata
 
 
 @pytest.fixture
 def encode_ds_2_edata() -> ed.EHRData:
-    edata = read_csv(f"{TEST_DATA_PATH}/encode/dataset2.csv")
+    edata = ed.io.read_csv(f"{TEST_DATA_PATH}/encode/dataset2.csv")
     edata.layers["layer_2"] = edata.X.copy()
     return edata
 
