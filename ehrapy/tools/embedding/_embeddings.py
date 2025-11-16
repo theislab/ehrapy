@@ -174,7 +174,7 @@ def umap(
         "use_rep" in edata.uns[key_to_check]["params"]
         and edata.uns[key_to_check]["params"]["use_rep"] == TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY
     ):
-        edata.obsm[TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY] = np.zeros(edata.n_obs)
+        edata.obsm[TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY] = np.zeros(edata.shape[0])
 
     edata_returned = sc.tl.umap(
         adata=edata,
@@ -373,6 +373,7 @@ def embedding_density(
 def famd(
     edata: EHRData | np.ndarray,
     *,
+    layer: str | None = None,
     n_components: int = 2,
     key_added: str | None = None,
     var_names: Sequence[str] | None = None,
@@ -388,6 +389,7 @@ def famd(
 
     Args:
         edata: The EHRData object (n_obs × n_vars × n_timesteps) containing mixed data types.
+        layer: The layer to perform the computation on.
         n_components: Number of dimensions to retain in the reduced space. Must be less than min(n_obs, n_vars).
         key_added: Key under which to store the results in `.obsm` and `.uns`. Defaults to 'famd'.
         var_names: Names of the input variables (features).
@@ -406,9 +408,8 @@ def famd(
     Returns:
         If edata is EHRData and copy=True, returns modified copy. If edata is ndarray, returns (factor_scores, loadings, metadata).
     """
-    # TODO add layer and fix layer handling
-    # https://github.com/theislab/ehrapy/pull/971/files#diff-74581a2d40a1d3f9d7de0d55f27fb778e5262a7b5bd16ce5e14f738c9516d348
-    _raise_array_type_not_implemented(famd, type(edata.R))
+    arr = edata.X if layer is None else edata.layers[layer]
+    _raise_array_type_not_implemented(famd, type(arr))
     return None
 
 
@@ -418,6 +419,7 @@ def _(
     edata: EHRData,
     /,
     *,
+    layer: str | None = None,
     n_components: int = 2,
     key_added: str | None = None,
     var_names: Sequence[str] | None = None,
@@ -428,7 +430,8 @@ def _(
 
     edata = edata.copy() if copy else edata
 
-    factor_scores, loadings, metadata = famd(edata.R, n_components=n_components, var_names=edata.var_names)
+    arr = edata.X if layer is None else edata.layers[layer]
+    factor_scores, loadings, metadata = famd(arr, n_components=n_components, var_names=edata.var_names)
 
     edata.obsm[f"X_{key_added}"] = factor_scores
     edata.varm[f"{key_added}_loadings"] = loadings

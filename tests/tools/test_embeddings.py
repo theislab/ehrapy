@@ -65,9 +65,9 @@ def test_famd_numpy_pure_qualitative(pure_qual_array: np.ndarray) -> None:
 
 def test_famd_ehrdata_integration(edata_blobs_timeseries_small: ed.EHRData) -> None:
     edata = edata_blobs_timeseries_small
-    edata.R = edata.X[:, :, np.newaxis]
+    edata.layers[DEFAULT_TEM_LAYER_NAME] = edata.X[:, :, np.newaxis]
 
-    ep.tl.famd(edata, n_components=2)
+    ep.tl.famd(edata, n_components=2, layer=DEFAULT_TEM_LAYER_NAME)
 
     assert "X_famd" in edata.obsm
     assert "famd" in edata.uns
