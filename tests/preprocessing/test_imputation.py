@@ -21,7 +21,7 @@ from ehrapy.preprocessing._imputation import (
     miss_forest_impute,
     simple_impute,
 )
-from tests.conftest import ARRAY_TYPES, TEST_DATA_PATH
+from tests.conftest import ARRAY_TYPES_NONNUMERIC, ARRAY_TYPES_NUMERIC, ARRAY_TYPES_NUMERIC_3D_ABLE, TEST_DATA_PATH
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_PATH = f"{TEST_DATA_PATH}/imputation"
@@ -154,7 +154,9 @@ def test_base_check_imputation_change_detected_in_imputed_column(impute_num_edat
     [
         (np.array, None),
         (da.array, None),
-        (sparse.csr_matrix, NotImplementedError),
+        (sparse.csr_array, None),
+        (sparse.csc_array, None),
+        # (sparse.coo_array, None) # not yet supported by AnnData
     ],
 )
 def test_simple_impute_array_types(impute_num_edata, array_type, expected_error):
@@ -165,7 +167,7 @@ def test_simple_impute_array_types(impute_num_edata, array_type, expected_error)
             simple_impute(impute_num_edata, strategy="mean")
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES)
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NUMERIC)
 @pytest.mark.parametrize("strategy", ["mean", "median", "most_frequent"])
 def test_simple_impute_basic(impute_num_edata, array_type, strategy):
     impute_num_edata.X = array_type(impute_num_edata.X)
@@ -187,7 +189,7 @@ def test_simple_impute_copy(impute_num_edata, strategy):
     _base_check_imputation(impute_num_edata, edata_imputed)
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES)
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 @pytest.mark.parametrize("strategy", ["mean", "median", "most_frequent"])
 def test_simple_impute_subset(impute_edata, array_type, strategy):
     impute_edata.X = array_type(impute_edata.X)
@@ -208,7 +210,7 @@ def test_simple_impute_subset(impute_edata, array_type, strategy):
             assert edata_imputed.X[0, 1] == 2.0  # if multiple equally frequent values, return minimum
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES)
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NUMERIC_3D_ABLE)
 @pytest.mark.parametrize("strategy", ["mean", "median", "most_frequent"])
 def test_simple_impute_3D_edata(mcar_edata, array_type, strategy):
     mcar_edata.layers[DEFAULT_TEM_LAYER_NAME] = array_type(mcar_edata.layers[DEFAULT_TEM_LAYER_NAME])
@@ -392,7 +394,7 @@ def test_explicit_impute_3D_edata(edata_blob_small):
         explicit_impute(edata_blob_small, replacement=1011, layer=DEFAULT_TEM_LAYER_NAME)
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES)
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 def test_explicit_impute_all(array_type, impute_num_edata):
     impute_num_edata.X = array_type(impute_num_edata.X)
     warnings.filterwarnings("ignore", category=FutureWarning)
@@ -402,7 +404,7 @@ def test_explicit_impute_all(array_type, impute_num_edata):
     assert np.sum([edata_imputed.X == 1011]) == 3
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES)
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 def test_explicit_impute_subset(impute_edata, array_type):
     impute_edata.X = array_type(impute_edata.X)
     edata_imputed = explicit_impute(impute_edata, replacement={"strcol": "REPLACED", "intcol": 1011}, copy=True)

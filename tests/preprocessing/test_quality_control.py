@@ -9,13 +9,13 @@ import ehrapy as ep
 from ehrapy.io._read import read_csv
 from ehrapy.preprocessing._encoding import encode
 from ehrapy.preprocessing._quality_control import _compute_obs_metrics, _compute_var_metrics, mcar_test
-from tests.conftest import ARRAY_TYPES, TEST_DATA_PATH, as_dense_dask_array
+from tests.conftest import ARRAY_TYPES_NONNUMERIC, TEST_DATA_PATH, as_dense_dask_array
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_PATH_ENCODE = f"{TEST_DATA_PATH}/encode"
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES)
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 def test_qc_metrics_vanilla(array_type, missing_values_edata):
     adata = missing_values_edata
     adata.X = array_type(adata.X)
@@ -40,7 +40,7 @@ def test_qc_metrics_vanilla(array_type, missing_values_edata):
         assert np.array_equal(modification_copy.var[key], adata.var[key])
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES)
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 def test_obs_qc_metrics(array_type, missing_values_edata):
     missing_values_edata.X = array_type(missing_values_edata.X)
     mtx = missing_values_edata.X
@@ -50,7 +50,7 @@ def test_obs_qc_metrics(array_type, missing_values_edata):
     assert np.allclose(obs_metrics["missing_values_pct"].values, np.array([33.3333, 66.6667]))
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES)
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 def test_var_qc_metrics(array_type, missing_values_edata):
     missing_values_edata.X = array_type(missing_values_edata.X)
     mtx = missing_values_edata.X

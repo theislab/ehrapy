@@ -1,11 +1,15 @@
 # type: ignore
 import warnings
+from collections.abc import Callable
 
+import dask.array as da
+import numpy as np
 import pytest
+import scipy.sparse as sp
 from anndata import AnnData
 from ehrdata import EHRData
 
-from ehrapy._compat import use_ehrdata
+from ehrapy._compat import _apply_over_time_axis, use_ehrdata
 
 
 @pytest.fixture
@@ -156,3 +160,36 @@ def test_invalid_function_signature() -> None:
             pass
 
     assert "does not have parameter" in str(excinfo.value)
+
+
+@pytest.mark.parametrize(
+    "array_type",
+    [np.array, da.array, sp.csr_array, sp.csc_array, sp.coo_array],
+)
+def test_apply_over_time_axis_with_2d_input(array_type: Callable) -> None:
+    @_apply_over_time_axis
+    def mock_normalization(
+        array: np.ndarray | da.Array | sp.sparray,
+    ) -> np.ndarray | da.Array | sp.sparray:
+        return array / array.sum(axis=0)
+
+    array_2d = array_type([[1, 2, 3], [4, 5, 6]])
+    assert mock_normalization(array_2d).shape == array_2d.shape
+    assert np.allclose(mock_normalization(array_2d).sum(axis=0), np.ones(array_2d.shape[1]))
+
+
+@pytest.mark.parametrize(
+    "array_type",
+    [np.array, da.array, sp.coo_array],
+)
+def test_apply_over_time_axis_with_3d_input(array_type: Callable) -> None:
+    @_apply_over_time_axis
+    def mock_normalization(
+        array: np.ndarray | da.Array | sp.sparray,
+    ) -> np.ndarray | da.Array | sp.sparray:
+        return array / array.sum(axis=0)
+
+    array_3d = array_type(np.array([[[1, 0, 3], [0, 5, 6]], [[7, 8, 0], [0, 11, 12]]]))
+
+    assert mock_normalization(array_3d).shape == array_3d.shape
+    assert np.allclose(mock_normalization(array_3d).sum(axis=0).sum(axis=1), np.ones(array_3d.shape[1]))

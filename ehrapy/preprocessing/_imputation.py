@@ -8,12 +8,19 @@ from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import pandas as pd
+import scipy.sparse as sp
 from ehrdata._logger import logger
 from sklearn.experimental import enable_iterative_imputer  # noinspection PyUnresolvedReference
 from sklearn.impute import SimpleImputer
 
 from ehrapy import settings
-from ehrapy._compat import DaskArray, _raise_array_type_not_implemented, _support_3d, function_2D_only, use_ehrdata
+from ehrapy._compat import (
+    DaskArray,
+    _apply_over_time_axis,
+    _raise_array_type_not_implemented,
+    function_2D_only,
+    use_ehrdata,
+)
 from ehrapy._progress import spinner
 from ehrapy.anndata import _check_feature_types
 from ehrapy.anndata._feature_specifications import _infer_numerical_column_indices
@@ -104,7 +111,7 @@ def _replace_explicit(arr, replacement: str | int, impute_empty_strings: bool) -
     _raise_array_type_not_implemented(_replace_explicit, type(arr))
 
 
-@_replace_explicit.register
+@_replace_explicit.register(np.ndarray)
 def _(arr: np.ndarray, replacement: str | int, impute_empty_strings: bool) -> np.ndarray:
     """Replace one column or whole X with a value where missing values are stored."""
     if not impute_empty_strings:  # pragma: no cover
@@ -152,7 +159,7 @@ def _simple_impute_function(arr, strategy: Literal["mean", "median", "most_frequ
 
 
 @_simple_impute_function.register
-@_support_3d
+@_apply_over_time_axis
 def _(arr: DaskArray, strategy: Literal["mean", "median", "most_frequent"]) -> DaskArray:
     import dask_ml.impute
 
@@ -160,8 +167,10 @@ def _(arr: DaskArray, strategy: Literal["mean", "median", "most_frequent"]) -> D
     return dask_ml.impute.SimpleImputer(strategy=strategy).fit_transform(arr.astype(float)).astype(arr_dtype)
 
 
-@_simple_impute_function.register
-@_support_3d
+@_simple_impute_function.register(sp.csc_array)
+@_simple_impute_function.register(sp.csr_array)
+@_simple_impute_function.register(np.ndarray)
+@_apply_over_time_axis
 def _(arr: np.ndarray, strategy: Literal["mean", "median", "most_frequent"]) -> np.ndarray:
     import sklearn
 
@@ -169,7 +178,6 @@ def _(arr: np.ndarray, strategy: Literal["mean", "median", "most_frequent"]) -> 
 
 
 @use_ehrdata(deprecated_after="1.0.0")
-@spinner("Performing simple impute")
 def simple_impute(
     edata: EHRData | AnnData,
     var_names: Iterable[str] | None = None,
