@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import pandas as pd
-from lamin_utils import logger
+from ehrdata._logger import logger
 from sklearn.experimental import enable_iterative_imputer  # noinspection PyUnresolvedReference
 from sklearn.impute import SimpleImputer
 

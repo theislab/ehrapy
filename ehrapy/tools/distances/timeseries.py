@@ -3,7 +3,7 @@ from functools import singledispatch
 from typing import Any, Literal
 
 import numpy as np
-from scipy.sparse import coo_matrix
+from scipy.sparse import coo_array
 
 
 def _raise_array_type_not_implemented(function: Callable[..., Any], array_type: type) -> None:
@@ -13,7 +13,7 @@ def _raise_array_type_not_implemented(function: Callable[..., Any], array_type: 
 def timeseries_distance(
     obs_indices_x: np.ndarray,
     obs_indices_y: np.ndarray,
-    arr: np.ndarray | coo_matrix,
+    arr: np.ndarray | coo_array,
     metric: Literal["dtw", "soft_dtw", "gak"] = "dtw",
 ) -> float:
     """Calculate temporal distance between two patients across all variables.
@@ -40,7 +40,7 @@ def timeseries_distance(
 
 @singledispatch
 def _timeseries_distance_impl(
-    arr: np.ndarray | coo_matrix,
+    arr: np.ndarray | coo_array,
     obs_indices_x: np.ndarray,
     obs_indices_y: np.ndarray,
     metric: Literal["dtw", "soft_dtw", "gak"],
@@ -96,7 +96,7 @@ def _(
 
 @_timeseries_distance_impl.register
 def _(
-    arr: coo_matrix,
+    arr: coo_array,
     obs_indices_x: np.ndarray,
     obs_indices_y: np.ndarray,
     metric: Literal["dtw", "soft_dtw", "gak"],

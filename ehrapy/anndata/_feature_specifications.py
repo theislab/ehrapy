@@ -8,8 +8,8 @@ import numpy as np
 import pandas as pd
 from anndata import AnnData
 from dateutil.parser import isoparse  # type: ignore
+from ehrdata._logger import logger
 from ehrdata.core.constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
-from lamin_utils import logger
 from rich import print
 from rich.tree import Tree
 
