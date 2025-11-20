@@ -200,7 +200,7 @@ def simple_impute(
     Args:
         edata: Central data object.
         var_names: A list of column names to apply imputation on (if None, impute all columns).
-        strategy: Imputation strategy to use. One of {'mean', 'median', 'most_frequent'}. If data is a :class:`dask.array.Array`, only 'mean' is supported.
+        strategy: Imputation strategy to use. One of {'mean', 'median', 'most_frequent'}. If data is a `dask.array.Array`, only 'mean' is supported.
         warning_threshold: Display a warning message if percentage of missing values exceeds this threshold.
         layer: The layer to impute.
         copy: Whether to return a copy of `edata` or modify it inplace.
