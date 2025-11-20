@@ -7,6 +7,8 @@ from inspect import signature
 from subprocess import PIPE, Popen
 from typing import TYPE_CHECKING, ParamSpec, TypeVar, cast
 
+import numpy as np
+
 P = ParamSpec("P")
 R = TypeVar("R")
 T = TypeVar("T")
@@ -179,7 +181,7 @@ def _apply_over_time_axis(f: Callable) -> Callable:
 
         elif arr.ndim == 3:
             n_obs, n_vars, n_time = arr.shape
-            arr_2d = arr.transpose((0, 2, 1)).reshape(-1, n_vars)
+            arr_2d = np.moveaxis(arr, 1, 2).reshape(-1, n_vars)
             arr_modified_2d = f(arr_2d, *args, **kwargs)
             return arr_modified_2d.reshape(n_obs, n_time, n_vars).transpose((0, 2, 1))
 
