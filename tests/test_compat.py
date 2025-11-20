@@ -192,4 +192,4 @@ def test_apply_over_time_axis_with_3d_input(array_type: Callable) -> None:
     array_3d = array_type(np.array([[[1, 0, 3], [0, 5, 6]], [[7, 8, 0], [0, 11, 12]]]))
 
     assert mock_normalization(array_3d).shape == array_3d.shape
-    assert np.allclose(mock_normalization(array_3d).sum(axis=0).sum(axis=1), np.ones(array_3d.shape[1]))
+    assert np.allclose(mock_normalization(array_3d).toarray().sum(axis=0).sum(axis=1), np.ones(array_3d.shape[1]))
