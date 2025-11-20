@@ -240,6 +240,32 @@ def test_simple_impute_3D_edata(mcar_edata, array_type, strategy):
             assert np.isclose(element, reference_value)
 
 
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
+@pytest.mark.parametrize("strategy", ["mean", "median", "most_frequent"])
+def test_simple_impute_3D_edata_nonnumeric(edata_mini_3D_missing_values, array_type, strategy):
+    edata_mini_3D_missing_values.layers[DEFAULT_TEM_LAYER_NAME] = array_type(
+        edata_mini_3D_missing_values.layers[DEFAULT_TEM_LAYER_NAME]
+    )
+
+    if strategy == "most_frequent" and not isinstance(
+        edata_mini_3D_missing_values.layers[DEFAULT_TEM_LAYER_NAME], da.Array
+    ):
+        edata_imputed = simple_impute(
+            edata_mini_3D_missing_values, layer=DEFAULT_TEM_LAYER_NAME, strategy=strategy, copy=True
+        )
+        _base_check_imputation(
+            edata_mini_3D_missing_values,
+            edata_imputed,
+            before_imputation_layer=DEFAULT_TEM_LAYER_NAME,
+            after_imputation_layer=DEFAULT_TEM_LAYER_NAME,
+        )
+    else:
+        with pytest.raises(ValueError):
+            edata_imputed = simple_impute(
+                edata_mini_3D_missing_values, layer=DEFAULT_TEM_LAYER_NAME, strategy=strategy, copy=True
+            )
+
+
 @pytest.mark.parametrize("strategy", ["mean", "median"])
 def test_simple_impute_throws_error_non_numerical(impute_edata, strategy):
     with pytest.raises(ValueError):

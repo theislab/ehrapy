@@ -157,6 +157,20 @@ def edata_mini():
 
 
 @pytest.fixture
+def edata_mini_3D_missing_values():
+    tiny_mixed_array = np.array(
+        [
+            [[138, 139], [78, np.nan], [77, 76], [1, 2], ["A", "B"], ["Yes", np.nan]],
+            [[140, 141], [80, 81], [60, 90], [0, 1], ["A", "A"], ["Yes", "Yes"]],
+            [[148, 149], [77, 78], [110, np.nan], [0, 1], [np.nan, "B"], ["Yes", "Yes"]],
+            [[150, 151], [79, 80], [56, np.nan], [2, 3], ["B", "B"], ["Yes", "No"]],
+        ],
+        dtype=object,
+    )
+    return ed.EHRData(layers={DEFAULT_TEM_LAYER_NAME: tiny_mixed_array})
+
+
+@pytest.fixture
 def edata_mini_sample():
     return ed.io.read_csv(f"{TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["clinic_day"])
 
