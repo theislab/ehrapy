@@ -158,7 +158,12 @@ def _simple_impute_function(arr, strategy: Literal["mean", "median", "most_frequ
     _raise_array_type_not_implemented(_simple_impute_function, type(arr))
 
 
-@_simple_impute_function.register
+@_simple_impute_function.register(sp.coo_array)
+def _(arr: sp.coo_array, strategy: Literal["mean", "median", "most_frequent"]) -> sp.coo_array:
+    _raise_array_type_not_implemented(_simple_impute_function, type(arr))
+
+
+@_simple_impute_function.register(DaskArray)
 @_apply_over_time_axis
 def _(arr: DaskArray, strategy: Literal["mean", "median", "most_frequent"]) -> DaskArray:
     import dask_ml.impute

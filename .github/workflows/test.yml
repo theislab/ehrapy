@@ -67,7 +67,6 @@ jobs:
       - name: create hatch environment
         run: uvx hatch env create ${{ matrix.env.name }}
       - name: Show installed packages
-        if: matrix.env.python == '3.13'
         run: |
           uvx hatch run hatch-test.py3.13:uv pip freeze
       - name: run tests using hatch
