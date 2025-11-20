@@ -183,7 +183,7 @@ def _apply_over_time_axis(f: Callable) -> Callable:
             n_obs, n_vars, n_time = arr.shape
             arr_2d = np.moveaxis(arr, 1, 2).reshape(-1, n_vars)
             arr_modified_2d = f(arr_2d, *args, **kwargs)
-            return arr_modified_2d.reshape(n_obs, n_time, n_vars).transpose((0, 2, 1))
+            return np.moveaxis(arr_modified_2d.reshape(n_obs, n_time, n_vars), 1, 2)
 
         else:
             raise ValueError(f"Unsupported array dimensionality: {arr.ndim}. Please reshape the array to 2D or 3D.")
