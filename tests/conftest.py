@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pytest
+import scipy.sparse as sp
 from anndata import AnnData
 from ehrdata.core.constants import CATEGORICAL_TAG, DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY, NUMERIC_TAG
 from matplotlib.testing.compare import compare_images
@@ -141,7 +142,11 @@ def mcar_edata(rng) -> ed.EHRData:
     missing_indices = rng.choice(a=[False, True], size=data.shape, p=[1 - 0.1, 0.1])
     data[missing_indices] = np.nan
 
-    return ed.EHRData(data)
+    data_3d = rng.random((100, 10, 3))
+    missing_indices = rng.choice(a=[False, True], size=data_3d.shape, p=[1 - 0.1, 0.1])
+    data_3d[missing_indices] = np.nan
+
+    return ed.EHRData(data, layers={DEFAULT_TEM_LAYER_NAME: data_3d})
 
 
 @pytest.fixture
@@ -149,6 +154,20 @@ def edata_mini():
     return ed.io.read_csv(
         f"{TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["glucose", "weight", "disease", "station"]
     )
+
+
+@pytest.fixture
+def edata_mini_3D_missing_values():
+    tiny_mixed_array = np.array(
+        [
+            [[138, 139], [78, np.nan], [77, 76], [1, 2], ["A", "B"], ["Yes", np.nan]],
+            [[140, 141], [80, 81], [60, 90], [0, 1], ["A", "A"], ["Yes", "Yes"]],
+            [[148, 149], [77, 78], [110, np.nan], [0, 1], [np.nan, "B"], ["Yes", "Yes"]],
+            [[150, 151], [79, 80], [56, np.nan], [2, 3], ["B", "B"], ["Yes", "No"]],
+        ],
+        dtype=object,
+    )
+    return ed.EHRData(layers={DEFAULT_TEM_LAYER_NAME: tiny_mixed_array})
 
 
 @pytest.fixture
@@ -415,4 +434,11 @@ def as_dense_dask_array(a, chunk_size=1000):
     return da.from_array(a, chunks=chunk_size)
 
 
-ARRAY_TYPES = (asarray, as_dense_dask_array)
+ARRAY_TYPES_NUMERIC = (
+    asarray,
+    as_dense_dask_array,
+    sp.csr_array,
+    sp.csc_array,
+)  # add coo_array once supported in AnnData
+ARRAY_TYPES_NUMERIC_3D_ABLE = (asarray, as_dense_dask_array)  # add coo_array once supported in AnnData
+ARRAY_TYPES_NONNUMERIC = (asarray, as_dense_dask_array)
