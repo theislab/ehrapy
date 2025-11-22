@@ -3,7 +3,7 @@ from functools import singledispatch
 from typing import Any, Literal
 
 import numpy as np
-from scipy.sparse import coo_matrix
+from scipy.sparse import coo_array
 
 
 def _raise_array_type_not_implemented(function: Callable[..., Any], array_type: type) -> None:
@@ -13,7 +13,7 @@ def _raise_array_type_not_implemented(function: Callable[..., Any], array_type: 
 def timeseries_distance(
     obs_indices_x: np.ndarray,
     obs_indices_y: np.ndarray,
-    R: np.ndarray | coo_matrix,
+    arr: np.ndarray | coo_array,
     metric: Literal["dtw", "soft_dtw", "gak"] = "dtw",
 ) -> float:
     """Calculate temporal distance between two patients across all variables.
@@ -24,7 +24,7 @@ def timeseries_distance(
     Args:
         obs_indices_x: Array containing patient index [i]
         obs_indices_y: Array containing patient index [j]
-        R: Array containing timeseries measurements
+        arr: Array containing timeseries measurements
         metric: Temporal distance metric.
 
             - "dtw": Standard DTW with exact optimal alignment via dynamic programming
@@ -35,24 +35,24 @@ def timeseries_distance(
         Average temporal distance across valid variable pairs.
         Returns 0 if no valid variable pairs exist.
     """
-    return _timeseries_distance_impl(R, obs_indices_x, obs_indices_y, metric)
+    return _timeseries_distance_impl(arr, obs_indices_x, obs_indices_y, metric)
 
 
 @singledispatch
 def _timeseries_distance_impl(
-    R: np.ndarray | coo_matrix,
+    arr: np.ndarray | coo_array,
     obs_indices_x: np.ndarray,
     obs_indices_y: np.ndarray,
     metric: Literal["dtw", "soft_dtw", "gak"],
 ) -> float:
-    _raise_array_type_not_implemented(timeseries_distance, type(R))
+    _raise_array_type_not_implemented(timeseries_distance, type(arr))
 
     return None
 
 
 @_timeseries_distance_impl.register
 def _(
-    R: np.ndarray,
+    arr: np.ndarray,
     obs_indices_x: np.ndarray,
     obs_indices_y: np.ndarray,
     metric: Literal["dtw", "soft_dtw", "gak"],
@@ -78,9 +78,9 @@ def _(
     total_distance = 0
     valid_variable_count = 0
 
-    for variable_idx in range(R.shape[1]):
-        series_i = R[obs_i, variable_idx, :]
-        series_j = R[obs_j, variable_idx, :]
+    for variable_idx in range(arr.shape[1]):
+        series_i = arr[obs_i, variable_idx, :]
+        series_j = arr[obs_j, variable_idx, :]
         valid_measurements_i = ~np.isnan(series_i)
         valid_measurements_j = ~np.isnan(series_j)
 
@@ -96,11 +96,11 @@ def _(
 
 @_timeseries_distance_impl.register
 def _(
-    R: coo_matrix,
+    arr: coo_array,
     obs_indices_x: np.ndarray,
     obs_indices_y: np.ndarray,
     metric: Literal["dtw", "soft_dtw", "gak"],
 ) -> float:
-    _raise_array_type_not_implemented(timeseries_distance, type(R))
+    _raise_array_type_not_implemented(timeseries_distance, type(arr))
 
     return None

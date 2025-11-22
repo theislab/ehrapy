@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import pytest
-from ehrdata.core.constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
+from ehrdata.core.constants import CATEGORICAL_TAG, DATE_TAG, DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY, NUMERIC_TAG
 
 import ehrapy as ep
 from ehrapy.anndata import _check_feature_types, df_to_anndata
@@ -164,4 +164,4 @@ def test_partial_annotation(edata_feature_type_specifications):
 def test_infer_feature_types_3D(edata_blob_small):
     ep.ad.infer_feature_types(edata_blob_small, layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.ad.infer_feature_types(edata_blob_small, layer="R_layer")
+        ep.ad.infer_feature_types(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)

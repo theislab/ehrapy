@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pandas as pd
 from anndata import AnnData, concat
+from ehrdata._logger import logger
 from ehrdata.core.constants import FEATURE_TYPE_KEY, NUMERIC_TAG
-from lamin_utils import logger
 from scipy.sparse import issparse
 
 from ehrapy._compat import _cast_adata_to_match_data_type, function_2D_only, function_future_warning, use_ehrdata

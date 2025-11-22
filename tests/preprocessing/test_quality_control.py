@@ -3,19 +3,19 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
-from anndata import AnnData
+from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
 
 import ehrapy as ep
 from ehrapy.io._read import read_csv
 from ehrapy.preprocessing._encoding import encode
 from ehrapy.preprocessing._quality_control import _compute_obs_metrics, _compute_var_metrics, mcar_test
-from tests.conftest import ARRAY_TYPES, TEST_DATA_PATH, as_dense_dask_array
+from tests.conftest import ARRAY_TYPES_NONNUMERIC, TEST_DATA_PATH, as_dense_dask_array
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_PATH_ENCODE = f"{TEST_DATA_PATH}/encode"
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES)
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 def test_qc_metrics_vanilla(array_type, missing_values_edata):
     adata = missing_values_edata
     adata.X = array_type(adata.X)
@@ -54,7 +54,7 @@ def test_qc_metrics_vanilla(array_type, missing_values_edata):
         assert np.array_equal(modification_copy.var[key], adata.var[key])
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES)
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 def test_obs_qc_metrics(array_type, missing_values_edata):
     missing_values_edata.X = array_type(missing_values_edata.X)
     mtx = missing_values_edata.X
@@ -67,7 +67,7 @@ def test_obs_qc_metrics(array_type, missing_values_edata):
     assert np.allclose(obs_metrics["entropy_of_missingness"].values, np.array([0.9183, 0.9183]))
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES)
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 def test_var_qc_metrics(array_type, missing_values_edata):
     missing_values_edata.X = array_type(missing_values_edata.X)
     mtx = missing_values_edata.X
@@ -170,7 +170,7 @@ def test_calculate_qc_metrics(missing_values_edata):
 def test_encode_3D_edata(edata_blob_small):
     ep.pp.qc_metrics(edata_blob_small, layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.qc_metrics(edata_blob_small, layer="R_layer")
+        ep.pp.qc_metrics(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
 
 
 def test_qc_lab_measurements_simple(lab_measurements_simple_edata):
@@ -231,7 +231,9 @@ def test_qc_lab_measurements_simple_layer(lab_measurements_layer_edata):
 def test_qc_lab_measurements_3D_edata(edata_blob_small):
     ep.pp.qc_lab_measurements(edata_blob_small, measurements=list(edata_blob_small.var_names), layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.qc_lab_measurements(edata_blob_small, measurements=list(edata_blob_small.var_names), layer="R_layer")
+        ep.pp.qc_lab_measurements(
+            edata_blob_small, measurements=list(edata_blob_small.var_names), layer=DEFAULT_TEM_LAYER_NAME
+        )
 
 
 def test_qc_lab_measurements_age():
@@ -275,7 +277,7 @@ def test_mcar_test_method_output_types(mar_edata, method, expected_output_type):
 def test_mcar_test_3D_edata(edata_blob_small):
     mcar_test(edata_blob_small, layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        mcar_test(edata_blob_small, layer="R_layer")
+        mcar_test(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
 
 
 def test_mar_data_identification(mar_edata):

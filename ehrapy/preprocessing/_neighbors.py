@@ -9,6 +9,7 @@ import numpy as np
 import scanpy as sc
 
 from ehrapy._compat import use_ehrdata
+from ehrapy.core._constants import TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY
 from ehrapy.tools.distances.timeseries import timeseries_distance
 
 if TYPE_CHECKING:
@@ -65,7 +66,7 @@ def neighbors(
                      In general values should be in the range 2 to 100. If `knn` is `True`, number of nearest neighbors to be searched.
                      If `knn` is `False`, a Gaussian kernel width is set to the distance of the `n_neighbors` neighbor.
         n_pcs: Use this many PCs. If `n_pcs==0` use `.X` if `use_rep is None`.
-        use_rep: Use the indicated representation. `'X'` or any key for `.obsm` is valid.
+        use_rep: Use the indicated representation. `'X'` or any key for `.obsm` is valid. For time series data (`metric='dtw'`, `'soft_dtw'`, `'gak'`), the key must be a 3D array with shape (n_obs, n_vars, n_timepoints).
                  If `None`, the representation is chosen automatically:
                  For `.n_vars` < 50, `.X` is used, otherwise 'X_pca' is used.
                  If 'X_pca' is not present, it's computed with default parameters.
@@ -102,12 +103,40 @@ def neighbors(
          **distances** : sparse matrix of dtype `float32`.
          Instead of decaying weights, this stores distances for each pair of neighbors.
     """
-    if metric in {"dtw", "soft_dtw", "gak"}:
-        if edata.R is None:
-            raise ValueError(f"metric {metric} requires edata.R to be set.")
-        metric = partial(timeseries_distance, R=edata.R, metric=metric)  # type: ignore
+    import ehrapy as ep
 
-    return sc.pp.neighbors(
+    if metric in {"dtw", "soft_dtw", "gak"}:
+        if use_rep is None:
+            raise ValueError(f"use_rep must be specified if metric is {metric}")
+        if use_rep in edata.layers:
+            arr = edata.layers[use_rep]
+        elif use_rep in edata.obsm:
+            arr = edata.obsm[use_rep]
+        else:
+            raise ValueError(f"use_rep {use_rep} not found in edata.layers or edata.obsm")
+
+        if arr.ndim != 3:
+            raise ValueError(
+                f"If metric is {metric}, use_rep must be a 3D array with shape (n_obs, n_vars, n_timepoints), but {arr} is ndim={arr.ndim}."
+            )
+
+        metric = partial(timeseries_distance, arr=arr, metric=metric)  # type: ignore
+
+        # the metric will use arr, but we need to hide this fact from scanpy;
+        # this is a hack to do so. It tricks scanpy's checks for the use_rep shap, while the metric brings along its array       use_rep = None
+
+        use_rep = None
+
+        # For longitudinal data, we pass a mock array `np.arange` with indices as `use_rep` to `scanpy.pp.neighbors`.
+        # It will call the metric with the indices as the first two arguments.
+        # Scanpy thinks that timeseries_distance computes distance on use_rep,
+        # but actually timeseries_distance just takes the indices from use_rep and uses them to index the timeseries data along the obs axis.
+        if use_rep is not None:
+            raise ValueError(f"use_rep must be None when metric is {metric}")
+        edata.obsm[TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY] = np.arange(edata.shape[0])
+        use_rep = TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY
+
+    edata_returned = sc.pp.neighbors(
         adata=edata,
         n_neighbors=n_neighbors,
         n_pcs=n_pcs,
@@ -121,3 +150,9 @@ def neighbors(
         key_added=key_added,
         copy=copy,
     )
+    if edata_returned is not None:
+        edata_returned.obsm.pop(TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY, None)
+
+    edata.obsm.pop(TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY, None)
+
+    return edata_returned

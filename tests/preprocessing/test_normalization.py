@@ -3,12 +3,12 @@ from pathlib import Path
 
 import dask.array as da
 import numpy as np
-import pandas as pd
 import pytest
 from anndata import AnnData
+from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
 
 import ehrapy as ep
-from tests.conftest import ARRAY_TYPES
+from tests.conftest import ARRAY_TYPES_NONNUMERIC
 
 CURRENT_DIR = Path(__file__).parent
 from scipy import sparse
@@ -39,7 +39,7 @@ def test_norm_scale_array_types(adata_to_norm, array_type, expected_error):
 def test_norm_scale_3D_edata(edata_blob_small):
     ep.pp.scale_norm(edata_blob_small, layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.scale_norm(edata_blob_small, layer="R_layer")
+        ep.pp.scale_norm(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
 
 
 @pytest.mark.parametrize("array_type", [np.array, da.array])
@@ -83,7 +83,7 @@ def test_norm_scale_integers(edata_mini_integers_in_X):
     assert np.allclose(adata_norm.X, in_days_norm)
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES)
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 def test_norm_scale_kwargs(array_type, adata_to_norm):
     adata_to_norm.X = array_type(adata_to_norm.X)
 
@@ -96,7 +96,7 @@ def test_norm_scale_kwargs(array_type, adata_to_norm):
     assert np.allclose(adata_norm.X[:, 4], num2_norm)
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES)
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 def test_norm_scale_group(array_type, edata_mini_normalization):
     edata_mini_casted = edata_mini_normalization.copy()
     edata_mini_casted.X = array_type(edata_mini_casted.X)
@@ -146,10 +146,10 @@ def test_norm_minmax_array_types(adata_to_norm, array_type, expected_error):
 def test_norm_minmax_3D_edata(edata_blob_small):
     ep.pp.minmax_norm(edata_blob_small, layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.minmax_norm(edata_blob_small, layer="R_layer")
+        ep.pp.minmax_norm(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES)
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 def test_norm_minmax(array_type, adata_to_norm):
     """Test for the minmax normalization method."""
     adata_to_norm.X = array_type(adata_to_norm.X)
@@ -173,7 +173,7 @@ def test_norm_minmax_integers(edata_mini_integers_in_X):
     assert np.allclose(adata_norm.X, in_days_norm)
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES)
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 def test_norm_minmax_kwargs(array_type, adata_to_norm):
     adata_to_norm.X = array_type(adata_to_norm.X)
 
@@ -186,7 +186,7 @@ def test_norm_minmax_kwargs(array_type, adata_to_norm):
     assert np.allclose(adata_norm.X[:, 4], num2_norm)
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES)
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 def test_norm_minmax_group(array_type, edata_mini_normalization):
     edata_mini_casted = edata_mini_normalization.copy()
     edata_mini_casted.X = array_type(edata_mini_casted.X)
@@ -227,10 +227,10 @@ def test_norm_maxabs_array_types(adata_to_norm, array_type, expected_error):
 def test_norm_maxabs_3D_edata(edata_blob_small):
     ep.pp.maxabs_norm(edata_blob_small, layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.maxabs_norm(edata_blob_small, layer="R_layer")
+        ep.pp.maxabs_norm(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES)
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 def test_norm_maxabs(array_type, adata_to_norm):
     """Test for the maxabs normalization method."""
     adata_to_norm.X = array_type(adata_to_norm.X)
@@ -259,7 +259,7 @@ def test_norm_maxabs_integers(edata_mini_integers_in_X):
     assert np.allclose(adata_norm.X, in_days_norm)
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES)
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 def test_norm_maxabs_group(array_type, edata_mini_normalization):
     edata_mini_casted = edata_mini_normalization.copy()
     edata_mini_casted.X = array_type(edata_mini_casted.X)
@@ -313,10 +313,10 @@ def test_norm_robust_scale_array_types(adata_to_norm, array_type, expected_error
 def test_norm_robust_scale_3D_edata(edata_blob_small):
     ep.pp.robust_scale_norm(edata_blob_small, layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.robust_scale_norm(edata_blob_small, layer="R_layer")
+        ep.pp.robust_scale_norm(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES)
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 def test_norm_robust_scale(array_type, adata_to_norm):
     """Test for the robust_scale normalization method."""
     adata_to_norm.X = array_type(adata_to_norm.X)
@@ -340,7 +340,7 @@ def test_norm_robust_scale_integers(edata_mini_integers_in_X):
     assert np.allclose(adata_norm.X, in_days_norm)
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES)
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 def test_norm_robust_scale_kwargs(adata_to_norm, array_type):
     adata_to_norm.X = array_type(adata_to_norm.X)
 
@@ -353,7 +353,7 @@ def test_norm_robust_scale_kwargs(adata_to_norm, array_type):
     assert np.allclose(adata_norm.X[:, 4], num2_norm)
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES)
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 def test_norm_robust_scale_group(array_type, edata_mini_normalization):
     edata_mini_casted = edata_mini_normalization.copy()
     edata_mini_casted.X = array_type(edata_mini_casted.X)
@@ -395,10 +395,10 @@ def test_norm_quantile_array_types(adata_to_norm, array_type, expected_error):
 def test_norm_quantile_3D_edata(edata_blob_small):
     ep.pp.quantile_norm(edata_blob_small, layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.quantile_norm(edata_blob_small, layer="R_layer")
+        ep.pp.quantile_norm(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES)
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 def test_norm_quantile_uniform(array_type, adata_to_norm):
     """Test for the quantile normalization method."""
     warnings.filterwarnings("ignore", category=UserWarning)
@@ -438,7 +438,7 @@ def test_norm_quantile_integers(edata_mini_integers_in_X):
     assert np.allclose(adata_norm.X, in_days_norm)
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES)
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 def test_norm_quantile_uniform_kwargs(array_type, adata_to_norm):
     adata_to_norm.X = array_type(adata_to_norm.X)
 
@@ -451,7 +451,7 @@ def test_norm_quantile_uniform_kwargs(array_type, adata_to_norm):
     assert np.allclose(adata_norm.X[:, 4], num2_norm)
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES)
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 def test_norm_quantile_uniform_group(array_type, edata_mini_normalization):
     edata_mini_casted = edata_mini_normalization.copy()
     edata_mini_casted.X = array_type(edata_mini_casted.X)
@@ -493,10 +493,10 @@ def test_norm_power_array_types(adata_to_norm, array_type, expected_error):
 def test_norm_power_3D_edata(edata_blob_small):
     ep.pp.power_norm(edata_blob_small, layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.power_norm(edata_blob_small, layer="R_layer")
+        ep.pp.power_norm(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES)
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 def test_norm_power(array_type, adata_to_norm):
     """Test for the power transformation normalization method."""
     adata_to_norm.X = array_type(adata_to_norm.X)
@@ -539,7 +539,7 @@ def test_norm_power_integers(edata_mini_integers_in_X):
     assert np.allclose(adata_norm.X, in_days_norm)
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES)
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 def test_norm_power_kwargs(array_type, adata_to_norm):
     adata_to_norm.X = array_type(adata_to_norm.X)
 
@@ -559,7 +559,7 @@ def test_norm_power_kwargs(array_type, adata_to_norm):
         assert np.allclose(adata_norm.X[:, 4], num2_norm, rtol=1e-02, atol=1e-02)
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES)
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 def test_norm_power_group(array_type, edata_mini_normalization):
     edata_mini_casted = edata_mini_normalization.copy()
     edata_mini_casted.X = array_type(edata_mini_casted.X)
@@ -629,10 +629,10 @@ def test_norm_log_norm_array_types(adata_to_norm, array_type, expected_error):
 
 def test_norm_log_3D_edata(edata_blob_small):
     edata_blob_small.X = np.abs(edata_blob_small.X)
-    edata_blob_small.layers["R_layer"] = np.abs(edata_blob_small.layers["R_layer"])
+    edata_blob_small.layers[DEFAULT_TEM_LAYER_NAME] = np.abs(edata_blob_small.layers[DEFAULT_TEM_LAYER_NAME])
     ep.pp.log_norm(edata_blob_small, layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.log_norm(edata_blob_small, layer="R_layer")
+        ep.pp.log_norm(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
 
 
 def test_norm_log1p(adata_to_norm):
@@ -711,7 +711,7 @@ def test_offset_negative_values():
 def test_offset_negative_values_3D_edata(edata_blob_small):
     ep.pp.offset_negative_values(edata_blob_small, layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.offset_negative_values(edata_blob_small, layer="R_layer")
+        ep.pp.offset_negative_values(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
 
 
 def test_norm_numerical_only():

@@ -8,18 +8,23 @@ from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import pandas as pd
-from lamin_utils import logger
+import scipy.sparse as sp
+from ehrdata._logger import logger
 from sklearn.experimental import enable_iterative_imputer  # noinspection PyUnresolvedReference
 from sklearn.impute import SimpleImputer
 
 from ehrapy import settings
-from ehrapy._compat import DaskArray, _raise_array_type_not_implemented, function_2D_only, use_ehrdata
+from ehrapy._compat import (
+    DaskArray,
+    _apply_over_time_axis,
+    _raise_array_type_not_implemented,
+    function_2D_only,
+    use_ehrdata,
+)
 from ehrapy._progress import spinner
 from ehrapy.anndata import _check_feature_types
 from ehrapy.anndata._feature_specifications import _infer_numerical_column_indices
-from ehrapy.anndata.anndata_ext import (
-    _get_var_indices,
-)
+from ehrapy.anndata.anndata_ext import _get_var_indices
 
 if TYPE_CHECKING:
     from anndata import AnnData
@@ -106,7 +111,7 @@ def _replace_explicit(arr, replacement: str | int, impute_empty_strings: bool) -
     _raise_array_type_not_implemented(_replace_explicit, type(arr))
 
 
-@_replace_explicit.register
+@_replace_explicit.register(np.ndarray)
 def _(arr: np.ndarray, replacement: str | int, impute_empty_strings: bool) -> np.ndarray:
     """Replace one column or whole X with a value where missing values are stored."""
     if not impute_empty_strings:  # pragma: no cover
@@ -148,9 +153,36 @@ def _extract_impute_value(replacement: dict[str, str | int], column_name: str) -
         return None
 
 
+@singledispatch
+def _simple_impute_function(arr, strategy: Literal["mean", "median", "most_frequent"]) -> None:
+    _raise_array_type_not_implemented(_simple_impute_function, type(arr))
+
+
+@_simple_impute_function.register(sp.coo_array)
+def _(arr: sp.coo_array, strategy: Literal["mean", "median", "most_frequent"]) -> sp.coo_array:
+    _raise_array_type_not_implemented(_simple_impute_function, type(arr))
+
+
+@_simple_impute_function.register(DaskArray)
+@_apply_over_time_axis
+def _(arr: DaskArray, strategy: Literal["mean", "median", "most_frequent"]) -> DaskArray:
+    import dask_ml.impute
+
+    arr_dtype = arr.dtype
+    return dask_ml.impute.SimpleImputer(strategy=strategy).fit_transform(arr.astype(float)).astype(arr_dtype)
+
+
+@_simple_impute_function.register(sp.csc_array)
+@_simple_impute_function.register(sp.csr_array)
+@_simple_impute_function.register(np.ndarray)
+@_apply_over_time_axis
+def _(arr: np.ndarray, strategy: Literal["mean", "median", "most_frequent"]) -> np.ndarray:
+    import sklearn
+
+    return sklearn.impute.SimpleImputer(strategy=strategy).fit_transform(arr)
+
+
 @use_ehrdata(deprecated_after="1.0.0")
-@function_2D_only()
-@spinner("Performing simple impute")
 def simple_impute(
     edata: EHRData | AnnData,
     var_names: Iterable[str] | None = None,
@@ -168,7 +200,7 @@ def simple_impute(
     Args:
         edata: Central data object.
         var_names: A list of column names to apply imputation on (if None, impute all columns).
-        strategy: Imputation strategy to use. One of {'mean', 'median', 'most_frequent'}.
+        strategy: Imputation strategy to use. One of {'mean', 'median', 'most_frequent'}. If data is a `dask.array.Array`, only 'mean' is supported.
         warning_threshold: Display a warning message if percentage of missing values exceeds this threshold.
         layer: The layer to impute.
         copy: Whether to return a copy of `edata` or modify it inplace.
@@ -186,39 +218,17 @@ def simple_impute(
     if copy:
         edata = edata.copy()
 
-    _warn_imputation_threshold(edata, var_names, threshold=warning_threshold, layer=layer)
+    # TODO: warn again if qc_metrics is 3D enabled
+    # _warn_imputation_threshold(edata, var_names, threshold=warning_threshold, layer=layer)
 
-    if strategy in {"median", "mean"}:
-        try:
-            _simple_impute(edata, var_names, strategy, layer)
-        except ValueError:
-            raise ValueError(
-                f"Can only impute numerical data using {strategy} strategy. Try to restrict imputation "
-                "to certain columns using var_names parameter or use a different mode."
-            ) from None
-    # most_frequent imputation works with non-numerical data as well
-    elif strategy == "most_frequent":
-        _simple_impute(edata, var_names, strategy, layer)
+    var_indices = _get_var_indices(edata, edata.var_names if var_names is None else var_names)
+
+    if layer is None:
+        edata.X[:, var_indices] = _simple_impute_function(edata.X[:, var_indices], strategy)
     else:
-        raise ValueError(
-            f"Unknown impute strategy {strategy} for simple Imputation. Choose any of mean, median or most_frequent."
-        ) from None
+        edata.layers[layer][:, var_indices] = _simple_impute_function(edata.layers[layer][:, var_indices], strategy)
 
     return edata if copy else None
-
-
-def _simple_impute(edata: EHRData | AnnData, var_names: Iterable[str] | None, strategy: str, layer: str | None) -> None:
-    imputer = SimpleImputer(strategy=strategy)
-    if layer is None:
-        if isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):
-            edata[:, var_names].X = imputer.fit_transform(edata[:, var_names].X)
-        else:
-            edata.X = imputer.fit_transform(edata.X)
-    else:
-        if isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):
-            edata[:, var_names].layers[layer] = imputer.fit_transform(edata[:, var_names].layers[layer])
-        else:
-            edata.layers[layer] = imputer.fit_transform(edata.layers[layer])
 
 
 @_check_feature_types

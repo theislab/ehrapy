@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Literal
 import fhiry.parallel as fp
 import numpy as np
 import pandas as pd
-from lamin_utils import logger
+from ehrdata._logger import logger
 from rich import print
 
 from ehrapy import ehrapy_settings, settings

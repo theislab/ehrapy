@@ -9,9 +9,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pytest
+import scipy.sparse as sp
 from anndata import AnnData
-from ehrdata.core.constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
-from ehrdata.io import read_csv
+from ehrdata.core.constants import CATEGORICAL_TAG, DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY, NUMERIC_TAG
 from matplotlib.testing.compare import compare_images
 
 import ehrapy as ep
@@ -142,22 +142,42 @@ def mcar_edata(rng) -> ed.EHRData:
     missing_indices = rng.choice(a=[False, True], size=data.shape, p=[1 - 0.1, 0.1])
     data[missing_indices] = np.nan
 
-    return ed.EHRData(data)
+    data_3d = rng.random((100, 10, 3))
+    missing_indices = rng.choice(a=[False, True], size=data_3d.shape, p=[1 - 0.1, 0.1])
+    data_3d[missing_indices] = np.nan
+
+    return ed.EHRData(data, layers={DEFAULT_TEM_LAYER_NAME: data_3d})
 
 
 @pytest.fixture
 def edata_mini():
-    return read_csv(f"{TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["glucose", "weight", "disease", "station"])
+    return ed.io.read_csv(
+        f"{TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["glucose", "weight", "disease", "station"]
+    )
+
+
+@pytest.fixture
+def edata_mini_3D_missing_values():
+    tiny_mixed_array = np.array(
+        [
+            [[138, 139], [78, np.nan], [77, 76], [1, 2], ["A", "B"], ["Yes", np.nan]],
+            [[140, 141], [80, 81], [60, 90], [0, 1], ["A", "A"], ["Yes", "Yes"]],
+            [[148, 149], [77, 78], [110, np.nan], [0, 1], [np.nan, "B"], ["Yes", "Yes"]],
+            [[150, 151], [79, 80], [56, np.nan], [2, 3], ["B", "B"], ["Yes", "No"]],
+        ],
+        dtype=object,
+    )
+    return ed.EHRData(layers={DEFAULT_TEM_LAYER_NAME: tiny_mixed_array})
 
 
 @pytest.fixture
 def edata_mini_sample():
-    return read_csv(f"{TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["clinic_day"])
+    return ed.io.read_csv(f"{TEST_DATA_PATH}/dataset1.csv", columns_obs_only=["clinic_day"])
 
 
 @pytest.fixture
 def edata_mini_normalization():
-    return read_csv(
+    return ed.io.read_csv(
         f"{TEST_DATA_PATH}/dataset1.csv",
         columns_obs_only=["glucose", "weight", "disease", "station"],
     )[:8]
@@ -165,7 +185,7 @@ def edata_mini_normalization():
 
 @pytest.fixture
 def edata_mini_integers_in_X():
-    adata = read_csv(
+    adata = ed.io.read_csv(
         f"{TEST_DATA_PATH}/dataset1.csv",
         columns_obs_only=["idx", "sys_bp_entry", "dia_bp_entry", "glucose", "weight", "disease", "station"],
     )
@@ -174,6 +194,25 @@ def edata_mini_integers_in_X():
     ep.ad.infer_feature_types(adata)
     ep.ad.replace_feature_types(adata, ["in_days"], "numeric")
     return adata
+
+
+@pytest.fixture
+def edata_and_distances_dtw():
+    """See tests/_scripts/dtw_test_reference.ipynb."""
+    data = np.random.default_rng(42).integers(0, 5, (5, 2, 4))
+    edata = ed.EHRData(X=None, layers={DEFAULT_TEM_LAYER_NAME: data})
+
+    distances = np.array(
+        [
+            [0.0, 2.98118805, 2.44948974, 3.30277564, 2.34277886],
+            [2.98118805, 0.0, 3.43649167, 3.05492646, 3.28629768],
+            [2.44948974, 3.43649167, 0.0, 3.16227766, 3.31318964],
+            [3.30277564, 3.05492646, 3.16227766, 0.0, 4.35228539],
+            [2.34277886, 3.28629768, 3.31318964, 4.35228539, 0.0],
+        ]
+    )
+
+    return edata, distances
 
 
 @pytest.fixture
@@ -214,48 +253,48 @@ def mimic_2_sa():
 
 @pytest.fixture
 def edata_move_obs_num() -> ed.EHRData:
-    return read_csv(TEST_DATA_PATH / "io/dataset_move_obs_num.csv")
+    return ed.io.read_csv(TEST_DATA_PATH / "io/dataset_move_obs_num.csv")
 
 
 @pytest.fixture
 def edata_move_obs_mix() -> ed.EHRData:
-    return read_csv(TEST_DATA_PATH / "io/dataset_move_obs_mix.csv")
+    return ed.io.read_csv(TEST_DATA_PATH / "io/dataset_move_obs_mix.csv")
 
 
 @pytest.fixture
 def impute_num_edata() -> ed.EHRData:
-    edata = read_csv(f"{TEST_DATA_PATH}/imputation/test_impute_num.csv")
+    edata = ed.io.read_csv(f"{TEST_DATA_PATH}/imputation/test_impute_num.csv")
     return edata
 
 
 @pytest.fixture
 def impute_edata() -> ed.EHRData:
-    edata = read_csv(f"{TEST_DATA_PATH}/imputation/test_impute.csv")
+    edata = ed.io.read_csv(f"{TEST_DATA_PATH}/imputation/test_impute.csv")
     return edata
 
 
 @pytest.fixture
 def impute_iris_edata() -> ed.EHRData:
-    edata = read_csv(f"{TEST_DATA_PATH}/imputation/test_impute_iris.csv")
+    edata = ed.io.read_csv(f"{TEST_DATA_PATH}/imputation/test_impute_iris.csv")
     return edata
 
 
 @pytest.fixture
 def impute_titanic_edata():
-    edata = read_csv(f"{TEST_DATA_PATH}/imputation/test_impute_titanic.csv")
+    edata = ed.io.read_csv(f"{TEST_DATA_PATH}/imputation/test_impute_titanic.csv")
     return edata
 
 
 @pytest.fixture
 def encode_ds_1_edata() -> ed.EHRData:
-    edata = read_csv(f"{TEST_DATA_PATH}/encode/dataset1.csv")
+    edata = ed.io.read_csv(f"{TEST_DATA_PATH}/encode/dataset1.csv")
     edata.layers["layer_2"] = edata.X.copy()
     return edata
 
 
 @pytest.fixture
 def encode_ds_2_edata() -> ed.EHRData:
-    edata = read_csv(f"{TEST_DATA_PATH}/encode/dataset2.csv")
+    edata = ed.io.read_csv(f"{TEST_DATA_PATH}/encode/dataset2.csv")
     edata.layers["layer_2"] = edata.X.copy()
     return edata
 
@@ -395,4 +434,11 @@ def as_dense_dask_array(a, chunk_size=1000):
     return da.from_array(a, chunks=chunk_size)
 
 
-ARRAY_TYPES = (asarray, as_dense_dask_array)
+ARRAY_TYPES_NUMERIC = (
+    asarray,
+    as_dense_dask_array,
+    sp.csr_array,
+    sp.csc_array,
+)  # add coo_array once supported in AnnData
+ARRAY_TYPES_NUMERIC_3D_ABLE = (asarray, as_dense_dask_array)  # add coo_array once supported in AnnData
+ARRAY_TYPES_NONNUMERIC = (asarray, as_dense_dask_array)
