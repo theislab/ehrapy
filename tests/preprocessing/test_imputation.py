@@ -21,7 +21,7 @@ from ehrapy.preprocessing._imputation import (
     miss_forest_impute,
     simple_impute,
 )
-from tests.conftest import ARRAY_TYPES, TEST_DATA_PATH
+from tests.conftest import ARRAY_TYPES_NONNUMERIC, ARRAY_TYPES_NUMERIC, ARRAY_TYPES_NUMERIC_3D_ABLE, TEST_DATA_PATH
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_PATH = f"{TEST_DATA_PATH}/imputation"
@@ -92,7 +92,9 @@ def _base_check_imputation(
         raise AssertionError("Values outside imputed columns were modified.")
 
     # Ensure imputation does not alter non-NaN values in the imputed columns
-    imputed_non_nan_mask = (~before_nan_mask) & imputed_mask
+    imputed_non_nan_mask = (~before_nan_mask) & (
+        imputed_mask[None, :] if layer_before.ndim == 2 else imputed_mask[None, :, None]
+    )
     if not _are_ndarrays_equal(layer_before[imputed_non_nan_mask], layer_after[imputed_non_nan_mask]):
         raise AssertionError("Non-NaN values in imputed columns were modified.")
 
@@ -147,10 +149,36 @@ def test_base_check_imputation_change_detected_in_imputed_column(impute_num_edat
         _base_check_imputation(impute_num_edata, edata_imputed)
 
 
+@pytest.mark.parametrize(
+    "array_type,expected_error",
+    [
+        (np.array, None),
+        (da.array, None),
+        (sparse.csr_array, None),
+        (sparse.csc_array, None),
+        # (sparse.coo_array, None) # not yet supported by AnnData
+    ],
+)
+def test_simple_impute_array_types(impute_num_edata, array_type, expected_error):
+    impute_num_edata.X = array_type(impute_num_edata.X)
+
+    if expected_error:
+        with pytest.raises(expected_error):
+            simple_impute(impute_num_edata, strategy="mean")
+
+
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NUMERIC)
 @pytest.mark.parametrize("strategy", ["mean", "median", "most_frequent"])
-def test_simple_impute_basic(impute_num_edata, strategy):
-    edata_imputed = simple_impute(impute_num_edata, strategy=strategy, copy=True)
-    _base_check_imputation(impute_num_edata, edata_imputed)
+def test_simple_impute_basic(impute_num_edata, array_type, strategy):
+    impute_num_edata.X = array_type(impute_num_edata.X)
+
+    if isinstance(impute_num_edata.X, da.Array) and strategy != "mean":
+        with pytest.raises(ValueError):
+            edata_imputed = simple_impute(impute_num_edata, strategy=strategy, copy=True)
+
+    else:
+        edata_imputed = simple_impute(impute_num_edata, strategy=strategy, copy=True)
+        _base_check_imputation(impute_num_edata, edata_imputed)
 
 
 @pytest.mark.parametrize("strategy", ["mean", "median", "most_frequent"])
@@ -161,19 +189,81 @@ def test_simple_impute_copy(impute_num_edata, strategy):
     _base_check_imputation(impute_num_edata, edata_imputed)
 
 
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 @pytest.mark.parametrize("strategy", ["mean", "median", "most_frequent"])
-def test_simple_impute_subset(impute_edata, strategy):
+def test_simple_impute_subset(impute_edata, array_type, strategy):
+    impute_edata.X = array_type(impute_edata.X)
     var_names = ("intcol", "indexcol")
-    edata_imputed = simple_impute(impute_edata, var_names=var_names, copy=True)
+    if isinstance(impute_edata.X, da.Array) and strategy != "mean":
+        with pytest.raises(ValueError):
+            edata_imputed = simple_impute(impute_edata, var_names=var_names, strategy=strategy, copy=True)
+    else:
+        edata_imputed = simple_impute(impute_edata, var_names=var_names, strategy=strategy, copy=True)
 
-    _base_check_imputation(impute_edata, edata_imputed, imputed_var_names=var_names)
-    assert np.any([item != item for item in edata_imputed.X[::, 3:4]])
+        _base_check_imputation(impute_edata, edata_imputed, imputed_var_names=var_names)
+        assert np.any([item != item for item in edata_imputed.X[::, 3:4]])
+
+        # manually verified computation result
+        if strategy == "mean":
+            assert edata_imputed.X[0, 1] == 3.0
+        elif strategy == "most_frequent":
+            assert edata_imputed.X[0, 1] == 2.0  # if multiple equally frequent values, return minimum
 
 
-def test_simple_impute_3D_edata(edata_blob_small):
-    simple_impute(edata_blob_small, layer="layer_2")
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
-        simple_impute(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NUMERIC_3D_ABLE)
+@pytest.mark.parametrize("strategy", ["mean", "median", "most_frequent"])
+def test_simple_impute_3D_edata(mcar_edata, array_type, strategy):
+    mcar_edata.layers[DEFAULT_TEM_LAYER_NAME] = array_type(mcar_edata.layers[DEFAULT_TEM_LAYER_NAME])
+
+    if isinstance(mcar_edata.layers[DEFAULT_TEM_LAYER_NAME], da.Array) and strategy != "mean":
+        with pytest.raises(ValueError):
+            edata_imputed = simple_impute(mcar_edata, layer=DEFAULT_TEM_LAYER_NAME, strategy=strategy, copy=True)
+
+    else:
+        edata_imputed = simple_impute(mcar_edata, layer=DEFAULT_TEM_LAYER_NAME, strategy=strategy, copy=True)
+        _base_check_imputation(
+            mcar_edata,
+            edata_imputed,
+            before_imputation_layer=DEFAULT_TEM_LAYER_NAME,
+            after_imputation_layer=DEFAULT_TEM_LAYER_NAME,
+        )
+
+        # manually verify computation result for 1 value
+        if strategy in {"mean", "median"}:
+            element = edata_imputed[9, 0, 0].layers[DEFAULT_TEM_LAYER_NAME]
+
+            if strategy == "mean":
+                reference_value = np.nanmean(mcar_edata[:, 0, :].layers[DEFAULT_TEM_LAYER_NAME])
+            elif strategy == "median":
+                reference_value = np.nanmedian(mcar_edata[:, 0, :].layers[DEFAULT_TEM_LAYER_NAME])
+
+            assert np.isclose(element, reference_value)
+
+
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
+@pytest.mark.parametrize("strategy", ["mean", "median", "most_frequent"])
+def test_simple_impute_3D_edata_nonnumeric(edata_mini_3D_missing_values, array_type, strategy):
+    edata_mini_3D_missing_values.layers[DEFAULT_TEM_LAYER_NAME] = array_type(
+        edata_mini_3D_missing_values.layers[DEFAULT_TEM_LAYER_NAME]
+    )
+
+    if strategy == "most_frequent" and not isinstance(
+        edata_mini_3D_missing_values.layers[DEFAULT_TEM_LAYER_NAME], da.Array
+    ):
+        edata_imputed = simple_impute(
+            edata_mini_3D_missing_values, layer=DEFAULT_TEM_LAYER_NAME, strategy=strategy, copy=True
+        )
+        _base_check_imputation(
+            edata_mini_3D_missing_values,
+            edata_imputed,
+            before_imputation_layer=DEFAULT_TEM_LAYER_NAME,
+            after_imputation_layer=DEFAULT_TEM_LAYER_NAME,
+        )
+    else:
+        with pytest.raises(ValueError):
+            edata_imputed = simple_impute(
+                edata_mini_3D_missing_values, layer=DEFAULT_TEM_LAYER_NAME, strategy=strategy, copy=True
+            )
 
 
 @pytest.mark.parametrize("strategy", ["mean", "median"])
@@ -330,7 +420,7 @@ def test_explicit_impute_3D_edata(edata_blob_small):
         explicit_impute(edata_blob_small, replacement=1011, layer=DEFAULT_TEM_LAYER_NAME)
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES)
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 def test_explicit_impute_all(array_type, impute_num_edata):
     impute_num_edata.X = array_type(impute_num_edata.X)
     warnings.filterwarnings("ignore", category=FutureWarning)
@@ -340,7 +430,7 @@ def test_explicit_impute_all(array_type, impute_num_edata):
     assert np.sum([edata_imputed.X == 1011]) == 3
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES)
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 def test_explicit_impute_subset(impute_edata, array_type):
     impute_edata.X = array_type(impute_edata.X)
     edata_imputed = explicit_impute(impute_edata, replacement={"strcol": "REPLACED", "intcol": 1011}, copy=True)
