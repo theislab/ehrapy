@@ -478,7 +478,7 @@ def tracksplot(  # noqa: D417
         gene_symbols=feature_symbols,
         var_group_positions=var_group_positions,
         var_group_labels=var_group_labels,
-        layer=layer, 
+        layer=layer,
         show=show,
         save=save,
         figsize=figsize,
