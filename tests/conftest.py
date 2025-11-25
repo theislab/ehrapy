@@ -53,6 +53,16 @@ def var_data():
 
 
 @pytest.fixture
+def var_data_adv():
+    return {
+        "alive": ["yes", "no", "maybe"],
+        "hospital": ["hospital 1", "hospital 2", "hospital 1"],
+        "crazy": ["yes", "yes", "yes"],
+        "feature_type": ["numeric", "numeric", "categorical"],
+    }
+
+
+@pytest.fixture
 def edata_feature_type_specifications():
     df = pd.DataFrame(
         {
@@ -76,6 +86,15 @@ def missing_values_edata(obs_data, var_data):
         X=np.array([[0.21, np.nan, 41.42], [np.nan, np.nan, 7.234]], dtype=np.float32),
         obs=pd.DataFrame(data=obs_data),
         var=pd.DataFrame(data=var_data, index=["Acetaminophen", "hospital", "crazy"]),
+    )
+
+
+@pytest.fixture
+def missing_values_edata_adv(obs_data, var_data_adv):
+    return ed.EHRData(
+        X=np.array([[0.21, np.nan, 41.42], [np.nan, np.nan, 7.234]], dtype=np.float32),
+        obs=pd.DataFrame(data=obs_data),
+        var=pd.DataFrame(data=var_data_adv, index=["Acetaminophen", "hospital", "crazy"]),
     )
 
 
