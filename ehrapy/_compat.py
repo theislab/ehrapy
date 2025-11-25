@@ -8,6 +8,7 @@ from subprocess import PIPE, Popen
 from typing import TYPE_CHECKING, ParamSpec, TypeVar, cast
 
 import numpy as np
+import scipy.sparse as sp
 
 P = ParamSpec("P")
 R = TypeVar("R")
@@ -248,3 +249,25 @@ def function_2D_only():
         return wrapper
 
     return decorator
+
+
+def asarray(a):
+    import numpy as np
+
+    return np.asarray(a)
+
+
+def as_dense_dask_array(a, chunk_size=1000):
+    import dask.array as da
+
+    return da.from_array(a, chunks=chunk_size)
+
+
+ARRAY_TYPES_NUMERIC = (
+    asarray,
+    as_dense_dask_array,
+    sp.csr_array,
+    sp.csc_array,
+)  # add coo_array once supported in AnnData
+ARRAY_TYPES_NUMERIC_3D_ABLE = (asarray, as_dense_dask_array)  # add coo_array once supported in AnnData
+ARRAY_TYPES_NONNUMERIC = (asarray, as_dense_dask_array)
