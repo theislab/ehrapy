@@ -66,6 +66,9 @@ jobs:
           cache-dependency-glob: pyproject.toml
       - name: create hatch environment
         run: uvx hatch env create ${{ matrix.env.name }}
+      - name: Show installed packages
+        run: |
+          uvx hatch run ${{ matrix.env.name }}:uv pip freeze
       - name: run tests using hatch
         env:
           MPLBACKEND: agg

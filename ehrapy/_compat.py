@@ -7,6 +7,8 @@ from inspect import signature
 from subprocess import PIPE, Popen
 from typing import TYPE_CHECKING, ParamSpec, TypeVar, cast
 
+import numpy as np
+
 P = ParamSpec("P")
 R = TypeVar("R")
 T = TypeVar("T")
@@ -163,6 +165,30 @@ def use_ehrdata(
         return cast("Callable[P, R]", wrapper)
 
     return decorator
+
+
+def _apply_over_time_axis(f: Callable) -> Callable:
+    """Decorator to allow functions to handle both 2D and 3D arrays.
+
+    - If the input is 2D: pass it through unchanged.
+    - If the input is 3D: reshape to 2D before calling the function, then reshape the result back to 3D.
+    """
+
+    @wraps(f)
+    def wrapper(arr, *args, **kwargs):
+        if arr.ndim == 2:
+            return f(arr, *args, **kwargs)
+
+        elif arr.ndim == 3:
+            n_obs, n_vars, n_time = arr.shape
+            arr_2d = np.moveaxis(arr, 1, 2).reshape(-1, n_vars)
+            arr_modified_2d = f(arr_2d, *args, **kwargs)
+            return np.moveaxis(arr_modified_2d.reshape(n_obs, n_time, n_vars), 1, 2)
+
+        else:
+            raise ValueError(f"Unsupported array dimensionality: {arr.ndim}. Please reshape the array to 2D or 3D.")
+
+    return wrapper
 
 
 def _cast_adata_to_match_data_type(input_data: AnnData, target_type_reference: EHRData | AnnData) -> EHRData | AnnData:
