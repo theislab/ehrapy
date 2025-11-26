@@ -7,9 +7,16 @@ import numpy as np
 import sklearn.preprocessing as sklearn_pp
 from ehrdata.core.constants import NUMERIC_TAG
 
-from ehrapy._compat import DaskArray, _raise_array_type_not_implemented, function_2D_only, use_ehrdata
+from ehrapy._compat import (
+    DaskArray,
+    _apply_over_time_axis,
+    _raise_array_type_not_implemented,
+    function_2D_only,
+    use_ehrdata,
+)
 from ehrapy.anndata.anndata_ext import (
     _assert_numeric_vars,
+    _get_var_indices,
     _get_var_indices_for_type,
 )
 
@@ -19,83 +26,6 @@ if TYPE_CHECKING:
     import pandas as pd
     from anndata import AnnData
     from ehrdata import EHRData
-
-
-def _get_target_layer(edata: EHRData | AnnData, layer: str | None) -> tuple[np.ndarray, str]:
-    """Get the target data layer and its effective name.
-
-    Returns:
-        tuple: (data_array, effective_layer_name)
-    """
-    if layer is None:
-        if hasattr(edata, "R") and edata.R is not None:
-            return edata.R, "R"
-        else:
-            return edata.X, "X"
-    else:
-        return edata.layers[layer], layer
-
-
-def _set_target_layer(
-    edata: EHRData | AnnData, data: np.ndarray, layer_name: str, var_indices: Sequence[int] | Sequence[str]
-) -> None:
-    """Write normalized data back to the target layer."""
-    if layer_name == "R":
-        edata.R[:, var_indices, :] = data.astype(edata.R.dtype)
-    elif layer_name == "X":
-        edata.X = edata.X.astype(data.dtype)
-        edata[:, var_indices].X = data
-    else:
-        if data.ndim == 3:
-            edata.layers[layer_name][:, var_indices, :] = data.astype(edata.layers[layer_name].dtype)
-        else:
-            edata.layers[layer_name] = edata.layers[layer_name].astype(data.dtype)
-            edata[:, var_indices].layers[layer_name] = data
-
-
-def _normalize_3d_data(
-    data: np.ndarray,
-    var_indices: list[int],
-    scale_func: Callable[[np.ndarray], np.ndarray],
-    group_key: str | None,
-    edata: EHRData | AnnData,
-) -> np.ndarray:
-    """Apply normalization to 3D data (n_obs x n_var x n_timestamps)."""
-    var_values = data[:, var_indices, :]
-    n_obs, n_var_selected, n_timestamps = var_values.shape
-
-    if group_key is None:
-        for var_idx in range(n_var_selected):
-            var_data = var_values[:, var_idx, :].reshape(-1, 1)
-            var_data = scale_func(var_data)
-            var_values[:, var_idx, :] = var_data.reshape(n_obs, n_timestamps)
-    else:
-        for group in edata.obs[group_key].unique():
-            group_idx = edata.obs[group_key] == group
-            group_data = var_values[group_idx]
-            n_obs_group = group_data.shape[0]
-            for var_idx in range(n_var_selected):
-                var_data = group_data[:, var_idx, :].reshape(-1, 1)
-                var_data = scale_func(var_data)
-                var_values[group_idx, var_idx, :] = var_data.reshape(n_obs_group, n_timestamps)
-
-    return var_values
-
-
-def _normalize_2d_data(
-    edata: EHRData | AnnData, vars: Sequence[str], scale_func: Callable[[np.ndarray], np.ndarray], group_key: str | None
-) -> np.ndarray:
-    """Apply normalization to 2D data (n_obs × n_var)."""
-    var_values = edata[:, vars].X.copy()
-
-    if group_key is None:
-        var_values = scale_func(var_values)
-    else:
-        for group in edata.obs[group_key].unique():
-            group_idx = edata.obs[group_key] == group
-            var_values[group_idx] = scale_func(var_values[group_idx])
-
-    return var_values
 
 
 def _scale_func_group(
@@ -123,21 +53,37 @@ def _scale_func_group(
 
     edata = _prep_edata_norm(edata, copy)
 
-    target_data, layer_name = _get_target_layer(edata, layer)
+    var_indices = _get_var_indices(edata, vars)
+    X = edata.X if layer is None else edata.layers[layer]
 
-    if target_data.ndim == 3:
-        from ehrapy.anndata.anndata_ext import _get_var_indices
+    # group wise normalization doesnt work with dask arrays
+    if isinstance(X, DaskArray) and group_key is not None:
+        raise NotImplementedError(
+            "Group-wise normalization is not yet supported for Dask arrays. "
+            "Please convert to numpy array first or normalize without group_key."
+        )
 
-        var_indices = _get_var_indices(edata, vars)
-        normalized_data = _normalize_3d_data(target_data, var_indices, scale_func, group_key, edata)
-        _set_target_layer(edata, normalized_data, layer_name, var_indices)
+    # Convert integer arrays to float to preserve precision in normalized results
+    if isinstance(X, np.ndarray) and np.issubdtype(X.dtype, np.integer):
+        X = X.astype(np.float64)
 
-    elif target_data.ndim == 2:
-        normalized_data = _normalize_2d_data(edata, vars, scale_func, group_key)
-        _set_target_layer(edata, normalized_data, layer_name, vars)
-
+    if group_key is None:
+        X[:, var_indices] = scale_func(X[:, var_indices])
     else:
-        raise ValueError(f"Unsupported data dimensionality: {target_data.ndim}D. Expected 2D or 3D data.")
+        for group in edata.obs[group_key].unique():
+            group_idx = edata.obs[group_key] == group
+            group_mask = np.where(group_idx)[0]
+            if X.ndim == 2:
+                X[np.ix_(group_mask, var_indices)] = scale_func(X[np.ix_(group_mask, var_indices)])
+            else:
+                group_data = X[group_mask][:, var_indices, :]
+                normalized_group_data = scale_func(group_data)
+                X[group_idx, :, :][:, var_indices, :] = normalized_group_data
+
+    if layer is None:
+        edata.X = X
+    else:
+        edata.layers[layer] = X
 
     _record_norm(edata, vars, norm_name)
 
@@ -145,20 +91,22 @@ def _scale_func_group(
 
 
 @singledispatch
-def _scale_norm_function(arr):
+def _scale_norm_function(arr, **kwargs):
     _raise_array_type_not_implemented(_scale_norm_function, type(arr))
 
 
 @_scale_norm_function.register
+@_apply_over_time_axis
 def _(arr: np.ndarray, **kwargs):
-    return sklearn_pp.StandardScaler(**kwargs).fit_transform
+    return sklearn_pp.StandardScaler(**kwargs).fit_transform(arr)
 
 
 @_scale_norm_function.register
+@_apply_over_time_axis
 def _(arr: DaskArray, **kwargs):
     import dask_ml.preprocessing as daskml_pp
 
-    return daskml_pp.StandardScaler(**kwargs).fit_transform
+    return daskml_pp.StandardScaler(**kwargs).fit_transform(arr)
 
 
 @use_ehrdata(deprecated_after="1.0.0")
@@ -197,15 +145,15 @@ def scale_norm(
         >>> import ehrapy as ep
         >>> import numpy as np
         >>> edata = ed.dt.physionet2012()
-        >>> np.nanmean(edata.R)
+        >>> np.nanmean(edata.X)
         120.142281
         >>> ep.pp.scale_norm(edata)
-        >>> np.nanmean(edata.R)
+        >>> np.nanmean(edata.X)
         0
 
     """
-    arr, _ = _get_target_layer(edata, layer)
-    scale_func = _scale_norm_function(arr, **kwargs)
+    edata.X if layer is None else edata.layers[layer]
+    scale_func = lambda arr: _scale_norm_function(arr, **kwargs)
 
     return _scale_func_group(
         edata=edata,
@@ -219,20 +167,22 @@ def scale_norm(
 
 
 @singledispatch
-def _minmax_norm_function(arr):
+def _minmax_norm_function(arr, **kwargs):
     _raise_array_type_not_implemented(_minmax_norm_function, type(arr))
 
 
 @_minmax_norm_function.register
+@_apply_over_time_axis
 def _(arr: np.ndarray, **kwargs):
-    return sklearn_pp.MinMaxScaler(**kwargs).fit_transform
+    return sklearn_pp.MinMaxScaler(**kwargs).fit_transform(arr)
 
 
 @_minmax_norm_function.register
+@_apply_over_time_axis
 def _(arr: DaskArray, **kwargs):
     import dask_ml.preprocessing as daskml_pp
 
-    return daskml_pp.MinMaxScaler(**kwargs).fit_transform
+    return daskml_pp.MinMaxScaler(**kwargs).fit_transform(arr)
 
 
 @use_ehrdata(deprecated_after="1.0.0")
@@ -272,14 +222,14 @@ def minmax_norm(
         >>> import ehrapy as ep
         >>> import numpy as np
         >>> edata = ed.dt.physionet2012()
-        >>> np.nanmin(edata.R), np.nanmax(edata.R)
+        >>> np.nanmin(edata.X), np.nanmax(edata.X)
         (8, 4695)
         >>> ep.pp.minmax_norm(edata)
-        >>> np.nanmin(edata.R), np.nanmax(edata.R)
+        >>> np.nanmin(edata.X), np.nanmax(edata.X)
         (0, 1)
     """
-    arr, _ = _get_target_layer(edata, layer)
-    scale_func = _minmax_norm_function(arr, **kwargs)
+    edata.X if layer is None else edata.layers[layer]
+    scale_func = lambda arr: _minmax_norm_function(arr, **kwargs)
 
     return _scale_func_group(
         edata=edata,
@@ -294,12 +244,13 @@ def minmax_norm(
 
 @singledispatch
 def _maxabs_norm_function(arr):
-    _raise_array_type_not_implemented(_scale_norm_function, type(arr))
+    _raise_array_type_not_implemented(_maxabs_norm_function, type(arr))
 
 
 @_maxabs_norm_function.register
+@_apply_over_time_axis
 def _(arr: np.ndarray):
-    return sklearn_pp.MaxAbsScaler().fit_transform
+    return sklearn_pp.MaxAbsScaler().fit_transform(arr)
 
 
 @use_ehrdata(deprecated_after="1.0.0")
@@ -336,14 +287,14 @@ def maxabs_norm(
         >>> import ehrapy as ep
         >>> import numpy as np
         >>> edata = ed.dt.physionet2012()
-        >>> np.nanmax(np.abs(edata.R))
+        >>> np.nanmax(np.abs(edata.X))
         4695
         >>> ep.pp.maxabs_norm(edata)
-        >>> np.nanmax(np.abs(edata.R))
+        >>> np.nanmax(np.abs(edata.X))
         1
     """
-    arr, _ = _get_target_layer(edata, layer)
-    scale_func = _maxabs_norm_function(arr)
+    edata.X if layer is None else edata.layers[layer]
+    scale_func = _maxabs_norm_function
 
     return _scale_func_group(
         edata=edata,
@@ -362,15 +313,17 @@ def _robust_scale_norm_function(arr, **kwargs):
 
 
 @_robust_scale_norm_function.register
+@_apply_over_time_axis
 def _(arr: np.ndarray, **kwargs):
-    return sklearn_pp.RobustScaler(**kwargs).fit_transform
+    return sklearn_pp.RobustScaler(**kwargs).fit_transform(arr)
 
 
 @_robust_scale_norm_function.register
+@_apply_over_time_axis
 def _(arr: DaskArray, **kwargs):
     import dask_ml.preprocessing as daskml_pp
 
-    return daskml_pp.RobustScaler(**kwargs).fit_transform
+    return daskml_pp.RobustScaler(**kwargs).fit_transform(arr)
 
 
 @use_ehrdata(deprecated_after="1.0.0")
@@ -411,14 +364,14 @@ def robust_scale_norm(
         >>> import ehrapy as ep
         >>> import numpy as np
         >>> edata = ed.dt.physionet2012()
-        >>> np.nanmedian(edata.R)
+        >>> np.nanmedian(edata.X)
         82
         >>> ep.pp.robust_scale_norm(edata)
-        >>> np.nanmedian(edata.R)
+        >>> np.nanmedian(edata.X)
         0
     """
-    arr, _ = _get_target_layer(edata, layer)
-    scale_func = _robust_scale_norm_function(arr, **kwargs)
+    edata.X if layer is None else edata.layers[layer]
+    scale_func = lambda arr: _robust_scale_norm_function(arr, **kwargs)
 
     return _scale_func_group(
         edata=edata,
@@ -432,20 +385,22 @@ def robust_scale_norm(
 
 
 @singledispatch
-def _quantile_norm_function(arr):
+def _quantile_norm_function(arr, **kwargs):
     _raise_array_type_not_implemented(_quantile_norm_function, type(arr))
 
 
 @_quantile_norm_function.register
+@_apply_over_time_axis
 def _(arr: np.ndarray, **kwargs):
-    return sklearn_pp.QuantileTransformer(**kwargs).fit_transform
+    return sklearn_pp.QuantileTransformer(**kwargs).fit_transform(arr)
 
 
 @_quantile_norm_function.register
+@_apply_over_time_axis
 def _(arr: DaskArray, **kwargs):
     import dask_ml.preprocessing as daskml_pp
 
-    return daskml_pp.QuantileTransformer(**kwargs).fit_transform
+    return daskml_pp.QuantileTransformer(**kwargs).fit_transform(arr)
 
 
 @use_ehrdata(deprecated_after="1.0.0")
@@ -485,14 +440,14 @@ def quantile_norm(
         >>> import ehrapy as ep
         >>> import numpy as np
         >>> edata = ed.dt.physionet2012()
-        >>> np.nanmin(edata.R), np.nanmax(edata.R)
+        >>> np.nanmin(edata.X), np.nanmax(edata.X)
         (8, 4695)
         >>> ep.pp.quantile_norm(edata)
-        >>> np.nanmin(edata.R), np.nanmax(edata.R)
+        >>> np.nanmin(edata.X), np.nanmax(edata.X)
         (0, 1)
     """
-    arr, _ = _get_target_layer(edata, layer)
-    scale_func = _quantile_norm_function(arr, **kwargs)
+    edata.X if layer is None else edata.layers[layer]
+    scale_func = lambda arr: _quantile_norm_function(arr, **kwargs)
 
     return _scale_func_group(
         edata=edata,
@@ -511,8 +466,9 @@ def _power_norm_function(arr, **kwargs):
 
 
 @_power_norm_function.register
+@_apply_over_time_axis
 def _(arr: np.ndarray, **kwargs):
-    return sklearn_pp.PowerTransformer(**kwargs).fit_transform
+    return sklearn_pp.PowerTransformer(**kwargs).fit_transform(arr)
 
 
 @use_ehrdata(deprecated_after="1.0.0")
@@ -552,14 +508,14 @@ def power_norm(
         >>> import ehrapy as ep
         >>> from scipy import stats
         >>> edata = ed.dt.physionet2012()
-        >>> stats.skew(edata.R.flatten())
+        >>> stats.skew(edata.X.flatten())
         13.528100
         >>> ep.pp.power_norm(edata)
-        >>> stats.skew(edata.R.flatten())
+        >>> stats.skew(edata.X.flatten())
         -0.041263
     """
-    arr, _ = _get_target_layer(edata, layer)
-    scale_func = _power_norm_function(arr, **kwargs)
+    edata.X if layer is None else edata.layers[layer]
+    scale_func = lambda arr: _power_norm_function(arr, **kwargs)
 
     return _scale_func_group(
         edata=edata,
@@ -608,10 +564,10 @@ def log_norm(
         >>> import ehrapy as ep
         >>> import numpy as np
         >>> edata = ed.dt.physionet2012()
-        >>> np.nanmax(edata.R)
+        >>> np.nanmax(edata.X)
         4695
         >>> ep.pp.log_norm(edata)
-        >>> np.nanmax(edata.R)
+        >>> np.nanmax(edata.X)
         8.454679
     """
     if isinstance(vars, str):
@@ -623,22 +579,17 @@ def log_norm(
 
     edata = _prep_edata_norm(edata, copy)
 
-    arr, layer_name = _get_target_layer(edata, layer)
-    is_3d = arr.ndim == 3
+    X = edata.X if layer is None else edata.layers[layer]
 
     if vars:
-        if is_3d:
-            var_indices = [edata.var_names.get_loc(v) for v in vars]
-            check_data = arr[:, var_indices, :]
-        else:
-            edata_to_check_for_negatives = edata[:, vars]
-            check_data = edata_to_check_for_negatives.X
+        var_indices = _get_var_indices(edata, vars)
+        check_data = X[:, var_indices] if X.ndim == 2 else X[:, var_indices, :]
     else:
-        check_data = arr
+        check_data = X
 
     offset_tmp_applied = check_data + offset
     if np.any(offset_tmp_applied < 0):
-        data_type = "Matrix R" if layer_name == "R" else "Layer" if layer else "Matrix X"
+        data_type = f"Layer '{layer}'" if layer else "Matrix X"
         raise ValueError(
             f"{data_type} contains negative values. "
             "Undefined behavior for log normalization. "
@@ -646,13 +597,11 @@ def log_norm(
             "or offset negative values with ep.pp.offset_negative_values()."
         )
 
-    if is_3d or layer:
-        var_values = arr.copy()
+    if vars:
+        var_indices = _get_var_indices(edata, vars)
+        var_values = X[:, var_indices] if X.ndim == 2 else X[:, var_indices, :]
     else:
-        if vars:
-            var_values = edata[:, vars].X.copy()
-        else:
-            var_values = arr.copy()
+        var_values = X.copy()
 
     if offset == 1:
         np.log1p(var_values, out=var_values)
@@ -663,36 +612,24 @@ def log_norm(
     if base is not None:
         np.divide(var_values, np.log(base), out=var_values)
 
-    if layer_name == "R":
-        edata.R = edata.R.astype(var_values.dtype)
-        if vars:
-            var_indices = [edata.var_names.get_loc(v) for v in vars]
-            edata.R[:, var_indices, :] = var_values
+    if vars:
+        var_indices = _get_var_indices(edata, vars)
+        if layer is None:
+            edata.X[:, var_indices] = var_values
         else:
-            edata.R[:, :, :] = var_values
-    elif layer:
-        edata.layers[layer] = edata.layers[layer].astype(var_values.dtype)
-        if is_3d:
-            if vars:
-                var_indices = [edata.var_names.get_loc(v) for v in vars]
+            if X.ndim == 3:
                 edata.layers[layer][:, var_indices, :] = var_values
             else:
-                edata.layers[layer][:, :, :] = var_values
-        else:
-            if vars:
                 edata[:, vars].layers[layer] = var_values
-            else:
-                edata.layers[layer] = var_values
     else:
-        edata.X = edata.X.astype(var_values.dtype)
-        if vars:
-            edata[:, vars].X = var_values
-        else:
+        if layer is None:
             edata.X = var_values
+        else:
+            edata.layers[layer] = var_values
 
     _record_norm(edata, vars, "log")
 
-    return edata
+    return edata if copy else None
 
 
 def _prep_edata_norm(edata: EHRData | AnnData, copy: bool = False) -> EHRData | AnnData | None:  # pragma: no cover
@@ -748,25 +685,23 @@ def offset_negative_values(edata: EHRData | AnnData, layer: str = None, copy: bo
         >>> import numpy as np
         >>> edata = ed.dt.physionet2012()
         >>> edata_shifted = edata.copy()
-        >>> edata_shifted.R = edata_shifted.R - 2.0
-        >>> np.nanmean(edata_shifted.R)
+        >>> edata_shifted.X = edata_shifted.X - 2.0
+        >>> np.nanmean(edata_shifted.X)
         118.142281
         >>> ep.pp.offset_negative_values(edata_shifted)
-        >>> np.nanmean(edata_shifted.R)
+        >>> np.nanmean(edata_shifted.X)
         137.942281
     """
     if copy:
         edata = edata.copy()
 
-    arr, layer_name = _get_target_layer(edata, layer)
-    minimum = np.nanmin(arr)
+    X = edata.X if layer is None else edata.layers[layer]
+    minimum = np.nanmin(X)
     if minimum < 0:
-        offset_arr = arr + np.abs(minimum)
-        if layer_name == "R":
-            edata.R = offset_arr
-        elif layer:
-            edata.layers[layer] = offset_arr
-        else:
+        offset_arr = X + np.abs(minimum)
+        if layer is None:
             edata.X = offset_arr
+        else:
+            edata.layers[layer] = offset_arr
 
     return edata if copy else None
