@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, List
+from typing import TYPE_CHECKING
 
 import ehrdata as ed
 import holoviews as hv
@@ -11,12 +11,11 @@ from holoviews import opts
 hv.extension("bokeh")
 
 if TYPE_CHECKING:
-    from anndata import AnnData
     from ehrdata import EHRData
 
 
 def plot_sankey(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     *,
     columns: list[str],
     show: bool = False,
@@ -87,7 +86,7 @@ def plot_sankey(
 
 
 def plot_sankey_time(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     *,
     columns: list[str],
     layer: str,
