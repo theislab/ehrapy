@@ -71,7 +71,7 @@ def plot_sankey(
     )
 
     sankey = hv.Sankey(sankey_df, kdims=["source", "target"], vdims=["value"])
-    default_opts = {"label_position": "right", "show_values": True, "title": f"Patient flows: {columns[0]} over time"}
+    default_opts = {"label_position": "right", "show_values": True, "title": f"Flow across: {columns}"}
 
     default_opts.update(kwargs)
 
