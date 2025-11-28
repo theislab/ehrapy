@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import warnings
 from functools import singledispatch
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
@@ -34,28 +35,29 @@ def qc_metrics(
     """Calculates various quality control metrics.
 
     Uses the original values to calculate the metrics and not the encoded ones.
-    Look at the return type for a more in depth description of the calculated metrics.
+    Look at the return type for a more in depth description of the basic and advanced calculated metrics.
+
 
     Args:
         edata: Central data object.
         qc_vars: Optional List of vars to calculate additional metrics for.
         layer: Layer to use to calculate the metrics.
-        advanced: Determines if the advanced metrics should be calculated that require feature type information. If it is set to `True`, ehrdata.infer_feature_types must be run first.
+        advanced: Determines if the advanced metrics should be calculated that require feature type information. If it is set to `True`, ehrdata.infer_feature_types must be run first. Default is `False`.
 
     Returns:
         Two Pandas DataFrames of all calculated QC metrics for `obs` and `var` respectively.
 
-        Default observation level metrics include:
+        Basic (default) observation level metrics include:
 
         - `missing_values_abs`: Absolute amount of missing values.
         - `missing_values_pct`: Relative amount of missing values in percent.
         - `entropy_of_missingness`: Entropy of the missingness pattern for each observation. Higher values indicate a more heterogeneous (less structured) missingness pattern.
 
-        Advanced observation level metrics include:
+        Advanced observation level metrics include (only computed if advanced is set to `True`):
         - `unique_values_abs`: Absolute amount of unique values.
         - `unique_values_ratio`: Relative amount of unique values in percent.
 
-        Feature level metrics include:
+        Basic (default) feature level metrics include:
 
         - `missing_values_abs`: Absolute amount of missing values.
         - `missing_values_pct`: Relative amount of missing values in percent.
@@ -68,7 +70,7 @@ def qc_metrics(
         - `iqr_outliers`: Whether the feature contains outliers based on the interquartile range (IQR) method.
 
 
-        Advanced feature level metrics include:
+        Advanced feature level metrics include (only computed if advanced is set to `True`):
 
         - `unique_values_abs`: Absolute amount of unique values.
         - `unique_values_ratio`: Relative amount of unique values in percent.
@@ -84,17 +86,21 @@ def qc_metrics(
             >>> obs_qc, var_qc = ep.pp.qc_metrics(edata)
             >>> obs_qc["missing_values_pct"].plot(kind="hist", bins=20)
     """
+    feature_type = edata.var.get("feature_type", None)
+    if_advanced = advanced
     if advanced:
-        feature_type = edata.var.get("feature_type", None)
         if feature_type is None:
-            raise ValueError(
-                "Advanced variable metrics require `edata.var['feature_type']`. "
-                "Please run `infer_feature_types(edata)` first."
+            warnings.warn(
+                "Advanced QC metrics require `edata.var['feature_type']`."
+                "Only basic metrics will be computed."
+                "Please run `infer_feature_types(edata)` first to enable advanced metrics.",
+                stacklevel=2,
             )
+            if_advanced = False
 
     mtx = edata.X if layer is None else edata.layers[layer]
-    var_metrics = _compute_var_metrics(mtx, edata, advanced=advanced)
-    obs_metrics = _compute_obs_metrics(mtx, edata, qc_vars=qc_vars, log1p=True, advanced=advanced)
+    var_metrics = _compute_var_metrics(mtx, edata, advanced=if_advanced)
+    obs_metrics = _compute_obs_metrics(mtx, edata, qc_vars=qc_vars, log1p=True, advanced=if_advanced)
 
     edata.var[var_metrics.columns] = var_metrics
     edata.obs[obs_metrics.columns] = obs_metrics
@@ -206,7 +212,12 @@ def _compute_obs_metrics(
     obs_metrics["missing_values_pct"] = (obs_metrics["missing_values_abs"] / mtx.shape[1]) * 100
     obs_metrics["entropy_of_missingness"] = _compute_entropy_of_missingness(mtx, axis=1)
 
-    if advanced and "feature_type" in edata.var:
+    if advanced and "feature_type" not in edata.var:
+        raise ValueError(
+            "Advanced QC metrics require `edata.var['feature_type']`.Please run `infer_feature_types(edata)` first"
+        )
+
+    if advanced:
         feature_type = edata.var["feature_type"]
         categorical_mask = feature_type == "categorical"
 
@@ -218,13 +229,10 @@ def _compute_obs_metrics(
             missing_cat = _compute_missing_values(mtx_cat, axis=1)
             valid_counts = mtx_cat.shape[1] - missing_cat
 
-            unique_val_ratio = (
-                np.where(
-                    valid_counts > 0,
-                    unique_val_abs / valid_counts,
-                    np.nan,
-                )
-                * 100
+            unique_val_ratio = np.where(
+                valid_counts > 0,
+                unique_val_abs / valid_counts * 100,
+                np.nan,
             )
         else:
             n_obs = mtx.shape[0]
@@ -286,7 +294,12 @@ def _compute_var_metrics(
     var_metrics["missing_values_pct"] = (var_metrics["missing_values_abs"] / mtx.shape[0]) * 100
     var_metrics["entropy_of_missingness"] = _compute_entropy_of_missingness(mtx, axis=0)
 
-    if advanced and "feature_type" in edata.var:
+    if advanced and "feature_type" not in edata.var:
+        raise ValueError(
+            "Advanced QC metrics require `edata.var['feature_type']`. Please run `infer_feature_types(edata)` first"
+        )
+
+    if advanced:
         feature_type = edata.var["feature_type"]
         categorical_mask = feature_type == "categorical"
 
@@ -364,35 +377,34 @@ def _compute_var_metrics(
             feature_type = edata.var["feature_type"]
             numeric_mask = feature_type == "numeric"
 
-            non_categorical_indices = np.asarray(numeric_mask)
+            numeric_indices = np.asarray(numeric_mask)
 
-            if np.any(non_categorical_indices):
+            if np.any(numeric_indices):
                 var_metrics.loc[non_categorical_indices, "coefficient_of_variation"] = (
-                    var_metrics.loc[non_categorical_indices, "standard_deviation"]
-                    / var_metrics.loc[non_categorical_indices, "mean"]
+                    var_metrics.loc[numeric_indices, "standard_deviation"] / var_metrics.loc[numeric_indices, "mean"]
                 ).replace([np.inf, -np.inf], np.nan)
 
                 # Constant column detection
-                constant_mask = (var_metrics.loc[non_categorical_indices, "standard_deviation"] == 0) | (
-                    var_metrics.loc[non_categorical_indices, "max"] == var_metrics.loc[non_categorical_indices, "min"]
+                constant_mask = (var_metrics.loc[numeric_indices, "standard_deviation"] == 0) | (
+                    var_metrics.loc[numeric_indices, "max"] == var_metrics.loc[numeric_indices, "min"]
                 )
 
-                var_metrics.loc[non_categorical_indices, "is_constant"] = constant_mask
+                var_metrics.loc[numeric_indices, "is_constant"] = constant_mask
 
                 var_metrics["constant_variable_ratio"] = constant_mask.mean() * 100
 
                 # Calculate range ratio
-                var_metrics.loc[non_categorical_indices, "range_ratio"] = (
-                    (var_metrics.loc[non_categorical_indices, "max"] - var_metrics.loc[non_categorical_indices, "min"])
-                    / var_metrics.loc[non_categorical_indices, "mean"]
+                var_metrics.loc[numeric_indices, "range_ratio"] = (
+                    (var_metrics.loc[numeric_indices, "max"] - var_metrics.loc[numeric_indices, "min"])
+                    / var_metrics.loc[numeric_indices, "mean"]
                 ).replace([np.inf, -np.inf], np.nan) * 100
 
                 # Calculate skewness and kurtosis
-                """var_metrics.loc[non_categorical_indices, "skewness"] = skew(
-                    mtx[:, non_categorical_indices].astype(np.float64), axis=0, bias=False, nan_policy="omit"
+                """var_metrics.loc[numeric_indices, "skewness"] = skew(
+                    mtx[:, numeric_indices].astype(np.float64), axis=0, bias=False, nan_policy="omit"
                 )
-                var_metrics.loc[non_categorical_indices, "kurtosis"] = kurtosis(
-                    mtx[:, non_categorical_indices].astype(np.float64), axis=0, bias=False, nan_policy="omit"
+                var_metrics.loc[numeric_indices, "kurtosis"] = kurtosis(
+                    mtx[:, numeric_indices].astype(np.float64), axis=0, bias=False, nan_policy="omit"
                 )
                 """
 
