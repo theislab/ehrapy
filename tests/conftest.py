@@ -105,6 +105,20 @@ def missing_values_edata_adv(obs_data, var_data_adv):
 
 
 @pytest.fixture
+def missing_values_edata_3d(obs_data, var_data_adv):
+    layer = np.array(
+        [[[0.21, 0.55], [np.nan, 1.23], [41.42, np.nan]], [[np.nan, np.nan], [np.nan, 3.14], [7.234, 9.99]]],
+        dtype=np.float32,
+    )
+    return ed.EHRData(
+        layers={"layer_1": layer},
+        obs=pd.DataFrame(data=obs_data),
+        var=pd.DataFrame(data=var_data_adv, index=["Acetaminophen", "hospital", "crazy"]),
+        tem=pd.DataFrame(index=["t0", "t1"]),
+    )
+
+
+@pytest.fixture
 def lab_measurements_simple_edata(obs_data, var_data):
     X = np.array([[73, 0.02, 1.00], [148, 0.25, 3.55]], dtype=np.float32)
     return ed.EHRData(
