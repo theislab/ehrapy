@@ -12,7 +12,13 @@ from ehrdata._logger import logger
 from scipy.stats import kurtosis, skew
 from thefuzz import process
 
-from ehrapy._compat import DaskArray, _raise_array_type_not_implemented, function_2D_only, use_ehrdata, _apply_over_time_axis 
+from ehrapy._compat import (
+    DaskArray,
+    _apply_over_time_axis,
+    _raise_array_type_not_implemented,
+    function_2D_only,
+    use_ehrdata,
+)
 from ehrapy.anndata import anndata_to_df
 from ehrapy.preprocessing._encoding import _get_encoded_features
 
