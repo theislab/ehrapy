@@ -199,6 +199,8 @@ def _compute_obs_metrics(
     obs_metrics = pd.DataFrame(index=edata.obs_names)
     var_metrics = pd.DataFrame(index=edata.var_names)
 
+    original_mtx = mtx
+
     if "encoding_mode" in edata.var:
         for original_values_categorical in _get_encoded_features(edata):
             mtx = mtx.astype(object)
@@ -214,13 +216,19 @@ def _compute_obs_metrics(
                 )
             )
 
-    obs_metrics["missing_values_abs"] = _compute_missing_values(mtx, axis=1)
-    obs_metrics["missing_values_pct"] = (obs_metrics["missing_values_abs"] / mtx.shape[1]) * 100
-    obs_metrics["entropy_of_missingness"] = _compute_entropy_of_missingness(mtx, axis=1)
+    if mtx.ndim == 3:
+        n_obs, n_vars, n_time = mtx.shape
+        flat_mtx = mtx.reshape(n_obs, n_vars * n_time)
+    if mtx.ndim == 2:
+        flat_mtx = mtx
+
+    obs_metrics["missing_values_abs"] = _compute_missing_values(flat_mtx, axis=1)
+    obs_metrics["missing_values_pct"] = (obs_metrics["missing_values_abs"] / flat_mtx.shape[1]) * 100
+    obs_metrics["entropy_of_missingness"] = _compute_entropy_of_missingness(flat_mtx, axis=1)
 
     if advanced and "feature_type" not in edata.var:
         raise ValueError(
-            "Advanced QC metrics require `edata.var['feature_type']`.Please run `infer_feature_types(edata)` first"
+            "Advanced QC metrics require `edata.var['feature_type']`. Please run `infer_feature_types(edata)` first"
         )
 
     if advanced:
@@ -229,11 +237,28 @@ def _compute_obs_metrics(
 
         if np.any(categorical_mask):
             cat_mask_np = np.asarray(categorical_mask)
-            mtx_cat = mtx[:, cat_mask_np]
+            if original_mtx.ndim == 2:
+                mtx_cat = mtx[:, cat_mask_np]
 
-            unique_val_abs = _compute_unique_values(mtx_cat, axis=1)
-            missing_cat = _compute_missing_values(mtx_cat, axis=1)
-            valid_counts = mtx_cat.shape[1] - missing_cat
+                unique_val_abs = _compute_unique_values(mtx_cat, axis=1)
+                missing_cat = _compute_missing_values(mtx_cat, axis=1)
+                valid_counts = mtx_cat.shape[1] - missing_cat
+
+            elif original_mtx.ndim == 3:
+                mtx_cat_3d = original_mtx[:, cat_mask_np, :]
+                n_obs, n_cat, n_time = mtx_cat_3d.shape
+
+                unique_per_time = np.empty((n_obs, n_time))
+                valid_per_time = np.empty((n_obs, n_time))
+
+                for t in range(n_time):
+                    slice_t = mtx_cat_3d[:, :, t]  # (n_obs, n_cat_vars)
+                    unique_per_time[:, t] = _compute_unique_values(slice_t, axis=1)
+                    missing_t = _compute_missing_values(slice_t, axis=1)
+                    valid_per_time[:, t] = n_cat - missing_t
+
+                unique_val_abs = unique_per_time.sum(axis=1)
+                valid_counts = valid_per_time.sum(axis=1)
 
             unique_val_ratio = np.where(
                 valid_counts > 0,
@@ -250,6 +275,9 @@ def _compute_obs_metrics(
 
     # Specific QC metrics
     for qc_var in qc_vars:
+        if mtx.ndim == 3:
+            raise ValueError("Only 2D matrices are supported for qc_vars argument")
+
         obs_metrics[f"total_features_{qc_var}"] = np.ravel(mtx[:, edata.var[qc_var].values].sum(axis=1))
         if log1p:
             obs_metrics[f"log1p_total_features_{qc_var}"] = np.log1p(obs_metrics[f"total_features_{qc_var}"])
@@ -275,6 +303,10 @@ def _compute_var_metrics(
     """
     categorical_indices = np.ndarray([0], dtype=int)
     var_metrics = pd.DataFrame(index=edata.var_names)
+
+    if mtx.ndim == 3:
+        n_obs, n_vars, n_time = mtx.shape
+        mtx = np.moveaxis(mtx, 1, 2).reshape(-1, n_vars)
 
     if "encoding_mode" in edata.var.keys():
         for original_values_categorical in _get_encoded_features(edata):
