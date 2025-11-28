@@ -12,7 +12,7 @@ from ehrdata._logger import logger
 from scipy.stats import kurtosis, skew
 from thefuzz import process
 
-from ehrapy._compat import DaskArray, _raise_array_type_not_implemented, function_2D_only, use_ehrdata
+from ehrapy._compat import DaskArray, _raise_array_type_not_implemented, function_2D_only, use_ehrdata, _apply_over_time_axis 
 from ehrapy.anndata import anndata_to_df
 from ehrapy.preprocessing._encoding import _get_encoded_features
 
@@ -24,7 +24,6 @@ if TYPE_CHECKING:
 
 
 @use_ehrdata(deprecated_after="1.0.0")
-@function_2D_only()
 def qc_metrics(
     edata: EHRData | AnnData,
     qc_vars: Collection[str] = (),
@@ -114,11 +113,13 @@ def _compute_missing_values(mtx, axis):
 
 
 @_compute_missing_values.register(np.ndarray)
+@_apply_over_time_axis
 def _(mtx: np.ndarray, axis) -> np.ndarray:
     return pd.isnull(mtx).sum(axis)
 
 
 @_compute_missing_values.register(DaskArray)
+@_apply_over_time_axis
 def _(mtx: DaskArray, axis) -> np.ndarray:
     import dask.array as da
 
@@ -131,11 +132,13 @@ def _compute_unique_values(mtx, axis):
 
 
 @_compute_unique_values.register(np.ndarray)
+@_apply_over_time_axis
 def _(mtx: np.ndarray, axis) -> np.ndarray:
     return pd.DataFrame(mtx).nunique(axis=axis, dropna=True).to_numpy()
 
 
 @_compute_unique_values.register(DaskArray)
+@_apply_over_time_axis
 def _(mtx: DaskArray, axis) -> np.ndarray:
     import dask.array as da
 
@@ -151,6 +154,7 @@ def _compute_entropy_of_missingness(mtx, axis):
 
 
 @_compute_entropy_of_missingness.register(np.ndarray)
+@_apply_over_time_axis
 def _(mtx: np.ndarray, axis) -> np.ndarray:
     missing_mask = pd.isnull(mtx)
     p_miss = missing_mask.mean(axis=axis)
@@ -159,6 +163,7 @@ def _(mtx: np.ndarray, axis) -> np.ndarray:
 
 
 @_compute_entropy_of_missingness.register(DaskArray)
+@_apply_over_time_axis
 def _(mtx: DaskArray, axis) -> np.ndarray:
     import dask.array as da
 
