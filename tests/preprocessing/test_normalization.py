@@ -157,7 +157,7 @@ def test_norm_3D(edata_blobs_timeseries_small, array_type, norm_func):
         ep.pp.maxabs_norm,
         ep.pp.power_norm,
     ):
-        with pytest.raises(NotImplementedError, match="Dask arrays are not supported"):
+        with pytest.raises(NotImplementedError, match="does not support array type.*dask"):
             norm_func(edata, layer=DEFAULT_TEM_LAYER_NAME)
         return
     orig_shape = edata.layers[DEFAULT_TEM_LAYER_NAME].shape
@@ -876,7 +876,7 @@ def test_norm_3D_precise(edata_blobs_timeseries_small, array_type, norm_func, ch
         ep.pp.maxabs_norm,
         ep.pp.power_norm,
     ):
-        with pytest.raises(NotImplementedError, match="Dask arrays are not supported"):
+        with pytest.raises(NotImplementedError, match="does not support array type.*dask"):
             norm_func(edata, layer=DEFAULT_TEM_LAYER_NAME)
         return
     orig_shape = edata.layers[DEFAULT_TEM_LAYER_NAME].shape

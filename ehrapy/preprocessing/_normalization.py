@@ -143,6 +143,7 @@ def scale_norm(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> import numpy as np
+        >>> from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
         >>> edata = ed.dt.ehrdata_blobs(n_observations=20, base_timepoints=15)
         >>> np.nanmean(edata.layers[DEFAULT_TEM_LAYER_NAME])
         0.5
@@ -220,6 +221,7 @@ def minmax_norm(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> import numpy as np
+        >>> from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
         >>> edata = ed.dt.ehrdata_blobs(n_observations=20, base_timepoints=15)
         >>> edata.layers[DEFAULT_TEM_LAYER_NAME] = edata.layers[DEFAULT_TEM_LAYER_NAME] * 10 + 5
         >>> np.nanmin(edata.layers[DEFAULT_TEM_LAYER_NAME]), np.nanmax(edata.layers[DEFAULT_TEM_LAYER_NAME])
@@ -287,6 +289,7 @@ def maxabs_norm(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> import numpy as np
+        >>> from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
         >>> edata = ed.dt.ehrdata_blobs(n_observations=20, base_timepoints=15)
         >>> edata.layers[DEFAULT_TEM_LAYER_NAME] = edata.layers[DEFAULT_TEM_LAYER_NAME] * 5 - 2.5
         >>> np.nanmax(np.abs(edata.layers[DEFAULT_TEM_LAYER_NAME]))
@@ -297,18 +300,7 @@ def maxabs_norm(
     """
     X = edata.X if layer is None else edata.layers[layer]
     if isinstance(X, DaskArray) and group_key is None:
-        if layer is None:
-            raise NotImplementedError(
-                "Dask arrays are not supported for maxabs_norm. "
-                "Please convert to numpy array first using `edata.X = edata.X.compute()` "
-                "or use a different normalization function that supports Dask arrays."
-            )
-        else:
-            raise NotImplementedError(
-                f"Dask arrays are not supported for maxabs_norm. "
-                f"Please convert to numpy array first using `edata.layers['{layer}'] = edata.layers['{layer}'].compute()` "
-                "or use a different normalization function that supports Dask arrays."
-            )
+        _raise_array_type_not_implemented(_maxabs_norm_function, type(X))
     scale_func = _maxabs_norm_function
 
     return _scale_func_group(
@@ -378,6 +370,7 @@ def robust_scale_norm(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> import numpy as np
+        >>> from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
         >>> edata = ed.dt.ehrdata_blobs(n_observations=20, base_timepoints=15)
         >>> np.nanmedian(edata.layers[DEFAULT_TEM_LAYER_NAME])
         0.5
@@ -454,6 +447,7 @@ def quantile_norm(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> import numpy as np
+        >>> from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
         >>> edata = ed.dt.ehrdata_blobs(n_observations=20, base_timepoints=15)
         >>> edata.layers[DEFAULT_TEM_LAYER_NAME] = edata.layers[DEFAULT_TEM_LAYER_NAME] * 8 + 2
         >>> np.nanmin(edata.layers[DEFAULT_TEM_LAYER_NAME]), np.nanmax(edata.layers[DEFAULT_TEM_LAYER_NAME])
@@ -524,6 +518,7 @@ def power_norm(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> from scipy import stats
+        >>> from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
         >>> edata = ed.dt.ehrdata_blobs(n_observations=20, base_timepoints=15)
         >>> edata.layers[DEFAULT_TEM_LAYER_NAME] = np.abs(edata.layers[DEFAULT_TEM_LAYER_NAME]) + 0.1
         >>> skewed_data = np.power(edata.layers[DEFAULT_TEM_LAYER_NAME], 2)
@@ -536,18 +531,7 @@ def power_norm(
     """
     X = edata.X if layer is None else edata.layers[layer]
     if isinstance(X, DaskArray) and group_key is None:
-        if layer is None:
-            raise NotImplementedError(
-                "Dask arrays are not supported for power_norm. "
-                "Please convert to numpy array first using `edata.X = edata.X.compute()` "
-                "or use a different normalization function that supports Dask arrays."
-            )
-        else:
-            raise NotImplementedError(
-                f"Dask arrays are not supported for power_norm. "
-                f"Please convert to numpy array first using `edata.layers['{layer}'] = edata.layers['{layer}'].compute()` "
-                "or use a different normalization function that supports Dask arrays."
-            )
+        _raise_array_type_not_implemented(_power_norm_function, type(X))
     scale_func = lambda arr: _power_norm_function(arr, **kwargs)
 
     return _scale_func_group(
@@ -569,17 +553,16 @@ def _log_norm_function(arr, offset: int | float = 1, base: int | float | None = 
 @_log_norm_function.register
 @_apply_over_time_axis
 def _(arr: np.ndarray, offset: int | float = 1, base: int | float | None = None) -> np.ndarray:
-    result = arr.copy()  # Work on a copy to avoid modifying input
     if offset == 1:
-        np.log1p(result, out=result)
+        np.log1p(arr, out=arr)
     else:
-        result = result + offset
-        np.log(result, out=result)
+        np.add(arr, offset, out=arr)
+        np.log(arr, out=arr)
 
     if base is not None:
-        np.divide(result, np.log(base), out=result)
+        np.divide(arr, np.log(base), out=arr)
 
-    return result
+    return arr
 
 
 @_log_norm_function.register
@@ -633,6 +616,7 @@ def log_norm(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> import numpy as np
+        >>> from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
         >>> edata = ed.dt.ehrdata_blobs(n_observations=20, base_timepoints=15)
         >>> np.nanmax(edata.layers[DEFAULT_TEM_LAYER_NAME])
         4695
@@ -741,6 +725,7 @@ def offset_negative_values(edata: EHRData | AnnData, layer: str = None, copy: bo
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> import numpy as np
+        >>> from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
         >>> edata = ed.dt.ehrdata_blobs(n_observations=20, base_timepoints=15)
         >>> edata_shifted = edata.copy()
         >>> edata_shifted.layers[DEFAULT_TEM_LAYER_NAME] = edata_shifted.layers[DEFAULT_TEM_LAYER_NAME] - 0.5
@@ -750,16 +735,11 @@ def offset_negative_values(edata: EHRData | AnnData, layer: str = None, copy: bo
         >>> np.nanmin(edata_shifted.layers[DEFAULT_TEM_LAYER_NAME])
         0.0
     """
-    if copy:
-        edata = edata.copy()
+    edata = _prep_edata_norm(edata, copy)
 
     X = edata.X if layer is None else edata.layers[layer]
     minimum = np.nanmin(X)
     if minimum < 0:
-        offset_arr = X + np.abs(minimum)
-        if layer is None:
-            edata.X = offset_arr
-        else:
-            edata.layers[layer] = offset_arr
+        np.add(X, np.abs(minimum), out=X)
 
     return edata if copy else None
