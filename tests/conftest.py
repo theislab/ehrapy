@@ -59,16 +59,6 @@ def var_data():
 
 
 @pytest.fixture
-def var_data_adv():
-    return {
-        "alive": ["yes", "no", "maybe"],
-        "hospital": ["hospital 1", "hospital 2", "hospital 1"],
-        "crazy": ["yes", "yes", "yes"],
-        "feature_type": ["numeric", "numeric", "categorical"],
-    }
-
-
-@pytest.fixture
 def edata_feature_type_specifications():
     df = pd.DataFrame(
         {
@@ -92,29 +82,6 @@ def missing_values_edata(obs_data, var_data):
         X=np.array([[0.21, np.nan, 41.42], [np.nan, np.nan, 7.234]], dtype=np.float32),
         obs=pd.DataFrame(data=obs_data),
         var=pd.DataFrame(data=var_data, index=["Acetaminophen", "hospital", "crazy"]),
-    )
-
-
-@pytest.fixture
-def missing_values_edata_adv(obs_data, var_data_adv):
-    return ed.EHRData(
-        X=np.array([[0.21, np.nan, 41.42], [np.nan, np.nan, 7.234]], dtype=np.float32),
-        obs=pd.DataFrame(data=obs_data),
-        var=pd.DataFrame(data=var_data_adv, index=["Acetaminophen", "hospital", "crazy"]),
-    )
-
-
-@pytest.fixture
-def missing_values_edata_3d(obs_data, var_data_adv):
-    layer = np.array(
-        [[[0.21, 0.55], [np.nan, 1.23], [41.42, np.nan]], [[np.nan, np.nan], [np.nan, 3.14], [7.234, 9.99]]],
-        dtype=np.float32,
-    )
-    return ed.EHRData(
-        layers={"layer_1": layer},
-        obs=pd.DataFrame(data=obs_data),
-        var=pd.DataFrame(data=var_data_adv, index=["Acetaminophen", "hospital", "crazy"]),
-        tem=pd.DataFrame(index=["t0", "t1"]),
     )
 
 
@@ -206,7 +173,8 @@ def edata_mini_3D_missing_values():
         ],
         dtype=object,
     )
-    return ed.EHRData(layers={DEFAULT_TEM_LAYER_NAME: tiny_mixed_array})
+    n_obs, n_vars, _ = tiny_mixed_array.shape
+    return ed.EHRData(shape=(n_obs, n_vars), layers={DEFAULT_TEM_LAYER_NAME: tiny_mixed_array})
 
 
 @pytest.fixture

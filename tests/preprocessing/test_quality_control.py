@@ -43,9 +43,11 @@ def test_qc_metrics_vanilla(array_type, missing_values_edata):
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
-def test_qc_metrics_vanilla_advanced(array_type, missing_values_edata_adv):
-    adata = missing_values_edata_adv
-    adata.X = array_type(adata.X)
+def test_qc_metrics_vanilla_advanced(array_type, missing_values_edata):
+    adata = missing_values_edata
+
+    adata.var["feature_type"] = ["numeric", "numeric", "categorical"]
+    adata.X = array_type(missing_values_edata.X)
     modification_copy = adata.copy()
     obs_metrics, var_metrics = ep.pp.qc_metrics(adata, advanced=True)
 
@@ -82,132 +84,109 @@ def test_qc_metrics_vanilla_advanced(array_type, missing_values_edata_adv):
         assert np.array_equal(modification_copy.var[key], adata.var[key])
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
-def test_obs_qc_metrics(array_type, missing_values_edata):
-    missing_values_edata.X = array_type(missing_values_edata.X)
-    mtx = missing_values_edata.X
-    obs_metrics = _compute_obs_metrics(mtx, missing_values_edata)
+def test_qc_metrics_3d_vanilla(edata_mini_3D_missing_values):
+    edata = edata_mini_3D_missing_values
+    edata = edata[:, :4]
+    modification_copy = edata.copy()
 
-    assert np.array_equal(obs_metrics["missing_values_abs"].values, np.array([1, 2]))
-    assert np.allclose(obs_metrics["missing_values_pct"].values, np.array([33.3333, 66.6667]))
-    assert np.allclose(obs_metrics["entropy_of_missingness"].values, np.array([0.9183, 0.9183]))
+    obs_metrics, var_metrics = ep.pp.qc_metrics(edata, layer=DEFAULT_TEM_LAYER_NAME)
 
+    assert np.array_equal(obs_metrics["missing_values_abs"].values, np.array([1, 0, 1, 1]))
+    assert np.allclose(obs_metrics["missing_values_pct"].values, np.array([12.5, 0.0, 12.5, 12.5]))
+    assert np.allclose(obs_metrics["entropy_of_missingness"].values, np.array([0.54356, 0, 0.54356, 0.54356]))
 
-def test_obs_qc_metrics_3D(missing_values_edata_3d):
-    mtx = missing_values_edata_3d.layers["layer_1"]
-    obs_metrics = _compute_obs_metrics(mtx, missing_values_edata_3d)
-
-    assert np.array_equal(obs_metrics["missing_values_abs"].values, np.array([2, 3]))
-    assert np.allclose(obs_metrics["missing_values_pct"].values, np.array([33.3333, 50.0]))
-    assert np.allclose(obs_metrics["entropy_of_missingness"].values, np.array([0.9183, 1.0]))
-
-
-@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
-def test_obs_qc_metrics_advanced(array_type, missing_values_edata_adv):
-    missing_values_edata_adv.X = array_type(missing_values_edata_adv.X)
-    mtx = missing_values_edata_adv.X
-    obs_metrics = _compute_obs_metrics(mtx, missing_values_edata_adv, advanced=True)
-
-    assert np.array_equal(obs_metrics["missing_values_abs"].values, np.array([1, 2]))
-    assert np.allclose(obs_metrics["missing_values_pct"].values, np.array([33.3333, 66.6667]))
-    assert np.array_equal(obs_metrics["unique_values_abs"].values, np.array([1, 1]))
-    assert np.allclose(obs_metrics["unique_values_ratio"].values, np.array([100.0, 100.0]))
-    assert np.allclose(obs_metrics["entropy_of_missingness"].values, np.array([0.9183, 0.9183]))
-
-
-def test_obs_qc_metrics_advanced_3D(missing_values_edata_3d):
-    mtx = missing_values_edata_3d.layers["layer_1"]
-    obs_metrics = _compute_obs_metrics(mtx, missing_values_edata_3d, advanced=True)
-
-    assert np.array_equal(obs_metrics["missing_values_abs"].values, np.array([2, 3]))
-    assert np.allclose(obs_metrics["missing_values_pct"].values, np.array([33.3333, 50.0]))
-    assert np.array_equal(obs_metrics["unique_values_abs"].values, np.array([1, 2]))
-    assert np.allclose(obs_metrics["unique_values_ratio"].values, np.array([100.0, 100.0]))
-    assert np.allclose(obs_metrics["entropy_of_missingness"].values, np.array([0.9183, 1.0]))
-
-
-@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
-def test_var_qc_metrics(array_type, missing_values_edata):
-    missing_values_edata.X = array_type(missing_values_edata.X)
-    mtx = missing_values_edata.X
-    var_metrics = _compute_var_metrics(mtx, missing_values_edata)
-
-    assert np.array_equal(var_metrics["missing_values_abs"].values, np.array([1, 2, 0]))
-    assert np.allclose(var_metrics["missing_values_pct"].values, np.array([50.0, 100.0, 0.0]))
-    assert np.allclose(var_metrics["entropy_of_missingness"].values, np.array([1.0, 0.0, 0.0]))
-    assert np.allclose(var_metrics["mean"].values, np.array([0.21, np.nan, 24.327]), equal_nan=True)
-    assert np.allclose(var_metrics["median"].values, np.array([0.21, np.nan, 24.327]), equal_nan=True)
-    assert np.allclose(var_metrics["min"].values, np.array([0.21, np.nan, 7.234]), equal_nan=True)
-    assert np.allclose(var_metrics["max"].values, np.array([0.21, np.nan, 41.419998]), equal_nan=True)
-    assert (~var_metrics["iqr_outliers"]).all()
-
-
-def test_var_qc_metrics_3D(missing_values_edata_3d):
-    mtx = missing_values_edata_3d.layers["layer_1"]
-    var_metrics = _compute_var_metrics(mtx, missing_values_edata_3d)
-
-    assert np.array_equal(var_metrics["missing_values_abs"].values, np.array([2, 2, 1]))
-    assert np.allclose(var_metrics["missing_values_pct"].values, np.array([50.0, 50.0, 25.0]))
-    assert np.allclose(var_metrics["entropy_of_missingness"].values, np.array([1.0, 1.0, 0.811278]))
-    assert np.allclose(var_metrics["mean"].values, np.array([0.38, 2.185, 19.547999]))
-    assert np.allclose(var_metrics["median"].values, np.array([0.38, 2.185, 9.98999]))
-    assert np.allclose(var_metrics["min"].values, np.array([0.21, 1.23, 7.234]))
-    assert np.allclose(var_metrics["max"].values, np.array([0.55, 3.14, 41.42]))
-    assert (~var_metrics["iqr_outliers"]).all()
-
-
-@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
-def test_var_qc_metrics_advanced(array_type, missing_values_edata_adv):
-    missing_values_edata_adv.X = array_type(missing_values_edata_adv.X)
-    mtx = missing_values_edata_adv.X
-    var_metrics = _compute_var_metrics(mtx, missing_values_edata_adv, advanced=True)
-
-    assert np.array_equal(var_metrics["missing_values_abs"].values, np.array([1, 2, 0]))
-    assert np.allclose(var_metrics["missing_values_pct"].values, np.array([50.0, 100.0, 0.0]))
-    assert np.allclose(var_metrics["unique_values_abs"].values, np.array([np.nan, np.nan, 2.0]), equal_nan=True)
-    assert np.allclose(var_metrics["unique_values_ratio"].values, np.array([np.nan, np.nan, 100.0]), equal_nan=True)
-    assert np.allclose(var_metrics["entropy_of_missingness"].values, np.array([1.0, 0.0, 0.0]))
-    assert np.allclose(var_metrics["mean"].values, np.array([0.21, np.nan, 24.327]), equal_nan=True)
-    assert np.allclose(var_metrics["median"].values, np.array([0.21, np.nan, 24.327]), equal_nan=True)
-    assert np.allclose(var_metrics["min"].values, np.array([0.21, np.nan, 7.234]), equal_nan=True)
-    assert np.allclose(var_metrics["max"].values, np.array([0.21, np.nan, 41.419998]), equal_nan=True)
-    assert np.allclose(var_metrics["coefficient_of_variation"].values, np.array([0.0, np.nan, np.nan]), equal_nan=True)
-
-    is_const = var_metrics["is_constant"].values
-    assert is_const[0] is True
-    assert is_const[1] is False
-    assert np.isnan(is_const[2])
-
-    assert np.allclose(var_metrics["constant_variable_ratio"].values, np.array([50.0, 50.0, 50.0]), equal_nan=True)
-    assert np.allclose(var_metrics["range_ratio"].values, np.array([0.0, np.nan, np.nan]), equal_nan=True)
-    # assert np.allclose(var_metrics["skewness"].values, np.array([np.nan, np.nan, 0.0]), equal_nan=True)
-    # assert np.allclose(var_metrics["kurtosis"].values, np.array([np.nan, np.nan, -2.0]), equal_nan=True)
-    assert (~var_metrics["iqr_outliers"]).all()
-
-
-def test_var_qc_metrics_advanced_3D(missing_values_edata_3d):
-    mtx = missing_values_edata_3d.layers["layer_1"]
-    var_metrics = _compute_var_metrics(mtx, missing_values_edata_3d, advanced=True)
-
-    assert np.array_equal(var_metrics["missing_values_abs"].values, np.array([2, 2, 1]))
-    assert np.allclose(var_metrics["missing_values_pct"].values, np.array([50.0, 50.0, 25.0]))
-    assert np.allclose(var_metrics["entropy_of_missingness"].values, np.array([1.0, 1.0, 0.811278]))
-    assert np.allclose(var_metrics["mean"].values, np.array([0.38, 2.185, 19.547999]))
-    assert np.allclose(var_metrics["median"].values, np.array([0.38, 2.185, 9.98999]))
-    assert np.allclose(var_metrics["min"].values, np.array([0.21, 1.23, 7.234]))
-    assert np.allclose(var_metrics["max"].values, np.array([0.55, 3.14, 41.42]))
+    assert np.array_equal(
+        var_metrics["missing_values_abs"].values,
+        np.array(
+            [
+                0,
+                1,
+                2,
+                0,
+            ]
+        ),
+    )
+    assert np.allclose(var_metrics["missing_values_pct"].values, np.array([0.0, 12.5, 25.0, 0.0]))
+    assert np.allclose(var_metrics["entropy_of_missingness"].values, np.array([0, 0.54356, 0.811278, 0]))
+    assert np.allclose(var_metrics["mean"].values, np.array([144.5, 79.0, 78.16667, 1.25]))
+    assert np.allclose(var_metrics["median"].values, np.array([144.5, 79.0, 76.5, 1.0]))
     assert np.allclose(
-        var_metrics["coefficient_of_variation"].values, np.array([0.44737, 0.43707, np.nan]), equal_nan=True
+        var_metrics["standard_deviation"].values,
+        np.array([5.12347538, 1.30930734, 18.16972451, 0.96824584]),
+        equal_nan=True,
+    )
+    assert np.allclose(var_metrics["min"].values, np.array([138.0, 77.0, 56.0, 0.0]))
+    assert np.allclose(var_metrics["max"].values, np.array([151.0, 81.0, 110.0, 3.0]))
+    assert (~var_metrics["iqr_outliers"]).all()
+
+    # check that none of the columns were modified
+    for key in modification_copy.obs.keys():
+        assert np.array_equal(modification_copy.obs[key], edata.obs[key])
+    for key in modification_copy.var.keys():
+        assert np.array_equal(modification_copy.var[key], edata.var[key])
+
+
+def test_qc_metrics_3d_vanilla_advanced(edata_mini_3D_missing_values):
+    edata = edata_mini_3D_missing_values.copy()
+    edata = edata[:, :4]
+    edata.var["feature_type"] = ["numeric", "numeric", "numeric", "categorical"]
+    modification_copy = edata.copy()
+
+    obs_metrics, var_metrics = ep.pp.qc_metrics(edata, layer=DEFAULT_TEM_LAYER_NAME, advanced=True)
+
+    assert np.array_equal(obs_metrics["missing_values_abs"].values, np.array([1, 0, 1, 1]))
+    assert np.allclose(obs_metrics["missing_values_pct"].values, np.array([12.5, 0.0, 12.5, 12.5]))
+    assert np.allclose(obs_metrics["entropy_of_missingness"].values, np.array([0.54356, 0, 0.54356, 0.54356]))
+    assert np.array_equal(obs_metrics["unique_values_abs"].values, np.array([2, 2, 2, 2]))
+    assert np.allclose(obs_metrics["unique_values_ratio"].values, np.array([100.0, 100.0, 100.0, 100.0]))
+
+    assert np.array_equal(
+        var_metrics["missing_values_abs"].values,
+        np.array(
+            [
+                0,
+                1,
+                2,
+                0,
+            ]
+        ),
+    )
+    assert np.allclose(var_metrics["missing_values_pct"].values, np.array([0.0, 12.5, 25.0, 0.0]))
+    assert np.allclose(var_metrics["entropy_of_missingness"].values, np.array([0, 0.54356, 0.811278, 0]))
+    assert np.allclose(var_metrics["mean"].values, np.array([144.5, 79.0, 78.16667, 1.25]))
+    assert np.allclose(var_metrics["median"].values, np.array([144.5, 79.0, 76.5, 1.0]))
+    assert np.allclose(
+        var_metrics["standard_deviation"].values,
+        np.array([5.12347538, 1.30930734, 18.16972451, 0.96824584]),
+        equal_nan=True,
+    )
+    assert np.allclose(var_metrics["min"].values, np.array([138.0, 77.0, 56.0, 0.0]))
+    assert np.allclose(var_metrics["max"].values, np.array([151.0, 81.0, 110.0, 3.0]))
+    assert np.allclose(var_metrics["unique_values_abs"].values, np.array([np.nan, np.nan, np.nan, 4.0]), equal_nan=True)
+    assert np.allclose(
+        var_metrics["unique_values_ratio"].values, np.array([np.nan, np.nan, np.nan, 50.0]), equal_nan=True
+    )
+    assert np.allclose(
+        var_metrics["coefficient_of_variation"].values,
+        np.array([0.03545658, 0.01657351, 0.2324485, np.nan]),
+        equal_nan=True,
     )
 
     is_const = var_metrics["is_constant"].values
     assert is_const[0] is False
     assert is_const[1] is False
-    assert np.isnan(is_const[2])
+    assert is_const[2] is False
+    assert np.isnan(is_const[3])
 
-    assert np.allclose(var_metrics["constant_variable_ratio"].values, np.array([0, 0, 0]))
-    assert np.allclose(var_metrics["range_ratio"].values, np.array([89.473688, 87.414189, np.nan]), equal_nan=True)
+    assert np.allclose(var_metrics["constant_variable_ratio"].values, np.array([0, 0, 0, 0]))
+    assert np.allclose(var_metrics["range_ratio"].values, np.array([8.9965, 5.0633, 69.0832, np.nan]), equal_nan=True)
     assert (~var_metrics["iqr_outliers"]).all()
+
+    # check that none of the columns were modified
+    for key in modification_copy.obs.keys():
+        assert np.array_equal(modification_copy.obs[key], edata.obs[key])
+    for key in modification_copy.var.keys():
+        assert np.array_equal(modification_copy.var[key], edata.var[key])
 
 
 @pytest.mark.parametrize(
@@ -282,12 +261,6 @@ def test_calculate_qc_metrics(missing_values_edata):
 
     assert missing_values_edata.obs.missing_values_abs is not None
     assert missing_values_edata.var.missing_values_abs is not None
-
-
-def test_encode_3D_edata(edata_blob_small):
-    ep.pp.qc_metrics(edata_blob_small, layer="layer_2")
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.qc_metrics(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
 
 
 def test_qc_lab_measurements_simple(lab_measurements_simple_edata):

@@ -30,7 +30,6 @@ if TYPE_CHECKING:
 
 
 @use_ehrdata(deprecated_after="1.0.0")
-@function_2D_only()
 def qc_metrics(
     edata: EHRData | AnnData,
     qc_vars: Collection[str] = (),
@@ -174,6 +173,19 @@ def _(mtx: DaskArray, axis) -> np.ndarray:
     return -(p * da.log2(p) + (1 - p) * da.log2(1 - p)).compute()
 
 
+@_apply_over_time_axis
+def _row_unique(arr_2d: np.ndarray, axis) -> np.ndarray:
+    uniques = _compute_unique_values(arr_2d, axis=axis)
+    return np.broadcast_to(uniques[:, None], arr_2d.shape)
+
+
+@_apply_over_time_axis
+def _row_valid(arr_2d: np.ndarray, axis) -> np.ndarray:
+    missing = _compute_missing_values(arr_2d, axis=axis)
+    valid = arr_2d.shape[axis] - missing
+    return np.broadcast_to(valid[:, None], arr_2d.shape)
+
+
 def _compute_obs_metrics(
     mtx,
     edata: EHRData | AnnData,
@@ -237,25 +249,22 @@ def _compute_obs_metrics(
 
         if np.any(categorical_mask):
             cat_mask_np = np.asarray(categorical_mask)
+
             if original_mtx.ndim == 2:
-                mtx_cat = mtx[:, cat_mask_np]
+                mtx_cat = mtx[:, cat_mask_np]  # (n_obs, n_cat_var)
+            else:  # ndim == 3
+                mtx_cat = original_mtx[:, cat_mask_np, :]  # (n_obs, n_cat_var, n_time)
 
-                unique_val_abs = _compute_unique_values(mtx_cat, axis=1)
-                missing_cat = _compute_missing_values(mtx_cat, axis=1)
-                valid_counts = mtx_cat.shape[1] - missing_cat
+            unique_arr = _row_unique(mtx_cat, axis=1)
+            valid_arr = _row_valid(mtx_cat, axis=1)
 
-            elif original_mtx.ndim == 3:
-                mtx_cat_3d = original_mtx[:, cat_mask_np, :]
-                n_obs, n_cat, n_time = mtx_cat_3d.shape
+            if unique_arr.ndim == 2:
+                unique_val_abs = unique_arr[:, 0]
+                valid_counts = valid_arr[:, 0]
 
-                unique_per_time = np.empty((n_obs, n_time))
-                valid_per_time = np.empty((n_obs, n_time))
-
-                for t in range(n_time):
-                    slice_t = mtx_cat_3d[:, :, t]  # (n_obs, n_cat_vars)
-                    unique_per_time[:, t] = _compute_unique_values(slice_t, axis=1)
-                    missing_t = _compute_missing_values(slice_t, axis=1)
-                    valid_per_time[:, t] = n_cat - missing_t
+            else:
+                unique_per_time = unique_arr[:, 0, :]
+                valid_per_time = valid_arr[:, 0, :]
 
                 unique_val_abs = unique_per_time.sum(axis=1)
                 valid_counts = valid_per_time.sum(axis=1)
@@ -303,6 +312,7 @@ def _compute_var_metrics(
     """
     categorical_indices = np.ndarray([0], dtype=int)
     var_metrics = pd.DataFrame(index=edata.var_names)
+    mtx = np.asarray(mtx)
 
     if mtx.ndim == 3:
         n_obs, n_vars, n_time = mtx.shape
@@ -436,15 +446,6 @@ def _compute_var_metrics(
                     (var_metrics.loc[numeric_indices, "max"] - var_metrics.loc[numeric_indices, "min"])
                     / var_metrics.loc[numeric_indices, "mean"]
                 ).replace([np.inf, -np.inf], np.nan) * 100
-
-                # Calculate skewness and kurtosis
-                """var_metrics.loc[numeric_indices, "skewness"] = skew(
-                    mtx[:, numeric_indices].astype(np.float64), axis=0, bias=False, nan_policy="omit"
-                )
-                var_metrics.loc[numeric_indices, "kurtosis"] = kurtosis(
-                    mtx[:, numeric_indices].astype(np.float64), axis=0, bias=False, nan_policy="omit"
-                )
-                """
 
         var_metrics = var_metrics.infer_objects()
     except (TypeError, ValueError):
