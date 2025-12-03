@@ -14,10 +14,26 @@ if TYPE_CHECKING:
     from ehrdata import EHRData
 
 
+def _set_hv_backend(backend: str | None) -> str:
+    """Ensure a valid HoloViews backend is active and return its name."""
+    if backend is None:
+        backend = "matplotlib"  # default
+
+    backend = backend.lower()
+    if backend not in {"bokeh", "matplotlib"}:
+        raise ValueError(f"Unsupported backend '{backend}'. Use 'bokeh' or 'matplotlib'.")
+
+    if hv.Store.current_backend != backend:
+        hv.extension(backend)
+
+    return backend
+
+
 def plot_sankey(
     edata: EHRData,
     *,
     columns: list[str],
+    backend: str | None = None,
     show: bool = False,
     **kwargs,
 ) -> hv.Sankey:
@@ -26,6 +42,7 @@ def plot_sankey(
     Args:
         edata : Central data object containing observation data
         columns : Column names from edata.obs to visualize
+        backend: HoloViews backend to use ("matplotlib" or"bokeh"). Default: "matplotlib"
         show: If True, display the plot immediately. If False, only return the plot object without displaying.
         **kwargs: Additional styling options passed to `holoviews.opts.Sankey`. See HoloViews Sankey documentation for full list of options.
 
@@ -38,6 +55,8 @@ def plot_sankey(
         >>> ep.pl.plot_sankey(edata, columns=["gender", "race"])
 
     """
+    _set_hv_backend(backend)
+
     df = edata.obs[columns]
 
     labels = []
@@ -91,6 +110,7 @@ def plot_sankey_time(
     columns: list[str],
     layer: str,
     state_labels: dict[int, str] | None = None,
+    backend: str | None = None,
     show: bool = False,
     **kwargs,
 ) -> hv.Sankey:
@@ -107,6 +127,7 @@ def plot_sankey_time(
         layer: Name of the layer in `edata.layers` containing the feature data to visualize.
         state_labels: Mapping from numeric state values to readable labels. If None, state values
         will be displayed as strings of their numeric codes (e.g., "0", "1", "2"). Default: "None"
+        backend: HoloViews backend to use ("matplotlib" or"bokeh"). Default: "matplotlib"
         show: If True, display the plot immediately. If False, only return the plot object without displaying.
         **kwargs: Additional styling options passed to `holoviews.opts.Sankey`. See HoloViews Sankey documentation for full list of options.
 
@@ -137,6 +158,8 @@ def plot_sankey_time(
 
 
     """
+    _set_hv_backend(backend)
+
     flare_data = edata[:, edata.var_names.isin(columns), :].layers[layer][:, 0, :]
 
     time_steps = edata.tem.index.tolist()
