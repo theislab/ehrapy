@@ -371,13 +371,13 @@ def _compute_var_metrics(
         var_metrics["is_constant"] = np.nan
         var_metrics["constant_variable_ratio"] = np.nan
         var_metrics["range_ratio"] = np.nan
-        var_metrics["iqr_outliers"] = np.nan
 
     var_metrics["mean"] = np.nan
     var_metrics["median"] = np.nan
     var_metrics["standard_deviation"] = np.nan
     var_metrics["min"] = np.nan
     var_metrics["max"] = np.nan
+    var_metrics["iqr_outliers"] = np.nan
 
     try:
         # Calculate statistics for non-categorical variables
