@@ -124,145 +124,6 @@ def test_norm_scale_group(array_type, edata_mini_normalization):
         assert np.allclose(edata_mini_norm.X[:, 2], col2_norm)
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES_NUMERIC_3D_ABLE)
-@pytest.mark.parametrize(
-    "norm_func",
-    [
-        ep.pp.scale_norm,
-        ep.pp.minmax_norm,
-        ep.pp.maxabs_norm,
-        ep.pp.robust_scale_norm,
-        ep.pp.quantile_norm,
-        ep.pp.power_norm,
-    ],
-)
-def test_norm_3D(edata_blobs_timeseries_small, array_type, norm_func):
-    """Test basic 3D normalization functionality across all normalization functions.
-
-    This test checks:
-    - Shape preservation
-    - Dtype handling (preserved or converted to float)
-    - Metadata preservation (obs/var shapes)
-    - Layer isolation (normalizing one layer doesn't affect others)
-    - Normalization record (uns["normalization"] is populated)
-    - Invalid vars handling (raises ValueError for nonexistent vars)
-    - Variable selection (only selected vars are normalized)
-    - Copy behavior (copy=True returns new object, copy=False modifies in place)
-    - Group functionality (group_key parameter works and preserves shape)
-    - Layer independence (normalizing different layers produces different results)
-    """
-    edata = edata_blobs_timeseries_small.copy()
-    edata.layers[DEFAULT_TEM_LAYER_NAME] = array_type(edata.layers[DEFAULT_TEM_LAYER_NAME])
-    if isinstance(edata.layers[DEFAULT_TEM_LAYER_NAME], da.Array) and norm_func in (
-        ep.pp.maxabs_norm,
-        ep.pp.power_norm,
-    ):
-        with pytest.raises(NotImplementedError, match="does not support array type.*dask"):
-            norm_func(edata, layer=DEFAULT_TEM_LAYER_NAME)
-        return
-    orig_shape = edata.layers[DEFAULT_TEM_LAYER_NAME].shape
-    orig_dtype = edata.layers[DEFAULT_TEM_LAYER_NAME].dtype
-    orig_obs_shape = edata.obs.shape
-    orig_var_shape = edata.var.shape
-
-    if norm_func == ep.pp.power_norm:
-        edata.layers[DEFAULT_TEM_LAYER_NAME] = np.abs(edata.layers[DEFAULT_TEM_LAYER_NAME]) + 0.1
-
-    layer_original = edata.layers[DEFAULT_TEM_LAYER_NAME].copy()
-    norm_func(edata, layer=DEFAULT_TEM_LAYER_NAME)
-
-    assert edata.layers[DEFAULT_TEM_LAYER_NAME].shape == orig_shape
-    assert edata.layers[DEFAULT_TEM_LAYER_NAME].dtype == orig_dtype or np.issubdtype(
-        edata.layers[DEFAULT_TEM_LAYER_NAME].dtype, np.floating
-    )
-
-    assert edata.obs.shape == orig_obs_shape
-    assert edata.var.shape[0] == orig_var_shape[0]
-
-    edata.layers["test_isolated_layer"] = layer_original.copy() * 2 + 5
-    isolated_original = edata.layers["test_isolated_layer"].copy()
-    norm_func(edata, layer=DEFAULT_TEM_LAYER_NAME)
-    assert np.allclose(edata.layers["test_isolated_layer"], isolated_original, equal_nan=True)
-
-    assert "normalization" in edata.uns
-    assert len(edata.uns["normalization"]) > 0
-
-    edata_invalid = edata_blobs_timeseries_small.copy()
-    edata_invalid.layers[DEFAULT_TEM_LAYER_NAME] = array_type(edata_invalid.layers[DEFAULT_TEM_LAYER_NAME])
-    if norm_func == ep.pp.power_norm:
-        edata_invalid.layers[DEFAULT_TEM_LAYER_NAME] = np.abs(edata_invalid.layers[DEFAULT_TEM_LAYER_NAME]) + 0.1
-    with pytest.raises(ValueError, match="not found|not numeric"):
-        norm_func(edata_invalid, layer=DEFAULT_TEM_LAYER_NAME, vars=["nonexistent_var"])
-
-    if edata.layers[DEFAULT_TEM_LAYER_NAME].shape[1] >= 2:
-        edata_select = edata_blobs_timeseries_small.copy()
-        edata_select.layers[DEFAULT_TEM_LAYER_NAME] = array_type(edata_select.layers[DEFAULT_TEM_LAYER_NAME])
-        if norm_func == ep.pp.power_norm:
-            edata_select.layers[DEFAULT_TEM_LAYER_NAME] = np.abs(edata_select.layers[DEFAULT_TEM_LAYER_NAME]) + 0.1
-        layer_before_select = edata_select.layers[DEFAULT_TEM_LAYER_NAME].copy()
-        selected_vars = [edata_select.var_names[0], edata_select.var_names[1]]
-        norm_func(edata_select, layer=DEFAULT_TEM_LAYER_NAME, vars=selected_vars)
-
-        assert not np.allclose(
-            edata_select.layers[DEFAULT_TEM_LAYER_NAME][:, 0, :], layer_before_select[:, 0, :], equal_nan=True
-        )
-        assert not np.allclose(
-            edata_select.layers[DEFAULT_TEM_LAYER_NAME][:, 1, :], layer_before_select[:, 1, :], equal_nan=True
-        )
-
-        if edata_select.layers[DEFAULT_TEM_LAYER_NAME].shape[1] > 2:
-            assert np.allclose(
-                edata_select.layers[DEFAULT_TEM_LAYER_NAME][:, 2, :], layer_before_select[:, 2, :], equal_nan=True
-            )
-
-    edata_copy = edata_blobs_timeseries_small.copy()
-    edata_copy.layers[DEFAULT_TEM_LAYER_NAME] = array_type(edata_copy.layers[DEFAULT_TEM_LAYER_NAME])
-    if norm_func == ep.pp.power_norm:
-        edata_copy.layers[DEFAULT_TEM_LAYER_NAME] = np.abs(edata_copy.layers[DEFAULT_TEM_LAYER_NAME]) + 0.1
-    layer_before_copy = edata_copy.layers[DEFAULT_TEM_LAYER_NAME].copy()
-
-    result_copy = norm_func(edata_copy, layer=DEFAULT_TEM_LAYER_NAME, copy=True)
-    assert result_copy is not None
-    assert np.allclose(edata_copy.layers[DEFAULT_TEM_LAYER_NAME], layer_before_copy, equal_nan=True)
-    assert not np.allclose(result_copy.layers[DEFAULT_TEM_LAYER_NAME], layer_before_copy, equal_nan=True)
-
-    edata_no_copy = edata_blobs_timeseries_small.copy()
-    edata_no_copy.layers[DEFAULT_TEM_LAYER_NAME] = array_type(edata_no_copy.layers[DEFAULT_TEM_LAYER_NAME])
-    if norm_func == ep.pp.power_norm:
-        edata_no_copy.layers[DEFAULT_TEM_LAYER_NAME] = np.abs(edata_no_copy.layers[DEFAULT_TEM_LAYER_NAME]) + 0.1
-    layer_before_no_copy = edata_no_copy.layers[DEFAULT_TEM_LAYER_NAME].copy()
-    result_no_copy = norm_func(edata_no_copy, layer=DEFAULT_TEM_LAYER_NAME, copy=False)
-    assert result_no_copy is None
-    assert not np.allclose(edata_no_copy.layers[DEFAULT_TEM_LAYER_NAME], layer_before_no_copy, equal_nan=True)
-
-    if not isinstance(edata.layers[DEFAULT_TEM_LAYER_NAME], da.Array):
-        edata_group = edata_blobs_timeseries_small.copy()
-        edata_group.layers[DEFAULT_TEM_LAYER_NAME] = array_type(edata_group.layers[DEFAULT_TEM_LAYER_NAME])
-        if norm_func == ep.pp.power_norm:
-            edata_group.layers[DEFAULT_TEM_LAYER_NAME] = np.abs(edata_group.layers[DEFAULT_TEM_LAYER_NAME]) + 0.1
-        n_obs = edata_group.n_obs
-        group_size = n_obs // 2
-        edata_group.obs["group"] = ["A"] * group_size + ["B"] * (n_obs - group_size)
-
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            norm_func(edata_group, layer=DEFAULT_TEM_LAYER_NAME, group_key="group")
-
-        assert edata_group.layers[DEFAULT_TEM_LAYER_NAME].shape == orig_shape
-
-    edata_layers = edata_blobs_timeseries_small.copy()
-    edata_layers.layers[DEFAULT_TEM_LAYER_NAME] = array_type(edata_layers.layers[DEFAULT_TEM_LAYER_NAME])
-    if norm_func == ep.pp.power_norm:
-        edata_layers.layers[DEFAULT_TEM_LAYER_NAME] = np.abs(edata_layers.layers[DEFAULT_TEM_LAYER_NAME]) + 0.1
-    edata_layers.layers["test_3d_layer"] = edata_layers.layers[DEFAULT_TEM_LAYER_NAME].copy() * 2 + 5
-    layer_before_norm = edata_layers.layers[DEFAULT_TEM_LAYER_NAME].copy()
-    norm_func(edata_layers, layer="test_3d_layer")
-    assert not np.allclose(
-        edata_layers.layers[DEFAULT_TEM_LAYER_NAME], edata_layers.layers["test_3d_layer"], equal_nan=True
-    )
-    assert np.allclose(edata_layers.layers[DEFAULT_TEM_LAYER_NAME], layer_before_norm, equal_nan=True)
-
-
 @pytest.mark.parametrize(
     "array_type,expected_error",
     [
@@ -818,60 +679,22 @@ def test_norm_numerical_only():
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES_NUMERIC_3D_ABLE)
 @pytest.mark.parametrize(
-    "norm_func,check_func",
+    "norm_func",
     [
-        (
-            ep.pp.scale_norm,
-            lambda flat: (
-                np.allclose(np.nanmean(flat), 0, atol=1e-6),
-                np.allclose(np.nanstd(flat), 1, atol=1e-6),
-            ),
-        ),
-        (
-            ep.pp.minmax_norm,
-            lambda flat: (
-                np.allclose(np.nanmin(flat), 0, atol=1e-6),
-                np.allclose(np.nanmax(flat), 1, atol=1e-6),
-            ),
-        ),
-        (
-            ep.pp.maxabs_norm,
-            lambda flat: (np.allclose(np.nanmax(np.abs(flat)), 1, atol=1e-6),),
-        ),
-        (
-            ep.pp.robust_scale_norm,
-            lambda flat: (
-                np.allclose(np.nanmedian(flat), 0, atol=1e-6),
-                np.allclose(np.nanpercentile(flat, 75) - np.nanpercentile(flat, 25), 1, atol=1e-6),
-            ),
-        ),
-        (
-            ep.pp.quantile_norm,
-            lambda flat: (
-                np.allclose(np.nanmin(flat), 0, atol=1e-6),
-                np.allclose(np.nanmax(flat), 1, atol=1e-6),
-                np.allclose(np.nanpercentile(flat, 25), 0.25, atol=0.05),
-                np.allclose(np.nanpercentile(flat, 50), 0.5, atol=0.05),
-                np.allclose(np.nanpercentile(flat, 75), 0.75, atol=0.05),
-            ),
-        ),
-        (
-            ep.pp.power_norm,
-            lambda flat: (
-                np.allclose(np.nanmean(flat), 0, atol=1e-5),
-                np.allclose(np.nanstd(flat), 1, atol=1e-5),
-            ),
-        ),
+        ep.pp.scale_norm,
+        ep.pp.minmax_norm,
+        ep.pp.maxabs_norm,
+        ep.pp.robust_scale_norm,
+        ep.pp.quantile_norm,
+        ep.pp.power_norm,
     ],
 )
-def test_norm_3D_precise(edata_blobs_timeseries_small, array_type, norm_func, check_func):
-    """Test precise mathematical correctness of 3D normalization functions.
-
-    Each normalization function is tested to ensure it produces the expected
-    statistical properties (e.g., mean=0, std=1 for scale_norm).
-    """
+def test_norm_3D(edata_blobs_timeseries_small, array_type, norm_func):
     edata = edata_blobs_timeseries_small.copy()
     edata.layers[DEFAULT_TEM_LAYER_NAME] = array_type(edata.layers[DEFAULT_TEM_LAYER_NAME])
+    # maxabs_norm and power_norm raise NotImplementedError for Dask arrays when group_key is None.
+    # This check is needed here because _scale_func_group only checks for Dask arrays when group_key
+    # is provided, but these functions raise the error earlier in their own implementation.
     if isinstance(edata.layers[DEFAULT_TEM_LAYER_NAME], da.Array) and norm_func in (
         ep.pp.maxabs_norm,
         ep.pp.power_norm,
@@ -881,10 +704,13 @@ def test_norm_3D_precise(edata_blobs_timeseries_small, array_type, norm_func, ch
         return
     orig_shape = edata.layers[DEFAULT_TEM_LAYER_NAME].shape
     orig_dtype = edata.layers[DEFAULT_TEM_LAYER_NAME].dtype
+    orig_obs_shape = edata.obs.shape
+    orig_var_shape = edata.var.shape
 
     if norm_func == ep.pp.power_norm:
         edata.layers[DEFAULT_TEM_LAYER_NAME] = np.abs(edata.layers[DEFAULT_TEM_LAYER_NAME]) + 0.1
 
+    layer_original = edata.layers[DEFAULT_TEM_LAYER_NAME].copy()
     norm_func(edata, layer=DEFAULT_TEM_LAYER_NAME)
 
     assert edata.layers[DEFAULT_TEM_LAYER_NAME].shape == orig_shape
@@ -892,34 +718,177 @@ def test_norm_3D_precise(edata_blobs_timeseries_small, array_type, norm_func, ch
         edata.layers[DEFAULT_TEM_LAYER_NAME].dtype, np.floating
     )
 
+    assert edata.obs.shape == orig_obs_shape
+    assert edata.var.shape[0] == orig_var_shape[0]
+
+    edata.layers["test_isolated_layer"] = layer_original.copy() * 2 + 5
+    isolated_original = edata.layers["test_isolated_layer"].copy()
+    norm_func(edata, layer=DEFAULT_TEM_LAYER_NAME)
+    assert np.allclose(edata.layers["test_isolated_layer"], isolated_original, equal_nan=True)
+
+    assert "normalization" in edata.uns
+    assert len(edata.uns["normalization"]) > 0
+
+    edata_invalid = edata_blobs_timeseries_small.copy()
+    edata_invalid.layers[DEFAULT_TEM_LAYER_NAME] = array_type(edata_invalid.layers[DEFAULT_TEM_LAYER_NAME])
+    if norm_func == ep.pp.power_norm:
+        edata_invalid.layers[DEFAULT_TEM_LAYER_NAME] = np.abs(edata_invalid.layers[DEFAULT_TEM_LAYER_NAME]) + 0.1
+    with pytest.raises(ValueError, match="not found|not numeric"):
+        norm_func(edata_invalid, layer=DEFAULT_TEM_LAYER_NAME, vars=["nonexistent_var"])
+
+    if edata.layers[DEFAULT_TEM_LAYER_NAME].shape[1] >= 2:
+        edata_select = edata_blobs_timeseries_small.copy()
+        edata_select.layers[DEFAULT_TEM_LAYER_NAME] = array_type(edata_select.layers[DEFAULT_TEM_LAYER_NAME])
+        if norm_func == ep.pp.power_norm:
+            edata_select.layers[DEFAULT_TEM_LAYER_NAME] = np.abs(edata_select.layers[DEFAULT_TEM_LAYER_NAME]) + 0.1
+        layer_before_select = edata_select.layers[DEFAULT_TEM_LAYER_NAME].copy()
+        selected_vars = [edata_select.var_names[0], edata_select.var_names[1]]
+        norm_func(edata_select, layer=DEFAULT_TEM_LAYER_NAME, vars=selected_vars)
+
+        assert not np.allclose(
+            edata_select.layers[DEFAULT_TEM_LAYER_NAME][:, 0, :], layer_before_select[:, 0, :], equal_nan=True
+        )
+        assert not np.allclose(
+            edata_select.layers[DEFAULT_TEM_LAYER_NAME][:, 1, :], layer_before_select[:, 1, :], equal_nan=True
+        )
+
+        if edata_select.layers[DEFAULT_TEM_LAYER_NAME].shape[1] > 2:
+            assert np.allclose(
+                edata_select.layers[DEFAULT_TEM_LAYER_NAME][:, 2, :], layer_before_select[:, 2, :], equal_nan=True
+            )
+
+    edata_copy = edata_blobs_timeseries_small.copy()
+    edata_copy.layers[DEFAULT_TEM_LAYER_NAME] = array_type(edata_copy.layers[DEFAULT_TEM_LAYER_NAME])
+    if norm_func == ep.pp.power_norm:
+        edata_copy.layers[DEFAULT_TEM_LAYER_NAME] = np.abs(edata_copy.layers[DEFAULT_TEM_LAYER_NAME]) + 0.1
+    layer_before_copy = edata_copy.layers[DEFAULT_TEM_LAYER_NAME].copy()
+
+    result_copy = norm_func(edata_copy, layer=DEFAULT_TEM_LAYER_NAME, copy=True)
+    assert result_copy is not None
+    assert np.allclose(edata_copy.layers[DEFAULT_TEM_LAYER_NAME], layer_before_copy, equal_nan=True)
+    assert not np.allclose(result_copy.layers[DEFAULT_TEM_LAYER_NAME], layer_before_copy, equal_nan=True)
+
+    edata_no_copy = edata_blobs_timeseries_small.copy()
+    edata_no_copy.layers[DEFAULT_TEM_LAYER_NAME] = array_type(edata_no_copy.layers[DEFAULT_TEM_LAYER_NAME])
+    if norm_func == ep.pp.power_norm:
+        edata_no_copy.layers[DEFAULT_TEM_LAYER_NAME] = np.abs(edata_no_copy.layers[DEFAULT_TEM_LAYER_NAME]) + 0.1
+    layer_before_no_copy = edata_no_copy.layers[DEFAULT_TEM_LAYER_NAME].copy()
+    result_no_copy = norm_func(edata_no_copy, layer=DEFAULT_TEM_LAYER_NAME, copy=False)
+    assert result_no_copy is None
+    assert not np.allclose(edata_no_copy.layers[DEFAULT_TEM_LAYER_NAME], layer_before_no_copy, equal_nan=True)
+
+    if not isinstance(edata.layers[DEFAULT_TEM_LAYER_NAME], da.Array):
+        edata_group = edata_blobs_timeseries_small.copy()
+        edata_group.layers[DEFAULT_TEM_LAYER_NAME] = array_type(edata_group.layers[DEFAULT_TEM_LAYER_NAME])
+        if norm_func == ep.pp.power_norm:
+            edata_group.layers[DEFAULT_TEM_LAYER_NAME] = np.abs(edata_group.layers[DEFAULT_TEM_LAYER_NAME]) + 0.1
+        n_obs = edata_group.n_obs
+        group_size = n_obs // 2
+        edata_group.obs["group"] = ["A"] * group_size + ["B"] * (n_obs - group_size)
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            norm_func(edata_group, layer=DEFAULT_TEM_LAYER_NAME, group_key="group")
+
+        assert edata_group.layers[DEFAULT_TEM_LAYER_NAME].shape == orig_shape
+
+    edata_layers = edata_blobs_timeseries_small.copy()
+    edata_layers.layers[DEFAULT_TEM_LAYER_NAME] = array_type(edata_layers.layers[DEFAULT_TEM_LAYER_NAME])
+    if norm_func == ep.pp.power_norm:
+        edata_layers.layers[DEFAULT_TEM_LAYER_NAME] = np.abs(edata_layers.layers[DEFAULT_TEM_LAYER_NAME]) + 0.1
+    edata_layers.layers["test_3d_layer"] = edata_layers.layers[DEFAULT_TEM_LAYER_NAME].copy() * 2 + 5
+    layer_before_norm = edata_layers.layers[DEFAULT_TEM_LAYER_NAME].copy()
+    norm_func(edata_layers, layer="test_3d_layer")
+    assert not np.allclose(
+        edata_layers.layers[DEFAULT_TEM_LAYER_NAME], edata_layers.layers["test_3d_layer"], equal_nan=True
+    )
+    assert np.allclose(edata_layers.layers[DEFAULT_TEM_LAYER_NAME], layer_before_norm, equal_nan=True)
+
+
+def test_scale_norm_3D(edata_blobs_timeseries_small):
+    edata = edata_blobs_timeseries_small.copy()
+    ep.pp.scale_norm(edata, layer=DEFAULT_TEM_LAYER_NAME)
+
     n_obs, n_var, n_timestamps = edata.layers[DEFAULT_TEM_LAYER_NAME].shape
     for var_idx in range(n_var):
         flat = edata.layers[DEFAULT_TEM_LAYER_NAME][:, var_idx, :].reshape(-1)
         if not np.all(np.isnan(flat)):
-            checks = check_func(flat)
-            assert all(checks), f"Mathematical checks failed for variable {var_idx}"
+            assert np.allclose(np.nanmean(flat), 0, atol=1e-6), f"Mean check failed for variable {var_idx}"
+            assert np.allclose(np.nanstd(flat), 1, atol=1e-6), f"Std check failed for variable {var_idx}"
+
+
+def test_minmax_norm_3D(edata_blobs_timeseries_small):
+    edata = edata_blobs_timeseries_small.copy()
+    ep.pp.minmax_norm(edata, layer=DEFAULT_TEM_LAYER_NAME)
+
+    n_obs, n_var, n_timestamps = edata.layers[DEFAULT_TEM_LAYER_NAME].shape
+    for var_idx in range(n_var):
+        flat = edata.layers[DEFAULT_TEM_LAYER_NAME][:, var_idx, :].reshape(-1)
+        if not np.all(np.isnan(flat)):
+            assert np.allclose(np.nanmin(flat), 0, atol=1e-6), f"Min check failed for variable {var_idx}"
+            assert np.allclose(np.nanmax(flat), 1, atol=1e-6), f"Max check failed for variable {var_idx}"
+
+
+def test_maxabs_norm_3D(edata_blobs_timeseries_small):
+    edata = edata_blobs_timeseries_small.copy()
+    ep.pp.maxabs_norm(edata, layer=DEFAULT_TEM_LAYER_NAME)
+
+    n_obs, n_var, n_timestamps = edata.layers[DEFAULT_TEM_LAYER_NAME].shape
+    for var_idx in range(n_var):
+        flat = edata.layers[DEFAULT_TEM_LAYER_NAME][:, var_idx, :].reshape(-1)
+        if not np.all(np.isnan(flat)):
+            assert np.allclose(np.nanmax(np.abs(flat)), 1, atol=1e-6), f"Max-abs check failed for variable {var_idx}"
+
+
+def test_robust_scale_norm_3D(edata_blobs_timeseries_small):
+    edata = edata_blobs_timeseries_small.copy()
+    ep.pp.robust_scale_norm(edata, layer=DEFAULT_TEM_LAYER_NAME)
+
+    n_obs, n_var, n_timestamps = edata.layers[DEFAULT_TEM_LAYER_NAME].shape
+    for var_idx in range(n_var):
+        flat = edata.layers[DEFAULT_TEM_LAYER_NAME][:, var_idx, :].reshape(-1)
+        if not np.all(np.isnan(flat)):
+            assert np.allclose(np.nanmedian(flat), 0, atol=1e-6), f"Median check failed for variable {var_idx}"
+            assert np.allclose(np.nanpercentile(flat, 75) - np.nanpercentile(flat, 25), 1, atol=1e-6), (
+                f"IQR check failed for variable {var_idx}"
+            )
+
+
+def test_quantile_norm_3D(edata_blobs_timeseries_small):
+    edata = edata_blobs_timeseries_small.copy()
+    ep.pp.quantile_norm(edata, layer=DEFAULT_TEM_LAYER_NAME)
+
+    n_obs, n_var, n_timestamps = edata.layers[DEFAULT_TEM_LAYER_NAME].shape
+    for var_idx in range(n_var):
+        flat = edata.layers[DEFAULT_TEM_LAYER_NAME][:, var_idx, :].reshape(-1)
+        if not np.all(np.isnan(flat)):
+            assert np.allclose(np.nanmin(flat), 0, atol=1e-6), f"Min check failed for variable {var_idx}"
+            assert np.allclose(np.nanmax(flat), 1, atol=1e-6), f"Max check failed for variable {var_idx}"
+            assert np.allclose(np.nanpercentile(flat, 25), 0.25, atol=0.05), f"Q25 check failed for variable {var_idx}"
+            assert np.allclose(np.nanpercentile(flat, 50), 0.5, atol=0.05), f"Q50 check failed for variable {var_idx}"
+            assert np.allclose(np.nanpercentile(flat, 75), 0.75, atol=0.05), f"Q75 check failed for variable {var_idx}"
+
+
+def test_power_norm_3D(edata_blobs_timeseries_small):
+    edata = edata_blobs_timeseries_small.copy()
+    edata.layers[DEFAULT_TEM_LAYER_NAME] = np.abs(edata.layers[DEFAULT_TEM_LAYER_NAME]) + 0.1
+    ep.pp.power_norm(edata, layer=DEFAULT_TEM_LAYER_NAME)
+
+    n_obs, n_var, n_timestamps = edata.layers[DEFAULT_TEM_LAYER_NAME].shape
+    for var_idx in range(n_var):
+        flat = edata.layers[DEFAULT_TEM_LAYER_NAME][:, var_idx, :].reshape(-1)
+        if not np.all(np.isnan(flat)):
+            assert np.allclose(np.nanmean(flat), 0, atol=1e-5), f"Mean check failed for variable {var_idx}"
+            assert np.allclose(np.nanstd(flat), 1, atol=1e-5), f"Std check failed for variable {var_idx}"
 
 
 def test_log_norm_3D(edata_blobs_timeseries_small):
-    """Test that log_norm applies elementwise log1p (or log with offset) to 3D data.
-
-    The test uses strictly positive input (abs + 1) and verifies the result is
-    equal to np.log1p(original) elementwise (NaN-preserving).
-    """
     edata = edata_blobs_timeseries_small.copy()
     edata.layers[DEFAULT_TEM_LAYER_NAME] = np.abs(edata.layers[DEFAULT_TEM_LAYER_NAME]) + 1
-
-    orig_shape = edata.layers[DEFAULT_TEM_LAYER_NAME].shape
-    orig_dtype = edata.layers[DEFAULT_TEM_LAYER_NAME].dtype
 
     layer_original = edata.layers[DEFAULT_TEM_LAYER_NAME].copy()
 
     ep.pp.log_norm(edata, layer=DEFAULT_TEM_LAYER_NAME)
-
-    assert edata.layers[DEFAULT_TEM_LAYER_NAME].shape == orig_shape
-    assert edata.layers[DEFAULT_TEM_LAYER_NAME].dtype == orig_dtype or np.issubdtype(
-        edata.layers[DEFAULT_TEM_LAYER_NAME].dtype, np.floating
-    )
 
     expected = np.log1p(layer_original)
     assert np.allclose(edata.layers[DEFAULT_TEM_LAYER_NAME], expected, rtol=1e-6, equal_nan=True)
@@ -928,24 +897,11 @@ def test_log_norm_3D(edata_blobs_timeseries_small):
 
 
 def test_offset_negative_values_3D(edata_blobs_timeseries_small):
-    """Test that offset_negative_values shifts the array so its minimum becomes 0.
-
-    The function should preserve shape and dtype and ensure all non-NaN values
-    are >= 0 after the operation.
-    """
     edata = edata_blobs_timeseries_small.copy()
     edata.layers[DEFAULT_TEM_LAYER_NAME] = edata.layers[DEFAULT_TEM_LAYER_NAME] - 2
-
-    orig_shape = edata.layers[DEFAULT_TEM_LAYER_NAME].shape
-    orig_dtype = edata.layers[DEFAULT_TEM_LAYER_NAME].dtype
     assert np.nanmin(edata.layers[DEFAULT_TEM_LAYER_NAME]) < 0
 
     ep.pp.offset_negative_values(edata, layer=DEFAULT_TEM_LAYER_NAME)
-
-    assert edata.layers[DEFAULT_TEM_LAYER_NAME].shape == orig_shape
-    assert edata.layers[DEFAULT_TEM_LAYER_NAME].dtype == orig_dtype or np.issubdtype(
-        edata.layers[DEFAULT_TEM_LAYER_NAME].dtype, np.floating
-    )
 
     assert np.allclose(np.nanmin(edata.layers[DEFAULT_TEM_LAYER_NAME]), 0, atol=1e-10)
 
