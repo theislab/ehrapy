@@ -58,8 +58,8 @@ def qc_metrics(
         - `entropy_of_missingness`: Entropy of the missingness pattern for each observation. Higher values indicate a more heterogeneous (less structured) missingness pattern.
 
         Advanced observation level metrics include (only computed if :func:`~ehrdata.infer_feature_types` is run first):
-        - `unique_values_abs`: Absolute amount of unique values.
-        - `unique_values_ratio`: Relative amount of unique values in percent.
+        - `unique_values_abs`: Absolute amount of unique values. Returned as ``NaN`` for numeric features.
+        - `unique_values_ratio`: Relative amount of unique values in percent. Returned as ``NaN`` for numeric features.
 
         Basic (default) feature level metrics include:
 
@@ -76,8 +76,8 @@ def qc_metrics(
 
         Advanced feature level metrics include (only computed if :func:`~ehrdata.infer_feature_types` is run first):
 
-        - `unique_values_abs`: Absolute amount of unique values.
-        - `unique_values_ratio`: Relative amount of unique values in percent.
+        - `unique_values_abs`: Absolute amount of unique values. Returned as ``NaN`` for numeric features
+        - `unique_values_ratio`: Relative amount of unique values in percent. Returned as ``NaN`` for numeric features
         - `coefficient_of_variation`: Coefficient of variation of the features.
         - `is_constant`: Whether the feature is constant (with near zero variance).
         - `constant_variable_ratio`: Relative amount of constant features in percent.
@@ -233,7 +233,7 @@ def _compute_obs_metrics(
 
     if advanced and "feature_type" not in edata.var:
         raise ValueError(
-            "Advanced QC metrics require `edata.var['feature_type']`. Please run `infer_feature_types(edata)` first"
+            "Advanced QC metrics require `edata.var['feature_type']`. Please run `ehrdata.infer_feature_types(edata)` first"
         )
 
     if advanced:
