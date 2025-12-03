@@ -377,8 +377,6 @@ def _compute_var_metrics(
     var_metrics["is_constant"] = np.nan
     var_metrics["constant_variable_ratio"] = np.nan
     var_metrics["range_ratio"] = np.nan
-    # var_metrics["skewness"] = np.nan
-    # var_metrics["kurtosis"] = np.nan
     var_metrics["iqr_outliers"] = np.nan
 
     try:
@@ -429,7 +427,7 @@ def _compute_var_metrics(
                     var_metrics.loc[numeric_indices, "max"] == var_metrics.loc[numeric_indices, "min"]
                 )
 
-                var_metrics.loc[numeric_indices, "is_constant"] = constant_mask
+                var_metrics.loc[numeric_indices, "is_constant"] = constant_mask.astype(float)
 
                 var_metrics["constant_variable_ratio"] = constant_mask.mean() * 100
 

@@ -49,7 +49,7 @@ def test_qc_metrics_vanilla_advanced(array_type, missing_values_edata):
     adata.var["feature_type"] = ["numeric", "numeric", "categorical"]
     adata.X = array_type(missing_values_edata.X)
     modification_copy = adata.copy()
-    obs_metrics, var_metrics = ep.pp.qc_metrics(adata, advanced=True)
+    obs_metrics, var_metrics = ep.pp.qc_metrics(adata)
 
     assert np.array_equal(obs_metrics["missing_values_abs"].values, np.array([1, 2]))
     assert np.allclose(obs_metrics["missing_values_pct"].values, np.array([33.3333, 66.6667]))
@@ -67,12 +67,7 @@ def test_qc_metrics_vanilla_advanced(array_type, missing_values_edata):
     assert np.allclose(var_metrics["min"].values, np.array([0.21, np.nan, 7.234]), equal_nan=True)
     assert np.allclose(var_metrics["max"].values, np.array([0.21, np.nan, 41.419998]), equal_nan=True)
     assert np.allclose(var_metrics["coefficient_of_variation"].values, np.array([0.0, np.nan, np.nan]), equal_nan=True)
-
-    is_const = var_metrics["is_constant"].values
-    assert is_const[0] is True
-    assert is_const[1] is False
-    assert np.isnan(is_const[2])
-
+    assert np.array_equal(var_metrics["is_constant"].values, np.array([1, 0, np.nan]), equal_nan=True)
     assert np.allclose(var_metrics["constant_variable_ratio"].values, np.array([50.0, 50.0, 50.0]), equal_nan=True)
     assert np.allclose(var_metrics["range_ratio"].values, np.array([0.0, np.nan, np.nan]), equal_nan=True)
     assert (~var_metrics["iqr_outliers"]).all()
@@ -132,7 +127,7 @@ def test_qc_metrics_3d_vanilla_advanced(edata_mini_3D_missing_values):
     edata.var["feature_type"] = ["numeric", "numeric", "numeric", "categorical"]
     modification_copy = edata.copy()
 
-    obs_metrics, var_metrics = ep.pp.qc_metrics(edata, layer=DEFAULT_TEM_LAYER_NAME, advanced=True)
+    obs_metrics, var_metrics = ep.pp.qc_metrics(edata, layer=DEFAULT_TEM_LAYER_NAME)
 
     assert np.array_equal(obs_metrics["missing_values_abs"].values, np.array([1, 0, 1, 1]))
     assert np.allclose(obs_metrics["missing_values_pct"].values, np.array([12.5, 0.0, 12.5, 12.5]))
@@ -171,13 +166,7 @@ def test_qc_metrics_3d_vanilla_advanced(edata_mini_3D_missing_values):
         np.array([0.03545658, 0.01657351, 0.2324485, np.nan]),
         equal_nan=True,
     )
-
-    is_const = var_metrics["is_constant"].values
-    assert is_const[0] is False
-    assert is_const[1] is False
-    assert is_const[2] is False
-    assert np.isnan(is_const[3])
-
+    assert np.array_equal(var_metrics["is_constant"].values, np.array([0, 0, 0, np.nan]), equal_nan=True)
     assert np.allclose(var_metrics["constant_variable_ratio"].values, np.array([0, 0, 0, 0]))
     assert np.allclose(var_metrics["range_ratio"].values, np.array([8.9965, 5.0633, 69.0832, np.nan]), equal_nan=True)
     assert (~var_metrics["iqr_outliers"]).all()
