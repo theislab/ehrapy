@@ -55,13 +55,6 @@ def _scale_func_group(
     var_indices = _get_var_indices(edata, vars)
     X = edata.X if layer is None else edata.layers[layer]
 
-    # group wise normalization doesnt work with dask arrays
-    if isinstance(X, DaskArray) and group_key is not None:
-        raise NotImplementedError(
-            "Group-wise normalization is not yet supported for Dask arrays. "
-            "Please convert to numpy array first or normalize without group_key."
-        )
-
     # Convert integer arrays to float to preserve precision in normalized results
     if isinstance(X, np.ndarray) and np.issubdtype(X.dtype, np.integer):
         X = X.astype(np.float64)
@@ -69,15 +62,64 @@ def _scale_func_group(
     if group_key is None:
         X[:, var_indices] = scale_func(X[:, var_indices])
     else:
-        for group in edata.obs[group_key].unique():
-            group_idx = edata.obs[group_key] == group
-            group_mask = np.where(group_idx)[0]
-            if X.ndim == 2:
-                X[np.ix_(group_mask, var_indices)] = scale_func(X[np.ix_(group_mask, var_indices)])
-            else:
-                group_data = X[group_mask][:, var_indices, :]
+        import dask.array as da
+
+        if isinstance(X, DaskArray):
+            result = X
+            for group in edata.obs[group_key].unique():
+                group_idx = edata.obs[group_key] == group
+                group_mask = np.where(group_idx)[0]
+
+                group_data = X[group_mask][:, var_indices] if X.ndim == 2 else X[group_mask][:, var_indices, :]
                 normalized_group_data = scale_func(group_data)
-                X[group_idx, :, :][:, var_indices, :] = normalized_group_data
+
+                group_rows = X[group_mask]
+                if X.ndim == 2:
+                    non_var_indices = np.setdiff1d(np.arange(X.shape[1]), var_indices)
+                    if len(non_var_indices) > 0:
+                        sorted_indices = np.argsort(np.concatenate([non_var_indices, var_indices]))
+                        updated_group_rows = da.concatenate(
+                            [group_rows[:, non_var_indices], normalized_group_data], axis=1
+                        )[:, sorted_indices]
+                    else:
+                        updated_group_rows = normalized_group_data
+
+                    full_updated_rows = result
+                    for i, obs_idx in enumerate(group_mask):
+                        obs_mask = da.arange(X.shape[0], chunks=X.chunksize[0]) == obs_idx
+                        full_updated_rows = da.where(
+                            obs_mask[:, None], updated_group_rows[i : i + 1], full_updated_rows
+                        )
+                else:
+                    full_updated_rows = result
+                    for i, obs_idx in enumerate(group_mask):
+                        obs_original = X[obs_idx : obs_idx + 1]
+                        non_var_indices = np.setdiff1d(np.arange(X.shape[1]), var_indices)
+                        if len(non_var_indices) > 0:
+                            sorted_indices = np.argsort(np.concatenate([non_var_indices, var_indices]))
+                            updated_obs = da.concatenate(
+                                [obs_original[:, non_var_indices, :], normalized_group_data[i : i + 1]], axis=1
+                            )[:, sorted_indices, :]
+                        else:
+                            updated_obs = normalized_group_data[i : i + 1]
+
+                        obs_mask = da.arange(X.shape[0], chunks=X.chunksize[0]) == obs_idx
+                        full_updated_rows = da.where(obs_mask[:, None, None], updated_obs, full_updated_rows)
+
+                result = full_updated_rows
+
+            X = result
+        else:
+            for group in edata.obs[group_key].unique():
+                group_idx = edata.obs[group_key] == group
+                group_mask = np.where(group_idx)[0]
+                if X.ndim == 2:
+                    X[np.ix_(group_mask, var_indices)] = scale_func(X[np.ix_(group_mask, var_indices)])
+                else:
+                    group_data = X[group_mask][:, var_indices, :].copy()
+                    normalized_group_data = scale_func(group_data)
+                    for i, obs_idx in enumerate(group_mask):
+                        X[obs_idx, var_indices, :] = normalized_group_data[i]
 
     if layer is None:
         edata.X = X
@@ -221,9 +263,8 @@ def minmax_norm(
         >>> import ehrapy as ep
         >>> import numpy as np
         >>> edata = ed.dt.physionet2012(layer="tem_data")
-        >>> edata.layers["tem_data"] = edata.layers["tem_data"] * 10 + 5
         >>> np.nanmin(edata.layers["tem_data"]), np.nanmax(edata.layers["tem_data"])
-        (-173.0, 364005.0)
+        (-17.8, 36400.0)
         >>> ep.pp.minmax_norm(edata, layer="tem_data")
         >>> np.nanmin(edata.layers["tem_data"]), np.nanmax(edata.layers["tem_data"])
         (0.0, 1.0)
@@ -288,9 +329,8 @@ def maxabs_norm(
         >>> import ehrapy as ep
         >>> import numpy as np
         >>> edata = ed.dt.physionet2012(layer="tem_data")
-        >>> edata.layers["tem_data"] = edata.layers["tem_data"] * 5 - 2.5
         >>> np.nanmax(np.abs(edata.layers["tem_data"]))
-        181997.5
+        36400.0
         >>> ep.pp.maxabs_norm(edata, layer="tem_data")
         >>> np.nanmax(np.abs(edata.layers["tem_data"]))
         1.0
@@ -444,9 +484,8 @@ def quantile_norm(
         >>> import ehrapy as ep
         >>> import numpy as np
         >>> edata = ed.dt.physionet2012(layer="tem_data")
-        >>> edata.layers["tem_data"] = edata.layers["tem_data"] * 8 + 2
         >>> np.nanmin(edata.layers["tem_data"]), np.nanmax(edata.layers["tem_data"])
-        (-140.4, 291202.0)
+        (-17.8, 36400.0)
         >>> ep.pp.quantile_norm(edata, layer="tem_data")
         >>> np.nanmin(edata.layers["tem_data"]), np.nanmax(edata.layers["tem_data"])
         (0.0, 1.0)
@@ -721,12 +760,10 @@ def offset_negative_values(edata: EHRData | AnnData, layer: str = None, copy: bo
         >>> import ehrapy as ep
         >>> import numpy as np
         >>> edata = ed.dt.physionet2012(layer="tem_data")
-        >>> edata_shifted = edata.copy()
-        >>> edata_shifted.layers["tem_data"] = edata_shifted.layers["tem_data"] - 0.5
-        >>> np.nanmin(edata_shifted.layers["tem_data"])
-        -18.3
-        >>> ep.pp.offset_negative_values(edata_shifted, layer="tem_data")
-        >>> np.nanmin(edata_shifted.layers["tem_data"])
+        >>> np.nanmin(edata.layers["tem_data"])
+        -17.8
+        >>> ep.pp.offset_negative_values(edata, layer="tem_data")
+        >>> np.nanmin(edata.layers["tem_data"])
         0.0
     """
     edata = _prep_edata_norm(edata, copy)
