@@ -304,7 +304,6 @@ def _compute_var_metrics(
     """
     categorical_indices = np.ndarray([0], dtype=int)
     var_metrics = pd.DataFrame(index=edata.var_names)
-    mtx = np.asarray(mtx)
 
     if mtx.ndim == 3:
         n_obs, n_vars, n_time = mtx.shape

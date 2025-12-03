@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
+from scipy import sparse as sp
 
 import ehrapy as ep
 from ehrapy.io._read import read_csv
@@ -20,6 +21,7 @@ def test_qc_metrics_vanilla(array_type, missing_values_edata):
     adata = missing_values_edata
     adata.X = array_type(adata.X)
     modification_copy = adata.copy()
+
     obs_metrics, var_metrics = ep.pp.qc_metrics(adata)
 
     assert np.array_equal(obs_metrics["missing_values_abs"].values, np.array([1, 2]))
@@ -80,8 +82,7 @@ def test_qc_metrics_vanilla_advanced(array_type, missing_values_edata):
 
 
 def test_qc_metrics_3d_vanilla(edata_mini_3D_missing_values):
-    edata = edata_mini_3D_missing_values
-    edata = edata[:, :4]
+    edata = edata_mini_3D_missing_values[:, :4].copy()
     modification_copy = edata.copy()
 
     obs_metrics, var_metrics = ep.pp.qc_metrics(edata, layer=DEFAULT_TEM_LAYER_NAME)
@@ -122,8 +123,7 @@ def test_qc_metrics_3d_vanilla(edata_mini_3D_missing_values):
 
 
 def test_qc_metrics_3d_vanilla_advanced(edata_mini_3D_missing_values):
-    edata = edata_mini_3D_missing_values.copy()
-    edata = edata[:, :4]
+    edata = edata_mini_3D_missing_values[:, :4].copy()
     edata.var["feature_type"] = ["numeric", "numeric", "numeric", "categorical"]
     modification_copy = edata.copy()
 
