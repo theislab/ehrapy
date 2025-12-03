@@ -40,7 +40,7 @@ def qc_metrics(
 
     Uses the original values to calculate the metrics and not the encoded ones.
     Look at the return type for a more in depth description of the basic and advanced calculated metrics.
-    If ehrdata.infer_feature_types is run first, then advanced metrics are calculated in addition to basic metrics that require feature type information.
+    If :func:`~ehrdata.infer_feature_types` is run first, then advanced metrics are calculated in addition to basic metrics that require feature type information.
 
 
     Args:
@@ -57,7 +57,7 @@ def qc_metrics(
         - `missing_values_pct`: Relative amount of missing values in percent.
         - `entropy_of_missingness`: Entropy of the missingness pattern for each observation. Higher values indicate a more heterogeneous (less structured) missingness pattern.
 
-        Advanced observation level metrics include (only computed if advanced is set to `True`):
+        Advanced observation level metrics include (only computed if :func:`~ehrdata.infer_feature_types` is run first):
         - `unique_values_abs`: Absolute amount of unique values.
         - `unique_values_ratio`: Relative amount of unique values in percent.
 
@@ -74,7 +74,7 @@ def qc_metrics(
         - `iqr_outliers`: Whether the feature contains outliers based on the interquartile range (IQR) method.
 
 
-        Advanced feature level metrics include (only computed if ehrdata.infer_feature_types is run first):
+        Advanced feature level metrics include (only computed if :func:`~ehrdata.infer_feature_types` is run first):
 
         - `unique_values_abs`: Absolute amount of unique values.
         - `unique_values_ratio`: Relative amount of unique values in percent.
@@ -88,7 +88,8 @@ def qc_metrics(
             >>> import ehrapy as ep
             >>> edata = ed.dt.mimic_2()
             >>> obs_qc, var_qc = ep.pp.qc_metrics(edata)
-            >>> obs_qc["missing_values_pct"].plot(kind="hist", bins=20)
+            >>> obs_qc.head()
+            >>> var_qc.head()
     """
     feature_type = edata.var.get("feature_type", None)
     if_advanced = True
