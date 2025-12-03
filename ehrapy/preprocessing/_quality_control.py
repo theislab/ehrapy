@@ -35,19 +35,18 @@ def qc_metrics(
     qc_vars: Collection[str] = (),
     *,
     layer: str | None = None,
-    advanced: bool = False,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Calculates various quality control metrics.
 
     Uses the original values to calculate the metrics and not the encoded ones.
     Look at the return type for a more in depth description of the basic and advanced calculated metrics.
+    If ehrdata.infer_feature_types is run first, then advanced metrics are calculated in addition to basic metrics that require feature type information.
 
 
     Args:
         edata: Central data object.
         qc_vars: Optional List of vars to calculate additional metrics for.
         layer: Layer to use to calculate the metrics.
-        advanced: Determines if the advanced metrics should be calculated that require feature type information. If it is set to `True`, ehrdata.infer_feature_types must be run first. Default is `False`.
 
     Returns:
         Two Pandas DataFrames of all calculated QC metrics for `obs` and `var` respectively.
@@ -75,7 +74,7 @@ def qc_metrics(
         - `iqr_outliers`: Whether the feature contains outliers based on the interquartile range (IQR) method.
 
 
-        Advanced feature level metrics include (only computed if advanced is set to `True`):
+        Advanced feature level metrics include (only computed if ehrdata.infer_feature_types is run first):
 
         - `unique_values_abs`: Absolute amount of unique values.
         - `unique_values_ratio`: Relative amount of unique values in percent.
@@ -92,16 +91,9 @@ def qc_metrics(
             >>> obs_qc["missing_values_pct"].plot(kind="hist", bins=20)
     """
     feature_type = edata.var.get("feature_type", None)
-    if_advanced = advanced
-    if advanced:
-        if feature_type is None:
-            warnings.warn(
-                "Advanced QC metrics require `edata.var['feature_type']`."
-                "Only basic metrics will be computed."
-                "Please run `infer_feature_types(edata)` first to enable advanced metrics.",
-                stacklevel=2,
-            )
-            if_advanced = False
+    if_advanced = True
+    if feature_type is None:
+        if_advanced = False
 
     mtx = edata.X if layer is None else edata.layers[layer]
     var_metrics = _compute_var_metrics(mtx, edata, advanced=if_advanced)
