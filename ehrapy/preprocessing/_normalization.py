@@ -143,12 +143,11 @@ def scale_norm(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> import numpy as np
-        >>> from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
-        >>> edata = ed.dt.ehrdata_blobs(n_observations=20, base_timepoints=15)
-        >>> np.nanmean(edata.layers[DEFAULT_TEM_LAYER_NAME])
-        0.5
-        >>> ep.pp.scale_norm(edata, layer=DEFAULT_TEM_LAYER_NAME)
-        >>> np.nanmean(edata.layers[DEFAULT_TEM_LAYER_NAME])
+        >>> edata = ed.dt.physionet2012(layer="tem_data")
+        >>> np.nanmean(edata.layers["tem_data"])
+        74.213570
+        >>> ep.pp.scale_norm(edata, layer="tem_data")
+        >>> np.nanmean(edata.layers["tem_data"])
         0.0
 
     """
@@ -221,13 +220,12 @@ def minmax_norm(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> import numpy as np
-        >>> from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
-        >>> edata = ed.dt.ehrdata_blobs(n_observations=20, base_timepoints=15)
-        >>> edata.layers[DEFAULT_TEM_LAYER_NAME] = edata.layers[DEFAULT_TEM_LAYER_NAME] * 10 + 5
-        >>> np.nanmin(edata.layers[DEFAULT_TEM_LAYER_NAME]), np.nanmax(edata.layers[DEFAULT_TEM_LAYER_NAME])
-        (5.0, 15.0)
-        >>> ep.pp.minmax_norm(edata, layer=DEFAULT_TEM_LAYER_NAME)
-        >>> np.nanmin(edata.layers[DEFAULT_TEM_LAYER_NAME]), np.nanmax(edata.layers[DEFAULT_TEM_LAYER_NAME])
+        >>> edata = ed.dt.physionet2012(layer="tem_data")
+        >>> edata.layers["tem_data"] = edata.layers["tem_data"] * 10 + 5
+        >>> np.nanmin(edata.layers["tem_data"]), np.nanmax(edata.layers["tem_data"])
+        (-173.0, 364005.0)
+        >>> ep.pp.minmax_norm(edata, layer="tem_data")
+        >>> np.nanmin(edata.layers["tem_data"]), np.nanmax(edata.layers["tem_data"])
         (0.0, 1.0)
     """
     edata.X if layer is None else edata.layers[layer]
@@ -289,13 +287,12 @@ def maxabs_norm(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> import numpy as np
-        >>> from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
-        >>> edata = ed.dt.ehrdata_blobs(n_observations=20, base_timepoints=15)
-        >>> edata.layers[DEFAULT_TEM_LAYER_NAME] = edata.layers[DEFAULT_TEM_LAYER_NAME] * 5 - 2.5
-        >>> np.nanmax(np.abs(edata.layers[DEFAULT_TEM_LAYER_NAME]))
-        2.5
-        >>> ep.pp.maxabs_norm(edata, layer=DEFAULT_TEM_LAYER_NAME)
-        >>> np.nanmax(np.abs(edata.layers[DEFAULT_TEM_LAYER_NAME]))
+        >>> edata = ed.dt.physionet2012(layer="tem_data")
+        >>> edata.layers["tem_data"] = edata.layers["tem_data"] * 5 - 2.5
+        >>> np.nanmax(np.abs(edata.layers["tem_data"]))
+        181997.5
+        >>> ep.pp.maxabs_norm(edata, layer="tem_data")
+        >>> np.nanmax(np.abs(edata.layers["tem_data"]))
         1.0
     """
     X = edata.X if layer is None else edata.layers[layer]
@@ -370,12 +367,11 @@ def robust_scale_norm(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> import numpy as np
-        >>> from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
-        >>> edata = ed.dt.ehrdata_blobs(n_observations=20, base_timepoints=15)
-        >>> np.nanmedian(edata.layers[DEFAULT_TEM_LAYER_NAME])
-        0.5
-        >>> ep.pp.robust_scale_norm(edata, layer=DEFAULT_TEM_LAYER_NAME)
-        >>> np.nanmedian(edata.layers[DEFAULT_TEM_LAYER_NAME])
+        >>> edata = ed.dt.physionet2012(layer="tem_data")
+        >>> np.nanmedian(edata.layers["tem_data"])
+        69.0
+        >>> ep.pp.robust_scale_norm(edata, layer="tem_data")
+        >>> np.nanmedian(edata.layers["tem_data"])
         0.0
     """
     edata.X if layer is None else edata.layers[layer]
@@ -447,13 +443,12 @@ def quantile_norm(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> import numpy as np
-        >>> from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
-        >>> edata = ed.dt.ehrdata_blobs(n_observations=20, base_timepoints=15)
-        >>> edata.layers[DEFAULT_TEM_LAYER_NAME] = edata.layers[DEFAULT_TEM_LAYER_NAME] * 8 + 2
-        >>> np.nanmin(edata.layers[DEFAULT_TEM_LAYER_NAME]), np.nanmax(edata.layers[DEFAULT_TEM_LAYER_NAME])
-        (2.0, 10.0)
-        >>> ep.pp.quantile_norm(edata, layer=DEFAULT_TEM_LAYER_NAME)
-        >>> np.nanmin(edata.layers[DEFAULT_TEM_LAYER_NAME]), np.nanmax(edata.layers[DEFAULT_TEM_LAYER_NAME])
+        >>> edata = ed.dt.physionet2012(layer="tem_data")
+        >>> edata.layers["tem_data"] = edata.layers["tem_data"] * 8 + 2
+        >>> np.nanmin(edata.layers["tem_data"]), np.nanmax(edata.layers["tem_data"])
+        (-140.4, 291202.0)
+        >>> ep.pp.quantile_norm(edata, layer="tem_data")
+        >>> np.nanmin(edata.layers["tem_data"]), np.nanmax(edata.layers["tem_data"])
         (0.0, 1.0)
     """
     edata.X if layer is None else edata.layers[layer]
@@ -517,17 +512,17 @@ def power_norm(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
+        >>> import numpy as np
         >>> from scipy import stats
-        >>> from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
-        >>> edata = ed.dt.ehrdata_blobs(n_observations=20, base_timepoints=15)
-        >>> edata.layers[DEFAULT_TEM_LAYER_NAME] = np.abs(edata.layers[DEFAULT_TEM_LAYER_NAME]) + 0.1
-        >>> skewed_data = np.power(edata.layers[DEFAULT_TEM_LAYER_NAME], 2)
-        >>> edata.layers[DEFAULT_TEM_LAYER_NAME] = skewed_data
-        >>> stats.skew(edata.layers[DEFAULT_TEM_LAYER_NAME].flatten())
-        13.528100
-        >>> ep.pp.power_norm(edata, layer=DEFAULT_TEM_LAYER_NAME)
-        >>> stats.skew(edata.layers[DEFAULT_TEM_LAYER_NAME].flatten())
-        -0.041263
+        >>> edata = ed.dt.physionet2012(layer="tem_data")
+        >>> edata.layers["tem_data"] = np.abs(edata.layers["tem_data"]) + 0.1
+        >>> skewed_data = np.power(edata.layers["tem_data"], 2)
+        >>> edata.layers["tem_data"] = skewed_data
+        >>> stats.skew(edata.layers["tem_data"].flatten())
+        504.250727
+        >>> ep.pp.power_norm(edata, layer="tem_data")
+        >>> stats.skew(edata.layers["tem_data"].flatten())
+        0.144324
     """
     X = edata.X if layer is None else edata.layers[layer]
     if isinstance(X, DaskArray) and group_key is None:
@@ -616,13 +611,13 @@ def log_norm(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> import numpy as np
-        >>> from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
-        >>> edata = ed.dt.ehrdata_blobs(n_observations=20, base_timepoints=15)
-        >>> np.nanmax(edata.layers[DEFAULT_TEM_LAYER_NAME])
-        4695
-        >>> ep.pp.log_norm(edata, layer=DEFAULT_TEM_LAYER_NAME)
-        >>> np.nanmax(edata.layers[DEFAULT_TEM_LAYER_NAME])
-        8.454679
+        >>> edata = ed.dt.physionet2012(layer="tem_data")
+        >>> edata.layers["tem_data"] = np.abs(edata.layers["tem_data"]) + 1
+        >>> np.nanmax(edata.layers["tem_data"])
+        36401.0
+        >>> ep.pp.log_norm(edata, layer="tem_data")
+        >>> np.nanmax(edata.layers["tem_data"])
+        10.502379
     """
     if isinstance(vars, str):
         vars = [vars]
@@ -725,14 +720,13 @@ def offset_negative_values(edata: EHRData | AnnData, layer: str = None, copy: bo
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> import numpy as np
-        >>> from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
-        >>> edata = ed.dt.ehrdata_blobs(n_observations=20, base_timepoints=15)
+        >>> edata = ed.dt.physionet2012(layer="tem_data")
         >>> edata_shifted = edata.copy()
-        >>> edata_shifted.layers[DEFAULT_TEM_LAYER_NAME] = edata_shifted.layers[DEFAULT_TEM_LAYER_NAME] - 0.5
-        >>> np.nanmin(edata_shifted.layers[DEFAULT_TEM_LAYER_NAME])
-        -0.5
-        >>> ep.pp.offset_negative_values(edata_shifted, layer=DEFAULT_TEM_LAYER_NAME)
-        >>> np.nanmin(edata_shifted.layers[DEFAULT_TEM_LAYER_NAME])
+        >>> edata_shifted.layers["tem_data"] = edata_shifted.layers["tem_data"] - 0.5
+        >>> np.nanmin(edata_shifted.layers["tem_data"])
+        -18.3
+        >>> ep.pp.offset_negative_values(edata_shifted, layer="tem_data")
+        >>> np.nanmin(edata_shifted.layers["tem_data"])
         0.0
     """
     edata = _prep_edata_norm(edata, copy)
