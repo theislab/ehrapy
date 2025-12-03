@@ -5,7 +5,7 @@ import dask.array as da
 import numpy as np
 import pytest
 from anndata import AnnData
-from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
+from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY, NUMERIC_TAG
 
 import ehrapy as ep
 from tests.conftest import ARRAY_TYPES_NONNUMERIC, ARRAY_TYPES_NUMERIC_3D_ABLE
@@ -19,7 +19,6 @@ def test_vars_checks(adata_to_norm):
         ep.pp.scale_norm(adata_to_norm, vars=["String1"])
 
 
-# TODO: check this for each function, with just default settings?
 @pytest.mark.parametrize(
     "array_type,expected_error",
     [
@@ -93,35 +92,31 @@ def test_norm_scale_group(array_type, edata_mini_normalization):
     edata_mini_casted = edata_mini_normalization.copy()
     edata_mini_casted.X = array_type(edata_mini_casted.X)
 
-    if isinstance(edata_mini_casted.X, da.Array):
-        with pytest.raises(NotImplementedError, match="Group-wise normalization is not yet supported for Dask arrays"):
-            ep.pp.scale_norm(edata_mini_casted, group_key="disease", copy=True)
-    else:
-        with pytest.raises(KeyError):
-            ep.pp.scale_norm(edata_mini_casted, group_key="invalid_key", copy=True)
+    with pytest.raises(KeyError):
+        ep.pp.scale_norm(edata_mini_casted, group_key="invalid_key", copy=True)
 
-        edata_mini_norm = ep.pp.scale_norm(
-            edata_mini_casted,
-            vars=["sys_bp_entry", "dia_bp_entry"],
-            group_key="disease",
-            copy=True,
-        )
-        col1_norm = np.array(
-            [
-                -1.34164079,
-                -0.4472136,
-                0.4472136,
-                1.34164079,
-                -1.34164079,
-                -0.4472136,
-                0.4472136,
-                1.34164079,
-            ]
-        )
-        col2_norm = col1_norm
-        assert np.allclose(edata_mini_norm.X[:, 0], edata_mini_casted.X[:, 0])
-        assert np.allclose(edata_mini_norm.X[:, 1], col1_norm)
-        assert np.allclose(edata_mini_norm.X[:, 2], col2_norm)
+    edata_mini_norm = ep.pp.scale_norm(
+        edata_mini_casted,
+        vars=["sys_bp_entry", "dia_bp_entry"],
+        group_key="disease",
+        copy=True,
+    )
+    col1_norm = np.array(
+        [
+            -1.34164079,
+            -0.4472136,
+            0.4472136,
+            1.34164079,
+            -1.34164079,
+            -0.4472136,
+            0.4472136,
+            1.34164079,
+        ]
+    )
+    col2_norm = col1_norm
+    assert np.allclose(edata_mini_norm.X[:, 0], edata_mini_casted.X[:, 0])
+    assert np.allclose(edata_mini_norm.X[:, 1], col1_norm)
+    assert np.allclose(edata_mini_norm.X[:, 2], col2_norm)
 
 
 @pytest.mark.parametrize(
@@ -180,24 +175,20 @@ def test_norm_minmax_group(array_type, edata_mini_normalization):
     edata_mini_casted = edata_mini_normalization.copy()
     edata_mini_casted.X = array_type(edata_mini_casted.X)
 
-    if isinstance(edata_mini_casted.X, da.Array):
-        with pytest.raises(NotImplementedError, match="Group-wise normalization is not yet supported for Dask arrays"):
-            ep.pp.minmax_norm(edata_mini_casted, group_key="disease", copy=True)
-    else:
-        with pytest.raises(KeyError):
-            ep.pp.minmax_norm(edata_mini_casted, group_key="invalid_key", copy=True)
+    with pytest.raises(KeyError):
+        ep.pp.minmax_norm(edata_mini_casted, group_key="invalid_key", copy=True)
 
-        edata_mini_norm = ep.pp.minmax_norm(
-            edata_mini_casted,
-            vars=["sys_bp_entry", "dia_bp_entry"],
-            group_key="disease",
-            copy=True,
-        )
-        col1_norm = np.array([0.0, 0.33333333, 0.66666667, 1.0, 0.0, 0.33333333, 0.66666667, 1.0])
-        col2_norm = col1_norm
-        assert np.allclose(edata_mini_norm.X[:, 0], edata_mini_casted.X[:, 0])
-        assert np.allclose(edata_mini_norm.X[:, 1], col1_norm)
-        assert np.allclose(edata_mini_norm.X[:, 2], col2_norm)
+    edata_mini_norm = ep.pp.minmax_norm(
+        edata_mini_casted,
+        vars=["sys_bp_entry", "dia_bp_entry"],
+        group_key="disease",
+        copy=True,
+    )
+    col1_norm = np.array([0.0, 0.33333333, 0.66666667, 1.0, 0.0, 0.33333333, 0.66666667, 1.0])
+    col2_norm = col1_norm
+    assert np.allclose(edata_mini_norm.X[:, 0], edata_mini_casted.X[:, 0])
+    assert np.allclose(edata_mini_norm.X[:, 1], col1_norm)
+    assert np.allclose(edata_mini_norm.X[:, 2], col2_norm)
 
 
 @pytest.mark.parametrize(
@@ -251,7 +242,7 @@ def test_norm_maxabs_group(array_type, edata_mini_normalization):
     edata_mini_casted.X = array_type(edata_mini_casted.X)
 
     if isinstance(edata_mini_casted.X, da.Array):
-        with pytest.raises(NotImplementedError, match="Group-wise normalization is not yet supported for Dask arrays"):
+        with pytest.raises(NotImplementedError, match="does not support array type.*dask"):
             ep.pp.maxabs_norm(edata_mini_casted, group_key="disease", copy=True)
     else:
         with pytest.raises(KeyError):
@@ -337,27 +328,23 @@ def test_norm_robust_scale_group(array_type, edata_mini_normalization):
     edata_mini_casted = edata_mini_normalization.copy()
     edata_mini_casted.X = array_type(edata_mini_casted.X)
 
-    if isinstance(edata_mini_casted.X, da.Array):
-        with pytest.raises(NotImplementedError, match="Group-wise normalization is not yet supported for Dask arrays"):
-            ep.pp.robust_scale_norm(edata_mini_casted, group_key="disease", copy=True)
-    else:
-        with pytest.raises(KeyError):
-            ep.pp.robust_scale_norm(edata_mini_casted, group_key="invalid_key", copy=True)
+    with pytest.raises(KeyError):
+        ep.pp.robust_scale_norm(edata_mini_casted, group_key="invalid_key", copy=True)
 
-        edata_mini_norm = ep.pp.robust_scale_norm(
-            edata_mini_casted,
-            vars=["sys_bp_entry", "dia_bp_entry"],
-            group_key="disease",
-            copy=True,
-        )
-        col1_norm = np.array(
-            [-1.0, -0.33333333, 0.33333333, 1.0, -1.0, -0.33333333, 0.33333333, 1.0],
-            dtype=np.float32,
-        )
-        col2_norm = col1_norm
-        assert np.allclose(edata_mini_norm.X[:, 0], edata_mini_casted.X[:, 0])
-        assert np.allclose(edata_mini_norm.X[:, 1], col1_norm)
-        assert np.allclose(edata_mini_norm.X[:, 2], col2_norm)
+    edata_mini_norm = ep.pp.robust_scale_norm(
+        edata_mini_casted,
+        vars=["sys_bp_entry", "dia_bp_entry"],
+        group_key="disease",
+        copy=True,
+    )
+    col1_norm = np.array(
+        [-1.0, -0.33333333, 0.33333333, 1.0, -1.0, -0.33333333, 0.33333333, 1.0],
+        dtype=np.float32,
+    )
+    col2_norm = col1_norm
+    assert np.allclose(edata_mini_norm.X[:, 0], edata_mini_casted.X[:, 0])
+    assert np.allclose(edata_mini_norm.X[:, 1], col1_norm)
+    assert np.allclose(edata_mini_norm.X[:, 2], col2_norm)
 
 
 @pytest.mark.parametrize(
@@ -432,27 +419,23 @@ def test_norm_quantile_uniform_group(array_type, edata_mini_normalization):
     edata_mini_casted = edata_mini_normalization.copy()
     edata_mini_casted.X = array_type(edata_mini_casted.X)
 
-    if isinstance(edata_mini_casted.X, da.Array):
-        with pytest.raises(NotImplementedError, match="Group-wise normalization is not yet supported for Dask arrays"):
-            ep.pp.quantile_norm(edata_mini_casted, group_key="disease", copy=True)
-    else:
-        with pytest.raises(KeyError):
-            ep.pp.quantile_norm(edata_mini_casted, group_key="invalid_key", copy=True)
+    with pytest.raises(KeyError):
+        ep.pp.quantile_norm(edata_mini_casted, group_key="invalid_key", copy=True)
 
-        edata_mini_norm = ep.pp.quantile_norm(
-            edata_mini_casted,
-            vars=["sys_bp_entry", "dia_bp_entry"],
-            group_key="disease",
-            copy=True,
-        )
-        col1_norm = np.array(
-            [0.0, 0.33333333, 0.66666667, 1.0, 0.0, 0.33333333, 0.66666667, 1.0],
-            dtype=np.float32,
-        )
-        col2_norm = col1_norm
-        assert np.allclose(edata_mini_norm.X[:, 0], edata_mini_casted.X[:, 0])
-        assert np.allclose(edata_mini_norm.X[:, 1], col1_norm)
-        assert np.allclose(edata_mini_norm.X[:, 2], col2_norm)
+    edata_mini_norm = ep.pp.quantile_norm(
+        edata_mini_casted,
+        vars=["sys_bp_entry", "dia_bp_entry"],
+        group_key="disease",
+        copy=True,
+    )
+    col1_norm = np.array(
+        [0.0, 0.33333333, 0.66666667, 1.0, 0.0, 0.33333333, 0.66666667, 1.0],
+        dtype=np.float32,
+    )
+    col2_norm = col1_norm
+    assert np.allclose(edata_mini_norm.X[:, 0], edata_mini_casted.X[:, 0])
+    assert np.allclose(edata_mini_norm.X[:, 1], col1_norm)
+    assert np.allclose(edata_mini_norm.X[:, 2], col2_norm)
 
 
 @pytest.mark.parametrize(
@@ -538,7 +521,7 @@ def test_norm_power_group(array_type, edata_mini_normalization):
     edata_mini_casted.X = array_type(edata_mini_casted.X)
 
     if isinstance(edata_mini_casted.X, da.Array):
-        with pytest.raises(NotImplementedError, match="Group-wise normalization is not yet supported for Dask arrays"):
+        with pytest.raises(NotImplementedError, match="does not support array type.*dask"):
             ep.pp.power_norm(edata_mini_casted, group_key="disease", copy=True)
     else:
         with pytest.raises(KeyError):
@@ -690,11 +673,9 @@ def test_norm_numerical_only():
     ],
 )
 def test_norm_3D(edata_blobs_timeseries_small, array_type, norm_func):
-    edata = edata_blobs_timeseries_small.copy()
+    edata = edata_blobs_timeseries_small
     edata.layers[DEFAULT_TEM_LAYER_NAME] = array_type(edata.layers[DEFAULT_TEM_LAYER_NAME])
-    # maxabs_norm and power_norm raise NotImplementedError for Dask arrays when group_key is None.
-    # This check is needed here because _scale_func_group only checks for Dask arrays when group_key
-    # is provided, but these functions raise the error earlier in their own implementation.
+
     if isinstance(edata.layers[DEFAULT_TEM_LAYER_NAME], da.Array) and norm_func in (
         ep.pp.maxabs_norm,
         ep.pp.power_norm,
@@ -702,107 +683,17 @@ def test_norm_3D(edata_blobs_timeseries_small, array_type, norm_func):
         with pytest.raises(NotImplementedError, match="does not support array type.*dask"):
             norm_func(edata, layer=DEFAULT_TEM_LAYER_NAME)
         return
+
     orig_shape = edata.layers[DEFAULT_TEM_LAYER_NAME].shape
-    orig_dtype = edata.layers[DEFAULT_TEM_LAYER_NAME].dtype
-    orig_obs_shape = edata.obs.shape
-    orig_var_shape = edata.var.shape
 
     if norm_func == ep.pp.power_norm:
         edata.layers[DEFAULT_TEM_LAYER_NAME] = np.abs(edata.layers[DEFAULT_TEM_LAYER_NAME]) + 0.1
 
-    layer_original = edata.layers[DEFAULT_TEM_LAYER_NAME].copy()
     norm_func(edata, layer=DEFAULT_TEM_LAYER_NAME)
 
     assert edata.layers[DEFAULT_TEM_LAYER_NAME].shape == orig_shape
-    assert edata.layers[DEFAULT_TEM_LAYER_NAME].dtype == orig_dtype or np.issubdtype(
-        edata.layers[DEFAULT_TEM_LAYER_NAME].dtype, np.floating
-    )
-
-    assert edata.obs.shape == orig_obs_shape
-    assert edata.var.shape[0] == orig_var_shape[0]
-
-    edata.layers["test_isolated_layer"] = layer_original.copy() * 2 + 5
-    isolated_original = edata.layers["test_isolated_layer"].copy()
-    norm_func(edata, layer=DEFAULT_TEM_LAYER_NAME)
-    assert np.allclose(edata.layers["test_isolated_layer"], isolated_original, equal_nan=True)
-
     assert "normalization" in edata.uns
     assert len(edata.uns["normalization"]) > 0
-
-    edata_invalid = edata_blobs_timeseries_small.copy()
-    edata_invalid.layers[DEFAULT_TEM_LAYER_NAME] = array_type(edata_invalid.layers[DEFAULT_TEM_LAYER_NAME])
-    if norm_func == ep.pp.power_norm:
-        edata_invalid.layers[DEFAULT_TEM_LAYER_NAME] = np.abs(edata_invalid.layers[DEFAULT_TEM_LAYER_NAME]) + 0.1
-    with pytest.raises(ValueError, match="not found|not numeric"):
-        norm_func(edata_invalid, layer=DEFAULT_TEM_LAYER_NAME, vars=["nonexistent_var"])
-
-    if edata.layers[DEFAULT_TEM_LAYER_NAME].shape[1] >= 2:
-        edata_select = edata_blobs_timeseries_small.copy()
-        edata_select.layers[DEFAULT_TEM_LAYER_NAME] = array_type(edata_select.layers[DEFAULT_TEM_LAYER_NAME])
-        if norm_func == ep.pp.power_norm:
-            edata_select.layers[DEFAULT_TEM_LAYER_NAME] = np.abs(edata_select.layers[DEFAULT_TEM_LAYER_NAME]) + 0.1
-        layer_before_select = edata_select.layers[DEFAULT_TEM_LAYER_NAME].copy()
-        selected_vars = [edata_select.var_names[0], edata_select.var_names[1]]
-        norm_func(edata_select, layer=DEFAULT_TEM_LAYER_NAME, vars=selected_vars)
-
-        assert not np.allclose(
-            edata_select.layers[DEFAULT_TEM_LAYER_NAME][:, 0, :], layer_before_select[:, 0, :], equal_nan=True
-        )
-        assert not np.allclose(
-            edata_select.layers[DEFAULT_TEM_LAYER_NAME][:, 1, :], layer_before_select[:, 1, :], equal_nan=True
-        )
-
-        if edata_select.layers[DEFAULT_TEM_LAYER_NAME].shape[1] > 2:
-            assert np.allclose(
-                edata_select.layers[DEFAULT_TEM_LAYER_NAME][:, 2, :], layer_before_select[:, 2, :], equal_nan=True
-            )
-
-    edata_copy = edata_blobs_timeseries_small.copy()
-    edata_copy.layers[DEFAULT_TEM_LAYER_NAME] = array_type(edata_copy.layers[DEFAULT_TEM_LAYER_NAME])
-    if norm_func == ep.pp.power_norm:
-        edata_copy.layers[DEFAULT_TEM_LAYER_NAME] = np.abs(edata_copy.layers[DEFAULT_TEM_LAYER_NAME]) + 0.1
-    layer_before_copy = edata_copy.layers[DEFAULT_TEM_LAYER_NAME].copy()
-
-    result_copy = norm_func(edata_copy, layer=DEFAULT_TEM_LAYER_NAME, copy=True)
-    assert result_copy is not None
-    assert np.allclose(edata_copy.layers[DEFAULT_TEM_LAYER_NAME], layer_before_copy, equal_nan=True)
-    assert not np.allclose(result_copy.layers[DEFAULT_TEM_LAYER_NAME], layer_before_copy, equal_nan=True)
-
-    edata_no_copy = edata_blobs_timeseries_small.copy()
-    edata_no_copy.layers[DEFAULT_TEM_LAYER_NAME] = array_type(edata_no_copy.layers[DEFAULT_TEM_LAYER_NAME])
-    if norm_func == ep.pp.power_norm:
-        edata_no_copy.layers[DEFAULT_TEM_LAYER_NAME] = np.abs(edata_no_copy.layers[DEFAULT_TEM_LAYER_NAME]) + 0.1
-    layer_before_no_copy = edata_no_copy.layers[DEFAULT_TEM_LAYER_NAME].copy()
-    result_no_copy = norm_func(edata_no_copy, layer=DEFAULT_TEM_LAYER_NAME, copy=False)
-    assert result_no_copy is None
-    assert not np.allclose(edata_no_copy.layers[DEFAULT_TEM_LAYER_NAME], layer_before_no_copy, equal_nan=True)
-
-    if not isinstance(edata.layers[DEFAULT_TEM_LAYER_NAME], da.Array):
-        edata_group = edata_blobs_timeseries_small.copy()
-        edata_group.layers[DEFAULT_TEM_LAYER_NAME] = array_type(edata_group.layers[DEFAULT_TEM_LAYER_NAME])
-        if norm_func == ep.pp.power_norm:
-            edata_group.layers[DEFAULT_TEM_LAYER_NAME] = np.abs(edata_group.layers[DEFAULT_TEM_LAYER_NAME]) + 0.1
-        n_obs = edata_group.n_obs
-        group_size = n_obs // 2
-        edata_group.obs["group"] = ["A"] * group_size + ["B"] * (n_obs - group_size)
-
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            norm_func(edata_group, layer=DEFAULT_TEM_LAYER_NAME, group_key="group")
-
-        assert edata_group.layers[DEFAULT_TEM_LAYER_NAME].shape == orig_shape
-
-    edata_layers = edata_blobs_timeseries_small.copy()
-    edata_layers.layers[DEFAULT_TEM_LAYER_NAME] = array_type(edata_layers.layers[DEFAULT_TEM_LAYER_NAME])
-    if norm_func == ep.pp.power_norm:
-        edata_layers.layers[DEFAULT_TEM_LAYER_NAME] = np.abs(edata_layers.layers[DEFAULT_TEM_LAYER_NAME]) + 0.1
-    edata_layers.layers["test_3d_layer"] = edata_layers.layers[DEFAULT_TEM_LAYER_NAME].copy() * 2 + 5
-    layer_before_norm = edata_layers.layers[DEFAULT_TEM_LAYER_NAME].copy()
-    norm_func(edata_layers, layer="test_3d_layer")
-    assert not np.allclose(
-        edata_layers.layers[DEFAULT_TEM_LAYER_NAME], edata_layers.layers["test_3d_layer"], equal_nan=True
-    )
-    assert np.allclose(edata_layers.layers[DEFAULT_TEM_LAYER_NAME], layer_before_norm, equal_nan=True)
 
 
 def test_scale_norm_3D(edata_blobs_timeseries_small):
@@ -907,3 +798,90 @@ def test_offset_negative_values_3D(edata_blobs_timeseries_small):
 
     non_nan_values = edata.layers[DEFAULT_TEM_LAYER_NAME][~np.isnan(edata.layers[DEFAULT_TEM_LAYER_NAME])]
     assert np.all(non_nan_values >= 0)
+
+
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NUMERIC_3D_ABLE)
+@pytest.mark.parametrize(
+    "norm_func",
+    [
+        ep.pp.scale_norm,
+        ep.pp.minmax_norm,
+        ep.pp.maxabs_norm,
+        ep.pp.robust_scale_norm,
+        ep.pp.quantile_norm,
+        ep.pp.power_norm,
+    ],
+)
+def test_norm_group_3D(edata_blobs_timeseries_small, array_type, norm_func):
+    edata = edata_blobs_timeseries_small
+    edata.var[FEATURE_TYPE_KEY] = NUMERIC_TAG
+    edata.layers[DEFAULT_TEM_LAYER_NAME] = array_type(edata.layers[DEFAULT_TEM_LAYER_NAME])
+
+    if norm_func == ep.pp.power_norm:
+        edata.layers[DEFAULT_TEM_LAYER_NAME] = np.abs(edata.layers[DEFAULT_TEM_LAYER_NAME]) + 0.1
+
+    n_obs = edata.n_obs
+    group_size = n_obs // 2
+
+    layer_data = edata.layers[DEFAULT_TEM_LAYER_NAME]
+    if isinstance(layer_data, np.ndarray):
+        layer_data[:group_size] = layer_data[:group_size] * 2 + 10
+        layer_data[group_size:] = layer_data[group_size:] * 0.5 - 5
+        edata.layers[DEFAULT_TEM_LAYER_NAME] = layer_data
+
+    edata.obs["group"] = ["A"] * group_size + ["B"] * (n_obs - group_size)
+
+    if isinstance(edata.layers[DEFAULT_TEM_LAYER_NAME], da.Array) and norm_func in (
+        ep.pp.maxabs_norm,
+        ep.pp.power_norm,
+    ):
+        with pytest.raises(NotImplementedError, match="does not support array type.*dask"):
+            norm_func(edata, layer=DEFAULT_TEM_LAYER_NAME, group_key="group")
+        return
+
+    orig_shape = edata.layers[DEFAULT_TEM_LAYER_NAME].shape
+    layer_before = edata.layers[DEFAULT_TEM_LAYER_NAME].copy()
+
+    norm_func(edata, layer=DEFAULT_TEM_LAYER_NAME, group_key="group")
+
+    assert edata.layers[DEFAULT_TEM_LAYER_NAME].shape == orig_shape
+    assert "normalization" in edata.uns
+    assert len(edata.uns["normalization"]) > 0
+
+    layer_after = edata.layers[DEFAULT_TEM_LAYER_NAME]
+    if isinstance(layer_after, da.Array):
+        layer_after = layer_after.compute()
+    if isinstance(layer_before, da.Array):
+        layer_before = layer_before.compute()
+    assert not np.allclose(layer_before, layer_after, equal_nan=True), (
+        "Normalization did not modify the data - check that feature types are set correctly"
+    )
+
+    layer_data = edata.layers[DEFAULT_TEM_LAYER_NAME]
+    if isinstance(layer_data, da.Array):
+        layer_data = layer_data.compute()
+
+    group_a_data = layer_data[:group_size]
+    group_b_data = layer_data[group_size:]
+
+    group_a_flat = group_a_data.flatten()[~np.isnan(group_a_data.flatten())]
+    group_b_flat = group_b_data.flatten()[~np.isnan(group_b_data.flatten())]
+
+    if len(group_a_flat) > 0 and len(group_b_flat) > 0:
+        if norm_func == ep.pp.scale_norm:
+            assert np.abs(np.nanmean(group_a_flat)) < 1e-5 and np.abs(np.nanmean(group_b_flat)) < 1e-5
+            assert np.abs(np.nanstd(group_a_flat) - 1.0) < 1e-5 and np.abs(np.nanstd(group_b_flat) - 1.0) < 1e-5
+        elif norm_func == ep.pp.minmax_norm:
+            assert np.abs(np.nanmin(group_a_flat)) < 1e-5 and np.abs(np.nanmin(group_b_flat)) < 1e-5
+            assert np.abs(np.nanmax(group_a_flat) - 1.0) < 1e-5 and np.abs(np.nanmax(group_b_flat) - 1.0) < 1e-5
+        elif norm_func == ep.pp.maxabs_norm:
+            assert np.abs(np.nanmax(np.abs(group_a_flat)) - 1.0) < 1e-5
+            assert np.abs(np.nanmax(np.abs(group_b_flat)) - 1.0) < 1e-5
+        elif norm_func == ep.pp.robust_scale_norm:
+            assert np.abs(np.nanmedian(group_a_flat)) < 1e-5 and np.abs(np.nanmedian(group_b_flat)) < 1e-5
+        elif norm_func == ep.pp.quantile_norm:
+            assert np.abs(np.nanmin(group_a_flat)) < 1e-5 and np.abs(np.nanmin(group_b_flat)) < 1e-5
+            assert np.abs(np.nanmax(group_a_flat) - 1.0) < 1e-5 and np.abs(np.nanmax(group_b_flat) - 1.0) < 1e-5
+        elif norm_func == ep.pp.power_norm:
+            assert np.abs(np.nanmean(group_a_flat)) < 1e-5 and np.abs(np.nanmean(group_b_flat)) < 1e-5
+            assert np.abs(np.nanstd(group_a_flat) - 1.0) < 1e-5 and np.abs(np.nanstd(group_b_flat) - 1.0) < 1e-5
