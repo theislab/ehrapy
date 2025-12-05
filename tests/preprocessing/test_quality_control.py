@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import ehrdata as ed
 import numpy as np
 import pandas as pd
 import pytest
@@ -176,6 +177,14 @@ def test_qc_metrics_3d_vanilla_advanced(edata_mini_3D_missing_values):
         assert np.array_equal(modification_copy.obs[key], edata.obs[key])
     for key in modification_copy.var.keys():
         assert np.array_equal(modification_copy.var[key], edata.var[key])
+
+
+def test_qc_metrics_heterogeneous_columns():
+    mtx = np.array([[11, "a"], [True, 22]], dtype=object)
+
+    edata = ed.EHRData(shape=(2, 2), layers={"tem_data": mtx})
+    with pytest.raises(ValueError):
+        ep.pp.qc_metrics(edata, layer="tem_data")
 
 
 @pytest.mark.parametrize(

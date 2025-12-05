@@ -14,7 +14,7 @@ from ehrdata.core.constants import CATEGORICAL_TAG, DEFAULT_TEM_LAYER_NAME, FEAT
 from matplotlib.testing.compare import compare_images
 
 import ehrapy as ep
-from ehrapy._compat import (
+from ehrapy._types import (
     ARRAY_TYPES_NONNUMERIC,
     ARRAY_TYPES_NUMERIC,
     ARRAY_TYPES_NUMERIC_3D_ABLE,

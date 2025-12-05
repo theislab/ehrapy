@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     from collections.abc import Collection
 
     from anndata import AnnData
-    from ehrdata import EHRData
+from ehrdata import EHRData
 
 
 @use_ehrdata(deprecated_after="1.0.0")
@@ -39,8 +39,8 @@ def qc_metrics(
     """Calculates various quality control metrics.
 
     Uses the original values to calculate the metrics and not the encoded ones.
-    Look at the return type for a more in depth description of the basic and advanced calculated metrics.
-    If :func:`~ehrdata.infer_feature_types` is run first, then advanced metrics are calculated in addition to basic metrics that require feature type information.
+    Look at the return type for a more in depth description of the default and extended metrics.
+    If :func:`~ehrdata.infer_feature_types` is run first, then extended metrics that require feature type information are calculated in addition to default metrics.
 
 
     Args:
@@ -51,17 +51,17 @@ def qc_metrics(
     Returns:
         Two Pandas DataFrames of all calculated QC metrics for `obs` and `var` respectively.
 
-        Basic (default) observation level metrics include:
+        Default observation level metrics include:
 
         - `missing_values_abs`: Absolute amount of missing values.
         - `missing_values_pct`: Relative amount of missing values in percent.
         - `entropy_of_missingness`: Entropy of the missingness pattern for each observation. Higher values indicate a more heterogeneous (less structured) missingness pattern.
 
-        Advanced observation level metrics include (only computed if :func:`~ehrdata.infer_feature_types` is run first):
+        Extended observation level metrics include (only computed if :func:`~ehrdata.infer_feature_types` is run first):
         - `unique_values_abs`: Absolute amount of unique values. Returned as ``NaN`` for numeric features.
         - `unique_values_ratio`: Relative amount of unique values in percent. Returned as ``NaN`` for numeric features.
 
-        Basic (default) feature level metrics include:
+        Default feature level metrics include:
 
         - `missing_values_abs`: Absolute amount of missing values.
         - `missing_values_pct`: Relative amount of missing values in percent.
@@ -74,7 +74,7 @@ def qc_metrics(
         - `iqr_outliers`: Whether the feature contains outliers based on the interquartile range (IQR) method.
 
 
-        Advanced feature level metrics include (only computed if :func:`~ehrdata.infer_feature_types` is run first):
+        Extended feature level metrics include (only computed if :func:`~ehrdata.infer_feature_types` is run first):
 
         - `unique_values_abs`: Absolute amount of unique values. Returned as ``NaN`` for numeric features
         - `unique_values_ratio`: Relative amount of unique values in percent. Returned as ``NaN`` for numeric features
@@ -91,12 +91,39 @@ def qc_metrics(
             >>> obs_qc.head()
             >>> var_qc.head()
     """
+    if not isinstance(edata, EHRData):
+        raise ValueError(f"Central data object should be an EHRData object, but received {type(edata).__name__}")
+
     feature_type = edata.var.get("feature_type", None)
     if_advanced = True
     if feature_type is None:
         if_advanced = False
 
     mtx = edata.X if layer is None else edata.layers[layer]
+
+    if mtx.ndim == 3:
+        mtx_check = mtx[:, :, 0]
+    else:
+        mtx_check = mtx
+
+    mtx_df = pd.DataFrame(mtx_check)
+    mixed = []
+    for col in mtx_df.columns:
+        s = mtx_df[col].dropna()
+        if s.empty:
+            continue
+        types = {type(v) for v in s}
+
+        if all(issubclass(t, (int, float, bool)) for t in types):
+            continue
+
+        if all(isinstance(v, str) for v in s):
+            continue
+
+        mixed.append(col)
+    if mixed:
+        raise ValueError(f"Mixed or unsupported types are found in columns {mixed}Columns must be homogeneous")
+
     var_metrics = _compute_var_metrics(mtx, edata, advanced=if_advanced)
     obs_metrics = _compute_obs_metrics(mtx, edata, qc_vars=qc_vars, log1p=True, advanced=if_advanced)
 
@@ -233,7 +260,7 @@ def _compute_obs_metrics(
 
     if advanced and "feature_type" not in edata.var:
         raise ValueError(
-            "Advanced QC metrics require `edata.var['feature_type']`. Please run `ehrdata.infer_feature_types(edata)` first"
+            "Extended QC metrics require `edata.var['feature_type']`. Please run `ehrdata.infer_feature_types(edata)` first"
         )
 
     if advanced:
@@ -335,7 +362,7 @@ def _compute_var_metrics(
 
     if advanced and "feature_type" not in edata.var:
         raise ValueError(
-            "Advanced QC metrics require `edata.var['feature_type']`. Please run `ehrdata.infer_feature_types(edata)` first"
+            "Extended QC metrics require `edata.var['feature_type']`. Please run `ehrdata.infer_feature_types(edata)` first"
         )
 
     if advanced:
