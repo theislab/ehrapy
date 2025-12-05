@@ -1,7 +1,7 @@
 import holoviews as hv
 
 from ehrapy.plot._catplot import catplot
-from ehrapy.plot._colormaps import LinearSegmentedColormap
+from ehrapy.plot._colormaps import Colormaps, LinearSegmentedColormap
 from ehrapy.plot._missingno import (
     missing_values_barplot,
     missing_values_dendrogram,
