@@ -153,8 +153,8 @@ def ols(
                 style_map = {"-": "solid", "--": "dashed", ":": "dotted", "-.": "dashdot"}
                 curve_opts["line_dash"] = style_map.get(lines_style[i], "solid")
 
-            label = lines_label[i] if lines_label[i] else None
-            line_curve = hv.Curve((line_x, line_y), label=label).opts(**curve_opts)
+            curve_kwargs = {"label": lines_label[i]} if lines_label[i] else {}
+            line_curve = hv.Curve((line_x, line_y), **curve_kwargs).opts(**curve_opts)
             plot = line_curve if plot is None else plot * line_curve
 
     if plot is None:
