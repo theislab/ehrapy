@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from functools import partial
 from typing import Literal
 
 import numpy as np
@@ -16,7 +15,12 @@ RNGLike = np.random.Generator | np.random.BitGenerator
 SeedLike = int | np.integer | Sequence[int] | np.random.SeedSequence
 AnyRandom = int | np.random.RandomState | None
 
-asarray = partial(to_dense, to_cpu_memory=True)
+
+def asarray(a):
+    """Convert input to a dense NumPy array in CPU memory using fast-array-utils."""
+    return to_dense(a, to_cpu_memory=True)
+
+
 ARRAY_TYPES_NUMERIC = (
     asarray,
     as_dense_dask_array,

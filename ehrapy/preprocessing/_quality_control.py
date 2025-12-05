@@ -25,7 +25,8 @@ from ehrapy.preprocessing._encoding import _get_encoded_features
 if TYPE_CHECKING:
     from collections.abc import Collection
 
-    from anndata import AnnData
+
+from anndata import AnnData
 from ehrdata import EHRData
 
 
@@ -91,8 +92,10 @@ def qc_metrics(
             >>> obs_qc.head()
             >>> var_qc.head()
     """
-    if not isinstance(edata, EHRData):
-        raise ValueError(f"Central data object should be an EHRData object, but received {type(edata).__name__}")
+    if not isinstance(edata, EHRData) or not isinstance(edata, AnnData):
+        raise ValueError(
+            f"Central data object should be an EHRData or an AnnData object, but received {type(edata).__name__}"
+        )
 
     feature_type = edata.var.get("feature_type", None)
     if_advanced = True
@@ -101,28 +104,7 @@ def qc_metrics(
 
     mtx = edata.X if layer is None else edata.layers[layer]
 
-    if mtx.ndim == 3:
-        mtx_check = mtx[:, :, 0]
-    else:
-        mtx_check = mtx
-
-    mtx_df = pd.DataFrame(mtx_check)
-    mixed = []
-    for col in mtx_df.columns:
-        s = mtx_df[col].dropna()
-        if s.empty:
-            continue
-        types = {type(v) for v in s}
-
-        if all(issubclass(t, (int, float, bool)) for t in types):
-            continue
-
-        if all(isinstance(v, str) for v in s):
-            continue
-
-        mixed.append(col)
-    if mixed:
-        raise ValueError(f"Mixed or unsupported types are found in columns {mixed}Columns must be homogeneous")
+    _raise_error_when_heterogeneous(mtx)
 
     var_metrics = _compute_var_metrics(mtx, edata, advanced=if_advanced)
     obs_metrics = _compute_obs_metrics(mtx, edata, qc_vars=qc_vars, log1p=True, advanced=if_advanced)
@@ -204,6 +186,42 @@ def _row_valid(arr_2d: np.ndarray, axis) -> np.ndarray:
     missing = _compute_missing_values(arr_2d, axis=axis)
     valid = arr_2d.shape[axis] - missing
     return np.broadcast_to(valid[:, None], arr_2d.shape)
+
+
+@singledispatch
+def _raise_error_when_heterogeneous(mtx):
+    _raise_array_type_not_implemented(_raise_error_when_heterogeneous, type(mtx))
+
+
+@_raise_error_when_heterogeneous.register(np.ndarray)
+@_raise_error_when_heterogeneous.register(DaskArray)
+def _(mtx: np.ndarray | DaskArray):
+    if mtx.ndim == 3:
+        mtx_check = mtx[:, :, 0]
+    else:
+        mtx_check = mtx
+    try:
+        mtx_check = mtx_check.compute()
+    except AttributeError:
+        # numpy arrays don't have .compute()
+        pass
+
+    mtx_df = pd.DataFrame(mtx_check)
+    mixed = []
+    for col in mtx_df.columns:
+        s = mtx_df[col].dropna()
+        if s.empty:
+            continue
+        types = {type(v) for v in s}
+
+        if all(issubclass(t, (int, float, bool)) for t in types):
+            continue
+        if all(isinstance(v, str) for v in s):
+            continue
+
+        mixed.append(col)
+    if mixed:
+        raise ValueError(f"Mixed or unsupported types are found in columns {mixed}. Columns must be homogeneous")
 
 
 def _compute_obs_metrics(
