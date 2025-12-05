@@ -89,7 +89,7 @@ def ols(
         ...     ylabel="TCO2",
         ... )
 
-        .. image:: /_static/docstring_previews/ols_plot_1.png
+        .. image:: /_static/docstring_previews/ols_plot.png
 
         >>> import ehrdata as ed
         >>> import ehrapy as ep
