@@ -92,7 +92,7 @@ def qc_metrics(
             >>> obs_qc.head()
             >>> var_qc.head()
     """
-    if not isinstance(edata, EHRData) or not isinstance(edata, AnnData):
+    if not isinstance(edata, EHRData) and not isinstance(edata, AnnData):
         raise ValueError(
             f"Central data object should be an EHRData or an AnnData object, but received {type(edata).__name__}"
         )
