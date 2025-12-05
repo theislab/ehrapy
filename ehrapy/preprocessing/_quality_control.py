@@ -98,16 +98,16 @@ def qc_metrics(
         )
 
     feature_type = edata.var.get("feature_type", None)
-    if_advanced = True
+    extended = True
     if feature_type is None:
-        if_advanced = False
+        extended = False
 
     mtx = edata.X if layer is None else edata.layers[layer]
 
     _raise_error_when_heterogeneous(mtx)
 
-    var_metrics = _compute_var_metrics(mtx, edata, advanced=if_advanced)
-    obs_metrics = _compute_obs_metrics(mtx, edata, qc_vars=qc_vars, log1p=True, advanced=if_advanced)
+    var_metrics = _compute_var_metrics(mtx, edata, extended=extended)
+    obs_metrics = _compute_obs_metrics(mtx, edata, qc_vars=qc_vars, log1p=True, extended=extended)
 
     edata.var[var_metrics.columns] = var_metrics
     edata.obs[obs_metrics.columns] = obs_metrics
@@ -230,7 +230,7 @@ def _compute_obs_metrics(
     *,
     qc_vars: Collection[str] = (),
     log1p: bool = True,
-    advanced: bool = False,
+    extended: bool = False,
 ):
     """Calculates quality control metrics for observations.
 
@@ -241,7 +241,7 @@ def _compute_obs_metrics(
         edata: Central data object.
         qc_vars: A list of previously calculated QC metrics to calculate summary statistics for.
         log1p: Whether to apply log1p normalization for the QC metrics. Only used with parameter 'qc_vars'.
-        advanced: Whether to calculate further metrics that require feature type information.
+        extended: Whether to calculate further metrics that require feature type information.
 
     Returns:
         A Pandas DataFrame with the calculated metrics.
@@ -276,12 +276,12 @@ def _compute_obs_metrics(
     obs_metrics["missing_values_pct"] = (obs_metrics["missing_values_abs"] / flat_mtx.shape[1]) * 100
     obs_metrics["entropy_of_missingness"] = _compute_entropy_of_missingness(flat_mtx, axis=1)
 
-    if advanced and "feature_type" not in edata.var:
+    if extended and "feature_type" not in edata.var:
         raise ValueError(
             "Extended QC metrics require `edata.var['feature_type']`. Please run `ehrdata.infer_feature_types(edata)` first"
         )
 
-    if advanced:
+    if extended:
         feature_type = edata.var["feature_type"]
         categorical_mask = feature_type == "categorical"
 
@@ -338,14 +338,14 @@ def _compute_obs_metrics(
 def _compute_var_metrics(
     mtx,
     edata: EHRData | AnnData,
-    advanced: bool = False,
+    extended: bool = False,
 ):
     """Compute variable metrics for quality control.
 
     Args:
         mtx: Data array.
         edata: Central data object.
-        advanced: Whether to calculate further metrics that require feature type information.
+        extended: Whether to calculate further metrics that require feature type information.
     """
     categorical_indices = np.ndarray([0], dtype=int)
     var_metrics = pd.DataFrame(index=edata.var_names)
@@ -378,12 +378,12 @@ def _compute_var_metrics(
     var_metrics["missing_values_pct"] = (var_metrics["missing_values_abs"] / mtx.shape[0]) * 100
     var_metrics["entropy_of_missingness"] = _compute_entropy_of_missingness(mtx, axis=0)
 
-    if advanced and "feature_type" not in edata.var:
+    if extended and "feature_type" not in edata.var:
         raise ValueError(
             "Extended QC metrics require `edata.var['feature_type']`. Please run `ehrdata.infer_feature_types(edata)` first"
         )
 
-    if advanced:
+    if extended:
         feature_type = edata.var["feature_type"]
         categorical_mask = feature_type == "categorical"
 
@@ -456,7 +456,7 @@ def _compute_var_metrics(
         # Fill all non_categoricals with False because else we have a dtype object Series which h5py cannot save
         var_metrics["iqr_outliers"] = var_metrics["iqr_outliers"].astype(bool).fillna(False)
 
-        if advanced:
+        if extended:
             feature_type = edata.var["feature_type"]
             numeric_mask = feature_type == "numeric"
 

@@ -183,7 +183,7 @@ def test_qc_metrics_heterogeneous_columns():
     mtx = np.array([[11, "a"], [True, 22]], dtype=object)
 
     edata = ed.EHRData(shape=(2, 2), layers={"tem_data": mtx})
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Mixed or unsupported"):
         ep.pp.qc_metrics(edata, layer="tem_data")
 
 
