@@ -9,12 +9,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pytest
-import scipy.sparse as sp
 from anndata import AnnData
 from ehrdata.core.constants import CATEGORICAL_TAG, DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY, NUMERIC_TAG
 from matplotlib.testing.compare import compare_images
 
 import ehrapy as ep
+from ehrapy._types import (
+    ARRAY_TYPES_NONNUMERIC,
+    ARRAY_TYPES_NUMERIC,
+    ARRAY_TYPES_NUMERIC_3D_ABLE,
+    as_dense_dask_array,
+    asarray,
+)
 
 if TYPE_CHECKING:
     import os
@@ -167,7 +173,8 @@ def edata_mini_3D_missing_values():
         ],
         dtype=object,
     )
-    return ed.EHRData(layers={DEFAULT_TEM_LAYER_NAME: tiny_mixed_array})
+    n_obs, n_vars, _ = tiny_mixed_array.shape
+    return ed.EHRData(shape=(n_obs, n_vars), layers={DEFAULT_TEM_LAYER_NAME: tiny_mixed_array})
 
 
 @pytest.fixture
@@ -420,25 +427,3 @@ def clean_up_plots():
     plt.clf()
     plt.cla()
     plt.close("all")
-
-
-def asarray(a):
-    import numpy as np
-
-    return np.asarray(a)
-
-
-def as_dense_dask_array(a, chunk_size=1000):
-    import dask.array as da
-
-    return da.from_array(a, chunks=chunk_size)
-
-
-ARRAY_TYPES_NUMERIC = (
-    asarray,
-    as_dense_dask_array,
-    sp.csr_array,
-    sp.csc_array,
-)  # add coo_array once supported in AnnData
-ARRAY_TYPES_NUMERIC_3D_ABLE = (asarray, as_dense_dask_array)  # add coo_array once supported in AnnData
-ARRAY_TYPES_NONNUMERIC = (asarray, as_dense_dask_array)

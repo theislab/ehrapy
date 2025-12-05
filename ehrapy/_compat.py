@@ -8,6 +8,7 @@ from subprocess import PIPE, Popen
 from typing import TYPE_CHECKING, ParamSpec, TypeVar, cast
 
 import numpy as np
+import scipy.sparse as sp
 
 P = ParamSpec("P")
 R = TypeVar("R")
@@ -248,3 +249,10 @@ def function_2D_only():
         return wrapper
 
     return decorator
+
+
+def as_dense_dask_array(a, chunk_size=1000):
+    """Convert input to a dense Dask array."""
+    import dask.array as da
+
+    return da.from_array(a, chunks=chunk_size)
