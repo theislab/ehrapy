@@ -45,7 +45,6 @@ def ols(
     xlim: tuple[float, float] | None = None,
     ylim: tuple[float, float] | None = None,
     show: bool | None = None,
-    backend: str | None = None,
     title: str | None = None,
     **kwds,
 ):
@@ -70,7 +69,6 @@ def ols(
         xlim: Set the x-axis view limits. Required for only plotting lines using slope and intercept.
         ylim: Set the y-axis view limits. Required for only plotting lines using slope and intercept.
         show: Show the plot, do not return plot object.
-        backend: Backend to use ('bokeh', 'matplotlib', 'plotly'). If None, uses current renderer.
         title: Set the title of the plot.
         **kwds: Passed to HoloViews Scatter element.
 
@@ -180,16 +178,7 @@ def ols(
 
     plot = plot.opts(**opts_dict)
 
-    if backend:
-        renderer = hv.renderer(backend)
-        if show:
-            return renderer.show(plot)
-        return plot
-
-    if show:
-        return hv.renderer(hv.Store.current_backend).show(plot)
-
-    return plot
+    return None if show else plot
 
 
 def kmf(
