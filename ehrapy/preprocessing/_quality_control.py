@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import warnings
 from functools import singledispatch
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
@@ -8,21 +9,28 @@ from typing import TYPE_CHECKING, Literal
 import numpy as np
 import pandas as pd
 from ehrdata._logger import logger
+from scipy.stats import kurtosis, skew
 from thefuzz import process
 
-from ehrapy._compat import DaskArray, _raise_array_type_not_implemented, function_2D_only, use_ehrdata
+from ehrapy._compat import (
+    DaskArray,
+    _apply_over_time_axis,
+    _raise_array_type_not_implemented,
+    function_2D_only,
+    use_ehrdata,
+)
 from ehrapy.anndata import anndata_to_df
 from ehrapy.preprocessing._encoding import _get_encoded_features
 
 if TYPE_CHECKING:
     from collections.abc import Collection
 
-    from anndata import AnnData
-    from ehrdata import EHRData
+
+from anndata import AnnData
+from ehrdata import EHRData
 
 
 @use_ehrdata(deprecated_after="1.0.0")
-@function_2D_only()
 def qc_metrics(
     edata: EHRData | AnnData,
     qc_vars: Collection[str] = (),
@@ -32,7 +40,9 @@ def qc_metrics(
     """Calculates various quality control metrics.
 
     Uses the original values to calculate the metrics and not the encoded ones.
-    Look at the return type for a more in depth description of the calculated metrics.
+    Look at the return type for a more in depth description of the default and extended metrics.
+    If :func:`~ehrdata.infer_feature_types` is run first, then extended metrics that require feature type information are calculated in addition to default metrics.
+
 
     Args:
         edata: Central data object.
@@ -42,30 +52,62 @@ def qc_metrics(
     Returns:
         Two Pandas DataFrames of all calculated QC metrics for `obs` and `var` respectively.
 
-        Observation level metrics include:
+        Default observation level metrics include:
 
         - `missing_values_abs`: Absolute amount of missing values.
         - `missing_values_pct`: Relative amount of missing values in percent.
+        - `entropy_of_missingness`: Entropy of the missingness pattern for each observation. Higher values indicate a more heterogeneous (less structured) missingness pattern.
 
-        Feature level metrics include:
+        Extended observation level metrics include (only computed if :func:`~ehrdata.infer_feature_types` is run first):
+        - `unique_values_abs`: Absolute amount of unique values. Returned as ``NaN`` for numeric features.
+        - `unique_values_ratio`: Relative amount of unique values in percent. Returned as ``NaN`` for numeric features.
+
+        Default feature level metrics include:
 
         - `missing_values_abs`: Absolute amount of missing values.
         - `missing_values_pct`: Relative amount of missing values in percent.
+        - `entropy_of_missingness`: Entropy of the missingness pattern for each feature. Higher values indicate a more heterogeneous (less structured) missingness pattern.
         - `mean`: Mean value of the features.
         - `median`: Median value of the features.
         - `std`: Standard deviation of the features.
         - `min`: Minimum value of the features.
         - `max`: Maximum value of the features.
+        - `iqr_outliers`: Whether the feature contains outliers based on the interquartile range (IQR) method.
+
+
+        Extended feature level metrics include (only computed if :func:`~ehrdata.infer_feature_types` is run first):
+
+        - `unique_values_abs`: Absolute amount of unique values. Returned as ``NaN`` for numeric features
+        - `unique_values_ratio`: Relative amount of unique values in percent. Returned as ``NaN`` for numeric features
+        - `coefficient_of_variation`: Coefficient of variation of the features.
+        - `is_constant`: Whether the feature is constant (with near zero variance).
+        - `constant_variable_ratio`: Relative amount of constant features in percent.
+        - `range_ratio`: Relative dispersion of features values respective to their mean.
+
 
     Examples:
             >>> import ehrapy as ep
             >>> edata = ed.dt.mimic_2()
             >>> obs_qc, var_qc = ep.pp.qc_metrics(edata)
-            >>> obs_qc["missing_values_pct"].plot(kind="hist", bins=20)
+            >>> obs_qc.head()
+            >>> var_qc.head()
     """
+    if not isinstance(edata, EHRData) and not isinstance(edata, AnnData):
+        raise ValueError(
+            f"Central data object should be an EHRData or an AnnData object, but received {type(edata).__name__}"
+        )
+
+    feature_type = edata.var.get("feature_type", None)
+    extended = True
+    if feature_type is None:
+        extended = False
+
     mtx = edata.X if layer is None else edata.layers[layer]
-    var_metrics = _compute_var_metrics(mtx, edata)
-    obs_metrics = _compute_obs_metrics(mtx, edata, qc_vars=qc_vars, log1p=True)
+
+    _raise_error_when_heterogeneous(mtx)
+
+    var_metrics = _compute_var_metrics(mtx, edata, extended=extended)
+    obs_metrics = _compute_obs_metrics(mtx, edata, qc_vars=qc_vars, log1p=True, extended=extended)
 
     edata.var[var_metrics.columns] = var_metrics
     edata.obs[obs_metrics.columns] = obs_metrics
@@ -78,16 +120,108 @@ def _compute_missing_values(mtx, axis):
     _raise_array_type_not_implemented(_compute_missing_values, type(mtx))
 
 
-@_compute_missing_values.register
+@_compute_missing_values.register(np.ndarray)
 def _(mtx: np.ndarray, axis) -> np.ndarray:
     return pd.isnull(mtx).sum(axis)
 
 
-@_compute_missing_values.register
+@_compute_missing_values.register(DaskArray)
 def _(mtx: DaskArray, axis) -> np.ndarray:
     import dask.array as da
 
     return da.isnull(mtx).sum(axis).compute()
+
+
+@singledispatch
+def _compute_unique_values(mtx, axis):
+    _raise_array_type_not_implemented(_compute_unique_values, type(mtx))
+
+
+@_compute_unique_values.register(np.ndarray)
+def _(mtx: np.ndarray, axis) -> np.ndarray:
+    return pd.DataFrame(mtx).nunique(axis=axis, dropna=True).to_numpy()
+
+
+@_compute_unique_values.register(DaskArray)
+def _(mtx: DaskArray, axis) -> np.ndarray:
+    import dask.array as da
+
+    def nunique_block(block, axis):
+        return pd.DataFrame(block).nunique(axis=axis, dropna=True).to_numpy()
+
+    return da.map_blocks(nunique_block, mtx, axis=axis, dtype=int).compute()
+
+
+@singledispatch
+def _compute_entropy_of_missingness(mtx, axis):
+    _raise_array_type_not_implemented(_compute_entropy_of_missingness, type(mtx))
+
+
+@_compute_entropy_of_missingness.register(np.ndarray)
+def _(mtx: np.ndarray, axis) -> np.ndarray:
+    missing_mask = pd.isnull(mtx)
+    p_miss = missing_mask.mean(axis=axis)
+    p = np.clip(p_miss, 1e-10, 1 - 1e-10)  # avoid log(0)
+    return -(p * np.log2(p) + (1 - p) * np.log2(1 - p))
+
+
+@_compute_entropy_of_missingness.register(DaskArray)
+def _(mtx: DaskArray, axis) -> np.ndarray:
+    import dask.array as da
+
+    missing_mask = da.isnull(mtx)
+    p_miss = missing_mask.mean(axis=axis)
+    p = da.clip(p_miss, 1e-10, 1 - 1e-10)  # avoid log(0)
+    return -(p * da.log2(p) + (1 - p) * da.log2(1 - p)).compute()
+
+
+@_apply_over_time_axis
+def _row_unique(arr_2d: np.ndarray, axis) -> np.ndarray:
+    uniques = _compute_unique_values(arr_2d, axis=axis)
+    return np.broadcast_to(uniques[:, None], arr_2d.shape)
+
+
+@_apply_over_time_axis
+def _row_valid(arr_2d: np.ndarray, axis) -> np.ndarray:
+    missing = _compute_missing_values(arr_2d, axis=axis)
+    valid = arr_2d.shape[axis] - missing
+    return np.broadcast_to(valid[:, None], arr_2d.shape)
+
+
+@singledispatch
+def _raise_error_when_heterogeneous(mtx):
+    _raise_array_type_not_implemented(_raise_error_when_heterogeneous, type(mtx))
+
+
+@_raise_error_when_heterogeneous.register(np.ndarray)
+@_raise_error_when_heterogeneous.register(DaskArray)
+def _(mtx: np.ndarray | DaskArray):
+    if mtx.ndim == 3:
+        mtx_check = mtx[:, :, 0]
+    else:
+        mtx_check = mtx
+    try:
+        mtx_check = mtx_check.compute()
+    except AttributeError:
+        # numpy arrays don't have .compute()
+        pass
+
+    mtx_df = pd.DataFrame(mtx_check)
+    mixed = []
+    for col in mtx_df.columns:
+        s = mtx_df[col].dropna()
+        if s.empty:
+            continue
+        types = {type(v) for v in s}
+
+        if all(issubclass(t, (int, float, bool)) for t in types):
+            continue
+        if all(isinstance(v, str) for v in s):
+            continue
+
+        mixed.append(col)
+    if mixed:
+        raise ValueError(f"Mixed or unsupported types are found in columns {mixed}. Columns must be homogeneous")
 
 
 def _compute_obs_metrics(
@@ -96,6 +230,7 @@ def _compute_obs_metrics(
     *,
     qc_vars: Collection[str] = (),
     log1p: bool = True,
+    extended: bool = False,
 ):
     """Calculates quality control metrics for observations.
 
@@ -106,12 +241,15 @@ def _compute_obs_metrics(
         edata: Central data object.
         qc_vars: A list of previously calculated QC metrics to calculate summary statistics for.
         log1p: Whether to apply log1p normalization for the QC metrics. Only used with parameter 'qc_vars'.
+        extended: Whether to calculate further metrics that require feature type information.
 
     Returns:
         A Pandas DataFrame with the calculated metrics.
     """
     obs_metrics = pd.DataFrame(index=edata.obs_names)
     var_metrics = pd.DataFrame(index=edata.var_names)
+
+    original_mtx = mtx
 
     if "encoding_mode" in edata.var:
         for original_values_categorical in _get_encoded_features(edata):
@@ -128,11 +266,64 @@ def _compute_obs_metrics(
                 )
             )
 
-    obs_metrics["missing_values_abs"] = _compute_missing_values(mtx, axis=1)
-    obs_metrics["missing_values_pct"] = (obs_metrics["missing_values_abs"] / mtx.shape[1]) * 100
+    if mtx.ndim == 3:
+        n_obs, n_vars, n_time = mtx.shape
+        flat_mtx = mtx.reshape(n_obs, n_vars * n_time)
+    if mtx.ndim == 2:
+        flat_mtx = mtx
+
+    obs_metrics["missing_values_abs"] = _compute_missing_values(flat_mtx, axis=1)
+    obs_metrics["missing_values_pct"] = (obs_metrics["missing_values_abs"] / flat_mtx.shape[1]) * 100
+    obs_metrics["entropy_of_missingness"] = _compute_entropy_of_missingness(flat_mtx, axis=1)
+
+    if extended and "feature_type" not in edata.var:
+        raise ValueError(
+            "Extended QC metrics require `edata.var['feature_type']`. Please run `ehrdata.infer_feature_types(edata)` first"
+        )
+
+    if extended:
+        feature_type = edata.var["feature_type"]
+        categorical_mask = feature_type == "categorical"
+
+        if np.any(categorical_mask):
+            cat_mask_np = np.asarray(categorical_mask)
+
+            if original_mtx.ndim == 2:
+                mtx_cat = mtx[:, cat_mask_np]  # (n_obs, n_cat_var)
+            else:  # ndim == 3
+                mtx_cat = original_mtx[:, cat_mask_np, :]  # (n_obs, n_cat_var, n_time)
+
+            unique_arr = _row_unique(mtx_cat, axis=1)
+            valid_arr = _row_valid(mtx_cat, axis=1)
+
+            if unique_arr.ndim == 2:
+                unique_val_abs = unique_arr[:, 0]
+                valid_counts = valid_arr[:, 0]
+            else:
+                unique_per_time = unique_arr[:, 0, :]
+                valid_per_time = valid_arr[:, 0, :]
+
+                unique_val_abs = unique_per_time.sum(axis=1)
+                valid_counts = valid_per_time.sum(axis=1)
+
+            unique_val_ratio = np.where(
+                valid_counts > 0,
+                unique_val_abs / valid_counts * 100,
+                np.nan,
+            )
+        else:
+            n_obs = mtx.shape[0]
+            unique_val_abs = np.full(n_obs, np.nan)
+            unique_val_ratio = np.full(n_obs, np.nan)
+
+        obs_metrics["unique_values_abs"] = unique_val_abs
+        obs_metrics["unique_values_ratio"] = unique_val_ratio
 
     # Specific QC metrics
     for qc_var in qc_vars:
+        if mtx.ndim == 3:
+            raise ValueError("Only 2D matrices are supported for qc_vars argument")
+
         obs_metrics[f"total_features_{qc_var}"] = np.ravel(mtx[:, edata.var[qc_var].values].sum(axis=1))
         if log1p:
             obs_metrics[f"log1p_total_features_{qc_var}"] = np.log1p(obs_metrics[f"total_features_{qc_var}"])
@@ -147,15 +338,21 @@ def _compute_obs_metrics(
 def _compute_var_metrics(
     mtx,
     edata: EHRData | AnnData,
+    extended: bool = False,
 ):
     """Compute variable metrics for quality control.
 
     Args:
         mtx: Data array.
         edata: Central data object.
+        extended: Whether to calculate further metrics that require feature type information.
     """
     categorical_indices = np.ndarray([0], dtype=int)
     var_metrics = pd.DataFrame(index=edata.var_names)
+
+    if mtx.ndim == 3:
+        n_obs, n_vars, n_time = mtx.shape
+        mtx = np.moveaxis(mtx, 1, 2).reshape(-1, n_vars)
 
     if "encoding_mode" in edata.var.keys():
         for original_values_categorical in _get_encoded_features(edata):
@@ -179,6 +376,46 @@ def _compute_var_metrics(
 
     var_metrics["missing_values_abs"] = _compute_missing_values(mtx, axis=0)
     var_metrics["missing_values_pct"] = (var_metrics["missing_values_abs"] / mtx.shape[0]) * 100
+    var_metrics["entropy_of_missingness"] = _compute_entropy_of_missingness(mtx, axis=0)
+
+    if extended and "feature_type" not in edata.var:
+        raise ValueError(
+            "Extended QC metrics require `edata.var['feature_type']`. Please run `ehrdata.infer_feature_types(edata)` first"
+        )
+
+    if extended:
+        feature_type = edata.var["feature_type"]
+        categorical_mask = feature_type == "categorical"
+
+        n_vars = mtx.shape[1]
+        unique_val_abs_full = np.full(n_vars, np.nan)
+        unique_val_ratio_full = np.full(n_vars, np.nan)
+
+        if np.any(categorical_mask):
+            cat_mask_np = np.asarray(categorical_mask)
+
+            mtx_cat = mtx[:, cat_mask_np]
+
+            unique_val_abs = _compute_unique_values(mtx_cat, axis=0)
+            missing_cat = _compute_missing_values(mtx_cat, axis=0)
+            valid_counts = mtx_cat.shape[0] - missing_cat
+
+            unique_val_ratio = np.where(
+                valid_counts > 0,
+                unique_val_abs / valid_counts * 100,
+                np.nan,
+            )
+
+            unique_val_abs_full[cat_mask_np] = unique_val_abs
+            unique_val_ratio_full[cat_mask_np] = unique_val_ratio
+
+        var_metrics["unique_values_abs"] = unique_val_abs_full
+        var_metrics["unique_values_ratio"] = unique_val_ratio_full
+
+        var_metrics["coefficient_of_variation"] = np.nan
+        var_metrics["is_constant"] = np.nan
+        var_metrics["constant_variable_ratio"] = np.nan
+        var_metrics["range_ratio"] = np.nan
 
     var_metrics["mean"] = np.nan
     var_metrics["median"] = np.nan
@@ -188,6 +425,7 @@ def _compute_var_metrics(
     var_metrics["iqr_outliers"] = np.nan
 
     try:
+        # Calculate statistics for non-categorical variables
         var_metrics.loc[non_categorical_indices, "mean"] = np.nanmean(
             mtx[:, non_categorical_indices].astype(np.float64), axis=0
         )
@@ -217,6 +455,33 @@ def _compute_var_metrics(
         )
         # Fill all non_categoricals with False because else we have a dtype object Series which h5py cannot save
         var_metrics["iqr_outliers"] = var_metrics["iqr_outliers"].astype(bool).fillna(False)
+
+        if extended:
+            feature_type = edata.var["feature_type"]
+            numeric_mask = feature_type == "numeric"
+
+            numeric_indices = np.asarray(numeric_mask)
+
+            if np.any(numeric_indices):
+                var_metrics.loc[non_categorical_indices, "coefficient_of_variation"] = (
+                    var_metrics.loc[numeric_indices, "standard_deviation"] / var_metrics.loc[numeric_indices, "mean"]
+                ).replace([np.inf, -np.inf], np.nan)
+
+                # Constant column detection
+                constant_mask = (var_metrics.loc[numeric_indices, "standard_deviation"] == 0) | (
+                    var_metrics.loc[numeric_indices, "max"] == var_metrics.loc[numeric_indices, "min"]
+                )
+
+                var_metrics.loc[numeric_indices, "is_constant"] = constant_mask.astype(float)
+
+                var_metrics["constant_variable_ratio"] = constant_mask.mean() * 100
+
+                # Calculate range ratio
+                var_metrics.loc[numeric_indices, "range_ratio"] = (
+                    (var_metrics.loc[numeric_indices, "max"] - var_metrics.loc[numeric_indices, "min"])
+                    / var_metrics.loc[numeric_indices, "mean"]
+                ).replace([np.inf, -np.inf], np.nan) * 100
+
         var_metrics = var_metrics.infer_objects()
     except (TypeError, ValueError):
         # We assume that the data just hasn't been encoded yet
