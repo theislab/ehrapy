@@ -254,7 +254,6 @@ def _compute_obs_metrics(
             if unique_arr.ndim == 2:
                 unique_val_abs = unique_arr[:, 0]
                 valid_counts = valid_arr[:, 0]
-
             else:
                 unique_per_time = unique_arr[:, 0, :]
                 valid_per_time = valid_arr[:, 0, :]
@@ -336,7 +335,7 @@ def _compute_var_metrics(
 
     if advanced and "feature_type" not in edata.var:
         raise ValueError(
-            "Advanced QC metrics require `edata.var['feature_type']`. Please run `infer_feature_types(edata)` first"
+            "Advanced QC metrics require `edata.var['feature_type']`. Please run `ehrdata.infer_feature_types(edata)` first"
         )
 
     if advanced:
