@@ -3,6 +3,7 @@ from __future__ import annotations
 import warnings
 from typing import TYPE_CHECKING
 
+import holoviews as hv
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
@@ -11,10 +12,10 @@ import pandas as pd
 from numpy import ndarray
 
 from ehrapy._compat import use_ehrdata
-from ehrapy.plot import scatter
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
+    from typing import Any
     from xmlrpc.client import Boolean
 
     from anndata import AnnData
@@ -32,21 +33,22 @@ def ols(
     y: str | None = None,
     scatter_plot: Boolean | None = True,
     ols_results: list[RegressionResults] | None = None,
-    ols_color: list[str] | None | None = None,
+    ols_color: list[str | None] | None = None,
     xlabel: str | None = None,
     ylabel: str | None = None,
-    figsize: tuple[float, float] | None = None,
+    width: int | None = 600,
+    height: int | None = 400,
     lines: list[tuple[ndarray | float, ndarray | float]] | None = None,
-    lines_color: list[str] | None | None = None,
-    lines_style: list[str] | None | None = None,
-    lines_label: list[str] | None | None = None,
+    lines_color: list[str | None] | None = None,
+    lines_style: list[str | None] | None = None,
+    lines_label: list[str | None] | None = None,
     xlim: tuple[float, float] | None = None,
     ylim: tuple[float, float] | None = None,
     show: bool | None = None,
-    ax: Axes | None = None,
+    backend: str | None = None,
     title: str | None = None,
     **kwds,
-) -> Axes | None:
+):
     """Plots an Ordinary Least Squares (OLS) Model result, scatter plot, and line plot.
 
     Args:
@@ -58,7 +60,8 @@ def ols(
         ols_color: List of colors for each ols_results. Example: ['red', 'blue'].
         xlabel: The x-axis label text.
         ylabel: The y-axis label text.
-        figsize: Width, height in inches.
+        width: Plot width in pixels.
+        height: Plot height in pixels.
         lines: List of Tuples of (slope, intercept) or (x, y). Plot lines by slope and intercept or data points.
                Example: plot two lines (y = x + 2 and y = 2*x + 1): [(1, 2), (2, 1)]
         lines_color: List of colors for each line. Example: ['red', 'blue']
@@ -66,10 +69,10 @@ def ols(
         lines_label: List of line labels for each line. Example: ['Line1', 'Line2']
         xlim: Set the x-axis view limits. Required for only plotting lines using slope and intercept.
         ylim: Set the y-axis view limits. Required for only plotting lines using slope and intercept.
-        show: Show the plot, do not return axis.
-        ax: A matplotlib axes object. Only works if plotting a single component.
+        show: Show the plot, do not return plot object.
+        backend: Backend to use ('bokeh', 'matplotlib', 'plotly'). If None, uses current renderer.
         title: Set the title of the plot.
-        **kwds: Passed to Matplotlib Scatterplot.
+        **kwds: Passed to HoloViews Scatter element.
 
     Examples:
         >>> import ehrdata as ed
@@ -95,21 +98,7 @@ def ols(
         >>> edata = ed.dt.mimic_2()
         >>> ep.pl.ols(edata, x='pco2_first', y='tco2_first', lines=[(0.25, 10), (0.3, 20)],
         >>>           lines_color=['red', 'blue'], lines_style=['-', ':'], lines_label=['Line1', 'Line2'])
-
-        .. image:: /_static/docstring_previews/ols_plot_2.png
-
-        >>> import ehrapy as ep
-        >>> ep.pl.ols(lines=[(0.25, 10), (0.3, 20)], lines_color=['red', 'blue'], lines_style=['-', ':'],
-        >>>           lines_label=['Line1', 'Line2'], xlim=(0, 150), ylim=(0, 50))
-
-        .. image:: /_static/docstring_previews/ols_plot_3.png
     """
-    if ax is None:
-        _, ax = plt.subplots(figsize=figsize)
-    if xlim is not None:
-        plt.xlim(xlim)
-    if ylim is not None:
-        plt.ylim(ylim)
     if ols_color is None and ols_results is not None:
         ols_color = [None] * len(ols_results)
     if lines_color is None and lines is not None:
@@ -118,35 +107,89 @@ def ols(
         lines_style = [None] * len(lines)
     if lines_label is None and lines is not None:
         lines_label = [None] * len(lines)
+
+    plot = None
+
     if edata is not None and x is not None and y is not None:
-        x_processed = np.array(edata[:, x].X).astype(float)
-        x_processed = x_processed[~np.isnan(x_processed)]
-        if scatter_plot is True:
-            ax = scatter(edata, x=x, y=y, show=False, ax=ax, **kwds)
+        x_data = np.array(edata[:, x].X).flatten().astype(float)
+        y_data = np.array(edata[:, y].X).flatten().astype(float)
+
+        mask = ~(np.isnan(x_data) | np.isnan(y_data))
+        x_clean = x_data[mask]
+        y_clean = y_data[mask]
+
+        if scatter_plot:
+            scatter_opts = {**kwds}
+            scatter_opts.setdefault("tools", ["hover"])
+            plot = hv.Scatter((x_clean, y_clean), kdims=x, vdims=y).opts(**scatter_opts)
+
         if ols_results is not None:
+            x_sorted = np.sort(x_clean)
             for i, ols_result in enumerate(ols_results):
-                ax.plot(x_processed, ols_result.predict(), color=ols_color[i])
+                y_pred = ols_result.predict(exog={"const": 1, x: x_sorted})
+                curve_opts: dict[str, Any] = {"tools": ["hover"]}
+                if ols_color[i] is not None:
+                    curve_opts["color"] = ols_color[i]
+                ols_curve = hv.Curve((x_sorted, y_pred)).opts(**curve_opts)
+                plot = ols_curve if plot is None else plot * ols_curve
 
     if lines is not None:
+        if xlim is None and plot is not None:
+            x_range = plot.range(x if x else 0)
+            xlim = (x_range[0], x_range[1]) if x_range[0] is not None else (0, 1)
+        elif xlim is None:
+            xlim = (0, 1)
+
         for i, line in enumerate(lines):
             a, b = line
             if np.ndim(a) == 0 and np.ndim(b) == 0:
-                line_x = np.array(ax.get_xlim())
+                line_x = np.array(xlim)
                 line_y = a * line_x + b
-                ax.plot(line_x, line_y, linestyle=lines_style[i], color=lines_color[i], label=lines_label[i])
             else:
-                ax.plot(a, b, lines_style[i], color=lines_color[i], label=lines_label[i])
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    if title:
-        plt.title(title)
-    if lines_label is not None and lines_label[0] is not None:
-        plt.legend()
+                line_x, line_y = a, b
 
-    if not show:
-        return ax
-    else:
+            curve_opts = {"tools": ["hover"]}
+            if lines_color[i] is not None:
+                curve_opts["color"] = lines_color[i]
+            if lines_style[i] is not None:
+                style_map = {"-": "solid", "--": "dashed", ":": "dotted", "-.": "dashdot"}
+                curve_opts["line_dash"] = style_map.get(lines_style[i], "solid")
+
+            label = lines_label[i] if lines_label[i] else None
+            line_curve = hv.Curve((line_x, line_y), label=label).opts(**curve_opts)
+            plot = line_curve if plot is None else plot * line_curve
+
+    if plot is None:
         return None
+
+    opts_dict: dict[str, Any] = {}
+    if width is not None:
+        opts_dict["width"] = width
+    if height is not None:
+        opts_dict["height"] = height
+    if xlabel is not None:
+        opts_dict["xlabel"] = xlabel
+    if ylabel is not None:
+        opts_dict["ylabel"] = ylabel
+    if title is not None:
+        opts_dict["title"] = title
+    if xlim is not None:
+        opts_dict["xlim"] = xlim
+    if ylim is not None:
+        opts_dict["ylim"] = ylim
+
+    plot = plot.opts(**opts_dict)
+
+    if backend:
+        renderer = hv.renderer(backend)
+        if show:
+            return renderer.show(plot)
+        return plot
+
+    if show:
+        return hv.renderer(hv.Store.current_backend).show(plot)
+
+    return plot
 
 
 def kmf(
@@ -369,7 +412,8 @@ def cox_ph_forestplot(
 ):
     """Generates a forest plot to visualize the coefficients and confidence intervals of a Cox Proportional Hazards model.
 
-    The `edata` object must first be populated using the :func:`~ehrapy.tools.cox_ph` function. This function stores the summary table of the `CoxPHFitter` in the `.uns` attribute of `edata`.
+    The `edata` object must first be populated using the :func:`~ehrapy.tools.cox_ph` function.
+    This function stores the summary table of the `CoxPHFitter` in the `.uns` attribute of `edata`.
     The summary table is created when the model is fitted using the :func:`~ehrapy.tools.cox_ph` function.
     For more information on the `CoxPHFitter`, see the `Lifelines documentation <https://lifelines.readthedocs.io/en/latest/fitters/regression/CoxPHFitter.html>`_.
 

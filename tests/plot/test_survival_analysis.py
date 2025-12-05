@@ -1,6 +1,8 @@
 from pathlib import Path
 
+import holoviews as hv
 import numpy as np
+from ehrdata import EHRData
 
 import ehrapy as ep
 
@@ -66,12 +68,12 @@ def test_coxph_forestplot(mimic_2, check_same_image):
     )
 
 
-def test_ols(mimic_2, check_same_image):
+def test_ols(mimic_2: EHRData):
     adata_sample = mimic_2[:200].copy()
     co2_lm_result = ep.tl.ols(
         adata_sample, var_names=["pco2_first", "tco2_first"], formula="tco2_first ~ pco2_first", missing="drop"
     ).fit()
-    ax = ep.pl.ols(
+    plot = ep.pl.ols(
         adata_sample,
         x="pco2_first",
         y="tco2_first",
@@ -82,13 +84,6 @@ def test_ols(mimic_2, check_same_image):
         show=False,
     )
 
-    fig = ax.figure
-
-    fig.set_size_inches(8, 6)
-    fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
-
-    check_same_image(
-        fig=fig,
-        base_path=f"{_TEST_IMAGE_PATH}/ols",
-        tol=2e-1,
-    )
+    assert isinstance(plot, hv.Overlay) or isinstance(plot, hv.Scatter)
+    assert plot.opts.get().kwargs["xlabel"] == "PCO2"
+    assert plot.opts.get().kwargs["ylabel"] == "TCO2"
