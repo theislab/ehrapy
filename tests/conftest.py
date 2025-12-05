@@ -343,6 +343,7 @@ def edata_blobs_timeseries_small() -> ed.EHRData:
         seasonality=True,
         time_shifts=True,
         variable_length=False,
+        layer=DEFAULT_TEM_LAYER_NAME,
     )
     edata.layers["layer_2"] = edata.X.copy()
 
