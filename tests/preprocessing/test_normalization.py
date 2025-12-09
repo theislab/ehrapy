@@ -95,6 +95,19 @@ def test_norm_scale_group(array_type, edata_mini_normalization):
     with pytest.raises(KeyError):
         ep.pp.scale_norm(edata_mini_casted, group_key="invalid_key", copy=True)
 
+    if isinstance(edata_mini_casted.X, da.Array):
+        with pytest.raises(
+            NotImplementedError,
+            match="Group-wise normalization|does not support array type.*dask",
+        ):
+            ep.pp.scale_norm(
+                edata_mini_casted,
+                vars=["sys_bp_entry", "dia_bp_entry"],
+                group_key="disease",
+                copy=True,
+            )
+        return
+
     edata_mini_norm = ep.pp.scale_norm(
         edata_mini_casted,
         vars=["sys_bp_entry", "dia_bp_entry"],
@@ -177,6 +190,19 @@ def test_norm_minmax_group(array_type, edata_mini_normalization):
 
     with pytest.raises(KeyError):
         ep.pp.minmax_norm(edata_mini_casted, group_key="invalid_key", copy=True)
+
+    if isinstance(edata_mini_casted.X, da.Array):
+        with pytest.raises(
+            NotImplementedError,
+            match="Group-wise normalization|does not support array type.*dask",
+        ):
+            ep.pp.minmax_norm(
+                edata_mini_casted,
+                vars=["sys_bp_entry", "dia_bp_entry"],
+                group_key="disease",
+                copy=True,
+            )
+        return
 
     edata_mini_norm = ep.pp.minmax_norm(
         edata_mini_casted,
@@ -331,6 +357,19 @@ def test_norm_robust_scale_group(array_type, edata_mini_normalization):
     with pytest.raises(KeyError):
         ep.pp.robust_scale_norm(edata_mini_casted, group_key="invalid_key", copy=True)
 
+    if isinstance(edata_mini_casted.X, da.Array):
+        with pytest.raises(
+            NotImplementedError,
+            match="Group-wise normalization|does not support array type.*dask",
+        ):
+            ep.pp.robust_scale_norm(
+                edata_mini_casted,
+                vars=["sys_bp_entry", "dia_bp_entry"],
+                group_key="disease",
+                copy=True,
+            )
+        return
+
     edata_mini_norm = ep.pp.robust_scale_norm(
         edata_mini_casted,
         vars=["sys_bp_entry", "dia_bp_entry"],
@@ -421,6 +460,19 @@ def test_norm_quantile_uniform_group(array_type, edata_mini_normalization):
 
     with pytest.raises(KeyError):
         ep.pp.quantile_norm(edata_mini_casted, group_key="invalid_key", copy=True)
+
+    if isinstance(edata_mini_casted.X, da.Array):
+        with pytest.raises(
+            NotImplementedError,
+            match="Group-wise normalization|does not support array type.*dask",
+        ):
+            ep.pp.quantile_norm(
+                edata_mini_casted,
+                vars=["sys_bp_entry", "dia_bp_entry"],
+                group_key="disease",
+                copy=True,
+            )
+        return
 
     edata_mini_norm = ep.pp.quantile_norm(
         edata_mini_casted,
