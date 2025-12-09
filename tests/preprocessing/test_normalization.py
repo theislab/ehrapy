@@ -739,7 +739,7 @@ def test_norm_3D(edata_blobs_timeseries_small, array_type, norm_func):
     orig_shape = edata.layers[DEFAULT_TEM_LAYER_NAME].shape
 
     if norm_func == ep.pp.power_norm:
-        edata.layers[DEFAULT_TEM_LAYER_NAME] = np.abs(edata.layers[DEFAULT_TEM_LAYER_NAME]) + 0.1
+        ep.pp.offset_negative_values(edata, layer=DEFAULT_TEM_LAYER_NAME)
 
     norm_func(edata, layer=DEFAULT_TEM_LAYER_NAME)
 
@@ -814,7 +814,7 @@ def test_quantile_norm_3D(edata_blobs_timeseries_small):
 
 def test_power_norm_3D(edata_blobs_timeseries_small):
     edata = edata_blobs_timeseries_small.copy()
-    edata.layers[DEFAULT_TEM_LAYER_NAME] = np.abs(edata.layers[DEFAULT_TEM_LAYER_NAME]) + 0.1
+    ep.pp.offset_negative_values(edata, layer=DEFAULT_TEM_LAYER_NAME)
     ep.pp.power_norm(edata, layer=DEFAULT_TEM_LAYER_NAME)
 
     n_obs, n_var, n_timestamps = edata.layers[DEFAULT_TEM_LAYER_NAME].shape
@@ -827,7 +827,7 @@ def test_power_norm_3D(edata_blobs_timeseries_small):
 
 def test_log_norm_3D(edata_blobs_timeseries_small):
     edata = edata_blobs_timeseries_small.copy()
-    edata.layers[DEFAULT_TEM_LAYER_NAME] = np.abs(edata.layers[DEFAULT_TEM_LAYER_NAME]) + 1
+    ep.pp.offset_negative_values(edata, layer=DEFAULT_TEM_LAYER_NAME)
 
     layer_original = edata.layers[DEFAULT_TEM_LAYER_NAME].copy()
 
@@ -872,7 +872,7 @@ def test_norm_group_3D(edata_blobs_timeseries_small, array_type, norm_func):
     edata.layers[layer] = array_type(edata.layers[layer])
 
     if norm_func == ep.pp.power_norm:
-        edata.layers[layer] = np.abs(edata.layers[layer]) + 0.1
+        ep.pp.offset_negative_values(edata, layer=layer)
 
     # create two groups with different distributions
     n_obs = edata.n_obs

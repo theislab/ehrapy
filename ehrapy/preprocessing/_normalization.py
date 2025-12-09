@@ -145,7 +145,6 @@ def scale_norm(
         0.0
 
     """
-    edata.X if layer is None else edata.layers[layer]
     scale_func = lambda arr: _scale_norm_function(arr, **kwargs)
 
     return _scale_func_group(
@@ -221,7 +220,6 @@ def minmax_norm(
         >>> np.nanmin(edata.layers["tem_data"]), np.nanmax(edata.layers["tem_data"])
         (0.0, 1.0)
     """
-    edata.X if layer is None else edata.layers[layer]
     scale_func = lambda arr: _minmax_norm_function(arr, **kwargs)
 
     return _scale_func_group(
@@ -366,7 +364,6 @@ def robust_scale_norm(
         >>> np.nanmedian(edata.layers["tem_data"])
         0.0
     """
-    edata.X if layer is None else edata.layers[layer]
     scale_func = lambda arr: _robust_scale_norm_function(arr, **kwargs)
 
     return _scale_func_group(
@@ -442,7 +439,6 @@ def quantile_norm(
         >>> np.nanmin(edata.layers["tem_data"]), np.nanmax(edata.layers["tem_data"])
         (0.0, 1.0)
     """
-    edata.X if layer is None else edata.layers[layer]
     scale_func = lambda arr: _quantile_norm_function(arr, **kwargs)
 
     return _scale_func_group(
@@ -506,7 +502,7 @@ def power_norm(
         >>> import numpy as np
         >>> from scipy import stats
         >>> edata = ed.dt.physionet2012(layer="tem_data")
-        >>> edata.layers["tem_data"] = np.abs(edata.layers["tem_data"]) + 0.1
+        >>> ep.pp.offset_negative_values(edata, layer="tem_data")
         >>> skewed_data = np.power(edata.layers["tem_data"], 2)
         >>> edata.layers["tem_data"] = skewed_data
         >>> stats.skew(edata.layers["tem_data"].flatten())
@@ -603,9 +599,9 @@ def log_norm(
         >>> import ehrapy as ep
         >>> import numpy as np
         >>> edata = ed.dt.physionet2012(layer="tem_data")
-        >>> edata.layers["tem_data"] = np.abs(edata.layers["tem_data"]) + 1
+        >>> ep.pp.offset_negative_values(edata, layer="tem_data")
         >>> np.nanmax(edata.layers["tem_data"])
-        36401.0
+        36400.0
         >>> ep.pp.log_norm(edata, layer="tem_data")
         >>> np.nanmax(edata.layers["tem_data"])
         10.502379
