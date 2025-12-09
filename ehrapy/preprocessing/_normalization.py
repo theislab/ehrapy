@@ -55,71 +55,23 @@ def _scale_func_group(
     var_indices = _get_var_indices(edata, vars)
     X = edata.X if layer is None else edata.layers[layer]
 
-    # Convert integer arrays to float to preserve precision in normalized results
-    if isinstance(X, np.ndarray) and np.issubdtype(X.dtype, np.integer):
+    if np.issubdtype(X.dtype, np.integer):
         X = X.astype(np.float64)
 
     if group_key is None:
         X[:, var_indices] = scale_func(X[:, var_indices])
+
     else:
-        import dask.array as da
-
+        # Group-wise normalization is not supported for Dask arrays
         if isinstance(X, DaskArray):
-            result = X
-            for group in edata.obs[group_key].unique():
-                group_idx = edata.obs[group_key] == group
-                group_mask = np.where(group_idx)[0]
+            raise NotImplementedError(
+                f"Group-wise normalization with group_key='{group_key}' does not support array type {type(X)}. "
+                "Please convert to numpy array first or use normalization without group_key."
+            )
 
-                group_data = X[group_mask][:, var_indices] if X.ndim == 2 else X[group_mask][:, var_indices, :]
-                normalized_group_data = scale_func(group_data)
-
-                group_rows = X[group_mask]
-                if X.ndim == 2:
-                    non_var_indices = np.setdiff1d(np.arange(X.shape[1]), var_indices)
-                    if len(non_var_indices) > 0:
-                        sorted_indices = np.argsort(np.concatenate([non_var_indices, var_indices]))
-                        updated_group_rows = da.concatenate(
-                            [group_rows[:, non_var_indices], normalized_group_data], axis=1
-                        )[:, sorted_indices]
-                    else:
-                        updated_group_rows = normalized_group_data
-
-                    full_updated_rows = result
-                    for i, obs_idx in enumerate(group_mask):
-                        obs_mask = da.arange(X.shape[0], chunks=X.chunksize[0]) == obs_idx
-                        full_updated_rows = da.where(
-                            obs_mask[:, None], updated_group_rows[i : i + 1], full_updated_rows
-                        )
-                else:
-                    full_updated_rows = result
-                    for i, obs_idx in enumerate(group_mask):
-                        obs_original = X[obs_idx : obs_idx + 1]
-                        non_var_indices = np.setdiff1d(np.arange(X.shape[1]), var_indices)
-                        if len(non_var_indices) > 0:
-                            sorted_indices = np.argsort(np.concatenate([non_var_indices, var_indices]))
-                            updated_obs = da.concatenate(
-                                [obs_original[:, non_var_indices, :], normalized_group_data[i : i + 1]], axis=1
-                            )[:, sorted_indices, :]
-                        else:
-                            updated_obs = normalized_group_data[i : i + 1]
-
-                        obs_mask = da.arange(X.shape[0], chunks=X.chunksize[0]) == obs_idx
-                        full_updated_rows = da.where(obs_mask[:, None, None], updated_obs, full_updated_rows)
-
-                result = full_updated_rows
-
-            X = result
-        else:
-            for group in edata.obs[group_key].unique():
-                group_idx = edata.obs[group_key] == group
-                group_mask = np.where(group_idx)[0]
-                if X.ndim == 2:
-                    X[np.ix_(group_mask, var_indices)] = scale_func(X[np.ix_(group_mask, var_indices)])
-                else:
-                    group_data = X[group_mask][:, var_indices, :].copy()
-                    normalized_group_data = scale_func(group_data)
-                    for i, obs_idx in enumerate(group_mask):
-                        X[obs_idx, var_indices, :] = normalized_group_data[i]
+        for group in edata.obs[group_key].unique():
+            group_mask = np.where(edata.obs[group_key] == group)[0]
+            X[np.ix_(group_mask, var_indices)] = scale_func(X[np.ix_(group_mask, var_indices)])
 
     if layer is None:
         edata.X = X
@@ -336,7 +288,7 @@ def maxabs_norm(
         1.0
     """
     X = edata.X if layer is None else edata.layers[layer]
-    if isinstance(X, DaskArray) and group_key is None:
+    if isinstance(X, DaskArray):
         _raise_array_type_not_implemented(_maxabs_norm_function, type(X))
     scale_func = _maxabs_norm_function
 
@@ -564,7 +516,7 @@ def power_norm(
         0.144324
     """
     X = edata.X if layer is None else edata.layers[layer]
-    if isinstance(X, DaskArray) and group_key is None:
+    if isinstance(X, DaskArray):
         _raise_array_type_not_implemented(_power_norm_function, type(X))
     scale_func = lambda arr: _power_norm_function(arr, **kwargs)
 

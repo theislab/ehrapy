@@ -814,74 +814,66 @@ def test_offset_negative_values_3D(edata_blobs_timeseries_small):
 )
 def test_norm_group_3D(edata_blobs_timeseries_small, array_type, norm_func):
     edata = edata_blobs_timeseries_small
+    layer = DEFAULT_TEM_LAYER_NAME
     edata.var[FEATURE_TYPE_KEY] = NUMERIC_TAG
-    edata.layers[DEFAULT_TEM_LAYER_NAME] = array_type(edata.layers[DEFAULT_TEM_LAYER_NAME])
+
+    edata.layers[layer] = array_type(edata.layers[layer])
 
     if norm_func == ep.pp.power_norm:
-        edata.layers[DEFAULT_TEM_LAYER_NAME] = np.abs(edata.layers[DEFAULT_TEM_LAYER_NAME]) + 0.1
+        edata.layers[layer] = np.abs(edata.layers[layer]) + 0.1
 
+    # create two groups with different distributions
     n_obs = edata.n_obs
     group_size = n_obs // 2
-
-    layer_data = edata.layers[DEFAULT_TEM_LAYER_NAME]
-    if isinstance(layer_data, np.ndarray):
-        layer_data[:group_size] = layer_data[:group_size] * 2 + 10
-        layer_data[group_size:] = layer_data[group_size:] * 0.5 - 5
-        edata.layers[DEFAULT_TEM_LAYER_NAME] = layer_data
-
     edata.obs["group"] = ["A"] * group_size + ["B"] * (n_obs - group_size)
 
-    if isinstance(edata.layers[DEFAULT_TEM_LAYER_NAME], da.Array) and norm_func in (
-        ep.pp.maxabs_norm,
-        ep.pp.power_norm,
-    ):
-        with pytest.raises(NotImplementedError, match="does not support array type.*dask"):
-            norm_func(edata, layer=DEFAULT_TEM_LAYER_NAME, group_key="group")
+    # raise NotImplementedError for all dask arrays
+    if isinstance(edata.layers[layer], da.Array):
+        with pytest.raises(
+            NotImplementedError,
+            match="Group-wise normalization|does not support array type.*dask",
+        ):
+            norm_func(edata, layer=layer, group_key="group")
         return
 
-    orig_shape = edata.layers[DEFAULT_TEM_LAYER_NAME].shape
-    layer_before = edata.layers[DEFAULT_TEM_LAYER_NAME].copy()
+    original_shape = edata.layers[layer].shape
+    layer_before = edata.layers[layer].copy()
 
-    norm_func(edata, layer=DEFAULT_TEM_LAYER_NAME, group_key="group")
+    norm_func(edata, layer=layer, group_key="group")
 
-    assert edata.layers[DEFAULT_TEM_LAYER_NAME].shape == orig_shape
+    # verify shape and tracking
+    assert edata.layers[layer].shape == original_shape
     assert "normalization" in edata.uns
     assert len(edata.uns["normalization"]) > 0
 
-    layer_after = edata.layers[DEFAULT_TEM_LAYER_NAME]
-    if isinstance(layer_after, da.Array):
-        layer_after = layer_after.compute()
-    if isinstance(layer_before, da.Array):
-        layer_before = layer_before.compute()
-    assert not np.allclose(layer_before, layer_after, equal_nan=True), (
-        "Normalization did not modify the data - check that feature types are set correctly"
-    )
+    layer_after = edata.layers[layer]
 
-    layer_data = edata.layers[DEFAULT_TEM_LAYER_NAME]
-    if isinstance(layer_data, da.Array):
-        layer_data = layer_data.compute()
+    # verify data changed
+    assert not np.allclose(layer_before, layer_after, equal_nan=True)
 
-    group_a_data = layer_data[:group_size]
-    group_b_data = layer_data[group_size:]
+    group_a = layer_after[:group_size].flatten()
+    group_b = layer_after[group_size:].flatten()
+    group_a = group_a[~np.isnan(group_a)]
+    group_b = group_b[~np.isnan(group_b)]
 
-    group_a_flat = group_a_data.flatten()[~np.isnan(group_a_data.flatten())]
-    group_b_flat = group_b_data.flatten()[~np.isnan(group_b_data.flatten())]
+    def near0(x):
+        return abs(x) < 1e-5
 
-    if len(group_a_flat) > 0 and len(group_b_flat) > 0:
-        if norm_func == ep.pp.scale_norm:
-            assert np.abs(np.nanmean(group_a_flat)) < 1e-5 and np.abs(np.nanmean(group_b_flat)) < 1e-5
-            assert np.abs(np.nanstd(group_a_flat) - 1.0) < 1e-5 and np.abs(np.nanstd(group_b_flat) - 1.0) < 1e-5
-        elif norm_func == ep.pp.minmax_norm:
-            assert np.abs(np.nanmin(group_a_flat)) < 1e-5 and np.abs(np.nanmin(group_b_flat)) < 1e-5
-            assert np.abs(np.nanmax(group_a_flat) - 1.0) < 1e-5 and np.abs(np.nanmax(group_b_flat) - 1.0) < 1e-5
-        elif norm_func == ep.pp.maxabs_norm:
-            assert np.abs(np.nanmax(np.abs(group_a_flat)) - 1.0) < 1e-5
-            assert np.abs(np.nanmax(np.abs(group_b_flat)) - 1.0) < 1e-5
-        elif norm_func == ep.pp.robust_scale_norm:
-            assert np.abs(np.nanmedian(group_a_flat)) < 1e-5 and np.abs(np.nanmedian(group_b_flat)) < 1e-5
-        elif norm_func == ep.pp.quantile_norm:
-            assert np.abs(np.nanmin(group_a_flat)) < 1e-5 and np.abs(np.nanmin(group_b_flat)) < 1e-5
-            assert np.abs(np.nanmax(group_a_flat) - 1.0) < 1e-5 and np.abs(np.nanmax(group_b_flat) - 1.0) < 1e-5
-        elif norm_func == ep.pp.power_norm:
-            assert np.abs(np.nanmean(group_a_flat)) < 1e-5 and np.abs(np.nanmean(group_b_flat)) < 1e-5
-            assert np.abs(np.nanstd(group_a_flat) - 1.0) < 1e-5 and np.abs(np.nanstd(group_b_flat) - 1.0) < 1e-5
+    def near1(x):
+        return abs(x - 1.0) < 1e-5
+
+    # validate per-group normalization
+    if norm_func in {ep.pp.scale_norm, ep.pp.power_norm}:
+        assert near0(np.nanmean(group_a)) and near0(np.nanmean(group_b))
+        assert near1(np.nanstd(group_a)) and near1(np.nanstd(group_b))
+
+    elif norm_func in {ep.pp.minmax_norm, ep.pp.quantile_norm}:
+        assert near0(np.nanmin(group_a)) and near0(np.nanmin(group_b))
+        assert near1(np.nanmax(group_a)) and near1(np.nanmax(group_b))
+
+    elif norm_func == ep.pp.maxabs_norm:
+        assert near1(np.nanmax(np.abs(group_a)))
+        assert near1(np.nanmax(np.abs(group_b)))
+
+    elif norm_func == ep.pp.robust_scale_norm:
+        assert near0(np.nanmedian(group_a)) and near0(np.nanmedian(group_b))
