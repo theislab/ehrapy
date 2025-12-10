@@ -56,7 +56,7 @@ def _scale_func_group(
     X = edata.X if layer is None else edata.layers[layer]
 
     if np.issubdtype(X.dtype, np.integer):
-        X = X.astype(np.float64)
+        X = X.astype(np.float32)
 
     if group_key is None:
         X[:, var_indices] = scale_func(X[:, var_indices])
@@ -88,13 +88,13 @@ def _scale_norm_function(arr, **kwargs):
     _raise_array_type_not_implemented(_scale_norm_function, type(arr))
 
 
-@_scale_norm_function.register
+@_scale_norm_function.register(np.ndarray)
 @_apply_over_time_axis
 def _(arr: np.ndarray, **kwargs):
     return sklearn_pp.StandardScaler(**kwargs).fit_transform(arr)
 
 
-@_scale_norm_function.register
+@_scale_norm_function.register(DaskArray)
 @_apply_over_time_axis
 def _(arr: DaskArray, **kwargs):
     import dask_ml.preprocessing as daskml_pp
@@ -163,13 +163,13 @@ def _minmax_norm_function(arr, **kwargs):
     _raise_array_type_not_implemented(_minmax_norm_function, type(arr))
 
 
-@_minmax_norm_function.register
+@_minmax_norm_function.register(np.ndarray)
 @_apply_over_time_axis
 def _(arr: np.ndarray, **kwargs):
     return sklearn_pp.MinMaxScaler(**kwargs).fit_transform(arr)
 
 
-@_minmax_norm_function.register
+@_minmax_norm_function.register(DaskArray)
 @_apply_over_time_axis
 def _(arr: DaskArray, **kwargs):
     import dask_ml.preprocessing as daskml_pp
@@ -238,7 +238,7 @@ def _maxabs_norm_function(arr):
     _raise_array_type_not_implemented(_maxabs_norm_function, type(arr))
 
 
-@_maxabs_norm_function.register
+@_maxabs_norm_function.register(np.ndarray)
 @_apply_over_time_axis
 def _(arr: np.ndarray):
     return sklearn_pp.MaxAbsScaler().fit_transform(arr)
@@ -306,13 +306,13 @@ def _robust_scale_norm_function(arr, **kwargs):
     _raise_array_type_not_implemented(_robust_scale_norm_function, type(arr))
 
 
-@_robust_scale_norm_function.register
+@_robust_scale_norm_function.register(np.ndarray)
 @_apply_over_time_axis
 def _(arr: np.ndarray, **kwargs):
     return sklearn_pp.RobustScaler(**kwargs).fit_transform(arr)
 
 
-@_robust_scale_norm_function.register
+@_robust_scale_norm_function.register(DaskArray)
 @_apply_over_time_axis
 def _(arr: DaskArray, **kwargs):
     import dask_ml.preprocessing as daskml_pp
@@ -382,13 +382,13 @@ def _quantile_norm_function(arr, **kwargs):
     _raise_array_type_not_implemented(_quantile_norm_function, type(arr))
 
 
-@_quantile_norm_function.register
+@_quantile_norm_function.register(np.ndarray)
 @_apply_over_time_axis
 def _(arr: np.ndarray, **kwargs):
     return sklearn_pp.QuantileTransformer(**kwargs).fit_transform(arr)
 
 
-@_quantile_norm_function.register
+@_quantile_norm_function.register(DaskArray)
 @_apply_over_time_axis
 def _(arr: DaskArray, **kwargs):
     import dask_ml.preprocessing as daskml_pp
@@ -457,7 +457,7 @@ def _power_norm_function(arr, **kwargs):
     _raise_array_type_not_implemented(_power_norm_function, type(arr))
 
 
-@_power_norm_function.register
+@_power_norm_function.register(np.ndarray)
 @_apply_over_time_axis
 def _(arr: np.ndarray, **kwargs):
     return sklearn_pp.PowerTransformer(**kwargs).fit_transform(arr)
@@ -532,7 +532,7 @@ def _log_norm_function(arr, offset: int | float = 1, base: int | float | None = 
     _raise_array_type_not_implemented(_log_norm_function, type(arr))
 
 
-@_log_norm_function.register
+@_log_norm_function.register(np.ndarray)
 @_apply_over_time_axis
 def _(arr: np.ndarray, offset: int | float = 1, base: int | float | None = None) -> np.ndarray:
     if offset == 1:
@@ -547,7 +547,7 @@ def _(arr: np.ndarray, offset: int | float = 1, base: int | float | None = None)
     return arr
 
 
-@_log_norm_function.register
+@_log_norm_function.register(DaskArray)
 @_apply_over_time_axis
 def _(arr: DaskArray, offset: int | float = 1, base: int | float | None = None) -> DaskArray:
     import dask.array as da
