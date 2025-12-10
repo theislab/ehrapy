@@ -64,7 +64,7 @@ dependencies = [
     "igraph",  # careful - GPL
     "fast-array-utils[sparse,accel]",
     "tslearn",
-    "holoviews"
+    "holoviews[recommended]"
 ]
 
 [project.optional-dependencies]
