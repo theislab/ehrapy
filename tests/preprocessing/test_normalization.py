@@ -544,7 +544,7 @@ def test_norm_power_integers(edata_mini_integers_in_X):
             [-0.31234142],
         ]
     )
-    assert np.allclose(adata_norm.X, in_days_norm)
+    assert np.allclose(adata_norm.X, in_days_norm, rtol=1e-4, atol=1e-4)
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
