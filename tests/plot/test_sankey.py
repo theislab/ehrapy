@@ -16,19 +16,30 @@ _TEST_IMAGE_PATH = f"{CURRENT_DIR}/_images"
 def ehr_3d_mini():
     layer = np.array(
         [
-            [[1, 0, 1], [0, 1, 0]],
-            [[0, 1, 1], [1, 0, 0]],
-            [[1, 1, 0], [0, 0, 1]],
+            [[0, 1, 2, 1, 2], 
+             [1, 2, 1, 2, 0]],  
+    
+            [[1, 2, 0, 2, 1],
+             [2, 1, 2, 1, 2]],
+     
+            [[2, 0, 1, 2, 0],
+             [2, 0, 1, 1, 2]],
+            
+            [[1, 2, 1, 0, 1],
+             [0, 2, 1, 2, 0]],
+
+            [[0, 2, 1, 2, 2],
+             [1, 2, 1, 0, 2]],
         ]
     )
 
     edata = ed.EHRData(
         layers={"layer_1": layer},
-        obs=pd.DataFrame(index=["patient 1", "patient 2", "patient 3"]),
+        obs=pd.DataFrame(index=["patient 1", "patient 2", "patient 3", "patient 4", "patient 5"]),
         # obs_names=["patient 1", "patient 2", "patient 3"],
         var=pd.DataFrame(index=["treatment", "disease_flare"]),
         # var_names=["treatment", "disease_flare"],
-        tem=pd.DataFrame(index=["visit_0", "visit_1", "visit_2"]),
+        tem=pd.DataFrame(index=["visit_0", "visit_1", "visit_2", "visit_3", "visit_4"]),
     )
     return edata
 
@@ -96,7 +107,7 @@ def test_sankey_time_plot(ehr_3d_mini, check_same_image):
         edata,
         columns=["disease_flare"],
         layer="layer_1",
-        state_labels={0: "no flare", 1: "flare"},
+        state_labels={0: "no flare", 1: "mid flare", 2: "severe flare"},
         backend="matplotlib",
     )
 
@@ -107,13 +118,17 @@ def test_sankey_time_plot(ehr_3d_mini, check_same_image):
         base_path=f"{_TEST_IMAGE_PATH}/sankey_time",
         tol=2e-1,
     )
-    return True
+
 
 
 def test_sankey_time_bokeh_plot(ehr_3d_mini):
     edata = ehr_3d_mini
     sankey = ep.pl.plot_sankey_time(
-        edata, columns=["disease_flare"], layer="layer_1", state_labels={0: "no flare", 1: "flare"}, backend="bokeh"
+        edata, 
+        columns=["disease_flare"], 
+        layer="layer_1", 
+        state_labels={0: "no flare", 1: " mid flare", 2: "severe flare"}, 
+        backend="bokeh"
     )
 
     assert isinstance(sankey, hv.Sankey)
@@ -127,7 +142,7 @@ def test_sankey_time_bokeh_plot(ehr_3d_mini):
     assert (data["value"] > 0).all()
 
     # check that sources and targets contain state labels
-    state_labels = ["no flare", "flare"]
+    state_labels = ["no flare", "mid flare", "severe flare"]
     for source in data["source"].unique():
         assert any(label in source for label in state_labels)
         assert "(" in source and ")" in source

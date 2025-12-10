@@ -8,7 +8,6 @@ import numpy as np
 import pandas as pd
 from holoviews import opts
 
-hv.extension("bokeh")
 
 if TYPE_CHECKING:
     from ehrdata import EHRData
