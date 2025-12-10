@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
@@ -83,6 +84,11 @@ def plot_timeseries(
     n_obs, _, n_time = mtx.shape
 
     if tem_time_key is None:
+        warnings.warn(
+            "No `tem_time_key` provided. Expected `edata.tem` to be 1D.",
+            UserWarning,
+            stacklevel=2,
+        )
         timepoints = np.asarray(edata.tem)
     else:
         if tem_time_key not in edata.tem:
@@ -128,7 +134,7 @@ def plot_timeseries(
             obs_idx, obs_id_info = _resolve_obs(obs, obs_id_key, n_obs, edata)
             y = np.asarray(mtx[obs_idx, var_idx, :], dtype=float)
             ax.plot(timepoints, y, marker="o", label=str(obs_id_info))
-        ax.set_title(title if title is not None else f"Time series for variable {k!r} for multiple observations")
+        ax.set_title(title if title is not None else f"Time series for the variable {k!r} for observations {obs_ids}")
         ax.set_ylabel(ylabel if ylabel is not None else "Value")
         ax.legend(loc="best")
     else:
@@ -163,7 +169,14 @@ def plot_timeseries(
 
 
 def _resolve_obs(obs, obs_id_key, n_obs, edata) -> tuple[int, str]:
-    """Resolve obs identifier to (row index, obs_id_info) tuple."""
+    """Resolve obs identifier to (row index, obs_id_info) tuple.
+
+    Args:
+        obs: Integer row index or label to match in `edata.obs[obs_id_key]`.
+        obs_id_key: Column used when `obs` is not a valid row index.
+        n_obs: Number of observations for index validation.
+        edata: EHR data object providing the `.obs` table.
+    """
     if isinstance(obs, int) and 0 <= obs < n_obs:
         obs_idx = obs
         obs_id_info = f"row {obs}"

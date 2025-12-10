@@ -111,3 +111,41 @@ def test_plot_timeseries_overlay(edata_blob_timeseries, check_same_image):
     )
 
     plt.close("all")
+
+
+def test_error_cases(mar_edata, edata_blob_timeseries):
+    edata_2d_layer = mar_edata.X
+    edata_2d = ed.EHRData(shape=(100, 10), layers={"X": edata_2d_layer})
+
+    with pytest.raises(ValueError, match="Layer 'X' must be 3D"):
+        ep.pl.plot_timeseries(
+            edata_2d,
+            obs_id=0,
+            keys="feature1",
+            layer="X",
+        )
+    with pytest.raises(KeyError, match="Column 'unknown_time' not found in edata.tem"):
+        ep.pl.plot_timeseries(
+            edata_blob_timeseries,
+            obs_id=0,
+            keys="feature1",
+            tem_time_key="unknown_time",
+            layer=DEFAULT_TEM_LAYER_NAME,
+        )
+    with pytest.raises(KeyError, match="Variable 'unknown_feature' not found in edata.var_names"):
+        ep.pl.plot_timeseries(
+            edata_blob_timeseries,
+            obs_id=0,
+            keys="unknown_feature",
+            tem_time_key="timepoint",
+            layer=DEFAULT_TEM_LAYER_NAME,
+        )
+    with pytest.raises(ValueError, match="When overlay=True, only a single key can be plotted at a time"):
+        ep.pl.plot_timeseries(
+            edata_blob_timeseries,
+            obs_id=[0, 1],
+            keys=["feature1", "feature2"],
+            layer=DEFAULT_TEM_LAYER_NAME,
+            tem_time_key="timepoint",
+            overlay=True,
+        )
