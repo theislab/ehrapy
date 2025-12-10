@@ -8,7 +8,6 @@ import numpy as np
 import pandas as pd
 from holoviews import opts
 
-
 if TYPE_CHECKING:
     from ehrdata import EHRData
 

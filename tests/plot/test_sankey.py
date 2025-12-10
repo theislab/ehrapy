@@ -16,20 +16,11 @@ _TEST_IMAGE_PATH = f"{CURRENT_DIR}/_images"
 def ehr_3d_mini():
     layer = np.array(
         [
-            [[0, 1, 2, 1, 2], 
-             [1, 2, 1, 2, 0]],  
-    
-            [[1, 2, 0, 2, 1],
-             [2, 1, 2, 1, 2]],
-     
-            [[2, 0, 1, 2, 0],
-             [2, 0, 1, 1, 2]],
-            
-            [[1, 2, 1, 0, 1],
-             [0, 2, 1, 2, 0]],
-
-            [[0, 2, 1, 2, 2],
-             [1, 2, 1, 0, 2]],
+            [[0, 1, 2, 1, 2], [1, 2, 1, 2, 0]],
+            [[1, 2, 0, 2, 1], [2, 1, 2, 1, 2]],
+            [[2, 0, 1, 2, 0], [2, 0, 1, 1, 2]],
+            [[1, 2, 1, 0, 1], [0, 2, 1, 2, 0]],
+            [[0, 2, 1, 2, 2], [1, 2, 1, 0, 2]],
         ]
     )
 
@@ -120,15 +111,14 @@ def test_sankey_time_plot(ehr_3d_mini, check_same_image):
     )
 
 
-
 def test_sankey_time_bokeh_plot(ehr_3d_mini):
     edata = ehr_3d_mini
     sankey = ep.pl.plot_sankey_time(
-        edata, 
-        columns=["disease_flare"], 
-        layer="layer_1", 
-        state_labels={0: "no flare", 1: " mid flare", 2: "severe flare"}, 
-        backend="bokeh"
+        edata,
+        columns=["disease_flare"],
+        layer="layer_1",
+        state_labels={0: "no flare", 1: " mid flare", 2: "severe flare"},
+        backend="bokeh",
     )
 
     assert isinstance(sankey, hv.Sankey)
