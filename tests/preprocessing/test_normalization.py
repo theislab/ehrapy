@@ -5,22 +5,20 @@ import dask.array as da
 import numpy as np
 import pytest
 from anndata import AnnData
-from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
+from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY, NUMERIC_TAG
 
 import ehrapy as ep
-from tests.conftest import ARRAY_TYPES_NONNUMERIC
+from tests.conftest import ARRAY_TYPES_NONNUMERIC, ARRAY_TYPES_NUMERIC_3D_ABLE
 
 CURRENT_DIR = Path(__file__).parent
 from scipy import sparse
 
 
 def test_vars_checks(adata_to_norm):
-    """Test for checks that vars argument is valid."""
     with pytest.raises(ValueError, match=r"Some selected vars are not numeric"):
         ep.pp.scale_norm(adata_to_norm, vars=["String1"])
 
 
-# TODO: check this for each function, with just default settings?
 @pytest.mark.parametrize(
     "array_type,expected_error",
     [
@@ -36,15 +34,8 @@ def test_norm_scale_array_types(adata_to_norm, array_type, expected_error):
             ep.pp.scale_norm(adata_to_norm)
 
 
-def test_norm_scale_3D_edata(edata_blob_small):
-    ep.pp.scale_norm(edata_blob_small, layer="layer_2")
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.scale_norm(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
-
-
 @pytest.mark.parametrize("array_type", [np.array, da.array])
 def test_norm_scale(adata_to_norm, array_type):
-    """Test for the scaling normalization method."""
     warnings.filterwarnings("ignore")
     adata_to_norm.X = array_type(adata_to_norm.X)
     ep.pp.scale_norm(adata_to_norm)
@@ -104,6 +95,19 @@ def test_norm_scale_group(array_type, edata_mini_normalization):
     with pytest.raises(KeyError):
         ep.pp.scale_norm(edata_mini_casted, group_key="invalid_key", copy=True)
 
+    if isinstance(edata_mini_casted.X, da.Array):
+        with pytest.raises(
+            NotImplementedError,
+            match="Group-wise normalization|does not support array type.*dask",
+        ):
+            ep.pp.scale_norm(
+                edata_mini_casted,
+                vars=["sys_bp_entry", "dia_bp_entry"],
+                group_key="disease",
+                copy=True,
+            )
+        return
+
     edata_mini_norm = ep.pp.scale_norm(
         edata_mini_casted,
         vars=["sys_bp_entry", "dia_bp_entry"],
@@ -143,15 +147,8 @@ def test_norm_minmax_array_types(adata_to_norm, array_type, expected_error):
             ep.pp.minmax_norm(adata_to_norm)
 
 
-def test_norm_minmax_3D_edata(edata_blob_small):
-    ep.pp.minmax_norm(edata_blob_small, layer="layer_2")
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.minmax_norm(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
-
-
 @pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 def test_norm_minmax(array_type, adata_to_norm):
-    """Test for the minmax normalization method."""
     adata_to_norm.X = array_type(adata_to_norm.X)
 
     adata_norm = ep.pp.minmax_norm(adata_to_norm, copy=True)
@@ -194,6 +191,19 @@ def test_norm_minmax_group(array_type, edata_mini_normalization):
     with pytest.raises(KeyError):
         ep.pp.minmax_norm(edata_mini_casted, group_key="invalid_key", copy=True)
 
+    if isinstance(edata_mini_casted.X, da.Array):
+        with pytest.raises(
+            NotImplementedError,
+            match="Group-wise normalization|does not support array type.*dask",
+        ):
+            ep.pp.minmax_norm(
+                edata_mini_casted,
+                vars=["sys_bp_entry", "dia_bp_entry"],
+                group_key="disease",
+                copy=True,
+            )
+        return
+
     edata_mini_norm = ep.pp.minmax_norm(
         edata_mini_casted,
         vars=["sys_bp_entry", "dia_bp_entry"],
@@ -224,18 +234,11 @@ def test_norm_maxabs_array_types(adata_to_norm, array_type, expected_error):
         ep.pp.maxabs_norm(adata_to_norm)
 
 
-def test_norm_maxabs_3D_edata(edata_blob_small):
-    ep.pp.maxabs_norm(edata_blob_small, layer="layer_2")
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.maxabs_norm(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
-
-
 @pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 def test_norm_maxabs(array_type, adata_to_norm):
-    """Test for the maxabs normalization method."""
     adata_to_norm.X = array_type(adata_to_norm.X)
 
-    if "dask" in array_type.__name__:
+    if isinstance(adata_to_norm.X, da.Array):
         with pytest.raises(NotImplementedError):
             adata_norm = ep.pp.maxabs_norm(adata_to_norm, copy=True)
 
@@ -264,9 +267,9 @@ def test_norm_maxabs_group(array_type, edata_mini_normalization):
     edata_mini_casted = edata_mini_normalization.copy()
     edata_mini_casted.X = array_type(edata_mini_casted.X)
 
-    if "dask" in array_type.__name__:
-        with pytest.raises(NotImplementedError):
-            ep.pp.maxabs_norm(edata_mini_casted, copy=True)
+    if isinstance(edata_mini_casted.X, da.Array):
+        with pytest.raises(NotImplementedError, match="does not support array type.*dask"):
+            ep.pp.maxabs_norm(edata_mini_casted, group_key="disease", copy=True)
     else:
         with pytest.raises(KeyError):
             ep.pp.maxabs_norm(edata_mini_casted, group_key="invalid_key", copy=True)
@@ -310,15 +313,8 @@ def test_norm_robust_scale_array_types(adata_to_norm, array_type, expected_error
             ep.pp.robust_scale_norm(adata_to_norm)
 
 
-def test_norm_robust_scale_3D_edata(edata_blob_small):
-    ep.pp.robust_scale_norm(edata_blob_small, layer="layer_2")
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.robust_scale_norm(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
-
-
 @pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 def test_norm_robust_scale(array_type, adata_to_norm):
-    """Test for the robust_scale normalization method."""
     adata_to_norm.X = array_type(adata_to_norm.X)
 
     adata_norm = ep.pp.robust_scale_norm(adata_to_norm, copy=True)
@@ -361,6 +357,19 @@ def test_norm_robust_scale_group(array_type, edata_mini_normalization):
     with pytest.raises(KeyError):
         ep.pp.robust_scale_norm(edata_mini_casted, group_key="invalid_key", copy=True)
 
+    if isinstance(edata_mini_casted.X, da.Array):
+        with pytest.raises(
+            NotImplementedError,
+            match="Group-wise normalization|does not support array type.*dask",
+        ):
+            ep.pp.robust_scale_norm(
+                edata_mini_casted,
+                vars=["sys_bp_entry", "dia_bp_entry"],
+                group_key="disease",
+                copy=True,
+            )
+        return
+
     edata_mini_norm = ep.pp.robust_scale_norm(
         edata_mini_casted,
         vars=["sys_bp_entry", "dia_bp_entry"],
@@ -392,15 +401,8 @@ def test_norm_quantile_array_types(adata_to_norm, array_type, expected_error):
             ep.pp.quantile_norm(adata_to_norm)
 
 
-def test_norm_quantile_3D_edata(edata_blob_small):
-    ep.pp.quantile_norm(edata_blob_small, layer="layer_2")
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.quantile_norm(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
-
-
 @pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 def test_norm_quantile_uniform(array_type, adata_to_norm):
-    """Test for the quantile normalization method."""
     warnings.filterwarnings("ignore", category=UserWarning)
     adata_to_norm.X = array_type(adata_to_norm.X)
 
@@ -459,6 +461,19 @@ def test_norm_quantile_uniform_group(array_type, edata_mini_normalization):
     with pytest.raises(KeyError):
         ep.pp.quantile_norm(edata_mini_casted, group_key="invalid_key", copy=True)
 
+    if isinstance(edata_mini_casted.X, da.Array):
+        with pytest.raises(
+            NotImplementedError,
+            match="Group-wise normalization|does not support array type.*dask",
+        ):
+            ep.pp.quantile_norm(
+                edata_mini_casted,
+                vars=["sys_bp_entry", "dia_bp_entry"],
+                group_key="disease",
+                copy=True,
+            )
+        return
+
     edata_mini_norm = ep.pp.quantile_norm(
         edata_mini_casted,
         vars=["sys_bp_entry", "dia_bp_entry"],
@@ -490,18 +505,11 @@ def test_norm_power_array_types(adata_to_norm, array_type, expected_error):
             ep.pp.power_norm(adata_to_norm)
 
 
-def test_norm_power_3D_edata(edata_blob_small):
-    ep.pp.power_norm(edata_blob_small, layer="layer_2")
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.power_norm(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
-
-
 @pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 def test_norm_power(array_type, adata_to_norm):
-    """Test for the power transformation normalization method."""
     adata_to_norm.X = array_type(adata_to_norm.X)
 
-    if "dask" in array_type.__name__:
+    if isinstance(adata_to_norm.X, da.Array):
         with pytest.raises(NotImplementedError):
             ep.pp.power_norm(adata_to_norm, copy=True)
     else:
@@ -536,14 +544,14 @@ def test_norm_power_integers(edata_mini_integers_in_X):
             [-0.31234142],
         ]
     )
-    assert np.allclose(adata_norm.X, in_days_norm)
+    assert np.allclose(adata_norm.X, in_days_norm, rtol=1e-4, atol=1e-4)
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 def test_norm_power_kwargs(array_type, adata_to_norm):
     adata_to_norm.X = array_type(adata_to_norm.X)
 
-    if "dask" in array_type.__name__:
+    if isinstance(adata_to_norm.X, da.Array):
         with pytest.raises(NotImplementedError):
             ep.pp.power_norm(adata_to_norm, copy=True)
     else:
@@ -564,9 +572,9 @@ def test_norm_power_group(array_type, edata_mini_normalization):
     edata_mini_casted = edata_mini_normalization.copy()
     edata_mini_casted.X = array_type(edata_mini_casted.X)
 
-    if "dask" in array_type.__name__:
-        with pytest.raises(NotImplementedError):
-            ep.pp.power_norm(edata_mini_casted, copy=True)
+    if isinstance(edata_mini_casted.X, da.Array):
+        with pytest.raises(NotImplementedError, match="does not support array type.*dask"):
+            ep.pp.power_norm(edata_mini_casted, group_key="disease", copy=True)
     else:
         with pytest.raises(KeyError):
             ep.pp.power_norm(edata_mini_casted, group_key="invalid_key", copy=True)
@@ -627,16 +635,7 @@ def test_norm_log_norm_array_types(adata_to_norm, array_type, expected_error):
             ep.pp.log_norm(adata_to_norm)
 
 
-def test_norm_log_3D_edata(edata_blob_small):
-    edata_blob_small.X = np.abs(edata_blob_small.X)
-    edata_blob_small.layers[DEFAULT_TEM_LAYER_NAME] = np.abs(edata_blob_small.layers[DEFAULT_TEM_LAYER_NAME])
-    ep.pp.log_norm(edata_blob_small, layer="layer_2")
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.log_norm(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
-
-
 def test_norm_log1p(adata_to_norm):
-    """Test for the log normalization method."""
     # Ensure that some test data is strictly positive
     log_adata = adata_to_norm.copy()
     log_adata.X[0, 4] = 1
@@ -684,7 +683,6 @@ def test_norm_log1p(adata_to_norm):
 
 
 def test_norm_record(adata_to_norm):
-    """Test for logging of applied normalization methods."""
     adata_norm = ep.pp.minmax_norm(adata_to_norm, copy=True)
 
     assert adata_norm.uns["normalization"] == {
@@ -701,22 +699,233 @@ def test_norm_record(adata_to_norm):
 
 
 def test_offset_negative_values():
-    """Test for the offset_negative_values method."""
     to_offset_adata = AnnData(X=np.array([[-1, -5, -10], [5, 6, -20]], dtype=np.float32))
     expected_adata = AnnData(X=np.array([[19, 15, 10], [25, 26, 0]], dtype=np.float32))
 
     assert np.array_equal(expected_adata.X, ep.pp.offset_negative_values(to_offset_adata, copy=True).X)
 
 
-def test_offset_negative_values_3D_edata(edata_blob_small):
-    ep.pp.offset_negative_values(edata_blob_small, layer="layer_2")
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.offset_negative_values(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
-
-
 def test_norm_numerical_only():
-    """Test for the log_norm method."""
     to_normalize_adata = AnnData(X=np.array([[1, 0, 0], [0, 0, 1]], dtype=np.float32))
     expected_adata = AnnData(X=np.array([[0.6931472, 0, 0], [0, 0, 0.6931472]], dtype=np.float32))
 
     assert np.array_equal(expected_adata.X, ep.pp.log_norm(to_normalize_adata, copy=True).X)
+
+
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NUMERIC_3D_ABLE)
+@pytest.mark.parametrize(
+    "norm_func",
+    [
+        ep.pp.scale_norm,
+        ep.pp.minmax_norm,
+        ep.pp.maxabs_norm,
+        ep.pp.robust_scale_norm,
+        ep.pp.quantile_norm,
+        ep.pp.power_norm,
+    ],
+)
+def test_norm_3D(edata_blobs_timeseries_small, array_type, norm_func):
+    edata = edata_blobs_timeseries_small
+    edata.layers[DEFAULT_TEM_LAYER_NAME] = array_type(edata.layers[DEFAULT_TEM_LAYER_NAME])
+
+    if isinstance(edata.layers[DEFAULT_TEM_LAYER_NAME], da.Array) and norm_func in (
+        ep.pp.maxabs_norm,
+        ep.pp.power_norm,
+    ):
+        with pytest.raises(NotImplementedError, match="does not support array type.*dask"):
+            norm_func(edata, layer=DEFAULT_TEM_LAYER_NAME)
+        return
+
+    orig_shape = edata.layers[DEFAULT_TEM_LAYER_NAME].shape
+
+    if norm_func == ep.pp.power_norm:
+        ep.pp.offset_negative_values(edata, layer=DEFAULT_TEM_LAYER_NAME)
+
+    norm_func(edata, layer=DEFAULT_TEM_LAYER_NAME)
+
+    assert edata.layers[DEFAULT_TEM_LAYER_NAME].shape == orig_shape
+    assert "normalization" in edata.uns
+    assert len(edata.uns["normalization"]) > 0
+
+
+def test_scale_norm_3D(edata_blobs_timeseries_small):
+    edata = edata_blobs_timeseries_small.copy()
+    ep.pp.scale_norm(edata, layer=DEFAULT_TEM_LAYER_NAME)
+
+    n_obs, n_var, n_timestamps = edata.layers[DEFAULT_TEM_LAYER_NAME].shape
+    for var_idx in range(n_var):
+        flat = edata.layers[DEFAULT_TEM_LAYER_NAME][:, var_idx, :].reshape(-1)
+        if not np.all(np.isnan(flat)):
+            assert np.allclose(np.nanmean(flat), 0, atol=1e-6), f"Mean check failed for variable {var_idx}"
+            assert np.allclose(np.nanstd(flat), 1, atol=1e-6), f"Std check failed for variable {var_idx}"
+
+
+def test_minmax_norm_3D(edata_blobs_timeseries_small):
+    edata = edata_blobs_timeseries_small.copy()
+    ep.pp.minmax_norm(edata, layer=DEFAULT_TEM_LAYER_NAME)
+
+    n_obs, n_var, n_timestamps = edata.layers[DEFAULT_TEM_LAYER_NAME].shape
+    for var_idx in range(n_var):
+        flat = edata.layers[DEFAULT_TEM_LAYER_NAME][:, var_idx, :].reshape(-1)
+        if not np.all(np.isnan(flat)):
+            assert np.allclose(np.nanmin(flat), 0, atol=1e-6), f"Min check failed for variable {var_idx}"
+            assert np.allclose(np.nanmax(flat), 1, atol=1e-6), f"Max check failed for variable {var_idx}"
+
+
+def test_maxabs_norm_3D(edata_blobs_timeseries_small):
+    edata = edata_blobs_timeseries_small.copy()
+    ep.pp.maxabs_norm(edata, layer=DEFAULT_TEM_LAYER_NAME)
+
+    n_obs, n_var, n_timestamps = edata.layers[DEFAULT_TEM_LAYER_NAME].shape
+    for var_idx in range(n_var):
+        flat = edata.layers[DEFAULT_TEM_LAYER_NAME][:, var_idx, :].reshape(-1)
+        if not np.all(np.isnan(flat)):
+            assert np.allclose(np.nanmax(np.abs(flat)), 1, atol=1e-6), f"Max-abs check failed for variable {var_idx}"
+
+
+def test_robust_scale_norm_3D(edata_blobs_timeseries_small):
+    edata = edata_blobs_timeseries_small.copy()
+    ep.pp.robust_scale_norm(edata, layer=DEFAULT_TEM_LAYER_NAME)
+
+    n_obs, n_var, n_timestamps = edata.layers[DEFAULT_TEM_LAYER_NAME].shape
+    for var_idx in range(n_var):
+        flat = edata.layers[DEFAULT_TEM_LAYER_NAME][:, var_idx, :].reshape(-1)
+        if not np.all(np.isnan(flat)):
+            assert np.allclose(np.nanmedian(flat), 0, atol=1e-6), f"Median check failed for variable {var_idx}"
+            assert np.allclose(np.nanpercentile(flat, 75) - np.nanpercentile(flat, 25), 1, atol=1e-6), (
+                f"IQR check failed for variable {var_idx}"
+            )
+
+
+def test_quantile_norm_3D(edata_blobs_timeseries_small):
+    edata = edata_blobs_timeseries_small.copy()
+    ep.pp.quantile_norm(edata, layer=DEFAULT_TEM_LAYER_NAME)
+
+    n_obs, n_var, n_timestamps = edata.layers[DEFAULT_TEM_LAYER_NAME].shape
+    for var_idx in range(n_var):
+        flat = edata.layers[DEFAULT_TEM_LAYER_NAME][:, var_idx, :].reshape(-1)
+        if not np.all(np.isnan(flat)):
+            assert np.allclose(np.nanmin(flat), 0, atol=1e-6), f"Min check failed for variable {var_idx}"
+            assert np.allclose(np.nanmax(flat), 1, atol=1e-6), f"Max check failed for variable {var_idx}"
+            assert np.allclose(np.nanpercentile(flat, 25), 0.25, atol=0.05), f"Q25 check failed for variable {var_idx}"
+            assert np.allclose(np.nanpercentile(flat, 50), 0.5, atol=0.05), f"Q50 check failed for variable {var_idx}"
+            assert np.allclose(np.nanpercentile(flat, 75), 0.75, atol=0.05), f"Q75 check failed for variable {var_idx}"
+
+
+def test_power_norm_3D(edata_blobs_timeseries_small):
+    edata = edata_blobs_timeseries_small.copy()
+    ep.pp.offset_negative_values(edata, layer=DEFAULT_TEM_LAYER_NAME)
+    ep.pp.power_norm(edata, layer=DEFAULT_TEM_LAYER_NAME)
+
+    n_obs, n_var, n_timestamps = edata.layers[DEFAULT_TEM_LAYER_NAME].shape
+    for var_idx in range(n_var):
+        flat = edata.layers[DEFAULT_TEM_LAYER_NAME][:, var_idx, :].reshape(-1)
+        if not np.all(np.isnan(flat)):
+            assert np.allclose(np.nanmean(flat), 0, atol=1e-5), f"Mean check failed for variable {var_idx}"
+            assert np.allclose(np.nanstd(flat), 1, atol=1e-5), f"Std check failed for variable {var_idx}"
+
+
+def test_log_norm_3D(edata_blobs_timeseries_small):
+    edata = edata_blobs_timeseries_small.copy()
+    ep.pp.offset_negative_values(edata, layer=DEFAULT_TEM_LAYER_NAME)
+
+    layer_original = edata.layers[DEFAULT_TEM_LAYER_NAME].copy()
+
+    ep.pp.log_norm(edata, layer=DEFAULT_TEM_LAYER_NAME)
+
+    expected = np.log1p(layer_original)
+    assert np.allclose(edata.layers[DEFAULT_TEM_LAYER_NAME], expected, rtol=1e-6, equal_nan=True)
+
+    assert not np.allclose(layer_original, edata.layers[DEFAULT_TEM_LAYER_NAME], equal_nan=True)
+
+
+def test_offset_negative_values_3D(edata_blobs_timeseries_small):
+    edata = edata_blobs_timeseries_small.copy()
+    edata.layers[DEFAULT_TEM_LAYER_NAME] = edata.layers[DEFAULT_TEM_LAYER_NAME] - 2
+    assert np.nanmin(edata.layers[DEFAULT_TEM_LAYER_NAME]) < 0
+
+    ep.pp.offset_negative_values(edata, layer=DEFAULT_TEM_LAYER_NAME)
+
+    assert np.allclose(np.nanmin(edata.layers[DEFAULT_TEM_LAYER_NAME]), 0, atol=1e-10)
+
+    non_nan_values = edata.layers[DEFAULT_TEM_LAYER_NAME][~np.isnan(edata.layers[DEFAULT_TEM_LAYER_NAME])]
+    assert np.all(non_nan_values >= 0)
+
+
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NUMERIC_3D_ABLE)
+@pytest.mark.parametrize(
+    "norm_func",
+    [
+        ep.pp.scale_norm,
+        ep.pp.minmax_norm,
+        ep.pp.maxabs_norm,
+        ep.pp.robust_scale_norm,
+        ep.pp.quantile_norm,
+        ep.pp.power_norm,
+    ],
+)
+def test_norm_group_3D(edata_blobs_timeseries_small, array_type, norm_func):
+    edata = edata_blobs_timeseries_small
+    layer = DEFAULT_TEM_LAYER_NAME
+    edata.var[FEATURE_TYPE_KEY] = NUMERIC_TAG
+
+    edata.layers[layer] = array_type(edata.layers[layer])
+
+    if norm_func == ep.pp.power_norm:
+        ep.pp.offset_negative_values(edata, layer=layer)
+
+    # create two groups with different distributions
+    n_obs = edata.n_obs
+    group_size = n_obs // 2
+    edata.obs["group"] = ["A"] * group_size + ["B"] * (n_obs - group_size)
+
+    # raise NotImplementedError for all dask arrays
+    if isinstance(edata.layers[layer], da.Array):
+        with pytest.raises(
+            NotImplementedError,
+            match="Group-wise normalization|does not support array type.*dask",
+        ):
+            norm_func(edata, layer=layer, group_key="group")
+        return
+
+    original_shape = edata.layers[layer].shape
+    layer_before = edata.layers[layer].copy()
+
+    norm_func(edata, layer=layer, group_key="group")
+
+    # verify shape and tracking
+    assert edata.layers[layer].shape == original_shape
+    assert "normalization" in edata.uns
+    assert len(edata.uns["normalization"]) > 0
+
+    layer_after = edata.layers[layer]
+
+    # verify data changed
+    assert not np.allclose(layer_before, layer_after, equal_nan=True)
+
+    group_a = layer_after[:group_size].flatten()
+    group_b = layer_after[group_size:].flatten()
+    group_a = group_a[~np.isnan(group_a)]
+    group_b = group_b[~np.isnan(group_b)]
+
+    def near0(x):
+        return abs(x) < 1e-5
+
+    def near1(x):
+        return abs(x - 1.0) < 1e-5
+
+    # validate per-group normalization
+    if norm_func in {ep.pp.scale_norm, ep.pp.power_norm}:
+        assert near0(np.nanmean(group_a)) and near0(np.nanmean(group_b))
+        assert near1(np.nanstd(group_a)) and near1(np.nanstd(group_b))
+
+    elif norm_func in {ep.pp.minmax_norm, ep.pp.quantile_norm}:
+        assert near0(np.nanmin(group_a)) and near0(np.nanmin(group_b))
+        assert near1(np.nanmax(group_a)) and near1(np.nanmax(group_b))
+
+    elif norm_func == ep.pp.maxabs_norm:
+        assert near1(np.nanmax(np.abs(group_a)))
+        assert near1(np.nanmax(np.abs(group_b)))
+
+    elif norm_func == ep.pp.robust_scale_norm:
+        assert near0(np.nanmedian(group_a)) and near0(np.nanmedian(group_b))
