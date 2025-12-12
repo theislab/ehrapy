@@ -12,21 +12,6 @@ if TYPE_CHECKING:
     from ehrdata import EHRData
 
 
-def _set_hv_backend(backend: str | None) -> str:
-    """Ensure a valid HoloViews backend is active and return its name."""
-    if backend is None:
-        backend = "matplotlib"  # default
-
-    backend = backend.lower()
-    if backend not in {"bokeh", "matplotlib"}:
-        raise ValueError(f"Unsupported backend '{backend}'. Use 'bokeh' or 'matplotlib'.")
-
-    if hv.Store.current_backend != backend:
-        hv.extension(backend)
-
-    return backend
-
-
 def plot_sankey(
     edata: EHRData,
     *,
@@ -36,7 +21,7 @@ def plot_sankey(
 ) -> hv.Sankey:
     """Create a Sankey diagram showing relationships across observation columns.
 
-    Please run `hv.extension('matplotlib')` or `hv.extension('bokeh')` before using this function to determine the backend.
+    Please call :func:`holoviews.extension` with ``"matplotlib"`` or ``"bokeh"`` before using this function to select the backend.
 
 
     Args:
@@ -117,7 +102,7 @@ def plot_sankey_time(
     Each node represents a state at a specific time point, and flows show the
     number of patients transitioning between states.
 
-    Please run `hv.extension('matplotlib')` or `hv.extension('bokeh')` before using this function to determine the backend.
+    Please call :func:`holoviews.extension` with ``"matplotlib"`` or ``"bokeh"`` before using this function to select the backend.
 
     Args:
         edata: Central data object containing observation data
@@ -159,13 +144,11 @@ def plot_sankey_time(
     flare_data = edata[:, edata.var_names.isin(columns), :].layers[layer][:, 0, :]
 
     time_steps = edata.tem.index.tolist()
-    # states = edata.var.loc[columns[0]].values
 
     if state_labels is None:
         unique_states = np.unique(flare_data)
         unique_states = unique_states[~np.isnan(unique_states)]
         state_labels = {int(state): str(state) for state in unique_states}
-        # state_labels = {int(state): states[int(state)] for state in unique_states} if the categorical variables values are also in layer
 
     state_values = sorted(state_labels.keys())
     state_names = [state_labels[val] for val in state_values]

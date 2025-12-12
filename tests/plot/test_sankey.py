@@ -27,9 +27,7 @@ def ehr_3d_mini():
     edata = ed.EHRData(
         layers={"layer_1": layer},
         obs=pd.DataFrame(index=["patient 1", "patient 2", "patient 3", "patient 4", "patient 5"]),
-        # obs_names=["patient 1", "patient 2", "patient 3"],
         var=pd.DataFrame(index=["treatment", "disease_flare"]),
-        # var_names=["treatment", "disease_flare"],
         tem=pd.DataFrame(index=["visit_0", "visit_1", "visit_2", "visit_3", "visit_4"]),
     )
     return edata
