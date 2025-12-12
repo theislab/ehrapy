@@ -8,6 +8,8 @@ from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
 
 import ehrapy as ep
 
+matplotlib.use("Agg")
+
 CURRENT_DIR = Path(__file__).parent
 _TEST_IMAGE_PATH = f"{CURRENT_DIR}/_images"
 
@@ -113,7 +115,7 @@ def test_plot_timeseries_overlay(edata_blob_timeseries, check_same_image):
     plt.close("all")
 
 
-def test_error_cases(mar_edata, edata_blob_timeseries):
+def test_plot_timeseries_error_cases(mar_edata, edata_blob_timeseries):
     edata_2d_layer = mar_edata.X
     edata_2d = ed.EHRData(shape=(100, 10), layers={"X": edata_2d_layer})
 

@@ -37,7 +37,7 @@ def plot_timeseries(
     Args:
         edata: Central data object.
         obs_id: row index or observation identifier(s) to plot.
-        keys: Feature key or list of keys in adata.obsm to plot.
+        keys: Variable name or list of variable names in edata.var_names to plot.
         layer: layer to use for time series data.
         obs_id_key: Column in edata.obs to match obs_id against (if obs_id is not given as row index).
         tem_time_key: Key in edata.tem to use as timepoints. If None, use edata.tem as 1D array.
@@ -48,7 +48,7 @@ def plot_timeseries(
         show: Show the plot, do not return axis.
 
     Returns:
-        Axes object or None
+        Axes object or Sequence of Axes or None
 
     Examples:
         >>> edata = ed.dt.ehrdata_blobs(
@@ -85,7 +85,7 @@ def plot_timeseries(
 
     if tem_time_key is None:
         warnings.warn(
-            "No `tem_time_key` provided. Expected `edata.tem` to be 1D.",
+            "No tem_time_key provided; using edata.tem directly. It must be 1D and have length n_time.",
             UserWarning,
             stacklevel=2,
         )
@@ -155,7 +155,7 @@ def plot_timeseries(
             ax.set_ylabel(ylabel if ylabel is not None else "Value")
             ax.legend(loc="best")
 
-    axes[-1].set_xlabel(xlabel if xlabel is not None else tem_time_key)
+    axes[-1].set_xlabel(xlabel if xlabel is not None else (tem_time_key or "time"))
 
     fig.tight_layout()
 
