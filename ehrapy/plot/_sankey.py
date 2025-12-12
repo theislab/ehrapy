@@ -8,7 +8,6 @@ import numpy as np
 import pandas as pd
 from holoviews import opts
 
-
 if TYPE_CHECKING:
     from ehrdata import EHRData
 
@@ -32,16 +31,17 @@ def plot_sankey(
     edata: EHRData,
     *,
     columns: list[str],
-    backend: str | None = None,
     show: bool = False,
     **kwargs,
 ) -> hv.Sankey:
     """Create a Sankey diagram showing relationships across observation columns.
 
+    Please run `hv.extension('matplotlib')` or `hv.extension('bokeh')` before using this function to determine the backend.
+
+
     Args:
         edata : Central data object containing observation data
         columns : Column names from edata.obs to visualize
-        backend: HoloViews backend to use ("matplotlib" or"bokeh"). Default: "matplotlib"
         show: If True, display the plot immediately. If False, only return the plot object without displaying.
         **kwargs: Additional styling options passed to `holoviews.opts.Sankey`. See HoloViews Sankey documentation for full list of options.
 
@@ -54,8 +54,6 @@ def plot_sankey(
         >>> ep.pl.plot_sankey(edata, columns=["gender", "race"])
 
     """
-    _set_hv_backend(backend)
-
     df = edata.obs[columns]
 
     labels = []
@@ -109,7 +107,6 @@ def plot_sankey_time(
     columns: list[str],
     layer: str,
     state_labels: dict[int, str] | None = None,
-    backend: str | None = None,
     show: bool = False,
     **kwargs,
 ) -> hv.Sankey:
@@ -119,6 +116,8 @@ def plot_sankey_time(
     (e.g., disease severity, treatment status) across consecutive time points.
     Each node represents a state at a specific time point, and flows show the
     number of patients transitioning between states.
+
+    Please run `hv.extension('matplotlib')` or `hv.extension('bokeh')` before using this function to determine the backend.
 
     Args:
         edata: Central data object containing observation data
@@ -157,8 +156,6 @@ def plot_sankey_time(
 
 
     """
-    _set_hv_backend(backend)
-
     flare_data = edata[:, edata.var_names.isin(columns), :].layers[layer][:, 0, :]
 
     time_steps = edata.tem.index.tolist()
