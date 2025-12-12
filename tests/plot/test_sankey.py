@@ -21,6 +21,11 @@ def ehr_3d_mini():
             [[2, 0, 1, 2, 0], [2, 0, 1, 1, 2]],
             [[1, 2, 1, 0, 1], [0, 2, 1, 2, 0]],
             [[0, 2, 1, 2, 2], [1, 2, 1, 0, 2]],
+            [[0, 1, 2, 1, 2], [1, 2, 1, 2, 0]],
+            [[1, 2, 0, 2, 1], [2, 1, 2, 1, 2]],
+            [[2, 0, 1, 2, 0], [2, 0, 1, 1, 2]],
+            [[1, 2, 1, 0, 1], [0, 2, 1, 2, 0]],
+            [[0, 2, 1, 2, 2], [1, 2, 1, 0, 2]],
         ]
     )
 
@@ -113,10 +118,34 @@ def test_sankey_bokeh_plot(diabetes_130_fairlearn_sample_100):
         assert target.startswith("race:")  # targets have the correct prefix
 
 
+def test_sankey_time_plot(ehr_3d_mini, check_same_image):
+    edata = ehr_3d_mini
+    sankey_time = ep.pl.plot_sankey_time(
+        edata,
+        columns=["disease_flare"],
+        layer="layer_1",
+        state_labels={0: "no flare", 1: "mid flare", 2: "severe flare"},
+        backend="matplotlib",
+    )
+
+    fig = hv.render(sankey_time, backend="matplotlib")
+
+    check_same_image(
+        fig=fig,
+        base_path=f"{_TEST_IMAGE_PATH}/sankey_time",
+        tol=2e-1,
+    )
+
+
 def test_sankey_time_bokeh_plot(ehr_3d_mini):
     hv.extension("bokeh")
     edata = ehr_3d_mini
     sankey = ep.pl.plot_sankey_time(
+        edata,
+        columns=["disease_flare"],
+        layer="layer_1",
+        state_labels={0: "no flare", 1: " mid flare", 2: "severe flare"},
+        backend="bokeh",
         edata,
         columns=["disease_flare"],
         layer="layer_1",
