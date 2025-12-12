@@ -118,7 +118,7 @@ def test_sankey_time_bokeh_plot(ehr_3d_mini):
         edata,
         columns=["disease_flare"],
         layer="layer_1",
-        state_labels={0: "no flare", 1: " mid flare", 2: "severe flare"},
+        state_labels={0: "no flare", 1: "mid flare", 2: "severe flare"},
     )
     assert isinstance(sankey, hv.Sankey)
 

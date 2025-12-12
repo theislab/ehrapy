@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import ehrdata as ed
 import holoviews as hv
 import numpy as np
 import pandas as pd
@@ -22,7 +21,6 @@ def plot_sankey(
     """Create a Sankey diagram showing relationships across observation columns.
 
     Please call :func:`holoviews.extension` with ``"matplotlib"`` or ``"bokeh"`` before using this function to select the backend.
-
 
     Args:
         edata : Central data object containing observation data
@@ -106,11 +104,10 @@ def plot_sankey_time(
 
     Args:
         edata: Central data object containing observation data
-        columns: Column names from edata.obs to visualize
+        columns: Column names from edata.var_names to visualize
         layer: Name of the layer in `edata.layers` containing the feature data to visualize.
         state_labels: Mapping from numeric state values to readable labels. If None, state values
-        will be displayed as strings of their numeric codes (e.g., "0", "1", "2"). Default: "None"
-        backend: HoloViews backend to use ("matplotlib" or"bokeh"). Default: "matplotlib"
+                    will be displayed as strings of their numeric codes (e.g., "0", "1", "2"). Default: None
         show: If True, display the plot immediately. If False, only return the plot object without displaying.
         **kwargs: Additional styling options passed to `holoviews.opts.Sankey`. See HoloViews Sankey documentation for full list of options.
 
