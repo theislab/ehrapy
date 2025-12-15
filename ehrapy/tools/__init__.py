@@ -1,4 +1,5 @@
-from ehrapy.tools._sa import (
+from ehrapy.tools._scanpy_tl_api import *  # noqa: F403
+from ehrapy.tools._survival_analysis import (
     anova_glm,
     cox_ph,
     glm,
@@ -12,7 +13,6 @@ from ehrapy.tools._sa import (
     weibull,
     weibull_aft,
 )
-from ehrapy.tools._scanpy_tl_api import *  # noqa: F403
 from ehrapy.tools.causal._dowhy import causal_inference
 from ehrapy.tools.cohort_tracking._cohort_tracker import CohortTracker
 from ehrapy.tools.embedding._embeddings import diffmap, draw_graph, embedding_density, famd, tsne, umap
