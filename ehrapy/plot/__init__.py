@@ -46,5 +46,5 @@ from ehrapy.plot._survival_analysis import cox_ph_forestplot, kaplan_meier, ols
 from ehrapy.plot.causal_inference._dowhy import causal_effect
 from ehrapy.plot.feature_ranking._feature_importances import rank_features_supervised
 
-if hv.Store.current_backend is None:
+if not hv.Store.renderers:
     hv.extension("bokeh")
