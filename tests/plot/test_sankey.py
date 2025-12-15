@@ -13,6 +13,21 @@ _TEST_IMAGE_PATH = f"{CURRENT_DIR}/_images"
 
 
 @pytest.fixture
+def hv_backend():
+    baseline = "matplotlib"
+    hv.extension(baseline)
+
+    def _set(name: str):
+        hv.extension(name)
+        return name
+
+    try:
+        yield _set
+    finally:
+        hv.extension(baseline)
+
+
+@pytest.fixture
 def ehr_3d_mini():
     layer = np.array(
         [
@@ -45,8 +60,8 @@ def diabetes_130_fairlearn_sample_100():
     return edata
 
 
-def test_sankey_plot(diabetes_130_fairlearn_sample_100, check_same_image):
-    hv.extension("matplotlib")
+def test_sankey_plot(diabetes_130_fairlearn_sample_100, check_same_image, hv_backend):
+    hv_backend("matplotlib")
     edata = diabetes_130_fairlearn_sample_100.copy()
 
     sankey = ep.pl.plot_sankey(edata, columns=["gender", "race"])
@@ -59,8 +74,8 @@ def test_sankey_plot(diabetes_130_fairlearn_sample_100, check_same_image):
     )
 
 
-def test_sankey_time_plot(ehr_3d_mini, check_same_image):
-    hv.extension("matplotlib")
+def test_sankey_time_plot(ehr_3d_mini, check_same_image, hv_backend):
+    hv_backend("matplotlib")
     edata = ehr_3d_mini
     sankey_time = ep.pl.plot_sankey_time(
         edata,
@@ -78,8 +93,8 @@ def test_sankey_time_plot(ehr_3d_mini, check_same_image):
     )
 
 
-def test_sankey_bokeh_plot(diabetes_130_fairlearn_sample_100):
-    hv.extension("bokeh")
+def test_sankey_bokeh_plot(diabetes_130_fairlearn_sample_100, hv_backend):
+    hv_backend("bokeh")
     edata = diabetes_130_fairlearn_sample_100.copy()
 
     sankey = ep.pl.plot_sankey(edata, columns=["gender", "race"])
@@ -111,8 +126,8 @@ def test_sankey_bokeh_plot(diabetes_130_fairlearn_sample_100):
         assert target.startswith("race:")  # targets have the correct prefix
 
 
-def test_sankey_time_bokeh_plot(ehr_3d_mini):
-    hv.extension("bokeh")
+def test_sankey_time_bokeh_plot(ehr_3d_mini, hv_backend):
+    hv_backend("bokeh")
     edata = ehr_3d_mini
     sankey = ep.pl.plot_sankey_time(
         edata,

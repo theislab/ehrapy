@@ -8,25 +8,40 @@ import pandas as pd
 from holoviews import opts
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from ehrdata import EHRData
 
 
 def plot_sankey(
     edata: EHRData,
     *,
-    columns: list[str],
-    show: bool = False,
-    **kwargs,
+    columns: Sequence[str],
+    node_width: int | float = 20,
+    node_padding: int | float = 10,
+    node_color: str = None,
+    edge_color: str = None,
+    label_position: str | None = "right",
+    show_values: bool = True,
+    title: str | None = None,
+    width: int | None = 600,
+    height: int | None = 400,
 ) -> hv.Sankey:
     """Create a Sankey diagram showing relationships across observation columns.
 
-    Please call :func:`holoviews.extension` with ``"matplotlib"`` or ``"bokeh"`` before using this function to select the backend.
-
     Args:
-        edata : Central data object containing observation data
-        columns : Column names from edata.obs to visualize
-        show: If True, display the plot immediately. If False, only return the plot object without displaying.
-        **kwargs: Additional styling options passed to `holoviews.opts.Sankey`. See HoloViews Sankey documentation for full list of options.
+        edata : Central data object.
+        columns : Column names from `edata.obs` to visualize
+        node_width : Width of the nodes in the Sankey diagram.
+        node_padding : Padding between nodes in the Sankey diagram.
+        node_color : Color of the nodes. If None, default coloring is used.
+        edge_color : Color of the edges. If None, default coloring is used.
+        label_position : Position of the labels on the nodes. Options are 'left', 'right', 'top', 'bottom', or 'center'.
+        show_values : Whether to display the values on the edges.
+        title : Title of the Sankey diagram.
+        width : Width of the Sankey diagram.
+        height : Height of the Sankey diagram.
+
 
     Returns:
         holoviews.Sankey
@@ -35,14 +50,13 @@ def plot_sankey(
         >>> import ehrdata as ed
         >>> edata = ed.dt.diabetes_130_fairlearn(columns_obs_only=["gender", "race"])
         >>> ep.pl.plot_sankey(edata, columns=["gender", "race"])
-
     """
+    if hv.Store.current_backend is None:
+        raise RuntimeError(
+            "No holoviews backend selected. "
+            ":func:`holoviews.extension` with ``matplotlib`` or ``bokeh`` must be called before using this function."
+        )
     df = edata.obs[columns]
-
-    labels = []
-    for col in columns:
-        labels.extend([f"{col}: {val}" for val in df[col].unique()])
-    labels = list(dict.fromkeys(labels))  # keep order & unique
 
     # Build links between consecutive columns
     sources, targets, values = [], [], []
@@ -50,14 +64,11 @@ def plot_sankey(
     for i in range(len(columns) - 1):
         col_from, col_to = columns[i], columns[i + 1]
         flows = df.groupby([col_from, col_to]).size().reset_index(name="count")
-        for _, row in flows.iterrows():
-            source = f"{col_from}: {row[col_from]}"
-            target = f"{col_to}: {row[col_to]}"
-            sources.append(source)
-            targets.append(target)
-            values.append(row["count"])
-            source_levels.append(col_from)
-            target_levels.append(col_to)
+        sources.extend(col_from + ": " + flows[col_from].astype("string"))
+        targets.extend(col_to + ": " + flows[col_to].astype("string"))
+        values.extend(flows["count"].to_numpy())
+        source_levels.extend([col_from] * len(flows))
+        target_levels.extend([col_to] * len(flows))
 
     sankey_df = pd.DataFrame(
         {
@@ -69,17 +80,17 @@ def plot_sankey(
         }
     )
 
-    sankey = hv.Sankey(sankey_df, kdims=["source", "target"], vdims=["value"])
-    default_opts = {"label_position": "right", "show_values": True, "title": f"Flow across: {columns}"}
-
-    default_opts.update(kwargs)
-
-    sankey = sankey.opts(opts.Sankey(**default_opts))
-
-    if show:
-        from IPython.display import display
-
-        display(sankey)
+    sankey = hv.Sankey(sankey_df, kdims=["source", "target"], vdims=["value"]).opts(
+        node_width=node_width,
+        node_padding=node_padding,
+        node_color=node_color,
+        edge_color=edge_color,
+        label_position=label_position,
+        show_values=show_values,
+        title=title if title is not None else "Flow across " + " -> ".join(columns),
+        width=width,
+        height=height,
+    )
 
     return sankey
 
@@ -87,29 +98,41 @@ def plot_sankey(
 def plot_sankey_time(
     edata: EHRData,
     *,
-    columns: list[str],
+    columns: Sequence[str],
     layer: str,
     state_labels: dict[int, str] | None = None,
-    show: bool = False,
-    **kwargs,
+    node_width: int | float = 20,
+    node_padding: int | float = 10,
+    node_color: str = None,
+    edge_color: str = None,
+    label_position: str | None = "right",
+    show_values: bool = True,
+    title: str | None = None,
+    width: int | None = 600,
+    height: int | None = 400,
 ) -> hv.Sankey:
     """Create a Sankey diagram showing patient state transitions over time.
 
-    This function visualizes how patients transition between different states
-    (e.g., disease severity, treatment status) across consecutive time points.
     Each node represents a state at a specific time point, and flows show the
     number of patients transitioning between states.
-
-    Please call :func:`holoviews.extension` with ``"matplotlib"`` or ``"bokeh"`` before using this function to select the backend.
+    Visualizes how patients transition between different states
+    (e.g. disease severity, treatment status) across consecutive time points.
 
     Args:
-        edata: Central data object containing observation data
-        columns: Column names from edata.var_names to visualize
+        edata: Central data object.
+        columns: Variable name from  `edata.var_names` to visualize
         layer: Name of the layer in `edata.layers` containing the feature data to visualize.
-        state_labels: Mapping from numeric state values to readable labels. If None, state values
-                    will be displayed as strings of their numeric codes (e.g., "0", "1", "2"). Default: None
-        show: If True, display the plot immediately. If False, only return the plot object without displaying.
-        **kwargs: Additional styling options passed to `holoviews.opts.Sankey`. See HoloViews Sankey documentation for full list of options.
+        state_labels: Mapping from numeric state values to readable labels.
+                    If None, state values will be displayed as strings of their numeric codes (e.g., "0", "1", "2").
+        node_width : Width of the nodes in the Sankey diagram.
+        node_padding : Padding between nodes in the Sankey diagram.
+        node_color : Color of the nodes. If None, default coloring is used.
+        edge_color : Color of the edges. If None, default coloring is used.
+        label_position : Position of the labels on the nodes. Options are 'left', 'right', 'outer', or 'inner'.
+        show_values : Whether to display the values on the edges.
+        title : Title of the Sankey diagram.
+        width : Width of the Sankey diagram.
+        height : Height of the Sankey diagram.
 
     Returns:
         holoviews.Sankey
@@ -135,9 +158,13 @@ def plot_sankey_time(
     ... )
     >>>
     >>> plot_sankey_time(edata, columns=["disease_flare"], layer="layer_1", state_labels={0: "no flare", 1: "flare"})
-
-
     """
+    if hv.Store.current_backend is None:
+        raise RuntimeError(
+            "No holoviews backend selected. "
+            ":func:`holoviews.extension` with ``matplotlib`` or ``bokeh`` must be called before using this function."
+        )
+
     flare_data = edata[:, edata.var_names.isin(columns), :].layers[layer][:, 0, :]
 
     time_steps = edata.tem.index.tolist()
@@ -164,17 +191,16 @@ def plot_sankey_time(
 
     sankey_df = pd.DataFrame({"source": sources, "target": targets, "value": values})
 
-    sankey = hv.Sankey(sankey_df, kdims=["source", "target"], vdims=["value"])
-
-    default_opts = {"label_position": "right", "show_values": True, "title": f"Patient flows: {columns[0]} over time"}
-
-    default_opts.update(kwargs)
-
-    sankey = sankey.opts(opts.Sankey(**default_opts))
-
-    if show:
-        from IPython.display import display
-
-        display(sankey)
+    sankey = hv.Sankey(sankey_df, kdims=["source", "target"], vdims=["value"]).opts(
+        node_width=node_width,
+        node_padding=node_padding,
+        node_color=node_color,
+        edge_color=edge_color,
+        label_position=label_position,
+        show_values=show_values,
+        title=title if title is not None else "Flow across " + " -> ".join(columns),
+        width=width,
+        height=height,
+    )
 
     return sankey
