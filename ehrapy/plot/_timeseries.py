@@ -1,82 +1,71 @@
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
-import matplotlib.pyplot as plt
+import holoviews as hv
 import numpy as np
+import pandas as pd
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from ehrdata import EHRData
-    from matplotlib.axes import Axes
 
 
 def plot_timeseries(
     edata: EHRData,
-    obs_id: str | int | Sequence[str | int],
-    keys: str | Sequence[str],
     *,
-    layer: str,
-    obs_id_key: str | None = None,
+    obs_names: str | int | Sequence[str | int] | None = None,
+    var_names: str | Sequence[str] | None = None,
+    layer: str = "tem_data",
     tem_time_key: str | None = None,
     overlay: bool = False,
     xlabel: str | None = None,
     ylabel: str | None = None,
+    width: int | None = 600,
+    height: int | None = 400,
     title: str | None = None,
-    show: bool = True,
-) -> Axes | Sequence[Axes] | None:
-    """Plot variable time series either for an observation or multiple observations from a 3D EHRData layer.
+) -> hv.Overlay | hv.Layout:
+    """Selection logic:
+        - If obs_names is an int in [0, n_obs), use it as row index.
+        - Otherwise, it should match a row name in edata.obs_names.
 
-    Selection logic:
-        - If obs_id is an int in [0, n_obs), use it as row index.
-        - Otherwise, obs_id_key must be a column name in edata.obs, and
-          obs_id is matched against that column.
+    Plot variable time series either for an observation or for multiple observations from a 3D EHRData layer.
 
     Args:
         edata: Central data object.
-        obs_id: row index or observation identifier(s) to plot.
-        keys: Variable name or list of variable names in edata.var_names to plot.
+        obs_names: row index or unique observation identifier(s) to plot.
+        var_names: Variable name or list of variable names in `edata.var_names` to plot.
         layer: layer to use for time series data.
-        obs_id_key: Column in edata.obs to match obs_id against (if obs_id is not given as row index).
-        tem_time_key: Key in edata.tem to use as timepoints. If None, use edata.tem as 1D array.
+        tem_time_key: Key in  `edata.tem` to use as timepoints. If None, use edata.tem as 1D array.
         overlay: Whether to overlay multiple observations in a single plot (True) or create subplots (False).
         xlabel: The x-axis label text.
         ylabel: The y-axis label text.
+        width: Plot width in pixels.
+        height: Plot height in pixels.
         title: Set the title of the plot.
-        show: Show the plot, do not return axis.
 
     Returns:
-        Axes object or Sequence of Axes or None
+        HoloViews Overlay (if overlay=True) or Layout (if overlay=False) object representing the time series plot(s).
 
     Examples:
-        >>> edata = ed.dt.ehrdata_blobs(
-        ...     n_variables=4,
-        ...     n_observations=10,
-        ...     base_timepoints=100,
-        ...     layer=DEFAULT_TEM_LAYER_NAME,
-        ... )
-        >>> edata.var.index = ["feature1", "feature2", "feature3", "feature4"]
-        >>> ep.pl.plot_timeseries(
-        ...     edata,
-        ...     obs_id=2,
-        ...     keys=["feature1", "feature2", "feature3"],
-        ...     layer=DEFAULT_TEM_LAYER_NAME,
-        ...     tem_time_key="timepoint",
-        ... )
+    >>> edata = ed.dt.ehrdata_blobs(n_variables=10, n_observations=5, base_timepoints=100)
+    >>> ep.pl.plot_timeseries(edata, obs_names=1)
 
-
+    .. image:: /_static/docstring_previews/plot_timeseries.png
     """
-    if isinstance(keys, str):
-        key_list = [keys]
-    else:
-        key_list = list(keys)
-
-    if isinstance(obs_id, (str, int)):
-        obs_ids = [obs_id]
-    else:
-        obs_ids = list(obs_id)
+    opts_dict: dict[str, Any] = {}
+    if width is not None:
+        opts_dict["width"] = width
+    if height is not None:
+        opts_dict["height"] = height
+    if xlabel is not None:
+        opts_dict["xlabel"] = xlabel
+    if ylabel is not None:
+        opts_dict["ylabel"] = ylabel
+    opts_dict["shared_axes"] = True
+    opts_dict["legend_position"] = "right"
 
     mtx = np.asarray(edata.layers[layer])
     if mtx.ndim != 3:
@@ -84,120 +73,107 @@ def plot_timeseries(
     n_obs, _, n_time = mtx.shape
 
     if tem_time_key is None:
-        warnings.warn(
-            "No tem_time_key provided; using edata.tem directly. It must be 1D and have length n_time.",
-            UserWarning,
-            stacklevel=2,
-        )
-        timepoints = np.asarray(edata.tem)
+        try:
+            timepoints = np.asarray(edata.tem.index).astype(float)
+        except (TypeError, ValueError):
+            timepoints = np.asarray(edata.tem.index)
     else:
         if tem_time_key not in edata.tem:
             raise KeyError(f"Column {tem_time_key!r} not found in edata.tem.")
-
         timepoints = np.asarray(edata.tem[tem_time_key])
 
-    if timepoints.ndim != 1:
-        raise ValueError(f"timepoints must be 1D, got shape {timepoints.shape}.")
     if timepoints.shape[0] != n_time:
         raise ValueError(f"Length of timepoints ({timepoints.shape[0]}) does not match n_time ({n_time}).")
 
-    var_names = np.asarray(edata.var_names)
+    if var_names is None:
+        key_list = list(np.asarray(edata.var_names).tolist())
+    elif isinstance(var_names, str):
+        key_list = [var_names]
+    else:
+        key_list = list(var_names)
+
+    if not key_list:
+        raise ValueError("var_names is empty")
+
+    obs_ids: list[str | int]
+    if obs_names is None:
+        obs_ids = list(range(n_obs))
+    elif isinstance(obs_names, (str, int)):
+        obs_ids = [obs_names]
+    else:
+        obs_ids = list(obs_names)
+
+    if not obs_ids:
+        raise ValueError("obs_names is empty")
+
+    all_var_names = np.asarray(edata.var_names)
     var_idx_list: list[int] = []
     for k in key_list:
-        matches = np.flatnonzero(var_names == k)
+        matches = np.flatnonzero(all_var_names == k)
         if matches.size == 0:
             raise KeyError(f"Variable {k!r} not found in edata.var_names.")
         var_idx_list.append(int(matches[0]))
 
+    rows: list[dict] = []
     if overlay:
         if len(key_list) != 1:
-            raise ValueError("When overlay=True, only a single key can be plotted at a time.")
-        n_panels = 1
-    else:
-        n_panels = len(obs_ids)
-
-    fig, axes = plt.subplots(
-        n_panels,
-        1,
-        figsize=(12, 4 * n_panels),
-        sharex=True,
-    )
-    if n_panels == 1:
-        axes = [axes]
-
-    if overlay:
-        ax = axes[0]
+            raise ValueError("When overlay=True, only a single var_name can be plotted at a time.")
         k = key_list[0]
-        var_idx = var_idx_list[0]
-
+        v_idx = var_idx_list[0]
         for obs in obs_ids:
-            obs_idx, obs_id_info = _resolve_obs(obs, obs_id_key, n_obs, edata)
-            y = np.asarray(mtx[obs_idx, var_idx, :], dtype=float)
-            ax.plot(timepoints, y, marker="o", label=str(obs_id_info))
-        ax.set_title(title if title is not None else f"Time series for the variable {k!r} for observations {obs_ids}")
-        ax.set_ylabel(ylabel if ylabel is not None else "Value")
-        ax.legend(loc="best")
-    else:
-        for ax, obs in zip(axes, obs_ids, strict=False):
-            obs_idx, obs_id_info = _resolve_obs(obs, obs_id_key, n_obs, edata)
+            obs_idx, obs_id_info = _resolve_obs(edata, obs, n_obs)
+            y = np.asarray(mtx[obs_idx, v_idx, :], dtype=float)
+            for t, val in zip(timepoints, y, strict=False):
+                rows.append({"time": t, "value": val, "series": str(obs_id_info), "variable": k})
+        df = pd.DataFrame(rows)
 
-            # plot each variable for this observation
-            for k, v_idx in zip(key_list, var_idx_list, strict=False):
-                y = np.asarray(mtx[obs_idx, v_idx, :], dtype=float)
-                ax.plot(timepoints, y, marker="o", label=str(k))
+        curves = []
+        for series, g in df.groupby("series", sort=False):
+            curves.append(hv.Curve(g, kdims="time", vdims="value", label=series))
+        plot = hv.Overlay(curves)
 
-            panel_title = (
-                title
-                if (title is not None and n_panels == 1)
-                else f"Time series for observation with index {obs_idx} ({obs_id_info})"
-            )
-            ax.set_title(panel_title)
-            ax.set_ylabel(ylabel if ylabel is not None else "Value")
-            ax.legend(loc="best")
+        plot_title = title if title is not None else f"Time series for variable {k!r}"
+        plot = plot.relabel(plot_title).opts(**opts_dict)
 
-    axes[-1].set_xlabel(xlabel if xlabel is not None else (tem_time_key or "time"))
+        return plot
 
-    fig.tight_layout()
+    # overlay=False: one panel per observation; within each panel overlay variables
+    panels = []
+    for obs in obs_ids:
+        obs_idx, obs_id_info = _resolve_obs(edata, obs, n_obs)
 
-    if show:
-        plt.show()
-        return None
-    else:
-        if n_panels == 1:
-            return axes[0]
-        return axes
+        curves = []
+        for k, v_idx in zip(key_list, var_idx_list, strict=False):
+            y = np.asarray(mtx[obs_idx, v_idx, :], dtype=float)
+            g = pd.DataFrame({"time": timepoints, "value": y})
+            curves.append(hv.Curve(g, kdims="time", vdims="value", label=str(k)))
+
+        panel = hv.Overlay(curves)
+
+        panel_title = (
+            title
+            if (title is not None and len(obs_ids) == 1)
+            else f"Time series for observation index {obs_idx} ({obs_id_info})"
+        )
+        panel = panel.relabel(panel_title).opts(**opts_dict)
+        panels.append(panel)
+
+    layout = hv.Layout(panels).cols(1)
+    return layout
 
 
-def _resolve_obs(obs, obs_id_key, n_obs, edata) -> tuple[int, str]:
-    """Resolve obs identifier to (row index, obs_id_info) tuple.
-
-    Args:
-        obs: Integer row index or label to match in `edata.obs[obs_id_key]`.
-        obs_id_key: Column used when `obs` is not a valid row index.
-        n_obs: Number of observations for index validation.
-        edata: EHR data object providing the `.obs` table.
-    """
+def _resolve_obs(edata: EHRData, obs: str | int, n_obs: int) -> tuple[int, str]:
+    """Resolve obs identifier to (row index, obs_id_info) tuple."""
     if isinstance(obs, int) and 0 <= obs < n_obs:
         obs_idx = obs
-        obs_id_info = f"row {obs}"
+        obs_info = f"row {obs}"
 
-    else:
-        if obs_id_key is None:
-            raise ValueError("obs_id_key must be given when obs_id is not a valid row index.")
-        if obs_id_key not in edata.obs:
-            raise KeyError(f"Column {obs_id_key!r} not found in edata.obs.")
-        col = np.asarray(edata.obs[obs_id_key])
-        obs_mask = col == obs
-        candidates = np.flatnonzero(obs_mask)
+    elif isinstance(obs, str):
+        obs_names = np.asarray(edata.obs_names)
+        matches = np.flatnonzero(obs_names == obs)
+        if matches.size == 0:
+            raise KeyError(f"Observation {obs!r} not found in edata.obs_names.")
+        obs_idx = int(matches[0])
+        obs_info = f"obs_name={obs!r}"
 
-        if candidates.size == 0:
-            raise ValueError(f"No row with {obs_id_key} == {obs!r} found in edata.obs.")
-        if candidates.size > 1:
-            raise ValueError(
-                f"Multiple rows with {obs_id_key} == {obs!r} found. "
-                "Either make that column unique or adapt the selection logic."
-            )
-        obs_idx = int(candidates[0])
-        obs_id_info = f"{obs_id_key}={obs!r}"
-
-    return obs_idx, obs_id_info
+    return obs_idx, obs_info

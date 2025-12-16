@@ -1,152 +1,97 @@
 from pathlib import Path
 
 import ehrdata as ed
-import matplotlib
-import matplotlib.pyplot as plt
+import holoviews as hv
+
+hv.extension("bokeh")
 import pytest
 from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
 
 import ehrapy as ep
 
-matplotlib.use("Agg")
-
 CURRENT_DIR = Path(__file__).parent
-_TEST_IMAGE_PATH = f"{CURRENT_DIR}/_images"
 
 
-@pytest.fixture
-def edata_blob_timeseries():
-    edata = ed.dt.ehrdata_blobs(
-        n_variables=4,
-        n_observations=10,
-        base_timepoints=100,
-        layer="tem_data",
-    )
-    edata.var.index = ["feature1", "feature2", "feature3", "feature4"]
-    edata.obs["subject_id"] = [f"patient{i}" for i in range(1, edata.n_obs + 1)]
-    return edata
+def test_plot_timeseries(edata_blob_small):
+    edata = edata_blob_small
+
+    plot = ep.pl.plot_timeseries(edata, obs_names=1, layer=DEFAULT_TEM_LAYER_NAME)
+    assert plot is not None
+    assert isinstance(plot, hv.Layout)
 
 
-def test_plot_timeseries(edata_blob_timeseries, check_same_image):
-    edata = edata_blob_timeseries
+def test_plot_timeseries_obs_id(edata_blob_small):
+    edata = edata_blob_small
 
-    ax = ep.pl.plot_timeseries(
+    plot = ep.pl.plot_timeseries(
         edata,
-        obs_id=2,
-        keys=["feature1", "feature2", "feature3"],
+        obs_names="1",
         layer=DEFAULT_TEM_LAYER_NAME,
-        tem_time_key="timepoint",
-        show=False,
     )
-
-    fig = ax.figure
-
-    check_same_image(
-        fig=fig,
-        base_path=f"{_TEST_IMAGE_PATH}/plot_timeseries_one_obs_row_index",
-        tol=2e-1,
-    )
-    plt.close("all")
+    assert plot is not None
+    assert isinstance(plot, hv.Layout)
 
 
-def test_plot_timeseries_obs_id(edata_blob_timeseries, check_same_image):
-    edata = edata_blob_timeseries
+def test_plot_timeseries_multiple_obs(edata_blob_small):
+    edata = edata_blob_small
 
-    ax = ep.pl.plot_timeseries(
+    plot = ep.pl.plot_timeseries(
         edata,
-        obs_id="patient3",
-        keys=["feature1", "feature2", "feature3"],
-        obs_id_key="subject_id",
+        obs_names=[3, 4],
+        var_names=["feature_1", "feature_2", "feature_3"],
         layer=DEFAULT_TEM_LAYER_NAME,
-        tem_time_key="timepoint",
-        show=False,
     )
-    fig = ax.figure
 
-    check_same_image(
-        fig=fig,
-        base_path=f"{_TEST_IMAGE_PATH}/plot_timeseries_one_obs_id",
-        tol=2e-1,
-    )
-    plt.close("all")
+    assert plot is not None
+    assert isinstance(plot, hv.Layout)
 
 
-def test_plot_timeseries_multiple_obs(edata_blob_timeseries, check_same_image):
-    edata = edata_blob_timeseries
+def test_plot_timeseries_overlay(edata_blob_small):
+    edata = edata_blob_small
 
-    axes = ep.pl.plot_timeseries(
+    plot = ep.pl.plot_timeseries(
         edata,
-        obs_id=["patient3", "patient4"],
-        keys=["feature1", "feature2", "feature3"],
-        obs_id_key="subject_id",
+        obs_names=[3, 4, 5],
+        var_names="feature_1",
         layer=DEFAULT_TEM_LAYER_NAME,
-        tem_time_key="timepoint",
-        show=False,
-    )
-    fig = axes[0].figure
-    check_same_image(
-        fig=fig,
-        base_path=f"{_TEST_IMAGE_PATH}/plot_timeseries_multiple_obs_subplots",
-        tol=2e-1,
-    )
-    plt.close("all")
-
-
-def test_plot_timeseries_overlay(edata_blob_timeseries, check_same_image):
-    edata = edata_blob_timeseries
-    ax = ep.pl.plot_timeseries(
-        edata,
-        obs_id=["patient3", "patient4", "patient5"],
-        keys="feature1",
-        obs_id_key="subject_id",
-        layer=DEFAULT_TEM_LAYER_NAME,
-        tem_time_key="timepoint",
         overlay=True,
-        show=False,
     )
-    fig = ax.figure
-
-    check_same_image(
-        fig=fig,
-        base_path=f"{_TEST_IMAGE_PATH}/plot_timeseries_overlay",
-        tol=2e-1,
-    )
-
-    plt.close("all")
+    assert plot is not None
+    assert isinstance(plot, hv.Overlay)
 
 
-def test_plot_timeseries_error_cases(mar_edata, edata_blob_timeseries):
+def test_plot_timeseries_error_cases(mar_edata, edata_blob_small):
     edata_2d_layer = mar_edata.X
     edata_2d = ed.EHRData(shape=(100, 10), layers={"X": edata_2d_layer})
 
     with pytest.raises(ValueError, match="Layer 'X' must be 3D"):
         ep.pl.plot_timeseries(
             edata_2d,
-            obs_id=0,
-            keys="feature1",
+            obs_names=0,
+            var_names="feature_1",
             layer="X",
         )
     with pytest.raises(KeyError, match="Column 'unknown_time' not found in edata.tem"):
         ep.pl.plot_timeseries(
-            edata_blob_timeseries,
-            obs_id=0,
-            keys="feature1",
+            edata_blob_small,
+            obs_names=0,
+            var_names="feature_1",
             tem_time_key="unknown_time",
             layer=DEFAULT_TEM_LAYER_NAME,
         )
     with pytest.raises(KeyError, match="Variable 'unknown_feature' not found in edata.var_names"):
         ep.pl.plot_timeseries(
-            edata_blob_timeseries,
-            obs_id=0,
-            keys="unknown_feature",
+            edata_blob_small,
+            obs_names=0,
+            var_names="unknown_feature",
             tem_time_key="timepoint",
             layer=DEFAULT_TEM_LAYER_NAME,
         )
-    with pytest.raises(ValueError, match="When overlay=True, only a single key can be plotted at a time"):
+    with pytest.raises(ValueError, match="When overlay=True, only a single var_name can be plotted at a time"):
         ep.pl.plot_timeseries(
-            edata_blob_timeseries,
-            obs_id=[0, 1],
-            keys=["feature1", "feature2"],
+            edata_blob_small,
+            obs_names=[0, 1],
+            var_names=["feature_1", "feature_2"],
             layer=DEFAULT_TEM_LAYER_NAME,
             tem_time_key="timepoint",
             overlay=True,
