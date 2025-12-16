@@ -1,4 +1,4 @@
-name: GPU-CI
+name: GPU tests
 on:
   push:
     branches: [main]
@@ -80,7 +80,7 @@ jobs:
       - name: Run GPU tests
         env:
           MPLBACKEND: agg
-        run: uvx hatch run ${{ matrix.env.name }}:run -m gpu -v --color=yes
+        run: uvx hatch run ${{ matrix.env.name }}:run -- -v --color=yes
       - name: Remove 'run-gpu-ci' label
         if: always()
         uses: actions-ecosystem/action-remove-labels@v1
