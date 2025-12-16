@@ -164,7 +164,8 @@ overrides.matrix.cuda.features = [
 
 [[tool.hatch.envs.hatch-test-gpu.matrix]]
 python = ["3.13"]
-cuda = ["12", "13"]
+# cuda 13 currently requires a new AMI
+cuda = ["12"]#, "13"]
 
 [tool.coverage.run]
 source_pkgs = ["ehrapy"]
