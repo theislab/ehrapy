@@ -27,11 +27,11 @@ def plot_timeseries(
     height: int | None = 400,
     title: str | None = None,
 ) -> hv.Overlay | hv.Layout:
-    """Selection logic:
+    """Plot variable time series either for an observation or for multiple observations from a 3D EHRData layer.
+
+    Selection logic:
         - If obs_names is an int in [0, n_obs), use it as row index.
         - Otherwise, it should match a row name in edata.obs_names.
-
-    Plot variable time series either for an observation or for multiple observations from a 3D EHRData layer.
 
     Args:
         edata: Central data object.
@@ -54,6 +54,7 @@ def plot_timeseries(
     >>> ep.pl.plot_timeseries(edata, obs_names=1)
 
     .. image:: /_static/docstring_previews/plot_timeseries.png
+
     """
     opts_dict: dict[str, Any] = {}
     if width is not None:
