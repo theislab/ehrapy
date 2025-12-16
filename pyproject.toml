@@ -78,6 +78,20 @@ dask = [
     "anndata[dask]",
     "dask-ml>=2025.1.0",
 ]
+rapids12 = [
+  "cudf-cu12>=25.10",
+  "cugraph-cu12>=25.10",
+  "cuml-cu12>=25.10",
+  "cupy-cuda12x",
+  "cuvs-cu12>=25.10",
+]
+rapids13 = [
+  "cudf-cu13>=25.10",
+  "cugraph-cu13>=25.10",
+  "cuml-cu13>=25.10",
+  "cupy-cuda13x",
+  "cuvs-cu13>=25.10",
+]
 dev = [
     "pre-commit",
 ]
@@ -113,6 +127,7 @@ test = [
     "pytest-mock"
 ]
 
+
 [tool.hatch.version]
 source = "vcs"
 
@@ -129,11 +144,25 @@ scripts.build = "sphinx-build -M html docs docs/_build -W {args}"
 scripts.open = "python -m webbrowser -t docs/_build/html/index.html"
 scripts.clean = "git clean -fdX -- {args:docs}"
 
+# CPU
 [tool.hatch.envs.hatch-test]
 features = [ "dask", "causal" ]
 
 [[tool.hatch.envs.hatch-test.matrix]]
 python = [ "3.12", "3.14" ]
+
+# GPU
+[tool.hatch.envs.hatch-test-gpu]
+features = ["test"]
+
+overrides.matrix.cuda.features = [
+    { if = ["12"], value = "rapids12" },
+    { if = ["13"], value = "rapids13" },
+]
+
+[[tool.hatch.envs.hatch-test-gpu.matrix]]
+python = ["3.13"]
+cuda = ["12", "13"]
 
 [tool.coverage.run]
 source_pkgs = ["ehrapy"]
@@ -147,6 +176,7 @@ testpaths = "tests"
 xfail_strict = true
 addopts = [
     "--import-mode=importlib",  # allow using test files with same name
+    "-m not gpu",
 ]
 markers = [
     "conda: marks a subset of tests to be ran on the Bioconda CI.",
