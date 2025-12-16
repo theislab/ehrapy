@@ -154,6 +154,8 @@ python = [ "3.12", "3.14" ]
 # GPU
 [tool.hatch.envs.hatch-test-gpu]
 features = ["test"]
+# custom script to not run coverage
+scripts.run = "pytest -m gpu {args}"
 
 overrides.matrix.cuda.features = [
     { if = ["12"], value = "rapids12" },
