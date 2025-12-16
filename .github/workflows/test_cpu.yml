@@ -33,7 +33,7 @@ jobs:
         run: |
           ENVS_JSON=$(uvx hatch env show --json | jq -c 'to_entries
             | map(
-                select(.key | startswith("hatch-test"))
+                select(.key | startswith("hatch-test.*"))
                 | {
                     name: .key,
                     label: (if (.key | contains("pre")) then .key + " (PRE-RELEASE DEPENDENCIES)" else .key end),
