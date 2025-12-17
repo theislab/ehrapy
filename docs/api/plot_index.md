@@ -26,8 +26,8 @@ For most tools and for some preprocessing functions, you will find a plotting fu
     plot.ranking
     plot.dendrogram
     plot.catplot
-    plot.plot_sankey
-    plot.plot_sankey_time
+    plot.sankey_diagram
+    plot.sankey_diagram_time
 ```
 
 ## Quality Control and missing values
