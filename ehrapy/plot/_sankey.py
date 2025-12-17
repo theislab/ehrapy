@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 from holoviews import opts
 
-from ehrapy._compat import _raise_array_type_not_implemented
+from ehrapy._compat import _raise_array_type_not_implemented, choose_hv_backend
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -16,16 +16,7 @@ if TYPE_CHECKING:
     from ehrdata import EHRData
 
 
-@singledispatch
-def _generate_sankey(mtx):
-    _raise_array_type_not_implemented(mtx, type(mtx))
-
-
-@_generate_sankey.register(np.ndarray)
-def _(mtx):
-    return
-
-
+@choose_hv_backend()
 def sankey_diagram(
     edata: EHRData,
     *,
@@ -56,10 +47,6 @@ def sankey_diagram(
         height : Height of the Sankey diagram.
         **kwargs: Additional styling options passed to :class:`holoviews.element.sankey.Sankey`.
 
-
-    Returns:
-        holoviews.Sankey
-
     Examples:
         >>> import ehrdata as ed
         >>> edata = ed.dt.diabetes_130_fairlearn(columns_obs_only=["gender", "race"])
@@ -71,8 +58,6 @@ def sankey_diagram(
             ":func:`holoviews.extension` with ``matplotlib`` or ``bokeh`` must be called before using this function."
         )
     df = edata.obs[columns]
-    mtx = df.to_numpy()
-    _generate_sankey(mtx)
 
     # Build links between consecutive columns
     sources, targets, values = [], [], []
@@ -125,6 +110,39 @@ def sankey_diagram(
     return sankey
 
 
+@singledispatch
+def _generate_sankey(mtx, time: list[Any], state_labels: dict[int, str] | None = None):
+    _raise_array_type_not_implemented(mtx, type(mtx))
+
+
+@_generate_sankey.register(np.ndarray)
+def _(mtx: np.ndarray, time: list[Any], state_labels: dict[int, str] | None = None) -> pd.DataFrame:
+    if state_labels is None:
+        unique_states = np.unique(mtx)
+        if np.issubdtype(unique_states.dtype, np.floating):
+            unique_states = unique_states[~np.isnan(unique_states)]
+
+        state_labels = {int(state): str(state) for state in unique_states}
+
+    state_values = sorted(state_labels.keys())
+    state_names = [state_labels[val] for val in state_values]
+
+    sources, targets, values = [], [], []
+    for t in range(len(time) - 1):
+        for s_from_idx, s_from_val in enumerate(state_values):
+            for s_to_idx, s_to_val in enumerate(state_values):
+                count = np.sum((mtx[:, t] == s_from_val) & (mtx[:, t + 1] == s_to_val))
+                if count > 0:
+                    source_label = f"{state_names[s_from_idx]} ({time[t]})"
+                    target_label = f"{state_names[s_to_idx]} ({time[t + 1]})"
+                    sources.append(source_label)
+                    targets.append(target_label)
+                    values.append(int(count))
+
+    return pd.DataFrame({"source": sources, "target": targets, "value": values})
+
+
+@choose_hv_backend()
 def sankey_diagram_time(
     edata: EHRData,
     *,
@@ -134,7 +152,6 @@ def sankey_diagram_time(
     node_width: int | float = 20,
     node_padding: int | float = 10,
     node_color: str = None,
-    edge_color: str = None,
     label_position: str | None = "right",
     show_values: bool = True,
     title: str | None = None,
@@ -166,9 +183,6 @@ def sankey_diagram_time(
         height : Height of the Sankey diagram.
         **kwargs: Additional styling options passed to :class:`holoviews.element.sankey.Sankey`.
 
-    Returns:
-        holoviews.Sankey
-
     Examples:
     >>> import numpy as np
     >>> import pandas as pd
@@ -191,37 +205,10 @@ def sankey_diagram_time(
     >>>
     >>> sankey_diagram_time(edata, columns=["disease_flare"], layer="layer_1", state_labels={0: "no flare", 1: "flare"})
     """
-    if hv.Store.current_backend is None:
-        raise RuntimeError(
-            "No holoviews backend selected. "
-            ":func:`holoviews.extension` with ``matplotlib`` or ``bokeh`` must be called before using this function."
-        )
-
     flare_data = edata[:, edata.var_names.isin(columns), :].layers[layer][:, 0, :]
-
     time_steps = edata.tem.index.tolist()
 
-    if state_labels is None:
-        unique_states = np.unique(flare_data)
-        unique_states = unique_states[~np.isnan(unique_states)]
-        state_labels = {int(state): str(state) for state in unique_states}
-
-    state_values = sorted(state_labels.keys())
-    state_names = [state_labels[val] for val in state_values]
-
-    sources, targets, values = [], [], []
-    for t in range(len(time_steps) - 1):
-        for s_from_idx, s_from_val in enumerate(state_values):
-            for s_to_idx, s_to_val in enumerate(state_values):
-                count = np.sum((flare_data[:, t] == s_from_val) & (flare_data[:, t + 1] == s_to_val))
-                if count > 0:
-                    source_label = f"{state_names[s_from_idx]} ({time_steps[t]})"
-                    target_label = f"{state_names[s_to_idx]} ({time_steps[t + 1]})"
-                    sources.append(source_label)
-                    targets.append(target_label)
-                    values.append(int(count))
-
-    sankey_df = pd.DataFrame({"source": sources, "target": targets, "value": values})
+    sankey_df = _generate_sankey(flare_data, time=time_steps, state_labels=state_labels)
 
     sankey = hv.Sankey(sankey_df, kdims=["source", "target"], vdims=["value"])
 
