@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import holoviews as hv
 import numpy as np
@@ -20,7 +20,6 @@ def plot_sankey(
     node_width: int | float = 20,
     node_padding: int | float = 10,
     node_color: str = None,
-    edge_color: str = None,
     label_position: str | None = "right",
     show_values: bool = True,
     title: str | None = None,
@@ -79,19 +78,30 @@ def plot_sankey(
             "target_level": target_levels,
         }
     )
+    sankey = hv.Sankey(sankey_df, kdims=["source", "target"], vdims=["value"])
 
-    sankey = hv.Sankey(sankey_df, kdims=["source", "target"], vdims=["value"]).opts(
-        node_width=node_width,
-        node_padding=node_padding,
-        node_color=node_color,
-        edge_color=edge_color,
-        label_position=label_position,
-        show_values=show_values,
-        title=title if title is not None else "Flow across " + " -> ".join(columns),
-        width=width,
-        height=height,
-    )
+    opts_dict: dict[str, Any] = {}
 
+    if hv.Store.current_backend == "bokeh":
+        if width is not None:
+            opts_dict["width"] = width
+        if height is not None:
+            opts_dict["height"] = height
+
+    if node_width is not None:
+        opts_dict["node_width"] = node_width
+    if node_padding is not None:
+        opts_dict["node_padding"] = node_padding
+    if title is not None:
+        opts_dict["title"] = title
+    if node_color is not None:
+        opts_dict["node_color"] = node_color
+    if label_position is not None:
+        opts_dict["label_position"] = label_position
+    if show_values is not None:
+        opts_dict["show_values"] = show_values
+
+    sankey = sankey.opts(**opts_dict)
     return sankey
 
 
@@ -191,16 +201,26 @@ def plot_sankey_time(
 
     sankey_df = pd.DataFrame({"source": sources, "target": targets, "value": values})
 
-    sankey = hv.Sankey(sankey_df, kdims=["source", "target"], vdims=["value"]).opts(
-        node_width=node_width,
-        node_padding=node_padding,
-        node_color=node_color,
-        edge_color=edge_color,
-        label_position=label_position,
-        show_values=show_values,
-        title=title if title is not None else "Flow across " + " -> ".join(columns),
-        width=width,
-        height=height,
-    )
+    sankey = hv.Sankey(sankey_df, kdims=["source", "target"], vdims=["value"])
+
+    opts_dict: dict[str, Any] = {}
+    if width is not None:
+        opts_dict["width"] = width
+    if height is not None:
+        opts_dict["height"] = height
+    if node_width is not None:
+        opts_dict["node_width"] = node_width
+    if node_padding is not None:
+        opts_dict["node_padding"] = node_padding
+    if title is not None:
+        opts_dict["title"] = title
+    if node_color is not None:
+        opts_dict["node_color"] = node_color
+    if label_position is not None:
+        opts_dict["label_position"] = label_position
+    if show_values is not None:
+        opts_dict["show_values"] = show_values
+
+    sankey = sankey.opts(**opts_dict)
 
     return sankey
