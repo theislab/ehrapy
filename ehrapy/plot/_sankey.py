@@ -184,26 +184,18 @@ def sankey_diagram_time(
         **kwargs: Additional styling options passed to :class:`holoviews.element.sankey.Sankey`.
 
     Examples:
-    >>> import numpy as np
-    >>> import pandas as pd
     >>> import ehrdata as ed
-    >>>
-    >>> layer = np.array(
-    ...     [
-    ...         [[1, 0, 1], [0, 1, 0]],  # patient 1: treatment, disease_flare
-    ...         [[0, 1, 1], [1, 0, 0]],  # patient 2: treatment, disease_flare
-    ...         [[1, 1, 0], [0, 0, 1]],  # patient 3: treatment, disease_flare
-    ...     ]
+    >>> edata = ed.dt.ehrdata_blobs(base_timepoints=5, n_variables=1, n_observations=5, random_state=59)
+    >>> edata.layers["tem_data"] = edata.layers["tem_data"].astype(int)
+    >>> state_labels = {-2: "no", -3: "mild", -4: "moderate", -5: "severe", -6: "critical"}
+    >>> plot = sankey_diagram_time(
+    ...     edata,
+    ...     columns=["feature_0"],
+    ...     layer="tem_data",
+    ...     state_labels=state_labels,
     ... )
-    >>>
-    >>> edata = ed.EHRData(
-    ...     layers={"layer_1": layer},
-    ...     obs=pd.DataFrame(index=["patient_1", "patient_2", "patient_3"]),
-    ...     var=pd.DataFrame(index=["treatment", "disease_flare"]),
-    ...     tem=pd.DataFrame(index=["visit_0", "visit_1", "visit_2"]),
-    ... )
-    >>>
-    >>> sankey_diagram_time(edata, columns=["disease_flare"], layer="layer_1", state_labels={0: "no flare", 1: "flare"})
+
+    .. image:: /_static/docstring_previews/sankey_time.png
     """
     flare_data = edata[:, edata.var_names.isin(columns), :].layers[layer][:, 0, :]
     time_steps = edata.tem.index.tolist()

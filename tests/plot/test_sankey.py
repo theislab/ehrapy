@@ -5,6 +5,7 @@ import holoviews as hv
 import numpy as np
 import pandas as pd
 import pytest
+from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
 
 import ehrapy as ep
 
@@ -25,27 +26,6 @@ def hv_backend():
         yield _set
     finally:
         hv.extension(baseline)
-
-
-@pytest.fixture
-def ehr_3d_mini():
-    layer = np.array(
-        [
-            [[0, 1, 2, 1, 2], [1, 2, 1, 2, 0]],
-            [[1, 2, 0, 2, 1], [2, 1, 2, 1, 2]],
-            [[2, 0, 1, 2, 0], [2, 0, 1, 1, 2]],
-            [[1, 2, 1, 0, 1], [0, 2, 1, 2, 0]],
-            [[0, 2, 1, 2, 2], [1, 2, 1, 0, 2]],
-        ]
-    )
-
-    edata = ed.EHRData(
-        layers={"layer_1": layer},
-        obs=pd.DataFrame(index=["patient 1", "patient 2", "patient 3", "patient 4", "patient 5"]),
-        var=pd.DataFrame(index=["treatment", "disease_flare"]),
-        tem=pd.DataFrame(index=["visit_0", "visit_1", "visit_2", "visit_3", "visit_4"]),
-    )
-    return edata
 
 
 @pytest.fixture
@@ -74,14 +54,15 @@ def test_sankey_plot(diabetes_130_fairlearn_sample_100, check_same_image, hv_bac
     )
 
 
-def test_sankey_time_plot(ehr_3d_mini, check_same_image, hv_backend):
+def test_sankey_time_plot(check_same_image, hv_backend):
     hv_backend("matplotlib")
-    edata = ehr_3d_mini
+    edata = ed.dt.ehrdata_blobs(base_timepoints=5, n_variables=1, n_observations=5, random_state=59)
+    edata.layers[DEFAULT_TEM_LAYER_NAME] = edata.layers[DEFAULT_TEM_LAYER_NAME].astype(int)
     sankey_time = ep.pl.sankey_diagram_time(
         edata,
-        columns=["disease_flare"],
-        layer="layer_1",
-        state_labels={0: "no flare", 1: "mid flare", 2: "severe flare"},
+        columns=["feature_0"],
+        layer=DEFAULT_TEM_LAYER_NAME,
+        state_labels={-2: "no", -3: "mild", -4: "moderate", -5: "severe", -6: "critical"},
     )
 
     fig = hv.render(sankey_time, backend="matplotlib")
@@ -126,14 +107,15 @@ def test_sankey_bokeh_plot(diabetes_130_fairlearn_sample_100, hv_backend):
         assert target.startswith("race:")  # targets have the correct prefix
 
 
-def test_sankey_time_bokeh_plot(ehr_3d_mini, hv_backend):
+def test_sankey_time_bokeh_plot(hv_backend):
     hv_backend("bokeh")
-    edata = ehr_3d_mini
+    edata = ed.dt.ehrdata_blobs(base_timepoints=5, n_variables=1, n_observations=5, random_state=59)
+    edata.layers[DEFAULT_TEM_LAYER_NAME] = edata.layers[DEFAULT_TEM_LAYER_NAME].astype(int)
     sankey = ep.pl.sankey_diagram_time(
         edata,
-        columns=["disease_flare"],
-        layer="layer_1",
-        state_labels={0: "no flare", 1: "mid flare", 2: "severe flare"},
+        columns=["feature_0"],
+        layer=DEFAULT_TEM_LAYER_NAME,
+        state_labels={-2: "no", -3: "mild", -4: "moderate", -5: "severe", -6: "critical"},
     )
     assert isinstance(sankey, hv.Sankey)
 
@@ -146,7 +128,7 @@ def test_sankey_time_bokeh_plot(ehr_3d_mini, hv_backend):
     assert (data["value"] > 0).all()
 
     # check that sources and targets contain state labels
-    state_labels = ["no flare", "mid flare", "severe flare"]
+    state_labels = ["no", "mild", "moderate", "severe", "critical"]
     for source in data["source"].unique():
         assert any(label in source for label in state_labels)
         assert "(" in source and ")" in source
