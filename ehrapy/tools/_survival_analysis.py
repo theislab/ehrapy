@@ -17,12 +17,12 @@ from lifelines import (
     WeibullAFTFitter,
     WeibullFitter,
 )
+from lifelines.exceptions import ConvergenceError
 from lifelines.statistics import StatisticalResult, logrank_test
 from scipy import stats
 from statsmodels.genmod.generalized_linear_model import GLMResultsWrapper  # noqa
 
 from ehrapy._compat import function_2D_only, use_ehrdata
-from ehrapy.anndata import anndata_to_df
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -466,15 +466,22 @@ def cox_ph(
         penalizer: Attach a penalty to the size of the coefficients during regression. This improves stability of the estimates and controls for high correlation between covariates.
         l1_ratio: Specify what ratio to assign to a L1 vs L2 penalty. Same as scikit-learn. See penalizer above.
         strata: specify a list of columns to use in stratification. This is useful if a categorical covariate does not obey the proportional hazard assumption. This is used similar to the strata expression in R. See http://courses.washington.edu/b515/l17.pdf.
-        n_baseline_knots: Used when baseline_estimation_method="spline". Set the number of knots (interior & exterior) in the baseline hazard, which will be placed evenly along the time axis. Should be at least 2. Royston et. al, the authors of this model, suggest 4 to start, but any values between 2 and 8 are reasonable. If you need to customize the timestamps used to calculate the curve, use the knots parameter instead.
+        n_baseline_knots: Used when baseline_estimation_method="spline". Set the number of knots (interior & exterior) in the baseline hazard, which will be placed evenly along the time axis.
+            Should be at least 2. Royston et. al, the authors of this model, suggest 4 to start, but any values between 2 and 8 are reasonable.
+            If you need to customize the timestamps used to calculate the curve, use the knots parameter instead.
         knots: When baseline_estimation_method="spline", this allows customizing the points in the time axis for the baseline hazard curve. To use evenly-spaced points in time, the n_baseline_knots parameter can be employed instead.
         breakpoints: Used when baseline_estimation_method="piecewise". Set the positions of the baseline hazard breakpoints.
         weights_col: The name of the column in DataFrame that contains the weights for each subject.
-        cluster_col: The name of the column in DataFrame that contains the cluster variable. Using this forces the sandwich estimator (robust variance estimator) to be used.
+        cluster_col: The name of the column in DataFrame that contains the cluster variable.
+            Using this forces the sandwich estimator (robust variance estimator) to be used.
         entry_col: Column denoting when a subject entered the study, i.e. left-truncation.
-        robust: Compute the robust errors using the Huber sandwich estimator, aka Wei-Lin estimate. This does not handle ties, so if there are high number of ties, results may significantly differ.
-        formula: an Wilkinson formula, like in R and statsmodels, for the right-hand-side. If left as None, all columns not assigned as durations, weights, etc. are used. Uses the library Formulaic for parsing.
-        batch_mode:  Enabling batch_mode can be faster for datasets with a large number of ties. If left as `None`, lifelines will choose the best option.
+        robust: Compute the robust errors using the Huber sandwich estimator, aka Wei-Lin estimate.
+            This does not handle ties, so if there are high number of ties, results may significantly differ.
+        formula: an Wilkinson formula, like in R and statsmodels, for the right-hand-side.
+            If left as None, all columns not assigned as durations, weights, etc. are used.
+            Uses the library Formulaic for parsing.
+        batch_mode:  Enabling batch_mode can be faster for datasets with a large number of ties.
+            If left as `None`, lifelines will choose the best option.
         show_progress: Since the fitter is iterative, show convergence diagnostics. Useful if convergence is failing.
         initial_point: set the starting point for the iterative solver.
         fit_options: Additional keyword arguments to pass into the estimator.
@@ -489,7 +496,9 @@ def cox_ph(
         >>> edata = ed.dt.mimic_2()
         >>> # Flip 'censor_fl' because 0 = death and 1 = censored
         >>> edata[:, ["censor_flg"]].X = np.where(edata[:, ["censor_flg"]].X == 0, 1, 0)
-        >>> cph = ep.tl.cox_ph(edata, "mort_day_censored", "censor_flg")
+        >>> cph = ep.tl.cox_ph(
+        ...     edata, "mort_day_censored", "censor_flg", formula="gender_num + afib_flg + day_icu_intime_num"
+        ... )
     """
     df = _build_model_input_dataframe(edata, duration_col, layer=layer)
     cox_ph = CoxPHFitter(
@@ -503,20 +512,39 @@ def cox_ph(
         knots=knots,
         breakpoints=breakpoints,
     )
-    cox_ph.fit(
-        df,
-        duration_col=duration_col,
-        event_col=event_col,
-        entry_col=entry_col,
-        robust=robust,
-        initial_point=initial_point,
-        weights_col=weights_col,
-        cluster_col=cluster_col,
-        batch_mode=batch_mode,
-        formula=formula,
-        fit_options=fit_options,
-        show_progress=show_progress,
-    )
+    try:
+        cox_ph.fit(
+            df,
+            duration_col=duration_col,
+            event_col=event_col,
+            entry_col=entry_col,
+            robust=robust,
+            initial_point=initial_point,
+            weights_col=weights_col,
+            cluster_col=cluster_col,
+            batch_mode=batch_mode,
+            formula=formula,
+            fit_options=fit_options,
+            show_progress=show_progress,
+        )
+    except (ValueError, ConvergenceError) as e:
+        special_cols = {duration_col, event_col, entry_col, weights_col, cluster_col} - {None}
+        numeric_cols = [c for c in df.columns if c not in special_cols and df[c].dtype.kind in "iufb"]
+
+        if "could not convert string to float" in str(e):
+            non_numeric = [c for c in df.columns if c not in special_cols and df[c].dtype.kind not in "iufb"]
+            raise ValueError(
+                f"Non-numeric columns found: {non_numeric}\n"
+                f"Specify numeric covariates with formula=, e.g.:\n"
+                f'  ep.tl.cox_ph(..., formula="{" + ".join(numeric_cols[:3])}")'
+            ) from e
+        elif "singular" in str(e).lower() or "collinearity" in str(e).lower():
+            raise ValueError(
+                f"Matrix singularity (likely collinear or constant columns).\n"
+                f"Specify covariates explicitly with formula=, e.g.:\n"
+                f'  ep.tl.cox_ph(..., formula="{" + ".join(numeric_cols[:3])}")'
+            ) from e
+        raise
 
     summary = cox_ph.summary
     edata.uns[uns_key] = summary

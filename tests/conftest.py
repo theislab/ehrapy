@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import ehrdata as ed
+import holoviews as hv
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -109,7 +110,7 @@ def lab_measurements_layer_edata(obs_data, var_data):
 @pytest.fixture
 def mimic_2():
     edata = ed.dt.mimic_2()
-    ed.infer_feature_types(edata)
+    ed.infer_feature_types(edata, output=None)
     edata.layers["layer_2"] = edata.X.copy()
     return edata
 
@@ -117,7 +118,7 @@ def mimic_2():
 @pytest.fixture
 def mimic_2_encoded():
     edata = ed.dt.mimic_2()
-    ed.infer_feature_types(edata)
+    ed.infer_feature_types(edata, output=None)
     edata = ep.pp.encode(edata, autodetect=True)
 
     return edata
@@ -126,7 +127,7 @@ def mimic_2_encoded():
 @pytest.fixture
 def mimic_2_10():
     mimic_2_10 = ed.dt.mimic_2()[:10].copy()
-    ed.infer_feature_types(mimic_2_10)
+    ed.infer_feature_types(mimic_2_10, output=None)
     return mimic_2_10
 
 
@@ -343,6 +344,7 @@ def edata_blobs_timeseries_small() -> ed.EHRData:
         seasonality=True,
         time_shifts=True,
         variable_length=False,
+        layer=DEFAULT_TEM_LAYER_NAME,
     )
     edata.layers["layer_2"] = edata.X.copy()
 
@@ -396,9 +398,9 @@ def adata_to_norm():
 
 # simplified from https://github.com/scverse/scanpy/blob/main/scanpy/tests/conftest.py
 @pytest.fixture
-def check_same_image(tmp_path):
+def check_same_image(tmp_path: Path):
     def check_same_image(
-        fig: Figure,
+        fig: Figure | hv.core.overlay.Overlay | hv.element.chart.Scatter | hv.Element,
         base_path: Path | os.PathLike,
         *,
         tol: float,
@@ -408,13 +410,14 @@ def check_same_image(tmp_path):
             raise OSError(f"No expected output found at {expected}.")
         actual = tmp_path / "actual.png"
 
-        fig.savefig(actual, dpi=80)
+        if hasattr(fig, "savefig"):
+            fig.savefig(actual, dpi=80)
+        else:
+            hv.save(fig, actual, backend="matplotlib", size=80)
 
         result = compare_images(expected, actual, tol=tol, in_decorator=True)
-
         if result is None:
             return None
-
         raise AssertionError(result)
 
     return check_same_image

@@ -2,8 +2,9 @@ name: Bug report
 description: ehrapy doesn’t do what it should? Please help us fix it!
 #title: ...
 labels:
-  - bug
   - triage
+type:
+  - Bug
 #assignees: []
 body:
   - type: checkboxes
