@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import warnings
 from typing import TYPE_CHECKING
 
 import holoviews as hv
@@ -21,7 +20,6 @@ if TYPE_CHECKING:
     from anndata import AnnData
     from ehrdata import EHRData
     from lifelines import KaplanMeierFitter
-    from matplotlib.axes import Axes
     from statsmodels.regression.linear_model import RegressionResults
 
 
@@ -44,7 +42,6 @@ def ols(
     lines_label: list[str | None] | None = None,
     xlim: tuple[float, float] | None = None,
     ylim: tuple[float, float] | None = None,
-    show: bool | None = None,
     title: str | None = None,
     **kwds,
 ) -> hv.Scatter | hv.Curve | hv.Overlay | None:
@@ -55,20 +52,19 @@ def ols(
         x: x coordinate, for scatter plotting.
         y: y coordinate, for scatter plotting.
         scatter_plot: Whether to show a scatter plot.
-        ols_results: List of RegressionResults from ehrapy.tl.ols. Example: [result_1, result_2]
-        ols_color: List of colors for each ols_results. Example: ['red', 'blue'].
+        ols_results: List of RegressionResults from ehrapy.tl.ols.
+        ols_color: List of colors for each ols_results.
         xlabel: The x-axis label text.
         ylabel: The y-axis label text.
         width: Plot width in pixels.
         height: Plot height in pixels.
         lines: List of Tuples of (slope, intercept) or (x, y). Plot lines by slope and intercept or data points.
                Example: plot two lines (y = x + 2 and y = 2*x + 1): [(1, 2), (2, 1)]
-        lines_color: List of colors for each line. Example: ['red', 'blue']
-        lines_style: List of line styles for each line. Example: ['-', '--']
-        lines_label: List of line labels for each line. Example: ['Line1', 'Line2']
+        lines_color: List of colors for each line.
+        lines_style: List of line styles for each line.
+        lines_label: List of line labels for each line.
         xlim: Set the x-axis view limits. Required for only plotting lines using slope and intercept.
         ylim: Set the y-axis view limits. Required for only plotting lines using slope and intercept.
-        show: Show the plot, do not return plot object.
         title: Set the title of the plot.
         **kwds: Passed to HoloViews Scatter element.
 
@@ -90,12 +86,6 @@ def ols(
         ... )
 
         .. image:: /_static/docstring_previews/ols_plot.png
-
-        >>> import ehrdata as ed
-        >>> import ehrapy as ep
-        >>> edata = ed.dt.mimic_2()
-        >>> ep.pl.ols(edata, x='pco2_first', y='tco2_first', lines=[(0.25, 10), (0.3, 20)],
-        >>>           lines_color=['red', 'blue'], lines_style=['-', ':'], lines_label=['Line1', 'Line2'])
     """
     if ols_color is None and ols_results is not None:
         ols_color = [None] * len(ols_results)
@@ -178,7 +168,7 @@ def ols(
 
     plot = plot.opts(**opts_dict)
 
-    return None if show else plot
+    return plot
 
 
 def kaplan_meier(
@@ -190,19 +180,19 @@ def kaplan_meier(
     ci_show: list[Boolean] | None = None,
     ci_legend: list[Boolean] | None = None,
     at_risk_counts: list[Boolean] | None = None,
-    color: list[str] | None | None = None,
+    color: list[str | None] | None = None,
     grid: Boolean | None = False,
     xlim: tuple[float, float] | None = None,
     ylim: tuple[float, float] | None = None,
     xlabel: str | None = None,
     ylabel: str | None = None,
-    figsize: tuple[float, float] | None = None,
-    show: bool | None = None,
+    width: int | None = 600,
+    height: int | None = 400,
     title: str | None = None,
-) -> Axes | None:
+) -> hv.Layout | hv.Overlay | hv.Curve | None:
     """Plots a pretty figure of the Fitted KaplanMeierFitter model.
 
-    See https://lifelines.readthedocs.io/en/latest/fitters/univariate/KaplanMeierFitter.html
+    See also: :class:`~lifelines.fitters.kaplan_meier_fitter.KaplanMeierFitter`.
 
     Args:
         kmfs: Iterables of fitted KaplanMeierFitter objects.
@@ -220,8 +210,8 @@ def kaplan_meier(
         ylim: Set the y-axis view limits.
         xlabel: The x-axis label text.
         ylabel: The y-axis label text.
-        figsize: Width, height in inches.
-        show: Show the plot, do not return axis.
+        width: Plot width in pixels.
+        height: Plot height in pixels.
         title: Set the title of the plot.
 
     Examples:
@@ -229,30 +219,15 @@ def kaplan_meier(
         >>> import ehrapy as ep
         >>> import numpy as np
         >>> edata = ed.dt.mimic_2()
-
-        # Because in MIMIC-II database, `censor_fl` is censored or death (binary: 0 = death, 1 = censored).
-        # While in KaplanMeierFitter, `event_observed` is True if the the death was observed, False if the event was lost (right-censored).
-        # So we need to flip `censor_fl` when pass `censor_fl` to KaplanMeierFitter
-
-        >>> edata[:, ["censor_flg"]].X = np.where(edata[:, ["censor_flg"]].X == 0, 1, 0)
+        >>> edata[:, ["censor_flg"]].X = np.where(
+        ...     edata[:, ["censor_flg"]].X == 0, 1, 0
+        ... )  # MIMIC-II uses 0=death while KaplanMeierFitter expects True=death
         >>> kmf = ep.tl.kaplan_meier(edata, "mort_day_censored", "censor_flg")
         >>> ep.pl.kaplan_meier(
-        ...     [kmf], color=["r"], xlim=[0, 700], ylim=[0, 1], xlabel="Days", ylabel="Proportion Survived", show=True
+        ...     [kmf], color=["r"], xlim=(0, 700), ylim=(0, 1), xlabel="Days", ylabel="Proportion Survived", show=True
         ... )
 
-        .. image:: /_static/docstring_previews/kmf_plot_1.png
-
-        >>> groups = edata[:, ["service_unit"]].X
-        >>> edata_ficu = edata[groups == "FICU"]
-        >>> edata_micu = edata[groups == "MICU"]
-        >>> edata_sicu = edata[groups == "SICU"]
-        >>> kmf_1 = ep.tl.kaplan_meier(edata_ficu, "mort_day_censored", "censor_flg", label="FICU")
-        >>> kmf_2 = ep.tl.kaplan_meier(edata_micu, "mort_day_censored", "censor_flg", label="MICU")
-        >>> kmf_3 = ep.tl.kaplan_meier(edata_sicu, "mort_day_censored", "censor_flg", label="SICU")
-        >>> ep.pl.kaplan_meier([kmf_1, kmf_2, kmf_3], ci_show=[False,False,False], color=['k','r', 'g'],
-        >>>           xlim=[0, 750], ylim=[0, 1], xlabel="Days", ylabel="Proportion Survived")
-
-        .. image:: /_static/docstring_previews/kmf_plot_2.png
+        .. image:: /_static/docstring_previews/kaplan_meier.png
     """
     if ci_alpha is None:
         ci_alpha = [0.3] * len(kmfs)
@@ -267,77 +242,86 @@ def kaplan_meier(
     if color is None:
         color = [None] * len(kmfs)
 
-    fig = plt.figure(constrained_layout=True, figsize=figsize)
-    spec = fig.add_gridspec(2, 1) if display_survival_statistics else fig.add_gridspec(1, 1)
-    ax = plt.subplot(spec[0, 0])
+    plot = None
 
     for i, kmf in enumerate(kmfs):
-        if i == 0:
-            ax = kmf.plot_survival_function(
-                ci_alpha=ci_alpha[i],
-                ci_force_lines=ci_force_lines[i],
-                ci_show=ci_show[i],
-                ci_legend=ci_legend[i],
-                at_risk_counts=at_risk_counts[i],
-                color=color[i],
-            )
-        else:
-            ax = kmf.plot_survival_function(
-                ax=ax,
-                ci_alpha=ci_alpha[i],
-                ci_force_lines=ci_force_lines[i],
-                ci_show=ci_show[i],
-                ci_legend=ci_legend[i],
-                at_risk_counts=at_risk_counts[i],
-                color=color[i],
-            )
-    # Configure plot appearance
-    ax.grid(grid)
-    ax.set_xlim(xlim)
-    ax.set_ylim(ylim)
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
+        sf = kmf.survival_function_
+        times = sf.index.values
+        survival = sf.iloc[:, 0].values
+
+        label = kmf.label if kmf.label else f"Group {i + 1}"
+        curve_opts: dict[str, Any] = {"tools": ["hover"]}
+        if color[i] is not None:
+            curve_opts["color"] = color[i]
+
+        curve = hv.Curve((times, survival), kdims="Time", vdims="Survival", label=label).opts(**curve_opts)
+
+        if ci_show[i] and hasattr(kmf, "confidence_interval_survival_function_"):
+            ci = kmf.confidence_interval_survival_function_
+            ci_lower = ci.iloc[:, 0].values
+            ci_upper = ci.iloc[:, 1].values
+
+            if ci_force_lines[i]:
+                ci_lower_curve = hv.Curve((times, ci_lower)).opts(
+                    color=color[i] if color[i] else "gray", alpha=ci_alpha[i], line_dash="dashed"
+                )
+                ci_upper_curve = hv.Curve((times, ci_upper)).opts(
+                    color=color[i] if color[i] else "gray", alpha=ci_alpha[i], line_dash="dashed"
+                )
+                curve = curve * ci_lower_curve * ci_upper_curve
+            else:
+                ci_area = hv.Area((times, ci_lower, ci_upper), vdims=["y", "y2"]).opts(
+                    color=color[i] if color[i] else "gray", alpha=ci_alpha[i], line_width=0
+                )
+                curve = ci_area * curve
+
+        plot = curve if plot is None else plot * curve
+
+    if plot is None:
+        return None
+
+    opts_dict: dict[str, Any] = {"width": width, "show_grid": grid}
+    if xlabel:
+        opts_dict["xlabel"] = xlabel
+    if ylabel:
+        opts_dict["ylabel"] = ylabel
     if title:
-        ax.set_title(title)
+        opts_dict["title"] = title
+    if xlim:
+        opts_dict["xlim"] = xlim
+    if ylim:
+        opts_dict["ylim"] = ylim
+    opts_dict["show_legend"] = True
+
+    plot = plot.opts(**opts_dict)
 
     if display_survival_statistics:
-        xticks = [x for x in ax.get_xticks() if x >= 0]
-        xticks_space = xticks[1] - xticks[0]
-        if xlabel is None:
-            xlabel = "Time"
+        if xlim:
+            time_points = np.linspace(xlim[0], xlim[1], 10)
+        else:
+            all_times = np.concatenate([kmf.survival_function_.index.values for kmf in kmfs])
+            time_points = np.linspace(all_times.min(), all_times.max(), 10)
 
-        yticks = np.arange(len(kmfs))
+        # Create table data in wide format (one row per group, columns are time points)
+        table_data: dict[str, list[str]] = {}
+        table_data["Group"] = []
 
-        ax_table = plt.subplot(spec[1, 0])
-        ax_table.set_xticks(xticks)
-        ax_table.set_xlim(-xticks_space / 2, xticks[-1] + xticks_space / 2)
-        ax_table.set_ylim(-1, len(kmfs))
-        ax_table.set_yticks(yticks)
-        ax_table.set_yticklabels([kmf.label if kmf.label else f"Group {i + 1}" for i, kmf in enumerate(kmfs[::-1])])
+        for kmf in kmfs:
+            label = kmf.label if kmf.label else "Group"
+            table_data["Group"].append(label)
+            survival_probs = kmf.survival_function_at_times(time_points).values
 
-        for i, kmf in enumerate(kmfs[::-1]):
-            survival_probs = kmf.survival_function_at_times(xticks).values
-            for j, prob in enumerate(survival_probs):
-                ax_table.text(
-                    xticks[j],  # x position
-                    yticks[i],  # y position
-                    f"{prob:.2f}",  # formatted survival probability
-                    ha="center",
-                    va="center",
-                    bbox={"boxstyle": "round,pad=0.2", "edgecolor": "none", "facecolor": "lightgrey"},
-                )
+            for _, (t, prob) in enumerate(zip(time_points, survival_probs, strict=False)):
+                col_name = f"{t:.0f}"
+                if col_name not in table_data:
+                    table_data[col_name] = []
+                table_data[col_name].append(f"{prob:.2f}")
 
-        ax_table.grid(grid)
-        ax_table.spines["top"].set_visible(False)
-        ax_table.spines["right"].set_visible(False)
-        ax_table.spines["bottom"].set_visible(False)
-        ax_table.spines["left"].set_visible(False)
+        df = pd.DataFrame(table_data)
+        table = hv.Table(df).opts(width=width, height=int(height * 0.4), fit_columns=True)
+        plot = (plot + table).cols(1)
 
-    if not show:
-        return fig, ax
-
-    else:
-        return None
+    return plot
 
 
 @use_ehrdata(deprecated_after="1.0.0")
@@ -346,166 +330,140 @@ def cox_ph_forestplot(
     *,
     uns_key: str = "cox_ph",
     labels: Iterable[str] | None = None,
-    fig_size: tuple = (10, 10),
-    t_adjuster: float = 0.1,
+    width: int = 1200,
+    height: int = 600,
     ecolor: str = "dimgray",
     size: int = 3,
     marker: str = "o",
     decimal: int = 2,
     text_size: int = 12,
     color: str = "k",
-    show: bool = None,
     title: str | None = None,
-):
+) -> hv.Overlay | None:
     """Generates a forest plot to visualize the coefficients and confidence intervals of a Cox Proportional Hazards model.
 
     The `edata` object must first be populated using the :func:`~ehrapy.tools.cox_ph` function.
     This function stores the summary table of the `CoxPHFitter` in the `.uns` attribute of `edata`.
     The summary table is created when the model is fitted using the :func:`~ehrapy.tools.cox_ph` function.
-    For more information on the `CoxPHFitter`, see the `Lifelines documentation <https://lifelines.readthedocs.io/en/latest/fitters/regression/CoxPHFitter.html>`_.
-
-    Inspired by `zepid.graphics.EffectMeasurePlot <https://readthedocs.org>`_ (zEpid Package, https://pypi.org/project/zepid/).
+    See also: :class:`~lifelines.fitters.coxph_fitter.CoxPHFitter`
 
     Args:
         edata: Data object containing the summary table from the CoxPHFitter. This is stored in the `.uns` attribute, after fitting the model using :func:`~ehrapy.tools.cox_ph`.
         uns_key: Key in `.uns` where :func:`~ehrapy.tools.cox_ph` function stored the summary table. See argument `uns_key` in :func:`~ehrapy.tools.cox_ph`.
-        labels: List of labels for each coefficient, default uses the index of the summary ta
-        fig_size: Width, height in inches.
-        t_adjuster: Adjust the table to the right.
+        labels: List of labels for each coefficient, default uses the index of the summary table.
+        width: Plot width in pixels.
+        height: Plot height in pixels.
         ecolor: Color of the error bars.
         size: Size of the markers.
         marker: Marker style.
         decimal: Number of decimal places to display.
         text_size: Font size of the text.
         color: Color of the markers.
-        show: Show the plot, do not return figure and axis.
         title: Set the title of the plot.
+
+    Returns:
+        HoloViews Overlay with forest plot and text annotations.
 
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ed.dt.mimic_2()
-        >>> edata_subset = edata[:, ["mort_day_censored", "censor_flg", "gender_num", "afib_flg", "day_icu_intime_num"]]
-        >>> coxph = ep.tl.cox_ph(edata_subset, event_col="censor_flg", duration_col="mort_day_censored")
-        >>> ep.pl.cox_ph_forestplot(edata_subset)
+        >>> edata = ed.dt.mimic_2()[
+        ...     :, ["mort_day_censored", "censor_flg", "gender_num", "afib_flg", "day_icu_intime_num"]
+        ... ]
+        >>> coxph = ep.tl.cox_ph(edata, event_col="censor_flg", duration_col="mort_day_censored")
+        >>> ep.pl.cox_ph_forestplot(edata)
 
         .. image:: /_static/docstring_previews/coxph_forestplot.png
-
     """
     if uns_key not in edata.uns:
         raise ValueError(f"Key {uns_key} not found in edata.uns. Please provide a valid key.")
 
-    coxph_fitting_summary = edata.uns[
-        uns_key
-    ]  # pd.Dataframe with columns: coef, exp(coef), se(coef), z, p, lower 0.95, upper 0.95
+    coxph_fitting_summary = edata.uns[uns_key]
     auc_col = "coef"
 
     if labels is None:
-        labels = coxph_fitting_summary.index
-    tval = []
-    ytick = []
-    for row_index in range(len(coxph_fitting_summary)):
-        if not np.isnan(coxph_fitting_summary[auc_col].iloc[row_index]):
-            if (
-                (isinstance(coxph_fitting_summary[auc_col].iloc[row_index], float))
-                & (isinstance(coxph_fitting_summary["coef lower 95%"].iloc[row_index], float))
-                & (isinstance(coxph_fitting_summary["coef upper 95%"].iloc[row_index], float))
-            ):
-                tval.append(
-                    [
-                        round(coxph_fitting_summary[auc_col].iloc[row_index], decimal),
-                        (
-                            "("
-                            + str(round(coxph_fitting_summary["coef lower 95%"].iloc[row_index], decimal))
-                            + ", "
-                            + str(round(coxph_fitting_summary["coef upper 95%"].iloc[row_index], decimal))
-                            + ")"
-                        ),
-                    ]
-                )
+        labels = list(coxph_fitting_summary.index)
+
+    coefs = coxph_fitting_summary[auc_col].values
+    lower = coxph_fitting_summary["coef lower 95%"].values
+    upper = coxph_fitting_summary["coef upper 95%"].values
+    y_positions = np.arange(len(coxph_fitting_summary))
+
+    x_axis_upper_bound = float(pd.to_numeric(coxph_fitting_summary["coef upper 95%"]).max())
+    x_axis_lower_bound = float(pd.to_numeric(coxph_fitting_summary["coef lower 95%"]).min())
+
+    data_range = x_axis_upper_bound - x_axis_lower_bound
+    plot_padding = data_range * 0.1
+    text_gap = data_range * 0.15
+    text_spacing = data_range * 0.4
+
+    plot_x_min = x_axis_lower_bound - plot_padding
+    plot_x_max = x_axis_upper_bound + plot_padding
+    text_start_x = plot_x_max + text_gap
+    ci_text_x = text_start_x + text_spacing
+
+    total_x_max = ci_text_x + (data_range * 0.5)
+
+    error_data = []
+    for coef, y, lower_val, upper_val in zip(coefs, y_positions, lower, upper, strict=False):
+        if not np.isnan(coef) and not np.isnan(lower_val) and not np.isnan(upper_val):
+            error_data.append((coef, y, coef - lower_val, upper_val - coef))
+
+    error_bars = hv.ErrorBars(
+        error_data,
+        kdims=["Coefficient", "Variable"],
+        vdims=["negative_error", "positive_error"],
+    ).opts(color=ecolor, line_width=2)
+
+    points = hv.Scatter(
+        [(coef, y) for coef, y in zip(coefs, y_positions, strict=False) if not np.isnan(coef)],
+        kdims=["Coefficient"],
+        vdims=["Variable"],
+    ).opts(color=color, size=size * 5, marker=marker, tools=["hover"])
+
+    vline = hv.VLine(1).opts(color="gray", line_width=1)
+
+    text_labels = []
+    for coef_val, low_val, upp_val, y_pos in zip(coefs, lower, upper, y_positions, strict=False):
+        if not np.isnan(coef_val):
+            if isinstance(coef_val, float) and isinstance(low_val, float) and isinstance(upp_val, float):
+                coef_text = f"{coef_val:.{decimal}f}"
+                ci_text = f"({low_val:.{decimal}f}, {upp_val:.{decimal}f})"
             else:
-                tval.append(
-                    [
-                        coxph_fitting_summary[auc_col].iloc[row_index],
-                        (
-                            "("
-                            + str(coxph_fitting_summary["coef lower 95%"].iloc[row_index])
-                            + ", "
-                            + str(coxph_fitting_summary["coef upper 95%"].iloc[row_index])
-                            + ")"
-                        ),
-                    ]
-                )
-            ytick.append(row_index)
-        else:
-            tval.append([" ", " "])
-            ytick.append(row_index)
+                coef_text = str(coef_val)
+                ci_text = f"({low_val}, {upp_val})"
 
-    x_axis_upper_bound = round(((pd.to_numeric(coxph_fitting_summary["coef upper 95%"])).max() + 0.1), 2)
+            text_labels.append((text_start_x, y_pos, coef_text))
+            text_labels.append((ci_text_x, y_pos, ci_text))
 
-    x_axis_lower_bound = round(((pd.to_numeric(coxph_fitting_summary["coef lower 95%"])).min() - 0.1), 1)
-
-    fig = plt.figure(figsize=fig_size)
-    gspec = gridspec.GridSpec(1, 6)
-    plot = plt.subplot(gspec[0, 0:4])
-    table = plt.subplot(gspec[0, 4:])
-    plot.set_ylim(-1, (len(coxph_fitting_summary)))  # spacing out y-axis properly
-
-    plot.axvline(1, color="gray", zorder=1)
-    lower_diff = coxph_fitting_summary[auc_col] - coxph_fitting_summary["coef lower 95%"]
-    upper_diff = coxph_fitting_summary["coef upper 95%"] - coxph_fitting_summary[auc_col]
-    plot.errorbar(
-        coxph_fitting_summary[auc_col],
-        coxph_fitting_summary.index,
-        xerr=[lower_diff, upper_diff],
-        marker="None",
-        zorder=2,
-        ecolor=ecolor,
-        linewidth=0,
-        elinewidth=1,
+    labels_overlay = hv.Labels(text_labels, kdims=["x", "y"], vdims=["text"]).opts(
+        text_font_size=f"{text_size}pt", text_align="left", text_color="black"
     )
-    # plot markers
-    plot.scatter(
-        coxph_fitting_summary[auc_col],
-        coxph_fitting_summary.index,
-        c=color,
-        s=(size * 25),
-        marker=marker,
-        zorder=3,
-        edgecolors="None",
-    )
-    # plot settings
-    plot.xaxis.set_ticks_position("bottom")
-    plot.yaxis.set_ticks_position("left")
-    plot.get_xaxis().set_major_formatter(ticker.ScalarFormatter())
-    plot.get_xaxis().set_minor_formatter(ticker.NullFormatter())
-    plot.set_yticks(ytick)
-    plot.set_xlim([x_axis_lower_bound, x_axis_upper_bound])
-    plot.set_xticks([x_axis_lower_bound, 1, x_axis_upper_bound])
-    plot.set_xticklabels([x_axis_lower_bound, 1, x_axis_upper_bound])
-    plot.set_yticklabels(labels)
-    plot.tick_params(axis="y", labelsize=text_size)
-    plot.yaxis.set_ticks_position("none")
-    plot.invert_yaxis()  # invert y-axis to align values properly with table
-    tb = table.table(
-        cellText=tval, cellLoc="center", loc="right", colLabels=[auc_col, "95% CI"], bbox=[0, t_adjuster, 1, 1]
-    )
-    table.axis("off")
-    tb.auto_set_font_size(False)
-    tb.set_fontsize(text_size)
-    for _, cell in tb.get_celld().items():
-        cell.set_linewidth(0)
 
-    # remove spines
-    plot.spines["top"].set_visible(False)
-    plot.spines["right"].set_visible(False)
-    plot.spines["left"].set_visible(False)
+    header_y = len(coxph_fitting_summary) - 0.7
+    header_labels = hv.Labels(
+        [
+            (text_start_x, header_y, "coef"),
+            (ci_text_x, header_y, "95% CI"),
+        ],
+        kdims=["x", "y"],
+        vdims=["text"],
+    ).opts(text_font_size=f"{text_size + 2}pt", text_font_style="bold", text_align="left", text_color="black")
+
+    forest_plot = (vline * error_bars * points * labels_overlay * header_labels).opts(
+        width=width,
+        height=height,
+        xlim=(plot_x_min, total_x_max),
+        ylim=(len(coxph_fitting_summary) - 0.5, -0.5),
+        invert_yaxis=True,
+        yticks=list(zip(y_positions, labels, strict=False)),
+        xlabel="Coefficient",
+        ylabel="",
+        fontsize={"yticks": text_size},
+        show_legend=False,
+    )
 
     if title:
-        plt.title(title)
+        forest_plot = forest_plot.opts(title=title)
 
-    if not show:
-        return fig, plot
-
-    else:
-        return None
+    return forest_plot

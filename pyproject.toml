@@ -7,7 +7,7 @@ name = "ehrapy"
 version = "0.13.0"
 description = "Electronic Health Record Analysis with Python."
 readme = "README.md"
-requires-python = ">=3.12,<3.14"
+requires-python = ">=3.12,<3.15"
 license = {file = "LICENSE"}
 authors = [
     {name = "Lukas Heumos"},
@@ -40,6 +40,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering :: Bio-Informatics",
     "Topic :: Scientific/Engineering :: Visualization",
 ]
@@ -77,6 +78,8 @@ dask = [
     "anndata[dask]",
     "dask-ml>=2025.1.0",
 ]
+rapids12 = ["rapids-singlecell[rapids12]"]
+rapids13 = ["rapids-singlecell[rapids13]"]
 dev = [
     "pre-commit",
 ]
@@ -112,6 +115,7 @@ test = [
     "pytest-mock"
 ]
 
+
 [tool.hatch.version]
 source = "vcs"
 
@@ -128,11 +132,28 @@ scripts.build = "sphinx-build -M html docs docs/_build -W {args}"
 scripts.open = "python -m webbrowser -t docs/_build/html/index.html"
 scripts.clean = "git clean -fdX -- {args:docs}"
 
+# CPU
 [tool.hatch.envs.hatch-test]
 features = [ "dask", "causal" ]
 
 [[tool.hatch.envs.hatch-test.matrix]]
-python = [ "3.12", "3.13" ]
+python = [ "3.12", "3.14" ]
+
+# GPU
+[tool.hatch.envs.hatch-test-gpu]
+features = ["test"]
+# custom script to not run coverage
+scripts.run = "pytest -m gpu {args}"
+
+overrides.matrix.cuda.features = [
+    { if = ["12"], value = "rapids12" },
+    { if = ["13"], value = "rapids13" },
+]
+
+[[tool.hatch.envs.hatch-test-gpu.matrix]]
+python = ["3.13"]
+# cuda 13 currently requires a new AMI
+cuda = ["12"]#, "13"]
 
 [tool.coverage.run]
 source_pkgs = ["ehrapy"]
@@ -146,6 +167,7 @@ testpaths = "tests"
 xfail_strict = true
 addopts = [
     "--import-mode=importlib",  # allow using test files with same name
+    "-m not gpu",
 ]
 markers = [
     "conda: marks a subset of tests to be ran on the Bioconda CI.",
