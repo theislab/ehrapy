@@ -34,7 +34,7 @@ def test_highly_variable_features(clean_up_plots):
     assert "means" in adata.var.columns
     assert "variances" in adata.var.columns
     assert "variances_norm" in adata.var.columns
-    
+
     adata = ep.dt.dermatology(encoded=True)
     ep.pp.knn_impute(adata)
     highly_variable_features(adata, top_features_percentage=0.5)
