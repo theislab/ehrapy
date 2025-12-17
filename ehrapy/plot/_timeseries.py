@@ -18,8 +18,8 @@ def plot_timeseries(
     *,
     obs_names: str | int | Sequence[str | int] | None = None,
     var_names: str | Sequence[str] | None = None,
+    tem_names: int | Sequence[int] | None = None,
     layer: str = "tem_data",
-    tem_time_key: str | None = None,
     overlay: bool = False,
     xlabel: str | None = None,
     ylabel: str | None = None,
@@ -35,10 +35,10 @@ def plot_timeseries(
 
     Args:
         edata: Central data object.
-        obs_names: row index or unique observation identifier(s) to plot.
+        obs_names: Row index or unique observation identifier(s) to plot.
         var_names: Variable name or list of variable names in `edata.var_names` to plot.
+        tem_names: Time indices to plot.
         layer: layer to use for time series data.
-        tem_time_key: Key in  `edata.tem` to use as timepoints. If None, use edata.tem as 1D array.
         overlay: Whether to overlay multiple observations in a single plot (True) or create subplots (False).
         xlabel: The x-axis label text.
         ylabel: The y-axis label text.
@@ -51,7 +51,7 @@ def plot_timeseries(
 
     Examples:
     >>> edata = ed.dt.ehrdata_blobs(n_variables=10, n_observations=5, base_timepoints=100)
-    >>> ep.pl.plot_timeseries(edata, obs_names=1)
+    >>> ep.pl.plot_timeseries(edata, obs_names=1, var_names=["feature_1", "feature_2], tem_names=range(50))
 
     .. image:: /_static/docstring_previews/plot_timeseries.png
 
@@ -73,19 +73,6 @@ def plot_timeseries(
         raise ValueError(f"Layer {layer!r} must be 3D (n_obs, n_vars, n_time), got shape {mtx.shape}.")
     n_obs, _, n_time = mtx.shape
 
-    if tem_time_key is None:
-        try:
-            timepoints = np.asarray(edata.tem.index).astype(float)
-        except (TypeError, ValueError):
-            timepoints = np.asarray(edata.tem.index)
-    else:
-        if tem_time_key not in edata.tem:
-            raise KeyError(f"Column {tem_time_key!r} not found in edata.tem.")
-        timepoints = np.asarray(edata.tem[tem_time_key])
-
-    if timepoints.shape[0] != n_time:
-        raise ValueError(f"Length of timepoints ({timepoints.shape[0]}) does not match n_time ({n_time}).")
-
     if var_names is None:
         key_list = list(np.asarray(edata.var_names).tolist())
     elif isinstance(var_names, str):
@@ -106,6 +93,25 @@ def plot_timeseries(
 
     if not obs_ids:
         raise ValueError("obs_names is empty")
+
+    if tem_names is None:
+        tem_pos = list(range(n_time))
+    elif isinstance(tem_names, int):
+        if not 0 <= tem_names < n_time:
+            raise IndexError(f"tem index {tem_names} out of range")
+        tem_pos = [tem_names]
+    else:
+        tem_pos = []
+        for t in tem_names:
+            if not isinstance(t, int):
+                raise TypeError("tem_names must contain integers only")
+            if not 0 <= t < n_time:
+                raise IndexError(f"tem index {t} out of range")
+            tem_pos.append(t)
+
+    tem_pos = list(dict.fromkeys(tem_pos))
+    mtx = mtx[:, :, tem_pos]
+    timepoints = np.asarray(edata.tem.index)[tem_pos]
 
     all_var_names = np.asarray(edata.var_names)
     var_idx_list: list[int] = []
