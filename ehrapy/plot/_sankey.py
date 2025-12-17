@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from functools import singledispatch
 from typing import TYPE_CHECKING, Any
 
 import holoviews as hv
@@ -7,13 +8,25 @@ import numpy as np
 import pandas as pd
 from holoviews import opts
 
+from ehrapy._compat import _raise_array_type_not_implemented
+
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from ehrdata import EHRData
 
 
-def plot_sankey(
+@singledispatch
+def _generate_sankey(mtx):
+    _raise_array_type_not_implemented(mtx, type(mtx))
+
+
+@_generate_sankey.register(np.ndarray)
+def _(mtx):
+    return
+
+
+def sankey_diagram(
     edata: EHRData,
     *,
     columns: Sequence[str],
@@ -25,8 +38,9 @@ def plot_sankey(
     title: str | None = None,
     width: int | None = 600,
     height: int | None = 400,
+    **kwargs,
 ) -> hv.Sankey:
-    """Create a Sankey diagram showing relationships across observation columns.
+    """Create a Sankey diagram of relationships across the flat observation table.
 
     Args:
         edata : Central data object.
@@ -40,6 +54,7 @@ def plot_sankey(
         title : Title of the Sankey diagram.
         width : Width of the Sankey diagram.
         height : Height of the Sankey diagram.
+        **kwargs: Additional styling options passed to :class:`holoviews.element.sankey.Sankey`.
 
 
     Returns:
@@ -48,7 +63,7 @@ def plot_sankey(
     Examples:
         >>> import ehrdata as ed
         >>> edata = ed.dt.diabetes_130_fairlearn(columns_obs_only=["gender", "race"])
-        >>> ep.pl.plot_sankey(edata, columns=["gender", "race"])
+        >>> ep.pl.sankey_diagram(edata, columns=["gender", "race"])
     """
     if hv.Store.current_backend is None:
         raise RuntimeError(
@@ -56,6 +71,8 @@ def plot_sankey(
             ":func:`holoviews.extension` with ``matplotlib`` or ``bokeh`` must be called before using this function."
         )
     df = edata.obs[columns]
+    mtx = df.to_numpy()
+    _generate_sankey(mtx)
 
     # Build links between consecutive columns
     sources, targets, values = [], [], []
@@ -78,6 +95,7 @@ def plot_sankey(
             "target_level": target_levels,
         }
     )
+
     sankey = hv.Sankey(sankey_df, kdims=["source", "target"], vdims=["value"])
 
     opts_dict: dict[str, Any] = {}
@@ -101,11 +119,13 @@ def plot_sankey(
     if show_values is not None:
         opts_dict["show_values"] = show_values
 
+    opts_dict.update(kwargs)
+
     sankey = sankey.opts(**opts_dict)
     return sankey
 
 
-def plot_sankey_time(
+def sankey_diagram_time(
     edata: EHRData,
     *,
     columns: Sequence[str],
@@ -120,6 +140,7 @@ def plot_sankey_time(
     title: str | None = None,
     width: int | None = 600,
     height: int | None = 400,
+    **kwargs,
 ) -> hv.Sankey:
     """Create a Sankey diagram showing patient state transitions over time.
 
@@ -143,6 +164,7 @@ def plot_sankey_time(
         title : Title of the Sankey diagram.
         width : Width of the Sankey diagram.
         height : Height of the Sankey diagram.
+        **kwargs: Additional styling options passed to :class:`holoviews.element.sankey.Sankey`.
 
     Returns:
         holoviews.Sankey
@@ -167,7 +189,7 @@ def plot_sankey_time(
     ...     tem=pd.DataFrame(index=["visit_0", "visit_1", "visit_2"]),
     ... )
     >>>
-    >>> plot_sankey_time(edata, columns=["disease_flare"], layer="layer_1", state_labels={0: "no flare", 1: "flare"})
+    >>> sankey_diagram_time(edata, columns=["disease_flare"], layer="layer_1", state_labels={0: "no flare", 1: "flare"})
     """
     if hv.Store.current_backend is None:
         raise RuntimeError(
@@ -204,10 +226,13 @@ def plot_sankey_time(
     sankey = hv.Sankey(sankey_df, kdims=["source", "target"], vdims=["value"])
 
     opts_dict: dict[str, Any] = {}
-    if width is not None:
-        opts_dict["width"] = width
-    if height is not None:
-        opts_dict["height"] = height
+
+    if hv.Store.current_backend == "bokeh":
+        if width is not None:
+            opts_dict["width"] = width
+        if height is not None:
+            opts_dict["height"] = height
+
     if node_width is not None:
         opts_dict["node_width"] = node_width
     if node_padding is not None:
@@ -220,6 +245,8 @@ def plot_sankey_time(
         opts_dict["label_position"] = label_position
     if show_values is not None:
         opts_dict["show_values"] = show_values
+
+    opts_dict.update(kwargs)
 
     sankey = sankey.opts(**opts_dict)
 
