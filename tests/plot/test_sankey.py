@@ -60,7 +60,7 @@ def test_sankey_time_plot(check_same_image, hv_backend):
     edata.layers[DEFAULT_TEM_LAYER_NAME] = edata.layers[DEFAULT_TEM_LAYER_NAME].astype(int)
     sankey_time = ep.pl.sankey_diagram_time(
         edata,
-        columns=["feature_0"],
+        var_name="feature_0",
         layer=DEFAULT_TEM_LAYER_NAME,
         state_labels={-2: "no", -3: "mild", -4: "moderate", -5: "severe", -6: "critical"},
     )
@@ -113,7 +113,7 @@ def test_sankey_time_bokeh_plot(hv_backend):
     edata.layers[DEFAULT_TEM_LAYER_NAME] = edata.layers[DEFAULT_TEM_LAYER_NAME].astype(int)
     sankey = ep.pl.sankey_diagram_time(
         edata,
-        columns=["feature_0"],
+        var_name="feature_0",
         layer=DEFAULT_TEM_LAYER_NAME,
         state_labels={-2: "no", -3: "mild", -4: "moderate", -5: "severe", -6: "critical"},
     )

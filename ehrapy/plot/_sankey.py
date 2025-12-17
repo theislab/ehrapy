@@ -48,15 +48,11 @@ def sankey_diagram(
         **kwargs: Additional styling options passed to :class:`holoviews.element.sankey.Sankey`.
 
     Examples:
+        >>> import ehrapy as ep
         >>> import ehrdata as ed
         >>> edata = ed.dt.diabetes_130_fairlearn(columns_obs_only=["gender", "race"])
         >>> ep.pl.sankey_diagram(edata, columns=["gender", "race"])
     """
-    if hv.Store.current_backend is None:
-        raise RuntimeError(
-            "No holoviews backend selected. "
-            ":func:`holoviews.extension` with ``matplotlib`` or ``bokeh`` must be called before using this function."
-        )
     df = edata.obs[columns]
 
     # Build links between consecutive columns
@@ -146,7 +142,7 @@ def _(mtx: np.ndarray, time: list[Any], state_labels: dict[int, str] | None = No
 def sankey_diagram_time(
     edata: EHRData,
     *,
-    columns: Sequence[str],
+    var_name: str,
     layer: str,
     state_labels: dict[int, str] | None = None,
     node_width: int | float = 20,
@@ -168,7 +164,7 @@ def sankey_diagram_time(
 
     Args:
         edata: Central data object.
-        columns: Variable name from  `edata.var_names` to visualize
+        var_name: Variable name from  `edata.var_names` to visualize
         layer: Name of the layer in `edata.layers` containing the feature data to visualize.
         state_labels: Mapping from numeric state values to readable labels.
                     If None, state values will be displayed as strings of their numeric codes (e.g., "0", "1", "2").
@@ -184,20 +180,21 @@ def sankey_diagram_time(
         **kwargs: Additional styling options passed to :class:`holoviews.element.sankey.Sankey`.
 
     Examples:
-    >>> import ehrdata as ed
-    >>> edata = ed.dt.ehrdata_blobs(base_timepoints=5, n_variables=1, n_observations=5, random_state=59)
-    >>> edata.layers["tem_data"] = edata.layers["tem_data"].astype(int)
-    >>> state_labels = {-2: "no", -3: "mild", -4: "moderate", -5: "severe", -6: "critical"}
-    >>> plot = sankey_diagram_time(
-    ...     edata,
-    ...     columns=["feature_0"],
-    ...     layer="tem_data",
-    ...     state_labels=state_labels,
-    ... )
+        >>> import ehrapy as ep
+        >>> import ehrdata as ed
+        >>> edata = ed.dt.ehrdata_blobs(base_timepoints=5, n_variables=1, n_observations=5, random_state=59)
+        >>> edata.layers["tem_data"] = edata.layers["tem_data"].astype(int)
+        >>> state_labels = {-2: "no", -3: "mild", -4: "moderate", -5: "severe", -6: "critical"}
+        >>> ep.pl.sankey_diagram_time(
+        ...     edata,
+        ...     var_name="feature_0",
+        ...     layer="tem_data",
+        ...     state_labels=state_labels,
+        ... )
 
-    .. image:: /_static/docstring_previews/sankey_time.png
+        .. image:: /_static/docstring_previews/sankey_time.png
     """
-    flare_data = edata[:, edata.var_names.isin(columns), :].layers[layer][:, 0, :]
+    flare_data = edata[:, edata.var_names.isin([var_name]), :].layers[layer][:, 0, :]
     time_steps = edata.tem.index.tolist()
 
     sankey_df = _generate_sankey(flare_data, time=time_steps, state_labels=state_labels)

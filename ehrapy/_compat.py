@@ -259,7 +259,7 @@ def as_dense_dask_array(a, chunk_size=1000):
     return da.from_array(a, chunks=chunk_size)
 
 
-def choose_hv_backend():
+def choose_hv_backend() -> Callable[[Callable[P, R]], Callable[P, R]]:
     def decorator(func: Callable[P, R]) -> Callable[P, R]:
         @wraps(func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
