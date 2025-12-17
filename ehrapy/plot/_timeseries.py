@@ -53,7 +53,7 @@ def plot_timeseries(
     >>> edata = ed.dt.ehrdata_blobs(n_variables=10, n_observations=5, base_timepoints=100)
     >>> ep.pl.plot_timeseries(edata, obs_names=1, var_names=["feature_1", "feature_2], tem_names=range(50))
 
-    .. image:: /_static/docstring_previews/plot_timeseries.png
+    .. image:: /_static/docstring_previews/timeseries_plot.png
 
     """
     opts_dict: dict[str, Any] = {}
