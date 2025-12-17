@@ -26,6 +26,7 @@ For most tools and for some preprocessing functions, you will find a plotting fu
     plot.ranking
     plot.dendrogram
     plot.catplot
+    plot.plot_timeseries
 ```
 
 ## Quality Control and missing values
