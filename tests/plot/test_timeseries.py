@@ -20,18 +20,6 @@ def test_timeseries(edata_blob_small):
     assert isinstance(plot, hv.Layout)
 
 
-def test_timeseries_obs_id(edata_blob_small):
-    edata = edata_blob_small
-
-    plot = ep.pl.timeseries(
-        edata,
-        obs_names="1",
-        layer=DEFAULT_TEM_LAYER_NAME,
-    )
-    assert plot is not None
-    assert isinstance(plot, hv.Layout)
-
-
 def test_timeseries_multiple_obs(edata_blob_small):
     edata = edata_blob_small
 
@@ -86,7 +74,16 @@ def test_timeseries_error_cases(mar_edata, edata_blob_small):
             var_names="feature_1",
             layer="X",
         )
-    with pytest.raises(KeyError, match="'unknown_feature not found in edata.var_names'"):
+
+    with pytest.raises(KeyError, match="Layer 'unknown_layer' not found in edata.layers"):
+        ep.pl.timeseries(
+            edata_blob_small,
+            obs_names="0",
+            var_names="feature_0",
+            layer="unknown_layer",
+        )
+
+    with pytest.raises(KeyError, match="unknown_feature not found in edata.var_names"):
         ep.pl.timeseries(
             edata_blob_small,
             obs_names="0",

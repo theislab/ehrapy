@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import warnings
 from typing import TYPE_CHECKING, Any
 
 import holoviews as hv
@@ -18,7 +17,7 @@ def timeseries(
     *,
     obs_names: str | int | Sequence[str | int] | None = None,
     var_names: str | Sequence[str] | None = None,
-    tem_names: Any | Sequence[Any] | slice | None = None,
+    tem_names: str | int | slice | None = None,
     layer: str = "tem_data",
     overlay: bool = False,
     xlabel: str | None = None,
@@ -30,8 +29,8 @@ def timeseries(
     """Plot time series from a 3D EHRData object.
 
     Selection logic:
-    obs_names, var_names, tem_names select by labels from `edata.obs_names`, `edata.var_names`, `edata.tem.index`.
-    Use :class:`slice` (e.g. ``slice(0, 5)``) for positional selection along the `edata.tem` axis.
+    obs_names, var_names, tem_names select labels from `edata.obs_names`, `edata.var_names`, `edata.tem.index`.
+    Use :class:`slice` (e.g. ``slice(0, 5)``) for positional selection along the axes.
 
     Args:
         edata: Central data object.
@@ -53,7 +52,7 @@ def timeseries(
     >>> import ehrapy as ep
     >>> import ehrdata as ed
     >>> edata = ed.dt.ehrdata_blobs(n_variables=10, n_observations=5, base_timepoints=100)
-    >>> ep.pl.timeseries(edata, obs_names=1, var_names=["feature_1", "feature_2"], tem_names=range(50))
+    >>> ep.pl.timeseries(edata, obs_names="1", var_names=["feature_1", "feature_2"], tem_names=slice(0, 10))
 
     .. image:: /_static/docstring_previews/timeseries_plot.png
 
@@ -70,6 +69,8 @@ def timeseries(
     opts_dict["shared_axes"] = True
     opts_dict["legend_position"] = "right"
 
+    if layer not in edata.layers:
+        raise KeyError(f"Layer {layer!r} not found in edata.layers. Available layers: {list(edata.layers)}")
     mtx = np.asarray(edata.layers[layer])
     if mtx.ndim != 3:
         raise ValueError(f"Layer {layer!r} must be 3D (n_obs, n_vars, n_time), got shape {mtx.shape}.")
@@ -86,14 +87,18 @@ def timeseries(
             raise ValueError("When overlay=True, only a single var_name can be plotted at a time.")
 
         k = str(var_labels[0])
-        rows: list[dict] = []
+        y = np.asarray(mtx[:, 0, :], dtype=float)
+        n_obs, n_time = y.shape
 
-        for obs_i, obs_label in enumerate(obs_labels):
-            y = np.asarray(mtx[obs_i, 0, :], dtype=float)
-            for t, val in zip(timepoints, y, strict=False):
-                rows.append({"time": t, "value": val, "series": str(obs_label), "variable": k})
+        df = pd.DataFrame(
+            {
+                "time": np.tile(timepoints, n_obs),
+                "value": y.ravel(order="C"),
+                "series": np.repeat([str(x) for x in obs_labels], n_time),
+                "variable": k,
+            }
+        )
 
-        df = pd.DataFrame(rows)
         curves = [
             hv.Curve(g, kdims="time", vdims="value", label=series) for series, g in df.groupby("series", sort=False)
         ]
