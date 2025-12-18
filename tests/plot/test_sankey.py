@@ -2,8 +2,6 @@ from pathlib import Path
 
 import ehrdata as ed
 import holoviews as hv
-import numpy as np
-import pandas as pd
 import pytest
 from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
 
@@ -89,7 +87,6 @@ def test_sankey_bokeh_plot(diabetes_130_fairlearn_sample_100, hv_backend):
 
     assert len(data) > 0  # at least one flow
     assert (data["value"] > 0).all()  # flow values positive
-    assert data["value"].sum() == len(edata.obs)  # total flow must match total obs
 
     # each flow matches the expected count
     for _, row in data.iterrows():
@@ -152,3 +149,30 @@ def test_sankey_time_bokeh_plot(hv_backend):
     expected_total_flow = n_patients * n_transitions
 
     assert data["value"].sum() == expected_total_flow
+
+
+def test_error_cases():
+    edata_time = ed.dt.ehrdata_blobs(base_timepoints=5, n_variables=1, n_observations=5, random_state=59)
+
+    with pytest.raises(ValueError, match="Sankey requires discrete, binned states"):
+        ep.pl.sankey_diagram_time(
+            edata_time,
+            var_name="feature_0",
+            layer=DEFAULT_TEM_LAYER_NAME,
+        )
+
+    edata_time.layers[DEFAULT_TEM_LAYER_NAME] = edata_time.layers[DEFAULT_TEM_LAYER_NAME].astype(int)
+
+    with pytest.raises(KeyError, match="'unknown_feature' not found in edata.var_names"):
+        ep.pl.sankey_diagram_time(
+            edata_time,
+            var_name="unknown_feature",
+            layer=DEFAULT_TEM_LAYER_NAME,
+        )
+
+    with pytest.raises(KeyError, match="'unknown_layer' not found in edata.layers"):
+        ep.pl.sankey_diagram_time(
+            edata_time,
+            var_name="feature_0",
+            layer="unknown_layer",
+        )

@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, Any
 import holoviews as hv
 import numpy as np
 import pandas as pd
-from holoviews import opts
 
 from ehrapy._compat import _raise_array_type_not_implemented, choose_hv_backend
 
@@ -23,7 +22,7 @@ def sankey_diagram(
     columns: Sequence[str],
     node_width: int | float = 20,
     node_padding: int | float = 10,
-    node_color: str = None,
+    node_color: str | None = None,
     label_position: str | None = "right",
     show_values: bool = True,
     title: str | None = None,
@@ -39,7 +38,6 @@ def sankey_diagram(
         node_width : Width of the nodes in the Sankey diagram.
         node_padding : Padding between nodes in the Sankey diagram.
         node_color : Color of the nodes. If None, default coloring is used.
-        edge_color : Color of the edges. If None, default coloring is used.
         label_position : Position of the labels on the nodes. Options are 'left', 'right', 'top', 'bottom', or 'center'.
         show_values : Whether to display the values on the edges.
         title : Title of the Sankey diagram.
@@ -113,12 +111,32 @@ def _generate_sankey(mtx, time: list[Any], state_labels: dict[int, str] | None =
 
 @_generate_sankey.register(np.ndarray)
 def _(mtx: np.ndarray, time: list[Any], state_labels: dict[int, str] | None = None) -> pd.DataFrame:
+    mtx = np.asarray(mtx)
+
+    if np.issubdtype(mtx.dtype, np.floating):
+        flat = mtx.ravel()
+        for x in flat:
+            if not np.isfinite(x):
+                continue
+            rx = np.rint(x)
+            if not np.isclose(x, rx, rtol=0.0, atol=1e-8):
+                raise ValueError(
+                    "Sankey requires discrete, binned states. "
+                    f"Found non-integer value {float(x)!r}. "
+                    "Bin first (e.g with np.digitize) and pass integer codes."
+                )
+
     if state_labels is None:
         unique_states = np.unique(mtx)
         if np.issubdtype(unique_states.dtype, np.floating):
             unique_states = unique_states[~np.isnan(unique_states)]
 
         state_labels = {int(state): str(state) for state in unique_states}
+
+    observed = set(np.unique(mtx[np.isfinite(mtx)] if float else mtx))
+    missing = observed - set(state_labels)
+    if missing:
+        raise KeyError(f"state_labels missing keys for states: {sorted(missing)!r}")
 
     state_values = sorted(state_labels.keys())
     state_names = [state_labels[val] for val in state_values]
@@ -147,7 +165,7 @@ def sankey_diagram_time(
     state_labels: dict[int, str] | None = None,
     node_width: int | float = 20,
     node_padding: int | float = 10,
-    node_color: str = None,
+    node_color: str | None = None,
     label_position: str | None = "right",
     show_values: bool = True,
     title: str | None = None,
@@ -171,7 +189,6 @@ def sankey_diagram_time(
         node_width : Width of the nodes in the Sankey diagram.
         node_padding : Padding between nodes in the Sankey diagram.
         node_color : Color of the nodes. If None, default coloring is used.
-        edge_color : Color of the edges. If None, default coloring is used.
         label_position : Position of the labels on the nodes. Options are 'left', 'right', 'outer', or 'inner'.
         show_values : Whether to display the values on the edges.
         title : Title of the Sankey diagram.
@@ -194,6 +211,11 @@ def sankey_diagram_time(
 
         .. image:: /_static/docstring_previews/sankey_time.png
     """
+    if var_name not in edata.var_names:
+        raise KeyError(f"{var_name!r} not found in edata.var_names.")
+    if layer not in edata.layers:
+        raise KeyError(f"{layer!r} not found in edata.layers.")
+
     flare_data = edata[:, edata.var_names.isin([var_name]), :].layers[layer][:, 0, :]
     time_steps = edata.tem.index.tolist()
 
