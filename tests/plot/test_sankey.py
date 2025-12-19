@@ -163,14 +163,14 @@ def test_error_cases():
 
     edata_time.layers[DEFAULT_TEM_LAYER_NAME] = edata_time.layers[DEFAULT_TEM_LAYER_NAME].astype(int)
 
-    with pytest.raises(KeyError, match="'unknown_feature' not found in edata.var_names"):
+    with pytest.raises(KeyError, match="unknown_feature not found in edata.var_names"):
         ep.pl.sankey_diagram_time(
             edata_time,
             var_name="unknown_feature",
             layer=DEFAULT_TEM_LAYER_NAME,
         )
 
-    with pytest.raises(KeyError, match="'unknown_layer' not found in edata.layers"):
+    with pytest.raises(KeyError, match="unknown_layer not found in edata.layers"):
         ep.pl.sankey_diagram_time(
             edata_time,
             var_name="feature_0",

@@ -23,6 +23,7 @@ def sankey_diagram(
     node_width: int | float = 20,
     node_padding: int | float = 10,
     node_color: str | None = None,
+    edge_color: str | None = None,
     label_position: str | None = "right",
     show_values: bool = True,
     title: str | None = None,
@@ -38,7 +39,8 @@ def sankey_diagram(
         node_width : Width of the nodes in the Sankey diagram.
         node_padding : Padding between nodes in the Sankey diagram.
         node_color : Color of the nodes. If None, default coloring is used.
-        label_position : Position of the labels on the nodes. Options are 'left', 'right', 'top', 'bottom', or 'center'.
+        edge_color: Color of the edges. If None, default coloring is used.
+        label_position : Position of the labels on the nodes. Options are 'left', 'right', 'outer', or 'inner'.
         show_values : Whether to display the values on the edges.
         title : Title of the Sankey diagram.
         width : Width of the Sankey diagram.
@@ -51,6 +53,13 @@ def sankey_diagram(
         >>> edata = ed.dt.diabetes_130_fairlearn(columns_obs_only=["gender", "race"])
         >>> ep.pl.sankey_diagram(edata, columns=["gender", "race"])
     """
+    missing = [c for c in columns if c not in edata.obs.columns]
+    if missing:
+        raise KeyError(f"columns not found in edata.obs: {missing}")
+
+    if len(columns) < 2:
+        raise ValueError("columns must contain at least two obs column names.")
+
     df = edata.obs[columns]
 
     # Build links between consecutive columns
@@ -93,6 +102,8 @@ def sankey_diagram(
         opts_dict["title"] = title
     if node_color is not None:
         opts_dict["node_color"] = node_color
+    if edge_color is not None:
+        opts_dict["edge_color"] = edge_color
     if label_position is not None:
         opts_dict["label_position"] = label_position
     if show_values is not None:
@@ -123,20 +134,21 @@ def _(mtx: np.ndarray, time: list[Any], state_labels: dict[int, str] | None = No
                 raise ValueError(
                     "Sankey requires discrete, binned states. "
                     f"Found non-integer value {float(x)!r}. "
-                    "Bin first (e.g with np.digitize) and pass integer codes."
+                    "Bin first (e.g. with np.digitize) and pass integer codes."
                 )
+        states = np.unique(mtx[np.isfinite(mtx)])
+    else:
+        states = np.unique(mtx)
+
+    observed = {int(s) for s in states}
 
     if state_labels is None:
-        unique_states = np.unique(mtx)
-        if np.issubdtype(unique_states.dtype, np.floating):
-            unique_states = unique_states[~np.isnan(unique_states)]
+        state_labels = {state: str(state) for state in sorted(observed)}
 
-        state_labels = {int(state): str(state) for state in unique_states}
-
-    observed = set(np.unique(mtx[np.isfinite(mtx)] if float else mtx))
     missing = observed - set(state_labels)
+
     if missing:
-        raise KeyError(f"state_labels missing keys for states: {sorted(missing)!r}")
+        raise KeyError(f"state_labels missing keys for states: {missing}")
 
     state_values = sorted(state_labels.keys())
     state_names = [state_labels[val] for val in state_values]
@@ -166,6 +178,7 @@ def sankey_diagram_time(
     node_width: int | float = 20,
     node_padding: int | float = 10,
     node_color: str | None = None,
+    edge_color: str | None = None,
     label_position: str | None = "right",
     show_values: bool = True,
     title: str | None = None,
@@ -189,6 +202,7 @@ def sankey_diagram_time(
         node_width : Width of the nodes in the Sankey diagram.
         node_padding : Padding between nodes in the Sankey diagram.
         node_color : Color of the nodes. If None, default coloring is used.
+        edge_color: Color of the edges. If None, default coloring is used.
         label_position : Position of the labels on the nodes. Options are 'left', 'right', 'outer', or 'inner'.
         show_values : Whether to display the values on the edges.
         title : Title of the Sankey diagram.
@@ -212,9 +226,9 @@ def sankey_diagram_time(
         .. image:: /_static/docstring_previews/sankey_time.png
     """
     if var_name not in edata.var_names:
-        raise KeyError(f"{var_name!r} not found in edata.var_names.")
+        raise KeyError(f"{var_name} not found in edata.var_names.")
     if layer not in edata.layers:
-        raise KeyError(f"{layer!r} not found in edata.layers.")
+        raise KeyError(f"{layer} not found in edata.layers.")
 
     flare_data = edata[:, edata.var_names.isin([var_name]), :].layers[layer][:, 0, :]
     time_steps = edata.tem.index.tolist()
@@ -239,6 +253,8 @@ def sankey_diagram_time(
         opts_dict["title"] = title
     if node_color is not None:
         opts_dict["node_color"] = node_color
+    if edge_color is not None:
+        opts_dict["edge_color"] = edge_color
     if label_position is not None:
         opts_dict["label_position"] = label_position
     if show_values is not None:
