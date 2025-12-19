@@ -17,7 +17,7 @@ def timeseries(
     *,
     obs_names: str | int | Sequence[str | int] | None = None,
     var_names: str | Sequence[str] | None = None,
-    tem_names: str | int | slice | None = None,
+    tem_names: Any | Sequence[Any] | slice | None = None,
     layer: str = "tem_data",
     overlay: bool = False,
     xlabel: str | None = None,
@@ -79,6 +79,13 @@ def timeseries(
     var_pos, var_labels = _resolve_axis(pd.Index(edata.var_names), var_names, "var_names")
     tem_pos, tem_labels = _resolve_axis(pd.Index(edata.tem.index), tem_names, "tem_names")
 
+    if obs_pos.size == 0:
+        raise ValueError("No observations selected (obs_names resolved to empty).")
+    if var_pos.size == 0:
+        raise ValueError("No variables selected (var_names resolved to empty).")
+    if tem_pos.size == 0:
+        raise ValueError("No timepoints selected (tem_names resolved to empty).")
+
     mtx = mtx[np.ix_(obs_pos, var_pos, tem_pos)]
     timepoints = np.asarray(tem_labels)
 
@@ -131,7 +138,7 @@ def timeseries(
     return layout
 
 
-def _resolve_axis(index: pd.Index, names, axis: str) -> tuple[np.ndarray, pd.Index]:
+def _resolve_axis(index: pd.Index, names: Any, axis: str) -> tuple[np.ndarray, pd.Index]:
     n = len(index)
 
     if names is None:

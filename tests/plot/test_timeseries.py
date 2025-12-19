@@ -63,6 +63,21 @@ def test_timeseries_subset_time(edata_blob_small):
     assert isinstance(plot_1, hv.Layout)
 
 
+def test_timeseries_list(edata_blob_small):
+    edata = edata_blob_small
+
+    plot = ep.pl.timeseries(
+        edata,
+        obs_names=["3", "4"],
+        var_names=["feature_1", "feature_2", "feature_3"],
+        tem_names=["0", "1", "2"],
+        layer=DEFAULT_TEM_LAYER_NAME,
+    )
+
+    assert plot is not None
+    assert isinstance(plot, hv.Layout)
+
+
 def test_timeseries_error_cases(mar_edata, edata_blob_small):
     edata_2d_layer = mar_edata.X
     edata_2d = ed.EHRData(shape=(100, 10), layers={"X": edata_2d_layer})
