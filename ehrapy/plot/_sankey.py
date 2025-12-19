@@ -34,17 +34,17 @@ def sankey_diagram(
     """Create a Sankey diagram of relationships across the flat observation table.
 
     Args:
-        edata : Central data object.
-        columns : Column names from `edata.obs` to visualize
-        node_width : Width of the nodes in the Sankey diagram.
-        node_padding : Padding between nodes in the Sankey diagram.
-        node_color : Color of the nodes. If None, default coloring is used.
+        edata: Central data object.
+        columns: Column names from `edata.obs` to visualize
+        node_width: Width of the nodes in the Sankey diagram.
+        node_padding: Padding between nodes in the Sankey diagram.
+        node_color: Color of the nodes. If None, default coloring is used.
         edge_color: Color of the edges. If None, default coloring is used.
-        label_position : Position of the labels on the nodes. Options are 'left', 'right', 'outer', or 'inner'.
-        show_values : Whether to display the values on the edges.
-        title : Title of the Sankey diagram.
-        width : Width of the Sankey diagram.
-        height : Height of the Sankey diagram.
+        label_position: Position of the labels on the nodes. Options are 'left', 'right', 'outer', or 'inner'.
+        show_values: Whether to display the values on the edges.
+        title: Title of the Sankey diagram.
+        width: Width of the Sankey diagram.
+        height: Height of the Sankey diagram.
         **kwargs: Additional styling options passed to :class:`holoviews.element.sankey.Sankey`.
 
     Examples:
@@ -52,6 +52,8 @@ def sankey_diagram(
         >>> import ehrdata as ed
         >>> edata = ed.dt.diabetes_130_fairlearn(columns_obs_only=["gender", "race"])
         >>> ep.pl.sankey_diagram(edata, columns=["gender", "race"])
+
+        .. image:: /_static/docstring_previews/sankey.png
     """
     missing = [c for c in columns if c not in edata.obs.columns]
     if missing:
@@ -115,14 +117,71 @@ def sankey_diagram(
     return sankey
 
 
-@singledispatch
-def _generate_sankey(mtx, time: list[Any], state_labels: dict[int, str] | None = None):
-    _raise_array_type_not_implemented(mtx, type(mtx))
+@choose_hv_backend()
+def sankey_diagram_time(
+    edata: EHRData,
+    *,
+    var_name: str,
+    layer: str,
+    state_labels: dict[int, str] | None = None,
+    node_width: int | float = 20,
+    node_padding: int | float = 10,
+    node_color: str | None = None,
+    edge_color: str | None = None,
+    label_position: str | None = "right",
+    show_values: bool = True,
+    title: str | None = None,
+    width: int | None = 600,
+    height: int | None = 400,
+    **kwargs,
+) -> hv.Sankey:
+    """Create a Sankey diagram showing patient state transitions over time.
 
+    Each node represents a state at a specific time point, and flows show the
+    number of patients transitioning between states.
+    Visualizes how patients transition between different states
+    (e.g. disease severity, treatment status) across consecutive time points.
 
-@_generate_sankey.register(np.ndarray)
-def _(mtx: np.ndarray, time: list[Any], state_labels: dict[int, str] | None = None) -> pd.DataFrame:
-    mtx = np.asarray(mtx)
+    Args:
+        edata: Central data object.
+        var_name: Variable name from `edata.var_names` to visualize
+        layer: Name of the layer in `edata.layers` containing the feature data to visualize.
+        state_labels: Mapping from numeric state values to readable labels.
+                    If None, state values will be displayed as strings of their numeric codes (e.g., "0", "1", "2").
+        node_width: Width of the nodes in the Sankey diagram.
+        node_padding: Padding between nodes in the Sankey diagram.
+        node_color: Color of the nodes. If None, default coloring is used.
+        edge_color: Color of the edges. If None, default coloring is used.
+        label_position: Position of the labels on the nodes. Options are 'left', 'right', 'outer', or 'inner'.
+        show_values: Whether to display the values on the edges.
+        title: Title of the Sankey diagram.
+        width: Width of the Sankey diagram.
+        height: Height of the Sankey diagram.
+        **kwargs: Additional styling options passed to :class:`holoviews.element.sankey.Sankey`.
+
+    Examples:
+        >>> import ehrapy as ep
+        >>> import ehrdata as ed
+        >>> edata = ed.dt.ehrdata_blobs(base_timepoints=5, n_variables=1, n_observations=5, random_state=59)
+        >>> edata.layers["tem_data"] = edata.layers["tem_data"].astype(int)
+        >>> state_labels = {-2: "no", -3: "mild", -4: "moderate", -5: "severe", -6: "critical"}
+        >>> ep.pl.sankey_diagram_time(
+        ...     edata,
+        ...     var_name="feature_0",
+        ...     layer="tem_data",
+        ...     state_labels=state_labels,
+        ... )
+
+        .. image:: /_static/docstring_previews/sankey_time.png
+    """
+    if var_name not in edata.var_names:
+        raise KeyError(f"{var_name} not found in edata.var_names.")
+    if layer not in edata.layers:
+        raise KeyError(f"{layer} not found in edata.layers.")
+
+    flare_data = edata[:, edata.var_names == var_name, :].layers[layer][:, 0, :]
+    mtx = np.asarray(flare_data)
+    time_steps = edata.tem.index.tolist()
 
     if np.issubdtype(mtx.dtype, np.floating):
         flat = mtx.ravel()
@@ -154,86 +213,18 @@ def _(mtx: np.ndarray, time: list[Any], state_labels: dict[int, str] | None = No
     state_names = [state_labels[val] for val in state_values]
 
     sources, targets, values = [], [], []
-    for t in range(len(time) - 1):
+    for t in range(len(time_steps) - 1):
         for s_from_idx, s_from_val in enumerate(state_values):
             for s_to_idx, s_to_val in enumerate(state_values):
                 count = np.sum((mtx[:, t] == s_from_val) & (mtx[:, t + 1] == s_to_val))
                 if count > 0:
-                    source_label = f"{state_names[s_from_idx]} ({time[t]})"
-                    target_label = f"{state_names[s_to_idx]} ({time[t + 1]})"
+                    source_label = f"{state_names[s_from_idx]} ({time_steps[t]})"
+                    target_label = f"{state_names[s_to_idx]} ({time_steps[t + 1]})"
                     sources.append(source_label)
                     targets.append(target_label)
                     values.append(int(count))
 
-    return pd.DataFrame({"source": sources, "target": targets, "value": values})
-
-
-@choose_hv_backend()
-def sankey_diagram_time(
-    edata: EHRData,
-    *,
-    var_name: str,
-    layer: str,
-    state_labels: dict[int, str] | None = None,
-    node_width: int | float = 20,
-    node_padding: int | float = 10,
-    node_color: str | None = None,
-    edge_color: str | None = None,
-    label_position: str | None = "right",
-    show_values: bool = True,
-    title: str | None = None,
-    width: int | None = 600,
-    height: int | None = 400,
-    **kwargs,
-) -> hv.Sankey:
-    """Create a Sankey diagram showing patient state transitions over time.
-
-    Each node represents a state at a specific time point, and flows show the
-    number of patients transitioning between states.
-    Visualizes how patients transition between different states
-    (e.g. disease severity, treatment status) across consecutive time points.
-
-    Args:
-        edata: Central data object.
-        var_name: Variable name from  `edata.var_names` to visualize
-        layer: Name of the layer in `edata.layers` containing the feature data to visualize.
-        state_labels: Mapping from numeric state values to readable labels.
-                    If None, state values will be displayed as strings of their numeric codes (e.g., "0", "1", "2").
-        node_width : Width of the nodes in the Sankey diagram.
-        node_padding : Padding between nodes in the Sankey diagram.
-        node_color : Color of the nodes. If None, default coloring is used.
-        edge_color: Color of the edges. If None, default coloring is used.
-        label_position : Position of the labels on the nodes. Options are 'left', 'right', 'outer', or 'inner'.
-        show_values : Whether to display the values on the edges.
-        title : Title of the Sankey diagram.
-        width : Width of the Sankey diagram.
-        height : Height of the Sankey diagram.
-        **kwargs: Additional styling options passed to :class:`holoviews.element.sankey.Sankey`.
-
-    Examples:
-        >>> import ehrapy as ep
-        >>> import ehrdata as ed
-        >>> edata = ed.dt.ehrdata_blobs(base_timepoints=5, n_variables=1, n_observations=5, random_state=59)
-        >>> edata.layers["tem_data"] = edata.layers["tem_data"].astype(int)
-        >>> state_labels = {-2: "no", -3: "mild", -4: "moderate", -5: "severe", -6: "critical"}
-        >>> ep.pl.sankey_diagram_time(
-        ...     edata,
-        ...     var_name="feature_0",
-        ...     layer="tem_data",
-        ...     state_labels=state_labels,
-        ... )
-
-        .. image:: /_static/docstring_previews/sankey_time.png
-    """
-    if var_name not in edata.var_names:
-        raise KeyError(f"{var_name} not found in edata.var_names.")
-    if layer not in edata.layers:
-        raise KeyError(f"{layer} not found in edata.layers.")
-
-    flare_data = edata[:, edata.var_names.isin([var_name]), :].layers[layer][:, 0, :]
-    time_steps = edata.tem.index.tolist()
-
-    sankey_df = _generate_sankey(flare_data, time=time_steps, state_labels=state_labels)
+    sankey_df = pd.DataFrame({"source": sources, "target": targets, "value": values})
 
     sankey = hv.Sankey(sankey_df, kdims=["source", "target"], vdims=["value"])
 

@@ -11,33 +11,6 @@ CURRENT_DIR = Path(__file__).parent
 _TEST_IMAGE_PATH = f"{CURRENT_DIR}/_images"
 
 
-@pytest.fixture
-def hv_backend():
-    baseline = "matplotlib"
-    hv.extension(baseline)
-
-    def _set(name: str):
-        hv.extension(name)
-        return name
-
-    try:
-        yield _set
-    finally:
-        hv.extension(baseline)
-
-
-@pytest.fixture
-def diabetes_130_fairlearn_sample_100():
-    edata = ed.dt.diabetes_130_fairlearn(
-        columns_obs_only=[
-            "race",
-            "gender",
-        ]
-    )[:100]
-
-    return edata
-
-
 def test_sankey_plot(diabetes_130_fairlearn_sample_100, check_same_image, hv_backend):
     hv_backend("matplotlib")
     edata = diabetes_130_fairlearn_sample_100.copy()

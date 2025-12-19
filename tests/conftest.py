@@ -240,6 +240,18 @@ def diabetes_130_fairlearn_sample():
 
 
 @pytest.fixture
+def diabetes_130_fairlearn_sample_100():
+    edata = ed.dt.diabetes_130_fairlearn(
+        columns_obs_only=[
+            "race",
+            "gender",
+        ]
+    )[:100]
+
+    return edata
+
+
+@pytest.fixture
 def mimic_2_sample_serv_unit_day_icu():
     edata = ed.dt.mimic_2(columns_obs_only=["service_unit", "day_icu_intime"])
     ed.infer_feature_types(edata)
@@ -430,3 +442,18 @@ def clean_up_plots():
     plt.clf()
     plt.cla()
     plt.close("all")
+
+
+@pytest.fixture
+def hv_backend():
+    baseline = "matplotlib"
+    hv.extension(baseline)
+
+    def _set(name: str):
+        hv.extension(name)
+        return name
+
+    try:
+        yield _set
+    finally:
+        hv.extension(baseline)
