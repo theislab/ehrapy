@@ -7,18 +7,58 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### 🚀 Features
 
 * Transitioning from AnnData to EHRData
-
 `EHRData` replaces `AnnData` as ehrapy's core data structure to better support time-series electronic health record data.
 The key enhancement is native support for 3D tensors (observations × variables × timesteps) alongside the existing 2D matrices, enabling efficient storage of longitudinal patient data.
 A new `.tem` DataFrame provides time-point annotations, complementing the existing `.obs` and `.var` annotations for comprehensive temporal data description.
 While `EHRData` maintains full backward compatibility with AnnData's API, users can now seamlessly work with time-series data and leverage specialized methods for temporal analysis.
 Existing code using `AnnData` objects will continue to work, but migration to `EHRData` is strongly recommended to access enhanced time-series functionality.
-
 * The preferred central data object is now `EHRData` ([#908](https://github.com/theislab/ehrapy/pull/908)) @eroell
 * The `layers` argument is now available for all functions operating on X or layers ([#908](https://github.com/theislab/ehrapy/pull/908)) @eroell
 * Update expected behaviour of `io.read_fhir` ([#922](https://github.com/theislab/ehrapy/pull/922)) @eroell
-* Move `mimic_2`, `mimic_2_preprocessed`, `diabetes_130_raw`, `diabetes_130_fairlearn` to `ehrdata.dt` ([#908](https://github.com/theislab/ehrapy/pull/908)) @eroell
+* Move `mimic_2`, `mimic_2_preprocessed`, `diabetes_130_raw`, `diabetes_130_fairlearn` to `ehrdata.dt` ([#908](https://github.com/theislab/ehrapy/pull/908))
 * Deprecate all `ep.dt.*`, refer to datasets in `ehrdata` ([#908](https://github.com/theislab/ehrapy/pull/908)) @eroell
+* Support Python 3.14 ([#996](https://github.com/theislab/ehrapy/pull/996)) @Zethson
+* Move kaplan_meier & cox_ph plots to holoviews ([#995](https://github.com/theislab/ehrapy/pull/995)) @Zethson
+* Longitudinal normalization ([#958](https://github.com/theislab/ehrapy/pull/958)) @agerardy
+* Add interactive `ols` plot ([#992](https://github.com/theislab/ehrapy/pull/992)) @Zethson
+* Longitudinal and new qc_metrics ([#967](https://github.com/theislab/ehrapy/pull/967)) @sueoglu
+* Simple Impute for timeseries ([#975](https://github.com/theislab/ehrapy/pull/975)) @eroell
+* Simple implementation of balanced sampling ([#937](https://github.com/theislab/ehrapy/pull/937)) @sueoglu
+* Add Sankey diagram visualization functions ([#989](https://github.com/theislab/ehrapy/pull/989)) @sueoglu
+* Add `ep.pl.timeseries()` to visualize variables over time ([#994](https://github.com/theislab/ehrapy/pull/994)) @sueoglu
+* Add GPU CI & skeleton ([#998](https://github.com/theislab/ehrapy/pull/998)) @Zethson
+* Add FAMD ([#976](https://github.com/theislab/ehrapy/pull/976)) @Zethson
+* 3D enabled implementation of ep.pp.filter_observations, ep.pp.filter_features ([#953](https://github.com/theislab/ehrapy/pull/953)) @sueoglu
+* Add time series distances ([#954](https://github.com/theislab/ehrapy/pull/954)) @Zethson
+
+### 🐛 Bug Fixes
+
+* All green if GPU skipped ([#1000](https://github.com/theislab/ehrapy/pull/1000)) @Zethson
+* Fix neighbors with timeseries ([#973](https://github.com/theislab/ehrapy/pull/973)) @eroell
+* Fix use_rep when X none ([#969](https://github.com/theislab/ehrapy/pull/969)) @eroell
+* Fix missing_values_barplot errors ([#963](https://github.com/theislab/ehrapy/pull/963)) @sueoglu
+* Fix CR notebook ([#939](https://github.com/theislab/ehrapy/pull/939)) @Zethson
+
+### 🧰 Maintenance
+
+* Update actions ([#977](https://github.com/theislab/ehrapy/pull/977)) @Zethson
+* Cleanup simple_impute tests ([#974](https://github.com/theislab/ehrapy/pull/974)) @eroell
+* Move to ehrdata 0.0.10 ([#971](https://github.com/theislab/ehrapy/pull/971)) @eroell
+* Improved notebook CI ([#959](https://github.com/theislab/ehrapy/pull/959)) @Zethson
+* Switch to template ([#960](https://github.com/theislab/ehrapy/pull/960)) @Zethson
+* Tests for more plots ([#919](https://github.com/theislab/ehrapy/pull/919)) @sueoglu
+* Lowerbound cvxpy ([#935](https://github.com/theislab/ehrapy/pull/935)) @Zethson
+* Optimize var_metrics ([#927](https://github.com/theislab/ehrapy/pull/927)) @Zethson
+* Refactor Dask usage pattern ([#926](https://github.com/theislab/ehrapy/pull/926)) @Zethson
+* Add cover to README & remove some tokens ([#923](https://github.com/theislab/ehrapy/pull/923)) @Zethson
+* Update test coverage reporting ([#918](https://github.com/theislab/ehrapy/pull/918)) @eroell
+* Fix changelog links ([#915](https://github.com/theislab/ehrapy/pull/915)) @Zethson
+* Fixed structure of Returns in _rank_features_groups.py documentation ([#911](https://github.com/theislab/ehrapy/pull/911)) @agerardy
+* Add EHRData transition code ([#897](https://github.com/theislab/ehrapy/pull/897)) @Zethson @eroell
+* Make test that downloads dermatology dataset more robust ([#906](https://github.com/theislab/ehrapy/pull/906)) @Zethson
+* Update image source in README.md ([#986](https://github.com/theislab/ehrapy/pull/986)) @eroell
+* Fix plot docs formatting ([#952](https://github.com/theislab/ehrapy/pull/952)) @Zethson
+* Typo in the documentation of ehrapy.data.mimic_2_preprocessed ([#917](https://github.com/theislab/ehrapy/pull/917)) @sueoglu
 
 ## v0.12.1
 
