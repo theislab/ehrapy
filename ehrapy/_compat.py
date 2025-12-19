@@ -7,6 +7,7 @@ from inspect import signature
 from subprocess import PIPE, Popen
 from typing import TYPE_CHECKING, ParamSpec, TypeVar, cast
 
+import holoviews as hv
 import numpy as np
 import scipy.sparse as sp
 
@@ -256,3 +257,20 @@ def as_dense_dask_array(a, chunk_size=1000):
     import dask.array as da
 
     return da.from_array(a, chunks=chunk_size)
+
+
+def choose_hv_backend() -> Callable[[Callable[P, R]], Callable[P, R]]:
+    def decorator(func: Callable[P, R]) -> Callable[P, R]:
+        @wraps(func)
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+            if hv.Store.current_backend is None:
+                raise RuntimeError(
+                    "No holoviews backend selected. "
+                    "Call holoviews.extension('matplotlib') or "
+                    "holoviews.extension('bokeh') before using this function."
+                )
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator

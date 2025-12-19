@@ -8,6 +8,7 @@ from ehrapy.plot._missingno import (
     missing_values_heatmap,
     missing_values_matrix,
 )
+from ehrapy.plot._sankey import sankey_diagram, sankey_diagram_time
 from ehrapy.plot._scanpy_pl_api import (
     clustermap,
     dendrogram,
