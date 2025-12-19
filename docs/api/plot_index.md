@@ -26,6 +26,7 @@ For most tools and for some preprocessing functions, you will find a plotting fu
     plot.ranking
     plot.dendrogram
     plot.catplot
+    plot.timeseries
     plot.sankey_diagram
     plot.sankey_diagram_time
 ```
