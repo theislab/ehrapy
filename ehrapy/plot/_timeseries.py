@@ -49,13 +49,12 @@ def timeseries(
         HoloViews Overlay (if overlay=True) or Layout (if overlay=False) object representing the time series plot(s).
 
     Examples:
-    >>> import ehrapy as ep
-    >>> import ehrdata as ed
-    >>> edata = ed.dt.ehrdata_blobs(n_variables=10, n_observations=5, base_timepoints=100)
-    >>> ep.pl.timeseries(edata, obs_names="1", var_names=["feature_1", "feature_2"], tem_names=slice(0, 10))
+        >>> import ehrapy as ep
+        >>> import ehrdata as ed
+        >>> edata = ed.dt.ehrdata_blobs(n_variables=10, n_observations=5, base_timepoints=100)
+        >>> ep.pl.timeseries(edata, obs_names="1", var_names=["feature_1", "feature_2"], tem_names=slice(0, 10))
 
-    .. image:: /_static/docstring_previews/timeseries_plot.png
-
+        .. image:: /_static/docstring_previews/timeseries_plot.png
     """
     opts_dict: dict[str, Any] = {}
     if width is not None:
