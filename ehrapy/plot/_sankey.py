@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from functools import singledispatch
 from typing import TYPE_CHECKING, Any
 
 import holoviews as hv
 import numpy as np
 import pandas as pd
+from fast_array_utils.conv import to_dense
 
-from ehrapy._compat import _raise_array_type_not_implemented, choose_hv_backend
+from ehrapy._compat import choose_hv_backend
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -180,7 +180,7 @@ def sankey_diagram_time(
         raise KeyError(f"{layer} not found in edata.layers.")
 
     flare_data = edata[:, edata.var_names == var_name, :].layers[layer][:, 0, :]
-    mtx = np.asarray(flare_data)
+    mtx = to_dense(flare_data, to_cpu_memory=True)
     time_steps = edata.tem.index.tolist()
 
     if np.issubdtype(mtx.dtype, np.floating):
