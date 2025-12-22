@@ -337,9 +337,9 @@ def _knn_impute(
 
         imputer = KNNImputer(n_neighbors=n_neighbors, **kwargs)
     else:
-        from fknni import FaissImputer
+        from fknni import FastKNNImputer
 
-        imputer = FaissImputer(n_neighbors=n_neighbors, **kwargs)
+        imputer = FastKNNImputer(n_neighbors=n_neighbors, **kwargs)
 
     column_indices = _get_var_indices(edata, edata.var_names if var_names is None else var_names)
     numerical_indices = _infer_numerical_column_indices(
