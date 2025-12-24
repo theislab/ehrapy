@@ -1,82 +1,154 @@
-[tool.poetry]
+[build-system]
+build-backend = "hatchling.build"
+requires = [ "hatchling" ]
+
+[project]
 name = "ehrapy"
-version = "0.1.0"  # <<COOKIETEMPLE_FORCE_BUMP>>
+version = "0.0.1"
 description = "Electronic Health Record Analysis with Python."
-authors = ["Lukas Heumos <lukas.heumos@posteo.net>"]
-license = "Apache2.0"
-readme = "README.rst"
-homepage = "https://github.com/theislab/ehrapy"
-repository = "https://github.com/theislab/ehrapy"
-documentation = "https://ehrapy.readthedocs.io"
-packages = [
-    { include = "ehrapy" },
+readme = "README.md"
+license = { file = "LICENSE" }
+maintainers = [
+  { name = "Lukas Heumos", email = "lukas.heumos@posteo.net" },
 ]
+authors = [
+  { name = "Lukas Heumos" },
+]
+requires-python = ">=3.11"
 classifiers = [
-    "Programming Language :: Python :: 3.6",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+  "anndata",
+  # for debug logging (referenced from the issue template)
+  "session-info2",
+]
+# https://docs.pypi.org/project_metadata/#project-urls
+urls.Documentation = "https://ehrapy.readthedocs.io/"
+urls.Homepage = "https://github.com/theislab/ehrapy"
+urls.Source = "https://github.com/theislab/ehrapy"
+
+[dependency-groups]
+dev = [
+  "pre-commit",
+  "twine>=4.0.2",
+]
+test = [
+  "coverage>=7.10",
+  "pytest",
+  "pytest-cov",     # For VS Code’s coverage functionality
+]
+doc = [
+  "ipykernel",
+  "ipython",
+  "myst-nb>=1.1",
+  "pandas",
+  "sphinx>=8.1",
+  "sphinx-autodoc-typehints",
+  "sphinx-book-theme>=1",
+  "sphinx-copybutton",
+  "sphinx-tabs",
+  "sphinxcontrib-bibtex>=1",
+  "sphinxcontrib-katex",
+  "sphinxext-opengraph",
 ]
 
+[tool.hatch.envs.default]
+installer = "uv"
+dependency-groups = [ "dev" ]
 
-[tool.poetry.dependencies]
-python = "^3.6.1"
-click = "^8.0.0"
-rich = "^10.3.0"
-PyYAML = "^5.4.1"
-Jinja2 = "^2.11.3"
+[tool.hatch.envs.docs]
+dependency-groups = [ "doc" ]
+scripts.build = "sphinx-build -M html docs docs/_build -W {args}"
+scripts.open = "python -m webbrowser -t docs/_build/html/index.html"
+scripts.clean = "git clean -fdX -- {args:docs}"
 
-[tool.poetry.dev-dependencies]
-pytest = "^6.2.3"
-coverage = {extras = ["toml"], version = "^5.3"}
-safety = "^1.9.0"
-mypy = "^0.901"
-typeguard = "^2.12.0"
-xdoctest = {extras = ["colors"], version = "^0.15.0"}
-sphinx = "^3.3.1"
-sphinx-autobuild = "^2021.3.14"
-pre-commit = "^2.11.1"
-flake8 = "^3.8.4"
-black = "^20.8b1"
-flake8-bandit = "^2.1.2"
-flake8-bugbear = "^21.4.3"
-flake8-docstrings = "^1.5.0"
-flake8-rst-docstrings = "^0.0.14"
-pep8-naming = "^0.11.1"
-darglint = "^1.5.8"
-reorder-python-imports = "^2.5.0"
-pre-commit-hooks = "^3.3.0"
-sphinx-rtd-theme = "^0.5.0"
-sphinx-click = "^3.0.0"
-Pygments = "^2.8.1"
-types-pkg-resources = "^0.1.2"
-types-requests = "^0.1.9"
-types-attrs = "^19.1.0"
+# Test the lowest and highest supported Python versions with normal deps
+[[tool.hatch.envs.hatch-test.matrix]]
+deps = [ "stable" ]
+python = [ "3.11", "3.14" ]
 
-[tool.poetry.scripts]
-ehrapy = "ehrapy.__main__:main"
+# Test the newest supported Python version also with pre-release deps
+[[tool.hatch.envs.hatch-test.matrix]]
+deps = [ "pre" ]
+python = [ "3.14" ]
 
-[tool.black]
+[tool.hatch.envs.hatch-test]
+dependency-groups = [ "dev", "test" ]
+
+[tool.hatch.envs.hatch-test.overrides]
+# If the matrix variable `deps` is set to "pre",
+# set the environment variable `UV_PRERELEASE` to "allow".
+matrix.deps.env-vars = [
+  { key = "UV_PRERELEASE", value = "allow", if = [ "pre" ] },
+]
+
+[tool.ruff]
 line-length = 120
+src = [ "src" ]
+extend-include = [ "*.ipynb" ]
 
-[tool.mypy]
-strict = false
-pretty = true
-show_column_numbers = true
-show_error_codes = true
-show_error_context = true
-ignore_missing_imports = true
+format.docstring-code-format = true
 
-[tool.coverage.paths]
-source = ["ehrapy", "*/site-packages"]
+lint.select = [
+  "B",      # flake8-bugbear
+  "BLE",    # flake8-blind-except
+  "C4",     # flake8-comprehensions
+  "D",      # pydocstyle
+  "E",      # Error detected by Pycodestyle
+  "F",      # Errors detected by Pyflakes
+  "I",      # isort
+  "RUF100", # Report unused noqa directives
+  "TID",    # flake8-tidy-imports
+  "UP",     # pyupgrade
+  "W",      # Warning detected by Pycodestyle
+]
+lint.ignore = [
+  "B008", # Errors from function calls in argument defaults. These are fine when the result is immutable.
+  "D100", # Missing docstring in public module
+  "D104", # Missing docstring in public package
+  "D105", # __magic__ methods are often self-explanatory, allow missing docstrings
+  "D107", # Missing docstring in __init__
+  # Disable one in each pair of mutually incompatible rules
+  "D203", # We don’t want a blank line before a class docstring
+  "D213", # <> We want docstrings to start immediately after the opening triple quote
+  "D400", # first line should end with a period [Bug: doesn’t work with single-line docstrings]
+  "D401", # First line should be in imperative mood; try rephrasing
+  "E501", # line too long -> we accept long comment lines; formatter gets rid of long code lines
+  "E731", # Do not assign a lambda expression, use a def -> lambda expression assignments are convenient
+  "E741", # allow I, O, l as variable names -> I is the identity matrix
+]
+lint.per-file-ignores."*/__init__.py" = [ "F401" ]
+lint.per-file-ignores."docs/*" = [ "I" ]
+lint.per-file-ignores."tests/*" = [ "D" ]
+lint.pydocstyle.convention = "numpy"
+
+[tool.pytest]
+strict = true
+testpaths = [ "tests" ]
+addopts = [
+  "--import-mode=importlib", # allow using test files with same name
+]
 
 [tool.coverage.run]
-branch = true
-source = ["ehrapy"]
+source = [ "ehrapy" ]
+patch = [ "subprocess" ]
+omit = [
+  "**/test_*.py",
+]
 
-[tool.coverage.report]
-show_missing = true
-
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+[tool.cruft]
+skip = [
+  "tests",
+  "src/**/__init__.py",
+  "src/**/basic.py",
+  "docs/api.md",
+  "docs/changelog.md",
+  "docs/references.bib",
+  "docs/references.md",
+  "docs/notebooks/example.ipynb",
+]

@@ -1,5 +1,0 @@
-# (optional) list included tests here:
-tests: []
-
-# (optional) list skipped tests here:
-skips: ["B403", "B404", "B603", "B607"]
