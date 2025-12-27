@@ -4,6 +4,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## v0.13.0
 
+### 🧰 Maintenance
+
+* improve syntax usage ([#1005](https://github.com/theislab/ehrapy/pull/1005)) @Zethson
+* fix fknni extra ([#1003](https://github.com/theislab/ehrapy/pull/1003)) @Zethson
+
+## v0.13.0
+
 ### 🚀 Features
 
 * Transitioning from AnnData to EHRData
