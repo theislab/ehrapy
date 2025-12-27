@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 import pytest
 from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
-from scipy import sparse as sp
 
 import ehrapy as ep
 from ehrapy.io._read import read_csv
@@ -324,27 +323,72 @@ def test_qc_lab_measurements_3D_edata(edata_blob_small):
         )
 
 
-def test_qc_lab_measurements_age():
-    # TODO
-    pass
+def test_qc_lab_measurements_age(lab_measurements_simple_edata):
+    reference_table = pd.DataFrame(
+        {
+            "SI Reference Interval": ["66-199", "1-50"],
+            "Age": ["18-65", "66-99"],
+        },
+        index=pd.Index(["Acetaminophen", "Acetaminophen"], name="Measurement"),
+    )
+    ep.pp.qc_lab_measurements(
+        lab_measurements_simple_edata,
+        reference_table=reference_table,
+        measurements=["Acetaminophen"],
+        unit="SI",
+        age_col="Age",
+        age_range="66-99",
+    )
+    # Values [73, 148], range 1-50: both False
+    assert list(lab_measurements_simple_edata.obs["Acetaminophen normal"]) == [False, False]
 
 
-def test_qc_lab_measurements_sex():
-    # TODO
-    pass
+def test_qc_lab_measurements_sex(lab_measurements_simple_edata):
+    reference_table = pd.DataFrame(
+        {
+            "SI Reference Interval": ["66-199", "1-50"],
+            "Sex": ["M", "F"],
+        },
+        index=pd.Index(["Acetaminophen", "Acetaminophen"], name="Measurement"),
+    )
+    ep.pp.qc_lab_measurements(
+        lab_measurements_simple_edata,
+        reference_table=reference_table,
+        measurements=["Acetaminophen"],
+        unit="SI",
+        sex_col="Sex",
+        sex="F",
+    )
+    # Values [73, 148], range 1-50: both False
+    assert list(lab_measurements_simple_edata.obs["Acetaminophen normal"]) == [False, False]
 
 
-def test_qc_lab_measurements_ethnicity():
-    # TODO
-    pass
+def test_qc_lab_measurements_ethnicity(lab_measurements_simple_edata):
+    reference_table = pd.DataFrame(
+        {
+            "SI Reference Interval": ["66-199", "1-50"],
+            "Ethnicity": ["Caucasian", "Asian"],
+        },
+        index=pd.Index(["Acetaminophen", "Acetaminophen"], name="Measurement"),
+    )
+    ep.pp.qc_lab_measurements(
+        lab_measurements_simple_edata,
+        reference_table=reference_table,
+        measurements=["Acetaminophen"],
+        unit="SI",
+        ethnicity_col="Ethnicity",
+        ethnicity="Asian",
+    )
+    # Values [73, 148], range 1-50: both False
+    assert list(lab_measurements_simple_edata.obs["Acetaminophen normal"]) == [False, False]
 
 
 def test_qc_lab_measurements_multiple_measurements():
     data = pd.DataFrame(np.array([[100, 98], [162, 107]]), columns=["oxygen saturation", "glucose"], index=[0, 1])
 
     with pytest.raises(ValueError):
-        adata = ep.ad.df_to_anndata(data)
-        ep.pp.qc_lab_measurements(adata, measurements=["oxygen saturation", "glucose"], unit="SI")
+        edata = ed.io.from_pandas(data)
+        ep.pp.qc_lab_measurements(edata, measurements=["oxygen saturation", "glucose"], unit="SI")
 
 
 @pytest.mark.parametrize(

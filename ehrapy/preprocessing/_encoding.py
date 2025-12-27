@@ -171,15 +171,11 @@ def encode(
 
             new_var["encoding_mode"] = [encodings if var in categoricals_names else None for var in unencoded_var_names]
 
-            # TODO: ehrdata v0.0.5 and newer allow to pass layers and X to constructor
-            encoded_edata = _cast_adata_to_match_data_type(
-                AnnData(
-                    X=encoded_x,
-                    obs=updated_obs,
-                    var=new_var,
-                    uns=edata.uns.copy(),
-                ),
-                edata,
+            encoded_edata = EHRData(
+                X=encoded_x,
+                obs=updated_obs,
+                var=new_var,
+                uns=edata.uns.copy(),
             )
 
             encoded_edata.layers["original"] = updated_layer
@@ -281,15 +277,11 @@ def encode(
             new_var.loc[_categorical, "encoding_mode"] = encoding_mode[_categorical]
 
         try:
-            # TODO: ehrdata v0.0.5 and newer allow to pass layers and X to constructor
-            encoded_edata = _cast_adata_to_match_data_type(
-                AnnData(
-                    X=encoded_x,
-                    obs=updated_obs,
-                    var=new_var,
-                    uns=edata.uns.copy(),
-                ),
-                edata,
+            encoded_edata = EHRData(
+                X=encoded_x,
+                obs=updated_obs,
+                var=new_var,
+                uns=edata.uns.copy(),
             )
 
             encoded_edata.layers["original"] = updated_layer
@@ -552,15 +544,11 @@ def _undo_encoding(
         edata.var.loc[edata.var["unencoded_var_names"] == unenc_var_name, FEATURE_TYPE_KEY].unique()[0]
         for unenc_var_name in new_var_names
     ]
-    # TODO: ehrdata v0.0.5 and newer allow to pass layers and X to constructor
-    edata = _cast_adata_to_match_data_type(
-        AnnData(
-            new_x,
-            obs=new_obs,
-            var=var,
-            uns=OrderedDict(),
-        ),
-        edata,
+    edata = EHRData(
+        X=new_x,
+        obs=new_obs,
+        var=var,
+        uns=OrderedDict(),
     )
     if layer is not None:
         edata.layers[layer] = new_x.copy()

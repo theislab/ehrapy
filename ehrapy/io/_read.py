@@ -609,16 +609,6 @@ def _prepare_dataframe(initial_df: pd.DataFrame, columns_obs_only, columns_x_onl
         except (ValueError, TypeError):
             # we only need to replace NANs on non datetime, non numerical columns since datetime are obs only by default
             no_datetime_object_col.append(col)
-    # writing to hd5a files requires non string to be empty in non numerical columns
-    if cache:
-        # TODO remove this when anndata 0.8.0 is released
-        initial_df[no_datetime_object_col] = initial_df[no_datetime_object_col].fillna("")
-        # temporary workaround needed; see https://github.com/theislab/anndata/issues/504 and https://github.com/theislab/anndata/issues/662
-        # converting booleans to strings is needed for caching as writing to .h5ad files currently does not support writing boolean values
-        bool_columns = {
-            column_name: "str" for column_name in initial_df.columns if initial_df.dtypes[column_name] == "bool"
-        }
-        initial_df = initial_df.astype(bool_columns)
     return initial_df, columns_obs_only
 
 
