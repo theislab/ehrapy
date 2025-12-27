@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ehrdata as ed
 import numpy as np
 import pandas as pd
 import pytest
@@ -19,7 +20,6 @@ from ehrapy.anndata.anndata_ext import (
     move_to_obs,
     move_to_x,
 )
-from tests.conftest import TEST_DATA_PATH
 
 
 @pytest.fixture
@@ -244,9 +244,9 @@ def test_df_to_anndata_index_column_index():
     d = {"col1": [0, 1, 2, 3], "col2": pd.Series([2, 3])}
     df = pd.DataFrame(data=d, index=[0, 1, 2, 3])
     df.index.set_names("quarter", inplace=True)
-    adata = ep.ad.df_to_anndata(df, index_column="quarter")
-    assert adata.obs.index.name == "quarter"
-    assert list(adata.obs.index) == ["0", "1", "2", "3"]
+    edata = ed.io.from_pandas(df, index_column="quarter")
+    assert edata.obs.index.name == "quarter"
+    assert list(edata.obs.index) == ["0", "1", "2", "3"]
 
 
 def test_df_to_anndata_invalid_index_throws_error(setup_df_to_anndata):
@@ -257,11 +257,11 @@ def test_df_to_anndata_invalid_index_throws_error(setup_df_to_anndata):
 
 def test_df_to_anndata_cols_obs_only(setup_df_to_anndata):
     df, col1_val, col2_val, col3_val = setup_df_to_anndata
-    adata = df_to_anndata(df, columns_obs_only=["col1", "col2"])
-    assert adata.X.dtype == "float32"
-    assert adata.X.shape == (100, 1)
+    edata = ed.io.from_pandas(df, columns_obs_only=["col1", "col2"])
+    assert np.issubdtype(edata.X.dtype, np.floating)
+    assert edata.X.shape == (100, 1)
     assert_frame_equal(
-        adata.obs,
+        edata.obs,
         DataFrame({"col1": col1_val, "col2": col2_val}, index=[str(idx) for idx in range(100)]).astype("category"),
     )
 
@@ -269,10 +269,10 @@ def test_df_to_anndata_cols_obs_only(setup_df_to_anndata):
 def test_df_to_anndata_all_num():
     test_array = np.random.default_rng().integers(0, 100, (4, 5))
     df = DataFrame(test_array, columns=["col" + str(idx) for idx in range(5)])
-    adata = df_to_anndata(df)
+    edata = ed.io.from_pandas(df)
 
-    assert adata.X.dtype == "float32"
-    np.testing.assert_array_equal(test_array, adata.X)
+    assert np.issubdtype(edata.X.dtype, np.floating)
+    np.testing.assert_array_equal(test_array, edata.X)
 
 
 def test_df_to_anndata_index_col_obs_only(setup_df_to_anndata):

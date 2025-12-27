@@ -750,7 +750,6 @@ def synthea_1k_sample(
     """Loads the 1K Sample Synthetic Patient Records Data Set.
 
     More details: https://synthea.mitre.org/downloads
-    Preprocessing: TODO: add preprocessing link
 
     Args:
         encoded: Whether to return an already encoded object.

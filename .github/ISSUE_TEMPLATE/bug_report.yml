@@ -3,8 +3,7 @@ description: ehrapy doesn’t do what it should? Please help us fix it!
 #title: ...
 labels:
   - triage
-type:
-  - Bug
+type: Bug
 #assignees: []
 body:
   - type: checkboxes

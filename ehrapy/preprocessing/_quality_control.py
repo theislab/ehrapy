@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import copy
-import warnings
 from functools import singledispatch
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
@@ -9,7 +8,6 @@ from typing import TYPE_CHECKING, Literal
 import numpy as np
 import pandas as pd
 from ehrdata._logger import logger
-from scipy.stats import kurtosis, skew
 from thefuzz import process
 
 from ehrapy._compat import (
@@ -26,6 +24,7 @@ if TYPE_CHECKING:
     from collections.abc import Collection
 
 
+import ehrdata as ed
 from anndata import AnnData
 from ehrdata import EHRData
 
@@ -607,7 +606,7 @@ def qc_lab_measurements(
                 min_age, max_age = age_range.split("-")
                 reference_values = reference_values[
                     (reference_values[age_col].str.split("-").str[0].astype(int) >= int(min_age))
-                    and (reference_values[age_col].str.split("-").str[1].astype(int) <= int(max_age))
+                    & (reference_values[age_col].str.split("-").str[1].astype(int) <= int(max_age))
                 ]
             if sex_col:
                 sexes = "U|M" if sex is None else sex
@@ -669,8 +668,7 @@ def mcar_test(
     We advise to use Little’s MCAR test carefully.
     Rejecting the null hypothesis may not always mean that data is not MCAR, nor is accepting the null hypothesis a guarantee that data is MCAR.
     See Schouten, R. M., & Vink, G. (2021). The Dance of the Mechanisms: How Observed Information Influences the Validity of Missingness Assumptions.
-    Sociological Methods & Research, 50(3), 1243-1258. https://doi.org/10.1177/0049124118799376
-    for a thorough discussion of missingness mechanisms.
+    Sociological Methods & Research, 50(3), 1243-1258. https://doi.org/10.1177/0049124118799376 for a thorough discussion of missingness mechanisms.
 
     Args:
         edata: Central data object.
@@ -680,7 +678,7 @@ def mcar_test(
     Returns:
         A single p-value if the Little's test was applied or a Pandas DataFrame of the p-value of t-tests for each pair of features.
     """
-    df = anndata_to_df(edata, layer=layer)
+    df = ed.io.to_pandas(edata, layer=layer)
     from pyampute.exploration.mcar_statistical_tests import MCARTest
 
     mt = MCARTest(method=method)

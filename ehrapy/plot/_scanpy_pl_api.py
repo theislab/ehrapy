@@ -611,9 +611,7 @@ def stacked_violin(  # noqa: D417
     stripplot: bool = StackedViolin.DEFAULT_STRIPPLOT,
     jitter: float | bool = StackedViolin.DEFAULT_JITTER,
     size: int = StackedViolin.DEFAULT_JITTER_SIZE,
-    scale: Literal[
-        "area", "count", "width"
-    ] = "width",  # TODO This should be StackedViolin.DEFAULT_DENSITY_NORM -> wait for next release
+    scale: Literal["area", "count", "width"] = StackedViolin.DEFAULT_DENSITY_NORM,
     yticklabels: bool | None = StackedViolin.DEFAULT_PLOT_YTICKLABELS,
     order: Sequence[str] | None = None,
     swap_axes: bool = False,
@@ -634,8 +632,7 @@ def stacked_violin(  # noqa: D417
     Makes a compact image composed of individual violin plots (from :func:`~seaborn.violinplot`) stacked on top of each other.
 
     This function provides a convenient interface to the :class:`~ehrapy.plot.StackedViolin` class.
-    If you need more flexibility, you should use :class:`~ehrapy.plot.StackedViolin` directly.
-
+    If you need more flexibility, use :class:`~ehrapy.plot.StackedViolin` directly.
 
     Args:
         {common_plot_args}
@@ -944,7 +941,6 @@ def ranking(
             ep.pp.log_norm(edata, offset=1)
             ep.pp.neighbors(edata)
             ep.pp.pca(edata)
-            TODO: ep.pl.ranking(edata)
     """
     return sc.pl.ranking(
         edata,
