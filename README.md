@@ -4,7 +4,7 @@
 [![PyPI](https://img.shields.io/pypi/v/ehrapy.svg)](https://pypi.org/project/ehrapy/)
 [![Python Version](https://img.shields.io/pypi/pyversions/ehrapy)](https://pypi.org/project/ehrapy)
 [![Read the Docs](https://img.shields.io/readthedocs/ehrapy/latest.svg?label=Read%20the%20Docs)](https://ehrapy.readthedocs.io/)
-[![Test](https://github.com/theislab/ehrapy/actions/workflows/test.yml/badge.svg)](https://github.com/theislab/ehrapy/actions/workflows/test.yml)
+[![Test](https://github.com/theislab/ehrapy/actions/workflows/test_cpu.yml/badge.svg)](https://github.com/theislab/ehrapy/actions/workflows/test_cpu.yml)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 
 <p align="center">
