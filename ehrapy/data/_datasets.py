@@ -369,7 +369,7 @@ def dermatology(
     adata = read_csv(
         dataset_path=f"{ehrapy_settings.datasetdir}/dermatology.csv",
         download_dataset_name="dermatology.csv",
-        backup_url="https://figshare.com/ndownloader/files/34179300",
+        backup_url="https://exampledata.scverse.org/ehrapy/dermatology.csv",
         columns_obs_only=columns_obs_only,
         index_column="patient_id",
     )
