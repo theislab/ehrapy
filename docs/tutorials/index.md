@@ -29,6 +29,7 @@ For questions about the usage of ehrapy use the [zulip forum](https://scverse.zu
    notebooks/bias
    notebooks/out_of_core
    notebooks/patient_trajectory
+   notebooks/longitudinal_with_ehrapy
 
 ```
 
