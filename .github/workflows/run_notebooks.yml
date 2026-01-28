@@ -38,7 +38,7 @@ jobs:
               run: pip install uv
 
             - name: Install ehrapy and additional dependencies
-              run: uv pip install --system . cellrank nbconvert ipykernel graphviz torch pypots torch_geometric torch_scatter torch_sparse
+              run: uv pip install --system . cellrank nbconvert ipykernel graphviz
 
             - name: Run ${{ matrix.notebook }} Notebook
               run: jupyter nbconvert --to notebook --execute ${{ matrix.notebook }}
