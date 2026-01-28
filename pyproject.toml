@@ -83,7 +83,7 @@ dev = [
     "pre-commit",
 ]
 doc = [
-    "docutils",
+    "docutils<0.22",  # https://github.com/vidartf/nbsphinx-link/issues/25
     "sphinx",
     "scanpydoc",
     "sphinx-book-theme",
