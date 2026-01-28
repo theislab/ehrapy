@@ -1,3 +1,4 @@
+from ehrapy.tools._correlation import compute_variable_correlations
 from ehrapy.tools._scanpy_tl_api import *  # noqa: F403
 from ehrapy.tools._survival_analysis import (
     anova_glm,
