@@ -179,4 +179,5 @@ nbsphinx_thumbnails = {
 # Redirect broken parameter annotation classes
 qualname_overrides = {
     "pandas.core.series.Series": "pandas.Series",
+    "pandas.core.series.DataFrame": "pandas.DataFrame",
 }
