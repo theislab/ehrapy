@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import matplotlib as mpl
+import matplotlib.collections as mcoll
 import pandas as pd
 import pytest
 
@@ -92,7 +93,40 @@ def test_dotplot_plot(mimic_2, check_same_image):
 
     ax = ep.pl.dotplot(
         adata,
-        var_names=[
+        var_names=adata.var_names,
+        groupby="service_unit",
+        show=False,
+        figsize=(5, 6),
+    )
+
+    ax["mainplot_ax"].get_figure()
+
+    # ticks exist and are non empty
+    xt = [t.get_text().strip() for t in ax["mainplot_ax"].get_xticklabels() if t.get_text().strip()]
+    yt = [t.get_text().strip() for t in ax["mainplot_ax"].get_yticklabels() if t.get_text().strip()]
+
+    for v in adata.var_names:
+        assert v in xt
+
+    for g in adata.obs["service_unit"].cat.categories:
+        assert str(g) in yt
+
+    # dot counts match expected
+    n = 0
+    for coll in ax["mainplot_ax"].collections:
+        if isinstance(coll, mcoll.PathCollection):
+            offsets = coll.get_offsets()
+            if offsets is not None:
+                n += len(offsets)
+
+    n_groups = adata.obs["service_unit"].nunique()
+    assert n == n_groups * len(adata.var_names)
+
+
+def test_dotplot_plot_image(mimic_2, check_same_image):
+    adata = mimic_2[
+        :,
+        [
             "abg_count",
             "wbc_first",
             "hgb_first",
@@ -101,13 +135,24 @@ def test_dotplot_plot(mimic_2, check_same_image):
             "bun_first",
             "creatinine_first",
             "pco2_first",
+            "service_unit",
         ],
+    ].copy()
+
+    adata.obs["service_unit"] = mimic_2[:, "service_unit"].X.toarray().ravel().astype(str)
+    adata._inplace_subset_var([var for var in adata.var_names if var != "service_unit"])
+    adata.X = adata.X.astype(float)
+
+    ax = ep.pl.dotplot(
+        adata,
+        var_names=adata.var_names,
         groupby="service_unit",
         show=False,
         figsize=(5, 6),
     )
 
     fig = ax["mainplot_ax"].get_figure()
+
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/dotplot_scanpy_plt",
@@ -391,23 +436,50 @@ def test_rank_features_groups_heatmap(mimic_2_encoded, check_same_image):
     plt.close("all")
 
 
-def test_rank_features_groups_dotplot(mimic_2_encoded, check_same_image):
+from matplotlib.collections import PathCollection
+
+
+def test_rank_features_groups_dotplot(mimic_2_encoded):
     adata_sample = mimic_2_encoded[
         :200, ["wbc_first", "hgb_first", "potassium_first", "tco2_first", "bun_first"]
     ].copy()
     ep.tl.rank_features_groups(adata_sample, groupby="service_unit")
 
-    # To see the numerical results
+    plot = ep.pl.rank_features_groups_dotplot(
+        adata_sample, key="rank_features_groups", groupby="service_unit", show=False
+    )
 
-    groups = adata_sample.uns["rank_features_groups"]["names"].dtype.names
-    for group in groups:
-        print(f"\nGroup: {group}")
-        names = adata_sample.uns["rank_features_groups"]["names"][group]
-        scores = adata_sample.uns["rank_features_groups"]["scores"][group]
-        pvals = adata_sample.uns["rank_features_groups"]["pvals"][group]
-        print("Top features:")
-        for name, score, pval in zip(names, scores, pvals, strict=False):
-            print(f"  {name}: score={score:.4f}, pval={pval:.4e}")
+    ax = plot["mainplot_ax"]
+
+    # ticks exist and are non-empty
+    xt = [t.get_text().strip() for t in ax.get_xticklabels() if t.get_text().strip()]
+    yt = [t.get_text().strip() for t in ax.get_yticklabels() if t.get_text().strip()]
+    assert xt
+    assert yt
+
+    expected_groups = {str(g) for g in adata_sample.obs["service_unit"].cat.categories}
+    assert set(yt) == expected_groups
+
+    colls = [c for c in ax.collections if isinstance(c, PathCollection)]
+    assert colls
+
+    sizes = [len(c.get_offsets()) for c in colls if c.get_offsets() is not None]
+    assert sizes
+
+    n_groups = adata_sample.obs["service_unit"].nunique()
+    expected_points = n_groups * (n_groups * len(adata_sample.var_names))
+
+    # Main dot layer should be the largest collection
+    assert max(sizes) == expected_points
+
+    plt.close("all")
+
+
+def test_rank_features_groups_dotplot_image(mimic_2_encoded, check_same_image):
+    adata_sample = mimic_2_encoded[
+        :200, ["wbc_first", "hgb_first", "potassium_first", "tco2_first", "bun_first"]
+    ].copy()
+    ep.tl.rank_features_groups(adata_sample, groupby="service_unit")
 
     ax = ep.pl.rank_features_groups_dotplot(
         adata_sample, key="rank_features_groups", groupby="service_unit", show=False
