@@ -22,7 +22,7 @@ from ehrapy._types import (
     as_dense_dask_array,
     asarray,
 )
-
+import os
 if TYPE_CHECKING:
     import os
 
@@ -30,6 +30,25 @@ if TYPE_CHECKING:
 
 TEST_DATA_PATH = Path(__file__).parent / "data"
 
+def pytest_configure():
+    os.environ.setdefault("MPLBACKEND", "Agg")
+
+    import matplotlib as mpl
+    mpl.use("Agg", force=True)
+
+    mpl.rcParams.update({
+        "font.family": "DejaVu Sans",
+        "font.size": 10,
+
+        "figure.constrained_layout.use": False,
+        "figure.autolayout": False,
+
+        "figure.dpi": 80,
+        "savefig.dpi": 80,
+
+        "savefig.bbox": "standard",  # not "tight"
+        "savefig.pad_inches": 0.1,
+    })
 
 @pytest.fixture
 def root_dir():
