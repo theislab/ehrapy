@@ -852,6 +852,43 @@ def test_offset_negative_values_3D(edata_blobs_timeseries_small):
     assert np.all(non_nan_values >= 0)
 
 
+@pytest.mark.parametrize(
+    "norm_func",
+    [
+        ep.pp.scale_norm,
+        ep.pp.minmax_norm,
+        ep.pp.maxabs_norm,
+        ep.pp.robust_scale_norm,
+        ep.pp.quantile_norm,
+        ep.pp.power_norm,
+        ep.pp.log_norm,
+        ep.pp.offset_negative_values,
+    ],
+)
+def test_norm_with_X_none_and_layer(edata_blobs_timeseries_small, norm_func):
+    edata = edata_blobs_timeseries_small.copy()
+    layer = DEFAULT_TEM_LAYER_NAME
+
+    edata.X = None
+
+    edata.var[FEATURE_TYPE_KEY] = NUMERIC_TAG
+
+    layer_before = edata.layers[layer].copy()
+
+    if norm_func in (ep.pp.power_norm, ep.pp.log_norm):
+        ep.pp.offset_negative_values(edata, layer=layer)
+        layer_before = edata.layers[layer].copy()
+
+    result = norm_func(edata, layer=layer, copy=True)
+
+    assert result is not None
+    assert result.layers[layer].shape == layer_before.shape
+    assert edata.X is None
+
+    if norm_func != ep.pp.offset_negative_values:
+        assert not np.allclose(layer_before, result.layers[layer], equal_nan=True)
+
+
 @pytest.mark.parametrize("array_type", ARRAY_TYPES_NUMERIC_3D_ABLE)
 @pytest.mark.parametrize(
     "norm_func",
