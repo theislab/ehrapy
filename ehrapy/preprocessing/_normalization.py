@@ -50,7 +50,8 @@ def _scale_func_group(
     else:
         _assert_numeric_vars(edata, vars)
 
-    edata = _prep_edata_norm(edata, copy)
+    if copy:
+        edata = edata.copy()
 
     var_indices = _get_var_indices(edata, vars)
     X = edata.X if layer is None else edata.layers[layer]
@@ -613,7 +614,8 @@ def log_norm(
     else:
         _assert_numeric_vars(edata, vars)
 
-    edata = _prep_edata_norm(edata, copy)
+    if copy:
+        edata = edata.copy()
 
     X = edata.X if layer is None else edata.layers[layer]
 
@@ -654,16 +656,6 @@ def log_norm(
     _record_norm(edata, vars, "log")
 
     return edata if copy else None
-
-
-def _prep_edata_norm(edata: EHRData | AnnData, copy: bool = False) -> EHRData | AnnData | None:  # pragma: no cover
-    if copy:
-        edata = edata.copy()
-
-    if "raw_norm" not in edata.layers.keys():
-        edata.layers["raw_norm"] = edata.X.copy()
-
-    return edata
 
 
 def _record_norm(edata: EHRData | AnnData, vars: Sequence[str], method: str) -> None:
@@ -714,7 +706,8 @@ def offset_negative_values(edata: EHRData | AnnData, layer: str = None, copy: bo
         >>> np.nanmin(edata.layers["tem_data"])
         0.0
     """
-    edata = _prep_edata_norm(edata, copy)
+    if copy:
+        edata = edata.copy()
 
     X = edata.X if layer is None else edata.layers[layer]
     minimum = np.nanmin(X)
