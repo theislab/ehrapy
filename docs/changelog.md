@@ -8,6 +8,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 * improve syntax usage ([#1005](https://github.com/theislab/ehrapy/pull/1005)) @Zethson
 * fix fknni extra ([#1003](https://github.com/theislab/ehrapy/pull/1003)) @Zethson
+* Update plotting ci dotplot ([#1011](https://github.com/theislab/ehrapy/pull/1011)) @sueoglu @eroell
 
 ### 🐛 Bug Fixes
 
