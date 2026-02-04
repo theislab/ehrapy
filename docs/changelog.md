@@ -11,7 +11,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### 🐛 Bug Fixes
 
-* `ep.pp`'s normalization functions now work when using a `layer` and `.X` is `None` ([#1015](https://github.com/theislab/ehrapy/pull/1015)) @agerardy @eroell
+* `ep.pp` normalization functions now work when using a `layer` and `.X` is `None` ([#1015](https://github.com/theislab/ehrapy/pull/1015)) @agerardy @eroell
 
 
 ## v0.13.0
