@@ -1,9 +1,9 @@
 import re
 import warnings
 
-import anndata
 import dowhy
 import dowhy.datasets
+import ehrdata as ed
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
@@ -25,7 +25,7 @@ class TestCausal:
         )
         X = linear_data["df"].astype(np.float32)
         R_layer = np.stack([X, X], axis=2)
-        self.linear_data = anndata.AnnData(X, layers={DEFAULT_TEM_LAYER_NAME: R_layer})
+        self.linear_data = ed.EHRData(X, layers={DEFAULT_TEM_LAYER_NAME: R_layer})
         self.linear_graph = linear_data["gml_graph"]
         self.outcome_name = "y"
         self.treatment_name = "v0"

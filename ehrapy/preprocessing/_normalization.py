@@ -40,7 +40,7 @@ def _scale_func_group(
 
     Supports both 2D and 3D data with unified layer handling.
     """
-    if group_key is not None and group_key not in edata.obs_keys():
+    if group_key is not None and group_key not in edata.obs:
         raise KeyError(f"group key '{group_key}' not found in edata.obs.")
 
     if isinstance(vars, str):
@@ -659,7 +659,7 @@ def log_norm(
 
 
 def _record_norm(edata: EHRData | AnnData, vars: Sequence[str], method: str) -> None:
-    if "normalization" in edata.uns_keys():
+    if "normalization" in edata.uns:
         norm_record = edata.uns["normalization"]
     else:
         norm_record = {}

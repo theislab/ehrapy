@@ -1,6 +1,6 @@
+import ehrdata as ed
 import numpy as np
 import pytest
-from anndata import AnnData
 from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
 from pandas import DataFrame
 
@@ -15,9 +15,9 @@ def adata_to_expand(rng):
     measurement3 = rng.uniform(0, 20, size=6)
     data_dict = {"measurement1": measurement1, "measurement2": measurement2, "measurement3": measurement3}
     data_df = DataFrame(data_dict, index=row_ids)
-    adata = AnnData(X=data_df)
+    edata = ed.EHRData(X=data_df)
 
-    return adata
+    return edata
 
 
 def test_all_statistics(adata_to_expand):
