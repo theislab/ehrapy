@@ -662,6 +662,7 @@ def stacked_violin(  # noqa: D417
     Example:
         .. code-block:: python
 
+            import ehrdata as ed
             import ehrapy as ep
 
             edata = ed.dt.mimic_2()
@@ -788,6 +789,7 @@ def matrixplot(  # noqa: D417
     Example:
         .. code-block:: python
 
+            import ehrdata as ed
             import ehrapy as ep
 
             edata = ed.dt.mimic_2()
@@ -879,6 +881,7 @@ def clustermap(  # noqa: D417
     Example:
         .. code-block:: python
 
+            import ehrdata as ed
             import ehrapy as ep
 
             edata = ed.dt.mimic_2()
@@ -986,6 +989,7 @@ def dendrogram(  # noqa: D417
     Example:
         .. code-block:: python
 
+            import ehrdata as ed
             import ehrapy as ep
 
             edata = ed.dt.mimic_2()
