@@ -5,9 +5,9 @@ import numpy as np
 import pandas as pd
 import pytest
 from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
+from ehrdata.io import read_csv
 
 import ehrapy as ep
-from ehrapy.io._read import read_csv
 from ehrapy.preprocessing._encoding import encode
 from ehrapy.preprocessing._quality_control import _compute_obs_metrics, _compute_var_metrics, mcar_test
 from tests.conftest import ARRAY_TYPES_NONNUMERIC, TEST_DATA_PATH, as_dense_dask_array
@@ -195,7 +195,7 @@ def test_qc_metrics_heterogeneous_columns():
     ],
 )
 def test_obs_qc_metrics_array_types(array_type, expected_error):
-    adata = read_csv(dataset_path=f"{_TEST_PATH_ENCODE}/dataset1.csv")
+    adata = read_csv(f"{_TEST_PATH_ENCODE}/dataset1.csv")
     adata.X = array_type(adata.X)
     mtx = adata.X
     if expected_error:
@@ -204,7 +204,7 @@ def test_obs_qc_metrics_array_types(array_type, expected_error):
 
 
 def test_obs_nan_qc_metrics():
-    adata = read_csv(dataset_path=f"{_TEST_PATH_ENCODE}/dataset1.csv")
+    adata = read_csv(f"{_TEST_PATH_ENCODE}/dataset1.csv")
     adata.X[0][4] = np.nan
     adata2 = encode(adata, encodings={"one-hot": ["clinic_day"]})
     mtx = adata2.X
@@ -221,7 +221,7 @@ def test_obs_nan_qc_metrics():
     ],
 )
 def test_var_qc_metrics_array_types(array_type, expected_error):
-    adata = read_csv(dataset_path=f"{_TEST_PATH_ENCODE}/dataset1.csv")
+    adata = read_csv(f"{_TEST_PATH_ENCODE}/dataset1.csv")
     adata.X = array_type(adata.X)
     mtx = adata.X
     if expected_error:
@@ -230,7 +230,7 @@ def test_var_qc_metrics_array_types(array_type, expected_error):
 
 
 def test_var_encoding_mode_does_not_modify_original_matrix():
-    adata = read_csv(dataset_path=f"{_TEST_PATH_ENCODE}/dataset1.csv")
+    adata = read_csv(f"{_TEST_PATH_ENCODE}/dataset1.csv")
     adata2 = encode(adata, encodings={"one-hot": ["clinic_day"]})
     mtx_copy = adata2.X.copy()
     _compute_var_metrics(adata2.X, adata2)
@@ -238,7 +238,7 @@ def test_var_encoding_mode_does_not_modify_original_matrix():
 
 
 def test_var_nan_qc_metrics():
-    adata = read_csv(dataset_path=f"{_TEST_PATH_ENCODE}/dataset1.csv")
+    adata = read_csv(f"{_TEST_PATH_ENCODE}/dataset1.csv")
     adata.X[0][4] = np.nan
     adata2 = encode(adata, encodings={"one-hot": ["clinic_day"]})
     mtx = adata2.X

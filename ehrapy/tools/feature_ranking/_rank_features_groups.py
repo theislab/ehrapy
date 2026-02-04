@@ -11,7 +11,7 @@ from ehrdata import infer_feature_types, move_to_x
 from ehrdata._feature_types import _check_feature_types
 from ehrdata.core.constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 
-from ehrapy._compat import _cast_adata_to_match_data_type, function_2D_only, use_ehrdata
+from ehrapy._compat import _cast_edata_to_match_data_type, function_2D_only, use_ehrdata
 from ehrapy.preprocessing import encode
 
 if TYPE_CHECKING:
@@ -460,7 +460,7 @@ def rank_features_groups(
         X_to_keep = np.zeros((len(edata), 1))
         var_to_keep = pd.DataFrame({"dummy": [0]})
 
-    edata_minimal = _cast_adata_to_match_data_type(
+    edata_minimal = _cast_edata_to_match_data_type(
         AnnData(
             X=X_to_keep,
             obs=edata.obs,

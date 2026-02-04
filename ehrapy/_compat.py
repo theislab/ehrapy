@@ -193,7 +193,7 @@ def _apply_over_time_axis(f: Callable) -> Callable:
     return wrapper
 
 
-def _cast_adata_to_match_data_type(input_data: AnnData, target_type_reference: EHRData | AnnData) -> EHRData | AnnData:
+def _cast_edata_to_match_data_type(input_data: AnnData, target_type_reference: EHRData | AnnData) -> EHRData | AnnData:
     """Cast the data object to the type used by the function."""
     if isinstance(input_data, type(target_type_reference)):
         return input_data

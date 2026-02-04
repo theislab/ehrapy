@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pytest
-from anndata import AnnData
 from ehrdata.core.constants import CATEGORICAL_TAG, DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY, NUMERIC_TAG
 from matplotlib.testing.compare import compare_images
 
@@ -219,8 +218,8 @@ def edata_mini_integers_in_X():
     )
     # cast data in X to integers; pd.read generates floats generously, but want to test integer normalization
     edata.X = edata.X.astype(np.int32)
-    ep.ad.infer_feature_types(edata)
-    ep.ad.replace_feature_types(edata, ["in_days"], "numeric")
+    ed.infer_feature_types(edata)
+    ed.replace_feature_types(edata, ["in_days"], "numeric")
     return edata
 
 

@@ -4,8 +4,10 @@ from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import pandas as pd
+from ehrdata._feature_types import _check_feature_types
 from ehrdata._logger import logger
 from ehrdata.core.constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
+from ehrdata.io import to_pandas
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.model_selection import train_test_split
@@ -13,7 +15,6 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.svm import SVC, SVR
 
 from ehrapy._compat import function_2D_only, use_ehrdata
-from ehrapy.anndata import _check_feature_types, anndata_to_df
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -95,7 +96,7 @@ def rank_features_supervised(
             f"Feature scaling type {feature_scaling} not recognized. Please choose either 'standard', 'minmax', or None."
         )
 
-    data = anndata_to_df(edata, layer=layer)
+    data = to_pandas(edata, layer=layer)
 
     prediction_type = edata.var[FEATURE_TYPE_KEY].loc[predicted_feature]
 

@@ -25,7 +25,7 @@ def test_all_statistics(adata_to_expand):
         adata_to_expand,
     )
 
-    assert transformed_adata.shape == (3, 9)  # (3 patients, 3 measurements * 3 statistics)
+    assert transformed_adata.shape == (3, 9, 1)  # (3 patients, 3 measurements * 3 statistics)
     assert np.allclose(
         transformed_adata[:, "measurement2_min"].X.reshape(-1), np.array([1.883547, 15.222794, 2.5622725])
     )
@@ -43,13 +43,13 @@ def test_var_names_subset(adata_to_expand):
         var_names=["measurement1", "measurement2"],
     )
 
-    assert transformed_adata.shape == (3, 6)  # (3 patients, 2 measurements * 3 statistics)
+    assert transformed_adata.shape == (3, 6, 1)  # (3 patients, 2 measurements * 3 statistics)
 
 
 def test_statistics_subset(adata_to_expand):
     transformed_adata = summarize_measurements(adata_to_expand, statistics=["min"])
 
-    assert transformed_adata.shape == (3, 3)  # (3 patients, 3 measurements * 1 statistics)
+    assert transformed_adata.shape == (3, 3, 1)  # (3 patients, 3 measurements * 1 statistics)
 
 
 def test_summarize_measurements_3D_edata(edata_blob_small):

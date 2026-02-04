@@ -183,9 +183,6 @@ filterwarnings = [
     "ignore:Trying to modify attribute `.var` of view, initializing view as actual.:anndata.ImplicitModificationWarning",
     "ignore:Transforming to str index.:anndata.ImplicitModificationWarning:",
     "ignore:Modifying `X` on a view results in data being overridden:anndata.ImplicitModificationWarning",
-    # Ignore AnnData deprecation warnings in tests (except in test_compat.py where they're explicitly tested)
-    "ignore:Using AnnData.*is deprecated.*Please use EHRData instead:FutureWarning",
-    "ignore:ep.* is deprecated.*:FutureWarning",
     "ignore:Parameter.*is deprecated.*Please use.*instead:FutureWarning"
 ]
 minversion = 6.0

@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Literal
 import numpy as np
 import pandas as pd
 from ehrdata._logger import logger
+from ehrdata.io import to_pandas
 from thefuzz import process
 
 from ehrapy._compat import (
@@ -17,7 +18,6 @@ from ehrapy._compat import (
     function_2D_only,
     use_ehrdata,
 )
-from ehrapy.anndata import anndata_to_df
 from ehrapy.preprocessing._encoding import _get_encoded_features
 
 if TYPE_CHECKING:

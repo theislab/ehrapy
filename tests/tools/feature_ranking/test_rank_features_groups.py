@@ -1,13 +1,14 @@
 from pathlib import Path
 
+import ehrdata as ed
 import numpy as np
 import pandas as pd
 import pytest
 from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY, NUMERIC_TAG
+from ehrdata.io import read_csv
 
 import ehrapy as ep
 import ehrapy.tools.feature_ranking._rank_features_groups as _utils
-from ehrapy.io._read import read_csv
 from tests.conftest import TEST_DATA_PATH
 
 CURRENT_DIR = Path(__file__).parent
@@ -43,8 +44,9 @@ class TestHelperFunctions:
         def _is_sorted(arr: np.array):
             return np.all(arr[:-1] <= arr[1:])
 
-        adata = ep.dt.mimic_2(encoded=False)
-        adata.uns["rank_features_groups"] = {
+        edata = ed.dt.mimic_2()
+        edata = ep.pp.encode(edata, autodetect=True)
+        edata.uns["rank_features_groups"] = {
             "params": {"whatever": "here is", "it does": "not matter", "but this key should be": "present for testing"},
             "names": pd.DataFrame(
                 {
@@ -60,24 +62,25 @@ class TestHelperFunctions:
             "log2foldchanges": pd.DataFrame({"group1": (2, 1, 10, 3), "group2": (4, 5, 6, 7)}).to_records(index=False),
         }
         # Doesn't really matter that they are the same here but order should be preserved
-        adata.uns["rank_features_groups"]["pvals_adj"] = adata.uns["rank_features_groups"]["pvals"].copy()
+        edata.uns["rank_features_groups"]["pvals_adj"] = edata.uns["rank_features_groups"]["pvals"].copy()
 
-        _utils._sort_features(adata)
+        _utils._sort_features(edata)
 
         # Check that every feature is sorted
         # Actually, some of them would be sorted in the opposite direction (e.g. scores) for real data
         # But what matters here is that the permutation is the same for every key and is based on adjusted p-values
-        for key in adata.uns["rank_features_groups"]:
+        for key in edata.uns["rank_features_groups"]:
             if key == "params":
                 continue
-            assert _is_sorted(adata.uns["rank_features_groups"][key]["group1"])
-            assert _is_sorted(adata.uns["rank_features_groups"][key]["group2"])
+            assert _is_sorted(edata.uns["rank_features_groups"][key]["group1"])
+            assert _is_sorted(edata.uns["rank_features_groups"][key]["group2"])
 
     def test_save_rank_features_result(self):
         groups = ("group1", "group2")
 
-        adata = ep.dt.mimic_2(encoded=False)
-        adata.uns["rank_features_groups"] = {
+        edata = ed.dt.mimic_2()
+        edata = ep.pp.encode(edata, autodetect=True)
+        edata.uns["rank_features_groups"] = {
             "params": {"whatever": "here is", "it does": "not matter", "but this key should be": "present for testing"}
         }
 
@@ -94,9 +97,9 @@ class TestHelperFunctions:
         logfoldchanges = pd.DataFrame({"group1": (2, 1, 10, 3), "group2": (4, 5, 6, 7)}).to_records(index=False)
 
         # Check that adding only required keys works
-        adata_only_required = adata.copy()
+        edata_only_required = edata.copy()
         _utils._save_rank_features_result(
-            adata_only_required,
+            edata_only_required,
             key_added="rank_features_groups",
             groups_order=groups,
             names=names,
@@ -104,36 +107,36 @@ class TestHelperFunctions:
             pvals=pvals,
         )
 
-        assert "names" in adata_only_required.uns["rank_features_groups"]
-        assert "pvals" in adata_only_required.uns["rank_features_groups"]
-        assert "scores" in adata_only_required.uns["rank_features_groups"]
-        assert "log2foldchanges" not in adata_only_required.uns["rank_features_groups"]
-        assert "pvals_adj" not in adata_only_required.uns["rank_features_groups"]
-        assert "pts" not in adata_only_required.uns["rank_features_groups"]
-        assert adata_only_required.uns["rank_features_groups"]["names"].dtype.names == groups
+        assert "names" in edata_only_required.uns["rank_features_groups"]
+        assert "pvals" in edata_only_required.uns["rank_features_groups"]
+        assert "scores" in edata_only_required.uns["rank_features_groups"]
+        assert "log2foldchanges" not in edata_only_required.uns["rank_features_groups"]
+        assert "pvals_adj" not in edata_only_required.uns["rank_features_groups"]
+        assert "pts" not in edata_only_required.uns["rank_features_groups"]
+        assert edata_only_required.uns["rank_features_groups"]["names"].dtype.names == groups
         assert (
-            len(adata_only_required.uns["rank_features_groups"]["names"]) == 4
+            len(edata_only_required.uns["rank_features_groups"]["names"]) == 4
         )  # It only captures the length of each group
-        assert len(adata_only_required.uns["rank_features_groups"]["pvals"]) == 4
-        assert len(adata_only_required.uns["rank_features_groups"]["scores"]) == 4
+        assert len(edata_only_required.uns["rank_features_groups"]["pvals"]) == 4
+        assert len(edata_only_required.uns["rank_features_groups"]["scores"]) == 4
 
-        # Check that running the function on adata with existing keys merges the arrays correctly
+        # Check that running the function on edata with existing keys merges the arrays correctly
         _utils._save_rank_features_result(
-            adata_only_required,
+            edata_only_required,
             key_added="rank_features_groups",
             groups_order=groups,
             names=names,
             scores=scores,
             pvals=pvals,
         )
-        assert len(adata_only_required.uns["rank_features_groups"]["names"]) == 8
-        assert len(adata_only_required.uns["rank_features_groups"]["pvals"]) == 8
-        assert len(adata_only_required.uns["rank_features_groups"]["scores"]) == 8
+        assert len(edata_only_required.uns["rank_features_groups"]["names"]) == 8
+        assert len(edata_only_required.uns["rank_features_groups"]["pvals"]) == 8
+        assert len(edata_only_required.uns["rank_features_groups"]["scores"]) == 8
 
         # Check that adding other keys works
-        adata_all_keys = adata.copy()
+        edata_all_keys = edata.copy()
         _utils._save_rank_features_result(
-            adata_all_keys,
+            edata_all_keys,
             key_added="rank_features_groups",
             groups_order=groups,
             names=names,
@@ -144,23 +147,23 @@ class TestHelperFunctions:
             logfoldchanges=logfoldchanges,
         )
 
-        assert "names" in adata_all_keys.uns["rank_features_groups"]
-        assert "pvals" in adata_all_keys.uns["rank_features_groups"]
-        assert "scores" in adata_all_keys.uns["rank_features_groups"]
-        assert "logfoldchanges" in adata_all_keys.uns["rank_features_groups"]
-        assert "pvals_adj" in adata_all_keys.uns["rank_features_groups"]
-        assert "pts" in adata_all_keys.uns["rank_features_groups"]
-        assert adata_all_keys.uns["rank_features_groups"]["names"].dtype.names == groups
-        assert len(adata_all_keys.uns["rank_features_groups"]["names"]) == 4
-        assert len(adata_all_keys.uns["rank_features_groups"]["pvals"]) == 4
-        assert len(adata_all_keys.uns["rank_features_groups"]["pvals_adj"]) == 4
-        assert len(adata_all_keys.uns["rank_features_groups"]["logfoldchanges"]) == 4
-        assert len(adata_all_keys.uns["rank_features_groups"]["scores"]) == 4
-        assert len(adata_all_keys.uns["rank_features_groups"]["pts"]) == 4
+        assert "names" in edata_all_keys.uns["rank_features_groups"]
+        assert "pvals" in edata_all_keys.uns["rank_features_groups"]
+        assert "scores" in edata_all_keys.uns["rank_features_groups"]
+        assert "logfoldchanges" in edata_all_keys.uns["rank_features_groups"]
+        assert "pvals_adj" in edata_all_keys.uns["rank_features_groups"]
+        assert "pts" in edata_all_keys.uns["rank_features_groups"]
+        assert edata_all_keys.uns["rank_features_groups"]["names"].dtype.names == groups
+        assert len(edata_all_keys.uns["rank_features_groups"]["names"]) == 4
+        assert len(edata_all_keys.uns["rank_features_groups"]["pvals"]) == 4
+        assert len(edata_all_keys.uns["rank_features_groups"]["pvals_adj"]) == 4
+        assert len(edata_all_keys.uns["rank_features_groups"]["logfoldchanges"]) == 4
+        assert len(edata_all_keys.uns["rank_features_groups"]["scores"]) == 4
+        assert len(edata_all_keys.uns["rank_features_groups"]["pts"]) == 4
 
         # Check that passing empty objects doesn't add keys
         _utils._save_rank_features_result(
-            adata,
+            edata,
             key_added="rank_features_groups",
             groups_order=groups,
             names=names,
@@ -170,12 +173,12 @@ class TestHelperFunctions:
             pts=np.array([]),
             logfoldchanges=pd.DataFrame([]),
         )
-        assert "names" in adata.uns["rank_features_groups"]
-        assert "pvals" in adata.uns["rank_features_groups"]
-        assert "scores" in adata.uns["rank_features_groups"]
-        assert "logfoldchanges" not in adata.uns["rank_features_groups"]
-        assert "pvals_adj" not in adata.uns["rank_features_groups"]
-        assert "pts" not in adata.uns["rank_features_groups"]
+        assert "names" in edata.uns["rank_features_groups"]
+        assert "pvals" in edata.uns["rank_features_groups"]
+        assert "scores" in edata.uns["rank_features_groups"]
+        assert "logfoldchanges" not in edata.uns["rank_features_groups"]
+        assert "pvals_adj" not in edata.uns["rank_features_groups"]
+        assert "pts" not in edata.uns["rank_features_groups"]
 
     def test_get_groups_order(self):
         assert _utils._get_groups_order(groups_subset="all", group_names=("A", "B", "C"), reference="B") == (
@@ -205,18 +208,19 @@ class TestHelperFunctions:
             _utils._get_groups_order(groups_subset=("A", "B"), group_names=("A", "B", "C"), reference="D")
 
     def test_evaluate_categorical_features(self):
-        adata = ep.dt.mimic_2(encoded=False)
-        ep.ad.infer_feature_types(adata, output=None)
-        adata.var.loc["hour_icu_intime", FEATURE_TYPE_KEY] = (
+        edata = ed.dt.mimic_2()
+        edata = ep.pp.encode(edata, autodetect=True)
+        ed.infer_feature_types(edata, output=None)
+        edata.var.loc["hour_icu_intime", FEATURE_TYPE_KEY] = (
             NUMERIC_TAG  # This is detected as categorical, so we need to correct that
         )
-        adata = ep.pp.encode(adata, autodetect=True, encodings="label")
+        edata = ep.pp.encode(edata, autodetect=True, encodings="label")
 
-        group_names = pd.Categorical(adata.obs["service_unit"].astype(str)).categories.tolist()
+        group_names = pd.Categorical(edata.obs["service_unit"].astype(str)).categories.tolist()
 
         for method in ("chi-square", "g-test", "freeman-tukey", "mod-log-likelihood", "neyman", "cressie-read"):
             names, scores, pvals, logfc, pts = _utils._evaluate_categorical_features(
-                adata, groupby="service_unit", group_names=group_names, categorical_method=method
+                edata, groupby="service_unit", group_names=group_names, categorical_method=method
             )
 
             # Check that important fields are not empty
@@ -238,200 +242,209 @@ class TestHelperFunctions:
 
 
 def test_real_dataset(mimic_2_encoded):
-    adata = mimic_2_encoded
-    ep.tl.rank_features_groups(adata, groupby="service_unit")
+    edata = mimic_2_encoded
+    ep.tl.rank_features_groups(edata, groupby="service_unit")
 
-    assert "rank_features_groups" in adata.uns
-    assert "names" in adata.uns["rank_features_groups"]
-    assert "pvals" in adata.uns["rank_features_groups"]
-    assert "scores" in adata.uns["rank_features_groups"]
-    assert "logfoldchanges" in adata.uns["rank_features_groups"]
-    assert "pvals_adj" in adata.uns["rank_features_groups"]
+    assert "rank_features_groups" in edata.uns
+    assert "names" in edata.uns["rank_features_groups"]
+    assert "pvals" in edata.uns["rank_features_groups"]
+    assert "scores" in edata.uns["rank_features_groups"]
+    assert "logfoldchanges" in edata.uns["rank_features_groups"]
+    assert "pvals_adj" in edata.uns["rank_features_groups"]
 
-    assert "params" in adata.uns["rank_features_groups"]
-    assert "method" in adata.uns["rank_features_groups"]["params"]
-    assert "categorical_method" in adata.uns["rank_features_groups"]["params"]
-    assert "reference" in adata.uns["rank_features_groups"]["params"]
-    assert "groupby" in adata.uns["rank_features_groups"]["params"]
-    assert "layer" in adata.uns["rank_features_groups"]["params"]
-    assert "corr_method" in adata.uns["rank_features_groups"]["params"]
+    assert "params" in edata.uns["rank_features_groups"]
+    assert "method" in edata.uns["rank_features_groups"]["params"]
+    assert "categorical_method" in edata.uns["rank_features_groups"]["params"]
+    assert "reference" in edata.uns["rank_features_groups"]["params"]
+    assert "groupby" in edata.uns["rank_features_groups"]["params"]
+    assert "layer" in edata.uns["rank_features_groups"]["params"]
+    assert "corr_method" in edata.uns["rank_features_groups"]["params"]
 
 
 def test_only_continous_features(mimic_2_encoded):
-    adata = mimic_2_encoded
-    ep.tl.rank_features_groups(adata, groupby="service_unit")
+    edata = mimic_2_encoded
+    ep.tl.rank_features_groups(edata, groupby="service_unit")
 
-    assert "rank_features_groups" in adata.uns
-    assert "names" in adata.uns["rank_features_groups"]
-    assert "pvals" in adata.uns["rank_features_groups"]
-    assert "scores" in adata.uns["rank_features_groups"]
-    assert "logfoldchanges" in adata.uns["rank_features_groups"]
-    assert "pvals_adj" in adata.uns["rank_features_groups"]
+    assert "rank_features_groups" in edata.uns
+    assert "names" in edata.uns["rank_features_groups"]
+    assert "pvals" in edata.uns["rank_features_groups"]
+    assert "scores" in edata.uns["rank_features_groups"]
+    assert "logfoldchanges" in edata.uns["rank_features_groups"]
+    assert "pvals_adj" in edata.uns["rank_features_groups"]
 
 
 def test_only_cat_features(mimic_2_encoded):
-    adata = mimic_2_encoded
-    ep.tl.rank_features_groups(adata, groupby="service_unit")
-    assert "rank_features_groups" in adata.uns
-    assert "names" in adata.uns["rank_features_groups"]
-    assert "pvals" in adata.uns["rank_features_groups"]
-    assert "scores" in adata.uns["rank_features_groups"]
-    assert "logfoldchanges" in adata.uns["rank_features_groups"]
-    assert "pvals_adj" in adata.uns["rank_features_groups"]
+    edata = mimic_2_encoded
+    ep.tl.rank_features_groups(edata, groupby="service_unit")
+    assert "rank_features_groups" in edata.uns
+    assert "names" in edata.uns["rank_features_groups"]
+    assert "pvals" in edata.uns["rank_features_groups"]
+    assert "scores" in edata.uns["rank_features_groups"]
+    assert "logfoldchanges" in edata.uns["rank_features_groups"]
+    assert "pvals_adj" in edata.uns["rank_features_groups"]
 
 
 @pytest.mark.parametrize("field_to_rank", ["layer", "obs", "layer_and_obs"])
-def test_rank_adata_immutability_property(field_to_rank):
+def test_rank_edata_immutability_property(field_to_rank):
     """
-    Test that rank_features_group does not modify the adata object passed to it, except for the desired .uns field.
+    Test that rank_features_group does not modify the edata object passed to it, except for the desired .uns field.
     This test is important because to save memory, copies are made conservatively in rank_features_groups
     """
-    adata = read_csv(
-        dataset_path=f"{TEST_DATA_PATH}/dataset1.csv", columns_x_only=["station", "sys_bp_entry", "dia_bp_entry"]
+    edata = read_csv(f"{TEST_DATA_PATH}/dataset1.csv")
+    edata = ed.move_to_obs(
+        edata, edata.var_names[~edata.var_names.isin(["station", "sys_bp_entry", "dia_bp_entry"])], copy=True
     )
-    adata = ep.pp.encode(adata, encodings={"label": ["station"]})
-    adata_orig = adata.copy()
+    edata = ep.pp.encode(edata, encodings={"label": ["station"]})
+    edata_orig = edata.copy()
 
-    ep.tl.rank_features_groups(adata, groupby="disease", field_to_rank=field_to_rank)
+    ep.tl.rank_features_groups(edata, groupby="disease", field_to_rank=field_to_rank)
 
-    assert adata_orig.shape == adata.shape
-    assert adata_orig.X.shape == adata.X.shape
-    assert adata_orig.obs.shape == adata.obs.shape
-    assert adata_orig.var.shape == adata.var.shape
+    assert edata_orig.shape == edata.shape
+    assert edata_orig.X.shape == edata.X.shape
+    assert edata_orig.obs.shape == edata.obs.shape
+    assert edata_orig.var.shape == edata.var.shape
 
-    assert np.allclose(adata_orig.X, adata.X)
-    assert np.array_equal(adata_orig.obs, adata.obs)
+    assert np.allclose(edata_orig.X, edata.X)
+    assert np.array_equal(edata_orig.obs, edata.obs)
 
-    assert "rank_features_groups" in adata.uns
+    assert "rank_features_groups" in edata.uns
 
 
 @pytest.mark.parametrize("field_to_rank", ["layer", "obs", "layer_and_obs"])
 def test_rank_features_groups_generates_outputs(field_to_rank):
     """Test that the desired output is generated."""
-    adata = read_csv(
-        dataset_path=f"{TEST_DATA_PATH}/dataset1.csv",
-        columns_obs_only=["disease", "station", "sys_bp_entry", "dia_bp_entry"],
-    )
-    ep.tl.rank_features_groups(adata, groupby="disease", field_to_rank=field_to_rank)
+    edata = read_csv(f"{TEST_DATA_PATH}/dataset1.csv")
+    edata = ed.move_to_obs(edata, ["disease", "station", "sys_bp_entry", "dia_bp_entry"], copy=True)
+    ep.tl.rank_features_groups(edata, groupby="disease", field_to_rank=field_to_rank)
 
     # check standard rank_features_groups entries
-    assert "names" in adata.uns["rank_features_groups"]
-    assert "pvals" in adata.uns["rank_features_groups"]
-    assert "scores" in adata.uns["rank_features_groups"]
-    assert "pvals_adj" in adata.uns["rank_features_groups"]
-    assert "logfoldchanges" in adata.uns["rank_features_groups"]
-    assert "log2foldchanges" not in adata.uns["rank_features_groups"]
-    assert "pts" not in adata.uns["rank_features_groups"]
+    assert "names" in edata.uns["rank_features_groups"]
+    assert "pvals" in edata.uns["rank_features_groups"]
+    assert "scores" in edata.uns["rank_features_groups"]
+    assert "pvals_adj" in edata.uns["rank_features_groups"]
+    assert "logfoldchanges" in edata.uns["rank_features_groups"]
+    assert "log2foldchanges" not in edata.uns["rank_features_groups"]
+    assert "pts" not in edata.uns["rank_features_groups"]
 
     if field_to_rank == "layer":
-        assert len(adata.uns["rank_features_groups"]["names"]) == 4
-        assert len(adata.uns["rank_features_groups"]["pvals"]) == 4
-        assert len(adata.uns["rank_features_groups"]["scores"]) == 4
+        assert len(edata.uns["rank_features_groups"]["names"]) == 4
+        assert len(edata.uns["rank_features_groups"]["pvals"]) == 4
+        assert len(edata.uns["rank_features_groups"]["scores"]) == 4
 
     elif field_to_rank == "obs":
-        assert len(adata.uns["rank_features_groups"]["names"]) == 3  # It only captures the length of each group
-        assert len(adata.uns["rank_features_groups"]["pvals"]) == 3
-        assert len(adata.uns["rank_features_groups"]["scores"]) == 3
+        assert len(edata.uns["rank_features_groups"]["names"]) == 3  # It only captures the length of each group
+        assert len(edata.uns["rank_features_groups"]["pvals"]) == 3
+        assert len(edata.uns["rank_features_groups"]["scores"]) == 3
 
     elif field_to_rank == "layer_and_obs":
-        assert len(adata.uns["rank_features_groups"]["names"]) == 7  # It only captures the length of each group
-        assert len(adata.uns["rank_features_groups"]["pvals"]) == 7
-        assert len(adata.uns["rank_features_groups"]["scores"]) == 7
+        assert len(edata.uns["rank_features_groups"]["names"]) == 7  # It only captures the length of each group
+        assert len(edata.uns["rank_features_groups"]["pvals"]) == 7
+        assert len(edata.uns["rank_features_groups"]["scores"]) == 7
 
 
 def test_rank_features_groups_consistent_results():
-    adata_features_in_x = read_csv(
-        dataset_path=f"{TEST_DATA_PATH}/dataset1.csv",
-        columns_x_only=["station", "sys_bp_entry", "dia_bp_entry", "glucose"],
+    edata_features_in_x = read_csv(f"{TEST_DATA_PATH}/dataset1.csv")
+    edata_features_in_x = ed.move_to_obs(
+        edata_features_in_x,
+        edata_features_in_x.var_names[~edata_features_in_x.var_names.isin(["sys_bp_entry", "dia_bp_entry", "glucose"])],
+        copy=True,
     )
-    adata_features_in_x = ep.pp.encode(adata_features_in_x, encodings={"label": ["station"]})
+    edata_features_in_x = ep.pp.encode(edata_features_in_x, encodings={"label": ["station"]})
 
-    adata_features_in_obs = read_csv(
-        dataset_path=f"{TEST_DATA_PATH}/dataset1.csv",
-        columns_obs_only=["disease", "station", "sys_bp_entry", "dia_bp_entry", "glucose"],
+    edata_features_in_obs = read_csv(f"{TEST_DATA_PATH}/dataset1.csv")
+    edata_features_in_obs = ed.move_to_obs(
+        edata_features_in_obs,
+        ["disease", "station", "sys_bp_entry", "dia_bp_entry", "glucose"],
+        copy=True,
     )
 
-    adata_features_in_x_and_obs = read_csv(
-        dataset_path=f"{TEST_DATA_PATH}/dataset1.csv",
-        columns_obs_only=["disease", "station"],
+    edata_features_in_x_and_obs = read_csv(f"{TEST_DATA_PATH}/dataset1.csv")
+    edata_features_in_x_and_obs = ed.move_to_obs(
+        edata_features_in_x_and_obs,
+        ["disease", "station"],
+        copy=True,
     )
     # to keep the same variables as in the datasets above, in order to make the comparison of consistency
-    adata_features_in_x_and_obs = adata_features_in_x_and_obs[:, ["sys_bp_entry", "dia_bp_entry", "glucose"]]
+    edata_features_in_x_and_obs = edata_features_in_x_and_obs[:, ["sys_bp_entry", "dia_bp_entry", "glucose"]]
 
-    ep.tl.rank_features_groups(adata_features_in_x, groupby="disease")
-    ep.tl.rank_features_groups(adata_features_in_obs, groupby="disease", field_to_rank="obs")
-    ep.tl.rank_features_groups(adata_features_in_x_and_obs, groupby="disease", field_to_rank="layer_and_obs")
+    ep.tl.rank_features_groups(edata_features_in_x, groupby="disease")
+    ep.tl.rank_features_groups(edata_features_in_obs, groupby="disease", field_to_rank="obs")
+    ep.tl.rank_features_groups(edata_features_in_x_and_obs, groupby="disease", field_to_rank="layer_and_obs")
 
-    for record in adata_features_in_x.uns["rank_features_groups"]["names"].dtype.names:
+    for record in edata_features_in_x.uns["rank_features_groups"]["names"].dtype.names:
         assert np.allclose(
-            adata_features_in_x.uns["rank_features_groups"]["scores"][record],
-            adata_features_in_obs.uns["rank_features_groups"]["scores"][record],
+            edata_features_in_x.uns["rank_features_groups"]["scores"][record],
+            edata_features_in_obs.uns["rank_features_groups"]["scores"][record],
         )
         assert np.allclose(
-            np.array(adata_features_in_x.uns["rank_features_groups"]["pvals"][record]),
-            np.array(adata_features_in_obs.uns["rank_features_groups"]["pvals"][record]),
+            np.array(edata_features_in_x.uns["rank_features_groups"]["pvals"][record]),
+            np.array(edata_features_in_obs.uns["rank_features_groups"]["pvals"][record]),
         )
         assert np.array_equal(
-            np.array(adata_features_in_x.uns["rank_features_groups"]["names"][record]),
-            np.array(adata_features_in_obs.uns["rank_features_groups"]["names"][record]),
+            np.array(edata_features_in_x.uns["rank_features_groups"]["names"][record]),
+            np.array(edata_features_in_obs.uns["rank_features_groups"]["names"][record]),
         )
-    for record in adata_features_in_x.uns["rank_features_groups"]["names"].dtype.names:
+    for record in edata_features_in_x.uns["rank_features_groups"]["names"].dtype.names:
         assert np.allclose(
-            adata_features_in_x.uns["rank_features_groups"]["scores"][record],
-            adata_features_in_x_and_obs.uns["rank_features_groups"]["scores"][record],
+            edata_features_in_x.uns["rank_features_groups"]["scores"][record],
+            edata_features_in_x_and_obs.uns["rank_features_groups"]["scores"][record],
         )
         assert np.allclose(
-            np.array(adata_features_in_x.uns["rank_features_groups"]["pvals"][record]),
-            np.array(adata_features_in_x_and_obs.uns["rank_features_groups"]["pvals"][record]),
+            np.array(edata_features_in_x.uns["rank_features_groups"]["pvals"][record]),
+            np.array(edata_features_in_x_and_obs.uns["rank_features_groups"]["pvals"][record]),
         )
         assert np.array_equal(
-            np.array(adata_features_in_x.uns["rank_features_groups"]["names"][record]),
-            np.array(adata_features_in_x_and_obs.uns["rank_features_groups"]["names"][record]),
+            np.array(edata_features_in_x.uns["rank_features_groups"]["names"][record]),
+            np.array(edata_features_in_x_and_obs.uns["rank_features_groups"]["names"][record]),
         )
 
 
 def test_rank_features_group_column_to_rank():
-    adata = read_csv(
-        dataset_path=f"{TEST_DATA_PATH}/dataset1.csv",
-        columns_obs_only=["disease", "station", "sys_bp_entry", "dia_bp_entry"],
+    edata = read_csv(
+        f"{TEST_DATA_PATH}/dataset1.csv",
         index_column="idx",
     )
+    edata = ed.move_to_obs(
+        edata,
+        ["disease", "station", "sys_bp_entry", "dia_bp_entry"],
+        copy=True,
+    )
 
-    # get a fresh adata for every test to not have any side effects
-    adata_copy = adata.copy()
+    # get a fresh edata for every test to not have any side effects
+    edata_copy = edata.copy()
 
-    ep.tl.rank_features_groups(adata, groupby="disease", columns_to_rank="all")
-    assert len(adata.uns["rank_features_groups"]["names"]) == 3
+    ep.tl.rank_features_groups(edata, groupby="disease", columns_to_rank="all")
+    assert len(edata.uns["rank_features_groups"]["names"]) == 3
 
     # want to check a "complete selection" works
-    adata = adata_copy.copy()
-    ep.tl.rank_features_groups(adata, groupby="disease", columns_to_rank={"var_names": ["glucose", "weight"]})
-    assert len(adata.uns["rank_features_groups"]["names"]) == 2
+    edata = edata_copy.copy()
+    ep.tl.rank_features_groups(edata, groupby="disease", columns_to_rank={"var_names": ["glucose", "weight"]})
+    assert len(edata.uns["rank_features_groups"]["names"]) == 2
 
     # want to check a "sub-selection" works
-    adata = adata_copy.copy()
-    ep.tl.rank_features_groups(adata, groupby="disease", columns_to_rank={"var_names": ["glucose"]})
-    assert len(adata.uns["rank_features_groups"]["names"]) == 1
+    edata = edata_copy.copy()
+    ep.tl.rank_features_groups(edata, groupby="disease", columns_to_rank={"var_names": ["glucose"]})
+    assert len(edata.uns["rank_features_groups"]["names"]) == 1
 
     # want to check a "complete" selection works
-    adata = adata_copy.copy()
+    edata = edata_copy.copy()
     ep.tl.rank_features_groups(
-        adata,
+        edata,
         groupby="disease",
         field_to_rank="obs",
         columns_to_rank={"obs_names": ["station", "sys_bp_entry", "dia_bp_entry"]},
     )
-    assert len(adata.uns["rank_features_groups"]["names"]) == 3
+    assert len(edata.uns["rank_features_groups"]["names"]) == 3
 
     # want to check a "sub-selection" selection works
-    adata = adata_copy.copy()
+    edata = edata_copy.copy()
     ep.tl.rank_features_groups(
-        adata,
+        edata,
         groupby="disease",
         field_to_rank="obs",
         columns_to_rank={"obs_names": ["sys_bp_entry", "dia_bp_entry"]},
     )
-    assert len(adata.uns["rank_features_groups"]["names"]) == 2
+    assert len(edata.uns["rank_features_groups"]["names"]) == 2
 
 
 def test_rank_features_groups_3D_edata(edata_blob_small):
@@ -441,6 +454,6 @@ def test_rank_features_groups_3D_edata(edata_blob_small):
 
 
 def test_filter_rank_features_groups_edata(mimic_2):
-    mimic_2 = ep.ad.move_to_obs(mimic_2, to_obs=["service_unit"])
+    mimic_2 = ed.move_to_obs(mimic_2, ["service_unit"], copy=True)
     ep.tl.rank_features_groups(mimic_2, "service_unit")
     ep.tl.rank_features_groups(mimic_2, "service_unit")

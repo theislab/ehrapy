@@ -35,7 +35,8 @@ def test_highly_variable_features(clean_up_plots):
     assert "variances" in adata.var.columns
     assert "variances_norm" in adata.var.columns
 
-    adata = ep.dt.dermatology(encoded=True)
+    adata = ed.dt.diabetes_130_fairlearn()
+    adata = ep.pp.encode(adata, autodetect=True)
     ep.pp.knn_impute(adata)
     highly_variable_features(adata, top_features_percentage=0.5)
-    assert adata.var["highly_variable"].sum() == 17
+    assert adata.var["highly_variable"].sum() == 31
