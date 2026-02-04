@@ -9,6 +9,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 * improve syntax usage ([#1005](https://github.com/theislab/ehrapy/pull/1005)) @Zethson
 * fix fknni extra ([#1003](https://github.com/theislab/ehrapy/pull/1003)) @Zethson
 
+### 🐛 Bug Fixes
+
+* `ep.pp` normalization functions now work when using a `layer` and `.X` is `None` ([#1015](https://github.com/theislab/ehrapy/pull/1015)) @agerardy @eroell
+* `ep.tl.rank_features_groups` can use `.obs` regardless of what is in `.X` or `.layers` ([#1015](https://github.com/theislab/ehrapy/pull/1015)) @agerardy @eroell
+
 ## v0.13.0
 
 ### 🚀 Features
