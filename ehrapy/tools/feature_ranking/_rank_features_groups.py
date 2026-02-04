@@ -7,10 +7,11 @@ import numpy as np
 import pandas as pd
 import scanpy as sc
 from anndata import AnnData
+from ehrdata import infer_feature_types, move_to_x
+from ehrdata._feature_types import _check_feature_types
 from ehrdata.core.constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 
 from ehrapy._compat import _cast_adata_to_match_data_type, function_2D_only, use_ehrdata
-from ehrapy.anndata import _check_feature_types, infer_feature_types, move_to_x
 from ehrapy.preprocessing import encode
 
 if TYPE_CHECKING:
@@ -313,7 +314,6 @@ def _check_columns_to_rank_dict(columns_to_rank):
 
 
 @_check_feature_types
-@function_2D_only()
 @use_ehrdata(deprecated_after="1.0.0")
 def rank_features_groups(
     edata: EHRData | AnnData,
@@ -424,6 +424,15 @@ def rank_features_groups(
 
     if field_to_rank not in ["layer", "obs", "layer_and_obs"]:
         raise ValueError(f"layer must be one of 'layer', 'obs', 'layer_and_obs', not {field_to_rank}")
+
+    # Only check for 2D data if field_to_rank is not "obs"
+    # When field_to_rank is "obs", we're ranking obs columns, so 3D data is acceptable
+    if field_to_rank != "obs":
+        array = edata.X if layer is None else edata.layers[layer]
+        if array.ndim != 2 and array.shape[2] != 1:
+            raise ValueError(
+                f"rank_features_groups with field_to_rank='{field_to_rank}' only supports 2D data, got {'edata.X' if layer is None else f'edata.layers[{layer}]'} with shape {array.shape}"
+            )
 
     # to give better error messages, check if columns_to_rank have valid keys and values here
     _var_subset, _obs_subset = _check_columns_to_rank_dict(columns_to_rank)
