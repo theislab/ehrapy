@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from collections import OrderedDict
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -24,11 +25,30 @@ from ehrapy._types import (
 )
 
 if TYPE_CHECKING:
-    import os
-
     from matplotlib.figure import Figure
 
 TEST_DATA_PATH = Path(__file__).parent / "data"
+
+
+def pytest_configure():
+    os.environ.setdefault("MPLBACKEND", "Agg")
+
+    import matplotlib as mpl
+
+    mpl.use("Agg", force=True)
+
+    mpl.rcParams.update(
+        {
+            "font.family": "DejaVu Sans",
+            "font.size": 10,
+            "figure.constrained_layout.use": False,
+            "figure.autolayout": False,
+            "figure.dpi": 80,
+            "savefig.dpi": 80,
+            "savefig.bbox": "standard",  # not "tight"
+            "savefig.pad_inches": 0.1,
+        }
+    )
 
 
 @pytest.fixture
