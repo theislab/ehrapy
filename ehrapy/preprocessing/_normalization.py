@@ -3,9 +3,9 @@ from __future__ import annotations
 from functools import singledispatch
 from typing import TYPE_CHECKING
 
+import ehrdata as ed
 import numpy as np
 import sklearn.preprocessing as sklearn_pp
-from ehrdata._feature_types import _check_feature_types
 from ehrdata.core.constants import FEATURE_TYPE_KEY, NUMERIC_TAG
 
 from ehrapy._compat import (
@@ -23,7 +23,6 @@ if TYPE_CHECKING:
     from ehrdata import EHRData
 
 
-@_check_feature_types
 def _scale_func_group(
     edata: EHRData | AnnData,
     scale_func: Callable[[np.ndarray | pd.DataFrame], np.ndarray],
@@ -48,6 +47,9 @@ def _scale_func_group(
         numeric_vars = edata.var_names[edata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG].tolist()
         if not set(vars) <= set(numeric_vars):
             raise ValueError("Some selected vars are not numeric")
+
+    if FEATURE_TYPE_KEY not in edata.var.columns:
+        ed.infer_feature_types(edata, layer=layer, output=None)
 
     if copy:
         edata = edata.copy()
@@ -564,7 +566,6 @@ def _(arr: DaskArray, offset: int | float = 1, base: int | float | None = None) 
     return result
 
 
-@_check_feature_types
 @use_ehrdata(deprecated_after="1.0.0")
 def log_norm(
     edata: EHRData | AnnData,
@@ -616,6 +617,9 @@ def log_norm(
         numeric_vars = edata.var_names[edata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG].tolist()
         if not set(vars) <= set(numeric_vars):
             raise ValueError("Some selected vars are not numeric")
+
+    if FEATURE_TYPE_KEY not in edata.var.columns:
+        ed.infer_feature_types(edata, layer=layer, output=None)
 
     if copy:
         edata = edata.copy()

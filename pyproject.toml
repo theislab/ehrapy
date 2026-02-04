@@ -182,8 +182,7 @@ filterwarnings = [
     "ignore:Observation names are not unique. To make them unique, call `.obs_names_make_unique`.:UserWarning",
     "ignore:Trying to modify attribute `.var` of view, initializing view as actual.:anndata.ImplicitModificationWarning",
     "ignore:Transforming to str index.:anndata.ImplicitModificationWarning:",
-    "ignore:Modifying `X` on a view results in data being overridden:anndata.ImplicitModificationWarning",
-    "ignore:Parameter.*is deprecated.*Please use.*instead:FutureWarning"
+    "ignore:Modifying `X` on a view results in data being overridden:anndata.ImplicitModificationWarning"
 ]
 minversion = 6.0
 norecursedirs = [ '.*', 'build', 'dist', '*.egg', 'data', '__pycache__']

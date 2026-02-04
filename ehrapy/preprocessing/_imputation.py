@@ -221,7 +221,7 @@ def simple_impute(
 
     # TODO: warn again if qc_metrics is 3D enabled
     # _warn_imputation_threshold(edata, var_names, threshold=warning_threshold, layer=layer)
-    var_indices = np.where(np.isin(edata.var_names, var_names))[0].tolist()
+    var_indices = edata.var_names.get_indexer(var_names)
 
     if layer is None:
         edata.X[:, var_indices] = _simple_impute_function(edata.X[:, var_indices], strategy)
@@ -343,7 +343,7 @@ def _knn_impute(
 
     if var_names is None:
         var_names = edata.var_names
-    var_indices = np.where(np.isin(edata.var_names, var_names))[0].tolist()
+    var_indices = edata.var_names.get_indexer(var_names)
 
     numerical_indices = _infer_numerical_column_indices(
         edata,
@@ -445,7 +445,7 @@ def miss_forest_impute(
 
         if var_names is None:
             var_names = edata.var_names
-        var_indices = np.where(np.isin(edata.var_names, var_names))[0].tolist()
+        var_indices = edata.var_names.get_indexer(var_names)
 
         if set(var_indices).issubset(_get_non_numerical_column_indices(edata.X)):
             raise ValueError(
@@ -533,7 +533,7 @@ def mice_forest_impute(
 
     if var_names is None:
         var_names = edata.var_names
-    var_indices = np.where(np.isin(edata.var_names, var_names))[0].tolist()
+    var_indices = edata.var_names.get_indexer(var_names)
 
     _warn_imputation_threshold(edata, var_names, threshold=warning_threshold, layer=layer)
 
@@ -578,7 +578,7 @@ def _miceforest_impute(
     data_df = data_df.apply(pd.to_numeric, errors="coerce")
 
     if isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):
-        column_indices = np.where(np.isin(edata.var_names, var_names))[0].tolist()
+        column_indices = edata.var_names.get_indexer(var_names)
         selected_columns = data_df.iloc[:, column_indices]
         selected_columns = selected_columns.reset_index(drop=True)
 
