@@ -63,7 +63,8 @@ def pca(
                     Efficient computation of the principal components of a sparse matrix currently only works with the `'arpack`' or `'lobpcg'` solvers.
         random_state: Change to use different initial states for the optimization.
         return_info: Only relevant when not passing an :class:`~ehrdata.EHRData`: or :class:`~anndata.AnnData`: see “**Returns**”.
-        mask_var: To run only on a certain set of genes given by a boolean array or a string referring to an array in `var`. By default, uses `.var['highly_variable']` if available, else everything.
+        mask_var: To run only on a certain set of genes given by a boolean array or a string referring to an array in `var`.
+                By default, uses `.var['highly_variable']` if available, else everything.
         dtype: Numpy data type string to which to convert the result.
         layer: The layer to operate on.
         copy: If an :class:`~ehrdata.EHRData`: or :class:`~anndata.AnnData`: is passed, determines whether a copy is returned. Is ignored otherwise.

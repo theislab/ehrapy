@@ -41,9 +41,8 @@ def test_clip_var(mimic_2_10):
 def test_clip_obs(mimic_2_10):
     to_clip_obs = ed.move_to_obs(mimic_2_10, "age", copy=True)
     clipped_adata = ep.pp.clip_quantile(to_clip_obs, obs_cols=["age"], limits=(25, 50), copy=True)
-    expected = np.array([50, 50, 36.5, 44.49191, 25, 36.54657, 25, 50, 50, 25.41667])
-
-    np.testing.assert_allclose(np.array(clipped_adata.obs["age"]), expected)
+    expected = np.array([50, 50, 36.5, 44.49191, 25, 36.54657, 25, 50, 50, 25.41667], dtype=np.float32)
+    np.testing.assert_allclose(np.array(clipped_adata.obs["age"].values.astype(np.float32)), expected)
 
 
 def test_clip_3D_edata(edata_blob_small):
