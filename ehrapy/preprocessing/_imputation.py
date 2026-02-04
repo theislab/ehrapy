@@ -283,7 +283,7 @@ def knn_impute(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
-        >>> ep.ad.infer_feature_types(edata)
+        >>> ed.infer_feature_types(edata)
         >>> ep.pp.knn_impute(edata)
     """
     if copy:

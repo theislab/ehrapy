@@ -43,7 +43,7 @@ def catplot(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.diabetes_130_fairlearn()
-        >>> ep.ad.move_to_obs(edata, ["A1Cresult", "admission_source_id"], copy_obs=True)
+        >>> ed.move_to_obs(edata, ["A1Cresult", "admission_source_id"], copy_obs=True)
         >>> edata.obs["A1Cresult_measured"] = ~edata.obs["A1Cresult"].isna()
         >>> ep.pl.catplot(
         ...     edata=edata,

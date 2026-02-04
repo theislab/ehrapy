@@ -73,7 +73,7 @@ def rank_features_supervised(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
-        >>> ep.ad.infer_feature_types(edata)
+        >>> ed.infer_feature_types(edata)
         >>> ep.pp.knn_impute(edata, n_neighbors=5)
         >>> input_features = [
         ...     feat for feat in edata.var_names if feat not in {"service_unit", "day_icu_intime", "tco2_first"}

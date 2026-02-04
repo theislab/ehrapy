@@ -392,7 +392,7 @@ def rank_features_groups(
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> # want to move some metedata to the obs field
-        >>> ep.anndata.move_to_obs(edata, to_obs=["service_unit", "service_num", "age", "mort_day_censored"])
+        >>> ed.move_to_obs(edata, ["service_unit", "service_num", "age", "mort_day_censored"])
         >>> ep.tl.rank_features_groups(edata, "service_unit")
         >>> ep.pl.rank_features_groups(edata)
 
@@ -400,7 +400,7 @@ def rank_features_groups(
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> # want to move some metedata to the obs field
-        >>> ep.anndata.move_to_obs(edata, to_obs=["service_unit", "service_num", "age", "mort_day_censored"])
+        >>> ed.move_to_obs(edata, ["service_unit", "service_num", "age", "mort_day_censored"])
         >>> ep.tl.rank_features_groups(
         ...     edata, "service_unit", field_to_rank="obs", columns_to_rank={"obs_names": ["age", "mort_day_censored"]}
         ... )
@@ -410,7 +410,7 @@ def rank_features_groups(
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> # want to move some metedata to the obs field
-        >>> ep.anndata.move_to_obs(edata, to_obs=["service_unit", "service_num", "age", "mort_day_censored"])
+        >>> ed.move_to_obs(edata, ["service_unit", "service_num", "age", "mort_day_censored"])
         >>> ep.tl.rank_features_groups(
         ...     edata,
         ...     "service_unit",
@@ -648,7 +648,7 @@ def filter_rank_features_groups(
         >>> import ehrapy as ep
         >>> import ehrdata as ed
         >>> edata = ed.dt.mimic_2()
-        >>> edata = ep.ad.move_to_obs(edata, to_obs=["service_unit"])
+        >>> ed.move_to_obs(edata, ["service_unit"])
         >>> ep.tl.rank_features_groups(edata, "service_unit")
         >>> ep.pl.rank_features_groups(edata)
     """
