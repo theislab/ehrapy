@@ -6,10 +6,10 @@ from typing import TYPE_CHECKING, Literal
 import ehrdata as ed
 import numpy as np
 import pandas as pd
+from ehrdata._feature_types import _check_feature_types
 from ehrdata.core.constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 
 from ehrapy._compat import function_2D_only, use_ehrdata
-from ehrapy.anndata import _check_feature_types
 
 if TYPE_CHECKING:
     from collections.abc import Iterable

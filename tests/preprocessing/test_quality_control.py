@@ -5,9 +5,9 @@ import numpy as np
 import pandas as pd
 import pytest
 from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
+from ehrdata.io import read_csv
 
 import ehrapy as ep
-from ehrapy.io._read import read_csv
 from ehrapy.preprocessing._encoding import encode
 from ehrapy.preprocessing._quality_control import _compute_obs_metrics, _compute_var_metrics, mcar_test
 from tests.conftest import ARRAY_TYPES_NONNUMERIC, TEST_DATA_PATH, as_dense_dask_array
@@ -18,11 +18,11 @@ _TEST_PATH_ENCODE = f"{TEST_DATA_PATH}/encode"
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 def test_qc_metrics_vanilla(array_type, missing_values_edata):
-    adata = missing_values_edata
-    adata.X = array_type(adata.X)
-    modification_copy = adata.copy()
+    edata = missing_values_edata
+    edata.X = array_type(edata.X)
+    modification_copy = edata.copy()
 
-    obs_metrics, var_metrics = ep.pp.qc_metrics(adata)
+    obs_metrics, var_metrics = ep.pp.qc_metrics(edata)
 
     assert np.array_equal(obs_metrics["missing_values_abs"].values, np.array([1, 2]))
     assert np.allclose(obs_metrics["missing_values_pct"].values, np.array([33.3333, 66.6667]))
@@ -39,19 +39,19 @@ def test_qc_metrics_vanilla(array_type, missing_values_edata):
 
     # check that none of the columns were modified
     for key in modification_copy.obs.keys():
-        assert np.array_equal(modification_copy.obs[key], adata.obs[key])
+        assert np.array_equal(modification_copy.obs[key], edata.obs[key])
     for key in modification_copy.var.keys():
-        assert np.array_equal(modification_copy.var[key], adata.var[key])
+        assert np.array_equal(modification_copy.var[key], edata.var[key])
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 def test_qc_metrics_vanilla_advanced(array_type, missing_values_edata):
-    adata = missing_values_edata
+    edata = missing_values_edata
 
-    adata.var["feature_type"] = ["numeric", "numeric", "categorical"]
-    adata.X = array_type(missing_values_edata.X)
-    modification_copy = adata.copy()
-    obs_metrics, var_metrics = ep.pp.qc_metrics(adata)
+    edata.var["feature_type"] = ["numeric", "numeric", "categorical"]
+    edata.X = array_type(missing_values_edata.X)
+    modification_copy = edata.copy()
+    obs_metrics, var_metrics = ep.pp.qc_metrics(edata)
 
     assert np.array_equal(obs_metrics["missing_values_abs"].values, np.array([1, 2]))
     assert np.allclose(obs_metrics["missing_values_pct"].values, np.array([33.3333, 66.6667]))
@@ -76,9 +76,9 @@ def test_qc_metrics_vanilla_advanced(array_type, missing_values_edata):
 
     # check that none of the columns were modified
     for key in modification_copy.obs.keys():
-        assert np.array_equal(modification_copy.obs[key], adata.obs[key])
+        assert np.array_equal(modification_copy.obs[key], edata.obs[key])
     for key in modification_copy.var.keys():
-        assert np.array_equal(modification_copy.var[key], adata.var[key])
+        assert np.array_equal(modification_copy.var[key], edata.var[key])
 
 
 def test_qc_metrics_3d_vanilla(edata_mini_3D_missing_values):
@@ -195,20 +195,20 @@ def test_qc_metrics_heterogeneous_columns():
     ],
 )
 def test_obs_qc_metrics_array_types(array_type, expected_error):
-    adata = read_csv(dataset_path=f"{_TEST_PATH_ENCODE}/dataset1.csv")
-    adata.X = array_type(adata.X)
-    mtx = adata.X
+    edata = read_csv(f"{_TEST_PATH_ENCODE}/dataset1.csv")
+    edata.X = array_type(edata.X)
+    mtx = edata.X
     if expected_error:
         with pytest.raises(expected_error):
-            _compute_obs_metrics(mtx, adata)
+            _compute_obs_metrics(mtx, edata)
 
 
 def test_obs_nan_qc_metrics():
-    adata = read_csv(dataset_path=f"{_TEST_PATH_ENCODE}/dataset1.csv")
-    adata.X[0][4] = np.nan
-    adata2 = encode(adata, encodings={"one-hot": ["clinic_day"]})
-    mtx = adata2.X
-    obs_metrics = _compute_obs_metrics(mtx, adata2)
+    edata = read_csv(f"{_TEST_PATH_ENCODE}/dataset1.csv")
+    edata.X[0][4] = np.nan
+    edata2 = encode(edata, encodings={"one-hot": ["clinic_day"]})
+    mtx = edata2.X
+    obs_metrics = _compute_obs_metrics(mtx, edata2)
     assert obs_metrics.iloc[0].iloc[0] == 1
 
 
@@ -221,28 +221,28 @@ def test_obs_nan_qc_metrics():
     ],
 )
 def test_var_qc_metrics_array_types(array_type, expected_error):
-    adata = read_csv(dataset_path=f"{_TEST_PATH_ENCODE}/dataset1.csv")
-    adata.X = array_type(adata.X)
-    mtx = adata.X
+    edata = read_csv(f"{_TEST_PATH_ENCODE}/dataset1.csv")
+    edata.X = array_type(edata.X)
+    mtx = edata.X
     if expected_error:
         with pytest.raises(expected_error):
-            _compute_var_metrics(mtx, adata)
+            _compute_var_metrics(mtx, edata)
 
 
 def test_var_encoding_mode_does_not_modify_original_matrix():
-    adata = read_csv(dataset_path=f"{_TEST_PATH_ENCODE}/dataset1.csv")
-    adata2 = encode(adata, encodings={"one-hot": ["clinic_day"]})
-    mtx_copy = adata2.X.copy()
-    _compute_var_metrics(adata2.X, adata2)
-    assert np.array_equal(mtx_copy, adata2.X)
+    edata = read_csv(f"{_TEST_PATH_ENCODE}/dataset1.csv")
+    edata2 = encode(edata, encodings={"one-hot": ["clinic_day"]})
+    mtx_copy = edata2.X.copy()
+    _compute_var_metrics(edata2.X, edata2)
+    assert np.array_equal(mtx_copy, edata2.X)
 
 
 def test_var_nan_qc_metrics():
-    adata = read_csv(dataset_path=f"{_TEST_PATH_ENCODE}/dataset1.csv")
-    adata.X[0][4] = np.nan
-    adata2 = encode(adata, encodings={"one-hot": ["clinic_day"]})
-    mtx = adata2.X
-    var_metrics = _compute_var_metrics(mtx, adata2)
+    edata = read_csv(f"{_TEST_PATH_ENCODE}/dataset1.csv")
+    edata.X[0][4] = np.nan
+    edata2 = encode(edata, encodings={"one-hot": ["clinic_day"]})
+    mtx = edata2.X
+    var_metrics = _compute_var_metrics(mtx, edata2)
     assert var_metrics.iloc[0].iloc[0] == 1
     assert var_metrics.iloc[1].iloc[0] == 1
     assert var_metrics.iloc[2].iloc[0] == 1

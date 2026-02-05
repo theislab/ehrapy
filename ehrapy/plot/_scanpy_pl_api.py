@@ -501,7 +501,7 @@ def violin(  # noqa: D417
     jitter: float | bool = True,
     size: int = 1,
     layer: str | None = None,
-    scale: Literal["area", "count", "width"] = "width",
+    density_norm: Literal["area", "count", "width"] = "width",
     order: Sequence[str] | None = None,
     multi_panel: bool | None = None,
     xlabel: str = "",
@@ -529,7 +529,7 @@ def violin(  # noqa: D417
                default edata.raw.X is plotted. If `use_raw=False` is set,
                then `edata.X` is plotted. If `layer` is set to a valid layer name,
                then the layer is plotted. `layer` takes precedence over `use_raw`.
-        scale: The method used to scale the width of each violin.
+        density_norm: The method used to scale the width of each violin.
                If 'width' (the default), each violin will have the same width.
                If 'area', each violin will have the same area.
                If 'count', a violin's width corresponds to the number of observations.
@@ -567,7 +567,7 @@ def violin(  # noqa: D417
         jitter=jitter,
         size=size,
         layer=layer,
-        scale=scale,
+        density_norm=density_norm,
         order=order,
         multi_panel=multi_panel,
         xlabel=xlabel,
@@ -608,12 +608,12 @@ def stacked_violin(  # noqa: D417
     standard_scale: Literal["var", "obs"] | None = None,
     var_group_rotation: float | None = None,
     layer: str | None = None,
+    categories_order: Sequence[str] | None = None,
     stripplot: bool = StackedViolin.DEFAULT_STRIPPLOT,
     jitter: float | bool = StackedViolin.DEFAULT_JITTER,
     size: int = StackedViolin.DEFAULT_JITTER_SIZE,
-    scale: Literal["area", "count", "width"] = StackedViolin.DEFAULT_DENSITY_NORM,
+    density_norm: Literal["area", "count", "width"] = StackedViolin.DEFAULT_DENSITY_NORM,
     yticklabels: bool | None = StackedViolin.DEFAULT_PLOT_YTICKLABELS,
-    order: Sequence[str] | None = None,
     swap_axes: bool = False,
     show: bool | None = None,
     save: bool | str | None = None,
@@ -641,9 +641,8 @@ def stacked_violin(  # noqa: D417
         jitter: Add jitter to the stripplot (only when stripplot is True) See :func:`~seaborn.stripplot`.
         size: Size of the jitter points.
         yticklabels: Set to true to view the y tick labels
-        order: Order in which to show the categories. Note: if `dendrogram=True`
-               the categories order will be given by the dendrogram and `order` will be ignored.
-        scale: The method used to scale the width of each violin.
+        categories_order: Order in which to show the categories. Note: add_dendrogram or add_totals can change the categories order.
+        density_norm: The method used to scale the width of each violin.
                If 'width' (the default), each violin will have the same width.
                If 'area', each violin will have the same area.
                If 'count', a violin’s width corresponds to the number of observations.
@@ -663,6 +662,7 @@ def stacked_violin(  # noqa: D417
     Example:
         .. code-block:: python
 
+            import ehrdata as ed
             import ehrapy as ep
 
             edata = ed.dt.mimic_2()
@@ -707,12 +707,12 @@ def stacked_violin(  # noqa: D417
         standard_scale=standard_scale,
         var_group_rotation=var_group_rotation,
         layer=layer,
+        categories_order=categories_order,
         stripplot=stripplot,
         jitter=jitter,
         size=size,
-        scale=scale,
+        density_norm=density_norm,
         yticklabels=yticklabels,
-        order=order,
         swap_axes=swap_axes,
         show=show,
         save=save,
@@ -789,6 +789,7 @@ def matrixplot(  # noqa: D417
     Example:
         .. code-block:: python
 
+            import ehrdata as ed
             import ehrapy as ep
 
             edata = ed.dt.mimic_2()
@@ -880,6 +881,7 @@ def clustermap(  # noqa: D417
     Example:
         .. code-block:: python
 
+            import ehrdata as ed
             import ehrapy as ep
 
             edata = ed.dt.mimic_2()
@@ -987,6 +989,7 @@ def dendrogram(  # noqa: D417
     Example:
         .. code-block:: python
 
+            import ehrdata as ed
             import ehrapy as ep
 
             edata = ed.dt.mimic_2()
@@ -2062,7 +2065,7 @@ def rank_features_groups_violin(  # noqa: D417
     feature_symbols: str | None = None,
     key: str | None = None,
     split: bool = True,
-    scale: str = "width",
+    density_norm: str = "width",
     strip: bool = True,
     jitter: int | float | bool = True,
     size: int = 1,
@@ -2082,7 +2085,7 @@ def rank_features_groups_violin(  # noqa: D417
                          use `.var_names` displayed in the plot.
         key: The key of the calculated feature group rankings (default: 'rank_features_groups').
         split: Whether to split the violins or not.
-        scale: See :func:`~seaborn.violinplot`.
+        density_norm: See :func:`~seaborn.violinplot`.
         strip: Show a strip plot on top of the violin plot.
         jitter: If set to 0, no points are drawn. See :func:`~seaborn.stripplot`.
         size: Size of the jitter points.
@@ -2117,7 +2120,7 @@ def rank_features_groups_violin(  # noqa: D417
         use_raw=False,
         key=key,
         split=split,
-        scale=scale,
+        density_norm=density_norm,
         strip=strip,
         jitter=jitter,
         size=size,

@@ -126,7 +126,7 @@ edata: Central data object.
     use_raw: Use `raw` attribute of `edata` if present.
     log: Plot on logarithmic axis.
     num_categories: Only used if groupby observation is not categorical. This value determines the number of groups into which the groupby observation should be subdivided.
-    categories_order: Order in which to show the categories. Note: add_dendrogram or add_totals can change the categories order.
+    categories_order: Order in which to show the categories.Note: add_dendrogram or add_totals can change the categories order.
     figsize: Figure size when `multi_panel=True`. Otherwise the `rcParam['figure.figsize]` value is used. Format is (width, height)
     dendrogram: If True or a valid dendrogram key, a dendrogram based on the hierarchical clustering between the `groupby` categories is added. The dendrogram information is computed using :func:`scanpy.tl.dendrogram`. If `tl.dendrogram` has not been called previously the function is called with default parameters.
     feature_symbols: Column name in `.var` DataFrame that stores feature symbols. By default `var_names` refer to the index column of the `.var` DataFrame. Setting this option allows alternative names to be used.

@@ -8,19 +8,17 @@ import numpy as np
 import pandas as pd
 from anndata import AnnData
 from ehrdata import EHRData
+from ehrdata._feature_types import _check_feature_types
 from ehrdata._logger import logger
 from ehrdata.core.constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from rich.progress import BarColumn, Progress
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
-from ehrapy._compat import _cast_adata_to_match_data_type, function_2D_only, use_ehrdata
-from ehrapy.anndata import _check_feature_types
-from ehrapy.anndata.anndata_ext import _get_var_indices_for_type
+from ehrapy._compat import function_2D_only, use_ehrdata
 
 available_encodings = {"one-hot", "label"}
 
 
-@_check_feature_types
 @use_ehrdata(deprecated_after="1.0.0")
 @function_2D_only()
 def encode(
@@ -85,12 +83,16 @@ def encode(
             f"Setting encode mode with autodetect=True only works by passing a string (encode mode name) or None not {type(encodings)}!"
         )
 
+    # Infer feature types if not already done (passing layer parameter correctly)
+    if FEATURE_TYPE_KEY not in edata.var.columns:
+        ed.infer_feature_types(edata, layer=layer, output=None)
+
     if "original" not in edata.layers.keys():
         edata.layers["original"] = X.copy()
 
     # autodetect categorical values based on feature types stored in edata.var[FEATURE_TYPE_KEY]
     if autodetect:
-        categoricals_names = _get_var_indices_for_type(edata, CATEGORICAL_TAG)
+        categoricals_names = edata.var_names[edata.var[FEATURE_TYPE_KEY] == CATEGORICAL_TAG].tolist()
 
         if "encoding_mode" in edata.var.keys():
             if edata.var["encoding_mode"].isnull().values.any():
