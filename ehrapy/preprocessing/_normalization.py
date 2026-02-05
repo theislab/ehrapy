@@ -38,6 +38,10 @@ def _scale_func_group(
     """
     if group_key is not None and group_key not in edata.obs:
         raise KeyError(f"group key '{group_key}' not found in edata.obs.")
+    if copy:
+        edata = edata.copy()
+    if FEATURE_TYPE_KEY not in edata.var.columns:
+        ed.infer_feature_types(edata, layer=layer, output=None)
 
     if isinstance(vars, str):
         vars = [vars]
@@ -47,12 +51,6 @@ def _scale_func_group(
         numeric_vars = edata.var_names[edata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG].tolist()
         if not set(vars) <= set(numeric_vars):
             raise ValueError("Some selected vars are not numeric")
-
-    if FEATURE_TYPE_KEY not in edata.var.columns:
-        ed.infer_feature_types(edata, layer=layer, output=None)
-
-    if copy:
-        edata = edata.copy()
 
     # Get numeric indices (positions) of the variables to normalize
     var_indices = edata.var_names.get_indexer(vars)
@@ -609,6 +607,12 @@ def log_norm(
         >>> np.nanmax(edata.layers["tem_data"])
         10.502379
     """
+    if copy:
+        edata = edata.copy()
+
+    if FEATURE_TYPE_KEY not in edata.var.columns:
+        ed.infer_feature_types(edata, layer=layer, output=None)
+
     if isinstance(vars, str):
         vars = [vars]
     if vars is None:
@@ -617,12 +621,6 @@ def log_norm(
         numeric_vars = edata.var_names[edata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG].tolist()
         if not set(vars) <= set(numeric_vars):
             raise ValueError("Some selected vars are not numeric")
-
-    if FEATURE_TYPE_KEY not in edata.var.columns:
-        ed.infer_feature_types(edata, layer=layer, output=None)
-
-    if copy:
-        edata = edata.copy()
 
     X = edata.X if layer is None else edata.layers[layer]
 

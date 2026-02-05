@@ -2,9 +2,9 @@ import warnings
 from pathlib import Path
 
 import dask.array as da
+import ehrdata as ed
 import numpy as np
 import pytest
-from anndata import AnnData
 from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY, NUMERIC_TAG
 
 import ehrapy as ep
@@ -420,7 +420,7 @@ def test_norm_quantile_uniform(array_type, edata_to_norm):
 
 
 def test_norm_quantile_integers(edata_mini_integers_in_X):
-    adata_norm = ep.pp.quantile_norm(edata_mini_integers_in_X, copy=True)
+    adata_norm = ep.pp.quantile_norm(edata_mini_integers_in_X, n_quantiles=12, copy=True)
     in_days_norm = np.array(
         [
             [0.36363636],
@@ -444,7 +444,7 @@ def test_norm_quantile_integers(edata_mini_integers_in_X):
 def test_norm_quantile_uniform_kwargs(array_type, edata_to_norm):
     edata_to_norm.X = array_type(edata_to_norm.X)
 
-    adata_norm = ep.pp.quantile_norm(edata_to_norm, copy=True, output_distribution="normal")
+    adata_norm = ep.pp.quantile_norm(edata_to_norm, copy=True, output_distribution="normal", n_quantiles=3)
 
     num1_norm = np.array([-5.19933758, 0.0, 5.19933758], dtype=np.float32)
     num2_norm = np.array([-5.19933758, 5.19933758, 0.0], dtype=np.float32)
@@ -699,15 +699,15 @@ def test_norm_record(edata_to_norm):
 
 
 def test_offset_negative_values():
-    to_offset_adata = AnnData(X=np.array([[-1, -5, -10], [5, 6, -20]], dtype=np.float32))
-    expected_adata = AnnData(X=np.array([[19, 15, 10], [25, 26, 0]], dtype=np.float32))
+    to_offset_adata = ed.EHRData(X=np.array([[-1, -5, -10], [5, 6, -20]], dtype=np.float32))
+    expected_adata = ed.EHRData(X=np.array([[19, 15, 10], [25, 26, 0]], dtype=np.float32))
 
     assert np.array_equal(expected_adata.X, ep.pp.offset_negative_values(to_offset_adata, copy=True).X)
 
 
 def test_norm_numerical_only():
-    to_normalize_adata = AnnData(X=np.array([[1, 0, 0], [0, 0, 1]], dtype=np.float32))
-    expected_adata = AnnData(X=np.array([[0.6931472, 0, 0], [0, 0, 0.6931472]], dtype=np.float32))
+    to_normalize_adata = ed.EHRData(X=np.array([[1, 0, 0], [0, 0, 1]], dtype=np.float32))
+    expected_adata = ed.EHRData(X=np.array([[0.6931472, 0, 0], [0, 0, 0.6931472]], dtype=np.float32))
 
     assert np.array_equal(expected_adata.X, ep.pp.log_norm(to_normalize_adata, copy=True).X)
 

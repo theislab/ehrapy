@@ -662,6 +662,7 @@ def test_dpt_timeseries(mimic_2_encoded, check_same_image):
 
     ep.pp.knn_impute(adata)
     ep.pp.log_norm(adata, offset=1)
+    ep.pp.pca(adata)
     ep.pp.neighbors(adata, method="gauss")
     ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
     ep.tl.diffmap(adata, n_comps=10)
