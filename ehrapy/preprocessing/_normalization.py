@@ -3,20 +3,16 @@ from __future__ import annotations
 from functools import singledispatch
 from typing import TYPE_CHECKING
 
+import ehrdata as ed
 import numpy as np
 import sklearn.preprocessing as sklearn_pp
-from ehrdata.core.constants import NUMERIC_TAG
+from ehrdata.core.constants import FEATURE_TYPE_KEY, NUMERIC_TAG
 
 from ehrapy._compat import (
     DaskArray,
     _apply_over_time_axis,
     _raise_array_type_not_implemented,
     use_ehrdata,
-)
-from ehrapy.anndata.anndata_ext import (
-    _assert_numeric_vars,
-    _get_var_indices,
-    _get_var_indices_for_type,
 )
 
 if TYPE_CHECKING:
@@ -40,20 +36,24 @@ def _scale_func_group(
 
     Supports both 2D and 3D data with unified layer handling.
     """
-    if group_key is not None and group_key not in edata.obs_keys():
+    if group_key is not None and group_key not in edata.obs:
         raise KeyError(f"group key '{group_key}' not found in edata.obs.")
+    if copy:
+        edata = edata.copy()
+    if FEATURE_TYPE_KEY not in edata.var.columns:
+        ed.infer_feature_types(edata, layer=layer, output=None)
 
     if isinstance(vars, str):
         vars = [vars]
     if vars is None:
-        vars = _get_var_indices_for_type(edata, NUMERIC_TAG)
+        vars = edata.var_names[edata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG].tolist()
     else:
-        _assert_numeric_vars(edata, vars)
+        numeric_vars = edata.var_names[edata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG].tolist()
+        if not set(vars) <= set(numeric_vars):
+            raise ValueError("Some selected vars are not numeric")
 
-    if copy:
-        edata = edata.copy()
-
-    var_indices = _get_var_indices(edata, vars)
+    # Get numeric indices (positions) of the variables to normalize
+    var_indices = edata.var_names.get_indexer(vars)
     X = edata.X if layer is None else edata.layers[layer]
 
     if np.issubdtype(X.dtype, np.integer):
@@ -607,20 +607,25 @@ def log_norm(
         >>> np.nanmax(edata.layers["tem_data"])
         10.502379
     """
+    if copy:
+        edata = edata.copy()
+
+    if FEATURE_TYPE_KEY not in edata.var.columns:
+        ed.infer_feature_types(edata, layer=layer, output=None)
+
     if isinstance(vars, str):
         vars = [vars]
     if vars is None:
-        vars = _get_var_indices_for_type(edata, NUMERIC_TAG)
+        vars = edata.var_names[edata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG].tolist()
     else:
-        _assert_numeric_vars(edata, vars)
-
-    if copy:
-        edata = edata.copy()
+        numeric_vars = edata.var_names[edata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG].tolist()
+        if not set(vars) <= set(numeric_vars):
+            raise ValueError("Some selected vars are not numeric")
 
     X = edata.X if layer is None else edata.layers[layer]
 
     if vars:
-        var_indices = _get_var_indices(edata, vars)
+        var_indices = edata.var_names.get_indexer(vars)
         check_data = X[:, var_indices] if X.ndim == 2 else X[:, var_indices, :]
     else:
         check_data = X
@@ -636,7 +641,7 @@ def log_norm(
         )
 
     if vars:
-        var_indices = _get_var_indices(edata, vars)
+        var_indices = edata.var_names.get_indexer(vars)
         var_values = X[:, var_indices] if X.ndim == 2 else X[:, var_indices, :]
         transformed_values = _log_norm_function(var_values, offset=offset, base=base)
         if layer is None:
@@ -659,7 +664,7 @@ def log_norm(
 
 
 def _record_norm(edata: EHRData | AnnData, vars: Sequence[str], method: str) -> None:
-    if "normalization" in edata.uns_keys():
+    if "normalization" in edata.uns:
         norm_record = edata.uns["normalization"]
     else:
         norm_record = {}

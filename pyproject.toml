@@ -170,7 +170,8 @@ addopts = [
 ]
 markers = [
     "conda: marks a subset of tests to be ran on the Bioconda CI.",
-    "extra: marks tests that require extra dependencies."
+    "extra: marks tests that require extra dependencies.",
+    "gpu: marks tests that require GPU."
 ]
 filterwarnings = [
     "ignore::DeprecationWarning",

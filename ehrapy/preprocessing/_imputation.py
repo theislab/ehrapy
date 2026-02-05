@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Literal
 import numpy as np
 import pandas as pd
 import scipy.sparse as sp
+from ehrdata._feature_types import _check_feature_types, _infer_numerical_column_indices
 from ehrdata._logger import logger
 from sklearn.experimental import enable_iterative_imputer  # noinspection PyUnresolvedReference
 from sklearn.impute import SimpleImputer
@@ -22,9 +23,6 @@ from ehrapy._compat import (
     use_ehrdata,
 )
 from ehrapy._progress import spinner
-from ehrapy.anndata import _check_feature_types
-from ehrapy.anndata._feature_specifications import _infer_numerical_column_indices
-from ehrapy.anndata.anndata_ext import _get_var_indices
 
 if TYPE_CHECKING:
     from anndata import AnnData
@@ -218,10 +216,12 @@ def simple_impute(
     if copy:
         edata = edata.copy()
 
+    if var_names is None:
+        var_names = edata.var_names
+
     # TODO: warn again if qc_metrics is 3D enabled
     # _warn_imputation_threshold(edata, var_names, threshold=warning_threshold, layer=layer)
-
-    var_indices = _get_var_indices(edata, edata.var_names if var_names is None else var_names)
+    var_indices = edata.var_names.get_indexer(var_names).tolist()
 
     if layer is None:
         edata.X[:, var_indices] = _simple_impute_function(edata.X[:, var_indices], strategy)
@@ -283,7 +283,7 @@ def knn_impute(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
-        >>> ep.ad.infer_feature_types(edata)
+        >>> ed.infer_feature_types(edata)
         >>> ep.pp.knn_impute(edata)
     """
     if copy:
@@ -341,18 +341,21 @@ def _knn_impute(
 
         imputer = FastKNNImputer(n_neighbors=n_neighbors, **kwargs)
 
-    column_indices = _get_var_indices(edata, edata.var_names if var_names is None else var_names)
+    if var_names is None:
+        var_names = edata.var_names
+    var_indices = edata.var_names.get_indexer(var_names).tolist()
+
     numerical_indices = _infer_numerical_column_indices(
         edata,
     )
-    if any(idx not in numerical_indices for idx in column_indices):
+    if any(idx not in numerical_indices for idx in var_indices):
         raise ValueError(
             "Can only impute numerical data. Try to restrict imputation to certain columns using "
             "var_names parameter or perform an encoding of your data."
         )
     X = edata.X if layer is None else edata.layers[layer]
     complete_numerical_columns = np.array(numerical_indices)[~np.isnan(X[:, numerical_indices]).any(axis=0)].tolist()
-    imputer_data_indices = column_indices + [i for i in complete_numerical_columns if i not in column_indices]
+    imputer_data_indices = var_indices + [i for i in complete_numerical_columns if i not in var_indices]
     imputer_x = X[::, imputer_data_indices].astype("float64")
 
     if layer is None:
@@ -440,23 +443,22 @@ def miss_forest_impute(
             random_state=random_state,
         )
 
-        if isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):  # type: ignore
-            num_indices = _get_var_indices(edata, var_names)
-        else:
-            num_indices = _get_var_indices(edata, edata.var_names)
+        if var_names is None:
+            var_names = edata.var_names
+        var_indices = edata.var_names.get_indexer(var_names).tolist()
 
-        if set(num_indices).issubset(_get_non_numerical_column_indices(edata.X)):
+        if set(var_indices).issubset(_get_non_numerical_column_indices(edata.X)):
             raise ValueError(
                 "Can only impute numerical data. Try to restrict imputation to certain columns using "
                 "var_names parameter."
             )
 
         # this step is the most expensive one and might extremely slow down the impute process
-        if num_indices:
+        if var_indices:
             if layer is None:
-                edata.X[::, num_indices] = imp_num.fit_transform(edata.X[::, num_indices])
+                edata.X[::, var_indices] = imp_num.fit_transform(edata.X[::, var_indices])
             else:
-                edata.layers[layer][::, num_indices] = imp_num.fit_transform(edata.layers[layer][::, num_indices])
+                edata.layers[layer][::, var_indices] = imp_num.fit_transform(edata.layers[layer][::, var_indices])
         else:
             raise ValueError("Cannot find any feature to perform imputation")
 
@@ -529,12 +531,13 @@ def mice_forest_impute(
     if copy:
         edata = edata.copy()
 
+    if var_names is None:
+        var_names = edata.var_names
+    var_indices = edata.var_names.get_indexer(var_names).tolist()
+
     _warn_imputation_threshold(edata, var_names, threshold=warning_threshold, layer=layer)
 
-    if any(
-        idx not in _infer_numerical_column_indices(edata)
-        for idx in _get_var_indices(edata, edata.var_names if var_names is None else var_names)
-    ):
+    if any(idx not in _infer_numerical_column_indices(edata) for idx in var_indices):
         raise ValueError(
             "Can only impute numerical data. Try to restrict imputation to certain columns using "
             "var_names parameter or perform an encoding of your data."
@@ -575,7 +578,7 @@ def _miceforest_impute(
     data_df = data_df.apply(pd.to_numeric, errors="coerce")
 
     if isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):
-        column_indices = _get_var_indices(edata, var_names)
+        column_indices = edata.var_names.get_indexer(var_names).tolist()
         selected_columns = data_df.iloc[:, column_indices]
         selected_columns = selected_columns.reset_index(drop=True)
 

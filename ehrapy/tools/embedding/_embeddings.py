@@ -7,11 +7,11 @@ import numpy as np
 import pandas as pd
 import scanpy as sc
 from ehrdata import EHRData
+from ehrdata._feature_types import _detect_feature_type
 from scipy.linalg import svd
 from scipy.sparse import spmatrix  # noqa
 
 from ehrapy._compat import _raise_array_type_not_implemented, function_2D_only, use_ehrdata
-from ehrapy.anndata._feature_specifications import _detect_feature_type
 from ehrapy.core._constants import TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY
 from ehrapy.tools import _method_options  # noqa
 

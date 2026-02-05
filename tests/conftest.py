@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pytest
-from anndata import AnnData
 from ehrdata.core.constants import CATEGORICAL_TAG, DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY, NUMERIC_TAG
 from matplotlib.testing.compare import compare_images
 
@@ -213,15 +212,15 @@ def edata_mini_normalization():
 
 @pytest.fixture
 def edata_mini_integers_in_X():
-    adata = ed.io.read_csv(
+    edata = ed.io.read_csv(
         f"{TEST_DATA_PATH}/dataset1.csv",
         columns_obs_only=["idx", "sys_bp_entry", "dia_bp_entry", "glucose", "weight", "disease", "station"],
     )
     # cast data in X to integers; pd.read generates floats generously, but want to test integer normalization
-    adata.X = adata.X.astype(np.int32)
-    ep.ad.infer_feature_types(adata)
-    ep.ad.replace_feature_types(adata, ["in_days"], "numeric")
-    return adata
+    edata.X = edata.X.astype(np.int32)
+    ed.infer_feature_types(edata)
+    ed.replace_feature_types(edata, ["in_days"], "numeric")
+    return edata
 
 
 @pytest.fixture
@@ -384,7 +383,7 @@ def edata_blobs_timeseries_small() -> ed.EHRData:
 
 
 @pytest.fixture
-def adata_to_norm():
+def edata_to_norm():
     obs_data = {"ID": ["Patient1", "Patient2", "Patient3"], "Age": [31, 94, 62]}
 
     X_data = np.array(
@@ -416,16 +415,16 @@ def adata_to_norm():
             CATEGORICAL_TAG,
         ],
     }
-    adata = AnnData(
+    edata = ed.EHRData(
         X=X_data,
         obs=pd.DataFrame(data=obs_data),
         var=pd.DataFrame(data=var_data, index=var_data["Feature"]),
         uns=OrderedDict(),
     )
 
-    adata = ep.pp.encode(adata, autodetect=True, encodings="label")
+    edata = ep.pp.encode(edata, autodetect=True, encodings="label")
 
-    return adata
+    return edata
 
 
 # simplified from https://github.com/scverse/scanpy/blob/main/scanpy/tests/conftest.py
