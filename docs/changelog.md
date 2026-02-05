@@ -9,11 +9,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 * improve syntax usage ([#1005](https://github.com/theislab/ehrapy/pull/1005)) @Zethson
 * fix fknni extra ([#1003](https://github.com/theislab/ehrapy/pull/1003)) @Zethson
 * Update plotting ci dotplot ([#1011](https://github.com/theislab/ehrapy/pull/1011)) @sueoglu @eroell
+* fix test warnings & adjust to future scanpy arguments ([#1016](https://github.com/theislab/ehrapy/pull/1016)) @eroell
 
 ### 🐛 Bug Fixes
 
 * `ep.pp` normalization functions now work when using a `layer` and `.X` is `None` ([#1015](https://github.com/theislab/ehrapy/pull/1015)) @agerardy @eroell
 * `ep.tl.rank_features_groups` can use `.obs` regardless of what is in `.X` or `.layers` ([#1015](https://github.com/theislab/ehrapy/pull/1015)) @agerardy @eroell
+
+### ⚠️ Modified
+
+* remove deprecated `ep.ad` (moved to `ehrdata`): `infer_feature_types`, `feature_type_overview`, `replace_feature_types`, `anndata_to_df`, `df_to_anndata`, `move_to_obs`, `move_to_x` ([#1016](https://github.com/theislab/ehrapy/pull/1016)) @eroell
+* remove deprecated `ep.dt` (moved to `ehrdata`) ([#1016](https://github.com/theislab/ehrapy/pull/1016)) @eroell
+* remove deprecated `ep.io` (moved to `ehrdata`): `df_to_anndata`, `read_csv`, `read_fhir`, `read_h5ad`, `write` ([#1016](https://github.com/theislab/ehrapy/pull/1016)) @eroell
+
 
 ## v0.13.0
 

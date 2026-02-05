@@ -32,7 +32,7 @@ class TestCausal:
 
     def test_dowhy_linear_dataset(self):
         estimate, refute_results = ep.tl.causal_inference(
-            adata=self.linear_data,
+            edata=self.linear_data,
             graph=self.linear_graph,
             treatment=self.treatment_name,
             outcome=self.outcome_name,
@@ -72,7 +72,7 @@ class TestCausal:
 
     def test_plot_causal_effect(self):
         estimate = ep.tl.causal_inference(
-            adata=self.linear_data,
+            edata=self.linear_data,
             graph=self.linear_graph,
             treatment=self.treatment_name,
             outcome=self.outcome_name,

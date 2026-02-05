@@ -40,21 +40,21 @@ def test_norm_scale(edata_to_norm, array_type):
     edata_to_norm.X = array_type(edata_to_norm.X)
     ep.pp.scale_norm(edata_to_norm)
 
-    adata_norm = ep.pp.scale_norm(edata_to_norm, copy=True)
+    edata_norm = ep.pp.scale_norm(edata_to_norm, copy=True)
 
     num1_norm = np.array([-1.4039999, 0.55506986, 0.84893], dtype=np.float32)
     num2_norm = np.array([-1.3587323, 1.0190493, 0.3396831], dtype=np.float32)
 
-    assert np.array_equal(adata_norm.X[:, 0], edata_to_norm.X[:, 0])
-    assert np.array_equal(adata_norm.X[:, 1], edata_to_norm.X[:, 1])
-    assert np.array_equal(adata_norm.X[:, 2], edata_to_norm.X[:, 2])
-    assert np.allclose(adata_norm.X[:, 3], num1_norm)
-    assert np.allclose(adata_norm.X[:, 4], num2_norm)
-    assert np.allclose(adata_norm.X[:, 5], edata_to_norm.X[:, 5], equal_nan=True)
+    assert np.array_equal(edata_norm.X[:, 0], edata_to_norm.X[:, 0])
+    assert np.array_equal(edata_norm.X[:, 1], edata_to_norm.X[:, 1])
+    assert np.array_equal(edata_norm.X[:, 2], edata_to_norm.X[:, 2])
+    assert np.allclose(edata_norm.X[:, 3], num1_norm)
+    assert np.allclose(edata_norm.X[:, 4], num2_norm)
+    assert np.allclose(edata_norm.X[:, 5], edata_to_norm.X[:, 5], equal_nan=True)
 
 
 def test_norm_scale_integers(edata_mini_integers_in_X):
-    adata_norm = ep.pp.scale_norm(edata_mini_integers_in_X, copy=True)
+    edata_norm = ep.pp.scale_norm(edata_mini_integers_in_X, copy=True)
     in_days_norm = np.array(
         [
             [-0.4472136],
@@ -71,20 +71,20 @@ def test_norm_scale_integers(edata_mini_integers_in_X):
             [-0.4472136],
         ]
     )
-    assert np.allclose(adata_norm.X, in_days_norm)
+    assert np.allclose(edata_norm.X, in_days_norm)
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 def test_norm_scale_kwargs(array_type, edata_to_norm):
     edata_to_norm.X = array_type(edata_to_norm.X)
 
-    adata_norm = ep.pp.scale_norm(edata_to_norm, copy=True, with_mean=False)
+    edata_norm = ep.pp.scale_norm(edata_to_norm, copy=True, with_mean=False)
 
     num1_norm = np.array([3.3304186, 5.2894883, 5.5833483], dtype=np.float32)
     num2_norm = np.array([-0.6793662, 1.6984155, 1.0190493], dtype=np.float32)
 
-    assert np.allclose(adata_norm.X[:, 3], num1_norm)
-    assert np.allclose(adata_norm.X[:, 4], num2_norm)
+    assert np.allclose(edata_norm.X[:, 3], num1_norm)
+    assert np.allclose(edata_norm.X[:, 4], num2_norm)
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
@@ -151,36 +151,36 @@ def test_norm_minmax_array_types(edata_to_norm, array_type, expected_error):
 def test_norm_minmax(array_type, edata_to_norm):
     edata_to_norm.X = array_type(edata_to_norm.X)
 
-    adata_norm = ep.pp.minmax_norm(edata_to_norm, copy=True)
+    edata_norm = ep.pp.minmax_norm(edata_to_norm, copy=True)
 
     num1_norm = np.array([0.0, 0.86956537, 0.9999999], dtype=np.dtype(np.float32))
     num2_norm = np.array([0.0, 1.0, 0.71428573], dtype=np.float32)
 
-    assert np.array_equal(adata_norm.X[:, 0], edata_to_norm.X[:, 0])
-    assert np.array_equal(adata_norm.X[:, 1], edata_to_norm.X[:, 1])
-    assert np.array_equal(adata_norm.X[:, 2], edata_to_norm.X[:, 2])
-    assert np.allclose(adata_norm.X[:, 3], num1_norm)
-    assert np.allclose(adata_norm.X[:, 4], num2_norm)
-    assert np.allclose(adata_norm.X[:, 5], edata_to_norm.X[:, 5], equal_nan=True)
+    assert np.array_equal(edata_norm.X[:, 0], edata_to_norm.X[:, 0])
+    assert np.array_equal(edata_norm.X[:, 1], edata_to_norm.X[:, 1])
+    assert np.array_equal(edata_norm.X[:, 2], edata_to_norm.X[:, 2])
+    assert np.allclose(edata_norm.X[:, 3], num1_norm)
+    assert np.allclose(edata_norm.X[:, 4], num2_norm)
+    assert np.allclose(edata_norm.X[:, 5], edata_to_norm.X[:, 5], equal_nan=True)
 
 
 def test_norm_minmax_integers(edata_mini_integers_in_X):
-    adata_norm = ep.pp.minmax_norm(edata_mini_integers_in_X, copy=True)
+    edata_norm = ep.pp.minmax_norm(edata_mini_integers_in_X, copy=True)
     in_days_norm = np.array([[0.25], [0.5], [0.0], [0.25], [0.0], [0.25], [0.5], [0.75], [1.0], [0.25], [0.5], [0.25]])
-    assert np.allclose(adata_norm.X, in_days_norm)
+    assert np.allclose(edata_norm.X, in_days_norm)
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 def test_norm_minmax_kwargs(array_type, edata_to_norm):
     edata_to_norm.X = array_type(edata_to_norm.X)
 
-    adata_norm = ep.pp.minmax_norm(edata_to_norm, copy=True, feature_range=(0, 2))
+    edata_norm = ep.pp.minmax_norm(edata_to_norm, copy=True, feature_range=(0, 2))
 
     num1_norm = np.array([0.0, 1.7391307, 1.9999998], dtype=np.float32)
     num2_norm = np.array([0.0, 2.0, 1.4285715], dtype=np.float32)
 
-    assert np.allclose(adata_norm.X[:, 3], num1_norm)
-    assert np.allclose(adata_norm.X[:, 4], num2_norm)
+    assert np.allclose(edata_norm.X[:, 3], num1_norm)
+    assert np.allclose(edata_norm.X[:, 4], num2_norm)
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
@@ -240,26 +240,26 @@ def test_norm_maxabs(array_type, edata_to_norm):
 
     if isinstance(edata_to_norm.X, da.Array):
         with pytest.raises(NotImplementedError):
-            adata_norm = ep.pp.maxabs_norm(edata_to_norm, copy=True)
+            edata_norm = ep.pp.maxabs_norm(edata_to_norm, copy=True)
 
     else:
-        adata_norm = ep.pp.maxabs_norm(edata_to_norm, copy=True)
+        edata_norm = ep.pp.maxabs_norm(edata_to_norm, copy=True)
 
         num1_norm = np.array([0.5964913, 0.94736844, 1.0], dtype=np.float32)
         num2_norm = np.array([-0.4, 1.0, 0.6], dtype=np.float32)
 
-        assert np.array_equal(adata_norm.X[:, 0], edata_to_norm.X[:, 0])
-        assert np.array_equal(adata_norm.X[:, 1], edata_to_norm.X[:, 1])
-        assert np.array_equal(adata_norm.X[:, 2], edata_to_norm.X[:, 2])
-        assert np.allclose(adata_norm.X[:, 3], num1_norm)
-        assert np.allclose(adata_norm.X[:, 4], num2_norm)
-        assert np.allclose(adata_norm.X[:, 5], edata_to_norm.X[:, 5], equal_nan=True)
+        assert np.array_equal(edata_norm.X[:, 0], edata_to_norm.X[:, 0])
+        assert np.array_equal(edata_norm.X[:, 1], edata_to_norm.X[:, 1])
+        assert np.array_equal(edata_norm.X[:, 2], edata_to_norm.X[:, 2])
+        assert np.allclose(edata_norm.X[:, 3], num1_norm)
+        assert np.allclose(edata_norm.X[:, 4], num2_norm)
+        assert np.allclose(edata_norm.X[:, 5], edata_to_norm.X[:, 5], equal_nan=True)
 
 
 def test_norm_maxabs_integers(edata_mini_integers_in_X):
-    adata_norm = ep.pp.maxabs_norm(edata_mini_integers_in_X, copy=True)
+    edata_norm = ep.pp.maxabs_norm(edata_mini_integers_in_X, copy=True)
     in_days_norm = np.array([[0.25], [0.5], [0.0], [0.25], [0.0], [0.25], [0.5], [0.75], [1.0], [0.25], [0.5], [0.25]])
-    assert np.allclose(adata_norm.X, in_days_norm)
+    assert np.allclose(edata_norm.X, in_days_norm)
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
@@ -317,36 +317,36 @@ def test_norm_robust_scale_array_types(edata_to_norm, array_type, expected_error
 def test_norm_robust_scale(array_type, edata_to_norm):
     edata_to_norm.X = array_type(edata_to_norm.X)
 
-    adata_norm = ep.pp.robust_scale_norm(edata_to_norm, copy=True)
+    edata_norm = ep.pp.robust_scale_norm(edata_to_norm, copy=True)
 
     num1_norm = np.array([-1.73913043, 0.0, 0.26086957], dtype=np.float32)
     num2_norm = np.array([-1.4285715, 0.5714286, 0.0], dtype=np.float32)
 
-    assert np.array_equal(adata_norm.X[:, 0], edata_to_norm.X[:, 0])
-    assert np.array_equal(adata_norm.X[:, 1], edata_to_norm.X[:, 1])
-    assert np.array_equal(adata_norm.X[:, 2], edata_to_norm.X[:, 2])
-    assert np.allclose(adata_norm.X[:, 3], num1_norm)
-    assert np.allclose(adata_norm.X[:, 4], num2_norm)
-    assert np.allclose(adata_norm.X[:, 5], edata_to_norm.X[:, 5], equal_nan=True)
+    assert np.array_equal(edata_norm.X[:, 0], edata_to_norm.X[:, 0])
+    assert np.array_equal(edata_norm.X[:, 1], edata_to_norm.X[:, 1])
+    assert np.array_equal(edata_norm.X[:, 2], edata_to_norm.X[:, 2])
+    assert np.allclose(edata_norm.X[:, 3], num1_norm)
+    assert np.allclose(edata_norm.X[:, 4], num2_norm)
+    assert np.allclose(edata_norm.X[:, 5], edata_to_norm.X[:, 5], equal_nan=True)
 
 
 def test_norm_robust_scale_integers(edata_mini_integers_in_X):
-    adata_norm = ep.pp.robust_scale_norm(edata_mini_integers_in_X, copy=True)
+    edata_norm = ep.pp.robust_scale_norm(edata_mini_integers_in_X, copy=True)
     in_days_norm = np.array([[0.0], [1.0], [-1.0], [0.0], [-1.0], [0.0], [1.0], [2.0], [3.0], [0.0], [1.0], [0.0]])
-    assert np.allclose(adata_norm.X, in_days_norm)
+    assert np.allclose(edata_norm.X, in_days_norm)
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 def test_norm_robust_scale_kwargs(edata_to_norm, array_type):
     edata_to_norm.X = array_type(edata_to_norm.X)
 
-    adata_norm = ep.pp.robust_scale_norm(edata_to_norm, copy=True, with_scaling=False)
+    edata_norm = ep.pp.robust_scale_norm(edata_to_norm, copy=True, with_scaling=False)
 
     num1_norm = np.array([-2.0, 0.0, 0.2999997], dtype=np.float32)
     num2_norm = np.array([-5.0, 2.0, 0.0], dtype=np.float32)
 
-    assert np.allclose(adata_norm.X[:, 3], num1_norm)
-    assert np.allclose(adata_norm.X[:, 4], num2_norm)
+    assert np.allclose(edata_norm.X[:, 3], num1_norm)
+    assert np.allclose(edata_norm.X[:, 4], num2_norm)
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
@@ -406,21 +406,21 @@ def test_norm_quantile_uniform(array_type, edata_to_norm):
     warnings.filterwarnings("ignore", category=UserWarning)
     edata_to_norm.X = array_type(edata_to_norm.X)
 
-    adata_norm = ep.pp.quantile_norm(edata_to_norm, copy=True)
+    edata_norm = ep.pp.quantile_norm(edata_to_norm, copy=True)
 
     num1_norm = np.array([0.0, 0.5, 1.0], dtype=np.float32)
     num2_norm = np.array([0.0, 1.0, 0.5], dtype=np.float32)
 
-    assert np.array_equal(adata_norm.X[:, 0], edata_to_norm.X[:, 0])
-    assert np.array_equal(adata_norm.X[:, 1], edata_to_norm.X[:, 1])
-    assert np.array_equal(adata_norm.X[:, 2], edata_to_norm.X[:, 2])
-    assert np.allclose(adata_norm.X[:, 3], num1_norm)
-    assert np.allclose(adata_norm.X[:, 4], num2_norm)
-    assert np.allclose(adata_norm.X[:, 5], edata_to_norm.X[:, 5], equal_nan=True)
+    assert np.array_equal(edata_norm.X[:, 0], edata_to_norm.X[:, 0])
+    assert np.array_equal(edata_norm.X[:, 1], edata_to_norm.X[:, 1])
+    assert np.array_equal(edata_norm.X[:, 2], edata_to_norm.X[:, 2])
+    assert np.allclose(edata_norm.X[:, 3], num1_norm)
+    assert np.allclose(edata_norm.X[:, 4], num2_norm)
+    assert np.allclose(edata_norm.X[:, 5], edata_to_norm.X[:, 5], equal_nan=True)
 
 
 def test_norm_quantile_integers(edata_mini_integers_in_X):
-    adata_norm = ep.pp.quantile_norm(edata_mini_integers_in_X, n_quantiles=12, copy=True)
+    edata_norm = ep.pp.quantile_norm(edata_mini_integers_in_X, n_quantiles=12, copy=True)
     in_days_norm = np.array(
         [
             [0.36363636],
@@ -437,20 +437,20 @@ def test_norm_quantile_integers(edata_mini_integers_in_X):
             [0.36363636],
         ]
     )
-    assert np.allclose(adata_norm.X, in_days_norm)
+    assert np.allclose(edata_norm.X, in_days_norm)
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 def test_norm_quantile_uniform_kwargs(array_type, edata_to_norm):
     edata_to_norm.X = array_type(edata_to_norm.X)
 
-    adata_norm = ep.pp.quantile_norm(edata_to_norm, copy=True, output_distribution="normal", n_quantiles=3)
+    edata_norm = ep.pp.quantile_norm(edata_to_norm, copy=True, output_distribution="normal", n_quantiles=3)
 
     num1_norm = np.array([-5.19933758, 0.0, 5.19933758], dtype=np.float32)
     num2_norm = np.array([-5.19933758, 5.19933758, 0.0], dtype=np.float32)
 
-    assert np.allclose(adata_norm.X[:, 3], num1_norm)
-    assert np.allclose(adata_norm.X[:, 4], num2_norm)
+    assert np.allclose(edata_norm.X[:, 3], num1_norm)
+    assert np.allclose(edata_norm.X[:, 4], num2_norm)
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
@@ -513,21 +513,21 @@ def test_norm_power(array_type, edata_to_norm):
         with pytest.raises(NotImplementedError):
             ep.pp.power_norm(edata_to_norm, copy=True)
     else:
-        adata_norm = ep.pp.power_norm(edata_to_norm, copy=True)
+        edata_norm = ep.pp.power_norm(edata_to_norm, copy=True)
 
         num1_norm = np.array([-1.3821232, 0.43163615, 0.950487], dtype=np.float32)
         num2_norm = np.array([-1.340104, 1.0613203, 0.27878374], dtype=np.float32)
 
-        assert np.array_equal(adata_norm.X[:, 0], edata_to_norm.X[:, 0])
-        assert np.array_equal(adata_norm.X[:, 1], edata_to_norm.X[:, 1])
-        assert np.array_equal(adata_norm.X[:, 2], edata_to_norm.X[:, 2])
-        assert np.allclose(adata_norm.X[:, 3], num1_norm, rtol=1.1)
-        assert np.allclose(adata_norm.X[:, 4], num2_norm, rtol=1.1)
-        assert np.allclose(adata_norm.X[:, 5], edata_to_norm.X[:, 5], equal_nan=True)
+        assert np.array_equal(edata_norm.X[:, 0], edata_to_norm.X[:, 0])
+        assert np.array_equal(edata_norm.X[:, 1], edata_to_norm.X[:, 1])
+        assert np.array_equal(edata_norm.X[:, 2], edata_to_norm.X[:, 2])
+        assert np.allclose(edata_norm.X[:, 3], num1_norm, rtol=1.1)
+        assert np.allclose(edata_norm.X[:, 4], num2_norm, rtol=1.1)
+        assert np.allclose(edata_norm.X[:, 5], edata_to_norm.X[:, 5], equal_nan=True)
 
 
 def test_norm_power_integers(edata_mini_integers_in_X):
-    adata_norm = ep.pp.power_norm(edata_mini_integers_in_X, copy=True)
+    edata_norm = ep.pp.power_norm(edata_mini_integers_in_X, copy=True)
     in_days_norm = np.array(
         [
             [-0.31234142],
@@ -544,7 +544,7 @@ def test_norm_power_integers(edata_mini_integers_in_X):
             [-0.31234142],
         ]
     )
-    assert np.allclose(adata_norm.X, in_days_norm, rtol=1e-4, atol=1e-4)
+    assert np.allclose(edata_norm.X, in_days_norm, rtol=1e-4, atol=1e-4)
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
@@ -558,13 +558,13 @@ def test_norm_power_kwargs(array_type, edata_to_norm):
         with pytest.raises(ValueError):
             ep.pp.power_norm(edata_to_norm, copy=True, method="box-cox")
 
-        adata_norm = ep.pp.power_norm(edata_to_norm, copy=True, standardize=False)
+        edata_norm = ep.pp.power_norm(edata_to_norm, copy=True, standardize=False)
 
         num1_norm = np.array([201.03636, 1132.8341, 1399.3877], dtype=np.float32)
         num2_norm = np.array([-1.8225479, 5.921072, 3.397709], dtype=np.float32)
 
-        assert np.allclose(adata_norm.X[:, 3], num1_norm, rtol=1e-02, atol=1e-02)
-        assert np.allclose(adata_norm.X[:, 4], num2_norm, rtol=1e-02, atol=1e-02)
+        assert np.allclose(edata_norm.X[:, 3], num1_norm, rtol=1e-02, atol=1e-02)
+        assert np.allclose(edata_norm.X[:, 4], num2_norm, rtol=1e-02, atol=1e-02)
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
@@ -637,38 +637,38 @@ def test_norm_log_norm_array_types(edata_to_norm, array_type, expected_error):
 
 def test_norm_log1p(edata_to_norm):
     # Ensure that some test data is strictly positive
-    log_adata = edata_to_norm.copy()
-    log_adata.X[0, 4] = 1
+    log_edata = edata_to_norm.copy()
+    log_edata.X[0, 4] = 1
 
-    adata_norm = ep.pp.log_norm(log_adata, copy=True)
+    edata_norm = ep.pp.log_norm(log_edata, copy=True)
 
     num1_norm = np.array([1.4816046, 1.856298, 1.9021075], dtype=np.float32)
     num2_norm = np.array([0.6931472, 1.7917595, 1.3862944], dtype=np.float32)
 
-    assert np.array_equal(adata_norm.X[:, 0], edata_to_norm.X[:, 0])
-    assert np.array_equal(adata_norm.X[:, 1], edata_to_norm.X[:, 1])
-    assert np.array_equal(adata_norm.X[:, 2], edata_to_norm.X[:, 2])
-    assert np.allclose(adata_norm.X[:, 3], num1_norm)
-    assert np.allclose(adata_norm.X[:, 4], num2_norm)
-    assert np.allclose(adata_norm.X[:, 5], edata_to_norm.X[:, 5], equal_nan=True)
+    assert np.array_equal(edata_norm.X[:, 0], edata_to_norm.X[:, 0])
+    assert np.array_equal(edata_norm.X[:, 1], edata_to_norm.X[:, 1])
+    assert np.array_equal(edata_norm.X[:, 2], edata_to_norm.X[:, 2])
+    assert np.allclose(edata_norm.X[:, 3], num1_norm)
+    assert np.allclose(edata_norm.X[:, 4], num2_norm)
+    assert np.allclose(edata_norm.X[:, 5], edata_to_norm.X[:, 5], equal_nan=True)
 
     # Check alternative base works
-    adata_norm = ep.pp.log_norm(log_adata, base=10, copy=True)
+    edata_norm = ep.pp.log_norm(log_edata, base=10, copy=True)
 
     num1_norm = np.divide(np.array([1.4816046, 1.856298, 1.9021075], dtype=np.float32), np.log(10))
     num2_norm = np.divide(np.array([0.6931472, 1.7917595, 1.3862944], dtype=np.float32), np.log(10))
 
-    assert np.allclose(adata_norm.X[:, 3], num1_norm)
-    assert np.allclose(adata_norm.X[:, 4], num2_norm)
+    assert np.allclose(edata_norm.X[:, 3], num1_norm)
+    assert np.allclose(edata_norm.X[:, 4], num2_norm)
 
     # Check alternative offset works
-    adata_norm = ep.pp.log_norm(log_adata, offset=0.5, copy=True)
+    edata_norm = ep.pp.log_norm(log_edata, offset=0.5, copy=True)
 
     num1_norm = np.array([1.3609766, 1.7749524, 1.8245492], dtype=np.float32)
     num2_norm = np.array([0.4054651, 1.7047482, 1.252763], dtype=np.float32)
 
-    assert np.allclose(adata_norm.X[:, 3], num1_norm)
-    assert np.allclose(adata_norm.X[:, 4], num2_norm)
+    assert np.allclose(edata_norm.X[:, 3], num1_norm)
+    assert np.allclose(edata_norm.X[:, 4], num2_norm)
 
     try:
         ep.pp.log_norm(edata_to_norm, vars="Numeric2", offset=3, copy=True)
@@ -683,33 +683,33 @@ def test_norm_log1p(edata_to_norm):
 
 
 def test_norm_record(edata_to_norm):
-    adata_norm = ep.pp.minmax_norm(edata_to_norm, copy=True)
+    edata_norm = ep.pp.minmax_norm(edata_to_norm, copy=True)
 
-    assert adata_norm.uns["normalization"] == {
+    assert edata_norm.uns["normalization"] == {
         "Numeric1": ["minmax"],
         "Numeric2": ["minmax"],
     }
 
-    adata_norm = ep.pp.maxabs_norm(adata_norm, vars=["Numeric1"], copy=True)
+    edata_norm = ep.pp.maxabs_norm(edata_norm, vars=["Numeric1"], copy=True)
 
-    assert adata_norm.uns["normalization"] == {
+    assert edata_norm.uns["normalization"] == {
         "Numeric1": ["minmax", "maxabs"],
         "Numeric2": ["minmax"],
     }
 
 
 def test_offset_negative_values():
-    to_offset_adata = ed.EHRData(X=np.array([[-1, -5, -10], [5, 6, -20]], dtype=np.float32))
-    expected_adata = ed.EHRData(X=np.array([[19, 15, 10], [25, 26, 0]], dtype=np.float32))
+    to_offset_edata = ed.EHRData(X=np.array([[-1, -5, -10], [5, 6, -20]], dtype=np.float32))
+    expected_edata = ed.EHRData(X=np.array([[19, 15, 10], [25, 26, 0]], dtype=np.float32))
 
-    assert np.array_equal(expected_adata.X, ep.pp.offset_negative_values(to_offset_adata, copy=True).X)
+    assert np.array_equal(expected_edata.X, ep.pp.offset_negative_values(to_offset_edata, copy=True).X)
 
 
 def test_norm_numerical_only():
-    to_normalize_adata = ed.EHRData(X=np.array([[1, 0, 0], [0, 0, 1]], dtype=np.float32))
-    expected_adata = ed.EHRData(X=np.array([[0.6931472, 0, 0], [0, 0, 0.6931472]], dtype=np.float32))
+    to_normalize_edata = ed.EHRData(X=np.array([[1, 0, 0], [0, 0, 1]], dtype=np.float32))
+    expected_edata = ed.EHRData(X=np.array([[0.6931472, 0, 0], [0, 0, 0.6931472]], dtype=np.float32))
 
-    assert np.array_equal(expected_adata.X, ep.pp.log_norm(to_normalize_adata, copy=True).X)
+    assert np.array_equal(expected_edata.X, ep.pp.log_norm(to_normalize_edata, copy=True).X)
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES_NUMERIC_3D_ABLE)

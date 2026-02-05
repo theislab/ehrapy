@@ -16,10 +16,10 @@ def test_kaplan_meier(mimic_2: EHRData):
     mimic_2.X[:, censor_idx] = np.where(mimic_2.X[:, censor_idx] == 0, 1, 0)
 
     groups = mimic_2[:, ["service_unit"]].X
-    adata_ficu = mimic_2[groups == "FICU"].copy()
-    adata_micu = mimic_2[groups == "MICU"].copy()
-    kmf_1 = ep.tl.kaplan_meier(adata_ficu, duration_col="mort_day_censored", event_col="censor_flg", label="FICU")
-    kmf_2 = ep.tl.kaplan_meier(adata_micu, duration_col="mort_day_censored", event_col="censor_flg", label="MICU")
+    edata_ficu = mimic_2[groups == "FICU"].copy()
+    edata_micu = mimic_2[groups == "MICU"].copy()
+    kmf_1 = ep.tl.kaplan_meier(edata_ficu, duration_col="mort_day_censored", event_col="censor_flg", label="FICU")
+    kmf_2 = ep.tl.kaplan_meier(edata_micu, duration_col="mort_day_censored", event_col="censor_flg", label="MICU")
 
     plot = ep.pl.kaplan_meier(
         [kmf_1, kmf_2],
@@ -48,22 +48,22 @@ def test_kaplan_meier(mimic_2: EHRData):
 
 
 def test_coxph_forestplot(mimic_2: EHRData):
-    adata_subset = mimic_2[
+    edata_subset = mimic_2[
         :, ["mort_day_censored", "censor_flg", "gender_num", "afib_flg", "day_icu_intime_num"]
     ].copy()
-    ep.tl.cox_ph(adata_subset, duration_col="mort_day_censored", event_col="censor_flg")
-    plot = ep.pl.cox_ph_forestplot(adata_subset)
+    ep.tl.cox_ph(edata_subset, duration_col="mort_day_censored", event_col="censor_flg")
+    plot = ep.pl.cox_ph_forestplot(edata_subset)
     assert plot is not None
     assert isinstance(plot, hv.Overlay)
 
 
 def test_ols(mimic_2: EHRData):
-    adata_sample = mimic_2[:200].copy()
+    edata_sample = mimic_2[:200].copy()
     co2_lm_result = ep.tl.ols(
-        adata_sample, var_names=["pco2_first", "tco2_first"], formula="tco2_first ~ pco2_first", missing="drop"
+        edata_sample, var_names=["pco2_first", "tco2_first"], formula="tco2_first ~ pco2_first", missing="drop"
     ).fit()
     plot = ep.pl.ols(
-        adata_sample,
+        edata_sample,
         x="pco2_first",
         y="tco2_first",
         ols_results=[co2_lm_result],
