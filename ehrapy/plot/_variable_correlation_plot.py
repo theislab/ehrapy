@@ -19,9 +19,9 @@ def plot_variable_correlations(
     *,
     layer: str,
     var_names: Sequence[str] | None = None,
-    method: Literal["spearman", "pearson"] = "pearson",
+    method: Literal["spearman", "pearson", "kendall"] = "pearson",
     agg: Literal["mean", "last", "first"] = "mean",
-    correction_method: Literal["bonferroni", "fdr_bh", "holm", "none"] = "bonferroni",
+    correction_method: Literal["bonferroni", "fdr_bh", "fdr_tsbh", "holm", "none"] = "bonferroni",
     alpha: float = 0.05,
     width: int = 600,
     height: int = 600,
@@ -31,17 +31,24 @@ def plot_variable_correlations(
 ) -> hv.HeatMap | hv.Overlay:
     """Plot variable correlations with heatmap.
 
+    Computes a correlation matrix (Pearson or Spearman) for the selected variables
+    from the given layer. If the layer contains a time dimension, values are first
+    aggregated per variable across time. Cells are annotated with the correlation
+    coefficient; an asterisk marks statistically significant correlations after
+    correction.
+
     Args:
         edata: Central data object.
         layer: Layer to extract data from.
         var_names: List of variable names to compute correlation of. If None, uses all numeric variables.
-        method: Correlation method: "spearman" or "pearson".
+        method: Correlation method: "spearman", "kendall" or "pearson".
         agg: How to aggregate time dimension: "mean", "last" or "first".
         correction_method: Multiple testing correction method:
-            - "bonferroni": conservative Bonferroni correction
-            -  "fdr_bh": Benjamini Hochberg FDR
-            -  "holm": Holm-Bonferroni
-            -  "none": no correction
+            -   "bonferroni": conservative Bonferroni correction
+            -   "fdr_bh": Benjamini Hochberg FDR
+            -   "fdr_tsbh": two-stage Benjamini-Hochberg, better calibrated when many variables are truly correlated
+            -   "holm": Holm-Bonferroni
+            -   "none": no correction
         alpha: Significance threshold after correction.
         width: Plot width in pixels.
         height: Plot height in pixels.
@@ -51,6 +58,16 @@ def plot_variable_correlations(
 
     Returns:
         HoloViews HeatMap object.
+
+    Examples:
+        >>> import ehrdata as ed
+        >>> import ehrapy as ep
+        >>> edata = ed.dt.ehrdata_blobs(n_variables=10, n_centers=5, n_observations=200, base_timepoints=3)
+        >>> ep.pl.plot_variable_correlations(
+        ...     edata, layer="tem_data", method="pearson", agg="mean", correction_method="fdr_bh", width=700
+        ... )
+
+        .. image:: /_static/docstring_previews/variable_correlations_heatmap.png
     """
     corr_df, _, sig_df = ep.tl.compute_variable_correlations(
         edata=edata,
@@ -87,9 +104,9 @@ def plot_variable_correlations(
     heatmap_df = pd.DataFrame(heatmap_data)
 
     if title is None:
-        title = f"{method.capitalize()} Correlation Matrix"
+        title = f"{method.capitalize()} Correlation Matrix "
         if correction_method != "none":
-            title += f"({correction_method}, alpha={alpha})"
+            title += f"(correction method: {correction_method}, alpha={alpha})"
 
     heatmap = hv.HeatMap(heatmap_df, kdims=["variable1", "variable2"], vdims=["correlation", "label"])
     heatmap = heatmap.opts(
@@ -102,6 +119,8 @@ def plot_variable_correlations(
         xrotation=45,
         toolbar="above",
         fontscale=1.2,
+        xlabel="",
+        ylabel="",
     )
     if show_values:
         labels = hv.Labels(heatmap_df, kdims=["variable1", "variable2"], vdims="label").opts(
@@ -124,9 +143,9 @@ def plot_variable_dependencies(
     *,
     layer: str,
     var_names: Sequence[str] | None = None,
-    method: Literal["spearman", "pearson"] = "pearson",
+    method: Literal["spearman", "pearson", "kendall"] = "pearson",
     agg: Literal["mean", "last", "first"] = "mean",
-    correction_method: Literal["bonferroni", "fdr_bh", "holm", "none"] = "bonferroni",
+    correction_method: Literal["bonferroni", "fdr_bh", "fdr_tsbh", "holm", "none"] = "bonferroni",
     alpha: float = 0.05,
     min_correlation: float = 0.3,
     only_significant: bool = True,
@@ -137,17 +156,22 @@ def plot_variable_dependencies(
 ) -> hv.Chord:
     """Plot correlation dependencies as a chord diagram.
 
+    Computes pairwise correlations between selected variables from layer and
+    visualizes them as a chord diagram. If the layer contains a time dimension,
+    values are aggregated per variable before correlation is computed.
+
     Args:
         edata: Central data object.
         layer: Layer to extract data from.
         var_names: List of variable names to compute correlation of. If None, uses all numeric variables.
-        method: Correlation method: "spearman" or "pearson".
+        method: Correlation method: "spearman", "kendall" or "pearson".
         agg: How to aggregate time dimension: "mean", "last" or "first".
         correction_method: Multiple testing correction method:
-            - "bonferroni": conservative Bonferroni correction
-            -  "fdr_bh": Benjamini Hochberg FDR
-            -  "holm": Holm-Bonferroni
-            -  "none": no correction
+            -   "bonferroni": conservative Bonferroni correction
+            -   "fdr_bh": Benjamini Hochberg FDR
+            -   "fdr_tsbh": two-stage Benjamini-Hochberg, better calibrated when many variables are truly correlated
+            -   "holm": Holm-Bonferroni
+            -   "none": no correction
         alpha: Significance threshold after correction.
         min_correlation: Minimum absolute correlation to show a chord.
         only_significant: If True, only show significant correlations.
@@ -158,6 +182,17 @@ def plot_variable_dependencies(
 
     Returns:
             HoloViews Chord diagram object.
+
+    Examples:
+        >>> import ehrdata as ed
+        >>> import ehrapy as ep
+        >>> edata = ed.dt.ehrdata_blobs(n_variables=10, n_centers=5, n_observations=200, base_timepoints=3)
+        >>> ep.pl.plot_variable_dependencies(
+        ...     edata, layer="tem_data", method="pearson", agg="mean", correction_method="fdr_bh"
+        ... )
+
+        .. image:: /_static/docstring_previews/variable_dependencies_chord.png
+
     """
     corr_df, _, sig_df = ep.tl.compute_variable_correlations(
         edata=edata,
@@ -202,7 +237,7 @@ def plot_variable_dependencies(
     nodes_df = pd.DataFrame({"index": range(len(variables)), "name": variables})
 
     if title is None:
-        title = f"{method.capitalize()} Correlation Chord"
+        title = f"{method.capitalize()} Correlation Chord Diagram "
         if correction_method != "none":
             title += f"({correction_method}, alpha={alpha})"
 

@@ -72,9 +72,9 @@ def compute_variable_correlations(
     *,
     layer: str,
     var_names: Sequence[str] | None = None,
-    method: Literal["spearman", "pearson"] = "pearson",
+    method: Literal["spearman", "pearson", "kendall"] = "pearson",
     agg: Literal["mean", "last", "first"] = "mean",
-    correction_method: Literal["bonferroni", "fdr_bh", "holm", "none"] = "bonferroni",
+    correction_method: Literal["bonferroni", "fdr_bh", "fdr_tsbh", "holm", "none"] = "bonferroni",
     alpha: float = 0.05,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Compute correlation matrix with statistical testing and multiple testing correction.
@@ -87,11 +87,12 @@ def compute_variable_correlations(
         edata: Central data object.
         layer: Layer to extract data from.
         var_names: List of variable names to compute correlation of. If None, uses all numeric variables.
-        method: Correlation method, "spearman" or "pearson".
+        method: Correlation method, "spearman", "kendall" or "pearson".
         agg: How to aggregate time dimension: "mean", "last" or "first".
         correction_method: Multiple testing correction method:
             -   "bonferroni": conservative Bonferroni correction
             -   "fdr_bh": Benjamini Hochberg FDR
+            -   "fdr_tsbh": two-stage Benjamini-Hochberg, better calibrated when many variables are truly correlated
             -   "holm": Holm-Bonferroni
             -   "none": no correction
         alpha: Significance threshold after correction.
@@ -101,6 +102,14 @@ def compute_variable_correlations(
             - corr_mtx: Correlation coefficient matrix (pd.DataFrame)
             - pval_mtx: Raw p-value matrix (pd.DataFrame)
             - sig_mtx: Boolean significance matrix after correction (pd.DataFrame)
+
+    Examples:
+        >>> import ehrdata as ed
+        >>> import ehrapy as ep
+        >>> edata = ed.dt.ehrdata_blobs(n_variables=10, n_centers=5, n_observations=200, base_timepoints=3)
+        >>> corr, pval, sig = ed.tl.compute_variable_correlations(
+        ...     edata, layer="tem_data", method="pearson", agg="mean", correction_method="fdr_bh", alpha=0.02
+        ... )
     """
     df = _extract_variable_values(edata, layer=layer, var_names=var_names, agg=agg)
 
@@ -112,7 +121,7 @@ def compute_variable_correlations(
     n_vars = len(numeric_cols)
 
     # Correlation computation using pandas
-    if method == "spearman" or method == "pearson":
+    if method == "spearman" or method == "kendall" or method == "pearson":
         corr_df = df.corr(method=method)
     else:
         raise ValueError(f"Unsupported correlation method: {method}")
@@ -137,6 +146,8 @@ def compute_variable_correlations(
 
             if method == "spearman":
                 _, pval = stats.spearmanr(x[mask], y[mask])
+            elif method == "kendall":
+                _, pval = stats.kendalltau(x[mask], y[mask])
             else:
                 _, pval = stats.pearsonr(x[mask], y[mask])
 
