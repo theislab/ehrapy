@@ -126,6 +126,7 @@ def sankey_diagram_time(
     state_labels: dict[int, str] | None = None,
     node_width: int | float = 20,
     node_padding: int | float = 10,
+    cmap: str | list[str] | None = None,
     node_color: str | None = None,
     edge_color: str | None = None,
     label_position: str | None = "right",
@@ -150,6 +151,7 @@ def sankey_diagram_time(
                     If None, state values will be displayed as strings of their numeric codes (e.g., "0", "1", "2").
         node_width: Width of the nodes in the Sankey diagram.
         node_padding: Padding between nodes in the Sankey diagram.
+        cmap: Colormap to use for coloring states. Can be a string recognized by Holoviews or a list of color hex codes.
         node_color: Color of the nodes. If None, default coloring is used.
         edge_color: Color of the edges. If None, default coloring is used.
         label_position: Position of the labels on the nodes. Options are 'left', 'right', 'outer', or 'inner'.
@@ -212,6 +214,23 @@ def sankey_diagram_time(
     state_values = sorted(state_labels.keys())
     state_names = [state_labels[val] for val in state_values]
 
+    if cmap is None:
+        cmap = hv.plotting.util.process_cmap("Category10", ncolors=len(state_names))
+    elif isinstance(cmap, str):
+        cmap = hv.plotting.util.process_cmap(cmap, ncolors=len(state_names))
+    else:
+        cmap = list(cmap)
+        if len(cmap) < len(state_names):
+            raise ValueError(f"Provided cmap has {len(cmap)} colors but {len(state_names)} are needed.")
+
+    # map each state name to a fixed color
+    state_color_map = {name: cmap[i] for i, name in enumerate(state_names)}
+
+    def _color_for_label(label: str) -> str:
+        """Helper function to get the bare state name without suffixes."""
+        state = label.rsplit(" (", 1)[0]
+        return state_color_map.get(state, "#aaaaaa")  # fall back to grey if a state name is not in the map
+
     sources, targets, values = [], [], []
     for t in range(len(time_steps) - 1):
         for s_from_idx, s_from_val in enumerate(state_values):
@@ -225,8 +244,23 @@ def sankey_diagram_time(
                     values.append(int(count))
 
     sankey_df = pd.DataFrame({"source": sources, "target": targets, "value": values})
+    sankey_df["edge_color"] = sankey_df["source"].apply(_color_for_label)
 
-    sankey = hv.Sankey(sankey_df, kdims=["source", "target"], vdims=["value"])
+    # node labels in appearance order
+    all_labels = list(dict.fromkeys(sources + targets))
+
+    # explicit node dataset with "label" as the key dimension
+    node_df = pd.DataFrame({"label": all_labels})
+    nodes = hv.Dataset(node_df, kdims=["label"])
+
+    # map every node label to its state color
+    label_color_map = {lbl: _color_for_label(lbl) for lbl in all_labels}
+
+    sankey = hv.Sankey(
+        (sankey_df, nodes),
+        kdims=["source", "target"],
+        vdims=["value", "edge_color"],
+    )
 
     opts_dict: dict[str, Any] = {}
 
@@ -242,10 +276,17 @@ def sankey_diagram_time(
         opts_dict["node_padding"] = node_padding
     if title is not None:
         opts_dict["title"] = title
-    if node_color is not None:
+    if node_color is None:
+        opts_dict["node_color"] = "label"
+        opts_dict["cmap"] = label_color_map
+    else:
         opts_dict["node_color"] = node_color
-    if edge_color is not None:
+    if edge_color is None:
+        opts_dict["edge_color"] = "edge_color"
+    else:
         opts_dict["edge_color"] = edge_color
+    opts_dict["node_size"] = 0
+
     if label_position is not None:
         opts_dict["label_position"] = label_position
     if show_values is not None:
