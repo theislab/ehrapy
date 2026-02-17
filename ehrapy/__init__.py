@@ -17,9 +17,7 @@ from ehrapy._settings import EhrapyConfig, ehrapy_settings
 
 settings: EhrapyConfig = ehrapy_settings
 
-from ehrapy import anndata as ad
-from ehrapy import data as dt
-from ehrapy import get, io
+from ehrapy import get
 from ehrapy import plot as pl
 from ehrapy import preprocessing as pp
 from ehrapy import tools as tl

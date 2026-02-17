@@ -86,7 +86,10 @@ myst_enable_extensions = [
     "amsmath",
 ]
 
-autodoc_mock_imports = ["scipy.linalg.triu"]
+autodoc_mock_imports = [
+    "scipy.linalg.triu",
+    "leidenalg",
+]
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
@@ -139,6 +142,7 @@ nitpick_ignore = [
     ("py:class", "dask_ml.preprocessing.StandardScaler"),
     ("py:class", "pathlib._local.Path"),
     ("py:data", "typing.Union"),
+    ("py:class", "pandas.core.frame.DataFrame"),
 ]
 autodoc_type_aliases = {"CAT": "Any"}
 
@@ -169,4 +173,12 @@ nbsphinx_thumbnails = {
     "tutorials/notebooks/bias": "_static/tutorials/bias.png",
     "tutorials/notebooks/out_of_core": "_static/tutorials/out_of_core.png",
     "tutorials/notebooks/patient_trajectory": "_static/tutorials/patient_trajectory.png",
+    "tutorials/notebooks/longitudinal_with_ehrapy": "_static/tutorials/longitudinal.png",
+}
+
+
+# Redirect broken parameter annotation classes
+qualname_overrides = {
+    "pandas.core.series.Series": "pandas.Series",
+    "pandas.core.frame.DataFrame": "pandas.DataFrame",
 }

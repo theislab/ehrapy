@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import matplotlib as mpl
+import matplotlib.collections as mcoll
 import pandas as pd
 import pytest
 
@@ -25,8 +26,8 @@ os.environ["NUMBA_CPU_NAME"] = "generic"
 
 
 def test_scatter_plot(mimic_2, check_same_image):
-    adata_subset = mimic_2[:, ["age", "icu_los_day"]].copy()
-    ax = ep.pl.scatter(adata_subset, x="age", y="icu_los_day", color="#fe57a1", show=False)
+    edata_subset = mimic_2[:, ["age", "icu_los_day"]].copy()
+    ax = ep.pl.scatter(edata_subset, x="age", y="icu_los_day", color="#fe57a1", show=False)
     fig = ax.figure
 
     check_same_image(
@@ -71,7 +72,7 @@ def test_heatmap_plot_3D(edata_blob_small):
 
 
 def test_dotplot_plot(mimic_2, check_same_image):
-    adata = mimic_2[
+    edata = mimic_2[
         :,
         [
             "abg_count",
@@ -86,13 +87,46 @@ def test_dotplot_plot(mimic_2, check_same_image):
         ],
     ].copy()
 
-    adata.obs["service_unit"] = mimic_2[:, "service_unit"].X.toarray().ravel().astype(str)
-    adata._inplace_subset_var([var for var in adata.var_names if var != "service_unit"])
-    adata.X = adata.X.astype(float)
+    edata.obs["service_unit"] = mimic_2[:, "service_unit"].X.toarray().ravel().astype(str)
+    edata._inplace_subset_var([var for var in edata.var_names if var != "service_unit"])
+    edata.X = edata.X.astype(float)
 
     ax = ep.pl.dotplot(
-        adata,
-        var_names=[
+        edata,
+        var_names=edata.var_names,
+        groupby="service_unit",
+        show=False,
+        figsize=(5, 6),
+    )
+
+    ax["mainplot_ax"].get_figure()
+
+    # ticks exist and are non empty
+    xt = [t.get_text().strip() for t in ax["mainplot_ax"].get_xticklabels() if t.get_text().strip()]
+    yt = [t.get_text().strip() for t in ax["mainplot_ax"].get_yticklabels() if t.get_text().strip()]
+
+    for v in edata.var_names:
+        assert v in xt
+
+    for g in edata.obs["service_unit"].cat.categories:
+        assert str(g) in yt
+
+    # dot counts match expected
+    n = 0
+    for coll in ax["mainplot_ax"].collections:
+        if isinstance(coll, mcoll.PathCollection):
+            offsets = coll.get_offsets()
+            if offsets is not None:
+                n += len(offsets)
+
+    n_groups = edata.obs["service_unit"].nunique()
+    assert n == n_groups * len(edata.var_names)
+
+
+def test_dotplot_plot_image(mimic_2, check_same_image):
+    edata = mimic_2[
+        :,
+        [
             "abg_count",
             "wbc_first",
             "hgb_first",
@@ -101,13 +135,24 @@ def test_dotplot_plot(mimic_2, check_same_image):
             "bun_first",
             "creatinine_first",
             "pco2_first",
+            "service_unit",
         ],
+    ].copy()
+
+    edata.obs["service_unit"] = mimic_2[:, "service_unit"].X.toarray().ravel().astype(str)
+    edata._inplace_subset_var([var for var in edata.var_names if var != "service_unit"])
+    edata.X = edata.X.astype(float)
+
+    ax = ep.pl.dotplot(
+        edata,
+        var_names=edata.var_names,
         groupby="service_unit",
         show=False,
         figsize=(5, 6),
     )
 
     fig = ax["mainplot_ax"].get_figure()
+
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/dotplot_scanpy_plt",
@@ -125,16 +170,16 @@ def test_dotplot_plot_3D(edata_blob_small):
 
 
 def test_tracks_plot(mimic_2, check_same_image):
-    adata_sample = mimic_2[
+    edata_sample = mimic_2[
         :200, ["age", "gender_num", "weight_first", "bmi", "sapsi_first", "day_icu_intime_num", "hour_icu_intime"]
     ].copy()
-    adata_sample.obs["service_unit"] = mimic_2[:200, "service_unit"].X.toarray().ravel().astype(str)
-    adata_sample.obs["service_unit"] = adata_sample.obs["service_unit"].astype("category")
-    adata_sample._inplace_subset_var([var for var in adata_sample.var_names if var != "service_unit"])
-    adata_sample.X = adata_sample.X.astype(float)
+    edata_sample.obs["service_unit"] = mimic_2[:200, "service_unit"].X.toarray().ravel().astype(str)
+    edata_sample.obs["service_unit"] = edata_sample.obs["service_unit"].astype("category")
+    edata_sample._inplace_subset_var([var for var in edata_sample.var_names if var != "service_unit"])
+    edata_sample.X = edata_sample.X.astype(float)
 
     ax = ep.pl.tracksplot(
-        adata_sample,
+        edata_sample,
         var_names=["age", "gender_num", "weight_first", "bmi", "sapsi_first", "day_icu_intime_num", "hour_icu_intime"],
         groupby="service_unit",
         show=False,
@@ -158,11 +203,11 @@ def test_tracksplot_3D(edata_blob_small):
 
 
 def test_violin_plot(mimic_2, check_same_image):
-    adata_sample = mimic_2[:200, ["age"]].copy()
-    adata_sample.obs["service_unit"] = mimic_2[:200, "service_unit"].X.toarray().ravel().astype(str)
-    adata_sample.obs["service_unit"] = adata_sample.obs["service_unit"].astype("category")
+    edata_sample = mimic_2[:200, ["age"]].copy()
+    edata_sample.obs["service_unit"] = mimic_2[:200, "service_unit"].X.toarray().ravel().astype(str)
+    edata_sample.obs["service_unit"] = edata_sample.obs["service_unit"].astype("category")
 
-    ax = ep.pl.violin(adata_sample, keys="age", groupby="service_unit", show=False, jitter=False)
+    ax = ep.pl.violin(edata_sample, keys="age", groupby="service_unit", show=False, jitter=False)
     fig = ax.get_figure()
 
     check_same_image(
@@ -180,7 +225,7 @@ def test_violin_plot_3D(edata_blob_small):
 
 
 def test_matrix_plot(mimic_2, check_same_image):
-    adata_sample = mimic_2[
+    edata_sample = mimic_2[
         :200,
         [
             "abg_count",
@@ -193,12 +238,12 @@ def test_matrix_plot(mimic_2, check_same_image):
             "pco2_first",
         ],
     ].copy()
-    adata_sample.obs["service_unit"] = mimic_2[:200, "service_unit"].X.toarray().ravel().astype(str)
-    adata_sample.obs["service_unit"] = adata_sample.obs["service_unit"].astype("category")
-    adata_sample.X = adata_sample.X.astype(float)
+    edata_sample.obs["service_unit"] = mimic_2[:200, "service_unit"].X.toarray().ravel().astype(str)
+    edata_sample.obs["service_unit"] = edata_sample.obs["service_unit"].astype("category")
+    edata_sample.X = edata_sample.X.astype(float)
 
     ax = ep.pl.matrixplot(
-        adata_sample,
+        edata_sample,
         var_names=[
             "abg_count",
             "wbc_first",
@@ -233,13 +278,13 @@ def test_matrix_plot_3D(edata_blob_small):
 def test_stacked_violin_plot(mimic_2, check_same_image):
     var_names = ["icu_los_day", "hospital_los_day", "age", "gender_num", "weight_first", "bmi"]
 
-    adata_sample = mimic_2[:200, var_names].copy()
-    adata_sample.obs["service_unit"] = mimic_2[:200, "service_unit"].X.toarray().ravel().astype(str)
-    adata_sample.obs["service_unit"] = adata_sample.obs["service_unit"].astype("category")
-    adata_sample.X = adata_sample.X.astype(float)
+    edata_sample = mimic_2[:200, var_names].copy()
+    edata_sample.obs["service_unit"] = mimic_2[:200, "service_unit"].X.toarray().ravel().astype(str)
+    edata_sample.obs["service_unit"] = edata_sample.obs["service_unit"].astype("category")
+    edata_sample.X = edata_sample.X.astype(float)
 
     ax = ep.pl.stacked_violin(
-        adata_sample,
+        edata_sample,
         var_names=["icu_los_day", "hospital_los_day", "age", "gender_num", "weight_first", "bmi"],
         groupby="service_unit",
         show=False,
@@ -263,12 +308,12 @@ def test_stacked_violin_plot_3D(edata_blob_small):
 
 
 def test_clustermap(mimic_2_encoded, check_same_image):
-    adata_sample = mimic_2_encoded[:200, ["abg_count", "wbc_first", "hgb_first"]].copy()
+    edata_sample = mimic_2_encoded[:200, ["abg_count", "wbc_first", "hgb_first"]].copy()
 
-    mask = np.isfinite(adata_sample.X).all(axis=1)
-    adata_clean = adata_sample[mask].copy()
+    mask = np.isfinite(edata_sample.X).all(axis=1)
+    edata_clean = edata_sample[mask].copy()
 
-    ax = ep.pl.clustermap(adata_clean, show=False)
+    ax = ep.pl.clustermap(edata_clean, show=False)
     fig = ax.figure
     fig.set_dpi(80)
 
@@ -294,7 +339,7 @@ def test_rank_features_groups_plots(mimic_2_encoded, plotter):
     # in scanpy tests, there is no testing for rank_genes_groups plot but for tool function,
     # issue: https://github.com/scverse/scanpy/issues/3787
     # here I only test if these plotting functions produce a valid plot with correct properties e.g axes, labels
-    adata = mimic_2_encoded[
+    edata = mimic_2_encoded[
         :200,
         [
             "abg_count",
@@ -308,19 +353,19 @@ def test_rank_features_groups_plots(mimic_2_encoded, plotter):
         ],
     ].copy()
 
-    adata.obs["service_unit"] = pd.Categorical(
-        adata.obs["service_unit"],
-        categories=sorted(pd.unique(adata.obs["service_unit"])),
+    edata.obs["service_unit"] = pd.Categorical(
+        edata.obs["service_unit"],
+        categories=sorted(pd.unique(edata.obs["service_unit"])),
         ordered=True,
     )
 
-    ep.tl.rank_features_groups(adata, groupby="service_unit")
+    ep.tl.rank_features_groups(edata, groupby="service_unit")
 
-    first_group = adata.obs["service_unit"].cat.categories[0]
+    first_group = edata.obs["service_unit"].cat.categories[0]
 
     plot_fn = getattr(ep.pl, plotter)
     result = plot_fn(
-        adata,
+        edata,
         key="rank_features_groups",
         groups=[first_group],
         show=False,
@@ -359,25 +404,25 @@ def test_rank_features_groups_plots(mimic_2_encoded, plotter):
 
 
 def test_rank_features_groups_heatmap(mimic_2_encoded, check_same_image):
-    adata_sample = mimic_2_encoded[
+    edata_sample = mimic_2_encoded[
         :200, ["wbc_first", "hgb_first", "potassium_first", "tco2_first", "bun_first", "pco2_first"]
     ].copy()
 
-    ep.tl.rank_features_groups(adata_sample, groupby="service_unit")
+    ep.tl.rank_features_groups(edata_sample, groupby="service_unit")
 
     # To see the numerical results
 
-    groups = adata_sample.uns["rank_features_groups"]["names"].dtype.names
+    groups = edata_sample.uns["rank_features_groups"]["names"].dtype.names
     for group in groups:
         print(f"\nGroup: {group}")
-        names = adata_sample.uns["rank_features_groups"]["names"][group]
-        scores = adata_sample.uns["rank_features_groups"]["scores"][group]
-        pvals = adata_sample.uns["rank_features_groups"]["pvals"][group]
+        names = edata_sample.uns["rank_features_groups"]["names"][group]
+        scores = edata_sample.uns["rank_features_groups"]["scores"][group]
+        pvals = edata_sample.uns["rank_features_groups"]["pvals"][group]
         print("Top features:")
         for name, score, pval in zip(names, scores, pvals, strict=False):
             print(f"  {name}: score={score:.4f}, pval={pval:.4e}")
 
-    ax = ep.pl.rank_features_groups_heatmap(adata_sample, key="rank_features_groups", show=False)
+    ax = ep.pl.rank_features_groups_heatmap(edata_sample, key="rank_features_groups", show=False)
 
     fig = ax["heatmap_ax"].figure
     fig.set_size_inches(8, 6)
@@ -391,26 +436,53 @@ def test_rank_features_groups_heatmap(mimic_2_encoded, check_same_image):
     plt.close("all")
 
 
-def test_rank_features_groups_dotplot(mimic_2_encoded, check_same_image):
-    adata_sample = mimic_2_encoded[
+from matplotlib.collections import PathCollection
+
+
+def test_rank_features_groups_dotplot(mimic_2_encoded):
+    edata_sample = mimic_2_encoded[
         :200, ["wbc_first", "hgb_first", "potassium_first", "tco2_first", "bun_first"]
     ].copy()
-    ep.tl.rank_features_groups(adata_sample, groupby="service_unit")
+    ep.tl.rank_features_groups(edata_sample, groupby="service_unit")
 
-    # To see the numerical results
+    plot = ep.pl.rank_features_groups_dotplot(
+        edata_sample, key="rank_features_groups", groupby="service_unit", show=False
+    )
 
-    groups = adata_sample.uns["rank_features_groups"]["names"].dtype.names
-    for group in groups:
-        print(f"\nGroup: {group}")
-        names = adata_sample.uns["rank_features_groups"]["names"][group]
-        scores = adata_sample.uns["rank_features_groups"]["scores"][group]
-        pvals = adata_sample.uns["rank_features_groups"]["pvals"][group]
-        print("Top features:")
-        for name, score, pval in zip(names, scores, pvals, strict=False):
-            print(f"  {name}: score={score:.4f}, pval={pval:.4e}")
+    ax = plot["mainplot_ax"]
+
+    # ticks exist and are non-empty
+    xt = [t.get_text().strip() for t in ax.get_xticklabels() if t.get_text().strip()]
+    yt = [t.get_text().strip() for t in ax.get_yticklabels() if t.get_text().strip()]
+    assert xt
+    assert yt
+
+    expected_groups = {str(g) for g in edata_sample.obs["service_unit"].cat.categories}
+    assert set(yt) == expected_groups
+
+    colls = [c for c in ax.collections if isinstance(c, PathCollection)]
+    assert colls
+
+    sizes = [len(c.get_offsets()) for c in colls if c.get_offsets() is not None]
+    assert sizes
+
+    n_groups = edata_sample.obs["service_unit"].nunique()
+    expected_points = n_groups * (n_groups * len(edata_sample.var_names))
+
+    # Main dot layer should be the largest collection
+    assert max(sizes) == expected_points
+
+    plt.close("all")
+
+
+def test_rank_features_groups_dotplot_image(mimic_2_encoded, check_same_image):
+    edata_sample = mimic_2_encoded[
+        :200, ["wbc_first", "hgb_first", "potassium_first", "tco2_first", "bun_first"]
+    ].copy()
+    ep.tl.rank_features_groups(edata_sample, groupby="service_unit")
 
     ax = ep.pl.rank_features_groups_dotplot(
-        adata_sample, key="rank_features_groups", groupby="service_unit", show=False
+        edata_sample, key="rank_features_groups", groupby="service_unit", show=False
     )
 
     fig = ax["mainplot_ax"].get_figure()
@@ -423,15 +495,15 @@ def test_rank_features_groups_dotplot(mimic_2_encoded, check_same_image):
 
 
 def test_pca(mimic_2_sample_serv_unit_day_icu, check_same_image):
-    adata = mimic_2_sample_serv_unit_day_icu.copy()
-    adata = adata[~np.isnan(adata.X).any(axis=1)].copy()
-    adata = adata[:200, :].copy()
-    adata = ep.pp.encode(adata, autodetect=True)
+    edata = mimic_2_sample_serv_unit_day_icu.copy()
+    edata = edata[~np.isnan(edata.X).any(axis=1)].copy()
+    edata = edata[:200, :].copy()
+    edata = ep.pp.encode(edata, autodetect=True)
 
-    ep.pp.pca(adata)
-    ep.pp.neighbors(adata)
+    ep.pp.pca(edata)
+    ep.pp.neighbors(edata)
 
-    ax = ep.pl.pca(adata, color="service_unit", show=False)
+    ax = ep.pl.pca(edata, color="service_unit", show=False)
     fig = ax.figure
 
     fig.set_size_inches(8, 6)
@@ -446,15 +518,15 @@ def test_pca(mimic_2_sample_serv_unit_day_icu, check_same_image):
 
 
 def test_pca_loadings(mimic_2_sample_serv_unit_day_icu, check_same_image):
-    adata = mimic_2_sample_serv_unit_day_icu.copy()
-    adata = adata[~np.isnan(adata.X).any(axis=1)].copy()
-    adata = adata[:200, :].copy()
-    adata = ep.pp.encode(adata, autodetect=True)
+    edata = mimic_2_sample_serv_unit_day_icu.copy()
+    edata = edata[~np.isnan(edata.X).any(axis=1)].copy()
+    edata = edata[:200, :].copy()
+    edata = ep.pp.encode(edata, autodetect=True)
 
-    ep.pp.pca(adata)
-    ep.pp.neighbors(adata)
+    ep.pp.pca(edata)
+    ep.pp.neighbors(edata)
 
-    ep.pl.pca_loadings(adata, components="1,2,3", show=False)
+    ep.pl.pca_loadings(edata, components="1,2,3", show=False)
     fig = plt.gcf()
     fig.set_size_inches(12, 6)
     fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
@@ -469,15 +541,15 @@ def test_pca_loadings(mimic_2_sample_serv_unit_day_icu, check_same_image):
 
 
 def test_pca_variance_ration(mimic_2_sample_serv_unit_day_icu, check_same_image):
-    adata = mimic_2_sample_serv_unit_day_icu.copy()
-    adata = adata[~np.isnan(adata.X).any(axis=1)].copy()
-    adata = adata[:200, :].copy()
-    adata = ep.pp.encode(adata, autodetect=True)
+    edata = mimic_2_sample_serv_unit_day_icu.copy()
+    edata = edata[~np.isnan(edata.X).any(axis=1)].copy()
+    edata = edata[:200, :].copy()
+    edata = ep.pp.encode(edata, autodetect=True)
 
-    ep.pp.pca(adata)
-    ep.pp.neighbors(adata)
+    ep.pp.pca(edata)
+    ep.pp.neighbors(edata)
 
-    ep.pl.pca_variance_ratio(adata, show=False)
+    ep.pl.pca_variance_ratio(edata, show=False)
     fig = plt.gcf()
     fig.set_size_inches(8, 6)
     fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
@@ -492,15 +564,15 @@ def test_pca_variance_ration(mimic_2_sample_serv_unit_day_icu, check_same_image)
 
 
 def test_pca_overview(mimic_2_sample_serv_unit_day_icu, check_same_image, clean_up_plots):
-    adata = mimic_2_sample_serv_unit_day_icu.copy()
-    adata = adata[~np.isnan(adata.X).any(axis=1)].copy()
-    adata = adata[:200, :].copy()
-    adata = ep.pp.encode(adata, autodetect=True)
+    edata = mimic_2_sample_serv_unit_day_icu.copy()
+    edata = edata[~np.isnan(edata.X).any(axis=1)].copy()
+    edata = edata[:200, :].copy()
+    edata = ep.pp.encode(edata, autodetect=True)
 
-    ep.pp.pca(adata)
-    ep.pp.neighbors(adata)
+    ep.pp.pca(edata)
+    ep.pp.neighbors(edata)
 
-    ep.pl.pca_overview(adata, components="1,2", color="service_unit", show=False)
+    ep.pl.pca_overview(edata, components="1,2", color="service_unit", show=False)
 
     for id, fignum in enumerate(plt.get_fignums(), start=1):
         fig = plt.figure(fignum)
@@ -518,18 +590,18 @@ def test_pca_overview(mimic_2_sample_serv_unit_day_icu, check_same_image, clean_
 
 
 def test_umap_functionality(mimic_2_sample_serv_unit_day_icu):
-    adata = mimic_2_sample_serv_unit_day_icu.copy()
-    adata = adata[~np.isnan(adata.X).any(axis=1)].copy()
-    adata = adata[:200, :].copy()
-    adata = ep.pp.encode(adata, autodetect=True)
+    edata = mimic_2_sample_serv_unit_day_icu.copy()
+    edata = edata[~np.isnan(edata.X).any(axis=1)].copy()
+    edata = edata[:200, :].copy()
+    edata = ep.pp.encode(edata, autodetect=True)
 
-    ep.pp.simple_impute(adata)
-    ep.pp.log_norm(adata, offset=1)
-    ep.pp.neighbors(adata, random_state=0)
-    ep.tl.umap(adata, random_state=0)
+    ep.pp.simple_impute(edata)
+    ep.pp.log_norm(edata, offset=1)
+    ep.pp.neighbors(edata, random_state=0)
+    ep.tl.umap(edata, random_state=0)
 
     fig1 = ep.pl.umap(
-        adata,
+        edata,
         color="day_icu_intime",
         frameon=False,
         vmax=["p99.0", None, None],
@@ -539,7 +611,7 @@ def test_umap_functionality(mimic_2_sample_serv_unit_day_icu):
     assert fig1 is not None
 
     fig2 = ep.pl.umap(
-        adata,
+        edata,
         color=["day_icu_intime", "service_unit"],
         frameon=True,
         show=False,
@@ -547,7 +619,7 @@ def test_umap_functionality(mimic_2_sample_serv_unit_day_icu):
     assert fig2 is not None
 
     fig3 = ep.pl.umap(
-        adata,
+        edata,
         color="day_icu_intime",
         frameon=False,
         cmap="viridis",
@@ -561,17 +633,17 @@ def test_umap_functionality(mimic_2_sample_serv_unit_day_icu):
 """
 #issue: https://github.com/scverse/scanpy/issues/3787
 def test_diffmap(mimic_2_sample_serv_unit_day_icu, check_same_image):
-    adata = mimic_2_sample_serv_unit_day_icu.copy()
-    adata = adata[~np.isnan(adata.X).any(axis=1)].copy()
-    adata = adata[:200, :].copy()
-    adata = ep.pp.encode(adata, autodetect=True)
+    edata = mimic_2_sample_serv_unit_day_icu.copy()
+    edata = edata[~np.isnan(edata.X).any(axis=1)].copy()
+    edata = edata[:200, :].copy()
+    edata = ep.pp.encode(edata, autodetect=True)
 
-    ep.pp.simple_impute(adata)
-    ep.pp.log_norm(adata, offset=1)
-    ep.pp.neighbors(adata)
-    ep.tl.diffmap(adata)
+    ep.pp.simple_impute(edata)
+    ep.pp.log_norm(edata, offset=1)
+    ep.pp.neighbors(edata)
+    ep.tl.diffmap(edata)
 
-    ep.pl.diffmap(adata, color="service_unit", show=False)
+    ep.pl.diffmap(edata, color="service_unit", show=False)
     fig = plt.gcf()
 
     fig.set_size_inches(16, 6)
@@ -586,18 +658,19 @@ def test_diffmap(mimic_2_sample_serv_unit_day_icu, check_same_image):
 
 
 def test_dpt_timeseries(mimic_2_encoded, check_same_image):
-    adata = mimic_2_encoded.copy()
+    edata = mimic_2_encoded.copy()
 
-    ep.pp.knn_impute(adata)
-    ep.pp.log_norm(adata, offset=1)
-    ep.pp.neighbors(adata, method="gauss")
-    ep.tl.leiden(adata, resolution=0.5, key_added="leiden_0_5")
-    ep.tl.diffmap(adata, n_comps=10)
+    ep.pp.knn_impute(edata)
+    ep.pp.log_norm(edata, offset=1)
+    ep.pp.pca(edata)
+    ep.pp.neighbors(edata, method="gauss")
+    ep.tl.leiden(edata, resolution=0.5, key_added="leiden_0_5")
+    ep.tl.diffmap(edata, n_comps=10)
 
-    adata.uns["iroot"] = np.flatnonzero(adata.obs["leiden_0_5"] == "0")[0]
+    edata.uns["iroot"] = np.flatnonzero(edata.obs["leiden_0_5"] == "0")[0]
 
-    ep.tl.dpt(adata, n_branchings=2)
-    ep.pl.dpt_timeseries(adata, show=False)
+    ep.tl.dpt(edata, n_branchings=2)
+    ep.pl.dpt_timeseries(edata, show=False)
 
     fig = plt.gcf()
     check_same_image(

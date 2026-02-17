@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from anndata import AnnData
+from ehrdata._feature_types import _detect_feature_type
 from ehrdata.core.constants import CATEGORICAL_TAG
 from matplotlib.axes import Axes
 from matplotlib.font_manager import FontProperties
@@ -15,7 +16,6 @@ from matplotlib.patches import Patch
 from tableone import TableOne
 
 from ehrapy._compat import use_ehrdata
-from ehrapy.anndata._feature_specifications import _detect_feature_type
 
 if TYPE_CHECKING:
     from collections.abc import Sequence

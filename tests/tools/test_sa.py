@@ -16,14 +16,14 @@ import ehrapy as ep
 
 @pytest.mark.parametrize("layer", [None, "layer_2"])
 def test_ols(mimic_2, layer):
-    adata = mimic_2
+    edata = mimic_2
     # If use layer argument, set X to None to avoid it being used
     if layer is not None:
-        adata.X = None
+        edata.X = None
 
     formula = "tco2_first ~ pco2_first"
     var_names = ["tco2_first", "pco2_first"]
-    ols = ep.tl.ols(adata, var_names, formula=formula, missing="drop", layer=layer)
+    ols = ep.tl.ols(edata, var_names, formula=formula, missing="drop", layer=layer)
     s = ols.fit().params.iloc[1]
     i = ols.fit().params.iloc[0]
     assert isinstance(ols, statsmodels.regression.linear_model.OLS)
@@ -41,16 +41,16 @@ def test_ols_3D(edata_blob_small):
 
 @pytest.mark.parametrize("layer", [None, "layer_2"])
 def test_glm(mimic_2, layer):
-    adata = mimic_2
+    edata = mimic_2
     # If use layer argument, set X to None to avoid it being used
     if layer is not None:
-        adata.X = None
+        edata.X = None
 
     formula = "day_28_flg ~ age"
     var_names = ["day_28_flg", "age"]
     family = "Binomial"
     glm = ep.tl.glm(
-        adata, var_names, formula=formula, family=family, missing="drop", as_continuous=["age"], layer=layer
+        edata, var_names, formula=formula, family=family, missing="drop", as_continuous=["age"], layer=layer
     )
     Intercept = glm.fit().params.iloc[0]
     age = glm.fit().params.iloc[1]
@@ -93,15 +93,15 @@ def test_calculate_logrank_pvalue(weightings):
 
 
 def test_anova_glm(mimic_2):
-    adata = mimic_2
+    edata = mimic_2
     formula = "day_28_flg ~ age"
     var_names = ["day_28_flg", "age"]
     family = "Binomial"
-    age_glm = ep.tl.glm(adata, var_names, formula=formula, family=family, missing="drop", as_continuous=["age"])
+    age_glm = ep.tl.glm(edata, var_names, formula=formula, family=family, missing="drop", as_continuous=["age"])
     age_glm_result = age_glm.fit()
     formula = "day_28_flg ~ age + service_unit"
     var_names = ["day_28_flg", "age", "service_unit"]
-    ageunit_glm = ep.tl.glm(adata, var_names, formula=formula, family=family, missing="drop", as_continuous=["age"])
+    ageunit_glm = ep.tl.glm(edata, var_names, formula=formula, family=family, missing="drop", as_continuous=["age"])
     ageunit_glm_result = ageunit_glm.fit()
     dataframe = ep.tl.anova_glm(
         age_glm_result, ageunit_glm_result, "day_28_flg ~ age", "day_28_flg ~ age + service_unit"
@@ -126,18 +126,18 @@ def test_anova_glm(mimic_2):
 )
 @pytest.mark.parametrize("layer", [None, "layer_2"])
 def test_survival_models(sa_function, sa_class, mimic_2_sa, layer):
-    adata, duration_col, event_col = mimic_2_sa
+    edata, duration_col, event_col = mimic_2_sa
     # If use layer argument, set X to None to avoid it being used
     if layer is not None:
-        adata.X = None
+        edata.X = None
 
-    sa = sa_function(adata, duration_col=duration_col, event_col=event_col, uns_key="test", layer=layer)
+    sa = sa_function(edata, duration_col=duration_col, event_col=event_col, uns_key="test", layer=layer)
 
     assert isinstance(sa, sa_class)
     assert len(sa.durations) == 1776
     assert sum(sa.event_observed) == 497
 
-    model_summary = adata.uns.get("test")
+    model_summary = edata.uns.get("test")
     assert model_summary is not None
 
     expected_attr = "event_table" if isinstance(sa, KaplanMeierFitter | NelsonAalenFitter) else "summary"
@@ -170,8 +170,8 @@ def test_survival_models_3D(sa_function, sa_class, edata_blob_small):
 
 def test_kmf(mimic_2_sa):
     with pytest.warns(DeprecationWarning):
-        adata, _, _ = mimic_2_sa
-        kmf = ep.tl.kmf(adata[:, ["mort_day_censored"]].X, adata[:, ["censor_flg"]].X)
+        edata, _, _ = mimic_2_sa
+        kmf = ep.tl.kmf(edata[:, ["mort_day_censored"]].X, edata[:, ["censor_flg"]].X)
 
         assert isinstance(kmf, KaplanMeierFitter)
         assert len(kmf.durations) == 1776

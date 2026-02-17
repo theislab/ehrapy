@@ -21,6 +21,7 @@ jobs:
                         "docs/tutorials/notebooks/mimic_2_survival_analysis.ipynb",
                         "docs/tutorials/notebooks/mimic_2_fate.ipynb",
                         "docs/tutorials/notebooks/cohort_tracking.ipynb",
+                        "docs/tutorials/notebooks/longitudinal_with_ehrapy.ipynb",
                         # "docs/tutorials/notebooks/mimic_2_causal_inference.ipynb",
                     ]
         steps:
@@ -37,7 +38,7 @@ jobs:
               run: pip install uv
 
             - name: Install ehrapy and additional dependencies
-              run: uv pip install --system . cellrank nbconvert ipykernel graphviz
+              run: uv pip install --system . cellrank nbconvert ipykernel graphviz pypots
 
             - name: Run ${{ matrix.notebook }} Notebook
               run: jupyter nbconvert --to notebook --execute ${{ matrix.notebook }}

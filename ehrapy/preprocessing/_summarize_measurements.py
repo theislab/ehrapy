@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
 
+from ehrdata.io import from_pandas, to_pandas
+
 from ehrapy._compat import function_2D_only, use_ehrdata
-from ehrapy.anndata import anndata_to_df, df_to_anndata
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -38,9 +39,9 @@ def summarize_measurements(
 
     aggregation_functions = dict.fromkeys(var_names, statistics)
 
-    grouped = anndata_to_df(edata, layer=layer).groupby(edata.obs.index).agg(aggregation_functions)
+    grouped = to_pandas(edata, layer=layer).groupby(edata.obs.index).agg(aggregation_functions)
     grouped.columns = [f"{col}_{stat}" for col, stat in grouped.columns]
 
-    expanded_edata = df_to_anndata(grouped)
+    expanded_edata = from_pandas(grouped)
 
     return expanded_edata
