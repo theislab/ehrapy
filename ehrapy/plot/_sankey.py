@@ -223,7 +223,7 @@ def sankey_diagram_time(
         if len(cmap) < len(state_names):
             raise ValueError(f"Provided cmap has {len(cmap)} colors but {len(state_names)} are needed.")
 
-    # map each state name to a fixed color
+    # map each state label to a fixed color
     state_color_map = {name: cmap[i] for i, name in enumerate(state_names)}
 
     def _color_for_label(label: str) -> str:
@@ -261,6 +261,10 @@ def sankey_diagram_time(
         kdims=["source", "target"],
         vdims=["value", "edge_color"],
     )
+
+    print(state_labels)
+    print("names")
+    print(state_names)
 
     opts_dict: dict[str, Any] = {}
 
