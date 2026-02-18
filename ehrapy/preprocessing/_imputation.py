@@ -637,6 +637,84 @@ def _warn_imputation_threshold(
     return var_name_to_pct
 
 
+@use_ehrdata(deprecated_after="1.0.0")
+@spinner("Performing LOCF impute")
+def locf_impute(
+    edata: EHRData | AnnData,
+    var_names: Iterable[str] | None = None,
+    *,
+    layer: str | None = None,
+    fallback_method: Literal["mean"] = "mean",
+    copy: bool = False,
+) -> EHRData | AnnData | None:
+    """Impute missing values by carrying forward the last observed value along the time axis.
+
+    Implements Last Observation Carried Forward (LOCF) for longitudinal (3D) data.
+    For each patient and feature, missing values are replaced with the most recent
+    non-missing value. Missing values that occur before any observation for a given
+    patient are filled using a fallback method.
+
+    Args:
+        edata: Central data object.
+        var_names: A list of column names to apply imputation on (if ``None``, impute all columns).
+        layer: The layer to impute. Must contain 3D data of shape ``(n_obs, n_vars, n_time)``.
+        fallback_method: Method for imputing values before the first observation per patient.
+                         Currently only ``'mean'`` is supported, which fills with the per-feature
+                         mean computed across all patients and time steps.
+        copy: Whether to return a copy of ``edata`` or modify it inplace.
+
+    Returns:
+        If copy is True, a modified copy of the original data object with imputed data.
+        If copy is False, the original data object is modified in place, and None is returned.
+
+    Raises:
+        ValueError: If the data is not 3D or if an unsupported ``fallback_method`` is specified.
+
+    Examples:
+        >>> import ehrdata as ed
+        >>> import ehrapy as ep
+        >>> edata = ed.dt.mimic_2()
+        >>> ep.pp.locf_impute(edata, layer="tem_data")
+    """
+    if fallback_method != "mean":
+        raise ValueError(f"Unsupported fallback method '{fallback_method}'. Only 'mean' is supported.")
+
+    if copy:
+        edata = edata.copy()
+
+    X = edata.X if layer is None else edata.layers[layer]
+
+    if X.ndim != 3:
+        raise ValueError(
+            f"locf_impute requires 3D data (n_obs, n_vars, n_time), got array with shape {X.shape}. "
+            "Use the 'layer' parameter to specify a layer containing 3D data."
+        )
+
+    if var_names is None:
+        var_names = edata.var_names
+    var_indices = edata.var_names.get_indexer(var_names).tolist()
+
+    n_obs, _, n_time = X.shape
+
+    arr = X[:, var_indices, :].astype(float)
+
+    feature_means = np.nanmean(arr, axis=(0, 2))
+
+    arr = pd.DataFrame(arr.reshape(-1, n_time)).ffill(axis=1).values.reshape(n_obs, -1, n_time)
+
+    remaining_nans = np.isnan(arr)
+    if np.any(remaining_nans):
+        means_broadcast = np.broadcast_to(
+            feature_means[np.newaxis, :, np.newaxis],
+            arr.shape,
+        )
+        arr[remaining_nans] = means_broadcast[remaining_nans]
+
+    X[:, var_indices, :] = arr
+
+    return edata if copy else None
+
+
 def _get_non_numerical_column_indices(arr: np.ndarray) -> set:
     """Return indices of columns, that contain at least one non-numerical value that is not "Nan"."""
 
