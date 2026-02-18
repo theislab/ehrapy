@@ -29,12 +29,15 @@ def plot_variable_correlations(
     show_values: bool = True,
     title: str | None = None,
 ) -> hv.HeatMap | hv.Overlay:
-    """Plot variable correlations with heatmap.
+    """Plot variable correlations as heatmap.
 
     Computes a correlation matrix (Pearson or Spearman) for the selected variables
-    from the given layer. If the layer contains a time dimension, values are first
-    aggregated per variable across time. Cells are annotated with the correlation
-    coefficient; an asterisk marks statistically significant correlations after
+    from the given layer.
+    If the layer contains a time dimension, values are first
+    aggregated per variable across time.
+    Cells are annotated with the correlation
+    coefficient.
+    An asterisk marks statistically significant correlations after
     correction.
 
     Args:
@@ -57,7 +60,7 @@ def plot_variable_correlations(
         title: Set the title of the plot.
 
     Returns:
-        HoloViews HeatMap object.
+        :class:`holoviews.element.HeatMap` object.
 
     Examples:
         >>> import ehrdata as ed
@@ -78,30 +81,23 @@ def plot_variable_correlations(
         correction_method=correction_method,
         alpha=alpha,
     )
-    variables = corr_df.columns.to_list()
-    heatmap_data = []
+    corr_df.columns.to_list()
 
-    for i, var1 in enumerate(variables):
-        for j, var2 in enumerate(variables):
-            corr = corr_df.loc[var1, var2]
-            is_sig = sig_df.loc[var1, var2]
+    corr_long = corr_df.stack(dropna=False).rename("correlation")
+    sig_long = sig_df.stack(dropna=False).rename("significant")
+    heatmap_df = pd.concat([corr_long, sig_long], axis=1).reset_index()
+    heatmap_df.columns = ["variable1", "variable2", "correlation", "significant"]
 
-            if np.isnan(corr):
-                label = "N/A"
-                corr = 0
-            else:
-                label = f"{corr:.2f}" + ("*" if is_sig and i != j else "")
-            heatmap_data.append(
-                {
-                    "variable1": var1,
-                    "variable2": var2,
-                    "correlation": corr,
-                    "significant": is_sig,
-                    "label": label,
-                }
-            )
+    is_nan = heatmap_df["correlation"].isna()
+    is_diag = heatmap_df["variable1"] == heatmap_df["variable2"]
 
-    heatmap_df = pd.DataFrame(heatmap_data)
+    heatmap_df["label"] = np.where(
+        is_nan,
+        "N/A",
+        heatmap_df["correlation"].map("{:.2f}".format) + np.where(heatmap_df["significant"] & ~is_diag, "*", ""),
+    )
+
+    heatmap_df["correlation"] = heatmap_df["correlation"].fillna(0)
 
     if title is None:
         title = f"{method.capitalize()} Correlation Matrix "
@@ -157,7 +153,8 @@ def plot_variable_dependencies(
     """Plot correlation dependencies as a chord diagram.
 
     Computes pairwise correlations between selected variables from layer and
-    visualizes them as a chord diagram. If the layer contains a time dimension,
+    visualizes them as a chord diagram.
+    If the layer contains a time dimension,
     values are aggregated per variable before correlation is computed.
 
     Args:
@@ -181,7 +178,7 @@ def plot_variable_dependencies(
         title: Set the title of the plot.
 
     Returns:
-            HoloViews Chord diagram object.
+        :class:`holoviews.element.Chord` object.
 
     Examples:
         >>> import ehrdata as ed
@@ -207,33 +204,34 @@ def plot_variable_dependencies(
     if not 0 <= min_correlation <= 1:
         raise ValueError(f"min_correlation must be between 0 and 1, got {min_correlation}")
 
-    edges = []
+    corr_long = corr_df.stack(dropna=False).rename("correlation")
+    sig_long = sig_df.stack().rename("significant")
+
+    edges_df = pd.concat([corr_long, sig_long], axis=1).reset_index()
+    edges_df.columns = ["variable1", "variable2", "correlation", "significant"]
+
     variables = corr_df.columns.to_list()
     var_to_idx = {var: idx for idx, var in enumerate(variables)}
 
-    for i, var1 in enumerate(variables):
-        for j, var2 in enumerate(variables):
-            if i < j:
-                corr = corr_df.loc[var1, var2]
-                is_sig = sig_df.loc[var1, var2]
+    edges_df["source"] = edges_df["variable1"].map(var_to_idx)
+    edges_df["target"] = edges_df["variable2"].map(var_to_idx)
 
-                if np.isnan(corr):
-                    continue
-                if only_significant and not is_sig:
-                    continue
-                if abs(corr) < min_correlation:
-                    continue
+    edges_df = edges_df[edges_df["source"] < edges_df["target"]]
+    edges_df = edges_df.dropna(subset="correlation")
+    edges_df["value"] = edges_df["correlation"].abs()
 
-                edges.append(
-                    {"source": var_to_idx[var1], "target": var_to_idx[var2], "value": abs(corr), "correlation": corr}
-                )
-    if len(edges) == 0:
+    if only_significant:
+        edges_df = edges_df[edges_df["significant"]]
+
+    edges_df = edges_df[edges_df["value"] >= min_correlation]
+    edges_df = edges_df[["source", "target", "value", "correlation"]].reset_index(drop=True)
+
+    if len(edges_df) == 0:
         raise ValueError(
-            f"No correlations meet criteria (minimum correlation to plot = {min_correlation},"
+            f"No correlations meet criteria (minimum correlation to plot = {min_correlation})."
             f"Try lowering min_correlation or setting only_significant=False."
         )
 
-    edges_df = pd.DataFrame(edges)
     nodes_df = pd.DataFrame({"index": range(len(variables)), "name": variables})
 
     if title is None:

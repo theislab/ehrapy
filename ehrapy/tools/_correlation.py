@@ -19,7 +19,7 @@ def _extract_variable_values(
     var_names: Sequence[str] | None = None,
     agg: Literal["mean", "last", "first"] = "mean",
 ) -> pd.DataFrame:
-    """Extract variable values from a 3D EHRData layer."""
+    """Extract variable values from a EHRData layer aggregating over time with specified aggregation method."""
     if layer not in edata.layers:
         raise KeyError(f"Layer {layer} not found in edata.layers. Available: {edata.layers.keys()}")
 
@@ -46,18 +46,20 @@ def _extract_variable_values(
             mtx_2d = np.nanmean(mtx[:, var_indices, :], axis=2)
             df = pd.DataFrame(mtx_2d, columns=var_names, index=edata.obs_names)
         elif agg == "last" or agg == "first":
-            mtx_2d = np.empty((n_obs, len(var_indices)))
-            for i, _var_idx in enumerate(var_names):
-                for obs_idx in range(n_obs):
-                    values = mtx[obs_idx, var_indices[i], :]
-                    non_nan_mask = ~np.isnan(values.astype(float))
-                    if non_nan_mask.any():
-                        if agg == "last":
-                            mtx_2d[obs_idx, i] = values[non_nan_mask][-1]
-                        elif agg == "first":
-                            mtx_2d[obs_idx, i] = values[non_nan_mask][0]
-                    else:
-                        mtx_2d[obs_idx, i] = np.nan
+            mtx_sub = mtx[:, var_indices, :]
+            valid_mask = ~np.isnan(mtx_sub)
+            if agg == "last":
+                mtx_sub = mtx_sub[:, :, ::-1]  # to use np.argmax
+                valid_mask = valid_mask[:, :, ::-1]
+
+            first_valid = np.argmax(valid_mask, axis=2)
+            is_valid = valid_mask.any(axis=2)
+
+            obs_idx = np.arange(n_obs)[:, None]
+            var_idx = np.arange(len(var_indices))[None, :]
+            mtx_2d = mtx_sub[obs_idx, var_idx, first_valid]
+
+            mtx_2d[~is_valid] = np.nan
             df = pd.DataFrame(mtx_2d, columns=var_names, index=edata.obs_names)
         else:
             raise ValueError(f"Unknown aggregation method: {agg}")
@@ -98,16 +100,15 @@ def compute_variable_correlations(
         alpha: Significance threshold after correction.
 
     Returns:
-        tuple(pd.DataFrame, pd.DataFrame, pd.DataFrame)
-            - corr_mtx: Correlation coefficient matrix (pd.DataFrame)
-            - pval_mtx: Raw p-value matrix (pd.DataFrame)
-            - sig_mtx: Boolean significance matrix after correction (pd.DataFrame)
+        corr_df: Correlation coefficient matrix (:class:`pandas.DataFrame`)
+        pval_df: Raw p-value matrix (:class:`pandas.DataFrame`)
+        sig_df: Boolean significance matrix after correction (:class:`pandas.DataFrame`)
 
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.ehrdata_blobs(n_variables=10, n_centers=5, n_observations=200, base_timepoints=3)
-        >>> corr, pval, sig = ed.tl.compute_variable_correlations(
+        >>> corr, pval, sig = ep.tl.compute_variable_correlations(
         ...     edata, layer="tem_data", method="pearson", agg="mean", correction_method="fdr_bh", alpha=0.02
         ... )
     """
@@ -120,7 +121,6 @@ def compute_variable_correlations(
     df = df[numeric_cols]
     n_vars = len(numeric_cols)
 
-    # Correlation computation using pandas
     if method == "spearman" or method == "kendall" or method == "pearson":
         corr_df = df.corr(method=method)
     else:
