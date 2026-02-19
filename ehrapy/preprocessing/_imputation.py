@@ -6,6 +6,7 @@ from functools import singledispatch
 from importlib.util import find_spec
 from typing import TYPE_CHECKING, Literal
 
+import array_api_compat
 import numpy as np
 import pandas as pd
 import scipy.sparse as sp
@@ -15,6 +16,7 @@ from sklearn.experimental import enable_iterative_imputer  # noinspection PyUnre
 from sklearn.impute import SimpleImputer
 
 from ehrapy import settings
+from ehrapy._array_api import nanmean_api, nanmedian_api
 from ehrapy._compat import (
     DaskArray,
     _apply_over_time_axis,
@@ -637,65 +639,6 @@ def _warn_imputation_threshold(
     return var_name_to_pct
 
 
-def _ffill_along_last_axis(arr: np.ndarray) -> np.ndarray:
-
-    mask = np.isnan(arr)
-    idx = np.where(~mask, np.arange(arr.shape[-1]), 0)
-    np.maximum.accumulate(idx, axis=-1, out=idx)
-    rows = np.arange(arr.shape[0])[:, np.newaxis]
-    return arr[rows, idx]
-
-
-@singledispatch
-def _locf_impute_function(arr, fallback_values: np.ndarray) -> None:
-    _raise_array_type_not_implemented(_locf_impute_function, type(arr))
-
-
-@_locf_impute_function.register(sp.coo_array)
-def _(arr: sp.spmatrix, fallback_values: np.ndarray) -> None:
-    _raise_array_type_not_implemented(_locf_impute_function, type(arr))
-
-
-@_locf_impute_function.register(np.ndarray)
-def _(arr: np.ndarray, fallback_values: np.ndarray) -> np.ndarray:
-    n_time = arr.shape[-1]
-    arr = _ffill_along_last_axis(arr.reshape(-1, n_time)).reshape(arr.shape)
-    remaining_nans = np.isnan(arr)
-    if np.any(remaining_nans):
-        broadcast = np.broadcast_to(
-            fallback_values[np.newaxis, :, np.newaxis],
-            arr.shape,
-        )
-        arr[remaining_nans] = broadcast[remaining_nans]
-    return arr
-
-
-@_locf_impute_function.register(DaskArray)
-def _(arr: DaskArray, fallback_values: np.ndarray) -> DaskArray:
-    import dask.array as da
-
-    if hasattr(fallback_values, "compute"):
-        fallback_values = np.asarray(fallback_values.compute())
-    n_time = arr.shape[-1]
-    arr = arr.rechunk((-1, -1, n_time))
-
-    def _locf_block(block: np.ndarray, block_info: dict | None = None) -> np.ndarray:
-        block = np.asarray(block, dtype=float)
-        if block_info is not None:
-            var_slice = block_info["array-location"][1]
-            block_fallback = fallback_values[var_slice]
-        else:
-            block_fallback = np.nanmean(block, axis=(0, 2))
-        return _locf_impute_function.dispatch(np.ndarray)(block, block_fallback)
-
-    return da.map_blocks(
-        _locf_block,
-        arr.astype(float),
-        dtype=float,
-        meta=np.array((), dtype=float),
-    )
-
-
 @spinner("Performing LOCF impute")
 def locf_impute(
     edata: EHRData,
@@ -752,14 +695,28 @@ def locf_impute(
         var_names = edata.var_names
     var_indices = edata.var_names.get_indexer(var_names).tolist()
 
-    arr = X[:, var_indices, :].astype(float)
+    xp = array_api_compat.array_namespace(X)
+    arr = xp.astype(X[:, var_indices, :], xp.float64)
+    n_vars, n_time = arr.shape[1], arr.shape[2]
 
     if fallback_method == "mean":
-        fallback_values = np.nanmean(arr, axis=(0, 2))
+        fallback_values = nanmean_api(xp, arr, axes=(0, 2))
     else:
-        fallback_values = np.nanmedian(arr, axis=(0, 2))
+        fallback_values = nanmedian_api(xp, arr)
 
-    X[:, var_indices, :] = _locf_impute_function(arr, fallback_values)
+    slices = [arr[:, :, 0:1]]
+    for t in range(1, n_time):
+        curr = arr[:, :, t : t + 1]
+        slices.append(xp.where(xp.isnan(curr), slices[-1], curr))
+    arr = xp.concat(slices, axis=2)
+
+    fallback_broadcast = xp.broadcast_to(
+        xp.reshape(fallback_values, (1, n_vars, 1)),
+        arr.shape,
+    )
+    arr = xp.where(xp.isnan(arr), fallback_broadcast, arr)
+
+    X[:, var_indices, :] = arr
 
     return edata if copy else None
 
