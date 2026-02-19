@@ -637,16 +637,74 @@ def _warn_imputation_threshold(
     return var_name_to_pct
 
 
-@use_ehrdata(deprecated_after="1.0.0")
+def _ffill_along_last_axis(arr: np.ndarray) -> np.ndarray:
+
+    mask = np.isnan(arr)
+    idx = np.where(~mask, np.arange(arr.shape[-1]), 0)
+    np.maximum.accumulate(idx, axis=-1, out=idx)
+    rows = np.arange(arr.shape[0])[:, np.newaxis]
+    return arr[rows, idx]
+
+
+@singledispatch
+def _locf_impute_function(arr, fallback_values: np.ndarray) -> None:
+    _raise_array_type_not_implemented(_locf_impute_function, type(arr))
+
+
+@_locf_impute_function.register(sp.coo_array)
+def _(arr: sp.spmatrix, fallback_values: np.ndarray) -> None:
+    _raise_array_type_not_implemented(_locf_impute_function, type(arr))
+
+
+@_locf_impute_function.register(np.ndarray)
+def _(arr: np.ndarray, fallback_values: np.ndarray) -> np.ndarray:
+    n_time = arr.shape[-1]
+    arr = _ffill_along_last_axis(arr.reshape(-1, n_time)).reshape(arr.shape)
+    remaining_nans = np.isnan(arr)
+    if np.any(remaining_nans):
+        broadcast = np.broadcast_to(
+            fallback_values[np.newaxis, :, np.newaxis],
+            arr.shape,
+        )
+        arr[remaining_nans] = broadcast[remaining_nans]
+    return arr
+
+
+@_locf_impute_function.register(DaskArray)
+def _(arr: DaskArray, fallback_values: np.ndarray) -> DaskArray:
+    import dask.array as da
+
+    if hasattr(fallback_values, "compute"):
+        fallback_values = np.asarray(fallback_values.compute())
+    n_time = arr.shape[-1]
+    arr = arr.rechunk((-1, -1, n_time))
+
+    def _locf_block(block: np.ndarray, block_info: dict | None = None) -> np.ndarray:
+        block = np.asarray(block, dtype=float)
+        if block_info is not None:
+            var_slice = block_info["array-location"][1]
+            block_fallback = fallback_values[var_slice]
+        else:
+            block_fallback = np.nanmean(block, axis=(0, 2))
+        return _locf_impute_function.dispatch(np.ndarray)(block, block_fallback)
+
+    return da.map_blocks(
+        _locf_block,
+        arr.astype(float),
+        dtype=float,
+        meta=np.array((), dtype=float),
+    )
+
+
 @spinner("Performing LOCF impute")
 def locf_impute(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     var_names: Iterable[str] | None = None,
     *,
     layer: str | None = None,
-    fallback_method: Literal["mean"] = "mean",
+    fallback_method: Literal["mean", "median"] = "mean",
     copy: bool = False,
-) -> EHRData | AnnData | None:
+) -> EHRData | None:
     """Impute missing values by carrying forward the last observed value along the time axis.
 
     Implements Last Observation Carried Forward (LOCF) for longitudinal (3D) data.
@@ -659,8 +717,8 @@ def locf_impute(
         var_names: A list of column names to apply imputation on (if ``None``, impute all columns).
         layer: The layer to impute. Must contain 3D data of shape ``(n_obs, n_vars, n_time)``.
         fallback_method: Method for imputing values before the first observation per patient.
-                         Currently only ``'mean'`` is supported, which fills with the per-feature
-                         mean computed across all patients and time steps.
+                         ``'mean'`` fills with the per-feature mean, ``'median'`` fills with the
+                         per-feature median, both computed across all patients and time steps.
         copy: Whether to return a copy of ``edata`` or modify it inplace.
 
     Returns:
@@ -676,8 +734,8 @@ def locf_impute(
         >>> edata = ed.dt.mimic_2()
         >>> ep.pp.locf_impute(edata, layer="tem_data")
     """
-    if fallback_method != "mean":
-        raise ValueError(f"Unsupported fallback method '{fallback_method}'. Only 'mean' is supported.")
+    if fallback_method not in ("mean", "median"):
+        raise ValueError(f"Unsupported fallback method '{fallback_method}'. Use 'mean' or 'median'.")
 
     if copy:
         edata = edata.copy()
@@ -694,23 +752,14 @@ def locf_impute(
         var_names = edata.var_names
     var_indices = edata.var_names.get_indexer(var_names).tolist()
 
-    n_obs, _, n_time = X.shape
-
     arr = X[:, var_indices, :].astype(float)
 
-    feature_means = np.nanmean(arr, axis=(0, 2))
+    if fallback_method == "mean":
+        fallback_values = np.nanmean(arr, axis=(0, 2))
+    else:
+        fallback_values = np.nanmedian(arr, axis=(0, 2))
 
-    arr = pd.DataFrame(arr.reshape(-1, n_time)).ffill(axis=1).values.reshape(n_obs, -1, n_time)
-
-    remaining_nans = np.isnan(arr)
-    if np.any(remaining_nans):
-        means_broadcast = np.broadcast_to(
-            feature_means[np.newaxis, :, np.newaxis],
-            arr.shape,
-        )
-        arr[remaining_nans] = means_broadcast[remaining_nans]
-
-    X[:, var_indices, :] = arr
+    X[:, var_indices, :] = _locf_impute_function(arr, fallback_values)
 
     return edata if copy else None
 

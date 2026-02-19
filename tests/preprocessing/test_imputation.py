@@ -503,17 +503,21 @@ def test_locf_impute_forward_fill(locf_edata_3d):
     )
 
 
-def test_locf_impute_mean_fallback(locf_edata_3d):
-    result = locf_impute(locf_edata_3d, layer=DEFAULT_TEM_LAYER_NAME, copy=True)
+@pytest.mark.parametrize("fallback_method", ["mean", "median"])
+def test_locf_impute_fallback(locf_edata_3d, fallback_method):
+    result = locf_impute(locf_edata_3d, layer=DEFAULT_TEM_LAYER_NAME, fallback_method=fallback_method, copy=True)
     imputed = result.layers[DEFAULT_TEM_LAYER_NAME]
 
     original = locf_edata_3d.layers[DEFAULT_TEM_LAYER_NAME].astype(float)
-    feature_means = np.nanmean(original, axis=(0, 2))
+    if fallback_method == "mean":
+        expected = np.nanmean(original, axis=(0, 2))
+    else:
+        expected = np.nanmedian(original, axis=(0, 2))
 
-    assert np.isclose(imputed[0, 1, 0], feature_means[1])
-    assert np.isclose(imputed[1, 0, 0], feature_means[0])
-    assert np.isclose(imputed[1, 0, 1], feature_means[0])
-    assert np.isclose(imputed[1, 2, 0], feature_means[2])
+    assert np.isclose(imputed[0, 1, 0], expected[1])
+    assert np.isclose(imputed[1, 0, 0], expected[0])
+    assert np.isclose(imputed[1, 0, 1], expected[0])
+    assert np.isclose(imputed[1, 2, 0], expected[2])
 
 
 def test_locf_impute_inplace(locf_edata_3d):
