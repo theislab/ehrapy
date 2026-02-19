@@ -16,7 +16,7 @@ from sklearn.experimental import enable_iterative_imputer  # noinspection PyUnre
 from sklearn.impute import SimpleImputer
 
 from ehrapy import settings
-from ehrapy._array_api import nanmean_api, nanmedian_api
+from ehrapy._array_api import ffill_along_axis, nanmean_api, nanmedian_api
 from ehrapy._compat import (
     DaskArray,
     _apply_over_time_axis,
@@ -697,18 +697,14 @@ def locf_impute(
 
     xp = array_api_compat.array_namespace(X)
     arr = xp.astype(X[:, var_indices, :], xp.float64)
-    n_vars, n_time = arr.shape[1], arr.shape[2]
+    n_vars = arr.shape[1]
 
     if fallback_method == "mean":
         fallback_values = nanmean_api(xp, arr, axes=(0, 2))
     else:
         fallback_values = nanmedian_api(xp, arr)
 
-    slices = [arr[:, :, 0:1]]
-    for t in range(1, n_time):
-        curr = arr[:, :, t : t + 1]
-        slices.append(xp.where(xp.isnan(curr), slices[-1], curr))
-    arr = xp.concat(slices, axis=2)
+    arr = ffill_along_axis(xp, arr, axis=2)
 
     fallback_broadcast = xp.broadcast_to(
         xp.reshape(fallback_values, (1, n_vars, 1)),
