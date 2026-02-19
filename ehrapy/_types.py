@@ -1,19 +1,39 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Literal
+from types import ModuleType
+from typing import TYPE_CHECKING, Literal, Union
 
 import numpy as np
 import scipy.sparse as sp
 from fast_array_utils.conv import to_dense
 
-from ehrapy._compat import as_dense_dask_array
+from ehrapy._compat import DaskArray, as_dense_dask_array
+
+if TYPE_CHECKING:
+    import cupy
+    import jax
+    import ndonnx
+    import sparse
+    import torch
 
 KnownTransformer = Literal["pynndescent", "sklearn"]
 CSBase = sp.csr_matrix | sp.csc_matrix
 RNGLike = np.random.Generator | np.random.BitGenerator
 SeedLike = int | np.integer | Sequence[int] | np.random.SeedSequence
 AnyRandom = int | np.random.RandomState | None
+
+ArrayAPICompliant = Union[
+    np.ndarray,
+    DaskArray,
+    "cupy.ndarray",
+    "torch.Tensor",
+    "jax.Array",
+    "sparse.SparseArray",
+    "ndonnx.Array",
+]
+
+ArrayNamespace = ModuleType
 
 
 def asarray(a):
@@ -26,6 +46,6 @@ ARRAY_TYPES_NUMERIC = (
     as_dense_dask_array,
     sp.csr_array,
     sp.csc_array,
-)  # add coo_array once supported in AnnData
-ARRAY_TYPES_NUMERIC_3D_ABLE = (asarray, as_dense_dask_array)  # add coo_array once supported in AnnData
+)
+ARRAY_TYPES_NUMERIC_3D_ABLE = (asarray, as_dense_dask_array)
 ARRAY_TYPES_NONNUMERIC = (asarray, as_dense_dask_array)

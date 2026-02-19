@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ehrapy._types import ArrayAPICompliant, ArrayNamespace
 
 
-def ffill_along_axis(xp: Any, arr: Any, axis: int = -1) -> Any:
+def ffill_along_axis(xp: ArrayNamespace, arr: ArrayAPICompliant, axis: int = -1) -> ArrayAPICompliant:
     """Forward-fill NaN values along an axis.
 
     Each NaN is replaced with the most recent non-NaN value in the same position
@@ -50,7 +53,7 @@ def ffill_along_axis(xp: Any, arr: Any, axis: int = -1) -> Any:
     return result
 
 
-def nanmean_api(xp: Any, arr: Any, axes: int | tuple[int, ...]) -> Any:
+def nanmean_api(xp: ArrayNamespace, arr: ArrayAPICompliant, axes: int | tuple[int, ...]) -> ArrayAPICompliant:
     """Compute mean ignoring NaN values.
 
     Args:
@@ -67,7 +70,7 @@ def nanmean_api(xp: Any, arr: Any, axes: int | tuple[int, ...]) -> Any:
     return xp.sum(zero_filled, axis=axes) / count
 
 
-def nanmedian_api(xp: Any, arr: Any) -> Any:
+def nanmedian_api(xp: ArrayNamespace, arr: ArrayAPICompliant) -> ArrayAPICompliant:
     """Compute per-feature median ignoring NaN values.
 
     For a 3D array of shape ``(n_obs, n_vars, n_time)``, returns one median per
