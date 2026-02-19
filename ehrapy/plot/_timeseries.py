@@ -105,9 +105,12 @@ def timeseries(
             }
         )
 
-        curves = [
-            hv.Curve(g, kdims="time", vdims="value", label=series) for series, g in df.groupby("series", sort=False)
-        ]
+        curves = []
+        for series, g in df.groupby("series", sort=False):
+            curve = hv.Curve(g, kdims="time", vdims=["value", "variable"], label=series)
+            points = hv.Scatter(g, kdims="time", vdims=["value", "variable"]).opts(size=6, tools=["hover"])
+            curves.append(curve * points)
+
         plot = hv.Overlay(curves)
 
         plot_title = title if title is not None else f"Time series for variable {k}"
@@ -121,9 +124,10 @@ def timeseries(
         curves = []
         for var_i, var_label in enumerate(var_labels):
             y = np.asarray(mtx[obs_i, var_i, :], dtype=float)
-            g = pd.DataFrame({"time": timepoints, "value": y})
-            curves.append(hv.Curve(g, kdims="time", vdims="value", label=str(var_label)))
-
+            g = pd.DataFrame({"time": timepoints, "value": y, "variable": str(var_label)})
+            curve = hv.Curve(g, kdims="time", vdims=["value", "variable"], label=str(var_label))
+            points = hv.Scatter(g, kdims="time", vdims=["value", "variable"]).opts(size=6, tools=["hover"])
+            curves.append(curve * points)
         panel = hv.Overlay(curves)
 
         panel_title = (
