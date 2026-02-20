@@ -98,11 +98,15 @@ def compute_variable_correlations(
         method: Correlation method, "spearman", "kendall" or "pearson".
         agg: How to aggregate time dimension: "mean", "last" or "first".
         correction_method: Multiple testing correction method:
-            -   "bonferroni": conservative Bonferroni correction
-            -   "fdr_bh": Benjamini Hochberg FDR
-            -   "fdr_tsbh": two-stage Benjamini-Hochberg, better calibrated when many variables are truly correlated
-            -   "holm": Holm-Bonferroni
-            -   "none": no correction
+                    * `'bonferroni'` conservative Bonferroni correction.
+
+                    * `'fdr_bh'` Benjamini-Hochberg false discovery rate (FDR) control.
+
+                    * `'fdr_tsbh'` two-stage Benjamini-Hochberg, better calibrated when many variables are truly correlated.
+
+                    * `'holm'` Holm-Bonferroni correction.
+
+                    * `'none'` no multiple-testing correction.
         alpha: Significance threshold after correction.
 
     Returns:
