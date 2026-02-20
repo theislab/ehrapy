@@ -101,3 +101,13 @@ Partially overlaps with dataset integration. Note that a simple batch correction
 
     preprocessing.neighbors
 ```
+
+## Correlation
+
+```{eval-rst}
+.. autosummary::
+    :toctree: preprocessing
+    :nosignatures:
+
+    preprocessing.compute_variable_correlations
+```
