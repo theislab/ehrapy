@@ -392,7 +392,7 @@ class CohortTracker:
         if legend_kwargs is not None:
             tot_legend_kwargs.update(legend_kwargs)
 
-        def create_legend_with_subtitles(patches_list, subtitles_list, tot_legend_kwargs):
+        def create_legend_with_subtitles(patches_list, subtitles_list, tot_legend_kwargs, categorical_cols):
             """Create a legend with subtitles."""
             size = {"size": tot_legend_kwargs["fontsize"]}
             subtitle_font = FontProperties(weight="bold", **size)
@@ -402,13 +402,25 @@ class CohortTracker:
             # there can be empty lists which distort the logic of matching patches to subtitles
             patches_list = [patch for patch in patches_list if patch]
 
-            for patches, subtitle in zip(patches_list, subtitles_list, strict=False):
-                handles.append(Line2D([], [], linestyle="none", marker="", alpha=0))  # Placeholder for title
-                labels.append(subtitle)
+            for patches, subtitle, col in zip(patches_list, subtitles_list, self.columns[::-1], strict=False):
+                is_categorical = col in categorical_cols
 
-                for patch in patches:
+                if is_categorical:
+                    if subtitle:  # only add placeholder if subtitle is non-empty
+                        handles.append(Line2D([], [], linestyle="none", marker="", alpha=0))
+                        labels.append(subtitle)
+                    for patch in patches:
+                        handles.append(patch)
+                        labels.append(patch.get_label())
+                else:
+                    patch = patches[0]  # continuous always has one patch
+                    patch_label = patch.get_label()
+                    is_remapped = patch_label != subtitle
+                    if is_remapped:
+                        handles.append(Line2D([], [], linestyle="none", marker="", alpha=0))
+                        labels.append(subtitle)
                     handles.append(patch)
-                    labels.append(patch.get_label())
+                    labels.append(patch_label if is_remapped else subtitle)
 
                 # empty space after block
                 handles.append(Line2D([], [], linestyle="none", marker="", alpha=0))
@@ -429,6 +441,7 @@ class CohortTracker:
                 legend_handles,
                 subtitles,
                 tot_legend_kwargs,
+                categorical_cols=self.categorical,
             )
         else:
             legend_handles = [item for sublist in legend_handles for item in sublist]
