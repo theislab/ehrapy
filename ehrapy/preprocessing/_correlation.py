@@ -46,8 +46,8 @@ def _extract_variable_values(
     else:
         n_obs, n_var, n_time = mtx.shape
         if agg == "mean":
-            mtx_2d = xp.mean(mtx[:, var_indices, :], axis=2)
-            mtx_2d_np = array_api_compat.numpy.asarray(mtx_2d)
+            mtx_3d = array_api_compat.numpy.asarray(mtx[:, var_indices, :])
+            mtx_2d_np = np.nanmean(mtx_3d, axis=2)
             df = pd.DataFrame(mtx_2d_np, columns=var_names, index=edata.obs_names)
         elif agg == "last" or agg == "first":
             mtx_sub = mtx[:, var_indices, :]
@@ -60,12 +60,14 @@ def _extract_variable_values(
             first_valid = xp.argmax(valid_mask, axis=2)
             is_valid = xp.any(valid_mask, axis=2)
 
-            obs_idx = xp.arange(n_obs)[:, None]
-            var_idx = xp.arange(len(var_indices))[None, :]
-            mtx_2d = mtx_sub[obs_idx, var_idx, first_valid]
+            mtx_sub_np = array_api_compat.numpy.asarray(mtx_sub)
+            first_valid_np = array_api_compat.numpy.asarray(first_valid)
+            obs_idx = np.arange(n_obs)[:, None]
+            var_idx = np.arange(len(var_indices))[None, :]
+            mtx_2d_np = mtx_sub_np[obs_idx, var_idx, first_valid_np]
 
-            mtx_2d = xp.where(is_valid, mtx_2d, xp.full(mtx_2d.shape, xp.nan, dtype=mtx_2d.dtype))
-            mtx_2d_np = array_api_compat.numpy.asarray(mtx_2d)
+            is_valid_np = array_api_compat.numpy.asarray(is_valid)
+            mtx_2d_np = np.where(is_valid_np, mtx_2d_np, np.nan)
             df = pd.DataFrame(mtx_2d_np, columns=var_names, index=edata.obs_names)
         else:
             raise ValueError(f"Unknown aggregation method: {agg}")
@@ -110,7 +112,7 @@ def compute_variable_correlations(
         alpha: Significance threshold after correction.
 
     Returns:
-            Correlation coefficient matrix, raw p-value matrix and boolean significance matrix after correction for each variable pair.
+        Correlation coefficient matrix, raw p-value matrix and boolean significance matrix after correction for each variable pair.
 
     Examples:
         >>> import ehrdata as ed
@@ -129,10 +131,11 @@ def compute_variable_correlations(
     df = df[numeric_cols]
     n_vars = len(numeric_cols)
 
-    if method == "spearman" or method == "kendall" or method == "pearson":
-        corr_df = df.corr(method=method)
-    else:
+    if method not in {"spearman", "kendall", "pearson"}:
         raise ValueError(f"Unsupported correlation method: {method}")
+
+    corr_mtx = np.full((n_vars, n_vars), np.nan)
+    np.fill_diagonal(corr_mtx, 1.0)
 
     pval_mtx = np.ones((n_vars, n_vars))
     np.fill_diagonal(pval_mtx, 0.0)
@@ -146,22 +149,25 @@ def compute_variable_correlations(
 
             if mask.sum() < 3:
                 # There should be at least 3 observations that have a value for variables i and j
-                corr_df.iloc[i, j] = np.nan
-                corr_df.iloc[j, i] = np.nan
+                corr_mtx[i, j] = np.nan
+                corr_mtx[j, i] = np.nan
                 pval_mtx[i, j] = 1.0
                 pval_mtx[j, i] = 1.0
                 continue
 
             if method == "spearman":
-                _, pval = stats.spearmanr(x[mask], y[mask])
+                corr_val, pval = stats.spearmanr(x[mask], y[mask])
             elif method == "kendall":
-                _, pval = stats.kendalltau(x[mask], y[mask])
+                corr_val, pval = stats.kendalltau(x[mask], y[mask])
             else:
-                _, pval = stats.pearsonr(x[mask], y[mask])
+                corr_val, pval = stats.pearsonr(x[mask], y[mask])
 
+            corr_mtx[i, j] = corr_val
+            corr_mtx[j, i] = corr_val
             pval_mtx[i, j] = pval
             pval_mtx[j, i] = pval
 
+    corr_df = pd.DataFrame(corr_mtx, index=numeric_cols, columns=numeric_cols)
     pval_df = pd.DataFrame(pval_mtx, index=numeric_cols, columns=numeric_cols)
     # Multiple testing correction
     if correction_method != "none":

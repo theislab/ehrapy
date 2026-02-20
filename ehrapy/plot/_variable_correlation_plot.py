@@ -47,11 +47,15 @@ def plot_variable_correlations(
         method: Correlation method: "spearman", "kendall" or "pearson".
         agg: How to aggregate time dimension: "mean", "last" or "first".
         correction_method: Multiple testing correction method:
-            -   "bonferroni": conservative Bonferroni correction
-            -   "fdr_bh": Benjamini Hochberg FDR
-            -   "fdr_tsbh": two-stage Benjamini-Hochberg, better calibrated when many variables are truly correlated
-            -   "holm": Holm-Bonferroni
-            -   "none": no correction
+                    * `'bonferroni'` conservative Bonferroni correction.
+
+                    * `'fdr_bh'` Benjamini-Hochberg false discovery rate (FDR) control.
+
+                    * `'fdr_tsbh'` two-stage Benjamini-Hochberg, better calibrated when many variables are truly correlated.
+
+                    * `'holm'` Holm-Bonferroni correction.
+
+                    * `'none'` no multiple-testing correction.
         alpha: Significance threshold after correction.
         width: Plot width in pixels.
         height: Plot height in pixels.
@@ -60,7 +64,7 @@ def plot_variable_correlations(
         title: Set the title of the plot.
 
     Returns:
-        :class:`holoviews.element.HeatMap` object.
+        :class:`holoviews.element.HeatMap` (if show_labels=False) or :class:`holoviews.element.Overlay` (if show_labels=True).
 
     Examples:
         >>> import ehrdata as ed
@@ -81,7 +85,6 @@ def plot_variable_correlations(
         correction_method=correction_method,
         alpha=alpha,
     )
-    corr_df.columns.to_list()
 
     corr_long = corr_df.stack(dropna=False).rename("correlation")
     sig_long = sig_df.stack(dropna=False).rename("significant")
@@ -164,11 +167,15 @@ def plot_variable_dependencies(
         method: Correlation method: "spearman", "kendall" or "pearson".
         agg: How to aggregate time dimension: "mean", "last" or "first".
         correction_method: Multiple testing correction method:
-            -   "bonferroni": conservative Bonferroni correction
-            -   "fdr_bh": Benjamini Hochberg FDR
-            -   "fdr_tsbh": two-stage Benjamini-Hochberg, better calibrated when many variables are truly correlated
-            -   "holm": Holm-Bonferroni
-            -   "none": no correction
+                    * `'bonferroni'` conservative Bonferroni correction.
+
+                    * `'fdr_bh'` Benjamini-Hochberg false discovery rate (FDR) control.
+
+                    * `'fdr_tsbh'` two-stage Benjamini-Hochberg, better calibrated when many variables are truly correlated.
+
+                    * `'holm'` Holm-Bonferroni correction.
+
+                    * `'none'` no multiple-testing correction.
         alpha: Significance threshold after correction.
         min_correlation: Minimum absolute correlation to show a chord.
         only_significant: If True, only show significant correlations.
@@ -229,7 +236,7 @@ def plot_variable_dependencies(
     if len(edges_df) == 0:
         raise ValueError(
             f"No correlations meet criteria (minimum correlation to plot = {min_correlation})."
-            f"Try lowering min_correlation or setting only_significant=False."
+            f"\nTry lowering min_correlation or setting only_significant=False."
         )
 
     nodes_df = pd.DataFrame({"index": range(len(variables)), "name": variables})
