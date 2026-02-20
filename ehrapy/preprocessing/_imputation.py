@@ -6,6 +6,7 @@ from functools import singledispatch
 from importlib.util import find_spec
 from typing import TYPE_CHECKING, Literal
 
+import array_api_compat
 import numpy as np
 import pandas as pd
 import scipy.sparse as sp
@@ -27,6 +28,8 @@ from ehrapy._progress import spinner
 if TYPE_CHECKING:
     from anndata import AnnData
     from ehrdata import EHRData
+
+    from ehrapy._types import ArrayAPICompliant, ArrayNamespace
 
 
 @use_ehrdata(deprecated_after="1.0.0")
@@ -635,6 +638,167 @@ def _warn_imputation_threshold(
         logger.warning(f"Feature '{var}' had more than {var_name_to_pct[var]:.2f}% missing values!")
 
     return var_name_to_pct
+
+
+def _ffill_along_time(xp: ArrayNamespace, arr: ArrayAPICompliant) -> ArrayAPICompliant:
+    """Forward-fill NaN values along the last axis (time).
+
+    Each NaN is replaced with the most recent non-NaN value at the same
+    (patient, feature) position. Leading NaNs before the first observation
+    are left as NaN.
+    """
+    import math
+
+    result = xp.asarray(arr, copy=True)
+    axis = -1
+    n = result.shape[axis]
+
+    for d in range(math.ceil(math.log2(max(n, 2)))):
+        shift = 2**d
+        if shift >= n:
+            break
+        pad_shape = (*result.shape[:-1], shift)
+        pad = xp.full(pad_shape, float("nan"), dtype=result.dtype)
+        shifted = xp.concat([pad, result[..., : n - shift]], axis=axis)
+        result = xp.where(xp.isnan(result), shifted, result)
+
+    return result
+
+
+def _bfill_along_time(xp: ArrayNamespace, arr: ArrayAPICompliant) -> ArrayAPICompliant:
+    """Backward-fill NaN values along the last axis (time).
+
+    Each NaN is replaced with the next non-NaN value at the same
+    (patient, feature) position. Trailing NaNs after the last observation
+    are left as NaN.
+    """
+    return xp.flip(_ffill_along_time(xp, xp.flip(arr, axis=-1)), axis=-1)
+
+
+def _nanmean(xp: ArrayNamespace, arr: ArrayAPICompliant, axes: int | tuple[int, ...]) -> ArrayAPICompliant:
+    mask = xp.isnan(arr)
+    zero_filled = xp.where(mask, xp.zeros_like(arr), arr)
+    count = xp.sum(xp.astype(~mask, arr.dtype), axis=axes)
+    return xp.sum(zero_filled, axis=axes) / count
+
+
+def _nanmedian(xp: ArrayNamespace, arr: ArrayAPICompliant) -> ArrayAPICompliant:
+    """Compute per-feature median ignoring NaN values.
+
+    For a 3D array ``(n_obs, n_vars, n_time)`` returns shape ``(n_vars,)``.
+
+    """
+    n_obs, n_vars, n_time = arr.shape
+    flat = xp.reshape(xp.permute_dims(arr, (1, 0, 2)), (n_vars, -1))
+
+    not_nan = ~xp.isnan(flat)
+    counts = xp.sum(xp.astype(not_nan, xp.int64), axis=1)
+
+    filled = xp.where(not_nan, flat, xp.full_like(flat, float("inf")))
+    sorted_flat = xp.sort(filled, axis=1)
+
+    half = counts // 2
+    is_odd = (counts % 2) == 1
+
+    idx_lo = xp.reshape(xp.where(is_odd, half, xp.where(counts == 0, xp.zeros_like(half), half - 1)), (-1, 1))
+    idx_hi = xp.reshape(xp.where(counts == 0, xp.zeros_like(half), half), (-1, 1))
+
+    val_lo = xp.squeeze(xp.take_along_axis(sorted_flat, idx_lo, axis=1), axis=1)
+    val_hi = xp.squeeze(xp.take_along_axis(sorted_flat, idx_hi, axis=1), axis=1)
+
+    medians = (val_lo + val_hi) / 2
+    medians = xp.where(counts == 0, xp.asarray(float("nan"), dtype=arr.dtype), medians)
+
+    return xp.astype(medians, arr.dtype)
+
+
+def locf_impute(
+    edata: EHRData,
+    var_names: Iterable[str] | None = None,
+    *,
+    layer: str | None = None,
+    fallback_method: Literal["mean", "median", "bfill"] = "mean",
+    copy: bool = False,
+) -> EHRData | None:
+    """Impute missing values by carrying forward the last observed value along the time axis.
+
+    Implements Last Observation Carried Forward (LOCF) for longitudinal (3D) data.
+    For each patient and feature, missing values are replaced with the most recent
+    non-missing value. Missing values that occur before any observation for a given
+    patient are filled using a fallback method.
+
+    Args:
+        edata: Central data object.
+        var_names: A list of column names to apply imputation on (if ``None``, impute all columns).
+        layer: The layer to impute. Must contain 3D data of shape ``(n_obs, n_vars, n_time)``.
+        fallback_method: Method for imputing values before the first observation per patient.
+                         ``'mean'`` fills with the per-feature mean, ``'median'`` fills with the
+                         per-feature median (both computed across all patients and time steps),
+                         and ``'bfill'`` fills with each patient's first observed value
+                         (backward fill).
+        copy: Whether to return a copy of ``edata`` or modify it inplace.
+
+    Returns:
+        If copy is True, a modified copy of the original data object with imputed data.
+        If copy is False, the original data object is modified in place, and None is returned.
+
+    Raises:
+        ValueError: If the data is not 3D or if an unsupported ``fallback_method`` is specified.
+
+    Examples:
+        >>> import ehrdata as ed
+        >>> import ehrapy as ep
+        >>> import numpy as np
+        >>> edata = ed.dt.ehrdata_blobs(n_observations=100, base_timepoints=24, n_centers=3)
+        >>> rng = np.random.default_rng(42)
+        >>> layer = edata.layers["tem_data"]
+        >>> layer[rng.random(layer.shape) < 0.3] = np.nan
+        >>> np.isnan(layer).sum()
+        7935
+        >>> ep.pp.locf_impute(edata, layer="tem_data")
+        >>> np.isnan(edata.layers["tem_data"]).sum()
+        0
+    """
+    if fallback_method not in ("mean", "median", "bfill"):
+        raise ValueError(f"Unsupported fallback method '{fallback_method}'. Use 'mean', 'median', or 'bfill'.")
+
+    if copy:
+        edata = edata.copy()
+
+    X = edata.X if layer is None else edata.layers[layer]
+
+    if X.ndim != 3:
+        raise ValueError(
+            f"locf_impute requires 3D data (n_obs, n_vars, n_time), got array with shape {X.shape}. "
+            "Use the 'layer' parameter to specify a layer containing 3D data."
+        )
+
+    if var_names is None:
+        var_names = edata.var_names
+    var_indices = edata.var_names.get_indexer(var_names).tolist()
+
+    xp = array_api_compat.array_namespace(X)
+    arr = xp.astype(X[:, var_indices, :], xp.float64)
+
+    arr = _ffill_along_time(xp, arr)
+
+    if fallback_method == "bfill":
+        arr = _bfill_along_time(xp, arr)
+    else:
+        n_vars = arr.shape[1]
+        if fallback_method == "mean":
+            fallback_values = _nanmean(xp, X[:, var_indices, :], axes=(0, 2))
+        else:
+            fallback_values = _nanmedian(xp, X[:, var_indices, :])
+        fallback_broadcast = xp.broadcast_to(
+            xp.reshape(fallback_values, (1, n_vars, 1)),
+            arr.shape,
+        )
+        arr = xp.where(xp.isnan(arr), fallback_broadcast, arr)
+
+    X[:, var_indices, :] = arr
+
+    return edata if copy else None
 
 
 def _get_non_numerical_column_indices(arr: np.ndarray) -> set:

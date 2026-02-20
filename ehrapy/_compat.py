@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import warnings
 from functools import wraps
-from importlib.util import find_spec
 from inspect import signature
 from subprocess import PIPE, Popen
 from typing import TYPE_CHECKING, ParamSpec, TypeVar, cast
@@ -18,14 +17,15 @@ T = TypeVar("T")
 from anndata import AnnData
 from ehrdata import EHRData
 
-if TYPE_CHECKING:
-    # type checkers are confused and can only see …core.Array
-    from dask.array.core import Array as DaskArray
-elif find_spec("dask"):
-    from dask.array import Array as DaskArray
-else:
-    DaskArray = type("Array", (), {})
-    DaskArray.__module__ = "dask.array"
+from ehrapy._types import (
+    CupyArray,
+    DaskArray,
+    JaxArray,
+    NdonnxArray,
+    SparseArray,
+    TorchTensor,
+    as_dense_dask_array,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -250,13 +250,6 @@ def function_2D_only():
         return wrapper
 
     return decorator
-
-
-def as_dense_dask_array(a, chunk_size=1000):
-    """Convert input to a dense Dask array."""
-    import dask.array as da
-
-    return da.from_array(a, chunks=chunk_size)
 
 
 def choose_hv_backend() -> Callable[[Callable[P, R]], Callable[P, R]]:
