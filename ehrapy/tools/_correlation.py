@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
 
+import array_api_compat
 import numpy as np
 import pandas as pd
 from scipy import stats
@@ -24,6 +25,7 @@ def _extract_variable_values(
         raise KeyError(f"Layer {layer} not found in edata.layers. Available: {edata.layers.keys()}")
 
     mtx = edata.layers[layer]
+    xp = array_api_compat.array_namespace(mtx)
 
     if var_names is None:
         var_names = list(edata.var_names)
@@ -38,29 +40,33 @@ def _extract_variable_values(
     if mtx.ndim == 2:
         n_obs, n_var = mtx.shape
         mtx_2d = mtx[:, var_indices]
-        df = pd.DataFrame(mtx_2d, columns=var_names, index=edata.obs_names)
+        mtx_2d_np = array_api_compat.numpy.asarray(mtx_2d)
+        df = pd.DataFrame(mtx_2d_np, columns=var_names, index=edata.obs_names)
 
     else:
         n_obs, n_var, n_time = mtx.shape
         if agg == "mean":
-            mtx_2d = np.nanmean(mtx[:, var_indices, :], axis=2)
-            df = pd.DataFrame(mtx_2d, columns=var_names, index=edata.obs_names)
+            mtx_2d = xp.mean(mtx[:, var_indices, :], axis=2)
+            mtx_2d_np = array_api_compat.numpy.asarray(mtx_2d)
+            df = pd.DataFrame(mtx_2d_np, columns=var_names, index=edata.obs_names)
         elif agg == "last" or agg == "first":
             mtx_sub = mtx[:, var_indices, :]
-            valid_mask = ~np.isnan(mtx_sub)
+            mtx_sub = xp.astype(mtx_sub, xp.float64)
+            valid_mask = ~xp.isnan(mtx_sub)
             if agg == "last":
-                mtx_sub = mtx_sub[:, :, ::-1]  # to use np.argmax
-                valid_mask = valid_mask[:, :, ::-1]
+                mtx_sub = xp.flip(mtx_sub, axis=2)  # for argmax to find the last valid value
+                valid_mask = xp.flip(valid_mask, axis=2)
 
-            first_valid = np.argmax(valid_mask, axis=2)
-            is_valid = valid_mask.any(axis=2)
+            first_valid = xp.argmax(valid_mask, axis=2)
+            is_valid = xp.any(valid_mask, axis=2)
 
-            obs_idx = np.arange(n_obs)[:, None]
-            var_idx = np.arange(len(var_indices))[None, :]
+            obs_idx = xp.arange(n_obs)[:, None]
+            var_idx = xp.arange(len(var_indices))[None, :]
             mtx_2d = mtx_sub[obs_idx, var_idx, first_valid]
 
-            mtx_2d[~is_valid] = np.nan
-            df = pd.DataFrame(mtx_2d, columns=var_names, index=edata.obs_names)
+            mtx_2d = xp.where(is_valid, mtx_2d, xp.full(mtx_2d.shape, xp.nan, dtype=mtx_2d.dtype))
+            mtx_2d_np = array_api_compat.numpy.asarray(mtx_2d)
+            df = pd.DataFrame(mtx_2d_np, columns=var_names, index=edata.obs_names)
         else:
             raise ValueError(f"Unknown aggregation method: {agg}")
 
