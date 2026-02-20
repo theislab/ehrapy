@@ -520,6 +520,18 @@ def test_locf_impute_fallback(locf_edata_3d, fallback_method):
     assert np.isclose(imputed[1, 2, 0], expected[2])
 
 
+def test_locf_impute_bfill(locf_edata_3d):
+    result = locf_impute(locf_edata_3d, layer=DEFAULT_TEM_LAYER_NAME, fallback_method="bfill", copy=True)
+    imputed = result.layers[DEFAULT_TEM_LAYER_NAME]
+
+    assert not np.any(np.isnan(imputed))
+
+    assert np.isclose(imputed[0, 1, 0], 2.0)
+    assert np.isclose(imputed[1, 0, 0], 3.0)
+    assert np.isclose(imputed[1, 0, 1], 3.0)
+    assert np.isclose(imputed[1, 2, 0], 2.0)
+
+
 def test_locf_impute_inplace(locf_edata_3d):
     original_data = locf_edata_3d.layers[DEFAULT_TEM_LAYER_NAME].copy()
     result = locf_impute(locf_edata_3d, layer=DEFAULT_TEM_LAYER_NAME, copy=False)
