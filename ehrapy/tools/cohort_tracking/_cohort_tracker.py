@@ -402,20 +402,25 @@ class CohortTracker:
             # there can be empty lists which distort the logic of matching patches to subtitles
             patches_list = [patch for patch in patches_list if patch]
 
-            for patches, subtitle in zip(patches_list, subtitles_list, strict=False):
-                is_categorical = subtitle in categorical_cols
-                # include title only for categorical columns
+            for patches, subtitle, col in zip(patches_list, subtitles_list, self.columns[::-1], strict=False):
+                is_categorical = col in categorical_cols
 
-                handles.append(Line2D([], [], linestyle="none", marker="", alpha=0))  # Placeholder for title
-                labels.append(subtitle)
-
-                for patch in patches:
-                    handles.append(patch)
-                    if is_categorical:
+                if is_categorical:
+                    if subtitle:  # only add placeholder if subtitle is non-empty
+                        handles.append(Line2D([], [], linestyle="none", marker="", alpha=0))
+                        labels.append(subtitle)
+                    for patch in patches:
+                        handles.append(patch)
                         labels.append(patch.get_label())
-                    else:
-                        patch_label = patch.get_label()
-                        labels.append(patch_label if patch_label != subtitle else "")  # if a label is remapped
+                else:
+                    patch = patches[0]  # continuous always has one patch
+                    patch_label = patch.get_label()
+                    is_remapped = patch_label != subtitle
+                    if is_remapped:
+                        handles.append(Line2D([], [], linestyle="none", marker="", alpha=0))
+                        labels.append(subtitle)
+                    handles.append(patch)
+                    labels.append(patch_label if is_remapped else subtitle)
 
                 # empty space after block
                 handles.append(Line2D([], [], linestyle="none", marker="", alpha=0))
