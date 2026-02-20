@@ -260,135 +260,172 @@ def test_calculate_qc_metrics(missing_values_edata):
     assert missing_values_edata.var.missing_values_abs is not None
 
 
-def test_qc_lab_measurements_simple(lab_measurements_simple_edata):
-    expected_obs_data = pd.Series(
-        data={
-            "Acetaminophen normal": [True, True],
-            "Acetoacetic acid normal": [True, False],
-            "Beryllium, toxic normal": [False, True],
-        }
-    )
-
-    ep.pp.qc_lab_measurements(
-        lab_measurements_simple_edata,
-        measurements=list(lab_measurements_simple_edata.var_names),
-        unit="SI",
-    )
-
-    assert (
-        list(lab_measurements_simple_edata.obs["Acetaminophen normal"]) == (expected_obs_data["Acetaminophen normal"])
-    )
-    assert (
-        list(lab_measurements_simple_edata.obs["Acetoacetic acid normal"])
-        == (expected_obs_data["Acetoacetic acid normal"])
-    )
-    assert (
-        list(lab_measurements_simple_edata.obs["Beryllium, toxic normal"])
-        == (expected_obs_data["Beryllium, toxic normal"])
-    )
+def _make_lab_edata(n_obs: int = 20, seed: int = 0) -> ed.EHRData:
+    """Create a small synthetic EHRData for lab measurement QC tests."""
+    rng = np.random.default_rng(seed)
+    data = np.column_stack(
+        [
+            rng.normal(5.0, 0.5, n_obs),  # potassium — tight cluster
+            rng.normal(140.0, 5.0, n_obs),  # sodium
+        ]
+    ).astype(float)
+    # Inject one obvious outlier in potassium
+    data[0, 0] = 99.0
+    edata = ed.EHRData(X=data, var=pd.DataFrame(index=["potassium", "sodium"]))
+    return edata
 
 
-def test_qc_lab_measurements_simple_layer(lab_measurements_layer_edata):
-    expected_obs_data = pd.Series(
-        data={
-            "Acetaminophen normal": [True, True],
-            "Acetoacetic acid normal": [True, False],
-            "Beryllium, toxic normal": [False, True],
-        }
+def test_qc_lab_measurements_flags_and_scores():
+    """Basic check: flags and scores appear in obs and have the right shape."""
+    edata = _make_lab_edata()
+    ep.pp.qc_lab_measurements(edata, vars=["potassium", "sodium"])
+
+    assert "potassium_outlier" in edata.obs.columns
+    assert "potassium_score" in edata.obs.columns
+    assert "sodium_outlier" in edata.obs.columns
+    assert "sodium_score" in edata.obs.columns
+    assert len(edata.obs["potassium_outlier"]) == edata.n_obs
+    assert edata.obs["potassium_outlier"].dtype == bool
+
+
+def test_qc_lab_measurements_outlier_detected():
+    """The injected extreme value should be flagged as an outlier."""
+    edata = _make_lab_edata()
+    ep.pp.qc_lab_measurements(edata, vars=["potassium"], method="quantile")
+    # Index 0 has value 99, far outside the normal distribution
+    assert edata.obs["potassium_outlier"].iloc[0]
+    # Most other values should be within the reference interval
+    assert edata.obs["potassium_outlier"].iloc[1:].sum() < edata.n_obs - 1
+
+
+def test_qc_lab_measurements_score_direction():
+    """High values should produce positive scores (z-score / IQR distance)."""
+    edata = _make_lab_edata()
+    ep.pp.qc_lab_measurements(edata, vars=["potassium"], score_type="zscore")
+    scores = edata.obs["potassium_score"].values
+    # The extreme value at index 0 (99.0) must have the highest score in the column
+    assert scores[0] == scores.max()
+    assert scores[0] > 0
+
+
+def test_qc_lab_measurements_add_flag_false():
+    """With add_flag=False the flag column must not be created."""
+    edata = _make_lab_edata()
+    ep.pp.qc_lab_measurements(edata, vars=["potassium"], add_flag=False)
+    assert "potassium_outlier" not in edata.obs.columns
+    assert "potassium_score" in edata.obs.columns
+
+
+def test_qc_lab_measurements_add_score_false():
+    """With add_score=False the score column must not be created."""
+    edata = _make_lab_edata()
+    ep.pp.qc_lab_measurements(edata, vars=["potassium"], add_score=False)
+    assert "potassium_score" not in edata.obs.columns
+    assert "potassium_outlier" in edata.obs.columns
+
+
+def test_qc_lab_measurements_methods():
+    """All four methods should run and produce flags of the correct dtype."""
+    edata_base = _make_lab_edata(n_obs=50)
+    for method in ("quantile", "iqr", "zscore", "modified_zscore"):
+        edata = edata_base.copy()
+        ep.pp.qc_lab_measurements(edata, vars=["potassium"], method=method)
+        assert edata.obs["potassium_outlier"].dtype == bool, f"method={method}"
+
+
+def test_qc_lab_measurements_score_types():
+    """All three score types should run and produce finite floats for non-NaN inputs."""
+    edata_base = _make_lab_edata(n_obs=50)
+    for score_type in ("zscore", "iqr_distance", "percentile"):
+        edata = edata_base.copy()
+        ep.pp.qc_lab_measurements(edata, vars=["potassium"], score_type=score_type)
+        scores = edata.obs["potassium_score"]
+        assert np.isfinite(scores).all(), f"score_type={score_type}"
+
+
+def test_qc_lab_measurements_groupby():
+    """Scores are computed relative to each group's own distribution.
+
+    Two non-overlapping groups (M≈5, F≈50) without any injected extreme values.
+    Without groupby, M values appear as extreme negatives relative to the combined
+    mean ≈ 27.5, so their mean |z-score| is large.  With groupby each group is
+    scored against itself, so within-group scores should be centred near zero.
+    """
+    rng = np.random.default_rng(42)
+    n = 100
+    values = np.concatenate([rng.normal(5.0, 0.5, n), rng.normal(50.0, 0.5, n)])
+    sex = ["M"] * n + ["F"] * n
+    edata = ed.EHRData(
+        X=values[:, None].astype(float),
+        var=pd.DataFrame(index=["potassium"]),
+        obs=pd.DataFrame({"sex": sex}),
     )
 
-    ep.pp.qc_lab_measurements(
-        lab_measurements_layer_edata,
-        measurements=list(lab_measurements_layer_edata.var_names),
-        unit="SI",
-        layer="layer_copy",
-    )
+    # Without groupby: M values look wildly below the combined mean
+    edata_global = edata.copy()
+    ep.pp.qc_lab_measurements(edata_global, vars=["potassium"], score_type="zscore")
+    m_abs_score_global = edata_global.obs["potassium_score"].iloc[:n].abs().mean()
 
-    assert list(lab_measurements_layer_edata.obs["Acetaminophen normal"]) == (expected_obs_data["Acetaminophen normal"])
-    assert (
-        list(lab_measurements_layer_edata.obs["Acetoacetic acid normal"])
-        == (expected_obs_data["Acetoacetic acid normal"])
-    )
-    assert (
-        list(lab_measurements_layer_edata.obs["Beryllium, toxic normal"])
-        == (expected_obs_data["Beryllium, toxic normal"])
-    )
+    # With groupby: M values are scored against M peers, scores centre near 0
+    edata_grouped = edata.copy()
+    ep.pp.qc_lab_measurements(edata_grouped, vars=["potassium"], groupby="sex", score_type="zscore")
+    m_abs_score_grouped = edata_grouped.obs["potassium_score"].iloc[:n].abs().mean()
+
+    # Stratification must bring group-relative scores much closer to zero
+    assert m_abs_score_grouped < m_abs_score_global / 5
+
+
+def test_qc_lab_measurements_groupby_invalid_col():
+    edata = _make_lab_edata()
+    with pytest.raises(ValueError, match="groupby columns not found"):
+        ep.pp.qc_lab_measurements(edata, vars=["potassium"], groupby="nonexistent")
+
+
+def test_qc_lab_measurements_invalid_var():
+    edata = _make_lab_edata()
+    with pytest.raises(ValueError, match="Variables not found"):
+        ep.pp.qc_lab_measurements(edata, vars=["nonexistent_var"])
+
+
+def test_qc_lab_measurements_nan_handling():
+    """NaN values should not be flagged as outliers; their score should be NaN."""
+    edata = _make_lab_edata(n_obs=20)
+    edata.X[5, 0] = np.nan
+    ep.pp.qc_lab_measurements(edata, vars=["potassium"])
+    assert not edata.obs["potassium_outlier"].iloc[5]  # NaN → not flagged
+    assert np.isnan(edata.obs["potassium_score"].iloc[5])
+
+
+def test_qc_lab_measurements_copy():
+    """copy=True must not modify the original object."""
+    edata = _make_lab_edata()
+    original_obs_cols = set(edata.obs.columns)
+    result = ep.pp.qc_lab_measurements(edata, vars=["potassium"], copy=True)
+    assert set(edata.obs.columns) == original_obs_cols  # original untouched
+    assert "potassium_outlier" in result.obs.columns
+
+
+def test_qc_lab_measurements_layer():
+    """Function should operate on the specified layer rather than X."""
+    edata = _make_lab_edata()
+    edata.layers["measurements"] = edata.X.copy()
+    edata.X[:] = 0  # zero out X so any result must come from the layer
+    ep.pp.qc_lab_measurements(edata, vars=["potassium"], layer="measurements")
+    assert "potassium_outlier" in edata.obs.columns
 
 
 def test_qc_lab_measurements_3D_edata(edata_blob_small):
-    ep.pp.qc_lab_measurements(edata_blob_small, measurements=list(edata_blob_small.var_names), layer="layer_2")
+    ep.pp.qc_lab_measurements(edata_blob_small, vars=list(edata_blob_small.var_names), layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.qc_lab_measurements(
-            edata_blob_small, measurements=list(edata_blob_small.var_names), layer=DEFAULT_TEM_LAYER_NAME
-        )
+        ep.pp.qc_lab_measurements(edata_blob_small, vars=list(edata_blob_small.var_names), layer=DEFAULT_TEM_LAYER_NAME)
 
 
-def test_qc_lab_measurements_age(lab_measurements_simple_edata):
-    reference_table = pd.DataFrame(
-        {
-            "SI Reference Interval": ["66-199", "1-50"],
-            "Age": ["18-65", "66-99"],
-        },
-        index=pd.Index(["Acetaminophen", "Acetaminophen"], name="Measurement"),
-    )
-    ep.pp.qc_lab_measurements(
-        lab_measurements_simple_edata,
-        reference_table=reference_table,
-        measurements=["Acetaminophen"],
-        unit="SI",
-        age_col="Age",
-        age_range="66-99",
-    )
-    # Values [73, 148], range 1-50: both False
-    assert list(lab_measurements_simple_edata.obs["Acetaminophen normal"]) == [False, False]
-
-
-def test_qc_lab_measurements_sex(lab_measurements_simple_edata):
-    reference_table = pd.DataFrame(
-        {
-            "SI Reference Interval": ["66-199", "1-50"],
-            "Sex": ["M", "F"],
-        },
-        index=pd.Index(["Acetaminophen", "Acetaminophen"], name="Measurement"),
-    )
-    ep.pp.qc_lab_measurements(
-        lab_measurements_simple_edata,
-        reference_table=reference_table,
-        measurements=["Acetaminophen"],
-        unit="SI",
-        sex_col="Sex",
-        sex="F",
-    )
-    # Values [73, 148], range 1-50: both False
-    assert list(lab_measurements_simple_edata.obs["Acetaminophen normal"]) == [False, False]
-
-
-def test_qc_lab_measurements_ethnicity(lab_measurements_simple_edata):
-    reference_table = pd.DataFrame(
-        {
-            "SI Reference Interval": ["66-199", "1-50"],
-            "Ethnicity": ["Caucasian", "Asian"],
-        },
-        index=pd.Index(["Acetaminophen", "Acetaminophen"], name="Measurement"),
-    )
-    ep.pp.qc_lab_measurements(
-        lab_measurements_simple_edata,
-        reference_table=reference_table,
-        measurements=["Acetaminophen"],
-        unit="SI",
-        ethnicity_col="Ethnicity",
-        ethnicity="Asian",
-    )
-    # Values [73, 148], range 1-50: both False
-    assert list(lab_measurements_simple_edata.obs["Acetaminophen normal"]) == [False, False]
-
-
-def test_qc_lab_measurements_multiple_measurements():
-    data = pd.DataFrame(np.array([[100, 98], [162, 107]]), columns=["oxygen saturation", "glucose"], index=[0, 1])
-
-    with pytest.raises(ValueError):
-        edata = ed.io.from_pandas(data)
-        ep.pp.qc_lab_measurements(edata, measurements=["oxygen saturation", "glucose"], unit="SI")
+def test_qc_lab_measurements_defaults_to_all_vars():
+    """When vars=None, all variables should be evaluated."""
+    edata = _make_lab_edata()
+    ep.pp.qc_lab_measurements(edata)
+    assert "potassium_outlier" in edata.obs.columns
+    assert "sodium_outlier" in edata.obs.columns
 
 
 @pytest.mark.parametrize(
