@@ -72,7 +72,7 @@ def plot_variable_correlations(
 
         .. image:: /_static/docstring_previews/variable_correlations_heatmap.png
     """
-    corr_df, _, sig_df = ep.tl.compute_variable_correlations(
+    corr_df, _, sig_df = ep.pp.compute_variable_correlations(
         edata=edata,
         layer=layer,
         var_names=var_names,
@@ -191,7 +191,7 @@ def plot_variable_dependencies(
         .. image:: /_static/docstring_previews/variable_dependencies_chord.png
 
     """
-    corr_df, _, sig_df = ep.tl.compute_variable_correlations(
+    corr_df, _, sig_df = ep.pp.compute_variable_correlations(
         edata=edata,
         layer=layer,
         var_names=var_names,
