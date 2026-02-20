@@ -29,6 +29,8 @@ if TYPE_CHECKING:
     from anndata import AnnData
     from ehrdata import EHRData
 
+    from ehrapy._types import ArrayAPICompliant, ArrayNamespace
+
 
 @use_ehrdata(deprecated_after="1.0.0")
 @function_2D_only()
@@ -638,7 +640,7 @@ def _warn_imputation_threshold(
     return var_name_to_pct
 
 
-def _ffill_along_time(xp, arr):
+def _ffill_along_time(xp: ArrayNamespace, arr: ArrayAPICompliant) -> ArrayAPICompliant:
     """Forward-fill NaN values along the last axis (time).
 
     Each NaN is replaced with the most recent non-NaN value at the same
@@ -663,7 +665,7 @@ def _ffill_along_time(xp, arr):
     return result
 
 
-def _bfill_along_time(xp, arr):
+def _bfill_along_time(xp: ArrayNamespace, arr: ArrayAPICompliant) -> ArrayAPICompliant:
     """Backward-fill NaN values along the last axis (time).
 
     Each NaN is replaced with the next non-NaN value at the same
@@ -673,14 +675,14 @@ def _bfill_along_time(xp, arr):
     return xp.flip(_ffill_along_time(xp, xp.flip(arr, axis=-1)), axis=-1)
 
 
-def _nanmean(xp, arr, axes):
+def _nanmean(xp: ArrayNamespace, arr: ArrayAPICompliant, axes: int | tuple[int, ...]) -> ArrayAPICompliant:
     mask = xp.isnan(arr)
     zero_filled = xp.where(mask, xp.zeros_like(arr), arr)
     count = xp.sum(xp.astype(~mask, arr.dtype), axis=axes)
     return xp.sum(zero_filled, axis=axes) / count
 
 
-def _nanmedian(xp, arr):
+def _nanmedian(xp: ArrayNamespace, arr: ArrayAPICompliant) -> ArrayAPICompliant:
     """Compute per-feature median ignoring NaN values.
 
     For a 3D array ``(n_obs, n_vars, n_time)`` returns shape ``(n_vars,)``.
