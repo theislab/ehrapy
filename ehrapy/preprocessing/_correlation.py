@@ -106,12 +106,7 @@ def compute_variable_correlations(
         alpha: Significance threshold after correction.
 
     Returns:
-        corr_df : :class:`~pandas.DataFrame`
-            Correlation coefficient matrix
-        pval_df : :class:`~pandas.DataFrame`
-            Raw p-value matrix
-        sig_df : :class:`~pandas.DataFrame`
-            Boolean significance matrix after correction
+            Correlation coefficient matrix, raw p-value matrix and boolean significance matrix after correction for each variable pair.
 
     Examples:
         >>> import ehrdata as ed
