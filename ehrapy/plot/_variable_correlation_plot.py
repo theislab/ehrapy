@@ -64,7 +64,7 @@ def plot_variable_correlations(
         title: Set the title of the plot.
 
     Returns:
-        :class:`holoviews.element.HeatMap` (if show_labels=False) or :class:`holoviews.element.Overlay` (if show_labels=True).
+        :class:`holoviews.element.HeatMap` (if show_values=False) or :class:`holoviews.element.Overlay` (if show_values=True).
 
     Examples:
         >>> import ehrdata as ed
@@ -100,6 +100,7 @@ def plot_variable_correlations(
         heatmap_df["correlation"].map("{:.2f}".format) + np.where(heatmap_df["significant"] & ~is_diag, "*", ""),
     )
 
+    # for NaN correlations the neutral color will be shown on the colorscale
     heatmap_df["correlation"] = heatmap_df["correlation"].fillna(0)
 
     if title is None:
@@ -128,10 +129,7 @@ def plot_variable_correlations(
             text_align="center",
         )
 
-        overlay = (heatmap * labels).opts(
-            width=width,
-            height=height,
-        )
+        overlay = heatmap * labels
         return overlay
 
     return heatmap
@@ -198,6 +196,9 @@ def plot_variable_dependencies(
         .. image:: /_static/docstring_previews/variable_dependencies_chord.png
 
     """
+    if not 0 <= min_correlation <= 1:
+        raise ValueError(f"min_correlation must be between 0 and 1, got {min_correlation}")
+
     corr_df, _, sig_df = ep.pp.compute_variable_correlations(
         edata=edata,
         layer=layer,
@@ -207,9 +208,6 @@ def plot_variable_dependencies(
         correction_method=correction_method,
         alpha=alpha,
     )
-
-    if not 0 <= min_correlation <= 1:
-        raise ValueError(f"min_correlation must be between 0 and 1, got {min_correlation}")
 
     corr_long = corr_df.stack(dropna=False).rename("correlation")
     sig_long = sig_df.stack().rename("significant")
@@ -251,9 +249,11 @@ def plot_variable_dependencies(
         width=width,
         height=height,
         node_color="index",
-        edge_color="value",
+        edge_color="correlation",
+        colorbar=True,
         labels="name",
         node_size=15,
+        clim=(-1, 1),
         title=title,
         cmap=cmap,
     )

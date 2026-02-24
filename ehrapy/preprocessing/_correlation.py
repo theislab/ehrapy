@@ -35,7 +35,8 @@ def _extract_variable_values(
         if missing:
             raise KeyError(f"Variables not found: {missing}")
 
-    var_indices = [list(edata.var_names).index(v) for v in var_names]
+    var_name_to_idx = {v: i for i, v in enumerate(edata.var_names)}
+    var_indices = [var_name_to_idx[v] for v in var_names]
 
     if mtx.ndim == 2:
         n_obs, n_var = mtx.shape
