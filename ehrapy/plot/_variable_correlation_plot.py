@@ -64,7 +64,7 @@ def plot_variable_correlations(
         title: Set the title of the plot.
 
     Returns:
-        :class:`holoviews.element.HeatMap` (if show_values=False) or :class:`holoviews.element.Overlay` (if show_values=True).
+        :class:`holoviews.element.HeatMap` (if show_values=False) or :class:`holoviews.core.Overlay` (if show_values=True).
 
     Examples:
         >>> import ehrdata as ed
