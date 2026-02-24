@@ -78,7 +78,7 @@ def _extract_variable_values(
     return df
 
 
-def compute_variable_correlations(
+def variable_correlations(
     edata: EHRData,
     *,
     layer: str,
@@ -91,8 +91,8 @@ def compute_variable_correlations(
     """Compute correlation matrix with statistical testing and multiple testing correction.
 
     This function computes pairwise correlations between variables in the given EHRData object,
-    automatically handling missing values through pairwise deletion. For 3D
-    time-series data, values are aggregated across time before computing correlations.
+    automatically handling missing values through pairwise deletion.
+    For 3D time-series data, values are aggregated across time before computing correlations.
 
     Args:
         edata: Central data object.
@@ -102,13 +102,9 @@ def compute_variable_correlations(
         agg: How to aggregate time dimension: "mean", "last" or "first".
         correction_method: Multiple testing correction method:
                     * `'bonferroni'` conservative Bonferroni correction.
-
                     * `'fdr_bh'` Benjamini-Hochberg false discovery rate (FDR) control.
-
                     * `'fdr_tsbh'` two-stage Benjamini-Hochberg, better calibrated when many variables are truly correlated.
-
                     * `'holm'` Holm-Bonferroni correction.
-
                     * `'none'` no multiple-testing correction.
         alpha: Significance threshold after correction.
 

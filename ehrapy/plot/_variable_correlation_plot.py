@@ -31,14 +31,10 @@ def plot_variable_correlations(
 ) -> hv.HeatMap | hv.Overlay:
     """Plot variable correlations as heatmap.
 
-    Computes a correlation matrix (Pearson or Spearman) for the selected variables
-    from the given layer.
-    If the layer contains a time dimension, values are first
-    aggregated per variable across time.
-    Cells are annotated with the correlation
-    coefficient.
-    An asterisk marks statistically significant correlations after
-    correction.
+    Computes a correlation matrix (Pearson or Spearman) for the selected variables from the given layer.
+    If the layer contains a time dimension, values are first aggregated per variable across time.
+    Cells are annotated with the correlation coefficient.
+    An asterisk marks statistically significant correlations after correction.
 
     Args:
         edata: Central data object.
@@ -48,13 +44,9 @@ def plot_variable_correlations(
         agg: How to aggregate time dimension: "mean", "last" or "first".
         correction_method: Multiple testing correction method:
                     * `'bonferroni'` conservative Bonferroni correction.
-
                     * `'fdr_bh'` Benjamini-Hochberg false discovery rate (FDR) control.
-
                     * `'fdr_tsbh'` two-stage Benjamini-Hochberg, better calibrated when many variables are truly correlated.
-
                     * `'holm'` Holm-Bonferroni correction.
-
                     * `'none'` no multiple-testing correction.
         alpha: Significance threshold after correction.
         width: Plot width in pixels.
@@ -76,7 +68,7 @@ def plot_variable_correlations(
 
         .. image:: /_static/docstring_previews/variable_correlations_heatmap.png
     """
-    corr_df, _, sig_df = ep.pp.compute_variable_correlations(
+    corr_df, _, sig_df = ep.pp.variable_correlations(
         edata=edata,
         layer=layer,
         var_names=var_names,
@@ -153,10 +145,8 @@ def plot_variable_dependencies(
 ) -> hv.Chord:
     """Plot correlation dependencies as a chord diagram.
 
-    Computes pairwise correlations between selected variables from layer and
-    visualizes them as a chord diagram.
-    If the layer contains a time dimension,
-    values are aggregated per variable before correlation is computed.
+    Computes pairwise correlations between selected variables from layer and visualizes them as a chord diagram.
+    If the layer contains a time dimension, values are aggregated per variable before correlation is computed.
 
     Args:
         edata: Central data object.
@@ -166,13 +156,9 @@ def plot_variable_dependencies(
         agg: How to aggregate time dimension: "mean", "last" or "first".
         correction_method: Multiple testing correction method:
                     * `'bonferroni'` conservative Bonferroni correction.
-
                     * `'fdr_bh'` Benjamini-Hochberg false discovery rate (FDR) control.
-
                     * `'fdr_tsbh'` two-stage Benjamini-Hochberg, better calibrated when many variables are truly correlated.
-
                     * `'holm'` Holm-Bonferroni correction.
-
                     * `'none'` no multiple-testing correction.
         alpha: Significance threshold after correction.
         min_correlation: Minimum absolute correlation to show a chord.
@@ -194,12 +180,11 @@ def plot_variable_dependencies(
         ... )
 
         .. image:: /_static/docstring_previews/variable_dependencies_chord.png
-
     """
     if not 0 <= min_correlation <= 1:
         raise ValueError(f"min_correlation must be between 0 and 1, got {min_correlation}")
 
-    corr_df, _, sig_df = ep.pp.compute_variable_correlations(
+    corr_df, _, sig_df = ep.pp.variable_correlations(
         edata=edata,
         layer=layer,
         var_names=var_names,
