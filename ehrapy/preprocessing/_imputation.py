@@ -30,7 +30,6 @@ if TYPE_CHECKING:
 
 
 @use_ehrdata(deprecated_after="1.0.0")
-@function_2D_only()
 @spinner("Performing explicit impute")
 def explicit_impute(
     edata: EHRData | AnnData,
@@ -74,13 +73,13 @@ def explicit_impute(
     X = edata.X if layer is None else edata.layers[layer]
 
     if isinstance(replacement, int) or isinstance(replacement, str):
-        _warn_imputation_threshold(edata, var_names=list(edata.var_names), threshold=warning_threshold)
+        _warn_imputation_threshold(edata, var_names=list(edata.var_names), threshold=warning_threshold, layer=layer)
     else:
-        _warn_imputation_threshold(edata, var_names=replacement.keys(), threshold=warning_threshold)  # type: ignore
+        _warn_imputation_threshold(edata, var_names=replacement.keys(), threshold=warning_threshold, layer=layer)  # type: ignore
 
     # 1: Replace all missing values with the specified value
     if isinstance(replacement, int | str):
-        _replace_explicit(X, replacement, impute_empty_strings)
+        X = _replace_explicit(X, replacement, impute_empty_strings)
 
     # 2: Replace all missing values in a subset of columns with a specified value per column or a default value, when the column is not explicitly named
     elif isinstance(replacement, dict):
@@ -110,6 +109,7 @@ def _replace_explicit(arr, replacement: str | int, impute_empty_strings: bool) -
 
 
 @_replace_explicit.register(np.ndarray)
+@_apply_over_time_axis
 def _(arr: np.ndarray, replacement: str | int, impute_empty_strings: bool) -> np.ndarray:
     """Replace one column or whole X with a value where missing values are stored."""
     if not impute_empty_strings:  # pragma: no cover
@@ -121,6 +121,7 @@ def _(arr: np.ndarray, replacement: str | int, impute_empty_strings: bool) -> np
 
 
 @_replace_explicit.register(DaskArray)
+@_apply_over_time_axis
 def _(arr: DaskArray, replacement: str | int, impute_empty_strings: bool) -> DaskArray:
     """Replace one column or whole X with a value where missing values are stored."""
     import dask.array as da

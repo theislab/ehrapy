@@ -414,10 +414,54 @@ def test_explicit_impute_array_types(impute_num_edata, array_type, expected_erro
             explicit_impute(impute_num_edata, replacement=1011, copy=True)
 
 
-def test_explicit_impute_3D_edata(edata_blob_small):
-    explicit_impute(edata_blob_small, replacement=1011, layer="layer_2")
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
-        explicit_impute(edata_blob_small, replacement=1011, layer=DEFAULT_TEM_LAYER_NAME)
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
+def test_explicit_impute_3D_edata(edata_mini_3D_missing_values, array_type):
+    edata_mini_3D_missing_values.layers[DEFAULT_TEM_LAYER_NAME] = array_type(
+        edata_mini_3D_missing_values.layers[DEFAULT_TEM_LAYER_NAME]
+    )
+    edata_imputed = explicit_impute(
+        edata_mini_3D_missing_values, replacement=1011, layer=DEFAULT_TEM_LAYER_NAME, copy=True
+    )
+    layer_after = edata_imputed.layers[DEFAULT_TEM_LAYER_NAME]
+
+    _base_check_imputation(
+        edata_mini_3D_missing_values,
+        edata_imputed,
+        before_imputation_layer=DEFAULT_TEM_LAYER_NAME,
+        after_imputation_layer=DEFAULT_TEM_LAYER_NAME,
+    )
+
+    # manually check if the NaNs are replaced with replacement value
+    assert layer_after[0, 1, 1] == 1011
+    assert layer_after[2, 2, 1] == 1011
+    assert layer_after[3, 2, 1] == 1011
+    assert layer_after[0, 5, 1] == 1011
+    assert layer_after[2, 4, 0] == 1011
+
+
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
+def test_explicit_impute_3D_edata_cat(edata_mini_3D_missing_values, array_type):
+    edata_mini_3D_missing_values.layers[DEFAULT_TEM_LAYER_NAME] = array_type(
+        edata_mini_3D_missing_values.layers[DEFAULT_TEM_LAYER_NAME]
+    )
+    edata_imputed = explicit_impute(
+        edata_mini_3D_missing_values,
+        replacement={"4": "REPLACED", "5": "REPLACED"},
+        layer=DEFAULT_TEM_LAYER_NAME,
+        copy=True,
+    )
+    layer_after = edata_imputed.layers[DEFAULT_TEM_LAYER_NAME]
+    _base_check_imputation(
+        edata_mini_3D_missing_values,
+        edata_imputed,
+        imputed_var_names=("4", "5"),
+        before_imputation_layer=DEFAULT_TEM_LAYER_NAME,
+        after_imputation_layer=DEFAULT_TEM_LAYER_NAME,
+    )
+
+    # manually check if the NaNs are replaced with replacement value in categorical columns
+    assert layer_after[0, 5, 1] == "REPLACED"
+    assert layer_after[2, 4, 0] == "REPLACED"
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
