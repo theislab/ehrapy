@@ -484,6 +484,33 @@ def test_explicit_impute_subset(impute_edata, array_type):
     assert np.sum([edata_imputed.X == "REPLACED"]) == 1
 
 
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
+def test_explicit_impute_timepoints(edata_mini_3D_missing_values, array_type):
+    edata_mini_3D_missing_values.layers[DEFAULT_TEM_LAYER_NAME] = array_type(
+        edata_mini_3D_missing_values.layers[DEFAULT_TEM_LAYER_NAME]
+    )
+    edata_imputed = explicit_impute(
+        edata_mini_3D_missing_values,
+        replacement=[1, 2],
+        layer=DEFAULT_TEM_LAYER_NAME,
+        copy=True,
+    )
+    layer_after = edata_imputed.layers[DEFAULT_TEM_LAYER_NAME]
+    _base_check_imputation(
+        edata_mini_3D_missing_values,
+        edata_imputed,
+        before_imputation_layer=DEFAULT_TEM_LAYER_NAME,
+        after_imputation_layer=DEFAULT_TEM_LAYER_NAME,
+    )
+
+    # manually check if the NaNs are replaced with different replacement values in different timepoints
+    assert layer_after[0, 1, 1] == 2
+    assert layer_after[2, 2, 1] == 2
+    assert layer_after[3, 2, 1] == 2
+    assert layer_after[0, 5, 1] == 2
+    assert layer_after[2, 4, 0] == 1
+
+
 def test_warning(impute_num_edata):
     warning_results = _warn_imputation_threshold(impute_num_edata, threshold=20, var_names=None)
     assert warning_results == {"col1": 25, "col3": 50}
