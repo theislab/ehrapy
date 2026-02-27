@@ -33,7 +33,7 @@ if TYPE_CHECKING:
 @spinner("Performing explicit impute")
 def explicit_impute(
     edata: EHRData | AnnData,
-    replacement: (str | int) | (dict[str, str | int]) | (list[int]),
+    replacement: (str | int) | (dict[str, str | int]) | (list[int | str]),
     *,
     layer: str | None = None,
     impute_empty_strings: bool = True,
@@ -75,7 +75,7 @@ def explicit_impute(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.ehrdata_blobs(n_variables=10, n_observations=10, base_timepoints=2, missing_values=0.5)
-        >>> ep.pp.explicit_impute(edata, replacement=[1, 2])
+        >>> ep.pp.explicit_impute(edata, replacement=[1, 2], layer="tem_data")
     """
     if copy:
         edata = edata.copy()
@@ -85,12 +85,12 @@ def explicit_impute(
     if isinstance(replacement, int) or isinstance(replacement, str):
         _warn_imputation_threshold(edata, var_names=list(edata.var_names), threshold=warning_threshold, layer=layer)
     elif isinstance(replacement, list):
-        _warn_imputation_threshold(edata, var_names=list(replacement), threshold=warning_threshold, layer=layer)
+        _warn_imputation_threshold(edata, var_names=list(edata.var_names), threshold=warning_threshold, layer=layer)
     else:
         _warn_imputation_threshold(edata, var_names=replacement.keys(), threshold=warning_threshold, layer=layer)  # type: ignore
 
     # 1: Replace all missing values with the specified value
-    if isinstance(replacement, int | str):
+    if isinstance(replacement, int) or isinstance(replacement, str):
         X = _replace_explicit(X, replacement, impute_empty_strings)
 
     # 2: Replace all missing values in a subset of columns with a specified value per column or a default value, when the column is not explicitly named
