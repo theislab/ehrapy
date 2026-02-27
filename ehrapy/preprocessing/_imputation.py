@@ -42,7 +42,7 @@ def explicit_impute(
 ) -> EHRData | AnnData | None:
     """Replaces all missing values in all columns or a subset of columns specified by the user with the passed replacement value.
 
-    There are two scenarios to cover:
+    There are three scenarios to cover:
     1. Replace all missing values with the specified value.
     2. Replace all missing values in a subset of columns with a specified value per column.
     3. Replace all missing values with a different value per timepoint.
