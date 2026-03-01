@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v0.14.0
+
+### 🧰 Maintenance
+
+* continuous values don't repeat title in CohortTracker's barplot ([#1021](https://github.com/theislab/ehrapy/pull/1021)) @sueoglu
+
+
 ## v0.13.1
 
 ### 🧰 Maintenance

@@ -236,7 +236,9 @@ class CohortTracker:
         Examples:
                 >>> import ehrdata as ed
                 >>> import ehrapy as ep
-                >>> edata = ed.dt.diabetes_130_fairlearn(columns_obs_only=["gender", "race", "num_procedures"])
+                >>> edata = ed.dt.diabetes_130_fairlearn(
+                ...     columns_obs_only=["gender", "race", "num_procedures", "number_diagnoses"]
+                ... )
                 >>> cohort_tracker = ep.tl.CohortTracker(edata, categorical=["gender", "race"])
                 >>> cohort_tracker(edata, "Initial Cohort")
                 >>> edata = edata[:1000]
@@ -247,11 +249,9 @@ class CohortTracker:
                 ...     yticks_labels={
                 ...         "race": "Race [%]",
                 ...         "gender": "Gender [%]",
-                ...         "num_procedures": "#Procedures [mean (stdev)]",
                 ...     },
                 ...     legend_labels={
                 ...         "Unknown/Invalid": "Unknown",
-                ...         "num_procedures": "#Procedures",
                 ...     },
                 ...     legend_kwargs={"bbox_to_anchor": (1, 1.4)},
                 ... )
