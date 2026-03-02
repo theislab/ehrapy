@@ -8,6 +8,8 @@ import pandas as pd
 from scipy import stats
 from statsmodels.stats.multitest import multipletests
 
+from ehrapy._compat import nanmean_array_api
+
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
@@ -50,8 +52,9 @@ def _aggregate_variable_values(
     else:
         n_obs, n_var, n_time = mtx.shape
         if agg == "mean":
-            mtx_3d = array_api_compat.numpy.asarray(mtx[:, var_indices, :])
-            mtx_2d_np = np.nanmean(mtx_3d, axis=2)
+            mtx_3d = xp.astype(mtx[:, var_indices, :], xp.float64)
+            mtx_2d = nanmean_array_api(xp, mtx_3d, axes=2)
+            mtx_2d_np = array_api_compat.numpy.asarray(mtx_2d)
             df = pd.DataFrame(mtx_2d_np, columns=var_names, index=edata.obs_names)
         elif agg == "last" or agg == "first":
             mtx_sub = mtx[:, var_indices, :]
