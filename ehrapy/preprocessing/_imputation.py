@@ -85,6 +85,8 @@ def explicit_impute(
     if isinstance(replacement, int) or isinstance(replacement, str):
         _warn_imputation_threshold(edata, var_names=list(edata.var_names), threshold=warning_threshold, layer=layer)
     elif isinstance(replacement, list):
+        if X.ndim != 3:
+            raise ValueError("List replacement is only supported for 3D data.")
         _warn_imputation_threshold(edata, var_names=list(edata.var_names), threshold=warning_threshold, layer=layer)
     else:
         _warn_imputation_threshold(edata, var_names=replacement.keys(), threshold=warning_threshold, layer=layer)  # type: ignore
@@ -106,8 +108,6 @@ def explicit_impute(
     # 3: Replace all missing values in each timepoint with the different value
     elif isinstance(replacement, list):
         n_time = edata.shape[2] if edata.layers[layer].ndim == 3 else None
-        if n_time is None:
-            raise ValueError("List replacement is only supported for 3D data.")
         if len(replacement) != n_time:
             raise ValueError(
                 f"Length of replacement list ({len(replacement)}) must match number of timepoints ({n_time})."

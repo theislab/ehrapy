@@ -511,6 +511,13 @@ def test_explicit_impute_timepoints(edata_mini_3D_missing_values, array_type):
     assert layer_after[2, 4, 0] == 1
 
 
+def test_explicit_impute_error(impute_edata, edata_mini_3D_missing_values):
+    with pytest.raises(ValueError, match="List replacement is only supported for 3D data"):
+        explicit_impute(impute_edata, replacement=[1, 2])
+    with pytest.raises(ValueError, match="must match number of timepoints"):
+        explicit_impute(edata_mini_3D_missing_values, replacement=[1, 2, 3], layer=DEFAULT_TEM_LAYER_NAME)
+
+
 def test_warning(impute_num_edata):
     warning_results = _warn_imputation_threshold(impute_num_edata, threshold=20, var_names=None)
     assert warning_results == {"col1": 25, "col3": 50}
