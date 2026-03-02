@@ -290,6 +290,9 @@ def nanmedian_array_api(xp, arr):
     Computes the median for each feature across all patients and time steps
     for a 3D array of shape ``(n_obs, n_vars, n_time)``.
     """
+    if arr.ndim == 2:
+        arr = xp.reshape(arr, (arr.shape[0], arr.shape[1], 1))
+
     n_obs, n_vars, n_time = arr.shape
     arr_flat = xp.reshape(xp.permute_dims(arr, (1, 0, 2)), (n_vars, -1))
     medians = []

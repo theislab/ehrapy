@@ -5,6 +5,7 @@ from functools import singledispatch
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
+import array_api_compat
 import numpy as np
 import pandas as pd
 from ehrdata._logger import logger
@@ -16,6 +17,9 @@ from ehrapy._compat import (
     _apply_over_time_axis,
     _raise_array_type_not_implemented,
     function_2D_only,
+    nanmean_array_api,
+    nanmedian_array_api,
+    nanstd_array_api,
     use_ehrdata,
 )
 from ehrapy.preprocessing._encoding import _get_encoded_features
@@ -425,21 +429,18 @@ def _compute_var_metrics(
 
     try:
         # Calculate statistics for non-categorical variables
-        var_metrics.loc[non_categorical_indices, "mean"] = np.nanmean(
-            mtx[:, non_categorical_indices].astype(np.float64), axis=0
-        )
-        var_metrics.loc[non_categorical_indices, "median"] = np.nanmedian(
-            mtx[:, non_categorical_indices].astype(np.float64), axis=0
-        )
-        var_metrics.loc[non_categorical_indices, "standard_deviation"] = np.nanstd(
-            mtx[:, non_categorical_indices].astype(np.float64), axis=0
-        )
-        var_metrics.loc[non_categorical_indices, "min"] = np.nanmin(
-            mtx[:, non_categorical_indices].astype(np.float64), axis=0
-        )
-        var_metrics.loc[non_categorical_indices, "max"] = np.nanmax(
-            mtx[:, non_categorical_indices].astype(np.float64), axis=0
-        )
+        xp = array_api_compat.array_namespace(mtx)
+        sub = xp.astype(mtx[:, non_categorical_indices], xp.float64)
+
+        nan_mask = xp.isnan(sub)
+        sub_for_min = xp.where(nan_mask, xp.full_like(sub, xp.inf), sub)
+        sub_for_max = xp.where(nan_mask, xp.full_like(sub, -xp.inf), sub)
+
+        var_metrics.loc[non_categorical_indices, "mean"] = np.asarray(nanmean_array_api(xp, sub, axes=0))
+        var_metrics.loc[non_categorical_indices, "median"] = np.asarray(nanmedian_array_api(xp, sub))
+        var_metrics.loc[non_categorical_indices, "standard_deviation"] = np.asarray(nanstd_array_api(xp, sub, axes=0))
+        var_metrics.loc[non_categorical_indices, "min"] = np.asarray(xp.min(sub_for_min, axis=0))
+        var_metrics.loc[non_categorical_indices, "max"] = np.asarray(xp.max(sub_for_max, axis=0))
 
         # Calculate IQR and define IQR outliers
         q1 = np.nanpercentile(mtx[:, non_categorical_indices], 25, axis=0)
