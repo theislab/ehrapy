@@ -109,5 +109,5 @@ Partially overlaps with dataset integration. Note that a simple batch correction
     :toctree: preprocessing
     :nosignatures:
 
-    preprocessing.compute_variable_correlations
+    preprocessing.variable_correlations
 ```
