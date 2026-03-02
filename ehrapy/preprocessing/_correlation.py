@@ -14,17 +14,20 @@ if TYPE_CHECKING:
     from ehrdata import EHRData
 
 
-def _extract_variable_values(
+def _aggregate_variable_values(
     edata: EHRData,
-    layer: str,
+    layer: str | None = None,
     var_names: Sequence[str] | None = None,
     agg: Literal["mean", "last", "first"] = "mean",
 ) -> pd.DataFrame:
-    """Extract variable values from a EHRData layer aggregating over time with specified aggregation method."""
-    if layer not in edata.layers:
-        raise KeyError(f"Layer {layer} not found in edata.layers. Available: {edata.layers.keys()}")
+    """Aggregate variable values from a EHRData layer over time with specified aggregation method."""
+    if layer is not None:
+        if layer not in edata.layers:
+            raise KeyError(f"Layer {layer} not found in edata.layers. Available: {edata.layers.keys()}")
+        mtx = edata.layers[layer]
+    else:
+        mtx = edata.X
 
-    mtx = edata.layers[layer]
     xp = array_api_compat.array_namespace(mtx)
 
     if var_names is None:
@@ -81,7 +84,7 @@ def _extract_variable_values(
 def variable_correlations(
     edata: EHRData,
     *,
-    layer: str,
+    layer: str | None = None,
     var_names: Sequence[str] | None = None,
     method: Literal["spearman", "pearson", "kendall"] = "pearson",
     agg: Literal["mean", "last", "first"] = "mean",
@@ -96,7 +99,7 @@ def variable_correlations(
 
     Args:
         edata: Central data object.
-        layer: Layer to extract data from.
+        layer: Layer to extract data from. If None, `.X` will be used.
         var_names: List of variable names to compute correlation of. If None, uses all numeric variables.
         method: Correlation method, "spearman", "kendall" or "pearson".
         agg: How to aggregate time dimension: "mean", "last" or "first".
@@ -115,11 +118,11 @@ def variable_correlations(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.ehrdata_blobs(n_variables=10, n_centers=5, n_observations=200, base_timepoints=3)
-        >>> corr, pval, sig = ep.tl.compute_variable_correlations(
+        >>> corr, pval, sig = ep.pp.compute_variable_correlations(
         ...     edata, layer="tem_data", method="pearson", agg="mean", correction_method="fdr_bh", alpha=0.02
         ... )
     """
-    df = _extract_variable_values(edata, layer=layer, var_names=var_names, agg=agg)
+    df = _aggregate_variable_values(edata, layer=layer, var_names=var_names, agg=agg)
 
     numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
     if len(numeric_cols) < 2:
