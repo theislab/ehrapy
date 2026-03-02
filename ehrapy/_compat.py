@@ -321,3 +321,39 @@ def nanstd_array_api(xp, arr, axes):
     diff = xp.where(nan_mask, xp.zeros_like(arr), arr - xp.expand_dims(mean, axis=axes))
     count = xp.sum(xp.astype(~nan_mask, arr.dtype), axis=axes)
     return xp.sqrt(xp.sum(diff**2, axis=axes) / count)
+
+
+def nanmin_array_api(xp, arr, axis):
+    """Compute min ignoring NaN values using Array API operations.
+
+    Returns NaN for slices where all values are NaN.
+    """
+    nan_mask = xp.isnan(arr)
+
+    # Replace NaNs with +inf so they don't affect min
+    arr_for_min = xp.where(nan_mask, xp.full_like(arr, xp.inf), arr)
+    minv = xp.min(arr_for_min, axis=axis)
+
+    # Count non NaN entries per slice
+    count = xp.sum(xp.astype(~nan_mask, xp.int64), axis=axis)
+    nan_scalar = xp.asarray(float("nan"), dtype=arr.dtype)
+
+    return xp.where(count == 0, nan_scalar, minv)
+
+
+def nanmax_array_api(xp, arr, axis):
+    """Compute max ignoring NaN values using Array API operations.
+
+    Returns NaN for slices where all values are NaN.
+    """
+    nan_mask = xp.isnan(arr)
+
+    # Replace NaNs with -inf so they don't affect max
+    arr_for_max = xp.where(nan_mask, xp.full_like(arr, -xp.inf), arr)
+    maxv = xp.max(arr_for_max, axis=axis)
+
+    # Count non NaN entries per slice
+    count = xp.sum(xp.astype(~nan_mask, xp.int64), axis=axis)
+    nan_scalar = xp.asarray(float("nan"), dtype=arr.dtype)
+
+    return xp.where(count == 0, nan_scalar, maxv)
