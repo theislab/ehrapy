@@ -29,8 +29,8 @@ For most tools and for some preprocessing functions, you will find a plotting fu
     plot.timeseries
     plot.sankey_diagram
     plot.sankey_diagram_time
-    plot.plot_variable_correlations
-    plot.plot_variable_dependencies
+    plot.variable_correlations
+    plot.variable_dependencies
 ```
 
 ## Quality Control and missing values

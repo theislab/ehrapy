@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from ehrdata import EHRData
 
 
-def plot_variable_correlations(
+def variable_correlations(
     edata: EHRData,
     *,
     layer: str,
@@ -62,7 +62,7 @@ def plot_variable_correlations(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.ehrdata_blobs(n_variables=10, n_centers=5, n_observations=200, base_timepoints=3)
-        >>> ep.pl.plot_variable_correlations(
+        >>> ep.pl.variable_correlations(
         ...     edata, layer="tem_data", method="pearson", agg="mean", correction_method="fdr_bh", width=700
         ... )
 
@@ -127,7 +127,7 @@ def plot_variable_correlations(
     return heatmap
 
 
-def plot_variable_dependencies(
+def variable_dependencies(
     edata: EHRData,
     *,
     layer: str,
@@ -136,7 +136,7 @@ def plot_variable_dependencies(
     agg: Literal["mean", "last", "first"] = "mean",
     correction_method: Literal["bonferroni", "fdr_bh", "fdr_tsbh", "holm", "none"] = "bonferroni",
     alpha: float = 0.05,
-    min_correlation: float = 0.3,
+    abs_correlation_threshold: float = 0.3,
     only_significant: bool = True,
     width: int = 600,
     height: int = 600,
@@ -161,7 +161,7 @@ def plot_variable_dependencies(
                     * `'holm'` Holm-Bonferroni correction.
                     * `'none'` no multiple-testing correction.
         alpha: Significance threshold after correction.
-        min_correlation: Minimum absolute correlation to show a chord.
+        abs_correlation_threshold: Minimum absolute correlation to show a chord.
         only_significant: If True, only show significant correlations.
         width: Plot width in pixels.
         height: Plot height in pixels.
@@ -175,14 +175,14 @@ def plot_variable_dependencies(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.ehrdata_blobs(n_variables=10, n_centers=5, n_observations=200, base_timepoints=3)
-        >>> ep.pl.plot_variable_dependencies(
+        >>> ep.pl.variable_dependencies(
         ...     edata, layer="tem_data", method="pearson", agg="mean", correction_method="fdr_bh"
         ... )
 
         .. image:: /_static/docstring_previews/variable_dependencies_chord.png
     """
-    if not 0 <= min_correlation <= 1:
-        raise ValueError(f"min_correlation must be between 0 and 1, got {min_correlation}")
+    if not 0 <= abs_correlation_threshold <= 1:
+        raise ValueError(f"min_correlation must be between 0 and 1, got {abs_correlation_threshold}")
 
     corr_df, _, sig_df = ep.pp.variable_correlations(
         edata=edata,
@@ -213,13 +213,13 @@ def plot_variable_dependencies(
     if only_significant:
         edges_df = edges_df[edges_df["significant"]]
 
-    edges_df = edges_df[edges_df["value"] >= min_correlation]
+    edges_df = edges_df[edges_df["value"] >= abs_correlation_threshold]
     edges_df = edges_df[["source", "target", "value", "correlation"]].reset_index(drop=True)
 
     if len(edges_df) == 0:
         raise ValueError(
-            f"No correlations meet criteria (minimum correlation to plot = {min_correlation})."
-            f"\nTry lowering min_correlation or setting only_significant=False."
+            f"No correlations meet criteria (minimum absolute correlation to plot = {abs_correlation_threshold})."
+            f"\nTry lowering abs_correlation_threshold or setting only_significant=False."
         )
 
     nodes_df = pd.DataFrame({"index": range(len(variables)), "name": variables})

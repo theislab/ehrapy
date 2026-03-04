@@ -19,9 +19,10 @@ if TYPE_CHECKING:
 def _aggregate_variable_values(
     edata: EHRData,
     layer: str | None = None,
+    *,
     var_names: Sequence[str] | None = None,
     agg: Literal["mean", "last", "first"] = "mean",
-) -> pd.DataFrame:
+) -> tuple[np.ndarray, Sequence[str]]:
     """Aggregate variable values from a EHRData layer over time with specified aggregation method."""
     if layer is not None:
         if layer not in edata.layers:
@@ -47,7 +48,7 @@ def _aggregate_variable_values(
         n_obs, n_var = mtx.shape
         mtx_2d = mtx[:, var_indices]
         mtx_2d_np = array_api_compat.numpy.asarray(mtx_2d)
-        df = pd.DataFrame(mtx_2d_np, columns=var_names, index=edata.obs_names)
+        pd.DataFrame(mtx_2d_np, columns=var_names, index=edata.obs_names)
 
     else:
         n_obs, n_var, n_time = mtx.shape
@@ -55,7 +56,7 @@ def _aggregate_variable_values(
             mtx_3d = xp.astype(mtx[:, var_indices, :], xp.float64)
             mtx_2d = nanmean_array_api(xp, mtx_3d, axes=2)
             mtx_2d_np = array_api_compat.numpy.asarray(mtx_2d)
-            df = pd.DataFrame(mtx_2d_np, columns=var_names, index=edata.obs_names)
+            # df = pd.DataFrame(mtx_2d_np, columns=var_names, index=edata.obs_names)
         elif agg == "last" or agg == "first":
             mtx_sub = mtx[:, var_indices, :]
             mtx_sub = xp.astype(mtx_sub, xp.float64)
@@ -75,13 +76,13 @@ def _aggregate_variable_values(
 
             is_valid_np = array_api_compat.numpy.asarray(is_valid)
             mtx_2d_np = np.where(is_valid_np, mtx_2d_np, np.nan)
-            df = pd.DataFrame(mtx_2d_np, columns=var_names, index=edata.obs_names)
+            # df = pd.DataFrame(mtx_2d_np, columns=var_names, index=edata.obs_names)
         else:
             raise ValueError(f"Unknown aggregation method: {agg}")
 
-    df = df.apply(pd.to_numeric, errors="coerce")
+    # df = df.apply(pd.to_numeric, errors="coerce")
 
-    return df
+    return mtx_2d_np, var_names
 
 
 def variable_correlations(
@@ -125,7 +126,9 @@ def variable_correlations(
         ...     edata, layer="tem_data", method="pearson", agg="mean", correction_method="fdr_bh", alpha=0.02
         ... )
     """
-    df = _aggregate_variable_values(edata, layer=layer, var_names=var_names, agg=agg)
+    arr, var_names = _aggregate_variable_values(edata, layer, var_names=var_names, agg=agg)
+    df = pd.DataFrame(arr, columns=var_names, index=edata.obs_names)
+    df = df.apply(pd.to_numeric, errors="coerce")
 
     numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
     if len(numeric_cols) < 2:
@@ -145,8 +148,8 @@ def variable_correlations(
 
     for i in range(n_vars):
         for j in range(i + 1, n_vars):
-            x = df.iloc[:, i].values
-            y = df.iloc[:, j].values
+            x = arr[:, i]
+            y = arr[:, j]
 
             mask = ~(np.isnan(x) | np.isnan(y))
 
