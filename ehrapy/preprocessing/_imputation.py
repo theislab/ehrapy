@@ -30,7 +30,6 @@ if TYPE_CHECKING:
 
 
 @use_ehrdata(deprecated_after="1.0.0")
-@spinner("Performing explicit impute")
 def explicit_impute(
     edata: EHRData | AnnData,
     replacement: (str | int) | (dict[str, str | int]) | (list[int | str]),
