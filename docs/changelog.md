@@ -8,6 +8,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 * continuous values don't repeat title in CohortTracker's barplot ([#1021](https://github.com/theislab/ehrapy/pull/1021)) @sueoglu
 
+### 🚀 Features
+
+* Longitudinal explicit impute `ep.pp.explicit_impute()` extended to enable the users to assign different imputation values per timepoint ([#1023](https://github.com/theislab/ehrapy/pull/1023)) @sueoglu
+
 
 ## v0.13.1
 
