@@ -76,6 +76,18 @@ def explicit_impute(
         >>> import ehrapy as ep
         >>> edata = ed.dt.ehrdata_blobs(n_variables=10, n_observations=10, base_timepoints=2, missing_values=0.5)
         >>> ep.pp.explicit_impute(edata, replacement=[1, 2], layer="tem_data")
+
+        Example Output:
+
+        >>> edata.layers["tem_data"][0, :, 0]
+
+        array([ 1.        ,  1.        ,  1.        ,  1.        ,  1.        ,
+        0.021176  , -5.25906637,  1.        ,  1.        ,  1.        ])
+
+        >>> edata.layers["tem_data"][0, :, 1]
+
+        array([ 2.        , 10.30041167, -3.6883699 ,  2.        ,  2.        ,
+        0.09374899,  2.        , -3.77042107,  2.        ,  2.45151241])
     """
     if copy:
         edata = edata.copy()
