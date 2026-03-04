@@ -32,7 +32,7 @@ if TYPE_CHECKING:
 @use_ehrdata(deprecated_after="1.0.0")
 def explicit_impute(
     edata: EHRData | AnnData,
-    replacement: (str | int) | (dict[str, str | int]) | (list[int | str]),
+    replacement: (str | int | float) | (dict[str, str | int | float]) | (list[str | int | float]),
     *,
     layer: str | None = None,
     impute_empty_strings: bool = True,
@@ -90,7 +90,7 @@ def explicit_impute(
 
     X = edata.X if layer is None else edata.layers[layer]
 
-    if isinstance(replacement, int) or isinstance(replacement, str):
+    if isinstance(replacement, int) or isinstance(replacement, str) or isinstance(replacement, float):
         _warn_imputation_threshold(edata, var_names=list(edata.var_names), threshold=warning_threshold, layer=layer)
     elif isinstance(replacement, list):
         if X.ndim != 3:
@@ -100,7 +100,7 @@ def explicit_impute(
         _warn_imputation_threshold(edata, var_names=replacement.keys(), threshold=warning_threshold, layer=layer)  # type: ignore
 
     # 1: Replace all missing values with the specified value
-    if isinstance(replacement, int) or isinstance(replacement, str):
+    if isinstance(replacement, int) or isinstance(replacement, str) or isinstance(replacement, float):
         X = _replace_explicit(X, replacement, impute_empty_strings)
 
     # 2: Replace all missing values in a subset of columns with a specified value per column or a default value, when the column is not explicitly named
@@ -137,13 +137,13 @@ def explicit_impute(
 
 
 @singledispatch
-def _replace_explicit(arr, replacement: str | int, impute_empty_strings: bool) -> None:
+def _replace_explicit(arr, replacement: str | int | float, impute_empty_strings: bool) -> None:
     _raise_array_type_not_implemented(_replace_explicit, type(arr))
 
 
 @_replace_explicit.register(np.ndarray)
 @_apply_over_time_axis
-def _(arr: np.ndarray, replacement: str | int, impute_empty_strings: bool) -> np.ndarray:
+def _(arr: np.ndarray, replacement: str | int | float, impute_empty_strings: bool) -> np.ndarray:
     """Replace one column or whole X with a value where missing values are stored."""
     if not impute_empty_strings:  # pragma: no cover
         impute_conditions = pd.isnull(arr)
@@ -155,7 +155,7 @@ def _(arr: np.ndarray, replacement: str | int, impute_empty_strings: bool) -> np
 
 @_replace_explicit.register(DaskArray)
 @_apply_over_time_axis
-def _(arr: DaskArray, replacement: str | int, impute_empty_strings: bool) -> DaskArray:
+def _(arr: DaskArray, replacement: str | int | float, impute_empty_strings: bool) -> DaskArray:
     """Replace one column or whole X with a value where missing values are stored."""
     import dask.array as da
 
@@ -167,7 +167,7 @@ def _(arr: DaskArray, replacement: str | int, impute_empty_strings: bool) -> Das
     return arr
 
 
-def _extract_impute_value(replacement: dict[str, str | int], column_name: str) -> str | int | None:
+def _extract_impute_value(replacement: dict[str, str | int | float], column_name: str) -> str | int | float | None:
     """Extract the replacement value for a given column in the data object.
 
     Returns:
