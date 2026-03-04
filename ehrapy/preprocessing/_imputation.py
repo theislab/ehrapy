@@ -32,7 +32,7 @@ if TYPE_CHECKING:
 @use_ehrdata(deprecated_after="1.0.0")
 def explicit_impute(
     edata: EHRData | AnnData,
-    replacement: (str | int) | (dict[str, str | int]),
+    replacement: (str | int) | (dict[str, str | int]) | (list[int | str]),
     *,
     layer: str | None = None,
     impute_empty_strings: bool = True,
@@ -41,14 +41,17 @@ def explicit_impute(
 ) -> EHRData | AnnData | None:
     """Replaces all missing values in all columns or a subset of columns specified by the user with the passed replacement value.
 
-    There are two scenarios to cover:
+    There are three scenarios to cover:
     1. Replace all missing values with the specified value.
     2. Replace all missing values in a subset of columns with a specified value per column.
+    3. Replace all missing values with a different value per timepoint.
 
     Args:
         edata: Central data object.
         replacement: The value to replace missing values with. If a dictionary is provided, the keys represent column
-                     names and the values represent replacement values for those columns.
+                     names and the values represent replacement values for those columns. If a list with a length of
+                     timepoints is provided, the index of the list represent the timepoint and the values represent the
+                     replacement value for the respective timepoint.
         layer: The layer to impute.
         impute_empty_strings: If True, empty strings are also replaced.
         warning_threshold: Threshold of percentage of missing values to display a warning for.
@@ -65,6 +68,25 @@ def explicit_impute(
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> ep.pp.explicit_impute(edata, replacement=0)
+
+        Replace all missing values in the first timepoint with 1 and all missing values in second timepoint with 2:
+
+        >>> import ehrdata as ed
+        >>> import ehrapy as ep
+        >>> edata = ed.dt.ehrdata_blobs(n_variables=10, n_observations=10, base_timepoints=2, missing_values=0.5)
+        >>> ep.pp.explicit_impute(edata, replacement=[1, 2], layer="tem_data")
+
+        Example Output:
+
+        >>> edata.layers["tem_data"][0, :, 0]
+
+        array([ 1.        ,  1.        ,  1.        ,  1.        ,  1.        ,
+        0.021176  , -5.25906637,  1.        ,  1.        ,  1.        ])
+
+        >>> edata.layers["tem_data"][0, :, 1]
+
+        array([ 2.        , 10.30041167, -3.6883699 ,  2.        ,  2.        ,
+        0.09374899,  2.        , -3.77042107,  2.        ,  2.45151241])
     """
     if copy:
         edata = edata.copy()
@@ -72,13 +94,17 @@ def explicit_impute(
     X = edata.X if layer is None else edata.layers[layer]
 
     if isinstance(replacement, int) or isinstance(replacement, str):
-        _warn_imputation_threshold(edata, var_names=list(edata.var_names), threshold=warning_threshold)
+        _warn_imputation_threshold(edata, var_names=list(edata.var_names), threshold=warning_threshold, layer=layer)
+    elif isinstance(replacement, list):
+        if X.ndim != 3:
+            raise ValueError("List replacement is only supported for 3D data.")
+        _warn_imputation_threshold(edata, var_names=list(edata.var_names), threshold=warning_threshold, layer=layer)
     else:
-        _warn_imputation_threshold(edata, var_names=replacement.keys(), threshold=warning_threshold)  # type: ignore
+        _warn_imputation_threshold(edata, var_names=replacement.keys(), threshold=warning_threshold, layer=layer)  # type: ignore
 
     # 1: Replace all missing values with the specified value
-    if isinstance(replacement, int | str):
-        _replace_explicit(X, replacement, impute_empty_strings)
+    if isinstance(replacement, int) or isinstance(replacement, str):
+        X = _replace_explicit(X, replacement, impute_empty_strings)
 
     # 2: Replace all missing values in a subset of columns with a specified value per column or a default value, when the column is not explicitly named
     elif isinstance(replacement, dict):
@@ -89,6 +115,17 @@ def explicit_impute(
                 X[:, idx : idx + 1] = _replace_explicit(X[:, idx : idx + 1], imputation_value, impute_empty_strings)
             else:
                 logger.warning(f"No replace value passed and found for var [not bold green]{column_name}.")
+
+    # 3: Replace all missing values in each timepoint with the different value
+    elif isinstance(replacement, list):
+        n_time = edata.shape[2] if edata.layers[layer].ndim == 3 else None
+        if len(replacement) != n_time:
+            raise ValueError(
+                f"Length of replacement list ({len(replacement)}) must match number of timepoints ({n_time})."
+            )
+        for time, value in enumerate(replacement):
+            current_slice = X[:, :, time]
+            X[:, :, time] = _replace_explicit(current_slice, value, impute_empty_strings)
     else:
         raise ValueError(  # pragma: no cover
             f"Type {type(replacement)} is not a valid datatype for replacement parameter. Either use int, str or a dict!"
@@ -108,6 +145,7 @@ def _replace_explicit(arr, replacement: str | int, impute_empty_strings: bool) -
 
 
 @_replace_explicit.register(np.ndarray)
+@_apply_over_time_axis
 def _(arr: np.ndarray, replacement: str | int, impute_empty_strings: bool) -> np.ndarray:
     """Replace one column or whole X with a value where missing values are stored."""
     if not impute_empty_strings:  # pragma: no cover
@@ -119,6 +157,7 @@ def _(arr: np.ndarray, replacement: str | int, impute_empty_strings: bool) -> np
 
 
 @_replace_explicit.register(DaskArray)
+@_apply_over_time_axis
 def _(arr: DaskArray, replacement: str | int, impute_empty_strings: bool) -> DaskArray:
     """Replace one column or whole X with a value where missing values are stored."""
     import dask.array as da
