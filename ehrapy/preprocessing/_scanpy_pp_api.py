@@ -7,8 +7,6 @@ import numpy as np
 import scanpy as sc
 import scipy.sparse as sp
 from anndata import AnnData
-from ehrdata._logger import logger
-from ehrdata.core.constants import MISSING_VALUES
 from numpy.typing import NDArray
 
 from ehrapy._compat import function_2D_only, use_ehrdata
