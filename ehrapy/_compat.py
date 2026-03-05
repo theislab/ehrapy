@@ -293,24 +293,30 @@ def nanmedian_array_api(xp, arr):
     if arr.ndim == 2:
         arr = xp.reshape(arr, (arr.shape[0], arr.shape[1], 1))
 
-    n_obs, n_vars, n_time = arr.shape
-    arr_flat = xp.reshape(xp.permute_dims(arr, (1, 0, 2)), (n_vars, -1))
-    medians = []
-    for i in range(n_vars):
-        row = arr_flat[i, :]
-        not_nan = ~xp.isnan(row)
-        n = int(xp.sum(xp.astype(not_nan, xp.float64)))
-        if n == 0:
-            medians.append(float("nan"))
-            continue
-        filled = xp.where(not_nan, row, xp.asarray(float("inf"), dtype=arr.dtype))
-        sorted_row = xp.sort(filled)
-        if n % 2 == 1:
-            medians.append(float(sorted_row[n // 2]))
-        else:
-            medians.append(float((sorted_row[n // 2 - 1] + sorted_row[n // 2]) / 2))
+    # reshape to (n_vars, N)
+    arr = xp.permute_dims(arr, (1, 0, 2))
+    arr = xp.reshape(arr, (arr.shape[0], -1))
 
-    return xp.asarray(medians, dtype=arr.dtype)
+    mask = ~xp.isnan(arr)
+    counts = xp.sum(mask, axis=1)
+
+    # replace NaNs with +inf
+    filled = xp.where(mask, arr, xp.asarray(float("inf"), dtype=arr.dtype))
+
+    sorted_arr = xp.sort(filled, axis=1)
+
+    mid = counts // 2
+    is_odd = counts % 2 == 1
+
+    lower = xp.take_along_axis(sorted_arr, (mid - 1)[:, None], axis=1).squeeze()
+    upper = xp.take_along_axis(sorted_arr, mid[:, None], axis=1).squeeze()
+
+    med = xp.where(
+        counts == 0,
+        xp.asarray(float("nan"), dtype=arr.dtype),
+        xp.where(is_odd, upper, (lower + upper) / 2),
+    )
+    return med
 
 
 def nanstd_array_api(xp, arr, axes):
