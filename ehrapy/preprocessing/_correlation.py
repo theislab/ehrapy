@@ -34,18 +34,12 @@ def _aggregate_variable_values(
 
     xp = array_api_compat.array_namespace(mtx)
 
-    # include only numeric variables
-    if FEATURE_TYPE_KEY in edata.var:  # if edata.var includes feature types
-        numeric_var_names = set(edata.var_names[edata.var[FEATURE_TYPE_KEY] == "numeric"])
-    else:  # if ed.infer_feature_types() hasnt been run beforehand
-        mtx_to_check = edata.layers[layer] if layer is not None else edata.X
-        numeric_var_names = {
-            v
-            for i, v in enumerate(edata.var_names)
-            if np.issubdtype(
-                np.array(mtx_to_check[:, i] if mtx_to_check.ndim == 2 else mtx_to_check[:, i, 0]).dtype, np.number
-            )
-        }
+    # only include numeric or encoded variables
+    numeric_var_names = {
+        v
+        for i, v in enumerate(edata.var_names)
+        if np.issubdtype(np.array(mtx[:, i] if mtx.ndim == 2 else mtx[:, i, 0]).dtype, np.number)
+    }
 
     if var_names is None:
         var_names = [v for v in edata.var_names if v in numeric_var_names]
@@ -109,7 +103,7 @@ def variable_correlations(
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Compute correlation matrix with statistical testing and multiple testing correction.
 
-    This function computes pairwise correlations between numeric variables in the given EHRData object,
+    This function computes pairwise correlations between variables in the given EHRData object,
     automatically handling missing values through pairwise deletion.
     For 3D time-series data, values are aggregated across time before computing correlations.
 
