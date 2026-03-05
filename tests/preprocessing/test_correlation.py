@@ -37,12 +37,15 @@ def test_compute_variable_correlations_aggregation(edata_blobs_timeseries_small,
     assert not np.isnan(corr_df.values).all()
 
 
-def test_compute_variable_correlations_errors(edata_blobs_timeseries_small):
+def test_compute_variable_correlations_errors(edata_blobs_timeseries_small, edata_mini_3D_missing_values):
     edata = edata_blobs_timeseries_small
+    cat_edata = edata_mini_3D_missing_values
     with pytest.raises(KeyError, match="Layer .* not found"):
         ep.pp.variable_correlations(edata=edata, layer="unsupported")
     with pytest.raises(KeyError, match="Variables not found"):
         ep.pp.variable_correlations(edata=edata, layer=DEFAULT_TEM_LAYER_NAME, var_names=["var_0", "nonexistent_var"])
+    with pytest.raises(ValueError, match="Non-numeric variables"):
+        ep.pp.variable_correlations(edata=cat_edata, layer=DEFAULT_TEM_LAYER_NAME, var_names=["5"])
     with pytest.raises(ValueError, match="Unsupported correlation method"):
         ep.pp.variable_correlations(edata=edata, layer=DEFAULT_TEM_LAYER_NAME, method="unsupported")
     with pytest.raises(ValueError, match="Unknown aggregation method"):

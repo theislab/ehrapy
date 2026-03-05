@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Literal
 import array_api_compat
 import numpy as np
 import pandas as pd
+from ehrdata.core.constants import FEATURE_TYPE_KEY
 from scipy import stats
 from statsmodels.stats.multitest import multipletests
 
@@ -33,13 +34,29 @@ def _aggregate_variable_values(
 
     xp = array_api_compat.array_namespace(mtx)
 
+    # include only numeric variables
+    if FEATURE_TYPE_KEY in edata.var:  # if edata.var includes feature types
+        numeric_var_names = set(edata.var_names[edata.var[FEATURE_TYPE_KEY] == "numeric"])
+    else:  # if ed.infer_feature_types() hasnt been run beforehand
+        mtx_to_check = edata.layers[layer] if layer is not None else edata.X
+        numeric_var_names = {
+            v
+            for i, v in enumerate(edata.var_names)
+            if np.issubdtype(
+                np.array(mtx_to_check[:, i] if mtx_to_check.ndim == 2 else mtx_to_check[:, i, 0]).dtype, np.number
+            )
+        }
+
     if var_names is None:
-        var_names = list(edata.var_names)
-    else:
+        var_names = [v for v in edata.var_names if v in numeric_var_names]
+    else:  # when user provides the var_names
         available_vars = set(edata.var_names)
         missing = set(var_names) - available_vars
         if missing:
-            raise KeyError(f"Variables not found: {missing}")
+            raise KeyError(f"Variables not found: {missing}, {available_vars}")
+        non_numeric = set(var_names) - numeric_var_names
+        if non_numeric:
+            raise ValueError(f"Non-numeric variables were requested {non_numeric}")
 
     var_name_to_idx = {v: i for i, v in enumerate(edata.var_names)}
     var_indices = [var_name_to_idx[v] for v in var_names]
@@ -48,7 +65,6 @@ def _aggregate_variable_values(
         n_obs, n_var = mtx.shape
         mtx_2d = mtx[:, var_indices]
         mtx_2d_np = array_api_compat.numpy.asarray(mtx_2d)
-        pd.DataFrame(mtx_2d_np, columns=var_names, index=edata.obs_names)
 
     else:
         n_obs, n_var, n_time = mtx.shape
@@ -56,7 +72,6 @@ def _aggregate_variable_values(
             mtx_3d = xp.astype(mtx[:, var_indices, :], xp.float64)
             mtx_2d = nanmean_array_api(xp, mtx_3d, axes=2)
             mtx_2d_np = array_api_compat.numpy.asarray(mtx_2d)
-            # df = pd.DataFrame(mtx_2d_np, columns=var_names, index=edata.obs_names)
         elif agg == "last" or agg == "first":
             mtx_sub = mtx[:, var_indices, :]
             mtx_sub = xp.astype(mtx_sub, xp.float64)
@@ -76,11 +91,8 @@ def _aggregate_variable_values(
 
             is_valid_np = array_api_compat.numpy.asarray(is_valid)
             mtx_2d_np = np.where(is_valid_np, mtx_2d_np, np.nan)
-            # df = pd.DataFrame(mtx_2d_np, columns=var_names, index=edata.obs_names)
         else:
             raise ValueError(f"Unknown aggregation method: {agg}")
-
-    # df = df.apply(pd.to_numeric, errors="coerce")
 
     return mtx_2d_np, var_names
 
@@ -97,7 +109,7 @@ def variable_correlations(
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Compute correlation matrix with statistical testing and multiple testing correction.
 
-    This function computes pairwise correlations between variables in the given EHRData object,
+    This function computes pairwise correlations between numeric variables in the given EHRData object,
     automatically handling missing values through pairwise deletion.
     For 3D time-series data, values are aggregated across time before computing correlations.
 
@@ -127,15 +139,11 @@ def variable_correlations(
         ... )
     """
     arr, var_names = _aggregate_variable_values(edata, layer, var_names=var_names, agg=agg)
-    df = pd.DataFrame(arr, columns=var_names, index=edata.obs_names)
-    df = df.apply(pd.to_numeric, errors="coerce")
 
-    numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-    if len(numeric_cols) < 2:
+    if arr.shape[1] < 2:
         raise ValueError("For correlation matrix, at least 2 numeric variables are needed.")
 
-    df = df[numeric_cols]
-    n_vars = len(numeric_cols)
+    n_vars = len(var_names)
 
     if method not in {"spearman", "kendall", "pearson"}:
         raise ValueError(f"Unsupported correlation method: {method}")
@@ -173,8 +181,8 @@ def variable_correlations(
             pval_mtx[i, j] = pval
             pval_mtx[j, i] = pval
 
-    corr_df = pd.DataFrame(corr_mtx, index=numeric_cols, columns=numeric_cols)
-    pval_df = pd.DataFrame(pval_mtx, index=numeric_cols, columns=numeric_cols)
+    corr_df = pd.DataFrame(corr_mtx, index=var_names, columns=var_names)
+    pval_df = pd.DataFrame(pval_mtx, index=var_names, columns=var_names)
     # Multiple testing correction
     if correction_method != "none":
         indices = np.triu_indices(n_vars, k=1)
@@ -191,6 +199,6 @@ def variable_correlations(
     else:
         sig_mtx = pval_mtx < alpha
 
-    sig_df = pd.DataFrame(sig_mtx, index=numeric_cols, columns=numeric_cols)
+    sig_df = pd.DataFrame(sig_mtx, index=var_names, columns=var_names)
 
     return corr_df, pval_df, sig_df
