@@ -10,7 +10,6 @@ import numpy as np
 import pandas as pd
 from ehrdata._logger import logger
 from ehrdata.io import to_pandas
-from thefuzz import process
 
 from ehrapy._compat import (
     DaskArray,
@@ -493,163 +492,148 @@ def _compute_var_metrics(
 def qc_lab_measurements(
     edata: EHRData | AnnData,
     *,
-    reference_table: pd.DataFrame | None = None,
-    measurements: list[str] | None = None,
-    unit: Literal["traditional", "SI"] | None = None,
-    threshold: int = 20,
-    age_col: str | None = None,
-    age_range: str | None = None,
-    sex_col: str | None = None,
-    sex: str | None = None,
-    ethnicity_col: str | None = None,
-    ethnicity: str | None = None,
     layer: str | None = None,
+    var_names: list[str] | None = None,
+    method: Literal["quantile", "iqr", "zscore", "modified_zscore"] = "iqr",
+    score_type: Literal["zscore", "iqr_distance", "percentile"] = "zscore",
+    add_flag: bool = True,
+    add_score: bool = True,
+    groupby: str | None = None,
     copy: bool = False,
-    verbose: bool = False,
 ) -> EHRData | AnnData | None:
-    """Examines lab measurements for reference ranges and outliers.
+    """Flag outliers and compute anomaly scores for numeric variables.
 
-    Source:
-        The used reference values were obtained from https://accessmedicine.mhmedical.com/content.aspx?bookid=1069&sectionid=60775149 .
-        This table is compiled from data in the following sources:
+    For each requested variable the function adds up to two columns in
+    ``edata.obs``:
 
-        * Tietz NW, ed. Clinical Guide to Laboratory Tests. 3rd ed. Philadelphia: WB Saunders Co; 1995;
-        * Laposata M. SI Unit Conversion Guide. Boston: NEJM Books; 1992;
-        * American Medical Association Manual of Style: A Guide for Authors and Editors. 9th ed. Chicago: AMA; 1998:486–503. Copyright 1998, American Medical Association;
-        * Jacobs DS, DeMott WR, Oxley DK, eds. Jacobs & DeMott Laboratory Test Handbook With Key Word Index. 5th ed. Hudson, OH: Lexi-Comp Inc; 2001;
-        * Henry JB, ed. Clinical Diagnosis and Management by Laboratory Methods. 20th ed. Philadelphia: WB Saunders Co; 2001;
-        * Kratz A, et al. Laboratory reference values. N Engl J Med. 2006;351:1548–1563; 7) Burtis CA, ed. Tietz Textbook of Clinical Chemistry and Molecular Diagnostics. 5th ed. St. Louis: Elsevier; 2012.
-
-        This version of the table of reference ranges was reviewed and updated by Jessica Franco-Colon, PhD, and Kay Brooks.
-
-    Limitations:
-        * Reference ranges differ between continents, countries and even laboratories (https://informatics.bmj.com/content/28/1/e100419).
-          The default values used here are only one of many options.
-        * Ensure that the values used as input are provided with the correct units. We recommend the usage of SI values.
-        * The reference values pertain to adults. Many of the reference ranges need to be adapted for children.
-        * By default if no gender is provided and no unisex values are available, we use the **male** reference ranges.
-        * The used reference ranges may be biased for ethnicity. Please examine the primary sources if required.
-        * We recommend a glance at https://www.nature.com/articles/s41591-021-01468-6 for the effect of such covariates.
-
-    Additional values:
-        * Interleukin-6 based on https://pubmed.ncbi.nlm.nih.gov/33155686/
-
-    If you want to specify your own table as a Pandas DataFrame please examine the existing default table.
-    Ethnicity and age columns can be added.
-    https://github.com/theislab/ehrapy/blob/main/ehrapy/preprocessing/laboratory_reference_tables/laposata.tsv
+    * ``{var}_outlier`` – boolean flag (``True`` = outlier).
+    * ``{var}_score``   – continuous anomaly score.
 
     Args:
         edata: Central data object.
-        reference_table: A custom DataFrame with reference values. Defaults to the laposata table if not specified.
-        measurements: A list of measurements to check.
-        unit: The unit of the measurements.
-        threshold: Minimum required matching confidence score of the fuzzysearch.
-                   0 = no matches, 100 = all must match.
-        age_col: Column containing age values.
-        age_range: The inclusive age-range to filter for such as 5-99.
-        sex_col: Column containing sex values. Column must contain 'U', 'M' or 'F'.
-        sex: Sex to filter the reference values for. Use U for unisex which uses male values when male and female conflict.
-        ethnicity_col: Column containing ethnicity values.
-        ethnicity: Ethnicity to filter for.
-        layer: Layer containing the matrix to calculate the metrics for.
-        copy: Whether to return a copy.
-        verbose: Whether to have verbose stdout. Notifies user of matched columns and value ranges.
+        var_names: Variables to evaluate.  ``None`` (default) evaluates all
+            variables in ``edata.var_names``.
+        layer: Layer to use instead of ``edata.X``.
+        method: Outlier detection method.
+
+            * ``"iqr"`` – outside [Q1 − 1.5·IQR, Q3 + 1.5·IQR].
+            * ``"quantile"`` – outside [2.5th, 97.5th] percentiles.
+            * ``"zscore"`` – ``|z| > 3``.
+            * ``"modified_zscore"`` – ``|modified z| > 3.5`` (median / MAD).
+        score_type: Continuous score assigned to each observation.
+
+            * ``"zscore"`` – ``(x − mean) / std``.
+            * ``"iqr_distance"`` – ``(x − median) / IQR``.
+            * ``"percentile"`` – percentile rank in [0, 100].
+        add_flag: Whether to add the ``{var}_outlier`` column.
+        add_score: Whether to add the ``{var}_score`` column.
+        groupby: Column in ``edata.obs`` used to stratify the computation so
+            that statistics are calculated within each group independently.
+        copy: If ``True``, return a modified copy; otherwise modify in place.
 
     Returns:
-        `None` if `copy=False` and modifies the passed edata, else returns an updated data object.
+        ``None`` if ``copy=False``, otherwise the updated data object.
 
     Examples:
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
-        >>> ep.pp.qc_lab_measurements(edata, measurements=["potassium_first"], verbose=True)
+        >>> ep.pp.qc_lab_measurements(edata, var_names=["potassium_first"])
     """
     if copy:
         edata = edata.copy()
 
-    preprocessing_dir = Path(__file__).parent.resolve()
-    if reference_table is None:
-        reference_table = pd.read_csv(
-            f"{preprocessing_dir}/laboratory_reference_tables/laposata.tsv", sep="\t", index_col="Measurement"
-        )
+    mtx = edata.X if layer is None else edata.layers[layer]
 
-    for measurement in measurements:
-        best_column_match, score = process.extractOne(
-            query=measurement, choices=reference_table.index, score_cutoff=threshold
-        )
-        if best_column_match is None:
-            logger.warning(f"Unable to find a match for {measurement}")
-            continue
-        if verbose:
-            logger.info(f"Detected '{best_column_match}' for '{measurement}' with score {score}.")
+    if var_names is None:
+        var_names = list(edata.var_names)
 
-        reference_column = "SI Reference Interval" if unit == "SI" else "Traditional Reference Interval"
+    missing = [v for v in var_names if v not in edata.var_names]
+    if missing:
+        raise ValueError(f"Variables not found in edata.var_names: {missing}")
 
-        # Fetch all non None columns from the reference statistics
-        not_none_columns = [col for col in [sex_col, age_col, ethnicity_col] if col is not None]
-        not_none_columns.append(reference_column)
-        reference_values = reference_table.loc[[best_column_match], not_none_columns]
+    if groupby is not None:
+        if groupby not in edata.obs.columns:
+            raise ValueError(f"groupby columns not found in edata.obs: {groupby!r}")
 
-        additional_columns = False
-        if sex_col or age_col or ethnicity_col:  # check if additional columns were provided
-            additional_columns = True
+    var_idx = {name: i for i, name in enumerate(edata.var_names)}
 
-        # Check if multiple reference values occur and no additional information is available:
-        if reference_values.shape[0] > 1 and additional_columns is False:
-            raise ValueError(
-                f"Several options for {best_column_match} reference value are available. Please specify sex, age or "
-                f"ethnicity columns and their values."
-            )
+    for var in var_names:
+        col = np.asarray(mtx[:, var_idx[var]], dtype=float).ravel()
 
-        try:
-            if age_col:
-                min_age, max_age = age_range.split("-")
-                reference_values = reference_values[
-                    (reference_values[age_col].str.split("-").str[0].astype(int) >= int(min_age))
-                    & (reference_values[age_col].str.split("-").str[1].astype(int) <= int(max_age))
-                ]
-            if sex_col:
-                sexes = "U|M" if sex is None else sex
-                reference_values = reference_values[reference_values[sex_col].str.contains(sexes)]
-            if ethnicity_col:
-                reference_values = reference_values[reference_values[ethnicity_col].isin([ethnicity])]
+        if groupby is None:
+            flags, scores = _outlier_flags_and_scores(col, method, score_type)
+        else:
+            flags = np.zeros(len(col), dtype=bool)
+            scores = np.full(len(col), np.nan)
+            groups = edata.obs[groupby]
+            for group_val in groups.unique():
+                mask = (groups == group_val).values
+                g_flags, g_scores = _outlier_flags_and_scores(col[mask], method, score_type)
+                flags[mask] = g_flags
+                scores[mask] = g_scores
 
-            if layer is not None:
-                actual_measurements = edata[:, measurement].layers[layer]
-            else:
-                actual_measurements = edata[:, measurement].X
-        except TypeError:
-            logger.warning(f"Unable to find specified reference values for {measurement}.")
-
-        check = reference_values[reference_column].values
-        check_str: str = np.array2string(check)
-        check_str = check_str.replace("[", "").replace("]", "").replace("'", "")
-        if "<" in check_str:
-            upperbound = float(check_str.replace("<", ""))
-            if verbose:
-                logger.info(f"Using upperbound {upperbound}")
-
-            upperbound_check_results = actual_measurements < upperbound
-            upperbound_check_results_array: np.ndarray = upperbound_check_results.copy()
-            edata.obs[f"{measurement} normal"] = upperbound_check_results_array
-        elif ">" in check_str:
-            lower_bound = float(check_str.replace(">", ""))
-            if verbose:
-                logger.info(f"Using lowerbound {lower_bound}")
-
-            lower_bound_check_results = actual_measurements > lower_bound
-            lower_bound_check_results_array = lower_bound_check_results.copy()
-            edata.obs[f"{measurement} normal"] = lower_bound_check_results_array
-        else:  # "-" range case
-            min_value = float(check_str.split("-")[0])
-            max_value = float(check_str.split("-")[1])
-            if verbose:
-                logger.info(f"Using minimum of {min_value} and maximum of {max_value}")
-
-            range_check_results = (actual_measurements >= min_value) & (actual_measurements <= max_value)
-            range_check_results_array: np.ndarray = range_check_results.copy()
-            edata.obs[f"{measurement} normal"] = range_check_results_array
+        if add_flag:
+            edata.obs[f"{var}_outlier"] = flags
+        if add_score:
+            edata.obs[f"{var}_score"] = scores
 
     return edata if copy else None
+
+
+def _outlier_flags_and_scores(
+    values: np.ndarray,
+    method: str,
+    score_type: str,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Compute outlier flags and scores for a single 1-D numeric array."""
+    nan_mask = np.isnan(values)
+    valid = values[~nan_mask]
+    n = len(valid)
+
+    flags = np.zeros(len(values), dtype=bool)
+    scores = np.full(len(values), np.nan)
+
+    if n < 2:
+        return flags, scores
+
+    # --- outlier flags ---
+    if method == "iqr":
+        q1, q3 = np.percentile(valid, [25, 75])
+        iqr = q3 - q1
+        flags = (values < q1 - 1.5 * iqr) | (values > q3 + 1.5 * iqr)
+    elif method == "quantile":
+        lo, hi = np.percentile(valid, [2.5, 97.5])
+        flags = (values < lo) | (values > hi)
+    elif method == "zscore":
+        mean, std = valid.mean(), valid.std()
+        if std > 0:
+            flags = np.abs((values - mean) / std) > 3
+    elif method == "modified_zscore":
+        median = np.median(valid)
+        mad = np.median(np.abs(valid - median))
+        if mad > 0:
+            flags = np.abs(0.6745 * (values - median) / mad) > 3.5
+
+    flags[nan_mask] = False
+
+    # --- scores ---
+    if score_type == "zscore":
+        mean, std = valid.mean(), valid.std()
+        if std > 0:
+            scores[~nan_mask] = (values[~nan_mask] - mean) / std
+    elif score_type == "iqr_distance":
+        q1, q3 = np.percentile(valid, [25, 75])
+        iqr = q3 - q1
+        median = np.median(valid)
+        if iqr > 0:
+            scores[~nan_mask] = (values[~nan_mask] - median) / iqr
+    elif score_type == "percentile":
+        from scipy.stats import rankdata
+
+        ranked = rankdata(values[~nan_mask])
+        scores[~nan_mask] = ranked / n * 100
+
+    return flags, scores
 
 
 @function_2D_only()

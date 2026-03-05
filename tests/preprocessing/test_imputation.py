@@ -370,6 +370,7 @@ def test_miceforest_impute_3D_edata(edata_blob_small):
 
 
 @pytest.mark.skipif(platform.system() == "Darwin", reason="miceforest Imputation not supported by MacOS.")
+@pytest.mark.filterwarnings("ignore:invalid value encountered in divide:RuntimeWarning")
 def test_miceforest_impute_no_copy(impute_iris_edata):
     edata_not_imputed = impute_iris_edata.copy()
     mice_forest_impute(impute_iris_edata)
@@ -378,6 +379,7 @@ def test_miceforest_impute_no_copy(impute_iris_edata):
 
 
 @pytest.mark.skipif(platform.system() == "Darwin", reason="miceforest Imputation not supported by MacOS.")
+@pytest.mark.filterwarnings("ignore:invalid value encountered in divide:RuntimeWarning")
 def test_miceforest_impute_copy(impute_iris_edata):
     edata_imputed = mice_forest_impute(impute_iris_edata, copy=True)
 
@@ -392,9 +394,10 @@ def test_miceforest_impute_non_numerical_data(impute_titanic_edata):
 
 
 @pytest.mark.skipif(platform.system() == "Darwin", reason="miceforest Imputation not supported by MacOS.")
+@pytest.mark.filterwarnings("ignore:invalid value encountered in divide:RuntimeWarning")
 def test_miceforest_impute_numerical_data(impute_iris_edata):
     edata_not_imputed = impute_iris_edata.copy()
-    mice_forest_impute(impute_iris_edata)
+    mice_forest_impute(impute_iris_edata, copy=True)
 
     _base_check_imputation(edata_not_imputed, impute_iris_edata)
 
