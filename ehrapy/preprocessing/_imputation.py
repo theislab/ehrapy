@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import warnings
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping, Sequence
 from functools import singledispatch
 from importlib.util import find_spec
 from typing import TYPE_CHECKING, Literal
@@ -12,7 +12,6 @@ import scipy.sparse as sp
 from ehrdata._feature_types import _check_feature_types, _infer_numerical_column_indices
 from ehrdata._logger import logger
 from sklearn.experimental import enable_iterative_imputer  # noinspection PyUnresolvedReference
-from sklearn.impute import SimpleImputer
 
 from ehrapy import settings
 from ehrapy._compat import (
@@ -32,7 +31,7 @@ if TYPE_CHECKING:
 @use_ehrdata(deprecated_after="1.0.0")
 def explicit_impute(
     edata: EHRData | AnnData,
-    replacement: (str | int | float) | (dict[str, str | int | float]) | (list[str | int | float]),
+    replacement: (str | int | float) | (Mapping[str, str | int | float]) | (Sequence[str | int | float]),
     *,
     layer: str | None = None,
     impute_empty_strings: bool = True,
@@ -48,10 +47,11 @@ def explicit_impute(
 
     Args:
         edata: Central data object.
-        replacement: The value to replace missing values with. If a dictionary is provided, the keys represent column
-                     names and the values represent replacement values for those columns. If a list with a length of
-                     timepoints is provided, the index of the list represent the timepoint and the values represent the
-                     replacement value for the respective timepoint.
+        replacement: The value to replace missing values with.
+            If a dictionary is provided, the keys represent column
+            names and the values represent replacement values for those columns.
+            If a list with a length of timepoints is provided, the index of the list represent the timepoint
+            and the values represent the replacement value for the respective timepoint.
         layer: The layer to impute.
         impute_empty_strings: If True, empty strings are also replaced.
         warning_threshold: Threshold of percentage of missing values to display a warning for.
@@ -104,7 +104,7 @@ def explicit_impute(
         X = _replace_explicit(X, replacement, impute_empty_strings)
 
     # 2: Replace all missing values in a subset of columns with a specified value per column or a default value, when the column is not explicitly named
-    elif isinstance(replacement, dict):
+    elif isinstance(replacement, Mapping):
         for idx, column_name in enumerate(edata.var_names):
             imputation_value = _extract_impute_value(replacement, column_name)
             # only replace if an explicit value got passed or could be extracted from replacement
@@ -114,11 +114,11 @@ def explicit_impute(
                 logger.warning(f"No replace value passed and found for var [not bold green]{column_name}.")
 
     # 3: Replace all missing values in each timepoint with the different value
-    elif isinstance(replacement, list):
+    elif isinstance(replacement, Sequence):
         n_time = edata.shape[2] if edata.layers[layer].ndim == 3 else None
         if len(replacement) != n_time:
             raise ValueError(
-                f"Length of replacement list ({len(replacement)}) must match number of timepoints ({n_time})."
+                f"Length of replacement sequence ({len(replacement)}) must match number of timepoints ({n_time})."
             )
         for time, value in enumerate(replacement):
             current_slice = X[:, :, time]
@@ -167,7 +167,7 @@ def _(arr: DaskArray, replacement: str | int | float, impute_empty_strings: bool
     return arr
 
 
-def _extract_impute_value(replacement: dict[str, str | int | float], column_name: str) -> str | int | float | None:
+def _extract_impute_value(replacement: Mapping[str, str | int | float], column_name: str) -> str | int | float | None:
     """Extract the replacement value for a given column in the data object.
 
     Returns:
