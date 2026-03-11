@@ -397,7 +397,7 @@ def test_miceforest_impute_non_numerical_data(impute_titanic_edata):
 @pytest.mark.filterwarnings("ignore:invalid value encountered in divide:RuntimeWarning")
 def test_miceforest_impute_numerical_data(impute_iris_edata):
     edata_not_imputed = impute_iris_edata.copy()
-    mice_forest_impute(impute_iris_edata, copy=True)
+    mice_forest_impute(impute_iris_edata)
 
     _base_check_imputation(edata_not_imputed, impute_iris_edata)
 
