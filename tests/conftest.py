@@ -291,6 +291,16 @@ def mimic_2_sa():
 
 
 @pytest.fixture
+def mimic_2_adjusted_sa():
+    edata = ed.dt.mimic_2()
+    ed.infer_feature_types(edata)
+    ed.replace_feature_types(edata, ["age", "sapsi_first", "sofa_first"], "numeric")
+    edata[:, ["censor_flg"]].X = np.where(edata[:, ["censor_flg"]].X == 0, 1, 0)
+    edata.layers["layer_2"] = edata.X.copy()
+    return edata
+
+
+@pytest.fixture
 def edata_move_obs_num() -> ed.EHRData:
     return ed.io.read_csv(TEST_DATA_PATH / "io/dataset_move_obs_num.csv")
 

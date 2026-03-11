@@ -1077,8 +1077,7 @@ def cox_ph_adjusted_curves(
             }
 
     elif method == "conditional":
-        ref_patient = _build_reference_patient(df, predict_cols, reference_values or {})
-
+        ref_patient = _build_reference_patient(df, predict_cols, reference_values or {}, cph)
         for group in groups:
             ref = ref_patient.copy()
             ref[strata] = group  # vary only the strata variable
@@ -1132,6 +1131,7 @@ def _build_reference_patient(
     df: pd.DataFrame,
     predict_cols: list[str],
     overrides: dict,
+    cph: CoxPHFitter,
 ) -> dict:
     """Build a synthetic reference patient.
 
@@ -1139,10 +1139,16 @@ def _build_reference_patient(
     - categorical/object columns -> column mode
     - any key in `overrides` -> use that value.
     """
+    # columns that got dummy-encoded during fitting have names like "col[T.x]"
+    dummy_encoded_cols = {param.split("[")[0] for param in cph.params_.index.get_level_values(0) if "[" in param}
+
     ref = {}
     for col in predict_cols:
         if col in overrides:
             ref[col] = overrides[col]
+        elif col in dummy_encoded_cols:
+            # must pass an original level, not a mean — use mode
+            ref[col] = df[col].mode().iloc[0]
         elif pd.api.types.is_numeric_dtype(df[col]):
             ref[col] = df[col].mean()
         else:
