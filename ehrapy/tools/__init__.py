@@ -2,6 +2,7 @@ from ehrapy.tools._scanpy_tl_api import *  # noqa: F403
 from ehrapy.tools._survival_analysis import (
     anova_glm,
     cox_ph,
+    cox_ph_adjusted_curves,
     glm,
     kaplan_meier,
     kmf,
@@ -43,4 +44,5 @@ __all__ = [
     "diffmap",
     "embedding_density",
     "draw_graph",
+    "cox_ph_adjusted_curves",
 ]
