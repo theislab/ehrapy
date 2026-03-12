@@ -718,6 +718,7 @@ def locf_impute(
     X[:, var_indices, :] = da.values
 
     if fallback_method in ("mean", "median", "most_frequent"):
+        # required to avoid mypy error of unexpected argument value "bfill" for strategy parameter
         from typing import Literal, cast
 
         StrategyType = Literal["mean", "median", "most_frequent"]
