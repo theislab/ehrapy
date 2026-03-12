@@ -46,7 +46,6 @@ classifiers = [
 ]
 
 dependencies = [
-    "array-api-compat",
     "ehrdata",
     "scanpy",
     "requests",

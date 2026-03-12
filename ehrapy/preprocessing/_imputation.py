@@ -6,7 +6,6 @@ from functools import singledispatch
 from importlib.util import find_spec
 from typing import TYPE_CHECKING, Literal
 
-import array_api_compat
 import numpy as np
 import pandas as pd
 import scipy.sparse as sp
@@ -28,8 +27,6 @@ from ehrapy._progress import spinner
 if TYPE_CHECKING:
     from anndata import AnnData
     from ehrdata import EHRData
-
-    from ehrapy._types import ArrayAPICompliant, ArrayNamespace
 
 
 @use_ehrdata(deprecated_after="1.0.0")
@@ -640,84 +637,12 @@ def _warn_imputation_threshold(
     return var_name_to_pct
 
 
-def _ffill_along_time(xp: ArrayNamespace, arr: ArrayAPICompliant) -> ArrayAPICompliant:
-    """Forward-fill NaN values along the last axis (time).
-
-    Each NaN is replaced with the most recent non-NaN value at the same
-    (patient, feature) position. Leading NaNs before the first observation
-    are left as NaN.
-    """
-    import math
-
-    result = xp.asarray(arr, copy=True)
-    axis = -1
-    n = result.shape[axis]
-
-    for d in range(math.ceil(math.log2(max(n, 2)))):
-        shift = 2**d
-        if shift >= n:
-            break
-        pad_shape = (*result.shape[:-1], shift)
-        pad = xp.full(pad_shape, float("nan"), dtype=result.dtype)
-        shifted = xp.concat([pad, result[..., : n - shift]], axis=axis)
-        result = xp.where(xp.isnan(result), shifted, result)
-
-    return result
-
-
-def _bfill_along_time(xp: ArrayNamespace, arr: ArrayAPICompliant) -> ArrayAPICompliant:
-    """Backward-fill NaN values along the last axis (time).
-
-    Each NaN is replaced with the next non-NaN value at the same
-    (patient, feature) position. Trailing NaNs after the last observation
-    are left as NaN.
-    """
-    return xp.flip(_ffill_along_time(xp, xp.flip(arr, axis=-1)), axis=-1)
-
-
-def _nanmean(xp: ArrayNamespace, arr: ArrayAPICompliant, axes: int | tuple[int, ...]) -> ArrayAPICompliant:
-    mask = xp.isnan(arr)
-    zero_filled = xp.where(mask, xp.zeros_like(arr), arr)
-    count = xp.sum(xp.astype(~mask, arr.dtype), axis=axes)
-    return xp.sum(zero_filled, axis=axes) / count
-
-
-def _nanmedian(xp: ArrayNamespace, arr: ArrayAPICompliant) -> ArrayAPICompliant:
-    """Compute per-feature median ignoring NaN values.
-
-    For a 3D array ``(n_obs, n_vars, n_time)`` returns shape ``(n_vars,)``.
-
-    """
-    n_obs, n_vars, n_time = arr.shape
-    flat = xp.reshape(xp.permute_dims(arr, (1, 0, 2)), (n_vars, -1))
-
-    not_nan = ~xp.isnan(flat)
-    counts = xp.sum(xp.astype(not_nan, xp.int64), axis=1)
-
-    filled = xp.where(not_nan, flat, xp.full_like(flat, float("inf")))
-    sorted_flat = xp.sort(filled, axis=1)
-
-    half = counts // 2
-    is_odd = (counts % 2) == 1
-
-    idx_lo = xp.reshape(xp.where(is_odd, half, xp.where(counts == 0, xp.zeros_like(half), half - 1)), (-1, 1))
-    idx_hi = xp.reshape(xp.where(counts == 0, xp.zeros_like(half), half), (-1, 1))
-
-    val_lo = xp.squeeze(xp.take_along_axis(sorted_flat, idx_lo, axis=1), axis=1)
-    val_hi = xp.squeeze(xp.take_along_axis(sorted_flat, idx_hi, axis=1), axis=1)
-
-    medians = (val_lo + val_hi) / 2
-    medians = xp.where(counts == 0, xp.asarray(float("nan"), dtype=arr.dtype), medians)
-
-    return xp.astype(medians, arr.dtype)
-
-
 def locf_impute(
     edata: EHRData,
     var_names: Iterable[str] | None = None,
     *,
     layer: str | None = None,
-    fallback_method: Literal["mean", "median", "bfill"] = "mean",
+    fallback_method: Literal["mean", "median", "most_frequent", "bfill"] = "mean",
     copy: bool = False,
 ) -> EHRData | None:
     """Impute missing values by carrying forward the last observed value along the time axis.
@@ -733,9 +658,10 @@ def locf_impute(
         layer: The layer to impute. Must contain 3D data of shape ``(n_obs, n_vars, n_time)``.
         fallback_method: Method for imputing values before the first observation per patient.
                          ``'mean'`` fills with the per-feature mean, ``'median'`` fills with the
-                         per-feature median (both computed across all patients and time steps),
-                         and ``'bfill'`` fills with each patient's first observed value
-                         (backward fill).
+                         per-feature median, ``'most_frequent'`` fills with the per-feature most
+                         frequent value (all computed across all patients and time steps
+                         of the forward-filled data), and ``'bfill'`` fills with each patient's
+                         first observed value (backward fill).
         copy: Whether to return a copy of ``edata`` or modify it inplace.
 
     Returns:
@@ -759,8 +685,12 @@ def locf_impute(
         >>> np.isnan(edata.layers["tem_data"]).sum()
         0
     """
-    if fallback_method not in ("mean", "median", "bfill"):
-        raise ValueError(f"Unsupported fallback method '{fallback_method}'. Use 'mean', 'median', or 'bfill'.")
+    import xarray as xr
+
+    if fallback_method not in ("mean", "median", "most_frequent", "bfill"):
+        raise ValueError(
+            f"Unsupported fallback method '{fallback_method}'. Use 'mean', 'median', 'most_frequent', or 'bfill'."
+        )
 
     if copy:
         edata = edata.copy()
@@ -774,29 +704,26 @@ def locf_impute(
         )
 
     if var_names is None:
-        var_names = edata.var_names
+        var_names = list(edata.var_names)
+    else:
+        var_names = list(var_names)
     var_indices = edata.var_names.get_indexer(var_names).tolist()
 
-    xp = array_api_compat.array_namespace(X)
-    arr = xp.astype(X[:, var_indices, :], xp.float64)
-
-    arr = _ffill_along_time(xp, arr)
+    da = xr.DataArray(X[:, var_indices, :].astype(float), dims=["obs", "var", "time"])
+    da = da.ffill(dim="time")
 
     if fallback_method == "bfill":
-        arr = _bfill_along_time(xp, arr)
-    else:
-        n_vars = arr.shape[1]
-        if fallback_method == "mean":
-            fallback_values = _nanmean(xp, X[:, var_indices, :], axes=(0, 2))
-        else:
-            fallback_values = _nanmedian(xp, X[:, var_indices, :])
-        fallback_broadcast = xp.broadcast_to(
-            xp.reshape(fallback_values, (1, n_vars, 1)),
-            arr.shape,
-        )
-        arr = xp.where(xp.isnan(arr), fallback_broadcast, arr)
+        da = da.bfill(dim="time")
 
-    X[:, var_indices, :] = arr
+    X[:, var_indices, :] = da.values
+
+    if fallback_method in ("mean", "median", "most_frequent"):
+        from typing import Literal, cast
+
+        StrategyType = Literal["mean", "median", "most_frequent"]
+        strategy: StrategyType = cast("StrategyType", fallback_method)
+
+        simple_impute(edata, var_names=var_names, strategy=strategy, layer=layer)
 
     return edata if copy else None
 

@@ -508,11 +508,17 @@ def test_locf_impute_fallback(locf_edata_3d, fallback_method):
     result = locf_impute(locf_edata_3d, layer=DEFAULT_TEM_LAYER_NAME, fallback_method=fallback_method, copy=True)
     imputed = result.layers[DEFAULT_TEM_LAYER_NAME]
 
+    assert not np.any(np.isnan(imputed))
+
+    # simple_impute computes per-feature stats from the forward-filled data
+    import xarray as xr
+
     original = locf_edata_3d.layers[DEFAULT_TEM_LAYER_NAME].astype(float)
-    if fallback_method == "mean":
-        expected = np.nanmean(original, axis=(0, 2))
-    else:
-        expected = np.nanmedian(original, axis=(0, 2))
+    ffilled = xr.DataArray(original, dims=["obs", "var", "time"]).ffill(dim="time").values
+    n_obs, n_vars, n_time = ffilled.shape
+    flat = np.moveaxis(ffilled, 1, 2).reshape(-1, n_vars)
+    stat_fn = np.nanmean if fallback_method == "mean" else np.nanmedian
+    expected = stat_fn(flat, axis=0)
 
     assert np.isclose(imputed[0, 1, 0], expected[1])
     assert np.isclose(imputed[1, 0, 0], expected[0])
