@@ -278,7 +278,7 @@ def _make_lab_edata(n_obs: int = 20, seed: int = 0) -> ed.EHRData:
 def test_qc_lab_measurements_flags_and_scores():
     """Basic check: flags and scores appear in obs and have the right shape."""
     edata = _make_lab_edata()
-    ep.pp.qc_lab_measurements(edata, vars=["potassium", "sodium"])
+    ep.pp.qc_lab_measurements(edata, var_names=["potassium", "sodium"])
 
     assert "potassium_outlier" in edata.obs.columns
     assert "potassium_score" in edata.obs.columns
@@ -291,7 +291,7 @@ def test_qc_lab_measurements_flags_and_scores():
 def test_qc_lab_measurements_outlier_detected():
     """The injected extreme value should be flagged as an outlier."""
     edata = _make_lab_edata()
-    ep.pp.qc_lab_measurements(edata, vars=["potassium"], method="quantile")
+    ep.pp.qc_lab_measurements(edata, var_names=["potassium"], method="quantile")
     # Index 0 has value 99, far outside the normal distribution
     assert edata.obs["potassium_outlier"].iloc[0]
     # Most other values should be within the reference interval
@@ -301,7 +301,7 @@ def test_qc_lab_measurements_outlier_detected():
 def test_qc_lab_measurements_score_direction():
     """High values should produce positive scores (z-score / IQR distance)."""
     edata = _make_lab_edata()
-    ep.pp.qc_lab_measurements(edata, vars=["potassium"], score_type="zscore")
+    ep.pp.qc_lab_measurements(edata, var_names=["potassium"], score_type="zscore")
     scores = edata.obs["potassium_score"].values
     # The extreme value at index 0 (99.0) must have the highest score in the column
     assert scores[0] == scores.max()
@@ -311,7 +311,7 @@ def test_qc_lab_measurements_score_direction():
 def test_qc_lab_measurements_add_flag_false():
     """With add_flag=False the flag column must not be created."""
     edata = _make_lab_edata()
-    ep.pp.qc_lab_measurements(edata, vars=["potassium"], add_flag=False)
+    ep.pp.qc_lab_measurements(edata, var_names=["potassium"], add_flag=False)
     assert "potassium_outlier" not in edata.obs.columns
     assert "potassium_score" in edata.obs.columns
 
@@ -319,7 +319,7 @@ def test_qc_lab_measurements_add_flag_false():
 def test_qc_lab_measurements_add_score_false():
     """With add_score=False the score column must not be created."""
     edata = _make_lab_edata()
-    ep.pp.qc_lab_measurements(edata, vars=["potassium"], add_score=False)
+    ep.pp.qc_lab_measurements(edata, var_names=["potassium"], add_score=False)
     assert "potassium_score" not in edata.obs.columns
     assert "potassium_outlier" in edata.obs.columns
 
@@ -329,7 +329,7 @@ def test_qc_lab_measurements_methods():
     edata_base = _make_lab_edata(n_obs=50)
     for method in ("quantile", "iqr", "zscore", "modified_zscore"):
         edata = edata_base.copy()
-        ep.pp.qc_lab_measurements(edata, vars=["potassium"], method=method)
+        ep.pp.qc_lab_measurements(edata, var_names=["potassium"], method=method)
         assert edata.obs["potassium_outlier"].dtype == bool, f"method={method}"
 
 
@@ -338,7 +338,7 @@ def test_qc_lab_measurements_score_types():
     edata_base = _make_lab_edata(n_obs=50)
     for score_type in ("zscore", "iqr_distance", "percentile"):
         edata = edata_base.copy()
-        ep.pp.qc_lab_measurements(edata, vars=["potassium"], score_type=score_type)
+        ep.pp.qc_lab_measurements(edata, var_names=["potassium"], score_type=score_type)
         scores = edata.obs["potassium_score"]
         assert np.isfinite(scores).all(), f"score_type={score_type}"
 
@@ -363,13 +363,13 @@ def test_qc_lab_measurements_groupby():
 
     # Without groupby: M values look wildly below the combined mean
     edata_global = edata.copy()
-    ep.pp.qc_lab_measurements(edata_global, vars=["potassium"], score_type="zscore")
-    m_abs_score_global = edata_global.obs["potassium_score"].iloc[:n].abs().mean()
+    ep.pp.qc_lab_measurements(edata_global, var_names=["potassium"], score_type="zscore")
+    m_abs_score_global = np.abs(edata_global.obs["potassium_score"].iloc[:n].mean())
 
     # With groupby: M values are scored against M peers, scores centre near 0
     edata_grouped = edata.copy()
-    ep.pp.qc_lab_measurements(edata_grouped, vars=["potassium"], groupby="sex", score_type="zscore")
-    m_abs_score_grouped = edata_grouped.obs["potassium_score"].iloc[:n].abs().mean()
+    ep.pp.qc_lab_measurements(edata_grouped, var_names=["potassium"], groupby="sex", score_type="zscore")
+    m_abs_score_grouped = np.abs(edata_grouped.obs["potassium_score"].iloc[:n].mean())
 
     # Stratification must bring group-relative scores much closer to zero
     assert m_abs_score_grouped < m_abs_score_global / 5
@@ -378,20 +378,20 @@ def test_qc_lab_measurements_groupby():
 def test_qc_lab_measurements_groupby_invalid_col():
     edata = _make_lab_edata()
     with pytest.raises(ValueError, match="groupby columns not found"):
-        ep.pp.qc_lab_measurements(edata, vars=["potassium"], groupby="nonexistent")
+        ep.pp.qc_lab_measurements(edata, var_names=["potassium"], groupby="nonexistent")
 
 
 def test_qc_lab_measurements_invalid_var():
     edata = _make_lab_edata()
     with pytest.raises(ValueError, match="Variables not found"):
-        ep.pp.qc_lab_measurements(edata, vars=["nonexistent_var"])
+        ep.pp.qc_lab_measurements(edata, var_names=["nonexistent_var"])
 
 
 def test_qc_lab_measurements_nan_handling():
     """NaN values should not be flagged as outliers; their score should be NaN."""
     edata = _make_lab_edata(n_obs=20)
     edata.X[5, 0] = np.nan
-    ep.pp.qc_lab_measurements(edata, vars=["potassium"])
+    ep.pp.qc_lab_measurements(edata, var_names=["potassium"])
     assert not edata.obs["potassium_outlier"].iloc[5]  # NaN → not flagged
     assert np.isnan(edata.obs["potassium_score"].iloc[5])
 
@@ -400,7 +400,7 @@ def test_qc_lab_measurements_copy():
     """copy=True must not modify the original object."""
     edata = _make_lab_edata()
     original_obs_cols = set(edata.obs.columns)
-    result = ep.pp.qc_lab_measurements(edata, vars=["potassium"], copy=True)
+    result = ep.pp.qc_lab_measurements(edata, var_names=["potassium"], copy=True)
     assert set(edata.obs.columns) == original_obs_cols  # original untouched
     assert "potassium_outlier" in result.obs.columns
 
@@ -410,18 +410,20 @@ def test_qc_lab_measurements_layer():
     edata = _make_lab_edata()
     edata.layers["measurements"] = edata.X.copy()
     edata.X[:] = 0  # zero out X so any result must come from the layer
-    ep.pp.qc_lab_measurements(edata, vars=["potassium"], layer="measurements")
+    ep.pp.qc_lab_measurements(edata, var_names=["potassium"], layer="measurements")
     assert "potassium_outlier" in edata.obs.columns
 
 
 def test_qc_lab_measurements_3D_edata(edata_blob_small):
-    ep.pp.qc_lab_measurements(edata_blob_small, vars=list(edata_blob_small.var_names), layer="layer_2")
+    ep.pp.qc_lab_measurements(edata_blob_small, var_names=list(edata_blob_small.var_names), layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.qc_lab_measurements(edata_blob_small, vars=list(edata_blob_small.var_names), layer=DEFAULT_TEM_LAYER_NAME)
+        ep.pp.qc_lab_measurements(
+            edata_blob_small, var_names=list(edata_blob_small.var_names), layer=DEFAULT_TEM_LAYER_NAME
+        )
 
 
 def test_qc_lab_measurements_defaults_to_all_vars():
-    """When vars=None, all variables should be evaluated."""
+    """When var_names=None, all variables should be evaluated."""
     edata = _make_lab_edata()
     ep.pp.qc_lab_measurements(edata)
     assert "potassium_outlier" in edata.obs.columns

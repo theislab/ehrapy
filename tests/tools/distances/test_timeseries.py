@@ -22,7 +22,7 @@ def test_patient_timeseries_distance_numpy(metric):
 
     patient_0 = np.array([0])
     distance_same = timeseries_distance(patient_0, patient_0, time_series_data, metric=metric)
-    assert distance_same == 0.0
+    assert np.isclose(distance_same, 0.0)
 
     patient_1 = np.array([1])
     distance_similar = timeseries_distance(patient_0, patient_1, time_series_data, metric=metric)
@@ -51,7 +51,7 @@ def test_patient_timeseries_distance_insufficient_overlap(metric):
     patient_0 = np.array([0])
     patient_1 = np.array([1])
     distance = timeseries_distance(patient_0, patient_1, time_series_data, metric=metric)
-    assert distance == 0.0
+    assert np.isclose(distance, 0.0)
 
 
 @pytest.mark.parametrize("metric", ["dtw", "soft_dtw", "gak"])
@@ -71,7 +71,7 @@ def test_patient_timeseries_distance_with_ehrdata(metric):
 
     patient_0 = np.array([0])
     distance_same = ts_metric(patient_0, patient_0)
-    assert distance_same == 0.0
+    assert np.isclose(distance_same, 0.0)
 
     patient_1 = np.array([1])
     patient_5 = np.array([5])
@@ -108,4 +108,4 @@ def test_patient_timeseries_distance_edge_cases(metric):
     )
 
     distance_nan = timeseries_distance(patient_0, patient_1, time_series_data_nan, metric=metric)
-    assert distance_nan == 0.0
+    assert np.isclose(distance_nan, 0.0)
