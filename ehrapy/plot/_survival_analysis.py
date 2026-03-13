@@ -327,7 +327,7 @@ def kaplan_meier(
 
 @use_ehrdata(deprecated_after="1.0.0")
 def cox_ph_forestplot(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     *,
     uns_key: str = "cox_ph",
     labels: Iterable[str] | None = None,
@@ -486,7 +486,7 @@ def cox_ph_adjusted_curves(
     ylabel: str = "Adjusted Survival Probability",
     legend_position: str = "top_right",
 ) -> hv.Overlay:
-    """Plot CoxPH-adjusted survival curves computed by :func:`~ehrapy.tools.cox_ph_adjusted_curves`.
+    """Generates a survival curve plot to visualize CoxPH-adjusted survival probabilities stratified by a grouping variable.
 
     The `edata` object must first be populated using the :func:`~ehrapy.tools.cox_ph_adjusted_curves` function.
     This function stores the adjusted survival curves in the `.uns` attribute of `edata`.
@@ -495,22 +495,23 @@ def cox_ph_adjusted_curves(
     https://cran.r-project.org/web/packages/survival/vignettes/adjcurve.pdf
 
     Args:
-        edata: Data object containing the adjusted survival curves. This is stored in the `.uns`
-            attribute after running :func:`~ehrapy.tools.cox_ph_adjusted_curves`.
+        edata: Data object containing the adjusted survival curves.
+            This is stored in the `.uns` attribute after running :func:`~ehrapy.tools.cox_ph_adjusted_curves` function.
         uns_key: Key in `.uns` where :func:`~ehrapy.tools.cox_ph_adjusted_curves` stored its output.
             See argument `key_added` in :func:`~ehrapy.tools.cox_ph_adjusted_curves`.
-        groups: Subset of group labels to plot. If None, all groups are plotted.
-        palette: List of hex or named colors, one per group. Defaults to Bokeh Category10 palette.
-        show_ci: Whether to draw confidence interval bands. Only has an effect when method='average'
-            was used, as method='conditional' does not produce confidence intervals.
-        ci_alpha: Transparency of the CI band fill between 0 and 1. Default is 0.15.
-        line_width: Line width for the survival curves. Default is 2.0.
+        groups: Subset of group labels to plot.
+            If None, all groups are plotted.
+        palette: List of hex or named colors, one per group.
+        show_ci: Whether to draw confidence interval bands.
+            Only has an effect when method='average' was used, as method='conditional' does not produce confidence intervals.
+        ci_alpha: Transparency of the CI band fill between 0 and 1.
+        line_width: Line width for the survival curves.
         width: Plot width in pixels.
         height: Plot height in pixels.
-        title: Set the title of the plot. Defaults to 'CoxPH-Adjusted Survival Curves (<method>)'.
-        xlabel: X-axis label. Default is 'Time'.
-        ylabel: Y-axis label. Default is 'Adjusted Survival Probability'.
-        legend_position: Position of the legend. Default is 'top_right'.
+        title: Set the title of the plot.
+        xlabel: X-axis label.
+        ylabel: Y-axis label.
+        legend_position: Position of the legend.
 
     Returns:
         HoloViews Overlay object representing the adjusted survival curve plot.
@@ -562,7 +563,6 @@ def cox_ph_adjusted_curves(
     colors = palette[: len(plot_groups)]
 
     elements = []
-
     for color, group in zip(colors, plot_groups, strict=False):
         entry = data[group]
         times = entry["times"]

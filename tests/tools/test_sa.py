@@ -178,7 +178,7 @@ def test_kmf(mimic_2_sa):
         assert sum(kmf.event_observed) == 497
 
 
-@pytest.mark.parametrize("method", ["average"])
+@pytest.mark.parametrize("method", ["average", "conditional"])
 @pytest.mark.parametrize("layer", [None, "layer_2"])
 def test_cox_ph_adjusted_curves_basic(mimic_2_adjusted_sa, method, layer):
     """Results are stored in edata.uns with correct structure."""
