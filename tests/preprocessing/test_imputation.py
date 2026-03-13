@@ -527,9 +527,6 @@ def test_warning(impute_num_edata):
     assert warning_results == {"col1": 25, "col3": 50}
 
 
-# ── LOCF impute tests ──────────────────────────────────────────────────
-
-
 @pytest.fixture
 def locf_edata_3d():
     """3D data with known NaN positions for deterministic LOCF testing.
@@ -563,18 +560,31 @@ def locf_edata_3d():
     return EHRData(shape=(2, 3), layers={DEFAULT_TEM_LAYER_NAME: data_3d})
 
 
-def test_locf_impute_forward_fill(locf_edata_3d):
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NUMERIC_3D_ABLE)
+def test_locf_impute_forward_fill(locf_edata_3d, array_type):
     original = locf_edata_3d.copy()
+    locf_edata_3d.layers[DEFAULT_TEM_LAYER_NAME] = array_type(locf_edata_3d.layers[DEFAULT_TEM_LAYER_NAME])
     result = locf_impute(locf_edata_3d, layer=DEFAULT_TEM_LAYER_NAME, copy=True)
     imputed = result.layers[DEFAULT_TEM_LAYER_NAME]
 
-    assert not np.any(np.isnan(imputed))
+    # Type is preserved: numpy in → numpy out, dask in → dask out
+    if isinstance(locf_edata_3d.layers[DEFAULT_TEM_LAYER_NAME], da.Array):
+        assert isinstance(imputed, da.Array)
+        arr = imputed.compute()
+    else:
+        assert isinstance(imputed, np.ndarray)
+        arr = imputed
 
-    assert imputed[0, 0, 1] == 1.0
-    assert imputed[0, 0, 3] == 3.0
-    assert imputed[1, 1, 1] == 1.0
-    assert imputed[1, 1, 2] == 1.0
-    assert imputed[1, 1, 3] == 1.0
+    assert not np.any(np.isnan(arr))
+
+    # ffilled values
+    assert arr[0, 0, 1] == 1.0
+    assert arr[0, 0, 3] == 3.0
+    assert arr[1, 1, 1] == 1.0
+    assert arr[1, 1, 2] == 1.0
+    assert arr[1, 1, 3] == 1.0
+
+    # mean (default fallback method) values
 
     _base_check_imputation(
         original,
@@ -584,22 +594,23 @@ def test_locf_impute_forward_fill(locf_edata_3d):
     )
 
 
-@pytest.mark.parametrize("fallback_method", ["mean", "median"])
+@pytest.mark.parametrize("fallback_method", ["mean", "median", "most_frequent"])
 def test_locf_impute_fallback(locf_edata_3d, fallback_method):
     result = locf_impute(locf_edata_3d, layer=DEFAULT_TEM_LAYER_NAME, fallback_method=fallback_method, copy=True)
     imputed = result.layers[DEFAULT_TEM_LAYER_NAME]
 
     assert not np.any(np.isnan(imputed))
 
-    # simple_impute computes per-feature stats from the forward-filled data
-    import xarray as xr
-
     original = locf_edata_3d.layers[DEFAULT_TEM_LAYER_NAME].astype(float)
-    ffilled = xr.DataArray(original, dims=["obs", "var", "time"]).ffill(dim="time").values
-    n_obs, n_vars, n_time = ffilled.shape
-    flat = np.moveaxis(ffilled, 1, 2).reshape(-1, n_vars)
-    stat_fn = np.nanmean if fallback_method == "mean" else np.nanmedian
-    expected = stat_fn(flat, axis=0)
+    if fallback_method == "mean":
+        expected = np.nanmean(original, axis=(0, 2))
+    elif fallback_method == "median":
+        expected = np.nanmedian(original, axis=(0, 2))
+    else:
+        from scipy.stats import mode as scipy_mode
+
+        n_vars = original.shape[1]
+        expected = np.array([scipy_mode(original[:, j, :][~np.isnan(original[:, j, :])]).mode for j in range(n_vars)])
 
     assert np.isclose(imputed[0, 1, 0], expected[1])
     assert np.isclose(imputed[1, 0, 0], expected[0])
@@ -644,6 +655,21 @@ def test_locf_impute_var_names(locf_edata_3d):
 def test_locf_impute_requires_3d(mcar_edata):
     with pytest.raises(ValueError, match="requires 3D data"):
         locf_impute(mcar_edata)
+
+
+def test_locf_impute_no_fallback(locf_edata_3d):
+    """fallback_method=None applies only ffill; leading NaNs remain."""
+    result = locf_impute(locf_edata_3d, layer=DEFAULT_TEM_LAYER_NAME, fallback_method=None, copy=True)
+    imputed = result.layers[DEFAULT_TEM_LAYER_NAME]
+
+    assert imputed[0, 0, 1] == 1.0
+    assert imputed[0, 0, 3] == 3.0
+    assert imputed[1, 1, 1] == 1.0
+
+    assert np.isnan(imputed[0, 1, 0])
+    assert np.isnan(imputed[1, 0, 0])
+    assert np.isnan(imputed[1, 0, 1])
+    assert np.isnan(imputed[1, 2, 0])
 
 
 def test_locf_impute_invalid_fallback(locf_edata_3d):

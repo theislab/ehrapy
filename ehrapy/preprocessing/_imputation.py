@@ -676,7 +676,7 @@ def locf_impute(
     var_names: Iterable[str] | None = None,
     *,
     layer: str | None = None,
-    fallback_method: Literal["mean", "median", "most_frequent", "bfill"] = "mean",
+    fallback_method: Literal["mean", "median", "most_frequent", "bfill"] | None = "mean",
     copy: bool = False,
 ) -> EHRData | None:
     """Impute missing values by carrying forward the last observed value along the time axis.
@@ -693,9 +693,10 @@ def locf_impute(
         fallback_method: Method for imputing values before the first observation per patient.
                          ``'mean'`` fills with the per-feature mean, ``'median'`` fills with the
                          per-feature median, ``'most_frequent'`` fills with the per-feature most
-                         frequent value (all computed across all patients and time steps
-                         of the forward-filled data), and ``'bfill'`` fills with each patient's
-                         first observed value (backward fill).
+                         frequent value (all computed from the original data, before forward
+                         filling), ``'bfill'`` fills with each patient's first observed
+                         value (backward fill), and ``None`` leaves remaining NaN values
+                         untouched.
         copy: Whether to return a copy of ``edata`` or modify it inplace.
 
     Returns:
@@ -706,24 +707,31 @@ def locf_impute(
         ValueError: If the data is not 3D or if an unsupported ``fallback_method`` is specified.
 
     Examples:
+        >>> import numpy as np
         >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> import numpy as np
-        >>> edata = ed.dt.ehrdata_blobs(n_observations=100, base_timepoints=24, n_centers=3)
-        >>> rng = np.random.default_rng(42)
-        >>> layer = edata.layers["tem_data"]
-        >>> layer[rng.random(layer.shape) < 0.3] = np.nan
-        >>> np.isnan(layer).sum()
-        7935
+        >>> data = np.array(
+        ...     [
+        ...         [[1.0, np.nan, 3.0, np.nan], [np.nan, 2.0, np.nan, 4.0], [5.0, 6.0, 7.0, 8.0]],
+        ...         [[np.nan, np.nan, 3.0, np.nan], [1.0, np.nan, np.nan, np.nan], [np.nan, 2.0, np.nan, 4.0]],
+        ...     ]
+        ... )
+        >>> edata = ed.EHRData(shape=(2, 3), layers={"tem_data": data})
         >>> ep.pp.locf_impute(edata, layer="tem_data")
-        >>> np.isnan(edata.layers["tem_data"]).sum()
-        0
+        >>> edata.layers["tem_data"]
+        array([[[1.        , 1.        , 3.        , 3.        ],
+                [2.33, 2.        , 2.        , 4.        ],
+                [5.        , 6.        , 7.        , 8.        ]],
+        <BLANKLINE>
+               [[2.33, 2.33, 3.        , 3.        ],
+                [1.        , 1.        , 1.        , 1.        ],
+                [5.33, 2.        , 2.        , 4.        ]]])
     """
     import xarray as xr
 
-    if fallback_method not in ("mean", "median", "most_frequent", "bfill"):
+    if fallback_method not in ("mean", "median", "most_frequent", "bfill", None):
         raise ValueError(
-            f"Unsupported fallback method '{fallback_method}'. Use 'mean', 'median', 'most_frequent', or 'bfill'."
+            f"Unsupported fallback method '{fallback_method}'. Use 'mean', 'median', 'most_frequent', 'bfill', or None."
         )
 
     if copy:
@@ -743,22 +751,25 @@ def locf_impute(
         var_names = list(var_names)
     var_indices = edata.var_names.get_indexer(var_names).tolist()
 
-    da = xr.DataArray(X[:, var_indices, :].astype(float), dims=["obs", "var", "time"])
+    original = X[:, var_indices, :].astype(float)
+
+    da = xr.DataArray(original.copy(), dims=["obs", "var", "time"])
     da = da.ffill(dim="time")
+    arr = da.values
 
     if fallback_method == "bfill":
-        da = da.bfill(dim="time")
+        arr = xr.DataArray(arr, dims=["obs", "var", "time"]).bfill(dim="time").values
+    elif fallback_method in ("mean", "median", "most_frequent"):
+        from typing import cast
 
-    X[:, var_indices, :] = da.values
-
-    if fallback_method in ("mean", "median", "most_frequent"):
-        # required to avoid mypy error of unexpected argument value "bfill" for strategy parameter
-        from typing import Literal, cast
-
-        StrategyType = Literal["mean", "median", "most_frequent"]
-        strategy: StrategyType = cast("StrategyType", fallback_method)
-
+        strategy = cast("Literal['mean', 'median', 'most_frequent']", fallback_method)
+        X[:, var_indices, :] = original
         simple_impute(edata, var_names=var_names, strategy=strategy, layer=layer)
+        fallback_values = X[:, var_indices, :].copy()
+        mask = np.isnan(arr)
+        arr[mask] = fallback_values[mask]
+
+    X[:, var_indices, :] = arr
 
     return edata if copy else None
 
