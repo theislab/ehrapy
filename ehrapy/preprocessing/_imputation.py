@@ -671,6 +671,109 @@ def _warn_imputation_threshold(
     return var_name_to_pct
 
 
+def locf_impute(
+    edata: EHRData,
+    var_names: Iterable[str] | None = None,
+    *,
+    layer: str | None = None,
+    fallback_method: Literal["mean", "median", "most_frequent", "bfill"] | None = "mean",
+    copy: bool = False,
+) -> EHRData | None:
+    """Impute missing values by carrying forward the last observed value along the time axis.
+
+    Implements Last Observation Carried Forward (LOCF) for longitudinal (3D) data.
+    For each patient and feature, missing values are replaced with the most recent
+    non-missing value. Missing values that occur before any observation for a given
+    patient are filled using a fallback method.
+
+    Args:
+        edata: Central data object.
+        var_names: A list of column names to apply imputation on (if ``None``, impute all columns).
+        layer: The layer to impute. Must contain 3D data of shape ``(n_obs, n_vars, n_time)``.
+        fallback_method: Method for imputing values before the first observation per patient.
+                         ``'mean'`` fills with the per-feature mean, ``'median'`` fills with the
+                         per-feature median, ``'most_frequent'`` fills with the per-feature most
+                         frequent value (all computed from the original data, before forward
+                         filling), ``'bfill'`` fills with each patient's first observed
+                         value (backward fill), and ``None`` leaves remaining NaN values
+                         untouched.
+        copy: Whether to return a copy of ``edata`` or modify it inplace.
+
+    Returns:
+        If copy is True, a modified copy of the original data object with imputed data.
+        If copy is False, the original data object is modified in place, and None is returned.
+
+    Raises:
+        ValueError: If the data is not 3D or if an unsupported ``fallback_method`` is specified.
+
+    Examples:
+        >>> import numpy as np
+        >>> import ehrdata as ed
+        >>> import ehrapy as ep
+        >>> data = np.array(
+        ...     [
+        ...         [[1.0, np.nan, 3.0, np.nan], [np.nan, 2.0, np.nan, 4.0], [5.0, 6.0, 7.0, 8.0]],
+        ...         [[np.nan, np.nan, 3.0, np.nan], [1.0, np.nan, np.nan, np.nan], [np.nan, 2.0, np.nan, 4.0]],
+        ...     ]
+        ... )
+        >>> edata = ed.EHRData(shape=(2, 3), layers={"tem_data": data})
+        >>> ep.pp.locf_impute(edata, layer="tem_data")
+        >>> edata.layers["tem_data"]
+        array([[[1.        , 1.        , 3.        , 3.        ],
+                [2.33, 2.        , 2.        , 4.        ],
+                [5.        , 6.        , 7.        , 8.        ]],
+        <BLANKLINE>
+               [[2.33, 2.33, 3.        , 3.        ],
+                [1.        , 1.        , 1.        , 1.        ],
+                [5.33, 2.        , 2.        , 4.        ]]])
+    """
+    import xarray as xr
+
+    if fallback_method not in ("mean", "median", "most_frequent", "bfill", None):
+        raise ValueError(
+            f"Unsupported fallback method '{fallback_method}'. Use 'mean', 'median', 'most_frequent', 'bfill', or None."
+        )
+
+    if copy:
+        edata = edata.copy()
+
+    X = edata.X if layer is None else edata.layers[layer]
+
+    if X.ndim != 3:
+        raise ValueError(
+            f"locf_impute requires 3D data (n_obs, n_vars, n_time), got array with shape {X.shape}. "
+            "Use the 'layer' parameter to specify a layer containing 3D data."
+        )
+
+    if var_names is None:
+        var_names = list(edata.var_names)
+    else:
+        var_names = list(var_names)
+    var_indices = edata.var_names.get_indexer(var_names).tolist()
+
+    original = X[:, var_indices, :].astype(float)
+
+    da = xr.DataArray(original.copy(), dims=["obs", "var", "time"])
+    da = da.ffill(dim="time")
+    arr = da.values
+
+    if fallback_method == "bfill":
+        arr = xr.DataArray(arr, dims=["obs", "var", "time"]).bfill(dim="time").values
+    elif fallback_method in ("mean", "median", "most_frequent"):
+        from typing import cast
+
+        strategy = cast("Literal['mean', 'median', 'most_frequent']", fallback_method)
+        X[:, var_indices, :] = original
+        simple_impute(edata, var_names=var_names, strategy=strategy, layer=layer)
+        fallback_values = X[:, var_indices, :].copy()
+        mask = np.isnan(arr)
+        arr[mask] = fallback_values[mask]
+
+    X[:, var_indices, :] = arr
+
+    return edata if copy else None
+
+
 def _get_non_numerical_column_indices(arr: np.ndarray) -> set:
     """Return indices of columns, that contain at least one non-numerical value that is not "Nan"."""
 

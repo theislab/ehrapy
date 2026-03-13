@@ -5,6 +5,7 @@ from ehrapy.preprocessing._highly_variable_features import highly_variable_featu
 from ehrapy.preprocessing._imputation import (
     explicit_impute,
     knn_impute,
+    locf_impute,
     mice_forest_impute,
     miss_forest_impute,
     simple_impute,
@@ -32,6 +33,7 @@ __all__ = [
     "highly_variable_features",
     "explicit_impute",
     "knn_impute",
+    "locf_impute",
     "mice_forest_impute",
     "miss_forest_impute",
     "simple_impute",
