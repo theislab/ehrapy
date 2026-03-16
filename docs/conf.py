@@ -98,7 +98,7 @@ intersphinx_mapping = {
     "matplotlib": ("https://matplotlib.org/stable/", None),
     "seaborn": ("https://seaborn.pydata.org/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
-    "pandas": ("https://pandas.pydata.org/pandas-docs/stable/", None),
+    "pandas": ("https://pandas.pydata.org/docs/", None),
     "scipy": ("https://docs.scipy.org/doc/scipy/", None),
     "pynndescent": ("https://pynndescent.readthedocs.io/en/latest/", None),
     "sklearn": ("https://scikit-learn.org/stable", None),
