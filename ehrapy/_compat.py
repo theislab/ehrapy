@@ -274,3 +274,86 @@ def choose_hv_backend() -> Callable[[Callable[P, R]], Callable[P, R]]:
         return wrapper
 
     return decorator
+
+
+def nanmean_array_api(xp, arr, axes):
+    """Compute mean ignoring NaN values using Array API operations."""
+    mask = xp.isnan(arr)
+    zero_filled = xp.where(mask, xp.zeros_like(arr), arr)
+    count = xp.sum(xp.astype(~mask, arr.dtype), axis=axes)
+    return xp.sum(zero_filled, axis=axes) / count
+
+
+def nanmedian_array_api(xp, arr):
+    """Compute per-feature median ignoring NaN values using Array API operations.
+
+    Computes the median for each feature across all patients and time steps
+    for a 3D array of shape ``(n_obs, n_vars, n_time)``.
+    """
+    if arr.ndim == 2:
+        arr = xp.reshape(arr, (arr.shape[0], arr.shape[1], 1))
+
+    n_obs, n_vars, n_time = arr.shape
+    arr_flat = xp.reshape(xp.permute_dims(arr, (1, 0, 2)), (n_vars, -1))
+    medians = []
+    for i in range(n_vars):
+        row = arr_flat[i, :]
+        not_nan = ~xp.isnan(row)
+        n = int(xp.sum(xp.astype(not_nan, xp.float64)))
+        if n == 0:
+            medians.append(float("nan"))
+            continue
+        filled = xp.where(not_nan, row, xp.asarray(float("inf"), dtype=arr.dtype))
+        sorted_row = xp.sort(filled)
+        if n % 2 == 1:
+            medians.append(float(sorted_row[n // 2]))
+        else:
+            medians.append(float((sorted_row[n // 2 - 1] + sorted_row[n // 2]) / 2))
+
+    return xp.asarray(medians, dtype=arr.dtype)
+
+
+def nanstd_array_api(xp, arr, axes):
+    """Compute standard deviation ignoring NaN values using Array API operations."""
+    nan_mask = xp.isnan(arr)
+    mean = nanmean_array_api(xp, arr, axes=axes)
+    # expand mean dims to broadcast against arr (assumes axes is an int or 0)
+    diff = xp.where(nan_mask, xp.zeros_like(arr), arr - xp.expand_dims(mean, axis=axes))
+    count = xp.sum(xp.astype(~nan_mask, arr.dtype), axis=axes)
+    return xp.sqrt(xp.sum(diff**2, axis=axes) / count)
+
+
+def nanmin_array_api(xp, arr, axis):
+    """Compute min ignoring NaN values using Array API operations.
+
+    Returns NaN for slices where all values are NaN.
+    """
+    nan_mask = xp.isnan(arr)
+
+    # Replace NaNs with +inf so they don't affect min
+    arr_for_min = xp.where(nan_mask, xp.full_like(arr, xp.inf), arr)
+    minv = xp.min(arr_for_min, axis=axis)
+
+    # Count non NaN entries per slice
+    count = xp.sum(xp.astype(~nan_mask, xp.int64), axis=axis)
+    nan_scalar = xp.asarray(float("nan"), dtype=arr.dtype)
+
+    return xp.where(count == 0, nan_scalar, minv)
+
+
+def nanmax_array_api(xp, arr, axis):
+    """Compute max ignoring NaN values using Array API operations.
+
+    Returns NaN for slices where all values are NaN.
+    """
+    nan_mask = xp.isnan(arr)
+
+    # Replace NaNs with -inf so they don't affect max
+    arr_for_max = xp.where(nan_mask, xp.full_like(arr, -xp.inf), arr)
+    maxv = xp.max(arr_for_max, axis=axis)
+
+    # Count non NaN entries per slice
+    count = xp.sum(xp.astype(~nan_mask, xp.int64), axis=axis)
+    nan_scalar = xp.asarray(float("nan"), dtype=arr.dtype)
+
+    return xp.where(count == 0, nan_scalar, maxv)
