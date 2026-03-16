@@ -60,12 +60,12 @@ def ncp(
     - **Sample loadings** – histogram of per-observation loadings, revealing whether
       the component is diffuse (broad distribution) or selective (heavy right tail).
 
-    Requires :func:`~ehrapy.tl.ncp` to have been run first.
+    Requires :func:`~ehrapy.tools.ncp` to have been run first.
 
     Args:
         edata: Central data object containing NCP results.
         key: Key under which NCP results are stored (matches ``key_added`` in
-            :func:`~ehrapy.tl.ncp`).
+            :func:`~ehrapy.tools.ncp`).
         n_top: Number of top-loaded variables to display per component.
         width: Width of each individual panel in pixels.
         height: Height of each individual panel in pixels.
@@ -188,7 +188,7 @@ def ncp_cluster_trajectories(
     3. Mean probability trajectories over the time axis are plotted for those
        variables, averaged across all observations in the cluster.
 
-    Requires :func:`~ehrapy.tl.ncp` to have been run first.
+    Requires :func:`~ehrapy.tools.ncp` to have been run first.
 
     Args:
         edata: Central data object.
