@@ -123,6 +123,17 @@ Methods that extract and visualize tool-specific annotation in an AnnData object
     plot.cox_ph_forestplot
 ```
 
+## Normalized Complexity Profile
+
+```{eval-rst}
+.. autosummary::
+    :toctree: plot
+    :nosignatures:
+
+    plot.ncp
+    plot.ncp_cluster_trajectories
+```
+
 ## Causal Inference
 
 ```{eval-rst}

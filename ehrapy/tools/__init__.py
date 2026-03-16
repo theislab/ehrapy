@@ -1,3 +1,4 @@
+from ehrapy.tools._ncp import ncp
 from ehrapy.tools._scanpy_tl_api import *  # noqa: F403
 from ehrapy.tools._survival_analysis import (
     anova_glm,
@@ -43,4 +44,5 @@ __all__ = [
     "diffmap",
     "embedding_density",
     "draw_graph",
+    "ncp",
 ]
