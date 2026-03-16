@@ -26,18 +26,16 @@ def ncp(
 ) -> EHRData | AnnData | None:
     r"""Non-negative CP (PARAFAC) decomposition of a 3D temporal layer.
 
-    Decomposes the tensor :math:`\\mathcal{X} \\approx \\sum_{r=1}^{R} \\mathbf{a}_r \\otimes \\mathbf{b}_r \\otimes \\mathbf{c}_r`
-    (all factors non-negative) and stores the three factor matrices in
-    ``.obsm``, ``.varm``, and ``.uns``.
+    Decomposes the stored 3D data into three factor matrices (all factors non-negative).
 
-    Uses ``tensorly``'s ``non_negative_parafac`` (required dependency).
+    Uses :func:`tensorly.decomposition.non_negative_parafac`.
 
     Args:
         edata: Central data object.
         layer: Key of the 3D layer to decompose (shape ``n_obs × n_vars × n_time``).
         rank: Number of components (rank of the decomposition).
         n_iter_max: Maximum number of ALS iterations.
-        init: Initialisation strategy passed to tensorly (``"random"`` or ``"svd"``).
+        init: Initialisation strategy passed to :func:`~tensorly.decomposition.non_negative_parafac` (``"random"`` or ``"svd"``).
         sigmoid_transform: If ``True``, apply a sigmoid transformation to the layer
             before decomposition. Useful when the layer contains raw logits.
         key_added: Key prefix for storing results. Results are stored as
