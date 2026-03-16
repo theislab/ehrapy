@@ -74,11 +74,19 @@ def ncp(
         HoloViews Layout with ``rank × 3`` panels arranged in three columns.
 
     Examples:
-        >>> import ehrapy as ep
-        >>> import ehrdata as ed
-        >>> edata = ed.dt.physionet2019(layer="tem_data", n_samples=200)
-        >>> ep.tl.ncp(edata, layer="tem_data", rank=3)
-        >>> ep.pl.ncp(edata)
+        >>> import numpy as np, pandas as pd
+        >>> import ehrdata as ed, ehrapy as ep
+        >>> np.random.seed(0)
+        >>> tensor = np.abs(np.random.randn(30, 8, 12))
+        >>> edata = ed.EHRData(
+        ...     shape=(30, 8),
+        ...     layers={"data": tensor},
+        ...     var=pd.DataFrame(index=[f"var_{i}" for i in range(8)]),
+        ... )
+        >>> ep.tl.ncp(edata, layer="data", rank=3)
+        >>> ep.pl.ncp(edata, n_top=5)
+
+        .. image:: /_static/docstring_previews/ncp.png
     """
     _require_ncp(edata, key)
 
@@ -198,11 +206,24 @@ def ncp_cluster_trajectories(
         HoloViews Layout with one panel per cluster, arranged in two columns.
 
     Examples:
-        >>> import ehrapy as ep
-        >>> import ehrdata as ed
-        >>> edata = ed.dt.physionet2019(layer="tem_data", n_samples=200)
-        >>> ep.tl.ncp(edata, layer="tem_data", rank=3)
-        >>> ep.pl.ncp_cluster_trajectories(edata, layer="tem_data", cluster_key="leiden")
+        >>> import numpy as np, pandas as pd
+        >>> import ehrdata as ed, ehrapy as ep
+        >>> np.random.seed(0)
+        >>> tensor = np.abs(np.random.randn(30, 8, 12))
+        >>> obs = pd.DataFrame(
+        ...     {"group": ["A"] * 15 + ["B"] * 15},
+        ...     index=[str(i) for i in range(30)],
+        ... )
+        >>> edata = ed.EHRData(
+        ...     shape=(30, 8),
+        ...     layers={"data": tensor},
+        ...     obs=obs,
+        ...     var=pd.DataFrame(index=[f"var_{i}" for i in range(8)]),
+        ... )
+        >>> ep.tl.ncp(edata, layer="data", rank=3)
+        >>> ep.pl.ncp_cluster_trajectories(edata, layer="data", cluster_key="group")
+
+        .. image:: /_static/docstring_previews/ncp_cluster_trajectories.png
     """
     _require_ncp(edata, key)
     if cluster_key not in edata.obs:
