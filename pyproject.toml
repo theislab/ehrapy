@@ -47,6 +47,7 @@ classifiers = [
 
 dependencies = [
     "ehrdata",
+    "bottleneck",
     "scanpy",
     "requests",
     "miceforest",
