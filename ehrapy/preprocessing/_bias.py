@@ -9,6 +9,7 @@ import pandas as pd
 from ehrdata._feature_types import _check_feature_types
 from ehrdata.core.constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 
+import ehrapy as ep
 from ehrapy._compat import function_2D_only, use_ehrdata
 
 if TYPE_CHECKING:
@@ -111,7 +112,7 @@ def detect_bias(
         sens_features_list = []
         for variable in sensitive_features:
             if variable not in edata.var_names:
-                # check if feature has been encodeds
+                # check if feature has been encoded
                 encoded_categorical_features = [
                     feature for feature in edata.var_names if feature.startswith(f"ehrapycat_{variable}")
                 ]
@@ -149,8 +150,15 @@ def detect_bias(
     # --------------------
     # Feature correlations
     # --------------------
-    correlations = edata_df.corr(method=corr_method)
-    edata.varp["feature_correlations"] = correlations
+    # Delegate to variable_correlations, which handles layer=None (falls back to .X),
+    # pairwise NaN deletion, and provides p-values and significance
+    corr_df, _, _ = ep.pp.variable_correlations(
+        edata,
+        layer=layer,
+        method=corr_method,
+        correction_method="bonferroni",
+    )
+    edata.varp["feature_correlations"] = corr_df
 
     corr_results: dict[str, list] = {"Feature 1": [], "Feature 2": [], f"{corr_method.capitalize()} CC": []}
     if sensitive_features == "all":
@@ -160,10 +168,13 @@ def detect_bias(
     for sens_feature, comp_feature in feature_tuples:
         if sens_feature == comp_feature:
             continue
-        if abs(correlations.loc[sens_feature, comp_feature]) > corr_threshold:
+        # corr_df may not cover all features if some are non-numeric; guard with a check
+        if sens_feature not in corr_df.index or comp_feature not in corr_df.columns:
+            continue
+        if abs(corr_df.loc[sens_feature, comp_feature]) > corr_threshold:
             corr_results["Feature 1"].append(sens_feature)
             corr_results["Feature 2"].append(comp_feature)
-            corr_results[f"{corr_method.capitalize()} CC"].append(correlations.loc[sens_feature, comp_feature])
+            corr_results[f"{corr_method.capitalize()} CC"].append(corr_df.loc[sens_feature, comp_feature])
     bias_results["feature_correlations"] = pd.DataFrame(corr_results).sort_values(
         by=f"{corr_method.capitalize()} CC", key=abs, ascending=False
     )

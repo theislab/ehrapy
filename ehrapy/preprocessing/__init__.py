@@ -1,4 +1,5 @@
 from ehrapy.preprocessing._bias import detect_bias
+from ehrapy.preprocessing._correlation import variable_correlations
 from ehrapy.preprocessing._encoding import encode
 from ehrapy.preprocessing._filter import filter_features, filter_observations
 from ehrapy.preprocessing._highly_variable_features import highly_variable_features
@@ -57,4 +58,5 @@ __all__ = [
     "regress_out",
     "sample",
     "combat",
+    "variable_correlations",
 ]
