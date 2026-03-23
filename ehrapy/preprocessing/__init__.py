@@ -1,10 +1,12 @@
 from ehrapy.preprocessing._bias import detect_bias
+from ehrapy.preprocessing._correlation import variable_correlations
 from ehrapy.preprocessing._encoding import encode
 from ehrapy.preprocessing._filter import filter_features, filter_observations
 from ehrapy.preprocessing._highly_variable_features import highly_variable_features
 from ehrapy.preprocessing._imputation import (
     explicit_impute,
     knn_impute,
+    locf_impute,
     mice_forest_impute,
     miss_forest_impute,
     simple_impute,
@@ -32,6 +34,7 @@ __all__ = [
     "highly_variable_features",
     "explicit_impute",
     "knn_impute",
+    "locf_impute",
     "mice_forest_impute",
     "miss_forest_impute",
     "simple_impute",
@@ -55,4 +58,5 @@ __all__ = [
     "regress_out",
     "sample",
     "combat",
+    "variable_correlations",
 ]

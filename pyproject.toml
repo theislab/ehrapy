@@ -4,7 +4,7 @@ requires = ["hatchling"]
 
 [project]
 name = "ehrapy"
-version = "0.13.1"
+version = "0.14.0rc1"
 description = "Electronic Health Record Analysis with Python."
 readme = "README.md"
 requires-python = ">=3.12,<3.15"
@@ -47,6 +47,7 @@ classifiers = [
 
 dependencies = [
     "ehrdata",
+    "bottleneck",
     "scanpy",
     "requests",
     "miceforest",
@@ -64,7 +65,8 @@ dependencies = [
     "igraph",  # careful - GPL
     "fast-array-utils[sparse,accel]",
     "tslearn",
-    "holoviews[recommended]"
+    "holoviews[recommended]",
+    "tensorly"
 ]
 
 [project.optional-dependencies]

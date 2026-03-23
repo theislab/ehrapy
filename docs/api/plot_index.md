@@ -29,6 +29,8 @@ For most tools and for some preprocessing functions, you will find a plotting fu
     plot.timeseries
     plot.sankey_diagram
     plot.sankey_diagram_time
+    plot.variable_correlations
+    plot.variable_dependencies
 ```
 
 ## Quality Control and missing values
@@ -120,6 +122,17 @@ Methods that extract and visualize tool-specific annotation in an AnnData object
     plot.kaplan_meier
     plot.cox_ph_forestplot
     plot.cox_ph_adjusted_curves
+```
+
+## Normalized Complexity Profile
+
+```{eval-rst}
+.. autosummary::
+    :toctree: plot
+    :nosignatures:
+
+    plot.ncp
+    plot.ncp_cluster_trajectories
 ```
 
 ## Causal Inference

@@ -2,15 +2,39 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## v0.14.0
-
-### 🧰 Maintenance
-
-* continuous values don't repeat title in CohortTracker's barplot ([#1021](https://github.com/theislab/ehrapy/pull/1021)) @sueoglu
+## v0.14.0rc1
 
 ### 🚀 Features
 
-* Longitudinal explicit impute `ep.pp.explicit_impute()` extended to enable the users to assign different imputation values per timepoint ([#1023](https://github.com/theislab/ehrapy/pull/1023)) @sueoglu
+* Add LOCF imputation `ep.pp.locf_impute()` for longitudinal (3D) data with forward fill and configurable fallback strategies ([#1020](https://github.com/theislab/ehrapy/pull/1020)) @agerardy @eroell
+* Add non-negative CP decomposition `ep.tl.ncp()` for 3D tensor factorisation with companion plots `ep.pl.ncp()` and `ep.pl.ncp_cluster_trajectories()` ([#1030](https://github.com/theislab/ehrapy/pull/1030)) @eroell
+* Add `ep.pp.variable_correlations()` and plotting functions `ep.pl.variable_correlations()` / `ep.pl.variable_dependencies()` ([#1010](https://github.com/theislab/ehrapy/pull/1010)) @sueoglu
+* Longitudinal explicit impute `ep.pp.explicit_impute()` extended to enable different imputation values per timepoint ([#1023](https://github.com/theislab/ehrapy/pull/1023)) @sueoglu
+* Sankey diagram state-transition colours and hover function for timeseries plots ([#1019](https://github.com/theislab/ehrapy/pull/1019)) @sueoglu
+* Add longitudinal data analysis notebook ([#1007](https://github.com/theislab/ehrapy/pull/1007)) @eroell
+
+### 🐛 Bug Fixes
+
+* Fix `AttributeError` when normalizing with `edata.X = None` ([#1015](https://github.com/theislab/ehrapy/pull/1015)) @agerardy @eroell
+
+
+### 🧰 Maintenance
+
+* Fix plotting CI ([#1011](https://github.com/theislab/ehrapy/pull/1011)) @sueoglu @eroell
+* Continuous values don't repeat title in CohortTracker's barplot ([#1021](https://github.com/theislab/ehrapy/pull/1021)) @sueoglu
+* Remove legacy code deprecated in 0.13.0, fix test warnings & adjust to future scanpy arguments ([#1016](https://github.com/theislab/ehrapy/pull/1016)) @eroell
+* Update plotting ci dotplot ([#1011](https://github.com/theislab/ehrapy/pull/1011)) @sueoglu @Zethson @eroell
+
+### 🐛 Bug Fixes
+
+* `ep.pp` normalization functions now work when using a `layer` and `.X` is `None` ([#1015](https://github.com/theislab/ehrapy/pull/1015)) @agerardy @eroell
+* `ep.tl.rank_features_groups` can use `.obs` regardless of what is in `.X` or `.layers` ([#1015](https://github.com/theislab/ehrapy/pull/1015)) @agerardy @eroell
+
+### ⚠️ Modified
+* Update `qc_lab_metrics`([#1025](https://github.com/theislab/ehrapy/pull/1025)) @eroell
+* remove deprecated `ep.ad` (moved to `ehrdata`): `infer_feature_types`, `feature_type_overview`, `replace_feature_types`, `anndata_to_df`, `df_to_anndata`, `move_to_obs`, `move_to_x` ([#1016](https://github.com/theislab/ehrapy/pull/1016)) @eroell
+* remove deprecated `ep.dt` (moved to `ehrdata`) ([#1016](https://github.com/theislab/ehrapy/pull/1016)) @eroell
+* remove deprecated `ep.io` (moved to `ehrdata`): `df_to_anndata`, `read_csv`, `read_fhir`, `read_h5ad`, `write` ([#1016](https://github.com/theislab/ehrapy/pull/1016)) @eroell
 
 
 ## v0.13.1
@@ -19,20 +43,6 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 * improve syntax usage ([#1005](https://github.com/theislab/ehrapy/pull/1005)) @Zethson
 * fix fknni extra ([#1003](https://github.com/theislab/ehrapy/pull/1003)) @Zethson
-* Update plotting ci dotplot ([#1011](https://github.com/theislab/ehrapy/pull/1011)) @sueoglu @eroell
-* fix test warnings & adjust to future scanpy arguments ([#1016](https://github.com/theislab/ehrapy/pull/1016)) @eroell
-
-### 🐛 Bug Fixes
-
-* `ep.pp` normalization functions now work when using a `layer` and `.X` is `None` ([#1015](https://github.com/theislab/ehrapy/pull/1015)) @agerardy @eroell
-* `ep.tl.rank_features_groups` can use `.obs` regardless of what is in `.X` or `.layers` ([#1015](https://github.com/theislab/ehrapy/pull/1015)) @agerardy @eroell
-
-### ⚠️ Modified
-
-* remove deprecated `ep.ad` (moved to `ehrdata`): `infer_feature_types`, `feature_type_overview`, `replace_feature_types`, `anndata_to_df`, `df_to_anndata`, `move_to_obs`, `move_to_x` ([#1016](https://github.com/theislab/ehrapy/pull/1016)) @eroell
-* remove deprecated `ep.dt` (moved to `ehrdata`) ([#1016](https://github.com/theislab/ehrapy/pull/1016)) @eroell
-* remove deprecated `ep.io` (moved to `ehrdata`): `df_to_anndata`, `read_csv`, `read_fhir`, `read_h5ad`, `write` ([#1016](https://github.com/theislab/ehrapy/pull/1016)) @eroell
-
 
 ## v0.13.0
 

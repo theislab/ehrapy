@@ -88,6 +88,16 @@ In contrast to a preprocessing function, a tool usually adds an easily interpret
     tools.causal_inference
 ```
 
+## Normalized Complexity Profile
+
+```{eval-rst}
+.. autosummary::
+    :toctree: tools
+    :nosignatures:
+
+    tools.ncp
+```
+
 ## Cohort Tracking
 
 ```{eval-rst}

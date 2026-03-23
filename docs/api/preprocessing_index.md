@@ -58,6 +58,7 @@ Preprocessing steps usually perform a basic transformation on the data array in 
 
     preprocessing.explicit_impute
     preprocessing.simple_impute
+    preprocessing.locf_impute
     preprocessing.knn_impute
     preprocessing.miss_forest_impute
     preprocessing.mice_forest_impute
@@ -100,4 +101,14 @@ Partially overlaps with dataset integration. Note that a simple batch correction
     :nosignatures:
 
     preprocessing.neighbors
+```
+
+## Correlation
+
+```{eval-rst}
+.. autosummary::
+    :toctree: preprocessing
+    :nosignatures:
+
+    preprocessing.variable_correlations
 ```
