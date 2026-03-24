@@ -203,7 +203,7 @@ def test_cox_ph_adjusted_curves_basic(mimic_2_adjusted_sa, method, layer):
         event_col=event_col,
         method=method,
         n_bootstrap=10,
-        key_added="test_adjusted",
+        uns_key="test_adjusted",
         layer=layer,
     )
 
@@ -226,8 +226,14 @@ def test_cox_ph_adjusted_curves_basic(mimic_2_adjusted_sa, method, layer):
         entry = result[group]
         assert "times" in entry
         assert "survival" in entry
-        assert "ci_lower" in entry
-        assert "ci_upper" in entry
+
+        if method == "average":
+            assert entry["ci_lower"] is not None
+            assert entry["ci_upper"] is not None
+        else:
+            assert entry["ci_lower"] is None
+            assert entry["ci_upper"] is None
+
         assert len(entry["times"]) == len(entry["survival"]) == 100
         # survival probabilities must be in [0, 1]
         assert np.all(entry["survival"] >= 0)

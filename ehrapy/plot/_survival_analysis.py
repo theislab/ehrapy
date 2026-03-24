@@ -542,7 +542,7 @@ def cox_ph_adjusted_curves(
 
     data = edata.uns[uns_key]
     meta = data.get("_meta", {})
-    meta.get("strata", "group")
+    strata_label = meta.get("strata", "group")
     method = meta.get("method", "average")
 
     all_groups = [k for k in data if k != "_meta"]
@@ -597,7 +597,7 @@ def cox_ph_adjusted_curves(
             elements.append(band)
 
     _method_label = "population-averaged" if method == "average" else "conditional"
-    _title = title or f"CoxPH-Adjusted Survival Curves ({_method_label})"
+    _title = title or f"CoxPH-Adjusted Survival Curves ({_method_label}) stratified by {strata_label}"
 
     overlay = (
         hv.Overlay(elements)

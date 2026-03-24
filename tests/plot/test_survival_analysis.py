@@ -95,7 +95,7 @@ def test_cox_ph_adjusted_curves(mimic_2_adjusted_sa):
         event_col=event_col,
         method="average",
         n_bootstrap=10,
-        key_added="test_adjusted",
+        uns_key="test_adjusted",
         layer="layer_2",
     )
     plot = ep.pl.cox_ph_adjusted_curves(edata_sample, uns_key="test_adjusted")

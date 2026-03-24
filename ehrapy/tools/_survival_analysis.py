@@ -970,7 +970,7 @@ def cox_ph_adjusted_curves(
     ci_alpha: float = 0.05,
     times: np.ndarray | None = None,
     layer: str | None = None,
-    key_added: str = "cox_ph_adjusted_curves",
+    uns_key: str = "cox_ph_adjusted_curves",
 ) -> None:
     """Compute CoxPH adjusted survival curves stratified by a grouping variable.
 
@@ -998,10 +998,10 @@ def cox_ph_adjusted_curves(
         times: Evaluation time grid.
             Defaults to 100 evenly-spaced points from 0 to the maximum observed time.
         layer: The layer to use when reconstructing the covariate data for prediction.
-        key_added: The key to use for the `.uns` slot in the data object.
+        uns_key: The key to use for the `.uns` slot in the data object.
 
     Returns:
-        None. Results are stored in edata.uns[key_added].
+        None. Results are stored in edata.uns[uns_key].
 
     Examples:
         >>> import numpy as np
@@ -1054,7 +1054,11 @@ def cox_ph_adjusted_curves(
         for group in groups:
             # Assign every patient in the cohort to this group
             full_df_group = full_df.copy()
-            full_df_group[strata] = group
+            # Cast to categorical so it is encoded consistently with fit time
+            full_df_group[strata] = pd.Categorical(
+                [group] * len(full_df_group),
+                categories=sorted(df[strata].unique()),
+            )
 
             surv_matrix = cph.predict_survival_function(full_df_group, times=_times)
             mean_surv = surv_matrix.values.mean(axis=1)
@@ -1112,7 +1116,7 @@ def cox_ph_adjusted_curves(
         "duration_col": duration_col,
         "event_col": event_col,
     }
-    edata.uns[key_added] = results
+    edata.uns[uns_key] = results
 
 
 def _bootstrap_average_survival(
