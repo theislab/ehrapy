@@ -533,7 +533,7 @@ def cox_ph_adjusted_curves(
         ...     duration_col="mort_day_censored",
         ...     event_col="censor_flg",
         ... )
-        >>> ep.pl.cox_ph_adjusted_curves(edata
+        >>> ep.pl.cox_ph_adjusted_curves(edata)
 
         .. image:: /_static/docstring_previews/cox_ph_adjusted_curves.png
     """
