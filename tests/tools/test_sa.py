@@ -176,3 +176,67 @@ def test_kmf(mimic_2_sa):
         assert isinstance(kmf, KaplanMeierFitter)
         assert len(kmf.durations) == 1776
         assert sum(kmf.event_observed) == 497
+
+
+@pytest.mark.parametrize("method", ["average", "conditional"])
+@pytest.mark.parametrize("layer", [None, "layer_2"])
+def test_cox_ph_adjusted_curves_basic(mimic_2_adjusted_sa, method, layer):
+    """Results are stored in edata.uns with correct structure."""
+    edata = mimic_2_adjusted_sa
+    duration_col, event_col = "mort_day_censored", "censor_flg"
+
+    if layer is not None:
+        edata.X = None
+
+    cph = ep.tl.cox_ph(
+        edata,
+        duration_col=duration_col,
+        event_col=event_col,
+        formula="sapsi_first + afib_flg",
+        layer=layer,
+    )
+    ep.tl.cox_ph_adjusted_curves(
+        edata,
+        cph,
+        strata="aline_flg",
+        duration_col=duration_col,
+        event_col=event_col,
+        method=method,
+        n_bootstrap=10,
+        uns_key="test_adjusted",
+        layer=layer,
+    )
+
+    assert "test_adjusted" in edata.uns
+    result = edata.uns["test_adjusted"]
+
+    # _meta is stored correctly
+    assert "_meta" in result
+    assert result["_meta"]["strata"] == "aline_flg"
+    assert result["_meta"]["method"] == method
+    assert result["_meta"]["duration_col"] == duration_col
+    assert result["_meta"]["event_col"] == event_col
+
+    # one entry per group plus _meta
+    groups = [k for k in result if k != "_meta"]
+    assert len(groups) == 2  # aline_flg is binary
+
+    # each group entry has the expected keys and shapes
+    for group in groups:
+        entry = result[group]
+        assert "times" in entry
+        assert "survival" in entry
+
+        if method == "average":
+            assert entry["ci_lower"] is not None
+            assert entry["ci_upper"] is not None
+        else:
+            assert entry["ci_lower"] is None
+            assert entry["ci_upper"] is None
+
+        assert len(entry["times"]) == len(entry["survival"]) == 100
+        # survival probabilities must be in [0, 1]
+        assert np.all(entry["survival"] >= 0)
+        assert np.all(entry["survival"] <= 1)
+        # survival must be non-increasing
+        assert np.all(np.diff(entry["survival"]) <= 1e-8)
