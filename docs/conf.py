@@ -106,7 +106,6 @@ intersphinx_mapping = {
     "scanpy": ("https://scanpy.readthedocs.io/en/stable/", None),
     "pytorch_lightning": ("https://lightning.ai/docs/pytorch/stable/", None),
     "pymde": ("https://pymde.org/", None),
-    "tensorly": ("https://tensorly.org/stable/", None),
     "lamin": ("https://docs.lamin.ai", None),
     "lifelines": ("https://lifelines.readthedocs.io/en/latest/", None),
     "statsmodels": ("https://www.statsmodels.org/stable", None),

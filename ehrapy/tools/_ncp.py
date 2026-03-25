@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 
@@ -11,31 +11,111 @@ if TYPE_CHECKING:
     from ehrdata import EHRData
 
 
-@use_ehrdata(deprecated_after="1.0.0")
+def _khatri_rao(A: np.ndarray, B: np.ndarray) -> np.ndarray:
+    """Khatri-Rao (column-wise Kronecker) product of two matrices."""
+    I, R = A.shape
+    J, _ = B.shape
+    return (A[:, np.newaxis, :] * B[np.newaxis, :, :]).reshape(I * J, R)
+
+
+def _unfold(tensor: np.ndarray, mode: int) -> np.ndarray:
+    """Mode-n unfolding (matricisation) of a tensor."""
+    return np.moveaxis(tensor, mode, 0).reshape(tensor.shape[mode], -1)
+
+
+def _nonneg_cp(
+    tensor: np.ndarray,
+    rank: int,
+    n_iter_max: int = 300,
+    tol: float = 1e-8,
+    random_state: int = 0,
+) -> tuple[np.ndarray, list[np.ndarray]]:
+    """Non-negative CP decomposition via Multiplicative Updates (Lee & Seung).
+
+    Parameters
+    ----------
+    tensor
+        Non-negative input tensor of arbitrary order (≥2).
+    rank
+        Number of components.
+    n_iter_max
+        Maximum number of iterations.
+    tol
+        Convergence tolerance on the relative change in reconstruction error.
+    random_state
+        Seed for initialisation.
+
+    Returns:
+    -------
+    weights
+        Per-component weights of shape ``(rank,)``.
+    factors
+        List of non-negative factor matrices, one per tensor mode.
+    """
+    rng = np.random.default_rng(random_state)
+    ndims = tensor.ndim
+    eps = 1e-12
+
+    factors = [np.abs(rng.standard_normal((s, rank))) + 0.1 for s in tensor.shape]
+
+    prev_error = np.inf
+    for _ in range(n_iter_max):
+        for mode in range(ndims):
+            others = [f for i, f in enumerate(factors) if i != mode]
+            kr = others[-1]
+            for f in reversed(others[:-1]):
+                kr = _khatri_rao(f, kr)
+
+            X_mode = _unfold(tensor, mode)
+            numerator = X_mode @ kr
+            denominator = factors[mode] @ (kr.T @ kr) + eps
+            factors[mode] *= numerator / denominator
+
+        recon = np.zeros_like(tensor)
+        for r in range(rank):
+            component = factors[0][:, r]
+            for f in factors[1:]:
+                component = np.multiply.outer(component, f[:, r])
+            recon += component
+        error = np.linalg.norm(tensor - recon) / max(np.linalg.norm(tensor), eps)
+
+        if abs(prev_error - error) < tol:
+            break
+        prev_error = error
+
+    weights = np.ones(rank)
+    for i in range(ndims):
+        norms = np.maximum(np.linalg.norm(factors[i], axis=0), eps)
+        weights *= norms
+        factors[i] /= norms[np.newaxis, :]
+
+    return weights, factors
+
+
 def ncp(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     *,
     layer: str,
     rank: int = 4,
     n_iter_max: int = 300,
-    init: str = "random",
+    init: Literal["random"] = "random",
     sigmoid_transform: bool = False,
     key_added: str = "ncp",
     random_state: int = 0,
     copy: bool = False,
-) -> EHRData | AnnData | None:
+) -> EHRData | None:
     r"""Non-negative CP (PARAFAC) decomposition of a 3D temporal layer.
 
-    Decomposes the stored 3D data into three factor matrices (all factors non-negative).
-
-    Uses :func:`tensorly.decomposition.non_negative_parafac`.
+    Decomposes the stored 3D data into three non-negative factor matrices
+    using multiplicative updates (Lee & Seung).  The implementation is
+    pure NumPy and does not require ``tensorly``.
 
     Args:
         edata: Central data object.
         layer: Key of the 3D layer to decompose (shape ``n_obs × n_vars × n_time``).
         rank: Number of components (rank of the decomposition).
-        n_iter_max: Maximum number of ALS iterations.
-        init: Initialisation strategy passed to :func:`~tensorly.decomposition.non_negative_parafac` (``"random"`` or ``"svd"``).
+        n_iter_max: Maximum number of multiplicative-update iterations.
+        init: Initialisation strategy (currently only ``"random"``).
         sigmoid_transform: If ``True``, apply a sigmoid transformation to the layer
             before decomposition. Useful when the layer contains raw logits.
         key_added: Key prefix for storing results. Results are stored as
@@ -51,8 +131,8 @@ def ncp(
     Examples:
         >>> import numpy as np, pandas as pd
         >>> import ehrdata as ed, ehrapy as ep
-        >>> np.random.seed(0)
-        >>> tensor = np.abs(np.random.randn(30, 8, 12))  # patients × vars × time
+        >>> rng = np.random.default_rng(0)
+        >>> tensor = np.abs(rng.standard_normal((30, 8, 12)))
         >>> edata = ed.EHRData(
         ...     shape=(30, 8),
         ...     layers={"data": tensor},
@@ -77,14 +157,9 @@ def ncp(
 
     edata = edata.copy() if copy else edata
 
-    from tensorly.decomposition import non_negative_parafac
-
-    weights, factors = non_negative_parafac(
-        tensor, rank=rank, init=init, n_iter_max=n_iter_max, random_state=random_state
-    )
-    A, B, C = (np.asarray(f) for f in factors)
-    # absorb weights into the sample factor so each component is self-contained
-    A = A * np.asarray(weights)[np.newaxis, :]
+    weights, factors = _nonneg_cp(tensor, rank=rank, n_iter_max=n_iter_max, random_state=random_state)
+    A, B, C = factors
+    A = A * weights[np.newaxis, :]
 
     edata.obsm[f"X_{key_added}"] = A  # (n_obs, rank)
     edata.varm[f"{key_added}_loadings"] = B  # (n_vars, rank)
