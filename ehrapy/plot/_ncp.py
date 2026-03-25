@@ -23,9 +23,6 @@ _PALETTE = [
 ]
 
 
-# ── helpers ───────────────────────────────────────────────────────────────────
-
-
 def _require_ncp(edata: EHRData, key: str) -> None:
     missing = []
     if key not in edata.uns:
@@ -36,9 +33,6 @@ def _require_ncp(edata: EHRData, key: str) -> None:
         missing.append(f"edata.varm['{key}_loadings']")
     if missing:
         raise KeyError(f"NCP results not found ({missing}). Run `ep.tl.ncp(edata, ...)` first.")
-
-
-# ── pl.ncp ────────────────────────────────────────────────────────────────────
 
 
 def ncp(
@@ -74,16 +68,11 @@ def ncp(
         HoloViews Layout with ``rank × 3`` panels arranged in three columns.
 
     Examples:
-        >>> import numpy as np, pandas as pd
+        >>> import numpy as np
         >>> import ehrdata as ed, ehrapy as ep
-        >>> np.random.seed(0)
-        >>> tensor = np.abs(np.random.randn(30, 8, 12))
-        >>> edata = ed.EHRData(
-        ...     shape=(30, 8),
-        ...     layers={"data": tensor},
-        ...     var=pd.DataFrame(index=[f"var_{i}" for i in range(8)]),
-        ... )
-        >>> ep.tl.ncp(edata, layer="data", rank=3)
+        >>> edata = ed.dt.ehrdata_blobs(n_variables=8, n_centers=3, n_observations=30, base_timepoints=12)
+        >>> edata.layers["tem_data"] = np.abs(edata.layers["tem_data"])
+        >>> ep.tl.ncp(edata, layer="tem_data", rank=3)
         >>> ep.pl.ncp(edata, n_top=5)
 
         .. image:: /_static/docstring_previews/ncp.png
@@ -163,9 +152,6 @@ def ncp(
     return hv.Layout(panels).cols(3)
 
 
-# ── pl.ncp_cluster_trajectories ───────────────────────────────────────────────
-
-
 def ncp_cluster_trajectories(
     edata: EHRData,
     *,
@@ -206,22 +192,12 @@ def ncp_cluster_trajectories(
         HoloViews Layout with one panel per cluster, arranged in two columns.
 
     Examples:
-        >>> import numpy as np, pandas as pd
+        >>> import numpy as np
         >>> import ehrdata as ed, ehrapy as ep
-        >>> np.random.seed(0)
-        >>> tensor = np.abs(np.random.randn(30, 8, 12))
-        >>> obs = pd.DataFrame(
-        ...     {"group": ["A"] * 15 + ["B"] * 15},
-        ...     index=[str(i) for i in range(30)],
-        ... )
-        >>> edata = ed.EHRData(
-        ...     shape=(30, 8),
-        ...     layers={"data": tensor},
-        ...     obs=obs,
-        ...     var=pd.DataFrame(index=[f"var_{i}" for i in range(8)]),
-        ... )
-        >>> ep.tl.ncp(edata, layer="data", rank=3)
-        >>> ep.pl.ncp_cluster_trajectories(edata, layer="data", cluster_key="group")
+        >>> edata = ed.dt.ehrdata_blobs(n_variables=8, n_centers=3, n_observations=30, base_timepoints=12)
+        >>> edata.layers["tem_data"] = np.abs(edata.layers["tem_data"])
+        >>> ep.tl.ncp(edata, layer="tem_data", rank=3)
+        >>> ep.pl.ncp_cluster_trajectories(edata, layer="tem_data", cluster_key="cluster")
 
         .. image:: /_static/docstring_previews/ncp_cluster_trajectories.png
     """

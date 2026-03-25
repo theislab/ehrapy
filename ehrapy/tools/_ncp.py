@@ -107,8 +107,7 @@ def ncp(
     r"""Non-negative CP (PARAFAC) decomposition of a 3D temporal layer.
 
     Decomposes the stored 3D data into three non-negative factor matrices
-    using multiplicative updates (Lee & Seung).  The implementation is
-    pure NumPy and does not require ``tensorly``.
+    using multiplicative updates.
 
     Args:
         edata: Central data object.
@@ -129,19 +128,17 @@ def ncp(
         ``None`` if ``copy=False``, else a modified copy of ``edata``.
 
     Examples:
-        >>> import numpy as np, pandas as pd
+        >>> import numpy as np
         >>> import ehrdata as ed, ehrapy as ep
-        >>> rng = np.random.default_rng(0)
-        >>> tensor = np.abs(rng.standard_normal((30, 8, 12)))
-        >>> edata = ed.EHRData(
-        ...     shape=(30, 8),
-        ...     layers={"data": tensor},
-        ...     var=pd.DataFrame(index=[f"var_{i}" for i in range(8)]),
-        ... )
-        >>> ep.tl.ncp(edata, layer="data", rank=3)
-        >>> edata.obsm["X_ncp"].shape  # (30, 3)  – sample factors
-        >>> edata.varm["ncp_loadings"].shape  # (8, 3)   – variable factors
-        >>> edata.uns["ncp"]["temporal_factors"].shape  # (12, 3) – time factors
+        >>> edata = ed.dt.ehrdata_blobs(n_variables=8, n_centers=3, n_observations=30, base_timepoints=12)
+        >>> edata.layers["tem_data"] = np.abs(edata.layers["tem_data"])
+        >>> ep.tl.ncp(edata, layer="tem_data", rank=3)
+        >>> edata.obsm["X_ncp"].shape
+        (30, 3)
+        >>> edata.varm["ncp_loadings"].shape
+        (8, 3)
+        >>> edata.uns["ncp"]["temporal_factors"].shape
+        (12, 3)
     """
     if layer not in edata.layers:
         raise KeyError(f"Layer {layer!r} not found in edata.layers. Available: {list(edata.layers)}")
