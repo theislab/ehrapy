@@ -9,8 +9,9 @@ from typing import TYPE_CHECKING, Literal
 import numpy as np
 import pandas as pd
 import scipy.sparse as sp
-from ehrdata._feature_types import _check_feature_types, _infer_numerical_column_indices
+from ehrdata._feature_types import _check_feature_types
 from ehrdata._logger import logger
+from ehrdata.core.constants import FEATURE_TYPE_KEY, NUMERIC_TAG
 from sklearn.experimental import enable_iterative_imputer  # noinspection PyUnresolvedReference
 
 from ehrapy import settings
@@ -379,9 +380,8 @@ def _knn_impute(
         var_names = edata.var_names
     var_indices = edata.var_names.get_indexer(var_names).tolist()
 
-    numerical_indices = _infer_numerical_column_indices(
-        edata,
-    )
+    numerical_var_names = edata.var_names[edata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG]
+    numerical_indices = edata.var_names.get_indexer(numerical_var_names).tolist()
     if any(idx not in numerical_indices for idx in var_indices):
         raise ValueError(
             "Can only impute numerical data. Try to restrict imputation to certain columns using "
@@ -571,7 +571,9 @@ def mice_forest_impute(
 
     _warn_imputation_threshold(edata, var_names, threshold=warning_threshold, layer=layer)
 
-    if any(idx not in _infer_numerical_column_indices(edata) for idx in var_indices):
+    numerical_var_names = edata.var_names[edata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG]
+    numerical_indices = edata.var_names.get_indexer(numerical_var_names).tolist()
+    if any(idx not in numerical_indices for idx in var_indices):
         raise ValueError(
             "Can only impute numerical data. Try to restrict imputation to certain columns using "
             "var_names parameter or perform an encoding of your data."
