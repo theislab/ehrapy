@@ -661,7 +661,9 @@ def test_diffmap(mimic_2_sample_serv_unit_day_icu, check_same_image):
 def test_dpt_timeseries(mimic_2_encoded, check_same_image):
     edata = mimic_2_encoded.copy()
 
-    ep.pp.knn_impute(edata, backend="scikit-learn", var_names=edata.var_names[edata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG])
+    ep.pp.knn_impute(
+        edata, backend="scikit-learn", var_names=edata.var_names[edata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG]
+    )
     ep.pp.log_norm(edata, offset=1)
     ep.pp.pca(edata)
     ep.pp.neighbors(edata, method="gauss")
