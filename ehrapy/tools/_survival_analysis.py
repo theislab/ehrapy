@@ -982,7 +982,7 @@ def cox_ph_adjusted_curves(
 
     Args:
         edata: Central data object.
-        cph: Fitted CoxPHFitter, as returned by tl.cox_ph().
+        cph: Fitted CoxPHFitter, as returned by :func:`~ehrapy.tools.cox_ph`.
         strata: Name of the column to stratify by.
             Must be present in the data and should not be included in the Cox model formula.
         duration_col: The name of the column that contains the subjects' lifetimes.
@@ -993,7 +993,7 @@ def cox_ph_adjusted_curves(
             * `'conditional'` one curve per group for a synthetic reference patient with cohort-average covariates, varying only the strata variable.
         reference_values: A dict of values to override the default reference patient values for method = 'conditional' (mean for continuous, mode for categorical).
         n_bootstrap: Number of bootstrap resamples used to compute confidence intervals.
-            Only used when method='average'.
+            Only used when method is 'average'.
         ci_alpha: Significance level for confidence intervals.
         times: Evaluation time grid.
             Defaults to 100 evenly-spaced points from 0 to the maximum observed time.
@@ -1004,7 +1004,6 @@ def cox_ph_adjusted_curves(
         None. Results are stored in edata.uns[uns_key].
 
     Examples:
-        >>> import numpy as np
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
@@ -1142,6 +1141,8 @@ def _build_reference_patient(
     cph: CoxPHFitter,
 ) -> dict:
     """Build a synthetic reference patient.
+
+    A reference patient represents a patient with average characteristics of the entire cohort.
 
     - continuous columns -> column mean
     - categorical/object columns -> column mode

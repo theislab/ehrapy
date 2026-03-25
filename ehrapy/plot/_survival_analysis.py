@@ -486,17 +486,15 @@ def cox_ph_adjusted_curves(
     ylabel: str = "Adjusted Survival Probability",
     legend_position: str = "top_right",
 ) -> hv.Overlay:
-    """Generates a survival curve plot to visualize CoxPH-adjusted survival probabilities stratified by a grouping variable.
+    """Survival curve plot to visualize CoxPH-adjusted survival probabilities stratified by a grouping variable.
 
     The `edata` object must first be populated using :func:`~ehrapy.tools.cox_ph_adjusted_curves`.
-    It stores the adjusted survival curves in the `.uns` attribute of `edata`.
     Mirrors the functionality of ggadjustedcurves() from the R survminer package.
     See also: Therneau, Crowson & Atkinson (2015), 'Adjusted Survival Curves':
     https://cran.r-project.org/web/packages/survival/vignettes/adjcurve.pdf
 
     Args:
-        edata: Data object containing the adjusted survival curves.
-            This is stored in the `.uns` attribute after running :func:`~ehrapy.tools.cox_ph_adjusted_curves` function.
+        edata: Data object containing the adjusted survival curves in `uns` after having run :func:`~ehrapy.tools.cox_ph_adjusted_curves`.
         uns_key: Key in `.uns` where :func:`~ehrapy.tools.cox_ph_adjusted_curves` stored its output.
             See argument `key_added` in :func:`~ehrapy.tools.cox_ph_adjusted_curves`.
         groups: Subset of group labels to plot.
@@ -517,7 +515,6 @@ def cox_ph_adjusted_curves(
         HoloViews Overlay object representing the adjusted survival curve plot.
 
     Examples:
-        >>> import numpy as np
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
@@ -536,7 +533,7 @@ def cox_ph_adjusted_curves(
         .. image:: /_static/docstring_previews/cox_ph_adjusted_curves.png
     """
     if uns_key not in edata.uns:
-        raise KeyError(f"No adjusted curves found at edata.uns['{uns_key}']. Run tl.cox_ph_adjusted_curves() first.")
+        raise KeyError(f"No adjusted curves found at edata.uns['{uns_key}']. Run ep.tl.cox_ph_adjusted_curves() first.")
 
     data = edata.uns[uns_key]
     meta = data.get("_meta", {})
