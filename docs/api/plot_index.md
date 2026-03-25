@@ -121,6 +121,7 @@ Methods that extract and visualize tool-specific annotation in an AnnData object
     plot.ols
     plot.kaplan_meier
     plot.cox_ph_forestplot
+    plot.cox_ph_adjusted_curves
 ```
 
 ## Normalized Complexity Profile
