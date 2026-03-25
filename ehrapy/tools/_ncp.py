@@ -98,7 +98,6 @@ def ncp(
     layer: str,
     rank: int = 4,
     n_iter_max: int = 300,
-    init: Literal["random"] = "random",
     sigmoid_transform: bool = False,
     key_added: str = "ncp",
     random_state: int = 0,
@@ -114,7 +113,6 @@ def ncp(
         layer: Key of the 3D layer to decompose (shape ``n_obs × n_vars × n_time``).
         rank: Number of components (rank of the decomposition).
         n_iter_max: Maximum number of multiplicative-update iterations.
-        init: Initialisation strategy (currently only ``"random"``).
         sigmoid_transform: If ``True``, apply a sigmoid transformation to the layer
             before decomposition. Useful when the layer contains raw logits.
         key_added: Key prefix for storing results. Results are stored as
@@ -165,7 +163,6 @@ def ncp(
             "layer": layer,
             "rank": rank,
             "n_iter_max": n_iter_max,
-            "init": init,
             "sigmoid_transform": sigmoid_transform,
         },
         "temporal_factors": C,  # (n_time, rank)
