@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import numpy as np
 import pandas as pd
+from bokeh.palettes import Category10
 from numpy import ndarray
 
 from ehrapy._compat import use_ehrdata
@@ -326,7 +327,7 @@ def kaplan_meier(
 
 @use_ehrdata(deprecated_after="1.0.0")
 def cox_ph_forestplot(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     *,
     uns_key: str = "cox_ph",
     labels: Iterable[str] | None = None,
@@ -467,3 +468,146 @@ def cox_ph_forestplot(
         forest_plot = forest_plot.opts(title=title)
 
     return forest_plot
+
+
+def cox_ph_adjusted_curves(
+    edata: EHRData,
+    *,
+    uns_key: str = "cox_ph_adjusted_curves",
+    groups: Sequence[str] | None = None,
+    palette: Sequence[str] | None = None,
+    show_ci: bool = True,
+    ci_alpha: float = 0.15,
+    line_width: float = 2.0,
+    width: int = 650,
+    height: int = 450,
+    title: str | None = None,
+    xlabel: str = "Time",
+    ylabel: str = "Adjusted Survival Probability",
+    legend_position: str = "top_right",
+) -> hv.Overlay:
+    """Survival curve plot to visualize CoxPH-adjusted survival probabilities stratified by a grouping variable.
+
+    The `edata` object must first be populated using :func:`~ehrapy.tools.cox_ph_adjusted_curves`.
+    Mirrors the functionality of ggadjustedcurves() from the R survminer package.
+    See also: Therneau, Crowson & Atkinson (2015), 'Adjusted Survival Curves':
+    https://cran.r-project.org/web/packages/survival/vignettes/adjcurve.pdf
+
+    Args:
+        edata: Data object containing the adjusted survival curves in `uns` after having run :func:`~ehrapy.tools.cox_ph_adjusted_curves`.
+        uns_key: Key in `.uns` where :func:`~ehrapy.tools.cox_ph_adjusted_curves` stored its output.
+            See argument `key_added` in :func:`~ehrapy.tools.cox_ph_adjusted_curves`.
+        groups: Subset of group labels to plot.
+            If None, all groups are plotted.
+        palette: List of hex or named colors, one per group.
+        show_ci: Whether to draw confidence interval bands.
+            Only has an effect when method='average' was used, as method='conditional' does not produce confidence intervals.
+        ci_alpha: Transparency of the CI band fill between 0 and 1.
+        line_width: Line width for the survival curves.
+        width: Plot width in pixels.
+        height: Plot height in pixels.
+        title: Set the title of the plot.
+        xlabel: X-axis label.
+        ylabel: Y-axis label.
+        legend_position: Position of the legend.
+
+    Returns:
+        HoloViews Overlay object representing the adjusted survival curve plot.
+
+    Examples:
+        >>> import ehrdata as ed
+        >>> import ehrapy as ep
+        >>> edata = ed.dt.mimic_2()
+        >>> cph = ep.tl.cox_ph(
+        ...     edata, "mort_day_censored", "censor_flg", formula="gender_num + afib_flg + day_icu_intime_num"
+        ... )
+        >>> ep.tl.cox_ph_adjusted_curves(
+        ...     edata,
+        ...     cph,
+        ...     strata="aline_flg",
+        ...     duration_col="mort_day_censored",
+        ...     event_col="censor_flg",
+        ... )
+        >>> ep.pl.cox_ph_adjusted_curves(edata)
+
+        .. image:: /_static/docstring_previews/cox_ph_adjusted_curves.png
+    """
+    if uns_key not in edata.uns:
+        raise KeyError(f"No adjusted curves found at edata.uns['{uns_key}']. Run ep.tl.cox_ph_adjusted_curves() first.")
+
+    data = edata.uns[uns_key]
+    meta = data.get("_meta", {})
+    strata_label = meta.get("strata", "group")
+    method = meta.get("method", "average")
+
+    all_groups = [k for k in data if k != "_meta"]
+    plot_groups = groups if groups is not None else all_groups
+
+    missing = set(plot_groups) - set(all_groups)
+    if missing:
+        raise ValueError(f"Groups {missing} not found in results. Available: {all_groups}")
+
+    if palette is None:
+        try:
+            palette = Category10[max(3, len(plot_groups))]
+        except KeyError as err:
+            raise ValueError(
+                "Too many groups to assign colors automatically. Please provide a custom palette."
+            ) from err
+
+    colors = palette[: len(plot_groups)]
+
+    elements = []
+    for color, group in zip(colors, plot_groups, strict=False):
+        entry = data[group]
+        times = entry["times"]
+        survival = entry["survival"]
+        ci_lower = entry.get("ci_lower")
+        ci_upper = entry.get("ci_upper")
+
+        # Survival curve
+        curve = hv.Curve(
+            (times, survival),
+            kdims="time",
+            vdims="survival",
+            label=str(group),
+        ).opts(
+            color=color,
+            line_width=line_width,
+            tools=["hover"],
+        )
+        elements.append(curve)
+
+        # CI band
+        if show_ci and ci_lower is not None and ci_upper is not None:
+            band = hv.Area(
+                (times, ci_lower, ci_upper),
+                kdims="time",
+                vdims=["survival_lower", "survival_upper"],
+            ).opts(
+                color=color,
+                alpha=ci_alpha,
+                line_alpha=0,
+            )
+            elements.append(band)
+
+    _method_label = "population-averaged" if method == "average" else "conditional"
+    _title = title or f"CoxPH-Adjusted Survival Curves ({_method_label}) stratified by {strata_label}"
+
+    overlay = (
+        hv.Overlay(elements)
+        .opts(
+            width=width,
+            height=height,
+            xlabel=xlabel,
+            ylabel=ylabel,
+            ylim=(-0.02, 1.05),
+            xlim=(0, None),
+            legend_position=legend_position,
+            title=_title,
+            toolbar="above",
+        )
+        .relabel(_title)
+    )
+
+    return overlay

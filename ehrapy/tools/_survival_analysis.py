@@ -4,7 +4,7 @@ import warnings
 from typing import TYPE_CHECKING, Literal
 
 import ehrdata as ed
-import numpy as np  # noqa: TC002
+import numpy as np
 import pandas as pd
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
@@ -25,7 +25,7 @@ from statsmodels.genmod.generalized_linear_model import GLMResultsWrapper  # noq
 from ehrapy._compat import function_2D_only, use_ehrdata
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Iterable, Mapping, Sequence
 
     from anndata import AnnData
     from ehrdata import EHRData
@@ -955,3 +955,211 @@ def weibull(
         fit_options=fit_options,
         layer=layer,
     )
+
+
+def cox_ph_adjusted_curves(
+    edata: EHRData,
+    cph: CoxPHFitter,
+    strata: str,
+    *,
+    duration_col: str,
+    event_col: str,
+    method: Literal["average", "conditional"] = "average",
+    reference_values: Mapping[str, str | int | float] | None = None,
+    n_bootstrap: int = 200,
+    ci_alpha: float = 0.05,
+    times: np.ndarray | None = None,
+    layer: str | None = None,
+    uns_key: str = "cox_ph_adjusted_curves",
+) -> None:
+    """Compute CoxPH adjusted survival curves stratified by a grouping variable.
+
+    Adjusted survival curves account for differences in baseline covariates between groups, allowing fairer comparison of survival outcomes in observational cohorts where groups may not be balanced.
+    This mirrors the functionality of R's survminer::surv_adjustedcurves().
+    The results will be stored in the `.uns` slot of the data object under the key 'cox_ph_adjusted_curves',
+    unless specified otherwise in the `uns_key` parameter.
+    See Therneau, Crowson & Atkinson (2015), 'Adjusted Survival Curves': https://cran.r-project.org/web/packages/survival/vignettes/adjcurve.pdf.
+
+    Args:
+        edata: Central data object.
+        cph: Fitted CoxPHFitter, as returned by :func:`~ehrapy.tools.cox_ph`.
+        strata: Name of the column to stratify by.
+            Must be present in the data and should not be included in the Cox model formula.
+        duration_col: The name of the column that contains the subjects' lifetimes.
+        event_col: The name of the column that specifies whether the event has been observed or censored.
+            Column values are True if the event was observed, False if the event was lost (right-censored).
+        method: The method used to compute adjusted survival curves. Options are:
+            * `'average'` one population-averaged curve per group, no rebalancing.
+            * `'conditional'` one curve per group for a synthetic reference patient with cohort-average covariates, varying only the strata variable.
+        reference_values: A dict of values to override the default reference patient values for method = 'conditional' (mean for continuous, mode for categorical).
+        n_bootstrap: Number of bootstrap resamples used to compute confidence intervals.
+            Only used when method is 'average'.
+        ci_alpha: Significance level for confidence intervals.
+        times: Evaluation time grid.
+            Defaults to 100 evenly-spaced points from 0 to the maximum observed time.
+        layer: The layer to use when reconstructing the covariate data for prediction.
+        uns_key: The key to use for the `.uns` slot in the data object.
+
+    Returns:
+        None. Results are stored in edata.uns[uns_key].
+
+    Examples:
+        >>> import ehrdata as ed
+        >>> import ehrapy as ep
+        >>> edata = ed.dt.mimic_2()
+        >>> cph = ep.tl.cox_ph(
+        ...     edata, "mort_day_censored", "censor_flg", formula="gender_num + afib_flg + day_icu_intime_num"
+        ... )
+        >>> ep.tl.cox_ph_adjusted_curves(
+        ...     edata,
+        ...     cph,
+        ...     strata="gender_num",
+        ...     duration_col="mort_day_censored",
+        ...     event_col="censor_flg",
+        ... )
+    """
+    df = ed.io.to_pandas(edata, layer=layer)
+
+    if "feature_type" in edata.var.columns:
+        for col in df.columns:
+            if col in edata.var.index and edata.var.loc[col, "feature_type"] == "categorical":
+                df[col] = pd.Categorical(df[col])
+
+    # Merge in obs columns (e.g. categorical strata variables stored as
+    # strings in edata.obs rather than in X). X columns take precedence.
+    obs_extra = edata.obs.columns.difference(df.columns)
+    if len(obs_extra) > 0:
+        df = df.join(edata.obs[obs_extra])
+
+    df = df.dropna()
+
+    if strata not in df.columns:
+        raise KeyError(f"strata column '{strata}' not found in data. Available columns: {list(df.columns)}")
+
+    t_max = df[duration_col].max()
+    _times = times if times is not None else np.linspace(0, t_max, 100)
+
+    # Columns to pass to predict (everything except duration and event)
+    predict_cols = [c for c in df.columns if c not in (duration_col, event_col)]
+
+    groups = df[strata].unique()
+    results: dict = {}
+
+    if method == "average":
+        full_df = df[predict_cols].copy().reset_index(drop=True)
+
+        for group in groups:
+            # Assign every patient in the cohort to this group
+            full_df_group = full_df.copy()
+            # Cast to categorical so it is encoded consistently with fit time
+            full_df_group[strata] = pd.Categorical(
+                [group] * len(full_df_group),
+                categories=sorted(df[strata].unique()),
+            )
+
+            surv_matrix = cph.predict_survival_function(full_df_group, times=_times)
+            mean_surv = surv_matrix.values.mean(axis=1)
+
+            boot_means = _bootstrap_average_survival(
+                cph=cph,
+                group_df=full_df_group,
+                times=_times,
+                predict_cols=predict_cols,
+                n_bootstrap=n_bootstrap,
+                rng=np.random.default_rng(seed=42),
+            )
+            ci_lower = np.percentile(boot_means, 100 * (ci_alpha / 2), axis=0)
+            ci_upper = np.percentile(boot_means, 100 * (1 - ci_alpha / 2), axis=0)
+
+            results[str(group)] = {
+                "times": _times,
+                "survival": mean_surv,
+                "ci_lower": ci_lower,
+                "ci_upper": ci_upper,
+            }
+    elif method == "conditional":
+        ref_patient = _build_reference_patient(df, predict_cols, reference_values or {}, cph)
+        for group in groups:
+            ref = ref_patient.copy()
+            ref[strata] = group  # vary only the strata variable
+
+            ref_df = df[predict_cols].iloc[[0]].copy()
+            for col, val in ref.items():
+                if col in ref_df.columns:
+                    if hasattr(ref_df[col], "cat"):
+                        # preserve categorical dtype when assigning scalar
+                        ref_df[col] = pd.Categorical([val], categories=ref_df[col].cat.categories)
+                    else:
+                        ref_df[col] = val
+
+            surv = cph.predict_survival_function(ref_df, times=_times)
+            survival = surv.values.flatten()
+
+            results[str(group)] = {
+                "times": _times,
+                "survival": survival,
+                "ci_lower": None,
+                "ci_upper": None,
+            }
+
+    else:
+        raise ValueError(f"method must be 'average' or 'conditional', got '{method}'")
+
+    results["_meta"] = {
+        "strata": strata,
+        "method": method,
+        "n_bootstrap": n_bootstrap if method == "average" else None,
+        "ci_alpha": ci_alpha,
+        "duration_col": duration_col,
+        "event_col": event_col,
+    }
+    edata.uns[uns_key] = results
+
+
+def _bootstrap_average_survival(
+    cph: CoxPHFitter,
+    group_df: pd.DataFrame,
+    times: np.ndarray,
+    predict_cols: Sequence[str],
+    n_bootstrap: int,
+    rng: np.random.Generator,
+) -> np.ndarray:
+    """Compute one mean survival curve per bootstrap resample of the group."""
+    boot_means = np.zeros((n_bootstrap, len(times)))
+    n = len(group_df)
+    for i in range(n_bootstrap):
+        sample = group_df.sample(n=n, replace=True, random_state=int(rng.integers(1e6)))
+        surv_matrix = cph.predict_survival_function(sample[predict_cols], times=times)
+        boot_means[i] = surv_matrix.values.mean(axis=1)
+    return boot_means
+
+
+def _build_reference_patient(
+    df: pd.DataFrame,
+    predict_cols: Sequence[str],
+    overrides: Mapping[str, str | int | float],
+    cph: CoxPHFitter,
+) -> dict:
+    """Build a synthetic reference patient.
+
+    A reference patient represents a patient with average characteristics of the entire cohort.
+
+    - continuous columns -> column mean
+    - categorical/object columns -> column mode
+    - any key in `overrides` -> use that value.
+    """
+    # columns that got dummy-encoded during fitting have names like "col[T.x]"
+    dummy_encoded_cols = {param.split("[")[0] for param in cph.params_.index.get_level_values(0) if "[" in param}
+
+    ref = {}
+    for col in predict_cols:
+        if col in overrides:
+            ref[col] = overrides[col]
+        elif col in dummy_encoded_cols:
+            # must pass an original level, not a mean — use mode
+            ref[col] = df[col].mode().iloc[0]
+        elif pd.api.types.is_numeric_dtype(df[col]):
+            ref[col] = df[col].mean()
+        else:
+            ref[col] = df[col].mode().iloc[0]
+    return ref

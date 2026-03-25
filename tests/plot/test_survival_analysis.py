@@ -75,3 +75,30 @@ def test_ols(mimic_2: EHRData):
     assert isinstance(plot, (hv.Overlay, hv.Scatter))
     assert plot.opts.get().kwargs["xlabel"] == "PCO2"
     assert plot.opts.get().kwargs["ylabel"] == "TCO2"
+
+
+def test_cox_ph_adjusted_curves(mimic_2_adjusted_sa):
+    edata_sample = mimic_2_adjusted_sa
+    duration_col, event_col = "mort_day_censored", "censor_flg"
+    cph = ep.tl.cox_ph(
+        edata_sample,
+        duration_col=duration_col,
+        event_col=event_col,
+        formula="sapsi_first + afib_flg",
+        layer="layer_2",
+    )
+    ep.tl.cox_ph_adjusted_curves(
+        edata_sample,
+        cph,
+        strata="aline_flg",
+        duration_col=duration_col,
+        event_col=event_col,
+        method="average",
+        n_bootstrap=10,
+        uns_key="test_adjusted",
+        layer="layer_2",
+    )
+    plot = ep.pl.cox_ph_adjusted_curves(edata_sample, uns_key="test_adjusted")
+
+    assert plot is not None
+    assert isinstance(plot, hv.Overlay)
