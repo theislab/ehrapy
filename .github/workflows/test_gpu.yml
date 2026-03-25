@@ -63,6 +63,7 @@ jobs:
         with:
           filter: blob:none
           fetch-depth: 0
+          submodules: true
 
       - name: Nvidia SMI sanity check
         run: nvidia-smi
