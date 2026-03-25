@@ -294,7 +294,6 @@ def mimic_2_adjusted_sa():
     edata = ed.dt.mimic_2()
     ed.infer_feature_types(edata)
     ed.replace_feature_types(edata, ["age", "sapsi_first", "sofa_first"], "numeric")
-    edata[:, ["censor_flg"]].X = np.where(edata[:, ["censor_flg"]].X == 0, 1, 0)
     edata.layers["layer_2"] = edata.X.copy()
     return edata
 
