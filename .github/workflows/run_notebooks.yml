@@ -40,5 +40,8 @@ jobs:
             - name: Install ehrapy and additional dependencies
               run: uv pip install --system . 'cellrank[scvelo]' nbconvert ipykernel graphviz pypots
 
+            - name: Install ehrdata from submodule
+              run: uv pip install --system --reinstall --no-deps -e submodules/ehrdata
+
             - name: Run ${{ matrix.notebook }} Notebook
               run: jupyter nbconvert --to notebook --execute ${{ matrix.notebook }}
