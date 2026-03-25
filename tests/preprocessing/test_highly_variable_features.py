@@ -2,7 +2,7 @@ import ehrdata as ed
 import numpy as np
 import pytest
 import requests
-from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
+from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY, NUMERIC_TAG
 
 import ehrapy as ep
 from ehrapy.preprocessing._highly_variable_features import highly_variable_features
@@ -26,7 +26,7 @@ def test_highly_variable_features(clean_up_plots):
             pytest.skip("Dataset download failed with 403 Forbidden")
         raise
 
-    ep.pp.knn_impute(edata)
+    ep.pp.knn_impute(edata, var_names=edata.var_names[edata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG])
     highly_variable_features(edata)
 
     assert "highly_variable" in edata.var.columns
@@ -37,6 +37,6 @@ def test_highly_variable_features(clean_up_plots):
 
     edata = ed.dt.diabetes_130_fairlearn()
     edata = ep.pp.encode(edata, autodetect=True)
-    ep.pp.knn_impute(edata)
+    ep.pp.knn_impute(edata, var_names=edata.var_names[edata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG])
     highly_variable_features(edata, top_features_percentage=0.5)
     assert edata.var["highly_variable"].sum() == 31

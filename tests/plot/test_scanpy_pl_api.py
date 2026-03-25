@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import ehrdata as ed
 import matplotlib as mpl
 import matplotlib.collections as mcoll
 import pandas as pd
@@ -14,7 +15,7 @@ plt.style.use("default")
 import os
 
 import numpy as np
-from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
+from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY, NUMERIC_TAG
 
 import ehrapy as ep
 
@@ -660,7 +661,7 @@ def test_diffmap(mimic_2_sample_serv_unit_day_icu, check_same_image):
 def test_dpt_timeseries(mimic_2_encoded, check_same_image):
     edata = mimic_2_encoded.copy()
 
-    ep.pp.knn_impute(edata)
+    ep.pp.knn_impute(edata, backend="scikit-learn", var_names=edata.var_names[edata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG])
     ep.pp.log_norm(edata, offset=1)
     ep.pp.pca(edata)
     ep.pp.neighbors(edata, method="gauss")
