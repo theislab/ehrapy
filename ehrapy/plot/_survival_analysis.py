@@ -471,11 +471,11 @@ def cox_ph_forestplot(
 
 
 def cox_ph_adjusted_curves(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     *,
     uns_key: str = "cox_ph_adjusted_curves",
-    groups: list[str] | None = None,
-    palette: list[str] | None = None,
+    groups: Sequence[str] | None = None,
+    palette: Sequence[str] | None = None,
     show_ci: bool = True,
     ci_alpha: float = 0.15,
     line_width: float = 2.0,
@@ -488,8 +488,8 @@ def cox_ph_adjusted_curves(
 ) -> hv.Overlay:
     """Generates a survival curve plot to visualize CoxPH-adjusted survival probabilities stratified by a grouping variable.
 
-    The `edata` object must first be populated using the :func:`~ehrapy.tools.cox_ph_adjusted_curves` function.
-    This function stores the adjusted survival curves in the `.uns` attribute of `edata`.
+    The `edata` object must first be populated using :func:`~ehrapy.tools.cox_ph_adjusted_curves`.
+    It stores the adjusted survival curves in the `.uns` attribute of `edata`.
     Mirrors the functionality of ggadjustedcurves() from the R survminer package.
     See also: Therneau, Crowson & Atkinson (2015), 'Adjusted Survival Curves':
     https://cran.r-project.org/web/packages/survival/vignettes/adjcurve.pdf
@@ -521,8 +521,6 @@ def cox_ph_adjusted_curves(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
-        >>> # Flip 'censor_flg' because 0 = death and 1 = censored
-        >>> edata[:, ["censor_flg"]].X = np.where(edata[:, ["censor_flg"]].X == 0, 1, 0)
         >>> cph = ep.tl.cox_ph(
         ...     edata, "mort_day_censored", "censor_flg", formula="gender_num + afib_flg + day_icu_intime_num"
         ... )
