@@ -12,11 +12,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 * Longitudinal explicit impute `ep.pp.explicit_impute()` extended to enable different imputation values per timepoint ([#1023](https://github.com/theislab/ehrapy/pull/1023)) @sueoglu
 * Sankey diagram state-transition colours and hover function for timeseries plots ([#1019](https://github.com/theislab/ehrapy/pull/1019)) @sueoglu
 * Add longitudinal data analysis notebook ([#1007](https://github.com/theislab/ehrapy/pull/1007)) @eroell
-
-### 🐛 Bug Fixes
-
-* Fix `AttributeError` when normalizing with `edata.X = None` ([#1015](https://github.com/theislab/ehrapy/pull/1015)) @agerardy @eroell
-
+* Add `ep.tl.cox_ph_adjusted_curves()` and plotting functions `ep.pl.cox_ph_adjusted_curves()` ([#1028](https://github.com/theislab/ehrapy/pull/1028)) @sueoglu
 
 ### 🧰 Maintenance
 
