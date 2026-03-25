@@ -281,7 +281,6 @@ def mimic_2_sample_serv_unit_day_icu():
 def mimic_2_sa():
     edata = ed.dt.mimic_2()
     ed.infer_feature_types(edata)
-    edata[:, ["censor_flg"]].X = np.where(edata[:, ["censor_flg"]].X == 0, 1, 0)
     edata = edata[:, ["mort_day_censored", "censor_flg"]].copy()
     duration_col, event_col = "mort_day_censored", "censor_flg"
 
