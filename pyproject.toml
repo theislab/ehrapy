@@ -125,9 +125,15 @@ allow-direct-references = true
 [tool.hatch.envs.default]
 installer = "uv"
 features = [ "dev" ]
+post-install-commands = [
+  "uv pip install --reinstall --no-deps -e submodules/ehrdata",
+]
 
 [tool.hatch.envs.docs]
 features = [ "doc", "dask", "causal" ]
+post-install-commands = [
+  "uv pip install --reinstall --no-deps -e submodules/ehrdata",
+]
 scripts.build = "sphinx-build -M html docs docs/_build -W {args}"
 scripts.open = "python -m webbrowser -t docs/_build/html/index.html"
 scripts.clean = "git clean -fdX -- {args:docs}"
@@ -135,6 +141,9 @@ scripts.clean = "git clean -fdX -- {args:docs}"
 # CPU
 [tool.hatch.envs.hatch-test]
 features = [ "dask", "causal" ]
+post-install-commands = [
+  "uv pip install --reinstall --no-deps -e submodules/ehrdata",
+]
 
 [[tool.hatch.envs.hatch-test.matrix]]
 python = [ "3.12", "3.14" ]
@@ -142,7 +151,9 @@ python = [ "3.12", "3.14" ]
 # GPU
 [tool.hatch.envs.hatch-test-gpu]
 features = ["test"]
-# custom script to not run coverage
+post-install-commands = [
+  "uv pip install --reinstall --no-deps -e submodules/ehrdata",
+]
 scripts.run = "pytest -m gpu {args}"
 
 overrides.matrix.cuda.features = [

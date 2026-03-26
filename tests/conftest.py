@@ -137,6 +137,8 @@ def mimic_2():
 @pytest.fixture
 def mimic_2_encoded():
     edata = ed.dt.mimic_2()
+    # replace NaN in gender_num with most frequent value to avoid NaN in categorical without introducing 3rd category
+    ep.pp.simple_impute(edata, var_names=["gender_num"], strategy="most_frequent")
     ed.infer_feature_types(edata, output=None)
     edata = ep.pp.encode(edata, autodetect=True)
 
