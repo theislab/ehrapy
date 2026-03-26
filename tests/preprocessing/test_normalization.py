@@ -708,7 +708,7 @@ def test_offset_negative_values():
 def test_norm_numerical_only():
     to_normalize_edata = ed.EHRData(X=np.array([[1, 0, 0], [0, 0, 1]], dtype=np.float32))
     expected_edata = ed.EHRData(X=np.array([[0.6931472, 0, 0], [0, 0, 0.6931472]], dtype=np.float32))
-
+    ed.infer_feature_types(to_normalize_edata, binary_as="numeric")
     assert np.array_equal(expected_edata.X, ep.pp.log_norm(to_normalize_edata, copy=True).X)
 
 
