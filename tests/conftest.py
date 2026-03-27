@@ -196,7 +196,9 @@ def edata_mini_3D_missing_values():
         dtype=object,
     )
     n_obs, n_vars, _ = tiny_mixed_array.shape
-    return ed.EHRData(shape=(n_obs, n_vars), layers={DEFAULT_TEM_LAYER_NAME: tiny_mixed_array})
+    edata = ed.EHRData(shape=(n_obs, n_vars), layers={DEFAULT_TEM_LAYER_NAME: tiny_mixed_array})
+    edata.var[FEATURE_TYPE_KEY] = [NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG, CATEGORICAL_TAG, CATEGORICAL_TAG]
+    return edata
 
 
 @pytest.fixture

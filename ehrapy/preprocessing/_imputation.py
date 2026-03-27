@@ -268,7 +268,6 @@ def simple_impute(
 
 @_check_feature_types
 @use_ehrdata(deprecated_after="1.0.0")
-@function_2D_only()
 @spinner("Performing KNN impute")
 def knn_impute(
     edata: EHRData | AnnData,
@@ -388,14 +387,29 @@ def _knn_impute(
             "var_names parameter or perform an encoding of your data."
         )
     X = edata.X if layer is None else edata.layers[layer]
-    complete_numerical_columns = np.array(numerical_indices)[~np.isnan(X[:, numerical_indices]).any(axis=0)].tolist()
-    imputer_data_indices = var_indices + [i for i in complete_numerical_columns if i not in var_indices]
-    imputer_x = X[::, imputer_data_indices].astype("float64")
 
-    if layer is None:
-        edata.X[::, imputer_data_indices] = imputer.fit_transform(imputer_x)
+    if X.ndim == 3:
+        if backend == "scikit-learn":
+            # Since scikit-learn is relatively slow even for 2D, if we want to implement it we can do it via slicing per timepoint
+            raise NotImplementedError(
+                "The 'scikit-learn' backend does not support 3D data. Use backend='faiss' instead."
+            )
+        # complete columns depend on the timepoint, so computing it here would be wrong
+        imputer_x = X[:, var_indices, :].astype("float64")
+        if layer is None:
+            edata.X[:, var_indices, :] = imputer.fit_transform(imputer_x)
+        else:
+            edata.layers[layer][:, var_indices, :] = imputer.fit_transform(imputer_x)
     else:
-        edata.layers[layer][::, imputer_data_indices] = imputer.fit_transform(imputer_x)
+        complete_numerical_columns = np.array(numerical_indices)[
+            ~np.isnan(X[:, numerical_indices]).any(axis=0)
+        ].tolist()
+        imputer_data_indices = var_indices + [i for i in complete_numerical_columns if i not in var_indices]
+        imputer_x = X[:, imputer_data_indices].astype("float64")
+        if layer is None:
+            edata.X[:, imputer_data_indices] = imputer.fit_transform(imputer_x)
+        else:
+            edata.layers[layer][:, imputer_data_indices] = imputer.fit_transform(imputer_x)
 
 
 @use_ehrdata(deprecated_after="1.0.0")

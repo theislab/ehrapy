@@ -278,10 +278,15 @@ def test_simple_impute_invalid_strategy(impute_edata):
         simple_impute(impute_edata, strategy="invalid_strategy", copy=True)  # type: ignore
 
 
-def test_knn_impute_3D_edata(edata_blob_small):
-    knn_impute(edata_blob_small, layer="layer_2")
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
-        knn_impute(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
+def test_knn_impute_3d_numerical(edata_mini_3D_missing_values):
+    edata = edata_mini_3D_missing_values[:, :4].copy()
+    edata_imputed = knn_impute(edata, layer=DEFAULT_TEM_LAYER_NAME, copy=True)
+    _base_check_imputation(
+        edata,
+        edata_imputed,
+        before_imputation_layer=DEFAULT_TEM_LAYER_NAME,
+        after_imputation_layer=DEFAULT_TEM_LAYER_NAME,
+    )
 
 
 def test_knn_impute_check_backend(impute_num_edata):
