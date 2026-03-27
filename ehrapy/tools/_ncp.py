@@ -11,16 +11,7 @@ if TYPE_CHECKING:
     from ehrdata import EHRData
 
 
-def _khatri_rao(A: np.ndarray, B: np.ndarray) -> np.ndarray:
-    """Khatri-Rao (column-wise Kronecker) product of two matrices."""
-    I, R = A.shape
-    J, _ = B.shape
-    return (A[:, np.newaxis, :] * B[np.newaxis, :, :]).reshape(I * J, R)
-
-
-def _unfold(tensor: np.ndarray, mode: int) -> np.ndarray:
-    """Mode-n unfolding (matricisation) of a tensor."""
-    return np.moveaxis(tensor, mode, 0).reshape(tensor.shape[mode], -1)
+_MTTKRP_EINSUM = ["ijk,jr,kr->ir", "ijk,ir,kr->jr", "ijk,ir,jr->kr"]
 
 
 def _nonneg_cp(
@@ -32,10 +23,19 @@ def _nonneg_cp(
 ) -> tuple[np.ndarray, list[np.ndarray]]:
     """Non-negative CP decomposition via Multiplicative Updates (Lee & Seung).
 
+    Uses three optimisations over a naive implementation:
+
+    * **einsum MTTKRP** — the matricised-tensor-times-Khatri–Rao-product is
+      computed via ``np.einsum`` without ever forming the Khatri–Rao matrix.
+    * **Gram-matrix denominator** — ``kr.T @ kr`` is replaced by the Hadamard
+      product of the other factors' Gram matrices (O(R²) instead of O(JK·R²)).
+    * **Algebraic error** — the reconstruction error is computed from Gram
+      matrices and the cached MTTKRP, avoiding the full-tensor reconstruction.
+
     Parameters
     ----------
     tensor
-        Non-negative input tensor of arbitrary order (≥2).
+        Non-negative input tensor of shape ``(I, J, K)``.
     rank
         Number of components.
     n_iter_max
@@ -53,38 +53,39 @@ def _nonneg_cp(
         List of non-negative factor matrices, one per tensor mode.
     """
     rng = np.random.default_rng(random_state)
-    ndims = tensor.ndim
     eps = 1e-12
 
     factors = [np.abs(rng.standard_normal((s, rank))) + 0.1 for s in tensor.shape]
+    grams = [f.T @ f for f in factors]
+    tensor_norm_sq = np.dot(tensor.ravel(), tensor.ravel())
 
     prev_error = np.inf
     for _ in range(n_iter_max):
-        for mode in range(ndims):
-            others = [f for i, f in enumerate(factors) if i != mode]
-            kr = others[-1]
-            for f in reversed(others[:-1]):
-                kr = _khatri_rao(f, kr)
+        for mode in range(3):
+            other = [i for i in range(3) if i != mode]
+            numerator = np.einsum(
+                _MTTKRP_EINSUM[mode],
+                tensor,
+                factors[other[0]],
+                factors[other[1]],
+                optimize=True,
+            )
+            gram_prod = grams[other[0]] * grams[other[1]]
+            factors[mode] *= numerator / (factors[mode] @ gram_prod + eps)
+            grams[mode] = factors[mode].T @ factors[mode]
 
-            X_mode = _unfold(tensor, mode)
-            numerator = X_mode @ kr
-            denominator = factors[mode] @ (kr.T @ kr) + eps
-            factors[mode] *= numerator / denominator
-
-        recon = np.zeros_like(tensor)
-        for r in range(rank):
-            component = factors[0][:, r]
-            for f in factors[1:]:
-                component = np.multiply.outer(component, f[:, r])
-            recon += component
-        error = np.linalg.norm(tensor - recon) / max(np.linalg.norm(tensor), eps)
+        # Reuse the mode-2 MTTKRP: <X, [[A,B,C]]> = sum(C * mttkrp_2)
+        inner = np.sum(factors[2] * numerator)
+        gram_all = grams[0] * grams[1] * grams[2]
+        err_sq = max(tensor_norm_sq - 2 * inner + np.sum(gram_all), 0.0)
+        error = np.sqrt(err_sq) / max(np.sqrt(tensor_norm_sq), eps)
 
         if abs(prev_error - error) < tol:
             break
         prev_error = error
 
     weights = np.ones(rank)
-    for i in range(ndims):
+    for i in range(3):
         norms = np.maximum(np.linalg.norm(factors[i], axis=0), eps)
         weights *= norms
         factors[i] /= norms[np.newaxis, :]
