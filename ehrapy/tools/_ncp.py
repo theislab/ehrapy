@@ -107,22 +107,79 @@ def ncp(
     random_state: int = 0,
     copy: bool = False,
 ) -> EHRData | None:
-    r"""Non-negative CP (PARAFAC) decomposition of a 3D temporal layer.
+    r"""Non-negative CP (PARAFAC) decomposition of a 3D temporal EHR layer.
 
-    Decomposes the stored 3D data into three non-negative factor matrices using multiplicative updates.
+    **What NCP does**
+
+    CP (CANDECOMP/PARAFAC) decomposition factorises a 3-way tensor
+    ``X ∈ ℝ^{I×J×K}`` into a sum of ``rank`` outer products::
+
+        X ≈ Σ_r  a_r ⊗ b_r ⊗ c_r
+
+    where each triplet ``(a_r, b_r, c_r)`` is a *component*:
+
+    * ``a_r ∈ ℝ^I`` — **patient factor**: how strongly each observation
+      expresses component *r*.
+    * ``b_r ∈ ℝ^J`` — **variable factor**: which clinical variables are
+      characteristic of component *r*.
+    * ``c_r ∈ ℝ^K`` — **temporal factor**: how the risk pattern of component
+      *r* evolves over the time axis.
+
+    The *Non-negative* variant (NCP) constrains all factors to be ≥ 0, which
+    is natural for count-like or probability data and yields parts-based,
+    interpretable components (analogous to NMF for matrices).
+
+    **Algorithm**
+
+    Factors are estimated by Multiplicative Updates (Lee & Seung, 2001).
+    Each factor matrix is updated in closed form while the others are held
+    fixed, cycling through the three modes until convergence:
+
+    .. math::
+
+        F_{\text{mode}} \leftarrow F_{\text{mode}} \odot
+        \frac{\mathcal{X}_{(\text{mode})} \, \mathrm{KR}(F_{-\text{mode}})}
+             {F_{\text{mode}} \, \mathrm{KR}(F_{-\text{mode}})^\top
+              \mathrm{KR}(F_{-\text{mode}}) + \varepsilon}
+
+    where :math:`\mathcal{X}_{(\text{mode})}` is the mode-*n* matricisation of
+    the tensor and :math:`\mathrm{KR}` denotes the Khatri–Rao product of the
+    remaining factor matrices. The numerator is computed via ``einsum`` to
+    avoid explicitly forming the Khatri–Rao matrix, and the denominator uses
+    the Hadamard product of Gram matrices for efficiency. Convergence is
+    monitored via an algebraic reconstruction error that does not require
+    rebuilding the full tensor.
+
+    **Choosing rank**
+
+    ``rank`` is the only hyperparameter. A good starting point is to try a
+    small number of components (e.g. 3–10), inspect the factor plots with
+    :func:`~ehrapy.plot.ncp`, and increase ``rank`` until the components
+    become redundant or hard to interpret. A higher rank captures more
+    fine-grained structure but is slower and more prone to over-fitting.
 
     Args:
         edata: Central data object.
         layer: Key of the 3D layer to decompose (shape ``n_obs × n_vars × n_time``).
-        rank: Number of components (rank of the decomposition).
+            All values must be non-negative (use ``sigmoid_transform=True`` for
+            logit layers, or ``np.abs`` / clipping beforehand).
+        rank: Number of components (rank of the decomposition). Each component
+            describes one co-occurring patient sub-group, variable signature,
+            and temporal trajectory.
         n_iter_max: Maximum number of multiplicative-update iterations.
+            300 is sufficient for most datasets; increase if the error has not
+            converged (check ``edata.uns[key_added]["params"]``).
         sigmoid_transform: If ``True``, apply a sigmoid transformation to the layer
             before decomposition. Useful when the layer contains raw logits.
-        key_added: Key prefix for storing results. Results are stored as
-            ``edata.obsm["X_{key_added}"]`` (sample factors, shape ``n_obs × rank``),
-            ``edata.varm["{key_added}_loadings"]`` (variable factors, shape ``n_vars × rank``),
-            and ``edata.uns["{key_added}"]`` (temporal factors + metadata).
-        random_state: Random seed for reproducibility.
+        key_added: Key prefix for storing results. Results are stored as:
+
+            * ``edata.obsm["X_{key_added}"]`` — patient factors,
+              shape ``(n_obs, rank)``.
+            * ``edata.varm["{key_added}_loadings"]`` — variable factors,
+              shape ``(n_vars, rank)``.
+            * ``edata.uns["{key_added}"]["temporal_factors"]`` — temporal
+              factors, shape ``(n_time, rank)``.
+        random_state: Random seed for the factor initialisation.
         copy: Whether to return a copy rather than modifying in place.
 
     Returns:
