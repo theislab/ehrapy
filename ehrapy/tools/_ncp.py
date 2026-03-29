@@ -32,21 +32,14 @@ def _nonneg_cp(
     * **Algebraic error** — the reconstruction error is computed from Gram
       matrices and the cached MTTKRP, avoiding the full-tensor reconstruction.
 
-    Parameters
-    ----------
-    tensor
-        Non-negative input tensor of shape ``(I, J, K)``.
-    rank
-        Number of components.
-    n_iter_max
-        Maximum number of iterations.
-    tol
-        Convergence tolerance on the relative change in reconstruction error.
-    random_state
-        Seed for initialisation.
+    Args:
+        tensor: Non-negative input tensor of shape ``(I, J, K)``.
+        rank: Number of components.
+        n_iter_max: Maximum number of iterations.
+        tol: Convergence tolerance on the relative change in reconstruction error.
+        random_state: Seed for initialisation.
 
     Returns:
-    -------
     weights
         Per-component weights of shape ``(rank,)``.
     factors
@@ -106,8 +99,7 @@ def ncp(
 ) -> EHRData | None:
     r"""Non-negative CP (PARAFAC) decomposition of a 3D temporal layer.
 
-    Decomposes the stored 3D data into three non-negative factor matrices
-    using multiplicative updates.
+    Decomposes the stored 3D data into three non-negative factor matrices using multiplicative updates.
 
     Args:
         edata: Central data object.
