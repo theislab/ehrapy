@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from typing import TYPE_CHECKING, Literal
 
 import numpy as np
@@ -45,18 +46,25 @@ def _nonneg_cp(
     factors
         List of non-negative factor matrices, one per tensor mode.
     """
+    # Derive the array namespace from the tensor so the algorithm is
+    # compatible with any Array API 2022.12-compliant backend (NumPy,
+    # CuPy, PyTorch via array-api-compat, …).
+    xp = tensor.__array_namespace__()
+
+    # np.random is not part of the Array API standard; initialise on NumPy
+    # and move to the target namespace via xp.asarray.
     rng = np.random.default_rng(random_state)
     eps = 1e-12
 
-    factors = [np.abs(rng.standard_normal((s, rank))) + 0.1 for s in tensor.shape]
+    factors = [xp.asarray(np.abs(rng.standard_normal((s, rank))) + 0.1, dtype=tensor.dtype) for s in tensor.shape]
     grams = [f.T @ f for f in factors]
-    tensor_norm_sq = np.dot(tensor.ravel(), tensor.ravel())
+    tensor_norm_sq = float(xp.sum(tensor * tensor))
 
-    prev_error = np.inf
+    prev_error = math.inf
     for _ in range(n_iter_max):
         for mode in range(3):
             other = [i for i in range(3) if i != mode]
-            numerator = np.einsum(
+            numerator = xp.einsum(
                 _MTTKRP_EINSUM[mode],
                 tensor,
                 factors[other[0]],
@@ -64,24 +72,26 @@ def _nonneg_cp(
                 optimize=True,
             )
             gram_prod = grams[other[0]] * grams[other[1]]
-            factors[mode] *= numerator / (factors[mode] @ gram_prod + eps)
+            # Use assignment rather than *= (in-place ops are optional in the spec)
+            factors[mode] = factors[mode] * numerator / (factors[mode] @ gram_prod + eps)
             grams[mode] = factors[mode].T @ factors[mode]
 
         # Reuse the mode-2 MTTKRP: <X, [[A,B,C]]> = sum(C * mttkrp_2)
-        inner = np.sum(factors[2] * numerator)
+        inner = float(xp.sum(factors[2] * numerator))
         gram_all = grams[0] * grams[1] * grams[2]
-        err_sq = max(tensor_norm_sq - 2 * inner + np.sum(gram_all), 0.0)
-        error = np.sqrt(err_sq) / max(np.sqrt(tensor_norm_sq), eps)
+        err_sq = max(tensor_norm_sq - 2 * inner + float(xp.sum(gram_all)), 0.0)
+        error = math.sqrt(err_sq) / max(math.sqrt(tensor_norm_sq), eps)
 
         if abs(prev_error - error) < tol:
             break
         prev_error = error
 
-    weights = np.ones(rank)
+    weights = xp.ones(rank, dtype=tensor.dtype)
     for i in range(3):
-        norms = np.maximum(np.linalg.norm(factors[i], axis=0), eps)
-        weights *= norms
-        factors[i] /= norms[np.newaxis, :]
+        # xp.clip(x, min=eps) replaces np.maximum(x, eps) — Array API 2022.12
+        norms = xp.clip(xp.linalg.norm(factors[i], axis=0), min=eps)
+        weights = weights * norms
+        factors[i] = factors[i] / norms[None, :]
 
     return weights, factors
 
@@ -147,7 +157,7 @@ def ncp(
 
     weights, factors = _nonneg_cp(tensor, rank=rank, n_iter_max=n_iter_max, random_state=random_state)
     A, B, C = factors
-    A = A * weights[np.newaxis, :]
+    A = A * weights[None, :]
 
     edata.obsm[f"X_{key_added}"] = A  # (n_obs, rank)
     edata.varm[f"{key_added}_loadings"] = B  # (n_vars, rank)
