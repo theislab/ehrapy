@@ -323,6 +323,11 @@ def knn_impute(
     if copy:
         edata = edata.copy()
 
+    if edata.X is None and layer is None:  # if edata is 3D
+        raise ValueError(
+            "3D imputation requires a layer to be specified. Pass the layer containing the full temporal data."
+        )
+
     _warn_imputation_threshold(edata, var_names, threshold=warning_threshold, layer=layer)
 
     if backend not in {"scikit-learn", "faiss"}:
@@ -396,10 +401,8 @@ def _knn_impute(
             )
         # complete columns depend on the timepoint, so computing it here would be wrong
         imputer_x = X[:, var_indices, :].astype("float64")
-        if layer is None:
-            edata.X[:, var_indices, :] = imputer.fit_transform(imputer_x)
-        else:
-            edata.layers[layer][:, var_indices, :] = imputer.fit_transform(imputer_x)
+        edata.layers[layer][:, var_indices, :] = imputer.fit_transform(imputer_x)
+
     else:
         complete_numerical_columns = np.array(numerical_indices)[
             ~np.isnan(X[:, numerical_indices]).any(axis=0)
