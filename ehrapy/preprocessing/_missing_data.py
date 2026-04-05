@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections.abc import Iterable
 from functools import singledispatch
 from typing import TYPE_CHECKING
 
@@ -14,6 +13,8 @@ from ehrapy._compat import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from anndata import AnnData
     from ehrdata import EHRData
 
