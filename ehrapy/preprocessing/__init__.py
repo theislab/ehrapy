@@ -1,5 +1,4 @@
 from ehrapy.preprocessing._bias import detect_bias
-from ehrapy.preprocessing._missing_data import missing_data_mask
 from ehrapy.preprocessing._correlation import variable_correlations
 from ehrapy.preprocessing._encoding import encode
 from ehrapy.preprocessing._filter import filter_features, filter_observations
@@ -12,6 +11,7 @@ from ehrapy.preprocessing._imputation import (
     miss_forest_impute,
     simple_impute,
 )
+from ehrapy.preprocessing._missing_data import missing_data_mask
 from ehrapy.preprocessing._neighbors import neighbors
 from ehrapy.preprocessing._normalization import (
     log_norm,

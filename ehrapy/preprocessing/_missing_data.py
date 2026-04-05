@@ -60,7 +60,7 @@ def missing_data_mask(
 
     if mask_values is not None:
         values = list(mask_values)
-        mask = _apply_sentinel_mask(mask, X, values)
+        mask = _apply_sentinel_mask(X, mask, values)
 
     edata.layers[key_added] = mask
 
@@ -77,6 +77,12 @@ def _(mtx: np.ndarray) -> np.ndarray:
     return np.isnan(mtx)
 
 
+@_compute_nan_mask.register(sp.csr_array)
+@_compute_nan_mask.register(sp.csc_array)
+def _(mtx: sp.csr_array | sp.csc_array) -> np.ndarray:
+    return np.isnan(mtx.toarray())
+
+
 @_compute_nan_mask.register(DaskArray)
 def _(mtx: DaskArray) -> np.ndarray:
     import dask.array as da
@@ -84,18 +90,26 @@ def _(mtx: DaskArray) -> np.ndarray:
     return da.isnan(mtx).compute()
 
 
+# singledispatch dispatches on the FIRST argument, so dispatch on mtx (the
+# data matrix), not mask.  This ensures sparse and Dask paths are reached.
 @singledispatch
-def _apply_sentinel_mask(mask, mtx, values):
+def _apply_sentinel_mask(mtx, mask, values):
     _raise_array_type_not_implemented(_apply_sentinel_mask, type(mtx))
 
 
 @_apply_sentinel_mask.register(np.ndarray)
-def _(mask: np.ndarray, mtx: np.ndarray, values: list) -> np.ndarray:
+def _(mtx: np.ndarray, mask: np.ndarray, values: list) -> np.ndarray:
     return mask | np.isin(mtx, values)
 
 
+@_apply_sentinel_mask.register(sp.csr_array)
+@_apply_sentinel_mask.register(sp.csc_array)
+def _(mtx: sp.csr_array | sp.csc_array, mask: np.ndarray, values: list) -> np.ndarray:
+    return mask | np.isin(mtx.toarray(), values)
+
+
 @_apply_sentinel_mask.register(DaskArray)
-def _(mask: np.ndarray, mtx: DaskArray, values: list) -> np.ndarray:
+def _(mtx: DaskArray, mask: np.ndarray, values: list) -> np.ndarray:
     import dask.array as da
 
     return mask | da.isin(mtx, values).compute()
