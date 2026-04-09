@@ -392,27 +392,37 @@ def _knn_impute(
             "var_names parameter or perform an encoding of your data."
         )
     X = edata.X if layer is None else edata.layers[layer]
+    var_indices_original = var_indices
+    is_3d = False
 
+    # if input data is 3D flatten along axis 0 before giving it to the imputer: each timepoint becomes a row
     if X.ndim == 3:
-        if backend == "scikit-learn":
-            # Since scikit-learn is relatively slow even for 2D, if we want to implement it we can do it via slicing per timepoint
-            raise NotImplementedError(
-                "The 'scikit-learn' backend does not support 3D data. Use backend='faiss' instead."
-            )
-        # complete columns depend on the timepoint, so computing it here would be wrong
-        imputer_x = X[:, var_indices, :].astype("float64")
-        edata.layers[layer][:, var_indices, :] = imputer.fit_transform(imputer_x)
+        is_3d = True
+        n_obs, n_vars, n_t = X.shape
+        X = X[:, var_indices, :].astype("float64").transpose(0, 2, 1).reshape(n_obs * n_t, len(var_indices))
+        numerical_indices = list(range(len(var_indices)))
+        var_indices = numerical_indices
 
+    # complete columns to be used as anchors
+    complete_numerical_columns = np.array(numerical_indices)[~np.isnan(X[:, numerical_indices]).any(axis=0)].tolist()
+
+    imputer_data_indices = var_indices + [
+        i for i in complete_numerical_columns if i not in var_indices
+    ]  # columns to impute
+    imputer_x = X[:, imputer_data_indices].astype("float64")
+    X_imputed = imputer.fit_transform(imputer_x)
+
+    if is_3d:
+        # slice back to only requested columns and transpose back to n_obs, n_var, n_t
+        X_imputed = (
+            X_imputed[:, : len(var_indices_original)].reshape(n_obs, n_t, len(var_indices_original)).transpose(0, 2, 1)
+        )
+        edata.layers[layer][:, var_indices_original, :] = X_imputed
     else:
-        complete_numerical_columns = np.array(numerical_indices)[
-            ~np.isnan(X[:, numerical_indices]).any(axis=0)
-        ].tolist()
-        imputer_data_indices = var_indices + [i for i in complete_numerical_columns if i not in var_indices]
-        imputer_x = X[:, imputer_data_indices].astype("float64")
         if layer is None:
-            edata.X[:, imputer_data_indices] = imputer.fit_transform(imputer_x)
+            edata.X[:, imputer_data_indices] = X_imputed
         else:
-            edata.layers[layer][:, imputer_data_indices] = imputer.fit_transform(imputer_x)
+            edata.layers[layer][:, imputer_data_indices] = X_imputed
 
 
 @use_ehrdata(deprecated_after="1.0.0")
