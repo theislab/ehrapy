@@ -450,3 +450,11 @@ def test_mar_data_identification(mar_edata):
 def test_mcar_identification(mcar_edata):
     p_value = mcar_test(mcar_edata, method="little")
     assert p_value > 0.05
+
+
+def test_mcar_test_ttest_detects_mar(mar_edata):
+    result = mcar_test(mar_edata, method="ttest")
+    assert result.shape == (mar_edata.n_vars, mar_edata.n_vars)
+    p_col0_given_miss9 = result.iloc[-1, 0]
+    assert not np.isnan(p_col0_given_miss9)
+    assert p_col0_given_miss9 < 0.05
