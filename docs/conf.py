@@ -155,7 +155,9 @@ pygments_dark_style = "native"
 html_theme = "scanpydoc"
 html_title = "ehrapy"
 html_logo = "_static/ehrapy_logos/ehrapy_pure.png"
-html_theme_options = {}
+html_theme_options = {
+    "show_toc_level": 2,
+}
 html_static_path = ["_static"]
 html_css_files = ["css/overwrite.css", "css/sphinx_gallery.css"]
 html_show_sphinx = False
