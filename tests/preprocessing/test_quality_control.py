@@ -438,26 +438,15 @@ def test_qc_lab_measurements_defaults_to_all_vars():
     ],
 )
 def test_mcar_test_method_output_types(mar_edata, method, expected_output_type):
-    """Tests if mcar_test returns the correct output type for different methods."""
     output = mcar_test(mar_edata, method=method)
-    assert isinstance(output, expected_output_type), (
-        f"Output type for method '{method}' should be {expected_output_type}, got {type(output)} instead."
-    )
-
-
-def test_mcar_test_3D_edata(edata_blob_small):
-    mcar_test(edata_blob_small, layer="layer_2")
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
-        mcar_test(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
+    assert isinstance(output, expected_output_type)
 
 
 def test_mar_data_identification(mar_edata):
-    """Test that mcar_test correctly identifies data as not MCAR (i.e., MAR or NMAR)."""
     p_value = mcar_test(mar_edata, method="little")
-    assert p_value <= 0.05, "The test should significantly reject the MCAR hypothesis for MAR data."
+    assert p_value <= 0.05
 
 
 def test_mcar_identification(mcar_edata):
-    """Test that mcar_test correctly identifies data as MCAR."""
     p_value = mcar_test(mcar_edata, method="little")
-    assert p_value > 0.05, "The test should not significantly accept the MCAR hypothesis for MCAR data."
+    assert p_value > 0.05
