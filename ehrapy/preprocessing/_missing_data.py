@@ -30,8 +30,8 @@ def missing_data_mask(
 ) -> EHRData | AnnData | None:
     """Create a boolean mask indicating missing values in the data matrix.
 
-    By default marks ``NaN`` values as missing.  Optionally also marks
-    user-specified sentinel values (e.g. ``-1``, ``0``, ``999``) as missing.
+    By default marks ``NaN`` values as missing.
+    Optionally also marks user-specified sentinel values (e.g. ``-1``, ``0``, ``999``) as missing.
 
     The result is stored in ``edata.layers[key_added]``.
 
@@ -39,8 +39,7 @@ def missing_data_mask(
         edata: Central data object.
         layer: Layer to use instead of ``edata.X``.
         mask_values: Additional values to treat as missing besides ``NaN``.
-        key_added: Key under which the boolean mask is stored in
-            ``edata.layers``.
+        key_added: Key under which the boolean mask is stored in ``edata.layers``.
         copy: If ``True``, return a modified copy; otherwise modify in place.
 
     Returns:
@@ -91,8 +90,8 @@ def _(mtx: DaskArray) -> np.ndarray:
     return da.isnan(mtx).compute()
 
 
-# singledispatch dispatches on the FIRST argument, so dispatch on mtx (the
-# data matrix), not mask.  This ensures sparse and Dask paths are reached.
+# singledispatch dispatches on the FIRST argument, so dispatch on mtx (the data matrix), not mask.
+# This ensures sparse and Dask paths are reached.
 @singledispatch
 def _apply_sentinel_mask(mtx, mask, values):
     _raise_array_type_not_implemented(_apply_sentinel_mask, type(mtx))
