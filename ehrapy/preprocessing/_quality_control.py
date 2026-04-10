@@ -9,7 +9,6 @@ import array_api_compat
 import numpy as np
 import pandas as pd
 from ehrdata._logger import logger
-from ehrdata.io import to_pandas
 
 from ehrapy._compat import (
     DaskArray,
@@ -29,7 +28,6 @@ if TYPE_CHECKING:
     from collections.abc import Collection
 
 
-import ehrdata as ed
 from anndata import AnnData
 from ehrdata import EHRData
 
@@ -637,33 +635,120 @@ def _outlier_flags_and_scores(
 
 
 @function_2D_only()
-@use_ehrdata(deprecated_after="1.0.0")
 def mcar_test(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     method: Literal["little", "ttest"] = "little",
     *,
     layer: str | None = None,
 ) -> float | pd.DataFrame:
     """Statistical hypothesis test for Missing Completely At Random (MCAR).
 
-    The null hypothesis of the Little's test is that data is Missing Completely At Random (MCAR).
+    Performs Little's MCAR test or pairwise t-tests.
+
+    The null hypothesis of Little's test is that data is Missing Completely At Random (MCAR).
+    A small p-value suggests the data is **not** MCAR.
 
     We advise to use Little’s MCAR test carefully.
     Rejecting the null hypothesis may not always mean that data is not MCAR, nor is accepting the null hypothesis a guarantee that data is MCAR.
     See Schouten, R. M., & Vink, G. (2021). The Dance of the Mechanisms: How Observed Information Influences the Validity of Missingness Assumptions.
     Sociological Methods & Research, 50(3), 1243-1258. https://doi.org/10.1177/0049124118799376 for a thorough discussion of missingness mechanisms.
 
+    Sparse matrices are not supported. Dask arrays are materialised with a warning.
+
     Args:
         edata: Central data object.
-        method: Whether to perform a chi-square test on the entire dataset (“little”) or separate t-tests for every combination of variables (“ttest”).
-        layer: Layer to apply the test to. Uses X matrix if set to `None`.
+        method: ``"little"`` for a global chi-square test or ``"ttest"`` for
+            pairwise Welch t-tests across all variable combinations.
+        layer: Layer to apply the test to. Uses ``X`` if ``None``.
 
     Returns:
-        A single p-value if the Little's test was applied or a Pandas DataFrame of the p-value of t-tests for each pair of features.
+        A single p-value (``float``) for ``"little"`` or a :class:`~pandas.DataFrame`
+        of p-values for ``"ttest"``.
     """
-    df = ed.io.to_pandas(edata, layer=layer)
-    from pyampute.exploration.mcar_statistical_tests import MCARTest
+    from scipy import sparse
 
-    mt = MCARTest(method=method)
+    mtx = edata.X if layer is None else edata.layers[layer]
 
-    return mt(df)
+    if sparse.issparse(mtx):
+        raise TypeError("mcar_test does not support sparse matrices. Convert to dense first.")
+
+    if isinstance(mtx, DaskArray):
+        logger.warning("Dask array detected – materialising into memory for MCAR test.")
+        mtx = mtx.compute()
+
+    X = np.asarray(mtx, dtype=np.float64)
+
+    if method == "little":
+        return _little_mcar_test(X)
+    elif method == "ttest":
+        var_names = np.asarray(edata.var_names)
+        return _mcar_t_tests(X, var_names)
+    else:
+        raise ValueError(f"Unknown method {method!r}. Choose from 'little' or 'ttest'.")
+
+
+def _little_mcar_test(X: np.ndarray) -> float:
+    from scipy.stats import chi2
+
+    n, p = X.shape
+    mask = np.isnan(X)
+
+    if not mask.any():
+        return 1.0
+
+    mu = np.nanmean(X, axis=0)
+
+    centered = X - mu
+    valid = ~mask
+    denom = valid.astype(np.float64).T @ valid.astype(np.float64)
+    np.fill_diagonal(denom, np.maximum(denom.diagonal(), 1))
+    cov_global = np.where(valid, centered, 0.0).T @ np.where(valid, centered, 0.0) / (denom - 1)
+    np.fill_diagonal(cov_global, np.maximum(cov_global.diagonal(), 1e-12))
+
+    patterns, inverse, counts = np.unique(mask, axis=0, return_inverse=True, return_counts=True)
+
+    d2 = 0.0
+    kj = 0
+    for j in range(len(patterns)):
+        obs_cols = ~patterns[j]
+        k = obs_cols.sum()
+        if k == 0:
+            continue
+        kj += k
+
+        rows = inverse == j
+        X_sub = X[np.ix_(rows, obs_cols)]
+        delta = np.nanmean(X_sub, axis=0) - mu[obs_cols]
+        sigma_j = cov_global[np.ix_(obs_cols, obs_cols)]
+
+        try:
+            contribution = delta @ np.linalg.solve(sigma_j, delta)
+        except np.linalg.LinAlgError:
+            contribution = delta @ np.linalg.pinv(sigma_j) @ delta
+
+        d2 += counts[j] * contribution
+
+    df = kj - p
+    if df <= 0:
+        return 1.0
+
+    return float(chi2.sf(d2, df))
+
+
+def _mcar_t_tests(X: np.ndarray, var_names: np.ndarray) -> pd.DataFrame:
+    from scipy.stats import ttest_ind
+
+    m = X.shape[1]
+    result = np.full((m, m), np.nan)
+
+    for i in range(m):
+        missing_i = np.isnan(X[:, i])
+        for j in range(m):
+            vals_when_missing = X[missing_i, j]
+            vals_when_present = X[~missing_i, j]
+            vals_when_missing = vals_when_missing[~np.isnan(vals_when_missing)]
+            vals_when_present = vals_when_present[~np.isnan(vals_when_present)]
+            if len(vals_when_missing) >= 1 and len(vals_when_present) >= 1:
+                result[i, j] = ttest_ind(vals_when_missing, vals_when_present, equal_var=False).pvalue
+
+    return pd.DataFrame(result, index=var_names, columns=var_names)
