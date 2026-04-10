@@ -295,7 +295,7 @@ def knn_impute(
         var_names: A list of variable names indicating which columns to impute.
                    If `None`, all columns are imputed. Default is `None`.
         n_neighbors: Number of neighbors to use when performing the imputation.
-        layer: The layer to impute.
+        layer: The layer to impute. Required when the input data is 3D.
         copy: Whether to perform the imputation on a copy of the original data object.
               If `True`, the original object remains unmodified.
         backend: The implementation to use for the KNN imputation.

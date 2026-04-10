@@ -289,6 +289,17 @@ def test_knn_impute_3d_numerical(edata_mini_3D_missing_values):
     )
 
 
+def test_knn_impute_3d_scikit_backend(edata_mini_3D_missing_values):
+    edata = edata_mini_3D_missing_values[:, :4].copy()
+    edata_imputed = knn_impute(edata, layer=DEFAULT_TEM_LAYER_NAME, copy=True, backend="scikit-learn")
+    _base_check_imputation(
+        edata,
+        edata_imputed,
+        before_imputation_layer=DEFAULT_TEM_LAYER_NAME,
+        after_imputation_layer=DEFAULT_TEM_LAYER_NAME,
+    )
+
+
 def test_knn_impute_3d_var_names_subset(edata_mini_3D_missing_values):
     edata = edata_mini_3D_missing_values.copy()
     imputed = knn_impute(edata, layer=DEFAULT_TEM_LAYER_NAME, var_names=["1", "2"], copy=True)
