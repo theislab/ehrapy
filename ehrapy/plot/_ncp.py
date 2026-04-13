@@ -49,36 +49,27 @@ def ncp(
     ``rank × 3`` panels in a fixed three-column grid:
 
     **Panel 1 — Temporal profile** (line chart)
-        The normalised temporal factor ``c_r`` for component *r*, plotted
-        against the relative time axis. Each value shows how the collective
-        influence of this component rises or falls at that time point.
-        A rising curve indicates a condition that worsens (or becomes more
-        prevalent) over time; a peaked curve suggests a transient event;
+        The normalised temporal factor ``c_r`` for component *r*, plotted against the relative time axis.
+        Each value shows how the collective influence of this component rises or falls at that time point.
+        A rising curve indicates a condition that worsens (or becomes more prevalent) over time; a peaked curve suggests a transient event;
         a flat curve indicates a time-independent pattern.
 
     **Panel 2 — Top variables** (horizontal bar chart)
-        The ``n_top`` clinical variables with the highest normalised loading
-        ``b_r`` for component *r*, sorted by loading magnitude. These are
-        the variables that best characterise the component — i.e. the
-        diseases, measurements, or features that tend to co-occur in the
-        patient sub-group captured by this component.
+        The ``n_top`` clinical variables with the highest normalised loading ``b_r`` for component *r*, sorted by loading magnitude.
+        These are the variables that best characterise the component — i.e. the diseases, measurements, or features that tend to co-occur in the patient sub-group captured by this component.
 
     **Panel 3 — Sample loadings** (histogram)
-        Distribution of the patient-level loading ``a_r`` across all
-        observations. A spike near zero with a heavy right tail means the
-        component is *selective* — only a sub-group of patients expresses it.
-        A broad, roughly uniform distribution means the component is
-        *diffuse* — relevant to most patients to varying degrees.
+        Distribution of the patient-level loading ``a_r`` across all observations.
+        A spike near zero with a heavy right tail means the component is *selective* — only a sub-group of patients expresses it.
+        A broad, roughly uniform distribution means the component is *diffuse* — relevant to most patients to varying degrees.
 
-    All three factor vectors are normalised to ``[0, 1]`` before plotting
-    so that components with different absolute scales are visually comparable.
+    All three factor vectors are normalised to ``[0, 1]`` before plotting so that components with different absolute scales are visually comparable.
 
     Requires :func:`~ehrapy.tools.ncp` to have been run first.
 
     Args:
         edata: Central data object containing NCP results.
-        key: Key under which NCP results are stored (matches ``key_added`` in
-            :func:`~ehrapy.tools.ncp`).
+        key: Key under which NCP results are stored (matches ``key_added`` in :func:`~ehrapy.tools.ncp`).
         n_top: Number of top-loaded variables to display per component.
         width: Width of each individual panel in pixels.
         height: Height of each individual panel in pixels.
@@ -87,7 +78,6 @@ def ncp(
         HoloViews Layout with ``rank × 3`` panels arranged in three columns.
 
     Examples:
-        >>> import numpy as np
         >>> import ehrdata as ed, ehrapy as ep
         >>> edata = ed.dt.ehrdata_blobs(n_variables=8, n_centers=3, n_observations=30, base_timepoints=12)
         >>> ep.tl.ncp(edata, layer="tem_data", rank=3, sigmoid_transform=True)
@@ -183,57 +173,43 @@ def ncp_cluster_trajectories(
 ) -> hv.Layout:
     """Plot mean variable trajectories per cluster, guided by NCP loadings.
 
-    This function bridges unsupervised NCP decomposition and an existing
-    cluster assignment (e.g. from ``sc.tl.leiden`` or a clinical grouping):
-    for each cluster it identifies which NCP component best represents that
-    cluster, selects the top variables of that component, and visualises their
-    mean trajectories over the time axis — all from the raw data, not the
-    low-rank approximation.
+    This function bridges unsupervised NCP decomposition and an existing cluster assignment (e.g. from ``sc.tl.leiden`` or a clinical grouping):
+    for each cluster it identifies which NCP component best represents that cluster, selects the top variables of that component,
+    and visualises their mean trajectories over the time axis — all from the raw data, not the low-rank approximation.
 
     **What each panel shows**
 
-    One panel is drawn per unique value in ``edata.obs[cluster_key]``,
-    arranged in two columns.  The panel title shows the cluster label,
-    the number of observations, and the dominant NCP component.
+    One panel is drawn per unique value in ``edata.obs[cluster_key]``, arranged in two columns.
+    The panel title shows the cluster label, the number of observations, and the dominant NCP component.
 
-    Within each panel, each line is one variable.  The y-axis is the mean
-    value (or mean probability, if ``sigmoid_transform=True``) of that
-    variable across all observations belonging to the cluster, plotted at
-    each time point along the x-axis.  Lines therefore reveal:
+    Within each panel, each line is one variable.
+    The y-axis is the mean value (or mean probability, if ``sigmoid_transform=True``) of that variable across all observations belonging to the cluster,
+    plotted at each time point along the x-axis.  Lines therefore reveal:
 
-    * **Level** — which variables have the highest absolute values for
-      this cluster (higher lines = more pronounced feature).
-    * **Shape** — whether a variable rises, falls, peaks, or stays flat
-      over time within the cluster.
-    * **Co-occurrence** — variables that share a similar trajectory shape
-      are likely driven by the same underlying mechanism.
+    * **Level** — which variables have the highest absolute values for this cluster (higher lines = more pronounced feature).
+    * **Shape** — whether a variable rises, falls, peaks, or stays flat over time within the cluster.
+    * **Co-occurrence** — variables that share a similar trajectory shape are likely driven by the same underlying mechanism.
 
     **How variables are chosen per cluster**
 
-    1. The mean patient loading ``A[mask].mean(axis=0)`` is computed for
-       the cluster, giving a score per NCP component.
+    1. The mean patient loading ``A[mask].mean(axis=0)`` is computed for the cluster, giving a score per NCP component.
     2. The component with the highest score is called the *dominant component*.
-    3. The ``n_top_diseases`` variables with the highest loading in that
-       component's variable factor ``B[:, dominant]`` are selected.
+    3. The ``n_top_diseases`` variables with the highest loading in that component's variable factor ``B[:, dominant]`` are selected.
 
-    This means each cluster is represented by the clinical variables that the
-    NCP model considers most characteristic of it, providing a direct link
-    between the data-driven decomposition and the cluster structure.
+    This means each cluster is represented by the clinical variables that the NCP model considers most characteristic of it,
+    providing a direct link between the data-driven decomposition and the cluster structure.
 
     Requires :func:`~ehrapy.tools.ncp` to have been run first.
 
     Args:
         edata: Central data object.
-        layer: Key of the 3D layer holding the raw values
-            (shape ``n_obs × n_vars × n_time``).
-        cluster_key: Column in ``edata.obs`` that contains cluster or group
-            labels (any categorical or string column).
-        key: Key under which NCP results are stored (matches ``key_added`` in
-            :func:`~ehrapy.tools.ncp`).
+        layer: Key of the 3D layer holding the raw values (shape ``n_obs × n_vars × n_time``).
+            All values must be non-negative (use ``sigmoid_transform=True`` for logit layers, or ``np.abs`` / clipping beforehand).
+        cluster_key: Column in ``edata.obs`` that contains cluster or group labels (any categorical or string column).
+        key: Key under which NCP results are stored (matches ``key_added`` in :func:`~ehrapy.tools.ncp`).
         n_top_diseases: Number of top-loaded variables to show per cluster.
-        sigmoid_transform: Apply a sigmoid transformation to the layer values
-            before averaging. Set to ``True`` when the layer stores raw logits
-            so that the y-axis represents probabilities in ``(0, 1)``.
+        sigmoid_transform: Apply a sigmoid transformation to the layer values before averaging.
+            Set to ``True`` when the layer stores raw logits so that the y-axis represents probabilities in ``(0, 1)``.
         width: Width of each panel in pixels.
         height: Height of each panel in pixels.
 
@@ -241,7 +217,6 @@ def ncp_cluster_trajectories(
         HoloViews Layout with one panel per cluster, arranged in two columns.
 
     Examples:
-        >>> import numpy as np
         >>> import ehrdata as ed, ehrapy as ep
         >>> edata = ed.dt.ehrdata_blobs(n_variables=8, n_centers=3, n_observations=30, base_timepoints=12)
         >>> ep.tl.ncp(edata, layer="tem_data", rank=3, sigmoid_transform=True)

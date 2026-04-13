@@ -7,7 +7,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### 🚀 Features
 
 * Add LOCF imputation `ep.pp.locf_impute()` for longitudinal (3D) data with forward fill and configurable fallback strategies ([#1020](https://github.com/theislab/ehrapy/pull/1020)) @agerardy @eroell
-* Add non-negative CP decomposition `ep.tl.ncp()` for 3D tensor factorisation with companion plots `ep.pl.ncp()` and `ep.pl.ncp_cluster_trajectories()` ([#1030](https://github.com/theislab/ehrapy/pull/1030)) @eroell
+* Add non-negative CP decomposition `ep.tl.ncp()` for 3D tensor factorisation with companion plots `ep.pl.ncp()` and `ep.pl.ncp_cluster_trajectories()` ([#1030](https://github.com/theislab/ehrapy/pull/1030), [#1038](https://github.com/theislab/ehrapy/pull/1038)) @eroell
 * Add `ep.pp.variable_correlations()` and plotting functions `ep.pl.variable_correlations()` / `ep.pl.variable_dependencies()` ([#1010](https://github.com/theislab/ehrapy/pull/1010)) @sueoglu
 * Longitudinal explicit impute `ep.pp.explicit_impute()` extended to enable different imputation values per timepoint ([#1023](https://github.com/theislab/ehrapy/pull/1023)) @sueoglu
 * Sankey diagram state-transition colours and hover function for timeseries plots ([#1019](https://github.com/theislab/ehrapy/pull/1019)) @sueoglu
