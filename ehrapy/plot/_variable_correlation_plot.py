@@ -78,8 +78,8 @@ def variable_correlations(
         alpha=alpha,
     )
 
-    corr_long = corr_df.stack(dropna=False).rename("correlation")
-    sig_long = sig_df.stack(dropna=False).rename("significant")
+    corr_long = corr_df.stack().rename("correlation")
+    sig_long = sig_df.stack().rename("significant")
     heatmap_df = pd.concat([corr_long, sig_long], axis=1).reset_index()
     heatmap_df.columns = ["variable1", "variable2", "correlation", "significant"]
 
