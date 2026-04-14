@@ -33,12 +33,15 @@ def missing_data_mask(
     By default marks ``NaN`` values as missing.
     Optionally also marks user-specified sentinel values (e.g. ``-1``, ``0``, ``999``) as missing.
 
-    The result is stored in ``edata.layers[key_added]``.
+    The result is stored in ``edata.layers[key_added]`` and preserves the
+    array backend of the source matrix: dense in / dense out, sparse in /
+    sparse out, dask in / dask out.
 
     Args:
         edata: Central data object.
         layer: Layer to use instead of ``edata.X``.
         mask_values: Additional values to treat as missing besides ``NaN``.
+            Not supported on sparse arrays — densify first or use a dense layer.
         key_added: Key under which the boolean mask is stored in ``edata.layers``.
         copy: If ``True``, return a modified copy; otherwise modify in place.
 
@@ -50,6 +53,7 @@ def missing_data_mask(
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> ep.pp.missing_data_mask(edata)
+        >>> edata
     """
     if copy:
         edata = edata.copy()
@@ -60,7 +64,8 @@ def missing_data_mask(
 
     if mask_values is not None:
         values = list(mask_values)
-        mask = _apply_sentinel_mask(X, mask, values)
+        if values:
+            mask = _apply_sentinel_mask(X, mask, values)
 
     edata.layers[key_added] = mask
 
@@ -79,19 +84,22 @@ def _(mtx: np.ndarray) -> np.ndarray:
 
 @_compute_nan_mask.register(sp.csr_array)
 @_compute_nan_mask.register(sp.csc_array)
-def _(mtx: sp.csr_array | sp.csc_array) -> np.ndarray:
-    return np.isnan(mtx.toarray())
+def _(mtx: sp.csr_array | sp.csc_array) -> sp.csr_array | sp.csc_array:
+    # Sparse formats use implicit zeros, so a NaN can only appear among the
+    # explicitly stored data entries.  Reuse the input's indices/indptr and
+    # replace ``data`` with a boolean isnan view, so the result preserves
+    # the sparse backend without densifying.
+    nan_data = np.isnan(mtx.data)
+    return type(mtx)((nan_data, mtx.indices.copy(), mtx.indptr.copy()), shape=mtx.shape)
 
 
 @_compute_nan_mask.register(DaskArray)
-def _(mtx: DaskArray) -> np.ndarray:
+def _(mtx: DaskArray) -> DaskArray:
     import dask.array as da
 
-    return da.isnan(mtx).compute()
+    return da.isnan(mtx)
 
 
-# singledispatch dispatches on the FIRST argument, so dispatch on mtx (the data matrix), not mask.
-# This ensures sparse and Dask paths are reached.
 @singledispatch
 def _apply_sentinel_mask(mtx, mask, values):
     _raise_array_type_not_implemented(_apply_sentinel_mask, type(mtx))
@@ -104,12 +112,15 @@ def _(mtx: np.ndarray, mask: np.ndarray, values: list) -> np.ndarray:
 
 @_apply_sentinel_mask.register(sp.csr_array)
 @_apply_sentinel_mask.register(sp.csc_array)
-def _(mtx: sp.csr_array | sp.csc_array, mask: np.ndarray, values: list) -> np.ndarray:
-    return mask | np.isin(mtx.toarray(), values)
+def _(mtx: sp.csr_array | sp.csc_array, mask, values: list):
+    raise NotImplementedError(
+        "missing_data_mask does not support sentinel values (mask_values=...) on sparse arrays. "
+        "Densify the matrix or apply on a dense layer instead."
+    )
 
 
 @_apply_sentinel_mask.register(DaskArray)
-def _(mtx: DaskArray, mask: np.ndarray, values: list) -> np.ndarray:
+def _(mtx: DaskArray, mask: DaskArray, values: list) -> DaskArray:
     import dask.array as da
 
-    return mask | da.isin(mtx, values).compute()
+    return mask | da.isin(mtx, values)
