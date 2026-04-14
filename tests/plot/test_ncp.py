@@ -68,7 +68,6 @@ def test_pl_ncp_n_top(edata_with_ncp: ed.EHRData) -> None:
 
 
 def test_pl_ncp_image(edata_with_ncp: ed.EHRData, check_same_image, hv_backend) -> None:
-    hv_backend("matplotlib")
     plot = ep.pl.ncp(edata_with_ncp, n_top=5)
     fig = hv.render(plot, backend="matplotlib")
     fig.set_size_inches(12, 10.5)
@@ -140,7 +139,6 @@ def test_pl_ncp_cluster_trajectories_missing_ncp_raises(edata_with_ncp: ed.EHRDa
 
 
 def test_pl_ncp_cluster_trajectories_image(edata_with_ncp: ed.EHRData, check_same_image, hv_backend) -> None:
-    hv_backend("matplotlib")
     plot = ep.pl.ncp_cluster_trajectories(
         edata_with_ncp,
         layer=DEFAULT_TEM_LAYER_NAME,
