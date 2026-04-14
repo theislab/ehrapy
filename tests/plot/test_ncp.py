@@ -71,6 +71,8 @@ def test_pl_ncp_image(edata_with_ncp: ed.EHRData, check_same_image, hv_backend) 
     hv_backend("matplotlib")
     plot = ep.pl.ncp(edata_with_ncp, n_top=5)
     fig = hv.render(plot, backend="matplotlib")
+    fig.set_size_inches(12, 10.5)
+    fig.set_dpi(80)
 
     check_same_image(
         fig=fig,
@@ -146,6 +148,8 @@ def test_pl_ncp_cluster_trajectories_image(edata_with_ncp: ed.EHRData, check_sam
         n_top_diseases=5,
     )
     fig = hv.render(plot, backend="matplotlib")
+    fig.set_size_inches(8, 2.75)
+    fig.set_dpi(80)
 
     check_same_image(
         fig=fig,
