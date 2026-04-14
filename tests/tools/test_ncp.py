@@ -8,8 +8,6 @@ from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
 
 import ehrapy as ep
 
-# ── shared fixture ────────────────────────────────────────────────────────────
-
 
 @pytest.fixture
 def edata_3d() -> ed.EHRData:
@@ -24,9 +22,6 @@ def edata_3d() -> ed.EHRData:
         layers={DEFAULT_TEM_LAYER_NAME: layer},
         var=pd.DataFrame(index=var_names),
     )
-
-
-# ── tl.ncp ────────────────────────────────────────────────────────────────────
 
 
 def test_ncp_stores_factors(edata_3d: ed.EHRData) -> None:
