@@ -284,6 +284,8 @@ def knn_impute(
     """Imputes missing values in the input data object using K-nearest neighbor imputation.
 
     If required, the data needs to be properly encoded as this imputation requires numerical data only.
+    For 2D data, if layer is `None`, `edata.X` is used directly.
+    For 3D data, the layer is flattened along axis 0 before imputation and reshaped back to 3D afterwards.
 
     .. warning::
         Currently, both `n_neighbours` and `n_neighbors` are accepted as parameters for the number of neighbors.
@@ -316,9 +318,36 @@ def knn_impute(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ed.dt.mimic_2()
-        >>> ed.infer_feature_types(edata)
-        >>> ep.pp.knn_impute(edata)
+        >>> edata_3d = ed.dt.ehrdata_blobs(n_variables=3, n_observations=3, base_timepoints=2, missing_values=0.3)
+        >>> edata_imputed = ep.pp.knn_impute(edata_3d, layer="tem_data", copy=True)
+
+        Example Output:
+        >>> edata_3d.layers["tem_data"]
+        [[[-12.12732884, -18.37304373],
+        [         nan,  -0.91339411],
+        [         nan,  -7.88514984]],
+
+       [[  0.46031019,          nan],
+        [  0.75960393,          nan],
+        [  2.37346143,          nan]],
+
+       [[  1.17615504,   2.21695734],
+        [         nan,          nan],
+        [  3.63259441,          nan]]]
+
+        >>> edata_imputed.layers["tem_data"]
+        [[[-12.12732884, -18.37304373],
+        [ -0.07689509,  -0.91339411],
+        [ -2.75584421,  -7.88514984]],
+
+       [[  0.46031019,  -8.95636677],
+        [  0.75960393,  -0.07689509],
+        [  2.37346143,  -2.75584421]],
+
+       [[  1.17615504,   2.21695734],
+        [ -0.07689509,  -0.07689509],
+        [  3.63259441,  -2.75584421]]]
+
     """
     if copy:
         edata = edata.copy()
