@@ -391,25 +391,31 @@ def _knn_impute(
             "Can only impute numerical data. Try to restrict imputation to certain columns using "
             "var_names parameter or perform an encoding of your data."
         )
-    X = edata.X if layer is None else edata.layers[layer]
+    mtx = edata.X if layer is None else edata.layers[layer]
     var_indices_original = var_indices
     is_3d = False
+    input_dtype = mtx.dtype if np.issubdtype(mtx.dtype, np.floating) else np.float64
 
-    # if input data is 3D flatten along axis 0 before giving it to the imputer: each timepoint becomes a row
-    if X.ndim == 3:
+    # if input data is 3D, flatten along axis 0 before passing it to the imputer: each timepoint becomes a row
+    if mtx.ndim == 3:
         is_3d = True
-        n_obs, n_vars, n_t = X.shape
-        X = X[:, var_indices, :].astype("float64").transpose(0, 2, 1).reshape(n_obs * n_t, len(var_indices))
+        n_obs, n_vars, n_t = mtx.shape
+        mtx = (
+            mtx[:, var_indices, :]
+            .astype(input_dtype, copy=True)
+            .transpose(0, 2, 1)
+            .reshape(n_obs * n_t, len(var_indices))
+        )
         numerical_indices = list(range(len(var_indices)))
         var_indices = numerical_indices
 
     # complete columns to be used as anchors
-    complete_numerical_columns = np.array(numerical_indices)[~np.isnan(X[:, numerical_indices]).any(axis=0)].tolist()
+    complete_numerical_columns = np.array(numerical_indices)[~np.isnan(mtx[:, numerical_indices]).any(axis=0)].tolist()
 
     imputer_data_indices = var_indices + [
-        i for i in complete_numerical_columns if i not in var_indices
+        column for column in complete_numerical_columns if column not in var_indices
     ]  # columns to impute
-    imputer_x = X[:, imputer_data_indices].astype("float64")
+    imputer_x = mtx[:, imputer_data_indices].astype(input_dtype, copy=True)
     X_imputed = imputer.fit_transform(imputer_x)
 
     if is_3d:
