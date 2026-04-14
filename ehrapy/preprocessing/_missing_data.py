@@ -79,6 +79,13 @@ def _compute_nan_mask(mtx):
 
 @_compute_nan_mask.register(np.ndarray)
 def _(mtx: np.ndarray) -> np.ndarray:
+    if mtx.dtype.kind == "O":
+        # `np.isnan` only accepts numeric dtypes, so an object-typed
+        # array (e.g. EHR data with categorical and numeric columns
+        # mixed) would raise. `pd.isna` is the dtype-agnostic check.
+        import pandas as pd
+
+        return pd.isna(mtx)
     return np.isnan(mtx)
 
 

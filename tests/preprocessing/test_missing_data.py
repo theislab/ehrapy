@@ -30,7 +30,28 @@ def test_missing_data_mask_preserves_dask(missing_values_edata):
 
     ep.pp.missing_data_mask(edata)
 
+    # The newly created layer must remain dask
     assert isinstance(edata.layers["missing_data_mask"], da.Array)
+    # And the original data array must not have been silently converted
+    # to a numpy array as a side effect of computing the mask.
+    assert isinstance(edata.X, da.Array)
+
+
+def test_missing_data_mask_object_dtype():
+    # EHR data often arrives as an object array because columns mix
+    # numeric and categorical values; np.isnan would error on this dtype,
+    # so the function must fall back to a dtype-agnostic check.
+    X = np.array([[1.0, np.nan, "A"], ["B", 5.0, np.nan]], dtype=object)
+    edata = ed.EHRData(
+        X=X,
+        obs=pd.DataFrame({"id": ["a", "b"]}),
+        var=pd.DataFrame(index=["v1", "v2", "v3"]),
+    )
+
+    ep.pp.missing_data_mask(edata)
+
+    expected = np.array([[False, True, False], [False, False, True]])
+    assert np.array_equal(edata.layers["missing_data_mask"], expected)
 
 
 def test_missing_data_mask_no_missing():
