@@ -66,7 +66,6 @@ dependencies = [
     "tslearn",
     "holoviews[recommended]",
     "bottleneck",  # required for locf - transitive from xarray (accel extra)
-    "tensorly"
 ]
 
 [project.optional-dependencies]
