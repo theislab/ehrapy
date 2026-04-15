@@ -54,6 +54,10 @@ def missing_data_mask(
         >>> edata = ed.dt.mimic_2()
         >>> ep.pp.missing_data_mask(edata)
         >>> edata
+        EHRData object with n_obs × n_vars × n_t = 1776 × 46 × 1
+            layers: 'missing_data_mask'
+            shape of .X: (1776, 46)
+            shape of .missing_data_mask: (1776, 46)
     """
     if copy:
         edata = edata.copy()
