@@ -11,6 +11,7 @@ from ehrapy.preprocessing._imputation import (
     miss_forest_impute,
     simple_impute,
 )
+from ehrapy.preprocessing._missing_data import missing_data_mask
 from ehrapy.preprocessing._neighbors import neighbors
 from ehrapy.preprocessing._normalization import (
     log_norm,
@@ -59,4 +60,5 @@ __all__ = [
     "sample",
     "combat",
     "variable_correlations",
+    "missing_data_mask",
 ]
