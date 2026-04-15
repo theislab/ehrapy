@@ -24,9 +24,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 * Update plotting ci dotplot ([#1011](https://github.com/theislab/ehrapy/pull/1011)) @sueoglu @Zethson @eroell
 * Add ehrdata as submodule ([#1040](https://github.com/theislab/ehrapy/pull/1040)) @eroell
 * Adapt to updated `ed.infer_feature_type`, discard alternative feature type inference in imputation methods ([#1039](https://github.com/theislab/ehrapy/pull/1039)) @eroell
-* Upgrade tutorials ([#1042](https://github.com/theislab/ehrapy/pull/1042)) @agerardy
-* Upgrade tutorials ([#1043](https://github.com/theislab/ehrapy/pull/1043)) @sueoglu
-* Upgrade tutorials ([#1046](https://github.com/theislab/ehrapy/pull/1046)) @Zethson
+* Upgrade tutorials ([#1042](https://github.com/theislab/ehrapy/pull/1042), [#1043](https://github.com/theislab/ehrapy/pull/1043), [#1046](https://github.com/theislab/ehrapy/pull/1046)) @agerardy @sueoglu @Zethson
 * Remove ML with ehrapy notebook ([#1048](https://github.com/theislab/ehrapy/pull/1048)) @eroell
 
 
