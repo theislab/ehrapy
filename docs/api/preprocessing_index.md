@@ -56,6 +56,7 @@ Preprocessing steps usually perform a basic transformation on the data array in 
     :toctree: preprocessing
     :nosignatures:
 
+    preprocessing.missing_data_mask
     preprocessing.explicit_impute
     preprocessing.simple_impute
     preprocessing.locf_impute
