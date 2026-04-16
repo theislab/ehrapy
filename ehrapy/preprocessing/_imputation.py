@@ -445,7 +445,6 @@ def _knn_impute(
 
 
 @use_ehrdata(deprecated_after="1.0.0")
-@function_2D_only()
 @spinner("Performing miss-forest impute")
 def miss_forest_impute(
     edata: EHRData | AnnData,
@@ -495,6 +494,11 @@ def miss_forest_impute(
     if copy:
         edata = edata.copy()
 
+    if edata.X is None and layer is None:  # if edata is 3D
+        raise ValueError(
+            "3D imputation requires a layer to be specified. Pass the layer containing the full temporal data."
+        )
+
     if var_names is None:
         _warn_imputation_threshold(edata, list(edata.var_names), threshold=warning_threshold, layer=layer)
     elif isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):
@@ -527,7 +531,24 @@ def miss_forest_impute(
             var_names = edata.var_names
         var_indices = edata.var_names.get_indexer(var_names).tolist()
 
-        if set(var_indices).issubset(_get_non_numerical_column_indices(edata.X)):
+        mtx = edata.X if layer is None else edata.layers[layer]
+        input_dtype = mtx.dtype if np.issubdtype(mtx.dtype, np.floating) else np.float64
+        var_indices_original = var_indices
+
+        is_3d = False
+        if mtx.ndim == 3:
+            is_3d = True
+            n_obs, n_vars, n_t = mtx.shape
+            mtx = (
+                mtx[:, var_indices, :]
+                .astype(input_dtype, copy=True)
+                .transpose(0, 2, 1)
+                .reshape(n_obs * n_t, len(var_indices))
+            )
+            numerical_indices = list(range(len(var_indices)))
+            var_indices = numerical_indices
+
+        if set(var_indices).issubset(_get_non_numerical_column_indices(mtx)):
             raise ValueError(
                 "Can only impute numerical data. Try to restrict imputation to certain columns using "
                 "var_names parameter."
@@ -535,10 +556,20 @@ def miss_forest_impute(
 
         # this step is the most expensive one and might extremely slow down the impute process
         if var_indices:
-            if layer is None:
-                edata.X[::, var_indices] = imp_num.fit_transform(edata.X[::, var_indices])
+            imputer_x = mtx[:, var_indices]
+            X_imputed = imp_num.fit_transform(imputer_x)
+            if is_3d:
+                X_imputed = (
+                    X_imputed[:, : len(var_indices_original)]
+                    .reshape(n_obs, n_t, len(var_indices_original))
+                    .transpose(0, 2, 1)
+                )
+                edata.layers[layer][:, var_indices_original, :] = X_imputed
             else:
-                edata.layers[layer][::, var_indices] = imp_num.fit_transform(edata.layers[layer][::, var_indices])
+                if layer is None:
+                    edata.X[::, var_indices] = X_imputed
+                else:
+                    edata.layers[layer][::, var_indices] = X_imputed
         else:
             raise ValueError("Cannot find any feature to perform imputation")
 

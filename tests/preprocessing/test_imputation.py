@@ -354,10 +354,33 @@ def test_knn_impute_numerical_data(impute_num_edata):
     _base_check_imputation(impute_num_edata, edata_imputed)
 
 
-def test_missforest_impute_3D_edata(edata_blob_small):
-    miss_forest_impute(edata_blob_small, layer="layer_2")
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
-        miss_forest_impute(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
+@pytest.mark.parametrize("edata_mini_3D_missing_values", [True], indirect=True)
+def test_missforest_impute_3D_edata(edata_mini_3D_missing_values):
+    edata = edata_mini_3D_missing_values.copy()
+    edata_imputed = miss_forest_impute(edata, layer=DEFAULT_TEM_LAYER_NAME, copy=True)
+    _base_check_imputation(
+        edata_mini_3D_missing_values,
+        edata_imputed,
+        before_imputation_layer=DEFAULT_TEM_LAYER_NAME,
+        after_imputation_layer=DEFAULT_TEM_LAYER_NAME,
+    )
+
+
+def test_missforest_impute_3d_var_names_subset(edata_mini_3D_missing_values):
+    edata = edata_mini_3D_missing_values.copy()
+    imputed = miss_forest_impute(edata, layer=DEFAULT_TEM_LAYER_NAME, var_names=["1", "2"], copy=True)
+    edata_imputed = imputed[:, :2].copy()
+    _base_check_imputation(
+        edata_mini_3D_missing_values[:, :2],
+        edata_imputed,
+        before_imputation_layer=DEFAULT_TEM_LAYER_NAME,
+        after_imputation_layer=DEFAULT_TEM_LAYER_NAME,
+    )
+
+
+def test_missforest_impute_3d_layer_none(edata_mini_3D_missing_values):
+    with pytest.raises(ValueError, match="requires a layer"):
+        miss_forest_impute(edata_mini_3D_missing_values, copy=True)
 
 
 def test_missforest_impute_non_numerical_data(impute_edata):
