@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Callable
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
 import pandas as pd
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class LLMCallable(Protocol):

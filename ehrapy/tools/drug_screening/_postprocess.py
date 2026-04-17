@@ -1,8 +1,11 @@
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from typing import TYPE_CHECKING
 
 import pandas as pd
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping, Sequence
 
 
 def normalize_screening_result(

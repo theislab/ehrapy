@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+import sys
 import warnings
 from collections.abc import Iterable, Mapping, Sequence
 from functools import singledispatch
 from importlib.util import find_spec
-import sys
 from typing import TYPE_CHECKING, Literal
 
 import numpy as np

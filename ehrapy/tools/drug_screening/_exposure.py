@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Callable, Sequence
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Sequence
 
 _NUMBER_WORDS = {
     "zero": 0.0,
@@ -311,10 +314,7 @@ def prepare_prescriptions_from_therapy(
 
         frame = frame.merge(patient_frame, how="left", on=patient_col)
         observation_end = frame.loc[:, list(observation_end_cols)].min(axis=1)
-        valid_mask = (
-            frame[registration_start_col].lt(frame[event_date_col])
-            & observation_end.gt(frame[event_date_col])
-        )
+        valid_mask = frame[registration_start_col].lt(frame[event_date_col]) & observation_end.gt(frame[event_date_col])
         frame = frame.loc[valid_mask].copy()
 
     frame["duration"] = infer_prescription_duration(
@@ -972,7 +972,9 @@ def _apply_implausible_imputation(
     if method is None:
         raise NotImplementedError(f"Unsupported implausible-value decision: {decision}")
     group = _decision_group(decision, patient_col=patient_col, practice_col=practice_col)
-    return _impute_by_group(frame, values, mask, method=method, group=group, prodcode_col=prodcode_col, replace_with=np.nan)
+    return _impute_by_group(
+        frame, values, mask, method=method, group=group, prodcode_col=prodcode_col, replace_with=np.nan
+    )
 
 
 def _apply_missing_imputation(
@@ -1004,14 +1006,22 @@ def _apply_missing_duration_imputation(
     if decision == "a":
         return values
     if decision == "b":
-        return _impute_by_group(frame, values, values.isna(), method="mean", group=patient_col, prodcode_col=prodcode_col)
+        return _impute_by_group(
+            frame, values, values.isna(), method="mean", group=patient_col, prodcode_col=prodcode_col
+        )
     if decision == "c":
-        return _impute_by_group(frame, values, values.isna(), method="mean", group="population", prodcode_col=prodcode_col)
+        return _impute_by_group(
+            frame, values, values.isna(), method="mean", group="population", prodcode_col=prodcode_col
+        )
     if decision == "d":
-        individual = _impute_by_group(frame, values, values.isna(), method="mean", group=patient_col, prodcode_col=prodcode_col)
+        individual = _impute_by_group(
+            frame, values, values.isna(), method="mean", group=patient_col, prodcode_col=prodcode_col
+        )
         temp = frame.copy()
         temp[duration_col] = individual
-        return _impute_by_group(temp, individual, individual.isna(), method="mean", group="population", prodcode_col=prodcode_col)
+        return _impute_by_group(
+            temp, individual, individual.isna(), method="mean", group="population", prodcode_col=prodcode_col
+        )
     raise NotImplementedError(f"Unsupported missing-duration decision: {decision}")
 
 
@@ -1211,11 +1221,15 @@ def collapse_exposure_episodes(
             if start <= current_stop + pd.Timedelta(days=gap_days):
                 current_stop = max(current_stop, stop)
             else:
-                merged_rows.append(_merge_row_dict(merge_keys, key_values, start_col, current_start, stop_col, current_stop))
+                merged_rows.append(
+                    _merge_row_dict(merge_keys, key_values, start_col, current_start, stop_col, current_stop)
+                )
                 current_start, current_stop = start, stop
 
         if current_start is not None:
-            merged_rows.append(_merge_row_dict(merge_keys, key_values, start_col, current_start, stop_col, current_stop))
+            merged_rows.append(
+                _merge_row_dict(merge_keys, key_values, start_col, current_start, stop_col, current_stop)
+            )
 
     merged = pd.DataFrame(merged_rows)
     if keep_first_only and not merged.empty:

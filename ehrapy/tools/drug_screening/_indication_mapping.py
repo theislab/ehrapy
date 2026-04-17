@@ -39,9 +39,12 @@ def extract_rxclass_may_treat(
             }
         )
 
-    return pd.DataFrame(rows, columns=[rxcui_col, drug_col, mesh_col, disease_col]).dropna(
-        subset=[mesh_col]
-    ).drop_duplicates().reset_index(drop=True)
+    return (
+        pd.DataFrame(rows, columns=[rxcui_col, drug_col, mesh_col, disease_col])
+        .dropna(subset=[mesh_col])
+        .drop_duplicates()
+        .reset_index(drop=True)
+    )
 
 
 def extract_readcodev3_from_snomedbrowser(
@@ -65,8 +68,11 @@ def extract_readcodev3_from_snomedbrowser(
         return pd.DataFrame(columns=[snomed_col, readcode_col])
 
     readcodes = [token for token in re.split(r"\s+", readcode_text) if token]
-    return pd.DataFrame({snomed_col: snomed_disease, readcode_col: readcodes}).dropna().drop_duplicates().reset_index(
-        drop=True
+    return (
+        pd.DataFrame({snomed_col: snomed_disease, readcode_col: readcodes})
+        .dropna()
+        .drop_duplicates()
+        .reset_index(drop=True)
     )
 
 
@@ -102,8 +108,10 @@ def extract_snomed_ingredient_links(
     )
     if ingredient_ids.empty:
         return pd.DataFrame(columns=[snomed_drug_col, snomed_ingredient_col])
-    return pd.DataFrame({snomed_drug_col: snomed_drug, snomed_ingredient_col: ingredient_ids}).dropna().drop_duplicates(
-        ignore_index=True
+    return (
+        pd.DataFrame({snomed_drug_col: snomed_drug, snomed_ingredient_col: ingredient_ids})
+        .dropna()
+        .drop_duplicates(ignore_index=True)
     )
 
 
@@ -221,7 +229,9 @@ def build_rxcui_readcodev3_map(
 
     return (
         rxcui_snomed_disease.loc[:, [rxcui_col, snomed_disease_col]]
-        .merge(snomed_disease_readcodev3.loc[:, [snomed_disease_col, readcodev3_col]], how="left", on=snomed_disease_col)
+        .merge(
+            snomed_disease_readcodev3.loc[:, [snomed_disease_col, readcodev3_col]], how="left", on=snomed_disease_col
+        )
         .loc[:, [rxcui_col, readcodev3_col]]
         .dropna()
         .drop_duplicates()
@@ -280,7 +290,9 @@ def build_rxcui_medcode_map(
         return direct.reset_index(drop=True)
 
     lookup_codes = set(readcodev2_medcode[readcodev2_col].dropna())
-    unmatched = rxcui_readcodev2.loc[~rxcui_readcodev2[readcodev2_col].isin(lookup_codes), [rxcui_col, readcodev2_col]].copy()
+    unmatched = rxcui_readcodev2.loc[
+        ~rxcui_readcodev2[readcodev2_col].isin(lookup_codes), [rxcui_col, readcodev2_col]
+    ].copy()
     if unmatched.empty:
         return direct.reset_index(drop=True)
 
@@ -351,8 +363,7 @@ def build_rxcui_prodcode_map(
     _require_columns(bnfcode_prodcode, {bnfcode_col, prodcode_col}, context="BNF to prodcode mapping")
 
     return (
-        rxcui_ingredient
-        .merge(snomed_ingredient_rxcui, how="left", on=rxcui_col)
+        rxcui_ingredient.merge(snomed_ingredient_rxcui, how="left", on=rxcui_col)
         .merge(snomed_ingredient_uk, how="left", on=snomed_ingredient_col)
         .merge(snomed_bnfcode, how="left", on=snomed_drug_col)
         .merge(bnfcode_prodcode, how="left", on=bnfcode_col)

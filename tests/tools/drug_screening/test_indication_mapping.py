@@ -124,18 +124,10 @@ def test_build_rxcui_medcode_map_applies_four_character_fallback():
 
 
 def test_build_rxcui_prodcode_map_follows_original_merge_chain():
-    rxcui_ingredient = pd.DataFrame(
-        {"rxcui": ["100", "200"], "rxcui.ingredient": ["5001", "5002"]}
-    )
-    snomed_ingredient_rxcui = pd.DataFrame(
-        {"snomed.ingredient": ["3001", "3002"], "rxcui": ["100", "200"]}
-    )
-    snomed_ingredient_uk = pd.DataFrame(
-        {"snomed.drug.uk": ["7001", "7002"], "snomed.ingredient": ["3001", "3002"]}
-    )
-    snomed_bnfcode = pd.DataFrame(
-        {"snomed.drug.uk": ["7001", "7002"], "bnfcode": ["111111", "222222"]}
-    )
+    rxcui_ingredient = pd.DataFrame({"rxcui": ["100", "200"], "rxcui.ingredient": ["5001", "5002"]})
+    snomed_ingredient_rxcui = pd.DataFrame({"snomed.ingredient": ["3001", "3002"], "rxcui": ["100", "200"]})
+    snomed_ingredient_uk = pd.DataFrame({"snomed.drug.uk": ["7001", "7002"], "snomed.ingredient": ["3001", "3002"]})
+    snomed_bnfcode = pd.DataFrame({"snomed.drug.uk": ["7001", "7002"], "bnfcode": ["111111", "222222"]})
     bnfcode_prodcode = pd.DataFrame({"prodcode": [10, 20], "bnfcode": ["111111", "222222"]})
 
     mapping = ep.tl.build_rxcui_prodcode_map(
@@ -167,9 +159,7 @@ def test_build_prodcode_medcode_map_returns_unique_pairs():
 def test_build_disease_indication_map_runs_full_disease_side_chain():
     rxcui_mesh = pd.DataFrame({"rxcui": ["100", "200"], "mesh": ["M1", "M2"]})
     mesh_snomed_disease = pd.DataFrame({"mesh": ["M1", "M2"], "snomed.disease": ["S1", "S2"]})
-    snomed_disease_readcodev3 = pd.DataFrame(
-        {"snomed.disease": ["S1", "S2"], "readcodev3": ["V31", "V32"]}
-    )
+    snomed_disease_readcodev3 = pd.DataFrame({"snomed.disease": ["S1", "S2"], "readcodev3": ["V31", "V32"]})
     readcodev3_readcodev2 = pd.DataFrame({"readcodev3": ["V31", "V32"], "readcodev2": ["A1234", "B2345"]})
     medical = pd.DataFrame({"medcode": ["10", "20"], "readcode": ["A1234Z", "B234X"]})
 

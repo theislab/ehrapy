@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Iterable, Sequence
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
@@ -17,6 +17,9 @@ from ehrapy.tools.drug_screening._grouping import (
     validate_grouping_level,
 )
 from ehrapy.tools.drug_screening._self_controlled_cohort import rate_ratio_test
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Sequence
 
 DEFAULT_AGE_GROUPS: tuple[tuple[str, float, float] | tuple[str], ...] = (
     ("0-20", 0.0, 20.0),
@@ -248,7 +251,9 @@ def screen_substance_therapy(
     return screen_substance_cohort(
         prescriptions,
         patients,
-        events.rename(columns={disease_event_date_col: "disease_eventdate"}) if disease_event_date_col != "disease_eventdate" else events,
+        events.rename(columns={disease_event_date_col: "disease_eventdate"})
+        if disease_event_date_col != "disease_eventdate"
+        else events,
         patient_col=patient_col,
         drug_col="drug",
         duration_col="duration",
@@ -532,9 +537,9 @@ def screen_drugs(
                 unexposed_mask = disease_drug[event_date_col].between(
                     disease_drug[unexposed_start_col], disease_drug[start_col], inclusive="both"
                 )
-                exposed_mask = disease_drug[event_date_col].gt(disease_drug[start_col]) & disease_drug[event_date_col].le(
-                    disease_drug[stop_col]
-                )
+                exposed_mask = disease_drug[event_date_col].gt(disease_drug[start_col]) & disease_drug[
+                    event_date_col
+                ].le(disease_drug[stop_col])
 
                 irr = rate_ratio_test(
                     x=[int(exposed_mask.sum()), int(unexposed_mask.sum())],
@@ -585,7 +590,9 @@ def screen_drugs(
                             | disease_drug[event_date_col].gt(disease_drug[stop_col])
                         ).sum()
                     ),
-                    "N.disease.A.before.exposed": int(disease_drug[event_date_col].lt(disease_drug[unexposed_start_col]).sum()),
+                    "N.disease.A.before.exposed": int(
+                        disease_drug[event_date_col].lt(disease_drug[unexposed_start_col]).sum()
+                    ),
                     "N.disease.D.after.exposed": int(disease_drug[event_date_col].gt(disease_drug[stop_col]).sum()),
                 }
                 results.append(result)

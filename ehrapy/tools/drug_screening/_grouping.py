@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Literal, get_args
+from typing import TYPE_CHECKING, Literal, get_args
 
-import pandas as pd
+if TYPE_CHECKING:
+    import pandas as pd
 
 GroupingLevel = Literal["substance", "paragraph", "section", "chapter"]
 

@@ -46,13 +46,7 @@ def test_compute_ndd_from_text_handles_ranges_abbreviations_and_non_daily_interv
 
 
 def test_compute_ndd_from_text_matches_drugprepr_example_patterns():
-    dosage = pd.DataFrame(
-        {
-            "text": ["TAKE 1 OR 2 4 TIMES/DAY"] * 6
-            + ["TAKE 1-2 THREE TIMES A DAY"] * 8
-            + [""] * 4
-        }
-    )
+    dosage = pd.DataFrame({"text": ["TAKE 1 OR 2 4 TIMES/DAY"] * 6 + ["TAKE 1-2 THREE TIMES A DAY"] * 8 + [""] * 4})
 
     parsed_min = ep.tl.compute_ndd_from_text(dosage, dose_fn="min", freq_fn="min", interval_fn="mean")
     parsed_min_max = ep.tl.compute_ndd_from_text(dosage, dose_fn="min", freq_fn="max", interval_fn="mean")
@@ -327,7 +321,9 @@ def test_screen_drugs_skips_known_pairs():
             "deathdate": ["2021-01-01", "2021-01-01"],
         }
     )
-    exposure_windows = ep.tl.prepare_exposure_windows(ep.tl.build_exposure_episodes_from_prescriptions(prescriptions), patients)
+    exposure_windows = ep.tl.prepare_exposure_windows(
+        ep.tl.build_exposure_episodes_from_prescriptions(prescriptions), patients
+    )
     events = pd.DataFrame(
         {
             "patid": [1, 2],
@@ -990,7 +986,9 @@ def test_screen_grouped_therapy_supports_named_followup_workflows():
         min_total_events=1,
     )
 
-    chapter_one = result[(result["drug"] == "chapter_1") & (result["disease"] == "disease_x") & (result["age.group"] == "all")].iloc[0]
+    chapter_one = result[
+        (result["drug"] == "chapter_1") & (result["disease"] == "disease_x") & (result["age.group"] == "all")
+    ].iloc[0]
     assert chapter_one["sum.exposed.person.time"] == 730
 
 
