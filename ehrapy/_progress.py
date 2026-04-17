@@ -1,4 +1,5 @@
 import functools
+import sys
 from collections.abc import Callable
 
 from rich.progress import Progress, SpinnerColumn
@@ -11,7 +12,11 @@ def spinner(message: str = "Running task") -> Callable:
             with Progress(
                 "[progress.description]{task.description}",
                 SpinnerColumn(),
-                refresh_per_second=1500,
+                # Disable live updates in non-interactive environments such as pytest,
+                # where Rich's background refresh thread can be unstable.
+                disable=not sys.stdout.isatty(),
+                refresh_per_second=10,
+                transient=True,
             ) as progress:
                 progress.add_task(f"[blue]{message}", total=1)
                 result = func(*args, **kwargs)

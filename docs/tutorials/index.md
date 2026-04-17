@@ -32,4 +32,12 @@ For questions about the usage of ehrapy use the [zulip forum](https://scverse.zu
 
 ```
 
+## Method Tutorials
+
+```{toctree}
+:maxdepth: 1
+
+drug_screening
+```
+
 [zulip forum]: https://scverse.zulipchat.com/#narrow/channel/465075-ehrapy

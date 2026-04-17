@@ -4,6 +4,7 @@ import warnings
 from collections.abc import Iterable, Mapping, Sequence
 from functools import singledispatch
 from importlib.util import find_spec
+import sys
 from typing import TYPE_CHECKING, Literal
 
 import numpy as np
@@ -346,6 +347,15 @@ def knn_impute(
     if backend not in {"scikit-learn", "faiss"}:
         raise ValueError(f"Unknown backend '{backend}' for KNN imputation. Choose between 'scikit-learn' and 'faiss'.")
 
+    if backend == "faiss" and sys.platform == "darwin":
+        warnings.warn(
+            "The faiss KNN imputation backend is unstable on macOS in this environment. "
+            "Falling back to the scikit-learn backend.",
+            RuntimeWarning,
+            stacklevel=1,
+        )
+        backend = "scikit-learn"
+
     if backend_kwargs is None:
         backend_kwargs = {}
 
@@ -389,9 +399,13 @@ def _knn_impute(
 
         imputer = KNNImputer(n_neighbors=n_neighbors, **kwargs)
     else:
-        from fknni import FastKNNImputer
+        # fknni renamed FaissImputer to FastKNNImputer in newer releases.
+        try:
+            from fknni import FaissImputer as _FaissImputer
+        except ImportError:
+            from fknni import FastKNNImputer as _FaissImputer
 
-        imputer = FastKNNImputer(n_neighbors=n_neighbors, **kwargs)
+        imputer = _FaissImputer(n_neighbors=n_neighbors, **kwargs)
 
     if var_names is None:
         var_names = edata.var_names

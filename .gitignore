@@ -45,12 +45,14 @@ htmlcov/
 .nox/
 .coverage
 .coverage.*
+# local cache files
 .cache
 nosetests.xml
 coverage.xml
 *.cover
 *.py,cover
 .hypothesis/
+# local pytest state
 .pytest_cache/
 
 # Translations
@@ -112,6 +114,7 @@ celerybeat.pid
 
 # Environments
 .env
+# local virtual environment
 .venv
 env/
 venv/
@@ -149,6 +152,7 @@ notebooks/data
 notebooks/*.dat
 notebooks/*.csv
 notebooks/*-requirements.txt
+# local downloaded datasets
 **/ehrapy_data/
 
 *.DS_Store

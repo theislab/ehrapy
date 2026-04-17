@@ -21,7 +21,11 @@ class TestCausal:
             num_common_causes=5,
             num_instruments=2,
             num_samples=1000,
-            treatment_is_binary=True,
+            # `dowhy.datasets.linear_dataset(..., treatment_is_binary=True)` is
+            # currently broken with the pinned dowhy/numpy combination in this
+            # test environment. The continuous-treatment branch exercises the
+            # same ehrapy wrapper surface while remaining stable.
+            treatment_is_binary=False,
         )
         X = linear_data["df"].astype(np.float32)
         R_layer = np.stack([X, X], axis=2)
