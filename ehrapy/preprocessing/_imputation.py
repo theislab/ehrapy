@@ -555,7 +555,6 @@ def miss_forest_impute(
 
 @_check_feature_types
 @use_ehrdata(deprecated_after="1.0.0")
-@function_2D_only()
 @spinner("Performing mice-forest impute")
 def mice_forest_impute(
     edata: EHRData | AnnData,
@@ -611,6 +610,11 @@ def mice_forest_impute(
     if copy:
         edata = edata.copy()
 
+    if edata.X is None and layer is None:  # if edata is 3D
+        raise ValueError(
+            "3D imputation requires a layer to be specified. Pass the layer containing the full temporal data."
+        )
+
     if var_names is None:
         var_names = edata.var_names
     var_indices = edata.var_names.get_indexer(var_names).tolist()
@@ -624,6 +628,7 @@ def mice_forest_impute(
             "Can only impute numerical data. Try to restrict imputation to certain columns using "
             "var_names parameter or perform an encoding of your data."
         )
+
     _miceforest_impute(
         edata,
         var_names,
@@ -654,13 +659,33 @@ def _miceforest_impute(
 ) -> None:
     import miceforest as mf
 
-    data_df = load_dataframe(
-        edata.X if layer is None else edata.layers[layer], columns=edata.var_names, index=edata.obs_names
-    )
+    mtx = edata.X if layer is None else edata.layers[layer]
+    input_dtype = mtx.dtype if np.issubdtype(mtx.dtype, np.floating) else np.float64
+    var_indices = edata.var_names.get_indexer(var_names).tolist()
+
+    is_3d = False
+    if mtx.ndim == 3:
+        is_3d = True
+        n_obs, n_vars, n_t = mtx.shape
+        mtx = (
+            mtx[:, var_indices, :]
+            .astype(input_dtype, copy=True)
+            .transpose(0, 2, 1)
+            .reshape(n_obs * n_t, len(var_indices))
+        )
+
+    col_names = edata.var_names[var_indices]
+    idx = pd.RangeIndex(n_obs * n_t) if is_3d else edata.obs_names
+
+    data_df = load_dataframe(mtx, columns=col_names, index=idx)
     data_df = data_df.apply(pd.to_numeric, errors="coerce")
 
     if isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):
-        column_indices = edata.var_names.get_indexer(var_names).tolist()
+        if is_3d:
+            # all columns are already the selected var_names so no need to re-index
+            column_indices = list(range(len(var_indices)))
+        else:
+            column_indices = edata.var_names.get_indexer(var_names).tolist()
         selected_columns = data_df.iloc[:, column_indices]
         selected_columns = selected_columns.reset_index(drop=True)
 
@@ -684,10 +709,14 @@ def _miceforest_impute(
         kernel.mice(iterations=iterations, variable_parameters=variable_parameters or {}, verbose=verbose)
         data_df = kernel.complete_data(dataset=0, inplace=inplace)
 
-    if layer is None:
-        edata.X = data_df.values
+    if is_3d:
+        result = data_df.values.reshape(n_obs, n_t, len(var_indices)).transpose(0, 2, 1)
+        edata.layers[layer][:, var_indices, :] = result
     else:
-        edata.layers[layer] = data_df.values
+        if layer is None:
+            edata.X = data_df.values
+        else:
+            edata.layers[layer] = data_df.values
 
 
 def _warn_imputation_threshold(
