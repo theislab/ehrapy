@@ -376,6 +376,7 @@ def test_missforest_impute_3d_var_names_subset(edata_mini_3D_missing_values):
         before_imputation_layer=DEFAULT_TEM_LAYER_NAME,
         after_imputation_layer=DEFAULT_TEM_LAYER_NAME,
     )
+    assert edata.shape == imputed.shape
 
 
 def test_missforest_impute_3d_layer_none(edata_mini_3D_missing_values):
