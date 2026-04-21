@@ -526,9 +526,20 @@ def miss_forest_impute(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ed.dt.mimic_2()
-        >>> edata = ep.pp.encode(edata, autodetect=True)
-        >>> ep.pp.miss_forest_impute(edata)
+        >>> edata_3d = ed.dt.ehrdata_blobs(n_variables=3, n_observations=3, base_timepoints=2, missing_values=0.3)
+        >>> edata_imputed = ep.pp.knn_impute(edata_3d, layer="tem_data", copy=True)
+
+        Example Output:
+
+        >>> edata_3d.layers["tem_data"][0, :, :]
+        [[-12.12732884, -18.37304373],
+        [         nan,  -0.91339411],
+        [         nan,  -7.88514984]]
+        >>> edata_imputed.layers["tem_data"][0, :, :]
+        [[-12.12732884, -18.37304373],
+        [ -0.3278448 ,  -0.91339411],
+        [ -4.39722201,  -7.88514984]]
+
     """
     if copy:
         edata = edata.copy()
