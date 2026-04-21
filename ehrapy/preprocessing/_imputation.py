@@ -444,6 +444,42 @@ def _knn_impute(
             edata.layers[layer][:, imputer_data_indices] = X_imputed
 
 
+@singledispatch
+def _miss_forest_impute_function(arr, num_initial_strategy, n_estimators, max_iter, random_state):
+    _raise_array_type_not_implemented(_miss_forest_impute_function, type(arr))
+
+
+@_miss_forest_impute_function.register(DaskArray)
+def _(arr: DaskArray, num_initial_strategy, n_estimators, max_iter, random_state):
+    _raise_array_type_not_implemented(_miss_forest_impute_function, type(arr))
+
+
+@_miss_forest_impute_function.register(sp.coo_array)
+def _(arr: sp.coo_array, num_initial_strategy, n_estimators, max_iter, random_state):
+    _raise_array_type_not_implemented(_miss_forest_impute_function, type(arr))
+
+
+@_miss_forest_impute_function.register(np.ndarray)
+@_miss_forest_impute_function.register(sp.csr_array)
+@_miss_forest_impute_function.register(sp.csc_array)
+@_apply_over_time_axis
+def _(arr: np.ndarray, num_initial_strategy, n_estimators, max_iter, random_state):
+
+    if set(range(arr.shape[1])).issubset(_get_non_numerical_column_indices(arr)):
+        raise ValueError(
+            "Can only impute numerical data. Try to restrict imputation to certain columns using var_names parameter."
+        )
+    from sklearn.ensemble import ExtraTreesRegressor
+    from sklearn.impute import IterativeImputer
+
+    return IterativeImputer(
+        estimator=ExtraTreesRegressor(n_estimators=n_estimators, n_jobs=settings.n_jobs),
+        initial_strategy=num_initial_strategy,
+        max_iter=max_iter,
+        random_state=random_state,
+    ).fit_transform(arr)
+
+
 @use_ehrdata(deprecated_after="1.0.0")
 @spinner("Performing miss-forest impute")
 def miss_forest_impute(
@@ -464,6 +500,9 @@ def miss_forest_impute(
     The strategy works by fitting a random forest model on each feature containing missing values,
     and using the trained model to predict the missing values.
 
+    For 2D data, if layer is `None`, `edata.X` is used directly.
+    For 3D data, the layer is flattened along axis 0 before imputation and reshaped back to 3D afterwards.
+
     See https://academic.oup.com/bioinformatics/article/28/1/112/219101.
 
     If required, the data needs to be properly encoded as this imputation requires numerical data only.
@@ -477,7 +516,7 @@ def miss_forest_impute(
                       Decrease for faster computations.
         random_state: The random seed for the initialization.
         warning_threshold: Threshold of percentage of missing values to display a warning for.
-        layer: The layer to impute.
+        layer: The layer to impute. Required when input data is 3D.
         copy: Whether to return a copy or act in place.
 
     Returns:
@@ -509,16 +548,11 @@ def miss_forest_impute(
 
         patch_sklearn()
 
-    from sklearn.ensemble import ExtraTreesRegressor, RandomForestClassifier
+    from sklearn.ensemble import RandomForestClassifier
     from sklearn.impute import IterativeImputer
 
     try:
-        imp_num = IterativeImputer(
-            estimator=ExtraTreesRegressor(n_estimators=n_estimators, n_jobs=settings.n_jobs),
-            initial_strategy=num_initial_strategy,
-            max_iter=max_iter,
-            random_state=random_state,
-        )
+        # not sure if this should be kept?
         # initial strategy here will not be parametrized since only most_frequent will be applied to non numerical data
         IterativeImputer(
             estimator=RandomForestClassifier(n_estimators=n_estimators, n_jobs=settings.n_jobs),
@@ -533,43 +567,24 @@ def miss_forest_impute(
 
         mtx = edata.X if layer is None else edata.layers[layer]
         input_dtype = mtx.dtype if np.issubdtype(mtx.dtype, np.floating) else np.float64
-        var_indices_original = var_indices
 
-        is_3d = False
         if mtx.ndim == 3:
-            is_3d = True
-            n_obs, n_vars, n_t = mtx.shape
-            mtx = (
-                mtx[:, var_indices, :]
-                .astype(input_dtype, copy=True)
-                .transpose(0, 2, 1)
-                .reshape(n_obs * n_t, len(var_indices))
-            )
-            numerical_indices = list(range(len(var_indices)))
-            var_indices = numerical_indices
-
-        if set(var_indices).issubset(_get_non_numerical_column_indices(mtx)):
-            raise ValueError(
-                "Can only impute numerical data. Try to restrict imputation to certain columns using "
-                "var_names parameter."
-            )
+            mtx_slice = mtx[:, var_indices, :].astype(input_dtype, copy=True)
+        else:
+            mtx_slice = mtx[:, var_indices].astype(input_dtype, copy=True)
 
         # this step is the most expensive one and might extremely slow down the impute process
         if var_indices:
-            imputer_x = mtx[:, var_indices]
-            X_imputed = imp_num.fit_transform(imputer_x)
-            if is_3d:
-                X_imputed = (
-                    X_imputed[:, : len(var_indices_original)]
-                    .reshape(n_obs, n_t, len(var_indices_original))
-                    .transpose(0, 2, 1)
-                )
-                edata.layers[layer][:, var_indices_original, :] = X_imputed
+            X_imputed = _miss_forest_impute_function(
+                mtx_slice, num_initial_strategy, n_estimators, max_iter, random_state
+            )
+            if mtx.ndim == 3:
+                edata.layers[layer][:, var_indices, :] = X_imputed
             else:
                 if layer is None:
-                    edata.X[::, var_indices] = X_imputed
+                    edata.X[:, var_indices] = X_imputed
                 else:
-                    edata.layers[layer][::, var_indices] = X_imputed
+                    edata.layers[layer][:, var_indices] = X_imputed
         else:
             raise ValueError("Cannot find any feature to perform imputation")
 
