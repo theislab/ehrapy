@@ -491,6 +491,7 @@ def miss_forest_impute(
         >>> edata = ed.dt.mimic_2()
         >>> edata = ep.pp.encode(edata, autodetect=True)
         >>> ep.pp.miss_forest_impute(edata)
+
     """
     if copy:
         edata = edata.copy()
@@ -603,9 +604,20 @@ def mice_forest_impute(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ed.dt.mimic_2()
-        >>> edata = ep.pp.encode(edata, autodetect=True)
-        >>> ep.pp.mice_forest_impute(edata)
+        >>> edata = ed.dt.ehrdata_blobs(n_variables=3, n_observations=20, base_timepoints=2, missing_values=0.3)
+        >>> edata_imputed = ep.pp.mice_forest_impute(edata_3d, layer="tem_data", copy=True)
+
+        Example Output:
+
+        >>> edata_3d.layers["tem_data"][0, :, :]
+        [[-11.3735387 , -17.00612946],
+        [         nan,  -3.13348925],
+        [         nan, -10.87061402]]
+        >>> edata_imputed.layers["tem_data"][0, :, :]
+        [[-11.3735387 , -17.00612946],
+        [ -2.29990557,  -3.13348925],
+        [ -6.72812888, -10.87061402]]
+
     """
     if copy:
         edata = edata.copy()
@@ -673,19 +685,18 @@ def _miceforest_impute(
             .transpose(0, 2, 1)
             .reshape(n_obs * n_t, len(var_indices))
         )
+        col_names = edata.var_names[var_indices]
+        column_indices = list(range(len(var_indices)))
+    else:
+        col_names = edata.var_names
+        column_indices = var_indices
 
-    col_names = edata.var_names[var_indices]
     idx = pd.RangeIndex(n_obs * n_t) if is_3d else edata.obs_names
 
     data_df = load_dataframe(mtx, columns=col_names, index=idx)
     data_df = data_df.apply(pd.to_numeric, errors="coerce")
 
     if isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):
-        if is_3d:
-            # all columns are already the selected var_names so no need to re-index
-            column_indices = list(range(len(var_indices)))
-        else:
-            column_indices = edata.var_names.get_indexer(var_names).tolist()
         selected_columns = data_df.iloc[:, column_indices]
         selected_columns = selected_columns.reset_index(drop=True)
 
