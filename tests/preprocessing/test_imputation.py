@@ -388,12 +388,18 @@ def test_missforest_impute_non_numerical_data(impute_edata):
     with pytest.raises(ValueError):
         miss_forest_impute(impute_edata, copy=True)
 
-
-def test_missforest_impute_numerical_data(impute_num_edata):
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NUMERIC)
+def test_missforest_impute_numerical_data(impute_num_edata, array_type):
     warnings.filterwarnings("ignore", category=ConvergenceWarning)
-    edata_imputed = miss_forest_impute(impute_num_edata, copy=True)
+    impute_num_edata.X = array_type(impute_num_edata.X)
 
-    _base_check_imputation(impute_num_edata, edata_imputed)
+    if isinstance(impute_num_edata.X, da.Array):
+        with pytest.raises(NotImplementedError):
+            edata_imputed = miss_forest_impute(impute_num_edata, copy=True)
+    else:
+        edata_imputed = miss_forest_impute(impute_num_edata, copy=True)
+
+        _base_check_imputation(impute_num_edata, edata_imputed)
 
 
 def test_missforest_impute_subset(impute_num_edata):

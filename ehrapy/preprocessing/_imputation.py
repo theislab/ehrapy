@@ -506,7 +506,9 @@ def miss_forest_impute(
     See https://academic.oup.com/bioinformatics/article/28/1/112/219101.
 
     If required, the data needs to be properly encoded as this imputation requires numerical data only.
-
+    If the data is stored as sparse arrays (:class:`scipy.sparse.csr_array`, :class:`scipy.sparse.csc_array`), 
+    they will be converted to dense internally during imputation.
+    
     Args:
         edata: Central data object.
         var_names: Iterable of columns to impute
@@ -559,25 +561,14 @@ def miss_forest_impute(
 
         patch_sklearn()
 
-    from sklearn.ensemble import RandomForestClassifier
-    from sklearn.impute import IterativeImputer
-
     try:
-        # not sure if this should be kept?
-        # initial strategy here will not be parametrized since only most_frequent will be applied to non numerical data
-        IterativeImputer(
-            estimator=RandomForestClassifier(n_estimators=n_estimators, n_jobs=settings.n_jobs),
-            initial_strategy="most_frequent",
-            max_iter=max_iter,
-            random_state=random_state,
-        )
 
         if var_names is None:
             var_names = edata.var_names
         var_indices = edata.var_names.get_indexer(var_names).tolist()
 
         mtx = edata.X if layer is None else edata.layers[layer]
-        input_dtype = mtx.dtype if np.issubdtype(mtx.dtype, np.floating) else np.float64
+        input_dtype = mtx.dtype if np.issubdtype(mtx.dtype, np.floating) else np.float64 #ensure floating point dtype before imputation, e.g. in case input layer dtype=object
 
         if mtx.ndim == 3:
             mtx_slice = mtx[:, var_indices, :].astype(input_dtype, copy=True)
