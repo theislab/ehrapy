@@ -458,3 +458,54 @@ def test_mcar_test_ttest_detects_mar(mar_edata):
     p_col0_given_miss9 = result.iloc[-1, 0]
     assert not np.isnan(p_col0_given_miss9)
     assert p_col0_given_miss9 < 0.05
+
+
+def test_mcar_test_little_matches_pyampute_references():
+    import json
+
+    ref_dir = TEST_DATA_PATH / "preprocessing/mcar_refs"
+    with (ref_dir / "little_expected.json").open(encoding="utf-8") as f:
+        expected = json.load(f)
+
+    for scenario_name, expected_p in expected.items():
+        df = pd.read_csv(ref_dir / f"{scenario_name}.csv")
+        edata = ed.EHRData(X=df.to_numpy(dtype=float), var=pd.DataFrame(index=df.columns))
+        observed = mcar_test(edata, method="little")
+        assert np.isclose(observed, expected_p, rtol=1e-2, atol=2e-3), (
+            f"Mismatch for {scenario_name}: observed={observed}, expected={expected_p}"
+        )
+
+
+def test_mcar_test_ttest_matches_pyampute_references():
+    ref_dir = TEST_DATA_PATH / "preprocessing/mcar_refs"
+    df = pd.read_csv(ref_dir / "ttest_mar.csv")
+    expected = pd.read_csv(ref_dir / "ttest_mar_expected.csv", index_col=0)
+
+    edata = ed.EHRData(X=df.to_numpy(dtype=float), var=pd.DataFrame(index=df.columns))
+    observed = mcar_test(edata, method="ttest")
+
+    expected = expected.reindex(index=observed.index, columns=observed.columns)
+
+    obs_vals = observed.to_numpy(dtype=float)
+    exp_vals = expected.to_numpy(dtype=float)
+    nan_mask = np.isnan(obs_vals) & np.isnan(exp_vals)
+    finite_mask = np.isfinite(obs_vals) & np.isfinite(exp_vals)
+
+    assert np.all(nan_mask | finite_mask), "NaN pattern mismatch in ttest reference comparison"
+    assert np.allclose(obs_vals[finite_mask], exp_vals[finite_mask], rtol=1e-6, atol=1e-10)
+
+
+def test_mcar_test_sparse_input(mcar_edata):
+    from scipy.sparse import csr_matrix
+
+    mcar_edata.X = csr_matrix(mcar_edata.X)
+    p_value = mcar_test(mcar_edata, method="little")
+    assert isinstance(p_value, float)
+    assert p_value > 0.05
+
+
+def test_mcar_test_dask_input(mcar_edata):
+    mcar_edata.X = as_dense_dask_array(mcar_edata.X)
+    p_value = mcar_test(mcar_edata, method="little")
+    assert isinstance(p_value, float)
+    assert p_value > 0.05
