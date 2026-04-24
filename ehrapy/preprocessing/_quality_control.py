@@ -681,7 +681,8 @@ def mcar_test(
         logger.warning(
             f"Data dtype is {mtx.dtype}, converting to float64 for MCAR test. This may temporarily double memory usage."
         )
-    X = np.asarray(mtx, dtype=np.float64, copy=False)
+    # Little's test uses covariance estimation and linear solves, which require float64 for numerical stability and to avoid integer arithmetic issues.
+    X = np.asarray(mtx).astype(np.float64, copy=False)
 
     if method == "little":
         return _little_mcar_test(X)
