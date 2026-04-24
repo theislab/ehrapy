@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import warnings
 from functools import singledispatch
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
@@ -9,6 +10,8 @@ import array_api_compat
 import numpy as np
 import pandas as pd
 from ehrdata._logger import logger
+from scipy import sparse
+from scipy.stats import chi2, ttest_ind_from_stats
 
 from ehrapy._compat import (
     DaskArray,
@@ -646,37 +649,39 @@ def mcar_test(
     Performs Little's MCAR test or pairwise t-tests.
 
     The null hypothesis of Little's test is that data is Missing Completely At Random (MCAR).
-    A small p-value suggests the data is **not** MCAR.
+    A small p-value suggests the data is not MCAR.
 
     We advise to use Little’s MCAR test carefully.
     Rejecting the null hypothesis may not always mean that data is not MCAR, nor is accepting the null hypothesis a guarantee that data is MCAR.
     See Schouten, R. M., & Vink, G. (2021). The Dance of the Mechanisms: How Observed Information Influences the Validity of Missingness Assumptions.
     Sociological Methods & Research, 50(3), 1243-1258. https://doi.org/10.1177/0049124118799376 for a thorough discussion of missingness mechanisms.
 
-    Sparse matrices are not supported. Dask arrays are materialised with a warning.
+    Sparse and Dask arrays are densified into memory with a warning, because the test requires global access to all observations simultaneously.
+    Non-float64 data is cast to ``float64`` with a warning, because it may temporarily increase memory usage.
 
     Args:
         edata: Central data object.
-        method: ``"little"`` for a global chi-square test or ``"ttest"`` for
-            pairwise Welch t-tests across all variable combinations.
+        method: ``"little"`` for a global chi-square test or ``"ttest"`` for pairwise Welch t-tests across all variable combinations.
         layer: Layer to apply the test to. Uses ``X`` if ``None``.
 
     Returns:
-        A single p-value (``float``) for ``"little"`` or a :class:`~pandas.DataFrame`
-        of p-values for ``"ttest"``.
+        A single p-value if the Little's test was applied or a Pandas DataFrame of the p-value of t-tests for each pair of features.
     """
-    from scipy import sparse
-
     mtx = edata.X if layer is None else edata.layers[layer]
 
     if sparse.issparse(mtx):
-        raise TypeError("mcar_test does not support sparse matrices. Convert to dense first.")
+        logger.warning("Sparse matrix detected – densifying into memory for MCAR test.")
+        mtx = mtx.toarray()
 
     if isinstance(mtx, DaskArray):
         logger.warning("Dask array detected – materialising into memory for MCAR test.")
         mtx = mtx.compute()
 
-    X = np.asarray(mtx, dtype=np.float64)
+    if mtx.dtype != np.float64:
+        logger.warning(
+            f"Data dtype is {mtx.dtype}, converting to float64 for MCAR test. This may temporarily double memory usage."
+        )
+    X = np.asarray(mtx, dtype=np.float64, copy=False)
 
     if method == "little":
         return _little_mcar_test(X)
@@ -688,8 +693,10 @@ def mcar_test(
 
 
 def _little_mcar_test(X: np.ndarray) -> float:
-    from scipy.stats import chi2
-
+    # Implements equation (4) from:
+    # Li, C. (2013). Little's test of missing completely at random. Stata Journal, 13(4), 795-809.
+    # Freely accessible preprint: https://cpb-us-w2.wpmucdn.com/blog.nus.edu.sg/dist/4/6502/files/2018/06/mcartest-zlxtj7.pdf
+    # Original reference: Little, R.J.A. (1988). JASA 83(404), 1198-1202. https://doi.org/10.2307/2290157
     n, p = X.shape
     mask = np.isnan(X)
 
@@ -736,19 +743,39 @@ def _little_mcar_test(X: np.ndarray) -> float:
 
 
 def _mcar_t_tests(X: np.ndarray, var_names: np.ndarray) -> pd.DataFrame:
-    from scipy.stats import ttest_ind
-
-    m = X.shape[1]
+    n, m = X.shape
     result = np.full((m, m), np.nan)
 
     for i in range(m):
-        missing_i = np.isnan(X[:, i])
-        for j in range(m):
-            vals_when_missing = X[missing_i, j]
-            vals_when_present = X[~missing_i, j]
-            vals_when_missing = vals_when_missing[~np.isnan(vals_when_missing)]
-            vals_when_present = vals_when_present[~np.isnan(vals_when_present)]
-            if len(vals_when_missing) >= 1 and len(vals_when_present) >= 1:
-                result[i, j] = ttest_ind(vals_when_missing, vals_when_present, equal_var=False).pvalue
+        miss = np.isnan(X[:, i])
+        if miss.all() or (~miss).all():
+            continue
+
+        X_miss = X[miss]
+        X_pres = X[~miss]
+
+        n1 = (~np.isnan(X_miss)).sum(axis=0).astype(float)
+        n2 = (~np.isnan(X_pres)).sum(axis=0).astype(float)
+
+        # nanmean/nanstd are evaluated eagerly for all columns before the np.where guard
+        # filters out all-NaN or single-observation columns, causing spurious RuntimeWarnings.
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            mu1 = np.where(n1 > 0, np.nanmean(X_miss, axis=0), np.nan)
+            mu2 = np.where(n2 > 0, np.nanmean(X_pres, axis=0), np.nan)
+            # ddof=1 to match ttest_ind equal_var=False (Welch's t-test)
+            std1 = np.where(n1 > 1, np.nanstd(X_miss, axis=0, ddof=1), np.nan)
+            std2 = np.where(n2 > 1, np.nanstd(X_pres, axis=0, ddof=1), np.nan)
+
+        computable = (n1 >= 1) & (n2 >= 1)
+        result[i, computable] = ttest_ind_from_stats(
+            mu1[computable],
+            std1[computable],
+            n1[computable],
+            mu2[computable],
+            std2[computable],
+            n2[computable],
+            equal_var=False,
+        ).pvalue
 
     return pd.DataFrame(result, index=var_names, columns=var_names)
