@@ -656,10 +656,6 @@ def mcar_test(
     See Schouten, R. M., & Vink, G. (2021). The Dance of the Mechanisms: How Observed Information Influences the Validity of Missingness Assumptions.
     Sociological Methods & Research, 50(3), 1243-1258. https://doi.org/10.1177/0049124118799376 for a thorough discussion of missingness mechanisms.
 
-    Sparse matrices are handled natively without full densification.
-    Dask arrays are materialised into memory with a warning.
-    Non-float64 data is cast to ``float64`` with a warning, because this may temporarily increase memory usage.
-
     Args:
         edata: Central data object.
         method: ``"little"`` for a global chi-square test or ``"ttest"`` for pairwise Welch t-tests across all variable combinations.
@@ -682,23 +678,21 @@ def mcar_test(
         mtx = mtx.astype(np.float64)
 
     var_names = np.asarray(edata.var_names)
-
-    if sparse.issparse(mtx):
-        if method == "little":
-            return _little_mcar_test_sparse(mtx)
-        if method == "ttest":
-            return _mcar_t_tests_sparse(mtx, var_names)
-        raise ValueError(f"Unknown method {method!r}. Choose from 'little' or 'ttest'.")
-
-    X = np.asarray(mtx)
     if method == "little":
-        return _little_mcar_test(X)
+        return _little_mcar_test(mtx)
     if method == "ttest":
-        return _mcar_t_tests(X, var_names)
+        return _mcar_t_tests(mtx, var_names)
     raise ValueError(f"Unknown method {method!r}. Choose from 'little' or 'ttest'.")
 
 
-def _little_mcar_test(X: np.ndarray) -> float:
+@singledispatch
+def _little_mcar_test(X) -> float:
+    _raise_array_type_not_implemented(_little_mcar_test, type(X))
+    raise TypeError(f"Unsupported input type: {type(X)!r}")
+
+
+@_little_mcar_test.register(np.ndarray)
+def _(X: np.ndarray) -> float:
     # Implements equation (4) from:
     # Li, C. (2013). Little's test of missing completely at random. Stata Journal, 13(4), 795-809.
     # Freely accessible preprint: https://cpb-us-w2.wpmucdn.com/blog.nus.edu.sg/dist/4/6502/files/2018/06/mcartest-zlxtj7.pdf
@@ -749,10 +743,6 @@ def _little_mcar_test(X: np.ndarray) -> float:
 
 
 def _sparse_prepare(X_sparse):
-    """Build NaN-zeroed and NaN-indicator sparse matrices from a CSC matrix.
-
-    Returns ``(X_clean_csc, nan_ind_csc, nan_mask)`` where ``nan_mask`` is a boolean ``(n, p)`` array marking NaN positions.
-    """
     csc = X_sparse.tocsc()
     n, p = csc.shape
 
@@ -772,13 +762,8 @@ def _sparse_prepare(X_sparse):
     return X_clean, nan_ind, nan_mask
 
 
-def _little_mcar_test_sparse(X_sparse) -> float:
-    """Sparse-native Little's MCAR test.
-
-    Builds the p×p global covariance entirely via sparse matrix products.
-    Uses the algebraic identity Σ(x-μ)(y-μ) = Σxy - μ_y·Σx - μ_x·Σy + n·μ_x·μ_y.
-    Avoids allocating a no n×p float64 dense matrix.
-    """
+@_little_mcar_test.register(sparse.spmatrix)
+def _(X_sparse) -> float:
     n, p = X_sparse.shape
     X_clean, nan_ind, mask = _sparse_prepare(X_sparse)
 
@@ -825,7 +810,14 @@ def _little_mcar_test_sparse(X_sparse) -> float:
     return float(chi2.sf(d2, df))
 
 
-def _mcar_t_tests(X: np.ndarray, var_names: np.ndarray) -> pd.DataFrame:
+@singledispatch
+def _mcar_t_tests(X, var_names: np.ndarray) -> pd.DataFrame:
+    _raise_array_type_not_implemented(_mcar_t_tests, type(X))
+    raise TypeError(f"Unsupported input type: {type(X)!r}")
+
+
+@_mcar_t_tests.register(np.ndarray)
+def _(X: np.ndarray, var_names: np.ndarray) -> pd.DataFrame:
     n, m = X.shape
     result = np.full((m, m), np.nan)
 
@@ -864,12 +856,8 @@ def _mcar_t_tests(X: np.ndarray, var_names: np.ndarray) -> pd.DataFrame:
     return pd.DataFrame(result, index=var_names, columns=var_names)
 
 
-def _mcar_t_tests_sparse(X_sparse, var_names: np.ndarray) -> pd.DataFrame:
-    """Sparse-native pairwise Welch t-tests.
-
-    Group statistics are computed via sparse row-slicing and column sums so no
-    full n×p dense matrix is allocated.
-    """
+@_mcar_t_tests.register(sparse.spmatrix)
+def _(X_sparse, var_names: np.ndarray) -> pd.DataFrame:
     n, m = X_sparse.shape
     result = np.full((m, m), np.nan)
 
