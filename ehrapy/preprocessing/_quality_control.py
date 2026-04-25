@@ -656,8 +656,9 @@ def mcar_test(
     See Schouten, R. M., & Vink, G. (2021). The Dance of the Mechanisms: How Observed Information Influences the Validity of Missingness Assumptions.
     Sociological Methods & Research, 50(3), 1243-1258. https://doi.org/10.1177/0049124118799376 for a thorough discussion of missingness mechanisms.
 
-    Sparse and Dask arrays are densified into memory with a warning, because the test requires global access to all observations simultaneously.
-    Non-float64 data is cast to ``float64`` with a warning, because it may temporarily increase memory usage.
+    Sparse matrices are handled natively without full densification.
+    Dask arrays are materialised into memory with a warning.
+    Non-float64 data is cast to ``float64`` with a warning, because this may temporarily increase memory usage.
 
     Args:
         edata: Central data object.
@@ -669,28 +670,32 @@ def mcar_test(
     """
     mtx = edata.X if layer is None else edata.layers[layer]
 
-    if sparse.issparse(mtx):
-        logger.warning("Sparse matrix detected – densifying into memory for MCAR test.")
-        mtx = mtx.toarray()
-
     if isinstance(mtx, DaskArray):
         logger.warning("Dask array detected – materialising into memory for MCAR test.")
         mtx = mtx.compute()
 
+    # float64 required: covariance estimation and linear solves need stable floating-point math
     if mtx.dtype != np.float64:
         logger.warning(
-            f"Data dtype is {mtx.dtype}, converting to float64 for MCAR test. This may temporarily double memory usage."
+            f"Data dtype is {mtx.dtype}, converting to float64 for MCAR test. This may temporarily increase memory usage."
         )
-    # Little's test uses covariance estimation and linear solves, which require float64 for numerical stability and to avoid integer arithmetic issues.
-    X = np.asarray(mtx).astype(np.float64, copy=False)
+        mtx = mtx.astype(np.float64)
 
+    var_names = np.asarray(edata.var_names)
+
+    if sparse.issparse(mtx):
+        if method == "little":
+            return _little_mcar_test_sparse(mtx)
+        if method == "ttest":
+            return _mcar_t_tests_sparse(mtx, var_names)
+        raise ValueError(f"Unknown method {method!r}. Choose from 'little' or 'ttest'.")
+
+    X = np.asarray(mtx)
     if method == "little":
         return _little_mcar_test(X)
-    elif method == "ttest":
-        var_names = np.asarray(edata.var_names)
+    if method == "ttest":
         return _mcar_t_tests(X, var_names)
-    else:
-        raise ValueError(f"Unknown method {method!r}. Choose from 'little' or 'ttest'.")
+    raise ValueError(f"Unknown method {method!r}. Choose from 'little' or 'ttest'.")
 
 
 def _little_mcar_test(X: np.ndarray) -> float:
@@ -743,6 +748,83 @@ def _little_mcar_test(X: np.ndarray) -> float:
     return float(chi2.sf(d2, df))
 
 
+def _sparse_prepare(X_sparse):
+    """Build NaN-zeroed and NaN-indicator sparse matrices from a CSC matrix.
+
+    Returns ``(X_clean_csc, nan_ind_csc, nan_mask)`` where ``nan_mask`` is a boolean ``(n, p)`` array marking NaN positions.
+    """
+    csc = X_sparse.tocsc()
+    n, p = csc.shape
+
+    is_nan = np.isnan(csc.data)
+    col_idx = np.repeat(np.arange(p), np.diff(csc.indptr))
+    nan_mask = np.zeros((n, p), dtype=bool)
+    nan_mask[csc.indices[is_nan], col_idx[is_nan]] = True
+
+    X_clean = csc.copy()
+    X_clean.data[is_nan] = 0.0
+    X_clean.eliminate_zeros()
+
+    nan_ind = csc.copy()
+    nan_ind.data[:] = is_nan.astype(np.float64)
+    nan_ind.eliminate_zeros()
+
+    return X_clean, nan_ind, nan_mask
+
+
+def _little_mcar_test_sparse(X_sparse) -> float:
+    """Sparse-native Little's MCAR test.
+
+    Builds the p×p global covariance entirely via sparse matrix products.
+    Uses the algebraic identity Σ(x-μ)(y-μ) = Σxy - μ_y·Σx - μ_x·Σy + n·μ_x·μ_y.
+    Avoids allocating a no n×p float64 dense matrix.
+    """
+    n, p = X_sparse.shape
+    X_clean, nan_ind, mask = _sparse_prepare(X_sparse)
+
+    if not mask.any():
+        return 1.0
+
+    nan_per_col = np.asarray(nan_ind.sum(axis=0)).ravel()
+    sum_per_col = np.asarray(X_clean.sum(axis=0)).ravel()
+    mu = sum_per_col / np.maximum(n - nan_per_col, 1)
+
+    cross = (X_clean.T @ X_clean).toarray()
+    both_nan = (nan_ind.T @ nan_ind).toarray()
+    xc_nan = (X_clean.T @ nan_ind).toarray()
+    n_pairs = (n - nan_per_col[:, np.newaxis] - nan_per_col[np.newaxis, :] + both_nan).astype(float)
+    S = sum_per_col[:, np.newaxis] - xc_nan  # Σ x_ki where both i,j non-NaN
+
+    cov_global = (cross - mu[np.newaxis, :] * S - mu[:, np.newaxis] * S.T + n_pairs * np.outer(mu, mu)) / np.maximum(
+        n_pairs - 1, 1
+    )
+    np.fill_diagonal(cov_global, np.maximum(cov_global.diagonal(), 1e-12))
+
+    patterns, inverse, counts = np.unique(mask, axis=0, return_inverse=True, return_counts=True)
+    X_clean_csr = X_clean.tocsr()
+    d2 = 0.0
+    kj = 0
+    for j in range(len(patterns)):
+        obs_cols = ~patterns[j]
+        k = obs_cols.sum()
+        if k == 0:
+            continue
+        kj += k
+        rows = inverse == j
+        delta = np.asarray(X_clean_csr[rows][:, obs_cols].mean(axis=0)).ravel() - mu[obs_cols]
+        sigma_j = cov_global[np.ix_(obs_cols, obs_cols)]
+        try:
+            contribution = delta @ np.linalg.solve(sigma_j, delta)
+        except np.linalg.LinAlgError:
+            contribution = delta @ np.linalg.pinv(sigma_j) @ delta
+        d2 += counts[j] * contribution
+
+    df = kj - p
+    if df <= 0:
+        return 1.0
+    return float(chi2.sf(d2, df))
+
+
 def _mcar_t_tests(X: np.ndarray, var_names: np.ndarray) -> pd.DataFrame:
     n, m = X.shape
     result = np.full((m, m), np.nan)
@@ -767,6 +849,58 @@ def _mcar_t_tests(X: np.ndarray, var_names: np.ndarray) -> pd.DataFrame:
             # ddof=1 to match ttest_ind equal_var=False (Welch's t-test)
             std1 = np.where(n1 > 1, np.nanstd(X_miss, axis=0, ddof=1), np.nan)
             std2 = np.where(n2 > 1, np.nanstd(X_pres, axis=0, ddof=1), np.nan)
+
+        computable = (n1 >= 1) & (n2 >= 1)
+        result[i, computable] = ttest_ind_from_stats(
+            mu1[computable],
+            std1[computable],
+            n1[computable],
+            mu2[computable],
+            std2[computable],
+            n2[computable],
+            equal_var=False,
+        ).pvalue
+
+    return pd.DataFrame(result, index=var_names, columns=var_names)
+
+
+def _mcar_t_tests_sparse(X_sparse, var_names: np.ndarray) -> pd.DataFrame:
+    """Sparse-native pairwise Welch t-tests.
+
+    Group statistics are computed via sparse row-slicing and column sums so no
+    full n×p dense matrix is allocated.
+    """
+    n, m = X_sparse.shape
+    result = np.full((m, m), np.nan)
+
+    X_clean, nan_ind, col_nan_mask = _sparse_prepare(X_sparse)
+    X_clean_csr = X_clean.tocsr()
+    nan_ind_csr = nan_ind.tocsr()
+
+    X_sq = X_clean.copy()
+    X_sq.data **= 2
+    X_sq_csr = X_sq.tocsr()
+
+    for i in range(m):
+        miss = col_nan_mask[:, i]
+        n_miss = int(miss.sum())
+        if n_miss == 0 or n_miss == n:
+            continue
+
+        sum1 = np.asarray(X_clean_csr[miss].sum(axis=0)).ravel()
+        sum2 = np.asarray(X_clean_csr[~miss].sum(axis=0)).ravel()
+        sq1 = np.asarray(X_sq_csr[miss].sum(axis=0)).ravel()
+        sq2 = np.asarray(X_sq_csr[~miss].sum(axis=0)).ravel()
+        n1 = (n_miss - np.asarray(nan_ind_csr[miss].sum(axis=0)).ravel()).astype(float)
+        n2 = (n - n_miss - np.asarray(nan_ind_csr[~miss].sum(axis=0)).ravel()).astype(float)
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            mu1 = np.where(n1 > 0, sum1 / n1, np.nan)
+            mu2 = np.where(n2 > 0, sum2 / n2, np.nan)
+            # One-pass variance: var = (Σx² - (Σx)²/n) / (n-1)
+            std1 = np.sqrt(np.where(n1 > 1, (sq1 - sum1**2 / n1) / (n1 - 1), np.nan))
+            std2 = np.sqrt(np.where(n2 > 1, (sq2 - sum2**2 / n2) / (n2 - 1), np.nan))
 
         computable = (n1 >= 1) & (n2 >= 1)
         result[i, computable] = ttest_ind_from_stats(

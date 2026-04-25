@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import ehrdata as ed
@@ -6,6 +7,7 @@ import pandas as pd
 import pytest
 from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
 from ehrdata.io import read_csv
+from scipy.sparse import csr_matrix
 
 import ehrapy as ep
 from ehrapy.preprocessing._encoding import encode
@@ -461,8 +463,6 @@ def test_mcar_test_ttest_detects_mar(mar_edata):
 
 
 def test_mcar_test_little_matches_pyampute_references():
-    import json
-
     ref_dir = TEST_DATA_PATH / "preprocessing/mcar_refs"
     with (ref_dir / "little_expected.json").open(encoding="utf-8") as f:
         expected = json.load(f)
@@ -495,13 +495,18 @@ def test_mcar_test_ttest_matches_pyampute_references():
     assert np.allclose(obs_vals[finite_mask], exp_vals[finite_mask], rtol=1e-6, atol=1e-10)
 
 
-def test_mcar_test_sparse_input(mcar_edata):
-    from scipy.sparse import csr_matrix
+@pytest.mark.parametrize("method", ["little", "ttest"])
+def test_mcar_test_sparse_matches_dense(mar_edata, method):
+    dense_result = mcar_test(mar_edata, method=method)
 
-    mcar_edata.X = csr_matrix(mcar_edata.X)
-    p_value = mcar_test(mcar_edata, method="little")
-    assert isinstance(p_value, float)
-    assert p_value > 0.05
+    mar_edata_sparse = mar_edata.copy()
+    mar_edata_sparse.X = csr_matrix(mar_edata.X)
+    sparse_result = mcar_test(mar_edata_sparse, method=method)
+
+    if method == "little":
+        assert np.isclose(dense_result, sparse_result, rtol=1e-10)
+    else:
+        pd.testing.assert_frame_equal(dense_result, sparse_result, rtol=1e-10)
 
 
 def test_mcar_test_dask_input(mcar_edata):
