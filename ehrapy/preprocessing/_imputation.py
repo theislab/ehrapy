@@ -564,7 +564,6 @@ def mice_forest_impute(
     warning_threshold: int = 70,
     save_all_iterations_data: bool = True,
     random_state: int | None = None,
-    inplace: bool = False,
     iterations: int = 5,
     variable_parameters: dict | None = None,
     verbose: bool = False,
@@ -578,6 +577,9 @@ def mice_forest_impute(
 
     If required, the data needs to be properly encoded as this imputation requires numerical data only.
 
+    For 2D data, if layer is `None`, `edata.X` is used directly.
+    For 3D data, the layer is flattened along axis 0 before imputation and reshaped back to 3D afterwards.
+
     .. warning::
         This function is not supported on MacOS.
 
@@ -588,8 +590,6 @@ def mice_forest_impute(
         save_all_iterations_data: Whether to save all imputed values from all iterations or just the latest.
                              Saving all iterations allows for additional plotting, but may take more memory.
         random_state: The random state ensures script reproducibility.
-        inplace: If True, modify the input data object in-place and return None.
-                 If False, return a copy of the modified data object. Default is False.
         iterations: The number of iterations to run.
         variable_parameters: Model parameters can be specified by variable here.
                              Keys should be variable names or indices, and values should be a dict of parameter which should apply to that variable only.
@@ -646,7 +646,6 @@ def mice_forest_impute(
         var_names,
         save_all_iterations_data,
         random_state,
-        inplace,
         iterations,
         variable_parameters,
         verbose,
@@ -667,7 +666,7 @@ def _(arr: np.ndarray, columns, index):
 
 
 def _miceforest_impute(
-    edata, var_names, save_all_iterations_data, random_state, inplace, iterations, variable_parameters, verbose, layer
+    edata, var_names, save_all_iterations_data, random_state, iterations, variable_parameters, verbose, layer
 ) -> None:
     import miceforest as mf
 
@@ -686,15 +685,14 @@ def _miceforest_impute(
             .transpose(0, 2, 1)
             .reshape(n_obs * n_t, len(var_indices))
         )
-        col_names = edata.var_names[var_indices]
+        var_names = edata.var_names[var_indices]
         column_indices = list(range(len(var_indices)))
     else:
-        col_names = edata.var_names
         column_indices = var_indices
 
     idx = pd.RangeIndex(n_obs * n_t) if is_3d else edata.obs_names
 
-    data_df = load_dataframe(mtx, columns=col_names, index=idx)
+    data_df = load_dataframe(mtx, columns=var_names, index=idx)
     data_df = data_df.apply(pd.to_numeric, errors="coerce")
 
     # no need for branching as var_names is always either pd.Index or list of strings (resolved to strings before _miceforest_impute is called)
@@ -709,7 +707,7 @@ def _miceforest_impute(
     )
 
     kernel.mice(iterations=iterations, variable_parameters=variable_parameters or {}, verbose=verbose)
-    data_df.iloc[:, column_indices] = kernel.complete_data(dataset=0, inplace=inplace)
+    data_df.iloc[:, column_indices] = kernel.complete_data(dataset=0, inplace=False)
 
     if is_3d:
         result = data_df.values.reshape(n_obs, n_t, len(var_indices)).transpose(0, 2, 1)
