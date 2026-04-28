@@ -10,7 +10,6 @@ import array_api_compat
 import numpy as np
 import pandas as pd
 from ehrdata._logger import logger
-from scipy import sparse
 from scipy.stats import chi2, ttest_ind_from_stats
 
 from ehrapy._compat import (
@@ -666,10 +665,6 @@ def mcar_test(
     """
     mtx = edata.X if layer is None else edata.layers[layer]
 
-    if isinstance(mtx, DaskArray):
-        logger.warning("Dask array detected – materialising into memory for MCAR test.")
-        mtx = mtx.compute()
-
     # float64 required: covariance estimation and linear solves need stable floating-point math
     if mtx.dtype != np.float64:
         logger.warning(
@@ -742,74 +737,6 @@ def _(X: np.ndarray) -> float:
     return float(chi2.sf(d2, df))
 
 
-def _sparse_prepare(X_sparse):
-    csc = X_sparse.tocsc()
-    n, p = csc.shape
-
-    is_nan = np.isnan(csc.data)
-    col_idx = np.repeat(np.arange(p), np.diff(csc.indptr))
-    nan_mask = np.zeros((n, p), dtype=bool)
-    nan_mask[csc.indices[is_nan], col_idx[is_nan]] = True
-
-    X_clean = csc.copy()
-    X_clean.data[is_nan] = 0.0
-    X_clean.eliminate_zeros()
-
-    nan_ind = csc.copy()
-    nan_ind.data[:] = is_nan.astype(np.float64)
-    nan_ind.eliminate_zeros()
-
-    return X_clean, nan_ind, nan_mask
-
-
-@_little_mcar_test.register(sparse.spmatrix)
-def _(X_sparse) -> float:
-    n, p = X_sparse.shape
-    X_clean, nan_ind, mask = _sparse_prepare(X_sparse)
-
-    if not mask.any():
-        return 1.0
-
-    nan_per_col = np.asarray(nan_ind.sum(axis=0)).ravel()
-    sum_per_col = np.asarray(X_clean.sum(axis=0)).ravel()
-    mu = sum_per_col / np.maximum(n - nan_per_col, 1)
-
-    cross = (X_clean.T @ X_clean).toarray()
-    both_nan = (nan_ind.T @ nan_ind).toarray()
-    xc_nan = (X_clean.T @ nan_ind).toarray()
-    n_pairs = (n - nan_per_col[:, np.newaxis] - nan_per_col[np.newaxis, :] + both_nan).astype(float)
-    S = sum_per_col[:, np.newaxis] - xc_nan  # Σ x_ki where both i,j non-NaN
-
-    cov_global = (cross - mu[np.newaxis, :] * S - mu[:, np.newaxis] * S.T + n_pairs * np.outer(mu, mu)) / np.maximum(
-        n_pairs - 1, 1
-    )
-    np.fill_diagonal(cov_global, np.maximum(cov_global.diagonal(), 1e-12))
-
-    patterns, inverse, counts = np.unique(mask, axis=0, return_inverse=True, return_counts=True)
-    X_clean_csr = X_clean.tocsr()
-    d2 = 0.0
-    kj = 0
-    for j in range(len(patterns)):
-        obs_cols = ~patterns[j]
-        k = obs_cols.sum()
-        if k == 0:
-            continue
-        kj += k
-        rows = inverse == j
-        delta = np.asarray(X_clean_csr[rows][:, obs_cols].mean(axis=0)).ravel() - mu[obs_cols]
-        sigma_j = cov_global[np.ix_(obs_cols, obs_cols)]
-        try:
-            contribution = delta @ np.linalg.solve(sigma_j, delta)
-        except np.linalg.LinAlgError:
-            contribution = delta @ np.linalg.pinv(sigma_j) @ delta
-        d2 += counts[j] * contribution
-
-    df = kj - p
-    if df <= 0:
-        return 1.0
-    return float(chi2.sf(d2, df))
-
-
 @singledispatch
 def _mcar_t_tests(X, var_names: np.ndarray) -> pd.DataFrame:
     _raise_array_type_not_implemented(_mcar_t_tests, type(X))
@@ -818,7 +745,7 @@ def _mcar_t_tests(X, var_names: np.ndarray) -> pd.DataFrame:
 
 @_mcar_t_tests.register(np.ndarray)
 def _(X: np.ndarray, var_names: np.ndarray) -> pd.DataFrame:
-    n, m = X.shape
+    _, m = X.shape
     result = np.full((m, m), np.nan)
 
     for i in range(m):
@@ -841,54 +768,6 @@ def _(X: np.ndarray, var_names: np.ndarray) -> pd.DataFrame:
             # ddof=1 to match ttest_ind equal_var=False (Welch's t-test)
             std1 = np.where(n1 > 1, np.nanstd(X_miss, axis=0, ddof=1), np.nan)
             std2 = np.where(n2 > 1, np.nanstd(X_pres, axis=0, ddof=1), np.nan)
-
-        computable = (n1 >= 1) & (n2 >= 1)
-        result[i, computable] = ttest_ind_from_stats(
-            mu1[computable],
-            std1[computable],
-            n1[computable],
-            mu2[computable],
-            std2[computable],
-            n2[computable],
-            equal_var=False,
-        ).pvalue
-
-    return pd.DataFrame(result, index=var_names, columns=var_names)
-
-
-@_mcar_t_tests.register(sparse.spmatrix)
-def _(X_sparse, var_names: np.ndarray) -> pd.DataFrame:
-    n, m = X_sparse.shape
-    result = np.full((m, m), np.nan)
-
-    X_clean, nan_ind, col_nan_mask = _sparse_prepare(X_sparse)
-    X_clean_csr = X_clean.tocsr()
-    nan_ind_csr = nan_ind.tocsr()
-
-    X_sq = X_clean.copy()
-    X_sq.data **= 2
-    X_sq_csr = X_sq.tocsr()
-
-    for i in range(m):
-        miss = col_nan_mask[:, i]
-        n_miss = int(miss.sum())
-        if n_miss == 0 or n_miss == n:
-            continue
-
-        sum1 = np.asarray(X_clean_csr[miss].sum(axis=0)).ravel()
-        sum2 = np.asarray(X_clean_csr[~miss].sum(axis=0)).ravel()
-        sq1 = np.asarray(X_sq_csr[miss].sum(axis=0)).ravel()
-        sq2 = np.asarray(X_sq_csr[~miss].sum(axis=0)).ravel()
-        n1 = (n_miss - np.asarray(nan_ind_csr[miss].sum(axis=0)).ravel()).astype(float)
-        n2 = (n - n_miss - np.asarray(nan_ind_csr[~miss].sum(axis=0)).ravel()).astype(float)
-
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", RuntimeWarning)
-            mu1 = np.where(n1 > 0, sum1 / n1, np.nan)
-            mu2 = np.where(n2 > 0, sum2 / n2, np.nan)
-            # One-pass variance: var = (Σx² - (Σx)²/n) / (n-1)
-            std1 = np.sqrt(np.where(n1 > 1, (sq1 - sum1**2 / n1) / (n1 - 1), np.nan))
-            std2 = np.sqrt(np.where(n2 > 1, (sq2 - sum2**2 / n2) / (n2 - 1), np.nan))
 
         computable = (n1 >= 1) & (n2 >= 1)
         result[i, computable] = ttest_ind_from_stats(

@@ -1,6 +1,5 @@
 {
-    "mar_small": 2.8709888743372325e-5,
-    "mcar_medium_high_missing": 0.18254470257509647,
-    "mcar_small": 0.2392081915533858,
-    "ttest_mar": 1.1102230246251565e-16
+    "mar_small": 2.484164678229206e-5,
+    "mcar_medium_high_missing": 0.001045380246672778,
+    "mcar_small": 0.8127459507579607
 }
