@@ -605,7 +605,7 @@ def mice_forest_impute(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.ehrdata_blobs(n_variables=3, n_observations=20, base_timepoints=2, missing_values=0.3)
-        >>> edata_imputed = ep.pp.mice_forest_impute(edata_3d, layer="tem_data", copy=True)
+        >>> edata_imputed = ep.pp.mice_forest_impute(edata, layer="tem_data", copy=True)
 
         Example Output:
 
@@ -661,7 +661,7 @@ def load_dataframe(arr, columns, index):
     _raise_array_type_not_implemented(load_dataframe, type(arr))
 
 
-@load_dataframe.register
+@load_dataframe.register(np.ndarray)
 def _(arr: np.ndarray, columns, index):
     return pd.DataFrame(arr, columns=columns, index=index)
 
@@ -696,29 +696,19 @@ def _miceforest_impute(
     data_df = load_dataframe(mtx, columns=col_names, index=idx)
     data_df = data_df.apply(pd.to_numeric, errors="coerce")
 
-    if isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):
-        selected_columns = data_df.iloc[:, column_indices]
-        selected_columns = selected_columns.reset_index(drop=True)
+    # no need for branching as var_names is always either pd.Index or list of strings
+    selected_columns = data_df.iloc[:, column_indices]
+    selected_columns = selected_columns.reset_index(drop=True)
 
-        kernel = mf.ImputationKernel(
-            selected_columns,
-            num_datasets=1,
-            save_all_iterations_data=save_all_iterations_data,
-            random_state=random_state,
-        )
+    kernel = mf.ImputationKernel(
+        selected_columns,
+        num_datasets=1,
+        save_all_iterations_data=save_all_iterations_data,
+        random_state=random_state,
+    )
 
-        kernel.mice(iterations=iterations, variable_parameters=variable_parameters or {}, verbose=verbose)
-        data_df.iloc[:, column_indices] = kernel.complete_data(dataset=0, inplace=inplace)
-
-    else:
-        data_df = data_df.reset_index(drop=True)
-
-        kernel = mf.ImputationKernel(
-            data_df, num_datasets=1, save_all_iterations_data=save_all_iterations_data, random_state=random_state
-        )
-
-        kernel.mice(iterations=iterations, variable_parameters=variable_parameters or {}, verbose=verbose)
-        data_df = kernel.complete_data(dataset=0, inplace=inplace)
+    kernel.mice(iterations=iterations, variable_parameters=variable_parameters or {}, verbose=verbose)
+    data_df.iloc[:, column_indices] = kernel.complete_data(dataset=0, inplace=inplace)
 
     if is_3d:
         result = data_df.values.reshape(n_obs, n_t, len(var_indices)).transpose(0, 2, 1)
