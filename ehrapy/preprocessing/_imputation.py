@@ -695,10 +695,9 @@ def _warn_imputation_threshold(
 ) -> dict[str, int]:
     """Warns the user if the more than $threshold percent had to be imputed.
 
-    For sparse arrays (:class:`scipy.sparse.csr_array`, :class:`scipy.sparse.csc_array`),
-        missing values are assumed to be explicitly stored as NaN in the sparse structure.
-        If missing values are represented as zeros (not stored), they will not be
-        detected and the warning threshold check will be inaccurate.
+    For sparse arrays, missing values are assumed to be represented as ``np.nan``.
+    Use :func:`ehrdata.harmonize_missing_values` to convert other missing value
+    symbols to ``np.nan`` before imputing.
 
     Args:
         edata: The data object to check
