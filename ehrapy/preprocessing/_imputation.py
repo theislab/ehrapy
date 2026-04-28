@@ -695,6 +695,11 @@ def _warn_imputation_threshold(
 ) -> dict[str, int]:
     """Warns the user if the more than $threshold percent had to be imputed.
 
+    For sparse arrays (:class:`scipy.sparse.csr_array`, :class:`scipy.sparse.csc_array`),
+        missing values are assumed to be explicitly stored as NaN in the sparse structure.
+        If missing values are represented as zeros (not stored), they will not be
+        detected and the warning threshold check will be inaccurate.
+
     Args:
         edata: The data object to check
         var_names: The var names which were imputed.
@@ -711,8 +716,10 @@ def _warn_imputation_threshold(
             mtx_csc = (
                 mtx.tocsc() if isinstance(mtx, sp.csr_array) else mtx
             )  # convert to csc to get per column stats easily
-            n_missing_per_col = n_obs - np.diff(mtx_csc.indptr)
-            missing_pct = (n_missing_per_col / n_obs) * 100
+            n_nan_per_col = np.array(
+                [np.sum(np.isnan(mtx_csc.data[mtx_csc.indptr[i] : mtx_csc.indptr[i + 1]])) for i in range(mtx.shape[1])]
+            )
+            missing_pct = (n_nan_per_col / n_obs) * 100
             edata.var["missing_values_pct"] = missing_pct
         else:
             from ehrapy.preprocessing import qc_metrics
