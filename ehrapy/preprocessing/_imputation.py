@@ -459,9 +459,13 @@ def _(arr: sp.coo_array, num_initial_strategy, n_estimators, max_iter, random_st
     _raise_array_type_not_implemented(_miss_forest_impute_function, type(arr))
 
 
-@_miss_forest_impute_function.register(np.ndarray)
 @_miss_forest_impute_function.register(sp.csr_array)
 @_miss_forest_impute_function.register(sp.csc_array)
+def _(arr: sp.csr_array | sp.csc_array, num_initial_strategy, n_estimators, max_iter, random_state):
+    _raise_array_type_not_implemented(_miss_forest_impute_function, type(arr))
+
+
+@_miss_forest_impute_function.register(np.ndarray)
 @_apply_over_time_axis
 def _(arr: np.ndarray, num_initial_strategy, n_estimators, max_iter, random_state):
 
@@ -506,9 +510,7 @@ def miss_forest_impute(
     See https://academic.oup.com/bioinformatics/article/28/1/112/219101.
 
     If required, the data needs to be properly encoded as this imputation requires numerical data only.
-    If the data is stored as sparse arrays (:class:`scipy.sparse.csr_array`, :class:`scipy.sparse.csc_array`), 
-    they will be converted to dense internally during imputation.
-    
+
     Args:
         edata: Central data object.
         var_names: Iterable of columns to impute
@@ -562,13 +564,14 @@ def miss_forest_impute(
         patch_sklearn()
 
     try:
-
         if var_names is None:
             var_names = edata.var_names
         var_indices = edata.var_names.get_indexer(var_names).tolist()
 
         mtx = edata.X if layer is None else edata.layers[layer]
-        input_dtype = mtx.dtype if np.issubdtype(mtx.dtype, np.floating) else np.float64 #ensure floating point dtype before imputation, e.g. in case input layer dtype=object
+        input_dtype = (
+            mtx.dtype if np.issubdtype(mtx.dtype, np.floating) else np.float64
+        )  # ensure floating point dtype before imputation, e.g. in case input layer dtype=object
 
         if mtx.ndim == 3:
             mtx_slice = mtx[:, var_indices, :].astype(input_dtype, copy=True)

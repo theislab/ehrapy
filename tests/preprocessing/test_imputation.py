@@ -388,12 +388,13 @@ def test_missforest_impute_non_numerical_data(impute_edata):
     with pytest.raises(ValueError):
         miss_forest_impute(impute_edata, copy=True)
 
+
 @pytest.mark.parametrize("array_type", ARRAY_TYPES_NUMERIC)
 def test_missforest_impute_numerical_data(impute_num_edata, array_type):
     warnings.filterwarnings("ignore", category=ConvergenceWarning)
     impute_num_edata.X = array_type(impute_num_edata.X)
 
-    if isinstance(impute_num_edata.X, da.Array):
+    if isinstance(impute_num_edata.X, da.Array | sparse.csr_array | sparse.csc_array):
         with pytest.raises(NotImplementedError):
             edata_imputed = miss_forest_impute(impute_num_edata, copy=True)
     else:
