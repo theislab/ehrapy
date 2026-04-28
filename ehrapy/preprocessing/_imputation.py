@@ -594,7 +594,7 @@ def mice_forest_impute(
         variable_parameters: Model parameters can be specified by variable here.
                              Keys should be variable names or indices, and values should be a dict of parameter which should apply to that variable only.
         verbose: Whether to print information about the imputation process.
-        layer: The layer to impute.
+        layer: The layer to impute. Required when input data is 3D.
         copy: Whether to return a copy of the data object or modify it in-place.
 
     Returns:
@@ -609,7 +609,7 @@ def mice_forest_impute(
 
         Example Output:
 
-        >>> edata_3d.layers["tem_data"][0, :, :]
+        >>> edata.layers["tem_data"][0, :, :]
         [[-11.3735387 , -17.00612946],
         [         nan,  -3.13348925],
         [         nan, -10.87061402]]
@@ -672,6 +672,7 @@ def _miceforest_impute(
     import miceforest as mf
 
     mtx = edata.X if layer is None else edata.layers[layer]
+    # ensure floating point dtype for 3D flatten, object dtype arrays cause NaN predictions in miceforest's KD-tree
     input_dtype = mtx.dtype if np.issubdtype(mtx.dtype, np.floating) else np.float64
     var_indices = edata.var_names.get_indexer(var_names).tolist()
 
@@ -696,7 +697,7 @@ def _miceforest_impute(
     data_df = load_dataframe(mtx, columns=col_names, index=idx)
     data_df = data_df.apply(pd.to_numeric, errors="coerce")
 
-    # no need for branching as var_names is always either pd.Index or list of strings
+    # no need for branching as var_names is always either pd.Index or list of strings (resolved to strings before _miceforest_impute is called)
     selected_columns = data_df.iloc[:, column_indices]
     selected_columns = selected_columns.reset_index(drop=True)
 
