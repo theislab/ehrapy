@@ -704,9 +704,20 @@ def _warn_imputation_threshold(
     try:
         edata.var["missing_values_pct"]
     except KeyError:
-        from ehrapy.preprocessing import qc_metrics
+        mtx = edata.X if layer is None else edata.layers[layer]
+        if isinstance(mtx, (sp.csr_array, sp.csc_array)):
+            # compute missing pct directly for sparse without calling qc_metrics
+            n_obs = mtx.shape[0]
+            mtx_csc = (
+                mtx.tocsc() if isinstance(mtx, sp.csr_array) else mtx
+            )  # convert to csc to get per column stats easily
+            n_missing_per_col = n_obs - np.diff(mtx_csc.indptr)
+            missing_pct = (n_missing_per_col / n_obs) * 100
+            edata.var["missing_values_pct"] = missing_pct
+        else:
+            from ehrapy.preprocessing import qc_metrics
 
-        qc_metrics(edata, layer=layer)
+            qc_metrics(edata, layer=layer)
     used_var_names = set(edata.var_names) if var_names is None else set(var_names)
 
     thresholded_var_names = set(edata.var[edata.var["missing_values_pct"] > threshold].index) & set(used_var_names)
