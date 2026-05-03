@@ -431,7 +431,7 @@ def test_miceforest_impute_numerical_data(impute_iris_edata):
 
 @pytest.mark.skipif(platform.system() == "Darwin", reason="miceforest Imputation not supported by MacOS.")
 @pytest.mark.filterwarnings("ignore:invalid value encountered in divide:RuntimeWarning")
-@pytest.mark.parametrize("edata_mini_3D_missing_values", [True], indirect=True)
+@pytest.mark.parametrize("edata_mini_3D_missing_values", [(True, True)], indirect=True)
 def test_miceforest_impute_3D_edata(edata_mini_3D_missing_values):
     edata_imputed = mice_forest_impute(edata_mini_3D_missing_values, layer=DEFAULT_TEM_LAYER_NAME, copy=True)
 
@@ -444,6 +444,7 @@ def test_miceforest_impute_3D_edata(edata_mini_3D_missing_values):
     assert id(edata_mini_3D_missing_values) != id(edata_imputed)
 
 
+@pytest.mark.parametrize("edata_mini_3D_missing_values", [(True, True)], indirect=True)
 def test_miceforest_impute_3D_var_names_subset(edata_mini_3D_missing_values):
     edata = edata_mini_3D_missing_values.copy()
     imputed = mice_forest_impute(edata, layer=DEFAULT_TEM_LAYER_NAME, var_names=["1", "2"], copy=True)
