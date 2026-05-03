@@ -23,6 +23,7 @@ from ehrapy._compat import (
     use_ehrdata,
 )
 from ehrapy._progress import spinner
+from ehrapy._types import CSBase
 
 if TYPE_CHECKING:
     from anndata import AnnData
@@ -695,9 +696,9 @@ def _warn_imputation_threshold(
 ) -> dict[str, int]:
     """Warns the user if the more than $threshold percent had to be imputed.
 
-    For sparse arrays, missing values are assumed to be represented as ``np.nan``.
+    For sparse arrays, missing values are assumed to be represented as `np.nan`.
     Use :func:`ehrdata.harmonize_missing_values` to convert other missing value
-    symbols to ``np.nan`` before imputing.
+    symbols to `np.nan` before imputing.
 
     Args:
         edata: The data object to check
@@ -709,7 +710,7 @@ def _warn_imputation_threshold(
         edata.var["missing_values_pct"]
     except KeyError:
         mtx = edata.X if layer is None else edata.layers[layer]
-        if isinstance(mtx, (sp.csr_array, sp.csc_array)):
+        if isinstance(mtx, (sp.csr_array, sp.csc_array, CSBase)):
             # compute missing pct directly for sparse without calling qc_metrics
             n_obs = mtx.shape[0]
             mtx_csc = (
