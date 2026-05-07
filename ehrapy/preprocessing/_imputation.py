@@ -710,7 +710,7 @@ def _warn_imputation_threshold(
         edata.var["missing_values_pct"]
     except KeyError:
         mtx = edata.X if layer is None else edata.layers[layer]
-        if isinstance(mtx, (sp.csr_array, sp.csc_array, CSBase)):
+        if isinstance(mtx, CSBase):
             # compute missing pct directly for sparse without calling qc_metrics
             n_obs = mtx.shape[0]
             mtx_csc = (
