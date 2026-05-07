@@ -4,7 +4,7 @@ import warnings
 from collections.abc import Iterable, Mapping, Sequence
 from functools import singledispatch
 from importlib.util import find_spec
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, get_args
 
 import numpy as np
 import pandas as pd
@@ -710,7 +710,7 @@ def _warn_imputation_threshold(
         edata.var["missing_values_pct"]
     except KeyError:
         mtx = edata.X if layer is None else edata.layers[layer]
-        if isinstance(mtx, CSBase):
+        if isinstance(mtx, get_args(CSBase)):
             # compute missing pct directly for sparse without calling qc_metrics
             n_obs = mtx.shape[0]
             mtx_csc = (
