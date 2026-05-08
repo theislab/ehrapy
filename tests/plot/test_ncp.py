@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import ehrdata as ed
 import holoviews as hv
 import numpy as np
@@ -11,12 +13,17 @@ hv.extension("bokeh")
 
 import ehrapy as ep
 
-# ── shared fixture ────────────────────────────────────────────────────────────
+CURRENT_DIR = Path(__file__).parent
+_TEST_IMAGE_PATH = f"{CURRENT_DIR}/_images"
 
 
 @pytest.fixture
 def edata_with_ncp() -> ed.EHRData:
-    """EHRData with a 3D layer and NCP results pre-computed."""
+    """EHRData with a 3D layer and NCP results pre-computed.
+
+    Uses the same deterministic data as the reference-image notebooks
+    (tests/_scripts/ncp_expected.ipynb, ncp_cluster_trajectories_expected.ipynb).
+    """
     rng = np.random.default_rng(0)
     n_obs, n_vars, n_time = 40, 12, 8
     layer = np.abs(rng.standard_normal((n_obs, n_vars, n_time)))
@@ -26,13 +33,9 @@ def edata_with_ncp() -> ed.EHRData:
         layers={DEFAULT_TEM_LAYER_NAME: layer},
         var=pd.DataFrame(index=var_names),
     )
-    ep.tl.ncp(edata, layer=DEFAULT_TEM_LAYER_NAME, rank=3, n_iter_max=20)
-    # Add simple cluster labels for trajectory tests
+    ep.tl.ncp(edata, layer=DEFAULT_TEM_LAYER_NAME, rank=3, n_iter_max=50, random_state=0)
     edata.obs["cluster"] = ["A"] * 20 + ["B"] * 20
     return edata
-
-
-# ── pl.ncp ────────────────────────────────────────────────────────────────────
 
 
 def test_pl_ncp_returns_layout(edata_with_ncp: ed.EHRData) -> None:
@@ -44,12 +47,10 @@ def test_pl_ncp_returns_layout(edata_with_ncp: ed.EHRData) -> None:
 def test_pl_ncp_panel_count(edata_with_ncp: ed.EHRData) -> None:
     rank = edata_with_ncp.obsm["X_ncp"].shape[1]
     plot = ep.pl.ncp(edata_with_ncp)
-    # rank × 3 panels (temporal, top-vars, sample histogram)
     assert len(plot) == rank * 3
 
 
 def test_pl_ncp_custom_key(edata_with_ncp: ed.EHRData) -> None:
-    # Compute under a different key and make sure pl.ncp reads it correctly
     ep.tl.ncp(edata_with_ncp, layer=DEFAULT_TEM_LAYER_NAME, rank=2, key_added="ncp2", n_iter_max=10)
     plot = ep.pl.ncp(edata_with_ncp, key="ncp2")
     assert isinstance(plot, hv.Layout)
@@ -62,12 +63,21 @@ def test_pl_ncp_missing_key_raises(edata_with_ncp: ed.EHRData) -> None:
 
 
 def test_pl_ncp_n_top(edata_with_ncp: ed.EHRData) -> None:
-    """n_top parameter does not crash and returns a Layout."""
     plot = ep.pl.ncp(edata_with_ncp, n_top=5)
     assert isinstance(plot, hv.Layout)
 
 
-# ── pl.ncp_cluster_trajectories ───────────────────────────────────────────────
+def test_pl_ncp_image(edata_with_ncp: ed.EHRData, check_same_image, hv_backend) -> None:
+    plot = ep.pl.ncp(edata_with_ncp, n_top=5)
+    fig = hv.render(plot, backend="matplotlib")
+    fig.set_size_inches(12, 10.5)
+    fig.set_dpi(80)
+
+    check_same_image(
+        fig=fig,
+        base_path=f"{_TEST_IMAGE_PATH}/ncp",
+        tol=2e-1,
+    )
 
 
 def test_pl_ncp_cluster_trajectories_returns_layout(edata_with_ncp: ed.EHRData) -> None:
@@ -91,7 +101,6 @@ def test_pl_ncp_cluster_trajectories_panel_per_cluster(edata_with_ncp: ed.EHRDat
 
 
 def test_pl_ncp_cluster_trajectories_sigmoid(edata_with_ncp: ed.EHRData) -> None:
-    """sigmoid_transform=True should not crash and return a Layout."""
     plot = ep.pl.ncp_cluster_trajectories(
         edata_with_ncp,
         layer=DEFAULT_TEM_LAYER_NAME,
@@ -127,3 +136,21 @@ def test_pl_ncp_cluster_trajectories_missing_ncp_raises(edata_with_ncp: ed.EHRDa
             cluster_key="cluster",
             key="ghost_key",
         )
+
+
+def test_pl_ncp_cluster_trajectories_image(edata_with_ncp: ed.EHRData, check_same_image, hv_backend) -> None:
+    plot = ep.pl.ncp_cluster_trajectories(
+        edata_with_ncp,
+        layer=DEFAULT_TEM_LAYER_NAME,
+        cluster_key="cluster",
+        n_top_diseases=5,
+    )
+    fig = hv.render(plot, backend="matplotlib")
+    fig.set_size_inches(8, 2.75)
+    fig.set_dpi(80)
+
+    check_same_image(
+        fig=fig,
+        base_path=f"{_TEST_IMAGE_PATH}/ncp_cluster_trajectories",
+        tol=2e-1,
+    )

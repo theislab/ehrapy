@@ -106,7 +106,6 @@ intersphinx_mapping = {
     "scanpy": ("https://scanpy.readthedocs.io/en/stable/", None),
     "pytorch_lightning": ("https://lightning.ai/docs/pytorch/stable/", None),
     "pymde": ("https://pymde.org/", None),
-    "tensorly": ("https://tensorly.org/stable/", None),
     "lamin": ("https://docs.lamin.ai", None),
     "lifelines": ("https://lifelines.readthedocs.io/en/latest/", None),
     "statsmodels": ("https://www.statsmodels.org/stable", None),
@@ -155,7 +154,9 @@ pygments_dark_style = "native"
 html_theme = "scanpydoc"
 html_title = "ehrapy"
 html_logo = "_static/ehrapy_logos/ehrapy_pure.png"
-html_theme_options = {}
+html_theme_options = {
+    "show_toc_level": 2,
+}
 html_static_path = ["_static"]
 html_css_files = ["css/overwrite.css", "css/sphinx_gallery.css"]
 html_show_sphinx = False
@@ -167,7 +168,6 @@ nbsphinx_thumbnails = {
     "tutorials/notebooks/mimic_2_survival_analysis": "_static/tutorials/survival.png",
     "tutorials/notebooks/mimic_2_effect_estimation": "_static/tutorials/effect_estimation.png",
     "tutorials/notebooks/mimic_2_causal_inference": "_static/tutorials/causal_inference.png",
-    "tutorials/notebooks/ml_usecases": "_static/tutorials/machine_learning.png",
     "tutorials/notebooks/ontology_mapping": "_static/tutorials/ontology.png",
     "tutorials/notebooks/fhir": "_static/tutorials/fhir.png",
     "tutorials/notebooks/cohort_tracking": "_static/tutorials/cohort_tracking.png",

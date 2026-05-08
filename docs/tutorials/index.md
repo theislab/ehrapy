@@ -22,14 +22,13 @@ For questions about the usage of ehrapy use the [zulip forum](https://scverse.zu
    notebooks/mimic_2_survival_analysis
    notebooks/mimic_2_effect_estimation
    notebooks/mimic_2_causal_inference
-   notebooks/ml_usecases
+   notebooks/longitudinal_with_ehrapy
    notebooks/ontology_mapping
    notebooks/fhir
    notebooks/cohort_tracking
    notebooks/bias
    notebooks/out_of_core
    notebooks/patient_trajectory
-   notebooks/longitudinal_with_ehrapy
 
 ```
 

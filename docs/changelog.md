@@ -2,21 +2,19 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## v0.14.0rc1
+## v0.14.0
 
 ### 🚀 Features
 
 * Add LOCF imputation `ep.pp.locf_impute()` for longitudinal (3D) data with forward fill and configurable fallback strategies ([#1020](https://github.com/theislab/ehrapy/pull/1020)) @agerardy @eroell
-* Add non-negative CP decomposition `ep.tl.ncp()` for 3D tensor factorisation with companion plots `ep.pl.ncp()` and `ep.pl.ncp_cluster_trajectories()` ([#1030](https://github.com/theislab/ehrapy/pull/1030)) @eroell
+* Add non-negative CP decomposition `ep.tl.ncp()` for 3D tensor factorisation with companion plots `ep.pl.ncp()` and `ep.pl.ncp_cluster_trajectories()` ([#1030](https://github.com/theislab/ehrapy/pull/1030), [#1038](https://github.com/theislab/ehrapy/pull/1038)) @eroell
 * Add `ep.pp.variable_correlations()` and plotting functions `ep.pl.variable_correlations()` / `ep.pl.variable_dependencies()` ([#1010](https://github.com/theislab/ehrapy/pull/1010)) @sueoglu
 * Longitudinal explicit impute `ep.pp.explicit_impute()` extended to enable different imputation values per timepoint ([#1023](https://github.com/theislab/ehrapy/pull/1023)) @sueoglu
 * Sankey diagram state-transition colours and hover function for timeseries plots ([#1019](https://github.com/theislab/ehrapy/pull/1019)) @sueoglu
 * Add longitudinal data analysis notebook ([#1007](https://github.com/theislab/ehrapy/pull/1007)) @eroell
-
-### 🐛 Bug Fixes
-
-* Fix `AttributeError` when normalizing with `edata.X = None` ([#1015](https://github.com/theislab/ehrapy/pull/1015)) @agerardy @eroell
-
+* Add `ep.tl.cox_ph_adjusted_curves()` and plotting functions `ep.pl.cox_ph_adjusted_curves()` ([#1028](https://github.com/theislab/ehrapy/pull/1028)) @sueoglu
+* Add 3D support for `ep.pp.knn_impute()` ([#1041](https://github.com/theislab/ehrapy/pull/1041)) @sueoglu
+* Add `ep.pp.missing_data_mask()` to compute and apply missing-data masks for sparse, dense, and Dask arrays ([#1045](https://github.com/theislab/ehrapy/pull/1045)) @haoyu-haoyu
 
 ### 🧰 Maintenance
 
@@ -24,6 +22,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 * Continuous values don't repeat title in CohortTracker's barplot ([#1021](https://github.com/theislab/ehrapy/pull/1021)) @sueoglu
 * Remove legacy code deprecated in 0.13.0, fix test warnings & adjust to future scanpy arguments ([#1016](https://github.com/theislab/ehrapy/pull/1016)) @eroell
 * Update plotting ci dotplot ([#1011](https://github.com/theislab/ehrapy/pull/1011)) @sueoglu @Zethson @eroell
+* Add ehrdata as submodule ([#1040](https://github.com/theislab/ehrapy/pull/1040)) @eroell
+* Adapt to updated `ed.infer_feature_type`, discard alternative feature type inference in imputation methods ([#1039](https://github.com/theislab/ehrapy/pull/1039)) @eroell
+* Upgrade tutorials ([#1042](https://github.com/theislab/ehrapy/pull/1042), [#1043](https://github.com/theislab/ehrapy/pull/1043), [#1046](https://github.com/theislab/ehrapy/pull/1046)) @agerardy @sueoglu @Zethson
+* Remove ML with ehrapy notebook ([#1048](https://github.com/theislab/ehrapy/pull/1048)) @eroell
+
 
 ### 🐛 Bug Fixes
 

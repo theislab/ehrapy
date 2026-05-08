@@ -278,10 +278,45 @@ def test_simple_impute_invalid_strategy(impute_edata):
         simple_impute(impute_edata, strategy="invalid_strategy", copy=True)  # type: ignore
 
 
-def test_knn_impute_3D_edata(edata_blob_small):
-    knn_impute(edata_blob_small, layer="layer_2")
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
-        knn_impute(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
+@pytest.mark.parametrize("edata_mini_3D_missing_values", [True], indirect=True)
+def test_knn_impute_3d_numerical(edata_mini_3D_missing_values):
+    edata = edata_mini_3D_missing_values.copy()
+    edata_imputed = knn_impute(edata, layer=DEFAULT_TEM_LAYER_NAME, copy=True)
+    _base_check_imputation(
+        edata_mini_3D_missing_values,
+        edata_imputed,
+        before_imputation_layer=DEFAULT_TEM_LAYER_NAME,
+        after_imputation_layer=DEFAULT_TEM_LAYER_NAME,
+    )
+
+
+@pytest.mark.parametrize("edata_mini_3D_missing_values", [True], indirect=True)
+def test_knn_impute_3d_scikit_backend(edata_mini_3D_missing_values):
+    edata = edata_mini_3D_missing_values.copy()
+    edata_imputed = knn_impute(edata, layer=DEFAULT_TEM_LAYER_NAME, copy=True, backend="scikit-learn")
+    _base_check_imputation(
+        edata_mini_3D_missing_values,
+        edata_imputed,
+        before_imputation_layer=DEFAULT_TEM_LAYER_NAME,
+        after_imputation_layer=DEFAULT_TEM_LAYER_NAME,
+    )
+
+
+def test_knn_impute_3d_var_names_subset(edata_mini_3D_missing_values):
+    edata = edata_mini_3D_missing_values.copy()
+    imputed = knn_impute(edata, layer=DEFAULT_TEM_LAYER_NAME, var_names=["1", "2"], copy=True)
+    edata_imputed = imputed[:, :2].copy()
+    _base_check_imputation(
+        edata_mini_3D_missing_values[:, :2],
+        edata_imputed,
+        before_imputation_layer=DEFAULT_TEM_LAYER_NAME,
+        after_imputation_layer=DEFAULT_TEM_LAYER_NAME,
+    )
+
+
+def test_knn_impute_3d_layer_none(edata_mini_3D_missing_values):
+    with pytest.raises(ValueError, match="requires a layer"):
+        knn_impute(edata_mini_3D_missing_values, copy=True)
 
 
 def test_knn_impute_check_backend(impute_num_edata):
