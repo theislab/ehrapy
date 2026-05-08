@@ -240,7 +240,7 @@ def detect_bias(
         for comp_feature in cat_var_names:
             if sens_feature == comp_feature:
                 continue
-            value_counts = edata_df.groupby([sens_feature, comp_feature]).size().unstack(fill_value=0)
+            value_counts = edata_df.groupby([sens_feature, comp_feature], observed=True).size().unstack(fill_value=0)
             value_counts = value_counts.div(value_counts.sum(axis=1), axis=0)
 
             for sens_group in value_counts.index:
