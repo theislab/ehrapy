@@ -662,6 +662,16 @@ def mcar_test(
 
     Returns:
         A single p-value if the Little's test was applied or a Pandas DataFrame of the p-value of t-tests for each pair of features.
+
+    Examples:
+        >>> import ehrdata as ed
+        >>> import ehrapy as ep
+        >>> edata = ed.dt.ehrdata_blobs(
+        ...     n_observations=100, n_variables=5, missing_values=0.1, random_state=0, n_centers=1, base_timepoints=1
+        ... )
+        >>> ep.pp.mcar_test(edata)
+        0.327...
+        >>> ep.pp.mcar_test(edata, method="ttest")
     """
     mtx = edata.X if layer is None else edata.layers[layer]
 
