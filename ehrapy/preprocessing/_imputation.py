@@ -449,22 +449,6 @@ def _miss_forest_impute_function(arr, num_initial_strategy, n_estimators, max_it
     _raise_array_type_not_implemented(_miss_forest_impute_function, type(arr))
 
 
-@_miss_forest_impute_function.register(DaskArray)
-def _(arr: DaskArray, num_initial_strategy, n_estimators, max_iter, random_state):
-    _raise_array_type_not_implemented(_miss_forest_impute_function, type(arr))
-
-
-@_miss_forest_impute_function.register(sp.coo_array)
-def _(arr: sp.coo_array, num_initial_strategy, n_estimators, max_iter, random_state):
-    _raise_array_type_not_implemented(_miss_forest_impute_function, type(arr))
-
-
-@_miss_forest_impute_function.register(sp.csr_array)
-@_miss_forest_impute_function.register(sp.csc_array)
-def _(arr: sp.csr_array | sp.csc_array, num_initial_strategy, n_estimators, max_iter, random_state):
-    _raise_array_type_not_implemented(_miss_forest_impute_function, type(arr))
-
-
 @_miss_forest_impute_function.register(np.ndarray)
 @_apply_over_time_axis
 def _(arr: np.ndarray, num_initial_strategy, n_estimators, max_iter, random_state):
@@ -530,12 +514,12 @@ def miss_forest_impute(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata_3d = ed.dt.ehrdata_blobs(n_variables=3, n_observations=3, base_timepoints=2, missing_values=0.3)
-        >>> edata_imputed = ep.pp.knn_impute(edata_3d, layer="tem_data", copy=True)
+        >>> edata = ed.dt.ehrdata_blobs(n_variables=3, n_observations=3, base_timepoints=2, missing_values=0.3)
+        >>> edata_imputed = ep.pp.knn_impute(edata, layer="tem_data", copy=True)
 
         Example Output:
 
-        >>> edata_3d.layers["tem_data"][0, :, :]
+        >>> edata.layers["tem_data"][0, :, :]
         [[-12.12732884, -18.37304373],
         [         nan,  -0.91339411],
         [         nan,  -7.88514984]]
