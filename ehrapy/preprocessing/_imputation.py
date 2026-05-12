@@ -665,6 +665,54 @@ def _(arr: np.ndarray, columns, index):
     return pd.DataFrame(arr, columns=columns, index=index)
 
 
+@singledispatch
+def _miceforest_impute_function(
+    mtx,
+    var_names,
+    idx,
+    column_indices,
+    save_all_iterations_data,
+    random_state,
+    iterations,
+    variable_parameters,
+    verbose,
+):
+    _raise_array_type_not_implemented(_miceforest_impute_function, type(mtx))
+
+
+@_miceforest_impute_function.register(np.ndarray)
+def _(
+    mtx: np.ndarray,
+    var_names,
+    idx,
+    column_indices,
+    save_all_iterations_data,
+    random_state,
+    iterations,
+    variable_parameters,
+    verbose,
+):
+    import miceforest as mf
+
+    data_df = load_dataframe(mtx, columns=var_names, index=idx)
+    data_df = data_df.apply(pd.to_numeric, errors="coerce")
+
+    # no need for branching as var_names is always either pd.Index or list of strings (resolved to strings before _miceforest_impute is called)
+    selected_columns = data_df.iloc[:, column_indices]
+    selected_columns = selected_columns.reset_index(drop=True)
+
+    kernel = mf.ImputationKernel(
+        selected_columns,
+        num_datasets=1,
+        save_all_iterations_data=save_all_iterations_data,
+        random_state=random_state,
+    )
+
+    kernel.mice(iterations=iterations, variable_parameters=variable_parameters or {}, verbose=verbose)
+    data_df.iloc[:, column_indices] = kernel.complete_data(dataset=0, inplace=False)
+    return data_df
+
+
 def _miceforest_impute(
     edata, var_names, save_all_iterations_data, random_state, iterations, variable_parameters, verbose, layer
 ) -> None:
@@ -685,29 +733,23 @@ def _miceforest_impute(
             .transpose(0, 2, 1)
             .reshape(n_obs * n_t, len(var_indices))
         )
-        var_names = edata.var_names[var_indices]
         column_indices = list(range(len(var_indices)))
     else:
         column_indices = var_indices
 
     idx = pd.RangeIndex(n_obs * n_t) if is_3d else edata.obs_names
 
-    data_df = load_dataframe(mtx, columns=var_names, index=idx)
-    data_df = data_df.apply(pd.to_numeric, errors="coerce")
-
-    # no need for branching as var_names is always either pd.Index or list of strings (resolved to strings before _miceforest_impute is called)
-    selected_columns = data_df.iloc[:, column_indices]
-    selected_columns = selected_columns.reset_index(drop=True)
-
-    kernel = mf.ImputationKernel(
-        selected_columns,
-        num_datasets=1,
-        save_all_iterations_data=save_all_iterations_data,
-        random_state=random_state,
+    data_df = _miceforest_impute_function(
+        mtx,
+        var_names,
+        idx,
+        column_indices,
+        save_all_iterations_data,
+        random_state,
+        iterations,
+        variable_parameters,
+        verbose,
     )
-
-    kernel.mice(iterations=iterations, variable_parameters=variable_parameters or {}, verbose=verbose)
-    data_df.iloc[:, column_indices] = kernel.complete_data(dataset=0, inplace=False)
 
     if is_3d:
         result = data_df.values.reshape(n_obs, n_t, len(var_indices)).transpose(0, 2, 1)
