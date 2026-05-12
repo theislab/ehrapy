@@ -24,6 +24,7 @@ from ehrapy._compat import (
 )
 from ehrapy._progress import spinner
 from ehrapy._types import CSBase
+from ehrapy.preprocessing._quality_control import _compute_missing_values
 
 if TYPE_CHECKING:
     from anndata import AnnData
@@ -710,21 +711,14 @@ def _warn_imputation_threshold(
         edata.var["missing_values_pct"]
     except KeyError:
         mtx = edata.X if layer is None else edata.layers[layer]
-        if isinstance(mtx, get_args(CSBase)):
-            # compute missing pct directly for sparse without calling qc_metrics
-            n_obs = mtx.shape[0]
-            mtx_csc = (
-                mtx.tocsc() if isinstance(mtx, sp.csr_array) else mtx
-            )  # convert to csc to get per column stats easily
-            n_nan_per_col = np.array(
-                [np.sum(np.isnan(mtx_csc.data[mtx_csc.indptr[i] : mtx_csc.indptr[i + 1]])) for i in range(mtx.shape[1])]
-            )
-            missing_pct = (n_nan_per_col / n_obs) * 100
-            edata.var["missing_values_pct"] = missing_pct
+        if mtx.ndim == 3:
+            n_obs, n_vars, n_t = mtx.shape
+            mtx_2d = mtx.transpose(0, 2, 1).reshape(n_obs * n_t, n_vars)
         else:
-            from ehrapy.preprocessing import qc_metrics
+            mtx_2d = mtx
+        missing_abs = _compute_missing_values(mtx_2d, axis=0)
+        edata.var["missing_values_pct"] = (missing_abs / mtx_2d.shape[0]) * 100
 
-            qc_metrics(edata, layer=layer)
     used_var_names = set(edata.var_names) if var_names is None else set(var_names)
 
     thresholded_var_names = set(edata.var[edata.var["missing_values_pct"] > threshold].index) & set(used_var_names)
