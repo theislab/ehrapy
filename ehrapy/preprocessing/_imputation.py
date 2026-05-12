@@ -446,8 +446,31 @@ def _knn_impute(
             edata.layers[layer][:, imputer_data_indices] = X_imputed
 
 
+@singledispatch
+def _miss_forest_impute_function(arr, num_initial_strategy, n_estimators, max_iter, random_state):
+    _raise_array_type_not_implemented(_miss_forest_impute_function, type(arr))
+
+
+@_miss_forest_impute_function.register(np.ndarray)
+@_apply_over_time_axis
+def _(arr: np.ndarray, num_initial_strategy, n_estimators, max_iter, random_state):
+
+    if set(range(arr.shape[1])).issubset(_get_non_numerical_column_indices(arr)):
+        raise ValueError(
+            "Can only impute numerical data. Try to restrict imputation to certain columns using var_names parameter."
+        )
+    from sklearn.ensemble import ExtraTreesRegressor
+    from sklearn.impute import IterativeImputer
+
+    return IterativeImputer(
+        estimator=ExtraTreesRegressor(n_estimators=n_estimators, n_jobs=settings.n_jobs),
+        initial_strategy=num_initial_strategy,
+        max_iter=max_iter,
+        random_state=random_state,
+    ).fit_transform(arr)
+
+
 @use_ehrdata(deprecated_after="1.0.0")
-@function_2D_only()
 @spinner("Performing miss-forest impute")
 def miss_forest_impute(
     edata: EHRData | AnnData,
@@ -467,6 +490,9 @@ def miss_forest_impute(
     The strategy works by fitting a random forest model on each feature containing missing values,
     and using the trained model to predict the missing values.
 
+    For 2D data, if layer is `None`, `edata.X` is used directly.
+    For 3D data, the layer is flattened along axis 0 before imputation and reshaped back to 3D afterwards.
+
     See https://academic.oup.com/bioinformatics/article/28/1/112/219101.
 
     If required, the data needs to be properly encoded as this imputation requires numerical data only.
@@ -480,7 +506,7 @@ def miss_forest_impute(
                       Decrease for faster computations.
         random_state: The random seed for the initialization.
         warning_threshold: Threshold of percentage of missing values to display a warning for.
-        layer: The layer to impute.
+        layer: The layer to impute. Required when input data is 3D.
         copy: Whether to return a copy or act in place.
 
     Returns:
@@ -490,12 +516,28 @@ def miss_forest_impute(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ed.dt.mimic_2()
-        >>> edata = ep.pp.encode(edata, autodetect=True)
-        >>> ep.pp.miss_forest_impute(edata)
+        >>> edata = ed.dt.ehrdata_blobs(n_variables=3, n_observations=3, base_timepoints=2, missing_values=0.3)
+        >>> edata_imputed = ep.pp.knn_impute(edata, layer="tem_data", copy=True)
+
+        Example Output:
+
+        >>> edata.layers["tem_data"][0, :, :]
+        [[-12.12732884, -18.37304373],
+        [         nan,  -0.91339411],
+        [         nan,  -7.88514984]]
+        >>> edata_imputed.layers["tem_data"][0, :, :]
+        [[-12.12732884, -18.37304373],
+        [ -0.3278448 ,  -0.91339411],
+        [ -4.39722201,  -7.88514984]]
+
     """
     if copy:
         edata = edata.copy()
+
+    if edata.X is None and layer is None:  # if edata is 3D
+        raise ValueError(
+            "3D imputation requires a layer to be specified. Pass the layer containing the full temporal data."
+        )
 
     if var_names is None:
         _warn_imputation_threshold(edata, list(edata.var_names), threshold=warning_threshold, layer=layer)
@@ -507,40 +549,33 @@ def miss_forest_impute(
 
         patch_sklearn()
 
-    from sklearn.ensemble import ExtraTreesRegressor, RandomForestClassifier
-    from sklearn.impute import IterativeImputer
-
     try:
-        imp_num = IterativeImputer(
-            estimator=ExtraTreesRegressor(n_estimators=n_estimators, n_jobs=settings.n_jobs),
-            initial_strategy=num_initial_strategy,
-            max_iter=max_iter,
-            random_state=random_state,
-        )
-        # initial strategy here will not be parametrized since only most_frequent will be applied to non numerical data
-        IterativeImputer(
-            estimator=RandomForestClassifier(n_estimators=n_estimators, n_jobs=settings.n_jobs),
-            initial_strategy="most_frequent",
-            max_iter=max_iter,
-            random_state=random_state,
-        )
-
         if var_names is None:
             var_names = edata.var_names
         var_indices = edata.var_names.get_indexer(var_names).tolist()
 
-        if set(var_indices).issubset(_get_non_numerical_column_indices(edata.X)):
-            raise ValueError(
-                "Can only impute numerical data. Try to restrict imputation to certain columns using "
-                "var_names parameter."
-            )
+        mtx = edata.X if layer is None else edata.layers[layer]
+        input_dtype = (
+            mtx.dtype if np.issubdtype(mtx.dtype, np.floating) else np.float64
+        )  # ensure floating point dtype before imputation, e.g. in case input layer dtype=object
+
+        if mtx.ndim == 3:
+            mtx_slice = mtx[:, var_indices, :].astype(input_dtype, copy=True)
+        else:
+            mtx_slice = mtx[:, var_indices].astype(input_dtype, copy=True)
 
         # this step is the most expensive one and might extremely slow down the impute process
         if var_indices:
-            if layer is None:
-                edata.X[::, var_indices] = imp_num.fit_transform(edata.X[::, var_indices])
+            X_imputed = _miss_forest_impute_function(
+                mtx_slice, num_initial_strategy, n_estimators, max_iter, random_state
+            )
+            if mtx.ndim == 3:
+                edata.layers[layer][:, var_indices, :] = X_imputed
             else:
-                edata.layers[layer][::, var_indices] = imp_num.fit_transform(edata.layers[layer][::, var_indices])
+                if layer is None:
+                    edata.X[:, var_indices] = X_imputed
+                else:
+                    edata.layers[layer][:, var_indices] = X_imputed
         else:
             raise ValueError("Cannot find any feature to perform imputation")
 
