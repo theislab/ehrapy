@@ -671,7 +671,6 @@ def mcar_test(
         ... )
         >>> ep.pp.mcar_test(edata)
         0.327...
-        >>> ep.pp.mcar_test(edata, method="ttest")
     """
     mtx = edata.X if layer is None else edata.layers[layer]
 

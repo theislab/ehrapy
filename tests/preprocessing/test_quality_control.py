@@ -6,7 +6,7 @@ import pandas as pd
 import pytest
 from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
 from ehrdata.io import read_csv
-from scipy.sparse import csr_matrix
+from scipy import sparse as sp
 
 import ehrapy as ep
 from ehrapy.preprocessing._encoding import encode
@@ -522,7 +522,7 @@ def test_mcar_test_ttest_matches_pyampute_reference():
 
 
 @pytest.mark.parametrize("method", ["little", "ttest"])
-@pytest.mark.parametrize("array_type", [csr_matrix, as_dense_dask_array])
+@pytest.mark.parametrize("array_type", [sp.csr_array, as_dense_dask_array])
 def test_mcar_test_unsupported_array_type_raises(mar_edata, method, array_type):
     edata = mar_edata.copy()
     edata.X = array_type(edata.X)
