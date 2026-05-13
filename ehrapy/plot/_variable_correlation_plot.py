@@ -78,8 +78,8 @@ def variable_correlations(
         alpha=alpha,
     )
 
-    corr_long = corr_df.stack().rename("correlation")
-    sig_long = sig_df.stack().rename("significant")
+    corr_long = corr_df.stack(future_stack=True).rename("correlation")
+    sig_long = sig_df.stack(future_stack=True).rename("significant")
     heatmap_df = pd.concat([corr_long, sig_long], axis=1).reset_index()
     heatmap_df.columns = ["variable1", "variable2", "correlation", "significant"]
 
@@ -194,8 +194,8 @@ def variable_dependencies(
         alpha=alpha,
     )
 
-    corr_long = corr_df.stack(dropna=False).rename("correlation")
-    sig_long = sig_df.stack().rename("significant")
+    corr_long = corr_df.stack(future_stack=True).rename("correlation")
+    sig_long = sig_df.stack(future_stack=True).rename("significant")
 
     edges_df = pd.concat([corr_long, sig_long], axis=1).reset_index()
     edges_df.columns = ["variable1", "variable2", "correlation", "significant"]
