@@ -31,7 +31,7 @@ pip install ehrapy[causal]
 
 #### leiden clustering
 
-To use :func:`ehrapy.tools.leiden`, install the `leiden` extra (which pulls in :mod:`igraph`):
+To use `ehrapy.tools.leiden`, install the `leiden` extra (which pulls in `igraph`):
 
 ```console
 pip install ehrapy[leiden]
