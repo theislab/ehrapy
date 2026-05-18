@@ -4,7 +4,7 @@ import warnings
 from collections.abc import Iterable, Mapping, Sequence
 from functools import singledispatch
 from importlib.util import find_spec
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, get_args
 
 import numpy as np
 import pandas as pd
@@ -23,6 +23,8 @@ from ehrapy._compat import (
     use_ehrdata,
 )
 from ehrapy._progress import spinner
+from ehrapy._types import CSBase
+from ehrapy.preprocessing._quality_control import _compute_missing_values
 
 if TYPE_CHECKING:
     from anndata import AnnData
@@ -730,6 +732,9 @@ def _warn_imputation_threshold(
 ) -> dict[str, int]:
     """Warns the user if the more than $threshold percent had to be imputed.
 
+    Use :func:`ehrdata.harmonize_missing_values` to convert other missing value
+    symbols to `np.nan` before imputing.
+
     Args:
         edata: The data object to check
         var_names: The var names which were imputed.
@@ -739,9 +744,15 @@ def _warn_imputation_threshold(
     try:
         edata.var["missing_values_pct"]
     except KeyError:
-        from ehrapy.preprocessing import qc_metrics
+        mtx = edata.X if layer is None else edata.layers[layer]
+        if mtx.ndim == 3:
+            n_obs, n_vars, n_t = mtx.shape
+            mtx_2d = mtx.transpose(0, 2, 1).reshape(n_obs * n_t, n_vars)
+        else:
+            mtx_2d = mtx
+        missing_abs = _compute_missing_values(mtx_2d, axis=0)
+        edata.var["missing_values_pct"] = (missing_abs / mtx_2d.shape[0]) * 100
 
-        qc_metrics(edata, layer=layer)
     used_var_names = set(edata.var_names) if var_names is None else set(var_names)
 
     thresholded_var_names = set(edata.var[edata.var["missing_values_pct"] > threshold].index) & set(used_var_names)

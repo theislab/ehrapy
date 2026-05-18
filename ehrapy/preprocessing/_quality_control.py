@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Literal
 import array_api_compat
 import numpy as np
 import pandas as pd
+import scipy.sparse as sp
 from ehrdata._logger import logger
 from ehrdata.io import to_pandas
 
@@ -134,6 +135,23 @@ def _(mtx: DaskArray, axis) -> np.ndarray:
     import dask.array as da
 
     return da.isnull(mtx).sum(axis).compute()
+
+
+@_compute_missing_values.register(sp.csr_array)
+@_compute_missing_values.register(sp.csc_array)
+def _(mtx, axis) -> np.ndarray:
+    mtx_csc = mtx.tocsc() if isinstance(mtx, sp.csr_array) else mtx
+    n_nan_per_col = np.array(
+        [np.sum(np.isnan(mtx_csc.data[mtx_csc.indptr[i] : mtx_csc.indptr[i + 1]])) for i in range(mtx.shape[1])]
+    )
+    if axis == 0:
+        return n_nan_per_col
+    else:
+        # per row
+        mtx_csr = mtx.tocsr() if isinstance(mtx, sp.csc_array) else mtx
+        return np.array(
+            [np.sum(np.isnan(mtx_csr.data[mtx_csr.indptr[i] : mtx_csr.indptr[i + 1]])) for i in range(mtx.shape[0])]
+        )
 
 
 @singledispatch

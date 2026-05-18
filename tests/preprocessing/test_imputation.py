@@ -588,7 +588,11 @@ def test_explicit_impute_error(impute_edata, edata_mini_3D_missing_values):
         explicit_impute(edata_mini_3D_missing_values, replacement=[1, 2, 3], layer=DEFAULT_TEM_LAYER_NAME)
 
 
-def test_warning(impute_num_edata):
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NUMERIC)
+def test_warning(impute_num_edata, array_type):
+    impute_num_edata.X = array_type(impute_num_edata.X)
+    if isinstance(impute_num_edata.X, da.Array):
+        pytest.skip("_warn_imputation_threshold does not support Dask arrays")
     warning_results = _warn_imputation_threshold(impute_num_edata, threshold=20, var_names=None)
     assert warning_results == {"col1": 25, "col3": 50}
 

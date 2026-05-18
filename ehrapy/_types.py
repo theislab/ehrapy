@@ -10,7 +10,7 @@ from fast_array_utils.conv import to_dense
 from ehrapy._compat import as_dense_dask_array
 
 KnownTransformer = Literal["pynndescent", "sklearn"]
-CSBase = sp.csr_matrix | sp.csc_matrix
+CSBase = sp.csr_array | sp.csc_array
 RNGLike = np.random.Generator | np.random.BitGenerator
 SeedLike = int | np.integer | Sequence[int] | np.random.SeedSequence
 AnyRandom = int | np.random.RandomState | None
