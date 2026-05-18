@@ -111,7 +111,6 @@ intersphinx_mapping = {
     "networkx": ("https://networkx.org/documentation/stable", None),
     "ehrdata": ("https://ehrdata.readthedocs.io/en/latest/", None),
     "holoviews": ("https://holoviews.org/", None),
-    "igraph": ("https://python.igraph.org/en/stable/", None),
 }
 nitpick_ignore = [
     ("py:class", "matplotlib.axes.Axes"),
