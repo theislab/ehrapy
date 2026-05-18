@@ -13,12 +13,9 @@ import warnings
 
 warnings.filterwarnings("ignore", category=SyntaxWarning, message=r"invalid escape sequence '\\")
 
-from ehrapy._settings import EhrapyConfig, ehrapy_settings
-
-settings: EhrapyConfig = ehrapy_settings
-
 from ehrapy import get
 from ehrapy import plot as pl
 from ehrapy import preprocessing as pp
 from ehrapy import tools as tl
+from ehrapy._settings import settings
 from ehrapy.core.meta_information import print_versions

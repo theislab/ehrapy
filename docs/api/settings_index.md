@@ -6,20 +6,11 @@
 ```
 
 ```{eval-rst}
-
-.. currentmodule:: ehrapy._settings
-
 .. autosummary::
-    :toctree: settings
-    :nosignatures:
+   :toctree: generated
 
-    EhrapyConfig
-```
-
-```python
-import ehrapy as ep
-
-ep.settings.set_figure_params(dpi=150)
+   settings
+   settings.override
 ```
 
 ## Dependency Versions
