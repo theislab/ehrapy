@@ -732,7 +732,6 @@ def _warn_imputation_threshold(
 ) -> dict[str, int]:
     """Warns the user if the more than $threshold percent had to be imputed.
 
-    For sparse arrays, missing values are assumed to be represented as `np.nan`.
     Use :func:`ehrdata.harmonize_missing_values` to convert other missing value
     symbols to `np.nan` before imputing.
 
