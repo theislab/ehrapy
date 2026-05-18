@@ -1,20 +1,12 @@
+import os
 from pathlib import Path
 
 import ehrdata as ed
-import matplotlib as mpl
 import matplotlib.collections as mcoll
+import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import pytest
-
-mpl.use("Agg")
-
-import matplotlib.pyplot as plt
-
-plt.style.use("default")
-
-import os
-
-import numpy as np
 from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY, NUMERIC_TAG
 
 import ehrapy as ep

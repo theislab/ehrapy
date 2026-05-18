@@ -98,7 +98,7 @@ In contrast to a preprocessing function, a tool usually adds an easily interpret
     tools.ncp
 ```
 
-## Cohort Tracking
+## Cohort Tracking & summaries
 
 ```{eval-rst}
 .. autosummary::
@@ -106,4 +106,5 @@ In contrast to a preprocessing function, a tool usually adds an easily interpret
     :nosignatures:
 
     tools.CohortTracker
+    tools.stratified_table_one
 ```
