@@ -88,7 +88,6 @@ myst_enable_extensions = [
 
 autodoc_mock_imports = [
     "scipy.linalg.triu",
-    "leidenalg",
 ]
 
 intersphinx_mapping = {
@@ -115,10 +114,7 @@ intersphinx_mapping = {
 }
 nitpick_ignore = [
     ("py:class", "matplotlib.axes.Axes"),
-    ("py:class", "leidenalg.RBConfigurationVertexPartition"),
-    ("py:class", "leidenalg.VertexPartition.MutableVertexPartition"),
     ("py:class", "cycler.Cycler"),
-    ("py:func", "leidenalg.find_partition"),
     ("py:class", "CAT"),
     ("py:class", "ehrapy.tools.annotate_text.CAT"),
     ("py:class", "tableone.TableOne"),

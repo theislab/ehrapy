@@ -12,7 +12,6 @@ if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
 
     from ehrdata import EHRData
-    from leidenalg.VertexPartition import MutableVertexPartition
 
     from ehrapy._types import AnyRandom
 
@@ -25,51 +24,37 @@ def leiden(
     random_state: AnyRandom = 0,
     key_added: str = "leiden",
     adjacency: spmatrix | None = None,
-    directed: bool | None = False,
     use_weights: bool = True,
     n_iterations: int = -1,
-    partition_type: type[MutableVertexPartition] | None = None,
     neighbors_key: str | None = None,
     obsp: str | None = None,
-    flavor: Literal["leidenalg", "igraph"] = "igraph",
     copy: bool = False,
-    **partition_kwargs,
+    **clustering_args,
 ) -> EHRData | None:  # pragma: no cover
     """Cluster observations into subgroups :cite:p:`Traag2019`.
 
-    Cluster observations using the Leiden algorithm :cite:p:`Traag2019`,
-    an improved version of the Louvain algorithm :cite:p:`Blondel2008`.
+    Cluster observations using the Leiden algorithm :cite:p:`Traag2019`, an improved version of the Louvain algorithm :cite:p:`Blondel2008`.
     It has been proposed for single-cell analysis by :cite:p:`Levine2015`.
     This requires having run :func:`~ehrapy.preprocessing.neighbors`.
+    Uses the :mod:`igraph` implementation (``flavor="igraph"`` in scanpy); ``leidenalg`` is not supported.
 
     Args:
         edata: Central data object.
         resolution: A parameter value controlling the coarseness of the clustering. Higher values lead to more clusters.
-                    Set to `None` if overriding `partition_type` to one that doesn't accept a `resolution_parameter`.
-        restrict_to: Restrict the clustering to the categories within the key for sample
-                     annotation, tuple needs to contain `(obs_key, list_of_categories)`.
+        restrict_to: Restrict the clustering to the categories within the key for sample annotation, tuple needs to contain `(obs_key, list_of_categories)`.
         random_state: Random seed of the initialization of the optimization.
         key_added: `edata.obs` key under which to add the cluster labels.
         adjacency: Sparse adjacency matrix of the graph, defaults to neighbors connectivities.
-        directed: Whether to treat the graph as directed or undirected.
-        use_weights: If `True`, edge weights from the graph are used in the computation
-                     (placing more emphasis on stronger edges).
+        use_weights: If `True`, edge weights from the graph are used in the computation (placing more emphasis on stronger edges).
         n_iterations: How many iterations of the Leiden clustering algorithm to perform.
-                      Positive values above 2 define the total number of iterations to perform,
+                      Positive values above 2 define the total number of iterations to perform.
                       -1 has the algorithm run until it reaches its optimal clustering.
-        partition_type: Type of partition to use.
-                        Defaults to :class:`~leidenalg.RBConfigurationVertexPartition`.
-                        For the available options, consult the documentation for
-                        :func:`~leidenalg.find_partition`.
         neighbors_key: Use neighbors connectivities as adjacency.
-                       If not specified, leiden looks .obsp['connectivities'] for connectivities
-                       (default storage place for pp.neighbors).
+                       If not specified, leiden looks .obsp['connectivities'] for connectivities (default storage place for pp.neighbors).
                        If specified, leiden looks .obsp[.uns[neighbors_key]['connectivities_key']] for connectivities.
         obsp: Use `.obsp[obsp]` as adjacency. You can't specify both `obsp` and `neighbors_key` at the same time.
-        flavor: Which package's implementation to use.
         copy: Whether to copy `edata` or modify it inplace.
-        **partition_kwargs: Any further arguments to pass to `~leidenalg.find_partition`
-                            (which in turn passes arguments to the `partition_type`).
+        **clustering_args: Any further arguments passed to :meth:`igraph.Graph.community_leiden`.
 
     Returns:
         `edata.obs[key_added]`
@@ -85,15 +70,13 @@ def leiden(
         random_state=random_state,
         key_added=key_added,
         adjacency=adjacency,
-        directed=directed,
         use_weights=use_weights,
         n_iterations=n_iterations,
-        partition_type=partition_type,
         neighbors_key=neighbors_key,
         obsp=obsp,
         copy=copy,
-        flavor=flavor,
-        **partition_kwargs,
+        flavor="igraph",
+        **clustering_args,
     )
 
 
