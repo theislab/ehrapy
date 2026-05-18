@@ -63,6 +63,11 @@ def leiden(
         `edata.uns['leiden']['params']`
         A dict with the values for the parameters `resolution`, `random_state`, and `n_iterations`.
     """
+    try:
+        import igraph
+    except ImportError as e:
+        raise ImportError("`ep.tl.leiden` requires `igraph`. Install with `pip install ehrapy[leiden]`.") from e
+
     return sc.tl.leiden(
         adata=edata,
         resolution=resolution,

@@ -29,6 +29,14 @@ To run causal inference with ehrapy, install the `causal` extra:
 pip install ehrapy[causal]
 ```
 
+#### leiden clustering
+
+To use :func:`ehrapy.tools.leiden`, install the `leiden` extra (which pulls in :mod:`igraph`):
+
+```console
+pip install ehrapy[leiden]
+```
+
 ## From sources
 
 The sources for ehrapy can be downloaded from the [Github repo].
