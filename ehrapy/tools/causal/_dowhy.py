@@ -10,12 +10,11 @@ import ehrdata as ed
 import numpy as np
 from ehrdata._logger import logger
 
-from ehrapy._compat import function_2D_only, use_ehrdata
+from ehrapy._compat import function_2D_only
 
 if TYPE_CHECKING:
     import dowhy
     import networkx as nx
-    from anndata import AnnData
     from ehrdata import EHRData
 
 warnings.filterwarnings("ignore")
@@ -34,9 +33,8 @@ class capture_output(list):
 
 
 @function_2D_only()
-@use_ehrdata(deprecated_after="1.0.0")
 def causal_inference(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     graph: nx.DiGraph | str,
     treatment: str,
     outcome: str,

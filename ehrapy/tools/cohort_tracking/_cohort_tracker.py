@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from anndata import AnnData
+from ehrdata import EHRData
 from ehrdata._feature_types import _detect_feature_type
 from ehrdata.core.constants import CATEGORICAL_TAG
 from matplotlib.axes import Axes
@@ -15,12 +15,9 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 from tableone import TableOne
 
-from ehrapy._compat import use_ehrdata
-
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from ehrdata import EHRData
     from matplotlib.figure import Figure
 
 
@@ -72,15 +69,14 @@ class CohortTracker:
         tableone: An open source Python package for producing summary statistics for research papers, Journal of the American Medical Informatics Association, Volume 24, Issue 2, 1 March 2017, Pages 267–271, https://doi.org/10.1093/jamia/ocw117
     """
 
-    @use_ehrdata(deprecated_after="1.0.0")
     def __init__(
         self,
-        edata: AnnData | EHRData,
+        edata: EHRData,
         columns: Sequence | None = None,
         categorical: Sequence | None = None,
     ) -> None:
-        if not isinstance(edata, AnnData):
-            raise ValueError("edata must be an AnnData or EHRData.")
+        if not isinstance(edata, EHRData):
+            raise ValueError("edata must be an EHRData.")
 
         self.columns = columns if columns is not None else list(edata.obs.columns)
 
@@ -111,12 +107,9 @@ class CohortTracker:
         }
         self._tracked_tables: list = []
 
-    @use_ehrdata(deprecated_after="1.0.0")
-    def __call__(
-        self, edata: AnnData | EHRData, label: str = None, operations_done: str = None, **tableone_kwargs: dict
-    ) -> None:
-        if not isinstance(edata, AnnData):
-            raise ValueError("edata must be an AnnData or EHRData.")
+    def __call__(self, edata: EHRData, label: str = None, operations_done: str = None, **tableone_kwargs: dict) -> None:
+        if not isinstance(edata, EHRData):
+            raise ValueError("edata must be an EHRData.")
 
         _check_columns_exist(edata.obs, self.columns)
         _check_no_new_categories(edata.obs, self.categorical, self._categorical_categories)
