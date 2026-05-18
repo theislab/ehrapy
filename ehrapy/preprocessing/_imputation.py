@@ -252,6 +252,8 @@ def simple_impute(
     if var_names is None:
         var_names = edata.var_names
 
+    # TODO: warn again if qc_metrics is 3D enabled
+    # _warn_imputation_threshold(edata, var_names, threshold=warning_threshold, layer=layer)
     var_indices = edata.var_names.get_indexer(var_names).tolist()
 
     if layer is None:
