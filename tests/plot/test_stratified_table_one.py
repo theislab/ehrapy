@@ -48,9 +48,7 @@ def test_stratified_table_one_plot_sensitivity(edata_mini, check_same_image, hv_
 
 
 def test_stratified_table_one_plot_returns_layout(edata_mini, hv_backend):
-    ep.tl.stratified_table_one(
-        edata_mini, groupby="station", columns=["glucose", "disease"]
-    )
+    ep.tl.stratified_table_one(edata_mini, groupby="station", columns=["glucose", "disease"])
     layout = ep.pl.stratified_table_one(edata_mini)
     assert isinstance(layout, hv.Layout)
     assert len(layout) == 2

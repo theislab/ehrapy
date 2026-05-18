@@ -94,9 +94,7 @@ def stratified_table_one(
         raise ValueError(f"groupby column {groupby!r} not found in edata.obs.")
 
     if edata.obs[groupby].nunique(dropna=True) < 2:
-        raise ValueError(
-            f"groupby column {groupby!r} has fewer than 2 unique non-null values; cannot stratify."
-        )
+        raise ValueError(f"groupby column {groupby!r} has fewer than 2 unique non-null values; cannot stratify.")
 
     target = edata.copy() if copy else edata
 
@@ -109,9 +107,7 @@ def stratified_table_one(
         cols = [c for c in columns if c != groupby]
 
     if categorical is None:
-        cats = [
-            col for col in cols if _detect_feature_type(target.obs[col])[0] == CATEGORICAL_TAG
-        ]
+        cats = [col for col in cols if _detect_feature_type(target.obs[col])[0] == CATEGORICAL_TAG]
     else:
         missing_cats = set(categorical) - set(target.obs.columns)
         if missing_cats:
@@ -120,9 +116,7 @@ def stratified_table_one(
             raise ValueError("categorical columns must be a subset of `columns`.")
         cats = list(categorical)
 
-    categorical_categories = {
-        col: list(target.obs[col].astype("category").cat.categories) for col in cats
-    }
+    categorical_categories = {col: list(target.obs[col].astype("category").cat.categories) for col in cats}
 
     # tableone chokes on pandas Categorical dtype — cast the groupby + categorical columns to plain strings
     obs_for_tableone = target.obs.copy()

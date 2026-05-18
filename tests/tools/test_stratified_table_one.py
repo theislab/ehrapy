@@ -72,9 +72,7 @@ def test_stratified_table_one_single_group(edata_mini):
 
 def test_stratified_table_one_invalid_columns(edata_mini):
     with pytest.raises(ValueError, match="not found in edata.obs"):
-        ep.tl.stratified_table_one(
-            edata_mini, groupby="station", columns=["glucose", "no_such_column"]
-        )
+        ep.tl.stratified_table_one(edata_mini, groupby="station", columns=["glucose", "no_such_column"])
 
 
 def test_stratified_table_one_requires_ehrdata():

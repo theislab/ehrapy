@@ -10,7 +10,6 @@ from ehrapy.plot._missingno import (
 )
 from ehrapy.plot._ncp import ncp, ncp_cluster_trajectories
 from ehrapy.plot._sankey import sankey_diagram, sankey_diagram_time
-from ehrapy.plot._stratified_table_one import stratified_table_one
 from ehrapy.plot._scanpy_pl_api import (
     clustermap,
     dendrogram,
@@ -45,6 +44,7 @@ from ehrapy.plot._scanpy_pl_api import (
     umap,
     violin,
 )
+from ehrapy.plot._stratified_table_one import stratified_table_one
 from ehrapy.plot._survival_analysis import cox_ph_adjusted_curves, cox_ph_forestplot, kaplan_meier, ols
 from ehrapy.plot._timeseries import timeseries
 from ehrapy.plot._variable_correlation_plot import variable_correlations, variable_dependencies

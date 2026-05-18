@@ -23,15 +23,14 @@ def _extract_central_value(summary: str) -> float:
     except ValueError:
         return 0.0
 
+
 if TYPE_CHECKING:
     from ehrdata import EHRData
 
 
 def _require_results(edata: EHRData, key: str) -> dict:
     if key not in edata.uns:
-        raise KeyError(
-            f"edata.uns[{key!r}] not found. Run `ep.tl.stratified_table_one(edata, groupby=...)` first."
-        )
+        raise KeyError(f"edata.uns[{key!r}] not found. Run `ep.tl.stratified_table_one(edata, groupby=...)` first.")
     return edata.uns[key]
 
 

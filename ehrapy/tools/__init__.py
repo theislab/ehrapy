@@ -1,5 +1,6 @@
 from ehrapy.tools._ncp import ncp
 from ehrapy.tools._scanpy_tl_api import *  # noqa: F403
+from ehrapy.tools._stratified_table_one import stratified_table_one
 from ehrapy.tools._survival_analysis import (
     anova_glm,
     cox_ph,
@@ -17,7 +18,6 @@ from ehrapy.tools._survival_analysis import (
 )
 from ehrapy.tools.causal._dowhy import causal_inference
 from ehrapy.tools.cohort_tracking._cohort_tracker import CohortTracker
-from ehrapy.tools._stratified_table_one import stratified_table_one
 from ehrapy.tools.embedding._embeddings import diffmap, draw_graph, embedding_density, famd, tsne, umap
 from ehrapy.tools.feature_ranking._feature_importances import rank_features_supervised
 from ehrapy.tools.feature_ranking._rank_features_groups import filter_rank_features_groups, rank_features_groups
