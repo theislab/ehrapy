@@ -80,12 +80,28 @@ In contrast to a preprocessing function, a tool usually adds an easily interpret
 
 ## Causal Inference
 
+ehrapy ships a small, dependency-light set of causal inference estimators built directly on top of
+scikit-learn. ATE estimators handle binary treatments via inverse probability of treatment
+weighting (IPTW), parametric g-computation, the doubly-robust augmented IPW (AIPW), and propensity
+score matching. Heterogeneous treatment effects (CATE) are available via the T-, S-, and
+X-learner meta-learners. Two diagnostics — covariate balance and positivity — round out the
+toolkit.
+
 ```{eval-rst}
 .. autosummary::
     :toctree: tools
     :nosignatures:
 
-    tools.causal_inference
+    tools.iptw
+    tools.g_computation
+    tools.aipw
+    tools.propensity_score_matching
+    tools.t_learner
+    tools.s_learner
+    tools.x_learner
+    tools.covariate_balance
+    tools.positivity_check
+    tools.CausalEstimate
 ```
 
 ## Normalized Complexity Profile

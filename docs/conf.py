@@ -118,7 +118,6 @@ nitpick_ignore = [
     ("py:class", "CAT"),
     ("py:class", "ehrapy.tools.annotate_text.CAT"),
     ("py:class", "tableone.TableOne"),
-    ("py:class", "dowhy.causal_estimator.CausalEstimate"),
     ("py:class", "DotPlot"),
     ("py:class", "MatrixPlot"),
     ("py:class", "StackedViolin"),
