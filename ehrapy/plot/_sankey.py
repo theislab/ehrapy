@@ -262,10 +262,6 @@ def sankey_diagram_time(
         vdims=["value", "edge_color"],
     )
 
-    print(state_labels)
-    print("names")
-    print(state_names)
-
     opts_dict: dict[str, Any] = {}
 
     if hv.Store.current_backend == "bokeh":
