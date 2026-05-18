@@ -36,7 +36,7 @@ def leiden(
     Cluster observations using the Leiden algorithm :cite:p:`Traag2019`, an improved version of the Louvain algorithm :cite:p:`Blondel2008`.
     It has been proposed for single-cell analysis by :cite:p:`Levine2015`.
     This requires having run :func:`~ehrapy.preprocessing.neighbors`.
-    Uses the ``igraph`` implementation (``flavor="igraph"`` in scanpy); ``leidenalg`` is not supported.
+    Uses the :mod:`igraph` implementation (``flavor="igraph"`` in scanpy); ``leidenalg`` is not supported.
 
     Args:
         edata: Central data object.
@@ -54,7 +54,7 @@ def leiden(
                        If specified, leiden looks .obsp[.uns[neighbors_key]['connectivities_key']] for connectivities.
         obsp: Use `.obsp[obsp]` as adjacency. You can't specify both `obsp` and `neighbors_key` at the same time.
         copy: Whether to copy `edata` or modify it inplace.
-        **clustering_args: Any further arguments passed to ``igraph.Graph.community_leiden``.
+        **clustering_args: Any further arguments passed to :meth:`igraph.Graph.community_leiden`.
 
     Returns:
         `edata.obs[key_added]`
