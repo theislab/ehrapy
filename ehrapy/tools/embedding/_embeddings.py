@@ -11,23 +11,20 @@ from ehrdata._feature_types import _detect_feature_type
 from scipy.linalg import svd
 from scipy.sparse import spmatrix  # noqa
 
-from ehrapy._compat import _raise_array_type_not_implemented, function_2D_only, use_ehrdata
+from ehrapy._compat import _raise_array_type_not_implemented, function_2D_only
 from ehrapy.core._constants import TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY
 from ehrapy.tools import _method_options  # noqa
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from anndata import AnnData
-
     from ehrapy._types import AnyRandom
 
 
 # No need for testing 3D; tSNE does not not support layers, and
 # and X can only be 2D currently, until this PR is merged: https://github.com/scverse/anndata/pull/1707
-@use_ehrdata(deprecated_after="1.0.0")
 def tsne(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     *,
     n_pcs: int | None = None,
     use_rep: str | None = None,
@@ -38,7 +35,7 @@ def tsne(
     n_jobs: int | None = None,
     copy: bool = False,
     metric: str = "euclidean",
-) -> EHRData | EHRData | AnnData | None:  # pragma: no cover
+) -> EHRData | None:  # pragma: no cover
     """Calculates t-SNE :cite:p:`vanDerMaaten2008`, :cite:p:`Amir2013`, and :cite:p:`Pedregosa2011`.
 
     t-distributed stochastic neighborhood embedding (tSNE) :cite:p:`vanDerMaaten2008` has been
@@ -92,9 +89,8 @@ def tsne(
     )
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def umap(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     *,
     min_dist: float = 0.5,
     spread: float = 1.0,
@@ -110,7 +106,7 @@ def umap(
     copy: bool = False,
     method: Literal["umap", "rapids"] = "umap",
     neighbors_key: str | None = None,
-) -> EHRData | AnnData | None:  # pragma: no cover
+) -> EHRData | None:  # pragma: no cover
     """Embed the neighborhood graph using UMAP :cite:p:`McInnes2018`.
 
     UMAP (Uniform Manifold Approximation and Projection) is a manifold learning technique suitable for visualizing high-dimensional data.
@@ -201,9 +197,8 @@ def umap(
     return edata_returned
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def draw_graph(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     *,
     layout: _method_options._Layout = "fa",
     init_pos: str | bool | None = None,
@@ -216,7 +211,7 @@ def draw_graph(
     obsp: str | None = None,
     copy: bool = False,
     **kwds,
-) -> EHRData | AnnData | None:  # pragma: no cover
+) -> EHRData | None:  # pragma: no cover
     """Force-directed graph drawing :cite:p:`Islam2011`, :cite:p:`Jacomy2014`, and :cite:p:`Chippada2018`.
 
     .. _fa2: https://github.com/bhargavchippada/forceatlas2
@@ -276,15 +271,14 @@ def draw_graph(
     )
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def diffmap(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     *,
     n_comps: int = 15,
     neighbors_key: str | None = None,
     random_state: AnyRandom = 0,
     copy: bool = False,
-) -> EHRData | AnnData | None:  # pragma: no cover
+) -> EHRData | None:  # pragma: no cover
     """Diffusion Maps :cite:p:`Coifman2005`, :cite:p:`Haghverdi2015`, :cite:p:`Wolf2019`.
 
     Diffusion maps :cite:p:`Coifman2005` has been proposed for visualizing biomedical data by :cite:p:`Haghverdi2015`.
@@ -322,9 +316,8 @@ def diffmap(
     )
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def embedding_density(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     *,
     basis: str = "umap",  # was positional before 1.4.5
     groupby: str | None = None,

@@ -22,7 +22,6 @@ from ehrapy._compat import (
     nanmedian_array_api,
     nanmin_array_api,
     nanstd_array_api,
-    use_ehrdata,
 )
 from ehrapy.preprocessing._encoding import _get_encoded_features
 
@@ -31,13 +30,11 @@ if TYPE_CHECKING:
 
 
 import ehrdata as ed
-from anndata import AnnData
 from ehrdata import EHRData
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def qc_metrics(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     qc_vars: Collection[str] = (),
     *,
     layer: str | None = None,
@@ -97,10 +94,8 @@ def qc_metrics(
             >>> obs_qc.head()
             >>> var_qc.head()
     """
-    if not isinstance(edata, EHRData) and not isinstance(edata, AnnData):
-        raise ValueError(
-            f"Central data object should be an EHRData or an AnnData object, but received {type(edata).__name__}"
-        )
+    if not isinstance(edata, EHRData):
+        raise ValueError(f"Central data object should be an EHRData object, but received {type(edata).__name__}")
 
     feature_type = edata.var.get("feature_type", None)
     extended = True
@@ -248,7 +243,7 @@ def _(mtx: np.ndarray | DaskArray):
 
 def _compute_obs_metrics(
     mtx,
-    edata: EHRData | AnnData,
+    edata: EHRData,
     *,
     qc_vars: Collection[str] = (),
     log1p: bool = True,
@@ -359,7 +354,7 @@ def _compute_obs_metrics(
 
 def _compute_var_metrics(
     mtx,
-    edata: EHRData | AnnData,
+    edata: EHRData,
     extended: bool = False,
 ):
     """Compute variable metrics for quality control.
@@ -506,9 +501,8 @@ def _compute_var_metrics(
 
 
 @function_2D_only()
-@use_ehrdata(deprecated_after="1.0.0")
 def qc_lab_measurements(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     *,
     layer: str | None = None,
     var_names: list[str] | None = None,
@@ -518,7 +512,7 @@ def qc_lab_measurements(
     add_score: bool = True,
     groupby: str | None = None,
     copy: bool = False,
-) -> EHRData | AnnData | None:
+) -> EHRData | None:
     """Flag outliers and compute anomaly scores for numeric variables.
 
     For each requested variable the function adds up to two columns in
@@ -655,9 +649,8 @@ def _outlier_flags_and_scores(
 
 
 @function_2D_only()
-@use_ehrdata(deprecated_after="1.0.0")
 def mcar_test(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     method: Literal["little", "ttest"] = "little",
     *,
     layer: str | None = None,

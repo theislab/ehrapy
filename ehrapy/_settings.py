@@ -141,7 +141,7 @@ class EhrapyConfig:  # pragma: no cover
 
     @property
     def file_format_data(self) -> str:
-        """File format for saving AnnData objects.
+        """File format for saving EHRData objects.
 
         Allowed are 'txt', 'csv' (comma separated value file) for exporting and 'h5ad' (hdf5) for lossless saving.
         """

@@ -12,26 +12,24 @@ from ehrapy._compat import (
     DaskArray,
     _apply_over_time_axis,
     _raise_array_type_not_implemented,
-    use_ehrdata,
 )
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
 
     import pandas as pd
-    from anndata import AnnData
     from ehrdata import EHRData
 
 
 def _scale_func_group(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     scale_func: Callable[[np.ndarray | pd.DataFrame], np.ndarray],
     vars: str | Sequence[str] | None,
     group_key: str | None,
     layer: str | None,
     copy: bool,
     norm_name: str,
-) -> EHRData | AnnData | None:
+) -> EHRData | None:
     """Apply scaling function to selected columns of edata, either globally or per group.
 
     Supports both 2D and 3D data with unified layer handling.
@@ -103,15 +101,14 @@ def _(arr: DaskArray, **kwargs):
     return daskml_pp.StandardScaler(**kwargs).fit_transform(arr)
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def scale_norm(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     vars: str | Sequence[str] | None = None,
     group_key: str | None = None,
     layer: str | None = None,
     copy: bool = False,
     **kwargs,
-) -> EHRData | AnnData | None:
+) -> EHRData | None:
     """Apply scaling normalization.
 
     Functionality is provided by :class:`~sklearn.preprocessing.StandardScaler`, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html for details.
@@ -178,15 +175,14 @@ def _(arr: DaskArray, **kwargs):
     return daskml_pp.MinMaxScaler(**kwargs).fit_transform(arr)
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def minmax_norm(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     vars: str | Sequence[str] | None = None,
     group_key: str | None = None,
     layer: str | None = None,
     copy: bool = False,
     **kwargs,
-) -> EHRData | AnnData | None:
+) -> EHRData | None:
     """Apply min-max normalization.
 
     Functionality is provided by :class:`~sklearn.preprocessing.MinMaxScaler`, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MinMaxScaler.html for details.
@@ -245,14 +241,13 @@ def _(arr: np.ndarray):
     return sklearn_pp.MaxAbsScaler().fit_transform(arr)
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def maxabs_norm(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     vars: str | Sequence[str] | None = None,
     group_key: str | None = None,
     layer: str | None = None,
     copy: bool = False,
-) -> EHRData | AnnData | None:
+) -> EHRData | None:
     """Apply max-abs normalization.
 
     Functionality is provided by :class:`~sklearn.preprocessing.MaxAbsScaler`, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MaxAbsScaler.html for details.
@@ -321,15 +316,14 @@ def _(arr: DaskArray, **kwargs):
     return daskml_pp.RobustScaler(**kwargs).fit_transform(arr)
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def robust_scale_norm(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     vars: str | Sequence[str] | None = None,
     group_key: str | None = None,
     layer: str | None = None,
     copy: bool = False,
     **kwargs,
-) -> EHRData | AnnData | None:
+) -> EHRData | None:
     """Apply robust scaling normalization.
 
     Functionality is provided by :class:`~sklearn.preprocessing.RobustScaler`,
@@ -397,15 +391,14 @@ def _(arr: DaskArray, **kwargs):
     return daskml_pp.QuantileTransformer(**kwargs).fit_transform(arr)
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def quantile_norm(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     vars: str | Sequence[str] | None = None,
     group_key: str | None = None,
     layer: str | None = None,
     copy: bool = False,
     **kwargs,
-) -> EHRData | AnnData | None:
+) -> EHRData | None:
     """Apply quantile normalization.
 
     Functionality is provided by :class:`~sklearn.preprocessing.QuantileTransformer`,
@@ -464,15 +457,14 @@ def _(arr: np.ndarray, **kwargs):
     return sklearn_pp.PowerTransformer(**kwargs).fit_transform(arr)
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def power_norm(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     vars: str | Sequence[str] | None = None,
     group_key: str | None = None,
     layer: str | None = None,
     copy: bool = False,
     **kwargs,
-) -> EHRData | AnnData | None:
+) -> EHRData | None:
     """Apply power transformation normalization.
 
     Functionality is provided by :class:`~sklearn.preprocessing.PowerTransformer`,
@@ -564,15 +556,14 @@ def _(arr: DaskArray, offset: int | float = 1, base: int | float | None = None) 
     return result
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def log_norm(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     vars: str | Sequence[str] | None = None,
     base: int | float | None = None,
     offset: int | float = 1,
     layer: str | None = None,
     copy: bool = False,
-) -> EHRData | AnnData | None:
+) -> EHRData | None:
     r"""Apply log normalization.
 
     Computes :math:`x = \\log(x + offset)`, where :math:`log` denotes the natural logarithm
@@ -663,7 +654,7 @@ def log_norm(
     return edata if copy else None
 
 
-def _record_norm(edata: EHRData | AnnData, vars: Sequence[str], method: str) -> None:
+def _record_norm(edata: EHRData, vars: Sequence[str], method: str) -> None:
     if "normalization" in edata.uns:
         norm_record = edata.uns["normalization"]
     else:
@@ -680,8 +671,7 @@ def _record_norm(edata: EHRData | AnnData, vars: Sequence[str], method: str) -> 
     return None
 
 
-@use_ehrdata(deprecated_after="1.0.0")
-def offset_negative_values(edata: EHRData | AnnData, layer: str = None, copy: bool = False) -> EHRData | AnnData | None:
+def offset_negative_values(edata: EHRData, layer: str = None, copy: bool = False) -> EHRData | None:
     """Offsets negative values into positive ones with the lowest negative value becoming 0.
 
     This is primarily used to enable the usage of functions such as log_norm that

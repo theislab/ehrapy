@@ -9,25 +9,22 @@ import scipy.sparse as sp
 from ehrapy._compat import (
     DaskArray,
     _raise_array_type_not_implemented,
-    use_ehrdata,
 )
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-    from anndata import AnnData
     from ehrdata import EHRData
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def missing_data_mask(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     *,
     layer: str | None = None,
     mask_values: Iterable[float | int] | None = None,
     key_added: str = "missing_data_mask",
     copy: bool = False,
-) -> EHRData | AnnData | None:
+) -> EHRData | None:
     """Create a boolean mask indicating missing values in the data matrix.
 
     By default marks ``NaN`` values as missing.

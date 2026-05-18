@@ -6,17 +6,13 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
-from ehrapy._compat import use_ehrdata
-
 if TYPE_CHECKING:
-    from anndata import AnnData
     from ehrdata import EHRData
     from matplotlib.axes import Axes
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def rank_features_supervised(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     key: str = "feature_importances",
     n_features: int = 10,
     ax: Axes | None = None,

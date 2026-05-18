@@ -6,22 +6,19 @@ import numpy as np
 import scanpy as sc
 from scipy.sparse import spmatrix  # noqa
 
-from ehrapy._compat import use_ehrdata
 from ehrapy.core._constants import TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
 
-    from anndata import AnnData
     from ehrdata import EHRData
     from leidenalg.VertexPartition import MutableVertexPartition
 
     from ehrapy._types import AnyRandom
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def leiden(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     resolution: float = 1,
     *,
     restrict_to: tuple[str, Sequence[str]] | None = None,
@@ -37,7 +34,7 @@ def leiden(
     flavor: Literal["leidenalg", "igraph"] = "igraph",
     copy: bool = False,
     **partition_kwargs,
-) -> EHRData | AnnData | None:  # pragma: no cover
+) -> EHRData | None:  # pragma: no cover
     """Cluster observations into subgroups :cite:p:`Traag2019`.
 
     Cluster observations using the Leiden algorithm :cite:p:`Traag2019`,
@@ -102,9 +99,8 @@ def leiden(
 
 # No need for testing 3D; tSNE does not not support layers, and
 # and X can only be 2D currently, until this PR is merged: https://github.com/scverse/anndata/pull/1707
-@use_ehrdata(deprecated_after="1.0.0")
 def dendrogram(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     *,
     groupby: str,
     n_pcs: int | None = None,
@@ -181,9 +177,8 @@ def dendrogram(
     )
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def dpt(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     *,
     n_dcs: int = 10,
     n_branchings: int = 0,
@@ -191,7 +186,7 @@ def dpt(
     allow_kendall_tau_shift: bool = True,
     neighbors_key: str | None = None,
     copy: bool = False,
-) -> EHRData | AnnData | None:  # pragma: no cover
+) -> EHRData | None:  # pragma: no cover
     """Infer progression of observations through geodesic distance along the graph :cite:p:`Haghverdi2016`, :cite:p:`Wolf2019`.
 
     Reconstruct the progression of a biological process from snapshot
@@ -244,15 +239,14 @@ def dpt(
     )
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def paga(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     *,
     groups: str | None = None,
     model: Literal["v1.2", "v1.0"] = "v1.2",
     neighbors_key: str | None = None,
     copy: bool = False,
-) -> EHRData | AnnData | None:  # pragma: no cover
+) -> EHRData | None:  # pragma: no cover
     """Mapping out the coarse-grained connectivity structures of complex manifolds :cite:p:`Wolf2019`.
 
     By quantifying the connectivity of partitions (groups, clusters), partition-based graph abstraction (PAGA) generates a much
@@ -305,10 +299,9 @@ def paga(
     )
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def ingest(
-    edata: EHRData | AnnData,
-    edata_ref: EHRData | AnnData,
+    edata: EHRData,
+    edata_ref: EHRData,
     *,
     obs: str | Iterable[str] | None = None,
     embedding_method: str | Iterable[str] = ("umap", "pca"),
@@ -316,7 +309,7 @@ def ingest(
     neighbors_key: str | None = None,
     inplace: bool = True,
     **kwargs,
-) -> EHRData | AnnData | None:  # pragma: no cover
+) -> EHRData | None:  # pragma: no cover
     """Map labels and embeddings from reference data to new data.
 
     Integrates embeddings and annotations of an `edata` with a reference dataset

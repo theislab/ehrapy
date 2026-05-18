@@ -6,19 +6,17 @@ import numpy as np
 import pandas as pd
 import scipy.stats.mstats
 
-from ehrapy._compat import function_2D_only, use_ehrdata
+from ehrapy._compat import function_2D_only
 
 if TYPE_CHECKING:
     from collections.abc import Collection
 
-    from anndata import AnnData
     from ehrdata import EHRData
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 @function_2D_only()
 def winsorize(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     vars: Collection[str] = None,
     obs_cols: Collection[str] = None,
     *,
@@ -26,7 +24,7 @@ def winsorize(
     layer: str | None = None,
     copy: bool = False,
     **kwargs,
-) -> EHRData | AnnData | None:
+) -> EHRData | None:
     """Returns a Winsorized version of the input array.
 
     The implementation is based on https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.mstats.winsorize.html
@@ -74,17 +72,16 @@ def winsorize(
     return edata if copy else None
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 @function_2D_only()
 def clip_quantile(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     limits: tuple[float, float],
     vars: Collection[str] = None,
     obs_cols: Collection[str] = None,
     *,
     layer: str | None = None,
     copy: bool = False,
-) -> EHRData | AnnData | None:
+) -> EHRData | None:
     """Clips (limits) features.
 
     Given an interval, values outside the interval are clipped to the interval edges.

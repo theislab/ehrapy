@@ -26,6 +26,6 @@ ARRAY_TYPES_NUMERIC = (
     as_dense_dask_array,
     sp.csr_array,
     sp.csc_array,
-)  # add coo_array once supported in AnnData
-ARRAY_TYPES_NUMERIC_3D_ABLE = (asarray, as_dense_dask_array)  # add coo_array once supported in AnnData
+)  # add coo_array once supported by the EHRData backend
+ARRAY_TYPES_NUMERIC_3D_ABLE = (asarray, as_dense_dask_array)  # add coo_array once supported by the EHRData backend
 ARRAY_TYPES_NONNUMERIC = (asarray, as_dense_dask_array)

@@ -8,14 +8,12 @@ from typing import TYPE_CHECKING, Any, Literal
 import numpy as np
 import scanpy as sc
 
-from ehrapy._compat import use_ehrdata
 from ehrapy.core._constants import TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY
 from ehrapy.tools.distances.timeseries import timeseries_distance
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from anndata import AnnData
     from ehrdata import EHRData
     from scanpy.neighbors import KnnTransformerLike
 
@@ -37,9 +35,8 @@ _MetricScipySpatial = Literal[
 _Metric = _MetricSparseCapable | _MetricTimeSeries | _MetricScipySpatial
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def neighbors(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     *,
     n_neighbors: int = 15,
     n_pcs: int | None = None,
@@ -52,7 +49,7 @@ def neighbors(
     key_added: str | None = None,
     random_state: AnyRandom = 0,
     copy: bool = False,
-) -> EHRData | AnnData | None:  # pragma: no cover
+) -> EHRData | None:  # pragma: no cover
     """Compute a neighborhood graph of observations :cite:p:`McInnes2018`.
 
     The neighbor search efficiency of this heavily relies on UMAP :cite:p:`McInnes2018`,

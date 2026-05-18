@@ -157,7 +157,7 @@ def test_base_check_imputation_change_detected_in_imputed_column(impute_num_edat
         (da.array, None),
         (sparse.csr_array, None),
         (sparse.csc_array, None),
-        # (sparse.coo_array, None) # not yet supported by AnnData
+        # (sparse.coo_array, None) # not yet supported by the EHRData backend
     ],
 )
 def test_simple_impute_array_types(impute_num_edata, array_type, expected_error):

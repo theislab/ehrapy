@@ -6,17 +6,14 @@ from typing import TYPE_CHECKING, Literal
 import numpy as np
 import pandas as pd
 import scanpy as sc
-from anndata import AnnData
-from ehrdata import infer_feature_types, move_to_x
+from ehrdata import EHRData, infer_feature_types, move_to_x
 from ehrdata._feature_types import _check_feature_types
 from ehrdata.core.constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 
-from ehrapy._compat import _cast_edata_to_match_data_type, function_2D_only, use_ehrdata
+from ehrapy._compat import function_2D_only
 from ehrapy.preprocessing import encode
 
 if TYPE_CHECKING:
-    from ehrdata import EHRData
-
     from ehrapy.tools import _method_options
 
 
@@ -62,7 +59,7 @@ def _adjust_pvalues(pvals: np.recarray, corr_method: _method_options._correction
     return pvals_adj
 
 
-def _sort_features(edata: EHRData | AnnData, key_added: str = "rank_features_groups") -> None:
+def _sort_features(edata: EHRData, key_added: str = "rank_features_groups") -> None:
     """Sort results of :func:`~ehrapy.tools.rank_features_groups` by adjusted p-value.
 
     Args:
@@ -88,7 +85,7 @@ def _sort_features(edata: EHRData | AnnData, key_added: str = "rank_features_gro
 
 
 def _save_rank_features_result(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     key_added: str,
     names,
     scores,
@@ -162,7 +159,7 @@ def _get_groups_order(groups_subset: Literal["all"] | Iterable[str], group_names
 
 @_check_feature_types
 def _evaluate_categorical_features(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     groupby: str,
     group_names: list[str],
     groups: Literal["all"] | Iterable[str] = "all",
@@ -314,9 +311,8 @@ def _check_columns_to_rank_dict(columns_to_rank):
 
 
 @_check_feature_types
-@use_ehrdata(deprecated_after="1.0.0")
 def rank_features_groups(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     groupby: str,
     *,
     groups: Literal["all"] | Iterable[str] = "all",
@@ -460,13 +456,10 @@ def rank_features_groups(
         X_to_keep = np.zeros((len(edata), 1))
         var_to_keep = pd.DataFrame({"dummy": [0]})
 
-    edata_minimal = _cast_edata_to_match_data_type(
-        AnnData(
-            X=X_to_keep,
-            obs=edata.obs,
-            var=var_to_keep,
-        ),
-        target_type_reference=edata,
+    edata_minimal = EHRData(
+        X=X_to_keep,
+        obs=edata.obs,
+        var=var_to_keep,
     )
 
     if field_to_rank in ["obs", "layer_and_obs"]:
@@ -610,10 +603,9 @@ def rank_features_groups(
     return edata if copy else None
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 @function_2D_only()
 def filter_rank_features_groups(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     *,
     key: str = "rank_features_groups",
     groupby: str | None = None,

@@ -4,17 +4,13 @@ from typing import TYPE_CHECKING
 
 import seaborn as sns
 
-from ehrapy._compat import use_ehrdata
-
 if TYPE_CHECKING:
-    from anndata import AnnData
     from ehrdata import EHRData
     from seaborn.axisgrid import FacetGrid
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def catplot(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     x: str = None,
     y: str = None,
     hue: str = None,

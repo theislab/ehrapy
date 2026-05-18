@@ -20,27 +20,24 @@ from ehrapy._compat import (
     _apply_over_time_axis,
     _raise_array_type_not_implemented,
     function_2D_only,
-    use_ehrdata,
 )
 from ehrapy._progress import spinner
 from ehrapy._types import CSBase
 from ehrapy.preprocessing._quality_control import _compute_missing_values
 
 if TYPE_CHECKING:
-    from anndata import AnnData
     from ehrdata import EHRData
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def explicit_impute(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     replacement: (str | int | float) | (Mapping[str, str | int | float]) | (Sequence[str | int | float]),
     *,
     layer: str | None = None,
     impute_empty_strings: bool = True,
     warning_threshold: int = 70,
     copy: bool = False,
-) -> EHRData | AnnData | None:
+) -> EHRData | None:
     """Replaces all missing values in all columns or a subset of columns specified by the user with the passed replacement value.
 
     There are three scenarios to cover:
@@ -217,16 +214,15 @@ def _(arr: np.ndarray, strategy: Literal["mean", "median", "most_frequent"]) -> 
     return sklearn.impute.SimpleImputer(strategy=strategy).fit_transform(arr)
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def simple_impute(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     var_names: Iterable[str] | None = None,
     *,
     strategy: Literal["mean", "median", "most_frequent"] = "mean",
     warning_threshold: int = 70,
     layer: str | None = None,
     copy: bool = False,
-) -> EHRData | AnnData | None:
+) -> EHRData | None:
     """Impute missing values in numerical data using mean/median/most frequent imputation.
 
     If required and using mean or median strategy, the data needs to be properly encoded as this imputation requires
@@ -269,10 +265,9 @@ def simple_impute(
 
 
 @_check_feature_types
-@use_ehrdata(deprecated_after="1.0.0")
 @spinner("Performing KNN impute")
 def knn_impute(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     var_names: Iterable[str] | None = None,
     *,
     n_neighbors: int = 5,
@@ -282,7 +277,7 @@ def knn_impute(
     warning_threshold: int = 70,
     backend_kwargs: dict | None = None,
     **kwargs,
-) -> EHRData | AnnData | None:
+) -> EHRData | None:
     """Imputes missing values in the input data object using K-nearest neighbor imputation.
 
     If required, the data needs to be properly encoded as this imputation requires numerical data only.
@@ -379,7 +374,7 @@ def knn_impute(
 
 
 def _knn_impute(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     var_names: Iterable[str] | None,
     n_neighbors: int,
     layer: str | None,
@@ -470,10 +465,9 @@ def _(arr: np.ndarray, num_initial_strategy, n_estimators, max_iter, random_stat
     ).fit_transform(arr)
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 @spinner("Performing miss-forest impute")
 def miss_forest_impute(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     var_names: Iterable[str] | None = None,
     *,
     num_initial_strategy: Literal["mean", "median", "most_frequent", "constant"] = "mean",
@@ -483,7 +477,7 @@ def miss_forest_impute(
     warning_threshold: int = 70,
     layer: str | None = None,
     copy: bool = False,
-) -> EHRData | AnnData | None:
+) -> EHRData | None:
     """Impute data using the MissForest strategy.
 
     This function uses the MissForest strategy to impute missing values in the data matrix of an data object.
@@ -591,11 +585,10 @@ def miss_forest_impute(
 
 
 @_check_feature_types
-@use_ehrdata(deprecated_after="1.0.0")
 @function_2D_only()
 @spinner("Performing mice-forest impute")
 def mice_forest_impute(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     var_names: Iterable[str] | None = None,
     *,
     warning_threshold: int = 70,
@@ -607,7 +600,7 @@ def mice_forest_impute(
     verbose: bool = False,
     layer: str | None = None,
     copy: bool = False,
-) -> EHRData | AnnData | None:
+) -> EHRData | None:
     """Impute data using the miceforest method.
 
     See https://github.com/AnotherSamWilson/miceforest
@@ -728,7 +721,7 @@ def _miceforest_impute(
 
 
 def _warn_imputation_threshold(
-    edata: EHRData | AnnData, var_names: Iterable[str] | None, threshold: int = 75, layer: str | None = None
+    edata: EHRData, var_names: Iterable[str] | None, threshold: int = 75, layer: str | None = None
 ) -> dict[str, int]:
     """Warns the user if the more than $threshold percent had to be imputed.
 

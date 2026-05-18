@@ -4,18 +4,16 @@ from typing import TYPE_CHECKING
 
 import scanpy as sc
 
-from ehrapy._compat import function_2D_only, use_ehrdata
+from ehrapy._compat import function_2D_only
 
 if TYPE_CHECKING:
     import pandas as pd
-    from anndata import AnnData
     from ehrdata import EHRData
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 @function_2D_only()
 def highly_variable_features(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     *,
     layer: str | None = None,
     top_features_percentage: float = 0.2,

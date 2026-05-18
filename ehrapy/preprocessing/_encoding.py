@@ -6,7 +6,6 @@ from itertools import chain
 import ehrdata as ed
 import numpy as np
 import pandas as pd
-from anndata import AnnData
 from ehrdata import EHRData
 from ehrdata._feature_types import _check_feature_types
 from ehrdata._logger import logger
@@ -14,20 +13,19 @@ from ehrdata.core.constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TA
 from rich.progress import BarColumn, Progress
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
-from ehrapy._compat import function_2D_only, use_ehrdata
+from ehrapy._compat import function_2D_only
 
 available_encodings = {"one-hot", "label"}
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 @function_2D_only()
 def encode(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     autodetect: bool | dict = False,
     encodings: dict[str, list[str]] | str | None = "one-hot",
     *,
     layer: str | None = None,
-) -> EHRData | AnnData:
+) -> EHRData:
     """Encode categoricals of a data object.
 
     Categorical values could be either passed via parameters or are autodetected on the fly.
@@ -73,8 +71,8 @@ def encode(
     """
     X = edata.X if layer is None else edata.layers[layer]
 
-    if not isinstance(edata, AnnData) and not isinstance(edata, EHRData):
-        raise ValueError(f"Cannot encode object of type {type(edata)}. Can only encode AnnData or EHRData objects!")
+    if not isinstance(edata, EHRData):
+        raise ValueError(f"Cannot encode object of type {type(edata)}. Can only encode EHRData objects!")
 
     if isinstance(encodings, str) and not autodetect:
         raise ValueError("Passing a string for parameter encodings is only possible when using autodetect=True!")
@@ -102,7 +100,7 @@ def encode(
                 ]
             else:
                 logger.warning(
-                    "The current AnnData/EHRData object has been already encoded. Returning original AnnData/EHRData object!"
+                    "The current EHRData object has been already encoded. Returning original EHRData object!"
                 )
                 return edata
 
@@ -114,9 +112,7 @@ def encode(
 
         # no columns were detected, that would require an encoding (e.g. non-numerical columns)
         if not categoricals_names:
-            logger.warning(
-                "Detected no columns that need to be encoded. Leaving passed EHRData/AnnData object unchanged."
-            )
+            logger.warning("Detected no columns that need to be encoded. Leaving passed EHRData object unchanged.")
             return edata
         # update obs with the original categorical values
         updated_obs = _update_obs(edata, categoricals_names, layer=layer)
@@ -305,7 +301,7 @@ def encode(
 
 
 def _one_hot_encoding(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     *,
     X: np.ndarray | None,
     layer: str | None,
@@ -358,7 +354,7 @@ def _one_hot_encoding(
 
 
 def _label_encoding(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     *,
     X: np.ndarray | None,
     layer: str | None,
@@ -515,10 +511,10 @@ def _initial_encoding(
 
 
 def _undo_encoding(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     layer: str | None = None,
 ) -> EHRData | None:
-    """Undo the current encodings applied to all columns in X. This currently resets the AnnData object to its initial state.
+    """Undo the current encodings applied to all columns in X. This currently resets the EHRData object to its initial state.
 
     Args:
         edata: Central data object.
@@ -560,7 +556,7 @@ def _undo_encoding(
     return edata
 
 
-def _delete_all_encodings(edata: EHRData | AnnData, layer: str | None) -> tuple[np.ndarray | None, list | None]:
+def _delete_all_encodings(edata: EHRData, layer: str | None) -> tuple[np.ndarray | None, list | None]:
     """Delete all encoded columns and keep track of their indices.
 
     Args:
@@ -587,7 +583,7 @@ def _delete_all_encodings(edata: EHRData | AnnData, layer: str | None) -> tuple[
     return None, None
 
 
-def _reorder_encodings(edata: EHRData | AnnData, new_encodings: dict[str, list[list[str]] | list[str]]):
+def _reorder_encodings(edata: EHRData, new_encodings: dict[str, list[list[str]] | list[str]]):
     """Reorder the encodings and update which column will be encoded using which mode.
 
     Args:
@@ -602,7 +598,7 @@ def _reorder_encodings(edata: EHRData | AnnData, new_encodings: dict[str, list[l
     # check for duplicates and raise an error if any
     if len(set(latest_encoded_columns)) != len(latest_encoded_columns):
         logger.error(
-            "Reencoding EHRData/AnnData object failed. You have at least one duplicate in your encodings. A column "
+            "Reencoding EHRData object failed. You have at least one duplicate in your encodings. A column "
             "cannot be encoded at the same time using different encoding modes!"
         )
         raise DuplicateColumnEncodingError
@@ -651,7 +647,7 @@ def _get_categoricals_old_indices(old_var_names: list[str], encoded_categories: 
     return idx_list
 
 
-def _update_obs(edata: EHRData | AnnData, categorical_names: list[str], layer: str | None = None) -> pd.DataFrame:
+def _update_obs(edata: EHRData, categorical_names: list[str], layer: str | None = None) -> pd.DataFrame:
     """Add the original categorical values to obs.
 
     Args:
@@ -681,7 +677,7 @@ def _update_obs(edata: EHRData | AnnData, categorical_names: list[str], layer: s
     return updated_obs
 
 
-def _get_encoded_features(edata: EHRData | AnnData) -> list[str]:
+def _get_encoded_features(edata: EHRData) -> list[str]:
     """Get all encoded features in an data object.
 
     Args:
