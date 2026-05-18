@@ -36,6 +36,9 @@ jobs:
                   python-version: "3.14"
                   cache-dependency-glob: pyproject.toml
 
+            - name: Create virtual environment
+              run: uv venv
+
             - name: Install OpenBLAS
               run: sudo apt-get install -y libopenblas-dev
 
