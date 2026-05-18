@@ -6,28 +6,25 @@ from typing import Any
 
 @dataclass(frozen=True)
 class CausalEstimate:
-    """Result of a causal effect estimation.
+    """Result of a causal effect estimation."""
 
-    Attributes:
-        method: Name of the estimator that produced this estimate.
-        treatment: Treatment variable name.
-        outcome: Outcome variable name.
-        value: Point estimate of the average treatment effect (ATE).
-        se: Standard error of the estimate, when available.
-        ci_lower: Lower bound of the (typically 95%) confidence interval, when available.
-        ci_upper: Upper bound of the (typically 95%) confidence interval, when available.
-        n: Number of observations used to compute the estimate.
-        params: Estimator-specific metadata such as fitted propensity scores or effective sample size.
-    """
-
+    #: Name of the estimator that produced this estimate.
     method: str
+    #: Treatment variable name.
     treatment: str
+    #: Outcome variable name.
     outcome: str
+    #: Point estimate of the average treatment effect (ATE).
     value: float
+    #: Standard error of the estimate, when available.
     se: float | None = None
+    #: Lower bound of the (typically 95%) confidence interval, when available.
     ci_lower: float | None = None
+    #: Upper bound of the (typically 95%) confidence interval, when available.
     ci_upper: float | None = None
+    #: Number of observations used to compute the estimate.
     n: int | None = None
+    #: Estimator-specific metadata such as fitted propensity scores or effective sample size.
     params: dict[str, Any] = field(default_factory=dict)
 
     def __repr__(self) -> str:
