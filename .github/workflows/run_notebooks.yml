@@ -30,16 +30,14 @@ jobs:
               with:
                   submodules: "true"
 
-            - name: Set up Python
-              uses: actions/setup-python@v6
+            - name: Set up uv
+              uses: astral-sh/setup-uv@v7
               with:
                   python-version: "3.14"
+                  cache-dependency-glob: pyproject.toml
 
             - name: Install OpenBLAS
               run: sudo apt-get install -y libopenblas-dev
-
-            - name: Install UV
-              run: pip install uv
 
             - name: Install ehrapy and additional dependencies
               run: uv pip install --system . 'cellrank[scvelo]' nbconvert ipykernel graphviz pypots fairlearn
