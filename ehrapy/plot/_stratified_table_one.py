@@ -163,7 +163,7 @@ def stratified_table_one(
                 for group in groups
             ]
             df = pd.DataFrame.from_records(records)
-            bar_opts: dict[str, Any] = {
+            bar_opts = {
                 "color": palette[0],
                 "ylabel": col,
                 "xlabel": groupby,
