@@ -14,7 +14,6 @@ from ehrdata._logger import logger
 from ehrdata.core.constants import FEATURE_TYPE_KEY, NUMERIC_TAG
 from sklearn.experimental import enable_iterative_imputer  # noinspection PyUnresolvedReference
 
-from ehrapy import settings
 from ehrapy._compat import (
     DaskArray,
     _apply_over_time_axis,
@@ -22,6 +21,7 @@ from ehrapy._compat import (
     function_2D_only,
 )
 from ehrapy._progress import spinner
+from ehrapy._settings import settings
 from ehrapy._types import CSBase
 from ehrapy.preprocessing._quality_control import _compute_missing_values
 

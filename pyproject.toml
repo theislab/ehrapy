@@ -48,6 +48,7 @@ classifiers = [
 dependencies = [
     "ehrdata",
     "scanpy",
+    "scverse-misc[settings]>=0.0.7",
     "requests",
     "miceforest",
     "scikit-misc",  # required for seuratv3 highly variable features
