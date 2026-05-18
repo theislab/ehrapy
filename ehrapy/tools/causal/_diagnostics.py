@@ -45,7 +45,7 @@ def covariate_balance(
             Each entry must refer to a name in ``edata.var_names`` or ``edata.obs.columns``.
         weights: Optional pre-computed IPTW weight vector aligned with ``edata.obs.index``.
             When ``None``, weights are computed internally from a freshly fitted propensity model.
-        propensity_model: Propensity model used to compute weights when ``weights`` is ``None`` (see :func:`~ehrapy.tl.iptw` for the accepted values).
+        propensity_model: Propensity model used to compute weights when ``weights`` is ``None`` (see :func:`~ehrapy.tools.iptw` for the accepted values).
         layer: Layer of ``edata`` to draw the var-side variables from.
             If ``None``, ``edata.X`` is used.
 
@@ -103,7 +103,7 @@ def positivity_check(
         treatment: Column name of the binary (0/1) treatment variable.
         covariates: Adjustment set used to fit the propensity model.
             Each entry must refer to a name in ``edata.var_names`` or ``edata.obs.columns``.
-        propensity_model: Propensity model specification (see :func:`~ehrapy.tl.iptw` for the accepted values).
+        propensity_model: Propensity model specification (see :func:`~ehrapy.tools.iptw` for the accepted values).
         eps: Lower (and ``1 − eps`` upper) boundary of the common-support interval.
         layer: Layer of ``edata`` to draw the var-side variables from.
             If ``None``, ``edata.X`` is used.

@@ -1,7 +1,7 @@
 """Meta-learners for the heterogeneous (conditional) treatment effect (CATE).
 
 Each learner fits one or more sklearn-style outcome models and returns the per-observation CATE predictions ``τ(X_i) = E[Y(1) − Y(0) | X = X_i]``.
-The ATE summary written to :attr:`~ehrapy.tools.causal.CausalEstimate.value` is ``mean(τ(X))``; the full per-observation CATE vector lives in ``estimate.params['cate']`` and is also written back to ``edata.obs`` under ``key_added`` when supplied.
+The ATE summary written to :attr:`~ehrapy.tools.CausalEstimate.value` is ``mean(τ(X))``; the full per-observation CATE vector lives in ``estimate.params['cate']`` and is also written back to ``edata.obs`` under ``key_added`` when supplied.
 """
 
 from __future__ import annotations
@@ -55,14 +55,14 @@ def t_learner(
         outcome: Column name of the outcome variable.
         covariates: Adjustment set used for the outcome models.
             Each entry must refer to a name in ``edata.var_names`` or ``edata.obs.columns``.
-        outcome_model: Outcome model specification (see :func:`~ehrapy.tl.g_computation` for the accepted values).
+        outcome_model: Outcome model specification (see :func:`~ehrapy.tools.g_computation` for the accepted values).
         key_added: Optional ``edata.obs`` column name into which the per-observation CATE vector is written.
             Observations dropped during NaN filtering are filled with ``NaN``.
         layer: Layer of ``edata`` to draw the var-side variables from.
             If ``None``, ``edata.X`` is used.
 
     Returns:
-        A :class:`~ehrapy.tools.causal.CausalEstimate` whose ``value`` is the average CATE and whose ``params['cate']`` is the per-observation CATE vector.
+        A :class:`~ehrapy.tools.CausalEstimate` whose ``value`` is the average CATE and whose ``params['cate']`` is the per-observation CATE vector.
     """
     design = build_design(edata, treatment=treatment, outcome=outcome, covariates=covariates, layer=layer)
     assert_binary_treatment(design.T, treatment)
@@ -111,14 +111,14 @@ def s_learner(
         outcome: Column name of the outcome variable.
         covariates: Adjustment set used for the outcome model.
             Each entry must refer to a name in ``edata.var_names`` or ``edata.obs.columns``.
-        outcome_model: Outcome model specification (see :func:`~ehrapy.tl.g_computation` for the accepted values).
+        outcome_model: Outcome model specification (see :func:`~ehrapy.tools.g_computation` for the accepted values).
         key_added: Optional ``edata.obs`` column name into which the per-observation CATE vector is written.
             Observations dropped during NaN filtering are filled with ``NaN``.
         layer: Layer of ``edata`` to draw the var-side variables from.
             If ``None``, ``edata.X`` is used.
 
     Returns:
-        A :class:`~ehrapy.tools.causal.CausalEstimate` whose ``value`` is the average CATE and whose ``params['cate']`` is the per-observation CATE vector.
+        A :class:`~ehrapy.tools.CausalEstimate` whose ``value`` is the average CATE and whose ``params['cate']`` is the per-observation CATE vector.
     """
     design = build_design(edata, treatment=treatment, outcome=outcome, covariates=covariates, layer=layer)
     assert_binary_treatment(design.T, treatment)
@@ -170,8 +170,8 @@ def x_learner(
         outcome: Column name of the outcome variable.
         covariates: Adjustment set used for both the outcome and propensity models.
             Each entry must refer to a name in ``edata.var_names`` or ``edata.obs.columns``.
-        outcome_model: Outcome model specification for the first-stage ``μ`` models (see :func:`~ehrapy.tl.g_computation` for the accepted values).
-        propensity_model: Propensity model specification (see :func:`~ehrapy.tl.iptw` for the accepted values).
+        outcome_model: Outcome model specification for the first-stage ``μ`` models (see :func:`~ehrapy.tools.g_computation` for the accepted values).
+        propensity_model: Propensity model specification (see :func:`~ehrapy.tools.iptw` for the accepted values).
         cate_model: Regressor used for the second-stage ``τ`` models.
             Accepts ``'auto'``/``'linear'``/``'gradient_boosting'``/``'random_forest'`` or any sklearn-compatible regressor.
             ``'auto'`` resolves to linear regression.
@@ -184,7 +184,7 @@ def x_learner(
             If ``None``, ``edata.X`` is used.
 
     Returns:
-        A :class:`~ehrapy.tools.causal.CausalEstimate` whose ``value`` is the average CATE and whose ``params['cate']`` is the per-observation CATE vector.
+        A :class:`~ehrapy.tools.CausalEstimate` whose ``value`` is the average CATE and whose ``params['cate']`` is the per-observation CATE vector.
     """
     design = build_design(edata, treatment=treatment, outcome=outcome, covariates=covariates, layer=layer)
     assert_binary_treatment(design.T, treatment)

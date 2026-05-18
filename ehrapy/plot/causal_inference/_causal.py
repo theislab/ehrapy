@@ -31,7 +31,7 @@ def love_plot(
     Covariates are drawn on the y-axis sorted by their unweighted absolute SMD, with vertical guide lines at ``±threshold`` (commonly 0.1).
 
     Args:
-        balance: Output of :func:`~ehrapy.tl.covariate_balance`, a DataFrame indexed by covariate name with ``smd_unweighted`` and ``smd_weighted`` columns.
+        balance: Output of :func:`~ehrapy.tools.covariate_balance`, a DataFrame indexed by covariate name with ``smd_unweighted`` and ``smd_weighted`` columns.
         threshold: SMD magnitude used for the dashed guide lines.
         title: Plot title.
             If ``None``, defaults to ``"Covariate balance"``.
@@ -88,11 +88,11 @@ def propensity_overlap(
 ) -> hv.Overlay:
     """Plot overlapping propensity score histograms for treated and untreated groups.
 
-    Use the dict returned by :func:`~ehrapy.tl.positivity_check`.
+    Use the dict returned by :func:`~ehrapy.tools.positivity_check`.
     A lack of overlap between the two arms is the visual signature of a positivity violation.
 
     Args:
-        positivity: Output of :func:`~ehrapy.tl.positivity_check`.
+        positivity: Output of :func:`~ehrapy.tools.positivity_check`.
         bins: Number of histogram bins per arm.
         title: Plot title.
             If ``None``, defaults to a string describing the support fraction.
@@ -142,7 +142,7 @@ def causal_effect(
     With ``other`` supplied one row per estimator is drawn so methods can be compared side by side.
 
     Args:
-        estimate: The primary :class:`~ehrapy.tools.causal.CausalEstimate` to display.
+        estimate: The primary :class:`~ehrapy.tools.CausalEstimate` to display.
         other: Optional mapping ``{label: estimate}`` of additional estimates to plot below the primary one.
         title: Plot title.
             If ``None``, defaults to ``"Causal effect estimate"``.

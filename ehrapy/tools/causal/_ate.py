@@ -1,6 +1,6 @@
 """Average treatment effect (ATE) estimators for binary treatments.
 
-All estimators in this module accept an :class:`~ehrdata.EHRData` object and return a :class:`~ehrapy.tools.causal.CausalEstimate`.
+All estimators in this module accept an :class:`~ehrdata.EHRData` object and return a :class:`~ehrapy.tools.CausalEstimate`.
 They share a common interface: a ``treatment`` and ``outcome`` column name plus a list of ``covariates`` (the adjustment set) that may come from either ``edata.var_names`` or ``edata.obs.columns``.
 """
 
@@ -85,7 +85,7 @@ def iptw(
             If ``None``, ``edata.X`` is used.
 
     Returns:
-        A :class:`~ehrapy.tools.causal.CausalEstimate` whose ``params`` dict contains the fitted ``propensity_scores`` and the IPTW ``weights``.
+        A :class:`~ehrapy.tools.CausalEstimate` whose ``params`` dict contains the fitted ``propensity_scores`` and the IPTW ``weights``.
 
     Examples:
         >>> import ehrapy as ep
@@ -167,7 +167,7 @@ def g_computation(
             If ``None``, ``edata.X`` is used.
 
     Returns:
-        A :class:`~ehrapy.tools.causal.CausalEstimate` whose ``params`` dict contains the counterfactual predictions ``mu1`` and ``mu0``.
+        A :class:`~ehrapy.tools.CausalEstimate` whose ``params`` dict contains the counterfactual predictions ``mu1`` and ``mu0``.
     """
     design = build_design(edata, treatment=treatment, outcome=outcome, covariates=covariates, layer=layer)
     assert_binary_treatment(design.T, treatment)
@@ -246,7 +246,7 @@ def aipw(
             If ``None``, ``edata.X`` is used.
 
     Returns:
-        A :class:`~ehrapy.tools.causal.CausalEstimate` whose ``params`` dict contains ``propensity_scores``, ``mu1``, ``mu0``, and the per-observation ``influence`` values.
+        A :class:`~ehrapy.tools.CausalEstimate` whose ``params`` dict contains ``propensity_scores``, ``mu1``, ``mu0``, and the per-observation ``influence`` values.
     """
     design = build_design(edata, treatment=treatment, outcome=outcome, covariates=covariates, layer=layer)
     assert_binary_treatment(design.T, treatment)
@@ -338,7 +338,7 @@ def propensity_score_matching(
             If ``None``, ``edata.X`` is used.
 
     Returns:
-        A :class:`~ehrapy.tools.causal.CausalEstimate` whose ``params`` dict contains the propensity scores and the matched-pair indices.
+        A :class:`~ehrapy.tools.CausalEstimate` whose ``params`` dict contains the propensity scores and the matched-pair indices.
     """
     if target not in {"att", "ate"}:
         raise ValueError(f"target must be 'att' or 'ate'; got {target!r}.")
