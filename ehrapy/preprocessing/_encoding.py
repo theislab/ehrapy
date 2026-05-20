@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import OrderedDict
+from functools import singledispatch
 from itertools import chain
 
 import ehrdata as ed
@@ -13,7 +14,7 @@ from ehrdata.core.constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TA
 from rich.progress import BarColumn, Progress
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
-from ehrapy._compat import function_2D_only
+from ehrapy._compat import DaskArray, _raise_array_type_not_implemented, function_2D_only
 
 available_encodings = {"one-hot", "label"}
 
@@ -406,6 +407,64 @@ def _label_encoding(
     return temp_x, temp_var_names, unencoded_var_names
 
 
+@singledispatch
+def _delete_columns(X, idx_to_delete):
+    """Drop the given column indices from `X`, preserving `X`'s array type."""
+    _raise_array_type_not_implemented(_delete_columns, type(X))
+
+
+@_delete_columns.register(np.ndarray)
+def _(X: np.ndarray, idx_to_delete) -> np.ndarray:
+    return np.delete(X, list(idx_to_delete), 1)
+
+
+@_delete_columns.register(DaskArray)
+def _(X: DaskArray, idx_to_delete) -> DaskArray:
+    idx_set = set(idx_to_delete)
+    keep = [i for i in range(X.shape[1]) if i not in idx_set]
+    return X[:, keep]
+
+
+@singledispatch
+def _prepend_columns(X, columns_to_prepend):
+    """Prepend ``columns_to_prepend`` to `X` along axis=1, preserving `X`'s array type."""
+    _raise_array_type_not_implemented(_prepend_columns, type(X))
+
+
+@_prepend_columns.register(np.ndarray)
+def _(X: np.ndarray, columns_to_prepend) -> np.ndarray:
+    return np.hstack((np.asarray(columns_to_prepend), X))
+
+
+@_prepend_columns.register(DaskArray)
+def _(X: DaskArray, columns_to_prepend) -> DaskArray:
+    import dask.array as da
+
+    if not isinstance(columns_to_prepend, DaskArray):
+        columns_to_prepend = da.from_array(np.asarray(columns_to_prepend), chunks=(X.chunks[0], -1))
+    return da.concatenate([columns_to_prepend, X], axis=1)
+
+
+@singledispatch
+def _append_columns(X, columns_to_append):
+    """Append ``columns_to_append`` to `X` along axis=1, preserving `X`'s array type."""
+    _raise_array_type_not_implemented(_append_columns, type(X))
+
+
+@_append_columns.register(np.ndarray)
+def _(X: np.ndarray, columns_to_append) -> np.ndarray:
+    return np.hstack((X, np.asarray(columns_to_append)))
+
+
+@_append_columns.register(DaskArray)
+def _(X: DaskArray, columns_to_append) -> DaskArray:
+    import dask.array as da
+
+    if not isinstance(columns_to_append, DaskArray):
+        columns_to_append = da.from_array(np.asarray(columns_to_append), chunks=(X.chunks[0], -1))
+    return da.concatenate([X, columns_to_append], axis=1)
+
+
 def _update_layer_after_encoding(
     old_layer: np.ndarray,
     new_x: np.ndarray,
@@ -444,7 +503,7 @@ def _update_layer_after_encoding(
     # get all encoded categoricals of X
     encoded_categoricals = new_x[:, :new_cat_stop_index]
     # horizontally stack all encoded categoricals and the remaining "old original values"
-    updated_layer = np.hstack((encoded_categoricals, old_layer_view))
+    updated_layer = _append_columns(encoded_categoricals, old_layer_view)
 
     try:
         logger.info("Updated the original layer after encoding.")
@@ -477,10 +536,10 @@ def _update_encoded_data(
         Encoded new X, the corresponding new var names, and the unencoded var names
     """
     idx = _get_categoricals_old_indices(var_names, categoricals)
-    # delete the original categorical column
-    del_cat_column_x = np.delete(X, list(idx), 1)
-    # create the new, encoded X
-    temp_x = np.hstack((transformed, del_cat_column_x))
+    # drop the original categorical columns
+    del_cat_column_x = _delete_columns(X, idx)
+    # prepend the transformed (numpy) categorical block to the remaining columns
+    temp_x = _prepend_columns(del_cat_column_x, transformed)
     # delete old categorical name
     var_names = [col_name for col_idx, col_name in enumerate(var_names) if col_idx not in idx]
     temp_var_names = categorical_prefixes + var_names
@@ -531,7 +590,7 @@ def _undo_encoding(
 
     transformed = _initial_encoding(edata.obs, categoricals)
     temp_x, temp_var_names = _delete_all_encodings(edata, layer=layer)
-    new_x = np.hstack((transformed, temp_x)) if temp_x is not None else transformed
+    new_x = _prepend_columns(temp_x, transformed) if temp_x is not None else transformed
     new_var_names = categoricals + temp_var_names if temp_var_names is not None else categoricals
 
     # only keep columns in obs that were stored in obs only -> delete every encoded column from obs
