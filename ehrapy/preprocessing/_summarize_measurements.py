@@ -4,24 +4,22 @@ from typing import TYPE_CHECKING, Literal
 
 from ehrdata.io import from_pandas, to_pandas
 
-from ehrapy._compat import function_2D_only, use_ehrdata
+from ehrapy._compat import function_2D_only
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-    from anndata import AnnData
     from ehrdata import EHRData
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 @function_2D_only()
 def summarize_measurements(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     *,
     layer: str | None = None,
     var_names: Iterable[str] | None = None,
     statistics: Iterable[Literal["min", "max", "mean"]] | None = ["min", "max", "mean"],
-) -> EHRData | AnnData:
+) -> EHRData:
     """Summarizes numerical measurements into minimum, maximum and average values.
 
     Args:

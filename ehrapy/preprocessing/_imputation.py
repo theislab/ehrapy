@@ -4,7 +4,7 @@ import warnings
 from collections.abc import Iterable, Mapping, Sequence
 from functools import singledispatch
 from importlib.util import find_spec
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, get_args
 
 import numpy as np
 import pandas as pd
@@ -14,31 +14,30 @@ from ehrdata._logger import logger
 from ehrdata.core.constants import FEATURE_TYPE_KEY, NUMERIC_TAG
 from sklearn.experimental import enable_iterative_imputer  # noinspection PyUnresolvedReference
 
-from ehrapy import settings
 from ehrapy._compat import (
     DaskArray,
     _apply_over_time_axis,
     _raise_array_type_not_implemented,
     function_2D_only,
-    use_ehrdata,
 )
 from ehrapy._progress import spinner
+from ehrapy._settings import settings
+from ehrapy._types import CSBase
+from ehrapy.preprocessing._quality_control import _compute_missing_values
 
 if TYPE_CHECKING:
-    from anndata import AnnData
     from ehrdata import EHRData
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def explicit_impute(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     replacement: (str | int | float) | (Mapping[str, str | int | float]) | (Sequence[str | int | float]),
     *,
     layer: str | None = None,
     impute_empty_strings: bool = True,
     warning_threshold: int = 70,
     copy: bool = False,
-) -> EHRData | AnnData | None:
+) -> EHRData | None:
     """Replaces all missing values in all columns or a subset of columns specified by the user with the passed replacement value.
 
     There are three scenarios to cover:
@@ -215,16 +214,15 @@ def _(arr: np.ndarray, strategy: Literal["mean", "median", "most_frequent"]) -> 
     return sklearn.impute.SimpleImputer(strategy=strategy).fit_transform(arr)
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def simple_impute(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     var_names: Iterable[str] | None = None,
     *,
     strategy: Literal["mean", "median", "most_frequent"] = "mean",
     warning_threshold: int = 70,
     layer: str | None = None,
     copy: bool = False,
-) -> EHRData | AnnData | None:
+) -> EHRData | None:
     """Impute missing values in numerical data using mean/median/most frequent imputation.
 
     If required and using mean or median strategy, the data needs to be properly encoded as this imputation requires
@@ -267,10 +265,9 @@ def simple_impute(
 
 
 @_check_feature_types
-@use_ehrdata(deprecated_after="1.0.0")
 @spinner("Performing KNN impute")
 def knn_impute(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     var_names: Iterable[str] | None = None,
     *,
     n_neighbors: int = 5,
@@ -280,7 +277,7 @@ def knn_impute(
     warning_threshold: int = 70,
     backend_kwargs: dict | None = None,
     **kwargs,
-) -> EHRData | AnnData | None:
+) -> EHRData | None:
     """Imputes missing values in the input data object using K-nearest neighbor imputation.
 
     If required, the data needs to be properly encoded as this imputation requires numerical data only.
@@ -377,7 +374,7 @@ def knn_impute(
 
 
 def _knn_impute(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     var_names: Iterable[str] | None,
     n_neighbors: int,
     layer: str | None,
@@ -444,11 +441,33 @@ def _knn_impute(
             edata.layers[layer][:, imputer_data_indices] = X_imputed
 
 
-@use_ehrdata(deprecated_after="1.0.0")
-@function_2D_only()
+@singledispatch
+def _miss_forest_impute_function(arr, num_initial_strategy, n_estimators, max_iter, random_state):
+    _raise_array_type_not_implemented(_miss_forest_impute_function, type(arr))
+
+
+@_miss_forest_impute_function.register(np.ndarray)
+@_apply_over_time_axis
+def _(arr: np.ndarray, num_initial_strategy, n_estimators, max_iter, random_state):
+
+    if set(range(arr.shape[1])).issubset(_get_non_numerical_column_indices(arr)):
+        raise ValueError(
+            "Can only impute numerical data. Try to restrict imputation to certain columns using var_names parameter."
+        )
+    from sklearn.ensemble import ExtraTreesRegressor
+    from sklearn.impute import IterativeImputer
+
+    return IterativeImputer(
+        estimator=ExtraTreesRegressor(n_estimators=n_estimators, n_jobs=settings.n_jobs),
+        initial_strategy=num_initial_strategy,
+        max_iter=max_iter,
+        random_state=random_state,
+    ).fit_transform(arr)
+
+
 @spinner("Performing miss-forest impute")
 def miss_forest_impute(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     var_names: Iterable[str] | None = None,
     *,
     num_initial_strategy: Literal["mean", "median", "most_frequent", "constant"] = "mean",
@@ -458,12 +477,15 @@ def miss_forest_impute(
     warning_threshold: int = 70,
     layer: str | None = None,
     copy: bool = False,
-) -> EHRData | AnnData | None:
+) -> EHRData | None:
     """Impute data using the MissForest strategy.
 
     This function uses the MissForest strategy to impute missing values in the data matrix of an data object.
     The strategy works by fitting a random forest model on each feature containing missing values,
     and using the trained model to predict the missing values.
+
+    For 2D data, if layer is `None`, `edata.X` is used directly.
+    For 3D data, the layer is flattened along axis 0 before imputation and reshaped back to 3D afterwards.
 
     See https://academic.oup.com/bioinformatics/article/28/1/112/219101.
 
@@ -478,7 +500,7 @@ def miss_forest_impute(
                       Decrease for faster computations.
         random_state: The random seed for the initialization.
         warning_threshold: Threshold of percentage of missing values to display a warning for.
-        layer: The layer to impute.
+        layer: The layer to impute. Required when input data is 3D.
         copy: Whether to return a copy or act in place.
 
     Returns:
@@ -488,12 +510,28 @@ def miss_forest_impute(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ed.dt.mimic_2()
-        >>> edata = ep.pp.encode(edata, autodetect=True)
-        >>> ep.pp.miss_forest_impute(edata)
+        >>> edata = ed.dt.ehrdata_blobs(n_variables=3, n_observations=3, base_timepoints=2, missing_values=0.3)
+        >>> edata_imputed = ep.pp.knn_impute(edata, layer="tem_data", copy=True)
+
+        Example Output:
+
+        >>> edata.layers["tem_data"][0, :, :]
+        [[-12.12732884, -18.37304373],
+        [         nan,  -0.91339411],
+        [         nan,  -7.88514984]]
+        >>> edata_imputed.layers["tem_data"][0, :, :]
+        [[-12.12732884, -18.37304373],
+        [ -0.3278448 ,  -0.91339411],
+        [ -4.39722201,  -7.88514984]]
+
     """
     if copy:
         edata = edata.copy()
+
+    if edata.X is None and layer is None:  # if edata is 3D
+        raise ValueError(
+            "3D imputation requires a layer to be specified. Pass the layer containing the full temporal data."
+        )
 
     if var_names is None:
         _warn_imputation_threshold(edata, list(edata.var_names), threshold=warning_threshold, layer=layer)
@@ -505,40 +543,33 @@ def miss_forest_impute(
 
         patch_sklearn()
 
-    from sklearn.ensemble import ExtraTreesRegressor, RandomForestClassifier
-    from sklearn.impute import IterativeImputer
-
     try:
-        imp_num = IterativeImputer(
-            estimator=ExtraTreesRegressor(n_estimators=n_estimators, n_jobs=settings.n_jobs),
-            initial_strategy=num_initial_strategy,
-            max_iter=max_iter,
-            random_state=random_state,
-        )
-        # initial strategy here will not be parametrized since only most_frequent will be applied to non numerical data
-        IterativeImputer(
-            estimator=RandomForestClassifier(n_estimators=n_estimators, n_jobs=settings.n_jobs),
-            initial_strategy="most_frequent",
-            max_iter=max_iter,
-            random_state=random_state,
-        )
-
         if var_names is None:
             var_names = edata.var_names
         var_indices = edata.var_names.get_indexer(var_names).tolist()
 
-        if set(var_indices).issubset(_get_non_numerical_column_indices(edata.X)):
-            raise ValueError(
-                "Can only impute numerical data. Try to restrict imputation to certain columns using "
-                "var_names parameter."
-            )
+        mtx = edata.X if layer is None else edata.layers[layer]
+        input_dtype = (
+            mtx.dtype if np.issubdtype(mtx.dtype, np.floating) else np.float64
+        )  # ensure floating point dtype before imputation, e.g. in case input layer dtype=object
+
+        if mtx.ndim == 3:
+            mtx_slice = mtx[:, var_indices, :].astype(input_dtype, copy=True)
+        else:
+            mtx_slice = mtx[:, var_indices].astype(input_dtype, copy=True)
 
         # this step is the most expensive one and might extremely slow down the impute process
         if var_indices:
-            if layer is None:
-                edata.X[::, var_indices] = imp_num.fit_transform(edata.X[::, var_indices])
+            X_imputed = _miss_forest_impute_function(
+                mtx_slice, num_initial_strategy, n_estimators, max_iter, random_state
+            )
+            if mtx.ndim == 3:
+                edata.layers[layer][:, var_indices, :] = X_imputed
             else:
-                edata.layers[layer][::, var_indices] = imp_num.fit_transform(edata.layers[layer][::, var_indices])
+                if layer is None:
+                    edata.X[:, var_indices] = X_imputed
+                else:
+                    edata.layers[layer][:, var_indices] = X_imputed
         else:
             raise ValueError("Cannot find any feature to perform imputation")
 
@@ -554,11 +585,10 @@ def miss_forest_impute(
 
 
 @_check_feature_types
-@use_ehrdata(deprecated_after="1.0.0")
 @function_2D_only()
 @spinner("Performing mice-forest impute")
 def mice_forest_impute(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     var_names: Iterable[str] | None = None,
     *,
     warning_threshold: int = 70,
@@ -570,7 +600,7 @@ def mice_forest_impute(
     verbose: bool = False,
     layer: str | None = None,
     copy: bool = False,
-) -> EHRData | AnnData | None:
+) -> EHRData | None:
     """Impute data using the miceforest method.
 
     See https://github.com/AnotherSamWilson/miceforest
@@ -691,9 +721,12 @@ def _miceforest_impute(
 
 
 def _warn_imputation_threshold(
-    edata: EHRData | AnnData, var_names: Iterable[str] | None, threshold: int = 75, layer: str | None = None
+    edata: EHRData, var_names: Iterable[str] | None, threshold: int = 75, layer: str | None = None
 ) -> dict[str, int]:
     """Warns the user if the more than $threshold percent had to be imputed.
+
+    Use :func:`ehrdata.harmonize_missing_values` to convert other missing value
+    symbols to `np.nan` before imputing.
 
     Args:
         edata: The data object to check
@@ -704,9 +737,15 @@ def _warn_imputation_threshold(
     try:
         edata.var["missing_values_pct"]
     except KeyError:
-        from ehrapy.preprocessing import qc_metrics
+        mtx = edata.X if layer is None else edata.layers[layer]
+        if mtx.ndim == 3:
+            n_obs, n_vars, n_t = mtx.shape
+            mtx_2d = mtx.transpose(0, 2, 1).reshape(n_obs * n_t, n_vars)
+        else:
+            mtx_2d = mtx
+        missing_abs = _compute_missing_values(mtx_2d, axis=0)
+        edata.var["missing_values_pct"] = (missing_abs / mtx_2d.shape[0]) * 100
 
-        qc_metrics(edata, layer=layer)
     used_var_names = set(edata.var_names) if var_names is None else set(var_names)
 
     thresholded_var_names = set(edata.var[edata.var["missing_values_pct"] > threshold].index) & set(used_var_names)

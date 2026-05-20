@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Literal
 import array_api_compat
 import numpy as np
 import pandas as pd
+import scipy.sparse as sp
 from ehrdata._logger import logger
 from scipy.stats import chi2, ttest_ind_from_stats
 
@@ -22,7 +23,6 @@ from ehrapy._compat import (
     nanmedian_array_api,
     nanmin_array_api,
     nanstd_array_api,
-    use_ehrdata,
 )
 from ehrapy.preprocessing._encoding import _get_encoded_features
 
@@ -30,13 +30,12 @@ if TYPE_CHECKING:
     from collections.abc import Collection
 
 
-from anndata import AnnData
+import ehrdata as ed
 from ehrdata import EHRData
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def qc_metrics(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     qc_vars: Collection[str] = (),
     *,
     layer: str | None = None,
@@ -96,10 +95,8 @@ def qc_metrics(
             >>> obs_qc.head()
             >>> var_qc.head()
     """
-    if not isinstance(edata, EHRData) and not isinstance(edata, AnnData):
-        raise ValueError(
-            f"Central data object should be an EHRData or an AnnData object, but received {type(edata).__name__}"
-        )
+    if not isinstance(edata, EHRData):
+        raise ValueError(f"Central data object should be an EHRData object, but received {type(edata).__name__}")
 
     feature_type = edata.var.get("feature_type", None)
     extended = True
@@ -134,6 +131,23 @@ def _(mtx: DaskArray, axis) -> np.ndarray:
     import dask.array as da
 
     return da.isnull(mtx).sum(axis).compute()
+
+
+@_compute_missing_values.register(sp.csr_array)
+@_compute_missing_values.register(sp.csc_array)
+def _(mtx, axis) -> np.ndarray:
+    mtx_csc = mtx.tocsc() if isinstance(mtx, sp.csr_array) else mtx
+    n_nan_per_col = np.array(
+        [np.sum(np.isnan(mtx_csc.data[mtx_csc.indptr[i] : mtx_csc.indptr[i + 1]])) for i in range(mtx.shape[1])]
+    )
+    if axis == 0:
+        return n_nan_per_col
+    else:
+        # per row
+        mtx_csr = mtx.tocsr() if isinstance(mtx, sp.csc_array) else mtx
+        return np.array(
+            [np.sum(np.isnan(mtx_csr.data[mtx_csr.indptr[i] : mtx_csr.indptr[i + 1]])) for i in range(mtx.shape[0])]
+        )
 
 
 @singledispatch
@@ -230,7 +244,7 @@ def _(mtx: np.ndarray | DaskArray):
 
 def _compute_obs_metrics(
     mtx,
-    edata: EHRData | AnnData,
+    edata: EHRData,
     *,
     qc_vars: Collection[str] = (),
     log1p: bool = True,
@@ -341,7 +355,7 @@ def _compute_obs_metrics(
 
 def _compute_var_metrics(
     mtx,
-    edata: EHRData | AnnData,
+    edata: EHRData,
     extended: bool = False,
 ):
     """Compute variable metrics for quality control.
@@ -488,9 +502,8 @@ def _compute_var_metrics(
 
 
 @function_2D_only()
-@use_ehrdata(deprecated_after="1.0.0")
 def qc_lab_measurements(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     *,
     layer: str | None = None,
     var_names: list[str] | None = None,
@@ -500,7 +513,7 @@ def qc_lab_measurements(
     add_score: bool = True,
     groupby: str | None = None,
     copy: bool = False,
-) -> EHRData | AnnData | None:
+) -> EHRData | None:
     """Flag outliers and compute anomaly scores for numeric variables.
 
     For each requested variable the function adds up to two columns in

@@ -29,6 +29,7 @@ For most tools and for some preprocessing functions, you will find a plotting fu
     plot.timeseries
     plot.sankey_diagram
     plot.sankey_diagram_time
+    plot.stratified_table_one
     plot.variable_correlations
     plot.variable_dependencies
 ```

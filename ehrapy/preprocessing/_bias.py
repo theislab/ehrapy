@@ -10,20 +10,18 @@ from ehrdata._feature_types import _check_feature_types
 from ehrdata.core.constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 
 import ehrapy as ep
-from ehrapy._compat import function_2D_only, use_ehrdata
+from ehrapy._compat import function_2D_only
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-    from anndata import AnnData
     from ehrdata import EHRData
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 @function_2D_only()
 @_check_feature_types
 def detect_bias(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     sensitive_features: Iterable[str] | Literal["all"],
     *,
     run_feature_importances: bool | None = None,
@@ -35,7 +33,7 @@ def detect_bias(
     corr_method: Literal["pearson", "spearman"] = "spearman",
     layer: str | None = None,
     copy: bool = False,
-) -> dict[str, pd.DataFrame] | tuple[dict[str, pd.DataFrame], EHRData | AnnData]:
+) -> dict[str, pd.DataFrame] | tuple[dict[str, pd.DataFrame], EHRData]:
     """Detects biases in the data using feature correlations, standardized mean differences, and feature importances.
 
     Detects biases with respect to sensitive features, which can be either a specified subset of features or all features in `.var`.
@@ -240,7 +238,7 @@ def detect_bias(
         for comp_feature in cat_var_names:
             if sens_feature == comp_feature:
                 continue
-            value_counts = edata_df.groupby([sens_feature, comp_feature]).size().unstack(fill_value=0)
+            value_counts = edata_df.groupby([sens_feature, comp_feature], observed=True).size().unstack(fill_value=0)
             value_counts = value_counts.div(value_counts.sum(axis=1), axis=0)
 
             for sens_group in value_counts.index:

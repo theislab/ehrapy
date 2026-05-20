@@ -1,5 +1,6 @@
 from ehrapy.tools._ncp import ncp
 from ehrapy.tools._scanpy_tl_api import *  # noqa: F403
+from ehrapy.tools._stratified_table_one import stratified_table_one
 from ehrapy.tools._survival_analysis import (
     anova_glm,
     cox_ph,
@@ -36,6 +37,7 @@ __all__ = [
     "weibull_aft",
     "causal_inference",
     "CohortTracker",
+    "stratified_table_one",
     "rank_features_supervised",
     "filter_rank_features_groups",
     "rank_features_groups",

@@ -5,17 +5,15 @@ from typing import TYPE_CHECKING
 import ehrdata as ed
 import missingno as msno
 
-from ehrapy._compat import function_2D_only, use_ehrdata
+from ehrapy._compat import function_2D_only
 
 if TYPE_CHECKING:
-    from anndata import AnnData
     from ehrdata import EHRData
 
 
 @function_2D_only()
-@use_ehrdata(deprecated_after="1.0.0")
 def missing_values_matrix(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     *,
     filter: str | None = None,
     max_cols: int = 0,
@@ -97,9 +95,8 @@ def missing_values_matrix(
 
 
 @function_2D_only()
-@use_ehrdata(deprecated_after="1.0.0")
 def missing_values_barplot(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     *,
     log: bool = False,
     filter: str | None = None,
@@ -181,9 +178,8 @@ def missing_values_barplot(
 
 
 @function_2D_only()
-@use_ehrdata(deprecated_after="1.0.0")
 def missing_values_heatmap(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     *,
     filter: str | None = None,
     max_cols: int = 0,
@@ -271,9 +267,8 @@ def missing_values_heatmap(
 
 
 @function_2D_only()
-@use_ehrdata(deprecated_after="1.0.0")
 def missing_values_dendrogram(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     *,
     method: str = "average",
     filter: str | None = None,
