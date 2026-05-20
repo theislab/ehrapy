@@ -46,7 +46,6 @@ classifiers = [
 ]
 
 dependencies = [
-    "anndata<0.12.12", # temporarily pinning because ehrdata is incompatible with newer anndata for now
     "ehrdata",
     "scanpy",
     "scverse-misc[settings]>=0.0.7",
