@@ -56,7 +56,6 @@ dependencies = [
     "missingno",
     "thefuzz[speedup]",
     "fhiry",
-    "pyampute",
     "tableone",
     "fknni[faisscpu]>=1.3.0",
     "filelock",
