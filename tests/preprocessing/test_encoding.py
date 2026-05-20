@@ -26,8 +26,58 @@ _TEST_PATH = f"{TEST_DATA_PATH}/encode"
 
 def test_encode_3D_edata(edata_blob_small):
     encode(edata_blob_small, autodetect=True, layer="layer_2")
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
-        encode(edata_blob_small, autodetect=True, layer=DEFAULT_TEM_LAYER_NAME)
+    # 3D longitudinal layers are now supported; the encoded layer keeps its time axis.
+    n_time = edata_blob_small.layers[DEFAULT_TEM_LAYER_NAME].shape[2]
+    encoded = encode(edata_blob_small, autodetect=True, layer=DEFAULT_TEM_LAYER_NAME)
+    encoded_layer = encoded.layers[DEFAULT_TEM_LAYER_NAME]
+    assert encoded_layer.ndim == 3
+    assert encoded_layer.shape[0] == edata_blob_small.n_obs
+    assert encoded_layer.shape[2] == n_time
+
+
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
+def test_encode_3D_longitudinal_one_hot(edata_mini_3D_missing_values, array_type):
+    """One-hot encode a 3D layer with categorical columns.
+
+    The encoder must fit on values stacked across time so the category space is shared,
+    the time axis is preserved, and ``obs`` stores the first-timepoint value.
+    """
+    edata = edata_mini_3D_missing_values
+    layer = DEFAULT_TEM_LAYER_NAME
+    n_obs, n_vars, n_time = edata.layers[layer].shape
+    edata.var_names = ["n1", "n2", "n3", "n4", "letter", "yn"]
+
+    edata.layers[layer] = array_type(edata.layers[layer])
+
+    encoded = encode(edata, autodetect=False, encodings={"one-hot": ["letter", "yn"]}, layer=layer)
+
+    encoded_layer = encoded.layers[layer]
+    if array_type is as_dense_dask_array:
+        assert isinstance(encoded_layer, DaskArray)
+        assert isinstance(encoded.layers["original"], DaskArray)
+
+    assert encoded_layer.ndim == 3
+    assert encoded_layer.shape[0] == n_obs
+    assert encoded_layer.shape[2] == n_time
+    # one-hot expansion: letter (A, B, nan) + yn (Yes, No, nan) replaces 2 cols, adds 6.
+    assert encoded_layer.shape[1] == n_vars - 2 + 6
+
+    # obs holds the first-timepoint value for each encoded categorical.
+    assert list(encoded.obs["letter"]) == ["A", "A", None, "B"] or list(encoded.obs["letter"]) == [
+        "A",
+        "A",
+        np.nan,
+        "B",
+    ]
+    assert list(encoded.obs["yn"]) == ["Yes", "Yes", "Yes", "Yes"]
+
+
+def test_encode_3D_reencode_not_supported(edata_mini_3D_missing_values):
+    edata = edata_mini_3D_missing_values
+    edata.var_names = ["n1", "n2", "n3", "n4", "letter", "yn"]
+    encoded = encode(edata, autodetect=False, encodings={"one-hot": ["letter", "yn"]}, layer=DEFAULT_TEM_LAYER_NAME)
+    with pytest.raises(NotImplementedError, match="Re-encoding 3D"):
+        encode(encoded, autodetect=False, encodings={"label": ["letter"]}, layer=DEFAULT_TEM_LAYER_NAME)
 
 
 def test_unknown_encode_mode(encode_ds_1_edata):

@@ -14,12 +14,11 @@ from ehrdata.core.constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TA
 from rich.progress import BarColumn, Progress
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
-from ehrapy._compat import DaskArray, _raise_array_type_not_implemented, function_2D_only
+from ehrapy._compat import DaskArray, _raise_array_type_not_implemented
 
 available_encodings = {"one-hot", "label"}
 
 
-@function_2D_only()
 def encode(
     edata: EHRData,
     autodetect: bool | dict = False,
@@ -43,6 +42,11 @@ def encode(
     Available encodings are:
         1. one-hot (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.OneHotEncoder.html)
         2. label (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.LabelEncoder.html)
+
+    For 3D longitudinal layers of shape ``(n_obs, n_vars, n_time)`` the encoder is fit on
+    values stacked across the time axis so the category space is consistent over time.
+    The encoded result keeps the time axis, and ``obs`` stores the first-timepoint value
+    of each encoded categorical column.
 
     Args:
         edata: Central data object.
@@ -70,8 +74,6 @@ def encode(
         ...     edata, autodetect=False, encodings={"label": ["col1", "col2"], "one-hot": ["col3"]}
         ... )
     """
-    X = edata.X if layer is None else edata.layers[layer]
-
     if not isinstance(edata, EHRData):
         raise ValueError(f"Cannot encode object of type {type(edata)}. Can only encode EHRData objects!")
 
@@ -81,6 +83,22 @@ def encode(
         raise ValueError(
             f"Setting encode mode with autodetect=True only works by passing a string (encode mode name) or None not {type(encodings)}!"
         )
+
+    X = edata.X if layer is None else edata.layers[layer]
+    if X.ndim == 3 and X.shape[2] > 1:
+        return _encode_3d(edata, autodetect, encodings, layer=layer)
+
+    return _encode_2d(edata, autodetect, encodings, layer=layer)
+
+
+def _encode_2d(
+    edata: EHRData,
+    autodetect: bool | dict,
+    encodings: dict[str, list[str]] | str | None,
+    *,
+    layer: str | None,
+) -> EHRData:
+    X = edata.X if layer is None else edata.layers[layer]
 
     # Infer feature types if not already done (passing layer parameter correctly)
     if FEATURE_TYPE_KEY not in edata.var.columns:
@@ -299,6 +317,62 @@ def encode(
         encoded_edata.X = None
 
     return encoded_edata
+
+
+def _encode_3d(
+    edata: EHRData,
+    autodetect: bool | dict,
+    encodings: dict[str, list[str]] | str | None,
+    *,
+    layer: str | None,
+) -> EHRData:
+    """Encode categoricals of a 3D longitudinal layer.
+
+    The encoder is fit on values stacked across the time axis so the category space is
+    shared across timepoints; the encoded result preserves the ``(n_obs, n_vars_new, n_time)``
+    shape and ``obs`` stores the first-timepoint value of each encoded categorical.
+    """
+    if "encoding_mode" in edata.var.keys():
+        raise NotImplementedError(
+            "Re-encoding 3D longitudinal data is not supported: the original time variation "
+            "is not preserved after the first encoding."
+        )
+
+    X_3d = edata.X if layer is None else edata.layers[layer]
+    n_obs, n_vars, n_time = X_3d.shape
+
+    # Reshape (n_obs, n_vars, n_time) -> (n_obs * n_time, n_vars) in patient-major order
+    # so that the first n_obs rows of the stacked block correspond to t=0, etc.
+    X_2d = X_3d.transpose(0, 2, 1).reshape(n_obs * n_time, n_vars)
+    obs_repeated = edata.obs.iloc[np.repeat(np.arange(n_obs), n_time)].reset_index(drop=True)
+
+    temp_var = edata.var.copy()
+    temp_edata = EHRData(X=X_2d, obs=obs_repeated, var=temp_var, uns=edata.uns.copy())
+
+    encoded_temp = _encode_2d(temp_edata, autodetect=autodetect, encodings=encodings, layer=None)
+
+    # Reshape encoded X / original layer back to 3D.
+    encoded_X_2d = encoded_temp.X
+    n_vars_new = encoded_X_2d.shape[1]
+    encoded_X_3d = encoded_X_2d.reshape(n_obs, n_time, n_vars_new).transpose(0, 2, 1)
+    original_3d = encoded_temp.layers["original"].reshape(n_obs, n_time, n_vars_new).transpose(0, 2, 1)
+
+    # Take the first timepoint (rows 0, n_time, 2*n_time, ...) for the obs-side originals.
+    first_t_rows = np.arange(n_obs) * n_time
+    final_obs = encoded_temp.obs.iloc[first_t_rows].copy()
+    final_obs.index = edata.obs.index
+
+    if layer is None:
+        result = EHRData(X=encoded_X_3d, obs=final_obs, var=encoded_temp.var.copy(), uns=encoded_temp.uns.copy())
+    else:
+        result = EHRData(
+            obs=final_obs,
+            var=encoded_temp.var.copy(),
+            uns=encoded_temp.uns.copy(),
+            layers={layer: encoded_X_3d},
+        )
+    result.layers["original"] = original_3d
+    return result
 
 
 def _one_hot_encoding(
