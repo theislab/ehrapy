@@ -234,7 +234,7 @@ def test_CohortTracker_flowchart_image(edata_mini, check_same_image):
     check_same_image(
         fig=plot,
         base_path=f"{_TEST_IMAGE_PATH}/cohorttracker_edata_mini_flowchart",
-        tol=5,
+        tol=1e-1,
     )
 
 
@@ -249,5 +249,5 @@ def test_CohortTracker_flowchart_image_sensitivity(edata_mini, check_same_image)
         check_same_image(
             fig=plot,
             base_path=f"{_TEST_IMAGE_PATH}/cohorttracker_edata_mini_flowchart",
-            tol=5,
+            tol=1e-1,
         )
