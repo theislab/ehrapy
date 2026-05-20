@@ -43,10 +43,8 @@ def encode(
         1. one-hot (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.OneHotEncoder.html)
         2. label (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.LabelEncoder.html)
 
-    For 3D longitudinal layers of shape ``(n_obs, n_vars, n_time)`` the encoder is fit on
-    values stacked across the time axis so the category space is consistent over time.
-    The encoded result keeps the time axis, and ``obs`` stores the first-timepoint value
-    of each encoded categorical column.
+    For 3D longitudinal layers of shape ``(n_obs, n_vars, n_time)`` the encoder is fit on values stacked across the time axis so the category space is consistent over time.
+    The encoded result keeps the time axis, and ``obs`` stores the first-timepoint value of each encoded categorical column.
 
     Args:
         edata: Central data object.
@@ -328,21 +326,18 @@ def _encode_3d(
 ) -> EHRData:
     """Encode categoricals of a 3D longitudinal layer.
 
-    The encoder is fit on values stacked across the time axis so the category space is
-    shared across timepoints; the encoded result preserves the ``(n_obs, n_vars_new, n_time)``
-    shape and ``obs`` stores the first-timepoint value of each encoded categorical.
+    The encoder is fit on values stacked across the time axis so the category space is shared across timepoints.
+    The encoded result preserves the ``(n_obs, n_vars_new, n_time)`` shape and ``obs`` stores the first-timepoint value of each encoded categorical.
     """
     if "encoding_mode" in edata.var.keys():
         raise NotImplementedError(
-            "Re-encoding 3D longitudinal data is not supported: the original time variation "
-            "is not preserved after the first encoding."
+            "Re-encoding 3D longitudinal data is not supported: the original time variation is not preserved after the first encoding."
         )
 
     X_3d = edata.X if layer is None else edata.layers[layer]
     n_obs, n_vars, n_time = X_3d.shape
 
-    # Reshape (n_obs, n_vars, n_time) -> (n_obs * n_time, n_vars) in patient-major order
-    # so that the first n_obs rows of the stacked block correspond to t=0, etc.
+    # Reshape (n_obs, n_vars, n_time) -> (n_obs * n_time, n_vars) in patient-major order so that the first n_obs rows of the stacked block correspond to t=0, etc.
     X_2d = X_3d.transpose(0, 2, 1).reshape(n_obs * n_time, n_vars)
     obs_repeated = edata.obs.iloc[np.repeat(np.arange(n_obs), n_time)].reset_index(drop=True)
 

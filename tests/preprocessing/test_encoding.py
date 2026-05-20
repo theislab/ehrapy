@@ -39,8 +39,7 @@ def test_encode_3D_edata(edata_blob_small):
 def test_encode_3D_longitudinal_one_hot(edata_mini_3D_missing_values, array_type):
     """One-hot encode a 3D layer with categorical columns.
 
-    The encoder must fit on values stacked across time so the category space is shared,
-    the time axis is preserved, and ``obs`` stores the first-timepoint value.
+    The encoder must fit on values stacked across time so the category space is shared, the time axis is preserved, and ``obs`` stores the first-timepoint value.
     """
     edata = edata_mini_3D_missing_values
     layer = DEFAULT_TEM_LAYER_NAME
