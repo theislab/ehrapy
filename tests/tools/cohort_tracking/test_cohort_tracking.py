@@ -223,3 +223,31 @@ def test_CohortTracker_flowchart_empty(edata_mini):
     ct = ep.tl.CohortTracker(edata_mini)
     with pytest.raises(ValueError, match="No tracked steps"):
         ct.plot_flowchart()
+
+
+def test_CohortTracker_flowchart_image(edata_mini, check_same_image):
+    ct = ep.tl.CohortTracker(edata_mini)
+    ct(edata_mini, label="Base Cohort")
+    ct(edata_mini, operations_done="Some processing")
+
+    plot = ct.plot_flowchart()
+    check_same_image(
+        fig=plot,
+        base_path=f"{_TEST_IMAGE_PATH}/cohorttracker_edata_mini_flowchart",
+        tol=5,
+    )
+
+
+def test_CohortTracker_flowchart_image_sensitivity(edata_mini, check_same_image):
+    ct = ep.tl.CohortTracker(edata_mini)
+    ct(edata_mini, label="Base Cohort")
+    ct(edata_mini, operations_done="Some processing")
+
+    # different node colour should diverge from the reference
+    plot = ct.plot_flowchart(node_color="#ff0000")
+    with pytest.raises(AssertionError):
+        check_same_image(
+            fig=plot,
+            base_path=f"{_TEST_IMAGE_PATH}/cohorttracker_edata_mini_flowchart",
+            tol=5,
+        )
