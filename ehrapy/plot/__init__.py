@@ -52,4 +52,4 @@ from ehrapy.plot.causal_inference._dowhy import causal_effect
 from ehrapy.plot.feature_ranking._feature_importances import rank_features_supervised
 
 if not hv.Store.renderers:
-    hv.extension("bokeh")
+    hv.extension("bokeh", "matplotlib")

@@ -623,19 +623,47 @@ class CohortTracker:
                 op_labels.append({"x": (px + cx) / 2 + 0.05 * x_spacing, "y": (py_edge + cy_edge) / 2, "text": op})
 
         rect_el = hv.Rectangles(rects).opts(
-            hv.opts.Rectangles(fill_color=node_color, line_color="black", alpha=0.85, line_width=1.2, backend="bokeh"),
             hv.opts.Rectangles(
-                facecolor=node_color, edgecolor="black", alpha=0.85, linewidth=1.0, backend="matplotlib"
+                fill_color=node_color,
+                line_color="black",
+                alpha=0.85,
+                line_width=1.2,
+                xaxis=None,
+                yaxis=None,
+                backend="bokeh",
+            ),
+            hv.opts.Rectangles(
+                facecolor=node_color,
+                edgecolor="black",
+                alpha=0.85,
+                linewidth=1.0,
+                xaxis=None,
+                yaxis=None,
+                backend="matplotlib",
             ),
         )
         label_el = hv.Labels(node_labels, kdims=["x", "y"], vdims="text").opts(
-            hv.opts.Labels(text_font_size=font_size, text_align="center", text_baseline="middle", backend="bokeh"),
-            hv.opts.Labels(size=9, horizontalalignment="center", verticalalignment="center", backend="matplotlib"),
+            hv.opts.Labels(
+                text_font_size=font_size,
+                text_align="center",
+                text_baseline="middle",
+                xaxis=None,
+                yaxis=None,
+                backend="bokeh",
+            ),
+            hv.opts.Labels(
+                size=9,
+                horizontalalignment="center",
+                verticalalignment="center",
+                xaxis=None,
+                yaxis=None,
+                backend="matplotlib",
+            ),
         )
         segments_el = (
             hv.Segments(segments, kdims=["x0", "y0", "x1", "y1"]).opts(
-                hv.opts.Segments(color=edge_color, line_width=2, backend="bokeh"),
-                hv.opts.Segments(color=edge_color, linewidth=1.2, backend="matplotlib"),
+                hv.opts.Segments(color=edge_color, line_width=2, xaxis=None, yaxis=None, backend="bokeh"),
+                hv.opts.Segments(color=edge_color, linewidth=1.2, xaxis=None, yaxis=None, backend="matplotlib"),
             )
             if segments
             else hv.Segments([], kdims=["x0", "y0", "x1", "y1"])
@@ -649,6 +677,8 @@ class CohortTracker:
                     text_align="left",
                     text_baseline="middle",
                     text_font_style="italic",
+                    xaxis=None,
+                    yaxis=None,
                     backend="bokeh",
                 ),
                 hv.opts.Labels(
@@ -656,6 +686,8 @@ class CohortTracker:
                     color="#555555",
                     horizontalalignment="left",
                     verticalalignment="center",
+                    xaxis=None,
+                    yaxis=None,
                     backend="matplotlib",
                 ),
             )
@@ -666,16 +698,12 @@ class CohortTracker:
             hv.opts.Overlay(
                 width=width,
                 height=height,
-                xaxis=None,
-                yaxis=None,
                 show_frame=False,
                 toolbar="above",
                 title=title or "",
                 backend="bokeh",
             ),
             hv.opts.Overlay(
-                xaxis=None,
-                yaxis=None,
                 show_frame=False,
                 title=title or "",
                 backend="matplotlib",
