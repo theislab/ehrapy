@@ -158,33 +158,68 @@ def test_CohortTracker_plot_cohort_barplot_loosing_category(edata_mini, check_sa
     )
 
 
-def test_CohortTracker_flowchart_sensitivity(edata_mini, check_same_image):
+def test_CohortTracker_branching_parent_resolution(edata_mini):
     ct = ep.tl.CohortTracker(edata_mini)
 
+    with pytest.raises(ValueError, match="first tracked step"):
+        ct(edata_mini, label="Root", parent=0)
+
+    ct(edata_mini, label="Screened")
+    ct(edata_mini[:8], label="Enrolled", operations_done="eligibility")
+    ct(edata_mini[:4], label="Arm A", operations_done="randomized", parent="Enrolled")
+    ct(edata_mini[4:8], label="Arm B", operations_done="randomized", parent=1)
+
+    assert ct._tracked_parents == [None, 0, 1, 1]
+    assert not ct._is_linear()
+
+    with pytest.raises(ValueError, match="not found"):
+        ct(edata_mini, label="Bad", parent="does-not-exist")
+    with pytest.raises(ValueError, match="out of range"):
+        ct(edata_mini, label="Bad", parent=99)
+
+
+def test_CohortTracker_branching_ambiguous_parent(edata_mini):
+    ct = ep.tl.CohortTracker(edata_mini)
+    ct(edata_mini, label="Dup")
+    ct(edata_mini, label="Dup")
+    with pytest.raises(ValueError, match="ambiguous"):
+        ct(edata_mini, label="Child", parent="Dup")
+
+
+def test_CohortTracker_branching_linear_backcompat(edata_mini):
+    ct = ep.tl.CohortTracker(edata_mini)
+    ct(edata_mini, label="A")
+    ct(edata_mini, label="B")
+    ct(edata_mini, label="C")
+    assert ct._tracked_parents == [None, 0, 1]
+    assert ct._is_linear()
+
+
+def test_CohortTracker_flowchart_linear(edata_mini):
+    import holoviews as hv
+
+    ct = ep.tl.CohortTracker(edata_mini)
     ct(edata_mini, label="Base Cohort")
     ct(edata_mini, operations_done="Some processing")
 
-    # check that e.g. different arrow size triggers error
-    fig, _ = ct.plot_flowchart(show=False, arrow_size=0.5)
-
-    with pytest.raises(AssertionError):
-        check_same_image(
-            fig=fig,
-            base_path=f"{_TEST_IMAGE_PATH}/cohorttracker_edata_mini_flowchart",
-            tol=1e-1,
-        )
+    plot = ct.plot_flowchart(title="linear")
+    assert isinstance(plot, hv.core.Overlay)
 
 
-def test_CohortTracker_flowchart(edata_mini, check_same_image):
+def test_CohortTracker_flowchart_branched(edata_mini):
+    import holoviews as hv
+
     ct = ep.tl.CohortTracker(edata_mini)
+    ct(edata_mini, label="Screened")
+    ct(edata_mini[:8], label="Enrolled", operations_done="eligibility")
+    ct(edata_mini[:4], label="Arm A", operations_done="randomized", parent="Enrolled")
+    ct(edata_mini[4:8], label="Arm B", operations_done="randomized", parent="Enrolled")
 
-    ct(edata_mini, label="Base Cohort")
-    ct(edata_mini, operations_done="Some processing")
+    plot = ct.plot_flowchart(title="CONSORT")
+    assert isinstance(plot, hv.core.Overlay)
 
-    fig, _ = ct.plot_flowchart(show=False)
 
-    check_same_image(
-        fig=fig,
-        base_path=f"{_TEST_IMAGE_PATH}/cohorttracker_edata_mini_flowchart",
-        tol=1e-1,
-    )
+def test_CohortTracker_flowchart_empty(edata_mini):
+    ct = ep.tl.CohortTracker(edata_mini)
+    with pytest.raises(ValueError, match="No tracked steps"):
+        ct.plot_flowchart()

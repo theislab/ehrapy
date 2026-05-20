@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import holoviews as hv
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -14,6 +15,8 @@ from matplotlib.font_manager import FontProperties
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 from tableone import TableOne
+
+from ehrapy._compat import choose_hv_backend
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -90,6 +93,7 @@ class CohortTracker:
         self._tracked_steps: int = 0
         self._tracked_text: list = []
         self._tracked_operations: list = []
+        self._tracked_parents: list[int | None] = []
 
         # if categorical columns specified, use them, else infer the feature types
         self.categorical = (
@@ -107,12 +111,34 @@ class CohortTracker:
         }
         self._tracked_tables: list = []
 
-    def __call__(self, edata: EHRData, label: str = None, operations_done: str = None, **tableone_kwargs: dict) -> None:
+    def __call__(
+        self,
+        edata: EHRData,
+        label: str = None,
+        operations_done: str = None,
+        parent: str | int | None = None,
+        **tableone_kwargs: dict,
+    ) -> None:
+        """Record a cohort snapshot.
+
+        Args:
+            edata: Central data object.
+            label: Short label for this step.
+                Defaults to ``"Cohort <n>"`` where ``n`` is the step index.
+            operations_done: Description of the transition from the parent step.
+            parent: Where this step branches from.
+                ``None`` (default) continues from the previous step, giving the linear pipeline behavior.
+            Pass a label (``str``) or a 0-based step index (``int``) to branch off an earlier cohort for CONSORT-style diagrams.
+            **tableone_kwargs: Forwarded to :class:`tableone.TableOne`.
+        """
         if not isinstance(edata, EHRData):
             raise ValueError("edata must be an EHRData.")
 
         _check_columns_exist(edata.obs, self.columns)
         _check_no_new_categories(edata.obs, self.categorical, self._categorical_categories)
+
+        parent_idx = self._resolve_parent(parent)
+        self._tracked_parents.append(parent_idx)
 
         # track a small text with each tracking step, for the flowchart
         track_text = label if label is not None else f"Cohort {self.tracked_steps}"
@@ -126,6 +152,75 @@ class CohortTracker:
         # track new tableone object
         t1 = TableOne(edata.obs, columns=self.columns, categorical=self.categorical, **tableone_kwargs)
         self._tracked_tables.append(t1)
+
+    def _resolve_parent(self, parent: str | int | None) -> int | None:
+        if self._tracked_steps == 0:
+            if parent is not None:
+                raise ValueError("The first tracked step cannot have a parent.")
+            return None
+        if parent is None:
+            return self._tracked_steps - 1
+        if isinstance(parent, bool):
+            raise TypeError("parent must be a step label, index, or None.")
+        if isinstance(parent, int):
+            if not 0 <= parent < self._tracked_steps:
+                raise ValueError(f"parent index {parent} is out of range [0, {self._tracked_steps}).")
+            return parent
+        if isinstance(parent, str):
+            matches = [i for i, txt in enumerate(self._tracked_text) if txt.split("\n", 1)[0] == parent]
+            if not matches:
+                raise ValueError(f"parent label {parent!r} not found among tracked step labels.")
+            if len(matches) > 1:
+                raise ValueError(
+                    f"parent label {parent!r} is ambiguous (matches steps {matches}); use an index instead."
+                )
+            return matches[0]
+        raise TypeError(f"parent must be str, int, or None; got {type(parent).__name__}.")
+
+    def _is_linear(self) -> bool:
+        """True iff every step is the direct continuation of its predecessor."""
+        expected = [None, *list(range(self._tracked_steps - 1))]
+        return self._tracked_parents == expected
+
+    def _tree_layout(self) -> tuple[list[int], list[float], dict[int, list[int]]]:
+        """Compute depth and x-coordinate for every tracked step, plus the child list of each node."""
+        n = self._tracked_steps
+        children: dict[int, list[int]] = {i: [] for i in range(n)}
+        roots: list[int] = []
+        for i, p in enumerate(self._tracked_parents):
+            if p is None:
+                roots.append(i)
+            else:
+                children[p].append(i)
+
+        depth = [0] * n
+        for root in roots:
+            stack = [root]
+            while stack:
+                node = stack.pop()
+                for child in children[node]:
+                    depth[child] = depth[node] + 1
+                    stack.append(child)
+
+        x = [0.0] * n
+        cursor = [0.0]
+
+        def assign_x(node: int) -> None:
+            kids = children[node]
+            if not kids:
+                x[node] = cursor[0]
+                cursor[0] += 1.0
+                return
+            for kid in kids:
+                assign_x(kid)
+            x[node] = (x[kids[0]] + x[kids[-1]]) / 2.0
+
+        for i, root in enumerate(roots):
+            assign_x(root)
+            if i < len(roots) - 1:
+                cursor[0] += 0.5  # gap between disconnected trees
+
+        return depth, x, children
 
     def _get_cat_data(self, table_one: TableOne, col: str) -> pd.DataFrame:
         cat_pct: dict = {category: [] for category in self._categorical_categories[col]}
@@ -454,105 +549,111 @@ class CohortTracker:
             else:
                 return axes
 
+    @choose_hv_backend()
     def plot_flowchart(
         self,
         *,
         title: str | None = None,
-        arrow_size: float = 0.7,
-        show: bool = True,
-        ax: Axes | None = None,
-        bbox_kwargs: dict | None = None,
-        arrowprops_kwargs: dict | None = None,
-    ) -> None | list[Axes] | tuple[Figure, list[Axes]]:
+        width: int = 700,
+        height: int = 500,
+        node_color: str = "#cfe2f3",
+        edge_color: str = "#888888",
+        font_size: str = "10pt",
+    ) -> hv.Overlay:
         """Flowchart over the tracked steps.
 
-        Create a simple flowchart of data preparation steps tracked with `CohortTracker`.
+        Renders a CONSORT-style flowchart of cohort steps as a HoloViews overlay (rectangles for cohorts, segments for transitions, italic labels for ``operations_done``).
+        For a linear pipeline this becomes a single vertical chain; once any step is recorded with ``parent=``, the chain branches like a clinical-trial CONSORT diagram.
 
         Args:
-            title: Title of the flow chart.
-            arrow_size: The size of the arrows in the plot.
-            show: If `True`, the plot will be displayed. If `False`, plotting handels are returned.
-            ax: If `None`, a new figure and axes will be created. If an axes object is provided, the plot will be added to it.
-            bbox_kwargs: Additional keyword arguments for the node boxes.
-            arrowprops_kwargs: Additional keyword arguments for the arrows.
+            title: Optional plot title.
+            width: Plot width in pixels.
+            height: Plot height in pixels.
+            node_color: Fill color for cohort boxes.
+            edge_color: Color of the connecting arrows.
+            font_size: Font size for box and operation labels (HoloViews font-size string).
 
         Examples:
                 >>> import ehrdata as ed
                 >>> import ehrapy as ep
                 >>> edata = ed.dt.diabetes_130_fairlearn(columns_obs_only=["gender", "race"])
-                >>> cohort_tracker = ep.tl.CohortTracker(edata)
-                >>> cohort_tracker(edata, label="Initial Cohort")
-                >>> edata = edata[:1000]
-                >>> cohort_tracker(edata, label="Reduced Cohort", operations_done="filtered to first 1000 entries")
-                >>> edata = edata[:500]
-                >>> cohort_tracker(
-                ...     edata,
-                ...     label="Further reduced Cohort",
-                ...     operations_done="filtered to first 500 entries",
-                ... )
-                >>> cohort_tracker.plot_flowchart(title="Flowchart of Data Processing", show=True)
-
-            .. image:: /_static/docstring_previews/flowchart.png
+                >>> ct = ep.tl.CohortTracker(edata)
+                >>> ct(edata, label="Screened")
+                >>> ct(edata[:800], label="Enrolled", operations_done="eligibility")
+                >>> ct(edata[:400], label="Treatment", operations_done="randomized", parent="Enrolled")
+                >>> ct(edata[400:800], label="Control", operations_done="randomized", parent="Enrolled")
+                >>> ct.plot_flowchart(title="CONSORT")
         """
-        if ax is None:
-            fig, axes = plt.subplots()
+        if self._tracked_steps == 0:
+            raise ValueError("No tracked steps yet; call the tracker first.")
+
+        depth, x, _ = self._tree_layout()
+        # Box footprint in data units. Width tuned to fit "Label\n(n=12345)".
+        box_w = 0.9
+        box_h = 0.55
+        x_spacing = 1.4
+        y_spacing = 1.2
+
+        positions = [(x[i] * x_spacing, -depth[i] * y_spacing) for i in range(self._tracked_steps)]
+
+        rects = [(cx - box_w / 2, cy - box_h / 2, cx + box_w / 2, cy + box_h / 2) for cx, cy in positions]
+        node_labels = pd.DataFrame(
+            {
+                "x": [p[0] for p in positions],
+                "y": [p[1] for p in positions],
+                "text": [t.replace("\n ", "\n") for t in self._tracked_text],
+            }
+        )
+
+        segments = []
+        op_labels = []
+        for i, parent_idx in enumerate(self._tracked_parents):
+            if parent_idx is None:
+                continue
+            (px, py) = positions[parent_idx]
+            (cx, cy) = positions[i]
+            # Trim segment endpoints to the edge of each box for a clean look.
+            py_edge = py - box_h / 2
+            cy_edge = cy + box_h / 2
+            segments.append((px, py_edge, cx, cy_edge))
+            op = self._tracked_operations[i]
+            if op:
+                op_labels.append({"x": (px + cx) / 2 + 0.05 * x_spacing, "y": (py_edge + cy_edge) / 2, "text": op})
+
+        rect_el = hv.Rectangles(rects).opts(
+            fill_color=node_color,
+            line_color="black",
+            alpha=0.85,
+            line_width=1.2,
+        )
+        label_el = hv.Labels(node_labels, kdims=["x", "y"], vdims="text").opts(
+            text_font_size=font_size,
+            text_align="center",
+            text_baseline="middle",
+        )
+        segments_el = (
+            hv.Segments(segments, kdims=["x0", "y0", "x1", "y1"]).opts(color=edge_color, line_width=2)
+            if segments
+            else hv.Segments([], kdims=["x0", "y0", "x1", "y1"])
+        )
+        if op_labels:
+            op_df = pd.DataFrame(op_labels)
+            op_el = hv.Labels(op_df, kdims=["x", "y"], vdims="text").opts(
+                text_font_size=font_size,
+                text_color="#555555",
+                text_align="left",
+                text_baseline="middle",
+                text_font_style="italic",
+            )
         else:
-            axes = ax
-        axes.set_aspect("equal")
+            op_el = hv.Labels([], kdims=["x", "y"], vdims="text")
 
-        if title is not None:
-            axes.set_title(title)
-        # Define positions for the nodes
-        # heuristic to avoid oversized gaps
-        max_pos = min(0.3 * self.tracked_steps, 1)
-        y_positions = np.linspace(max_pos, 0, self.tracked_steps)
-
-        node_labels = self._tracked_text
-
-        tot_bbox_kwargs = {"boxstyle": "round,pad=0.3", "fc": "lightblue", "alpha": 0.5}
-        if bbox_kwargs is not None:
-            tot_bbox_kwargs.update(bbox_kwargs)
-        for _, (y, label) in enumerate(zip(y_positions, node_labels, strict=False)):
-            axes.annotate(
-                label,
-                xy=(0, y),
-                xytext=(0, y),
-                ha="center",
-                va="center",
-                bbox=tot_bbox_kwargs,
-            )
-
-        for i in range(len(self._tracked_operations) - 1):
-            axes.annotate(
-                self._tracked_operations[i + 1],
-                xy=(0, (y_positions[i] + y_positions[i + 1]) / 2),
-                xytext=(0.01, (y_positions[i] + y_positions[i + 1]) / 2),
-            )
-
-        tot_arrowprops_kwargs = {"arrowstyle": "->", "connectionstyle": "arc3", "color": "gray"}
-        if arrowprops_kwargs is not None:
-            tot_arrowprops_kwargs.update(arrowprops_kwargs)
-        for i in range(len(self._tracked_operations) - 1):
-            arrow_length = (
-                y_positions[i] - y_positions[i + 1] - (y_positions[i] - y_positions[i + 1]) * (1 - arrow_size)
-            )
-            axes.annotate(
-                "",
-                xy=(0, (y_positions[i] + y_positions[i + 1]) / 2 - arrow_length / 2),
-                xytext=(0, (y_positions[i] + y_positions[i + 1]) / 2 + arrow_length / 2),
-                arrowprops=tot_arrowprops_kwargs,
-            )
-
-        # required to center the plot
-        axes.set_xlim(-0.5, 0.5)
-        axes.set_ylim(0, 1.1)
-
-        axes.set_axis_off()
-        if show:
-            plt.show()
-            return None
-        else:
-            if ax is None:
-                return fig, axes
-            else:
-                return axes
+        return (segments_el * rect_el * label_el * op_el).opts(
+            width=width,
+            height=height,
+            xaxis=None,
+            yaxis=None,
+            show_frame=False,
+            toolbar="above",
+            title=title or "",
+        )
