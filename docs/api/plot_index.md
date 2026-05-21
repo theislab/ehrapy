@@ -143,5 +143,7 @@ Methods that extract and visualize tool-specific annotation in an AnnData object
     :toctree: plot
     :nosignatures:
 
+    plot.love_plot
+    plot.propensity_overlap
     plot.causal_effect
 ```
