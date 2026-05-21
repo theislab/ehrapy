@@ -63,6 +63,19 @@ def t_learner(
 
     Returns:
         A :class:`~ehrapy.tools.CausalEstimate` whose ``value`` is the average CATE and whose ``params['cate']`` is the per-observation CATE vector.
+
+    Examples:
+        >>> import ehrapy as ep
+        >>> import ehrdata as ed
+        >>> edata = ed.dt.mimic_2_preprocessed()
+        >>> est = ep.tl.t_learner(
+        ...     edata,
+        ...     "aline_flg",
+        ...     "day_28_flg",
+        ...     covariates=["age", "sofa_first", "sapsi_first"],
+        ... )
+        >>> print(f"average CATE: {est.value:+.4f}  (n={est.n})")
+        average CATE: -0.0256  (n=1776)
     """
     design = build_design(edata, treatment=treatment, outcome=outcome, covariates=covariates, layer=layer)
     assert_binary_treatment(design.T, treatment)
@@ -119,6 +132,19 @@ def s_learner(
 
     Returns:
         A :class:`~ehrapy.tools.CausalEstimate` whose ``value`` is the average CATE and whose ``params['cate']`` is the per-observation CATE vector.
+
+    Examples:
+        >>> import ehrapy as ep
+        >>> import ehrdata as ed
+        >>> edata = ed.dt.mimic_2_preprocessed()
+        >>> est = ep.tl.s_learner(
+        ...     edata,
+        ...     "aline_flg",
+        ...     "day_28_flg",
+        ...     covariates=["age", "sofa_first", "sapsi_first"],
+        ... )
+        >>> print(f"average CATE: {est.value:+.4f}  (n={est.n})")
+        average CATE: -0.0216  (n=1776)
     """
     design = build_design(edata, treatment=treatment, outcome=outcome, covariates=covariates, layer=layer)
     assert_binary_treatment(design.T, treatment)
@@ -185,6 +211,19 @@ def x_learner(
 
     Returns:
         A :class:`~ehrapy.tools.CausalEstimate` whose ``value`` is the average CATE and whose ``params['cate']`` is the per-observation CATE vector.
+
+    Examples:
+        >>> import ehrapy as ep
+        >>> import ehrdata as ed
+        >>> edata = ed.dt.mimic_2_preprocessed()
+        >>> est = ep.tl.x_learner(
+        ...     edata,
+        ...     "aline_flg",
+        ...     "day_28_flg",
+        ...     covariates=["age", "sofa_first", "sapsi_first"],
+        ... )
+        >>> print(f"average CATE: {est.value:+.4f}  (n={est.n})")
+        average CATE: -0.0237  (n=1776)
     """
     design = build_design(edata, treatment=treatment, outcome=outcome, covariates=covariates, layer=layer)
     assert_binary_treatment(design.T, treatment)

@@ -51,6 +51,21 @@ def covariate_balance(
 
     Returns:
         A DataFrame indexed by covariate name with columns ``smd_unweighted``, ``smd_weighted``, ``var_ratio_unweighted``, and ``var_ratio_weighted``.
+
+    Examples:
+        >>> import ehrapy as ep
+        >>> import ehrdata as ed
+        >>> edata = ed.dt.mimic_2_preprocessed()
+        >>> bal = ep.tl.covariate_balance(
+        ...     edata,
+        ...     "aline_flg",
+        ...     covariates=["age", "sofa_first", "sapsi_first"],
+        ... )
+        >>> print(bal.round(3).to_string())
+                     smd_unweighted  smd_weighted  var_ratio_unweighted  var_ratio_weighted
+        age                   0.117        -0.044                 0.896               1.018
+        sofa_first            0.818        -0.220                 1.135               0.480
+        sapsi_first           0.627        -0.157                 1.112               0.781
     """
     design = _build_design_no_outcome(edata, treatment=treatment, covariates=covariates, layer=layer)
     assert_binary_treatment(design.T, treatment)
@@ -110,6 +125,18 @@ def positivity_check(
 
     Returns:
         A dict with keys ``propensity_scores``, ``treatment``, ``index``, ``eps``, ``support_fraction``, ``n_outside_support``, ``summary_treated``, and ``summary_untreated``.
+
+    Examples:
+        >>> import ehrapy as ep
+        >>> import ehrdata as ed
+        >>> edata = ed.dt.mimic_2_preprocessed()
+        >>> info = ep.tl.positivity_check(
+        ...     edata,
+        ...     "aline_flg",
+        ...     covariates=["age", "sofa_first", "sapsi_first"],
+        ... )
+        >>> print(f"support_fraction={info['support_fraction']:.3f}  n_outside_support={info['n_outside_support']}")
+        support_fraction=0.981  n_outside_support=34
     """
     design = _build_design_no_outcome(edata, treatment=treatment, covariates=covariates, layer=layer)
     assert_binary_treatment(design.T, treatment)

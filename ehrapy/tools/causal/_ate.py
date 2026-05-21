@@ -89,8 +89,22 @@ def iptw(
 
     Examples:
         >>> import ehrapy as ep
-        >>> est = ep.tl.iptw(edata, "treatment", "outcome", covariates=["age", "sex", "bmi"])
+        >>> import ehrdata as ed
+        >>> edata = ed.dt.mimic_2_preprocessed()
+        >>> est = ep.tl.iptw(
+        ...     edata,
+        ...     "aline_flg",
+        ...     "day_28_flg",
+        ...     covariates=["age", "sofa_first", "sapsi_first"],
+        ...     random_state=0,
+        ... )
         >>> print(est.summary())
+        Causal effect of 'aline_flg' on 'day_28_flg'
+          method: iptw_stabilized
+          ATE:    -0.0644
+          SE:     0.0332
+          95% CI: [-0.1313, -0.0089]
+          n:      1776
     """
     design = build_design(edata, treatment=treatment, outcome=outcome, covariates=covariates, layer=layer)
     assert_binary_treatment(design.T, treatment)
@@ -168,6 +182,25 @@ def g_computation(
 
     Returns:
         A :class:`~ehrapy.tools.CausalEstimate` whose ``params`` dict contains the counterfactual predictions ``mu1`` and ``mu0``.
+
+    Examples:
+        >>> import ehrapy as ep
+        >>> import ehrdata as ed
+        >>> edata = ed.dt.mimic_2_preprocessed()
+        >>> est = ep.tl.g_computation(
+        ...     edata,
+        ...     "aline_flg",
+        ...     "day_28_flg",
+        ...     covariates=["age", "sofa_first", "sapsi_first"],
+        ...     random_state=0,
+        ... )
+        >>> print(est.summary())
+        Causal effect of 'aline_flg' on 'day_28_flg'
+          method: g_computation
+          ATE:    -0.0216
+          SE:     0.0174
+          95% CI: [-0.0541, 0.0127]
+          n:      1776
     """
     design = build_design(edata, treatment=treatment, outcome=outcome, covariates=covariates, layer=layer)
     assert_binary_treatment(design.T, treatment)
@@ -247,6 +280,24 @@ def aipw(
 
     Returns:
         A :class:`~ehrapy.tools.CausalEstimate` whose ``params`` dict contains ``propensity_scores``, ``mu1``, ``mu0``, and the per-observation ``influence`` values.
+
+    Examples:
+        >>> import ehrapy as ep
+        >>> import ehrdata as ed
+        >>> edata = ed.dt.mimic_2_preprocessed()
+        >>> est = ep.tl.aipw(
+        ...     edata,
+        ...     "aline_flg",
+        ...     "day_28_flg",
+        ...     covariates=["age", "sofa_first", "sapsi_first"],
+        ... )
+        >>> print(est.summary())
+        Causal effect of 'aline_flg' on 'day_28_flg'
+          method: aipw
+          ATE:    -0.0349
+          SE:     0.0365
+          95% CI: [-0.1065, 0.0367]
+          n:      1776
     """
     design = build_design(edata, treatment=treatment, outcome=outcome, covariates=covariates, layer=layer)
     assert_binary_treatment(design.T, treatment)
@@ -339,6 +390,25 @@ def propensity_score_matching(
 
     Returns:
         A :class:`~ehrapy.tools.CausalEstimate` whose ``params`` dict contains the propensity scores and the matched-pair indices.
+
+    Examples:
+        >>> import ehrapy as ep
+        >>> import ehrdata as ed
+        >>> edata = ed.dt.mimic_2_preprocessed()
+        >>> est = ep.tl.propensity_score_matching(
+        ...     edata,
+        ...     "aline_flg",
+        ...     "day_28_flg",
+        ...     covariates=["age", "sofa_first", "sapsi_first"],
+        ...     random_state=0,
+        ... )
+        >>> print(est.summary())
+        Causal effect of 'aline_flg' on 'day_28_flg'
+          method: propensity_score_matching_att
+          ATE:    -0.0511
+          SE:     0.0337
+          95% CI: [-0.1209, 0.0051]
+          n:      1776
     """
     if target not in {"att", "ate"}:
         raise ValueError(f"target must be 'att' or 'ate'; got {target!r}.")

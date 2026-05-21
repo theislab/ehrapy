@@ -41,6 +41,17 @@ def love_plot(
 
     Returns:
         A :class:`holoviews.Overlay` containing the scatter points, connecting lines, and guide lines.
+
+    Examples:
+        >>> import ehrapy as ep
+        >>> import ehrdata as ed
+        >>> edata = ed.dt.mimic_2_preprocessed()
+        >>> bal = ep.tl.covariate_balance(
+        ...     edata,
+        ...     "aline_flg",
+        ...     covariates=["age", "sofa_first", "sapsi_first"],
+        ... )
+        >>> ep.pl.love_plot(bal)
     """
     bal = balance.reindex(balance["smd_unweighted"].abs().sort_values(ascending=True).index)
     n = len(bal)
@@ -101,6 +112,17 @@ def propensity_overlap(
 
     Returns:
         A :class:`holoviews.Overlay` containing one histogram per arm and the support-boundary guide lines.
+
+    Examples:
+        >>> import ehrapy as ep
+        >>> import ehrdata as ed
+        >>> edata = ed.dt.mimic_2_preprocessed()
+        >>> info = ep.tl.positivity_check(
+        ...     edata,
+        ...     "aline_flg",
+        ...     covariates=["age", "sofa_first", "sapsi_first"],
+        ... )
+        >>> ep.pl.propensity_overlap(info)
     """
     ps = np.asarray(positivity["propensity_scores"])
     T = np.asarray(positivity["treatment"])
@@ -151,6 +173,15 @@ def causal_effect(
 
     Returns:
         A :class:`holoviews.Overlay` containing the point estimates, confidence-interval segments, and zero-line.
+
+    Examples:
+        >>> import ehrapy as ep
+        >>> import ehrdata as ed
+        >>> edata = ed.dt.mimic_2_preprocessed()
+        >>> covs = ["age", "sofa_first", "sapsi_first"]
+        >>> est_iptw = ep.tl.iptw(edata, "aline_flg", "day_28_flg", covariates=covs, random_state=0)
+        >>> est_aipw = ep.tl.aipw(edata, "aline_flg", "day_28_flg", covariates=covs)
+        >>> ep.pl.causal_effect(est_aipw, other={"iptw": est_iptw})
     """
     items: list[tuple[str, CausalEstimate]] = [(estimate.method, estimate)]
     if other:
