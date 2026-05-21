@@ -52,6 +52,9 @@ def love_plot(
         ...     covariates=["age", "sofa_first", "sapsi_first"],
         ... )
         >>> ep.pl.love_plot(bal)
+
+    Preview:
+        .. image:: /_static/docstring_previews/love_plot.png
     """
     bal = balance.reindex(balance["smd_unweighted"].abs().sort_values(ascending=True).index)
     n = len(bal)
@@ -123,6 +126,9 @@ def propensity_overlap(
         ...     covariates=["age", "sofa_first", "sapsi_first"],
         ... )
         >>> ep.pl.propensity_overlap(info)
+
+    Preview:
+        .. image:: /_static/docstring_previews/propensity_overlap.png
     """
     ps = np.asarray(positivity["propensity_scores"])
     T = np.asarray(positivity["treatment"])
@@ -182,6 +188,9 @@ def causal_effect(
         >>> est_iptw = ep.tl.iptw(edata, "aline_flg", "day_28_flg", covariates=covs, random_state=0)
         >>> est_aipw = ep.tl.aipw(edata, "aline_flg", "day_28_flg", covariates=covs)
         >>> ep.pl.causal_effect(est_aipw, other={"iptw": est_iptw})
+
+    Preview:
+        .. image:: /_static/docstring_previews/causal_effect.png
     """
     items: list[tuple[str, CausalEstimate]] = [(estimate.method, estimate)]
     if other:
