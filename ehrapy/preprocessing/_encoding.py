@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import OrderedDict
+from functools import singledispatch
 from itertools import chain
 
 import ehrdata as ed
@@ -13,12 +14,11 @@ from ehrdata.core.constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TA
 from rich.progress import BarColumn, Progress
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
-from ehrapy._compat import function_2D_only
+from ehrapy._compat import DaskArray, _raise_array_type_not_implemented
 
 available_encodings = {"one-hot", "label"}
 
 
-@function_2D_only()
 def encode(
     edata: EHRData,
     autodetect: bool | dict = False,
@@ -42,6 +42,9 @@ def encode(
     Available encodings are:
         1. one-hot (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.OneHotEncoder.html)
         2. label (https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.LabelEncoder.html)
+
+    For 3D longitudinal layers of shape ``(n_obs, n_vars, n_time)`` the encoder is fit on values stacked across the time axis so the category space is consistent over time.
+    The encoded result keeps the time axis, and ``obs`` stores the first-timepoint value of each encoded categorical column.
 
     Args:
         edata: Central data object.
@@ -69,8 +72,6 @@ def encode(
         ...     edata, autodetect=False, encodings={"label": ["col1", "col2"], "one-hot": ["col3"]}
         ... )
     """
-    X = edata.X if layer is None else edata.layers[layer]
-
     if not isinstance(edata, EHRData):
         raise ValueError(f"Cannot encode object of type {type(edata)}. Can only encode EHRData objects!")
 
@@ -80,6 +81,22 @@ def encode(
         raise ValueError(
             f"Setting encode mode with autodetect=True only works by passing a string (encode mode name) or None not {type(encodings)}!"
         )
+
+    X = edata.X if layer is None else edata.layers[layer]
+    if X.ndim == 3 and X.shape[2] > 1:
+        return _encode_3d(edata, autodetect, encodings, layer=layer)
+
+    return _encode_2d(edata, autodetect, encodings, layer=layer)
+
+
+def _encode_2d(
+    edata: EHRData,
+    autodetect: bool | dict,
+    encodings: dict[str, list[str]] | str | None,
+    *,
+    layer: str | None,
+) -> EHRData:
+    X = edata.X if layer is None else edata.layers[layer]
 
     # Infer feature types if not already done (passing layer parameter correctly)
     if FEATURE_TYPE_KEY not in edata.var.columns:
@@ -300,6 +317,59 @@ def encode(
     return encoded_edata
 
 
+def _encode_3d(
+    edata: EHRData,
+    autodetect: bool | dict,
+    encodings: dict[str, list[str]] | str | None,
+    *,
+    layer: str | None,
+) -> EHRData:
+    """Encode categoricals of a 3D longitudinal layer.
+
+    The encoder is fit on values stacked across the time axis so the category space is shared across timepoints.
+    The encoded result preserves the ``(n_obs, n_vars_new, n_time)`` shape and ``obs`` stores the first-timepoint value of each encoded categorical.
+    """
+    if "encoding_mode" in edata.var.keys():
+        raise NotImplementedError(
+            "Re-encoding 3D longitudinal data is not supported: the original time variation is not preserved after the first encoding."
+        )
+
+    X_3d = edata.X if layer is None else edata.layers[layer]
+    n_obs, n_vars, n_time = X_3d.shape
+
+    # Reshape (n_obs, n_vars, n_time) -> (n_obs * n_time, n_vars) in patient-major order so that the first n_obs rows of the stacked block correspond to t=0, etc.
+    X_2d = X_3d.transpose(0, 2, 1).reshape(n_obs * n_time, n_vars)
+    obs_repeated = edata.obs.iloc[np.repeat(np.arange(n_obs), n_time)].reset_index(drop=True)
+
+    temp_var = edata.var.copy()
+    temp_edata = EHRData(X=X_2d, obs=obs_repeated, var=temp_var, uns=edata.uns.copy())
+
+    encoded_temp = _encode_2d(temp_edata, autodetect=autodetect, encodings=encodings, layer=None)
+
+    # Reshape encoded X / original layer back to 3D.
+    encoded_X_2d = encoded_temp.X
+    n_vars_new = encoded_X_2d.shape[1]
+    encoded_X_3d = encoded_X_2d.reshape(n_obs, n_time, n_vars_new).transpose(0, 2, 1)
+    original_3d = encoded_temp.layers["original"].reshape(n_obs, n_time, n_vars_new).transpose(0, 2, 1)
+
+    # Take the first timepoint (rows 0, n_time, 2*n_time, ...) for the obs-side originals.
+    first_t_rows = np.arange(n_obs) * n_time
+    final_obs = encoded_temp.obs.iloc[first_t_rows].copy()
+    final_obs.index = edata.obs.index
+
+    if layer is None:
+        result = EHRData(X=encoded_X_3d, obs=final_obs, var=encoded_temp.var.copy(), uns=encoded_temp.uns.copy())
+    else:
+        result = EHRData(
+            obs=final_obs,
+            var=encoded_temp.var.copy(),
+            uns=encoded_temp.uns.copy(),
+            layers={layer: encoded_X_3d},
+        )
+    result.layers["original"] = original_3d
+    return result
+
+
 def _one_hot_encoding(
     edata: EHRData,
     *,
@@ -406,6 +476,64 @@ def _label_encoding(
     return temp_x, temp_var_names, unencoded_var_names
 
 
+@singledispatch
+def _delete_columns(X, idx_to_delete):
+    """Drop the given column indices from `X`, preserving `X`'s array type."""
+    _raise_array_type_not_implemented(_delete_columns, type(X))
+
+
+@_delete_columns.register(np.ndarray)
+def _(X: np.ndarray, idx_to_delete) -> np.ndarray:
+    return np.delete(X, list(idx_to_delete), 1)
+
+
+@_delete_columns.register(DaskArray)
+def _(X: DaskArray, idx_to_delete) -> DaskArray:
+    idx_set = set(idx_to_delete)
+    keep = [i for i in range(X.shape[1]) if i not in idx_set]
+    return X[:, keep]
+
+
+@singledispatch
+def _prepend_columns(X, columns_to_prepend):
+    """Prepend ``columns_to_prepend`` to `X` along axis=1, preserving `X`'s array type."""
+    _raise_array_type_not_implemented(_prepend_columns, type(X))
+
+
+@_prepend_columns.register(np.ndarray)
+def _(X: np.ndarray, columns_to_prepend) -> np.ndarray:
+    return np.hstack((np.asarray(columns_to_prepend), X))
+
+
+@_prepend_columns.register(DaskArray)
+def _(X: DaskArray, columns_to_prepend) -> DaskArray:
+    import dask.array as da
+
+    if not isinstance(columns_to_prepend, DaskArray):
+        columns_to_prepend = da.from_array(np.asarray(columns_to_prepend), chunks=(X.chunks[0], -1))
+    return da.concatenate([columns_to_prepend, X], axis=1)
+
+
+@singledispatch
+def _append_columns(X, columns_to_append):
+    """Append ``columns_to_append`` to `X` along axis=1, preserving `X`'s array type."""
+    _raise_array_type_not_implemented(_append_columns, type(X))
+
+
+@_append_columns.register(np.ndarray)
+def _(X: np.ndarray, columns_to_append) -> np.ndarray:
+    return np.hstack((X, np.asarray(columns_to_append)))
+
+
+@_append_columns.register(DaskArray)
+def _(X: DaskArray, columns_to_append) -> DaskArray:
+    import dask.array as da
+
+    if not isinstance(columns_to_append, DaskArray):
+        columns_to_append = da.from_array(np.asarray(columns_to_append), chunks=(X.chunks[0], -1))
+    return da.concatenate([X, columns_to_append], axis=1)
+
+
 def _update_layer_after_encoding(
     old_layer: np.ndarray,
     new_x: np.ndarray,
@@ -444,7 +572,7 @@ def _update_layer_after_encoding(
     # get all encoded categoricals of X
     encoded_categoricals = new_x[:, :new_cat_stop_index]
     # horizontally stack all encoded categoricals and the remaining "old original values"
-    updated_layer = np.hstack((encoded_categoricals, old_layer_view))
+    updated_layer = _append_columns(encoded_categoricals, old_layer_view)
 
     try:
         logger.info("Updated the original layer after encoding.")
@@ -477,10 +605,10 @@ def _update_encoded_data(
         Encoded new X, the corresponding new var names, and the unencoded var names
     """
     idx = _get_categoricals_old_indices(var_names, categoricals)
-    # delete the original categorical column
-    del_cat_column_x = np.delete(X, list(idx), 1)
-    # create the new, encoded X
-    temp_x = np.hstack((transformed, del_cat_column_x))
+    # drop the original categorical columns
+    del_cat_column_x = _delete_columns(X, idx)
+    # prepend the transformed (numpy) categorical block to the remaining columns
+    temp_x = _prepend_columns(del_cat_column_x, transformed)
     # delete old categorical name
     var_names = [col_name for col_idx, col_name in enumerate(var_names) if col_idx not in idx]
     temp_var_names = categorical_prefixes + var_names
@@ -531,7 +659,7 @@ def _undo_encoding(
 
     transformed = _initial_encoding(edata.obs, categoricals)
     temp_x, temp_var_names = _delete_all_encodings(edata, layer=layer)
-    new_x = np.hstack((transformed, temp_x)) if temp_x is not None else transformed
+    new_x = _prepend_columns(temp_x, transformed) if temp_x is not None else transformed
     new_var_names = categoricals + temp_var_names if temp_var_names is not None else categoricals
 
     # only keep columns in obs that were stored in obs only -> delete every encoded column from obs

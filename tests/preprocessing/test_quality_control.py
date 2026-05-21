@@ -233,9 +233,11 @@ def test_obs_qc_metrics_array_types(array_type, expected_error):
             _compute_obs_metrics(mtx, edata)
 
 
-def test_obs_nan_qc_metrics():
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
+def test_obs_nan_qc_metrics(array_type):
     edata = read_csv(f"{_TEST_PATH_ENCODE}/dataset1.csv")
     edata.X[0][4] = np.nan
+    edata.X = array_type(edata.X)
     edata2 = encode(edata, encodings={"one-hot": ["clinic_day"]})
     mtx = edata2.X
     obs_metrics = _compute_obs_metrics(mtx, edata2)
@@ -259,17 +261,21 @@ def test_var_qc_metrics_array_types(array_type, expected_error):
             _compute_var_metrics(mtx, edata)
 
 
-def test_var_encoding_mode_does_not_modify_original_matrix():
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
+def test_var_encoding_mode_does_not_modify_original_matrix(array_type):
     edata = read_csv(f"{_TEST_PATH_ENCODE}/dataset1.csv")
+    edata.X = array_type(edata.X)
     edata2 = encode(edata, encodings={"one-hot": ["clinic_day"]})
-    mtx_copy = edata2.X.copy()
+    mtx_before = np.asarray(edata2.X).copy()
     _compute_var_metrics(edata2.X, edata2)
-    assert np.array_equal(mtx_copy, edata2.X)
+    assert np.array_equal(mtx_before, np.asarray(edata2.X))
 
 
-def test_var_nan_qc_metrics():
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
+def test_var_nan_qc_metrics(array_type):
     edata = read_csv(f"{_TEST_PATH_ENCODE}/dataset1.csv")
     edata.X[0][4] = np.nan
+    edata.X = array_type(edata.X)
     edata2 = encode(edata, encodings={"one-hot": ["clinic_day"]})
     mtx = edata2.X
     var_metrics = _compute_var_metrics(mtx, edata2)
