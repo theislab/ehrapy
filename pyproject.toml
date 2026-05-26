@@ -47,7 +47,6 @@ classifiers = [
 
 dependencies = [
     "ehrdata",
-    "anndata<0.12.12",  # temporary pin until ehrdata is compatible with latest anndata
     "scanpy",
     "requests",
     "miceforest",
