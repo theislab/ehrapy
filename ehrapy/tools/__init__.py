@@ -16,7 +16,18 @@ from ehrapy.tools._survival_analysis import (
     weibull,
     weibull_aft,
 )
-from ehrapy.tools.causal._dowhy import causal_inference
+from ehrapy.tools.causal import (
+    CausalEstimate,
+    aipw,
+    covariate_balance,
+    g_computation,
+    iptw,
+    positivity_check,
+    propensity_score_matching,
+    s_learner,
+    t_learner,
+    x_learner,
+)
 from ehrapy.tools.cohort_tracking._cohort_tracker import CohortTracker
 from ehrapy.tools.embedding._embeddings import diffmap, draw_graph, embedding_density, famd, tsne, umap
 from ehrapy.tools.feature_ranking._feature_importances import rank_features_supervised
@@ -35,7 +46,16 @@ __all__ = [
     "test_nested_f_statistic",
     "weibull",
     "weibull_aft",
-    "causal_inference",
+    "CausalEstimate",
+    "iptw",
+    "g_computation",
+    "aipw",
+    "propensity_score_matching",
+    "t_learner",
+    "s_learner",
+    "x_learner",
+    "covariate_balance",
+    "positivity_check",
     "CohortTracker",
     "stratified_table_one",
     "rank_features_supervised",
