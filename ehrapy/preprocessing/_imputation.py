@@ -575,7 +575,6 @@ def miss_forest_impute(
 
 
 @_check_feature_types
-@use_ehrdata(deprecated_after="1.0.0")
 @spinner("Performing mice-forest impute")
 def mice_forest_impute(
     edata: EHRData,
