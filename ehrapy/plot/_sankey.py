@@ -69,7 +69,7 @@ def sankey_diagram(
     source_levels, target_levels = [], []
     for i in range(len(columns) - 1):
         col_from, col_to = columns[i], columns[i + 1]
-        flows = df.groupby([col_from, col_to]).size().reset_index(name="count")
+        flows = df.groupby([col_from, col_to], observed=True).size().reset_index(name="count")
         sources.extend(col_from + ": " + flows[col_from].astype("string"))
         targets.extend(col_to + ": " + flows[col_to].astype("string"))
         values.extend(flows["count"].to_numpy())
@@ -261,10 +261,6 @@ def sankey_diagram_time(
         kdims=["source", "target"],
         vdims=["value", "edge_color"],
     )
-
-    print(state_labels)
-    print("names")
-    print(state_names)
 
     opts_dict: dict[str, Any] = {}
 

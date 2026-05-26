@@ -21,12 +21,12 @@ Run `conda install -c anaconda cmake` and `conda install -c conda-forge lightgbm
 
 ### Optional dependencies
 
-#### causal & dowhy
+#### leiden clustering
 
-To run causal inference with ehrapy, install the `causal` extra:
+To use `ehrapy.tools.leiden`, install the `leiden` extra (which pulls in `igraph`):
 
 ```console
-pip install ehrapy[causal]
+pip install ehrapy[leiden]
 ```
 
 ## From sources

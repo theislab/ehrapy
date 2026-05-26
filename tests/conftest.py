@@ -50,6 +50,24 @@ def pytest_configure():
     )
 
 
+@pytest.fixture(autouse=True)
+def _mpl_default_style():
+    """Apply matplotlib's ``default`` style around every test, then restore.
+
+    Image-comparison baselines under ``tests/plot/_images/`` were generated against matplotlib's factory ``default`` style.
+    Applying it per-test (with snapshot/restore) keeps that behaviour deterministic regardless of test collection order and prevents state from leaking between tests.
+    """
+    import matplotlib as mpl
+    import matplotlib.pyplot as plt
+
+    snapshot = dict(mpl.rcParams)
+    plt.style.use("default")
+    try:
+        yield
+    finally:
+        mpl.rcParams.update(snapshot)
+
+
 @pytest.fixture
 def root_dir():
     return Path(__file__).resolve().parent
