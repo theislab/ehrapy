@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-import sys
-from datetime import datetime
-
 from rich import print
 
 from ehrapy import __version__

@@ -3,30 +3,23 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import holoviews as hv
-import matplotlib.gridspec as gridspec
-import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
 import numpy as np
 import pandas as pd
 from bokeh.palettes import Category10
 from numpy import ndarray
-
-from ehrapy._compat import use_ehrdata
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
     from typing import Any
     from xmlrpc.client import Boolean
 
-    from anndata import AnnData
     from ehrdata import EHRData
     from lifelines import KaplanMeierFitter
     from statsmodels.regression.linear_model import RegressionResults
 
 
-@use_ehrdata(deprecated_after="1.0.0", edata_None_allowed=True)
 def ols(
-    edata: EHRData | AnnData | None = None,
+    edata: EHRData | None = None,
     *,
     x: str | None = None,
     y: str | None = None,
@@ -325,7 +318,6 @@ def kaplan_meier(
     return plot
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def cox_ph_forestplot(
     edata: EHRData,
     *,

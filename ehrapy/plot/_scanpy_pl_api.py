@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any, Literal
 import scanpy as sc
 from scanpy.plotting import DotPlot, MatrixPlot, StackedViolin
 
-from ehrapy._compat import function_2D_only, use_ehrdata
+from ehrapy._compat import function_2D_only
 from ehrapy._utils_doc import (
     _doc_params,
     doc_adata_color_etc,
@@ -29,7 +29,6 @@ if TYPE_CHECKING:
 
     import numpy as np
     import pandas as pd
-    from anndata import AnnData
     from cycler import Cycler
     from ehrdata import EHRData
     from matplotlib.axes import Axes
@@ -47,11 +46,10 @@ _FontSize = Literal["xx-small", "x-small", "small", "medium", "large", "x-large"
 VBound = str | float | Callable[[Sequence[float]], float]
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 @function_2D_only()
 @_doc_params(scatter_temp=doc_scatter_basic, show_save_ax=doc_show_save_ax)
 def scatter(  # noqa: D417
-    edata: EHRData | AnnData,
+    edata: EHRData,
     x: str | None = None,
     y: str | None = None,
     *,
@@ -142,7 +140,6 @@ def scatter(  # noqa: D417
     return scatter_partial(edata, color=color)
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 @function_2D_only()
 @_doc_params(
     vminmax=doc_vboundnorm,
@@ -150,7 +147,7 @@ def scatter(  # noqa: D417
     common_plot_args=doc_common_plot_args,
 )
 def heatmap(  # noqa: D417
-    edata: EHRData | AnnData,
+    edata: EHRData,
     var_names: _VarNames | Mapping[str, _VarNames],
     groupby: str | Sequence[str],
     *,
@@ -258,7 +255,6 @@ def heatmap(  # noqa: D417
     return heatmap_partial(edata, groupby=groupby)
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 @function_2D_only()
 @_doc_params(
     show_save_ax=doc_show_save_ax,
@@ -267,7 +263,7 @@ def heatmap(  # noqa: D417
     vminmax=doc_vboundnorm,
 )
 def dotplot(  # noqa: D417
-    edata: EHRData | AnnData,
+    edata: EHRData,
     var_names: _VarNames | Mapping[str, _VarNames],
     groupby: str,
     *,
@@ -410,11 +406,10 @@ def dotplot(  # noqa: D417
     return dotplot_partial(edata, groupby=groupby)
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 @function_2D_only()
 @_doc_params(show_save_ax=doc_show_save_ax, common_plot_args=doc_common_plot_args)
 def tracksplot(  # noqa: D417
-    edata: EHRData | AnnData,
+    edata: EHRData,
     var_names: _VarNames | Mapping[str, _VarNames],
     groupby: str,
     *,
@@ -488,10 +483,9 @@ def tracksplot(  # noqa: D417
     return tracksplot_partial(edata, groupby=groupby)
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 @function_2D_only()
 def violin(  # noqa: D417
-    edata: EHRData | AnnData,
+    edata: EHRData,
     keys: str | Sequence[str],
     groupby: str | None = None,
     *,
@@ -525,7 +519,7 @@ def violin(  # noqa: D417
         stripplot: Add a stripplot on top of the violin plot. See :func:`~seaborn.stripplot`.
         jitter: Add jitter to the stripplot (only when stripplot is True) See :func:`~seaborn.stripplot`.
         size: Size of the jitter points.
-        layer: Name of the AnnData object layer that wants to be plotted. By
+        layer: Name of the EHRData object layer that wants to be plotted. By
                default edata.raw.X is plotted. If `use_raw=False` is set,
                then `edata.X` is plotted. If `layer` is set to a valid layer name,
                then the layer is plotted. `layer` takes precedence over `use_raw`.
@@ -582,7 +576,6 @@ def violin(  # noqa: D417
     return violin_partial(edata, groupby=groupby)
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 @function_2D_only()
 @_doc_params(
     show_save_ax=doc_show_save_ax,
@@ -591,7 +584,7 @@ def violin(  # noqa: D417
     vminmax=doc_vboundnorm,
 )
 def stacked_violin(  # noqa: D417
-    edata: EHRData | AnnData,
+    edata: EHRData,
     var_names: _VarNames | Mapping[str, _VarNames],
     groupby: str | Sequence[str],
     *,
@@ -730,7 +723,6 @@ def stacked_violin(  # noqa: D417
     return stacked_vio_partial(edata, groupby=groupby)
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 @function_2D_only()
 @_doc_params(
     show_save_ax=doc_show_save_ax,
@@ -739,7 +731,7 @@ def stacked_violin(  # noqa: D417
     vminmax=doc_vboundnorm,
 )
 def matrixplot(  # noqa: D417
-    edata: EHRData | AnnData,
+    edata: EHRData,
     var_names: _VarNames | Mapping[str, _VarNames],
     groupby: str | Sequence[str],
     *,
@@ -853,11 +845,10 @@ def matrixplot(  # noqa: D417
     return matrix_partial(edata, groupby=groupby)
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 @function_2D_only()
 @_doc_params(show_save_ax=doc_show_save_ax)
 def clustermap(  # noqa: D417
-    edata: EHRData | AnnData,
+    edata: EHRData,
     obs_keys: str | None = None,
     use_raw: bool | None = None,
     show: bool | None = None,
@@ -899,9 +890,8 @@ def clustermap(  # noqa: D417
     return clustermap_partial(edata, obs_keys=obs_keys)
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def ranking(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     attr: Literal["var", "obs", "uns", "varm", "obsm"],
     keys: str | Sequence[str],
     dictionary=None,
@@ -959,11 +949,10 @@ def ranking(
     )
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 @function_2D_only()
 @_doc_params(show_save_ax=doc_show_save_ax)
 def dendrogram(  # noqa: D417
-    edata: EHRData | AnnData,
+    edata: EHRData,
     groupby: str,
     *,
     dendrogram_key: str | None = None,
@@ -1021,7 +1010,6 @@ def dendrogram(  # noqa: D417
     show_save_ax=doc_show_save_ax,
 )
 @function_2D_only()
-@use_ehrdata(deprecated_after="1.0.0")
 def pca(  # noqa: D417
     edata,
     *,
@@ -1061,9 +1049,8 @@ def pca(  # noqa: D417
     return pca_partial(edata, **kwargs)
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def pca_loadings(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     components: str | Sequence[int] | None = None,
     include_lowest: bool = True,
     show: bool | None = None,
@@ -1095,9 +1082,8 @@ def pca_loadings(
     return sc.pl.pca_loadings(edata, components=components, include_lowest=include_lowest, show=show, save=save)
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def pca_variance_ratio(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     n_pcs: int = 30,
     log: bool = False,
     show: bool | None = None,
@@ -1130,9 +1116,8 @@ def pca_variance_ratio(
     return sc.pl.pca_variance_ratio(edata, n_pcs=n_pcs, log=log, show=show, save=save)
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 @_doc_params(scatter_bulk=doc_scatter_embedding, show_save_ax=doc_show_save_ax)
-def pca_overview(edata: EHRData | AnnData, **params) -> Axes | list[Axes] | None:  # pragma: no cover
+def pca_overview(edata: EHRData, **params) -> Axes | list[Axes] | None:  # pragma: no cover
     """Plot PCA results.
 
     The parameters are the ones of the scatter plot.
@@ -1165,7 +1150,6 @@ def pca_overview(edata: EHRData | AnnData, **params) -> Axes | list[Axes] | None
 
 
 # @_wraps_plot_scatter
-@use_ehrdata(deprecated_after="1.0.0")
 @_doc_params(
     adata_color_etc=doc_adata_color_etc,
     edges_arrows=doc_edges_arrows,
@@ -1212,14 +1196,13 @@ def tsne(edata, **kwargs) -> Figure | Axes | list[Axes] | None:  # pragma: no co
 
 
 # @_wraps_plot_scatter
-@use_ehrdata(deprecated_after="1.0.0")
 @_doc_params(
     adata_color_etc=doc_adata_color_etc,
     edges_arrows=doc_edges_arrows,
     scatter_bulk=doc_scatter_embedding,
     show_save_ax=doc_show_save_ax,
 )
-def umap(edata: EHRData | AnnData, **kwargs) -> Figure | Axes | list[Axes] | None:  # pragma: no cover # noqa: D417
+def umap(edata: EHRData, **kwargs) -> Figure | Axes | list[Axes] | None:  # pragma: no cover # noqa: D417
     """Scatter plot in UMAP basis.
 
     Args:
@@ -1257,7 +1240,6 @@ def umap(edata: EHRData | AnnData, **kwargs) -> Figure | Axes | list[Axes] | Non
     return sc.pl.umap(edata, **kwargs)
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 @function_2D_only()
 # @_wraps_plot_scatter
 @_doc_params(
@@ -1290,7 +1272,6 @@ def diffmap(edata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover # 
 
 
 # @_wraps_plot_scatter
-@use_ehrdata(deprecated_after="1.0.0")
 @_doc_params(
     adata_color_etc=doc_adata_color_etc,
     edges_arrows=doc_edges_arrows,
@@ -1298,7 +1279,7 @@ def diffmap(edata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover # 
     show_save_ax=doc_show_save_ax,
 )
 def draw_graph(  # noqa: D417
-    edata: EHRData | AnnData, *, layout: _IGraphLayout | None = None, **kwargs
+    edata: EHRData, *, layout: _IGraphLayout | None = None, **kwargs
 ) -> Figure | Axes | list[Axes] | None:  # pragma: no cover
     """Scatter plot in graph-drawing basis.
 
@@ -1344,7 +1325,6 @@ class Empty(Enum):
 _empty = Empty.token
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 @function_2D_only()
 @_doc_params(
     adata_color_etc=doc_adata_color_etc,
@@ -1353,7 +1333,7 @@ _empty = Empty.token
     show_save_ax=doc_show_save_ax,
 )
 def embedding(  # noqa: D417
-    edata: EHRData | AnnData,
+    edata: EHRData,
     basis: str,
     *,
     color: str | Sequence[str] | None = None,
@@ -1470,10 +1450,9 @@ def embedding(  # noqa: D417
     return embedding_partial(adata=edata, color=color)
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 @_doc_params(vminmax=doc_vbound_percentile, panels=doc_panels, show_save_ax=doc_show_save_ax)
 def embedding_density(  # noqa: D417
-    edata: EHRData | AnnData,
+    edata: EHRData,
     basis: str = "umap",  # was positional before 1.4.5
     key: str | None = None,  # was positional before 1.4.5
     groupby: str | None = None,
@@ -1570,9 +1549,8 @@ def embedding_density(  # noqa: D417
     )
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def dpt_groups_pseudotime(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     color_map: str | Colormap | None = None,
     palette: Sequence[str] | Cycler | None = None,
     show: bool | None = None,
@@ -1607,9 +1585,8 @@ def dpt_groups_pseudotime(
     sc.pl.dpt_groups_pseudotime(adata=edata, color_map=color_map, palette=palette, show=show, save=save)
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def dpt_timeseries(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     color_map: str | Colormap | None = None,
     as_heatmap: bool = True,
     show: bool | None = None,
@@ -1644,9 +1621,8 @@ def dpt_timeseries(
     sc.pl.dpt_timeseries(adata=edata, color_map=color_map, show=show, save=save, as_heatmap=as_heatmap)
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def paga(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     threshold: float | None = None,
     color: str | Mapping[str | int, Mapping[Any, float]] | None = None,
     layout: _IGraphLayout | None = None,
@@ -1812,9 +1788,8 @@ def paga(
     )
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def paga_path(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     nodes: Sequence[str | int],
     keys: Sequence[str],
     use_raw: bool = True,
@@ -1902,9 +1877,8 @@ def paga_path(
     )
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def paga_compare(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     basis=None,
     edges=False,
     color=None,
@@ -1995,10 +1969,9 @@ def paga_compare(
     )
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 @_doc_params(show_save_ax=doc_show_save_ax)
 def rank_features_groups(  # noqa: D417
-    edata: EHRData | AnnData,
+    edata: EHRData,
     groups: str | Sequence[str] | None = None,
     n_features: int = 20,
     feature_symbols: str | None = None,
@@ -2055,10 +2028,9 @@ def rank_features_groups(  # noqa: D417
     )
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 @_doc_params(show_save_ax=doc_show_save_ax)
 def rank_features_groups_violin(  # noqa: D417
-    edata: EHRData | AnnData,
+    edata: EHRData,
     groups: Sequence[str] | None = None,
     n_features: int = 20,
     feature_names: Iterable[str] | None = None,
@@ -2130,10 +2102,9 @@ def rank_features_groups_violin(  # noqa: D417
     )
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 @_doc_params(show_save_ax=doc_show_save_ax)
 def rank_features_groups_stacked_violin(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     groups: str | Sequence[str] | None = None,
     n_features: int | None = None,
     groupby: str | None = None,
@@ -2199,9 +2170,8 @@ def rank_features_groups_stacked_violin(
     )
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def rank_features_groups_heatmap(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     groups: str | Sequence[str] | None = None,
     n_features: int | None = None,
     groupby: str | None = None,
@@ -2258,9 +2228,8 @@ def rank_features_groups_heatmap(
     )
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def rank_features_groups_dotplot(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     groups: str | Sequence[str] | None = None,
     n_features: int | None = None,
     groupby: str | None = None,
@@ -2339,9 +2308,8 @@ def rank_features_groups_dotplot(
     )
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def rank_features_groups_matrixplot(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     groups: str | Sequence[str] | None = None,
     n_features: int | None = None,
     groupby: str | None = None,
@@ -2420,9 +2388,8 @@ def rank_features_groups_matrixplot(
     )
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def rank_features_groups_tracksplot(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     groups: str | Sequence[str] | None = None,
     n_features: int | None = None,
     groupby: str | None = None,

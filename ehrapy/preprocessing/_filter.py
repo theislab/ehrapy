@@ -9,11 +9,10 @@ from ehrdata._logger import logger
 from ehrdata.core.constants import MISSING_VALUES
 from scipy import sparse
 
-from ehrapy._compat import DaskArray, _raise_array_type_not_implemented, use_ehrdata
+from ehrapy._compat import DaskArray, _raise_array_type_not_implemented
 from ehrapy.core._constants import MISSING_VALUE_COUNT_KEY_2D, MISSING_VALUE_COUNT_KEY_3D
 
 if TYPE_CHECKING:
-    from anndata import AnnData
     from ehrdata import EHRData
 
 
@@ -37,9 +36,8 @@ def _(arr: sparse.coo_array, *, function: Callable[..., Any]) -> None:
     _raise_array_type_not_implemented(function, type(arr))
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def filter_features(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     *,
     layer: str | None = None,
     min_obs: int | None = None,
@@ -47,7 +45,7 @@ def filter_features(
     time_mode: Literal["all", "any", "proportion"] = "all",
     prop: float | None = None,
     copy: bool = False,
-) -> EHRData | AnnData | None:  # pragma: no cover
+) -> EHRData | None:  # pragma: no cover
     """Filter features based on missing data thresholds.
 
     Keep only features which have at least `min_obs` observations and/or have at most `max_obs` observations.
@@ -127,9 +125,8 @@ def filter_features(
     return data if copy else None
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def filter_observations(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     *,
     layer: str | None = None,
     min_vars: int | None = None,
@@ -137,7 +134,7 @@ def filter_observations(
     time_mode: Literal["all", "any", "proportion"] = "all",
     prop: float | None = None,
     copy: bool = False,
-) -> EHRData | AnnData | None:
+) -> EHRData | None:
     """Filter observations based on missing data thresholds (features/measurements).
 
     Keep only observations which have at least `min_vars` variables and/or at most `max_vars` variables.
