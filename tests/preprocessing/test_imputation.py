@@ -491,7 +491,7 @@ def test_miceforest_impute_3D_var_names_subset(edata_mini_3D_missing_values):
 
 
 def test_miceforest_impute_3d_layer_none(edata_mini_3D_missing_values):
-    with pytest.raises(ValueError, match="requires a layer"):
+    with pytest.raises(ValueError, match="requires either edata.X to be available or a layer to be specified"):
         mice_forest_impute(edata_mini_3D_missing_values, copy=True)
 
 
