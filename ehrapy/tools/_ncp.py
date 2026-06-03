@@ -18,8 +18,10 @@ def _nonneg_cp(
     n_iter_max: int = 300,
     tol: float = 1e-8,
     random_state: int = 0,
+    sparsity: float = 0.0,
+    orthogonality: float = 0.0,
 ) -> tuple[np.ndarray, list[np.ndarray]]:
-    """Non-negative CP decomposition via Multiplicative Updates (Lee & Seung).
+    r"""Non-negative CP decomposition via Multiplicative Updates (Lee & Seung).
 
     Uses three optimisations over a naive implementation:
 
@@ -27,12 +29,28 @@ def _nonneg_cp(
     * **Gram-matrix denominator** — ``kr.T @ kr`` is replaced by the Hadamard product of the other factors' Gram matrices (O(R²) instead of O(JK·R²)).
     * **Algebraic error** — the reconstruction error is computed from Gram matrices and the cached MTTKRP, avoiding the full-tensor reconstruction.
 
+    Optional regularisation acts on the **variable factor** :math:`B` (mode 1) only, the factor whose
+    interpretation as a per-program disease signature the constraints are meant to sharpen:
+
+    * **sparsity** (L1) adds a uniform offset to the update denominator, multiplicatively shrinking and
+      driving small loadings toward zero so each disease loads on *few* programs. The offset is sized
+      relative to the mean explained magnitude (``sparsity × mean(denominator)``) so the same value behaves
+      consistently regardless of factor scale or tensor dimensions.
+    * **orthogonality** penalises off-diagonal entries of :math:`B^\\top B`, adding
+      :math:`\\lambda_\\perp\\, B (\\mathbf{1}\\mathbf{1}^\\top - I)` to the denominator so two programs
+      avoid sharing the same disease — i.e. *fewer features per program*.
+
+    Both penalties have a non-negative gradient in :math:`B`, so they enter the denominator and keep the
+    update multiplicative and the factors non-negative.
+
     Args:
         tensor: Non-negative input tensor of shape ``(I, J, K)``.
         rank: Number of components.
         n_iter_max: Maximum number of iterations.
         tol: Convergence tolerance on the relative change in reconstruction error.
         random_state: Seed for initialisation.
+        sparsity: L1 penalty strength :math:`\\lambda_1` on the variable factor. ``0`` disables it.
+        orthogonality: Off-diagonal :math:`B^\\top B` penalty strength :math:`\\lambda_\\perp`. ``0`` disables it.
 
     Returns:
         weights
@@ -49,6 +67,9 @@ def _nonneg_cp(
     grams = [f.T @ f for f in factors]
     tensor_norm_sq = float(xp.sum(tensor * tensor))
 
+    penalised = sparsity > 0.0 or orthogonality > 0.0
+    off_diag = xp.asarray(np.ones((rank, rank)) - np.eye(rank), dtype=tensor.dtype) if orthogonality > 0.0 else None
+
     prev_error = math.inf
     for _ in range(n_iter_max):
         for mode in range(3):
@@ -61,7 +82,15 @@ def _nonneg_cp(
                 optimize=True,
             )
             gram_prod = grams[other[0]] * grams[other[1]]
-            factors[mode] = factors[mode] * numerator / (factors[mode] @ gram_prod + eps)
+            denominator = factors[mode] @ gram_prod
+            if mode == 1:  # variable factor B — apply interpretability penalties
+                if sparsity > 0.0:
+                    # Relative L1: a uniform offset sized to the mean explained magnitude so the
+                    # penalty stays meaningful regardless of factor scale / tensor dimensions.
+                    denominator = denominator + sparsity * float(xp.mean(denominator))
+                if orthogonality > 0.0:
+                    denominator = denominator + orthogonality * (factors[mode] @ off_diag)
+            factors[mode] = factors[mode] * numerator / (denominator + eps)
             grams[mode] = factors[mode].T @ factors[mode]
 
         inner = float(xp.sum(factors[2] * numerator))
@@ -72,6 +101,17 @@ def _nonneg_cp(
         if abs(prev_error - error) < tol:
             break
         prev_error = error
+
+        # Fix the scaling gauge: normalise the patient (A) and temporal (C) factors to unit columns,
+        # pushing their scale into B. This makes the other modes' Gram matrices O(1) so the penalty
+        # strengths on B are on a consistent, interpretable scale instead of being defeated by — or
+        # swamped by — CP's freedom to trade magnitude between the three factors.
+        if penalised:
+            for m in (0, 2):
+                norms = xp.clip(xp.linalg.norm(factors[m], axis=0), min=eps)
+                factors[m] = factors[m] / norms[None, :]
+                factors[1] = factors[1] * norms[None, :]
+            grams = [f.T @ f for f in factors]
 
     weights = xp.ones(rank, dtype=tensor.dtype)
     for i in range(3):
@@ -89,6 +129,8 @@ def ncp(
     rank: int = 4,
     n_iter_max: int = 300,
     sigmoid_transform: bool = False,
+    sparsity: float = 0.0,
+    orthogonality: float = 0.0,
     key_added: str = "ncp",
     random_state: int = 0,
     copy: bool = False,
@@ -134,6 +176,16 @@ def ncp(
             300 is sufficient for most datasets; increase if the error has not converged (check ``edata.uns[key_added]["params"]``).
         sigmoid_transform: If ``True``, apply a sigmoid transformation to the layer before decomposition.
             Useful when the layer contains raw logits.
+        sparsity: L1 penalty strength on the **variable factor** :math:`B` (default ``0`` = off).
+            Larger values push small variable loadings to exactly zero, so each clinical variable loads
+            onto *few* components instead of being spread thinly across many. This sharpens the
+            "this program = these diseases" interpretation. Start small (e.g. ``0.01``–``0.1`` relative to
+            the layer scale) and increase until the loadings are as discrete as the interpretation needs.
+        orthogonality: Penalty strength on the off-diagonal entries of :math:`B^\top B` (default ``0`` = off).
+            Larger values discourage two components from sharing the same variables, yielding programs with
+            *fewer, more distinct features each*. Use when you want near-disjoint variable signatures across
+            components; it can fight the data when variables genuinely co-occur across programs, so raise it
+            gradually. Can be combined with ``sparsity``.
         key_added: Key prefix for storing results. Results are stored as:
 
             * ``edata.obsm["X_{key_added}"]`` — patient factors, shape ``(n_obs, rank)``.
@@ -170,7 +222,14 @@ def ncp(
 
     edata = edata.copy() if copy else edata
 
-    weights, factors = _nonneg_cp(tensor, rank=rank, n_iter_max=n_iter_max, random_state=random_state)
+    weights, factors = _nonneg_cp(
+        tensor,
+        rank=rank,
+        n_iter_max=n_iter_max,
+        random_state=random_state,
+        sparsity=sparsity,
+        orthogonality=orthogonality,
+    )
     A, B, C = factors
     A = A * weights[None, :]
 
@@ -182,6 +241,8 @@ def ncp(
             "rank": rank,
             "n_iter_max": n_iter_max,
             "sigmoid_transform": sigmoid_transform,
+            "sparsity": sparsity,
+            "orthogonality": orthogonality,
         },
         "temporal_factors": C,  # (n_time, rank)
     }
