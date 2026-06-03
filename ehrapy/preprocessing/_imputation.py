@@ -514,6 +514,17 @@ def miss_forest_impute(
         >>> edata = ep.pp.encode(edata, autodetect=True)
         >>> ep.pp.miss_forest_impute(edata)
 
+        Example Output:
+
+        >>> edata.layers["tem_data"][0, :, :]
+        [[-12.12732884, -18.37304373],
+        [         nan,  -0.91339411],
+        [         nan,  -7.88514984]]
+        >>> edata_imputed.layers["tem_data"][0, :, :]
+        [[-12.12732884, -18.37304373],
+        [ -0.3278448 ,  -0.91339411],
+        [ -4.39722201,  -7.88514984]]
+
     """
     if copy:
         edata = edata.copy()
@@ -641,9 +652,9 @@ def mice_forest_impute(
     if copy:
         edata = edata.copy()
 
-    if edata.X is None and layer is None:  # if edata is 3D
+    if edata.X is None and layer is None:  # if edata is empty
         raise ValueError(
-            "3D imputation requires a layer to be specified. Pass the layer containing the full temporal data."
+            "Imputation requires either edata.X to be available or a layer to be specified. Pass the layer containing the full temporal data."
         )
 
     if var_names is None:
