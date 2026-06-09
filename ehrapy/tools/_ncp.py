@@ -5,10 +5,7 @@ from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 
-from ehrapy._compat import use_ehrdata
-
 if TYPE_CHECKING:
-    from anndata import AnnData
     from ehrdata import EHRData
 
 

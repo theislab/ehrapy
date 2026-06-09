@@ -30,22 +30,23 @@ jobs:
               with:
                   submodules: "true"
 
-            - name: Set up Python
-              uses: actions/setup-python@v6
+            - name: Set up uv
+              uses: astral-sh/setup-uv@v7
               with:
                   python-version: "3.14"
+                  cache-dependency-glob: pyproject.toml
+
+            - name: Create virtual environment
+              run: uv venv
 
             - name: Install OpenBLAS
               run: sudo apt-get install -y libopenblas-dev
 
-            - name: Install UV
-              run: pip install uv
-
             - name: Install ehrapy and additional dependencies
-              run: uv pip install --system . 'cellrank[scvelo]' nbconvert ipykernel graphviz pypots fairlearn
+              run: uv pip install '.[leiden]' 'cellrank[scvelo]' nbconvert ipykernel graphviz pypots fairlearn
 
             - name: Install ehrdata from submodule
-              run: uv pip install --system --reinstall --no-deps -e submodules/ehrdata
+              run: uv pip install --reinstall --no-deps -e submodules/ehrdata
 
             - name: Run ${{ matrix.notebook }} Notebook
-              run: jupyter nbconvert --to notebook --execute ${{ matrix.notebook }}
+              run: uv run jupyter nbconvert --to notebook --execute ${{ matrix.notebook }}

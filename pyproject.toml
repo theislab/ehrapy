@@ -48,6 +48,7 @@ classifiers = [
 dependencies = [
     "ehrdata",
     "scanpy",
+    "scverse-misc[settings]>=0.0.7",
     "requests",
     "miceforest",
     "scikit-misc",  # required for seuratv3 highly variable features
@@ -55,13 +56,12 @@ dependencies = [
     "missingno",
     "thefuzz[speedup]",
     "fhiry",
-    "pyampute",
     "tableone",
     "fknni[faisscpu]>=1.3.0",
     "filelock",
     "numpy>=2.0.0",
     "numba>=0.60.0",
-    "igraph",  # careful - GPL
+    "array-api-compat",
     "fast-array-utils[sparse,accel]",
     "tslearn",
     "holoviews[recommended]",
@@ -69,15 +69,11 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-causal = [
-    "dowhy>=0.14",
-    # manual lower bound necessary or else dowhy installs something old and incompatible
-    "cvxpy>=1.7.3"
-]
 dask = [
     "anndata[dask]",
     "dask-ml>=2025.1.0",
 ]
+leiden = ["igraph"]  # careful - GPL
 rapids12 = ["rapids-singlecell[rapids12]"]
 rapids13 = ["rapids-singlecell[rapids13]"]
 dev = [
@@ -106,10 +102,10 @@ doc = [
     "nbsphinx-link",
     "ipykernel",
     "ipython",
-    "ehrapy[dask]"
+    "ehrapy[dask,leiden]"
 ]
 test = [
-    "ehrapy[dask,causal]",
+    "ehrapy[dask,leiden]",
     "pytest",
     "pytest-cov",
     "pytest-mock"
@@ -130,7 +126,7 @@ post-install-commands = [
 ]
 
 [tool.hatch.envs.docs]
-features = [ "doc", "dask", "causal" ]
+features = [ "doc", "dask", "leiden" ]
 post-install-commands = [
   "uv pip install --reinstall --no-deps -e submodules/ehrdata",
 ]
@@ -140,7 +136,7 @@ scripts.clean = "git clean -fdX -- {args:docs}"
 
 # CPU
 [tool.hatch.envs.hatch-test]
-features = [ "dask", "causal" ]
+features = [ "dask", "leiden" ]
 post-install-commands = [
   "uv pip install --reinstall --no-deps -e submodules/ehrdata",
 ]

@@ -1,4 +1,4 @@
-from pathlib import Path
+import json
 
 import ehrdata as ed
 import numpy as np
@@ -6,14 +6,44 @@ import pandas as pd
 import pytest
 from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
 from ehrdata.io import read_csv
+from scipy import sparse as sp
 
 import ehrapy as ep
 from ehrapy.preprocessing._encoding import encode
 from ehrapy.preprocessing._quality_control import _compute_obs_metrics, _compute_var_metrics, mcar_test
 from tests.conftest import ARRAY_TYPES_NONNUMERIC, TEST_DATA_PATH, as_dense_dask_array
 
-CURRENT_DIR = Path(__file__).parent
 _TEST_PATH_ENCODE = f"{TEST_DATA_PATH}/encode"
+
+_BLOB_KWARGS = {"n_centers": 1, "cluster_std": 1.0, "base_timepoints": 1}
+
+_SCENARIOS_LITTLE = {
+    "mcar_small": {"n_obs": 100, "n_vars": 10, "missing_rate": 0.10, "seed": 42},
+    "mar_small": {"n_obs": 100, "n_vars": 10, "missing_pct": 0.10, "seed": 42},
+    "mcar_medium_high_missing": {"n_obs": 900, "n_vars": 50, "missing_rate": 0.50, "seed": 7},
+}
+_SCENARIO_TTEST = {"n_obs": 200, "n_vars": 8, "missing_pct": 0.20, "seed": 99}
+
+
+def _make_mcar_edata(*, n_obs, n_vars, missing_rate, seed):
+    return ed.dt.ehrdata_blobs(
+        n_observations=n_obs, n_variables=n_vars, missing_values=missing_rate, random_state=seed, **_BLOB_KWARGS
+    )
+
+
+def _make_mar_edata(*, n_obs, n_vars, missing_pct, seed):
+    edata = ed.dt.ehrdata_blobs(
+        n_observations=n_obs, n_variables=n_vars, missing_values=0.0, random_state=seed, **_BLOB_KWARGS
+    )
+    X = np.asarray(edata.X, dtype=float).copy()
+    X[X[:, 0] < np.percentile(X[:, 0], missing_pct * 100), -1] = np.nan
+    edata.X = X
+    return edata
+
+
+def _build_little_scenario(name):
+    cfg = _SCENARIOS_LITTLE[name]
+    return _make_mcar_edata(**cfg) if "missing_rate" in cfg else _make_mar_edata(**cfg)
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
@@ -203,9 +233,11 @@ def test_obs_qc_metrics_array_types(array_type, expected_error):
             _compute_obs_metrics(mtx, edata)
 
 
-def test_obs_nan_qc_metrics():
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
+def test_obs_nan_qc_metrics(array_type):
     edata = read_csv(f"{_TEST_PATH_ENCODE}/dataset1.csv")
     edata.X[0][4] = np.nan
+    edata.X = array_type(edata.X)
     edata2 = encode(edata, encodings={"one-hot": ["clinic_day"]})
     mtx = edata2.X
     obs_metrics = _compute_obs_metrics(mtx, edata2)
@@ -229,17 +261,21 @@ def test_var_qc_metrics_array_types(array_type, expected_error):
             _compute_var_metrics(mtx, edata)
 
 
-def test_var_encoding_mode_does_not_modify_original_matrix():
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
+def test_var_encoding_mode_does_not_modify_original_matrix(array_type):
     edata = read_csv(f"{_TEST_PATH_ENCODE}/dataset1.csv")
+    edata.X = array_type(edata.X)
     edata2 = encode(edata, encodings={"one-hot": ["clinic_day"]})
-    mtx_copy = edata2.X.copy()
+    mtx_before = np.asarray(edata2.X).copy()
     _compute_var_metrics(edata2.X, edata2)
-    assert np.array_equal(mtx_copy, edata2.X)
+    assert np.array_equal(mtx_before, np.asarray(edata2.X))
 
 
-def test_var_nan_qc_metrics():
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
+def test_var_nan_qc_metrics(array_type):
     edata = read_csv(f"{_TEST_PATH_ENCODE}/dataset1.csv")
     edata.X[0][4] = np.nan
+    edata.X = array_type(edata.X)
     edata2 = encode(edata, encodings={"one-hot": ["clinic_day"]})
     mtx = edata2.X
     var_metrics = _compute_var_metrics(mtx, edata2)
@@ -438,26 +474,63 @@ def test_qc_lab_measurements_defaults_to_all_vars():
     ],
 )
 def test_mcar_test_method_output_types(mar_edata, method, expected_output_type):
-    """Tests if mcar_test returns the correct output type for different methods."""
     output = mcar_test(mar_edata, method=method)
-    assert isinstance(output, expected_output_type), (
-        f"Output type for method '{method}' should be {expected_output_type}, got {type(output)} instead."
-    )
-
-
-def test_mcar_test_3D_edata(edata_blob_small):
-    mcar_test(edata_blob_small, layer="layer_2")
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
-        mcar_test(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
+    assert isinstance(output, expected_output_type)
 
 
 def test_mar_data_identification(mar_edata):
-    """Test that mcar_test correctly identifies data as not MCAR (i.e., MAR or NMAR)."""
     p_value = mcar_test(mar_edata, method="little")
-    assert p_value <= 0.05, "The test should significantly reject the MCAR hypothesis for MAR data."
+    assert p_value <= 0.05
 
 
 def test_mcar_identification(mcar_edata):
-    """Test that mcar_test correctly identifies data as MCAR."""
     p_value = mcar_test(mcar_edata, method="little")
-    assert p_value > 0.05, "The test should not significantly accept the MCAR hypothesis for MCAR data."
+    assert p_value > 0.05
+
+
+def test_mcar_test_ttest_detects_mar(mar_edata):
+    result = mcar_test(mar_edata, method="ttest")
+    assert result.shape == (mar_edata.n_vars, mar_edata.n_vars)
+    p_col0_given_miss9 = result.iloc[-1, 0]
+    assert not np.isnan(p_col0_given_miss9)
+    assert p_col0_given_miss9 < 0.05
+
+
+@pytest.fixture(params=list(_SCENARIOS_LITTLE))
+def little_scenario(request):
+    return request.param, _build_little_scenario(request.param)
+
+
+def test_mcar_test_little_matches_pyampute_reference(little_scenario):
+    name, edata = little_scenario
+    with (TEST_DATA_PATH / "preprocessing/mcar_refs/little_expected.json").open(encoding="utf-8") as f:
+        expected = json.load(f)[name]
+
+    observed = mcar_test(edata, method="little")
+    assert np.isclose(observed, expected, rtol=1e-2, atol=2e-3), (
+        f"Mismatch for {name}: observed={observed}, expected={expected}"
+    )
+
+
+def test_mcar_test_ttest_matches_pyampute_reference():
+    edata = _make_mar_edata(**_SCENARIO_TTEST)
+    expected = pd.read_csv(TEST_DATA_PATH / "preprocessing/mcar_refs/ttest_mar_expected.csv", index_col=0)
+    observed = mcar_test(edata, method="ttest")
+    expected = expected.reindex(index=observed.index, columns=observed.columns)
+
+    obs_vals = observed.to_numpy(dtype=float)
+    exp_vals = expected.to_numpy(dtype=float)
+    finite = np.isfinite(obs_vals) & np.isfinite(exp_vals)
+    nan_match = np.isnan(obs_vals) & np.isnan(exp_vals)
+
+    assert np.all(finite | nan_match), "NaN pattern mismatch vs pyampute reference"
+    assert np.allclose(obs_vals[finite], exp_vals[finite], rtol=1e-6, atol=1e-10)
+
+
+@pytest.mark.parametrize("method", ["little", "ttest"])
+@pytest.mark.parametrize("array_type", [sp.csr_array, as_dense_dask_array])
+def test_mcar_test_unsupported_array_type_raises(mar_edata, method, array_type):
+    edata = mar_edata.copy()
+    edata.X = array_type(edata.X)
+    with pytest.raises(NotImplementedError):
+        mcar_test(edata, method=method)

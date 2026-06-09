@@ -50,6 +50,24 @@ def pytest_configure():
     )
 
 
+@pytest.fixture(autouse=True)
+def _mpl_default_style():
+    """Apply matplotlib's ``default`` style around every test, then restore.
+
+    Image-comparison baselines under ``tests/plot/_images/`` were generated against matplotlib's factory ``default`` style.
+    Applying it per-test (with snapshot/restore) keeps that behaviour deterministic regardless of test collection order and prevents state from leaking between tests.
+    """
+    import matplotlib as mpl
+    import matplotlib.pyplot as plt
+
+    snapshot = dict(mpl.rcParams)
+    plt.style.use("default")
+    try:
+        yield
+    finally:
+        mpl.rcParams.update(snapshot)
+
+
 @pytest.fixture
 def root_dir():
     return Path(__file__).resolve().parent
@@ -186,7 +204,8 @@ def edata_mini():
 
 @pytest.fixture
 def edata_mini_3D_missing_values(request):
-    only_numerical = getattr(request, "param", False)
+    params = getattr(request, "param", (False, False))
+    only_numerical, more_obs = params if isinstance(params, tuple) else (params, False)
 
     tiny_mixed_array = np.array(
         [
@@ -197,6 +216,10 @@ def edata_mini_3D_missing_values(request):
         ],
         dtype=object,
     )
+
+    if more_obs:
+        # stack the array to get more observations
+        tiny_mixed_array = np.concatenate([tiny_mixed_array] * 5, axis=0)
 
     if only_numerical:
         layer = tiny_mixed_array[:, :4, :]

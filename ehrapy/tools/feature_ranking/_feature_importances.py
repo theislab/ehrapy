@@ -14,20 +14,18 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.svm import SVC, SVR
 
-from ehrapy._compat import function_2D_only, use_ehrdata
+from ehrapy._compat import function_2D_only
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-    from anndata import AnnData
     from ehrdata import EHRData
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 @function_2D_only()
 @_check_feature_types
 def rank_features_supervised(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     predicted_feature: str,
     *,
     model: Literal["regression", "svm", "rf"] = "rf",

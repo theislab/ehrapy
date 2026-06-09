@@ -157,7 +157,7 @@ def test_base_check_imputation_change_detected_in_imputed_column(impute_num_edat
         (da.array, None),
         (sparse.csr_array, None),
         (sparse.csc_array, None),
-        # (sparse.coo_array, None) # not yet supported by AnnData
+        # (sparse.coo_array, None) # not yet supported by the EHRData backend
     ],
 )
 def test_simple_impute_array_types(impute_num_edata, array_type, expected_error):
@@ -354,10 +354,34 @@ def test_knn_impute_numerical_data(impute_num_edata):
     _base_check_imputation(impute_num_edata, edata_imputed)
 
 
-def test_missforest_impute_3D_edata(edata_blob_small):
-    miss_forest_impute(edata_blob_small, layer="layer_2")
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
-        miss_forest_impute(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
+@pytest.mark.parametrize("edata_mini_3D_missing_values", [True], indirect=True)
+def test_missforest_impute_3D_edata(edata_mini_3D_missing_values):
+    edata = edata_mini_3D_missing_values.copy()
+    edata_imputed = miss_forest_impute(edata, layer=DEFAULT_TEM_LAYER_NAME, copy=True)
+    _base_check_imputation(
+        edata_mini_3D_missing_values,
+        edata_imputed,
+        before_imputation_layer=DEFAULT_TEM_LAYER_NAME,
+        after_imputation_layer=DEFAULT_TEM_LAYER_NAME,
+    )
+
+
+def test_missforest_impute_3d_var_names_subset(edata_mini_3D_missing_values):
+    edata = edata_mini_3D_missing_values.copy()
+    imputed = miss_forest_impute(edata, layer=DEFAULT_TEM_LAYER_NAME, var_names=["1", "2"], copy=True)
+    edata_imputed = imputed[:, :2].copy()
+    _base_check_imputation(
+        edata_mini_3D_missing_values[:, :2],
+        edata_imputed,
+        before_imputation_layer=DEFAULT_TEM_LAYER_NAME,
+        after_imputation_layer=DEFAULT_TEM_LAYER_NAME,
+    )
+    assert edata.shape == imputed.shape
+
+
+def test_missforest_impute_3d_layer_none(edata_mini_3D_missing_values):
+    with pytest.raises(ValueError, match="requires a layer"):
+        miss_forest_impute(edata_mini_3D_missing_values, copy=True)
 
 
 def test_missforest_impute_non_numerical_data(impute_edata):
@@ -365,11 +389,18 @@ def test_missforest_impute_non_numerical_data(impute_edata):
         miss_forest_impute(impute_edata, copy=True)
 
 
-def test_missforest_impute_numerical_data(impute_num_edata):
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NUMERIC)
+def test_missforest_impute_numerical_data(impute_num_edata, array_type):
     warnings.filterwarnings("ignore", category=ConvergenceWarning)
-    edata_imputed = miss_forest_impute(impute_num_edata, copy=True)
+    impute_num_edata.X = array_type(impute_num_edata.X)
 
-    _base_check_imputation(impute_num_edata, edata_imputed)
+    if isinstance(impute_num_edata.X, da.Array | sparse.csr_array | sparse.csc_array):
+        with pytest.raises(NotImplementedError):
+            edata_imputed = miss_forest_impute(impute_num_edata, copy=True)
+    else:
+        edata_imputed = miss_forest_impute(impute_num_edata, copy=True)
+
+        _base_check_imputation(impute_num_edata, edata_imputed)
 
 
 def test_missforest_impute_subset(impute_num_edata):
@@ -394,15 +425,6 @@ def test_miceforest_array_types(impute_num_edata, array_type, expected_error):
     if expected_error:
         with pytest.raises(expected_error):
             mice_forest_impute(impute_num_edata, copy=True)
-
-
-@pytest.mark.skipif(platform.system() == "Darwin", reason="miceforest Imputation not supported by MacOS.")
-def test_miceforest_impute_3D_edata(edata_blob_small):
-    edata_blob_small.X[3:5, 4:6] = np.nan
-    edata_blob_small.layers[DEFAULT_TEM_LAYER_NAME][3:5, 4:6] = np.nan
-    mice_forest_impute(edata_blob_small)
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
-        mice_forest_impute(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
 
 
 @pytest.mark.skipif(platform.system() == "Darwin", reason="miceforest Imputation not supported by MacOS.")
@@ -436,6 +458,41 @@ def test_miceforest_impute_numerical_data(impute_iris_edata):
     edata_imputed = mice_forest_impute(impute_iris_edata, copy=True)
 
     _base_check_imputation(edata_not_imputed, edata_imputed)
+
+
+@pytest.mark.skipif(platform.system() == "Darwin", reason="miceforest Imputation not supported by MacOS.")
+@pytest.mark.filterwarnings("ignore:invalid value encountered in divide:RuntimeWarning")
+@pytest.mark.parametrize("edata_mini_3D_missing_values", [(True, True)], indirect=True)
+def test_miceforest_impute_3D_edata(edata_mini_3D_missing_values):
+    edata_imputed = mice_forest_impute(edata_mini_3D_missing_values, layer=DEFAULT_TEM_LAYER_NAME, copy=True)
+
+    _base_check_imputation(
+        edata_mini_3D_missing_values,
+        edata_imputed,
+        before_imputation_layer=DEFAULT_TEM_LAYER_NAME,
+        after_imputation_layer=DEFAULT_TEM_LAYER_NAME,
+    )
+    assert id(edata_mini_3D_missing_values) != id(edata_imputed)
+
+
+@pytest.mark.parametrize("edata_mini_3D_missing_values", [(True, True)], indirect=True)
+def test_miceforest_impute_3D_var_names_subset(edata_mini_3D_missing_values):
+    edata = edata_mini_3D_missing_values.copy()
+    imputed = mice_forest_impute(edata, layer=DEFAULT_TEM_LAYER_NAME, var_names=["1", "2"], copy=True)
+    edata_imputed = imputed[:, :2].copy()
+    _base_check_imputation(
+        edata_mini_3D_missing_values[:, :2],
+        edata_imputed,
+        before_imputation_layer=DEFAULT_TEM_LAYER_NAME,
+        after_imputation_layer=DEFAULT_TEM_LAYER_NAME,
+    )
+
+    assert edata.shape == imputed.shape
+
+
+def test_miceforest_impute_3d_layer_none(edata_mini_3D_missing_values):
+    with pytest.raises(ValueError, match="requires either edata.X to be available or a layer to be specified"):
+        mice_forest_impute(edata_mini_3D_missing_values, copy=True)
 
 
 @pytest.mark.parametrize(
@@ -557,7 +614,11 @@ def test_explicit_impute_error(impute_edata, edata_mini_3D_missing_values):
         explicit_impute(edata_mini_3D_missing_values, replacement=[1, 2, 3], layer=DEFAULT_TEM_LAYER_NAME)
 
 
-def test_warning(impute_num_edata):
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NUMERIC)
+def test_warning(impute_num_edata, array_type):
+    impute_num_edata.X = array_type(impute_num_edata.X)
+    if isinstance(impute_num_edata.X, da.Array):
+        pytest.skip("_warn_imputation_threshold does not support Dask arrays")
     warning_results = _warn_imputation_threshold(impute_num_edata, threshold=20, var_names=None)
     assert warning_results == {"col1": 25, "col3": 50}
 

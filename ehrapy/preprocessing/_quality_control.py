@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import warnings
 from functools import singledispatch
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
@@ -8,8 +9,9 @@ from typing import TYPE_CHECKING, Literal
 import array_api_compat
 import numpy as np
 import pandas as pd
+import scipy.sparse as sp
 from ehrdata._logger import logger
-from ehrdata.io import to_pandas
+from scipy.stats import chi2, ttest_ind_from_stats
 
 from ehrapy._compat import (
     DaskArray,
@@ -21,7 +23,6 @@ from ehrapy._compat import (
     nanmedian_array_api,
     nanmin_array_api,
     nanstd_array_api,
-    use_ehrdata,
 )
 from ehrapy.preprocessing._encoding import _get_encoded_features
 
@@ -30,13 +31,11 @@ if TYPE_CHECKING:
 
 
 import ehrdata as ed
-from anndata import AnnData
 from ehrdata import EHRData
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 def qc_metrics(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     qc_vars: Collection[str] = (),
     *,
     layer: str | None = None,
@@ -96,10 +95,8 @@ def qc_metrics(
             >>> obs_qc.head()
             >>> var_qc.head()
     """
-    if not isinstance(edata, EHRData) and not isinstance(edata, AnnData):
-        raise ValueError(
-            f"Central data object should be an EHRData or an AnnData object, but received {type(edata).__name__}"
-        )
+    if not isinstance(edata, EHRData):
+        raise ValueError(f"Central data object should be an EHRData object, but received {type(edata).__name__}")
 
     feature_type = edata.var.get("feature_type", None)
     extended = True
@@ -134,6 +131,23 @@ def _(mtx: DaskArray, axis) -> np.ndarray:
     import dask.array as da
 
     return da.isnull(mtx).sum(axis).compute()
+
+
+@_compute_missing_values.register(sp.csr_array)
+@_compute_missing_values.register(sp.csc_array)
+def _(mtx, axis) -> np.ndarray:
+    mtx_csc = mtx.tocsc() if isinstance(mtx, sp.csr_array) else mtx
+    n_nan_per_col = np.array(
+        [np.sum(np.isnan(mtx_csc.data[mtx_csc.indptr[i] : mtx_csc.indptr[i + 1]])) for i in range(mtx.shape[1])]
+    )
+    if axis == 0:
+        return n_nan_per_col
+    else:
+        # per row
+        mtx_csr = mtx.tocsr() if isinstance(mtx, sp.csc_array) else mtx
+        return np.array(
+            [np.sum(np.isnan(mtx_csr.data[mtx_csr.indptr[i] : mtx_csr.indptr[i + 1]])) for i in range(mtx.shape[0])]
+        )
 
 
 @singledispatch
@@ -230,7 +244,7 @@ def _(mtx: np.ndarray | DaskArray):
 
 def _compute_obs_metrics(
     mtx,
-    edata: EHRData | AnnData,
+    edata: EHRData,
     *,
     qc_vars: Collection[str] = (),
     log1p: bool = True,
@@ -341,7 +355,7 @@ def _compute_obs_metrics(
 
 def _compute_var_metrics(
     mtx,
-    edata: EHRData | AnnData,
+    edata: EHRData,
     extended: bool = False,
 ):
     """Compute variable metrics for quality control.
@@ -488,9 +502,8 @@ def _compute_var_metrics(
 
 
 @function_2D_only()
-@use_ehrdata(deprecated_after="1.0.0")
 def qc_lab_measurements(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     *,
     layer: str | None = None,
     var_names: list[str] | None = None,
@@ -500,7 +513,7 @@ def qc_lab_measurements(
     add_score: bool = True,
     groupby: str | None = None,
     copy: bool = False,
-) -> EHRData | AnnData | None:
+) -> EHRData | None:
     """Flag outliers and compute anomaly scores for numeric variables.
 
     For each requested variable the function adds up to two columns in
@@ -637,16 +650,18 @@ def _outlier_flags_and_scores(
 
 
 @function_2D_only()
-@use_ehrdata(deprecated_after="1.0.0")
 def mcar_test(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     method: Literal["little", "ttest"] = "little",
     *,
     layer: str | None = None,
 ) -> float | pd.DataFrame:
     """Statistical hypothesis test for Missing Completely At Random (MCAR).
 
-    The null hypothesis of the Little's test is that data is Missing Completely At Random (MCAR).
+    Performs Little's MCAR test or pairwise t-tests.
+
+    The null hypothesis of Little's test is that data is Missing Completely At Random (MCAR).
+    A small p-value suggests the data is not MCAR.
 
     We advise to use Little’s MCAR test carefully.
     Rejecting the null hypothesis may not always mean that data is not MCAR, nor is accepting the null hypothesis a guarantee that data is MCAR.
@@ -655,15 +670,136 @@ def mcar_test(
 
     Args:
         edata: Central data object.
-        method: Whether to perform a chi-square test on the entire dataset (“little”) or separate t-tests for every combination of variables (“ttest”).
-        layer: Layer to apply the test to. Uses X matrix if set to `None`.
+        method: ``"little"`` for a global chi-square test or ``"ttest"`` for pairwise Welch t-tests across all variable combinations.
+        layer: Layer to apply the test to. Uses ``X`` if ``None``.
 
     Returns:
         A single p-value if the Little's test was applied or a Pandas DataFrame of the p-value of t-tests for each pair of features.
+
+    Examples:
+        >>> import ehrdata as ed
+        >>> import ehrapy as ep
+        >>> edata = ed.dt.ehrdata_blobs(
+        ...     n_observations=100, n_variables=5, missing_values=0.1, random_state=0, n_centers=1, base_timepoints=1
+        ... )
+        >>> ep.pp.mcar_test(edata)
+        0.327...
     """
-    df = ed.io.to_pandas(edata, layer=layer)
-    from pyampute.exploration.mcar_statistical_tests import MCARTest
+    mtx = edata.X if layer is None else edata.layers[layer]
 
-    mt = MCARTest(method=method)
+    # float64 required: covariance estimation and linear solves need stable floating-point math
+    if mtx.dtype != np.float64:
+        logger.warning(
+            f"Data dtype is {mtx.dtype}, converting to float64 for MCAR test. This may temporarily increase memory usage."
+        )
+        mtx = mtx.astype(np.float64)
 
-    return mt(df)
+    var_names = np.asarray(edata.var_names)
+    if method == "little":
+        return _little_mcar_test(mtx)
+    if method == "ttest":
+        return _mcar_t_tests(mtx, var_names)
+    raise ValueError(f"Unknown method {method!r}. Choose from 'little' or 'ttest'.")
+
+
+@singledispatch
+def _little_mcar_test(X) -> float:
+    _raise_array_type_not_implemented(_little_mcar_test, type(X))
+    raise TypeError(f"Unsupported input type: {type(X)!r}")
+
+
+@_little_mcar_test.register(np.ndarray)
+def _(X: np.ndarray) -> float:
+    # Implements equation (4) from:
+    # Li, C. (2013). Little's test of missing completely at random. Stata Journal, 13(4), 795-809.
+    # Freely accessible preprint: https://cpb-us-w2.wpmucdn.com/blog.nus.edu.sg/dist/4/6502/files/2018/06/mcartest-zlxtj7.pdf
+    # Original reference: Little, R.J.A. (1988). JASA 83(404), 1198-1202. https://doi.org/10.2307/2290157
+    n, p = X.shape
+    mask = np.isnan(X)
+
+    if not mask.any():
+        return 1.0
+
+    mu = np.nanmean(X, axis=0)
+
+    centered = X - mu
+    valid = ~mask
+    denom = valid.astype(np.float64).T @ valid.astype(np.float64)
+    np.fill_diagonal(denom, np.maximum(denom.diagonal(), 1))
+    cov_global = np.where(valid, centered, 0.0).T @ np.where(valid, centered, 0.0) / (denom - 1)
+    np.fill_diagonal(cov_global, np.maximum(cov_global.diagonal(), 1e-12))
+
+    patterns, inverse, counts = np.unique(mask, axis=0, return_inverse=True, return_counts=True)
+
+    d2 = 0.0
+    kj = 0
+    for j in range(len(patterns)):
+        obs_cols = ~patterns[j]
+        k = obs_cols.sum()
+        if k == 0:
+            continue
+        kj += k
+
+        rows = inverse == j
+        X_sub = X[np.ix_(rows, obs_cols)]
+        delta = np.nanmean(X_sub, axis=0) - mu[obs_cols]
+        sigma_j = cov_global[np.ix_(obs_cols, obs_cols)]
+
+        try:
+            contribution = delta @ np.linalg.solve(sigma_j, delta)
+        except np.linalg.LinAlgError:
+            contribution = delta @ np.linalg.pinv(sigma_j) @ delta
+
+        d2 += counts[j] * contribution
+
+    df = kj - p
+    if df <= 0:
+        return 1.0
+
+    return float(chi2.sf(d2, df))
+
+
+@singledispatch
+def _mcar_t_tests(X, var_names: np.ndarray) -> pd.DataFrame:
+    _raise_array_type_not_implemented(_mcar_t_tests, type(X))
+    raise TypeError(f"Unsupported input type: {type(X)!r}")
+
+
+@_mcar_t_tests.register(np.ndarray)
+def _(X: np.ndarray, var_names: np.ndarray) -> pd.DataFrame:
+    _, m = X.shape
+    result = np.full((m, m), np.nan)
+
+    for i in range(m):
+        miss = np.isnan(X[:, i])
+        if miss.all() or (~miss).all():
+            continue
+
+        X_miss = X[miss]
+        X_pres = X[~miss]
+
+        n1 = (~np.isnan(X_miss)).sum(axis=0).astype(float)
+        n2 = (~np.isnan(X_pres)).sum(axis=0).astype(float)
+
+        # nanmean/nanstd are evaluated eagerly for all columns before the np.where guard
+        # filters out all-NaN or single-observation columns, causing spurious RuntimeWarnings.
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            mu1 = np.where(n1 > 0, np.nanmean(X_miss, axis=0), np.nan)
+            mu2 = np.where(n2 > 0, np.nanmean(X_pres, axis=0), np.nan)
+            # ddof=1 to match ttest_ind equal_var=False (Welch's t-test)
+            std1 = np.where(n1 > 1, np.nanstd(X_miss, axis=0, ddof=1), np.nan)
+            std2 = np.where(n2 > 1, np.nanstd(X_pres, axis=0, ddof=1), np.nan)
+
+        computable = (n1 >= 1) & (n2 >= 1)
+        result[i, computable] = ttest_ind_from_stats(
+            mu1[computable],
+            std1[computable],
+            n1[computable],
+            mu2[computable],
+            std2[computable],
+            n2[computable],
+            equal_var=False,
+        ).pvalue
+
+    return pd.DataFrame(result, index=var_names, columns=var_names)

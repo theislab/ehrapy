@@ -22,19 +22,17 @@ from lifelines.statistics import StatisticalResult, logrank_test
 from scipy import stats
 from statsmodels.genmod.generalized_linear_model import GLMResultsWrapper  # noqa
 
-from ehrapy._compat import function_2D_only, use_ehrdata
+from ehrapy._compat import function_2D_only
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping, Sequence
 
-    from anndata import AnnData
     from ehrdata import EHRData
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 @function_2D_only()
 def ols(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     var_names: list[str] | None | None = None,
     formula: str | None = None,
     *,
@@ -88,10 +86,9 @@ def ols(
     return ols
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 @function_2D_only()
 def glm(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     var_names: Iterable[str] | None = None,
     formula: str | None = None,
     *,
@@ -236,9 +233,8 @@ def kmf(
 
 
 @function_2D_only()
-@use_ehrdata(deprecated_after="1.0.0")
 def kaplan_meier(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     duration_col: str,
     event_col: str | None = None,
     *,
@@ -405,7 +401,7 @@ def anova_glm(
 
 
 def _build_model_input_dataframe(
-    edata: EHRData | AnnData, duration_col: str, accept_zero_duration=True, layer: str | None = None
+    edata: EHRData, duration_col: str, accept_zero_duration=True, layer: str | None = None
 ):
     """Convenience function for regression models."""
     df = ed.io.to_pandas(edata, layer=layer)
@@ -417,10 +413,9 @@ def _build_model_input_dataframe(
     return df
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 @function_2D_only()
 def cox_ph(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     duration_col: str,
     event_col: str = None,
     *,
@@ -553,9 +548,8 @@ def cox_ph(
 
 
 @function_2D_only()
-@use_ehrdata(deprecated_after="1.0.0")
 def weibull_aft(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     duration_col: str,
     event_col: str,
     *,
@@ -656,9 +650,8 @@ def weibull_aft(
 
 
 @function_2D_only()
-@use_ehrdata(deprecated_after="1.0.0")
 def log_logistic_aft(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     duration_col: str,
     event_col: str | None = None,
     *,
@@ -757,7 +750,7 @@ def log_logistic_aft(
 
 
 def _univariate_model(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     duration_col: str,
     event_col: str,
     model_class,
@@ -806,10 +799,9 @@ def _univariate_model(
     return model
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 @function_2D_only()
 def nelson_aalen(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     duration_col: str,
     event_col: str | None = None,
     *,
@@ -883,9 +875,8 @@ def nelson_aalen(
 
 
 @function_2D_only()
-@use_ehrdata(deprecated_after="1.0.0")
 def weibull(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     duration_col: str,
     event_col: str,
     *,

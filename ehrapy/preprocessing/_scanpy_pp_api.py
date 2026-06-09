@@ -6,15 +6,14 @@ from typing import TYPE_CHECKING, Literal
 import numpy as np
 import scanpy as sc
 import scipy.sparse as sp
-from anndata import AnnData
+from ehrdata import EHRData
 from numpy.typing import NDArray
 
-from ehrapy._compat import function_2D_only, use_ehrdata
+from ehrapy._compat import function_2D_only
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Sequence
 
-    from ehrdata import EHRData
     from numpy.typing import NDArray
     from scipy.sparse import spmatrix
 
@@ -23,7 +22,7 @@ if TYPE_CHECKING:
 
 @function_2D_only()
 def pca(
-    data: EHRData | AnnData | np.ndarray | spmatrix,
+    data: EHRData | np.ndarray | spmatrix,
     *,
     n_comps: int | None = None,
     zero_center: bool | None = True,
@@ -36,7 +35,7 @@ def pca(
     copy: bool = False,
     chunked: bool = False,
     chunk_size: int | None = None,
-) -> EHRData | AnnData | np.ndarray | spmatrix | None:  # pragma: no cover
+) -> EHRData | np.ndarray | spmatrix | None:  # pragma: no cover
     """Computes a principal component analysis.
 
     Computes PCA coordinates, loadings and variance decomposition. Uses the implementation of *scikit-learn*.
@@ -60,12 +59,12 @@ def pca(
 
                     Efficient computation of the principal components of a sparse matrix currently only works with the `'arpack`' or `'lobpcg'` solvers.
         random_state: Change to use different initial states for the optimization.
-        return_info: Only relevant when not passing an :class:`~ehrdata.EHRData`: or :class:`~anndata.AnnData`: see “**Returns**”.
+        return_info: Only relevant when not passing an :class:`~ehrdata.EHRData`: see “**Returns**”.
         mask_var: To run only on a certain set of genes given by a boolean array or a string referring to an array in `var`.
                 By default, uses `.var['highly_variable']` if available, else everything.
         dtype: Numpy data type string to which to convert the result.
         layer: The layer to operate on.
-        copy: If an :class:`~ehrdata.EHRData`: or :class:`~anndata.AnnData`: is passed, determines whether a copy is returned. Is ignored otherwise.
+        copy: If an :class:`~ehrdata.EHRData`: is passed, determines whether a copy is returned. Is ignored otherwise.
         chunked: If `True`, perform an incremental PCA on segments of `chunk_size`.
                   The incremental PCA automatically zero centers and ignores settings of
                   `random_seed` and `svd_solver`. If `False`, perform a full PCA.
@@ -76,7 +75,7 @@ def pca(
         this function returns the PCA representation of `data` as an
         array of the same type as the input array.
 
-        Otherwise, it returns `None` if `copy=False`, else an updated `AnnData` object.
+        Otherwise, it returns `None` if `copy=False`, else an updated `EHRData` object.
         Sets the following fields:
 
         `.obsm['X_pca' | key_added]` : :class:`~scipy.sparse.csr_matrix` | :class:`~scipy.sparse.csc_matrix` | :class:`~numpy.ndarray` (shape `(adata.n_obs, n_comps)`)
@@ -105,16 +104,15 @@ def pca(
     )
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 @function_2D_only()
 def regress_out(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     *,
     keys: str | Sequence[str],
     n_jobs: int | None = None,
     layer: str | None = None,
     copy: bool = False,
-) -> EHRData | AnnData | None:  # pragma: no cover
+) -> EHRData | None:  # pragma: no cover
     """Regress out (mostly) unwanted sources of variation.
 
     Uses simple linear regression. This is inspired by Seurat's `regressOut` function in R [Satija15].
@@ -134,13 +132,13 @@ def regress_out(
 
 
 def subsample(
-    data: EHRData | AnnData | np.ndarray | spmatrix,
+    data: EHRData | np.ndarray | spmatrix,
     *,
     fraction: float | None = None,
     n_obs: int | None = None,
     random_state: AnyRandom = 0,
     copy: bool = False,
-) -> EHRData | AnnData | None:  # pragma: no cover
+) -> EHRData | None:  # pragma: no cover
     warnings.warn(
         "This function is deprecated and will be removed in the next release. Use ep.pp.sample instead.",
         DeprecationWarning,
@@ -150,7 +148,7 @@ def subsample(
 
 
 def sample(
-    data: EHRData | AnnData | np.ndarray | CSBase,
+    data: EHRData | np.ndarray | CSBase,
     fraction: float | None = None,
     *,
     n_obs: int | None = None,
@@ -162,7 +160,7 @@ def sample(
     replace: bool = False,
     axis: Literal["obs", 0, "var", 1] = "obs",
     p: str | NDArray[np.bool_] | NDArray[np.floating] | None = None,
-) -> EHRData | AnnData | None | tuple[np.ndarray | CSBase, np.ndarray]:  # pragma: no cover
+) -> EHRData | None | tuple[np.ndarray | CSBase, np.ndarray]:  # pragma: no cover
     """Sample a fraction or a number of observations / variables with or without replacement.
 
     Args:
@@ -170,7 +168,7 @@ def sample(
         fraction: Sample to this `fraction` of the number of observations.
         n_obs: Sample to this number of observations.
         rng: Random seed.
-        copy: If an :class:`~anndata.AnnData` is passed, determines whether a copy is returned.
+        copy: If an :class:`~ehrdata.EHRData` is passed, determines whether a copy is returned.
         balanced: If `True`, balance the groups in `adata.obs[key]` by under- or over-sampling.
                   Requires `key` to be set. If `False`, simple random sampling is performed.
         balanced_method: The sampling method, either "RandomUnderSampler" for under-sampling or "RandomOverSampler" for over-sampling. Only relevant if `balanced=True`.
@@ -206,7 +204,7 @@ def sample(
         if balanced_key is None:
             raise TypeError("Key must be provided when balanced=True")
 
-        if isinstance(data, AnnData):
+        if isinstance(data, EHRData):
             if balanced_key not in data.obs.columns:
                 raise ValueError(
                     f"Key '{balanced_key}' not found in edata.obs. Available keys are: {data.obs.columns.tolist()}"
@@ -222,14 +220,14 @@ def sample(
                 )
 
         else:
-            raise TypeError("data must be an EHRData, AnnData, numpy array or scipy sparse matrix when balanced=True")
+            raise TypeError("data must be an EHRData, numpy array or scipy sparse matrix when balanced=True")
 
         if balanced_method == "RandomUnderSampler" or balanced_method == "RandomOverSampler":
             sampled_indices, _ = _random_resample(labels, method=balanced_method, random_state=rng)
         else:
             raise ValueError(f"Unknown sampling method: {balanced_method}")
 
-        if isinstance(data, AnnData):
+        if isinstance(data, EHRData):
             if copy:
                 return data[sampled_indices].copy()
             else:
@@ -241,16 +239,15 @@ def sample(
         return sc.pp.sample(data=data, fraction=fraction, n=n_obs, rng=rng, copy=copy, replace=replace, axis=axis, p=p)
 
 
-@use_ehrdata(deprecated_after="1.0.0")
 @function_2D_only()
 def combat(
-    edata: EHRData | AnnData,
+    edata: EHRData,
     *,
     key: str = "batch",
     covariates: Collection[str] | None = None,
     layer: str | None = None,
     inplace: bool = True,
-) -> EHRData | AnnData | np.ndarray | None:  # pragma: no cover
+) -> EHRData | np.ndarray | None:  # pragma: no cover
     """ComBat function for batch effect correction :cite:p:`Johnson2006`, :cite:p:`Leek2012`, :cite:p:`Pedersen2012`.
 
     Corrects for batch effects by fitting linear models, gains statistical power via an EB framework where information is borrowed across features.
