@@ -510,8 +510,9 @@ def miss_forest_impute(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ed.dt.ehrdata_blobs(n_variables=3, n_observations=3, base_timepoints=2, missing_values=0.3)
-        >>> edata_imputed = ep.pp.knn_impute(edata, layer="tem_data", copy=True)
+        >>> edata = ed.dt.mimic_2()
+        >>> edata = ep.pp.encode(edata, autodetect=True)
+        >>> ep.pp.miss_forest_impute(edata)
 
         Example Output:
 
@@ -585,7 +586,6 @@ def miss_forest_impute(
 
 
 @_check_feature_types
-@function_2D_only()
 @spinner("Performing mice-forest impute")
 def mice_forest_impute(
     edata: EHRData,
@@ -594,7 +594,6 @@ def mice_forest_impute(
     warning_threshold: int = 70,
     save_all_iterations_data: bool = True,
     random_state: int | None = None,
-    inplace: bool = False,
     iterations: int = 5,
     variable_parameters: dict | None = None,
     verbose: bool = False,
@@ -608,6 +607,9 @@ def mice_forest_impute(
 
     If required, the data needs to be properly encoded as this imputation requires numerical data only.
 
+    For 2D data, if layer is `None`, `edata.X` is used directly.
+    For 3D data, the layer is flattened along axis 0 before imputation and reshaped back to 3D afterwards.
+
     .. warning::
         This function is not supported on MacOS.
 
@@ -618,13 +620,11 @@ def mice_forest_impute(
         save_all_iterations_data: Whether to save all imputed values from all iterations or just the latest.
                              Saving all iterations allows for additional plotting, but may take more memory.
         random_state: The random state ensures script reproducibility.
-        inplace: If True, modify the input data object in-place and return None.
-                 If False, return a copy of the modified data object. Default is False.
         iterations: The number of iterations to run.
         variable_parameters: Model parameters can be specified by variable here.
                              Keys should be variable names or indices, and values should be a dict of parameter which should apply to that variable only.
         verbose: Whether to print information about the imputation process.
-        layer: The layer to impute.
+        layer: The layer to impute. Required when input data is 3D.
         copy: Whether to return a copy of the data object or modify it in-place.
 
     Returns:
@@ -634,12 +634,28 @@ def mice_forest_impute(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ed.dt.mimic_2()
-        >>> edata = ep.pp.encode(edata, autodetect=True)
-        >>> ep.pp.mice_forest_impute(edata)
+        >>> edata = ed.dt.ehrdata_blobs(n_variables=3, n_observations=20, base_timepoints=2, missing_values=0.3)
+        >>> edata_imputed = ep.pp.mice_forest_impute(edata, layer="tem_data", copy=True)
+
+        Example Output:
+
+        >>> edata.layers["tem_data"][0, :, :]
+        [[-11.3735387 , -17.00612946],
+        [         nan,  -3.13348925],
+        [         nan, -10.87061402]]
+        >>> edata_imputed.layers["tem_data"][0, :, :]
+        [[-11.3735387 , -17.00612946],
+        [ -2.29990557,  -3.13348925],
+        [ -6.72812888, -10.87061402]]
+
     """
     if copy:
         edata = edata.copy()
+
+    if edata.X is None and layer is None:  # if edata is empty
+        raise ValueError(
+            "Imputation requires either edata.X to be available or a layer to be specified. Pass the layer containing the full temporal data."
+        )
 
     if var_names is None:
         var_names = edata.var_names
@@ -654,12 +670,12 @@ def mice_forest_impute(
             "Can only impute numerical data. Try to restrict imputation to certain columns using "
             "var_names parameter or perform an encoding of your data."
         )
+
     _miceforest_impute(
         edata,
         var_names,
         save_all_iterations_data,
         random_state,
-        inplace,
         iterations,
         variable_parameters,
         verbose,
@@ -674,50 +690,105 @@ def load_dataframe(arr, columns, index):
     _raise_array_type_not_implemented(load_dataframe, type(arr))
 
 
-@load_dataframe.register
+@load_dataframe.register(np.ndarray)
 def _(arr: np.ndarray, columns, index):
     return pd.DataFrame(arr, columns=columns, index=index)
 
 
+@singledispatch
+def _miceforest_impute_function(
+    mtx,
+    var_names,
+    idx,
+    column_indices,
+    save_all_iterations_data,
+    random_state,
+    iterations,
+    variable_parameters,
+    verbose,
+):
+    _raise_array_type_not_implemented(_miceforest_impute_function, type(mtx))
+
+
+@_miceforest_impute_function.register(np.ndarray)
+def _(
+    mtx: np.ndarray,
+    var_names,
+    idx,
+    column_indices,
+    save_all_iterations_data,
+    random_state,
+    iterations,
+    variable_parameters,
+    verbose,
+):
+    import miceforest as mf
+
+    data_df = load_dataframe(mtx, columns=var_names, index=idx)
+    data_df = data_df.apply(pd.to_numeric, errors="coerce")
+
+    # no need for branching as var_names is always either pd.Index or list of strings (resolved to strings before _miceforest_impute is called)
+    selected_columns = data_df.iloc[:, column_indices]
+    selected_columns = selected_columns.reset_index(drop=True)
+
+    kernel = mf.ImputationKernel(
+        selected_columns,
+        num_datasets=1,
+        save_all_iterations_data=save_all_iterations_data,
+        random_state=random_state,
+    )
+
+    kernel.mice(iterations=iterations, variable_parameters=variable_parameters or {}, verbose=verbose)
+    data_df.iloc[:, column_indices] = kernel.complete_data(dataset=0, inplace=False)
+    return data_df
+
+
 def _miceforest_impute(
-    edata, var_names, save_all_iterations_data, random_state, inplace, iterations, variable_parameters, verbose, layer
+    edata, var_names, save_all_iterations_data, random_state, iterations, variable_parameters, verbose, layer
 ) -> None:
     import miceforest as mf
 
-    data_df = load_dataframe(
-        edata.X if layer is None else edata.layers[layer], columns=edata.var_names, index=edata.obs_names
+    mtx = edata.X if layer is None else edata.layers[layer]
+    # ensure floating point dtype for 3D flatten, object dtype arrays cause NaN predictions in miceforest's KD-tree
+    input_dtype = mtx.dtype if np.issubdtype(mtx.dtype, np.floating) else np.float64
+    var_indices = edata.var_names.get_indexer(var_names).tolist()
+
+    is_3d = False
+    if mtx.ndim == 3:
+        is_3d = True
+        n_obs, n_vars, n_t = mtx.shape
+        mtx = (
+            mtx[:, var_indices, :]
+            .astype(input_dtype, copy=True)
+            .transpose(0, 2, 1)
+            .reshape(n_obs * n_t, len(var_indices))
+        )
+        column_indices = list(range(len(var_indices)))
+    else:
+        column_indices = var_indices
+
+    idx = pd.RangeIndex(n_obs * n_t) if is_3d else edata.obs_names
+
+    data_df = _miceforest_impute_function(
+        mtx,
+        var_names,
+        idx,
+        column_indices,
+        save_all_iterations_data,
+        random_state,
+        iterations,
+        variable_parameters,
+        verbose,
     )
-    data_df = data_df.apply(pd.to_numeric, errors="coerce")
 
-    if isinstance(var_names, Iterable) and all(isinstance(item, str) for item in var_names):
-        column_indices = edata.var_names.get_indexer(var_names).tolist()
-        selected_columns = data_df.iloc[:, column_indices]
-        selected_columns = selected_columns.reset_index(drop=True)
-
-        kernel = mf.ImputationKernel(
-            selected_columns,
-            num_datasets=1,
-            save_all_iterations_data=save_all_iterations_data,
-            random_state=random_state,
-        )
-
-        kernel.mice(iterations=iterations, variable_parameters=variable_parameters or {}, verbose=verbose)
-        data_df.iloc[:, column_indices] = kernel.complete_data(dataset=0, inplace=inplace)
-
+    if is_3d:
+        result = data_df.values.reshape(n_obs, n_t, len(var_indices)).transpose(0, 2, 1)
+        edata.layers[layer][:, var_indices, :] = result
     else:
-        data_df = data_df.reset_index(drop=True)
-
-        kernel = mf.ImputationKernel(
-            data_df, num_datasets=1, save_all_iterations_data=save_all_iterations_data, random_state=random_state
-        )
-
-        kernel.mice(iterations=iterations, variable_parameters=variable_parameters or {}, verbose=verbose)
-        data_df = kernel.complete_data(dataset=0, inplace=inplace)
-
-    if layer is None:
-        edata.X = data_df.values
-    else:
-        edata.layers[layer] = data_df.values
+        if layer is None:
+            edata.X = data_df.values
+        else:
+            edata.layers[layer] = data_df.values
 
 
 def _warn_imputation_threshold(

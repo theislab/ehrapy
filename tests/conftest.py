@@ -204,7 +204,8 @@ def edata_mini():
 
 @pytest.fixture
 def edata_mini_3D_missing_values(request):
-    only_numerical = getattr(request, "param", False)
+    params = getattr(request, "param", (False, False))
+    only_numerical, more_obs = params if isinstance(params, tuple) else (params, False)
 
     tiny_mixed_array = np.array(
         [
@@ -215,6 +216,10 @@ def edata_mini_3D_missing_values(request):
         ],
         dtype=object,
     )
+
+    if more_obs:
+        # stack the array to get more observations
+        tiny_mixed_array = np.concatenate([tiny_mixed_array] * 5, axis=0)
 
     if only_numerical:
         layer = tiny_mixed_array[:, :4, :]
