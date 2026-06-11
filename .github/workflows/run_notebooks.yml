@@ -48,5 +48,26 @@ jobs:
             - name: Install ehrdata from submodule
               run: uv pip install --reinstall --no-deps -e submodules/ehrdata
 
+            # Restore example datasets so flaky/blocked upstream hosts (physionet.org etc.) don't break the tutorial runs.
+            # Keyed per notebook because each notebook downloads a different subset; bump the version on URL changes.
+            # nbconvert executes with the notebook's directory as the working directory, so datasets land in docs/tutorials/notebooks/ehrapy_data.
+            - name: Restore datasets cache
+              id: data-cache
+              uses: actions/cache/restore@v4
+              with:
+                  path: docs/tutorials/notebooks/ehrapy_data
+                  key: ehrapy-data-notebook-${{ matrix.notebook }}-v1
+
             - name: Run ${{ matrix.notebook }} Notebook
+              env:
+                  EHRDATA_DOWNLOAD_MAX_RETRIES: "5"
+                  EHRDATA_DOWNLOAD_RETRY_DELAY: "10"
               run: uv run jupyter nbconvert --to notebook --execute ${{ matrix.notebook }}
+
+            # Only persist after a green run that had to download (cache miss), so a partial/failed download is never saved under the (immutable) key.
+            - name: Save datasets cache
+              if: steps.data-cache.outputs.cache-hit != 'true' && success()
+              uses: actions/cache/save@v4
+              with:
+                  path: docs/tutorials/notebooks/ehrapy_data
+                  key: ehrapy-data-notebook-${{ matrix.notebook }}-v1

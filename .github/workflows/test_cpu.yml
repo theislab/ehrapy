@@ -67,6 +67,15 @@ jobs:
           python-version: ${{ matrix.env.python }}
           cache-dependency-glob: pyproject.toml
 
+      # Restore example datasets (downloaded from physionet.org etc.) from a previous run, so flaky/blocked upstream hosts don't break CI.
+      # The key is static and shared across the Python matrix so the cache is reused across runs; bump the version when a dataset URL changes.
+      - name: Restore datasets cache
+        id: data-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ehrapy_data
+          key: ehrapy-data-tests-v1
+
       - name: create hatch environment
         run: uvx hatch env create ${{ matrix.env.name }}
       - name: Show installed packages
@@ -77,7 +86,16 @@ jobs:
           MPLBACKEND: agg
           PLATFORM: ${{ matrix.os }}
           DISPLAY: :42
+          EHRDATA_DOWNLOAD_MAX_RETRIES: "5"
+          EHRDATA_DOWNLOAD_RETRY_DELAY: "10"
         run: uvx hatch run ${{ matrix.env.name }}:run-cov -v --color=yes -n auto
+      # Only persist the cache after a green run that had to download (cache miss), so a partial/failed download is never saved under the (immutable) key.
+      - name: Save datasets cache
+        if: steps.data-cache.outputs.cache-hit != 'true' && success()
+        uses: actions/cache/save@v4
+        with:
+          path: ehrapy_data
+          key: ehrapy-data-tests-v1
       - name: generate coverage report
         run: |
           # See https://coverage.readthedocs.io/en/latest/config.html#run-patch
