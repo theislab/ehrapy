@@ -49,4 +49,4 @@ jobs:
               run: uv pip install --reinstall --no-deps -e submodules/ehrdata
 
             - name: Run ${{ matrix.notebook }} Notebook
-              run: uv run jupyter nbconvert --to notebook --execute ${{ matrix.notebook }}
+              run: uv run --no-sync jupyter nbconvert --to notebook --execute ${{ matrix.notebook }}
