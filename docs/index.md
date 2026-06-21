@@ -29,6 +29,14 @@ ehrapy is a modular open-source Python framework designed for exploratory end-to
 ```
 
 ```{eval-rst}
+.. card:: Ecosystem :octicon:`package;1em;`
+    :link: ecosystem
+    :link-type: doc
+
+    Discover specialized packages and workflows that build on ehrapy.
+```
+
+```{eval-rst}
 .. card:: Discussion :octicon:`megaphone;1em;`
     :link: https://discourse.scverse.org/
 
@@ -51,6 +59,7 @@ ehrapy is a modular open-source Python framework designed for exploratory end-to
 
 installation
 api
+ecosystem
 contributing
 changelog
 references
