@@ -47,7 +47,6 @@ classifiers = [
 
 dependencies = [
     "ehrdata",
-    "pooch",  # required by the bundled ehrdata submodule, which is installed with --no-deps
     "scanpy",
     "scverse-misc[settings]>=0.0.7",
     "requests",
@@ -124,13 +123,13 @@ allow-direct-references = true
 installer = "uv"
 features = [ "dev" ]
 post-install-commands = [
-  "uv pip install --reinstall --no-deps -e submodules/ehrdata",
+  "uv pip install --reinstall -e submodules/ehrdata",
 ]
 
 [tool.hatch.envs.docs]
 features = [ "doc", "dask", "leiden" ]
 post-install-commands = [
-  "uv pip install --reinstall --no-deps -e submodules/ehrdata",
+  "uv pip install --reinstall -e submodules/ehrdata",
 ]
 scripts.build = "sphinx-build -M html docs docs/_build -W {args}"
 scripts.open = "python -m webbrowser -t docs/_build/html/index.html"
@@ -140,7 +139,7 @@ scripts.clean = "git clean -fdX -- {args:docs}"
 [tool.hatch.envs.hatch-test]
 features = [ "dask", "leiden" ]
 post-install-commands = [
-  "uv pip install --reinstall --no-deps -e submodules/ehrdata",
+  "uv pip install --reinstall -e submodules/ehrdata",
 ]
 
 [[tool.hatch.envs.hatch-test.matrix]]
@@ -150,7 +149,7 @@ python = [ "3.12", "3.14" ]
 [tool.hatch.envs.hatch-test-gpu]
 features = ["test"]
 post-install-commands = [
-  "uv pip install --reinstall --no-deps -e submodules/ehrdata",
+  "uv pip install --reinstall -e submodules/ehrdata",
 ]
 scripts.run = "pytest -m gpu {args}"
 
