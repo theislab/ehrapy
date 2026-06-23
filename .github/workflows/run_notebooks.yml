@@ -43,7 +43,7 @@ jobs:
               run: sudo apt-get install -y libopenblas-dev
 
             - name: Install ehrapy and additional dependencies
-              run: uv pip install '.[leiden]' 'cellrank[scvelo]' nbconvert ipykernel graphviz pypots fairlearn
+              run: uv pip install '.[leiden]' 'cellrank[scvelo]' 'numpy>=2.3.2,<2.4' nbconvert ipykernel graphviz pypots fairlearn # numpy pin, upstream: https://github.com/scverse/cellrank/issues/1365
 
             - name: Install ehrdata from submodule
               run: uv pip install --reinstall --no-deps -e submodules/ehrdata
@@ -59,7 +59,7 @@ jobs:
               env:
                   EHRDATA_DOWNLOAD_MAX_RETRIES: "5"
                   EHRDATA_DOWNLOAD_RETRY_DELAY: "10"
-              run: uv run jupyter nbconvert --to notebook --execute ${{ matrix.notebook }}
+              run: uv run --no-sync jupyter nbconvert --to notebook --execute ${{ matrix.notebook }}
 
             - name: Save datasets cache
               if: steps.data-cache.outputs.cache-hit != 'true' && success()
