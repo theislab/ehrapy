@@ -67,5 +67,3 @@ jobs:
               with:
                   path: docs/tutorials/notebooks/ehrapy_data
                   key: ehrapy-data-notebook-${{ matrix.notebook }}-v1
-
-
