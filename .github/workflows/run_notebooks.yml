@@ -46,7 +46,7 @@ jobs:
               run: uv pip install '.[leiden]' 'cellrank[scvelo]' 'numpy>=2.3.2,<2.4' nbconvert ipykernel graphviz pypots fairlearn # numpy pin, upstream: https://github.com/scverse/cellrank/issues/1365
 
             - name: Install ehrdata from submodule
-              run: uv pip install --reinstall -e submodules/ehrdata
+              run: uv pip install --reinstall --no-deps -e submodules/ehrdata
 
             - name: Restore datasets cache
               id: data-cache
