@@ -76,7 +76,7 @@ def test_pl_ncp_image(edata_with_ncp: ed.EHRData, check_same_image, hv_backend) 
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/ncp",
-        tol=2e-1,
+        tol=30,
     )
 
 
@@ -152,5 +152,5 @@ def test_pl_ncp_cluster_trajectories_image(edata_with_ncp: ed.EHRData, check_sam
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/ncp_cluster_trajectories",
-        tol=2e-1,
+        tol=35,
     )

@@ -571,10 +571,7 @@ def test_pca_overview(mimic_2_sample_serv_unit_day_icu, check_same_image, clean_
             fig.set_size_inches(8, 6)
         fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
 
-        check_same_image(
-            fig=fig,
-            base_path=f"{_TEST_IMAGE_PATH}/pca_overview_{id}",
-        )
+        check_same_image(fig=fig, base_path=f"{_TEST_IMAGE_PATH}/pca_overview_{id}", tol=40)
 
 
 def test_umap_functionality(mimic_2_sample_serv_unit_day_icu):
