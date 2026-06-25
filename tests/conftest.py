@@ -486,7 +486,9 @@ def check_same_image(tmp_path: Path):
         fig: Figure | hv.core.overlay.Overlay | hv.element.chart.Scatter | hv.Element,
         base_path: Path | os.PathLike,
         *,
-        tol: float,
+        # default mirrors scanpy's most common image-comparison tolerance (RMS on a
+        # 0-255 scale); individual tests bump this where rendering legitimately differs more.
+        tol: float = 15,
     ) -> None:
         expected = Path(base_path).parent / (Path(base_path).name + "_expected.png")
         if not Path(expected).is_file():

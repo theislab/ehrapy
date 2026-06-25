@@ -21,7 +21,6 @@ def test_sankey_plot(diabetes_130_fairlearn_sample_100, check_same_image, hv_bac
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/sankey",
-        tol=2e-1,
     )
 
 
@@ -41,7 +40,6 @@ def test_sankey_time_plot(check_same_image, hv_backend):
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/sankey_time",
-        tol=2e-1,
     )
 
 

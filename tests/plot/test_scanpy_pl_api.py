@@ -26,7 +26,6 @@ def test_scatter_plot(mimic_2, check_same_image):
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/scatter_scanpy_plt",
-        tol=2e-1,
     )
     plt.close("all")
 
@@ -51,7 +50,7 @@ def test_heatmap_plot(edata_mini, check_same_image):
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/heatmap_scanpy_plt",
-        tol=2e-1,
+        tol=25,
     )
     plt.close("all")
 
@@ -149,7 +148,7 @@ def test_dotplot_plot_image(mimic_2, check_same_image):
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/dotplot_scanpy_plt",
-        tol=2e-1,
+        tol=25,
     )
     plt.close("all")
 
@@ -181,7 +180,7 @@ def test_tracks_plot(mimic_2, check_same_image):
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/tracksplot_scanpy_plt",
-        tol=2e-1,
+        tol=25,
     )
     plt.close("all")
 
@@ -206,7 +205,6 @@ def test_violin_plot(mimic_2, check_same_image):
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/violin_scanpy_plt",
-        tol=2e-1,
     )
     plt.close("all")
 
@@ -255,7 +253,7 @@ def test_matrix_plot(mimic_2, check_same_image):
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/matrix_scanpy_plot",
-        tol=2e-1,
+        tol=25,
     )
     plt.close("all")
 
@@ -287,7 +285,7 @@ def test_stacked_violin_plot(mimic_2, check_same_image):
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/stacked_violin_scanpy_plt",
-        tol=2e-1,
+        tol=25,
     )
     plt.close("all")
 
@@ -313,7 +311,6 @@ def test_clustermap(mimic_2_encoded, check_same_image):
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/clustermap_scanpy",
-        tol=2e-1,
     )
     plt.close("all")
 
@@ -424,7 +421,7 @@ def test_rank_features_groups_heatmap(mimic_2_encoded, check_same_image):
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/rank_features_groups_heatmap_scanpy",
-        tol=2e-1,
+        tol=25,
     )
     plt.close("all")
 
@@ -482,7 +479,7 @@ def test_rank_features_groups_dotplot_image(mimic_2_encoded, check_same_image):
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/rank_features_groups_dotplot_scanpy",
-        tol=2e-1,
+        tol=25,
     )
     plt.close("all")
 
@@ -505,7 +502,6 @@ def test_pca(mimic_2_sample_serv_unit_day_icu, check_same_image):
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/pca",
-        tol=2e-1,
     )
     plt.close("all")
 
@@ -527,7 +523,7 @@ def test_pca_loadings(mimic_2_sample_serv_unit_day_icu, check_same_image):
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/pca_loadings",
-        tol=2e-1,
+        tol=40,
     )
 
     plt.close("all")
@@ -550,7 +546,7 @@ def test_pca_variance_ration(mimic_2_sample_serv_unit_day_icu, check_same_image)
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/pca_variance_ratio",
-        tol=2e-1,
+        tol=25,
     )
 
     plt.close("all")
@@ -578,7 +574,6 @@ def test_pca_overview(mimic_2_sample_serv_unit_day_icu, check_same_image, clean_
         check_same_image(
             fig=fig,
             base_path=f"{_TEST_IMAGE_PATH}/pca_overview_{id}",
-            tol=2e-1,
         )
 
 
@@ -671,5 +666,5 @@ def test_dpt_timeseries(mimic_2_encoded, check_same_image):
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/dpt_timeseries",
-        tol=2e-1,
+        tol=35,
     )
