@@ -48,6 +48,8 @@ classifiers = [
 dependencies = [
     "ehrdata",
     "scanpy",
+    # mirroring scanpy: skip 3.11.0 series for now: https://github.com/matplotlib/matplotlib/issues/31575
+    "matplotlib>=3.10,!=3.11.0rc1,!=3.11.0rc2,!=3.11",
     "scverse-misc[settings]>=0.0.7",
     "requests",
     "miceforest",
