@@ -47,6 +47,7 @@ classifiers = [
 
 dependencies = [
     "ehrdata",
+    "pooch",  # required by the ehrdata submodule, which is installed with --no-deps
     "scanpy",
     "scverse-misc[settings]>=0.0.7",
     "requests",

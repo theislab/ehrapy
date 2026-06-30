@@ -48,5 +48,22 @@ jobs:
             - name: Install ehrdata from submodule
               run: uv pip install --reinstall --no-deps -e submodules/ehrdata
 
+            - name: Restore datasets cache
+              id: data-cache
+              uses: actions/cache/restore@v4
+              with:
+                  path: docs/tutorials/notebooks/ehrapy_data
+                  key: ehrapy-data-notebook-${{ matrix.notebook }}-v1
+
             - name: Run ${{ matrix.notebook }} Notebook
+              env:
+                  EHRDATA_DOWNLOAD_MAX_RETRIES: "5"
+                  EHRDATA_DOWNLOAD_RETRY_DELAY: "10"
               run: uv run --no-sync jupyter nbconvert --to notebook --execute ${{ matrix.notebook }}
+
+            - name: Save datasets cache
+              if: steps.data-cache.outputs.cache-hit != 'true' && success()
+              uses: actions/cache/save@v4
+              with:
+                  path: docs/tutorials/notebooks/ehrapy_data
+                  key: ehrapy-data-notebook-${{ matrix.notebook }}-v1
