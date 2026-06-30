@@ -128,6 +128,7 @@ nitpick_ignore = [
     ("py:func", "ehrapy.pl.tracksplot"),
     ("py:class", "scanpy.plotting._utils._AxesSubplot"),
     ("py:func", "IPython.display.set_matplotlib_formats"),
+    ("py:func", "matplotlib.cm.get_cmap"),
     ("py:class", "matplotlib.colorbar.ColorbarBase"),
     ("py:class", "scanpy.neighbors._types.KnnTransformerLike"),
     ("py:class", "statsmodels.genmod.generalized_linear_model.GLMResultsWrapper"),
