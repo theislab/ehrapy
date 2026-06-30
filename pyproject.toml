@@ -47,6 +47,7 @@ classifiers = [
 
 dependencies = [
     "ehrdata",
+    "pooch",  # required by the ehrdata submodule, which is installed with --no-deps
     "scanpy",
     # mirroring scanpy: skip 3.11.0 series for now: https://github.com/matplotlib/matplotlib/issues/31575
     "matplotlib>=3.10,!=3.11.0rc1,!=3.11.0rc2,!=3.11",

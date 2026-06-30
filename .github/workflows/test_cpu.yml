@@ -67,6 +67,13 @@ jobs:
           python-version: ${{ matrix.env.python }}
           cache-dependency-glob: pyproject.toml
 
+      - name: Restore datasets cache
+        id: data-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ehrapy_data
+          key: ehrapy-data-tests-v1
+
       - name: create hatch environment
         run: uvx hatch env create ${{ matrix.env.name }}
       - name: Show installed packages
@@ -77,7 +84,15 @@ jobs:
           MPLBACKEND: agg
           PLATFORM: ${{ matrix.os }}
           DISPLAY: :42
+          EHRDATA_DOWNLOAD_MAX_RETRIES: "5"
+          EHRDATA_DOWNLOAD_RETRY_DELAY: "10"
         run: uvx hatch run ${{ matrix.env.name }}:run-cov -v --color=yes -n auto
+      - name: Save datasets cache
+        if: steps.data-cache.outputs.cache-hit != 'true' && success()
+        uses: actions/cache/save@v4
+        with:
+          path: ehrapy_data
+          key: ehrapy-data-tests-v1
       - name: generate coverage report
         run: |
           # See https://coverage.readthedocs.io/en/latest/config.html#run-patch
