@@ -487,7 +487,6 @@ def check_same_image(tmp_path: Path):
         base_path: Path | os.PathLike,
         *,
         # default mirrors scanpy's most common image-comparison tolerance 15 (RMS on a 0-255 scale). https://github.com/scverse/scanpy/blob/ee7707bc208132cca8387e542d0532f6967f68cc/tests/test_plotting.py#L567. Individual tests bump this where rendering legitimately differs more.
-        # 0-255 scale); individual tests bump this where rendering legitimately differs more.
         tol: float = 15,
     ) -> None:
         expected = Path(base_path).parent / (Path(base_path).name + "_expected.png")
