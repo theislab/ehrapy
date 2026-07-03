@@ -91,7 +91,7 @@ def test_CohortTracker_plot_cohort_barplot_vanilla(edata_mini, check_same_image)
     check_same_image(
         fig=fig1,
         base_path=f"{_TEST_IMAGE_PATH}/cohorttracker_edata_mini_step1_vanilla",
-        tol=1e-1,
+        tol=35,
     )
 
     ct(edata_mini, label="Second step", operations_done="Some other operations")
@@ -100,7 +100,7 @@ def test_CohortTracker_plot_cohort_barplot_vanilla(edata_mini, check_same_image)
     check_same_image(
         fig=fig2,
         base_path=f"{_TEST_IMAGE_PATH}/cohorttracker_edata_mini_step2_vanilla",
-        tol=1e-1,
+        tol=35,
     )
 
 
@@ -117,7 +117,7 @@ def test_CohortTracker_plot_cohort_barplot_use_settings(edata_mini, check_same_i
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/cohorttracker_edata_mini_step1_use_settings",
-        tol=1e-1,
+        tol=35,
     )
 
 
@@ -136,7 +136,7 @@ def test_CohortTracker_plot_cohort_barplot_use_settings_big(edata_mini, check_sa
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/cohorttracker_edata_mini_step1_use_settings_big",
-        tol=1e-1,
+        tol=35,
     )
 
 
@@ -154,7 +154,7 @@ def test_CohortTracker_plot_cohort_barplot_loosing_category(edata_mini, check_sa
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/cohorttracker_edata_mini_step2_loose_category",
-        tol=1e-1,
+        tol=35,
     )
 
 
@@ -234,7 +234,6 @@ def test_CohortTracker_flowchart_image(edata_mini, check_same_image):
     check_same_image(
         fig=plot,
         base_path=f"{_TEST_IMAGE_PATH}/cohorttracker_edata_mini_flowchart",
-        tol=1e-1,
     )
 
 

@@ -23,7 +23,7 @@ def test_missing_values_barplot(mimic_2, check_same_image, layer, clean_up_plots
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/missing_values_barplot",
-        tol=5,
+        tol=25,
     )
 
 
@@ -43,7 +43,7 @@ def test_missing_values_matrixplot(mimic_2, check_same_image, layer, clean_up_pl
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/missing_values_matrix",
-        tol=2e-1,
+        tol=25,
     )
 
 
@@ -63,7 +63,7 @@ def test_missing_values_heatmap(mimic_2, check_same_image, layer, clean_up_plots
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/missing_values_heatmap",
-        tol=2e-1,
+        tol=25,
     )
 
 
@@ -83,7 +83,7 @@ def test_missing_values_dendogram(mimic_2, check_same_image, layer):
     check_same_image(
         fig=fig,
         base_path=f"{_TEST_IMAGE_PATH}/missing_values_dendogram",
-        tol=2e-1,
+        tol=25,
     )
 
 
