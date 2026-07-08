@@ -122,8 +122,7 @@ def clip_quantile(
 
 
 def _write_var_back(edata: EHRData, var: str, values, layer: str | None) -> None:
-    """Write ``values`` for a single ``var`` back into the parent's ``X``/``layer``.
-    """
+    """Write ``values`` for a single ``var`` back into the parent's ``X``/``layer``."""
     var_idx = edata.var_names.get_loc(var)
     if layer is None:
         arr = np.asarray(edata.X).copy()
