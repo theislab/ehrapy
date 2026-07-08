@@ -158,8 +158,11 @@ def test_survival_models(sa_function, sa_class, mimic_2_sa, layer):
 def test_survival_models_3D(sa_function, sa_class, edata_blob_small):
     duration_col = "feature_1"
     event_col = "feature_0"
-    edata_blob_small[:, [duration_col]].X = np.arange(len(edata_blob_small), dtype=np.int32)
-    edata_blob_small[:, [event_col]].X = 1
+    # Assigning through a subset view does not propagate on anndata >=0.13, so set X on the parent.
+    X = np.asarray(edata_blob_small.X).copy()
+    X[:, edata_blob_small.var_names.get_loc(duration_col)] = np.arange(len(edata_blob_small), dtype=np.int32)
+    X[:, edata_blob_small.var_names.get_loc(event_col)] = 1
+    edata_blob_small.X = X
 
     edata_blob_small.layers["layer_2"] = edata_blob_small.X.copy()
 

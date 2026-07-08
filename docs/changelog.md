@@ -4,6 +4,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## v0.14.0
 
+<!--
+anndata 0.13.0 has been released and is now supported.
+The anndata 0.13.0 release notes are worth a look: https://anndata.scverse.org/en/stable/release-notes/index.html#v0-13-0
+-->
+
 ### 🚀 Features
 
 * Add LOCF imputation `ep.pp.locf_impute()` for longitudinal (3D) data with forward fill and configurable fallback strategies ([#1020](https://github.com/theislab/ehrapy/pull/1020)) @agerardy @eroell
@@ -26,12 +31,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 * Adapt to updated `ed.infer_feature_type`, discard alternative feature type inference in imputation methods ([#1039](https://github.com/theislab/ehrapy/pull/1039)) @eroell
 * Upgrade tutorials ([#1042](https://github.com/theislab/ehrapy/pull/1042), [#1043](https://github.com/theislab/ehrapy/pull/1043), [#1046](https://github.com/theislab/ehrapy/pull/1046)) @agerardy @sueoglu @Zethson
 * Remove ML with ehrapy notebook ([#1048](https://github.com/theislab/ehrapy/pull/1048)) @eroell
+* `anndata` 0.13 support ([#1084](https://github.com/theislab/ehrapy/pull/1048)) @eroell
 
 
 ### 🐛 Bug Fixes
 
 * `ep.pp` normalization functions now work when using a `layer` and `.X` is `None` ([#1015](https://github.com/theislab/ehrapy/pull/1015)) @agerardy @eroell
 * `ep.tl.rank_features_groups` can use `.obs` regardless of what is in `.X` or `.layers` ([#1015](https://github.com/theislab/ehrapy/pull/1015)) @agerardy @eroell
+
 
 ### ⚠️ Modified
 * Update `qc_lab_metrics`([#1025](https://github.com/theislab/ehrapy/pull/1025)) @eroell
