@@ -25,7 +25,7 @@ class _EhrapySettings(Settings, exported_object_name="settings", docstring_style
     plot_suffix: str = ""
     """Global suffix appended to figure filenames."""
 
-    file_format_data: Literal["csv", "h5ad"] = "h5ad"
+    file_format_data: Literal["csv", "h5ed"] = "h5ed"
     """File format for saving EHRData objects."""
 
     file_format_figs: str = "pdf"

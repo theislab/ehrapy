@@ -794,7 +794,7 @@ def _update_obs(edata: EHRData, categorical_names: list[str], layer: str | None 
         elif var_name in categorical_names:
             updated_obs[var_name] = X[::, idx : idx + 1].flatten()
             # note: this will count binary columns (0 and 1 only) as well
-            # needed for writing to .h5ad files
+            # needed for writing to .h5ed files
             if set(pd.unique(updated_obs[var_name])).issubset({False, True, np.nan}):
                 updated_obs[var_name] = updated_obs[var_name].astype("bool")
     # get all non bool object columns and cast them to category dtype
