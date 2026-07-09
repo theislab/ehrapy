@@ -13,11 +13,12 @@ The anndata 0.13.0 release notes are worth a look: https://anndata.scverse.org/e
 
 ### 🚀 Features
 
-* Add 3D support for `ep.pp.miss_forest_impute()` ([#1052](https://github.com/theislab/ehrapy/pull/1052)) @sueoglu
-* Add 3D support for `ep.pp.mice_forest_impute()` ([#1055](https://github.com/theislab/ehrapy/pull/1055)) @sueoglu
+* Add 3D support for {func}`ep.pp.miss_forest_impute <ehrapy.preprocessing.miss_forest_impute>` ([#1052](https://github.com/theislab/ehrapy/pull/1052)) @sueoglu
+* Add 3D support for {func}`ep.pp.mice_forest_impute <ehrapy.preprocessing.mice_forest_impute>` ([#1055](https://github.com/theislab/ehrapy/pull/1055)) @sueoglu
 * Add stratified Table One for baseline comparisons ([#1066](https://github.com/theislab/ehrapy/pull/1066)) @Zethson
-* Add CONSORT-style branching for `CohortTracker` ([#1077](https://github.com/theislab/ehrapy/pull/1077)) @Zethson
-* Add 3D & lazy Dask array support for `ep.pp.encode()` ([#1078](https://github.com/theislab/ehrapy/pull/1078)) @Zethson
+* Add CONSORT-style branching for {class}`CohortTracker <ehrapy.tools.CohortTracker>` ([#1077](https://github.com/theislab/ehrapy/pull/1077)) @Zethson
+* Add 3D & lazy Dask array support for {func}`ep.pp.encode <ehrapy.preprocessing.encode>` ([#1078](https://github.com/theislab/ehrapy/pull/1078)) @Zethson
+* Add in-house causal inference module — {func}`ep.tl.iptw <ehrapy.tools.iptw>`, {func}`ep.tl.g_computation <ehrapy.tools.g_computation>`, {func}`ep.tl.aipw <ehrapy.tools.aipw>`, {func}`ep.tl.propensity_score_matching <ehrapy.tools.propensity_score_matching>`, meta-learners ({func}`ep.tl.t_learner <ehrapy.tools.t_learner>`/{func}`ep.tl.s_learner <ehrapy.tools.s_learner>`/{func}`ep.tl.x_learner <ehrapy.tools.x_learner>`), and {func}`ep.tl.covariate_balance <ehrapy.tools.covariate_balance>` — replacing the `dowhy` dependency ([#1076](https://github.com/theislab/ehrapy/pull/1076)) @Zethson
 
 ### 🐛 Bug Fixes
 
@@ -37,11 +38,10 @@ The anndata 0.13.0 release notes are worth a look: https://anndata.scverse.org/e
 * Mirror scanpy's image-comparison tolerances to fix CPU plotting test failures ([#1083](https://github.com/theislab/ehrapy/pull/1083)) @sueoglu
 * Unpin numpy in run_notebooks workflow ([#1085](https://github.com/theislab/ehrapy/pull/1085)) @eroell
 
-### ⚠️ Modified
+### 💥 Breaking changes
 
 * Drop AnnData compatibility in favour of an EHRData-only API ([#1069](https://github.com/theislab/ehrapy/pull/1069)) @Zethson
-* Drop `leidenalg` flavor from `ep.tl.leiden` (igraph only) ([#1072](https://github.com/theislab/ehrapy/pull/1072)) @Zethson
-* Drop `dowhy`, ship in-house causal inference module ([#1076](https://github.com/theislab/ehrapy/pull/1076)) @Zethson
+* Drop `leidenalg` flavor from {func}`ep.tl.leiden <ehrapy.tools.leiden>` (igraph only) ([#1072](https://github.com/theislab/ehrapy/pull/1072)) @Zethson
 
 
 ## v0.14.0
