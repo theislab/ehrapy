@@ -1,45 +1,12 @@
 version: 2
 updates:
-    - package-ecosystem: github-actions
-      directory: "/"
-      schedule:
-          interval: daily
-      open-pull-requests-limit: 3
-      target-branch: development
-      labels:
-          - DEPENDABOT
-      commit-message:
-          prefix: "[DEPENDABOT]"
-
-    - package-ecosystem: pip
-      directory: "/.github/workflows"
-      schedule:
-          interval: daily
-      open-pull-requests-limit: 3
-      target-branch: development
-      labels:
-          - DEPENDABOT
-      commit-message:
-          prefix: "[DEPENDABOT]"
-
-    - package-ecosystem: pip
-      directory: "/docs"
-      schedule:
-          interval: daily
-      open-pull-requests-limit: 3
-      target-branch: development
-      labels:
-          - DEPENDABOT
-      commit-message:
-          prefix: "[DEPENDABOT]"
-
-    - package-ecosystem: pip
-      directory: "/"
-      schedule:
-          interval: daily
-      open-pull-requests-limit: 3
-      target-branch: development
-      labels:
-          - DEPENDABOT
-      commit-message:
-          prefix: "[DEPENDABOT]"
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      actions-deps:
+        patterns:
+          - "*"
