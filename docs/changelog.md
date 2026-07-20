@@ -2,12 +2,49 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## v0.14.0
+## The future
 
+
+## v0.15.0
 <!--
 anndata 0.13.0 has been released and is now supported.
 The anndata 0.13.0 release notes are worth a look: https://anndata.scverse.org/en/stable/release-notes/index.html#v0-13-0
 -->
+
+### 🚀 Features
+
+* Add 3D support for {func}`ep.pp.miss_forest_impute <ehrapy.preprocessing.miss_forest_impute>` ([#1052](https://github.com/theislab/ehrapy/pull/1052)) @sueoglu
+* Add 3D support for {func}`ep.pp.mice_forest_impute <ehrapy.preprocessing.mice_forest_impute>` ([#1055](https://github.com/theislab/ehrapy/pull/1055)) @sueoglu
+* Add stratified Table One for baseline comparisons ([#1066](https://github.com/theislab/ehrapy/pull/1066)) @Zethson
+* Add CONSORT-style branching for {class}`CohortTracker <ehrapy.tools.CohortTracker>` ([#1077](https://github.com/theislab/ehrapy/pull/1077)) @Zethson
+* Add 3D & lazy Dask array support for {func}`ep.pp.encode <ehrapy.preprocessing.encode>` ([#1078](https://github.com/theislab/ehrapy/pull/1078)) @Zethson
+* Add in-house causal inference module — {func}`ep.tl.iptw <ehrapy.tools.iptw>`, {func}`ep.tl.g_computation <ehrapy.tools.g_computation>`, {func}`ep.tl.aipw <ehrapy.tools.aipw>`, {func}`ep.tl.propensity_score_matching <ehrapy.tools.propensity_score_matching>`, meta-learners ({func}`ep.tl.t_learner <ehrapy.tools.t_learner>`/{func}`ep.tl.s_learner <ehrapy.tools.s_learner>`/{func}`ep.tl.x_learner <ehrapy.tools.x_learner>`), and {func}`ep.tl.covariate_balance <ehrapy.tools.covariate_balance>` — replacing the `dowhy` dependency ([#1076](https://github.com/theislab/ehrapy/pull/1076)) @Zethson
+
+### 🐛 Bug Fixes
+
+* Sparse array support for `_warn_imputation_threshold` ([#1060](https://github.com/theislab/ehrapy/pull/1060)) @sueoglu
+
+### 🧰 Maintenance
+
+* Adjust to `ehrdata` 0.3.0 release, adding `anndata` 0.13.0 support ([#1084](https://github.com/theislab/ehrapy/pull/1084)) @eroell
+* Make `ehrdata` compatible with `anndata>=0.12.13` ([#1065](https://github.com/theislab/ehrapy/pull/1065)) @eroell
+* Efficient, dependency-free implementation of the MCAR test ([#1056](https://github.com/theislab/ehrapy/pull/1056)) @agerardy
+* Replace `EhrapyConfig` with scverse-misc `Settings` ([#1070](https://github.com/theislab/ehrapy/pull/1070)) @Zethson
+* Address pandas `FutureWarning` ([#1063](https://github.com/theislab/ehrapy/pull/1063)) @agerardy
+* Remove unused imports, debug prints, and stale TODOs ([#1075](https://github.com/theislab/ehrapy/pull/1075)) @Zethson
+* Fix invalid rst roles in `installation.md` leiden section ([#1073](https://github.com/theislab/ehrapy/pull/1073)) @Zethson
+* Improve fate tutorial robustness ([#1081](https://github.com/theislab/ehrapy/pull/1081)) @eroell
+* Cache CI datasets and harden against flaky downloads ([#1080](https://github.com/theislab/ehrapy/pull/1080)) @sueoglu
+* Mirror scanpy's image-comparison tolerances to fix CPU plotting test failures ([#1083](https://github.com/theislab/ehrapy/pull/1083)) @sueoglu
+* Unpin numpy in run_notebooks workflow ([#1085](https://github.com/theislab/ehrapy/pull/1085)) @eroell
+
+### 💥 Breaking changes
+
+* Drop AnnData compatibility in favour of an EHRData-only API ([#1069](https://github.com/theislab/ehrapy/pull/1069)) @Zethson
+* Drop `leidenalg` flavor from {func}`ep.tl.leiden <ehrapy.tools.leiden>` (igraph only) ([#1072](https://github.com/theislab/ehrapy/pull/1072)) @Zethson
+
+
+## v0.14.0
 
 ### 🚀 Features
 
@@ -31,8 +68,6 @@ The anndata 0.13.0 release notes are worth a look: https://anndata.scverse.org/e
 * Adapt to updated `ed.infer_feature_type`, discard alternative feature type inference in imputation methods ([#1039](https://github.com/theislab/ehrapy/pull/1039)) @eroell
 * Upgrade tutorials ([#1042](https://github.com/theislab/ehrapy/pull/1042), [#1043](https://github.com/theislab/ehrapy/pull/1043), [#1046](https://github.com/theislab/ehrapy/pull/1046)) @agerardy @sueoglu @Zethson
 * Remove ML with ehrapy notebook ([#1048](https://github.com/theislab/ehrapy/pull/1048)) @eroell
-* `anndata` 0.13 support ([#1084](https://github.com/theislab/ehrapy/pull/1048)) @eroell
-
 
 ### 🐛 Bug Fixes
 
