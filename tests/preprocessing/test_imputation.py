@@ -581,6 +581,32 @@ def test_explicit_impute_subset(impute_edata, array_type):
 
 
 @pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
+@pytest.mark.parametrize(
+    "column_name,row_idx,replacement_value",
+    [
+        ("intcol", 0, 0),
+        ("intcol", 0, 0.0),
+        ("strcol", 1, ""),
+    ],
+)
+def test_explicit_impute_subset_accepts_falsy_replacement_value(
+    impute_edata, array_type, column_name, row_idx, replacement_value
+):
+    if replacement_value == "":
+        impute_edata.X[row_idx, impute_edata.var_names.get_loc(column_name)] = np.nan
+    impute_edata.X = array_type(impute_edata.X)
+    edata_imputed = explicit_impute(impute_edata, replacement={column_name: replacement_value}, copy=True)
+
+    if replacement_value != "":
+        _base_check_imputation(impute_edata, edata_imputed, imputed_var_names=(column_name,))
+    layer_after = to_dense(edata_imputed.X)
+    if isinstance(layer_after, da.Array):
+        layer_after = layer_after.compute()
+    col_idx = edata_imputed.var_names.get_loc(column_name)
+    assert layer_after[row_idx, col_idx] == replacement_value
+
+
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
 def test_explicit_impute_timepoints(edata_mini_3D_missing_values, array_type):
     edata_mini_3D_missing_values.layers[DEFAULT_TEM_LAYER_NAME] = array_type(
         edata_mini_3D_missing_values.layers[DEFAULT_TEM_LAYER_NAME]
