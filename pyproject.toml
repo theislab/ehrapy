@@ -53,7 +53,6 @@ dependencies = [
     "matplotlib>=3.10,!=3.11.0rc1,!=3.11.0rc2,!=3.11",
     "scverse-misc[settings]>=0.0.7",
     "requests",
-    "miceforest",
     "scikit-misc",  # required for seuratv3 highly variable features
     "lifelines>=0.30.0",
     "missingno",
