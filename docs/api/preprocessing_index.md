@@ -62,7 +62,6 @@ Preprocessing steps usually perform a basic transformation on the data array in 
     preprocessing.locf_impute
     preprocessing.knn_impute
     preprocessing.miss_forest_impute
-    preprocessing.mice_forest_impute
 ```
 
 ## Normalization

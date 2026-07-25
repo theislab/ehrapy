@@ -7,7 +7,6 @@ from ehrapy.preprocessing._imputation import (
     explicit_impute,
     knn_impute,
     locf_impute,
-    mice_forest_impute,
     miss_forest_impute,
     simple_impute,
 )
@@ -36,7 +35,6 @@ __all__ = [
     "explicit_impute",
     "knn_impute",
     "locf_impute",
-    "mice_forest_impute",
     "miss_forest_impute",
     "simple_impute",
     "log_norm",
