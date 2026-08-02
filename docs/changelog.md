@@ -4,10 +4,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## The future
 
+### 💥 Breaking changes
+
+* Remove `ep.pp.mice_forest_impute` and drop the `miceforest` dependency @Zethson
+
+  `miceforest` is effectively unmaintained (last commit 2025-10-27) and broken against `lightgbm>=4.7.0`, which it calls through a private, name-mangled internal ([miceforest#104](https://github.com/AnotherSamWilson/miceforest/issues/104)).
+  Use {func}`ep.pp.miss_forest_impute <ehrapy.preprocessing.miss_forest_impute>` instead, which is MICE via {class}`~sklearn.impute.IterativeImputer` with a tree ensemble.
+  For a LightGBM backend, pass `IterativeImputer(estimator=LGBMRegressor(...))` directly.
+
 ### 🐛 Bug Fixes
 
 * `ep.pp.explicit_impute()` now accepts falsy mapping replacement values such as `0`, `0.0`, and empty strings ([#1087](https://github.com/theislab/ehrapy/pull/1087)) @driavysinus
-
 
 ## v0.15.0
 <!--
@@ -18,7 +25,7 @@ The anndata 0.13.0 release notes are worth a look: https://anndata.scverse.org/e
 ### 🚀 Features
 
 * Add 3D support for {func}`ep.pp.miss_forest_impute <ehrapy.preprocessing.miss_forest_impute>` ([#1052](https://github.com/theislab/ehrapy/pull/1052)) @sueoglu
-* Add 3D support for {func}`ep.pp.mice_forest_impute <ehrapy.preprocessing.mice_forest_impute>` ([#1055](https://github.com/theislab/ehrapy/pull/1055)) @sueoglu
+* Add 3D support for `ep.pp.mice_forest_impute` ([#1055](https://github.com/theislab/ehrapy/pull/1055)) @sueoglu
 * Add stratified Table One for baseline comparisons ([#1066](https://github.com/theislab/ehrapy/pull/1066)) @Zethson
 * Add CONSORT-style branching for {class}`CohortTracker <ehrapy.tools.CohortTracker>` ([#1077](https://github.com/theislab/ehrapy/pull/1077)) @Zethson
 * Add 3D & lazy Dask array support for {func}`ep.pp.encode <ehrapy.preprocessing.encode>` ([#1078](https://github.com/theislab/ehrapy/pull/1078)) @Zethson

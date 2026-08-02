@@ -1,4 +1,3 @@
-import platform
 import warnings
 from collections.abc import Iterable
 from pathlib import Path
@@ -18,7 +17,6 @@ from ehrapy.preprocessing._imputation import (
     explicit_impute,
     knn_impute,
     locf_impute,
-    mice_forest_impute,
     miss_forest_impute,
     simple_impute,
 )
@@ -409,90 +407,6 @@ def test_missforest_impute_subset(impute_num_edata):
     edata_imputed = miss_forest_impute(impute_num_edata, var_names=var_names, copy=True)
 
     _base_check_imputation(impute_num_edata, edata_imputed, imputed_var_names=var_names)
-
-
-@pytest.mark.parametrize(
-    "array_type,expected_error",
-    [
-        (np.array, None),
-        (da.from_array, NotImplementedError),
-        (sparse.csr_matrix, NotImplementedError),
-    ],
-)
-@pytest.mark.skipif(platform.system() == "Darwin", reason="miceforest Imputation not supported by MacOS.")
-def test_miceforest_array_types(impute_num_edata, array_type, expected_error):
-    impute_num_edata.X = array_type(impute_num_edata.X)
-    if expected_error:
-        with pytest.raises(expected_error):
-            mice_forest_impute(impute_num_edata, copy=True)
-
-
-@pytest.mark.skipif(platform.system() == "Darwin", reason="miceforest Imputation not supported by MacOS.")
-@pytest.mark.filterwarnings("ignore:invalid value encountered in divide:RuntimeWarning")
-def test_miceforest_impute_no_copy(impute_iris_edata):
-    edata_not_imputed = impute_iris_edata.copy()
-    mice_forest_impute(impute_iris_edata)
-
-    _base_check_imputation(edata_not_imputed, impute_iris_edata)
-
-
-@pytest.mark.skipif(platform.system() == "Darwin", reason="miceforest Imputation not supported by MacOS.")
-@pytest.mark.filterwarnings("ignore:invalid value encountered in divide:RuntimeWarning")
-def test_miceforest_impute_copy(impute_iris_edata):
-    edata_imputed = mice_forest_impute(impute_iris_edata, copy=True)
-
-    _base_check_imputation(impute_iris_edata, edata_imputed)
-    assert id(impute_iris_edata) != id(edata_imputed)
-
-
-@pytest.mark.skipif(platform.system() == "Darwin", reason="miceforest Imputation not supported by MacOS.")
-def test_miceforest_impute_non_numerical_data(impute_titanic_edata):
-    with pytest.raises(ValueError):
-        mice_forest_impute(impute_titanic_edata)
-
-
-@pytest.mark.skipif(platform.system() == "Darwin", reason="miceforest Imputation not supported by MacOS.")
-@pytest.mark.filterwarnings("ignore:invalid value encountered in divide:RuntimeWarning")
-def test_miceforest_impute_numerical_data(impute_iris_edata):
-    edata_not_imputed = impute_iris_edata.copy()
-    edata_imputed = mice_forest_impute(impute_iris_edata, copy=True)
-
-    _base_check_imputation(edata_not_imputed, edata_imputed)
-
-
-@pytest.mark.skipif(platform.system() == "Darwin", reason="miceforest Imputation not supported by MacOS.")
-@pytest.mark.filterwarnings("ignore:invalid value encountered in divide:RuntimeWarning")
-@pytest.mark.parametrize("edata_mini_3D_missing_values", [(True, True)], indirect=True)
-def test_miceforest_impute_3D_edata(edata_mini_3D_missing_values):
-    edata_imputed = mice_forest_impute(edata_mini_3D_missing_values, layer=DEFAULT_TEM_LAYER_NAME, copy=True)
-
-    _base_check_imputation(
-        edata_mini_3D_missing_values,
-        edata_imputed,
-        before_imputation_layer=DEFAULT_TEM_LAYER_NAME,
-        after_imputation_layer=DEFAULT_TEM_LAYER_NAME,
-    )
-    assert id(edata_mini_3D_missing_values) != id(edata_imputed)
-
-
-@pytest.mark.parametrize("edata_mini_3D_missing_values", [(True, True)], indirect=True)
-def test_miceforest_impute_3D_var_names_subset(edata_mini_3D_missing_values):
-    edata = edata_mini_3D_missing_values.copy()
-    imputed = mice_forest_impute(edata, layer=DEFAULT_TEM_LAYER_NAME, var_names=["1", "2"], copy=True)
-    edata_imputed = imputed[:, :2].copy()
-    _base_check_imputation(
-        edata_mini_3D_missing_values[:, :2],
-        edata_imputed,
-        before_imputation_layer=DEFAULT_TEM_LAYER_NAME,
-        after_imputation_layer=DEFAULT_TEM_LAYER_NAME,
-    )
-
-    assert edata.shape == imputed.shape
-
-
-def test_miceforest_impute_3d_layer_none(edata_mini_3D_missing_values):
-    with pytest.raises(ValueError, match="requires either edata.X to be available or a layer to be specified"):
-        mice_forest_impute(edata_mini_3D_missing_values, copy=True)
 
 
 @pytest.mark.parametrize(
