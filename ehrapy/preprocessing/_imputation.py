@@ -668,9 +668,9 @@ def locf_impute(
         ...         [[np.nan, np.nan, 3.0, np.nan], [1.0, np.nan, np.nan, np.nan], [np.nan, 2.0, np.nan, 4.0]],
         ...     ]
         ... )
-        >>> edata = ed.EHRData(shape=(2, 3), layers={"tem_data": data})
-        >>> ep.pp.locf_impute(edata, layer="tem_data")
-        >>> edata.layers["tem_data"]
+        >>> edata = ed.EHRData(X=data)
+        >>> ep.pp.locf_impute(edata)
+        >>> edata.X
         array([[[1.        , 1.        , 3.        , 3.        ],
                 [2.33, 2.        , 2.        , 4.        ],
                 [5.        , 6.        , 7.        , 8.        ]],
