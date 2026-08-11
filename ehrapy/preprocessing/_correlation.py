@@ -129,7 +129,7 @@ def variable_correlations(
         >>> import ehrapy as ep
         >>> edata = ed.dt.ehrdata_blobs(n_variables=10, n_centers=5, n_observations=200, base_timepoints=3)
         >>> corr, pval, sig = ep.pp.variable_correlations(
-        ...     edata, layer="tem_data", method="pearson", agg="mean", correction_method="fdr_bh", alpha=0.02
+        ...     edata, method="pearson", agg="mean", correction_method="fdr_bh", alpha=0.02
         ... )
     """
     arr, var_names = _aggregate_variable_values(edata, layer, var_names=var_names, agg=agg)
