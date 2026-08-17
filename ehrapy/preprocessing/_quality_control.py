@@ -683,9 +683,11 @@ def mcar_test(
         ...     n_observations=100, n_variables=5, missing_values=0.1, random_state=0, n_centers=1, base_timepoints=1
         ... )
         >>> ep.pp.mcar_test(edata)
-        0.327...
+        0.1416...
     """
     mtx = edata.X if layer is None else edata.layers[layer]
+    if mtx.ndim == 3:
+        mtx = mtx[:, :, 0]
 
     # float64 required: covariance estimation and linear solves need stable floating-point math
     if mtx.dtype != np.float64:
