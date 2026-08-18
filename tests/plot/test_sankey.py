@@ -26,7 +26,9 @@ def test_sankey_plot(diabetes_130_fairlearn_sample_100, check_same_image, hv_bac
 
 def test_sankey_time_plot(check_same_image, hv_backend):
     hv_backend("matplotlib")
-    edata = ed.dt.ehrdata_blobs(base_timepoints=5, n_variables=1, n_observations=5, random_state=59)
+    edata = ed.dt.ehrdata_blobs(
+        base_timepoints=5, n_variables=1, n_observations=5, random_state=59, layer=DEFAULT_TEM_LAYER_NAME
+    )
     edata.layers[DEFAULT_TEM_LAYER_NAME] = edata.layers[DEFAULT_TEM_LAYER_NAME].astype(int)
     sankey_time = ep.pl.sankey_diagram_time(
         edata,
@@ -77,7 +79,9 @@ def test_sankey_bokeh_plot(diabetes_130_fairlearn_sample_100, hv_backend):
 
 def test_sankey_time_bokeh_plot(hv_backend):
     hv_backend("bokeh")
-    edata = ed.dt.ehrdata_blobs(base_timepoints=5, n_variables=1, n_observations=5, random_state=59)
+    edata = ed.dt.ehrdata_blobs(
+        base_timepoints=5, n_variables=1, n_observations=5, random_state=59, layer=DEFAULT_TEM_LAYER_NAME
+    )
     edata.layers[DEFAULT_TEM_LAYER_NAME] = edata.layers[DEFAULT_TEM_LAYER_NAME].astype(int)
     sankey = ep.pl.sankey_diagram_time(
         edata,
@@ -123,7 +127,9 @@ def test_sankey_time_bokeh_plot(hv_backend):
 
 
 def test_error_cases():
-    edata_time = ed.dt.ehrdata_blobs(base_timepoints=5, n_variables=1, n_observations=5, random_state=59)
+    edata_time = ed.dt.ehrdata_blobs(
+        base_timepoints=5, n_variables=1, n_observations=5, random_state=59, layer=DEFAULT_TEM_LAYER_NAME
+    )
 
     with pytest.raises(ValueError, match="Sankey requires discrete, binned states"):
         ep.pl.sankey_diagram_time(
