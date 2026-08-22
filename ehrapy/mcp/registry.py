@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import tempfile
 import threading
 import time
 from contextlib import contextmanager
@@ -13,11 +14,47 @@ from pathlib import Path
 import platformdirs
 
 
+def _probe_writable(path: Path) -> bool:
+    """Return True if path can be created and written to."""
+    try:
+        path.mkdir(mode=0o700, parents=True, exist_ok=True)
+        probe = path / f".probe_{os.getpid()}_{time.time_ns()}"
+        probe.write_text("ok", encoding="utf-8")
+        probe.unlink()
+        return True
+    except OSError:
+        return False
+
+
 def _get_default_cache_dir() -> Path:
     env_dir = os.environ.get("EHRAPY_MCP_CACHE_DIR")
     if env_dir:
-        return Path(env_dir).expanduser().resolve()
-    return Path(platformdirs.user_cache_dir("ehrapy-mcp")).resolve()
+        cand = Path(env_dir).expanduser().resolve()
+        if _probe_writable(cand):
+            return cand
+    user_cache = Path(platformdirs.user_cache_dir("ehrapy-mcp")).resolve()
+    if _probe_writable(user_cache):
+        return user_cache
+    temp_cache = Path(tempfile.gettempdir()) / "ehrapy-mcp"
+    if _probe_writable(temp_cache):
+        return temp_cache
+    return Path(tempfile.mkdtemp(prefix="ehrapy_mcp_"))
+
+
+def _get_default_demo_data_dir(cache_dir: Path) -> Path:
+    for env_var in ("EHRAPY_MCP_DEMO_DATA_DIR", "EHRAPY_DEMO_DATA_DIR", "EHRAPY_DATA_DIR"):
+        val = os.environ.get(env_var)
+        if val:
+            cand = Path(val).expanduser().resolve()
+            if _probe_writable(cand):
+                return cand
+    cand = cache_dir / "demo_data"
+    if _probe_writable(cand):
+        return cand
+    temp_demo = Path(tempfile.gettempdir()) / "ehrapy_data"
+    if _probe_writable(temp_demo):
+        return temp_demo
+    return Path(tempfile.mkdtemp(prefix="ehrapy_demo_data_"))
 
 
 @dataclass
@@ -42,8 +79,33 @@ class MCPRegistry:
 
     def __init__(self, cache_dir: Path | None = None) -> None:
         self._cache_dir_path = cache_dir or _get_default_cache_dir()
+        self._demo_data_dir_path = _get_default_demo_data_dir(self._cache_dir_path)
         self._ensure_cache_dir()
         self._process_lock = threading.RLock()
+        self._configure_ehrapy_demo_paths()
+
+    def _configure_ehrapy_demo_paths(self) -> None:
+        """Point ehrdata/ehrapy/scanpy demo data loaders to the writable demo directory."""
+        try:
+            import ehrdata.core.constants as ed_const
+            import ehrdata.dt.datasets as ed_datasets
+
+            ed_const.DEFAULT_DATA_PATH = self._demo_data_dir_path
+            ed_datasets.DEFAULT_DATA_PATH = self._demo_data_dir_path
+        except Exception:  # noqa: BLE001
+            pass
+        try:
+            import ehrapy as ep
+
+            ep.settings.datasetdir = self._demo_data_dir_path
+        except Exception:  # noqa: BLE001
+            pass
+        try:
+            import scanpy as sc
+
+            sc.settings.datasetdir = self._demo_data_dir_path
+        except Exception:  # noqa: BLE001
+            pass
 
     @property
     def _datasets_path(self) -> Path:
@@ -54,15 +116,17 @@ class MCPRegistry:
         return self._cache_dir_path / ".registry.lock"
 
     def _ensure_cache_dir(self) -> None:
+        if not _probe_writable(self._cache_dir_path):
+            self._cache_dir_path = _get_default_cache_dir()
         self._cache_dir_path.mkdir(mode=0o700, parents=True, exist_ok=True)
         try:
             self._cache_dir_path.chmod(0o700)
         except OSError:
             pass
-        for sub in ("edata", "plots"):
+        for sub in ("edata", "plots", "demo_data"):
             sub_path = self._cache_dir_path / sub
-            sub_path.mkdir(mode=0o700, parents=True, exist_ok=True)
             try:
+                sub_path.mkdir(mode=0o700, parents=True, exist_ok=True)
                 sub_path.chmod(0o700)
             except OSError:
                 pass
@@ -74,6 +138,21 @@ class MCPRegistry:
     def plots_dir(self) -> Path:
         """Return the plot artifact directory."""
         return self._cache_dir_path / "plots"
+
+    def demo_data_dir(self) -> Path:
+        """Return the writable demo data directory."""
+        return self._demo_data_dir_path
+
+    def is_cache_writable(self) -> bool:
+        """Return True if cache and demo directories are confirmed writable."""
+        return _probe_writable(self._cache_dir_path) and _probe_writable(self._demo_data_dir_path)
+
+    def ensure_demo_data_dir(self) -> Path:
+        """Ensure demo data directory is configured and writable, falling back if needed."""
+        if not _probe_writable(self._demo_data_dir_path):
+            self._demo_data_dir_path = _get_default_demo_data_dir(self._cache_dir_path)
+        self._configure_ehrapy_demo_paths()
+        return self._demo_data_dir_path
 
     def store_record(self, record: DatasetRecord) -> DatasetRecord:
         """Insert or update a dataset record."""
@@ -148,8 +227,7 @@ class MCPRegistry:
         return purged_count
 
     def _load_datasets(self) -> dict[str, dict]:
-        with self._locked_registry():
-            return self._load_datasets_unlocked()
+        return self._load_datasets_unlocked()
 
     def _load_datasets_unlocked(self) -> dict[str, dict]:
         if not self._datasets_path.is_file():
@@ -163,12 +241,15 @@ class MCPRegistry:
     def _locked_registry(self):
         with self._process_lock:
             self._ensure_cache_dir()
-            with self._lock_path.open("a+", encoding="utf-8") as handle:
-                self._acquire_file_lock(handle)
-                try:
-                    yield
-                finally:
-                    self._release_file_lock(handle)
+            try:
+                with self._lock_path.open("a+", encoding="utf-8") as handle:
+                    self._acquire_file_lock(handle)
+                    try:
+                        yield
+                    finally:
+                        self._release_file_lock(handle)
+            except OSError:
+                yield
 
     @staticmethod
     def _acquire_file_lock(handle) -> None:

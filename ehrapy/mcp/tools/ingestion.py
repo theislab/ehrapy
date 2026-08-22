@@ -26,6 +26,11 @@ def ingest_dataset(
     """Read an external tabular data file (CSV, TSV) and convert it into a managed EHRData handle.
 
     Use this to load clinical cohorts from the host filesystem into the session cache.
+
+    Cache-Bridge pattern for sandboxed clients: If running in a sandboxed agent environment,
+    file paths in the client sandbox are not directly visible to the MCP host. Call
+    get_runtime_context() to inspect cache_dir, copy your data file into cache_dir, and
+    pass that path to file_path.
     """
     try:
         resolved_path = check_path_allowed(file_path, for_write=False)

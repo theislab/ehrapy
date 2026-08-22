@@ -48,8 +48,12 @@ WORKFLOW_PROMPT = """# ehrapy MCP Server — Agent Guide
 2. `run_analysis(function='covariate_balance')` → Assess balance
 3. `run_plot(function='love_plot')` → Render Love plot
 
-## Host vs. Sandbox Filesystem Paths
-All file paths passed to `ingest_dataset` or `export_edata` must refer to absolute, host-visible paths. Sandboxed agent paths (e.g. `/workspace`, `/home/claude`) are not accessible directly to the MCP host.
+## Host vs. Sandbox Filesystem Paths (Cache-Bridge Pattern)
+All file paths passed to `ingest_dataset` or `export_edata` must refer to absolute, host-visible paths. Sandboxed agent paths (e.g. `/workspace`, `/home/claude`) are not directly accessible to the MCP host.
+When operating in a sandboxed client environment:
+1. Call `get_runtime_context()` to obtain the host `cache_dir`.
+2. Copy or write your dataset file into that `cache_dir`.
+3. Call `ingest_dataset(file_path=f"{cache_dir}/filename.csv")` to load it.
 """
 
 SERVER_INSTRUCTIONS = """ehrapy MCP server provides clinical data analysis tools built on ehrapy and ehrdata.

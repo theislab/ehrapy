@@ -9,9 +9,14 @@ from fastmcp.tools.tool import ToolResult
 _SANDBOX_PATH_PREFIXES = (
     "/home/claude",
     "/mnt/",
-    "/workspace/",
+    "/workspace",
     "/tmp/claude",
     "/System/Volumes/Data/home/claude",
+    "/sandbox",
+    "/tmp/sandbox",
+    "/tmp/user",
+    "/app/",
+    "/home/user",
 )
 
 
@@ -56,12 +61,19 @@ def mcp_error(
 
 def classify_path(path: str) -> dict[str, Any]:
     """Flag paths that look like agent-sandbox locations."""
+    path_str = str(path)
     matched_prefix = next(
-        (prefix for prefix in _SANDBOX_PATH_PREFIXES if path.startswith(prefix)),
+        (prefix for prefix in _SANDBOX_PATH_PREFIXES if path_str.startswith(prefix)),
         None,
     )
+    if matched_prefix is None:
+        for term in ("claude", "sandbox", "/workspace"):
+            if term in path_str.lower():
+                matched_prefix = term
+                break
+
     return {
-        "attempted_path": path,
+        "attempted_path": path_str,
         "looks_like_sandbox_path": matched_prefix is not None,
         "matched_prefix": matched_prefix,
     }
@@ -73,7 +85,7 @@ def path_access_error(
     *,
     missing_code: str = "FILE_NOT_FOUND",
     missing_reason: str = "Path does not exist on the MCP host filesystem.",
-    missing_action: str = "Provide a host-visible absolute path, or call get_runtime_context first.",
+    missing_action: str = "Provide a host-visible absolute path, or call get_runtime_context() to get cache_dir.",
     sandbox_action: str | None = None,
 ) -> ToolResult:
     """Return a path-access error ToolResult."""
@@ -81,16 +93,16 @@ def path_access_error(
     if path_context["looks_like_sandbox_path"]:
         return mcp_error(
             tool,
-            "Path is not visible to the MCP server host filesystem.",
+            f"Path '{path}' is not visible to the MCP server host filesystem (sandbox path detected).",
             error_code="HOST_PATH_NOT_VISIBLE",
             agent_action=sandbox_action
-            or "Ask the user for a host-visible absolute path, or call get_runtime_context first.",
+            or "File is in a sandboxed client path. Call get_runtime_context() to find cache_dir, copy the file into cache_dir, and retry with the cache_dir path.",
             details={"path_context": path_context},
         )
 
     return mcp_error(
         tool,
-        missing_reason,
+        f"File not found: '{path}'. {missing_reason}",
         error_code=missing_code,
         agent_action=missing_action,
         details={"path_context": path_context},
