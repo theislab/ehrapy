@@ -1,0 +1,264 @@
+tasks:
+  - id: eda_qc_mimic2
+    name: Exploratory Data Analysis & Quality Control on MIMIC-II
+    steps:
+      - tool: load_demo_dataset
+        args:
+          dataset: mimic_2
+        assert_status: ok
+        assert_contains:
+          - edata_id
+      - tool: get_edata_snapshot
+        args: {}
+        assert_status: ok
+      - tool: run_preprocessing
+        args:
+          function: qc_metrics
+          params:
+            qc_vars: []
+        assert_status: ok
+      - tool: run_get
+        args:
+          function: obs_df
+          params:
+            keys: ["missing_values_abs", "missing_values_pct"]
+        assert_status: ok
+
+  - id: clustering_pipeline
+    name: Unsupervised Clustering & Differential Features
+    steps:
+      - tool: load_demo_dataset
+        args:
+          dataset: mimic_2
+        assert_status: ok
+      - tool: run_preprocessing
+        args:
+          function: simple_impute
+          params:
+            var_names: ["gender_num"]
+            strategy: most_frequent
+        assert_status: ok
+      - tool: run_preprocessing
+        args:
+          function: encode
+          params:
+            autodetect: true
+        assert_status: ok
+      - tool: run_preprocessing
+        args:
+          function: simple_impute
+          params:
+            strategy: mean
+        assert_status: ok
+      - tool: run_preprocessing
+        args:
+          function: pca
+        assert_status: ok
+      - tool: run_preprocessing
+        args:
+          function: neighbors
+        assert_status: ok
+      - tool: run_analysis
+        args:
+          function: leiden
+          params:
+            resolution: 0.5
+        assert_status: ok
+      - tool: run_analysis
+        args:
+          function: rank_features_groups
+          params:
+            groupby: leiden
+        assert_status: ok
+      - tool: run_get
+        args:
+          function: rank_features_groups_df
+          params:
+            group: "0"
+        assert_status: ok
+
+  - id: survival_analysis
+    name: Kaplan-Meier Survival Analysis
+    steps:
+      - tool: load_demo_dataset
+        args:
+          dataset: mimic_2
+        assert_status: ok
+      - tool: run_analysis
+        args:
+          function: kaplan_meier
+          params:
+            duration_col: mort_day_censored
+            event_col: censor_flg
+        assert_status: ok
+
+  - id: fork_branching
+    name: Dataset Handle Forking & Independent State
+    steps:
+      - tool: load_demo_dataset
+        args:
+          dataset: mimic_2
+        assert_status: ok
+      - tool: fork_edata_handle
+        args:
+          name: branched_cohort
+        assert_status: ok
+      - tool: get_edata_snapshot
+        args: {}
+        assert_status: ok
+
+  - id: discovery_and_help
+    name: Function Discovery & Signature Help
+    steps:
+      - tool: list_ehrapy_functions
+        args:
+          namespace: preprocessing
+        assert_status: ok
+      - tool: get_function_help
+        args:
+          namespace: preprocessing
+          function: knn_impute
+        assert_status: ok
+
+  - id: workflow_guide_and_context
+    name: Workflow Guide & Runtime Context
+    steps:
+      - tool: get_workflow_guide
+        args: {}
+        assert_status: ok
+      - tool: get_runtime_context
+        args: {}
+        assert_status: ok
+
+  # Every plot advertised by the steering graph and the registered MCP prompts is a
+  # promise to the agent; each must return an actual image, not merely status ok.
+  - id: plot_surface
+    name: Plot Surface — every advertised plot returns an image
+    steps:
+      - tool: load_demo_dataset
+        args:
+          dataset: mimic_2
+        assert_status: ok
+      - tool: run_plot
+        args:
+          function: missing_values_matrix
+        assert_status: ok
+        assert_image: true
+      - tool: run_analysis
+        args:
+          function: kaplan_meier
+          params:
+            duration_col: mort_day_censored
+            event_col: censor_flg
+        assert_status: ok
+      - tool: run_plot
+        args:
+          function: kaplan_meier
+        assert_status: ok
+        assert_image: true
+      - tool: run_preprocessing
+        args:
+          function: encode
+          params:
+            autodetect: true
+        assert_status: ok
+      - tool: run_preprocessing
+        args:
+          function: simple_impute
+          params:
+            strategy: mean
+        assert_status: ok
+      - tool: run_preprocessing
+        args:
+          function: pca
+        assert_status: ok
+      - tool: run_preprocessing
+        args:
+          function: neighbors
+        assert_status: ok
+      - tool: run_analysis
+        args:
+          function: umap
+        assert_status: ok
+      - tool: run_plot
+        args:
+          function: umap
+        assert_status: ok
+        assert_image: true
+      # A plot whose first argument is a fitted model, not the EHRData (origin #5).
+      - tool: run_analysis
+        args:
+          function: positivity_check
+          params:
+            treatment: aline_flg
+            covariates: ["age", "gender_num"]
+        assert_status: ok
+      - tool: run_plot
+        args:
+          function: propensity_overlap
+        assert_status: ok
+        assert_image: true
+
+  # Negative paths: a failing call must carry a specific error_code, never a generic one.
+  - id: error_contracts
+    name: Error Contracts — failures are specific and actionable
+    steps:
+      - tool: load_demo_dataset
+        args:
+          dataset: mimic_2
+        assert_status: ok
+      - tool: get_edata_snapshot
+        args:
+          edata_id: no-such-handle
+        assert_status: error
+        assert_error_code: EDATA_ID_UNKNOWN
+      - tool: run_preprocessing
+        args:
+          function: not_a_real_function
+        assert_status: error
+        assert_error_code: UNKNOWN_FUNCTION
+      - tool: list_ehrapy_functions
+        args:
+          namespace: not_a_namespace
+        assert_status: error
+        assert_error_code: UNKNOWN_NAMESPACE
+      - tool: get_edata_snapshot
+        args:
+          hallucinated_argument: 1
+        assert_status: error
+        assert_error_code: UNKNOWN_ARGUMENT
+      - tool: ingest_dataset
+        args:
+          file_path: /home/claude/sandbox_only.csv
+        assert_status: error
+        assert_error_code: HOST_PATH_NOT_VISIBLE
+      # A plot whose model was never fitted must steer, not surface an AttributeError.
+      - tool: run_plot
+        args:
+          function: love_plot
+        assert_status: error
+        assert_error_code: INVALID_VALUE
+
+  # Causal inference returns dataclasses holding ndarrays; these must survive the
+  # JSON boundary of structured_content.
+  - id: causal_inference
+    name: Causal Inference — IPTW result crosses the MCP boundary
+    steps:
+      - tool: load_demo_dataset
+        args:
+          dataset: mimic_2
+        assert_status: ok
+      - tool: run_preprocessing
+        args:
+          function: encode
+          params:
+            autodetect: true
+        assert_status: ok
+      - tool: run_analysis
+        args:
+          function: iptw
+          params:
+            treatment: aline_flg
+            outcome: hosp_exp_flg
+            covariates: ["age", "gender_num"]
+        assert_status: ok

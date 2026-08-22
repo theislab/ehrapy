@@ -20,6 +20,7 @@ api/preprocessing_index
 api/tools_index
 api/plot_index
 api/settings_index
+api/mcp_index
 ```
 
 ```{eval-rst}

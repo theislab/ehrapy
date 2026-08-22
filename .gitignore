@@ -157,3 +157,8 @@ test2.ipynb
 test3.ipynb
 .vscode/launch.json
 .claude
+
+# Local dev environment (direnv) and uv lockfile — ehrapy is a library and does not
+# pin a lockfile; remove these entries if the fork decides to track uv.lock.
+.envrc
+uv.lock
