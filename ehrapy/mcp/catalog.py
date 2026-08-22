@@ -135,31 +135,44 @@ def get_namespace_kind(namespace: str) -> str:
     return NAMESPACES[canonical]["kind"]
 
 
-def _extract_choices(param_name: str, ann: Any, desc: str | None) -> list[str] | None:
-    origin = typing.get_origin(ann)
-    if origin is typing.Literal:
+def _literal_choices(ann: Any) -> list[str] | None:
+    """Return string choices if ``ann`` is (or wraps, e.g. via Optional/Union) a typing.Literal."""
+    if typing.get_origin(ann) is typing.Literal:
         return [str(a) for a in typing.get_args(ann)]
     if hasattr(ann, "__args__"):
         for arg in ann.__args__:
             if typing.get_origin(arg) is typing.Literal:
                 return [str(a) for a in typing.get_args(arg)]
-    if desc:
-        if (
-            param_name in ("backend", "mode", "method", "metric", "flavor", "strategy", "how", "which")
-            or "choose from" in desc.lower()
-            or "one of" in desc.lower()
-        ):
-            quoted = re.findall(r"['\"]([a-zA-Z0-9_\-]+)['\"]", desc)
-            if quoted:
-                seen = set()
-                res = []
-                for q in quoted:
-                    if q not in seen and q not in ("None", "True", "False", "strategy"):
-                        seen.add(q)
-                        res.append(q)
-                if res:
-                    return res
     return None
+
+
+_CHOICE_LIKE_PARAM_NAMES = frozenset({"backend", "mode", "method", "metric", "flavor", "strategy", "how", "which"})
+_CHOICE_STOPWORDS = frozenset({"None", "True", "False", "strategy"})
+
+
+def _looks_like_choice_param(param_name: str, desc: str) -> bool:
+    return param_name in _CHOICE_LIKE_PARAM_NAMES or "choose from" in desc.lower() or "one of" in desc.lower()
+
+
+def _quoted_choices(desc: str) -> list[str]:
+    """Extract unique quoted tokens from a docstring description, dropping known stopwords."""
+    seen: set[str] = set()
+    res: list[str] = []
+    for q in re.findall(r"['\"]([a-zA-Z0-9_\-]+)['\"]", desc):
+        if q not in seen and q not in _CHOICE_STOPWORDS:
+            seen.add(q)
+            res.append(q)
+    return res
+
+
+def _extract_choices(param_name: str, ann: Any, desc: str | None) -> list[str] | None:
+    """Infer valid choices for a parameter from its Literal annotation or docstring text."""
+    literal_choices = _literal_choices(ann)
+    if literal_choices is not None:
+        return literal_choices
+    if not desc or not _looks_like_choice_param(param_name, desc):
+        return None
+    return _quoted_choices(desc) or None
 
 
 def _synthesize_example_call(namespace: str, function: str, params: list[dict[str, Any]]) -> str:
@@ -202,6 +215,36 @@ def _synthesize_example_call(namespace: str, function: str, params: list[dict[st
     return f"{tool_name}(function='{function}')"
 
 
+def _param_info_entry(name: str, param: inspect.Parameter, doc_params: dict[str, str | None]) -> dict[str, Any]:
+    """Build the help-payload entry for a single function parameter."""
+    entry: dict[str, Any] = {"name": name}
+    if param.default is not inspect.Parameter.empty:
+        entry["default"] = repr(param.default)
+    if param.annotation is not inspect.Parameter.empty:
+        entry["annotation"] = str(param.annotation)
+
+    desc = doc_params.get(name) or ""
+    # Clean up whitespace in description
+    desc_clean = " ".join(desc.split())
+    if desc_clean:
+        entry["description"] = desc_clean
+
+    choices = _extract_choices(name, param.annotation, desc)
+    if choices:
+        entry["choices"] = choices
+
+    return entry
+
+
+def _first_example_snippet(parsed: Any) -> str:
+    """Return the first non-empty example snippet from a parsed docstring, or ''."""
+    for ex in parsed.examples:
+        snippet = (ex.snippet or ex.description or "").strip()
+        if snippet:
+            return snippet[:600]
+    return ""
+
+
 def function_help(namespace: str, function: str) -> dict[str, Any]:
     """Return signature metadata, numpydoc parameter descriptions, choices, and example call."""
     canonical = _canonical_namespace(namespace)
@@ -212,33 +255,7 @@ def function_help(namespace: str, function: str) -> dict[str, Any]:
     parsed = docstring_parser.parse(raw_doc)
     doc_params = {p.arg_name: p.description for p in parsed.params if p.arg_name}
 
-    params_info: list[dict[str, Any]] = []
-    for name, param in sig.parameters.items():
-        entry: dict[str, Any] = {"name": name}
-        if param.default is not inspect.Parameter.empty:
-            entry["default"] = repr(param.default)
-        if param.annotation is not inspect.Parameter.empty:
-            entry["annotation"] = str(param.annotation)
-
-        desc = doc_params.get(name) or ""
-        # Clean up whitespace in description
-        desc_clean = " ".join(desc.split())
-        if desc_clean:
-            entry["description"] = desc_clean
-
-        choices = _extract_choices(name, param.annotation, desc)
-        if choices:
-            entry["choices"] = choices
-
-        params_info.append(entry)
-
-    # First example
-    example_text = ""
-    for ex in parsed.examples:
-        snippet = (ex.snippet or ex.description or "").strip()
-        if snippet:
-            example_text = snippet[:600]
-            break
+    params_info = [_param_info_entry(name, param, doc_params) for name, param in sig.parameters.items()]
 
     example_call = _synthesize_example_call(canonical, function, params_info)
     short_doc = (parsed.short_description or raw_doc.split("\n\n")[0])[:400]
@@ -249,7 +266,7 @@ def function_help(namespace: str, function: str) -> dict[str, Any]:
         "kind": get_namespace_kind(canonical),
         "parameters": params_info,
         "short_description": short_doc,
-        "example_snippet": example_text,
+        "example_snippet": _first_example_snippet(parsed),
         "example_call": example_call,
     }
 

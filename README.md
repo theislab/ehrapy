@@ -1,3 +1,5 @@
+> **Krv-Labs fork.** This is Krv Labs' fork of [theislab/ehrapy](https://github.com/theislab/ehrapy), used to develop and dogfood the `ehrapy.mcp` package ahead of an eventual upstream PR. Remove this notice when that happens.
+
 [![Build](https://github.com/theislab/ehrapy/actions/workflows/build.yml/badge.svg)](https://github.com/theislab/ehrapy/actions/workflows/build.yml)
 [![Codecov](https://codecov.io/gh/theislab/ehrapy/branch/master/graph/badge.svg)](https://codecov.io/gh/theislab/ehrapy)
 [![License](https://img.shields.io/github/license/theislab/ehrapy)](https://opensource.org/licenses/Apache2.0)

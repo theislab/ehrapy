@@ -78,6 +78,55 @@ def fork_edata_handle(edata_id: str | None = None, name: str | None = None, ctx:
         return mcp_error("fork_edata_handle", f"Failed to fork handle '{handle}': {exc}", error_code="FORK_ERROR")
 
 
+def _non_none_str_list(items: Any) -> list[str]:
+    return [str(x) for x in items if x is not None]
+
+
+def _truncated_list_str(items: list[str], limit: int = 25) -> str:
+    suffix = "..." if len(items) > limit else ""
+    return f"{', '.join(items[:limit])}{suffix}"
+
+
+def _snapshot_struct(edata: Any, handle: str, cols: dict[str, list[str]], *, used_latest: bool) -> dict[str, Any]:
+    struct = {
+        "status": "ok",
+        "edata_id": handle,
+        "n_obs": edata.n_obs,
+        "n_vars": edata.n_vars,
+        "obs_columns": cols["obs"],
+        "var_columns": cols["var"],
+        "layers": cols["layers"],
+        "uns_keys": cols["uns"],
+    }
+    if used_latest:
+        struct["used_latest"] = True
+    return struct
+
+
+def _snapshot_markdown(edata: Any, handle: str, cols: dict[str, list[str]]) -> str:
+    md_lines = [
+        f"### Snapshot for EHRData `{handle}`",
+        f"- **Dimensions:** {edata.n_obs} observations × {edata.n_vars} variables",
+        f"- **Observation columns ({len(cols['obs'])}):** {_truncated_list_str(cols['obs'])}",
+        f"- **Variable columns ({len(cols['var'])}):** {_truncated_list_str(cols['var'])}",
+        f"- **Layers ({len(cols['layers'])}):** {', '.join(cols['layers']) if cols['layers'] else 'None'}",
+        f"- **Annotations (uns keys):** {', '.join(cols['uns']) if cols['uns'] else 'None'}",
+    ]
+    return "\n".join(md_lines)
+
+
+def _edata_snapshot_payload(edata: Any, handle: str, *, used_latest: bool) -> tuple[dict[str, Any], str]:
+    """Build the (structured_content, markdown) pair describing an EHRData handle's shape."""
+    cols = {
+        "obs": _non_none_str_list(edata.obs.columns),
+        "var": _non_none_str_list(edata.var.columns),
+        "layers": _non_none_str_list(edata.layers.keys()),
+        "uns": _non_none_str_list(edata.uns.keys()),
+    }
+    struct = _snapshot_struct(edata, handle, cols, used_latest=used_latest)
+    return struct, _snapshot_markdown(edata, handle, cols)
+
+
 def get_edata_snapshot(edata_id: str | None = None, ctx: Context = None) -> ToolResult:
     """Return structural metadata for an EHRData handle including observation count, variable count, layers, obs columns, and uns keys.
 
@@ -95,33 +144,8 @@ def get_edata_snapshot(edata_id: str | None = None, ctx: Context = None) -> Tool
 
     try:
         edata = load_edata(handle)
-        obs_cols = [str(c) for c in edata.obs.columns if c is not None]
-        var_cols = [str(c) for c in edata.var.columns if c is not None]
-        layers = [str(k) for k in edata.layers.keys() if k is not None]
-        uns_keys = [str(k) for k in edata.uns.keys() if k is not None]
-
-        struct = {
-            "status": "ok",
-            "edata_id": handle,
-            "n_obs": edata.n_obs,
-            "n_vars": edata.n_vars,
-            "obs_columns": obs_cols,
-            "var_columns": var_cols,
-            "layers": layers,
-            "uns_keys": uns_keys,
-        }
-        if edata_id is None:
-            struct["used_latest"] = True
-
-        md_lines = [
-            f"### Snapshot for EHRData `{handle}`",
-            f"- **Dimensions:** {edata.n_obs} observations × {edata.n_vars} variables",
-            f"- **Observation columns ({len(obs_cols)}):** {', '.join(obs_cols[:25])}{'...' if len(obs_cols) > 25 else ''}",
-            f"- **Variable columns ({len(var_cols)}):** {', '.join(var_cols[:25])}{'...' if len(var_cols) > 25 else ''}",
-            f"- **Layers ({len(layers)}):** {', '.join(layers) if layers else 'None'}",
-            f"- **Annotations (uns keys):** {', '.join(uns_keys) if uns_keys else 'None'}",
-        ]
-        return ToolResult(structured_content=struct, content="\n".join(md_lines))
+        struct, md = _edata_snapshot_payload(edata, handle, used_latest=edata_id is None)
+        return ToolResult(structured_content=struct, content=md)
     except (KeyError, FileNotFoundError):
         return unknown_handle_error("get_edata_snapshot", "edata_id", handle)
     except Exception as exc:  # noqa: BLE001

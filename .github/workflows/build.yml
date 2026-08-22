@@ -34,3 +34,12 @@ jobs:
 
       - name: Check package
         run: uvx twine check --strict dist/*.whl
+
+      - name: Restore datasets cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ehrapy_data
+          key: ehrapy-data-tests-v1
+
+      - name: MCP handshake check
+        uses: ./.github/actions/mcp-handshake-check

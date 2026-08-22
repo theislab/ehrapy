@@ -1,27 +1,32 @@
-name: Release
+name: Release MCP Package
 
+# Krv-Labs fork: this fork does not publish to public PyPI (package name
+# collides with the real theislab/ehrapy). Instead, pushing a version tag
+# builds the wheel/sdist, verifies the installed ehrapy[mcp] extra actually
+# speaks MCP over stdio, and attaches the artifacts to a GitHub Release.
+# Consume from another project with:
+#   uv tool run --from "git+https://github.com/Krv-Labs/ehrapy.git@<tag>#egg=ehrapy[mcp]" ehrapy-mcp
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
 
 defaults:
   run:
     shell: bash -euo pipefail {0}
 
+permissions:
+  contents: write
+
 jobs:
   release:
-    name: Upload release to PyPI
+    name: Build, verify, and publish GitHub Release
     runs-on: ubuntu-latest
-    environment:
-      name: pypi
-      url: https://pypi.org/p/ehrapy
-    permissions:
-      id-token: write
     steps:
       - uses: actions/checkout@v5
         with:
           filter: blob:none
-          fetch-depth: 0
 
       - name: Install uv
         uses: astral-sh/setup-uv@v7
@@ -30,5 +35,17 @@ jobs:
 
       - name: Build package
         run: uv build
-      - name: Publish package distributions to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+
+      - name: Restore datasets cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ehrapy_data
+          key: ehrapy-data-tests-v1
+
+      - name: MCP handshake check
+        uses: ./.github/actions/mcp-handshake-check
+
+      - name: Create GitHub Release with build artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${GITHUB_REF_NAME}" dist/* --generate-notes --title "${GITHUB_REF_NAME}"

@@ -207,6 +207,30 @@ def _profile_dataframe(
     return full_md, meta
 
 
+def _find_strat_col(df: pd.DataFrame, relevant_cols: set[str]) -> str | None:
+    """Find a relevant, non-numeric column to stratify the middle sample by."""
+    for col in relevant_cols:
+        if col in df.columns and (not pd.api.types.is_numeric_dtype(df[col]) or pd.api.types.is_bool_dtype(df[col])):
+            return col
+    return None
+
+
+def _middle_sample_positions(mid_df: pd.DataFrame, strat_col: str | None, middle_n: int) -> list[int]:
+    """Pick ``middle_n`` row positions (relative to ``mid_df``), stratified when useful."""
+    pos_series = pd.Series(range(len(mid_df)))
+    if strat_col is None or mid_df[strat_col].nunique() <= 1:
+        return list(pos_series.sample(min(middle_n, len(pos_series)), random_state=42))
+    try:
+        strat_labels = pd.Series(mid_df[strat_col].to_numpy())
+        grouped = pos_series.groupby(strat_labels, group_keys=False)
+        sampled_rel = grouped.apply(
+            lambda g: g.sample(max(1, int(len(g) / len(pos_series) * middle_n)), random_state=42)
+        )
+        return list(sampled_rel.iloc[:middle_n])
+    except Exception:  # noqa: BLE001
+        return list(pos_series.sample(min(middle_n, len(pos_series)), random_state=42))
+
+
 def _sample_rows(
     df: pd.DataFrame,
     relevant_cols: set[str],
@@ -224,48 +248,88 @@ def _sample_rows(
     tail_n = min(5, n_rows - head_n)
     middle_n = max(0, row_budget - head_n - tail_n)
 
-    head_idx = list(df.index[:head_n])
-    tail_idx = list(df.index[-tail_n:]) if tail_n > 0 else []
-    remaining_idx = [i for i in df.index if i not in head_idx and i not in tail_idx]
+    head_pos = list(range(head_n))
+    tail_pos = list(range(n_rows - tail_n, n_rows)) if tail_n > 0 else []
+    mid_pos_range = list(range(head_n, n_rows - tail_n))
 
-    sample_idx: list[Any] = []
-    if middle_n > 0 and remaining_idx:
-        mid_df = df.loc[remaining_idx]
-        strat_col = None
-        for col in relevant_cols:
-            if col in df.columns and (
-                not pd.api.types.is_numeric_dtype(df[col]) or pd.api.types.is_bool_dtype(df[col])
-            ):
-                strat_col = col
-                break
-        if strat_col is not None and mid_df[strat_col].nunique() > 1:
-            try:
-                sampled = mid_df.groupby(strat_col, group_keys=False).apply(
-                    lambda g: g.sample(max(1, int(len(g) / len(mid_df) * middle_n)), random_state=42)
-                )
-                sample_idx = list(sampled.index[:middle_n])
-            except Exception:  # noqa: BLE001
-                sample_idx = list(mid_df.sample(min(middle_n, len(mid_df)), random_state=42).index)
-        else:
-            sample_idx = list(mid_df.sample(min(middle_n, len(mid_df)), random_state=42).index)
+    sample_pos: list[int] = []
+    if middle_n > 0 and mid_pos_range:
+        mid_df = df.iloc[mid_pos_range]
+        strat_col = _find_strat_col(df, relevant_cols)
+        chosen_rel = _middle_sample_positions(mid_df, strat_col, middle_n)
+        sample_pos = [mid_pos_range[p] for p in chosen_rel]
 
-    rows = []
-    for idx in head_idx:
-        r = df.loc[idx].to_dict()
-        r["sample"] = "head"
-        rows.append(r)
-    for idx in sample_idx:
-        r = df.loc[idx].to_dict()
-        r["sample"] = "sample"
-        rows.append(r)
-    for idx in tail_idx:
-        r = df.loc[idx].to_dict()
-        r["sample"] = "tail"
-        rows.append(r)
+    all_positions = head_pos + sample_pos + tail_pos
+    sample_tags = ["head"] * len(head_pos) + ["sample"] * len(sample_pos) + ["tail"] * len(tail_pos)
 
-    sampled_df = pd.DataFrame(rows)
-    cols = ["sample"] + [c for c in sampled_df.columns if c != "sample"]
-    return sampled_df[cols]
+    sampled_df = df.iloc[all_positions].copy()
+    sampled_df.insert(0, "sample", sample_tags)
+    return sampled_df
+
+
+def _serialize_empty_dataframe(
+    df: pd.DataFrame, params: dict[str, Any], function: str, edata: EHRData | None
+) -> tuple[dict[str, Any], str]:
+    """Serialize a DataFrame with no rows or no columns, steering toward a `keys` param if applicable."""
+    if not params.get("keys") and function in ("obs_df", "var_df", "rank_features_groups_df"):
+        avail_cols: list[str] = []
+        if edata is not None:
+            if function == "obs_df":
+                avail_cols = list(edata.obs.columns[:30])
+            elif function == "var_df":
+                avail_cols = list(edata.var.columns[:30])
+        avail_str = f" Available columns: {', '.join(avail_cols)}" if avail_cols else ""
+        meta = {
+            "status": "ok_empty",
+            "shape": list(df.shape),
+            "agent_action": f"No columns requested. Specify columns using `params={{'keys': [...]}}`.{avail_str}",
+        }
+        md = f"# Result: ok_empty\n\nReturned table shape is `{list(df.shape)}`.\n\n**Action:** {meta['agent_action']}"
+        return meta, md
+    meta = {"type": "dataframe", "shape": list(df.shape)}
+    return meta, f"Empty DataFrame (shape: {list(df.shape)})."
+
+
+def _tier3_sampled_view(
+    df: pd.DataFrame,
+    relevant_cols: set[str],
+    response_format: Literal["concise", "detailed"],
+    params: dict[str, Any],
+) -> tuple[dict[str, Any], str] | None:
+    """Return a Tier-3 sampled-row view when rows were explicitly requested, else None."""
+    if response_format != "detailed" and "rows" not in params:
+        return None
+    sampled = _sample_rows(df, relevant_cols)
+    table_md = _df_to_markdown_table(sampled)
+    meta: dict[str, Any] = {"type": "dataframe", "shape": list(df.shape), "tier": 3, "sampled_rows": len(sampled)}
+    md = f"### DataFrame ({df.shape[0]} rows × {df.shape[1]} columns — sampled view)\n\n" + table_md
+    return meta, md
+
+
+def _tier1_full_table(df: pd.DataFrame) -> tuple[dict[str, Any], str] | None:
+    """Return the whole table rendered as Markdown if it fits the Tier-1 budget, else None."""
+    # Bound the work first -- rendering a 100k-row frame to Markdown just to discover it is
+    # too big is the exact overflow this tier is meant to prevent.
+    cells = df.shape[0] * max(1, df.shape[1])
+    if cells > _TIER1_MAX_CHARS:
+        return None
+    full_table_md = _df_to_markdown_table(df)
+    if len(full_table_md) > _TIER1_MAX_CHARS:
+        return None
+    meta: dict[str, Any] = {"type": "dataframe", "shape": list(df.shape), "tier": 1}
+    md = f"### DataFrame ({df.shape[0]} rows × {df.shape[1]} columns)\n\n" + full_table_md
+    return meta, md
+
+
+def _tier2_profile(df: pd.DataFrame, relevant_cols: set[str], is_whole_table: bool) -> tuple[dict[str, Any], str]:
+    """Render the Tier-2 column-profile view (default for large or whole-table results)."""
+    profile_md, profile_meta = _profile_dataframe(df, relevant_cols)
+    profile_meta["tier"] = 2
+    header = f"### Column Profile ({df.shape[0]} rows × {df.shape[1]} columns)\n\n"
+    steering = ""
+    if is_whole_table:
+        steering = "\n\n*Full table not returned — use `export_edata` to write it to disk, or `run_get` with `keys=[...]` for specific columns.*"
+    return profile_meta, header + profile_md + steering
 
 
 def _serialize_dataframe(
@@ -280,70 +344,20 @@ def _serialize_dataframe(
     params = params or {}
     relevant_cols = _extract_relevant_columns(params)
 
-    # Empty result guard
     if df.shape[0] == 0 or df.shape[1] == 0:
-        if not params.get("keys") and function in (
-            "obs_df",
-            "var_df",
-            "rank_features_groups_df",
-        ):
-            avail_cols: list[str] = []
-            if edata is not None:
-                if function == "obs_df":
-                    avail_cols = list(edata.obs.columns[:30])
-                elif function == "var_df":
-                    avail_cols = list(edata.var.columns[:30])
-            avail_str = f" Available columns: {', '.join(avail_cols)}" if avail_cols else ""
-            meta = {
-                "status": "ok_empty",
-                "shape": list(df.shape),
-                "agent_action": f"No columns requested. Specify columns using `params={{'keys': [...]}}`.{avail_str}",
-            }
-            md = f"# Result: ok_empty\n\nReturned table shape is `{list(df.shape)}`.\n\n**Action:** {meta['agent_action']}"
-            return meta, md
-        # Plain empty dataframe
-        meta = {"type": "dataframe", "shape": list(df.shape)}
-        return meta, f"Empty DataFrame (shape: {list(df.shape)})."
+        return _serialize_empty_dataframe(df, params, function, edata)
 
-    # Whole table return guard (e.g. to_pandas)
     is_whole_table = function == "to_pandas"
 
     if not is_whole_table:
-        # Tier 3: rows explicitly requested
-        if response_format == "detailed" or "rows" in params:
-            sampled = _sample_rows(df, relevant_cols)
-            table_md = _df_to_markdown_table(sampled)
-            meta_tier3: dict[str, Any] = {
-                "type": "dataframe",
-                "shape": list(df.shape),
-                "tier": 3,
-                "sampled_rows": len(sampled),
-            }
-            md = f"### DataFrame ({df.shape[0]} rows × {df.shape[1]} columns — sampled view)\n\n" + table_md
-            return meta_tier3, md
+        tier3 = _tier3_sampled_view(df, relevant_cols, response_format, params)
+        if tier3 is not None:
+            return tier3
+        tier1 = _tier1_full_table(df)
+        if tier1 is not None:
+            return tier1
 
-        # Tier 1: Pass-through if it fits the Tier 1 budget. Bound the work first --
-        # rendering a 100k-row frame to Markdown just to discover it is too big is the
-        # exact overflow this tier is meant to prevent.
-        cells = df.shape[0] * max(1, df.shape[1])
-        if cells <= _TIER1_MAX_CHARS:
-            full_table_md = _df_to_markdown_table(df)
-        else:
-            full_table_md = None
-        if full_table_md is not None and len(full_table_md) <= _TIER1_MAX_CHARS:
-            meta_tier1: dict[str, Any] = {"type": "dataframe", "shape": list(df.shape), "tier": 1}
-            md = f"### DataFrame ({df.shape[0]} rows × {df.shape[1]} columns)\n\n" + full_table_md
-            return meta_tier1, md
-
-    # Tier 2: Profile-first (default for large DataFrames or whole-table returns)
-    profile_md, profile_meta = _profile_dataframe(df, relevant_cols)
-    profile_meta["tier"] = 2
-    header = f"### Column Profile ({df.shape[0]} rows × {df.shape[1]} columns)\n\n"
-    steering = ""
-    if is_whole_table:
-        steering = "\n\n*Full table not returned — use `export_edata` to write it to disk, or `run_get` with `keys=[...]` for specific columns.*"
-
-    return profile_meta, header + profile_md + steering
+    return _tier2_profile(df, relevant_cols, is_whole_table)
 
 
 def _unique_plot_path(plots_dir: Path, stem: str) -> Path:
@@ -442,6 +456,36 @@ _JSON_SAFE_SCALARS = (str, bool, int, float)
 _MAX_INLINE_SEQUENCE = 32
 
 
+def _json_safe_ndarray(value: np.ndarray, depth: int) -> Any:
+    if value.ndim == 1 and value.size <= _MAX_INLINE_SEQUENCE:
+        return [_json_safe(v, depth) for v in value.tolist()]
+    return {"type": "ndarray", "shape": list(value.shape), "dtype": str(value.dtype)}
+
+
+def _json_safe_sequence(seq_like: list[Any] | tuple[Any, ...] | set[Any], depth: int) -> list[Any]:
+    seq = list(seq_like)
+    out = [_json_safe(v, depth) for v in seq[:_MAX_INLINE_SEQUENCE]]
+    if len(seq) > _MAX_INLINE_SEQUENCE:
+        out.append(f"... ({len(seq) - _MAX_INLINE_SEQUENCE} more)")
+    return out
+
+
+def _json_safe_scalar(value: Any) -> Any:
+    """Coerce a scalar to JSON-safe, mapping non-finite floats (NaN/inf) to None."""
+    if isinstance(value, float) and not math.isfinite(value):
+        return None
+    return value
+
+
+def _json_safe_pandas(value: Any) -> dict[str, Any] | None:
+    """Summarize a pandas Series/DataFrame, or None if ``value`` is neither."""
+    if isinstance(value, pd.Series):
+        return {"type": "series", "length": int(len(value)), "dtype": str(value.dtype)}
+    if isinstance(value, pd.DataFrame):
+        return {"type": "dataframe", "shape": list(value.shape)}
+    return None
+
+
 def _json_safe(value: Any, _depth: int = 0) -> Any:
     """Coerce a value into something FastMCP can place in ``structured_content``.
 
@@ -450,28 +494,189 @@ def _json_safe(value: Any, _depth: int = 0) -> Any:
     ``CausalEstimate`` carry ndarrays inside nested ``params`` dicts, so this recurses.
     """
     if value is None or isinstance(value, _JSON_SAFE_SCALARS):
-        return None if isinstance(value, float) and not math.isfinite(value) else value
+        return _json_safe_scalar(value)
     if _depth >= 4:
         return f"<{type(value).__name__}>"
     if isinstance(value, (np.integer, np.floating, np.bool_)):
         return _json_safe(value.item(), _depth + 1)
     if isinstance(value, np.ndarray):
-        if value.ndim == 1 and value.size <= _MAX_INLINE_SEQUENCE:
-            return [_json_safe(v, _depth + 1) for v in value.tolist()]
-        return {"type": "ndarray", "shape": list(value.shape), "dtype": str(value.dtype)}
-    if isinstance(value, pd.Series):
-        return {"type": "series", "length": int(len(value)), "dtype": str(value.dtype)}
-    if isinstance(value, pd.DataFrame):
-        return {"type": "dataframe", "shape": list(value.shape)}
+        return _json_safe_ndarray(value, _depth + 1)
+    pandas_meta = _json_safe_pandas(value)
+    if pandas_meta is not None:
+        return pandas_meta
     if isinstance(value, dict):
         return {str(k): _json_safe(v, _depth + 1) for k, v in value.items()}
     if isinstance(value, (list, tuple, set)):
-        seq = list(value)
-        out = [_json_safe(v, _depth + 1) for v in seq[:_MAX_INLINE_SEQUENCE]]
-        if len(seq) > _MAX_INLINE_SEQUENCE:
-            out.append(f"... ({len(seq) - _MAX_INLINE_SEQUENCE} more)")
-        return out
+        return _json_safe_sequence(value, _depth + 1)
     return str(value)[:200]
+
+
+def _truncate_markdown(md: str, max_chars: int, suffix: str) -> str:
+    """Truncate markdown at a line boundary near max_chars, appending an explanatory suffix."""
+    if len(md) <= max_chars:
+        return md
+    cutoff = md[:max_chars].rfind("\n")
+    cutoff = cutoff if cutoff > 0 else max_chars
+    return md[:cutoff] + suffix
+
+
+def _serialize_visual(result: Any, plots_dir: Path | None) -> tuple[dict[str, Any], list[Any]] | None:
+    """Serialize a visual/plot result to a saved PNG, or None if ``result`` is not visual."""
+    visual_saved = _try_save_visual(result, plots_dir)
+    if visual_saved is None:
+        return None
+    meta, path = visual_saved
+    md = f"Plot rendered successfully and saved to `{path}`."
+    return meta, [md, Image(path=str(path))]
+
+
+def _serialize_ehrdata(result: EHRData) -> tuple[dict[str, Any], str]:
+    meta = {"type": "EHRData", "n_obs": result.n_obs, "n_vars": result.n_vars}
+    md = f"**EHRData dataset:** {result.n_obs} observations × {result.n_vars} variables"
+    return meta, md
+
+
+def _serialize_single_dataframe(
+    result: pd.DataFrame,
+    *,
+    response_format: Literal["concise", "detailed"],
+    params: dict[str, Any],
+    function: str,
+    edata: EHRData | None,
+    max_chars: int,
+) -> tuple[dict[str, Any], str]:
+    meta, md = _serialize_dataframe(
+        result, response_format=response_format, params=params, function=function, edata=edata
+    )
+    md = _truncate_markdown(
+        md, max_chars, f"\n\n*... [Output truncated at {max_chars} characters. Narrow your query with parameters.]*"
+    )
+    return meta, md
+
+
+def _is_dataframe_collection(result: Any) -> bool:
+    """True if ``result`` is a tuple/list containing at least one DataFrame."""
+    return isinstance(result, (tuple, list)) and any(isinstance(x, pd.DataFrame) for x in result)
+
+
+def _table_label_and_missing_note(idx: int, item: pd.DataFrame) -> tuple[str, str]:
+    """Determine a section label for one table in a collection, and any missingness callout."""
+    label = "Observations" if idx == 0 and "missing_values_abs" in item.columns else f"Table {idx + 1}"
+    note = ""
+    if "missing_values_pct" in item.columns and "missing_values_abs" in item.columns and item.shape[0] < 1000:
+        label = "Variables Quality Metrics"
+        top_m = item.sort_values("missing_values_pct", ascending=False).head(5)
+        parts = [
+            f"{idx_name} ({row['missing_values_pct']:.1f}%)"
+            for idx_name, row in top_m.iterrows()
+            if row["missing_values_pct"] > 0
+        ]
+        if parts:
+            note = f"\n\n**Highest-missingness variables:** {', '.join(parts)}"
+    return label, note
+
+
+def _serialize_dataframe_collection(
+    result: tuple[Any, ...] | list[Any],
+    *,
+    response_format: Literal["concise", "detailed"],
+    params: dict[str, Any],
+    function: str,
+    edata: EHRData | None,
+    max_chars: int,
+) -> tuple[dict[str, Any], str]:
+    """Serialize a tuple/list containing one or more DataFrames (e.g. qc_metrics)."""
+    table_sections: list[str] = []
+    table_metas: list[dict[str, Any]] = []
+    top_missing_note = ""
+
+    for idx, item in enumerate(result):
+        if not isinstance(item, pd.DataFrame):
+            table_sections.append(f"### Item {idx + 1}\n\n`{repr(item)[:500]}`")
+            continue
+        t_meta, t_md = _serialize_dataframe(
+            item, response_format=response_format, params=params, function=function, edata=edata
+        )
+        label, note = _table_label_and_missing_note(idx, item)
+        if note:
+            top_missing_note = note
+        table_sections.append(f"### {label}\n\n{t_md}")
+        table_metas.append(t_meta)
+
+    full_md = "\n\n---\n\n".join(table_sections) + top_missing_note
+    full_md = _truncate_markdown(full_md, max_chars, f"\n\n*... [Output truncated at {max_chars} characters.]*")
+
+    return {"type": "table_collection", "tables": table_metas}, full_md
+
+
+def _serialize_series(result: pd.Series) -> tuple[dict[str, Any], str]:
+    if len(result) <= 20:
+        df_s = result.reset_index()
+        md = f"### Series `{result.name or 'result'}`\n\n" + _df_to_markdown_table(df_s)
+    else:
+        df_s = pd.DataFrame({"index": list(result.index), "value": list(result.values)})
+        prof_md, _ = _profile_dataframe(df_s, set())
+        md = f"### Series `{result.name or 'result'}` (Profile)\n\n" + prof_md
+    meta = {"type": "series", "name": result.name, "length": len(result)}
+    return meta, md
+
+
+def _serialize_ndarray(result: np.ndarray) -> tuple[dict[str, Any], str]:
+    meta = {"type": "ndarray", "shape": list(result.shape), "dtype": str(result.dtype)}
+    md = f"**Array result:** shape `{list(result.shape)}`, dtype `{result.dtype}`"
+    return meta, md
+
+
+def _serialize_array_like(result: Any) -> tuple[dict[str, Any], str] | None:
+    """Serialize a pandas Series or numpy ndarray, or None if ``result`` is neither."""
+    if isinstance(result, pd.Series):
+        return _serialize_series(result)
+    if isinstance(result, np.ndarray):
+        return _serialize_ndarray(result)
+    return None
+
+
+def _serialize_dataclass(result: Any) -> tuple[dict[str, Any], str]:
+    d = asdict(result)
+    meta = {"type": type(result).__name__, **d}
+    md = f"### {type(result).__name__}\n\n" + "\n".join(f"- **{k}:** `{v}`" for k, v in d.items())
+    return meta, md
+
+
+def _serialize_dict_result(result: dict[str, Any]) -> tuple[dict[str, Any], str]:
+    meta = {str(k): (v if isinstance(v, (int, float, str, bool)) else str(type(v).__name__)) for k, v in result.items()}
+    md = "### Result\n\n" + "\n".join(f"- **{k}:** `{v}`" for k, v in result.items())
+    return meta, md
+
+
+def _serialize_structured(result: Any) -> tuple[dict[str, Any], str] | None:
+    """Serialize a dataclass instance or a plain dict, or None if ``result`` is neither."""
+    if is_dataclass(result) and not isinstance(result, type):
+        return _serialize_dataclass(result)
+    if isinstance(result, dict):
+        return _serialize_dict_result(result)
+    return None
+
+
+def _serialize_with_summary(result: Any) -> tuple[dict[str, Any], str] | None:
+    """Serialize via a summary() method (e.g. statsmodels/lifelines results), or None if unavailable."""
+    summary_fn = getattr(result, "summary", None)
+    if not callable(summary_fn):
+        return None
+    try:
+        summ_text = str(summary_fn())[:_MAX_REPR_CHARS]
+    except Exception:  # noqa: BLE001
+        return None
+    meta = {"type": type(result).__name__}
+    md = f"### {type(result).__name__} Summary\n\n```\n{summ_text}\n```"
+    return meta, md
+
+
+def _serialize_fallback_repr(result: Any) -> tuple[dict[str, Any], str]:
+    repr_str = repr(result)[:_MAX_REPR_CHARS]
+    meta = {"type": type(result).__name__}
+    md = f"```\n{repr_str}\n```"
+    return meta, md
 
 
 def _serialize_result_inner(
@@ -487,141 +692,49 @@ def _serialize_result_inner(
     params = params or {}
     max_chars = _get_max_result_chars()
 
-    # None
     if result is None:
         return {}, "Operation completed successfully."
 
-    # Visual / Plot object
-    visual_saved = _try_save_visual(result, plots_dir)
-    if visual_saved is not None:
-        meta, path = visual_saved
-        md = f"Plot rendered successfully and saved to `{path}`."
-        img = Image(path=str(path))
-        return meta, [md, img]
+    visual = _serialize_visual(result, plots_dir)
+    if visual is not None:
+        return visual
 
-    # EHRData
     if isinstance(result, EHRData):
-        meta = {"type": "EHRData", "n_obs": result.n_obs, "n_vars": result.n_vars}
-        md = f"**EHRData dataset:** {result.n_obs} observations × {result.n_vars} variables"
-        return meta, md
+        return _serialize_ehrdata(result)
 
-    # Single DataFrame
     if isinstance(result, pd.DataFrame):
-        meta, md = _serialize_dataframe(
+        return _serialize_single_dataframe(
             result,
             response_format=response_format,
             params=params,
             function=function,
             edata=edata,
+            max_chars=max_chars,
         )
-        if len(md) > max_chars:
-            cutoff = md[:max_chars].rfind("\n")
-            cutoff = cutoff if cutoff > 0 else max_chars
-            md = (
-                md[:cutoff]
-                + f"\n\n*... [Output truncated at {max_chars} characters. Narrow your query with parameters.]*"
-            )
-        return meta, md
 
-    # Tuple / list of DataFrames (e.g. qc_metrics)
-    if isinstance(result, (tuple, list)) and any(isinstance(x, pd.DataFrame) for x in result):
-        table_sections: list[str] = []
-        table_metas: list[dict[str, Any]] = []
-        top_missing_note = ""
+    if _is_dataframe_collection(result):
+        return _serialize_dataframe_collection(
+            result,
+            response_format=response_format,
+            params=params,
+            function=function,
+            edata=edata,
+            max_chars=max_chars,
+        )
 
-        for idx, item in enumerate(result):
-            if isinstance(item, pd.DataFrame):
-                t_meta, t_md = _serialize_dataframe(
-                    item,
-                    response_format=response_format,
-                    params=params,
-                    function=function,
-                    edata=edata,
-                )
-                label = "Observations" if idx == 0 and "missing_values_abs" in item.columns else f"Table {idx + 1}"
-                if (
-                    "missing_values_pct" in item.columns
-                    and "missing_values_abs" in item.columns
-                    and item.shape[0] < 1000
-                ):
-                    label = "Variables Quality Metrics"
-                    # Extract top missing
-                    top_m = item.sort_values("missing_values_pct", ascending=False).head(5)
-                    parts = [
-                        f"{idx_name} ({row['missing_values_pct']:.1f}%)"
-                        for idx_name, row in top_m.iterrows()
-                        if row["missing_values_pct"] > 0
-                    ]
-                    if parts:
-                        top_missing_note = f"\n\n**Highest-missingness variables:** {', '.join(parts)}"
+    array_like = _serialize_array_like(result)
+    if array_like is not None:
+        return array_like
 
-                table_sections.append(f"### {label}\n\n{t_md}")
-                table_metas.append(t_meta)
-            else:
-                table_sections.append(f"### Item {idx + 1}\n\n`{repr(item)[:500]}`")
+    structured = _serialize_structured(result)
+    if structured is not None:
+        return structured
 
-        full_md = "\n\n---\n\n".join(table_sections) + top_missing_note
-        if len(full_md) > max_chars:
-            cutoff = full_md[:max_chars].rfind("\n")
-            cutoff = cutoff if cutoff > 0 else max_chars
-            full_md = full_md[:cutoff] + f"\n\n*... [Output truncated at {max_chars} characters.]*"
+    summary_result = _serialize_with_summary(result)
+    if summary_result is not None:
+        return summary_result
 
-        meta = {"type": "table_collection", "tables": table_metas}
-        return meta, full_md
-
-    # Series
-    if isinstance(result, pd.Series):
-        if len(result) <= 20:
-            df_s = result.reset_index()
-            md = f"### Series `{result.name or 'result'}`\n\n" + _df_to_markdown_table(df_s)
-        else:
-            df_s = pd.DataFrame({"index": list(result.index), "value": list(result.values)})
-            prof_md, _ = _profile_dataframe(df_s, set())
-            md = f"### Series `{result.name or 'result'}` (Profile)\n\n" + prof_md
-        meta = {"type": "series", "name": result.name, "length": len(result)}
-        return meta, md
-
-    # NumPy ndarray
-    if isinstance(result, np.ndarray):
-        meta = {
-            "type": "ndarray",
-            "shape": list(result.shape),
-            "dtype": str(result.dtype),
-        }
-        md = f"**Array result:** shape `{list(result.shape)}`, dtype `{result.dtype}`"
-        return meta, md
-
-    # Dataclass
-    if is_dataclass(result) and not isinstance(result, type):
-        d = asdict(result)
-        meta = {"type": type(result).__name__, **d}
-        md = f"### {type(result).__name__}\n\n" + "\n".join(f"- **{k}:** `{v}`" for k, v in d.items())
-        return meta, md
-
-    # Dict
-    if isinstance(result, dict):
-        meta = {
-            str(k): (v if isinstance(v, (int, float, str, bool)) else str(type(v).__name__)) for k, v in result.items()
-        }
-        md = "### Result\n\n" + "\n".join(f"- **{k}:** `{v}`" for k, v in result.items())
-        return meta, md
-
-    # Objects with summary() method (e.g. statsmodels / lifelines)
-    summary_fn = getattr(result, "summary", None)
-    if callable(summary_fn):
-        try:
-            summ_text = str(summary_fn())[:_MAX_REPR_CHARS]
-            meta = {"type": type(result).__name__}
-            md = f"### {type(result).__name__} Summary\n\n```\n{summ_text}\n```"
-            return meta, md
-        except Exception:  # noqa: BLE001
-            pass
-
-    # Fallback repr
-    repr_str = repr(result)[:_MAX_REPR_CHARS]
-    meta = {"type": type(result).__name__}
-    md = f"```\n{repr_str}\n```"
-    return meta, md
+    return _serialize_fallback_repr(result)
 
 
 def serialize_result(

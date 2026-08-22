@@ -4,7 +4,7 @@ requires = ["hatchling"]
 
 [project]
 name = "ehrapy"
-version = "0.15.0"
+version = "0.1.0"
 description = "Electronic Health Record Analysis with Python."
 readme = "README.md"
 requires-python = ">=3.12,<3.15"
@@ -24,7 +24,7 @@ maintainers = [
     {name = "Lukas Heumos", email = "lukas.heumos@posteo.net"},
 ]
 urls.Documentation = "https://ehrapy.readthedocs.io"
-urls.Source = "https://github.com/theislab/ehrapy"
+urls.Source = "https://github.com/Krv-Labs/ehrapy"
 urls.Home-page = "https://github.com/theislab/ehrapy"
 
 classifiers = [
@@ -123,9 +123,6 @@ test = [
 
 [project.scripts]
 ehrapy-mcp = "ehrapy.mcp.server:main"
-
-[tool.hatch.version]
-source = "vcs"
 
 [tool.hatch.metadata]
 allow-direct-references = true

@@ -128,13 +128,13 @@ class ArgumentValidationMiddleware(Middleware):
         return result
 
 
-def create_server() -> FastMCP:
+def create_server(*, purge_cache: bool = False) -> FastMCP:
     """Create and configure the FastMCP server instance."""
-    # Startup cache purge
-    try:
-        registry.purge()
-    except Exception:  # noqa: BLE001
-        pass
+    if purge_cache:
+        try:
+            registry.purge()
+        except Exception:  # noqa: BLE001
+            pass
 
     server = FastMCP("ehrapy", instructions=SERVER_INSTRUCTIONS)
     server.add_middleware(ArgumentValidationMiddleware(server))
@@ -198,7 +198,13 @@ def main() -> None:
     """Entry point for running the MCP server."""
     parser = argparse.ArgumentParser(description="ehrapy MCP server")
     parser.add_argument("--transport", default="stdio", choices=["stdio", "sse", "http"], help="MCP transport protocol")
+    parser.add_argument("--no-purge", action="store_true", help="Do not purge cache on startup")
     args = parser.parse_args()
+    if not args.no_purge:
+        try:
+            registry.purge()
+        except Exception:  # noqa: BLE001
+            pass
     mcp.run(transport=args.transport)
 
 

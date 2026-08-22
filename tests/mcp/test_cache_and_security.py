@@ -6,6 +6,7 @@ import asyncio
 import os
 import stat
 import tempfile
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import ehrdata.dt as dt
@@ -21,9 +22,6 @@ from ehrapy.mcp.policy import (
 )
 from ehrapy.mcp.registry import MCPRegistry, registry
 from ehrapy.mcp.server import mcp
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 
 def _run(coro):
@@ -137,3 +135,62 @@ def test_cache_directory_permissions_and_purge(tmp_path: Path, monkeypatch: pyte
     # Test purge runs without errors
     purged = reg.purge(older_than_days=7)
     assert isinstance(purged, int)
+
+
+def test_create_server_does_not_purge_cache(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Ensure create_server does not purge existing datasets on disk (issue #16)."""
+    custom_cache = tmp_path / "mcp_cache"
+    monkeypatch.setenv("EHRAPY_MCP_CACHE_DIR", str(custom_cache))
+
+    # Save a dataset in the cache
+    edata = dt.mimic_2()
+    rec = save_edata(edata, name="preserved_test")
+    cache_file = Path(rec.cache_path)
+    assert cache_file.exists()
+
+    # Create server instance without purge
+    from ehrapy.mcp.server import create_server
+
+    create_server(purge_cache=False)
+    assert cache_file.exists()
+    assert registry.get_dataset(rec.edata_id) is not None
+
+
+def test_read_only_tools_preserve_in_memory_edata_invariant() -> None:
+    """Assert invariant that read-only tools do not mutate cached in-memory EHRData (issue #13)."""
+
+    async def _test():
+        async with Client(mcp) as client:
+            demo_res = await client.call_tool("load_demo_dataset", {"dataset": "mimic_2"})
+            edata_id = demo_res.structured_content["edata_id"]
+
+            edata_before = load_edata(edata_id)
+            obs_cols_before = list(edata_before.obs.columns)
+            var_cols_before = list(edata_before.var.columns)
+            uns_keys_before = set(edata_before.uns.keys())
+            shape_before = edata_before.shape
+            layers_before = set(edata_before.layers.keys())
+
+            # 1. run_get calls
+            await client.call_tool("run_get", {"function": "obs_df", "edata_id": edata_id, "params": {"keys": ["age"]}})
+            await client.call_tool(
+                "run_get",
+                {"function": "var_df", "edata_id": edata_id, "params": {"keys": list(edata_before.var_names[:2])}},
+            )
+
+            # 2. get_edata_snapshot call
+            await client.call_tool("get_edata_snapshot", {"edata_id": edata_id})
+
+            # 3. run_plot call
+            await client.call_tool("run_plot", {"function": "missing_values_matrix", "edata_id": edata_id})
+
+            # Verify in-memory edata is completely unchanged
+            edata_after = load_edata(edata_id)
+            assert edata_after is edata_before  # same cached instance
+            assert list(edata_after.obs.columns) == obs_cols_before
+            assert list(edata_after.var.columns) == var_cols_before
+            assert set(edata_after.uns.keys()) == uns_keys_before
+            assert edata_after.shape == shape_before
+            assert set(edata_after.layers.keys()) == layers_before
+
+    _run(_test())

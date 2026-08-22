@@ -1,9 +1,11 @@
 name: GPU tests
+# Krv-Labs fork: no cirun-aws-gpu self-hosted runner is provisioned here, so
+# this workflow can never actually pass on a pull_request -- it would just
+# show a permanent red "Triage" gate on every PR. Left as push-to-main only
+# (upstream's original scope) so this doesn't affect PR checks at all.
 on:
   push:
     branches: [main]
-  pull_request:
-    types: [labeled, opened, synchronize]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}

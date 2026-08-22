@@ -56,6 +56,22 @@ def test_tier3_sample_rows_detailed_format() -> None:
     assert "tail" in md
 
 
+def test_sample_rows_duplicate_indices() -> None:
+    """Ensure _sample_rows handles non-unique index labels positionally without corruption (issue #16)."""
+    # 100 rows with all index labels set to 0 and a categorical stratification column
+    df = pd.DataFrame(
+        {"feat": range(100), "category": ["A", "B"] * 50},
+        index=[0] * 100,
+    )
+    sampled = _sample_rows(df, {"category"}, row_budget=20)
+    assert len(sampled) == 20
+    assert list(sampled.columns) == ["sample", "feat", "category"]
+    assert list(sampled["sample"].iloc[:5]) == ["head"] * 5
+    assert list(sampled["sample"].iloc[-5:]) == ["tail"] * 5
+    assert list(sampled["sample"].iloc[5:15]) == ["sample"] * 10
+    assert not sampled.isna().any().any()
+
+
 def test_empty_dataframe_guard() -> None:
     edata = dt.mimic_2()
     empty_df = pd.DataFrame()
