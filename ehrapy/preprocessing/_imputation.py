@@ -108,7 +108,7 @@ def explicit_impute(
         for idx, column_name in enumerate(edata.var_names):
             imputation_value = _extract_impute_value(replacement, column_name)
             # only replace if an explicit value got passed or could be extracted from replacement
-            if imputation_value:
+            if imputation_value is not None:
                 X[:, idx : idx + 1] = _replace_explicit(X[:, idx : idx + 1], imputation_value, impute_empty_strings)
             else:
                 logger.warning(f"No replace value passed and found for var [not bold green]{column_name}.")
@@ -174,13 +174,11 @@ def _extract_impute_value(replacement: Mapping[str, str | int | float], column_n
         The value to replace missing values
     """
     # try to get a value for the specific column
-    imputation_value = replacement.get(column_name)
-    if imputation_value:
-        return imputation_value
+    if column_name in replacement:
+        return replacement[column_name]
     # search for a default value in case no value was specified for that column
-    imputation_value = replacement.get("default")
-    if imputation_value:  # pragma: no cover
-        return imputation_value
+    if "default" in replacement:  # pragma: no cover
+        return replacement["default"]
     else:
         return None
 
