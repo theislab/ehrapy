@@ -303,17 +303,17 @@ def move_type_info_from_uns_to_var(adata, copy=False):
     if copy:
         adata = adata.copy()
 
-    adata.var['ehrapy_column_type'] = 'unknown'
+    adata.var["ehrapy_column_type"] = "unknown"
 
-    if 'numerical_columns' in adata.uns.keys():
-        for key in adata.uns['numerical_columns']:
-            adata.var.loc[key, 'ehrapy_column_type'] = 'numeric'
-    if 'non_numerical_columns' in adata.uns.keys():
-        for key in adata.uns['non_numerical_columns']:
-            adata.var.loc[key, 'ehrapy_column_type'] = 'non_numeric'
-    if 'encoded_non_numerical_columns' in adata.uns.keys():
-        for key in adata.uns['encoded_non_numerical_columns']:
-            adata.var.loc[key, 'ehrapy_column_type'] = 'non_numeric_encoded'
+    if "numerical_columns" in adata.uns.keys():
+        for key in adata.uns["numerical_columns"]:
+            adata.var.loc[key, "ehrapy_column_type"] = "numeric"
+    if "non_numerical_columns" in adata.uns.keys():
+        for key in adata.uns["non_numerical_columns"]:
+            adata.var.loc[key, "ehrapy_column_type"] = "non_numeric"
+    if "encoded_non_numerical_columns" in adata.uns.keys():
+        for key in adata.uns["encoded_non_numerical_columns"]:
+            adata.var.loc[key, "ehrapy_column_type"] = "non_numeric_encoded"
 
     if copy:
         return adata
