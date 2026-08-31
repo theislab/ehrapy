@@ -686,6 +686,8 @@ def mcar_test(
         0.1416...
     """
     mtx = edata.X if layer is None else edata.layers[layer]
+    if mtx.ndim == 3:
+        mtx = mtx[:, :, 0]
 
     # sequeeze the array if input is inherently 2D (only 1 timepoint of shape (x,y,1)), 3D already checked by @function_2D_only()
     if mtx.ndim == 3:
