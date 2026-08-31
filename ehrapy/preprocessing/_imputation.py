@@ -374,30 +374,18 @@ def knn_impute(
 
 
 @singledispatch
-def _knn_impute_function(arr, var_indices: list[int], numerical_indices: list[int], imputer):
+def _knn_impute_function(arr, var_indices: list[int], numerical_indices: list[int], imputer) -> np.ndarray:
     raise _raise_array_type_not_implemented(_knn_impute_function, type(arr))
 
 
 @_knn_impute_function.register(np.ndarray)
-def _(arr: np.ndarray, var_indices: list[int], numerical_indices: list[int], imputer) -> tuple[list[int], np.ndarray]:
-    var_indices_original = var_indices
-    is_3d = arr.ndim == 3
+@_apply_over_time_axis
+def _(arr: np.ndarray, var_indices: list[int], numerical_indices: list[int], imputer) -> np.ndarray:
     input_dtype = arr.dtype if np.issubdtype(arr.dtype, np.floating) else np.float64
-
-    # if input data is 3D, flatten along axis 0 before passing it to the imputer: each timepoint becomes a row
-    if is_3d:
-        n_obs, n_vars, n_t = arr.shape
-        arr = (
-            arr[:, var_indices, :]
-            .astype(input_dtype, copy=True)
-            .transpose(0, 2, 1)
-            .reshape(n_obs * n_t, len(var_indices))
-        )
-        numerical_indices = list(range(len(var_indices)))
-        var_indices = numerical_indices
+    numerical_arr = arr[:, numerical_indices].astype(input_dtype, copy=True)
 
     # complete columns to be used as anchors
-    complete_numerical_columns = np.array(numerical_indices)[~np.isnan(arr[:, numerical_indices]).any(axis=0)].tolist()
+    complete_numerical_columns = np.array(numerical_indices)[~np.isnan(numerical_arr).any(axis=0)].tolist()
 
     imputer_data_indices = var_indices + [
         column for column in complete_numerical_columns if column not in var_indices
@@ -405,14 +393,9 @@ def _(arr: np.ndarray, var_indices: list[int], numerical_indices: list[int], imp
     imputer_x = arr[:, imputer_data_indices].astype(input_dtype, copy=True)
     X_imputed = imputer.fit_transform(imputer_x)
 
-    if is_3d:
-        # slice back to only requested columns and transpose back to n_obs, n_var, n_t
-        X_imputed = (
-            X_imputed[:, : len(var_indices_original)].reshape(n_obs, n_t, len(var_indices_original)).transpose(0, 2, 1)
-        )
-        return var_indices_original, X_imputed
-    else:
-        return imputer_data_indices, X_imputed
+    result = arr.copy()
+    result[:, imputer_data_indices] = X_imputed
+    return result
 
 
 def _knn_impute(
@@ -445,15 +428,12 @@ def _knn_impute(
         )
     mtx = edata.X if layer is None else edata.layers[layer]
 
-    result_indices, X_imputed = _knn_impute_function(mtx, var_indices, numerical_indices, imputer)
+    X_imputed = _knn_impute_function(mtx, var_indices, numerical_indices, imputer)
 
-    if mtx.ndim == 3:
-        edata.layers[layer][:, result_indices, :] = X_imputed
+    if layer is None:
+        edata.X[:, var_indices] = X_imputed[:, var_indices]
     else:
-        if layer is None:
-            edata.X[:, result_indices] = X_imputed
-        else:
-            edata.layers[layer][:, result_indices] = X_imputed
+        edata.layers[layer][:, var_indices] = X_imputed[:, var_indices]
 
 
 @singledispatch
