@@ -12,6 +12,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   Use {func}`ep.pp.miss_forest_impute <ehrapy.preprocessing.miss_forest_impute>` instead, which is MICE via {class}`~sklearn.impute.IterativeImputer` with a tree ensemble.
   For a LightGBM backend, pass `IterativeImputer(estimator=LGBMRegressor(...))` directly.
 
+### 📖 Documentation
+
+* Add imputation methods tutorial notebook, benchmarking six imputation strategies on the PhysioNet2012 dataset ([#1101](https://github.com/theislab/ehrapy/pull/1101)) @sueoglu
+
 ## v0.15.0
 <!--
 anndata 0.13.0 has been released and is now supported.
