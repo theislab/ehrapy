@@ -497,10 +497,6 @@ def test_mcar_test_ttest_detects_mar(mar_edata):
     assert p_col0_given_miss9 < 0.05
 
 
-# _little_mcar_test estimates pairwise-deletion covariance using each column's global mean rather than
-# the mean of the jointly-observed subset, which diverges from pyampute's pandas.cov()-based reference at
-# high missingness / many variables. Pre-existing algorithm issue, unrelated to the ehrdata_blobs 2D/3D .X
-# migration this test suite is being updated for; tracked separately.
 _LITTLE_SCENARIO_XFAILS = {"mcar_medium_high_missing": "diverges from pyampute reference at high missingness"}
 
 
