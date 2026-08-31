@@ -16,6 +16,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 * `ep.pp.explicit_impute()` now accepts falsy mapping replacement values such as `0`, `0.0`, and empty strings ([#1087](https://github.com/theislab/ehrapy/pull/1087)) @driavysinus
 
+### 📖 Documentation
+
+* Add imputation methods tutorial notebook, benchmarking six imputation strategies on the PhysioNet2012 dataset ([#1101](https://github.com/theislab/ehrapy/pull/1101)) @sueoglu
+
 ## v0.15.0
 <!--
 anndata 0.13.0 has been released and is now supported.
