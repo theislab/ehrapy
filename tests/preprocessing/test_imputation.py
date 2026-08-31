@@ -352,6 +352,20 @@ def test_knn_impute_numerical_data(impute_num_edata):
     _base_check_imputation(impute_num_edata, edata_imputed)
 
 
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NUMERIC)
+@pytest.mark.parametrize("backend", ["scikit-learn", "faiss"])
+def test_knn_impute_array_types(impute_num_edata, array_type, backend):
+    impute_num_edata.X = array_type(impute_num_edata.X)
+
+    if isinstance(impute_num_edata.X, da.Array | sparse.csr_array | sparse.csc_array):
+        with pytest.raises(NotImplementedError):
+            knn_impute(impute_num_edata, backend=backend, copy=True)
+    else:
+        edata_imputed = knn_impute(impute_num_edata, backend=backend, copy=True)
+
+        _base_check_imputation(impute_num_edata, edata_imputed)
+
+
 @pytest.mark.parametrize("edata_mini_3D_missing_values", [True], indirect=True)
 def test_missforest_impute_3D_edata(edata_mini_3D_missing_values):
     edata = edata_mini_3D_missing_values.copy()
