@@ -43,7 +43,7 @@ jobs:
               run: sudo apt-get install -y libopenblas-dev
 
             - name: Install ehrapy and additional dependencies
-              run: uv pip install '.[leiden]' 'cellrank[scvelo]' nbconvert ipykernel graphviz pypots fairlearn sparse anndata<=0.13.2 # temporary anndata pin https://github.com/scverse/cellrank/issues/1377
+              run: uv pip install '.[leiden]' 'cellrank[scvelo]' nbconvert ipykernel graphviz pypots fairlearn sparse 'anndata<=0.13.2' # temporary anndata pin https://github.com/scverse/cellrank/issues/1377
 
             - name: Install ehrdata from submodule
               run: uv pip install --reinstall --no-deps -e submodules/ehrdata
