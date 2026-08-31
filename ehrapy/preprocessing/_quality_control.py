@@ -689,6 +689,10 @@ def mcar_test(
     if mtx.ndim == 3:
         mtx = mtx[:, :, 0]
 
+    # sequeeze the array if input is inherently 2D (only 1 timepoint of shape (x,y,1)), 3D already checked by @function_2D_only()
+    if mtx.ndim == 3:
+        mtx = mtx[:, :, 0]
+
     # float64 required: covariance estimation and linear solves need stable floating-point math
     if mtx.dtype != np.float64:
         logger.warning(
