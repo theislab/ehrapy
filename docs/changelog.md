@@ -4,6 +4,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## The future
 
+### 🧰 Maintenance
+
+* Add imputation methods tutorial notebook, benchmarking six imputation strategies on the PhysioNet2012 dataset ([#1101](https://github.com/theislab/ehrapy/pull/1101)) @sueoglu
+
 ### 💥 Breaking changes
 
 * Remove `ep.pp.mice_forest_impute` and drop the `miceforest` dependency @Zethson
