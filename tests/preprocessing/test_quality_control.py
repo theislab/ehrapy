@@ -488,6 +488,11 @@ def test_mcar_identification(mcar_edata):
     assert p_value > 0.05
 
 
+def test_mcar_test_multi_timepoint_3d_raises(mcar_edata):
+    with pytest.raises(ValueError, match="only supports 2D data"):
+        mcar_test(mcar_edata, layer=DEFAULT_TEM_LAYER_NAME)
+
+
 def test_mcar_test_ttest_detects_mar(mar_edata):
     result = mcar_test(mar_edata, method="ttest")
     assert result.shape == (mar_edata.n_vars, mar_edata.n_vars)
