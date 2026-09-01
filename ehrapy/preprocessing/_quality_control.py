@@ -706,6 +706,35 @@ def mcar_test(
     raise ValueError(f"Unknown method {method!r}. Choose from 'little' or 'ttest'.")
 
 
+def _pairwise_deletion_cov(X: np.ndarray) -> np.ndarray:
+    """Covariance matrix of `X` by pairwise deletion.
+
+    Each entry is centred on the means of its own variable pair, computed over
+    the rows where both variables are observed. Centring on the global column
+    means instead biases every entry once missingness is high enough that a
+    pair's observed rows differ appreciably from the column's own observed
+    rows. This matches :meth:`pandas.DataFrame.cov`, the reference Little's
+    test is defined against.
+
+    Args:
+        X: 2D array of observations, missing values encoded as NaN.
+
+    Returns:
+        The pairwise-deletion covariance matrix.
+    """
+    valid = ~np.isnan(X)
+    valid_f = valid.astype(np.float64)
+    filled = np.where(valid, np.nan_to_num(X, nan=0.0), 0.0)
+
+    pair_counts = valid_f.T @ valid_f
+    np.fill_diagonal(pair_counts, np.maximum(pair_counts.diagonal(), 1))
+    sum_products = filled.T @ filled
+    # sum_rows[i, j] is the sum of variable i over the rows where i and j are both observed
+    sum_rows = filled.T @ valid_f
+
+    return (sum_products - sum_rows * sum_rows.T / np.maximum(pair_counts, 1.0)) / np.maximum(pair_counts - 1, 1.0)
+
+
 @singledispatch
 def _little_mcar_test(X) -> float:
     _raise_array_type_not_implemented(_little_mcar_test, type(X))
@@ -726,11 +755,7 @@ def _(X: np.ndarray) -> float:
 
     mu = np.nanmean(X, axis=0)
 
-    centered = X - mu
-    valid = ~mask
-    denom = valid.astype(np.float64).T @ valid.astype(np.float64)
-    np.fill_diagonal(denom, np.maximum(denom.diagonal(), 1))
-    cov_global = np.where(valid, centered, 0.0).T @ np.where(valid, centered, 0.0) / (denom - 1)
+    cov_global = _pairwise_deletion_cov(X)
     np.fill_diagonal(cov_global, np.maximum(cov_global.diagonal(), 1e-12))
 
     patterns, inverse, counts = np.unique(mask, axis=0, return_inverse=True, return_counts=True)

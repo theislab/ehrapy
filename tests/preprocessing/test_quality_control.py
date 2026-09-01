@@ -10,7 +10,12 @@ from scipy import sparse as sp
 
 import ehrapy as ep
 from ehrapy.preprocessing._encoding import encode
-from ehrapy.preprocessing._quality_control import _compute_obs_metrics, _compute_var_metrics, mcar_test
+from ehrapy.preprocessing._quality_control import (
+    _compute_obs_metrics,
+    _compute_var_metrics,
+    _pairwise_deletion_cov,
+    mcar_test,
+)
 from tests.conftest import ARRAY_TYPES_NONNUMERIC, TEST_DATA_PATH, as_dense_dask_array
 
 _TEST_PATH_ENCODE = f"{TEST_DATA_PATH}/encode"
@@ -476,6 +481,24 @@ def test_qc_lab_measurements_defaults_to_all_vars():
 def test_mcar_test_method_output_types(mar_edata, method, expected_output_type):
     output = mcar_test(mar_edata, method=method)
     assert isinstance(output, expected_output_type)
+
+
+@pytest.mark.parametrize("missing_fraction", [0.0, 0.1, 0.3, 0.5, 0.7])
+def test_pairwise_deletion_cov_matches_pandas(missing_fraction):
+    """The covariance behind Little's test must match pandas' pairwise covariance.
+
+    Regression test for #1110: entries were centred on each column's global mean
+    rather than the mean of the pair's own observed rows, which drifts as
+    missingness rises.
+    """
+    rng = np.random.default_rng(7)
+    X = rng.normal(size=(400, 8))
+    X[rng.random(X.shape) < missing_fraction] = np.nan
+
+    expected = pd.DataFrame(X).cov().to_numpy()
+    finite = np.isfinite(expected)
+
+    np.testing.assert_allclose(_pairwise_deletion_cov(X)[finite], expected[finite], atol=1e-10)
 
 
 def test_mar_data_identification(mar_edata):
