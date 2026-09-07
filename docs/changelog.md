@@ -12,6 +12,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   Use {func}`ep.pp.miss_forest_impute <ehrapy.preprocessing.miss_forest_impute>` instead, which is MICE via {class}`~sklearn.impute.IterativeImputer` with a tree ensemble.
   For a LightGBM backend, pass `IterativeImputer(estimator=LGBMRegressor(...))` directly.
 
+### 🐛 Bug Fixes
+
+* `ep.pp.explicit_impute()` now accepts falsy mapping replacement values such as `0`, `0.0`, and empty strings ([#1087](https://github.com/theislab/ehrapy/pull/1087)) @driavysinus
+
 ### 📖 Documentation
 
 * Add imputation methods tutorial notebook, benchmarking six imputation strategies on the PhysioNet2012 dataset ([#1101](https://github.com/theislab/ehrapy/pull/1101)) @sueoglu
