@@ -482,8 +482,8 @@ def miss_forest_impute(
     The strategy works by fitting a random forest model on each feature containing missing values,
     and using the trained model to predict the missing values.
 
-    For 2D data, if layer is `None`, `edata.X` is used directly.
-    For 3D data, the layer is flattened along axis 0 before imputation and reshaped back to 3D afterwards.
+    If layer is `None`, `edata.X` is used directly; this also covers 3D data stored in `.X`.
+    For 3D data, values are flattened along axis 0 before imputation and reshaped back to 3D afterwards.
 
     See https://academic.oup.com/bioinformatics/article/28/1/112/219101.
 
@@ -498,7 +498,7 @@ def miss_forest_impute(
                       Decrease for faster computations.
         random_state: The random seed for the initialization.
         warning_threshold: Threshold of percentage of missing values to display a warning for.
-        layer: The layer to impute. Required when input data is 3D.
+        layer: The layer to impute. If `None`, `.X` is used. Required only when the 3D data lives in a named layer instead of `.X`.
         copy: Whether to return a copy or act in place.
 
     Returns:
@@ -508,17 +508,16 @@ def miss_forest_impute(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ed.dt.mimic_2()
-        >>> edata = ep.pp.encode(edata, autodetect=True)
-        >>> ep.pp.miss_forest_impute(edata)
+        >>> edata = ed.dt.ehrdata_blobs(n_variables=3, n_observations=3, base_timepoints=2, missing_values=0.3)
+        >>> edata_imputed = ep.pp.miss_forest_impute(edata, copy=True)
 
         Example Output:
 
-        >>> edata.layers["tem_data"][0, :, :]
+        >>> edata.X[0, :, :]
         [[-12.12732884, -18.37304373],
         [         nan,  -0.91339411],
         [         nan,  -7.88514984]]
-        >>> edata_imputed.layers["tem_data"][0, :, :]
+        >>> edata_imputed.X[0, :, :]
         [[-12.12732884, -18.37304373],
         [ -0.3278448 ,  -0.91339411],
         [ -4.39722201,  -7.88514984]]
