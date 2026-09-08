@@ -75,14 +75,13 @@ def filter_features(
         Depending on `copy`, subsets and annotates the passed data object and returns a filtered copy of the data object or acts in place
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ed.dt.ehrdata_blobs(
-        ...     n_variables=45, n_observations=500, base_timepoints=15, missing_values=0.6, layer="tem_data"
-        ... )
-        >>> edata.layers["tem_data"].shape
+        >>> edata = ed.dt.ehrdata_blobs(n_variables=45, n_observations=500, base_timepoints=15, missing_values=0.6)
+        >>> edata.X.shape
         (500, 45, 15)
-        >>> ep.pp.filter_features(edata, min_obs=185, time_mode="all", layer="tem_data")
-        >>> edata.layers["tem_data"].shape
+        >>> ep.pp.filter_features(edata, min_obs=185, time_mode="all")
+        >>> edata.X.shape
         (500, 18, 15)
     """
     data = edata.copy() if copy else edata
@@ -163,14 +162,13 @@ def filter_observations(
         Depending on `copy`, subsets and annotates the passed data object and returns a filtered copy of the data object or acts in place
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ed.dt.ehrdata_blobs(
-        ...     n_variables=45, n_observations=500, base_timepoints=15, missing_values=0.6, layer="tem_data"
-        ... )
-        >>> edata.layers["tem_data"].shape
+        >>> edata = ed.dt.ehrdata_blobs(n_variables=45, n_observations=500, base_timepoints=15, missing_values=0.6)
+        >>> edata.X.shape
         (500, 45, 15)
-        >>> ep.pp.filter_observations(edata, min_vars=10, time_mode="all", layer="tem_data")
-        >>> edata.layers["tem_data"].shape
+        >>> ep.pp.filter_observations(edata, min_vars=10, time_mode="all")
+        >>> edata.X.shape
         (477, 45, 15)
     """
     data = edata.copy() if copy else edata
