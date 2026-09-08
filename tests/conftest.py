@@ -411,7 +411,10 @@ def edata_small_bias() -> ed.EHRData:
 
 @pytest.fixture
 def edata_blob_small() -> ed.EHRData:
-    edata = ed.dt.ehrdata_blobs(n_variables=10, n_centers=2, n_observations=50, base_timepoints=10)
+    edata = ed.dt.ehrdata_blobs(
+        n_variables=10, n_centers=2, n_observations=50, base_timepoints=10, layer=DEFAULT_TEM_LAYER_NAME
+    )
+    edata.X = np.asarray(edata.layers[DEFAULT_TEM_LAYER_NAME])[:, :, 0].copy()
     edata.layers["layer_2"] = edata.X.copy()
     ep.pp.neighbors(edata)
     return edata
@@ -429,7 +432,7 @@ def edata_blobs_timeseries_small() -> ed.EHRData:
         variable_length=False,
         layer=DEFAULT_TEM_LAYER_NAME,
     )
-    edata.layers["layer_2"] = edata.X.copy()
+    edata.layers["layer_2"] = edata.layers[DEFAULT_TEM_LAYER_NAME].copy()
 
     return edata
 
