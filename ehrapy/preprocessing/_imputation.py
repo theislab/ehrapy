@@ -371,6 +371,31 @@ def knn_impute(
     return edata if copy else None
 
 
+@singledispatch
+def _knn_impute_function(arr, var_indices: list[int], numerical_indices: list[int], imputer) -> np.ndarray:
+    raise _raise_array_type_not_implemented(_knn_impute_function, type(arr))
+
+
+@_knn_impute_function.register(np.ndarray)
+@_apply_over_time_axis
+def _(arr: np.ndarray, var_indices: list[int], numerical_indices: list[int], imputer) -> np.ndarray:
+    input_dtype = arr.dtype if np.issubdtype(arr.dtype, np.floating) else np.float64
+    numerical_arr = arr[:, numerical_indices].astype(input_dtype, copy=True)
+
+    # complete columns to be used as anchors
+    complete_numerical_columns = np.array(numerical_indices)[~np.isnan(numerical_arr).any(axis=0)].tolist()
+
+    imputer_data_indices = var_indices + [
+        column for column in complete_numerical_columns if column not in var_indices
+    ]  # columns to impute
+    imputer_x = arr[:, imputer_data_indices].astype(input_dtype, copy=True)
+    X_imputed = imputer.fit_transform(imputer_x)
+
+    result = arr.copy()
+    result[:, imputer_data_indices] = X_imputed
+    return result
+
+
 def _knn_impute(
     edata: EHRData,
     var_names: Iterable[str] | None,
@@ -400,43 +425,13 @@ def _knn_impute(
             "var_names parameter or perform an encoding of your data."
         )
     mtx = edata.X if layer is None else edata.layers[layer]
-    var_indices_original = var_indices
-    is_3d = False
-    input_dtype = mtx.dtype if np.issubdtype(mtx.dtype, np.floating) else np.float64
 
-    # if input data is 3D, flatten along axis 0 before passing it to the imputer: each timepoint becomes a row
-    if mtx.ndim == 3:
-        is_3d = True
-        n_obs, n_vars, n_t = mtx.shape
-        mtx = (
-            mtx[:, var_indices, :]
-            .astype(input_dtype, copy=True)
-            .transpose(0, 2, 1)
-            .reshape(n_obs * n_t, len(var_indices))
-        )
-        numerical_indices = list(range(len(var_indices)))
-        var_indices = numerical_indices
+    X_imputed = _knn_impute_function(mtx, var_indices, numerical_indices, imputer)
 
-    # complete columns to be used as anchors
-    complete_numerical_columns = np.array(numerical_indices)[~np.isnan(mtx[:, numerical_indices]).any(axis=0)].tolist()
-
-    imputer_data_indices = var_indices + [
-        column for column in complete_numerical_columns if column not in var_indices
-    ]  # columns to impute
-    imputer_x = mtx[:, imputer_data_indices].astype(input_dtype, copy=True)
-    X_imputed = imputer.fit_transform(imputer_x)
-
-    if is_3d:
-        # slice back to only requested columns and transpose back to n_obs, n_var, n_t
-        X_imputed = (
-            X_imputed[:, : len(var_indices_original)].reshape(n_obs, n_t, len(var_indices_original)).transpose(0, 2, 1)
-        )
-        edata.layers[layer][:, var_indices_original, :] = X_imputed
+    if layer is None:
+        edata.X[:, var_indices] = X_imputed[:, var_indices]
     else:
-        if layer is None:
-            edata.X[:, imputer_data_indices] = X_imputed
-        else:
-            edata.layers[layer][:, imputer_data_indices] = X_imputed
+        edata.layers[layer][:, var_indices] = X_imputed[:, var_indices]
 
 
 @singledispatch
