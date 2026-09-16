@@ -20,6 +20,14 @@ def test_timeseries(edata_blob_small):
     assert isinstance(plot, hv.Layout)
 
 
+def test_timeseries_x():
+    edata = ed.dt.ehrdata_blobs(n_variables=5, n_centers=2, n_observations=10, base_timepoints=5)
+
+    plot = ep.pl.timeseries(edata, obs_names="1")
+    assert plot is not None
+    assert isinstance(plot, hv.Layout)
+
+
 def test_timeseries_multiple_obs(edata_blob_small):
     edata = edata_blob_small
 
@@ -88,6 +96,13 @@ def test_timeseries_error_cases(mar_edata, edata_blob_small):
             obs_names="0",
             var_names="feature_1",
             layer="X",
+        )
+
+    with pytest.raises(ValueError, match=r"\.X must be 3D"):
+        ep.pl.timeseries(
+            edata_2d,
+            obs_names="0",
+            var_names="feature_1",
         )
 
     with pytest.raises(KeyError, match="Layer 'unknown_layer' not found in edata.layers"):

@@ -18,7 +18,7 @@ def timeseries(
     obs_names: str | int | Sequence[str | int] | None = None,
     var_names: str | Sequence[str] | None = None,
     tem_names: Any | Sequence[Any] | slice | None = None,
-    layer: str = "tem_data",
+    layer: str | None = None,
     overlay: bool = False,
     xlabel: str | None = None,
     ylabel: str | None = None,
@@ -37,7 +37,7 @@ def timeseries(
         obs_names: Unique observation identifier(s) to plot.
         var_names: Variable name or list of variable names in `edata.var_names` to plot.
         tem_names: Time indices to plot.
-        layer: layer to use for time series data.
+        layer: Layer to use for time series data. If None, `.X` will be used.
         overlay: Whether to overlay multiple observations in a single plot (True) or create subplots (False).
         xlabel: The x-axis label text.
         ylabel: The y-axis label text.
@@ -68,11 +68,15 @@ def timeseries(
     opts_dict["shared_axes"] = True
     opts_dict["legend_position"] = "right"
 
-    if layer not in edata.layers:
-        raise KeyError(f"Layer {layer!r} not found in edata.layers. Available layers: {list(edata.layers)}")
-    mtx = np.asarray(edata.layers[layer])
+    if layer is None:
+        mtx = np.asarray(edata.X)
+    else:
+        if layer not in edata.layers:
+            raise KeyError(f"Layer {layer!r} not found in edata.layers. Available layers: {list(edata.layers)}")
+        mtx = np.asarray(edata.layers[layer])
     if mtx.ndim != 3:
-        raise ValueError(f"Layer {layer!r} must be 3D (n_obs, n_vars, n_time), got shape {mtx.shape}.")
+        source = ".X" if layer is None else f"Layer {layer!r}"
+        raise ValueError(f"{source} must be 3D (n_obs, n_vars, n_time), got shape {mtx.shape}.")
 
     obs_pos, obs_labels = _resolve_axis(pd.Index(edata.obs_names), obs_names, "obs_names")
     var_pos, var_labels = _resolve_axis(pd.Index(edata.var_names), var_names, "var_names")
