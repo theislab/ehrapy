@@ -728,11 +728,17 @@ def _(X: np.ndarray) -> float:
 
     mu = np.nanmean(X, axis=0)
 
-    centered = X - mu
+    # Pairwise-deletion covariance: each pair (i, j) is centered using the mean of
+    # each column computed only over rows where i and j are observed
     valid = ~mask
-    denom = valid.astype(np.float64).T @ valid.astype(np.float64)
+    valid_f = valid.astype(np.float64)
+    denom = valid_f.T @ valid_f
     np.fill_diagonal(denom, np.maximum(denom.diagonal(), 1))
-    cov_global = np.where(valid, centered, 0.0).T @ np.where(valid, centered, 0.0) / (denom - 1)
+
+    X_filled = np.where(valid, X, 0.0)
+    S = X_filled.T @ X_filled
+    M = X_filled.T @ valid_f
+    cov_global = (S - (M * M.T) / denom) / (denom - 1)
     np.fill_diagonal(cov_global, np.maximum(cov_global.diagonal(), 1e-12))
 
     patterns, inverse, counts = np.unique(mask, axis=0, return_inverse=True, return_counts=True)
