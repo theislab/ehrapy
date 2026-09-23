@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+from functools import singledispatch
 from typing import TYPE_CHECKING, Any
 
 import holoviews as hv
 import numpy as np
 import pandas as pd
+
+from ehrapy._compat import DaskArray, _raise_array_type_not_implemented
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -27,6 +30,8 @@ def timeseries(
     title: str | None = None,
 ) -> hv.Overlay | hv.Layout:
     """Plot time series from a 3D EHRData object.
+
+    Only numpy- and Dask arrays are supported.
 
     Selection logic:
     obs_names, var_names, tem_names select labels from `edata.obs_names`, `edata.var_names`, `edata.tem.index`.
@@ -69,14 +74,16 @@ def timeseries(
     opts_dict["legend_position"] = "right"
 
     if layer is None:
-        mtx = np.asarray(edata.X)
+        raw_mtx = edata.X
     else:
         if layer not in edata.layers:
             raise KeyError(f"Layer {layer!r} not found in edata.layers. Available layers: {list(edata.layers)}")
-        mtx = np.asarray(edata.layers[layer])
-    if mtx.ndim != 3:
-        source = ".X" if layer is None else f"Layer {layer!r}"
-        raise ValueError(f"{source} must be 3D (n_obs, n_vars, n_time), got shape {mtx.shape}.")
+        raw_mtx = edata.layers[layer]
+    source = ".X" if layer is None else f"Layer {layer!r}"
+    if raw_mtx is None or np.ndim(raw_mtx) != 3:
+        shape = () if raw_mtx is None else np.shape(raw_mtx)
+        raise ValueError(f"{source} must be 3D (n_obs, n_vars, n_time), got shape {shape}.")
+    mtx = _get_dense_mtx(raw_mtx)
 
     obs_pos, obs_labels = _resolve_axis(pd.Index(edata.obs_names), obs_names, "obs_names")
     var_pos, var_labels = _resolve_axis(pd.Index(edata.var_names), var_names, "var_names")
@@ -143,6 +150,21 @@ def timeseries(
 
     layout = hv.Layout(panels).cols(1)
     return layout
+
+
+@singledispatch
+def _get_dense_mtx(arr) -> np.ndarray:
+    _raise_array_type_not_implemented(_get_dense_mtx, type(arr))
+
+
+@_get_dense_mtx.register(np.ndarray)
+def _(arr: np.ndarray) -> np.ndarray:
+    return arr
+
+
+@_get_dense_mtx.register(DaskArray)
+def _(arr: DaskArray) -> np.ndarray:
+    return np.asarray(arr)
 
 
 def _resolve_axis(index: pd.Index, names: Any, axis: str) -> tuple[np.ndarray, pd.Index]:
