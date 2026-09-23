@@ -12,10 +12,14 @@ import ehrapy as ep
 CURRENT_DIR = Path(__file__).parent
 
 
-def test_timeseries(edata_blob_small):
-    edata = edata_blob_small
+@pytest.mark.parametrize("layer", [DEFAULT_TEM_LAYER_NAME, None])
+def test_timeseries(edata_blob_small, layer):
+    if layer is None:
+        edata = ed.dt.ehrdata_blobs(n_variables=5, n_centers=2, n_observations=10, base_timepoints=5)
+    else:
+        edata = edata_blob_small
 
-    plot = ep.pl.timeseries(edata, obs_names="1", layer=DEFAULT_TEM_LAYER_NAME)
+    plot = ep.pl.timeseries(edata, obs_names="1", layer=layer)
     assert plot is not None
     assert isinstance(plot, hv.Layout)
 
@@ -88,6 +92,13 @@ def test_timeseries_error_cases(mar_edata, edata_blob_small):
             obs_names="0",
             var_names="feature_1",
             layer="X",
+        )
+
+    with pytest.raises(ValueError, match=r"\.X must be 3D"):
+        ep.pl.timeseries(
+            edata_2d,
+            obs_names="0",
+            var_names="feature_1",
         )
 
     with pytest.raises(KeyError, match="Layer 'unknown_layer' not found in edata.layers"):
