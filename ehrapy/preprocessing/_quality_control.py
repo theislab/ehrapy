@@ -728,8 +728,6 @@ def _(X: np.ndarray) -> float:
 
     mu = np.nanmean(X, axis=0)
 
-    # Pairwise-deletion covariance: each pair (i, j) is centered using the mean of
-    # each column computed only over rows where i and j are observed
     valid = ~mask
     valid_f = valid.astype(np.float64)
     denom = valid_f.T @ valid_f
