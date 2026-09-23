@@ -61,7 +61,9 @@ def variable_correlations(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ed.dt.ehrdata_blobs(n_variables=10, n_centers=5, n_observations=200, base_timepoints=3)
+        >>> edata = ed.dt.ehrdata_blobs(
+        ...     n_variables=10, n_centers=5, n_observations=200, base_timepoints=3, layer="tem_data"
+        ... )
         >>> ep.pl.variable_correlations(
         ...     edata, layer="tem_data", method="pearson", agg="mean", correction_method="fdr_bh", width=700
         ... )
@@ -174,7 +176,9 @@ def variable_dependencies(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ed.dt.ehrdata_blobs(n_variables=10, n_centers=5, n_observations=200, base_timepoints=3)
+        >>> edata = ed.dt.ehrdata_blobs(
+        ...     n_variables=10, n_centers=5, n_observations=200, base_timepoints=3, layer="tem_data"
+        ... )
         >>> ep.pl.variable_dependencies(
         ...     edata, layer="tem_data", method="pearson", agg="mean", correction_method="fdr_bh"
         ... )

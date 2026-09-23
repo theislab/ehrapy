@@ -79,7 +79,9 @@ def ncp(
 
     Examples:
         >>> import ehrdata as ed, ehrapy as ep
-        >>> edata = ed.dt.ehrdata_blobs(n_variables=8, n_centers=3, n_observations=30, base_timepoints=12)
+        >>> edata = ed.dt.ehrdata_blobs(
+        ...     n_variables=8, n_centers=3, n_observations=30, base_timepoints=12, layer="tem_data"
+        ... )
         >>> ep.tl.ncp(edata, layer="tem_data", rank=3, sigmoid_transform=True)
         >>> ep.pl.ncp(edata, n_top=5)
 
@@ -218,7 +220,9 @@ def ncp_cluster_trajectories(
 
     Examples:
         >>> import ehrdata as ed, ehrapy as ep
-        >>> edata = ed.dt.ehrdata_blobs(n_variables=8, n_centers=3, n_observations=30, base_timepoints=12)
+        >>> edata = ed.dt.ehrdata_blobs(
+        ...     n_variables=8, n_centers=3, n_observations=30, base_timepoints=12, layer="tem_data"
+        ... )
         >>> ep.tl.ncp(edata, layer="tem_data", rank=3, sigmoid_transform=True)
         >>> ep.pl.ncp_cluster_trajectories(edata, layer="tem_data", cluster_key="cluster")
 
