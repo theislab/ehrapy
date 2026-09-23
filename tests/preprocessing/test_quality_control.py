@@ -502,17 +502,7 @@ def test_mcar_test_ttest_detects_mar(mar_edata):
     assert p_col0_given_miss9 < 0.05
 
 
-_LITTLE_SCENARIO_XFAILS = {"mcar_medium_high_missing": "diverges from pyampute reference at high missingness"}
-
-
-@pytest.fixture(
-    params=[
-        pytest.param(name, marks=pytest.mark.xfail(reason=_LITTLE_SCENARIO_XFAILS[name], strict=True))
-        if name in _LITTLE_SCENARIO_XFAILS
-        else name
-        for name in _SCENARIOS_LITTLE
-    ]
-)
+@pytest.fixture(params=list(_SCENARIOS_LITTLE))
 def little_scenario(request):
     return request.param, _build_little_scenario(request.param)
 
