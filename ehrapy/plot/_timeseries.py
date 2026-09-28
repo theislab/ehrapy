@@ -7,7 +7,7 @@ import holoviews as hv
 import numpy as np
 import pandas as pd
 
-from ehrapy._compat import DaskArray, _raise_array_type_not_implemented
+from ehrapy._compat import _raise_array_type_not_implemented
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -31,7 +31,7 @@ def timeseries(
 ) -> hv.Overlay | hv.Layout:
     """Plot time series from a 3D EHRData object.
 
-    Only numpy- and Dask arrays are supported.
+    Only numpy arrays are supported.
 
     Selection logic:
     obs_names, var_names, tem_names select labels from `edata.obs_names`, `edata.var_names`, `edata.tem.index`.
@@ -83,7 +83,6 @@ def timeseries(
     if raw_mtx is None or np.ndim(raw_mtx) != 3:
         shape = () if raw_mtx is None else np.shape(raw_mtx)
         raise ValueError(f"{source} must be 3D (n_obs, n_vars, n_time), got shape {shape}.")
-    mtx = _get_dense_mtx(raw_mtx)
 
     obs_pos, obs_labels = _resolve_axis(pd.Index(edata.obs_names), obs_names, "obs_names")
     var_pos, var_labels = _resolve_axis(pd.Index(edata.var_names), var_names, "var_names")
@@ -96,7 +95,7 @@ def timeseries(
     if tem_pos.size == 0:
         raise ValueError("No timepoints selected (tem_names resolved to empty).")
 
-    mtx = mtx[np.ix_(obs_pos, var_pos, tem_pos)]
+    mtx = _timeseries_function(raw_mtx, obs_pos, var_pos, tem_pos)
     timepoints = np.asarray(tem_labels)
 
     if overlay:
@@ -153,18 +152,13 @@ def timeseries(
 
 
 @singledispatch
-def _get_dense_mtx(arr) -> np.ndarray:
-    _raise_array_type_not_implemented(_get_dense_mtx, type(arr))
+def _timeseries_function(arr, obs_pos: np.ndarray, var_pos: np.ndarray, tem_pos: np.ndarray) -> np.ndarray:
+    _raise_array_type_not_implemented(_timeseries_function, type(arr))
 
 
-@_get_dense_mtx.register(np.ndarray)
-def _(arr: np.ndarray) -> np.ndarray:
-    return arr
-
-
-@_get_dense_mtx.register(DaskArray)
-def _(arr: DaskArray) -> np.ndarray:
-    return np.asarray(arr)
+@_timeseries_function.register(np.ndarray)
+def _(arr: np.ndarray, obs_pos: np.ndarray, var_pos: np.ndarray, tem_pos: np.ndarray) -> np.ndarray:
+    return arr[np.ix_(obs_pos, var_pos, tem_pos)]
 
 
 def _resolve_axis(index: pd.Index, names: Any, axis: str) -> tuple[np.ndarray, pd.Index]:

@@ -4,10 +4,12 @@ import ehrdata as ed
 import holoviews as hv
 
 hv.extension("bokeh")
+import numpy as np
 import pytest
 from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
 
 import ehrapy as ep
+from tests.conftest import ARRAY_TYPES_NUMERIC_3D_ABLE
 
 CURRENT_DIR = Path(__file__).parent
 
@@ -21,6 +23,20 @@ def test_timeseries(edata_blob_small, layer):
 
     plot = ep.pl.timeseries(edata, obs_names="1", layer=layer)
     assert plot is not None
+    assert isinstance(plot, hv.Layout)
+
+
+@pytest.mark.parametrize("array_type", ARRAY_TYPES_NUMERIC_3D_ABLE)
+def test_timeseries_array_types(edata_blob_small, array_type):
+    edata = edata_blob_small
+    edata.layers[DEFAULT_TEM_LAYER_NAME] = array_type(edata.layers[DEFAULT_TEM_LAYER_NAME])
+
+    if not isinstance(edata.layers[DEFAULT_TEM_LAYER_NAME], np.ndarray):
+        with pytest.raises(NotImplementedError, match="does not support array type"):
+            ep.pl.timeseries(edata, obs_names="1", layer=DEFAULT_TEM_LAYER_NAME)
+        return
+
+    plot = ep.pl.timeseries(edata, obs_names="1", layer=DEFAULT_TEM_LAYER_NAME)
     assert isinstance(plot, hv.Layout)
 
 
