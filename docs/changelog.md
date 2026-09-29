@@ -19,6 +19,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 * `ep.pp.explicit_impute()` now accepts falsy mapping replacement values such as `0`, `0.0`, and empty strings ([#1087](https://github.com/theislab/ehrapy/pull/1087)) @driavysinus
 * `ep.pp.knn_impute()` now raises a clear `NotImplementedError` for unsupported array types (dask and sparse arrays) instead of failing silently ([#1109](https://github.com/theislab/ehrapy/pull/1109)) @sueoglu
+* `_little_mcar_test` now computes its global covariance matrix with true pairwise deletion instead of centering on the global mean, fixing incorrect p-values under moderate-to-high missingness ([#1110](https://github.com/theislab/ehrapy/pull/1110)) @sueoglu
 
 ### 📖 Documentation
 
@@ -307,17 +308,17 @@ def move_type_info_from_uns_to_var(adata, copy=False):
     if copy:
         adata = adata.copy()
 
-    adata.var['ehrapy_column_type'] = 'unknown'
+    adata.var["ehrapy_column_type"] = "unknown"
 
-    if 'numerical_columns' in adata.uns.keys():
-        for key in adata.uns['numerical_columns']:
-            adata.var.loc[key, 'ehrapy_column_type'] = 'numeric'
-    if 'non_numerical_columns' in adata.uns.keys():
-        for key in adata.uns['non_numerical_columns']:
-            adata.var.loc[key, 'ehrapy_column_type'] = 'non_numeric'
-    if 'encoded_non_numerical_columns' in adata.uns.keys():
-        for key in adata.uns['encoded_non_numerical_columns']:
-            adata.var.loc[key, 'ehrapy_column_type'] = 'non_numeric_encoded'
+    if "numerical_columns" in adata.uns.keys():
+        for key in adata.uns["numerical_columns"]:
+            adata.var.loc[key, "ehrapy_column_type"] = "numeric"
+    if "non_numerical_columns" in adata.uns.keys():
+        for key in adata.uns["non_numerical_columns"]:
+            adata.var.loc[key, "ehrapy_column_type"] = "non_numeric"
+    if "encoded_non_numerical_columns" in adata.uns.keys():
+        for key in adata.uns["encoded_non_numerical_columns"]:
+            adata.var.loc[key, "ehrapy_column_type"] = "non_numeric_encoded"
 
     if copy:
         return adata
