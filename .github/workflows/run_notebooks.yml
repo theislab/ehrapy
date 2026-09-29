@@ -23,6 +23,7 @@ jobs:
                         "docs/tutorials/notebooks/cohort_tracking.ipynb",
                         "docs/tutorials/notebooks/longitudinal_with_ehrapy.ipynb",
                         "docs/tutorials/notebooks/bias.ipynb",
+                        "docs/tutorials/notebooks/imputation_nb.ipynb",
                         # "docs/tutorials/notebooks/mimic_2_causal_inference.ipynb",
                     ]
         steps:
