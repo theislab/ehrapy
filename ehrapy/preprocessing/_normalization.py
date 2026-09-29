@@ -135,11 +135,11 @@ def scale_norm(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> import numpy as np
-        >>> edata = ed.dt.physionet2012(layer="tem_data")
-        >>> np.nanmean(edata.layers["tem_data"])
+        >>> edata = ed.dt.physionet2012()
+        >>> np.nanmean(edata.X)
         74.213570
-        >>> ep.pp.scale_norm(edata, layer="tem_data")
-        >>> np.nanmean(edata.layers["tem_data"])
+        >>> ep.pp.scale_norm(edata)
+        >>> np.nanmean(edata.X)
         0.0
 
     """
@@ -210,11 +210,11 @@ def minmax_norm(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> import numpy as np
-        >>> edata = ed.dt.physionet2012(layer="tem_data")
-        >>> np.nanmin(edata.layers["tem_data"]), np.nanmax(edata.layers["tem_data"])
+        >>> edata = ed.dt.physionet2012()
+        >>> np.nanmin(edata.X), np.nanmax(edata.X)
         (-17.8, 36400.0)
-        >>> ep.pp.minmax_norm(edata, layer="tem_data")
-        >>> np.nanmin(edata.layers["tem_data"]), np.nanmax(edata.layers["tem_data"])
+        >>> ep.pp.minmax_norm(edata)
+        >>> np.nanmin(edata.X), np.nanmax(edata.X)
         (0.0, 1.0)
     """
     scale_func = lambda arr: _minmax_norm_function(arr, **kwargs)
@@ -274,11 +274,11 @@ def maxabs_norm(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> import numpy as np
-        >>> edata = ed.dt.physionet2012(layer="tem_data")
-        >>> np.nanmax(np.abs(edata.layers["tem_data"]))
+        >>> edata = ed.dt.physionet2012()
+        >>> np.nanmax(np.abs(edata.X))
         36400.0
-        >>> ep.pp.maxabs_norm(edata, layer="tem_data")
-        >>> np.nanmax(np.abs(edata.layers["tem_data"]))
+        >>> ep.pp.maxabs_norm(edata)
+        >>> np.nanmax(np.abs(edata.X))
         1.0
     """
     X = edata.X if layer is None else edata.layers[layer]
@@ -352,11 +352,11 @@ def robust_scale_norm(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> import numpy as np
-        >>> edata = ed.dt.physionet2012(layer="tem_data")
-        >>> np.nanmedian(edata.layers["tem_data"])
+        >>> edata = ed.dt.physionet2012()
+        >>> np.nanmedian(edata.X)
         69.0
-        >>> ep.pp.robust_scale_norm(edata, layer="tem_data")
-        >>> np.nanmedian(edata.layers["tem_data"])
+        >>> ep.pp.robust_scale_norm(edata)
+        >>> np.nanmedian(edata.X)
         0.0
     """
     scale_func = lambda arr: _robust_scale_norm_function(arr, **kwargs)
@@ -426,11 +426,11 @@ def quantile_norm(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> import numpy as np
-        >>> edata = ed.dt.physionet2012(layer="tem_data")
-        >>> np.nanmin(edata.layers["tem_data"]), np.nanmax(edata.layers["tem_data"])
+        >>> edata = ed.dt.physionet2012()
+        >>> np.nanmin(edata.X), np.nanmax(edata.X)
         (-17.8, 36400.0)
-        >>> ep.pp.quantile_norm(edata, layer="tem_data")
-        >>> np.nanmin(edata.layers["tem_data"]), np.nanmax(edata.layers["tem_data"])
+        >>> ep.pp.quantile_norm(edata)
+        >>> np.nanmin(edata.X), np.nanmax(edata.X)
         (0.0, 1.0)
     """
     scale_func = lambda arr: _quantile_norm_function(arr, **kwargs)
@@ -494,14 +494,14 @@ def power_norm(
         >>> import ehrapy as ep
         >>> import numpy as np
         >>> from scipy import stats
-        >>> edata = ed.dt.physionet2012(layer="tem_data")
-        >>> ep.pp.offset_negative_values(edata, layer="tem_data")
-        >>> skewed_data = np.power(edata.layers["tem_data"], 2)
-        >>> edata.layers["tem_data"] = skewed_data
-        >>> stats.skew(edata.layers["tem_data"].flatten())
+        >>> edata = ed.dt.physionet2012()
+        >>> ep.pp.offset_negative_values(edata)
+        >>> skewed_data = np.power(edata.X, 2)
+        >>> edata.X = skewed_data
+        >>> stats.skew(edata.X.flatten())
         504.250727
-        >>> ep.pp.power_norm(edata, layer="tem_data")
-        >>> stats.skew(edata.layers["tem_data"].flatten())
+        >>> ep.pp.power_norm(edata)
+        >>> stats.skew(edata.X.flatten())
         0.144324
     """
     X = edata.X if layer is None else edata.layers[layer]
@@ -590,12 +590,12 @@ def log_norm(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> import numpy as np
-        >>> edata = ed.dt.physionet2012(layer="tem_data")
-        >>> ep.pp.offset_negative_values(edata, layer="tem_data")
-        >>> np.nanmax(edata.layers["tem_data"])
+        >>> edata = ed.dt.physionet2012()
+        >>> ep.pp.offset_negative_values(edata)
+        >>> np.nanmax(edata.X)
         36400.0
-        >>> ep.pp.log_norm(edata, layer="tem_data")
-        >>> np.nanmax(edata.layers["tem_data"])
+        >>> ep.pp.log_norm(edata)
+        >>> np.nanmax(edata.X)
         10.502379
     """
     if copy:
@@ -694,11 +694,11 @@ def offset_negative_values(edata: EHRData, layer: str = None, copy: bool = False
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> import numpy as np
-        >>> edata = ed.dt.physionet2012(layer="tem_data")
-        >>> np.nanmin(edata.layers["tem_data"])
+        >>> edata = ed.dt.physionet2012()
+        >>> np.nanmin(edata.X)
         -17.8
-        >>> ep.pp.offset_negative_values(edata, layer="tem_data")
-        >>> np.nanmin(edata.layers["tem_data"])
+        >>> ep.pp.offset_negative_values(edata)
+        >>> np.nanmin(edata.X)
         0.0
     """
     if copy:
