@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+from functools import singledispatch
 from typing import TYPE_CHECKING, Any
 
 import holoviews as hv
 import numpy as np
 import pandas as pd
+
+from ehrapy._compat import _raise_array_type_not_implemented
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -18,7 +21,7 @@ def timeseries(
     obs_names: str | int | Sequence[str | int] | None = None,
     var_names: str | Sequence[str] | None = None,
     tem_names: Any | Sequence[Any] | slice | None = None,
-    layer: str = "tem_data",
+    layer: str | None = None,
     overlay: bool = False,
     xlabel: str | None = None,
     ylabel: str | None = None,
@@ -27,6 +30,8 @@ def timeseries(
     title: str | None = None,
 ) -> hv.Overlay | hv.Layout:
     """Plot time series from a 3D EHRData object.
+
+    Only numpy arrays are supported.
 
     Selection logic:
     obs_names, var_names, tem_names select labels from `edata.obs_names`, `edata.var_names`, `edata.tem.index`.
@@ -37,7 +42,7 @@ def timeseries(
         obs_names: Unique observation identifier(s) to plot.
         var_names: Variable name or list of variable names in `edata.var_names` to plot.
         tem_names: Time indices to plot.
-        layer: layer to use for time series data.
+        layer: Layer to use for time series data. If None, `.X` will be used.
         overlay: Whether to overlay multiple observations in a single plot (True) or create subplots (False).
         xlabel: The x-axis label text.
         ylabel: The y-axis label text.
@@ -68,11 +73,16 @@ def timeseries(
     opts_dict["shared_axes"] = True
     opts_dict["legend_position"] = "right"
 
-    if layer not in edata.layers:
-        raise KeyError(f"Layer {layer!r} not found in edata.layers. Available layers: {list(edata.layers)}")
-    mtx = np.asarray(edata.layers[layer])
-    if mtx.ndim != 3:
-        raise ValueError(f"Layer {layer!r} must be 3D (n_obs, n_vars, n_time), got shape {mtx.shape}.")
+    if layer is None:
+        raw_mtx = edata.X
+    else:
+        if layer not in edata.layers:
+            raise KeyError(f"Layer {layer!r} not found in edata.layers. Available layers: {list(edata.layers)}")
+        raw_mtx = edata.layers[layer]
+    source = ".X" if layer is None else f"Layer {layer!r}"
+    if raw_mtx is None or np.ndim(raw_mtx) != 3:
+        shape = () if raw_mtx is None else np.shape(raw_mtx)
+        raise ValueError(f"{source} must be 3D (n_obs, n_vars, n_time), got shape {shape}.")
 
     obs_pos, obs_labels = _resolve_axis(pd.Index(edata.obs_names), obs_names, "obs_names")
     var_pos, var_labels = _resolve_axis(pd.Index(edata.var_names), var_names, "var_names")
@@ -85,7 +95,7 @@ def timeseries(
     if tem_pos.size == 0:
         raise ValueError("No timepoints selected (tem_names resolved to empty).")
 
-    mtx = mtx[np.ix_(obs_pos, var_pos, tem_pos)]
+    mtx = _timeseries_function(raw_mtx, obs_pos, var_pos, tem_pos)
     timepoints = np.asarray(tem_labels)
 
     if overlay:
@@ -139,6 +149,16 @@ def timeseries(
 
     layout = hv.Layout(panels).cols(1)
     return layout
+
+
+@singledispatch
+def _timeseries_function(arr, obs_pos: np.ndarray, var_pos: np.ndarray, tem_pos: np.ndarray) -> np.ndarray:
+    _raise_array_type_not_implemented(_timeseries_function, type(arr))
+
+
+@_timeseries_function.register(np.ndarray)
+def _(arr: np.ndarray, obs_pos: np.ndarray, var_pos: np.ndarray, tem_pos: np.ndarray) -> np.ndarray:
+    return arr[np.ix_(obs_pos, var_pos, tem_pos)]
 
 
 def _resolve_axis(index: pd.Index, names: Any, axis: str) -> tuple[np.ndarray, pd.Index]:
