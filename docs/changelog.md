@@ -17,6 +17,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 * `ep.pp.explicit_impute()` now accepts falsy mapping replacement values such as `0`, `0.0`, and empty strings ([#1087](https://github.com/theislab/ehrapy/pull/1087)) @driavysinus
 * `ep.pp.knn_impute()` now raises a clear `NotImplementedError` for unsupported array types (dask and sparse arrays) instead of failing silently ([#1109](https://github.com/theislab/ehrapy/pull/1109)) @sueoglu
 * `_little_mcar_test` now computes its global covariance matrix with true pairwise deletion instead of centering on the global mean, fixing incorrect p-values under moderate-to-high missingness ([#1110](https://github.com/theislab/ehrapy/pull/1110)) @sueoglu
+* `ep.pl.timeseries()`, `ep.pl.variable_correlations()` and `ep.pl.variable_dependencies()` now use `.X` when no `layer` is given, and `ep.pl.timeseries()` raises a clear `NotImplementedError` for unsupported array types instead of loading them into memory ([#1119](https://github.com/theislab/ehrapy/pull/1119)) @sueoglu
+
 
 ### 📖 Documentation
 
