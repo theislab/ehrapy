@@ -19,6 +19,7 @@ api/io_index
 api/preprocessing_index
 api/tools_index
 api/plot_index
+api/get_index
 api/settings_index
 ```
 

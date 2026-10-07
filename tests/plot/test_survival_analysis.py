@@ -89,16 +89,16 @@ def test_cox_ph_adjusted_curves(mimic_2_adjusted_sa):
     )
     ep.tl.cox_ph_adjusted_curves(
         edata_sample,
-        cph,
+        cph=cph,
         strata="aline_flg",
         duration_col=duration_col,
         event_col=event_col,
         method="average",
         n_bootstrap=10,
-        uns_key="test_adjusted",
+        key_added="test_adjusted",
         layer="layer_2",
     )
-    plot = ep.pl.cox_ph_adjusted_curves(edata_sample, uns_key="test_adjusted")
+    plot = ep.pl.cox_ph_adjusted_curves(edata_sample, key="test_adjusted")
 
     assert plot is not None
     assert isinstance(plot, hv.Overlay)

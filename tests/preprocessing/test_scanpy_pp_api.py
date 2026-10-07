@@ -25,18 +25,33 @@ def test_regress_out_3D_edata(edata_blob_small):
         ep.pp.regress_out(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
 
 
-def test_subsample(edata_blob_small):
-    ep.pp.subsample(edata_blob_small, fraction=0.5)
-
-
 def test_combat(edata_blob_small):
-    ep.pp.combat(edata_blob_small, key="cluster")
+    ep.pp.combat(edata_blob_small, batch_key="cluster")
+
+
+@pytest.mark.parametrize("layer", [None, "layer_2"])
+def test_combat_copy(edata_blob_small, layer):
+    X_before = edata_blob_small.X.copy()
+    layer_before = edata_blob_small.layers["layer_2"].copy()
+
+    corrected = ep.pp.combat(edata_blob_small, batch_key="cluster", layer=layer, copy=True)
+
+    np.testing.assert_array_equal(edata_blob_small.X, X_before)
+    np.testing.assert_array_equal(edata_blob_small.layers["layer_2"], layer_before)
+    corrected_mtx = corrected.X if layer is None else corrected.layers[layer]
+    assert not np.allclose(corrected_mtx, X_before)
+
+    assert ep.pp.combat(edata_blob_small, batch_key="cluster", layer=layer) is None
+    mtx = edata_blob_small.X if layer is None else edata_blob_small.layers[layer]
+    np.testing.assert_allclose(mtx, corrected_mtx)
+    if layer is not None:
+        np.testing.assert_array_equal(edata_blob_small.X, X_before)
 
 
 def test_combat_3D_edata(edata_blob_small):
-    ep.pp.combat(edata_blob_small, key="cluster", layer="layer_2")
+    ep.pp.combat(edata_blob_small, batch_key="cluster", layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.combat(edata_blob_small, key="cluster", layer=DEFAULT_TEM_LAYER_NAME)
+        ep.pp.combat(edata_blob_small, batch_key="cluster", layer=DEFAULT_TEM_LAYER_NAME)
 
 
 def test_neighbors(edata_blob_small):

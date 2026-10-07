@@ -23,7 +23,7 @@ def test_ols(mimic_2, layer):
 
     formula = "tco2_first ~ pco2_first"
     var_names = ["tco2_first", "pco2_first"]
-    ols = ep.tl.ols(edata, var_names, formula=formula, missing="drop", layer=layer)
+    ols = ep.tl.ols(edata, var_names=var_names, formula=formula, missing="drop", layer=layer)
     s = ols.fit().params.iloc[1]
     i = ols.fit().params.iloc[0]
     assert isinstance(ols, statsmodels.regression.linear_model.OLS)
@@ -34,9 +34,9 @@ def test_ols(mimic_2, layer):
 def test_ols_3D(edata_blob_small):
     formula = "feature_1 ~ feature_2"
     var_names = ["feature_1", "feature_2"]
-    ep.tl.ols(edata_blob_small, var_names, formula=formula, missing="drop", layer="layer_2")
+    ep.tl.ols(edata_blob_small, var_names=var_names, formula=formula, missing="drop", layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.tl.ols(edata_blob_small, var_names, formula=formula, missing="drop", layer=DEFAULT_TEM_LAYER_NAME)
+        ep.tl.ols(edata_blob_small, var_names=var_names, formula=formula, missing="drop", layer=DEFAULT_TEM_LAYER_NAME)
 
 
 @pytest.mark.parametrize("layer", [None, "layer_2"])
@@ -50,7 +50,7 @@ def test_glm(mimic_2, layer):
     var_names = ["day_28_flg", "age"]
     family = "Binomial"
     glm = ep.tl.glm(
-        edata, var_names, formula=formula, family=family, missing="drop", as_continuous=["age"], layer=layer
+        edata, var_names=var_names, formula=formula, family=family, missing="drop", as_continuous=["age"], layer=layer
     )
     Intercept = glm.fit().params.iloc[0]
     age = glm.fit().params.iloc[1]
@@ -62,9 +62,9 @@ def test_glm(mimic_2, layer):
 def test_glm_3D(edata_blob_small):
     formula = "feature_1 ~ feature_2"
     var_names = ["feature_1", "feature_2"]
-    ep.tl.glm(edata_blob_small, var_names, formula=formula, missing="drop", layer="layer_2")
+    ep.tl.glm(edata_blob_small, var_names=var_names, formula=formula, missing="drop", layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.tl.glm(edata_blob_small, var_names, formula=formula, missing="drop", layer=DEFAULT_TEM_LAYER_NAME)
+        ep.tl.glm(edata_blob_small, var_names=var_names, formula=formula, missing="drop", layer=DEFAULT_TEM_LAYER_NAME)
 
 
 @pytest.mark.parametrize(
@@ -97,14 +97,21 @@ def test_anova_glm(mimic_2):
     formula = "day_28_flg ~ age"
     var_names = ["day_28_flg", "age"]
     family = "Binomial"
-    age_glm = ep.tl.glm(edata, var_names, formula=formula, family=family, missing="drop", as_continuous=["age"])
+    age_glm = ep.tl.glm(
+        edata, var_names=var_names, formula=formula, family=family, missing="drop", as_continuous=["age"]
+    )
     age_glm_result = age_glm.fit()
     formula = "day_28_flg ~ age + service_unit"
     var_names = ["day_28_flg", "age", "service_unit"]
-    ageunit_glm = ep.tl.glm(edata, var_names, formula=formula, family=family, missing="drop", as_continuous=["age"])
+    ageunit_glm = ep.tl.glm(
+        edata, var_names=var_names, formula=formula, family=family, missing="drop", as_continuous=["age"]
+    )
     ageunit_glm_result = ageunit_glm.fit()
     dataframe = ep.tl.anova_glm(
-        age_glm_result, ageunit_glm_result, "day_28_flg ~ age", "day_28_flg ~ age + service_unit"
+        age_glm_result,
+        ageunit_glm_result,
+        formula_1="day_28_flg ~ age",
+        formula_2="day_28_flg ~ age + service_unit",
     )
 
     assert len(dataframe) == 2
@@ -131,7 +138,7 @@ def test_survival_models(sa_function, sa_class, mimic_2_sa, layer):
     if layer is not None:
         edata.X = None
 
-    sa = sa_function(edata, duration_col=duration_col, event_col=event_col, uns_key="test", layer=layer)
+    sa = sa_function(edata, duration_col=duration_col, event_col=event_col, key_added="test", layer=layer)
 
     assert isinstance(sa, sa_class)
     assert len(sa.durations) == 1776
@@ -171,16 +178,6 @@ def test_survival_models_3D(sa_function, sa_class, edata_blob_small):
         sa_function(edata_blob_small, duration_col=duration_col, event_col=event_col, layer=DEFAULT_TEM_LAYER_NAME)
 
 
-def test_kmf(mimic_2_sa):
-    with pytest.warns(DeprecationWarning):
-        edata, _, _ = mimic_2_sa
-        kmf = ep.tl.kmf(edata[:, ["mort_day_censored"]].X, edata[:, ["censor_flg"]].X)
-
-        assert isinstance(kmf, KaplanMeierFitter)
-        assert len(kmf.durations) == 1776
-        assert sum(kmf.event_observed) == 497
-
-
 @pytest.mark.parametrize("method", ["average", "conditional"])
 @pytest.mark.parametrize("layer", [None, "layer_2"])
 def test_cox_ph_adjusted_curves_basic(mimic_2_adjusted_sa, method, layer):
@@ -200,13 +197,13 @@ def test_cox_ph_adjusted_curves_basic(mimic_2_adjusted_sa, method, layer):
     )
     ep.tl.cox_ph_adjusted_curves(
         edata,
-        cph,
+        cph=cph,
         strata="aline_flg",
         duration_col=duration_col,
         event_col=event_col,
         method=method,
         n_bootstrap=10,
-        uns_key="test_adjusted",
+        key_added="test_adjusted",
         layer=layer,
     )
 
@@ -243,3 +240,17 @@ def test_cox_ph_adjusted_curves_basic(mimic_2_adjusted_sa, method, layer):
         assert np.all(entry["survival"] <= 1)
         # survival must be non-increasing
         assert np.all(np.diff(entry["survival"]) <= 1e-8)
+
+
+def test_cox_ph_adjusted_curves_copy(mimic_2_adjusted_sa):
+    edata = mimic_2_adjusted_sa
+    duration_col, event_col = "mort_day_censored", "censor_flg"
+    cph = ep.tl.cox_ph(edata, duration_col=duration_col, event_col=event_col, formula="sapsi_first + afib_flg")
+    kwargs = {"cph": cph, "strata": "aline_flg", "duration_col": duration_col, "event_col": event_col}
+
+    edata_copy = ep.tl.cox_ph_adjusted_curves(edata, method="conditional", copy=True, **kwargs)
+    assert "cox_ph_adjusted_curves" in edata_copy.uns
+    assert "cox_ph_adjusted_curves" not in edata.uns
+
+    assert ep.tl.cox_ph_adjusted_curves(edata, method="conditional", **kwargs) is None
+    assert "cox_ph_adjusted_curves" in edata.uns

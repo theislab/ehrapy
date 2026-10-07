@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 def variable_correlations(
     edata: EHRData,
     *,
-    layer: str,
+    layer: str | None = None,
     var_names: Sequence[str] | None = None,
     method: Literal["spearman", "pearson", "kendall"] = "pearson",
     agg: Literal["mean", "last", "first"] = "mean",
@@ -39,6 +39,7 @@ def variable_correlations(
     Args:
         edata: Central data object.
         layer: Layer to extract data from.
+            If `None`, `edata.X` is used.
         var_names: List of variable names to compute correlation of. If None, uses all numeric variables.
         method: Correlation method: "spearman", "kendall" or "pearson".
         agg: How to aggregate time dimension: "mean", "last" or "first".
@@ -130,7 +131,7 @@ def variable_correlations(
 def variable_dependencies(
     edata: EHRData,
     *,
-    layer: str,
+    layer: str | None = None,
     var_names: Sequence[str] | None = None,
     method: Literal["spearman", "pearson", "kendall"] = "pearson",
     agg: Literal["mean", "last", "first"] = "mean",
@@ -151,6 +152,7 @@ def variable_dependencies(
     Args:
         edata: Central data object.
         layer: Layer to extract data from.
+            If `None`, `edata.X` is used.
         var_names: List of variable names to compute correlation of. If None, uses all numeric variables.
         method: Correlation method: "spearman", "kendall" or "pearson".
         agg: How to aggregate time dimension: "mean", "last" or "first".

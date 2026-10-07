@@ -1,7 +1,7 @@
 import holoviews as hv
 
 from ehrapy.plot._catplot import catplot
-from ehrapy.plot._colormaps import Colormaps, LinearSegmentedColormap
+from ehrapy.plot._colormaps import Colormaps
 from ehrapy.plot._missingno import (
     missing_values_barplot,
     missing_values_dendrogram,
@@ -53,3 +53,60 @@ from ehrapy.plot.feature_ranking._feature_importances import rank_features_super
 
 if not hv.Store.renderers:
     hv.extension("bokeh", "matplotlib")
+
+__all__ = [
+    "catplot",
+    "Colormaps",
+    "missing_values_barplot",
+    "missing_values_dendrogram",
+    "missing_values_heatmap",
+    "missing_values_matrix",
+    "ncp",
+    "ncp_cluster_trajectories",
+    "sankey_diagram",
+    "sankey_diagram_time",
+    "clustermap",
+    "dendrogram",
+    "diffmap",
+    "dotplot",
+    "dpt_groups_pseudotime",
+    "dpt_timeseries",
+    "draw_graph",
+    "embedding",
+    "embedding_density",
+    "heatmap",
+    "matrixplot",
+    "paga",
+    "paga_compare",
+    "paga_path",
+    "pca",
+    "pca_loadings",
+    "pca_overview",
+    "pca_variance_ratio",
+    "rank_features_groups",
+    "rank_features_groups_dotplot",
+    "rank_features_groups_heatmap",
+    "rank_features_groups_matrixplot",
+    "rank_features_groups_stacked_violin",
+    "rank_features_groups_tracksplot",
+    "rank_features_groups_violin",
+    "ranking",
+    "scatter",
+    "stacked_violin",
+    "tracksplot",
+    "tsne",
+    "umap",
+    "violin",
+    "stratified_table_one",
+    "cox_ph_adjusted_curves",
+    "cox_ph_forestplot",
+    "kaplan_meier",
+    "ols",
+    "timeseries",
+    "variable_correlations",
+    "variable_dependencies",
+    "causal_effect",
+    "love_plot",
+    "propensity_overlap",
+    "rank_features_supervised",
+]

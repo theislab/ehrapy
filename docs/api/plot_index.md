@@ -49,11 +49,20 @@ For most tools and for some preprocessing functions, you will find a plotting fu
 
 ## Classes
 
+```{eval-rst}
+.. autosummary::
+    :toctree: plot
+    :nosignatures:
+
+    plot.Colormaps
+```
+
 Please refer to [Scanpy's plotting classes documentation](https://scanpy.readthedocs.io/en/stable/api.html#classes).
 
 ## Tools
 
-Methods that extract and visualize tool-specific annotation in an AnnData object. For any method in module `tl`, there is a method with the same name in `pl`.
+Methods that extract and visualize tool-specific annotation in an EHRData object.
+For any method in module `tl`, there is a method with the same name in `pl`.
 
 ```{eval-rst}
 .. autosummary::

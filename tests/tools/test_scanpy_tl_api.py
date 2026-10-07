@@ -39,7 +39,12 @@ def test_diffmap_with_timeseries_metric_dtw(edata_and_distances_dtw):
 
 def test_embedding_density(edata_blob_small):
     ep.pp.pca(edata_blob_small)
-    ep.tl.embedding_density(edata_blob_small, basis="pca")
+    edata_copy = ep.tl.embedding_density(edata_blob_small, basis="pca", copy=True)
+    assert "pca_density" in edata_copy.obs
+    assert "pca_density" not in edata_blob_small.obs
+
+    assert ep.tl.embedding_density(edata_blob_small, basis="pca") is None
+    assert "pca_density" in edata_blob_small.obs
 
 
 def test_leiden(edata_blob_small):
@@ -53,7 +58,12 @@ def test_leiden_with_timeseries_metric_dtw(edata_and_distances_dtw):
 
 
 def test_dendrogram(edata_blob_small):
-    ep.tl.dendrogram(edata_blob_small, groupby="cluster")
+    edata_copy = ep.tl.dendrogram(edata_blob_small, groupby="cluster", copy=True)
+    assert "dendrogram_cluster" in edata_copy.uns
+    assert "dendrogram_cluster" not in edata_blob_small.uns
+
+    assert ep.tl.dendrogram(edata_blob_small, groupby="cluster") is None
+    assert "dendrogram_cluster" in edata_blob_small.uns
 
 
 def test_dpt(edata_blob_small):
@@ -74,7 +84,12 @@ def test_paga_with_timeseries_metric_dtw(edata_and_distances_dtw):
 
 
 def test_ingest(edata_blob_small):
-    edata_blob_small_copy = edata_blob_small.copy()
-    ep.pp.pca(edata_blob_small_copy)
-    ep.pp.pca(edata_blob_small)
-    ep.tl.ingest(edata_blob_small, edata_ref=edata_blob_small_copy, embedding_method="pca")
+    edata_ref = edata_blob_small.copy()
+    ep.pp.pca(edata_ref)
+
+    edata_copy = ep.tl.ingest(edata_blob_small, edata_ref=edata_ref, embedding_method="pca", copy=True)
+    assert "X_pca" in edata_copy.obsm
+    assert "X_pca" not in edata_blob_small.obsm
+
+    assert ep.tl.ingest(edata_blob_small, edata_ref=edata_ref, embedding_method="pca") is None
+    assert "X_pca" in edata_blob_small.obsm

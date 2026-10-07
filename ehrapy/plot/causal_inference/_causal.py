@@ -48,7 +48,7 @@ def love_plot(
         >>> edata = ed.dt.mimic_2_preprocessed()
         >>> bal = ep.tl.covariate_balance(
         ...     edata,
-        ...     "aline_flg",
+        ...     treatment="aline_flg",
         ...     covariates=["age", "sofa_first", "sapsi_first"],
         ... )
         >>> ep.pl.love_plot(bal)
@@ -122,7 +122,7 @@ def propensity_overlap(
         >>> edata = ed.dt.mimic_2_preprocessed()
         >>> info = ep.tl.positivity_check(
         ...     edata,
-        ...     "aline_flg",
+        ...     treatment="aline_flg",
         ...     covariates=["age", "sofa_first", "sapsi_first"],
         ... )
         >>> ep.pl.propensity_overlap(info)
@@ -185,8 +185,8 @@ def causal_effect(
         >>> import ehrdata as ed
         >>> edata = ed.dt.mimic_2_preprocessed()
         >>> covs = ["age", "sofa_first", "sapsi_first"]
-        >>> est_iptw = ep.tl.iptw(edata, "aline_flg", "day_28_flg", covariates=covs, random_state=0)
-        >>> est_aipw = ep.tl.aipw(edata, "aline_flg", "day_28_flg", covariates=covs)
+        >>> est_iptw = ep.tl.iptw(edata, treatment="aline_flg", outcome="day_28_flg", covariates=covs, random_state=0)
+        >>> est_aipw = ep.tl.aipw(edata, treatment="aline_flg", outcome="day_28_flg", covariates=covs)
         >>> ep.pl.causal_effect(est_aipw, other={"iptw": est_iptw})
 
     Preview:

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import seaborn as sns
 
@@ -11,10 +11,11 @@ if TYPE_CHECKING:
 
 def catplot(
     edata: EHRData,
-    x: str = None,
-    y: str = None,
-    hue: str = None,
-    kind: str = "strip",
+    *,
+    x: str | None = None,
+    y: str | None = None,
+    hue: str | None = None,
+    kind: Literal["strip", "swarm", "box", "violin", "boxen", "point", "bar", "count"] = "strip",
     **kwargs,
 ) -> FacetGrid:
     """Plot categorical data.

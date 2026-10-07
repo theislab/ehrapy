@@ -32,8 +32,8 @@ def _parse_count_pct(cell: str | None) -> tuple[float, float]:
 
 def stratified_table_one(
     edata: EHRData,
-    *,
     groupby: str,
+    *,
     columns: Sequence | None = None,
     categorical: Sequence | None = None,
     nonnormal: Sequence | None = None,

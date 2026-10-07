@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from typing import TYPE_CHECKING, Literal
 
 import numpy as np
@@ -287,7 +287,7 @@ def _check_columns_to_rank_dict(columns_to_rank):
         else:
             raise ValueError("If columns_to_rank is a string, it must be 'all'.")
 
-    elif isinstance(columns_to_rank, dict):
+    elif isinstance(columns_to_rank, Mapping):
         allowed_keys = {"var_names", "obs_names"}
         for key in columns_to_rank.keys():
             if key not in allowed_keys:
@@ -327,10 +327,10 @@ def rank_features_groups(
     correction_method: _method_options._correction_method = "benjamini-hochberg",
     tie_correct: bool = False,
     layer: str | None = None,
-    field_to_rank: Literal["layer"] | Literal["obs"] | Literal["layer_and_obs"] = "layer",
-    columns_to_rank: dict[str, Iterable[str]] | Literal["all"] = "all",
+    field_to_rank: Literal["layer", "obs", "layer_and_obs"] = "layer",
+    columns_to_rank: Mapping[str, Iterable[str]] | Literal["all"] = "all",
     **kwds,
-) -> None:  # pragma: no cover
+) -> EHRData | None:  # pragma: no cover
     """Rank features for characterizing groups.
 
     Args:
@@ -371,9 +371,7 @@ def rank_features_groups(
                 minimal set of genes that are good predictors (sparse solution meaning few non-zero fitted coefficients).
 
     Returns:
-        None
-
-        The results are stored in `edata.uns['rank_features_groups']` and include:
+        Depending on `copy`, returns or updates `edata` with the results stored in `edata.uns[key_added]`, which include:
 
         - names (:class:`numpy.ndarray`): Structured array to be indexed by group id storing the gene names. Ordered according to scores.
         - scores (:class:`numpy.ndarray`): Structured array to be indexed by group id storing the z-score underlying the computation of a p-value for each gene for each group. Ordered according to scores.
@@ -389,7 +387,7 @@ def rank_features_groups(
         >>> edata = ed.dt.mimic_2()
         >>> # want to move some metedata to the obs field
         >>> ed.move_to_obs(edata, ["service_unit", "service_num", "age", "mort_day_censored"])
-        >>> ep.tl.rank_features_groups(edata, "service_unit")
+        >>> ep.tl.rank_features_groups(edata, groupby="service_unit")
         >>> ep.pl.rank_features_groups(edata)
 
         >>> import ehrdata as ed
@@ -398,7 +396,10 @@ def rank_features_groups(
         >>> # want to move some metedata to the obs field
         >>> ed.move_to_obs(edata, ["service_unit", "service_num", "age", "mort_day_censored"])
         >>> ep.tl.rank_features_groups(
-        ...     edata, "service_unit", field_to_rank="obs", columns_to_rank={"obs_names": ["age", "mort_day_censored"]}
+        ...     edata,
+        ...     groupby="service_unit",
+        ...     field_to_rank="obs",
+        ...     columns_to_rank={"obs_names": ["age", "mort_day_censored"]},
         ... )
         >>> ep.pl.rank_features_groups(edata)
 
@@ -409,7 +410,7 @@ def rank_features_groups(
         >>> ed.move_to_obs(edata, ["service_unit", "service_num", "age", "mort_day_censored"])
         >>> ep.tl.rank_features_groups(
         ...     edata,
-        ...     "service_unit",
+        ...     groupby="service_unit",
         ...     field_to_rank="layer_and_obs",
         ...     columns_to_rank={"var_names": ["copd_flg", "renal_flg"], "obs_names": ["age", "mort_day_censored"]},
         ... )
@@ -439,7 +440,7 @@ def rank_features_groups(
     # subsetted to the specified columns
     if field_to_rank in ["layer", "layer_and_obs"]:
         # for some reason ruff insists on this type check. columns_to_rank is always a dict with key "var_names" if _var_subset is True
-        if _var_subset and isinstance(columns_to_rank, dict):
+        if _var_subset and isinstance(columns_to_rank, Mapping):
             X_to_keep = (
                 edata[:, columns_to_rank["var_names"]].X
                 if layer is None
@@ -465,7 +466,7 @@ def rank_features_groups(
     if field_to_rank in ["obs", "layer_and_obs"]:
         # want columns of obs to become variables in X to be able to use rank_features_groups
         # for some reason ruff insists on this type check. columns_to_rank is always a dict with key "obs_names" if _obs_subset is True
-        if _obs_subset and isinstance(columns_to_rank, dict):
+        if _obs_subset and isinstance(columns_to_rank, Mapping):
             obs_to_move = edata.obs[columns_to_rank["obs_names"]].keys()
         else:
             obs_to_move = edata.obs.keys()
@@ -515,6 +516,7 @@ def rank_features_groups(
         "categorical_method": cat_cols_method,
         "layer": layer,
         "corr_method": correction_method,
+        "use_raw": False,
     }
 
     group_names = pd.Categorical(edata.obs[groupby].astype(str)).categories.tolist()
@@ -613,7 +615,8 @@ def filter_rank_features_groups(
     min_in_group_fraction: float = 0.25,
     min_fold_change: int = 1,
     max_out_group_fraction: float = 0.5,
-) -> None:  # pragma: no cover
+    copy: bool = False,
+) -> EHRData | None:  # pragma: no cover
     """Filters out features based on fold change and fraction of features containing the feature within and outside the `groupby` categories.
 
     See :func:`~ehrapy.tools.rank_features_groups`.
@@ -632,19 +635,21 @@ def filter_rank_features_groups(
         min_in_group_fraction: Minimum in group fraction (default: 0.25).
         min_fold_change: Miniumum fold change (default: 1).
         max_out_group_fraction: Maximum out group fraction (default: 0.5).
+        copy: Copy `edata` before computation and return a copy. Otherwise, perform computation in place and return `None`.
 
     Returns:
-        Same output as :func:`ehrapy.tools.rank_features_groups` but with filtered feature names set to `nan`
+        Depending on `copy`, returns or updates `edata` with the same output as :func:`ehrapy.tools.rank_features_groups` but with filtered feature names set to `nan`.
 
     Examples:
         >>> import ehrapy as ep
         >>> import ehrdata as ed
         >>> edata = ed.dt.mimic_2()
         >>> ed.move_to_obs(edata, ["service_unit"])
-        >>> ep.tl.rank_features_groups(edata, "service_unit")
-        >>> ep.pl.rank_features_groups(edata)
+        >>> ep.tl.rank_features_groups(edata, groupby="service_unit")
+        >>> ep.tl.filter_rank_features_groups(edata)
     """
-    return sc.tl.filter_rank_genes_groups(
+    edata = edata.copy() if copy else edata
+    sc.tl.filter_rank_genes_groups(
         adata=edata,
         key=key,
         groupby=groupby,
@@ -654,3 +659,4 @@ def filter_rank_features_groups(
         min_fold_change=min_fold_change,
         max_out_group_fraction=max_out_group_fraction,
     )
+    return edata if copy else None
