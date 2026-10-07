@@ -26,7 +26,9 @@ jobs:
                         "docs/tutorials/notebooks/cohort_tracking.ipynb",
                         "docs/tutorials/notebooks/longitudinal_with_ehrapy.ipynb",
                         "docs/tutorials/notebooks/bias.ipynb",
-                        # "docs/tutorials/notebooks/mimic_2_causal_inference.ipynb",
+                        "docs/tutorials/notebooks/imputation_nb.ipynb",
+                        "docs/tutorials/notebooks/mimic_2_causal_inference.ipynb",
+                        "docs/tutorials/notebooks/mimic_2_effect_estimation.ipynb",
                     ]
         steps:
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
