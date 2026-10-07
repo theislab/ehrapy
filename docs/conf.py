@@ -12,7 +12,7 @@ sys.path[:0] = [str(HERE.parent), str(HERE / "extensions")]
 needs_sphinx = "8.0"
 
 info = metadata("ehrapy")
-project_name = info["Name"]
+project = info["Name"]
 author = info["Author"]
 copyright = f"{datetime.now():%Y}, {author}."
 version = info["Version"]
@@ -143,6 +143,7 @@ nitpick_ignore = [
 autodoc_type_aliases = {"CAT": "Any"}
 
 typehints_defaults = "comma"
+always_use_bars_union = True
 
 pygments_style = "sphinx"
 pygments_dark_style = "native"

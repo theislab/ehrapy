@@ -1,10 +1,10 @@
 [build-system]
 build-backend = "hatchling.build"
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 
 [project]
 name = "ehrapy"
-version = "0.15.0"
+dynamic = ["version"]
 description = "Electronic Health Record Analysis with Python."
 readme = "README.md"
 requires-python = ">=3.12,<3.15"
@@ -78,9 +78,6 @@ dask = [
 leiden = ["igraph"]  # careful - GPL
 rapids12 = ["rapids-singlecell[rapids12]"]
 rapids13 = ["rapids-singlecell[rapids13]"]
-dev = [
-    "pre-commit",
-]
 doc = [
     "docutils<0.22",  # https://github.com/vidartf/nbsphinx-link/issues/25
     "sphinx",
@@ -114,6 +111,11 @@ test = [
     "pytest-mock"
 ]
 
+[dependency-groups]
+dev = [
+    "prek",
+    "twine>=4.0.2",
+]
 
 [tool.hatch.version]
 source = "vcs"
@@ -123,7 +125,7 @@ allow-direct-references = true
 
 [tool.hatch.envs.default]
 installer = "uv"
-features = [ "dev" ]
+dependency-groups = [ "dev" ]
 post-install-commands = [
   "uv pip install --reinstall --no-deps -e submodules/ehrdata",
 ]
@@ -265,9 +267,10 @@ convention = "google"
 
 [tool.cruft]
 skip = [
-    "tests",
-    "src/**/__init__.py",
-    "src/**/basic.py",
+    ".git",
+    "ehrapy/**",
+    "src/**",
+    "tests/**",
     "docs/api.md",
     "docs/changelog.md",
     "docs/references.bib",
