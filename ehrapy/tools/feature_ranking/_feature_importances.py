@@ -17,7 +17,7 @@ from sklearn.svm import SVC, SVR
 from ehrapy._compat import function_2D_only
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Sequence
 
     from ehrdata import EHRData
 
@@ -26,19 +26,19 @@ if TYPE_CHECKING:
 @_check_feature_types
 def rank_features_supervised(
     edata: EHRData,
-    predicted_feature: str,
     *,
+    predicted_feature: str,
     model: Literal["regression", "svm", "rf"] = "rf",
-    input_features: Iterable[str] | Literal["all"] = "all",
+    var_names: Sequence[str] | Literal["all"] = "all",
     layer: str | None = None,
     test_split_size: float = 0.2,
     key_added: str = "feature_importances",
     feature_scaling: Literal["standard", "minmax"] | None = "standard",
     percent_output: bool = False,
     verbose: bool = True,
-    return_score: bool = False,
+    copy: bool = False,
     **kwargs,
-) -> float | None:
+) -> EHRData | None:
     """Calculate feature importances for predicting a specified feature in adata.var.
 
     Args:
@@ -47,13 +47,13 @@ def rank_features_supervised(
         model: The model to use for prediction.
             Choose between 'regression', 'svm', or 'rf'.
             Multi-class classification is only possible with 'rf'.
-        input_features: The features in edata.var to use for prediction.
+        var_names: The features in edata.var to use for prediction.
             Should be a list of feature names.
             If 'all', all features in edata.var will be used.
             Non-numeric input features will error.
         layer: The layer in edata.layers to use for prediction. If None, edata.X will be used.
         test_split_size: The split of data used for testing the model. Should be a float between 0 and 1, representing the proportion.
-        key_added: The key in edata.var to store the feature importances.
+        key_added: The key in `edata.var` to store the feature importances and in `edata.uns` to store the model's test set performance.
         feature_scaling: The type of feature scaling to use for the input.
             Choose between 'standard', 'minmax', or None.
             'standard' uses sklearn's StandardScaler, 'minmax' uses MinMaxScaler.
@@ -61,11 +61,12 @@ def rank_features_supervised(
         percent_output: Set to True to output the feature importances as percentages.
             Note that information about positive or negative coefficients for regression models will be lost.
         verbose: Set to False to disable logging.
-        return_score: Set to True to return the R2 score / the accuracy of the model.
+        copy: Copy `edata` before computation and return a copy. Otherwise, perform computation in place.
         **kwargs: Additional keyword arguments to pass to the model. See the documentation of the respective model in scikit-learn for details.
 
     Returns:
-        If return_score is True, the R2 score / accuracy of the model on the test set. Otherwise, None.
+        Depending on `copy`, returns or updates `edata` with the feature importances in `edata.var[key_added]`
+        and the model's R2 score (numeric target) or accuracy (categorical target) on the test set in `edata.uns[key_added]`.
 
     Examples:
         >>> import ehrdata as ed
@@ -73,16 +74,16 @@ def rank_features_supervised(
         >>> edata = ed.dt.mimic_2()
         >>> ed.infer_feature_types(edata)
         >>> ep.pp.knn_impute(edata, n_neighbors=5)
-        >>> input_features = [
+        >>> var_names = [
         ...     feat for feat in edata.var_names if feat not in {"service_unit", "day_icu_intime", "tco2_first"}
         ... ]
-        >>> ep.tl.rank_features_supervised(edata, "tco2_first", model="rf", input_features=input_features)
+        >>> ep.tl.rank_features_supervised(edata, predicted_feature="tco2_first", model="rf", var_names=var_names)
     """
     if predicted_feature not in edata.var_names:
         raise ValueError(f"Feature {predicted_feature} not found in edata.var.")
 
-    if input_features != "all":
-        for feature in input_features:
+    if var_names != "all":
+        for feature in var_names:
             if feature not in edata.var_names:
                 raise ValueError(f"Feature {feature} not found in edata.var.")
 
@@ -94,6 +95,7 @@ def rank_features_supervised(
             f"Feature scaling type {feature_scaling} not recognized. Please choose either 'standard', 'minmax', or None."
         )
 
+    edata = edata.copy() if copy else edata
     data = to_pandas(edata, layer=layer)
 
     prediction_type = edata.var[FEATURE_TYPE_KEY].loc[predicted_feature]
@@ -124,11 +126,11 @@ def rank_features_supervised(
         elif model == "rf":
             predictor = RandomForestClassifier(**kwargs)
 
-    if input_features == "all":
-        input_features = list(edata.var_names)
-        input_features.remove(predicted_feature)
+    if var_names == "all":
+        var_names = list(edata.var_names)
+        var_names.remove(predicted_feature)
 
-    input_data = data[input_features]
+    input_data = data[list(var_names)]
     labels = data[predicted_feature]
 
     x_train, x_test, y_train, y_test = train_test_split(input_data, labels, test_size=test_split_size, random_state=42)
@@ -148,18 +150,16 @@ def rank_features_supervised(
         except ValueError as e:
             raise ValueError(
                 f"Feature {feature} is not numeric. Please encode non-numeric features before calculating "
-                f"feature importances or drop them from the input_features list."
+                f"feature importances or drop them from the var_names list."
             ) from e
 
     predictor.fit(x_train, y_train)
 
     score = predictor.score(x_test, y_test)
-    evaluation_metric = "R2 score" if prediction_type == "continuous" else "accuracy"
+    evaluation_metric = "r2" if prediction_type == NUMERIC_TAG else "accuracy"
 
     if verbose:
-        logger.info(
-            f"Training completed. The model achieved an {evaluation_metric} of {score:.2f} on the test set, consisting of {len(y_test)} samples."
-        )
+        logger.info(f"Training completed. Test set {evaluation_metric}: {score:.2f} ({len(y_test)} samples).")
 
     if model == "regression" or model == "svm":
         feature_importances = pd.Series(predictor.coef_.squeeze(), index=input_data.columns)
@@ -172,5 +172,11 @@ def rank_features_supervised(
     # Reorder feature importances to match edata.var order and save importances in edata.var
     feature_importances = feature_importances.reindex(edata.var_names)
     edata.var[key_added] = feature_importances
+    edata.uns[key_added] = {
+        "predicted_feature": predicted_feature,
+        "model": model,
+        "metric": evaluation_metric,
+        "score": score,
+    }
 
-    return score if return_score else None
+    return edata if copy else None

@@ -6,7 +6,7 @@ They share a common interface: a ``treatment`` and ``outcome`` column name plus 
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import array_api_compat
 import numpy as np
@@ -50,9 +50,9 @@ def _bootstrap_ate(
 @function_2D_only()
 def iptw(
     edata: EHRData,
+    *,
     treatment: str,
     outcome: str,
-    *,
     covariates: Sequence[str],
     propensity_model: str | BaseEstimator = "logistic",
     stabilized: bool = True,
@@ -93,8 +93,8 @@ def iptw(
         >>> edata = ed.dt.mimic_2_preprocessed()
         >>> est = ep.tl.iptw(
         ...     edata,
-        ...     "aline_flg",
-        ...     "day_28_flg",
+        ...     treatment="aline_flg",
+        ...     outcome="day_28_flg",
         ...     covariates=["age", "sofa_first", "sapsi_first"],
         ...     random_state=0,
         ... )
@@ -151,9 +151,9 @@ def iptw(
 @function_2D_only()
 def g_computation(
     edata: EHRData,
+    *,
     treatment: str,
     outcome: str,
-    *,
     covariates: Sequence[str],
     outcome_model: str | BaseEstimator = "auto",
     n_bootstrap: int = 200,
@@ -189,8 +189,8 @@ def g_computation(
         >>> edata = ed.dt.mimic_2_preprocessed()
         >>> est = ep.tl.g_computation(
         ...     edata,
-        ...     "aline_flg",
-        ...     "day_28_flg",
+        ...     treatment="aline_flg",
+        ...     outcome="day_28_flg",
         ...     covariates=["age", "sofa_first", "sapsi_first"],
         ...     random_state=0,
         ... )
@@ -240,9 +240,9 @@ def g_computation(
 @function_2D_only()
 def aipw(
     edata: EHRData,
+    *,
     treatment: str,
     outcome: str,
-    *,
     covariates: Sequence[str],
     propensity_model: str | BaseEstimator = "logistic",
     outcome_model: str | BaseEstimator = "auto",
@@ -287,8 +287,8 @@ def aipw(
         >>> edata = ed.dt.mimic_2_preprocessed()
         >>> est = ep.tl.aipw(
         ...     edata,
-        ...     "aline_flg",
-        ...     "day_28_flg",
+        ...     treatment="aline_flg",
+        ...     outcome="day_28_flg",
         ...     covariates=["age", "sofa_first", "sapsi_first"],
         ... )
         >>> print(est.summary())
@@ -352,15 +352,15 @@ def aipw(
 @function_2D_only()
 def propensity_score_matching(
     edata: EHRData,
+    *,
     treatment: str,
     outcome: str,
-    *,
     covariates: Sequence[str],
     propensity_model: str | BaseEstimator = "logistic",
     k: int = 1,
     caliper: float | None = 0.2,
     replacement: bool = True,
-    target: str = "att",
+    target: Literal["att", "ate"] = "att",
     n_bootstrap: int = 200,
     random_state: int | None = None,
     layer: str | None = None,
@@ -397,8 +397,8 @@ def propensity_score_matching(
         >>> edata = ed.dt.mimic_2_preprocessed()
         >>> est = ep.tl.propensity_score_matching(
         ...     edata,
-        ...     "aline_flg",
-        ...     "day_28_flg",
+        ...     treatment="aline_flg",
+        ...     outcome="day_28_flg",
         ...     covariates=["age", "sofa_first", "sapsi_first"],
         ...     random_state=0,
         ... )

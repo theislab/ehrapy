@@ -22,8 +22,8 @@ if TYPE_CHECKING:
 @_check_feature_types
 def detect_bias(
     edata: EHRData,
-    sensitive_features: Iterable[str] | Literal["all"],
     *,
+    sensitive_features: Iterable[str] | Literal["all"],
     run_feature_importances: bool | None = None,
     corr_threshold: float = 0.5,
     smd_threshold: float = 0.5,
@@ -32,8 +32,9 @@ def detect_bias(
     prediction_confidence_threshold: float = 0.5,
     corr_method: Literal["pearson", "spearman"] = "spearman",
     layer: str | None = None,
+    key_added: str = "bias",
     copy: bool = False,
-) -> dict[str, pd.DataFrame] | tuple[dict[str, pd.DataFrame], EHRData]:
+) -> EHRData | None:
     """Detects biases in the data using feature correlations, standardized mean differences, and feature importances.
 
     Detects biases with respect to sensitive features, which can be either a specified subset of features or all features in `.var`.
@@ -45,7 +46,7 @@ def detect_bias(
     - feature importances for predicting one feature with another
 
     Results of the computations are stored in `.var`, `.varp`, and `.uns` of the edata object.
-    Values that exceed the specified thresholds are considered of interest and returned in the results dictionary.
+    Values that exceed the specified thresholds are considered of interest and stored in the results dictionary in `.uns[key_added]`.
     Be aware that the results depend on the encoding of the data. E.g. when using one-hot encoding, each group of a categorical feature will
     be treated as a separate feature, which can lead to an increased number of detected biases. Please take this into consideration when
     interpreting the results.
@@ -65,11 +66,14 @@ def detect_bias(
             feature to be considered of interest.
         corr_method: The correlation method to use.
         layer: The layer in `.layers` to use for computation. If None, `.X` will be used.
+        key_added: The key in `.uns` to store the results dictionary under.
         copy: If set to `False`, `edata` is updated in place. If set to `True`, the `edata` is copied and the results are stored in the copied `edata`, which
             is then returned.
 
     Returns:
-        A dictionary containing the results of the bias detection. The keys are
+        `None` if `copy=False` and modifies the passed edata, else returns an updated object.
+        Stores a dictionary containing the results of the bias detection in `edata.uns[key_added]`.
+        The keys are
 
         - "feature_correlations": Pairwise correlations between features that exceed the correlation threshold.
         - "standardized_mean_differences": Standardized mean differences between groups of sensitive features that exceed the SMD threshold.
@@ -78,15 +82,14 @@ def detect_bias(
         - "feature_importances": Feature importances for predicting one feature with another that exceed the feature importance and prediction
           confidence thresholds.
 
-        If `copy` is set to `True`, the function returns a tuple with the results dictionary and the updated `edata`.
-
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> ed.infer_feature_types(edata)
         >>> edata = ep.pp.encode(edata, autodetect=True, encodings="label")
-        >>> results_dict = ep.pp.detect_bias(edata, "all")
+        >>> ep.pp.detect_bias(edata, sensitive_features="all")
+        >>> edata.uns["bias"]["feature_correlations"]
 
         >>> # Example with specified sensitive features
         >>> import ehrdata as ed
@@ -94,7 +97,7 @@ def detect_bias(
         >>> edata = ed.dt.diabetes_130_fairlearn()
         >>> ed.infer_feature_types(edata)
         >>> edata = ep.pp.encode(edata, autodetect=True, encodings="label")
-        >>> results_dict = ep.pp.detect_bias(edata, sensitive_features=["race", "gender"])
+        >>> ep.pp.detect_bias(edata, sensitive_features=["race", "gender"])
     """
     from ehrapy.tools import rank_features_supervised
 
@@ -289,15 +292,14 @@ def detect_bias(
         }
         for prediction_feature in edata.var_names:
             try:
-                prediction_score = rank_features_supervised(
+                rank_features_supervised(
                     edata,
-                    prediction_feature,
-                    input_features="all",
+                    predicted_feature=prediction_feature,
+                    var_names="all",
                     model="rf",
                     key_added=f"{prediction_feature}_feature_importances",
                     percent_output=True,
                     verbose=False,
-                    return_score=True,
                 )
             except ValueError as e:
                 if "Input y contains NaN" in str(e):
@@ -307,6 +309,7 @@ def detect_bias(
                 else:
                     raise e
 
+            prediction_score = edata.uns[f"{prediction_feature}_feature_importances"]["score"]
             for sens_feature in sens_features_list:
                 if prediction_feature == sens_feature:
                     continue
@@ -323,6 +326,6 @@ def detect_bias(
             by="Feature Importance", key=abs, ascending=False
         )
 
-    if copy:
-        return bias_results, edata
-    return bias_results
+    edata.uns[key_added] = bias_results
+
+    return edata if copy else None

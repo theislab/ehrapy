@@ -24,22 +24,22 @@ def test_balanced_sampling_basic(encode_ds_1_edata, sparse_input):
 
     # invalid key
     with pytest.raises(ValueError):
-        ep.pp.sample(encode_ds_1_edata, balanced=True, balanced_key="non_existing_column")
+        ep.pp.sample(encode_ds_1_edata, balanced=True, groupby="non_existing_column")
 
     # invalid method
     with pytest.raises(ValueError):
-        ep.pp.sample(encode_ds_1_edata, balanced=True, balanced_key="clinic_day", balanced_method="non_existing_method")
+        ep.pp.sample(encode_ds_1_edata, balanced=True, groupby="clinic_day", balanced_method="non_existing_method")
 
     # undersampling
     edata_sampled = ep.pp.sample(
-        encode_ds_1_edata, balanced=True, balanced_key="clinic_day", balanced_method="RandomUnderSampler", copy=True
+        encode_ds_1_edata, balanced=True, groupby="clinic_day", balanced_method="RandomUnderSampler", copy=True
     )
     assert edata_sampled.n_obs == 4
     assert edata_sampled.obs.clinic_day.value_counts().min() == edata_sampled.obs.clinic_day.value_counts().max()
 
     # oversampling
     edata_sampled = ep.pp.sample(
-        encode_ds_1_edata, balanced=True, balanced_key="clinic_day", balanced_method="RandomOverSampler", copy=True
+        encode_ds_1_edata, balanced=True, groupby="clinic_day", balanced_method="RandomOverSampler", copy=True
     )
     assert edata_sampled.n_obs == 8
     assert edata_sampled.obs.clinic_day.value_counts().min() == edata_sampled.obs.clinic_day.value_counts().max()
@@ -49,7 +49,7 @@ def test_balanced_sampling_basic(encode_ds_1_edata, sparse_input):
     output = ep.pp.sample(
         encode_ds_1_edata_for_undersampling,
         balanced=True,
-        balanced_key="clinic_day",
+        groupby="clinic_day",
         balanced_method="RandomUnderSampler",
         copy=False,
     )
@@ -61,7 +61,7 @@ def test_balanced_sampling_basic(encode_ds_1_edata, sparse_input):
     output = ep.pp.sample(
         encode_ds_1_edata_for_oversampling,
         balanced=True,
-        balanced_key="clinic_day",
+        groupby="clinic_day",
         balanced_method="RandomOverSampler",
         copy=False,
     )

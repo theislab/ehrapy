@@ -7,7 +7,6 @@ import scanpy as sc
 from ehrapy._compat import function_2D_only
 
 if TYPE_CHECKING:
-    import pandas as pd
     from ehrdata import EHRData
 
 
@@ -20,9 +19,9 @@ def highly_variable_features(
     span: float | None = 0.3,
     n_bins: int = 20,
     subset: bool = False,
-    inplace: bool = True,
     check_values: bool = True,
-) -> pd.DataFrame | None:
+    copy: bool = False,
+) -> EHRData | None:
     """Annotate highly variable features.
 
     Expects count data. A normalized variance for each feature is computed. First, the data
@@ -39,12 +38,12 @@ def highly_variable_features(
                 If just a single observation falls into a bin, the normalized dispersion is artificially set to 1.
                 You'll be informed about this if you set `settings.verbosity = 4`.
         subset: Inplace subset to highly-variable features if `True` otherwise merely indicate highly variable features.
-        inplace: Whether to place calculated metrics in `.var` or return them.
         check_values: Check if counts in selected layer are integers. A Warning is returned if set to True.
+        copy: Whether to return a copy of `edata` or modify it in place.
 
     Returns:
-        Depending on `inplace` returns calculated metrics (:class:`~pandas.DataFrame`) or
-        updates `.var` with the following fields
+        `None` if `copy=False` and modifies the passed edata, else returns an updated object.
+        Updates `.var` with the following fields
 
     **highly_variable**
         boolean indicator of highly-variable features
@@ -57,9 +56,10 @@ def highly_variable_features(
     **highly_variable_rank**
         rank of the feature according to normalized variance, median rank in the case of multiple batches
     """
+    edata = edata.copy() if copy else edata
     n_top_features = int(top_features_percentage * len(edata.var))
 
-    return sc.pp.highly_variable_genes(
+    sc.pp.highly_variable_genes(
         adata=edata,
         layer=layer,
         n_top_genes=n_top_features,
@@ -67,6 +67,8 @@ def highly_variable_features(
         n_bins=n_bins,
         flavor="seurat_v3",
         subset=subset,
-        inplace=inplace,
+        inplace=True,
         check_values=check_values,
     )
+
+    return edata if copy else None

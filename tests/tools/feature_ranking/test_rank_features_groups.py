@@ -455,5 +455,11 @@ def test_rank_features_groups_3D_edata(edata_blob_small):
 
 def test_filter_rank_features_groups_edata(mimic_2):
     mimic_2 = ed.move_to_obs(mimic_2, ["service_unit"], copy=True)
-    ep.tl.rank_features_groups(mimic_2, "service_unit")
-    ep.tl.rank_features_groups(mimic_2, "service_unit")
+    ep.tl.rank_features_groups(mimic_2, groupby="service_unit")
+
+    edata_copy = ep.tl.filter_rank_features_groups(mimic_2, copy=True)
+    assert "rank_features_groups_filtered" in edata_copy.uns
+    assert "rank_features_groups_filtered" not in mimic_2.uns
+
+    assert ep.tl.filter_rank_features_groups(mimic_2) is None
+    assert "rank_features_groups_filtered" in mimic_2.uns

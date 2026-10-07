@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import warnings
 from typing import TYPE_CHECKING, Literal
 
 import numpy as np
@@ -22,7 +21,7 @@ if TYPE_CHECKING:
 
 @function_2D_only()
 def pca(
-    data: EHRData | np.ndarray | spmatrix,
+    edata: EHRData | np.ndarray | spmatrix,
     *,
     n_comps: int | None = None,
     zero_center: bool | None = True,
@@ -41,7 +40,7 @@ def pca(
     Computes PCA coordinates, loadings and variance decomposition. Uses the implementation of *scikit-learn*.
 
     Args:
-        data: Central data object.
+        edata: Central data object.
         n_comps: Number of principal components to compute.
                  Defaults to 50, or 1 - minimum dimension size of selected representation.
         zero_center: If `True`, compute standard PCA from covariance matrix.
@@ -71,8 +70,8 @@ def pca(
         chunk_size: Number of observations to include in each chunk. Required if `chunked=True` was passed.
 
     Returns:
-        If `data` is array-like and `return_info=False` was passed,
-        this function returns the PCA representation of `data` as an
+        If `edata` is array-like and `return_info=False` was passed,
+        this function returns the PCA representation of `edata` as an
         array of the same type as the input array.
 
         Otherwise, it returns `None` if `copy=False`, else an updated `EHRData` object.
@@ -89,7 +88,7 @@ def pca(
             covariance matrix.
     """
     return sc.pp.pca(
-        data=data,
+        data=edata,
         layer=layer,
         n_comps=n_comps,
         zero_center=zero_center,
@@ -131,31 +130,15 @@ def regress_out(
     return sc.pp.regress_out(adata=edata, keys=keys, n_jobs=n_jobs, layer=layer, copy=copy)
 
 
-def subsample(
-    data: EHRData | np.ndarray | spmatrix,
-    *,
-    fraction: float | None = None,
-    n_obs: int | None = None,
-    random_state: AnyRandom = 0,
-    copy: bool = False,
-) -> EHRData | None:  # pragma: no cover
-    warnings.warn(
-        "This function is deprecated and will be removed in the next release. Use ep.pp.sample instead.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    return sample(data=data, fraction=fraction, n_obs=n_obs, rng=random_state, copy=copy)
-
-
 def sample(
-    data: EHRData | np.ndarray | CSBase,
-    fraction: float | None = None,
+    edata: EHRData | np.ndarray | CSBase,
     *,
+    fraction: float | None = None,
     n_obs: int | None = None,
     rng: RNGLike | SeedLike | None = None,
     balanced: bool = False,
     balanced_method: Literal["RandomUnderSampler", "RandomOverSampler"] = "RandomUnderSampler",
-    balanced_key: str | None = None,
+    groupby: str | None = None,
     copy: bool = False,
     replace: bool = False,
     axis: Literal["obs", 0, "var", 1] = "obs",
@@ -164,15 +147,15 @@ def sample(
     """Sample a fraction or a number of observations / variables with or without replacement.
 
     Args:
-        data: Central data object.
+        edata: Central data object.
         fraction: Sample to this `fraction` of the number of observations.
         n_obs: Sample to this number of observations.
         rng: Random seed.
         copy: If an :class:`~ehrdata.EHRData` is passed, determines whether a copy is returned.
-        balanced: If `True`, balance the groups in `adata.obs[key]` by under- or over-sampling.
-                  Requires `key` to be set. If `False`, simple random sampling is performed.
+        balanced: If `True`, balance the groups in `edata.obs[groupby]` by under- or over-sampling.
+                  Requires `groupby` to be set. If `False`, simple random sampling is performed.
         balanced_method: The sampling method, either "RandomUnderSampler" for under-sampling or "RandomOverSampler" for over-sampling. Only relevant if `balanced=True`.
-        balanced_key: Key in `adata.obs` to use for balancing the groups. Only relevant if `balanced=True`.
+        groupby: Key in `edata.obs` to use for balancing the groups. Only relevant if `balanced=True`.
         replace: If `True`, samples are drawn with replacement. Only relevant if `balanced=False`.
         axis: Axis to sample on. Either `obs` / `0` (observations, default) or `var` / `1` (variables).
         p: Drawing probabilities (floats) or mask (bools).
@@ -180,7 +163,7 @@ def sample(
             If p is an array of probabilities, it must sum to 1.
 
     Returns:
-        Returns `X[obs_indices], obs_indices` if data is array-like, otherwise subsamples the passed
+        Returns `X[obs_indices], obs_indices` if `edata` is array-like, otherwise subsamples the passed
         Central data object (`copy == False`) or returns a subsampled copy of it (`copy == True`).
 
     Examples:
@@ -192,7 +175,7 @@ def sample(
         '30-60 years'            30716
         '30 years or younger'     2509
         >>> edata_balanced = ep.pp.sample(
-        ...     edata, balanced=True, balanced_method="RandomUnderSampler", balanced_key="age", copy=True
+        ...     edata, balanced=True, balanced_method="RandomUnderSampler", groupby="age", copy=True
         ... )
         >>> edata_balanced.obs.age.value_counts()
          age
@@ -201,53 +184,53 @@ def sample(
         'Over 60 years'          2509
     """
     if balanced:
-        if balanced_key is None:
-            raise TypeError("Key must be provided when balanced=True")
+        if groupby is None:
+            raise TypeError("groupby must be provided when balanced=True")
 
-        if isinstance(data, EHRData):
-            if balanced_key not in data.obs.columns:
+        if isinstance(edata, EHRData):
+            if groupby not in edata.obs.columns:
                 raise ValueError(
-                    f"Key '{balanced_key}' not found in edata.obs. Available keys are: {data.obs.columns.tolist()}"
+                    f"Key '{groupby}' not found in edata.obs. Available keys are: {edata.obs.columns.tolist()}"
                 )
 
-            labels = data.obs[balanced_key].values
+            labels = edata.obs[groupby].values
 
-        elif isinstance(data, sp.csr_matrix | sp.csc_matrix) or isinstance(data, np.ndarray):
-            labels = np.asarray(balanced_key)
-            if labels.shape[0] != data.shape[0]:
+        elif isinstance(edata, sp.csr_matrix | sp.csc_matrix) or isinstance(edata, np.ndarray):
+            labels = np.asarray(groupby)
+            if labels.shape[0] != edata.shape[0]:
                 raise ValueError(
-                    f"Length of labels ({labels.shape[0]}) does not match number of observations ({data.shape[0]})"
+                    f"Length of labels ({labels.shape[0]}) does not match number of observations ({edata.shape[0]})"
                 )
 
         else:
-            raise TypeError("data must be an EHRData, numpy array or scipy sparse matrix when balanced=True")
+            raise TypeError("edata must be an EHRData, numpy array or scipy sparse matrix when balanced=True")
 
         if balanced_method == "RandomUnderSampler" or balanced_method == "RandomOverSampler":
             sampled_indices, _ = _random_resample(labels, method=balanced_method, random_state=rng)
         else:
             raise ValueError(f"Unknown sampling method: {balanced_method}")
 
-        if isinstance(data, EHRData):
+        if isinstance(edata, EHRData):
             if copy:
-                return data[sampled_indices].copy()
+                return edata[sampled_indices].copy()
             else:
-                data._inplace_subset_obs(sampled_indices)
+                edata._inplace_subset_obs(sampled_indices)
                 return None
         else:
-            return data[sampled_indices], sampled_indices
+            return edata[sampled_indices], sampled_indices
     else:
-        return sc.pp.sample(data=data, fraction=fraction, n=n_obs, rng=rng, copy=copy, replace=replace, axis=axis, p=p)
+        return sc.pp.sample(data=edata, fraction=fraction, n=n_obs, rng=rng, copy=copy, replace=replace, axis=axis, p=p)
 
 
 @function_2D_only()
 def combat(
     edata: EHRData,
     *,
-    key: str = "batch",
+    batch_key: str = "batch",
     covariates: Collection[str] | None = None,
     layer: str | None = None,
-    inplace: bool = True,
-) -> EHRData | np.ndarray | None:  # pragma: no cover
+    copy: bool = False,
+) -> EHRData | None:  # pragma: no cover
     """ComBat function for batch effect correction :cite:p:`Johnson2006`, :cite:p:`Leek2012`, :cite:p:`Pedersen2012`.
 
     Corrects for batch effects by fitting linear models, gains statistical power via an EB framework where information is borrowed across features.
@@ -257,30 +240,29 @@ def combat(
 
     Args:
         edata: Central data object.
-        key: Key to a categorical annotation from `.obs` that will be used for batch effect removal.
+        batch_key: Key to a categorical annotation from `.obs` that will be used for batch effect removal.
         covariates: Additional covariates besides the batch variable such as adjustment variables or biological condition.
                     This parameter refers to the design matrix `X` in Equation 2.1 in :cite:p:`Johnson2006` and to the `mod` argument in
                     the original combat function in the sva R package.
                     Note that not including covariates may introduce bias or lead to the removal of signal in unbalanced designs.
         layer: The layer to operate on.
-        inplace: Whether to replace edata.X or to return the corrected data
+        copy: Whether to return a corrected copy of `edata` or to correct it in place.
 
     Returns:
-        Depending on the value of `inplace`, either returns the corrected matrix or modifies `edata.X`.
+        `None` if `copy=False` and modifies the passed edata, else returns an updated object.
     """
+    edata = edata.copy() if copy else edata
     # Since scanpy's combat does not support layers, we need to copy the data to the X matrix and then copy the result back to the layer
     if layer is None:
-        return sc.pp.combat(adata=edata, key=key, covariates=covariates, inplace=inplace)
+        sc.pp.combat(adata=edata, key=batch_key, covariates=covariates, inplace=True)
     else:
         X = edata.X.copy()
         edata.X = edata.layers[layer].copy()
-        if not inplace:
-            return sc.pp.combat(adata=edata, key=key, covariates=covariates, inplace=False)
-        else:
-            sc.pp.combat(adata=edata, key=key, covariates=covariates, inplace=True)
-            edata.layers[layer] = edata.X
-            edata.X = X
-            return None
+        sc.pp.combat(adata=edata, key=batch_key, covariates=covariates, inplace=True)
+        edata.layers[layer] = edata.X
+        edata.X = X
+
+    return edata if copy else None
 
 
 def _random_resample(

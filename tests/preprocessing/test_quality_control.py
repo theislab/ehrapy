@@ -53,7 +53,8 @@ def test_qc_metrics_vanilla(array_type, missing_values_edata):
     edata.X = array_type(edata.X)
     modification_copy = edata.copy()
 
-    obs_metrics, var_metrics = ep.pp.qc_metrics(edata)
+    ep.pp.qc_metrics(edata)
+    obs_metrics, var_metrics = edata.obs, edata.var
 
     assert np.array_equal(obs_metrics["missing_values_abs"].values, np.array([1, 2]))
     assert np.allclose(obs_metrics["missing_values_pct"].values, np.array([33.3333, 66.6667]))
@@ -82,7 +83,8 @@ def test_qc_metrics_vanilla_advanced(array_type, missing_values_edata):
     edata.var["feature_type"] = ["numeric", "numeric", "categorical"]
     edata.X = array_type(missing_values_edata.X)
     modification_copy = edata.copy()
-    obs_metrics, var_metrics = ep.pp.qc_metrics(edata)
+    ep.pp.qc_metrics(edata)
+    obs_metrics, var_metrics = edata.obs, edata.var
 
     assert np.array_equal(obs_metrics["missing_values_abs"].values, np.array([1, 2]))
     assert np.allclose(obs_metrics["missing_values_pct"].values, np.array([33.3333, 66.6667]))
@@ -116,7 +118,8 @@ def test_qc_metrics_3d_vanilla(edata_mini_3D_missing_values):
     edata = edata_mini_3D_missing_values[:, :4].copy()
     modification_copy = edata.copy()
 
-    obs_metrics, var_metrics = ep.pp.qc_metrics(edata, layer=DEFAULT_TEM_LAYER_NAME)
+    ep.pp.qc_metrics(edata, layer=DEFAULT_TEM_LAYER_NAME)
+    obs_metrics, var_metrics = edata.obs, edata.var
 
     assert np.array_equal(obs_metrics["missing_values_abs"].values, np.array([1, 0, 1, 1]))
     assert np.allclose(obs_metrics["missing_values_pct"].values, np.array([12.5, 0.0, 12.5, 12.5]))
@@ -158,7 +161,8 @@ def test_qc_metrics_3d_vanilla_advanced(edata_mini_3D_missing_values):
     edata.var["feature_type"] = ["numeric", "numeric", "numeric", "categorical"]
     modification_copy = edata.copy()
 
-    obs_metrics, var_metrics = ep.pp.qc_metrics(edata, layer=DEFAULT_TEM_LAYER_NAME)
+    ep.pp.qc_metrics(edata, layer=DEFAULT_TEM_LAYER_NAME)
+    obs_metrics, var_metrics = edata.obs, edata.var
 
     assert np.array_equal(obs_metrics["missing_values_abs"].values, np.array([1, 0, 1, 1]))
     assert np.allclose(obs_metrics["missing_values_pct"].values, np.array([12.5, 0.0, 12.5, 12.5]))
@@ -287,14 +291,18 @@ def test_var_nan_qc_metrics(array_type):
     assert var_metrics.iloc[4].iloc[0] == 1
 
 
-def test_calculate_qc_metrics(missing_values_edata):
-    obs_metrics, var_metrics = ep.pp.qc_metrics(missing_values_edata)
+@pytest.mark.parametrize("copy", [False, True])
+def test_calculate_qc_metrics(missing_values_edata, copy):
+    result = ep.pp.qc_metrics(missing_values_edata, copy=copy)
 
-    assert obs_metrics is not None
-    assert var_metrics is not None
-
-    assert missing_values_edata.obs.missing_values_abs is not None
-    assert missing_values_edata.var.missing_values_abs is not None
+    if copy:
+        assert "missing_values_abs" not in missing_values_edata.obs
+        assert "missing_values_abs" not in missing_values_edata.var
+        missing_values_edata = result
+    else:
+        assert result is None
+    assert "missing_values_abs" in missing_values_edata.obs
+    assert "missing_values_abs" in missing_values_edata.var
 
 
 def _make_lab_edata(n_obs: int = 20, seed: int = 0) -> ed.EHRData:

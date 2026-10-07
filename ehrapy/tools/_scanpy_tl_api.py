@@ -1,12 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Literal
 
-import numpy as np
 import scanpy as sc
 from scipy.sparse import spmatrix  # noqa
-
-from ehrapy.core._constants import TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
@@ -18,8 +15,8 @@ if TYPE_CHECKING:
 
 def leiden(
     edata: EHRData,
-    resolution: float = 1,
     *,
+    resolution: float = 1,
     restrict_to: tuple[str, Sequence[str]] | None = None,
     random_state: AnyRandom = 0,
     key_added: str = "leiden",
@@ -94,12 +91,12 @@ def dendrogram(
     n_pcs: int | None = None,
     use_rep: str | None = None,
     var_names: Sequence[str] | None = None,
-    cor_method: str = "pearson",
+    cor_method: Literal["pearson", "kendall", "spearman"] = "pearson",
     linkage_method: str = "complete",
     optimal_ordering: bool = False,
     key_added: str | None = None,
-    inplace: bool = True,
-) -> dict[str, Any] | None:  # pragma: no cover
+    copy: bool = False,
+) -> EHRData | None:  # pragma: no cover
     """Computes a hierarchical clustering for the given `groupby` categories.
 
     By default, the PCA representation is used unless `.X` has less than 50 variables.
@@ -135,11 +132,10 @@ def dendrogram(
         key_added: By default, the dendrogram information is added to
                    `.uns[f'dendrogram_{{groupby}}']`.
                    Notice that the `groupby` information is added to the dendrogram.
-        inplace: If `True`, adds dendrogram information to `edata.uns[key_added]`,
-                 else this function returns the information.
+        copy: Copy `edata` before computation and return a copy. Otherwise, perform computation in place and return `None`.
 
     Returns:
-        If `inplace=False`, returns dendrogram information, else `edata.uns[key_added]` is updated with it.
+        Depending on `copy`, returns or updates `edata` with the dendrogram information in `edata.uns[key_added]`.
 
     Examples:
         >>> import ehrdata as ed
@@ -150,7 +146,8 @@ def dendrogram(
         >>> ep.tl.dendrogram(edata, groupby="service_unit")
         >>> ep.pl.dendrogram(edata, groupby="service_unit")
     """
-    return sc.tl.dendrogram(
+    edata = edata.copy() if copy else edata
+    sc.tl.dendrogram(
         adata=edata,
         groupby=groupby,
         n_pcs=n_pcs,
@@ -161,8 +158,9 @@ def dendrogram(
         linkage_method=linkage_method,
         optimal_ordering=optimal_ordering,
         key_added=key_added,
-        inplace=inplace,
+        inplace=True,
     )
+    return edata if copy else None
 
 
 def dpt(
@@ -289,13 +287,13 @@ def paga(
 
 def ingest(
     edata: EHRData,
-    edata_ref: EHRData,
     *,
+    edata_ref: EHRData,
     obs: str | Iterable[str] | None = None,
     embedding_method: str | Iterable[str] = ("umap", "pca"),
-    labeling_method: str = "knn",
+    labeling_method: Literal["knn"] = "knn",
     neighbors_key: str | None = None,
-    inplace: bool = True,
+    copy: bool = False,
     **kwargs,
 ) -> EHRData | None:  # pragma: no cover
     """Map labels and embeddings from reference data to new data.
@@ -322,27 +320,27 @@ def ingest(
         neighbors_key: If not specified, ingest looks edata_ref.uns['neighbors'] for neighbors settings and edata_ref.obsp['distances'] for
                        distances (default storage places for pp.neighbors). If specified, ingest looks edata_ref.uns[neighbors_key] for
                        neighbors settings and edata_ref.obsp[edata_ref.uns[neighbors_key]['distances_key']] for distances.
-        inplace: Only works if `return_joint=False`.
-                 Add labels and embeddings to the passed `edata` (if `True`) or return a copy of `edata` with mapped embeddings and labels.
+        copy: Copy `edata` before computation and return a copy. Otherwise, perform computation in place and return `None`.
         **kwargs: Further keyword arguments for the Neighbor calculation
 
     Returns:
-        * if `inplace=False` returns a copy of `edata` with mapped embeddings and labels in `obsm` and `obs` correspondingly
-        * if `inplace=True` returns `None` and updates `edata.obsm` and `edata.obs` with mapped embeddings and labels
+        Depending on `copy`, returns or updates `edata` with mapped embeddings and labels in `obsm` and `obs` correspondingly.
 
     Examples:
         >>> import ehrapy as ep
         >>> ep.pp.neighbors(edata_ref)
         >>> ep.tl.umap(edata_ref)
-        >>> ep.tl.ingest(edata, edata_ref, obs="service_unit")
+        >>> ep.tl.ingest(edata, edata_ref=edata_ref, obs="service_unit")
     """
-    return sc.tl.ingest(
+    edata = edata.copy() if copy else edata
+    sc.tl.ingest(
         adata=edata,
         adata_ref=edata_ref,
         obs=obs,
         embedding_method=embedding_method,
         labeling_method=labeling_method,
         neighbors_key=neighbors_key,
-        inplace=inplace,
+        inplace=True,
         **kwargs,
     )
+    return edata if copy else None

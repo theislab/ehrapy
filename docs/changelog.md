@@ -11,16 +11,32 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   `miceforest` is effectively unmaintained (last commit 2025-10-27) and broken against `lightgbm>=4.7.0`, which it calls through a private, name-mangled internal ([miceforest#104](https://github.com/AnotherSamWilson/miceforest/issues/104)).
   Use {func}`ep.pp.miss_forest_impute <ehrapy.preprocessing.miss_forest_impute>` instead, which is MICE via {class}`~sklearn.impute.IterativeImputer` with a tree ensemble.
   For a LightGBM backend, pass `IterativeImputer(estimator=LGBMRegressor(...))` directly.
+* Unify the API conventions across `ep.pp`, `ep.tl`, `ep.pl` and `ep.get` @Zethson
+
+  Every argument after `edata` is keyword-only.
+  Grouping keys are called `groupby` (was `group_key`, `cluster_key`, `balanced_key`), feature subsets `var_names` (was `vars`, `input_features`, `feature_names`), feature-name columns `feature_symbols` (was `gene_symbols`, `features`), and result keys `key_added` when written and `key` when read (was `uns_key`).
+  {func}`ep.pp.combat <ehrapy.preprocessing.combat>` takes `batch_key` (was `key`), and {func}`ep.pp.pca <ehrapy.preprocessing.pca>` and {func}`ep.pp.sample <ehrapy.preprocessing.sample>` take `edata` (was `data`).
+* Replace `inplace` with `copy` @Zethson
+
+  {func}`ep.pp.combat <ehrapy.preprocessing.combat>`, {func}`ep.pp.highly_variable_features <ehrapy.preprocessing.highly_variable_features>`, {func}`ep.tl.dendrogram <ehrapy.tools.dendrogram>` and {func}`ep.tl.ingest <ehrapy.tools.ingest>` take `copy` instead of `inplace`.
+  {func}`ep.pp.qc_metrics <ehrapy.preprocessing.qc_metrics>`, {func}`ep.pp.detect_bias <ehrapy.preprocessing.detect_bias>`, {func}`ep.tl.embedding_density <ehrapy.tools.embedding_density>`, {func}`ep.tl.filter_rank_features_groups <ehrapy.tools.filter_rank_features_groups>`, {func}`ep.tl.rank_features_supervised <ehrapy.tools.rank_features_supervised>` and {func}`ep.tl.cox_ph_adjusted_curves <ehrapy.tools.cox_ph_adjusted_curves>` gained `copy`.
+  `qc_metrics` and `detect_bias` store their results in `edata` instead of returning them (`detect_bias` under `uns["bias"]`), and `rank_features_supervised` stores the model's test score in `uns[key_added]` instead of returning it.
+* Remove the deprecated `ep.tl.kmf`, `ep.pp.subsample` and the `n_neighbours` alias of {func}`ep.pp.knn_impute <ehrapy.preprocessing.knn_impute>` @Zethson
 
 ### 🐛 Bug Fixes
 
 * `ep.pp.explicit_impute()` now accepts falsy mapping replacement values such as `0`, `0.0`, and empty strings ([#1087](https://github.com/theislab/ehrapy/pull/1087)) @driavysinus
 * `ep.pp.knn_impute()` now raises a clear `NotImplementedError` for unsupported array types (dask and sparse arrays) instead of failing silently ([#1109](https://github.com/theislab/ehrapy/pull/1109)) @sueoglu
 * `_little_mcar_test` now computes its global covariance matrix with true pairwise deletion instead of centering on the global mean, fixing incorrect p-values under moderate-to-high missingness ([#1110](https://github.com/theislab/ehrapy/pull/1110)) @sueoglu
+* {func}`ep.pp.encode <ehrapy.preprocessing.encode>` and {func}`ep.pp.clip_quantile(copy=True) <ehrapy.preprocessing.clip_quantile>` no longer modify their input @Zethson
+* {func}`ep.tl.filter_rank_features_groups <ehrapy.tools.filter_rank_features_groups>` no longer raises `KeyError: 'use_raw'` @Zethson
+* {func}`ep.tl.rank_features_supervised <ehrapy.tools.rank_features_supervised>` reports R² instead of accuracy for numeric targets @Zethson
+* `ep.tl` no longer leaks implementation details such as `np` and `sc`, and its `__all__` now lists `leiden`, `dendrogram`, `dpt`, `paga` and `ingest`; `ep.pl` gained an `__all__` @Zethson
 
 ### 📖 Documentation
 
 * Add imputation methods tutorial notebook, benchmarking six imputation strategies on the PhysioNet2012 dataset ([#1101](https://github.com/theislab/ehrapy/pull/1101)) @sueoglu
+* Document the `ep.get` module, {func}`ep.tl.famd <ehrapy.tools.famd>` and {func}`ep.tl.anova_glm <ehrapy.tools.anova_glm>` @Zethson
 
 ## v0.15.0
 <!--

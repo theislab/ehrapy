@@ -164,7 +164,7 @@ def ncp_cluster_trajectories(
     edata: EHRData,
     *,
     layer: str,
-    cluster_key: str,
+    groupby: str,
     key: str = "ncp",
     n_top_diseases: int = 5,
     sigmoid_transform: bool = False,
@@ -179,7 +179,7 @@ def ncp_cluster_trajectories(
 
     **What each panel shows**
 
-    One panel is drawn per unique value in ``edata.obs[cluster_key]``, arranged in two columns.
+    One panel is drawn per unique value in ``edata.obs[groupby]``, arranged in two columns.
     The panel title shows the cluster label, the number of observations, and the dominant NCP component.
 
     Within each panel, each line is one variable.
@@ -205,7 +205,7 @@ def ncp_cluster_trajectories(
         edata: Central data object.
         layer: Key of the 3D layer holding the raw values (shape ``n_obs × n_vars × n_time``).
             All values must be non-negative (use ``sigmoid_transform=True`` for logit layers, or ``np.abs`` / clipping beforehand).
-        cluster_key: Column in ``edata.obs`` that contains cluster or group labels (any categorical or string column).
+        groupby: Column in ``edata.obs`` that contains cluster or group labels (any categorical or string column).
         key: Key under which NCP results are stored (matches ``key_added`` in :func:`~ehrapy.tools.ncp`).
         n_top_diseases: Number of top-loaded variables to show per cluster.
         sigmoid_transform: Apply a sigmoid transformation to the layer values before averaging.
@@ -220,13 +220,13 @@ def ncp_cluster_trajectories(
         >>> import ehrdata as ed, ehrapy as ep
         >>> edata = ed.dt.ehrdata_blobs(n_variables=8, n_centers=3, n_observations=30, base_timepoints=12)
         >>> ep.tl.ncp(edata, layer="tem_data", rank=3, sigmoid_transform=True)
-        >>> ep.pl.ncp_cluster_trajectories(edata, layer="tem_data", cluster_key="cluster")
+        >>> ep.pl.ncp_cluster_trajectories(edata, layer="tem_data", groupby="cluster")
 
         .. image:: /_static/docstring_previews/ncp_cluster_trajectories.png
     """
     _require_ncp(edata, key)
-    if cluster_key not in edata.obs:
-        raise KeyError(f"Cluster key {cluster_key!r} not found in edata.obs.")
+    if groupby not in edata.obs:
+        raise KeyError(f"Groupby key {groupby!r} not found in edata.obs.")
     if layer not in edata.layers:
         raise KeyError(f"Layer {layer!r} not found in edata.layers.")
 
@@ -243,7 +243,7 @@ def ncp_cluster_trajectories(
     B = np.asarray(edata.varm[f"{key}_loadings"])  # (n_vars, rank)
     var_names = list(edata.var_names)
     n_time = tensor.shape[2]
-    clusters = edata.obs[cluster_key]
+    clusters = edata.obs[groupby]
 
     panels = []
     for cluster_id in sorted(clusters.unique()):

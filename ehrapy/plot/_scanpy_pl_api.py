@@ -50,9 +50,9 @@ VBound = str | float | Callable[[Sequence[float]], float]
 @_doc_params(scatter_temp=doc_scatter_basic, show_save_ax=doc_show_save_ax)
 def scatter(  # noqa: D417
     edata: EHRData,
+    *,
     x: str | None = None,
     y: str | None = None,
-    *,
     color: str | None = None,
     use_raw: bool | None = None,
     layers: str | Collection[str] | None = None,
@@ -148,9 +148,9 @@ def scatter(  # noqa: D417
 )
 def heatmap(  # noqa: D417
     edata: EHRData,
+    *,
     var_names: _VarNames | Mapping[str, _VarNames],
     groupby: str | Sequence[str],
-    *,
     use_raw: bool | None = None,
     log: bool = False,
     num_categories: int = 7,
@@ -264,9 +264,9 @@ def heatmap(  # noqa: D417
 )
 def dotplot(  # noqa: D417
     edata: EHRData,
+    *,
     var_names: _VarNames | Mapping[str, _VarNames],
     groupby: str,
-    *,
     use_raw: bool | None = None,
     log: bool = False,
     num_categories: int = 7,
@@ -410,9 +410,9 @@ def dotplot(  # noqa: D417
 @_doc_params(show_save_ax=doc_show_save_ax, common_plot_args=doc_common_plot_args)
 def tracksplot(  # noqa: D417
     edata: EHRData,
+    *,
     var_names: _VarNames | Mapping[str, _VarNames],
     groupby: str,
-    *,
     use_raw: bool | None = None,
     log: bool = False,
     dendrogram: bool | str = False,
@@ -486,9 +486,9 @@ def tracksplot(  # noqa: D417
 @function_2D_only()
 def violin(  # noqa: D417
     edata: EHRData,
+    *,
     keys: str | Sequence[str],
     groupby: str | None = None,
-    *,
     log: bool = False,
     use_raw: bool | None = None,
     stripplot: bool = True,
@@ -585,9 +585,9 @@ def violin(  # noqa: D417
 )
 def stacked_violin(  # noqa: D417
     edata: EHRData,
+    *,
     var_names: _VarNames | Mapping[str, _VarNames],
     groupby: str | Sequence[str],
-    *,
     log: bool = False,
     use_raw: bool | None = None,
     num_categories: int = 7,
@@ -595,7 +595,7 @@ def stacked_violin(  # noqa: D417
     colorbar_title: str | None = "Median value\n in group",
     figsize: tuple[float, float] | None = None,
     dendrogram: bool | str = False,
-    gene_symbols: str | None = None,
+    feature_symbols: str | None = None,
     var_group_positions: Sequence[tuple[int, int]] | None = None,
     var_group_labels: Sequence[str] | None = None,
     standard_scale: Literal["var", "obs"] | None = None,
@@ -694,7 +694,7 @@ def stacked_violin(  # noqa: D417
         colorbar_title=colorbar_title,
         figsize=figsize,
         dendrogram=dendrogram,
-        gene_symbols=gene_symbols,
+        gene_symbols=feature_symbols,
         var_group_positions=var_group_positions,
         var_group_labels=var_group_labels,
         standard_scale=standard_scale,
@@ -732,9 +732,9 @@ def stacked_violin(  # noqa: D417
 )
 def matrixplot(  # noqa: D417
     edata: EHRData,
+    *,
     var_names: _VarNames | Mapping[str, _VarNames],
     groupby: str | Sequence[str],
-    *,
     use_raw: bool | None = None,
     log: bool = False,
     num_categories: int = 7,
@@ -743,7 +743,7 @@ def matrixplot(  # noqa: D417
     title: str | None = None,
     cmap: str | None = MatrixPlot.DEFAULT_COLORMAP,
     colorbar_title: str | None = "Mean value\n in group",
-    gene_symbols: str | None = None,
+    feature_symbols: str | None = None,
     var_group_positions: Sequence[tuple[int, int]] | None = None,
     var_group_labels: Sequence[str] | None = None,
     var_group_rotation: float | None = None,
@@ -823,7 +823,7 @@ def matrixplot(  # noqa: D417
         title=title,
         cmap=cmap,
         colorbar_title=colorbar_title,
-        gene_symbols=gene_symbols,
+        gene_symbols=feature_symbols,
         var_group_positions=var_group_positions,
         var_group_labels=var_group_labels,
         var_group_rotation=var_group_rotation,
@@ -849,6 +849,7 @@ def matrixplot(  # noqa: D417
 @_doc_params(show_save_ax=doc_show_save_ax)
 def clustermap(  # noqa: D417
     edata: EHRData,
+    *,
     obs_keys: str | None = None,
     use_raw: bool | None = None,
     show: bool | None = None,
@@ -892,16 +893,17 @@ def clustermap(  # noqa: D417
 
 def ranking(
     edata: EHRData,
+    *,
     attr: Literal["var", "obs", "uns", "varm", "obsm"],
     keys: str | Sequence[str],
-    dictionary=None,
-    indices=None,
-    labels=None,
-    color="black",
-    n_points=30,
-    log=False,
-    include_lowest=False,
-    show=None,
+    dictionary: str | None = None,
+    indices: Sequence[int] | None = None,
+    labels: str | Sequence[str] | None = None,
+    color: ColorLike = "black",
+    n_points: int = 30,
+    log: bool = False,
+    include_lowest: bool = False,
+    show: bool | None = None,
 ):  # pragma: no cover
     """Plot rankings.
 
@@ -953,8 +955,8 @@ def ranking(
 @_doc_params(show_save_ax=doc_show_save_ax)
 def dendrogram(  # noqa: D417
     edata: EHRData,
-    groupby: str,
     *,
+    groupby: str,
     dendrogram_key: str | None = None,
     orientation: Literal["top", "bottom", "left", "right"] = "top",
     remove_labels: bool = False,
@@ -1011,7 +1013,7 @@ def dendrogram(  # noqa: D417
 )
 @function_2D_only()
 def pca(  # noqa: D417
-    edata,
+    edata: EHRData,
     *,
     annotate_var_explained: bool = False,
     show: bool | None = None,
@@ -1051,6 +1053,7 @@ def pca(  # noqa: D417
 
 def pca_loadings(
     edata: EHRData,
+    *,
     components: str | Sequence[int] | None = None,
     include_lowest: bool = True,
     show: bool | None = None,
@@ -1084,6 +1087,7 @@ def pca_loadings(
 
 def pca_variance_ratio(
     edata: EHRData,
+    *,
     n_pcs: int = 30,
     log: bool = False,
     show: bool | None = None,
@@ -1156,7 +1160,7 @@ def pca_overview(edata: EHRData, **params) -> Axes | list[Axes] | None:  # pragm
     scatter_bulk=doc_scatter_embedding,
     show_save_ax=doc_show_save_ax,
 )
-def tsne(edata, **kwargs) -> Figure | Axes | list[Axes] | None:  # pragma: no cover # noqa: D417
+def tsne(edata: EHRData, **kwargs) -> Figure | Axes | list[Axes] | None:  # pragma: no cover # noqa: D417
     """Scatter plot in tSNE basis.
 
     Args:
@@ -1247,7 +1251,7 @@ def umap(edata: EHRData, **kwargs) -> Figure | Axes | list[Axes] | None:  # prag
     scatter_bulk=doc_scatter_embedding,
     show_save_ax=doc_show_save_ax,
 )
-def diffmap(edata, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover # noqa: D417
+def diffmap(edata: EHRData, **kwargs) -> Axes | list[Axes] | None:  # pragma: no cover # noqa: D417
     """Scatter plot in Diffusion Map basis.
 
     Args:
@@ -1334,8 +1338,8 @@ _empty = Empty.token
 )
 def embedding(  # noqa: D417
     edata: EHRData,
-    basis: str,
     *,
+    basis: str,
     color: str | Sequence[str] | None = None,
     feature_symbols: str | None = None,
     use_raw: bool | None = None,
@@ -1396,7 +1400,7 @@ def embedding(  # noqa: D417
         >>> ep.pp.log_norm(edata, offset=1)
         >>> ep.pp.neighbors(edata)
         >>> ep.tl.umap(edata)
-        >>> ep.pl.embedding(edata, "X_umap", color="icu_exp_flg")
+        >>> ep.pl.embedding(edata, basis="X_umap", color="icu_exp_flg")
 
     Preview:
         .. image:: /_static/docstring_previews/embedding.png
@@ -1453,10 +1457,11 @@ def embedding(  # noqa: D417
 @_doc_params(vminmax=doc_vbound_percentile, panels=doc_panels, show_save_ax=doc_show_save_ax)
 def embedding_density(  # noqa: D417
     edata: EHRData,
-    basis: str = "umap",  # was positional before 1.4.5
-    key: str | None = None,  # was positional before 1.4.5
+    *,
+    basis: str = "umap",
+    key: str | None = None,
     groupby: str | None = None,
-    group: str | list[str] | None | None = "all",
+    group: str | Sequence[str] | None = "all",
     color_map: Colormap | str = "YlOrRd",
     bg_dotsize: int | None = 80,
     fg_dotsize: int | None = 180,
@@ -1466,8 +1471,8 @@ def embedding_density(  # noqa: D417
     norm: Normalize | None = None,
     ncols: int | None = 4,
     hspace: float | None = 0.25,
-    wspace: None = None,
-    title: str = None,
+    wspace: float | None = None,
+    title: str | None = None,
     show: bool | None = None,
     save: bool | str | None = None,
     ax: Axes | None = None,
@@ -1551,6 +1556,7 @@ def embedding_density(  # noqa: D417
 
 def dpt_groups_pseudotime(
     edata: EHRData,
+    *,
     color_map: str | Colormap | None = None,
     palette: Sequence[str] | Cycler | None = None,
     show: bool | None = None,
@@ -1587,6 +1593,7 @@ def dpt_groups_pseudotime(
 
 def dpt_timeseries(
     edata: EHRData,
+    *,
     color_map: str | Colormap | None = None,
     as_heatmap: bool = True,
     show: bool | None = None,
@@ -1623,6 +1630,7 @@ def dpt_timeseries(
 
 def paga(
     edata: EHRData,
+    *,
     threshold: float | None = None,
     color: str | Mapping[str | int, Mapping[Any, float]] | None = None,
     layout: _IGraphLayout | None = None,
@@ -1790,6 +1798,7 @@ def paga(
 
 def paga_path(
     edata: EHRData,
+    *,
     nodes: Sequence[str | int],
     keys: Sequence[str],
     use_raw: bool = True,
@@ -1801,7 +1810,7 @@ def paga_path(
     groups_key: str | None = None,
     xlim: tuple[int | None, int | None] = (None, None),
     title: str | None = None,
-    left_margin=None,
+    left_margin: float | None = None,
     ytick_fontsize: int | None = None,
     title_fontsize: int | None = None,
     show_node_names: bool = True,
@@ -1879,30 +1888,30 @@ def paga_path(
 
 def paga_compare(
     edata: EHRData,
-    basis=None,
-    edges=False,
-    color=None,
-    alpha=None,
-    groups=None,
-    components=None,
+    *,
+    basis: str | None = None,
+    edges: bool = False,
+    color: str | Sequence[str] | None = None,
+    alpha: float | None = None,
+    groups: str | Sequence[str] | None = None,
+    components: str | Sequence[str] | None = None,
     projection: Literal["2d", "3d"] = "2d",
-    legend_loc="on data",
+    legend_loc: str | None = "on data",
     legend_fontsize: int | float | _FontSize | None = None,
     legend_fontweight: int | _FontWeight = "bold",
-    legend_fontoutline=None,
-    color_map=None,
-    palette=None,
-    frameon=False,
-    size=None,
-    title=None,
-    right_margin=None,
-    left_margin=0.05,
-    show=None,
-    save=None,
-    title_graph=None,
-    groups_graph=None,
-    *,
-    pos=None,
+    legend_fontoutline: int | None = None,
+    color_map: str | Colormap | None = None,
+    palette: str | Sequence[str] | Cycler | None = None,
+    frameon: bool | None = False,
+    size: float | Sequence[float] | None = None,
+    title: str | None = None,
+    right_margin: float | None = None,
+    left_margin: float = 0.05,
+    show: bool | None = None,
+    save: bool | str | None = None,
+    title_graph: str | None = None,
+    groups_graph: str | Sequence[str] | Mapping[str, str] | None = None,
+    pos: np.ndarray | str | Path | None = None,
     **paga_graph_params,
 ) -> Sequence[Axes] | list[Axes] | None:  # pragma: no cover
     """Scatter and PAGA graph side-by-side.
@@ -1972,6 +1981,7 @@ def paga_compare(
 @_doc_params(show_save_ax=doc_show_save_ax)
 def rank_features_groups(  # noqa: D417
     edata: EHRData,
+    *,
     groups: str | Sequence[str] | None = None,
     n_features: int = 20,
     feature_symbols: str | None = None,
@@ -2031,13 +2041,14 @@ def rank_features_groups(  # noqa: D417
 @_doc_params(show_save_ax=doc_show_save_ax)
 def rank_features_groups_violin(  # noqa: D417
     edata: EHRData,
+    *,
     groups: Sequence[str] | None = None,
     n_features: int = 20,
-    feature_names: Iterable[str] | None = None,
+    var_names: Iterable[str] | None = None,
     feature_symbols: str | None = None,
     key: str | None = None,
     split: bool = True,
-    density_norm: str = "width",
+    density_norm: Literal["area", "count", "width"] = "width",
     strip: bool = True,
     jitter: int | float | bool = True,
     size: int = 1,
@@ -2050,9 +2061,9 @@ def rank_features_groups_violin(  # noqa: D417
     Args:
         edata: Central data object.
         groups: List of group names.
-        n_features: Number of features to show. Is ignored if `feature_names` is passed.
-        feature_names: List of features to plot. Is only useful if interested in a custom feature list,
-                       which is not the result of :func:`~ehrapy.tools.rank_features_groups`.
+        n_features: Number of features to show. Is ignored if `var_names` is passed.
+        var_names: List of features to plot. Is only useful if interested in a custom feature list,
+                   which is not the result of :func:`~ehrapy.tools.rank_features_groups`.
         feature_symbols: Key for field in `.var` that stores feature symbols if you do not want to
                          use `.var_names` displayed in the plot.
         key: The key of the calculated feature group rankings (default: 'rank_features_groups').
@@ -2087,7 +2098,7 @@ def rank_features_groups_violin(  # noqa: D417
         adata=edata,
         groups=groups,
         n_genes=n_features,
-        gene_names=feature_names,
+        gene_names=var_names,
         gene_symbols=feature_symbols,
         use_raw=False,
         key=key,
@@ -2105,11 +2116,11 @@ def rank_features_groups_violin(  # noqa: D417
 @_doc_params(show_save_ax=doc_show_save_ax)
 def rank_features_groups_stacked_violin(
     edata: EHRData,
+    *,
     groups: str | Sequence[str] | None = None,
     n_features: int | None = None,
     groupby: str | None = None,
     feature_symbols: str | None = None,
-    *,
     var_names: Sequence[str] | Mapping[str, Sequence[str]] | None = None,
     min_logfoldchange: float | None = None,
     key: str | None = None,
@@ -2123,7 +2134,7 @@ def rank_features_groups_stacked_violin(
     Args:
         edata: Central data object.
         groups: List of group names.
-        n_features: Number of features to show. Is ignored if `feature_names` is passed.
+        n_features: Number of features to show. Is ignored if `var_names` is passed.
         groupby: Which key to group the features by.
         feature_symbols: Key for field in `.var` that stores feature symbols if you do not want to
                          use `.var_names` displayed in the plot.
@@ -2172,6 +2183,7 @@ def rank_features_groups_stacked_violin(
 
 def rank_features_groups_heatmap(
     edata: EHRData,
+    *,
     groups: str | Sequence[str] | None = None,
     n_features: int | None = None,
     groupby: str | None = None,
@@ -2188,7 +2200,7 @@ def rank_features_groups_heatmap(
     Args:
         edata: Central data object.
         groups: List of group names.
-        n_features: Number of features to show. Is ignored if `feature_names` is passed.
+        n_features: Number of features to show. Is ignored if `var_names` is passed.
         groupby: Which key to group the features by.
         feature_symbols: Key for field in `.var` that stores feature symbols if you do not want to
                          use `.var_names` displayed in the plot.
@@ -2230,6 +2242,7 @@ def rank_features_groups_heatmap(
 
 def rank_features_groups_dotplot(
     edata: EHRData,
+    *,
     groups: str | Sequence[str] | None = None,
     n_features: int | None = None,
     groupby: str | None = None,
@@ -2258,7 +2271,7 @@ def rank_features_groups_dotplot(
     Args:
         edata: Central data object.
         groups: List of group names.
-        n_features: Number of features to show. Is ignored if `feature_names` is passed.
+        n_features: Number of features to show. Is ignored if `var_names` is passed.
         groupby: Which key to group the features by.
         feature_symbols: Key for field in `.var` that stores feature symbols if you do not want to
                          use `.var_names` displayed in the plot.
@@ -2310,6 +2323,7 @@ def rank_features_groups_dotplot(
 
 def rank_features_groups_matrixplot(
     edata: EHRData,
+    *,
     groups: str | Sequence[str] | None = None,
     n_features: int | None = None,
     groupby: str | None = None,
@@ -2338,7 +2352,7 @@ def rank_features_groups_matrixplot(
     Args:
         edata: Central data object.
         groups: List of group names.
-        n_features: Number of features to show. Is ignored if `feature_names` is passed.
+        n_features: Number of features to show. Is ignored if `var_names` is passed.
         groupby: Which key to group the features by.
         feature_symbols: Key for field in `.var` that stores feature symbols if you do not want to
                          use `.var_names` displayed in the plot.
@@ -2390,6 +2404,7 @@ def rank_features_groups_matrixplot(
 
 def rank_features_groups_tracksplot(
     edata: EHRData,
+    *,
     groups: str | Sequence[str] | None = None,
     n_features: int | None = None,
     groupby: str | None = None,
@@ -2406,7 +2421,7 @@ def rank_features_groups_tracksplot(
     Args:
         edata: Central data object.
         groups: List of group names.
-        n_features: Number of features to show. Is ignored if `feature_names` is passed.
+        n_features: Number of features to show. Is ignored if `var_names` is passed.
         groupby: Which key to group the features by.
         feature_symbols: Key for field in `.var` that stores feature symbols if you do not want to
                          use `.var_names` displayed in the plot.

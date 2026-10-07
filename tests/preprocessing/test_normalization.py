@@ -16,7 +16,7 @@ from scipy import sparse
 
 def test_vars_checks(edata_to_norm):
     with pytest.raises(ValueError, match=r"Some selected vars are not numeric"):
-        ep.pp.scale_norm(edata_to_norm, vars=["String1"])
+        ep.pp.scale_norm(edata_to_norm, var_names=["String1"])
 
 
 @pytest.mark.parametrize(
@@ -93,7 +93,7 @@ def test_norm_scale_group(array_type, edata_mini_normalization):
     edata_mini_casted.X = array_type(edata_mini_casted.X)
 
     with pytest.raises(KeyError):
-        ep.pp.scale_norm(edata_mini_casted, group_key="invalid_key", copy=True)
+        ep.pp.scale_norm(edata_mini_casted, groupby="invalid_key", copy=True)
 
     if isinstance(edata_mini_casted.X, da.Array):
         with pytest.raises(
@@ -102,16 +102,16 @@ def test_norm_scale_group(array_type, edata_mini_normalization):
         ):
             ep.pp.scale_norm(
                 edata_mini_casted,
-                vars=["sys_bp_entry", "dia_bp_entry"],
-                group_key="disease",
+                var_names=["sys_bp_entry", "dia_bp_entry"],
+                groupby="disease",
                 copy=True,
             )
         return
 
     edata_mini_norm = ep.pp.scale_norm(
         edata_mini_casted,
-        vars=["sys_bp_entry", "dia_bp_entry"],
-        group_key="disease",
+        var_names=["sys_bp_entry", "dia_bp_entry"],
+        groupby="disease",
         copy=True,
     )
     col1_norm = np.array(
@@ -189,7 +189,7 @@ def test_norm_minmax_group(array_type, edata_mini_normalization):
     edata_mini_casted.X = array_type(edata_mini_casted.X)
 
     with pytest.raises(KeyError):
-        ep.pp.minmax_norm(edata_mini_casted, group_key="invalid_key", copy=True)
+        ep.pp.minmax_norm(edata_mini_casted, groupby="invalid_key", copy=True)
 
     if isinstance(edata_mini_casted.X, da.Array):
         with pytest.raises(
@@ -198,16 +198,16 @@ def test_norm_minmax_group(array_type, edata_mini_normalization):
         ):
             ep.pp.minmax_norm(
                 edata_mini_casted,
-                vars=["sys_bp_entry", "dia_bp_entry"],
-                group_key="disease",
+                var_names=["sys_bp_entry", "dia_bp_entry"],
+                groupby="disease",
                 copy=True,
             )
         return
 
     edata_mini_norm = ep.pp.minmax_norm(
         edata_mini_casted,
-        vars=["sys_bp_entry", "dia_bp_entry"],
-        group_key="disease",
+        var_names=["sys_bp_entry", "dia_bp_entry"],
+        groupby="disease",
         copy=True,
     )
     col1_norm = np.array([0.0, 0.33333333, 0.66666667, 1.0, 0.0, 0.33333333, 0.66666667, 1.0])
@@ -269,15 +269,15 @@ def test_norm_maxabs_group(array_type, edata_mini_normalization):
 
     if isinstance(edata_mini_casted.X, da.Array):
         with pytest.raises(NotImplementedError, match="does not support array type.*dask"):
-            ep.pp.maxabs_norm(edata_mini_casted, group_key="disease", copy=True)
+            ep.pp.maxabs_norm(edata_mini_casted, groupby="disease", copy=True)
     else:
         with pytest.raises(KeyError):
-            ep.pp.maxabs_norm(edata_mini_casted, group_key="invalid_key", copy=True)
+            ep.pp.maxabs_norm(edata_mini_casted, groupby="invalid_key", copy=True)
 
         edata_mini_norm = ep.pp.maxabs_norm(
             edata_mini_casted,
-            vars=["sys_bp_entry", "dia_bp_entry"],
-            group_key="disease",
+            var_names=["sys_bp_entry", "dia_bp_entry"],
+            groupby="disease",
             copy=True,
         )
         col1_norm = np.array(
@@ -355,7 +355,7 @@ def test_norm_robust_scale_group(array_type, edata_mini_normalization):
     edata_mini_casted.X = array_type(edata_mini_casted.X)
 
     with pytest.raises(KeyError):
-        ep.pp.robust_scale_norm(edata_mini_casted, group_key="invalid_key", copy=True)
+        ep.pp.robust_scale_norm(edata_mini_casted, groupby="invalid_key", copy=True)
 
     if isinstance(edata_mini_casted.X, da.Array):
         with pytest.raises(
@@ -364,16 +364,16 @@ def test_norm_robust_scale_group(array_type, edata_mini_normalization):
         ):
             ep.pp.robust_scale_norm(
                 edata_mini_casted,
-                vars=["sys_bp_entry", "dia_bp_entry"],
-                group_key="disease",
+                var_names=["sys_bp_entry", "dia_bp_entry"],
+                groupby="disease",
                 copy=True,
             )
         return
 
     edata_mini_norm = ep.pp.robust_scale_norm(
         edata_mini_casted,
-        vars=["sys_bp_entry", "dia_bp_entry"],
-        group_key="disease",
+        var_names=["sys_bp_entry", "dia_bp_entry"],
+        groupby="disease",
         copy=True,
     )
     col1_norm = np.array(
@@ -459,7 +459,7 @@ def test_norm_quantile_uniform_group(array_type, edata_mini_normalization):
     edata_mini_casted.X = array_type(edata_mini_casted.X)
 
     with pytest.raises(KeyError):
-        ep.pp.quantile_norm(edata_mini_casted, group_key="invalid_key", copy=True)
+        ep.pp.quantile_norm(edata_mini_casted, groupby="invalid_key", copy=True)
 
     if isinstance(edata_mini_casted.X, da.Array):
         with pytest.raises(
@@ -468,16 +468,16 @@ def test_norm_quantile_uniform_group(array_type, edata_mini_normalization):
         ):
             ep.pp.quantile_norm(
                 edata_mini_casted,
-                vars=["sys_bp_entry", "dia_bp_entry"],
-                group_key="disease",
+                var_names=["sys_bp_entry", "dia_bp_entry"],
+                groupby="disease",
                 copy=True,
             )
         return
 
     edata_mini_norm = ep.pp.quantile_norm(
         edata_mini_casted,
-        vars=["sys_bp_entry", "dia_bp_entry"],
-        group_key="disease",
+        var_names=["sys_bp_entry", "dia_bp_entry"],
+        groupby="disease",
         copy=True,
     )
     col1_norm = np.array(
@@ -574,15 +574,15 @@ def test_norm_power_group(array_type, edata_mini_normalization):
 
     if isinstance(edata_mini_casted.X, da.Array):
         with pytest.raises(NotImplementedError, match="does not support array type.*dask"):
-            ep.pp.power_norm(edata_mini_casted, group_key="disease", copy=True)
+            ep.pp.power_norm(edata_mini_casted, groupby="disease", copy=True)
     else:
         with pytest.raises(KeyError):
-            ep.pp.power_norm(edata_mini_casted, group_key="invalid_key", copy=True)
+            ep.pp.power_norm(edata_mini_casted, groupby="invalid_key", copy=True)
 
         edata_mini_norm = ep.pp.power_norm(
             edata_mini_casted,
-            vars=["sys_bp_entry", "dia_bp_entry"],
-            group_key="disease",
+            var_names=["sys_bp_entry", "dia_bp_entry"],
+            groupby="disease",
             copy=True,
         )
         col1_norm = np.array(
@@ -671,7 +671,7 @@ def test_norm_log1p(edata_to_norm):
     assert np.allclose(edata_norm.X[:, 4], num2_norm)
 
     try:
-        ep.pp.log_norm(edata_to_norm, vars="Numeric2", offset=3, copy=True)
+        ep.pp.log_norm(edata_to_norm, var_names="Numeric2", offset=3, copy=True)
     except ValueError:
         pytest.fail("Unexpected ValueError exception was raised.")
 
@@ -679,7 +679,7 @@ def test_norm_log1p(edata_to_norm):
         ep.pp.log_norm(edata_to_norm, copy=True)
 
     with pytest.raises(ValueError):
-        ep.pp.log_norm(edata_to_norm, vars="Numeric2", offset=1, copy=True)
+        ep.pp.log_norm(edata_to_norm, var_names="Numeric2", offset=1, copy=True)
 
 
 def test_norm_record(edata_to_norm):
@@ -690,7 +690,7 @@ def test_norm_record(edata_to_norm):
         "Numeric2": ["minmax"],
     }
 
-    edata_norm = ep.pp.maxabs_norm(edata_norm, vars=["Numeric1"], copy=True)
+    edata_norm = ep.pp.maxabs_norm(edata_norm, var_names=["Numeric1"], copy=True)
 
     assert edata_norm.uns["normalization"] == {
         "Numeric1": ["minmax", "maxabs"],
@@ -922,13 +922,13 @@ def test_norm_group_3D(edata_blobs_timeseries_small, array_type, norm_func):
             NotImplementedError,
             match="Group-wise normalization|does not support array type.*dask",
         ):
-            norm_func(edata, layer=layer, group_key="group")
+            norm_func(edata, layer=layer, groupby="group")
         return
 
     original_shape = edata.layers[layer].shape
     layer_before = edata.layers[layer].copy()
 
-    norm_func(edata, layer=layer, group_key="group")
+    norm_func(edata, layer=layer, groupby="group")
 
     # verify shape and tracking
     assert edata.layers[layer].shape == original_shape

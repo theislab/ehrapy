@@ -17,9 +17,9 @@ if TYPE_CHECKING:
 @function_2D_only()
 def winsorize(
     edata: EHRData,
-    vars: Collection[str] = None,
-    obs_cols: Collection[str] = None,
     *,
+    var_names: Collection[str] | None = None,
+    obs_cols: Collection[str] | None = None,
     limits: tuple[float, float] = (0.01, 0.99),
     layer: str | None = None,
     copy: bool = False,
@@ -31,7 +31,7 @@ def winsorize(
 
     Args:
         edata: Central data object.
-        vars: The features to winsorize.
+        var_names: The features to winsorize.
         obs_cols: Columns in obs with features to winsorize.
         limits: Tuple of the percentages to cut on each side of the array as floats between 0. and 1.
         layer: The layer to operate on.
@@ -45,12 +45,12 @@ def winsorize(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
-        >>> ep.pp.winsorize(edata, vars=["bmi"])
+        >>> ep.pp.winsorize(edata, var_names=["bmi"])
     """
     if copy:  # pragma: no cover
         edata = edata.copy()
 
-    obs_cols_set, vars_set = _validate_outlier_input(edata, obs_cols, vars)
+    obs_cols_set, vars_set = _validate_outlier_input(edata, obs_cols, var_names)
 
     if vars_set:
         for var in vars_set:
@@ -72,10 +72,10 @@ def winsorize(
 @function_2D_only()
 def clip_quantile(
     edata: EHRData,
-    limits: tuple[float, float],
-    vars: Collection[str] = None,
-    obs_cols: Collection[str] = None,
     *,
+    limits: tuple[float, float],
+    var_names: Collection[str] | None = None,
+    obs_cols: Collection[str] | None = None,
     layer: str | None = None,
     copy: bool = False,
 ) -> EHRData | None:
@@ -86,7 +86,7 @@ def clip_quantile(
     Args:
         edata: Central data object.
         limits: Values outside the interval are clipped to the interval edges.
-        vars: Columns in var with features to clip.
+        var_names: Columns in var with features to clip.
         obs_cols: Columns in obs with features to clip
         layer: The layer to operate on.
         copy: Whether to return a copy of data or not
@@ -98,12 +98,15 @@ def clip_quantile(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
-        >>> ep.pp.clip_quantile(edata, limits=(0, 75), vars=["bmi"])
+        >>> ep.pp.clip_quantile(edata, limits=(0, 75), var_names=["bmi"])
     """
-    obs_cols, vars = _validate_outlier_input(edata, obs_cols, vars)  # type: ignore
+    if copy:
+        edata = edata.copy()
 
-    if vars:
-        for var in vars:
+    obs_cols, var_names = _validate_outlier_input(edata, obs_cols, var_names)  # type: ignore
+
+    if var_names:
+        for var in var_names:
             edata_view = edata[:, var]
             X = edata_view.X if layer is None else edata_view.layers[layer]
             X = np.clip(X, limits[0], limits[1])
@@ -114,9 +117,6 @@ def clip_quantile(
             obs_array = edata.obs[col].to_numpy()
             clipped_array = np.clip(obs_array, limits[0], limits[1])
             edata.obs[col] = pd.Series(clipped_array).values
-
-    if copy:  # pragma: no cover
-        edata = edata.copy()
 
     return edata if copy else None
 

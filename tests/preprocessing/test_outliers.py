@@ -7,7 +7,7 @@ import ehrapy as ep
 
 
 def test_winsorize_var(mimic_2_10):
-    winsorized_edata = ep.pp.winsorize(mimic_2_10, vars=["age"], limits=[0.2, 0.2], copy=True)
+    winsorized_edata = ep.pp.winsorize(mimic_2_10, var_names=["age"], limits=[0.2, 0.2], copy=True)
     expected = np.array(
         [71.43198, 64.92076, 36.5, 44.49191, 25.41667, 36.54657, 25.41667, 71.43198, 71.43198, 25.41667]
     ).reshape((10, 1))
@@ -32,10 +32,12 @@ def test_winsorize_3D_edata(edata_blob_small):
 
 
 def test_clip_var(mimic_2_10):
-    clipped_edata = ep.pp.clip_quantile(mimic_2_10, vars=["age"], limits=(25, 50), copy=True)
+    age_before = mimic_2_10[:, "age"].X.copy()
+    clipped_edata = ep.pp.clip_quantile(mimic_2_10, var_names=["age"], limits=(25, 50), copy=True)
     expected = np.array([50, 50, 36.5, 44.49191, 25, 36.54657, 25, 50, 50, 25.41667]).reshape((10, 1))
 
     np.testing.assert_allclose(np.array(clipped_edata[:, "age"].X, dtype=np.float32), expected)
+    np.testing.assert_array_equal(mimic_2_10[:, "age"].X, age_before)
 
 
 def test_clip_obs(mimic_2_10):

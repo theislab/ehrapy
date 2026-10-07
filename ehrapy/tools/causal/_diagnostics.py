@@ -22,8 +22,8 @@ if TYPE_CHECKING:
 @function_2D_only()
 def covariate_balance(
     edata: EHRData,
-    treatment: str,
     *,
+    treatment: str,
     covariates: Sequence[str],
     weights: np.ndarray | None = None,
     propensity_model: str | BaseEstimator = "logistic",
@@ -58,7 +58,7 @@ def covariate_balance(
         >>> edata = ed.dt.mimic_2_preprocessed()
         >>> bal = ep.tl.covariate_balance(
         ...     edata,
-        ...     "aline_flg",
+        ...     treatment="aline_flg",
         ...     covariates=["age", "sofa_first", "sapsi_first"],
         ... )
         >>> print(bal.round(3).to_string())
@@ -101,8 +101,8 @@ def covariate_balance(
 @function_2D_only()
 def positivity_check(
     edata: EHRData,
-    treatment: str,
     *,
+    treatment: str,
     covariates: Sequence[str],
     propensity_model: str | BaseEstimator = "logistic",
     eps: float = 0.05,
@@ -132,7 +132,7 @@ def positivity_check(
         >>> edata = ed.dt.mimic_2_preprocessed()
         >>> info = ep.tl.positivity_check(
         ...     edata,
-        ...     "aline_flg",
+        ...     treatment="aline_flg",
         ...     covariates=["age", "sofa_first", "sapsi_first"],
         ... )
         >>> print(f"support_fraction={info['support_fraction']:.3f}  n_outside_support={info['n_outside_support']}")
