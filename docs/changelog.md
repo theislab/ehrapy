@@ -40,6 +40,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### 🧰 Maintenance
 
+* Run the imputation, causal inference and effect estimation tutorials in the notebook CI ([#1120](https://github.com/theislab/ehrapy/pull/1120)) @sueoglu
 * Update to cookiecutter-scverse v0.8.0, derive the version from git tags via hatch-vcs, and move the `dev` extra to a `dev` dependency group ([#1125](https://github.com/theislab/ehrapy/pull/1125)) @Zethson
 
 ## v0.15.0
