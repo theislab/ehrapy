@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any
 import holoviews as hv
 import pandas as pd
 
-from ehrapy._compat import choose_hv_backend
+from ehrapy.plot._holoviews import load_hv_extensions
 
 _LEADING_NUMBER = re.compile(r"-?\d+\.?\d*")
 
@@ -34,7 +34,7 @@ def _require_results(edata: EHRData, key: str) -> dict:
     return edata.uns[key]
 
 
-@choose_hv_backend()
+@load_hv_extensions()
 def stratified_table_one(
     edata: EHRData,
     *,

@@ -51,6 +51,7 @@ def stratified_table_one(
 
     The rendered table and the intermediate data needed for plotting are stored in ``edata.uns[key_added]``.
     Access the table via ``edata.uns[key_added]["table"]``.
+    It has one row per variable and category, labelled by its ``variable`` and ``level`` columns.
     Use :func:`ehrapy.plot.stratified_table_one` to visualize.
 
     Args:
@@ -195,8 +196,11 @@ def stratified_table_one(
                 per_group[str(group)] = ""
         num_summary[col] = per_group
 
+    # h5ad needs string keys and single-typed columns, so the rendered MultiIndex table is flattened to text
+    table = t1.tableone.droplevel(0, axis="columns").reset_index(names=["variable", "level"]).astype(str)
+
     target.uns[key_added] = {
-        "table": t1.tableone,
+        "table": table,
         "groupby": groupby,
         "groups": [str(g) for g in groups],
         "group_counts": {str(g): group_counts[g] for g in groups},

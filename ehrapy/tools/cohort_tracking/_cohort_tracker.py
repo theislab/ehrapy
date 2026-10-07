@@ -16,7 +16,7 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 from tableone import TableOne
 
-from ehrapy._compat import choose_hv_backend
+from ehrapy.plot._holoviews import load_hv_extensions
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -551,7 +551,7 @@ class CohortTracker:
             else:
                 return axes
 
-    @choose_hv_backend()
+    @load_hv_extensions()
     def plot_flowchart(
         self,
         *,

@@ -7,11 +7,11 @@ coverage:
     status:
         project:
             default:
-                # Require 1% coverage, i.e., always succeed
-                target: 1
+                target: auto
+                threshold: 1%
         patch:
             default:
-                enabled: no
+                informational: true
     ignore:
         - "tests/"
 github_checks:

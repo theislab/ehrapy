@@ -1,19 +1,15 @@
-from collections.abc import Callable
 from functools import singledispatch
-from typing import Any, Literal
+from typing import Literal
 
 import numpy as np
-from scipy.sparse import coo_array
 
-
-def _raise_array_type_not_implemented(function: Callable[..., Any], array_type: type) -> None:
-    raise NotImplementedError(f"{function.__name__} not implemented for type {array_type}")
+from ehrapy._compat import _raise_array_type_not_implemented
 
 
 def timeseries_distance(
     obs_indices_x: np.ndarray,
     obs_indices_y: np.ndarray,
-    arr: np.ndarray | coo_array,
+    arr: np.ndarray,
     metric: Literal["dtw", "soft_dtw", "gak"] = "dtw",
 ) -> float:
     """Calculate temporal distance between two patients across all variables.
@@ -40,12 +36,12 @@ def timeseries_distance(
 
 @singledispatch
 def _timeseries_distance_impl(
-    arr: np.ndarray | coo_array,
+    arr: np.ndarray,
     obs_indices_x: np.ndarray,
     obs_indices_y: np.ndarray,
     metric: Literal["dtw", "soft_dtw", "gak"],
 ) -> float:
-    _raise_array_type_not_implemented(timeseries_distance, type(arr))
+    _raise_array_type_not_implemented(_timeseries_distance_impl, type(arr))
 
     return None
 
@@ -92,15 +88,3 @@ def _(
             valid_variable_count += 1
 
     return total_distance / max(valid_variable_count, 1)
-
-
-@_timeseries_distance_impl.register
-def _(
-    arr: coo_array,
-    obs_indices_x: np.ndarray,
-    obs_indices_y: np.ndarray,
-    metric: Literal["dtw", "soft_dtw", "gak"],
-) -> float:
-    _raise_array_type_not_implemented(timeseries_distance, type(arr))
-
-    return None

@@ -9,6 +9,7 @@ import scanpy as sc
 from ehrdata import EHRData, infer_feature_types, move_to_x
 from ehrdata._feature_types import _check_feature_types
 from ehrdata.core.constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
+from fast_array_utils.conv import to_dense
 
 from ehrapy._compat import function_2D_only
 from ehrapy.preprocessing import encode
@@ -218,7 +219,7 @@ def _evaluate_categorical_features(
             continue
 
         try:
-            feature_values = edata[:, feature].X.flatten().toarray()
+            feature_values = to_dense(edata[:, feature].X, to_cpu_memory=True).ravel()
         except ValueError as e:
             raise ValueError(f"Feature {feature} is not encoded. Please encode it using `ehrapy.pp.encode`") from e
 

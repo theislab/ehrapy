@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 
 import ehrapy as ep
+from ehrapy.plot._holoviews import load_hv_extensions
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -14,6 +15,7 @@ if TYPE_CHECKING:
     from ehrdata import EHRData
 
 
+@load_hv_extensions()
 def variable_correlations(
     edata: EHRData,
     *,
@@ -128,6 +130,7 @@ def variable_correlations(
     return heatmap
 
 
+@load_hv_extensions()
 def variable_dependencies(
     edata: EHRData,
     *,

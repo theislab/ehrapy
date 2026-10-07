@@ -6,6 +6,8 @@ from scanpy.get import obs_df as scanpy_obs_df
 from scanpy.get import rank_genes_groups_df
 from scanpy.get import var_df as scanpy_var_df
 
+from ehrapy._compat import function_2D_only
+
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
@@ -13,6 +15,7 @@ if TYPE_CHECKING:
     from ehrdata import EHRData
 
 
+@function_2D_only()
 def obs_df(
     edata: EHRData,
     *,
@@ -42,6 +45,7 @@ def obs_df(
     return scanpy_obs_df(adata=edata, keys=keys, obsm_keys=obsm_keys, layer=layer, gene_symbols=feature_symbols)
 
 
+@function_2D_only()
 def var_df(
     edata: EHRData,
     *,

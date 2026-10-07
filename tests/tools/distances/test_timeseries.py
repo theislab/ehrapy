@@ -3,6 +3,7 @@ from functools import partial
 import ehrdata as ed
 import numpy as np
 import pytest
+import scipy.sparse as sp
 from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
 
 from ehrapy.tools.distances.timeseries import timeseries_distance
@@ -109,3 +110,10 @@ def test_patient_timeseries_distance_edge_cases(metric):
 
     distance_nan = timeseries_distance(patient_0, patient_1, time_series_data_nan, metric=metric)
     assert np.isclose(distance_nan, 0.0)
+
+
+def test_patient_timeseries_distance_unsupported_array_type():
+    arr = sp.coo_array(np.ones((2, 5)))
+
+    with pytest.raises(NotImplementedError, match="does not support array type"):
+        timeseries_distance(np.array([0]), np.array([1]), arr)
