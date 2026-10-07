@@ -1,8 +1,10 @@
 """Top-level package for ehrapy."""
 
+from importlib.metadata import version as _version
+
 __author__ = "Lukas Heumos"
 __email__ = "lukas.heumos@posteo.net"
-__version__ = "0.15.0"
+__version__ = _version("ehrapy")
 
 import os
 

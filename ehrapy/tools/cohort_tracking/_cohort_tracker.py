@@ -75,8 +75,9 @@ class CohortTracker:
     def __init__(
         self,
         edata: EHRData,
-        columns: Sequence | None = None,
-        categorical: Sequence | None = None,
+        *,
+        columns: Sequence[str] | None = None,
+        categorical: Sequence[str] | None = None,
     ) -> None:
         if not isinstance(edata, EHRData):
             raise ValueError("edata must be an EHRData.")
@@ -114,8 +115,9 @@ class CohortTracker:
     def __call__(
         self,
         edata: EHRData,
-        label: str = None,
-        operations_done: str = None,
+        *,
+        label: str | None = None,
+        operations_done: str | None = None,
         parent: str | int | None = None,
         **tableone_kwargs: dict,
     ) -> None:
@@ -328,9 +330,9 @@ class CohortTracker:
                 ...     columns_obs_only=["gender", "race", "num_procedures", "number_diagnoses"]
                 ... )
                 >>> cohort_tracker = ep.tl.CohortTracker(edata, categorical=["gender", "race"])
-                >>> cohort_tracker(edata, "Initial Cohort")
+                >>> cohort_tracker(edata, label="Initial Cohort")
                 >>> edata = edata[:1000]
-                >>> cohort_tracker(edata, "Filtered Cohort")
+                >>> cohort_tracker(edata, label="Filtered Cohort")
                 >>> cohort_tracker.plot_cohort_barplot(
                 ...     subfigure_title=True,
                 ...     color_palette="tab20",

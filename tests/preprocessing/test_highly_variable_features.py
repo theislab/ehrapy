@@ -17,6 +17,17 @@ def test_highly_variable_features_3D_edata(edata_blob_small):
         highly_variable_features(edata_blob_small, span=1, layer=DEFAULT_TEM_LAYER_NAME)
 
 
+def test_highly_variable_features_copy(edata_blob_small):
+    edata_blob_small.X = np.abs(edata_blob_small.X)
+
+    edata_hvf = highly_variable_features(edata_blob_small, span=1, copy=True)
+    assert "highly_variable" not in edata_blob_small.var
+    assert "highly_variable" in edata_hvf.var
+
+    assert highly_variable_features(edata_blob_small, span=1) is None
+    assert "highly_variable" in edata_blob_small.var
+
+
 def test_highly_variable_features(clean_up_plots):
     try:
         edata = ed.dt.diabetes_130_fairlearn()

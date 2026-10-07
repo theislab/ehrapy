@@ -10,6 +10,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
     run:
         runs-on: ubuntu-latest
@@ -24,15 +27,16 @@ jobs:
                         "docs/tutorials/notebooks/longitudinal_with_ehrapy.ipynb",
                         "docs/tutorials/notebooks/bias.ipynb",
                         "docs/tutorials/notebooks/imputation_nb.ipynb",
-                        # "docs/tutorials/notebooks/mimic_2_causal_inference.ipynb",
+                        "docs/tutorials/notebooks/mimic_2_causal_inference.ipynb",
                     ]
         steps:
-            - uses: actions/checkout@v5
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
                   submodules: "true"
+                  persist-credentials: false
 
             - name: Set up uv
-              uses: astral-sh/setup-uv@v7
+              uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
               with:
                   python-version: "3.14"
                   cache-dependency-glob: pyproject.toml
@@ -51,7 +55,7 @@ jobs:
 
             - name: Restore datasets cache
               id: data-cache
-              uses: actions/cache/restore@v4
+              uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
               with:
                   path: docs/tutorials/notebooks/ehrapy_data
                   key: ehrapy-data-notebook-${{ matrix.notebook }}-v1
@@ -64,7 +68,7 @@ jobs:
 
             - name: Save datasets cache
               if: steps.data-cache.outputs.cache-hit != 'true' && success()
-              uses: actions/cache/save@v4
+              uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
               with:
                   path: docs/tutorials/notebooks/ehrapy_data
                   key: ehrapy-data-notebook-${{ matrix.notebook }}-v1

@@ -12,22 +12,22 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-defaults:
-  run:
-    shell: bash -euo pipefail {0}
+permissions:
+  contents: read
 
 jobs:
   get-environments:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     outputs:
       envs: ${{ steps.get-envs.outputs.envs }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           filter: blob:none
           fetch-depth: 0
+          persist-credentials: false
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
       - name: Get test environments
         id: get-envs
         run: |
@@ -44,6 +44,9 @@ jobs:
 
   test:
     needs: get-environments
+    permissions:
+       id-token: write  # for codecov OIDC
+       contents: read
 
     strategy:
       fail-fast: false
@@ -53,23 +56,24 @@ jobs:
 
     name: ${{ matrix.env.label }}
     runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ contains(matrix.env.name, 'pre') }}  # make "all-green" pass even if pre-release job fails
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           filter: blob:none
           fetch-depth: 0
           submodules: true
+          persist-credentials: false
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
           python-version: ${{ matrix.env.python }}
-          cache-dependency-glob: pyproject.toml
 
       - name: Restore datasets cache
         id: data-cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ehrapy_data
           key: ehrapy-data-tests-v1
@@ -89,20 +93,21 @@ jobs:
         run: uvx hatch run ${{ matrix.env.name }}:run-cov -v --color=yes -n auto
       - name: Save datasets cache
         if: steps.data-cache.outputs.cache-hit != 'true' && success()
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ehrapy_data
           key: ehrapy-data-tests-v1
       - name: generate coverage report
         run: |
-          # See https://coverage.readthedocs.io/en/latest/config.html#run-patch
+          # See https://coverage.readthedocs.io/page/config.html#run-patch
           test -f .coverage || uvx hatch run ${{ matrix.env.name }}:cov-combine
           uvx hatch run ${{ matrix.env.name }}:cov-report   # report visibly
           uvx hatch run ${{ matrix.env.name }}:coverage xml # create report for upload
       - name: Upload coverage
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
-            token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
+          use_oidc: true
 
   check:
     name: Tests pass in all hatch environments
@@ -112,6 +117,6 @@ jobs:
       - test
     runs-on: ubuntu-latest
     steps:
-        - uses: re-actors/alls-green@release/v1
+        - uses: re-actors/alls-green@b5b5b37504aa4183270bd3d855c52a67f212be35 # v1.3.0
           with:
             jobs: ${{ toJSON(needs) }}

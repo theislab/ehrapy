@@ -84,7 +84,7 @@ def test_pl_ncp_cluster_trajectories_returns_layout(edata_with_ncp: ed.EHRData) 
     plot = ep.pl.ncp_cluster_trajectories(
         edata_with_ncp,
         layer=DEFAULT_TEM_LAYER_NAME,
-        cluster_key="cluster",
+        groupby="cluster",
     )
     assert plot is not None
     assert isinstance(plot, hv.Layout)
@@ -95,7 +95,7 @@ def test_pl_ncp_cluster_trajectories_panel_per_cluster(edata_with_ncp: ed.EHRDat
     plot = ep.pl.ncp_cluster_trajectories(
         edata_with_ncp,
         layer=DEFAULT_TEM_LAYER_NAME,
-        cluster_key="cluster",
+        groupby="cluster",
     )
     assert len(plot) == n_clusters
 
@@ -104,18 +104,18 @@ def test_pl_ncp_cluster_trajectories_sigmoid(edata_with_ncp: ed.EHRData) -> None
     plot = ep.pl.ncp_cluster_trajectories(
         edata_with_ncp,
         layer=DEFAULT_TEM_LAYER_NAME,
-        cluster_key="cluster",
+        groupby="cluster",
         sigmoid_transform=True,
     )
     assert isinstance(plot, hv.Layout)
 
 
-def test_pl_ncp_cluster_trajectories_missing_cluster_key_raises(edata_with_ncp: ed.EHRData) -> None:
+def test_pl_ncp_cluster_trajectories_missing_groupby_raises(edata_with_ncp: ed.EHRData) -> None:
     with pytest.raises(KeyError, match="not found in edata.obs"):
         ep.pl.ncp_cluster_trajectories(
             edata_with_ncp,
             layer=DEFAULT_TEM_LAYER_NAME,
-            cluster_key="no_such_column",
+            groupby="no_such_column",
         )
 
 
@@ -124,7 +124,7 @@ def test_pl_ncp_cluster_trajectories_missing_layer_raises(edata_with_ncp: ed.EHR
         ep.pl.ncp_cluster_trajectories(
             edata_with_ncp,
             layer="no_such_layer",
-            cluster_key="cluster",
+            groupby="cluster",
         )
 
 
@@ -133,7 +133,7 @@ def test_pl_ncp_cluster_trajectories_missing_ncp_raises(edata_with_ncp: ed.EHRDa
         ep.pl.ncp_cluster_trajectories(
             edata_with_ncp,
             layer=DEFAULT_TEM_LAYER_NAME,
-            cluster_key="cluster",
+            groupby="cluster",
             key="ghost_key",
         )
 
@@ -142,7 +142,7 @@ def test_pl_ncp_cluster_trajectories_image(edata_with_ncp: ed.EHRData, check_sam
     plot = ep.pl.ncp_cluster_trajectories(
         edata_with_ncp,
         layer=DEFAULT_TEM_LAYER_NAME,
-        cluster_key="cluster",
+        groupby="cluster",
         n_top_diseases=5,
     )
     fig = hv.render(plot, backend="matplotlib")

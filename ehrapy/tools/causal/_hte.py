@@ -38,8 +38,8 @@ def t_learner(
     edata: EHRData,
     treatment: str,
     outcome: str,
-    *,
     covariates: Sequence[str],
+    *,
     outcome_model: str | BaseEstimator = "auto",
     key_added: str | None = None,
     layer: str | None = None,
@@ -70,8 +70,8 @@ def t_learner(
         >>> edata = ed.dt.mimic_2_preprocessed()
         >>> est = ep.tl.t_learner(
         ...     edata,
-        ...     "aline_flg",
-        ...     "day_28_flg",
+        ...     treatment="aline_flg",
+        ...     outcome="day_28_flg",
         ...     covariates=["age", "sofa_first", "sapsi_first"],
         ... )
         >>> print(f"average CATE: {est.value:+.4f}  (n={est.n})")
@@ -107,8 +107,8 @@ def s_learner(
     edata: EHRData,
     treatment: str,
     outcome: str,
-    *,
     covariates: Sequence[str],
+    *,
     outcome_model: str | BaseEstimator = "auto",
     key_added: str | None = None,
     layer: str | None = None,
@@ -139,8 +139,8 @@ def s_learner(
         >>> edata = ed.dt.mimic_2_preprocessed()
         >>> est = ep.tl.s_learner(
         ...     edata,
-        ...     "aline_flg",
-        ...     "day_28_flg",
+        ...     treatment="aline_flg",
+        ...     outcome="day_28_flg",
         ...     covariates=["age", "sofa_first", "sapsi_first"],
         ... )
         >>> print(f"average CATE: {est.value:+.4f}  (n={est.n})")
@@ -172,8 +172,8 @@ def x_learner(
     edata: EHRData,
     treatment: str,
     outcome: str,
-    *,
     covariates: Sequence[str],
+    *,
     outcome_model: str | BaseEstimator = "auto",
     propensity_model: str | BaseEstimator = "logistic",
     cate_model: str | BaseEstimator = "auto",
@@ -218,8 +218,8 @@ def x_learner(
         >>> edata = ed.dt.mimic_2_preprocessed()
         >>> est = ep.tl.x_learner(
         ...     edata,
-        ...     "aline_flg",
-        ...     "day_28_flg",
+        ...     treatment="aline_flg",
+        ...     outcome="day_28_flg",
         ...     covariates=["age", "sofa_first", "sapsi_first"],
         ... )
         >>> print(f"average CATE: {est.value:+.4f}  (n={est.n})")

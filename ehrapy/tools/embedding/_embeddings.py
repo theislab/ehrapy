@@ -319,11 +319,12 @@ def diffmap(
 def embedding_density(
     edata: EHRData,
     *,
-    basis: str = "umap",  # was positional before 1.4.5
+    basis: str = "umap",
     groupby: str | None = None,
     key_added: str | None = None,
-    components: str | Sequence[str] = None,
-) -> None:  # pragma: no cover
+    components: str | Sequence[str] | None = None,
+    copy: bool = False,
+) -> EHRData | None:  # pragma: no cover
     """Calculate the density of observation in an embedding (per condition).
 
     Gaussian kernel density estimation is used to calculate the density of observations in an embedded space.
@@ -341,9 +342,10 @@ def embedding_density(
         key_added: Name of the `.obs` covariate that will be added with the density estimates.
         components: The embedding dimensions over which the density should be calculated.
                     This is limited to two components.
+        copy: Copy `edata` before computation and return a copy. Otherwise, perform computation in place and return `None`.
 
     Returns:
-        Updates `edata.obs` with an additional field specified by the `key_added` parameter.
+        Depending on `copy`, returns or updates `edata` with an additional `.obs` field specified by the `key_added` parameter.
         This parameter defaults to `[basis]_density_[groupby]`,
         where `[basis]` is one of `umap`, `diffmap`, `pca`, `tsne`, or `draw_graph_fa` and `[groupby]` denotes the parameter input.
         Updates `edata.uns` with an additional field `[key_added]_params`.
@@ -359,7 +361,9 @@ def embedding_density(
         >>> ep.tl.embedding_density(edata, basis="umap")
         >>> ep.pl.embedding_density(edata, basis="umap")
     """
+    edata = edata.copy() if copy else edata
     sc.tl.embedding_density(adata=edata, basis=basis, groupby=groupby, key_added=key_added, components=components)
+    return edata if copy else None
 
 
 @singledispatch

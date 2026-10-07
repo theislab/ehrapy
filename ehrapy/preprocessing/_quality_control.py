@@ -36,10 +36,11 @@ from ehrdata import EHRData
 
 def qc_metrics(
     edata: EHRData,
-    qc_vars: Collection[str] = (),
     *,
+    qc_vars: Collection[str] = (),
     layer: str | None = None,
-) -> tuple[pd.DataFrame, pd.DataFrame]:
+    copy: bool = False,
+) -> EHRData | None:
     """Calculates various quality control metrics.
 
     Uses the original values to calculate the metrics and not the encoded ones.
@@ -51,9 +52,11 @@ def qc_metrics(
         edata: Central data object.
         qc_vars: Optional List of vars to calculate additional metrics for.
         layer: Layer to use to calculate the metrics.
+        copy: Whether to return a copy of `edata` or modify it in place.
 
     Returns:
-        Two Pandas DataFrames of all calculated QC metrics for `obs` and `var` respectively.
+        `None` if `copy=False` and modifies the passed edata, else returns an updated object.
+        The calculated QC metrics are added to `obs` and `var` respectively.
 
         Default observation level metrics include:
 
@@ -91,12 +94,15 @@ def qc_metrics(
     Examples:
             >>> import ehrapy as ep
             >>> edata = ed.dt.mimic_2()
-            >>> obs_qc, var_qc = ep.pp.qc_metrics(edata)
-            >>> obs_qc.head()
-            >>> var_qc.head()
+            >>> ep.pp.qc_metrics(edata)
+            >>> edata.obs.head()
+            >>> edata.var.head()
     """
     if not isinstance(edata, EHRData):
         raise ValueError(f"Central data object should be an EHRData object, but received {type(edata).__name__}")
+
+    if copy:
+        edata = edata.copy()
 
     feature_type = edata.var.get("feature_type", None)
     extended = True
@@ -113,7 +119,7 @@ def qc_metrics(
     edata.var[var_metrics.columns] = var_metrics
     edata.obs[obs_metrics.columns] = obs_metrics
 
-    return obs_metrics, var_metrics
+    return edata if copy else None
 
 
 @singledispatch
@@ -652,8 +658,8 @@ def _outlier_flags_and_scores(
 @function_2D_only()
 def mcar_test(
     edata: EHRData,
-    method: Literal["little", "ttest"] = "little",
     *,
+    method: Literal["little", "ttest"] = "little",
     layer: str | None = None,
 ) -> float | pd.DataFrame:
     """Statistical hypothesis test for Missing Completely At Random (MCAR).
