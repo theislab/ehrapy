@@ -1,5 +1,5 @@
 [![Build](https://github.com/theislab/ehrapy/actions/workflows/build.yml/badge.svg)](https://github.com/theislab/ehrapy/actions/workflows/build.yml)
-[![Codecov](https://codecov.io/gh/theislab/ehrapy/branch/master/graph/badge.svg)](https://codecov.io/gh/theislab/ehrapy)
+[![Codecov](https://codecov.io/gh/theislab/ehrapy/branch/main/graph/badge.svg)](https://codecov.io/gh/theislab/ehrapy)
 [![License](https://img.shields.io/github/license/theislab/ehrapy)](https://opensource.org/licenses/Apache2.0)
 [![PyPI](https://img.shields.io/pypi/v/ehrapy.svg)](https://pypi.org/project/ehrapy/)
 [![Python Version](https://img.shields.io/pypi/pyversions/ehrapy)](https://pypi.org/project/ehrapy)
@@ -15,7 +15,8 @@
 # ehrapy overview
 
 **ehrapy** is a modular open-source Python framework for exploratory analysis of heterogeneous epidemiological and EHR data.
-It supports a full pipeline from data ingestion and quality control to advanced analyses such as clustering, survival, trajectory, causal inference, deep learning, and more.
+It supports a full pipeline from quality control, imputation and normalization to clustering, trajectory inference, survival analysis, causal inference and bias detection.
+Data lives in [ehrdata](https://github.com/theislab/ehrdata)'s `EHRData` object, which holds static 2D data and longitudinal 3D data as numpy, sparse or dask arrays.
 
 <p align="center">
     <img src="https://github.com/user-attachments/assets/84fe403c-66de-4dd9-9265-b0d1739ce3cc" alt="fig1" width="100%">
@@ -32,6 +33,8 @@ You can install _ehrapy_ via [pip] from [PyPI]:
 ```console
 $ pip install ehrapy
 ```
+
+Optional extras enable dask-backed out-of-core arrays (`ehrapy[dask]`), Leiden clustering (`ehrapy[leiden]`), and GPU acceleration through rapids-singlecell (`ehrapy[rapids12]` or `ehrapy[rapids13]`).
 
 ## API
 
