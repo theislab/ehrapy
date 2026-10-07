@@ -7,7 +7,7 @@ from importlib.metadata import metadata
 from pathlib import Path
 
 HERE = Path(__file__).parent
-sys.path[:0] = [str(HERE.parent), str(HERE / "extensions")]
+sys.path.insert(0, str(HERE.parent))
 
 needs_sphinx = "8.0"
 
@@ -42,10 +42,11 @@ extensions = [
     "sphinx_issues",
     "sphinxcontrib.bibtex",
     "IPython.sphinxext.ipython_console_highlighting",
+    "sphinxext.opengraph",
 ]
 
 ogp_site_url = "https://ehrapy.readthedocs.io/en/latest/"
-ogp_image = "https://ehrapy.readthedocs.io/en/latest//_static/logo.png"
+ogp_image = "https://ehrapy.readthedocs.io/en/latest/_static/ehrapy_logos/ehrapy_pure.png"
 
 # nbsphinx specific settings
 exclude_patterns = [
@@ -111,12 +112,11 @@ intersphinx_mapping = {
     "networkx": ("https://networkx.org/documentation/stable", None),
     "ehrdata": ("https://ehrdata.readthedocs.io/en/latest/", None),
     "holoviews": ("https://holoviews.org/", None),
+    "dask": ("https://docs.dask.org/en/stable/", None),
 }
 nitpick_ignore = [
     ("py:class", "matplotlib.axes.Axes"),
     ("py:class", "cycler.Cycler"),
-    ("py:class", "CAT"),
-    ("py:class", "ehrapy.tools.annotate_text.CAT"),
     ("py:class", "tableone.TableOne"),
     ("py:class", "DotPlot"),
     ("py:class", "MatrixPlot"),
@@ -140,7 +140,6 @@ nitpick_ignore = [
     ("py:data", "typing.Union"),
     ("py:class", "pandas.core.frame.DataFrame"),
 ]
-autodoc_type_aliases = {"CAT": "Any"}
 
 typehints_defaults = "comma"
 always_use_bars_union = True
