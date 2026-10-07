@@ -106,8 +106,8 @@ def pca(
 @function_2D_only()
 def regress_out(
     edata: EHRData,
-    *,
     keys: str | Sequence[str],
+    *,
     n_jobs: int | None = None,
     layer: str | None = None,
     copy: bool = False,

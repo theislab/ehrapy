@@ -30,8 +30,8 @@ if TYPE_CHECKING:
 
 def explicit_impute(
     edata: EHRData,
-    *,
     replacement: (str | int | float) | (Mapping[str, str | int | float]) | (Sequence[str | int | float]),
+    *,
     layer: str | None = None,
     impute_empty_strings: bool = True,
     warning_threshold: int = 70,

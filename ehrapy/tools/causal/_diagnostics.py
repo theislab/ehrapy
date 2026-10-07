@@ -22,9 +22,9 @@ if TYPE_CHECKING:
 @function_2D_only()
 def covariate_balance(
     edata: EHRData,
-    *,
     treatment: str,
     covariates: Sequence[str],
+    *,
     weights: np.ndarray | None = None,
     propensity_model: str | BaseEstimator = "logistic",
     layer: str | None = None,
@@ -101,9 +101,9 @@ def covariate_balance(
 @function_2D_only()
 def positivity_check(
     edata: EHRData,
-    *,
     treatment: str,
     covariates: Sequence[str],
+    *,
     propensity_model: str | BaseEstimator = "logistic",
     eps: float = 0.05,
     layer: str | None = None,

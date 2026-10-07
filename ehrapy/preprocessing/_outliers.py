@@ -72,8 +72,8 @@ def winsorize(
 @function_2D_only()
 def clip_quantile(
     edata: EHRData,
-    *,
     limits: tuple[float, float],
+    *,
     var_names: Collection[str] | None = None,
     obs_cols: Collection[str] | None = None,
     layer: str | None = None,

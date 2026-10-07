@@ -158,8 +158,8 @@ def glm(
 @function_2D_only()
 def kaplan_meier(
     edata: EHRData,
-    *,
     duration_col: str,
+    *,
     event_col: str | None = None,
     key_added: str = "kaplan_meier",
     timeline: Sequence[float] | None = None,
@@ -296,7 +296,6 @@ def test_nested_f_statistic(small_model: GLMResultsWrapper, big_model: GLMResult
 def anova_glm(
     result_1: GLMResultsWrapper,
     result_2: GLMResultsWrapper,
-    *,
     formula_1: str,
     formula_2: str,
 ) -> pd.DataFrame:
@@ -341,8 +340,8 @@ def _build_model_input_dataframe(
 @function_2D_only()
 def cox_ph(
     edata: EHRData,
-    *,
     duration_col: str,
+    *,
     event_col: str | None = None,
     key_added: str = "cox_ph",
     alpha: float = 0.05,
@@ -478,9 +477,9 @@ def cox_ph(
 @function_2D_only()
 def weibull_aft(
     edata: EHRData,
-    *,
     duration_col: str,
     event_col: str,
+    *,
     key_added: str = "weibull_aft",
     alpha: float = 0.05,
     fit_intercept: bool = True,
@@ -580,8 +579,8 @@ def weibull_aft(
 @function_2D_only()
 def log_logistic_aft(
     edata: EHRData,
-    *,
     duration_col: str,
+    *,
     event_col: str | None = None,
     key_added: str = "log_logistic_aft",
     alpha: float = 0.05,
@@ -730,8 +729,8 @@ def _univariate_model(
 @function_2D_only()
 def nelson_aalen(
     edata: EHRData,
-    *,
     duration_col: str,
+    *,
     event_col: str | None = None,
     key_added: str = "nelson_aalen",
     timeline: Sequence[float] | None = None,
@@ -805,9 +804,9 @@ def nelson_aalen(
 @function_2D_only()
 def weibull(
     edata: EHRData,
-    *,
     duration_col: str,
     event_col: str,
+    *,
     key_added: str = "weibull",
     timeline: Sequence[float] | None = None,
     entry: str | None = None,
@@ -878,11 +877,11 @@ def weibull(
 
 def cox_ph_adjusted_curves(
     edata: EHRData,
-    *,
     cph: CoxPHFitter,
     strata: str,
     duration_col: str,
     event_col: str,
+    *,
     method: Literal["average", "conditional"] = "average",
     reference_values: Mapping[str, str | int | float] | None = None,
     n_bootstrap: int = 200,

@@ -13,7 +13,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   For a LightGBM backend, pass `IterativeImputer(estimator=LGBMRegressor(...))` directly.
 * Unify the API conventions across `ep.pp`, `ep.tl`, `ep.pl` and `ep.get` ([#1126](https://github.com/theislab/ehrapy/pull/1126)) @Zethson
 
-  Every argument after `edata` is keyword-only.
+  Required arguments are positional and every argument with a default is keyword-only.
   Grouping keys are called `groupby` (was `group_key`, `cluster_key`, `balanced_key`), feature subsets `var_names` (was `vars`, `input_features`, `feature_names`), feature-name columns `feature_symbols` (was `gene_symbols`, `features`), and result keys `key_added` when written and `key` when read (was `uns_key`).
   {func}`ep.pp.combat <ehrapy.preprocessing.combat>` takes `batch_key` (was `key`), and {func}`ep.pp.pca <ehrapy.preprocessing.pca>` and {func}`ep.pp.sample <ehrapy.preprocessing.sample>` take `edata` (was `data`).
 * Replace `inplace` with `copy` ([#1126](https://github.com/theislab/ehrapy/pull/1126)) @Zethson

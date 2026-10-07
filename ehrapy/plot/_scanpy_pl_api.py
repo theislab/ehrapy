@@ -148,9 +148,9 @@ def scatter(  # noqa: D417
 )
 def heatmap(  # noqa: D417
     edata: EHRData,
-    *,
     var_names: _VarNames | Mapping[str, _VarNames],
     groupby: str | Sequence[str],
+    *,
     use_raw: bool | None = None,
     log: bool = False,
     num_categories: int = 7,
@@ -264,9 +264,9 @@ def heatmap(  # noqa: D417
 )
 def dotplot(  # noqa: D417
     edata: EHRData,
-    *,
     var_names: _VarNames | Mapping[str, _VarNames],
     groupby: str,
+    *,
     use_raw: bool | None = None,
     log: bool = False,
     num_categories: int = 7,
@@ -410,9 +410,9 @@ def dotplot(  # noqa: D417
 @_doc_params(show_save_ax=doc_show_save_ax, common_plot_args=doc_common_plot_args)
 def tracksplot(  # noqa: D417
     edata: EHRData,
-    *,
     var_names: _VarNames | Mapping[str, _VarNames],
     groupby: str,
+    *,
     use_raw: bool | None = None,
     log: bool = False,
     dendrogram: bool | str = False,
@@ -486,8 +486,8 @@ def tracksplot(  # noqa: D417
 @function_2D_only()
 def violin(  # noqa: D417
     edata: EHRData,
-    *,
     keys: str | Sequence[str],
+    *,
     groupby: str | None = None,
     log: bool = False,
     use_raw: bool | None = None,
@@ -585,9 +585,9 @@ def violin(  # noqa: D417
 )
 def stacked_violin(  # noqa: D417
     edata: EHRData,
-    *,
     var_names: _VarNames | Mapping[str, _VarNames],
     groupby: str | Sequence[str],
+    *,
     log: bool = False,
     use_raw: bool | None = None,
     num_categories: int = 7,
@@ -732,9 +732,9 @@ def stacked_violin(  # noqa: D417
 )
 def matrixplot(  # noqa: D417
     edata: EHRData,
-    *,
     var_names: _VarNames | Mapping[str, _VarNames],
     groupby: str | Sequence[str],
+    *,
     use_raw: bool | None = None,
     log: bool = False,
     num_categories: int = 7,
@@ -893,9 +893,9 @@ def clustermap(  # noqa: D417
 
 def ranking(
     edata: EHRData,
-    *,
     attr: Literal["var", "obs", "uns", "varm", "obsm"],
     keys: str | Sequence[str],
+    *,
     dictionary: str | None = None,
     indices: Sequence[int] | None = None,
     labels: str | Sequence[str] | None = None,
@@ -955,8 +955,8 @@ def ranking(
 @_doc_params(show_save_ax=doc_show_save_ax)
 def dendrogram(  # noqa: D417
     edata: EHRData,
-    *,
     groupby: str,
+    *,
     dendrogram_key: str | None = None,
     orientation: Literal["top", "bottom", "left", "right"] = "top",
     remove_labels: bool = False,
@@ -1338,8 +1338,8 @@ _empty = Empty.token
 )
 def embedding(  # noqa: D417
     edata: EHRData,
-    *,
     basis: str,
+    *,
     color: str | Sequence[str] | None = None,
     feature_symbols: str | None = None,
     use_raw: bool | None = None,
@@ -1798,9 +1798,9 @@ def paga(
 
 def paga_path(
     edata: EHRData,
-    *,
     nodes: Sequence[str | int],
     keys: Sequence[str],
+    *,
     use_raw: bool = True,
     annotations: Sequence[str] = ("dpt_pseudotime",),
     color_map: str | Colormap | None = None,

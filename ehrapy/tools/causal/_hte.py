@@ -36,10 +36,10 @@ def _store_cate(edata: EHRData, design_index, cate: np.ndarray, key_added: str |
 @function_2D_only()
 def t_learner(
     edata: EHRData,
-    *,
     treatment: str,
     outcome: str,
     covariates: Sequence[str],
+    *,
     outcome_model: str | BaseEstimator = "auto",
     key_added: str | None = None,
     layer: str | None = None,
@@ -105,10 +105,10 @@ def t_learner(
 @function_2D_only()
 def s_learner(
     edata: EHRData,
-    *,
     treatment: str,
     outcome: str,
     covariates: Sequence[str],
+    *,
     outcome_model: str | BaseEstimator = "auto",
     key_added: str | None = None,
     layer: str | None = None,
@@ -170,10 +170,10 @@ def s_learner(
 @function_2D_only()
 def x_learner(
     edata: EHRData,
-    *,
     treatment: str,
     outcome: str,
     covariates: Sequence[str],
+    *,
     outcome_model: str | BaseEstimator = "auto",
     propensity_model: str | BaseEstimator = "logistic",
     cate_model: str | BaseEstimator = "auto",

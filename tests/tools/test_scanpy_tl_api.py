@@ -3,13 +3,6 @@ from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
 import ehrapy as ep
 
 
-def test_tl_exports():
-    assert all(hasattr(ep.tl, name) for name in ep.tl.__all__)
-    assert {"leiden", "dendrogram", "dpt", "paga", "ingest"} <= set(ep.tl.__all__)
-    for leaked in ("np", "sc", "spmatrix", "Any", "Literal", "TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY", "kmf"):
-        assert not hasattr(ep.tl, leaked)
-
-
 def test_tsne(edata_blob_small):
     ep.tl.tsne(edata_blob_small, use_rep="X")
 

@@ -313,8 +313,8 @@ def _check_columns_to_rank_dict(columns_to_rank):
 @_check_feature_types
 def rank_features_groups(
     edata: EHRData,
-    *,
     groupby: str,
+    *,
     groups: Literal["all"] | Iterable[str] = "all",
     reference: str = "rest",
     n_features: int | None = None,

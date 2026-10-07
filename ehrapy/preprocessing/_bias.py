@@ -22,8 +22,8 @@ if TYPE_CHECKING:
 @_check_feature_types
 def detect_bias(
     edata: EHRData,
-    *,
     sensitive_features: Iterable[str] | Literal["all"],
+    *,
     run_feature_importances: bool | None = None,
     corr_threshold: float = 0.5,
     smd_threshold: float = 0.5,

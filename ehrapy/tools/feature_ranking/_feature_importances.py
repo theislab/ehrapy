@@ -26,8 +26,8 @@ if TYPE_CHECKING:
 @_check_feature_types
 def rank_features_supervised(
     edata: EHRData,
-    *,
     predicted_feature: str,
+    *,
     model: Literal["regression", "svm", "rf"] = "rf",
     var_names: Sequence[str] | Literal["all"] = "all",
     layer: str | None = None,

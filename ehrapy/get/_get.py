@@ -71,8 +71,8 @@ def var_df(
 
 def rank_features_groups_df(
     edata: EHRData,
-    *,
     group: str | Iterable[str] | None,
+    *,
     key: str = "rank_features_groups",
     pval_cutoff: float | None = None,
     log2fc_min: float | None = None,

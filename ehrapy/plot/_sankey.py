@@ -18,8 +18,8 @@ if TYPE_CHECKING:
 @choose_hv_backend()
 def sankey_diagram(
     edata: EHRData,
-    *,
     columns: Sequence[str],
+    *,
     node_width: int | float = 20,
     node_padding: int | float = 10,
     node_color: str | None = None,
@@ -120,9 +120,9 @@ def sankey_diagram(
 @choose_hv_backend()
 def sankey_diagram_time(
     edata: EHRData,
-    *,
     var_name: str,
-    layer: str,
+    *,
+    layer: str | None = None,
     state_labels: dict[int, str] | None = None,
     node_width: int | float = 20,
     node_padding: int | float = 10,
@@ -147,6 +147,7 @@ def sankey_diagram_time(
         edata: Central data object.
         var_name: Variable name from `edata.var_names` to visualize
         layer: Name of the layer in `edata.layers` containing the feature data to visualize.
+            If `None`, `edata.X` is used.
         state_labels: Mapping from numeric state values to readable labels.
                     If None, state values will be displayed as strings of their numeric codes (e.g., "0", "1", "2").
         node_width: Width of the nodes in the Sankey diagram.
@@ -178,10 +179,11 @@ def sankey_diagram_time(
     """
     if var_name not in edata.var_names:
         raise KeyError(f"{var_name} not found in edata.var_names.")
-    if layer not in edata.layers:
+    if layer is not None and layer not in edata.layers:
         raise KeyError(f"{layer} not found in edata.layers.")
 
-    flare_data = edata[:, edata.var_names == var_name, :].layers[layer][:, 0, :]
+    subset = edata[:, edata.var_names == var_name, :]
+    flare_data = (subset.X if layer is None else subset.layers[layer])[:, 0, :]
     mtx = to_dense(flare_data, to_cpu_memory=True)
     time_steps = edata.tem.index.tolist()
 

@@ -86,8 +86,8 @@ def leiden(
 # and X can only be 2D currently, until this PR is merged: https://github.com/scverse/anndata/pull/1707
 def dendrogram(
     edata: EHRData,
-    *,
     groupby: str,
+    *,
     n_pcs: int | None = None,
     use_rep: str | None = None,
     var_names: Sequence[str] | None = None,
@@ -287,8 +287,8 @@ def paga(
 
 def ingest(
     edata: EHRData,
-    *,
     edata_ref: EHRData,
+    *,
     obs: str | Iterable[str] | None = None,
     embedding_method: str | Iterable[str] = ("umap", "pca"),
     labeling_method: Literal["knn"] = "knn",

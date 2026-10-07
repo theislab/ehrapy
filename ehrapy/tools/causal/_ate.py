@@ -50,10 +50,10 @@ def _bootstrap_ate(
 @function_2D_only()
 def iptw(
     edata: EHRData,
-    *,
     treatment: str,
     outcome: str,
     covariates: Sequence[str],
+    *,
     propensity_model: str | BaseEstimator = "logistic",
     stabilized: bool = True,
     clip: tuple[float, float] | None = _DEFAULT_CLIP,
@@ -151,10 +151,10 @@ def iptw(
 @function_2D_only()
 def g_computation(
     edata: EHRData,
-    *,
     treatment: str,
     outcome: str,
     covariates: Sequence[str],
+    *,
     outcome_model: str | BaseEstimator = "auto",
     n_bootstrap: int = 200,
     random_state: int | None = None,
@@ -240,10 +240,10 @@ def g_computation(
 @function_2D_only()
 def aipw(
     edata: EHRData,
-    *,
     treatment: str,
     outcome: str,
     covariates: Sequence[str],
+    *,
     propensity_model: str | BaseEstimator = "logistic",
     outcome_model: str | BaseEstimator = "auto",
     clip: tuple[float, float] | None = _DEFAULT_CLIP,
@@ -352,10 +352,10 @@ def aipw(
 @function_2D_only()
 def propensity_score_matching(
     edata: EHRData,
-    *,
     treatment: str,
     outcome: str,
     covariates: Sequence[str],
+    *,
     propensity_model: str | BaseEstimator = "logistic",
     k: int = 1,
     caliper: float | None = 0.2,
