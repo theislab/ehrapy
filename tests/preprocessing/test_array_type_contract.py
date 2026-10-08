@@ -27,6 +27,7 @@ ARRAY_FUNCTIONS = [
         id="knn_impute",
     ),
     pytest.param(ep.pp.miss_forest_impute, {"n_estimators": 10}, None, 0, id="miss_forest_impute"),
+    pytest.param(ep.pp.gradient_boosting_impute, {"max_train_obs": 10}, None, 0, id="gradient_boosting_impute"),
     pytest.param(ep.pp.locf_impute, {}, None, 0, id="locf_impute"),
     pytest.param(ep.pp.missing_data_mask, {}, "missing_data_mask", 0, id="missing_data_mask"),
     pytest.param(ep.pp.filter_features, {"min_obs": 15}, None, 1, id="filter_features"),

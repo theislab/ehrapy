@@ -16,6 +16,7 @@ from scipy.special import ndtri
 from ehrapy._compat import (
     _by_group,
     _columnwise,
+    _ensure_feature_types,
     _has_sparse_chunks,
     _map_variable_blocks,
     _obs_axes,
@@ -58,13 +59,7 @@ def _scale_func_group(
     if copy:
         edata = edata.copy()
     X = edata.X if layer is None else edata.layers[layer]
-    if FEATURE_TYPE_KEY not in edata.var.columns:
-        if is_lazy_array(X):
-            raise ValueError(
-                f"{norm_name} needs feature types in `edata.var`. "
-                "Infer them first with `ed.infer_feature_types(edata)`, which reads every value once."
-            )
-        ed.infer_feature_types(edata, layer=layer, output=None)
+    _ensure_feature_types(edata, layer, norm_name)
 
     var_names = _numeric_var_names(edata, var_names)
     var_indices = edata.var_names.get_indexer(var_names)

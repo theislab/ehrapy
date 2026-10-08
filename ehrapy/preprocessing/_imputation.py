@@ -13,16 +13,16 @@ import scipy.sparse as sp
 from array_api_compat import array_namespace, is_lazy_array
 from ehrdata._feature_types import _check_feature_types
 from ehrdata._logger import logger
-from ehrdata.core.constants import FEATURE_TYPE_KEY, NUMERIC_TAG
+from ehrdata.core.constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from fast_array_utils import stats
 from fast_array_utils.conv import to_dense
 from fast_array_utils.types import CSBase, DaskArray
-from sklearn.experimental import enable_iterative_imputer
 from sklearn.utils import safe_sqr
 
 from ehrapy._compat import (
     _apply_over_time_axis,
     _broadcast_var_stat,
+    _ensure_feature_types,
     _has_sparse_chunks,
     _map_observation_blocks,
     _map_variable_blocks,
@@ -41,12 +41,17 @@ from ehrapy._settings import settings
 from ehrapy.preprocessing._missing_data import _missing_mask
 from ehrapy.preprocessing._quality_control import _compute_missing_values
 
+# number of array elements densified or predicted at once
+_BATCH_VALUES = 2_000_000
+
 if TYPE_CHECKING:
+    from dask.delayed import Delayed
     from ehrdata import EHRData
     from sklearn.impute import KNNImputer
 
     type Array = np.ndarray | DaskArray
     type Strategy = Literal["mean", "median", "most_frequent"]
+    type Model = tuple[Any, np.ndarray, np.ndarray]
 
 
 @singledispatch
@@ -603,21 +608,32 @@ def _knn_impute(
 @singledispatch
 @_apply_over_time_axis
 def _miss_forest_impute_function(
-    arr: np.ndarray, num_initial_strategy, n_estimators, max_iter, random_state
+    arr: np.ndarray, num_initial_strategy, n_estimators, max_iter, random_state, tol: float = 1e-3
 ) -> np.ndarray:
     from sklearn.ensemble import ExtraTreesRegressor
-    from sklearn.impute import IterativeImputer
+    from sklearn.impute import SimpleImputer
 
-    # IterativeImputer drops variables without observed values, so those are left missing
-    observed = ~np.isnan(arr).all(axis=0)
+    missing = np.isnan(arr)
+    # variables without observed values cannot be predicted and stay missing
+    observed = ~missing.all(axis=0)
     result = arr.copy()
-    if observed.any():
-        result[:, observed] = IterativeImputer(
-            estimator=ExtraTreesRegressor(n_estimators=n_estimators, n_jobs=settings.n_jobs, random_state=random_state),
-            initial_strategy=num_initial_strategy,
-            max_iter=max_iter,
-            random_state=random_state,
-        ).fit_transform(arr[:, observed])
+    if not observed.any():
+        return result
+    missing = missing[:, observed]
+    filled = SimpleImputer(strategy=num_initial_strategy).fit_transform(arr[:, observed])
+    scale = tol * np.abs(filled[~missing]).max()
+    for _ in range(max_iter):
+        previous = filled.copy()
+        for j in np.argsort(missing.sum(axis=0), kind="stable"):
+            rows = missing[:, j]
+            if not rows.any():
+                continue
+            predictors = np.delete(filled, j, axis=1)
+            forest = ExtraTreesRegressor(n_estimators=n_estimators, n_jobs=settings.n_jobs, random_state=random_state)
+            filled[rows, j] = forest.fit(predictors[~rows], filled[~rows, j]).predict(predictors[rows])
+        if np.abs(filled - previous).sum(axis=1).max() < scale:
+            break
+    result[:, observed] = filled
     return result
 
 
@@ -748,6 +764,195 @@ def miss_forest_impute(
         edata.X = mtx
     else:
         edata.layers[layer] = mtx
+
+    return edata if copy else None
+
+
+def _time_context(X: np.ndarray) -> list[np.ndarray]:
+    """Per-variable predictors along the time axis: the timepoint, and the closest observed values before and after with their distance in timepoints."""
+    n_t = X.shape[2]
+    steps = np.arange(n_t)
+    observed = ~np.isnan(X)
+    last = np.maximum.accumulate(np.where(observed, steps, -1), axis=2)
+    before = np.concatenate([np.full((*X.shape[:2], 1), -1), last[..., :-1]], axis=2)
+    first = np.minimum.accumulate(np.where(observed, steps, n_t)[..., ::-1], axis=2)[..., ::-1]
+    after = np.concatenate([first[..., 1:], np.full((*X.shape[:2], 1), n_t)], axis=2)
+    context = [np.broadcast_to(steps.astype(np.float64), X.shape)]
+    for index, found in ((before, before >= 0), (after, after < n_t)):
+        value = np.take_along_axis(X, np.clip(index, 0, n_t - 1), axis=2)
+        context += [np.where(found, value, np.nan), np.where(found, np.abs(index - steps), np.nan)]
+    return context
+
+
+def _rows_and_context(X: np.ndarray) -> tuple[np.ndarray, list[np.ndarray]]:
+    """Observations, or every timepoint of an observation for 3D data, as rows with the per-variable time context."""
+    if X.ndim == 2:
+        return X, []
+    return _rows(X), [_rows(context) for context in _time_context(X)]
+
+
+def _rows(X: np.ndarray) -> np.ndarray:
+    return np.moveaxis(X, 1, 2).reshape(-1, X.shape[1])
+
+
+def _predictors(rows: np.ndarray, context: Sequence[np.ndarray], var: int) -> np.ndarray:
+    return np.column_stack([np.delete(rows, var, axis=1), *(values[:, var] for values in context)])
+
+
+def _hide_like(predictors: np.ndarray, missing_rate: np.ndarray, rng: np.random.Generator) -> None:
+    """Hide predictor values at random so that every predictor is missing at `missing_rate`, the rate where the values are imputed."""
+    train_rate = np.isnan(predictors).mean(axis=0)
+    hide = np.clip((missing_rate - train_rate) / np.maximum(1 - train_rate, np.finfo(np.float64).eps), 0, 1)
+    predictors[rng.random(predictors.shape, dtype=np.float32) < hide] = np.nan
+
+
+@singledispatch
+def _fit_boosting(sample: np.ndarray, categorical: np.ndarray, random_state: int) -> list[Model | None]:
+    """A gradient boosting model per variable with the predictors it uses and the range of its observed values, `None` for variables without observed values."""
+    from sklearn.dummy import DummyClassifier, DummyRegressor
+    from sklearn.ensemble import HistGradientBoostingClassifier, HistGradientBoostingRegressor
+
+    rng = np.random.default_rng(random_state)
+    rows, context = _rows_and_context(sample)
+    models: list[Model | None] = []
+    for var in range(rows.shape[1]):
+        observed = ~np.isnan(rows[:, var])
+        if not observed.any():
+            models.append(None)
+            continue
+        predictors = _predictors(rows[observed], [values[observed] for values in context], var)
+        if not observed.all():
+            to_impute = _predictors(rows[~observed], [values[~observed] for values in context], var)
+            _hide_like(predictors, np.isnan(to_impute).mean(axis=0), rng)
+        # scikit-learn cannot bin a predictor without values
+        used = ~np.isnan(predictors).all(axis=0)
+        if not used.any():
+            model = DummyClassifier(strategy="most_frequent") if categorical[var] else DummyRegressor()
+        else:
+            model = (HistGradientBoostingClassifier if categorical[var] else HistGradientBoostingRegressor)(
+                random_state=random_state
+            )
+        target = rows[observed, var]
+        models.append((model.fit(predictors[:, used], target), used, np.array([target.min(), target.max()])))
+    return models
+
+
+@_fit_boosting.register(CSBase)
+def _(sample: CSBase, categorical: np.ndarray, random_state: int) -> list[Model | None]:
+    return _fit_boosting(to_dense(sample), categorical, random_state)
+
+
+@_fit_boosting.register(DaskArray)
+def _(sample: DaskArray, categorical: np.ndarray, random_state: int) -> Delayed:
+    import dask
+
+    return dask.delayed(_fit_boosting)(sample, categorical, random_state)
+
+
+def _batch_size(X: np.ndarray | CSBase) -> int:
+    return max(1, _BATCH_VALUES // math.prod(X.shape[1:]))
+
+
+@singledispatch
+def _impute_boosting(X: np.ndarray, models: Sequence[Model | None]) -> np.ndarray:
+    size = _batch_size(X)
+    return np.concatenate([_impute_block(X[start : start + size], models) for start in range(0, X.shape[0], size)])
+
+
+def _impute_block(X: np.ndarray, models: Sequence[Model | None]) -> np.ndarray:
+    rows, context = _rows_and_context(X)
+    filled = rows.copy()
+    for var, fitted in enumerate(models):
+        missing = np.isnan(rows[:, var])
+        if fitted is not None and missing.any():
+            model, used, bounds = fitted
+            predictors = _predictors(rows[missing], [values[missing] for values in context], var)
+            filled[missing, var] = np.clip(model.predict(predictors[:, used]), *bounds)
+    return filled if X.ndim == 2 else np.moveaxis(filled.reshape(X.shape[0], X.shape[2], X.shape[1]), 2, 1)
+
+
+@_impute_boosting.register(CSBase)
+def _(X: CSBase, models: Sequence[Model | None]) -> CSBase:
+    X = X.copy()
+    missing = np.flatnonzero(np.isnan(X.data))
+    rows, columns = _sparse_rows(X)[missing], _sparse_columns(X)[missing]
+    incomplete = np.unique(rows)
+    size = _batch_size(X)
+    for start in range(0, len(incomplete), size):
+        batch = incomplete[start : start + size]
+        in_batch = (rows >= batch[0]) & (rows <= batch[-1])
+        filled = _impute_block(to_dense(X[batch]), models)
+        X.data[missing[in_batch]] = filled[np.searchsorted(batch, rows[in_batch]), columns[in_batch]]
+    return X
+
+
+@_impute_boosting.register(DaskArray)
+def _(X: DaskArray, models: Sequence[Model | None] | Delayed) -> DaskArray:
+    return _map_observation_blocks(X, _impute_boosting, models, meta=X._meta)
+
+
+@spinner("Performing gradient boosting impute")
+def gradient_boosting_impute(
+    edata: EHRData,
+    *,
+    var_names: Iterable[str] | None = None,
+    max_train_obs: int | None = 10_000,
+    random_state: int = 0,
+    warning_threshold: int = 70,
+    layer: str | None = None,
+    copy: bool = False,
+) -> EHRData | None:
+    """Impute missing values with a gradient boosting model per variable.
+
+    Every variable is predicted from the other variables of the same observation, missing values included, with :class:`~sklearn.ensemble.HistGradientBoostingRegressor`, or :class:`~sklearn.ensemble.HistGradientBoostingClassifier` for categorical variables.
+    For 3D data, every timepoint is predicted, and the predictors also include the timepoint and the closest observed values of the variable before and after it with their distance in timepoints.
+    During training, every predictor is hidden as often as it is missing where the variable is imputed, so that variables measured together cannot stand in for each other.
+    Imputed values stay within the range of the observed values of their variable, and variables without any observed value stay missing.
+
+    Args:
+        edata: Central data object.
+        var_names: The variables to impute and to predict from.
+            If `None`, all variables are used.
+        max_train_obs: Maximum number of randomly chosen observations the models are trained on.
+            If `None`, all observations are used.
+        random_state: Seed for choosing the training observations and for the models.
+        warning_threshold: Percentage of missing values above which a warning is issued.
+        layer: The layer to impute.
+        copy: Whether to return a copy or act in place.
+
+    Returns:
+        If copy is True, a modified copy of the original data object with imputed data.
+        If copy is False, the original data object is modified in place, and None is returned.
+
+    Examples:
+        >>> import ehrdata as ed
+        >>> import ehrapy as ep
+        >>> edata = ed.dt.ehrdata_blobs(n_variables=5, n_observations=100, base_timepoints=10, missing_values=0.3)
+        >>> ep.pp.gradient_boosting_impute(edata)
+    """
+    if copy:
+        edata = edata.copy()
+
+    X = edata.X if layer is None else edata.layers[layer]
+    _ensure_feature_types(edata, layer, "gradient_boosting_impute")
+    var_names = list(edata.var_names if var_names is None else var_names)
+    _warn_imputation_threshold(edata, var_names, threshold=warning_threshold, layer=layer)
+
+    var_indices = edata.var_names.get_indexer(var_names)
+    categorical = (edata.var[FEATURE_TYPE_KEY].iloc[var_indices] == CATEGORICAL_TAG).to_numpy()
+    values = X[:, var_indices]
+    if not np.issubdtype(values.dtype, np.floating):
+        values = values.astype(np.float64)
+    train = np.arange(X.shape[0])
+    if max_train_obs is not None and X.shape[0] > max_train_obs:
+        train = np.sort(np.random.default_rng(random_state).choice(X.shape[0], max_train_obs, replace=False))
+    models = _fit_boosting(values[train], categorical, random_state)
+    X = _set_columns(X, var_indices, _impute_boosting(values, models))
+
+    if layer is None:
+        edata.X = X
+    else:
+        edata.layers[layer] = X
 
     return edata if copy else None
 

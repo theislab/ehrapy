@@ -5,6 +5,7 @@ from ehrapy.preprocessing._filter import filter_features, filter_observations
 from ehrapy.preprocessing._highly_variable_features import highly_variable_features
 from ehrapy.preprocessing._imputation import (
     explicit_impute,
+    gradient_boosting_impute,
     knn_impute,
     locf_impute,
     miss_forest_impute,
@@ -33,6 +34,7 @@ __all__ = [
     "neighbors",
     "highly_variable_features",
     "explicit_impute",
+    "gradient_boosting_impute",
     "knn_impute",
     "locf_impute",
     "miss_forest_impute",
