@@ -395,7 +395,7 @@ def test_knn_impute_copy(impute_num_edata):
 
 def test_knn_impute_non_numerical_data(impute_edata):
     with pytest.raises(ValueError):
-        knn_impute(impute_edata, n_neighbors=3, copy=True)
+        knn_impute(impute_edata, var_names=["strcol"], n_neighbors=3, copy=True)
 
 
 def test_knn_impute_numerical_data(impute_num_edata):
@@ -919,3 +919,11 @@ def test_locf_impute_no_fallback(locf_edata_3d):
 def test_locf_impute_invalid_fallback(locf_edata_3d):
     with pytest.raises(ValueError, match="Unsupported fallback method"):
         locf_impute(locf_edata_3d, layer=DEFAULT_TEM_LAYER_NAME, fallback_method="invalid")
+
+
+def test_knn_impute_defaults_to_numeric_variables(mimic_2_encoded):
+    numeric = mimic_2_encoded.var_names[mimic_2_encoded.var[FEATURE_TYPE_KEY] == NUMERIC_TAG]
+
+    knn_impute(mimic_2_encoded, backend="scikit-learn")
+
+    assert not np.isnan(mimic_2_encoded[:, numeric].X.astype(float)).any()

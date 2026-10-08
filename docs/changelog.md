@@ -54,6 +54,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### 🐛 Bug Fixes
 
 * Matplotlib figures in notebooks no longer disappear after the first holoviews-based ehrapy plot @Zethson
+* {func}`ep.pp.knn_impute <ehrapy.preprocessing.knn_impute>` imputes all numeric variables by default instead of raising on data with encoded categorical variables @Zethson
 * On dask arrays with missing values, {func}`ep.pp.minmax_norm <ehrapy.preprocessing.minmax_norm>` and {func}`ep.pp.robust_scale_norm <ehrapy.preprocessing.robust_scale_norm>` returned all-NaN variables and {func}`ep.pp.quantile_norm <ehrapy.preprocessing.quantile_norm>` returned wrong values ([#1132](https://github.com/theislab/ehrapy/pull/1132)) @Zethson
 * {func}`ep.pp.filter_features <ehrapy.preprocessing.filter_features>` and {func}`ep.pp.filter_observations <ehrapy.preprocessing.filter_observations>` crashed for every non-numpy array, {func}`ep.pp.encode <ehrapy.preprocessing.encode>` crashed on sparse arrays, and the imputers crashed on variables without any observed value ([#1132](https://github.com/theislab/ehrapy/pull/1132)) @Zethson
 * {func}`ep.pp.qc_metrics <ehrapy.preprocessing.qc_metrics>` no longer computes dask arrays once per variable or reports all-NaN statistics when any variable holds strings ([#1132](https://github.com/theislab/ehrapy/pull/1132)) @Zethson

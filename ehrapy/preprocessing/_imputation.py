@@ -334,7 +334,7 @@ def knn_impute(
     Args:
         edata: Central data object.
         var_names: A list of variable names indicating which columns to impute.
-                   If `None`, all columns are imputed. Default is `None`.
+                   If `None`, all numeric variables are imputed.
         n_neighbors: Number of neighbors to use when performing the imputation.
         layer: The layer to impute.
         copy: Whether to perform the imputation on a copy of the original data object.
@@ -597,11 +597,11 @@ def _knn_impute(
 
         imputer = FastKNNImputer(n_neighbors=n_neighbors, **kwargs)
 
+    numerical_var_names = edata.var_names[edata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG]
     if var_names is None:
-        var_names = edata.var_names
+        var_names = numerical_var_names
     var_indices = edata.var_names.get_indexer(var_names).tolist()
 
-    numerical_var_names = edata.var_names[edata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG]
     numerical_indices = edata.var_names.get_indexer(numerical_var_names).tolist()
     if any(idx not in numerical_indices for idx in var_indices):
         raise ValueError(
