@@ -50,7 +50,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 * Update to cookiecutter-scverse v0.8.0, derive the version from git tags via hatch-vcs, and move the `dev` extra to a `dev` dependency group ([#1125](https://github.com/theislab/ehrapy/pull/1125)) @Zethson
 * `import ehrapy` no longer loads the holoviews extensions, which now load on the first holoviews-backed plot, and no longer installs a global `SyntaxWarning` filter ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
 * Drop the unused `thefuzz`, `fhiry` and `filelock` dependencies and move `requests` to the `test` extra ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
-* Remove dead code, test notebooks that relied on removed APIs and unreferenced baseline images, and let codecov compare project coverage against the base commit ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
+* Remove dead code and let codecov compare project coverage against the base commit ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
 
 ## v0.15.0
 <!--
