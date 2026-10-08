@@ -927,8 +927,7 @@ def gradient_boosting_impute(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ed.dt.physionet2012()
-        >>> ed.infer_feature_types(edata)
+        >>> edata = ed.dt.ehrdata_blobs(n_variables=5, n_observations=100, base_timepoints=10, missing_values=0.3)
         >>> ep.pp.gradient_boosting_impute(edata)
     """
     if copy:
