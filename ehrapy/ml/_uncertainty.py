@@ -11,7 +11,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import log_loss
 
 from ehrapy.ml._evaluate import _log_odds
-from ehrapy.ml._predictor import _calibrated, _class_probabilities, _held_out, _outputs_of
+from ehrapy.ml._predictor import _calibrated, _class_probabilities, _held_out, _outputs_of, _paired
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -56,7 +56,7 @@ def calibrate(
     if kind not in {"binary", "multiclass"} or (kind == "multiclass" and method != "temperature"):
         raise ValueError(f"{method!r} calibration does not apply to {kind} tasks.")
     rows, y = _held_out(edata, predictor, split_key=split_key, split=split)
-    outputs = _outputs_of(edata[rows], predictor)[0]
+    y, outputs = _paired(predictor.task, y, _outputs_of(edata[rows], predictor)[0])
     calibrator: Callable[[np.ndarray], np.ndarray]
     match method:
         case "platt":
@@ -112,7 +112,7 @@ def conformalize(
     if kind not in {"binary", "multiclass", "regression"}:
         raise ValueError(f"Conformal prediction does not apply to {kind} tasks.")
     rows, y = _held_out(edata, predictor, split_key=split_key, split=split)
-    outputs = _calibrated(predictor, _outputs_of(edata[rows], predictor)[0])
+    y, outputs = _paired(predictor.task, y, _calibrated(predictor, _outputs_of(edata[rows], predictor)[0]))
     if kind == "regression":
         scores = np.abs(y - outputs[:, 0])
     else:
