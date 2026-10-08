@@ -5,6 +5,7 @@ import pytest
 import statsmodels
 from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
 from lifelines import (
+    AalenJohansenFitter,
     CoxPHFitter,
     KaplanMeierFitter,
     LogLogisticAFTFitter,
@@ -272,6 +273,7 @@ def survival_obs_edata(rng):
             "sex": rng.choice(["female", "male"], n),
             "entry": rng.uniform(0, 0.05, n),
             "weight": rng.uniform(0.5, 1.5, n),
+            "cause": rng.integers(0, 3, n),
         },
         index=[str(i) for i in range(n)],
     )
@@ -313,6 +315,48 @@ def test_kaplan_meier_entry_and_weights(survival_obs_edata):
 def test_kaplan_meier_without_event_col(survival_obs_edata):
     kmf = ep.tl.kaplan_meier(survival_obs_edata, "duration")
     assert kmf.event_observed.all()
+
+
+@pytest.mark.parametrize("from_obs", [True, False])
+def test_kaplan_meier_event_of_interest_matches_lifelines(survival_obs_edata, from_obs):
+    obs = survival_obs_edata.obs
+    edata = survival_obs_edata
+    if not from_obs:
+        edata = ed.EHRData(X=obs[["duration", "cause"]].to_numpy(float), var=pd.DataFrame(index=["duration", "cause"]))
+
+    ajf = ep.tl.kaplan_meier(edata, "duration", event_col="cause", event_of_interest=2, key_added="aj")
+
+    expected = AalenJohansenFitter(seed=0).fit(obs["duration"], obs["cause"], event_of_interest=2)
+    assert isinstance(ajf, AalenJohansenFitter)
+    np.testing.assert_allclose(ajf.cumulative_density_.to_numpy(), expected.cumulative_density_.to_numpy())
+    np.testing.assert_allclose(ajf.confidence_interval_.to_numpy(), expected.confidence_interval_.to_numpy())
+    assert edata.uns["aj"].equals(ajf.event_table)
+
+
+def test_kaplan_meier_event_of_interest_without_competing_events(survival_obs_edata):
+    ajf = ep.tl.kaplan_meier(survival_obs_edata, "duration", event_col="event", event_of_interest=1)
+    kmf = ep.tl.kaplan_meier(survival_obs_edata, "duration", event_col="event")
+    np.testing.assert_allclose(ajf.cumulative_density_.iloc[:, 0], 1 - kmf.survival_function_.iloc[:, 0])
+
+
+def test_nelson_aalen_event_of_interest(survival_obs_edata):
+    obs = survival_obs_edata.obs
+    naf = ep.tl.nelson_aalen(survival_obs_edata, "duration", event_col="cause", event_of_interest=2)
+    expected = NelsonAalenFitter().fit(obs["duration"], obs["cause"] == 2)
+    pd.testing.assert_frame_equal(naf.cumulative_hazard_, expected.cumulative_hazard_)
+
+
+@pytest.mark.parametrize("sa_function", [ep.tl.kaplan_meier, ep.tl.nelson_aalen])
+def test_competing_events_require_event_of_interest(survival_obs_edata, sa_function):
+    with pytest.raises(ValueError, match="event_of_interest"):
+        sa_function(survival_obs_edata, "duration", event_col="cause")
+    with pytest.raises(ValueError, match="requires an `event_col`"):
+        sa_function(survival_obs_edata, "duration", event_of_interest=1)
+
+
+def test_kaplan_meier_event_of_interest_left_censoring(survival_obs_edata):
+    with pytest.raises(ValueError, match="censoring='left'"):
+        ep.tl.kaplan_meier(survival_obs_edata, "duration", event_col="cause", event_of_interest=1, censoring="left")
 
 
 def _survival_edata(X) -> ed.EHRData:
