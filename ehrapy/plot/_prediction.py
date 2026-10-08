@@ -49,10 +49,10 @@ def prediction_performance(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ed.dt.physionet2012()
-        >>> ep.ml.split(edata, stratify="In-hospital_death")
-        >>> task = ep.ml.Task("In-hospital_death")
-        >>> ep.ml.predict(edata, ep.ml.fit(edata, task, obs_keys=["Age", "Gender", "ICUType"]))
+        >>> edata = ed.dt.ehrdata_blobs(n_observations=200, n_centers=2, base_timepoints=10)
+        >>> ep.ml.split(edata, stratify="cluster")
+        >>> task = ep.ml.Task("cluster")
+        >>> ep.ml.predict(edata, ep.ml.fit(edata, task))
         >>> ep.pl.prediction_performance(edata, task)
 
     Preview:

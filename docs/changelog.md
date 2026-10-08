@@ -10,10 +10,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 * {func}`ep.pl.trajectories <ehrapy.plot.trajectories>` plots the mean of longitudinal variables over time with a confidence band for every group of observations ([#1146](https://github.com/theislab/ehrapy/pull/1146)) @Zethson
 * {func}`ep.pp.locf_impute <ehrapy.preprocessing.locf_impute>` takes a `limit` on how many timepoints an observed value is carried forward, and its fallback only fills timepoints before a patient's first observation ([#1147](https://github.com/theislab/ehrapy/pull/1147)) @Zethson
 * `ep.ml` fits, applies and evaluates scikit-learn models that predict patient outcomes from static and longitudinal data ([#1144](https://github.com/theislab/ehrapy/pull/1144)) @Zethson
+* `ep.ml` fits, applies and evaluates models that predict patient outcomes from static and longitudinal data ([#1144](https://github.com/theislab/ehrapy/pull/1144)) @Zethson
 
   {func}`ep.ml.split <ehrapy.ml.split>` assigns patients to `train`, `tuning` and `held_out` sets, at random or by time, and {func}`ep.ml.fit <ehrapy.ml.fit>` fits imputation, scaling and the model on `train` only.
-  A {class}`ep.ml.Task <ehrapy.ml.Task>` sets the label and the observation window that longitudinal variables are summarized over.
-  {func}`ep.ml.evaluate <ehrapy.ml.evaluate>` reports AUROC, AUPRC, Brier score and calibration with bootstrap confidence intervals, overall or per subgroup, and {func}`ep.pl.prediction_performance <ehrapy.plot.prediction_performance>` plots the ROC, precision-recall and calibration curves.
+  A {class}`ep.ml.Task <ehrapy.ml.Task>` sets binary, multiclass, multilabel, regression or survival targets and the observation window that longitudinal variables are summarized over.
+  {func}`ep.ml.evaluate <ehrapy.ml.evaluate>` reports the metrics of every kind of task with confidence intervals from resampled patients, overall, per subgroup and as differences between subgroups such as demographic parity and equalized odds.
+  {func}`ep.pl.prediction_performance <ehrapy.plot.prediction_performance>` plots the ROC, precision-recall and calibration curves.
   On PhysioNet 2012, gradient boosting on summaries of the first 48 hours predicts in-hospital mortality with a held-out AUROC of 0.86 and AUPRC of 0.51.
 * {func}`ep.pp.gradient_boosting_impute <ehrapy.preprocessing.gradient_boosting_impute>` imputes every variable with a gradient boosting model, which for longitudinal data also uses the closest observed values before and after each timepoint @Zethson
 
