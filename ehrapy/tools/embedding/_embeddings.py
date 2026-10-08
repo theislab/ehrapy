@@ -385,10 +385,10 @@ def famd(
     The method produces factor scores for individuals, correlation circles for quantitative variables, and category centroids for qualitative variables.
 
     Args:
-        edata: The EHRData object (n_obs × n_vars × n_timesteps) containing mixed data types.
+        edata: Central data object or a 2D array with quantitative and qualitative variables.
         layer: The layer to perform the computation on.
         n_components: Number of dimensions to retain in the reduced space. Must be less than min(n_obs, n_vars).
-        key_added: Key under which to store the results in `.obsm` and `.uns`. Defaults to 'famd'.
+        key_added: Key under which to store the results in `.obsm`, `.varm` and `.uns`. Defaults to 'famd'.
         var_names: Names of the input variables (features).
             Used to generate interpretable feature names in the output (e.g., 'age' vs 'var_0', 'sex_M' vs 'var_1_M').
             If None, defaults to 'var_0', 'var_1', etc. Automatically extracted from `.var_names`.
@@ -403,16 +403,27 @@ def famd(
         >>> edata.uns["famd"]["variance_ratio"]  # Explained variance
 
     Returns:
-        If edata is EHRData and copy=True, returns modified copy. If edata is ndarray, returns (factor_scores, loadings, metadata).
+        If `edata` is an array, returns `(factor_scores, loadings, metadata)`.
+        `loadings` has one row per entry of `metadata["feature_names"]`: one per quantitative variable, followed by one per category of each qualitative variable.
+        Otherwise, depending on `copy`, returns or updates `edata` with the following fields.
+
+        `X_{key_added}` : :class:`numpy.ndarray` (`edata.obsm`)
+        Factor scores of shape `(n_obs, n_components)`.
+
+        `{key_added}_loadings` : :class:`numpy.ndarray` (`edata.varm`)
+        Loadings of the quantitative variables.
+        Rows of qualitative variables are `NaN` because their loadings are per category.
+
+        `{key_added}` : `dict` (`edata.uns`)
+        `loadings` of all quantitative variables and categories labelled by `feature_names` and mapped to variable positions by `feature_to_original`, together with `variance`, `variance_ratio`, `quant_mask` and `params`.
     """
-    arr = edata.X if layer is None else edata.layers[layer]
-    _raise_array_type_not_implemented(famd, type(arr))
+    _raise_array_type_not_implemented(famd, type(edata))
     return None
 
 
-@function_2D_only()
 @famd.register(EHRData)
-def _(
+@function_2D_only()
+def _famd_ehrdata(  # named because function_2D_only puts __name__ into its error message
     edata: EHRData,
     /,
     *,
@@ -430,15 +441,21 @@ def _(
     arr = edata.X if layer is None else edata.layers[layer]
     factor_scores, loadings, metadata = famd(arr, n_components=n_components, var_names=edata.var_names)
 
+    quant_mask = metadata["quant_mask"]
+    var_loadings = np.full((edata.n_vars, loadings.shape[1]), np.nan)
+    # quantitative features come first in the transformed matrix
+    var_loadings[quant_mask] = loadings[: quant_mask.sum()]
+
     edata.obsm[f"X_{key_added}"] = factor_scores
-    edata.varm[f"{key_added}_loadings"] = loadings
+    edata.varm[f"{key_added}_loadings"] = var_loadings
     edata.uns[key_added] = {
         "params": {
             "n_components": n_components,
         },
+        "loadings": loadings,
         "variance": metadata["variance"],
         "variance_ratio": metadata["variance_ratio"],
-        "quant_mask": metadata["quant_mask"],
+        "quant_mask": quant_mask,
         "feature_names": metadata["feature_names"],
         "feature_to_original": metadata["feature_to_original"],
     }
@@ -450,10 +467,10 @@ def _(
 def _(
     arr: np.ndarray, /, *, n_components: int = 2, var_names: Sequence[str] | None = None, **kwargs
 ) -> tuple[np.ndarray, np.ndarray, dict]:
-    if arr.ndim != 3 or arr.shape[2] != 1:
-        raise ValueError(f"FAMD requires 3D array with single timepoint (shape[2]=1), got shape {arr.shape}")
+    data = arr[:, :, 0] if arr.ndim == 3 and arr.shape[2] == 1 else arr
+    if data.ndim != 2:
+        raise ValueError(f"famd() only supports 2D data, got an array with shape {arr.shape}")
 
-    data = arr[:, :, 0]
     n_vars = data.shape[1]
 
     if var_names is None:

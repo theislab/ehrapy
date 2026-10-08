@@ -1,19 +1,15 @@
-from collections.abc import Callable
 from functools import singledispatch
-from typing import Any, Literal
+from typing import Literal
 
 import numpy as np
-from scipy.sparse import coo_array
 
-
-def _raise_array_type_not_implemented(function: Callable[..., Any], array_type: type) -> None:
-    raise NotImplementedError(f"{function.__name__} not implemented for type {array_type}")
+from ehrapy._compat import _raise_array_type_not_implemented
 
 
 def timeseries_distance(
     obs_indices_x: np.ndarray,
     obs_indices_y: np.ndarray,
-    arr: np.ndarray | coo_array,
+    arr: np.ndarray,
     metric: Literal["dtw", "soft_dtw", "gak"] = "dtw",
 ) -> float:
     """Calculate temporal distance between two patients across all variables.
@@ -33,19 +29,19 @@ def timeseries_distance(
 
     Returns:
         Average temporal distance across valid variable pairs.
-        Returns 0 if no valid variable pairs exist.
+        Returns 0 for a patient compared with itself and `np.inf` if no valid variable pairs exist, so that patients without comparable measurements are never nearest neighbours.
     """
     return _timeseries_distance_impl(arr, obs_indices_x, obs_indices_y, metric)
 
 
 @singledispatch
 def _timeseries_distance_impl(
-    arr: np.ndarray | coo_array,
+    arr: np.ndarray,
     obs_indices_x: np.ndarray,
     obs_indices_y: np.ndarray,
     metric: Literal["dtw", "soft_dtw", "gak"],
 ) -> float:
-    _raise_array_type_not_implemented(timeseries_distance, type(arr))
+    _raise_array_type_not_implemented(_timeseries_distance_impl, type(arr))
 
     return None
 
@@ -75,6 +71,9 @@ def _(
 
     obs_i = int(np.asarray(obs_indices_x).flat[0])
     obs_j = int(np.asarray(obs_indices_y).flat[0])
+    if obs_i == obs_j:
+        return 0.0
+
     total_distance = 0
     valid_variable_count = 0
 
@@ -91,16 +90,7 @@ def _(
             total_distance += variable_distance
             valid_variable_count += 1
 
-    return total_distance / max(valid_variable_count, 1)
+    if valid_variable_count == 0:
+        return np.inf
 
-
-@_timeseries_distance_impl.register
-def _(
-    arr: coo_array,
-    obs_indices_x: np.ndarray,
-    obs_indices_y: np.ndarray,
-    metric: Literal["dtw", "soft_dtw", "gak"],
-) -> float:
-    _raise_array_type_not_implemented(timeseries_distance, type(arr))
-
-    return None
+    return total_distance / valid_variable_count

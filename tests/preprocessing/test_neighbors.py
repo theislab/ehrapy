@@ -39,6 +39,22 @@ def test_neighbors_with_timeseries_metric_dtw_tight_test(edata_and_distances_dtw
 
 
 @pytest.mark.parametrize("metric", ["dtw", "soft_dtw", "gak"])
+def test_neighbors_with_timeseries_sparse_patient(rng, metric):
+    layer = rng.standard_normal((12, 2, 10))
+    layer[0, :, 2:] = np.nan
+    edata = ed.EHRData(shape=(12, 2), layers={DEFAULT_TEM_LAYER_NAME: layer})
+
+    ep.pp.neighbors(edata, n_neighbors=4, metric=metric, use_rep=DEFAULT_TEM_LAYER_NAME)
+
+    distances, connectivities = edata.obsp["distances"], edata.obsp["connectivities"]
+    assert np.isfinite(distances.data).all()
+    assert np.isfinite(connectivities.data).all()
+    assert distances[0].nnz == distances[:, 0].nnz == 0
+    assert connectivities[0].nnz == connectivities[:, 0].nnz == 0
+    assert (distances[1:].getnnz(axis=1) == 3).all()
+
+
+@pytest.mark.parametrize("metric", ["dtw", "soft_dtw", "gak"])
 def test_neighbors_with_timeseries_illegal_arguments(edata_and_distances_dtw, metric):
     edata, _ = edata_and_distances_dtw
     with pytest.raises(ValueError, match=rf"use_rep must be specified if metric is {metric}"):

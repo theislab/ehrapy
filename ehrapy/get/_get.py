@@ -6,6 +6,8 @@ from scanpy.get import obs_df as scanpy_obs_df
 from scanpy.get import rank_genes_groups_df
 from scanpy.get import var_df as scanpy_var_df
 
+from ehrapy._compat import function_2D_only
+
 if TYPE_CHECKING:
     from collections.abc import Collection, Iterable
 
@@ -26,6 +28,7 @@ def obs_df(
     Args:
         edata: Central data object.
         keys: Keys from either `.var_names`, `.var[feature_symbols]`, or `.obs.columns`.
+            Keys from `.var_names` or `.var[feature_symbols]` require `.X` or `layer` to be 2D, whereas `.obs` columns can be read from 3D data.
         obsm_keys: Tuples of `(key from obsm, column index of obsm[key])`.
         layer: Layer of `edata` to use as feature values.
         feature_symbols: Column of `edata.var` to search for `keys` in.
@@ -39,9 +42,17 @@ def obs_df(
         >>> edata = ed.dt.mimic_2()
         >>> ages = ep.get.obs_df(edata, keys=["age"])
     """
+    array = edata.X if layer is None else edata.layers[layer]
+    var_keys = edata.var_names if feature_symbols is None else edata.var[feature_symbols]
+    if array is not None and array.ndim != 2 and var_keys.isin([keys] if isinstance(keys, str) else keys).any():
+        raise ValueError(
+            f"obs_df() only supports 2D data for keys from var_names, got {'data.X' if layer is None else f'data.layers[{layer}]'} with shape {array.shape}"
+        )
+
     return scanpy_obs_df(adata=edata, keys=keys, obsm_keys=obsm_keys, layer=layer, gene_symbols=feature_symbols)
 
 
+@function_2D_only()
 def var_df(
     edata: EHRData,
     *,

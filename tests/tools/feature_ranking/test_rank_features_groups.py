@@ -4,6 +4,7 @@ import ehrdata as ed
 import numpy as np
 import pandas as pd
 import pytest
+import scipy.sparse as sp
 from ehrdata.core.constants import CATEGORICAL_TAG, DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrdata.io import read_csv
 
@@ -485,6 +486,22 @@ def test_rank_features_groups_3D_edata(edata_blob_small):
     ep.tl.rank_features_groups(edata_blob_small, groupby="cluster", layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         ep.tl.rank_features_groups(edata_blob_small, groupby="cluster", layer=DEFAULT_TEM_LAYER_NAME)
+
+
+def test_rank_features_groups_sparse_categorical(rng):
+    X = np.column_stack([rng.standard_normal(40), rng.integers(0, 3, 40)])
+    obs = pd.DataFrame({"group": pd.Categorical(rng.choice(["a", "b"], 40))}, index=[str(i) for i in range(40)])
+    var = pd.DataFrame({FEATURE_TYPE_KEY: [NUMERIC_TAG, CATEGORICAL_TAG]}, index=["num", "cat"])
+    edata_dense = ed.EHRData(X=X, obs=obs, var=var)
+    edata_sparse = ed.EHRData(X=sp.csr_array(X), obs=obs, var=var)
+
+    ep.tl.rank_features_groups(edata_dense, "group")
+    ep.tl.rank_features_groups(edata_sparse, "group")
+
+    for field in ("names", "scores", "pvals"):
+        np.testing.assert_array_equal(
+            edata_sparse.uns["rank_features_groups"][field], edata_dense.uns["rank_features_groups"][field]
+        )
 
 
 def test_filter_rank_features_groups_edata(mimic_2):

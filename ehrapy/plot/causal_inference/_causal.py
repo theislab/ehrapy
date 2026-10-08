@@ -7,6 +7,8 @@ from typing import TYPE_CHECKING
 import holoviews as hv
 import numpy as np
 
+from ehrapy.plot._holoviews import load_hv_extensions
+
 if TYPE_CHECKING:
     import pandas as pd
 
@@ -18,6 +20,7 @@ _WEIGHTED_COLOR = "#d62728"
 _GUIDE_COLOR = "#404040"
 
 
+@load_hv_extensions()
 def love_plot(
     balance: pd.DataFrame,
     *,
@@ -92,6 +95,7 @@ def love_plot(
     return overlay
 
 
+@load_hv_extensions()
 def propensity_overlap(
     positivity: dict,
     *,
@@ -156,6 +160,7 @@ def propensity_overlap(
     )
 
 
+@load_hv_extensions()
 def causal_effect(
     estimate: CausalEstimate,
     *,

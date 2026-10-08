@@ -129,6 +129,7 @@ def ncp(
         layer: Key of the 3D layer to decompose (shape ``n_obs × n_vars × n_time``).
             If `None`, `edata.X` is used.
             All values must be non-negative (use ``sigmoid_transform=True`` for logit layers, or ``np.abs`` / clipping beforehand).
+            Missing values are not supported and must be imputed beforehand.
         rank: Number of components (rank of the decomposition).
             Each component describes one co-occurring patient sub-group, variable signature, and temporal trajectory.
         n_iter_max: Maximum number of multiplicative-update iterations.
@@ -160,16 +161,23 @@ def ncp(
     if layer is not None and layer not in edata.layers:
         raise KeyError(f"Layer {layer!r} not found in edata.layers. Available: {list(edata.layers)}")
 
+    source = "edata.X" if layer is None else f"Layer {layer!r}"
     tensor = np.asarray(edata.X if layer is None else edata.layers[layer], dtype=np.float64)
     if tensor.ndim != 3:
-        raise ValueError(
-            f"{'edata.X' if layer is None else f'Layer {layer!r}'} must be 3D (n_obs × n_vars × n_time), got shape {tensor.shape}."
-        )
+        raise ValueError(f"{source} must be 3D (n_obs × n_vars × n_time), got shape {tensor.shape}.")
 
     if sigmoid_transform:
         from scipy.special import expit
 
         tensor = expit(tensor)
+
+    if np.isnan(tensor).any():
+        raise ValueError(f"{source} contains NaN values. Impute them first, e.g. with `ep.pp.simple_impute`.")
+    if (tensor < 0).any():
+        raise ValueError(
+            f"{source} contains negative values, but NCP requires non-negative input. "
+            "Use `sigmoid_transform=True` for logits or shift the data to be non-negative first."
+        )
 
     edata = edata.copy() if copy else edata
 

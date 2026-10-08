@@ -5,6 +5,8 @@ from typing import TYPE_CHECKING
 import holoviews as hv
 import numpy as np
 
+from ehrapy.plot._holoviews import load_hv_extensions
+
 if TYPE_CHECKING:
     from ehrdata import EHRData
 
@@ -35,6 +37,7 @@ def _require_ncp(edata: EHRData, key: str) -> None:
         raise KeyError(f"NCP results not found ({missing}). Run `ep.tl.ncp(edata, ...)` first.")
 
 
+@load_hv_extensions()
 def ncp(
     edata: EHRData,
     *,
@@ -160,6 +163,7 @@ def ncp(
     return hv.Layout(panels).cols(3)
 
 
+@load_hv_extensions()
 def ncp_cluster_trajectories(
     edata: EHRData,
     groupby: str,

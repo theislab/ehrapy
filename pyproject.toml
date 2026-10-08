@@ -52,15 +52,11 @@ dependencies = [
     # mirroring scanpy, skip 3.11.0 series for now: https://github.com/matplotlib/matplotlib/issues/31575https://github.com/scverse/scanpy/blob/d5a745e1258f5ca6a23c6a790f27b40d7ad05418/pyproject.toml#L60
     "matplotlib>=3.10,!=3.11.0rc1,!=3.11.0rc2,!=3.11",
     "scverse-misc[settings]>=0.0.7",
-    "requests",
     "scikit-misc",  # required for seuratv3 highly variable features
     "lifelines>=0.30.0",
     "missingno",
-    "thefuzz[speedup]",
-    "fhiry",
     "tableone",
     "fknni[faisscpu]>=1.3.0",
-    "filelock",
     "numpy>=2.0.0",
     "numba>=0.60.0",
     "array-api-compat",
@@ -108,7 +104,8 @@ test = [
     "ehrapy[dask,leiden]",
     "pytest",
     "pytest-cov",
-    "pytest-mock"
+    "pytest-mock",
+    "requests"
 ]
 
 [dependency-groups]
@@ -171,7 +168,6 @@ cuda = ["12"]#, "13"]
 source_pkgs = ["ehrapy"]
 omit = [
     "**/test_*.py",
-    "ehrapy/data/_datasets.py",  # Difficult to test
 ]
 
 [tool.pytest.ini_options]

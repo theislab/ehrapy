@@ -1,5 +1,3 @@
-import holoviews as hv
-
 from ehrapy.plot._catplot import catplot
 from ehrapy.plot._colormaps import Colormaps
 from ehrapy.plot._missingno import (
@@ -50,9 +48,6 @@ from ehrapy.plot._timeseries import timeseries
 from ehrapy.plot._variable_correlation_plot import variable_correlations, variable_dependencies
 from ehrapy.plot.causal_inference import causal_effect, love_plot, propensity_overlap
 from ehrapy.plot.feature_ranking._feature_importances import rank_features_supervised
-
-if not hv.Store.renderers:
-    hv.extension("bokeh", "matplotlib")
 
 __all__ = [
     "catplot",

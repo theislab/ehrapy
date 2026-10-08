@@ -9,9 +9,9 @@ import scanpy as sc
 from ehrdata import EHRData, infer_feature_types, move_to_x
 from ehrdata._feature_types import _check_feature_types
 from ehrdata.core.constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
+from fast_array_utils.conv import to_dense
 
 from ehrapy._compat import function_2D_only
-from ehrapy._types import asarray
 from ehrapy.preprocessing import encode
 
 if TYPE_CHECKING:
@@ -221,7 +221,7 @@ def _evaluate_categorical_features(
             continue
 
         try:
-            feature_values = edata[:, feature].X.flatten().toarray()
+            feature_values = to_dense(edata[:, feature].X, to_cpu_memory=True).ravel()
         except ValueError as e:
             raise ValueError(f"Feature {feature} is not encoded. Please encode it using `ehrapy.pp.encode`") from e
 
@@ -268,7 +268,7 @@ def _nonzero_fractions(
     edata: EHRData, features: Sequence[str], *, groupby: str, reference: str
 ) -> dict[str, pd.DataFrame]:
     """Fractions of observations with non-zero values per feature (rows) and group (columns), as `pts` of :func:`scanpy.tl.rank_genes_groups`."""
-    nonzero = pd.DataFrame(asarray(edata[:, features].X) != 0, columns=features)
+    nonzero = pd.DataFrame(to_dense(edata[:, features].X, to_cpu_memory=True) != 0, columns=features)
     grouped = nonzero.groupby(edata.obs[groupby].astype(str).to_numpy())
     fractions = {"pts": grouped.mean().T}
     if reference == "rest":
