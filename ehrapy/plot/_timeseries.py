@@ -22,7 +22,7 @@ def timeseries(
     obs_names: str | int | Sequence[str | int] | None = None,
     var_names: str | Sequence[str] | None = None,
     tem_names: Any | Sequence[Any] | slice | None = None,
-    layer: str | None = "tem_data",
+    layer: str | None = None,
     overlay: bool = False,
     xlabel: str | None = None,
     ylabel: str | None = None,
@@ -56,7 +56,7 @@ def timeseries(
     Examples:
         >>> import ehrapy as ep
         >>> import ehrdata as ed
-        >>> edata = ed.dt.ehrdata_blobs(n_variables=10, n_observations=5, base_timepoints=100, layer="tem_data")
+        >>> edata = ed.dt.ehrdata_blobs(n_variables=10, n_observations=5, base_timepoints=100)
         >>> ep.pl.timeseries(edata, obs_names="1", var_names=["feature_1", "feature_2"], tem_names=slice(0, 10))
 
         .. image:: /_static/docstring_previews/timeseries_plot.png
