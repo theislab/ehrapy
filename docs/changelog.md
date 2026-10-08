@@ -25,6 +25,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### 💥 Breaking changes
 
+* The `ep.pl.missing_values_*` plots are interactive HoloViews plots that accept longitudinal data, and the `missingno` dependency is dropped ([#1149](https://github.com/theislab/ehrapy/pull/1149)) @Zethson
+
+  {func}`ep.pl.missing_values_matrix <ehrapy.plot.missing_values_matrix>` shows the percentage of observed values per observation, or per timepoint for longitudinal data, and the bar plot, heatmap and dendrogram count every timepoint of every observation as one row.
+  They take `var_names`, `width`, `height` and `title` instead of the `missingno` arguments.
 * {func}`ep.pl.timeseries <ehrapy.plot.timeseries>` plots the 3D `.X` by default instead of `.layers["tem_data"]`, like every other function ([#1121](https://github.com/theislab/ehrapy/pull/1121)) @sueoglu
 * Survival analysis and regression models take their columns from `edata.obs` or variables and only drop observations missing a column the model uses ([#1133](https://github.com/theislab/ehrapy/pull/1133)) @Zethson
 
