@@ -11,20 +11,15 @@
   <img src="https://user-images.githubusercontent.com/21954664/156930990-0d668468-0cd9-496e-995a-96d2c2407cf5.png" alt="ehrapy logo" width="25%">
 </p>
 
+# ehrapy: electronic health record (EHR) analysis in Python
 
-# ehrapy overview
-
-**ehrapy** is a modular open-source Python framework for exploratory analysis of heterogeneous epidemiological and EHR data.
-It supports a full pipeline from quality control, imputation and normalization to clustering, trajectory inference, survival analysis, causal inference and bias detection.
-Data lives in [ehrdata](https://github.com/theislab/ehrdata)'s `EHRData` object, which holds static 2D data and longitudinal 3D data as numpy, sparse or dask arrays.
+ehrapy is an open-source Python framework for exploratory and statistical analysis of electronic health records (EHR) and other clinical and epidemiological data.
+It reads static and longitudinal patient data from OMOP databases, public datasets such as MIMIC and PhysioNet, or your own tables.
+It is for clinical researchers, epidemiologists and data scientists who want to go from raw patient data to quality-controlled cohorts, patient groups, trajectories, statistical tests, survival curves and treatment effect estimates in one reproducible workflow.
 
 <p align="center">
-    <img src="https://github.com/user-attachments/assets/84fe403c-66de-4dd9-9265-b0d1739ce3cc" alt="fig1" width="100%">
+    <img src="https://github.com/user-attachments/assets/84fe403c-66de-4dd9-9265-b0d1739ce3cc" alt="ehrapy overview: data preparation, data preprocessing and knowledge inference" width="100%">
 </p>
-
-## Documentation
-
-Please read the [documentation](https://ehrapy.readthedocs.io/en/latest) for installation, tutorials, use cases, and more.
 
 ## Installation
 
@@ -36,13 +31,47 @@ $ pip install ehrapy
 
 Optional extras enable dask-backed out-of-core arrays (`ehrapy[dask]`), Leiden clustering (`ehrapy[leiden]`), and GPU acceleration through rapids-singlecell (`ehrapy[rapids12]` or `ehrapy[rapids13]`).
 
-## API
+## Quickstart
 
-Please have a look at the [API documentation](https://ehrapy.readthedocs.io/en/latest/api.html) and the [tutorials](https://ehrapy.readthedocs.io/en/latest/tutorials/index.html).
+Cluster 11,988 intensive care stays from PhysioNet 2012, each with 37 measurements over 48 hours, and test which measurements differ between patients who died and survived, after `pip install "ehrapy[leiden]"`:
 
 ```python
+import ehrdata as ed
 import ehrapy as ep
+
+edata = ed.dt.physionet2012()  # 11,988 ICU stays × 37 measurements × 48 hours
+ed.infer_feature_types(edata)
+ep.pp.locf_impute(edata)
+ep.pp.scale_norm(edata)
+
+summary = ep.pp.summarize_measurements(edata, statistics=["mean", "min", "max"])
+summary.obs["outcome"] = summary.obs["In-hospital_death"].map({0: "survived", 1: "died"}).astype("category")
+ep.pp.pca(summary)
+ep.pp.neighbors(summary)
+ep.tl.leiden(summary, resolution=0.3)
+ep.tl.umap(summary)
+ep.pl.umap(summary, color=["leiden", "outcome"])
+
+ep.tl.rank_features_groups(summary, groupby="outcome", groups=["died"], reference="survived")
+ep.get.rank_features_groups_df(summary, group="died")[["names", "scores", "pvals_adj"]].head()
 ```
+
+<p align="center">
+    <img src="https://raw.githubusercontent.com/theislab/ehrapy/main/docs/_static/readme_quickstart.png" alt="UMAP of PhysioNet 2012 intensive care stays colored by Leiden cluster and in-hospital death" width="100%">
+</p>
+
+```
+        names     scores      pvals_adj
+0    GCS_mean -28.216665  1.869927e-146
+1     GCS_max -22.782927  1.980853e-100
+2    BUN_mean  18.654604   3.497719e-70
+3     BUN_min  18.486603   2.324785e-69
+4  Urine_mean -16.941847   1.399260e-59
+```
+
+## Documentation
+
+The [documentation](https://ehrapy.readthedocs.io) has the [tutorials](https://ehrapy.readthedocs.io/en/stable/tutorials/index.html) and the [API reference](https://ehrapy.readthedocs.io/en/stable/api.html).
 
 ## Citation
 
@@ -73,4 +102,3 @@ Read more about ehrapy in the [associated publication](https://doi.org/10.1038/s
 
 [pip]: https://pip.pypa.io/
 [pypi]: https://pypi.org/
-[api]: https://ehrapy.readthedocs.io/en/latest/api.html

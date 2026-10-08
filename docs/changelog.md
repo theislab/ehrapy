@@ -90,6 +90,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 * Fix the {func}`ep.pl.kaplan_meier <ehrapy.plot.kaplan_meier>` example ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
 * Describe {func}`ep.tl.ncp <ehrapy.tools.ncp>` in plain words and drop the doubled period in the docs footer ([#1131](https://github.com/theislab/ehrapy/pull/1131)) @Zethson
 * Docstring examples keep time series in the 3D `.X` instead of `.layers["tem_data"]` and show the outputs the examples actually produce ([#1098](https://github.com/theislab/ehrapy/pull/1098)) @sueoglu
+* Describe ehrapy's data sources and analyses in the README, docs landing page and package metadata, and add a longitudinal quickstart, a sitemap, an `llms.txt`, stable canonical URLs and a `CITATION.cff` ([#1141](https://github.com/theislab/ehrapy/pull/1141)) @Zethson
 
 ### 🧰 Maintenance
 

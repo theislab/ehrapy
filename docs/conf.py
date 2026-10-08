@@ -43,10 +43,23 @@ extensions = [
     "sphinxcontrib.bibtex",
     "IPython.sphinxext.ipython_console_highlighting",
     "sphinxext.opengraph",
+    "sphinx_sitemap",
+    "sphinx_llms_txt",
 ]
 
-ogp_site_url = "https://ehrapy.readthedocs.io/en/latest/"
-ogp_image = "https://ehrapy.readthedocs.io/en/latest/_static/ehrapy_logos/ehrapy_pure.png"
+html_baseurl = "https://ehrapy.readthedocs.io/en/stable/"
+# html_baseurl already contains the language and version
+sitemap_url_scheme = "{link}"
+sitemap_excludes = ["search.html", "genindex.html", "py-modindex.html"]
+ogp_site_url = html_baseurl
+ogp_image = f"{html_baseurl}_static/ehrapy_logos/ehrapy_pure.png"
+llms_txt_summary = info["Summary"]
+llms_txt_exclude = ["changelog", "references", "contributing"]
+llms_txt_uri_template = "{base_url}{docname}.html"
+llms_txt_full_file = False
+# llms_txt_full_file is ignored while _sources exists (sphinx-llms-txt 0.7.1), so cap it away
+llms_txt_full_max_size = 0
+llms_txt_full_size_policy = "info_skip"
 
 # nbsphinx specific settings
 exclude_patterns = [
