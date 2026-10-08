@@ -16,6 +16,7 @@
 ehrapy is an open-source Python framework for exploratory and statistical analysis of electronic health records (EHR) and other clinical and epidemiological data.
 It reads static and longitudinal patient data from OMOP databases, public datasets such as MIMIC and PhysioNet, or your own tables.
 It is for clinical researchers, epidemiologists and data scientists who want to go from raw patient data to quality-controlled cohorts, patient groups, trajectories, statistical tests, survival curves and treatment effect estimates in one reproducible workflow.
+With `ep.ml`, it also trains and evaluates prediction models on the same data, from gradient boosting to recurrent and transformer networks, with patient-level splits, calibration and subgroup metrics.
 
 <p align="center">
     <img src="https://github.com/user-attachments/assets/84fe403c-66de-4dd9-9265-b0d1739ce3cc" alt="ehrapy overview: data preparation, data preprocessing and knowledge inference" width="100%">
@@ -29,7 +30,7 @@ You can install _ehrapy_ via [pip] from [PyPI]:
 $ pip install ehrapy
 ```
 
-Optional extras enable dask-backed out-of-core arrays (`ehrapy[dask]`), Leiden clustering (`ehrapy[leiden]`), and GPU acceleration through rapids-singlecell (`ehrapy[rapids12]` or `ehrapy[rapids13]`).
+Optional extras enable dask-backed out-of-core arrays (`ehrapy[dask]`), Leiden clustering (`ehrapy[leiden]`), deep learning prediction models (`ehrapy[ml]`), and GPU acceleration through rapids-singlecell (`ehrapy[rapids12]` or `ehrapy[rapids13]`).
 
 ## Quickstart
 

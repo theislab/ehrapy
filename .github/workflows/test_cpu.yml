@@ -57,6 +57,8 @@ jobs:
     name: ${{ matrix.env.label }}
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ contains(matrix.env.name, 'pre') }}  # make "all-green" pass even if pre-release job fails
+    env:
+      UV_TORCH_BACKEND: cpu
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -76,7 +78,7 @@ jobs:
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ehrapy_data
-          key: ehrapy-data-tests-v1
+          key: ehrapy-data-tests-v2
 
       - name: create hatch environment
         run: uvx hatch env create ${{ matrix.env.name }}
@@ -96,7 +98,7 @@ jobs:
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ehrapy_data
-          key: ehrapy-data-tests-v1
+          key: ehrapy-data-tests-v2
       - name: generate coverage report
         run: |
           # See https://coverage.readthedocs.io/page/config.html#run-patch

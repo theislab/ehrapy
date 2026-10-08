@@ -7,6 +7,7 @@ from ehrapy.plot._missing_values import (
     missing_values_matrix,
 )
 from ehrapy.plot._ncp import ncp, ncp_cluster_trajectories
+from ehrapy.plot._prediction import prediction_performance, subgroup_performance
 from ehrapy.plot._sankey import sankey_diagram, sankey_diagram_time
 from ehrapy.plot._scanpy_pl_api import (
     clustermap,
@@ -58,6 +59,8 @@ __all__ = [
     "missing_values_matrix",
     "ncp",
     "ncp_cluster_trajectories",
+    "prediction_performance",
+    "subgroup_performance",
     "sankey_diagram",
     "sankey_diagram_time",
     "clustermap",

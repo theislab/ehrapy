@@ -135,6 +135,17 @@ For any method in module `tl`, there is a method with the same name in `pl`.
     plot.cox_ph_adjusted_curves
 ```
 
+## Prediction
+
+```{eval-rst}
+.. autosummary::
+    :toctree: plot
+    :nosignatures:
+
+    plot.prediction_performance
+    plot.subgroup_performance
+```
+
 ## Patterns across patients, variables and time
 
 Finds groups of patients whose variables follow a similar course over time.
