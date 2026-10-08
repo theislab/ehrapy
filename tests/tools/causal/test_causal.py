@@ -224,27 +224,37 @@ def test_causal_array_types(array_type, estimator, kwargs):
         (ep.tl.positivity_check, {}),
     ],
 )
-def test_causal_obs_columns_on_3D_data(edata_blobs_3d, estimator, kwargs):
-    estimator(edata_blobs_3d, treatment="treated", covariates=["age"], **kwargs)
-    with pytest.raises(ValueError, match="only supports 2D data"):
-        estimator(edata_blobs_3d, treatment="treated", covariates=["age", "feature_0"], **kwargs)
+def test_causal_variables_on_3D_data(edata_blobs_3d, estimator, kwargs):
+    baseline = ed.EHRData(
+        X=ep.get.obs_df(edata_blobs_3d, keys=list(edata_blobs_3d.var_names)).to_numpy(),
+        obs=edata_blobs_3d.obs,
+        var=edata_blobs_3d.var,
+    )
+    kwargs = {"treatment": "treated", "covariates": ["age", "feature_0"], **kwargs}
+    expected = estimator(baseline, **kwargs)
+
+    result = estimator(edata_blobs_3d, **kwargs)
+
+    if isinstance(expected, pd.DataFrame):
+        pd.testing.assert_frame_equal(result, expected)
+    elif isinstance(expected, dict):
+        np.testing.assert_allclose(result["propensity_scores"], expected["propensity_scores"])
+    else:
+        assert result.value == pytest.approx(expected.value)
 
 
 class TestGuards:
-    def test_rejects_3d_layer(self):
+    def test_3d_layer_at_first_timepoint(self):
         from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
 
         edata = _synth_dataset()
-        edata.layers[DEFAULT_TEM_LAYER_NAME] = np.stack([edata.X, edata.X], axis=2)
-        with pytest.raises(ValueError, match=r"only supports 2D data"):
-            ep.tl.iptw(
-                edata,
-                treatment="tx",
-                outcome="y",
-                covariates=["age", "sex", "bmi"],
-                layer=DEFAULT_TEM_LAYER_NAME,
-                n_bootstrap=0,
-            )
+        kwargs = {"treatment": "tx", "outcome": "y", "covariates": ["age", "sex", "bmi"], "n_bootstrap": 0}
+        expected = ep.tl.iptw(edata, **kwargs)
+        edata.layers[DEFAULT_TEM_LAYER_NAME] = np.stack([edata.X, np.full_like(edata.X, np.nan), edata.X + 1], axis=2)
+
+        result = ep.tl.iptw(edata, layer=DEFAULT_TEM_LAYER_NAME, **kwargs)
+
+        assert result.value == pytest.approx(expected.value)
 
     def test_rejects_non_binary_treatment(self):
         edata = _synth_dataset()

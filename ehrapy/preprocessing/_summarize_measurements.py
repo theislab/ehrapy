@@ -197,3 +197,16 @@ def _aggregate_time(X: Array, statistic: str) -> Array:
             first_valid = xp.argmax(xp.astype(valid, xp.int8), axis=2, keepdims=True)
             return xp.sum(xp.where(xp.arange(X.shape[2]) == first_valid, X, 0), axis=2)
     raise ValueError(f"Unknown statistic: {statistic}")
+
+
+def _tem_times(edata: EHRData, time_key: str) -> np.ndarray:
+    """Time of every timepoint since the first one from `edata.tem[time_key]`, as numbers, time differences in seconds or dates, or its position if `tem` has no such column."""
+    if time_key not in edata.tem:
+        return np.arange(edata.n_t, dtype=np.float64)
+    times = edata.tem[time_key]
+    if pd.api.types.is_numeric_dtype(times):
+        times = times.to_numpy(np.float64)
+        return times - times[0]
+    if pd.api.types.is_datetime64_any_dtype(times):
+        times = times - times.iloc[0]
+    return pd.to_timedelta(times).dt.total_seconds().to_numpy()
