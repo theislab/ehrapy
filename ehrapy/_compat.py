@@ -99,11 +99,7 @@ def function_2D_only(*, allow_single_timepoint: bool = False, var_keys: Collecti
                 arrays = {"edata.X": data.X}
 
             for name, array in arrays.items():
-                if getattr(array, "ndim", 2) == 3 and not (allow_single_timepoint and array.shape[2] == 1):
-                    raise ValueError(
-                        f"{func.__name__}() only supports 2D data, but {name} has shape {array.shape}. "
-                        "Aggregate the time axis first, e.g. with `ep.pp.summarize_measurements()`."
-                    )
+                _raise_if_3D(array, func.__name__, name, allow_single_timepoint=allow_single_timepoint)
 
             return func(*args, **kwargs)
 
@@ -392,3 +388,11 @@ def _(X: DaskArray, values: np.ndarray) -> DaskArray:
 def _raise_if_dask(X: Array | CSBase, name: str, reason: str) -> None:
     if isinstance(X, DaskArray):
         raise NotImplementedError(f"{name} does not support dask arrays because {reason}.")
+
+
+def _raise_if_3D(X: Any, name: str, array_name: str, *, allow_single_timepoint: bool = False) -> None:
+    if getattr(X, "ndim", 2) == 3 and not (allow_single_timepoint and X.shape[2] == 1):
+        raise ValueError(
+            f"{name}() only supports 2D data, but {array_name} has shape {X.shape}. "
+            "Aggregate the time axis first, e.g. with `ep.pp.summarize_measurements()`."
+        )

@@ -8,7 +8,6 @@ import pandas as pd
 from bokeh.palettes import Category10
 from numpy import ndarray
 
-from ehrapy._compat import function_2D_only
 from ehrapy.get import obs_df
 from ehrapy.plot._holoviews import load_hv_extensions
 
@@ -21,7 +20,6 @@ if TYPE_CHECKING:
     from statsmodels.regression.linear_model import RegressionResults
 
 
-@function_2D_only()
 @load_hv_extensions()
 def ols(
     edata: EHRData | None = None,

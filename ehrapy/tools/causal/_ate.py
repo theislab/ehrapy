@@ -11,7 +11,6 @@ from typing import TYPE_CHECKING, Literal
 import array_api_compat
 import numpy as np
 
-from ehrapy._compat import function_2D_only
 from ehrapy.tools.causal._design import assert_binary_treatment, build_design
 from ehrapy.tools.causal._estimate import CausalEstimate
 from ehrapy.tools.causal._models import fit_propensity, predict_mean, resolve_outcome_model
@@ -47,7 +46,6 @@ def _bootstrap_ate(
     return se, ci_lower, ci_upper
 
 
-@function_2D_only()
 def iptw(
     edata: EHRData,
     treatment: str,
@@ -148,7 +146,6 @@ def iptw(
     )
 
 
-@function_2D_only()
 def g_computation(
     edata: EHRData,
     treatment: str,
@@ -237,7 +234,6 @@ def g_computation(
     )
 
 
-@function_2D_only()
 def aipw(
     edata: EHRData,
     treatment: str,
@@ -349,7 +345,6 @@ def aipw(
     )
 
 
-@function_2D_only()
 def propensity_score_matching(
     edata: EHRData,
     treatment: str,

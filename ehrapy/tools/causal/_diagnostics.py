@@ -8,7 +8,6 @@ import array_api_compat
 import numpy as np
 import pandas as pd
 
-from ehrapy._compat import function_2D_only
 from ehrapy.tools.causal._design import Design, _collect_columns, assert_binary_treatment
 from ehrapy.tools.causal._models import fit_propensity
 
@@ -19,7 +18,6 @@ if TYPE_CHECKING:
     from sklearn.base import BaseEstimator
 
 
-@function_2D_only()
 def covariate_balance(
     edata: EHRData,
     treatment: str,
@@ -98,7 +96,6 @@ def covariate_balance(
     )
 
 
-@function_2D_only()
 def positivity_check(
     edata: EHRData,
     treatment: str,
