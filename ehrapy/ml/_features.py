@@ -52,6 +52,28 @@ def _features(
     return features, [*names, *covariates.columns]
 
 
+def _sequences(
+    edata: EHRData,
+    task: Task,
+    var_names: Sequence[str],
+    obs_keys: Sequence[str],
+    layer: str | None,
+    *,
+    feature_names: Sequence[str] | None = None,
+) -> tuple[Array, list[str]]:
+    """Time series of the variables over the observation window, followed by the `obs` covariates repeated over time."""
+    X = edata.X if layer is None else edata.layers[layer]
+    if X.ndim != 3:
+        raise ValueError("Models of time series need longitudinal data.")
+    window = edata[:, list(var_names), task._window(X.shape[2])]
+    values = to_dense(window.X if layer is None else window.layers[layer])
+    covariates = _covariates(edata, obs_keys, None if feature_names is None else feature_names[len(var_names) :])
+    xp = array_namespace(values)
+    static = _like_obs(values, covariates.to_numpy(np.float64))
+    static = xp.broadcast_to(static[:, :, None], (*static.shape, values.shape[2]))
+    return xp.concat([xp.astype(values, xp.float64), static], axis=1), [*var_names, *covariates.columns]
+
+
 def _covariates(edata: EHRData, obs_keys: Sequence[str], columns: Sequence[str] | None) -> pd.DataFrame:
     """`obs` columns with categorical columns one-hot encoded, aligned with `columns` if given."""
     covariates = pd.get_dummies(edata.obs[list(obs_keys)]) if obs_keys else edata.obs[[]]

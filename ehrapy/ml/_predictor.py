@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from functools import singledispatch
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
 import pandas as pd
@@ -22,13 +22,15 @@ from sklearn.preprocessing import StandardScaler
 
 from ehrapy._compat import _map_observation_blocks, _materialize
 from ehrapy._settings import settings
-from ehrapy.ml._features import _features
+from ehrapy.ml._deep import DeepModel, _deep_model, _FittedModel
+from ehrapy.ml._features import _features, _sequences
 from ehrapy.ml._task import Kind, Task, _targets
 
 if TYPE_CHECKING:
     from collections.abc import Hashable, Iterable
 
     from ehrdata import EHRData
+    from torch import nn
 
 
 @dataclass(frozen=True)
@@ -37,8 +39,10 @@ class Predictor:
 
     #: The prediction task.
     task: Task
-    #: The fitted imputation, scaling and model steps.
-    model: Pipeline
+    #: The fitted imputation and scaling of summarized features, or `None` for models of time series.
+    preprocessing: Pipeline | None
+    #: The fitted scikit-learn estimator or deep learning model.
+    model: Any
     #: Variables the features are computed from.
     var_names: list[str]
     #: Columns of `obs` used as features.
@@ -57,7 +61,24 @@ def fit(
     edata: EHRData,
     task: Task,
     *,
-    model: Literal["logistic", "linear", "gradient_boosting", "random_forest", "cox"] | BaseEstimator | None = None,
+    model: Literal[
+        "logistic",
+        "linear",
+        "gradient_boosting",
+        "random_forest",
+        "cox",
+        "mlp",
+        "gru",
+        "lstm",
+        "grud",
+        "tcn",
+        "transformer",
+        "retain",
+    ]
+    | BaseEstimator
+    | DeepModel
+    | nn.Module
+    | None = None,
     var_names: Iterable[str] | None = None,
     obs_keys: Iterable[str] = (),
     layer: str | None = None,
@@ -68,8 +89,10 @@ def fit(
 ) -> Predictor:
     """Fit a model that predicts the targets of a task from variables and `obs` columns.
 
-    Longitudinal variables are summarized over the observation window of the task with :func:`~ehrapy.preprocessing.summarize_measurements`.
-    Missing values are imputed with the median and features are standardized, with both steps fit on the training set only, like the model.
+    Most models read the longitudinal variables summarized over the observation window of the task with :func:`~ehrapy.preprocessing.summarize_measurements`.
+    For them, missing values are imputed with the median and features are standardized, with both steps fit on the training set only, like the model.
+    Models of time series read the variables at every timepoint of the observation window, whether they were observed and the time since their last observation, standardized with statistics of the training set.
+    Deep learning models stop training once their loss on the `"tuning"` set stops improving.
 
     The models are
 
@@ -77,13 +100,18 @@ def fit(
     - `"linear"`: a ridge regression for regression tasks,
     - `"gradient_boosting"`: gradient boosted trees for every task except survival,
     - `"random_forest"`: a random forest for every task except survival,
-    - `"cox"`: a Cox proportional hazards model for survival tasks.
+    - `"cox"`: a Cox proportional hazards model for survival tasks,
+    - `"mlp"`: a multilayer perceptron as in :class:`~ehrapy.ml.MLP`,
+    - `"gru"`, `"lstm"`, `"grud"`, `"tcn"`, `"transformer"` and `"retain"`: models of time series as in :class:`~ehrapy.ml.GRU`, :class:`~ehrapy.ml.LSTM`, :class:`~ehrapy.ml.GRUD`, :class:`~ehrapy.ml.TCN`, :class:`~ehrapy.ml.Transformer` and :class:`~ehrapy.ml.RETAIN`.
+
+    Deep learning models fit every kind of task and need PyTorch, which `pip install 'ehrapy[ml]'` installs.
 
     Args:
         edata: Central data object.
         task: The prediction task.
-        model: Name of the model or a scikit-learn estimator.
+        model: Name of the model, a scikit-learn estimator, a configured deep learning model, or a torch module.
             An estimator for survival tasks is fit on the time and whether the event occurred and predicts a risk score.
+            A torch module is a model of time series that maps the `values`, whether they were observed (`mask`) and the time since their last observation (`time_since_observed`), each of shape `(observations, timepoints, variables)`, and the `static` covariates of shape `(observations, covariates)` to an embedding of shape `(observations, features)`, or to an embedding and the attention to every timepoint.
             If `None`, gradient boosting, or the Cox model for survival tasks.
         var_names: Variables to compute features from.
             If `None`, all variables except the targets are used.
@@ -93,8 +121,8 @@ def fit(
         statistics: Statistics that summarize every longitudinal variable over the observation window.
         split_key: Column of `obs` with the sets from :func:`~ehrapy.ml.split`.
             The model is fit on the observations in `"train"` with all targets.
-        max_train_obs: Maximum number of randomly chosen training observations the model is fit on.
-            If `None`, all training observations are used.
+        max_train_obs: Maximum number of randomly chosen training and tuning observations the model is fit on.
+            If `None`, all are used.
         random_state: Seed for choosing the training observations and for the built-in models.
 
     Returns:
@@ -117,17 +145,43 @@ def fit(
     targets, classes = _targets(edata.obs, task)
     if model is None:
         model = "cox" if task.kind == "survival" else "gradient_boosting"
-    estimator = _estimator(model, task.kind, random_state)
+    deep = _deep_model(model)
+    sequential = deep is not None and deep.sequential
+    n_outputs = len(classes) if task.kind in {"multiclass", "multilabel"} else 1
 
+    rng = np.random.default_rng(random_state)
     labeled = ~np.isnan(targets.reshape(len(targets), -1)).any(axis=1)
-    train = np.flatnonzero((edata.obs[split_key] == "train").to_numpy() & labeled)
-    if max_train_obs is not None and len(train) > max_train_obs:
-        train = np.sort(np.random.default_rng(random_state).choice(train, max_train_obs, replace=False))
+    train, tuning = (
+        _sample(np.flatnonzero((edata.obs[split_key] == split).to_numpy() & labeled), max_train_obs, rng)
+        for split in ("train", "tuning")
+    )
     statistics = list(statistics)
-    features, feature_names = _features(edata, task, var_names, obs_keys, layer, statistics)
-    pipeline = make_pipeline(SimpleImputer(strategy="median"), StandardScaler(), estimator)
-    pipeline.fit(_materialize(features[train])[0], targets[train])
-    return Predictor(task, pipeline, var_names, obs_keys, layer, statistics, feature_names, classes)
+    if sequential:
+        features, feature_names = _sequences(edata, task, var_names, obs_keys, layer)
+    else:
+        features, feature_names = _features(edata, task, var_names, obs_keys, layer, statistics)
+    train_features, tuning_features = _materialize(features[train], features[tuning])
+
+    preprocessing = None
+    if not sequential:
+        preprocessing = make_pipeline(SimpleImputer(strategy="median"), StandardScaler()).fit(train_features)
+        train_features, tuning_features = (
+            preprocessing.transform(train_features),
+            preprocessing.transform(tuning_features),
+        )
+    if deep is None:
+        fitted = _estimator(model, task.kind, random_state).fit(train_features, targets[train])
+    else:
+        fitted = deep._fit(
+            train_features,
+            targets[train],
+            kind=task.kind,
+            n_outputs=n_outputs,
+            n_static=len(feature_names) - len(var_names) if sequential else train_features.shape[1],
+            tuning=(tuning_features, targets[tuning]),
+            random_state=random_state,
+        )
+    return Predictor(task, preprocessing, fitted, var_names, obs_keys, layer, statistics, feature_names, classes)
 
 
 def predict(
@@ -150,6 +204,7 @@ def predict(
         The predictions are stored in `edata.obs[key_added]`.
         They are the probability of the larger of the two label values, such as `1` or `True`, for binary tasks, the most probable class for multiclass tasks, the predicted value for regression tasks and a risk score, which is higher for earlier events, for survival tasks.
         The probability of every class of multiclass tasks and of every label of multilabel tasks is stored in `edata.obsm[key_added]`.
+        Deep learning models store the embedding of every observation in `edata.obsm[f"X_{key_added}"]`, and the transformer and RETAIN the attention to every timepoint in `edata.obsm[f"{key_added}_attention"]`.
 
     Examples:
         >>> import ehrdata as ed
@@ -161,7 +216,7 @@ def predict(
     """
     if copy:
         edata = edata.copy()
-    outputs = _predictions(edata, predictor)
+    outputs, embedding, attention = _outputs_of(edata, predictor)
     kind = predictor.task.kind
     if kind in {"multiclass", "multilabel"}:
         columns = [str(c) for c in predictor.classes]
@@ -171,22 +226,44 @@ def predict(
         edata.obs[key_added] = pd.Categorical(classes[outputs.argmax(axis=1)], categories=predictor.classes)
     elif kind != "multilabel":
         edata.obs[key_added] = outputs[:, 0]
+    if embedding.shape[1]:
+        edata.obsm[f"X_{key_added}"] = embedding
+    if attention.shape[1]:
+        X = edata.X if predictor.layer is None else edata.layers[predictor.layer]
+        timepoints = edata.tem.index[predictor.task._window(X.shape[2])].astype(str)
+        edata.obsm[f"{key_added}_attention"] = pd.DataFrame(attention, index=edata.obs_names, columns=timepoints)
     return edata if copy else None
 
 
-def _predictions(edata: EHRData, predictor: Predictor) -> np.ndarray:
-    """Predictions of every observation, with a column for every class of multiclass and every label of multilabel tasks."""
-    features, _ = _features(
-        edata,
-        predictor.task,
-        predictor.var_names,
-        predictor.obs_keys,
-        predictor.layer,
-        predictor.statistics,
-        feature_names=predictor.feature_names,
-    )
-    n_outputs = len(predictor.classes) if predictor.task.kind in {"multiclass", "multilabel"} else 1
-    return _materialize(_outputs(features, predictor.model, predictor.task.kind, n_outputs))[0]
+def _outputs_of(edata: EHRData, predictor: Predictor) -> list[np.ndarray]:
+    """Predictions, with a column for every class of multiclass and every label of multilabel tasks, embeddings and attention of every observation."""
+    task = predictor.task
+    if predictor.preprocessing is None:
+        features, _ = _sequences(
+            edata, task, predictor.var_names, predictor.obs_keys, predictor.layer, feature_names=predictor.feature_names
+        )
+    else:
+        features, _ = _features(
+            edata,
+            task,
+            predictor.var_names,
+            predictor.obs_keys,
+            predictor.layer,
+            predictor.statistics,
+            feature_names=predictor.feature_names,
+        )
+    n_outputs = len(predictor.classes) if task.kind in {"multiclass", "multilabel"} else 1
+    widths = [n_outputs, 0, 0]
+    if isinstance(predictor.model, _FittedModel):
+        widths[1:] = predictor.model.n_embedding, predictor.model.n_attention
+    outputs = _outputs(features, predictor.preprocessing, predictor.model, task.kind, n_outputs, sum(widths))
+    return np.split(_materialize(outputs)[0], np.cumsum(widths)[:-1], axis=1)
+
+
+def _sample(rows: np.ndarray, max_obs: int | None, rng: np.random.Generator) -> np.ndarray:
+    if max_obs is None or len(rows) <= max_obs:
+        return rows
+    return np.sort(rng.choice(rows, max_obs, replace=False))
 
 
 def _estimator(model: str | BaseEstimator, kind: Kind, random_state: int) -> BaseEstimator:
@@ -213,7 +290,13 @@ def _estimator(model: str | BaseEstimator, kind: Kind, random_state: int) -> Bas
 
 
 @singledispatch
-def _outputs(features: np.ndarray, model: Pipeline, kind: Kind, n_outputs: int) -> np.ndarray:
+def _outputs(
+    features: np.ndarray, preprocessing: Pipeline | None, model: Any, kind: Kind, n_outputs: int, n_columns: int
+) -> np.ndarray:
+    if preprocessing is not None:
+        features = preprocessing.transform(features)
+    if isinstance(model, _FittedModel):
+        return model.outputs(features)
     match kind:
         case "binary":
             return model.predict_proba(features)[:, 1:]
@@ -230,14 +313,19 @@ def _outputs(features: np.ndarray, model: Pipeline, kind: Kind, n_outputs: int) 
 
 
 @_outputs.register(DaskArray)
-def _(features: DaskArray, model: Pipeline, kind: Kind, n_outputs: int) -> DaskArray:
+def _(
+    features: DaskArray, preprocessing: Pipeline | None, model: Any, kind: Kind, n_outputs: int, n_columns: int
+) -> DaskArray:
     return _map_observation_blocks(
         features,
         _outputs,
+        preprocessing,
         model,
         kind,
         n_outputs,
-        chunks=(features.chunks[0], (n_outputs,)),
+        n_columns,
+        chunks=(features.chunks[0], (n_columns,)),
+        drop_axis=2 if features.ndim == 3 else [],
         meta=np.empty((0, 0), dtype=np.float64),
     )
 

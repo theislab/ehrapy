@@ -95,6 +95,7 @@ dask = [
     "anndata[dask]",
 ]
 leiden = ["igraph"]  # careful - GPL
+ml = ["torch>=2.4"]
 rapids12 = ["rapids-singlecell[rapids12]"]
 rapids13 = ["rapids-singlecell[rapids13]"]
 doc = [
@@ -122,11 +123,11 @@ doc = [
     "nbsphinx-link",
     "ipykernel",
     "ipython",
-    "ehrapy[dask,leiden]",
+    "ehrapy[dask,leiden,ml]",
     "scverse-misc"
 ]
 test = [
-    "ehrapy[dask,leiden]",
+    "ehrapy[dask,leiden,ml]",
     "pytest",
     "pytest-cov",
     "pytest-mock",
@@ -154,7 +155,7 @@ post-install-commands = [
 ]
 
 [tool.hatch.envs.docs]
-features = [ "doc", "dask", "leiden" ]
+features = [ "doc", "dask", "leiden", "ml" ]
 post-install-commands = [
   "uv pip install --reinstall --no-deps -e submodules/ehrdata",
 ]
@@ -164,7 +165,7 @@ scripts.clean = "git clean -fdX -- {args:docs}"
 
 # CPU
 [tool.hatch.envs.hatch-test]
-features = [ "dask", "leiden" ]
+features = [ "dask", "leiden", "ml" ]
 extra-dependencies = [ "xdoctest" ]
 post-install-commands = [
   "uv pip install --reinstall --no-deps -e submodules/ehrdata",

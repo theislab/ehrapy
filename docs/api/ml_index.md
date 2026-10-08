@@ -31,6 +31,27 @@ A {class}`~ehrapy.ml.Task` names the label and the timepoints the features come 
     ml.Predictor
 ```
 
+## Deep learning models
+
+Models that need PyTorch, which `pip install 'ehrapy[ml]'` installs.
+Except for the multilayer perceptron, they read the time series of the variables instead of their summaries.
+
+```{eval-rst}
+.. autosummary::
+    :toctree: ml
+    :nosignatures:
+
+    ml.MLP
+    ml.GRU
+    ml.LSTM
+    ml.GRUD
+    ml.TCN
+    ml.Transformer
+    ml.RETAIN
+    ml.DeepModel
+    ml.Trainer
+```
+
 ## Evaluation
 
 ```{eval-rst}

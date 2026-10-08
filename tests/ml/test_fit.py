@@ -76,7 +76,7 @@ def test_preprocessing_is_fit_on_train():
     predictor = ep.ml.fit(edata, ep.ml.Task("y"), var_names=["noise"])
 
     train = edata.X[is_train, 1]
-    imputer, scaler, _ = predictor.model
+    imputer, scaler = predictor.preprocessing
     np.testing.assert_allclose(imputer.statistics_, [np.nanmedian(train)])
     np.testing.assert_allclose(scaler.mean_, [np.where(np.isnan(train), np.nanmedian(train), train).mean()])
 

@@ -14,6 +14,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
   {func}`ep.ml.split <ehrapy.ml.split>` assigns patients to `train`, `tuning` and `held_out` sets, at random or by time, and {func}`ep.ml.fit <ehrapy.ml.fit>` fits imputation, scaling and the model on `train` only.
   A {class}`ep.ml.Task <ehrapy.ml.Task>` sets binary, multiclass, multilabel, regression or survival targets and the observation window that longitudinal variables are summarized over.
+  Besides scikit-learn models and a Cox model, {func}`ep.ml.fit <ehrapy.ml.fit>` trains a multilayer perceptron and GRU, LSTM, GRU-D, TCN, transformer and RETAIN models of time series with PyTorch, which the new `ml` extra installs.
   {func}`ep.ml.evaluate <ehrapy.ml.evaluate>` reports the metrics of every kind of task with confidence intervals from resampled patients, overall, per subgroup and as differences between subgroups such as demographic parity and equalized odds.
   {func}`ep.pl.prediction_performance <ehrapy.plot.prediction_performance>` plots the ROC, precision-recall and calibration curves.
   On PhysioNet 2012, gradient boosting on summaries of the first 48 hours predicts in-hospital mortality with a held-out AUROC of 0.86 and AUPRC of 0.51.

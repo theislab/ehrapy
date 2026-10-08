@@ -57,6 +57,8 @@ jobs:
     name: ${{ matrix.env.label }}
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ contains(matrix.env.name, 'pre') }}  # make "all-green" pass even if pre-release job fails
+    env:
+      UV_TORCH_BACKEND: cpu
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
