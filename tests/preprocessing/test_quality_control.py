@@ -612,6 +612,8 @@ def test_qc_lab_measurements_2D_has_no_jumps():
     ep.pp.qc_lab_measurements(edata)
 
     assert not edata.obs.columns.str.endswith("_jump").any()
+    with pytest.raises(ValueError, match="3D"):
+        ep.pp.qc_lab_measurements(edata, max_change=1.0)
 
 
 def test_qc_lab_measurements_max_change_unknown_var():

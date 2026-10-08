@@ -72,7 +72,7 @@ def qc_metrics(
         qc_vars: Optional List of vars to calculate additional metrics for.
         layer: Layer to use to calculate the metrics.
         time_key: Column of `tem` with the time of every timepoint, as numbers, time differences or dates, in which the longitudinal metrics of 3D data are measured.
-            Time differences and dates are measured in seconds since the first timepoint.
+            Time differences are measured in seconds and dates in seconds since the first timepoint.
             If `tem` has no such column, the timepoints are evenly spaced and times are their positions.
         copy: Whether to return a copy of `edata` or modify it in place.
 
@@ -596,6 +596,8 @@ def qc_lab_measurements(
             raise ValueError(f"groupby key '{groupby}' contains missing values.")
 
     mtx = edata.X if layer is None else edata.layers[layer]
+    if mtx.ndim != 3 and max_change is not None:
+        raise ValueError("max_change needs 3D data with a time axis.")
     mtx = to_dense(mtx[:, edata.var_names.get_indexer(var_names)])
     xp = array_namespace(mtx)
     mtx = xp.astype(mtx, xp.float64)
