@@ -27,6 +27,7 @@ For most tools and for some preprocessing functions, you will find a plotting fu
     plot.dendrogram
     plot.catplot
     plot.timeseries
+    plot.trajectories
     plot.sankey_diagram
     plot.sankey_diagram_time
     plot.stratified_table_one
