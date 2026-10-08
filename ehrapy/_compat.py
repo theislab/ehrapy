@@ -255,6 +255,24 @@ def _var_indices(edata: EHRData, var_names: Iterable[str]) -> np.ndarray:
     return indices
 
 
+def _timepoint_times(edata: EHRData, time_key: str) -> np.ndarray:
+    """Time of every timepoint from `edata.tem[time_key]`, as numbers, time differences or dates in seconds, or its position if `tem` has no such column."""
+    if time_key not in edata.tem:
+        return np.arange(edata.n_t, dtype=np.float64)
+    times = edata.tem[time_key]
+    if pd.api.types.is_numeric_dtype(times):
+        return times.to_numpy(np.float64)
+    if pd.api.types.is_datetime64_any_dtype(times):
+        times = times - times.iloc[0]
+    return pd.to_timedelta(times).dt.total_seconds().to_numpy()
+
+
+def _previous_observed(observed: np.ndarray) -> np.ndarray:
+    """Index of the closest observed timepoint before every timepoint along the last axis, or -1 if there is none."""
+    last = np.maximum.accumulate(np.where(observed, np.arange(observed.shape[-1]), -1), axis=-1)
+    return np.concatenate([np.full((*observed.shape[:-1], 1), -1), last[..., :-1]], axis=-1)
+
+
 @singledispatch
 def _set_columns(X: Array, indices: np.ndarray, values: Array) -> Array:
     X[:, indices] = values

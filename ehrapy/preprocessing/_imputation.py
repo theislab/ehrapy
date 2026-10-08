@@ -27,6 +27,7 @@ from ehrapy._compat import (
     _map_observation_blocks,
     _map_variable_blocks,
     _obs_axes,
+    _previous_observed,
     _raise_if_dask,
     _set_columns,
     _sparse_columns,
@@ -773,8 +774,7 @@ def _time_context(X: np.ndarray) -> list[np.ndarray]:
     n_t = X.shape[2]
     steps = np.arange(n_t)
     observed = ~np.isnan(X)
-    last = np.maximum.accumulate(np.where(observed, steps, -1), axis=2)
-    before = np.concatenate([np.full((*X.shape[:2], 1), -1), last[..., :-1]], axis=2)
+    before = _previous_observed(observed)
     first = np.minimum.accumulate(np.where(observed, steps, n_t)[..., ::-1], axis=2)[..., ::-1]
     after = np.concatenate([first[..., 1:], np.full((*X.shape[:2], 1), n_t)], axis=2)
     context = [np.broadcast_to(steps.astype(np.float64), X.shape)]
