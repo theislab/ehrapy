@@ -12,7 +12,7 @@ from ehrdata import EHRData
 from fast_array_utils.types import DaskArray
 from numpy.typing import NDArray
 
-from ehrapy._compat import _like_obs, _raise_if_sparse, function_2D_only
+from ehrapy._compat import _like_obs, _raise_if_3D, _raise_if_sparse, _unfold_time, function_2D_only
 from ehrapy._types import _empty
 
 if TYPE_CHECKING:
@@ -26,7 +26,6 @@ if TYPE_CHECKING:
     type Array = np.ndarray | DaskArray
 
 
-@function_2D_only()
 def pca(
     edata: EHRData | np.ndarray | spmatrix,
     *,
@@ -48,6 +47,8 @@ def pca(
 
     Computes PCA coordinates, loadings and variance decomposition.
     Uses the implementation of *scikit-learn*.
+    Longitudinal data is unfolded so that every combination of variable and timepoint is a feature, which is known as unfolded or multiway PCA.
+    PCA requires data without missing values, so impute them first, for example with :func:`~ehrapy.preprocessing.locf_impute`.
 
     Args:
         edata: Central data object.
@@ -97,7 +98,7 @@ def pca(
 
         `.obsm['X_pca' | key_added]` : :class:`~scipy.sparse.csr_matrix` | :class:`~scipy.sparse.csc_matrix` | :class:`~numpy.ndarray` (shape `(edata.n_obs, n_comps)`)
             PCA representation of data.
-        `.varm['PCs' | key_added]` : :class:`~numpy.ndarray` (shape `(edata.n_vars, n_comps)`)
+        `.varm['PCs' | key_added]` : :class:`~numpy.ndarray` (shape `(edata.n_vars, n_comps)`, or `(edata.n_vars, edata.n_t, n_comps)` for data with several timepoints)
             The principal components containing the loadings when `obsm=None`.
         `.uns['pca' | key_added]['components']` : :class:`~numpy.ndarray` (shape `(edata.obsm[obsm].shape[1], n_comps)`)
             The principal components containing the loadings when `obsm` is passed.
@@ -113,23 +114,52 @@ def pca(
         >>> edata = ed.dt.mimic_2(columns_obs_only=["service_unit", "day_icu_intime"])
         >>> ep.pp.simple_impute(edata, strategy="median")
         >>> ep.pp.pca(edata)
+
+        Longitudinal data:
+
+        >>> edata = ed.dt.ehrdata_blobs(n_variables=10, n_observations=100, base_timepoints=5)
+        >>> ep.pp.pca(edata, n_comps=10)
+        >>> edata.varm["PCs"].shape
+        (10, 5, 10)
     """
-    return sc.pp.pca(
-        data=edata,
-        n_comps=n_comps,
-        layer=layer,
-        obsm=obsm,
-        zero_center=zero_center,
-        svd_solver=svd_solver,
-        random_state=random_state,
-        return_info=return_info,
-        dtype=dtype,
-        key_added=key_added,
-        copy=copy,
-        chunked=chunked,
-        chunk_size=chunk_size,
-        **({} if mask_var is _empty else {"mask_var": mask_var}),
-    )
+    params = {
+        "n_comps": n_comps,
+        "zero_center": zero_center,
+        "svd_solver": svd_solver,
+        "random_state": random_state,
+        "dtype": dtype,
+        "chunked": chunked,
+        "chunk_size": chunk_size,
+    }
+    if not isinstance(edata, EHRData):
+        _raise_if_3D(edata, "pca", "the input")
+    X = (edata.X if layer is None else edata.layers[layer]) if isinstance(edata, EHRData) else None
+    mask_kwargs = {} if mask_var is _empty else {"mask_var": mask_var}
+    if obsm is not None or getattr(X, "ndim", 2) != 3:
+        return sc.pp.pca(
+            data=edata,
+            layer=layer,
+            obsm=obsm,
+            return_info=return_info,
+            key_added=key_added,
+            copy=copy,
+            **params,
+            **mask_kwargs,
+        )
+
+    edata = edata.copy() if copy else edata
+    n_vars, n_timepoints = X.shape[1:]
+    var = edata.var.iloc[np.repeat(np.arange(n_vars), n_timepoints)].reset_index(drop=True)
+    var.index = var.index.astype(str)
+    if not (mask_var is _empty or mask_var is None or isinstance(mask_var, str)):
+        mask_kwargs["mask_var"] = np.repeat(np.asarray(mask_var, dtype=bool), n_timepoints)
+    unfolded = EHRData(X=_unfold_time(X), obs=edata.obs[[]], var=var)
+    unfolded.uns = edata.uns
+    sc.pp.pca(unfolded, key_added=key_added, **params, **mask_kwargs)
+    edata.obsm[key_added or "X_pca"] = unfolded.obsm[key_added or "X_pca"]
+    loadings = unfolded.varm[key_added or "PCs"]
+    edata.varm[key_added or "PCs"] = loadings if n_timepoints == 1 else loadings.reshape(n_vars, n_timepoints, -1)
+    return edata if copy else None
 
 
 def _residuals(X: Array, design: np.ndarray, *, keep_constant: bool) -> Array:

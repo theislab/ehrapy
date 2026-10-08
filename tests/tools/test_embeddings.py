@@ -104,11 +104,42 @@ def test_famd_ehrdata_2d_mixed(mixed_data_array: np.ndarray) -> None:
     assert loadings.shape == (len(edata.uns["famd"]["feature_names"]), 2)
 
 
-def test_famd_3d_raises(edata_blobs_timeseries_small: ed.EHRData) -> None:
-    with pytest.raises(ValueError, match="only supports 2D data"):
-        ep.tl.famd(edata_blobs_timeseries_small, layer=DEFAULT_TEM_LAYER_NAME)
-    with pytest.raises(ValueError, match="only supports 2D data"):
-        ep.tl.famd(edata_blobs_timeseries_small.layers[DEFAULT_TEM_LAYER_NAME])
+def test_famd_3d_unfolds_timepoints(rng: np.random.Generator) -> None:
+    X = np.empty((30, 3, 4), dtype=object)
+    X[:, 0] = rng.standard_normal((30, 4))
+    X[:, 1] = rng.choice(["A", "B"], (30, 4))
+    X[:, 2] = rng.standard_normal((30, 4))
+    X[0, 0, 1] = np.nan
+    edata = ed.EHRData(X=X)
+    expected = ed.EHRData(X=X[:, [0, 2, 1]].reshape(30, -1))
+    expected.var_names = [f"{name}_t{t}" for name in ["0", "2", "1"] for t in range(4)]
+
+    ep.tl.famd(edata, n_components=3)
+    ep.tl.famd(expected, n_components=3)
+
+    loadings = edata.varm["famd_loadings"]
+    assert loadings.shape == (3, 4, 3)
+    assert np.isnan(loadings[1]).all()
+    np.testing.assert_allclose(loadings[[0, 2]].reshape(8, 3), expected.varm["famd_loadings"][:8])
+    np.testing.assert_allclose(edata.obsm["X_famd"], expected.obsm["X_famd"])
+    np.testing.assert_array_equal(edata.uns["famd"]["quant_mask"], [True, False, True])
+    assert edata.uns["famd"]["feature_names"] == expected.uns["famd"]["feature_names"]
+    np.testing.assert_array_equal(edata.uns["famd"]["feature_to_original"], [0] * 4 + [2] * 4 + [1] * 8)
+
+
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu | Flags.Sparse)
+def test_famd_3d_array_types(array_type, edata_blobs_timeseries_small: ed.EHRData) -> None:
+    X = np.asarray(edata_blobs_timeseries_small.layers[DEFAULT_TEM_LAYER_NAME])
+    expected = ed.EHRData(X=X)
+    ep.tl.famd(expected)
+    edata = ed.EHRData(X=array_type(X))
+
+    with forbid_dask_compute(allowed=1):
+        ep.tl.famd(edata)
+
+    assert edata.varm["famd_loadings"].shape == (X.shape[1], X.shape[2], 2)
+    np.testing.assert_allclose(edata.obsm["X_famd"], expected.obsm["X_famd"])
+    np.testing.assert_allclose(edata.varm["famd_loadings"], expected.varm["famd_loadings"])
 
 
 @pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)

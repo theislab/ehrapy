@@ -13,7 +13,13 @@ from fast_array_utils.types import CSBase, DaskArray
 from scipy.linalg import svd
 from scipy.sparse import spmatrix  # noqa
 
-from ehrapy._compat import _as_scanpy_input, _materialize, _raise_array_type_not_implemented, function_2D_only
+from ehrapy._compat import (
+    _as_scanpy_input,
+    _materialize,
+    _raise_array_type_not_implemented,
+    _unfold_time,
+    function_2D_only,
+)
 from ehrapy.core._constants import TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY
 from ehrapy.tools import _method_options  # noqa
 
@@ -402,9 +408,11 @@ def famd(
     It maximizes the sum of squared correlations with quantitative variables and squared correlation ratios with qualitative variables,
     treating both types equally with each variable's contribution bounded by 1.
     The method produces factor scores for individuals, correlation circles for quantitative variables, and category centroids for qualitative variables.
+    Longitudinal data is unfolded so that every combination of variable and timepoint is a feature.
+    Missing values of quantitative features are set to their mean.
 
     Args:
-        edata: Central data object or a 2D array with quantitative and qualitative variables.
+        edata: Central data object or an array with quantitative and qualitative variables.
         layer: The layer to perform the computation on.
         n_components: Number of dimensions to retain in the reduced space. Must be less than min(n_obs, n_vars).
         key_added: Key under which to store the results in `.obsm`, `.varm` and `.uns`. Defaults to 'famd'.
@@ -430,7 +438,7 @@ def famd(
         Factor scores of shape `(n_obs, n_components)`.
 
         `{key_added}_loadings` : :class:`numpy.ndarray` (`edata.varm`)
-        Loadings of the quantitative variables.
+        Loadings of the quantitative variables of shape `(n_vars, n_components)`, or `(n_vars, n_t, n_components)` for data with several timepoints.
         Rows of qualitative variables are `NaN` because their loadings are per category.
 
         `{key_added}` : `dict` (`edata.uns`)
@@ -441,8 +449,7 @@ def famd(
 
 
 @famd.register(EHRData)
-@function_2D_only(allow_single_timepoint=True)
-def _famd_ehrdata(  # named because function_2D_only puts __name__ into its error message
+def _(
     edata: EHRData,
     /,
     *,
@@ -461,12 +468,13 @@ def _famd_ehrdata(  # named because function_2D_only puts __name__ into its erro
     factor_scores, loadings, metadata = famd(arr, n_components=n_components, var_names=edata.var_names)
 
     quant_mask = metadata["quant_mask"]
-    var_loadings = np.full((edata.n_vars, loadings.shape[1]), np.nan)
+    n_timepoints = arr.shape[2] if arr.ndim == 3 else 1
+    var_loadings = np.full((edata.n_vars, n_timepoints, loadings.shape[1]), np.nan)
     # quantitative features come first in the transformed matrix
-    var_loadings[quant_mask] = loadings[: quant_mask.sum()]
+    var_loadings[quant_mask] = loadings[: quant_mask.sum() * n_timepoints].reshape(-1, *var_loadings.shape[1:])
 
     edata.obsm[f"X_{key_added}"] = factor_scores
-    edata.varm[f"{key_added}_loadings"] = var_loadings
+    edata.varm[f"{key_added}_loadings"] = var_loadings[:, 0] if n_timepoints == 1 else var_loadings
     edata.uns[key_added] = {
         "params": {
             "n_components": n_components,
@@ -493,20 +501,26 @@ def _(
     arr: np.ndarray, /, *, n_components: int = 2, var_names: Sequence[str] | None = None, **kwargs
 ) -> tuple[np.ndarray, np.ndarray, dict]:
     data = arr[:, :, 0] if arr.ndim == 3 and arr.shape[2] == 1 else arr
-    if data.ndim != 2:
-        raise ValueError(f"famd() only supports 2D data, got an array with shape {arr.shape}")
+    if data.ndim not in {2, 3}:
+        raise ValueError(f"famd() only supports 2D and 3D data, got an array with shape {arr.shape}")
 
     n_vars = data.shape[1]
+    n_timepoints = data.shape[2] if data.ndim == 3 else 1
 
     if var_names is None:
         var_names = [f"var_{i}" for i in range(n_vars)]
 
     quant_mask = np.zeros(n_vars, dtype=bool)
     for i in range(n_vars):
-        col = pd.Series(data[:, i], name=var_names[i])
+        col = pd.Series(data[:, i].ravel(), name=var_names[i])
         feature_type, _ = _detect_feature_type(col)
         quant_mask[i] = feature_type == "numeric"
 
+    variable_quant_mask = quant_mask
+    if data.ndim == 3:
+        data = _unfold_time(data)
+        var_names = [f"{name}_t{t}" for name in var_names for t in range(n_timepoints)]
+        quant_mask = np.repeat(quant_mask, n_timepoints)
     qual_mask = ~quant_mask
     n_obs = data.shape[0]
     transformed_cols = []
@@ -524,7 +538,7 @@ def _(
 
         for idx in quant_indices:
             feature_names.append(f"{var_names[idx]}")
-            feature_to_original.append(idx)
+            feature_to_original.append(idx // n_timepoints)
 
     if qual_mask.any():
         qual_indices = np.where(qual_mask)[0]
@@ -543,7 +557,7 @@ def _(
 
             for cat in categories.categories:
                 feature_names.append(f"{var_names[idx]}_{cat}")
-                feature_to_original.append(idx)
+                feature_to_original.append(idx // n_timepoints)
 
     X_transformed = np.hstack(transformed_cols)
     X_transformed = np.nan_to_num(X_transformed)
@@ -557,7 +571,7 @@ def _(
     metadata = {
         "variance": S[:n_components] ** 2 / n_obs,
         "variance_ratio": (S[:n_components] ** 2) / (S**2).sum(),
-        "quant_mask": quant_mask,
+        "quant_mask": variable_quant_mask,
         "n_components": n_components,
         "feature_names": feature_names,
         "feature_to_original": feature_to_original,
