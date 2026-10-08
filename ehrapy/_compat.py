@@ -6,17 +6,21 @@ from functools import singledispatch, wraps
 from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar
 
 import array_api_extra as xpx
+import ehrdata as ed
 import numpy as np
 import pandas as pd
 import scipy.sparse as sp
 from array_api_compat import array_namespace, is_lazy_array
+from fast_array_utils.conv import to_dense
 from fast_array_utils.types import CSBase, DaskArray
 
 P = ParamSpec("P")
 R = TypeVar("R")
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Collection
+    from collections.abc import Callable, Collection, Mapping
+
+    from ehrdata import EHRData
 
     type Array = np.ndarray | DaskArray
 
@@ -307,6 +311,40 @@ def _materialize(*arrays: Array) -> list[np.ndarray]:
 
         arrays = dask.compute(*arrays)
     return [np.asarray(array) for array in arrays]
+
+
+def _shallow_copy(edata: EHRData, X: Any, layers: Mapping[str, Any]) -> EHRData:
+    """A copy of `edata` with other arrays that shares `uns`, so that results stored there reach `edata`."""
+    adata = ed.EHRData(
+        X,
+        obs=edata.obs,
+        var=edata.var,
+        tem=getattr(edata, "tem", None),
+        obsm=edata.obsm,
+        varm=edata.varm,
+        obsp=edata.obsp,
+        layers=layers,
+    )
+    adata.uns = edata.uns
+    return adata
+
+
+def _as_scanpy_input(edata: EHRData, *, dense: bool = False) -> EHRData:
+    """`edata` with dask arrays with sparse chunks densified lazily and scipy sparse matrices as sparse arrays, which scanpy reads.
+
+    With `dense`, sparse arrays are densified as well.
+    """
+
+    def readable(X):
+        if (isinstance(X, DaskArray) and isinstance(X._meta, CSBase)) or (dense and isinstance(X, CSBase)):
+            return to_dense(X)
+        return getattr(sp, f"{X.format}_array")(X) if isinstance(X, sp.spmatrix) else X
+
+    arrays = {key: array for key, array in edata.layers.items() if key is not None} | {None: edata.X}
+    converted = {key: readable(array) for key, array in arrays.items()}
+    if all(converted[key] is array for key, array in arrays.items()):
+        return edata
+    return _shallow_copy(edata, converted.pop(None), converted)
 
 
 def _raise_densifying(name: str, reason: str) -> None:

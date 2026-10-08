@@ -123,11 +123,6 @@ def test_missing_values_array_types(array_type, plot, rng, clean_up_plots):
     expected = _drawn_data(plot(ed.EHRData(X=X, var=var)))
     edata = ed.EHRData(X=array_type(X), var=var)
 
-    if array_type.flags & Flags.Sparse and array_type.flags & Flags.Dask:
-        with pytest.raises(NotImplementedError):
-            plot(edata)
-        return
-
     with forbid_dask_compute(allowed=1):
         result = _drawn_data(plot(edata))
 

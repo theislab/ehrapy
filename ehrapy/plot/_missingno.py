@@ -7,17 +7,16 @@ import numpy as np
 import pandas as pd
 from fast_array_utils.conv import to_dense
 
-from ehrapy._compat import _raise_if_dask_with_sparse_chunks, function_2D_only
+from ehrapy._compat import function_2D_only
 from ehrapy.preprocessing._missing_data import _missing_mask
 
 if TYPE_CHECKING:
     from ehrdata import EHRData
 
 
-def _nullity_df(edata: EHRData, *, layer: str | None, categoricals: bool, name: str) -> pd.DataFrame:
+def _nullity_df(edata: EHRData, *, layer: str | None, categoricals: bool) -> pd.DataFrame:
     """The plotted variables as a DataFrame that is NaN where values are missing, because missingno only reads nullity."""
     X = edata.X if layer is None else edata.layers[layer]
-    _raise_if_dask_with_sparse_chunks(X, name)
     columns = edata.var_names if categoricals else edata.var_names[~edata.var_names.str.startswith("ehrapycat")]
     missing = to_dense(_missing_mask(X[:, edata.var_names.get_indexer(columns)]), to_cpu_memory=True)
     return pd.DataFrame(np.where(missing, np.float32(np.nan), np.float32(0)), index=edata.obs_names, columns=columns)
@@ -71,7 +70,7 @@ def missing_values_matrix(
     Preview:
         .. image:: /_static/docstring_previews/missingno_matrix.png
     """
-    df = _nullity_df(edata, layer=layer, categoricals=categoricals, name="missing_values_matrix")
+    df = _nullity_df(edata, layer=layer, categoricals=categoricals)
     return msno.matrix(
         df,
         filter,
@@ -136,7 +135,7 @@ def missing_values_barplot(
     Preview:
         .. image:: /_static/docstring_previews/missingno_barplot.png
     """
-    df = _nullity_df(edata, layer=layer, categoricals=categoricals, name="missing_values_barplot")
+    df = _nullity_df(edata, layer=layer, categoricals=categoricals)
     return msno.bar(
         df,
         figsize,
@@ -205,7 +204,7 @@ def missing_values_heatmap(
     Preview:
         .. image:: /_static/docstring_previews/missingno_heatmap.png
     """
-    df = _nullity_df(edata, layer=layer, categoricals=categoricals, name="missing_values_heatmap")
+    df = _nullity_df(edata, layer=layer, categoricals=categoricals)
     return msno.heatmap(
         df,
         filter,
@@ -268,5 +267,5 @@ def missing_values_dendrogram(
     Preview:
         .. image:: /_static/docstring_previews/missingno_dendrogram.png
     """
-    df = _nullity_df(edata, layer=layer, categoricals=categoricals, name="missing_values_dendrogram")
+    df = _nullity_df(edata, layer=layer, categoricals=categoricals)
     return msno.dendrogram(df, method, filter, max_cols, max_percentage, orientation, figsize, fontsize, label_rotation)

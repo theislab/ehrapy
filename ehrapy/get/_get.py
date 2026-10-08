@@ -2,16 +2,16 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import pandas as pd
 from scanpy.get import obs_df as scanpy_obs_df
 from scanpy.get import rank_genes_groups_df
 from scanpy.get import var_df as scanpy_var_df
 
-from ehrapy._compat import _raise_if_dask_with_sparse_chunks, function_2D_only
+from ehrapy._compat import _as_scanpy_input, function_2D_only
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Iterable
 
+    import pandas as pd
     from ehrdata import EHRData
 
 
@@ -43,10 +43,9 @@ def obs_df(
         >>> edata = ed.dt.mimic_2()
         >>> ages = ep.get.obs_df(edata, keys=["age"])
     """
-    var_names = edata.var_names if feature_symbols is None else pd.Index(edata.var[feature_symbols])
-    if var_names.isin([keys] if isinstance(keys, str) else keys).any():
-        _raise_if_dask_with_sparse_chunks(edata.X if layer is None else edata.layers[layer], "obs_df")
-    return scanpy_obs_df(adata=edata, keys=keys, obsm_keys=obsm_keys, layer=layer, gene_symbols=feature_symbols)
+    return scanpy_obs_df(
+        adata=_as_scanpy_input(edata), keys=keys, obsm_keys=obsm_keys, layer=layer, gene_symbols=feature_symbols
+    )
 
 
 @function_2D_only()
@@ -74,8 +73,7 @@ def var_df(
         >>> edata = ed.dt.mimic_2()
         >>> four_patients = ep.get.var_df(edata, keys=["0", "1", "2", "3"])
     """
-    _raise_if_dask_with_sparse_chunks(edata.X if layer is None else edata.layers[layer], "var_df")
-    return scanpy_var_df(adata=edata, keys=keys, varm_keys=varm_keys, layer=layer)
+    return scanpy_var_df(adata=_as_scanpy_input(edata), keys=keys, varm_keys=varm_keys, layer=layer)
 
 
 def rank_features_groups_df(

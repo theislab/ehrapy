@@ -201,11 +201,6 @@ def test_causal_array_types(array_type, estimator, kwargs):
     kwargs = {"treatment": "tx", "covariates": ["age", "sex", "bmi"], **kwargs}
     expected = estimator(reference, **kwargs)
 
-    if array_type.flags & Flags.Sparse and array_type.flags & Flags.Dask:
-        with pytest.raises(NotImplementedError):
-            estimator(edata, **kwargs)
-        return
-
     with forbid_dask_compute(allowed=1):
         result = estimator(edata, **kwargs)
 

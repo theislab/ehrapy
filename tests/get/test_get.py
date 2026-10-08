@@ -65,11 +65,6 @@ def test_get_array_types(array_type, getter, keys, rng):
     expected = get(ed.EHRData(X=X, obs=obs, var=var), keys=keys)
     edata = ed.EHRData(X=array_type(X), obs=obs, var=var)
 
-    if array_type.flags & Flags.Sparse and array_type.flags & Flags.Dask:
-        with pytest.raises(NotImplementedError):
-            get(edata, keys=keys)
-        return
-
     with forbid_dask_compute(allowed=1):
         result = get(edata, keys=keys)
 

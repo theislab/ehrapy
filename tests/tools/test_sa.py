@@ -325,15 +325,6 @@ def _survival_data(rng: np.random.Generator) -> np.ndarray:
     ).astype(float)
 
 
-def _raises_or_runs(array_type, func, /, *args, **kwargs):
-    if array_type.flags & Flags.Sparse and array_type.flags & Flags.Dask:
-        with pytest.raises(NotImplementedError):
-            func(*args, **kwargs)
-        return None
-    with forbid_dask_compute(allowed=1):
-        return func(*args, **kwargs)
-
-
 @pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
 @pytest.mark.parametrize(
     "sa_function",
@@ -345,8 +336,10 @@ def test_survival_models_array_types(array_type, sa_function, rng):
     sa_function(expected, duration_col="duration", event_col="event", key_added="test")
     edata = _survival_edata(array_type(X))
 
-    if _raises_or_runs(array_type, sa_function, edata, duration_col="duration", event_col="event", key_added="test"):
-        pd.testing.assert_frame_equal(edata.uns["test"], expected.uns["test"])
+    with forbid_dask_compute(allowed=1):
+        sa_function(edata, duration_col="duration", event_col="event", key_added="test")
+
+    pd.testing.assert_frame_equal(edata.uns["test"], expected.uns["test"])
 
 
 @pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
@@ -356,8 +349,10 @@ def test_ols_glm_array_types(array_type, model, rng):
     kwargs = {"var_names": ["a", "duration"], "formula": "a ~ duration"}
     expected = model(_survival_edata(X), **kwargs).fit().params
 
-    if result := _raises_or_runs(array_type, model, _survival_edata(array_type(X)), **kwargs):
-        pd.testing.assert_series_equal(result.fit().params, expected)
+    with forbid_dask_compute(allowed=1):
+        result = model(_survival_edata(array_type(X)), **kwargs)
+
+    pd.testing.assert_series_equal(result.fit().params, expected)
 
 
 @pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
@@ -369,10 +364,14 @@ def test_cox_ph_adjusted_curves_array_types(array_type, rng):
     ep.tl.cox_ph_adjusted_curves(expected, **kwargs)
     edata = _survival_edata(array_type(X))
 
-    if result := _raises_or_runs(array_type, ep.tl.cox_ph_adjusted_curves, edata, copy=True, **kwargs):
-        assert type(result.X) is type(edata.X)
-        for group in ("0.0", "1.0"):
-            np.testing.assert_allclose(
-                result.uns["cox_ph_adjusted_curves"][group]["survival"],
-                expected.uns["cox_ph_adjusted_curves"][group]["survival"],
-            )
+    with forbid_dask_compute(allowed=1):
+        result = ep.tl.cox_ph_adjusted_curves(edata, copy=True, **kwargs)
+
+    assert isinstance(result.X, array_type.cls)
+    if array_type.flags & Flags.Dask:
+        assert type(result.X._meta) is type(edata.X._meta)
+    for group in ("0.0", "1.0"):
+        np.testing.assert_allclose(
+            result.uns["cox_ph_adjusted_curves"][group]["survival"],
+            expected.uns["cox_ph_adjusted_curves"][group]["survival"],
+        )

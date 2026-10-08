@@ -8,10 +8,12 @@ import pandas as pd
 import scanpy as sc
 from ehrdata import EHRData
 from ehrdata._feature_types import _detect_feature_type
+from fast_array_utils.conv import to_dense
+from fast_array_utils.types import CSBase, DaskArray
 from scipy.linalg import svd
 from scipy.sparse import spmatrix  # noqa
 
-from ehrapy._compat import _raise_array_type_not_implemented, function_2D_only
+from ehrapy._compat import _as_scanpy_input, _materialize, _raise_array_type_not_implemented, function_2D_only
 from ehrapy.core._constants import TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY
 from ehrapy.tools import _method_options  # noqa
 
@@ -77,8 +79,10 @@ def tsne(
 
         **X_tsne** : `np.ndarray` (`edata.obsm['X_tsne' | key_added]`, dtype `float`) tSNE coordinates of data.
     """
-    return sc.tl.tsne(
-        adata=edata,
+    edata = edata.copy() if copy else edata
+    adata = _as_scanpy_input(edata)
+    sc.tl.tsne(
+        adata=adata,
         n_pcs=n_pcs,
         n_components=n_components,
         use_rep=use_rep,
@@ -89,8 +93,9 @@ def tsne(
         random_state=random_state,
         n_jobs=n_jobs,
         key_added=key_added,
-        copy=copy,
     )
+    edata.obsm[key_added or "X_tsne"] = adata.obsm[key_added or "X_tsne"]
+    return edata if copy else None
 
 
 def umap(
@@ -460,6 +465,12 @@ def _famd_ehrdata(  # named because function_2D_only puts __name__ into its erro
     }
 
     return edata if copy else None
+
+
+@famd.register(CSBase)
+@famd.register(DaskArray)
+def _(arr: CSBase | DaskArray, /, **kwargs) -> tuple[np.ndarray, np.ndarray, dict]:
+    return famd(_materialize(to_dense(arr))[0], **kwargs)
 
 
 @famd.register(np.ndarray)

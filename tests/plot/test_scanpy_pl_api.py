@@ -11,7 +11,6 @@ from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY, NUM
 from testing.fast_array_utils import Flags
 
 import ehrapy as ep
-from tests.conftest import DASK_WITH_SPARSE_CHUNKS
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_IMAGE_PATH = f"{CURRENT_DIR}/_images"
@@ -750,7 +749,7 @@ def edata_embedded(rng) -> ed.EHRData:
 _VAR_NAMES = ["feature_0", "feature_1", "feature_2"]
 
 
-@pytest.mark.array_type(skip={*DASK_WITH_SPARSE_CHUNKS, Flags.Disk, Flags.Gpu})
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
 @pytest.mark.parametrize(
     ("plotter", "kwargs"),
     [
@@ -776,25 +775,14 @@ _VAR_NAMES = ["feature_0", "feature_1", "feature_2"]
         ("rank_features_groups_tracksplot", {"n_features": 2}),
     ],
 )
-def test_scanpy_plots_array_types(array_type, plotter, kwargs, edata_embedded, request, clean_up_plots):
+def test_scanpy_plots_array_types(array_type, plotter, kwargs, edata_embedded, clean_up_plots):
     plot = getattr(ep.pl, plotter)
     expected = plot(edata_embedded.copy(), show=False, **kwargs)
-    edata_embedded.X = array_type(edata_embedded.X)
-
-    if (plotter == "dpt_timeseries" and array_type.flags & Flags.Sparse) or (
-        plotter == "paga_path" and array_type.flags & Flags.Dask
-    ):
-        with pytest.raises(NotImplementedError):
-            plot(edata_embedded, show=False, **kwargs)
-        return
-    if (
-        plotter in {"rank_features_groups_heatmap", "rank_features_groups_tracksplot"}
-        and array_type.flags & Flags.Matrix
-    ):
-        request.applymarker(pytest.mark.xfail(reason="scanpy's dendrogram fails on scipy sparse matrices"))
+    X = edata_embedded.X = array_type(edata_embedded.X)
 
     result = plot(edata_embedded, show=False, **kwargs)
 
+    assert edata_embedded.X is X
     if kwargs.get("return_fig"):
         pd.testing.assert_frame_equal(result.obs_tidy, expected.obs_tidy)
 

@@ -159,7 +159,9 @@ def test_ncp_array_types(array_type, edata_3d: ed.EHRData) -> None:
     with forbid_dask_compute(allowed=1):
         result = ep.tl.ncp(edata_3d, layer=DEFAULT_TEM_LAYER_NAME, rank=2, n_iter_max=20, copy=True)
 
-    assert type(result.layers[DEFAULT_TEM_LAYER_NAME]) is type(edata_3d.layers[DEFAULT_TEM_LAYER_NAME])
+    assert isinstance(result.layers[DEFAULT_TEM_LAYER_NAME], array_type.cls)
+    if array_type.flags & Flags.Dask:
+        assert type(result.layers[DEFAULT_TEM_LAYER_NAME]._meta) is type(edata_3d.layers[DEFAULT_TEM_LAYER_NAME]._meta)
     assert isinstance(result.obsm["X_ncp"], np.ndarray)
     np.testing.assert_allclose(result.obsm["X_ncp"], expected.obsm["X_ncp"])
     np.testing.assert_allclose(result.varm["ncp_loadings"], expected.varm["ncp_loadings"])

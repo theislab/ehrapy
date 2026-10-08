@@ -9,10 +9,11 @@ import scanpy as sc
 from ehrdata import EHRData, infer_feature_types, move_to_x
 from ehrdata._feature_types import _check_feature_types
 from ehrdata.core.constants import CATEGORICAL_TAG, DATE_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
+from fast_array_utils import stats
 from fast_array_utils.conv import to_dense
 from fast_array_utils.types import DaskArray
 
-from ehrapy._compat import _materialize, _raise_if_dask_with_sparse_chunks, function_2D_only
+from ehrapy._compat import _materialize, function_2D_only
 from ehrapy.preprocessing import encode
 
 if TYPE_CHECKING:
@@ -272,9 +273,8 @@ def _nonzero_fractions(
     X = edata.X[:, edata.var_names.get_indexer(features)]
     groups = edata.obs[groupby].astype(str).to_numpy()
     masks = [groups == group for group in groups_order]
-    *n_nonzero, n_nonzero_all = (
-        np.ravel(counts)
-        for counts in _materialize(*((X[mask] != 0).sum(axis=0) for mask in masks), (X != 0).sum(axis=0))
+    *n_nonzero, n_nonzero_all = _materialize(
+        *(stats.sum(X[mask] != 0, axis=0) for mask in masks), stats.sum(X != 0, axis=0)
     )
     n_nonzero = np.stack(n_nonzero)
     n_obs = np.array([mask.sum() for mask in masks])[:, None]
@@ -362,8 +362,6 @@ def rank_features_groups(
     **kwds,
 ) -> EHRData | None:  # pragma: no cover
     """Rank features for characterizing groups.
-
-    Ranking variables of `edata.X` or a layer requires 2D data, whereas `obs` columns can be ranked for 3D data.
 
     Args:
         edata: Central data object.
@@ -462,31 +460,39 @@ def rank_features_groups(
     if field_to_rank not in ["layer", "obs", "layer_and_obs"]:
         raise ValueError(f"layer must be one of 'layer', 'obs', 'layer_and_obs', not {field_to_rank}")
 
+    # Only check for 2D data if field_to_rank is not "obs"
+    # When field_to_rank is "obs", we're ranking obs columns, so 3D data is acceptable
+    if field_to_rank != "obs":
+        array = edata.X if layer is None else edata.layers[layer]
+        if array.ndim != 2 and array.shape[2] != 1:
+            raise ValueError(
+                f"rank_features_groups with field_to_rank='{field_to_rank}' only supports 2D data, got {'edata.X' if layer is None else f'edata.layers[{layer}]'} with shape {array.shape}"
+            )
+
     # to give better error messages, check if columns_to_rank have valid keys and values here
     _var_subset, _obs_subset = _check_columns_to_rank_dict(columns_to_rank)
 
     edata = edata.copy() if copy else edata
 
-    # to create a minimal edata object below, grab X/layer of the original edata, subsetted to the specified columns
+    # to create a minimal edata object below, grab a reference to X/layer of the original edata,
+    # subsetted to the specified columns
     if field_to_rank in ["layer", "layer_and_obs"]:
-        X_to_keep = edata.X if layer is None else edata.layers[layer]
-        if X_to_keep.ndim == 3 and X_to_keep.shape[2] != 1:
-            raise ValueError(
-                f"rank_features_groups() only supports 2D data with field_to_rank={field_to_rank!r}, but "
-                f"{'edata.X' if layer is None else f'edata.layers[{layer!r}]'} has shape {X_to_keep.shape}. "
-                "Aggregate the time axis first, e.g. with `ep.pp.summarize_measurements()`."
-            )
-        _raise_if_dask_with_sparse_chunks(X_to_keep, "rank_features_groups")
-        var_to_keep = edata.var
         # for some reason ruff insists on this type check. columns_to_rank is always a dict with key "var_names" if _var_subset is True
         if _var_subset and isinstance(columns_to_rank, Mapping):
-            var_to_keep = edata.var.loc[list(columns_to_rank["var_names"])]
-            X_to_keep = X_to_keep[:, edata.var_names.get_indexer(var_to_keep.index)]
+            X_to_keep = (
+                edata[:, columns_to_rank["var_names"]].X
+                if layer is None
+                else edata[:, columns_to_rank["var_names"]].layers[layer]
+            )
+            var_to_keep = edata[:, columns_to_rank["var_names"]].var
+
+        else:
+            X_to_keep = edata.X if layer is None else edata.layers[layer]
+            var_to_keep = edata.var
         if X_to_keep.ndim == 3:
             X_to_keep = X_to_keep[:, :, 0]
-        # scanpy computes every group statistic separately, so the ranked variables are computed once up front
         if isinstance(X_to_keep, DaskArray):
-            (X_to_keep,) = _materialize(X_to_keep)
+            X_to_keep = X_to_keep.compute()
 
     else:
         # dummy 1-dimensional X to be used by move_to_x, and removed again afterwards
@@ -706,8 +712,6 @@ def filter_rank_features_groups(
         and groupby in (None, params["groupby"])
         and pd.Index(features).isin(edata.var_names).all()
     ):
-        _raise_if_dask_with_sparse_chunks(edata.X, "filter_rank_features_groups")
-        # scanpy otherwise counts the non-zero values of each group separately and fails for sparse arrays
         edata.uns[key] = result | _nonzero_fractions(
             edata,
             features,

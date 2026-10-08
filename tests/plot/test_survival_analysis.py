@@ -101,11 +101,6 @@ def test_ols_array_types(array_type, rng: np.random.Generator):
     expected = ep.pl.ols(EHRData(X=X, var=var), x="a", y="c")
     edata = EHRData(X=array_type(X), var=var)
 
-    if array_type.flags & Flags.Sparse and array_type.flags & Flags.Dask:
-        with pytest.raises(NotImplementedError):
-            ep.pl.ols(edata, x="a", y="c")
-        return
-
     with forbid_dask_compute(allowed=1):
         plot = ep.pl.ols(edata, x="a", y="c")
 

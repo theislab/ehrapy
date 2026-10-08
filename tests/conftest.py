@@ -15,7 +15,6 @@ import pandas as pd
 import pytest
 from ehrdata.core.constants import CATEGORICAL_TAG, DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY, NUMERIC_TAG
 from matplotlib.testing.compare import compare_images
-from testing.fast_array_utils import SUPPORTED_TYPES, Flags
 
 import ehrapy as ep
 
@@ -23,7 +22,6 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
 
 TEST_DATA_PATH = Path(__file__).parent / "data"
-DASK_WITH_SPARSE_CHUNKS = {at for at in SUPPORTED_TYPES if at.flags & Flags.Sparse and at.flags & Flags.Dask}
 
 
 @contextmanager

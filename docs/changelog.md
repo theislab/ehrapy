@@ -13,7 +13,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 * {func}`ep.pp.winsorize <ehrapy.preprocessing.winsorize>`, {func}`ep.pp.clip_quantile <ehrapy.preprocessing.clip_quantile>` and {func}`ep.pp.qc_lab_measurements <ehrapy.preprocessing.qc_lab_measurements>` support longitudinal data ([#1132](https://github.com/theislab/ehrapy/pull/1132)) @Zethson
 * Tools, plots and `ep.get` functions support numpy, scipy sparse and dask arrays, and densify and compute only the variables they use ([#1134](https://github.com/theislab/ehrapy/pull/1134)) @Zethson
 
-  The causal estimators and {func}`ep.tl.rank_features_supervised <ehrapy.tools.rank_features_supervised>` accept sparse and dask arrays instead of rejecting or fully densifying them.
+  The causal estimators, {func}`ep.tl.famd <ehrapy.tools.famd>` and {func}`ep.tl.rank_features_supervised <ehrapy.tools.rank_features_supervised>` accept sparse and dask arrays instead of rejecting or fully densifying them.
   Embedding plots such as {func}`ep.pl.umap <ehrapy.plot.umap>` color longitudinal data by `obs` columns, and {func}`ep.pl.timeseries <ehrapy.plot.timeseries>` plots 3D `.X` with `layer=None`.
 
 ### 💥 Breaking changes

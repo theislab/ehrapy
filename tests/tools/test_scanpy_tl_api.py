@@ -1,11 +1,12 @@
 import ehrdata as ed
 import numpy as np
+import pandas as pd
 import pytest
 from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
 from testing.fast_array_utils import Flags
 
 import ehrapy as ep
-from tests.conftest import DASK_WITH_SPARSE_CHUNKS, forbid_dask_compute
+from tests.conftest import forbid_dask_compute
 
 
 def test_tsne(edata_blob_small):
@@ -130,7 +131,7 @@ def test_x_based_tools_3D_raise(edata_blob_small):
     ep.tl.dendrogram(edata_3d, groupby="cluster", use_rep="X_pca")
 
 
-@pytest.mark.array_type(skip={*DASK_WITH_SPARSE_CHUNKS, Flags.Disk, Flags.Gpu})
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
 @pytest.mark.parametrize("var_names", [None, ["feature_1", "feature_2", "feature_3"]])
 def test_dendrogram_array_types(array_type, var_names, edata_blob_small):
     expected = ep.tl.dendrogram(edata_blob_small, groupby="cluster", var_names=var_names, copy=True)
@@ -146,15 +147,38 @@ def test_dendrogram_array_types(array_type, var_names, edata_blob_small):
 
 
 @pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
-def test_ingest_array_types(array_type, edata_blob_small):
+@pytest.mark.parametrize("use_rep", ["X", "X_pca"])
+def test_ingest_array_types(array_type, use_rep, edata_blob_small):
     edata_ref = edata_blob_small.copy()
-    ep.pp.pca(edata_ref)
+    ep.pp.pca(edata_ref, n_comps=3)
+    ep.pp.neighbors(edata_ref, n_neighbors=5, use_rep=use_rep)
+    ep.tl.umap(edata_ref)
+    kwargs = {"obs": "cluster", "embedding_method": ("umap", "pca"), "copy": True}
+    expected = ep.tl.ingest(edata_blob_small, edata_ref, **kwargs)
+    edata_ref.X = array_type(edata_ref.X)
     edata_blob_small.X = array_type(edata_blob_small.X)
 
-    if array_type.cls is not np.ndarray:
-        with pytest.raises(NotImplementedError, match="only supports numpy arrays"):
-            ep.tl.ingest(edata_blob_small, edata_ref, embedding_method="pca")
-        return
+    with forbid_dask_compute(allowed=1):
+        result = ep.tl.ingest(edata_blob_small, edata_ref, **kwargs)
 
-    ep.tl.ingest(edata_blob_small, edata_ref, embedding_method="pca")
-    assert "X_pca" in edata_blob_small.obsm
+    assert isinstance(result.X, array_type.cls)
+    if array_type.flags & Flags.Dask:
+        assert type(result.X._meta) is type(edata_blob_small.X._meta)
+    np.testing.assert_allclose(result.obsm["X_pca"], expected.obsm["X_pca"])
+    np.testing.assert_allclose(result.obsm["X_umap"], expected.obsm["X_umap"])
+    pd.testing.assert_series_equal(result.obs["cluster"], expected.obs["cluster"])
+
+
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+def test_tsne_array_types(array_type, edata_blob_small):
+    expected = ep.tl.tsne(edata_blob_small, perplexity=5, copy=True)
+    edata_blob_small.X = array_type(edata_blob_small.X)
+
+    with forbid_dask_compute(allowed=1):
+        result = ep.tl.tsne(edata_blob_small, perplexity=5, copy=True)
+
+    assert isinstance(result.X, array_type.cls)
+    if array_type.flags & Flags.Dask:
+        assert type(result.X._meta) is type(edata_blob_small.X._meta)
+    np.testing.assert_allclose(result.obsm["X_tsne"], expected.obsm["X_tsne"], rtol=1e-5, atol=1e-5)
+    assert "tsne" in result.uns

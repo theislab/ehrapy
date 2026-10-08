@@ -522,15 +522,12 @@ def test_rank_features_groups_array_types(array_type, method, pts, rng):
     expected = ep.tl.rank_features_groups(_ranking_edata(X, categorical=categorical), "group", **kwargs)
     edata = _ranking_edata(array_type(X), categorical=categorical)
 
-    if array_type.flags & Flags.Sparse and array_type.flags & Flags.Dask:
-        with pytest.raises(NotImplementedError):
-            ep.tl.rank_features_groups(edata, "group", **kwargs)
-        return
-
     with forbid_dask_compute(allowed=1):
         result = ep.tl.rank_features_groups(edata, "group", **kwargs)
 
-    assert type(result.X) is type(edata.X)
+    assert isinstance(result.X, array_type.cls)
+    if array_type.flags & Flags.Dask:
+        assert type(result.X._meta) is type(edata.X._meta)
     _assert_rankings_equal(result.uns["rank_features_groups"], expected.uns["rank_features_groups"])
 
 
@@ -554,11 +551,6 @@ def test_filter_rank_features_groups_array_types(array_type, rng):
     expected = ep.tl.filter_rank_features_groups(ranked, min_in_group_fraction=0.7, copy=True)
     edata = _ranking_edata(array_type(X))
     edata.uns["rank_features_groups"] = ranked.uns["rank_features_groups"]
-
-    if array_type.flags & Flags.Sparse and array_type.flags & Flags.Dask:
-        with pytest.raises(NotImplementedError):
-            ep.tl.filter_rank_features_groups(edata)
-        return
 
     with forbid_dask_compute(allowed=1):
         ep.tl.filter_rank_features_groups(edata, min_in_group_fraction=0.7)

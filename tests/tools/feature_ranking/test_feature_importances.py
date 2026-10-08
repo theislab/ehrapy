@@ -120,14 +120,11 @@ def test_rank_features_supervised_array_types(array_type, var_names, rng):
     expected = rank_features_supervised(ed.EHRData(X=X, var=var), **kwargs)
     edata = ed.EHRData(X=array_type(X), var=var)
 
-    if array_type.flags & Flags.Sparse and array_type.flags & Flags.Dask:
-        with pytest.raises(NotImplementedError):
-            rank_features_supervised(edata, **kwargs)
-        return
-
     with forbid_dask_compute(allowed=1):
         result = rank_features_supervised(edata, **kwargs)
 
-    assert type(result.X) is type(edata.X)
+    assert isinstance(result.X, array_type.cls)
+    if array_type.flags & Flags.Dask:
+        assert type(result.X._meta) is type(edata.X._meta)
     pd.testing.assert_series_equal(result.var["feature_importances"], expected.var["feature_importances"])
     assert result.uns["feature_importances"]["score"] == pytest.approx(expected.uns["feature_importances"]["score"])
