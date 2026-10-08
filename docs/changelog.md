@@ -9,7 +9,6 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 * {func}`ep.pp.summarize_measurements <ehrapy.preprocessing.summarize_measurements>` computes the number of values, their standard deviation and, for longitudinal data, their slope over time ([#1150](https://github.com/theislab/ehrapy/pull/1150)) @Zethson
 * {func}`ep.pl.trajectories <ehrapy.plot.trajectories>` plots the mean of longitudinal variables over time with a confidence band for every group of observations ([#1146](https://github.com/theislab/ehrapy/pull/1146)) @Zethson
 * {func}`ep.pp.locf_impute <ehrapy.preprocessing.locf_impute>` takes a `limit` on how many timepoints an observed value is carried forward, and its fallback only fills timepoints before a patient's first observation ([#1147](https://github.com/theislab/ehrapy/pull/1147)) @Zethson
-* `ep.ml` fits, applies and evaluates scikit-learn models that predict patient outcomes from static and longitudinal data ([#1144](https://github.com/theislab/ehrapy/pull/1144)) @Zethson
 * `ep.ml` fits, applies and evaluates models that predict patient outcomes from static and longitudinal data ([#1144](https://github.com/theislab/ehrapy/pull/1144)) @Zethson
 
   {func}`ep.ml.split <ehrapy.ml.split>` assigns patients to `train`, `tuning` and `held_out` sets, at random or by time, and {func}`ep.ml.fit <ehrapy.ml.fit>` fits imputation, scaling and the model on `train` only.
