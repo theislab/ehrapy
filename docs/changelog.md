@@ -6,7 +6,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### 🚀 Features
 
-* {func}`ep.tl.comorbidity_index <ehrapy.tools.comorbidity_index>` scores every patient with the Charlson or Elixhauser comorbidity index from ICD-10 codes, using the coding algorithms of Quan et al. 2005 with the Charlson, Quan 2011 or van Walraven weights, and stores the score and every comorbidity in `obs` @Zethson
+* {func}`ep.tl.comorbidity_index <ehrapy.tools.comorbidity_index>` scores every patient with the Charlson or Elixhauser comorbidity index from ICD-10 codes, using the coding algorithms of Quan et al. 2005 with the Charlson, Quan 2011 or van Walraven weights, and stores the score and every comorbidity in `obs` ([#1161](https://github.com/theislab/ehrapy/pull/1161)) @Zethson
 * {func}`ep.get.obs_df <ehrapy.get.obs_df>` and the functions that read variables through it, the survival and regression models, the causal estimators, {func}`ep.pl.scatter <ehrapy.plot.scatter>`, {func}`ep.pl.catplot <ehrapy.plot.catplot>` and {func}`ep.pl.ols <ehrapy.plot.ols>`, take variables of longitudinal 3D data at their first non-missing value, the baseline, or at another statistic over time passed to `obs_df` as `statistic` ([#1164](https://github.com/theislab/ehrapy/pull/1164)) @Zethson
 
   The survival models derive the duration and event from an `event_col` that is a longitudinal variable, so that `ep.tl.kaplan_meier(edata, event_col="SepsisLabel")` estimates the time to sepsis on PhysioNet 2019.
