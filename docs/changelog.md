@@ -6,7 +6,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### 🚀 Features
 
-* {func}`ep.get.obs_df <ehrapy.get.obs_df>` and the functions that read variables through it, the survival and regression models, the causal estimators, {func}`ep.pl.scatter <ehrapy.plot.scatter>`, {func}`ep.pl.catplot <ehrapy.plot.catplot>` and {func}`ep.pl.ols <ehrapy.plot.ols>`, take variables of longitudinal 3D data at their first non-missing value, the baseline, or at another statistic over time passed to `obs_df` as `statistic` @Zethson
+* {func}`ep.get.obs_df <ehrapy.get.obs_df>` and the functions that read variables through it, the survival and regression models, the causal estimators, {func}`ep.pl.scatter <ehrapy.plot.scatter>`, {func}`ep.pl.catplot <ehrapy.plot.catplot>` and {func}`ep.pl.ols <ehrapy.plot.ols>`, take variables of longitudinal 3D data at their first non-missing value, the baseline, or at another statistic over time passed to `obs_df` as `statistic` ([#1164](https://github.com/theislab/ehrapy/pull/1164)) @Zethson
 
   The survival models derive the duration and event from an `event_col` that is a longitudinal variable, so that `ep.tl.kaplan_meier(edata, event_col="SepsisLabel")` estimates the time to sepsis on PhysioNet 2019.
   The event is whether the variable is ever 1, at the time of its first 1 in `edata.tem["interval_start_offset"]`, and observations without one are censored at their last non-missing value.
