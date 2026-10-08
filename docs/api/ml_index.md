@@ -1,6 +1,6 @@
 # Machine learning
 
-Prediction models for patient outcomes, built on scikit-learn.
+Prediction models for patient outcomes, from linear and gradient boosting models to recurrent and transformer networks for time series.
 A {class}`~ehrapy.ml.Task` names the label and the timepoints the features come from, {func}`~ehrapy.ml.split` assigns patients to a training, a tuning and a held-out set, and {func}`~ehrapy.ml.fit` learns a model on the training set only.
 
 ```{eval-rst}
