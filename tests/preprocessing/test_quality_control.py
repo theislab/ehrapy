@@ -639,18 +639,15 @@ def test_mcar_test_single_timepoint_3d(mar_edata):
 
 @pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
 @pytest.mark.parametrize("method", ["little", "ttest"])
-def test_mcar_test_array_types(array_type, mar_edata, method):
-    expected = mcar_test(mar_edata, method=method)
-    edata = ed.EHRData(X=array_type(mar_edata.X))
+def test_mcar_test_array_types(array_type, mcar_edata, method, rng):
+    X = np.where(rng.random(mcar_edata.X.shape) < 0.3, 0.0, mcar_edata.X)
+    expected = mcar_test(ed.EHRData(X=X), method=method)
+    edata = ed.EHRData(X=array_type(X))
 
-    if array_type.cls is not np.ndarray:
-        with pytest.raises(NotImplementedError):
-            mcar_test(edata, method=method)
-        return
-
-    result = mcar_test(edata, method=method)
+    with forbid_dask_compute(allowed=1):
+        result = mcar_test(edata, method=method)
 
     if method == "little":
-        assert result == expected
+        assert np.isclose(result, expected, rtol=1e-10)
     else:
-        pd.testing.assert_frame_equal(result, expected)
+        pd.testing.assert_frame_equal(result, expected, rtol=1e-10)

@@ -1,14 +1,18 @@
 from __future__ import annotations
 
+from functools import singledispatch
 from typing import TYPE_CHECKING, Literal
 
 import numpy as np
+import pandas as pd
 import scanpy as sc
 import scipy.sparse as sp
+from array_api_compat import array_namespace
 from ehrdata import EHRData
+from fast_array_utils.types import DaskArray
 from numpy.typing import NDArray
 
-from ehrapy._compat import _raise_if_not_numpy, function_2D_only
+from ehrapy._compat import _like_obs, _raise_if_sparse, function_2D_only
 from ehrapy._types import _empty
 
 if TYPE_CHECKING:
@@ -18,6 +22,8 @@ if TYPE_CHECKING:
     from scipy.sparse import spmatrix
 
     from ehrapy._types import AnyRandom, CSBase, Empty, RNGLike, SeedLike
+
+    type Array = np.ndarray | DaskArray
 
 
 @function_2D_only()
@@ -119,6 +125,19 @@ def pca(
     )
 
 
+def _residuals(X: Array, design: np.ndarray, *, keep_constant: bool) -> Array:
+    """Residuals of the least-squares fit of every variable on the columns of `design`."""
+    xp = array_namespace(X)
+    X = xp.astype(X, np.result_type(X.dtype, np.float32))
+    regressors = _like_obs(X, design)
+    coefficients = xp.asarray(np.linalg.pinv(design.T @ design)) @ (regressors.T @ X)
+    residuals = X - xp.astype(regressors @ coefficients, X.dtype)
+    if keep_constant:
+        # scanpy's per-variable fallback fit leaves constant variables unchanged
+        residuals = xp.where(xp.all(X == X[:1], axis=0), X, residuals)
+    return residuals
+
+
 @function_2D_only()
 def regress_out(
     edata: EHRData,
@@ -127,7 +146,7 @@ def regress_out(
     n_jobs: int | None = None,
     layer: str | None = None,
     copy: bool = False,
-) -> EHRData | None:  # pragma: no cover
+) -> EHRData | None:
     """Regress out (mostly) unwanted sources of variation.
 
     Uses simple linear regression.
@@ -137,16 +156,33 @@ def regress_out(
     Args:
         edata: Central data object.
         keys: Keys for observation annotation on which to regress on.
-        n_jobs: Number of jobs for parallel computation.
-                `None` means using :attr:`scanpy.settings.n_jobs`.
+        n_jobs: Unused, kept for backwards compatibility.
         layer: If provided, which element of `layers` to regress on.
         copy: Determines whether a copy of `edata` is returned.
 
     Returns:
         Depending on `copy` returns or updates the data object with the corrected data matrix in `X` or `layers[layer]`.
     """
-    _raise_if_not_numpy(edata.X if layer is None else edata.layers[layer], "regress_out", "the residuals are dense")
-    return sc.pp.regress_out(adata=edata, keys=keys, n_jobs=n_jobs, layer=layer, copy=copy)
+    X = edata.X if layer is None else edata.layers[layer]
+    _raise_if_sparse(X, "regress_out", "the residuals of a linear model are dense")
+
+    keys = [keys] if isinstance(keys, str) else list(keys)
+    categorical = not pd.api.types.is_numeric_dtype(edata.obs[keys[0]])
+    if categorical:
+        if len(keys) > 1:
+            raise ValueError("Only a single categorical key is allowed, whose per-category means are regressed out.")
+        design = pd.get_dummies(edata.obs[keys[0]], dtype=np.float64).to_numpy()
+    else:
+        design = np.column_stack([np.ones(edata.n_obs), edata.obs[keys].to_numpy(np.float64)])
+
+    edata = edata.copy() if copy else edata
+    X = _residuals(X, design, keep_constant=categorical or np.linalg.det(design.T @ design) == 0)
+    if layer is None:
+        edata.X = X
+    else:
+        edata.layers[layer] = X
+
+    return edata if copy else None
 
 
 def sample(
@@ -243,7 +279,56 @@ def sample(
         return sc.pp.sample(data=edata, fraction=fraction, n=n_obs, rng=rng, copy=copy, replace=replace, axis=axis, p=p)
 
 
-@function_2D_only()
+@singledispatch
+def _empirical_bayes(estimates: np.ndarray, sizes: np.ndarray, conv: float = 1e-4) -> np.ndarray:
+    """Posterior estimates of the additive and multiplicative batch effects from their first estimates, stacked as `(2, n_batches, n_vars)`."""
+    gamma_hat, delta_hat = estimates
+    m, s2 = delta_hat.mean(axis=1), delta_hat.var(axis=1, ddof=1)
+    priors = zip(gamma_hat.mean(axis=1), gamma_hat.var(axis=1), (2 * s2 + m**2) / s2, (m * s2 + m**3) / s2, strict=True)
+    result = np.empty_like(estimates)
+    for i, (g_bar, t2, a, b) in enumerate(priors):
+        n, g_hat, d_hat = sizes[i], gamma_hat[i], delta_hat[i]
+        g_old, d_old, change = g_hat, d_hat, 1.0
+        while change > conv:
+            g_new = (t2 * n * g_hat + d_old * g_bar) / (t2 * n + d_old)
+            # squared deviations of the batch's standardized data from g_new, via its mean g_hat and sample variance d_hat
+            sum2 = (n - 1) * d_hat + n * (g_hat - g_new) ** 2
+            d_new = (0.5 * sum2 + b) / (n / 2.0 + a - 1.0)
+            change = max((abs(g_new - g_old) / g_old).max(), (abs(d_new - d_old) / d_old).max())
+            g_old, d_old = g_new, d_new
+        result[:, i] = g_new, d_new
+    return result
+
+
+@_empirical_bayes.register(DaskArray)
+def _(estimates: DaskArray, sizes: np.ndarray) -> DaskArray:
+    return estimates.rechunk(-1).map_blocks(
+        _empirical_bayes.dispatch(np.ndarray), sizes=sizes, meta=np.empty((0, 0, 0), dtype=estimates.dtype)
+    )
+
+
+def _combat(X: Array, design: np.ndarray, n_batches: int) -> Array:
+    """Batch-corrected `X` with the parametric empirical Bayes ComBat model, where the first `n_batches` columns of `design` encode the batches."""
+    xp = array_namespace(X)
+    X = xp.astype(X, xp.float64)
+    sizes = design[:, :n_batches].sum(axis=0)
+    regressors = _like_obs(X, design)
+    batch_regressors = regressors[:, :n_batches]
+
+    coefficients = xp.asarray(np.linalg.inv(design.T @ design)) @ (regressors.T @ X)
+    grand_mean = xp.asarray(sizes / X.shape[0]) @ coefficients[:n_batches]
+    var_pooled = xp.mean((X - regressors @ coefficients) ** 2, axis=0)
+    stand_mean = grand_mean + regressors[:, n_batches:] @ coefficients[n_batches:]
+    standardized = xp.where(var_pooled == 0, 0.0, (X - stand_mean) / xp.sqrt(var_pooled))
+
+    gamma_hat = (batch_regressors.T @ standardized) / sizes[:, None]
+    delta_hat = (batch_regressors.T @ (standardized - batch_regressors @ gamma_hat) ** 2) / (sizes[:, None] - 1)
+    gamma_star, delta_star = _empirical_bayes(xp.stack([gamma_hat, delta_hat]), sizes)
+
+    adjusted = (standardized - batch_regressors @ gamma_star) / xp.sqrt(batch_regressors @ delta_star)
+    return adjusted * xp.sqrt(var_pooled) + stand_mean
+
+
 @function_2D_only()
 def combat(
     edata: EHRData,
@@ -252,7 +337,7 @@ def combat(
     covariates: Collection[str] | None = None,
     layer: str | None = None,
     copy: bool = False,
-) -> EHRData | None:  # pragma: no cover
+) -> EHRData | None:
     """ComBat function for batch effect correction :cite:p:`Johnson2006`, :cite:p:`Leek2012`, :cite:p:`Pedersen2012`.
 
     Corrects for batch effects by fitting linear models, gains statistical power via an EB framework where information is borrowed across features.
@@ -267,23 +352,35 @@ def combat(
                     This parameter refers to the design matrix `X` in Equation 2.1 in :cite:p:`Johnson2006` and to the `mod` argument in
                     the original combat function in the sva R package.
                     Note that not including covariates may introduce bias or lead to the removal of signal in unbalanced designs.
+                    Categorical covariates are dummy-coded with their first category as reference.
         layer: The layer to operate on.
         copy: Whether to return a corrected copy of `edata` or to correct it in place.
 
     Returns:
         `None` if `copy=False` and modifies the passed edata, else returns an updated object.
     """
-    _raise_if_not_numpy(edata.X if layer is None else edata.layers[layer], "combat", "the corrected values are dense")
+    X = edata.X if layer is None else edata.layers[layer]
+    _raise_if_sparse(X, "combat", "standardizing the variables centers them")
+
+    batches = pd.get_dummies(edata.obs[batch_key].astype("category").cat.remove_unused_categories(), dtype=np.float64)
+    sizes = batches.sum()
+    if (sizes < 2).any():
+        raise ValueError(
+            f"Batches {sizes.index[sizes < 2].tolist()} have fewer than 2 observations, "
+            "but ComBat needs at least 2 observations per batch to estimate the within-batch variance."
+        )
+    design = batches
+    if covariates:
+        design = pd.concat(
+            [batches, pd.get_dummies(edata.obs[list(covariates)], drop_first=True, dtype=np.float64)], axis=1
+        )
+
     edata = edata.copy() if copy else edata
-    # Since scanpy's combat does not support layers, we need to copy the data to the X matrix and then copy the result back to the layer
+    X = _combat(X, design.to_numpy(np.float64), n_batches=len(sizes))
     if layer is None:
-        sc.pp.combat(adata=edata, key=batch_key, covariates=covariates, inplace=True)
-    else:
-        X = edata.X
-        edata.X = edata.layers[layer].copy()
-        sc.pp.combat(adata=edata, key=batch_key, covariates=covariates, inplace=True)
-        edata.layers[layer] = edata.X
         edata.X = X
+    else:
+        edata.layers[layer] = X
 
     return edata if copy else None
 

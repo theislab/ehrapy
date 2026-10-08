@@ -282,3 +282,59 @@ def _raise_densifying(name: str, reason: str) -> None:
 def _raise_if_not_numpy(X: Array | CSBase, name: str, reason: str) -> None:
     if not isinstance(X, np.ndarray):
         raise NotImplementedError(f"{name} only supports numpy arrays because {reason}, got {type(X).__name__}.")
+
+
+def _raise_if_sparse(X: Array | CSBase, name: str, reason: str) -> None:
+    if isinstance(X, CSBase) or (isinstance(X, DaskArray) and isinstance(X._meta, CSBase)):
+        _raise_densifying(name, reason)
+
+
+@singledispatch
+def _like_obs(X: np.ndarray, values: np.ndarray) -> np.ndarray:
+    """Per-observation `values` as an array of the same kind as `X`, chunked like its observations."""
+    return values
+
+
+@_like_obs.register(DaskArray)
+def _(X: DaskArray, values: np.ndarray) -> DaskArray:
+    import dask.array as da
+
+    return da.from_array(values, chunks=(X.chunks[0], *(-1,) * (values.ndim - 1)))
+
+
+def _zero_centered_ranks(values: np.ndarray, n: int) -> np.ndarray:
+    """Average ranks of `values` among themselves and `n - len(values)` zeros, minus the rank of zero."""
+    from scipy.stats import rankdata
+
+    n_zeros = n - len(values)
+    ranks = rankdata(values) + n_zeros * ((values > 0) + (values == 0) / 2)
+    return ranks - np.sum(values < 0) - (np.sum(values == 0) + n_zeros + 1) / 2
+
+
+def sparse_nan_corrcoef(X: CSBase, *, method: str) -> np.ndarray:
+    """Pearson or Spearman correlations between all columns over the observations where neither is NaN, counting implicit zeros as values.
+
+    Correlations over fewer than 3 observations or with a constant column are NaN.
+    """
+    X = X.tocsc()
+    columns = [
+        (X.indices[start:stop], X.data[start:stop]) for start, stop in zip(X.indptr[:-1], X.indptr[1:], strict=True)
+    ]
+    missing = [rows[np.isnan(values)] for rows, values in columns]
+    corr = np.eye(X.shape[1])
+    for i in range(X.shape[1]):
+        for j in range(i + 1, X.shape[1]):
+            excluded = np.union1d(missing[i], missing[j])
+            n = X.shape[0] - len(excluded)
+            (x_rows, x), (y_rows, y) = columns[i], columns[j]
+            x_kept, y_kept = ~np.isin(x_rows, excluded), ~np.isin(y_rows, excluded)
+            x_rows, x, y_rows, y = x_rows[x_kept], x[x_kept], y_rows[y_kept], y[y_kept]
+            if n < 3 or any(np.all(v == (v[0] if len(v) == n else 0)) for v in (x, y)):
+                corr[i, j] = corr[j, i] = np.nan
+                continue
+            if method == "spearman":
+                x, y = _zero_centered_ranks(x, n), _zero_centered_ranks(y, n)
+            _, x_common, y_common = np.intersect1d(x_rows, y_rows, assume_unique=True, return_indices=True)
+            cov = x[x_common] @ y[y_common] - x.sum() * y.sum() / n
+            corr[i, j] = corr[j, i] = cov / np.sqrt((x @ x - x.sum() ** 2 / n) * (y @ y - y.sum() ** 2 / n))
+    return corr

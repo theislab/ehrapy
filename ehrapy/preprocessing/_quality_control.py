@@ -1,13 +1,14 @@
 from __future__ import annotations
 
+import itertools
 import math
-import warnings
 from functools import partial, singledispatch
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, NamedTuple
 
 import array_api_extra as xpx
 import numpy as np
 import pandas as pd
+import scipy.sparse as sp
 from array_api_compat import array_namespace, is_lazy_array
 from ehrdata import EHRData
 from ehrdata._logger import logger
@@ -20,10 +21,10 @@ from ehrapy._compat import (
     _broadcast_var_stat,
     _by_group,
     _columnwise,
+    _like_obs,
     _materialize,
     _obs_axes,
     _raise_if_dask_with_sparse_chunks,
-    _raise_if_not_numpy,
     _sparse_columns,
     _sparse_rows,
     _var_axes,
@@ -259,8 +260,7 @@ def _with_original_values(mtx: np.ndarray, original: np.ndarray) -> np.ndarray:
 def _(mtx: DaskArray, original: np.ndarray) -> DaskArray:
     import dask.array as da
 
-    original = da.from_array(original, chunks=(mtx.chunks[0], *(-1,) * (original.ndim - 1)))
-    return da.concatenate([mtx.astype(object), original], axis=1)
+    return da.concatenate([mtx.astype(object), _like_obs(mtx, original)], axis=1)
 
 
 @_with_original_values.register(CSBase)
@@ -606,7 +606,6 @@ def mcar_test(
         0.1416...
     """
     mtx = edata.X if layer is None else edata.layers[layer]
-    _raise_if_not_numpy(mtx, "mcar_test", "the tests need all observations in memory")
     if mtx.ndim == 3:
         mtx = mtx[:, :, 0]
 
@@ -619,37 +618,107 @@ def mcar_test(
 
     var_names = np.asarray(edata.var_names)
     if method == "little":
-        return _little_mcar_test(mtx)
+        return _little_mcar_test(_missingness_patterns(mtx))
     if method == "ttest":
-        return _mcar_t_tests(mtx, var_names)
+        return _mcar_t_tests(_missingness_patterns(mtx), var_names)
     raise ValueError(f"Unknown method {method!r}. Choose from 'little' or 'ttest'.")
 
 
-def _little_mcar_test(X: np.ndarray) -> float:
+class _MissingnessPatterns(NamedTuple):
+    """Sufficient statistics of the observed values for every missingness pattern.
+
+    `patterns` is True where values are missing, `counts`, `sums` and `squares` hold the number of observations and the per-variable sums and sums of squares of each pattern, and `cross_products` holds the cross-products of all variables with missing values as 0.
+    """
+
+    patterns: np.ndarray
+    counts: np.ndarray
+    sums: np.ndarray
+    squares: np.ndarray
+    cross_products: np.ndarray
+
+
+def _group_by_pattern(
+    patterns: np.ndarray,
+    inverse: np.ndarray,
+    counts: np.ndarray,
+    sums: np.ndarray | CSBase,
+    squares: np.ndarray | CSBase,
+    cross_products: np.ndarray | CSBase,
+) -> _MissingnessPatterns:
+    """Sum the statistics of all rows that share a pattern, where `inverse` maps every row to its row of `patterns`."""
+    indicator = sp.csr_array(
+        (np.ones(len(inverse)), (inverse, np.arange(len(inverse)))), shape=(len(patterns), len(inverse))
+    )
+    return _MissingnessPatterns(
+        patterns,
+        indicator @ counts,
+        to_dense(indicator @ sums),
+        to_dense(indicator @ squares),
+        to_dense(cross_products),
+    )
+
+
+@singledispatch
+def _missingness_patterns(X: np.ndarray) -> _MissingnessPatterns:
+    """Sufficient statistics of every missingness pattern of `X`."""
+    missing = np.isnan(X)
+    observed = np.where(missing, 0.0, X)
+    patterns, inverse = np.unique(missing, axis=0, return_inverse=True)
+    return _group_by_pattern(patterns, inverse, np.ones(X.shape[0]), observed, observed**2, observed.T @ observed)
+
+
+@_missingness_patterns.register(CSBase)
+def _(X: CSBase) -> _MissingnessPatterns:
+    missing = np.isnan(X.data)
+    mask = sp.csr_array((missing[missing], (_sparse_rows(X)[missing], _sparse_columns(X)[missing])), shape=X.shape)
+    keys = np.array(
+        [mask.indices[start:stop].tobytes() for start, stop in itertools.pairwise(mask.indptr)], dtype=object
+    )
+    _, first, inverse = np.unique(keys, return_index=True, return_inverse=True)
+    observed = X.copy()
+    observed.data[missing] = 0
+    return _group_by_pattern(
+        mask[first].toarray(),
+        inverse,
+        np.ones(X.shape[0]),
+        observed,
+        observed.multiply(observed),
+        observed.T @ observed,
+    )
+
+
+@_missingness_patterns.register(DaskArray)
+def _(X: DaskArray) -> _MissingnessPatterns:
+    import dask
+
+    blocks = dask.compute(*map(dask.delayed(_missingness_patterns), X.rechunk({1: -1}).to_delayed().ravel()))
+    patterns, counts, sums, squares, cross_products = zip(*blocks, strict=True)
+    unique, inverse = np.unique(np.concatenate(patterns), axis=0, return_inverse=True)
+    return _group_by_pattern(
+        unique, inverse, np.concatenate(counts), np.concatenate(sums), np.concatenate(squares), sum(cross_products)
+    )
+
+
+def _little_mcar_test(statistics: _MissingnessPatterns) -> float:
     # Implements equation (4) from:
     # Li, C. (2013). Little's test of missing completely at random. Stata Journal, 13(4), 795-809.
     # Freely accessible preprint: https://cpb-us-w2.wpmucdn.com/blog.nus.edu.sg/dist/4/6502/files/2018/06/mcartest-zlxtj7.pdf
     # Original reference: Little, R.J.A. (1988). JASA 83(404), 1198-1202. https://doi.org/10.2307/2290157
-    n, p = X.shape
-    mask = np.isnan(X)
+    patterns, counts, sums, _, S = statistics
+    p = patterns.shape[1]
 
-    if not mask.any():
+    if not patterns.any():
         return 1.0
 
-    mu = np.nanmean(X, axis=0)
+    valid_f = (~patterns).astype(np.float64)
+    mu = sums.sum(axis=0) / (counts @ valid_f)
 
-    valid = ~mask
-    valid_f = valid.astype(np.float64)
-    denom = valid_f.T @ valid_f
+    denom = valid_f.T @ (counts[:, None] * valid_f)
     np.fill_diagonal(denom, np.maximum(denom.diagonal(), 1))
 
-    X_filled = np.where(valid, X, 0.0)
-    S = X_filled.T @ X_filled
-    M = X_filled.T @ valid_f
+    M = sums.T @ valid_f
     cov_global = (S - (M * M.T) / denom) / (denom - 1)
     np.fill_diagonal(cov_global, np.maximum(cov_global.diagonal(), 1e-12))
-
-    patterns, inverse, counts = np.unique(mask, axis=0, return_inverse=True, return_counts=True)
 
     d2 = 0.0
     kj = 0
@@ -660,9 +729,7 @@ def _little_mcar_test(X: np.ndarray) -> float:
             continue
         kj += k
 
-        rows = inverse == j
-        X_sub = X[np.ix_(rows, obs_cols)]
-        delta = np.nanmean(X_sub, axis=0) - mu[obs_cols]
+        delta = sums[j, obs_cols] / counts[j] - mu[obs_cols]
         sigma_j = cov_global[np.ix_(obs_cols, obs_cols)]
 
         try:
@@ -679,30 +746,30 @@ def _little_mcar_test(X: np.ndarray) -> float:
     return float(chi2.sf(d2, df))
 
 
-def _mcar_t_tests(X: np.ndarray, var_names: np.ndarray) -> pd.DataFrame:
-    _, m = X.shape
+def _observed_moments(
+    statistics: _MissingnessPatterns, selected: np.ndarray
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Number of observed values, mean and sample standard deviation of every variable over the selected patterns."""
+    n = statistics.counts[selected] @ ~statistics.patterns[selected]
+    sums, squares = statistics.sums[selected].sum(axis=0), statistics.squares[selected].sum(axis=0)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        mean = np.where(n > 0, sums / n, np.nan)
+        # ddof=1 to match ttest_ind equal_var=False (Welch's t-test)
+        std = np.where(n > 1, np.sqrt(np.maximum(squares - n * mean**2, 0) / (n - 1)), np.nan)
+    return n, mean, std
+
+
+def _mcar_t_tests(statistics: _MissingnessPatterns, var_names: np.ndarray) -> pd.DataFrame:
+    m = statistics.patterns.shape[1]
     result = np.full((m, m), np.nan)
 
     for i in range(m):
-        miss = np.isnan(X[:, i])
+        miss = statistics.patterns[:, i]
         if miss.all() or (~miss).all():
             continue
 
-        X_miss = X[miss]
-        X_pres = X[~miss]
-
-        n1 = (~np.isnan(X_miss)).sum(axis=0).astype(float)
-        n2 = (~np.isnan(X_pres)).sum(axis=0).astype(float)
-
-        # nanmean/nanstd are evaluated eagerly for all columns before the np.where guard
-        # filters out all-NaN or single-observation columns, causing spurious RuntimeWarnings.
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", RuntimeWarning)
-            mu1 = np.where(n1 > 0, np.nanmean(X_miss, axis=0), np.nan)
-            mu2 = np.where(n2 > 0, np.nanmean(X_pres, axis=0), np.nan)
-            # ddof=1 to match ttest_ind equal_var=False (Welch's t-test)
-            std1 = np.where(n1 > 1, np.nanstd(X_miss, axis=0, ddof=1), np.nan)
-            std2 = np.where(n2 > 1, np.nanstd(X_pres, axis=0, ddof=1), np.nan)
+        n1, mu1, std1 = _observed_moments(statistics, miss)
+        n2, mu2, std2 = _observed_moments(statistics, ~miss)
 
         computable = (n1 >= 1) & (n2 >= 1)
         result[i, computable] = ttest_ind_from_stats(

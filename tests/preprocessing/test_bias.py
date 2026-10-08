@@ -126,13 +126,29 @@ def test_detect_bias_copy(edata_small_bias, copy):
 
 
 @pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
-def test_detect_bias_array_types(edata_small_bias, array_type):
-    edata_small_bias.X = array_type(edata_small_bias.X)
+@pytest.mark.parametrize("corr_method", ["spearman", "pearson"])
+def test_detect_bias_array_types(edata_small_bias, array_type, corr_method, rng):
+    X = edata_small_bias.X.astype(np.float64)
+    numeric = X[:, :4]
+    numeric[rng.random(numeric.shape) < 0.2] = 0
+    numeric[rng.random(numeric.shape) < 0.1] = np.nan
+    edata_small_bias.X = X
+    kwargs = {"sensitive_features": "all", "run_feature_importances": False, "corr_method": corr_method}
+    expected = ep.pp.detect_bias(edata_small_bias, copy=True, **kwargs)
+    edata_small_bias.X = array_type(X)
 
-    if array_type.flags & (Flags.Sparse | Flags.Dask):
-        with pytest.raises(NotImplementedError, match="only supports numpy arrays"):
-            ep.pp.detect_bias(edata_small_bias, sensitive_features=["cat1"], run_feature_importances=False)
+    if array_type.flags & Flags.Dask:
+        with pytest.raises(NotImplementedError, match="dask arrays"):
+            ep.pp.detect_bias(edata_small_bias, **kwargs)
         return
+    if array_type.flags & Flags.Sparse:
+        with pytest.raises(NotImplementedError, match="run_feature_importances"):
+            ep.pp.detect_bias(edata_small_bias, sensitive_features=["cat1"], run_feature_importances=True)
 
-    ep.pp.detect_bias(edata_small_bias, sensitive_features=["cat1"], run_feature_importances=False)
-    assert len(edata_small_bias.uns["bias"]["standardized_mean_differences"]) == 2
+    result = ep.pp.detect_bias(edata_small_bias, copy=True, **kwargs)
+
+    np.testing.assert_allclose(result.varp["feature_correlations"], expected.varp["feature_correlations"], rtol=1e-10)
+    for key, frame in expected.uns["bias"].items():
+        pd.testing.assert_frame_equal(result.uns["bias"][key], frame, rtol=1e-10)
+    for feature, frame in expected.uns["smd"].items():
+        pd.testing.assert_frame_equal(result.uns["smd"][feature], frame, rtol=1e-10)
