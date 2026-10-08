@@ -4,6 +4,7 @@ import ehrdata as ed
 import numpy as np
 import pandas as pd
 import pytest
+import scanpy as sc
 import scipy.sparse as sp
 from ehrdata.core.constants import CATEGORICAL_TAG, DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrdata.io import read_csv
@@ -542,6 +543,31 @@ def test_rank_features_groups_single_timepoint(rng):
 def test_rank_features_groups_logreg_with_categorical_raises(rng):
     with pytest.raises(ValueError, match="cannot be combined with categorical features"):
         ep.tl.rank_features_groups(_ranking_edata(_ranking_data(rng)), "group", num_cols_method="logreg")
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "compared_groups"),
+    [
+        ({"reference": "b"}, ("a", "c", "d")),
+        ({"groups": ["a"], "reference": "b"}, ("a",)),
+        ({"groups": ["c", "a"], "reference": "b"}, ("c", "a")),
+        ({"groups": ["c", "a"], "reference": "rest"}, ("c", "a")),
+    ],
+)
+def test_rank_features_groups_compared_groups(kwargs, compared_groups, rng):
+    edata = _ranking_edata(_ranking_data(rng))
+    numeric = edata[:, edata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG].copy()
+
+    ep.tl.rank_features_groups(edata, "group", **kwargs)
+    sc.tl.rank_genes_groups(numeric, "group", **kwargs)
+
+    result, expected = edata.uns["rank_features_groups"], numeric.uns["rank_genes_groups"]
+    for key in ("names", "scores", "pvals", "pvals_adj", "logfoldchanges"):
+        assert result[key].dtype.names == compared_groups
+    for group in compared_groups:
+        assert set(result["names"][group]) == set(edata.var_names)
+        scores = pd.Series(result["scores"][group], index=result["names"][group])
+        np.testing.assert_allclose(scores[expected["names"][group]], expected["scores"][group])
 
 
 @pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
