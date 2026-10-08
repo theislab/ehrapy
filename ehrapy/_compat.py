@@ -20,6 +20,7 @@ R = TypeVar("R")
 if TYPE_CHECKING:
     from collections.abc import Callable, Collection, Iterable, Mapping
 
+    import pandas as pd
     from ehrdata import EHRData
 
     type Array = np.ndarray | DaskArray
