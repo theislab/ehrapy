@@ -16,7 +16,6 @@ import ehrapy as ep
 from ehrapy._compat import (
     _raise_densifying,
     function_2D_only,
-    sparse_nan_corrcoef,
     sparse_nan_moments,
 )
 
@@ -24,21 +23,6 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from ehrdata import EHRData
-
-
-@singledispatch
-def _correlations(
-    X: np.ndarray, edata: EHRData, layer: str | None, method: Literal["pearson", "spearman"]
-) -> pd.DataFrame:
-    # Delegate to variable_correlations, which handles layer=None (falls back to .X),
-    # pairwise NaN deletion, and provides p-values and significance
-    corr_df, _, _ = ep.pp.variable_correlations(edata, layer=layer, method=method, correction_method="bonferroni")
-    return corr_df
-
-
-@_correlations.register(CSBase)
-def _(X: CSBase, edata: EHRData, layer: str | None, method: Literal["pearson", "spearman"]) -> pd.DataFrame:
-    return pd.DataFrame(sparse_nan_corrcoef(X, method=method), index=edata.var_names, columns=edata.var_names)
 
 
 @singledispatch
@@ -203,7 +187,7 @@ def detect_bias(
     # --------------------
     # Feature correlations
     # --------------------
-    corr_df = _correlations(X, edata, layer, corr_method)
+    corr_df, _, _ = ep.pp.variable_correlations(edata, layer=layer, method=corr_method, correction_method="bonferroni")
     edata.varp["feature_correlations"] = corr_df
 
     corr_results: dict[str, list] = {"Feature 1": [], "Feature 2": [], f"{corr_method.capitalize()} CC": []}
