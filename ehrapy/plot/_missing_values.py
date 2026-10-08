@@ -12,9 +12,8 @@ from fast_array_utils import stats
 from fast_array_utils.conv import to_dense
 from fast_array_utils.types import CSBase
 
-from ehrapy._compat import _materialize
+from ehrapy._compat import _materialize, _resolve_axis
 from ehrapy.plot._holoviews import load_hv_extensions
-from ehrapy.plot._timeseries import _resolve_axis
 from ehrapy.preprocessing._missing_data import _missing_mask
 
 if TYPE_CHECKING:

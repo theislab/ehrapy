@@ -6,7 +6,7 @@ import holoviews as hv
 import numpy as np
 import pandas as pd
 
-from ehrapy._compat import _materialize
+from ehrapy._compat import _materialize, _resolve_axis
 from ehrapy.plot._holoviews import load_hv_extensions
 
 if TYPE_CHECKING:
@@ -243,30 +243,3 @@ def _time_series(edata: EHRData, layer: str | None) -> np.ndarray | DaskArray:
         source = "edata.X" if layer is None else f"Layer {layer!r}"
         raise ValueError(f"{source} must be 3D (n_obs, n_vars, n_time), got shape {X.shape}.")
     return X
-
-
-def _resolve_axis(index: pd.Index, names: Any, axis: str) -> tuple[np.ndarray, pd.Index]:
-    n = len(index)
-
-    if names is None:
-        pos = np.arange(n, dtype=int)
-        return pos, index.take(pos)
-
-    if isinstance(names, slice):
-        pos = np.arange(n, dtype=int)[names]
-        return pos, index.take(pos)
-
-    if isinstance(names, (str, int, np.integer)):
-        names_list = [names]
-    else:
-        names_list = list(names)
-
-    names_list = list(dict.fromkeys(names_list))
-
-    pos = index.get_indexer(names_list)
-    if (pos < 0).any():
-        missing = [names_list[i] for i, p in enumerate(pos) if p < 0]
-        raise KeyError(f"{', '.join(str(x) for x in missing)} not found in edata.{axis}")
-
-    pos = pos.astype(int, copy=False)
-    return pos, index.take(pos)
