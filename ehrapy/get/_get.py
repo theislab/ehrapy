@@ -22,17 +22,15 @@ def obs_df(
     keys: Collection[str] = (),
     obsm_keys: Iterable[tuple[str, int]] = (),
     layer: str | None = None,
-    feature_symbols: str | None = None,
 ) -> pd.DataFrame:
     """Return values for observations in edata.
 
     Args:
         edata: Central data object.
-        keys: Keys from either `.var_names`, `.var[feature_symbols]`, or `.obs.columns`.
-            Keys from `.var_names` or `.var[feature_symbols]` require `.X` or `layer` to be 2D, whereas `.obs` columns can be read from 3D data.
+        keys: Keys from either `.var_names` or `.obs.columns`.
+            Keys from `.var_names` require `.X` or `layer` to be 2D, whereas `.obs` columns can be read from 3D data.
         obsm_keys: Tuples of `(key from obsm, column index of obsm[key])`.
         layer: Layer of `edata` to use as feature values.
-        feature_symbols: Column of `edata.var` to search for `keys` in.
 
     Returns:
         A DataFrame with `edata.obs_names` as index, and values specified by `keys` and `obsm_keys`.
@@ -43,9 +41,7 @@ def obs_df(
         >>> edata = ed.dt.mimic_2()
         >>> ages = ep.get.obs_df(edata, keys=["age"])
     """
-    return scanpy_obs_df(
-        adata=_as_scanpy_input(edata), keys=keys, obsm_keys=obsm_keys, layer=layer, gene_symbols=feature_symbols
-    )
+    return scanpy_obs_df(adata=_as_scanpy_input(edata), keys=keys, obsm_keys=obsm_keys, layer=layer)
 
 
 @function_2D_only()
@@ -84,7 +80,6 @@ def rank_features_groups_df(
     pval_cutoff: float | None = None,
     log2fc_min: float | None = None,
     log2fc_max: float | None = None,
-    feature_symbols: str | None = None,
 ) -> pd.DataFrame:
     """:func:`ehrapy.tools.rank_features_groups` results in the form of a :class:`~pandas.DataFrame`.
 
@@ -96,8 +91,6 @@ def rank_features_groups_df(
         pval_cutoff: Return only adjusted p-values below the cutoff.
         log2fc_min: Minimum logfc to return.
         log2fc_max: Maximum logfc to return.
-        feature_symbols: Column name in `.var` DataFrame that stores feature symbols.
-                         Specifying this will add that column to the returned DataFrame.
 
     Returns:
         A Pandas DataFrame of all rank features groups results.
@@ -117,5 +110,4 @@ def rank_features_groups_df(
         pval_cutoff=pval_cutoff,
         log2fc_min=log2fc_min,
         log2fc_max=log2fc_max,
-        gene_symbols=feature_symbols,
     )

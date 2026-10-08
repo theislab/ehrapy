@@ -46,7 +46,6 @@ def scatter(
     x: str | None = None,
     y: str | None = None,
     color: ColorLike | Collection[ColorLike] | None = None,
-    use_raw: bool | None = None,
     layers: str | Collection[str] | None = None,
     sort_order: bool = True,
     alpha: float | None = None,
@@ -78,8 +77,6 @@ def scatter(
         x: x coordinate.
         y: y coordinate.
         color: Keys for annotations of observations or features, or a hex color specification, e.g., `'ann1'`, `'#fe57a1'`, or `['ann1', 'ann2']`.
-        use_raw: Whether to use `raw` attribute of `edata`.
-            Defaults to `True` if `.raw` is present.
         layers: Use the `layers` attribute of `edata` if present: specify the layer for `x`, `y` and `color`.
             If `layers` is a string, then it is expanded to `(layers, layers, layers)`.
         sort_order: {sort_order}
@@ -121,7 +118,7 @@ def scatter(
         sc.pl.scatter,
         x=x,
         y=y,
-        use_raw=use_raw,
+        use_raw=False,
         layers=layers,
         sort_order=sort_order,
         alpha=alpha,
@@ -155,11 +152,9 @@ def heatmap(
     var_names: _VarNames | Mapping[str, _VarNames],
     groupby: str | Sequence[str],
     *,
-    use_raw: bool | None = None,
     log: bool = False,
     num_categories: int = 7,
     dendrogram: bool | str = False,
-    feature_symbols: str | None = None,
     var_group_positions: Sequence[tuple[int, int]] | None = None,
     var_group_labels: Sequence[str] | None = None,
     var_group_rotation: float | None = None,
@@ -184,11 +179,9 @@ def heatmap(
         edata: Central data object.
         var_names: {var_names}
         groupby: {groupby}
-        use_raw: {use_raw}
         log: {log}
         num_categories: {num_categories}
         dendrogram: {dendrogram}
-        feature_symbols: {feature_symbols}
         var_group_positions: {var_group_positions}
         var_group_labels: {var_group_labels}
         var_group_rotation: {var_group_rotation}
@@ -247,11 +240,10 @@ def heatmap(
     heatmap_partial = partial(
         sc.pl.heatmap,
         var_names=var_names,
-        use_raw=use_raw,
+        use_raw=False,
         log=log,
         num_categories=num_categories,
         dendrogram=dendrogram,
-        gene_symbols=feature_symbols,
         var_group_positions=var_group_positions,
         var_group_labels=var_group_labels,
         var_group_rotation=var_group_rotation,
@@ -278,7 +270,6 @@ def dotplot(
     var_names: _VarNames | Mapping[str, _VarNames],
     groupby: str | Sequence[str],
     *,
-    use_raw: bool | None = None,
     log: bool = False,
     num_categories: int = 7,
     categories_order: Sequence[str] | None = None,
@@ -290,7 +281,6 @@ def dotplot(
     size_title: str | None = "Fraction of observations\nin group (%)",
     figsize: tuple[float, float] | None = None,
     dendrogram: bool | str = False,
-    feature_symbols: str | None = None,
     var_group_positions: Sequence[tuple[int, int]] | None = None,
     var_group_labels: Sequence[str] | None = None,
     var_group_rotation: float | None = None,
@@ -324,7 +314,6 @@ def dotplot(
         edata: Central data object.
         var_names: {var_names}
         groupby: {groupby}
-        use_raw: {use_raw}
         log: {log}
         num_categories: {num_categories}
         categories_order: {categories_order}
@@ -338,7 +327,6 @@ def dotplot(
             New line character (\\n) can be used.
         figsize: {figsize}
         dendrogram: {dendrogram}
-        feature_symbols: {feature_symbols}
         var_group_positions: {var_group_positions}
         var_group_labels: {var_group_labels}
         var_group_rotation: {var_group_rotation}
@@ -406,7 +394,7 @@ def dotplot(
     dotplot_partial = partial(
         sc.pl.dotplot,
         var_names=var_names,
-        use_raw=use_raw,
+        use_raw=False,
         log=log,
         num_categories=num_categories,
         categories_order=categories_order,
@@ -418,7 +406,6 @@ def dotplot(
         size_title=size_title,
         figsize=figsize,
         dendrogram=dendrogram,
-        gene_symbols=feature_symbols,
         var_group_positions=var_group_positions,
         var_group_labels=var_group_labels,
         var_group_rotation=var_group_rotation,
@@ -450,10 +437,8 @@ def tracksplot(
     var_names: _VarNames | Mapping[str, _VarNames],
     groupby: str,
     *,
-    use_raw: bool | None = None,
     log: bool = False,
     dendrogram: bool | str = False,
-    feature_symbols: str | None = None,
     var_group_positions: Sequence[tuple[int, int]] | None = None,
     var_group_labels: Sequence[str] | None = None,
     layer: str | None = None,
@@ -470,10 +455,8 @@ def tracksplot(
         edata: Central data object.
         var_names: {var_names}
         groupby: {groupby}
-        use_raw: {use_raw}
         log: {log}
         dendrogram: {dendrogram}
-        feature_symbols: {feature_symbols}
         var_group_positions: {var_group_positions}
         var_group_labels: {var_group_labels}
         layer: {layer}
@@ -512,10 +495,9 @@ def tracksplot(
     tracksplot_partial = partial(
         sc.pl.tracksplot,
         var_names=var_names,
-        use_raw=use_raw,
+        use_raw=False,
         log=log,
         dendrogram=dendrogram,
-        gene_symbols=feature_symbols,
         var_group_positions=var_group_positions,
         var_group_labels=var_group_labels,
         layer=layer,
@@ -534,7 +516,6 @@ def violin(
     *,
     groupby: str | None = None,
     log: bool = False,
-    use_raw: bool | None = None,
     stripplot: bool = True,
     jitter: float | bool = True,
     size: int = 1,
@@ -558,8 +539,6 @@ def violin(
         keys: Keys for accessing variables of `.var_names` or fields of `.obs`.
         groupby: {groupby}
         log: {log}
-        use_raw: Whether to use `raw` attribute of `edata`.
-            Defaults to `True` if `.raw` is present.
         stripplot: Add a stripplot on top of the violin plot.
             See :func:`~seaborn.stripplot`.
         jitter: Add jitter to the stripplot (only when stripplot is True).
@@ -601,7 +580,7 @@ def violin(
         sc.pl.violin,
         keys=keys,
         log=log,
-        use_raw=use_raw,
+        use_raw=False,
         stripplot=stripplot,
         jitter=jitter,
         size=size,
@@ -628,13 +607,11 @@ def stacked_violin(
     groupby: str | Sequence[str],
     *,
     log: bool = False,
-    use_raw: bool | None = None,
     num_categories: int = 7,
     title: str | None = None,
     colorbar_title: str | None = "Median value\n in group",
     figsize: tuple[float, float] | None = None,
     dendrogram: bool | str = False,
-    feature_symbols: str | None = None,
     var_group_positions: Sequence[tuple[int, int]] | None = None,
     var_group_labels: Sequence[str] | None = None,
     standard_scale: Literal["var", "group"] | None = None,
@@ -670,13 +647,11 @@ def stacked_violin(
         var_names: {var_names}
         groupby: {groupby}
         log: {log}
-        use_raw: {use_raw}
         num_categories: {num_categories}
         title: {title}
         colorbar_title: {colorbar_title}
         figsize: {figsize}
         dendrogram: {dendrogram}
-        feature_symbols: {feature_symbols}
         var_group_positions: {var_group_positions}
         var_group_labels: {var_group_labels}
         standard_scale: {standard_scale}
@@ -745,13 +720,12 @@ def stacked_violin(
         sc.pl.stacked_violin,
         var_names=var_names,
         log=log,
-        use_raw=use_raw,
+        use_raw=False,
         num_categories=num_categories,
         title=title,
         colorbar_title=colorbar_title,
         figsize=figsize,
         dendrogram=dendrogram,
-        gene_symbols=feature_symbols,
         var_group_positions=var_group_positions,
         var_group_labels=var_group_labels,
         standard_scale=standard_scale,
@@ -786,7 +760,6 @@ def matrixplot(
     var_names: _VarNames | Mapping[str, _VarNames],
     groupby: str | Sequence[str],
     *,
-    use_raw: bool | None = None,
     log: bool = False,
     num_categories: int = 7,
     categories_order: Sequence[str] | None = None,
@@ -795,7 +768,6 @@ def matrixplot(
     title: str | None = None,
     cmap: Colormap | str | None = MatrixPlot.DEFAULT_COLORMAP,
     colorbar_title: str | None = "Mean value\n in group",
-    feature_symbols: str | None = None,
     var_group_positions: Sequence[tuple[int, int]] | None = None,
     var_group_labels: Sequence[str] | None = None,
     var_group_rotation: float | None = None,
@@ -821,7 +793,6 @@ def matrixplot(
         edata: Central data object.
         var_names: {var_names}
         groupby: {groupby}
-        use_raw: {use_raw}
         log: {log}
         num_categories: {num_categories}
         categories_order: {categories_order}
@@ -830,7 +801,6 @@ def matrixplot(
         title: {title}
         cmap: {cmap}
         colorbar_title: {colorbar_title}
-        feature_symbols: {feature_symbols}
         var_group_positions: {var_group_positions}
         var_group_labels: {var_group_labels}
         var_group_rotation: {var_group_rotation}
@@ -885,7 +855,7 @@ def matrixplot(
     matrix_partial = partial(
         sc.pl.matrixplot,
         var_names=var_names,
-        use_raw=use_raw,
+        use_raw=False,
         log=log,
         num_categories=num_categories,
         categories_order=categories_order,
@@ -894,7 +864,6 @@ def matrixplot(
         title=title,
         cmap=cmap,
         colorbar_title=colorbar_title,
-        gene_symbols=feature_symbols,
         var_group_positions=var_group_positions,
         var_group_labels=var_group_labels,
         var_group_rotation=var_group_rotation,
@@ -921,7 +890,6 @@ def clustermap(
     edata: EHRData,
     *,
     obs_keys: str | None = None,
-    use_raw: bool | None = None,
     show: bool | None = None,
     **kwds,
 ) -> ClusterGrid | None:  # pragma: no cover
@@ -933,8 +901,6 @@ def clustermap(
         edata: Central data object.
         obs_keys: Categorical annotation to plot with a different color map.
             Currently, only a single key is supported.
-        use_raw: Whether to use `raw` attribute of `edata`.
-            Defaults to `True` if `.raw` is present.
         show: {show}
         **kwds: Keyword arguments passed to :func:`~seaborn.clustermap`.
 
@@ -953,7 +919,7 @@ def clustermap(
     Preview:
         .. image:: /_static/docstring_previews/clustermap.png
     """
-    clustermap_partial = partial(sc.pl.clustermap, use_raw=use_raw, show=show, **kwds)
+    clustermap_partial = partial(sc.pl.clustermap, use_raw=False, show=show, **kwds)
 
     return clustermap_partial(_as_scanpy_input(edata), obs_keys=obs_keys)
 
@@ -1076,7 +1042,6 @@ def pca(
     edata: EHRData,
     *,
     annotate_var_explained: bool = False,
-    feature_symbols: str | None = None,
     show: bool | None = None,
     return_fig: bool | None = None,
     **kwargs,
@@ -1088,7 +1053,6 @@ def pca(
     Args:
         edata: Central data object.
         annotate_var_explained: Whether to annotate the axis labels with the explained variance ratio of the principal components.
-        feature_symbols: {feature_symbols}
         show: {show}
         return_fig: {return_fig}
         **kwargs: {embedding_kwargs}
@@ -1107,7 +1071,6 @@ def pca(
     pca_partial = partial(
         sc.pl.pca,
         annotate_var_explained=annotate_var_explained,
-        gene_symbols=feature_symbols,
         show=show,
         return_fig=return_fig,
     )
@@ -1178,7 +1141,7 @@ def pca_variance_ratio(
 
 @function_2D_only(var_keys=("color",))
 @_doc_params(**doc_plot_params)
-def pca_overview(edata: EHRData, *, feature_symbols: str | None = None, **params) -> None:  # pragma: no cover
+def pca_overview(edata: EHRData, **params) -> None:  # pragma: no cover
     """Plot PCA results.
 
     Plots the PCA scatter plot, the loadings and the variance ratio.
@@ -1187,7 +1150,6 @@ def pca_overview(edata: EHRData, *, feature_symbols: str | None = None, **params
 
     Args:
         edata: Central data object.
-        feature_symbols: {feature_symbols}
         **params: Keyword arguments of :func:`~ehrapy.plot.pca`, for example `color`, `components` or `show`.
 
     Examples:
@@ -1205,19 +1167,16 @@ def pca_overview(edata: EHRData, *, feature_symbols: str | None = None, **params
 
         .. image:: /_static/docstring_previews/pca_overview_3.png
     """
-    return sc.pl.pca_overview(_as_scanpy_input(edata), gene_symbols=feature_symbols, **params)
+    return sc.pl.pca_overview(_as_scanpy_input(edata), **params)
 
 
 @function_2D_only(var_keys=("color",))
 @_doc_params(**doc_plot_params)
-def tsne(
-    edata: EHRData, *, feature_symbols: str | None = None, **kwargs
-) -> Figure | Axes | list[Axes] | None:  # pragma: no cover
+def tsne(edata: EHRData, **kwargs) -> Figure | Axes | list[Axes] | None:  # pragma: no cover
     """Scatter plot in tSNE basis.
 
     Args:
         edata: Central data object.
-        feature_symbols: {feature_symbols}
         **kwargs: {embedding_kwargs}
 
     Examples:
@@ -1246,19 +1205,16 @@ def tsne(
         .. image:: /_static/docstring_previews/tsne_3.png
 
     """
-    return sc.pl.tsne(_as_scanpy_input(edata), gene_symbols=feature_symbols, **kwargs)
+    return sc.pl.tsne(_as_scanpy_input(edata), **kwargs)
 
 
 @function_2D_only(var_keys=("color",))
 @_doc_params(**doc_plot_params)
-def umap(
-    edata: EHRData, *, feature_symbols: str | None = None, **kwargs
-) -> Figure | Axes | list[Axes] | None:  # pragma: no cover
+def umap(edata: EHRData, **kwargs) -> Figure | Axes | list[Axes] | None:  # pragma: no cover
     """Scatter plot in UMAP basis.
 
     Args:
         edata: Central data object.
-        feature_symbols: {feature_symbols}
         **kwargs: {embedding_kwargs}
 
     Examples:
@@ -1286,19 +1242,16 @@ def umap(
 
         .. image:: /_static/docstring_previews/umap_3.png
     """
-    return sc.pl.umap(_as_scanpy_input(edata), gene_symbols=feature_symbols, **kwargs)
+    return sc.pl.umap(_as_scanpy_input(edata), **kwargs)
 
 
 @function_2D_only(var_keys=("color",))
 @_doc_params(**doc_plot_params)
-def diffmap(
-    edata: EHRData, *, feature_symbols: str | None = None, **kwargs
-) -> Figure | Axes | list[Axes] | None:  # pragma: no cover
+def diffmap(edata: EHRData, **kwargs) -> Figure | Axes | list[Axes] | None:  # pragma: no cover
     """Scatter plot in Diffusion Map basis.
 
     Args:
         edata: Central data object.
-        feature_symbols: {feature_symbols}
         **kwargs: {embedding_kwargs}
 
     Examples:
@@ -1313,13 +1266,13 @@ def diffmap(
     Preview:
         .. image:: /_static/docstring_previews/diffmap.png
     """
-    return sc.pl.diffmap(_as_scanpy_input(edata), gene_symbols=feature_symbols, **kwargs)
+    return sc.pl.diffmap(_as_scanpy_input(edata), **kwargs)
 
 
 @function_2D_only(var_keys=("color",))
 @_doc_params(**doc_plot_params)
 def draw_graph(
-    edata: EHRData, *, layout: _IGraphLayout | None = None, feature_symbols: str | None = None, **kwargs
+    edata: EHRData, *, layout: _IGraphLayout | None = None, **kwargs
 ) -> Figure | Axes | list[Axes] | None:  # pragma: no cover
     """Scatter plot in graph-drawing basis.
 
@@ -1327,7 +1280,6 @@ def draw_graph(
         edata: Central data object.
         layout: One of the :func:`~ehrapy.tools.draw_graph` layouts.
             By default, the last computed layout is used.
-        feature_symbols: {feature_symbols}
         **kwargs: {embedding_kwargs}
 
     Examples:
@@ -1352,7 +1304,7 @@ def draw_graph(
 
         .. image:: /_static/docstring_previews/draw_graph_2.png
     """
-    return sc.pl.draw_graph(_as_scanpy_input(edata), layout=layout, gene_symbols=feature_symbols, **kwargs)
+    return sc.pl.draw_graph(_as_scanpy_input(edata), layout=layout, **kwargs)
 
 
 @function_2D_only(var_keys=("color",))
@@ -1363,8 +1315,6 @@ def embedding(
     *,
     color: str | Sequence[str] | None = None,
     mask_obs: np.ndarray | str | None = None,
-    feature_symbols: str | None = None,
-    use_raw: bool | None = None,
     sort_order: bool = True,
     edges: bool = False,
     edges_width: float = 0.1,
@@ -1414,9 +1364,6 @@ def embedding(
         basis: Name of the `obsm` basis to use.
         color: {color}
         mask_obs: A boolean array or a string mask expression to subset observations.
-        feature_symbols: {feature_symbols}
-        use_raw: Use `.raw` attribute of `edata` for coloring with feature values.
-            If `None`, defaults to `True` if `layer` isn't provided and `edata.raw` is present.
         sort_order: {sort_order}
         edges: Show edges.
         edges_width: Width of edges.
@@ -1488,8 +1435,7 @@ def embedding(
         sc.pl.embedding,
         basis=basis,
         mask_obs=mask_obs,
-        gene_symbols=feature_symbols,
-        use_raw=use_raw,
+        use_raw=False,
         sort_order=sort_order,
         edges=edges,
         edges_width=edges_width,
@@ -1748,7 +1694,6 @@ def paga(
     frameon: bool | None = None,
     add_pos: bool = True,
     export_to_gexf: bool = False,
-    use_raw: bool = True,
     plot: bool = True,
     show: bool | None = None,
     ax: Axes | None = None,
@@ -1809,7 +1754,6 @@ def paga(
         frameon: Draw a frame around the PAGA graph.
         add_pos: Add the positions to `edata.uns['paga']`.
         export_to_gexf: Export to gexf format to be read by graph visualization programs such as Gephi.
-        use_raw: Whether to use `raw` attribute of `edata` if present.
         plot: If `False`, do not create the figure, simply compute the layout.
         show: Show the plot, do not return axis.
         ax: A matplotlib axes object.
@@ -1870,7 +1814,7 @@ def paga(
         frameon=frameon,
         add_pos=add_pos,
         export_to_gexf=export_to_gexf,
-        use_raw=use_raw,
+        use_raw=False,
         plot=plot,
         show=show,
         ax=ax,
@@ -1883,7 +1827,6 @@ def paga_path(
     nodes: Sequence[str | int],
     keys: Sequence[str],
     *,
-    use_raw: bool = True,
     annotations: Sequence[str] = ("dpt_pseudotime",),
     color_map: str | Colormap | None = None,
     color_maps_annotations: Mapping[str, str | Colormap] = MappingProxyType({"dpt_pseudotime": "Greys"}),
@@ -1913,7 +1856,6 @@ def paga_path(
         nodes: A path through nodes of the abstracted graph, that is, names or indices (within `.categories`) of groups that have been used to run PAGA.
         keys: Either variables in `edata.var_names` or annotations in `edata.obs`.
             They are plotted using `color_map`.
-        use_raw: Use `edata.raw` for retrieving feature values if it has been set.
         annotations: Plot these keys with `color_maps_annotations`.
             Need to be keys for `edata.obs`.
         color_map: Matplotlib colormap.
@@ -1954,7 +1896,7 @@ def paga_path(
         adata=_as_scanpy_input(edata),
         nodes=nodes,
         keys=keys,
-        use_raw=use_raw,
+        use_raw=False,
         annotations=annotations,
         color_map=color_map,
         color_maps_annotations=color_maps_annotations,
@@ -2077,7 +2019,6 @@ def rank_features_groups(
     *,
     groups: str | Sequence[str] | None = None,
     n_features: int = 20,
-    feature_symbols: str | None = None,
     key: str = "rank_features_groups",
     fontsize: int = 8,
     ncols: int = 4,
@@ -2091,7 +2032,6 @@ def rank_features_groups(
         edata: Central data object.
         groups: {rank_groups}
         n_features: Number of features to show.
-        feature_symbols: {feature_symbols}
         key: {rank_key}
         fontsize: Fontsize for feature names.
         ncols: Number of panels shown per row.
@@ -2120,7 +2060,6 @@ def rank_features_groups(
         adata=edata,
         groups=groups,
         n_genes=n_features,
-        gene_symbols=feature_symbols,
         key=key,
         fontsize=fontsize,
         ncols=ncols,
@@ -2138,7 +2077,6 @@ def rank_features_groups_violin(
     groups: Sequence[str] | None = None,
     n_features: int = 20,
     var_names: Iterable[str] | None = None,
-    feature_symbols: str | None = None,
     key: str = "rank_features_groups",
     split: bool = True,
     density_norm: Literal["area", "count", "width"] = "width",
@@ -2157,7 +2095,6 @@ def rank_features_groups_violin(
             Is ignored if `var_names` is passed.
         var_names: List of features to plot.
             Is only useful if interested in a custom feature list, which is not the result of :func:`~ehrapy.tools.rank_features_groups`.
-        feature_symbols: {feature_symbols}
         key: {rank_key}
         split: Whether to split the violins or not.
         density_norm: See :func:`~seaborn.violinplot`.
@@ -2192,7 +2129,6 @@ def rank_features_groups_violin(
         groups=groups,
         n_genes=n_features,
         gene_names=var_names,
-        gene_symbols=feature_symbols,
         use_raw=False,
         key=key,
         split=split,
@@ -2213,7 +2149,6 @@ def rank_features_groups_stacked_violin(
     groups: str | Sequence[str] | None = None,
     n_features: int | None = None,
     groupby: str | None = None,
-    feature_symbols: str | None = None,
     var_names: Sequence[str] | Mapping[str, Sequence[str]] | None = None,
     min_logfoldchange: float | None = None,
     key: str = "rank_features_groups",
@@ -2228,7 +2163,6 @@ def rank_features_groups_stacked_violin(
         groups: {rank_groups}
         n_features: {rank_n_features}
         groupby: {rank_groupby}
-        feature_symbols: {feature_symbols}
         var_names: {rank_var_names}
         min_logfoldchange: {min_logfoldchange}
         key: {rank_key}
@@ -2259,7 +2193,6 @@ def rank_features_groups_stacked_violin(
         groups=groups,
         n_genes=n_features,
         groupby=groupby,
-        gene_symbols=feature_symbols,
         var_names=var_names,
         min_logfoldchange=min_logfoldchange,
         key=key,
@@ -2277,7 +2210,6 @@ def rank_features_groups_heatmap(
     groups: str | Sequence[str] | None = None,
     n_features: int | None = None,
     groupby: str | None = None,
-    feature_symbols: str | None = None,
     var_names: Sequence[str] | Mapping[str, Sequence[str]] | None = None,
     min_logfoldchange: float | None = None,
     key: str = "rank_features_groups",
@@ -2291,7 +2223,6 @@ def rank_features_groups_heatmap(
         groups: {rank_groups}
         n_features: {rank_n_features}
         groupby: {rank_groupby}
-        feature_symbols: {feature_symbols}
         var_names: {rank_var_names}
         min_logfoldchange: {min_logfoldchange}
         key: {rank_key}
@@ -2316,7 +2247,6 @@ def rank_features_groups_heatmap(
         groups=groups,
         n_genes=n_features,
         groupby=groupby,
-        gene_symbols=feature_symbols,
         var_names=var_names,
         min_logfoldchange=min_logfoldchange,
         key=key,
@@ -2335,7 +2265,6 @@ def rank_features_groups_dotplot(
     groupby: str | None = None,
     values_to_plot: _ValuesToPlot | None = None,
     var_names: Sequence[str] | Mapping[str, Sequence[str]] | None = None,
-    feature_symbols: str | None = None,
     min_logfoldchange: float | None = None,
     key: str = "rank_features_groups",
     show: bool | None = None,
@@ -2351,7 +2280,6 @@ def rank_features_groups_dotplot(
         groupby: {rank_groupby}
         values_to_plot: {values_to_plot}
         var_names: {rank_var_names}
-        feature_symbols: {feature_symbols}
         min_logfoldchange: {min_logfoldchange}
         key: {rank_key}
         show: {show}
@@ -2386,7 +2314,6 @@ def rank_features_groups_dotplot(
         groupby=groupby,
         values_to_plot=values_to_plot,
         var_names=var_names,
-        gene_symbols=feature_symbols,
         min_logfoldchange=min_logfoldchange,
         key=key,
         show=show,
@@ -2405,7 +2332,6 @@ def rank_features_groups_matrixplot(
     groupby: str | None = None,
     values_to_plot: _ValuesToPlot | None = None,
     var_names: Sequence[str] | Mapping[str, Sequence[str]] | None = None,
-    feature_symbols: str | None = None,
     min_logfoldchange: float | None = None,
     key: str = "rank_features_groups",
     show: bool | None = None,
@@ -2421,7 +2347,6 @@ def rank_features_groups_matrixplot(
         groupby: {rank_groupby}
         values_to_plot: {values_to_plot}
         var_names: {rank_var_names}
-        feature_symbols: {feature_symbols}
         min_logfoldchange: {min_logfoldchange}
         key: {rank_key}
         show: {show}
@@ -2454,7 +2379,6 @@ def rank_features_groups_matrixplot(
         groupby=groupby,
         values_to_plot=values_to_plot,
         var_names=var_names,
-        gene_symbols=feature_symbols,
         min_logfoldchange=min_logfoldchange,
         key=key,
         show=show,
@@ -2472,7 +2396,6 @@ def rank_features_groups_tracksplot(
     n_features: int | None = None,
     groupby: str | None = None,
     var_names: Sequence[str] | Mapping[str, Sequence[str]] | None = None,
-    feature_symbols: str | None = None,
     min_logfoldchange: float | None = None,
     key: str = "rank_features_groups",
     show: bool | None = None,
@@ -2486,7 +2409,6 @@ def rank_features_groups_tracksplot(
         n_features: {rank_n_features}
         groupby: {rank_groupby}
         var_names: {rank_var_names}
-        feature_symbols: {feature_symbols}
         min_logfoldchange: {min_logfoldchange}
         key: {rank_key}
         show: {show}
@@ -2511,7 +2433,6 @@ def rank_features_groups_tracksplot(
         n_genes=n_features,
         groupby=groupby,
         var_names=var_names,
-        gene_symbols=feature_symbols,
         min_logfoldchange=min_logfoldchange,
         key=key,
         show=show,
