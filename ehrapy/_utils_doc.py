@@ -31,7 +31,6 @@ doc_plot_params = {
         "When `var_names` is a mapping, then the `var_group_labels` and `var_group_positions` are set.",
     ),
     "groupby": "The key of the observation grouping to consider.",
-    "use_raw": "Use `raw` attribute of `edata` if present.",
     "log": "Plot on logarithmic axis.",
     "num_categories": _lines(
         "Only used if groupby observation is not categorical.",
@@ -51,11 +50,6 @@ doc_plot_params = {
         "The dendrogram information is computed using :func:`~ehrapy.tools.dendrogram`.",
         "If :func:`~ehrapy.tools.dendrogram` has not been called previously, the function is called with default parameters.",
     ),
-    "feature_symbols": _lines(
-        "Column name in `.var` that stores feature symbols.",
-        "By default `var_names` refer to the index column of `.var`.",
-        "Setting this option allows alternative names to be used.",
-    ),
     "var_group_positions": _lines(
         "Use this parameter to highlight groups of `var_names`.",
         "This will draw a 'bracket' or a color block between the given start and end positions.",
@@ -70,10 +64,7 @@ doc_plot_params = {
     ),
     "layer": _lines(
         "Name of the `edata` layer to plot.",
-        "By default `edata.raw.X` is plotted.",
-        "If `use_raw=False` is set, then `edata.X` is plotted.",
-        "If `layer` is set to a valid layer name, then the layer is plotted.",
-        "`layer` takes precedence over `use_raw`.",
+        "By default `edata.X` is plotted.",
     ),
     "title": "Title for the figure.",
     "colorbar_title": _lines("Title for the color bar.", "New line character (\\n) can be used."),

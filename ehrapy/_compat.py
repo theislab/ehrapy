@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar
 import array_api_extra as xpx
 import ehrdata as ed
 import numpy as np
-import pandas as pd
 import scipy.sparse as sp
 from array_api_compat import array_namespace, is_lazy_array
 from ehrdata.core.constants import FEATURE_TYPE_KEY
@@ -82,9 +81,7 @@ def function_2D_only(*, allow_single_timepoint: bool = False, var_keys: Collecti
             if var_keys and hasattr(data, "var_names"):
                 keys = [arguments.get(name) for name in var_keys]
                 keys = [key for value in keys for key in ([value] if isinstance(value, str) else value or ())]
-                symbols = arguments.get("feature_symbols")
-                var_names = data.var_names if symbols is None else pd.Index(data.var[symbols])
-                if not var_names.isin(keys).any():
+                if not data.var_names.isin(keys).any():
                     return func(*args, **kwargs)
             use_rep = arguments.get("use_rep")
             layers = arguments.get("layer", arguments.get("layers"))

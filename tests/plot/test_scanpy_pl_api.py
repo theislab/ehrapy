@@ -397,7 +397,6 @@ def test_rank_features_groups_plots(mimic_2_encoded, plotter):
 @pytest.fixture
 def edata_ranked(mimic_2_encoded):
     edata = mimic_2_encoded[:200, ["wbc_first", "hgb_first", "potassium_first", "tco2_first", "bun_first"]].copy()
-    edata.var["symbol"] = [f"symbol_{name}" for name in edata.var_names]
     ep.tl.rank_features_groups(edata, groupby="service_unit")
     return edata
 
@@ -419,14 +418,6 @@ def test_rank_features_groups_plots_default_key(edata_ranked, plotter):
     plt.close("all")
 
 
-def test_rank_features_groups_tracksplot_feature_symbols(edata_ranked):
-    ep.pl.rank_features_groups_tracksplot(edata_ranked, n_features=2, feature_symbols="symbol", show=False)
-    track_labels = {ax.get_ylabel() for ax in plt.gcf().axes} - {""}
-    assert track_labels
-    assert all(label.startswith("symbol_") for label in track_labels)
-    plt.close("all")
-
-
 def test_rank_features_groups_dotplot_titles(edata_ranked):
     dp = ep.pl.rank_features_groups_dotplot(edata_ranked, return_fig=True)
     assert dp.color_legend_title == "Mean value in group"
@@ -440,16 +431,16 @@ def test_rank_features_groups_dotplot_titles(edata_ranked):
     plt.close("all")
 
 
-@pytest.mark.parametrize(
-    ("plotter", "compute"),
-    [("pca", ep.pp.pca), ("tsne", ep.tl.tsne), ("umap", ep.tl.umap), ("diffmap", ep.tl.diffmap)],
-)
-def test_embedding_plots_feature_symbols(edata_blob_small, plotter, compute):
-    edata_blob_small.var["symbol"] = [f"symbol_{name}" for name in edata_blob_small.var_names]
-    compute(edata_blob_small)
+@pytest.mark.parametrize("plotter", ["dotplot", "matrixplot", "stacked_violin", "violin"])
+def test_plots_read_X_not_raw(edata_blob_small, plotter):
+    edata_blob_small.obs["group"] = pd.Categorical(["a", "b"] * (edata_blob_small.n_obs // 2))
+    edata_blob_small.raw = edata_blob_small[:, :5]
+    feature = edata_blob_small.var_names[-1]
 
-    ax = getattr(ep.pl, plotter)(edata_blob_small, color="symbol_feature_0", feature_symbols="symbol", show=False)
-    assert ax.get_title() == "symbol_feature_0"
+    if plotter == "violin":
+        ep.pl.violin(edata_blob_small, keys=feature, groupby="group", show=False)
+    else:
+        getattr(ep.pl, plotter)(edata_blob_small, var_names=[feature], groupby="group", show=False)
     plt.close("all")
 
 

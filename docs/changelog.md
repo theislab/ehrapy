@@ -39,6 +39,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### 💥 Breaking changes
 
+* Remove the single-cell leftovers `feature_symbols`, `use_raw` and the unused fields of `ep.settings` ([#1154](https://github.com/theislab/ehrapy/pull/1154)) @Zethson
+
+  The `feature_symbols` argument of the `ep.pl` and `ep.get` functions and the `use_raw` argument of the `ep.pl` functions are gone, and plots always read `.X` or `layer`, never `.raw`.
+  `ep.settings` keeps `verbosity` and `n_jobs`, the only fields ehrapy reads, and drops `plot_suffix`, `file_format_data`, `file_format_figs`, `autosave`, `autoshow`, `writedir`, `cachedir`, `datasetdir`, `figdir`, `cache_compression`, `max_memory`, `categories_to_ignore` and `n_pcs`.
 * The `ep.pl.missing_values_*` plots are interactive HoloViews plots that accept longitudinal data, and the `missingno` dependency is dropped ([#1149](https://github.com/theislab/ehrapy/pull/1149)) @Zethson
 
   {func}`ep.pl.missing_values_matrix <ehrapy.plot.missing_values_matrix>` shows the percentage of observed values per observation, or per timepoint for longitudinal data, and the bar plot, heatmap and dendrogram count every timepoint of every observation as one row.
