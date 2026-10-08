@@ -32,12 +32,6 @@ def test_missing_values_barplot(mimic_2, check_same_image, layer, clean_up_plots
     )
 
 
-def test_missing_values_barplot_3D(edata_blob_small, clean_up_plots):
-    ep.pl.missing_values_barplot(edata_blob_small)
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pl.missing_values_barplot(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
-
-
 @pytest.mark.parametrize("layer", [None, "layer_2"])
 def test_missing_values_matrixplot(mimic_2, check_same_image, layer, clean_up_plots):
     if layer is not None:
@@ -77,12 +71,6 @@ def test_missing_values_heatmap(mimic_2, check_same_image, layer, clean_up_plots
     )
 
 
-def test_missing_values_heatmap_3D(edata_blob_small, clean_up_plots):
-    ep.pl.missing_values_heatmap(edata_blob_small, layer="layer_2")
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pl.missing_values_heatmap(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
-
-
 @pytest.mark.parametrize("layer", [None, "layer_2"])
 def test_missing_values_dendogram(mimic_2, check_same_image, layer):
     if layer is not None:
@@ -97,10 +85,19 @@ def test_missing_values_dendogram(mimic_2, check_same_image, layer):
     )
 
 
-def test_missing_values_dendogram_3D(edata_blob_small, clean_up_plots):
-    ep.pl.missing_values_dendrogram(edata_blob_small, layer="layer_2")
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pl.missing_values_dendrogram(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
+@pytest.mark.parametrize(
+    "plot", [ep.pl.missing_values_barplot, ep.pl.missing_values_heatmap, ep.pl.missing_values_dendrogram]
+)
+def test_missing_values_3D_counts_every_timepoint(plot, rng, clean_up_plots):
+    X = rng.standard_normal((20, 4, 3))
+    X[rng.random(X.shape) < 0.3] = np.nan
+    var = pd.DataFrame(index=["a", "b", "c", "d"])
+    expected = _drawn_data(plot(ed.EHRData(X=np.moveaxis(X, 1, 2).reshape(-1, 4), var=var)))
+
+    result = _drawn_data(plot(ed.EHRData(X=X, var=var)))
+
+    for drawn, expected_drawn in zip(result, expected, strict=True):
+        np.testing.assert_allclose(drawn, expected_drawn)
 
 
 def _drawn_data(ax) -> list[np.ndarray]:

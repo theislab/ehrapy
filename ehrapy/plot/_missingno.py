@@ -8,7 +8,7 @@ import pandas as pd
 from array_api_compat import array_namespace
 from fast_array_utils.conv import to_dense
 
-from ehrapy._compat import _materialize, function_2D_only
+from ehrapy._compat import _materialize
 from ehrapy.preprocessing._missing_data import _missing_mask
 
 if TYPE_CHECKING:
@@ -25,7 +25,9 @@ def _nullity_df(edata: EHRData, *, layer: str | None, categoricals: bool) -> pd.
     X = edata.X if layer is None else edata.layers[layer]
     columns = _plotted_columns(edata, categoricals=categoricals)
     missing = to_dense(_missing_mask(X[:, edata.var_names.get_indexer(columns)]), to_cpu_memory=True)
-    return pd.DataFrame(np.where(missing, np.float32(np.nan), np.float32(0)), index=edata.obs_names, columns=columns)
+    if missing.ndim == 3:
+        missing = np.moveaxis(missing, 1, 2).reshape(-1, len(columns))
+    return pd.DataFrame(np.where(missing, np.float32(np.nan), np.float32(0)), columns=columns)
 
 
 def _observed_over_time(
@@ -143,7 +145,6 @@ def missing_values_matrix(
     )
 
 
-@function_2D_only()
 def missing_values_barplot(
     edata: EHRData,
     *,
@@ -162,6 +163,8 @@ def missing_values_barplot(
     layer: str | None = None,
 ):  # pragma: no cover
     """A bar chart visualization of the nullity of the given data object.
+
+    For 3D data, every timepoint of every observation counts as one row.
 
     Args:
         edata: Central data object.
@@ -208,7 +211,6 @@ def missing_values_barplot(
     )
 
 
-@function_2D_only()
 def missing_values_heatmap(
     edata: EHRData,
     *,
@@ -230,6 +232,7 @@ def missing_values_heatmap(
     """Presents a `seaborn` heatmap visualization of nullity correlation in the given data object.
 
     Note that this visualization has no special support for large datasets. For those, try the dendrogram instead.
+    For 3D data, every timepoint of every observation counts as one row.
 
     Args:
         edata: Central data object.
@@ -278,7 +281,6 @@ def missing_values_heatmap(
     )
 
 
-@function_2D_only()
 def missing_values_dendrogram(
     edata: EHRData,
     *,
@@ -294,6 +296,8 @@ def missing_values_dendrogram(
     layer: str | None = None,
 ):
     """Fits a `scipy` hierarchical clustering algorithm and visualizes the results as a `scipy` dendrogram.
+
+    For 3D data, every timepoint of every observation counts as one row.
 
     The default vertical display will fit up to 50 columns. If more than 50 columns are specified and orientation is
     left unspecified the dendrogram will automatically swap to a horizontal display to fit the additional variables.
