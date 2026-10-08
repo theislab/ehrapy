@@ -53,6 +53,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### 🐛 Bug Fixes
 
+* {func}`ep.pp.simple_impute <ehrapy.preprocessing.simple_impute>`, {func}`ep.pp.miss_forest_impute <ehrapy.preprocessing.miss_forest_impute>` and {func}`ep.pp.locf_impute <ehrapy.preprocessing.locf_impute>` raise a `KeyError` for unknown `var_names` instead of imputing the last variable, and {func}`ep.pp.explicit_impute <ehrapy.preprocessing.explicit_impute>` raises one for unknown `replacement` keys instead of ignoring them ([#1140](https://github.com/theislab/ehrapy/pull/1140)) @Zethson
+
+  {func}`ep.pp.knn_impute <ehrapy.preprocessing.knn_impute>` and the normalization functions raise a `KeyError` for unknown `var_names` instead of reporting them as non-numeric.
 * Matplotlib figures in notebooks no longer disappear after the first holoviews-based ehrapy plot @Zethson
 * {func}`ep.pp.knn_impute <ehrapy.preprocessing.knn_impute>` imputes all numeric variables by default instead of raising on data with encoded categorical variables ([#1139](https://github.com/theislab/ehrapy/pull/1139)) @Zethson
 * On dask arrays with missing values, {func}`ep.pp.minmax_norm <ehrapy.preprocessing.minmax_norm>` and {func}`ep.pp.robust_scale_norm <ehrapy.preprocessing.robust_scale_norm>` returned all-NaN variables and {func}`ep.pp.quantile_norm <ehrapy.preprocessing.quantile_norm>` returned wrong values ([#1132](https://github.com/theislab/ehrapy/pull/1132)) @Zethson
