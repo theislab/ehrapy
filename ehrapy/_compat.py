@@ -287,6 +287,13 @@ def _map_variable_blocks(X: DaskArray, func: Callable[..., Any], *args: Any, met
     return X.rechunk(dict.fromkeys(_obs_axes(X), -1)).map_blocks(func, *args, meta=meta)
 
 
+def _map_reduction(X: DaskArray, func: Callable[..., Any], axis: tuple[int, ...], dtype: np.dtype | type) -> DaskArray:
+    """Reduce over `axis` with an in-memory `func(block, axis=axis)`, applied to blocks that hold all values along `axis`."""
+    return X.rechunk(dict.fromkeys(axis, -1)).map_blocks(
+        func, axis=axis, drop_axis=axis, meta=np.array((), dtype=dtype)
+    )
+
+
 def _materialize(*arrays: Array) -> list[np.ndarray]:
     """Convert to numpy arrays, computing all lazy arrays with a single `dask.compute`."""
     if any(is_lazy_array(array) for array in arrays):

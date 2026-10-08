@@ -158,11 +158,6 @@ def test_filter_array_types(array_type, ndim, time_mode, filter_func, kwargs, an
     expected = filter_func(ed.EHRData(X=X), copy=True, **kwargs)
     edata = ed.EHRData(X=array_type(X))
 
-    if array_type.flags & Flags.Sparse and array_type.flags & Flags.Dask:
-        with pytest.raises(NotImplementedError):
-            filter_func(edata, **kwargs)
-        return
-
     with forbid_dask_compute(allowed=1):
         result = filter_func(edata, copy=True, **kwargs)
 

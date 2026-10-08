@@ -54,11 +54,6 @@ def test_qc_metrics_vanilla(array_type, missing_values_edata):
     edata.X = array_type(edata.X)
     modification_copy = edata.copy()
 
-    if array_type.flags & Flags.Sparse and array_type.flags & Flags.Dask:
-        with pytest.raises(NotImplementedError):
-            ep.pp.qc_metrics(edata)
-        return
-
     with forbid_dask_compute(allowed=1):
         ep.pp.qc_metrics(edata)
     obs_metrics, var_metrics = edata.obs, edata.var
@@ -92,11 +87,6 @@ def test_qc_metrics_vanilla_advanced(array_type, missing_values_edata):
     edata.var["feature_type"] = ["numeric", "numeric", "categorical"]
     edata.X = array_type(missing_values_edata.X)
     modification_copy = edata.copy()
-
-    if array_type.flags & Flags.Sparse and array_type.flags & Flags.Dask:
-        with pytest.raises(NotImplementedError):
-            ep.pp.qc_metrics(edata)
-        return
 
     with forbid_dask_compute(allowed=1):
         ep.pp.qc_metrics(edata)
@@ -247,11 +237,6 @@ def test_qc_metrics_encoded_uses_original_values(array_type):
     edata.X = array_type(edata.X)
     X_before = edata.X.copy()
 
-    if array_type.flags & Flags.Sparse:
-        with pytest.raises(NotImplementedError):
-            ep.pp.qc_metrics(edata)
-        return
-
     with forbid_dask_compute(allowed=1):
         ep.pp.qc_metrics(edata)
 
@@ -295,11 +280,6 @@ def test_qc_metrics_array_types(array_type, ndim, extended, rng):
     expected = ep.pp.qc_metrics(make_edata(X), qc_vars=["qc"], copy=True)
     edata = make_edata(array_type(X))
 
-    if array_type.flags & Flags.Sparse and array_type.flags & Flags.Dask:
-        with pytest.raises(NotImplementedError):
-            ep.pp.qc_metrics(edata, qc_vars=["qc"])
-        return
-
     with forbid_dask_compute(allowed=1):
         result = ep.pp.qc_metrics(edata, qc_vars=["qc"], copy=True)
 
@@ -329,11 +309,6 @@ def test_qc_metrics_encoded_array_types(array_type):
     edata = encode(edata, encodings={"one-hot": ["clinic_day"]})
     expected = ep.pp.qc_metrics(edata, copy=True)
     edata.X = array_type(edata.X)
-
-    if array_type.flags & Flags.Sparse:
-        with pytest.raises(NotImplementedError):
-            ep.pp.qc_metrics(edata)
-        return
 
     with forbid_dask_compute(allowed=1):
         result = ep.pp.qc_metrics(edata, copy=True)

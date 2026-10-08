@@ -5,10 +5,7 @@ from typing import TYPE_CHECKING, Literal
 import numpy as np
 from ehrdata._logger import logger
 
-from ehrapy._compat import (
-    _materialize,
-    _raise_if_dask_with_sparse_chunks,
-)
+from ehrapy._compat import _materialize
 from ehrapy.core._constants import MISSING_VALUE_COUNT_KEY_2D, MISSING_VALUE_COUNT_KEY_3D
 from ehrapy.preprocessing._quality_control import _compute_missing_values
 
@@ -78,7 +75,6 @@ def filter_features(
         raise ValueError("prop must be set to a value between 0 and 1 when time_mode is 'proportion'")
 
     arr = edata.X if layer is None else edata.layers[layer]
-    _raise_if_dask_with_sparse_chunks(arr, "filter_features")
     is_3d = arr.ndim == 3 and arr.shape[2] > 1
 
     features_passing_filtering_mask, nonmissing_counts_per_feature = _compute_mask(
@@ -165,7 +161,6 @@ def filter_observations(
         raise ValueError("prop must be set to a value between 0 and 1 when time_mode is 'proportion'")
 
     arr = edata.X if layer is None else edata.layers[layer]
-    _raise_if_dask_with_sparse_chunks(arr, "filter_observations")
     is_3d = arr.ndim == 3 and arr.shape[2] > 1
 
     observations_passing_filtering_mask, nonmissing_counts_per_observation = _compute_mask(

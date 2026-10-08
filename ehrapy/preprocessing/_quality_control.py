@@ -22,9 +22,9 @@ from ehrapy._compat import (
     _by_group,
     _columnwise,
     _like_obs,
+    _map_reduction,
     _materialize,
     _obs_axes,
-    _raise_if_dask_with_sparse_chunks,
     _sparse_columns,
     _sparse_rows,
     _var_axes,
@@ -116,7 +116,6 @@ def qc_metrics(
         edata = edata.copy()
 
     mtx = edata.X if layer is None else edata.layers[layer]
-    _raise_if_dask_with_sparse_chunks(mtx, "qc_metrics")
     if mtx.dtype == object and not is_lazy_array(mtx):
         _raise_error_when_heterogeneous(mtx)
 
@@ -148,6 +147,13 @@ def _(mtx: CSBase, axis: int | tuple[int, ...]) -> np.ndarray:
     return np.bincount(index[np.isnan(mtx.data)], minlength=n)
 
 
+@_compute_missing_values.register(DaskArray)
+def _(mtx: DaskArray, axis: int | tuple[int, ...]) -> DaskArray:
+    if isinstance(mtx._meta, CSBase):
+        return _map_reduction(mtx, _compute_missing_values, (axis,) if isinstance(axis, int) else axis, np.int64)
+    return _compute_missing_values.dispatch(object)(mtx, axis)
+
+
 def _count_distinct(index: np.ndarray, values: np.ndarray, n: int) -> np.ndarray:
     """Number of distinct non-missing `values` at every position of `index` in `range(n)`."""
     codes, uniques = pd.factorize(values)
@@ -168,10 +174,7 @@ def _nunique(mtx: np.ndarray, axis: tuple[int, ...]) -> np.ndarray:
 
 @_nunique.register(DaskArray)
 def _(mtx: DaskArray, axis: tuple[int, ...]) -> DaskArray:
-    # every block must hold all values that are reduced over
-    return mtx.rechunk(dict.fromkeys(axis, -1)).map_blocks(
-        _nunique.dispatch(np.ndarray), axis=axis, drop_axis=axis, meta=np.array((), dtype=np.int64)
-    )
+    return _map_reduction(mtx, _nunique, axis, np.int64)
 
 
 @_nunique.register(CSBase)
@@ -201,6 +204,9 @@ def _tukey_fences(q1: Array, q3: Array) -> tuple[Array, Array]:
     return q1 - 1.5 * iqr, q3 + 1.5 * iqr
 
 
+_VAR_STATS = ("mean", "median", "standard_deviation", "min", "max", "iqr_outliers")
+
+
 @singledispatch
 def _var_stats(mtx: Array) -> dict[str, Array]:
     """Mean, median, standard deviation, minimum and maximum of every variable, and whether it has IQR outliers."""
@@ -217,6 +223,21 @@ def _var_stats(mtx: Array) -> dict[str, Array]:
         "max": xpx.nanmax(mtx, axis=axes),
         "iqr_outliers": xp.any((mtx < lower) | (mtx > upper), axis=axes),
     }
+
+
+@_var_stats.register(DaskArray)
+def _(mtx: DaskArray) -> dict[str, DaskArray]:
+    if not isinstance(mtx._meta, CSBase):
+        return _var_stats.dispatch(object)(mtx)
+    mtx = mtx.rechunk({0: -1})
+    stacked = mtx.map_blocks(
+        lambda block: np.stack(list(_var_stats(block).values())).astype(np.float64),
+        chunks=((len(_VAR_STATS),), mtx.chunks[1]),
+        meta=np.array((), dtype=np.float64),
+    )
+    stats = dict(zip(_VAR_STATS, stacked, strict=True))
+    stats["iqr_outliers"] = stats["iqr_outliers"].astype(bool)
+    return stats
 
 
 @_var_stats.register(CSBase)
@@ -250,6 +271,13 @@ def _(mtx: CSBase) -> np.ndarray:
     return np.asarray(mtx.sum(axis=1)).ravel()
 
 
+@_total.register(DaskArray)
+def _(mtx: DaskArray) -> DaskArray:
+    if isinstance(mtx._meta, CSBase):
+        return _map_reduction(mtx, lambda block, axis: _total(block), (1,), np.float64)
+    return _total.dispatch(object)(mtx)
+
+
 @singledispatch
 def _with_original_values(mtx: np.ndarray, original: np.ndarray) -> np.ndarray:
     """Variables of `mtx` followed by the original values of encoded features."""
@@ -260,15 +288,25 @@ def _with_original_values(mtx: np.ndarray, original: np.ndarray) -> np.ndarray:
 def _(mtx: DaskArray, original: np.ndarray) -> DaskArray:
     import dask.array as da
 
+    if isinstance(mtx._meta, CSBase):
+        mtx = mtx.rechunk({1: -1})
+        return mtx.map_blocks(
+            _with_original_values,
+            _like_obs(mtx, original),
+            chunks=(mtx.chunks[0], (mtx.shape[1] + original.shape[1],)),
+            meta=mtx._meta.astype(np.float64),
+        )
     return da.concatenate([mtx.astype(object), _like_obs(mtx, original)], axis=1)
 
 
 @_with_original_values.register(CSBase)
 def _(mtx: CSBase, original: np.ndarray) -> CSBase:
-    raise NotImplementedError(
-        "qc_metrics does not support sparse arrays with encoded categorical variables and feature types, "
-        "because counting unique values together with the original values in edata.obs would densify them."
-    )
+    # sparse matrices cannot hold the original objects, so all values become codes that keep zero at zero
+    codes = pd.factorize(np.concatenate([[0.0], mtx.data, original.ravel()]).astype(object))[0].astype(np.float64)
+    codes[codes < 0] = np.nan
+    coded = mtx.astype(np.float64)
+    coded.data = codes[1 : 1 + mtx.nnz]
+    return sp.hstack([coded, codes[1 + mtx.nnz :].reshape(original.shape)], format=mtx.format)
 
 
 def _original_values(edata: EHRData, mtx: Array | CSBase) -> tuple[np.ndarray, np.ndarray]:
