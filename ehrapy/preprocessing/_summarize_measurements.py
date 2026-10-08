@@ -10,7 +10,7 @@ from array_api_compat import array_namespace
 from ehrdata import EHRData
 from fast_array_utils.types import CSBase, DaskArray
 
-from ehrapy._compat import nanquantile
+from ehrapy._compat import _map_variable_blocks, nanquantile
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
@@ -78,9 +78,8 @@ def _summarize_groups(X: np.ndarray, groups: np.ndarray, statistics: Sequence[st
 
 @_summarize_groups.register(DaskArray)
 def _(X: DaskArray, groups: np.ndarray, statistics: Sequence[str]) -> DaskArray:
-    # every block must hold all rows of its variables
-    X = X.rechunk({0: -1})
-    return X.map_blocks(
+    return _map_variable_blocks(
+        X,
         _summarize_groups,
         groups=groups,
         statistics=statistics,

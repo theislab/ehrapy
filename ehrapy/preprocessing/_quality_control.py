@@ -21,8 +21,11 @@ from ehrapy._compat import (
     _broadcast_var_stat,
     _by_group,
     _columnwise,
+    _has_sparse_chunks,
     _like_obs,
+    _map_observation_blocks,
     _map_reduction,
+    _map_variable_blocks,
     _materialize,
     _obs_axes,
     _sparse_columns,
@@ -149,7 +152,7 @@ def _(mtx: CSBase, axis: int | tuple[int, ...]) -> np.ndarray:
 
 @_compute_missing_values.register(DaskArray)
 def _(mtx: DaskArray, axis: int | tuple[int, ...]) -> DaskArray:
-    if isinstance(mtx._meta, CSBase):
+    if _has_sparse_chunks(mtx):
         return _map_reduction(mtx, _compute_missing_values, (axis,) if isinstance(axis, int) else axis, np.int64)
     return _compute_missing_values.dispatch(object)(mtx, axis)
 
@@ -227,10 +230,10 @@ def _var_stats(mtx: Array) -> dict[str, Array]:
 
 @_var_stats.register(DaskArray)
 def _(mtx: DaskArray) -> dict[str, DaskArray]:
-    if not isinstance(mtx._meta, CSBase):
+    if not _has_sparse_chunks(mtx):
         return _var_stats.dispatch(object)(mtx)
-    mtx = mtx.rechunk({0: -1})
-    stacked = mtx.map_blocks(
+    stacked = _map_variable_blocks(
+        mtx,
         lambda block: np.stack(list(_var_stats(block).values())).astype(np.float64),
         chunks=((len(_VAR_STATS),), mtx.chunks[1]),
         meta=np.array((), dtype=np.float64),
@@ -273,7 +276,7 @@ def _(mtx: CSBase) -> np.ndarray:
 
 @_total.register(DaskArray)
 def _(mtx: DaskArray) -> DaskArray:
-    if isinstance(mtx._meta, CSBase):
+    if _has_sparse_chunks(mtx):
         return _map_reduction(mtx, lambda block, axis: _total(block), (1,), np.float64)
     return _total.dispatch(object)(mtx)
 
@@ -288,9 +291,9 @@ def _with_original_values(mtx: np.ndarray, original: np.ndarray) -> np.ndarray:
 def _(mtx: DaskArray, original: np.ndarray) -> DaskArray:
     import dask.array as da
 
-    if isinstance(mtx._meta, CSBase):
-        mtx = mtx.rechunk({1: -1})
-        return mtx.map_blocks(
+    if _has_sparse_chunks(mtx):
+        return _map_observation_blocks(
+            mtx,
             _with_original_values,
             _like_obs(mtx, original),
             chunks=(mtx.chunks[0], (mtx.shape[1] + original.shape[1],)),

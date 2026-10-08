@@ -34,7 +34,6 @@ def missing_data_mask(
         edata: Central data object.
         layer: Layer to use instead of ``edata.X``.
         mask_values: Additional values to treat as missing besides ``NaN``.
-            On sparse arrays, ``0`` is not supported because it would mark every implicit zero.
         key_added: Key under which the boolean mask is stored in ``edata.layers``.
         copy: If ``True``, return a modified copy; otherwise modify in place.
 

@@ -6,9 +6,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### 🚀 Features
 
-* Every preprocessing function supports numpy, scipy sparse and dask arrays, for static 2D and longitudinal 3D data ([#1132](https://github.com/theislab/ehrapy/pull/1132)) @Zethson
+* Preprocessing functions support numpy, scipy sparse and dask arrays, including dask arrays with sparse chunks, for static 2D and longitudinal 3D data ([#1132](https://github.com/theislab/ehrapy/pull/1132)) @Zethson
 
-  Dask arrays stay lazy, and functions that store summaries compute once; sparse arrays stay sparse, and operations that would densify them raise a `NotImplementedError` that says why.
+  Sparse arrays stay sparse and dask arrays stay lazy, and functions that store summaries compute once.
+  The few combinations that cannot work this way raise a `NotImplementedError` that says why, such as centering or ComBat on sparse data, the faiss backend of {func}`ep.pp.knn_impute <ehrapy.preprocessing.knn_impute>` on sparse or dask arrays, and {func}`ep.pp.miss_forest_impute <ehrapy.preprocessing.miss_forest_impute>` or {func}`ep.pp.detect_bias <ehrapy.preprocessing.detect_bias>` on dask arrays.
 * {func}`ep.pp.summarize_measurements <ehrapy.preprocessing.summarize_measurements>` aggregates longitudinal data over time into a 2D object with one column per variable and statistic (`min`, `max`, `mean`, `median`, `first`, `last`), which makes every 2D-only function usable on longitudinal data ([#1132](https://github.com/theislab/ehrapy/pull/1132)) @Zethson
 * {func}`ep.pp.winsorize <ehrapy.preprocessing.winsorize>`, {func}`ep.pp.clip_quantile <ehrapy.preprocessing.clip_quantile>` and {func}`ep.pp.qc_lab_measurements <ehrapy.preprocessing.qc_lab_measurements>` support longitudinal data ([#1132](https://github.com/theislab/ehrapy/pull/1132)) @Zethson
 * Tools, plots and `ep.get` functions support numpy, scipy sparse and dask arrays, and densify and compute only the variables they use ([#1134](https://github.com/theislab/ehrapy/pull/1134)) @Zethson

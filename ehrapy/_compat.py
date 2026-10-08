@@ -294,9 +294,18 @@ def _(X: DaskArray, groups: np.ndarray | None, kernel: Callable[[np.ndarray], np
     return _map_variable_blocks(X, _columnwise, groups, kernel, meta=X._meta.astype(np.float64))
 
 
-def _map_variable_blocks(X: DaskArray, func: Callable[..., Any], *args: Any, meta: Any) -> DaskArray:
+def _has_sparse_chunks(X: Any) -> bool:
+    return isinstance(X, DaskArray) and isinstance(X._meta, CSBase)
+
+
+def _map_variable_blocks(X: DaskArray, func: Callable[..., Any], *args: Any, **kwargs: Any) -> DaskArray:
     """Apply an in-memory `func` to blocks that hold all observations and timepoints of their variables."""
-    return X.rechunk(dict.fromkeys(_obs_axes(X), -1)).map_blocks(func, *args, meta=meta)
+    return X.rechunk(dict.fromkeys(_obs_axes(X), -1)).map_blocks(func, *args, **kwargs)
+
+
+def _map_observation_blocks(X: DaskArray, func: Callable[..., Any], *args: Any, **kwargs: Any) -> DaskArray:
+    """Apply an in-memory `func` to blocks that hold all variables and timepoints of their observations."""
+    return X.rechunk(dict.fromkeys(_var_axes(X), -1)).map_blocks(func, *args, **kwargs)
 
 
 def _map_reduction(X: DaskArray, func: Callable[..., Any], axis: tuple[int, ...], dtype: np.dtype | type) -> DaskArray:
@@ -338,7 +347,7 @@ def _as_scanpy_input(edata: EHRData, *, dense: bool = False) -> EHRData:
     """
 
     def readable(X):
-        if (isinstance(X, DaskArray) and isinstance(X._meta, CSBase)) or (dense and isinstance(X, CSBase)):
+        if _has_sparse_chunks(X) or (dense and isinstance(X, CSBase)):
             return to_dense(X)
         return getattr(sp, f"{X.format}_array")(X) if isinstance(X, sp.spmatrix) else X
 
@@ -354,7 +363,7 @@ def _raise_densifying(name: str, reason: str) -> None:
 
 
 def _raise_if_sparse(X: Array | CSBase, name: str, reason: str) -> None:
-    if isinstance(X, CSBase) or (isinstance(X, DaskArray) and isinstance(X._meta, CSBase)):
+    if isinstance(X, CSBase) or _has_sparse_chunks(X):
         _raise_densifying(name, reason)
 
 

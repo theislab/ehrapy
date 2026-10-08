@@ -9,6 +9,7 @@ from fast_array_utils.types import CSBase, DaskArray
 
 from ehrapy._compat import (
     _broadcast_var_stat,
+    _has_sparse_chunks,
     _map_variable_blocks,
     _order_statistic,
     _raise_densifying,
@@ -153,7 +154,7 @@ def _(X: CSBase, bounds: Callable[[CSBase], Bounds], name: str) -> CSBase:
 
 @_clip.register(DaskArray)
 def _(X: DaskArray, bounds: Callable[[Array], Bounds], name: str) -> DaskArray:
-    if isinstance(X._meta, CSBase):
+    if _has_sparse_chunks(X):
         return _map_variable_blocks(X, _clip, bounds, name, meta=X._meta)
     return _clip.dispatch(object)(X, bounds, name)
 

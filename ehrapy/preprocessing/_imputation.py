@@ -23,6 +23,8 @@ from sklearn.utils import safe_sqr
 from ehrapy._compat import (
     _apply_over_time_axis,
     _broadcast_var_stat,
+    _has_sparse_chunks,
+    _map_observation_blocks,
     _map_variable_blocks,
     _obs_axes,
     _raise_if_dask,
@@ -65,9 +67,8 @@ def _(X: CSBase, values: np.ndarray, *, empty_strings: bool = False) -> CSBase:
 
 @_fill_missing.register(DaskArray)
 def _(X: DaskArray, values: Array, *, empty_strings: bool = False) -> DaskArray:
-    if isinstance(X._meta, CSBase):
-        # every block must hold all variables to find their values
-        return X.rechunk({1: -1}).map_blocks(_fill_missing, values, meta=X._meta)
+    if _has_sparse_chunks(X):
+        return _map_observation_blocks(X, _fill_missing, values, meta=X._meta)
     return _fill_missing.dispatch(object)(X, values, empty_strings=empty_strings)
 
 
@@ -198,11 +199,7 @@ def _most_frequent(X: np.ndarray) -> np.ndarray:
 
 @_most_frequent.register(DaskArray)
 def _(X: DaskArray) -> DaskArray:
-    axes = _obs_axes(X)
-    # every block must hold all observations and timepoints of its variables
-    return X.rechunk(dict.fromkeys(axes, -1)).map_blocks(
-        _most_frequent.dispatch(np.ndarray), drop_axis=axes, dtype=X.dtype
-    )
+    return _map_variable_blocks(X, _most_frequent.dispatch(np.ndarray), drop_axis=_obs_axes(X), dtype=X.dtype)
 
 
 @_most_frequent.register(CSBase)
@@ -254,7 +251,7 @@ def _(X: CSBase, strategy: Strategy) -> np.ndarray:
 def _simple_impute(X: Array | CSBase, strategy: Strategy) -> Array | CSBase:
     if strategy != "most_frequent" and not np.issubdtype(X.dtype, np.floating):
         X = X.astype(np.float64)
-    if isinstance(X, DaskArray) and isinstance(X._meta, CSBase):
+    if _has_sparse_chunks(X):
         return _map_variable_blocks(X, _simple_impute, strategy, meta=X._meta)
     return _fill_missing(X, _impute_value(X, strategy))
 
@@ -481,7 +478,10 @@ def _(arr: DaskArray, var_indices: list[int], numerical_indices: list[int], impu
         concatenate=True,
         meta=np.empty((0, 0, 0, 0)),
     )
-    select = lambda candidates, axis, keepdims: _nearest(candidates, n_neighbors)
+
+    def select(candidates: np.ndarray, axis: int, keepdims: bool) -> np.ndarray:
+        return _nearest(candidates, n_neighbors)
+
     nearest = da.reduction(candidates, select, select, axis=3, keepdims=True, dtype=np.float64, output_size=n_neighbors)
     return da.blockwise(
         _impute_rows,

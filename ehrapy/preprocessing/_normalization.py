@@ -16,6 +16,7 @@ from scipy.special import ndtri
 from ehrapy._compat import (
     _by_group,
     _columnwise,
+    _has_sparse_chunks,
     _map_variable_blocks,
     _obs_axes,
     _raise_densifying,
@@ -71,7 +72,7 @@ def _scale_func_group(
 
     groups = None if groupby is None else pd.factorize(edata.obs[groupby])[0]
     values = X[:, var_indices]
-    if isinstance(values, DaskArray) and isinstance(values._meta, CSBase):
+    if _has_sparse_chunks(values):
         values = _map_variable_blocks(values, transform, groups, meta=transform(values._meta, None))
     else:
         values = transform(values, groups)
@@ -696,7 +697,7 @@ def _(X: CSBase) -> CSBase:
 
 @_offset_negative.register(DaskArray)
 def _(X: DaskArray) -> DaskArray:
-    if isinstance(X._meta, CSBase):
+    if _has_sparse_chunks(X):
         # the sparse offset either raises or keeps a block unchanged, so it applies blockwise
         return X.map_blocks(_offset_negative, meta=X._meta)
     return _offset_negative.dispatch(object)(X)

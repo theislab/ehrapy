@@ -17,7 +17,7 @@ from fast_array_utils.types import CSBase
 from rich.progress import BarColumn, Progress
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
-from ehrapy._compat import DaskArray, _raise_array_type_not_implemented
+from ehrapy._compat import DaskArray, _like_obs, _raise_array_type_not_implemented
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -523,9 +523,7 @@ def _(X: CSBase, values) -> CSBase:
 
 @_as_array_type_of.register(DaskArray)
 def _(X: DaskArray, values) -> DaskArray:
-    import dask.array as da
-
-    return da.from_array(_as_array_type_of(X._meta, values), chunks=(X.chunks[0], -1))
+    return _like_obs(X, _as_array_type_of(X._meta, values))
 
 
 @singledispatch
