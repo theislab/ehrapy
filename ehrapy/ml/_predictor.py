@@ -27,7 +27,7 @@ from ehrapy.ml._features import _features, _sequences
 from ehrapy.ml._task import Kind, Task, _targets
 
 if TYPE_CHECKING:
-    from collections.abc import Hashable, Iterable
+    from collections.abc import Callable, Hashable, Iterable
 
     from ehrdata import EHRData
     from torch import nn
@@ -55,6 +55,10 @@ class Predictor:
     feature_names: list[str]
     #: Classes of classification tasks or labels of multilabel tasks, in the order of the predicted probabilities.
     classes: list[Hashable]
+    #: Calibration of the predicted probabilities from :func:`~ehrapy.ml.calibrate`, or `None`.
+    calibrator: Callable[[np.ndarray], np.ndarray] | None = None
+    #: Quantile of the nonconformity scores from :func:`~ehrapy.ml.conformalize`, or `None`.
+    conformal: float | None = None
 
 
 def fit(
@@ -204,6 +208,7 @@ def predict(
         The predictions are stored in `edata.obs[key_added]`.
         They are the probability of the larger of the two label values, such as `1` or `True`, for binary tasks, the most probable class for multiclass tasks, the predicted value for regression tasks and a risk score, which is higher for earlier events, for survival tasks.
         The probability of every class of multiclass tasks and of every label of multilabel tasks is stored in `edata.obsm[key_added]`.
+        Models from :func:`~ehrapy.ml.conformalize` store prediction sets of classes in `edata.obsm[f"{key_added}_set"]` and prediction intervals in `edata.obs[f"{key_added}_lower"]` and `edata.obs[f"{key_added}_upper"]`.
         Deep learning models store the embedding of every observation in `edata.obsm[f"X_{key_added}"]`, and the transformer and RETAIN the attention to every timepoint in `edata.obsm[f"{key_added}_attention"]`.
 
     Examples:
@@ -217,6 +222,8 @@ def predict(
     if copy:
         edata = edata.copy()
     outputs, embedding, attention = _outputs_of(edata, predictor)
+    if predictor.calibrator is not None:
+        outputs = predictor.calibrator(outputs)
     kind = predictor.task.kind
     if kind in {"multiclass", "multilabel"}:
         columns = [str(c) for c in predictor.classes]
@@ -226,6 +233,14 @@ def predict(
         edata.obs[key_added] = pd.Categorical(classes[outputs.argmax(axis=1)], categories=predictor.classes)
     elif kind != "multilabel":
         edata.obs[key_added] = outputs[:, 0]
+    if predictor.conformal is not None and kind == "regression":
+        edata.obs[f"{key_added}_lower"] = outputs[:, 0] - predictor.conformal
+        edata.obs[f"{key_added}_upper"] = outputs[:, 0] + predictor.conformal
+    elif predictor.conformal is not None:
+        columns = [str(c) for c in predictor.classes]
+        edata.obsm[f"{key_added}_set"] = pd.DataFrame(
+            _class_probabilities(outputs) >= 1 - predictor.conformal, index=edata.obs_names, columns=columns
+        )
     if embedding.shape[1]:
         edata.obsm[f"X_{key_added}"] = embedding
     if attention.shape[1]:
@@ -258,6 +273,11 @@ def _outputs_of(edata: EHRData, predictor: Predictor) -> list[np.ndarray]:
         widths[1:] = predictor.model.n_embedding, predictor.model.n_attention
     outputs = _outputs(features, predictor.preprocessing, predictor.model, task.kind, n_outputs, sum(widths))
     return np.split(_materialize(outputs)[0], np.cumsum(widths)[:-1], axis=1)
+
+
+def _class_probabilities(outputs: np.ndarray) -> np.ndarray:
+    """Probabilities of every class, with both classes of binary predictions."""
+    return np.column_stack([1 - outputs, outputs]) if outputs.shape[1] == 1 else outputs
 
 
 def _sample(rows: np.ndarray, max_obs: int | None, rng: np.random.Generator) -> np.ndarray:

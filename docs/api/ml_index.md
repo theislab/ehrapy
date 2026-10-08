@@ -61,3 +61,14 @@ Except for the multilayer perceptron, they read the time series of the variables
 
     ml.evaluate
 ```
+
+## Calibration and uncertainty
+
+```{eval-rst}
+.. autosummary::
+    :toctree: ml
+    :nosignatures:
+
+    ml.calibrate
+    ml.conformalize
+```

@@ -3,6 +3,7 @@ from ehrapy.ml._evaluate import evaluate
 from ehrapy.ml._predictor import Predictor, fit, predict
 from ehrapy.ml._split import split
 from ehrapy.ml._task import Task
+from ehrapy.ml._uncertainty import calibrate, conformalize
 
 __all__ = [
     "GRU",
@@ -16,6 +17,8 @@ __all__ = [
     "Task",
     "Trainer",
     "Transformer",
+    "calibrate",
+    "conformalize",
     "evaluate",
     "fit",
     "predict",
