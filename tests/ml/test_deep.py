@@ -144,3 +144,23 @@ def test_missing_torch_raises(monkeypatch):
 
     with pytest.raises(ImportError, match=r"ehrapy\[ml\]"):
         ep.ml.fit(_split(60), TASKS["binary"], model="gru")
+
+
+def test_time_since_observation_follows_tem():
+    edata = _split(60)
+    task = ep.ml.Task("label")
+    hours = np.array([0, 1, 2, 3, 10, 11, 12, 20, 21, 22])
+    predictors, predictions = {}, {}
+    for grid, times in {"positions": None, "regular": np.arange(10), "irregular": hours}.items():
+        data = edata.copy()
+        if times is not None:
+            data.tem["interval_start_offset"] = pd.to_timedelta(times, unit="h").astype(str)
+        predictors[grid] = ep.ml.fit(data, task, model=ep.ml.GRU(trainer=QUICK))
+        predictions[grid] = ep.ml.predict(data, predictors[grid], copy=True).obs["prediction"]
+
+    pd.testing.assert_series_equal(predictions["positions"], predictions["regular"])
+    assert not predictions["positions"].equals(predictions["irregular"])
+    X = np.full((1, 3, 10), np.nan)
+    X[0, :, [0, 4]] = 0
+    since = predictors["irregular"].model._inputs(X, hours.astype(float))[2][0, :, 0].numpy()
+    np.testing.assert_allclose(since, np.array([0, 1, 2, 3, 0, 1, 2, 10, 11, 12]) / 23, rtol=1e-6)

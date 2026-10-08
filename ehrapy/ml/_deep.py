@@ -65,6 +65,7 @@ class DeepModel:
         n_outputs: int,
         n_static: int,
         tuning: tuple[np.ndarray, np.ndarray],
+        times: np.ndarray,
         random_state: int,
     ) -> _FittedModel:
         torch = _torch()
@@ -77,7 +78,7 @@ class DeepModel:
             )
         torch.manual_seed(random_state)
         fitted = _FittedModel(self, task, n_static, X, y)
-        inputs, targets = fitted._inputs(X), fitted._targets(y)
+        inputs, targets = fitted._inputs(X, times), fitted._targets(y)
         network = self._network(inputs[0].shape[2], inputs[0].shape[1], n_static, every_step)
         with torch.no_grad():
             embedding, attention = embed(network, *(tensor[:1] for tensor in inputs))
@@ -88,7 +89,7 @@ class DeepModel:
             fitted,
             inputs,
             targets,
-            fitted._inputs(tuning[0]),
+            fitted._inputs(tuning[0], times),
             fitted._targets(tuning[1]),
             _loss(task.kind, y[~np.isnan(y)] if every_step else y, n_outputs, self.trainer, labeled=every_step),
             random_state,
@@ -313,11 +314,11 @@ class _FittedModel:
         else:
             self.target_mean, self.target_std = 0.0, 1.0
 
-    def outputs(self, X: np.ndarray) -> np.ndarray:
+    def outputs(self, X: np.ndarray, times: np.ndarray) -> np.ndarray:
         """Predictions, embedding and attention of every observation, side by side."""
         torch = _torch()
 
-        outputs, embedding, attention = _forward(self, self._inputs(X))
+        outputs, embedding, attention = _forward(self, self._inputs(X, times))
         match self.kind:
             case "binary" | "multilabel":
                 outputs = torch.sigmoid(outputs)
@@ -331,8 +332,8 @@ class _FittedModel:
             return predictions
         return torch.cat([outputs, embedding, *([] if attention is None else [attention])], dim=1).double().numpy()
 
-    def _inputs(self, X: np.ndarray) -> tuple[Tensor, Tensor, Tensor, Tensor]:
-        """Values, whether they were observed and the time since their last observation of shape `(observations, timepoints, variables)`, and static covariates."""
+    def _inputs(self, X: np.ndarray, times: np.ndarray) -> tuple[Tensor, Tensor, Tensor, Tensor]:
+        """Values, whether they were observed and the time since their last observation as a fraction of the window, of shape `(observations, timepoints, variables)`, and static covariates."""
         torch = _torch()
 
         if not self.model.sequential:
@@ -345,7 +346,9 @@ class _FittedModel:
             steps = np.arange(X.shape[2])
             last = np.maximum.accumulate(np.where(observed, steps, -1), axis=2)
             filled = np.take_along_axis(np.nan_to_num(values), np.maximum(last, 0), axis=2) * (last >= 0)
-            since = np.where(last >= 0, steps - last, steps + 1) / X.shape[2]
+            step = np.median(np.diff(times)) if len(times) > 1 else 1.0
+            since = np.where(last >= 0, times - times[np.maximum(last, 0)], times - times[0] + step)
+            since /= times[-1] - times[0] + step
             static = np.nan_to_num((X[:, n_variables:, 0] - self.static_mean) / self.static_std)
             arrays = [*(np.moveaxis(array, 1, 2) for array in (filled, observed, since)), static]
         return tuple(torch.as_tensor(array, dtype=torch.float32) for array in arrays)

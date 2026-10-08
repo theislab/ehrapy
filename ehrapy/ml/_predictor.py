@@ -23,7 +23,7 @@ from sklearn.preprocessing import StandardScaler
 from ehrapy._compat import _map_observation_blocks, _materialize
 from ehrapy._settings import settings
 from ehrapy.ml._deep import DeepModel, _deep_model, _FittedModel
-from ehrapy.ml._features import _features, _sequences
+from ehrapy.ml._features import _features, _sequences, _times
 from ehrapy.ml._task import Kind, Task, _targets
 
 if TYPE_CHECKING:
@@ -61,6 +61,8 @@ class Predictor:
     calibrator: Callable[[np.ndarray], np.ndarray] | None = None
     #: Quantile of the nonconformity scores from :func:`~ehrapy.ml.conformalize`, or `None`.
     conformal: float | None = None
+    #: Column of `tem` with the time of every timepoint.
+    time_key: str = "interval_start_offset"
 
 
 def fit(
@@ -90,6 +92,7 @@ def fit(
     layer: str | None = None,
     statistics: Iterable[Statistic] = ("min", "max", "mean"),
     split_key: str = "split",
+    time_key: str = "interval_start_offset",
     max_train_obs: int | None = 10_000,
     random_state: int = 0,
 ) -> Predictor:
@@ -129,6 +132,8 @@ def fit(
         statistics: Statistics that summarize every longitudinal variable over the observation window, see :func:`~ehrapy.preprocessing.summarize_measurements`.
         split_key: Column of `obs` with the sets from :func:`~ehrapy.ml.split`.
             The model is fit on the observations in `"train"` with all targets.
+        time_key: Column of `tem` with the time of every timepoint, as numbers, time differences or dates, from which models of time series compute the time since the last observation.
+            If `tem` has no such column, the timepoints are evenly spaced.
         max_train_obs: Maximum number of randomly chosen training and tuning observations the model is fit on.
             If `None`, all are used.
         random_state: Seed for choosing the training observations and for the built-in models.
@@ -196,9 +201,12 @@ def fit(
             n_outputs=n_outputs,
             n_static=len(feature_names) - len(var_names) if sequential else train_features.shape[1],
             tuning=(tuning_features, tuning_targets),
+            times=_times(edata, task, layer, time_key) if sequential else np.empty(0),
             random_state=random_state,
         )
-    return Predictor(task, preprocessing, fitted, var_names, obs_keys, layer, statistics, feature_names, classes)
+    return Predictor(
+        task, preprocessing, fitted, var_names, obs_keys, layer, statistics, feature_names, classes, time_key=time_key
+    )
 
 
 def predict(
@@ -303,9 +311,11 @@ def _outputs_of(edata: EHRData, predictor: Predictor, features: Any = None) -> l
         widths[0] = features.shape[2]
     elif isinstance(predictor.model, _FittedModel):
         widths[1:] = predictor.model.n_embedding, predictor.model.n_attention
-    outputs = _materialize(_outputs(features, predictor.preprocessing, predictor.model, kind, n_outputs, sum(widths)))[
-        0
-    ]
+    times = np.empty(0)
+    if predictor.preprocessing is None:
+        times = _times(edata, predictor.task, predictor.layer, predictor.time_key)
+    outputs = _outputs(features, predictor.preprocessing, predictor.model, kind, n_outputs, sum(widths), times)
+    outputs = _materialize(outputs)[0]
     if predictor.task.rolling:
         outputs[:, : predictor.task.gap + 1] = np.nan
     return np.split(outputs, np.cumsum(widths)[:-1], axis=1)
@@ -387,15 +397,21 @@ def _estimator(model: str | BaseEstimator, kind: Kind, random_state: int) -> Bas
 
 @singledispatch
 def _outputs(
-    features: np.ndarray, preprocessing: Pipeline | None, model: Any, kind: Kind, n_outputs: int, n_columns: int
+    features: np.ndarray,
+    preprocessing: Pipeline | None,
+    model: Any,
+    kind: Kind,
+    n_outputs: int,
+    n_columns: int,
+    times: np.ndarray,
 ) -> np.ndarray:
     if preprocessing is not None and features.ndim == 3:
         samples = np.moveaxis(features, 2, 1).reshape(-1, features.shape[1])
-        return _outputs(samples, preprocessing, model, kind, n_outputs, 1)[:, 0].reshape(len(features), -1)
+        return _outputs(samples, preprocessing, model, kind, n_outputs, 1, times)[:, 0].reshape(len(features), -1)
     if preprocessing is not None:
         features = preprocessing.transform(features)
     if isinstance(model, _FittedModel):
-        return model.outputs(features)
+        return model.outputs(features, times)
     match kind:
         case "binary":
             return model.predict_proba(features)[:, 1:]
@@ -413,7 +429,13 @@ def _outputs(
 
 @_outputs.register(DaskArray)
 def _(
-    features: DaskArray, preprocessing: Pipeline | None, model: Any, kind: Kind, n_outputs: int, n_columns: int
+    features: DaskArray,
+    preprocessing: Pipeline | None,
+    model: Any,
+    kind: Kind,
+    n_outputs: int,
+    n_columns: int,
+    times: np.ndarray,
 ) -> DaskArray:
     return _map_observation_blocks(
         features,
@@ -423,6 +445,7 @@ def _(
         kind,
         n_outputs,
         n_columns,
+        times,
         chunks=(features.chunks[0], (n_columns,)),
         drop_axis=2 if features.ndim == 3 else [],
         meta=np.empty((0, 0), dtype=np.float64),
