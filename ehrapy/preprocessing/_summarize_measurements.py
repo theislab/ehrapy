@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
 
     type Array = np.ndarray | DaskArray
+    type Statistic = Literal["min", "max", "mean", "median", "first", "last", "count", "std", "slope"]
 
 
 def summarize_measurements(
@@ -23,13 +24,14 @@ def summarize_measurements(
     *,
     layer: str | None = None,
     var_names: Iterable[str] | None = None,
-    statistics: Iterable[Literal["min", "max", "mean", "median", "first", "last"]] = ("min", "max", "mean"),
+    statistics: Iterable[Statistic] = ("min", "max", "mean"),
 ) -> EHRData:
     """Summarizes numerical measurements into statistics such as their minimum, maximum and average values.
 
     For 3D data, every variable is aggregated over the time axis of each observation, ignoring missing values.
     This is how longitudinal data reaches the functions that only support 2D data.
-    The statistics `"first"` and `"last"` are the first and last non-missing value.
+    The statistics `"first"` and `"last"` are the first and last non-missing value, `"count"` is the number of non-missing values and `"std"` their sample standard deviation.
+    `"slope"` is the least-squares change per timepoint, which only exists for 3D data.
     For 2D data, rows that share an observation name are aggregated.
 
     Args:
@@ -58,6 +60,8 @@ def summarize_measurements(
     if missing := set(var_names) - set(edata.var_names):
         raise KeyError(f"Variables not found: {missing}")
     statistics = list(statistics)
+    if X.ndim != 3 and "slope" in statistics:
+        raise ValueError("The statistic 'slope' needs 3D data with a time axis.")
     values = X[:, edata.var_names.get_indexer(var_names)]
     var = pd.DataFrame(index=[f"{var}_{statistic}" for var in var_names for statistic in statistics])
 
@@ -127,6 +131,13 @@ def _segment_statistic(
         case "mean":
             with np.errstate(invalid="ignore"):
                 return np.add.reduceat(np.where(valid, values, 0), starts) / count
+        case "count":
+            return count.astype(np.float64)
+        case "std":
+            total = np.add.reduceat(np.where(valid, values, 0), starts)
+            squares = np.add.reduceat(np.where(valid, values**2, 0), starts)
+            with np.errstate(invalid="ignore", divide="ignore"):
+                return np.sqrt(np.maximum(squares - total**2 / count, 0) / (count - 1))
         case "median":
             ordered = values[np.lexsort((values, np.repeat(starts, n_stored)))]
             n_negative = np.add.reduceat(ordered < 0, starts, dtype=np.intp)
@@ -165,6 +176,20 @@ def _aggregate_time(X: Array, statistic: str) -> Array:
             return xpx.nanmean(X, axis=2)
         case "median":
             return nanquantile(X, 0.5, axis=2)
+        case "count":
+            return xp.sum(xp.astype(~xp.isnan(X), X.dtype), axis=2)
+        case "std" | "slope":
+            valid = ~xp.isnan(X)
+            n = xp.sum(xp.astype(valid, X.dtype), axis=2, keepdims=True)
+            value_mean = xp.sum(xp.where(valid, X, 0), axis=2, keepdims=True) / xp.where(n > 0, n, xp.nan)
+            if statistic == "std":
+                squares = xp.sum(xp.where(valid, (X - value_mean) ** 2, 0), axis=2)
+                return xp.sqrt(squares / xp.where(n[..., 0] > 1, n[..., 0] - 1, xp.nan))
+            time = xp.astype(xp.arange(X.shape[2]), X.dtype)
+            time_mean = xp.sum(xp.where(valid, time, 0), axis=2, keepdims=True) / xp.where(n > 0, n, xp.nan)
+            covariance = xp.sum(xp.where(valid, (time - time_mean) * (X - value_mean), 0), axis=2)
+            variance = xp.sum(xp.where(valid, (time - time_mean) ** 2, 0), axis=2)
+            return covariance / xp.where(variance > 0, variance, xp.nan)
         case "first" | "last":
             valid = ~xp.isnan(X)
             if statistic == "last":

@@ -10,7 +10,7 @@ from testing.fast_array_utils import Flags
 from ehrapy.preprocessing import summarize_measurements
 from tests.conftest import forbid_dask_compute
 
-STATISTICS = ["min", "max", "mean", "median", "first", "last"]
+STATISTICS = ["min", "max", "mean", "median", "first", "last", "count", "std"]
 
 
 @pytest.fixture
@@ -63,6 +63,11 @@ def _non_missing_at(x: np.ndarray, position: int) -> float:
     return x[position] if len(x) else np.nan
 
 
+def _slope(x: np.ndarray) -> float:
+    observed = ~np.isnan(x)
+    return np.polyfit(np.flatnonzero(observed), x[observed], 1)[0] if observed.sum() > 1 else np.nan
+
+
 @pytest.mark.filterwarnings("ignore:Mean of empty slice:RuntimeWarning")
 def test_summarize_measurements_3D(rng):
     X = rng.normal(size=(5, 3, 4))
@@ -71,7 +76,7 @@ def test_summarize_measurements_3D(rng):
     obs = pd.DataFrame({"group": list("aabbc")}, index=[f"pat{i}" for i in range(5)])
     edata = ed.EHRData(shape=(5, 3), obs=obs, layers={DEFAULT_TEM_LAYER_NAME: X})
 
-    summary = summarize_measurements(edata, layer=DEFAULT_TEM_LAYER_NAME, statistics=STATISTICS)
+    summary = summarize_measurements(edata, layer=DEFAULT_TEM_LAYER_NAME, statistics=[*STATISTICS, "slope"])
 
     expected = {
         "min": np.nanmin(X, axis=2),
@@ -80,9 +85,12 @@ def test_summarize_measurements_3D(rng):
         "median": np.nanmedian(X, axis=2),
         "first": np.apply_along_axis(_non_missing_at, 2, X, 0),
         "last": np.apply_along_axis(_non_missing_at, 2, X, -1),
+        "count": (~np.isnan(X)).sum(axis=2),
+        "std": np.nanstd(X, axis=2, ddof=1),
+        "slope": np.apply_along_axis(_slope, 2, X),
     }
-    assert summary.shape == (5, 3 * len(STATISTICS), 1)
-    assert summary.var_names.tolist() == [f"{var}_{stat}" for var in edata.var_names for stat in STATISTICS]
+    assert summary.shape == (5, 3 * len(expected), 1)
+    assert summary.var_names.tolist() == [f"{var}_{stat}" for var in edata.var_names for stat in expected]
     pd.testing.assert_frame_equal(summary.obs, edata.obs)
     for stat, values in expected.items():
         np.testing.assert_allclose(summary[:, [f"{var}_{stat}" for var in edata.var_names]].X, values)
@@ -109,11 +117,12 @@ def test_summarize_measurements_array_types(array_type, ndim, rng):
     def make_edata(X):
         return ed.EHRData(shape=shape[:2], obs=obs, layers={DEFAULT_TEM_LAYER_NAME: X})
 
-    expected = summarize_measurements(make_edata(X), layer=DEFAULT_TEM_LAYER_NAME, statistics=STATISTICS)
+    statistics = STATISTICS if ndim == 2 else [*STATISTICS, "slope"]
+    expected = summarize_measurements(make_edata(X), layer=DEFAULT_TEM_LAYER_NAME, statistics=statistics)
     edata = make_edata(array_type(X))
 
     with forbid_dask_compute():
-        result = summarize_measurements(edata, layer=DEFAULT_TEM_LAYER_NAME, statistics=STATISTICS)
+        result = summarize_measurements(edata, layer=DEFAULT_TEM_LAYER_NAME, statistics=statistics)
 
     assert type(result.X) is type(edata.layers[DEFAULT_TEM_LAYER_NAME])
     if array_type.flags & Flags.Dask:
@@ -121,3 +130,18 @@ def test_summarize_measurements_array_types(array_type, ndim, rng):
     pd.testing.assert_index_equal(result.obs_names, expected.obs_names)
     pd.testing.assert_index_equal(result.var_names, expected.var_names)
     np.testing.assert_allclose(to_dense(result.X, to_cpu_memory=True), expected.X, equal_nan=True)
+
+
+def test_summarize_measurements_2D_count_std(edata_to_expand):
+    summary = summarize_measurements(edata_to_expand, var_names=["measurement2"], statistics=["count", "std"])
+
+    values = edata_to_expand[:, "measurement2"].X.ravel()
+    np.testing.assert_allclose(summary.X[:, 0].ravel(), [3, 2, 1])
+    np.testing.assert_allclose(
+        summary.X[:, 1].ravel(), [np.std(values[:3], ddof=1), np.std(values[3:5], ddof=1), np.nan]
+    )
+
+
+def test_summarize_measurements_slope_needs_3D(edata_to_expand):
+    with pytest.raises(ValueError, match="needs 3D data"):
+        summarize_measurements(edata_to_expand, statistics=["slope"])
