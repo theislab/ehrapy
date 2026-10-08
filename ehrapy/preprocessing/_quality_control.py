@@ -30,10 +30,8 @@ from ehrapy._compat import (
     _map_variable_blocks,
     _materialize,
     _obs_axes,
-    _previous_observed,
     _sparse_columns,
     _sparse_rows,
-    _timepoint_times,
     _var_axes,
     function_2D_only,
     nanquantile,
@@ -43,7 +41,8 @@ from ehrapy._compat import (
     sparse_nanquantile,
 )
 from ehrapy.preprocessing._encoding import _get_encoded_features
-from ehrapy.preprocessing._missing_data import _missing_mask
+from ehrapy.preprocessing._missing_data import _missing_mask, _previous_observed
+from ehrapy.preprocessing._summarize_measurements import _tem_times
 
 if TYPE_CHECKING:
     from collections.abc import Collection
@@ -409,7 +408,7 @@ def _compute_qc_metrics(
             lazy[f"total_features_{qc_var}"] = _total(mtx[:, edata.var[qc_var].to_numpy(dtype=bool)])
     if mtx.ndim == 3:
         observed = ~_missing_mask(mtx)
-        times = _timepoint_times(edata, time_key)
+        times = _tem_times(edata, time_key)
         xp = array_namespace(observed)
         measured = xp.any(~_missing_mask(obs_mtx), axis=1)
         if encoded.any():
@@ -610,7 +609,7 @@ def qc_lab_measurements(
             if not isinstance(max_change, Mapping):
                 max_change = dict.fromkeys(var_names, np.nan if max_change is None else max_change)
             limits = np.array([max_change.get(var, np.nan) for var in var_names], dtype=np.float64)
-            changes = _changes(mtx, _timepoint_times(edata, time_key), relative_change)
+            changes = _changes(mtx, _tem_times(edata, time_key), relative_change)
             results["jump"] = _jump_flags(changes, groups, method, limits)
     if add_score:
         results["score"] = _anomaly_scores(mtx, groups, score_type)

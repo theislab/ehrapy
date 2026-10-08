@@ -27,7 +27,6 @@ from ehrapy._compat import (
     _map_observation_blocks,
     _map_variable_blocks,
     _obs_axes,
-    _previous_observed,
     _raise_if_dask,
     _set_columns,
     _sparse_columns,
@@ -39,7 +38,7 @@ from ehrapy._compat import (
 )
 from ehrapy._progress import spinner
 from ehrapy._settings import settings
-from ehrapy.preprocessing._missing_data import _missing_mask
+from ehrapy.preprocessing._missing_data import _missing_mask, _previous_observed
 from ehrapy.preprocessing._quality_control import _compute_missing_values
 
 # number of array elements densified or predicted at once

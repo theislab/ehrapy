@@ -86,3 +86,9 @@ def _(X: CSBase, values: Collection[float | str] = ()) -> CSBase:
     mask = type(X)((data, X.indices.copy(), X.indptr.copy()), shape=X.shape)
     mask.eliminate_zeros()
     return mask
+
+
+def _previous_observed(observed: np.ndarray) -> np.ndarray:
+    """Index of the closest observed timepoint before every timepoint along the last axis, or -1 if there is none."""
+    last = np.maximum.accumulate(np.where(observed, np.arange(observed.shape[-1]), -1), axis=-1)
+    return np.concatenate([np.full((*observed.shape[:-1], 1), -1), last[..., :-1]], axis=-1)
