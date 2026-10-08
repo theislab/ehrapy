@@ -14,20 +14,8 @@
 # ehrapy: electronic health record (EHR) analysis in Python
 
 ehrapy is an open-source Python framework for exploratory and statistical analysis of electronic health records (EHR) and other clinical and epidemiological data.
-It is for clinical researchers, epidemiologists and data scientists who want to go from raw patient data to quality-controlled cohorts, patient groups, trajectories, survival curves and treatment effect estimates in one reproducible workflow.
-
-## Features
-
-- **Data access**: build `EHRData` objects from OMOP Common Data Model tables, CSV, h5ad, h5ed and zarr files with `ehrdata.io`, and load MIMIC-II, the MIMIC-IV OMOP demo, the PhysioNet 2012 and 2019 challenges, Synthea and other public datasets with `ehrdata.dt`.
-- **Longitudinal data**: analyze static 2D and longitudinal 3D (patients × variables × time) data as numpy, sparse or dask arrays, aggregate time series with `ep.pp.summarize_measurements` and compare patients with dynamic time warping in `ep.pp.neighbors`.
-- **Quality control**: missingness and summary statistics, laboratory reference ranges, Little's MCAR test and missing value plots.
-- **Imputation and normalization**: explicit, mean or median, last observation carried forward, kNN and MissForest imputation, and scaling, log and power transforms.
-- **Clustering and embeddings**: PCA, FAMD, UMAP, t-SNE and Leiden clustering, with feature ranking to characterize patient groups.
-- **Trajectories**: diffusion pseudotime, PAGA and patterns across patients, variables and time with `ep.tl.ncp`.
-- **Survival analysis**: Kaplan-Meier, Nelson-Aalen, Cox proportional hazards and accelerated failure time models, plus OLS and GLM regression.
-- **Causal inference**: IPTW, g-computation, AIPW, propensity score matching and T-, S- and X-learners, with covariate balance and positivity diagnostics.
-- **Fairness**: detect biases with respect to sensitive attributes such as sex or race with `ep.pp.detect_bias`.
-- **Cohort reporting**: CONSORT-style cohort tracking and stratified Table One summaries.
+It reads static and longitudinal patient data from OMOP databases, public datasets such as MIMIC and PhysioNet, or your own tables.
+It is for clinical researchers, epidemiologists and data scientists who want to go from raw patient data to quality-controlled cohorts, patient groups, trajectories, statistical tests, survival curves and treatment effect estimates in one reproducible workflow.
 
 <p align="center">
     <img src="https://github.com/user-attachments/assets/84fe403c-66de-4dd9-9265-b0d1739ce3cc" alt="ehrapy overview: data preparation, data preprocessing and knowledge inference" width="100%">
@@ -45,22 +33,40 @@ Optional extras enable dask-backed out-of-core arrays (`ehrapy[dask]`), Leiden c
 
 ## Quickstart
 
-Cluster 1,776 intensive care patients from MIMIC-II and color them by in-hospital mortality, after `pip install "ehrapy[leiden]"`:
+Cluster 11,988 intensive care stays from PhysioNet 2012, each with 37 measurements over 48 hours, and test which measurements differ between patients who died and survived, after `pip install "ehrapy[leiden]"`:
 
 ```python
 import ehrdata as ed
 import ehrapy as ep
 
-edata = ed.dt.mimic_2(columns_obs_only=["service_unit", "day_icu_intime", "hosp_exp_flg"])
-ed.infer_feature_types(edata, binary_as="numeric")
-ep.pp.qc_metrics(edata)
-ep.pp.knn_impute(edata)
+edata = ed.dt.physionet2012()  # 11,988 ICU stays × 37 measurements × 48 hours
+ed.infer_feature_types(edata)
+ep.pp.locf_impute(edata)
 ep.pp.scale_norm(edata)
-ep.pp.pca(edata)
-ep.pp.neighbors(edata)
-ep.tl.leiden(edata)
-ep.tl.umap(edata)
-ep.pl.umap(edata, color=["leiden", "service_unit", "hosp_exp_flg"])
+
+summary = ep.pp.summarize_measurements(edata, statistics=["mean", "min", "max"])
+summary.obs["outcome"] = summary.obs["In-hospital_death"].map({0: "survived", 1: "died"}).astype("category")
+ep.pp.pca(summary)
+ep.pp.neighbors(summary)
+ep.tl.leiden(summary, resolution=0.3)
+ep.tl.umap(summary)
+ep.pl.umap(summary, color=["leiden", "outcome"])
+
+ep.tl.rank_features_groups(summary, groupby="outcome", groups=["died"], reference="survived")
+ep.get.rank_features_groups_df(summary, group="died")[["names", "scores", "pvals_adj"]].head()
+```
+
+<p align="center">
+    <img src="https://raw.githubusercontent.com/theislab/ehrapy/main/docs/_static/readme_quickstart.png" alt="UMAP of PhysioNet 2012 intensive care stays colored by Leiden cluster and in-hospital death" width="100%">
+</p>
+
+```
+        names     scores      pvals_adj
+0    GCS_mean -28.216665  1.869927e-146
+1     GCS_max -22.782927  1.980853e-100
+2    BUN_mean  18.654604   3.497719e-70
+3     BUN_min  18.486603   2.324785e-69
+4  Urine_mean -16.941847   1.399260e-59
 ```
 
 ## Documentation
