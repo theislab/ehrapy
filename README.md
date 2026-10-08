@@ -15,8 +15,6 @@
 
 ehrapy is an open-source Python framework for exploratory and statistical analysis of electronic health records (EHR) and other clinical and epidemiological data.
 It is for clinical researchers, epidemiologists and data scientists who want to go from raw patient data to quality-controlled cohorts, patient groups, trajectories, survival curves and treatment effect estimates in one reproducible workflow.
-Where [PyHealth](https://github.com/sunlabuiuc/PyHealth) focuses on deep learning models for clinical prediction, the [OHDSI](https://www.ohdsi.org) tools on standardized observational studies of OMOP databases in R and SQL, and [MEDS](https://github.com/Medical-Event-Data-Standard/meds) on a common data standard for medical events, ehrapy covers exploratory and statistical analysis in Python.
-It builds on [scverse](https://scverse.org) tools such as AnnData and scanpy and stores data in [ehrdata](https://github.com/theislab/ehrdata)'s `EHRData` object, which extends AnnData with a time axis.
 
 ## Features
 
