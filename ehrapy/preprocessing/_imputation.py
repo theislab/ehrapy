@@ -51,7 +51,7 @@ if TYPE_CHECKING:
 
     type Array = np.ndarray | DaskArray
     type Strategy = Literal["mean", "median", "most_frequent"]
-    type Model = tuple[Any, np.ndarray]
+    type Model = tuple[Any, np.ndarray, np.ndarray]
 
 
 @singledispatch
@@ -799,11 +799,20 @@ def _predictors(rows: np.ndarray, context: Sequence[np.ndarray], var: int) -> np
     return np.column_stack([np.delete(rows, var, axis=1), *(values[:, var] for values in context)])
 
 
+def _hide_like(predictors: np.ndarray, missing_rate: np.ndarray, rng: np.random.Generator) -> None:
+    """Hide predictor values at random so that every predictor is missing at `missing_rate`, the rate where the values are imputed."""
+    train_rate = np.isnan(predictors).mean(axis=0)
+    hide = np.clip((missing_rate - train_rate) / np.maximum(1 - train_rate, np.finfo(np.float64).eps), 0, 1)
+    predictors[rng.random(predictors.shape, dtype=np.float32) < hide] = np.nan
+
+
 @singledispatch
 def _fit_boosting(sample: np.ndarray, categorical: np.ndarray, random_state: int) -> list[Model | None]:
-    """A gradient boosting model per variable with the predictors it uses, `None` for variables without observed values."""
+    """A gradient boosting model per variable with the predictors it uses and the range of its observed values, `None` for variables without observed values."""
+    from sklearn.dummy import DummyClassifier, DummyRegressor
     from sklearn.ensemble import HistGradientBoostingClassifier, HistGradientBoostingRegressor
 
+    rng = np.random.default_rng(random_state)
     rows, context = _rows_and_context(sample)
     models: list[Model | None] = []
     for var in range(rows.shape[1]):
@@ -812,12 +821,19 @@ def _fit_boosting(sample: np.ndarray, categorical: np.ndarray, random_state: int
             models.append(None)
             continue
         predictors = _predictors(rows[observed], [values[observed] for values in context], var)
+        if not observed.all():
+            to_impute = _predictors(rows[~observed], [values[~observed] for values in context], var)
+            _hide_like(predictors, np.isnan(to_impute).mean(axis=0), rng)
         # scikit-learn cannot bin a predictor without values
         used = ~np.isnan(predictors).all(axis=0)
-        model = (HistGradientBoostingClassifier if categorical[var] else HistGradientBoostingRegressor)(
-            random_state=random_state
-        )
-        models.append((model.fit(predictors[:, used], rows[observed, var]), used))
+        if not used.any():
+            model = DummyClassifier(strategy="most_frequent") if categorical[var] else DummyRegressor()
+        else:
+            model = (HistGradientBoostingClassifier if categorical[var] else HistGradientBoostingRegressor)(
+                random_state=random_state
+            )
+        target = rows[observed, var]
+        models.append((model.fit(predictors[:, used], target), used, np.array([target.min(), target.max()])))
     return models
 
 
@@ -849,9 +865,9 @@ def _impute_block(X: np.ndarray, models: Sequence[Model | None]) -> np.ndarray:
     for var, fitted in enumerate(models):
         missing = np.isnan(rows[:, var])
         if fitted is not None and missing.any():
-            model, used = fitted
+            model, used, bounds = fitted
             predictors = _predictors(rows[missing], [values[missing] for values in context], var)
-            filled[missing, var] = model.predict(predictors[:, used])
+            filled[missing, var] = np.clip(model.predict(predictors[:, used]), *bounds)
     return filled if X.ndim == 2 else np.moveaxis(filled.reshape(X.shape[0], X.shape[2], X.shape[1]), 2, 1)
 
 
@@ -890,7 +906,8 @@ def gradient_boosting_impute(
 
     Every variable is predicted from the other variables of the same observation, missing values included, with :class:`~sklearn.ensemble.HistGradientBoostingRegressor`, or :class:`~sklearn.ensemble.HistGradientBoostingClassifier` for categorical variables.
     For 3D data, every timepoint is predicted, and the predictors also include the timepoint and the closest observed values of the variable before and after it with their distance in timepoints.
-    Variables without any observed value stay missing.
+    During training, every predictor is hidden as often as it is missing where the variable is imputed, so that variables measured together cannot stand in for each other.
+    Imputed values stay within the range of the observed values of their variable, and variables without any observed value stay missing.
 
     Args:
         edata: Central data object.

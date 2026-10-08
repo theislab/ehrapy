@@ -969,6 +969,29 @@ def test_gradient_boosting_impute_array_types(array_type, ndim, rng):
     assert not np.isnan(np.delete(expected, ALL_NAN_VAR, axis=1)).any()
 
 
+def test_gradient_boosting_impute_ignores_missingness_seen_only_in_training(rng):
+    values = rng.normal(100, 10, size=2000)
+    X = np.column_stack([values, values + rng.normal(size=2000)])
+    artifacts = rng.random(2000) < 0.01
+    X[artifacts] = [0, np.nan]
+    missing = ~artifacts & (rng.random(2000) < 0.3)
+    X[missing] = np.nan
+
+    imputed = gradient_boosting_impute(_numeric_edata(X), copy=True).X
+
+    assert np.median(imputed[missing, 0]) > 90
+
+
+def test_gradient_boosting_impute_stays_within_observed_range():
+    predictors = np.random.default_rng(0).uniform(0, 10, size=(2000, 2))
+    predictors = predictors[predictors.sum(axis=1) <= 10]
+    X = np.vstack([np.column_stack([predictors.sum(axis=1), predictors]), [np.nan, 10, 10]])
+
+    imputed = gradient_boosting_impute(_numeric_edata(X), copy=True).X
+
+    assert imputed[-1, 0] <= np.nanmax(X[:, 0])
+
+
 def test_gradient_boosting_impute_beats_locf(rng):
     slopes = rng.normal(size=(300, 1, 1))
     trend = slopes * np.arange(12)
