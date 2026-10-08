@@ -49,10 +49,10 @@ def summarize_measurements(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ed.dt.ehrdata_blobs(n_variables=10, n_observations=100, base_timepoints=10, layer="tem_data")
-        >>> edata.layers["tem_data"].shape
+        >>> edata = ed.dt.ehrdata_blobs(n_variables=10, n_observations=100, base_timepoints=10)
+        >>> edata.X.shape
         (100, 10, 10)
-        >>> edata_summary = ep.pp.summarize_measurements(edata, layer="tem_data", statistics=["mean", "max", "last"])
+        >>> edata_summary = ep.pp.summarize_measurements(edata, statistics=["mean", "max", "last"])
         >>> edata_summary.shape
         (100, 30, 1)
         >>> ep.pp.pca(edata_summary)

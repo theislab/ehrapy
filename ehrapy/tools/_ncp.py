@@ -150,7 +150,7 @@ def ncp(
     Examples:
         >>> import ehrdata as ed, ehrapy as ep
         >>> edata = ed.dt.ehrdata_blobs(n_variables=8, n_centers=3, n_observations=30, base_timepoints=12)
-        >>> ep.tl.ncp(edata, layer="tem_data", rank=3, sigmoid_transform=True)
+        >>> ep.tl.ncp(edata, rank=3, sigmoid_transform=True)
         >>> edata.obsm["X_ncp"].shape
         (30, 3)
         >>> edata.varm["ncp_loadings"].shape

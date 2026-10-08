@@ -104,14 +104,14 @@ def explicit_impute(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.ehrdata_blobs(n_variables=10, n_observations=10, base_timepoints=2, missing_values=0.5)
-        >>> ep.pp.explicit_impute(edata, replacement=[1, 2], layer="tem_data")
+        >>> ep.pp.explicit_impute(edata, replacement=[1, 2])
 
         Example Output:
 
-        >>> edata.layers["tem_data"][0, :, 0]
+        >>> edata.X[0, :, 0]
         [ 1.        ,  1.        ,  1.        ,  1.        ,  1.        ,
         0.021176  , -5.25906637,  1.        ,  1.        ,  1.        ]
-        >>> edata.layers["tem_data"][0, :, 1]
+        >>> edata.X[0, :, 1]
         [ 2.        , 10.30041167, -3.6883699 ,  2.        ,  2.        ,
         0.09374899,  2.        , -3.77042107,  2.        ,  2.45151241]
     """
@@ -325,7 +325,7 @@ def knn_impute(
         var_names: A list of variable names indicating which columns to impute.
                    If `None`, all columns are imputed. Default is `None`.
         n_neighbors: Number of neighbors to use when performing the imputation.
-        layer: The layer to impute. Required when the input data is 3D.
+        layer: The layer to impute.
         copy: Whether to perform the imputation on a copy of the original data object.
               If `True`, the original object remains unmodified.
         backend: The implementation to use for the KNN imputation.
@@ -346,15 +346,15 @@ def knn_impute(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata_3d = ed.dt.ehrdata_blobs(n_variables=3, n_observations=3, base_timepoints=2, missing_values=0.3)
-        >>> edata_imputed = ep.pp.knn_impute(edata_3d, layer="tem_data", copy=True)
+        >>> edata_imputed = ep.pp.knn_impute(edata_3d, copy=True)
 
         Example Output:
 
-        >>> edata_3d.layers["tem_data"][0, :, :]
+        >>> edata_3d.X[0, :, :]
         [[-12.12732884, -18.37304373],
         [         nan,  -0.91339411],
         [         nan,  -7.88514984]]
-        >>> edata_imputed.layers["tem_data"][0, :, :]
+        >>> edata_imputed.X[0, :, :]
         [[-12.12732884, -18.37304373],
         [ -0.07689509,  -0.91339411],
         [ -2.75584421,  -7.88514984]]
@@ -509,7 +509,7 @@ def miss_forest_impute(
                       Decrease for faster computations.
         random_state: The random seed for the initialization.
         warning_threshold: Threshold of percentage of missing values to display a warning for.
-        layer: The layer to impute. Required when input data is 3D.
+        layer: The layer to impute.
         copy: Whether to return a copy or act in place.
 
     Returns:
@@ -519,17 +519,16 @@ def miss_forest_impute(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ed.dt.mimic_2()
-        >>> edata = ep.pp.encode(edata, autodetect=True)
-        >>> ep.pp.miss_forest_impute(edata)
+        >>> edata = ed.dt.ehrdata_blobs(n_variables=3, n_observations=3, base_timepoints=2, missing_values=0.3)
+        >>> edata_imputed = ep.pp.miss_forest_impute(edata, copy=True)
 
         Example Output:
 
-        >>> edata.layers["tem_data"][0, :, :]
+        >>> edata.X[0, :, :]
         [[-12.12732884, -18.37304373],
         [         nan,  -0.91339411],
         [         nan,  -7.88514984]]
-        >>> edata_imputed.layers["tem_data"][0, :, :]
+        >>> edata_imputed.X[0, :, :]
         [[-12.12732884, -18.37304373],
         [ -0.3278448 ,  -0.91339411],
         [ -4.39722201,  -7.88514984]]
@@ -654,9 +653,9 @@ def locf_impute(
         ...         [[np.nan, np.nan, 3.0, np.nan], [1.0, np.nan, np.nan, np.nan], [np.nan, 2.0, np.nan, 4.0]],
         ...     ]
         ... )
-        >>> edata = ed.EHRData(shape=(2, 3), layers={"tem_data": data})
-        >>> ep.pp.locf_impute(edata, layer="tem_data")
-        >>> edata.layers["tem_data"]
+        >>> edata = ed.EHRData(X=data)
+        >>> ep.pp.locf_impute(edata)
+        >>> edata.X
         array([[[1.        , 1.        , 3.        , 3.        ],
                 [2.33, 2.        , 2.        , 4.        ],
                 [5.        , 6.        , 7.        , 8.        ]],
