@@ -7,7 +7,7 @@ from scanpy.get import obs_df as scanpy_obs_df
 from scanpy.get import rank_genes_groups_df
 from scanpy.get import var_df as scanpy_var_df
 
-from ehrapy._compat import _aggregate_time, _as_scanpy_input, _materialize, function_2D_only
+from ehrapy._compat import _as_scanpy_input, _materialize, function_2D_only
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Iterable
@@ -66,6 +66,8 @@ def _over_time(
     selected = edata.var_names.isin([key for key in keys if key is not None])
     if getattr(X, "ndim", 2) != 3 or not selected.any():
         return edata, layer
+    from ehrapy.preprocessing._summarize_measurements import _aggregate_time
+
     (values,) = _materialize(_aggregate_time(X[:, selected], statistic))
     reduced = EHRData(values, obs=edata.obs, var=edata.var[selected], obsm=edata.obsm, obsp=edata.obsp)
     reduced.uns = edata.uns

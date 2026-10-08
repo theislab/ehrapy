@@ -7,8 +7,8 @@ import pandas as pd
 from array_api_compat import array_namespace
 from fast_array_utils.conv import to_dense
 
-from ehrapy._compat import _like_obs, _tem_times
-from ehrapy.preprocessing._summarize_measurements import summarize_measurements
+from ehrapy._compat import _like_obs
+from ehrapy.preprocessing._summarize_measurements import _tem_times, summarize_measurements
 
 if TYPE_CHECKING:
     from collections.abc import Sequence

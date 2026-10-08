@@ -23,8 +23,9 @@ from lifelines.statistics import StatisticalResult, logrank_test
 from scipy import stats
 from statsmodels.genmod.generalized_linear_model import GLMResultsWrapper  # noqa
 
-from ehrapy._compat import _materialize, _tem_times
+from ehrapy._compat import _materialize
 from ehrapy.get import obs_df
+from ehrapy.preprocessing._summarize_measurements import _tem_times
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping, Sequence
