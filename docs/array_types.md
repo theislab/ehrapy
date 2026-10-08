@@ -21,8 +21,11 @@ Functions follow the same rules for every array type:
 
 - Per-variable statistics, for example in normalization, imputation and outlier handling, are computed across observations and timepoints, so a variable has the same scale at every timepoint.
 - Elementwise operations, for example {func}`~ehrapy.preprocessing.log_norm` or {func}`~ehrapy.preprocessing.explicit_impute`, apply at every timepoint.
-- Functions that need one value per observation and variable, such as PCA, embeddings, clustering, feature ranking, and most plots, only accept 2D data.
+- Functions that need one value per observation and variable, such as PCA, t-SNE, feature ranking, and most plots, only accept 2D data.
   Aggregate the time axis first with {func}`~ehrapy.preprocessing.summarize_measurements`, which turns a 3D array into a 2D array with one column per variable and statistic.
+- Functions that work on the neighbors graph, such as UMAP, Leiden clustering and PAGA, run on longitudinal data when the neighbors were computed with a time series distance, for example `ep.pp.neighbors(edata, metric="dtw", use_rep="tem_data")`.
+  Embedding plots of such data can be colored by `obs` columns, but not by variables.
+- Longitudinal plots and {func}`~ehrapy.tools.ncp` use the time axis and only accept 3D data.
 
 ## Preprocessing support
 
@@ -54,3 +57,35 @@ Functions follow the same rules for every array type:
 | {func}`~ehrapy.preprocessing.combat` | yes | no | no | 2D only |
 | {func}`~ehrapy.preprocessing.regress_out` | yes | no | no | 2D only |
 | {func}`~ehrapy.preprocessing.sample` | yes | yes | lazy | samples observations |
+
+## Tools and plots support
+
+Tools, plots and getters that fit models or build tables densify, and compute, only the variables they use.
+Functions that only read `obs`, `obsm`, `obsp` or `uns`, such as {func}`~ehrapy.tools.umap`, {func}`~ehrapy.tools.leiden`, {func}`~ehrapy.tools.paga`, {func}`~ehrapy.tools.stratified_table_one` or {func}`~ehrapy.plot.ncp`, work with every array type and with longitudinal data.
+
+| Function | numpy | sparse | dask | longitudinal data |
+| --- | --- | --- | --- | --- |
+| {func}`~ehrapy.tools.rank_features_groups` | yes | yes | one compute | 2D only for variables, `obs` columns of longitudinal data can be ranked |
+| {func}`~ehrapy.tools.filter_rank_features_groups` | yes | yes | one compute | 2D only |
+| {func}`~ehrapy.tools.rank_features_supervised` | yes | yes | one compute | 2D only |
+| {func}`~ehrapy.tools.ols`, {func}`~ehrapy.tools.glm`, {func}`~ehrapy.tools.kaplan_meier`, {func}`~ehrapy.tools.nelson_aalen`, {func}`~ehrapy.tools.weibull`, {func}`~ehrapy.tools.cox_ph`, {func}`~ehrapy.tools.weibull_aft`, {func}`~ehrapy.tools.log_logistic_aft`, {func}`~ehrapy.tools.cox_ph_adjusted_curves` | yes | yes | one compute | variables need 2D data, `obs` columns can be used with longitudinal data |
+| {func}`~ehrapy.tools.iptw`, {func}`~ehrapy.tools.g_computation`, {func}`~ehrapy.tools.aipw`, {func}`~ehrapy.tools.propensity_score_matching`, {func}`~ehrapy.tools.t_learner`, {func}`~ehrapy.tools.s_learner`, {func}`~ehrapy.tools.x_learner`, {func}`~ehrapy.tools.covariate_balance`, {func}`~ehrapy.tools.positivity_check` | yes | yes | one compute | 2D only |
+| {func}`~ehrapy.tools.tsne`, {func}`~ehrapy.tools.dendrogram` | yes | yes | one compute | 2D only, unless `use_rep` names an embedding |
+| {func}`~ehrapy.tools.ingest` | yes | no | no | 2D only |
+| {func}`~ehrapy.tools.famd` | yes | no | no | 2D only |
+| {func}`~ehrapy.tools.ncp` | yes | no | one compute | longitudinal data only, decomposes observations, variables and time |
+| {func}`~ehrapy.plot.timeseries` | yes | no | one compute of the plotted values | longitudinal data only, plots values over time |
+| {func}`~ehrapy.plot.sankey_diagram_time` | yes | no | one compute of the plotted variable | longitudinal data only, shows transitions between consecutive timepoints |
+| {func}`~ehrapy.plot.ncp_cluster_trajectories` | yes | no | one compute of the plotted means | longitudinal data only, plots mean trajectories per group |
+| {func}`~ehrapy.plot.variable_correlations`, {func}`~ehrapy.plot.variable_dependencies` | yes | no | one compute | values aggregated over time first |
+| {func}`~ehrapy.plot.missing_values_matrix`, {func}`~ehrapy.plot.missing_values_barplot`, {func}`~ehrapy.plot.missing_values_heatmap`, {func}`~ehrapy.plot.missing_values_dendrogram` | yes | yes | one compute of the missing value mask | 2D only |
+| {func}`~ehrapy.plot.ols` | yes | yes | one compute | 2D only |
+| {func}`~ehrapy.plot.heatmap`, {func}`~ehrapy.plot.dotplot`, {func}`~ehrapy.plot.matrixplot`, {func}`~ehrapy.plot.stacked_violin`, {func}`~ehrapy.plot.tracksplot`, {func}`~ehrapy.plot.violin`, {func}`~ehrapy.plot.clustermap`, {func}`~ehrapy.plot.scatter`, {func}`~ehrapy.plot.dendrogram` and the `rank_features_groups_*` plots | yes | yes | computes the plotted variables | 2D only |
+| {func}`~ehrapy.plot.pca`, {func}`~ehrapy.plot.tsne`, {func}`~ehrapy.plot.umap`, {func}`~ehrapy.plot.diffmap`, {func}`~ehrapy.plot.draw_graph`, {func}`~ehrapy.plot.embedding`, {func}`~ehrapy.plot.paga`, {func}`~ehrapy.plot.paga_compare`, {func}`~ehrapy.plot.pca_overview` | yes | yes | computes the plotted variables | coloring by `obs` columns works for longitudinal data, coloring by variables needs 2D data |
+| {func}`~ehrapy.plot.paga_path` | yes | yes | no | variables need 2D data |
+| {func}`~ehrapy.plot.dpt_timeseries` | yes | no | one compute | 2D only |
+| {func}`~ehrapy.get.obs_df` | yes | yes | one compute | variables need 2D data, `obs` columns can be read from longitudinal data |
+| {func}`~ehrapy.get.var_df` | yes | yes | one compute | 2D only |
+
+The plots built on scanpy read dask arrays through scanpy, which may compute the plotted variables more than once.
+Plots that draw a dendrogram fail on scipy sparse matrices in scanpy; compute the dendrogram first with {func}`~ehrapy.tools.dendrogram` or use sparse arrays.

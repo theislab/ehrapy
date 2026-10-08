@@ -3,8 +3,10 @@ import numpy as np
 import pandas as pd
 import pytest
 from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
+from testing.fast_array_utils import Flags
 
 import ehrapy as ep
+from tests.conftest import forbid_dask_compute
 
 
 def test_obs_df():
@@ -51,3 +53,24 @@ def test_obs_df_var_df_3d_var_keys_raise(edata_blobs_timeseries_small):
         ep.get.obs_df(edata_blobs_timeseries_small, keys=["cluster", "feature_0"], layer=DEFAULT_TEM_LAYER_NAME)
     with pytest.raises(ValueError, match="only supports 2D data"):
         ep.get.var_df(edata_blobs_timeseries_small, keys=["0"], layer=DEFAULT_TEM_LAYER_NAME)
+
+
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+@pytest.mark.parametrize(("getter", "keys"), [("obs_df", ["c", "group"]), ("var_df", ["p4", "p1"])])
+def test_get_array_types(array_type, getter, keys, rng):
+    X = np.where(rng.random((6, 3)) < 0.4, 0, rng.standard_normal((6, 3)))
+    obs = pd.DataFrame({"group": list("aabbcc")}, index=[f"p{i}" for i in range(6)])
+    var = pd.DataFrame(index=["a", "b", "c"])
+    get = getattr(ep.get, getter)
+    expected = get(ed.EHRData(X=X, obs=obs, var=var), keys=keys)
+    edata = ed.EHRData(X=array_type(X), obs=obs, var=var)
+
+    if array_type.flags & Flags.Sparse and array_type.flags & Flags.Dask:
+        with pytest.raises(NotImplementedError):
+            get(edata, keys=keys)
+        return
+
+    with forbid_dask_compute(allowed=1):
+        result = get(edata, keys=keys)
+
+    pd.testing.assert_frame_equal(result, expected)

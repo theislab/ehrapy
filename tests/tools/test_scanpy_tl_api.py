@@ -1,6 +1,11 @@
+import ehrdata as ed
+import numpy as np
+import pytest
 from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
+from testing.fast_array_utils import Flags
 
 import ehrapy as ep
+from tests.conftest import DASK_WITH_SPARSE_CHUNKS, forbid_dask_compute
 
 
 def test_tsne(edata_blob_small):
@@ -104,4 +109,52 @@ def test_ingest(edata_blob_small):
     assert "X_pca" not in edata_blob_small.obsm
 
     assert ep.tl.ingest(edata_blob_small, edata_ref=edata_ref, embedding_method="pca") is None
+    assert "X_pca" in edata_blob_small.obsm
+
+
+def test_x_based_tools_3D_raise(edata_blob_small):
+    edata_3d = ed.EHRData(X=edata_blob_small.layers[DEFAULT_TEM_LAYER_NAME], obs=edata_blob_small.obs)
+    edata_3d.obsm["X_pca"] = edata_blob_small.X[:, :3]
+    edata_ref = edata_blob_small.copy()
+    ep.pp.pca(edata_ref)
+
+    for tool in (
+        lambda: ep.tl.tsne(edata_3d),
+        lambda: ep.tl.dendrogram(edata_3d, groupby="cluster"),
+        lambda: ep.tl.ingest(edata_3d, edata_ref, embedding_method="pca"),
+    ):
+        with pytest.raises(ValueError, match="only supports 2D data"):
+            tool()
+
+    ep.tl.tsne(edata_3d, use_rep="X_pca", perplexity=5)
+    ep.tl.dendrogram(edata_3d, groupby="cluster", use_rep="X_pca")
+
+
+@pytest.mark.array_type(skip={*DASK_WITH_SPARSE_CHUNKS, Flags.Disk, Flags.Gpu})
+@pytest.mark.parametrize("var_names", [None, ["feature_1", "feature_2", "feature_3"]])
+def test_dendrogram_array_types(array_type, var_names, edata_blob_small):
+    expected = ep.tl.dendrogram(edata_blob_small, groupby="cluster", var_names=var_names, copy=True)
+    edata_blob_small.X = array_type(edata_blob_small.X)
+
+    with forbid_dask_compute(allowed=1):
+        ep.tl.dendrogram(edata_blob_small, groupby="cluster", var_names=var_names)
+
+    np.testing.assert_allclose(
+        edata_blob_small.uns["dendrogram_cluster"]["correlation_matrix"],
+        expected.uns["dendrogram_cluster"]["correlation_matrix"],
+    )
+
+
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+def test_ingest_array_types(array_type, edata_blob_small):
+    edata_ref = edata_blob_small.copy()
+    ep.pp.pca(edata_ref)
+    edata_blob_small.X = array_type(edata_blob_small.X)
+
+    if array_type.cls is not np.ndarray:
+        with pytest.raises(NotImplementedError, match="only supports numpy arrays"):
+            ep.tl.ingest(edata_blob_small, edata_ref, embedding_method="pca")
+        return
+
+    ep.tl.ingest(edata_blob_small, edata_ref, embedding_method="pca")
     assert "X_pca" in edata_blob_small.obsm

@@ -8,8 +8,10 @@ import pytest
 import scipy.sparse as sp
 from ehrdata import EHRData
 from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
+from testing.fast_array_utils import Flags
 
 import ehrapy as ep
+from tests.conftest import forbid_dask_compute
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_IMAGE_PATH = f"{CURRENT_DIR}/_images"
@@ -90,6 +92,24 @@ def test_ols_layer_and_sparse(rng: np.random.Generator):
 
     plot = ep.pl.ols(edata, x="a", y="b", layer="doubled")
     np.testing.assert_allclose(plot.data["b"], 2 * X[:, 1])
+
+
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+def test_ols_array_types(array_type, rng: np.random.Generator):
+    X = rng.standard_normal((20, 3))
+    var = pd.DataFrame(index=["a", "b", "c"])
+    expected = ep.pl.ols(EHRData(X=X, var=var), x="a", y="c")
+    edata = EHRData(X=array_type(X), var=var)
+
+    if array_type.flags & Flags.Sparse and array_type.flags & Flags.Dask:
+        with pytest.raises(NotImplementedError):
+            ep.pl.ols(edata, x="a", y="c")
+        return
+
+    with forbid_dask_compute(allowed=1):
+        plot = ep.pl.ols(edata, x="a", y="c")
+
+    pd.testing.assert_frame_equal(plot.data, expected.data)
 
 
 def test_ols_3d_raises(edata_blobs_timeseries_small: EHRData):

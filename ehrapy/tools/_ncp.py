@@ -162,9 +162,10 @@ def ncp(
         raise KeyError(f"Layer {layer!r} not found in edata.layers. Available: {list(edata.layers)}")
 
     source = "edata.X" if layer is None else f"Layer {layer!r}"
-    tensor = np.asarray(edata.X if layer is None else edata.layers[layer], dtype=np.float64)
-    if tensor.ndim != 3:
-        raise ValueError(f"{source} must be 3D (n_obs × n_vars × n_time), got shape {tensor.shape}.")
+    X = edata.X if layer is None else edata.layers[layer]
+    if X.ndim != 3:
+        raise ValueError(f"{source} must be 3D (n_obs × n_vars × n_time), got shape {X.shape}.")
+    tensor = np.asarray(X, dtype=np.float64)
 
     if sigmoid_transform:
         from scipy.special import expit

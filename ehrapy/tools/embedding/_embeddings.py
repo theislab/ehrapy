@@ -21,8 +21,7 @@ if TYPE_CHECKING:
     from ehrapy._types import AnyRandom
 
 
-# No need for testing 3D; tSNE does not not support layers, and
-# and X can only be 2D currently, until this PR is merged: https://github.com/scverse/anndata/pull/1707
+@function_2D_only()
 def tsne(
     edata: EHRData,
     *,

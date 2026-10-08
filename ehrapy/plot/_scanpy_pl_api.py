@@ -6,9 +6,10 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Literal
 
 import scanpy as sc
+from fast_array_utils.types import CSBase, DaskArray
 from scanpy.plotting import DotPlot, MatrixPlot, StackedViolin
 
-from ehrapy._compat import function_2D_only
+from ehrapy._compat import _raise_densifying, function_2D_only
 from ehrapy._utils_doc import _doc_params, doc_plot_params
 
 if TYPE_CHECKING:
@@ -1092,7 +1093,7 @@ def dendrogram(
 
 
 @_doc_params(**doc_plot_params)
-@function_2D_only()
+@function_2D_only(var_keys=("color",))
 def pca(
     edata: EHRData,
     *,
@@ -1197,6 +1198,7 @@ def pca_variance_ratio(
     return sc.pl.pca_variance_ratio(edata, n_pcs=n_pcs, log=log, show=show)
 
 
+@function_2D_only(var_keys=("color",))
 @_doc_params(**doc_plot_params)
 def pca_overview(edata: EHRData, *, feature_symbols: str | None = None, **params) -> None:  # pragma: no cover
     """Plot PCA results.
@@ -1228,6 +1230,7 @@ def pca_overview(edata: EHRData, *, feature_symbols: str | None = None, **params
     return sc.pl.pca_overview(edata, gene_symbols=feature_symbols, **params)
 
 
+@function_2D_only(var_keys=("color",))
 @_doc_params(**doc_plot_params)
 def tsne(
     edata: EHRData, *, feature_symbols: str | None = None, **kwargs
@@ -1268,6 +1271,7 @@ def tsne(
     return sc.pl.tsne(edata, gene_symbols=feature_symbols, **kwargs)
 
 
+@function_2D_only(var_keys=("color",))
 @_doc_params(**doc_plot_params)
 def umap(
     edata: EHRData, *, feature_symbols: str | None = None, **kwargs
@@ -1307,7 +1311,7 @@ def umap(
     return sc.pl.umap(edata, gene_symbols=feature_symbols, **kwargs)
 
 
-@function_2D_only()
+@function_2D_only(var_keys=("color",))
 @_doc_params(**doc_plot_params)
 def diffmap(
     edata: EHRData, *, feature_symbols: str | None = None, **kwargs
@@ -1334,6 +1338,7 @@ def diffmap(
     return sc.pl.diffmap(edata, gene_symbols=feature_symbols, **kwargs)
 
 
+@function_2D_only(var_keys=("color",))
 @_doc_params(**doc_plot_params)
 def draw_graph(
     edata: EHRData, *, layout: _IGraphLayout | None = None, feature_symbols: str | None = None, **kwargs
@@ -1372,7 +1377,7 @@ def draw_graph(
     return sc.pl.draw_graph(edata, layout=layout, gene_symbols=feature_symbols, **kwargs)
 
 
-@function_2D_only()
+@function_2D_only(var_keys=("color",))
 @_doc_params(**doc_plot_params)
 def embedding(
     edata: EHRData,
@@ -1688,6 +1693,7 @@ def dpt_groups_pseudotime(
     )
 
 
+@function_2D_only()
 @_doc_params(**doc_plot_params)
 def dpt_timeseries(
     edata: EHRData,
@@ -1723,9 +1729,12 @@ def dpt_timeseries(
     Preview:
         .. image:: /_static/docstring_previews/dpt_timeseries.png
     """
+    if isinstance(edata.X, CSBase):
+        _raise_densifying("dpt_timeseries", "it draws the whole data matrix as a heatmap")
     sc.pl.dpt_timeseries(adata=edata, color_map=color_map, as_heatmap=as_heatmap, marker=marker, show=show)
 
 
+@function_2D_only(var_keys=("color",))
 def paga(
     edata: EHRData,
     *,
@@ -1890,6 +1899,7 @@ def paga(
     )
 
 
+@function_2D_only(var_keys=("keys",))
 def paga_path(
     edata: EHRData,
     nodes: Sequence[str | int],
@@ -1956,6 +1966,10 @@ def paga_path(
         A :class:`~matplotlib.axes.Axes` object, if `ax` is `None`, else `None`.
         If `return_data`, return the timeseries data in addition to an axes.
     """
+    if isinstance(edata.X, DaskArray) and edata.var_names.isin(keys).any():
+        raise NotImplementedError(
+            "paga_path does not support dask arrays because scanpy reads the plotted values as lists."
+        )
     return sc.pl.paga_path(
         adata=edata,
         nodes=nodes,
@@ -1985,6 +1999,7 @@ def paga_path(
     )
 
 
+@function_2D_only(var_keys=("color",))
 @_doc_params(**doc_plot_params)
 def paga_compare(
     edata: EHRData,
@@ -2135,6 +2150,7 @@ def rank_features_groups(
     )
 
 
+@function_2D_only()
 @_doc_params(**doc_plot_params)
 def rank_features_groups_violin(
     edata: EHRData,
@@ -2209,6 +2225,7 @@ def rank_features_groups_violin(
     )
 
 
+@function_2D_only()
 @_doc_params(**doc_plot_params)
 def rank_features_groups_stacked_violin(
     edata: EHRData,
@@ -2272,6 +2289,7 @@ def rank_features_groups_stacked_violin(
     )
 
 
+@function_2D_only()
 @_doc_params(**doc_plot_params)
 def rank_features_groups_heatmap(
     edata: EHRData,
@@ -2327,6 +2345,7 @@ def rank_features_groups_heatmap(
     )
 
 
+@function_2D_only()
 @_doc_params(**doc_plot_params)
 def rank_features_groups_dotplot(
     edata: EHRData,
@@ -2396,6 +2415,7 @@ def rank_features_groups_dotplot(
     )
 
 
+@function_2D_only()
 @_doc_params(**doc_plot_params)
 def rank_features_groups_matrixplot(
     edata: EHRData,
@@ -2463,6 +2483,7 @@ def rank_features_groups_matrixplot(
     )
 
 
+@function_2D_only()
 @_doc_params(**doc_plot_params)
 def rank_features_groups_tracksplot(
     edata: EHRData,

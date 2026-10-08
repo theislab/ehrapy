@@ -5,6 +5,8 @@ from typing import TYPE_CHECKING, Literal
 import scanpy as sc
 from scipy.sparse import spmatrix  # noqa
 
+from ehrapy._compat import _raise_if_not_numpy, function_2D_only
+
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
 
@@ -88,6 +90,7 @@ def leiden(
     )
 
 
+@function_2D_only()
 def dendrogram(
     edata: EHRData,
     groupby: str | Sequence[str],
@@ -146,6 +149,11 @@ def dendrogram(
         >>> ep.pl.dendrogram(edata, groupby="service_unit")
     """
     edata = edata.copy() if copy else edata
+    if var_names is None and (
+        use_rep == "X" or (use_rep is None and (n_pcs == 0 or edata.n_vars <= sc.settings.N_PCS))
+    ):
+        # scanpy reads `.X` into a DataFrame directly, which fails for scipy sparse matrices
+        var_names = edata.var_names
     sc.tl.dendrogram(
         adata=edata,
         groupby=groupby,
@@ -277,6 +285,7 @@ def paga(
     )
 
 
+@function_2D_only()
 def ingest(
     edata: EHRData,
     edata_ref: EHRData,
@@ -328,6 +337,9 @@ def ingest(
         >>> ep.tl.umap(edata_ref)
         >>> ep.tl.ingest(edata_new, edata_ref, obs="service_unit")
     """
+    _raise_if_not_numpy(
+        edata.X, "ingest", "the observations are mapped onto the reference with an in-memory neighbor search"
+    )
     edata = edata.copy() if copy else edata
     sc.tl.ingest(
         adata=edata,

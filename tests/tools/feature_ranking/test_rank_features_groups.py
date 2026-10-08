@@ -7,10 +7,11 @@ import pytest
 import scipy.sparse as sp
 from ehrdata.core.constants import CATEGORICAL_TAG, DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrdata.io import read_csv
+from testing.fast_array_utils import Flags
 
 import ehrapy as ep
 import ehrapy.tools.feature_ranking._rank_features_groups as _utils
-from tests.conftest import TEST_DATA_PATH
+from tests.conftest import TEST_DATA_PATH, forbid_dask_compute
 
 CURRENT_DIR = Path(__file__).parent
 
@@ -486,6 +487,87 @@ def test_rank_features_groups_3D_edata(edata_blob_small):
     ep.tl.rank_features_groups(edata_blob_small, groupby="cluster", layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         ep.tl.rank_features_groups(edata_blob_small, groupby="cluster", layer=DEFAULT_TEM_LAYER_NAME)
+
+    edata_3d = ed.EHRData(X=edata_blob_small.layers[DEFAULT_TEM_LAYER_NAME], obs=edata_blob_small.obs)
+    edata_3d.obs["age"] = np.arange(edata_3d.n_obs, dtype=float)
+    ep.tl.rank_features_groups(edata_3d, groupby="cluster", field_to_rank="obs", columns_to_rank={"obs_names": ["age"]})
+    assert set(pd.DataFrame(edata_3d.uns["rank_features_groups"]["names"]).to_numpy().ravel()) == {"age"}
+
+
+def _ranking_edata(X: np.ndarray, *, categorical: bool = True) -> ed.EHRData:
+    obs = pd.DataFrame(
+        {"group": pd.Categorical(np.repeat(["a", "b", "c", "d"], 10))}, index=[str(i) for i in range(40)]
+    )
+    feature_types = [NUMERIC_TAG] * 3 + [CATEGORICAL_TAG if categorical else NUMERIC_TAG]
+    return ed.EHRData(X=X, obs=obs, var=pd.DataFrame({FEATURE_TYPE_KEY: feature_types}, index=["n0", "n1", "n2", "c"]))
+
+
+def _ranking_data(rng: np.random.Generator) -> np.ndarray:
+    return np.column_stack([np.where(rng.random((40, 3)) < 0.3, 0, rng.gamma(2, size=(40, 3))), rng.integers(0, 3, 40)])
+
+
+def _assert_rankings_equal(result: dict, expected: dict) -> None:
+    assert result.keys() == expected.keys()
+    for key in expected.keys() - {"params"}:
+        pd.testing.assert_frame_equal(pd.DataFrame(result[key]), pd.DataFrame(expected[key]))
+
+
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+@pytest.mark.parametrize("method", ["t-test", "wilcoxon", "logreg"])
+@pytest.mark.parametrize("pts", [False, True])
+def test_rank_features_groups_array_types(array_type, method, pts, rng):
+    X = _ranking_data(rng)
+    kwargs = {"num_cols_method": method, "pts": pts, "copy": True}
+    categorical = method != "logreg"
+    expected = ep.tl.rank_features_groups(_ranking_edata(X, categorical=categorical), "group", **kwargs)
+    edata = _ranking_edata(array_type(X), categorical=categorical)
+
+    if array_type.flags & Flags.Sparse and array_type.flags & Flags.Dask:
+        with pytest.raises(NotImplementedError):
+            ep.tl.rank_features_groups(edata, "group", **kwargs)
+        return
+
+    with forbid_dask_compute(allowed=1):
+        result = ep.tl.rank_features_groups(edata, "group", **kwargs)
+
+    assert type(result.X) is type(edata.X)
+    _assert_rankings_equal(result.uns["rank_features_groups"], expected.uns["rank_features_groups"])
+
+
+def test_rank_features_groups_single_timepoint(rng):
+    X = _ranking_data(rng)
+    expected = ep.tl.rank_features_groups(_ranking_edata(X), "group", pts=True, copy=True)
+    result = ep.tl.rank_features_groups(_ranking_edata(X[:, :, None]), "group", pts=True, copy=True)
+
+    _assert_rankings_equal(result.uns["rank_features_groups"], expected.uns["rank_features_groups"])
+
+
+def test_rank_features_groups_logreg_with_categorical_raises(rng):
+    with pytest.raises(ValueError, match="cannot be combined with categorical features"):
+        ep.tl.rank_features_groups(_ranking_edata(_ranking_data(rng)), "group", num_cols_method="logreg")
+
+
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+def test_filter_rank_features_groups_array_types(array_type, rng):
+    X = _ranking_data(rng)
+    ranked = ep.tl.rank_features_groups(_ranking_edata(X), "group", copy=True)
+    expected = ep.tl.filter_rank_features_groups(ranked, min_in_group_fraction=0.7, copy=True)
+    edata = _ranking_edata(array_type(X))
+    edata.uns["rank_features_groups"] = ranked.uns["rank_features_groups"]
+
+    if array_type.flags & Flags.Sparse and array_type.flags & Flags.Dask:
+        with pytest.raises(NotImplementedError):
+            ep.tl.filter_rank_features_groups(edata)
+        return
+
+    with forbid_dask_compute(allowed=1):
+        ep.tl.filter_rank_features_groups(edata, min_in_group_fraction=0.7)
+
+    assert "pts" not in edata.uns["rank_features_groups"]
+    pd.testing.assert_frame_equal(
+        pd.DataFrame(edata.uns["rank_features_groups_filtered"]["names"]),
+        pd.DataFrame(expected.uns["rank_features_groups_filtered"]["names"]),
+    )
 
 
 def test_rank_features_groups_sparse_categorical(rng):

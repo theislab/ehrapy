@@ -15,6 +15,7 @@ import pandas as pd
 import pytest
 from ehrdata.core.constants import CATEGORICAL_TAG, DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY, NUMERIC_TAG
 from matplotlib.testing.compare import compare_images
+from testing.fast_array_utils import SUPPORTED_TYPES, Flags
 
 import ehrapy as ep
 
@@ -22,6 +23,7 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
 
 TEST_DATA_PATH = Path(__file__).parent / "data"
+DASK_WITH_SPARSE_CHUNKS = {at for at in SUPPORTED_TYPES if at.flags & Flags.Sparse and at.flags & Flags.Dask}
 
 
 @contextmanager
@@ -38,6 +40,11 @@ def forbid_dask_compute(allowed: int = 0):
 
     with dask.config.set(scheduler=scheduler):
         yield
+
+
+def curve_values(plot: hv.Layout | hv.Overlay) -> list[np.ndarray]:
+    """The y values of every curve in a holoviews plot."""
+    return plot.traverse(lambda curve: curve.dimension_values(1), [hv.Curve])
 
 
 def pytest_configure():

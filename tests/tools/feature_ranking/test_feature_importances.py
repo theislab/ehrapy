@@ -3,8 +3,10 @@ import numpy as np
 import pandas as pd
 import pytest
 from ehrdata.core.constants import CATEGORICAL_TAG, DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY, NUMERIC_TAG
+from testing.fast_array_utils import Flags
 
 from ehrapy.tools import rank_features_supervised
+from tests.conftest import forbid_dask_compute
 
 
 def test_continuous_prediction():
@@ -106,3 +108,26 @@ def test_score_stored_in_uns(target_type, metric):
     assert result["predicted_feature"] == "target"
     assert result["metric"] == metric
     assert 0.5 < result["score"] <= 1
+
+
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+@pytest.mark.parametrize("var_names", ["all", ["feature1", "feature3"]])
+def test_rank_features_supervised_array_types(array_type, var_names, rng):
+    target = rng.random(60)
+    X = np.column_stack([target, 2 * target + rng.normal(scale=0.1, size=60), rng.random(60), np.zeros(60)])
+    var = pd.DataFrame({FEATURE_TYPE_KEY: [NUMERIC_TAG] * 4}, index=["target", "feature1", "feature2", "feature3"])
+    kwargs = {"predicted_feature": "target", "model": "regression", "var_names": var_names, "copy": True}
+    expected = rank_features_supervised(ed.EHRData(X=X, var=var), **kwargs)
+    edata = ed.EHRData(X=array_type(X), var=var)
+
+    if array_type.flags & Flags.Sparse and array_type.flags & Flags.Dask:
+        with pytest.raises(NotImplementedError):
+            rank_features_supervised(edata, **kwargs)
+        return
+
+    with forbid_dask_compute(allowed=1):
+        result = rank_features_supervised(edata, **kwargs)
+
+    assert type(result.X) is type(edata.X)
+    pd.testing.assert_series_equal(result.var["feature_importances"], expected.var["feature_importances"])
+    assert result.uns["feature_importances"]["score"] == pytest.approx(expected.uns["feature_importances"]["score"])

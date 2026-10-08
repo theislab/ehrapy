@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar
 
 import array_api_extra as xpx
 import numpy as np
+import pandas as pd
 import scipy.sparse as sp
 from array_api_compat import array_namespace, is_lazy_array
 from fast_array_utils.types import CSBase, DaskArray
@@ -15,7 +16,7 @@ P = ParamSpec("P")
 R = TypeVar("R")
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Collection
 
     type Array = np.ndarray | DaskArray
 
@@ -49,17 +50,21 @@ def _apply_over_time_axis(f: Callable) -> Callable:
     return wrapper
 
 
-def function_2D_only(*, allow_single_timepoint: bool = False):
+def function_2D_only(*, allow_single_timepoint: bool = False, var_keys: Collection[str] = ()):
     """Reject 3D input in functions that only operate on `(n_obs, n_vars)` data.
 
     The checked arrays are the ones the function reads: `edata.obsm[use_rep]`, the layers named by `layer` or `layers`, or `edata.X`.
+    Arguments passed through `**kwargs` are checked as well.
 
     Args:
         allow_single_timepoint: Also accept 3D arrays with a single timepoint, for functions that squeeze it themselves.
+        var_keys: Arguments holding keys that name either variables or `obs` columns, such as `color`.
+            If given, 3D data is only rejected when one of these keys names a variable.
     """
 
     def decorator(func: Callable[P, R]) -> Callable[P, R]:
         signature = inspect.signature(func)
+        var_keyword = next((p.name for p in signature.parameters.values() if p.kind is p.VAR_KEYWORD), None)
 
         @wraps(func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
@@ -67,7 +72,15 @@ def function_2D_only(*, allow_single_timepoint: bool = False):
                 arguments = signature.bind_partial(*args, **kwargs).arguments
             except TypeError:
                 return func(*args, **kwargs)
+            arguments = {**arguments.pop(var_keyword, {}), **arguments}
             data = arguments.get("edata")
+            if var_keys and hasattr(data, "var_names"):
+                keys = [arguments.get(name) for name in var_keys]
+                keys = [key for value in keys for key in ([value] if isinstance(value, str) else value or ())]
+                symbols = arguments.get("feature_symbols")
+                var_names = data.var_names if symbols is None else pd.Index(data.var[symbols])
+                if not var_names.isin(keys).any():
+                    return func(*args, **kwargs)
             use_rep = arguments.get("use_rep")
             layers = arguments.get("layer", arguments.get("layers"))
             layers = [layers] if isinstance(layers, str) else [layer for layer in layers or () if layer is not None]
