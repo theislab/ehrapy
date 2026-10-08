@@ -1,10 +1,11 @@
 import ehrdata as ed
 import numpy as np
 import pytest
-import scipy.sparse as sp
 from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
+from testing.fast_array_utils import Flags
 
 import ehrapy as ep
+from tests.conftest import forbid_dask_compute
 
 
 @pytest.fixture
@@ -110,11 +111,19 @@ def test_famd_3d_raises(edata_blobs_timeseries_small: ed.EHRData) -> None:
         ep.tl.famd(edata_blobs_timeseries_small.layers[DEFAULT_TEM_LAYER_NAME])
 
 
-def test_famd_sparse_raises(pure_quant_array: np.ndarray) -> None:
-    edata = ed.EHRData(X=sp.csr_array(pure_quant_array[:, :, 0]))
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+def test_famd_array_types(array_type, pure_quant_array: np.ndarray) -> None:
+    X = pure_quant_array[:, :, 0]
+    expected = ed.EHRData(X=X)
+    ep.tl.famd(expected)
+    edata = ed.EHRData(X=array_type(X))
 
-    with pytest.raises(NotImplementedError, match="does not support array type"):
+    with forbid_dask_compute(allowed=1):
         ep.tl.famd(edata)
+
+    assert isinstance(edata.X, array_type.cls)
+    np.testing.assert_allclose(edata.obsm["X_famd"], expected.obsm["X_famd"])
+    np.testing.assert_allclose(edata.varm["famd_loadings"], expected.varm["famd_loadings"])
 
 
 def test_famd_n_components_exceeds_dimensions(rng: np.random.Generator) -> None:

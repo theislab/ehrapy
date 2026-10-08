@@ -40,6 +40,11 @@ def forbid_dask_compute(allowed: int = 0):
         yield
 
 
+def curve_values(plot: hv.Layout | hv.Overlay) -> list[np.ndarray]:
+    """The y values of every curve in a holoviews plot."""
+    return plot.traverse(lambda curve: curve.dimension_values(1), [hv.Curve])
+
+
 def pytest_configure():
     os.environ.setdefault("MPLBACKEND", "Agg")
 

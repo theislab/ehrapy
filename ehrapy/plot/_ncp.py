@@ -4,7 +4,9 @@ from typing import TYPE_CHECKING
 
 import holoviews as hv
 import numpy as np
+from array_api_compat import array_namespace
 
+from ehrapy._compat import _materialize
 from ehrapy.plot._holoviews import load_hv_extensions
 
 if TYPE_CHECKING:
@@ -235,7 +237,7 @@ def ncp_cluster_trajectories(
     if layer is not None and layer not in edata.layers:
         raise KeyError(f"Layer {layer!r} not found in edata.layers.")
 
-    tensor = np.asarray(edata.X if layer is None else edata.layers[layer], dtype=np.float64)
+    tensor = edata.X if layer is None else edata.layers[layer]
     if tensor.ndim != 3:
         raise ValueError(f"{'edata.X' if layer is None else f'Layer {layer!r}'} must be 3D, got shape {tensor.shape}.")
 
@@ -249,22 +251,24 @@ def ncp_cluster_trajectories(
     var_names = list(edata.var_names)
     n_time = tensor.shape[2]
     clusters = edata.obs[groupby]
+    cluster_ids = sorted(clusters.unique())
+    masks = [(clusters == cluster_id).to_numpy() for cluster_id in cluster_ids]
+    primary_comps = [int(np.argmax(A[mask].mean(axis=0))) for mask in masks]
+    top_f_idxs = [np.argsort(B[:, primary_comp])[-n_top_diseases:] for primary_comp in primary_comps]
+    xp = array_namespace(tensor)
+    cluster_means = _materialize(
+        *(
+            xp.mean(xp.astype(tensor[mask][:, top_f_idx, :], xp.float64), axis=0)
+            for mask, top_f_idx in zip(masks, top_f_idxs, strict=True)
+        )
+    )
 
     panels = []
-    for cluster_id in sorted(clusters.unique()):
-        mask = (clusters == cluster_id).values
-        cluster_tensor = tensor[mask]  # (N_cluster, n_vars, n_time)
-
-        # dominant NCP component for this cluster
-        avg_loadings = A[mask].mean(axis=0)
-        primary_comp = int(np.argmax(avg_loadings))
-        _PALETTE[primary_comp % len(_PALETTE)]
-
-        top_f_idx = np.argsort(B[:, primary_comp])[-n_top_diseases:]
-
+    for cluster_id, mask, primary_comp, top_f_idx, means in zip(
+        cluster_ids, masks, primary_comps, top_f_idxs, cluster_means, strict=True
+    ):
         curves = []
-        for f_idx in top_f_idx:
-            avg_risk = cluster_tensor[:, f_idx, :].mean(axis=0)  # (n_time,)
+        for f_idx, avg_risk in zip(top_f_idx, means, strict=True):
             label = var_names[f_idx][:40]
             curve = hv.Curve(
                 (np.arange(n_time), avg_risk),

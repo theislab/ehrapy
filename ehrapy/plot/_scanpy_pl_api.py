@@ -5,10 +5,13 @@ from functools import partial
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Literal
 
+import ehrdata as ed
 import scanpy as sc
+from fast_array_utils.conv import to_dense
+from fast_array_utils.types import DaskArray
 from scanpy.plotting import DotPlot, MatrixPlot, StackedViolin
 
-from ehrapy._compat import function_2D_only
+from ehrapy._compat import _as_scanpy_input, _materialize, function_2D_only
 from ehrapy._utils_doc import _doc_params, doc_plot_params
 
 if TYPE_CHECKING:
@@ -145,7 +148,7 @@ def scatter(
         ax=ax,
     )
 
-    return scatter_partial(edata, color=color)
+    return scatter_partial(_as_scanpy_input(edata), color=color)
 
 
 @function_2D_only()
@@ -271,7 +274,7 @@ def heatmap(
         **kwds,
     )
 
-    return heatmap_partial(edata, groupby=groupby)
+    return heatmap_partial(_as_scanpy_input(edata), groupby=groupby)
 
 
 @function_2D_only()
@@ -446,7 +449,7 @@ def dotplot(
         **kwds,
     )
 
-    return dotplot_partial(edata, groupby=groupby)
+    return dotplot_partial(_as_scanpy_input(edata), groupby=groupby)
 
 
 @function_2D_only()
@@ -529,7 +532,7 @@ def tracksplot(
         figsize=figsize,
     )
 
-    return tracksplot_partial(edata, groupby=groupby)
+    return tracksplot_partial(_as_scanpy_input(edata), groupby=groupby)
 
 
 @function_2D_only()
@@ -626,7 +629,7 @@ def violin(
         **kwds,
     )
 
-    return violin_partial(edata, groupby=groupby)
+    return violin_partial(_as_scanpy_input(edata), groupby=groupby)
 
 
 @function_2D_only()
@@ -788,7 +791,7 @@ def stacked_violin(
         **kwds,
     )
 
-    return stacked_vio_partial(edata, groupby=groupby)
+    return stacked_vio_partial(_as_scanpy_input(edata), groupby=groupby)
 
 
 @function_2D_only()
@@ -927,7 +930,7 @@ def matrixplot(
         **kwds,
     )
 
-    return matrix_partial(edata, groupby=groupby)
+    return matrix_partial(_as_scanpy_input(edata), groupby=groupby)
 
 
 @function_2D_only()
@@ -973,7 +976,7 @@ def clustermap(
     """
     clustermap_partial = partial(sc.pl.clustermap, use_raw=use_raw, show=show, **kwds)
 
-    return clustermap_partial(edata, obs_keys=obs_keys)
+    return clustermap_partial(_as_scanpy_input(edata), obs_keys=obs_keys)
 
 
 def ranking(
@@ -1088,11 +1091,11 @@ def dendrogram(
         ax=ax,
     )
 
-    return dendrogram_partial(edata, groupby=groupby)
+    return dendrogram_partial(_as_scanpy_input(edata), groupby=groupby)
 
 
 @_doc_params(**doc_plot_params)
-@function_2D_only()
+@function_2D_only(var_keys=("color",))
 def pca(
     edata: EHRData,
     *,
@@ -1133,7 +1136,7 @@ def pca(
         return_fig=return_fig,
     )
 
-    return pca_partial(edata, **kwargs)
+    return pca_partial(_as_scanpy_input(edata), **kwargs)
 
 
 def pca_loadings(
@@ -1197,6 +1200,7 @@ def pca_variance_ratio(
     return sc.pl.pca_variance_ratio(edata, n_pcs=n_pcs, log=log, show=show)
 
 
+@function_2D_only(var_keys=("color",))
 @_doc_params(**doc_plot_params)
 def pca_overview(edata: EHRData, *, feature_symbols: str | None = None, **params) -> None:  # pragma: no cover
     """Plot PCA results.
@@ -1225,9 +1229,10 @@ def pca_overview(edata: EHRData, *, feature_symbols: str | None = None, **params
 
         .. image:: /_static/docstring_previews/pca_overview_3.png
     """
-    return sc.pl.pca_overview(edata, gene_symbols=feature_symbols, **params)
+    return sc.pl.pca_overview(_as_scanpy_input(edata), gene_symbols=feature_symbols, **params)
 
 
+@function_2D_only(var_keys=("color",))
 @_doc_params(**doc_plot_params)
 def tsne(
     edata: EHRData, *, feature_symbols: str | None = None, **kwargs
@@ -1265,9 +1270,10 @@ def tsne(
         .. image:: /_static/docstring_previews/tsne_3.png
 
     """
-    return sc.pl.tsne(edata, gene_symbols=feature_symbols, **kwargs)
+    return sc.pl.tsne(_as_scanpy_input(edata), gene_symbols=feature_symbols, **kwargs)
 
 
+@function_2D_only(var_keys=("color",))
 @_doc_params(**doc_plot_params)
 def umap(
     edata: EHRData, *, feature_symbols: str | None = None, **kwargs
@@ -1304,10 +1310,10 @@ def umap(
 
         .. image:: /_static/docstring_previews/umap_3.png
     """
-    return sc.pl.umap(edata, gene_symbols=feature_symbols, **kwargs)
+    return sc.pl.umap(_as_scanpy_input(edata), gene_symbols=feature_symbols, **kwargs)
 
 
-@function_2D_only()
+@function_2D_only(var_keys=("color",))
 @_doc_params(**doc_plot_params)
 def diffmap(
     edata: EHRData, *, feature_symbols: str | None = None, **kwargs
@@ -1331,9 +1337,10 @@ def diffmap(
     Preview:
         .. image:: /_static/docstring_previews/diffmap.png
     """
-    return sc.pl.diffmap(edata, gene_symbols=feature_symbols, **kwargs)
+    return sc.pl.diffmap(_as_scanpy_input(edata), gene_symbols=feature_symbols, **kwargs)
 
 
+@function_2D_only(var_keys=("color",))
 @_doc_params(**doc_plot_params)
 def draw_graph(
     edata: EHRData, *, layout: _IGraphLayout | None = None, feature_symbols: str | None = None, **kwargs
@@ -1369,10 +1376,10 @@ def draw_graph(
 
         .. image:: /_static/docstring_previews/draw_graph_2.png
     """
-    return sc.pl.draw_graph(edata, layout=layout, gene_symbols=feature_symbols, **kwargs)
+    return sc.pl.draw_graph(_as_scanpy_input(edata), layout=layout, gene_symbols=feature_symbols, **kwargs)
 
 
-@function_2D_only()
+@function_2D_only(var_keys=("color",))
 @_doc_params(**doc_plot_params)
 def embedding(
     edata: EHRData,
@@ -1550,7 +1557,7 @@ def embedding(
         **kwargs,
     )
 
-    return embedding_partial(adata=edata, color=color)
+    return embedding_partial(adata=_as_scanpy_input(edata), color=color)
 
 
 @_doc_params(**doc_plot_params)
@@ -1688,6 +1695,7 @@ def dpt_groups_pseudotime(
     )
 
 
+@function_2D_only()
 @_doc_params(**doc_plot_params)
 def dpt_timeseries(
     edata: EHRData,
@@ -1723,9 +1731,12 @@ def dpt_timeseries(
     Preview:
         .. image:: /_static/docstring_previews/dpt_timeseries.png
     """
-    sc.pl.dpt_timeseries(adata=edata, color_map=color_map, as_heatmap=as_heatmap, marker=marker, show=show)
+    sc.pl.dpt_timeseries(
+        adata=_as_scanpy_input(edata, dense=True), color_map=color_map, as_heatmap=as_heatmap, marker=marker, show=show
+    )
 
 
+@function_2D_only(var_keys=("color",))
 def paga(
     edata: EHRData,
     *,
@@ -1850,7 +1861,7 @@ def paga(
         .. image:: /_static/docstring_previews/paga.png
     """
     return sc.pl.paga(
-        adata=edata,
+        adata=_as_scanpy_input(edata),
         threshold=threshold,
         color=color,
         layout=layout,
@@ -1890,6 +1901,7 @@ def paga(
     )
 
 
+@function_2D_only(var_keys=("keys",))
 def paga_path(
     edata: EHRData,
     nodes: Sequence[str | int],
@@ -1956,8 +1968,14 @@ def paga_path(
         A :class:`~matplotlib.axes.Axes` object, if `ax` is `None`, else `None`.
         If `return_data`, return the timeseries data in addition to an axes.
     """
+    if isinstance(edata.X, DaskArray):
+        var_names = edata.var_names.intersection(keys)
+        (X,) = _materialize(to_dense(edata.X[:, edata.var_names.get_indexer(var_names)]))
+        adata = ed.EHRData(X, obs=edata.obs, var=edata.var.loc[var_names])
+        adata.uns = edata.uns
+        edata = adata
     return sc.pl.paga_path(
-        adata=edata,
+        adata=_as_scanpy_input(edata),
         nodes=nodes,
         keys=keys,
         use_raw=use_raw,
@@ -1985,6 +2003,7 @@ def paga_path(
     )
 
 
+@function_2D_only(var_keys=("color",))
 @_doc_params(**doc_plot_params)
 def paga_compare(
     edata: EHRData,
@@ -2049,7 +2068,7 @@ def paga_compare(
         A list of :class:`~matplotlib.axes.Axes` if `show` is `False`.
     """
     return sc.pl.paga_compare(
-        adata=edata,
+        adata=_as_scanpy_input(edata),
         basis=basis,
         edges=edges,
         color=color,
@@ -2135,6 +2154,7 @@ def rank_features_groups(
     )
 
 
+@function_2D_only()
 @_doc_params(**doc_plot_params)
 def rank_features_groups_violin(
     edata: EHRData,
@@ -2192,7 +2212,7 @@ def rank_features_groups_violin(
         .. image:: /_static/docstring_previews/rank_features_groups_violin_4.png
     """
     return sc.pl.rank_genes_groups_violin(
-        adata=edata,
+        adata=_as_scanpy_input(edata),
         groups=groups,
         n_genes=n_features,
         gene_names=var_names,
@@ -2209,6 +2229,7 @@ def rank_features_groups_violin(
     )
 
 
+@function_2D_only()
 @_doc_params(**doc_plot_params)
 def rank_features_groups_stacked_violin(
     edata: EHRData,
@@ -2258,7 +2279,7 @@ def rank_features_groups_stacked_violin(
         .. image:: /_static/docstring_previews/rank_features_groups_stacked_violin.png
     """
     return sc.pl.rank_genes_groups_stacked_violin(
-        adata=edata,
+        adata=_as_scanpy_input(edata),
         groups=groups,
         n_genes=n_features,
         groupby=groupby,
@@ -2272,6 +2293,7 @@ def rank_features_groups_stacked_violin(
     )
 
 
+@function_2D_only()
 @_doc_params(**doc_plot_params)
 def rank_features_groups_heatmap(
     edata: EHRData,
@@ -2314,7 +2336,7 @@ def rank_features_groups_heatmap(
         .. image:: /_static/docstring_previews/rank_features_groups_heatmap.png
     """
     return sc.pl.rank_genes_groups_heatmap(
-        adata=edata,
+        adata=_as_scanpy_input(edata),
         groups=groups,
         n_genes=n_features,
         groupby=groupby,
@@ -2327,6 +2349,7 @@ def rank_features_groups_heatmap(
     )
 
 
+@function_2D_only()
 @_doc_params(**doc_plot_params)
 def rank_features_groups_dotplot(
     edata: EHRData,
@@ -2381,7 +2404,7 @@ def rank_features_groups_dotplot(
         kwds.setdefault("colorbar_title", "Mean value in group")
     kwds.setdefault("size_title", "Fraction of observations\nin group (%)")
     return sc.pl.rank_genes_groups_dotplot(
-        adata=edata,
+        adata=_as_scanpy_input(edata),
         groups=groups,
         n_genes=n_features,
         groupby=groupby,
@@ -2396,6 +2419,7 @@ def rank_features_groups_dotplot(
     )
 
 
+@function_2D_only()
 @_doc_params(**doc_plot_params)
 def rank_features_groups_matrixplot(
     edata: EHRData,
@@ -2448,7 +2472,7 @@ def rank_features_groups_matrixplot(
 
     """
     return sc.pl.rank_genes_groups_matrixplot(
-        adata=edata,
+        adata=_as_scanpy_input(edata),
         groups=groups,
         n_genes=n_features,
         groupby=groupby,
@@ -2463,6 +2487,7 @@ def rank_features_groups_matrixplot(
     )
 
 
+@function_2D_only()
 @_doc_params(**doc_plot_params)
 def rank_features_groups_tracksplot(
     edata: EHRData,
@@ -2505,7 +2530,7 @@ def rank_features_groups_tracksplot(
         .. image:: /_static/docstring_previews/rank_features_groups_tracksplot.png
     """
     return sc.pl.rank_genes_groups_tracksplot(
-        adata=edata,
+        adata=_as_scanpy_input(edata),
         groups=groups,
         n_genes=n_features,
         groupby=groupby,

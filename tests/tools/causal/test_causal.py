@@ -7,8 +7,10 @@ import holoviews as hv
 import numpy as np
 import pandas as pd
 import pytest
+from testing.fast_array_utils import Flags
 
 import ehrapy as ep
+from tests.conftest import forbid_dask_compute
 
 
 def _synth_dataset(n: int = 2000, true_ate: float = 3.0, *, seed: int = 0):
@@ -183,22 +185,29 @@ class TestPlots:
         assert isinstance(plot, hv.Overlay)
 
 
-class TestBackends:
-    def test_rejects_sparse_x_explicitly(self):
-        import scipy.sparse as sp
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+@pytest.mark.parametrize(
+    ("estimator", "kwargs"),
+    [
+        (ep.tl.iptw, {"outcome": "y", "n_bootstrap": 0}),
+        (ep.tl.aipw, {"outcome": "y"}),
+        (ep.tl.t_learner, {"outcome": "y"}),
+        (ep.tl.covariate_balance, {}),
+    ],
+)
+def test_causal_array_types(array_type, estimator, kwargs):
+    reference = _synth_dataset(n=300)
+    edata = ed.EHRData(X=array_type(reference.X), var=reference.var)
+    kwargs = {"treatment": "tx", "covariates": ["age", "sex", "bmi"], **kwargs}
+    expected = estimator(reference, **kwargs)
 
-        edata = _synth_dataset()
-        edata.X = sp.csr_array(edata.X)
-        with pytest.raises(NotImplementedError, match="numpy-backed"):
-            ep.tl.iptw(edata, treatment="tx", outcome="y", covariates=["age", "sex", "bmi"], n_bootstrap=0)
+    with forbid_dask_compute(allowed=1):
+        result = estimator(edata, **kwargs)
 
-    def test_rejects_dask_x_explicitly(self):
-        da = pytest.importorskip("dask.array")
-
-        edata = _synth_dataset()
-        edata.X = da.from_array(edata.X, chunks=500)
-        with pytest.raises(NotImplementedError, match="numpy-backed"):
-            ep.tl.iptw(edata, treatment="tx", outcome="y", covariates=["age", "sex", "bmi"], n_bootstrap=0)
+    if isinstance(expected, pd.DataFrame):
+        pd.testing.assert_frame_equal(result, expected)
+    else:
+        assert result.value == pytest.approx(expected.value)
 
 
 class TestGuards:

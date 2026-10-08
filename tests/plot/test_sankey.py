@@ -2,10 +2,13 @@ from pathlib import Path
 
 import ehrdata as ed
 import holoviews as hv
+import pandas as pd
 import pytest
 from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
+from testing.fast_array_utils import Flags
 
 import ehrapy as ep
+from tests.conftest import forbid_dask_compute
 
 CURRENT_DIR = Path(__file__).parent
 _TEST_IMAGE_PATH = f"{CURRENT_DIR}/_images"
@@ -153,3 +156,28 @@ def test_error_cases():
             var_name="feature_0",
             layer="unknown_layer",
         )
+
+    with pytest.raises(ValueError, match="at least two timepoints"):
+        ep.pl.sankey_diagram_time(edata_time[:, :, :1], var_name="feature_0", layer=DEFAULT_TEM_LAYER_NAME)
+
+
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+def test_sankey_time_array_types(array_type):
+    edata = ed.dt.ehrdata_blobs(
+        base_timepoints=5, n_variables=2, n_observations=10, random_state=59, layer=DEFAULT_TEM_LAYER_NAME
+    )
+    tensor = edata.layers[DEFAULT_TEM_LAYER_NAME].astype(int)
+    if array_type.flags & Flags.Sparse:
+        edata.layers[DEFAULT_TEM_LAYER_NAME] = array_type(tensor[:, :, 0])
+        with pytest.raises(ValueError, match="needs 3D data"):
+            ep.pl.sankey_diagram_time(edata, var_name="feature_1", layer=DEFAULT_TEM_LAYER_NAME)
+        return
+
+    edata.layers[DEFAULT_TEM_LAYER_NAME] = tensor
+    expected = ep.pl.sankey_diagram_time(edata, var_name="feature_1", layer=DEFAULT_TEM_LAYER_NAME)
+    edata.layers[DEFAULT_TEM_LAYER_NAME] = array_type(tensor)
+
+    with forbid_dask_compute(allowed=1):
+        result = ep.pl.sankey_diagram_time(edata, var_name="feature_1", layer=DEFAULT_TEM_LAYER_NAME)
+
+    pd.testing.assert_frame_equal(result.data, expected.data)

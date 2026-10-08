@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING, Any
 import holoviews as hv
 import numpy as np
 import pandas as pd
-from fast_array_utils.conv import to_dense
 
+from ehrapy._compat import _materialize
 from ehrapy.plot._holoviews import load_hv_extensions
 
 if TYPE_CHECKING:
@@ -181,9 +181,13 @@ def sankey_diagram_time(
     if layer is not None and layer not in edata.layers:
         raise KeyError(f"{layer} not found in edata.layers.")
 
-    subset = edata[:, edata.var_names == var_name, :]
-    flare_data = (subset.X if layer is None else subset.layers[layer])[:, 0, :]
-    mtx = to_dense(flare_data, to_cpu_memory=True)
+    X = edata.X if layer is None else edata.layers[layer]
+    if X.ndim != 3 or X.shape[2] < 2:
+        raise ValueError(
+            f"sankey_diagram_time needs 3D data with at least two timepoints, but "
+            f"{'edata.X' if layer is None else f'edata.layers[{layer!r}]'} has shape {X.shape}."
+        )
+    (mtx,) = _materialize(X[:, edata.var_names.get_loc(var_name), :])
     time_steps = edata.tem.index.tolist()
 
     if np.issubdtype(mtx.dtype, np.floating):

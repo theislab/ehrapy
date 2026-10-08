@@ -6,16 +6,21 @@ from functools import singledispatch, wraps
 from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar
 
 import array_api_extra as xpx
+import ehrdata as ed
 import numpy as np
+import pandas as pd
 import scipy.sparse as sp
 from array_api_compat import array_namespace, is_lazy_array
+from fast_array_utils.conv import to_dense
 from fast_array_utils.types import CSBase, DaskArray
 
 P = ParamSpec("P")
 R = TypeVar("R")
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Collection, Mapping
+
+    from ehrdata import EHRData
 
     type Array = np.ndarray | DaskArray
 
@@ -49,17 +54,21 @@ def _apply_over_time_axis(f: Callable) -> Callable:
     return wrapper
 
 
-def function_2D_only(*, allow_single_timepoint: bool = False):
+def function_2D_only(*, allow_single_timepoint: bool = False, var_keys: Collection[str] = ()):
     """Reject 3D input in functions that only operate on `(n_obs, n_vars)` data.
 
     The checked arrays are the ones the function reads: `edata.obsm[use_rep]`, the layers named by `layer` or `layers`, or `edata.X`.
+    Arguments passed through `**kwargs` are checked as well.
 
     Args:
         allow_single_timepoint: Also accept 3D arrays with a single timepoint, for functions that squeeze it themselves.
+        var_keys: Arguments holding keys that name either variables or `obs` columns, such as `color`.
+            If given, 3D data is only rejected when one of these keys names a variable.
     """
 
     def decorator(func: Callable[P, R]) -> Callable[P, R]:
         signature = inspect.signature(func)
+        var_keyword = next((p.name for p in signature.parameters.values() if p.kind is p.VAR_KEYWORD), None)
 
         @wraps(func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
@@ -67,7 +76,15 @@ def function_2D_only(*, allow_single_timepoint: bool = False):
                 arguments = signature.bind_partial(*args, **kwargs).arguments
             except TypeError:
                 return func(*args, **kwargs)
+            arguments = {**arguments.pop(var_keyword, {}), **arguments}
             data = arguments.get("edata")
+            if var_keys and hasattr(data, "var_names"):
+                keys = [arguments.get(name) for name in var_keys]
+                keys = [key for value in keys for key in ([value] if isinstance(value, str) else value or ())]
+                symbols = arguments.get("feature_symbols")
+                var_names = data.var_names if symbols is None else pd.Index(data.var[symbols])
+                if not var_names.isin(keys).any():
+                    return func(*args, **kwargs)
             use_rep = arguments.get("use_rep")
             layers = arguments.get("layer", arguments.get("layers"))
             layers = [layers] if isinstance(layers, str) else [layer for layer in layers or () if layer is not None]
@@ -296,6 +313,40 @@ def _materialize(*arrays: Array) -> list[np.ndarray]:
 
         arrays = dask.compute(*arrays)
     return [np.asarray(array) for array in arrays]
+
+
+def _shallow_copy(edata: EHRData, X: Any, layers: Mapping[str, Any]) -> EHRData:
+    """A copy of `edata` with other arrays that shares `uns`, so that results stored there reach `edata`."""
+    adata = ed.EHRData(
+        X,
+        obs=edata.obs,
+        var=edata.var,
+        tem=getattr(edata, "tem", None),
+        obsm=edata.obsm,
+        varm=edata.varm,
+        obsp=edata.obsp,
+        layers=layers,
+    )
+    adata.uns = edata.uns
+    return adata
+
+
+def _as_scanpy_input(edata: EHRData, *, dense: bool = False) -> EHRData:
+    """`edata` with dask arrays with sparse chunks densified lazily and scipy sparse matrices as sparse arrays, which scanpy reads.
+
+    With `dense`, sparse arrays are densified as well.
+    """
+
+    def readable(X):
+        if (isinstance(X, DaskArray) and isinstance(X._meta, CSBase)) or (dense and isinstance(X, CSBase)):
+            return to_dense(X)
+        return getattr(sp, f"{X.format}_array")(X) if isinstance(X, sp.spmatrix) else X
+
+    arrays = {key: array for key, array in edata.layers.items() if key is not None} | {None: edata.X}
+    converted = {key: readable(array) for key, array in arrays.items()}
+    if all(converted[key] is array for key, array in arrays.items()):
+        return edata
+    return _shallow_copy(edata, converted.pop(None), converted)
 
 
 def _raise_densifying(name: str, reason: str) -> None:
