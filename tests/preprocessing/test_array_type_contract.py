@@ -19,7 +19,13 @@ ARRAY_FUNCTIONS = [
     pytest.param(ep.pp.offset_negative_values, {}, None, 0, id="offset_negative_values"),
     pytest.param(ep.pp.explicit_impute, {"replacement": -1.0}, None, 0, id="explicit_impute"),
     pytest.param(ep.pp.simple_impute, {"strategy": "median"}, None, 0, id="simple_impute"),
-    pytest.param(ep.pp.knn_impute, {"n_neighbors": 3, "var_names": ["0", "1", "2"]}, None, 0, id="knn_impute"),
+    pytest.param(
+        ep.pp.knn_impute,
+        {"n_neighbors": 3, "var_names": ["0", "1", "2"], "backend": "scikit-learn"},
+        None,
+        0,
+        id="knn_impute",
+    ),
     pytest.param(ep.pp.miss_forest_impute, {"n_estimators": 10}, None, 0, id="miss_forest_impute"),
     pytest.param(ep.pp.locf_impute, {}, None, 0, id="locf_impute"),
     pytest.param(ep.pp.missing_data_mask, {}, "missing_data_mask", 0, id="missing_data_mask"),
@@ -35,8 +41,8 @@ ARRAY_FUNCTIONS = [
 ]
 LONGITUDINAL_ONLY = {ep.pp.locf_impute}
 STATIC_COMPLETE_ONLY = {ep.pp.combat, ep.pp.regress_out}
-# the corrected values are dense, so they cannot stay sparse
-UNSUPPORTED = {ep.pp.combat: Flags.Sparse, ep.pp.regress_out: Flags.Sparse}
+# corrected values are dense, and MissForest refits its forests on all observations in every iteration
+UNSUPPORTED = {ep.pp.combat: Flags.Sparse, ep.pp.regress_out: Flags.Sparse, ep.pp.miss_forest_impute: Flags.Dask}
 NOT_ARRAY_FUNCTIONS = {
     "detect_bias",
     "highly_variable_features",
