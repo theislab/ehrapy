@@ -122,6 +122,9 @@ def pca(
         >>> edata.varm["PCs"].shape
         (10, 5, 10)
     """
+    X = (edata.X if layer is None else edata.layers[layer]) if isinstance(edata, EHRData) else None
+    if svd_solver is None and isinstance(X, DaskArray):
+        svd_solver = "covariance_eigh"
     params = {
         "n_comps": n_comps,
         "zero_center": zero_center,
@@ -133,7 +136,6 @@ def pca(
     }
     if not isinstance(edata, EHRData):
         _raise_if_3D(edata, "pca", "the input")
-    X = (edata.X if layer is None else edata.layers[layer]) if isinstance(edata, EHRData) else None
     mask_kwargs = {} if mask_var is _empty else {"mask_var": mask_var}
     if obsm is not None or getattr(X, "ndim", 2) != 3:
         return sc.pp.pca(
