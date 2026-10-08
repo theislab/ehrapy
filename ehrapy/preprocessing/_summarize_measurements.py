@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from functools import singledispatch
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import array_api_extra as xpx
 import numpy as np
@@ -10,7 +11,7 @@ from array_api_compat import array_namespace
 from ehrdata import EHRData
 from fast_array_utils.types import CSBase, DaskArray
 
-from ehrapy._compat import _map_variable_blocks, nanquantile
+from ehrapy._compat import _map_variable_blocks, _resolve_axis, nanquantile
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
@@ -25,6 +26,7 @@ def summarize_measurements(
     layer: str | None = None,
     var_names: Iterable[str] | None = None,
     statistics: Iterable[Statistic] = ("min", "max", "mean"),
+    tem_names: Any | Sequence[Any] | slice | Mapping[str, Any | Sequence[Any] | slice] | None = None,
 ) -> EHRData:
     """Summarizes numerical measurements into statistics such as their minimum, maximum and average values.
 
@@ -34,14 +36,20 @@ def summarize_measurements(
     `"slope"` is the least-squares change per timepoint, which only exists for 3D data.
     For 2D data, rows that share an observation name are aggregated.
 
+    `tem_names` restricts the summary of 3D data to timepoints, such as the last 24 hours before a prediction.
+    A mapping of window names to timepoints summarizes every window, such as `{"first_6h": slice(0, 6), "last_24h": slice(-24, None)}`.
+
     Args:
         edata: Data object containing measurements.
         layer: Layer to calculate the expanded measurements for.
         var_names: For which measurements to determine the expanded measurements for. Defaults to None (all numerical measurements).
         statistics: Which expanded measurements to calculate.
+        tem_names: Labels of `edata.tem.index` or a slice of timepoints to summarize, or a mapping of window names to such timepoints.
+            Defaults to None (all timepoints).
 
     Returns:
         A new data object with the statistic `stat` of the variable `var` in the column `f"{var}_{stat}"` of `.X`.
+        If `tem_names` is a mapping, the column of the window `window` is `f"{var}_{stat}_{window}"`.
         For 3D data, it keeps the observations and `.obs` of `edata`.
 
     Examples:
@@ -54,6 +62,11 @@ def summarize_measurements(
         >>> edata_summary.shape
         (100, 30, 1)
         >>> ep.pp.pca(edata_summary)
+        >>> edata_windows = ep.pp.summarize_measurements(
+        ...     edata, statistics=["mean"], tem_names={"early": slice(0, 5), "late": slice(5, None)}
+        ... )
+        >>> edata_windows.var_names[:2].tolist()
+        ['feature_0_mean_early', 'feature_0_mean_late']
     """
     X = edata.X if layer is None else edata.layers[layer]
     var_names = edata.var_names if var_names is None else list(var_names)
@@ -62,16 +75,38 @@ def summarize_measurements(
     statistics = list(statistics)
     if X.ndim != 3 and "slope" in statistics:
         raise ValueError("The statistic 'slope' needs 3D data with a time axis.")
+    if X.ndim != 3 and tem_names is not None:
+        raise ValueError("`tem_names` needs 3D data with a time axis.")
     values = X[:, edata.var_names.get_indexer(var_names)]
-    var = pd.DataFrame(index=[f"{var}_{statistic}" for var in var_names for statistic in statistics])
+    names = [f"{var}_{statistic}" for var in var_names for statistic in statistics]
 
     if X.ndim == 3:
+        windows = tem_names if isinstance(tem_names, Mapping) else {"": tem_names}
+        if not windows:
+            raise ValueError("`tem_names` must name at least one window.")
+        positions = [_resolve_axis(pd.Index(edata.tem.index), window, "tem_names")[0] for window in windows.values()]
+        if any(len(position) == 0 for position in positions):
+            raise ValueError("No timepoints selected (tem_names resolved to empty).")
         xp = array_namespace(values)
-        summary = xp.stack([_aggregate_time(values, statistic) for statistic in statistics], axis=2)
-        return EHRData(X=xp.reshape(summary, (summary.shape[0], -1)), obs=edata.obs.copy(), var=var)
+        summary = xp.stack(
+            [
+                xp.stack([_aggregate_time(values[:, :, position], statistic) for position in positions], axis=2)
+                for statistic in statistics
+            ],
+            axis=2,
+        )
+        if isinstance(tem_names, Mapping):
+            names = [f"{name}_{window}" for name in names for window in windows]
+        return EHRData(
+            X=xp.reshape(summary, (summary.shape[0], -1)), obs=edata.obs.copy(), var=pd.DataFrame(index=names)
+        )
 
     groups, observations = pd.factorize(edata.obs_names, sort=True)
-    return EHRData(X=_summarize_groups(values, groups, statistics), obs=pd.DataFrame(index=observations), var=var)
+    return EHRData(
+        X=_summarize_groups(values, groups, statistics),
+        obs=pd.DataFrame(index=observations),
+        var=pd.DataFrame(index=names),
+    )
 
 
 @singledispatch
