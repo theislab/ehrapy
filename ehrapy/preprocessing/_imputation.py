@@ -814,7 +814,7 @@ def _fit_boosting(sample: np.ndarray, categorical: np.ndarray, random_state: int
         # scikit-learn cannot bin a predictor without values
         used = ~np.isnan(predictors).all(axis=0)
         model = (HistGradientBoostingClassifier if categorical[var] else HistGradientBoostingRegressor)(
-            max_iter=200, random_state=random_state
+            random_state=random_state
         )
         models.append((model.fit(predictors[:, used], rows[observed, var]), used))
     return models
@@ -822,7 +822,7 @@ def _fit_boosting(sample: np.ndarray, categorical: np.ndarray, random_state: int
 
 @_fit_boosting.register(CSBase)
 def _(sample: CSBase, categorical: np.ndarray, random_state: int) -> list[Model | None]:
-    return _fit_boosting(sample.toarray(), categorical, random_state)
+    return _fit_boosting(to_dense(sample), categorical, random_state)
 
 
 @_fit_boosting.register(DaskArray)
@@ -854,7 +854,7 @@ def _(X: CSBase, models: Sequence[Model | None]) -> CSBase:
     for start in range(0, len(incomplete), _BATCH_SIZE):
         batch = incomplete[start : start + _BATCH_SIZE]
         in_batch = (rows >= batch[0]) & (rows <= batch[-1])
-        filled = _impute_boosting(X[batch].toarray(), models)
+        filled = _impute_boosting(to_dense(X[batch]), models)
         X.data[missing[in_batch]] = filled[np.searchsorted(batch, rows[in_batch]), columns[in_batch]]
     return X
 
