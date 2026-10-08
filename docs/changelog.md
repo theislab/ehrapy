@@ -4,8 +4,26 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## The future
 
+### 🚀 Features
+
+* Every preprocessing function supports numpy, scipy sparse and dask arrays, for static 2D and longitudinal 3D data @Zethson
+
+  Dask arrays stay lazy, and functions that store summaries compute once; sparse arrays stay sparse, and operations that would densify them raise a `NotImplementedError` that says why.
+  The implementations use the array API through array-api-compat and array-api-extra, so numpy and dask share one code path.
+  The new {doc}`array_types` page lists what every function supports and what it does with the time axis.
+* {func}`ep.pp.summarize_measurements <ehrapy.preprocessing.summarize_measurements>` aggregates longitudinal data over time into a 2D object with one column per variable and statistic (`min`, `max`, `mean`, `median`, `first`, `last`), which makes every 2D-only function usable on longitudinal data @Zethson
+* {func}`ep.pp.winsorize <ehrapy.preprocessing.winsorize>`, {func}`ep.pp.clip_quantile <ehrapy.preprocessing.clip_quantile>` and {func}`ep.pp.qc_lab_measurements <ehrapy.preprocessing.qc_lab_measurements>` support longitudinal data @Zethson
+
 ### 💥 Breaking changes
 
+* Normalization functions take explicit parameters instead of forwarding `**kwargs` to scikit-learn or dask-ml @Zethson
+
+  {func}`ep.pp.scale_norm <ehrapy.preprocessing.scale_norm>` takes `with_mean` and `with_std`, {func}`ep.pp.minmax_norm <ehrapy.preprocessing.minmax_norm>` `feature_range`, {func}`ep.pp.robust_scale_norm <ehrapy.preprocessing.robust_scale_norm>` `with_centering`, `with_scaling`, `quantile_range` and `unit_variance`, {func}`ep.pp.quantile_norm <ehrapy.preprocessing.quantile_norm>` `n_quantiles`, `output_distribution`, `subsample` and `random_state`, and {func}`ep.pp.power_norm <ehrapy.preprocessing.power_norm>` `method` and `standardize`.
+  A `groupby` column with missing values now raises instead of leaving those observations unnormalized, and the `dask` extra no longer installs dask-ml.
+* {func}`ep.pp.winsorize <ehrapy.preprocessing.winsorize>` takes `inclusive` instead of `**kwargs`, ignores missing values when ranking, and cuts 1% from each side by default @Zethson
+
+  The previous default `limits=(0.01, 0.99)` cut 99% of the largest values, replacing almost every value of a variable with the same number.
+* {func}`ep.pp.summarize_measurements <ehrapy.preprocessing.summarize_measurements>` no longer accepts `statistics=None`, which always raised @Zethson
 * Remove `ep.pp.mice_forest_impute` and drop the `miceforest` dependency @Zethson
 
   `miceforest` is effectively unmaintained (last commit 2025-10-27) and broken against `lightgbm>=4.7.0`, which it calls through a private, name-mangled internal ([miceforest#104](https://github.com/AnotherSamWilson/miceforest/issues/104)).
@@ -25,6 +43,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### 🐛 Bug Fixes
 
+* On dask arrays with missing values, {func}`ep.pp.minmax_norm <ehrapy.preprocessing.minmax_norm>` and {func}`ep.pp.robust_scale_norm <ehrapy.preprocessing.robust_scale_norm>` returned all-NaN variables and {func}`ep.pp.quantile_norm <ehrapy.preprocessing.quantile_norm>` returned wrong values @Zethson
+* {func}`ep.pp.filter_features <ehrapy.preprocessing.filter_features>` and {func}`ep.pp.filter_observations <ehrapy.preprocessing.filter_observations>` crashed for every non-numpy array, {func}`ep.pp.encode <ehrapy.preprocessing.encode>` crashed on sparse arrays, and the imputers crashed on variables without any observed value @Zethson
+* {func}`ep.pp.qc_metrics <ehrapy.preprocessing.qc_metrics>` no longer computes dask arrays once per variable or reports all-NaN statistics when any variable holds strings @Zethson
 * `ep.pp.explicit_impute()` now accepts falsy mapping replacement values such as `0`, `0.0`, and empty strings ([#1087](https://github.com/theislab/ehrapy/pull/1087)) @driavysinus
 * `ep.pp.knn_impute()` now raises a clear `NotImplementedError` for unsupported array types (dask and sparse arrays) instead of failing silently ([#1109](https://github.com/theislab/ehrapy/pull/1109)) @sueoglu
 * `_little_mcar_test` now computes its global covariance matrix with true pairwise deletion instead of centering on the global mean, fixing incorrect p-values under moderate-to-high missingness ([#1110](https://github.com/theislab/ehrapy/pull/1110)) @sueoglu

@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import os
 from collections import OrderedDict
+from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import dask
 import ehrdata as ed
 import holoviews as hv
 import matplotlib.pyplot as plt
@@ -15,18 +17,27 @@ from ehrdata.core.constants import CATEGORICAL_TAG, DEFAULT_TEM_LAYER_NAME, FEAT
 from matplotlib.testing.compare import compare_images
 
 import ehrapy as ep
-from ehrapy._types import (
-    ARRAY_TYPES_NONNUMERIC,
-    ARRAY_TYPES_NUMERIC,
-    ARRAY_TYPES_NUMERIC_3D_ABLE,
-    as_dense_dask_array,
-    asarray,
-)
 
 if TYPE_CHECKING:
     from matplotlib.figure import Figure
 
 TEST_DATA_PATH = Path(__file__).parent / "data"
+
+
+@contextmanager
+def forbid_dask_compute(allowed: int = 0):
+    """Fail if dask arrays are computed more than `allowed` times inside the block."""
+    computes = 0
+
+    def scheduler(dsk, keys, **kwargs):
+        nonlocal computes
+        computes += 1
+        if computes > allowed:
+            raise AssertionError(f"Dask computed {computes} times, expected at most {allowed}.")
+        return dask.get(dsk, keys, **kwargs)
+
+    with dask.config.set(scheduler=scheduler):
+        yield
 
 
 def pytest_configure():

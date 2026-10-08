@@ -422,7 +422,7 @@ def famd(
 
 
 @famd.register(EHRData)
-@function_2D_only()
+@function_2D_only(allow_single_timepoint=True)
 def _famd_ehrdata(  # named because function_2D_only puts __name__ into its error message
     edata: EHRData,
     /,

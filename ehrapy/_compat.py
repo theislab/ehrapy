@@ -1,55 +1,31 @@
 from __future__ import annotations
 
+import inspect
 import warnings
-from functools import wraps
-from importlib.util import find_spec
-from subprocess import PIPE, Popen
-from typing import TYPE_CHECKING, ParamSpec, TypeVar
+from collections.abc import Sequence
+from functools import singledispatch, wraps
+from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar
 
+import array_api_extra as xpx
 import holoviews as hv
 import numpy as np
 import scipy.sparse as sp
+from array_api_compat import array_namespace, is_lazy_array
+from fast_array_utils.types import CSBase, DaskArray
 
 P = ParamSpec("P")
 R = TypeVar("R")
 T = TypeVar("T")
 
 if TYPE_CHECKING:
-    # type checkers are confused and can only see …core.Array
-    from dask.array.core import Array as DaskArray
-elif find_spec("dask"):
-    from dask.array import Array as DaskArray
-else:
-    DaskArray = type("Array", (), {})
-    DaskArray.__module__ = "dask.array"
-
-if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from ehrdata import EHRData
+    type Array = np.ndarray | DaskArray
 
 
 def _raise_array_type_not_implemented(func: Callable, type_: type) -> NotImplementedError:
-    raise NotImplementedError(
-        f"{func.__name__} does not support array type {type_}. Must be of type {func.registry.keys()}."  # type: ignore
-    )
-
-
-def _shell_command_accessible(command: list[str]) -> bool:
-    """Checks whether the provided command is accessible in the current shell.
-
-    Args:
-        command: The command to check. Spaces are separated as list elements.
-
-    Returns:
-        True if the command is accessible, False otherwise.
-    """
-    command_accessible = Popen(command, stdout=PIPE, stderr=PIPE, universal_newlines=True, shell=True)
-    command_accessible.communicate()
-    if command_accessible.returncode != 0:
-        return False
-
-    return True
+    supported = ", ".join(t.__name__ for t in func.registry if t is not object)  # type: ignore[attr-defined]
+    raise NotImplementedError(f"{func.__name__} does not support array type {type_.__name__}. Supported: {supported}.")
 
 
 def _apply_over_time_axis(f: Callable) -> Callable:
@@ -91,27 +67,43 @@ def function_future_warning(old_function_name: str, new_function_name: str | Non
     return decorator
 
 
-def function_2D_only():
+def function_2D_only(*, allow_single_timepoint: bool = False):
+    """Reject 3D input in functions that only operate on `(n_obs, n_vars)` data.
+
+    The checked arrays are the ones the function reads: `edata.obsm[use_rep]`, the layers named by `layer` or `layers`, or `edata.X`.
+
+    Args:
+        allow_single_timepoint: Also accept 3D arrays with a single timepoint, for functions that squeeze it themselves.
+    """
+
     def decorator(func: Callable[P, R]) -> Callable[P, R]:
+        signature = inspect.signature(func)
+
         @wraps(func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
-            data: EHRData | None
-            if args and len(args) >= 1:
-                data = args[0]
-            elif kwargs:
-                data = kwargs.get("edata")
+            try:
+                arguments = signature.bind_partial(*args, **kwargs).arguments
+            except TypeError:
+                return func(*args, **kwargs)
+            data = arguments.get("edata")
+            use_rep = arguments.get("use_rep")
+            layers = arguments.get("layer", arguments.get("layers"))
+            layers = [layers] if isinstance(layers, str) else [layer for layer in layers or () if layer is not None]
 
-            layer = kwargs.get("layer")
-            use_rep = kwargs.get("use_rep")
+            if data is None or not hasattr(data, "X"):
+                arrays = {"the input": data}
+            elif use_rep is not None and use_rep in data.obsm:
+                arrays = {f"edata.obsm[{use_rep!r}]": data.obsm[use_rep]}
+            elif layers:
+                arrays = {f"edata.layers[{layer!r}]": data.layers[layer] for layer in layers}
+            else:
+                arrays = {"edata.X": data.X}
 
-            if data is not None:
-                array = data.X if layer is None else data.layers[layer]
-                if use_rep is not None:
-                    array = data.obsm[use_rep]
-
-                if array.ndim != 2 and array.shape[2] != 1:
+            for name, array in arrays.items():
+                if getattr(array, "ndim", 2) == 3 and not (allow_single_timepoint and array.shape[2] == 1):
                     raise ValueError(
-                        f"{func.__name__}() only supports 2D data, got {'data.X' if layer is None else f'data.layers[{layer}]'} with shape {array.shape}"
+                        f"{func.__name__}() only supports 2D data, but {name} has shape {array.shape}. "
+                        "Aggregate the time axis first, e.g. with `ep.pp.summarize_measurements()`."
                     )
 
             return func(*args, **kwargs)
@@ -119,13 +111,6 @@ def function_2D_only():
         return wrapper
 
     return decorator
-
-
-def as_dense_dask_array(a, chunk_size=1000):
-    """Convert input to a dense Dask array."""
-    import dask.array as da
-
-    return da.from_array(a, chunks=chunk_size)
 
 
 def choose_hv_backend() -> Callable[[Callable[P, R]], Callable[P, R]]:
@@ -145,84 +130,186 @@ def choose_hv_backend() -> Callable[[Callable[P, R]], Callable[P, R]]:
     return decorator
 
 
-def nanmean_array_api(xp, arr, axes):
-    """Compute mean ignoring NaN values using Array API operations."""
-    mask = xp.isnan(arr)
-    zero_filled = xp.where(mask, xp.zeros_like(arr), arr)
-    count = xp.sum(xp.astype(~mask, arr.dtype), axis=axes)
-    return xp.sum(zero_filled, axis=axes) / count
+def _raise_if_dask_with_sparse_chunks(X, name: str) -> None:
+    if isinstance(X, DaskArray) and isinstance(X._meta, CSBase):
+        raise NotImplementedError(f"{name} does not support dask arrays with sparse chunks.")
 
 
-def nanmedian_array_api(xp, arr):
-    """Compute per-feature median ignoring NaN values using Array API operations.
+def _obs_axes(X) -> tuple[int, ...]:
+    """Axes that hold samples of a variable: observations, and timepoints for 3D data."""
+    return (0,) if X.ndim == 2 else (0, 2)
 
-    Computes the median for each feature across all patients and time steps
-    for a 3D array of shape ``(n_obs, n_vars, n_time)``.
+
+def _var_axes(X: Array | CSBase) -> tuple[int, ...]:
+    """Axes that hold the values of an observation: variables, and timepoints for 3D data."""
+    return (1,) if X.ndim == 2 else (1, 2)
+
+
+def _broadcast_var_stat(stat, X):
+    """Reshape a per-variable statistic of shape `(n_vars,)` or per-row statistics `(n_obs, n_vars)` to broadcast against `X`."""
+    xp = array_namespace(stat)
+    if stat.ndim == 1:
+        stat = xp.reshape(stat, (1, -1))
+    return xp.reshape(stat, (*stat.shape, *(1,) * (X.ndim - 2)))
+
+
+def nanvar(X, /, *, axis: int | tuple[int, ...]):
+    """Population variance ignoring NaNs."""
+    xp = array_namespace(X)
+    axes = (axis,) if isinstance(axis, int) else axis
+    mean = xp.reshape(xpx.nanmean(X, axis=axes, xp=xp), [1 if i in axes else n for i, n in enumerate(X.shape)])
+    nan_mask = xp.isnan(X)
+    squared = xp.where(nan_mask, xp.zeros_like(X), (X - mean) ** 2)
+    return xp.sum(squared, axis=axes) / xp.sum(xp.astype(~nan_mask, X.dtype), axis=axes)
+
+
+def nanstd(X, /, *, axis: int | tuple[int, ...]):
+    """Population standard deviation ignoring NaNs."""
+    return array_namespace(X).sqrt(nanvar(X, axis=axis))
+
+
+def nanquantile(X, q: float | Sequence[float], /, *, axis: int | tuple[int, ...]):
+    """Quantiles ignoring NaNs; lazy for dask, which rechunks only the reduced axes."""
+    q = [float(x) for x in q] if isinstance(q, Sequence) else float(q)
+    return array_namespace(X).nanquantile(X, q, axis=axis)
+
+
+def _sparse_columns(X: CSBase) -> np.ndarray:
+    """Column index of every stored element of a CSR or CSC matrix."""
+    if X.format == "csr":
+        return X.indices
+    return np.repeat(np.arange(X.shape[1]), np.diff(X.indptr))
+
+
+def _sparse_rows(X: CSBase) -> np.ndarray:
+    """Row index of every stored element of a CSR or CSC matrix."""
+    if X.format == "csc":
+        return X.indices
+    return np.repeat(np.arange(X.shape[0]), np.diff(X.indptr))
+
+
+def sparse_nan_moments(X: CSBase) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Per-column count of non-NaN values, mean and population variance, counting implicit zeros as values."""
+    columns = _sparse_columns(X)
+    valid = ~np.isnan(X.data)
+    n_nan = np.bincount(columns[~valid], minlength=X.shape[1])
+    count = X.shape[0] - n_nan
+    total = np.bincount(columns[valid], weights=X.data[valid], minlength=X.shape[1])
+    total_sq = np.bincount(columns[valid], weights=X.data[valid] ** 2, minlength=X.shape[1])
+    with np.errstate(invalid="ignore", divide="ignore"):
+        mean = total / count
+        var = np.maximum(total_sq / count - mean**2, 0)
+    return count, mean, var
+
+
+def sparse_nan_min_max(X: CSBase) -> tuple[np.ndarray, np.ndarray]:
+    """Per-column minimum and maximum ignoring NaNs, counting implicit zeros as values."""
+    columns = _sparse_columns(X)
+    valid = ~np.isnan(X.data)
+    minimum = np.full(X.shape[1], np.inf)
+    maximum = np.full(X.shape[1], -np.inf)
+    np.minimum.at(minimum, columns[valid], X.data[valid])
+    np.maximum.at(maximum, columns[valid], X.data[valid])
+    has_implicit_zeros = np.bincount(columns, minlength=X.shape[1]) < X.shape[0]
+    minimum[has_implicit_zeros] = np.minimum(minimum[has_implicit_zeros], 0)
+    maximum[has_implicit_zeros] = np.maximum(maximum[has_implicit_zeros], 0)
+    all_nan = np.isinf(minimum)
+    minimum[all_nan] = maximum[all_nan] = np.nan
+    return minimum, maximum
+
+
+def _order_statistic(values: np.ndarray, n_negative: int, n_implicit_zeros: int, rank: np.ndarray) -> np.ndarray:
+    """Order statistics of sorted stored `values` with `n_implicit_zeros` zeros inserted after the negative ones."""
+    stat = np.zeros(rank.shape)
+    negative = rank < n_negative
+    stat[negative] = values[rank[negative]]
+    positive = rank >= n_negative + n_implicit_zeros
+    stat[positive] = values[rank[positive] - n_implicit_zeros]
+    return stat
+
+
+def sparse_nanquantile(X: CSBase, q: float | Sequence[float]) -> np.ndarray:
+    """Per-column quantiles ignoring NaNs, counting implicit zeros as values, with numpy's linear interpolation.
+
+    Returns an array of shape `(len(q), n_vars)`, or `(n_vars,)` for scalar `q`.
     """
-    if arr.ndim == 2:
-        arr = xp.reshape(arr, (arr.shape[0], arr.shape[1], 1))
-
-    n_obs, n_vars, n_time = arr.shape
-    arr_flat = xp.reshape(xp.permute_dims(arr, (1, 0, 2)), (n_vars, -1))
-    medians = []
-    for i in range(n_vars):
-        row = arr_flat[i, :]
-        not_nan = ~xp.isnan(row)
-        n = int(xp.sum(xp.astype(not_nan, xp.float64)))
+    X = X.tocsc()
+    qs = np.atleast_1d(np.asarray(q, dtype=np.float64))
+    result = np.full((len(qs), X.shape[1]), np.nan)
+    for j in range(X.shape[1]):
+        stored = X.data[X.indptr[j] : X.indptr[j + 1]]
+        n_implicit_zeros = X.shape[0] - len(stored)
+        values = np.sort(stored[~np.isnan(stored)])
+        n = len(values) + n_implicit_zeros
         if n == 0:
-            medians.append(float("nan"))
             continue
-        filled = xp.where(not_nan, row, xp.asarray(float("inf"), dtype=arr.dtype))
-        sorted_row = xp.sort(filled)
-        if n % 2 == 1:
-            medians.append(float(sorted_row[n // 2]))
-        else:
-            medians.append(float((sorted_row[n // 2 - 1] + sorted_row[n // 2]) / 2))
-
-    return xp.asarray(medians, dtype=arr.dtype)
-
-
-def nanstd_array_api(xp, arr, axes):
-    """Compute standard deviation ignoring NaN values using Array API operations."""
-    nan_mask = xp.isnan(arr)
-    mean = nanmean_array_api(xp, arr, axes=axes)
-    # expand mean dims to broadcast against arr (assumes axes is an int or 0)
-    diff = xp.where(nan_mask, xp.zeros_like(arr), arr - xp.expand_dims(mean, axis=axes))
-    count = xp.sum(xp.astype(~nan_mask, arr.dtype), axis=axes)
-    return xp.sqrt(xp.sum(diff**2, axis=axes) / count)
+        n_negative = int(np.searchsorted(values, 0))
+        position = (n - 1) * qs
+        lower = np.floor(position).astype(int)
+        upper = np.minimum(lower + 1, n - 1)
+        low_value, high_value = (
+            _order_statistic(values, n_negative, n_implicit_zeros, rank) for rank in (lower, upper)
+        )
+        result[:, j] = low_value + (position - lower) * (high_value - low_value)
+    return result if np.ndim(q) else result[0]
 
 
-def nanmin_array_api(xp, arr, axis):
-    """Compute min ignoring NaN values using Array API operations.
-
-    Returns NaN for slices where all values are NaN.
-    """
-    nan_mask = xp.isnan(arr)
-
-    # Replace NaNs with +inf so they don't affect min
-    arr_for_min = xp.where(nan_mask, xp.full_like(arr, xp.inf), arr)
-    minv = xp.min(arr_for_min, axis=axis)
-
-    # Count non NaN entries per slice
-    count = xp.sum(xp.astype(~nan_mask, xp.int64), axis=axis)
-    nan_scalar = xp.asarray(float("nan"), dtype=arr.dtype)
-
-    return xp.where(count == 0, nan_scalar, minv)
+def _by_group(X, groups: np.ndarray | None, stats: Callable[[Any], Sequence[Any | None]]) -> tuple[Any | None, ...]:
+    """Per-variable statistics broadcastable against `X`, estimated per group if `groups` is given; `None` statistics stay `None`."""
+    if groups is None:
+        return tuple(None if stat is None else _broadcast_var_stat(stat, X) for stat in stats(X))
+    xp = array_namespace(X)
+    per_group = zip(*(stats(X[groups == group]) for group in range(groups.max() + 1)), strict=True)
+    return tuple(None if stat[0] is None else _broadcast_var_stat(xp.stack(stat)[groups], X) for stat in per_group)
 
 
-def nanmax_array_api(xp, arr, axis):
-    """Compute max ignoring NaN values using Array API operations.
+@singledispatch
+def _set_columns(X: Array, indices: np.ndarray, values: Array) -> Array:
+    X[:, indices] = values
+    return X
 
-    Returns NaN for slices where all values are NaN.
-    """
-    nan_mask = xp.isnan(arr)
 
-    # Replace NaNs with -inf so they don't affect max
-    arr_for_max = xp.where(nan_mask, xp.full_like(arr, -xp.inf), arr)
-    maxv = xp.max(arr_for_max, axis=axis)
+@_set_columns.register(CSBase)
+def _(X: CSBase, indices: np.ndarray, values: CSBase) -> CSBase:
+    rest = np.setdiff1d(np.arange(X.shape[1]), indices)
+    combined = sp.hstack([values, X[:, rest]], format=X.format)
+    return combined[:, np.argsort(np.concatenate([indices, rest]))]
 
-    # Count non NaN entries per slice
-    count = xp.sum(xp.astype(~nan_mask, xp.int64), axis=axis)
-    nan_scalar = xp.asarray(float("nan"), dtype=arr.dtype)
 
-    return xp.where(count == 0, nan_scalar, maxv)
+@singledispatch
+def _columnwise(X: Array, groups: np.ndarray | None, kernel: Callable[[np.ndarray], np.ndarray]) -> Array:
+    """Apply a scikit-learn transformer that treats every variable independently, fitted per group if `groups` is given."""
+    kernel = _apply_over_time_axis(kernel)
+    if groups is None:
+        return kernel(X)
+    result = np.empty(X.shape, dtype=np.float64)
+    for group in np.unique(groups):
+        result[groups == group] = kernel(X[groups == group])
+    return result
+
+
+@_columnwise.register(DaskArray)
+def _(X: DaskArray, groups: np.ndarray | None, kernel: Callable[[np.ndarray], np.ndarray]) -> DaskArray:
+    # every block must hold all observations and timepoints of its variables for the per-variable fit
+    full_samples = {0: -1} if X.ndim == 2 else {0: -1, 2: -1}
+    return X.rechunk(full_samples).map_blocks(
+        _columnwise.dispatch(np.ndarray), groups=groups, kernel=kernel, dtype=np.float64
+    )
+
+
+def _materialize(*arrays: Array) -> list[np.ndarray]:
+    """Convert to numpy arrays, computing all lazy arrays with a single `dask.compute`."""
+    if any(is_lazy_array(array) for array in arrays):
+        import dask
+
+        arrays = dask.compute(*arrays)
+    return [np.asarray(array) for array in arrays]
+
+
+def _raise_densifying(name: str, reason: str) -> None:
+    raise NotImplementedError(f"{name} does not support sparse arrays because {reason}, which would densify them.")
+
+
+def _raise_if_not_numpy(X: Array | CSBase, name: str, reason: str) -> None:
+    if not isinstance(X, np.ndarray):
+        raise NotImplementedError(f"{name} only supports numpy arrays because {reason}, got {type(X).__name__}.")

@@ -1,17 +1,18 @@
 import warnings
 from pathlib import Path
 
-import dask.array as da
 import ehrdata as ed
 import numpy as np
+import pandas as pd
 import pytest
 from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY, NUMERIC_TAG
+from fast_array_utils.conv import to_dense
+from testing.fast_array_utils import Flags
 
 import ehrapy as ep
-from tests.conftest import ARRAY_TYPES_NONNUMERIC, ARRAY_TYPES_NUMERIC_3D_ABLE
+from tests.conftest import forbid_dask_compute
 
 CURRENT_DIR = Path(__file__).parent
-from scipy import sparse
 
 
 def test_vars_checks(edata_to_norm):
@@ -19,25 +20,8 @@ def test_vars_checks(edata_to_norm):
         ep.pp.scale_norm(edata_to_norm, var_names=["String1"])
 
 
-@pytest.mark.parametrize(
-    "array_type,expected_error",
-    [
-        (np.array, None),
-        (da.array, None),
-        (sparse.csr_matrix, NotImplementedError),
-    ],
-)
-def test_norm_scale_array_types(edata_to_norm, array_type, expected_error):
-    edata_to_norm.X = array_type(edata_to_norm.X)
-    if expected_error:
-        with pytest.raises(expected_error):
-            ep.pp.scale_norm(edata_to_norm)
-
-
-@pytest.mark.parametrize("array_type", [np.array, da.array])
-def test_norm_scale(edata_to_norm, array_type):
+def test_norm_scale(edata_to_norm):
     warnings.filterwarnings("ignore")
-    edata_to_norm.X = array_type(edata_to_norm.X)
     ep.pp.scale_norm(edata_to_norm)
 
     edata_norm = ep.pp.scale_norm(edata_to_norm, copy=True)
@@ -74,9 +58,7 @@ def test_norm_scale_integers(edata_mini_integers_in_X):
     assert np.allclose(edata_norm.X, in_days_norm)
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
-def test_norm_scale_kwargs(array_type, edata_to_norm):
-    edata_to_norm.X = array_type(edata_to_norm.X)
+def test_norm_scale_kwargs(edata_to_norm):
 
     edata_norm = ep.pp.scale_norm(edata_to_norm, copy=True, with_mean=False)
 
@@ -87,26 +69,11 @@ def test_norm_scale_kwargs(array_type, edata_to_norm):
     assert np.allclose(edata_norm.X[:, 4], num2_norm)
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
-def test_norm_scale_group(array_type, edata_mini_normalization):
+def test_norm_scale_group(edata_mini_normalization):
     edata_mini_casted = edata_mini_normalization.copy()
-    edata_mini_casted.X = array_type(edata_mini_casted.X)
 
     with pytest.raises(KeyError):
         ep.pp.scale_norm(edata_mini_casted, groupby="invalid_key", copy=True)
-
-    if isinstance(edata_mini_casted.X, da.Array):
-        with pytest.raises(
-            NotImplementedError,
-            match="Group-wise normalization|does not support array type.*dask",
-        ):
-            ep.pp.scale_norm(
-                edata_mini_casted,
-                var_names=["sys_bp_entry", "dia_bp_entry"],
-                groupby="disease",
-                copy=True,
-            )
-        return
 
     edata_mini_norm = ep.pp.scale_norm(
         edata_mini_casted,
@@ -132,24 +99,7 @@ def test_norm_scale_group(array_type, edata_mini_normalization):
     assert np.allclose(edata_mini_norm.X[:, 2], col2_norm)
 
 
-@pytest.mark.parametrize(
-    "array_type,expected_error",
-    [
-        (np.array, None),
-        (da.array, None),
-        (sparse.csr_matrix, NotImplementedError),
-    ],
-)
-def test_norm_minmax_array_types(edata_to_norm, array_type, expected_error):
-    edata_to_norm.X = array_type(edata_to_norm.X)
-    if expected_error:
-        with pytest.raises(expected_error):
-            ep.pp.minmax_norm(edata_to_norm)
-
-
-@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
-def test_norm_minmax(array_type, edata_to_norm):
-    edata_to_norm.X = array_type(edata_to_norm.X)
+def test_norm_minmax(edata_to_norm):
 
     edata_norm = ep.pp.minmax_norm(edata_to_norm, copy=True)
 
@@ -170,9 +120,7 @@ def test_norm_minmax_integers(edata_mini_integers_in_X):
     assert np.allclose(edata_norm.X, in_days_norm)
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
-def test_norm_minmax_kwargs(array_type, edata_to_norm):
-    edata_to_norm.X = array_type(edata_to_norm.X)
+def test_norm_minmax_kwargs(edata_to_norm):
 
     edata_norm = ep.pp.minmax_norm(edata_to_norm, copy=True, feature_range=(0, 2))
 
@@ -183,26 +131,11 @@ def test_norm_minmax_kwargs(array_type, edata_to_norm):
     assert np.allclose(edata_norm.X[:, 4], num2_norm)
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
-def test_norm_minmax_group(array_type, edata_mini_normalization):
+def test_norm_minmax_group(edata_mini_normalization):
     edata_mini_casted = edata_mini_normalization.copy()
-    edata_mini_casted.X = array_type(edata_mini_casted.X)
 
     with pytest.raises(KeyError):
         ep.pp.minmax_norm(edata_mini_casted, groupby="invalid_key", copy=True)
-
-    if isinstance(edata_mini_casted.X, da.Array):
-        with pytest.raises(
-            NotImplementedError,
-            match="Group-wise normalization|does not support array type.*dask",
-        ):
-            ep.pp.minmax_norm(
-                edata_mini_casted,
-                var_names=["sys_bp_entry", "dia_bp_entry"],
-                groupby="disease",
-                copy=True,
-            )
-        return
 
     edata_mini_norm = ep.pp.minmax_norm(
         edata_mini_casted,
@@ -217,43 +150,19 @@ def test_norm_minmax_group(array_type, edata_mini_normalization):
     assert np.allclose(edata_mini_norm.X[:, 2], col2_norm)
 
 
-@pytest.mark.parametrize(
-    "array_type,expected_error",
-    [
-        (np.array, None),
-        (da.array, NotImplementedError),
-        (sparse.csr_matrix, NotImplementedError),
-    ],
-)
-def test_norm_maxabs_array_types(edata_to_norm, array_type, expected_error):
-    edata_to_norm.X = array_type(edata_to_norm.X)
-    if expected_error:
-        with pytest.raises(expected_error):
-            ep.pp.maxabs_norm(edata_to_norm)
-    else:
-        ep.pp.maxabs_norm(edata_to_norm)
+def test_norm_maxabs(edata_to_norm):
 
+    edata_norm = ep.pp.maxabs_norm(edata_to_norm, copy=True)
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
-def test_norm_maxabs(array_type, edata_to_norm):
-    edata_to_norm.X = array_type(edata_to_norm.X)
+    num1_norm = np.array([0.5964913, 0.94736844, 1.0], dtype=np.float32)
+    num2_norm = np.array([-0.4, 1.0, 0.6], dtype=np.float32)
 
-    if isinstance(edata_to_norm.X, da.Array):
-        with pytest.raises(NotImplementedError):
-            edata_norm = ep.pp.maxabs_norm(edata_to_norm, copy=True)
-
-    else:
-        edata_norm = ep.pp.maxabs_norm(edata_to_norm, copy=True)
-
-        num1_norm = np.array([0.5964913, 0.94736844, 1.0], dtype=np.float32)
-        num2_norm = np.array([-0.4, 1.0, 0.6], dtype=np.float32)
-
-        assert np.array_equal(edata_norm.X[:, 0], edata_to_norm.X[:, 0])
-        assert np.array_equal(edata_norm.X[:, 1], edata_to_norm.X[:, 1])
-        assert np.array_equal(edata_norm.X[:, 2], edata_to_norm.X[:, 2])
-        assert np.allclose(edata_norm.X[:, 3], num1_norm)
-        assert np.allclose(edata_norm.X[:, 4], num2_norm)
-        assert np.allclose(edata_norm.X[:, 5], edata_to_norm.X[:, 5], equal_nan=True)
+    assert np.array_equal(edata_norm.X[:, 0], edata_to_norm.X[:, 0])
+    assert np.array_equal(edata_norm.X[:, 1], edata_to_norm.X[:, 1])
+    assert np.array_equal(edata_norm.X[:, 2], edata_to_norm.X[:, 2])
+    assert np.allclose(edata_norm.X[:, 3], num1_norm)
+    assert np.allclose(edata_norm.X[:, 4], num2_norm)
+    assert np.allclose(edata_norm.X[:, 5], edata_to_norm.X[:, 5], equal_nan=True)
 
 
 def test_norm_maxabs_integers(edata_mini_integers_in_X):
@@ -262,60 +171,37 @@ def test_norm_maxabs_integers(edata_mini_integers_in_X):
     assert np.allclose(edata_norm.X, in_days_norm)
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
-def test_norm_maxabs_group(array_type, edata_mini_normalization):
+def test_norm_maxabs_group(edata_mini_normalization):
     edata_mini_casted = edata_mini_normalization.copy()
-    edata_mini_casted.X = array_type(edata_mini_casted.X)
 
-    if isinstance(edata_mini_casted.X, da.Array):
-        with pytest.raises(NotImplementedError, match="does not support array type.*dask"):
-            ep.pp.maxabs_norm(edata_mini_casted, groupby="disease", copy=True)
-    else:
-        with pytest.raises(KeyError):
-            ep.pp.maxabs_norm(edata_mini_casted, groupby="invalid_key", copy=True)
+    with pytest.raises(KeyError):
+        ep.pp.maxabs_norm(edata_mini_casted, groupby="invalid_key", copy=True)
 
-        edata_mini_norm = ep.pp.maxabs_norm(
-            edata_mini_casted,
-            var_names=["sys_bp_entry", "dia_bp_entry"],
-            groupby="disease",
-            copy=True,
-        )
-        col1_norm = np.array(
-            [
-                0.9787234,
-                0.9858156,
-                0.9929078,
-                1.0,
-                0.98013245,
-                0.98675497,
-                0.99337748,
-                1.0,
-            ]
-        )
-        col2_norm = np.array([0.96296296, 0.97530864, 0.98765432, 1.0, 0.9625, 0.975, 0.9875, 1.0])
-        assert np.allclose(edata_mini_norm.X[:, 0], edata_mini_casted.X[:, 0])
-        assert np.allclose(edata_mini_norm.X[:, 1], col1_norm)
-        assert np.allclose(edata_mini_norm.X[:, 2], col2_norm)
+    edata_mini_norm = ep.pp.maxabs_norm(
+        edata_mini_casted,
+        var_names=["sys_bp_entry", "dia_bp_entry"],
+        groupby="disease",
+        copy=True,
+    )
+    col1_norm = np.array(
+        [
+            0.9787234,
+            0.9858156,
+            0.9929078,
+            1.0,
+            0.98013245,
+            0.98675497,
+            0.99337748,
+            1.0,
+        ]
+    )
+    col2_norm = np.array([0.96296296, 0.97530864, 0.98765432, 1.0, 0.9625, 0.975, 0.9875, 1.0])
+    assert np.allclose(edata_mini_norm.X[:, 0], edata_mini_casted.X[:, 0])
+    assert np.allclose(edata_mini_norm.X[:, 1], col1_norm)
+    assert np.allclose(edata_mini_norm.X[:, 2], col2_norm)
 
 
-@pytest.mark.parametrize(
-    "array_type,expected_error",
-    [
-        (np.array, None),
-        (da.array, None),
-        (sparse.csr_matrix, NotImplementedError),
-    ],
-)
-def test_norm_robust_scale_array_types(edata_to_norm, array_type, expected_error):
-    edata_to_norm.X = array_type(edata_to_norm.X)
-    if expected_error:
-        with pytest.raises(expected_error):
-            ep.pp.robust_scale_norm(edata_to_norm)
-
-
-@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
-def test_norm_robust_scale(array_type, edata_to_norm):
-    edata_to_norm.X = array_type(edata_to_norm.X)
+def test_norm_robust_scale(edata_to_norm):
 
     edata_norm = ep.pp.robust_scale_norm(edata_to_norm, copy=True)
 
@@ -336,9 +222,7 @@ def test_norm_robust_scale_integers(edata_mini_integers_in_X):
     assert np.allclose(edata_norm.X, in_days_norm)
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
-def test_norm_robust_scale_kwargs(edata_to_norm, array_type):
-    edata_to_norm.X = array_type(edata_to_norm.X)
+def test_norm_robust_scale_kwargs(edata_to_norm):
 
     edata_norm = ep.pp.robust_scale_norm(edata_to_norm, copy=True, with_scaling=False)
 
@@ -349,26 +233,11 @@ def test_norm_robust_scale_kwargs(edata_to_norm, array_type):
     assert np.allclose(edata_norm.X[:, 4], num2_norm)
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
-def test_norm_robust_scale_group(array_type, edata_mini_normalization):
+def test_norm_robust_scale_group(edata_mini_normalization):
     edata_mini_casted = edata_mini_normalization.copy()
-    edata_mini_casted.X = array_type(edata_mini_casted.X)
 
     with pytest.raises(KeyError):
         ep.pp.robust_scale_norm(edata_mini_casted, groupby="invalid_key", copy=True)
-
-    if isinstance(edata_mini_casted.X, da.Array):
-        with pytest.raises(
-            NotImplementedError,
-            match="Group-wise normalization|does not support array type.*dask",
-        ):
-            ep.pp.robust_scale_norm(
-                edata_mini_casted,
-                var_names=["sys_bp_entry", "dia_bp_entry"],
-                groupby="disease",
-                copy=True,
-            )
-        return
 
     edata_mini_norm = ep.pp.robust_scale_norm(
         edata_mini_casted,
@@ -386,25 +255,8 @@ def test_norm_robust_scale_group(array_type, edata_mini_normalization):
     assert np.allclose(edata_mini_norm.X[:, 2], col2_norm)
 
 
-@pytest.mark.parametrize(
-    "array_type,expected_error",
-    [
-        (np.array, None),
-        (da.array, None),
-        (sparse.csr_matrix, NotImplementedError),
-    ],
-)
-def test_norm_quantile_array_types(edata_to_norm, array_type, expected_error):
-    edata_to_norm.X = array_type(edata_to_norm.X)
-    if expected_error:
-        with pytest.raises(expected_error):
-            ep.pp.quantile_norm(edata_to_norm)
-
-
-@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
-def test_norm_quantile_uniform(array_type, edata_to_norm):
+def test_norm_quantile_uniform(edata_to_norm):
     warnings.filterwarnings("ignore", category=UserWarning)
-    edata_to_norm.X = array_type(edata_to_norm.X)
 
     edata_norm = ep.pp.quantile_norm(edata_to_norm, copy=True)
 
@@ -440,9 +292,7 @@ def test_norm_quantile_integers(edata_mini_integers_in_X):
     assert np.allclose(edata_norm.X, in_days_norm)
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
-def test_norm_quantile_uniform_kwargs(array_type, edata_to_norm):
-    edata_to_norm.X = array_type(edata_to_norm.X)
+def test_norm_quantile_uniform_kwargs(edata_to_norm):
 
     edata_norm = ep.pp.quantile_norm(edata_to_norm, copy=True, output_distribution="normal", n_quantiles=3)
 
@@ -453,26 +303,11 @@ def test_norm_quantile_uniform_kwargs(array_type, edata_to_norm):
     assert np.allclose(edata_norm.X[:, 4], num2_norm)
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
-def test_norm_quantile_uniform_group(array_type, edata_mini_normalization):
+def test_norm_quantile_uniform_group(edata_mini_normalization):
     edata_mini_casted = edata_mini_normalization.copy()
-    edata_mini_casted.X = array_type(edata_mini_casted.X)
 
     with pytest.raises(KeyError):
         ep.pp.quantile_norm(edata_mini_casted, groupby="invalid_key", copy=True)
-
-    if isinstance(edata_mini_casted.X, da.Array):
-        with pytest.raises(
-            NotImplementedError,
-            match="Group-wise normalization|does not support array type.*dask",
-        ):
-            ep.pp.quantile_norm(
-                edata_mini_casted,
-                var_names=["sys_bp_entry", "dia_bp_entry"],
-                groupby="disease",
-                copy=True,
-            )
-        return
 
     edata_mini_norm = ep.pp.quantile_norm(
         edata_mini_casted,
@@ -490,40 +325,19 @@ def test_norm_quantile_uniform_group(array_type, edata_mini_normalization):
     assert np.allclose(edata_mini_norm.X[:, 2], col2_norm)
 
 
-@pytest.mark.parametrize(
-    "array_type,expected_error",
-    [
-        (np.array, None),
-        (da.array, None),
-        (sparse.csr_matrix, NotImplementedError),
-    ],
-)
-def test_norm_power_array_types(edata_to_norm, array_type, expected_error):
-    edata_to_norm.X = array_type(edata_to_norm.X)
-    if expected_error:
-        with pytest.raises(expected_error):
-            ep.pp.power_norm(edata_to_norm)
+def test_norm_power(edata_to_norm):
 
+    edata_norm = ep.pp.power_norm(edata_to_norm, copy=True)
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
-def test_norm_power(array_type, edata_to_norm):
-    edata_to_norm.X = array_type(edata_to_norm.X)
+    num1_norm = np.array([-1.3821232, 0.43163615, 0.950487], dtype=np.float32)
+    num2_norm = np.array([-1.340104, 1.0613203, 0.27878374], dtype=np.float32)
 
-    if isinstance(edata_to_norm.X, da.Array):
-        with pytest.raises(NotImplementedError):
-            ep.pp.power_norm(edata_to_norm, copy=True)
-    else:
-        edata_norm = ep.pp.power_norm(edata_to_norm, copy=True)
-
-        num1_norm = np.array([-1.3821232, 0.43163615, 0.950487], dtype=np.float32)
-        num2_norm = np.array([-1.340104, 1.0613203, 0.27878374], dtype=np.float32)
-
-        assert np.array_equal(edata_norm.X[:, 0], edata_to_norm.X[:, 0])
-        assert np.array_equal(edata_norm.X[:, 1], edata_to_norm.X[:, 1])
-        assert np.array_equal(edata_norm.X[:, 2], edata_to_norm.X[:, 2])
-        assert np.allclose(edata_norm.X[:, 3], num1_norm, rtol=1.1)
-        assert np.allclose(edata_norm.X[:, 4], num2_norm, rtol=1.1)
-        assert np.allclose(edata_norm.X[:, 5], edata_to_norm.X[:, 5], equal_nan=True)
+    assert np.array_equal(edata_norm.X[:, 0], edata_to_norm.X[:, 0])
+    assert np.array_equal(edata_norm.X[:, 1], edata_to_norm.X[:, 1])
+    assert np.array_equal(edata_norm.X[:, 2], edata_to_norm.X[:, 2])
+    assert np.allclose(edata_norm.X[:, 3], num1_norm, rtol=1.1)
+    assert np.allclose(edata_norm.X[:, 4], num2_norm, rtol=1.1)
+    assert np.allclose(edata_norm.X[:, 5], edata_to_norm.X[:, 5], equal_nan=True)
 
 
 def test_norm_power_integers(edata_mini_integers_in_X):
@@ -547,92 +361,65 @@ def test_norm_power_integers(edata_mini_integers_in_X):
     assert np.allclose(edata_norm.X, in_days_norm, rtol=1e-4, atol=1e-4)
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
-def test_norm_power_kwargs(array_type, edata_to_norm):
-    edata_to_norm.X = array_type(edata_to_norm.X)
+def test_norm_power_kwargs(edata_to_norm):
 
-    if isinstance(edata_to_norm.X, da.Array):
-        with pytest.raises(NotImplementedError):
-            ep.pp.power_norm(edata_to_norm, copy=True)
-    else:
-        with pytest.raises(ValueError):
-            ep.pp.power_norm(edata_to_norm, copy=True, method="box-cox")
+    with pytest.raises(ValueError):
+        ep.pp.power_norm(edata_to_norm, copy=True, method="box-cox")
 
-        edata_norm = ep.pp.power_norm(edata_to_norm, copy=True, standardize=False)
+    edata_norm = ep.pp.power_norm(edata_to_norm, copy=True, standardize=False)
 
-        num1_norm = np.array([201.03636, 1132.8341, 1399.3877], dtype=np.float32)
-        num2_norm = np.array([-1.8225479, 5.921072, 3.397709], dtype=np.float32)
+    num1_norm = np.array([201.03636, 1132.8341, 1399.3877], dtype=np.float32)
+    num2_norm = np.array([-1.8225479, 5.921072, 3.397709], dtype=np.float32)
 
-        assert np.allclose(edata_norm.X[:, 3], num1_norm, rtol=1e-02, atol=1e-02)
-        assert np.allclose(edata_norm.X[:, 4], num2_norm, rtol=1e-02, atol=1e-02)
+    assert np.allclose(edata_norm.X[:, 3], num1_norm, rtol=1e-02, atol=1e-02)
+    assert np.allclose(edata_norm.X[:, 4], num2_norm, rtol=1e-02, atol=1e-02)
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
-def test_norm_power_group(array_type, edata_mini_normalization):
+def test_norm_power_group(edata_mini_normalization):
     edata_mini_casted = edata_mini_normalization.copy()
-    edata_mini_casted.X = array_type(edata_mini_casted.X)
 
-    if isinstance(edata_mini_casted.X, da.Array):
-        with pytest.raises(NotImplementedError, match="does not support array type.*dask"):
-            ep.pp.power_norm(edata_mini_casted, groupby="disease", copy=True)
-    else:
-        with pytest.raises(KeyError):
-            ep.pp.power_norm(edata_mini_casted, groupby="invalid_key", copy=True)
+    with pytest.raises(KeyError):
+        ep.pp.power_norm(edata_mini_casted, groupby="invalid_key", copy=True)
 
-        edata_mini_norm = ep.pp.power_norm(
-            edata_mini_casted,
-            var_names=["sys_bp_entry", "dia_bp_entry"],
-            groupby="disease",
-            copy=True,
-        )
-        col1_norm = np.array(
+    edata_mini_norm = ep.pp.power_norm(
+        edata_mini_casted,
+        var_names=["sys_bp_entry", "dia_bp_entry"],
+        groupby="disease",
+        copy=True,
+    )
+    col1_norm = np.array(
+        [
+            -1.34266204,
+            -0.44618949,
+            0.44823148,
+            1.34062005,
+            -1.34259417,
+            -0.44625773,
+            0.44816403,
+            1.34068786,
+        ],
+        dtype=np.float32,
+    )
+    col2_norm = np.array(
+        [
             [
-                -1.34266204,
-                -0.44618949,
-                0.44823148,
-                1.34062005,
-                -1.34259417,
-                -0.44625773,
-                0.44816403,
-                1.34068786,
-            ],
-            dtype=np.float32,
-        )
-        col2_norm = np.array(
-            [
-                [
-                    -1.3650659,
-                    -0.41545486,
-                    0.45502198,
-                    1.3254988,
-                    -1.3427324,
-                    -0.4461177,
-                    0.44829938,
-                    1.3405508,
-                ]
-            ],
-            dtype=np.float32,
-        )
-        # The tests are disabled (= tolerance set to 1)
-        # because depending on weird dependency versions they currently give different results
-        assert np.allclose(edata_mini_norm.X[:, 0], edata_mini_casted.X[:, 0], rtol=1, atol=1)
-        assert np.allclose(edata_mini_norm.X[:, 1], col1_norm, rtol=1, atol=1)
-        assert np.allclose(edata_mini_norm.X[:, 2], col2_norm, rtol=1, atol=1)
-
-
-@pytest.mark.parametrize(
-    "array_type,expected_error",
-    [
-        (np.array, None),
-        (da.array, None),
-        (sparse.csr_matrix, None),
-    ],
-)
-def test_norm_log_norm_array_types(edata_to_norm, array_type, expected_error):
-    edata_to_norm.X = array_type(edata_to_norm.X)
-    if expected_error:
-        with pytest.raises(expected_error):
-            ep.pp.log_norm(edata_to_norm)
+                -1.3650659,
+                -0.41545486,
+                0.45502198,
+                1.3254988,
+                -1.3427324,
+                -0.4461177,
+                0.44829938,
+                1.3405508,
+            ]
+        ],
+        dtype=np.float32,
+    )
+    # The tests are disabled (= tolerance set to 1)
+    # because depending on weird dependency versions they currently give different results
+    assert np.allclose(edata_mini_norm.X[:, 0], edata_mini_casted.X[:, 0], rtol=1, atol=1)
+    assert np.allclose(edata_mini_norm.X[:, 1], col1_norm, rtol=1, atol=1)
+    assert np.allclose(edata_mini_norm.X[:, 2], col2_norm, rtol=1, atol=1)
 
 
 def test_norm_log1p(edata_to_norm):
@@ -710,42 +497,6 @@ def test_norm_numerical_only():
     expected_edata = ed.EHRData(X=np.array([[0.6931472, 0, 0], [0, 0, 0.6931472]], dtype=np.float32))
     ed.infer_feature_types(to_normalize_edata, binary_as="numeric")
     assert np.array_equal(expected_edata.X, ep.pp.log_norm(to_normalize_edata, copy=True).X)
-
-
-@pytest.mark.parametrize("array_type", ARRAY_TYPES_NUMERIC_3D_ABLE)
-@pytest.mark.parametrize(
-    "norm_func",
-    [
-        ep.pp.scale_norm,
-        ep.pp.minmax_norm,
-        ep.pp.maxabs_norm,
-        ep.pp.robust_scale_norm,
-        ep.pp.quantile_norm,
-        ep.pp.power_norm,
-    ],
-)
-def test_norm_3D(edata_blobs_timeseries_small, array_type, norm_func):
-    edata = edata_blobs_timeseries_small
-    edata.layers[DEFAULT_TEM_LAYER_NAME] = array_type(edata.layers[DEFAULT_TEM_LAYER_NAME])
-
-    if isinstance(edata.layers[DEFAULT_TEM_LAYER_NAME], da.Array) and norm_func in (
-        ep.pp.maxabs_norm,
-        ep.pp.power_norm,
-    ):
-        with pytest.raises(NotImplementedError, match="does not support array type.*dask"):
-            norm_func(edata, layer=DEFAULT_TEM_LAYER_NAME)
-        return
-
-    orig_shape = edata.layers[DEFAULT_TEM_LAYER_NAME].shape
-
-    if norm_func == ep.pp.power_norm:
-        ep.pp.offset_negative_values(edata, layer=DEFAULT_TEM_LAYER_NAME)
-
-    norm_func(edata, layer=DEFAULT_TEM_LAYER_NAME)
-
-    assert edata.layers[DEFAULT_TEM_LAYER_NAME].shape == orig_shape
-    assert "normalization" in edata.uns
-    assert len(edata.uns["normalization"]) > 0
 
 
 def test_scale_norm_3D(edata_blobs_timeseries_small):
@@ -889,7 +640,6 @@ def test_norm_with_X_none_and_layer(edata_blobs_timeseries_small, norm_func):
         assert not np.allclose(layer_before, result.layers[layer], equal_nan=True)
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES_NUMERIC_3D_ABLE)
 @pytest.mark.parametrize(
     "norm_func",
     [
@@ -901,12 +651,10 @@ def test_norm_with_X_none_and_layer(edata_blobs_timeseries_small, norm_func):
         ep.pp.power_norm,
     ],
 )
-def test_norm_group_3D(edata_blobs_timeseries_small, array_type, norm_func):
+def test_norm_group_3D(edata_blobs_timeseries_small, norm_func):
     edata = edata_blobs_timeseries_small
     layer = DEFAULT_TEM_LAYER_NAME
     edata.var[FEATURE_TYPE_KEY] = NUMERIC_TAG
-
-    edata.layers[layer] = array_type(edata.layers[layer])
 
     if norm_func == ep.pp.power_norm:
         ep.pp.offset_negative_values(edata, layer=layer)
@@ -917,14 +665,6 @@ def test_norm_group_3D(edata_blobs_timeseries_small, array_type, norm_func):
     edata.obs["group"] = ["A"] * group_size + ["B"] * (n_obs - group_size)
 
     # raise NotImplementedError for all dask arrays
-    if isinstance(edata.layers[layer], da.Array):
-        with pytest.raises(
-            NotImplementedError,
-            match="Group-wise normalization|does not support array type.*dask",
-        ):
-            norm_func(edata, layer=layer, groupby="group")
-        return
-
     original_shape = edata.layers[layer].shape
     layer_before = edata.layers[layer].copy()
 
@@ -966,3 +706,78 @@ def test_norm_group_3D(edata_blobs_timeseries_small, array_type, norm_func):
 
     elif norm_func == ep.pp.robust_scale_norm:
         assert near0(np.nanmedian(group_a)) and near0(np.nanmedian(group_b))
+
+
+NORMS = [
+    pytest.param(ep.pp.scale_norm, {}, False, id="scale"),
+    pytest.param(ep.pp.scale_norm, {"with_mean": False}, True, id="scale-without-mean"),
+    pytest.param(ep.pp.minmax_norm, {}, False, id="minmax"),
+    pytest.param(ep.pp.maxabs_norm, {}, True, id="maxabs"),
+    pytest.param(ep.pp.robust_scale_norm, {}, False, id="robust"),
+    pytest.param(ep.pp.robust_scale_norm, {"with_centering": False}, True, id="robust-without-centering"),
+    pytest.param(ep.pp.quantile_norm, {"n_quantiles": 10}, False, id="quantile"),
+    pytest.param(ep.pp.power_norm, {}, False, id="power"),
+    pytest.param(ep.pp.log_norm, {}, True, id="log"),
+]
+
+
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+@pytest.mark.parametrize("ndim", [2, 3])
+@pytest.mark.parametrize("groupby", [None, "group"])
+@pytest.mark.parametrize(("norm", "kwargs", "sparse_support"), NORMS)
+def test_norm_array_types(array_type, ndim, groupby, norm, kwargs, sparse_support, rng):
+    if ndim == 3 and array_type.flags & Flags.Sparse:
+        pytest.skip("sparse arrays are 2D")
+    if groupby is not None and norm is ep.pp.log_norm:
+        pytest.skip("log_norm has no groupby")
+    shape = (20, 4) if ndim == 2 else (20, 4, 3)
+    X = np.where(rng.random(shape) < 0.4, 0, rng.gamma(2, size=shape))
+    X[rng.random(shape) < 0.1] = np.nan
+    obs = pd.DataFrame({"group": ["a", "b"] * 10}, index=[str(i) for i in range(20)])
+    kwargs = {**kwargs, "groupby": groupby} if groupby is not None else kwargs
+
+    def make_edata(X):
+        edata = ed.EHRData(X=X, obs=obs)
+        edata.var[FEATURE_TYPE_KEY] = NUMERIC_TAG
+        return edata
+
+    expected = norm(make_edata(X), copy=True, **kwargs).X
+    edata = make_edata(array_type(X))
+
+    if array_type.flags & Flags.Sparse and (not sparse_support or array_type.flags & Flags.Dask):
+        with pytest.raises(NotImplementedError):
+            norm(edata, **kwargs)
+        return
+
+    with forbid_dask_compute():
+        result = norm(edata, copy=True, **kwargs).X
+
+    assert isinstance(result, array_type.cls)
+    np.testing.assert_allclose(to_dense(result, to_cpu_memory=True), expected, rtol=1e-6, equal_nan=True)
+
+
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+@pytest.mark.parametrize("negative", [False, True])
+def test_offset_negative_values_array_types(array_type, negative):
+    X = np.array([[0.0, 2.0, np.nan], [0.0, 0.0, 3.0]])
+    if negative:
+        X[0, 1] = -2.0
+    expected = ep.pp.offset_negative_values(ed.EHRData(X=X), copy=True).X
+    edata = ed.EHRData(X=array_type(X))
+
+    if array_type.flags & Flags.Sparse and (negative or array_type.flags & Flags.Dask):
+        with pytest.raises(NotImplementedError):
+            ep.pp.offset_negative_values(edata)
+        return
+
+    with forbid_dask_compute():
+        result = ep.pp.offset_negative_values(edata, copy=True).X
+
+    assert isinstance(result, array_type.cls)
+    np.testing.assert_allclose(to_dense(result, to_cpu_memory=True), expected, equal_nan=True)
+
+
+def test_norm_groupby_missing_values(edata_mini_normalization):
+    edata_mini_normalization.obs.loc[edata_mini_normalization.obs_names[0], "disease"] = np.nan
+    with pytest.raises(ValueError, match="contains missing values"):
+        ep.pp.scale_norm(edata_mini_normalization, groupby="disease")

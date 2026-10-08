@@ -2,14 +2,15 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
 
-import array_api_compat
 import numpy as np
 import pandas as pd
-from ehrdata.core.constants import FEATURE_TYPE_KEY
+from fast_array_utils.conv import to_dense
+from fast_array_utils.types import CSBase
 from scipy import stats
 from statsmodels.stats.multitest import multipletests
 
-from ehrapy._compat import nanmean_array_api
+from ehrapy._compat import _raise_if_dask_with_sparse_chunks
+from ehrapy.preprocessing._summarize_measurements import _aggregate_time
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -32,14 +33,14 @@ def _aggregate_variable_values(
     else:
         mtx = edata.X
 
-    xp = array_api_compat.array_namespace(mtx)
+    if isinstance(mtx, CSBase):
+        raise NotImplementedError(
+            "variable_correlations does not support sparse arrays because pairwise deletion needs dense masks of missing values."
+        )
+    _raise_if_dask_with_sparse_chunks(mtx, "variable_correlations")
 
     # only include numeric or encoded variables
-    numeric_var_names = {
-        v
-        for i, v in enumerate(edata.var_names)
-        if np.issubdtype(np.array(mtx[:, i] if mtx.ndim == 2 else mtx[:, i, 0]).dtype, np.number)
-    }
+    numeric_var_names = set(edata.var_names) if np.issubdtype(mtx.dtype, np.number) else set()
 
     if var_names is None:
         var_names = [v for v in edata.var_names if v in numeric_var_names]
@@ -52,43 +53,13 @@ def _aggregate_variable_values(
         if non_numeric:
             raise ValueError(f"Non-numeric variables were requested {non_numeric}")
 
-    var_name_to_idx = {v: i for i, v in enumerate(edata.var_names)}
-    var_indices = [var_name_to_idx[v] for v in var_names]
-
-    if mtx.ndim == 2:
-        n_obs, n_var = mtx.shape
-        mtx_2d = mtx[:, var_indices]
-        mtx_2d_np = array_api_compat.numpy.asarray(mtx_2d)
-
-    else:
-        n_obs, n_var, n_time = mtx.shape
-        if agg == "mean":
-            mtx_3d = xp.astype(mtx[:, var_indices, :], xp.float64)
-            mtx_2d = nanmean_array_api(xp, mtx_3d, axes=2)
-            mtx_2d_np = array_api_compat.numpy.asarray(mtx_2d)
-        elif agg == "last" or agg == "first":
-            mtx_sub = mtx[:, var_indices, :]
-            mtx_sub = xp.astype(mtx_sub, xp.float64)
-            valid_mask = ~xp.isnan(mtx_sub)
-            if agg == "last":
-                mtx_sub = xp.flip(mtx_sub, axis=2)  # for argmax to find the last valid value
-                valid_mask = xp.flip(valid_mask, axis=2)
-
-            first_valid = xp.argmax(valid_mask, axis=2)
-            is_valid = xp.any(valid_mask, axis=2)
-
-            mtx_sub_np = array_api_compat.numpy.asarray(mtx_sub)
-            first_valid_np = array_api_compat.numpy.asarray(first_valid)
-            obs_idx = np.arange(n_obs)[:, None]
-            var_idx = np.arange(len(var_indices))[None, :]
-            mtx_2d_np = mtx_sub_np[obs_idx, var_idx, first_valid_np]
-
-            is_valid_np = array_api_compat.numpy.asarray(is_valid)
-            mtx_2d_np = np.where(is_valid_np, mtx_2d_np, np.nan)
-        else:
+    values = mtx[:, edata.var_names.get_indexer(var_names)]
+    if mtx.ndim == 3:
+        if agg not in {"mean", "last", "first"}:
             raise ValueError(f"Unknown aggregation method: {agg}")
+        values = _aggregate_time(values, agg)
 
-    return mtx_2d_np, var_names
+    return to_dense(values, to_cpu_memory=True), var_names
 
 
 def variable_correlations(
@@ -106,6 +77,8 @@ def variable_correlations(
     This function computes pairwise correlations between variables in the given EHRData object,
     automatically handling missing values through pairwise deletion.
     For 3D time-series data, values are aggregated across time before computing correlations.
+    Dask arrays are computed once, after the aggregation.
+    Sparse arrays are not supported because pairwise deletion needs dense masks of missing values.
 
     Args:
         edata: Central data object.
@@ -128,7 +101,7 @@ def variable_correlations(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.ehrdata_blobs(n_variables=10, n_centers=5, n_observations=200, base_timepoints=3)
-        >>> corr, pval, sig = ep.pp.compute_variable_correlations(
+        >>> corr, pval, sig = ep.pp.variable_correlations(
         ...     edata, layer="tem_data", method="pearson", agg="mean", correction_method="fdr_bh", alpha=0.02
         ... )
     """

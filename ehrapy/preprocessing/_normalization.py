@@ -1,76 +1,72 @@
 from __future__ import annotations
 
 from functools import singledispatch
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
+import array_api_extra as xpx
 import ehrdata as ed
 import numpy as np
+import pandas as pd
 import sklearn.preprocessing as sklearn_pp
+from array_api_compat import array_namespace, is_lazy_array
 from ehrdata.core.constants import FEATURE_TYPE_KEY, NUMERIC_TAG
+from fast_array_utils.types import CSBase, DaskArray
+from scipy.special import ndtri
 
 from ehrapy._compat import (
-    DaskArray,
-    _apply_over_time_axis,
-    _raise_array_type_not_implemented,
+    _by_group,
+    _columnwise,
+    _obs_axes,
+    _raise_densifying,
+    _raise_if_dask_with_sparse_chunks,
+    _set_columns,
+    _sparse_columns,
+    _sparse_rows,
+    nanquantile,
+    nanstd,
+    sparse_nan_min_max,
+    sparse_nan_moments,
+    sparse_nanquantile,
 )
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
 
-    import pandas as pd
     from ehrdata import EHRData
+
+    type Array = np.ndarray | DaskArray
+    type Params = tuple[Array | None, Array | None]
 
 
 def _scale_func_group(
     edata: EHRData,
-    scale_func: Callable[[np.ndarray | pd.DataFrame], np.ndarray],
+    transform: Callable[[Array | CSBase, np.ndarray | None], Array | CSBase],
     var_names: str | Sequence[str] | None,
     groupby: str | None,
     layer: str | None,
     copy: bool,
     norm_name: str,
 ) -> EHRData | None:
-    """Apply scaling function to selected columns of edata, either globally or per group.
-
-    Supports both 2D and 3D data with unified layer handling.
-    """
-    if groupby is not None and groupby not in edata.obs:
-        raise KeyError(f"groupby key '{groupby}' not found in edata.obs.")
+    """Apply a per-variable transformation to the selected numeric variables, either globally or per group."""
+    if groupby is not None:
+        if groupby not in edata.obs:
+            raise KeyError(f"groupby key '{groupby}' not found in edata.obs.")
+        if edata.obs[groupby].isna().any():
+            raise ValueError(f"groupby key '{groupby}' contains missing values.")
     if copy:
         edata = edata.copy()
     if FEATURE_TYPE_KEY not in edata.var.columns:
         ed.infer_feature_types(edata, layer=layer, output=None)
 
-    if isinstance(var_names, str):
-        var_names = [var_names]
-    if var_names is None:
-        var_names = edata.var_names[edata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG].tolist()
-    else:
-        numeric_vars = edata.var_names[edata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG].tolist()
-        if not set(var_names) <= set(numeric_vars):
-            raise ValueError("Some selected vars are not numeric")
-
-    # Get numeric indices (positions) of the variables to normalize
+    var_names = _numeric_var_names(edata, var_names)
     var_indices = edata.var_names.get_indexer(var_names)
     X = edata.X if layer is None else edata.layers[layer]
-
+    _raise_if_dask_with_sparse_chunks(X, norm_name)
     if np.issubdtype(X.dtype, np.integer):
         X = X.astype(np.float32)
 
-    if groupby is None:
-        X[:, var_indices] = scale_func(X[:, var_indices])
-
-    else:
-        # Group-wise normalization is not supported for Dask arrays
-        if isinstance(X, DaskArray):
-            raise NotImplementedError(
-                f"Group-wise normalization with groupby='{groupby}' does not support array type {type(X)}. "
-                "Please convert to numpy array first or use normalization without groupby."
-            )
-
-        for group in edata.obs[groupby].unique():
-            group_mask = np.where(edata.obs[groupby] == group)[0]
-            X[np.ix_(group_mask, var_indices)] = scale_func(X[np.ix_(group_mask, var_indices)])
+    groups = None if groupby is None else pd.factorize(edata.obs[groupby])[0]
+    X = _set_columns(X, var_indices, transform(X[:, var_indices], groups))
 
     if layer is None:
         edata.X = X
@@ -82,23 +78,63 @@ def _scale_func_group(
     return edata if copy else None
 
 
+def _numeric_var_names(edata: EHRData, var_names: str | Sequence[str] | None) -> list[str]:
+    numeric_vars = edata.var_names[edata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG].tolist()
+    if var_names is None:
+        return numeric_vars
+    var_names = [var_names] if isinstance(var_names, str) else list(var_names)
+    if not set(var_names) <= set(numeric_vars):
+        raise ValueError("Some selected vars are not numeric")
+    return var_names
+
+
+def _nonzero(scale: Array) -> Array:
+    """Replace zero scales by one so that constant variables stay unchanged, as scikit-learn does."""
+    xp = array_namespace(scale)
+    return xp.where(scale == 0, xp.ones_like(scale), scale)
+
+
+def _affine(X: Array, groups: np.ndarray | None, params: Callable[[Array], Params]) -> Array:
+    """Compute `(X - shift) / scale` with per-variable parameters, estimated per group if `groups` is given."""
+    shift, scale = _by_group(X, groups, params)
+    if shift is not None:
+        X = X - shift
+    if scale is not None:
+        X = X / scale
+    return X
+
+
+def _sparse_scale(X: CSBase, groups: np.ndarray | None, scale: Callable[[CSBase], np.ndarray]) -> CSBase:
+    """Divide every variable of a sparse matrix by a per-variable scale, estimated per group if `groups` is given."""
+    X = X.astype(np.result_type(X.dtype, np.float32))
+    columns = _sparse_columns(X)
+    if groups is None:
+        X.data /= scale(X)[columns]
+    else:
+        scales = np.stack([scale(X[groups == group]) for group in range(groups.max() + 1)])
+        X.data /= scales[groups[_sparse_rows(X)], columns]
+    return X
+
+
 @singledispatch
-def _scale_norm_function(arr, **kwargs):
-    _raise_array_type_not_implemented(_scale_norm_function, type(arr))
+def _scale(X: Array, groups: np.ndarray | None, *, with_mean: bool, with_std: bool) -> Array:
+    def params(x: Array) -> Params:
+        axes = _obs_axes(x)
+        return (
+            xpx.nanmean(x, axis=axes) if with_mean else None,
+            _nonzero(nanstd(x, axis=axes)) if with_std else None,
+        )
+
+    return _affine(X, groups, params)
 
 
-@_scale_norm_function.register(np.ndarray)
-@_apply_over_time_axis
-def _(arr: np.ndarray, **kwargs):
-    return sklearn_pp.StandardScaler(**kwargs).fit_transform(arr)
-
-
-@_scale_norm_function.register(DaskArray)
-@_apply_over_time_axis
-def _(arr: DaskArray, **kwargs):
-    import dask_ml.preprocessing as daskml_pp
-
-    return daskml_pp.StandardScaler(**kwargs).fit_transform(arr)
+@_scale.register(CSBase)
+def _(X: CSBase, groups: np.ndarray | None, *, with_mean: bool, with_std: bool) -> CSBase:
+    if with_mean:
+        _raise_densifying("scale_norm with `with_mean=True`", "centering shifts implicit zeros")
+    if not with_std:
+        return X
+    return _sparse_scale(X, groups, lambda x: _nonzero(np.sqrt(sparse_nan_moments(x)[2])))
 
 
 def scale_norm(
@@ -107,18 +143,16 @@ def scale_norm(
     var_names: str | Sequence[str] | None = None,
     groupby: str | None = None,
     layer: str | None = None,
+    with_mean: bool = True,
+    with_std: bool = True,
     copy: bool = False,
-    **kwargs,
 ) -> EHRData | None:
     """Apply scaling normalization.
 
-    Functionality is provided by :class:`~sklearn.preprocessing.StandardScaler`, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html for details.
-    If `edata.X` is a Dask Array, functionality is provided by :class:`~dask_ml.preprocessing.StandardScaler`, see https://ml.dask.org/modules/generated/dask_ml.preprocessing.StandardScaler.html for details.
-
-    Supports both 2D and 3D data:
-
-    - 2D data: Standard normalization across observations
-    - 3D data: Per-variable normalization across samples and timestamps
+    Standardizes every variable by subtracting its mean and dividing by its standard deviation, ignoring missing values, like :class:`~sklearn.preprocessing.StandardScaler`.
+    For 3D data, the statistics of a variable are computed across observations and timepoints.
+    Dask arrays stay lazy.
+    Sparse arrays are supported with `with_mean=False`.
 
     Args:
         edata: Central data object. Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
@@ -127,8 +161,9 @@ def scale_norm(
         groupby: Key in edata.obs that contains group information.
                  If provided, scaling is applied per group.
         layer: The layer to normalize.
+        with_mean: Whether to center the variables.
+        with_std: Whether to scale the variables to unit variance.
         copy: Whether to return a copy or act in place.
-        **kwargs: Additional arguments passed to the StandardScaler.
 
     Returns:
         `None` if `copy=False` and modifies the passed edata, else returns an updated object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
@@ -145,11 +180,9 @@ def scale_norm(
         0.0
 
     """
-    scale_func = lambda arr: _scale_norm_function(arr, **kwargs)
-
     return _scale_func_group(
         edata=edata,
-        scale_func=scale_func,
+        transform=lambda X, groups: _scale(X, groups, with_mean=with_mean, with_std=with_std),
         var_names=var_names,
         groupby=groupby,
         layer=layer,
@@ -159,22 +192,21 @@ def scale_norm(
 
 
 @singledispatch
-def _minmax_norm_function(arr, **kwargs):
-    _raise_array_type_not_implemented(_minmax_norm_function, type(arr))
+def _minmax(X: Array, groups: np.ndarray | None, *, feature_range: tuple[float, float]) -> Array:
+    low, high = feature_range
+
+    def params(x: Array) -> Params:
+        axes = _obs_axes(x)
+        minimum = xpx.nanmin(x, axis=axes)
+        scale = _nonzero(xpx.nanmax(x, axis=axes) - minimum) / (high - low)
+        return minimum - low * scale, scale
+
+    return _affine(X, groups, params)
 
 
-@_minmax_norm_function.register(np.ndarray)
-@_apply_over_time_axis
-def _(arr: np.ndarray, **kwargs):
-    return sklearn_pp.MinMaxScaler(**kwargs).fit_transform(arr)
-
-
-@_minmax_norm_function.register(DaskArray)
-@_apply_over_time_axis
-def _(arr: DaskArray, **kwargs):
-    import dask_ml.preprocessing as daskml_pp
-
-    return daskml_pp.MinMaxScaler(**kwargs).fit_transform(arr)
+@_minmax.register(CSBase)
+def _(X: CSBase, groups: np.ndarray | None, *, feature_range: tuple[float, float]) -> CSBase:
+    _raise_densifying("minmax_norm", "shifting by the minimum moves implicit zeros; use maxabs_norm instead")
 
 
 def minmax_norm(
@@ -183,18 +215,15 @@ def minmax_norm(
     var_names: str | Sequence[str] | None = None,
     groupby: str | None = None,
     layer: str | None = None,
+    feature_range: tuple[float, float] = (0.0, 1.0),
     copy: bool = False,
-    **kwargs,
 ) -> EHRData | None:
     """Apply min-max normalization.
 
-    Functionality is provided by :class:`~sklearn.preprocessing.MinMaxScaler`, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MinMaxScaler.html for details.
-    If `edata.X` is a Dask Array, functionality is provided by :class:`~dask_ml.preprocessing.MinMaxScaler`, see https://ml.dask.org/modules/generated/dask_ml.preprocessing.MinMaxScaler.html for details.
-
-    Supports both 2D and 3D data:
-
-    - 2D data: Standard normalization across observations
-    - 3D data: Per-variable normalization across samples and timestamps
+    Rescales every variable to `feature_range`, ignoring missing values, like :class:`~sklearn.preprocessing.MinMaxScaler`.
+    For 3D data, the statistics of a variable are computed across observations and timepoints.
+    Dask arrays stay lazy.
+    Sparse arrays are not supported because shifting by the minimum would densify them; use :func:`~ehrapy.preprocessing.maxabs_norm` instead.
 
     Args:
         edata: Central data object.
@@ -204,8 +233,8 @@ def minmax_norm(
         groupby: Key in edata.obs that contains group information.
                  If provided, scaling is applied per group.
         layer: The layer to normalize.
+        feature_range: Desired range of the transformed data.
         copy: Whether to return a copy or act in place.
-        **kwargs: Additional arguments passed to the MinMaxScaler.
 
     Returns:
         `None` if `copy=False` and modifies the passed edata, else returns an updated object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
@@ -221,11 +250,9 @@ def minmax_norm(
         >>> np.nanmin(edata.layers["tem_data"]), np.nanmax(edata.layers["tem_data"])
         (0.0, 1.0)
     """
-    scale_func = lambda arr: _minmax_norm_function(arr, **kwargs)
-
     return _scale_func_group(
         edata=edata,
-        scale_func=scale_func,
+        transform=lambda X, groups: _minmax(X, groups, feature_range=feature_range),
         var_names=var_names,
         groupby=groupby,
         layer=layer,
@@ -235,14 +262,20 @@ def minmax_norm(
 
 
 @singledispatch
-def _maxabs_norm_function(arr):
-    _raise_array_type_not_implemented(_maxabs_norm_function, type(arr))
+def _maxabs(X: Array, groups: np.ndarray | None) -> Array:
+    def params(x: Array) -> Params:
+        return None, _nonzero(xpx.nanmax(array_namespace(x).abs(x), axis=_obs_axes(x)))
+
+    return _affine(X, groups, params)
 
 
-@_maxabs_norm_function.register(np.ndarray)
-@_apply_over_time_axis
-def _(arr: np.ndarray):
-    return sklearn_pp.MaxAbsScaler().fit_transform(arr)
+@_maxabs.register(CSBase)
+def _(X: CSBase, groups: np.ndarray | None) -> CSBase:
+    def scale(x: CSBase) -> np.ndarray:
+        minimum, maximum = sparse_nan_min_max(x)
+        return _nonzero(np.maximum(np.abs(minimum), np.abs(maximum)))
+
+    return _sparse_scale(X, groups, scale)
 
 
 def maxabs_norm(
@@ -255,13 +288,9 @@ def maxabs_norm(
 ) -> EHRData | None:
     """Apply max-abs normalization.
 
-    Functionality is provided by :class:`~sklearn.preprocessing.MaxAbsScaler`, see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MaxAbsScaler.html for details.
-    Note: Dask arrays are not supported for this function. Please convert to numpy array first.
-
-    Supports both 2D and 3D data:
-
-    - 2D data: Standard normalization across observations
-    - 3D data: Per-variable normalization across samples and timestamps
+    Divides every variable by its maximum absolute value, ignoring missing values, like :class:`~sklearn.preprocessing.MaxAbsScaler`.
+    For 3D data, the statistics of a variable are computed across observations and timepoints.
+    Dask arrays stay lazy and sparse arrays stay sparse.
 
     Args:
         edata: Central data object.
@@ -287,14 +316,9 @@ def maxabs_norm(
         >>> np.nanmax(np.abs(edata.layers["tem_data"]))
         1.0
     """
-    X = edata.X if layer is None else edata.layers[layer]
-    if isinstance(X, DaskArray):
-        _raise_array_type_not_implemented(_maxabs_norm_function, type(X))
-    scale_func = _maxabs_norm_function
-
     return _scale_func_group(
         edata=edata,
-        scale_func=scale_func,
+        transform=_maxabs,
         var_names=var_names,
         groupby=groupby,
         layer=layer,
@@ -303,23 +327,56 @@ def maxabs_norm(
     )
 
 
+def _robust_scale_adjustment(quantile_range: tuple[float, float], unit_variance: bool) -> float:
+    low, high = quantile_range
+    return float(ndtri(high / 100) - ndtri(low / 100)) if unit_variance else 1.0
+
+
 @singledispatch
-def _robust_scale_norm_function(arr, **kwargs):
-    _raise_array_type_not_implemented(_robust_scale_norm_function, type(arr))
+def _robust_scale(
+    X: Array,
+    groups: np.ndarray | None,
+    *,
+    with_centering: bool,
+    with_scaling: bool,
+    quantile_range: tuple[float, float],
+    unit_variance: bool,
+) -> Array:
+    low, high = quantile_range
+    adjustment = _robust_scale_adjustment(quantile_range, unit_variance)
+
+    def params(x: Array) -> Params:
+        quantiles = nanquantile(x, [low / 100, 0.5, high / 100], axis=_obs_axes(x))
+        return (
+            quantiles[1] if with_centering else None,
+            _nonzero(quantiles[2] - quantiles[0]) / adjustment if with_scaling else None,
+        )
+
+    return _affine(X, groups, params)
 
 
-@_robust_scale_norm_function.register(np.ndarray)
-@_apply_over_time_axis
-def _(arr: np.ndarray, **kwargs):
-    return sklearn_pp.RobustScaler(**kwargs).fit_transform(arr)
+@_robust_scale.register(CSBase)
+def _(
+    X: CSBase,
+    groups: np.ndarray | None,
+    *,
+    with_centering: bool,
+    with_scaling: bool,
+    quantile_range: tuple[float, float],
+    unit_variance: bool,
+) -> CSBase:
+    if with_centering:
+        _raise_densifying("robust_scale_norm with `with_centering=True`", "centering shifts implicit zeros")
+    if not with_scaling:
+        return X
+    low, high = quantile_range
+    adjustment = _robust_scale_adjustment(quantile_range, unit_variance)
 
+    def scale(x: CSBase) -> np.ndarray:
+        quantiles = sparse_nanquantile(x, [low / 100, high / 100])
+        return _nonzero(quantiles[1] - quantiles[0]) / adjustment
 
-@_robust_scale_norm_function.register(DaskArray)
-@_apply_over_time_axis
-def _(arr: DaskArray, **kwargs):
-    import dask_ml.preprocessing as daskml_pp
-
-    return daskml_pp.RobustScaler(**kwargs).fit_transform(arr)
+    return _sparse_scale(X, groups, scale)
 
 
 def robust_scale_norm(
@@ -328,19 +385,18 @@ def robust_scale_norm(
     var_names: str | Sequence[str] | None = None,
     groupby: str | None = None,
     layer: str | None = None,
+    with_centering: bool = True,
+    with_scaling: bool = True,
+    quantile_range: tuple[float, float] = (25.0, 75.0),
+    unit_variance: bool = False,
     copy: bool = False,
-    **kwargs,
 ) -> EHRData | None:
     """Apply robust scaling normalization.
 
-    Functionality is provided by :class:`~sklearn.preprocessing.RobustScaler`,
-    see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.RobustScaler.html for details.
-    If `edata.X` is a Dask Array, functionality is provided by :class:`~dask_ml.preprocessing.RobustScaler`, see https://ml.dask.org/modules/generated/dask_ml.preprocessing.RobustScaler.html for details.
-
-    Supports both 2D and 3D data:
-
-    - 2D data: Standard normalization across observations
-    - 3D data: Per-variable normalization across samples and timestamps
+    Subtracts the median of every variable and divides by its interquantile range, ignoring missing values, like :class:`~sklearn.preprocessing.RobustScaler`.
+    For 3D data, the statistics of a variable are computed across observations and timepoints.
+    Dask arrays stay lazy.
+    Sparse arrays are supported with `with_centering=False`.
 
     Args:
         edata: Central data object.
@@ -350,8 +406,11 @@ def robust_scale_norm(
         groupby: Key in edata.obs that contains group information.
                  If provided, scaling is applied per group.
         layer: The layer to normalize.
+        with_centering: Whether to subtract the median.
+        with_scaling: Whether to divide by the interquantile range.
+        quantile_range: Lower and upper percentile of the interquantile range.
+        unit_variance: Whether to scale normally distributed variables to unit variance.
         copy: Whether to return a copy or act in place.
-        **kwargs: Additional arguments passed to the RobustScaler.
 
     Returns:
         `None` if `copy=False` and modifies the passed edata, else returns an updated object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
@@ -367,11 +426,16 @@ def robust_scale_norm(
         >>> np.nanmedian(edata.layers["tem_data"])
         0.0
     """
-    scale_func = lambda arr: _robust_scale_norm_function(arr, **kwargs)
-
     return _scale_func_group(
         edata=edata,
-        scale_func=scale_func,
+        transform=lambda X, groups: _robust_scale(
+            X,
+            groups,
+            with_centering=with_centering,
+            with_scaling=with_scaling,
+            quantile_range=quantile_range,
+            unit_variance=unit_variance,
+        ),
         var_names=var_names,
         groupby=groupby,
         layer=layer,
@@ -380,23 +444,13 @@ def robust_scale_norm(
     )
 
 
-@singledispatch
-def _quantile_norm_function(arr, **kwargs):
-    _raise_array_type_not_implemented(_quantile_norm_function, type(arr))
+def _dense_only(name: str, reason: str, transform: Callable[[Array, np.ndarray | None], Array]):
+    def checked(X: Array | CSBase, groups: np.ndarray | None) -> Array:
+        if isinstance(X, CSBase):
+            _raise_densifying(name, reason)
+        return transform(X, groups)
 
-
-@_quantile_norm_function.register(np.ndarray)
-@_apply_over_time_axis
-def _(arr: np.ndarray, **kwargs):
-    return sklearn_pp.QuantileTransformer(**kwargs).fit_transform(arr)
-
-
-@_quantile_norm_function.register(DaskArray)
-@_apply_over_time_axis
-def _(arr: DaskArray, **kwargs):
-    import dask_ml.preprocessing as daskml_pp
-
-    return daskml_pp.QuantileTransformer(**kwargs).fit_transform(arr)
+    return checked
 
 
 def quantile_norm(
@@ -405,19 +459,18 @@ def quantile_norm(
     var_names: str | Sequence[str] | None = None,
     groupby: str | None = None,
     layer: str | None = None,
+    n_quantiles: int = 1000,
+    output_distribution: Literal["uniform", "normal"] = "uniform",
+    subsample: int = 10_000,
+    random_state: int | None = None,
     copy: bool = False,
-    **kwargs,
 ) -> EHRData | None:
     """Apply quantile normalization.
 
-    Functionality is provided by :class:`~sklearn.preprocessing.QuantileTransformer`,
-    see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.QuantileTransformer.html for details.
-    If `edata.X` is a Dask Array, functionality is provided by :class:`~dask_ml.preprocessing.QuantileTransformer`, see https://ml.dask.org/modules/generated/dask_ml.preprocessing.QuantileTransformer.html for details.
-
-    Supports both 2D and 3D data:
-
-    - 2D data: Standard normalization across observations
-    - 3D data: Per-variable normalization across samples and timestamps
+    Maps every variable to a uniform or normal distribution with :class:`~sklearn.preprocessing.QuantileTransformer`, ignoring missing values.
+    For 3D data, a variable's quantiles are computed across observations and timepoints.
+    Dask arrays stay lazy; every chunk holds all observations of its variables.
+    Sparse arrays are not supported because the transform maps zeros to nonzero values.
 
     Args:
         edata: Central data object. Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
@@ -426,8 +479,11 @@ def quantile_norm(
         groupby: Key in edata.obs that contains group information.
                  If provided, scaling is applied per group.
         layer: The layer to normalize.
+        n_quantiles: Number of quantiles used to discretize the cumulative distribution function.
+        output_distribution: Marginal distribution of the transformed data.
+        subsample: Maximum number of samples used to estimate the quantiles.
+        random_state: Seed for subsampling.
         copy: Whether to return a copy or act in place.
-        **kwargs: Additional arguments passed to the QuantileTransformer.
 
     Returns:
         `None` if `copy=False` and modifies the passed edata, else returns an updated object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
@@ -443,11 +499,20 @@ def quantile_norm(
         >>> np.nanmin(edata.layers["tem_data"]), np.nanmax(edata.layers["tem_data"])
         (0.0, 1.0)
     """
-    scale_func = lambda arr: _quantile_norm_function(arr, **kwargs)
+
+    def kernel(x: np.ndarray) -> np.ndarray:
+        return sklearn_pp.QuantileTransformer(
+            n_quantiles=min(n_quantiles, x.shape[0]),
+            output_distribution=output_distribution,
+            subsample=subsample,
+            random_state=random_state,
+        ).fit_transform(x)
 
     return _scale_func_group(
         edata=edata,
-        scale_func=scale_func,
+        transform=_dense_only(
+            "quantile_norm", "it maps zeros to nonzero values", lambda X, groups: _columnwise(X, groups, kernel)
+        ),
         var_names=var_names,
         groupby=groupby,
         layer=layer,
@@ -456,36 +521,22 @@ def quantile_norm(
     )
 
 
-@singledispatch
-def _power_norm_function(arr, **kwargs):
-    _raise_array_type_not_implemented(_power_norm_function, type(arr))
-
-
-@_power_norm_function.register(np.ndarray)
-@_apply_over_time_axis
-def _(arr: np.ndarray, **kwargs):
-    return sklearn_pp.PowerTransformer(**kwargs).fit_transform(arr)
-
-
 def power_norm(
     edata: EHRData,
     *,
     var_names: str | Sequence[str] | None = None,
     groupby: str | None = None,
     layer: str | None = None,
+    method: Literal["yeo-johnson", "box-cox"] = "yeo-johnson",
+    standardize: bool = True,
     copy: bool = False,
-    **kwargs,
 ) -> EHRData | None:
     """Apply power transformation normalization.
 
-    Functionality is provided by :class:`~sklearn.preprocessing.PowerTransformer`,
-    see https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.PowerTransformer.html for details.
-    Note: Dask arrays are not supported for this function. Please convert to numpy array first.
-
-    Supports both 2D and 3D data:
-
-    - 2D data: Standard normalization across observations
-    - 3D data: Per-variable normalization across samples and timestamps
+    Makes every variable more Gaussian-like with :class:`~sklearn.preprocessing.PowerTransformer`, ignoring missing values.
+    For 3D data, a variable's transformation is fitted across observations and timepoints.
+    Dask arrays stay lazy; every chunk holds all observations of its variables.
+    Sparse arrays are not supported because the transform maps zeros to nonzero values.
 
     Args:
         edata: Central data object.
@@ -495,8 +546,10 @@ def power_norm(
         groupby: Key in edata.obs that contains group information.
                  If provided, scaling is applied per group.
         layer: The layer to normalize.
+        method: The power transform method.
+            'box-cox' requires strictly positive data.
+        standardize: Whether to center and scale the transformed data to zero mean and unit variance.
         copy: Whether to return a copy or act in place.
-        **kwargs: Additional arguments passed to the PowerTransformer.
 
     Returns:
         `None` if `copy=False` and modifies the passed edata, else returns an updated object. Also stores a record of applied normalizations as a dictionary in edata.uns["normalization"].
@@ -516,14 +569,15 @@ def power_norm(
         >>> stats.skew(edata.layers["tem_data"].flatten())
         0.144324
     """
-    X = edata.X if layer is None else edata.layers[layer]
-    if isinstance(X, DaskArray):
-        _raise_array_type_not_implemented(_power_norm_function, type(X))
-    scale_func = lambda arr: _power_norm_function(arr, **kwargs)
+
+    def kernel(x: np.ndarray) -> np.ndarray:
+        return sklearn_pp.PowerTransformer(method=method, standardize=standardize).fit_transform(x)
 
     return _scale_func_group(
         edata=edata,
-        scale_func=scale_func,
+        transform=_dense_only(
+            "power_norm", "it maps zeros to nonzero values", lambda X, groups: _columnwise(X, groups, kernel)
+        ),
         var_names=var_names,
         groupby=groupby,
         layer=layer,
@@ -532,40 +586,35 @@ def power_norm(
     )
 
 
+def _raise_negative(edata_part: str) -> None:
+    raise ValueError(
+        f"{edata_part} contains negative values. "
+        "Undefined behavior for log normalization. "
+        "Please specify a higher offset to this function "
+        "or offset negative values with ep.pp.offset_negative_values()."
+    )
+
+
 @singledispatch
-def _log_norm_function(arr, offset: int | float = 1, base: int | float | None = None):
-    _raise_array_type_not_implemented(_log_norm_function, type(arr))
+def _log(X: Array, *, base: float | None, offset: float, edata_part: str) -> Array:
+    xp = array_namespace(X)
+    if not is_lazy_array(X) and bool(xp.any(X + offset < 0)):
+        _raise_negative(edata_part)
+    X = xp.log1p(X) if offset == 1 else xp.log(X + offset)
+    return X if base is None else X / np.log(base)
 
 
-@_log_norm_function.register(np.ndarray)
-@_apply_over_time_axis
-def _(arr: np.ndarray, offset: int | float = 1, base: int | float | None = None) -> np.ndarray:
-    if offset == 1:
-        np.log1p(arr, out=arr)
-    else:
-        np.add(arr, offset, out=arr)
-        np.log(arr, out=arr)
-
+@_log.register(CSBase)
+def _(X: CSBase, *, base: float | None, offset: float, edata_part: str) -> CSBase:
+    if offset != 1:
+        _raise_densifying("log_norm with `offset != 1`", "log(0 + offset) is nonzero")
+    if np.any(X.data < -1):
+        _raise_negative(edata_part)
+    X = X.astype(np.result_type(X.dtype, np.float32))
+    np.log1p(X.data, out=X.data)
     if base is not None:
-        np.divide(arr, np.log(base), out=arr)
-
-    return arr
-
-
-@_log_norm_function.register(DaskArray)
-@_apply_over_time_axis
-def _(arr: DaskArray, offset: int | float = 1, base: int | float | None = None) -> DaskArray:
-    import dask.array as da
-
-    if offset == 1:
-        result = da.log1p(arr)
-    else:
-        result = da.log(arr + offset)
-
-    if base is not None:
-        result = result / np.log(base)
-
-    return result
+        X.data /= np.log(base)
+    return X
 
 
 def log_norm(
@@ -581,11 +630,9 @@ def log_norm(
 
     Computes :math:`x = \\log(x + offset)`, where :math:`log` denotes the natural logarithm
     unless a different base is given and the default :math:`offset` is :math:`1`.
-
-    Supports both 2D and 3D data:
-
-    - 2D data: Standard normalization across observations
-    - 3D data: Applied to all elements across samples and timestamps
+    Applies elementwise, so 3D data is transformed at every timepoint.
+    Dask arrays stay lazy; for them the check for negative values is skipped and such values become NaN.
+    Sparse arrays stay sparse and require `offset=1`.
 
     Args:
         edata: Central data object.
@@ -611,77 +658,35 @@ def log_norm(
         >>> np.nanmax(edata.layers["tem_data"])
         10.502379
     """
-    if copy:
-        edata = edata.copy()
-
-    if FEATURE_TYPE_KEY not in edata.var.columns:
-        ed.infer_feature_types(edata, layer=layer, output=None)
-
-    if isinstance(var_names, str):
-        var_names = [var_names]
-    if var_names is None:
-        var_names = edata.var_names[edata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG].tolist()
-    else:
-        numeric_vars = edata.var_names[edata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG].tolist()
-        if not set(var_names) <= set(numeric_vars):
-            raise ValueError("Some selected vars are not numeric")
-
-    X = edata.X if layer is None else edata.layers[layer]
-
-    if var_names:
-        var_indices = edata.var_names.get_indexer(var_names)
-        check_data = X[:, var_indices] if X.ndim == 2 else X[:, var_indices, :]
-    else:
-        check_data = X
-
-    offset_tmp_applied = check_data + offset
-    if np.any(offset_tmp_applied < 0):
-        data_type = f"Layer '{layer}'" if layer else "Matrix X"
-        raise ValueError(
-            f"{data_type} contains negative values. "
-            "Undefined behavior for log normalization. "
-            "Please specify a higher offset to this function "
-            "or offset negative values with ep.pp.offset_negative_values()."
-        )
-
-    if var_names:
-        var_indices = edata.var_names.get_indexer(var_names)
-        var_values = X[:, var_indices] if X.ndim == 2 else X[:, var_indices, :]
-        transformed_values = _log_norm_function(var_values, offset=offset, base=base)
-        if layer is None:
-            edata.X[:, var_indices] = transformed_values
-        else:
-            if X.ndim == 3:
-                edata.layers[layer][:, var_indices, :] = transformed_values
-            else:
-                edata.layers[layer][:, var_indices] = transformed_values
-    else:
-        transformed_values = _log_norm_function(X, offset=offset, base=base)
-        if layer is None:
-            edata.X = transformed_values
-        else:
-            edata.layers[layer] = transformed_values
-
-    _record_norm(edata, var_names, "log")
-
-    return edata if copy else None
+    edata_part = "Matrix X" if layer is None else f"Layer '{layer}'"
+    return _scale_func_group(
+        edata=edata,
+        transform=lambda X, _groups: _log(X, base=base, offset=offset, edata_part=edata_part),
+        var_names=var_names,
+        groupby=None,
+        layer=layer,
+        copy=copy,
+        norm_name="log",
+    )
 
 
-def _record_norm(edata: EHRData, vars: Sequence[str], method: str) -> None:
-    if "normalization" in edata.uns:
-        norm_record = edata.uns["normalization"]
-    else:
-        norm_record = {}
-
-    for var in vars:
-        if var in norm_record.keys():
-            norm_record[var].append(method)
-        else:
-            norm_record[var] = [method]
-
+def _record_norm(edata: EHRData, var_names: Sequence[str], method: str) -> None:
+    norm_record = edata.uns.get("normalization", {})
+    for var in var_names:
+        norm_record.setdefault(var, []).append(method)
     edata.uns["normalization"] = norm_record
 
-    return None
+
+@singledispatch
+def _offset_negative(X: Array) -> Array:
+    return X - array_namespace(X).minimum(xpx.nanmin(X), 0)
+
+
+@_offset_negative.register(CSBase)
+def _(X: CSBase) -> CSBase:
+    if np.nanmin(sparse_nan_min_max(X)[0]) < 0:
+        _raise_densifying("offset_negative_values on data with negative values", "the offset moves implicit zeros")
+    return X
 
 
 def offset_negative_values(edata: EHRData, *, layer: str | None = None, copy: bool = False) -> EHRData | None:
@@ -689,11 +694,9 @@ def offset_negative_values(edata: EHRData, *, layer: str | None = None, copy: bo
 
     This is primarily used to enable the usage of functions such as log_norm that
     do not allow negative values for mathematical or technical reasons.
-
-    Supports both 2D and 3D data:
-
-    - 2D data: Standard offset across observations
-    - 3D data: Applied to all elements across samples and timestamps
+    The offset is the global minimum, so 3D data is offset across all observations, variables and timepoints.
+    Dask arrays stay lazy.
+    Sparse arrays without negative values are returned unchanged; with negative values they are not supported because the offset would densify them.
 
     Args:
         edata: Central data object.
@@ -718,8 +721,11 @@ def offset_negative_values(edata: EHRData, *, layer: str | None = None, copy: bo
         edata = edata.copy()
 
     X = edata.X if layer is None else edata.layers[layer]
-    minimum = np.nanmin(X)
-    if minimum < 0:
-        np.add(X, np.abs(minimum), out=X)
+    _raise_if_dask_with_sparse_chunks(X, "offset_negative_values")
+    X = _offset_negative(X)
+    if layer is None:
+        edata.X = X
+    else:
+        edata.layers[layer] = X
 
     return edata if copy else None

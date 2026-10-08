@@ -4,17 +4,16 @@ from functools import singledispatch
 from typing import TYPE_CHECKING
 
 import numpy as np
-import scipy.sparse as sp
-
-from ehrapy._compat import (
-    DaskArray,
-    _raise_array_type_not_implemented,
-)
+import pandas as pd
+from array_api_compat import array_namespace
+from fast_array_utils.types import CSBase, DaskArray
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Collection, Iterable
 
     from ehrdata import EHRData
+
+    type Array = np.ndarray | DaskArray
 
 
 def missing_data_mask(
@@ -29,16 +28,14 @@ def missing_data_mask(
 
     By default marks ``NaN`` values as missing.
     Optionally also marks user-specified sentinel values (e.g. ``-1``, ``0``, ``999``) as missing.
-
-    The result is stored in ``edata.layers[key_added]`` and preserves the
-    array backend of the source matrix: dense in / dense out, sparse in /
-    sparse out, dask in / dask out.
+    The mask is elementwise, so 3D data is masked at every timepoint.
+    Dask arrays stay lazy and sparse arrays yield a sparse mask that stores only the missing values.
 
     Args:
         edata: Central data object.
         layer: Layer to use instead of ``edata.X``.
         mask_values: Additional values to treat as missing besides ``NaN``.
-            Not supported on sparse arrays — densify first or use a dense layer.
+            On sparse arrays, ``0`` is not supported because it would mark every implicit zero.
         key_added: Key under which the boolean mask is stored in ``edata.layers``.
         copy: If ``True``, return a modified copy; otherwise modify in place.
 
@@ -60,75 +57,34 @@ def missing_data_mask(
         edata = edata.copy()
 
     X = edata.X if layer is None else edata.layers[layer]
-
-    mask = _compute_nan_mask(X)
-
-    if mask_values is not None:
-        values = list(mask_values)
-        if values:
-            mask = _apply_sentinel_mask(X, mask, values)
-
-    edata.layers[key_added] = mask
+    edata.layers[key_added] = _missing_mask(X, () if mask_values is None else tuple(mask_values))
 
     return edata if copy else None
 
 
 @singledispatch
-def _compute_nan_mask(mtx):
-    _raise_array_type_not_implemented(_compute_nan_mask, type(mtx))
+def _missing_mask(X: Array, values: Collection[float | str] = ()) -> Array:
+    """Elementwise mask of missing values: NaN (any null value for object arrays) and `values`."""
+    xp = array_namespace(X)
+    mask = pd.isna(X) if X.dtype == object else xp.isnan(X)
+    for value in values:
+        mask = mask | (X == value)
+    return mask
 
 
-@_compute_nan_mask.register(np.ndarray)
-def _(mtx: np.ndarray) -> np.ndarray:
-    if mtx.dtype.kind == "O":
-        # `np.isnan` only accepts numeric dtypes, so an object-typed
-        # array (e.g. EHR data with categorical and numeric columns
-        # mixed) would raise. `pd.isna` is the dtype-agnostic check.
-        import pandas as pd
-
-        return pd.isna(mtx)
-    return np.isnan(mtx)
+@_missing_mask.register(DaskArray)
+def _(X: DaskArray, values: Collection[float | str] = ()) -> DaskArray:
+    return X.map_blocks(_missing_mask, values, dtype=bool, meta=_missing_mask(X._meta, values))
 
 
-@_compute_nan_mask.register(sp.csr_array)
-@_compute_nan_mask.register(sp.csc_array)
-def _(mtx: sp.csr_array | sp.csc_array) -> sp.csr_array | sp.csc_array:
-    # Sparse formats use implicit zeros, so a NaN can only appear among the
-    # explicitly stored data entries.  Reuse the input's indices/indptr and
-    # replace ``data`` with a boolean isnan view, so the result preserves
-    # the sparse backend without densifying.
-    nan_data = np.isnan(mtx.data)
-    return type(mtx)((nan_data, mtx.indices.copy(), mtx.indptr.copy()), shape=mtx.shape)
-
-
-@_compute_nan_mask.register(DaskArray)
-def _(mtx: DaskArray) -> DaskArray:
-    import dask.array as da
-
-    return da.isnan(mtx)
-
-
-@singledispatch
-def _apply_sentinel_mask(mtx, mask, values):
-    _raise_array_type_not_implemented(_apply_sentinel_mask, type(mtx))
-
-
-@_apply_sentinel_mask.register(np.ndarray)
-def _(mtx: np.ndarray, mask: np.ndarray, values: list) -> np.ndarray:
-    return mask | np.isin(mtx, values)
-
-
-@_apply_sentinel_mask.register(sp.csr_array)
-@_apply_sentinel_mask.register(sp.csc_array)
-def _(mtx: sp.csr_array | sp.csc_array, mask, values: list):
-    raise NotImplementedError(
-        "missing_data_mask does not support sentinel values (mask_values=...) on sparse arrays. "
-        "Densify the matrix or apply on a dense layer instead."
-    )
-
-
-@_apply_sentinel_mask.register(DaskArray)
-def _(mtx: DaskArray, mask: DaskArray, values: list) -> DaskArray:
-    import dask.array as da
-
-    return mask | da.isin(mtx, values)
+@_missing_mask.register(CSBase)
+def _(X: CSBase, values: Collection[float | str] = ()) -> CSBase:
+    if 0 in values:
+        raise NotImplementedError(
+            "missing_data_mask does not support the sentinel value 0 on sparse arrays "
+            "because it would mark every implicit zero, which would densify the mask."
+        )
+    data = np.isnan(X.data) | np.isin(X.data, list(values))
+    mask = type(X)((data, X.indices.copy(), X.indptr.copy()), shape=X.shape)
+    mask.eliminate_zeros()
+    return mask

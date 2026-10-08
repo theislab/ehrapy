@@ -10,7 +10,10 @@ from ehrdata._feature_types import _check_feature_types
 from ehrdata.core.constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 
 import ehrapy as ep
-from ehrapy._compat import function_2D_only
+from ehrapy._compat import (
+    _raise_if_not_numpy,
+    function_2D_only,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -46,6 +49,7 @@ def detect_bias(
     - feature importances for predicting one feature with another
 
     Results of the computations are stored in `.var`, `.varp`, and `.uns` of the edata object.
+    Only 2D numpy arrays are supported because the computations need all observations in memory; aggregate 3D data first with :func:`~ehrapy.preprocessing.summarize_measurements`.
     Values that exceed the specified thresholds are considered of interest and stored in the results dictionary in `.uns[key_added]`.
     Be aware that the results depend on the encoding of the data. E.g. when using one-hot encoding, each group of a categorical feature will
     be treated as a separate feature, which can lead to an increased number of detected biases. Please take this into consideration when
@@ -100,6 +104,9 @@ def detect_bias(
         >>> ep.pp.detect_bias(edata, sensitive_features=["race", "gender"])
     """
     from ehrapy.tools import rank_features_supervised
+
+    X = edata.X if layer is None else edata.layers[layer]
+    _raise_if_not_numpy(X, "detect_bias", "it trains models on all observations in memory")
 
     bias_results = {}
 

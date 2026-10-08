@@ -1,57 +1,72 @@
 from __future__ import annotations
 
-import dask.array as da
 import ehrdata as ed
 import numpy as np
 import pandas as pd
 import pytest
-import scipy.sparse as sp
+from fast_array_utils.conv import to_dense
+from fast_array_utils.types import CSBase
+from testing.fast_array_utils import Flags
 
 import ehrapy as ep
-from ehrapy._types import ARRAY_TYPES_NONNUMERIC, asarray
-from tests.conftest import as_dense_dask_array
+from tests.conftest import forbid_dask_compute
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
-def test_missing_data_mask_nan(array_type, missing_values_edata):
-    edata = missing_values_edata
-    edata.X = array_type(edata.X)
-
-    ep.pp.missing_data_mask(edata)
+def test_missing_data_mask_nan(missing_values_edata):
+    ep.pp.missing_data_mask(missing_values_edata)
 
     expected = np.array([[False, True, False], [True, True, False]])
-    assert "missing_data_mask" in edata.layers
-    assert np.array_equal(asarray(edata.layers["missing_data_mask"]), expected)
+    assert np.array_equal(missing_values_edata.layers["missing_data_mask"], expected)
 
 
-def test_missing_data_mask_preserves_dask(missing_values_edata):
-    edata = missing_values_edata
-    edata.X = as_dense_dask_array(edata.X)
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+@pytest.mark.parametrize("ndim", [2, 3])
+@pytest.mark.parametrize("mask_values", [None, [], [-1.0, 999.0], [0.0]])
+def test_missing_data_mask_array_types(array_type, ndim, mask_values, rng):
+    if ndim == 3 and array_type.flags & Flags.Sparse:
+        pytest.skip("sparse arrays are 2D")
+    shape = (20, 4) if ndim == 2 else (20, 4, 3)
+    X = np.where(rng.random(shape) < 0.5, 0.0, rng.gamma(2, size=shape))
+    X[rng.random(shape) < 0.1] = -1.0
+    X[rng.random(shape) < 0.2] = np.nan
+    X[:, 0] = np.nan
+    X[:, 1] = 999.0
+    expected = ep.pp.missing_data_mask(ed.EHRData(X=X), mask_values=mask_values, copy=True).layers["missing_data_mask"]
+    edata = ed.EHRData(X=array_type(X))
 
-    ep.pp.missing_data_mask(edata)
+    if array_type.flags & Flags.Sparse and mask_values == [0.0]:
+        with pytest.raises(NotImplementedError, match="sparse arrays"):
+            ep.pp.missing_data_mask(edata, mask_values=mask_values)
+        return
 
-    # The newly created layer must remain dask
-    assert isinstance(edata.layers["missing_data_mask"], da.Array)
-    # And the original data array must not have been silently converted
-    # to a numpy array as a side effect of computing the mask.
-    assert isinstance(edata.X, da.Array)
+    with forbid_dask_compute():
+        result = ep.pp.missing_data_mask(edata, mask_values=mask_values, copy=True).layers["missing_data_mask"]
+
+    assert isinstance(result, array_type.cls)
+    assert result.dtype == bool
+    if isinstance(result, CSBase):
+        assert result.nnz == expected.sum()
+    np.testing.assert_array_equal(to_dense(result, to_cpu_memory=True), expected)
 
 
-def test_missing_data_mask_object_dtype():
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu | Flags.Sparse)
+def test_missing_data_mask_object_dtype(array_type):
     # EHR data often arrives as an object array because columns mix
     # numeric and categorical values; np.isnan would error on this dtype,
     # so the function must fall back to a dtype-agnostic check.
     X = np.array([[1.0, np.nan, "A"], ["B", 5.0, np.nan]], dtype=object)
     edata = ed.EHRData(
-        X=X,
+        X=array_type(X),
         obs=pd.DataFrame({"id": ["a", "b"]}),
         var=pd.DataFrame(index=["v1", "v2", "v3"]),
     )
 
-    ep.pp.missing_data_mask(edata)
+    with forbid_dask_compute():
+        ep.pp.missing_data_mask(edata)
 
     expected = np.array([[False, True, False], [False, False, True]])
-    assert np.array_equal(edata.layers["missing_data_mask"], expected)
+    assert isinstance(edata.layers["missing_data_mask"], array_type.cls)
+    assert np.array_equal(to_dense(edata.layers["missing_data_mask"], to_cpu_memory=True), expected)
 
 
 def test_missing_data_mask_no_missing():
@@ -139,53 +154,3 @@ def test_missing_data_mask_custom_key(missing_values_edata):
 
     assert "my_mask" in missing_values_edata.layers
     assert "missing_data_mask" not in missing_values_edata.layers
-
-
-@pytest.mark.parametrize("sparse_type", [sp.csr_array, sp.csc_array])
-def test_missing_data_mask_sparse_nan_preserves_sparse(sparse_type):
-    # NaN must live among the explicitly stored entries; implicit zeros
-    # cannot encode NaN in CSR/CSC.
-    dense = np.array([[np.nan, 0.0, 1.0], [0.0, np.nan, 0.0]], dtype=np.float64)
-    edata = ed.EHRData(
-        X=sparse_type(dense),
-        obs=pd.DataFrame({"id": ["a", "b"]}),
-        var=pd.DataFrame(index=["v1", "v2", "v3"]),
-    )
-
-    ep.pp.missing_data_mask(edata)
-
-    mask = edata.layers["missing_data_mask"]
-    assert sp.issparse(mask)
-    assert isinstance(mask, sparse_type)
-    assert mask.dtype == np.bool_
-    expected = np.array([[True, False, False], [False, True, False]])
-    assert np.array_equal(mask.toarray(), expected)
-
-
-def test_missing_data_mask_empty_mask_values_is_noop_on_sparse():
-    # Regression: an empty sentinel iterable must not trigger the sparse
-    # NotImplementedError path — there are no sentinels to apply.
-    X = sp.csr_array(np.array([[np.nan, 0.0], [0.0, 1.0]], dtype=np.float64))
-    edata = ed.EHRData(
-        X=X,
-        obs=pd.DataFrame({"id": ["a", "b"]}),
-        var=pd.DataFrame(index=["v1", "v2"]),
-    )
-
-    ep.pp.missing_data_mask(edata, mask_values=[])
-
-    mask = edata.layers["missing_data_mask"]
-    assert sp.issparse(mask)
-    assert np.array_equal(mask.toarray(), np.array([[True, False], [False, False]]))
-
-
-def test_missing_data_mask_sparse_sentinels_raises():
-    X = sp.csr_array(np.array([[1.0, 0.0], [0.0, 2.0]], dtype=np.float64))
-    edata = ed.EHRData(
-        X=X,
-        obs=pd.DataFrame({"id": ["a", "b"]}),
-        var=pd.DataFrame(index=["v1", "v2"]),
-    )
-
-    with pytest.raises(NotImplementedError, match="sparse arrays"):
-        ep.pp.missing_data_mask(edata, mask_values=[0])

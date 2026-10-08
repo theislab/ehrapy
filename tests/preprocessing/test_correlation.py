@@ -1,8 +1,12 @@
+import ehrdata as ed
 import numpy as np
+import pandas as pd
 import pytest
 from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
+from testing.fast_array_utils import Flags
 
 import ehrapy as ep
+from tests.conftest import forbid_dask_compute
 
 
 @pytest.mark.parametrize("method", ["pearson", "spearman"])
@@ -50,3 +54,36 @@ def test_compute_variable_correlations_errors(edata_blobs_timeseries_small, edat
         ep.pp.variable_correlations(edata=edata, layer=DEFAULT_TEM_LAYER_NAME, method="unsupported")
     with pytest.raises(ValueError, match="Unknown aggregation method"):
         ep.pp.variable_correlations(edata=edata, layer=DEFAULT_TEM_LAYER_NAME, agg="median")
+
+
+@pytest.mark.filterwarnings("ignore::scipy.stats.ConstantInputWarning")
+@pytest.mark.filterwarnings("ignore:Mean of empty slice:RuntimeWarning")
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+@pytest.mark.parametrize("ndim", [2, 3])
+@pytest.mark.parametrize("agg", ["mean", "first", "last"])
+def test_variable_correlations_array_types(array_type, ndim, agg, rng):
+    if ndim == 3 and array_type.flags & Flags.Sparse:
+        pytest.skip("sparse arrays are 2D")
+    shape = (30, 5) if ndim == 2 else (30, 5, 3)
+    X = np.where(rng.random(shape) < 0.5, 0, rng.normal(size=shape))
+    X[:, 1] += X[:, 0]
+    X[rng.random(shape) < 0.1] = np.nan
+    X[:, 3] = 2.0
+    X[:, 4] = np.nan
+
+    def make_edata(X):
+        return ed.EHRData(shape=shape[:2], layers={DEFAULT_TEM_LAYER_NAME: X})
+
+    expected = ep.pp.variable_correlations(make_edata(X), layer=DEFAULT_TEM_LAYER_NAME, agg=agg)
+    edata = make_edata(array_type(X))
+
+    if array_type.flags & Flags.Sparse:
+        with pytest.raises(NotImplementedError):
+            ep.pp.variable_correlations(edata, layer=DEFAULT_TEM_LAYER_NAME, agg=agg)
+        return
+
+    with forbid_dask_compute(allowed=1):
+        result = ep.pp.variable_correlations(edata, layer=DEFAULT_TEM_LAYER_NAME, agg=agg)
+
+    for result_df, expected_df in zip(result, expected, strict=True):
+        pd.testing.assert_frame_equal(result_df, expected_df)

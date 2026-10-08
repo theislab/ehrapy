@@ -9,9 +9,10 @@ import ehrdata as ed
 import numpy as np
 import pandas as pd
 from ehrdata import EHRData
-from ehrdata._feature_types import _check_feature_types
 from ehrdata._logger import logger
 from ehrdata.core.constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
+from fast_array_utils.conv import to_dense
+from fast_array_utils.types import CSBase
 from rich.progress import BarColumn, Progress
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
@@ -49,6 +50,8 @@ def encode(
 
     For 3D longitudinal layers of shape ``(n_obs, n_vars, n_time)`` the encoder is fit on values stacked across the time axis so the category space is consistent over time.
     The encoded result keeps the time axis, and ``obs`` stores the first-timepoint value of each encoded categorical column.
+    Dask arrays stay lazy apart from a single computation that discovers the categories, which reads all values if the feature types still need to be inferred.
+    Sparse arrays only hold numeric values, so autodetection leaves them unchanged, and encoding their variables is not supported because it would densify them.
 
     Args:
         edata: Central data object.
@@ -87,7 +90,7 @@ def encode(
         )
 
     X = edata.X if layer is None else edata.layers[layer]
-    if X.ndim == 3 and X.shape[2] > 1:
+    if X.ndim == 3:
         return _encode_3d(edata, autodetect, encodings, layer=layer)
 
     return _encode_2d(edata, autodetect, encodings, layer=layer)
@@ -101,10 +104,19 @@ def _encode_2d(
     layer: str | None,
 ) -> EHRData:
     X = edata.X if layer is None else edata.layers[layer]
+    if isinstance(X, CSBase) or (isinstance(X, DaskArray) and isinstance(X._meta, CSBase)):
+        if not autodetect:
+            raise NotImplementedError(
+                "encode does not support sparse arrays because encoding their variables would densify them."
+            )
+        logger.warning("Detected no columns that need to be encoded. Leaving passed EHRData object unchanged.")
+        return edata
     original = edata.layers["original"] if "original" in edata.layers else X
     if FEATURE_TYPE_KEY in edata.var.columns:
         feature_types = edata.var[FEATURE_TYPE_KEY]
     else:
+        # inference reads every value, so compute lazy arrays once here and discover the categories from the result
+        X = to_dense(X, to_cpu_memory=True)
         # ed.infer_feature_types writes to var and replaces missing value strings in X, so it must not see the input
         proxy = EHRData(X=X.copy(), var=pd.DataFrame(index=edata.var_names))
         feature_types = ed.infer_feature_types(proxy, output="dataframe")[FEATURE_TYPE_KEY]
@@ -125,9 +137,9 @@ def _encode_2d(
                 return edata
 
         # filter out categorical columns, that are already stored numerically
-        df_edata = ed.io.to_pandas(edata, layer=layer)
+        values = _variable_values(edata, X, categoricals_names)
         categoricals_names = [
-            feat for feat in categoricals_names if not np.all(df_edata[feat].apply(type).isin([int, float]))
+            feat for feat in values.columns if not np.all(values[feat].apply(type).isin([int, float]))
         ]
 
         # no columns were detected, that would require an encoding (e.g. non-numerical columns)
@@ -135,7 +147,7 @@ def _encode_2d(
             logger.warning("Detected no columns that need to be encoded. Leaving passed EHRData object unchanged.")
             return edata
         # update obs with the original categorical values
-        updated_obs = _update_obs(edata, categoricals_names, layer=layer)
+        updated_obs = _update_obs(edata, values[categoricals_names])
 
         encoded_x = None
         encoded_var_names = edata.var_names.to_list()
@@ -204,6 +216,7 @@ def _encode_2d(
         if "encoding_mode" in edata.var.keys():
             encodings = _reorder_encodings(edata, encodings)  # type: ignore
             edata = _undo_encoding(edata, layer=layer)
+            X = edata.X if layer is None else edata.layers[layer]
             original = edata.layers["original"]
             feature_types = edata.var[FEATURE_TYPE_KEY]
 
@@ -229,7 +242,7 @@ def _encode_2d(
                 "to encode numerical columns!"
             )
 
-        updated_obs = _update_obs(edata, categoricals, layer)
+        updated_obs = _update_obs(edata, _variable_values(edata, X, categoricals))
 
         encoding_mode = {}
         encoded_x = None
@@ -780,32 +793,36 @@ def _get_categoricals_old_indices(old_var_names: list[str], encoded_categories: 
     return idx_list
 
 
-def _update_obs(edata: EHRData, categorical_names: list[str], layer: str | None = None) -> pd.DataFrame:
+def _variable_values(edata: EHRData, X: np.ndarray | DaskArray, var_names: Sequence[str]) -> pd.DataFrame:
+    """Values of the variables `var_names` of `X` in the order of `edata.var_names`, computing dask arrays once."""
+    selected = set(var_names)
+    var_names = [var_name for var_name in edata.var_names if var_name in selected]
+    return pd.DataFrame(to_dense(X[:, edata.var_names.get_indexer(var_names)], to_cpu_memory=True), columns=var_names)
+
+
+def _update_obs(edata: EHRData, values: pd.DataFrame) -> pd.DataFrame:
     """Add the original categorical values to obs.
 
     Args:
         edata: Central data object.
-        categorical_names: Name of each categorical column
-        layer: The layer to operate on.
+        values: The original values of the categorical variables, one column per variable.
 
     Returns:
         Updated obs with the original categorical values added
     """
-    X = edata.X if layer is None else edata.layers[layer]
     updated_obs = edata.obs.copy()
-    for idx, var_name in enumerate(edata.var_names):
+    for var_name in values.columns:
         if var_name in updated_obs.columns:
             continue
-        elif var_name in categorical_names:
-            updated_obs[var_name] = X[::, idx : idx + 1].flatten()
-            # note: this will count binary columns (0 and 1 only) as well
-            # needed for writing to .h5ed files
-            if set(pd.unique(updated_obs[var_name])).issubset({False, True, np.nan}):
-                updated_obs[var_name] = updated_obs[var_name].astype("bool")
+        updated_obs[var_name] = values[var_name].to_numpy()
+        # note: this will count binary columns (0 and 1 only) as well
+        # needed for writing to .h5ed files
+        if set(pd.unique(updated_obs[var_name])).issubset({False, True, np.nan}):
+            updated_obs[var_name] = updated_obs[var_name].astype("bool")
     # get all non bool object columns and cast them to category dtype
     object_columns = list(updated_obs.select_dtypes(include="object").columns)
     updated_obs[object_columns] = updated_obs[object_columns].astype("category")
-    logger.info(f"The original categorical values `{categorical_names}` were added to obs.")
+    logger.info(f"The original categorical values `{values.columns.tolist()}` were added to obs.")
 
     return updated_obs
 

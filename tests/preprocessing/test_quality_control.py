@@ -4,14 +4,14 @@ import ehrdata as ed
 import numpy as np
 import pandas as pd
 import pytest
-from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
+from ehrdata.core.constants import CATEGORICAL_TAG, DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrdata.io import read_csv
-from scipy import sparse as sp
+from testing.fast_array_utils import Flags
 
 import ehrapy as ep
 from ehrapy.preprocessing._encoding import encode
-from ehrapy.preprocessing._quality_control import _compute_obs_metrics, _compute_var_metrics, mcar_test
-from tests.conftest import ARRAY_TYPES_NONNUMERIC, TEST_DATA_PATH, as_dense_dask_array
+from ehrapy.preprocessing._quality_control import mcar_test
+from tests.conftest import TEST_DATA_PATH, forbid_dask_compute
 
 _TEST_PATH_ENCODE = f"{TEST_DATA_PATH}/encode"
 
@@ -47,10 +47,8 @@ def _build_little_scenario(name):
     return _make_mcar_edata(**cfg) if "missing_rate" in cfg else _make_mar_edata(**cfg)
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
-def test_qc_metrics_vanilla(array_type, missing_values_edata):
+def test_qc_metrics_vanilla(missing_values_edata):
     edata = missing_values_edata
-    edata.X = array_type(edata.X)
     modification_copy = edata.copy()
 
     ep.pp.qc_metrics(edata)
@@ -76,12 +74,10 @@ def test_qc_metrics_vanilla(array_type, missing_values_edata):
         assert np.array_equal(modification_copy.var[key], edata.var[key])
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
-def test_qc_metrics_vanilla_advanced(array_type, missing_values_edata):
+def test_qc_metrics_vanilla_advanced(missing_values_edata):
     edata = missing_values_edata
 
     edata.var["feature_type"] = ["numeric", "numeric", "categorical"]
-    edata.X = array_type(missing_values_edata.X)
     modification_copy = edata.copy()
     ep.pp.qc_metrics(edata)
     obs_metrics, var_metrics = edata.obs, edata.var
@@ -221,74 +217,99 @@ def test_qc_metrics_heterogeneous_columns():
         ep.pp.qc_metrics(edata, layer="tem_data")
 
 
-@pytest.mark.parametrize(
-    "array_type, expected_error",
-    [
-        (np.array, None),
-        (as_dense_dask_array, None),
-        # can't test sparse matrices because they don't support string values
-    ],
-)
-def test_obs_qc_metrics_array_types(array_type, expected_error):
-    edata = read_csv(f"{_TEST_PATH_ENCODE}/dataset1.csv")
-    edata.X = array_type(edata.X)
-    mtx = edata.X
-    if expected_error:
-        with pytest.raises(expected_error):
-            _compute_obs_metrics(mtx, edata)
-
-
-@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
-def test_obs_nan_qc_metrics(array_type):
+def test_qc_metrics_encoded_uses_original_values():
     edata = read_csv(f"{_TEST_PATH_ENCODE}/dataset1.csv")
     edata.X[0][4] = np.nan
-    edata.X = array_type(edata.X)
-    edata2 = encode(edata, encodings={"one-hot": ["clinic_day"]})
-    mtx = edata2.X
-    obs_metrics = _compute_obs_metrics(mtx, edata2)
-    assert obs_metrics.iloc[0].iloc[0] == 1
+    edata = encode(edata, encodings={"one-hot": ["clinic_day"]})
+    X_before = edata.X.copy()
+
+    ep.pp.qc_metrics(edata)
+
+    np.testing.assert_array_equal(edata.X, X_before)
+    assert edata.obs["missing_values_abs"].iloc[0] == 1
+    encoded = edata.var_names.str.startswith("ehrapycat_clinic_day")
+    assert (edata.var.loc[encoded, "missing_values_abs"] == 1).all()
+    assert (edata.var.loc[encoded, "unique_values_abs"] == 4).all()
+    assert edata.var.loc[encoded, ["mean", "median", "min", "max"]].isna().all().all()
+    assert not edata.var.loc[encoded, "iqr_outliers"].any()
 
 
-@pytest.mark.parametrize(
-    "array_type, expected_error",
-    [
-        (np.array, None),
-        (as_dense_dask_array, None),
-        # can't test sparse matrices because they don't support string values
-    ],
-)
-def test_var_qc_metrics_array_types(array_type, expected_error):
-    edata = read_csv(f"{_TEST_PATH_ENCODE}/dataset1.csv")
-    edata.X = array_type(edata.X)
-    mtx = edata.X
-    if expected_error:
-        with pytest.raises(expected_error):
-            _compute_var_metrics(mtx, edata)
+def _array_type_data(rng: np.random.Generator, ndim: int) -> np.ndarray:
+    """Values with many zeros, missing values, an outlier, and all-NaN, constant zero, constant and categorical variables."""
+    shape = (30, 6) if ndim == 2 else (30, 6, 3)
+    X = np.where(rng.random(shape) < 0.5, 0.0, rng.gamma(2, size=shape))
+    X[rng.random(shape) < 0.2] = np.nan
+    X[:, 0] = np.nan
+    X[:, 1] = 0.0
+    X[:, 2] = 3.0
+    X[:, 3] = np.where(np.isnan(X[:, 3]), np.nan, rng.integers(0, 3, size=X[:, 3].shape))
+    X[0, 4] = 50.0
+    return X
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
-def test_var_encoding_mode_does_not_modify_original_matrix(array_type):
-    edata = read_csv(f"{_TEST_PATH_ENCODE}/dataset1.csv")
-    edata.X = array_type(edata.X)
-    edata2 = encode(edata, encodings={"one-hot": ["clinic_day"]})
-    mtx_before = np.asarray(edata2.X).copy()
-    _compute_var_metrics(edata2.X, edata2)
-    assert np.array_equal(mtx_before, np.asarray(edata2.X))
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+@pytest.mark.parametrize("ndim", [2, 3])
+@pytest.mark.parametrize("extended", [False, True])
+def test_qc_metrics_array_types(array_type, ndim, extended, rng):
+    if ndim == 3 and array_type.flags & Flags.Sparse:
+        pytest.skip("sparse arrays are 2D")
+    X = _array_type_data(rng, ndim)
+
+    def make_edata(X):
+        var = pd.DataFrame({"qc": [False, False, True, False, False, False]}, index=[f"var{i}" for i in range(6)])
+        if extended:
+            var[FEATURE_TYPE_KEY] = [NUMERIC_TAG] * 3 + [CATEGORICAL_TAG] + [NUMERIC_TAG] * 2
+        return ed.EHRData(X=X, var=var)
+
+    expected = ep.pp.qc_metrics(make_edata(X), qc_vars=["qc"], copy=True)
+    edata = make_edata(array_type(X))
+
+    if array_type.flags & Flags.Sparse and array_type.flags & Flags.Dask:
+        with pytest.raises(NotImplementedError):
+            ep.pp.qc_metrics(edata, qc_vars=["qc"])
+        return
+
+    with forbid_dask_compute(allowed=1):
+        result = ep.pp.qc_metrics(edata, qc_vars=["qc"], copy=True)
+
+    assert isinstance(result.X, array_type.cls)
+    pd.testing.assert_frame_equal(result.obs, expected.obs)
+    pd.testing.assert_frame_equal(result.var, expected.var)
 
 
-@pytest.mark.parametrize("array_type", ARRAY_TYPES_NONNUMERIC)
-def test_var_nan_qc_metrics(array_type):
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu | Flags.Sparse)
+def test_qc_metrics_object_array_types(array_type, edata_mini_3D_missing_values):
+    edata = edata_mini_3D_missing_values
+    expected = ep.pp.qc_metrics(edata, layer=DEFAULT_TEM_LAYER_NAME, copy=True)
+    edata.layers[DEFAULT_TEM_LAYER_NAME] = array_type(edata.layers[DEFAULT_TEM_LAYER_NAME])
+
+    with forbid_dask_compute(allowed=1):
+        result = ep.pp.qc_metrics(edata, layer=DEFAULT_TEM_LAYER_NAME, copy=True)
+
+    assert isinstance(result.layers[DEFAULT_TEM_LAYER_NAME], array_type.cls)
+    pd.testing.assert_frame_equal(result.obs, expected.obs)
+    pd.testing.assert_frame_equal(result.var, expected.var)
+
+
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+def test_qc_metrics_encoded_array_types(array_type):
     edata = read_csv(f"{_TEST_PATH_ENCODE}/dataset1.csv")
     edata.X[0][4] = np.nan
+    edata = encode(edata, encodings={"one-hot": ["clinic_day"]})
+    expected = ep.pp.qc_metrics(edata, copy=True)
     edata.X = array_type(edata.X)
-    edata2 = encode(edata, encodings={"one-hot": ["clinic_day"]})
-    mtx = edata2.X
-    var_metrics = _compute_var_metrics(mtx, edata2)
-    assert var_metrics.iloc[0].iloc[0] == 1
-    assert var_metrics.iloc[1].iloc[0] == 1
-    assert var_metrics.iloc[2].iloc[0] == 1
-    assert var_metrics.iloc[3].iloc[0] == 1
-    assert var_metrics.iloc[4].iloc[0] == 1
+
+    if array_type.flags & Flags.Sparse:
+        with pytest.raises(NotImplementedError):
+            ep.pp.qc_metrics(edata)
+        return
+
+    with forbid_dask_compute(allowed=1):
+        result = ep.pp.qc_metrics(edata, copy=True)
+
+    assert isinstance(result.X, array_type.cls)
+    pd.testing.assert_frame_equal(result.obs, expected.obs)
+    pd.testing.assert_frame_equal(result.var, expected.var)
 
 
 @pytest.mark.parametrize("copy", [False, True])
@@ -459,12 +480,51 @@ def test_qc_lab_measurements_layer():
     assert "potassium_outlier" in edata.obs.columns
 
 
-def test_qc_lab_measurements_3D_edata(edata_blob_small):
-    ep.pp.qc_lab_measurements(edata_blob_small, var_names=list(edata_blob_small.var_names), layer="layer_2")
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.qc_lab_measurements(
-            edata_blob_small, var_names=list(edata_blob_small.var_names), layer=DEFAULT_TEM_LAYER_NAME
-        )
+def test_qc_lab_measurements_3D_flags_any_timepoint_and_averages_scores(rng):
+    X = rng.normal(5.0, 0.5, size=(20, 2, 3))
+    X[0, 0, 1] = 99.0
+    X[3, 1, 2] = np.nan
+    edata = ed.EHRData(X=X)
+    flat = ed.EHRData(X=np.moveaxis(X, 1, 2).reshape(-1, 2))
+
+    ep.pp.qc_lab_measurements(edata)
+    ep.pp.qc_lab_measurements(flat)
+
+    assert edata.obs["0_outlier"].iloc[0]
+    for var in edata.var_names:
+        flags = flat.obs[f"{var}_outlier"].to_numpy().reshape(20, 3)
+        scores = flat.obs[f"{var}_score"].to_numpy().reshape(20, 3)
+        np.testing.assert_array_equal(edata.obs[f"{var}_outlier"], flags.any(axis=1))
+        np.testing.assert_allclose(edata.obs[f"{var}_score"], np.nanmean(scores, axis=1))
+
+
+def test_qc_lab_measurements_groupby_missing_values():
+    edata = _make_lab_edata()
+    edata.obs["sex"] = ["M", None] * 10
+    with pytest.raises(ValueError, match="contains missing values"):
+        ep.pp.qc_lab_measurements(edata, groupby="sex")
+
+
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+@pytest.mark.parametrize("ndim", [2, 3])
+@pytest.mark.parametrize("groupby", [None, "group"])
+@pytest.mark.parametrize(
+    ("method", "score_type"),
+    [("iqr", "zscore"), ("quantile", "percentile"), ("zscore", "iqr_distance"), ("modified_zscore", "zscore")],
+)
+def test_qc_lab_measurements_array_types(array_type, ndim, groupby, method, score_type, rng):
+    if ndim == 3 and array_type.flags & Flags.Sparse:
+        pytest.skip("sparse arrays are 2D")
+    X = _array_type_data(rng, ndim)
+    obs = pd.DataFrame({"group": ["a", "b"] * 15}, index=[str(i) for i in range(30)])
+    kwargs = {"method": method, "score_type": score_type, "groupby": groupby}
+    expected = ep.pp.qc_lab_measurements(ed.EHRData(X=X, obs=obs), copy=True, **kwargs).obs
+
+    with forbid_dask_compute(allowed=1):
+        result = ep.pp.qc_lab_measurements(ed.EHRData(X=array_type(X), obs=obs), copy=True, **kwargs)
+
+    assert isinstance(result.X, array_type.cls)
+    pd.testing.assert_frame_equal(result.obs, expected)
 
 
 def test_qc_lab_measurements_defaults_to_all_vars():
@@ -541,10 +601,25 @@ def test_mcar_test_ttest_matches_pyampute_reference():
     assert np.allclose(obs_vals[finite], exp_vals[finite], rtol=1e-6, atol=1e-10)
 
 
+def test_mcar_test_single_timepoint_3d(mar_edata):
+    edata = ed.EHRData(X=mar_edata.X[:, :, None])
+    assert mcar_test(edata) == mcar_test(mar_edata)
+
+
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
 @pytest.mark.parametrize("method", ["little", "ttest"])
-@pytest.mark.parametrize("array_type", [sp.csr_array, as_dense_dask_array])
-def test_mcar_test_unsupported_array_type_raises(mar_edata, method, array_type):
-    edata = mar_edata.copy()
-    edata.X = array_type(edata.X)
-    with pytest.raises(NotImplementedError):
-        mcar_test(edata, method=method)
+def test_mcar_test_array_types(array_type, mar_edata, method):
+    expected = mcar_test(mar_edata, method=method)
+    edata = ed.EHRData(X=array_type(mar_edata.X))
+
+    if array_type.cls is not np.ndarray:
+        with pytest.raises(NotImplementedError):
+            mcar_test(edata, method=method)
+        return
+
+    result = mcar_test(edata, method=method)
+
+    if method == "little":
+        assert result == expected
+    else:
+        pd.testing.assert_frame_equal(result, expected)

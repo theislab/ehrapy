@@ -33,7 +33,7 @@ def test_scatter_plot(mimic_2, check_same_image):
 def test_scatter_plot_3D(edata_blob_small):
     ep.pl.scatter(edata_blob_small, x="feature_1", y="feature_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pl.scatter(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME, x="feature_1", y="feature_2")
+        ep.pl.scatter(edata_blob_small, layers=DEFAULT_TEM_LAYER_NAME, x="feature_1", y="feature_2")
 
 
 def test_heatmap_plot(edata_mini, check_same_image):

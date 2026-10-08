@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from ehrdata.core.constants import CATEGORICAL_TAG, DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY
+from testing.fast_array_utils import Flags
 
 import ehrapy as ep
 
@@ -51,7 +52,7 @@ def test_detect_bias_all_sensitive_features(edata_small_bias):
     assert len(df) >= 7  # 6 for the pairwise correlating features and one/two for contin1, which predicts cat1
 
 
-def test_explicit_impute_3D_edata(edata_blob_small):
+def test_detect_bias_3D_edata(edata_blob_small):
     ep.pp.detect_bias(edata_blob_small, sensitive_features=["feature_1"], layer="layer_2")
     with pytest.raises(ValueError, match=r"only supports 2D data"):
         ep.pp.detect_bias(edata_blob_small, sensitive_features=["feature_1"], layer=DEFAULT_TEM_LAYER_NAME)
@@ -122,3 +123,16 @@ def test_detect_bias_copy(edata_small_bias, copy):
         "standardized_mean_differences",
         "categorical_value_counts",
     }
+
+
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+def test_detect_bias_array_types(edata_small_bias, array_type):
+    edata_small_bias.X = array_type(edata_small_bias.X)
+
+    if array_type.flags & (Flags.Sparse | Flags.Dask):
+        with pytest.raises(NotImplementedError, match="only supports numpy arrays"):
+            ep.pp.detect_bias(edata_small_bias, sensitive_features=["cat1"], run_feature_importances=False)
+        return
+
+    ep.pp.detect_bias(edata_small_bias, sensitive_features=["cat1"], run_feature_importances=False)
+    assert len(edata_small_bias.uns["bias"]["standardized_mean_differences"]) == 2
