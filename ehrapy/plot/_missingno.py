@@ -5,24 +5,67 @@ from typing import TYPE_CHECKING
 import missingno as msno
 import numpy as np
 import pandas as pd
+from array_api_compat import array_namespace
 from fast_array_utils.conv import to_dense
 
-from ehrapy._compat import function_2D_only
+from ehrapy._compat import _materialize, function_2D_only
 from ehrapy.preprocessing._missing_data import _missing_mask
 
 if TYPE_CHECKING:
     from ehrdata import EHRData
+    from matplotlib.axes import Axes
+
+
+def _plotted_columns(edata: EHRData, *, categoricals: bool) -> pd.Index:
+    return edata.var_names if categoricals else edata.var_names[~edata.var_names.str.startswith("ehrapycat")]
 
 
 def _nullity_df(edata: EHRData, *, layer: str | None, categoricals: bool) -> pd.DataFrame:
     """The plotted variables as a DataFrame that is NaN where values are missing, because missingno only reads nullity."""
     X = edata.X if layer is None else edata.layers[layer]
-    columns = edata.var_names if categoricals else edata.var_names[~edata.var_names.str.startswith("ehrapycat")]
+    columns = _plotted_columns(edata, categoricals=categoricals)
     missing = to_dense(_missing_mask(X[:, edata.var_names.get_indexer(columns)]), to_cpu_memory=True)
     return pd.DataFrame(np.where(missing, np.float32(np.nan), np.float32(0)), index=edata.obs_names, columns=columns)
 
 
-@function_2D_only()
+def _observed_over_time(
+    edata: EHRData,
+    *,
+    layer: str | None,
+    categoricals: bool,
+    figsize: tuple,
+    color: tuple,
+    fontsize: float,
+    labels: bool,
+    label_rotation: float,
+) -> Axes:
+    """Shade the percentage of observations with a value for every timepoint (row) and variable (column)."""
+    import matplotlib.pyplot as plt
+    from matplotlib.colors import LinearSegmentedColormap
+    from matplotlib.ticker import FuncFormatter, MaxNLocator
+
+    X = edata.X if layer is None else edata.layers[layer]
+    columns = _plotted_columns(edata, categoricals=categoricals)
+    observed = ~_missing_mask(X[:, edata.var_names.get_indexer(columns)])
+    xp = array_namespace(observed)
+    (percent,) = _materialize(100 * xp.mean(xp.astype(observed, xp.float64), axis=0))
+
+    fig, ax = plt.subplots(figsize=figsize)
+    cmap = LinearSegmentedColormap.from_list("observed", ["white", color])
+    image = ax.imshow(np.asarray(percent).T, aspect="auto", interpolation="none", cmap=cmap, vmin=0, vmax=100)
+    ax.xaxis.tick_top()
+    ax.set_xticks(range(len(columns)), columns if labels else [], rotation=label_rotation, ha="left", fontsize=fontsize)
+    ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+    tem = edata.tem.index
+    ax.yaxis.set_major_formatter(
+        FuncFormatter(lambda position, _: str(tem[int(position)]) if 0 <= position < len(tem) else "")
+    )
+    ax.tick_params(axis="y", labelsize=fontsize)
+    ax.set_ylabel("time", fontsize=fontsize)
+    fig.colorbar(image, ax=ax).set_label("observed (%)", fontsize=fontsize)
+    return ax
+
+
 def missing_values_matrix(
     edata: EHRData,
     *,
@@ -41,6 +84,8 @@ def missing_values_matrix(
     layer: str | None = None,
 ):  # pragma: no cover
     """A matrix visualization of the nullity of the given data object.
+
+    For 3D data, the matrix shows the percentage of observations with a value of every variable at every timepoint, and `filter`, `max_cols`, `max_percentage`, `sort`, `width_ratios` and `sparkline` do not apply.
 
     Args:
         edata: Central data object.
@@ -70,6 +115,17 @@ def missing_values_matrix(
     Preview:
         .. image:: /_static/docstring_previews/missingno_matrix.png
     """
+    if (edata.X if layer is None else edata.layers[layer]).ndim == 3:
+        return _observed_over_time(
+            edata,
+            layer=layer,
+            categoricals=categoricals,
+            figsize=figsize,
+            color=color,
+            fontsize=fontsize,
+            labels=labels,
+            label_rotation=label_rotation,
+        )
     df = _nullity_df(edata, layer=layer, categoricals=categoricals)
     return msno.matrix(
         df,

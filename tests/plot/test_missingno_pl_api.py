@@ -52,10 +52,15 @@ def test_missing_values_matrixplot(mimic_2, check_same_image, layer, clean_up_pl
     )
 
 
-def test_missing_values_matrixplot_3D(edata_blob_small, clean_up_plots):
-    ep.pl.missing_values_matrix(edata_blob_small, layer="layer_2")
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pl.missing_values_matrix(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu | Flags.Sparse)
+def test_missing_values_matrixplot_3D(array_type, clean_up_plots):
+    X = np.array([[[1.0, np.nan], [np.nan, np.nan]], [[2.0, 3.0], [4.0, np.nan]]])
+    edata = ed.EHRData(X=array_type(X), var=pd.DataFrame(index=["a", "b"]))
+
+    with forbid_dask_compute(allowed=1):
+        ax = ep.pl.missing_values_matrix(edata)
+
+    np.testing.assert_array_equal(ax.images[0].get_array(), [[100, 50], [50, 0]])
 
 
 @pytest.mark.parametrize("layer", [None, "layer_2"])
