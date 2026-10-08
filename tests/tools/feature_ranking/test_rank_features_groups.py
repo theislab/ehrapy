@@ -8,6 +8,7 @@ import scanpy as sc
 import scipy.sparse as sp
 from ehrdata.core.constants import CATEGORICAL_TAG, DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrdata.io import read_csv
+from scipy.stats import chi2_contingency
 from testing.fast_array_utils import Flags
 
 import ehrapy as ep
@@ -568,6 +569,43 @@ def test_rank_features_groups_compared_groups(kwargs, compared_groups, rng):
         assert set(result["names"][group]) == set(edata.var_names)
         scores = pd.Series(result["scores"][group], index=result["names"][group])
         np.testing.assert_allclose(scores[expected["names"][group]], expected["scores"][group])
+
+
+def test_rank_features_groups_categorical_rest_with_groups_subset(rng):
+    edata = _ranking_edata(_ranking_data(rng))
+    ep.tl.rank_features_groups(edata, "group", groups=["c", "a"], reference="rest")
+
+    result = edata.uns["rank_features_groups"]
+    groups, values = edata.obs["group"].to_numpy(), edata[:, "c"].X.ravel()
+    for group in ("c", "a"):
+        scores = pd.Series(result["scores"][group], index=result["names"][group])
+        assert scores["c"] == pytest.approx(chi2_contingency(pd.crosstab(values, groups != group), lambda_=0)[0])
+
+
+@pytest.mark.filterwarnings("error::RuntimeWarning")
+@pytest.mark.parametrize("method", ["t-test", "wilcoxon"])
+@pytest.mark.parametrize("reference", ["rest", "b"])
+@pytest.mark.parametrize("standardize", [False, True])
+def test_rank_features_groups_logfoldchanges(method, reference, standardize, rng):
+    X = _ranking_data(rng)
+    if standardize:
+        X[:, :3] = (X[:, :3] - X[:, :3].mean(axis=0)) / X[:, :3].std(axis=0)
+    edata = _ranking_edata(X)
+    ep.tl.rank_features_groups(edata, "group", reference=reference, num_cols_method=method)
+
+    result = edata.uns["rank_features_groups"]
+    groups = edata.obs["group"].to_numpy()
+    logfoldchanges, expected = [], []
+    for group in result["names"].dtype.names:
+        rest = groups != group if reference == "rest" else groups == reference
+        for feature in ("n0", "n1", "n2"):
+            values = edata[:, feature].X.ravel()
+            mean, mean_rest = values[groups == group].mean(), values[rest].mean()
+            expected.append(np.log2(mean / mean_rest) if mean > 0 and mean_rest > 0 else np.nan)
+            logfoldchanges.append(pd.Series(result["logfoldchanges"][group], index=result["names"][group])[feature])
+
+    np.testing.assert_allclose(logfoldchanges, expected)
+    assert np.isnan(expected).any() == standardize
 
 
 @pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)

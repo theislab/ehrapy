@@ -19,6 +19,9 @@ from ehrapy.preprocessing import encode
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+    from fast_array_utils.types import CSBase
+
+    from ehrapy._compat import Array
     from ehrapy.tools import _method_options
 
 # params is metadata and pts/pts_rest are tables indexed by feature name, not per-group rankings
@@ -235,8 +238,7 @@ def _evaluate_categorical_features(
                 continue
 
             if reference == "rest":
-                reference_mask = (groups_values != group) & np.isin(groups_values, groups_order)
-                contingency_table = pd.crosstab(feature_values, reference_mask)
+                contingency_table = pd.crosstab(feature_values, groups_values != group)
             else:
                 obs_to_take = np.isin(groups_values, [group, reference])
                 reference_mask = groups_values[obs_to_take] == reference
@@ -266,24 +268,40 @@ def _evaluate_categorical_features(
     )
 
 
+def _group_means(X: Array | CSBase, groups: np.ndarray, groups_order: Sequence[str]) -> tuple[np.ndarray, np.ndarray]:
+    """Column means of `X` within each group (rows) and over all observations outside of it."""
+    masks = [groups == group for group in groups_order]
+    *sums, total = _materialize(*(stats.sum(X[mask], axis=0) for mask in masks), stats.sum(X, axis=0))
+    sums = np.stack(sums)
+    n_obs = np.array([mask.sum() for mask in masks])[:, None]
+    return sums / n_obs, (total - sums) / (len(groups) - n_obs)
+
+
 def _nonzero_fractions(
     edata: EHRData, features: Sequence[str], *, groupby: str, groups_order: Sequence[str], reference: str
 ) -> dict[str, pd.DataFrame]:
     """Fractions of observations with non-zero values per feature (rows) and group (columns), as `pts` of :func:`scanpy.tl.rank_genes_groups`."""
     X = edata.X[:, edata.var_names.get_indexer(features)]
-    groups = edata.obs[groupby].astype(str).to_numpy()
-    masks = [groups == group for group in groups_order]
-    *n_nonzero, n_nonzero_all = _materialize(
-        *(stats.sum(X[mask] != 0, axis=0) for mask in masks), stats.sum(X != 0, axis=0)
-    )
-    n_nonzero = np.stack(n_nonzero)
-    n_obs = np.array([mask.sum() for mask in masks])[:, None]
-    fractions = {"pts": pd.DataFrame((n_nonzero / n_obs).T, index=features, columns=groups_order)}
+    pts, pts_rest = _group_means(X != 0, edata.obs[groupby].astype(str).to_numpy(), groups_order)
+    fractions = {"pts": pd.DataFrame(pts.T, index=features, columns=groups_order)}
     if reference == "rest":
-        fractions["pts_rest"] = pd.DataFrame(
-            ((n_nonzero_all - n_nonzero) / (len(groups) - n_obs)).T, index=features, columns=groups_order
-        )
+        fractions["pts_rest"] = pd.DataFrame(pts_rest.T, index=features, columns=groups_order)
     return fractions
+
+
+def _log2_fold_changes(
+    edata: EHRData, names: np.recarray, *, groupby: str, groups_order: Sequence[str], reference: str
+) -> np.recarray:
+    """log2 ratios of each group's mean to the mean of `reference` or of all other observations, aligned with `names`."""
+    means, rest_means = _group_means(edata.X, edata.obs[groupby].astype(str).to_numpy(), groups_order)
+    if reference != "rest":
+        rest_means = means[list(groups_order).index(reference)]
+    with np.errstate(divide="ignore", invalid="ignore"):
+        log2_ratios = np.where((means > 0) & (rest_means > 0), np.log2(means) - np.log2(rest_means), np.nan)
+    log2_ratios = pd.DataFrame(log2_ratios.T, index=edata.var_names, columns=groups_order)
+    return pd.DataFrame(
+        {group: log2_ratios.loc[names[group], group].to_numpy() for group in names.dtype.names}
+    ).to_records(index=False)
 
 
 def _ranked_features(result: Mapping) -> list[str]:
@@ -409,9 +427,9 @@ def rank_features_groups(
         - scores (:class:`numpy.ndarray`): Structured array to be indexed by group id storing the z-score underlying the computation of a p-value for each feature for each group.
           Ordered according to adjusted p-values.
         - logfoldchanges (:class:`numpy.ndarray`): Structured array to be indexed by group id storing the log2 fold change for each feature for each group.
+          For numeric features, this is the log2 ratio of the mean in the group to the mean in the `reference` group, or in all other observations if `reference='rest'`, and `NaN` where either mean is not positive.
           Ordered according to adjusted p-values.
           Only provided if method is ‘t-test’ like.
-          Note: this is an approximation calculated from mean-log values.
         - pvals (:class:`numpy.ndarray`): p-values.
         - pvals_adj (:class:`numpy.ndarray`): Corrected p-values.
         - pts (:class:`pandas.DataFrame`): Only if `pts=True`.
@@ -571,20 +589,30 @@ def rank_features_groups(
         numerical_edata = edata[:, edata.var_names[edata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG]].copy()
         numerical_edata.X = numerical_edata.X.astype(float)
 
-        sc.tl.rank_genes_groups(
-            numerical_edata,
-            groupby,
-            groups=groups,
-            reference=reference,
-            rankby_abs=rankby_abs,
-            key_added=key_added,
-            copy=False,
-            method=num_cols_method,
-            corr_method=correction_method,
-            tie_correct=tie_correct,
-            layer=layer,
-            **kwds,
-        )
+        # scanpy's fold changes assume log1p data, warn on other data and are replaced below
+        with np.errstate(divide="ignore", invalid="ignore", over="ignore"):
+            sc.tl.rank_genes_groups(
+                numerical_edata,
+                groupby,
+                groups=groups,
+                reference=reference,
+                rankby_abs=rankby_abs,
+                key_added=key_added,
+                copy=False,
+                method=num_cols_method,
+                corr_method=correction_method,
+                tie_correct=tie_correct,
+                layer=layer,
+                **kwds,
+            )
+        if "logfoldchanges" in numerical_edata.uns[key_added]:
+            numerical_edata.uns[key_added]["logfoldchanges"] = _log2_fold_changes(
+                numerical_edata,
+                numerical_edata.uns[key_added]["names"],
+                groupby=groupby,
+                groups_order=groups_order,
+                reference=reference,
+            )
 
         # Update edata.uns with numerical result
         _save_rank_features_result(
