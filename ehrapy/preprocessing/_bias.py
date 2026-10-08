@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import itertools
+from functools import singledispatch
 from typing import TYPE_CHECKING, Literal
 
 import ehrdata as ed
@@ -8,17 +9,49 @@ import numpy as np
 import pandas as pd
 from ehrdata._feature_types import _check_feature_types
 from ehrdata.core.constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
+from fast_array_utils.conv import to_dense
+from fast_array_utils.types import CSBase, DaskArray
 
 import ehrapy as ep
 from ehrapy._compat import (
-    _raise_if_not_numpy,
+    _raise_densifying,
     function_2D_only,
+    sparse_nan_corrcoef,
+    sparse_nan_moments,
 )
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from ehrdata import EHRData
+
+
+@singledispatch
+def _correlations(
+    X: np.ndarray, edata: EHRData, layer: str | None, method: Literal["pearson", "spearman"]
+) -> pd.DataFrame:
+    # Delegate to variable_correlations, which handles layer=None (falls back to .X),
+    # pairwise NaN deletion, and provides p-values and significance
+    corr_df, _, _ = ep.pp.variable_correlations(edata, layer=layer, method=method, correction_method="bonferroni")
+    return corr_df
+
+
+@_correlations.register(CSBase)
+def _(X: CSBase, edata: EHRData, layer: str | None, method: Literal["pearson", "spearman"]) -> pd.DataFrame:
+    return pd.DataFrame(sparse_nan_corrcoef(X, method=method), index=edata.var_names, columns=edata.var_names)
+
+
+@singledispatch
+def _nan_mean_std(X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Mean and sample standard deviation of every column, ignoring NaNs."""
+    return np.nanmean(X, axis=0), np.nanstd(X, axis=0, ddof=1)
+
+
+@_nan_mean_std.register(CSBase)
+def _(X: CSBase) -> tuple[np.ndarray, np.ndarray]:
+    count, mean, var = sparse_nan_moments(X)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        return mean, np.sqrt(var * count / (count - 1))
 
 
 @function_2D_only()
@@ -106,12 +139,21 @@ def detect_bias(
     from ehrapy.tools import rank_features_supervised
 
     X = edata.X if layer is None else edata.layers[layer]
-    _raise_if_not_numpy(X, "detect_bias", "it trains models on all observations in memory")
+    if isinstance(X, DaskArray):
+        raise NotImplementedError(
+            "detect_bias does not support dask arrays because its correlations, group comparisons "
+            "and feature importances need all observations in memory."
+        )
 
     bias_results = {}
 
     if run_feature_importances is None:
         run_feature_importances = sensitive_features != "all"
+    if run_feature_importances and isinstance(X, CSBase):
+        _raise_densifying(
+            "detect_bias with `run_feature_importances=True`",
+            "ep.tl.rank_features_supervised trains its models on a dense copy of the data",
+        )
 
     if sensitive_features == "all":
         sens_features_list = edata.var_names.values.tolist()
@@ -139,33 +181,29 @@ def detect_bias(
     if copy:
         edata = edata.copy()
 
-    edata_df = ed.io.to_pandas(edata, layer=layer)
+    if not np.issubdtype(X.dtype, np.number):
+        edata_df = ed.io.to_pandas(edata, layer=layer)
+        for feature in edata.var_names:
+            if not np.all(edata_df[feature].dropna().apply(type).isin([int, float, complex])):
+                raise ValueError(
+                    f"Feature {feature} is not encoded numerically. Please encode the data (ep.pp.encode) before running bias detection."
+                )
 
-    for feature in edata.var_names:
-        if not np.all(edata_df[feature].dropna().apply(type).isin([int, float, complex])):
-            raise ValueError(
-                f"Feature {feature} is not encoded numerically. Please encode the data (ep.pp.encode) before running bias detection."
-            )
+    def _column(feature: str) -> np.ndarray:
+        return to_dense(X[:, [edata.var_names.get_loc(feature)]]).ravel()
 
     def _get_group_name(encoded_feature: str, group_val: int) -> str | int:
         try:
             feature_name = encoded_feature.split("_")[1]
             # Get the original group name stored in edata.obs by filtering the data for the encoded group value
-            return edata.obs[feature_name][list(edata[:, encoded_feature].X.squeeze() == group_val)].unique()[0]
+            return edata.obs[feature_name][list(_column(encoded_feature) == group_val)].unique()[0]
         except KeyError:
             return group_val
 
     # --------------------
     # Feature correlations
     # --------------------
-    # Delegate to variable_correlations, which handles layer=None (falls back to .X),
-    # pairwise NaN deletion, and provides p-values and significance
-    corr_df, _, _ = ep.pp.variable_correlations(
-        edata,
-        layer=layer,
-        method=corr_method,
-        correction_method="bonferroni",
-    )
+    corr_df = _correlations(X, edata, layer, corr_method)
     edata.varp["feature_correlations"] = corr_df
 
     corr_results: dict[str, list] = {"Feature 1": [], "Feature 2": [], f"{corr_method.capitalize()} CC": []}
@@ -198,21 +236,23 @@ def detect_bias(
     }
     edata.uns["smd"] = {}
     continuous_var_names = edata.var_names[edata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG]
+    continuous = X[:, edata.var_names.get_indexer(continuous_var_names)]
     for sens_feature in cat_sens_features:
-        sens_feature_groups = sorted(edata_df[sens_feature].unique())
+        sens_values = _column(sens_feature)
+        sens_feature_groups = sorted(pd.unique(sens_values))
         if len(sens_feature_groups) == 1:
             continue
         smd_df = pd.DataFrame(index=continuous_var_names, columns=sens_feature_groups)
 
         for _group_nr, group in enumerate(sens_feature_groups):
             # Compute SMD for all continuous features between the sensitive group and all other observations
-            group_mean = edata_df[continuous_var_names][edata_df[sens_feature] == group].mean()
-            group_std = edata_df[continuous_var_names][edata_df[sens_feature] == group].std()
+            group_mean, group_std = _nan_mean_std(continuous[sens_values == group])
+            comparison_mean, comparison_std = _nan_mean_std(continuous[sens_values != group])
 
-            comparison_mean = edata_df[continuous_var_names][edata_df[sens_feature] != group].mean()
-            comparison_std = edata_df[continuous_var_names][edata_df[sens_feature] != group].std()
-
-            smd = (group_mean - comparison_mean) / np.sqrt((group_std**2 + comparison_std**2) / 2)
+            smd = pd.Series(
+                (group_mean - comparison_mean) / np.sqrt((group_std**2 + comparison_std**2) / 2),
+                index=continuous_var_names,
+            )
             smd_df[group] = smd
 
             abs_smd = smd.abs()
@@ -248,7 +288,7 @@ def detect_bias(
         for comp_feature in cat_var_names:
             if sens_feature == comp_feature:
                 continue
-            value_counts = edata_df.groupby([sens_feature, comp_feature], observed=True).size().unstack(fill_value=0)
+            value_counts = pd.crosstab(_column(sens_feature), _column(comp_feature))
             value_counts = value_counts.div(value_counts.sum(axis=1), axis=0)
 
             for sens_group in value_counts.index:

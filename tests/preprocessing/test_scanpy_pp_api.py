@@ -1,8 +1,31 @@
+import anndata as ad
+import ehrdata as ed
 import numpy as np
+import pandas as pd
 import pytest
+import scanpy as sc
 from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
+from fast_array_utils.conv import to_dense
+from testing.fast_array_utils import Flags
 
 import ehrapy as ep
+from tests.conftest import forbid_dask_compute
+
+
+@pytest.fixture
+def batched_data(rng) -> tuple[np.ndarray, pd.DataFrame]:
+    X = rng.normal(5, 2, size=(40, 6))
+    obs = pd.DataFrame(
+        {
+            "batch": pd.Categorical(["a", "b", "c", "d"] * 10),
+            "condition": rng.choice(["x", "y"], size=40),
+            "covariate": rng.normal(size=40),
+            "covariate_2": rng.normal(size=40),
+        },
+        index=[str(i) for i in range(40)],
+    )
+    obs["covariate_copy"] = obs["covariate"]
+    return X, obs
 
 
 def test_pca(edata_blob_small):
@@ -43,8 +66,111 @@ def test_regress_out_3D_edata(edata_blob_small):
         ep.pp.regress_out(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
 
 
+@pytest.mark.parametrize(
+    "keys",
+    [
+        pytest.param("covariate", id="numeric"),
+        pytest.param(["covariate", "covariate_2"], id="numerics"),
+        pytest.param(["covariate", "covariate_copy"], id="singular"),
+        pytest.param("batch", id="categorical"),
+        pytest.param("condition", id="string"),
+    ],
+)
+def test_regress_out_matches_scanpy(batched_data, keys):
+    X, obs = batched_data
+    X = X.astype(np.float32)
+    X[:, 2] = 3.0
+    adata = ad.AnnData(X=X.copy(), obs=obs.copy())
+    sc.pp.regress_out(adata, keys)
+    edata = ed.EHRData(X=X.copy(), obs=obs.copy())
+
+    ep.pp.regress_out(edata, keys)
+
+    np.testing.assert_allclose(edata.X, adata.X, atol=1e-5)
+
+
+def test_regress_out_multiple_categorical_keys_raises(batched_data):
+    X, obs = batched_data
+    with pytest.raises(ValueError, match="single categorical key"):
+        ep.pp.regress_out(ed.EHRData(X=X, obs=obs), ["batch", "covariate"])
+
+
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+@pytest.mark.parametrize("keys", ["covariate", "batch"])
+def test_regress_out_array_types(array_type, batched_data, keys):
+    X, obs = batched_data
+    expected = ep.pp.regress_out(ed.EHRData(X=X, obs=obs), keys, copy=True).X
+    edata = ed.EHRData(X=array_type(X), obs=obs)
+
+    if array_type.flags & Flags.Sparse:
+        with pytest.raises(NotImplementedError, match="sparse"):
+            ep.pp.regress_out(edata, keys)
+        return
+
+    with forbid_dask_compute():
+        result = ep.pp.regress_out(edata, keys, copy=True).X
+
+    assert type(result) is type(edata.X)
+    if array_type.flags & Flags.Dask:
+        assert type(result._meta) is type(edata.X._meta)
+        assert result.chunks == edata.X.chunks
+    np.testing.assert_allclose(to_dense(result, to_cpu_memory=True), expected, rtol=1e-10)
+
+
 def test_combat(edata_blob_small):
     ep.pp.combat(edata_blob_small, batch_key="cluster")
+
+
+@pytest.mark.parametrize("covariates", [None, ["covariate"], ["covariate", "covariate_2"]])
+def test_combat_matches_scanpy(batched_data, covariates):
+    X, obs = batched_data
+    adata = ad.AnnData(X=X.copy(), obs=obs.copy())
+    sc.pp.combat(adata, "batch", covariates=covariates)
+    edata = ed.EHRData(X=X.copy(), obs=obs.copy())
+
+    ep.pp.combat(edata, batch_key="batch", covariates=covariates)
+
+    np.testing.assert_allclose(edata.X, adata.X, rtol=1e-10)
+
+
+def test_combat_categorical_covariate(batched_data):
+    X, obs = batched_data
+    dummies = pd.get_dummies(obs["condition"], drop_first=True, dtype=np.float64)
+    adata = ad.AnnData(X=X.copy(), obs=pd.concat([obs, dummies], axis=1))
+    sc.pp.combat(adata, "batch", covariates=list(dummies.columns))
+    edata = ed.EHRData(X=X.copy(), obs=obs.copy())
+
+    ep.pp.combat(edata, batch_key="batch", covariates=["condition"])
+
+    np.testing.assert_allclose(edata.X, adata.X, rtol=1e-10)
+
+
+def test_combat_small_batch_raises(batched_data):
+    X, obs = batched_data
+    obs["batch"] = ["a"] * 39 + ["b"]
+    with pytest.raises(ValueError, match="fewer than 2 observations"):
+        ep.pp.combat(ed.EHRData(X=X, obs=obs), batch_key="batch")
+
+
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+def test_combat_array_types(array_type, batched_data):
+    X, obs = batched_data
+    expected = ep.pp.combat(ed.EHRData(X=X, obs=obs), batch_key="batch", covariates=["covariate"], copy=True).X
+    edata = ed.EHRData(X=array_type(X), obs=obs)
+
+    if array_type.flags & Flags.Sparse:
+        with pytest.raises(NotImplementedError, match="sparse"):
+            ep.pp.combat(edata, batch_key="batch")
+        return
+
+    with forbid_dask_compute():
+        result = ep.pp.combat(edata, batch_key="batch", covariates=["covariate"], copy=True).X
+
+    assert type(result) is type(edata.X)
+    if array_type.flags & Flags.Dask:
+        assert type(result._meta) is type(edata.X._meta)
+        assert result.chunks == edata.X.chunks
+    np.testing.assert_allclose(to_dense(result, to_cpu_memory=True), expected, rtol=1e-10)
 
 
 @pytest.mark.parametrize("layer", [None, "layer_2"])
