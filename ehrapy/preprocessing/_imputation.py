@@ -998,6 +998,7 @@ def locf_impute(
     var_names: Iterable[str] | None = None,
     layer: str | None = None,
     fallback_method: Literal["mean", "median", "most_frequent", "bfill"] | None = "mean",
+    limit: int | None = None,
     copy: bool = False,
 ) -> EHRData | None:
     """Impute missing values by carrying forward the last observed value along the time axis.
@@ -1006,6 +1007,7 @@ def locf_impute(
     For each patient and feature, missing values are replaced with the most recent
     non-missing value. Missing values that occur before any observation for a given
     patient are filled using a fallback method.
+    With a `limit`, missing values further than `limit` timepoints after the last observation stay missing.
 
     Args:
         edata: Central data object.
@@ -1018,6 +1020,8 @@ def locf_impute(
                          filling), ``'bfill'`` fills with each patient's first observed
                          value (backward fill), and ``None`` leaves remaining NaN values
                          untouched.
+        limit: Maximum number of consecutive timepoints an observed value is carried forward to.
+            If `None`, values are carried forward without limit.
         copy: Whether to return a copy of ``edata`` or modify it inplace.
 
     Returns:
@@ -1071,12 +1075,14 @@ def locf_impute(
     if not np.issubdtype(original.dtype, np.floating):
         original = original.astype(np.float64)
 
-    filled = xr.DataArray(original, dims=["obs", "var", "time"]).ffill(dim="time")
+    xp = array_namespace(original)
+    series = xr.DataArray(original, dims=["obs", "var", "time"])
+    filled = series.ffill(dim="time", limit=limit).data
+    before_first = xp.cumulative_sum(xp.astype(~xp.isnan(original), xp.int32), axis=2) == 0
     if fallback_method == "bfill":
-        filled = filled.bfill(dim="time")
-    filled = filled.data
-    if fallback_method in ("mean", "median", "most_frequent"):
-        filled = _fill_missing(filled, _impute_value(original, fallback_method))
+        filled = xp.where(before_first, series.bfill(dim="time").data, filled)
+    elif fallback_method is not None:
+        filled = xp.where(before_first, _fill_missing(filled, _impute_value(original, fallback_method)), filled)
 
     X = _set_columns(X, var_indices, filled)
     if layer is None:
