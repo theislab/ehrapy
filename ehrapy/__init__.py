@@ -11,7 +11,7 @@ import os
 # https://docs.scipy.org/doc/scipy/dev/api-dev/array_api.html
 os.environ["SCIPY_ARRAY_API"] = "1"
 
-from ehrapy import get
+from ehrapy import get, ml
 from ehrapy import plot as pl
 from ehrapy import preprocessing as pp
 from ehrapy import tools as tl

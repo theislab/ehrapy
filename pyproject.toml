@@ -71,6 +71,7 @@ dependencies = [
     "ehrdata>=0.3.0",
     "pooch",  # required by the ehrdata submodule, which is installed with --no-deps
     "scanpy>=1.12",
+    "scikit-learn>=1.6",
     # mirroring scanpy, skip 3.11.0 series for now: https://github.com/matplotlib/matplotlib/issues/31575https://github.com/scverse/scanpy/blob/d5a745e1258f5ca6a23c6a790f27b40d7ad05418/pyproject.toml#L60
     "matplotlib>=3.10,!=3.11.0rc1,!=3.11.0rc2,!=3.11",
     "scverse-misc[settings]>=0.0.7",

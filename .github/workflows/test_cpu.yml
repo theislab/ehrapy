@@ -76,7 +76,7 @@ jobs:
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ehrapy_data
-          key: ehrapy-data-tests-v1
+          key: ehrapy-data-tests-v2
 
       - name: create hatch environment
         run: uvx hatch env create ${{ matrix.env.name }}
@@ -96,7 +96,7 @@ jobs:
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ehrapy_data
-          key: ehrapy-data-tests-v1
+          key: ehrapy-data-tests-v2
       - name: generate coverage report
         run: |
           # See https://coverage.readthedocs.io/page/config.html#run-patch
