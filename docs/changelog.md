@@ -28,9 +28,6 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   `qc_metrics` and `detect_bias` store their results in `edata` instead of returning them (`detect_bias` under `uns["bias"]`), and `rank_features_supervised` stores the model's test score in `uns[key_added]` instead of returning it.
 * Remove the deprecated `ep.tl.kmf`, `ep.pp.subsample` and the `n_neighbours` alias of {func}`ep.pp.knn_impute <ehrapy.preprocessing.knn_impute>` ([#1126](https://github.com/theislab/ehrapy/pull/1126)) @Zethson
 
-### 🧰 Maintenance
-
-* Docstring examples no longer pass `layer="tem_data"`: the time series is kept in the default 3D `.X` ([#1093](https://github.com/theislab/ehrapy/issues/1093)) @sueoglu
 ### 🐛 Bug Fixes
 
 * `ep.pp.explicit_impute()` now accepts falsy mapping replacement values such as `0`, `0.0`, and empty strings ([#1087](https://github.com/theislab/ehrapy/pull/1087)) @driavysinus
@@ -56,6 +53,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 * Document the `ep.get` module, {func}`ep.tl.famd <ehrapy.tools.famd>` and {func}`ep.tl.anova_glm <ehrapy.tools.anova_glm>` ([#1126](https://github.com/theislab/ehrapy/pull/1126)) @Zethson
 * Fix the {func}`ep.pl.kaplan_meier <ehrapy.plot.kaplan_meier>` example ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
 * Describe {func}`ep.tl.ncp <ehrapy.tools.ncp>` in plain words and drop the doubled period in the docs footer ([#1131](https://github.com/theislab/ehrapy/pull/1131)) @Zethson
+* Docstring examples keep time series in the 3D `.X` instead of `.layers["tem_data"]` and show the outputs the examples actually produce ([#1098](https://github.com/theislab/ehrapy/pull/1098)) @sueoglu
 
 ### 🧰 Maintenance
 

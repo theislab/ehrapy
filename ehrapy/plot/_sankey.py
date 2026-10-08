@@ -165,15 +165,12 @@ def sankey_diagram_time(
     Examples:
         >>> import ehrapy as ep
         >>> import ehrdata as ed
-        >>> edata = ed.dt.ehrdata_blobs(
-        ...     base_timepoints=5, n_variables=1, n_observations=5, random_state=59, layer="tem_data"
-        ... )
-        >>> edata.layers["tem_data"] = edata.layers["tem_data"].astype(int)
+        >>> edata = ed.dt.ehrdata_blobs(base_timepoints=5, n_variables=1, n_observations=5, random_state=59)
+        >>> edata.X = edata.X.astype(int)
         >>> state_labels = {-2: "no", -3: "mild", -4: "moderate", -5: "severe", -6: "critical"}
         >>> ep.pl.sankey_diagram_time(
         ...     edata,
         ...     var_name="feature_0",
-        ...     layer="tem_data",
         ...     state_labels=state_labels,
         ... )
 

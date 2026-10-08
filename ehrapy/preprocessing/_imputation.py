@@ -277,15 +277,15 @@ def knn_impute(
     """Imputes missing values in the input data object using K-nearest neighbor imputation.
 
     If required, the data needs to be properly encoded as this imputation requires numerical data only.
-    If layer is `None`, `edata.X` is used directly; this also covers 3D data stored in `.X`.
-    For 3D data, values are flattened along axis 0 before imputation and reshaped back to 3D afterwards.
+    For 2D data, if layer is `None`, `edata.X` is used directly.
+    For 3D data, the layer is flattened along axis 0 before imputation and reshaped back to 3D afterwards.
 
     Args:
         edata: Central data object.
         var_names: A list of variable names indicating which columns to impute.
                    If `None`, all columns are imputed. Default is `None`.
         n_neighbors: Number of neighbors to use when performing the imputation.
-        layer: The layer to impute. If `None`, `.X` is used. Required only when the 3D data lives in a named layer instead of `.X`.
+        layer: The layer to impute.
         copy: Whether to perform the imputation on a copy of the original data object.
               If `True`, the original object remains unmodified.
         backend: The implementation to use for the KNN imputation.
@@ -455,8 +455,8 @@ def miss_forest_impute(
     The strategy works by fitting a random forest model on each feature containing missing values,
     and using the trained model to predict the missing values.
 
-    If layer is `None`, `edata.X` is used directly; this also covers 3D data stored in `.X`.
-    For 3D data, values are flattened along axis 0 before imputation and reshaped back to 3D afterwards.
+    For 2D data, if layer is `None`, `edata.X` is used directly.
+    For 3D data, the layer is flattened along axis 0 before imputation and reshaped back to 3D afterwards.
 
     See https://academic.oup.com/bioinformatics/article/28/1/112/219101.
 
@@ -471,7 +471,7 @@ def miss_forest_impute(
                       Decrease for faster computations.
         random_state: The random seed for the initialization.
         warning_threshold: Threshold of percentage of missing values to display a warning for.
-        layer: The layer to impute. If `None`, `.X` is used. Required only when the 3D data lives in a named layer instead of `.X`.
+        layer: The layer to impute.
         copy: Whether to return a copy or act in place.
 
     Returns:

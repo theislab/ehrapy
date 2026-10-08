@@ -139,7 +139,7 @@ def scale_norm(
         >>> import numpy as np
         >>> edata = ed.dt.physionet2012()
         >>> np.nanmean(edata.X)
-        74.213570
+        74.194793
         >>> ep.pp.scale_norm(edata)
         >>> np.nanmean(edata.X)
         0.0
@@ -510,11 +510,11 @@ def power_norm(
         >>> ep.pp.offset_negative_values(edata)
         >>> skewed_data = np.power(edata.X, 2)
         >>> edata.X = skewed_data
-        >>> stats.skew(edata.X.flatten())
-        504.250727
+        >>> stats.skew(edata.X.flatten(), nan_policy="omit")
+        503.071351
         >>> ep.pp.power_norm(edata)
-        >>> stats.skew(edata.X.flatten())
-        0.144324
+        >>> stats.skew(edata.X.flatten(), nan_policy="omit")
+        0.017135
     """
     X = edata.X if layer is None else edata.layers[layer]
     if isinstance(X, DaskArray):
@@ -606,10 +606,10 @@ def log_norm(
         >>> edata = ed.dt.physionet2012()
         >>> ep.pp.offset_negative_values(edata)
         >>> np.nanmax(edata.X)
-        36400.0
+        36417.8
         >>> ep.pp.log_norm(edata)
         >>> np.nanmax(edata.X)
-        10.502379
+        10.502840
     """
     if copy:
         edata = edata.copy()
