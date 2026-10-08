@@ -9,13 +9,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 * Every preprocessing function supports numpy, scipy sparse and dask arrays, for static 2D and longitudinal 3D data ([#1132](https://github.com/theislab/ehrapy/pull/1132)) @Zethson
 
   Dask arrays stay lazy, and functions that store summaries compute once; sparse arrays stay sparse, and operations that would densify them raise a `NotImplementedError` that says why.
-  The implementations use the array API through array-api-compat and array-api-extra, so numpy and dask share one code path.
-  The new {doc}`array_types` page lists what every function supports and what it does with the time axis.
 * {func}`ep.pp.summarize_measurements <ehrapy.preprocessing.summarize_measurements>` aggregates longitudinal data over time into a 2D object with one column per variable and statistic (`min`, `max`, `mean`, `median`, `first`, `last`), which makes every 2D-only function usable on longitudinal data ([#1132](https://github.com/theislab/ehrapy/pull/1132)) @Zethson
 * {func}`ep.pp.winsorize <ehrapy.preprocessing.winsorize>`, {func}`ep.pp.clip_quantile <ehrapy.preprocessing.clip_quantile>` and {func}`ep.pp.qc_lab_measurements <ehrapy.preprocessing.qc_lab_measurements>` support longitudinal data ([#1132](https://github.com/theislab/ehrapy/pull/1132)) @Zethson
 * Tools, plots and `ep.get` functions support numpy, scipy sparse and dask arrays, and densify and compute only the variables they use ([#1134](https://github.com/theislab/ehrapy/pull/1134)) @Zethson
 
-  The {doc}`array_types` page lists what every tool and plot supports and what it does with longitudinal data.
   The causal estimators and {func}`ep.tl.rank_features_supervised <ehrapy.tools.rank_features_supervised>` accept sparse and dask arrays instead of rejecting or fully densifying them.
   Embedding plots such as {func}`ep.pl.umap <ehrapy.plot.umap>` color longitudinal data by `obs` columns, and {func}`ep.pl.timeseries <ehrapy.plot.timeseries>` plots 3D `.X` with `layer=None`.
 
@@ -26,7 +23,6 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   {func}`ep.tl.kaplan_meier <ehrapy.tools.kaplan_meier>`, {func}`ep.tl.cox_ph <ehrapy.tools.cox_ph>` and the other survival fitters, {func}`ep.tl.ols <ehrapy.tools.ols>` and {func}`ep.tl.glm <ehrapy.tools.glm>` accept obs columns wherever they accept variables, and work on longitudinal data when every column they use lives in `obs`.
   Previously, every observation with a missing value in any variable was silently dropped, even in variables the model did not use.
   Regression fitters gained `covariates`, the univariate fitters take `entry_col` and `weights_col` instead of the `entry` and `weights` arrays, and numeric columns are passed to the models as numbers, so a binomial {func}`ep.tl.glm <ehrapy.tools.glm>` on a 0/1 outcome models the probability of 1.
-* {func}`ep.tl.ingest <ehrapy.tools.ingest>` only supports numpy arrays and raises a `NotImplementedError` for sparse and dask arrays, which it densified or computed twice before ([#1134](https://github.com/theislab/ehrapy/pull/1134)) @Zethson
 * Normalization functions take explicit parameters instead of forwarding `**kwargs` to scikit-learn or dask-ml ([#1132](https://github.com/theislab/ehrapy/pull/1132)) @Zethson
 
   {func}`ep.pp.scale_norm <ehrapy.preprocessing.scale_norm>` takes `with_mean` and `with_std`, {func}`ep.pp.minmax_norm <ehrapy.preprocessing.minmax_norm>` `feature_range`, {func}`ep.pp.robust_scale_norm <ehrapy.preprocessing.robust_scale_norm>` `with_centering`, `with_scaling`, `quantile_range` and `unit_variance`, {func}`ep.pp.quantile_norm <ehrapy.preprocessing.quantile_norm>` `n_quantiles`, `output_distribution`, `subsample` and `random_state`, and {func}`ep.pp.power_norm <ehrapy.preprocessing.power_norm>` `method` and `standardize`.

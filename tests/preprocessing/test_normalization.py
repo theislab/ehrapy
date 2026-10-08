@@ -75,11 +75,6 @@ def test_norm_scale_integers(edata_mini_integers_in_X):
 def test_norm_scale_kwargs(array_type, edata_to_norm):
     edata_to_norm.X = array_type(edata_to_norm.X)
 
-    if array_type.flags & Flags.Sparse and array_type.flags & Flags.Dask:
-        with pytest.raises(NotImplementedError):
-            ep.pp.scale_norm(edata_to_norm, copy=True, with_mean=False)
-        return
-
     with forbid_dask_compute():
         edata_norm = ep.pp.scale_norm(edata_to_norm, copy=True, with_mean=False)
 
@@ -138,11 +133,6 @@ def test_norm_scale_group(array_type, edata_mini_normalization):
 def test_norm_minmax(array_type, edata_to_norm):
     edata_to_norm.X = array_type(edata_to_norm.X)
 
-    if array_type.flags & Flags.Sparse:
-        with pytest.raises(NotImplementedError):
-            ep.pp.minmax_norm(edata_to_norm, copy=True)
-        return
-
     with forbid_dask_compute():
         edata_norm = ep.pp.minmax_norm(edata_to_norm, copy=True)
 
@@ -170,11 +160,6 @@ def test_norm_minmax_integers(edata_mini_integers_in_X):
 def test_norm_minmax_kwargs(array_type, edata_to_norm):
     edata_to_norm.X = array_type(edata_to_norm.X)
 
-    if array_type.flags & Flags.Sparse:
-        with pytest.raises(NotImplementedError):
-            ep.pp.minmax_norm(edata_to_norm, copy=True, feature_range=(0, 2))
-        return
-
     with forbid_dask_compute():
         edata_norm = ep.pp.minmax_norm(edata_to_norm, copy=True, feature_range=(0, 2))
 
@@ -196,11 +181,6 @@ def test_norm_minmax_group(array_type, edata_mini_normalization):
     with pytest.raises(KeyError):
         ep.pp.minmax_norm(edata_mini_casted, groupby="invalid_key", copy=True)
 
-    if array_type.flags & Flags.Sparse:
-        with pytest.raises(NotImplementedError):
-            ep.pp.minmax_norm(edata_mini_casted, var_names=["sys_bp_entry", "dia_bp_entry"], groupby="disease")
-        return
-
     with forbid_dask_compute():
         edata_mini_norm = ep.pp.minmax_norm(
             edata_mini_casted,
@@ -221,11 +201,6 @@ def test_norm_minmax_group(array_type, edata_mini_normalization):
 @pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
 def test_norm_maxabs(array_type, edata_to_norm):
     edata_to_norm.X = array_type(edata_to_norm.X)
-
-    if array_type.flags & Flags.Sparse and array_type.flags & Flags.Dask:
-        with pytest.raises(NotImplementedError):
-            ep.pp.maxabs_norm(edata_to_norm, copy=True)
-        return
 
     with forbid_dask_compute():
         edata_norm = ep.pp.maxabs_norm(edata_to_norm, copy=True)
@@ -259,11 +234,6 @@ def test_norm_maxabs_group(array_type, edata_mini_normalization):
     with pytest.raises(KeyError):
         ep.pp.maxabs_norm(edata_mini_casted, groupby="invalid_key", copy=True)
 
-    if array_type.flags & Flags.Sparse and array_type.flags & Flags.Dask:
-        with pytest.raises(NotImplementedError):
-            ep.pp.maxabs_norm(edata_mini_casted, var_names=["sys_bp_entry", "dia_bp_entry"], groupby="disease")
-        return
-
     with forbid_dask_compute():
         edata_mini_norm = ep.pp.maxabs_norm(
             edata_mini_casted,
@@ -296,11 +266,6 @@ def test_norm_maxabs_group(array_type, edata_mini_normalization):
 def test_norm_robust_scale(array_type, edata_to_norm):
     edata_to_norm.X = array_type(edata_to_norm.X)
 
-    if array_type.flags & Flags.Sparse:
-        with pytest.raises(NotImplementedError):
-            ep.pp.robust_scale_norm(edata_to_norm, copy=True)
-        return
-
     with forbid_dask_compute():
         edata_norm = ep.pp.robust_scale_norm(edata_to_norm, copy=True)
 
@@ -328,11 +293,6 @@ def test_norm_robust_scale_integers(edata_mini_integers_in_X):
 def test_norm_robust_scale_kwargs(array_type, edata_to_norm):
     edata_to_norm.X = array_type(edata_to_norm.X)
 
-    if array_type.flags & Flags.Sparse:
-        with pytest.raises(NotImplementedError):
-            ep.pp.robust_scale_norm(edata_to_norm, copy=True, with_scaling=False)
-        return
-
     with forbid_dask_compute():
         edata_norm = ep.pp.robust_scale_norm(edata_to_norm, copy=True, with_scaling=False)
 
@@ -353,11 +313,6 @@ def test_norm_robust_scale_group(array_type, edata_mini_normalization):
 
     with pytest.raises(KeyError):
         ep.pp.robust_scale_norm(edata_mini_casted, groupby="invalid_key", copy=True)
-
-    if array_type.flags & Flags.Sparse:
-        with pytest.raises(NotImplementedError):
-            ep.pp.robust_scale_norm(edata_mini_casted, var_names=["sys_bp_entry", "dia_bp_entry"], groupby="disease")
-        return
 
     with forbid_dask_compute():
         edata_mini_norm = ep.pp.robust_scale_norm(
@@ -383,11 +338,6 @@ def test_norm_robust_scale_group(array_type, edata_mini_normalization):
 def test_norm_quantile_uniform(array_type, edata_to_norm):
     warnings.filterwarnings("ignore", category=UserWarning)
     edata_to_norm.X = array_type(edata_to_norm.X)
-
-    if array_type.flags & Flags.Sparse:
-        with pytest.raises(NotImplementedError):
-            ep.pp.quantile_norm(edata_to_norm, copy=True)
-        return
 
     with forbid_dask_compute():
         edata_norm = ep.pp.quantile_norm(edata_to_norm, copy=True)
@@ -456,11 +406,6 @@ def test_norm_quantile_uniform_group(array_type, edata_mini_normalization):
 
     with pytest.raises(KeyError):
         ep.pp.quantile_norm(edata_mini_casted, groupby="invalid_key", copy=True)
-
-    if array_type.flags & Flags.Sparse:
-        with pytest.raises(NotImplementedError):
-            ep.pp.quantile_norm(edata_mini_casted, var_names=["sys_bp_entry", "dia_bp_entry"], groupby="disease")
-        return
 
     with forbid_dask_compute():
         edata_mini_norm = ep.pp.quantile_norm(
@@ -533,13 +478,8 @@ def test_norm_power_integers(edata_mini_integers_in_X):
 def test_norm_power_kwargs(array_type, edata_to_norm):
     edata_to_norm.X = array_type(edata_to_norm.X)
 
-    if array_type.flags & Flags.Sparse:
-        with pytest.raises(NotImplementedError):
-            ep.pp.power_norm(edata_to_norm, copy=True, standardize=False)
-        return
-
     with pytest.raises(ValueError):
-        to_dense(ep.pp.power_norm(edata_to_norm, copy=True, method="box-cox").X, to_cpu_memory=True)
+        to_dense(ep.pp.power_norm(edata_to_norm, copy=True, method="box-cox", standardize=False).X, to_cpu_memory=True)
 
     with forbid_dask_compute():
         edata_norm = ep.pp.power_norm(edata_to_norm, copy=True, standardize=False)
@@ -904,12 +844,17 @@ def test_norm_group_3D(edata_blobs_timeseries_small, array_type, norm_func):
 NORMS = [
     pytest.param(ep.pp.scale_norm, {}, False, id="scale"),
     pytest.param(ep.pp.scale_norm, {"with_mean": False}, True, id="scale-without-mean"),
-    pytest.param(ep.pp.minmax_norm, {}, False, id="minmax"),
+    pytest.param(ep.pp.minmax_norm, {}, True, id="minmax"),
+    pytest.param(ep.pp.minmax_norm, {"feature_range": (-1.0, 1.0)}, False, id="minmax-shifted-range"),
     pytest.param(ep.pp.maxabs_norm, {}, True, id="maxabs"),
     pytest.param(ep.pp.robust_scale_norm, {}, False, id="robust"),
     pytest.param(ep.pp.robust_scale_norm, {"with_centering": False}, True, id="robust-without-centering"),
-    pytest.param(ep.pp.quantile_norm, {"n_quantiles": 10}, False, id="quantile"),
+    pytest.param(ep.pp.quantile_norm, {"n_quantiles": 10}, True, id="quantile"),
+    pytest.param(
+        ep.pp.quantile_norm, {"n_quantiles": 10, "output_distribution": "normal"}, False, id="quantile-normal"
+    ),
     pytest.param(ep.pp.power_norm, {}, False, id="power"),
+    pytest.param(ep.pp.power_norm, {"standardize": False}, True, id="power-unstandardized"),
     pytest.param(ep.pp.log_norm, {}, True, id="log"),
 ]
 
@@ -937,16 +882,40 @@ def test_norm_array_types(array_type, ndim, groupby, norm, kwargs, sparse_suppor
     expected = norm(make_edata(X), copy=True, **kwargs).X
     edata = make_edata(array_type(X))
 
-    if array_type.flags & Flags.Sparse and (not sparse_support or array_type.flags & Flags.Dask):
+    if array_type.flags & Flags.Sparse and not sparse_support:
         with pytest.raises(NotImplementedError):
-            norm(edata, **kwargs)
+            to_dense(norm(edata, copy=True, **kwargs).X, to_cpu_memory=True)
         return
 
     with forbid_dask_compute():
         result = norm(edata, copy=True, **kwargs).X
 
     assert isinstance(result, array_type.cls)
+    if array_type.flags & Flags.Dask:
+        assert type(result._meta) is type(edata.X._meta)
     np.testing.assert_allclose(to_dense(result, to_cpu_memory=True), expected, rtol=1e-6, equal_nan=True)
+
+
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+@pytest.mark.parametrize("zero_median", [True, False])
+def test_robust_scale_norm_centering_array_types(array_type, zero_median):
+    X = np.array([[0.0, 0.0], [0.0, 2.0], [3.0, 0.0], [0.0, np.nan], [5.0, 0.0]])
+    if not zero_median:
+        X[1, 0] = 4.0
+    edata = ed.EHRData(X=array_type(X))
+    edata.var[FEATURE_TYPE_KEY] = NUMERIC_TAG
+
+    if array_type.flags & Flags.Sparse and not zero_median:
+        with pytest.raises(NotImplementedError):
+            to_dense(ep.pp.robust_scale_norm(edata, copy=True).X, to_cpu_memory=True)
+        return
+
+    expected = ep.pp.robust_scale_norm(ed.EHRData(X=X, var=edata.var), copy=True).X
+    with forbid_dask_compute():
+        result = ep.pp.robust_scale_norm(edata, copy=True).X
+
+    assert isinstance(result, array_type.cls)
+    np.testing.assert_allclose(to_dense(result, to_cpu_memory=True), expected, equal_nan=True)
 
 
 @pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
@@ -958,9 +927,9 @@ def test_offset_negative_values_array_types(array_type, negative):
     expected = ep.pp.offset_negative_values(ed.EHRData(X=X), copy=True).X
     edata = ed.EHRData(X=array_type(X))
 
-    if array_type.flags & Flags.Sparse and (negative or array_type.flags & Flags.Dask):
+    if array_type.flags & Flags.Sparse and negative:
         with pytest.raises(NotImplementedError):
-            ep.pp.offset_negative_values(edata)
+            to_dense(ep.pp.offset_negative_values(edata, copy=True).X, to_cpu_memory=True)
         return
 
     with forbid_dask_compute():

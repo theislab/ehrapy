@@ -9,9 +9,9 @@ from fast_array_utils.types import CSBase, DaskArray
 
 from ehrapy._compat import (
     _broadcast_var_stat,
+    _map_variable_blocks,
     _order_statistic,
     _raise_densifying,
-    _raise_if_dask_with_sparse_chunks,
     _set_columns,
     _sparse_columns,
 )
@@ -116,8 +116,8 @@ def _clip_features(
 
     if var_names:
         X = edata.X if layer is None else edata.layers[layer]
-        _raise_if_dask_with_sparse_chunks(X, name)
-        X = _clip_columns(X, edata.var_names.get_indexer(list(var_names)), bounds, name)
+        indices = edata.var_names.get_indexer(list(var_names))
+        X = _set_columns(X, indices, _clip(X[:, indices], bounds, name))
         if layer is None:
             edata.X = X
         else:
@@ -132,27 +132,30 @@ def _clip_features(
 
 
 @singledispatch
-def _clip_columns(X: Array, indices: np.ndarray, bounds: Callable[[Array], Bounds], name: str) -> Array:
+def _clip(X: Array, bounds: Callable[[Array], Bounds], name: str) -> Array:
     xp = array_namespace(X)
-    values = X[:, indices]
-    if not xp.isdtype(values.dtype, "numeric"):
-        values = xp.astype(values, xp.float64)
-    return _set_columns(X, indices, xp.clip(values, *bounds(values)))
+    if not xp.isdtype(X.dtype, "numeric"):
+        X = xp.astype(X, xp.float64)
+    return xp.clip(X, *bounds(X))
 
 
-@_clip_columns.register(CSBase)
-def _(X: CSBase, indices: np.ndarray, bounds: Callable[[CSBase], Bounds], name: str) -> CSBase:
-    lower, upper = (np.broadcast_to(bound, indices.shape) for bound in bounds(X[:, indices]))
+@_clip.register(CSBase)
+def _(X: CSBase, bounds: Callable[[CSBase], Bounds], name: str) -> CSBase:
+    lower, upper = (np.broadcast_to(bound, X.shape[1]) for bound in bounds(X))
     columns = _sparse_columns(X)
-    has_implicit_zeros = np.bincount(columns, minlength=X.shape[1])[indices] < X.shape[0]
+    has_implicit_zeros = np.bincount(columns, minlength=X.shape[1]) < X.shape[0]
     if np.any(has_implicit_zeros & ((lower > 0) | (upper < 0))):
         _raise_densifying(name, "the bounds of a variable with implicit zeros exclude zero")
-    column_lower = np.full(X.shape[1], -np.inf)
-    column_upper = np.full(X.shape[1], np.inf)
-    column_lower[indices] = lower
-    column_upper[indices] = upper
-    X.data[:] = np.clip(X.data, column_lower[columns], column_upper[columns])
+    X = X.copy()
+    X.data[:] = np.clip(X.data, lower[columns], upper[columns])
     return X
+
+
+@_clip.register(DaskArray)
+def _(X: DaskArray, bounds: Callable[[Array], Bounds], name: str) -> DaskArray:
+    if isinstance(X._meta, CSBase):
+        return _map_variable_blocks(X, _clip, bounds, name, meta=X._meta)
+    return _clip.dispatch(object)(X, bounds, name)
 
 
 def _winsorize_ranks(n: Array, limits: tuple[float, float], inclusive: tuple[bool, bool]) -> tuple[Array, Array]:
