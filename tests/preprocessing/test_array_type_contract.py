@@ -9,12 +9,12 @@ import ehrapy as ep
 from tests.conftest import forbid_dask_compute
 
 ARRAY_FUNCTIONS = [
-    pytest.param(ep.pp.scale_norm, {}, None, 0, id="scale_norm"),
+    pytest.param(ep.pp.scale_norm, {"with_mean": False}, None, 0, id="scale_norm"),
     pytest.param(ep.pp.minmax_norm, {}, None, 0, id="minmax_norm"),
     pytest.param(ep.pp.maxabs_norm, {}, None, 0, id="maxabs_norm"),
-    pytest.param(ep.pp.robust_scale_norm, {}, None, 0, id="robust_scale_norm"),
+    pytest.param(ep.pp.robust_scale_norm, {"with_centering": False}, None, 0, id="robust_scale_norm"),
     pytest.param(ep.pp.quantile_norm, {"n_quantiles": 10}, None, 0, id="quantile_norm"),
-    pytest.param(ep.pp.power_norm, {}, None, 0, id="power_norm"),
+    pytest.param(ep.pp.power_norm, {"standardize": False}, None, 0, id="power_norm"),
     pytest.param(ep.pp.log_norm, {}, None, 0, id="log_norm"),
     pytest.param(ep.pp.offset_negative_values, {}, None, 0, id="offset_negative_values"),
     pytest.param(ep.pp.explicit_impute, {"replacement": -1.0}, None, 0, id="explicit_impute"),
@@ -35,6 +35,8 @@ ARRAY_FUNCTIONS = [
 ]
 LONGITUDINAL_ONLY = {ep.pp.locf_impute}
 STATIC_COMPLETE_ONLY = {ep.pp.combat, ep.pp.regress_out}
+# the corrected values are dense, so they cannot stay sparse
+UNSUPPORTED = {ep.pp.combat: Flags.Sparse, ep.pp.regress_out: Flags.Sparse}
 NOT_ARRAY_FUNCTIONS = {
     "detect_bias",
     "highly_variable_features",
@@ -74,16 +76,17 @@ def test_array_type_contract(array_type, ndim, func, kwargs, written_layer, dask
     edata = ed.EHRData(X=X, obs=obs)
     edata.var[FEATURE_TYPE_KEY] = [NUMERIC_TAG] * 3 + [CATEGORICAL_TAG]
 
-    try:
-        with forbid_dask_compute(allowed=dask_computes):
-            result = func(edata, **kwargs)
-    except NotImplementedError:
-        if array_type.cls is np.ndarray:
-            raise
+    if array_type.flags & UNSUPPORTED.get(func, Flags(0)):
+        with pytest.raises(NotImplementedError):
+            func(edata, **kwargs)
         return
+
+    with forbid_dask_compute(allowed=dask_computes):
+        result = func(edata, **kwargs)
 
     result = edata if result is None else result
     written = result.X if written_layer is None else result.layers[written_layer]
     assert type(written) is type(X)
     if array_type.flags & Flags.Dask:
         assert type(written._meta) is type(X._meta)
+        assert type(written.compute()) is type(X._meta)
