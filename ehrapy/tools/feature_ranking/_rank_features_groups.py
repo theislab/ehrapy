@@ -230,8 +230,8 @@ def _evaluate_categorical_features(
         pvals = []
         scores = []
 
-        for group in group_names:
-            if group not in groups_order:
+        for group in groups_order:
+            if group == reference:
                 continue
 
             if reference == "rest":
@@ -248,14 +248,14 @@ def _evaluate_categorical_features(
             scores.append(score)
             pvals.append(p_value)
 
-        categorical_names.append([feature] * len(group_names))
+        categorical_names.append([feature] * len(scores))
         categorical_scores.append(scores)
         categorical_pvals.append(pvals)
         # It is not clear, how to interpret logFC or percentages for categorical data
         # For now, leave some values so that plotting and sorting methods work
-        categorical_logfoldchanges.append(np.ones(len(group_names)))
+        categorical_logfoldchanges.append(np.ones(len(scores)))
         if pts:
-            categorical_pts.append(np.ones(len(group_names)))
+            categorical_pts.append(np.ones(len(scores)))
 
     return (
         np.array(categorical_names),
@@ -561,6 +561,7 @@ def rank_features_groups(
     }
 
     group_names = pd.Categorical(edata.obs[groupby].astype(str)).categories.tolist()
+    groups_order = _get_groups_order(groups_subset=groups, group_names=group_names, reference=reference)
 
     if list(edata.var_names[edata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG]):
         # Rank numerical features
@@ -594,7 +595,9 @@ def rank_features_groups(
             pvals=numerical_edata.uns[key_added].get("pvals"),
             pvals_adj=numerical_edata.uns[key_added].get("pvals_adj"),
             logfoldchanges=numerical_edata.uns[key_added].get("logfoldchanges"),
-            groups_order=group_names,
+            groups_order=[
+                group for group in groups_order if group in numerical_edata.uns[key_added]["names"].dtype.names
+            ],
         )
 
     if list(edata.var_names[edata.var[FEATURE_TYPE_KEY] == CATEGORICAL_TAG]):
@@ -626,7 +629,7 @@ def rank_features_groups(
             pvals=categorical_pvals,
             pvals_adj=categorical_pvals.copy(),
             logfoldchanges=categorical_logfoldchanges,
-            groups_order=group_names,
+            groups_order=[group for group in groups_order if group != reference],
         )
 
     if pts and "names" in edata.uns[key_added]:
@@ -635,7 +638,7 @@ def rank_features_groups(
                 edata,
                 _ranked_features(edata.uns[key_added]),
                 groupby=groupby,
-                groups_order=_get_groups_order(groups_subset=groups, group_names=group_names, reference=reference),
+                groups_order=groups_order,
                 reference=reference,
             )
         )
