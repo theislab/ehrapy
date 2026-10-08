@@ -219,6 +219,13 @@ def test_simple_impute_all_nan_variable(strategy, expected):
     assert np.isnan(imputed[:, 1]).all()
 
 
+def test_simple_impute_unknown_var_name(impute_num_edata):
+    with pytest.raises(KeyError, match="nope"):
+        simple_impute(impute_num_edata, var_names=["nope"])
+
+    assert np.isnan(impute_num_edata.X[:, -1]).any()
+
+
 @pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
 @pytest.mark.parametrize("strategy", ["mean", "median", "most_frequent"])
 def test_simple_impute_basic(impute_num_edata, array_type, strategy):
