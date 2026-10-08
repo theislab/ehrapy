@@ -1070,6 +1070,7 @@ def pca(
     """
     pca_partial = partial(
         sc.pl.pca,
+        use_raw=False,
         annotate_var_explained=annotate_var_explained,
         show=show,
         return_fig=return_fig,
@@ -1167,7 +1168,7 @@ def pca_overview(edata: EHRData, **params) -> None:  # pragma: no cover
 
         .. image:: /_static/docstring_previews/pca_overview_3.png
     """
-    return sc.pl.pca_overview(_as_scanpy_input(edata), **params)
+    return sc.pl.pca_overview(_as_scanpy_input(edata), use_raw=False, **params)
 
 
 @function_2D_only(var_keys=("color",))
@@ -1205,7 +1206,7 @@ def tsne(edata: EHRData, **kwargs) -> Figure | Axes | list[Axes] | None:  # prag
         .. image:: /_static/docstring_previews/tsne_3.png
 
     """
-    return sc.pl.tsne(_as_scanpy_input(edata), **kwargs)
+    return sc.pl.tsne(_as_scanpy_input(edata), use_raw=False, **kwargs)
 
 
 @function_2D_only(var_keys=("color",))
@@ -1242,7 +1243,7 @@ def umap(edata: EHRData, **kwargs) -> Figure | Axes | list[Axes] | None:  # prag
 
         .. image:: /_static/docstring_previews/umap_3.png
     """
-    return sc.pl.umap(_as_scanpy_input(edata), **kwargs)
+    return sc.pl.umap(_as_scanpy_input(edata), use_raw=False, **kwargs)
 
 
 @function_2D_only(var_keys=("color",))
@@ -1266,7 +1267,7 @@ def diffmap(edata: EHRData, **kwargs) -> Figure | Axes | list[Axes] | None:  # p
     Preview:
         .. image:: /_static/docstring_previews/diffmap.png
     """
-    return sc.pl.diffmap(_as_scanpy_input(edata), **kwargs)
+    return sc.pl.diffmap(_as_scanpy_input(edata), use_raw=False, **kwargs)
 
 
 @function_2D_only(var_keys=("color",))
@@ -1304,7 +1305,7 @@ def draw_graph(
 
         .. image:: /_static/docstring_previews/draw_graph_2.png
     """
-    return sc.pl.draw_graph(_as_scanpy_input(edata), layout=layout, **kwargs)
+    return sc.pl.draw_graph(_as_scanpy_input(edata), layout=layout, use_raw=False, **kwargs)
 
 
 @function_2D_only(var_keys=("color",))
@@ -2190,6 +2191,7 @@ def rank_features_groups_stacked_violin(
     """
     return sc.pl.rank_genes_groups_stacked_violin(
         adata=_as_scanpy_input(edata),
+        use_raw=False,
         groups=groups,
         n_genes=n_features,
         groupby=groupby,
@@ -2244,6 +2246,7 @@ def rank_features_groups_heatmap(
     """
     return sc.pl.rank_genes_groups_heatmap(
         adata=_as_scanpy_input(edata),
+        use_raw=False,
         groups=groups,
         n_genes=n_features,
         groupby=groupby,
@@ -2309,6 +2312,7 @@ def rank_features_groups_dotplot(
     kwds.setdefault("size_title", "Fraction of observations\nin group (%)")
     return sc.pl.rank_genes_groups_dotplot(
         adata=_as_scanpy_input(edata),
+        use_raw=False,
         groups=groups,
         n_genes=n_features,
         groupby=groupby,
@@ -2374,6 +2378,7 @@ def rank_features_groups_matrixplot(
     """
     return sc.pl.rank_genes_groups_matrixplot(
         adata=_as_scanpy_input(edata),
+        use_raw=False,
         groups=groups,
         n_genes=n_features,
         groupby=groupby,
@@ -2429,6 +2434,7 @@ def rank_features_groups_tracksplot(
     """
     return sc.pl.rank_genes_groups_tracksplot(
         adata=_as_scanpy_input(edata),
+        use_raw=False,
         groups=groups,
         n_genes=n_features,
         groupby=groupby,
