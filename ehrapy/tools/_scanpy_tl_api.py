@@ -68,6 +68,14 @@ def leiden(
 
         `edata.uns[key_added]['modularity']`
         The modularity score of the final clustering.
+
+    Examples:
+        >>> import ehrdata as ed
+        >>> import ehrapy as ep
+        >>> edata = ed.dt.mimic_2(columns_obs_only=["service_unit", "day_icu_intime"])
+        >>> ep.pp.simple_impute(edata, strategy="median")
+        >>> ep.pp.neighbors(edata)
+        >>> ep.tl.leiden(edata)
     """
     try:
         import igraph
@@ -270,6 +278,15 @@ def paga(
 
     Notes:
         Together with a random walk-based distance measure (e.g. :func:`ehrapy.tools.dpt`) this generates a partial coordinatization of data useful for exploring and explaining its variation.
+
+    Examples:
+        >>> import ehrdata as ed
+        >>> import ehrapy as ep
+        >>> edata = ed.dt.mimic_2(columns_obs_only=["service_unit", "day_icu_intime"])
+        >>> ep.pp.simple_impute(edata, strategy="median")
+        >>> ep.pp.neighbors(edata)
+        >>> ep.tl.leiden(edata)
+        >>> ep.tl.paga(edata, groups="leiden")
     """
     return sc.tl.paga(
         adata=edata,

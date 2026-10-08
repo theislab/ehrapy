@@ -229,7 +229,11 @@ pytest
 
 in the root of the repository.
 
+The tests also run every docstring example with [xdoctest][].
+Keep examples fast and use datasets that the tests already use, such as `ed.dt.mimic_2()` or `ed.dt.ehrdata_blobs()`.
+
 [pytest]: https://docs.pytest.org/
+[xdoctest]: https://xdoctest.readthedocs.io/
 
 ### Continuous integration
 

@@ -107,11 +107,12 @@ def qc_metrics(
 
 
     Examples:
-            >>> import ehrapy as ep
-            >>> edata = ed.dt.mimic_2()
-            >>> ep.pp.qc_metrics(edata)
-            >>> edata.obs.head()
-            >>> edata.var.head()
+        >>> import ehrdata as ed
+        >>> import ehrapy as ep
+        >>> edata = ed.dt.mimic_2()
+        >>> ep.pp.qc_metrics(edata)
+        >>> edata.obs.head()
+        >>> edata.var.head()
     """
     if not isinstance(edata, EHRData):
         raise ValueError(f"Central data object should be an EHRData object, but received {type(edata).__name__}")
@@ -508,6 +509,7 @@ def qc_lab_measurements(
         ``None`` if ``copy=False``, otherwise the updated data object.
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> ep.pp.qc_lab_measurements(edata, var_names=["potassium_first"])
@@ -645,7 +647,7 @@ def mcar_test(
         ...     n_observations=100, n_variables=5, missing_values=0.1, random_state=0, n_centers=1, base_timepoints=1
         ... )
         >>> ep.pp.mcar_test(edata)
-        0.1416...
+        0.1412...
     """
     mtx = edata.X if layer is None else edata.layers[layer]
     if mtx.ndim == 3:

@@ -104,6 +104,13 @@ def neighbors(
 
          **neighbors** : `dict` in `edata.uns['neighbors' | key_added]`.
          The neighbors parameters.
+
+    Examples:
+        >>> import ehrdata as ed
+        >>> import ehrapy as ep
+        >>> edata = ed.dt.mimic_2(columns_obs_only=["service_unit", "day_icu_intime"])
+        >>> ep.pp.simple_impute(edata, strategy="median")
+        >>> ep.pp.neighbors(edata)
     """
     if metric in {"dtw", "soft_dtw", "gak"}:
         if use_rep is None:

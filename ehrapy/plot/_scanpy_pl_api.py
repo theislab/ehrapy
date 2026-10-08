@@ -107,15 +107,12 @@ def scatter(
         If `show` is `False`, a :class:`~matplotlib.axes.Axes` or a list of it.
 
     Example:
-        .. code-block:: python
-
-            import ehrdata as ed
-            import ehrapy as ep
-
-            edata = ed.dt.mimic_2(columns_obs_only=["service_unit", "day_icu_intime"])
-            ep.pp.simple_impute(edata, strategy="median")
-            ep.pp.neighbors(edata)
-            ep.pl.scatter(edata, x="age", y="icu_los_day", color="icu_los_day")
+        >>> import ehrdata as ed
+        >>> import ehrapy as ep
+        >>> edata = ed.dt.mimic_2(columns_obs_only=["service_unit", "day_icu_intime"])
+        >>> ep.pp.simple_impute(edata, strategy="median")
+        >>> ep.pp.neighbors(edata)
+        >>> ep.pl.scatter(edata, x="age", y="icu_los_day", color="icu_los_day")
 
     Preview:
         .. image:: /_static/docstring_previews/scatter.png
@@ -214,38 +211,35 @@ def heatmap(
         Dict of :class:`~matplotlib.axes.Axes` if `show` is `False`.
 
     Example:
-        .. code-block:: python
-
-            import ehrdata as ed
-            import ehrapy as ep
-
-            edata = ed.dt.mimic_2(columns_obs_only=["service_unit", "day_icu_intime"])
-            ep.pp.simple_impute(edata, strategy="median")
-            ep.pp.neighbors(edata)
-            ep.tl.leiden(edata, resolution=0.5, key_added="leiden_0_5")
-            ep.pl.heatmap(
-                edata,
-                var_names=[
-                    "map_1st",
-                    "hr_1st",
-                    "temp_1st",
-                    "spo2_1st",
-                    "abg_count",
-                    "wbc_first",
-                    "hgb_first",
-                    "platelet_first",
-                    "sodium_first",
-                    "potassium_first",
-                    "tco2_first",
-                    "chloride_first",
-                    "bun_first",
-                    "creatinine_first",
-                    "po2_first",
-                    "pco2_first",
-                    "iv_day_1",
-                ],
-                groupby="leiden_0_5",
-            )
+        >>> import ehrdata as ed
+        >>> import ehrapy as ep
+        >>> edata = ed.dt.mimic_2(columns_obs_only=["service_unit", "day_icu_intime"])
+        >>> ep.pp.simple_impute(edata, strategy="median")
+        >>> ep.pp.neighbors(edata)
+        >>> ep.tl.leiden(edata, resolution=0.5, key_added="leiden_0_5")
+        >>> ep.pl.heatmap(
+        ...     edata,
+        ...     var_names=[
+        ...         "map_1st",
+        ...         "hr_1st",
+        ...         "temp_1st",
+        ...         "spo2_1st",
+        ...         "abg_count",
+        ...         "wbc_first",
+        ...         "hgb_first",
+        ...         "platelet_first",
+        ...         "sodium_first",
+        ...         "potassium_first",
+        ...         "tco2_first",
+        ...         "chloride_first",
+        ...         "bun_first",
+        ...         "creatinine_first",
+        ...         "po2_first",
+        ...         "pco2_first",
+        ...         "iv_day_1",
+        ...     ],
+        ...     groupby="leiden_0_5",
+        ... )
 
     Preview:
         .. image:: /_static/docstring_previews/heatmap.png
@@ -378,36 +372,33 @@ def dotplot(
         If `return_fig` is `True`, returns a :class:`~scanpy.pl.DotPlot` object, else if `show` is false, return axes dict
 
     Example:
-        .. code-block:: python
-
-            import ehrdata as ed
-            import ehrapy as ep
-
-            edata = ed.dt.mimic_2(columns_obs_only=["service_unit", "day_icu_intime"])
-            ep.pp.simple_impute(edata, strategy="median")
-            ep.pp.neighbors(edata)
-            ep.tl.leiden(edata, resolution=0.5, key_added="leiden_0_5")
-            ep.pl.dotplot(
-                edata,
-                var_names=[
-                    "age",
-                    "gender_num",
-                    "weight_first",
-                    "bmi",
-                    "wbc_first",
-                    "hgb_first",
-                    "platelet_first",
-                    "sodium_first",
-                    "potassium_first",
-                    "tco2_first",
-                    "chloride_first",
-                    "bun_first",
-                    "creatinine_first",
-                    "po2_first",
-                    "pco2_first",
-                ],
-                groupby="leiden_0_5",
-            )
+        >>> import ehrdata as ed
+        >>> import ehrapy as ep
+        >>> edata = ed.dt.mimic_2(columns_obs_only=["service_unit", "day_icu_intime"])
+        >>> ep.pp.simple_impute(edata, strategy="median")
+        >>> ep.pp.neighbors(edata)
+        >>> ep.tl.leiden(edata, resolution=0.5, key_added="leiden_0_5")
+        >>> ep.pl.dotplot(
+        ...     edata,
+        ...     var_names=[
+        ...         "age",
+        ...         "gender_num",
+        ...         "weight_first",
+        ...         "bmi",
+        ...         "wbc_first",
+        ...         "hgb_first",
+        ...         "platelet_first",
+        ...         "sodium_first",
+        ...         "potassium_first",
+        ...         "tco2_first",
+        ...         "chloride_first",
+        ...         "bun_first",
+        ...         "creatinine_first",
+        ...         "po2_first",
+        ...         "pco2_first",
+        ...     ],
+        ...     groupby="leiden_0_5",
+        ... )
 
     Preview:
         .. image:: /_static/docstring_previews/dotplot.png
@@ -595,16 +586,13 @@ def violin(
         A :class:`~matplotlib.axes.Axes` object if `ax` is `None` else `None`.
 
     Example:
-        .. code-block:: python
-
-            import ehrdata as ed
-            import ehrapy as ep
-
-            edata = ed.dt.mimic_2(columns_obs_only=["service_unit", "day_icu_intime"])
-            ep.pp.simple_impute(edata, strategy="median")
-            ep.pp.neighbors(edata)
-            ep.tl.leiden(edata, resolution=0.5, key_added="leiden_0_5")
-            ep.pl.violin(edata, keys=["age"], groupby="leiden_0_5")
+        >>> import ehrdata as ed
+        >>> import ehrapy as ep
+        >>> edata = ed.dt.mimic_2(columns_obs_only=["service_unit", "day_icu_intime"])
+        >>> ep.pp.simple_impute(edata, strategy="median")
+        >>> ep.pp.neighbors(edata)
+        >>> ep.tl.leiden(edata, resolution=0.5, key_added="leiden_0_5")
+        >>> ep.pl.violin(edata, keys=["age"], groupby="leiden_0_5")
 
     Preview:
         .. image:: /_static/docstring_previews/violin.png
@@ -726,32 +714,29 @@ def stacked_violin(
         If `return_fig` is `True`, returns a :class:`~scanpy.pl.StackedViolin` object, else if `show` is false, return axes dict
 
     Example:
-        .. code-block:: python
-
-            import ehrdata as ed
-            import ehrapy as ep
-
-            edata = ed.dt.mimic_2(columns_obs_only=["service_unit", "day_icu_intime"])
-            ep.pp.simple_impute(edata, strategy="median")
-            ep.pp.neighbors(edata)
-            ep.tl.leiden(edata, resolution=0.5, key_added="leiden_0_5")
-            ep.pl.stacked_violin(
-                edata,
-                var_names=[
-                    "icu_los_day",
-                    "hospital_los_day",
-                    "age",
-                    "gender_num",
-                    "weight_first",
-                    "bmi",
-                    "sapsi_first",
-                    "sofa_first",
-                    "service_num",
-                    "day_icu_intime_num",
-                    "hour_icu_intime",
-                ],
-                groupby="leiden_0_5",
-            )
+        >>> import ehrdata as ed
+        >>> import ehrapy as ep
+        >>> edata = ed.dt.mimic_2(columns_obs_only=["service_unit", "day_icu_intime"])
+        >>> ep.pp.simple_impute(edata, strategy="median")
+        >>> ep.pp.neighbors(edata)
+        >>> ep.tl.leiden(edata, resolution=0.5, key_added="leiden_0_5")
+        >>> ep.pl.stacked_violin(
+        ...     edata,
+        ...     var_names=[
+        ...         "icu_los_day",
+        ...         "hospital_los_day",
+        ...         "age",
+        ...         "gender_num",
+        ...         "weight_first",
+        ...         "bmi",
+        ...         "sapsi_first",
+        ...         "sofa_first",
+        ...         "service_num",
+        ...         "day_icu_intime_num",
+        ...         "hour_icu_intime",
+        ...     ],
+        ...     groupby="leiden_0_5",
+        ... )
 
     Preview:
         .. image:: /_static/docstring_previews/stacked_violin.png
@@ -868,34 +853,31 @@ def matrixplot(
         If `return_fig` is `True`, returns a :class:`~scanpy.pl.MatrixPlot` object, else if `show` is false, return axes dict
 
     Example:
-        .. code-block:: python
-
-            import ehrdata as ed
-            import ehrapy as ep
-
-            edata = ed.dt.mimic_2(columns_obs_only=["service_unit", "day_icu_intime"])
-            ep.pp.simple_impute(edata, strategy="median")
-            ep.pp.neighbors(edata)
-            ep.tl.leiden(edata, resolution=0.5, key_added="leiden_0_5")
-            ep.pl.matrixplot(
-                edata,
-                var_names=[
-                    "abg_count",
-                    "wbc_first",
-                    "hgb_first",
-                    "platelet_first",
-                    "sodium_first",
-                    "potassium_first",
-                    "tco2_first",
-                    "chloride_first",
-                    "bun_first",
-                    "creatinine_first",
-                    "po2_first",
-                    "pco2_first",
-                    "iv_day_1",
-                ],
-                groupby="leiden_0_5",
-            )
+        >>> import ehrdata as ed
+        >>> import ehrapy as ep
+        >>> edata = ed.dt.mimic_2(columns_obs_only=["service_unit", "day_icu_intime"])
+        >>> ep.pp.simple_impute(edata, strategy="median")
+        >>> ep.pp.neighbors(edata)
+        >>> ep.tl.leiden(edata, resolution=0.5, key_added="leiden_0_5")
+        >>> ep.pl.matrixplot(
+        ...     edata,
+        ...     var_names=[
+        ...         "abg_count",
+        ...         "wbc_first",
+        ...         "hgb_first",
+        ...         "platelet_first",
+        ...         "sodium_first",
+        ...         "potassium_first",
+        ...         "tco2_first",
+        ...         "chloride_first",
+        ...         "bun_first",
+        ...         "creatinine_first",
+        ...         "po2_first",
+        ...         "pco2_first",
+        ...         "iv_day_1",
+        ...     ],
+        ...     groupby="leiden_0_5",
+        ... )
 
     Preview:
         .. image:: /_static/docstring_previews/matrixplot.png
@@ -960,16 +942,13 @@ def clustermap(
         If `show` is `False`, a `seaborn.ClusterGrid` object (see :func:`~seaborn.clustermap`).
 
     Example:
-        .. code-block:: python
-
-            import ehrdata as ed
-            import ehrapy as ep
-
-            edata = ed.dt.mimic_2(columns_obs_only=["service_unit", "day_icu_intime"])
-            ep.pp.simple_impute(edata, strategy="median")
-            ep.pp.neighbors(edata)
-            ep.tl.leiden(edata, resolution=0.5, key_added="leiden_0_5")
-            ep.pl.clustermap(edata)
+        >>> import ehrdata as ed
+        >>> import ehrapy as ep
+        >>> edata = ed.dt.mimic_2(columns_obs_only=["service_unit", "day_icu_intime"])
+        >>> ep.pp.simple_impute(edata, strategy="median")
+        >>> ep.pp.neighbors(edata)
+        >>> ep.tl.leiden(edata, resolution=0.5, key_added="leiden_0_5")
+        >>> ep.pl.clustermap(edata)
 
     Preview:
         .. image:: /_static/docstring_previews/clustermap.png
@@ -1014,15 +993,12 @@ def ranking(
         Returns matplotlib gridspec with access to the axes.
 
     Example:
-        .. code-block:: python
-
-            import ehrdata as ed
-            import ehrapy as ep
-
-            edata = ed.dt.mimic_2(columns_obs_only=["service_unit", "day_icu_intime"])
-            ep.pp.simple_impute(edata, strategy="median")
-            ep.pp.pca(edata)
-            ep.pl.ranking(edata, "varm", "PCs", indices=[0, 1, 2])
+        >>> import ehrdata as ed
+        >>> import ehrapy as ep
+        >>> edata = ed.dt.mimic_2(columns_obs_only=["service_unit", "day_icu_intime"])
+        >>> ep.pp.simple_impute(edata, strategy="median")
+        >>> ep.pp.pca(edata)
+        >>> ep.pl.ranking(edata, "varm", "PCs", indices=[0, 1, 2])
     """
     return sc.pl.ranking(
         edata,
@@ -1068,16 +1044,13 @@ def dendrogram(
         ax: {ax}
 
     Example:
-        .. code-block:: python
-
-            import ehrdata as ed
-            import ehrapy as ep
-
-            edata = ed.dt.mimic_2(columns_obs_only=["service_unit", "day_icu_intime"])
-            ep.pp.simple_impute(edata, strategy="median")
-            ep.pp.neighbors(edata)
-            ep.tl.leiden(edata, resolution=0.5, key_added="leiden_0_5")
-            ep.pl.dendrogram(edata, groupby="leiden_0_5")
+        >>> import ehrdata as ed
+        >>> import ehrapy as ep
+        >>> edata = ed.dt.mimic_2(columns_obs_only=["service_unit", "day_icu_intime"])
+        >>> ep.pp.simple_impute(edata, strategy="median")
+        >>> ep.pp.neighbors(edata)
+        >>> ep.tl.leiden(edata, resolution=0.5, key_added="leiden_0_5")
+        >>> ep.pl.dendrogram(edata, groupby="leiden_0_5")
 
     Preview:
         .. image:: /_static/docstring_previews/dendrogram.png

@@ -73,9 +73,9 @@ def encode(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
-        >>> # encode col1 and col2 using label encoding and encode col3 using one hot encoding
+        >>> # label encode day_icu_intime and one-hot encode service_unit
         >>> edata_encoded = ep.pp.encode(
-        ...     edata, autodetect=False, encodings={"label": ["col1", "col2"], "one-hot": ["col3"]}
+        ...     edata, autodetect=False, encodings={"label": ["day_icu_intime"], "one-hot": ["service_unit"]}
         ... )
     """
     if not isinstance(edata, EHRData):

@@ -129,7 +129,8 @@ test = [
     "pytest",
     "pytest-cov",
     "pytest-mock",
-    "requests"
+    "requests",
+    "xdoctest",
 ]
 
 [dependency-groups]
@@ -163,6 +164,7 @@ scripts.clean = "git clean -fdX -- {args:docs}"
 # CPU
 [tool.hatch.envs.hatch-test]
 features = [ "dask", "leiden" ]
+extra-dependencies = [ "xdoctest" ]
 post-install-commands = [
   "uv pip install --reinstall --no-deps -e submodules/ehrdata",
 ]
@@ -195,11 +197,12 @@ omit = [
 ]
 
 [tool.pytest.ini_options]
-testpaths = "tests"
+testpaths = [ "tests", "ehrapy" ]
 xfail_strict = true
 addopts = [
     "--import-mode=importlib",  # allow using test files with same name
     "-m not gpu",
+    "--xdoctest",
 ]
 markers = [
     "conda: marks a subset of tests to be ran on the Bioconda CI.",

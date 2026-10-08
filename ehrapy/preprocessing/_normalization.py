@@ -187,13 +187,8 @@ def scale_norm(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> import numpy as np
-        >>> edata = ed.dt.physionet2012()
-        >>> np.nanmean(edata.X)
-        74.194793
+        >>> edata = ed.dt.ehrdata_blobs()
         >>> ep.pp.scale_norm(edata)
-        >>> np.nanmean(edata.X)
-        0.0
 
     """
     return _scale_func_group(
@@ -259,12 +254,10 @@ def minmax_norm(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> import numpy as np
-        >>> edata = ed.dt.physionet2012()
-        >>> np.nanmin(edata.X), np.nanmax(edata.X)
-        (-17.8, 36400.0)
+        >>> edata = ed.dt.ehrdata_blobs()
         >>> ep.pp.minmax_norm(edata)
-        >>> np.nanmin(edata.X), np.nanmax(edata.X)
-        (0.0, 1.0)
+        >>> print(np.nanmin(edata.X), np.nanmax(edata.X))
+        0.0 1.0
     """
     return _scale_func_group(
         edata=edata,
@@ -324,11 +317,9 @@ def maxabs_norm(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> import numpy as np
-        >>> edata = ed.dt.physionet2012()
-        >>> np.nanmax(np.abs(edata.X))
-        36400.0
+        >>> edata = ed.dt.ehrdata_blobs()
         >>> ep.pp.maxabs_norm(edata)
-        >>> np.nanmax(np.abs(edata.X))
+        >>> print(np.nanmax(np.abs(edata.X)))
         1.0
     """
     return _scale_func_group(
@@ -426,13 +417,8 @@ def robust_scale_norm(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> import numpy as np
-        >>> edata = ed.dt.physionet2012()
-        >>> np.nanmedian(edata.X)
-        69.0
+        >>> edata = ed.dt.ehrdata_blobs()
         >>> ep.pp.robust_scale_norm(edata)
-        >>> np.nanmedian(edata.X)
-        0.0
     """
     return _scale_func_group(
         edata=edata,
@@ -498,12 +484,10 @@ def quantile_norm(
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> import numpy as np
-        >>> edata = ed.dt.physionet2012()
-        >>> np.nanmin(edata.X), np.nanmax(edata.X)
-        (-17.8, 36400.0)
+        >>> edata = ed.dt.ehrdata_blobs()
         >>> ep.pp.quantile_norm(edata)
-        >>> np.nanmin(edata.X), np.nanmax(edata.X)
-        (0.0, 1.0)
+        >>> print(np.nanmin(edata.X), np.nanmax(edata.X))
+        0.0 1.0
     """
 
     def kernel(x: np.ndarray) -> np.ndarray:
@@ -565,17 +549,8 @@ def power_norm(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> import numpy as np
-        >>> from scipy import stats
-        >>> edata = ed.dt.physionet2012()
-        >>> ep.pp.offset_negative_values(edata)
-        >>> skewed_data = np.power(edata.X, 2)
-        >>> edata.X = skewed_data
-        >>> stats.skew(edata.X.flatten(), nan_policy="omit")
-        503.071351
+        >>> edata = ed.dt.ehrdata_blobs()
         >>> ep.pp.power_norm(edata)
-        >>> stats.skew(edata.X.flatten(), nan_policy="omit")
-        0.017135
     """
 
     def kernel(x: np.ndarray) -> np.ndarray:
@@ -657,14 +632,9 @@ def log_norm(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> import numpy as np
-        >>> edata = ed.dt.physionet2012()
+        >>> edata = ed.dt.ehrdata_blobs()
         >>> ep.pp.offset_negative_values(edata)
-        >>> np.nanmax(edata.X)
-        36417.8
         >>> ep.pp.log_norm(edata)
-        >>> np.nanmax(edata.X)
-        10.502840
     """
     edata_part = "Matrix X" if layer is None else f"Layer '{layer}'"
     return _scale_func_group(
@@ -724,11 +694,9 @@ def offset_negative_values(edata: EHRData, *, layer: str | None = None, copy: bo
         >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> import numpy as np
-        >>> edata = ed.dt.physionet2012()
-        >>> np.nanmin(edata.X)
-        -17.8
+        >>> edata = ed.dt.ehrdata_blobs()
         >>> ep.pp.offset_negative_values(edata)
-        >>> np.nanmin(edata.X)
+        >>> print(np.nanmin(edata.X))
         0.0
     """
     if copy:

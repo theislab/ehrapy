@@ -39,12 +39,9 @@ def rank_features_supervised(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ed.dt.mimic_2()
-        >>> ep.pp.knn_impute(edata, n_neighbors=5)
-        >>> input_features = [
-        ...     feat for feat in edata.var_names if feat not in {"service_unit", "day_icu_intime", "tco2_first"}
-        ... ]
-        >>> ep.tl.rank_features_supervised(edata, predicted_feature="tco2_first", model="rf", var_names=input_features)
+        >>> edata = ed.dt.mimic_2(columns_obs_only=["service_unit", "day_icu_intime"])
+        >>> ep.pp.simple_impute(edata, strategy="median")
+        >>> ep.tl.rank_features_supervised(edata, predicted_feature="tco2_first", model="rf")
         >>> ep.pl.rank_features_supervised(edata)
 
         .. image:: /_static/docstring_previews/feature_importances.png

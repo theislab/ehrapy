@@ -106,6 +106,13 @@ def pca(
         `.uns['pca' | key_added]['variance']` : :class:`~numpy.ndarray` (shape `(n_comps,)`)
             Explained variance, equivalent to the eigenvalues of the
             covariance matrix.
+
+    Examples:
+        >>> import ehrdata as ed
+        >>> import ehrapy as ep
+        >>> edata = ed.dt.mimic_2(columns_obs_only=["service_unit", "day_icu_intime"])
+        >>> ep.pp.simple_impute(edata, strategy="median")
+        >>> ep.pp.pca(edata)
     """
     return sc.pp.pca(
         data=edata,
@@ -229,6 +236,7 @@ def sample(
         'Over 60 years'          68541
         '30-60 years'            30716
         '30 years or younger'     2509
+        Name: count, dtype: int64
         >>> edata_balanced = ep.pp.sample(
         ...     edata, balanced=True, balanced_method="RandomUnderSampler", groupby="age", copy=True
         ... )
@@ -237,6 +245,7 @@ def sample(
         '30 years or younger'    2509
         '30-60 years'            2509
         'Over 60 years'          2509
+        Name: count, dtype: int64
     """
     if balanced:
         if groupby is None:
