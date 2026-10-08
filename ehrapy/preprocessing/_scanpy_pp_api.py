@@ -12,7 +12,7 @@ from ehrdata import EHRData
 from fast_array_utils.types import DaskArray
 from numpy.typing import NDArray
 
-from ehrapy._compat import _like_obs, _raise_if_sparse, function_2D_only
+from ehrapy._compat import _like_obs, _raise_if_sparse, _unfold_time, function_2D_only
 from ehrapy._types import _empty
 
 if TYPE_CHECKING:
@@ -26,7 +26,6 @@ if TYPE_CHECKING:
     type Array = np.ndarray | DaskArray
 
 
-@function_2D_only()
 def pca(
     edata: EHRData | np.ndarray | spmatrix,
     *,
@@ -48,6 +47,8 @@ def pca(
 
     Computes PCA coordinates, loadings and variance decomposition.
     Uses the implementation of *scikit-learn*.
+    Longitudinal data is unfolded so that every combination of variable and timepoint is a feature, which is known as unfolded or multiway PCA.
+    PCA requires data without missing values, so impute them first, for example with :func:`~ehrapy.preprocessing.locf_impute`.
 
     Args:
         edata: Central data object.
@@ -97,7 +98,7 @@ def pca(
 
         `.obsm['X_pca' | key_added]` : :class:`~scipy.sparse.csr_matrix` | :class:`~scipy.sparse.csc_matrix` | :class:`~numpy.ndarray` (shape `(edata.n_obs, n_comps)`)
             PCA representation of data.
-        `.varm['PCs' | key_added]` : :class:`~numpy.ndarray` (shape `(edata.n_vars, n_comps)`)
+        `.varm['PCs' | key_added]` : :class:`~numpy.ndarray` (shape `(edata.n_vars, n_comps)`, or `(edata.n_vars, edata.n_t, n_comps)` for longitudinal data)
             The principal components containing the loadings when `obsm=None`.
         `.uns['pca' | key_added]['components']` : :class:`~numpy.ndarray` (shape `(edata.obsm[obsm].shape[1], n_comps)`)
             The principal components containing the loadings when `obsm` is passed.
@@ -113,23 +114,53 @@ def pca(
         >>> edata = ed.dt.mimic_2(columns_obs_only=["service_unit", "day_icu_intime"])
         >>> ep.pp.simple_impute(edata, strategy="median")
         >>> ep.pp.pca(edata)
+
+        Longitudinal data:
+
+        >>> edata = ed.dt.ehrdata_blobs(n_variables=10, n_observations=100, base_timepoints=5)
+        >>> ep.pp.pca(edata, n_comps=10)
+        >>> edata.varm["PCs"].shape
+        (10, 5, 10)
     """
-    return sc.pp.pca(
-        data=edata,
-        n_comps=n_comps,
-        layer=layer,
-        obsm=obsm,
-        zero_center=zero_center,
-        svd_solver=svd_solver,
-        random_state=random_state,
-        return_info=return_info,
-        dtype=dtype,
+    params = {
+        "n_comps": n_comps,
+        "zero_center": zero_center,
+        "svd_solver": svd_solver,
+        "random_state": random_state,
+        "dtype": dtype,
+        "chunked": chunked,
+        "chunk_size": chunk_size,
+    }
+    X = (edata.X if layer is None else edata.layers[layer]) if isinstance(edata, EHRData) else None
+    if obsm is not None or getattr(X, "ndim", 2) != 3:
+        return sc.pp.pca(
+            data=edata,
+            layer=layer,
+            obsm=obsm,
+            return_info=return_info,
+            key_added=key_added,
+            copy=copy,
+            **params,
+            **({} if mask_var is _empty else {"mask_var": mask_var}),
+        )
+
+    edata = edata.copy() if copy else edata
+    n_vars, n_timepoints = X.shape[1:]
+    if mask_var is _empty:
+        mask_var = "highly_variable" if "highly_variable" in edata.var else None
+    if isinstance(mask_var, str):
+        mask_var = edata.var[mask_var]
+    unfolded = EHRData(X=_unfold_time(X), obs=edata.obs[[]])
+    unfolded.uns = edata.uns
+    sc.pp.pca(
+        unfolded,
         key_added=key_added,
-        copy=copy,
-        chunked=chunked,
-        chunk_size=chunk_size,
-        **({} if mask_var is _empty else {"mask_var": mask_var}),
+        mask_var=None if mask_var is None else np.repeat(np.asarray(mask_var, dtype=bool), n_timepoints),
+        **params,
     )
+    edata.obsm[key_added or "X_pca"] = unfolded.obsm[key_added or "X_pca"]
+    edata.varm[key_added or "PCs"] = unfolded.varm[key_added or "PCs"].reshape(n_vars, n_timepoints, -1)
+    return edata if copy else None
 
 
 def _residuals(X: Array, design: np.ndarray, *, keep_constant: bool) -> Array:

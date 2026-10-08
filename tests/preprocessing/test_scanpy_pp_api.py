@@ -6,6 +6,7 @@ import pytest
 import scanpy as sc
 from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
 from fast_array_utils.conv import to_dense
+from sklearn.decomposition import PCA
 from testing.fast_array_utils import Flags
 
 import ehrapy as ep
@@ -50,10 +51,64 @@ def test_pca_key_added(edata_blob_small):
     assert "X_pca" not in edata_blob_small.obsm
 
 
-def test_pca_3D_edata(edata_blob_small):
-    ep.pp.pca(edata_blob_small, layer="layer_2")
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pp.pca(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME)
+def test_pca_3D_unfolds_timepoints(edata_blob_small):
+    X = edata_blob_small.layers[DEFAULT_TEM_LAYER_NAME]
+    n_obs, n_vars, n_timepoints = X.shape
+    expected = PCA(n_components=5, svd_solver="full").fit(X.reshape(n_obs, -1))
+
+    ep.pp.pca(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME, n_comps=5, svd_solver="full", dtype="float64")
+
+    loadings = edata_blob_small.varm["PCs"]
+    assert loadings.shape == (n_vars, n_timepoints, 5)
+    signs = np.sign(np.sum(loadings.reshape(-1, 5) * expected.components_.T, axis=0))
+    np.testing.assert_allclose(
+        loadings * signs, np.moveaxis(expected.components_.reshape(5, n_vars, n_timepoints), 0, -1)
+    )
+    np.testing.assert_allclose(
+        edata_blob_small.obsm["X_pca"] * signs, expected.transform(X.reshape(n_obs, -1)), atol=1e-10
+    )
+    np.testing.assert_allclose(edata_blob_small.uns["pca"]["variance_ratio"], expected.explained_variance_ratio_)
+
+
+def test_pca_3D_mask_var(edata_blob_small):
+    edata_blob_small.var["highly_variable"] = [True] * 5 + [False] * 5
+
+    ep.pp.pca(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME, n_comps=2, key_added="pca_3D")
+
+    used = np.abs(edata_blob_small.varm["pca_3D"]).sum(axis=2) > 0
+    np.testing.assert_array_equal(used, np.repeat(edata_blob_small.var[["highly_variable"]].to_numpy(), 10, axis=1))
+    assert edata_blob_small.obsm["pca_3D"].shape == (edata_blob_small.n_obs, 2)
+
+
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu | Flags.Sparse)
+def test_pca_3D_array_types(array_type, edata_blob_small):
+    X = edata_blob_small.layers[DEFAULT_TEM_LAYER_NAME]
+    expected = ed.EHRData(X=X)
+    ep.pp.pca(expected, n_comps=3)
+    edata = ed.EHRData(X=array_type(X))
+
+    with forbid_dask_compute(allowed=1):
+        ep.pp.pca(edata, n_comps=3)
+
+    assert isinstance(edata.obsm["X_pca"], array_type.cls)
+    np.testing.assert_allclose(
+        np.abs(to_dense(edata.obsm["X_pca"], to_cpu_memory=True)), np.abs(expected.obsm["X_pca"]), atol=1e-4
+    )
+    np.testing.assert_allclose(np.abs(edata.varm["PCs"]), np.abs(expected.varm["PCs"]), atol=1e-4)
+
+
+def test_pca_3D_neighbors_umap_leiden(edata_blob_small):
+    edata = edata_blob_small
+    edata.X = edata.layers[DEFAULT_TEM_LAYER_NAME]
+
+    ep.pp.pca(edata, n_comps=5)
+    ep.pp.neighbors(edata)
+    ep.tl.umap(edata)
+    ep.tl.leiden(edata)
+
+    assert edata.uns["neighbors"]["params"]["use_rep"] == "X_pca"
+    assert edata.obsm["X_umap"].shape == (edata.n_obs, 2)
+    assert edata.obs["leiden"].nunique() > 1
 
 
 def test_regress_out(edata_blob_small):

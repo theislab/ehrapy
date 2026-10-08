@@ -116,6 +116,13 @@ def _var_axes(X: Array | CSBase) -> tuple[int, ...]:
     return (1,) if X.ndim == 2 else (1, 2)
 
 
+def _unfold_time(X: Array) -> Array:
+    """Unfold `(n_obs, n_vars, n_timepoints)` data into `(n_obs, n_vars * n_timepoints)`, keeping the timepoints of every variable next to each other."""
+    if isinstance(X, DaskArray):
+        X = X.rechunk(dict.fromkeys(_var_axes(X), -1))
+    return X.reshape(X.shape[0], -1)
+
+
 def _broadcast_var_stat(stat, X):
     """Reshape a per-variable statistic of shape `(n_vars,)` or per-row statistics `(n_obs, n_vars)` to broadcast against `X`."""
     xp = array_namespace(stat)

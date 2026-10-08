@@ -69,6 +69,7 @@ def neighbors(
                  If `None`, the representation is chosen automatically:
                  For `.n_vars` < 50, `.X` is used, otherwise 'X_pca' is used.
                  If 'X_pca' is not present, it's computed with default parameters or `n_pcs` if present.
+                 For longitudinal data, `None` uses 'X_pca', which :func:`~ehrapy.preprocessing.pca` computes from all timepoints.
                  For time series metrics (`metric='dtw'`, `'soft_dtw'`, `'gak'`), `None` uses `.X`, keys for `.layers` are valid as well, and the representation must be a 3D array with shape (n_obs, n_vars, n_timepoints).
         knn: If `True`, use a hard threshold to restrict the number of neighbors to `n_neighbors`, that is, consider a knn graph.
              Otherwise, use a Gaussian Kernel to assign low weights to neighbors more distant than the `n_neighbors` nearest neighbor.
@@ -145,6 +146,8 @@ def neighbors(
             raise ValueError(f"use_rep must be None when metric is {metric}")
         edata.obsm[TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY] = np.arange(edata.shape[0])
         use_rep = TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY
+    elif use_rep is None and np.ndim(edata.X) == 3 and "X_pca" in edata.obsm:
+        use_rep = "X_pca"
     elif use_rep in {None, "X"}:
         _raise_if_3D(edata.X, "neighbors", "edata.X")
 
