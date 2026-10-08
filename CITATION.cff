@@ -1,0 +1,87 @@
+cff-version: 1.2.0
+message: If you use ehrapy, please cite the article below.
+title: "ehrapy: electronic health record (EHR) analysis in Python"
+type: software
+authors:
+  - given-names: Lukas
+    family-names: Heumos
+  - given-names: Philipp
+    family-names: Ehmele
+  - given-names: Eljas
+    family-names: Roellin
+  - given-names: Lilly
+    family-names: May
+  - given-names: Tim
+    family-names: Treis
+  - given-names: Altana
+    family-names: Namsaraeva
+  - given-names: Vladimir A.
+    family-names: Shitov
+  - given-names: Luke
+    family-names: Zappia
+  - given-names: Xinyue
+    family-names: Zhang
+repository-code: https://github.com/theislab/ehrapy
+url: https://ehrapy.readthedocs.io
+license: Apache-2.0
+preferred-citation:
+  type: article
+  title: An open-source framework for end-to-end analysis of electronic health record data
+  authors:
+    - given-names: Lukas
+      family-names: Heumos
+    - given-names: Philipp
+      family-names: Ehmele
+    - given-names: Tim
+      family-names: Treis
+    - given-names: Julius
+      family-names: Upmeier zu Belzen
+      orcid: https://orcid.org/0000-0002-0966-4458
+    - given-names: Eljas
+      family-names: Roellin
+    - given-names: Lilly
+      family-names: May
+    - given-names: Altana
+      family-names: Namsaraeva
+    - given-names: Nastassya
+      family-names: Horlava
+    - given-names: Vladimir A.
+      family-names: Shitov
+      orcid: https://orcid.org/0000-0002-1960-8812
+    - given-names: Xinyue
+      family-names: Zhang
+      orcid: https://orcid.org/0000-0003-4806-4049
+    - given-names: Luke
+      family-names: Zappia
+      orcid: https://orcid.org/0000-0001-7744-8565
+    - given-names: Rainer
+      family-names: Knoll
+    - given-names: Niklas J.
+      family-names: Lang
+    - given-names: Leon
+      family-names: Hetzel
+    - given-names: Isaac
+      family-names: Virshup
+    - given-names: Lisa
+      family-names: Sikkema
+      orcid: https://orcid.org/0000-0001-9686-6295
+    - given-names: Fabiola
+      family-names: Curion
+    - given-names: Roland
+      family-names: Eils
+    - given-names: Herbert B.
+      family-names: Schiller
+    - given-names: Anne
+      family-names: Hilgendorff
+    - given-names: Fabian J.
+      family-names: Theis
+      orcid: https://orcid.org/0000-0002-2419-1943
+  journal: Nature Medicine
+  volume: 30
+  issue: 11
+  start: 3369
+  end: 3380
+  year: 2024
+  month: 11
+  doi: 10.1038/s41591-024-03214-0
+  url: https://doi.org/10.1038/s41591-024-03214-0

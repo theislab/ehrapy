@@ -5,10 +5,27 @@ requires = ["hatchling", "hatch-vcs"]
 [project]
 name = "ehrapy"
 dynamic = ["version"]
-description = "Electronic Health Record Analysis with Python."
+description = "Electronic health record (EHR) analysis in Python, from OMOP, MIMIC and PhysioNet data to clustering, trajectories, survival analysis and causal inference."
 readme = "README.md"
 requires-python = ">=3.12,<3.15"
 license = {file = "LICENSE"}
+keywords = [
+    "electronic health records",
+    "EHR",
+    "clinical data",
+    "epidemiology",
+    "OMOP",
+    "MIMIC",
+    "PhysioNet",
+    "longitudinal data",
+    "time series",
+    "imputation",
+    "patient stratification",
+    "survival analysis",
+    "causal inference",
+    "fairness",
+    "scverse",
+]
 authors = [
     {name = "Lukas Heumos"},
     {name = "Philipp Ehmele"},
@@ -26,6 +43,9 @@ maintainers = [
 urls.Documentation = "https://ehrapy.readthedocs.io"
 urls.Source = "https://github.com/theislab/ehrapy"
 urls.Home-page = "https://github.com/theislab/ehrapy"
+urls.Issues = "https://github.com/theislab/ehrapy/issues"
+urls.Changelog = "https://ehrapy.readthedocs.io/en/stable/changelog.html"
+urls.Paper = "https://doi.org/10.1038/s41591-024-03214-0"
 
 classifiers = [
     "License :: OSI Approved :: Apache Software License",
@@ -33,6 +53,7 @@ classifiers = [
     "Environment :: Console",
     "Framework :: Jupyter",
     "Intended Audience :: Developers",
+    "Intended Audience :: Healthcare Industry",
     "Intended Audience :: Science/Research",
     "Natural Language :: English",
     "Operating System :: MacOS :: MacOS X",
@@ -42,6 +63,7 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
     "Topic :: Scientific/Engineering :: Visualization",
 ]
 
@@ -92,6 +114,8 @@ doc = [
     "sphinx-last-updated-by-git",
     "sphinx-automodapi",
     "sphinxext-opengraph",
+    "sphinx-llms-txt",
+    "sphinx-sitemap",
     "pygments",
     "nbsphinx",
     "nbsphinx-link",
