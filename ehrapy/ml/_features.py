@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
@@ -17,9 +17,9 @@ if TYPE_CHECKING:
     from fast_array_utils.types import DaskArray
 
     from ehrapy.ml._task import Task
+    from ehrapy.preprocessing._summarize_measurements import Statistic
 
     type Array = np.ndarray | DaskArray
-    type Statistic = Literal["min", "max", "mean", "median", "first", "last"]
 
 
 def _features(

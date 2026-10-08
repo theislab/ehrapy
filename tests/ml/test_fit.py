@@ -69,6 +69,15 @@ def test_features_end_before_prediction_time_and_gap():
     np.testing.assert_array_equal(changed.obs["prediction"], edata.obs["prediction"])
 
 
+def test_fit_with_longitudinal_statistics():
+    edata = longitudinal()
+    ep.ml.split(edata, stratify="label")
+
+    predictor = ep.ml.fit(edata, TASKS["binary"], model="logistic", statistics=["count", "std", "slope"])
+
+    assert predictor.feature_names == [f"{var}_{stat}" for var in edata.var_names for stat in ("count", "std", "slope")]
+
+
 def test_preprocessing_is_fit_on_train():
     edata = static()
     is_train = (edata.obs["split"] == "train").to_numpy()

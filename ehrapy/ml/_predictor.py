@@ -32,6 +32,8 @@ if TYPE_CHECKING:
     from ehrdata import EHRData
     from torch import nn
 
+    from ehrapy.preprocessing._summarize_measurements import Statistic
+
 
 @dataclass(frozen=True)
 class Predictor:
@@ -50,7 +52,7 @@ class Predictor:
     #: Layer the variables are read from, or `None` for `.X`.
     layer: str | None
     #: Statistics that summarize longitudinal variables.
-    statistics: list[Literal["min", "max", "mean", "median", "first", "last"]]
+    statistics: list[Statistic]
     #: Names of the features in the order the model receives them.
     feature_names: list[str]
     #: Classes of classification tasks or labels of multilabel tasks, in the order of the predicted probabilities.
@@ -86,7 +88,7 @@ def fit(
     var_names: Iterable[str] | None = None,
     obs_keys: Iterable[str] = (),
     layer: str | None = None,
-    statistics: Iterable[Literal["min", "max", "mean", "median", "first", "last"]] = ("min", "max", "mean"),
+    statistics: Iterable[Statistic] = ("min", "max", "mean"),
     split_key: str = "split",
     max_train_obs: int | None = 10_000,
     random_state: int = 0,
@@ -122,7 +124,7 @@ def fit(
         obs_keys: Columns of `obs` to use as features, with categorical columns one-hot encoded.
         layer: Layer to read the variables from.
             If `None`, `.X` is used.
-        statistics: Statistics that summarize every longitudinal variable over the observation window.
+        statistics: Statistics that summarize every longitudinal variable over the observation window, see :func:`~ehrapy.preprocessing.summarize_measurements`.
         split_key: Column of `obs` with the sets from :func:`~ehrapy.ml.split`.
             The model is fit on the observations in `"train"` with all targets.
         max_train_obs: Maximum number of randomly chosen training and tuning observations the model is fit on.
