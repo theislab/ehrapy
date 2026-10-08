@@ -1,15 +1,16 @@
 from __future__ import annotations
 
+from functools import singledispatch
 from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import pandas as pd
 from fast_array_utils.conv import to_dense
-from fast_array_utils.types import CSBase
-from scipy import stats
+from fast_array_utils.types import CSBase, DaskArray
+from scipy import special, stats
 from statsmodels.stats.multitest import multipletests
 
-from ehrapy._compat import _raise_if_dask_with_sparse_chunks
+from ehrapy._compat import sparse_nan_min_max
 from ehrapy.preprocessing._summarize_measurements import _aggregate_time
 
 if TYPE_CHECKING:
@@ -24,7 +25,7 @@ def _aggregate_variable_values(
     *,
     var_names: Sequence[str] | None = None,
     agg: Literal["mean", "last", "first"] = "mean",
-) -> tuple[np.ndarray, Sequence[str]]:
+) -> tuple[np.ndarray | CSBase, Sequence[str]]:
     """Aggregate variable values from a EHRData layer over time with specified aggregation method."""
     if layer is not None:
         if layer not in edata.layers:
@@ -32,12 +33,6 @@ def _aggregate_variable_values(
         mtx = edata.layers[layer]
     else:
         mtx = edata.X
-
-    if isinstance(mtx, CSBase):
-        raise NotImplementedError(
-            "variable_correlations does not support sparse arrays because pairwise deletion needs dense masks of missing values."
-        )
-    _raise_if_dask_with_sparse_chunks(mtx, "variable_correlations")
 
     # only include numeric or encoded variables
     numeric_var_names = set(edata.var_names) if np.issubdtype(mtx.dtype, np.number) else set()
@@ -59,7 +54,72 @@ def _aggregate_variable_values(
             raise ValueError(f"Unknown aggregation method: {agg}")
         values = _aggregate_time(values, agg)
 
-    return to_dense(values, to_cpu_memory=True), var_names
+    return (values.compute() if isinstance(values, DaskArray) else values), var_names
+
+
+@singledispatch
+def _correlations(X: np.ndarray | CSBase, method: str) -> tuple[np.ndarray, np.ndarray]:
+    """Correlation coefficient and p-value of every pair of variables over the observations where both are observed."""
+    n_vars = X.shape[1]
+    corr_mtx = np.full((n_vars, n_vars), np.nan)
+    np.fill_diagonal(corr_mtx, 1.0)
+
+    pval_mtx = np.ones((n_vars, n_vars))
+    np.fill_diagonal(pval_mtx, 0.0)
+
+    for i in range(n_vars):
+        for j in range(i + 1, n_vars):
+            x, y = to_dense(X[:, [i, j]], to_cpu_memory=True).T
+
+            mask = ~(np.isnan(x) | np.isnan(y))
+
+            if mask.sum() < 3:
+                # There should be at least 3 observations that have a value for variables i and j
+                corr_mtx[i, j] = np.nan
+                corr_mtx[j, i] = np.nan
+                pval_mtx[i, j] = 1.0
+                pval_mtx[j, i] = 1.0
+                continue
+
+            if method == "spearman":
+                corr_val, pval = stats.spearmanr(x[mask], y[mask])
+            elif method == "kendall":
+                corr_val, pval = stats.kendalltau(x[mask], y[mask])
+            else:
+                corr_val, pval = stats.pearsonr(x[mask], y[mask])
+
+            corr_mtx[i, j] = corr_val
+            corr_mtx[j, i] = corr_val
+            pval_mtx[i, j] = pval
+            pval_mtx[j, i] = pval
+
+    return corr_mtx, pval_mtx
+
+
+@_correlations.register(CSBase)
+def _(X: CSBase, method: str) -> tuple[np.ndarray, np.ndarray]:
+    if method != "pearson":
+        return _correlations.dispatch(np.ndarray)(X.tocsc(), method)
+    is_nan = np.isnan(X.data)
+    filled, missing = X.astype(np.float64), X.astype(np.float64)
+    filled.data[is_nan] = 0
+    missing.data = is_nan.astype(np.float64)
+    n_missing = (missing.T @ missing).toarray()
+    n = X.shape[0] - np.diag(n_missing)[:, None] - np.diag(n_missing) + n_missing
+    sums, squares = (
+        np.asarray(a.sum(axis=0)).reshape(-1, 1) - (a.T @ missing).toarray() for a in (filled, filled.power(2))
+    )
+    variances = n * squares - sums**2
+    with np.errstate(divide="ignore", invalid="ignore"):
+        corr = np.clip((n * (filled.T @ filled).toarray() - sums * sums.T) / np.sqrt(variances * variances.T), -1, 1)
+    # rounding can leave a nonzero variance for constant variables
+    minimum, maximum = sparse_nan_min_max(X)
+    corr[:, minimum == maximum] = corr[minimum == maximum] = np.nan
+    pval = 2 * special.betaincc(n / 2 - 1, n / 2 - 1, (np.abs(corr) + 1) / 2)
+    corr[n < 3], pval[n < 3] = np.nan, 1.0
+    np.fill_diagonal(corr, 1.0)
+    np.fill_diagonal(pval, 0.0)
+    return corr, pval
 
 
 def variable_correlations(
@@ -113,38 +173,7 @@ def variable_correlations(
     if method not in {"spearman", "kendall", "pearson"}:
         raise ValueError(f"Unsupported correlation method: {method}")
 
-    corr_mtx = np.full((n_vars, n_vars), np.nan)
-    np.fill_diagonal(corr_mtx, 1.0)
-
-    pval_mtx = np.ones((n_vars, n_vars))
-    np.fill_diagonal(pval_mtx, 0.0)
-
-    for i in range(n_vars):
-        for j in range(i + 1, n_vars):
-            x = arr[:, i]
-            y = arr[:, j]
-
-            mask = ~(np.isnan(x) | np.isnan(y))
-
-            if mask.sum() < 3:
-                # There should be at least 3 observations that have a value for variables i and j
-                corr_mtx[i, j] = np.nan
-                corr_mtx[j, i] = np.nan
-                pval_mtx[i, j] = 1.0
-                pval_mtx[j, i] = 1.0
-                continue
-
-            if method == "spearman":
-                corr_val, pval = stats.spearmanr(x[mask], y[mask])
-            elif method == "kendall":
-                corr_val, pval = stats.kendalltau(x[mask], y[mask])
-            else:
-                corr_val, pval = stats.pearsonr(x[mask], y[mask])
-
-            corr_mtx[i, j] = corr_val
-            corr_mtx[j, i] = corr_val
-            pval_mtx[i, j] = pval
-            pval_mtx[j, i] = pval
+    corr_mtx, pval_mtx = _correlations(arr, method)
 
     corr_df = pd.DataFrame(corr_mtx, index=var_names, columns=var_names)
     pval_df = pd.DataFrame(pval_mtx, index=var_names, columns=var_names)
