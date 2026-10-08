@@ -8,6 +8,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 * {func}`ep.pp.summarize_measurements <ehrapy.preprocessing.summarize_measurements>` computes the number of values, their standard deviation and, for longitudinal data, their slope over time ([#1150](https://github.com/theislab/ehrapy/pull/1150)) @Zethson
 * {func}`ep.pl.trajectories <ehrapy.plot.trajectories>` plots the mean of longitudinal variables over time with a confidence band for every group of observations ([#1146](https://github.com/theislab/ehrapy/pull/1146)) @Zethson
+* {func}`ep.pp.locf_impute <ehrapy.preprocessing.locf_impute>` takes a `limit` on how many timepoints an observed value is carried forward, and its fallback only fills timepoints before a patient's first observation ([#1147](https://github.com/theislab/ehrapy/pull/1147)) @Zethson
 * {func}`ep.pp.gradient_boosting_impute <ehrapy.preprocessing.gradient_boosting_impute>` imputes every variable with a gradient boosting model, which for longitudinal data also uses the closest observed values before and after each timepoint @Zethson
 
   With every variable held out at 10% of the observed hours of all 11,988 PhysioNet 2012 patients, its RMSE on the standardized held-out values is 0.62 in 36 seconds, against 1.09 in 232 seconds for {func}`ep.pp.miss_forest_impute <ehrapy.preprocessing.miss_forest_impute>` and 0.82 for {func}`ep.pp.locf_impute <ehrapy.preprocessing.locf_impute>`.

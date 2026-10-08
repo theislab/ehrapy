@@ -806,13 +806,14 @@ def locf_edata_3d():
 
 @pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu | Flags.Sparse)
 @pytest.mark.parametrize("fallback_method", ["mean", "median", "most_frequent", "bfill", None])
-def test_locf_impute_array_types(array_type, fallback_method, rng):
+@pytest.mark.parametrize("limit", [None, 1])
+def test_locf_impute_array_types(array_type, fallback_method, limit, rng):
     X = _array_types_data(rng, 3)
-    expected = locf_impute(_numeric_edata(X), fallback_method=fallback_method, copy=True).X
+    expected = locf_impute(_numeric_edata(X), fallback_method=fallback_method, limit=limit, copy=True).X
     edata = _numeric_edata(array_type(X))
 
     with forbid_dask_compute():
-        result = locf_impute(edata, fallback_method=fallback_method, copy=True).X
+        result = locf_impute(edata, fallback_method=fallback_method, limit=limit, copy=True).X
 
     assert isinstance(result, array_type.cls)
     np.testing.assert_allclose(to_dense(result, to_cpu_memory=True), expected, equal_nan=True)
@@ -923,6 +924,22 @@ def test_locf_impute_no_fallback(locf_edata_3d):
     assert np.isnan(imputed[1, 0, 0])
     assert np.isnan(imputed[1, 0, 1])
     assert np.isnan(imputed[1, 2, 0])
+
+
+@pytest.mark.parametrize(
+    ("fallback_method", "expected"),
+    [
+        ("mean", [[2.0, 1.0, 1.0, np.nan, 3.0, 3.0]]),
+        ("bfill", [[1.0, 1.0, 1.0, np.nan, 3.0, 3.0]]),
+        (None, [[np.nan, 1.0, 1.0, np.nan, 3.0, 3.0]]),
+    ],
+)
+def test_locf_impute_limit(fallback_method, expected):
+    edata = _numeric_edata(np.array([[[np.nan, 1.0, np.nan, np.nan, 3.0, np.nan]]]))
+
+    locf_impute(edata, fallback_method=fallback_method, limit=1)
+
+    np.testing.assert_array_equal(edata.X[0], expected)
 
 
 def test_locf_impute_invalid_fallback(locf_edata_3d):
