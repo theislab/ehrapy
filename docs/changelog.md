@@ -6,11 +6,27 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### 💥 Breaking changes
 
+* Survival analysis and regression models take their columns from `edata.obs` or variables and only drop observations missing a column the model uses ([#1133](https://github.com/theislab/ehrapy/pull/1133)) @Zethson
+
+  {func}`ep.tl.kaplan_meier <ehrapy.tools.kaplan_meier>`, {func}`ep.tl.cox_ph <ehrapy.tools.cox_ph>` and the other survival fitters, {func}`ep.tl.ols <ehrapy.tools.ols>` and {func}`ep.tl.glm <ehrapy.tools.glm>` accept obs columns wherever they accept variables, and work on longitudinal data when every column they use lives in `obs`.
+  Previously, every observation with a missing value in any variable was silently dropped, even in variables the model did not use.
+  Regression fitters gained `covariates`, the univariate fitters take `entry_col` and `weights_col` instead of the `entry` and `weights` arrays, and numeric columns are passed to the models as numbers, so a binomial {func}`ep.tl.glm <ehrapy.tools.glm>` on a 0/1 outcome models the probability of 1.
 * Remove `ep.pp.mice_forest_impute` and drop the `miceforest` dependency @Zethson
 
   `miceforest` is effectively unmaintained (last commit 2025-10-27) and broken against `lightgbm>=4.7.0`, which it calls through a private, name-mangled internal ([miceforest#104](https://github.com/AnotherSamWilson/miceforest/issues/104)).
   Use {func}`ep.pp.miss_forest_impute <ehrapy.preprocessing.miss_forest_impute>` instead, which is MICE via {class}`~sklearn.impute.IterativeImputer` with a tree ensemble.
   For a LightGBM backend, pass `IterativeImputer(estimator=LGBMRegressor(...))` directly.
+* Unify the API conventions across `ep.pp`, `ep.tl`, `ep.pl` and `ep.get` ([#1126](https://github.com/theislab/ehrapy/pull/1126)) @Zethson
+
+  Required arguments are positional and every argument with a default is keyword-only.
+  Grouping keys are called `groupby` (was `group_key`, `cluster_key`, `balanced_key`), feature subsets `var_names` (was `vars`, `input_features`, `feature_names`), feature-name columns `feature_symbols` (was `gene_symbols`, `features`), and result keys `key_added` when written and `key` when read (was `uns_key`).
+  {func}`ep.pp.combat <ehrapy.preprocessing.combat>` takes `batch_key` (was `key`), and {func}`ep.pp.pca <ehrapy.preprocessing.pca>` and {func}`ep.pp.sample <ehrapy.preprocessing.sample>` take `edata` (was `data`).
+* Replace `inplace` with `copy` ([#1126](https://github.com/theislab/ehrapy/pull/1126)) @Zethson
+
+  {func}`ep.pp.combat <ehrapy.preprocessing.combat>`, {func}`ep.pp.highly_variable_features <ehrapy.preprocessing.highly_variable_features>`, {func}`ep.tl.dendrogram <ehrapy.tools.dendrogram>` and {func}`ep.tl.ingest <ehrapy.tools.ingest>` take `copy` instead of `inplace`.
+  {func}`ep.pp.qc_metrics <ehrapy.preprocessing.qc_metrics>`, {func}`ep.pp.detect_bias <ehrapy.preprocessing.detect_bias>`, {func}`ep.tl.embedding_density <ehrapy.tools.embedding_density>`, {func}`ep.tl.filter_rank_features_groups <ehrapy.tools.filter_rank_features_groups>`, {func}`ep.tl.rank_features_supervised <ehrapy.tools.rank_features_supervised>` and {func}`ep.tl.cox_ph_adjusted_curves <ehrapy.tools.cox_ph_adjusted_curves>` gained `copy`.
+  `qc_metrics` and `detect_bias` store their results in `edata` instead of returning them (`detect_bias` under `uns["bias"]`), and `rank_features_supervised` stores the model's test score in `uns[key_added]` instead of returning it.
+* Remove the deprecated `ep.tl.kmf`, `ep.pp.subsample` and the `n_neighbours` alias of {func}`ep.pp.knn_impute <ehrapy.preprocessing.knn_impute>` ([#1126](https://github.com/theislab/ehrapy/pull/1126)) @Zethson
 
 ### 🧰 Maintenance
 
@@ -20,10 +36,34 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 * `ep.pp.explicit_impute()` now accepts falsy mapping replacement values such as `0`, `0.0`, and empty strings ([#1087](https://github.com/theislab/ehrapy/pull/1087)) @driavysinus
 * `ep.pp.knn_impute()` now raises a clear `NotImplementedError` for unsupported array types (dask and sparse arrays) instead of failing silently ([#1109](https://github.com/theislab/ehrapy/pull/1109)) @sueoglu
 * `_little_mcar_test` now computes its global covariance matrix with true pairwise deletion instead of centering on the global mean, fixing incorrect p-values under moderate-to-high missingness ([#1110](https://github.com/theislab/ehrapy/pull/1110)) @sueoglu
+* {func}`ep.pp.encode <ehrapy.preprocessing.encode>` and {func}`ep.pp.clip_quantile(copy=True) <ehrapy.preprocessing.clip_quantile>` no longer modify their input ([#1126](https://github.com/theislab/ehrapy/pull/1126)) @Zethson
+* {func}`ep.tl.filter_rank_features_groups <ehrapy.tools.filter_rank_features_groups>` no longer raises `KeyError: 'use_raw'` ([#1126](https://github.com/theislab/ehrapy/pull/1126)) @Zethson
+* {func}`ep.tl.rank_features_supervised <ehrapy.tools.rank_features_supervised>` reports R² instead of accuracy for numeric targets ([#1126](https://github.com/theislab/ehrapy/pull/1126)) @Zethson
+* `ep.tl` no longer leaks implementation details such as `np` and `sc`, and its `__all__` now lists `leiden`, `dendrogram`, `dpt`, `paga` and `ingest`; `ep.pl` gained an `__all__` ([#1126](https://github.com/theislab/ehrapy/pull/1126)) @Zethson
+* {func}`ep.tl.famd <ehrapy.tools.famd>` works on 2D `.X` and layers with numeric or mixed variables, rejects 3D data, and stores per-variable loadings in `.varm` and all category loadings in `.uns` ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
+* {func}`ep.tl.ncp <ehrapy.tools.ncp>` raises a `ValueError` for missing or negative values instead of returning NaN or negative factors ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
+* {func}`ep.pl.ols <ehrapy.plot.ols>` gained `layer`, supports sparse arrays and rejects 3D data instead of flattening the time axis into extra points ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
+* {func}`ep.get.obs_df <ehrapy.get.obs_df>` raises a clear error when reading variables from 3D data and {func}`ep.get.var_df <ehrapy.get.var_df>` for any 3D data, instead of failing inside pandas ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
+* {func}`ep.tl.stratified_table_one <ehrapy.tools.stratified_table_one>` stores its table with `variable` and `level` columns so that results can be written to h5ad ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
+* {func}`ep.tl.rank_features_groups <ehrapy.tools.rank_features_groups>` supports categorical features in sparse arrays ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
+* {func}`ep.pp.neighbors <ehrapy.preprocessing.neighbors>` with a time series metric no longer makes patients without comparable measurements everyone's nearest neighbours but leaves them unconnected ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
+* Align all scanpy wrappers with scanpy 1.12: the `ep.pl.rank_features_groups_*` plots read the {func}`ep.tl.rank_features_groups <ehrapy.tools.rank_features_groups>` results by default, which now honours `n_features` and stores `pts` per feature, {func}`ep.pp.pca <ehrapy.preprocessing.pca>` uses `var["highly_variable"]` by default as documented, every plot passes `feature_symbols` on to scanpy, and the deprecated `save`, `ep.tl.umap(method=...)` and the no-op `n_bins` of {func}`ep.pp.highly_variable_features <ehrapy.preprocessing.highly_variable_features>` are removed ([#1130](https://github.com/theislab/ehrapy/pull/1130)) @Zethson
 
 ### 📖 Documentation
 
+* Refresh the README and installation guide (optional extras, install from GitHub) and drop dead Sphinx extensions ([#1128](https://github.com/theislab/ehrapy/pull/1128)) @Zethson
 * Add imputation methods tutorial notebook, benchmarking six imputation strategies on the PhysioNet2012 dataset ([#1101](https://github.com/theislab/ehrapy/pull/1101)) @sueoglu
+* Document the `ep.get` module, {func}`ep.tl.famd <ehrapy.tools.famd>` and {func}`ep.tl.anova_glm <ehrapy.tools.anova_glm>` ([#1126](https://github.com/theislab/ehrapy/pull/1126)) @Zethson
+* Fix the {func}`ep.pl.kaplan_meier <ehrapy.plot.kaplan_meier>` example ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
+* Describe {func}`ep.tl.ncp <ehrapy.tools.ncp>` in plain words and drop the doubled period in the docs footer ([#1131](https://github.com/theislab/ehrapy/pull/1131)) @Zethson
+
+### 🧰 Maintenance
+
+* Run the imputation, causal inference and effect estimation tutorials in the notebook CI ([#1120](https://github.com/theislab/ehrapy/pull/1120)) @sueoglu
+* Update to cookiecutter-scverse v0.8.0, derive the version from git tags via hatch-vcs, and move the `dev` extra to a `dev` dependency group ([#1125](https://github.com/theislab/ehrapy/pull/1125)) @Zethson
+* `import ehrapy` no longer loads the holoviews extensions, which now load on the first holoviews-backed plot, and no longer installs a global `SyntaxWarning` filter ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
+* Drop the unused `thefuzz`, `fhiry` and `filelock` dependencies and move `requests` to the `test` extra ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
+* Remove dead code and let codecov compare project coverage against the base commit ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
 
 ## v0.15.0
 <!--

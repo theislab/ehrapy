@@ -1,10 +1,10 @@
 [build-system]
 build-backend = "hatchling.build"
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 
 [project]
 name = "ehrapy"
-version = "0.15.0"
+dynamic = ["version"]
 description = "Electronic Health Record Analysis with Python."
 readme = "README.md"
 requires-python = ">=3.12,<3.15"
@@ -48,19 +48,15 @@ classifiers = [
 dependencies = [
     "ehrdata>=0.3.0",
     "pooch",  # required by the ehrdata submodule, which is installed with --no-deps
-    "scanpy",
+    "scanpy>=1.12",
     # mirroring scanpy, skip 3.11.0 series for now: https://github.com/matplotlib/matplotlib/issues/31575https://github.com/scverse/scanpy/blob/d5a745e1258f5ca6a23c6a790f27b40d7ad05418/pyproject.toml#L60
     "matplotlib>=3.10,!=3.11.0rc1,!=3.11.0rc2,!=3.11",
     "scverse-misc[settings]>=0.0.7",
-    "requests",
     "scikit-misc",  # required for seuratv3 highly variable features
     "lifelines>=0.30.0",
     "missingno",
-    "thefuzz[speedup]",
-    "fhiry",
     "tableone",
     "fknni[faisscpu]>=1.3.0",
-    "filelock",
     "numpy>=2.0.0",
     "numba>=0.60.0",
     "array-api-compat",
@@ -78,9 +74,6 @@ dask = [
 leiden = ["igraph"]  # careful - GPL
 rapids12 = ["rapids-singlecell[rapids12]"]
 rapids13 = ["rapids-singlecell[rapids13]"]
-dev = [
-    "pre-commit",
-]
 doc = [
     "docutils<0.22",  # https://github.com/vidartf/nbsphinx-link/issues/25
     "sphinx",
@@ -111,9 +104,15 @@ test = [
     "ehrapy[dask,leiden]",
     "pytest",
     "pytest-cov",
-    "pytest-mock"
+    "pytest-mock",
+    "requests"
 ]
 
+[dependency-groups]
+dev = [
+    "prek",
+    "twine>=4.0.2",
+]
 
 [tool.hatch.version]
 source = "vcs"
@@ -123,7 +122,7 @@ allow-direct-references = true
 
 [tool.hatch.envs.default]
 installer = "uv"
-features = [ "dev" ]
+dependency-groups = [ "dev" ]
 post-install-commands = [
   "uv pip install --reinstall --no-deps -e submodules/ehrdata",
 ]
@@ -169,7 +168,6 @@ cuda = ["12"]#, "13"]
 source_pkgs = ["ehrapy"]
 omit = [
     "**/test_*.py",
-    "ehrapy/data/_datasets.py",  # Difficult to test
 ]
 
 [tool.pytest.ini_options]
@@ -265,9 +263,10 @@ convention = "google"
 
 [tool.cruft]
 skip = [
-    "tests",
-    "src/**/__init__.py",
-    "src/**/basic.py",
+    ".git",
+    "ehrapy/**",
+    "src/**",
+    "tests/**",
     "docs/api.md",
     "docs/changelog.md",
     "docs/references.bib",

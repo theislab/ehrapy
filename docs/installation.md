@@ -16,36 +16,36 @@ This is the preferred method to install ehrapy, as it will always install the mo
 
 If you don't have [pip] installed, this [Python installation guide] can guide you through the process.
 
-If you run into "RuntimeError: CMake must be installed to build qdldl" ensure that you have CMake installed to build lightgbm.
-Run `conda install -c anaconda cmake` and `conda install -c conda-forge lightgbm` to do so.
-
 ### Optional dependencies
 
-#### leiden clustering
+ehrapy keeps optional functionality in extras:
 
-To use `ehrapy.tools.leiden`, install the `leiden` extra (which pulls in `igraph`):
+| Extra | Enables |
+| --- | --- |
+| `dask` | Out-of-core and lazy computation on {class}`dask.array.Array` data |
+| `leiden` | {func}`ehrapy.tools.leiden` clustering through `igraph` (GPL licensed) |
+| `rapids12`, `rapids13` | GPU acceleration through rapids-singlecell for CUDA 12 or 13 |
+
+Install one or several extras at once:
 
 ```console
-pip install ehrapy[leiden]
+pip install "ehrapy[dask,leiden]"
 ```
 
 ## From sources
 
-The sources for ehrapy can be downloaded from the [Github repo].
-
-You can either clone the public repository:
+To install the latest development version directly from [GitHub]:
 
 ```console
-git clone git://github.com/theislab/ehrapy
+pip install git+https://github.com/theislab/ehrapy
 ```
 
-Or download the [tarball]:
+To work on ehrapy itself, clone the repository and follow the {doc}`contributing guide <contributing>`:
 
 ```console
-curl -OJL https://github.com/theislab/ehrapy/tarball/master
+git clone https://github.com/theislab/ehrapy
 ```
 
-[github repo]: https://github.com/theislab/ehrapy
+[github]: https://github.com/theislab/ehrapy
 [pip]: https://pip.pypa.io
-[python installation guide]: http://docs.python-guide.org/en/latest/starting/installation/
-[tarball]: https://github.com/theislab/ehrapy/tarball/master
+[python installation guide]: https://docs.python-guide.org/starting/installation/

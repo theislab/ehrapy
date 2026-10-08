@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections import OrderedDict
 from functools import singledispatch
 from itertools import chain
+from typing import TYPE_CHECKING
 
 import ehrdata as ed
 import numpy as np
@@ -16,14 +17,17 @@ from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
 from ehrapy._compat import DaskArray, _raise_array_type_not_implemented
 
+if TYPE_CHECKING:
+    from collections.abc import Mapping, Sequence
+
 available_encodings = {"one-hot", "label"}
 
 
 def encode(
     edata: EHRData,
-    autodetect: bool | dict = False,
-    encodings: dict[str, list[str]] | str | None = "one-hot",
     *,
+    autodetect: bool = False,
+    encodings: Mapping[str, Sequence[str]] | str | None = "one-hot",
     layer: str | None = None,
 ) -> EHRData:
     """Encode categoricals of a data object.
@@ -92,22 +96,21 @@ def encode(
 def _encode_2d(
     edata: EHRData,
     autodetect: bool | dict,
-    encodings: dict[str, list[str]] | str | None,
+    encodings: Mapping[str, Sequence[str]] | str | None,
     *,
     layer: str | None,
 ) -> EHRData:
     X = edata.X if layer is None else edata.layers[layer]
+    original = edata.layers["original"] if "original" in edata.layers else X
+    if FEATURE_TYPE_KEY in edata.var.columns:
+        feature_types = edata.var[FEATURE_TYPE_KEY]
+    else:
+        # ed.infer_feature_types writes to var and replaces missing value strings in X, so it must not see the input
+        proxy = EHRData(X=X.copy(), var=pd.DataFrame(index=edata.var_names))
+        feature_types = ed.infer_feature_types(proxy, output="dataframe")[FEATURE_TYPE_KEY]
 
-    # Infer feature types if not already done (passing layer parameter correctly)
-    if FEATURE_TYPE_KEY not in edata.var.columns:
-        ed.infer_feature_types(edata, layer=layer, output=None)
-
-    if "original" not in edata.layers.keys():
-        edata.layers["original"] = X.copy()
-
-    # autodetect categorical values based on feature types stored in edata.var[FEATURE_TYPE_KEY]
     if autodetect:
-        categoricals_names = edata.var_names[edata.var[FEATURE_TYPE_KEY] == CATEGORICAL_TAG].tolist()
+        categoricals_names = edata.var_names[feature_types == CATEGORICAL_TAG].tolist()
 
         if "encoding_mode" in edata.var.keys():
             if edata.var["encoding_mode"].isnull().values.any():
@@ -169,7 +172,7 @@ def _encode_2d(
 
             # update layer content with the latest categorical encoding and the old other values
             updated_layer = _update_layer_after_encoding(
-                edata.layers["original"],
+                original,
                 encoded_x,
                 encoded_var_names,
                 edata.var_names.to_list(),
@@ -179,7 +182,7 @@ def _encode_2d(
 
             # copy non-encoded columns, and add new tag for encoded columns. This is needed to track encodings
             new_var = pd.DataFrame(index=encoded_var_names)
-            new_var[FEATURE_TYPE_KEY] = edata.var[FEATURE_TYPE_KEY].copy()
+            new_var[FEATURE_TYPE_KEY] = feature_types.copy()
             new_var.loc[new_var.index.str.contains("ehrapycat"), FEATURE_TYPE_KEY] = CATEGORICAL_TAG
 
             new_var["unencoded_var_names"] = unencoded_var_names
@@ -201,6 +204,8 @@ def _encode_2d(
         if "encoding_mode" in edata.var.keys():
             encodings = _reorder_encodings(edata, encodings)  # type: ignore
             edata = _undo_encoding(edata, layer=layer)
+            original = edata.layers["original"]
+            feature_types = edata.var[FEATURE_TYPE_KEY]
 
         # are all specified encodings valid?
         for encoding in encodings.keys():  # type: ignore
@@ -218,9 +223,7 @@ def _encode_2d(
                 "The categorical column names given contain at least one duplicate column. "
                 "Check the column names to ensure that no column is encoded twice!"
             )
-        elif any(
-            _categorical in edata.var_names[edata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG] for _categorical in categoricals
-        ):
+        elif any(_categorical in edata.var_names[feature_types == NUMERIC_TAG] for _categorical in categoricals):
             logger.warning(
                 "At least one of passed column names seems to have numerical dtype. In general it is not recommended "
                 "to encode numerical columns!"
@@ -269,7 +272,7 @@ def _encode_2d(
 
         # update original layer content with the new categorical encoding and the old other values
         updated_layer = _update_layer_after_encoding(
-            edata.layers["original"],
+            original,
             encoded_x,
             encoded_var_names,
             edata.var_names.to_list(),
@@ -279,7 +282,7 @@ def _encode_2d(
         # copy non-encoded columns, and add new tag for encoded columns. This is needed to track encodings
         new_var = pd.DataFrame(index=encoded_var_names)
 
-        new_var[FEATURE_TYPE_KEY] = edata.var[FEATURE_TYPE_KEY].copy()
+        new_var[FEATURE_TYPE_KEY] = feature_types.copy()
         new_var.loc[new_var.index.str.contains("ehrapycat"), FEATURE_TYPE_KEY] = CATEGORICAL_TAG
 
         new_var["unencoded_var_names"] = unencoded_var_names
@@ -320,7 +323,7 @@ def _encode_2d(
 def _encode_3d(
     edata: EHRData,
     autodetect: bool | dict,
-    encodings: dict[str, list[str]] | str | None,
+    encodings: Mapping[str, Sequence[str]] | str | None,
     *,
     layer: str | None,
 ) -> EHRData:
@@ -345,6 +348,8 @@ def _encode_3d(
     temp_edata = EHRData(X=X_2d, obs=obs_repeated, var=temp_var, uns=edata.uns.copy())
 
     encoded_temp = _encode_2d(temp_edata, autodetect=autodetect, encodings=encodings, layer=None)
+    if encoded_temp is temp_edata:
+        return edata
 
     # Reshape encoded X / original layer back to 3D.
     encoded_X_2d = encoded_temp.X

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import warnings
 from typing import TYPE_CHECKING, Literal
 
 import numpy as np
@@ -10,6 +9,7 @@ from ehrdata import EHRData
 from numpy.typing import NDArray
 
 from ehrapy._compat import function_2D_only
+from ehrapy._types import _empty
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Sequence
@@ -17,71 +17,84 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
     from scipy.sparse import spmatrix
 
-    from ehrapy._types import AnyRandom, CSBase, RNGLike, SeedLike
+    from ehrapy._types import AnyRandom, CSBase, Empty, RNGLike, SeedLike
 
 
 @function_2D_only()
 def pca(
-    data: EHRData | np.ndarray | spmatrix,
+    edata: EHRData | np.ndarray | spmatrix,
     *,
     n_comps: int | None = None,
-    zero_center: bool | None = True,
-    svd_solver: str = "arpack",
+    zero_center: bool = True,
+    svd_solver: Literal["arpack", "covariance_eigh", "randomized", "auto", "full", "tsqr"] | None = None,
     random_state: AnyRandom = 0,
-    mask_var: NDArray[np.bool_] | str | None = None,
+    mask_var: NDArray[np.bool_] | str | Empty | None = _empty,
     return_info: bool = False,
     dtype: str = "float32",
     layer: str | None = None,
+    obsm: str | None = None,
+    key_added: str | None = None,
     copy: bool = False,
     chunked: bool = False,
     chunk_size: int | None = None,
 ) -> EHRData | np.ndarray | spmatrix | None:  # pragma: no cover
-    """Computes a principal component analysis.
+    """Computes a principal component analysis :cite:p:`Pedregosa2011`.
 
-    Computes PCA coordinates, loadings and variance decomposition. Uses the implementation of *scikit-learn*.
+    Computes PCA coordinates, loadings and variance decomposition.
+    Uses the implementation of *scikit-learn*.
 
     Args:
-        data: Central data object.
+        edata: Central data object.
         n_comps: Number of principal components to compute.
                  Defaults to 50, or 1 - minimum dimension size of selected representation.
-        zero_center: If `True`, compute standard PCA from covariance matrix.
-                     If `False`, omit zero-centering variables (uses :class:`~sklearn.decomposition.TruncatedSVD`), which allows to handle sparse input efficiently.
-                     Passing `None` decides automatically based on sparseness of the data.
-        svd_solver: SVD solver to use:
+        zero_center: If `True`, compute (or approximate) PCA from covariance matrix.
+                     If `False`, perform a truncated SVD instead of PCA.
+        svd_solver: SVD solver to use.
+                    If `None`, chooses automatically: `'arpack'` for PCA and `'randomized'` for truncated SVD (`zero_center=False`).
 
-                    * `'arpack'` (the default) for the ARPACK wrapper in SciPy (:func:`~scipy.sparse.linalg.svds`)
+                    * `'arpack'` for the ARPACK wrapper in SciPy (:func:`~scipy.sparse.linalg.svds`).
+
+                    * `'covariance_eigh'` for the classic eigendecomposition of the covariance matrix, suited for tall-and-skinny matrices.
 
                     * `'randomized'` for the randomized algorithm due to Halko (2009).
 
                     * `'auto'` chooses automatically depending on the size of the problem.
 
-                    * `'lobpcg'` An alternative SciPy solver.
+                    * `'full'` for the exact full SVD.
 
-                    Efficient computation of the principal components of a sparse matrix currently only works with the `'arpack`' or `'lobpcg'` solvers.
+                    * `'tsqr'` for the “tall-and-skinny QR” algorithm, only available for dense *dask* arrays.
+
+                    Efficient computation of the principal components of a sparse matrix currently only works with the `'arpack'` or `'covariance_eigh'` solvers.
         random_state: Change to use different initial states for the optimization.
+        mask_var: To run only on a certain set of features given by a boolean array or a string referring to an array in `var`.
+                  By default, uses `.var['highly_variable']` if available, else all features.
+                  Pass `None` to use all features.
         return_info: Only relevant when not passing an :class:`~ehrdata.EHRData`: see “**Returns**”.
-        mask_var: To run only on a certain set of genes given by a boolean array or a string referring to an array in `var`.
-                By default, uses `.var['highly_variable']` if available, else everything.
         dtype: Numpy data type string to which to convert the result.
-        layer: The layer to operate on.
+        layer: If provided, which element of `layers` to use for PCA instead of `X`.
+        obsm: If provided, which element of `obsm` to use for PCA instead of `X`.
+        key_added: If not specified, the embedding is stored in `obsm['X_pca']`, the loadings in `varm['PCs']` and the parameters in `uns['pca']`.
+                   If specified, the embedding is stored in `obsm[key_added]`, the loadings in `varm[key_added]` and the parameters in `uns[key_added]`.
         copy: If an :class:`~ehrdata.EHRData`: is passed, determines whether a copy is returned. Is ignored otherwise.
         chunked: If `True`, perform an incremental PCA on segments of `chunk_size`.
-                  The incremental PCA automatically zero centers and ignores settings of
-                  `random_seed` and `svd_solver`. If `False`, perform a full PCA.
+                  The incremental PCA automatically zero centers and ignores settings of `zero_center`, `random_state` and `svd_solver`.
+                  If `False`, perform a full PCA.
         chunk_size: Number of observations to include in each chunk. Required if `chunked=True` was passed.
 
     Returns:
-        If `data` is array-like and `return_info=False` was passed,
-        this function returns the PCA representation of `data` as an
+        If `edata` is array-like and `return_info=False` was passed,
+        this function returns the PCA representation of `edata` as an
         array of the same type as the input array.
 
         Otherwise, it returns `None` if `copy=False`, else an updated `EHRData` object.
         Sets the following fields:
 
-        `.obsm['X_pca' | key_added]` : :class:`~scipy.sparse.csr_matrix` | :class:`~scipy.sparse.csc_matrix` | :class:`~numpy.ndarray` (shape `(adata.n_obs, n_comps)`)
+        `.obsm['X_pca' | key_added]` : :class:`~scipy.sparse.csr_matrix` | :class:`~scipy.sparse.csc_matrix` | :class:`~numpy.ndarray` (shape `(edata.n_obs, n_comps)`)
             PCA representation of data.
-        `.varm['PCs' | key_added]` : :class:`~numpy.ndarray` (shape `(adata.n_vars, n_comps)`)
-            The principal components containing the loadings.
+        `.varm['PCs' | key_added]` : :class:`~numpy.ndarray` (shape `(edata.n_vars, n_comps)`)
+            The principal components containing the loadings when `obsm=None`.
+        `.uns['pca' | key_added]['components']` : :class:`~numpy.ndarray` (shape `(edata.obsm[obsm].shape[1], n_comps)`)
+            The principal components containing the loadings when `obsm` is passed.
         `.uns['pca' | key_added]['variance_ratio']` : :class:`~numpy.ndarray` (shape `(n_comps,)`)
             Ratio of explained variance.
         `.uns['pca' | key_added]['variance']` : :class:`~numpy.ndarray` (shape `(n_comps,)`)
@@ -89,73 +102,61 @@ def pca(
             covariance matrix.
     """
     return sc.pp.pca(
-        data=data,
-        layer=layer,
+        data=edata,
         n_comps=n_comps,
+        layer=layer,
+        obsm=obsm,
         zero_center=zero_center,
         svd_solver=svd_solver,
         random_state=random_state,
         return_info=return_info,
-        mask_var=mask_var,
         dtype=dtype,
+        key_added=key_added,
         copy=copy,
         chunked=chunked,
         chunk_size=chunk_size,
+        **({} if mask_var is _empty else {"mask_var": mask_var}),
     )
 
 
 @function_2D_only()
 def regress_out(
     edata: EHRData,
-    *,
     keys: str | Sequence[str],
+    *,
     n_jobs: int | None = None,
     layer: str | None = None,
     copy: bool = False,
 ) -> EHRData | None:  # pragma: no cover
     """Regress out (mostly) unwanted sources of variation.
 
-    Uses simple linear regression. This is inspired by Seurat's `regressOut` function in R [Satija15].
+    Uses simple linear regression.
+    This is inspired by Seurat's `regressOut` function in R :cite:p:`Satija2015`.
     Note that this function tends to overcorrect in certain circumstances.
 
     Args:
         edata: Central data object.
         keys: Keys for observation annotation on which to regress on.
         n_jobs: Number of jobs for parallel computation.
-        layer: The layer to operate on.
-        copy: Determines whether a copy of `adata` is returned.
+                `None` means using :attr:`scanpy.settings.n_jobs`.
+        layer: If provided, which element of `layers` to regress on.
+        copy: Determines whether a copy of `edata` is returned.
 
     Returns:
-        Depending on `copy` returns or updates the data object with the corrected data matrix.
+        Depending on `copy` returns or updates the data object with the corrected data matrix in `X` or `layers[layer]`.
     """
     return sc.pp.regress_out(adata=edata, keys=keys, n_jobs=n_jobs, layer=layer, copy=copy)
 
 
-def subsample(
-    data: EHRData | np.ndarray | spmatrix,
-    *,
-    fraction: float | None = None,
-    n_obs: int | None = None,
-    random_state: AnyRandom = 0,
-    copy: bool = False,
-) -> EHRData | None:  # pragma: no cover
-    warnings.warn(
-        "This function is deprecated and will be removed in the next release. Use ep.pp.sample instead.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    return sample(data=data, fraction=fraction, n_obs=n_obs, rng=random_state, copy=copy)
-
-
 def sample(
-    data: EHRData | np.ndarray | CSBase,
-    fraction: float | None = None,
+    edata: EHRData | np.ndarray | CSBase,
     *,
+    fraction: float | None = None,
     n_obs: int | None = None,
     rng: RNGLike | SeedLike | None = None,
     balanced: bool = False,
     balanced_method: Literal["RandomUnderSampler", "RandomOverSampler"] = "RandomUnderSampler",
-    balanced_key: str | None = None,
+    groupby: str | None = None,
     copy: bool = False,
     replace: bool = False,
     axis: Literal["obs", 0, "var", 1] = "obs",
@@ -164,26 +165,28 @@ def sample(
     """Sample a fraction or a number of observations / variables with or without replacement.
 
     Args:
-        data: Central data object.
-        fraction: Sample to this `fraction` of the number of observations.
-        n_obs: Sample to this number of observations.
-        rng: Random seed.
+        edata: Central data object.
+        fraction: Sample to this `fraction` of the number of observations or variables (see `axis`).
+                  This can be larger than 1.0, if `replace=True`.
+        n_obs: Sample to this number of observations or variables (see `axis`).
+        rng: Random seed to change subsampling.
         copy: If an :class:`~ehrdata.EHRData` is passed, determines whether a copy is returned.
-        balanced: If `True`, balance the groups in `adata.obs[key]` by under- or over-sampling.
-                  Requires `key` to be set. If `False`, simple random sampling is performed.
+        balanced: If `True`, balance the groups in `edata.obs[groupby]` by under- or over-sampling.
+                  Requires `groupby` to be set. If `False`, simple random sampling is performed.
         balanced_method: The sampling method, either "RandomUnderSampler" for under-sampling or "RandomOverSampler" for over-sampling. Only relevant if `balanced=True`.
-        balanced_key: Key in `adata.obs` to use for balancing the groups. Only relevant if `balanced=True`.
+        groupby: Key in `edata.obs` to use for balancing the groups. Only relevant if `balanced=True`.
         replace: If `True`, samples are drawn with replacement. Only relevant if `balanced=False`.
         axis: Axis to sample on. Either `obs` / `0` (observations, default) or `var` / `1` (variables).
         p: Drawing probabilities (floats) or mask (bools).
-            Either an `axis`-sized array, or the name of a column
-            If p is an array of probabilities, it must sum to 1.
+            Either an `axis`-sized array, or the name of a column.
+            If `p` is an array of probabilities, it must sum to 1.
 
     Returns:
-        Returns `X[obs_indices], obs_indices` if data is array-like, otherwise subsamples the passed
+        Returns `X[obs_indices], obs_indices` if `edata` is array-like, otherwise subsamples the passed
         Central data object (`copy == False`) or returns a subsampled copy of it (`copy == True`).
 
     Examples:
+        >>> import ehrdata as ed
         >>> import ehrapy as ep
         >>> edata = ed.dt.diabetes_130_fairlearn(columns_obs_only=["age"])
         >>> edata.obs.age.value_counts()
@@ -192,95 +195,94 @@ def sample(
         '30-60 years'            30716
         '30 years or younger'     2509
         >>> edata_balanced = ep.pp.sample(
-        ...     edata, balanced=True, balanced_method="RandomUnderSampler", balanced_key="age", copy=True
+        ...     edata, balanced=True, balanced_method="RandomUnderSampler", groupby="age", copy=True
         ... )
         >>> edata_balanced.obs.age.value_counts()
-         age
+        age
         '30 years or younger'    2509
         '30-60 years'            2509
         'Over 60 years'          2509
     """
     if balanced:
-        if balanced_key is None:
-            raise TypeError("Key must be provided when balanced=True")
+        if groupby is None:
+            raise TypeError("groupby must be provided when balanced=True")
 
-        if isinstance(data, EHRData):
-            if balanced_key not in data.obs.columns:
+        if isinstance(edata, EHRData):
+            if groupby not in edata.obs.columns:
                 raise ValueError(
-                    f"Key '{balanced_key}' not found in edata.obs. Available keys are: {data.obs.columns.tolist()}"
+                    f"Key '{groupby}' not found in edata.obs. Available keys are: {edata.obs.columns.tolist()}"
                 )
 
-            labels = data.obs[balanced_key].values
+            labels = edata.obs[groupby].values
 
-        elif isinstance(data, sp.csr_matrix | sp.csc_matrix) or isinstance(data, np.ndarray):
-            labels = np.asarray(balanced_key)
-            if labels.shape[0] != data.shape[0]:
+        elif isinstance(edata, sp.csr_matrix | sp.csc_matrix) or isinstance(edata, np.ndarray):
+            labels = np.asarray(groupby)
+            if labels.shape[0] != edata.shape[0]:
                 raise ValueError(
-                    f"Length of labels ({labels.shape[0]}) does not match number of observations ({data.shape[0]})"
+                    f"Length of labels ({labels.shape[0]}) does not match number of observations ({edata.shape[0]})"
                 )
 
         else:
-            raise TypeError("data must be an EHRData, numpy array or scipy sparse matrix when balanced=True")
+            raise TypeError("edata must be an EHRData, numpy array or scipy sparse matrix when balanced=True")
 
         if balanced_method == "RandomUnderSampler" or balanced_method == "RandomOverSampler":
             sampled_indices, _ = _random_resample(labels, method=balanced_method, random_state=rng)
         else:
             raise ValueError(f"Unknown sampling method: {balanced_method}")
 
-        if isinstance(data, EHRData):
+        if isinstance(edata, EHRData):
             if copy:
-                return data[sampled_indices].copy()
+                return edata[sampled_indices].copy()
             else:
-                data._inplace_subset_obs(sampled_indices)
+                edata._inplace_subset_obs(sampled_indices)
                 return None
         else:
-            return data[sampled_indices], sampled_indices
+            return edata[sampled_indices], sampled_indices
     else:
-        return sc.pp.sample(data=data, fraction=fraction, n=n_obs, rng=rng, copy=copy, replace=replace, axis=axis, p=p)
+        return sc.pp.sample(data=edata, fraction=fraction, n=n_obs, rng=rng, copy=copy, replace=replace, axis=axis, p=p)
 
 
 @function_2D_only()
 def combat(
     edata: EHRData,
     *,
-    key: str = "batch",
+    batch_key: str = "batch",
     covariates: Collection[str] | None = None,
     layer: str | None = None,
-    inplace: bool = True,
-) -> EHRData | np.ndarray | None:  # pragma: no cover
+    copy: bool = False,
+) -> EHRData | None:  # pragma: no cover
     """ComBat function for batch effect correction :cite:p:`Johnson2006`, :cite:p:`Leek2012`, :cite:p:`Pedersen2012`.
 
     Corrects for batch effects by fitting linear models, gains statistical power via an EB framework where information is borrowed across features.
-    This uses the implementation `combat.py`:cite:p:`Pedersen2012`.
+    This uses the implementation `combat.py`_ :cite:p:`Pedersen2012`.
 
     .. _combat.py: https://github.com/brentp/combat.py
 
     Args:
         edata: Central data object.
-        key: Key to a categorical annotation from `.obs` that will be used for batch effect removal.
+        batch_key: Key to a categorical annotation from `.obs` that will be used for batch effect removal.
         covariates: Additional covariates besides the batch variable such as adjustment variables or biological condition.
                     This parameter refers to the design matrix `X` in Equation 2.1 in :cite:p:`Johnson2006` and to the `mod` argument in
                     the original combat function in the sva R package.
                     Note that not including covariates may introduce bias or lead to the removal of signal in unbalanced designs.
         layer: The layer to operate on.
-        inplace: Whether to replace edata.X or to return the corrected data
+        copy: Whether to return a corrected copy of `edata` or to correct it in place.
 
     Returns:
-        Depending on the value of `inplace`, either returns the corrected matrix or modifies `edata.X`.
+        `None` if `copy=False` and modifies the passed edata, else returns an updated object.
     """
+    edata = edata.copy() if copy else edata
     # Since scanpy's combat does not support layers, we need to copy the data to the X matrix and then copy the result back to the layer
     if layer is None:
-        return sc.pp.combat(adata=edata, key=key, covariates=covariates, inplace=inplace)
+        sc.pp.combat(adata=edata, key=batch_key, covariates=covariates, inplace=True)
     else:
         X = edata.X.copy()
         edata.X = edata.layers[layer].copy()
-        if not inplace:
-            return sc.pp.combat(adata=edata, key=key, covariates=covariates, inplace=False)
-        else:
-            sc.pp.combat(adata=edata, key=key, covariates=covariates, inplace=True)
-            edata.layers[layer] = edata.X
-            edata.X = X
-            return None
+        sc.pp.combat(adata=edata, key=batch_key, covariates=covariates, inplace=True)
+        edata.layers[layer] = edata.X
+        edata.X = X
+
+    return edata if copy else None
 
 
 def _random_resample(

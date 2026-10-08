@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-import warnings
 from collections.abc import Iterable, Mapping, Sequence
 from functools import singledispatch
 from importlib.util import find_spec
-from typing import TYPE_CHECKING, Literal, get_args
+from typing import TYPE_CHECKING, Any, Literal, get_args
 
 import numpy as np
 import pandas as pd
@@ -214,8 +213,8 @@ def _(arr: np.ndarray, strategy: Literal["mean", "median", "most_frequent"]) -> 
 
 def simple_impute(
     edata: EHRData,
-    var_names: Iterable[str] | None = None,
     *,
+    var_names: Iterable[str] | None = None,
     strategy: Literal["mean", "median", "most_frequent"] = "mean",
     warning_threshold: int = 70,
     layer: str | None = None,
@@ -266,26 +265,20 @@ def simple_impute(
 @spinner("Performing KNN impute")
 def knn_impute(
     edata: EHRData,
-    var_names: Iterable[str] | None = None,
     *,
+    var_names: Iterable[str] | None = None,
     n_neighbors: int = 5,
     layer: str | None = None,
     copy: bool = False,
     backend: Literal["scikit-learn", "faiss"] = "faiss",
     warning_threshold: int = 70,
-    backend_kwargs: dict | None = None,
-    **kwargs,
+    backend_kwargs: Mapping[str, Any] | None = None,
 ) -> EHRData | None:
     """Imputes missing values in the input data object using K-nearest neighbor imputation.
 
     If required, the data needs to be properly encoded as this imputation requires numerical data only.
     If layer is `None`, `edata.X` is used directly; this also covers 3D data stored in `.X`.
     For 3D data, values are flattened along axis 0 before imputation and reshaped back to 3D afterwards.
-
-    .. warning::
-        Currently, both `n_neighbours` and `n_neighbors` are accepted as parameters for the number of neighbors.
-        However, in future versions, only `n_neighbors` will be supported. Please update your code accordingly.
-
 
     Args:
         edata: Central data object.
@@ -304,7 +297,6 @@ def knn_impute(
                   Pass "mean", "median", or "weighted" for 'strategy' to set the imputation strategy for faiss.
                   See `sklearn.impute.KNNImputer <https://scikit-learn.org/stable/modules/generated/sklearn.impute.KNNImputer.html>`_ for more information on the 'scikit-learn' backend.
                   See `fknni.faiss.FaissImputer <https://fknni.readthedocs.io/en/latest/>`_ for more information on the 'faiss' backend.
-        kwargs: Gathering keyword arguments of earlier ehrapy versions for backwards compatibility. It is encouraged to use the here listed, current arguments.
 
     Returns:
         If copy is True, a modified copy of the original data object with imputed X.
@@ -343,20 +335,6 @@ def knn_impute(
 
     if backend_kwargs is None:
         backend_kwargs = {}
-
-    valid_kwargs = {"n_neighbours"}
-    unexpected_kwargs = set(kwargs.keys()) - valid_kwargs
-
-    if unexpected_kwargs:
-        raise ValueError(f"Unexpected keyword arguments: {unexpected_kwargs}.")
-
-    if "n_neighbours" in kwargs.keys():
-        n_neighbors = kwargs["n_neighbours"]
-        warnings.warn(
-            "ehrapy will use 'n_neighbors' instead of 'n_neighbours'. Please update your code.",
-            DeprecationWarning,
-            stacklevel=1,
-        )
 
     if find_spec("sklearnex") is not None:  # pragma: no cover
         from sklearnex import patch_sklearn, unpatch_sklearn
@@ -461,8 +439,8 @@ def _(arr: np.ndarray, num_initial_strategy, n_estimators, max_iter, random_stat
 @spinner("Performing miss-forest impute")
 def miss_forest_impute(
     edata: EHRData,
-    var_names: Iterable[str] | None = None,
     *,
+    var_names: Iterable[str] | None = None,
     num_initial_strategy: Literal["mean", "median", "most_frequent", "constant"] = "mean",
     max_iter: int = 3,
     n_estimators: int = 100,
@@ -617,8 +595,8 @@ def _warn_imputation_threshold(
 
 def locf_impute(
     edata: EHRData,
-    var_names: Iterable[str] | None = None,
     *,
+    var_names: Iterable[str] | None = None,
     layer: str | None = None,
     fallback_method: Literal["mean", "median", "most_frequent", "bfill"] | None = "mean",
     copy: bool = False,

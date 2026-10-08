@@ -1,17 +1,15 @@
 """Top-level package for ehrapy."""
 
+from importlib.metadata import version as _version
+
 __author__ = "Lukas Heumos"
 __email__ = "lukas.heumos@posteo.net"
-__version__ = "0.15.0"
+__version__ = _version("ehrapy")
 
 import os
 
 # https://docs.scipy.org/doc/scipy/dev/api-dev/array_api.html
 os.environ["SCIPY_ARRAY_API"] = "1"
-
-import warnings
-
-warnings.filterwarnings("ignore", category=SyntaxWarning, message=r"invalid escape sequence '\\")
 
 from ehrapy import get
 from ehrapy import plot as pl

@@ -24,8 +24,8 @@ if TYPE_CHECKING:
 def _scale_func_group(
     edata: EHRData,
     scale_func: Callable[[np.ndarray | pd.DataFrame], np.ndarray],
-    vars: str | Sequence[str] | None,
-    group_key: str | None,
+    var_names: str | Sequence[str] | None,
+    groupby: str | None,
     layer: str | None,
     copy: bool,
     norm_name: str,
@@ -34,42 +34,42 @@ def _scale_func_group(
 
     Supports both 2D and 3D data with unified layer handling.
     """
-    if group_key is not None and group_key not in edata.obs:
-        raise KeyError(f"group key '{group_key}' not found in edata.obs.")
+    if groupby is not None and groupby not in edata.obs:
+        raise KeyError(f"groupby key '{groupby}' not found in edata.obs.")
     if copy:
         edata = edata.copy()
     if FEATURE_TYPE_KEY not in edata.var.columns:
         ed.infer_feature_types(edata, layer=layer, output=None)
 
-    if isinstance(vars, str):
-        vars = [vars]
-    if vars is None:
-        vars = edata.var_names[edata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG].tolist()
+    if isinstance(var_names, str):
+        var_names = [var_names]
+    if var_names is None:
+        var_names = edata.var_names[edata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG].tolist()
     else:
         numeric_vars = edata.var_names[edata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG].tolist()
-        if not set(vars) <= set(numeric_vars):
+        if not set(var_names) <= set(numeric_vars):
             raise ValueError("Some selected vars are not numeric")
 
     # Get numeric indices (positions) of the variables to normalize
-    var_indices = edata.var_names.get_indexer(vars)
+    var_indices = edata.var_names.get_indexer(var_names)
     X = edata.X if layer is None else edata.layers[layer]
 
     if np.issubdtype(X.dtype, np.integer):
         X = X.astype(np.float32)
 
-    if group_key is None:
+    if groupby is None:
         X[:, var_indices] = scale_func(X[:, var_indices])
 
     else:
         # Group-wise normalization is not supported for Dask arrays
         if isinstance(X, DaskArray):
             raise NotImplementedError(
-                f"Group-wise normalization with group_key='{group_key}' does not support array type {type(X)}. "
-                "Please convert to numpy array first or use normalization without group_key."
+                f"Group-wise normalization with groupby='{groupby}' does not support array type {type(X)}. "
+                "Please convert to numpy array first or use normalization without groupby."
             )
 
-        for group in edata.obs[group_key].unique():
-            group_mask = np.where(edata.obs[group_key] == group)[0]
+        for group in edata.obs[groupby].unique():
+            group_mask = np.where(edata.obs[groupby] == group)[0]
             X[np.ix_(group_mask, var_indices)] = scale_func(X[np.ix_(group_mask, var_indices)])
 
     if layer is None:
@@ -77,7 +77,7 @@ def _scale_func_group(
     else:
         edata.layers[layer] = X
 
-    _record_norm(edata, vars, norm_name)
+    _record_norm(edata, var_names, norm_name)
 
     return edata if copy else None
 
@@ -103,8 +103,9 @@ def _(arr: DaskArray, **kwargs):
 
 def scale_norm(
     edata: EHRData,
-    vars: str | Sequence[str] | None = None,
-    group_key: str | None = None,
+    *,
+    var_names: str | Sequence[str] | None = None,
+    groupby: str | None = None,
     layer: str | None = None,
     copy: bool = False,
     **kwargs,
@@ -121,9 +122,10 @@ def scale_norm(
 
     Args:
         edata: Central data object. Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
-        vars: List of the names of the numeric variables to normalize.
+        var_names: List of the names of the numeric variables to normalize.
               If None all numeric variables will be normalized.
-        group_key: Key in edata.obs that contains group information. If provided, scaling is applied per group.
+        groupby: Key in edata.obs that contains group information.
+                 If provided, scaling is applied per group.
         layer: The layer to normalize.
         copy: Whether to return a copy or act in place.
         **kwargs: Additional arguments passed to the StandardScaler.
@@ -148,8 +150,8 @@ def scale_norm(
     return _scale_func_group(
         edata=edata,
         scale_func=scale_func,
-        vars=vars,
-        group_key=group_key,
+        var_names=var_names,
+        groupby=groupby,
         layer=layer,
         copy=copy,
         norm_name="scale",
@@ -177,8 +179,9 @@ def _(arr: DaskArray, **kwargs):
 
 def minmax_norm(
     edata: EHRData,
-    vars: str | Sequence[str] | None = None,
-    group_key: str | None = None,
+    *,
+    var_names: str | Sequence[str] | None = None,
+    groupby: str | None = None,
     layer: str | None = None,
     copy: bool = False,
     **kwargs,
@@ -196,9 +199,10 @@ def minmax_norm(
     Args:
         edata: Central data object.
                Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
-        vars: List of the names of the numeric variables to normalize.
+        var_names: List of the names of the numeric variables to normalize.
               If None all numeric variables will be normalized.
-        group_key: Key in edata.obs that contains group information. If provided, scaling is applied per group.
+        groupby: Key in edata.obs that contains group information.
+                 If provided, scaling is applied per group.
         layer: The layer to normalize.
         copy: Whether to return a copy or act in place.
         **kwargs: Additional arguments passed to the MinMaxScaler.
@@ -222,8 +226,8 @@ def minmax_norm(
     return _scale_func_group(
         edata=edata,
         scale_func=scale_func,
-        vars=vars,
-        group_key=group_key,
+        var_names=var_names,
+        groupby=groupby,
         layer=layer,
         copy=copy,
         norm_name="minmax",
@@ -243,8 +247,9 @@ def _(arr: np.ndarray):
 
 def maxabs_norm(
     edata: EHRData,
-    vars: str | Sequence[str] | None = None,
-    group_key: str | None = None,
+    *,
+    var_names: str | Sequence[str] | None = None,
+    groupby: str | None = None,
     layer: str | None = None,
     copy: bool = False,
 ) -> EHRData | None:
@@ -261,9 +266,10 @@ def maxabs_norm(
     Args:
         edata: Central data object.
                Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
-        vars: List of the names of the numeric variables to normalize.
+        var_names: List of the names of the numeric variables to normalize.
               If None all numeric variables will be normalized.
-        group_key: Key in edata.obs that contains group information. If provided, scaling is applied per group.
+        groupby: Key in edata.obs that contains group information.
+                 If provided, scaling is applied per group.
         layer: The layer to normalize.
         copy: Whether to return a copy or act in place.
 
@@ -289,8 +295,8 @@ def maxabs_norm(
     return _scale_func_group(
         edata=edata,
         scale_func=scale_func,
-        vars=vars,
-        group_key=group_key,
+        var_names=var_names,
+        groupby=groupby,
         layer=layer,
         copy=copy,
         norm_name="maxabs",
@@ -318,8 +324,9 @@ def _(arr: DaskArray, **kwargs):
 
 def robust_scale_norm(
     edata: EHRData,
-    vars: str | Sequence[str] | None = None,
-    group_key: str | None = None,
+    *,
+    var_names: str | Sequence[str] | None = None,
+    groupby: str | None = None,
     layer: str | None = None,
     copy: bool = False,
     **kwargs,
@@ -338,9 +345,10 @@ def robust_scale_norm(
     Args:
         edata: Central data object.
                Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
-        vars: List of the names of the numeric variables to normalize.
+        var_names: List of the names of the numeric variables to normalize.
               If None all numeric variables will be normalized.
-        group_key: Key in edata.obs that contains group information. If provided, scaling is applied per group.
+        groupby: Key in edata.obs that contains group information.
+                 If provided, scaling is applied per group.
         layer: The layer to normalize.
         copy: Whether to return a copy or act in place.
         **kwargs: Additional arguments passed to the RobustScaler.
@@ -364,8 +372,8 @@ def robust_scale_norm(
     return _scale_func_group(
         edata=edata,
         scale_func=scale_func,
-        vars=vars,
-        group_key=group_key,
+        var_names=var_names,
+        groupby=groupby,
         layer=layer,
         copy=copy,
         norm_name="robust_scale",
@@ -393,8 +401,9 @@ def _(arr: DaskArray, **kwargs):
 
 def quantile_norm(
     edata: EHRData,
-    vars: str | Sequence[str] | None = None,
-    group_key: str | None = None,
+    *,
+    var_names: str | Sequence[str] | None = None,
+    groupby: str | None = None,
     layer: str | None = None,
     copy: bool = False,
     **kwargs,
@@ -412,9 +421,10 @@ def quantile_norm(
 
     Args:
         edata: Central data object. Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
-        vars: List of the names of the numeric variables to normalize.
+        var_names: List of the names of the numeric variables to normalize.
               If None all numeric variables will be normalized.
-        group_key: Key in edata.obs that contains group information. If provided, scaling is applied per group.
+        groupby: Key in edata.obs that contains group information.
+                 If provided, scaling is applied per group.
         layer: The layer to normalize.
         copy: Whether to return a copy or act in place.
         **kwargs: Additional arguments passed to the QuantileTransformer.
@@ -438,8 +448,8 @@ def quantile_norm(
     return _scale_func_group(
         edata=edata,
         scale_func=scale_func,
-        vars=vars,
-        group_key=group_key,
+        var_names=var_names,
+        groupby=groupby,
         layer=layer,
         copy=copy,
         norm_name="quantile",
@@ -459,8 +469,9 @@ def _(arr: np.ndarray, **kwargs):
 
 def power_norm(
     edata: EHRData,
-    vars: str | Sequence[str] | None = None,
-    group_key: str | None = None,
+    *,
+    var_names: str | Sequence[str] | None = None,
+    groupby: str | None = None,
     layer: str | None = None,
     copy: bool = False,
     **kwargs,
@@ -479,9 +490,10 @@ def power_norm(
     Args:
         edata: Central data object.
                Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
-        vars: List of the names of the numeric variables to normalize.
+        var_names: List of the names of the numeric variables to normalize.
               If None all numeric variables will be normalized.
-        group_key: Key in edata.obs that contains group information. If provided, scaling is applied per group.
+        groupby: Key in edata.obs that contains group information.
+                 If provided, scaling is applied per group.
         layer: The layer to normalize.
         copy: Whether to return a copy or act in place.
         **kwargs: Additional arguments passed to the PowerTransformer.
@@ -512,8 +524,8 @@ def power_norm(
     return _scale_func_group(
         edata=edata,
         scale_func=scale_func,
-        vars=vars,
-        group_key=group_key,
+        var_names=var_names,
+        groupby=groupby,
         layer=layer,
         copy=copy,
         norm_name="power",
@@ -558,7 +570,8 @@ def _(arr: DaskArray, offset: int | float = 1, base: int | float | None = None) 
 
 def log_norm(
     edata: EHRData,
-    vars: str | Sequence[str] | None = None,
+    *,
+    var_names: str | Sequence[str] | None = None,
     base: int | float | None = None,
     offset: int | float = 1,
     layer: str | None = None,
@@ -576,7 +589,7 @@ def log_norm(
 
     Args:
         edata: Central data object.
-        vars: List of the names of the numeric variables to normalize.
+        var_names: List of the names of the numeric variables to normalize.
               If None all numeric variables will be normalized.
         base: Numeric base for logarithm. If None the natural logarithm is used.
         offset: Offset added to values before computing the logarithm.
@@ -604,19 +617,19 @@ def log_norm(
     if FEATURE_TYPE_KEY not in edata.var.columns:
         ed.infer_feature_types(edata, layer=layer, output=None)
 
-    if isinstance(vars, str):
-        vars = [vars]
-    if vars is None:
-        vars = edata.var_names[edata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG].tolist()
+    if isinstance(var_names, str):
+        var_names = [var_names]
+    if var_names is None:
+        var_names = edata.var_names[edata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG].tolist()
     else:
         numeric_vars = edata.var_names[edata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG].tolist()
-        if not set(vars) <= set(numeric_vars):
+        if not set(var_names) <= set(numeric_vars):
             raise ValueError("Some selected vars are not numeric")
 
     X = edata.X if layer is None else edata.layers[layer]
 
-    if vars:
-        var_indices = edata.var_names.get_indexer(vars)
+    if var_names:
+        var_indices = edata.var_names.get_indexer(var_names)
         check_data = X[:, var_indices] if X.ndim == 2 else X[:, var_indices, :]
     else:
         check_data = X
@@ -631,8 +644,8 @@ def log_norm(
             "or offset negative values with ep.pp.offset_negative_values()."
         )
 
-    if vars:
-        var_indices = edata.var_names.get_indexer(vars)
+    if var_names:
+        var_indices = edata.var_names.get_indexer(var_names)
         var_values = X[:, var_indices] if X.ndim == 2 else X[:, var_indices, :]
         transformed_values = _log_norm_function(var_values, offset=offset, base=base)
         if layer is None:
@@ -649,7 +662,7 @@ def log_norm(
         else:
             edata.layers[layer] = transformed_values
 
-    _record_norm(edata, vars, "log")
+    _record_norm(edata, var_names, "log")
 
     return edata if copy else None
 
@@ -671,7 +684,7 @@ def _record_norm(edata: EHRData, vars: Sequence[str], method: str) -> None:
     return None
 
 
-def offset_negative_values(edata: EHRData, layer: str = None, copy: bool = False) -> EHRData | None:
+def offset_negative_values(edata: EHRData, *, layer: str | None = None, copy: bool = False) -> EHRData | None:
     """Offsets negative values into positive ones with the lowest negative value becoming 0.
 
     This is primarily used to enable the usage of functions such as log_norm that

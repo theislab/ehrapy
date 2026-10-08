@@ -6,12 +6,15 @@ import holoviews as hv
 import numpy as np
 import pandas as pd
 
+from ehrapy.plot._holoviews import load_hv_extensions
+
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from ehrdata import EHRData
 
 
+@load_hv_extensions()
 def timeseries(
     edata: EHRData,
     *,

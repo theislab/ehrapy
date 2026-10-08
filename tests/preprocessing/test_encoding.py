@@ -154,13 +154,7 @@ def test_autodetect_encode(encode_ds_1_edata, layer, array_type):
     assert all(column in set(encoded_edata.obs.columns) for column in ["survival", "clinic_day"])
     assert not any(column in set(encode_ds_1_edata.obs.columns) for column in ["survival", "clinic_day"])
 
-    assert_frame_equal(
-        encode_ds_1_edata.var,
-        DataFrame(
-            {FEATURE_TYPE_KEY: [NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG, CATEGORICAL_TAG, CATEGORICAL_TAG]},
-            index=["patient_id", "los_days", "b12_values", "survival", "clinic_day"],
-        ),
-    )
+    assert FEATURE_TYPE_KEY not in encode_ds_1_edata.var
 
     assert np.all(
         encoded_edata.var[FEATURE_TYPE_KEY]
@@ -179,6 +173,26 @@ def test_autodetect_encode(encode_ds_1_edata, layer, array_type):
 
     assert pd.api.types.is_bool_dtype(encoded_edata.obs["survival"].dtype)
     assert isinstance(encoded_edata.obs["clinic_day"].dtype, CategoricalDtype)
+
+
+@pytest.mark.parametrize(
+    ("autodetect", "encodings"),
+    [(True, "one-hot"), (True, "label"), (False, {"label": ["survival"], "one-hot": ["clinic_day"]})],
+)
+@pytest.mark.parametrize("layer", [None, "layer_2"])
+def test_encode_does_not_modify_input(encode_ds_1_edata, autodetect, encodings, layer):
+    edata_before = encode_ds_1_edata.copy()
+
+    encoded_edata = encode(encode_ds_1_edata, autodetect=autodetect, encodings=encodings, layer=layer)
+
+    assert "original" in encoded_edata.layers
+    assert np.array_equal(encode_ds_1_edata.X, edata_before.X)
+    assert encode_ds_1_edata.layers.keys() == edata_before.layers.keys()
+    for key in edata_before.layers:
+        assert np.array_equal(encode_ds_1_edata.layers[key], edata_before.layers[key])
+    assert_frame_equal(encode_ds_1_edata.var, edata_before.var)
+    assert_frame_equal(encode_ds_1_edata.obs, edata_before.obs)
+    assert encode_ds_1_edata.uns.keys() == edata_before.uns.keys()
 
 
 @pytest.mark.parametrize("layer", [None, "layer_2"])
@@ -230,13 +244,7 @@ def test_autodetect_custom_mode(encode_ds_1_edata, layer, array_type):
     assert all(column in set(encoded_edata.obs.columns) for column in ["survival", "clinic_day"])
     assert not any(column in set(encode_ds_1_edata.obs.columns) for column in ["survival", "clinic_day"])
 
-    assert_frame_equal(
-        encode_ds_1_edata.var,
-        DataFrame(
-            {FEATURE_TYPE_KEY: [NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG, CATEGORICAL_TAG, CATEGORICAL_TAG]},
-            index=["patient_id", "los_days", "b12_values", "survival", "clinic_day"],
-        ),
-    )
+    assert FEATURE_TYPE_KEY not in encode_ds_1_edata.var
 
     assert np.all(
         encoded_edata.var[FEATURE_TYPE_KEY]
@@ -311,13 +319,7 @@ def test_custom_encode(encode_ds_1_edata, layer, array_type):
     assert all(column in set(encoded_edata.obs.columns) for column in ["survival", "clinic_day"])
     assert not any(column in set(encode_ds_1_edata.obs.columns) for column in ["survival", "clinic_day"])
 
-    assert_frame_equal(
-        encode_ds_1_edata.var,
-        DataFrame(
-            {FEATURE_TYPE_KEY: [NUMERIC_TAG, NUMERIC_TAG, NUMERIC_TAG, CATEGORICAL_TAG, CATEGORICAL_TAG]},
-            index=["patient_id", "los_days", "b12_values", "survival", "clinic_day"],
-        ),
-    )
+    assert FEATURE_TYPE_KEY not in encode_ds_1_edata.var
 
     assert np.all(
         encoded_edata.var[FEATURE_TYPE_KEY]
