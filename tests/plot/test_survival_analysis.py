@@ -125,17 +125,23 @@ def test_ols_array_types(array_type, rng: np.random.Generator):
     pd.testing.assert_frame_equal(plot.data, expected.data)
 
 
-def test_ols_3d_raises(edata_blobs_timeseries_small: EHRData):
-    with pytest.raises(ValueError, match="only supports 2D data"):
-        ep.pl.ols(edata_blobs_timeseries_small, x="feature_0", y="feature_1", layer=DEFAULT_TEM_LAYER_NAME)
+def test_ols_3D(edata_blobs_timeseries_small: EHRData):
+    first = ep.pp.summarize_measurements(
+        edata_blobs_timeseries_small,
+        layer=DEFAULT_TEM_LAYER_NAME,
+        var_names=["feature_0", "feature_1"],
+        statistics=["first"],
+    )
+
+    plot = ep.pl.ols(edata_blobs_timeseries_small, x="feature_0", y="feature_1", layer=DEFAULT_TEM_LAYER_NAME)
+
+    np.testing.assert_array_equal(plot.data["feature_0"], first.X[:, 0])
 
 
 def test_ols_obs_columns_on_3D_data(edata_blobs_3d: EHRData):
     plot = ep.pl.ols(edata_blobs_3d, x="age", y="y")
 
     np.testing.assert_array_equal(plot.data["age"], edata_blobs_3d.obs["age"])
-    with pytest.raises(ValueError, match="only supports 2D data"):
-        ep.pl.ols(edata_blobs_3d, x="age", y="feature_0")
 
 
 def test_cox_ph_adjusted_curves(mimic_2_adjusted_sa):

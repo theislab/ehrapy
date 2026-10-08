@@ -153,6 +153,43 @@ def nanquantile(X, q: float | Sequence[float], /, *, axis: int | tuple[int, ...]
     return array_namespace(X).nanquantile(X, q, axis=axis)
 
 
+def _aggregate_time(X: Array, statistic: str) -> Array:
+    """Aggregate every variable of 3D data over the time axis, ignoring missing values."""
+    xp = array_namespace(X)
+    if not xp.isdtype(X.dtype, "real floating"):
+        X = xp.astype(X, xp.float64)
+    match statistic:
+        case "min":
+            return xpx.nanmin(X, axis=2)
+        case "max":
+            return xpx.nanmax(X, axis=2)
+        case "mean":
+            return xpx.nanmean(X, axis=2)
+        case "median":
+            return nanquantile(X, 0.5, axis=2)
+        case "count":
+            return xp.sum(xp.astype(~xp.isnan(X), X.dtype), axis=2)
+        case "std" | "slope":
+            valid = ~xp.isnan(X)
+            n = xp.sum(xp.astype(valid, X.dtype), axis=2, keepdims=True)
+            value_mean = xp.sum(xp.where(valid, X, 0), axis=2, keepdims=True) / xp.where(n > 0, n, xp.nan)
+            if statistic == "std":
+                squares = xp.sum(xp.where(valid, (X - value_mean) ** 2, 0), axis=2)
+                return xp.sqrt(squares / xp.where(n[..., 0] > 1, n[..., 0] - 1, xp.nan))
+            time = xp.astype(xp.arange(X.shape[2]), X.dtype)
+            time_mean = xp.sum(xp.where(valid, time, 0), axis=2, keepdims=True) / xp.where(n > 0, n, xp.nan)
+            covariance = xp.sum(xp.where(valid, (time - time_mean) * (X - value_mean), 0), axis=2)
+            variance = xp.sum(xp.where(valid, (time - time_mean) ** 2, 0), axis=2)
+            return covariance / xp.where(variance > 0, variance, xp.nan)
+        case "first" | "last":
+            valid = ~xp.isnan(X)
+            if statistic == "last":
+                X, valid = xp.flip(X, axis=2), xp.flip(valid, axis=2)
+            first_valid = xp.argmax(xp.astype(valid, xp.int8), axis=2, keepdims=True)
+            return xp.sum(xp.where(xp.arange(X.shape[2]) == first_valid, X, 0), axis=2)
+    raise ValueError(f"Unknown statistic: {statistic}")
+
+
 def _sparse_columns(X: CSBase) -> np.ndarray:
     """Column index of every stored element of a CSR or CSC matrix."""
     if X.format == "csr":
@@ -333,6 +370,19 @@ def _materialize(*arrays: Array) -> list[np.ndarray]:
 
         arrays = dask.compute(*arrays)
     return [np.asarray(array) for array in arrays]
+
+
+def _tem_times(edata: EHRData, time_key: str) -> np.ndarray:
+    """Time of every timepoint since the first one from `edata.tem[time_key]`, as numbers, time differences in seconds or dates, or its position if `tem` has no such column."""
+    if time_key not in edata.tem:
+        return np.arange(edata.n_t, dtype=np.float64)
+    times = edata.tem[time_key]
+    if pd.api.types.is_numeric_dtype(times):
+        times = times.to_numpy(np.float64)
+        return times - times[0]
+    if pd.api.types.is_datetime64_any_dtype(times):
+        times = times - times.iloc[0]
+    return pd.to_timedelta(times).dt.total_seconds().to_numpy()
 
 
 def _shallow_copy(edata: EHRData, X: Any, layers: Mapping[str, Any]) -> EHRData:

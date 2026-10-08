@@ -10,8 +10,7 @@ from fast_array_utils.types import CSBase, DaskArray
 from scipy import special, stats
 from statsmodels.stats.multitest import multipletests
 
-from ehrapy._compat import sparse_nan_min_max
-from ehrapy.preprocessing._summarize_measurements import _aggregate_time
+from ehrapy._compat import _aggregate_time, sparse_nan_min_max
 
 if TYPE_CHECKING:
     from collections.abc import Sequence

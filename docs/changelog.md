@@ -6,6 +6,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### 🚀 Features
 
+* {func}`ep.get.obs_df <ehrapy.get.obs_df>` and the functions that read variables through it, the survival and regression models, the causal estimators, {func}`ep.pl.scatter <ehrapy.plot.scatter>`, {func}`ep.pl.catplot <ehrapy.plot.catplot>` and {func}`ep.pl.ols <ehrapy.plot.ols>`, take variables of longitudinal 3D data at their first non-missing value, the baseline, or at another statistic over time passed to `obs_df` as `statistic` @Zethson
+
+  The survival models derive the duration and event from an `event_col` that is a longitudinal variable, so that `ep.tl.kaplan_meier(edata, event_col="SepsisLabel")` estimates the time to sepsis on PhysioNet 2019.
+  The event is whether the variable is ever 1, at the time of its first 1 in `edata.tem["interval_start_offset"]`, and observations without one are censored at their last non-missing value.
+  The fitted models hold the derived durations and events as `durations` and `event_observed`.
 * {func}`ep.tl.kaplan_meier <ehrapy.tools.kaplan_meier>` estimates the cumulative incidence of an `event_of_interest` with the Aalen-Johansen estimator when the event column holds competing events, {func}`ep.tl.nelson_aalen <ehrapy.tools.nelson_aalen>` its cause-specific cumulative hazard, and {func}`ep.pl.kaplan_meier <ehrapy.plot.kaplan_meier>` plots the cumulative incidence ([#1155](https://github.com/theislab/ehrapy/pull/1155)) @Zethson
 
   Without `event_of_interest`, the univariate survival models raise an error for event columns with more than one event type instead of silently treating every event type as the same event.

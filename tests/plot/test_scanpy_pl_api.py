@@ -32,9 +32,15 @@ def test_scatter_plot(mimic_2, check_same_image):
 
 
 def test_scatter_plot_3D(edata_blob_small):
-    ep.pl.scatter(edata_blob_small, x="feature_1", y="feature_2")
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.pl.scatter(edata_blob_small, layers=DEFAULT_TEM_LAYER_NAME, x="feature_1", y="feature_2")
+    expected = ep.pl.scatter(edata_blob_small, x="feature_1", y="feature_2", color="feature_3", show=False)
+
+    ax = ep.pl.scatter(
+        edata_blob_small, layers=DEFAULT_TEM_LAYER_NAME, x="feature_1", y="feature_2", color="feature_3", show=False
+    )
+
+    np.testing.assert_array_equal(ax.collections[0].get_offsets(), expected.collections[0].get_offsets())
+    np.testing.assert_array_equal(ax.collections[0].get_array(), expected.collections[0].get_array())
+    plt.close("all")
 
 
 def test_heatmap_plot(edata_mini, check_same_image):
@@ -799,19 +805,17 @@ def test_embedding_plots_3D(plotter, edata_embedded, clean_up_plots):
         plot(edata_embedded, color=["group", "feature_0"], show=False, **kwargs)
 
 
-@pytest.mark.parametrize(
-    ("plotter", "obs_kwargs", "var_kwargs"),
-    [
-        ("violin", {"keys": "age"}, {"keys": ["age", "feature_0"]}),
-        ("scatter", {"x": "age", "y": "y"}, {"x": "age", "y": "y", "color": "feature_0"}),
-    ],
-)
-def test_obs_plots_3D(plotter, obs_kwargs, var_kwargs, edata_blobs_3d, clean_up_plots):
-    plot = getattr(ep.pl, plotter)
-
-    plot(edata_blobs_3d, show=False, **obs_kwargs)
+def test_violin_obs_3D(edata_blobs_3d, clean_up_plots):
+    ep.pl.violin(edata_blobs_3d, keys="age", show=False)
     with pytest.raises(ValueError, match="only supports 2D data"):
-        plot(edata_blobs_3d, show=False, **var_kwargs)
+        ep.pl.violin(edata_blobs_3d, keys=["age", "feature_0"], show=False)
+
+
+def test_scatter_obs_3D(edata_blobs_3d, clean_up_plots):
+    ax = ep.pl.scatter(edata_blobs_3d, x="age", y="feature_0", color="feature_1", show=False)
+
+    points = np.column_stack([edata_blobs_3d.obs["age"], edata_blobs_3d.X[:, 0, 0]])
+    np.testing.assert_array_equal(np.sort(ax.collections[0].get_offsets(), axis=0), np.sort(points, axis=0))
 
 
 def test_dendrogram_3D(edata_blobs_3d, clean_up_plots):

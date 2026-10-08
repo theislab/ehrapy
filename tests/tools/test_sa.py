@@ -39,9 +39,13 @@ def test_ols(mimic_2, layer):
 def test_ols_3D(edata_blob_small):
     formula = "feature_1 ~ feature_2"
     var_names = ["feature_1", "feature_2"]
-    ep.tl.ols(edata_blob_small, var_names=var_names, formula=formula, missing="drop", layer="layer_2")
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.tl.ols(edata_blob_small, var_names=var_names, formula=formula, missing="drop", layer=DEFAULT_TEM_LAYER_NAME)
+    expected = ep.tl.ols(edata_blob_small, var_names=var_names, formula=formula, missing="drop", layer="layer_2").fit()
+
+    result = ep.tl.ols(
+        edata_blob_small, var_names=var_names, formula=formula, missing="drop", layer=DEFAULT_TEM_LAYER_NAME
+    ).fit()
+
+    pd.testing.assert_series_equal(result.params, expected.params)
 
 
 @pytest.mark.parametrize("layer", [None, "layer_2"])
@@ -67,9 +71,13 @@ def test_glm(mimic_2, layer):
 def test_glm_3D(edata_blob_small):
     formula = "feature_1 ~ feature_2"
     var_names = ["feature_1", "feature_2"]
-    ep.tl.glm(edata_blob_small, var_names=var_names, formula=formula, missing="drop", layer="layer_2")
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
-        ep.tl.glm(edata_blob_small, var_names=var_names, formula=formula, missing="drop", layer=DEFAULT_TEM_LAYER_NAME)
+    expected = ep.tl.glm(edata_blob_small, var_names=var_names, formula=formula, missing="drop", layer="layer_2").fit()
+
+    result = ep.tl.glm(
+        edata_blob_small, var_names=var_names, formula=formula, missing="drop", layer=DEFAULT_TEM_LAYER_NAME
+    ).fit()
+
+    pd.testing.assert_series_equal(result.params, expected.params)
 
 
 @pytest.mark.parametrize(
@@ -179,7 +187,7 @@ def test_survival_models_3D(sa_function, sa_class, edata_blob_small):
     edata_blob_small.layers["layer_2"] = edata_blob_small.X.copy()
 
     sa_function(edata_blob_small, duration_col=duration_col, event_col=event_col, layer="layer_2")
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
+    with pytest.raises(ValueError, match=r"pass no `duration_col`"):
         sa_function(edata_blob_small, duration_col=duration_col, event_col=event_col, layer=DEFAULT_TEM_LAYER_NAME)
 
 
@@ -419,3 +427,76 @@ def test_cox_ph_adjusted_curves_array_types(array_type, rng):
             result.uns["cox_ph_adjusted_curves"][group]["survival"],
             expected.uns["cox_ph_adjusted_curves"][group]["survival"],
         )
+
+
+@pytest.fixture
+def longitudinal_events() -> ed.EHRData:
+    nan = np.nan
+    event = [[1, 1, 1, 1], [0, 0, 1, 0], [0, 0, 0, nan], [nan, nan, nan, nan], [0, nan, 0, 0], [0, 1, 1, nan]]
+    hr = np.arange(24, dtype=float).reshape(6, 4)
+    obs = pd.DataFrame({"group": list("ababab"), "age": [50.0, 61, 72, 43, 54, 65]}, index=list("pqrstu"))
+    tem = pd.DataFrame(
+        {"interval_start_offset": pd.to_timedelta([0, 1, 2, 4], unit="h")}, index=[str(t) for t in range(4)]
+    )
+    return ed.EHRData(
+        X=np.stack([np.array(event, dtype=float), hr], axis=1),
+        obs=obs,
+        var=pd.DataFrame(index=["event", "hr"]),
+        tem=tem,
+    )
+
+
+@pytest.mark.parametrize(
+    ("time_key", "durations"),
+    [("interval_start_offset", [0, 7200, 7200, 14400, 3600]), ("unknown", [0, 2, 2, 3, 1])],
+)
+def test_survival_from_longitudinal_event(longitudinal_events, time_key, durations):
+    if time_key == "unknown":
+        longitudinal_events.tem = longitudinal_events.tem.rename(columns={"interval_start_offset": time_key})
+
+    kmf = ep.tl.kaplan_meier(longitudinal_events, event_col="event")
+
+    np.testing.assert_array_equal(kmf.durations, durations)
+    np.testing.assert_array_equal(kmf.event_observed, [1, 1, 0, 0, 1])
+
+
+@pytest.mark.parametrize(
+    ("sa_function", "lifelines_class"),
+    [(ep.tl.kaplan_meier, KaplanMeierFitter), (ep.tl.nelson_aalen, NelsonAalenFitter)],
+)
+def test_survival_curves_from_longitudinal_event(longitudinal_events, sa_function, lifelines_class):
+    durations = pd.Series([0.0, 2, 2, 3, 1], index=list("pqrtu"))
+    expected = lifelines_class().fit(durations, event_observed=pd.Series([1, 1, 0, 0, 1], index=durations.index))
+    longitudinal_events.tem = longitudinal_events.tem.drop(columns="interval_start_offset")
+
+    model = sa_function(longitudinal_events, event_col="event")
+
+    pd.testing.assert_frame_equal(model.event_table, expected.event_table)
+
+
+def test_cox_ph_from_longitudinal_event(longitudinal_events):
+    longitudinal_events.tem = longitudinal_events.tem.drop(columns="interval_start_offset")
+    frame = pd.DataFrame(
+        {
+            "duration": [0.0, 2, 2, 3, 1],
+            "event": [1, 1, 0, 0, 2],
+            "hr": [0.0, 4, 8, 16, 20],
+            "age": [50.0, 61, 72, 54, 65],
+        },
+        index=list("pqrtu"),
+    )
+    expected = CoxPHFitter(penalizer=0.1).fit(frame, duration_col="duration", event_col="event")
+
+    cph = ep.tl.cox_ph(longitudinal_events, event_col="event", covariates=["hr", "age"], penalizer=0.1)
+
+    np.testing.assert_allclose(cph.params_, expected.params_)
+
+
+def test_survival_needs_duration_col(longitudinal_events):
+    with pytest.raises(ValueError, match="Pass a `duration_col`"):
+        ep.tl.kaplan_meier(longitudinal_events, event_col="age")
+
+
+def test_survival_needs_binary_longitudinal_event(longitudinal_events):
+    with pytest.raises(ValueError, match="must be 1 at the timepoints with the event"):
+        ep.tl.kaplan_meier(longitudinal_events, event_col="hr")

@@ -13,6 +13,7 @@ from scanpy.plotting import DotPlot, MatrixPlot, StackedViolin
 
 from ehrapy._compat import _as_scanpy_input, _materialize, _raise_if_3D, function_2D_only
 from ehrapy._utils_doc import _doc_params, doc_plot_params
+from ehrapy.get._get import _over_time
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -38,7 +39,6 @@ VBound = str | float | Callable[[Sequence[float]], float]
 _ValuesToPlot = Literal["scores", "logfoldchanges", "pvals", "pvals_adj", "log10_pvals", "log10_pvals_adj"]
 
 
-@function_2D_only(var_keys=("x", "y", "color"))
 @_doc_params(**doc_plot_params)
 def scatter(
     edata: EHRData,
@@ -71,6 +71,7 @@ def scatter(
     """Scatter plot along observations or variables axes.
 
     Color the plot using annotations of observations (`.obs`), variables (`.var`) or features (`.var_names`).
+    Variables of 3D data are plotted with their first non-missing value, see :func:`~ehrapy.get.obs_df`.
 
     Args:
         edata: Central data object.
@@ -114,6 +115,9 @@ def scatter(
     Preview:
         .. image:: /_static/docstring_previews/scatter.png
     """
+    if layers is None or isinstance(layers, str):
+        colors = [color] if isinstance(color, str) else list(color or ())
+        edata, layers = _over_time(edata, [x, y, *colors], layer=layers)
     scatter_partial = partial(
         sc.pl.scatter,
         x=x,

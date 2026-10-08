@@ -7,7 +7,7 @@ import pandas as pd
 from array_api_compat import array_namespace
 from fast_array_utils.conv import to_dense
 
-from ehrapy._compat import _like_obs
+from ehrapy._compat import _like_obs, _tem_times
 from ehrapy.preprocessing._summarize_measurements import summarize_measurements
 
 if TYPE_CHECKING:
@@ -102,15 +102,7 @@ def _with_covariates(values: Array, covariates: pd.DataFrame) -> Array:
 def _times(edata: EHRData, task: Task, layer: str | None, time_key: str) -> np.ndarray:
     """Time of every timepoint of the observation window from `edata.tem[time_key]`, or its position if `tem` has no such column."""
     X = edata.X if layer is None else edata.layers[layer]
-    window = task._window(X.shape[2])
-    if time_key not in edata.tem:
-        return np.arange(X.shape[2], dtype=np.float64)[window]
-    times = edata.tem[time_key].iloc[window]
-    if pd.api.types.is_numeric_dtype(times):
-        return times.to_numpy(np.float64)
-    if pd.api.types.is_datetime64_any_dtype(times):
-        times = times - times.iloc[0]
-    return pd.to_timedelta(times).dt.total_seconds().to_numpy()
+    return _tem_times(edata, time_key)[task._window(X.shape[2])]
 
 
 def _covariates(edata: EHRData, obs_keys: Sequence[str], columns: Sequence[str] | None) -> pd.DataFrame:

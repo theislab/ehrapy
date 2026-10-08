@@ -23,6 +23,7 @@ from lifelines.statistics import StatisticalResult, logrank_test
 from scipy import stats
 from statsmodels.genmod.generalized_linear_model import GLMResultsWrapper  # noqa
 
+from ehrapy._compat import _materialize, _tem_times
 from ehrapy.get import obs_df
 
 if TYPE_CHECKING:
@@ -30,17 +31,55 @@ if TYPE_CHECKING:
 
     from ehrdata import EHRData
 
+    from ehrapy._compat import Array
+
 
 def _model_frame(edata: EHRData, keys: Iterable[str | None], *, layer: str | None, dropna: bool = True) -> pd.DataFrame:
     """Values of the obs columns and variables a model uses, without the observations that miss any of them."""
     keys = list(dict.fromkeys(key for key in keys if key is not None))
     frame = obs_df(edata, keys=keys, layer=layer).infer_objects()
-    if dropna:
-        complete = frame.notna().all(axis=1)
-        if n_dropped := int((~complete).sum()):
-            logger.info(f"Dropped {n_dropped} of {len(frame)} observations with missing values in {keys}.")
-        frame = frame[complete]
-    return frame
+    return _drop_incomplete(frame) if dropna else frame
+
+
+def _drop_incomplete(frame: pd.DataFrame) -> pd.DataFrame:
+    complete = frame.notna().all(axis=1)
+    if n_dropped := int((~complete).sum()):
+        logger.info(f"Dropped {n_dropped} of {len(frame)} observations with missing values in {list(frame.columns)}.")
+    return frame[complete]
+
+
+def _survival_frame(
+    edata: EHRData, duration_col: str | None, event_col: str | None, keys: Iterable[str | None], *, layer: str | None
+) -> tuple[pd.DataFrame, str]:
+    """Model frame of a survival model and its duration column, which is derived along with the event if `event_col` is a variable of 3D data."""
+    X = edata.X if layer is None else edata.layers[layer]
+    if event_col is None or getattr(X, "ndim", 2) != 3 or event_col not in edata.var_names:
+        if duration_col is None:
+            raise ValueError("Pass a `duration_col`, or an `event_col` that is a variable of 3D data.")
+        return _model_frame(edata, [duration_col, event_col, *keys], layer=layer), duration_col
+    if duration_col is not None:
+        raise ValueError(f"The durations are derived from the 3D variable {event_col!r}, pass no `duration_col`.")
+    duration_col = f"{event_col}_duration"
+    events = pd.DataFrame(
+        _time_to_event(X[:, edata.var_names.get_loc(event_col)], _tem_times(edata, "interval_start_offset"), event_col),
+        index=edata.obs_names,
+        columns=[duration_col, event_col],
+    )
+    covariates = _model_frame(edata, [key for key in keys if key != event_col], layer=layer, dropna=False)
+    return _drop_incomplete(pd.concat([events, covariates], axis=1)), duration_col
+
+
+def _time_to_event(values: Array, times: np.ndarray, name: str) -> np.ndarray:
+    """Time of the first 1 of every row and 1, or the time of its last non-missing value and 0 if it has no 1."""
+    (values,) = _materialize(values)
+    observed = ~np.isnan(values)
+    if not np.isin(values[observed], [0, 1]).all():
+        raise ValueError(f"The longitudinal event {name!r} must be 1 at the timepoints with the event and 0 otherwise.")
+    occurred = values == 1
+    happened = occurred.any(axis=1)
+    last = values.shape[1] - 1 - observed[:, ::-1].argmax(axis=1)
+    durations = np.where(happened, times[occurred.argmax(axis=1)], times[last])
+    return np.where(observed.any(axis=1)[:, None], np.column_stack([durations, happened]), np.nan)
 
 
 def _formula_variables(formula: str | None) -> list[str]:
@@ -174,7 +213,7 @@ def glm(
 
 def kaplan_meier(
     edata: EHRData,
-    duration_col: str,
+    duration_col: str | None = None,
     *,
     event_col: str | None = None,
     key_added: str = "kaplan_meier",
@@ -203,9 +242,12 @@ def kaplan_meier(
     Args:
         edata: Central data object.
         duration_col: Column in `edata.obs` or variable with the subjects' lifetimes.
+            `None` if `event_col` is a variable of 3D data, from which the durations are derived.
         event_col: Column in `edata.obs` or variable that specifies whether the event has been observed, or censored.
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
             If left `None`, all individuals are assumed to be uncensored.
+            If it is a variable of 3D data that is 1 at the timepoints with the event and 0 otherwise, the event is whether it is ever 1 and the duration the time of its first 1, or of its last non-missing value for censored observations.
+            Times count from the first timepoint, in `edata.tem['interval_start_offset']` if present, with time differences in seconds, or as positions otherwise.
         key_added: The key to use for the `.uns` slot in the data object.
         timeline: Return the best estimate at the values in timelines (positively increasing)
         entry_col: Column in `edata.obs` or variable with the relative time when a subject entered the study.
@@ -360,7 +402,7 @@ def anova_glm(
 
 def cox_ph(
     edata: EHRData,
-    duration_col: str,
+    duration_col: str | None = None,
     *,
     event_col: str | None = None,
     key_added: str = "cox_ph",
@@ -396,9 +438,12 @@ def cox_ph(
     Args:
         edata: Central data object.
         duration_col: Column in `edata.obs` or variable with the subjects' lifetimes.
+            `None` if `event_col` is a variable of 3D data, from which the durations are derived.
         event_col: Column in `edata.obs` or variable that specifies whether the event has been observed, or censored.
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
             If left `None`, all individuals are assumed to be uncensored.
+            If it is a variable of 3D data that is 1 at the timepoints with the event and 0 otherwise, the event is whether it is ever 1 and the duration the time of its first 1, or of its last non-missing value for censored observations.
+            Times count from the first timepoint, in `edata.tem['interval_start_offset']` if present, with time differences in seconds, or as positions otherwise.
         key_added: The key to use for the `.uns` slot in the data object.
         alpha: The alpha value in the confidence intervals.
         label: The name of the column of the estimate.
@@ -447,11 +492,11 @@ def cox_ph(
         ... )
     """
     strata_cols = [strata] if isinstance(strata, str) else list(strata or [])
-    df = _model_frame(
+    df, duration_col = _survival_frame(
         edata,
+        duration_col,
+        event_col,
         [
-            duration_col,
-            event_col,
             entry_col,
             weights_col,
             cluster_col,
@@ -513,7 +558,7 @@ def cox_ph(
 
 def weibull_aft(
     edata: EHRData,
-    duration_col: str,
+    duration_col: str | None,
     event_col: str,
     *,
     key_added: str = "weibull_aft",
@@ -546,9 +591,12 @@ def weibull_aft(
     Args:
         edata: Central data object.
         duration_col: Name of the column in the data objects that contains the subjects’ lifetimes.
+            `None` if `event_col` is a variable of 3D data, from which the durations are derived.
         event_col: Column in `edata.obs` or variable that specifies whether the event has been observed, or censored.
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
             If left `None`, all individuals are assumed to be uncensored.
+            If it is a variable of 3D data that is 1 at the timepoints with the event and 0 otherwise, the event is whether it is ever 1 and the duration the time of its first 1, or of its last non-missing value for censored observations.
+            Times count from the first timepoint, in `edata.tem['interval_start_offset']` if present, with time differences in seconds, or as positions otherwise.
         key_added: The key to use for the `.uns` slot in the data object.
         alpha: The alpha value in the confidence intervals.
         fit_intercept: Whether to fit an intercept term in the model.
@@ -587,9 +635,11 @@ def weibull_aft(
         >>> aft.print_summary()
     """
     ancillary_cols = _formula_variables(ancillary) if isinstance(ancillary, str) else []
-    df = _model_frame(
+    df, duration_col = _survival_frame(
         edata,
-        [duration_col, event_col, entry_col, weights_col, *_covariates(edata, covariates, formula), *ancillary_cols],
+        duration_col,
+        event_col,
+        [entry_col, weights_col, *_covariates(edata, covariates, formula), *ancillary_cols],
         layer=layer,
     )
     df = _shift_zero_durations(df, duration_col)
@@ -624,7 +674,7 @@ def weibull_aft(
 
 def log_logistic_aft(
     edata: EHRData,
-    duration_col: str,
+    duration_col: str | None = None,
     *,
     event_col: str | None = None,
     key_added: str = "log_logistic_aft",
@@ -656,9 +706,12 @@ def log_logistic_aft(
     Args:
         edata: Central data object.
         duration_col: Name of the column in the data objects that contains the subjects' lifetimes.
+            `None` if `event_col` is a variable of 3D data, from which the durations are derived.
         event_col: Column in `edata.obs` or variable that specifies whether the event has been observed, or censored.
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
             If left `None`, all individuals are assumed to be uncensored.
+            If it is a variable of 3D data that is 1 at the timepoints with the event and 0 otherwise, the event is whether it is ever 1 and the duration the time of its first 1, or of its last non-missing value for censored observations.
+            Times count from the first timepoint, in `edata.tem['interval_start_offset']` if present, with time differences in seconds, or as positions otherwise.
         key_added: The key to use for the `.uns` slot in the data object.
         alpha: The alpha value in the confidence intervals.
         fit_intercept: Whether to fit an intercept term in the model.
@@ -696,9 +749,11 @@ def log_logistic_aft(
         >>> llf = ep.tl.log_logistic_aft(edata, duration_col="mort_day_censored", event_col="censor_flg")
     """
     ancillary_cols = _formula_variables(ancillary) if isinstance(ancillary, str) else []
-    df = _model_frame(
+    df, duration_col = _survival_frame(
         edata,
-        [duration_col, event_col, entry_col, weights_col, *_covariates(edata, covariates, formula), *ancillary_cols],
+        duration_col,
+        event_col,
+        [entry_col, weights_col, *_covariates(edata, covariates, formula), *ancillary_cols],
         layer=layer,
     )
     df = _shift_zero_durations(df, duration_col)
@@ -733,7 +788,7 @@ def log_logistic_aft(
 
 def _univariate_model(
     edata: EHRData,
-    duration_col: str,
+    duration_col: str | None,
     event_col: str,
     model_class,
     key_added: str,
@@ -751,7 +806,7 @@ def _univariate_model(
     random_state: int = 0,
 ):
     """Convenience function for univariate models."""
-    df = _model_frame(edata, [duration_col, event_col, entry_col, weights_col], layer=layer)
+    df, duration_col = _survival_frame(edata, duration_col, event_col, [entry_col, weights_col], layer=layer)
     if not accept_zero_duration:
         df = _shift_zero_durations(df, duration_col)
 
@@ -799,7 +854,7 @@ def _univariate_model(
 
 def nelson_aalen(
     edata: EHRData,
-    duration_col: str,
+    duration_col: str | None = None,
     *,
     event_col: str | None = None,
     key_added: str = "nelson_aalen",
@@ -825,9 +880,12 @@ def nelson_aalen(
     Args:
         edata: Central data object.
         duration_col: Column in `edata.obs` or variable with the subjects' lifetimes.
+            `None` if `event_col` is a variable of 3D data, from which the durations are derived.
         event_col: Column in `edata.obs` or variable that specifies whether the event has been observed, or censored.
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
             If left `None`, all individuals are assumed to be uncensored.
+            If it is a variable of 3D data that is 1 at the timepoints with the event and 0 otherwise, the event is whether it is ever 1 and the duration the time of its first 1, or of its last non-missing value for censored observations.
+            Times count from the first timepoint, in `edata.tem['interval_start_offset']` if present, with time differences in seconds, or as positions otherwise.
         key_added: The key to use for the `.uns` slot in the data object.
         timeline: Return the best estimate at the values in timelines (positively increasing)
         entry_col: Column in `edata.obs` or variable with the relative time when a subject entered the study.
@@ -878,7 +936,7 @@ def nelson_aalen(
 
 def weibull(
     edata: EHRData,
-    duration_col: str,
+    duration_col: str | None,
     event_col: str,
     *,
     key_added: str = "weibull",
@@ -905,9 +963,12 @@ def weibull(
     Args:
         edata: Central data object.
         duration_col: Name of the column in the data objects that contains the subjects’ lifetimes.
+            `None` if `event_col` is a variable of 3D data, from which the durations are derived.
         event_col: Column in `edata.obs` or variable that specifies whether the event has been observed, or censored.
             Column values are `True` if the event was observed, `False` if the event was lost (right-censored).
             If left `None`, all individuals are assumed to be uncensored.
+            If it is a variable of 3D data that is 1 at the timepoints with the event and 0 otherwise, the event is whether it is ever 1 and the duration the time of its first 1, or of its last non-missing value for censored observations.
+            Times count from the first timepoint, in `edata.tem['interval_start_offset']` if present, with time differences in seconds, or as positions otherwise.
         key_added: The key to use for the `.uns` slot in the data object.
         timeline: Return the best estimate at the values in timelines (positively increasing)
         entry_col: Column in `edata.obs` or variable with the relative time when a subject entered the study.
@@ -954,7 +1015,7 @@ def cox_ph_adjusted_curves(
     edata: EHRData,
     cph: CoxPHFitter,
     strata: str,
-    duration_col: str,
+    duration_col: str | None,
     event_col: str,
     *,
     method: Literal["average", "conditional"] = "average",
@@ -980,8 +1041,11 @@ def cox_ph_adjusted_curves(
         strata: Name of the column to stratify by.
             Must be present in the data and should not be included in the Cox model formula.
         duration_col: The name of the column that contains the subjects' lifetimes.
+            `None` if `event_col` is a variable of 3D data, from which the durations are derived.
         event_col: The name of the column that specifies whether the event has been observed or censored.
             Column values are True if the event was observed, False if the event was lost (right-censored).
+            If it is a variable of 3D data that is 1 at the timepoints with the event and 0 otherwise, the event is whether it is ever 1 and the duration the time of its first 1, or of its last non-missing value for censored observations.
+            Times count from the first timepoint, in `edata.tem['interval_start_offset']` if present, with time differences in seconds, or as positions otherwise.
         method: The method used to compute adjusted survival curves. Options are:
             * `'average'` one population-averaged curve per group, no rebalancing.
             * `'conditional'` one curve per group for a synthetic reference patient with cohort-average covariates, varying only the strata variable.
@@ -1019,7 +1083,9 @@ def cox_ph_adjusted_curves(
     edata = edata.copy() if copy else edata
     strata_cols = [cph.strata] if isinstance(cph.strata, str) else list(cph.strata or [])
     cph_covariates = _formula_variables(cph.formula) if cph.formula else list(cph.params_.index)
-    df = _model_frame(edata, [duration_col, event_col, strata, *strata_cols, *cph_covariates], layer=layer)
+    df, duration_col = _survival_frame(
+        edata, duration_col, event_col, [strata, *strata_cols, *cph_covariates], layer=layer
+    )
 
     t_max = df[duration_col].max()
     _times = times if times is not None else np.linspace(0, t_max, 100)

@@ -2,35 +2,39 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ehrdata import EHRData
 from scanpy.get import obs_df as scanpy_obs_df
 from scanpy.get import rank_genes_groups_df
 from scanpy.get import var_df as scanpy_var_df
 
-from ehrapy._compat import _as_scanpy_input, function_2D_only
+from ehrapy._compat import _aggregate_time, _as_scanpy_input, _materialize, function_2D_only
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Iterable
 
     import pandas as pd
-    from ehrdata import EHRData
+
+    from ehrapy.preprocessing._summarize_measurements import Statistic
 
 
-@function_2D_only(var_keys=("keys",))
 def obs_df(
     edata: EHRData,
     *,
     keys: Collection[str] = (),
     obsm_keys: Iterable[tuple[str, int]] = (),
     layer: str | None = None,
+    statistic: Statistic = "first",
 ) -> pd.DataFrame:
     """Return values for observations in edata.
 
     Args:
         edata: Central data object.
         keys: Keys from either `.var_names` or `.obs.columns`.
-            Keys from `.var_names` require `.X` or `layer` to be 2D, whereas `.obs` columns can be read from 3D data.
         obsm_keys: Tuples of `(key from obsm, column index of obsm[key])`.
         layer: Layer of `edata` to use as feature values.
+        statistic: Statistic over time that gives one value per observation for variables of 3D data, as in :func:`~ehrapy.preprocessing.summarize_measurements`.
+            The default `"first"` is the first non-missing value, the baseline.
+            To take the values at one timepoint, select it first, such as `edata[:, :, [6]]`.
 
     Returns:
         A DataFrame with `edata.obs_names` as index, and values specified by `keys` and `obsm_keys`.
@@ -40,8 +44,32 @@ def obs_df(
         >>> import ehrapy as ep
         >>> edata = ed.dt.mimic_2()
         >>> ages = ep.get.obs_df(edata, keys=["age"])
+
+        Mean of longitudinal variables over time:
+
+        >>> edata = ed.dt.ehrdata_blobs(n_variables=3, base_timepoints=5)
+        >>> means = ep.get.obs_df(edata, keys=["feature_0", "cluster"], statistic="mean")
     """
+    edata, layer = _over_time(edata, keys, layer=layer, statistic=statistic)
     return scanpy_obs_df(adata=_as_scanpy_input(edata), keys=keys, obsm_keys=obsm_keys, layer=layer)
+
+
+def _over_time(
+    edata: EHRData,
+    keys: Iterable[str | None],
+    *,
+    layer: str | None,
+    statistic: Statistic = "first",
+) -> tuple[EHRData, str | None]:
+    """`edata` with the variables among `keys` reduced to `statistic` over time if they are 3D, and the layer to read them from."""
+    X = edata.X if layer is None else edata.layers[layer]
+    selected = edata.var_names.isin([key for key in keys if key is not None])
+    if getattr(X, "ndim", 2) != 3 or not selected.any():
+        return edata, layer
+    (values,) = _materialize(_aggregate_time(X[:, selected], statistic))
+    reduced = EHRData(values, obs=edata.obs, var=edata.var[selected], obsm=edata.obsm, obsp=edata.obsp)
+    reduced.uns = edata.uns
+    return reduced, None
 
 
 @function_2D_only()
