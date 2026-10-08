@@ -78,6 +78,13 @@ def tsne(
         Depending on `copy`, returns or updates `edata` with the following fields.
 
         **X_tsne** : `np.ndarray` (`edata.obsm['X_tsne' | key_added]`, dtype `float`) tSNE coordinates of data.
+
+    Examples:
+        >>> import ehrdata as ed
+        >>> import ehrapy as ep
+        >>> edata = ed.dt.mimic_2(columns_obs_only=["service_unit", "day_icu_intime"])
+        >>> ep.pp.simple_impute(edata, strategy="median")
+        >>> ep.tl.tsne(edata)
     """
     edata = edata.copy() if copy else edata
     adata = _as_scanpy_input(edata)
@@ -167,6 +174,14 @@ def umap(
         **X_umap** : `edata.obsm['X_umap' | key_added]` UMAP coordinates of data.
 
         **umap** : `edata.uns['umap' | key_added]` UMAP parameters.
+
+    Examples:
+        >>> import ehrdata as ed
+        >>> import ehrapy as ep
+        >>> edata = ed.dt.mimic_2(columns_obs_only=["service_unit", "day_icu_intime"])
+        >>> ep.pp.simple_impute(edata, strategy="median")
+        >>> ep.pp.neighbors(edata)
+        >>> ep.tl.umap(edata)
     """
     if neighbors_key not in edata.uns:
         raise ValueError(f"Did not find .uns[{neighbors_key!r}]. Please run `ep.pp.neighbors` first.")

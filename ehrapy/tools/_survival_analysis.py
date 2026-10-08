@@ -221,6 +221,7 @@ def kaplan_meier(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
+        >>> import numpy as np
         >>> edata = ed.dt.mimic_2()
         >>> # Flip 'censor_fl' because 0 = death and 1 = censored
         >>> edata[:, ["censor_flg"]].X = np.where(edata[:, ["censor_flg"]].X == 0, 1, 0)
@@ -416,6 +417,7 @@ def cox_ph(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
+        >>> import numpy as np
         >>> edata = ed.dt.mimic_2()
         >>> # Flip 'censor_fl' because 0 = death and 1 = censored
         >>> edata[:, ["censor_flg"]].X = np.where(edata[:, ["censor_flg"]].X == 0, 1, 0)
@@ -559,6 +561,7 @@ def weibull_aft(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
+        >>> import numpy as np
         >>> edata = ed.dt.mimic_2()
         >>> edata[:, ["censor_flg"]].X = np.where(edata[:, ["censor_flg"]].X == 0, 1, 0)
         >>> edata = edata[:, ["mort_day_censored", "censor_flg"]]
@@ -667,6 +670,7 @@ def log_logistic_aft(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
+        >>> import numpy as np
         >>> edata = ed.dt.mimic_2()
         >>> # Flip 'censor_fl' because 0 = death and 1 = censored
         >>> edata[:, ["censor_flg"]].X = np.where(edata[:, ["censor_flg"]].X == 0, 1, 0)
@@ -809,6 +813,7 @@ def nelson_aalen(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
+        >>> import numpy as np
         >>> edata = ed.dt.mimic_2()
         >>> # Flip 'censor_fl' because 0 = death and 1 = censored
         >>> edata[:, ["censor_flg"]].X = np.where(edata[:, ["censor_flg"]].X == 0, 1, 0)
@@ -883,6 +888,7 @@ def weibull(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
+        >>> import numpy as np
         >>> edata = ed.dt.mimic_2()
         >>> # Flip 'censor_fl' because 0 = death and 1 = censored
         >>> edata[:, ["censor_flg"]].X = np.where(edata[:, ["censor_flg"]].X == 0, 1, 0)

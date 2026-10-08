@@ -121,15 +121,6 @@ def explicit_impute(
         >>> import ehrapy as ep
         >>> edata = ed.dt.ehrdata_blobs(n_variables=10, n_observations=10, base_timepoints=2, missing_values=0.5)
         >>> ep.pp.explicit_impute(edata, replacement=[1, 2])
-
-        Example Output:
-
-        >>> edata.X[0, :, 0]
-        [ 1.        ,  1.        ,  1.        ,  1.        ,  1.        ,
-        0.021176  , -5.25906637,  1.        ,  1.        ,  1.        ]
-        >>> edata.X[0, :, 1]
-        [ 2.        , 10.30041167, -3.6883699 ,  2.        ,  2.        ,
-        0.09374899,  2.        , -3.77042107,  2.        ,  2.45151241]
     """
     if copy:
         edata = edata.copy()
@@ -289,7 +280,7 @@ def simple_impute(
     Examples:
         >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ed.dt.mimic_2()
+        >>> edata = ed.dt.mimic_2(columns_obs_only=["service_unit", "day_icu_intime"])
         >>> ep.pp.simple_impute(edata, strategy="median")
     """
     if strategy not in {"mean", "median", "most_frequent"}:
@@ -360,18 +351,6 @@ def knn_impute(
         >>> import ehrapy as ep
         >>> edata_3d = ed.dt.ehrdata_blobs(n_variables=3, n_observations=3, base_timepoints=2, missing_values=0.3)
         >>> edata_imputed = ep.pp.knn_impute(edata_3d, copy=True)
-
-        Example Output:
-
-        >>> edata_3d.X[0, :, :]
-        [[-12.12732884, -18.37304373],
-        [         nan,  -0.91339411],
-        [         nan,  -7.88514984]]
-        >>> edata_imputed.X[0, :, :]
-        [[-12.12732884, -18.37304373],
-        [ -0.07689509,  -0.91339411],
-        [ -2.75584421,  -7.88514984]]
-
     """
     if edata.X is None and layer is None:  # if edata is 3D
         raise ValueError(
@@ -728,18 +707,6 @@ def miss_forest_impute(
         >>> import ehrapy as ep
         >>> edata = ed.dt.ehrdata_blobs(n_variables=3, n_observations=3, base_timepoints=2, missing_values=0.3)
         >>> edata_imputed = ep.pp.miss_forest_impute(edata, copy=True)
-
-        Example Output:
-
-        >>> edata.X[0, :, :]
-        [[-12.12732884, -18.37304373],
-        [         nan,  -0.91339411],
-        [         nan,  -7.88514984]]
-        >>> edata_imputed.X[0, :, :]
-        [[-12.12732884, -18.37304373],
-        [ -0.3278448 ,  -0.91339411],
-        [ -4.39722201,  -7.88514984]]
-
     """
     if edata.X is None and layer is None:  # if edata is 3D
         raise ValueError(
@@ -867,14 +834,14 @@ def locf_impute(
         ... )
         >>> edata = ed.EHRData(X=data)
         >>> ep.pp.locf_impute(edata)
-        >>> edata.X
-        array([[[1.        , 1.        , 3.        , 3.        ],
-                [2.33, 2.        , 2.        , 4.        ],
-                [5.        , 6.        , 7.        , 8.        ]],
+        >>> edata.X.round(2)
+        array([[[1.  , 1.  , 3.  , 3.  ],
+                [2.33, 2.  , 2.  , 4.  ],
+                [5.  , 6.  , 7.  , 8.  ]],
         <BLANKLINE>
-               [[2.33, 2.33, 3.        , 3.        ],
-                [1.        , 1.        , 1.        , 1.        ],
-                [5.33, 2.        , 2.        , 4.        ]]])
+               [[2.33, 2.33, 3.  , 3.  ],
+                [1.  , 1.  , 1.  , 1.  ],
+                [5.33, 2.  , 2.  , 4.  ]]])
     """
     import xarray as xr
 

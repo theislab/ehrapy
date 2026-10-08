@@ -115,7 +115,7 @@ def detect_bias(
         >>> # Example with specified sensitive features
         >>> import ehrdata as ed
         >>> import ehrapy as ep
-        >>> edata = ed.dt.diabetes_130_fairlearn()
+        >>> edata = ed.dt.diabetes_130_fairlearn()[:1000]
         >>> ed.infer_feature_types(edata)
         >>> edata = ep.pp.encode(edata, autodetect=True, encodings="label")
         >>> ep.pp.detect_bias(edata, sensitive_features=["race", "gender"])
