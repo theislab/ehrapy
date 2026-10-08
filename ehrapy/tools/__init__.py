@@ -1,3 +1,4 @@
+from ehrapy.tools._comorbidity import comorbidity_index
 from ehrapy.tools._ncp import ncp
 from ehrapy.tools._scanpy_tl_api import dendrogram, dpt, ingest, leiden, paga
 from ehrapy.tools._stratified_table_one import stratified_table_one
@@ -72,4 +73,5 @@ __all__ = [
     "ingest",
     "cox_ph_adjusted_curves",
     "ncp",
+    "comorbidity_index",
 ]

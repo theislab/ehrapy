@@ -116,6 +116,18 @@ Finds groups of patients whose variables follow a similar course over time.
     tools.ncp
 ```
 
+## Comorbidity
+
+Scores the comorbidity burden of every patient from ICD-10 codes.
+
+```{eval-rst}
+.. autosummary::
+    :toctree: tools
+    :nosignatures:
+
+    tools.comorbidity_index
+```
+
 ## Cohort Tracking & summaries
 
 ```{eval-rst}
