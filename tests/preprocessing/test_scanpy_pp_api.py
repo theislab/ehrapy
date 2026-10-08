@@ -78,6 +78,22 @@ def test_pca_3D_mask_var(edata_blob_small):
     used = np.abs(edata_blob_small.varm["pca_3D"]).sum(axis=2) > 0
     np.testing.assert_array_equal(used, np.repeat(edata_blob_small.var[["highly_variable"]].to_numpy(), 10, axis=1))
     assert edata_blob_small.obsm["pca_3D"].shape == (edata_blob_small.n_obs, 2)
+    assert edata_blob_small.uns["pca_3D"]["params"]["mask_var"] == "highly_variable"
+    assert edata_blob_small.uns["pca_3D"]["params"]["use_highly_variable"] is True
+
+    ep.pp.pca(edata_blob_small, layer=DEFAULT_TEM_LAYER_NAME, n_comps=2, mask_var=np.arange(10) < 3)
+    used = np.abs(edata_blob_small.varm["PCs"]).sum(axis=2) > 0
+    np.testing.assert_array_equal(used, np.repeat((np.arange(10) < 3)[:, None], 10, axis=1))
+
+
+def test_pca_3D_single_timepoint_and_arrays(edata_blob_small):
+    edata_blob_small.layers["single"] = edata_blob_small.layers[DEFAULT_TEM_LAYER_NAME][:, :, :1]
+
+    ep.pp.pca(edata_blob_small, layer="single", n_comps=2)
+
+    assert edata_blob_small.varm["PCs"].shape == (edata_blob_small.n_vars, 2)
+    with pytest.raises(ValueError, match="only supports 2D data"):
+        ep.pp.pca(edata_blob_small.layers[DEFAULT_TEM_LAYER_NAME])
 
 
 @pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu | Flags.Sparse)

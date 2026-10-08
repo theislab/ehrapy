@@ -438,7 +438,7 @@ def famd(
         Factor scores of shape `(n_obs, n_components)`.
 
         `{key_added}_loadings` : :class:`numpy.ndarray` (`edata.varm`)
-        Loadings of the quantitative variables of shape `(n_vars, n_components)`, or `(n_vars, n_t, n_components)` for longitudinal data.
+        Loadings of the quantitative variables of shape `(n_vars, n_components)`, or `(n_vars, n_t, n_components)` for data with several timepoints.
         Rows of qualitative variables are `NaN` because their loadings are per category.
 
         `{key_added}` : `dict` (`edata.uns`)
