@@ -99,6 +99,20 @@ def _with_covariates(values: Array, covariates: pd.DataFrame) -> Array:
     return xp.concat([xp.astype(values, xp.float64), static], axis=1)
 
 
+def _times(edata: EHRData, task: Task, layer: str | None, time_key: str) -> np.ndarray:
+    """Time of every timepoint of the observation window from `edata.tem[time_key]`, or its position if `tem` has no such column."""
+    X = edata.X if layer is None else edata.layers[layer]
+    window = task._window(X.shape[2])
+    if time_key not in edata.tem:
+        return np.arange(X.shape[2], dtype=np.float64)[window]
+    times = edata.tem[time_key].iloc[window]
+    if pd.api.types.is_numeric_dtype(times):
+        return times.to_numpy(np.float64)
+    if pd.api.types.is_datetime64_any_dtype(times):
+        times = times - times.iloc[0]
+    return pd.to_timedelta(times).dt.total_seconds().to_numpy()
+
+
 def _covariates(edata: EHRData, obs_keys: Sequence[str], columns: Sequence[str] | None) -> pd.DataFrame:
     """`obs` columns with categorical columns one-hot encoded, aligned with `columns` if given."""
     covariates = pd.get_dummies(edata.obs[list(obs_keys)]) if obs_keys else edata.obs[[]]
