@@ -628,7 +628,6 @@ def _miss_forest_impute_function(
             if not rows.any():
                 continue
             predictors = np.delete(filled, j, axis=1)
-            # one forest at a time: it is discarded after predicting, so memory does not grow with variables and rounds
             forest = ExtraTreesRegressor(n_estimators=n_estimators, n_jobs=settings.n_jobs, random_state=random_state)
             filled[rows, j] = forest.fit(predictors[~rows], filled[~rows, j]).predict(predictors[rows])
         if np.abs(filled - previous).sum(axis=1).max() < scale:
