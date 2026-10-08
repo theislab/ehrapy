@@ -143,6 +143,7 @@ For any method in module `tl`, there is a method with the same name in `pl`.
     :nosignatures:
 
     plot.prediction_performance
+    plot.subgroup_performance
 ```
 
 ## Patterns across patients, variables and time

@@ -18,7 +18,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   {func}`ep.ml.evaluate <ehrapy.ml.evaluate>` reports the metrics of every kind of task with confidence intervals from resampled patients, overall, per subgroup and as differences between subgroups such as demographic parity and equalized odds.
   {func}`ep.ml.calibrate <ehrapy.ml.calibrate>` calibrates predicted probabilities with Platt scaling, isotonic regression or temperature scaling, and {func}`ep.ml.conformalize <ehrapy.ml.conformalize>` adds conformal prediction sets and intervals, both on the tuning set.
   {func}`ep.ml.permutation_importance <ehrapy.ml.permutation_importance>` stores how much every variable matters to a model in `var` and `varm`.
-  {func}`ep.pl.prediction_performance <ehrapy.plot.prediction_performance>` plots the ROC, precision-recall and calibration curves.
+  {func}`ep.pl.prediction_performance <ehrapy.plot.prediction_performance>` plots the ROC, precision-recall and calibration curves, per class or label for multiclass and multilabel tasks, and {func}`ep.pl.subgroup_performance <ehrapy.plot.subgroup_performance>` the metrics of every subgroup.
   On PhysioNet 2012, gradient boosting on summaries of the first 48 hours predicts in-hospital mortality with a held-out AUROC of 0.86 and AUPRC of 0.51.
 * {func}`ep.pp.gradient_boosting_impute <ehrapy.preprocessing.gradient_boosting_impute>` imputes every variable with a gradient boosting model, which for longitudinal data also uses the closest observed values before and after each timepoint @Zethson
 
