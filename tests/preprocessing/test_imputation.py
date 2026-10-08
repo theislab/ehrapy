@@ -9,6 +9,9 @@ import pytest
 from ehrdata import EHRData
 from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY, NUMERIC_TAG
 from fast_array_utils.conv import to_dense
+from fast_array_utils.types import CSBase, DaskArray
+from sklearn import config_context
+from sklearn.ensemble import ExtraTreesRegressor
 from sklearn.exceptions import ConvergenceWarning
 from testing.fast_array_utils import Flags
 
@@ -37,10 +40,31 @@ def _array_types_data(rng: np.random.Generator, ndim: int) -> np.ndarray:
     return X
 
 
+def _continuous_data(rng: np.random.Generator, ndim: int) -> np.ndarray:
+    """Distinct values with zeros, missing values, an all-missing variable and a complete variable, so that nearest neighbors are unique."""
+    shape = (30, 6) if ndim == 2 else (20, 6, 3)
+    X = np.where(rng.random(shape) < 0.3, 0.0, rng.gamma(2, size=shape))
+    X[rng.random(shape) < 0.15] = np.nan
+    X[:, ALL_NAN_VAR] = np.nan
+    X[:, -1] = rng.gamma(2, size=X[:, -1].shape)
+    return X
+
+
 def _numeric_edata(X) -> EHRData:
     edata = EHRData(X=X)
     edata.var[FEATURE_TYPE_KEY] = NUMERIC_TAG
     return edata
+
+
+def _assert_same_array_type(result, X) -> None:
+    assert type(result) is type(X)
+    if isinstance(X, DaskArray):
+        assert type(result._meta) is type(X._meta)
+
+
+def _stored_positions(X: CSBase | DaskArray) -> set[tuple[int, int]]:
+    coo = (X.compute() if isinstance(X, DaskArray) else X).tocoo()
+    return set(zip(coo.row.tolist(), coo.col.tolist(), strict=True))
 
 
 def _base_check_imputation(
@@ -392,32 +416,93 @@ def test_knn_impute_numerical_data(impute_num_edata):
 
 @pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
 @pytest.mark.parametrize("ndim", [2, 3])
-@pytest.mark.parametrize(
-    "impute",
-    [
-        pytest.param(partial(knn_impute, backend="scikit-learn"), id="knn-scikit-learn"),
-        pytest.param(partial(knn_impute, backend="faiss"), id="knn-faiss"),
-        pytest.param(partial(miss_forest_impute, n_estimators=10), id="miss_forest"),
-    ],
-)
-def test_numpy_only_impute_array_types(array_type, ndim, impute, rng):
+@pytest.mark.parametrize("var_names", [None, ["0", "2"]], ids=["all", "subset"])
+def test_knn_impute_array_types(array_type, ndim, var_names, rng):
     if ndim == 3 and array_type.flags & Flags.Sparse:
         pytest.skip("sparse arrays are 2D")
-    X = _array_types_data(rng, ndim)
+    X = _continuous_data(rng, ndim)
+    expected = knn_impute(_numeric_edata(X), var_names=var_names, backend="scikit-learn", copy=True).X
+    X = array_type(X)
+
+    # a small working memory imputes sparse arrays in several batches
+    with forbid_dask_compute(), config_context(working_memory=0.01):
+        result = knn_impute(_numeric_edata(X), var_names=var_names, backend="scikit-learn", copy=True).X
+
+    _assert_same_array_type(result, X)
+    np.testing.assert_allclose(to_dense(result, to_cpu_memory=True), expected, equal_nan=True)
+    if array_type.flags & Flags.Sparse:
+        assert _stored_positions(result) == _stored_positions(X)
+
+
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+def test_knn_impute_without_shared_variables(array_type):
+    X = np.array([[1.0, np.nan, np.nan], [np.nan, 2.0, 0.0], [np.nan, 4.0, 0.0], [2.0, np.nan, np.nan]])
+    expected = knn_impute(_numeric_edata(X), backend="scikit-learn", copy=True).X
+    X = array_type(X)
+
+    with forbid_dask_compute():
+        result = knn_impute(_numeric_edata(X), backend="scikit-learn", copy=True).X
+
+    np.testing.assert_allclose(to_dense(result, to_cpu_memory=True), expected)
+    np.testing.assert_allclose(expected[0], [1.0, 3.0, 0.0])
+    if array_type.flags & Flags.Sparse:
+        assert _stored_positions(result) == _stored_positions(X)
+
+
+@pytest.mark.array_type(Flags.Dask, skip=Flags.Disk | Flags.Gpu)
+def test_knn_impute_uneven_chunks(array_type, rng):
+    X = _continuous_data(rng, 2)
+    expected = knn_impute(_numeric_edata(X), backend="scikit-learn", copy=True).X
+
+    with forbid_dask_compute():
+        result = knn_impute(
+            _numeric_edata(array_type(X).rechunk(((2, 3, 11, 14), (1, 5)))), backend="scikit-learn", copy=True
+        ).X
+
+    np.testing.assert_allclose(to_dense(result, to_cpu_memory=True), expected, equal_nan=True)
+
+
+@pytest.mark.array_type(Flags.Sparse | Flags.Dask, skip=Flags.Disk | Flags.Gpu)
+@pytest.mark.parametrize(
+    "kwargs",
+    [{"backend": "faiss"}, {"backend": "scikit-learn", "backend_kwargs": {"weights": "distance"}}],
+    ids=["faiss", "backend_kwargs"],
+)
+def test_knn_impute_numpy_only_options(array_type, kwargs, rng):
+    edata = _numeric_edata(array_type(_continuous_data(rng, 2)))
+
+    with pytest.raises(NotImplementedError, match="only with backend='scikit-learn' and without backend_kwargs"):
+        knn_impute(edata, **kwargs)
+
+
+class _DenseExtraTreesRegressor(ExtraTreesRegressor):
+    """Extra trees fit on dense values, since scikit-learn draws different trees from sparse values."""
+
+    def fit(self, X, y, **kwargs):
+        return super().fit(to_dense(X), y, **kwargs)
+
+    def predict(self, X):
+        return super().predict(to_dense(X))
+
+
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+def test_miss_forest_impute_array_types(array_type, rng, monkeypatch):
+    X = _continuous_data(rng, 2)
     edata = _numeric_edata(array_type(X))
 
-    if array_type.flags & (Flags.Sparse | Flags.Dask):
-        with pytest.raises(NotImplementedError, match="only supports numpy arrays"):
-            impute(edata)
+    if array_type.flags & Flags.Dask:
+        with pytest.raises(NotImplementedError, match="does not support dask arrays"):
+            miss_forest_impute(edata, n_estimators=10)
         return
 
-    result = impute(edata, copy=True).X
+    monkeypatch.setattr("sklearn.ensemble.ExtraTreesRegressor", _DenseExtraTreesRegressor)
+    expected = miss_forest_impute(_numeric_edata(X), n_estimators=10, copy=True).X
+    result = miss_forest_impute(edata, n_estimators=10, copy=True).X
 
-    assert isinstance(result, np.ndarray)
-    observed = ~np.isnan(X)
-    np.testing.assert_array_equal(result[observed], X[observed])
-    assert np.isnan(result[:, ALL_NAN_VAR]).all()
-    assert not np.isnan(np.delete(result, ALL_NAN_VAR, axis=1)).any()
+    _assert_same_array_type(result, edata.X)
+    np.testing.assert_allclose(to_dense(result, to_cpu_memory=True), expected, equal_nan=True)
+    if array_type.flags & Flags.Sparse:
+        assert _stored_positions(result) == _stored_positions(edata.X)
 
 
 @pytest.mark.parametrize("edata_mini_3D_missing_values", [True], indirect=True)
@@ -460,7 +545,7 @@ def test_missforest_impute_numerical_data(impute_num_edata, array_type):
     warnings.filterwarnings("ignore", category=ConvergenceWarning)
     impute_num_edata.X = array_type(impute_num_edata.X)
 
-    if array_type.flags & (Flags.Sparse | Flags.Dask):
+    if array_type.flags & Flags.Dask:
         with pytest.raises(NotImplementedError):
             miss_forest_impute(impute_num_edata, copy=True)
         return

@@ -9,21 +9,26 @@ from typing import TYPE_CHECKING, Any, Literal
 import array_api_extra as xpx
 import numpy as np
 import pandas as pd
+import scipy.sparse as sp
 from array_api_compat import array_namespace, is_lazy_array
 from ehrdata._feature_types import _check_feature_types
 from ehrdata._logger import logger
 from ehrdata.core.constants import FEATURE_TYPE_KEY, NUMERIC_TAG
+from fast_array_utils import stats
+from fast_array_utils.conv import to_dense
 from fast_array_utils.types import CSBase, DaskArray
 from sklearn.experimental import enable_iterative_imputer
+from sklearn.utils import safe_sqr
 
 from ehrapy._compat import (
     _apply_over_time_axis,
     _broadcast_var_stat,
     _obs_axes,
+    _raise_if_dask,
     _raise_if_dask_with_sparse_chunks,
-    _raise_if_not_numpy,
     _set_columns,
     _sparse_columns,
+    _sparse_rows,
     nanquantile,
     sparse_nan_moments,
     sparse_nanquantile,
@@ -35,6 +40,7 @@ from ehrapy.preprocessing._quality_control import _compute_missing_values
 
 if TYPE_CHECKING:
     from ehrdata import EHRData
+    from sklearn.impute import KNNImputer
 
     type Array = np.ndarray | DaskArray
     type Strategy = Literal["mean", "median", "most_frequent"]
@@ -53,7 +59,7 @@ def _fill_missing(X: Array, values: Array, *, empty_strings: bool = False) -> Ar
 def _(X: CSBase, values: np.ndarray, *, empty_strings: bool = False) -> CSBase:
     X = X.copy()
     missing = np.isnan(X.data)
-    X.data[missing] = np.broadcast_to(values, X.shape[1])[_sparse_columns(X)[missing]]
+    X.data[missing] = np.broadcast_to(values, X.shape)[_sparse_rows(X)[missing], _sparse_columns(X)[missing]]
     return X
 
 
@@ -364,11 +370,11 @@ def knn_impute(
         raise ValueError(
             "3D imputation requires a layer to be specified. Pass the layer containing the full temporal data."
         )
-    _raise_if_not_numpy(
-        edata.X if layer is None else edata.layers[layer],
-        "knn_impute",
-        "the neighbor search needs all observations in memory",
-    )
+    X = edata.X if layer is None else edata.layers[layer]
+    if not isinstance(X, np.ndarray) and (backend == "faiss" or backend_kwargs):
+        raise NotImplementedError(
+            f"knn_impute supports {type(X).__name__} only with backend='scikit-learn' and without backend_kwargs."
+        )
 
     if copy:
         edata = edata.copy()
@@ -394,6 +400,7 @@ def knn_impute(
     return edata if copy else None
 
 
+@singledispatch
 @_apply_over_time_axis
 def _knn_impute_function(arr: np.ndarray, var_indices: list[int], numerical_indices: list[int], imputer) -> np.ndarray:
     input_dtype = arr.dtype if np.issubdtype(arr.dtype, np.floating) else np.float64
@@ -413,6 +420,156 @@ def _knn_impute_function(arr: np.ndarray, var_indices: list[int], numerical_indi
         imputer_x = arr[:, imputer_data_indices].astype(input_dtype, copy=True)
         result[:, imputer_data_indices] = imputer.fit_transform(imputer_x)
     return result
+
+
+@_knn_impute_function.register(CSBase)
+def _(arr: CSBase, var_indices: list[int], numerical_indices: list[int], imputer: KNNImputer) -> CSBase:
+    from sklearn import get_config
+    from sklearn.utils import gen_batches
+
+    features, sums, n_observed = _knn_statistics(
+        arr, _fill_missing(arr, np.zeros(arr.shape[1])), var_indices, numerical_indices
+    )
+    X, reference = arr.tocsr(), arr.tocsc()
+    row_bytes = 8 * (X.shape[0] + X.shape[1] + 2 * imputer.n_neighbors * len(var_indices))
+    batch_size = max(1, int(get_config()["working_memory"] * 2**20 // row_bytes))
+    batches = [
+        _impute_rows(
+            X[rows],
+            _knn_candidates(X[rows], reference, features, var_indices, imputer.n_neighbors),
+            sums,
+            n_observed,
+            var_indices,
+        )
+        for rows in gen_batches(X.shape[0], batch_size)
+    ]
+    return sp.vstack(batches, format=arr.format)
+
+
+@_knn_impute_function.register(DaskArray)
+@_apply_over_time_axis
+def _(arr: DaskArray, var_indices: list[int], numerical_indices: list[int], imputer: KNNImputer) -> DaskArray:
+    import dask.array as da
+
+    # every block must hold all variables of its rows for the distances
+    X = arr.rechunk({1: -1})
+    features, sums, n_observed = _knn_statistics(
+        X, X.map_blocks(_fill_missing, np.zeros(X.shape[1]), meta=X._meta), var_indices, numerical_indices
+    )
+    n_neighbors = imputer.n_neighbors
+    candidates = da.blockwise(
+        _knn_candidates,
+        "itcj",
+        X,
+        "iv",
+        X,
+        "jv",
+        features,
+        "v",
+        targets=var_indices,
+        n_neighbors=n_neighbors,
+        new_axes={"t": len(var_indices), "c": 2},
+        adjust_chunks={"j": n_neighbors},
+        concatenate=True,
+        meta=np.empty((0, 0, 0, 0)),
+    )
+    select = lambda candidates, axis, keepdims: _nearest(candidates, n_neighbors)
+    nearest = da.reduction(candidates, select, select, axis=3, keepdims=True, dtype=np.float64, output_size=n_neighbors)
+    return da.blockwise(
+        _impute_rows,
+        "iv",
+        X,
+        "iv",
+        nearest,
+        "itck",
+        sums,
+        "v",
+        n_observed,
+        "v",
+        targets=var_indices,
+        concatenate=True,
+        meta=X._meta,
+    )
+
+
+def _knn_statistics(
+    X: CSBase | DaskArray, filled: CSBase | DaskArray, var_indices: list[int], numerical_indices: list[int]
+) -> tuple[Array, Array, Array]:
+    """Variables to measure distances on, the imputed and the complete numerical ones, and the sum and number of observed values of every variable."""
+    n_observed = X.shape[0] - stats.sum(_missing_mask(X), axis=0)
+    columns = np.arange(X.shape[1])
+    complete = np.isin(columns, numerical_indices) & (n_observed == X.shape[0])
+    return np.isin(columns, var_indices) | complete, stats.sum(filled, axis=0), n_observed
+
+
+def _mean_squared_differences(Q: np.ndarray | CSBase, R: np.ndarray | CSBase) -> np.ndarray:
+    """Mean squared difference of all pairs of rows over their commonly observed variables, infinite if there is none.
+
+    This is the squared nan-Euclidean distance divided by the number of variables.
+    """
+    from sklearn.metrics.pairwise import euclidean_distances
+    from sklearn.utils.extmath import safe_sparse_dot
+
+    q, r = (_fill_missing(x, np.zeros(x.shape[1])) for x in (Q, R))
+    q_missing, r_missing = (_missing_mask(x).astype(np.float64) for x in (Q, R))
+    squared = (
+        euclidean_distances(q, r, squared=True)
+        - safe_sparse_dot(safe_sqr(q), r_missing.T, dense_output=True)
+        - safe_sparse_dot(q_missing, safe_sqr(r).T, dense_output=True)
+    )
+    n_common = (
+        Q.shape[1]
+        - stats.sum(q_missing, axis=1)[:, None]
+        - stats.sum(r_missing, axis=1)
+        + safe_sparse_dot(q_missing, r_missing.T, dense_output=True)
+    )
+    with np.errstate(divide="ignore", invalid="ignore"):
+        return np.where(n_common > 0, np.maximum(squared, 0) / n_common, np.inf)
+
+
+def _nearest(candidates: np.ndarray, n_neighbors: int) -> np.ndarray:
+    """The `n_neighbors` pairs of distance and value with the smallest distances along the last axis."""
+    distances = candidates[..., 0, :]
+    if distances.shape[-1] <= n_neighbors:
+        return candidates
+    kth = np.partition(distances, n_neighbors - 1, axis=-1)[..., n_neighbors - 1, None]
+    # ties with the k-th distance go to the earliest candidates, so the result does not depend on the chunking
+    rank = (distances >= kth).astype(np.int8) + (distances > kth)
+    nearest = np.argsort(rank, axis=-1, kind="stable")[..., None, :n_neighbors]
+    return np.take_along_axis(candidates, nearest, axis=-1)
+
+
+def _knn_candidates(
+    Q: np.ndarray | CSBase, R: np.ndarray | CSBase, features: np.ndarray, targets: list[int], n_neighbors: int
+) -> np.ndarray:
+    """Distances and values of the nearest rows of `R` that observe a target variable, for the rows of `Q` missing it.
+
+    Returns an array of shape `(n_rows, n_targets, 2, n_neighbors)`, with infinite distances where donors are lacking.
+    """
+    distances = _mean_squared_differences(Q[:, features], R[:, features])
+    candidates = np.full((Q.shape[0], len(targets), 2, n_neighbors), np.inf)
+    for t, j in enumerate(targets):
+        receivers = np.flatnonzero(np.isnan(to_dense(Q[:, [j]])))
+        values = to_dense(R[:, [j]]).ravel()
+        donors = np.flatnonzero(~np.isnan(values))
+        if receivers.size and donors.size:
+            pairs = np.broadcast_arrays(distances[np.ix_(receivers, donors)], values[donors])
+            nearest = _nearest(np.stack(pairs, axis=-2), n_neighbors)
+            candidates[receivers, t, :, : nearest.shape[-1]] = nearest
+    return candidates
+
+
+def _impute_rows(
+    X: np.ndarray | CSBase, nearest: np.ndarray, sums: np.ndarray, n_observed: np.ndarray, targets: list[int]
+) -> np.ndarray | CSBase:
+    """Fill missing target values with the mean of their nearest donors, or of all observed values if no donor shares a variable."""
+    found = np.isfinite(nearest[..., 0, :])
+    with np.errstate(divide="ignore", invalid="ignore"):
+        donor_means = np.where(found, nearest[..., 1, :], 0).sum(axis=-1) / found.sum(axis=-1)
+        means = sums[targets] / n_observed[targets]
+    values = np.full(X.shape, np.nan)
+    values[:, targets] = np.where(found.any(axis=-1), donor_means, means)
+    return _fill_missing(X, values)
 
 
 def _knn_impute(
@@ -446,13 +603,15 @@ def _knn_impute(
     mtx = edata.X if layer is None else edata.layers[layer]
 
     X_imputed = _knn_impute_function(mtx, var_indices, numerical_indices, imputer)
+    mtx = _set_columns(mtx, var_indices, X_imputed[:, var_indices])
 
     if layer is None:
-        edata.X[:, var_indices] = X_imputed[:, var_indices]
+        edata.X = mtx
     else:
-        edata.layers[layer][:, var_indices] = X_imputed[:, var_indices]
+        edata.layers[layer] = mtx
 
 
+@singledispatch
 @_apply_over_time_axis
 def _miss_forest_impute_function(
     arr: np.ndarray, num_initial_strategy, n_estimators, max_iter, random_state
@@ -465,12 +624,50 @@ def _miss_forest_impute_function(
     result = arr.copy()
     if observed.any():
         result[:, observed] = IterativeImputer(
-            estimator=ExtraTreesRegressor(n_estimators=n_estimators, n_jobs=settings.n_jobs),
+            estimator=ExtraTreesRegressor(n_estimators=n_estimators, n_jobs=settings.n_jobs, random_state=random_state),
             initial_strategy=num_initial_strategy,
             max_iter=max_iter,
             random_state=random_state,
         ).fit_transform(arr[:, observed])
     return result
+
+
+@_miss_forest_impute_function.register(CSBase)
+def _(
+    arr: CSBase,
+    num_initial_strategy: Literal["mean", "median", "most_frequent", "constant"],
+    n_estimators: int,
+    max_iter: int,
+    random_state: int,
+) -> CSBase:
+    from sklearn.ensemble import ExtraTreesRegressor
+
+    X = arr.tocsc()
+    missing = np.isnan(X.data)
+    columns = _sparse_columns(X)
+    n_missing = np.bincount(columns[missing], minlength=X.shape[1])
+    # as in IterativeImputer, variables without observed values stay missing and the others are imputed by ascending missingness
+    observed = np.flatnonzero(n_missing < X.shape[0])
+    initial = np.zeros(X.shape[1]) if num_initial_strategy == "constant" else _impute_value(X, num_initial_strategy)
+    X = _fill_missing(X, np.where(n_missing < X.shape[0], initial, np.nan))
+    imputed = missing & np.isin(columns, observed)
+    tolerance = 1e-3 * np.abs(X.data[~missing]).max(initial=0)
+    for _ in range(max_iter if len(observed) > 1 else 0):
+        previous = X.data[imputed]
+        for j in observed[np.argsort(n_missing[observed], kind="mergesort")]:
+            positions = X.indptr[j] + np.flatnonzero(missing[X.indptr[j] : X.indptr[j + 1]])
+            if not positions.size:
+                continue
+            predictors = X[:, np.setdiff1d(observed, j)].tocsr()
+            train = np.ones(X.shape[0], dtype=bool)
+            train[X.indices[positions]] = False
+            forest = ExtraTreesRegressor(n_estimators=n_estimators, n_jobs=settings.n_jobs, random_state=random_state)
+            forest.fit(predictors[train], to_dense(X[:, [j]])[train, 0])
+            X.data[positions] = forest.predict(predictors[X.indices[positions]])
+        change = np.bincount(_sparse_rows(X)[imputed], weights=np.abs(X.data[imputed] - previous))
+        if change.max(initial=0) < tolerance:
+            break
+    return X.asformat(arr.format)
 
 
 @spinner("Performing miss-forest impute")
@@ -507,7 +704,7 @@ def miss_forest_impute(
         max_iter: The maximum number of iterations if the stop criterion has not been met yet.
         n_estimators: The number of trees to fit for every missing variable. Has a big effect on the run time.
                       Decrease for faster computations.
-        random_state: The random seed for the initialization.
+        random_state: The random seed for the initialization and the forests.
         warning_threshold: Threshold of percentage of missing values to display a warning for.
         layer: The layer to impute.
         copy: Whether to return a copy or act in place.
@@ -538,10 +735,10 @@ def miss_forest_impute(
         raise ValueError(
             "3D imputation requires a layer to be specified. Pass the layer containing the full temporal data."
         )
-    _raise_if_not_numpy(
+    _raise_if_dask(
         edata.X if layer is None else edata.layers[layer],
         "miss_forest_impute",
-        "the forests need all observations in memory",
+        "the forests are refit on all observations in every iteration",
     )
 
     if copy:
@@ -563,12 +760,18 @@ def miss_forest_impute(
     # ensure floating point dtype before imputation, e.g. in case input layer dtype=object
     input_dtype = mtx.dtype if np.issubdtype(mtx.dtype, np.floating) else np.float64
     # this step is the most expensive one and might extremely slow down the impute process
-    mtx[:, var_indices] = _miss_forest_impute_function(
+    imputed = _miss_forest_impute_function(
         mtx[:, var_indices].astype(input_dtype, copy=True), num_initial_strategy, n_estimators, max_iter, random_state
     )
+    mtx = _set_columns(mtx, var_indices, imputed)
 
     if find_spec("sklearnex") is not None:  # pragma: no cover
         unpatch_sklearn()
+
+    if layer is None:
+        edata.X = mtx
+    else:
+        edata.layers[layer] = mtx
 
     return edata if copy else None
 

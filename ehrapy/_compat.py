@@ -282,3 +282,8 @@ def _raise_densifying(name: str, reason: str) -> None:
 def _raise_if_not_numpy(X: Array | CSBase, name: str, reason: str) -> None:
     if not isinstance(X, np.ndarray):
         raise NotImplementedError(f"{name} only supports numpy arrays because {reason}, got {type(X).__name__}.")
+
+
+def _raise_if_dask(X: Array | CSBase, name: str, reason: str) -> None:
+    if isinstance(X, DaskArray):
+        raise NotImplementedError(f"{name} does not support dask arrays because {reason}.")
