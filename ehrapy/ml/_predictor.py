@@ -222,8 +222,7 @@ def predict(
     if copy:
         edata = edata.copy()
     outputs, embedding, attention = _outputs_of(edata, predictor)
-    if predictor.calibrator is not None:
-        outputs = predictor.calibrator(outputs)
+    outputs = _calibrated(predictor, outputs)
     kind = predictor.task.kind
     if kind in {"multiclass", "multilabel"}:
         columns = [str(c) for c in predictor.classes]
@@ -250,29 +249,52 @@ def predict(
     return edata if copy else None
 
 
-def _outputs_of(edata: EHRData, predictor: Predictor) -> list[np.ndarray]:
-    """Predictions, with a column for every class of multiclass and every label of multilabel tasks, embeddings and attention of every observation."""
-    task = predictor.task
+def _features_of(edata: EHRData, predictor: Predictor) -> Any:
+    """Features of every observation as the model of `predictor` receives them before preprocessing."""
     if predictor.preprocessing is None:
-        features, _ = _sequences(
-            edata, task, predictor.var_names, predictor.obs_keys, predictor.layer, feature_names=predictor.feature_names
-        )
-    else:
-        features, _ = _features(
+        return _sequences(
             edata,
-            task,
+            predictor.task,
             predictor.var_names,
             predictor.obs_keys,
             predictor.layer,
-            predictor.statistics,
             feature_names=predictor.feature_names,
-        )
-    n_outputs = len(predictor.classes) if task.kind in {"multiclass", "multilabel"} else 1
+        )[0]
+    return _features(
+        edata,
+        predictor.task,
+        predictor.var_names,
+        predictor.obs_keys,
+        predictor.layer,
+        predictor.statistics,
+        feature_names=predictor.feature_names,
+    )[0]
+
+
+def _outputs_of(edata: EHRData, predictor: Predictor, features: Any = None) -> list[np.ndarray]:
+    """Predictions, with a column for every class of multiclass and every label of multilabel tasks, embeddings and attention of every observation."""
+    features = _features_of(edata, predictor) if features is None else features
+    kind = predictor.task.kind
+    n_outputs = len(predictor.classes) if kind in {"multiclass", "multilabel"} else 1
     widths = [n_outputs, 0, 0]
     if isinstance(predictor.model, _FittedModel):
         widths[1:] = predictor.model.n_embedding, predictor.model.n_attention
-    outputs = _outputs(features, predictor.preprocessing, predictor.model, task.kind, n_outputs, sum(widths))
+    outputs = _outputs(features, predictor.preprocessing, predictor.model, kind, n_outputs, sum(widths))
     return np.split(_materialize(outputs)[0], np.cumsum(widths)[:-1], axis=1)
+
+
+def _calibrated(predictor: Predictor, outputs: np.ndarray) -> np.ndarray:
+    return outputs if predictor.calibrator is None else predictor.calibrator(outputs)
+
+
+def _held_out(edata: EHRData, predictor: Predictor, *, split_key: str, split: str) -> tuple[np.ndarray, np.ndarray]:
+    """Rows of the observations in `split` with all targets, and their targets."""
+    targets, _ = _targets(edata.obs, predictor.task)
+    labeled = ~np.isnan(targets.reshape(len(targets), -1)).any(axis=1)
+    rows = np.flatnonzero((edata.obs[split_key] == split).to_numpy() & labeled)
+    if not len(rows):
+        raise ValueError(f"No observations with targets in the {split!r} set of `edata.obs[{split_key!r}]`.")
+    return rows, targets[rows]
 
 
 def _class_probabilities(outputs: np.ndarray) -> np.ndarray:

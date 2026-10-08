@@ -72,3 +72,15 @@ Except for the multilayer perceptron, they read the time series of the variables
     ml.calibrate
     ml.conformalize
 ```
+
+## Interpretation
+
+Plot the importances with {func}`~ehrapy.plot.rank_features_supervised`.
+
+```{eval-rst}
+.. autosummary::
+    :toctree: ml
+    :nosignatures:
+
+    ml.permutation_importance
+```

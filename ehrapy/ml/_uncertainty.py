@@ -11,8 +11,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import log_loss
 
 from ehrapy.ml._evaluate import _log_odds
-from ehrapy.ml._predictor import _class_probabilities, _outputs_of
-from ehrapy.ml._task import _targets
+from ehrapy.ml._predictor import _calibrated, _class_probabilities, _held_out, _outputs_of
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -56,7 +55,8 @@ def calibrate(
     kind = predictor.task.kind
     if kind not in {"binary", "multiclass"} or (kind == "multiclass" and method != "temperature"):
         raise ValueError(f"{method!r} calibration does not apply to {kind} tasks.")
-    y, outputs = _held_out(edata, replace(predictor, calibrator=None), split_key=split_key, split=split)
+    rows, y = _held_out(edata, predictor, split_key=split_key, split=split)
+    outputs = _outputs_of(edata[rows], predictor)[0]
     calibrator: Callable[[np.ndarray], np.ndarray]
     match method:
         case "platt":
@@ -111,23 +111,14 @@ def conformalize(
     kind = predictor.task.kind
     if kind not in {"binary", "multiclass", "regression"}:
         raise ValueError(f"Conformal prediction does not apply to {kind} tasks.")
-    y, outputs = _held_out(edata, predictor, split_key=split_key, split=split)
+    rows, y = _held_out(edata, predictor, split_key=split_key, split=split)
+    outputs = _calibrated(predictor, _outputs_of(edata[rows], predictor)[0])
     if kind == "regression":
         scores = np.abs(y - outputs[:, 0])
     else:
         scores = 1 - np.take_along_axis(_class_probabilities(outputs), y.astype(int)[:, None], axis=1)[:, 0]
     level = min(1.0, np.ceil((len(scores) + 1) * (1 - alpha)) / len(scores))
     return replace(predictor, conformal=float(np.quantile(scores, level, method="higher")))
-
-
-def _held_out(edata: EHRData, predictor: Predictor, *, split_key: str, split: str) -> tuple[np.ndarray, np.ndarray]:
-    """Targets and calibrated predictions of the observations in `split` with all targets."""
-    y, _ = _targets(edata.obs, predictor.task)
-    rows = (edata.obs[split_key] == split).to_numpy() & ~np.isnan(y.reshape(len(y), -1)).any(axis=1)
-    if not rows.any():
-        raise ValueError(f"No observations with targets in the {split!r} set of `edata.obs[{split_key!r}]`.")
-    outputs = _outputs_of(edata[rows], predictor)[0]
-    return y[rows], outputs if predictor.calibrator is None else predictor.calibrator(outputs)
 
 
 @dataclass(frozen=True)
