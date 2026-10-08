@@ -39,8 +39,6 @@ def winsorize(
 
     Replaces the `limits` fractions of the smallest and largest values of every feature by the smallest and largest remaining value, ignoring missing values, like :func:`scipy.stats.mstats.winsorize`.
     For 3D data, the limits of a variable are computed across observations and timepoints.
-    Dask arrays stay lazy.
-    Sparse arrays stay sparse; they are not supported if a variable with implicit zeros would have them replaced.
 
     Args:
         edata: Central data object.
@@ -80,8 +78,6 @@ def clip_quantile(
 
     Given an interval, values outside the interval are clipped to the interval edges.
     Applies elementwise, so 3D data is clipped at every timepoint.
-    Dask arrays stay lazy.
-    Sparse arrays stay sparse; they are not supported if the interval excludes zero and a variable has implicit zeros.
 
     Args:
         edata: Central data object.

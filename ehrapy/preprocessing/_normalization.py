@@ -151,8 +151,6 @@ def scale_norm(
 
     Standardizes every variable by subtracting its mean and dividing by its standard deviation, ignoring missing values, like :class:`~sklearn.preprocessing.StandardScaler`.
     For 3D data, the statistics of a variable are computed across observations and timepoints.
-    Dask arrays stay lazy.
-    Sparse arrays are supported with `with_mean=False`.
 
     Args:
         edata: Central data object. Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
@@ -222,8 +220,6 @@ def minmax_norm(
 
     Rescales every variable to `feature_range`, ignoring missing values, like :class:`~sklearn.preprocessing.MinMaxScaler`.
     For 3D data, the statistics of a variable are computed across observations and timepoints.
-    Dask arrays stay lazy.
-    Sparse arrays are not supported because shifting by the minimum would densify them; use :func:`~ehrapy.preprocessing.maxabs_norm` instead.
 
     Args:
         edata: Central data object.
@@ -290,7 +286,6 @@ def maxabs_norm(
 
     Divides every variable by its maximum absolute value, ignoring missing values, like :class:`~sklearn.preprocessing.MaxAbsScaler`.
     For 3D data, the statistics of a variable are computed across observations and timepoints.
-    Dask arrays stay lazy and sparse arrays stay sparse.
 
     Args:
         edata: Central data object.
@@ -395,8 +390,6 @@ def robust_scale_norm(
 
     Subtracts the median of every variable and divides by its interquantile range, ignoring missing values, like :class:`~sklearn.preprocessing.RobustScaler`.
     For 3D data, the statistics of a variable are computed across observations and timepoints.
-    Dask arrays stay lazy.
-    Sparse arrays are supported with `with_centering=False`.
 
     Args:
         edata: Central data object.
@@ -469,8 +462,6 @@ def quantile_norm(
 
     Maps every variable to a uniform or normal distribution with :class:`~sklearn.preprocessing.QuantileTransformer`, ignoring missing values.
     For 3D data, a variable's quantiles are computed across observations and timepoints.
-    Dask arrays stay lazy; every chunk holds all observations of its variables.
-    Sparse arrays are not supported because the transform maps zeros to nonzero values.
 
     Args:
         edata: Central data object. Must already be encoded using :func:`~ehrapy.preprocessing.encode`.
@@ -535,8 +526,6 @@ def power_norm(
 
     Makes every variable more Gaussian-like with :class:`~sklearn.preprocessing.PowerTransformer`, ignoring missing values.
     For 3D data, a variable's transformation is fitted across observations and timepoints.
-    Dask arrays stay lazy; every chunk holds all observations of its variables.
-    Sparse arrays are not supported because the transform maps zeros to nonzero values.
 
     Args:
         edata: Central data object.
@@ -631,8 +620,6 @@ def log_norm(
     Computes :math:`x = \\log(x + offset)`, where :math:`log` denotes the natural logarithm
     unless a different base is given and the default :math:`offset` is :math:`1`.
     Applies elementwise, so 3D data is transformed at every timepoint.
-    Dask arrays stay lazy; for them the check for negative values is skipped and such values become NaN.
-    Sparse arrays stay sparse and require `offset=1`.
 
     Args:
         edata: Central data object.
@@ -695,8 +682,6 @@ def offset_negative_values(edata: EHRData, *, layer: str | None = None, copy: bo
     This is primarily used to enable the usage of functions such as log_norm that
     do not allow negative values for mathematical or technical reasons.
     The offset is the global minimum, so 3D data is offset across all observations, variables and timepoints.
-    Dask arrays stay lazy.
-    Sparse arrays without negative values are returned unchanged; with negative values they are not supported because the offset would densify them.
 
     Args:
         edata: Central data object.

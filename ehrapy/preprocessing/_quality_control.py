@@ -57,7 +57,6 @@ def qc_metrics(
     If :func:`~ehrdata.infer_feature_types` is run first, then extended metrics that require feature type information are calculated in addition to default metrics.
     Numeric statistics ignore non-numeric values such as unencoded categories.
     For 3D data, variable metrics are computed across observations and timepoints, and observation metrics across variables and timepoints.
-    Supports numpy, sparse and dask arrays; dask arrays are computed once and skip the check for variables with mixed types.
 
     Args:
         edata: Central data object.
@@ -439,7 +438,6 @@ def qc_lab_measurements(
     * ``{var}_score``   – continuous anomaly score.
 
     For 3D data, the reference range and score statistics of a variable are computed across observations and timepoints, an observation is flagged if any of its timepoints is out of range, and its score is the mean score over its timepoints.
-    Supports numpy, sparse and dask arrays; dask arrays are computed once.
 
     Args:
         edata: Central data object.
@@ -589,7 +587,6 @@ def mcar_test(
     Sociological Methods & Research, 50(3), 1243-1258. https://doi.org/10.1177/0049124118799376 for a thorough discussion of missingness mechanisms.
 
     3D data is only supported with a single timepoint, which is treated as 2D data.
-    Only numpy arrays are supported because the tests need all observations in memory.
 
     Args:
         edata: Central data object.

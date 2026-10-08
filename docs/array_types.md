@@ -32,7 +32,7 @@ Functions follow the same rules for every array type:
 | {func}`~ehrapy.preprocessing.robust_scale_norm` | yes | with `with_centering=False` | lazy | statistics across observations and timepoints |
 | {func}`~ehrapy.preprocessing.quantile_norm` | yes | no | lazy | quantiles across observations and timepoints |
 | {func}`~ehrapy.preprocessing.power_norm` | yes | no | lazy | fit across observations and timepoints |
-| {func}`~ehrapy.preprocessing.log_norm` | yes | with `offset=1` | lazy | elementwise |
+| {func}`~ehrapy.preprocessing.log_norm` | yes | with `offset=1` | lazy, negative values become NaN instead of raising | elementwise |
 | {func}`~ehrapy.preprocessing.offset_negative_values` | yes | without negative values | lazy | global minimum |
 | {func}`~ehrapy.preprocessing.explicit_impute` | yes | yes | lazy | elementwise, or one value per timepoint |
 | {func}`~ehrapy.preprocessing.simple_impute` | yes | yes | lazy | statistics across observations and timepoints |

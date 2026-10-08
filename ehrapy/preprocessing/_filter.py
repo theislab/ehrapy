@@ -34,7 +34,6 @@ def filter_features(
 
     When a longitudinal `EHRData` is passed, filtering can be done across time points according to the specific `time_mode`.
     For 3D data, the non-missing values of a feature are counted over observations at every timepoint, and `time_mode` combines the timepoints.
-    Supports numpy, sparse and dask arrays; for dask arrays only the counts are computed, once, and the data stays lazy.
 
     Only provide one of `min_obs` and/or `max_obs`.
 
@@ -125,7 +124,6 @@ def filter_observations(
     An observation is considered non-missing if it contains a valid (non-NaN / non-null) value.
     When a longitudinal `EHRData` is passed, filtering can be done across time points.
     For 3D data, the non-missing values of an observation are counted over variables at every timepoint, and `time_mode` combines the timepoints.
-    Supports numpy, sparse and dask arrays; for dask arrays only the counts are computed, once, and the data stays lazy.
 
     Only provide one of `min_vars` and/or `max_vars`.
 

@@ -77,8 +77,6 @@ def variable_correlations(
     This function computes pairwise correlations between variables in the given EHRData object,
     automatically handling missing values through pairwise deletion.
     For 3D time-series data, values are aggregated across time before computing correlations.
-    Dask arrays are computed once, after the aggregation.
-    Sparse arrays are not supported because pairwise deletion needs dense masks of missing values.
 
     Args:
         edata: Central data object.

@@ -49,7 +49,7 @@ def detect_bias(
     - feature importances for predicting one feature with another
 
     Results of the computations are stored in `.var`, `.varp`, and `.uns` of the edata object.
-    Only 2D numpy arrays are supported because the computations need all observations in memory; aggregate 3D data first with :func:`~ehrapy.preprocessing.summarize_measurements`.
+    Aggregate 3D data first with :func:`~ehrapy.preprocessing.summarize_measurements`.
     Values that exceed the specified thresholds are considered of interest and stored in the results dictionary in `.uns[key_added]`.
     Be aware that the results depend on the encoding of the data. E.g. when using one-hot encoding, each group of a categorical feature will
     be treated as a separate feature, which can lead to an increased number of detected biases. Please take this into consideration when

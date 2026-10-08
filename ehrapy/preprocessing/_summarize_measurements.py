@@ -34,8 +34,7 @@ def summarize_measurements(
     For 3D data, every variable is aggregated over the time axis of each observation, ignoring missing values.
     This is how longitudinal data reaches the functions that only support 2D data.
     The statistics `"first"` and `"last"` are the first and last non-missing value.
-    Numpy and dask arrays are supported for 3D data, and dask arrays stay lazy.
-    For 2D data, rows that share an observation name are aggregated, and only numpy arrays are supported.
+    For 2D data, rows that share an observation name are aggregated.
 
     Args:
         edata: Data object containing measurements.

@@ -74,7 +74,6 @@ def explicit_impute(
     3. Replace all missing values with a different value per timepoint.
 
     The replacement is elementwise, so 3D data is imputed at every timepoint, or with one value per timepoint if a sequence is passed.
-    Dask arrays stay lazy and sparse arrays stay sparse; for sparse arrays only stored NaNs are missing, implicit zeros are values.
 
     Args:
         edata: Central data object.
@@ -260,8 +259,6 @@ def simple_impute(
     numerical data only.
     For 3D data, the statistic of a variable is computed across observations and timepoints.
     Variables without any observed value stay missing.
-    Dask arrays stay lazy.
-    Sparse arrays stay sparse: the statistics count implicit zeros as values and only stored NaNs are imputed.
 
     Args:
         edata: Central data object.
@@ -322,7 +319,6 @@ def knn_impute(
     For 2D data, if layer is `None`, `edata.X` is used directly.
     For 3D data, the layer is flattened along axis 0 before imputation and reshaped back to 3D afterwards, so every timepoint of an observation is imputed as an observation of its own.
     Variables without any observed value stay missing.
-    Only numpy arrays are supported because the neighbor search needs all observations in memory.
 
     Args:
         edata: Central data object.
@@ -499,7 +495,6 @@ def miss_forest_impute(
     For 2D data, if layer is `None`, `edata.X` is used directly.
     For 3D data, the layer is flattened along axis 0 before imputation and reshaped back to 3D afterwards, so every timepoint of an observation is imputed as an observation of its own.
     Variables without any observed value stay missing.
-    Only numpy arrays are supported because the forests need all observations in memory.
 
     See https://academic.oup.com/bioinformatics/article/28/1/112/219101.
 
@@ -628,7 +623,6 @@ def locf_impute(
     For each patient and feature, missing values are replaced with the most recent
     non-missing value. Missing values that occur before any observation for a given
     patient are filled using a fallback method.
-    Supports numpy and dask arrays, which stay lazy; sparse arrays are 2D and therefore not supported.
 
     Args:
         edata: Central data object.

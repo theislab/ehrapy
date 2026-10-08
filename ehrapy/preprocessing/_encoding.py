@@ -50,8 +50,6 @@ def encode(
 
     For 3D longitudinal layers of shape ``(n_obs, n_vars, n_time)`` the encoder is fit on values stacked across the time axis so the category space is consistent over time.
     The encoded result keeps the time axis, and ``obs`` stores the first-timepoint value of each encoded categorical column.
-    Dask arrays stay lazy apart from a single computation that discovers the categories, which reads all values if the feature types still need to be inferred.
-    Sparse arrays only hold numeric values, so autodetection leaves them unchanged, and encoding their variables is not supported because it would densify them.
 
     Args:
         edata: Central data object.

@@ -29,7 +29,6 @@ def missing_data_mask(
     By default marks ``NaN`` values as missing.
     Optionally also marks user-specified sentinel values (e.g. ``-1``, ``0``, ``999``) as missing.
     The mask is elementwise, so 3D data is masked at every timepoint.
-    Dask arrays stay lazy and sparse arrays yield a sparse mask that stores only the missing values.
 
     Args:
         edata: Central data object.
