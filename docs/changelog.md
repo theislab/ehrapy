@@ -6,7 +6,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### 🚀 Features
 
-* {func}`ep.pl.missing_values_matrix <ehrapy.plot.missing_values_matrix>` shows the percentage of observed values of every variable at every timepoint for longitudinal data instead of rejecting it @Zethson
+* {func}`ep.pl.missing_values_matrix <ehrapy.plot.missing_values_matrix>` shows the percentage of observed values of every variable at every timepoint for longitudinal data instead of rejecting it ([#1149](https://github.com/theislab/ehrapy/pull/1149)) @Zethson
 * {func}`ep.pl.trajectories <ehrapy.plot.trajectories>` plots the mean of longitudinal variables over time with a confidence band for every group of observations ([#1146](https://github.com/theislab/ehrapy/pull/1146)) @Zethson
 * {func}`ep.pp.gradient_boosting_impute <ehrapy.preprocessing.gradient_boosting_impute>` imputes every variable with a gradient boosting model, which for longitudinal data also uses the closest observed values before and after each timepoint @Zethson
 
