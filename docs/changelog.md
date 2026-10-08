@@ -53,6 +53,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 * Document the `ep.get` module, {func}`ep.tl.famd <ehrapy.tools.famd>` and {func}`ep.tl.anova_glm <ehrapy.tools.anova_glm>` ([#1126](https://github.com/theislab/ehrapy/pull/1126)) @Zethson
 * Fix the {func}`ep.pl.kaplan_meier <ehrapy.plot.kaplan_meier>` example ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
 * Describe {func}`ep.tl.ncp <ehrapy.tools.ncp>` in plain words and drop the doubled period in the docs footer ([#1131](https://github.com/theislab/ehrapy/pull/1131)) @Zethson
+* Docstring examples keep time series in the 3D `.X` instead of `.layers["tem_data"]` and show the outputs the examples actually produce ([#1098](https://github.com/theislab/ehrapy/pull/1098)) @sueoglu
 
 ### 🧰 Maintenance
 
