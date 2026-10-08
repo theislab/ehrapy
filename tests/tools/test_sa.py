@@ -1,4 +1,6 @@
+import ehrdata as ed
 import numpy as np
+import pandas as pd
 import pytest
 import statsmodels
 from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
@@ -55,8 +57,8 @@ def test_glm(mimic_2, layer):
     Intercept = glm.fit().params.iloc[0]
     age = glm.fit().params.iloc[1]
     assert isinstance(glm, statsmodels.genmod.generalized_linear_model.GLM)
-    assert 5.778006344870297 == pytest.approx(Intercept)
-    assert -0.06523274132877163 == pytest.approx(age)
+    assert -5.778006344870297 == pytest.approx(Intercept)
+    assert 0.06523274132877163 == pytest.approx(age)
 
 
 def test_glm_3D(edata_blob_small):
@@ -254,3 +256,58 @@ def test_cox_ph_adjusted_curves_copy(mimic_2_adjusted_sa):
 
     assert ep.tl.cox_ph_adjusted_curves(edata, method="conditional", **kwargs) is None
     assert "cox_ph_adjusted_curves" in edata.uns
+
+
+@pytest.fixture
+def survival_obs_edata(rng):
+    n = 200
+    X = rng.normal(size=(n, 3))
+    X[:5, 2] = np.nan
+    obs = pd.DataFrame(
+        {
+            "duration": rng.exponential(10, n) + 0.1,
+            "event": rng.integers(0, 2, n).astype(bool),
+            "sex": rng.choice(["female", "male"], n),
+            "entry": rng.uniform(0, 0.05, n),
+            "weight": rng.uniform(0.5, 1.5, n),
+        },
+        index=[str(i) for i in range(n)],
+    )
+    return ed.EHRData(X=X, obs=obs, var=pd.DataFrame(index=["age", "bmi", "unused"]))
+
+
+@pytest.mark.parametrize(
+    "sa_function", [ep.tl.kaplan_meier, ep.tl.nelson_aalen, ep.tl.weibull, ep.tl.weibull_aft, ep.tl.log_logistic_aft]
+)
+def test_survival_models_obs_columns(survival_obs_edata, sa_function):
+    kwargs = {} if sa_function in (ep.tl.kaplan_meier, ep.tl.nelson_aalen, ep.tl.weibull) else {"covariates": ["age"]}
+    model = sa_function(survival_obs_edata, "duration", event_col="event", **kwargs)
+    assert len(model.durations) == survival_obs_edata.n_obs
+
+
+def test_cox_ph_only_drops_rows_missing_model_columns(survival_obs_edata):
+    cph = ep.tl.cox_ph(survival_obs_edata, "duration", event_col="event", formula="age + bmi + C(sex)")
+    assert len(cph.durations) == survival_obs_edata.n_obs
+
+    cph = ep.tl.cox_ph(survival_obs_edata, "duration", event_col="event", covariates=["age", "unused"])
+    assert len(cph.durations) == survival_obs_edata.n_obs - 5
+    assert set(cph.params_.index) == {"age", "unused"}
+
+
+def test_cox_ph_obs_only_on_3D_data(survival_obs_edata):
+    edata = ed.EHRData(
+        X=np.stack([survival_obs_edata.X] * 4, axis=2), obs=survival_obs_edata.obs, var=survival_obs_edata.var
+    )
+    cph = ep.tl.cox_ph(edata, "duration", event_col="event", formula="C(sex)")
+    assert set(cph.params_.index) == {"C(sex)[T.male]"}
+
+
+def test_kaplan_meier_entry_and_weights(survival_obs_edata):
+    kmf = ep.tl.kaplan_meier(survival_obs_edata, "duration", event_col="event", entry_col="entry", weights_col="weight")
+    assert np.allclose(kmf.entry, survival_obs_edata.obs["entry"])
+    assert np.allclose(kmf.weights, survival_obs_edata.obs["weight"])
+
+
+def test_kaplan_meier_without_event_col(survival_obs_edata):
+    kmf = ep.tl.kaplan_meier(survival_obs_edata, "duration")
+    assert kmf.event_observed.all()

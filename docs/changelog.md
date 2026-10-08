@@ -6,6 +6,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### 💥 Breaking changes
 
+* Survival analysis and regression models take their columns from `edata.obs` or variables and only drop observations missing a column the model uses ([#1133](https://github.com/theislab/ehrapy/pull/1133)) @Zethson
+
+  {func}`ep.tl.kaplan_meier <ehrapy.tools.kaplan_meier>`, {func}`ep.tl.cox_ph <ehrapy.tools.cox_ph>` and the other survival fitters, {func}`ep.tl.ols <ehrapy.tools.ols>` and {func}`ep.tl.glm <ehrapy.tools.glm>` accept obs columns wherever they accept variables, and work on longitudinal data when every column they use lives in `obs`.
+  Previously, every observation with a missing value in any variable was silently dropped, even in variables the model did not use.
+  Regression fitters gained `covariates`, the univariate fitters take `entry_col` and `weights_col` instead of the `entry` and `weights` arrays, and numeric columns are passed to the models as numbers, so a binomial {func}`ep.tl.glm <ehrapy.tools.glm>` on a 0/1 outcome models the probability of 1.
 * Remove `ep.pp.mice_forest_impute` and drop the `miceforest` dependency @Zethson
 
   `miceforest` is effectively unmaintained (last commit 2025-10-27) and broken against `lightgbm>=4.7.0`, which it calls through a private, name-mangled internal ([miceforest#104](https://github.com/AnotherSamWilson/miceforest/issues/104)).
