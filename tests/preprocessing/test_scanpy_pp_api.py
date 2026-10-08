@@ -100,11 +100,11 @@ def test_pca_3D_single_timepoint_and_arrays(edata_blob_small):
 def test_pca_3D_array_types(array_type, edata_blob_small):
     X = edata_blob_small.layers[DEFAULT_TEM_LAYER_NAME]
     expected = ed.EHRData(X=X)
-    ep.pp.pca(expected, n_comps=3)
+    ep.pp.pca(expected, n_comps=3, svd_solver="covariance_eigh")
     edata = ed.EHRData(X=array_type(X))
 
     with forbid_dask_compute(allowed=1):
-        ep.pp.pca(edata, n_comps=3)
+        ep.pp.pca(edata, n_comps=3, svd_solver="covariance_eigh")
 
     assert isinstance(edata.obsm["X_pca"], array_type.cls)
     np.testing.assert_allclose(
