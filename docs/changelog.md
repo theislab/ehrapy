@@ -38,6 +38,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 * {func}`ep.get.obs_df <ehrapy.get.obs_df>` and {func}`ep.get.var_df <ehrapy.get.var_df>` raise a clear error for 3D data ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
 * {func}`ep.tl.stratified_table_one <ehrapy.tools.stratified_table_one>` stores its table with `variable` and `level` columns so that results can be written to h5ad ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
 * {func}`ep.tl.rank_features_groups <ehrapy.tools.rank_features_groups>` supports categorical features in sparse arrays ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
+* {func}`ep.pp.neighbors <ehrapy.preprocessing.neighbors>` with a time series metric no longer makes patients without comparable measurements everyone's nearest neighbours but leaves them unconnected ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
 
 ### 📖 Documentation
 

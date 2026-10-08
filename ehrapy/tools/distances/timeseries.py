@@ -29,7 +29,7 @@ def timeseries_distance(
 
     Returns:
         Average temporal distance across valid variable pairs.
-        Returns 0 if no valid variable pairs exist.
+        Returns 0 for a patient compared with itself and `np.inf` if no valid variable pairs exist, so that patients without comparable measurements are never nearest neighbours.
     """
     return _timeseries_distance_impl(arr, obs_indices_x, obs_indices_y, metric)
 
@@ -71,6 +71,9 @@ def _(
 
     obs_i = int(np.asarray(obs_indices_x).flat[0])
     obs_j = int(np.asarray(obs_indices_y).flat[0])
+    if obs_i == obs_j:
+        return 0.0
+
     total_distance = 0
     valid_variable_count = 0
 
@@ -87,4 +90,7 @@ def _(
             total_distance += variable_distance
             valid_variable_count += 1
 
-    return total_distance / max(valid_variable_count, 1)
+    if valid_variable_count == 0:
+        return np.inf
+
+    return total_distance / valid_variable_count
