@@ -99,26 +99,25 @@ def test_summarize_measurements_unknown_var(edata_blob_small):
 def test_summarize_measurements_array_types(array_type, ndim, rng):
     if ndim == 3 and array_type.flags & Flags.Sparse:
         pytest.skip("sparse arrays are 2D")
-    shape = (6, 3) if ndim == 2 else (6, 3, 4)
+    shape = (12, 3) if ndim == 2 else (6, 3, 4)
     X = np.where(rng.random(shape) < 0.5, 0, rng.normal(size=shape))
     X[rng.random(shape) < 0.2] = np.nan
     X[:, 1] = 2.0
     X[:, 2] = np.nan
-    obs = pd.DataFrame(index=["pat1", "pat1", "pat2", "pat2", "pat3", "pat3"] if ndim == 2 else list("abcdef"))
+    obs = pd.DataFrame(index=list("bacbabccabda") if ndim == 2 else list("abcdef"))
 
     def make_edata(X):
         return ed.EHRData(shape=shape[:2], obs=obs, layers={DEFAULT_TEM_LAYER_NAME: X})
 
-    expected = summarize_measurements(make_edata(X), layer=DEFAULT_TEM_LAYER_NAME, statistics=STATISTICS).X
+    expected = summarize_measurements(make_edata(X), layer=DEFAULT_TEM_LAYER_NAME, statistics=STATISTICS)
     edata = make_edata(array_type(X))
 
-    if ndim == 2 and array_type.flags & (Flags.Sparse | Flags.Dask):
-        with pytest.raises(NotImplementedError):
-            summarize_measurements(edata, layer=DEFAULT_TEM_LAYER_NAME, statistics=STATISTICS)
-        return
-
     with forbid_dask_compute():
-        result = summarize_measurements(edata, layer=DEFAULT_TEM_LAYER_NAME, statistics=STATISTICS).X
+        result = summarize_measurements(edata, layer=DEFAULT_TEM_LAYER_NAME, statistics=STATISTICS)
 
-    assert isinstance(result, array_type.cls)
-    np.testing.assert_allclose(to_dense(result, to_cpu_memory=True), expected, equal_nan=True)
+    assert type(result.X) is type(edata.layers[DEFAULT_TEM_LAYER_NAME])
+    if array_type.flags & Flags.Dask:
+        assert type(result.X._meta) is type(edata.layers[DEFAULT_TEM_LAYER_NAME]._meta)
+    pd.testing.assert_index_equal(result.obs_names, expected.obs_names)
+    pd.testing.assert_index_equal(result.var_names, expected.var_names)
+    np.testing.assert_allclose(to_dense(result.X, to_cpu_memory=True), expected.X, equal_nan=True)

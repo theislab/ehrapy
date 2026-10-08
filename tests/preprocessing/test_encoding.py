@@ -6,6 +6,7 @@ import pandas as pd
 import pytest
 from ehrdata.core.constants import CATEGORICAL_TAG, DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY, NUMERIC_TAG
 from fast_array_utils.conv import to_dense
+from fast_array_utils.types import DaskArray
 from pandas import CategoricalDtype, DataFrame
 from pandas.testing import assert_frame_equal
 from testing.fast_array_utils import Flags
@@ -463,59 +464,67 @@ ENCODINGS = [
 ]
 
 
+def _numeric(X: np.ndarray) -> np.ndarray:
+    """Replace the values of every variable by codes, with a missing value in the last variable."""
+    codes = np.column_stack([pd.factorize(column)[0] for column in X.T]).astype(np.float64)
+    codes[1, -1] = np.nan
+    return codes
+
+
+def _assert_same_array_type(result, X) -> None:
+    assert type(result) is type(X)
+    if isinstance(X, DaskArray):
+        assert type(result._meta) is type(X._meta)
+
+
 @pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+@pytest.mark.parametrize("numeric", [False, True])
 @pytest.mark.parametrize("feature_types", [False, True])
 @pytest.mark.parametrize("ndim", [2, 3])
 @pytest.mark.parametrize(("autodetect", "encodings"), ENCODINGS)
-def test_encode_array_types(encode_ds_1_edata, array_type, ndim, feature_types, autodetect, encodings):
-    if array_type.flags & Flags.Sparse:
-        if ndim == 3:
-            pytest.skip("sparse arrays are 2D")
-        X = np.zeros((20, 3))
-        X[::4, 0] = 1
-        X[1::5, 1] = 2.5
-        X[2::3, 2] = np.nan
-        edata = ed.EHRData(X=array_type(X))
-        if not autodetect:
-            with pytest.raises(NotImplementedError, match="densify"):
-                encode(edata, autodetect=False, encodings={"one-hot": ["0"]})
-            return
-        with forbid_dask_compute():
-            assert encode(edata, autodetect=True, encodings=encodings) is edata
-        return
-
-    X = encode_ds_1_edata.X
+def test_encode_array_types(encode_ds_1_edata, array_type, ndim, feature_types, autodetect, encodings, numeric):
+    if array_type.flags & Flags.Sparse and (ndim == 3 or not numeric):
+        pytest.skip("sparse arrays are 2D and numeric")
+    X = _numeric(encode_ds_1_edata.X) if numeric else encode_ds_1_edata.X
     if ndim == 3:
         X = np.stack([X, X[::-1]], axis=2)
 
-    def make_edata(X):
-        edata = ed.EHRData(shape=X.shape[:2], var=encode_ds_1_edata.var.copy(), layers={DEFAULT_TEM_LAYER_NAME: X})
-        if feature_types:
-            ed.infer_feature_types(edata, layer=DEFAULT_TEM_LAYER_NAME, output=None)
-        return edata
+    def make_edata(X, var=encode_ds_1_edata.var):
+        return ed.EHRData(shape=X.shape[:2], var=var.copy(), layers={DEFAULT_TEM_LAYER_NAME: X})
 
+    edata_numpy = make_edata(X)
+    if feature_types:
+        ed.infer_feature_types(edata_numpy, layer=DEFAULT_TEM_LAYER_NAME, output=None)
+    edata = make_edata(array_type(X), edata_numpy.var)
     kwargs = {"autodetect": autodetect, "encodings": encodings, "layer": DEFAULT_TEM_LAYER_NAME}
-    expected = encode(make_edata(X), **kwargs)
-    edata = make_edata(array_type(X))
+    expected = encode(edata_numpy, **kwargs)
 
     with forbid_dask_compute(allowed=1):
         result = encode(edata, **kwargs)
 
     assert_frame_equal(result.obs, expected.obs)
     assert_frame_equal(result.var, expected.var)
-    for key in [DEFAULT_TEM_LAYER_NAME, "original"]:
-        assert isinstance(result.layers[key], array_type.cls)
-        np.testing.assert_allclose(
-            to_dense(result.layers[key], to_cpu_memory=True), expected.layers[key], equal_nan=True
-        )
+    assert result.layers.keys() == expected.layers.keys()
+    for key, expected_layer in expected.layers.items():
+        _assert_same_array_type(result.layers[key], edata.layers[DEFAULT_TEM_LAYER_NAME])
+        np.testing.assert_allclose(to_dense(result.layers[key], to_cpu_memory=True), expected_layer, equal_nan=True)
 
 
-@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu | Flags.Sparse)
-def test_encode_again_array_types(encode_ds_1_edata, array_type):
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+@pytest.mark.parametrize("numeric", [False, True])
+@pytest.mark.parametrize("var_names", [None, ["survival", "clinic_day"]], ids=["some-encoded", "all-encoded"])
+def test_encode_again_array_types(encode_ds_1_edata, array_type, numeric, var_names):
+    if array_type.flags & Flags.Sparse and not numeric:
+        pytest.skip("sparse arrays are numeric")
+
     def encode_twice(edata):
         edata = encode(edata, autodetect=False, encodings={"one-hot": ["clinic_day", "survival"]})
         return encode(edata, autodetect=False, encodings={"label": ["survival"], "one-hot": ["clinic_day"]})
 
+    if var_names is not None:
+        encode_ds_1_edata = encode_ds_1_edata[:, var_names].copy()
+    if numeric:
+        encode_ds_1_edata.X = _numeric(encode_ds_1_edata.X)
     expected = encode_twice(encode_ds_1_edata.copy())
     encode_ds_1_edata.X = array_type(encode_ds_1_edata.X)
 
@@ -525,5 +534,5 @@ def test_encode_again_array_types(encode_ds_1_edata, array_type):
     assert_frame_equal(result.obs, expected.obs)
     assert_frame_equal(result.var, expected.var)
     for X, expected_X in [(result.X, expected.X), (result.layers["original"], expected.layers["original"])]:
-        assert isinstance(X, array_type.cls)
+        _assert_same_array_type(X, encode_ds_1_edata.X)
         np.testing.assert_allclose(to_dense(X, to_cpu_memory=True), expected_X, equal_nan=True)

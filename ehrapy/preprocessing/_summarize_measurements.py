@@ -1,23 +1,19 @@
 from __future__ import annotations
 
+from functools import singledispatch
 from typing import TYPE_CHECKING, Literal
 
 import array_api_extra as xpx
+import numpy as np
 import pandas as pd
 from array_api_compat import array_namespace
 from ehrdata import EHRData
-from ehrdata.io import from_pandas, to_pandas
+from fast_array_utils.types import CSBase, DaskArray
 
-from ehrapy._compat import (
-    _raise_if_not_numpy,
-    nanquantile,
-)
+from ehrapy._compat import nanquantile
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
-
-    import numpy as np
-    from fast_array_utils.types import DaskArray
+    from collections.abc import Iterable, Sequence
 
     type Array = np.ndarray | DaskArray
 
@@ -62,28 +58,98 @@ def summarize_measurements(
     if missing := set(var_names) - set(edata.var_names):
         raise KeyError(f"Variables not found: {missing}")
     statistics = list(statistics)
+    values = X[:, edata.var_names.get_indexer(var_names)]
+    var = pd.DataFrame(index=[f"{var}_{statistic}" for var in var_names for statistic in statistics])
 
     if X.ndim == 3:
-        values = X[:, edata.var_names.get_indexer(var_names)]
         xp = array_namespace(values)
         summary = xp.stack([_aggregate_time(values, statistic) for statistic in statistics], axis=2)
-        return EHRData(
-            X=xp.reshape(summary, (summary.shape[0], -1)),
-            obs=edata.obs.copy(),
-            var=pd.DataFrame(index=[f"{var}_{statistic}" for var in var_names for statistic in statistics]),
-        )
+        return EHRData(X=xp.reshape(summary, (summary.shape[0], -1)), obs=edata.obs.copy(), var=var)
 
-    _raise_if_not_numpy(
-        X, "summarize_measurements on 2D data", "it groups the rows that share an observation name in memory"
+    groups, observations = pd.factorize(edata.obs_names, sort=True)
+    return EHRData(X=_summarize_groups(values, groups, statistics), obs=pd.DataFrame(index=observations), var=var)
+
+
+@singledispatch
+def _summarize_groups(X: np.ndarray, groups: np.ndarray, statistics: Sequence[str]) -> np.ndarray:
+    """Aggregate every variable over the rows of each group, ignoring missing values, with the statistics of a variable in adjacent columns."""
+    return pd.DataFrame(X).groupby(groups).agg(statistics).to_numpy(dtype=np.float64)
+
+
+@_summarize_groups.register(DaskArray)
+def _(X: DaskArray, groups: np.ndarray, statistics: Sequence[str]) -> DaskArray:
+    # every block must hold all rows of its variables
+    X = X.rechunk({0: -1})
+    return X.map_blocks(
+        _summarize_groups,
+        groups=groups,
+        statistics=statistics,
+        chunks=((groups.max() + 1,), tuple(n_vars * len(statistics) for n_vars in X.chunks[1])),
+        meta=X._meta.astype(np.float64),
     )
-    aggregation_functions = dict.fromkeys(var_names, statistics)
 
-    grouped = to_pandas(edata, layer=layer).groupby(edata.obs.index).agg(aggregation_functions)
-    grouped.columns = [f"{col}_{stat}" for col, stat in grouped.columns]
 
-    expanded_edata = from_pandas(grouped)
+@_summarize_groups.register(CSBase)
+def _(X: CSBase, groups: np.ndarray, statistics: Sequence[str]) -> CSBase:
+    coo = X.tocoo()
+    sizes = np.bincount(groups)
+    rank = np.empty_like(groups)
+    rank[np.argsort(groups, kind="stable")] = np.arange(len(groups))
+    group = groups[coo.row]
+    position = rank[coo.row] - (np.cumsum(sizes) - sizes)[group]
+    order = np.lexsort((position, group, coo.col))
+    group, column, position, values = group[order], coo.col[order], position[order], coo.data[order]
+    starts = np.flatnonzero((np.diff(column, prepend=-1) != 0) | (np.diff(group, prepend=-1) != 0))
+    summary = [
+        _segment_statistic(values, position, starts, sizes[group[starts]], statistic) for statistic in statistics
+    ]
+    columns = [column[starts] * len(statistics) + i for i in range(len(statistics))]
+    return type(X)(
+        (np.concatenate(summary), (np.tile(group[starts], len(statistics)), np.concatenate(columns))),
+        shape=(len(sizes), X.shape[1] * len(statistics)),
+        dtype=np.float64,
+    )
 
-    return expanded_edata
+
+def _segment_statistic(
+    values: np.ndarray, position: np.ndarray, starts: np.ndarray, sizes: np.ndarray, statistic: str
+) -> np.ndarray:
+    """`statistic` of every segment of `values` that starts at `starts`, sorted by `position` in a group of `sizes` rows, counting rows without a value as zeros."""
+    n_stored = np.diff(starts, append=len(values))
+    n_zeros = sizes - n_stored
+    zero_or_nan = np.where(n_zeros > 0, 0.0, np.nan)
+    valid = ~np.isnan(values)
+    count = np.add.reduceat(valid, starts, dtype=np.intp) + n_zeros
+    match statistic:
+        case "min":
+            return np.fmin(np.fmin.reduceat(values, starts), zero_or_nan)
+        case "max":
+            return np.fmax(np.fmax.reduceat(values, starts), zero_or_nan)
+        case "mean":
+            with np.errstate(invalid="ignore"):
+                return np.add.reduceat(np.where(valid, values, 0), starts) / count
+        case "median":
+            ordered = values[np.lexsort((values, np.repeat(starts, n_stored)))]
+            n_negative = np.add.reduceat(ordered < 0, starts, dtype=np.intp)
+
+            def order_statistic(rank: np.ndarray) -> np.ndarray:
+                index = starts + np.where(rank < n_negative, rank, rank - n_zeros)
+                is_zero = (rank >= n_negative) & (rank < n_negative + n_zeros)
+                return np.where(is_zero, 0, ordered[np.clip(index, 0, len(ordered) - 1)])
+
+            return np.where(count > 0, (order_statistic((count - 1) // 2) + order_statistic(count // 2)) / 2, np.nan)
+        case "first" | "last":
+            last = statistic == "last"
+            indices = np.arange(len(values))
+            n_zeros_before = position - (indices - np.repeat(starts, n_stored))
+            edge = (np.maximum if last else np.minimum).reduceat(
+                np.where(valid, indices, -1 if last else len(values)), starts
+            )
+            has_value = (edge >= 0) & (edge < len(values))
+            edge = np.where(has_value, edge, starts)
+            no_zero_beyond = n_zeros_before[edge] == (n_zeros if last else 0)
+            return np.where(has_value & no_zero_beyond, values[edge], zero_or_nan)
+    raise ValueError(f"Unknown statistic: {statistic}")
 
 
 def _aggregate_time(X: Array, statistic: str) -> Array:
