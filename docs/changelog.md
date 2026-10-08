@@ -9,8 +9,6 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 * Every preprocessing function supports numpy, scipy sparse and dask arrays, for static 2D and longitudinal 3D data ([#1132](https://github.com/theislab/ehrapy/pull/1132)) @Zethson
 
   Dask arrays stay lazy, and functions that store summaries compute once; sparse arrays stay sparse, and operations that would densify them raise a `NotImplementedError` that says why.
-  The implementations use the array API through array-api-compat and array-api-extra, so numpy and dask share one code path.
-  The new {doc}`array_types` page lists what every function supports and what it does with the time axis.
 * {func}`ep.pp.summarize_measurements <ehrapy.preprocessing.summarize_measurements>` aggregates longitudinal data over time into a 2D object with one column per variable and statistic (`min`, `max`, `mean`, `median`, `first`, `last`), which makes every 2D-only function usable on longitudinal data ([#1132](https://github.com/theislab/ehrapy/pull/1132)) @Zethson
 * {func}`ep.pp.winsorize <ehrapy.preprocessing.winsorize>`, {func}`ep.pp.clip_quantile <ehrapy.preprocessing.clip_quantile>` and {func}`ep.pp.qc_lab_measurements <ehrapy.preprocessing.qc_lab_measurements>` support longitudinal data ([#1132](https://github.com/theislab/ehrapy/pull/1132)) @Zethson
 

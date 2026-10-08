@@ -50,7 +50,6 @@ ehrapy is a modular open-source Python framework designed for exploratory end-to
 :maxdepth: 3
 
 installation
-array_types
 api
 contributing
 changelog

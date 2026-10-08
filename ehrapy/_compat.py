@@ -257,13 +257,34 @@ def _columnwise(X: Array, groups: np.ndarray | None, kernel: Callable[[np.ndarra
     return result
 
 
+@_columnwise.register(CSBase)
+def _(X: CSBase, groups: np.ndarray | None, kernel: Callable[[np.ndarray], np.ndarray]) -> CSBase:
+    result = X.astype(np.float64).tocsc()
+    groups = np.zeros(X.shape[0], dtype=np.intp) if groups is None else groups
+    group_sizes = np.bincount(groups)
+    for column in range(X.shape[1]):
+        stored = slice(result.indptr[column], result.indptr[column + 1])
+        rows, values = result.indices[stored], result.data[stored]
+        for group in np.flatnonzero(group_sizes):
+            in_group = groups[rows] == group
+            n_stored = np.count_nonzero(in_group)
+            samples = np.zeros((group_sizes[group], 1))
+            samples[:n_stored, 0] = values[in_group]
+            transformed = kernel(samples)[:, 0]
+            if np.any(transformed[n_stored:] != 0):
+                _raise_densifying("This transformation", "it maps implicit zeros to nonzero values")
+            values[in_group] = transformed[:n_stored]
+    return result.asformat(X.format)
+
+
 @_columnwise.register(DaskArray)
 def _(X: DaskArray, groups: np.ndarray | None, kernel: Callable[[np.ndarray], np.ndarray]) -> DaskArray:
-    # every block must hold all observations and timepoints of its variables for the per-variable fit
-    full_samples = {0: -1} if X.ndim == 2 else {0: -1, 2: -1}
-    return X.rechunk(full_samples).map_blocks(
-        _columnwise.dispatch(np.ndarray), groups=groups, kernel=kernel, dtype=np.float64
-    )
+    return _map_variable_blocks(X, _columnwise, groups, kernel, meta=X._meta.astype(np.float64))
+
+
+def _map_variable_blocks(X: DaskArray, func: Callable[..., Any], *args: Any, meta: Any) -> DaskArray:
+    """Apply an in-memory `func` to blocks that hold all observations and timepoints of their variables."""
+    return X.rechunk(dict.fromkeys(_obs_axes(X), -1)).map_blocks(func, *args, meta=meta)
 
 
 def _materialize(*arrays: Array) -> list[np.ndarray]:

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from functools import singledispatch
+from functools import partial, singledispatch
 from typing import TYPE_CHECKING, Literal
 
 import array_api_extra as xpx
@@ -16,9 +16,9 @@ from scipy.special import ndtri
 from ehrapy._compat import (
     _by_group,
     _columnwise,
+    _map_variable_blocks,
     _obs_axes,
     _raise_densifying,
-    _raise_if_dask_with_sparse_chunks,
     _set_columns,
     _sparse_columns,
     _sparse_rows,
@@ -56,7 +56,6 @@ def _scale_func_group(
     if copy:
         edata = edata.copy()
     X = edata.X if layer is None else edata.layers[layer]
-    _raise_if_dask_with_sparse_chunks(X, norm_name)
     if FEATURE_TYPE_KEY not in edata.var.columns:
         if is_lazy_array(X):
             raise ValueError(
@@ -71,7 +70,12 @@ def _scale_func_group(
         X = X.astype(np.float32)
 
     groups = None if groupby is None else pd.factorize(edata.obs[groupby])[0]
-    X = _set_columns(X, var_indices, transform(X[:, var_indices], groups))
+    values = X[:, var_indices]
+    if isinstance(values, DaskArray) and isinstance(values._meta, CSBase):
+        values = _map_variable_blocks(values, transform, groups, meta=transform(values._meta, None))
+    else:
+        values = transform(values, groups)
+    X = _set_columns(X, var_indices, values)
 
     if layer is None:
         edata.X = X
@@ -109,15 +113,21 @@ def _affine(X: Array, groups: np.ndarray | None, params: Callable[[Array], Param
     return X
 
 
-def _sparse_scale(X: CSBase, groups: np.ndarray | None, scale: Callable[[CSBase], np.ndarray]) -> CSBase:
-    """Divide every variable of a sparse matrix by a per-variable scale, estimated per group if `groups` is given."""
+def _sparse_affine(X: CSBase, groups: np.ndarray | None, params: Callable[[CSBase], Params], name: str) -> CSBase:
+    """Compute `(X - shift) / scale` on the stored values of a sparse matrix, estimated per group if `groups` is given."""
     X = X.astype(np.result_type(X.dtype, np.float32))
-    columns = _sparse_columns(X)
-    if groups is None:
-        X.data /= scale(X)[columns]
-    else:
-        scales = np.stack([scale(X[groups == group]) for group in range(groups.max() + 1)])
-        X.data /= scales[groups[_sparse_rows(X)], columns]
+    per_group = [params(X)] if groups is None else [params(X[groups == group]) for group in range(groups.max() + 1)]
+    shift, scale = (None if stat[0] is None else np.stack(stat) for stat in zip(*per_group, strict=True))
+    groups = np.zeros(X.shape[0], dtype=np.intp) if groups is None else groups
+    index = groups[_sparse_rows(X)], _sparse_columns(X)
+    if shift is not None:
+        n_stored = np.zeros(shift.shape, dtype=np.intp)
+        np.add.at(n_stored, index, 1)
+        if np.any((shift != 0) & (n_stored < np.bincount(groups, minlength=len(shift))[:, None])):
+            _raise_densifying(name, "it maps implicit zeros to nonzero values")
+        X.data -= shift[index]
+    if scale is not None:
+        X.data /= scale[index]
     return X
 
 
@@ -139,7 +149,7 @@ def _(X: CSBase, groups: np.ndarray | None, *, with_mean: bool, with_std: bool) 
         _raise_densifying("scale_norm with `with_mean=True`", "centering shifts implicit zeros")
     if not with_std:
         return X
-    return _sparse_scale(X, groups, lambda x: _nonzero(np.sqrt(sparse_nan_moments(x)[2])))
+    return _sparse_affine(X, groups, lambda x: (None, _nonzero(np.sqrt(sparse_nan_moments(x)[2]))), "scale_norm")
 
 
 def scale_norm(
@@ -194,22 +204,24 @@ def scale_norm(
     )
 
 
+def _minmax_params(minimum: Array, maximum: Array, feature_range: tuple[float, float]) -> Params:
+    low, high = feature_range
+    scale = _nonzero(maximum - minimum) / (high - low)
+    return minimum - low * scale, scale
+
+
 @singledispatch
 def _minmax(X: Array, groups: np.ndarray | None, *, feature_range: tuple[float, float]) -> Array:
-    low, high = feature_range
-
     def params(x: Array) -> Params:
         axes = _obs_axes(x)
-        minimum = xpx.nanmin(x, axis=axes)
-        scale = _nonzero(xpx.nanmax(x, axis=axes) - minimum) / (high - low)
-        return minimum - low * scale, scale
+        return _minmax_params(xpx.nanmin(x, axis=axes), xpx.nanmax(x, axis=axes), feature_range)
 
     return _affine(X, groups, params)
 
 
 @_minmax.register(CSBase)
 def _(X: CSBase, groups: np.ndarray | None, *, feature_range: tuple[float, float]) -> CSBase:
-    _raise_densifying("minmax_norm", "shifting by the minimum moves implicit zeros; use maxabs_norm instead")
+    return _sparse_affine(X, groups, lambda x: _minmax_params(*sparse_nan_min_max(x), feature_range), "minmax_norm")
 
 
 def minmax_norm(
@@ -272,11 +284,11 @@ def _maxabs(X: Array, groups: np.ndarray | None) -> Array:
 
 @_maxabs.register(CSBase)
 def _(X: CSBase, groups: np.ndarray | None) -> CSBase:
-    def scale(x: CSBase) -> np.ndarray:
+    def params(x: CSBase) -> Params:
         minimum, maximum = sparse_nan_min_max(x)
-        return _nonzero(np.maximum(np.abs(minimum), np.abs(maximum)))
+        return None, _nonzero(np.maximum(np.abs(minimum), np.abs(maximum)))
 
-    return _sparse_scale(X, groups, scale)
+    return _sparse_affine(X, groups, params, "maxabs_norm")
 
 
 def maxabs_norm(
@@ -327,9 +339,17 @@ def maxabs_norm(
     )
 
 
-def _robust_scale_adjustment(quantile_range: tuple[float, float], unit_variance: bool) -> float:
+def _robust_scale_params(
+    quantiles: Callable[[list[float]], Array],
+    with_centering: bool,
+    with_scaling: bool,
+    quantile_range: tuple[float, float],
+    unit_variance: bool,
+) -> Params:
     low, high = quantile_range
-    return float(ndtri(high / 100) - ndtri(low / 100)) if unit_variance else 1.0
+    lower, median, upper = quantiles([low / 100, 0.5, high / 100])
+    adjustment = float(ndtri(high / 100) - ndtri(low / 100)) if unit_variance else 1.0
+    return median if with_centering else None, _nonzero(upper - lower) / adjustment if with_scaling else None
 
 
 @singledispatch
@@ -342,15 +362,9 @@ def _robust_scale(
     quantile_range: tuple[float, float],
     unit_variance: bool,
 ) -> Array:
-    low, high = quantile_range
-    adjustment = _robust_scale_adjustment(quantile_range, unit_variance)
-
     def params(x: Array) -> Params:
-        quantiles = nanquantile(x, [low / 100, 0.5, high / 100], axis=_obs_axes(x))
-        return (
-            quantiles[1] if with_centering else None,
-            _nonzero(quantiles[2] - quantiles[0]) / adjustment if with_scaling else None,
-        )
+        quantiles = partial(nanquantile, x, axis=_obs_axes(x))
+        return _robust_scale_params(quantiles, with_centering, with_scaling, quantile_range, unit_variance)
 
     return _affine(X, groups, params)
 
@@ -365,18 +379,11 @@ def _(
     quantile_range: tuple[float, float],
     unit_variance: bool,
 ) -> CSBase:
-    if with_centering:
-        _raise_densifying("robust_scale_norm with `with_centering=True`", "centering shifts implicit zeros")
-    if not with_scaling:
-        return X
-    low, high = quantile_range
-    adjustment = _robust_scale_adjustment(quantile_range, unit_variance)
+    def params(x: CSBase) -> Params:
+        quantiles = partial(sparse_nanquantile, x)
+        return _robust_scale_params(quantiles, with_centering, with_scaling, quantile_range, unit_variance)
 
-    def scale(x: CSBase) -> np.ndarray:
-        quantiles = sparse_nanquantile(x, [low / 100, high / 100])
-        return _nonzero(quantiles[1] - quantiles[0]) / adjustment
-
-    return _sparse_scale(X, groups, scale)
+    return _sparse_affine(X, groups, params, "robust_scale_norm")
 
 
 def robust_scale_norm(
@@ -504,11 +511,15 @@ def quantile_norm(
             random_state=random_state,
         ).fit_transform(x)
 
+    transform = partial(_columnwise, kernel=kernel)
+    if output_distribution == "normal":
+        transform = _dense_only(
+            "quantile_norm with `output_distribution='normal'`", "it maps zeros to nonzero values", transform
+        )
+
     return _scale_func_group(
         edata=edata,
-        transform=_dense_only(
-            "quantile_norm", "it maps zeros to nonzero values", lambda X, groups: _columnwise(X, groups, kernel)
-        ),
+        transform=transform,
         var_names=var_names,
         groupby=groupby,
         layer=layer,
@@ -567,11 +578,13 @@ def power_norm(
     def kernel(x: np.ndarray) -> np.ndarray:
         return sklearn_pp.PowerTransformer(method=method, standardize=standardize).fit_transform(x)
 
+    transform = partial(_columnwise, kernel=kernel)
+    if standardize:
+        transform = _dense_only("power_norm with `standardize=True`", "centering shifts implicit zeros", transform)
+
     return _scale_func_group(
         edata=edata,
-        transform=_dense_only(
-            "power_norm", "it maps zeros to nonzero values", lambda X, groups: _columnwise(X, groups, kernel)
-        ),
+        transform=transform,
         var_names=var_names,
         groupby=groupby,
         layer=layer,
@@ -681,6 +694,14 @@ def _(X: CSBase) -> CSBase:
     return X
 
 
+@_offset_negative.register(DaskArray)
+def _(X: DaskArray) -> DaskArray:
+    if isinstance(X._meta, CSBase):
+        # the sparse offset either raises or keeps a block unchanged, so it applies blockwise
+        return X.map_blocks(_offset_negative, meta=X._meta)
+    return _offset_negative.dispatch(object)(X)
+
+
 def offset_negative_values(edata: EHRData, *, layer: str | None = None, copy: bool = False) -> EHRData | None:
     """Offsets negative values into positive ones with the lowest negative value becoming 0.
 
@@ -711,7 +732,6 @@ def offset_negative_values(edata: EHRData, *, layer: str | None = None, copy: bo
         edata = edata.copy()
 
     X = edata.X if layer is None else edata.layers[layer]
-    _raise_if_dask_with_sparse_chunks(X, "offset_negative_values")
     X = _offset_negative(X)
     if layer is None:
         edata.X = X

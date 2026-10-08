@@ -106,15 +106,17 @@ def test_outliers_array_types(array_type, ndim, func, kwargs, sparse_support, rn
     expected = func(make_edata(X.copy()), copy=True, **kwargs).layers[DEFAULT_TEM_LAYER_NAME]
     edata = make_edata(array_type(X))
 
-    if array_type.flags & Flags.Sparse and (not sparse_support or array_type.flags & Flags.Dask):
+    if array_type.flags & Flags.Sparse and not sparse_support:
         with pytest.raises(NotImplementedError):
-            func(edata, **kwargs)
+            to_dense(func(edata, copy=True, **kwargs).layers[DEFAULT_TEM_LAYER_NAME], to_cpu_memory=True)
         return
 
     with forbid_dask_compute():
         result = func(edata, copy=True, **kwargs).layers[DEFAULT_TEM_LAYER_NAME]
 
     assert isinstance(result, array_type.cls)
+    if array_type.flags & Flags.Dask:
+        assert type(result._meta) is type(edata.layers[DEFAULT_TEM_LAYER_NAME]._meta)
     np.testing.assert_allclose(to_dense(result, to_cpu_memory=True), expected, equal_nan=True)
     np.testing.assert_array_equal(to_dense(edata.layers[DEFAULT_TEM_LAYER_NAME], to_cpu_memory=True), X)
 
