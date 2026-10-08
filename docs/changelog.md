@@ -8,7 +8,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 * {func}`ep.pp.gradient_boosting_impute <ehrapy.preprocessing.gradient_boosting_impute>` imputes every variable with a gradient boosting model, which for longitudinal data also uses the closest observed values before and after each timepoint @Zethson
 
-  With 10% of the observed values of PhysioNet 2012 held out, its normalized RMSE is 0.49, against 0.57 for SAITS, 0.76 for {func}`ep.pp.locf_impute <ehrapy.preprocessing.locf_impute>` and 0.82 for {func}`ep.pp.miss_forest_impute <ehrapy.preprocessing.miss_forest_impute>`.
+  With 10% of the observed values of all 11,988 PhysioNet 2012 patients held out, its RMSE on the standardized held-out values is 0.48 in 38 seconds, against 0.81 in 220 seconds for {func}`ep.pp.miss_forest_impute <ehrapy.preprocessing.miss_forest_impute>` and 0.76 for {func}`ep.pp.locf_impute <ehrapy.preprocessing.locf_impute>`.
 * Preprocessing functions support numpy, scipy sparse and dask arrays, including dask arrays with sparse chunks, for static 2D and longitudinal 3D data ([#1132](https://github.com/theislab/ehrapy/pull/1132)) @Zethson
 
   Sparse arrays stay sparse and dask arrays stay lazy, and functions that store summaries compute once.
