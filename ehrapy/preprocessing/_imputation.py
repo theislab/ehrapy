@@ -41,7 +41,8 @@ from ehrapy._settings import settings
 from ehrapy.preprocessing._missing_data import _missing_mask
 from ehrapy.preprocessing._quality_control import _compute_missing_values
 
-_BATCH_SIZE = 10_000
+# number of array elements densified or predicted at once
+_BATCH_VALUES = 2_000_000
 
 if TYPE_CHECKING:
     from dask.delayed import Delayed
@@ -832,8 +833,17 @@ def _(sample: DaskArray, categorical: np.ndarray, random_state: int) -> Delayed:
     return dask.delayed(_fit_boosting)(sample, categorical, random_state)
 
 
+def _batch_size(X: np.ndarray | CSBase) -> int:
+    return max(1, _BATCH_VALUES // math.prod(X.shape[1:]))
+
+
 @singledispatch
 def _impute_boosting(X: np.ndarray, models: Sequence[Model | None]) -> np.ndarray:
+    size = _batch_size(X)
+    return np.concatenate([_impute_block(X[start : start + size], models) for start in range(0, X.shape[0], size)])
+
+
+def _impute_block(X: np.ndarray, models: Sequence[Model | None]) -> np.ndarray:
     rows, context = _rows_and_context(X)
     filled = rows.copy()
     for var, fitted in enumerate(models):
@@ -851,10 +861,11 @@ def _(X: CSBase, models: Sequence[Model | None]) -> CSBase:
     missing = np.flatnonzero(np.isnan(X.data))
     rows, columns = _sparse_rows(X)[missing], _sparse_columns(X)[missing]
     incomplete = np.unique(rows)
-    for start in range(0, len(incomplete), _BATCH_SIZE):
-        batch = incomplete[start : start + _BATCH_SIZE]
+    size = _batch_size(X)
+    for start in range(0, len(incomplete), size):
+        batch = incomplete[start : start + size]
         in_batch = (rows >= batch[0]) & (rows <= batch[-1])
-        filled = _impute_boosting(to_dense(X[batch]), models)
+        filled = _impute_block(to_dense(X[batch]), models)
         X.data[missing[in_batch]] = filled[np.searchsorted(batch, rows[in_batch]), columns[in_batch]]
     return X
 
