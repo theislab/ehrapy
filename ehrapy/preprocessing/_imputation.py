@@ -19,8 +19,8 @@ from sklearn.experimental import enable_iterative_imputer
 from ehrapy._compat import (
     _apply_over_time_axis,
     _broadcast_var_stat,
+    _map_variable_blocks,
     _obs_axes,
-    _raise_if_dask_with_sparse_chunks,
     _raise_if_not_numpy,
     _set_columns,
     _sparse_columns,
@@ -55,6 +55,14 @@ def _(X: CSBase, values: np.ndarray, *, empty_strings: bool = False) -> CSBase:
     missing = np.isnan(X.data)
     X.data[missing] = np.broadcast_to(values, X.shape[1])[_sparse_columns(X)[missing]]
     return X
+
+
+@_fill_missing.register(DaskArray)
+def _(X: DaskArray, values: Array, *, empty_strings: bool = False) -> DaskArray:
+    if isinstance(X._meta, CSBase):
+        # every block must hold all variables to find their values
+        return X.rechunk({1: -1}).map_blocks(_fill_missing, values, meta=X._meta)
+    return _fill_missing.dispatch(object)(X, values, empty_strings=empty_strings)
 
 
 def explicit_impute(
@@ -119,7 +127,6 @@ def explicit_impute(
         edata = edata.copy()
 
     X = edata.X if layer is None else edata.layers[layer]
-    _raise_if_dask_with_sparse_chunks(X, "explicit_impute")
 
     if isinstance(replacement, str | int | float):
         replacement = dict.fromkeys(edata.var_names, replacement)
@@ -241,6 +248,8 @@ def _(X: CSBase, strategy: Strategy) -> np.ndarray:
 def _simple_impute(X: Array | CSBase, strategy: Strategy) -> Array | CSBase:
     if strategy != "most_frequent" and not np.issubdtype(X.dtype, np.floating):
         X = X.astype(np.float64)
+    if isinstance(X, DaskArray) and isinstance(X._meta, CSBase):
+        return _map_variable_blocks(X, _simple_impute, strategy, meta=X._meta)
     return _fill_missing(X, _impute_value(X, strategy))
 
 
@@ -286,7 +295,6 @@ def simple_impute(
 
     var_names = list(edata.var_names if var_names is None else var_names)
     X = edata.X if layer is None else edata.layers[layer]
-    _raise_if_dask_with_sparse_chunks(X, "simple_impute")
     _warn_imputation_threshold(edata, var_names, threshold=warning_threshold, layer=layer)
 
     var_indices = edata.var_names.get_indexer(var_names)

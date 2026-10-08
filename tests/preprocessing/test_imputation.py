@@ -175,11 +175,6 @@ def test_simple_impute_array_types(array_type, ndim, strategy, var_names, rng):
     expected = simple_impute(_numeric_edata(X), var_names=var_names, strategy=strategy, copy=True).X
     edata = _numeric_edata(array_type(X))
 
-    if array_type.flags & Flags.Sparse and array_type.flags & Flags.Dask:
-        with pytest.raises(NotImplementedError):
-            simple_impute(edata, var_names=var_names, strategy=strategy)
-        return
-
     with forbid_dask_compute():
         result = simple_impute(edata, var_names=var_names, strategy=strategy, copy=True).X
 
@@ -204,11 +199,6 @@ def test_simple_impute_all_nan_variable(strategy, expected):
 @pytest.mark.parametrize("strategy", ["mean", "median", "most_frequent"])
 def test_simple_impute_basic(impute_num_edata, array_type, strategy):
     impute_num_edata.X = array_type(impute_num_edata.X)
-
-    if array_type.flags & Flags.Sparse and array_type.flags & Flags.Dask:
-        with pytest.raises(NotImplementedError):
-            simple_impute(impute_num_edata, strategy=strategy, copy=True)
-        return
 
     with forbid_dask_compute():
         edata_imputed = simple_impute(impute_num_edata, strategy=strategy, copy=True)
@@ -493,11 +483,6 @@ def test_explicit_impute_array_types(array_type, ndim, replacement, rng):
     expected = explicit_impute(_numeric_edata(X), replacement=replacement, copy=True).X
     edata = _numeric_edata(array_type(X))
 
-    if array_type.flags & Flags.Sparse and array_type.flags & Flags.Dask:
-        with pytest.raises(NotImplementedError):
-            explicit_impute(edata, replacement=replacement)
-        return
-
     with forbid_dask_compute():
         result = explicit_impute(edata, replacement=replacement, copy=True).X
 
@@ -585,11 +570,6 @@ def test_explicit_impute_3D_edata_cat(edata_mini_3D_missing_values, array_type):
 def test_explicit_impute_all(array_type, impute_num_edata):
     warnings.filterwarnings("ignore", category=FutureWarning)
     impute_num_edata.X = array_type(impute_num_edata.X)
-
-    if array_type.flags & Flags.Sparse and array_type.flags & Flags.Dask:
-        with pytest.raises(NotImplementedError):
-            explicit_impute(impute_num_edata, replacement=1011, copy=True)
-        return
 
     with forbid_dask_compute():
         edata_imputed = explicit_impute(impute_num_edata, replacement=1011, copy=True)
