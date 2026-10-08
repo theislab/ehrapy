@@ -797,3 +797,27 @@ def test_embedding_plots_3D(plotter, edata_embedded, clean_up_plots):
     plot(edata_embedded, color="group", show=False, **kwargs)
     with pytest.raises(ValueError, match="only supports 2D data"):
         plot(edata_embedded, color=["group", "feature_0"], show=False, **kwargs)
+
+
+@pytest.mark.parametrize(
+    ("plotter", "obs_kwargs", "var_kwargs"),
+    [
+        ("violin", {"keys": "age"}, {"keys": ["age", "feature_0"]}),
+        ("scatter", {"x": "age", "y": "y"}, {"x": "age", "y": "y", "color": "feature_0"}),
+    ],
+)
+def test_obs_plots_3D(plotter, obs_kwargs, var_kwargs, edata_blobs_3d, clean_up_plots):
+    plot = getattr(ep.pl, plotter)
+
+    plot(edata_blobs_3d, show=False, **obs_kwargs)
+    with pytest.raises(ValueError, match="only supports 2D data"):
+        plot(edata_blobs_3d, show=False, **var_kwargs)
+
+
+def test_dendrogram_3D(edata_blobs_3d, clean_up_plots):
+    with pytest.raises(ValueError, match="only supports 2D data"):
+        ep.pl.dendrogram(edata_blobs_3d, groupby="cluster", show=False)
+
+    edata_blobs_3d.obsm["X_mean"] = edata_blobs_3d.X.mean(axis=2)
+    ep.tl.dendrogram(edata_blobs_3d, groupby="cluster", use_rep="X_mean")
+    ep.pl.dendrogram(edata_blobs_3d, groupby="cluster", show=False)

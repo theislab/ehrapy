@@ -454,6 +454,16 @@ def edata_blobs_timeseries_small() -> ed.EHRData:
 
 
 @pytest.fixture
+def edata_blobs_3d(rng) -> ed.EHRData:
+    """Longitudinal data in a 3D `.X` with numeric `obs` columns."""
+    edata = ed.dt.ehrdata_blobs(n_observations=30, n_variables=4, base_timepoints=5)
+    edata.obs["age"] = rng.normal(60, 10, edata.n_obs)
+    edata.obs["treated"] = np.tile([0.0, 1.0], edata.n_obs // 2)
+    edata.obs["y"] = rng.normal(size=edata.n_obs)
+    return edata
+
+
+@pytest.fixture
 def edata_to_norm():
     obs_data = {"ID": ["Patient1", "Patient2", "Patient3"], "Age": [31, 94, 62]}
 

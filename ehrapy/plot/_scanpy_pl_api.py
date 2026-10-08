@@ -11,7 +11,7 @@ from fast_array_utils.conv import to_dense
 from fast_array_utils.types import DaskArray
 from scanpy.plotting import DotPlot, MatrixPlot, StackedViolin
 
-from ehrapy._compat import _as_scanpy_input, _materialize, function_2D_only
+from ehrapy._compat import _as_scanpy_input, _materialize, _raise_if_3D, function_2D_only
 from ehrapy._utils_doc import _doc_params, doc_plot_params
 
 if TYPE_CHECKING:
@@ -38,7 +38,7 @@ VBound = str | float | Callable[[Sequence[float]], float]
 _ValuesToPlot = Literal["scores", "logfoldchanges", "pvals", "pvals_adj", "log10_pvals", "log10_pvals_adj"]
 
 
-@function_2D_only()
+@function_2D_only(var_keys=("x", "y", "color"))
 @_doc_params(**doc_plot_params)
 def scatter(
     edata: EHRData,
@@ -535,7 +535,7 @@ def tracksplot(
     return tracksplot_partial(_as_scanpy_input(edata), groupby=groupby)
 
 
-@function_2D_only()
+@function_2D_only(var_keys=("keys",))
 @_doc_params(**doc_plot_params)
 def violin(
     edata: EHRData,
@@ -1039,7 +1039,6 @@ def ranking(
     )
 
 
-@function_2D_only()
 @_doc_params(**doc_plot_params)
 def dendrogram(
     edata: EHRData,
@@ -1082,6 +1081,10 @@ def dendrogram(
     Preview:
         .. image:: /_static/docstring_previews/dendrogram.png
     """
+    # scanpy computes a missing dendrogram from `.X`
+    if (f"dendrogram_{groupby}" if dendrogram_key is None else dendrogram_key) not in edata.uns:
+        _raise_if_3D(edata.X, "dendrogram", "edata.X")
+
     dendrogram_partial = partial(
         sc.pl.dendrogram,
         dendrogram_key=dendrogram_key,

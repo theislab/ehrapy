@@ -210,6 +210,26 @@ def test_causal_array_types(array_type, estimator, kwargs):
         assert result.value == pytest.approx(expected.value)
 
 
+@pytest.mark.parametrize(
+    ("estimator", "kwargs"),
+    [
+        (ep.tl.iptw, {"outcome": "y", "n_bootstrap": 0}),
+        (ep.tl.g_computation, {"outcome": "y", "n_bootstrap": 0}),
+        (ep.tl.aipw, {"outcome": "y"}),
+        (ep.tl.propensity_score_matching, {"outcome": "y", "n_bootstrap": 0}),
+        (ep.tl.t_learner, {"outcome": "y"}),
+        (ep.tl.s_learner, {"outcome": "y"}),
+        (ep.tl.x_learner, {"outcome": "y"}),
+        (ep.tl.covariate_balance, {}),
+        (ep.tl.positivity_check, {}),
+    ],
+)
+def test_causal_obs_columns_on_3D_data(edata_blobs_3d, estimator, kwargs):
+    estimator(edata_blobs_3d, treatment="treated", covariates=["age"], **kwargs)
+    with pytest.raises(ValueError, match="only supports 2D data"):
+        estimator(edata_blobs_3d, treatment="treated", covariates=["age", "feature_0"], **kwargs)
+
+
 class TestGuards:
     def test_rejects_3d_layer(self):
         from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME

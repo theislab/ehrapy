@@ -11,7 +11,6 @@ from typing import TYPE_CHECKING
 import array_api_compat
 import numpy as np
 
-from ehrapy._compat import function_2D_only
 from ehrapy.tools.causal._design import assert_binary_treatment, build_design
 from ehrapy.tools.causal._estimate import CausalEstimate
 from ehrapy.tools.causal._models import fit_propensity, predict_mean, resolve_outcome_model
@@ -33,7 +32,6 @@ def _store_cate(edata: EHRData, design_index, cate: np.ndarray, key_added: str |
     edata.obs[key_added] = full
 
 
-@function_2D_only()
 def t_learner(
     edata: EHRData,
     treatment: str,
@@ -102,7 +100,6 @@ def t_learner(
     )
 
 
-@function_2D_only()
 def s_learner(
     edata: EHRData,
     treatment: str,
@@ -167,7 +164,6 @@ def s_learner(
     )
 
 
-@function_2D_only()
 def x_learner(
     edata: EHRData,
     treatment: str,

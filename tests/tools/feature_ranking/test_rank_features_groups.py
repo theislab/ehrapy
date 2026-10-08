@@ -485,7 +485,7 @@ def test_rank_features_groups_pts(mimic_2_encoded):
 
 def test_rank_features_groups_3D_edata(edata_blob_small):
     ep.tl.rank_features_groups(edata_blob_small, groupby="cluster", layer="layer_2")
-    with pytest.raises(ValueError, match=r"only supports 2D data"):
+    with pytest.raises(ValueError, match=r"only supports 2D data.*summarize_measurements"):
         ep.tl.rank_features_groups(edata_blob_small, groupby="cluster", layer=DEFAULT_TEM_LAYER_NAME)
 
     edata_3d = ed.EHRData(X=edata_blob_small.layers[DEFAULT_TEM_LAYER_NAME], obs=edata_blob_small.obs)

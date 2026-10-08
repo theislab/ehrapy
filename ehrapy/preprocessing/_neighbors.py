@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, Literal
 import numpy as np
 import scanpy as sc
 
+from ehrapy._compat import _raise_if_3D
 from ehrapy.core._constants import TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY
 from ehrapy.tools.distances.timeseries import timeseries_distance
 
@@ -63,10 +64,12 @@ def neighbors(
                      In general values should be in the range 2 to 100. If `knn` is `True`, number of nearest neighbors to be searched.
                      If `knn` is `False`, a Gaussian kernel width is set to the distance of the `n_neighbors` neighbor.
         n_pcs: Use this many PCs. If `n_pcs==0` use `.X` if `use_rep is None`.
-        use_rep: Use the indicated representation. `'X'` or any key for `.obsm` is valid. For time series data (`metric='dtw'`, `'soft_dtw'`, `'gak'`), the key must be a 3D array with shape (n_obs, n_vars, n_timepoints).
+        use_rep: Use the indicated representation.
+                 `'X'` or any key for `.obsm` is valid.
                  If `None`, the representation is chosen automatically:
                  For `.n_vars` < 50, `.X` is used, otherwise 'X_pca' is used.
                  If 'X_pca' is not present, it's computed with default parameters or `n_pcs` if present.
+                 For time series metrics (`metric='dtw'`, `'soft_dtw'`, `'gak'`), `None` uses `.X`, keys for `.layers` are valid as well, and the representation must be a 3D array with shape (n_obs, n_vars, n_timepoints).
         knn: If `True`, use a hard threshold to restrict the number of neighbors to `n_neighbors`, that is, consider a knn graph.
              Otherwise, use a Gaussian Kernel to assign low weights to neighbors more distant than the `n_neighbors` nearest neighbor.
         random_state: A numpy random seed.
@@ -106,18 +109,18 @@ def neighbors(
          The neighbors parameters.
     """
     if metric in {"dtw", "soft_dtw", "gak"}:
-        if use_rep is None:
-            raise ValueError(f"use_rep must be specified if metric is {metric}")
-        if use_rep in edata.layers:
+        if use_rep in {None, "X"}:
+            arr = edata.X
+        elif use_rep in edata.layers:
             arr = edata.layers[use_rep]
         elif use_rep in edata.obsm:
             arr = edata.obsm[use_rep]
         else:
             raise ValueError(f"use_rep {use_rep} not found in edata.layers or edata.obsm")
 
-        if arr.ndim != 3:
+        if np.ndim(arr) != 3:
             raise ValueError(
-                f"If metric is {metric}, use_rep must be a 3D array with shape (n_obs, n_vars, n_timepoints), but {arr} is ndim={arr.ndim}."
+                f"If metric is {metric}, use_rep must be a 3D array with shape (n_obs, n_vars, n_timepoints), but it has shape {np.shape(arr)}."
             )
 
         metric = partial(timeseries_distance, arr=arr, metric=metric)  # type: ignore
@@ -135,6 +138,8 @@ def neighbors(
             raise ValueError(f"use_rep must be None when metric is {metric}")
         edata.obsm[TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY] = np.arange(edata.shape[0])
         use_rep = TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY
+    elif use_rep in {None, "X"}:
+        _raise_if_3D(edata.X, "neighbors", "edata.X")
 
     edata_returned = sc.pp.neighbors(
         adata=edata,

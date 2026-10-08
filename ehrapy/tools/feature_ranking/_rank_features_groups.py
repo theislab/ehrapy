@@ -13,7 +13,7 @@ from fast_array_utils import stats
 from fast_array_utils.conv import to_dense
 from fast_array_utils.types import DaskArray
 
-from ehrapy._compat import _materialize, function_2D_only
+from ehrapy._compat import _materialize, _raise_if_3D, function_2D_only
 from ehrapy.preprocessing import encode
 
 if TYPE_CHECKING:
@@ -460,14 +460,13 @@ def rank_features_groups(
     if field_to_rank not in ["layer", "obs", "layer_and_obs"]:
         raise ValueError(f"layer must be one of 'layer', 'obs', 'layer_and_obs', not {field_to_rank}")
 
-    # Only check for 2D data if field_to_rank is not "obs"
-    # When field_to_rank is "obs", we're ranking obs columns, so 3D data is acceptable
     if field_to_rank != "obs":
-        array = edata.X if layer is None else edata.layers[layer]
-        if array.ndim != 2 and array.shape[2] != 1:
-            raise ValueError(
-                f"rank_features_groups with field_to_rank='{field_to_rank}' only supports 2D data, got {'edata.X' if layer is None else f'edata.layers[{layer}]'} with shape {array.shape}"
-            )
+        _raise_if_3D(
+            edata.X if layer is None else edata.layers[layer],
+            "rank_features_groups",
+            "edata.X" if layer is None else f"edata.layers[{layer!r}]",
+            allow_single_timepoint=True,
+        )
 
     # to give better error messages, check if columns_to_rank have valid keys and values here
     _var_subset, _obs_subset = _check_columns_to_rank_dict(columns_to_rank)
