@@ -1,7 +1,7 @@
 # Machine learning
 
 Prediction models for patient outcomes, from linear and gradient boosting models to recurrent and transformer networks for time series.
-A {class}`~ehrapy.ml.Task` names the label and the timepoints the features come from, {func}`~ehrapy.ml.split` assigns patients to a training, a tuning and a held-out set, and {func}`~ehrapy.ml.fit` learns a model on the training set only.
+Models are trained, calibrated and evaluated on patient-level splits of static and longitudinal data.
 
 ```{eval-rst}
 .. module:: ehrapy
@@ -33,8 +33,7 @@ A {class}`~ehrapy.ml.Task` names the label and the timepoints the features come 
 
 ## Deep learning models
 
-Models that need PyTorch, which `pip install 'ehrapy[ml]'` installs.
-Except for the multilayer perceptron, they read the time series of the variables instead of their summaries.
+These models need the `ml` extra, `pip install 'ehrapy[ml]'`.
 
 ```{eval-rst}
 .. autosummary::
@@ -74,8 +73,6 @@ Except for the multilayer perceptron, they read the time series of the variables
 ```
 
 ## Interpretation
-
-Plot the importances with {func}`~ehrapy.plot.rank_features_supervised`.
 
 ```{eval-rst}
 .. autosummary::
