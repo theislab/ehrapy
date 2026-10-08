@@ -431,16 +431,25 @@ def test_rank_features_groups_dotplot_titles(edata_ranked):
     plt.close("all")
 
 
-@pytest.mark.parametrize("plotter", ["dotplot", "matrixplot", "stacked_violin", "violin"])
+@pytest.mark.parametrize(
+    "plotter", ["dotplot", "matrixplot", "stacked_violin", "violin", "umap", "rank_features_groups_matrixplot"]
+)
 def test_plots_read_X_not_raw(edata_blob_small, plotter):
     edata_blob_small.obs["group"] = pd.Categorical(["a", "b"] * (edata_blob_small.n_obs // 2))
     edata_blob_small.raw = edata_blob_small[:, :5]
     feature = edata_blob_small.var_names[-1]
 
-    if plotter == "violin":
-        ep.pl.violin(edata_blob_small, keys=feature, groupby="group", show=False)
-    else:
-        getattr(ep.pl, plotter)(edata_blob_small, var_names=[feature], groupby="group", show=False)
+    match plotter:
+        case "violin":
+            ep.pl.violin(edata_blob_small, keys=feature, groupby="group", show=False)
+        case "umap":
+            ep.tl.umap(edata_blob_small)
+            ep.pl.umap(edata_blob_small, color=feature, show=False)
+        case "rank_features_groups_matrixplot":
+            ep.tl.rank_features_groups(edata_blob_small, groupby="group")
+            ep.pl.rank_features_groups_matrixplot(edata_blob_small, n_features=edata_blob_small.n_vars, show=False)
+        case _:
+            getattr(ep.pl, plotter)(edata_blob_small, var_names=[feature], groupby="group", show=False)
     plt.close("all")
 
 
