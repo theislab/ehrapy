@@ -152,6 +152,13 @@ def test_combat_small_batch_raises(batched_data):
         ep.pp.combat(ed.EHRData(X=X, obs=obs), batch_key="batch")
 
 
+@pytest.mark.parametrize("covariates", [["batch"], ["covariate", "covariate"]])
+def test_combat_invalid_covariates_raise(batched_data, covariates):
+    X, obs = batched_data
+    with pytest.raises(ValueError, match="Covariates must be unique"):
+        ep.pp.combat(ed.EHRData(X=X, obs=obs), batch_key="batch", covariates=covariates)
+
+
 @pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
 def test_combat_array_types(array_type, batched_data):
     X, obs = batched_data

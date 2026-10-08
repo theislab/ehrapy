@@ -26,6 +26,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 * {func}`ep.pp.winsorize <ehrapy.preprocessing.winsorize>` takes `inclusive` instead of `**kwargs`, ignores missing values when ranking, and cuts 1% from each side by default ([#1132](https://github.com/theislab/ehrapy/pull/1132)) @Zethson
 
   The previous default `limits=(0.01, 0.99)` cut 99% of the largest values, replacing almost every value of a variable with the same number.
+* {func}`ep.pp.regress_out <ehrapy.preprocessing.regress_out>` no longer takes `n_jobs` ([#1132](https://github.com/theislab/ehrapy/pull/1132)) @Zethson
 * {func}`ep.pp.summarize_measurements <ehrapy.preprocessing.summarize_measurements>` no longer accepts `statistics=None`, which always raised ([#1132](https://github.com/theislab/ehrapy/pull/1132)) @Zethson
 * Remove `ep.pp.mice_forest_impute` and drop the `miceforest` dependency @Zethson
 

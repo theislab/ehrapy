@@ -143,7 +143,6 @@ def regress_out(
     edata: EHRData,
     keys: str | Sequence[str],
     *,
-    n_jobs: int | None = None,
     layer: str | None = None,
     copy: bool = False,
 ) -> EHRData | None:
@@ -156,7 +155,6 @@ def regress_out(
     Args:
         edata: Central data object.
         keys: Keys for observation annotation on which to regress on.
-        n_jobs: Unused, kept for backwards compatibility.
         layer: If provided, which element of `layers` to regress on.
         copy: Determines whether a copy of `edata` is returned.
 
@@ -362,6 +360,8 @@ def combat(
     X = edata.X if layer is None else edata.layers[layer]
     _raise_if_sparse(X, "combat", "standardizing the variables centers them")
 
+    if covariates and (batch_key in covariates or len(set(covariates)) < len(covariates)):
+        raise ValueError("Covariates must be unique and must not contain the batch key.")
     batches = pd.get_dummies(edata.obs[batch_key].astype("category").cat.remove_unused_categories(), dtype=np.float64)
     sizes = batches.sum()
     if (sizes < 2).any():
