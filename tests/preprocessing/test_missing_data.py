@@ -12,11 +12,18 @@ import ehrapy as ep
 from tests.conftest import forbid_dask_compute
 
 
-def test_missing_data_mask_nan(missing_values_edata):
-    ep.pp.missing_data_mask(missing_values_edata)
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+def test_missing_data_mask_nan(array_type, missing_values_edata):
+    edata = missing_values_edata
+    edata.X = array_type(edata.X)
+
+    with forbid_dask_compute():
+        ep.pp.missing_data_mask(edata)
 
     expected = np.array([[False, True, False], [True, True, False]])
-    assert np.array_equal(missing_values_edata.layers["missing_data_mask"], expected)
+    assert isinstance(edata.layers["missing_data_mask"], array_type.cls)
+    assert isinstance(edata.X, array_type.cls)
+    assert np.array_equal(to_dense(edata.layers["missing_data_mask"], to_cpu_memory=True), expected)
 
 
 @pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)

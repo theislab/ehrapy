@@ -1,6 +1,7 @@
 import warnings
 from pathlib import Path
 
+import dask.array as da
 import ehrdata as ed
 import numpy as np
 import pandas as pd
@@ -20,21 +21,33 @@ def test_vars_checks(edata_to_norm):
         ep.pp.scale_norm(edata_to_norm, var_names=["String1"])
 
 
-def test_norm_scale(edata_to_norm):
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+def test_norm_scale(array_type, edata_to_norm):
     warnings.filterwarnings("ignore")
-    ep.pp.scale_norm(edata_to_norm)
+    edata_to_norm.X = array_type(edata_to_norm.X)
 
-    edata_norm = ep.pp.scale_norm(edata_to_norm, copy=True)
+    if array_type.flags & Flags.Sparse:
+        with pytest.raises(NotImplementedError):
+            ep.pp.scale_norm(edata_to_norm)
+        return
+
+    with forbid_dask_compute():
+        ep.pp.scale_norm(edata_to_norm)
+        edata_norm = ep.pp.scale_norm(edata_to_norm, copy=True)
 
     num1_norm = np.array([-1.4039999, 0.55506986, 0.84893], dtype=np.float32)
     num2_norm = np.array([-1.3587323, 1.0190493, 0.3396831], dtype=np.float32)
 
-    assert np.array_equal(edata_norm.X[:, 0], edata_to_norm.X[:, 0])
-    assert np.array_equal(edata_norm.X[:, 1], edata_to_norm.X[:, 1])
-    assert np.array_equal(edata_norm.X[:, 2], edata_to_norm.X[:, 2])
-    assert np.allclose(edata_norm.X[:, 3], num1_norm)
-    assert np.allclose(edata_norm.X[:, 4], num2_norm)
-    assert np.allclose(edata_norm.X[:, 5], edata_to_norm.X[:, 5], equal_nan=True)
+    assert isinstance(edata_to_norm.X, array_type.cls)
+    assert isinstance(edata_norm.X, array_type.cls)
+    X = to_dense(edata_to_norm.X, to_cpu_memory=True)
+    X_norm = to_dense(edata_norm.X, to_cpu_memory=True)
+    assert np.array_equal(X_norm[:, 0], X[:, 0])
+    assert np.array_equal(X_norm[:, 1], X[:, 1])
+    assert np.array_equal(X_norm[:, 2], X[:, 2])
+    assert np.allclose(X_norm[:, 3], num1_norm)
+    assert np.allclose(X_norm[:, 4], num2_norm)
+    assert np.allclose(X_norm[:, 5], X[:, 5], equal_nan=True)
 
 
 def test_norm_scale_integers(edata_mini_integers_in_X):
@@ -58,29 +71,48 @@ def test_norm_scale_integers(edata_mini_integers_in_X):
     assert np.allclose(edata_norm.X, in_days_norm)
 
 
-def test_norm_scale_kwargs(edata_to_norm):
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+def test_norm_scale_kwargs(array_type, edata_to_norm):
+    edata_to_norm.X = array_type(edata_to_norm.X)
 
-    edata_norm = ep.pp.scale_norm(edata_to_norm, copy=True, with_mean=False)
+    if array_type.flags & Flags.Sparse and array_type.flags & Flags.Dask:
+        with pytest.raises(NotImplementedError):
+            ep.pp.scale_norm(edata_to_norm, copy=True, with_mean=False)
+        return
+
+    with forbid_dask_compute():
+        edata_norm = ep.pp.scale_norm(edata_to_norm, copy=True, with_mean=False)
 
     num1_norm = np.array([3.3304186, 5.2894883, 5.5833483], dtype=np.float32)
     num2_norm = np.array([-0.6793662, 1.6984155, 1.0190493], dtype=np.float32)
 
-    assert np.allclose(edata_norm.X[:, 3], num1_norm)
-    assert np.allclose(edata_norm.X[:, 4], num2_norm)
+    assert isinstance(edata_norm.X, array_type.cls)
+    X_norm = to_dense(edata_norm.X, to_cpu_memory=True)
+    assert np.allclose(X_norm[:, 3], num1_norm)
+    assert np.allclose(X_norm[:, 4], num2_norm)
 
 
-def test_norm_scale_group(edata_mini_normalization):
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+def test_norm_scale_group(array_type, edata_mini_normalization):
     edata_mini_casted = edata_mini_normalization.copy()
+    ed.infer_feature_types(edata_mini_casted, output=None)
+    edata_mini_casted.X = array_type(edata_mini_casted.X)
 
     with pytest.raises(KeyError):
         ep.pp.scale_norm(edata_mini_casted, groupby="invalid_key", copy=True)
 
-    edata_mini_norm = ep.pp.scale_norm(
-        edata_mini_casted,
-        var_names=["sys_bp_entry", "dia_bp_entry"],
-        groupby="disease",
-        copy=True,
-    )
+    if array_type.flags & Flags.Sparse:
+        with pytest.raises(NotImplementedError):
+            ep.pp.scale_norm(edata_mini_casted, var_names=["sys_bp_entry", "dia_bp_entry"], groupby="disease")
+        return
+
+    with forbid_dask_compute():
+        edata_mini_norm = ep.pp.scale_norm(
+            edata_mini_casted,
+            var_names=["sys_bp_entry", "dia_bp_entry"],
+            groupby="disease",
+            copy=True,
+        )
     col1_norm = np.array(
         [
             -1.34164079,
@@ -94,24 +126,38 @@ def test_norm_scale_group(edata_mini_normalization):
         ]
     )
     col2_norm = col1_norm
-    assert np.allclose(edata_mini_norm.X[:, 0], edata_mini_casted.X[:, 0])
-    assert np.allclose(edata_mini_norm.X[:, 1], col1_norm)
-    assert np.allclose(edata_mini_norm.X[:, 2], col2_norm)
+    assert isinstance(edata_mini_norm.X, array_type.cls)
+    X = to_dense(edata_mini_casted.X, to_cpu_memory=True)
+    X_norm = to_dense(edata_mini_norm.X, to_cpu_memory=True)
+    assert np.allclose(X_norm[:, 0], X[:, 0])
+    assert np.allclose(X_norm[:, 1], col1_norm)
+    assert np.allclose(X_norm[:, 2], col2_norm)
 
 
-def test_norm_minmax(edata_to_norm):
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+def test_norm_minmax(array_type, edata_to_norm):
+    edata_to_norm.X = array_type(edata_to_norm.X)
 
-    edata_norm = ep.pp.minmax_norm(edata_to_norm, copy=True)
+    if array_type.flags & Flags.Sparse:
+        with pytest.raises(NotImplementedError):
+            ep.pp.minmax_norm(edata_to_norm, copy=True)
+        return
+
+    with forbid_dask_compute():
+        edata_norm = ep.pp.minmax_norm(edata_to_norm, copy=True)
 
     num1_norm = np.array([0.0, 0.86956537, 0.9999999], dtype=np.dtype(np.float32))
     num2_norm = np.array([0.0, 1.0, 0.71428573], dtype=np.float32)
 
-    assert np.array_equal(edata_norm.X[:, 0], edata_to_norm.X[:, 0])
-    assert np.array_equal(edata_norm.X[:, 1], edata_to_norm.X[:, 1])
-    assert np.array_equal(edata_norm.X[:, 2], edata_to_norm.X[:, 2])
-    assert np.allclose(edata_norm.X[:, 3], num1_norm)
-    assert np.allclose(edata_norm.X[:, 4], num2_norm)
-    assert np.allclose(edata_norm.X[:, 5], edata_to_norm.X[:, 5], equal_nan=True)
+    assert isinstance(edata_norm.X, array_type.cls)
+    X = to_dense(edata_to_norm.X, to_cpu_memory=True)
+    X_norm = to_dense(edata_norm.X, to_cpu_memory=True)
+    assert np.array_equal(X_norm[:, 0], X[:, 0])
+    assert np.array_equal(X_norm[:, 1], X[:, 1])
+    assert np.array_equal(X_norm[:, 2], X[:, 2])
+    assert np.allclose(X_norm[:, 3], num1_norm)
+    assert np.allclose(X_norm[:, 4], num2_norm)
+    assert np.allclose(X_norm[:, 5], X[:, 5], equal_nan=True)
 
 
 def test_norm_minmax_integers(edata_mini_integers_in_X):
@@ -120,49 +166,82 @@ def test_norm_minmax_integers(edata_mini_integers_in_X):
     assert np.allclose(edata_norm.X, in_days_norm)
 
 
-def test_norm_minmax_kwargs(edata_to_norm):
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+def test_norm_minmax_kwargs(array_type, edata_to_norm):
+    edata_to_norm.X = array_type(edata_to_norm.X)
 
-    edata_norm = ep.pp.minmax_norm(edata_to_norm, copy=True, feature_range=(0, 2))
+    if array_type.flags & Flags.Sparse:
+        with pytest.raises(NotImplementedError):
+            ep.pp.minmax_norm(edata_to_norm, copy=True, feature_range=(0, 2))
+        return
+
+    with forbid_dask_compute():
+        edata_norm = ep.pp.minmax_norm(edata_to_norm, copy=True, feature_range=(0, 2))
 
     num1_norm = np.array([0.0, 1.7391307, 1.9999998], dtype=np.float32)
     num2_norm = np.array([0.0, 2.0, 1.4285715], dtype=np.float32)
 
-    assert np.allclose(edata_norm.X[:, 3], num1_norm)
-    assert np.allclose(edata_norm.X[:, 4], num2_norm)
+    assert isinstance(edata_norm.X, array_type.cls)
+    X_norm = to_dense(edata_norm.X, to_cpu_memory=True)
+    assert np.allclose(X_norm[:, 3], num1_norm)
+    assert np.allclose(X_norm[:, 4], num2_norm)
 
 
-def test_norm_minmax_group(edata_mini_normalization):
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+def test_norm_minmax_group(array_type, edata_mini_normalization):
     edata_mini_casted = edata_mini_normalization.copy()
+    ed.infer_feature_types(edata_mini_casted, output=None)
+    edata_mini_casted.X = array_type(edata_mini_casted.X)
 
     with pytest.raises(KeyError):
         ep.pp.minmax_norm(edata_mini_casted, groupby="invalid_key", copy=True)
 
-    edata_mini_norm = ep.pp.minmax_norm(
-        edata_mini_casted,
-        var_names=["sys_bp_entry", "dia_bp_entry"],
-        groupby="disease",
-        copy=True,
-    )
+    if array_type.flags & Flags.Sparse:
+        with pytest.raises(NotImplementedError):
+            ep.pp.minmax_norm(edata_mini_casted, var_names=["sys_bp_entry", "dia_bp_entry"], groupby="disease")
+        return
+
+    with forbid_dask_compute():
+        edata_mini_norm = ep.pp.minmax_norm(
+            edata_mini_casted,
+            var_names=["sys_bp_entry", "dia_bp_entry"],
+            groupby="disease",
+            copy=True,
+        )
     col1_norm = np.array([0.0, 0.33333333, 0.66666667, 1.0, 0.0, 0.33333333, 0.66666667, 1.0])
     col2_norm = col1_norm
-    assert np.allclose(edata_mini_norm.X[:, 0], edata_mini_casted.X[:, 0])
-    assert np.allclose(edata_mini_norm.X[:, 1], col1_norm)
-    assert np.allclose(edata_mini_norm.X[:, 2], col2_norm)
+    assert isinstance(edata_mini_norm.X, array_type.cls)
+    X = to_dense(edata_mini_casted.X, to_cpu_memory=True)
+    X_norm = to_dense(edata_mini_norm.X, to_cpu_memory=True)
+    assert np.allclose(X_norm[:, 0], X[:, 0])
+    assert np.allclose(X_norm[:, 1], col1_norm)
+    assert np.allclose(X_norm[:, 2], col2_norm)
 
 
-def test_norm_maxabs(edata_to_norm):
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+def test_norm_maxabs(array_type, edata_to_norm):
+    edata_to_norm.X = array_type(edata_to_norm.X)
 
-    edata_norm = ep.pp.maxabs_norm(edata_to_norm, copy=True)
+    if array_type.flags & Flags.Sparse and array_type.flags & Flags.Dask:
+        with pytest.raises(NotImplementedError):
+            ep.pp.maxabs_norm(edata_to_norm, copy=True)
+        return
+
+    with forbid_dask_compute():
+        edata_norm = ep.pp.maxabs_norm(edata_to_norm, copy=True)
 
     num1_norm = np.array([0.5964913, 0.94736844, 1.0], dtype=np.float32)
     num2_norm = np.array([-0.4, 1.0, 0.6], dtype=np.float32)
 
-    assert np.array_equal(edata_norm.X[:, 0], edata_to_norm.X[:, 0])
-    assert np.array_equal(edata_norm.X[:, 1], edata_to_norm.X[:, 1])
-    assert np.array_equal(edata_norm.X[:, 2], edata_to_norm.X[:, 2])
-    assert np.allclose(edata_norm.X[:, 3], num1_norm)
-    assert np.allclose(edata_norm.X[:, 4], num2_norm)
-    assert np.allclose(edata_norm.X[:, 5], edata_to_norm.X[:, 5], equal_nan=True)
+    assert isinstance(edata_norm.X, array_type.cls)
+    X = to_dense(edata_to_norm.X, to_cpu_memory=True)
+    X_norm = to_dense(edata_norm.X, to_cpu_memory=True)
+    assert np.array_equal(X_norm[:, 0], X[:, 0])
+    assert np.array_equal(X_norm[:, 1], X[:, 1])
+    assert np.array_equal(X_norm[:, 2], X[:, 2])
+    assert np.allclose(X_norm[:, 3], num1_norm)
+    assert np.allclose(X_norm[:, 4], num2_norm)
+    assert np.allclose(X_norm[:, 5], X[:, 5], equal_nan=True)
 
 
 def test_norm_maxabs_integers(edata_mini_integers_in_X):
@@ -171,18 +250,27 @@ def test_norm_maxabs_integers(edata_mini_integers_in_X):
     assert np.allclose(edata_norm.X, in_days_norm)
 
 
-def test_norm_maxabs_group(edata_mini_normalization):
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+def test_norm_maxabs_group(array_type, edata_mini_normalization):
     edata_mini_casted = edata_mini_normalization.copy()
+    ed.infer_feature_types(edata_mini_casted, output=None)
+    edata_mini_casted.X = array_type(edata_mini_casted.X)
 
     with pytest.raises(KeyError):
         ep.pp.maxabs_norm(edata_mini_casted, groupby="invalid_key", copy=True)
 
-    edata_mini_norm = ep.pp.maxabs_norm(
-        edata_mini_casted,
-        var_names=["sys_bp_entry", "dia_bp_entry"],
-        groupby="disease",
-        copy=True,
-    )
+    if array_type.flags & Flags.Sparse and array_type.flags & Flags.Dask:
+        with pytest.raises(NotImplementedError):
+            ep.pp.maxabs_norm(edata_mini_casted, var_names=["sys_bp_entry", "dia_bp_entry"], groupby="disease")
+        return
+
+    with forbid_dask_compute():
+        edata_mini_norm = ep.pp.maxabs_norm(
+            edata_mini_casted,
+            var_names=["sys_bp_entry", "dia_bp_entry"],
+            groupby="disease",
+            copy=True,
+        )
     col1_norm = np.array(
         [
             0.9787234,
@@ -196,24 +284,38 @@ def test_norm_maxabs_group(edata_mini_normalization):
         ]
     )
     col2_norm = np.array([0.96296296, 0.97530864, 0.98765432, 1.0, 0.9625, 0.975, 0.9875, 1.0])
-    assert np.allclose(edata_mini_norm.X[:, 0], edata_mini_casted.X[:, 0])
-    assert np.allclose(edata_mini_norm.X[:, 1], col1_norm)
-    assert np.allclose(edata_mini_norm.X[:, 2], col2_norm)
+    assert isinstance(edata_mini_norm.X, array_type.cls)
+    X = to_dense(edata_mini_casted.X, to_cpu_memory=True)
+    X_norm = to_dense(edata_mini_norm.X, to_cpu_memory=True)
+    assert np.allclose(X_norm[:, 0], X[:, 0])
+    assert np.allclose(X_norm[:, 1], col1_norm)
+    assert np.allclose(X_norm[:, 2], col2_norm)
 
 
-def test_norm_robust_scale(edata_to_norm):
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+def test_norm_robust_scale(array_type, edata_to_norm):
+    edata_to_norm.X = array_type(edata_to_norm.X)
 
-    edata_norm = ep.pp.robust_scale_norm(edata_to_norm, copy=True)
+    if array_type.flags & Flags.Sparse:
+        with pytest.raises(NotImplementedError):
+            ep.pp.robust_scale_norm(edata_to_norm, copy=True)
+        return
+
+    with forbid_dask_compute():
+        edata_norm = ep.pp.robust_scale_norm(edata_to_norm, copy=True)
 
     num1_norm = np.array([-1.73913043, 0.0, 0.26086957], dtype=np.float32)
     num2_norm = np.array([-1.4285715, 0.5714286, 0.0], dtype=np.float32)
 
-    assert np.array_equal(edata_norm.X[:, 0], edata_to_norm.X[:, 0])
-    assert np.array_equal(edata_norm.X[:, 1], edata_to_norm.X[:, 1])
-    assert np.array_equal(edata_norm.X[:, 2], edata_to_norm.X[:, 2])
-    assert np.allclose(edata_norm.X[:, 3], num1_norm)
-    assert np.allclose(edata_norm.X[:, 4], num2_norm)
-    assert np.allclose(edata_norm.X[:, 5], edata_to_norm.X[:, 5], equal_nan=True)
+    assert isinstance(edata_norm.X, array_type.cls)
+    X = to_dense(edata_to_norm.X, to_cpu_memory=True)
+    X_norm = to_dense(edata_norm.X, to_cpu_memory=True)
+    assert np.array_equal(X_norm[:, 0], X[:, 0])
+    assert np.array_equal(X_norm[:, 1], X[:, 1])
+    assert np.array_equal(X_norm[:, 2], X[:, 2])
+    assert np.allclose(X_norm[:, 3], num1_norm)
+    assert np.allclose(X_norm[:, 4], num2_norm)
+    assert np.allclose(X_norm[:, 5], X[:, 5], equal_nan=True)
 
 
 def test_norm_robust_scale_integers(edata_mini_integers_in_X):
@@ -222,53 +324,86 @@ def test_norm_robust_scale_integers(edata_mini_integers_in_X):
     assert np.allclose(edata_norm.X, in_days_norm)
 
 
-def test_norm_robust_scale_kwargs(edata_to_norm):
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+def test_norm_robust_scale_kwargs(array_type, edata_to_norm):
+    edata_to_norm.X = array_type(edata_to_norm.X)
 
-    edata_norm = ep.pp.robust_scale_norm(edata_to_norm, copy=True, with_scaling=False)
+    if array_type.flags & Flags.Sparse:
+        with pytest.raises(NotImplementedError):
+            ep.pp.robust_scale_norm(edata_to_norm, copy=True, with_scaling=False)
+        return
+
+    with forbid_dask_compute():
+        edata_norm = ep.pp.robust_scale_norm(edata_to_norm, copy=True, with_scaling=False)
 
     num1_norm = np.array([-2.0, 0.0, 0.2999997], dtype=np.float32)
     num2_norm = np.array([-5.0, 2.0, 0.0], dtype=np.float32)
 
-    assert np.allclose(edata_norm.X[:, 3], num1_norm)
-    assert np.allclose(edata_norm.X[:, 4], num2_norm)
+    assert isinstance(edata_norm.X, array_type.cls)
+    X_norm = to_dense(edata_norm.X, to_cpu_memory=True)
+    assert np.allclose(X_norm[:, 3], num1_norm)
+    assert np.allclose(X_norm[:, 4], num2_norm)
 
 
-def test_norm_robust_scale_group(edata_mini_normalization):
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+def test_norm_robust_scale_group(array_type, edata_mini_normalization):
     edata_mini_casted = edata_mini_normalization.copy()
+    ed.infer_feature_types(edata_mini_casted, output=None)
+    edata_mini_casted.X = array_type(edata_mini_casted.X)
 
     with pytest.raises(KeyError):
         ep.pp.robust_scale_norm(edata_mini_casted, groupby="invalid_key", copy=True)
 
-    edata_mini_norm = ep.pp.robust_scale_norm(
-        edata_mini_casted,
-        var_names=["sys_bp_entry", "dia_bp_entry"],
-        groupby="disease",
-        copy=True,
-    )
+    if array_type.flags & Flags.Sparse:
+        with pytest.raises(NotImplementedError):
+            ep.pp.robust_scale_norm(edata_mini_casted, var_names=["sys_bp_entry", "dia_bp_entry"], groupby="disease")
+        return
+
+    with forbid_dask_compute():
+        edata_mini_norm = ep.pp.robust_scale_norm(
+            edata_mini_casted,
+            var_names=["sys_bp_entry", "dia_bp_entry"],
+            groupby="disease",
+            copy=True,
+        )
     col1_norm = np.array(
         [-1.0, -0.33333333, 0.33333333, 1.0, -1.0, -0.33333333, 0.33333333, 1.0],
         dtype=np.float32,
     )
     col2_norm = col1_norm
-    assert np.allclose(edata_mini_norm.X[:, 0], edata_mini_casted.X[:, 0])
-    assert np.allclose(edata_mini_norm.X[:, 1], col1_norm)
-    assert np.allclose(edata_mini_norm.X[:, 2], col2_norm)
+    assert isinstance(edata_mini_norm.X, array_type.cls)
+    X = to_dense(edata_mini_casted.X, to_cpu_memory=True)
+    X_norm = to_dense(edata_mini_norm.X, to_cpu_memory=True)
+    assert np.allclose(X_norm[:, 0], X[:, 0])
+    assert np.allclose(X_norm[:, 1], col1_norm)
+    assert np.allclose(X_norm[:, 2], col2_norm)
 
 
-def test_norm_quantile_uniform(edata_to_norm):
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+def test_norm_quantile_uniform(array_type, edata_to_norm):
     warnings.filterwarnings("ignore", category=UserWarning)
+    edata_to_norm.X = array_type(edata_to_norm.X)
 
-    edata_norm = ep.pp.quantile_norm(edata_to_norm, copy=True)
+    if array_type.flags & Flags.Sparse:
+        with pytest.raises(NotImplementedError):
+            ep.pp.quantile_norm(edata_to_norm, copy=True)
+        return
+
+    with forbid_dask_compute():
+        edata_norm = ep.pp.quantile_norm(edata_to_norm, copy=True)
 
     num1_norm = np.array([0.0, 0.5, 1.0], dtype=np.float32)
     num2_norm = np.array([0.0, 1.0, 0.5], dtype=np.float32)
 
-    assert np.array_equal(edata_norm.X[:, 0], edata_to_norm.X[:, 0])
-    assert np.array_equal(edata_norm.X[:, 1], edata_to_norm.X[:, 1])
-    assert np.array_equal(edata_norm.X[:, 2], edata_to_norm.X[:, 2])
-    assert np.allclose(edata_norm.X[:, 3], num1_norm)
-    assert np.allclose(edata_norm.X[:, 4], num2_norm)
-    assert np.allclose(edata_norm.X[:, 5], edata_to_norm.X[:, 5], equal_nan=True)
+    assert isinstance(edata_norm.X, array_type.cls)
+    X = to_dense(edata_to_norm.X, to_cpu_memory=True)
+    X_norm = to_dense(edata_norm.X, to_cpu_memory=True)
+    assert np.array_equal(X_norm[:, 0], X[:, 0])
+    assert np.array_equal(X_norm[:, 1], X[:, 1])
+    assert np.array_equal(X_norm[:, 2], X[:, 2])
+    assert np.allclose(X_norm[:, 3], num1_norm)
+    assert np.allclose(X_norm[:, 4], num2_norm)
+    assert np.allclose(X_norm[:, 5], X[:, 5], equal_nan=True)
 
 
 def test_norm_quantile_integers(edata_mini_integers_in_X):
@@ -292,52 +427,85 @@ def test_norm_quantile_integers(edata_mini_integers_in_X):
     assert np.allclose(edata_norm.X, in_days_norm)
 
 
-def test_norm_quantile_uniform_kwargs(edata_to_norm):
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+def test_norm_quantile_uniform_kwargs(array_type, edata_to_norm):
+    edata_to_norm.X = array_type(edata_to_norm.X)
 
-    edata_norm = ep.pp.quantile_norm(edata_to_norm, copy=True, output_distribution="normal", n_quantiles=3)
+    if array_type.flags & Flags.Sparse:
+        with pytest.raises(NotImplementedError):
+            ep.pp.quantile_norm(edata_to_norm, copy=True, output_distribution="normal", n_quantiles=3)
+        return
+
+    with forbid_dask_compute():
+        edata_norm = ep.pp.quantile_norm(edata_to_norm, copy=True, output_distribution="normal", n_quantiles=3)
 
     num1_norm = np.array([-5.19933758, 0.0, 5.19933758], dtype=np.float32)
     num2_norm = np.array([-5.19933758, 5.19933758, 0.0], dtype=np.float32)
 
-    assert np.allclose(edata_norm.X[:, 3], num1_norm)
-    assert np.allclose(edata_norm.X[:, 4], num2_norm)
+    assert isinstance(edata_norm.X, array_type.cls)
+    X_norm = to_dense(edata_norm.X, to_cpu_memory=True)
+    assert np.allclose(X_norm[:, 3], num1_norm)
+    assert np.allclose(X_norm[:, 4], num2_norm)
 
 
-def test_norm_quantile_uniform_group(edata_mini_normalization):
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+def test_norm_quantile_uniform_group(array_type, edata_mini_normalization):
     edata_mini_casted = edata_mini_normalization.copy()
+    ed.infer_feature_types(edata_mini_casted, output=None)
+    edata_mini_casted.X = array_type(edata_mini_casted.X)
 
     with pytest.raises(KeyError):
         ep.pp.quantile_norm(edata_mini_casted, groupby="invalid_key", copy=True)
 
-    edata_mini_norm = ep.pp.quantile_norm(
-        edata_mini_casted,
-        var_names=["sys_bp_entry", "dia_bp_entry"],
-        groupby="disease",
-        copy=True,
-    )
+    if array_type.flags & Flags.Sparse:
+        with pytest.raises(NotImplementedError):
+            ep.pp.quantile_norm(edata_mini_casted, var_names=["sys_bp_entry", "dia_bp_entry"], groupby="disease")
+        return
+
+    with forbid_dask_compute():
+        edata_mini_norm = ep.pp.quantile_norm(
+            edata_mini_casted,
+            var_names=["sys_bp_entry", "dia_bp_entry"],
+            groupby="disease",
+            copy=True,
+        )
     col1_norm = np.array(
         [0.0, 0.33333333, 0.66666667, 1.0, 0.0, 0.33333333, 0.66666667, 1.0],
         dtype=np.float32,
     )
     col2_norm = col1_norm
-    assert np.allclose(edata_mini_norm.X[:, 0], edata_mini_casted.X[:, 0])
-    assert np.allclose(edata_mini_norm.X[:, 1], col1_norm)
-    assert np.allclose(edata_mini_norm.X[:, 2], col2_norm)
+    assert isinstance(edata_mini_norm.X, array_type.cls)
+    X = to_dense(edata_mini_casted.X, to_cpu_memory=True)
+    X_norm = to_dense(edata_mini_norm.X, to_cpu_memory=True)
+    assert np.allclose(X_norm[:, 0], X[:, 0])
+    assert np.allclose(X_norm[:, 1], col1_norm)
+    assert np.allclose(X_norm[:, 2], col2_norm)
 
 
-def test_norm_power(edata_to_norm):
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+def test_norm_power(array_type, edata_to_norm):
+    edata_to_norm.X = array_type(edata_to_norm.X)
 
-    edata_norm = ep.pp.power_norm(edata_to_norm, copy=True)
+    if array_type.flags & Flags.Sparse:
+        with pytest.raises(NotImplementedError):
+            ep.pp.power_norm(edata_to_norm, copy=True)
+        return
+
+    with forbid_dask_compute():
+        edata_norm = ep.pp.power_norm(edata_to_norm, copy=True)
 
     num1_norm = np.array([-1.3821232, 0.43163615, 0.950487], dtype=np.float32)
     num2_norm = np.array([-1.340104, 1.0613203, 0.27878374], dtype=np.float32)
 
-    assert np.array_equal(edata_norm.X[:, 0], edata_to_norm.X[:, 0])
-    assert np.array_equal(edata_norm.X[:, 1], edata_to_norm.X[:, 1])
-    assert np.array_equal(edata_norm.X[:, 2], edata_to_norm.X[:, 2])
-    assert np.allclose(edata_norm.X[:, 3], num1_norm, rtol=1.1)
-    assert np.allclose(edata_norm.X[:, 4], num2_norm, rtol=1.1)
-    assert np.allclose(edata_norm.X[:, 5], edata_to_norm.X[:, 5], equal_nan=True)
+    assert isinstance(edata_norm.X, array_type.cls)
+    X = to_dense(edata_to_norm.X, to_cpu_memory=True)
+    X_norm = to_dense(edata_norm.X, to_cpu_memory=True)
+    assert np.array_equal(X_norm[:, 0], X[:, 0])
+    assert np.array_equal(X_norm[:, 1], X[:, 1])
+    assert np.array_equal(X_norm[:, 2], X[:, 2])
+    assert np.allclose(X_norm[:, 3], num1_norm, rtol=1.1)
+    assert np.allclose(X_norm[:, 4], num2_norm, rtol=1.1)
+    assert np.allclose(X_norm[:, 5], X[:, 5], equal_nan=True)
 
 
 def test_norm_power_integers(edata_mini_integers_in_X):
@@ -361,32 +529,51 @@ def test_norm_power_integers(edata_mini_integers_in_X):
     assert np.allclose(edata_norm.X, in_days_norm, rtol=1e-4, atol=1e-4)
 
 
-def test_norm_power_kwargs(edata_to_norm):
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+def test_norm_power_kwargs(array_type, edata_to_norm):
+    edata_to_norm.X = array_type(edata_to_norm.X)
+
+    if array_type.flags & Flags.Sparse:
+        with pytest.raises(NotImplementedError):
+            ep.pp.power_norm(edata_to_norm, copy=True, standardize=False)
+        return
 
     with pytest.raises(ValueError):
-        ep.pp.power_norm(edata_to_norm, copy=True, method="box-cox")
+        to_dense(ep.pp.power_norm(edata_to_norm, copy=True, method="box-cox").X, to_cpu_memory=True)
 
-    edata_norm = ep.pp.power_norm(edata_to_norm, copy=True, standardize=False)
+    with forbid_dask_compute():
+        edata_norm = ep.pp.power_norm(edata_to_norm, copy=True, standardize=False)
 
     num1_norm = np.array([201.03636, 1132.8341, 1399.3877], dtype=np.float32)
     num2_norm = np.array([-1.8225479, 5.921072, 3.397709], dtype=np.float32)
 
-    assert np.allclose(edata_norm.X[:, 3], num1_norm, rtol=1e-02, atol=1e-02)
-    assert np.allclose(edata_norm.X[:, 4], num2_norm, rtol=1e-02, atol=1e-02)
+    assert isinstance(edata_norm.X, array_type.cls)
+    X_norm = to_dense(edata_norm.X, to_cpu_memory=True)
+    assert np.allclose(X_norm[:, 3], num1_norm, rtol=1e-02, atol=1e-02)
+    assert np.allclose(X_norm[:, 4], num2_norm, rtol=1e-02, atol=1e-02)
 
 
-def test_norm_power_group(edata_mini_normalization):
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+def test_norm_power_group(array_type, edata_mini_normalization):
     edata_mini_casted = edata_mini_normalization.copy()
+    ed.infer_feature_types(edata_mini_casted, output=None)
+    edata_mini_casted.X = array_type(edata_mini_casted.X)
 
     with pytest.raises(KeyError):
         ep.pp.power_norm(edata_mini_casted, groupby="invalid_key", copy=True)
 
-    edata_mini_norm = ep.pp.power_norm(
-        edata_mini_casted,
-        var_names=["sys_bp_entry", "dia_bp_entry"],
-        groupby="disease",
-        copy=True,
-    )
+    if array_type.flags & Flags.Sparse:
+        with pytest.raises(NotImplementedError):
+            ep.pp.power_norm(edata_mini_casted, var_names=["sys_bp_entry", "dia_bp_entry"], groupby="disease")
+        return
+
+    with forbid_dask_compute():
+        edata_mini_norm = ep.pp.power_norm(
+            edata_mini_casted,
+            var_names=["sys_bp_entry", "dia_bp_entry"],
+            groupby="disease",
+            copy=True,
+        )
     col1_norm = np.array(
         [
             -1.34266204,
@@ -415,11 +602,14 @@ def test_norm_power_group(edata_mini_normalization):
         ],
         dtype=np.float32,
     )
+    assert isinstance(edata_mini_norm.X, array_type.cls)
+    X = to_dense(edata_mini_casted.X, to_cpu_memory=True)
+    X_norm = to_dense(edata_mini_norm.X, to_cpu_memory=True)
     # The tests are disabled (= tolerance set to 1)
     # because depending on weird dependency versions they currently give different results
-    assert np.allclose(edata_mini_norm.X[:, 0], edata_mini_casted.X[:, 0], rtol=1, atol=1)
-    assert np.allclose(edata_mini_norm.X[:, 1], col1_norm, rtol=1, atol=1)
-    assert np.allclose(edata_mini_norm.X[:, 2], col2_norm, rtol=1, atol=1)
+    assert np.allclose(X_norm[:, 0], X[:, 0], rtol=1, atol=1)
+    assert np.allclose(X_norm[:, 1], col1_norm, rtol=1, atol=1)
+    assert np.allclose(X_norm[:, 2], col2_norm, rtol=1, atol=1)
 
 
 def test_norm_log1p(edata_to_norm):
@@ -640,6 +830,7 @@ def test_norm_with_X_none_and_layer(edata_blobs_timeseries_small, norm_func):
         assert not np.allclose(layer_before, result.layers[layer], equal_nan=True)
 
 
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu | Flags.Sparse)
 @pytest.mark.parametrize(
     "norm_func",
     [
@@ -651,10 +842,11 @@ def test_norm_with_X_none_and_layer(edata_blobs_timeseries_small, norm_func):
         ep.pp.power_norm,
     ],
 )
-def test_norm_group_3D(edata_blobs_timeseries_small, norm_func):
+def test_norm_group_3D(edata_blobs_timeseries_small, array_type, norm_func):
     edata = edata_blobs_timeseries_small
     layer = DEFAULT_TEM_LAYER_NAME
     edata.var[FEATURE_TYPE_KEY] = NUMERIC_TAG
+    edata.layers[layer] = array_type(edata.layers[layer])
 
     if norm_func == ep.pp.power_norm:
         ep.pp.offset_negative_values(edata, layer=layer)
@@ -664,18 +856,19 @@ def test_norm_group_3D(edata_blobs_timeseries_small, norm_func):
     group_size = n_obs // 2
     edata.obs["group"] = ["A"] * group_size + ["B"] * (n_obs - group_size)
 
-    # raise NotImplementedError for all dask arrays
     original_shape = edata.layers[layer].shape
     layer_before = edata.layers[layer].copy()
 
-    norm_func(edata, layer=layer, groupby="group")
+    with forbid_dask_compute():
+        norm_func(edata, layer=layer, groupby="group")
 
     # verify shape and tracking
     assert edata.layers[layer].shape == original_shape
     assert "normalization" in edata.uns
     assert len(edata.uns["normalization"]) > 0
 
-    layer_after = edata.layers[layer]
+    assert isinstance(edata.layers[layer], array_type.cls)
+    layer_after = to_dense(edata.layers[layer], to_cpu_memory=True)
 
     # verify data changed
     assert not np.allclose(layer_before, layer_after, equal_nan=True)
@@ -781,3 +974,11 @@ def test_norm_groupby_missing_values(edata_mini_normalization):
     edata_mini_normalization.obs.loc[edata_mini_normalization.obs_names[0], "disease"] = np.nan
     with pytest.raises(ValueError, match="contains missing values"):
         ep.pp.scale_norm(edata_mini_normalization, groupby="disease")
+
+
+def test_norm_lazy_without_feature_types_raises(edata_mini_normalization):
+    edata = edata_mini_normalization.copy()
+    edata.X = da.from_array(np.asarray(edata.X, dtype=np.float64), chunks=2)
+
+    with forbid_dask_compute(), pytest.raises(ValueError, match="needs feature types"):
+        ep.pp.scale_norm(edata, var_names=["sys_bp_entry"])

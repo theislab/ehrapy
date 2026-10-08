@@ -13,6 +13,15 @@ from testing.fast_array_utils import Flags
 from ehrapy.preprocessing._encoding import _reorder_encodings, encode
 from tests.conftest import TEST_DATA_PATH, forbid_dask_compute
 
+
+def _convert_edata_arrays(edata, array_type):
+    """Wrap ``edata.X`` and ``edata.layers['layer_2']`` with ``array_type``."""
+    edata.X = array_type(edata.X)
+    if "layer_2" in edata.layers:
+        edata.layers["layer_2"] = array_type(edata.layers["layer_2"])
+    return edata
+
+
 CURRENT_DIR = Path(__file__).parent
 _TEST_PATH = f"{TEST_DATA_PATH}/encode"
 
@@ -28,7 +37,8 @@ def test_encode_3D_edata(edata_blob_small):
     assert encoded_layer.shape[2] == n_time
 
 
-def test_encode_3D_longitudinal_one_hot(edata_mini_3D_missing_values):
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu | Flags.Sparse)
+def test_encode_3D_longitudinal_one_hot(edata_mini_3D_missing_values, array_type):
     """One-hot encode a 3D layer with categorical columns.
 
     The encoder must fit on values stacked across time so the category space is shared, the time axis is preserved, and ``obs`` stores the first-timepoint value.
@@ -38,9 +48,14 @@ def test_encode_3D_longitudinal_one_hot(edata_mini_3D_missing_values):
     n_obs, n_vars, n_time = edata.layers[layer].shape
     edata.var_names = ["n1", "n2", "n3", "n4", "letter", "yn"]
 
-    encoded = encode(edata, autodetect=False, encodings={"one-hot": ["letter", "yn"]}, layer=layer)
+    edata.layers[layer] = array_type(edata.layers[layer])
+
+    with forbid_dask_compute(allowed=1):
+        encoded = encode(edata, autodetect=False, encodings={"one-hot": ["letter", "yn"]}, layer=layer)
 
     encoded_layer = encoded.layers[layer]
+    assert isinstance(encoded_layer, array_type.cls)
+    assert isinstance(encoded.layers["original"], array_type.cls)
     assert encoded_layer.ndim == 3
     assert encoded_layer.shape[0] == n_obs
     assert encoded_layer.shape[2] == n_time
@@ -81,12 +96,18 @@ def test_duplicate_column_encoding(encode_ds_1_edata, layer):
         )
 
 
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu | Flags.Sparse)
 @pytest.mark.parametrize("layer", [None, "layer_2"])
-def test_autodetect_encode(encode_ds_1_edata, layer):
+def test_autodetect_encode(encode_ds_1_edata, layer, array_type):
+    _convert_edata_arrays(encode_ds_1_edata, array_type)
     # break .X to ensure its not used
     if layer is not None:
         encode_ds_1_edata.X = None
-    encoded_edata = encode(encode_ds_1_edata, autodetect=True, layer=layer)
+    with forbid_dask_compute(allowed=1):
+        encoded_edata = encode(encode_ds_1_edata, autodetect=True, layer=layer)
+    encoded_X = encoded_edata.X if layer is None else encoded_edata.layers[layer]
+    assert isinstance(encoded_X, array_type.cls)
+    assert isinstance(encoded_edata.layers["original"], array_type.cls)
     assert list(encoded_edata.obs.columns) == ["survival", "clinic_day"]
     assert set(encoded_edata.var_names) == {
         "ehrapycat_survival_False",
@@ -183,11 +204,17 @@ def test_autodetect_num_only(capfd, encode_ds_2_edata, layer):
     assert id(encoded_edata) == id(encode_ds_2_edata)
 
 
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu | Flags.Sparse)
 @pytest.mark.parametrize("layer", [None, "layer_2"])
-def test_autodetect_custom_mode(encode_ds_1_edata, layer):
+def test_autodetect_custom_mode(encode_ds_1_edata, layer, array_type):
+    _convert_edata_arrays(encode_ds_1_edata, array_type)
     if layer is not None:
         encode_ds_1_edata.X = None
-    encoded_edata = encode(encode_ds_1_edata, autodetect=True, encodings="label", layer=layer)
+    with forbid_dask_compute(allowed=1):
+        encoded_edata = encode(encode_ds_1_edata, autodetect=True, encodings="label", layer=layer)
+    encoded_X = encoded_edata.X if layer is None else encoded_edata.layers[layer]
+    assert isinstance(encoded_X, array_type.cls)
+    assert isinstance(encoded_edata.layers["original"], array_type.cls)
     assert list(encoded_edata.obs.columns) == ["survival", "clinic_day"]
     assert set(encoded_edata.var_names) == {
         "ehrapycat_survival",
@@ -244,17 +271,22 @@ def test_autodetect_encode_again(encode_ds_1_edata, layer):
     assert id(encoded_edata_again) == id(encoded_edata)
 
 
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu | Flags.Sparse)
 @pytest.mark.parametrize("layer", [None, "layer_2"])
-def test_custom_encode(encode_ds_1_edata, layer):
+def test_custom_encode(encode_ds_1_edata, layer, array_type):
+    _convert_edata_arrays(encode_ds_1_edata, array_type)
     if layer is not None:
         encode_ds_1_edata.X = None
-    encoded_edata = encode(
-        encode_ds_1_edata,
-        autodetect=False,
-        encodings={"label": ["survival"], "one-hot": ["clinic_day"]},
-        layer=layer,
-    )
+    with forbid_dask_compute(allowed=1):
+        encoded_edata = encode(
+            encode_ds_1_edata,
+            autodetect=False,
+            encodings={"label": ["survival"], "one-hot": ["clinic_day"]},
+            layer=layer,
+        )
     X = encoded_edata.X if layer is None else encoded_edata.layers[layer]
+    assert isinstance(X, array_type.cls)
+    assert isinstance(encoded_edata.layers["original"], array_type.cls)
     assert X.shape == (5, 8)
     assert list(encoded_edata.obs.columns) == ["survival", "clinic_day"]
     assert "ehrapycat_survival" in list(encoded_edata.var_names)
@@ -309,19 +341,24 @@ def test_custom_encode(encode_ds_1_edata, layer):
     assert isinstance(encoded_edata.obs["clinic_day"].dtype, CategoricalDtype)
 
 
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu | Flags.Sparse)
 @pytest.mark.parametrize("layer", [None, "layer_2"])
-def test_custom_encode_again_single_columns_encoding(encode_ds_1_edata, layer):
+def test_custom_encode_again_single_columns_encoding(encode_ds_1_edata, layer, array_type):
+    _convert_edata_arrays(encode_ds_1_edata, array_type)
     if layer is not None:
         encode_ds_1_edata.X = None
-    encoded_edata = encode(
-        encode_ds_1_edata,
-        autodetect=False,
-        encodings={"label": ["survival"], "one-hot": ["clinic_day"]},
-        layer=layer,
-    )
-    encoded_edata = encode(encoded_edata, autodetect=False, encodings={"label": ["clinic_day"]}, layer=layer)
+    with forbid_dask_compute(allowed=2):
+        encoded_edata = encode(
+            encode_ds_1_edata,
+            autodetect=False,
+            encodings={"label": ["survival"], "one-hot": ["clinic_day"]},
+            layer=layer,
+        )
+        encoded_edata = encode(encoded_edata, autodetect=False, encodings={"label": ["clinic_day"]}, layer=layer)
 
     X = encoded_edata.X if layer is None else encoded_edata.layers[layer]
+    assert isinstance(X, array_type.cls)
+    assert isinstance(encoded_edata.layers["original"], array_type.cls)
     assert X.shape == (5, 5)
     assert len(encoded_edata.obs.columns) == 2
     assert set(encoded_edata.obs.columns) == {"survival", "clinic_day"}
@@ -346,21 +383,26 @@ def test_custom_encode_again_single_columns_encoding(encode_ds_1_edata, layer):
     assert isinstance(encoded_edata.obs["clinic_day"].dtype, CategoricalDtype)
 
 
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu | Flags.Sparse)
 @pytest.mark.parametrize("layer", [None, "layer_2"])
-def test_custom_encode_again_multiple_columns_encoding(encode_ds_1_edata, layer):
+def test_custom_encode_again_multiple_columns_encoding(encode_ds_1_edata, layer, array_type):
+    _convert_edata_arrays(encode_ds_1_edata, array_type)
     if layer is not None:
         encode_ds_1_edata.X = None
-    encoded_edata = encode(
-        encode_ds_1_edata, autodetect=False, encodings={"one-hot": ["clinic_day", "survival"]}, layer=layer
-    )
-    encoded_edata_again = encode(
-        encoded_edata,
-        autodetect=False,
-        encodings={"label": ["survival"], "one-hot": ["clinic_day"]},
-        layer=layer,
-    )
+    with forbid_dask_compute(allowed=2):
+        encoded_edata = encode(
+            encode_ds_1_edata, autodetect=False, encodings={"one-hot": ["clinic_day", "survival"]}, layer=layer
+        )
+        encoded_edata_again = encode(
+            encoded_edata,
+            autodetect=False,
+            encodings={"label": ["survival"], "one-hot": ["clinic_day"]},
+            layer=layer,
+        )
 
     X = encoded_edata_again.X if layer is None else encoded_edata_again.layers[layer]
+    assert isinstance(X, array_type.cls)
+    assert isinstance(encoded_edata_again.layers["original"], array_type.cls)
     assert X.shape == (5, 8)
     assert len(encoded_edata_again.obs.columns) == 2
     assert set(encoded_edata_again.obs.columns) == {"survival", "clinic_day"}

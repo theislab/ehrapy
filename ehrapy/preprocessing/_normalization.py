@@ -55,13 +55,18 @@ def _scale_func_group(
             raise ValueError(f"groupby key '{groupby}' contains missing values.")
     if copy:
         edata = edata.copy()
+    X = edata.X if layer is None else edata.layers[layer]
+    _raise_if_dask_with_sparse_chunks(X, norm_name)
     if FEATURE_TYPE_KEY not in edata.var.columns:
+        if is_lazy_array(X):
+            raise ValueError(
+                f"{norm_name} needs feature types in `edata.var`. "
+                "Infer them first with `ed.infer_feature_types(edata)`, which reads every value once."
+            )
         ed.infer_feature_types(edata, layer=layer, output=None)
 
     var_names = _numeric_var_names(edata, var_names)
     var_indices = edata.var_names.get_indexer(var_names)
-    X = edata.X if layer is None else edata.layers[layer]
-    _raise_if_dask_with_sparse_chunks(X, norm_name)
     if np.issubdtype(X.dtype, np.integer):
         X = X.astype(np.float32)
 

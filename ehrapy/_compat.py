@@ -1,13 +1,11 @@
 from __future__ import annotations
 
 import inspect
-import warnings
 from collections.abc import Sequence
 from functools import singledispatch, wraps
 from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar
 
 import array_api_extra as xpx
-import holoviews as hv
 import numpy as np
 import scipy.sparse as sp
 from array_api_compat import array_namespace, is_lazy_array
@@ -15,7 +13,6 @@ from fast_array_utils.types import CSBase, DaskArray
 
 P = ParamSpec("P")
 R = TypeVar("R")
-T = TypeVar("T")
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -50,21 +47,6 @@ def _apply_over_time_axis(f: Callable) -> Callable:
             raise ValueError(f"Unsupported array dimensionality: {arr.ndim}. Please reshape the array to 2D or 3D.")
 
     return wrapper
-
-
-def function_future_warning(old_function_name: str, new_function_name: str | None = None):
-    def decorator(func: Callable[P, R]) -> Callable[P, R]:
-        @wraps(func)
-        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
-            warn_msg = f"{old_function_name} is deprecated, and will be removed in v1.0.0."
-            if new_function_name:
-                warn_msg += f" Use {new_function_name} instead."
-            warnings.warn(warn_msg, FutureWarning, stacklevel=2)
-            return func(*args, **kwargs)
-
-        return wrapper
-
-    return decorator
 
 
 def function_2D_only(*, allow_single_timepoint: bool = False):
@@ -106,23 +88,6 @@ def function_2D_only(*, allow_single_timepoint: bool = False):
                         "Aggregate the time axis first, e.g. with `ep.pp.summarize_measurements()`."
                     )
 
-            return func(*args, **kwargs)
-
-        return wrapper
-
-    return decorator
-
-
-def choose_hv_backend() -> Callable[[Callable[P, R]], Callable[P, R]]:
-    def decorator(func: Callable[P, R]) -> Callable[P, R]:
-        @wraps(func)
-        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
-            if hv.Store.current_backend is None:
-                raise RuntimeError(
-                    "No holoviews backend selected. "
-                    "Call holoviews.extension('matplotlib') or "
-                    "holoviews.extension('bokeh') before using this function."
-                )
             return func(*args, **kwargs)
 
         return wrapper
@@ -194,11 +159,15 @@ def sparse_nan_moments(X: CSBase) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     valid = ~np.isnan(X.data)
     n_nan = np.bincount(columns[~valid], minlength=X.shape[1])
     count = X.shape[0] - n_nan
-    total = np.bincount(columns[valid], weights=X.data[valid], minlength=X.shape[1])
-    total_sq = np.bincount(columns[valid], weights=X.data[valid] ** 2, minlength=X.shape[1])
+    n_implicit_zeros = X.shape[0] - np.bincount(columns, minlength=X.shape[1])
+    values = X.data[valid].astype(np.float64)
+    total = np.bincount(columns[valid], weights=values, minlength=X.shape[1])
     with np.errstate(invalid="ignore", divide="ignore"):
         mean = total / count
-        var = np.maximum(total_sq / count - mean**2, 0)
+        squared_deviations = np.bincount(
+            columns[valid], weights=(values - mean[columns[valid]]) ** 2, minlength=X.shape[1]
+        )
+        var = (squared_deviations + n_implicit_zeros * mean**2) / count
     return count, mean, var
 
 

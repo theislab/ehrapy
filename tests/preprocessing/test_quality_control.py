@@ -6,6 +6,7 @@ import pandas as pd
 import pytest
 from ehrdata.core.constants import CATEGORICAL_TAG, DEFAULT_TEM_LAYER_NAME, FEATURE_TYPE_KEY, NUMERIC_TAG
 from ehrdata.io import read_csv
+from fast_array_utils.conv import to_dense
 from testing.fast_array_utils import Flags
 
 import ehrapy as ep
@@ -47,12 +48,22 @@ def _build_little_scenario(name):
     return _make_mcar_edata(**cfg) if "missing_rate" in cfg else _make_mar_edata(**cfg)
 
 
-def test_qc_metrics_vanilla(missing_values_edata):
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+def test_qc_metrics_vanilla(array_type, missing_values_edata):
     edata = missing_values_edata
+    edata.X = array_type(edata.X)
     modification_copy = edata.copy()
 
-    ep.pp.qc_metrics(edata)
+    if array_type.flags & Flags.Sparse and array_type.flags & Flags.Dask:
+        with pytest.raises(NotImplementedError):
+            ep.pp.qc_metrics(edata)
+        return
+
+    with forbid_dask_compute(allowed=1):
+        ep.pp.qc_metrics(edata)
     obs_metrics, var_metrics = edata.obs, edata.var
+
+    assert isinstance(edata.X, array_type.cls)
 
     assert np.array_equal(obs_metrics["missing_values_abs"].values, np.array([1, 2]))
     assert np.allclose(obs_metrics["missing_values_pct"].values, np.array([33.3333, 66.6667]))
@@ -74,13 +85,24 @@ def test_qc_metrics_vanilla(missing_values_edata):
         assert np.array_equal(modification_copy.var[key], edata.var[key])
 
 
-def test_qc_metrics_vanilla_advanced(missing_values_edata):
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+def test_qc_metrics_vanilla_advanced(array_type, missing_values_edata):
     edata = missing_values_edata
 
     edata.var["feature_type"] = ["numeric", "numeric", "categorical"]
+    edata.X = array_type(missing_values_edata.X)
     modification_copy = edata.copy()
-    ep.pp.qc_metrics(edata)
+
+    if array_type.flags & Flags.Sparse and array_type.flags & Flags.Dask:
+        with pytest.raises(NotImplementedError):
+            ep.pp.qc_metrics(edata)
+        return
+
+    with forbid_dask_compute(allowed=1):
+        ep.pp.qc_metrics(edata)
     obs_metrics, var_metrics = edata.obs, edata.var
+
+    assert isinstance(edata.X, array_type.cls)
 
     assert np.array_equal(obs_metrics["missing_values_abs"].values, np.array([1, 2]))
     assert np.allclose(obs_metrics["missing_values_pct"].values, np.array([33.3333, 66.6667]))
@@ -217,15 +239,24 @@ def test_qc_metrics_heterogeneous_columns():
         ep.pp.qc_metrics(edata, layer="tem_data")
 
 
-def test_qc_metrics_encoded_uses_original_values():
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+def test_qc_metrics_encoded_uses_original_values(array_type):
     edata = read_csv(f"{_TEST_PATH_ENCODE}/dataset1.csv")
     edata.X[0][4] = np.nan
     edata = encode(edata, encodings={"one-hot": ["clinic_day"]})
+    edata.X = array_type(edata.X)
     X_before = edata.X.copy()
 
-    ep.pp.qc_metrics(edata)
+    if array_type.flags & Flags.Sparse:
+        with pytest.raises(NotImplementedError):
+            ep.pp.qc_metrics(edata)
+        return
 
-    np.testing.assert_array_equal(edata.X, X_before)
+    with forbid_dask_compute(allowed=1):
+        ep.pp.qc_metrics(edata)
+
+    assert isinstance(edata.X, array_type.cls)
+    np.testing.assert_array_equal(to_dense(edata.X, to_cpu_memory=True), to_dense(X_before, to_cpu_memory=True))
     assert edata.obs["missing_values_abs"].iloc[0] == 1
     encoded = edata.var_names.str.startswith("ehrapycat_clinic_day")
     assert (edata.var.loc[encoded, "missing_values_abs"] == 1).all()

@@ -73,8 +73,12 @@ def _base_check_imputation(
     def _is_val_missing(data: np.ndarray) -> np.ndarray[Any, np.dtype[np.bool_]]:
         return np.isin(data, [None, ""]) | (data != data)
 
-    layer_before = edata_before_imputation.layers.get(before_imputation_layer, edata_before_imputation.X)
-    layer_after = edata_after_imputation.layers.get(after_imputation_layer, edata_after_imputation.X)
+    layer_before = to_dense(
+        edata_before_imputation.layers.get(before_imputation_layer, edata_before_imputation.X), to_cpu_memory=True
+    )
+    layer_after = to_dense(
+        edata_after_imputation.layers.get(after_imputation_layer, edata_after_imputation.X), to_cpu_memory=True
+    )
 
     if layer_before.shape != layer_after.shape:
         raise AssertionError("The shapes of the two layers do not match")
@@ -196,9 +200,20 @@ def test_simple_impute_all_nan_variable(strategy, expected):
     assert np.isnan(imputed[:, 1]).all()
 
 
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
 @pytest.mark.parametrize("strategy", ["mean", "median", "most_frequent"])
-def test_simple_impute_basic(impute_num_edata, strategy):
-    edata_imputed = simple_impute(impute_num_edata, strategy=strategy, copy=True)
+def test_simple_impute_basic(impute_num_edata, array_type, strategy):
+    impute_num_edata.X = array_type(impute_num_edata.X)
+
+    if array_type.flags & Flags.Sparse and array_type.flags & Flags.Dask:
+        with pytest.raises(NotImplementedError):
+            simple_impute(impute_num_edata, strategy=strategy, copy=True)
+        return
+
+    with forbid_dask_compute():
+        edata_imputed = simple_impute(impute_num_edata, strategy=strategy, copy=True)
+
+    assert isinstance(edata_imputed.X, array_type.cls)
     _base_check_imputation(impute_num_edata, edata_imputed)
 
 
@@ -210,24 +225,34 @@ def test_simple_impute_copy(impute_num_edata, strategy):
     _base_check_imputation(impute_num_edata, edata_imputed)
 
 
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu | Flags.Sparse)
 @pytest.mark.parametrize("strategy", ["mean", "median", "most_frequent"])
-def test_simple_impute_subset(impute_edata, strategy):
+def test_simple_impute_subset(impute_edata, array_type, strategy):
+    impute_edata.X = array_type(impute_edata.X)
     var_names = ("intcol", "indexcol")
-    edata_imputed = simple_impute(impute_edata, var_names=var_names, strategy=strategy, copy=True)
+    with forbid_dask_compute():
+        edata_imputed = simple_impute(impute_edata, var_names=var_names, strategy=strategy, copy=True)
 
+    assert isinstance(edata_imputed.X, array_type.cls)
     _base_check_imputation(impute_edata, edata_imputed, imputed_var_names=var_names)
-    assert np.any([item != item for item in edata_imputed.X[::, 3:4]])
+    X = to_dense(edata_imputed.X, to_cpu_memory=True)
+    assert np.any([item != item for item in X[::, 3:4]])
 
     # manually verified computation result
     if strategy == "mean":
-        assert edata_imputed.X[0, 1] == 3.0
+        assert X[0, 1] == 3.0
     elif strategy == "most_frequent":
-        assert edata_imputed.X[0, 1] == 2.0  # if multiple equally frequent values, return minimum
+        assert X[0, 1] == 2.0  # if multiple equally frequent values, return minimum
 
 
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu | Flags.Sparse)
 @pytest.mark.parametrize("strategy", ["mean", "median", "most_frequent"])
-def test_simple_impute_3D_edata(mcar_edata, strategy):
-    edata_imputed = simple_impute(mcar_edata, layer=DEFAULT_TEM_LAYER_NAME, strategy=strategy, copy=True)
+def test_simple_impute_3D_edata(mcar_edata, array_type, strategy):
+    mcar_edata.layers[DEFAULT_TEM_LAYER_NAME] = array_type(mcar_edata.layers[DEFAULT_TEM_LAYER_NAME])
+    with forbid_dask_compute():
+        edata_imputed = simple_impute(mcar_edata, layer=DEFAULT_TEM_LAYER_NAME, strategy=strategy, copy=True)
+
+    assert isinstance(edata_imputed.layers[DEFAULT_TEM_LAYER_NAME], array_type.cls)
     _base_check_imputation(
         mcar_edata,
         edata_imputed,
@@ -240,19 +265,30 @@ def test_simple_impute_3D_edata(mcar_edata, strategy):
         element = edata_imputed[9, 0, 0].layers[DEFAULT_TEM_LAYER_NAME]
 
         if strategy == "mean":
-            reference_value = np.nanmean(mcar_edata[:, 0, :].layers[DEFAULT_TEM_LAYER_NAME])
+            reference_value = np.nanmean(
+                to_dense(mcar_edata[:, 0, :].layers[DEFAULT_TEM_LAYER_NAME], to_cpu_memory=True)
+            )
         elif strategy == "median":
-            reference_value = np.nanmedian(mcar_edata[:, 0, :].layers[DEFAULT_TEM_LAYER_NAME])
+            reference_value = np.nanmedian(
+                to_dense(mcar_edata[:, 0, :].layers[DEFAULT_TEM_LAYER_NAME], to_cpu_memory=True)
+            )
 
-        assert np.isclose(element, reference_value)
+        assert np.isclose(to_dense(element, to_cpu_memory=True), reference_value)
 
 
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu | Flags.Sparse)
 @pytest.mark.parametrize("strategy", ["mean", "median", "most_frequent"])
-def test_simple_impute_3D_edata_nonnumeric(edata_mini_3D_missing_values, strategy):
+def test_simple_impute_3D_edata_nonnumeric(edata_mini_3D_missing_values, array_type, strategy):
+    edata_mini_3D_missing_values.layers[DEFAULT_TEM_LAYER_NAME] = array_type(
+        edata_mini_3D_missing_values.layers[DEFAULT_TEM_LAYER_NAME]
+    )
+
     if strategy == "most_frequent":
-        edata_imputed = simple_impute(
-            edata_mini_3D_missing_values, layer=DEFAULT_TEM_LAYER_NAME, strategy=strategy, copy=True
-        )
+        with forbid_dask_compute():
+            edata_imputed = simple_impute(
+                edata_mini_3D_missing_values, layer=DEFAULT_TEM_LAYER_NAME, strategy=strategy, copy=True
+            )
+        assert isinstance(edata_imputed.layers[DEFAULT_TEM_LAYER_NAME], array_type.cls)
         _base_check_imputation(
             edata_mini_3D_missing_values,
             edata_imputed,
@@ -264,6 +300,7 @@ def test_simple_impute_3D_edata_nonnumeric(edata_mini_3D_missing_values, strateg
             edata_imputed = simple_impute(
                 edata_mini_3D_missing_values, layer=DEFAULT_TEM_LAYER_NAME, strategy=strategy, copy=True
             )
+            to_dense(edata_imputed.layers[DEFAULT_TEM_LAYER_NAME], to_cpu_memory=True)
 
 
 @pytest.mark.parametrize("strategy", ["mean", "median"])
@@ -418,10 +455,19 @@ def test_missforest_impute_non_numerical_data(impute_edata):
         miss_forest_impute(impute_edata, copy=True)
 
 
-def test_missforest_impute_numerical_data(impute_num_edata):
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+def test_missforest_impute_numerical_data(impute_num_edata, array_type):
     warnings.filterwarnings("ignore", category=ConvergenceWarning)
+    impute_num_edata.X = array_type(impute_num_edata.X)
+
+    if array_type.flags & (Flags.Sparse | Flags.Dask):
+        with pytest.raises(NotImplementedError):
+            miss_forest_impute(impute_num_edata, copy=True)
+        return
+
     edata_imputed = miss_forest_impute(impute_num_edata, copy=True)
 
+    assert isinstance(edata_imputed.X, array_type.cls)
     _base_check_imputation(impute_num_edata, edata_imputed)
 
 
@@ -481,11 +527,17 @@ def test_impute_object_array_types(array_type, impute, edata_mini_3D_missing_val
     np.testing.assert_array_equal(to_dense(result, to_cpu_memory=True), expected.layers[DEFAULT_TEM_LAYER_NAME])
 
 
-def test_explicit_impute_3D_edata(edata_mini_3D_missing_values):
-    edata_imputed = explicit_impute(
-        edata_mini_3D_missing_values, replacement=1011, layer=DEFAULT_TEM_LAYER_NAME, copy=True
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu | Flags.Sparse)
+def test_explicit_impute_3D_edata(edata_mini_3D_missing_values, array_type):
+    edata_mini_3D_missing_values.layers[DEFAULT_TEM_LAYER_NAME] = array_type(
+        edata_mini_3D_missing_values.layers[DEFAULT_TEM_LAYER_NAME]
     )
-    layer_after = edata_imputed.layers[DEFAULT_TEM_LAYER_NAME]
+    with forbid_dask_compute():
+        edata_imputed = explicit_impute(
+            edata_mini_3D_missing_values, replacement=1011, layer=DEFAULT_TEM_LAYER_NAME, copy=True
+        )
+    assert isinstance(edata_imputed.layers[DEFAULT_TEM_LAYER_NAME], array_type.cls)
+    layer_after = to_dense(edata_imputed.layers[DEFAULT_TEM_LAYER_NAME], to_cpu_memory=True)
 
     _base_check_imputation(
         edata_mini_3D_missing_values,
@@ -502,14 +554,20 @@ def test_explicit_impute_3D_edata(edata_mini_3D_missing_values):
     assert layer_after[2, 4, 0] == 1011
 
 
-def test_explicit_impute_3D_edata_cat(edata_mini_3D_missing_values):
-    edata_imputed = explicit_impute(
-        edata_mini_3D_missing_values,
-        replacement={"4": "REPLACED", "5": "REPLACED"},
-        layer=DEFAULT_TEM_LAYER_NAME,
-        copy=True,
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu | Flags.Sparse)
+def test_explicit_impute_3D_edata_cat(edata_mini_3D_missing_values, array_type):
+    edata_mini_3D_missing_values.layers[DEFAULT_TEM_LAYER_NAME] = array_type(
+        edata_mini_3D_missing_values.layers[DEFAULT_TEM_LAYER_NAME]
     )
-    layer_after = edata_imputed.layers[DEFAULT_TEM_LAYER_NAME]
+    with forbid_dask_compute():
+        edata_imputed = explicit_impute(
+            edata_mini_3D_missing_values,
+            replacement={"4": "REPLACED", "5": "REPLACED"},
+            layer=DEFAULT_TEM_LAYER_NAME,
+            copy=True,
+        )
+    assert isinstance(edata_imputed.layers[DEFAULT_TEM_LAYER_NAME], array_type.cls)
+    layer_after = to_dense(edata_imputed.layers[DEFAULT_TEM_LAYER_NAME], to_cpu_memory=True)
     _base_check_imputation(
         edata_mini_3D_missing_values,
         edata_imputed,
@@ -523,22 +581,38 @@ def test_explicit_impute_3D_edata_cat(edata_mini_3D_missing_values):
     assert layer_after[2, 4, 0] == "REPLACED"
 
 
-def test_explicit_impute_all(impute_num_edata):
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+def test_explicit_impute_all(array_type, impute_num_edata):
     warnings.filterwarnings("ignore", category=FutureWarning)
-    edata_imputed = explicit_impute(impute_num_edata, replacement=1011, copy=True)
+    impute_num_edata.X = array_type(impute_num_edata.X)
 
+    if array_type.flags & Flags.Sparse and array_type.flags & Flags.Dask:
+        with pytest.raises(NotImplementedError):
+            explicit_impute(impute_num_edata, replacement=1011, copy=True)
+        return
+
+    with forbid_dask_compute():
+        edata_imputed = explicit_impute(impute_num_edata, replacement=1011, copy=True)
+
+    assert isinstance(edata_imputed.X, array_type.cls)
     _base_check_imputation(impute_num_edata, edata_imputed)
-    assert np.sum([edata_imputed.X == 1011]) == 3
+    assert np.sum([to_dense(edata_imputed.X, to_cpu_memory=True) == 1011]) == 3
 
 
-def test_explicit_impute_subset(impute_edata):
-    edata_imputed = explicit_impute(impute_edata, replacement={"strcol": "REPLACED", "intcol": 1011}, copy=True)
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu | Flags.Sparse)
+def test_explicit_impute_subset(impute_edata, array_type):
+    impute_edata.X = array_type(impute_edata.X)
+    with forbid_dask_compute():
+        edata_imputed = explicit_impute(impute_edata, replacement={"strcol": "REPLACED", "intcol": 1011}, copy=True)
 
+    assert isinstance(edata_imputed.X, array_type.cls)
     _base_check_imputation(impute_edata, edata_imputed, imputed_var_names=("strcol", "intcol"))
-    assert np.sum([edata_imputed.X == 1011]) == 1
-    assert np.sum([edata_imputed.X == "REPLACED"]) == 1
+    X = to_dense(edata_imputed.X, to_cpu_memory=True)
+    assert np.sum([X == 1011]) == 1
+    assert np.sum([X == "REPLACED"]) == 1
 
 
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu | Flags.Sparse)
 @pytest.mark.parametrize(
     "column_name,row_idx,replacement_value",
     [
@@ -547,25 +621,36 @@ def test_explicit_impute_subset(impute_edata):
         ("strcol", 1, ""),
     ],
 )
-def test_explicit_impute_subset_accepts_falsy_replacement_value(impute_edata, column_name, row_idx, replacement_value):
+def test_explicit_impute_subset_accepts_falsy_replacement_value(
+    impute_edata, array_type, column_name, row_idx, replacement_value
+):
     if replacement_value == "":
         impute_edata.X[row_idx, impute_edata.var_names.get_loc(column_name)] = np.nan
-    edata_imputed = explicit_impute(impute_edata, replacement={column_name: replacement_value}, copy=True)
+    impute_edata.X = array_type(impute_edata.X)
+    with forbid_dask_compute():
+        edata_imputed = explicit_impute(impute_edata, replacement={column_name: replacement_value}, copy=True)
 
+    assert isinstance(edata_imputed.X, array_type.cls)
     if replacement_value != "":
         _base_check_imputation(impute_edata, edata_imputed, imputed_var_names=(column_name,))
     col_idx = edata_imputed.var_names.get_loc(column_name)
-    assert edata_imputed.X[row_idx, col_idx] == replacement_value
+    assert to_dense(edata_imputed.X, to_cpu_memory=True)[row_idx, col_idx] == replacement_value
 
 
-def test_explicit_impute_timepoints(edata_mini_3D_missing_values):
-    edata_imputed = explicit_impute(
-        edata_mini_3D_missing_values,
-        replacement=[1, 2],
-        layer=DEFAULT_TEM_LAYER_NAME,
-        copy=True,
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu | Flags.Sparse)
+def test_explicit_impute_timepoints(edata_mini_3D_missing_values, array_type):
+    edata_mini_3D_missing_values.layers[DEFAULT_TEM_LAYER_NAME] = array_type(
+        edata_mini_3D_missing_values.layers[DEFAULT_TEM_LAYER_NAME]
     )
-    layer_after = edata_imputed.layers[DEFAULT_TEM_LAYER_NAME]
+    with forbid_dask_compute():
+        edata_imputed = explicit_impute(
+            edata_mini_3D_missing_values,
+            replacement=[1, 2],
+            layer=DEFAULT_TEM_LAYER_NAME,
+            copy=True,
+        )
+    assert isinstance(edata_imputed.layers[DEFAULT_TEM_LAYER_NAME], array_type.cls)
+    layer_after = to_dense(edata_imputed.layers[DEFAULT_TEM_LAYER_NAME], to_cpu_memory=True)
     _base_check_imputation(
         edata_mini_3D_missing_values,
         edata_imputed,
@@ -588,9 +673,12 @@ def test_explicit_impute_error(impute_edata, edata_mini_3D_missing_values):
         explicit_impute(edata_mini_3D_missing_values, replacement=[1, 2, 3], layer=DEFAULT_TEM_LAYER_NAME)
 
 
-def test_warning(impute_num_edata):
-    warning_results = _warn_imputation_threshold(impute_num_edata, threshold=20, var_names=None)
-    assert warning_results == {"col1": 25, "col3": 50}
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
+def test_warning(impute_num_edata, array_type):
+    impute_num_edata.X = array_type(impute_num_edata.X)
+    with forbid_dask_compute():
+        warning_results = _warn_imputation_threshold(impute_num_edata, threshold=20, var_names=None)
+    assert warning_results == ({} if array_type.flags & Flags.Dask else {"col1": 25, "col3": 50})
 
 
 @pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
@@ -656,10 +744,15 @@ def test_locf_impute_array_types(array_type, fallback_method, rng):
     np.testing.assert_allclose(to_dense(result, to_cpu_memory=True), expected, equal_nan=True)
 
 
-def test_locf_impute_forward_fill(locf_edata_3d):
+@pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu | Flags.Sparse)
+def test_locf_impute_forward_fill(locf_edata_3d, array_type):
     original = locf_edata_3d.copy()
-    result = locf_impute(locf_edata_3d, layer=DEFAULT_TEM_LAYER_NAME, copy=True)
-    arr = result.layers[DEFAULT_TEM_LAYER_NAME]
+    locf_edata_3d.layers[DEFAULT_TEM_LAYER_NAME] = array_type(locf_edata_3d.layers[DEFAULT_TEM_LAYER_NAME])
+    with forbid_dask_compute():
+        result = locf_impute(locf_edata_3d, layer=DEFAULT_TEM_LAYER_NAME, copy=True)
+
+    assert isinstance(result.layers[DEFAULT_TEM_LAYER_NAME], array_type.cls)
+    arr = to_dense(result.layers[DEFAULT_TEM_LAYER_NAME], to_cpu_memory=True)
 
     assert not np.any(np.isnan(arr))
 

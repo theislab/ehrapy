@@ -14,6 +14,8 @@ Functions follow the same rules for every array type:
 - Where an operation would move implicit zeros, for example centering, it raises a {class}`NotImplementedError` that says so instead of silently densifying the data.
 - Results match the numpy result for every supported array type.
 - Dask arrays with sparse chunks are not supported yet.
+- Functions that need feature types do not infer them from dask arrays, because inference reads every value; run {func}`ehrdata.infer_feature_types` first.
+- Errors that depend on the values, for example a Box-Cox transform of non-positive data, appear when a lazy result is computed.
 
 ## What longitudinal data means for a function
 
@@ -49,3 +51,6 @@ Functions follow the same rules for every array type:
 | {func}`~ehrapy.preprocessing.summarize_measurements` | yes | no | lazy for longitudinal data | aggregates the time axis into a 2D array |
 | {func}`~ehrapy.preprocessing.detect_bias` | yes | no | no | 2D only |
 | {func}`~ehrapy.preprocessing.encode` | yes | only when nothing needs encoding | one compute to find the categories | encodes every timepoint |
+| {func}`~ehrapy.preprocessing.combat` | yes | no | no | 2D only |
+| {func}`~ehrapy.preprocessing.regress_out` | yes | no | no | 2D only |
+| {func}`~ehrapy.preprocessing.sample` | yes | yes | lazy | samples observations |

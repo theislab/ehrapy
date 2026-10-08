@@ -8,7 +8,7 @@ import scipy.sparse as sp
 from ehrdata import EHRData
 from numpy.typing import NDArray
 
-from ehrapy._compat import function_2D_only
+from ehrapy._compat import _raise_if_not_numpy, function_2D_only
 from ehrapy._types import _empty
 
 if TYPE_CHECKING:
@@ -145,6 +145,7 @@ def regress_out(
     Returns:
         Depending on `copy` returns or updates the data object with the corrected data matrix in `X` or `layers[layer]`.
     """
+    _raise_if_not_numpy(edata.X if layer is None else edata.layers[layer], "regress_out", "the residuals are dense")
     return sc.pp.regress_out(adata=edata, keys=keys, n_jobs=n_jobs, layer=layer, copy=copy)
 
 
@@ -243,6 +244,7 @@ def sample(
 
 
 @function_2D_only()
+@function_2D_only()
 def combat(
     edata: EHRData,
     *,
@@ -271,12 +273,13 @@ def combat(
     Returns:
         `None` if `copy=False` and modifies the passed edata, else returns an updated object.
     """
+    _raise_if_not_numpy(edata.X if layer is None else edata.layers[layer], "combat", "the corrected values are dense")
     edata = edata.copy() if copy else edata
     # Since scanpy's combat does not support layers, we need to copy the data to the X matrix and then copy the result back to the layer
     if layer is None:
         sc.pp.combat(adata=edata, key=batch_key, covariates=covariates, inplace=True)
     else:
-        X = edata.X.copy()
+        X = edata.X
         edata.X = edata.layers[layer].copy()
         sc.pp.combat(adata=edata, key=batch_key, covariates=covariates, inplace=True)
         edata.layers[layer] = edata.X
