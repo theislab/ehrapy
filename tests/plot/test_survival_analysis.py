@@ -53,6 +53,24 @@ def test_kaplan_meier(mimic_2: EHRData):
     assert isinstance(plot, hv.Layout)
 
 
+def test_kaplan_meier_cumulative_incidence(mimic_2: EHRData):
+    died, died_in_hospital = np.asarray(mimic_2[:, ["censor_flg", "hosp_exp_flg"]].X, dtype=float).T
+    mimic_2.obs["death"] = np.select([died_in_hospital == 1, died == 1], [1, 2], 0)
+    ajf = ep.tl.kaplan_meier(mimic_2, duration_col="mort_day_censored", event_col="death", event_of_interest=1)
+
+    plot = ep.pl.kaplan_meier([ajf])
+    assert isinstance(plot, hv.Overlay)
+    (curve,) = (element for element in plot if type(element) is hv.Curve)
+    assert curve.vdims[0].name == "Cumulative incidence"
+    np.testing.assert_allclose(curve.dimension_values(1), ajf.cumulative_density_.iloc[:, 0])
+
+    plot = ep.pl.kaplan_meier([ajf], display_survival_statistics=True, xlim=(0, 700))
+    assert isinstance(plot, hv.Layout)
+    table = plot.Table.I.dframe()
+    expected = ajf.cumulative_density_.iloc[:, 0].asof(np.linspace(0, 700, 10)).to_numpy()
+    np.testing.assert_allclose(table.iloc[0, 1:].astype(float), expected, atol=0.005)
+
+
 def test_coxph_forestplot(mimic_2: EHRData):
     edata_subset = mimic_2[
         :, ["mort_day_censored", "censor_flg", "gender_num", "afib_flg", "day_icu_intime_num"]

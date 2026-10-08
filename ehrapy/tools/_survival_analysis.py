@@ -10,6 +10,7 @@ from ehrdata._logger import logger
 from ehrdata.core.constants import CATEGORICAL_TAG, FEATURE_TYPE_KEY, NUMERIC_TAG
 from formulaic import Formula
 from lifelines import (
+    AalenJohansenFitter,
     CoxPHFitter,
     KaplanMeierFitter,
     LogLogisticAFTFitter,
@@ -186,11 +187,15 @@ def kaplan_meier(
     fit_options: Mapping[str, Any] | None = None,
     censoring: Literal["right", "left"] = "right",
     layer: str | None = None,
-) -> KaplanMeierFitter:
+    event_of_interest: int | None = None,
+    random_state: int = 0,
+) -> KaplanMeierFitter | AalenJohansenFitter:
     """Fit the Kaplan-Meier estimate for the survival function.
 
     The Kaplan–Meier estimator, also known as the product limit estimator, is a non-parametric statistic used to estimate the survival function from lifetime data.
     In medical research, it is often used to measure the fraction of patients living for a certain amount of time after treatment.
+    With competing events, such as death before the event of interest, one minus the Kaplan-Meier estimate overestimates the probability of the event.
+    Passing `event_of_interest` instead estimates its cumulative incidence with the Aalen-Johansen estimator, which accounts for the competing events.
     The results will be stored in the `.uns` slot of the data object under the key 'kaplan_meier' unless specified otherwise in the `key_added` parameter.
 
     See `Kaplan Meier on Wikipedia <https://en.wikipedia.org/wiki/Kaplan%E2%80%93Meier_estimator>`_ and `Kaplan Meier on Lifelines <https://lifelines.readthedocs.io/en/latest/fitters/univariate/KaplanMeierFitter.html#module-lifelines.fitters.kaplan_meier_fitter>`_.
@@ -214,9 +219,13 @@ def kaplan_meier(
         censoring: 'right' for fitting the model to a right-censored dataset. (default, calls fit).
                    'left' for fitting the model to a left-censored dataset (calls fit_left_censoring).
         layer: The layer to take variables from.
+        event_of_interest: The event type in `event_col` to estimate the cumulative incidence of.
+            `event_col` then holds 0 for censored subjects and a positive integer per event type, and all event types other than `event_of_interest` are competing events.
+            Supports only `censoring='right'`.
+        random_state: Seed for breaking tied event times when `event_of_interest` is set.
 
     Returns:
-        Fitted KaplanMeierFitter.
+        Fitted KaplanMeierFitter, or fitted AalenJohansenFitter if `event_of_interest` is set.
 
     Examples:
         >>> import ehrdata as ed
@@ -226,12 +235,19 @@ def kaplan_meier(
         >>> # Flip 'censor_fl' because 0 = death and 1 = censored
         >>> edata[:, ["censor_flg"]].X = np.where(edata[:, ["censor_flg"]].X == 0, 1, 0)
         >>> kmf = ep.tl.kaplan_meier(edata, duration_col="mort_day_censored", event_col="censor_flg", label="Mortality")
+
+        Cumulative incidence of death in hospital, with death after discharge as competing event:
+
+        >>> edata = ed.dt.mimic_2()
+        >>> died, died_in_hospital = edata[:, ["censor_flg", "hosp_exp_flg"]].X.T.astype(float)
+        >>> edata.obs["death"] = np.select([died_in_hospital == 1, died == 1], [1, 2], 0)
+        >>> ajf = ep.tl.kaplan_meier(edata, duration_col="mort_day_censored", event_col="death", event_of_interest=1)
     """
     return _univariate_model(
         edata,
         duration_col,
         event_col,
-        KaplanMeierFitter,
+        KaplanMeierFitter if event_of_interest is None else AalenJohansenFitter,
         key_added,
         True,
         timeline,
@@ -243,6 +259,8 @@ def kaplan_meier(
         fit_options,
         censoring,
         layer,
+        event_of_interest,
+        random_state,
     )
 
 
@@ -729,32 +747,48 @@ def _univariate_model(
     fit_options: Mapping[str, Any] | None = None,
     censoring: Literal["right", "left"] = "right",
     layer: str | None = None,
+    event_of_interest: int | None = None,
+    random_state: int = 0,
 ):
     """Convenience function for univariate models."""
     df = _model_frame(edata, [duration_col, event_col, entry_col, weights_col], layer=layer)
     if not accept_zero_duration:
         df = _shift_zero_durations(df, duration_col)
 
-    model = model_class()
-    function_name = "fit" if censoring == "right" else "fit_left_censoring"
-    # get fit function, default to fit if not found
-    fit_function = getattr(model, function_name, model.fit)
+    events = None if event_col is None else df[event_col]
+    if event_of_interest is None:
+        if events is not None and not events.isin([0, 1]).all():
+            raise ValueError(
+                f"`{event_col}` has more than one event type, pass the one to estimate as `event_of_interest`."
+            )
+    elif events is None:
+        raise ValueError("`event_of_interest` requires an `event_col`.")
+    elif model_class is not AalenJohansenFitter:
+        events = events == event_of_interest
 
-    fit_function(
-        df[duration_col],
-        event_observed=None if event_col is None else df[event_col],
-        timeline=timeline,
-        entry=None if entry_col is None else df[entry_col],
-        label=label,
-        alpha=alpha,
-        ci_labels=ci_labels,
-        weights=None if weights_col is None else df[weights_col],
-        fit_options=fit_options,
-    )
+    fit_kwargs = {
+        "timeline": timeline,
+        "entry": None if entry_col is None else df[entry_col],
+        "label": label,
+        "alpha": alpha,
+        "ci_labels": ci_labels,
+        "weights": None if weights_col is None else df[weights_col],
+    }
+    if model_class is AalenJohansenFitter:
+        if censoring != "right" or fit_options is not None:
+            raise ValueError("The cumulative incidence supports neither `censoring='left'` nor `fit_options`.")
+        model = AalenJohansenFitter(seed=random_state)
+        model.fit(df[duration_col], events.astype(int), event_of_interest, **fit_kwargs)
+    else:
+        model = model_class()
+        function_name = "fit" if censoring == "right" else "fit_left_censoring"
+        # get fit function, default to fit if not found
+        fit_function = getattr(model, function_name, model.fit)
+        fit_function(df[duration_col], event_observed=events, fit_options=fit_options, **fit_kwargs)
 
-    if isinstance(model, NelsonAalenFitter) or isinstance(
-        model, KaplanMeierFitter
-    ):  # NelsonAalenFitter and KaplanMeierFitter have no summary attribute
+    if isinstance(
+        model, NelsonAalenFitter | KaplanMeierFitter | AalenJohansenFitter
+    ):  # the non-parametric fitters have no summary attribute
         summary = model.event_table
     else:
         summary = model.summary
@@ -778,6 +812,7 @@ def nelson_aalen(
     fit_options: Mapping[str, Any] | None = None,
     censoring: Literal["right", "left"] = "right",
     layer: str | None = None,
+    event_of_interest: int | None = None,
 ) -> NelsonAalenFitter:
     """Employ the Nelson-Aalen estimator to estimate the cumulative hazard function from censored survival data.
 
@@ -806,6 +841,8 @@ def nelson_aalen(
         censoring: 'right' for fitting the model to a right-censored dataset. (default, calls fit).
                    'left' for fitting the model to a left-censored dataset (calls fit_left_censoring).
         layer: The layer to take variables from.
+        event_of_interest: The event type in `event_col` to estimate the cause-specific cumulative hazard of.
+            `event_col` then holds 0 for censored subjects and a positive integer per event type, and subjects with other event types count as censored at their event.
 
     Returns:
         Fitted NelsonAalenFitter.
@@ -835,6 +872,7 @@ def nelson_aalen(
         fit_options=fit_options,
         censoring=censoring,
         layer=layer,
+        event_of_interest=event_of_interest,
     )
 
 

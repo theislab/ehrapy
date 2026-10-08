@@ -6,6 +6,7 @@ import holoviews as hv
 import numpy as np
 import pandas as pd
 from bokeh.palettes import Category10
+from lifelines import AalenJohansenFitter
 from numpy import ndarray
 
 from ehrapy.get import obs_df
@@ -174,7 +175,7 @@ def ols(
 
 @load_hv_extensions()
 def kaplan_meier(
-    kmfs: Sequence[KaplanMeierFitter],
+    kmfs: Sequence[KaplanMeierFitter | AalenJohansenFitter],
     *,
     display_survival_statistics: bool = False,
     ci_alpha: Sequence[float] | None = None,
@@ -194,11 +195,13 @@ def kaplan_meier(
 ) -> hv.Layout | hv.Overlay | hv.Curve | None:
     """Plots a pretty figure of the Fitted KaplanMeierFitter model.
 
-    See also: :class:`~lifelines.fitters.kaplan_meier_fitter.KaplanMeierFitter`.
+    Fitted AalenJohansenFitter objects are plotted as cumulative incidence instead of survival.
+
+    See also: :class:`~lifelines.fitters.kaplan_meier_fitter.KaplanMeierFitter` and :class:`~lifelines.fitters.aalen_johansen_fitter.AalenJohansenFitter`.
 
     Args:
-        kmfs: Iterables of fitted KaplanMeierFitter objects.
-        display_survival_statistics: Whether to show survival statistics in a table below the plot.
+        kmfs: Iterables of fitted KaplanMeierFitter or AalenJohansenFitter objects.
+        display_survival_statistics: Whether to show survival statistics, or the cumulative incidence, in a table below the plot.
         ci_alpha: The transparency level of the confidence interval. If more than one kmfs, this should be a list.
         ci_force_lines: Force the confidence intervals to be line plots (versus default shaded areas).
                         If more than one kmfs, this should be a list.
@@ -247,7 +250,10 @@ def kaplan_meier(
     plot = None
 
     for i, kmf in enumerate(kmfs):
-        sf = kmf.survival_function_
+        if isinstance(kmf, AalenJohansenFitter):
+            sf, ci, vdim = kmf.cumulative_density_, kmf.confidence_interval_cumulative_density_, "Cumulative incidence"
+        else:
+            sf, ci, vdim = kmf.survival_function_, kmf.confidence_interval_survival_function_, "Survival"
         times = sf.index.values
         survival = sf.iloc[:, 0].values
 
@@ -256,10 +262,9 @@ def kaplan_meier(
         if color[i] is not None:
             curve_opts["color"] = color[i]
 
-        curve = hv.Curve((times, survival), kdims="Time", vdims="Survival", label=label).opts(**curve_opts)
+        curve = hv.Curve((times, survival), kdims="Time", vdims=vdim, label=label).opts(**curve_opts)
 
-        if ci_show[i] and hasattr(kmf, "confidence_interval_survival_function_"):
-            ci = kmf.confidence_interval_survival_function_
+        if ci_show[i] and ci is not None:
             ci_lower = ci.iloc[:, 0].values
             ci_upper = ci.iloc[:, 1].values
 
@@ -301,7 +306,7 @@ def kaplan_meier(
         if xlim:
             time_points = np.linspace(xlim[0], xlim[1], 10)
         else:
-            all_times = np.concatenate([kmf.survival_function_.index.values for kmf in kmfs])
+            all_times = np.concatenate([kmf.timeline for kmf in kmfs])
             time_points = np.linspace(all_times.min(), all_times.max(), 10)
 
         # Create table data in wide format (one row per group, columns are time points)
@@ -311,7 +316,7 @@ def kaplan_meier(
         for kmf in kmfs:
             label = kmf.label if kmf.label else "Group"
             table_data["Group"].append(label)
-            survival_probs = kmf.survival_function_at_times(time_points).values
+            survival_probs = kmf.predict(time_points).values
 
             for _, (t, prob) in enumerate(zip(time_points, survival_probs, strict=False)):
                 col_name = f"{t:.0f}"
