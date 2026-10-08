@@ -11,10 +11,6 @@ import os
 # https://docs.scipy.org/doc/scipy/dev/api-dev/array_api.html
 os.environ["SCIPY_ARRAY_API"] = "1"
 
-import warnings
-
-warnings.filterwarnings("ignore", category=SyntaxWarning, message=r"invalid escape sequence '\\")
-
 from ehrapy import get
 from ehrapy import plot as pl
 from ehrapy import preprocessing as pp

@@ -1,6 +1,7 @@
 import ehrdata as ed
 import numpy as np
 import pytest
+import scipy.sparse as sp
 from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
 
 import ehrapy as ep
@@ -76,6 +77,44 @@ def test_famd_ehrdata_integration(edata_blobs_timeseries_small: ed.EHRData) -> N
     assert edata.uns["famd"]["params"]["n_components"] == 2
     assert "variance" in edata.uns["famd"]
     assert "variance_ratio" in edata.uns["famd"]
+
+
+def test_famd_ehrdata_2d_numeric(pure_quant_array: np.ndarray) -> None:
+    edata = ed.EHRData(X=pure_quant_array[:, :, 0])
+
+    ep.tl.famd(edata, n_components=2)
+
+    assert edata.obsm["X_famd"].shape == (30, 2)
+    assert edata.varm["famd_loadings"].shape == (5, 2)
+    assert not np.isnan(edata.varm["famd_loadings"]).any()
+
+
+def test_famd_ehrdata_2d_mixed(mixed_data_array: np.ndarray) -> None:
+    edata = ed.EHRData(X=mixed_data_array[:, :, 0])
+
+    ep.tl.famd(edata, n_components=2)
+
+    quant_mask = edata.uns["famd"]["quant_mask"]
+    loadings = edata.uns["famd"]["loadings"]
+    np.testing.assert_array_equal(quant_mask, [True, False, True, False, True])
+    assert edata.varm["famd_loadings"].shape == (5, 2)
+    assert np.isnan(edata.varm["famd_loadings"][~quant_mask]).all()
+    np.testing.assert_allclose(edata.varm["famd_loadings"][quant_mask], loadings[: quant_mask.sum()])
+    assert loadings.shape == (len(edata.uns["famd"]["feature_names"]), 2)
+
+
+def test_famd_3d_raises(edata_blobs_timeseries_small: ed.EHRData) -> None:
+    with pytest.raises(ValueError, match="only supports 2D data"):
+        ep.tl.famd(edata_blobs_timeseries_small, layer=DEFAULT_TEM_LAYER_NAME)
+    with pytest.raises(ValueError, match="only supports 2D data"):
+        ep.tl.famd(edata_blobs_timeseries_small.layers[DEFAULT_TEM_LAYER_NAME])
+
+
+def test_famd_sparse_raises(pure_quant_array: np.ndarray) -> None:
+    edata = ed.EHRData(X=sp.csr_array(pure_quant_array[:, :, 0]))
+
+    with pytest.raises(NotImplementedError, match="does not support array type"):
+        ep.tl.famd(edata)
 
 
 def test_famd_n_components_exceeds_dimensions(rng: np.random.Generator) -> None:

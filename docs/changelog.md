@@ -32,17 +32,28 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 * {func}`ep.tl.filter_rank_features_groups <ehrapy.tools.filter_rank_features_groups>` no longer raises `KeyError: 'use_raw'` ([#1126](https://github.com/theislab/ehrapy/pull/1126)) @Zethson
 * {func}`ep.tl.rank_features_supervised <ehrapy.tools.rank_features_supervised>` reports R² instead of accuracy for numeric targets ([#1126](https://github.com/theislab/ehrapy/pull/1126)) @Zethson
 * `ep.tl` no longer leaks implementation details such as `np` and `sc`, and its `__all__` now lists `leiden`, `dendrogram`, `dpt`, `paga` and `ingest`; `ep.pl` gained an `__all__` ([#1126](https://github.com/theislab/ehrapy/pull/1126)) @Zethson
+* {func}`ep.tl.famd <ehrapy.tools.famd>` works on 2D `.X` and layers with numeric or mixed variables, rejects 3D data, and stores per-variable loadings in `.varm` and all category loadings in `.uns` ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
+* {func}`ep.tl.ncp <ehrapy.tools.ncp>` raises a `ValueError` for missing or negative values instead of returning NaN or negative factors ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
+* {func}`ep.pl.ols <ehrapy.plot.ols>` gained `layer`, supports sparse arrays and rejects 3D data instead of flattening the time axis into extra points ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
+* {func}`ep.get.obs_df <ehrapy.get.obs_df>` raises a clear error when reading variables from 3D data and {func}`ep.get.var_df <ehrapy.get.var_df>` for any 3D data, instead of failing inside pandas ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
+* {func}`ep.tl.stratified_table_one <ehrapy.tools.stratified_table_one>` stores its table with `variable` and `level` columns so that results can be written to h5ad ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
+* {func}`ep.tl.rank_features_groups <ehrapy.tools.rank_features_groups>` supports categorical features in sparse arrays ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
+* {func}`ep.pp.neighbors <ehrapy.preprocessing.neighbors>` with a time series metric no longer makes patients without comparable measurements everyone's nearest neighbours but leaves them unconnected ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
 
 ### 📖 Documentation
 
 * Refresh the README and installation guide (optional extras, install from GitHub) and drop dead Sphinx extensions ([#1128](https://github.com/theislab/ehrapy/pull/1128)) @Zethson
 * Add imputation methods tutorial notebook, benchmarking six imputation strategies on the PhysioNet2012 dataset ([#1101](https://github.com/theislab/ehrapy/pull/1101)) @sueoglu
 * Document the `ep.get` module, {func}`ep.tl.famd <ehrapy.tools.famd>` and {func}`ep.tl.anova_glm <ehrapy.tools.anova_glm>` ([#1126](https://github.com/theislab/ehrapy/pull/1126)) @Zethson
+* Fix the {func}`ep.pl.kaplan_meier <ehrapy.plot.kaplan_meier>` example and title the NCP API sections "Non-negative CP Decomposition" ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
 
 ### 🧰 Maintenance
 
 * Run the imputation, causal inference and effect estimation tutorials in the notebook CI ([#1120](https://github.com/theislab/ehrapy/pull/1120)) @sueoglu
 * Update to cookiecutter-scverse v0.8.0, derive the version from git tags via hatch-vcs, and move the `dev` extra to a `dev` dependency group ([#1125](https://github.com/theislab/ehrapy/pull/1125)) @Zethson
+* `import ehrapy` no longer loads the holoviews extensions, which now load on the first holoviews-backed plot, and no longer installs a global `SyntaxWarning` filter ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
+* Drop the unused `thefuzz`, `fhiry` and `filelock` dependencies and move `requests` to the `test` extra ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
+* Remove dead code and let codecov compare project coverage against the base commit ([#1129](https://github.com/theislab/ehrapy/pull/1129)) @Zethson
 
 ## v0.15.0
 <!--

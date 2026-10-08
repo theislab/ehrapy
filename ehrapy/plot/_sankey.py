@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from fast_array_utils.conv import to_dense
 
-from ehrapy._compat import choose_hv_backend
+from ehrapy.plot._holoviews import load_hv_extensions
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from ehrdata import EHRData
 
 
-@choose_hv_backend()
+@load_hv_extensions()
 def sankey_diagram(
     edata: EHRData,
     columns: Sequence[str],
@@ -117,7 +117,7 @@ def sankey_diagram(
     return sankey
 
 
-@choose_hv_backend()
+@load_hv_extensions()
 def sankey_diagram_time(
     edata: EHRData,
     var_name: str,

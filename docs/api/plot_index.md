@@ -134,7 +134,7 @@ For any method in module `tl`, there is a method with the same name in `pl`.
     plot.cox_ph_adjusted_curves
 ```
 
-## Normalized Complexity Profile
+## Non-negative CP Decomposition
 
 ```{eval-rst}
 .. autosummary::

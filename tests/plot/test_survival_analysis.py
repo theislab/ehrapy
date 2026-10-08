@@ -3,7 +3,11 @@ from pathlib import Path
 
 import holoviews as hv
 import numpy as np
+import pandas as pd
+import pytest
+import scipy.sparse as sp
 from ehrdata import EHRData
+from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
 
 import ehrapy as ep
 
@@ -75,6 +79,22 @@ def test_ols(mimic_2: EHRData):
     assert isinstance(plot, (hv.Overlay, hv.Scatter))
     assert plot.opts.get().kwargs["xlabel"] == "PCO2"
     assert plot.opts.get().kwargs["ylabel"] == "TCO2"
+
+
+def test_ols_layer_and_sparse(rng: np.random.Generator):
+    X = rng.standard_normal((20, 2))
+    edata = EHRData(X=sp.csr_array(X), layers={"doubled": 2 * X}, var=pd.DataFrame(index=["a", "b"]))
+
+    plot = ep.pl.ols(edata, x="a", y="b")
+    np.testing.assert_allclose(plot.data["b"], X[:, 1])
+
+    plot = ep.pl.ols(edata, x="a", y="b", layer="doubled")
+    np.testing.assert_allclose(plot.data["b"], 2 * X[:, 1])
+
+
+def test_ols_3d_raises(edata_blobs_timeseries_small: EHRData):
+    with pytest.raises(ValueError, match="only supports 2D data"):
+        ep.pl.ols(edata_blobs_timeseries_small, x="feature_0", y="feature_1", layer=DEFAULT_TEM_LAYER_NAME)
 
 
 def test_cox_ph_adjusted_curves(mimic_2_adjusted_sa):

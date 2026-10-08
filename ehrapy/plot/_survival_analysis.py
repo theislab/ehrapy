@@ -8,6 +8,10 @@ import pandas as pd
 from bokeh.palettes import Category10
 from numpy import ndarray
 
+from ehrapy._compat import function_2D_only
+from ehrapy.get import obs_df
+from ehrapy.plot._holoviews import load_hv_extensions
+
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
     from typing import Any
@@ -17,11 +21,14 @@ if TYPE_CHECKING:
     from statsmodels.regression.linear_model import RegressionResults
 
 
+@function_2D_only()
+@load_hv_extensions()
 def ols(
     edata: EHRData | None = None,
     *,
     x: str | None = None,
     y: str | None = None,
+    layer: str | None = None,
     scatter_plot: bool = True,
     ols_results: Sequence[RegressionResults] | None = None,
     ols_color: Sequence[str | None] | None = None,
@@ -44,6 +51,8 @@ def ols(
         edata: Central data object.
         x: x coordinate, for scatter plotting.
         y: y coordinate, for scatter plotting.
+        layer: The layer to take `x` and `y` from.
+            If `None`, `edata.X` is used.
         scatter_plot: Whether to show a scatter plot.
         ols_results: List of RegressionResults from ehrapy.tl.ols.
         ols_color: List of colors for each ols_results.
@@ -92,8 +101,9 @@ def ols(
     plot = None
 
     if edata is not None and x is not None and y is not None:
-        x_data = np.array(edata[:, x].X).flatten().astype(float)
-        y_data = np.array(edata[:, y].X).flatten().astype(float)
+        values = obs_df(edata, keys=[x, y], layer=layer)
+        x_data = values[x].to_numpy(dtype=float)
+        y_data = values[y].to_numpy(dtype=float)
 
         mask = ~(np.isnan(x_data) | np.isnan(y_data))
         x_clean = x_data[mask]
@@ -164,6 +174,7 @@ def ols(
     return plot
 
 
+@load_hv_extensions()
 def kaplan_meier(
     kmfs: Sequence[KaplanMeierFitter],
     *,
@@ -217,7 +228,7 @@ def kaplan_meier(
         ... )  # MIMIC-II uses 0=death while KaplanMeierFitter expects True=death
         >>> kmf = ep.tl.kaplan_meier(edata, duration_col="mort_day_censored", event_col="censor_flg")
         >>> ep.pl.kaplan_meier(
-        ...     [kmf], color=["r"], xlim=(0, 700), ylim=(0, 1), xlabel="Days", ylabel="Proportion Survived", show=True
+        ...     [kmf], color=["r"], xlim=(0, 700), ylim=(0, 1), xlabel="Days", ylabel="Proportion Survived"
         ... )
 
         .. image:: /_static/docstring_previews/kaplan_meier.png
@@ -317,6 +328,7 @@ def kaplan_meier(
     return plot
 
 
+@load_hv_extensions()
 def cox_ph_forestplot(
     edata: EHRData,
     *,
@@ -461,6 +473,7 @@ def cox_ph_forestplot(
     return forest_plot
 
 
+@load_hv_extensions()
 def cox_ph_adjusted_curves(
     edata: EHRData,
     *,

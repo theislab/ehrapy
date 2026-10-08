@@ -73,6 +73,7 @@ def neighbors(
         method: Use 'umap' :cite:p:`McInnes2018` or 'gauss' (Gauss kernel following :cite:p:`Coifman2005` with adaptive width :cite:p:`Haghverdi2016` for computing connectivities.
         metric: A known metric's name or a callable that returns a distance.
             'euclidean' works well for 2D data and 'dtw' for 3D time series data.
+            With time series metrics, two patients are not connected if no variable has more than 3 measurements in both.
         metric_kwds: Options for the metric.
         transformer: Approximate kNN search implementation.
 
@@ -151,5 +152,14 @@ def neighbors(
         edata_returned.obsm.pop(TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY, None)
 
     edata.obsm.pop(TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY, None)
+
+    if use_rep == TEMPORARY_TIMESERIES_NEIGHBORS_USE_REP_KEY:
+        result = edata if edata_returned is None else edata_returned
+        neighbors_params = result.uns["neighbors" if key_added is None else key_added]
+        # incomparable patients have infinite distances, which turn their UMAP connectivities into NaN
+        for graph_key in ("distances_key", "connectivities_key"):
+            graph = result.obsp[neighbors_params[graph_key]]
+            graph.data[~np.isfinite(graph.data)] = 0
+            graph.eliminate_zeros()
 
     return edata_returned

@@ -1,5 +1,8 @@
 import ehrdata as ed
 import numpy as np
+import pandas as pd
+import pytest
+from ehrdata.core.constants import DEFAULT_TEM_LAYER_NAME
 
 import ehrapy as ep
 
@@ -35,3 +38,16 @@ def test_var_df():
     df = ep.get.var_df(edata, keys=["0", "1", "2", "3"])
     # since pass through of scanpy, merely testing shape
     assert df.shape == (len(edata.var), 4)
+
+
+def test_obs_df_3d_obs_keys(edata_blobs_timeseries_small):
+    df = ep.get.obs_df(edata_blobs_timeseries_small, keys=["cluster"], layer=DEFAULT_TEM_LAYER_NAME)
+
+    pd.testing.assert_series_equal(df["cluster"], edata_blobs_timeseries_small.obs["cluster"])
+
+
+def test_obs_df_var_df_3d_var_keys_raise(edata_blobs_timeseries_small):
+    with pytest.raises(ValueError, match="only supports 2D data"):
+        ep.get.obs_df(edata_blobs_timeseries_small, keys=["cluster", "feature_0"], layer=DEFAULT_TEM_LAYER_NAME)
+    with pytest.raises(ValueError, match="only supports 2D data"):
+        ep.get.var_df(edata_blobs_timeseries_small, keys=["0"], layer=DEFAULT_TEM_LAYER_NAME)

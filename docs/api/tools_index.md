@@ -104,7 +104,7 @@ Two diagnostics — covariate balance and positivity — round out the toolkit.
     tools.CausalEstimate
 ```
 
-## Normalized Complexity Profile
+## Non-negative CP Decomposition
 
 ```{eval-rst}
 .. autosummary::
