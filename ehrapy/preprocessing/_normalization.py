@@ -23,6 +23,7 @@ from ehrapy._compat import (
     _set_columns,
     _sparse_columns,
     _sparse_rows,
+    _var_indices,
     nanquantile,
     nanstd,
     sparse_nan_min_max,
@@ -93,6 +94,7 @@ def _numeric_var_names(edata: EHRData, var_names: str | Sequence[str] | None) ->
     if var_names is None:
         return numeric_vars
     var_names = [var_names] if isinstance(var_names, str) else list(var_names)
+    _var_indices(edata, var_names)
     if not set(var_names) <= set(numeric_vars):
         raise ValueError("Some selected vars are not numeric")
     return var_names

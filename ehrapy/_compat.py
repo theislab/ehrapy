@@ -18,7 +18,7 @@ P = ParamSpec("P")
 R = TypeVar("R")
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Collection, Mapping
+    from collections.abc import Callable, Collection, Iterable, Mapping
 
     from ehrdata import EHRData
 
@@ -242,6 +242,15 @@ def _by_group(X, groups: np.ndarray | None, stats: Callable[[Any], Sequence[Any 
     xp = array_namespace(X)
     per_group = zip(*(stats(X[groups == group]) for group in range(groups.max() + 1)), strict=True)
     return tuple(None if stat[0] is None else _broadcast_var_stat(xp.stack(stat)[groups], X) for stat in per_group)
+
+
+def _var_indices(edata: EHRData, var_names: Iterable[str]) -> np.ndarray:
+    """Positions of `var_names` in `edata.var_names`, raising a `KeyError` that names the variables not found."""
+    var_names = list(var_names)
+    indices = edata.var_names.get_indexer(var_names)
+    if missing := [var_name for var_name, index in zip(var_names, indices, strict=True) if index < 0]:
+        raise KeyError(f"Variables not found in edata.var_names: {missing}")
+    return indices
 
 
 @singledispatch

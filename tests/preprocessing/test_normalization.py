@@ -18,7 +18,7 @@ CURRENT_DIR = Path(__file__).parent
 
 def test_vars_checks(edata_to_norm):
     with pytest.raises(ValueError, match=r"Some selected vars are not numeric"):
-        ep.pp.scale_norm(edata_to_norm, var_names=["String1"])
+        ep.pp.scale_norm(edata_to_norm, var_names=["ehrapycat_String1"])
 
 
 @pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)

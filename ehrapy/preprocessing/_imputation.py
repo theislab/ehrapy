@@ -31,6 +31,7 @@ from ehrapy._compat import (
     _set_columns,
     _sparse_columns,
     _sparse_rows,
+    _var_indices,
     nanquantile,
     sparse_nan_moments,
     sparse_nanquantile,
@@ -139,6 +140,7 @@ def explicit_impute(
         replacement = dict.fromkeys(edata.var_names, replacement)
 
     if isinstance(replacement, Mapping):
+        _var_indices(edata, [var for var in replacement if var != "default"])
         values = {var: _extract_impute_value(replacement, var) for var in edata.var_names}
         for var in (var for var, value in values.items() if value is None):
             logger.warning(f"No replace value passed and found for var [not bold green]{var}.")
@@ -297,10 +299,10 @@ def simple_impute(
         edata = edata.copy()
 
     var_names = list(edata.var_names if var_names is None else var_names)
+    var_indices = _var_indices(edata, var_names)
     X = edata.X if layer is None else edata.layers[layer]
     _warn_imputation_threshold(edata, var_names, threshold=warning_threshold, layer=layer)
 
-    var_indices = edata.var_names.get_indexer(var_names)
     X = _set_columns(X, var_indices, _simple_impute(X[:, var_indices], strategy))
 
     if layer is None:
@@ -600,7 +602,7 @@ def _knn_impute(
     numerical_var_names = edata.var_names[edata.var[FEATURE_TYPE_KEY] == NUMERIC_TAG]
     if var_names is None:
         var_names = numerical_var_names
-    var_indices = edata.var_names.get_indexer(var_names).tolist()
+    var_indices = _var_indices(edata, var_names).tolist()
 
     numerical_indices = edata.var_names.get_indexer(numerical_var_names).tolist()
     if any(idx not in numerical_indices for idx in var_indices):
@@ -754,11 +756,10 @@ def miss_forest_impute(
 
     mtx = edata.X if layer is None else edata.layers[layer]
     var_names = list(edata.var_names if var_names is None else var_names)
-    _warn_imputation_threshold(edata, var_names, threshold=warning_threshold, layer=layer)
-
-    var_indices = edata.var_names.get_indexer(var_names).tolist()
+    var_indices = _var_indices(edata, var_names).tolist()
     if not var_indices:
         raise ValueError("Cannot find any feature to perform imputation")
+    _warn_imputation_threshold(edata, var_names, threshold=warning_threshold, layer=layer)
 
     if find_spec("sklearnex") is not None:  # pragma: no cover
         from sklearnex import patch_sklearn, unpatch_sklearn
@@ -893,7 +894,7 @@ def locf_impute(
             "Use the 'layer' parameter to specify a layer containing 3D data."
         )
 
-    var_indices = edata.var_names.get_indexer(list(edata.var_names if var_names is None else var_names))
+    var_indices = _var_indices(edata, edata.var_names if var_names is None else var_names)
     original = X[:, var_indices]
     if not np.issubdtype(original.dtype, np.floating):
         original = original.astype(np.float64)

@@ -96,3 +96,34 @@ def test_array_type_contract(array_type, ndim, func, kwargs, written_layer, dask
     if array_type.flags & Flags.Dask:
         assert type(written._meta) is type(X._meta)
         assert type(written.compute()) is type(X._meta)
+
+
+@pytest.mark.parametrize(
+    "func",
+    [
+        ep.pp.scale_norm,
+        ep.pp.minmax_norm,
+        ep.pp.maxabs_norm,
+        ep.pp.robust_scale_norm,
+        ep.pp.quantile_norm,
+        ep.pp.power_norm,
+        ep.pp.log_norm,
+        ep.pp.explicit_impute,
+        ep.pp.simple_impute,
+        ep.pp.knn_impute,
+        ep.pp.miss_forest_impute,
+        ep.pp.locf_impute,
+    ],
+    ids=lambda func: func.__name__,
+)
+def test_unknown_var_names(func, rng):
+    X = rng.gamma(2, size=(20, 4, 3) if func in LONGITUDINAL_ONLY else (20, 4))
+    X[rng.random(X.shape) < 0.1] = np.nan
+    edata = ed.EHRData(X=X.copy())
+    edata.var[FEATURE_TYPE_KEY] = NUMERIC_TAG
+    kwargs = {"replacement": {"0": 0.0, "nope": 0.0}} if func is ep.pp.explicit_impute else {"var_names": ["0", "nope"]}
+
+    with pytest.raises(KeyError, match="nope"):
+        func(edata, **kwargs)
+
+    np.testing.assert_array_equal(edata.X, X)
