@@ -95,11 +95,6 @@ def function_2D_only(*, allow_single_timepoint: bool = False):
     return decorator
 
 
-def _raise_if_dask_with_sparse_chunks(X, name: str) -> None:
-    if isinstance(X, DaskArray) and isinstance(X._meta, CSBase):
-        raise NotImplementedError(f"{name} does not support dask arrays with sparse chunks.")
-
-
 def _obs_axes(X) -> tuple[int, ...]:
     """Axes that hold samples of a variable: observations, and timepoints for 3D data."""
     return (0,) if X.ndim == 2 else (0, 2)
