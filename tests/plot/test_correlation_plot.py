@@ -34,11 +34,6 @@ def test_correlation_plots_array_types(array_type, ndim, plot, edata_blobs_times
     expected = plot(EHRData(X=X, var=edata_blobs_timeseries_small.var), **kwargs)
     edata = EHRData(X=array_type(X), var=edata_blobs_timeseries_small.var)
 
-    if array_type.flags & Flags.Sparse:
-        with pytest.raises(NotImplementedError):
-            plot(edata, **kwargs)
-        return
-
     with forbid_dask_compute(allowed=1):
         result = plot(edata, **kwargs)
 

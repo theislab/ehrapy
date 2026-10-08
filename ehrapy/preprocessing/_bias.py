@@ -133,11 +133,6 @@ def detect_bias(
 
     if run_feature_importances is None:
         run_feature_importances = sensitive_features != "all"
-    if run_feature_importances and isinstance(X, CSBase):
-        _raise_densifying(
-            "detect_bias with `run_feature_importances=True`",
-            "ep.tl.rank_features_supervised trains its models on a dense copy of the data",
-        )
 
     if sensitive_features == "all":
         sens_features_list = edata.var_names.values.tolist()

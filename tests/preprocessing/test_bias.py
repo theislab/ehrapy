@@ -128,6 +128,10 @@ def test_detect_bias_copy(edata_small_bias, copy):
 @pytest.mark.array_type(skip=Flags.Disk | Flags.Gpu)
 @pytest.mark.parametrize("corr_method", ["spearman", "pearson"])
 def test_detect_bias_array_types(edata_small_bias, array_type, corr_method, rng):
+    complete = edata_small_bias.copy()
+    complete.X = complete.X.astype(np.float64)
+    importance_kwargs = {"sensitive_features": ["cat1"], "run_feature_importances": True}
+    expected_importances = ep.pp.detect_bias(complete, copy=True, **importance_kwargs).uns["bias"]
     X = edata_small_bias.X.astype(np.float64)
     numeric = X[:, :4]
     numeric[rng.random(numeric.shape) < 0.2] = 0
@@ -136,17 +140,17 @@ def test_detect_bias_array_types(edata_small_bias, array_type, corr_method, rng)
     kwargs = {"sensitive_features": "all", "run_feature_importances": False, "corr_method": corr_method}
     expected = ep.pp.detect_bias(edata_small_bias, copy=True, **kwargs)
     edata_small_bias.X = array_type(X)
+    complete.X = array_type(complete.X)
 
     if array_type.flags & Flags.Dask:
         with pytest.raises(NotImplementedError, match="dask arrays"):
             ep.pp.detect_bias(edata_small_bias, **kwargs)
         return
-    if array_type.flags & Flags.Sparse:
-        with pytest.raises(NotImplementedError, match="run_feature_importances"):
-            ep.pp.detect_bias(edata_small_bias, sensitive_features=["cat1"], run_feature_importances=True)
 
     result = ep.pp.detect_bias(edata_small_bias, copy=True, **kwargs)
+    importances = ep.pp.detect_bias(complete, copy=True, **importance_kwargs).uns["bias"]
 
+    assert list(importances["feature_importances"].columns) == list(expected_importances["feature_importances"].columns)
     np.testing.assert_allclose(result.varp["feature_correlations"], expected.varp["feature_correlations"], rtol=1e-10)
     for key, frame in expected.uns["bias"].items():
         pd.testing.assert_frame_equal(result.uns["bias"][key], frame, rtol=1e-10)
