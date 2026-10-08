@@ -93,7 +93,7 @@ def ncp(
     random_state: int = 0,
     copy: bool = False,
 ) -> EHRData | None:
-    r"""Non-negative CP (PARAFAC) decomposition of a 3D temporal EHR layer.
+    r"""Find groups of patients whose variables follow a similar course over time.
 
     CP (CANDECOMP/PARAFAC) decomposition factorises a 3-way tensor
     :math:`X \in \mathbb{R}^{I \times J \times K}` into a sum of ``rank``
