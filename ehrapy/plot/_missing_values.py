@@ -85,7 +85,7 @@ def missing_values_matrix(
         colorbar=True,
         invert_yaxis=True,
         xticks=list(enumerate(str(column) for column in columns)),
-        xrotation=45,
+        xrotation=90,
         tools=["hover"],
         **_size(width, height, title),
     )
@@ -132,7 +132,7 @@ def missing_values_barplot(
     (fraction,) = _materialize(stats.mean(_rows(missing), axis=0, dtype=np.float64))
     table = pd.DataFrame({"variable": np.asarray(columns, dtype=str), "observed (%)": 100 * (1 - fraction)})
     return hv.Bars(table, kdims="variable", vdims="observed (%)").opts(
-        ylim=(0, 100), xrotation=45, tools=["hover"], **_size(width, height, title)
+        ylim=(0, 100), xrotation=90, tools=["hover"], **_size(width, height, title)
     )
 
 
@@ -192,7 +192,7 @@ def missing_values_heatmap(
     )
     return hv.HeatMap(
         table, kdims=[_ordered("variable", names), _ordered("other variable", names[::-1])], vdims="correlation"
-    ).opts(cmap="RdBu_r", clim=(-1, 1), colorbar=True, xrotation=45, tools=["hover"], **_size(width, height, title))
+    ).opts(cmap="RdBu_r", clim=(-1, 1), colorbar=True, xrotation=90, tools=["hover"], **_size(width, height, title))
 
 
 @load_hv_extensions()
@@ -246,7 +246,7 @@ def missing_values_dendrogram(
     paths = [np.column_stack([x, y]) for x, y in zip(tree["icoord"], tree["dcoord"], strict=True)]
     ticks = [(5 + 10 * position, label) for position, label in enumerate(tree["ivl"])]
     return hv.Path(paths, kdims=["variable", "distance"]).opts(
-        xticks=ticks, xrotation=45, color="black", **_size(width, height, title)
+        xticks=ticks, xrotation=90, color="black", **_size(width, height, title)
     )
 
 
